@@ -1,0 +1,1 @@
+- Ajouter un chemin de bibliothèque : $(Compos)\GraphicEx\GraphicEx
