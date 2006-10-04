@@ -1,0 +1,13 @@
+- Installer Mediakit.dpk
+- Ajouter une variable d'environnement globale: Compos = ce répertoire
+- Ajouter les chemin de bibliothèque 
+    * $(Compos)\PrintObject
+    * $(Compos)\TrayIcon
+    * $(Compos)\idrunner
+    * $(Compos)\ProgressBar
+    * $(Compos)\ComboCheck
+    * $(Compos)\Labeled
+    * $(Compos)\ScanEdit
+    * $(Compos)\CheckVersionNet
+    * $(Compos)\BrowseDirectory
+    * $(Compos)\VersLabP
