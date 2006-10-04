@@ -1,0 +1,80 @@
+package MediaKit;
+
+{$R *.res}
+{$R 'HarmFade\HARMFADE.dcr'}
+{$R 'Memory Table\Memorytable.dcr'}
+{$R 'PrintObject\PrintObject.dcr'}
+{$R 'VersLabP\VerslabP.dcr'}
+{$R 'ShellNotification\kbShellNotify.dcr'}
+{$R 'browsedirectory\Browss.dcr'}
+{$R 'thandle\HANDLES.dcr'}
+{$R 'ComboCheck\ComboCheck.dcr'}
+{$R 'idrunner\idISAPIRunner.dcr'}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST ON}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$IMPLICITBUILD OFF}
+
+requires
+  vcl,
+  vcljpg,
+  vcldb,
+  bdertl,
+  vclsmp,
+  rtl,
+  vclie,
+  websnap,
+  webdsnap,
+  inetdb,
+  dbrtl,
+  inet,
+  xmlrtl,
+  dsnapcon,
+  dsnap,
+  vclx,
+  indy;
+
+contains
+  HarmFade in 'HarmFade\HARMFADE.PAS',
+  MemoryTable in 'Memory Table\Memorytable.pas',
+  MyBarCode in 'MyBarCode\MyBarCode.pas',
+  PrintObject in 'PrintObject\PrintObject.pas',
+  ProgressBar in 'ProgressBar\ProgressBar.pas',
+  ReadOnlyCheckBox in 'ReadOnlycheckBox\ReadOnlyCheckBox.pas',
+  ScanEdit in 'ScanEdit\ScanEdit.pas',
+  RoundButton in 'VDTButton\RoundButton.pas',
+  VDTButton in 'VDTButton\VDTButton.pas',
+  verslabp in 'VersLabP\VerslabP.pas',
+  DBEditLabeled in 'Labeled\DBEditLabeled.pas',
+  kbShellNotify in 'ShellNotification\kbShellNotify.pas',
+  kbsnPIDL in 'ShellNotification\kbsnPIDL.pas',
+  Browss in 'BrowseDirectory\Browss.pas',
+  TrayIcon in 'TrayIcon\TrayIcon.pas',
+  Divers in '..\Common\Divers.pas',
+  Handles in 'THandle\HANDLES.PAS',
+  ComboCheck in 'ComboCheck\ComboCheck.pas',
+  FormPreviewPrintObject in 'PrintObject\FormPreviewPrintObject.pas' {FormPreview},
+  UnrarComp in 'Unrar\UnrarComp.pas',
+  UnRAR in 'unrar\UnRAR.pas',
+  idISAPIRunner in 'idrunner\idISAPIRunner.pas',
+  CRFurtif in 'VDTButton\CRFurtif.pas';
+
+end.
