@@ -1,0 +1,89 @@
+La version perso est faite à partir de TLabel et non TCustomLabel -> property Transparent !!!
+et en Français
+Unit        : verslab.pas
+Version     : 1.03, 29 July 1997
+Status      : Freeware
+Contact     : Marc Evans, marc@leviathn.demon.co.uk
+
+Description:    TVersionLabel is a visual component that displays the
+                information available through the Win32 file information
+                routines.
+
+Requirements:   Delphi 3.x, any edition
+
+Installation:   Place the file verslab.pas with all your other installable
+                components, and add it to the delphi palette as usual.
+
+To Use:         Ensure the the Delphi 3 compiler is set to produce version
+                information (Project/Options/VersionInfo tab) and place this
+                component on the form to display the information at run time.
+
+Licence:        Freeware code, do with it what you will. Just let me know if
+                you find any bugs or you like it (or you don't like it!), or
+                anything else really.
+
+History:
+    v1.01   : fixed bug stopping LangCharSet from actually doing anything
+                at all on a non-UK system.
+
+    v1.02   : Fixed resource leak bug. (surely there can't be any more? It's
+                only 6K!) Thanks to Peter Stromblad for finding it!
+                1 July 1997
+
+    v1.03   : Added display of flags, tidied up code. Made LangCharSet
+                autodetect. Thanks to Fabrice Marguerie
+                (FabriceM@compuserve.com) for the flags code.
+                29 July 1997
+
+
+-------------------
+Events:
+-------------------
+
+No events defined
+
+-------------------
+Extra Properties:
+-------------------
+
+property VersionResource: TVersionResources;
+    This propery can set to display any one of 10 standard version info
+    strings.
+    TVersionResources = (vrCompanyName, vrFileDescription, vrFileVersion,
+                         vrInternalName, vrLegalCopyright, vrOriginalFilename,
+                         vrProductName, vrProductVersion, vrComments, vrFlags);
+
+    If vrFlags is selected the VersionResourceKey property is ignored and the
+    label displays the contents of the 'private build, special build' etc
+    checkboxes in the D3 project options VersionInfo tab.
+
+property VersionResourceKey: string;
+    Set this to the name of the key that is to be returned with the
+    GetFileVersionInfo call. If one of the 10 standard resource types are
+    used this value is set automatically. If you insert a new (non-standard)
+    key into the version resource table then set this property to the name
+    of the key.
+
+property InfoPrefix: String;
+    Sets the text that is displayed in the label before the version
+    information string.
+
+property ShowInfoPrefix: boolean;
+    If set, the InfoPrefix text will be prepended to the version information
+    displayed. If false, only the version information will be displayed.
+
+property LangCharSet: string;
+    The API help says (and I quote):
+    'Specifies a value in a language-specific structure. The lang-charset
+    name is a concatenation of a language and character-set identifier pair
+    found in the translation table for the resource. The lang-charset name
+    must be specified as a hexadecimal string.'
+
+    This defaults to -1, which means that the component will try to
+    figure it out at run time. If you get errors, mail me but try the following
+    guidelines as well:
+
+    The first 4 digits of this string are the language code, defaulting to
+    0809 for UK English. 0409 is US English, look up VerLanguageName for
+    the others. The last 4 digits represent a code page and for most
+    environments they should not be changed from the default of 04E4.
