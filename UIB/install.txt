@@ -1,2 +1,5 @@
-- Installer SYNEDIT
+- Dans source\jvuib.inc
+    * remplacer {$DEFINE HAVE_SYNEDIT} par {.$DEFINE HAVE_SYNEDIT}
+    * remplacer {$DEFINE UIBLANG_EN} par {.$DEFINE UIBLANG_EN}
+    * remplacer {.$DEFINE UIBLANG_FR} par {$DEFINE UIBLANG_FR}
 - Installer le paquet packages\JvUIBD7D.dpk
