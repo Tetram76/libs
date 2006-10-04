@@ -1,0 +1,2 @@
+- Installer SYNEDIT
+- Installer le paquet packages\JvUIBD7D.dpk
