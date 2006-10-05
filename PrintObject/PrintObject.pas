@@ -3,7 +3,7 @@ unit PrintObject;
 interface
 
 uses
-  SysUtils, WinSpool, Windows, Classes, Controls, Graphics, Forms, Printers, JPEG;
+  SysUtils, WinSpool, Windows, Classes, Controls, Graphics, Forms, Printers, JPEG, Dialogs;
 
 var
   mf: tmetafile;
@@ -580,6 +580,7 @@ type
   private
     { Déclarations privées }
     FPrintingState: TPrintingState; { En cours d'impression? }
+    FPages: TList; { liste des pages }
     FPreview: Boolean; { Apperçu avant impression? }
     OPreview: IPrintObjectPreview; { Objet récupérant toutes les actions pour préview }
     FDateTime: TDateTimeRecord; { Informations d'impression de la date }
@@ -620,7 +621,7 @@ type
     CurrentTab: Single; { The value of the current tab }
     CurrentFont: TCurrentFontRecords; { Historique des Font en cours d'utilisation }
     PrevFont: TFont; { Dernière Font utilisée pour imprimer }
-    Titre: string; { Titre de la fenêtre d'apperçu ou du gestionnaire d'impression }
+    FTitre: string; { Titre de la fenêtre d'apperçu ou du gestionnaire d'impression }
     LastYPosition: Single; { The Y position where the lastwrite occurred }
     TextMetrics: TTextMetric; { Tailles du texte en fonction de la Font courante }
 
@@ -651,6 +652,7 @@ type
     function GetPrintingEx(States: TPrintingStates = []): Boolean;
     function GetPrinting: Boolean;
     procedure CheckPrinting(States: TPrintingStates = []);
+    procedure SetTitre(const Value: string);
   protected
     { Déclarations protégées }
     procedure DoDestroy; virtual;
@@ -747,11 +749,13 @@ type
     procedure SetFontInformation2(Font: TFont);
     procedure SetTopOfPage;
     procedure SetYPosition(YPosition: Single);
-    procedure Start(Copies: Word; Title: string);
+    procedure Start(Title: string);
     procedure WriteDateTime;
     procedure WriteFooter;
     procedure WriteHeader;
     procedure WritePageNumber;
+
+    procedure PrintPages(Pages: TList);
   published
     { Déclarations publiées }
     property AutoPaging: Boolean read FAutoPaging write SetAutoPaging default True;
@@ -772,6 +776,7 @@ type
     property Printing: Boolean read GetPrinting default False;
     property PrintingState: TPrintingState read FPrintingState default psNone;
     property SizeOption: TSizeOption read FSizeOption write SetSizeOption default soAuto;
+    property Titre: string read GetTitre write SetTitre; 
 
     property BeforeStart: TBeforeNotifyEvent read FBeforeStart write FBeforeStart;
     property AfterStart: TNotifyEvent read FAfterStart write FAfterStart;
@@ -796,6 +801,8 @@ procedure Register;
 procedure RaiseError(const Msg: string);
 
 implementation
+
+uses Contnrs;
 
 function CleanString(s: string): string;
 begin
@@ -1769,6 +1776,8 @@ begin
   SetMargins(0, 0, 0, 0);
   FHeaderCoordinates.BackColor := clWhite;
   FFooterCoordinates.BackColor := clWhite;
+
+  FPages := TObjectList.Create(True);
 end;
 {-------------------------------------------------------------------------------}
 
@@ -1818,6 +1827,8 @@ begin
   PrevFont.Free;
   FFont.Free;
   FPrinterSettings.Free;
+
+  FPages.Free;
 
   inherited Destroy;
 end;
@@ -2234,14 +2245,21 @@ end;
 
 function TPrintObject.CreatePage: TGraphic;
 begin
+  if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
+
   Result := TMetaFile.Create;
-//  TMetafile(Result).MMWidth := Trunc(PrinterSettings.PaperWidthMms);
-//  TMetafile(Result).MMHeight := Trunc(PrinterSettings.PaperLengthMms);
+
   TMetafile(Result).Width := PrinterSettings.PaperWidthPixels;
   TMetafile(Result).Height := PrinterSettings.PaperLengthPixels;
-  Result.Transparent := False;
+
   FPreviewCanvas := TMetafileCanvas.Create(TMetafile(Result), PrinterSettings.UsedPrinter.Handle);
+
   FPreviewCanvas.Font.PixelsPerInch := PrinterSettings.FPixelsPerX;
+
+  if FPreview then
+    OPreview.Pages.Add(Result)
+  else
+    FPages.Add(Result);
 end;
 {============== Configuration ==================================================}
 
@@ -2712,13 +2730,9 @@ begin
   CheckPrinting;
   Cancel := False; if Assigned(FBeforeAbort) then FBeforeAbort(Self, Cancel); if Cancel then Exit;
   FPrintingState := psAborting;
-  case FPreview of
-    True: begin
-        if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
-        OPreview.Abort;
-      end;
-    else
-      PrinterSettings.UsedPrinter.Abort;
+  if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
+  if FPreview then begin
+    OPreview.Abort;
   end;
   FPrintingState := psNone;
   if Assigned(FAfterAbort) then FAfterAbort(Self);
@@ -2734,11 +2748,7 @@ end;
 function TPrintObject.Destination;
 begin
   CheckPrinting;
-  case FPreview of
-    True: Result := FPreviewCanvas;
-    else
-      Result := PrinterSettings.UsedPrinter.Canvas;
-  end;
+  Result := FPreviewCanvas;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2946,7 +2956,7 @@ begin
   case FPreview of
     True: Result := OPreview.Pages.Count;
     else
-      Result := PrinterSettings.UsedPrinter.PageNumber;
+      Result := FPages.Count;
   end;
 end;
 {-------------------------------------------------------------------------------}
@@ -2980,7 +2990,7 @@ end;
 
 function TPrintObject.GetTitre;
 begin
-  Result := Titre;
+  Result := FTitre;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -3032,16 +3042,7 @@ begin
     WriteFooter;
     WritePageNumber;
     WriteDateTime;
-    case FPreview of
-      True: begin
-          if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
-          mf := tmetafile(CreatePage);
-          mf.Height := mf.Height;
-          OPreview.Pages.Add(mf);
-        end;
-      else
-        PrinterSettings.UsedPrinter.NewPage;
-    end;
+    CreatePage;
     RestoreCurrentFont;
   end;
   LastYPosition := Detail.Top - GetLineHeightMms;
@@ -3085,13 +3086,13 @@ begin
   WriteFooter;
   WritePageNumber;
   WriteDateTime;
-  case FPreview of
-    True: begin
-        if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
-        OPreview.Quit;
-      end;
-    else
-      PrinterSettings.UsedPrinter.EndDoc;
+  if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
+  if FPreview  then begin
+    OPreview.Quit;
+  end
+  else
+  begin
+    PrintPages(FPages);
   end;
   FPrintingState := psNone;
   if Assigned(FAfterQuit) then FAfterQuit(Self);
@@ -3156,7 +3157,7 @@ begin
 end;
 {-------------------------------------------------------------------------------}
 
-procedure TPrintObject.Start(Copies: Word; Title: string); { doit TOUJOURS être appelée avant de commencer une impression }
+procedure TPrintObject.Start(Title: string); { doit TOUJOURS être appelée avant de commencer une impression }
 var
   Cancel: Boolean;
 begin
@@ -3165,21 +3166,13 @@ begin
   if FPreview and not Assigned(OPreview) then RaiseError(ENoPreview);
   FPrintingState := psStarting;
   StartDateTimePrint := Now;
-  case FPreview of
-    True: begin
-        Titre := Title;
-        OPreview.Pages.Add(CreatePage);
-        OPreview.SetHeightMM(PrinterSettings.WorkSheetLengthMms);
-        OPreview.SetWidthMM(PrinterSettings.WorkSheetWidthMms);
-        OPreview.SetCaption(Title);
-        OPreview.Start;
-      end;
-    else begin
-        PrinterSettings.UsedPrinter.Copies := Copies;
-        PrinterSettings.UsedPrinter.Title := Title;
-        PrinterSettings.UsedPrinter.BeginDoc;
-        PrinterSettings.UsedPrinter.Canvas.Font.PixelsPerInch := PrinterSettings.FPixelsPerX;
-      end;
+  Titre := Title;
+  CreatePage;
+  if FPreview then begin
+    OPreview.SetHeightMM(PrinterSettings.WorkSheetLengthMms);
+    OPreview.SetWidthMM(PrinterSettings.WorkSheetWidthMms);
+    OPreview.SetCaption(Title);
+    OPreview.Start;
   end;
   SetFontInformation2(FFont);
   CurrentTab := 0.0;
@@ -3924,6 +3917,126 @@ end;
 {-------------------------------------------------------------------------------}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+procedure TPrintObject.PrintPages(Pages: TList);
+var
+  PrintDialog: TPrintDialog;
+  PrinterPhysicalOffsetX, PrinterPhysicalOffsetY: Cardinal;
+  I, J: Integer;
+  StartPage, EndPage: Integer;
+begin
+  PrintDialog:= TPrintDialog.Create(nil);
+  try
+    PrintDialog.Copies := 1;
+    PrintDialog.Options := PrintDialog.Options + [poPageNums];
+    PrintDialog.MinPage := 1;
+    PrintDialog.MaxPage := Pages.Count;
+
+    if PrintDialog.Execute then begin
+      PrinterSettings.UsedPrinter.Title := Titre;
+      PrinterPhysicalOffsetX := GetDeviceCaps(PrinterSettings.UsedPrinter.Handle, PHYSICALOFFSETX);
+      PrinterPhysicalOffsetY := GetDeviceCaps(PrinterSettings.UsedPrinter.Handle, PHYSICALOFFSETY);
+
+      if PrintDialog.PrintRange = prAllPages then begin
+        StartPage := 0;
+        EndPage := Pred(Pages.Count);
+      end else begin
+        StartPage := PrintDialog.FromPage - 1;
+        EndPage := PrintDialog.ToPage - 1;
+      end;
+
+      if PrintDialog.Collate then // Range * Copies
+      begin
+        if StartPage > EndPage then
+        begin
+          // print backwards
+          for I := 0 to PrintDialog.Copies - 1 do
+            for J := StartPage downto EndPage do
+            begin
+              if PrinterSettings.UsedPrinter.Aborted then
+              begin
+                if PrinterSettings.UsedPrinter.Printing then
+                  PrinterSettings.UsedPrinter.EndDoc;
+                Exit;
+              end;
+              if (J = StartPage) and (I = 0) then
+                PrinterSettings.UsedPrinter.BeginDoc
+              else
+                PrinterSettings.UsedPrinter.NewPage;
+              PrinterSettings.UsedPrinter.Canvas.Draw(-PrinterPhysicalOffsetX, -PrinterPhysicalOffsetY, Pages[J]);
+            end;
+        end
+        else
+        begin
+          for I := 0 to PrintDialog.Copies - 1 do
+            for J := StartPage to EndPage do
+            begin
+              if PrinterSettings.UsedPrinter.Aborted then
+              begin
+                if PrinterSettings.UsedPrinter.Printing then
+                  PrinterSettings.UsedPrinter.EndDoc;
+                Exit;
+              end;
+              if (J = StartPage) and (I = 0) then
+                PrinterSettings.UsedPrinter.BeginDoc
+              else
+                PrinterSettings.UsedPrinter.NewPage;
+              PrinterSettings.UsedPrinter.Canvas.Draw(-PrinterPhysicalOffsetX, -PrinterPhysicalOffsetY, Pages[J]);
+            end;
+        end;
+      end
+      else // Page * Copies
+      begin
+        if StartPage > EndPage then
+        begin
+          // print backwards
+          for J := StartPage downto EndPage do
+            for I := 0 to PrintDialog.Copies - 1 do
+            begin
+              if PrinterSettings.UsedPrinter.Aborted then
+              begin
+                if PrinterSettings.UsedPrinter.Printing then
+                  PrinterSettings.UsedPrinter.EndDoc;
+                Exit;
+              end;
+              if (J = StartPage) and (I = 0) then
+                PrinterSettings.UsedPrinter.BeginDoc
+              else
+                PrinterSettings.UsedPrinter.NewPage;
+              PrinterSettings.UsedPrinter.Canvas.Draw(-PrinterPhysicalOffsetX, -PrinterPhysicalOffsetY, Pages[J]);
+            end;
+        end
+        else
+        begin
+          for J := StartPage to EndPage do
+            for I := 0 to PrintDialog.Copies - 1 do
+            begin
+              if PrinterSettings.UsedPrinter.Aborted then
+              begin
+                if PrinterSettings.UsedPrinter.Printing then
+                  PrinterSettings.UsedPrinter.EndDoc;
+                Exit;
+              end;
+              if (J = StartPage) and (I = 0) then
+                PrinterSettings.UsedPrinter.BeginDoc
+              else
+                PrinterSettings.UsedPrinter.NewPage;
+              PrinterSettings.UsedPrinter.Canvas.Draw(-PrinterPhysicalOffsetX, -PrinterPhysicalOffsetY, Pages[J]);
+            end;
+        end;
+      end;
+      if PrinterSettings.UsedPrinter.Printing then
+        PrinterSettings.UsedPrinter.EndDoc;
+    end;
+  finally
+    PrintDialog.Free;
+  end;
+end;
+
+procedure TPrintObject.SetTitre(const Value: string);
+begin
+  FTitre := Value;
+end;
 
 end.
 
