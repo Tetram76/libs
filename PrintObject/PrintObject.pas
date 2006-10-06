@@ -2025,6 +2025,8 @@ end;
 
 procedure TPrintObject.SetDetailTopBottom(Top, Bottom: Single);
 begin
+  if Top = -1 then Top := Margin.Top + HeaderCoordinates.Height;
+  if Bottom = -1 then Bottom := Margin.Bottom + FooterCoordinates.Height;
   if Top + Bottom > PrinterSettings.WorkSheetLengthMms then Exit;
   Detail.Top := Top;
   Detail.Bottom := Bottom;
@@ -2034,8 +2036,11 @@ end;
 
 procedure TPrintObject.SetFooterDimensions1(Left, Right, Bottom, Height: Single; Boxed: Boolean; LineWidth: Word; BackColor: TColor);
 begin
+  if Left = -1 then Left := Margin.Left;
   FFooterCoordinates.Left := Left;
+  if Right = -1 then Right := Margin.Right;
   FFooterCoordinates.Right := Right;
+  if Bottom = -1 then Bottom := Margin.Bottom;
   FFooterCoordinates.Bottom := Bottom;
   FFooterCoordinates.Height := Height;
   FFooterCoordinates.Boxed := Boxed;
@@ -2046,9 +2051,13 @@ end;
 
 procedure TPrintObject.SetFooterDimensions2(Left, Right, Bottom, Top: Single; Boxed: Boolean; LineWidth: Word; BackColor: TColor);
 begin
+  if Left = -1 then Left := Margin.Left;
   FFooterCoordinates.Left := Left;
+  if Right = -1 then Right := Margin.Right;
   FFooterCoordinates.Right := Right;
+  if Bottom = -1 then Bottom := Margin.Bottom;
   FFooterCoordinates.Bottom := Bottom;
+  if Top = -1 then Top := Margin.Top;
   FFooterCoordinates.Top := Top;
   FFooterCoordinates.Boxed := Boxed;
   FFooterCoordinates.LineWidth := LineWidth;
@@ -2100,8 +2109,11 @@ end;
 
 procedure TPrintObject.SetHeaderDimensions1(Left, Right, Top, Height: Single; Boxed: Boolean; LineWidth: Word; BackColor: TColor);
 begin
+  if Left = -1 then Left := Margin.Left;
   FHeaderCoordinates.Left := Left;
+  if Right = -1 then Right := Margin.Right;
   FHeaderCoordinates.Right := Right;
+  if Top = -1 then Top := Margin.Top;
   FHeaderCoordinates.Top := Top;
   FHeaderCoordinates.Height := Height;
   FHeaderCoordinates.Boxed := Boxed;
@@ -2112,9 +2124,13 @@ end;
 
 procedure TPrintObject.SetHeaderDimensions2(Left, Right, Top, Bottom: Single; Boxed: Boolean; LineWidth: Word; BackColor: TColor);
 begin
+  if Left = -1 then Left := Margin.Left;
   FHeaderCoordinates.Left := Left;
+  if Right = -1 then Right := Margin.Right;
   FHeaderCoordinates.Right := Right;
+  if Top = -1 then Top := Margin.Top;
   FHeaderCoordinates.Top := Top;
+  if Bottom = -1 then Bottom := Margin.Bottom;
   FHeaderCoordinates.Bottom := Bottom;
   FHeaderCoordinates.Boxed := Boxed;
   FHeaderCoordinates.LineWidth := LineWidth;
@@ -2323,7 +2339,7 @@ begin
     XPixels := MmsToPixelsHorizontal(X)
   else
     XPixels := FMargin.Left;
-  if (XPixels < PrinterSettings.Gutter.Left) then XPixels := PrinterSettings.Gutter.Left;
+  XPixels := Max(XPixels, PrinterSettings.Gutter.Left);
   if (CurrentTab > 0.0) then Inc(XPixels, MmsToPixelsHorizontal(CurrentTab));
 
   if (Y < 0) and (Y <> -2.0) and (Y <> -1.0) then Exit;
@@ -2357,7 +2373,7 @@ var
   StartPixel: Integer;
 begin
   PixelLength := Destination.TextWidth(Text);
-  StartPixel := ((PrinterSettings.Gutter.Left + (MmsToPixelsHorizontal(PrinterSettings.WorkSheetWidthMms) - PrinterSettings.Gutter.Right)) div 2) - (PixelLength div 2);
+  StartPixel := ((Max(MmsToPixelsHorizontal(Margin.Left), PrinterSettings.Gutter.Left) + (MmsToPixelsHorizontal(PrinterSettings.WorkSheetWidthMms) - Max(MmsToPixelsHorizontal(Margin.Right), PrinterSettings.Gutter.Right))) div 2) - (PixelLength div 2);
 
   SetTab(0.0);
   WriteLine(PixelsToMmsHorizontal(StartPixel), Y, Text);
@@ -2371,7 +2387,9 @@ var
   StartPixel: Word;
 begin
   PixelLength := Destination.TextWidth(Text);
-  StartPixel := (MmsToPixelsHorizontal(PrinterSettings.WorkSheetWidthMms) - PrinterSettings.Gutter.Left - PrinterSettings.Gutter.Right) - PixelLength;
+  StartPixel := (MmsToPixelsHorizontal(PrinterSettings.WorkSheetWidthMms) -
+    Max(MmsToPixelsHorizontal(Margin.Right), PrinterSettings.Gutter.Right)) -
+    PixelLength;
 
   SetTab(0.0);
   WriteLine(PixelsToMmsHorizontal(StartPixel), Y, Text);
@@ -3198,14 +3216,17 @@ begin
   SaveCurrentFont;
   SetFontInformation2(DateTime.Font);
   Temp := FAutoPaging;
-  FAutoPaging := False;
-  case DateTime.Alignment of
-    taCenter: WriteLineCenter(DateTime.Position, Buffer);
-    taRightJustify: WriteLineRight(DateTime.Position, Buffer);
-    else
-      WriteLine(Margin.Left, DateTime.Position, Buffer);
+  try
+    FAutoPaging := False;
+    case DateTime.Alignment of
+      taCenter: WriteLineCenter(DateTime.Position, Buffer);
+      taRightJustify: WriteLineRight(DateTime.Position, Buffer);
+      else
+        WriteLine(Margin.Left, DateTime.Position, Buffer);
+    end;
+  finally
+    FAutoPaging := Temp;
   end;
-  FAutoPaging := Temp;
   RestoreCurrentFont;
   if Assigned(FAfterDateTime) then FAfterDateTime(Self);
 end;
