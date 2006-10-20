@@ -14,7 +14,7 @@ function PosInText(const Debut: Integer; const Texte, AChercher: string): Intege
 function PosEx(const Substr: array of string; const S: string): Integer;
 function PosInTextEx(const Debut: Integer; const Texte: string; const AChercher: array of string): Integer;
 function IIf(Test: Boolean; Retour_Vrai, Retour_Faux: Variant): Variant;
-function Choose(Val: Integer; Retour: array of Variant): Variant;
+function Choose(Val: Integer; const Retour: array of Variant): Variant;
 function IsPrevInstance: HWND;
 function BaseSoundex(in_str: string; const language: string): string;
 function Soundex(const in_str, language: string): string;
@@ -43,7 +43,7 @@ type
 function GetVolumeInfo(Drive: Char; var SysInfoRec: TSysInfoRec): Boolean;
 procedure ChangeCurseur(Index: TCursor; Nom, Rubrique: PChar);
 function Base64(valueSTR: string): string;
-function MessageDlgEx(const Caption, Msg: string; AType: TMsgDlgType; AButtons: array of string): Word;
+function MessageDlgEx(const Caption, Msg: string; AType: TMsgDlgType; const AButtons: array of string): Word;
 
 type
   TNotifyProc = procedure(Sender: TObject);
@@ -354,7 +354,7 @@ begin
     Result := Retour_Faux;
 end;
 
-function Choose(Val: Integer; Retour: array of Variant): Variant;
+function Choose(Val: Integer; const Retour: array of Variant): Variant;
 begin
   Result := varNull;
   if Val in [0..High(Retour)] then Result := Retour[Val];
@@ -740,7 +740,7 @@ begin
   end;
 end;
 
-function MessageDlgEx(const Caption, Msg: string; AType: TMsgDlgType; AButtons: array of string): Word;
+function MessageDlgEx(const Caption, Msg: string; AType: TMsgDlgType; const AButtons: array of string): Word;
 var
   oForm: TForm;
   oLabel: TLabel;
@@ -829,6 +829,9 @@ var
   FindHandle: THandle;
 
   function FindLongname(Path: PChar): string;
+  var
+    FindData: TWin32FindData;
+    FindHandle: THandle;
   begin
     FindHandle := FindFirstFile(Path, FindData);
     Result := FindData.cFileName;
@@ -914,9 +917,9 @@ end;
 
 function CompareVersionNum(Ver1, Ver2: string; Sep: Char = '.'): Integer;
 type
-  ArrayOfByte = array of Byte;
+  TArrayOfByte = array of Byte;
 
-  procedure DecodeVer(Ver: string; var AVer: ArrayOfByte);
+  procedure DecodeVer(Ver: string; var AVer: TArrayOfByte);
   var
     Index: Integer;
     s: string;
@@ -937,7 +940,7 @@ type
     end;
   end;
 
-  procedure AjusteArray(var A1: ArrayOfByte; A2: ArrayOfByte);
+  procedure AjusteArray(var A1: TArrayOfByte; const A2: TArrayOfByte);
   begin
     while Length(A1) < Length(A2) do begin
       SetLength(A1, Length(A1) + 1);
@@ -946,7 +949,7 @@ type
   end;
 
 var
-  AVer1, AVer2: ArrayOfByte;
+  AVer1, AVer2: TArrayOfByte;
   Index: Integer;
 begin
   Result := 0;
