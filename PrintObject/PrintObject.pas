@@ -581,7 +581,6 @@ type
     { Déclarations privées }
     FPrintingState: TPrintingState; { En cours d'impression? }
     FPages: TList; { liste des pages }
-    FPreview: Boolean; { Apperçu avant impression? }
     OPreview: IPrintObjectPreview; { Objet récupérant toutes les actions pour préview }
     FDateTime: TDateTimeRecord; { Informations d'impression de la date }
     FAutoPaging: Boolean; { Passage à la page automatique? }
@@ -636,7 +635,7 @@ type
     procedure SetFooters(Value: TFooterRecords);
     procedure SetFont(Value: TFont);
     procedure SetHeaders(Value: THeaderRecords);
-    procedure SetPreview(Value: Boolean);
+    procedure SetPreview(Value: IPrintObjectPreview);
     procedure SetSizeOption(Value: TSizeOption);
     function CreatePage: TGraphic;
 
@@ -770,8 +769,7 @@ type
     property Margin: TMarginsMms read FMarginMm write FMarginMm;
     //      property Page: TPageInformations read FPageInfos write FPageInfos;
     property PageNumber: TPageNumberRecord read FPageNumber write FPageNumber;
-    property Preview: Boolean read FPreview write SetPreview default False;
-    property PreviewObject: IPrintObjectPreview read OPreview write OPreview;
+    property PreviewObject: IPrintObjectPreview read OPreview write SetPreview default nil;
     property PrinterSettings: TPrinterSettings read FPrinterSettings write FPrinterSettings;
     property Printing: Boolean read GetPrinting default False;
     property PrintingState: TPrintingState read FPrintingState default psNone;
@@ -1758,7 +1756,6 @@ begin
   CalculateMeasurements;
   FAutoPaging := True;
   FPrintingState := psNone;
-  FPreview := False;
   OPreview := nil;
   FSizeOption := soAuto;
   FFont := TFont.Create;
@@ -1869,7 +1866,7 @@ function TPrintObject.Position(X, Y: Single): TPoint;
 begin
   Result.x := MmsToPixelsHorizontal(X);
   Result.y := MmsToPixelsVertical(Y);
-  if not FPreview then begin
+  if not Assigned(OPreview) then begin
     Dec(Result.x, PrinterSettings.Gutter.Left);
     Dec(Result.y, PrinterSettings.Gutter.Top);
   end;
@@ -2239,10 +2236,10 @@ begin
 end;
 {-------------------------------------------------------------------------------}
 
-procedure TPrintObject.SetPreview(Value: Boolean);
+procedure TPrintObject.SetPreview(Value: IPrintObjectPreview);
 begin
   if Printing then RaiseError(EObjectPrinting);
-  FPreview := Value;
+  OPreview := Value;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2272,7 +2269,7 @@ begin
 
   FPreviewCanvas.Font.PixelsPerInch := PrinterSettings.FPixelsPerX;
 
-  if FPreview then
+  if Assigned(OPreview) then
     OPreview.Pages.Add(Result)
   else
     FPages.Add(Result);
@@ -2289,7 +2286,7 @@ var
 begin
   l := X;
   t := Y;
-  if FPreview then begin
+  if Assigned(OPreview) then begin
     Inc(l, PrinterSettings.Gutter.Left);
     Inc(t, PrinterSettings.Gutter.Top);
   end;
@@ -2465,7 +2462,7 @@ procedure TPrintObject.WriteRotatedLine(X, Y: Single; Text: string; Font: TFont;
   begin
     l := X;
     t := Y;
-    if FPreview then begin
+    if Assigned(OPreview) then begin
       Inc(l, PrinterSettings.Gutter.Left);
       Inc(t, PrinterSettings.Gutter.Top);
     end;
@@ -2547,7 +2544,7 @@ begin
 
   t := YTop; b := YBottom;
   l := XTop; r := XBottom;
-  if FPreview then begin
+  if Assigned(OPreview) then begin
     Inc(t, PrinterSettings.Gutter.Top);
     Inc(b, PrinterSettings.Gutter.Bottom);
     Inc(l, PrinterSettings.Gutter.Left);
@@ -2571,7 +2568,7 @@ var
   InfoSize, ImageSize: Cardinal;
   Image: TMemoryStream;
 begin
-  if FPreview then begin
+  if Assigned(OPreview) then begin
     Inc(dstX, PrinterSettings.Gutter.Top);
     Inc(dstY, PrinterSettings.Gutter.Left);
   end;
@@ -2581,7 +2578,7 @@ begin
   //    dstWidth := MulDiv(dstWidth, ResolutionEcran, ResolutionPrinterX);
   //    dstHeight := MulDiv(dstHeight, ResolutionEcran, ResolutionPrinterY);
   //  end;
-  if FPreview then begin
+  if Assigned(OPreview) then begin
     Destination.StretchDraw(Rect(dstX, dstY, dstX + dstWidth, dstY + dstHeight), Graphic);
     Exit;
   end;
@@ -2683,7 +2680,7 @@ begin
   TopYPixels := MmsToPixelsVertical(TopY);
   BottomYPixels := MmsToPixelsVertical(BottomY);
 
-  if not FPreview then begin
+  if not Assigned(OPreview) then begin
     Dec(TopXPixels, PrinterSettings.Gutter.Left);
     Dec(BottomXPixels, PrinterSettings.Gutter.Left);
     Dec(TopYPixels, PrinterSettings.Gutter.Top);
@@ -2749,7 +2746,7 @@ begin
   Cancel := False; if Assigned(FBeforeAbort) then FBeforeAbort(Self, Cancel); if Cancel then Exit;
   FPrintingState := psAborting;
   if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
-  if FPreview then begin
+  if Assigned(OPreview) then begin
     OPreview.Abort;
   end;
   FPrintingState := psNone;
@@ -2971,7 +2968,7 @@ end;
 
 function TPrintObject.GetPageNumber;
 begin
-  case FPreview of
+  case Assigned(OPreview) of
     True: Result := OPreview.Pages.Count;
     else
       Result := FPages.Count;
@@ -3105,7 +3102,7 @@ begin
   WritePageNumber;
   WriteDateTime;
   if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
-  if FPreview  then begin
+  if Assigned(OPreview)  then begin
     OPreview.Quit;
   end
   else
@@ -3181,12 +3178,11 @@ var
 begin
   if Printing then RaiseError(EPrinting);
   Cancel := False; if Assigned(FBeforeStart) then FBeforeStart(Self, Cancel); if Cancel then Exit;
-  if FPreview and not Assigned(OPreview) then RaiseError(ENoPreview);
   FPrintingState := psStarting;
   StartDateTimePrint := Now;
   Titre := Title;
   CreatePage;
-  if FPreview then begin
+  if Assigned(OPreview) then begin
     OPreview.SetHeightMM(PrinterSettings.WorkSheetLengthMms);
     OPreview.SetWidthMM(PrinterSettings.WorkSheetWidthMms);
     OPreview.SetCaption(Title);
