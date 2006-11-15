@@ -25,7 +25,8 @@ function MakeInitiales(Str: string): string;
 function SansAccents(Str: string): string;
 function OnlyAlphaNum(const Str: string; NoDblSpace: Boolean = True): string;
 function ListOfResName(Module, TypeRes: PChar; var ListRes: TStringList): Boolean;
-function MessageGetLastError(Erreur: Integer = -99): string;
+function MessageGetLastError: string; overload;
+function MessageGetLastError(ErrorCode: Integer): string; overload;
 function GetPosteName: string;
 function SetPosteName(const value: string): boolean;
 procedure DoInvisible(Form: TForm);
@@ -567,15 +568,16 @@ begin
   end;
 end;
 
-function MessageGetLastError(Erreur: Integer = -99): string;
+function MessageGetLastError: string;
+begin
+  Result := MessageGetLastError(GetLastError);
+end;
+
+function MessageGetLastError(ErrorCode: Integer): string;
 var
-  ErrorCode: Integer;
   Buf: array[Byte] of Char;
 begin
-  if Erreur <> -99 then
-    ErrorCode := Erreur
-  else
-    ErrorCode := GetLastError;
+  Result := '';
   if (ErrorCode <> 0) and
     (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, nil, ErrorCode, LOCALE_USER_DEFAULT, Buf, SizeOf(Buf), nil) <> 0) then Result := StrPas(Buf);
 end;
