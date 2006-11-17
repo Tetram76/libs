@@ -774,7 +774,7 @@ type
     property Printing: Boolean read GetPrinting default False;
     property PrintingState: TPrintingState read FPrintingState default psNone;
     property SizeOption: TSizeOption read FSizeOption write SetSizeOption default soAuto;
-    property Titre: string read GetTitre write SetTitre; 
+    property Titre: string read GetTitre write SetTitre;
 
     property BeforeStart: TBeforeNotifyEvent read FBeforeStart write FBeforeStart;
     property AfterStart: TNotifyEvent read FAfterStart write FAfterStart;
@@ -851,12 +851,14 @@ var
   temp: Single;
 begin
   case Index of
-    0: begin
+    0:
+      begin
         temp := Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Top);
         if (Value < temp) then Value := temp;
         if (FTop <> Value) and (Value + FBottom < Owner.PrinterSettings.WorkSheetLengthMms) then FTop := Value;
       end;
-    1: begin
+    1:
+      begin
         temp := Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Bottom);
         if (Value < temp) then Value := temp;
         if (FBottom <> Value) and (Value + FTop < Owner.PrinterSettings.WorkSheetLengthMms) then FBottom := Value;
@@ -872,18 +874,21 @@ var
   temp: Single;
 begin
   case Index of
-    0: begin
+    0:
+      begin
         temp := Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Left);
         if (Value < temp) then Value := temp;
         if (FLeft <> Value) and (Value + FRight < Owner.PrinterSettings.WorkSheetWidthMms) then FLeft := Value;
       end;
-    1: begin
+    1:
+      begin
         temp := Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Right);
         if (Value < temp) then Value := temp;
         if (FRight <> Value) and (Value + FLeft < Owner.PrinterSettings.WorkSheetWidthMms) then FRight := Value;
       end;
   end;
-  if Owner.FDetail <> nil then begin
+  if Owner.FDetail <> nil then
+  begin
     if Owner.FDetail.Left < FLeft then Owner.FDetail.Left := FLeft;
     if Owner.FDetail.Right < FRight then Owner.FDetail.Right := FRight;
   end;
@@ -932,19 +937,22 @@ var
   temp: Single;
 begin
   case Index of
-    0: begin
+    0:
+      begin
         temp := Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Top);
         if (Value < temp) then Value := temp;
         if (FTop <> Value) and (Value + FBottom < Owner.PrinterSettings.WorkSheetLengthMms) then FTop := Value;
         FHeight := Owner.PrinterSettings.WorkSheetLengthMms - FBottom - FTop;
       end;
-    1: begin
+    1:
+      begin
         temp := Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Bottom);
         if (Value < temp) then Value := temp;
         if (FBottom <> Value) and (Value + FTop < Owner.PrinterSettings.WorkSheetLengthMms) then FBottom := Value;
         FHeight := Owner.PrinterSettings.WorkSheetLengthMms - FBottom - FTop;
       end;
-    2: begin
+    2:
+      begin
         if (FTop + Value > Owner.PrinterSettings.WorkSheetLengthMms) then Value := Owner.PrinterSettings.WorkSheetLengthMms - FTop - Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Bottom);
         FHeight := Value;
         Bottom := Owner.PrinterSettings.WorkSheetLengthMms - FTop - Value;
@@ -958,19 +966,22 @@ var
   temp: Single;
 begin
   case Index of
-    0: begin
+    0:
+      begin
         temp := Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Left);
         if (Value < temp) then Value := temp;
         if (FLeft <> Value) and (Value + FRight < Owner.PrinterSettings.WorkSheetWidthMms) then FLeft := Value;
         FWidth := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - FRight;
       end;
-    1: begin
+    1:
+      begin
         temp := Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Right);
         if (Value < temp) then Value := temp;
         if (FRight <> Value) and (Value + FLeft < Owner.PrinterSettings.WorkSheetWidthMms) then FRight := Value;
         FWidth := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - FRight;
       end;
-    2: begin
+    2:
+      begin
         if (FLeft + Value > Owner.PrinterSettings.WorkSheetWidthMms) then Value := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Right);
         FWidth := Value;
         Right := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - Value;
@@ -1019,19 +1030,22 @@ var
   temp: Single;
 begin
   case Index of
-    0: begin
+    0:
+      begin
         temp := Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Top);
         if (Value < temp) then Value := temp;
         if (FTop <> Value) and (Value + FBottom < Owner.PrinterSettings.WorkSheetLengthMms) then FTop := Value;
         FHeight := Owner.PrinterSettings.WorkSheetLengthMms - FBottom - FTop;
       end;
-    1: begin
+    1:
+      begin
         temp := Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Bottom);
         if (Value < temp) then Value := temp;
         if (FBottom <> Value) and (Value + FTop < Owner.PrinterSettings.WorkSheetLengthMms) then FBottom := Value;
         FHeight := Owner.PrinterSettings.WorkSheetLengthMms - FBottom - FTop;
       end;
-    2: begin
+    2:
+      begin
         if (Owner.PrinterSettings.WorkSheetLengthMms - FBottom - Value < Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Top)) then Value := Owner.PrinterSettings.WorkSheetLengthMms - FBottom - Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Top);
         FHeight := Value;
         Top := Owner.PrinterSettings.WorkSheetLengthMms - FBottom - Value;
@@ -1045,19 +1059,22 @@ var
   temp: Single;
 begin
   case Index of
-    0: begin
+    0:
+      begin
         temp := Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Left);
         if (Value < temp) then Value := temp;
         if (FLeft <> Value) and (Value + FRight < Owner.PrinterSettings.WorkSheetWidthMms) then FLeft := Value;
         FWidth := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - FRight;
       end;
-    1: begin
+    1:
+      begin
         temp := Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Right);
         if (Value < temp) then Value := temp;
         if (FRight <> Value) and (Value + FLeft < Owner.PrinterSettings.WorkSheetWidthMms) then FRight := Value;
         FWidth := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - FRight;
       end;
-    2: begin
+    2:
+      begin
         if (FLeft + Value > Owner.PrinterSettings.WorkSheetWidthMms) then Value := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Right);
         FWidth := Value;
         Right := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - Value;
@@ -1100,19 +1117,22 @@ var
   temp: Single;
 begin
   case Index of
-    0: begin
+    0:
+      begin
         temp := Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Top);
         if (Value < temp) then Value := temp;
         if (FTop <> Value) and (Value + FBottom < Owner.PrinterSettings.WorkSheetLengthMms) then FTop := Value;
         FHeight := Owner.PrinterSettings.WorkSheetLengthMms - FBottom - FTop;
       end;
-    1: begin
+    1:
+      begin
         temp := Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Bottom);
         if (Value < temp) then Value := temp;
         if (FBottom <> Value) and (Value + FTop < Owner.PrinterSettings.WorkSheetLengthMms) then FBottom := Value;
         FHeight := Owner.PrinterSettings.WorkSheetLengthMms - FBottom - FTop;
       end;
-    2: begin
+    2:
+      begin
         if (FTop + Value > Owner.PrinterSettings.WorkSheetLengthMms) then Value := Owner.PrinterSettings.WorkSheetLengthMms - FTop - Owner.PixelsToMmsVertical(Owner.PrinterSettings.Gutter.Bottom);
         FHeight := Value;
         Bottom := Owner.PrinterSettings.WorkSheetLengthMms - FTop - Value;
@@ -1126,19 +1146,22 @@ var
   temp: Single;
 begin
   case Index of
-    0: begin
+    0:
+      begin
         temp := Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Left);
         if (Value < temp) then Value := temp;
         if (FLeft <> Value) and (Value + FRight < Owner.PrinterSettings.WorkSheetWidthMms) then FLeft := Value;
         FWidth := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - FRight;
       end;
-    1: begin
+    1:
+      begin
         temp := Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Right);
         if (Value < temp) then Value := temp;
         if (FRight <> Value) and (Value + FLeft < Owner.PrinterSettings.WorkSheetWidthMms) then FRight := Value;
         FWidth := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - FRight;
       end;
-    2: begin
+    2:
+      begin
         if (FLeft + Value > Owner.PrinterSettings.WorkSheetWidthMms) then Value := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - Owner.PixelsToMmsHorizontal(Owner.PrinterSettings.Gutter.Right);
         FWidth := Value;
         Right := Owner.PrinterSettings.WorkSheetWidthMms - FLeft - Value;
@@ -1151,7 +1174,8 @@ end;
 
 procedure TPageNumberRecord.Assign;
 begin
-  if Source is TPageNumberRecord then begin
+  if Source is TPageNumberRecord then
+  begin
     Printed := TPageNumberRecord(Source).Printed;
     Prefix := TPageNumberRecord(Source).Prefix;
     Suffix := TPageNumberRecord(Source).Suffix;
@@ -1208,7 +1232,8 @@ end;
 
 procedure TDateTimeRecord.Assign;
 begin
-  if Source is TDateTimeRecord then begin
+  if Source is TDateTimeRecord then
+  begin
     Printed := TDateTimeRecord(Source).Printed;
     DateFormat := TDateTimeRecord(Source).DateFormat;
     DatePrinted := TDateTimeRecord(Source).DatePrinted;
@@ -1323,7 +1348,8 @@ end;
 
 procedure THeaderRecord.Assign;
 begin
-  if Source is THeaderRecord then begin
+  if Source is THeaderRecord then
+  begin
     Text := THeaderRecord(Source).Text;
     Position := THeaderRecord(Source).Position;
     Alignment := THeaderRecord(Source).Alignment;
@@ -1357,7 +1383,8 @@ end;
 
 procedure THeaderRecord.SetAlignment(Value: TAlignment);
 begin
-  if FAlignment <> Value then begin
+  if FAlignment <> Value then
+  begin
     FAlignment := Value;
     Changed(False);
   end;
@@ -1372,7 +1399,8 @@ end;
 
 procedure THeaderRecord.SetPosition(Value: Single);
 begin
-  if FPosition <> Value then begin
+  if FPosition <> Value then
+  begin
     FPosition := Value;
     Changed(False);
   end;
@@ -1381,7 +1409,8 @@ end;
 
 procedure THeaderRecord.SetText(const Value: string);
 begin
-  if FText <> Value then begin
+  if FText <> Value then
+  begin
     FText := Value;
     Changed(False);
   end;
@@ -1425,7 +1454,8 @@ end;
 
 procedure TFooterRecord.Assign;
 begin
-  if Source is TFooterRecord then begin
+  if Source is TFooterRecord then
+  begin
     Text := TFooterRecord(Source).Text;
     Position := TFooterRecord(Source).Position;
     Alignment := TFooterRecord(Source).Alignment;
@@ -1459,7 +1489,8 @@ end;
 
 procedure TFooterRecord.SetAlignment(Value: TAlignment);
 begin
-  if FAlignment <> Value then begin
+  if FAlignment <> Value then
+  begin
     FAlignment := Value;
     Changed(False);
   end;
@@ -1474,7 +1505,8 @@ end;
 
 procedure TFooterRecord.SetPosition(Value: Single);
 begin
-  if FPosition <> Value then begin
+  if FPosition <> Value then
+  begin
     FPosition := Value;
     Changed(False);
   end;
@@ -1483,7 +1515,8 @@ end;
 
 procedure TFooterRecord.SetText(const Value: string);
 begin
-  if FText <> Value then begin
+  if FText <> Value then
+  begin
     FText := Value;
     Changed(False);
   end;
@@ -1527,7 +1560,8 @@ end;
 
 procedure TColumnInformationRecord.Assign(Source: TPersistent);
 begin
-  if Source is TColumnInformationRecord then begin
+  if Source is TColumnInformationRecord then
+  begin
     Length := TColumnInformationRecord(Source).Length;
     Position := TColumnInformationRecord(Source).Position;
     Alignment := TColumnInformationRecord(Source).Alignment;
@@ -1568,7 +1602,8 @@ end;
 
 procedure TColumnInformationRecord.SetAlignment(Value: TAlignment);
 begin
-  if FAlignment <> Value then begin
+  if FAlignment <> Value then
+  begin
     FAlignment := Value;
     Changed(False);
   end;
@@ -1583,7 +1618,8 @@ end;
 
 procedure TColumnInformationRecord.SetLength(Value: Single);
 begin
-  if FLength <> Value then begin
+  if FLength <> Value then
+  begin
     FLength := Value;
     Changed(False);
   end;
@@ -1592,7 +1628,8 @@ end;
 
 procedure TColumnInformationRecord.SetPosition(Value: Single);
 begin
-  if FPosition <> Value then begin
+  if FPosition <> Value then
+  begin
     FPosition := Value;
     Changed(False);
   end;
@@ -1636,7 +1673,8 @@ end;
 
 procedure TCurrentFontRecord.Assign;
 begin
-  if Source is TCurrentFontRecord then begin
+  if Source is TCurrentFontRecord then
+  begin
     Font := TCurrentFontRecord(Source).Font;
     Exit;
   end;
@@ -1833,7 +1871,8 @@ end;
 
 procedure TPrintObject.DoDestroy;
 begin
-  if Assigned(FOnDestroy) then try
+  if Assigned(FOnDestroy) then
+  try
     FOnDestroy(Self);
   except
     Application.HandleException(Self);
@@ -1866,7 +1905,8 @@ function TPrintObject.Position(X, Y: Single): TPoint;
 begin
   Result.x := MmsToPixelsHorizontal(X);
   Result.y := MmsToPixelsVertical(Y);
-  if not Assigned(OPreview) then begin
+  if not Assigned(OPreview) then
+  begin
     Dec(Result.x, PrinterSettings.Gutter.Left);
     Dec(Result.y, PrinterSettings.Gutter.Top);
   end;
@@ -1899,9 +1939,11 @@ type
     P: string;
   begin
     FillChar(Result, SizeOf(Result), #0);
-    for i := 0 to PrinterSettings.UsedPrinter.Printers.Count - 1 do begin
+    for i := 0 to PrinterSettings.UsedPrinter.Printers.Count - 1 do
+    begin
       p := PrinterSettings.UsedPrinter.Printers[i];
-      if Copy(p, 1, Length(NomCourt)) = NomCourt then begin
+      if Copy(p, 1, Length(NomCourt)) = NomCourt then
+      begin
         for j := 1 to Length(p) do
           Result[j - 1] := p[j];
         Exit;
@@ -1921,7 +1963,8 @@ begin
   Result := False;
   PrinterSettings.UsedPrinter.PrinterIndex := -1;
   PrinterSettings.UsedPrinter.GetPrinter(MyDevice, MyDriver, MyPort, MyHandle);
-  if FileExists(FileName) then begin
+  if FileExists(FileName) then
+  begin
     MyDevMode := GlobalLock(MyHandle);
     try
       AssignFile(f, FileName);
@@ -2043,6 +2086,8 @@ begin
   FFooterCoordinates.Boxed := Boxed;
   FFooterCoordinates.LineWidth := LineWidth;
   FFooterCoordinates.BackColor := BackColor;
+  SetDetailTopBottom(-1, -1);
+  SetTopOfPage;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2059,6 +2104,8 @@ begin
   FFooterCoordinates.Boxed := Boxed;
   FFooterCoordinates.LineWidth := LineWidth;
   FFooterCoordinates.BackColor := BackColor;
+  SetDetailTopBottom(-1, -1);
+  SetTopOfPage;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2116,6 +2163,8 @@ begin
   FHeaderCoordinates.Boxed := Boxed;
   FHeaderCoordinates.LineWidth := LineWidth;
   FHeaderCoordinates.BackColor := BackColor;
+  SetDetailTopBottom(-1, -1);
+  SetTopOfPage;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2132,6 +2181,8 @@ begin
   FHeaderCoordinates.Boxed := Boxed;
   FHeaderCoordinates.LineWidth := LineWidth;
   FHeaderCoordinates.BackColor := BackColor;
+  SetDetailTopBottom(-1, -1);
+  SetTopOfPage;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2173,14 +2224,16 @@ end;
 
 procedure TPrintObject.SetMargins(Top, Bottom, Left, Right: Single); { Défini les marges haute, basse, gauche et droite en MMS ! }
 begin
-  if (Left + Right >= PrinterSettings.WorkSheetWidthMms) then begin
+  if (Left + Right >= PrinterSettings.WorkSheetWidthMms) then
+  begin
     Left := PixelsToMmsHorizontal(PrinterSettings.Gutter.Left);
     Right := PixelsToMmsHorizontal(PrinterSettings.Gutter.Right);
   end;
   if (Left <= 0) then Left := PixelsToMmsHorizontal(PrinterSettings.Gutter.Left);
   if (Right <= 0) then Right := PixelsToMmsHorizontal(PrinterSettings.Gutter.Right);
 
-  if (Top + Bottom >= PrinterSettings.WorkSheetLengthMms) then begin
+  if (Top + Bottom >= PrinterSettings.WorkSheetLengthMms) then
+  begin
     Top := PixelsToMmsVertical(PrinterSettings.Gutter.Top);
     Bottom := PixelsToMmsVertical(PrinterSettings.Gutter.Bottom);
   end;
@@ -2286,7 +2339,8 @@ var
 begin
   l := X;
   t := Y;
-  if Assigned(OPreview) then begin
+  if Assigned(OPreview) then
+  begin
     Inc(l, PrinterSettings.Gutter.Left);
     Inc(t, PrinterSettings.Gutter.Top);
   end;
@@ -2340,19 +2394,23 @@ begin
   if (CurrentTab > 0.0) then Inc(XPixels, MmsToPixelsHorizontal(CurrentTab));
 
   if (Y < 0) and (Y <> -2.0) and (Y <> -1.0) then Exit;
-  if (Y = -1.0) then begin
+  if (Y = -1.0) then
+  begin
     LastYPosition := LastYPosition + Max(GetLineHeightMmsFont(PrevFont), GetLineHeightMms);
     if (FAutoPaging = True) then
       if (LastYPosition > PrinterSettings.WorkSheetLengthMms - Detail.Bottom) then NewPage;
     YPixels := MmsToPixelsVertical(LastYPosition);
   end
-  else begin
-    if (Y = -2.0) then begin
+  else
+  begin
+    if (Y = -2.0) then
+    begin
       if (FAutoPaging = True) then
         if (LastYPosition > PrinterSettings.WorkSheetLengthMms - Detail.Bottom) then NewPage;
       YPixels := MmsToPixelsVertical(LastYPosition);
     end
-    else begin
+    else
+    begin
       YPixels := MmsToPixelsVertical(Y);
       if (YPixels < PrinterSettings.Gutter.Top) then YPixels := PrinterSettings.Gutter.Top;
       if (YPixels > MmsToPixelsVertical(PrinterSettings.WorkSheetLengthMms) - PrinterSettings.Gutter.Bottom) then YPixels := MmsToPixelsVertical(PrinterSettings.WorkSheetLengthMms) - PrinterSettings.Gutter.Bottom;
@@ -2462,7 +2520,8 @@ procedure TPrintObject.WriteRotatedLine(X, Y: Single; Text: string; Font: TFont;
   begin
     l := X;
     t := Y;
-    if Assigned(OPreview) then begin
+    if Assigned(OPreview) then
+    begin
       Inc(l, PrinterSettings.Gutter.Left);
       Inc(t, PrinterSettings.Gutter.Top);
     end;
@@ -2509,19 +2568,23 @@ begin
   if (CurrentTab > 0.0) then Inc(XPixels, MmsToPixelsHorizontal(CurrentTab));
 
   if (Y < 0) and (Y <> -2.0) and (Y <> -1.0) then Exit;
-  if (Y = -1.0) then begin
+  if (Y = -1.0) then
+  begin
     LastYPosition := LastYPosition + Max(GetLineHeightMmsFont(PrevFont), GetLineHeightMms);
     if (FAutoPaging = True) then
       if (LastYPosition > PrinterSettings.WorkSheetLengthMms - Detail.Bottom) then NewPage;
     YPixels := MmsToPixelsVertical(LastYPosition);
   end
-  else begin
-    if (Y = -2.0) then begin
+  else
+  begin
+    if (Y = -2.0) then
+    begin
       if (FAutoPaging = True) then
         if (LastYPosition > PrinterSettings.WorkSheetLengthMms - Detail.Bottom) then NewPage;
       YPixels := MmsToPixelsVertical(LastYPosition);
     end
-    else begin
+    else
+    begin
       YPixels := MmsToPixelsVertical(Y);
       if (YPixels < PrinterSettings.Gutter.Top) then YPixels := PrinterSettings.Gutter.Top;
       if (YPixels > MmsToPixelsVertical(PrinterSettings.WorkSheetLengthMms) - PrinterSettings.Gutter.Bottom) then YPixels := MmsToPixelsVertical(PrinterSettings.WorkSheetLengthMms) - PrinterSettings.Gutter.Bottom;
@@ -2544,7 +2607,8 @@ begin
 
   t := YTop; b := YBottom;
   l := XTop; r := XBottom;
-  if Assigned(OPreview) then begin
+  if Assigned(OPreview) then
+  begin
     Inc(t, PrinterSettings.Gutter.Top);
     Inc(b, PrinterSettings.Gutter.Bottom);
     Inc(l, PrinterSettings.Gutter.Left);
@@ -2568,7 +2632,8 @@ var
   InfoSize, ImageSize: Cardinal;
   Image: TMemoryStream;
 begin
-  if Assigned(OPreview) then begin
+  if Assigned(OPreview) then
+  begin
     Inc(dstX, PrinterSettings.Gutter.Top);
     Inc(dstY, PrinterSettings.Gutter.Left);
   end;
@@ -2578,12 +2643,14 @@ begin
   //    dstWidth := MulDiv(dstWidth, ResolutionEcran, ResolutionPrinterX);
   //    dstHeight := MulDiv(dstHeight, ResolutionEcran, ResolutionPrinterY);
   //  end;
-  if Assigned(OPreview) then begin
+  if Assigned(OPreview) then
+  begin
     Destination.StretchDraw(Rect(dstX, dstY, dstX + dstWidth, dstY + dstHeight), Graphic);
     Exit;
   end;
   // not FPreview:
-  with TBitmap.Create do try
+  with TBitmap.Create do
+  try
     Height := Graphic.Height;
     Width := Graphic.Width;
     Palette := Graphic.Palette;
@@ -2680,7 +2747,8 @@ begin
   TopYPixels := MmsToPixelsVertical(TopY);
   BottomYPixels := MmsToPixelsVertical(BottomY);
 
-  if not Assigned(OPreview) then begin
+  if not Assigned(OPreview) then
+  begin
     Dec(TopXPixels, PrinterSettings.Gutter.Left);
     Dec(BottomXPixels, PrinterSettings.Gutter.Left);
     Dec(TopYPixels, PrinterSettings.Gutter.Top);
@@ -2720,7 +2788,8 @@ procedure TPrintObject.StretchDraw(Left, Top, Width, Height: Single; Graphic: TG
 var
   l, t, w, h: Integer;
 begin
-  if (Width = 0) and (Height = 0) then begin
+  if (Width = 0) and (Height = 0) then
+  begin
     Draw(Top, Left, Graphic);
     Exit;
   end;
@@ -2746,7 +2815,8 @@ begin
   Cancel := False; if Assigned(FBeforeAbort) then FBeforeAbort(Self, Cancel); if Cancel then Exit;
   FPrintingState := psAborting;
   if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
-  if Assigned(OPreview) then begin
+  if Assigned(OPreview) then
+  begin
     OPreview.Abort;
   end;
   FPrintingState := psNone;
@@ -2889,7 +2959,8 @@ function TPrintObject.GetLineText2(var Start: Integer; Line: Word; Len: Single; 
   var
     Temp, P: PChar;
   begin
-    if not Debut in [1..Length(Texte)] then begin
+    if not Debut in [1..Length(Texte)] then
+    begin
       Result := 0; Exit;
     end;
     Temp := @Texte[Debut];
@@ -2916,14 +2987,16 @@ begin
   PosTotal := 1;
   Decalage := 0;
   l := Pos(#10, text);
-  while l > 0 do begin
+  while l > 0 do
+  begin
     if (l <= PosIntPrec + 1) then Inc(Decalage);
     if (l < PosIntPrec + 1) then Dec(PosIntPrec);
     Delete(text, l, 1);
     l := Pos(#10, text);
   end;
   ll := MmsToPixelsHorizontal(Len);
-  for l := 1 to Line do begin
+  for l := 1 to Line do
+  begin
     PosTotal := PosTotal + PosIntPrec;
     PosInt := 0;
     txt := Copy(Text, PosTotal, Length(Text) - PosTotal + 1);
@@ -2935,20 +3008,25 @@ begin
     until (lw)
       or (PosInt = 0)
       or ((PosEnt < PosInt) and (PosEnt > 0));
-    if not lw and (PosEnt < PosInt) and (PosEnt > 0) then begin
+    if not lw and (PosEnt < PosInt) and (PosEnt > 0) then
+    begin
       PosInt := PosEnt + 1;
-      if (l <> Line) then begin
+      if (l <> Line) then
+      begin
         fin := False;
         PosIntPrec := PosEnt;
       end
-      else begin
+      else
+      begin
         fin := True;
         PosIntPrec := PosEnt - 1;
       end;
     end;
-    if not lw and (PosInt = 0) then begin
+    if not lw and (PosInt = 0) then
+    begin
       PosIntPrec := Length(txt);
-      if (l < Line) then begin
+      if (l < Line) then
+      begin
         RestoreCurrentFont;
         Exit;
       end;
@@ -3051,7 +3129,8 @@ var
 begin
   CheckPrinting([psStarting]);
   Cancel := False; if Assigned(FBeforeNewPage) then FBeforeNewPage(Self, Cancel); if Cancel then Exit;
-  if FPrintingState <> psStarting then begin
+  if FPrintingState <> psStarting then
+  begin
     SaveCurrentFont;
     WriteHeader;
     WriteFooter;
@@ -3102,7 +3181,8 @@ begin
   WritePageNumber;
   WriteDateTime;
   if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
-  if Assigned(OPreview)  then begin
+  if Assigned(OPreview) then
+  begin
     OPreview.Quit;
   end
   else
@@ -3156,6 +3236,7 @@ begin
 //    Destination.Font.PixelsPerInch := ResolutionPrinterY;
 //    Destination.Font.Size := LastSize;
 //  end;
+  Self.Font := Font;
   CalculateTextMetrics;
 end;
 {-------------------------------------------------------------------------------}
@@ -3182,7 +3263,8 @@ begin
   StartDateTimePrint := Now;
   Titre := Title;
   CreatePage;
-  if Assigned(OPreview) then begin
+  if Assigned(OPreview) then
+  begin
     OPreview.SetHeightMM(PrinterSettings.WorkSheetLengthMms);
     OPreview.SetWidthMM(PrinterSettings.WorkSheetWidthMms);
     OPreview.SetCaption(Title);
@@ -3255,7 +3337,8 @@ begin
         FooterCoordinates.FLineWidth);
   for i := 0 to FFooter.Count - 1 do
     with FFooter[i] do
-      if (Length(FText) > 0) then begin
+      if (Length(FText) > 0) then
+      begin
         SetFontInformation2(Font);
         ps := FPosition;
         if (ps <> -1) and (ps <> -2) then ps := PrinterSettings.WorkSheetLengthMms - FooterCoordinates.Bottom - ps;
@@ -3297,7 +3380,8 @@ begin
         HeaderCoordinates.FLineWidth);
   for i := 0 to FHeader.Count - 1 do
     with FHeader[i] do
-      if (Length(Text) > 0) then begin
+      if (Length(Text) > 0) then
+      begin
         SetFontInformation2(Font);
         ps := FPosition;
         if (ps <> -1) and (ps <> -2) then ps := ps + HeaderCoordinates.Top;
@@ -3532,10 +3616,13 @@ procedure TPrinterSettings.GetPrinterSettings;
     I: TQRBin;
   begin
     FOutputBin := First;
-    if Supported(dm_defaultsource) then begin
+    if Supported(dm_defaultsource) then
+    begin
       aBin := DevMode^.dmDefaultSource;
-      for I := First to Last do begin
-        if cQRBinTranslate[I] = aBin then begin
+      for I := First to Last do
+      begin
+        if cQRBinTranslate[I] = aBin then
+        begin
           FOutputBin := I;
           Exit;
         end
@@ -3565,12 +3652,14 @@ procedure TPrinterSettings.GetPrinterSettings;
     EscapeFunc: Word;
   begin
     EscapeFunc := GetPrintingOffset;
-    if Escape(UsedPrinter.Handle, QueryEscSupport, SizeOf(EscapeFunc), @EscapeFunc, nil) <> 0 then begin
+    if Escape(UsedPrinter.Handle, QueryEscSupport, SizeOf(EscapeFunc), @EscapeFunc, nil) <> 0 then
+    begin
       Escape(UsedPrinter.Handle, GetPrintingOffset, 0, nil, @PrintOffset);
       FLeftOffset := round(PrintOffset.x / PixelsPerX * 25.4);
       FTopOffset := round(PrintOffset.y / PixelsPerY * 25.4);
     end
-    else begin
+    else
+    begin
       FLeftOffset := 0;
       FTopOffset := 0;
     end;
@@ -3590,10 +3679,13 @@ procedure TPrinterSettings.GetPrinterSettings;
     I: TQRPaperSize;
   begin
     FPaperSize := Default;
-    if Supported(dm_papersize) then begin
+    if Supported(dm_papersize) then
+    begin
       aSize := DevMode^.dmPaperSize;
-      for I := Default to Custom do begin
-        if aSize = cQRPaperTranslate[I] then begin
+      for I := Default to Custom do
+      begin
+        if aSize = cQRPaperTranslate[I] then
+        begin
           FPaperSize := I;
           Exit;
         end
@@ -3607,14 +3699,16 @@ procedure TPrinterSettings.GetPrinterSettings;
     EscapeFunc: Word;
   begin
     EscapeFunc := GetPhysPageSize;
-    if Escape(UsedPrinter.Handle, QueryEscSupport, SizeOf(EscapeFunc), @EscapeFunc, nil) <> 0 then begin
+    if Escape(UsedPrinter.Handle, QueryEscSupport, SizeOf(EscapeFunc), @EscapeFunc, nil) <> 0 then
+    begin
       Escape(UsedPrinter.Handle, GetPhysPageSize, 0, nil, @PSize);
       FPaperWidthMms := PSize.X / PixelsPerX * 25.4;
       FPaperWidthPixels := Owner.MmsToPixelsHorizontal(FPaperWidthMms);
       FPaperLengthMms := PSize.Y / PixelsPerY * 25.4;
       FPaperLengthPixels := Owner.MmsToPixelsVertical(FPaperLengthMms);
     end
-    else begin
+    else
+    begin
       FPaperWidthMms := 0;
       FPaperWidthPixels := Owner.MmsToPixelsHorizontal(FPaperWidthMms);
       FPaperLengthMms := 0;
@@ -3632,9 +3726,12 @@ procedure TPrinterSettings.GetPrinterSettings;
     FillChar(DCResult, SizeOf(DCResult), #0);
     FillChar(FPaperSizes, SizeOf(FPaperSizes), #0);
     Count := winspool.DeviceCapabilities(FDevice, FPort, DC_PAPERS, @DCResult, DevMode);
-    for I := 0 to Count - 1 do begin
-      for J := Default to Custom do begin
-        if cQRPaperTranslate[J] = DCResult[I] then begin
+    for I := 0 to Count - 1 do
+    begin
+      for J := Default to Custom do
+      begin
+        if cQRPaperTranslate[J] = DCResult[I] then
+        begin
           FPaperSizes[J] := true;
           break;
         end
@@ -3651,7 +3748,8 @@ procedure TPrinterSettings.GetPrinterSettings;
   end;
 
 begin
-  if Assigned(UsedPrinter) then begin
+  if Assigned(UsedPrinter) then
+  begin
     GPrinter;
     GPixelsPer;
     GCopies;
@@ -3671,33 +3769,39 @@ procedure TPrinterSettings.ApplySettings;
 begin
   UsedPrinter.GetPrinter(FDevice, FDriver, FPort, DeviceMode);
   DevMode := GlobalLock(DeviceMode);
-  if PaperSize = Custom then begin
+  if PaperSize = Custom then
+  begin
     SetField(dm_paperlength);
     DevMode^.dmPaperLength := Round(PaperLengthMms * 10);
     SetField(dm_paperwidth);
     DevMode^.dmPaperWidth := Round(PaperWidthMms * 10);
   end;
 
-  if Supported(dm_duplex) and FDuplex then begin
+  if Supported(dm_duplex) and FDuplex then
+  begin
     SetField(dm_duplex);
     DevMode^.dmDuplex := dmdup_horizontal;
   end;
-  if Supported(dm_PaperSize) and (PaperSize <> Default) then begin
+  if Supported(dm_PaperSize) and (PaperSize <> Default) then
+  begin
     SetField(dm_papersize);
     DevMode^.dmPaperSize := cQRPaperTranslate[PaperSize];
   end;
 
-  if Supported(dm_copies) then begin
+  if Supported(dm_copies) then
+  begin
     SetField(dm_copies);
     DevMode^.dmCopies := FCopies;
   end;
 
-  if Supported(dm_defaultsource) then begin
+  if Supported(dm_defaultsource) then
+  begin
     SetField(dm_defaultsource);
     DevMode^.dmDefaultSource := (DevMode^.dmDefaultSource and 256) or cQRBinTranslate[OutputBin];
   end;
 
-  if Supported(dm_orientation) then begin
+  if Supported(dm_orientation) then
+  begin
     SetField(dm_orientation);
     if Orientation = poPortrait then
       DevMode^.dmOrientation := dmorient_portrait
@@ -3942,22 +4046,26 @@ var
   I, J: Integer;
   StartPage, EndPage: Integer;
 begin
-  PrintDialog:= TPrintDialog.Create(nil);
+  PrintDialog := TPrintDialog.Create(nil);
   try
     PrintDialog.Copies := 1;
     PrintDialog.Options := PrintDialog.Options + [poPageNums];
     PrintDialog.MinPage := 1;
     PrintDialog.MaxPage := Pages.Count;
 
-    if PrintDialog.Execute then begin
+    if PrintDialog.Execute then
+    begin
       PrinterSettings.UsedPrinter.Title := Titre;
       PrinterPhysicalOffsetX := GetDeviceCaps(PrinterSettings.UsedPrinter.Handle, PHYSICALOFFSETX);
       PrinterPhysicalOffsetY := GetDeviceCaps(PrinterSettings.UsedPrinter.Handle, PHYSICALOFFSETY);
 
-      if PrintDialog.PrintRange = prAllPages then begin
+      if PrintDialog.PrintRange = prAllPages then
+      begin
         StartPage := 0;
         EndPage := Pred(Pages.Count);
-      end else begin
+      end
+      else
+      begin
         StartPage := PrintDialog.FromPage - 1;
         EndPage := PrintDialog.ToPage - 1;
       end;
