@@ -2894,7 +2894,7 @@ end;
 
 function TPrintObject.GetLinesInDetailArea;
 begin
-  Result := MmsToPixelsVertical(Detail.Bottom - Detail.Top) div CalculateLineHeight;
+  Result := MmsToPixelsVertical(Detail.Top + Detail.Height) div CalculateLineHeight;
 end;
 {-------------------------------------------------------------------------------}
 
