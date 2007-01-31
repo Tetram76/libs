@@ -1,5 +1,7 @@
 unit DBEditLabeled;
-{.$D-}
+
+{$D-}
+
 interface
 
 uses
