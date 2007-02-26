@@ -16,6 +16,7 @@ type
     Button1: TButton;
     Button2: TButton;
     Button3: TButton;
+    Label4: TLabel;
     procedure FormShow(Sender: TObject);
     procedure Label1Click(Sender: TObject);
     procedure Label1MouseEnter(Sender: TObject);
@@ -57,6 +58,10 @@ begin
 end;
 
 function CheckVersion(const Titre, Code, CurrentVersion: string; ForceMessage, CanContinue: Boolean): Integer;
+// Valeurs de retour:
+// -1: erreur durant l'interrogation du site
+// 0: pas de mise à jour
+// 1: mise à jour et utilisateur demande à fermer l'appli
 const
   FLAG_ICC_FORCE_CONNECTION = 1;
 var
