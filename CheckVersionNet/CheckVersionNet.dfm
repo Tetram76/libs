@@ -5,7 +5,7 @@ object frmVerifUpgrade: TfrmVerifUpgrade
   BorderStyle = bsDialog
   BorderWidth = 8
   Caption = 'Nouvelle version'
-  ClientHeight = 120
+  ClientHeight = 151
   ClientWidth = 303
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -82,10 +82,21 @@ object frmVerifUpgrade: TfrmVerifUpgrade
     Left = 0
     Top = 79
     Width = 303
-    Height = 41
+    Height = 72
     BevelOuter = bvNone
     Caption = ' '
     TabOrder = 1
+    object Label4: TLabel
+      Left = 0
+      Top = 46
+      Width = 303
+      Height = 26
+      Align = alBottom
+      Caption = 
+        'Cliquez sur "Fermer" pour fermer l'#39'application et proc'#233'der '#224' la ' +
+        'mise '#224' jour manuelle.'
+      WordWrap = True
+    end
     object Button2: TButton
       Left = 62
       Top = 8
@@ -95,6 +106,7 @@ object frmVerifUpgrade: TfrmVerifUpgrade
       Default = True
       ModalResult = 2
       TabOrder = 0
+      WordWrap = True
     end
     object Button3: TButton
       Left = 166
