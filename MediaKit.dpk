@@ -49,12 +49,11 @@ requires
   xmlrtl,
   dsnapcon,
   dsnap,
-  vclx,
-  indy;
+  vclx;
 
 contains
-  HarmFade in 'HarmFade\HARMFADE.PAS',
-  MemoryTable in 'Memory Table\Memorytable.pas',
+  HARMFADE in 'HarmFade\HARMFADE.PAS',
+  Memorytable in 'Memory Table\Memorytable.pas',
   MyBarCode in 'MyBarCode\MyBarCode.pas',
   PrintObject in 'PrintObject\PrintObject.pas',
   ProgressBar in 'ProgressBar\ProgressBar.pas',
@@ -62,19 +61,17 @@ contains
   ScanEdit in 'ScanEdit\ScanEdit.pas',
   RoundButton in 'VDTButton\RoundButton.pas',
   VDTButton in 'VDTButton\VDTButton.pas',
-  verslabp in 'VersLabP\VerslabP.pas',
+  VerslabP in 'VersLabP\VerslabP.pas',
   DBEditLabeled in 'Labeled\DBEditLabeled.pas',
   kbShellNotify in 'ShellNotification\kbShellNotify.pas',
   kbsnPIDL in 'ShellNotification\kbsnPIDL.pas',
   Browss in 'BrowseDirectory\Browss.pas',
-  TrayIcon in 'TrayIcon\TrayIcon.pas',
   Divers in '..\Common\Divers.pas',
-  Handles in 'THandle\HANDLES.PAS',
+  HANDLES in 'THandle\HANDLES.PAS',
   ComboCheck in 'ComboCheck\ComboCheck.pas',
   FormPreviewPrintObject in 'PrintObject\FormPreviewPrintObject.pas' {FormPreview},
   UnrarComp in 'Unrar\UnrarComp.pas',
   UnRAR in 'unrar\UnRAR.pas',
-  idISAPIRunner in 'idrunner\idISAPIRunner.pas',
   CRFurtif in 'VDTButton\CRFurtif.pas';
 
 end.

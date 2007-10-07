@@ -50,6 +50,7 @@ end;
 
 constructor TVDTListView.Create(AOwner: TComponent);
 begin
+  inherited Create(AOwner);
   Anchors := [akLeft, akTop, akRight, akBottom];
   BorderStyle := bsNone;
   ColumnClick := False;
@@ -59,7 +60,6 @@ begin
   ShowColumnHeaders := False;
   SortType := stText;
   ViewStyle := vsReport;
-  inherited Create(AOwner);
   Cursor := crHandPoint;
 end;
 

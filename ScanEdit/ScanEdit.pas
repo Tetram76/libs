@@ -21,7 +21,7 @@ type
     property OnKeyPress: TKeyPressEvent read FOnKeyPress write FOnKeyPress;
   public
     { Déclarations publiques }
-    constructor create(aowner: tcomponent); override;
+    constructor Create(AOwner: TComponent); override;
   published
     { Déclarations publiées }
     property FieldName: string read ffieldname write ffieldname;
@@ -42,7 +42,7 @@ type
     property OnKeyPress: TKeyPressEvent read FOnKeyPress write FOnKeyPress;
   public
     { Déclarations publiques }
-    constructor create(aowner: tcomponent); override;
+    constructor Create(AOwner: TComponent); override;
   published
     { Déclarations publiées }
     property ListView: TListView read FListView write FListView;
@@ -62,7 +62,7 @@ type
     property OnKeyPress: TKeyPressEvent read FOnKeyPress write FOnKeyPress;
   public
     { Déclarations publiques }
-    constructor create(aowner: TComponent); override;
+    constructor Create(AOwner: TComponent); override;
   published
     { Déclarations publiées }
     property TreeView: TTreeView read FTreeView write FTreeView;
