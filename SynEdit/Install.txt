@@ -1,2 +1,2 @@
-- Compiler le paquet SynEdit\packages\SynEdit_R7.dpk
-- Compiler puis Installer le paquet SynEdit\packages\SynEdit_D7.dpk
+- Compiler le paquet SynEdit\packages\SynEdit_R2006.dpk
+- Compiler puis Installer le paquet SynEdit\packages\SynEdit_D2006.dpk
