@@ -1,0 +1,2 @@
+- Ajouter le chemin de bibliothèque 
+    * $(Compos)\TRegExp\Source
