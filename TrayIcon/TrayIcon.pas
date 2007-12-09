@@ -59,14 +59,14 @@ uses Divers;
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TTrayIcon]);
+  RegisterComponents('Tetram', [TTrayIcon]);
 end;
 
 constructor TTrayIcon.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   Self.FMessageWindow := Classes.AllocateHWnd(Self.ClientWndProc);
-  FTrayIconMessage := RegisterWindowMessage(PChar('Medi@KitTrayIconMessage'));
+  FTrayIconMessage := RegisterWindowMessage(PChar('TetramTrayIconMessage'));
   NotifyData.cbSize := SizeOf(NotifyData);
   NotifyData.Wnd := Self.FMessageWindow;
   NotifyData.uFlags := NIF_ICON or NIF_TIP or NIF_MESSAGE;

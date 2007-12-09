@@ -220,7 +220,7 @@ uses Forms;
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TkbShellNotify]);
+  RegisterComponents('Tetram', [TkbShellNotify]);
 end;
 
 {********************************************************

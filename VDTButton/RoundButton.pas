@@ -130,7 +130,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TRoundButton]);
+  RegisterComponents('Tetram', [TRoundButton]);
 end;
 
 procedure DisposeLst(Liste: TList);

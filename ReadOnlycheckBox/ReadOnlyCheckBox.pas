@@ -28,7 +28,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TReadOnlyCheckBox]);
+  RegisterComponents('Tetram', [TReadOnlyCheckBox]);
 end;
 
 procedure TReadOnlyCheckBox.KeyDown(var Key: Word; Shift: TShiftState);

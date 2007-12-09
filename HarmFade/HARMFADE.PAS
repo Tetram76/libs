@@ -735,7 +735,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [THarmFade]);
+  RegisterComponents('Tetram', [THarmFade]);
 end;
 
 end.

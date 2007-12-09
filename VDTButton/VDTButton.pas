@@ -38,7 +38,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TVDTButton, TVDTListView]);
+  RegisterComponents('Tetram', [TVDTButton, TVDTListView]);
 end;
 
 constructor TVDTButton.Create(AOwner: TComponent);

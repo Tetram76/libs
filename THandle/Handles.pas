@@ -89,7 +89,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TStretchHandle]);
+  RegisterComponents('Tetram', [TStretchHandle]);
 end;
 
 constructor TStretchHandle.Create(AOwner: TComponent);

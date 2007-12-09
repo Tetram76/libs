@@ -1,1 +1,2 @@
+- Décompresser FastMM478.zip dans FastMM4
 - Ajouter le chemin de bibliothèque $(Compos)\FastMM\FastMM4

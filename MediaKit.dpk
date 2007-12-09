@@ -35,21 +35,12 @@ package MediaKit;
 
 requires
   vcl,
-  vcljpg,
-  vcldb,
-  bdertl,
-  vclsmp,
   rtl,
-  vclie,
-  websnap,
-  webdsnap,
-  inetdb,
+  vcljpg,
   dbrtl,
-  inet,
-  xmlrtl,
-  dsnapcon,
-  dsnap,
-  vclx;
+  vcldb,
+  VclSmp,
+  bdertl;
 
 contains
   HARMFADE in 'HarmFade\HARMFADE.PAS',

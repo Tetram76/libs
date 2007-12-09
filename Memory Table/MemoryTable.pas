@@ -574,7 +574,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TMemoryTable]);
+  RegisterComponents('Tetram', [TMemoryTable]);
 end;
 
 end.

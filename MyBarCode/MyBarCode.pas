@@ -399,7 +399,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TMyBarCode]);
+  RegisterComponents('Tetram', [TMyBarCode]);
 end;
 
 end.

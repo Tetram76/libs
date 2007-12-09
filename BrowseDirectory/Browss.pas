@@ -583,7 +583,7 @@ end;
 }
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TBrowseDirectoryDlg]);
+  RegisterComponents('Tetram', [TBrowseDirectoryDlg]);
 //  RegisterComponentEditor(TBrowseDirectoryDlg, TBrowseDialogEditor);
 end;
 
