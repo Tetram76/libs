@@ -50,7 +50,6 @@ end;
 
 constructor TVDTListView.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);
   Anchors := [akLeft, akTop, akRight, akBottom];
   BorderStyle := bsNone;
   ColumnClick := False;
@@ -60,6 +59,8 @@ begin
   ShowColumnHeaders := False;
   SortType := stText;
   ViewStyle := vsReport;
+  // si on le place au début, les "personnalisations" prennent le pas sur ce qu'on peut mettre dans l'EDI
+  inherited Create(AOwner);
   Cursor := crHandPoint;
 end;
 
