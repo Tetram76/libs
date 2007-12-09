@@ -75,7 +75,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TScanEditDB, TScanEditLV, TScanEditTV]);
+  RegisterComponents('Tetram', [TScanEditDB, TScanEditLV, TScanEditTV]);
 end;
 
 constructor tscaneditDB.create(aowner: tcomponent);

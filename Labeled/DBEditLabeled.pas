@@ -268,7 +268,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TDateTimePickerLabeled, TDBCheckBoxLabeled, TCheckBoxLabeled, TScanEditLVLabeled, TVDTListViewLabeled, TDBEditLabeled, TDBMemoLabeled, TMemoLabeled, TEditLabeled, TSpinEditLabeled, TMaskEditLabeled, TDBComboBoxLabeled, TListBoxLabeled, TRadioGroupLabeled]);
+  RegisterComponents('Tetram', [TDateTimePickerLabeled, TDBCheckBoxLabeled, TCheckBoxLabeled, TScanEditLVLabeled, TVDTListViewLabeled, TDBEditLabeled, TDBMemoLabeled, TMemoLabeled, TEditLabeled, TSpinEditLabeled, TMaskEditLabeled, TDBComboBoxLabeled, TListBoxLabeled, TRadioGroupLabeled]);
 end;
 
 type

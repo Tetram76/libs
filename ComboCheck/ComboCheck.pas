@@ -252,7 +252,7 @@ type
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TLightComboCheck]);
+  RegisterComponents('Tetram', [TLightComboCheck]);
 end;
 
 {TKPopupMenu}

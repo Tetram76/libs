@@ -184,7 +184,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Teträm Corp', [TUnrar]);
+  RegisterComponents('Tetram', [TUnrar]);
 end;
 
 { TUnrar }

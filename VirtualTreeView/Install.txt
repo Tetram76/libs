@@ -2,4 +2,4 @@
 - Ajouter les chemins de bibliothèque 
     * $(Compos)\VirtualTreeView\VTSourceOnly\Source
     * $(Compos)\VirtualTreeView\VirtualEditTree
-- Installer le paquet VTSourceOnly\Delphi\VirtualTreesD10D.dproj
+- Installer le paquet VTSourceOnly\Delphi\VirtualTreesD7D.dpk

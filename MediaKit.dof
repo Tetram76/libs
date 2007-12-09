@@ -105,6 +105,10 @@ HostApplication=
 Launcher=
 UseLauncher=0
 DebugCWD=
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
 [Version Info]
 IncludeVerInfo=1
 AutoIncBuild=0
@@ -132,21 +136,8 @@ ProductVersion=1.0.0.0
 Comments=
 [Excluded Packages]
 c:\program files\borland\delphi7\Bin\DBWEBXPRT.BPL=Paquet Expert Web Borland
-C:\Program Files\Borland\Delphi7\Bin\dclbde70.bpl=Composants BD BDE Borland
-c:\program files\borland\delphi7\Bin\dclclxdb70.bpl=Composants BD CLX Borland
-c:\program files\borland\delphi7\Bin\dclIntraweb_50_70.bpl=Paquet de conception Intraweb 5.0 pour Delphi 7
-c:\program files\borland\delphi7\Projects\Bpl\IBO40XDT_D7.bpl=IB Objects TDataset
-c:\program files\borland\delphi7\Projects\Bpl\IBO40CDT_D7.bpl=IB Objects Core Components
-c:\program files\borland\delphi7\Projects\Bpl\IBO40EDT_D7.bpl=IB Objects Editors
-c:\program files\borland\delphi7\Projects\Bpl\IBO40FDT_D7.bpl=IB Objects Forms and Dialogs
-c:\program files\borland\delphi7\Projects\Bpl\IBO40WXDT_D7.bpl=IB Objects TDataset Internet Extensions
-c:\program files\borland\delphi7\Projects\Bpl\IBO40WSDT_D7.bpl=IBO 4 Web Snap Extensions
-c:\program files\borland\delphi7\Projects\Bpl\IBO40WDT_D7.bpl=IB Objects Internet Extensions
-c:\program files\borland\delphi7\Projects\Bpl\IBO40VDT_D7.bpl=IB Objects Visual Controls
-c:\program files\borland\delphi7\Projects\Bpl\IBO40TDT_D7.bpl=IB Objects Tools Components
-c:\program files\borland\delphi7\Projects\Bpl\IBOARMURE.bpl=(sans titre)
-C:\programmes\Composant\ArmureD7.bpl=ARMURE
 c:\program files\borland\delphi7\Bin\dcldss70.bpl=Composants Decision Cube Borland
+c:\program files\borland\delphi7\Bin\dclclxdb70.bpl=Composants BD CLX Borland
 [HistoryLists\hlUnitAliases]
 Count=1
 Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;

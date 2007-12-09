@@ -95,7 +95,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TMKProgressBar]);
+  RegisterComponents('Tetram', [TMKProgressBar]);
 end;
 
 function GetColor(BeginColor, EndColor: TColor; N, H: Integer): TColor;

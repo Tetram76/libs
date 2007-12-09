@@ -3434,7 +3434,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Medi@ Kit', [TPrintObject]);
+  RegisterComponents('Tetram', [TPrintObject]);
 end;
 {###############################################################################}
 
