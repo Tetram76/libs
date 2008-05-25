@@ -721,6 +721,8 @@ type
     function GetLinesInDetailAreaFont(Font: TFont): Word;
     function GetLinesLeft: Word;
     function GetLinesLeftFont(Font: TFont): Word;
+    function GetHeightLeftMms: Single;
+    function GetHeightLeftPixel: Integer;
     function GetLinesPerPage: Integer;
     function GetLinesPerPageFont(Font: TFont): Integer;
     function GetLineText1(var Start: Integer; Line: Word; Len: Single; Text: string; FontName: string; FontSize: Word; FontStyle: TFontStyles; var FinTexte: Boolean; TextOptions: TTextOptions = []): string;
@@ -732,7 +734,7 @@ type
     function GetYPosition: Single;
     function MmsToPixelsHorizontal(Milimeters: Single): Integer;
     function MmsToPixelsVertical(Milimeters: Single): Integer;
-    procedure NewLines(Number: Word);
+    procedure NewLines(Number: Single);
     procedure NewLinesFont(Number: Word; Font: TFont);
     procedure NewPage;
     procedure NextLine;
@@ -2466,9 +2468,12 @@ end;
 procedure TPrintObject.WriteLineColumnLeft(ColumnNumber: Word; Y: Single; Text: string);
 begin
   SaveCurrentFont;
-  SetFontInformation2(Columns[ColumnNumber].FFont);
-  WriteLine(Columns[ColumnNumber].FPosition, Y, Text);
-  RestoreCurrentFont;
+  try
+    SetFontInformation2(Columns[ColumnNumber].FFont);
+    WriteLine(Columns[ColumnNumber].FPosition, Y, Text);
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2479,15 +2484,18 @@ var
   Pixels: Integer;
 begin
   SaveCurrentFont;
-  SetFontInformation2(Columns[ColumnNumber].FFont);
-  PixelLength := Destination.TextWidth(Text);
-  Pixels := MmsToPixelsHorizontal(Columns[ColumnNumber].FLength);
-  StartPixel := (Pixels div 2) + MmsToPixelsHorizontal(Columns[ColumnNumber].FPosition) - (PixelLength div 2);
+  try
+    SetFontInformation2(Columns[ColumnNumber].FFont);
+    PixelLength := Destination.TextWidth(Text);
+    Pixels := MmsToPixelsHorizontal(Columns[ColumnNumber].FLength);
+    StartPixel := (Pixels div 2) + MmsToPixelsHorizontal(Columns[ColumnNumber].FPosition) - (PixelLength div 2);
 
-  SetTab(0.0);
-  WriteLine(PixelsToMmsHorizontal(StartPixel), Y, Text);
-  SetTab(CurrentTab);
-  RestoreCurrentFont;
+    SetTab(0.0);
+    WriteLine(PixelsToMmsHorizontal(StartPixel), Y, Text);
+    SetTab(CurrentTab);
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2497,14 +2505,17 @@ var
   StartPixel: Word;
 begin
   SaveCurrentFont;
-  SetFontInformation2(Columns[ColumnNumber].FFont);
-  PixelLength := Destination.TextWidth(Text);
-  StartPixel := MmsToPixelsHorizontal(Columns[ColumnNumber].FPosition + Columns[ColumnNumber].FLength) - PixelLength;
+  try
+    SetFontInformation2(Columns[ColumnNumber].FFont);
+    PixelLength := Destination.TextWidth(Text);
+    StartPixel := MmsToPixelsHorizontal(Columns[ColumnNumber].FPosition + Columns[ColumnNumber].FLength) - PixelLength;
 
-  SetTab(0.0);
-  WriteLine(PixelsToMmsHorizontal(StartPixel), Y, Text);
-  SetTab(CurrentTab);
-  RestoreCurrentFont;
+    SetTab(0.0);
+    WriteLine(PixelsToMmsHorizontal(StartPixel), Y, Text);
+    SetTab(CurrentTab);
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2605,8 +2616,10 @@ begin
   Destination.Pen.Width := LineWidth;
   Destination.Brush.Color := Shading;
 
-  t := YTop; b := YBottom;
-  l := XTop; r := XBottom;
+  t := YTop;
+  b := YBottom;
+  l := XTop;
+  r := XBottom;
   if Assigned(OPreview) then
   begin
     Inc(t, PrinterSettings.Gutter.Top);
@@ -2812,7 +2825,9 @@ var
   Cancel: Boolean;
 begin
   CheckPrinting;
-  Cancel := False; if Assigned(FBeforeAbort) then FBeforeAbort(Self, Cancel); if Cancel then Exit;
+  Cancel := False;
+  if Assigned(FBeforeAbort) then FBeforeAbort(Self, Cancel);
+  if Cancel then Exit;
   FPrintingState := psAborting;
   if Assigned(FPreviewCanvas) then FreeAndNil(FPreviewCanvas);
   if Assigned(OPreview) then
@@ -2849,9 +2864,12 @@ end;
 function TPrintObject.GetColumnsPerLineFont(Font: TFont): Integer;
 begin
   SaveCurrentFont;
-  SetFontInformation2(Font);
-  Result := GetColumnsPerLine;
-  RestoreCurrentFont;
+  try
+    SetFontInformation2(Font);
+    Result := GetColumnsPerLine;
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2886,9 +2904,12 @@ end;
 function TPrintObject.GetLineHeightMmsFont(Font: TFont): Single;
 begin
   SaveCurrentFont;
-  SetFontInformation2(Font);
-  Result := GetLineHeightMms;
-  RestoreCurrentfont;
+  try
+    SetFontInformation2(Font);
+    Result := GetLineHeightMms;
+  finally
+    RestoreCurrentfont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2901,9 +2922,12 @@ end;
 function TPrintObject.GetLinesInDetailAreaFont(Font: TFont): Word;
 begin
   SaveCurrentFont;
-  SetFontInformation2(Font);
-  Result := GetLinesInDetailArea;
-  RestoreCurrentFont;
+  try
+    SetFontInformation2(Font);
+    Result := GetLinesInDetailArea;
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2911,14 +2935,28 @@ function TPrintObject.GetLinesLeft;
 begin
   Result := Trunc((Detail.Top + Detail.Height - LastYPosition) / GetLineHeightMms);
 end;
+
+function TPrintObject.GetHeightLeftMms: Single;
+begin
+  Result := Detail.Top + Detail.Height - LastYPosition;
+end;
+
+function TPrintObject.GetHeightLeftPixel: Integer;
+begin
+  Result := MmsToPixelsVertical(GetHeightLeftMms);
+end;
+
 {-------------------------------------------------------------------------------}
 
 function TPrintObject.GetLinesLeftFont(Font: TFont): Word;
 begin
   SaveCurrentFont;
-  SetFontInformation2(Font);
-  Result := GetLinesLeft;
-  RestoreCurrentFont;
+  try
+    SetFontInformation2(Font);
+    Result := GetLinesLeft;
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2931,9 +2969,12 @@ end;
 function TPrintObject.GetLinesPerPageFont(Font: TFont): Integer;
 begin
   SaveCurrentFont;
-  SetFontInformation2(Font);
-  Result := GetLinesPerPage;
-  RestoreCurrentFont;
+  try
+    SetFontInformation2(Font);
+    Result := GetLinesPerPage;
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -2961,7 +3002,8 @@ function TPrintObject.GetLineText2(var Start: Integer; Line: Word; Len: Single; 
   begin
     if not Debut in [1..Length(Texte)] then
     begin
-      Result := 0; Exit;
+      Result := 0;
+      Exit;
     end;
     Temp := @Texte[Debut];
     P := StrPos(Temp, PChar(AChercher));
@@ -2982,65 +3024,64 @@ begin
   if Start > Length(Text) then Exit;
   if Start < 0 then Start := 1;
   SaveCurrentFont;
-  SetFontInformation2(Font);
-  PosIntPrec := Start - 1;
-  PosTotal := 1;
-  Decalage := 0;
-  l := Pos(#10, text);
-  while l > 0 do
-  begin
-    if (l <= PosIntPrec + 1) then Inc(Decalage);
-    if (l < PosIntPrec + 1) then Dec(PosIntPrec);
-    Delete(text, l, 1);
+  try
+    SetFontInformation2(Font);
+    PosIntPrec := Start - 1;
+    PosTotal := 1;
+    Decalage := 0;
     l := Pos(#10, text);
-  end;
-  ll := MmsToPixelsHorizontal(Len);
-  for l := 1 to Line do
-  begin
-    PosTotal := PosTotal + PosIntPrec;
-    PosInt := 0;
-    txt := Copy(Text, PosTotal, Length(Text) - PosTotal + 1);
-    PosEnt := Pos(#13, txt);
-    repeat
-      PosIntPrec := PosInt;
-      PosInt := PosGetLineText(PosIntPrec + 1, txt, ' ');
-      lw := (Destination.TextWidth(Copy(text, PosTotal, PosInt - 1)) > ll);
-    until (lw)
-      or (PosInt = 0)
-      or ((PosEnt < PosInt) and (PosEnt > 0));
-    if not lw and (PosEnt < PosInt) and (PosEnt > 0) then
+    while l > 0 do
     begin
-      PosInt := PosEnt + 1;
-      if (l <> Line) then
+      if (l <= PosIntPrec + 1) then Inc(Decalage);
+      if (l < PosIntPrec + 1) then Dec(PosIntPrec);
+      Delete(text, l, 1);
+      l := Pos(#10, text);
+    end;
+    ll := MmsToPixelsHorizontal(Len);
+    for l := 1 to Line do
+    begin
+      PosTotal := PosTotal + PosIntPrec;
+      PosInt := 0;
+      txt := Copy(Text, PosTotal, Length(Text) - PosTotal + 1);
+      PosEnt := Pos(#13, txt);
+      repeat
+        PosIntPrec := PosInt;
+        PosInt := PosGetLineText(PosIntPrec + 1, txt, ' ');
+        lw := (Destination.TextWidth(Copy(text, PosTotal, PosInt - 1)) > ll);
+      until (lw)
+        or (PosInt = 0)
+        or ((PosEnt < PosInt) and (PosEnt > 0));
+      if not lw and (PosEnt < PosInt) and (PosEnt > 0) then
       begin
-        fin := False;
-        PosIntPrec := PosEnt;
-      end
-      else
+        PosInt := PosEnt + 1;
+        if (l <> Line) then
+        begin
+          fin := False;
+          PosIntPrec := PosEnt;
+        end
+        else
+        begin
+          fin := True;
+          PosIntPrec := PosEnt - 1;
+        end;
+      end;
+      if not lw and (PosInt = 0) then
       begin
-        fin := True;
-        PosIntPrec := PosEnt - 1;
+        PosIntPrec := Length(txt);
+        if (l < Line) then Exit;
       end;
     end;
-    if not lw and (PosInt = 0) then
-    begin
-      PosIntPrec := Length(txt);
-      if (l < Line) then
-      begin
-        RestoreCurrentFont;
-        Exit;
-      end;
-    end;
-  end;
-  if toExact in TextOptions then
-    while (Destination.TextWidth(Copy(Text, PosTotal, PosIntPrec)) > ll) and (PosIntPrec > 0) do
-      Dec(PosIntPrec);
+    if toExact in TextOptions then
+      while (Destination.TextWidth(Copy(Text, PosTotal, PosIntPrec)) > ll) and (PosIntPrec > 0) do
+        Dec(PosIntPrec);
 
-  Result := Copy(Text, PosTotal, PosIntPrec);
-  Start := PosTotal + PosIntPrec + Decalage;
-  FinTexte := Start >= Length(Text);
-  if fin then Inc(Start);
-  RestoreCurrentFont;
+    Result := Copy(Text, PosTotal, PosIntPrec);
+    Start := PosTotal + PosIntPrec + Decalage;
+    FinTexte := Start >= Length(Text);
+    if fin then Inc(Start);
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -3069,9 +3110,12 @@ end;
 function TPrintObject.GetTextWidthFont(Text: string; Font: TFont): Single;
 begin
   SaveCurrentFont;
-  SetFontInformation2(Font);
-  Result := GetTextWidth(Text);
-  RestoreCurrentFont;
+  try
+    SetFontInformation2(Font);
+    Result := GetTextWidth(Text);
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -3105,21 +3149,21 @@ begin
 end;
 {-------------------------------------------------------------------------------}
 
-procedure TPrintObject.NewLines(Number: Word);
-var
-  i: Word;
+procedure TPrintObject.NewLines(Number: Single);
 begin
-  for i := 1 to Number do
-    NextLine;
+  LastYPosition := LastYPosition + GetLineHeightMms * Number;
 end;
 {-------------------------------------------------------------------------------}
 
 procedure TPrintObject.NewLinesFont(Number: Word; Font: TFont);
 begin
   SaveCurrentFont;
-  SetFontInformation2(Font);
-  NewLines(Number);
-  RestoreCurrentFont;
+  try
+    SetFontInformation2(Font);
+    NewLines(Number);
+  finally
+    RestoreCurrentFont;
+  end;
 end;
 {-------------------------------------------------------------------------------}
 
@@ -3128,16 +3172,21 @@ var
   Cancel: Boolean;
 begin
   CheckPrinting([psStarting]);
-  Cancel := False; if Assigned(FBeforeNewPage) then FBeforeNewPage(Self, Cancel); if Cancel then Exit;
+  Cancel := False;
+  if Assigned(FBeforeNewPage) then FBeforeNewPage(Self, Cancel);
+  if Cancel then Exit;
   if FPrintingState <> psStarting then
   begin
     SaveCurrentFont;
-    WriteHeader;
-    WriteFooter;
-    WritePageNumber;
-    WriteDateTime;
-    CreatePage;
-    RestoreCurrentFont;
+    try
+      WriteHeader;
+      WriteFooter;
+      WritePageNumber;
+      WriteDateTime;
+      CreatePage;
+    finally
+      RestoreCurrentFont;
+    end;
   end;
   LastYPosition := Detail.Top - GetLineHeightMms;
   SetTopOfPage;
@@ -3174,7 +3223,9 @@ var
   Cancel: Boolean;
 begin
   CheckPrinting;
-  Cancel := False; if Assigned(FBeforeQuit) then FBeforeQuit(Self, Cancel); if Cancel then Exit;
+  Cancel := False;
+  if Assigned(FBeforeQuit) then FBeforeQuit(Self, Cancel);
+  if Cancel then Exit;
   FPrintingState := psEnding;
   WriteHeader;
   WriteFooter;
@@ -3258,7 +3309,9 @@ var
   Cancel: Boolean;
 begin
   if Printing then RaiseError(EPrinting);
-  Cancel := False; if Assigned(FBeforeStart) then FBeforeStart(Self, Cancel); if Cancel then Exit;
+  Cancel := False;
+  if Assigned(FBeforeStart) then FBeforeStart(Self, Cancel);
+  if Cancel then Exit;
   FPrintingState := psStarting;
   StartDateTimePrint := Now;
   Titre := Title;
@@ -3286,15 +3339,17 @@ var
   Cancel: Boolean;
 begin
   if not DateTime.Printed then Exit;
-  Cancel := False; if Assigned(FBeforeDateTime) then FBeforeDateTime(Self, Cancel); if Cancel then Exit;
+  Cancel := False;
+  if Assigned(FBeforeDateTime) then FBeforeDateTime(Self, Cancel);
+  if Cancel then Exit;
   if DateTime.DateType = dtCurrent then
     Buffer := FormatDateTime(DateTime.PrintFormat, Now)
   else
     Buffer := FormatDateTime(DateTime.PrintFormat, StartDateTimePrint);
   SaveCurrentFont;
-  SetFontInformation2(DateTime.Font);
   Temp := FAutoPaging;
   try
+    SetFontInformation2(DateTime.Font);
     FAutoPaging := False;
     case DateTime.Alignment of
       taCenter: WriteLineCenter(DateTime.Position, Buffer);
@@ -3304,8 +3359,8 @@ begin
     end;
   finally
     FAutoPaging := Temp;
+    RestoreCurrentFont;
   end;
-  RestoreCurrentFont;
   if Assigned(FAfterDateTime) then FAfterDateTime(Self);
 end;
 {-------------------------------------------------------------------------------}
@@ -3319,39 +3374,44 @@ var
   Cancel: Boolean;
 begin
   if FFooter.Count = 0 then Exit;
-  Cancel := False; if Assigned(FBeforeFooter) then FBeforeFooter(Self, Cancel); if Cancel then Exit;
+  Cancel := False;
+  if Assigned(FBeforeFooter) then FBeforeFooter(Self, Cancel);
+  if Cancel then Exit;
   SavedColor := Destination.Brush.Color;
   SaveCurrentFont;
   Temp := FAutoPaging;
-  FAutoPaging := False;
-  if (FooterCoordinates.Boxed = True) then
-    if (FooterCoordinates.BackColor <> clWhite) then
-      DrawBoxShaded(FooterCoordinates.FLeft, FooterCoordinates.FTop,
-        FooterCoordinates.FLeft + FooterCoordinates.FWidth,
-        FooterCoordinates.FTop + FooterCoordinates.FHeight,
-        FooterCoordinates.FLineWidth, FooterCoordinates.FShading)
-    else
-      DrawBox(FooterCoordinates.FLeft, FooterCoordinates.FTop,
-        FooterCoordinates.FLeft + FooterCoordinates.FWidth,
-        FooterCoordinates.FTop + FooterCoordinates.FHeight,
-        FooterCoordinates.FLineWidth);
-  for i := 0 to FFooter.Count - 1 do
-    with FFooter[i] do
-      if (Length(FText) > 0) then
-      begin
-        SetFontInformation2(Font);
-        ps := FPosition;
-        if (ps <> -1) and (ps <> -2) then ps := PrinterSettings.WorkSheetLengthMms - FooterCoordinates.Bottom - ps;
-        case Alignment of
-          taCenter: WriteLineCenter(ps, FText);
-          taRightJustify: WriteLineRight(ps, FText);
-          else
-            WriteLine(FooterCoordinates.FLeft, ps, FText);
+  try
+    FAutoPaging := False;
+    if (FooterCoordinates.Boxed = True) then
+      if (FooterCoordinates.BackColor <> clWhite) then
+        DrawBoxShaded(FooterCoordinates.FLeft, FooterCoordinates.FTop,
+          FooterCoordinates.FLeft + FooterCoordinates.FWidth,
+          FooterCoordinates.FTop + FooterCoordinates.FHeight,
+          FooterCoordinates.FLineWidth, FooterCoordinates.FShading)
+      else
+        DrawBox(FooterCoordinates.FLeft, FooterCoordinates.FTop,
+          FooterCoordinates.FLeft + FooterCoordinates.FWidth,
+          FooterCoordinates.FTop + FooterCoordinates.FHeight,
+          FooterCoordinates.FLineWidth);
+    for i := 0 to FFooter.Count - 1 do
+      with FFooter[i] do
+        if (Length(FText) > 0) then
+        begin
+          SetFontInformation2(Font);
+          ps := FPosition;
+          if (ps <> -1) and (ps <> -2) then ps := PrinterSettings.WorkSheetLengthMms - FooterCoordinates.Bottom - ps;
+          case Alignment of
+            taCenter: WriteLineCenter(ps, FText);
+            taRightJustify: WriteLineRight(ps, FText);
+            else
+              WriteLine(FooterCoordinates.FLeft, ps, FText);
+          end;
         end;
-      end;
-  Destination.Brush.Color := SavedColor;
-  FAutoPaging := Temp;
-  RestoreCurrentFont;
+  finally
+    Destination.Brush.Color := SavedColor;
+    FAutoPaging := Temp;
+    RestoreCurrentFont;
+  end;
   if Assigned(FAfterFooter) then FAfterFooter(Self);
 end;
 {-------------------------------------------------------------------------------}
@@ -3364,36 +3424,41 @@ var
   Cancel: Boolean;
 begin
   if FHeader.Count = 0 then Exit;
-  Cancel := False; if Assigned(FBeforeHeader) then FBeforeHeader(Self, Cancel); if Cancel then Exit;
+  Cancel := False;
+  if Assigned(FBeforeHeader) then FBeforeHeader(Self, Cancel);
+  if Cancel then Exit;
   SavedColor := Destination.Brush.Color;
   SaveCurrentFont;
-  if (HeaderCoordinates.Boxed = True) then
-    if (HeaderCoordinates.BackColor <> clWhite) then
-      DrawBoxShaded(HeaderCoordinates.FLeft, HeaderCoordinates.FTop,
-        HeaderCoordinates.FLeft + HeaderCoordinates.FWidth,
-        HeaderCoordinates.FTop + HeaderCoordinates.FHeight,
-        HeaderCoordinates.FLineWidth, HeaderCoordinates.FShading)
-    else
-      DrawBox(HeaderCoordinates.FLeft, HeaderCoordinates.FTop,
-        HeaderCoordinates.FLeft + HeaderCoordinates.FWidth,
-        HeaderCoordinates.FTop + HeaderCoordinates.FHeight,
-        HeaderCoordinates.FLineWidth);
-  for i := 0 to FHeader.Count - 1 do
-    with FHeader[i] do
-      if (Length(Text) > 0) then
-      begin
-        SetFontInformation2(Font);
-        ps := FPosition;
-        if (ps <> -1) and (ps <> -2) then ps := ps + HeaderCoordinates.Top;
-        case Alignment of
-          taCenter: WriteLineCenter(ps, FText);
-          taRightJustify: WriteLineRight(ps, FText);
-          else
-            WriteLine(HeaderCoordinates.FLeft, ps, FText);
+  try
+    if (HeaderCoordinates.Boxed = True) then
+      if (HeaderCoordinates.BackColor <> clWhite) then
+        DrawBoxShaded(HeaderCoordinates.FLeft, HeaderCoordinates.FTop,
+          HeaderCoordinates.FLeft + HeaderCoordinates.FWidth,
+          HeaderCoordinates.FTop + HeaderCoordinates.FHeight,
+          HeaderCoordinates.FLineWidth, HeaderCoordinates.FShading)
+      else
+        DrawBox(HeaderCoordinates.FLeft, HeaderCoordinates.FTop,
+          HeaderCoordinates.FLeft + HeaderCoordinates.FWidth,
+          HeaderCoordinates.FTop + HeaderCoordinates.FHeight,
+          HeaderCoordinates.FLineWidth);
+    for i := 0 to FHeader.Count - 1 do
+      with FHeader[i] do
+        if (Length(Text) > 0) then
+        begin
+          SetFontInformation2(Font);
+          ps := FPosition;
+          if (ps <> -1) and (ps <> -2) then ps := ps + HeaderCoordinates.Top;
+          case Alignment of
+            taCenter: WriteLineCenter(ps, FText);
+            taRightJustify: WriteLineRight(ps, FText);
+            else
+              WriteLine(HeaderCoordinates.FLeft, ps, FText);
+          end;
         end;
-      end;
-  Destination.Brush.Color := SavedColor;
-  RestoreCurrentFont;
+  finally
+    Destination.Brush.Color := SavedColor;
+    RestoreCurrentFont;
+  end;
   if Assigned(FAfterHeader) then FAfterHeader(Self);
 end;
 {-------------------------------------------------------------------------------}
@@ -3405,20 +3470,24 @@ var
   Cancel: Boolean;
 begin
   if not PageNumber.Printed then Exit;
-  Cancel := False; if Assigned(FBeforePageNumber) then FBeforePageNumber(Self, Cancel); if Cancel then Exit;
+  Cancel := False;
+  if Assigned(FBeforePageNumber) then FBeforePageNumber(Self, Cancel);
+  if Cancel then Exit;
   Buffer := Format(PageNumber.FText, [GetPageNumber]);
   SaveCurrentFont;
-  SetFontInformation2(PageNumber.Font);
   Temp := FAutoPaging;
-  FAutoPaging := False;
-  case PageNumber.Alignment of
-    taCenter: WriteLineCenter(PageNumber.Position, Buffer);
-    taRightJustify: WriteLineRight(PageNumber.Position, Buffer);
-    else
-      WriteLine(Margin.Left, PageNumber.Position, Buffer);
+  try
+    FAutoPaging := False;
+    SetFontInformation2(PageNumber.Font);
+    case PageNumber.Alignment of
+      taCenter: WriteLineCenter(PageNumber.Position, Buffer);
+      taRightJustify: WriteLineRight(PageNumber.Position, Buffer);
+      else
+        WriteLine(Margin.Left, PageNumber.Position, Buffer);
+    end;
+  finally FAutoPaging := Temp;
+    RestoreCurrentFont;
   end;
-  FAutoPaging := Temp;
-  RestoreCurrentFont;
   if Assigned(FAfterPageNumber) then FAfterPageNumber(Self);
 end;
 {=============== Impression ====================================================}
