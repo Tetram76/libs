@@ -1,2 +1,3 @@
 - décompresser dans le répertoire
 - installer le paquet : Delphi\ZipMasterD7.dpk
+- Ajouter les chemins de bibliothèque $(Compos)\ZipMaster
