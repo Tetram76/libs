@@ -7,29 +7,27 @@ uses
 
 type
   TVDTButton = class(TSpeedButton)
-  private
-    { Déclarations privées }
-  protected
-    { Déclarations protégées }
   public
-    { Déclarations publiques }
     constructor Create(AOwner: TComponent); override;
   published
-    { Déclarations publiées }
+    property Flat default True;
+    property Cursor default crHandpoint;
   end;
 
   TVDTListView = class(TListView)
-  private
-    { Déclarations privées }
-  protected
-    { Déclarations protégées }
   public
-    { Déclarations publiques }
     constructor Create(AOwner: TComponent); override;
   published
-    { Déclarations publiées }
     property SortType default stText;
     property Cursor default crHandPoint;
+    property Anchors stored True nodefault;
+    property BorderStyle default bsNone;
+    property ColumnClick default False;
+    property HideSelection default False;
+    property ReadOnly default True;
+    property RowSelect default False;
+    property ShowColumnHeaders default False;
+    property ViewStyle default vsReport;
   end;
 
 procedure Register;
@@ -50,6 +48,7 @@ end;
 
 constructor TVDTListView.Create(AOwner: TComponent);
 begin
+  inherited Create(AOwner);
   Anchors := [akLeft, akTop, akRight, akBottom];
   BorderStyle := bsNone;
   ColumnClick := False;
@@ -59,8 +58,6 @@ begin
   ShowColumnHeaders := False;
   SortType := stText;
   ViewStyle := vsReport;
-  // si on le place au début, les "personnalisations" prennent le pas sur ce qu'on peut mettre dans l'EDI
-  inherited Create(AOwner);
   Cursor := crHandPoint;
 end;
 

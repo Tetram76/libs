@@ -10,8 +10,7 @@ procedure Collapse(var Chaine: string; const Sep: string = '');
 procedure ShowFormOnTaskBar(Handle: Integer);
 procedure HideFormOnTaskBar(Handle: Integer);
 procedure Swap(a, b: Variant);
-function PosInText(const Debut: Integer; const Texte, AChercher: string): Integer;
-function PosEx(const Substr: array of string; const S: string): Integer;
+function PosMulti(const Substr: array of string; const S: string): Integer;
 function PosInTextEx(const Debut: Integer; const Texte: string; const AChercher: array of string): Integer;
 function IIf(Test: Boolean; Retour_Vrai, Retour_Faux: Variant): Variant;
 function Choose(Val: Integer; const Retour: array of Variant): Variant;
@@ -291,20 +290,7 @@ begin
     GetWindowLong(Handle, GWL_EXSTYLE) or WS_EX_TOOLWINDOW and not WS_EX_APPWINDOW);
 end;
 
-function PosInText(const Debut: Integer; const Texte, AChercher: string): Integer;
-var
-  Temp, P: PChar;
-begin
-  if not Debut in [1..Length(Texte)] then begin
-    Result := 0;
-    Exit;
-  end;
-  Temp := @Texte[Debut];
-  P := StrPos(Temp, PChar(AChercher));
-  Result := IIf(P = nil, 0, Debut + P - Temp);
-end;
-
-function PosEx(const Substr: array of string; const S: string): Integer;
+function PosMulti(const Substr: array of string; const S: string): Integer;
 var
   i, p: Integer;
   trouve: Boolean;
@@ -889,7 +875,7 @@ var
   dump, size: Cardinal;
   buffer: PChar;
   vallen, Translen: Cardinal;
-  VersionPointer, TransBuffer: PChar;
+  VersionPointer, TransBuffer: PByte;
   Temp: Integer;
   CalcLangCharSet: string;
 begin
@@ -900,9 +886,9 @@ begin
     GetFileVersionInfo(PChar(Fichier), 0, size, buffer);
     VerQueryValue(buffer, '\VarFileInfo\Translation', Pointer(TransBuffer), TransLen);
     if TransLen >= 4 then begin
-      StrLCopy(@temp, TransBuffer, 2);
+      StrLCopy(@temp, PAnsiChar(TransBuffer), 2);
       CalcLangCharSet := IntToHex(temp and $FFFF, 4);
-      StrLCopy(@temp, TransBuffer + 2, 2);
+      StrLCopy(@temp, PAnsiChar(TransBuffer) + 2, 2);
       CalcLangCharSet := CalcLangCharSet + IntToHex(temp and $FFFF, 4);
     end
     else
@@ -910,7 +896,7 @@ begin
 
     if VerQueryValue(Buffer, PChar('\StringFileInfo\' + CalcLangCharSet + '\FileVersion'), Pointer(VersionPointer), vallen) then begin
       SetLength(Result, vallen - 1);
-      StrLCopy(PChar(Result), VersionPointer, vallen - 1);
+      StrLCopy(PChar(Result), PChar(VersionPointer), vallen - 1);
     end;
   finally
     StrDispose(Buffer);

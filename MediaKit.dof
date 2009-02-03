@@ -138,12 +138,3 @@ Comments=
 c:\program files\borland\delphi7\Bin\DBWEBXPRT.BPL=Paquet Expert Web Borland
 c:\program files\borland\delphi7\Bin\dcldss70.bpl=Composants Decision Cube Borland
 c:\program files\borland\delphi7\Bin\dclclxdb70.bpl=Composants BD CLX Borland
-[HistoryLists\hlUnitAliases]
-Count=1
-Item0=WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;
-[HistoryLists\hlUnitOutputDirectory]
-Count=1
-Item0=dcu
-[HistoryLists\hlBPLOutput]
-Count=1
-Item0=.
