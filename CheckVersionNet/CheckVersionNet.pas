@@ -46,8 +46,10 @@ var
 begin
   lBuffer := 1024;
   SetLength(Buffer, lBuffer);
-  if not InternetGetLastResponseInfo(ErrorCode, @Buffer, lBuffer) then begin
-    if GetLastError = ERROR_INSUFFICIENT_BUFFER then begin
+  if not InternetGetLastResponseInfo(ErrorCode, @Buffer, lBuffer) then
+  begin
+    if GetLastError = ERROR_INSUFFICIENT_BUFFER then
+    begin
       SetLength(Buffer, lBuffer);
       if not InternetGetLastResponseInfo(ErrorCode, @Buffer, lBuffer) then RaiseLastOsError;
     end
@@ -82,26 +84,30 @@ begin
     hRequest := InternetOpenUrl(hISession, PChar('http://www.tetram.org/lastversion.php?programme=' + Code), nil, 0, INTERNET_FLAG_PRAGMA_NOCACHE or INTERNET_FLAG_RELOAD or INTERNET_FLAG_RESYNCHRONIZE, 0);
     if (hRequest = nil) then RaiseLastInternetError;
     try
+      lBuffer := 1024;
+      SetLength(Buffer, lBuffer);
+      dDummy := 0;
+      if not HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE, Buffer, lBuffer, dDummy) then
+        if GetLastError = ERROR_INSUFFICIENT_BUFFER then
+        begin
+          SetLength(Buffer, lBuffer);
+          if not HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE, Buffer, lBuffer, dDummy) then RaiseLastOsError;
+        end
+        else
+          RaiseLastOsError;
+
       ss := TStringStream.Create('');
       try
-        lBuffer := 1024;
-        SetLength(Buffer, lBuffer);
-        dDummy := 0;
-        if not HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE, Buffer, lBuffer, dDummy) then
-          if GetLastError = ERROR_INSUFFICIENT_BUFFER then begin
-            SetLength(Buffer, lBuffer);
-            if not HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE, Buffer, lBuffer, dDummy) then RaiseLastOsError;
-          end
-          else
-            RaiseLastOsError;
         ss.Size := 0;
         ss.Write(Buffer[0], lBuffer);
-        if ss.DataString <> '200' then begin
+        if ss.DataString <> '200' then
+        begin
           ss.WriteString(#13#10);
           lBuffer := 1024;
           SetLength(Buffer, lBuffer);
           if not HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_TEXT, Buffer, lBuffer, dDummy) then
-            if GetLastError = ERROR_INSUFFICIENT_BUFFER then begin
+            if GetLastError = ERROR_INSUFFICIENT_BUFFER then
+            begin
               SetLength(Buffer, lBuffer);
               if not HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_TEXT, Buffer, lBuffer, dDummy) then RaiseLastOsError;
             end
@@ -110,23 +116,33 @@ begin
           ss.Write(Buffer[0], lBuffer);
           raise EOSError.Create(ss.DataString);
         end;
-
+      finally
+        ss.Free;
+      end;
+      
+      // recréation en prévision du passage à la gestion uniocde:
+      // l'encodage n'est pas le même pour la réponse du serveur (ANSI ou UNICODE) et pour le contenu (UTF8) 
+      ss := TStringStream.Create('');
+      try
         lBuffer := 4096;
         SetLength(Buffer, lBuffer);
         ss.Size := 0;
-        while InternetReadFile(hRequest, Buffer, lBuffer, BytesRead) do begin
+        while InternetReadFile(hRequest, Buffer, lBuffer, BytesRead) do
+        begin
           ss.Write(Buffer[0], BytesRead);
           if BytesRead < lBuffer then Break;
         end;
 
         sIdent := 'Request: ' + Code;
         ss.Position := 0;
-        if ss.ReadString(Length(sIdent)) = sIdent then begin
+        if ss.ReadString(Length(sIdent)) = sIdent then
+        begin
           sl := TStringList.Create;
           try
             sl.NameValueSeparator := ':';
             sl.Text := ss.DataString;
-            if CompareVersionNum(CurrentVersion, Trim(sl.Values['Version'])) < 0 then begin
+            if CompareVersionNum(CurrentVersion, Trim(sl.Values['Version'])) < 0 then
+            begin
               frmVerifUpgrade := TfrmVerifUpgrade.Create(nil);
               try
                 frmVerifUpgrade.Panel1.Visible := not CanContinue;
@@ -146,7 +162,8 @@ begin
             sl.Free;
           end;
         end
-        else begin
+        else
+        begin
           ShowMessage('Impossible d''interroger le site de mise à jour.');
           Result := -1;
         end;
