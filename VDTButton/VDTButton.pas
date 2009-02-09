@@ -11,7 +11,7 @@ type
     constructor Create(AOwner: TComponent); override;
   published
     property Flat default True;
-    property Cursor default crHandpoint;
+    property Cursor default crHandPoint;
   end;
 
   TVDTListView = class(TListView)
@@ -48,7 +48,9 @@ end;
 
 constructor TVDTListView.Create(AOwner: TComponent);
 begin
+  // si on le place au début, les "personnalisations" prennent le pas sur ce qu'on peut mettre dans l'EDI
   inherited Create(AOwner);
+
   Anchors := [akLeft, akTop, akRight, akBottom];
   BorderStyle := bsNone;
   ColumnClick := False;
