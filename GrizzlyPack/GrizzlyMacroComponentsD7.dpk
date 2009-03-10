@@ -1,0 +1,54 @@
+package GrizzlyMacroComponentsD7;
+
+{$R *.res}
+{$R 'Sources\GzFBDataset_Reg.dcr'}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'GrizzlyDev - Composants Complexes'}
+{$IMPLICITBUILD ON}
+
+requires
+  vcl,
+  rtl,
+  designide,
+  dbrtl,
+  bdertl,
+  vcldb,
+  GrizzlyBaseD7,
+  ForeignPackD7,
+  IcsDel70,
+  RxCtl7,
+  vclactnband,
+  vclx,
+  ProfDHTMLEditD7,
+  SynEdit_R7,
+  vcljpg,
+  qrpt70,
+  GrizzlyQRD7,
+  UIBD7R;
+
+contains
+  GzMacroComponents_Reg in 'Sources\GzMacroComponents_Reg.pas',
+  GzHTMLEditor in 'Sources\GzHTMLEditor.pas',
+  GzFBDataset_Reg in 'Sources\GzFBDataset_Reg.pas';
+
+end.

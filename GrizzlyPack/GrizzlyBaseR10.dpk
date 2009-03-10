@@ -1,0 +1,125 @@
+package GrizzlyBaseR10;
+
+{$R *.res}
+{$R 'Sources\HotKeyMgr.dcr'}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  vclx,
+  bdertl,
+  dbrtl,
+  vcldb,
+  UIBD10Win32R;
+
+contains
+  FEditDatabase in 'Sources\FEditDatabase.pas',
+  EasyDB in 'Sources\EasyDB.pas',
+  FFGMDP in 'Sources\FFGMDP.pas',
+  FGDBMDTV in 'Sources\FGDBMDTV.pas',
+  FGEllBtn in 'Sources\FGEllBtn.pas',
+  FiltExpt in 'Sources\FiltExpt.pas',
+  ProgressGauge in 'Sources\ProgressGauge.pas',
+  DBTransfer in 'Sources\DBTransfer.pas',
+  EvalDB in 'Sources\EvalDB.pas',
+  FFGEdUse in 'Sources\FFGEdUse.pas',
+  TetraClasses in 'Sources\TetraClasses.pas',
+  DataSetStreamer in 'Sources\DataSetStreamer.pas',
+  VDataSet in 'Sources\VDataSet.pas',
+  FCrossEditAccessRights in 'Sources\FCrossEditAccessRights.pas',
+  FFGEdMDP in 'Sources\FFGEdMDP.pas',
+  UFGUsers in 'Sources\UFGUsers.pas',
+  FEditElements in 'Sources\FEditElements.pas',
+  FGUsers in 'Sources\FGUsers.pas',
+  FGLDatasetEd in 'Sources\FGLDatasetEd.pas',
+  GzGLMgrDataset in 'Sources\GzGLMgrDataset.pas',
+  FFGGLDTSApp in 'Sources\FFGGLDTSApp.pas',
+  FGGLCtrl in 'Sources\FGGLCtrl.pas',
+  FGLChTb in 'Sources\FGLChTb.pas',
+  FFGGLApp in 'Sources\FFGGLApp.pas',
+  Encrypt in 'Sources\Encrypt.pas',
+  FGFiles in 'Sources\FGFiles.pas',
+  FGUtils in 'Sources\FGUtils.pas',
+  FGSelec in 'Sources\FGSelec.pas',
+  EvalIntf in 'Sources\EvalIntf.pas',
+  EvalClasses in 'Sources\EvalClasses.pas',
+  HintCtrl in 'Sources\HintCtrl.pas',
+  DBNavMgr in 'Sources\DBNavMgr.pas',
+  EvalMath in 'Sources\EvalMath.pas',
+  EvalUser in 'Sources\EvalUser.pas',
+  UFGDBCtl in 'Sources\UFGDBCtl.pas',
+  ADB in 'Sources\ADB.pas',
+  AUtils in 'Sources\AUtils.pas',
+  Parser in 'Sources\Parser.pas',
+  SharedUtils in 'Sources\SharedUtils.pas',
+  FFGGLAdd in 'Sources\FFGGLAdd.pas',
+  GZGLMgr in 'Sources\GZGLMgr.pas',
+  UFGFilt in 'Sources\UFGFilt.pas',
+  UFGGLMgr in 'Sources\UFGGLMgr.pas',
+  UFGUtils in 'Sources\UFGUtils.pas',
+  AClasses in 'Sources\AClasses.pas',
+  AFiles in 'Sources\AFiles.pas',
+  DBNavBtn in 'Sources\DBNavBtn.pas',
+  GzConsts in 'Sources\GzConsts.pas',
+  ASysUtil in 'Sources\ASysUtil.pas',
+  DBFind in 'Sources\DBFind.pas',
+  DBInfo in 'Sources\DBInfo.pas',
+  ExitPnl in 'Sources\ExitPnl.pas',
+  FChAlias in 'Sources\FChAlias.pas',
+  FGAliasD in 'Sources\FGAliasD.pas',
+  FGFindFn in 'Sources\FGFindFn.pas',
+  FGFindSt in 'Sources\FGFindSt.pas',
+  FGLog in 'Sources\FGLog.pas',
+  GzLog in 'Sources\GzLog.pas',
+  FRegApp in 'Sources\FRegApp.pas',
+  DBToTxt in 'Sources\DBToTxt.pas',
+  FGCstFmt in 'Sources\FGCstFmt.pas',
+  FGUseCnt in 'Sources\FGUseCnt.pas',
+  FFGGLEd in 'Sources\FFGGLEd.pas',
+  ShwrMgr in 'Sources\ShwrMgr.pas',
+  StrCont in 'Sources\StrCont.pas',
+  FFieldMapEditor in 'Sources\FFieldMapEditor.pas',
+  FGGLMgr in 'Sources\FGGLMgr.pas',
+  GZDBParams in 'Sources\GZDBParams.pas',
+  GzDBUpdate in 'Sources\GzDBUpdate.pas',
+  GZParams in 'Sources\GZParams.pas',
+  GZRegParams in 'Sources\GZRegParams.pas',
+  ResStore in 'Sources\ResStore.pas',
+  SingInst in 'Sources\SingInst.pas',
+  FGOrdLB in 'Sources\FGOrdLB.pas',
+  FMemoEditDlg in 'Sources\FMemoEditDlg.pas',
+  GzDBStatsUtils in 'Sources\GzDBStatsUtils.pas',
+  GzFileGrid in 'Sources\GzFileGrid.pas',
+  GzFileList in 'Sources\GzFileList.pas',
+  GzMemoDlg in 'Sources\GzMemoDlg.pas',
+  GzSumInfo in 'Sources\GzSumInfo.pas',
+  HotKeyMgr in 'Sources\HotKeyMgr.pas',
+  FEditFileGridCols in 'Sources\FEditFileGridCols.pas',
+  GzGrids in 'Sources\GzGrids.pas',
+  GzFBDataset in 'Sources\GzFBDataset.pas',
+  GzFBFields in 'Sources\GzFBFields.pas';
+
+end.

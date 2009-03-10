@@ -1,0 +1,44 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{fea9ea8e-ec29-4f00-b1b6-4595a05ac39a}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Projects Include="GrizzlyBaseD11.dproj" />
+    <Projects Include="GrizzlyBaseR11.dproj" />
+  </ItemGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Default.Personality</Borland.Personality>
+    <Borland.ProjectType />
+    <BorlandProject>
+  <BorlandProject xmlns=""> <Default.Personality> </Default.Personality> </BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Target Name="GrizzlyBaseR11">
+    <MSBuild Projects="GrizzlyBaseR11.dproj" Targets="" />
+  </Target>
+  <Target Name="GrizzlyBaseR11:Clean">
+    <MSBuild Projects="GrizzlyBaseR11.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="GrizzlyBaseR11:Make">
+    <MSBuild Projects="GrizzlyBaseR11.dproj" Targets="Make" />
+  </Target>
+  <Target Name="GrizzlyBaseD11">
+    <MSBuild Projects="GrizzlyBaseD11.dproj" Targets="" />
+  </Target>
+  <Target Name="GrizzlyBaseD11:Clean">
+    <MSBuild Projects="GrizzlyBaseD11.dproj" Targets="Clean" />
+  </Target>
+  <Target Name="GrizzlyBaseD11:Make">
+    <MSBuild Projects="GrizzlyBaseD11.dproj" Targets="Make" />
+  </Target>
+  <Target Name="Build">
+    <CallTarget Targets="GrizzlyBaseR11;GrizzlyBaseD11" />
+  </Target>
+  <Target Name="Clean">
+    <CallTarget Targets="GrizzlyBaseR11:Clean;GrizzlyBaseD11:Clean" />
+  </Target>
+  <Target Name="Make">
+    <CallTarget Targets="GrizzlyBaseR11:Make;GrizzlyBaseD11:Make" />
+  </Target>
+  <Import Condition="Exists('$(MSBuildBinPath)\Borland.Group.Targets')" Project="$(MSBuildBinPath)\Borland.Group.Targets" />
+</Project>

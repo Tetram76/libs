@@ -1,0 +1,51 @@
+package GrizzlyBaseD6;
+
+{$R *.res}
+{$R 'Sources\GzDBCtrls_Reg.dcr'}
+{$R 'Sources\VDataSet_Reg.dcr'}
+{$R 'Sources\GzGLMgr_Reg.dcr'}
+{$R 'Sources\GzTools_Reg.dcr'}
+{$R 'Sources\GzUsers_Reg.dcr'}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO ON}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'GrizzlyDev - Base'}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  designide,
+  vclx,
+  dbrtl,
+  bdertl,
+  vcldb;
+
+contains
+  FGCPGlyf in 'Sources\FGCPGlyf.pas' {DlgGlyph},
+  FGCPpanl in 'Sources\FGCPPanl.pas' {cpPanelDlg},
+  GzDBCtrls_Reg in 'Sources\GzDBCtrls_Reg.pas',
+  VDataSet_Reg in 'Sources\VDataSet_Reg.pas',
+  GzCtrls_Reg in 'Sources\GzCtrls_Reg.pas',
+  GzGLMgr_Reg in 'Sources\GzGLMgr_Reg.pas',
+  GzTools_Reg in 'Sources\GzTools_Reg.pas',
+  GzUsers_Reg in 'Sources\GzUsers_Reg.pas';
+
+end.
