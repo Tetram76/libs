@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Package Name="JvManagedThreads" Design="-1">
+  <Description>JVCL Managed Threads</Description>
+  <GUID>{33656D5A-B67F-4E6D-B879-6EA71C3C79F4}</GUID>
+  <C5PFlags>-LUvcl50 -LUdclstd50 -LUdsnide50 -LUJclC50(USEJVCL)</C5PFlags>
+  <C6PFlags>-LUDesignIde -LUJcl(USEJVCL)</C6PFlags>
+  <C5Libs/>
+  <C6Libs/>
+  <ImageBase>4D050000</ImageBase>
+  <VersionMajorNumber>3</VersionMajorNumber>
+  <VersionMinorNumber>31</VersionMinorNumber>
+  <ReleaseNumber>0</ReleaseNumber>
+  <BuildNumber>0</BuildNumber>
+  <Requires>
+    <Package Name="JvCore-D" Targets="all" Condition="USEJVCL"/>
+    <Package Name="JvManagedThreads-R" Targets="all" Condition=""/>
+    <Package Name="JCLD50" Targets="Dv5" Condition="USEJVCL"/>
+    <Package Name="JCLC50" Targets="Cv5" Condition="USEJVCL"/>
+    <Package Name="JCL" Targets="allv6up" Condition="USEJVCL"/>
+    <Package Name="vcl50" Targets="allv5" Condition=""/>
+    <Package Name="rtl" Targets="allv6up" Condition=""/>
+    <Package Name="vcl" Targets="allv6up" Condition=""/>
+  </Requires>
+  <Contains>
+    <File Name="..\..\design\JvManagedThreadsReg.pas" Targets="all" Formname="" Condition=""/>
+  </Contains>
+</Package>
