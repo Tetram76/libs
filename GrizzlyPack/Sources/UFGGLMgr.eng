@@ -1,0 +1,29 @@
+unit UFGGLMgr;
+
+interface
+
+Const
+  msgGroups='Groups';
+  msgSearchItem='Search for an item';
+  msgGroupName='Group name';
+  msgOrder='Order';
+  msgItem='Item';
+  msgValue='Value';
+  msgClose='&Close';
+  msgGroupNotExist='Group "%s" doesn''t exist';
+  msgEndUpdateBeforeClose='End your updates before close';
+  msgGroupHasNoName='Group has no name';
+  msgNotAllowedToAddItem='You are not allowed to add items to this group';
+  msgNotAllowedToDeleteItem='You are not allowed to delete items to this group';
+  msgAddItemToGroup='Adding item to group';
+  msgNewItem='New item';
+  msgItemValue='Item value';
+  msgEmptyItem='Item text is empty !';
+  msgOk='OK';
+  msgCancel='Cancel';
+  msgItemNewForAdding='<Add new>';
+  msgUnknownValueQueryAdd='Item "%s" isn''t part of group "%s"'#13#10'Do you wish to add it ?';
+
+implementation
+
+end.

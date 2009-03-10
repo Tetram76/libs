@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{8f4fa170-34fa-41c2-b004-b6a77622512a}</ProjectGuid>
+    <MainSource>GrizzlyBaseR11.dpk</MainSource>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+    <DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\5.0\Bpl\GrizzlyBaseR11.bpl</DCC_DependencyCheckOutputName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Version>7.0</Version>
+    <DCC_DebugInformation>False</DCC_DebugInformation>
+    <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+    <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    <DCC_Define>RELEASE</DCC_Define>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <Version>7.0</Version>
+  </PropertyGroup>
+  <ProjectExtensions>
+    <Borland.Personality>Delphi.Personality</Borland.Personality>
+    <Borland.ProjectType>Package</Borland.ProjectType>
+    <BorlandProject>
+<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">True</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">True</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">1</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">1036</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">GrizzlyBaseR11.dpk</Source></Source></Delphi.Personality></BorlandProject></BorlandProject>
+  </ProjectExtensions>
+  <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
+  <ItemGroup>
+    <DelphiCompile Include="GrizzlyBaseR11.dpk">
+      <MainSource>MainSource</MainSource>
+    </DelphiCompile>
+    <DCCReference Include="bdertl.dcp" />
+    <DCCReference Include="dbrtl.dcp" />
+    <DCCReference Include="JvUIBD11Win32R.dcp" />
+    <DCCReference Include="rtl.dcp" />
+    <DCCReference Include="Sources\AClasses.pas" />
+    <DCCReference Include="Sources\ADB.pas" />
+    <DCCReference Include="Sources\AFiles.pas" />
+    <DCCReference Include="Sources\ASysUtil.pas" />
+    <DCCReference Include="Sources\AUtils.pas" />
+    <DCCReference Include="Sources\DataSetStreamer.pas" />
+    <DCCReference Include="Sources\DBFind.pas" />
+    <DCCReference Include="Sources\DBInfo.pas" />
+    <DCCReference Include="Sources\DBNavBtn.pas" />
+    <DCCReference Include="Sources\DBNavMgr.pas" />
+    <DCCReference Include="Sources\DBToTxt.pas" />
+    <DCCReference Include="Sources\DBTransfer.pas" />
+    <DCCReference Include="Sources\EasyDB.pas" />
+    <DCCReference Include="Sources\Encrypt.pas" />
+    <DCCReference Include="Sources\EvalClasses.pas" />
+    <DCCReference Include="Sources\EvalDB.pas" />
+    <DCCReference Include="Sources\EvalIntf.pas" />
+    <DCCReference Include="Sources\EvalMath.pas" />
+    <DCCReference Include="Sources\EvalUser.pas" />
+    <DCCReference Include="Sources\ExitPnl.pas" />
+    <DCCReference Include="Sources\FChAlias.pas" />
+    <DCCReference Include="Sources\FCrossEditAccessRights.pas" />
+    <DCCReference Include="Sources\FEditDatabase.pas" />
+    <DCCReference Include="Sources\FEditElements.pas" />
+    <DCCReference Include="Sources\FEditFileGridCols.pas" />
+    <DCCReference Include="Sources\FFGEdMDP.pas" />
+    <DCCReference Include="Sources\FFGEdUse.pas" />
+    <DCCReference Include="Sources\FFGGLAdd.pas" />
+    <DCCReference Include="Sources\FFGGLApp.pas" />
+    <DCCReference Include="Sources\FFGGLDTSApp.pas" />
+    <DCCReference Include="Sources\FFGGLEd.pas" />
+    <DCCReference Include="Sources\FFGMDP.pas" />
+    <DCCReference Include="Sources\FFieldMapEditor.pas" />
+    <DCCReference Include="Sources\FGAliasD.pas" />
+    <DCCReference Include="Sources\FGCstFmt.pas" />
+    <DCCReference Include="Sources\FGDBMDTV.pas" />
+    <DCCReference Include="Sources\FGEllBtn.pas" />
+    <DCCReference Include="Sources\FGFiles.pas" />
+    <DCCReference Include="Sources\FGFindFn.pas" />
+    <DCCReference Include="Sources\FGFindSt.pas" />
+    <DCCReference Include="Sources\FGGLCtrl.pas" />
+    <DCCReference Include="Sources\FGGLMgr.pas" />
+    <DCCReference Include="Sources\FGLChTb.pas" />
+    <DCCReference Include="Sources\FGLDatasetEd.pas" />
+    <DCCReference Include="Sources\FGLog.pas" />
+    <DCCReference Include="Sources\FGOrdLB.pas" />
+    <DCCReference Include="Sources\FGSelec.pas" />
+    <DCCReference Include="Sources\FGUseCnt.pas" />
+    <DCCReference Include="Sources\FGUsers.pas" />
+    <DCCReference Include="Sources\FGUtils.pas" />
+    <DCCReference Include="Sources\FiltExpt.pas" />
+    <DCCReference Include="Sources\FMemoEditDlg.pas" />
+    <DCCReference Include="Sources\FRegApp.pas" />
+    <DCCReference Include="Sources\GzClasses.pas" />
+    <DCCReference Include="Sources\GzConsts.pas" />
+    <DCCReference Include="Sources\GZDBParams.pas" />
+    <DCCReference Include="Sources\GzDBStatsUtils.pas" />
+    <DCCReference Include="Sources\GzDBUpdate.pas" />
+    <DCCReference Include="Sources\GzFBDataset.pas" />
+    <DCCReference Include="Sources\GzFBFields.pas" />
+    <DCCReference Include="Sources\GzFileGrid.pas" />
+    <DCCReference Include="Sources\GzFileList.pas" />
+    <DCCReference Include="Sources\GZGLMgr.pas" />
+    <DCCReference Include="Sources\GzGLMgrDataset.pas" />
+    <DCCReference Include="Sources\GzGrids.pas" />
+    <DCCReference Include="Sources\GzLog.pas" />
+    <DCCReference Include="Sources\GzMemoDlg.pas" />
+    <DCCReference Include="Sources\GZParams.pas" />
+    <DCCReference Include="Sources\GZRegParams.pas" />
+    <DCCReference Include="Sources\GzSumInfo.pas" />
+    <DCCReference Include="Sources\HintCtrl.pas" />
+    <DCCReference Include="Sources\HotKeyMgr.pas" />
+    <DCCReference Include="Sources\Parser.pas" />
+    <DCCReference Include="Sources\ProgressGauge.pas" />
+    <DCCReference Include="Sources\ResStore.pas" />
+    <DCCReference Include="Sources\SharedUtils.pas" />
+    <DCCReference Include="Sources\ShwrMgr.pas" />
+    <DCCReference Include="Sources\SingInst.pas" />
+    <DCCReference Include="Sources\StrCont.pas" />
+    <DCCReference Include="Sources\TetraClasses.pas" />
+    <DCCReference Include="Sources\UFGDBCtl.pas" />
+    <DCCReference Include="Sources\UFGFilt.pas" />
+    <DCCReference Include="Sources\UFGGLMgr.pas" />
+    <DCCReference Include="Sources\UFGUsers.pas" />
+    <DCCReference Include="Sources\UFGUtils.pas" />
+    <DCCReference Include="Sources\VDataset.pas" />
+    <DCCReference Include="vcl.dcp" />
+    <DCCReference Include="vcldb.dcp" />
+    <DCCReference Include="vclx.dcp" />
+  </ItemGroup>
+</Project>

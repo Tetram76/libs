@@ -1,0 +1,29 @@
+unit UFGGLMgr;
+
+interface
+
+Const
+  msgGroups='Groupes';
+  msgSearchItem='Rechercher un élément';
+  msgGroupName='Nom de groupe';
+  msgOrder='Ordre';
+  msgItem='Elément';
+  msgValue='Valeur';
+  msgClose='&Fermer';
+  msgGroupNotExist='Le groupe "%s" n''existe pas';
+  msgEndUpdateBeforeClose='Terminez vos modifications avant de quitter';
+  msgGroupHasNoName='Le groupe n''a pas de nom';
+  msgNotAllowedToAddItem='Vous n''avez pas le droit d''ajouter d''éléments à ce groupe';
+  msgNotAllowedToDeleteItem='Vous n''avez pas le droit d''effacer d''éléments à ce groupe';
+  msgAddItemToGroup='Ajout d''un élément pour le groupe';
+  msgNewItem='Nouvel élément';
+  msgItemValue='Valeur de l''élément';
+  msgEmptyItem='L''élément est vide !';
+  msgOk='OK';
+  msgCancel='Annuler';
+  msgItemNewForAdding='<Nouveau>';
+  msgUnknownValueQueryAdd='La valeur "%s" ne figure pas dans le groupe "%s"'#13#10'Souhaitez-vous l''ajouter ?'
+  
+implementation
+
+end.

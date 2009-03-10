@@ -1,0 +1,35 @@
+unit UFGFilt;
+
+interface
+
+const
+  msgAddLine = 'Add line';
+  msgModifyLine = 'Modify';
+  msgDeleteLine = 'Delete';
+  msgApplySelection = 'Apply';
+  msgCancelSelection = 'Cancel';
+  msgAddOpenBracket = 'Add an open bracket';
+  msgAddCloseBracket = 'Add a close bracket';
+  msgRemoveOpenBracket = 'Remove an open bracket';
+  msgRemoveCloseBracket = 'Remove a close bracket';
+  msgNoFilterIn16Bits = 'Filter is not available in 16 bits';
+  msgMoreThan500Records = 'There is more than 500 records, '+#13#10+'the filling of the list might be long.'+#13#10+#13#10+'Do you wish to confirm ?';
+  msgAND = 'AND';
+  msgOR = 'OR';
+  msgEqual = 'equal';
+  msgNotEqual = 'not equal';
+  msgGreater = 'greater than';
+  msgSmaller = 'smaller than';
+  msgGreaterOrEqual = 'greater or equal';
+  msgSmallerOrEqual = 'smaller or equal';
+  msgBeginningWith = 'beginning with';
+  msgFinishingWith = 'finishing with';
+  msgContaining = 'containing';
+  msgIsNull = 'is null';
+  msgIsNotNull = 'is not null';
+  msgMustDefineDataset = 'You must define Dataset property';
+
+
+implementation
+
+end.
