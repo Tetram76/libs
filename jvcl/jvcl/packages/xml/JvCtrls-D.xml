@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Package Name="JvCtrls" Design="-1">
+  <Description>JVCL Visual Controls</Description>
+  <GUID>{F0549080-9D89-4D9C-98E1-34930BCF1360}</GUID>
+  <C5PFlags>-LUvcl50 -LUdclstd50 -LUdsnide50 -LUJclC50</C5PFlags>
+  <C6PFlags>-LUDesignIde -LUdclstd -LUJcl</C6PFlags>
+  <C5Libs/>
+  <C6Libs/>
+  <ImageBase>4A100000</ImageBase>
+  <VersionMajorNumber>3</VersionMajorNumber>
+  <VersionMinorNumber>31</VersionMinorNumber>
+  <ReleaseNumber>0</ReleaseNumber>
+  <BuildNumber>0</BuildNumber>
+  <Requires>
+    <Package Name="JvCore-D" Targets="all" Condition=""/>
+    <Package Name="JvCore-R" Targets="all" Condition=""/>
+    <Package Name="JvCtrls-R" Targets="all" Condition=""/>
+    <Package Name="JvStdCtrls-R" Targets="all" Condition=""/>
+    <Package Name="JvSystem-R" Targets="all" Condition=""/>
+    <Package Name="JclD50" Targets="Dv5" Condition=""/>
+    <Package Name="JclC50" Targets="Cv5" Condition=""/>
+    <Package Name="Jcl" Targets="allv6up" Condition=""/>
+    <Package Name="vcl50" Targets="allv5" Condition=""/>
+    <Package Name="dclstd50" Targets="allv5" Condition=""/>
+    <Package Name="rtl" Targets="allv6up" Condition=""/>
+    <Package Name="designide" Targets="allv6up" Condition=""/>
+    <Package Name="vcl" Targets="allv6up" Condition=""/>
+    <Package Name="vclx" Targets="allv6up" Condition=""/>
+    <Package Name="dclstd" Targets="allv6up" Condition=""/>
+  </Requires>
+  <Contains>
+    <File Name="..\..\design\JvControlActnResForm.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\design\JvHTHintForm.pas" Targets="all" Formname="JvHintEditor" Condition=""/>
+    <File Name="..\..\design\JvScrollMaxEditor.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\design\JvSpeedbarForm.pas" Targets="VCL" Formname="JvSpeedbarEditor" Condition=""/>
+    <File Name="..\..\design\JvBehaviorLabelEditor.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\design\JvCtrlsReg.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\design\JvFooterEditor.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\design\JvGroupHeaderEditor.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\design\JvTransparentButtonEditors.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\design\JvRollOutEditor.pas" Targets="all" Formname="" Condition=""/>
+  </Contains>
+</Package>
