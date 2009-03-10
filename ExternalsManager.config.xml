@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<config>
+  <TempFolder>.\temp</TempFolder>
+  <externals>
+    <external Name="JCL" Kind="ekVendorBranch">
+      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\jvcl\jcl</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/jvcl/jcl</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk/jcl</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>https://jcl.svn.sourceforge.net/svnroot/jcl</BaseURL>
+        <VendorPath>/vendors/jcl</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="JVCL" Kind="ekVendorBranch">
+      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\jvcl\jvcl</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/jvcl/jvcl</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk/jvcl</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>https://jvcl.svn.sourceforge.net/svnroot/jvcl</BaseURL>
+        <VendorPath>/vendors/jvcl</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="UIB" Kind="ekVendorBranch">
+      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\uib</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/uib</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>https://uib.svn.sourceforge.net/svnroot/uib</BaseURL>
+        <VendorPath>/vendors/uib</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="PascalScript" Kind="ekVendorBranch">
+      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\PascalScript</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/PascalScript</RepositoryExternalPath>
+      <DefaultSubfolder>/pascalscript</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>svn://svn.remobjects.com</BaseURL>
+        <VendorPath>/vendors/pascalscript</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="GrizzlyPack" Kind="ekVendorBranch">
+      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\GrizzlyPack</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/GrizzlyPack</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>https://svn.grizzlydev.com/GrizzlyPack</BaseURL>
+        <VendorPath>/vendors/grizzlypack</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+  </externals>
+</config>
