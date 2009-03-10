@@ -1,0 +1,7 @@
+{"database":
+	{"databasename":"C:\\Program Files\\Firebird\\Firebird_2_1\\examples\\empbuild\\EMPLOYEE.FDB",
+	 "username":"SYSDBA",
+	 "password":"masterkey",
+     "characterset": "ISO8859_1",
+     "sqldialect":3}
+}
