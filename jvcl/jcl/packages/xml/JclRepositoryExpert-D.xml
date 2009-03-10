@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Package Name="JclRepositoryExpert" Design="-1">
+  <Description>JCL Package containing repository wizards</Description>
+  <GUID>{2B548932-6654-4E44-8B06-3288D7A884C4}</GUID>
+  <C5PFlags>-LUvcl50 -LUdsnide50 -LUJclC50</C5PFlags>
+  <C6PFlags>-LUdesignide</C6PFlags>
+  <C5Libs/>
+  <C6Libs/>
+  <ImageBase>58100000</ImageBase>
+  <Requires>
+    <Package Name="rtl" Targets="WinLibSuffix" Condition=""/>
+    <Package Name="vcl50" Targets="noLibSuffix" Condition=""/>
+    <Package Name="vcl" Targets="WinLibSuffix" Condition=""/>
+    <Package Name="dsnide50" Targets="noLibSuffix" Condition=""/>
+    <Package Name="designide" Targets="WinLibSuffix" Condition=""/>
+    <Package Name="Jcl-R" Targets="Windows" Condition=""/>
+    <Package Name="JclBaseExpert-D" Targets="Windows" Condition=""/>
+  </Requires>
+  <Contains>
+    <File Name="..\..\experts\repository\JclOtaTemplates.pas" Targets="Windows" Formname="" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaRepositoryUtils.pas" Targets="Windows" Formname="" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaExcDlgRepository.pas" Targets="Windows" Formname="" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaExcDlgWizard.pas" Targets="Windows" Formname="JclOtaExcDlgForm" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaExcDlgFileFrame.pas" Targets="Windows" Formname="JclOtaExcDlgFilePage: TFrame" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaExcDlgFormFrame.pas" Targets="Windows" Formname="JclOtaExcDlgFormPage: TFrame" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaExcDlgSystemFrame.pas" Targets="Windows" Formname="JclOtaExcDlgSystemPage: TFrame" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaExcDlgTraceFrame.pas" Targets="Windows" Formname="JclOtaExcDlgTracePage: TFrame" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaExcDlgIgnoreFrame.pas" Targets="Windows" Formname="JclOtaExcDlgIgnoredPage: TFrame" Condition=""/>
+    <File Name="..\..\experts\repository\JclOtaRepositoryReg.pas" Targets="Windows" Formname="" Condition=""/>
+  </Contains>
+</Package>
