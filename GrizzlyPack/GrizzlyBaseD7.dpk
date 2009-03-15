@@ -40,13 +40,13 @@ requires
   vclactnband,
   bdertl,
   vcldb,
-  vcljpg;
+  vcljpg,
+  VDatasetD7;
 
 contains
   FGCPpanl in 'Sources\FGCPPanl.pas' {cpPanelDlg},
   FGCPGlyf in 'Sources\FGCPGlyf.pas' {DlgGlyph},
   GzDBCtrls_Reg in 'Sources\GzDBCtrls_Reg.pas',
-  VDataSet_Reg in 'Sources\VDataSet_Reg.pas',
   GzCtrls_Reg in 'Sources\GzCtrls_Reg.pas',
   GzUsers_Reg in 'Sources\GzUsers_Reg.pas',
   GzGLMgr_Reg in 'Sources\GzGLMgr_Reg.pas',

@@ -815,7 +815,7 @@ begin
   oForm := TForm.Create(Application);
   oForm.BorderStyle := bsDialog;
   oForm.BorderIcons := oForm.BorderIcons - [biSystemMenu];
-  oForm.FormStyle := fsStayOnTop;
+  oForm.PopupMode := pmAuto;
   oForm.Height := 185;
   oForm.Width := 450;
   oForm.Position := poScreenCenter;

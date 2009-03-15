@@ -1,0 +1,4 @@
+- Compiler le paquet Delphi\PngComponentsD12.dpk
+- Compiler puis Installer le paquet Delphi\PngComponentsD12D.dpk
+- Ajouter le chemin de bibliothèque 
+    * $(Compos)\PngComponents\Source

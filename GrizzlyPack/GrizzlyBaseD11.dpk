@@ -41,7 +41,7 @@ requires
   vclactnband,
   bdertl,
   vcldb,
-  vcljpg,
+  vclimg,
   GrizzlyBaseR11,
   SynEdit_R2007,
   UIBD11Win32R;

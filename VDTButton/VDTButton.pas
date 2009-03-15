@@ -3,10 +3,10 @@ unit VDTButton;
 interface
 
 uses
-  Windows, Forms, Controls, Classes, Buttons, ComCtrls, Graphics, RoundButton;
+  Windows, Forms, Controls, Classes, Buttons, ComCtrls, Graphics, RoundButton, PngSpeedButton;
 
 type
-  TVDTButton = class(TSpeedButton)
+  TVDTButton = class(TPngSpeedButton)
   public
     constructor Create(AOwner: TComponent); override;
   published

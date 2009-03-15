@@ -545,12 +545,10 @@ begin
 end;
 
 procedure TEditLabeled.ValidChar(var Key: Char; PressValid: Boolean = False);
-type
-  SetOfChar = set of Char;
 
-  procedure SameChar(Chars: SetOfChar);
+  procedure SameChar(Chars: TSysCharSet);
   begin
-    if PressValid and (Key in Chars) and (SelStart < Length(Text)) and (Text[SelStart + 1] = Key) then begin
+    if PressValid and CharInSet(Key, Chars) and (SelStart < Length(Text)) and (Text[SelStart + 1] = Key) then begin
       Key := #0;
       SelStart := SelStart + 1;
     end;
@@ -573,7 +571,7 @@ type
   end;
 
 var
-  ValidChars: SetOfChar;
+  ValidChars: TSysCharSet;
 begin
   if (Key <> #8) then
     case FTypeDonnee of
@@ -582,7 +580,7 @@ begin
           ValidChars := ['-', '0'..'9', DecimalSeparator];
           if (FTypeDonnee = tdCurrency) then
             ValidChars := ValidChars + [' ', FCurrencyChar];
-          if not (Key in ValidChars) then Key := #0;
+          if not CharInSet(Key, ValidChars) then Key := #0;
           if PressValid then begin
             if (Key = DecimalSeparator) and Bool(Pos(DecimalSeparator, Text)) and (SelStart < Length(Text)) and (Text[SelStart + 1] <> DecimalSeparator) then Key := #0;
             if (Key = '-') and ((FTypeDonnee = tdNumeric) or (SelStart <> 0)) then Key := #0;
@@ -599,7 +597,7 @@ begin
         end;
       tdEntier, tdEntierSigne: begin
           ValidChars := ['-', '0'..'9'];
-          if not (Key in ValidChars) then Key := #0;
+          if not CharInSet(Key, ValidChars) then Key := #0;
           if PressValid then begin
             if (Key = '-') and ((FTypeDonnee = tdEntier) or (SelStart <> 0)) then Key := #0;
           end
@@ -611,7 +609,7 @@ begin
       tdISBN: begin
           if (Key = 'x') then Key := 'X';
           ValidChars := ['0'..'9', 'X'];
-          if not (Key in ValidChars) then Key := #0;
+          if not CharInSet(Key, ValidChars) then Key := #0;
           if PressValid then begin
             if (Key = 'X') and not (Succ(SelStart) in [13, 10]) then Key := #0;
           end
@@ -621,19 +619,19 @@ begin
           SameChar(['-', 'X']);
         end;
       tdDate: begin
-          if not (Key in [DateSeparator, '0'..'9']) then Key := #0;
+          if not CharInSet(Key, [DateSeparator, '0'..'9']) then Key := #0;
           SameChar([DateSeparator]);
         end;
       tdHeure: begin
-          if not (Key in [TimeSeparator, '0'..'9']) then Key := #0;
+          if not CharInSet(Key, [TimeSeparator, '0'..'9']) then Key := #0;
           SameChar([TimeSeparator]);
         end;
       tdDateHeure: begin
-          if not (Key in [DateSeparator, TimeSeparator, ' ', '0'..'9']) then Key := #0;
+          if not CharInSet(Key, [DateSeparator, TimeSeparator, ' ', '0'..'9']) then Key := #0;
           SameChar([DateSeparator, TimeSeparator, ' ']);
         end;
       tdNomFichier:
-        if Key in ['<', '>', '*', '"', '|', '?'] then Key := #0;
+        if CharInSet(Key, ['<', '>', '*', '"', '|', '?']) then Key := #0;
     end;
   inherited;
 end;
