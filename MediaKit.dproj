@@ -1,102 +1,177 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <ProjectGuid>{0fad8534-4c32-4ccd-a87e-0c0db2f1cb42}</ProjectGuid>
-    <MainSource>MediaKit.dpk</MainSource>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-    <DCC_DependencyCheckOutputName>MediaKit.bpl</DCC_DependencyCheckOutputName>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Version>7.0</Version>
-    <DCC_DebugInformation>False</DCC_DebugInformation>
-    <DCC_WriteableConstants>True</DCC_WriteableConstants>
-    <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
-    <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-    <DCC_DcuOutput>dcu</DCC_DcuOutput>
-    <DCC_ObjOutput>dcu</DCC_ObjOutput>
-    <DCC_HppOutput>dcu</DCC_HppOutput>
-    <DCC_BplOutput>.</DCC_BplOutput>
-    <DCC_Define>RELEASE</DCC_Define>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <Version>7.0</Version>
-    <DCC_WriteableConstants>True</DCC_WriteableConstants>
-    <DCC_DcuOutput>dcu</DCC_DcuOutput>
-    <DCC_ObjOutput>dcu</DCC_ObjOutput>
-    <DCC_HppOutput>dcu</DCC_HppOutput>
-    <DCC_BplOutput>.</DCC_BplOutput>
-  </PropertyGroup>
-  <ProjectExtensions>
-    <Borland.Personality>Delphi.Personality</Borland.Personality>
-    <Borland.ProjectType>Package</Borland.ProjectType>
-    <BorlandProject>
-<BorlandProject><Delphi.Personality><Parameters><Parameters Name="UseLauncher">False</Parameters><Parameters Name="LoadAllSymbols">True</Parameters><Parameters Name="LoadUnspecifiedSymbols">False</Parameters></Parameters><Package_Options><Package_Options Name="ImplicitBuild">False</Package_Options><Package_Options Name="DesigntimeOnly">False</Package_Options><Package_Options Name="RuntimeOnly">False</Package_Options></Package_Options><VersionInfo><VersionInfo Name="IncludeVerInfo">True</VersionInfo><VersionInfo Name="AutoIncBuild">False</VersionInfo><VersionInfo Name="MajorVer">1</VersionInfo><VersionInfo Name="MinorVer">0</VersionInfo><VersionInfo Name="Release">0</VersionInfo><VersionInfo Name="Build">0</VersionInfo><VersionInfo Name="Debug">False</VersionInfo><VersionInfo Name="PreRelease">False</VersionInfo><VersionInfo Name="Special">False</VersionInfo><VersionInfo Name="Private">False</VersionInfo><VersionInfo Name="DLL">False</VersionInfo><VersionInfo Name="Locale">1036</VersionInfo><VersionInfo Name="CodePage">1252</VersionInfo></VersionInfo><VersionInfoKeys><VersionInfoKeys Name="CompanyName"></VersionInfoKeys><VersionInfoKeys Name="FileDescription"></VersionInfoKeys><VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="InternalName"></VersionInfoKeys><VersionInfoKeys Name="LegalCopyright"></VersionInfoKeys><VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys><VersionInfoKeys Name="OriginalFilename"></VersionInfoKeys><VersionInfoKeys Name="ProductName"></VersionInfoKeys><VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys><VersionInfoKeys Name="Comments"></VersionInfoKeys></VersionInfoKeys><Source><Source Name="MainSource">MediaKit.dpk</Source></Source>  <Excluded_Packages>
-      
-      <Excluded_Packages Name="C:\Program Files (x86)\RemObjects Software\Everwood\Bin\RemObjects_Everwood_D11.bpl">RemObjects Everwood for Delphi</Excluded_Packages>
-    </Excluded_Packages>
-  </Delphi.Personality></BorlandProject></BorlandProject>
-  </ProjectExtensions>
-  <Import Project="$(MSBuildBinPath)\Borland.Delphi.Targets" />
-  <ItemGroup>
-    <DelphiCompile Include="MediaKit.dpk">
-      <MainSource>MainSource</MainSource>
-    </DelphiCompile>
-    <DCCReference Include="..\Common\Divers.pas" />
-    <DCCReference Include="..\inet.dcp" />
-    <DCCReference Include="..\inetdb.dcp" />
-    <DCCReference Include="..\MEDIA.KIT\BDThèque\Sources\indy.dcp" />
-    <DCCReference Include="..\r.dcp" />
-    <DCCReference Include="..\rt.dcp" />
-    <DCCReference Include="..\vclie.dcp" />
-    <DCCReference Include="..\xmlrtl.dcp" />
-    <DCCReference Include="bdertl.dcp" />
-    <DCCReference Include="browsedirectory\Browss.dcr" />
-    <DCCReference Include="browsedirectory\Browss.dcr" />
-    <DCCReference Include="BrowseDirectory\Browss.pas" />
-    <DCCReference Include="ComboCheck\ComboCheck.dcr" />
-    <DCCReference Include="ComboCheck\ComboCheck.dcr" />
-    <DCCReference Include="ComboCheck\ComboCheck.pas" />
-    <DCCReference Include="dbrtl.dcp" />
-    <DCCReference Include="HarmFade\HARMFADE.dcr" />
-    <DCCReference Include="HarmFade\HARMFADE.dcr" />
-    <DCCReference Include="HarmFade\HARMFADE.PAS" />
-    <DCCReference Include="idrunner\idISAPIRunner.dcr" />
-    <DCCReference Include="idrunner\idISAPIRunner.dcr" />
-    <DCCReference Include="Labeled\DBEditLabeled.pas" />
-    <DCCReference Include="Memory Table\Memorytable.dcr" />
-    <DCCReference Include="Memory Table\Memorytable.dcr" />
-    <DCCReference Include="Memory Table\Memorytable.pas" />
-    <DCCReference Include="MyBarCode\MyBarCode.pas" />
-    <DCCReference Include="PrintObject\FormPreviewPrintObject.pas">
-      <Form>FormPreview</Form>
-    </DCCReference>
-    <DCCReference Include="PrintObject\PrintObject.dcr" />
-    <DCCReference Include="PrintObject\PrintObject.dcr" />
-    <DCCReference Include="PrintObject\PrintObject.pas" />
-    <DCCReference Include="ProgressBar\ProgressBar.pas" />
-    <DCCReference Include="ReadOnlycheckBox\ReadOnlyCheckBox.pas" />
-    <DCCReference Include="rtl.dcp" />
-    <DCCReference Include="ScanEdit\ScanEdit.pas" />
-    <DCCReference Include="ShellNotification\kbShellNotify.dcr" />
-    <DCCReference Include="ShellNotification\kbShellNotify.dcr" />
-    <DCCReference Include="ShellNotification\kbShellNotify.pas" />
-    <DCCReference Include="ShellNotification\kbsnPIDL.pas" />
-    <DCCReference Include="thandle\HANDLES.dcr" />
-    <DCCReference Include="thandle\HANDLES.dcr" />
-    <DCCReference Include="THandle\HANDLES.PAS" />
-    <DCCReference Include="unrar\UnRAR.pas" />
-    <DCCReference Include="Unrar\UnrarComp.pas" />
-    <DCCReference Include="vcl.dcp" />
-    <DCCReference Include="vcldb.dcp" />
-    <DCCReference Include="vcljpg.dcp" />
-    <DCCReference Include="VclSmp.dcp" />
-    <DCCReference Include="VDTButton\CRFurtif.pas" />
-    <DCCReference Include="VDTButton\RoundButton.pas" />
-    <DCCReference Include="VDTButton\VDTButton.pas" />
-    <DCCReference Include="VersLabP\VerslabP.dcr" />
-    <DCCReference Include="VersLabP\VerslabP.dcr" />
-    <DCCReference Include="VersLabP\VerslabP.pas" />
-  </ItemGroup>
-</Project>
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{0fad8534-4c32-4ccd-a87e-0c0db2f1cb42}</ProjectGuid>
+			<MainSource>MediaKit.dpk</MainSource>
+			<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+			<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+			<DCC_DependencyCheckOutputName>MediaKit.bpl</DCC_DependencyCheckOutputName>
+			<ProjectVersion>12.0</ProjectVersion>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DesignOnlyPackage>false</DesignOnlyPackage>
+			<DCC_WriteableConstants>true</DCC_WriteableConstants>
+			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Bpl\MediaKit.bpl</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<GenDll>true</GenDll>
+			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
+			<GenPackage>true</GenPackage>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_DependencyCheckOutputName>MediaKit.bpl</DCC_DependencyCheckOutputName>
+			<Version>7.0</Version>
+			<DCC_DebugInformation>False</DCC_DebugInformation>
+			<DCC_WriteableConstants>True</DCC_WriteableConstants>
+			<DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DcuOutput>dcu</DCC_DcuOutput>
+			<DCC_ObjOutput>dcu</DCC_ObjOutput>
+			<DCC_HppOutput>dcu</DCC_HppOutput>
+			<DCC_BplOutput>.</DCC_BplOutput>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_DependencyCheckOutputName>MediaKit.bpl</DCC_DependencyCheckOutputName>
+			<Version>7.0</Version>
+			<DCC_WriteableConstants>True</DCC_WriteableConstants>
+			<DCC_DcuOutput>dcu</DCC_DcuOutput>
+			<DCC_ObjOutput>dcu</DCC_ObjOutput>
+			<DCC_HppOutput>dcu</DCC_HppOutput>
+			<DCC_BplOutput>.</DCC_BplOutput>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="MediaKit.dpk">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="HarmFade\HARMFADE.dcr"/>
+			<DCCReference Include="Memory Table\Memorytable.dcr"/>
+			<DCCReference Include="PrintObject\PrintObject.dcr"/>
+			<DCCReference Include="VersLabP\VerslabP.dcr"/>
+			<DCCReference Include="ShellNotification\kbShellNotify.dcr"/>
+			<DCCReference Include="browsedirectory\Browss.dcr"/>
+			<DCCReference Include="thandle\HANDLES.dcr"/>
+			<DCCReference Include="ComboCheck\ComboCheck.dcr"/>
+			<DCCReference Include="idrunner\idISAPIRunner.dcr"/>
+			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="rtl.dcp"/>
+			<DCCReference Include="vclimg.dcp"/>
+			<DCCReference Include="dbrtl.dcp"/>
+			<DCCReference Include="vcldb.dcp"/>
+			<DCCReference Include="bdertl.dcp"/>
+			<DCCReference Include="VclSmp.dcp"/>
+			<DCCReference Include="PngComponentsD12.dcp"/>
+			<DCCReference Include="HarmFade\HARMFADE.PAS"/>
+			<DCCReference Include="MyBarCode\MyBarCode.pas"/>
+			<DCCReference Include="PrintObject\PrintObject.pas"/>
+			<DCCReference Include="ProgressBar\ProgressBar.pas"/>
+			<DCCReference Include="ReadOnlycheckBox\ReadOnlyCheckBox.pas"/>
+			<DCCReference Include="ScanEdit\ScanEdit.pas"/>
+			<DCCReference Include="VDTButton\RoundButton.pas"/>
+			<DCCReference Include="VDTButton\VDTButton.pas"/>
+			<DCCReference Include="VersLabP\VerslabP.pas"/>
+			<DCCReference Include="Labeled\DBEditLabeled.pas"/>
+			<DCCReference Include="ShellNotification\kbShellNotify.pas"/>
+			<DCCReference Include="ShellNotification\kbsnPIDL.pas"/>
+			<DCCReference Include="BrowseDirectory\Browss.pas"/>
+			<DCCReference Include="D:\Common\Divers.pas"/>
+			<DCCReference Include="THandle\HANDLES.PAS"/>
+			<DCCReference Include="ComboCheck\ComboCheck.pas"/>
+			<DCCReference Include="PrintObject\FormPreviewPrintObject.pas">
+				<Form>FormPreview</Form>
+			</DCCReference>
+			<DCCReference Include="Unrar\UnrarComp.pas"/>
+			<DCCReference Include="unrar\UnRAR.pas"/>
+			<DCCReference Include="VDTButton\CRFurtif.pas"/>
+			<DCCReference Include="HarmFade\HARMFADE.dcr"/>
+			<DCCReference Include="Memory Table\Memorytable.dcr"/>
+			<DCCReference Include="PrintObject\PrintObject.dcr"/>
+			<DCCReference Include="VersLabP\VerslabP.dcr"/>
+			<DCCReference Include="ShellNotification\kbShellNotify.dcr"/>
+			<DCCReference Include="browsedirectory\Browss.dcr"/>
+			<DCCReference Include="thandle\HANDLES.dcr"/>
+			<DCCReference Include="ComboCheck\ComboCheck.dcr"/>
+			<DCCReference Include="idrunner\idISAPIRunner.dcr"/>
+			<DCCReference Include="jpg.dcp"/>
+			<DCCReference Include="vcljpg.dcp"/>
+			<DCCReference Include="D:\inet.dcp"/>
+			<DCCReference Include="D:\inetdb.dcp"/>
+			<DCCReference Include="D:\MEDIA.KIT\BDThèque\Sources\indy.dcp"/>
+			<DCCReference Include="D:\r.dcp"/>
+			<DCCReference Include="D:\rt.dcp"/>
+			<DCCReference Include="D:\vclie.dcp"/>
+			<DCCReference Include="D:\xmlrtl.dcp"/>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType>Package</Borland.ProjectType>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">1</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1036</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName"/>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<Source>
+						<Source Name="MainSource">MediaKit.dpk</Source>
+					</Source>
+					<Excluded_Packages>
+						<Excluded_Packages Name="C:\Program Files (x86)\RemObjects Software\Everwood\Bin\RemObjects_Everwood_D11.bpl">RemObjects Everwood for Delphi</Excluded_Packages>
+					</Excluded_Packages>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

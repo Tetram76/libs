@@ -96,6 +96,7 @@ object frmVerifUpgrade: TfrmVerifUpgrade
         'Cliquez sur "Fermer" pour fermer l'#39'application et proc'#233'der '#224' la ' +
         'mise '#224' jour manuelle.'
       WordWrap = True
+      ExplicitWidth = 290
     end
     object Button2: TButton
       Left = 62

@@ -68,7 +68,7 @@ end;
 procedure Register;
 begin
   { Composants }
-  RegisterComponents('Jv UIB', [TGzFBCachedDataSet, TGzFBDataSet]);
+  RegisterComponents('UIB', [TGzFBCachedDataSet, TGzFBDataSet]);
 
   { Editeurs }
   RegisterComponentEditor(TGzFBDataset, TGzFBDatasetEditor);

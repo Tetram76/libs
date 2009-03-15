@@ -776,7 +776,7 @@ var
 begin
   Index := -1;
   Result := False;
-  for i := 0 to SP.ParamCount - 1 do
+  for i := 0 to SP.FieldCount - 1 do
   begin
     if AnsiCompareText(SP.FieldName[i], AName) = 0 then
     begin

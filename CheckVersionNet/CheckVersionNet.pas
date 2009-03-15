@@ -70,7 +70,7 @@ var
   hISession, hRequest: HINTERNET;
   ss: TStringStream;
   BytesRead: Cardinal;
-  Buffer: array of Char;
+  Buffer: TBytes;
   lBuffer, dDummy: Cardinal;
 
   sIdent: string;
@@ -88,15 +88,14 @@ begin
       SetLength(Buffer, lBuffer);
       dDummy := 0;
       if not HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE, Buffer, lBuffer, dDummy) then
-        if GetLastError = ERROR_INSUFFICIENT_BUFFER then
-        begin
+        if GetLastError = ERROR_INSUFFICIENT_BUFFER then begin
           SetLength(Buffer, lBuffer);
           if not HttpQueryInfo(hRequest, HTTP_QUERY_STATUS_CODE, Buffer, lBuffer, dDummy) then RaiseLastOsError;
         end
         else
           RaiseLastOsError;
 
-      ss := TStringStream.Create('');
+      ss := TStringStream.Create('', TEncoding.Unicode);
       try
         ss.Size := 0;
         ss.Write(Buffer[0], lBuffer);
@@ -119,14 +118,11 @@ begin
       finally
         ss.Free;
       end;
-      
-      // recréation en prévision du passage à la gestion uniocde:
-      // l'encodage n'est pas le même pour la réponse du serveur (ANSI ou UNICODE) et pour le contenu (UTF8) 
-      ss := TStringStream.Create('');
+
+      lBuffer := 4096;
+      SetLength(Buffer, lBuffer);
+      ss := TStringStream.Create('', TEncoding.UTF8);
       try
-        lBuffer := 4096;
-        SetLength(Buffer, lBuffer);
-        ss.Size := 0;
         while InternetReadFile(hRequest, Buffer, lBuffer, BytesRead) do
         begin
           ss.Write(Buffer[0], BytesRead);
@@ -141,8 +137,7 @@ begin
           try
             sl.NameValueSeparator := ':';
             sl.Text := ss.DataString;
-            if CompareVersionNum(CurrentVersion, Trim(sl.Values['Version'])) < 0 then
-            begin
+            if CurrentVersion < Trim(sl.Values['Version']) then begin
               frmVerifUpgrade := TfrmVerifUpgrade.Create(nil);
               try
                 frmVerifUpgrade.Panel1.Visible := not CanContinue;
