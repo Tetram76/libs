@@ -25,6 +25,7 @@ package uibD7D;
 {$DESCRIPTION 'UIB - Unified Interbase Components'}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
+{$DEFINE HAVE_SYNEDIT}
 
 requires
   uibD7R,
