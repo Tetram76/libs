@@ -816,10 +816,10 @@ begin T := Self.FIXEDCHAR; end;
 
 
 procedure TSTRINGFIELDVALUE_W(Self: TSTRINGFIELD; const T: String);
-begin Self.VALUE := T; end;
+begin Self.AsString := T; end;
 
 procedure TSTRINGFIELDVALUE_R(Self: TSTRINGFIELD; var T: String);
-begin T := Self.VALUE; end;
+begin T := Self.AsString; end;
 
 procedure TFIELDONVALIDATE_W(Self: TFIELD; const T: TFIELDNOTIFYEVENT);
 begin Self.ONVALIDATE := T; end;
