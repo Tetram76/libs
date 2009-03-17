@@ -105,15 +105,6 @@
 			<DCCReference Include="thandle\HANDLES.dcr"/>
 			<DCCReference Include="ComboCheck\ComboCheck.dcr"/>
 			<DCCReference Include="idrunner\idISAPIRunner.dcr"/>
-			<DCCReference Include="jpg.dcp"/>
-			<DCCReference Include="vcljpg.dcp"/>
-			<DCCReference Include="D:\inet.dcp"/>
-			<DCCReference Include="D:\inetdb.dcp"/>
-			<DCCReference Include="D:\MEDIA.KIT\BDThèque\Sources\indy.dcp"/>
-			<DCCReference Include="D:\r.dcp"/>
-			<DCCReference Include="D:\rt.dcp"/>
-			<DCCReference Include="D:\vclie.dcp"/>
-			<DCCReference Include="D:\xmlrtl.dcp"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

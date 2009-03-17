@@ -73,7 +73,7 @@ var
 begin
   inherited Paint;
 
-  if FPngImage <> nil then
+  if (FPngImage <> nil) and (not FPngImage.Empty) then
   begin
     //Calculate the position of the PNG glyph
     CalcButtonLayout(Canvas, FPngImage, ClientRect, FState = bsDown, Down, Caption, Layout, Margin, Spacing, GlyphPos, TextPos, DrawTextBiDiModeFlags(0));
@@ -100,18 +100,20 @@ end;
 procedure TPngSpeedButton.SetPngImage(const Value: TPNGImage);
 begin
   //This is all neccesary, because you can't assign a nil to a TPNGImage
-  if Value = nil then
+  if (Value = nil) or (Value.Empty) then
   begin
     FPngImage.Free;
     FPngImage := TPNGImage.Create;
   end
   else
+  begin
     FPngImage.Assign(Value);
 
-  //To work around the gamma-problem
-  with FPngImage do
-    if Header.ColorType in [COLOR_RGB, COLOR_RGBALPHA, COLOR_PALETTE] then
-      Chunks.RemoveChunk(Chunks.ItemFromClass(TChunkgAMA));
+    //To work around the gamma-problem
+    with FPngImage do
+      if Header.ColorType in [COLOR_RGB, COLOR_RGBALPHA, COLOR_PALETTE] then
+        Chunks.RemoveChunk(Chunks.ItemFromClass(TChunkgAMA));
+  end;
 
   FImageFromAction := False;
   CreatePngGlyph;
