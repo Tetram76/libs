@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-03-15 12:25:33 +0100 (dim., 15 mars 2009)                          $ }
+{ Revision:      $Rev:: 2687                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -125,7 +125,7 @@ type
     class function CorSystemDirectory: WideString;
     class function CorVersion: WideString;
     class function CorRequiredVersion: WideString;
-    class procedure GetClrVersions(VersionNames: TWideStrings); overload;
+    class procedure GetClrVersions(VersionNames: TJclWideStrings); overload;
     {$IFNDEF SUPPORTS_UNICODE}
     class procedure GetClrVersions(VersionNames: TStrings); overload;
     {$ENDIF ~SUPPORTS_UNICODE}
@@ -346,8 +346,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDotNet.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 2687 $';
+    Date: '$Date: 2009-03-15 12:25:33 +0100 (dim., 15 mars 2009) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}

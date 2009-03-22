@@ -40,9 +40,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-03-16 17:50:01 +0100 (lun., 16 mars 2009)                          $ }
+{ Revision:      $Rev:: 2692                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -573,8 +573,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysUtils.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
+    Revision: '$Revision: 2692 $';
+    Date: '$Date: 2009-03-16 17:50:01 +0100 (lun., 16 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -2475,7 +2475,7 @@ begin
   SetLength(Result, OutPos - 1);
 end;
 
-function InternalExecute(const CommandLine: string; var Output: string; OutputLineCallback: TTextHandler;
+function InternalExecute(CommandLine: string; var Output: string; OutputLineCallback: TTextHandler;
   RawOutput: Boolean; AbortPtr: PBoolean): Cardinal;
 const
   BufferSize = 255;
@@ -2540,6 +2540,7 @@ begin
   StartupInfo.hStdInput := GetStdHandle(STD_INPUT_HANDLE);
   StartupInfo.hStdOutput := PipeWrite;
   StartupInfo.hStdError := PipeWrite;
+  UniqueString(CommandLine); // CommandLine must be in a writable memory block
   if CreateProcess(nil, PChar(CommandLine), nil, nil, True, NORMAL_PRIORITY_CLASS,
     nil, nil, StartupInfo, ProcessInfo) then
   begin

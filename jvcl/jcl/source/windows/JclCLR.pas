@@ -27,13 +27,13 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                       $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-03-14 13:28:46 +0100 (sam., 14 mars 2009)                        $ }
+{ Revision:      $Rev:: 2683                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-// Last modified: $Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $
+// Last modified: $Date: 2009-03-14 13:28:46 +0100 (sam., 14 mars 2009) $
 
 unit JclCLR;
 
@@ -189,7 +189,7 @@ type
 
   TJclClrStringsStream = class(TJclClrStream)
   private
-    FStrings: TAnsiStringList;
+    FStrings: TStringList;
     function GetString(const Idx: Integer): WideString;
     function GetOffset(const Idx: Integer): DWORD;
     function GetStringCount: Integer;
@@ -495,8 +495,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclCLR.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 2683 $';
+    Date: '$Date: 2009-03-14 13:28:46 +0100 (sam., 14 mars 2009) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -629,7 +629,7 @@ begin
   while off < Size do
   begin
     if pch^ <> #0 then
-      FStrings.AddObject(string(TUTF8String(pch)), TObject(off)); // OF AnsiString to TStrings
+      FStrings.AddObject(string(TUTF8String(pch)), TObject(off));
     pch := pch + StrLen(pch) + 1;
     off := DWORD_PTR(pch - Data);
   end;
@@ -643,7 +643,7 @@ end;
 
 function TJclClrStringsStream.GetString(const Idx: Integer): WideString;
 begin
-  Result := UTF8ToWideString(TUTF8String(FStrings.Strings[Idx])); // OF TStrings to AnsiString
+  Result := UTF8ToWideString(TUTF8String(FStrings.Strings[Idx]));
 end;
 
 function TJclClrStringsStream.GetOffset(const Idx: Integer): DWORD;

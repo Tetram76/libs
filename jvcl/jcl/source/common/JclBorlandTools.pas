@@ -47,9 +47,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                       $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-03-16 18:28:54 +0100 (lun., 16 mars 2009)                         $ }
+{ Revision:      $Rev:: 2693                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -913,8 +913,8 @@ procedure GetBPKFileInfo(const BPKFileName: string; out RunOnly: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBorlandTools.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
+    Revision: '$Revision: 2693 $';
+    Date: '$Date: 2009-03-16 18:28:54 +0100 (lun., 16 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -5379,7 +5379,7 @@ end;
 
 procedure TJclBDSInstallation.SetMsBuildEnvOption(const OptionName, Value: string);
 var
-  EnvOptionsFileName: string;
+  EnvOptionsFileName, BakEnvOptionsFileName: string;
   EnvOptionsFile: TJclSimpleXML;
   PropertyGroupNode, PropertyNode: TJclSimpleXMLElem;
 begin
@@ -5394,7 +5394,18 @@ begin
 
     PropertyNode.Value := Value;
 
-    EnvOptionsFile.SaveToFile(EnvOptionsFileName);
+    { Do not overwrite the original file if something goes wrong }
+    BakEnvOptionsFileName := EnvOptionsFileName + '.bak';
+    DeleteFile(BakEnvOptionsFileName);
+    RenameFile(EnvOptionsFileName, BakEnvOptionsFileName);
+    try
+      EnvOptionsFile.SaveToFile(EnvOptionsFileName);
+      DeleteFile(BakEnvOptionsFileName);
+    except
+      DeleteFile(EnvOptionsFileName);
+      RenameFile(BakEnvOptionsFileName, EnvOptionsFileName);
+      raise;
+    end;
   finally
     EnvOptionsFile.Free;
   end;

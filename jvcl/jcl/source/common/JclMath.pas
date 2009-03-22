@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                       $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-03-13 10:22:23 +0100 (ven., 13 mars 2009)                          $ }
+{ Revision:      $Rev:: 2678                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -770,8 +770,8 @@ function CscH(const Z: TRectComplex): TRectComplex; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclMath.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
+    Revision: '$Revision: 2678 $';
+    Date: '$Date: 2009-03-13 10:22:23 +0100 (ven., 13 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -4028,7 +4028,7 @@ function Crc32_P(const Crc32Table: TCrc32Table; X: PJclByteArray; N: Integer; Cr
 var
   I: Integer;
 begin
-  Result := Crc16DefaultStart;
+  Result := Crc32DefaultStart;
   for I := 0 to N - 1 do // The CRC Bytes are located at the end of the information
     // a 32 bit value shr 24 is a Byte, explictit type conversion to Byte adds an ASM instruction
     Result := Crc32Table[Result shr (CRC32Bits-8)] xor (Result shl 8) xor X[I];

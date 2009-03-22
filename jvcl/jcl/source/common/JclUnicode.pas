@@ -35,8 +35,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                      $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-03-21 20:11:54 +0100 (sam., 21 mars 2009)                          $ }
+{ Revision:      $Rev:: 2697                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -202,7 +202,7 @@ const
   WideFormFeed = WideChar(#12);
   WideCR = WideChar(#13);
   WideCarriageReturn = WideChar(#13);
-  WideCRLF: WideString = #13#10;
+  WideCRLF = WideString(#13#10);
   WideLineSeparator = WideChar($2028);
   WideParagraphSeparator = WideChar($2029);
 
@@ -1270,8 +1270,8 @@ procedure LoadCompositionData;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnicode.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
+    Revision: '$Revision: 2697 $';
+    Date: '$Date: 2009-03-21 20:11:54 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
