@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvEditor.pas 12097 2008-12-22 16:24:31Z ahuser $
+// $Id: JvEditor.pas 12243 2009-03-20 19:35:51Z ahuser $
 
 unit JvEditor;
 
@@ -194,6 +194,7 @@ type
     property OnKeyPress;
     property OnKeyUp;
     property OnChange;
+    property OnCaretChanged;
     property OnSelectionChange;
     property OnMouseDown;
     property OnMouseMove;
@@ -385,8 +386,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditor.pas $';
-    Revision: '$Revision: 12097 $';
-    Date: '$Date: 2008-12-22 17:24:31 +0100 (lun., 22 déc. 2008) $';
+    Revision: '$Revision: 12243 $';
+    Date: '$Date: 2009-03-20 20:35:51 +0100 (ven., 20 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

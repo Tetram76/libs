@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditor.pas 12207 2009-02-09 23:38:48Z jfudickar $
+// $Id: JvPropertyStoreEditor.pas 12251 2009-03-21 17:45:12Z jfudickar $
 unit JvPropertyStoreEditor;
 
 {$I jvcl.inc}
@@ -112,6 +112,44 @@ type
     property InspectedObjectListEditorHandler: IJvPropertyListEditorHandler read
         FInspectedObjectListEditorHandlerIntf;
     property PropertyStore: TComponent read FPropertyStore write SetPropertyStore;
+  published
+    property Align;
+    property Anchors;
+    property AutoSize;
+    property BiDiMode;
+    property UseDockManager default True;
+    property DockSite;
+    property DragCursor;
+    property DragKind;
+    property ParentBiDiMode;
+    property OnCanResize;
+    property OnDockDrop;
+    property OnDockOver;
+    property OnEndDock;
+    property OnGetSiteInfo;
+    property OnStartDock;
+    property OnUnDock;
+    property BevelInner;
+    property BevelOuter;
+    property BevelWidth;
+    property BorderWidth;
+    property Color;
+    property Constraints;
+    property Enabled;
+    property Font;
+    {$IFDEF JVCLThemesEnabled}
+    property ParentBackground default True;
+    {$ENDIF JVCLThemesEnabled}
+    property ParentColor;
+    property ParentFont;
+    property ParentShowHint;
+    property ShowHint;
+    property TabOrder;
+    property TabStop;
+    property Visible;
+    property OnEnter;
+    property OnExit;
+    property OnResize;
   end;
 
 type
@@ -138,8 +176,8 @@ function EditPropertyStore(PropertyStore: TJvCustomPropertyStore): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditor.pas $';
-    Revision: '$Revision: 12207 $';
-    Date: '$Date: 2009-02-10 00:38:48 +0100 (mar., 10 févr. 2009) $';
+    Revision: '$Revision: 12251 $';
+    Date: '$Date: 2009-03-21 18:45:12 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

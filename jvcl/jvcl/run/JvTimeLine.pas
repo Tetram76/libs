@@ -36,7 +36,7 @@ Known Issues:
     * PosAtDate is slightly better
     * FirstVisibleDate always start at day 1 of month
 -----------------------------------------------------------------------------}
-// $Id: JvTimeLine.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvTimeLine.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 unit JvTimeLine;
 
@@ -496,8 +496,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimeLine.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -509,7 +509,7 @@ uses
   {$IFDEF COMPILER6_UP}
   DateUtils,
   {$ENDIF COMPILER6_UP}
-  JvJVCLUtils, JvThemes;
+  JvJCLUtils, JvJVCLUtils, JvThemes;
 
 {$R JvTimeLine.res}
 
@@ -592,7 +592,7 @@ end;
 
 procedure TJvTimeItem.Remove;
 begin
-  InvalidateRect(FParent.FTimeLine.Handle, @FRect, True);
+  Windows.InvalidateRect(FParent.FTimeLine.Handle, @FRect, True);
   // (rom) suspicious
   inherited Free;
 end;
@@ -616,9 +616,9 @@ end;
 
 procedure TJvTimeItem.Update;
 begin
-  InvalidateRect(FParent.FTimeLine.Handle, @FRect, True);
+  Windows.InvalidateRect(FParent.FTimeLine.Handle, @FRect, True);
   FParent.FTimeLine.UpdateItem(Index, FParent.FTimeLine.Canvas);
-  InvalidateRect(FParent.FTimeLine.Handle, @FRect, True);
+  Windows.InvalidateRect(FParent.FTimeLine.Handle, @FRect, True);
 end;
 
 function TJvTimeItem.GetDisplayName: string;
@@ -2049,7 +2049,7 @@ begin
         ACanvas.Rectangle(R);
         R.Left := R.Left + 2;
         SetBkMode(ACanvas.Handle, TRANSPARENT);
-        DrawTextEx(ACanvas.Handle, PChar(Item.Caption), Length(Item.Caption), R,
+        Windows.DrawTextEx(ACanvas.Handle, PChar(Item.Caption), Length(Item.Caption), R,
           DT_LEFT or DT_NOPREFIX or DT_SINGLELINE or DT_END_ELLIPSIS, nil);
       end
       else
@@ -2241,8 +2241,7 @@ begin
       UTF8Str := UTF8Str + Ch;
       Stream.Read(Ch, 1);
     end;
-
-    S := {$IFDEF SUPPORTS_UNICODE}UTF8ToString{$ELSE}{$IFDEF COMPILER6_UP}UTF8Decode{$ENDIF COMPILER6_UP}{$ENDIF SUPPORTS_UNICODE}(UTF8Str);
+    S := UTF8ToString(UTF8Str);
 
     case I of
       0: // Caption
@@ -2278,7 +2277,7 @@ procedure TJvCustomTimeLine.SaveToStream(Stream: TStream);
 var
   I: Integer;
   S: string;
-  UTF8Str: AnsiString;
+  UTF8Str: UTF8String;
 begin
   for I := 0 to Items.Count - 1 do
   begin
@@ -2324,8 +2323,8 @@ begin
       SaveItem(Items[I], Stream);
     end;
   end;
-  S := Cr;
-  Stream.Write(S[1], 1);
+  UTF8Str := UTF8String(Cr);
+  Stream.Write(UTF8Str[1], 1);
 end;
 
 procedure TJvCustomTimeLine.BeginUpdate;

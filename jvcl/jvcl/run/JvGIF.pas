@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
   GIF support is native for VisualCLX so this file is VCL only
 -----------------------------------------------------------------------------}
-// $Id: JvGIF.pas 12053 2008-11-18 17:15:04Z ahuser $
+// $Id: JvGIF.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 unit JvGIF;
 
@@ -253,8 +253,8 @@ procedure JvGif_Dummy;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGIF.pas $';
-    Revision: '$Revision: 12053 $';
-    Date: '$Date: 2008-11-18 18:15:04 +0100 (mar., 18 nov. 2008) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2533,7 +2533,7 @@ end;
 procedure TJvGIFImage.ReadStream(Size: Longint; Stream: TStream;
   ForceDecode: Boolean);
 var
-  SeparatorChar: Char;
+  SeparatorChar: AnsiChar;
   NewItem: TJvGIFFrame;
   Extensions: TList;
   ScreenDesc: TScreenDescriptor;
@@ -2569,7 +2569,7 @@ var
   function ReadDataBlock(Stream: TStream): TStringList;
   var
     BlockSize: Byte;
-    S: string;
+    S: AnsiString;
   begin
     Result := TStringList.Create;
     try
@@ -2579,7 +2579,7 @@ var
         begin
           SetLength(S, BlockSize);
           Stream.Read(S[1], BlockSize);
-          Result.Add(S);
+          Result.Add(string(S));
         end;
       until (BlockSize = 0) or (Stream.Position >= Stream.Size);
     except
@@ -2635,14 +2635,14 @@ var
     end;
   end;
 
-  function ReadSeparator(Stream: TStream): Char;
+  function ReadSeparator(Stream: TStream): AnsiChar;
   begin
     Result := #0;
     while (Stream.Size > Stream.Position) and (Result = #0) do
       Stream.Read(Result, SizeOf(Byte));
   end;
 
-  function ReadExtensionBlock(Stream: TStream; var SeparatorChar: Char): TList;
+  function ReadExtensionBlock(Stream: TStream; var SeparatorChar: AnsiChar): TList;
   var
     NewExt: TExtension;
   begin
@@ -2711,8 +2711,7 @@ begin
         ReadScreenDescriptor(Data);
         ReadGlobalColorMap(Data);
         SeparatorChar := ReadSeparator(Data);
-        while not CharInSet(SeparatorChar, [CHR_TRAILER, #0]) and not
-          (Data.Position >= Data.Size) do
+        while not (SeparatorChar in [CHR_TRAILER, #0]) and not (Data.Position >= Data.Size) do
         begin
           Extensions := ReadExtensionBlock(Data, SeparatorChar);
           if SeparatorChar = CHR_IMAGE_SEPARATOR then
@@ -2730,12 +2729,10 @@ begin
               raise;
             end;
             if not (Data.Position >= Data.Size) then
-            begin
-              SeparatorChar := ReadSeparator(Data);
-            end
+              SeparatorChar := ReadSeparator(Data)
             else
               SeparatorChar := CHR_TRAILER;
-            if not CharInSet(SeparatorChar, [CHR_EXT_INTRODUCER, CHR_IMAGE_SEPARATOR, CHR_TRAILER]) then
+            if not (SeparatorChar in [CHR_EXT_INTRODUCER, CHR_IMAGE_SEPARATOR, CHR_TRAILER]) then
             begin
               SeparatorChar := #0;
                 {GifError(RsEGIFDecodeError);}
@@ -2764,7 +2761,7 @@ begin
             end;
           end
           else
-          if not CharInSet(SeparatorChar, [CHR_TRAILER, #0]) then
+          if not (SeparatorChar in [CHR_TRAILER, #0]) then
             GifError(SReadError);
         end;
       finally
@@ -2848,7 +2845,7 @@ end;
 
 procedure TJvGIFImage.WriteStream(Stream: TStream; WriteSize: Boolean);
 var
-  Separator: Char;
+  Separator: Byte;
   Temp: Byte;
   FrameNo: Integer;
   Frame: TJvGIFFrame;
@@ -2901,12 +2898,12 @@ var
   procedure WriteDataBlock(Stream: TStream; Data: TStrings);
   var
     I: Integer;
-    S: string;
+    S: AnsiString;
     BlockSize: Byte;
   begin
     for I := 0 to Data.Count - 1 do
     begin
-      S := Data[I];
+      S := AnsiString(Data[I]);
       BlockSize := Min(Length(S), 255);
       if BlockSize > 0 then
       begin
@@ -2923,9 +2920,9 @@ var
     I: Integer;
     Ext: TExtension;
     ExtensionLabel: Byte;
-    SeparateChar: Char;
+    SeparateChar: Byte;
   begin
-    SeparateChar := CHR_EXT_INTRODUCER;
+    SeparateChar := Byte(CHR_EXT_INTRODUCER);
     for I := 0 to Extensions.Count - 1 do
     begin
       Ext := TExtension(Extensions[I]);
@@ -2973,7 +2970,7 @@ begin
     if FLooping and (FItems.Count > 1) then
     begin
       { write looping extension }
-      Separator := CHR_EXT_INTRODUCER;
+      Separator := Byte(CHR_EXT_INTRODUCER);
       Mem.Write(Separator, SizeOf(Byte));
       Temp := ExtLabels[etApplication];
       Mem.Write(Temp, SizeOf(Byte));
@@ -2989,7 +2986,7 @@ begin
         StrList.Free;
       end;
     end;
-    Separator := CHR_IMAGE_SEPARATOR;
+    Separator := Byte(CHR_IMAGE_SEPARATOR);
     for FrameNo := 0 to FItems.Count - 1 do
     begin
       Frame := TJvGIFFrame(FItems[FrameNo]);
@@ -3002,13 +2999,13 @@ begin
     end;
     if FImage.FComment.Count > 0 then
     begin
-      Separator := CHR_EXT_INTRODUCER;
+      Separator := Byte(CHR_EXT_INTRODUCER);
       Mem.Write(Separator, SizeOf(Byte));
       Temp := ExtLabels[etComment];
       Mem.Write(Temp, SizeOf(Byte));
       WriteDataBlock(Mem, FImage.FComment);
     end;
-    Separator := CHR_TRAILER;
+    Separator := Byte(CHR_TRAILER);
     Mem.Write(Separator, SizeOf(Byte));
     Size := Mem.Size;
     if WriteSize then

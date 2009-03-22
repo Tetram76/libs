@@ -31,7 +31,7 @@ description : JVCL Interpreter version 2
 Known Issues:
    String fields in records binded from Delphi don't work
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter.pas 11969 2008-10-18 10:38:19Z ahuser $
+// $Id: JvInterpreter.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 { history (JVCL Library versions):
   1.10:
@@ -1263,8 +1263,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter.pas $';
-    Revision: '$Revision: 11969 $';
-    Date: '$Date: 2008-10-18 12:38:19 +0200 (sam., 18 oct. 2008) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1760,23 +1760,25 @@ end;
 procedure StringSaveToStream(Stream: TStream; const S: string);
 var
   L: Integer;
-  P: PChar;
+  UTF8Str: UTF8String;
 begin
-  L := Length(S);
+  UTF8Str := UTF8Encode(S);
+  L := Length(UTF8Str);
   Stream.WriteBuffer(L, SizeOf(L));
-  P := PChar(S);
-  Stream.WriteBuffer(P^, L);
+  if L > 0 then
+    Stream.WriteBuffer(UTF8Str[1], L);
 end;
 
 function StringLoadFromStream(Stream: TStream): string;
 var
   L: Integer;
-  P: PChar;
+  UTF8Str: UTF8String;
 begin
   Stream.ReadBuffer(L, SizeOf(L));
-  SetLength(Result, L);
-  P := PChar(Result);
-  Stream.ReadBuffer(P^, L);
+  SetLength(UTF8Str, L);
+  if L > 0 then
+    Stream.ReadBuffer(UTF8Str[1], L);
+  Result := UTF8ToString(UTF8Str);
 end;
 
 procedure IntSaveToStream(Stream: TStream; AInt: Integer);

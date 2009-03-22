@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterList.pas 12218 2009-03-03 23:11:08Z jfudickar $
+// $Id: JvParameterList.pas 12239 2009-03-18 00:17:32Z jfudickar $
 
 unit JvParameterList;
 
@@ -498,8 +498,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterList.pas $';
-    Revision: '$Revision: 12218 $';
-    Date: '$Date: 2009-03-04 00:11:08 +0100 (mer., 04 mars 2009) $';
+    Revision: '$Revision: 12239 $';
+    Date: '$Date: 2009-03-18 01:17:32 +0100 (mer., 18 mars 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1029,7 +1029,7 @@ begin
     WinControl.Hint := Hint;
     WinControl.Tag := Tag;
     WinControl.HelpContext := HelpContext;
-    JvDynControl.ControlSetOnEnter(ParameterList.OnExitParameterControl);
+    JvDynControl.ControlSetOnEnter(ParameterList.OnEnterParameterControl);
     JvDynControl.ControlSetOnExit(ParameterList.OnExitParameterControl);
     if Assigned(JvDynControlData) then
       JvDynControlData.ControlSetOnChange(ParameterList.OnChangeParameterControl);

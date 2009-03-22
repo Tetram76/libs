@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportProc.pas 11059 2006-11-29 17:12:58Z marquardt $
+// $Id: JvDockSupportProc.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 unit JvDockSupportProc;
 
@@ -97,8 +97,8 @@ procedure UnRegisterSettingChangeClient(Client: TObject);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportProc.pas $';
-    Revision: '$Revision: 11059 $';
-    Date: '$Date: 2006-11-29 18:12:58 +0100 (mer., 29 nov. 2006) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -140,7 +140,7 @@ var
 
 function JvDockStreamDataToString(Stream: TStream): string;
 var
-  Ch: Char;
+  Ch: AnsiChar;
 begin
   Result := '';
   Stream.Position := 0;
@@ -154,12 +154,12 @@ end;
 procedure JvDockStringToStreamData(Stream: TStream; const Data: string);
 var
   I: Integer;
-  Ch: Char;
+  Ch: AnsiChar;
 begin
   I := 1;
   while I < Length(Data) do
   begin
-    Ch := Char(StrToInt('$' + Copy(Data, I, 2)));
+    Ch := AnsiChar(StrToInt('$' + Copy(Data, I, 2)));
     Stream.Write(Ch, SizeOf(Ch));
     Inc(I, 2);
   end;

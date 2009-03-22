@@ -33,7 +33,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPanel.pas 12215 2009-02-19 20:33:33Z ahuser $
+// $Id: JvPanel.pas 12240 2009-03-18 10:27:22Z ahuser $
 
 unit JvPanel;
 
@@ -338,8 +338,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPanel.pas $';
-    Revision: '$Revision: 12215 $';
-    Date: '$Date: 2009-02-19 21:33:33 +0100 (jeu., 19 févr. 2009) $';
+    Revision: '$Revision: 12240 $';
+    Date: '$Date: 2009-03-18 11:27:22 +0100 (mer., 18 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1231,6 +1231,8 @@ begin
       CurrControl := GetNextControlByTabOrder(LastTabOrder + 1);
       Inc(I);
     end;
+    if (Length(ControlRects) > 0) and not ControlRects[High(ControlRects)].LineBreak then
+      Inc(LineCount);
 
     { Vertical/Horizontal alignment }
     OffsetX := 0;

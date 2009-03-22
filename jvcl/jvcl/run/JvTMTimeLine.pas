@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTMTimeLine.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvTMTimeLine.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 unit JvTMTimeLine;
 
@@ -327,8 +327,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTMTimeLine.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -337,11 +337,9 @@ implementation
 
 uses
   Consts,
-  JvJVCLUtils, JvThemes;
+  JvJCLUtils, JvJVCLUtils, JvThemes;
 
 {$R JvTMTimeLine.res}
-
-
 
 const
   cMagic = 'Jv.TMTIMELINE1';
@@ -1189,11 +1187,13 @@ end;
 procedure WriteStr(Stream: TStream; const Value: string);
 var
   I: Integer;
+  UTF8Value: UTF8String;
 begin
-  I := Length(Value);
+  UTF8Value := UTF8Encode(Value);
+  I := Length(UTF8Value);
   WriteInt(Stream, I);
   if I > 0 then
-    Stream.Write(Value[1], I);
+    Stream.Write(UTF8Value[1], I);
 end;
 
 function ReadInt(Stream: TStream): Integer;
@@ -1204,11 +1204,15 @@ end;
 function ReadStr(Stream: TStream): string;
 var
   I: Integer;
+  UTF8Value: UTF8String;
 begin
   I := ReadInt(Stream);
   SetLength(Result, I);
   if I > 0 then
-    Stream.Read(Result[1], I);
+  begin
+    Stream.Read(UTF8Value[1], I);
+    Result := UTF8ToString(UTF8Value);
+  end;
 end;
 
 function TJvCustomTMTimeline.ReadMagic(Stream: TStream): Boolean;
