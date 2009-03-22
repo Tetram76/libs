@@ -26,7 +26,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvJCLUtils.pas 11963 2008-10-16 09:12:52Z obones $
+// $Id: JvJCLUtils.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 unit JvJCLUtils;
 
@@ -138,6 +138,10 @@ function AnsiLastChar(const S: AnsiString): AnsiChar;
 
 function ReadCharsFromStream(Stream: TStream; var Buf: array of AnsiChar; BufSize: Integer): Integer; // ANSI-Stream
 function WriteStringToStream(Stream: TStream; const Buf: AnsiString; BufSize: Integer): Integer; // ANSI-Stream
+
+{$IFNDEF COMPILER12_UP}
+function UTF8ToString(const S: UTF8String): string; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$ENDIF ~COMPILER12_UP}
 
 const
   DefaultDateOrder = doDMY;
@@ -837,7 +841,7 @@ procedure PError(const Text: string);
 // execute a program without waiting
 procedure Exec(const FileName, Parameters, Directory: string);
 // execute a program and wait for it to finish
-function ExecuteAndWait(const CommandLine, WorkingDirectory: string; Visibility: Integer = SW_SHOW): Integer;
+function ExecuteAndWait(CommandLine: string; const WorkingDirectory: string; Visibility: Integer = SW_SHOW): Integer;
 
 
 // returns True if this is the first instance of the program that is running
@@ -1281,8 +1285,8 @@ function SecondsBetween(const Now: TDateTime; const FTime: TDateTime): Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJCLUtils.pas $';
-    Revision: '$Revision: 11963 $';
-    Date: '$Date: 2008-10-16 11:12:52 +0200 (jeu., 16 oct. 2008) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1505,6 +1509,12 @@ begin
   {$ENDIF CLR}
 end;
 
+{$IFNDEF COMPILER12_UP}
+function UTF8ToString(const S: UTF8String): string;
+begin
+  Result := UTF8Decode(S);
+end;
+{$ENDIF ~COMPILER12_UP}
 
 // DEPRECATED:
 // StrToFloatUS uses US '.' as decimal separator and ',' as thousand separator
@@ -4009,12 +4019,9 @@ end;
 
 {$IFNDEF CLR}
 procedure MemStreamToClipBoard(MemStream: TMemoryStream; const Format: Word);
-
 var
   Data: THandle;
   DataPtr: Pointer;
-
-
 begin
   Clipboard.Open;
   try
@@ -4038,11 +4045,9 @@ begin
 end;
 
 procedure ClipBoardToMemStream(MemStream: TMemoryStream; const Format: Word);
-
 var
   Data: THandle;
   DataPtr: Pointer;
-
 begin
   Clipboard.Open;
   try
@@ -7453,7 +7458,7 @@ end;
 
 { (rb) Duplicate of JclMiscel.WinExec32AndWait }
 
-function ExecuteAndWait(const CommandLine, WorkingDirectory: string; Visibility: Integer): Integer;
+function ExecuteAndWait(CommandLine: string; const WorkingDirectory: string; Visibility: Integer): Integer;
 {$IFDEF CLR}
 var
   Proc: Process;
@@ -7490,6 +7495,7 @@ begin
   StartupInfo.cb := SizeOf(StartupInfo);
   StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow := Visibility;
+  UniqueString(CommandLine);//in the Unicode version the parameter lpCommandLine needs to be writable
   if not CreateProcess(nil, PChar(CommandLine), nil, nil, False, CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS,
     nil, Pointer(WorkingDirectory), StartupInfo, ProcessInfo) then
   begin

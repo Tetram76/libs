@@ -41,7 +41,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvDBTreeView.pas 11551 2007-10-31 11:06:57Z ahuser $
+// $Id: JvDBTreeView.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 unit JvDBTreeView;
 
@@ -283,8 +283,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBTreeView.pas $';
-    Revision: '$Revision: 11551 $';
-    Date: '$Date: 2007-10-31 12:06:57 +0100 (mer., 31 oct. 2007) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1486,7 +1486,7 @@ begin
     begin
       FMastersStream.Read(strLength, SizeOf(strLength));
       SetLength(temp, strLength);
-      FMastersStream.Read(temp[1], strLength);
+      FMastersStream.Read(temp[1], strLength * SizeOf(Char)); // internally used stream
       TJvDBTreeNode(Node).SetMasterValue(temp);
       FMastersStream.Read(HasChildren, SizeOf(HasChildren));
       Node.HasChildren := HasChildren <> 0;
@@ -1516,7 +1516,7 @@ begin
       temp := VarToStr(TJvDBTreeNode(Node).MasterValue);
       strLength := length(temp);
       FMastersStream.Write(strLength, SizeOf(strLength));
-      FMastersStream.Write(temp[1], strLength);
+      FMastersStream.Write(temp[1], strLength * SizeOf(Char)); // internally used stream
       HasChildren := Byte(Node.HasChildren);
       FMastersStream.Write(HasChildren, SizeOf(HasChildren));
       Node := Node.GetNext;

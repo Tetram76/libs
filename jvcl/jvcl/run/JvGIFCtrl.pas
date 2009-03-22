@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGIFCtrl.pas 12132 2009-01-07 12:53:11Z ahuser $
+// $Id: JvGIFCtrl.pas 12245 2009-03-21 14:52:15Z ahuser $
 
 unit JvGIFCtrl;
 
@@ -131,8 +131,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGIFCtrl.pas $';
-    Revision: '$Revision: 12132 $';
-    Date: '$Date: 2009-01-07 13:53:11 +0100 (mer., 07 janv. 2009) $';
+    Revision: '$Revision: 12245 $';
+    Date: '$Date: 2009-03-21 15:52:15 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -198,7 +198,9 @@ end;
 
 destructor TJvGIFAnimator.Destroy;
 begin
-  Destroying;
+  FTimer.OnTimer := nil; // terminate timer thread
+  FTimer.Enabled := False;
+  Destroying; // ??? ahuser: this is the job of TComponent.Destroy, why is it called here?
   FOnStart := nil;
   FOnStop := nil;
   FOnChange := nil;
@@ -207,7 +209,7 @@ begin
   FCache.Free;
   FImage.OnChange := nil;
   FImage.Free;
-  FTimer.Free; // Note: not really required (VCL does it for us), but cleaner
+  FreeAndNil(FTimer); // Note: not really required (VCL does it for us), but cleaner
   inherited Destroy;
 end;
 
@@ -567,7 +569,7 @@ end;
 
 procedure TJvGIFAnimator.TimerExpired(Sender: TObject);
 begin
-  if csPaintCopy in ControlState then
+  if (csPaintCopy in ControlState) or (csDestroying in ComponentState) then
     Exit;
   if Visible and (FImage.Count > 1) and (Parent <> nil) and
     Parent.HandleAllocated then

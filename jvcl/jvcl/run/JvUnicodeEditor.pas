@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvUnicodeEditor.pas 11966 2008-10-18 09:48:18Z ahuser $
+// $Id: JvUnicodeEditor.pas 12243 2009-03-20 19:35:51Z ahuser $
 
 unit JvUnicodeEditor;
 
@@ -197,6 +197,7 @@ type
     property OnKeyPress;
     property OnKeyUp;
     property OnChange;
+    property OnCaretChanged;
     property OnSelectionChange;
     property OnMouseDown;
     property OnMouseMove;
@@ -277,8 +278,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUnicodeEditor.pas $';
-    Revision: '$Revision: 11966 $';
-    Date: '$Date: 2008-10-18 11:48:18 +0200 (sam., 18 oct. 2008) $';
+    Revision: '$Revision: 12243 $';
+    Date: '$Date: 2009-03-20 20:35:51 +0100 (ven., 20 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

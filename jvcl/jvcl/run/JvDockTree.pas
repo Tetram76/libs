@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockTree.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvDockTree.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 unit JvDockTree;
 
@@ -621,8 +621,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockTree.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3516,14 +3516,14 @@ end;
 procedure TJvDockTree.WriteControlName(Stream: TStream; const ControlName: string);
 var
   NameLen: Longint;
-  UTF8ControlName: {$IFDEF SUPPORTS_UNICODE}UTF8String{$ELSE}string{$ENDIF SUPPORTS_UNICODE};
+  UTF8ControlName: UTF8String;
 begin
-  UTF8ControlName := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(ControlName);
+  UTF8ControlName := UTF8Encode(ControlName);
 
   NameLen := Length(UTF8ControlName);
   Stream.Write(NameLen, SizeOf(NameLen));
   if NameLen > 0 then
-    Stream.Write(PAnsiChar(UTF8ControlName)^, NameLen);
+    Stream.Write(UTF8ControlName[1], NameLen);
 end;
 
 procedure TJvDockTree.DoLoadZone(Stream: TStream);

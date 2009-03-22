@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 12200 2009-01-30 21:04:07Z jfudickar $
+// $Id: JvParameterListParameter.pas 12239 2009-03-18 00:17:32Z jfudickar $
 
 unit JvParameterListParameter;
 
@@ -390,13 +390,12 @@ type
     function GetAsVariant: Variant; override;
     function GetWinControlData: Variant; override;
     procedure SetWinControlData(Value: Variant); override;
+    procedure SetWinControlProperties; override;
   public
     constructor Create(AParameterList: TJvParameterList); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
     procedure SearchItemIndex(const Search: string);
-    procedure GetData; override;
-    procedure SetData; override;
   published
     property ItemList: TStringList read GetItemList write SetItemList;
     property ItemIndex: Integer read FItemIndex write SetItemIndex;
@@ -623,8 +622,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 12200 $';
-    Date: '$Date: 2009-01-30 22:04:07 +0100 (ven., 30 janv. 2009) $';
+    Revision: '$Revision: 12239 $';
+    Date: '$Date: 2009-03-18 01:17:32 +0100 (mer., 18 mars 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1455,6 +1454,8 @@ begin
   FItemList.Assign(Value);
   if Assigned(Value) then
     SetItemIndex(FItemIndex);
+  if Assigned(WinControl) then
+    SetWinControlProperties;
 end;
 
 procedure TJvListParameter.SetItemIndex(Value: Integer);
@@ -1539,21 +1540,14 @@ begin
     end;
 end;
 
-procedure TJvListParameter.GetData;
+procedure TJvListParameter.SetWinControlProperties;
+var
+  ITmpComboBox: IJvDynControlComboBox;
+  ITmpItems: IJvDynControlItems;
 begin
-  inherited GetData;
-  //  if Assigned(WinControl) then
-  //    ItemIndex := ItemList.IndexOf(Inherited GetAsString)
-  //  else
-  //    ItemIndex := -1;
-end;
-
-procedure TJvListParameter.SetData;
-begin
-  inherited SetData;
-  //  IF Assigned (
-  //  IF Assigned (WinControl) THEN
-  //    ItemList.IndexOf (AsString) := ItemIndex;
+  inherited SetWinControlProperties;
+  if Supports(WinControl, IJvDynControlItems, ITmpItems) then
+    ITmpItems.ControlItems := ItemList;
 end;
 
 //=== { TJvRadioGroupParameter } =============================================

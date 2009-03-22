@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Classes.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvInterpreter_Classes.pas 12252 2009-03-21 22:18:25Z ahuser $
 
 unit JvInterpreter_Classes;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Classes.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12252 $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -741,12 +741,12 @@ end;
 
 procedure TStream_ReadBuffer(var Value: Variant; Args: TJvInterpreterArgs);
 var
-  P: PChar;
-  S: string;
+  S: AnsiString;
 begin
+  // ahuser: Shouldn't this be the opposite of TStream_WriteBuffer ?
   SetLength(S, Integer(Args.Values[1]));
-  P := PChar(S);
-  TStream(Args.Obj).ReadBuffer(P^, Args.Values[1]);
+  if S <> '' then
+    TStream(Args.Obj).ReadBuffer(S[1], Args.Values[1]);
   Args.Values[0] := S;
 end;
 
