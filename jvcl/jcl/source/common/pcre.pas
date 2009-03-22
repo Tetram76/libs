@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-03-22 10:34:41 +0100 (dim., 22 mars 2009)                          $ }
+{ Revision:      $Rev:: 2699                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -601,7 +601,7 @@ uses
 {$LINK ..\windows\obj\pcre\pcre_study.obj}
 {$LINK ..\windows\obj\pcre\pcre_tables.obj}
 {$LINK ..\windows\obj\pcre\pcre_try_flipped.obj}
-{$LINK ..\windows\obj\pcre\pcre_ucp_searchfuncs.obj}
+{$LINK ..\windows\obj\pcre\pcre_ucd.obj}
 {$LINK ..\windows\obj\pcre\pcre_valid_utf8.obj}
 {$LINK ..\windows\obj\pcre\pcre_version.obj}
 {$LINK ..\windows\obj\pcre\pcre_xclass.obj}
