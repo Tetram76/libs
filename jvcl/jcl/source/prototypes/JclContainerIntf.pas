@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-10-07 21:16:48 +0200 (mar., 07 oct. 2008)                         $ }
-{ Revision:      $Rev:: 2532                                                                     $ }
+{ Last modified: $Date:: 2009-03-15 12:51:26 +0100 (dim., 15 mars 2009)                          $ }
+{ Revision:      $Rev:: 2688                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -45,7 +45,8 @@ uses
   {$ENDIF UNITVERSIONING}
   Classes,
   JclBase,
-  JclAnsiStrings;
+  JclAnsiStrings,
+  JclWideStrings;
 
 {$IFDEF BCB6}
 {$DEFINE BUGGY_DEFAULT_INDEXED_PROP}
@@ -277,11 +278,11 @@ type
 
   IJclAnsiStrFlatContainer = interface(IJclAnsiStrContainer)
     ['{8A45A4D4-6317-4CDF-8314-C3E5CC6899F4}']
-    procedure LoadFromStrings(Strings: TStrings);
-    procedure SaveToStrings(Strings: TStrings);
-    procedure AppendToStrings(Strings: TStrings);
-    procedure AppendFromStrings(Strings: TStrings);
-    function GetAsStrings: TStrings;
+    procedure LoadFromStrings(Strings: TJclAnsiStrings);
+    procedure SaveToStrings(Strings: TJclAnsiStrings);
+    procedure AppendToStrings(Strings: TJclAnsiStrings);
+    procedure AppendFromStrings(Strings: TJclAnsiStrings);
+    function GetAsStrings: TJclAnsiStrings;
     function GetAsDelimited(const Separator: AnsiString = AnsiLineBreak): AnsiString;
     procedure AppendDelimited(const AString: AnsiString; const Separator: AnsiString = AnsiLineBreak);
     procedure LoadDelimited(const AString: AnsiString; const Separator: AnsiString = AnsiLineBreak);
@@ -298,14 +299,14 @@ type
 
   IJclWideStrFlatContainer = interface(IJclWideStrContainer)
     ['{5B001B93-CA1C-47A8-98B8-451CCB444930}']
-    {procedure LoadFromStrings(Strings: TWideStrings);
-    procedure SaveToStrings(Strings: TWideStrings);
-    procedure AppendToStrings(Strings: TWideStrings);
-    procedure AppendFromStrings(Strings: TWideStrings);
-    function GetAsStrings: TWideStrings;
+    procedure LoadFromStrings(Strings: TJclWideStrings);
+    procedure SaveToStrings(Strings: TJclWideStrings);
+    procedure AppendToStrings(Strings: TJclWideStrings);
+    procedure AppendFromStrings(Strings: TJclWideStrings);
+    function GetAsStrings: TJclWideStrings;
     function GetAsDelimited(const Separator: WideString = WideLineBreak): WideString;
     procedure AppendDelimited(const AString: WideString; const Separator: WideString = WideLineBreak);
-    procedure LoadDelimited(const AString: WideString; const Separator: WideString = WideLineBreak);}
+    procedure LoadDelimited(const AString: WideString; const Separator: WideString = WideLineBreak);
   end;
 
   {$IFDEF SUPPORTS_UNICODE_STRING}
@@ -315,6 +316,14 @@ type
 
   IJclUnicodeStrFlatContainer = interface(IJclUnicodeStrContainer)
     ['{3343D73E-4ADC-458E-8289-A4B83D1479D1}']
+    procedure LoadFromStrings(Strings: TJclUnicodeStrings);
+    procedure SaveToStrings(Strings: TJclUnicodeStrings);
+    procedure AppendToStrings(Strings: TJclUnicodeStrings);
+    procedure AppendFromStrings(Strings: TJclUnicodeStrings);
+    function GetAsStrings: TJclUnicodeStrings;
+    function GetAsDelimited(const Separator: UnicodeString = WideLineBreak): UnicodeString;
+    procedure AppendDelimited(const AString: UnicodeString; const Separator: UnicodeString = WideLineBreak);
+    procedure LoadDelimited(const AString: UnicodeString; const Separator: UnicodeString = WideLineBreak);
   end;
   {$ENDIF SUPPORTS_UNICODE_STRING}
 
@@ -1632,8 +1641,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclContainerIntf.pas $';
-    Revision: '$Revision: 2532 $';
-    Date: '$Date: 2008-10-07 21:16:48 +0200 (mar., 07 oct. 2008) $';
+    Revision: '$Revision: 2688 $';
+    Date: '$Date: 2009-03-15 12:51:26 +0100 (dim., 15 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}

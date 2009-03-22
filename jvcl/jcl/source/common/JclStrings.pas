@@ -49,9 +49,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-09 22:25:03 +0100 (lun., 09 mars 2009)                         $ }
-{ Revision:      $Rev:: 2675                                                                     $ }
-{ Author:        $Author:: jfudickar                                                             $ }
+{ Last modified: $Date:: 2009-03-15 20:42:15 +0100 (dim., 15 mars 2009)                         $ }
+{ Revision:      $Rev:: 2690                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -338,10 +338,10 @@ type
   PAnsiMultiSz = JclAnsiStrings.PAnsiMultiSz;
   PWideMultiSz = JclWideStrings.PWideMultiSz;
 
-  TAnsiStrings = JclAnsiStrings.TAnsiStrings;
-  TWideStrings = JclWideStrings.TWideStrings;
-  TAnsiStringList = JclAnsiStrings.TAnsiStringList;
-  TWideStringList = JclWideStrings.TWideStringList;
+  TAnsiStrings = JclAnsiStrings.TJclAnsiStrings;
+  TWideStrings = JclWideStrings.TJclWideStrings;
+  TAnsiStringList = JclAnsiStrings.TJclAnsiStringList;
+  TWideStringList = JclWideStrings.TJclWideStringList;
 
 function StringsToMultiSz(var Dest: PMultiSz; const Source: TStrings): PMultiSz;
 procedure MultiSzToStrings(const Dest: TStrings; const Source: PMultiSz);
@@ -636,8 +636,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStrings.pas $';
-    Revision: '$Revision: 2675 $';
-    Date: '$Date: 2009-03-09 22:25:03 +0100 (lun., 09 mars 2009) $';
+    Revision: '$Revision: 2690 $';
+    Date: '$Date: 2009-03-15 20:42:15 +0100 (dim., 15 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -2155,11 +2155,11 @@ end;
 {$ELSE ~CLR}
 var
   P1, P2: PChar;
-  C:      Char;
+  C: Char;
 begin
   UniqueString(S);
   P1 := PChar(S);
-  P2 := P1 + SizeOf(Char) * (Length(S) - 1);
+  P2 := P1 + (Length(S) - 1);
   while P1 < P2 do
   begin
     C := P1^;

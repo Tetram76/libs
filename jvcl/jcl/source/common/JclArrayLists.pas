@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-04 18:47:03 +0100 (mer., 04 mars 2009)                          $ }
-{ Revision:      $Rev:: 2672                                                                     $ }
+{ Last modified: $Date:: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009)                          $ }
+{ Revision:      $Rev:: 2698                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1184,8 +1184,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclArrayLists.pas $';
-    Revision: '$Revision: 2672 $';
-    Date: '$Date: 2009-03-04 18:47:03 +0100 (mer., 04 mars 2009) $';
+    Revision: '$Revision: 2698 $';
+    Date: '$Date: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -1480,6 +1480,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AInterface) then
       begin
+        FElementData[I] := nil;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -2335,6 +2336,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AString) then
       begin
+        FElementData[I] := '';
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -3190,6 +3192,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AString) then
       begin
+        FElementData[I] := '';
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -4046,6 +4049,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AString) then
       begin
+        FElementData[I] := '';
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -4903,6 +4907,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AValue) then
       begin
+        FElementData[I] := 0.0;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -5758,6 +5763,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AValue) then
       begin
+        FElementData[I] := 0.0;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -6613,6 +6619,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AValue) then
       begin
+        FElementData[I] := 0.0;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -7468,6 +7475,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AValue) then
       begin
+        FElementData[I] := 0;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -8323,6 +8331,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AValue) then
       begin
+        FElementData[I] := 0;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -9178,6 +9187,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AValue) then
       begin
+        FElementData[I] := 0;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -10034,6 +10044,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], APtr) then
       begin
+        FElementData[I] := nil;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -10890,6 +10901,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AObject) then
       begin
+        FElementData[I] := nil;
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);
@@ -11747,6 +11759,7 @@ begin
     for I := FSize - 1 downto 0 do
       if ItemsEqual(FElementData[I], AItem) then
       begin
+        FElementData[I] := Default(T);
         if I < (FSize - 1) then
           MoveArray(FElementData, I + 1, I, FSize - I - 1);
         Dec(FSize);

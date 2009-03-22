@@ -49,9 +49,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-04 19:07:18 +0100 (mer., 04 mars 2009)                          $ }
-{ Revision:      $Rev:: 2673                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2009-03-12 10:45:33 +0100 (jeu., 12 mars 2009)                          $ }
+{ Revision:      $Rev:: 2676                                                                     $ }
+{ Author:        $Author:: obones                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1329,8 +1329,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 2673 $';
-    Date: '$Date: 2009-03-04 19:07:18 +0100 (mer., 04 mars 2009) $';
+    Revision: '$Revision: 2676 $';
+    Date: '$Date: 2009-03-12 10:45:33 +0100 (jeu., 12 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -2186,12 +2186,12 @@ end;
 
 {$IFDEF MSWINDOWS}
 {$IFNDEF CLR}
-procedure GetIpAddresses(Results: TAnsiStrings);
+procedure GetIpAddresses(Results: TStrings);
 begin
   GetIpAddresses(Results, '');
 end;
 
-procedure GetIpAddresses(Results: TAnsiStrings; const HostName: AnsiString);
+procedure GetIpAddresses(Results: TStrings; const HostName: AnsiString);
 type
   TaPInAddr = array[0..10] of PInAddr;
   PaPInAddr = ^TaPInAddr;

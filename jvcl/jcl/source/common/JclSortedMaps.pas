@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-04 18:47:03 +0100 (mer., 04 mars 2009)                         $ }
-{ Revision:      $Rev:: 2672                                                                     $ }
+{ Last modified: $Date:: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009)                         $ }
+{ Revision:      $Rev:: 2698                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -2393,8 +2393,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSortedMaps.pas $';
-    Revision: '$Revision: 2672 $';
-    Date: '$Date: 2009-03-04 18:47:03 +0100 (mer., 04 mars 2009) $';
+    Revision: '$Revision: 2698 $';
+    Date: '$Date: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -2575,6 +2575,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -3244,6 +3245,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -3919,6 +3921,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := '';
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -4594,6 +4597,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := '';
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -5263,6 +5267,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -5938,6 +5943,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := '';
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -6613,6 +6619,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := '';
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -7283,6 +7290,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -7958,6 +7966,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := '';
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -8633,6 +8642,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := '';
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -9303,6 +9313,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -9978,6 +9989,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0.0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -10653,6 +10665,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0.0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -11322,6 +11335,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -11997,6 +12011,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0.0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -12672,6 +12687,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0.0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -13341,6 +13357,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -14016,6 +14033,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0.0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -14691,6 +14709,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0.0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -15360,6 +15379,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -16035,6 +16055,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -16710,6 +16731,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -17379,6 +17401,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -18054,6 +18077,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -18729,6 +18753,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -19398,6 +19423,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -20073,6 +20099,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -20748,6 +20775,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := 0;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -21418,6 +21446,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -22093,6 +22122,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -22768,6 +22798,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -23439,6 +23470,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -24134,6 +24166,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -24823,6 +24856,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -25513,6 +25547,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -26203,6 +26238,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -26892,6 +26928,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -27581,6 +27618,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -28270,6 +28308,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -28959,6 +28998,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -29648,6 +29688,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -30338,6 +30379,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -31029,6 +31071,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := nil;
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);
@@ -31740,6 +31783,7 @@ begin
     if (Index >= 0) and (KeysCompare(FEntries[Index].Key, Key) = 0) then
     begin
       Result := FEntries[Index].Value;
+      FEntries[Index].Value := Default(TValue);
       FreeKey(FEntries[Index].Key);
       if Index < (FSize - 1) then
         MoveArray(Index + 1, Index, FSize - Index - 1);

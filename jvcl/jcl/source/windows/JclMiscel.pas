@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-03-21 00:09:07 +0100 (sam., 21 mars 2009)                          $ }
+{ Revision:      $Rev:: 2695                                                                     $ }
+{ Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -52,9 +52,9 @@ uses
 // StrLstLoadSave
 function SetDisplayResolution(const XRes, YRes: DWORD): Longint;
 
-function CreateDOSProcessRedirected(const CommandLine, InputFile, OutputFile: string): Boolean;
-function WinExec32(const Cmd: string; const CmdShow: Integer): Boolean;
-function WinExec32AndWait(const Cmd: string; const CmdShow: Integer): Cardinal;
+function CreateDOSProcessRedirected(CommandLine: string; const InputFile, OutputFile: string): Boolean;
+function WinExec32(Cmd: string; const CmdShow: Integer): Boolean;
+function WinExec32AndWait(Cmd: string; const CmdShow: Integer): Cardinal;
 function WinExec32AndRedirectOutput(const Cmd: string; var Output: string; RawOutput: Boolean = False): Cardinal;
 
 type
@@ -101,8 +101,8 @@ procedure CreateProcAsUserEx(const UserDomain, UserName, Password, CommandLine: 
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclMiscel.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
+    Revision: '$Revision: 2695 $';
+    Date: '$Date: 2009-03-21 00:09:07 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -129,7 +129,7 @@ begin
   end;
 end;
 
-function CreateDOSProcessRedirected(const CommandLine, InputFile, OutputFile: string): Boolean;
+function CreateDOSProcessRedirected(CommandLine: string; const InputFile, OutputFile: string): Boolean;
 var
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
@@ -152,6 +152,7 @@ begin
       StartupInfo.wShowWindow := SW_HIDE;
       StartupInfo.hStdOutput := hOutputFile;
       StartupInfo.hStdInput := hInputFile;
+      UniqueString(CommandLine);//in the Unicode version the parameter lpCommandLine needs to be writable
       Result := CreateProcess(nil, PChar(CommandLine), nil, nil, True,
         CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS, nil, nil, StartupInfo,
         ProcessInfo);
@@ -167,7 +168,7 @@ begin
   end;
 end;
 
-function WinExec32(const Cmd: string; const CmdShow: Integer): Boolean;
+function WinExec32(Cmd: string; const CmdShow: Integer): Boolean;
 var
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
@@ -176,6 +177,7 @@ begin
   StartupInfo.cb := SizeOf(TStartupInfo);
   StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow := CmdShow;
+  UniqueString(Cmd);//in the Unicode version the parameter lpCommandLine needs to be writable
   Result := CreateProcess(nil, PChar(Cmd), nil, nil, False,
     NORMAL_PRIORITY_CLASS, nil, nil, StartupInfo, ProcessInfo);
   if Result then
@@ -186,7 +188,7 @@ begin
   end;
 end;
 
-function WinExec32AndWait(const Cmd: string; const CmdShow: Integer): Cardinal;
+function WinExec32AndWait(Cmd: string; const CmdShow: Integer): Cardinal;
 var
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
@@ -196,6 +198,7 @@ begin
   StartupInfo.cb := SizeOf(TStartupInfo);
   StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow := CmdShow;
+  UniqueString(Cmd);//in the Unicode version the parameter lpCommandLine needs to be writable
   if CreateProcess(nil, PChar(Cmd), nil, nil, False, NORMAL_PRIORITY_CLASS,
     nil, nil, StartupInfo, ProcessInfo) then
   begin
