@@ -118,9 +118,9 @@ begin
       dllhandle := dlopen(PChar(s2), RTLD_LAZY);
       {$ELSE}
       if loadwithalteredsearchpath then
-        dllhandle := LoadLibraryExA(Pchar(s2), 0, LOAD_WITH_ALTERED_SEARCH_PATH)
+        dllhandle := LoadLibraryExA(PAnsichar(s2), 0, LOAD_WITH_ALTERED_SEARCH_PATH)
       else
-        dllhandle := LoadLibraryA(Pchar(s2));
+        dllhandle := LoadLibraryA(Pansichar(s2));
       {$ENDIF}
       if dllhandle = {$IFDEF LINUX}nil{$ELSE}0{$ENDIF}then
       begin

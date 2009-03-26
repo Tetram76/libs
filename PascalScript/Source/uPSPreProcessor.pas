@@ -267,7 +267,7 @@ var
 begin
   lModuleName := FastUpperCase(ModuleName);
 
-  for i := FItems.Count -1 downto 0 do
+  for i := 0 to FItems.Count -1 do
   begin
     Item := FItems[i];
     if (Pos >= Item.StartPos) and (Pos < Item.EndPos) and
