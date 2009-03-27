@@ -70,6 +70,8 @@ Historique:
                  Primož Gabrijelcic <primoz@gabrijelcic.org>). D7 code explorer
                  displays all classes again. 
 21/07/2007 V1.07 Updated TIcsTimer for .NET environment.
+01/05/2008 V1.08 A. Garrels - Function names adjusted according to changes in
+                 OverbyteIcsLibrary.pas.
 15/11/2008 V1.09 Olivier Sannier improved unit finalization, comments in source.
 
 
@@ -866,14 +868,14 @@ begin
             IcsWndControlWindowClass.hbrBackground := 0;
             IcsWndControlWindowClass.lpszMenuName  := nil;
 
-           if OverbyteIcsLibrary.RegisterClass(IcsWndControlWindowClass) = 0 then
+           if _RegisterClass(IcsWndControlWindowClass) = 0 then
                 raise EIcsException.Create(
                      'Unable to register TIcsWndControl hidden window class.' +
-                     ' Error #' + IntToStr(GetLastError) + '.');
+                     ' Error #' + _IntToStr(GetLastError) + '.');
         end;
 
         // Now we are sure the class is registered, we can create a window using it
-        FHandle := OverbyteIcsLibrary.CreateWindowEx(WS_EX_TOOLWINDOW,
+        FHandle := _CreateWindowEx(WS_EX_TOOLWINDOW,
                                   IcsWndControlWindowClass.lpszClassName,
                                   '',        // Window name
                                   WS_POPUP,  // Window Style
@@ -887,7 +889,7 @@ begin
         if FHandle = 0 then
             raise EIcsException.Create(
                 'Unable to create TIcsWndControl hidden window. ' +
-                ' Error #' + IntToStr(GetLastError) + '.');
+                ' Error #' + _IntToStr(GetLastError) + '.');
 
         // We have a window. In the associated data, we record a reference
         // to our object. Thjis will later allow to call the WndProc method to
@@ -924,8 +926,7 @@ begin
             { This is necessary to do so from a DLL when the DLL is unloaded }
             { (that is when DllEntryPoint is called with dwReason equal to   }
             { DLL_PROCESS_DETACH.                                            }
-            OverbyteIcsLibrary.UnregisterClass(
-                IcsWndControlWindowClassName, HInstance);
+            _UnregisterClass(IcsWndControlWindowClassName, HInstance);
     finally
         LeaveCriticalSection(GWndHandlerCritSect);
     end;

@@ -58,7 +58,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  ExtCtrls, StdCtrls, IniFiles,
+  ExtCtrls, StdCtrls, OverbyteIcsIniFiles,
 {$IFDEF CLR}
   System.IO,
   System.ComponentModel,
@@ -220,19 +220,18 @@ const
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TPOP3ExcercizerForm.FormCreate(Sender: TObject);
 begin
-    FIniFileName := LowerCase(ExtractFileName(Application.ExeName));
-    FIniFileName := Copy(FIniFileName, 1, Length(FIniFileName) - 3) + 'ini';
+    FIniFileName := GetIcsIniFileName;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TPOP3ExcercizerForm.FormShow(Sender: TObject);
 var
-    IniFile : TIniFile;
+    IniFile : TIcsIniFile;
 begin
     if FInitialized then Exit;
     FInitialized := TRUE;
-    IniFile := TIniFile.Create(FIniFileName);
+    IniFile := TIcsIniFile.Create(FIniFileName);
     try
 
         Top                    := IniFile.ReadInteger(SectionWindow, KeyTop,
@@ -277,9 +276,9 @@ procedure TPOP3ExcercizerForm.FormClose(
     Sender     : TObject;
     var Action : TCloseAction);
 var
-    IniFile : TIniFile;
+    IniFile : TIcsIniFile;
 begin
-    IniFile := TIniFile.Create(FIniFileName);
+    IniFile := TIcsIniFile.Create(FIniFileName);
     try
         IniFile.WriteInteger(SectionWindow, KeyTop,    Top);
         IniFile.WriteInteger(SectionWindow, KeyLeft,   Left);
@@ -294,6 +293,7 @@ begin
         IniFile.WriteBool(SectionSSL,     KeyVerify,   VerifyCheckbox.Checked);
         IniFile.WriteString(SectionSSL,   KeyCAFile,   CAFileEdit.Text);
         IniFile.WriteString(SectionSSL,   KeyCAPath,   CAPathEdit.Text);
+        IniFile.UpdateFile;
     finally
         IniFile.Free;
     end;
@@ -664,10 +664,10 @@ end;
 { We should start a TTimer to handle timeout...                             }
 procedure TPOP3ExcercizerForm.GetAllButtonClick(Sender: TObject);
 var
-    IniFile : TIniFile;
+    IniFile : TIcsIniFile;
 begin
     { Get path from INI file }
-    IniFile := TIniFile.Create(FIniFileName);
+    IniFile := TIcsIniFile.Create(FIniFileName);
     FMsgPath    := IniFile.ReadString('Data', 'MsgPath',
                                   ExtractFilePath(Application.ExeName));
     IniFile.Free;

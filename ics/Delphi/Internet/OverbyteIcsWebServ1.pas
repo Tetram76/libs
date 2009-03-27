@@ -16,7 +16,7 @@ Description:  WebSrv1 show how to use THttpServer component to implement
               The code below allows to get all files on the computer running
               the demo. Add code in OnGetDocument, OnHeadDocument and
               OnPostDocument to check for authorized access to files.
-Version:      1.14
+Version:      7.18
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -82,9 +82,19 @@ Oct 29, 2006 V1.12 Made authentication demo pages better.
                    Added compiler switches and DELPHI7_UP check.
                    Added D2006 memory leak detection
 Nov 05, 2006 V1.13 Removed IsDirectory function which wasn't used
-Jan 03, 2009 V1.14 A. Garrels added some lines to force client browser's login
+Apr 14, 2008 V1.14 A. Garrels, a few Unicode related changes.
+May 15, 2008 V1.15 A. Garrels, a few more Unicode related changes, removed some
+                   ifdefs for older compiler.
+Nov 03, 2008 V7.16 A. Garrels Added Keep-Alive timeout and a maximum number
+                   of allowed requests during a persistent connection. Set
+                   property KeepAliveTimeSec to zero in order disable this
+                   feature entirely, otherwise persistent connections are dropped
+                   either after an idle time of value KeepAliveTimeSec or if the
+                   maximum number of requests (property MaxRequestKeepAlive) is
+                   reached.
+Nov 05, 2008 V7.17 A. Garrels made the POST demo UTF-8 aware.
+Jan 03, 2009 V7.18 A. Garrels added some lines to force client browser's login
                    dialog when the nonce is stale with digest authentication.
-
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsWebServ1;
@@ -99,6 +109,13 @@ unit OverbyteIcsWebServ1;
 {$I+}                 { Turn IO exceptions to on            }
 {$H+}                 { Use long strings                    }
 {$J+}                 { Allow typed constant to be modified }
+{$IFDEF COMPILER12_UP}
+    { These are usefull for debugging !}
+    {$WARN IMPLICIT_STRING_CAST       OFF}
+    {$WARN IMPLICIT_STRING_CAST_LOSS  OFF}
+    {$WARN EXPLICIT_STRING_CAST       OFF}
+    {$WARN EXPLICIT_STRING_CAST_LOSS  OFF}
+{$ENDIF}
 {$WARN SYMBOL_PLATFORM   OFF}
 {$WARN SYMBOL_LIBRARY    OFF}
 {$WARN SYMBOL_DEPRECATED OFF}
@@ -107,13 +124,13 @@ interface
 
 uses
   WinTypes, WinProcs, Messages, SysUtils, Classes, Controls, Forms,
-  IniFiles, StdCtrls, ExtCtrls, StrUtils,
+  OverbyteIcsIniFiles, StdCtrls, ExtCtrls, StrUtils,
   OverbyteIcsWinSock,  OverbyteIcsWSocket, OverbyteIcsWndControl,
-  OverbyteIcsHttpSrv;
+  OverbyteIcsHttpSrv, OverbyteIcsUtils;
 
 const
-  WebServVersion     = 114;
-  CopyRight : String = 'WebServ (c) 1999-2009 F. Piette V1.14 ';
+  WebServVersion     = 718;
+  CopyRight : String = 'WebServ (c) 1999-2009 F. Piette V7.18 ';
   NO_CACHE           = 'Pragma: no-cache' + #13#10 + 'Expires: -1' + #13#10;
   WM_CLIENT_COUNT    = WM_USER + WH_MAX_MSG + 1;
 
@@ -125,10 +142,12 @@ type
   { his own private data.                                                   }
   TMyHttpConnection = class(THttpConnection)
   protected
-    FPostedDataBuffer : PChar;     { Will hold dynamically allocated buffer }
+    FPostedRawData    : PAnsiChar; { Will hold dynamically allocated buffer }
+    FPostedDataBuffer : PChar;     { Contains either Unicode or Ansi data   }
     FPostedDataSize   : Integer;   { Databuffer size                        }
     FDataLen          : Integer;   { Keep track of received byte count.     }
     FDataFile         : TextFile;  { Used for datafile display              }
+    FFileIsUtf8       : Boolean;
   public
     destructor  Destroy; override;
   end;
@@ -158,6 +177,10 @@ type
     RedirURLEdit: TEdit;
     TemplateDirEdit: TEdit;
     Label6: TLabel;
+    KeepAliveTimeSecEdit: TEdit;
+    Label7: TLabel;
+    Label8: TLabel;
+    MaxRequestsKeepAliveEdit: TEdit;
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -274,6 +297,8 @@ const
     KeyDirList         = 'AllowDirList';
     KeyOutsideRoot     = 'AllowOutsideRoot';
     KeyRedirUrl        = 'RedirURL';
+    KeyMaxRequests     = 'MaxRequestsKeepAlive';
+    KeyKeepAliveSec    = 'KeepAliveTimeSec';
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -301,11 +326,9 @@ end;
 procedure TWebServForm.FormCreate(Sender: TObject);
 begin
     { Create IniFileName based on EXE file name; }
-    FIniFileName := LowerCase(ExtractFileName(Application.ExeName));
-    FIniFileName := Copy(FIniFileName, 1, Length(FIniFileName) - 3) + 'ini';
-    FLogFileName := Application.ExeName;
-    FLogFileName := Copy(FLogFileName, 1, Length(FLogFileName) - 3) + '.log';
-{$IFDEF DELPHI10}
+    FIniFileName := GetIcsIniFileName;
+    FLogFileName := ChangeFileExt(FIniFileName, '.log');
+{$IFDEF DELPHI10_UP}
     // BDS2006 has built-in memory leak detection and display
     ReportMemoryLeaksOnShutdown := (DebugHook <> 0);
 {$ENDIF}
@@ -322,7 +345,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TWebServForm.FormShow(Sender: TObject);
 var
-    IniFile : TIniFile;
+    IniFile : TIcsIniFile;
     wsi     : TWSADATA;
     MyIp    : TStringList;
 begin
@@ -330,7 +353,7 @@ begin
         FInitialized := TRUE;
 
         { Restore persistent data from INI file }
-        IniFile      := TIniFile.Create(FIniFileName);
+        IniFile      := TIcsIniFile.Create(FIniFileName);
         Width        := IniFile.ReadInteger(SectionWindow, KeyWidth,  Width);
         Height       := IniFile.ReadInteger(SectionWindow, KeyHeight, Height);
         Top          := IniFile.ReadInteger(SectionWindow, KeyTop,
@@ -349,6 +372,10 @@ begin
                                                   '80');
         RedirUrlEdit.Text   := IniFile.ReadString(SectionData, KeyRedirUrl,
                                      '/time.html');
+        KeepAliveTimeSecEdit.Text := IniFile.ReadString(SectionData,
+                                     KeyKeepAliveSec, '10');
+        MaxRequestsKeepAliveEdit.Text := IniFile.ReadString(SectionData,
+                                         KeyMaxRequests, '100');
         DirListCheckBox.Checked :=
                 Boolean(IniFile.ReadInteger(SectionData, KeyDirList, 1));
         OutsideRootCheckBox.Checked :=
@@ -357,7 +384,7 @@ begin
                 Boolean(IniFile.ReadInteger(SectionData, KeyDisplayHeader, 0));
         WriteLogFileCheckBox.Checked :=
                 Boolean(IniFile.ReadInteger(SectionData, KeyLogToFile, 0));
-        IniFile.Destroy;
+        IniFile.Free;
         { Start log file }
         if WriteLogFileCheckBox.Checked then begin
             OpenLogFile;
@@ -377,8 +404,8 @@ begin
         Display('        Version ' +
                 Format('%d.%d', [WinsockInfo.wHighVersion shr 8,
                                  WinsockInfo.wHighVersion and 15]));
-        Display('        ' + StrPas(@wsi.szDescription));
-        Display('        ' + StrPas(@wsi.szSystemStatus));
+        Display('        ' + StrPas(wsi.szDescription));
+        Display('        ' + StrPas(wsi.szSystemStatus));
 {$IFNDEF DELPHI3}
         { A bug in Delphi 3 makes lpVendorInfo invalid }
         if wsi.lpVendorInfo <> nil then
@@ -401,10 +428,10 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TWebServForm.FormClose(Sender: TObject; var Action: TCloseAction);
 var
-    IniFile : TIniFile;
+    IniFile : TIcsIniFile;
 begin
     { Save persistent data to INI file }
-    IniFile := TIniFile.Create(FIniFileName);
+    IniFile := TIcsIniFile.Create(FIniFileName);
     IniFile.WriteInteger(SectionWindow, KeyTop,         Top);
     IniFile.WriteInteger(SectionWindow, KeyLeft,        Left);
     IniFile.WriteInteger(SectionWindow, KeyWidth,       Width);
@@ -422,7 +449,13 @@ begin
                                         Ord(DisplayHeaderCheckBox.Checked));
     IniFile.WriteInteger(SectionData,   KeyLogToFile,
                                         Ord(WriteLogFileCheckBox.Checked));
-    IniFile.Destroy;
+    IniFile.WriteInteger(SectionData,   KeyKeepAliveSec,
+                                        StrToIntDef(KeepAliveTimeSecEdit.Text, 10));
+    IniFile.WriteInteger(SectionData,   KeyMaxRequests,
+                                        StrToIntDef(MaxRequestsKeepAliveEdit.Text, 100));
+    
+    IniFile.UpdateFile;
+    IniFile.Free;
     CloseLogFile;
 end;
 
@@ -485,11 +518,13 @@ begin
     else
         HttpServer1.Options := HttpServer1.Options - [hoAllowOutsideRoot];
 
-    HttpServer1.DocDir      := Trim(DocDirEdit.Text);
-    HttpServer1.DefaultDoc  := Trim(DefaultDocEdit.Text);
-    HttpServer1.TemplateDir := Trim(TemplateDirEdit.Text);
-    HttpServer1.Port        := Trim(PortEdit.Text);
-    HttpServer1.ClientClass := TMyHttpConnection;
+    HttpServer1.DocDir               := Trim(DocDirEdit.Text);
+    HttpServer1.DefaultDoc           := Trim(DefaultDocEdit.Text);
+    HttpServer1.TemplateDir          := Trim(TemplateDirEdit.Text);
+    HttpServer1.Port                 := Trim(PortEdit.Text);
+    HttpServer1.KeepAliveTimeSec     := StrToIntDef(KeepAliveTimeSecEdit.Text, 10);
+    HttpServer1.MaxRequestsKeepAlive := StrToIntDef(MaxRequestsKeepAliveEdit.Text, 100);
+    HttpServer1.ClientClass          := TMyHttpConnection;
     try
         HttpServer1.Start;
     except
@@ -533,13 +568,15 @@ procedure TWebServForm.HttpServer1ServerStarted(Sender: TObject);
 var
     DemoUrl : String;
 begin
-    DocDirEdit.Enabled          := FALSE;
-    DefaultDocEdit.Enabled      := FALSE;
-    DirListCheckBox.Enabled     := FALSE;
-    OutsideRootCheckBox.Enabled := FALSE;
-    PortEdit.Enabled            := FALSE;
-    StartButton.Enabled         := FALSE;
-    StopButton.Enabled          := TRUE;
+    DocDirEdit.Enabled                := FALSE;
+    DefaultDocEdit.Enabled            := FALSE;
+    DirListCheckBox.Enabled           := FALSE;
+    OutsideRootCheckBox.Enabled       := FALSE;
+    PortEdit.Enabled                  := FALSE;
+    KeepAliveTimeSecEdit.Enabled      := FALSE;
+    MaxRequestsKeepAliveEdit.Enabled  := FALSE;
+    StartButton.Enabled               := FALSE;
+    StopButton.Enabled                := TRUE;
     Display('Server is waiting for connections on port ' + HttpServer1.Port);
 
     DemoUrl := 'http://' + LowerCase(LocalHostName);
@@ -556,13 +593,15 @@ end;
 { when server socket stop listening.                                        }
 procedure TWebServForm.HttpServer1ServerStopped(Sender: TObject);
 begin
-    DocDirEdit.Enabled          := TRUE;
-    DefaultDocEdit.Enabled      := TRUE;
-    DirListCheckBox.Enabled     := TRUE;
-    OutsideRootCheckBox.Enabled := TRUE;
-    PortEdit.Enabled            := TRUE;
-    StartButton.Enabled         := TRUE;
-    StopButton.Enabled          := FALSE;
+    DocDirEdit.Enabled                := TRUE;
+    DefaultDocEdit.Enabled            := TRUE;
+    DirListCheckBox.Enabled           := TRUE;
+    OutsideRootCheckBox.Enabled       := TRUE;
+    PortEdit.Enabled                  := TRUE;
+    StartButton.Enabled               := TRUE;
+    KeepAliveTimeSecEdit.Enabled      := TRUE;
+    MaxRequestsKeepAliveEdit.Enabled  := TRUE;
+    StopButton.Enabled                := FALSE;
     Display('Server stopped');
 end;
 
@@ -935,10 +974,6 @@ begin
     ClientCnx.AnswerString(Flags,
         '',                            { Default Status '200 OK'            }
         '',                            { Default Content-Type: text/html    }
-{$IFDEF DELPHI2_UP}
-        { Sorry but Delphi 1 doesn't support long strings                     }
-        'X-LongHeader: '   + DupeString('Hello ', 1500) + #13#10 +
-{$ENDIF}
         'Pragma: no-cache' + #13#10 +  { No client caching please           }
         'Expires: -1'      + #13#10,   { I said: no caching !               }
         '<HTML>' +
@@ -987,7 +1022,8 @@ procedure TWebServForm.FormDataGetRow(
     var More        : Boolean;
     UserData        : TObject);
 var
-    Buf       : String;
+    BufA       : AnsiString;
+    Buf        : String;
     ClientCnx : TMyHttpConnection;
 begin
     { Check if the table name. There could be several tables or table       }
@@ -1004,7 +1040,17 @@ begin
         Exit;
 
     { Read a line form data file                                            }
-    ReadLn(ClientCnx.FDataFile, Buf);
+    ReadLn(ClientCnx.FDataFile, BufA);
+
+    { Convert to String }
+    if ClientCnx.FFileIsUtf8 then
+    {$IFDEF UNICODE}
+        Buf := Utf8ToStringW(BufA)
+    {$ELSE}
+        Buf := Utf8ToStringA(BufA)
+    {$ENDIF}
+    else
+        Buf := String(BufA);
 
     { Extract column data from the datafile line                            }
     TagData.Add('DATE', Copy(Buf, 1, 8));
@@ -1026,11 +1072,26 @@ procedure TWebServForm.CreateVirtualDocument_ViewFormData(
     Sender    : TObject;            { HTTP server component                 }
     ClientCnx : TMyHttpConnection;  { Client connection issuing command     }
     var Flags : THttpGetFlag);      { Tells what HTTP server has to do next }
+var
+    Bom : array [0..2] of Byte;
+    I   : Integer;
 begin
     { Open data file                                                        }
     AssignFile(ClientCnx.FDataFile, 'FormHandler.txt');
     Reset(ClientCnx.FDataFile);
     try
+        { Check whether the data file is UTF-8 encoded }
+        I := 0;
+        while not EOF(ClientCnx.FDataFile) and (I < 3) do
+        begin
+            Read(ClientCnx.FDataFile, AnsiChar(BOM[I]));
+            Inc(I);
+        end;
+        ClientCnx.FFileIsUtf8 := (I = 3) and (Bom[0] = $EF) and
+                                 (Bom[1] = $BB) and (Bom[2] = $BF);
+        if not ClientCnx.FFileIsUtf8 then
+            Reset(ClientCnx.FDataFile);
+
         { Set event handler for getting datafile rows                       }
         ClientCnx.OnGetRowData := FormDataGetRow;
         ClientCnx.AnswerPage(
@@ -1104,20 +1165,8 @@ begin
         { We need a buffer to hold posted data. We allocate as much as the }
         { size of posted data plus one byte for terminating nul char.      }
         { We should check for ContentLength = 0 and handle that case...    }
-{$IFDEF VER80}
-        if ClientCnx.FPostedDataSize = 0 then begin
-            ClientCnx.FPostedDataSize := ClientCnx.RequestContentLength + 1;
-            GetMem(ClientCnx.FPostedDataBuffer, ClientCnx.FPostedDataSize);
-        end
-        else begin
-            ReallocMem(ClientCnx.FPostedDataBuffer, ClientCnx.FPostedDataSize,
-                       ClientCnx.RequestContentLength + 1);
-            ClientCnx.FPostedDataSize := ClientCnx.RequestContentLength + 1;
-        end;
-{$ELSE}
-        ReallocMem(ClientCnx.FPostedDataBuffer,
+        ReallocMem(ClientCnx.FPostedRawData,
                    ClientCnx.RequestContentLength + 1);
-{$ENDIF}
         { Clear received length }
         ClientCnx.FDataLen := 0;
     end;
@@ -1138,7 +1187,7 @@ procedure TWebServForm.HttpServer1PostedData(
 var
     Len     : Integer;
     Remains : Integer;
-    Junk    : array [0..255] of char;
+    Junk    : array [0..255] of AnsiChar;
     ClientCnx  : TMyHttpConnection;
 begin
     { It's easyer to do the cast one time. Could use with clause... }
@@ -1156,7 +1205,7 @@ begin
     { Receive as much data as we need to receive. But warning: we may       }
     { receive much less data. Data will be split into several packets we    }
     { have to assemble in our buffer.                                       }
-    Len := ClientCnx.Receive(ClientCnx.FPostedDataBuffer + ClientCnx.FDataLen, Remains);
+    Len := ClientCnx.Receive(ClientCnx.FPostedRawData + ClientCnx.FDataLen, Remains);
     { Sometimes, winsock doesn't wants to givve any data... }
     if Len <= 0 then
         Exit;
@@ -1164,12 +1213,16 @@ begin
     { Add received length to our count }
     Inc(ClientCnx.FDataLen, Len);
     { Add a nul terminating byte (handy to handle data as a string) }
-    ClientCnx.FPostedDataBuffer[ClientCnx.FDataLen] := #0;
+    ClientCnx.FPostedRawData[ClientCnx.FDataLen] := #0;
     { Display receive data so far }
-    Display('Data: ''' + StrPas(ClientCnx.FPostedDataBuffer) + '''');
-
+    Display('Data: ''' + StrPas(ClientCnx.FPostedRawData) + '''');
     { When we received the whole thing, we can process it }
     if ClientCnx.FDataLen = ClientCnx.RequestContentLength then begin
+{$IFDEF COMPILER12_UP}
+        ClientCnx.FPostedDataBuffer := Pointer(UnicodeString(ClientCnx.FPostedRawData)); // Cast to Unicode
+{$ELSE}
+        ClientCnx.FPostedDataBuffer := ClientCnx.FPostedRawData;
+{$ENDIF}
         { First we must tell the component that we've got all the data }
         ClientCnx.PostedDataReceived;
         { Then we check if the request is one we handle }
@@ -1196,6 +1249,10 @@ var
     HostName  : String;
     Buf       : String;
     Dummy     : THttpGetFlag;
+    Bom       : array[0..2] of Byte;
+    IsUtf8    : Boolean;
+    Len       : Integer;
+    Utf8Str   : AnsiString;
 begin
     { Extract fields from posted data. }
     ExtractURLEncodedValue(ClientCnx.FPostedDataBuffer, 'FirstName', FirstName);
@@ -1211,12 +1268,28 @@ begin
 
     EnterCriticalSection(LockFileAccess);
     try
-        if FileExists(FileName) then
-            Stream := TFileStream.Create(FileName, fmOpenWrite)
-        else
+        if FileExists(FileName) then begin
+            Stream := TFileStream.Create(FileName, fmOpenReadWrite);
+            { Check whether the data file is UTF-8 encoded }
+            Len := Stream.Read(Bom[0], SizeOf(Bom));
+            IsUtf8 := (Len = 3) and (Bom[0] = $EF) and (Bom[1] = $BB) and
+                      (Bom[2] = $BF);
+            Stream.Seek(0, soFromEnd);
+        end
+        else begin
+            { We use UTF-8 by default for new data files }
             Stream := TFileStream.Create(FileName, fmCreate);
-        Stream.Seek(0, soFromEnd);
-        Stream.Write(Buf[1], Length(Buf));
+            IsUtf8 := TRUE;
+            Bom[0] := $EF; Bom[1] := $BB; Bom[2] := $BF;
+            Stream.Write(Bom[0], SizeOf(Bom));
+        end;
+        if IsUtf8 then
+        begin
+            Utf8Str := StringToUtf8(Buf);
+            Stream.Write(PAnsiChar(Utf8Str)^, Length(Utf8Str));
+        end
+        else
+            StreamWriteStrA(Stream, Buf);
         Stream.Destroy;
     finally
         LeaveCriticalSection(LockFileAccess);
@@ -1265,10 +1338,10 @@ end;
 { memory for our data buffer.                                               }
 destructor TMyHttpConnection.Destroy;
 begin
-    if Assigned(FPostedDataBuffer) then begin
-        FreeMem(FPostedDataBuffer, FPostedDataSize);
-        FPostedDataBuffer := nil;
-        FPostedDataSize   := 0;
+    if Assigned(FPostedRawData) then begin
+        FreeMem(FPostedRawData, FPostedDataSize);
+        FPostedRawData  := nil;
+        FPostedDataSize := 0;
     end;
     inherited Destroy;
 end;
@@ -1400,7 +1473,7 @@ begin
             ClientCnx.GetPeerAddr + '] authentication ' +
             SuccessStr[Success] + ' for ' +
             ClientCnx.Path);
-            
+
     if (not Success) and (ClientCnx.AuthTypes = [atNtlm]) and
        (ClientCnx.AuthNtlmSession <> nil) then
         Display(ClientCnx.AuthNtlmSession.AuthErrorDesc);  // just for debugging!

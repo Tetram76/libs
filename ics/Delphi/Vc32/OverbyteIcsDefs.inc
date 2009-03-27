@@ -3,7 +3,7 @@
 Author:       François PIETTE
 Description:  Version defines for ICS (Internet Component Suite)
 Creation:     2003
-Version:      1.07
+Version:      1.09
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -45,6 +45,7 @@ Mar 13, 2005 V1.04 Changed conditional symbol for streams supporting 64 bits
                    seek.
 Jul 30, 2005 V1.05 Updated for Delphi 10. Not tested !
 Sept 2, 2005 V1.06 64-bit streams are Delphi 6 and later
+Oct 05, 2008 V1.09 USE_LINE for COMPILER10_UP, removed UNICODE check for .NET.
 
 
   SYMBOL           Compiler version
@@ -108,6 +109,14 @@ Sept 2, 2005 V1.06 64-bit streams are Delphi 6 and later
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 
+{ User defines : enable or disable these defines depending on how you want your 
+  ICS Packages to be compiled }
+  
+{#$DEFINE USE_SSL}
+{$DEFINE ZLIB_OBJ}
+
+{ Dont not change anything below this line ! }
+
 {$IFDEF FPC}
   {$MODE Delphi}                           { delphi mode            }
   {$H+}                                    { Use long strings       }
@@ -147,7 +156,8 @@ Sept 2, 2005 V1.06 64-bit streams are Delphi 6 and later
   {$ENDIF}
 {$ENDIF}
 
-{$IFDEF VER190}   {Some preliminary Tiburon version use that symbol}
+(*
+{$IFDEF VER190}   {Some preliminary Tiburon version use that symbol and .NET 2007}
   {$DEFINE COMPILER12}
   {$IFDEF BCB}
     {$DEFINE BCB12}
@@ -156,6 +166,7 @@ Sept 2, 2005 V1.06 64-bit streams are Delphi 6 and later
     {$DEFINE DELPHI}
   {$ENDIF}
 {$ENDIF}
+*)
 
 {$IFDEF VER185}
   {$DEFINE COMPILER11}
@@ -570,8 +581,22 @@ Sept 2, 2005 V1.06 64-bit streams are Delphi 6 and later
   {$DEFINE VCL}
 {$ENDIF}
 
-{$IFNDEF FPC}             { Not for FPC ?                           }
-  {$IFDEF VCL}            { Not for .NET                            }
-    //{$DEFINE USE_SSL}     { Uncommend this line to include SSL code }
+{$IFDEF COMPILER10_UP}
+    {$DEFINE USE_INLINE}
+{$ENDIF}
+
+{$IFDEF COMPILER12_UP}
+  {$IFNDEF BCB}
+    {$STRINGCHECKS OFF}
   {$ENDIF}
+{$ENDIF}
+
+{ ICS SSL code don't work on FPC }
+{$IFDEF FPC}
+  {$UNDEF USE_SSL}
+{$ENDIF}
+
+{ ICS SSL code don't work on .NET }
+{$IFNDEF VCL}
+  {$UNDEF USE_SSL}  
 {$ENDIF}

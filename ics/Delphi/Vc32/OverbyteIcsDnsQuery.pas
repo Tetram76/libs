@@ -4,11 +4,11 @@ Author:       François PIETTE
 Description:  Component to query DNS records.
               Implement a subset of RFC 1035 (A and MX records).
 Creation:     January 29, 1999
-Version:      6.00
+Version:      6.02
 EMail:        http://www.overbyte.be        francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1999-2007 by François PIETTE
+Legal issues: Copyright (C) 1999-2008 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
               <francois.piette@overbyte.be>
 
@@ -56,6 +56,8 @@ Mar 06, 2005 V1.07 DecodeAnswer has been fixed to avoid winsock ntohs and
                    defined the function as returning LongInt instead of Cardinal
 May 29, 2005 V1.08 Jack <jlist9@gmail.com> added TCP support
 Mar 26, 2006 V6.00 New version 6 started
+Jun 05, 2008 A. Garrels made some changes to prepare code for Unicode
+Aug 11, 2008 V6.02 A. Garrels - Type AnsiString rolled back to String.
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -90,8 +92,8 @@ uses
     SysUtils, Classes, OverbyteIcsWinsock, OverbyteIcsWSocket;
 
 const
-  DnsQueryVersion    = 600;
-  CopyRight : String = ' TDnsQuery  (c) 1999-2007 F. Piette V6.00 ';
+  DnsQueryVersion    = 602;
+  CopyRight : String = ' TDnsQuery  (c) 1999-2008 F. Piette V6.02 ';
 
   { Maximum answers (responses) count }
   MAX_ANCOUNT     = 50;
@@ -161,15 +163,15 @@ const
   DnsOpCodeSTATUS = 2;
 
 type
-  TDnsAnswerNameArray   = packed array [0..MAX_ANCOUNT - 1]     of String;
+  TDnsAnswerNameArray   = packed array [0..MAX_ANCOUNT - 1]     of AnsiString;
   TDnsAnswerTypeArray   = packed array [0..MAX_ANCOUNT - 1]     of Integer;
   TDnsAnswerClassArray  = packed array [0..MAX_ANCOUNT - 1]     of Integer;
   TDnsAnswerTTLArray    = packed array [0..MAX_ANCOUNT - 1]     of LongInt;
   TDnsAnswerTagArray    = packed array [0..MAX_ANCOUNT - 1]     of Integer;
   TDnsMXPreferenceArray = packed array [0..MAX_MX_RECORDS - 1]  of Integer;
-  TDnsMXExchangeArray   = packed array [0..MAX_MX_RECORDS - 1]  of String;
+  TDnsMXExchangeArray   = packed array [0..MAX_MX_RECORDS - 1]  of AnsiString;
   TDnsAddressArray      = packed array [0..MAX_A_RECORDS - 1]   of TInAddr;
-  TDnsHostnameArray     = packed array [0..MAX_PTR_RECORDS - 1] of String;
+  TDnsHostnameArray     = packed array [0..MAX_PTR_RECORDS - 1] of AnsiString;
 
   TDnsRequestDoneEvent = procedure (Sender : TObject; Error : WORD) of Object;
   TDnsRequestHeader = packed record
@@ -202,10 +204,10 @@ type
     vertpre             : integer;
     { Latitude, degree, minutes, seconds, milliseconds }
     lad, lam, las, lams : integer;
-    lahem               : char;
+    lahem               : ansichar;
     { same for Longitude }
     lod, lom, los, loms : integer;
-    lohem               : char;
+    lohem               : ansichar;
     altitude            : integer;
   end;
 
@@ -215,9 +217,9 @@ type
     FPort                       : String;
     FAddr                       : String;
     FIDCount                    : WORD;
-    FQueryBuf                   : array [0..511] of char;
+    FQueryBuf                   : array [0..511] of ansichar;
     FQueryLen                   : Integer;
-    FResponseBuf                : array [0..511] of char;
+    FResponseBuf                : array [0..511] of ansichar;
     FResponseLen                : Integer;
     FResponseID                 : Integer;
     FResponseCode               : Integer;
@@ -231,7 +233,7 @@ type
     FResponseARCount            : Integer;
     FQuestionType               : Integer;
     FQuestionClass              : Integer;
-    FQuestionName               : String;
+    FQuestionName               : AnsiString;
     FAnswerNameArray            : TDnsAnswerNameArray;
     FAnswerTypeArray            : TDnsAnswerTypeArray;
     FAnswerClassArray           : TDnsAnswerClassArray;
@@ -250,14 +252,14 @@ type
     FLengthByte                 : array [0..1] of BYTE; {  for tcp         }
     fLOCInfo                    : TLOCInfo;
     function GetMXPreference(nIndex : Integer) : Integer;
-    function GetMXExchange(nIndex : Integer)   : String;
-    function GetAnswerName(nIndex : Integer)   : String;
+    function GetMXExchange(nIndex : Integer)   : AnsiString;
+    function GetAnswerName(nIndex : Integer)   : AnsiString;
     function GetAnswerType(nIndex : Integer)   : Integer;
     function GetAnswerClass(nIndex : Integer)  : Integer;
     function GetAnswerTTL(nIndex : Integer)    : LongInt;
     function GetAnswerTag(nIndex : Integer)    : Integer;
     function GetAddress(nIndex : Integer)      : TInAddr;
-    function GetHostname(nIndex : Integer)     : String;
+    function GetHostname(nIndex : Integer)     : AnsiString;
     procedure BuildRequestHeader(Dst       : PDnsRequestHeader;
                                  ID        : WORD;
                                  OPCode    : BYTE;
@@ -266,41 +268,41 @@ type
                                  ANCount   : WORD;
                                  NSCount   : WORD;
                                  ARCount   : WORD); virtual;
-    function  BuildQuestionSection(Dst         : PChar;
-                                   const QName : String;
+    function  BuildQuestionSection(Dst         : PAnsiChar;
+                                   const QName : AnsiString;
                                    QType       : WORD;
                                    QClass      : WORD) : Integer; virtual;
     procedure WSocketDataAvailable(Sender: TObject; Error: WORD); virtual;
     procedure WSocketSessionConnected(Sender: TObject; Error: WORD); virtual;
     procedure TriggerRequestDone(Error: WORD); virtual;
-    function  GetResponseBuf : PChar;
+    function  GetResponseBuf : PAnsiChar;
     procedure SendQuery;
-    function  ExtractName(Base       : PChar;
-                          From       : PChar;
-                          var Name   : String) : PChar;
-    function  DecodeQuestion(Base       : PChar;
-                             From       : PChar;
-                             var Name   : String;
+    function  ExtractName(Base       : PAnsiChar;
+                          From       : PAnsiChar;
+                          var Name   : AnsiString) : PAnsiChar;
+    function  DecodeQuestion(Base       : PAnsiChar;
+                             From       : PAnsiChar;
+                             var Name   : AnsiString;
                              var QType  : Integer;
-                             var QClass : Integer) : PChar;
-    function DecodeAnswer(Base         : PChar;
-                          From         : PChar;
-                          var Name     : String;
+                             var QClass : Integer) : PAnsiChar;
+    function DecodeAnswer(Base         : PAnsiChar;
+                          From         : PAnsiChar;
+                          var Name     : AnsiString;
                           var QType    : Integer;
                           var QClass   : Integer;
                           var TTL      : LongInt;
                           var RDataPtr : Pointer;
-                          var RDataLen : Integer) : PChar;
-    function DecodeMXData(Base           : PChar;
-                          From           : PChar;
+                          var RDataLen : Integer) : PAnsiChar;
+    function DecodeMXData(Base           : PAnsiChar;
+                          From           : PAnsiChar;
                           var Preference : Integer;
-                          var Exchange   : String) : PChar;
-    function DecodeAData(Base        : PChar;
-                         From        : PChar;
-                         var Address : TInAddr) : PChar;
-    function DecodePTRData(Base         : PChar;
-                           From         : PChar;
-                           var Hostname : String) : PChar;
+                          var Exchange   : AnsiString) : PAnsiChar;
+    function DecodeAData(Base        : PAnsiChar;
+                         From        : PAnsiChar;
+                         var Address : TInAddr) : PAnsiChar;
+    function DecodePTRData(Base         : PAnsiChar;
+                           From         : PAnsiChar;
+                           var Hostname : AnsiString) : PAnsiChar;
     function  GetMultiThreaded: Boolean;
     procedure SetMultiThreaded(const Value: Boolean);
     procedure SetProto(const Value : String);
@@ -308,10 +310,10 @@ type
     constructor Create(AOwner : TComponent); override;
     destructor  Destroy; override;
     procedure   Notification(AComponent: TComponent; operation: TOperation); override;
-    function    MXLookup(Domain : String) : Integer;
-    function    ALookup(Host : String) : Integer;
-    function    PTRLookup(IP : String) : Integer;
-    function    QueryAny(Host : String; QNumber : Integer) : Integer;
+    function    MXLookup(Domain : AnsiString) : Integer;
+    function    ALookup(Host : AnsiString) : Integer;
+    function    PTRLookup(IP : AnsiString) : Integer;
+    function    QueryAny(Host : AnsiString; QNumber : Integer) : Integer;
     property ResponseID                 : Integer read FResponseID;
     property ResponseCode               : Integer read FResponseCode;
     property ResponseOpCode             : Integer read FResponseOpCode;
@@ -322,20 +324,20 @@ type
     property ResponseANCount            : Integer read FResponseANCount;
     property ResponseNSCount            : Integer read FResponseNSCount;
     property ResponseARCount            : Integer read FResponseARCount;
-    property ResponseBuf                : PChar   read GetResponseBuf;
+    property ResponseBuf                : PAnsiChar   read GetResponseBuf;
     property ResponseLen                : Integer read FResponseLen;
     property QuestionType               : Integer read FQuestionType;
     property QuestionClass              : Integer read FQuestionClass;
-    property QuestionName               : String  read FQuestionName;
-    property AnswerName[nIndex : Integer]   : String  read GetAnswerName;
+    property QuestionName               : AnsiString  read FQuestionName;
+    property AnswerName[nIndex : Integer]   : AnsiString  read GetAnswerName;
     property AnswerType[nIndex : Integer]   : Integer read GetAnswerType;
     property AnswerClass[nIndex : Integer]  : Integer read GetAnswerClass;
     property AnswerTTL[nIndex : Integer]    : LongInt read GetAnswerTTL;
     property AnswerTag[nIndex : Integer]    : Integer read GetAnswerTag;
     property MXPreference[nIndex : Integer] : Integer read GetMXPreference;
-    property MXExchange[nIndex : Integer]   : String  read GetMXExchange;
+    property MXExchange[nIndex : Integer]   : AnsiString  read GetMXExchange;
     property Address[nIndex : Integer]      : TInAddr read GetAddress;
-    property Hostname[nIndex : Integer]     : String  read GetHostname;
+    property Hostname[nIndex : Integer]     : AnsiString  read GetHostname;
     property Loc                            : TLOCInfo read fLOCInfo;
   published
     property Port    : String read  FPort  write FPort;
@@ -348,10 +350,9 @@ type
   end;
 
 
-function ReverseIP(const IP : String) : String;
-function LongLatToDMS(longlat : longint; hemis : String) : String; { !!KAP!! }
+function ReverseIP(const IP : AnsiString) : AnsiString;
+function LongLatToDMS(longlat : longint; hemis : AnsiString) : AnsiString; { !!KAP!! }
 function Loc2Geo(loc : TLOCInfo) : TLogGeo;                        { !!KAP!! }
-procedure Register;
 
 implementation
 
@@ -360,10 +361,8 @@ type
     PDWORD = ^DWORD;
 
 
-
-
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function ReverseIP(const IP : String) : String;
+function ReverseIP(const IP : AnsiString) : AnsiString;
 var
     I, J : Integer;
 begin
@@ -382,14 +381,6 @@ begin
     if Result[1] = '.' then
         Delete(Result, 1, 1);
 end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure Register;
-begin
-    RegisterComponents('FPiette', [TDnsQuery]);
-end;
-
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 constructor TDnsQuery.Create(AOwner : TComponent);
@@ -437,7 +428,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TDnsQuery.GetMXExchange(nIndex : Integer) : String;
+function TDnsQuery.GetMXExchange(nIndex : Integer) : AnsiString;
 begin
     { Silently ignore index out of bounds error }
     if (nIndex < Low(FMXExchangeArray)) or
@@ -449,7 +440,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TDnsQuery.GetAnswerName(nIndex : Integer) : String;
+function TDnsQuery.GetAnswerName(nIndex : Integer) : AnsiString;
 begin
     { Silently ignore index out of bounds error }
     if (nIndex < Low(FAnswerNameArray)) or
@@ -521,7 +512,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TDnsQuery.GetHostname(nIndex : Integer) : String;
+function TDnsQuery.GetHostname(nIndex : Integer) : AnsiString;
 begin
     { Silently ignore index out of bounds error }
     if (nIndex < Low(FHostnameArray)) or
@@ -533,14 +524,14 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TDnsQuery.GetResponseBuf : PChar;
+function TDnsQuery.GetResponseBuf : PAnsiChar;
 begin
     Result := @FResponseBuf;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TDnsQuery.MXLookup(Domain : String) : Integer;
+function TDnsQuery.MXLookup(Domain : AnsiString) : Integer;
 begin
     Inc(FIDCount);
     BuildRequestHeader(PDnsRequestHeader(@FQueryBuf), FIDCount, DnsOpCodeQuery, TRUE, 1, 0, 0, 0);
@@ -552,7 +543,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TDnsQuery.ALookup(Host : String) : Integer;
+function TDnsQuery.ALookup(Host : AnsiString) : Integer;
 begin
     Inc(FIDCount);
     BuildRequestHeader(PDnsRequestHeader(@FQueryBuf), FIDCount, DnsOpCodeQuery, TRUE, 1, 0, 0, 0);
@@ -564,7 +555,7 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { !!KAP!! }
-function TDnsQuery.QueryAny(Host : String; QNumber : integer) : Integer;
+function TDnsQuery.QueryAny(Host : AnsiString; QNumber : integer) : Integer;
 begin
     Inc(FIDCount);
     BuildRequestHeader(PDnsRequestHeader(@FQueryBuf), FIDCount, DnsOpCodeQuery, TRUE, 1, 0, 0, 0);
@@ -576,7 +567,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TDnsQuery.PTRLookup(IP : String) : Integer;
+function TDnsQuery.PTRLookup(IP : AnsiString) : Integer;
 begin
     Inc(FIDCount);
     BuildRequestHeader(PDnsRequestHeader(@FQueryBuf), FIDCount, DnsOpCodeQuery, TRUE, 1, 0, 0, 0);
@@ -610,14 +601,14 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TDnsQuery.BuildQuestionSection(
-    Dst         : PChar;
-    const QName : String;
+    Dst         : PAnsiChar;
+    const QName : AnsiString;
     QType       : WORD;
     QClass      : WORD) : Integer;
 var
     I   : Integer;
-    p   : PChar;
-    Ptr : PChar;
+    p   : PAnsiChar;
+    Ptr : PAnsiChar;
 begin
     Ptr := Dst;
     if Ptr = nil then begin
@@ -633,7 +624,7 @@ begin
             Inc(Ptr);
             Inc(I);
         end;
-        p^ := Chr(Ptr - p - 1);
+        p^ := AnsiChar(Ptr - p - 1);
         Inc(I);
     end;
     Ptr^ := #0;
@@ -682,7 +673,7 @@ var
     Len    : Integer;
     Ans    : PDnsRequestHeader;
     Flags  : Integer;
-    P      : PChar;
+    P      : PAnsiChar;
     RDataPtr : Pointer;
     RDataLen : Integer;
     I        : Integer;
@@ -830,14 +821,14 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TDnsQuery.ExtractName(
-    Base       : PChar;
-    From       : PChar;
-    var Name   : String) : PChar;
+    Base       : PAnsiChar;
+    From       : PAnsiChar;
+    var Name   : AnsiString) : PAnsiChar;
 var
     N       : Integer;
     I       : Integer;
-    P       : PChar;
-    NameEnd : String;
+    P       : PAnsiChar;
+    NameEnd : AnsiString;
 begin
     P := From;
     if P^ = #0 then begin
@@ -879,13 +870,13 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TDnsQuery.DecodeQuestion(
-    Base       : PChar;
-    From       : PChar;
-    var Name   : String;
+    Base       : PAnsiChar;
+    From       : PAnsiChar;
+    var Name   : AnsiString;
     var QType  : Integer;
-    var QClass : Integer) : PChar;
+    var QClass : Integer) : PAnsiChar;
 var
-    P : PChar;
+    P : PAnsiChar;
 begin
     P := ExtractName(Base, From, Name);
     QType  := WSocket_ntohs(PWORD(P)^);
@@ -912,16 +903,16 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TDnsQuery.DecodeAnswer(
-    Base         : PChar;
-    From         : PChar;
-    var Name     : String;
+    Base         : PAnsiChar;
+    From         : PAnsiChar;
+    var Name     : AnsiString;
     var QType    : Integer;
     var QClass   : Integer;
     var TTL      : LongInt;
     var RDataPtr : Pointer;
-    var RDataLen : Integer) : PChar;
+    var RDataLen : Integer) : PAnsiChar;
 var
-    P : PChar;
+    P : PAnsiChar;
 begin
     P        := ExtractName(Base, From, Name);
     QType    := ntohs(PWORD(P)^);  { 06/03/2005 WSocket_ntohs(PWORD(P)^); }
@@ -939,10 +930,10 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TDnsQuery.DecodeMXData(
-    Base           : PChar;
-    From           : PChar;
+    Base           : PAnsiChar;
+    From           : PAnsiChar;
     var Preference : Integer;
-    var Exchange   : String) : PChar;
+    var Exchange   : AnsiString) : PAnsiChar;
 begin
     Result := From;
     Preference := WSocket_ntohs(PWORD(Result)^);
@@ -953,9 +944,9 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TDnsQuery.DecodePTRData(
-    Base         : PChar;
-    From         : PChar;
-    var Hostname : String) : PChar;
+    Base         : PAnsiChar;
+    From         : PAnsiChar;
+    var Hostname : AnsiString) : PAnsiChar;
 begin
     Result := ExtractName(Base, From, Hostname);
 end;
@@ -963,9 +954,9 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TDnsQuery.DecodeAData(
-    Base        : PChar;
-    From        : PChar;
-    var Address : TInAddr) : PChar;
+    Base        : PAnsiChar;
+    From        : PAnsiChar;
+    var Address : TInAddr) : PAnsiChar;
 begin
     Result := From;
     Address.S_addr := Integer(PDWORD(Result)^);   { 06/03/2005 added cast }
@@ -1043,9 +1034,9 @@ const conv_sec = 1000.0;
       zh31     = 1 shl 31;
 
 procedure SubLOCgeo(longlat : longint;
-                    hemis : String;
+                    hemis : AnsiString;
                     var ldeg, lmin, lsec, lmsec : Extended;
-                    var hemic : char);
+                    var hemic : AnsiChar);
 var
     Labs : Extended;
 begin
@@ -1063,14 +1054,14 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function LongLatToDMS(longlat : longint; hemis : string):string;
+function LongLatToDMS(longlat : longint; hemis : AnsiString): AnsiString;
 Var ldeg, lmin, lsec, lmsec : extended;
-    hemi                    : char;
+    hemi                    : AnsiChar;
 begin
   SubLOCgeo(longlat,hemis,ldeg,lmin,lsec,lmsec,hemi);
-  result := Format('%d %02d %02d.%03d',
+  result := AnsiString(Format('%d %02d %02d.%03d',
                [round(ldeg), round(lmin), round(lsec),
-                round(lmsec)]) + ' ' + hemi;
+                round(lmsec)]) + ' ' + Char(hemi));
 end;
 
 
@@ -1087,9 +1078,9 @@ end;
 function Loc2Geo(loc : TLOCInfo):TLogGeo;
   { dolle umwandlung }
   procedure du(longlat : Integer;
-               hemis   : String;
+               hemis   : AnsiString;
                var ideg, imin, isec, imsec : Integer;
-               var hemic : Char);
+               var hemic : AnsiChar);
   var
       ldeg, lmin, lsec, lmsec : extended;
   begin

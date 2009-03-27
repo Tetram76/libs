@@ -5,11 +5,11 @@ Author:       François PIETTE. Based on work given by Louis S. Berman from
 Description:  MD5 is an implementation of the MD5 Message-Digest Algorithm
               as described in RFC-1321
 Creation:     October 11, 1997
-Version:      6.06
+Version:      6.08
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2007 by François PIETTE
+Legal issues: Copyright (C) 1997-2009 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
               <francois.piette@overbyte.be>
 
@@ -54,6 +54,12 @@ Oct 31, 2006 V6.03 Angus - progress reports position not size
 July 2007    V6.04 changes for .net compatibility
 27 Nov 2007  V6.05 Angus added FileMD5 for partial file, removed duplicate code
 08 Jan 2008  V6.06 Angus added FileListMD5, optional file mode to stop file being share locked
+Apr 12, 2008 *Temporary, non-breaking Unicode changes* AG.
+17 Apr, 2008 MD5UpdateBuffer String to AnsiString type-change.
+Aug 05, 2008 V6.07 F. Piette added casts to AnsiString to avoid warnings
+Jan 03, 2009 V6.07 A. Garrels added function MD5SameDigest and an overload
+             to MD5UpdateBuffer() which takes a TMD5Digest.
+
 
 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsMD5;
@@ -69,8 +75,8 @@ uses
     SysUtils, Classes;
 
 const
-    MD5Version         = 606;
-    CopyRight : String = ' MD5 Message-Digest (c) 1997-2008 F. Piette V6.06 ';
+    MD5Version         = 608;
+    CopyRight : String = ' MD5 Message-Digest (c) 1997-2009 F. Piette V6.08 ';
     DefaultMode =  fmOpenRead or fmShareDenyWrite;
 
 {$Q-}
@@ -98,9 +104,10 @@ procedure MD5Update(var MD5Context: TMD5Context;
 {$IFDEF SAFE}
     const Data : TBytes;
 {$ELSE}
-                    const Data;
+    const Data;
 {$ENDIF}
-                    Len: Integer);
+    Len: Integer);
+
 procedure MD5Transform(var Buf: array of LongInt;
                        const Data: array of LongInt);
 procedure MD5UpdateBuffer(var MD5Context: TMD5Context;
@@ -112,7 +119,10 @@ procedure MD5UpdateBuffer(var MD5Context: TMD5Context;
                           BufSize: Integer); overload;
 procedure MD5UpdateBuffer(
     var MD5Context : TMD5Context;
-    const Buffer   : String); overload;
+    const Buffer   : AnsiString); overload;
+procedure MD5UpdateBuffer(
+    var MD5Context: TMD5Context;
+    const Buffer: TMD5Digest); overload;    
 procedure MD5Final(var Digest: TMD5Digest; var MD5Context: TMD5Context);
 
 function  MD5GetBufChar(const MD5Context : TMD5Context; Index : Integer) : Byte;
@@ -136,17 +146,23 @@ function GetMD5({$IFDEF SAFE}
                 {$ELSE}
                 Buffer: Pointer;
                 {$ENDIF}
-                BufSize: Integer): string; overload;
-function StrMD5(Buffer : String): string;
-function FileMD5(const Filename: String; Mode: Word = DefaultMode) : String; overload;
+                BufSize: Integer): AnsiString; overload;
+function StrMD5(Buffer : String): String;
+{$IFDEF COMPILER12_UP}
+overload;
+function StrMD5(Buffer : AnsiString): AnsiString; overload;
+{$ENDIF}
+function FileMD5(const Filename: String; Mode: Word = DefaultMode) : AnsiString; overload;
 function FileMD5(const Filename: String; Obj: TObject; ProgressCallback: TMD5Progress;
-                                           Mode: Word = DefaultMode) : String; overload;
+                                           Mode: Word = DefaultMode) : AnsiString; overload;
 function FileMD5(const Filename: String; StartPos, EndPos: Int64;
-                                 Mode: Word = DefaultMode) : String; overload; { V6.05 }
+                                 Mode: Word = DefaultMode) : AnsiString; overload; { V6.05 }
 function FileMD5(const Filename: String; Obj: TObject; ProgressCallback : TMD5Progress;
-        StartPos, EndPos: Int64;  Mode: Word = DefaultMode): String; overload; { V6.05 }
+        StartPos, EndPos: Int64;  Mode: Word = DefaultMode): AnsiString; overload; { V6.05 }
 function FileListMD5(FileList: TStringList; Obj: TObject;
-    ProgressCallback : TMD5Progress; Mode: Word = DefaultMode) : String;    { V6.06 }
+    ProgressCallback : TMD5Progress; Mode: Word = DefaultMode) : AnsiString;    { V6.06 }
+
+function MD5SameDigest(D1, D2: TMD5Digest): Boolean;
 
 implementation
 
@@ -496,11 +512,32 @@ end;
 
 procedure MD5UpdateBuffer(
     var MD5Context : TMD5Context;
-    const Buffer   : String);
+    const Buffer   : AnsiString);
 begin
-    MD5UpdateBuffer(MD5Context, PChar(Buffer), Length(Buffer));
+    MD5UpdateBuffer(MD5Context, Pointer(Buffer), Length(Buffer));
 end;
 {$ENDIF}
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure MD5UpdateBuffer(
+    var MD5Context: TMD5Context;
+    const Buffer: TMD5Digest);
+{$IFDEF SAFE}
+var
+    Buf: TBytes;
+    I : Integer;
+{$ENDIF}
+begin
+{$IFDEF SAFE}
+    SetLength(Buf, 16);
+    for I := 0 to 15 do
+        Buf[I] := Buffer[I];
+    MD5Update(MD5Context, Buf, 16);
+{$ELSE}
+    MD5Update(MD5Context, Buffer[0], 16);
+{$ENDIF}
+end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -510,7 +547,7 @@ function GetMD5(
 {$ELSE}
     Buffer: Pointer;
 {$ENDIF}
-    BufSize: Integer): string;
+    BufSize: Integer): AnsiString;
 var
     I          : Integer;
     MD5Digest  : TMD5Digest;
@@ -523,12 +560,22 @@ begin
     MD5Final(MD5Digest, MD5Context);
     Result := '';
     for I := 0 to 15 do
-        Result := Result + IntToHex(MD5Digest[I], 2);
+        Result := Result + AnsiString(IntToHex(MD5Digest[I], 2));
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function StrMD5(Buffer : String): string;
+function StrMD5(Buffer : String): String;
+{$IFDEF COMPILER12_UP}
+begin
+    // No a real unicode MD5 computation ! Should be updated !!
+    Result := String(StrMD5(AnsiString(Buffer)));
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function StrMD5(Buffer : AnsiString): AnsiString;
+{$ENDIF}
 {$IFDEF SAFE}
 var
     Bytes : TBytes;
@@ -557,7 +604,7 @@ function FileMD5(
     Obj              : TObject;
     ProgressCallback : TMD5Progress;
     StartPos, EndPos : Int64;              { V6.05 }
-    Mode: Word = DefaultMode) : String;    { V6.06 }
+    Mode: Word = DefaultMode) : AnsiString;    { V6.06 }
 const
     ChunkSize : Cardinal = 102400;
 var
@@ -631,7 +678,7 @@ function FileMD5(
     Obj              : TObject;
     ProgressCallback : TMD5Progress;
     StartPos, EndPos : Int64;              { V6.05 }
-    Mode: Word = DefaultMode) : String;    { V6.06 }
+    Mode: Word = DefaultMode) : AnsiString;    { V6.06 }
 const
 {$IFDEF VER80}
     ChunkSize : Cardinal = 1024 * 31;
@@ -702,7 +749,7 @@ begin
         { Finalize MD5 calculation }
         MD5Final(MD5Digest, MD5Context);
         for I := 0 to 15 do
-            Result := Result + IntToHex(MD5Digest[I], 2);
+            Result := Result + AnsiString(IntToHex(MD5Digest[I], 2));
     finally
         { Free the file }
         Stream.Free;
@@ -711,28 +758,28 @@ end;
 {$ENDIF}
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function FileMD5(const Filename: String; Mode: Word = DefaultMode) : String;    { V6.06 }
+function FileMD5(const Filename: String; Mode: Word = DefaultMode) : AnsiString;    { V6.06 }
 begin
     Result := FileMD5 (FileName, 0, 0, Mode);
         end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function FileMD5(const Filename: String; StartPos, EndPos: Int64;
-                                    Mode: Word = DefaultMode) : String;    { V6.06 }
+                                    Mode: Word = DefaultMode) : AnsiString;    { V6.06 }
 begin
     Result := FileMD5(Filename, Nil, Nil, StartPos, EndPos, Mode);
         end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}  { V6.05 }
 function FileMD5(const Filename: String; Obj: TObject;
-    ProgressCallback : TMD5Progress; Mode: Word = DefaultMode) : String;    { V6.06 }
+    ProgressCallback : TMD5Progress; Mode: Word = DefaultMode) : AnsiString;    { V6.06 }
 begin
     Result := FileMD5(Filename, Obj, ProgressCallback, 0, 0, Mode);
 end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function FileListMD5(FileList: TStringList; Obj: TObject;
-    ProgressCallback : TMD5Progress; Mode: Word = DefaultMode) : String;    { V6.06 }
+    ProgressCallback : TMD5Progress; Mode: Word = DefaultMode) : AnsiString;    { V6.06 }
 const
     ChunkSize : Cardinal = 102400;
 var
@@ -813,7 +860,7 @@ begin
         { Finalize MD5 calculation }
         MD5Final(MD5Digest, MD5Context);
         for I := 0 to 15 do
-        Result := Result + IntToHex(Byte(MD5Digest[I]), 2);
+        Result := Result + AnsiString(IntToHex(Byte(MD5Digest[I]), 2));
     end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -943,7 +990,20 @@ end;
 {$ENDIF}
 
 
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function MD5SameDigest(D1, D2: TMD5Digest): Boolean;
+var
+    I : Integer;
+begin
+    Result := FALSE;
+    for I := 0 to Length(D1) -1 do
+        if D1[I] <> D2[I] then
+            Exit;
+    Result := TRUE;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFDEF MD5_SELF_TEST}
 const
     // Strings to test MD5. Expected checksums are below.

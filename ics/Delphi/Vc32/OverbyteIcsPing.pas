@@ -60,7 +60,9 @@ Nov 10, 2002 V1.12 Changed argument name from Error to Status in OnEchoReply
 Jan 29, 2004 V1.13 Added ICMPDLLHandle property and made Ping method virtual.
 May 31, 2004 V1.14 Used ICSDEFS.INC
 Mar 26, 2006 V6.00 New version 6 started.
-
+Jul 19, 2008 V6.00 F. Piette made some changes for Unicode. Address, HostName
+                      and DnsResult properties made as an AnsiString.
+                      
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsPing;
@@ -189,16 +191,7 @@ type
                                              write FOnDnsLookupDone;
   end;
 
-procedure Register;
-
 implementation
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure Register;
-begin
-    RegisterComponents('FPiette', [TPing]);
-end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -381,7 +374,7 @@ begin
     if Error = 0 then begin
         Phe        := PHostent(@FDnsLookupBuffer);
         IPAddr     := PInAddr(Phe^.h_addr_list^)^;
-        FDnsResult := StrPas(inet_ntoa(IPAddr));
+        FDnsResult := String(AnsiString(inet_ntoa(IPAddr)));
     end;
     if Assigned(FOnDnsLookupDone) then
         FOnDnsLookupDone(Self, Error);
@@ -463,17 +456,18 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TPing.DnsLookup(HostName : String);
 var
-    IPAddr  : TInAddr;
+    IPAddr    : TInAddr;
+    XHostName : AnsiString;
 begin
     { Cancel any pending lookup }
     if FDnsLookupHandle <> 0 then
         WSACancelAsyncRequest(FDnsLookupHandle);
 
     FDnsResult := '';
-
-    IPAddr.S_addr := Inet_addr(@HostName[1]);
+    XHostName  := AnsiString(HostName);
+    IPAddr.S_addr := Inet_addr(@XHostName[1]);
     if IPAddr.S_addr <> u_long(INADDR_NONE) then begin
-        FDnsResult := StrPas(inet_ntoa(IPAddr));
+        FDnsResult := String(AnsiString((inet_ntoa(IPAddr))));
         if Assigned(FOnDnsLookupDone) then
             FOnDnsLookupDone(Self, 0);
         Exit;
@@ -481,7 +475,7 @@ begin
 
     FDnsLookupHandle := WSAAsyncGetHostByName(FHandle,
                                               FMsg_WM_ASYNCGETHOSTBYNAME,
-                                              @HostName[1],
+                                              @XHostName[1],
                                               @FDnsLookupBuffer,
                                               SizeOf(FDnsLookupBuffer));
     if FDnsLookupHandle = 0 then

@@ -2,7 +2,7 @@
 
 Author:       François PIETTE
 Creation:     November 23, 1997
-Version:      6.00.7
+Version:      7.02c
 Description:  THttpCli is an implementation for the HTTP protocol
               RFC 1945 (V1.0), and some of RFC 2068 (V1.1)
 Credit:       This component was based on a freeware from by Andreas
@@ -11,7 +11,7 @@ Credit:       This component was based on a freeware from by Andreas
 EMail:        francois.piette@overbyte.be         http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2008 by François PIETTE
+Legal issues: Copyright (C) 1997-2009 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
@@ -388,41 +388,65 @@ Mar 19, 2007 V6.00.3 A.Garrels fixed a memory leak of FSendBuffer and
 May 27, 2008 V6.00.4 A.Garrels Workaround in GetHeaderLineNext. Ignore body data
              sent in the HEAD response by buggy servers.
 Jun 25, 2008 V6.00.5 A. Garrels SSL code merged.
+Jul 17, 2008 V6.00.6 A. Garrels made a few changes to prepare code for Unicode,
+             added OverbyteIcsUtils to the uses clause, optimized
+             MoveTBytesToString a bit, removed some stuff for older compilers,
+             removed typedef of TBytes, now uses TBytes of OverbyteIcsTypes.pas.
 Sep 28, 2008 V6.00.7 Maurizio Lotauro fixed a bug with premature received
              401/407 responses while data was still being sent with POST and PUT
-             requests.
+             requests. A. Garrels small fix in SendCommand().
+Sep 29, 2008 V6.00.8 A. Garrels added OverbyteIcsUtils to the uses clause
+             for all compilers.
+Dec 06, 2008 V7.00.9 A. Garrels fixed function EncodeStr and EncodeLine.
+Jan 11, 2009 V7.01 A. Garrels fixed a bug with proxies which do not
+             send a Content-Length header in non-persistent connections by
+             simply always setting FReceiveLen to zero in SocketSessionClosed.
+Jan 11, 2009 V7.02 A. Garrels - Added Digest Access Authentication.
+             In order to disable this feature entirely undefine directive
+             UseDigestAuthentication below.
+             Added new event OnBeforeAuth that can be used to skip internal
+             authorization by setting argument Allow to FALSE.
+             ** Also cleaned up the source code a bit, thus a comparison
+             with previous version, unfortunately won't be fun. **
+Jan 12, 2009 V7.02a Arno added two missing lines for digest auth to the SSL code.
+Jan 22, 2009 V7.02b Sorry guys! Re-added property OnBeforeHeaderSend again
+             which I (Arno) removed in V7.02 accidently :(
+Jan 22, 2009 V7.02c Arno - Conditional define UseDigestAuthentication was not
+             set properly in THttpCli.StateChange.
+
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsHttpProt;
 
 interface
 
-{$B-}             { Enable partial boolean evaluation   }
-{$T-}             { Untyped pointers                    }
-{$X+}             { Enable extended syntax              }
 {$I OverbyteIcsDefs.inc}
+
+{$IFNDEF COMPILER7_UP}
+    'Sorry, we do not want to support ancient compilers any longer'
+{$ENDIF}
 {$IFDEF DELPHI6_UP}
     {$WARN SYMBOL_PLATFORM   OFF}
     {$WARN SYMBOL_LIBRARY    OFF}
     {$WARN SYMBOL_DEPRECATED OFF}
 {$ENDIF}
-{$IFDEF COMPILER2_UP}  { Not for Delphi 1                    }
-    {$H+}         { Use long strings                    }
-    {$J+}         { Allow typed constant to be modified }
-{$ENDIF}
+{$B-}             { Enable partial boolean evaluation   }
+{$T-}             { Untyped pointers                    }
+{$X+}             { Enable extended syntax              }
+{$H+}             { Use long strings                    }
+{$J+}             { Allow typed constant to be modified }
 {$IFDEF BCB3_UP}
     {$ObjExportAll On}
 {$ENDIF}
-{$IFDEF COMPILER5_UP}
 {$IFNDEF NO_ADVANCED_HTTP_CLIENT_FEATURES}
     {$DEFINE UseNTLMAuthentication}
+    {$DEFINE UseDigestAuthentication}
     {$DEFINE UseBandwidthControl}
     {$DEFINE UseContentCoding}
-{$ENDIF}                                    
 {$ENDIF}
-
 {$IFDEF CLR}
     {$UNDEF UseNTLMAuthentication}
+    {$UNDEF UseDigestAuthentication}
     {$UNDEF UseContentCoding}
 {$ENDIF}
 
@@ -437,9 +461,9 @@ uses
     System.Text, System.IO, System.Threading,
 {$ENDIF}
     SysUtils, Classes,
-    {$IFNDEF NOFORMS}
+{$IFNDEF NOFORMS}
     Forms, Controls,
-    {$ENDIF}
+{$ENDIF}
 { You must define USE_SSL so that SSL code is included in the component.   }
 { Either in OverbyteIcsDefs.inc or in the project/package options.         }
 {$IFDEF USE_SSL}
@@ -455,23 +479,18 @@ uses
     OverbyteIcsLogger,
 {$ENDIF}
     OverbyteIcsUrl, OverbyteIcsTypes,
+    OverbyteIcsUtils,
+{$IFDEF UseDigestAuthentication}
+    OverbyteIcsDigestAuth,
+{$ENDIF}
     OverbyteIcsWinSock, OverbyteIcsWndControl, OverbyteIcsWSocket;
 
 const
-    HttpCliVersion       = 600;
-    CopyRight : String   = ' THttpCli (c) 1997-2008 F. Piette V6.00.7 ';
+    HttpCliVersion       = 702;
+    CopyRight : String   = ' THttpCli (c) 1997-2009 F. Piette V7.02c ';
     DefaultProxyPort     = '80';
-{$IFDEF DELPHI1}
-    { Delphi 1 has a 255 characters string limitation }
-    HTTP_RCV_BUF_SIZE    = 255;
-    HTTP_SND_BUF_SIZE    = 8193;
-{$ELSE}
     HTTP_RCV_BUF_SIZE    = 8193;
     HTTP_SND_BUF_SIZE    = 8193;
-{$ENDIF}
-    //WM_HTTP_REQUEST_DONE = WM_USER + 1;
-    //WM_HTTP_SET_READY    = WM_USER + 2;
-    //WM_HTTP_LOGIN        = WM_USER + 3;
     { EHttpException error code }
     httperrNoError                  = 0;
     httperrBusy                     = 1;
@@ -490,7 +509,7 @@ type
         constructor Create(const Msg : String; ErrCode : Word);
     end;
 
-    TBytes = array of Byte;
+    // TBytes = array of Byte;
 
     THttpEncoding    = (encUUEncode, encBase64, encMime);
     THttpRequest     = (httpABORT, httpGET, httpPOST, httpPUT,
@@ -505,9 +524,17 @@ type
 {$IFDEF UseNTLMAuthentication}
     THttpNTLMState   = (ntlmNone, ntlmMsg1, ntlmMsg2, ntlmMsg3, ntlmDone);
 {$ENDIF}
+{$IFDEF UseDigestAuthentication}
+    TAuthDigestInfo  = TAuthDigestResponseInfo;
+    THttpDigestState = (digestNone, digestMsg1, digestDone);
+{$ENDIF}
     THttpBasicState  = (basicNone, basicMsg1, basicDone);
-    THttpAuthType    = (httpAuthNone, httpAuthBasic, httpAuthNtlm);
-
+    THttpAuthType    = (httpAuthNone, httpAuthBasic, httpAuthNtlm, httpAuthDigest);
+    THttpBeforeAuthEvent   = procedure(Sender  : TObject;
+                                 AuthType      : THttpAuthType;
+                                 ProxyAuth     : Boolean;
+                                 const AuthHdr : String;
+                                 var Allow     : Boolean) of object;
     TOnCommand       = procedure (Sender : TObject;
                                   var S: String) of object;
     TDocDataEvent    = procedure (Sender : TObject;
@@ -527,14 +554,14 @@ type
     TBeforeHeaderSendEvent = procedure (Sender       : TObject;
                                         const Method : String;
                                         Headers      : TStrings) of object;
-    THttpCliOption = (httpoNoBasicAuth, httpoNoNTLMAuth, httpoBandwidthControl
-{$IFDEF UseContentCoding}
-                      , httpoEnableContentCoding, httpoUseQuality
-{$ENDIF}
-                      );
+    THttpCliOption = (httpoNoBasicAuth, httpoNoNTLMAuth, httpoBandwidthControl,
+                  {$IFDEF UseContentCoding}
+                      httpoEnableContentCoding, httpoUseQuality,
+                  {$ENDIF}
+                      httpoNoDigestAuth);
     THttpCliOptions = set of THttpCliOption;
     TLocationChangeExceeded = procedure (Sender              : TObject;
-                                  const RelocationCount      : integer;
+                                  const RelocationCount      : Integer;
                                   var   AllowMoreRelocations : Boolean) of object;  {  V1.90 }
 
     THttpCli = class(TIcsWndControl)
@@ -640,6 +667,15 @@ type
         FAuthNTLMState        : THttpNTLMState;
         FProxyAuthNTLMState   : THttpNTLMState;
 {$ENDIF}
+{$IFDEF UseDigestAuthentication}
+        FAuthDigestState      : THttpDigestState;
+        FProxyAuthDigestState : THttpDigestState;
+        FAuthDigestInfo       : TAuthDigestInfo;
+        FAuthDigestProxyInfo  : TAuthDigestInfo;
+        { As specified in RFC 2617, section 3.2.2.4, used only with auth-int }
+        FAuthDigestEntityHash : THashHex;
+{$ENDIF}
+        FOnBeforeAuth         : THttpBeforeAuthEvent;
         FAuthBasicState       : THttpBasicState;
         FProxyAuthBasicState  : THttpBasicState;
         //FServerAuth           : String;
@@ -716,11 +752,22 @@ type
 {$IFDEF UseNTLMAuthentication}
         procedure StartAuthNTLM; virtual;
         procedure StartProxyAuthNTLM; virtual;  {BLD proxy NTLM support }
-        function  GetNTLMMessage1 : String;
-        function  GetNTLMMessage3(const ForProxy: Boolean) : String;
+        function  GetNTLMMessage1(const ForProxy: Boolean) : String;
+        function  GetNTLMMessage3(const HttpMethod: String;
+            const ForProxy: Boolean): String;
         procedure ElaborateNTLMAuth;
         function  PrepareNTLMAuth(var FlgClean : Boolean) : Boolean;
 {$ENDIF}
+{$IFDEF UseDigestAuthentication}
+        procedure ElaborateDigestAuth;
+        function  GetDigestAuthorizationHeader(const HttpMethod: String;
+           ProxyAuth : Boolean): String;
+        function  PrepareDigestAuth(var FlgClean : Boolean) : Boolean;
+        procedure StartAuthDigest; virtual;
+        procedure StartProxyAuthDigest; virtual;
+{$ENDIF}
+        function GetBasicAuthorizationHeader(
+            const HttpMethod: String; ProxyAuth: Boolean): String;
         procedure CleanupRcvdStream;
         procedure CleanupSendStream;
         procedure StartAuthBasic; virtual;
@@ -801,7 +848,7 @@ type
         procedure   HeadASync;  { Asynchronous, non-blocking Head  }
         procedure   CloseAsync; { Asynchronous, non-blocking Close }
         procedure   ThreadAttach; override;
-        procedure   ThreadDetach; override;   
+        procedure   ThreadDetach; override;
         property CtrlSocket           : TWSocket     read  FCtrlSocket;
         //property Handle               : HWND         read  FWindowHandle;
         property State                : THttpState   read  FState;
@@ -829,6 +876,16 @@ type
         property RcvdHeader           : TStrings     read  FRcvdHeader;
         property Hostname             : String       read  FHostname;
         property Protocol             : String       read  FProtocol;
+{$IFDEF UseDigestAuthentication}
+        property AuthDigestInfo       : TAuthDigestInfo
+                                                     read  FAuthDigestInfo
+                                                     write FAuthDigestInfo;
+        property AuthDigestProxyInfo  : TAuthDigestInfo
+                                                     read  FAuthDigestProxyInfo
+                                                     write FAuthDigestProxyInfo;
+        property AuthDigestEntityHash : THashHex     read  FAuthDigestEntityHash
+                                                     write FAuthDigestEntityHash;
+{$ENDIF}
     published
         property URL             : String            read  FURL
                                                      write FURL;
@@ -961,18 +1018,26 @@ type
                                                      write FSocksUsercode;
         property SocksPassword    : String           read  FSocksPassword
                                                      write FSocksPassword;
-        property SocksAuthentication : TSocksAuthentication read  FSocksAuthentication
-                                                            write FSocksAuthentication;
-        property OnSocksConnected    : TSessionConnected    read FOnSocksConnected
-                                                            write FOnSocksConnected;
-        property OnSocksAuthState    : TSocksAuthStateEvent read FOnSocksAuthState
-                                                            write FOnSocksAuthState;
-        property OnSocksError        : TSocksErrorEvent     read FOnSocksError
-                                                            write FOnSocksError;
-        property OnSocketError       : TNotifyEvent         read FOnSocketError
-                                                            write FOnSocketError;
-        property OnBeforeHeaderSend  : TBeforeHeaderSendEvent read  FOnBeforeHeaderSend
-                                                              write FOnBeforeHeaderSend;
+        property SocksAuthentication : TSocksAuthentication
+                                                     read  FSocksAuthentication
+                                                     write FSocksAuthentication;
+        property OnSocksConnected    : TSessionConnected
+                                                     read FOnSocksConnected
+                                                     write FOnSocksConnected;
+        property OnSocksAuthState    : TSocksAuthStateEvent
+                                                     read FOnSocksAuthState
+                                                     write FOnSocksAuthState;
+        property OnSocksError        : TSocksErrorEvent
+                                                     read FOnSocksError
+                                                     write FOnSocksError;
+        property OnSocketError       : TNotifyEvent  read FOnSocketError
+                                                     write FOnSocketError;
+        property OnBeforeHeaderSend  : TBeforeHeaderSendEvent
+                                                     read  FOnBeforeHeaderSend
+                                                     write FOnBeforeHeaderSend;
+        property OnBeforeAuth        : THttpBeforeAuthEvent
+                                                     read  FOnBeforeAuth
+                                                     write FOnBeforeAuth;
     end;
 
 { You must define USE_SSL so that SSL code is included in the component.   }
@@ -1032,13 +1097,7 @@ type
                                       var IncRefCount  : Boolean); virtual;
         procedure TransferSslCliCertRequest(Sender     : TObject;
                                             var Cert   : TX509Base); virtual;
-        {procedure TransferSslHandshakeDone(Sender         : TObject;
-                                           ErrCode        : Word;
-                                           PeerCert       : TX509Base;
-                                           var Disconnect : Boolean); virtual;}
     public
-        constructor Create(AOwner : TComponent); override;
-        destructor  Destroy; override;
         procedure   SetAcceptableHostsList(const SemiColonSeparatedList : String);
     published
         property SslContext         : TSslContext         read  GetSslContext
@@ -1062,25 +1121,41 @@ type
 
 {$ENDIF} // USE_SSL
 
-procedure Register;
 procedure ReplaceExt(var FName : String; const newExt : String);
+{$IFDEF CLR}
 function EncodeStr(Encoding : THttpEncoding; const Value : String) : String;
+{$ENDIF}
 function RFC1123_Date(aDate : TDateTime) : String;
 function RFC1123_StrToDate(aDate : String) : TDateTime;
 {$IFDEF WIN32}
 function EncodeLine(
     Encoding : THttpEncoding;
-    SrcData  : PChar;
-    Size     : Integer) : String;
+    SrcData  : PAnsiChar;
+    Size     : Integer) : AnsiString;
+function EncodeStr(
+    Encoding    : THttpEncoding;
+    const Value : RawByteString) : RawByteString; overload;
+function EncodeStr(
+    Encoding    : THttpEncoding;
+    const Value : UnicodeString;
+    ACodePage   : Cardinal = CP_ACP ) : UnicodeString; overload;
 {$ENDIF}
 
 implementation
 
 const
+{$IFDEF WIN32}
+    bin2uue  : AnsiString = '`!"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_';
+    bin2b64  : AnsiString = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    uue2bin  : AnsiString = ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ ';
+    b642bin  : AnsiString = '~~~~~~~~~~~^~~~_TUVWXYZ[\]~~~|~~~ !"#$%&''()*+,-./0123456789~~~~~~:;<=>?@ABCDEFGHIJKLMNOPQRS';
+{$ENDIF}
+{$IFDEF CLR}
     bin2uue  : String = '`!"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_';
     bin2b64  : String = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     uue2bin  : String = ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ ';
     b642bin  : String = '~~~~~~~~~~~^~~~_TUVWXYZ[\]~~~|~~~ !"#$%&''()*+,-./0123456789~~~~~~:;<=>?@ABCDEFGHIJKLMNOPQRS';
+{$ENDIF}
     linesize = 45;
 type
     TCharSet = set of AnsiChar;
@@ -1088,67 +1163,6 @@ const
     UriProtocolSchemeAllowedChars : TCharSet = ['a'..'z','0'..'9','+','-','.'];
 
 function GetBaseUrl(const Url : String) : String; forward;
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure Register;
-begin
-    RegisterComponents('FPiette',
-                       [THttpCli
-{$IFDEF USE_SSL}
-                        , TSslHttpCli
-{$ENDIF}
-                       ]);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{$IFDEF DELPHI1}
-function TrimRight(Str : String) : String;
-var
-    i : Integer;
-begin
-    i := Length(Str);
-    while (i > 0) and (Str[i] in [' ', #9]) do
-        i := i - 1;
-    Result := Copy(Str, 1, i);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TrimLeft(Str : String) : String;
-var
-    i : Integer;
-begin
-    if Str[1] <> ' ' then
-        Result := Str
-    else begin
-        i := 1;
-        while (i <= Length(Str)) and (Str[i] = ' ') do
-            i := i + 1;
-        Result := Copy(Str, i, Length(Str) - i + 1);
-    end;
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function Trim(Str : String) : String;
-begin
-    Result := TrimLeft(TrimRight(Str));
-end;
-{$ENDIF}
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{$IFNDEF DELPHI5_UP}
-function StrToIntDef(const S: String; const Default: Integer): Integer;
-begin
-    try
-        Result := StrToInt(S);
-    except
-        Result := Default;
-    end;
-end;
-{$ENDIF}
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -1425,38 +1439,59 @@ begin
         if (NewState = httpReady) then begin
             { We must elaborate the result of started authentications
               before a new preparation }
-{$IFDEF UseNTLMAuthentication}
+        {$IFDEF UseNTLMAuthentication}
             ElaborateNTLMAuth;
-{$ENDIF}
+        {$ENDIF}
+        {$IFDEF UseDigestAuthentication}
+            ElaborateDigestAuth;
+        {$ENDIF}
             ElaborateBasicAuth;
 
             FlgClean := False;
-{$IFDEF UseNTLMAuthentication}
-            if PrepareNTLMAuth(FlgClean) or PrepareBasicAuth(FlgClean) then begin
-{$ELSE}
+    {$IFDEF UseNTLMAuthentication}
+            if PrepareNTLMAuth(FlgClean) or
+        {$IFDEF UseDigestAuthentication}
+                PrepareDigestAuth(FlgClean) or
+        {$ENDIF}
+                PrepareBasicAuth(FlgClean) then begin
+    {$ELSE}
+        {$IFDEF UseDigestAuthentication}
+            if PrepareDigestAuth(FlgClean) or PrepareBasicAuth(FlgClean) then begin
+        {$ELSE}
             if PrepareBasicAuth(FlgClean) then begin
-{$ENDIF}
+        {$ENDIF}
+    {$ENDIF}
                 if FStatusCode = 401 then begin
                     { If the connection will be closed then check if we must
                       repeat a proxy authentication, otherwise we must clear
                       it }
                     if FCloseReq then begin
-{$IFDEF UseNTLMAuthentication}
+                    {$IFDEF UseNTLMAuthentication}
                         if FProxyAuthNTLMState = ntlmDone then
                             FProxyAuthNTLMState := ntlmMsg1
                         else
-{$ENDIF}
+                    {$ENDIF}
+                    {$IFDEF UseDigestAuthentication}
+                        if FProxyAuthDigestState = digestDone then
+                            FProxyAuthDigestState := digestMsg1
+                        else
+                    {$ENDIF}
                         if FProxyAuthBasicState = basicDone then
                             FProxyAuthBasicState := basicMsg1;
                     end
                     else begin
-{$IFDEF UseNTLMAuthentication}
-                      if FProxyAuthNTLMState < ntlmDone then
-                          FProxyAuthNTLMState := ntlmNone
-                      else
-{$ENDIF}
-                      if FProxyAuthBasicState < basicDone then
-                          FProxyAuthBasicState := basicNone;
+                    {$IFDEF UseNTLMAuthentication}
+                        if FProxyAuthNTLMState < ntlmDone then
+                            FProxyAuthNTLMState := ntlmNone
+                        else
+                    {$ENDIF}
+                    {$IFDEF UseDigestAuthentication}
+                        if FProxyAuthDigestState < digestDone then
+                            FProxyAuthDigestState := digestNone
+                        else
+                    {$ENDIF}
+                        if FProxyAuthBasicState < basicDone then
+                            FProxyAuthBasicState := basicNone;
                     end;
                 end;
 
@@ -1471,8 +1506,8 @@ begin
             end
             else
             TriggerRequestDone;
+        end;
     end;
-end;
 end;
 
 
@@ -1711,23 +1746,34 @@ begin
 
     if (FStatusCode = 401) and (FDoAuthor.Count > 0) and
        (FAuthBasicState = basicNone) and
+{$IFDEF UseDigestAuthentication}
+       (FAuthDigestState = digestNone) and
+{$ENDIF}
        (FCurrUserName <> '') and (FCurrPassword <> '') then begin
         { We can handle authorization }
         TmpInt := FDoAuthor.Count - 1;
         while TmpInt >= 0  do begin
             if CompareText(Copy(FDoAuthor.Strings[TmpInt], 1, 4), 'NTLM') = 0 then begin
                 Result := TRUE;
-                StartAuthNTLM;
-                if FAuthNTLMState in [ntlmMsg1, ntlmMsg3] then
-                    FlgClean := True;
+                if Assigned(FOnBeforeAuth) then
+                    FOnBeforeAuth(Self, httpAuthNtlm, FALSE,
+                                  FDoAuthor.Strings[TmpInt], Result);
+                if Result then begin
+                    StartAuthNTLM;
+                    if FAuthNTLMState in [ntlmMsg1, ntlmMsg3] then
+                        FlgClean := True;
 
-                Break;
+                    Break;
+                end;
             end;
             Dec(TmpInt);
-        end
+        end;
     end
     else if (FStatusCode = 407)    and (FDoAuthor.Count > 0) and
             (FProxyAuthBasicState = basicNone) and
+{$IFDEF UseDigestAuthentication}
+            (FProxyAuthDigestState = digestNone) and
+{$ENDIF}
             (FProxyUsername <> '') and (FProxyPassword <> '') then begin
         {BLD proxy NTLM authentication}
         { We can handle authorization }
@@ -1735,14 +1781,19 @@ begin
         while TmpInt >= 0  do begin
             if CompareText(Copy(FDoAuthor.Strings[TmpInt], 1, 4), 'NTLM') = 0 then begin
                 Result := TRUE;
-                StartProxyAuthNTLM;
-                if FProxyAuthNTLMState in [ntlmMsg1, ntlmMsg3] then
-                    FlgClean := True;
+                if Assigned(FOnBeforeAuth) then
+                    FOnBeforeAuth(Self, httpAuthNtlm, TRUE,
+                                  FDoAuthor.Strings[TmpInt], Result);
+                if Result then begin
+                    StartProxyAuthNTLM;
+                    if FProxyAuthNTLMState in [ntlmMsg1, ntlmMsg3] then
+                        FlgClean := True;
 
-                Break;
+                    Break;
+                end;    
             end;
             Dec(TmpInt);
-        end
+        end;
     end;
 {$IFNDEF NO_DEBUG_LOG}                                                 { V1.91 }
     //THttpNTLMState   = (ntlmNone, ntlmMsg1, ntlmMsg2, ntlmMsg3, ntlmDone);
@@ -1774,6 +1825,9 @@ begin
 {$IFDEF UseNTLMAuthentication}
        (FAuthNTLMState = ntlmNone) and
 {$ENDIF}
+{$IFDEF UseDigestAuthentication}
+       (FAuthDigestState = digestNone) and
+{$ENDIF}
        (FCurrUserName <> '') and (FCurrPassword <> '') then begin
         { We can handle authorization }
         TmpInt := FDoAuthor.Count - 1;
@@ -1781,34 +1835,47 @@ begin
             if CompareText(Copy(FDoAuthor.Strings[TmpInt], 1, 5),
                            'Basic') = 0 then begin
                 Result := TRUE;
-                StartAuthBasic;
-                if FAuthBasicState in [basicMsg1] then
-                    FlgClean := True;
+                if Assigned(FOnBeforeAuth) then
+                    FOnBeforeAuth(Self, httpAuthBasic, TRUE,
+                                  FDoAuthor.Strings[TmpInt], Result);
+                if Result then begin
+                    StartAuthBasic;
+                    if FAuthBasicState in [basicMsg1] then
+                        FlgClean := True;
 
-                Break;
+                    Break;
+                end;
             end;
             Dec(TmpInt);
-        end
+        end;
     end
-    else if (FStatusCode = 407)    and (FDoAuthor.Count > 0) and
+    else if (FStatusCode = 407) and (FDoAuthor.Count > 0) and
 {$IFDEF UseNTLMAuthentication}
-            (FProxyAuthNTLMState = ntlmNone) and
+        (FProxyAuthNTLMState = ntlmNone) and
 {$ENDIF}
-            (FProxyUsername <> '') and (FProxyPassword <> '') then begin
+{$IFDEF UseDigestAuthentication}
+        (FProxyAuthDigestState = digestNone) and
+{$ENDIF}
+        (FProxyUsername <> '') and (FProxyPassword <> '') then begin
         { We can handle authorization }
         TmpInt := FDoAuthor.Count - 1;
         while TmpInt >= 0  do begin
             if CompareText(Copy(FDoAuthor.Strings[TmpInt], 1, 5),
                            'Basic') = 0 then begin
                 Result := TRUE;
-                StartProxyAuthBasic;
-                if FProxyAuthBasicState in [basicMsg1] then
-                    FlgClean := True;
+                if Assigned(FOnBeforeAuth) then
+                    FOnBeforeAuth(Self, httpAuthBasic, TRUE,
+                                  FDoAuthor.Strings[TmpInt], Result);
+                if Result then begin
+                    StartProxyAuthBasic;
+                    if FProxyAuthBasicState in [basicMsg1] then
+                        FlgClean := True;
 
-                Break;
+                    Break;
+                end;
             end;
             Dec(TmpInt);
-        end
+        end;
     end;
 end;
 
@@ -2047,13 +2114,19 @@ begin
         if (FProxy <> '') and
            (FProtocol = 'https') and
            ((FProxyConnected = FALSE) or
-{$IFDEF UseNTLMAuthentication}
+    {$IFDEF UseNTLMAuthentication}
            (FProxyConnected and (FProxyAuthNTLMState = ntlmMsg3)) or
            (FProxyConnected and (FProxyAuthNTLMState = ntlmMsg1)) or // <= AG 12/27/05
+        {$IFDEF UseDigestAuthentication}
+           (FProxyConnected and (FProxyAuthDigestState = digestMsg1)) or
+        {$ENDIF}
            (FProxyConnected and (FProxyAuthBasicState = basicMsg1)))
-{$ELSE}
+    {$ELSE}
+        {$IFDEF UseDigestAuthentication}
+           (FProxyConnected and (FProxyAuthDigestState = digestMsg1)) or
+        {$ENDIF}
            (FProxyConnected and (FProxyAuthBasicState = basicMsg1)))
-{$ENDIF}
+    {$ENDIF}
         then begin
             StateChange(httpWaitingProxyConnect);
             FReqStream.Clear;
@@ -2069,7 +2142,7 @@ begin
             httpPOST:
                 begin
                     SendRequest('POST', FRequestVer);
-{$IFDEF UseNTLMAuthentication}
+                {$IFDEF UseNTLMAuthentication}
                     if not ((FAuthNTLMState = ntlmMsg1) or
                             (FProxyAuthNTLMState = ntlmMsg1)) then begin
                         TriggerSendBegin;
@@ -2077,29 +2150,30 @@ begin
                         FDelaySetReady := FALSE;     { 09/26/08 ML }
                         SocketDataSent(FCtrlSocket, 0);
                     end;
-{$ELSE}
+                {$ELSE}
                     TriggerSendBegin;
                     FAllowedToSend := TRUE;
                     FDelaySetReady := FALSE;     { 09/26/08 ML }
                     SocketDataSent(FCtrlSocket, 0);
-{$ENDIF}
+                {$ENDIF}
                 end;
             httpPUT:
                 begin
                     SendRequest('PUT', FRequestVer);
-{$IFDEF UseNTLMAuthentication}
-                    if not ((FAuthNTLMState = ntlmMsg1) or (FProxyAuthNTLMState = ntlmMsg1)) then begin
+                {$IFDEF UseNTLMAuthentication}
+                    if not ((FAuthNTLMState = ntlmMsg1) or
+                            (FProxyAuthNTLMState = ntlmMsg1)) then begin
+                        TriggerSendBegin;
+                        FAllowedToSend := TRUE;
+                        FDelaySetReady := FALSE;     { 09/26/08 ML }
+                        SocketDataSent(FCtrlSocket, 0);
+                    end;
+                {$ELSE}
                     TriggerSendBegin;
                     FAllowedToSend := TRUE;
                     FDelaySetReady := FALSE;     { 09/26/08 ML }
                     SocketDataSent(FCtrlSocket, 0);
-                end;
-{$ELSE}
-                    TriggerSendBegin;
-                    FAllowedToSend := TRUE;
-                    FDelaySetReady := FALSE;     { 09/26/08 ML }
-                    SocketDataSent(FCtrlSocket, 0);
-{$ENDIF}
+                {$ENDIF}
                 end;
             httpHEAD:
                 begin
@@ -2150,7 +2224,11 @@ begin
     if Assigned(FOnCommand) then
         FOnCommand(Self, Buf);
     if Length(Buf) > 0 then
+{$IFDEF COMPILER12_UP}
+        StreamWriteString(FReqStream, Buf, CP_ACP);
+{$ELSE}
         FReqStream.Write(Buf[1], Length(Buf));
+{$ENDIF}
     FReqStream.Write(CRLF[1], 2);
 end;
 {$ENDIF}
@@ -2174,11 +2252,11 @@ begin
         // Number of bytes we allow during a sampling period
         FBandwidthMaxCount := Int64(FBandwidthLimit) * FBandwidthSampling div 1000;
         FBandwidthPaused   := FALSE;
-{$IFDEF CLR}
+    {$IFDEF CLR}
         FCtrlSocket.ComponentOptions := FCtrlSocket.ComponentOptions or wsoNoReceiveLoop;
-{$ELSE}
+    {$ELSE}
         FCtrlSocket.ComponentOptions := FCtrlSocket.ComponentOptions + [wsoNoReceiveLoop];
-{$ENDIF}
+    {$ENDIF CLR}
     end;
 {$ENDIF}
     Headers := TStringList.Create;
@@ -2190,26 +2268,26 @@ begin
             Headers.Add(Method + ' ' + FTargetHost + ':' + FTargetPort +
                        ' HTTP/' + Version)
         else begin
-        Headers.Add(method + ' ' + FPath + ' HTTP/' + Version);
-        if FSender <> '' then
-            Headers.Add('From: ' + FSender);
-        if FAccept <> '' then
-            Headers.Add('Accept: ' + FAccept);
-        if FReference <> '' then
-            Headers.Add('Referer: ' + FReference);
+            Headers.Add(method + ' ' + FPath + ' HTTP/' + Version);
+            if FSender <> '' then
+                Headers.Add('From: ' + FSender);
+            if FAccept <> '' then
+                Headers.Add('Accept: ' + FAccept);
+            if FReference <> '' then
+                Headers.Add('Referer: ' + FReference);
             if FCurrConnection <> '' then
                 Headers.Add('Connection: ' + FCurrConnection);
-        if FAcceptLanguage <> '' then
-            Headers.Add('Accept-Language: ' + FAcceptLanguage);
-{$IFDEF UseContentCoding}
+            if FAcceptLanguage <> '' then
+                Headers.Add('Accept-Language: ' + FAcceptLanguage);
+        {$IFDEF UseContentCoding}
             if (FContentCodingHnd.HeaderText <> '') and (FRequestType <> httpHEAD) then
                 Headers.Add('Accept-Encoding: ' + FContentCodingHnd.HeaderText);
-{$ENDIF}
-        if ((FRequestType = httpPOST) or (FRequestType = httpPUT)) and
-           (FContentPost <> '') then
-            Headers.Add('Content-Type: ' + FContentPost);
-        {if ((method = 'PUT') or (method = 'POST')) and (FContentPost <> '') then
-            Headers.Add('Content-Type: ' + FContentPost);}
+        {$ENDIF}
+            if ((FRequestType = httpPOST) or (FRequestType = httpPUT)) and
+               (FContentPost <> '') then
+                Headers.Add('Content-Type: ' + FContentPost);
+            {if ((method = 'PUT') or (method = 'POST')) and (FContentPost <> '') then
+                Headers.Add('Content-Type: ' + FContentPost);}
         end;
         if FAgent <> '' then
             Headers.Add('User-Agent: ' + FAgent);
@@ -2220,22 +2298,25 @@ begin
         if FNoCache then
             Headers.Add('Pragma: no-cache');
         if FCurrProxyConnection <> '' then
-            Headers.Add('Proxy-Connection: ' + FCurrProxyConnection);   
+            Headers.Add('Proxy-Connection: ' + FCurrProxyConnection);
         if (Method = 'CONNECT') then                                   // <= 12/29/05 AG
             Headers.Add('Content-Length: 0')                           // <= 12/29/05 AG}
-{$IFDEF UseNTLMAuthentication}
+    {$IFDEF UseNTLMAuthentication}
         else begin                                                     // <= 12/29/05 AG
-        if (FRequestType = httpPOST) or (FRequestType = httpPUT) then begin
-            if (FAuthNTLMState = ntlmMsg1) or (FProxyAuthNTLMState = ntlmMsg1) then
-                Headers.Add('Content-Length: 0')
-            else
-                Headers.Add('Content-Length: ' + IntToStr(SendStream.Size - SendStream.Position));
-        end;
+            if (FRequestType = httpPOST) or (FRequestType = httpPUT) then begin
+                if (FAuthNTLMState = ntlmMsg1) or
+                   (FProxyAuthNTLMState = ntlmMsg1) then
+                    Headers.Add('Content-Length: 0')
+                else
+                    Headers.Add('Content-Length: ' +
+                                IntToStr(SendStream.Size - SendStream.Position));
+            end;
         end;                                                          // <= 12/29/05 AG
-{$ELSE};                                                              // <= 12/29/05 AG
+    {$ELSE};                                                          // <= 12/29/05 AG
         if (FRequestType = httpPOST) or (FRequestType = httpPUT) then
-            Headers.Add('Content-Length: ' + IntToStr(SendStream.Size - SendStream.Position));
-{$ENDIF}
+            Headers.Add('Content-Length: ' +
+                        IntToStr(SendStream.Size - SendStream.Position));
+    {$ENDIF}
         { if (method = 'PUT') or (method = 'POST') then
             Headers.Add('Content-Length: ' + IntToStr(SendStream.Size));}
         if FModifiedSince <> 0 then
@@ -2244,46 +2325,48 @@ begin
 {$IFDEF UseNTLMAuthentication}
         if (FProxyAuthNTLMState <> ntlmMsg1) then begin
             if (FAuthNTLMState = ntlmMsg1) then
-            Headers.Add('Authorization: NTLM ' + GetNTLMMessage1)
+                Headers.Add(GetNTLMMessage1(FALSE))
             else if (FAuthNTLMState = ntlmMsg3) then
-                Headers.Add('Authorization: NTLM ' + GetNTLMMessage3(False))
+                Headers.Add(GetNTLMMessage3(Method, FALSE))
+    {$IFDEF UseDigestAuthentication}
+            else if (FAuthDigestState = digestMsg1) then
+                Headers.Add(GetDigestAuthorizationHeader(Method, FALSE))
+    {$ENDIF}
             else if (FAuthBasicState = basicMsg1) then
-                Headers.Add('Authorization: Basic ' +
-                            EncodeStr(encBase64, FCurrUsername + ':' + FCurrPassword));
+                Headers.Add(GetBasicAuthorizationHeader(Method, FALSE))
+            else begin
+                // Maybe an event to add a preemptive Authorization header?
+            end;
         end;
 {$ELSE}
-        if (FAuthBasicState = basicMsg1) then
-            Headers.Add('Authorization: Basic ' +
-                        EncodeStr(encBase64, FCurrUsername + ':' + FCurrPassword));
-{$ENDIF}
-
-{$IFDEF UseNTLMAuthentication}
-        if (FProxyAuthNTLMState = ntlmMsg1) then
-            Headers.Add('Proxy-Authorization: NTLM ' + GetNTLMMessage1)
-        else if (FProxyAuthNTLMState = ntlmMsg3) then
-            Headers.Add('Proxy-Authorization: NTLM ' + GetNTLMMessage3(True))
+    {$IFDEF UseDigestAuthentication}
+        if (FAuthDigestState = digestMsg1) then
+            Headers.Add(GetDigestAuthorizationHeader(Method, FALSE))
         else
+    {$ENDIF}
+        if (FAuthBasicState = basicMsg1) then
+            Headers.Add(GetBasicAuthorizationHeader(Method, FALSE))
+        else begin
+            // Maybe an event to add a preemptive Authorization header?
+        end;
 {$ENDIF}
+    {$IFDEF UseNTLMAuthentication}
+        if (FProxyAuthNTLMState = ntlmMsg1) then
+            Headers.Add(GetNTLMMessage1(TRUE))
+        else if (FProxyAuthNTLMState = ntlmMsg3) then
+            Headers.Add(GetNTLMMessage3(Method, TRUE))
+        else
+    {$ENDIF}
+    {$IFDEF UseDigestAuthentication}
+        if (FProxyAuthDigestState = digestMsg1) then
+            Headers.Add(GetDigestAuthorizationHeader(Method, TRUE))
+        else
+    {$ENDIF}
         if (FProxyAuthBasicState = basicMsg1) then
-            Headers.Add('Proxy-Authorization: Basic ' +
-                        EncodeStr(encBase64, FProxyUsername + ':' + FProxyPassword));
-(***
-        if (FUsername <> '') and (not (httpoNoBasicAuth in FOptions))
-{$IFDEF UseNTLMAuthentication}
-          and (FAuthNTLMState in [ntlmNone, ntlmDone])
-{$ENDIF}
-        then
-            Headers.Add('Authorization: Basic ' +
-                        EncodeStr(encBase64, FUsername + ':' + FPassword));
-
-        if (FProxy <> '') and (FProxyUsername <> '')
-{$IFDEF UseNTLMAuthentication}
-          and (FProxyAuthNTLMState = ntlmNone)
-{$ENDIF}
-        then
-            Headers.Add('Proxy-Authorization: Basic ' +
-                        EncodeStr(encBase64, FProxyUsername + ':' + FProxyPassword));
-***)
+           Headers.Add(GetBasicAuthorizationHeader(Method, TRUE))
+        else if Length(FProxy) > 0 then begin
+            // Maybe an event to add a preemptive Authorization header?
+        end;
 
         if FCookie <> '' then
             Headers.Add('Cookie: ' + FCookie);
@@ -2303,7 +2386,7 @@ begin
         if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
             DebugLog(loProtSpecInfo, IntToStr(Headers.Count) +
             ' header lines to send'#13#10 + Headers.Text);
-{$ENDIF}
+    {$ENDIF}
         TriggerBeforeHeaderSend(Method, Headers);
         for N := 0 to Headers.Count - 1 do
             SendCommand(Headers[N]);
@@ -2317,7 +2400,7 @@ begin
     {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
             DebugLog(loProtSpecInfo, 'SendRequest Done');
-{$ENDIF}
+    {$ENDIF}
     end;
 end;
 
@@ -2375,7 +2458,7 @@ begin
             if FChunkState = httpChunkGetSize then begin
                 while N > 0 do begin
 //                  if not IsXDigit(P^) then begin
-                    if not IsXDigit(Char(FReceiveBuffer[P])) then begin  // (FP 09/09/06)
+                    if not IsXDigit(AnsiChar(FReceiveBuffer[P])) then begin  // (FP 09/09/06)
                         FChunkState := httpChunkGetExt;
                         {$IFNDEF NO_DEBUG_LOG}
                         if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
@@ -2384,7 +2467,7 @@ begin
                         break;
                     end;
 //                  FChunkLength := FChunkLength * 16 + XDigit(P^);
-                    FChunkLength := FChunkLength * 16 + XDigit(Char(FReceiveBuffer[P]));  // (FP 09/09/06)
+                    FChunkLength := FChunkLength * 16 + XDigit(AnsiChar(FReceiveBuffer[P]));  // (FP 09/09/06)
                     Inc(P);
                     Dec(N);
                 end;
@@ -2534,21 +2617,29 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ If UNICODE is defined each byte in Buffer must be ASCII (ord < 128) ! }
 procedure MoveTBytesToString(
-    var Buffer : TBytes;
-    OffsetFrom : Integer;
-    var Dest   : String;
-    OffsetTo   : Integer;
-    Count      : Integer);
+    const Buffer : TBytes;
+    OffsetFrom   : Integer;
+    var Dest     : String;
+    OffsetTo     : Integer;
+    Count        : Integer);
+{$IFDEF UNICODE}
+var
+    PSrc  : PByte;
+    PDest : PChar;
 begin
-{$IFDEF CLR}
+    PSrc  := Pointer(Buffer);
+    PDest := Pointer(Dest);
+    Dec(OffsetTo); // String index!
     while Count > 0 do begin
-        Dest[OffsetTo] := Char(Buffer[OffsetFrom]);
+        PDest[OffsetTo] := Char(PSrc[OffsetFrom]);
         Inc(OffsetTo);
         Inc(OffsetFrom);
         Dec(Count);
     end;
 {$ELSE}
+begin
     Move(Buffer[OffsetFrom], Dest[OffsetTo], Count);
 {$ENDIF}
 end;
@@ -2654,6 +2745,12 @@ begin
              (FStatusCode = 301) or              { Added 06/10/2004 }
              (FStatusCode = 302) or              { Added 06/10/2004 }
              (FStatusCode = 304) or              { Added 12/03/2004 }
+             { AFAIR, next two lines have been added since it might }
+             { happen that a body is not sent with both responses.  }
+             { Unfortunately we truncate body data in those cases   }
+             { and we have to ensure that FReceiveLen is cleared    }
+             { properly. If it's not done below it's now done in    }
+             { SocketSessionClosed() a little bit later anyway. (AG)}
              (FStatusCode = 401) or              { Added 12/28/2005 } //AG 12/28/05
              (FStatusCode = 407)))               { Added 12/28/2005 } //AG 12/28/05
            or
@@ -3111,6 +3208,10 @@ begin
     FAuthNTLMState       := ntlmNone;
     FProxyAuthNTLMState  := ntlmNone;
 {$ENDIF}
+{$IFDEF UseDigestAuthentication}
+    FAuthDigestState      := digestNone;
+    FProxyAuthDigestState := digestNone;
+{$ENDIF}
     FAuthBasicState      := basicNone;
     FProxyAuthBasicState := basicNone;
 
@@ -3131,8 +3232,13 @@ begin
             end
             else
 {$ENDIF}
-          if FProxyAuth = httpAuthBasic then
-              FProxyAuthBasicState := basicDone;
+{$IFDEF UseDigestAuthentication}
+            if FProxyAuth = httpAuthDigest then
+                FProxyAuthDigestState := digestDone
+            else
+{$ENDIF}
+            if FProxyAuth = httpAuthBasic then
+                FProxyAuthBasicState := basicDone;
         end
         else begin
 {$IFDEF UseNTLMAuthentication}
@@ -3144,8 +3250,13 @@ begin
             end
             else
 {$ENDIF}
-          if FProxyAuth = httpAuthBasic then
-              FProxyAuthBasicState := basicMsg1;
+{$IFDEF UseDigestAuthentication}
+            if FProxyAuth = httpAuthDigest then
+                FProxyAuthDigestState := digestMsg1
+            else
+{$ENDIF}
+            if FProxyAuth = httpAuthBasic then
+                FProxyAuthBasicState := basicMsg1;
         end;
     end;
 
@@ -3159,6 +3270,11 @@ begin
                 FCurrConnection := 'Keep-alive';
         end
         else
+{$ENDIF}
+{$IFDEF UseDigestAuthentication}
+        if FServerAuth = httpAuthDigest then
+            FAuthDigestState := digestMsg1
+        else    
 {$ENDIF}
         if FServerAuth = httpAuthBasic then
             FAuthBasicState := basicMsg1;
@@ -3335,6 +3451,7 @@ begin
     if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
             DebugLog(loProtSpecInfo, 'SessionClosed Error: ' + IntToStr(ErrCode));
 {$ENDIF}
+    FReceiveLen := 0;                  { AG 11 Jan 2009 always clear the buffer! }
     if ErrCode <> 0 then               { WM 15 sep 2002 }
         FRequestDoneError := ErrCode;  { WM 15 sep 2002 }
     FConnected      := FALSE;
@@ -3473,24 +3590,28 @@ begin
         { "HTTP/1.0 200 Connection established<CRLF><CRLF>"             }
     {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
-            DebugLog(loProtSpecInfo, 'Proxy connected: "' + PChar(FReceiveBuffer) + '"');
+            DebugLog(loProtSpecInfo, 'Proxy connected: "' + PAnsiChar(FReceiveBuffer) + '"');
     {$ENDIF}
         FProxyConnected := TRUE;
         if (
-           (StrLIComp(PChar(FReceiveBuffer), 'HTTP/1.0 200', 12) = 0) or
-           (StrLIComp(PChar(FReceiveBuffer), 'HTTP/1.1 200', 12) = 0) or
-           (StrLIComp(PChar(FReceiveBuffer), 'HTTP/1.0  200', 13) = 0) or // M$ Proxy Server 2.0
-           (StrLIComp(PChar(FReceiveBuffer), 'HTTP/1.1  200', 13) = 0)    // M$ Proxy Server 2.0 not tested ??
+           (StrLIComp(PAnsiChar(FReceiveBuffer), AnsiString('HTTP/1.0 200'), 12) = 0) or
+           (StrLIComp(PAnsiChar(FReceiveBuffer), AnsiString('HTTP/1.1 200'), 12) = 0) or
+           (StrLIComp(PAnsiChar(FReceiveBuffer), AnsiString('HTTP/1.0  200'), 13) = 0) or // M$ Proxy Server 2.0
+           (StrLIComp(PAnsiChar(FReceiveBuffer), AnsiString('HTTP/1.1  200'), 13) = 0)    // M$ Proxy Server 2.0 not tested ??
            ) and not
-           ((StrLIComp(PChar(FReceiveBuffer), 'HTTP/1.1 200 OK', 15) = 0) or
-           (StrLIComp(PChar(FReceiveBuffer), 'HTTP/1.0 200 OK', 15) = 0)) then
+           ((StrLIComp(PAnsiChar(FReceiveBuffer), AnsiString('HTTP/1.1 200 OK'), 15) = 0) or
+           (StrLIComp(PAnsiChar(FReceiveBuffer), AnsiString('HTTP/1.0 200 OK'), 15) = 0)) then
         begin
             { We have a connection to remote host thru proxy, we can start }
             { SSL handshake                                                }
-{$IFDEF UseNTLMAuthentication}
+        {$IFDEF UseNTLMAuthentication}
             if not (FProxyAuthNTLMState in [ntlmNone, ntlmDone]) then
                 FProxyAuthNTLMState  := ntlmDone;
-{$ENDIF}
+        {$ENDIF}
+        {$IFDEF UseDigestAuthentication}
+            if not (FProxyAuthDigestState in [digestNone, digestDone]) then
+                FProxyAuthDigestState := digestDone;
+        {$ENDIF}
             if not (FProxyAuthBasicState in [basicNone, basicDone]) then
                 FProxyAuthBasicState := basicDone;
             // 12/27/05 AG begin, reset some more defaults
@@ -3501,10 +3622,10 @@ begin
                 FCloseReq := FALSE; *)
             // 12/27/05 AG end
 
-{$IFNDEF NO_DEBUG_LOG}
+    {$IFNDEF NO_DEBUG_LOG}
             if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
                 DebugLog(loProtSpecInfo, 'Start SSL handshake');
-{$ENDIF}
+    {$ENDIF}
             FReceiveLen                    := 0; { Clear input data }
             FCtrlSocket.OnSslHandshakeDone := SslHandshakeDone;
             FCtrlSocket.SslEnable          := TRUE;
@@ -3516,7 +3637,7 @@ begin
            { Continue as a normal HTTP request }
             FState := httpWaitingHeader;
     end;
-{$ENDIF}
+{$ENDIF USE_SSL}
 
     if FState = httpWaitingBody then begin
         if FReceiveLen > 0 then begin
@@ -3583,7 +3704,8 @@ begin
             else                                                  // FP 09/09/06
                 SetLength(FLastResponse, I);                      // FP 09/09/06
             if Length(FLastResponse) > 0 then                     // FP 09/09/06
-                MoveTBytesToString(FReceiveBuffer, 0, FLastResponse, 1, Length(FLastResponse)); // FP 09/09/06
+                MoveTBytesToString(FReceiveBuffer, 0,
+                        FLastResponse, 1, Length(FLastResponse)); // FP 09/09/06 
         end;                                                      // FP 09/09/06
 
 {$IFNDEF NO_DEBUG_LOG}
@@ -3604,7 +3726,7 @@ begin
             if Assigned(FNext) then
                 FNext
             else
-                SetReady;
+                CheckDelaySetReady; { 09/26/08 ML }
         end
         else begin
             { We are receiving data outside of any request. }
@@ -3787,7 +3909,9 @@ begin
 {$ENDIF}
         FProxyAuthNTLMState := ntlmMsg1;
         FProxyAuthBasicState := basicNone; { Other authentication must be cleared }
-
+{$IFDEF UseDigestAuthentication}
+        FProxyAuthDigestState := digestNone;
+{$ENDIF}
         { [rawbite 31.08.2004 Connection controll]                       }
         { if request version is 1.0 we must tell the server that we want }
         { to keep the connection or NTLM will not work                   }
@@ -3836,6 +3960,9 @@ begin
 {$IFDEF UseNTLMAuthentication}
         FAuthNTLMState    := ntlmNone; { Other authentication must be cleared }
 {$ENDIF}
+{$IFDEF UseDigestAuthentication}
+        FAuthDigestState  := digestNone;
+{$ENDIF}
         PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
     end
     else if FAuthBasicState = basicMsg1 then begin
@@ -3863,7 +3990,9 @@ begin
 {$IFDEF UseNTLMAuthentication}
         FProxyAuthNTLMState  := ntlmNone; { Other authentication must be cleared }
 {$ENDIF}
-
+{$IFDEF UseDigestAuthentication}
+        FProxyAuthDigestState := digestNone;
+{$ENDIF}
         PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
     end
     else if FProxyAuthBasicState = basicMsg1 then begin
@@ -3878,6 +4007,205 @@ begin
                                     httperrInvalidAuthState);
 end;
 
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function THttpCli.GetBasicAuthorizationHeader(
+  const HttpMethod: String; ProxyAuth: Boolean): String;
+begin
+    if ProxyAuth then
+        Result := 'Proxy-Authorization: Basic ' +
+                  EncodeStr(encBase64, FProxyUsername + ':' + FProxyPassword)
+    else
+        Result := 'Authorization: Basic ' +
+                  EncodeStr(encBase64, FCurrUsername + ':' + FCurrPassword);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFDEF UseDigestAuthentication}
+procedure THttpCli.ElaborateDigestAuth;
+begin
+    { if you place this code in GetHeaderLineNext, not each time will be }
+    { called ...                                                         }
+    if (FAuthDigestState = digestMsg1) and (FStatusCode <> 401) and
+       (FStatusCode <> 407) then
+        FAuthDigestState := digestDone
+    else if (FAuthDigestState = digestDone) and (FStatusCode = 401) then
+        FAuthDigestState := digestNone;
+
+    if (FProxyAuthDigestState = digestMsg1) and (FStatusCode <> 407) then
+        FProxyAuthDigestState := digestDone
+    else if (FProxyAuthDigestState = digestDone) and (FStatusCode = 407) then begin
+        { if we lost proxy authenticated line, most probaly we lost also }
+        { the authenticated line of Proxy to HTTP server, so reset the   }
+        { Digest state of HTTP also to none                              }
+        FProxyAuthDigestState := digestNone;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function THttpCli.PrepareDigestAuth(var FlgClean : Boolean) : Boolean;
+var
+    I : Integer;
+begin
+    { this flag can tell if we proceed with OnRequestDone or will try    }
+    { to authenticate                                                    }
+    Result := FALSE;
+    if (httpoNoDigestAuth in FOptions) and
+       (((FStatusCode = 401) and (FServerAuth = httpAuthDigest)) or
+       ((FStatusCode = 407) and (FProxyAuth = httpAuthDigest))) then
+        Exit;
+
+    if (FStatusCode = 401) and (FDoAuthor.Count > 0) and
+    {$IFDEF UseNTLMAuthentication}
+       (FAuthNTLMState = ntlmNone) and
+    {$ENDIF}
+       (FAuthBasicState = basicNone) and
+       (FCurrUserName <> '') and (FCurrPassword <> '') then begin
+        { We can handle Digest Access Authentication }
+        for I := FDoAuthor.Count - 1 downto 0 do begin
+            if CompareText(Copy(FDoAuthor.Strings[I], 1, 6),
+                          'Digest') = 0 then begin
+                Result := TRUE;
+                if Assigned(FOnBeforeAuth) then
+                    FOnBeforeAuth(Self, httpAuthDigest, FALSE,
+                                  FDoAuthor.Strings[I], Result);
+                if Result then begin
+                    AuthDigestParseChallenge(Copy(FDoAuthor.Strings[I], 8, 1000),
+                                                  FAuthDigestInfo);
+                    if AuthDigestValidateResponse(FAuthDigestInfo) then begin
+                        StartAuthDigest;
+                        if FAuthDigestState = digestMsg1 then
+                            FlgClean := True;
+                        Break;
+                    end
+                    else
+                        Result := FALSE;
+                end;
+            end;
+        end;
+    end
+    else if (FStatusCode = 407) and (FDoAuthor.Count > 0) and
+        {$IFDEF UseNTLMAuthentication}
+            (FProxyAuthNTLMState = ntlmNone) and
+        {$ENDIF}
+            (FProxyAuthBasicState = basicNone) and
+            (FProxyUsername <> '') and (FProxyPassword <> '') then begin
+        { We can handle Digest Access Authentication }
+        for I := FDoAuthor.Count - 1 downto 0 do begin
+            if CompareText(Copy(FDoAuthor.Strings[I], 1, 6),
+                          'Digest') = 0 then begin
+                Result := TRUE;
+                if Assigned(FOnBeforeAuth) then
+                    FOnBeforeAuth(Self, httpAuthDigest, TRUE,
+                                  FDoAuthor.Strings[I], Result);
+                if Result then begin
+                    AuthDigestParseChallenge(Copy(FDoAuthor.Strings[I], 8, 1000),
+                                                  FAuthDigestProxyInfo);
+                    if AuthDigestValidateResponse(FAuthDigestProxyInfo) then begin
+                        StartProxyAuthDigest;
+                        if FProxyAuthDigestState = digestMsg1 then
+                            FlgClean := True;
+                        Break;
+                    end
+                    else
+                        Result := FALSE;
+                end;    
+            end;
+        end;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function THttpCli.GetDigestAuthorizationHeader(
+  const HttpMethod: String; ProxyAuth: Boolean): String;
+var
+    Proto, User, Pass, Host, Port, Uri : String;
+begin
+    { It's probably faster to use a field FAuthDigestUri which   }
+    { is set at some other places when ParseUrl is called anyway }
+    ParseURL(FPath, Proto, User, Pass, Host, Port, Uri);
+
+    if ProxyAuth then begin
+        Inc(FAuthDigestProxyInfo.Nc);
+        Result := 'Proxy-Authorization: Digest ' +
+                  AuthDigestGenerateRequest(FProxyUserName,
+                                            FProxyPassword,
+                                            HttpMethod,
+                                            Uri,
+                                            FAuthDigestEntityHash,
+                                            FAuthDigestProxyInfo);
+    end
+    else begin
+        FAuthDigestInfo.Nc := 1;
+        Result := 'Authorization: Digest ' +
+                  AuthDigestGenerateRequest(FCurrUserName,
+                                            FCurrPassword,
+                                            HttpMethod,
+                                            Uri,
+                                            FAuthDigestEntityHash,
+                                            FAuthDigestInfo);
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpCli.StartAuthDigest;
+begin
+    if FAuthDigestState = digestNone then begin
+    {$IFNDEF NO_DEBUG_LOG}
+        if CheckLogOptions(loProtSpecInfo) then
+            DebugLog(loProtSpecInfo, 'Starting Digest authentication');
+    {$ENDIF}
+        FAuthDigestState  := digestMsg1;
+    {$IFDEF UseNTLMAuthentication}
+        FAuthNTLMState    := ntlmNone; { Other authentication must be cleared }
+    {$ENDIF}
+        FAuthBasicState   := basicNone;
+        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+    end
+    else if FAuthDigestState = digestMsg1 then begin
+        FDoAuthor.Clear;
+        FAuthDigestState := digestNone;
+        { We comes here when Basic has failed }
+        { so we trigger the end request       }
+        PostMessage(Handle, FMsg_WM_HTTP_REQUEST_DONE, 0, 0);
+    end
+    else
+        raise EHttpException.Create('Unexpected AuthDigestState',
+                                    httperrInvalidAuthState);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpCli.StartProxyAuthDigest;
+begin
+    if FProxyAuthDigestState = digestNone then begin
+    {$IFNDEF NO_DEBUG_LOG}
+        if CheckLogOptions(loProtSpecInfo) then
+            DebugLog(loProtSpecInfo, 'Starting Proxy Digest authentication');
+    {$ENDIF}
+        FProxyAuthDigestState := digestMsg1;
+    {$IFDEF UseNTLMAuthentication}
+        FProxyAuthNTLMState  := ntlmNone; { Other authentication must be cleared }
+    {$ENDIF}
+        FProxyAuthBasicState := basicNone;
+        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+    end
+    else if FProxyAuthBasicState = basicMsg1 then begin
+        FDoAuthor.Clear;
+        FProxyAuthDigestState := digestNone;
+        { We come here when Digest has failed }
+        { so we trigger the end request       }
+        PostMessage(Handle, FMsg_WM_HTTP_REQUEST_DONE, 0, 0);
+    end
+    else
+        raise EHttpException.Create('Unexpected ProxyAuthDigestState',
+                                    httperrInvalidAuthState);
+end;
+{$ENDIF UseDigestAuthentication}
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFDEF USE_SSL}
@@ -4118,19 +4446,19 @@ end;
 {$IFDEF WIN32}
 function EncodeLine(
     Encoding : THttpEncoding;
-    SrcData  : PChar;
-    Size     : Integer) : String;
+    SrcData  : PAnsiChar;
+    Size     : Integer) : AnsiString;
 var
     Offset : Integer;
     Pos1   : Integer;
     Pos2   : Integer;
     I      : Integer;
 begin
-    SetLength(Result, Size * 4 div 3 + 4);
-    FillChar(Result[1], Size * 4 div 3 + 2, #0);
-
+    //SetLength(Result, Size * 4 div 3 + 4);
+    //FillChar(Result[1], Size * 4 div 3 + 2, #0);
+    Result := StringOfChar(AnsiChar(#0), Size * 4 div 3 + 4);
     if Encoding = encUUEncode then begin
-        Result[1] := Char(((Size - 1) and $3f) + $21);
+        Result[1] := AnsiChar(((Size - 1) and $3f) + $21);
         Size      := ((Size + 2) div 3) * 3;
     end;
     Offset := 2;
@@ -4144,7 +4472,7 @@ begin
 
     while Pos1 < Size do begin
         if Offset > 0 then begin
-            Result[Pos2] := Char(ord(Result[Pos2]) or
+            Result[Pos2] := AnsiChar(ord(Result[Pos2]) or
                                  ((ord(SrcData[Pos1]) and
                                   ($3f shl Offset)) shr Offset));
             Offset := Offset - 6;
@@ -4153,14 +4481,14 @@ begin
         end
         else if Offset < 0 then begin
             Offset := Abs(Offset);
-            Result[Pos2] := Char(ord(Result[Pos2]) or
+            Result[Pos2] := AnsiChar(ord(Result[Pos2]) or
                                  ((ord(SrcData[Pos1]) and
                                   ($3f shr Offset)) shl Offset));
             Offset := 8 - Offset;
             Inc(Pos1);
         end
         else begin
-            Result[Pos2] := Char(ord(Result[Pos2]) or
+            Result[Pos2] := AnsiChar(ord(Result[Pos2]) or
                                  ((ord(SrcData[Pos1]) and $3f)));
             Inc(Pos2);
             Inc(Pos1);
@@ -4194,9 +4522,24 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function EncodeStr(Encoding : THttpEncoding; const Value : String) : String;
+function EncodeStr(
+    Encoding    : THttpEncoding;
+    const Value : RawByteString) : RawByteString;
 begin
-    Result := EncodeLine(Encoding, @Value[1], Length(Value));
+    Result := EncodeLine(Encoding, PAnsiChar(Value), Length(Value));
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function EncodeStr(
+    Encoding    : THttpEncoding;
+    const Value : UnicodeString;
+    ACodePage   : Cardinal = CP_ACP ) : UnicodeString;
+var
+    AStr : AnsiString;
+begin
+    AStr := UnicodeToAnsi(Value, ACodePage);
+    Result := String(EncodeLine(Encoding, PAnsiChar(AStr), Length(AStr)));
 end;
 {$ENDIF}
 
@@ -4283,43 +4626,48 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFDEF UseNTLMAuthentication}
-function THttpCli.GetNTLMMessage1: String;
+function THttpCli.GetNTLMMessage1(const ForProxy: Boolean): String;
 begin
     { Result := FNTLM.GetMessage1(FNTLMHost, FNTLMDomain);            }
     { it is very common not to send domain and workstation strings on }
     { the first message                                               }
-    Result := NtlmGetMessage1('', '');
+    if ForProxy then
+        Result := 'Proxy-Authorization: NTLM ' + NtlmGetMessage1('', '')
+    else
+        Result := 'Authorization: NTLM ' + NtlmGetMessage1('', '');
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function THttpCli.GetNTLMMessage3(const ForProxy: Boolean): String;
+function THttpCli.GetNTLMMessage3(const HttpMethod: String;
+  const ForProxy: Boolean): String;
 var
     Hostname : String;
 begin
     { get local hostname }
     try
-        Hostname := LocalHostName;
+        Hostname := String(LocalHostName);
     except
         Hostname := '';
     end;
 
     { domain is not used             }
     { hostname is the local hostname }
-    if ForProxy then begin
-        Result := NtlmGetMessage3('',
+    if ForProxy then
+        Result := 'Proxy-Authorization: NTLM ' +
+                  NtlmGetMessage3('',
                                   Hostname,
                                   FProxyUsername,
                                   FProxyPassword,
                                   FProxyNTLMMsg2Info.Challenge)
-    end
-    else begin
-        Result := NtlmGetMessage3('',
+
+    else
+        Result := 'Authorization: NTLM ' +
+                  NtlmGetMessage3('',
                                   Hostname,
 {                                 FNTLMUsercode, FNTLMPassword, }
                                   FCurrUsername, FCurrPassword,
                                   FNTLMMsg2Info.Challenge);
-    end;
 end;
 {$ENDIF}
 
@@ -4436,7 +4784,7 @@ end;
 { Either in OverbyteIcsDefs.inc or in the project/package options.          }
 {$IFDEF USE_SSL}
 {$IFDEF VER80}
-    Bomb('This unit require a 32 bit compiler !');
+    Bomb('This unit requires a 32 bit compiler !');
 {$ENDIF}
 {$B-}                                 { Enable partial boolean evaluation   }
 {$T-}                                 { Untyped pointers                    }
@@ -4447,20 +4795,6 @@ end;
 { unsafe code and unsafe typecast in the project options. Those warning are }
 { intended for .NET programs. You may also want to turn off deprecated      }
 { symbol and platform symbol warnings.                                      }
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-constructor TSslHttpCli.Create(AOwner : TComponent);
-begin
-    inherited Create(AOwner);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-destructor  TSslHttpCli.Destroy;
-begin
-    inherited Destroy;
-end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -4475,7 +4809,7 @@ end;
 procedure TSslHttpCli.DoBeforeConnect;
 begin
     inherited DoBeforeConnect;
-    FCtrlSocket.OnSslVerifyPeer := TransferSslVerifyPeer;
+    FCtrlSocket.OnSslVerifyPeer     := TransferSslVerifyPeer;
     FCtrlSocket.OnSslCliGetSession  := TransferSslCliGetSession;
     FCtrlSocket.OnSslCliNewSession  := TransferSslCliNewSession;
     FCtrlSocket.OnSslHandshakeDone  := SslHandshakeDone;
@@ -4515,7 +4849,7 @@ end;
 procedure TSslHttpCli.TransferSslVerifyPeer(
     Sender        : TObject;
     var Ok        : Integer;
-    Cert       : TX509Base);
+    Cert          : TX509Base);
 begin
     if Assigned(FOnSslVerifyPeer) then
         FOnSslVerifyPeer(Self, Ok, Cert);
@@ -4538,15 +4872,6 @@ begin
     if Assigned(FOnSslCliNewSession) then
         FOnSslCliNewSession(Self, SslSession, WasReused, IncRefCount);
 end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{procedure TSslHttpCli.TransferSslHandshakeDone(Sender: TObject;
-    ErrCode: Word; PeerCert: TX509Base;  var Disconnect : Boolean);
-begin
-    if Assigned(FOnSslHandshakeDone) then
-        FOnSslHandshakeDone(Sender, ErrCode, PeerCert, Disconnect);
-end;}
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
