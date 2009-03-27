@@ -3,14 +3,10 @@
 Author:       Arno Garrels <arno.garrels@gmx.de>
 Creation:     Oct 25, 2005
 Description:  Fast streams for ICS tested on D5 and D7.
-Version:      6.06
-EMail:        francois.piette@overbyte.be  http://www.overbyte.be
-Support:      Use the mailing list twsocket@elists.org
-              Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 2005-2008 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
-              <francois.piette@overbyte.be>
-
+Version:      6.10
+Legal issues: Copyright (C) 2005-2009 by Arno Garrels, Berlin, Germany,
+              contact: <arno.garrels@gmx.de>
+              
               This software is provided 'as-is', without any express or
               implied warranty.  In no event will the author be held liable
               for any  damages arising from the use of this software.
@@ -31,11 +27,6 @@ Legal issues: Copyright (C) 2005-2008 by François PIETTE
 
               3. This notice may not be removed or altered from any source
                  distribution.
-
-              4. You must register this software by sending a picture postcard
-                 to the author. Use a nice stamp and mention your name, street
-                 address, EMail address and any comment you like to say.
-
 
 History:
 Jan 05, 2006 V1.01 F. Piette added missing resourcestring for Delphi 6
@@ -58,6 +49,10 @@ Jan 22, 2008 V6.06 Angus allow for read file shrinking with fmShareDenyNone
 Mar 24, 2008 V6.07 Francois Piette made some changes to prepare code
                    for Unicode:
                    TTextStream use AnsiString.
+Apr 15, 2008 V6.08 A. Garrels, in FBuf of TBufferedFileStream changed to
+                   PAnsiChar
+Aug 27, 2008 V6.09 Arno added a WideString overload to TBufferedFileStream
+Jan 20, 2009 V6.10 Arno added property Mode to TBufferedFileStream.
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -88,7 +83,8 @@ uses
     RTLConsts
 {$ELSE}
     Consts
-{$ENDIF};
+{$ENDIF},
+    OverByteIcsUtils;
 
 {$IFDEF COMPILER6_UP}
 resourcestring
@@ -108,11 +104,12 @@ type
         FHandle     : Longint;
         FFileSize   : BigInt;
         FFileOffset : BigInt;
-        FBuf        : PChar;
+        FBuf        : PAnsiChar;
         FBufSize    : Longint;
         FBufCount   : Longint;
         FBufPos     : Longint;
         FDirty      : Boolean;
+        FMode       : Word;
         //FmWriteFlag : Boolean;  { V1.04 }        
     protected
         procedure   SetSize(NewSize: Longint); override;
@@ -125,8 +122,10 @@ type
         procedure   WriteToFile;
     public
         constructor Create(const FileName: String; Mode: Word; BufferSize: Longint);{$IFDEF COMPILER6_UP} overload; {$ENDIF}
+        constructor Create(const FileName: WideString; Mode: Word; BufferSize: Longint); {$IFDEF COMPILER6_UP} overload; {$ENDIF}
 {$IFDEF COMPILER6_UP}
         constructor Create(const FileName: String; Mode: Word; Rights: Cardinal; BufferSize: Longint); overload;
+        constructor Create(const FileName: WideString; Mode: Word; Rights: Cardinal; BufferSize: Longint); overload;
 {$ENDIF}
         destructor  Destroy; override;
 
@@ -139,8 +138,9 @@ type
 {$ENDIF}
         function    Write(const Buffer; Count: Longint): Longint; override;
         property    FastSize : BigInt read FFileSize;
+        property    Mode : Word read FMode;
     end;
-    
+
     EMultiPartFileReaderException = class(Exception);
 { Read only file stream capable to merge a custom header as well as a footer }
 { with the file. For instance usefull as a HTTP-POST-stream.                 }
@@ -270,6 +270,7 @@ begin
         if FHandle < 0 then
             raise EFOpenError.CreateFmt(SFOpenError, [FileName]);
     end;
+    FMode := Mode;
     Init(BufferSize);
 {$ENDIF}
 end;
@@ -304,6 +305,75 @@ begin
                                            [ExpandFileName(FileName),
                                            SysErrorMessage(GetLastError)]);
     end;
+    FMode := Mode;
+    Init(BufferSize);
+end;
+{$ENDIF}
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+constructor TBufferedFileStream.Create(const FileName: WideString; Mode: Word;
+    BufferSize: Longint);
+begin
+{$IFDEF COMPILER6_UP}
+    Create(Filename, Mode, 0, BufferSize);
+{$ELSE}
+    inherited Create;
+    FHandle := -1;
+    FBuf    := nil;
+    //FmWriteFlag := FALSE;   { V1.04 }
+    if Mode = fmCreate then begin
+        FHandle := IcsFileCreateW(FileName);
+        if FHandle < 0 then
+            raise EFCreateError.CreateFmt(SFCreateError, [FileName]);
+    end
+    else begin
+        { Even in mode fmOpenWrite we need to read from file as well }
+        if Mode and fmOpenWrite <> 0 then begin
+            Mode := Mode and not fmOpenWrite;
+            Mode := Mode or fmOpenReadWrite;
+            //FmWriteFlag := TRUE; { V1.04 }
+        end;
+        FHandle := IcsFileOpenW(FileName, Mode);
+        if FHandle < 0 then
+            raise EFOpenError.CreateFmt(SFOpenError, [FileName]);
+    end;
+    FMode := Mode;
+    Init(BufferSize);
+{$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFDEF COMPILER6_UP}
+constructor TBufferedFileStream.Create(const FileName : WideString; Mode: Word;
+    Rights: Cardinal; BufferSize: Longint);
+begin
+    inherited Create;
+    FHandle := -1;
+    FBuf    := nil;
+    //FmWriteFlag := FALSE;  { V1.04 }
+    if Mode = fmCreate then begin
+        FHandle := IcsFileCreateW(FileName, Rights);
+        if FHandle < 0 then
+            raise EFCreateError.CreateResFmt(@SFCreateErrorEx,
+                                             [ExpandFileName(FileName),
+                                             SysErrorMessage(GetLastError)]);
+    end
+    else begin
+        { Even in mode fmOpenWrite we need to read from file as well }
+        if (Mode and fmOpenWrite <> 0) then begin
+            Mode := Mode and not fmOpenWrite;
+            Mode := Mode or fmOpenReadWrite;
+            //FmWriteFlag := TRUE;  { V1.04 }
+        end;
+        FHandle := IcsFileOpenW(FileName, Mode);
+        if FHandle < 0 then
+            raise EFOpenError.CreateResFmt(@SFOpenErrorEx,
+                                           [ExpandFileName(FileName),
+                                           SysErrorMessage(GetLastError)]);
+    end;
+    FMode := Mode;
     Init(BufferSize);
 end;
 {$ENDIF}
@@ -432,7 +502,7 @@ begin
         if (FBufCount = 0) and ((FFileOffset + FBufPos) <= FFileSize) then
             ReadFromFile;
         Copied := Min(Remaining, FBufSize - FBufPos);
-        Move(PChar(Buffer), FBuf[FBufPos], Copied);
+        Move(PAnsiChar(Buffer), FBuf[FBufPos], Copied);
         FDirty := True;
         Inc(FBufPos, Copied);
         if (FBufCount < FBufPos) then begin
@@ -1026,7 +1096,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TTextStream.Write(const Buffer; Count: Integer): Longint;
 begin
-    SetMode(tsmWrite);;
+    SetMode(tsmWrite);
     Result := FStream.Write(Buffer, Count);
 end;
 

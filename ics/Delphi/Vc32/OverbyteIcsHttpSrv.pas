@@ -9,7 +9,7 @@ Description:  THttpServer implement the HTTP server protocol, that is a
               check for '..\', '.\', drive designation and UNC.
               Do the check in OnGetDocument and similar event handlers.
 Creation:     Oct 10, 1999
-Version:      6.06
+Version:      7.17
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -198,18 +198,63 @@ Aug 10, 2007 V1.62 AG - New property SndBlkSize specifies the size of data
              chunks put into the send buffer in THttpConnection.
 Mar 24, 2008 V6.01 Bumped version number to 6.01
              Francois Piette made some changes to prepare code for Unicode.
-Jul 13, 2008 V6.02 Revised socket names used for debugging purpose
-Oct 10, 2008 V6.03 A. Garrels fixed TextToHtmlText() to work in all locales.
-Oct 28, 2008 V6.04 A.Garrels - Replaced symbol UseInt64ForHttpRange by STREAM64.
+Apr 15, 2008 V6.02 A. Garrels added StreamWriteStrA() StreamWriteLnA()
+             both replace WriteStream, WriteLnStream and WriteLnToStream.
+             Got digest authentication working by type-changes from String to
+             AnsiString. All authentication methods do work now, briefly tested.
+Apr 20, 2008 Removed functions PutStringInSendBufferA() SendStrA() again.
+             Now uses OverbyteIcsLibrary.pas, Sysutils.pas removed from the
+             uses clause.
+Apr 22, 2008 V6.03 AGarrels Removed checks for faVolumeID
+Apr 30, 2008 V6.04 A. Garrels - Function names adjusted according to changes in
+             OverbyteIcsLibrary.pas
+May 15, 2008 V6.05 A. Garrels added function StreamReadStrA.
+             Some type changes from String to AnsiString of published properties.
+Jul 13, 2008 V6.06 Revised socket names used for debugging purpose.
+Aug 11, 2008 V6.07 A. Garrels - Type AnsiString rolled back to String.
+Sep 21, 2008 V6.08 A. Garrels removed a DELPHI4 conditional (CBuilder compat.)
+Sep 28, 2008 V6.09 A. Garrels modified UrlEncode(), UrlDecode() and
+             ExtractURLEncodedValue() to support UTF-8 encoding. Moved IsDigit,
+             IsXDigit, XDigit, htoi2 and htoin to OverbyteIcsUtils.
+             Fixed an AV in TextToHtmlText() with characters above #255.
+Oct 10, 2008 V6.10 A. Garrels fixed TextToHtmlText() to work in all locales.
+Oct 28, 2008 V7.11 A.Garrels - Replaced symbol UseInt64ForHttpRange by STREAM64.
              Fixed responses and  an infinite loop when a byte-range-set was
              unsatisfiable. Added a fix for content ranges with files > 2GB as
              suggested by Lars Gehre <lars@dvbviewer.com>.
-Jan 03, 2009 V6.05 A.Garrels fixed a infinite loop with digest authentication
-             when user credential was wrong, caused by improper handling of a
-             stale nonce. Improved nonce generation and added a new property
+Dec 03, 2008 V7.12 A.Garrels - Added Keep-Alive timeout and a maximum number
+             of allowed requests during a persistent connection. Set property
+             KeepAliveTimeSec to zero in order disable this feature entirely,
+             otherwise persistent connections are dropped either after an idle
+             time of value KeepAliveTimeSec or if the maximum number of requests
+             (property MaxRequestKeepAlive) is reached. Multiple calls to
+             CloseDelayed replaced by a graceful shutdown procedure to ensure
+             all data is sent before the socket handle is closed. It's achieved
+             by calling procedure PrepareGraceFullShutDown before data is actually
+             sent, when ConnectionDataSent triggers ShutDown(1) is called and
+             in case a client won't close the connection is dropped after 5
+             seconds. New header Keep-Alive is sent if a client explcitely
+             requests Connection: Keep-Alive.
+Dec 05, 2008 V7.13 A.Garrels make use of function IcsCalcTickDiff in
+             OverbyteIcsUtils.pas.
+Dec 06, 2008 V7.14 A.Garrels - Avoid reentrance in procedure HeartBeatOnTimer.
+             AnswerStream did not send the (optional) Keep-Alive header.
+Jan 03, 2009 V7.15 A.Garrels - Fixed a bug with conditional define
+             NO_AUTHENTICATION_SUPPORT introduced in V7.12.
+             Fixed a infinite loop with digest authentication when user
+             credential was wrong, caused by improper handling of a stale
+             nonce. Improved nonce generation and added a new property
              AuthDigestNonceLifeTimeMin.
-Jan 12, 2009 V6.06 A. Garrels fixed a bug with NTLM authentication in func.
-             Answer401.
+Jan 11, 2009 V7.16 A.Garrels - Removed some digest authentication code to new
+             unit OverbyteIcsDigestAuth. OnAuthResult is no longer triggered
+             with FALSE when the nonce is just stale. Changed string type of
+             FAuthDigestBody to AnsiString. New directive NO_DIGEST_AUTH
+             can be used to exclude the digest code from being compiled.
+             ** Typo corrected, property AuthDigetUri is now AuthDigestUri **
+             Added THttpConnection.AnswerStringEx() which works as AnswerString()
+             however takes a CodePage argument in D2009 and better.
+Jan 12, 2009 V7.17 A. Garrels fixed a bug with NTLM authentication in func.
+             Answer401.  
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -218,16 +263,22 @@ unit OverbyteIcsHttpSrv;
 {$B-}                 { Enable partial boolean evaluation   }
 {$T-}                 { Untyped pointers                    }
 {$X+}                 { Enable extended syntax              }
+{$H+}                 { Use long strings                    }
+{$J+}                 { Allow typed constant to be modified }
 {$I OverbyteIcsDefs.inc}
+{$IFDEF COMPILER12_UP}
+    { These are usefull for debugging !}
+    {$WARN IMPLICIT_STRING_CAST       ON}
+    {$WARN IMPLICIT_STRING_CAST_LOSS  ON}
+    {$WARN EXPLICIT_STRING_CAST       OFF}
+    {$WARN EXPLICIT_STRING_CAST_LOSS  OFF}
+{$ENDIF}
 {$IFDEF DELPHI6_UP}
     {$WARN SYMBOL_PLATFORM OFF}
     {$WARN SYMBOL_LIBRARY    OFF}
     {$WARN SYMBOL_DEPRECATED OFF}
 {$ENDIF}
-{$IFDEF COMPILER2_UP} { Not for Delphi 1                    }
-    {$H+}             { Use long strings                    }
-    {$J+}             { Allow typed constant to be modified }
-{$ENDIF}
+
 {$IFDEF BCB3_UP}
     {$ObjExportAll On}
 {$ENDIF}
@@ -240,6 +291,15 @@ unit OverbyteIcsHttpSrv;
     {$DEFINE USE_NTLM_AUTH}
 {$ELSE}
     {$UNDEF USE_NTLM_AUTH}
+    {$DEFINE NO_DIGEST_AUTH}
+{$ENDIF}
+{$IFNDEF WIN32}
+    {$IFDEF USE_NTLM_AUTH}
+        {$UNDEF USE_NTLM_AUTH}  {SSPI is Windows only}
+    {$ENDIF}
+    {$IFNDEF NO_DIGEST_AUTH}
+        {$DEFINE NO_DIGEST_AUTH}
+    {$ENDIF}
 {$ENDIF}
 
 interface
@@ -251,7 +311,7 @@ uses
 {$ELSE}
     WinTypes, WinProcs,
 {$ENDIF}
-    Classes, SysUtils,
+    Classes{, SysUtils},
 { You must define USE_SSL so that SSL code is included in the component.    }
 { Either in OverbyteIcsDefs.inc or in the project/package options.          }
 {$IFDEF USE_SSL}
@@ -265,25 +325,24 @@ uses
 {$ENDIF}
     OverbyteIcsMD5, OverbyteIcsMimeUtils,
     OverbyteIcsTypes, OverbyteIcsLibrary,
-{$IFNDEF WIN32}
-    {$IFDEF USE_NTLM_AUTH}
-        {$UNDEF USE_NTLM_AUTH}  {SSPI is Windows only}
-    {$ENDIF}
-{$ENDIF}
+    OverbyteIcsUtils,
 {$IFDEF USE_NTLM_AUTH}
     OverbyteIcsSspi,
     OverbyteIcsNtlmSsp,
 {$ENDIF}
-    OverbyteIcsWSocket, OverbyteIcsWSocketS;
+{$IFNDEF NO_DIGEST_AUTH}
+    OverbyteIcsDigestAuth,
+{$ENDIF}
+    OverbyteIcsWndControl, OverbyteIcsWSocket, OverbyteIcsWSocketS;
 
 const
-    THttpServerVersion = 606;
-    CopyRight : String = ' THttpServer (c) 1999-2009 F. Piette V6.06 ';
+    THttpServerVersion = 717;
+    CopyRight : String = ' THttpServer (c) 1999-2009 F. Piette V7.17 ';
     //WM_HTTP_DONE       = WM_USER + 40;
-    HA_MD5             = 0;
-    HA_MD5_SESS        = 1;
-    HASHLEN            = 16;
-    HASHHEXLEN         = 32;
+    //HA_MD5             = 0;
+    //HA_MD5_SESS        = 1;
+    //HASHLEN            = 16;
+    //HASHHEXLEN         = 32;
 
 type
     THttpServer          = class;
@@ -330,11 +389,10 @@ type
     THttpRangeInt        = LongInt;   { Limited to 2GB size }
 {$ENDIF}
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
-    TAuthenticationType     = (atNone, atBasic, atDigest
+    TAuthenticationType     = (atNone, atBasic
+                              {$IFNDEF NO_DIGEST_AUTH}, atDigest {$ENDIF}
                               {$IFDEF USE_NTLM_AUTH}, atNtlm {$ENDIF});
     TAuthenticationTypes    = set of TAuthenticationType;
-    TAuthDigestMethod       = (daAuth, daAuthInt, daBoth);
-    THashHex                = array [0..HASHHEXLEN] of Char;
     TAuthGetPasswordEvent   = procedure (Sender       : TObject;
                                          Client       : TObject;
                                          var Password : String) of object;
@@ -343,11 +401,11 @@ type
                                          Success   : Boolean) of object;
     TAuthGetTypeEvent       = procedure (Sender    : TObject;
                                          Client    : TObject) of object;
-{$IFDEF USE_NTLM_AUTH}
+  {$IFDEF USE_NTLM_AUTH}
     TAuthNtlmBeforeValidate = procedure (Sender       : TObject;
                                          Client       : TObject;
                                          var Allow    : Boolean) of object;
-{$ENDIF}
+  {$ENDIF}
 {$ENDIF}
 
     {ANDREAS one byte-range}
@@ -372,7 +430,7 @@ type
         procedure SetItems(NIndex: Integer; const Value: THttpRange);
     public
         destructor Destroy; override;
-        procedure  Clear; {$IFDEF DELPHI4_UP}override; {$ENDIF}
+        procedure  Clear; override;
         procedure Assign(Source: THttpRangeList);
         function  CreateRangeStream(SourceStream    : TStream;
                                     ContentString   : String;
@@ -423,13 +481,6 @@ type
         property PartStreams[NIndex : Integer] : THttpPartStream
                                                    read  GetPartStreams;
     end;
-{$IFNDEF NO_AUTHENTICATION_SUPPORT}
-    TAuthDigestNonceRec = record
-        DT    : TDateTime;
-        Hash  : TMd5Digest;
-    end;
-    PAuthDigestNonceRec = ^TAuthDigestNonceRec;
-{$ENDIF}
     { THttpConnection is used to handle client connections }
 {$IFDEF USE_SSL}
     TBaseHttpConnection = class(TSslWSocketClient);
@@ -446,6 +497,7 @@ type
         FAuthInit                     : Boolean;                        { V1.6 }
         FAuthUserName                 : String;
         FAuthPassword                 : String;
+    {$IFNDEF NO_DIGEST_AUTH}
         FAuthDigestRealm              : String;   { Received from client }
         FAuthDigestUri                : String;
         FAuthDigestNonce              : String;
@@ -458,20 +510,22 @@ type
         FAuthDigestServerOpaque       : String;
         FAuthDigestAlg                : String;
         FAuthDigestStale              : Boolean;
-        FAuthType                     : TAuthenticationType;
-        FAuthTypes                    : TAuthenticationTypes;
-        FAuthenticated                : Boolean;
-        FAuthDigestBody               : String;
+        FAuthDigestBody               : AnsiString; // Entity-Body as specified in RFC 2617, section 3.2.2.4
         FAuthDigestNonceLifeTimeMin   : Cardinal;
         FAuthDigestNonceTimeStamp     : TDateTime;
         FAuthDigestOneTimeFlag        : Boolean;
+    {$ENDIF}
+        FAuthType                     : TAuthenticationType;
+        FAuthTypes                    : TAuthenticationTypes;
+        FAuthenticated                : Boolean;
         function  AuthGetMethod: TAuthenticationType;
         procedure AuthCheckAuthenticated; virtual;
-        function  AuthDigestCheckPassword(const Password: string): Boolean;
+    {$IFNDEF NO_DIGEST_AUTH}
+        function  AuthDigestCheckPassword(const Password: String): Boolean;
         function  AuthDigestGetParams: Boolean;
-        function  AuthDigestGenNonceHash(RequestTime: TDateTime; Opaque: String): TMD5Digest;
+    {$ENDIF}
         function  AuthBasicGetParams: Boolean;
-        function  AuthBasicCheckPassword(const Password: string): Boolean;
+        function  AuthBasicCheckPassword(const Password: String): Boolean;
 {$IFDEF USE_NTLM_AUTH}
         procedure AuthNtlmSessionBeforeValidate(Sender: TObject; var Allow: Boolean);
 {$ENDIF}
@@ -489,7 +543,7 @@ type
         FDefaultDoc            : String;
         FDocument              : String;
         FDocStream             : TStream;
-        FDocBuf                : PChar;
+        FDocBuf                : PAnsiChar;
         FSndBlkSize            : Integer;       {AG 03/10/07}
         FLastModified          : TDateTime;
         FAnswerContentType     : String;
@@ -519,10 +573,14 @@ type
         FOptions               : THttpOptions;
         FOutsideFlag           : Boolean;
         FKeepAlive             : Boolean;        {Bjornar}
+        FKeepAliveRequested    : Boolean;
         FRequestRangeValues    : THttpRangeList; {ANDREAS}
         FDataSent              : THttpRangeInt; {TURCAN}
         FDocSize               : THttpRangeInt; {TURCAN}
         FMsg_WM_HTTP_DONE      : UINT;
+        FKeepAliveTimeSec      : Cardinal;
+        FMaxRequestsKeepAlive  : Integer;
+        FShutDownFlag          : Boolean;
         FOnGetDocument         : THttpGetConnEvent;
         FOnHeadDocument        : THttpGetConnEvent;
         FOnPostDocument        : THttpGetConnEvent;
@@ -575,6 +633,8 @@ type
         procedure   SendDocument(SendType : THttpSendType); virtual;
         procedure   SendHeader(Header : String); virtual;
         procedure   PostedDataReceived; virtual;
+        procedure   PrepareGraceFullShutDown; virtual;
+        function    GetKeepAliveHdrLines: String;
         { AnswerPage will take a HTML template and replace all tags in this
           template with data provided in the Tags argument.
           The tags in the template must have the form <#TagName>.
@@ -611,7 +671,7 @@ type
                                const HtmlFile : String;
                                UserData       : TObject;
                                Tags           : array of const); virtual;
-        procedure   AnswerStream(var   Flags      : THttpGetFlag;
+        procedure   AnswerStream(var   Flags    : THttpGetFlag;
                                  const Status   : String;
                                  const ContType : String;
                                  const Header   : String); virtual;
@@ -620,6 +680,14 @@ type
                                  const ContType : String;
                                  const Header   : String;
                                  const Body     : String); virtual;
+{$IFDEF COMPILER12_UP}
+        procedure   AnswerStringEx(var Flags    : THttpGetFlag;
+                                 const Status   : String;
+                                 const ContType : String;
+                                 const Header   : String;
+                                 const Body     : String;
+                                 BodyCodePage   : Integer = CP_ACP); virtual;
+{$ENDIF}
         { Mostly like AnswerPage but the result is given into a string.
           Designed to be used within a call to AnswerPage as one of the
           replacable tag value. This permit to build a page based on several
@@ -664,7 +732,12 @@ type
         property RequestHostName       : String      read  FRequestHostName;    {DAVID}
         property RequestHostPort       : String      read  FRequestHostPort;    {DAVID}
         property RequestConnection     : String      read  FRequestConnection;
-        property RequestRangeValues    : THttpRangeList  read  FRequestRangeValues; {ANDREAS}
+        property RequestRangeValues    : THttpRangeList
+                                                     read  FRequestRangeValues; {ANDREAS}
+        property KeepAliveTimeSec      : Cardinal    read  FKeepAliveTimeSec
+                                                     write FKeepAliveTimeSec;
+        property MaxRequestsKeepAlive  : Integer     read  FMaxRequestsKeepAlive
+                                                     write FMaxRequestsKeepAlive;                                             
     published
         { Where all documents are stored. Default to c:\wwwroot }
         property DocDir         : String            read  FDocDir
@@ -732,17 +805,19 @@ type
                                                     write FAuthUserName;
         property AuthPassword      : String         read  FAuthPassword
                                                     write FAuthPassword;
-        property AuthDigetUri      : String         read  FAuthDigestUri
-                                                    write FAuthDigestUri;
         property AuthRealm         : String         read  FAuthRealm
                                                     write FAuthRealm;
+    {$IFNDEF NO_DIGEST_AUTH}
+        property AuthDigestUri     : String         read  FAuthDigestUri
+                                                    write FAuthDigestUri;
         property AuthDigestNonceLifeTimeMin  : Cardinal
                                                     read  FAuthDigestNonceLifeTimeMin
                                                     write FAuthDigestNonceLifeTimeMin;
-{$IFDEF USE_NTLM_AUTH}
+    {$ENDIF}
+    {$IFDEF USE_NTLM_AUTH}
         property AuthNtlmSession   : TNtlmAuthSession
                                                     read  FAuthNtlmSession;
-{$ENDIF}
+    {$ENDIF}
 {$ENDIF}        
     end;
 
@@ -751,41 +826,47 @@ type
     THttpServer = class(TComponent)
     protected
         { FWSocketServer will handle all client management work }
-        FWSocketServer      : TWSocketServer;
-        FPort               : String;
-        FAddr               : String;
-        FMaxClients         : Integer;              {DAVID}
-        FClientClass        : THttpConnectionClass;
-        FDocDir             : String;
-        FTemplateDir        : String;
-        FDefaultDoc         : String;
-        FLingerOnOff        : TSocketLingerOnOff;
-        FLingerTimeout      : Integer;              { In seconds, 0 = disabled }
-        FOptions            : THttpOptions;
-        FOnServerStarted    : TNotifyEvent;
-        FOnServerStopped    : TNotifyEvent;
-        FOnClientConnect    : THttpConnectEvent;
-        FOnClientDisconnect : THttpConnectEvent;
-        FOnGetDocument      : THttpGetEvent;
-        FOnHeadDocument     : THttpGetEvent;
-        FOnPostDocument     : THttpGetEvent;
-        FOnPostedData       : THttpPostedDataEvent;
-        FOnHttpRequestDone  : THttpRequestDoneEvent;
-        FOnBeforeProcessRequest: THttpBeforeProcessEvent;    {DAVID}
-        FOnFilterDirEntry   : THttpFilterDirEntry;
-        FListenBacklog      : Integer; {Bjørnar}
+        FWSocketServer            : TWSocketServer;
+        FPort                     : String;
+        FAddr                     : String;
+        FMaxClients               : Integer;              {DAVID}
+        FClientClass              : THttpConnectionClass;
+        FDocDir                   : String;
+        FTemplateDir              : String;
+        FDefaultDoc               : String;
+        FLingerOnOff              : TSocketLingerOnOff;
+        FLingerTimeout            : Integer;        { In seconds, 0 = disabled }
+        FOptions                  : THttpOptions;
+        FOnServerStarted          : TNotifyEvent;
+        FOnServerStopped          : TNotifyEvent;
+        FOnClientConnect          : THttpConnectEvent;
+        FOnClientDisconnect       : THttpConnectEvent;
+        FOnGetDocument            : THttpGetEvent;
+        FOnHeadDocument           : THttpGetEvent;
+        FOnPostDocument           : THttpGetEvent;
+        FOnPostedData             : THttpPostedDataEvent;
+        FOnHttpRequestDone        : THttpRequestDoneEvent;
+        FOnBeforeProcessRequest   : THttpBeforeProcessEvent;    {DAVID}
+        FOnFilterDirEntry         : THttpFilterDirEntry;
+        FListenBacklog            : Integer; {Bjørnar}
+        FKeepAliveTimeSec         : Cardinal;
+        FMaxRequestsKeepAlive     : Integer;
+        FHeartBeat                : TIcsTimer;
+        FHeartBeatBusy            : Boolean;
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
-        FAuthTypes                  : TAuthenticationTypes;
-        FAuthRealm                  : String;
-        FAuthDigestServerSecret     : TULargeInteger;
-        FAuthDigestNonceLifeTimeMin : Cardinal;
-        FAuthDigestMethod           : TAuthDigestMethod;
-        FOnAuthGetPassword          : TAuthGetPasswordEvent;
-        FOnAuthResult               : TAuthResultEvent;
-{$IFDEF USE_NTLM_AUTH}
-        FOnAuthNtlmBeforeValidate: TAuthNtlmBeforeValidate;
+        FAuthTypes                : TAuthenticationTypes;
+        FAuthRealm                : String;
+{$IFNDEF NO_DIGEST_AUTH}
+        FAuthDigestServerSecret       : TULargeInteger;
+        FAuthDigestNonceLifeTimeMin   : Cardinal;
+        FAuthDigestMethod             : TAuthDigestMethod;
 {$ENDIF}
-        FOnAuthGetType           : TAuthGetTypeEvent;
+        FOnAuthGetPassword        : TAuthGetPasswordEvent;
+        FOnAuthResult             : TAuthResultEvent;
+{$IFDEF USE_NTLM_AUTH}
+        FOnAuthNtlmBeforeValidate : TAuthNtlmBeforeValidate;
+{$ENDIF}
+        FOnAuthGetType            : TAuthGetTypeEvent;
 {$ENDIF}
 {$IFNDEF NO_DEBUG_LOG}
         function  GetIcsLogger: TIcsLogger;                       { V1.38 }
@@ -825,12 +906,14 @@ type
         procedure TriggerFilterDirEntry(Sender   : TObject;
                                         Client   : TObject;
                                         DirEntry : THttpDirEntry); virtual;
-        procedure SetPortValue(newValue : String);
-        procedure SetAddr(newValue : String);
+        procedure SetPortValue(const newValue : String);
+        procedure SetAddr(const newValue : String);
         procedure SetDocDir(const Value: String);
         function  GetClientCount : Integer;
         function  GetClient(nIndex : Integer) : THttpConnection;
         function  GetSrcVersion: String;
+        procedure HeartBeatOnTimer(Sender: TObject); virtual;
+        procedure SetKeepAliveTimeSec(const Value: Cardinal);
     public
         constructor Create(AOwner: TComponent); override;
         destructor  Destroy; override;
@@ -883,8 +966,12 @@ type
         property LingerTimeout : Integer         read  FLingerTimeout
                                                  write FLingerTimeout;
         { Selected HTTP server optional behaviour }
-        property Options        : THttpOptions      read  FOptions
-                                                    write FOptions;
+        property Options        : THttpOptions   read  FOptions
+                                                 write FOptions;
+        property KeepAliveTimeSec : Cardinal     read  FKeepAliveTimeSec
+                                                 write SetKeepAliveTimeSec;
+        property MaxRequestsKeepAlive : Integer  read  FMaxRequestsKeepAlive
+                                                 write FMaxRequestsKeepAlive;
         { OnServerStrated is triggered when server has started listening }
         property OnServerStarted    : TNotifyEvent
                                                  read  FOnServerStarted
@@ -948,23 +1035,25 @@ type
         property OnAuthGetType      : TAuthGetTypeEvent
                                                  read  FOnAuthGetType
                                                  write FOnAuthGetType;
-{$IFDEF USE_NTLM_AUTH}
+    {$IFDEF USE_NTLM_AUTH}
          property OnAuthNtlmBeforeValidate  : TAuthNtlmBeforeValidate
                                                  read  FOnAuthNtlmBeforeValidate
                                                  write FOnAuthNtlmBeforeValidate;
-{$ENDIF}
-        property AuthDigestNonceLifeTimeMin  : Cardinal
-                                                 read  FAuthDigestNonceLifeTimeMin
-                                                 write FAuthDigestNonceLifeTimeMin default 1;
+    {$ENDIF}
         property AuthTypes         : TAuthenticationTypes
                                                  read  FAuthTypes
                                                  write FAuthTypes;
         property AuthRealm         : String      read  FAuthRealm
                                                  write FAuthRealm;
+    {$IFNDEF NO_DIGEST_AUTH}
         property AuthDigestMethod  : TAuthDigestMethod
                                                  read  FAuthDigestMethod
                                                  write FAuthDigestMethod
                                                  default daAuth;
+        property AuthDigestNonceLifeTimeMin  : Cardinal
+                                                 read  FAuthDigestNonceLifeTimeMin
+                                                 write FAuthDigestNonceLifeTimeMin default 1;                                         
+    {$ENDIF}
 {$ENDIF}
     end;
 
@@ -1125,9 +1214,6 @@ function ExtractURLEncodedValue(
     var Value : String): Boolean;  { Where to put variable value            }
 function UrlEncode(const S : String) : String;
 function UrlDecode(const Url : String) : String;
-function htoi2(value : PChar) : Integer;
-function IsXDigit(Ch : char) : Boolean;
-function XDigit(Ch : char) : Integer;
 function FileDate(FileName : String) : TDateTime;
 function RFC1123_Date(aDate : TDateTime) : String;
 function DocumentToContentType(FileName : String) : String;
@@ -1157,8 +1243,8 @@ function RemoveHtmlSpecialChars(const S : String) : String;
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
 function AuthTypesToString(Types : TAuthenticationTypes) : String;
 {$ENDIF}
-
-procedure Register;
+function StreamWriteStrA(AStrm : TStream; const AStr: String): Integer;
+function StreamWriteLnA(AStrm : TStream; const AStr: String): Integer;
 
 const
     HttpConnectionStateName : array [THttpConnectionState] of String =
@@ -1166,7 +1252,7 @@ const
 
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
     HttpAuthTypeNames : array [TAuthenticationType] of String =
-         ('None', 'Basic', 'Digest'
+         ('None', 'Basic' {$IFNDEF NO_DIGEST_AUTH}, 'Digest' {$ENDIF}
           {$IFDEF USE_NTLM_AUTH}, 'NTLM' {$ENDIF});
 {$ENDIF}
 
@@ -1174,16 +1260,6 @@ implementation
 
 const
     GTagPrefix : String = '#';
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure Register;
-begin
-    RegisterComponents('FPiette', [THttpServer
-{$IFDEF USE_SSL}
-                                   ,TSslHttpServer
-{$ENDIF}
-                                   ]);
-end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -1233,28 +1309,106 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function StreamWriteStrA(AStrm : TStream; const AStr: String): Integer;
+{$IFDEF COMPILER12_UP}
+var
+    S : AnsiString;
+begin
+    S := UnicodeToAnsi(AStr);
+    Result := AStrm.Write(Pointer(S)^, Length(S));
+{$ELSE}
+begin
+    Result := AStrm.Write(Pointer(AStr)^, Length(AStr));
+{$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+const
+    CRLF : String = Char($0D) + Char($0A);
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function StreamWriteLnA(AStrm : TStream; const AStr: String): Integer;
+begin
+    if Length(AStr) > 0 then
+        Result := StreamWriteStrA(AStrm, AStr)
+    else
+        Result := 0;
+    Result := Result + StreamWriteStrA(AStrm, CRLF);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function StreamReadStrA(AStrm : TStream; ByteCnt: Integer): String;
+var
+    Len : Integer;
+{$IFNDEF COMPILER12_UP}
+begin
+    if ByteCnt > 0 then
+    begin
+        SetLength(Result, ByteCnt);
+        Len := AStrm.Read(Pointer(Result)^, ByteCnt);
+        if Len <> ByteCnt then
+            SetLength(Result, Len);
+    end
+{$ELSE}
+    Str : AnsiString;
+begin
+    if ByteCnt > 0 then
+    begin
+        SetLength(Str, ByteCnt);
+        Len := AStrm.Read(Pointer(Str)^, ByteCnt);
+        if Len <> ByteCnt then
+            SetLength(Str, Len);
+        Result := AnsiToUnicode(Str); // Cast to Unicode
+    end
+{$ENDIF}
+    else
+        Result := '';
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function StreamWriteA(AStream : TStream; Buf: PChar; CharCnt: Integer): Integer;
+begin
+{$IFDEF COMPILER12_UP}
+    Result:= StreamWriteString(AStream, Buf, CharCnt, CP_ACP);
+{$ELSE}
+    Result := AStream.Write(Buf^, CharCnt);
+{$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 constructor THttpServer.Create(AOwner: TComponent);
 begin
     inherited Create(AOwner);
     CreateSocket;
-    FWSocketServer.Name := ClassName + '_SrvSocket' + IntToStr(SafeWSocketGCount);
-    FClientClass   := THttpConnection;
-    FOptions       := [];
-    FAddr          := '0.0.0.0';
-    FPort          := '80';
-    FMaxClients    := 0;                {DAVID}
-    FListenBacklog := 5; {Bjørnar}
-    FDefaultDoc    := 'index.html';
-    FDocDir        := 'c:\wwwroot';
-    FTemplateDir   := 'c:\wwwroot\templates';
-    FLingerOnOff   := wsLingerNoSet;
-    FLingerTimeout := 0;
+    FWSocketServer.Name := ClassName + '_SrvSocket' + _IntToStr(SafeWSocketGCount);
+    FClientClass    := THttpConnection;
+    FOptions        := [];
+    FAddr           := '0.0.0.0';
+    FPort           := '80';
+    FMaxClients     := 0;                {DAVID}
+    FListenBacklog  := 5; {Bjørnar}
+    FDefaultDoc     := 'index.html';
+    FDocDir         := 'c:\wwwroot';
+    FTemplateDir    := 'c:\wwwroot\templates';
+    FLingerOnOff    := wsLingerNoSet;
+    FLingerTimeout  := 0;
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
-    FAuthRealm     := 'ics';
+    FAuthRealm                    := 'ics';
+  {$IFNDEF NO_DIGEST_AUTH}
     FAuthDigestNonceLifeTimeMin   := 1;
-    FAuthTypes     := []; 
+  {$ENDIF}
+    FAuthTypes                    := [];
 {$ENDIF}
-    Randomize;
+    FKeepAliveTimeSec     := 10;
+    FMaxRequestsKeepAlive := 100;
+    FHeartBeat            := TIcsTimer.Create(FWSocketServer);
+    FHeartBeat.OnTimer    := HeartBeatOnTimer;
+    FHeartBeat.Interval   := 5000; { It's slow, just used for timeout detection }
+    FHeartBeat.Enabled    := TRUE;
 end;
 
 
@@ -1327,9 +1481,9 @@ begin
     FWSocketServer.BannerTooBusy      :=
         'HTTP/1.0 503 Service Unavailable' + #13#10 +
         'Content-type: text/plain' + #13#10 +
-        'Content-length: ' + IntToStr(Length(BusyText)) + #13#10#13#10 +
+        'Content-length: ' + _IntToStr(Length(BusyText)) + #13#10#13#10 +
         BusyText;
-{$IFNDEF NO_AUTHENTICATION_SUPPORT}
+{$IFNDEF NO_DIGEST_AUTH}
     FAuthDigestServerSecret           := CreateServerSecret;
 {$ENDIF}
     FWSocketServer.Listen;
@@ -1342,20 +1496,12 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpServer.Stop;
-var
-    I : Integer;
 begin
     if not Assigned(FWSocketServer) then
         Exit;
     FWSocketServer.Close;
     { Disconnect all clients }
-    for I := FWSocketServer.ClientCount - 1 downto 0 do begin
-        try
-            FWSocketServer.Client[I].Abort;
-        except
-            { Ignore any exception here }
-        end;
-    end;
+    FWSocketServer.DisconnectAll;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loProtSpecInfo) then
         DebugLog(loProtSpecInfo, Name + ' stopped');                  { V1.38 }
@@ -1364,7 +1510,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure THttpServer.SetPortValue(newValue : String);
+procedure THttpServer.SetPortValue(const newValue : String);
 begin
     if newValue = FPort then
         Exit;
@@ -1380,7 +1526,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure THttpServer.SetAddr(newValue : String);
+procedure THttpServer.SetAddr(const newValue : String);
 begin
     if newValue = FAddr then
         Exit;
@@ -1463,6 +1609,16 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpServer.SetKeepAliveTimeSec(const Value: Cardinal);
+begin
+    if Value > High(Cardinal) div 1000 then
+        FKeepAliveTimeSec := High(Cardinal) div 1000
+    else
+        FKeepAliveTimeSec := Value;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { This event handler is triggered when state of server socket has changed.  }
 { We use it to trigger our OnServerStarted event.                           }
 procedure THttpServer.WSocketServerChangeState(
@@ -1489,9 +1645,11 @@ procedure THttpServer.WSocketServerClientCreate(
     Sender : TObject;
     Client : TWSocketClient);
 begin
-    Client.LingerOnOff                  := FLingerOnOff;
-    Client.LingerTimeout                := FLingerTimeout;
-    (Client as THttpConnection).Options := FOptions;
+    Client.LingerOnOff                         := FLingerOnOff;
+    Client.LingerTimeout                       := FLingerTimeout;
+    (Client as THttpConnection).Options        := FOptions;
+    THttpConnection(Client).KeepAliveTimeSec   := FKeepAliveTimeSec ;
+    Client.CreateCounter;
     {$IFDEF USE_SSL}
     if not (Client.Owner is TSslWSocketServer) then
         (Client as THttpConnection).SslEnable := FALSE;
@@ -1513,7 +1671,7 @@ begin
     THttpConnection(Client).FServer           := Self;
     THttpConnection(Client).LineMode          := TRUE;
     THttpConnection(Client).LineEdit          := FALSE;
-    THttpConnection(Client).LineEnd           := #10;
+    THttpConnection(Client).LineEnd           := AnsiChar(#10);
     THttpConnection(Client).DocDir            := Self.DocDir;
     THttpConnection(Client).TemplateDir       := Self.TemplateDir;
     THttpConnection(Client).DefaultDoc        := Self.DefaultDoc;
@@ -1524,6 +1682,7 @@ begin
     THttpConnection(Client).OnHttpRequestDone := TriggerHttpRequestDone;
     THttpConnection(Client).OnBeforeProcessRequest := TriggerBeforeProcessRequest; {DAVID}
     THttpConnection(Client).OnFilterDirEntry  := TriggerFilterDirEntry;
+    THttpConnection(Client).MaxRequestsKeepAlive := Self.MaxRequestsKeepAlive;
     TriggerClientConnect(Client, Error);
 end;
 
@@ -1644,6 +1803,30 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpServer.HeartBeatOnTimer(Sender: TObject);
+var
+    CurTicks : Cardinal;
+    I        : Integer;
+    Cli      : THttpConnection;
+begin
+    if not FHeartBeatBusy then  { Avoid reentrance }
+    try
+        FHeartBeatBusy := TRUE;
+        CurTicks := GetTickCount;
+        for I := ClientCount - 1 downto 0 do begin
+            Cli := Client[I];
+            if (Cli.KeepAliveTimeSec > 0) and
+               (IcsCalcTickDiff(Cli.Counter.LastAliveTick, CurTicks) >
+                                             Cli.KeepAliveTimeSec * 1000) then
+                FWSocketServer.Disconnect(Cli);
+        end;
+    finally
+        FHeartBeatBusy := FALSE;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFNDEF NO_DEBUG_LOG}
 function THttpServer.GetIcsLogger : TIcsLogger;                        { V1.38 }
 begin
@@ -1677,15 +1860,15 @@ end;
 constructor THttpConnection.Create(AOwner : TComponent);
 begin
     inherited Create(AOwner);
-    LineMode            := TRUE;
-    LineEdit            := FALSE;
-    LineEnd             := #10;
-    FRequestHeader      := TStringList.Create;
-    FState              := hcRequest;
-    OnDataAvailable     := ConnectionDataAvailable;
-    FRequestRangeValues := THttpRangeList.Create; {ANDREAS}
-    ComponentOptions    := [wsoNoReceiveLoop];    { FP 15/05/2005 }
-    FSndBlkSize         :=  BufSize; // default value = 1460
+    LineMode              := TRUE;
+    LineEdit              := FALSE;
+    LineEnd               := AnsiChar(#10);
+    FRequestHeader        := TStringList.Create;
+    FState                := hcRequest;
+    OnDataAvailable       := ConnectionDataAvailable;
+    FRequestRangeValues   := THttpRangeList.Create; {ANDREAS}
+    ComponentOptions      := [wsoNoReceiveLoop];    { FP 15/05/2005 }
+    FSndBlkSize           :=  BufSize; // default value = 1460
 end;
 
 
@@ -1709,7 +1892,7 @@ begin
         FRequestRangeValues := nil;
     end;
 {$IFDEF USE_NTLM_AUTH}
-    FreeAndNil(FAuthNtlmSession);
+    _FreeAndNil(FAuthNtlmSession);
 {$ENDIF}
     inherited Destroy;
 end;
@@ -1774,163 +1957,7 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
-function PosEx(const SubStr, S: String; Offset: Cardinal): Integer;
-var
-    I, X      : Integer;
-    Len       : Integer;
-    LenSubStr : Integer;
-begin
-  if Offset = 1 then
-    Result := Pos(SubStr, S)
-  else begin
-    I := Offset;
-    LenSubStr := Length(SubStr);
-    Len := Length(S) - LenSubStr + 1;
-    while I <= Len do begin
-      if S[I] = SubStr[1] then begin
-        X := 1;
-        while (X < LenSubStr) and (S[I + X] = SubStr[X + 1]) do
-          Inc(X);
-        if (X = LenSubStr) then begin
-          Result := I;
-          exit;
-        end;
-      end;
-      Inc(I);
-    end;
-    Result := 0;
-  end;
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure AuthDigestCvtHex(const _b: TMD5Digest; _h: pchar);
-var
-    I: Word;
-    J: Char;
-begin
-    for I := 0 to HASHLEN - 1 do begin
-        J :=  Char((integer(_b[I]) shr 4) and $f);
-        if J <= Char(9) then
-            _h[I * 2] := Char(integer(J) + integer('0'))
-        else
-            _h[I * 2] := Char(integer(J) + integer('a') - 10);
-
-       J := Char(integer(_b[I]) and $f);
-       if J <= Char(9) then
-           _h[I * 2 + 1] := Char(integer(J) + integer('0'))
-       else
-           _h[I * 2 + 1] := Char(integer(J) + integer('a') - 10);
-    end;
-
-    _h[HASHHEXLEN] := #0;
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure AuthDigestCalcResponse(
-    HA1           : THashHex;           { H(A1)                             }
-    pszNonce      : String ;            { nonce from server                 }
-    pszNonceCount : String ;            { 8 hex digits                      }
-    pszCNonce     : String;             { client nonce                      }
-    pszQop        : String;             { qop-value: "", "auth", "auth-int" }
-    pszMethod     : String;             { method from the request           }
-    pszDigestUri  : String;             { requested URL                     }
-    HEntity       : THashHex;           { H(entity body) if qop="auth-int"  }
-    var Response  : THashHex);          { request-digest or response-digest }
-var
-    Md5Ctx   : TMD5Context;
-    HA2      : TMD5Digest;
-    RespHash : TMD5Digest;
-    HA2Hex   : THashHex;
-    Tmp      : String;
-begin
-    Tmp := ':';
-
-    { calculate H(A2) }
-    MD5Init(Md5Ctx);
-    MD5Update(Md5Ctx, pszMethod[1], Length(pszMethod));
-    MD5Update(Md5Ctx, Tmp[1], 1);
-    MD5Update(Md5Ctx, pszDigestUri[1], Length(pszDigestUri));
-
-    if StrIComp(PChar(pszQop), 'auth-int') = 0 then begin
-        MD5Update(Md5Ctx, Tmp[1], 1);
-        MD5Update(Md5Ctx, HEntity[0], HASHHEXLEN);
-    end;
-    MD5Final(HA2, Md5Ctx);
-    AuthDigestCvtHex(HA2, HA2Hex);
-
-    { calculate response }
-    MD5Init(Md5Ctx);
-    MD5Update(Md5Ctx, HA1[0], HASHHEXLEN);
-    MD5Update(Md5Ctx, Tmp[1], 1);
-    MD5Update(Md5Ctx, pszNonce[1], Length(pszNonce));
-    MD5Update(Md5Ctx, Tmp[1], 1);
-
-    MD5Update(Md5Ctx, pszNonceCount[1], Length(pszNonceCount));
-    MD5Update(Md5Ctx, Tmp[1], 1);
-    MD5Update(Md5Ctx, pszCNonce[1], Length(pszCNonce));
-    MD5Update(Md5Ctx, Tmp[1], 1);
-    MD5Update(Md5Ctx, pszQop[1], Length(pszQop));
-    MD5Update(Md5Ctx, Tmp[1], 1);
-
-    MD5Update(Md5Ctx, HA2Hex[0], HASHHEXLEN);
-    MD5Final(RespHash, Md5Ctx);
-    AuthDigestCvtHex(RespHash, Response);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure AuthDigestCalcHA1(
-    pszAlg        : String;
-    _username     : String;
-    _realm        : String;
-    _password     : String;
-    _nonce        : String;
-    _cnonce       : String;
-    var _sess_key : THashHex);
-var
-    Md5Ctx : TMD5Context;
-    HA1    : TMD5Digest;
-    Tmp    : String;
-begin
-    Tmp := ':';
-    MD5Init(Md5Ctx);
-    MD5Update(Md5Ctx, PChar(_username)^, Length(_username));
-    MD5Update(Md5Ctx, Tmp[1], 1);
-    MD5Update(Md5Ctx, PChar(_realm)^, Length(_realm));
-    MD5Update(Md5Ctx, Tmp[1], 1);
-    MD5Update(Md5Ctx, PChar(_password)^, Length(_password));
-    MD5Final(HA1, Md5Ctx);
-
-    if StrComp(StrLower(PChar(pszAlg)), 'md5-sess') = 0 then begin
-        MD5Init(Md5Ctx);
-        MD5Update(Md5Ctx, HA1[1], sizeof(HA1));
-        MD5Update(Md5Ctx, Tmp[1], 1);
-        MD5Update(Md5Ctx, _nonce[1], Length(_nonce));
-        MD5Update(Md5Ctx, Tmp[1], 1);
-        MD5Update(Md5Ctx, _cnonce[1], Length(_cnonce));
-        MD5Final(HA1, Md5Ctx);
-    end;
-
-    AuthDigestCvtHex(HA1, _sess_key);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure GetBodyHash(const Body: String; var BodyHash: THashHex);
-var
-    Md5Ctx : TMD5Context;
-    HA1    : TMD5Digest;
-begin
-    MD5Init(Md5Ctx);
-    MD5Update(Md5Ctx, PChar(Body)^, Length(Body));
-    MD5Final(HA1, Md5Ctx);
-    AuthDigestCvtHex(HA1, BodyHash);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFNDEF NO_DIGEST_AUTH}
 function THttpConnection.AuthDigestCheckPassword(const Password: String): Boolean;
 var
     SessKey      : THashHex;
@@ -1942,15 +1969,19 @@ begin
         Result := FALSE;
         Exit;
     end;
-    AuthDigestCalcHA1(FAuthDigestAlg, FAuthUserName, FAuthDigestRealm, Password,
-                      FAuthDigestNonce, FAuthDigestCnonce, SessKey);
+    AuthDigestCalcHA1(FAuthDigestAlg, AnsiString(FAuthUserName),
+                      AnsiString(FAuthDigestRealm), AnsiString(Password),
+                      AnsiString(FAuthDigestNonce), AnsiString(FAuthDigestCnonce),
+                      SessKey);
 
-    GetBodyHash(FAuthDigestBody, HEntity);
-    AuthDigestCalcResponse(SessKey, FAuthDigestNonce, FAuthDigestNc,
-                           FAuthDigestCnonce, FAuthDigestQop, FMethod,
-                           FAuthDigestUri, HEntity, MyResponse);
-    Result := (StrComp(@FAuthDigestResponse[1], @MyResponse[0]) = 0);
-    
+    AuthDigestGetBodyHash(FAuthDigestBody, HEntity);
+    AuthDigestCalcResponse(SessKey, AnsiString(FAuthDigestNonce),
+                           AnsiString(FAuthDigestNc),
+                           AnsiString(FAuthDigestCnonce),
+                           AnsiString(FAuthDigestQop), AnsiString(FMethod),
+                           AnsiString(FAuthDigestUri), HEntity, MyResponse);
+    Result := _CompareText(AnsiString(FAuthDigestResponse), MyResponse) = 0;
+
     if Result then begin
         { Check whether we have to force a new nonce in which case we set    }
         { FAuthDigestStale to TRUE which avoids popping up a login dialog at }
@@ -1962,7 +1993,7 @@ begin
         else
             NonceLifeTime := FAuthDigestNonceLifeTimeMin;
 
-        if (((FAuthDigestNonceTimeStamp * 1440) + NonceLifeTime) / 1440) < Now then
+        if (((FAuthDigestNonceTimeStamp * 1440) + NonceLifeTime) / 1440) < _Now then
         begin
             { The nonce is stale, respond a 401 }
             FAuthDigestStale := TRUE;
@@ -1970,12 +2001,12 @@ begin
         end;
      end;
 end;
-
+{$ENDIF}
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function THttpConnection.AuthBasicCheckPassword(const Password: String): Boolean;
 begin
-    Result := (FAuthPassword = Password)
+    Result := (FAuthPassword = Password);
 end;
 
 
@@ -2014,13 +2045,14 @@ begin
     if Length(FRequestAuth) < 5 then
         Result := atNone
 {$IFDEF USE_NTLM_AUTH}
-    else if LowerCase(Copy(FRequestAuth, 1, 5)) = 'ntlm ' then
+    else if _LowerCase(Copy(FRequestAuth, 1, 5)) = 'ntlm ' then
         Result := atNtlm
 {$ENDIF}
-
-    else if LowerCase(Copy(FRequestAuth, 1, 7)) = 'digest ' then
+{$IFNDEF NO_DIGEST_AUTH}
+    else if _LowerCase(Copy(FRequestAuth, 1, 7)) = 'digest ' then
         Result := atDigest
-    else if LowerCase(Copy(FRequestAuth, 1, 6)) = 'basic ' then
+{$ENDIF}
+    else if _LowerCase(Copy(FRequestAuth, 1, 6)) = 'basic ' then
         Result := atBasic
     else
         Result := atNone;
@@ -2028,119 +2060,16 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function THttpConnection.AuthDigestGenNonceHash(RequestTime: TDateTime; Opaque: String): TMD5Digest;
-var
-    NonceCtx : TMD5Context;
-begin
-    MD5Init(NonceCtx);
-    MD5UpdateBuffer(NonceCtx, @FServer.FAuthDigestServerSecret,
-                    SizeOf(FServer.FAuthDigestServerSecret));
-    MD5UpdateBuffer(NonceCtx, AnsiString(FAuthDigestRealm));
-    MD5UpdateBuffer(NonceCtx, @RequestTime, SizeOf(RequestTime));
-    MD5UpdateBuffer(NonceCtx, AnsiString(Opaque));
-    MD5Final(Result, NonceCtx);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFNDEF NO_DIGEST_AUTH}
 function THttpConnection.AuthDigestGetParams: Boolean;
-var
-    { alg,UserName, Realm, qop, nonce, nc,uri,method, cnonce, opaque, response: String; }
-    Pos1, Pos2       : Integer;
-    Buf              : AnsiString;
 begin
-    Result           := FALSE;
-
-    Pos1 := PosEx('username="', FRequestAuth, 1);
-    if Pos1 = 0 then
-        Exit;
-
-    Pos1            := Pos1 + Length('username="');
-    Pos2            := PosEx('"', FRequestAuth, Pos1);
-    FAuthUserName   := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-
-    Pos1 := PosEx('realm="', FRequestAuth, 1);
-    if Pos1 = 0 then
-        Exit;
-    Pos1             := Pos1  + Length('realm="');
-    Pos2             := PosEx('"', FRequestAuth, Pos1);
-    FAuthDigestRealm := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-
-    Pos1 := PosEx('qop="', FRequestAuth, 1);
-    if Pos1 = 0 then begin
-        Pos1 := PosEx('qop=', FRequestAuth, 1);
-        if Pos1 = 0 then
-            Exit;
-        Pos1           := Pos1 + Length('qop=');
-        Pos2           := PosEx(',', FRequestAuth, Pos1);
-        FAuthDigestQop := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-    end
-    else begin
-        Pos1           := Pos1 + Length('qop="');
-        Pos2           := PosEx('"', FRequestAuth, Pos1);
-        FAuthDigestQop := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-    end;
-
-    case FServer.FAuthDigestMethod of
-    daAuth:
-        if FAuthDigestQop <> 'auth' then
-            Exit;
-    daAuthInt:
-        if FAuthDigestQop <> 'auth-int' then
-            Exit;
-    daBoth:
-        { whatever it is }
-    end;
-
-    Pos1 := PosEx('algorithm="', FRequestAuth, 1);
-    if Pos1 = 0 then begin
-        Pos1 := PosEx('algorithm=', FRequestAuth, 1);
-        if Pos1 = 0 then
-            FAuthDigestAlg := 'MD5'
-        else begin
-            Pos1           := Pos1 + Length('algorithm=');
-            Pos2           := PosEx(',', FRequestAuth, Pos1);
-            FAuthDigestAlg := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-        end;
-    end
-    else begin
-        Pos1           := Pos1 + Length('algorithm="');
-        Pos2           := PosEx('"', FRequestAuth, Pos1);
-        FAuthDigestAlg := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-    end;
-
-    Pos1             := PosEx('nonce="', FRequestAuth, 1)  + Length('nonce="');
-    Pos2             := PosEx('"', FRequestAuth, Pos1);
-    FAuthDigestNonce := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-
-    Pos1             := PosEx('nc=', FRequestAuth, 1)  + Length('nc=');
-    Pos2             := PosEx(',', FRequestAuth, Pos1);
-    FAuthDigestNc    := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-
-    Pos1              := PosEx('uri="', FRequestAuth, 1)  + Length('uri="');
-    Pos2              := PosEx('"', FRequestAuth, Pos1);
-    FAuthDigestUri    := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-
-    Pos1              := PosEx('cnonce="', FRequestAuth, 1)  + Length('cnonce="');
-    Pos2              := PosEx('"', FRequestAuth, Pos1);
-    FAuthDigestCnonce := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-
-    Pos1              := PosEx('opaque="', FRequestAuth, 1)  + Length('opaque="');
-    Pos2              := PosEx('"', FRequestAuth, Pos1);
-    FAuthDigestOpaque := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-
-    Pos1                := PosEx('response="', FRequestAuth, 1)  + Length('response="');
-    Pos2                := PosEx('"', FRequestAuth, Pos1);
-    FAuthDigestResponse := Copy(FRequestAuth, Pos1, Pos2 - Pos1);
-
-    Buf := Base64Decode(AnsiString(FAuthDigestNonce));
-    if Length(Buf) <> SizeOf(TAuthDigestNonceRec) then
-        Exit;
-
-    FAuthDigestNonceTimeStamp := PAuthDigestNonceRec(Pointer(Buf))^.DT;
-
-    Result := TRUE;
+    Result := AuthDigestGetRequest(FRequestAuth, FAuthDigestNonceTimeStamp,
+                   FAuthUserName, FAuthDigestRealm, FAuthDigestQop,
+                   FAuthDigestAlg, FAuthDigestNonce, FAuthDigestNc,
+                   FAuthDigestUri, FAuthDigestCnonce, FAuthDigestOpaque,
+                   FAuthDigestResponse);
 end;
+{$ENDIF}
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -2151,8 +2080,9 @@ var
 begin
     FAuthTypes                    := FServer.AuthTypes;
     FAuthRealm                    := FServer.FAuthRealm;
+{$IFNDEF NO_DIGEST_AUTH}
     FAuthDigestNonceLifeTimeMin   := FServer.FAuthDigestNonceLifeTimeMin;
-
+{$ENDIF}
     TriggerAuthGetType;
     if (FAuthTypes = []) or (FAuthTypes = [atNone]) then begin
         FAuthenticated := TRUE;
@@ -2176,6 +2106,7 @@ begin
             TriggerAuthResult(FAuthenticated);
         end;
     end
+{$IFNDEF NO_DIGEST_AUTH}
     else if AuthType = atDigest then begin
         FAuthDigestBody := '';
         FAuthenticated := AuthDigestGetParams;
@@ -2187,10 +2118,13 @@ begin
             { This happens when the nonce is stale and a new nonce is forced. }
             { Note that this is a fix and change, previous versions did not   }
             { enter this IF-Block when the nonce was stale.                   }
-            TriggerAuthResult(FAuthenticated);
+            { Don't trigger AuthResult when the nonce is stale.               }
+            if not FAuthDigestStale then
+                TriggerAuthResult(FAuthenticated);
         end;
         FAuthDigestOneTimeFlag := FALSE;
     end
+{$ENDIF}    
 {$IFDEF USE_NTLM_AUTH}
     else if AuthType = atNtlm then begin
         if not Assigned(FAuthNtlmSession) then begin
@@ -2246,6 +2180,15 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.PrepareGraceFullShutDown;
+begin
+    FKeepAliveTimeSec := 5;
+    FShutDownFlag     := TRUE;
+    OnDataSent        := ConnectionDataSent;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { This procedure is called each time data is available from a client.       }
 { We use FState variable to keep track of the where we are in the http      }
 { protocol: request command, header line or posted data.                    }
@@ -2296,15 +2239,20 @@ begin
         FAuthUserName          := '';
         FAuthTypes             := FServer.FAuthTypes;
         FAuthRealm             := FServer.FAuthRealm;
+    {$IFNDEF NO_DIGEST_AUTH}
         FAuthDigestServerNonce := '';
         FAuthDigestStale       := FALSE;
         FAuthDigestNonceLifeTimeMin  := FServer.FAuthDigestNonceLifeTimeMin;
+    {$ENDIF}
 {$ENDIF}
         FRequestRangeValues.Clear;        {ANDREAS}
         FRequestHeader.Clear;
         FKeepAlive             := FALSE;  {Bjornar, default value. This is set to true when header indicates keep-alive.
                                            Use this value to decide when to shut down the socket}
+        FKeepAliveRequested    := FALSE;
         FHttpVerNum            := 11;     { Assume HTTP 1.1 by default }{ V1.6 }
+        if FKeepAliveTimeSec > 0 then
+            Dec(FMaxRequestsKeepAlive);
         { The line we just received is HTTP command, parse it  }
         ParseRequest;
         { Next lines will be header lines }
@@ -2332,30 +2280,30 @@ begin
             repeat
                 Inc(I);
             until (I > Length(FRcvdLine)) or (FRcvdLine[I] <> ' ');
-            if StrLIComp(@FRcvdLine[1], 'content-type:', 13) = 0 then
+            if _StrLIComp(@FRcvdLine[1], 'content-type:', 13) = 0 then
                 FRequestContentType := Copy(FRcvdLine, I, Length(FRcvdLine))
-            else if StrLIComp(@FRcvdLine[1], 'content-length:', 15) = 0 then begin            {Bjornar}
+            else if _StrLIComp(@FRcvdLine[1], 'content-length:', 15) = 0 then begin            {Bjornar}
                 try                                                                           {Bjornar}
-                    FRequestContentLength := StrToInt(Copy(FRcvdLine, I, Length(FRcvdLine))); {Bjornar}
+                    FRequestContentLength := _StrToInt(Copy(FRcvdLine, I, Length(FRcvdLine))); {Bjornar}
                 except                                                                        {Bjornar}
                     FRequestContentLength := 0;                                               {Bjornar}
                 end;
             end                                                                               {Bjornar}
-            else if StrLIComp(@FRcvdLine[1], 'Accept:', 7) = 0 then
+            else if _StrLIComp(@FRcvdLine[1], 'Accept:', 7) = 0 then
                 FRequestAccept:= Copy(FRcvdLine, I, Length(FRcvdLine))
-            else if StrLIComp(@FRcvdLine[1], 'Referer:', 8) = 0 then
+            else if _StrLIComp(@FRcvdLine[1], 'Referer:', 8) = 0 then
                 FRequestReferer := Copy(FRcvdLine, I, Length(FRcvdLine))
-            else if StrLIComp(@FRcvdLine[1], 'Accept-Language:', 16) = 0 then
+            else if _StrLIComp(@FRcvdLine[1], 'Accept-Language:', 16) = 0 then
                 FRequestAcceptLanguage := Copy(FRcvdLine, I, Length(FRcvdLine))
-            else if StrLIComp(@FRcvdLine[1], 'Accept-Encoding:', 16) = 0 then
+            else if _StrLIComp(@FRcvdLine[1], 'Accept-Encoding:', 16) = 0 then
                 FRequestAcceptEncoding := Copy(FRcvdLine, I, Length(FRcvdLine))
-            else if StrLIComp(@FRcvdLine[1], 'User-Agent:', 11) = 0 then
+            else if _StrLIComp(@FRcvdLine[1], 'User-Agent:', 11) = 0 then
                 FRequestUserAgent := Copy(FRcvdLine, I, Length(FRcvdLine))
-            else if StrLIComp(@FRcvdLine[1], 'Authorization:', 14) = 0 then {DAVID}
+            else if _StrLIComp(@FRcvdLine[1], 'Authorization:', 14) = 0 then {DAVID}
                 FRequestAuth := Copy(FRcvdLine, I, Length(FRcvdLine))
-            else if StrLIComp(@FRcvdLine[1], 'Cookie:', 7) = 0 then {DAVID}
+            else if _StrLIComp(@FRcvdLine[1], 'Cookie:', 7) = 0 then {DAVID}
                 FRequestCookies := Copy(FRcvdLine, I, Length(FRcvdLine))
-            else if StrLIComp(@FRcvdLine[1], 'Host:', 5) = 0 then begin
+            else if _StrLIComp(@FRcvdLine[1], 'Host:', 5) = 0 then begin
                 FRequestHost := Copy(FRcvdLine, I, Length(FRcvdLine));
                 J := Pos(':', FRequestHost); {DAVID}
                 if J > 0 then begin
@@ -2367,29 +2315,22 @@ begin
                     FRequestHostPort := FServer.Port; { by default server port }
                 end;
             end
-            else if StrLIComp(@FRcvdLine[1], 'Connection:', 11) = 0 then begin
+            else if _StrLIComp(@FRcvdLine[1], 'Connection:', 11) = 0 then begin
                 FRequestConnection := Copy(FRcvdLine, I, Length(FRcvdLine));
-                {Bjornar}
-                if FVersion = 'HTTP/1.0' then begin
-                    FHttpVerNum := 10;                              { V1.6 }
-                    if CompareText(FRequestConnection, 'keep-alive') <> 0 then
-                        FKeepAlive := FALSE
-                    else
-                        FKeepAlive := TRUE;
-                end
-                else if FVersion = 'HTTP/1.1' then begin
-                    FHttpVerNum := 11;                              { V1.6 }
-                    if CompareText(FRequestConnection, 'close') = 0 then
-                        FKeepAlive := FALSE
-                    else
-                        FKeepAlive := TRUE;
-                end;
-                {Bjornar}
+                FKeepAliveRequested := _CompareText(FRequestConnection, 'keep-alive') = 0;
+                if FHttpVerNum = 10 then
+                    FKeepAlive := FKeepAliveRequested
+                else if _CompareText(FRequestConnection, 'close') = 0 then
+                    FKeepAlive := FALSE;
             end
+            {else if _StrLIComp(@FRcvdLine[1], 'keep-alive:', 11) = 0 then begin
+            //Keep-Alive: timeout=3, max=100
+
+            end}
             {ANDREAS}
-            else if StrLIComp(@FRcvdLine[1], 'Range:', 6) = 0 then begin
+            else if _StrLIComp(@FRcvdLine[1], 'Range:', 6) = 0 then begin
                 { Init the Byte-range object }
-                RequestRangeValues.InitFromString(Trim(Copy(FRcvdLine, I,
+                RequestRangeValues.InitFromString(_Trim(Copy(FRcvdLine, I,
                                                            Length(FRcvdLine))));
             end;
         except
@@ -2410,7 +2351,7 @@ begin
     I := 1;
     while (I <= Length(FRcvdLine)) and (FRcvdLine[I] <> ' ') do
         Inc(I);
-    FMethod := UpperCase(Copy(FRcvdLine, 1, I - 1));
+    FMethod := _UpperCase(Copy(FRcvdLine, 1, I - 1));
     Inc(I);
     while (I <= Length(FRcvdLine)) and (FRcvdLine[I] = ' ') do
         Inc(I);
@@ -2432,9 +2373,12 @@ begin
     J := I;
     while (I <= Length(FRcvdLine)) and (FRcvdLine[I] <> ' ') do
         Inc(I);
-    FVersion := Trim(UpperCase(Copy(FRcvdLine, J, I - J)));
+    FVersion := _Trim(_UpperCase(Copy(FRcvdLine, J, I - J)));
     if FVersion = '' then
         FVersion := 'HTTP/1.0';
+    if FVersion = 'HTTP/1.0' then
+        FHttpVerNum := 10;
+    FKeepAlive := FHttpVerNum = 11;
 end;
 
 
@@ -2512,6 +2456,7 @@ begin
         PutStringInSendBuffer('Content-Type: text/html' + #13#10)
     else
         PutStringInSendBuffer('Content-Type: ' + ContType + #13#10);
+    (*
     {FP 22/05/05 begin}
     if FKeepAlive then begin
         if FHttpVerNum = 10 then { HTTP/1.0 only HTTP/1.1 is keep-alive by default } { V1.6 }
@@ -2522,6 +2467,9 @@ begin
             PutStringInSendBuffer('Connection: close' + #13#10);
     end;
     {FP 22/05/05 end}
+    *)
+    PutStringInSendBuffer(GetKeepAliveHdrLines);
+
     if not Assigned(FDocStream) then
         PutStringInSendBuffer('Content-Length: 0' + #13#10)
     else begin
@@ -2559,7 +2507,7 @@ begin
         end;
 {$ENDIF}
         PutStringInSendBuffer('Content-Length: ' +
-                              IntToStr(DocStream.Size) + #13#10);
+                              _IntToStr(DocStream.Size) + #13#10);
     end;
     if Header <> '' then
         PutStringInSendBuffer(Header);
@@ -2644,15 +2592,26 @@ procedure THttpConnection.AnswerString(
     const Body     : String);  { Could be empty. No default.                }
 begin
     DocStream.Free;
-{$IFNDEF COMPILER3_UP}
-    DocStream := TMemoryStream.Create;
-    if Body <> '' then
-        DocStream.Write(Body[1], Length(Body));
-{$ELSE}
     DocStream := TStringStream.Create(Body);
-{$ENDIF}
     AnswerStream(Flags, Status, ContType, Header);
 end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFDEF COMPILER12_UP}
+procedure THttpConnection.AnswerStringEx(
+    var   Flags    : THttpGetFlag;
+    const Status   : String;   { if empty, default to '200 OK'              }
+    const ContType : String;   { if empty, default to 'text/html'           }
+    const Header   : String;   { Do not use Content-Length nor Content-Type }
+    const Body     : String;   { Could be empty. No default.                }
+    BodyCodePage   : Integer  = CP_ACP);
+begin
+    DocStream.Free;
+    DocStream := TStringStream.Create(Body, BodyCodePage);
+    AnswerStream(Flags, Status, ContType, Header);
+end;
+{$ENDIF}
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -2664,7 +2623,8 @@ begin
             '<BODY><H1>416 Requested range not satisfiable</H1><P></BODY></HTML>' + #13#10;
             SendHeader(FVersion + ' 416 Requested range not satisfiable' + #13#10 +
             'Content-Type: text/html' + #13#10 +
-            'Content-Length: ' + IntToStr(Length(Body)) + #13#10 +
+            'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
+            GetKeepAliveHdrLines + 
             #13#10);
     { Do not use AnswerString method because we don't want to use ranges }
     SendStr(Body);
@@ -2682,7 +2642,8 @@ begin
             ' was not found on this server.<P></BODY></HTML>' + #13#10;
             SendHeader(FVersion + ' 404 Not Found' + #13#10 +
             'Content-Type: text/html' + #13#10 +
-            'Content-Length: ' + IntToStr(Length(Body)) + #13#10 +
+            'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
+            GetKeepAliveHdrLines + 
             #13#10);
     { Do not use AnswerString method because we don't want to use ranges }
     SendStr(Body);
@@ -2690,9 +2651,29 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function THttpConnection.GetKeepAliveHdrLines: String;
+begin
+    if (FHttpVerNum = 11) then
+    begin
+        if not FKeepAlive then
+            Result := 'Connection: Close' + #13#10
+        else if FKeepAliveRequested then
+            Result := 'Connection: Keep-Alive' + #13#10;
+    end
+    else if FKeepAlive then
+        Result := 'Connection: Keep-Alive' + #13#10;
+
+    if FKeepAlive and FKeepAliveRequested and (FKeepAliveTimeSec > 0) then
+        Result := Result +
+        'Keep-Alive: timeout=' + _IntToStr(FKeepAliveTimeSec) + ', max=' +
+         _IntToStr(FMaxRequestsKeepAlive) + #13#10;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpConnection.Answer403;
 var
-    Body : String;
+    Body    : String;
 begin
     Body := '<HTML><HEAD><TITLE>403 Forbidden</TITLE></HEAD>' +
             '<BODY><H1>403 Forbidden</H1>The requested URL ' +
@@ -2700,7 +2681,8 @@ begin
             ' is Forbidden on this server.<P></BODY></HTML>' + #13#10;
             SendHeader(FVersion + ' 403 Forbidden' + #13#10 +
             'Content-Type: text/html' + #13#10 +
-            'Content-Length: ' + IntToStr(Length(Body)) + #13#10 +
+            'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
+            GetKeepAliveHdrLines +
             #13#10);
     { Do not use AnswerString method because we don't want to use ranges }
     SendStr(Body);
@@ -2712,12 +2694,12 @@ procedure THttpConnection.Answer401;
 var
     Body       : String;
     Header     : String;
-{$IFNDEF NO_AUTHENTICATION_SUPPORT}
+(*
+{$IFNDEF NO_DIGEST_AUTH}
     I          : Integer;
     iCh        : Integer;
     AuthString : String;
-    Nonce      : TAuthDigestNonceRec;
-{$ENDIF}
+{$ENDIF} *)
 begin
     Body := '<HTML><HEAD><TITLE>401 Access Denied</TITLE></HEAD>' +
             '<BODY><H1>401 Access Denied</H1>The requested URL ' +
@@ -2726,22 +2708,33 @@ begin
 
     Header := FVersion + ' 401 Access Denied' + #13#10;
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
-{$IFDEF USE_NTLM_AUTH}
+  {$IFDEF USE_NTLM_AUTH}
     if (atNtlm in FAuthTypes) then begin
         if Assigned(FAuthNtlmSession) and
             (FAuthNtlmSession.State = lsInAuth) then
-            Header := Header +  Trim('WWW-Authenticate: NTLM ' +
+            Header := Header +  _Trim('WWW-Authenticate: NTLM ' +
              FAuthNtlmSession.NtlmMessage) + #13#10
         else
             Header := Header +
                 'WWW-Authenticate: NTLM' + #13#10;
     end;
-{$ENDIF}
+  {$ENDIF}
+  {$IFNDEF NO_DIGEST_AUTH}
     if (atDigest in FAuthTypes) then begin
         FAuthDigestServerNonce  := '';
         FAuthDigestServerOpaque := '';
+        Header := Header + 'WWW-Authenticate: Digest ' +
+                  AuthDigestGenerateChallenge(
+                                    FServer.FAuthDigestMethod,
+                                    FServer.FAuthDigestServerSecret,
+                                    FAuthRealm, '', FAuthDigestStale,
+                                    FAuthDigestServerNonce,
+                                    FAuthDigestServerOpaque) + #13#10;
+        (*
+        FAuthDigestServerNonce  := '';
+        FAuthDigestServerOpaque := '';
         //Randomize; MUST be called only once! Thus moved to the constructor. 
-        //FAuthDigestServerNonce := Base64Encode(_DateTimeToStr(_Now)); IMO weak AG  
+        //FAuthDigestServerNonce := Base64Encode(_DateTimeToStr(_Now)); IMO weak AG
         FAuthDigestOneTimeFlag  := FAuthDigestNonceLifeTimeMin = 0;
         { This is the original implementation by FastStream with slightly     }
         { improved speed and security, RFC2617 however recommends to include  }
@@ -2763,9 +2756,13 @@ begin
             end;
         end;
 
-        Nonce.DT    := Now;
-        Nonce.Hash  := AuthDigestGenNonceHash(Nonce.DT, FAuthDigestServerOpaque);
-        FAuthDigestServerNonce := String(Base64Encode(PAnsiChar(@Nonce), SizeOf(Nonce)));
+        FAuthDigestServerNonce  := String(
+                                      AuthDigestGenerateIcsNonce(
+                                          _Now,
+                                          FServer.FAuthDigestServerSecret,
+                                          AnsiString(FAuthDigestServerOpaque),
+                                          AnsiString(FAuthRealm))
+                                         );
 
         case FServer.FAuthDigestMethod of
         daAuth:    AuthString := 'auth';
@@ -2782,8 +2779,9 @@ begin
         if FAuthDigestStale then
             Header := Header + ', stale="true"' + #13#10
         else
-            Header := Header + #13#10;
+            Header := Header + #13#10; *)
     end;
+  {$ENDIF}
     if (atBasic in FAuthTypes) then begin
         Header := Header +
                   'WWW-Authenticate: ' +
@@ -2792,12 +2790,14 @@ begin
 {$ENDIF}
     Header := Header +
         'Content-Type: text/html' + #13#10 +
-        'Content-Length: '        + IntToStr(Length(Body)) + #13#10;
+        'Content-Length: '        + _IntToStr(Length(Body)) + #13#10;
 
-    if (FHttpVerNum = 11) and (not FKeepAlive) then
+   { if (FHttpVerNum = 11) and (not FKeepAlive) then
         Header := Header +  'Connection: close' + #13#10
     else if (FHttpVerNum = 10) and  FKeepAlive then
-        Header := Header +  'Connection: keep-alive' + #13#10;
+        Header := Header +  'Connection: keep-alive' + #13#10;}
+    Header := Header + GetKeepAliveHdrLines;
+
     (*
     if FAuthInit then begin //the initial 401
         if (FHttpVerNum = 11) and (not FKeepAlive) then
@@ -2834,7 +2834,8 @@ begin
     Body := '501 Unimplemented';
     SendHeader(FVersion + ' 501 Unimplemented' + #13#10 +
                'Content-Type: text/plain' + #13#10 +
-               'Content-Length: ' + IntToStr(Length(Body)) + #13#10 +
+               'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
+               GetKeepAliveHdrLines + 
                #13#10);
     { Do not use AnswerString method because we don't want to use ranges }
     SendStr(Body);
@@ -2847,6 +2848,9 @@ procedure THttpConnection.ProcessRequest;
 var
     Status : Integer;
 begin
+    if FKeepAlive and (FKeepAliveTimeSec > 0) then
+        FKeepAlive := FMaxRequestsKeepAlive > 0;
+        
     TriggerBeforeProcessRequest;
 
     if FPath = '/' then
@@ -2861,19 +2865,19 @@ begin
     if Length(FDocument) < Length(FDocDir) then
         Status := -1
     else if Length(FDocument) > Length(FDocDir) then
-        Status := CompareText(Copy(FDocument, 1, Length(FDocDir) + 1),
+        Status := _CompareText(Copy(FDocument, 1, Length(FDocDir) + 1),
                               FDocDir + '\')
     else
-        Status := CompareText(FDocument + '\', FDocDir + '\');
+        Status := _CompareText(FDocument + '\', FDocDir + '\');
     FOutsideFlag := (Status <> 0);
 
     { Check for default document }
     if (Length(FDocument) > 0) and
        (FDocument[Length(FDocument)] = '\') and
-       (FileExists(FDocument + FDefaultDoc)) then
+       (_FileExists(FDocument + FDefaultDoc)) then
             FDocument := FDocument + FDefaultDoc
     else if IsDirectory(FDocument) and
-       (FileExists(FDocument + '\' + FDefaultDoc)) then
+       (_FileExists(FDocument + '\' + FDefaultDoc)) then
             FDocument := FDocument + '\' + FDefaultDoc;
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
     AuthCheckAuthenticated;
@@ -2885,9 +2889,9 @@ begin
     else if FMethod = 'HEAD' then
         ProcessHead
     else begin
-        Answer501;   { 07/03/2005 was Answer404 }
         if FKeepAlive = FALSE then {Bjornar}
-            CloseDelayed;
+            PrepareGraceFullShutDown;
+        Answer501;   { 07/03/2005 was Answer404 }
     end;
 end;
 
@@ -2951,21 +2955,21 @@ begin
     case Flags of
     hg401:
         begin
-            Answer401;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer401;
         end;
     hg403:
         begin
-            Answer403;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer403;
         end;
     hg404:
         begin
-            Answer404;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer404;
         end;
     hgAcceptData:
         FAcceptPostedData := TRUE;
@@ -3007,30 +3011,30 @@ begin
     case Flags of
     hg401:
         begin
-            Answer401;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer401;
         end;
     hg403:
         begin
-            Answer403;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer403;
         end;
     hg404:
         begin
-            Answer404;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer404;
         end;
     hgSendDoc:
         begin
-            if FileExists(FDocument) then
+            if _FileExists(FDocument) then
                 SendDocument(httpSendHead)
             else begin
-                Answer404;
                 if FKeepAlive = FALSE then {Bjornar}
-                    CloseDelayed;
+                    PrepareGraceFullShutDown;
+                Answer404;    
             end;
         end;
     hgSendStream:
@@ -3069,31 +3073,31 @@ begin
     case Flags of
     hg401:
         begin
-            Answer401;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer401;
         end;
     hg403:
         begin
-            Answer403;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer403;
         end;
     hg404:
         begin
-            Answer404;
             if FKeepAlive = FALSE then {Bjornar}
-                CloseDelayed;
+                PrepareGraceFullShutDown;
+            Answer404;
         end;
     hgSendDoc:
         begin
             OK := FALSE;
             try
-                if not FileExists(FDocument) then begin
+                if not _FileExists(FDocument) then begin
                     { File not found }
-                    Answer404;
                     if FKeepAlive = FALSE then {Bjornar}
-                        CloseDelayed;
+                        PrepareGraceFullShutDown;
+                    Answer404;
                 end
                 else begin
                     TempStream := TFileStream.Create(FDocument, fmOpenRead + fmShareDenyWrite);
@@ -3101,9 +3105,9 @@ begin
                     OK := TRUE;
                 end;
             except
-                Answer404;
                 if FKeepAlive = FALSE then {Bjornar}
-                    CloseDelayed;
+                    PrepareGraceFullShutDown;
+                Answer404;    
             end;
             if OK then
                 SendDocument(httpSendDoc)
@@ -3127,7 +3131,7 @@ var
     Ext : String;
 begin
     { We probably should use the registry to find MIME type for file types }
-    Ext := LowerCase(ExtractFileExt(FileName));
+    Ext := _LowerCase(_ExtractFileExt(FileName));
     if Length(Ext) > 1 then
         Ext := Copy(Ext, 2, Length(Ext));
     if (Ext = 'htm') or (Ext = 'html') then
@@ -3179,11 +3183,11 @@ var
     Hour, Min,   Sec, MSec : Word;
     DayOfWeek              : Word;
 begin
-    DecodeDate(aDate, Year, Month, Day);
-    DecodeTime(aDate, Hour, Min,   Sec, MSec);
+    _DecodeDate(aDate, Year, Month, Day);
+    _DecodeTime(aDate, Hour, Min,   Sec, MSec);
     DayOfWeek := ((Trunc(aDate) - 2) mod 7);
     Result := Copy(StrWeekDay, 1 + DayOfWeek * 3, 3) + ', ' +
-              Format('%2.2d %s %4.4d %2.2d:%2.2d:%2.2d',
+              _Format('%2.2d %s %4.4d %2.2d:%2.2d:%2.2d',
                      [Day, Copy(StrMonth, 1 + 3 * (Month - 1), 3),
                       Year, Hour, Min, Sec]);
 end;
@@ -3197,14 +3201,14 @@ var
     SearchRec : TSearchRec;
     Status    : Integer;
 begin
-    Status := FindFirst(FileName, faAnyFile, SearchRec);
+    Status := _FindFirst(FileName, faAnyFile, SearchRec);
     try
         if Status <> 0 then
             Result := 0
         else
-            Result := FileDateToDateTime(SearchRec.Time);
+            Result := _FileDateToDateTime(SearchRec.Time);
     finally
-        FindClose(SearchRec);
+        _FindClose(SearchRec);
     end;
 end;
 
@@ -3228,7 +3232,7 @@ begin
     if ProtoNumber = 200 then
         Result := Version + ' 200 OK' + #13#10 +
                   'Content-Type: ' + AnswerContentType + #13#10 +
-                  'Content-Length: ' + IntToStr(DocSize) + #13#10 +
+                  'Content-Length: ' + _IntToStr(DocSize) + #13#10 +
                   'Accept-Ranges: bytes' + #13#10
     {else if ProtoNumber = 416 then
         Result := Version + ' 416 Request range not satisfiable' + #13#10}
@@ -3236,7 +3240,7 @@ begin
         if RangeList.Count = 1 then begin
             Result := Version + ' 206 Partial Content' + #13#10 +
                       'Content-Type: ' + AnswerContentType + #13#10 +
-                      'Content-Length: ' + IntToStr(DocSize) + #13#10 +
+                      'Content-Length: ' + _IntToStr(DocSize) + #13#10 +
                       'Content-Range: bytes ' +
                       RangeList.Items[0].GetContentRangeString(CompleteDocSize) +
                       #13#10;
@@ -3245,7 +3249,7 @@ begin
             Result := Version + ' 206 Partial Content' + #13#10 +
                       'Content-Type: multipart/byteranges; boundary=' +
                       ByteRangeSeparator + #13#10 +
-                      'Content-Length: ' + IntToStr(DocSize) + #13#10;
+                      'Content-Length: ' + _IntToStr(DocSize) + #13#10;
         end;
     end
     else
@@ -3293,6 +3297,8 @@ begin
             { Answer 416 Request range not satisfiable                      }
                 FDocStream.Free;
                 FDocStream := nil;
+                if not FKeepAlive then
+                    PrepareGraceFullShutDown;
                 Answer416;
                 Exit;
             end;
@@ -3317,13 +3323,14 @@ begin
                       ' GMT' + #13#10;
 
     {Bjornar}
-    if FKeepAlive then
+    {if FKeepAlive then
         Header := Header + 'Connection: keep-alive' + #13#10
     else
-        Header := Header + 'Connection: close' + #13#10;
+        Header := Header + 'Connection: close' + #13#10;}
     {Bjornar}
 
-    Header := Header + #13#10;
+    //Header := Header + #13#10;
+    Header := Header + GetKeepAliveHdrLines + #13#10;
 
     SendHeader(Header);
     if not ErrorSend then begin
@@ -3403,7 +3410,7 @@ begin
         SizeString := '';
     end
     else
-        SizeString := IntToStr(F.SizeLow);
+        SizeString := _IntToStr(F.SizeLow);
 
     if F.ReadOnly then
         Attr[3] := '-';
@@ -3426,9 +3433,9 @@ begin
     Result := '<TD>' + Attr + '</TD>' +
               '<TD ALIGN="right">' + SizeString + '</TD>' +
               '<TD WIDTH="10"></TD>' +
-              '<TD>' + Format('%s %2.2d, %4.4d', [StrMonth[F.Month], F.Day, F.Year]) + '</TD>' +
+              '<TD>' + _Format('%s %2.2d, %4.4d', [StrMonth[F.Month], F.Day, F.Year]) + '</TD>' +
               '<TD WIDTH="10"></TD>' +
-              '<TD>' + Format('%2.2d:%2.2d:%2.2d',  [F.Hour, F.Min, F.Sec])   + '</TD>' +
+              '<TD>' + _Format('%2.2d:%2.2d:%2.2d',  [F.Hour, F.Min, F.Sec])   + '</TD>' +
               '<TD WIDTH="10"></TD>' +
               '<TD><A HREF="' + Link + '">' +
               TextToHtmlText(F.Name) + '</A></TD>' + #13#10;
@@ -3452,10 +3459,10 @@ var
 begin
     { Create a list of all directories }
     DirList := TStringList.Create;
-    Status  := FindFirst(Document + '\*.*', faAnyFile, F);
+    Status  := _FindFirst(Document + '\*.*', faAnyFile, F);
     while Status = 0 do begin
         if ((F.Attr and faDirectory) <> 0) and
-           ((F.Attr and faVolumeID)  =  0) and
+           //((F.Attr and faVolumeID)  =  0) and
            (F.Name <> '.') and
            (F.Name <> '..') then begin
             Data           := THttpDirEntry.Create;
@@ -3469,7 +3476,7 @@ begin
             Data.Sec       := ((F.Time and $1F) shl 1);
             Data.Min       := ((F.Time shr 5) and $3F);
             Data.Hour      := ((F.Time shr 11) and $1F);
-            Data.VolumeID  := ((F.Attr and faVolumeID)  <> 0);
+            Data.VolumeID  := FALSE; //((F.Attr and faVolumeID)  <> 0);
             Data.Directory := ((F.Attr and faDirectory) <> 0);
             Data.ReadOnly  := ((F.Attr and faReadOnly)  <> 0);
             Data.SysFile   := ((F.Attr and faSysFile)   <> 0);
@@ -3480,17 +3487,17 @@ begin
             else
                 Data.Free;
         end;
-        Status  := FindNext(F);
+        Status  := _FindNext(F);
     end;
-    FindClose(F);
+    _FindClose(F);
     DirList.Sort;
 
     { Create a list of all files }
     FileList := TStringList.Create;
-    Status  := FindFirst(Document + '\*.*', faAnyFile, F);
+    Status  := _FindFirst(Document + '\*.*', faAnyFile, F);
     while Status = 0 do begin
-        if ((F.Attr and faDirectory) = 0) and
-           ((F.Attr and faVolumeID)  = 0) then begin
+        if ((F.Attr and faDirectory) = 0) then begin
+           //((F.Attr and faVolumeID)  = 0) then begin
             Data           := THttpDirEntry.Create;
             Data.Visible   := TRUE;
             Data.Name      := F.Name;
@@ -3502,7 +3509,7 @@ begin
             Data.Sec       := ((F.Time and $1F) shl 1);
             Data.Min       := ((F.Time shr 5) and $3F);
             Data.Hour      := ((F.Time shr 11) and $1F);
-            Data.VolumeID  := ((F.Attr and faVolumeID)  <> 0);
+            Data.VolumeID  := FALSE; //((F.Attr and faVolumeID)  <> 0);
             Data.Directory := ((F.Attr and faDirectory) <> 0);
             Data.ReadOnly  := ((F.Attr and faReadOnly)  <> 0);
             Data.SysFile   := ((F.Attr and faSysFile)   <> 0);
@@ -3513,28 +3520,30 @@ begin
             else
                 Data.Free;
         end;
-        Status  := FindNext(F);
+        Status  := _FindNext(F);
     end;
-    FindClose(F);
+    _FindClose(F);
     FileList.Sort;
 
     Result   := '<HTML>' + #13#10 +
                 '<HEAD>' + #13#10 +
+                  '' + #13#10 +
                   '<STYLE TYPE="text/css">' + #13#10 +
-                    '.dirline { font-family: arial; font-size: normal; color: black }' + #13#10 +
+                    '.dirline { font-family: arial; color: black; font-style: normal; }' + #13#10 +
                   '</STYLE>' + #13#10 +
                   '<TITLE>Directory List</TITLE>' + #13#10 +
+                  //'<meta http-equiv="Content-Type" content="text/html; charset=utf-8">' + #13#10 +
                 '</HEAD>' + #13#10 +
               '<BODY><P>Directory of ' +
-    TextToHtmlText(DosPathToUnixPath(AbsolutisePath(UnixPathToDosPath(Path)))) +
-                       ':</P><P CLASS=dirline>' + #13#10 +
-              '<TABLE>' + #13#10;
+    TextToHtmlText(DosPathToUnixPath(AbsolutisePath(UnixPathToDosPath(UrlDecode(Path))))) +
+                       ':</P>' + #13#10 +
+              '<TABLE CLASS="dirline">' + #13#10;
     if Path = '/' then
         ParentDir := ''
     else if Path[Length(Path)] = '/' then
-        ParentDir := DosPathToUnixPath(ExtractFilePath(UnixPathToDosPath(Copy(Path, 1, Length(Path) - 1))))
+        ParentDir := DosPathToUnixPath(_ExtractFilePath(UnixPathToDosPath(Copy(Path, 1, Length(Path) - 1))))
     else
-        ParentDir := DosPathToUnixPath(ExtractFilePath(UnixPathToDosPath(Path)));
+        ParentDir := DosPathToUnixPath(_ExtractFilePath(UnixPathToDosPath(Path)));
     if (ParentDir <> '') and (ParentDir <> '/') then
         SetLength(ParentDir, Length(ParentDir) - 1);
     if ParentDir <> '' then
@@ -3562,11 +3571,11 @@ begin
         end;
         FileList.Free;
         Result := Result + '<TR><TD COLSPAN="8">Total: ' +
-                           IntToStr(Total)      + ' file(s), ' +
-                           IntToStr(TotalBytes) + ' byte(s)</TD></TR>';
+                           _IntToStr(Total)      + ' file(s), ' +
+                           _IntToStr(TotalBytes) + ' byte(s)</TD></TR>';
     end;
 
-    Result := Result + '</TABLE></P></BODY></HTML>' + #13#10;
+    Result := Result + '</TABLE></BODY></HTML>' + #13#10;
 end;
 
 
@@ -3582,13 +3591,13 @@ begin
     Body   := BuildDirList;
     Header := Version +  ' 200 OK' + #13#10 +
               'Content-Type: text/html' + #13#10 +
-              'Content-Length: ' + IntToStr(Length(Body)) + #13#10 +
+              'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
               'Pragma: no-cache' + #13#10 +
               #13#10;
     PutStringInSendBuffer(Header);
     FDocStream := TMemoryStream.Create;
     if SendType = httpSendDoc then
-        FDocStream.Write(Body[1], Length(Body));
+        StreamWriteStrA(FDocStream, Body);
     FDocStream.Seek(0, 0);
     SendStream;
 end;
@@ -3602,6 +3611,10 @@ var
     Count  : THttpRangeInt;
     ToSend : THttpRangeInt;
 begin
+    if FShutDownFlag then begin
+        Shutdown(1);
+        Exit;
+    end;
     if not Assigned(FDocStream) then
         Exit; { End of file has been reached }
 
@@ -3640,48 +3653,6 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function XDigit(Ch : Char) : Integer;
-begin
-    if (Ch >= '0') and (Ch <= '9') then
-        Result := Ord(Ch) - Ord('0')
-    else
-        Result := (Ord(Ch) and 15) + 9;
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function IsXDigit(Ch : Char) : Boolean;
-begin
-    Result := ((Ch >= '0') and (Ch <= '9')) or
-              ((Ch >= 'a') and (Ch <= 'f')) or
-              ((Ch >= 'A') and (Ch <= 'F'));
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function htoin(Value : PChar; Len : Integer) : Integer;
-var
-    I : Integer;
-begin
-    Result := 0;
-    I      := 0;
-    while (I < Len) and (Value[I] = ' ') do
-        I := I + 1;
-    while (I < len) and (IsXDigit(Value[I])) do begin
-        Result := Result * 16 + XDigit(Value[I]);
-        I := I + 1;
-    end;
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function htoi2(Value : PChar) : Integer;
-begin
-    Result := htoin(Value, 2);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { Retrieve a single value by name out of an URL encoded data stream         }
 { In the stream, every space is replaced by a '+'. The '%' character is     }
 { an escape character. The next two are 2 digits hexadecimal codes ascii    }
@@ -3689,15 +3660,16 @@ end;
 { by a single '&' character. The special characters are coded by the '%'    }
 { followed by hex-ascii character code.                                     }
 function ExtractURLEncodedValue(
-    Msg       : PChar;        { URL Encoded stream                     }
-    Name      : String;       { Variable name to look for              }
-    var Value : String)       { Where to put variable value            }
+    Msg       : PChar;    { URL Encoded stream                     }
+    Name      : String;   { Variable name to look for              }
+    var Value : String)   { Where to put variable value            }
     : Boolean;                { Found or not found that's the question }
 var
     NameLen  : Integer;
     FoundLen : Integer; {tps}
-    Ch       : Char;
+    Ch       : AnsiChar;
     P, Q     : PChar;
+    U8Str    : AnsiString;
 begin
     Result  := FALSE;
     Value   := '';
@@ -3705,7 +3677,7 @@ begin
         Exit;
 
     NameLen := Length(Name);
-
+    U8Str := '';
     P := Msg;
     while P^ <> #0 do begin
         Q := P;
@@ -3714,17 +3686,17 @@ begin
         FoundLen := P - Q; {tps}
         if P^ = '=' then
             Inc(P);
-        if (StrLIComp(Q, @Name[1], NameLen) = 0) and
+        if (_StrLIComp(Q, @Name[1], NameLen) = 0) and
            (NameLen = FoundLen) then begin  {tps}
             while (P^ <> #0) and (P^ <> '&') do begin
-                Ch := P^;
+                Ch := AnsiChar(Ord(P^)); // should contain nothing but < ord 128
                 if Ch = '%' then begin
-                    Ch := chr(htoi2(P + 1));
+                    Ch := AnsiChar(htoi2(P + 1));
                     Inc(P, 2);
                 end
                 else if Ch = '+' then
                     Ch := ' ';
-                Value := Value + Ch;
+                U8Str := U8Str + Ch;
                 Inc(P);
             end;
             Result := TRUE;
@@ -3735,6 +3707,17 @@ begin
         if P^ = '&' then
             Inc(P);
     end;
+{$IFDEF COMPILER12_UP}
+    if IsUtf8Valid(U8Str) then
+        Value := Utf8ToStringW(U8Str)
+    else
+        Value := AnsiToUnicode(U8Str, CP_ACP);
+{$ELSE}
+    if IsUtf8Valid(U8Str) then
+        Value := Utf8ToStringA(U8Str)
+    else
+        Value := U8Str;
+{$ENDIF}
 end;
 
 
@@ -3765,7 +3748,7 @@ begin
             Inc(P);
         if P^ = '=' then
             Inc(P);
-        if StrLIComp(Q, @Name[1], NameLen) = 0 then begin
+        if _StrLIComp(Q, @Name[1], NameLen) = 0 then begin
             while (P^ <> #0) and (P^ <> ';') do begin
                 Ch := P^;
                 if Ch = '%' then begin
@@ -3898,13 +3881,13 @@ const
 var
     I, J : Integer;
     Sub  : String;
-    Temp : WideString;
+    Temp : UnicodeString;
 begin
     Result := '';
-    I := 1;
-    { Convert the ANSI string to Unicode with default code page !! HTML     }
-    { entities represent iso-8859-1 (Latin1) and Unicode character numbers  }
+    { Convert the ANSI string to Unicode with default code page in D7-D2007 !!  }
+    { HTML entities represent iso-8859-1 (Latin1) and Unicode character numbers }
     Temp := Src;
+    I := 1;
     while I <= Length(Temp) do begin
         J   := I;
         Sub := '';
@@ -3945,7 +3928,7 @@ begin
             Exit;
         end;
         if Ord(Temp[I]) > 255 then
-            Result := Result + Copy(Temp, J, I - J) + '&#' + IntToStr(Ord(Temp[I])) + ';'
+            Result := Result + Copy(Temp, J, I - J) + '&#' + _IntToStr(Ord(Temp[I])) + ';'
         else
             Result := Result + Copy(Temp, J, I - J) + '&' +
                     String(HtmlSpecialChars[Ord(Temp[I])]) + ';';
@@ -4011,7 +3994,7 @@ function IsDirectory(const Path : String) : Boolean;
 var
     Attr : DWORD;
 begin
-    Attr   := GetFileAttributes(PChar(ExcludeTrailingPathdelimiter(Path)));
+    Attr   := GetFileAttributes(PChar(_ExcludeTrailingPathdelimiter(Path)));
     Result := (Attr <> MaxDWord) and ((Attr and FILE_ATTRIBUTE_DIRECTORY) <> 0);
 end;
 
@@ -4077,7 +4060,7 @@ function MakeCookie(
 begin
     Result := 'Set-Cookie: ' + Name + '=' + UrlEncode(Value);
     if Length(Value) = 0 then
-        Result := Result + '_NONE_; EXPIRES=' + RFC1123_Date(Date - 7) { Last week }
+        Result := Result + '_NONE_; EXPIRES=' + RFC1123_Date(_Date - 7) { Last week }
     else if Expires <> 0 then
         Result := Result + '; EXPIRES=' + RFC1123_Date(Expires);
     Result := Result + '; PATH=' + Path + #13#10;
@@ -4087,63 +4070,78 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function UrlEncode(const S : String) : String;
 var
-    I : Integer;
-    Ch : Char;
+    I, J : Integer;
+    U8Str: AnsiString;
+    RStr : AnsiString;
+    HexStr: String[2];
 begin
-    Result := '';
-    for I := 1 to Length(S) do begin
-        Ch := S[I];
-        if ((Ch >= '0') and (Ch <= '9')) or
-           ((Ch >= 'a') and (Ch <= 'z')) or
-           ((Ch >= 'A') and (Ch <= 'Z')) or
-           (Ch = '.') then
-            Result := Result + Ch
+    U8Str := StringToUtf8(S);
+    SetLength(RStr, Length(U8Str) * 3);
+    J := 0;
+    for I := 1 to Length(U8Str) do begin
+        case U8Str[I] of
+            '0'..'9', 'a'..'z', 'A'..'Z', '.' :
+                begin
+                    Inc(J);
+                    RStr[J] := U8Str[I];
+                end
         else
-            Result := Result + '%' + IntToHex(Ord(Ch), 2);
+            Inc(J);
+            RStr[J] := '%';
+            HexStr  := IcsIntToHexA(Ord(U8Str[I]), 2);
+            Inc(J);
+            RStr[J] := HexStr[1];
+            Inc(J);
+            RStr[J] := HexStr[2];
+        end;
     end;
+    SetLength(RStr, J);
+    Result := String(RStr);
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function UrlDecode(const Url : String) : String;
 var
-    I, J, K, L : Integer;
+    I, J, L : Integer;
+    U8Str : AnsiString;
+    Ch : AnsiChar;
 begin
-    Result := Url;
-    L      := Length(Result);
-    I      := 1;
-    K      := 1;
-    while TRUE do begin
-        J := I;
-        while (J <= Length(Result)) and (Result[J] <> '%') do begin
-            if J <> K then
-                Result[K] := Result[J];
-            Inc(J);
-            Inc(K);
-        end;
-        if J > Length(Result) then
-            break;                   { End of string }
-        if J > (Length(Result) - 2) then begin
-            while J <= Length(Result) do begin
-                Result[K] := Result[J];
-                Inc(J);
-                Inc(K);
-            end;
-            break;
-        end;
-        Result[K] := Char(htoi2(@Result[J + 1]));
-        Inc(K);
-        I := J + 3;
-        Dec(L, 2);
+    L := Length(Url);
+    SetLength(U8Str, L);
+    I := 1;
+    J := 0;
+    while (I <= L) do begin
+        Ch := AnsiChar(Url[I]);
+        if Ch = '%' then begin
+            Ch := AnsiChar(htoi2(PChar(@Url[I + 1])));
+            Inc(I, 2);
+        end
+        else if Ch = '+' then
+            Ch := ' ';
+        Inc(J);
+        U8Str[J] := Ch;
+        Inc(I);
     end;
-    SetLength(Result, L);
+    SetLength(U8Str, J);
+{$IFDEF COMPILER12_UP}
+    if IsUtf8Valid(U8Str) then
+        Result := Utf8ToStringW(U8Str)
+    else
+        Result := AnsiToUnicode(U8Str, CP_ACP);
+{$ELSE}
+    if IsUtf8Valid(U8Str) then
+        Result := Utf8ToStringA(U8Str)
+    else
+        Result := U8Str;
+{$ENDIF}
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function THttpServer.GetSrcVersion: String;
 begin
-    Result := Format('%d.%02.2d', [THttpServerVersion div 100,
+    Result := _Format('%d.%02.2d', [THttpServerVersion div 100,
                                    THttpServerVersion mod 100]);
 
 end;
@@ -4227,25 +4225,6 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure WriteStream(
-    DestStream : TStream;
-    const S    : String);
-begin
-    if Length(S) > 0 then
-        DestStream.Write(S[1], Length(S));
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure WriteLnStream(
-    DestStream : TStream;
-    const S    : String);
-begin
-    WriteStream(DestStream, S + #13#10);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function DelimEnd(Ch : Char) : Boolean;
 begin
     Result := (Ch = ' ') or (Ch = '>') or (Ch = #9);
@@ -4268,7 +4247,7 @@ begin
     End2Tag  := '<'  + GTagPrefix + '/TABLE_ROWS'; { Old version still supported }
     I := 0;
     while I < (BufLen - 13) do begin
-        if (StrLIcomp(Buf + I, @StartTag[1], Length(StartTag)) = 0) and
+        if (_StrLIcomp(Buf + I, @StartTag[1], Length(StartTag)) = 0) and
            DelimEnd((Buf + I + Length(StartTag))^) then begin
             { Embedded TABLE_ROWS ! }
             while (I < (BufLen - 1)) and (Buf[I] <> '>') do
@@ -4276,7 +4255,7 @@ begin
             Q := SearchTableRowsEnd(Buf + I + 1, BufLen - I - 1);
             I := Q - Buf;
         end
-        else if (StrLIcomp(Buf + I, @End1Tag[1], Length(End1Tag)) = 0) and
+        else if (_StrLIcomp(Buf + I, @End1Tag[1], Length(End1Tag)) = 0) and
                 DelimEnd((Buf + I + Length(End1Tag))^) then begin
             I := I + Length(End1Tag);
             while (I < BufLen) and (Buf[I] <> '>') do
@@ -4284,7 +4263,7 @@ begin
             Result := Buf + I + 1;
             Exit;
         end
-        else if (StrLIcomp(Buf + I, @End2Tag[1], Length(End2Tag)) = 0) and
+        else if (_StrLIcomp(Buf + I, @End2Tag[1], Length(End2Tag)) = 0) and
                 DelimEnd((Buf + I + Length(End2Tag))^) then begin
             I := I + Length(End2Tag);
             while (I < BufLen) and (Buf[I] <> '>') do
@@ -4409,43 +4388,33 @@ begin
                 Inc(I);
             Inc(I);
         until (I >= (Cnt - Length(GTagPrefix))) or
-              (StrLIComp(P + I, @GTagPrefix[1], Length(GTagPrefix)) = 0);
+              (_StrLIComp(P + I, @GTagPrefix[1], Length(GTagPrefix)) = 0);
 
         Dec(I);
         if P[I] <> '<' then begin
             { No starting tag found, write source to destination }
-            DestStream.Write(P^, Cnt);
+            StreamWriteA(DestStream, P, Cnt);
             break;
         end;
 
         { Delimiter found
           Write from source to destination until start tag }
         if I > 0 then
-            DestStream.Write(P^, I);
-
+            StreamWriteA(DestStream, P, I);
         { Search ending delimiter }
         J := I;
         while (J < Cnt) and (P[J] <> '>') and (P[J] <> ' ') and (P[J] <> #9) do
             Inc(J);
 
-{$IFDEF VER80}
-        Move(P[I + 3], TagName[1], J - I - 2);
-        TagName[0] := Char(J - I - 2);
-{$ELSE}
-        TagName := UpperCase(Copy(P, I + Length(GTagPrefix) + 2, J - I - Length(GTagPrefix) - 1));
-{$ENDIF}
+        TagName := _UpperCase(Copy(P, I + Length(GTagPrefix) + 2, J - I - Length(GTagPrefix) - 1));
+
         if P[J] = '>' then
             TagParams := ''
         else begin
             I := J + 1;
             while (J < Cnt) and (P[J] <> '>') do
                 Inc(J);
-{$IFDEF VER80}
-            Move(P[I], TagParams[1], J - I + 1);
-            TagParams[0] := Char(J - I + 1);
-{$ELSE}
-            TagParams := Trim(UpperCase(Copy(P, I, J - I + 1)));
-{$ENDIF}
+            TagParams := _Trim(_UpperCase(Copy(P, I, J - I + 1)));
         end;
 
         if TagName = 'TABLE_ROWS' then begin
@@ -4460,13 +4429,12 @@ begin
         end;
 
         if TagData.Find(TagName, TagValue) then
-            WriteStream(DestStream, TagValue);
-
+            StreamWriteStrA(DestStream, TagValue);
         Inc(J);
         Inc(P, J);
         Dec(Cnt, J);
     end;
-    WriteStream(DestStream, #13#10);
+    StreamWriteLnA(DestStream, '');
     Result := TRUE;
 end;
 
@@ -4570,31 +4538,28 @@ const
     BooleanToString : array [Boolean] of String = ('FALSE', 'TRUE');
 begin
     case V.VType of
-    vtInteger:    Result := IntToStr(V.VInteger);
-    vtBoolean:    Result := BooleanToString[V.VBoolean];
-    vtChar:       Result := V.VChar;
-    vtExtended:   Result := FloatToStr(V.VExtended^);
-    vtString:     Result := V.VString^;
-    vtPointer:    Result := 'Unsupported TVarRec.VType = vtPointer';
-    vtPChar:      Result := StrPas(V.VPChar);
-    vtObject:     Result := 'Unsupported TVarRec.VType = vtObject';
-    vtClass:      Result := 'Unsupported TVarRec.VType = vtClass';
-{$IFNDEF VER80}
-    vtWideChar:   Result := 'Unsupported TVarRec.VType = vtWideChar';
-    vtPWideChar:  Result := 'Unsupported TVarRec.VType = vtPWideChar';
-    vtAnsiString: Result := StrPas(V.VPChar);
-    vtCurrency:   Result := 'Unsupported TVarRec.VType = vtCurrency';
-    vtVariant:    Result := 'Unsupported TVarRec.VType = vtVariant';
-{$ENDIF}
-{$IFDEF DELPHI3_UP}
-    vtWideString: Result := 'Unsupported TVarRec.VType = vtWideString';
-    vtInterface:  Result := 'Unsupported TVarRec.VType = vtInterface';
-{$ENDIF}
-{$IFDEF DELPHI4_UP}
-    vtInt64:      Result := IntToStr(V.VInt64^);
+    vtInteger:        Result := _IntToStr(V.VInteger);
+    vtBoolean:        Result := BooleanToString[V.VBoolean];
+    vtChar:           Result := String(V.VChar);
+    vtExtended:       Result := _FloatToStr(V.VExtended^);
+    vtString:         Result := String(V.VString^);
+    vtPointer:        Result := 'Unsupported TVarRec.VType = vtPointer';
+    vtPChar:          Result := String(_StrPas(V.VPChar));
+    vtObject:         Result := 'Unsupported TVarRec.VType = vtObject';
+    vtClass:          Result := 'Unsupported TVarRec.VType = vtClass';
+    vtWideChar:       Result := 'Unsupported TVarRec.VType = vtWideChar';
+    vtPWideChar:      Result := 'Unsupported TVarRec.VType = vtPWideChar';
+    vtAnsiString:     Result := String(_StrPas(V.VPChar));
+    vtCurrency:       Result := 'Unsupported TVarRec.VType = vtCurrency';
+    vtVariant:        Result := 'Unsupported TVarRec.VType = vtVariant';
+    vtWideString:     Result := 'Unsupported TVarRec.VType = vtWideString';
+    vtInterface:      Result := 'Unsupported TVarRec.VType = vtInterface';
+    vtInt64:          Result := _IntToStr(V.VInt64^);
+{$IFDEF COMPILER12_UP}
+    vtUnicodeString:  Result := PWideChar(V.VUnicodeString);
 {$ENDIF}
     else
-        Result := 'Unknown TVarRec.VType = "' + IntToStr(Ord(V.VType)) + '" ';
+        Result := 'Unknown TVarRec.VType = "' + _IntToStr(Ord(V.VType)) + '" ';
     end;
 end;
 
@@ -4608,16 +4573,17 @@ function HtmlPageProducer(
     DestStream         : TStream) : Boolean;
 var
     FromStream : TFileStream;
-    Buf        : PChar;
-    BufLen     : Integer;
+    //Buf        : PChar;
+    //BufLen     : Integer;
+    Str        : String;
     TagData    : TStringIndex;
     TagIndex   : Integer;
 begin
     if ((High(Tags) - Low(Tags) + 1) and 1) <> 0 then begin
-        WriteLnStream(DestStream, '<HTML><BODY>');
-        WriteLnStream(DestStream, 'Odd number of tags for substition in ' +
+        StreamWriteLnA(DestStream, '<HTML><BODY>');
+        StreamWriteLnA(DestStream, 'Odd number of tags for substition in ' +
                                   '''' + HtmlFileName + '''<BR>');
-        WriteLnStream(DestStream, '</BODY></HTML>');
+        StreamWriteLnA(DestStream, '</BODY></HTML>');
         Result := FALSE;
         Exit;
     end;
@@ -4626,10 +4592,10 @@ begin
                                          fmOpenRead or fmShareDenyWrite);
     except
         on E: Exception do begin
-            WriteLnStream(DestStream, '<HTML><BODY>');
-            WriteLnStream(DestStream, 'Unable to open ''' + HtmlFileName + '''<BR>');
-            WriteLnStream(DestStream, E.ClassName + ': ' + E.Message);
-            WriteLnStream(DestStream, '</BODY></HTML>');
+            StreamWriteLnA(DestStream, '<HTML><BODY>');
+            StreamWriteLnA(DestStream, 'Unable to open ''' + HtmlFileName + '''<BR>');
+            StreamWriteLnA(DestStream, E.ClassName + ': ' + E.Message);
+            StreamWriteLnA(DestStream, '</BODY></HTML>');
             Result := FALSE;
             Exit;
         end;
@@ -4643,18 +4609,19 @@ begin
             Inc(TagIndex, 2);
         end;
         try
-            BufLen := FromStream.Size;
-            GetMem(Buf, BufLen + 1);
-            try
-                FromStream.Read(Buf^, BufLen);
-                Buf[BufLen] := #0;
-                Result := HtmlPageProducerFromMemory(Buf, BufLen,
+            //BufLen := FromStream.Size;
+            //GetMem(Buf, BufLen + 1);
+            //try
+                Str := StreamReadStrA(FromStream, FromStream.Size);
+                //FromStream.Read(Buf^, BufLen);
+                //Buf[BufLen] := #0;
+                Result := HtmlPageProducerFromMemory(PChar(Str), Length(Str) + 1,
                                                      TagData,
                                                      RowDataGetter, UserData,
                                                      DestStream);
-            finally
-                FreeMem(Buf, BufLen + 1);
-            end;
+            //finally
+                //FreeMem(Buf, BufLen + 1);
+            //end;
         finally
             FromStream.Free;
         end;
@@ -4833,16 +4800,16 @@ function THttpRange.GetContentRangeString(
 begin
     if RangeFrom < 0 then
         { The Last Bytes }
-        Result := IntToStr(CompleteDocSize - RangeFrom) + '-' +
-                  IntToStr(CompleteDocSize - 1) + '/' + IntToStr(CompleteDocSize)
+        Result := _IntToStr(CompleteDocSize - RangeFrom) + '-' +
+                  _IntToStr(CompleteDocSize - 1) + '/' + _IntToStr(CompleteDocSize)
     else if RangeTo < 0 then
         { The First Bytes }
-        Result := IntToStr(RangeFrom) + '-' + IntToStr(CompleteDocSize - 1) +
-                  '/' + IntToStr(CompleteDocSize)
+        Result := _IntToStr(RangeFrom) + '-' + _IntToStr(CompleteDocSize - 1) +
+                  '/' + _IntToStr(CompleteDocSize)
     else
         { The First Bytes }
-        Result := IntToStr(RangeFrom) + '-' + IntToStr(RangeTo) +
-                  '/' + IntToStr(CompleteDocSize);
+        Result := _IntToStr(RangeFrom) + '-' + _IntToStr(RangeTo) +
+                  '/' + _IntToStr(CompleteDocSize);
 end;
 
 
@@ -4862,17 +4829,6 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { THttpRangeList }
-const
-    CRLF : String = #13#10;
-procedure WriteLnToStream(Stream: TStream; const Value: String);
-begin
-    if Value <> '' then
-        Stream.Write(Value[1], Length(Value));
-    Stream.Write(CRLF[1], 2);
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpRangeList.Assign(Source: THttpRangeList);
 var
     I        : Integer;
@@ -4934,15 +4890,15 @@ begin
     if SeperatorPos <> 0 then begin
         FromStr := Copy(Value, 1, SeperatorPos - 1);
         ToStr   := Copy(Value, SeperatorPos + 1, Length(Value));
-        FromStr := Trim(FromStr);
-        ToStr   := Trim(ToStr);
+        FromStr := _Trim(FromStr);
+        ToStr   := _Trim(ToStr);
         { Numeric Testing }
         if FromStr <> '' then begin
             try
             {$IFDEF STREAM64}
-                StrToInt64(FromStr);
+                _StrToInt64(FromStr);
             {$ELSE}
-                StrToInt(FromStr);
+                _StrToInt(FromStr);
             {$ENDIF}
             except
                 FromStr := '';
@@ -4953,9 +4909,9 @@ begin
         if ToStr <> '' then begin
             try
             {$IFDEF STREAM64}
-                StrToInt64(ToStr);
+                _StrToInt64(ToStr);
             {$ELSE}
-                StrToInt(ToStr);
+                _StrToInt(ToStr);
             {$ENDIF}
             except
                 FromStr := '';
@@ -4983,7 +4939,7 @@ begin
 
     try
         System.Delete(AStr, 1, Length('bytes='));
-        Trim(AStr);
+        _Trim(AStr);
 
         { Parse the string valid values are:
          '-500'
@@ -5001,8 +4957,8 @@ begin
                 AStr       := '';
             end
             else begin
-                WorkString := Trim(Copy(AStr, 1, CommaPos - 1));
-                AStr := Trim(Copy(AStr, CommaPos + 1, Length(AStr)));
+                WorkString := _Trim(Copy(AStr, 1, CommaPos - 1));
+                AStr := _Trim(Copy(AStr, CommaPos + 1, Length(AStr)));
             end;
 
             ParseRangeString(FromStr, ToStr, WorkString);
@@ -5012,17 +4968,17 @@ begin
                     NewRange.RangeFrom := -1
                 else
                 {$IFDEF STREAM64}
-                    NewRange.RangeFrom := StrToInt64(FromStr);
+                    NewRange.RangeFrom := _StrToInt64(FromStr);
                 {$ELSE}
-                    NewRange.RangeFrom := StrToInt(FromStr);
+                    NewRange.RangeFrom := _StrToInt(FromStr);
                 {$ENDIF}
                 if ToStr = '' then
                     NewRange.RangeTo := -1
                 else
                 {$IFDEF STREAM64}
-                    NewRange.RangeTo := StrToInt64(ToStr);
+                    NewRange.RangeTo := _StrToInt64(ToStr);
                 {$ELSE}
-                    NewRange.RangeTo := StrToInt(ToStr);
+                    NewRange.RangeTo := _StrToInt(ToStr);
                 {$ENDIF}
                 Add(NewRange);
             end;
@@ -5161,13 +5117,13 @@ begin
         for I := 0 to RangeList.Count-1 do begin
             if RangeList.Count > 1 then begin
                 AStream := TMemoryStream.Create;
-                if I <> 0 then
-                    WriteLnToStream(AStream, '');
-                WriteLnToStream(AStream, '--' + ByteRangeSeparator);
-                WriteLnToStream(AStream, 'Content-Type: ' + ContentString);
-                WriteLnToStream(AStream, 'Content-Range: bytes ' +
+                if I <> 0 then 
+                    StreamWriteLnA(AStream, '');
+                StreamWriteLnA(AStream, '--' + ByteRangeSeparator);
+                StreamWriteLnA(AStream, 'Content-Type: ' + ContentString);
+                StreamWriteLnA(AStream, 'Content-Range: bytes ' +
                     RangeList.Items[i].GetContentRangeString(CompleteDocSize));
-                WriteLnToStream(AStream, '');
+                StreamWriteLnA(AStream, '');
                 AddPartStream(AStream, 0, AStream.Size);
             end;
             FromVal := RangeList.Items[I].RangeFrom;
@@ -5216,9 +5172,9 @@ begin
         end;
         if RangeList.Count > 1 then begin
             AStream := TMemoryStream.Create;
-            WriteLnToStream(AStream, '');
-            WriteLnToStream(AStream, '--' + ByteRangeSeparator + '--');
-            WriteLnToStream(AStream, '');
+            StreamWriteLnA(AStream, '');
+            StreamWriteLnA(AStream, '--' + ByteRangeSeparator + '--');
+            StreamWriteLnA(AStream, '');
             AddPartStream(AStream, 0, AStream.Size);
         end;
         CalculateOffsets;
@@ -5331,17 +5287,18 @@ begin
         Result := Result + 'atNone ';
     if atBasic in Types then
         Result := Result + 'atBasic ';
+{$IFNDEF NO_DIGEST_AUTH}
     if atDigest in Types then
         Result := Result + 'atDigest ';
+{$ENDIF}
 {$IFDEF USE_NTLM_AUTH}
     if atNtlm in Types then
         Result := Result + 'atNtlm ';
 {$ENDIF}
-    Result := Trim(Result);
+    Result := _Trim(Result);
 end;
 {$ENDIF}
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-
 
 end.

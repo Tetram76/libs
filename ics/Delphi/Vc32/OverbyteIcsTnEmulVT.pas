@@ -5,7 +5,7 @@ Description:  Delphi component combining both TnCnx and EmulVT components.
               Hence it does ANSI emulation using TCP/IP telnet protocol.
 Author:       François PIETTE
 Creation:     May, 1996
-Version:      6.01
+Version:      7.00
 EMail:        http://www.overbyte.be       francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -75,6 +75,8 @@ Mar 26, 2006 V2.15 Fixed TnCnxSessionConnected where global Error variable was
 Mar 26, 2005 V6.00 New version 6 started from V5
 Mar 24, 2008 V6.01 Francois Piette made some changes to prepare code
              for Unicode.
+Aug 15, 2008 V7.00 Delphi 2009 (Unicode) support. The terminal is not
+             unicode, but the component support unicode strings.
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -112,8 +114,8 @@ uses
     OverbyteIcsTnOptFrm, OverbyteIcsWSocket;
 
 const
-  TnEmultVTVersion   = 601;
-  CopyRight : String = ' TTnEmulVT (c) 1996-2008 F. Piette V6.01 ';
+  TnEmultVTVersion   = 700;
+  CopyRight : String = ' TTnEmulVT (c) 1996-2008 F. Piette V7.00 ';
 
 type
   TTnEmulVTDataAvailable = procedure (Sender  : TObject;
@@ -213,15 +215,7 @@ type
                                                        write FOnDataAvailable;
   end;
 
-procedure Register;
-
 implementation
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure Register;
-begin
-  RegisterComponents('FPiette', [TTnEmulVT]);
-end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -422,8 +416,10 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure TTnEmulVT.TnCnxDataAvailable(Sender: TTnCnx; Buffer : Pointer;
-  Len: Integer);
+procedure TTnEmulVT.TnCnxDataAvailable(
+    Sender : TTnCnx;
+    Buffer : Pointer;
+    Len    : Integer);
 var
     I : Integer;
 begin
@@ -434,7 +430,7 @@ begin
 
     for I := 0 to Len - 1 do begin
         try
-            WriteChar((PChar(Buffer) + I)^);
+            WriteChar((PAnsiChar(Buffer) + I)^);
         except
             Break;
         end;
@@ -644,12 +640,16 @@ end;
 procedure TTnEmulVT.KeyPress(var Key: Char);
 begin
     inherited KeyPress(Key);
+{$IFDEF SizeOf(Char) <> 1}
+    if Ord(Key) > 255 then
+        raise Exception.Create('TTnEmulVT.KeyPress detected a non-ansi char');
+{$ENDIF}
     if FUpperLock and (Key >= 'a') and (Key <= 'z') then
         Key := chr(ord(Key) and $DF);
     if Key <> #0 then begin
         try
             if FLocalEcho then
-                WriteChar(Key);
+                WriteChar(AnsiChar(Key));
             if Assigned(FTnCnx) then
                 FTnCnx.Send(@Key, 1);
         except
@@ -794,7 +794,11 @@ begin
             Break;
         Line := Screen.FLines^[Rows - 1 - nRow];
         for nCol := StartCol to StopCol do begin
+{$IF SizeOf(Line.Txt[0]) <> 1}
             Buffer[0] := Line.Txt[nCol];
+{$ELSE}
+            Buffer[0] := Char(Line.Txt[nCol]);
+{$IFEND}
             Inc(Buffer);
             Dec(BufSize);
             Inc(nCnt);
