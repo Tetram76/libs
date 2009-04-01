@@ -63,6 +63,9 @@ contains
   FormPreviewPrintObject in 'PrintObject\FormPreviewPrintObject.pas' {FormPreview},
   UnrarComp in 'Unrar\UnrarComp.pas',
   UnRAR in 'unrar\UnRAR.pas',
-  CRFurtif in 'VDTButton\CRFurtif.pas';
+  CRFurtif in 'VDTButton\CRFurtif.pas',
+  EditLabeled in 'Labeled\EditLabeled.pas',
+  LinkControls in 'Labeled\LinkControls.pas',
+  EditLabeled_register in 'Labeled\EditLabeled_register.pas';
 
 end.

@@ -92,5 +92,59 @@
         <PropertyCommitComment/>
       </SVNExternalOptions>
     </external>
+    <external Name="ICS V7" Kind="ekVendorBranch">
+      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\ics</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/ics</RepositoryExternalPath>
+      <DefaultSubfolder>/branches/icsv7</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://svn.overbyte.be:8443/svn/ics</BaseURL>
+        <VendorPath>/vendors/ics</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="ICS V6" Kind="ekVendorBranch">
+      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\ics</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/ics</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://svn.overbyte.be:8443/svn/ics</BaseURL>
+        <VendorPath>/vendors/ics</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="Alcinoe" Kind="ekVendorBranch">
+      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\alcinoe</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/alcinoe</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskFolder">
+        <BaseURL>https://uib.svn.sourceforge.net/svnroot/uib</BaseURL>
+        <VendorPath>/vendors/alcinoe</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
   </externals>
 </config>

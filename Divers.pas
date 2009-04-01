@@ -23,7 +23,7 @@ function NumericSoundex(in_str: string; const language: string): SmallInt;
 function ExtendedSoundex(in_str: string): string;
 procedure ReplaceString(var str: string; const fr_str, to_str: string);
 function MakeInitiales(Str: string): string;
-function SansAccents(Str: string): string;
+function SansAccents(Str: string): string; overload;
 function OnlyAlphaNum(const Str: string; NoDblSpace: Boolean = True): string;
 function ListOfResName(Module, TypeRes: PChar; var ListRes: TStringList): Boolean;
 function MessageGetLastError: string; overload;
