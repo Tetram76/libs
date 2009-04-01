@@ -96,6 +96,9 @@
 			<DCCReference Include="Unrar\UnrarComp.pas"/>
 			<DCCReference Include="unrar\UnRAR.pas"/>
 			<DCCReference Include="VDTButton\CRFurtif.pas"/>
+			<DCCReference Include="Labeled\EditLabeled.pas"/>
+			<DCCReference Include="Labeled\LinkControls.pas"/>
+			<DCCReference Include="Labeled\EditLabeled_register.pas"/>
 			<DCCReference Include="HarmFade\HARMFADE.dcr"/>
 			<DCCReference Include="Memory Table\Memorytable.dcr"/>
 			<DCCReference Include="PrintObject\PrintObject.dcr"/>

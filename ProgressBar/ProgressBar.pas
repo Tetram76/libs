@@ -259,30 +259,32 @@ var
 begin
   ARect := GetClientRect;
   InvRect := ARect;
+  if FMax = FMin then Exit;
+
   if FOrientation = orHorizontal then
   begin
     if OldPosition < FPosition then
     begin
-      InvRect.Right := ARect.Left + Trunc(FPosition * (ARect.Right - ARect.Left) / (FMax - FMin)) + 2;
-      InvRect.Left := ARect.Left + Trunc(OldPosition * (ARect.Right - ARect.Left) / (FMax - FMin)) - 2;
+      InvRect.Right := ARect.Left + Trunc(MulDiv(FPosition, ARect.Right - ARect.Left, FMax - FMin)) + 2;
+      InvRect.Left := ARect.Left + Trunc(MulDiv(OldPosition, ARect.Right - ARect.Left, FMax - FMin)) - 2;
     end
     else
     begin
-      InvRect.Left := ARect.Left + Trunc(FPosition * (ARect.Right - ARect.Left) / (FMax - FMin)) - 2;
-      InvRect.Right := ARect.Left + Trunc(OldPosition * (ARect.Right - ARect.Left) / (FMax - FMin)) + 2;
+      InvRect.Left := ARect.Left + Trunc(MulDiv(FPosition, ARect.Right - ARect.Left, FMax - FMin)) - 2;
+      InvRect.Right := ARect.Left + Trunc(MulDiv(OldPosition, ARect.Right - ARect.Left, FMax - FMin)) + 2;
     end;
   end
   else
   begin
     if OldPosition < FPosition then
     begin
-      InvRect.Top := ARect.Bottom - Trunc(FPosition * (ARect.Bottom - ARect.Top) / (FMax - FMin)) - 2;
-      InvRect.Bottom := ARect.Bottom - Trunc(OldPosition * (ARect.Bottom - ARect.Top) / (FMax - FMin)) + 2;
+      InvRect.Top := ARect.Bottom - Trunc(MulDiv(FPosition, ARect.Bottom - ARect.Top, FMax - FMin)) - 2;
+      InvRect.Bottom := ARect.Bottom - Trunc(MulDiv(OldPosition, ARect.Bottom - ARect.Top, FMax - FMin)) + 2;
     end
     else
     begin
-      InvRect.Bottom := ARect.Bottom - Trunc(FPosition * (ARect.Bottom - ARect.Top) / (FMax - FMin)) + 2;
-      InvRect.Top := ARect.Bottom - Trunc(OldPosition * (ARect.Bottom - ARect.Top) / (FMax - FMin)) - 2;
+      InvRect.Bottom := ARect.Bottom - Trunc(MulDiv(FPosition, ARect.Bottom - ARect.Top, FMax - FMin)) + 2;
+      InvRect.Top := ARect.Bottom - Trunc(MulDiv(OldPosition, ARect.Bottom - ARect.Top, FMax - FMin)) - 2;
     end;
   end;
 
@@ -298,8 +300,8 @@ begin
     InvRect.Bottom := ARect.Bottom;
   end;
 
-  RectWidth := Trunc((ARect.Bottom - ARect.Top) * 2 / 3) + 2;
-  RectHeight := Trunc((ARect.Right - ARect.Left) * 2 / 3) + 2;
+  RectWidth := Trunc(MulDiv(ARect.Bottom - ARect.Top, 2, 3)) + 2;
+  RectHeight := Trunc(MulDiv(ARect.Right - ARect.Left, 2, 3)) + 2;
   if FStyle = sPictures then
   begin
     RectWidth := FGlyph.Width;
