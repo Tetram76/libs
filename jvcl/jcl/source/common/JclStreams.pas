@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-02 22:58:52 +0100 (lun., 02 mars 2009)                         $ }
-{ Revision:      $Rev:: 2666                                                                     $ }
+{ Last modified: $Date:: 2009-04-19 21:40:23 +0200 (dim., 19 avr. 2009)                         $ }
+{ Revision:      $Rev:: 2740                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -529,8 +529,10 @@ type
     FCharacterWriter: TJclStreamSetNextCharFunc;
     FPeekPosition: Int64;
     function GetCalcedSize: Int64; override;
+    procedure SetSize({$IFNDEF CLR}const{$ENDIF ~CLR} NewSize: Int64); override;
   public
     constructor Create(AStream: TStream; AOwnsStream: Boolean = False); virtual;
+    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
     function ReadString(var Buffer: string; Start, Count: Longint): Longint; overload;
     function ReadString(BufferSize: Longint = 4096): string; overload;
     function ReadAnsiString(var Buffer: AnsiString; Start, Count: Longint): Longint; overload;
@@ -605,8 +607,8 @@ function CompareFiles(const FileA, FileB: TFileName; BufferSize: Longint = 4096)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStreams.pas $';
-    Revision: '$Revision: 2666 $';
-    Date: '$Date: 2009-03-02 22:58:52 +0100 (lun., 02 mars 2009) $';
+    Revision: '$Revision: 2740 $';
+    Date: '$Date: 2009-04-19 21:40:23 +0200 (dim., 19 avr. 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -2988,6 +2990,18 @@ begin
     if ProcessedLength > 0 then
       Result := Result + Copy(Buffer, 1, ProcessedLength);
   until ProcessedLength = 0;
+end;
+
+function TJclStringStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+begin
+  Result := inherited Seek(Offset, Origin);
+  FPeekPosition := FPosition;
+end;
+
+procedure TJclStringStream.SetSize({$IFNDEF CLR}const{$ENDIF ~CLR} NewSize: Int64);
+begin
+  inherited SetSize(NewSize);
+  FPeekPosition := FPosition;
 end;
 
 function TJclStringStream.SkipBOM: Longint;

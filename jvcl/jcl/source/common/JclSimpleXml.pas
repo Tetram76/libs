@@ -26,9 +26,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-16 18:41:34 +0100 (lun., 16 mars 2009)                          $ }
-{ Revision:      $Rev:: 2694                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2009-03-31 21:45:46 +0200 (mar., 31 mars 2009)                          $ }
+{ Revision:      $Rev:: 2714                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -451,7 +451,7 @@ type
 
   TJclSimpleXML = class(TObject)
   protected
-    FEncoding: TJClStringEncoding;
+    FEncoding: TJclStringEncoding;
     FFileName: TFileName;
     FOptions: TJclSimpleXMLOptions;
     FRoot: TJclSimpleXMLElemClassic;
@@ -565,8 +565,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 2694 $';
-    Date: '$Date: 2009-03-16 18:41:34 +0100 (lun., 16 mars 2009) $';
+    Revision: '$Revision: 2714 $';
+    Date: '$Date: 2009-03-31 21:45:46 +0200 (mar., 31 mars 2009) $';
     LogPath: 'JCL\source\common'
   );
 {$ENDIF UNITVERSIONING}
@@ -1140,6 +1140,7 @@ begin
     end
     else
       AOutStream := Stream;
+
     case Encoding of
       seAnsi:
         AStringStream := TJclAnsiStream.Create(AOutStream, False);
@@ -1152,6 +1153,12 @@ begin
     end;
     try
       AStringStream.SkipBOM;
+
+      if AStringStream is TJclAutoStream then
+        FEncoding := TJclAutoStream(AStringStream).Encoding
+      else
+        FEncoding := Encoding;
+
       LoadFromStringStream(AStringStream);
     finally
       AStringStream.Free;

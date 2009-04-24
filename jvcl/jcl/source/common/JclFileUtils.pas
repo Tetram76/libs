@@ -51,9 +51,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-03-28 01:11:23 +0100 (sam., 28 mars 2009)                          $ }
+{ Revision:      $Rev:: 2708                                                                     $ }
+{ Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -146,7 +146,7 @@ const
 
   // Note: faVolumeID is potentially dangerous and its usage has been discontinued
   // Please see QC report 6003 for details, available online at this URL:
-  // http://qc.borland.com/wc/qcmain.aspx?d=6003
+  // http://qc.embarcadero.com/wc/qcmain.aspx?d=6003
   faRejectedByDefault = faHidden + faSysFile + faDirectory;
   faWindowsSpecific   = faArchive + faTemporary + faSparseFile + faReparsePoint +
                         faCompressed + faOffline + faNotContentIndexed + faEncrypted;
@@ -1061,8 +1061,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
+    Revision: '$Revision: 2708 $';
+    Date: '$Date: 2009-03-28 01:11:23 +0100 (sam., 28 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}

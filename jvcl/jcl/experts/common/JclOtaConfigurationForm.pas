@@ -17,12 +17,13 @@
 { Portions created by Florent Ouchet are Copyright (C) of Florent Ouchet. All rights reserved.     }
 {                                                                                                  }
 { Contributors:                                                                                    }
+{   Uwe Schuster (uschuster)                                                                       }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2490                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-03-22 23:10:17 +0100 (dim., 22 mars 2009)                          $ }
+{ Revision:      $Rev:: 2703                                                                     $ }
+{ Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -72,8 +73,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConfigurationForm.pas $';
-    Revision: '$Revision: 2490 $';
-    Date: '$Date: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008) $';
+    Revision: '$Revision: 2703 $';
+    Date: '$Date: 2009-03-22 23:10:17 +0100 (dim., 22 mars 2009) $';
     LogPath: 'JCL\experts\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -181,10 +182,32 @@ end;
 function TJclOtaOptionsForm.Execute(PageName: string): Boolean;
 var
   ATreeNode: TTreeNode;
+  NodeName: string;
+  PosSeparator: Integer;
   AItemDataRec: TItemDataRec;
 begin
-  // TODO: use PageName
   ATreeNode := TreeViewCategories.Items.GetFirstNode;
+
+  repeat
+    PosSeparator := Pos('\', PageName);
+    if PosSeparator > 0 then
+    begin
+      NodeName := Copy(PageName, 1, PosSeparator - 1);
+      PageName := Copy(PageName, PosSeparator + 1, Length(PageName) - PosSeparator);
+      while Assigned(ATreeNode) and (CompareText(NodeName, ATreeNode.Text) <> 0) do
+        ATreeNode := ATreeNode.getNextSibling;
+      if Assigned(ATreeNode) then
+        ATreeNode := ATreeNode.getFirstChild;
+    end
+    else
+    begin
+      while Assigned(ATreeNode) and (CompareText(PageName, ATreeNode.Text) <> 0) do
+        ATreeNode := ATreeNode.getNextSibling;
+    end;
+  until PosSeparator = 0;
+
+  if not Assigned(ATreeNode) then
+    ATreeNode := TreeViewCategories.Items.GetFirstNode;
   if Assigned(ATreeNode) then
     TreeViewCategories.Selected := ATreeNode;
 
@@ -229,7 +252,7 @@ end;
 
 procedure TJclOtaOptionsForm.LabelHomePageClick(Sender: TObject);
 begin
-  ShellExecute(Handle, 'open', 'http://jcl.sf.net/', '', '', SW_SHOW);
+  ShellExecute(Handle, 'open', PChar(RsHomePageURL), '', '', SW_SHOW);
 end;
 
 procedure TJclOtaOptionsForm.TreeViewCategoriesChange(Sender: TObject;
