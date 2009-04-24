@@ -212,9 +212,76 @@ const
 {$ENDIF}
   );
 
+  BytesPerCharacter: array[TCharacterSet] of Byte =
+  (
+    1, // NONE
+    1, // ASCII
+    2, // BIG_5
+    1, // CYRL
+    1, // DOS437
+    1, // DOS850
+    1, // DOS852
+    1, // DOS857
+    1, // DOS860
+    1, // DOS861
+    1, // DOS863
+    1, // DOS865
+    2, // EUCJ_0208
+    2, // GB_2312
+    1, // ISO8859_1
+    1, // ISO8859_2
+    2, // KSC_5601
+    1, // NEXT
+    1, // OCTETS
+    2, // SJIS_0208
+    3, // UNICODE_FSS
+    1, // WIN1250
+    1, // WIN1251
+    1, // WIN1252
+    1, // WIN1253
+    1  // WIN1254
+{$IFDEF FB15_UP}
+   ,1  // DOS737'
+   ,1  // DOS775
+   ,1  // DOS858
+   ,1  // DOS862
+   ,1  // DOS864
+   ,1  // DOS866
+   ,1  // DOS869
+   ,1  // WIN1255
+   ,1  // WIN1256
+   ,1  // WIN1257
+   ,1  // ISO8859_3
+   ,1  // ISO8859_4
+   ,1  // ISO8859_5
+   ,1  // ISO8859_6
+   ,1  // ISO8859_7
+   ,1  // ISO8859_8
+   ,1  // ISO8859_9
+   ,1  // ISO8859_13
+{$ENDIF}
+{$IFDEF IB71_UP}
+   ,1  // ISO8859_15
+   ,1  // KOI8R
+{$ENDIF}
+{$IFDEF FB20_UP}
+   ,1  // KOI8R
+   ,1  // KOI8U
+   ,4  // UTF8
+{$ENDIF}
+{$IFDEF FB21_UP}
+   ,1  // WIN1258
+   ,1  // TIS620
+   ,2  // GBK
+   ,2  // CP943C
+{$ENDIF}
+  );
+
 {$IFDEF DLLREGISTRY}
   FBINSTANCES = 'SOFTWARE\Firebird Project\Firebird Server\Instances';
 {$ENDIF}
+
+  function GetSystemCharacterset: TCharacterSet;
 
   function MBUEncode(const str: UnicodeString; cp: Word): RawByteString;
   function MBUDecode(const str: RawByteString; cp: Word): UnicodeString; overload;
@@ -1142,6 +1209,88 @@ begin
 {$ENDIF}
 end;
 
+function GetSystemCharacterset: TCharacterSet;
+{$IFDEF MSWINDOWS}
+  function GetAnsiCS: TCharacterSet;
+  begin
+    case GetACP of
+      20127: Result := csASCII;
+      950: Result := csBIG_5;
+      437: Result := csDOS437;
+      850: Result := csDOS850;
+      852: Result := csDOS852;
+      857: Result := csDOS857;
+      860: Result := csDOS860;
+      861: Result := csDOS861;
+      863: Result := csDOS863;
+      865: Result := csDOS865;
+      20932: Result := csEUCJ_0208;
+      28591: Result := csISO8859_1;
+      28592: Result := csISO8859_2;
+      949: Result := csKSC_5601;
+      1250: Result := csWIN1250;
+      1251: Result := csWIN1251;
+      1252: Result := csWIN1252;
+      1253: Result := csWIN1253;
+      1254: Result := csWIN1254;
+    {$IFDEF FB15_UP}
+      737: Result := csDOS737;
+      775: Result :=  csDOS775;
+      858: Result := csDOS858;
+      862: Result :=  csDOS862;
+      864: Result := csDOS864;
+      866: Result :=  csDOS866;
+      869: Result := csDOS869;
+      1255: Result := csWIN1255;
+      1256: Result := csWIN1256;
+      1257: Result :=  csWIN1257;
+      28593: Result := csISO8859_3;
+      28594: Result := csISO8859_4;
+      28595: Result := csISO8859_5;
+      28596: Result := csISO8859_6;
+      28597: Result := csISO8859_7;
+      28598: Result := csISO8859_8;
+      28599: Result := csISO8859_9;
+      28603: Result := csISO8859_13;
+    {$ENDIF}
+    {$IFDEF IB71_UP}
+      28605: Result := csISO8859_15;
+      20866: Result := csKOI8R;
+    {$ENDIF}
+    {$IFDEF FB20_UP}
+      20866: Result := csKOI8R;
+      21866: Result := csKOI8U;
+    {$ENDIF}
+    {$IFDEF FB21_UP}
+      1258: Result := csWIN1258;
+      874: Result := csTIS620;
+      936: Result := csGBK;
+      932: Result := csCP943C;
+    {$ELSE}
+      936: Result := csGB_2312;
+      932: Result := csSJIS_0208;
+    {$ENDIF}
+    else
+      Result := csNONE;
+    end;
+  end;
+{$ENDIF}
+begin
+{$IFDEF UNICODE}
+  {$IFDEF FB20_UP}
+     Result := csUTF8;
+  {$ELSE}
+     Result := GetAnsiCS;
+  {$ENDIF}
+{$ELSE}
+  {$IFDEF MSWINDOWS}
+    Result := GetAnsiCS;
+  {$ELSE}
+    Result := csNONE;
+  {$ENDIF}
+{$ENDIF}
+end;
+
 //function BytesPerCharacter(cs: TCharacterSet): Byte;
 //begin
 //  case cs of
@@ -1343,22 +1492,28 @@ const
   {$ENDIF}
   begin
   {$IFDEF DLLREGISTRY}
-    HR := RegOpenKeyEx(HKEY_LOCAL_MACHINE, FBINSTANCES, 0, KEY_READ, Key);
-    if (HR = ERROR_SUCCESS) then
+    if FileExists(ExtractFilePath(ParamStr(0)) + GDS32DLL) then
+      Result := GDS32DLL else
     begin
-      HR := RegQueryValueEx(Key, 'DefaultInstance', nil, nil, nil, @Size);
+      HR := RegOpenKeyEx(HKEY_LOCAL_MACHINE, FBINSTANCES, 0, KEY_READ, Key);
       if (HR = ERROR_SUCCESS) then
       begin
-        SetLength(Result, Size div sizeof(Char));
-        HR := RegQueryValueEx(Key, 'DefaultInstance', nil, nil, Pointer(Result), @Size);
+        HR := RegQueryValueEx(Key, 'DefaultInstance', nil, nil, nil, @Size);
         if (HR = ERROR_SUCCESS) then
-          Result := Trim(Result)+ 'bin\' + GDS32DLL;
+        begin
+          SetLength(Result, Size div sizeof(Char));
+          HR := RegQueryValueEx(Key, 'DefaultInstance', nil, nil, Pointer(Result), @Size);
+          if (HR = ERROR_SUCCESS) then
+            Result := Trim(Result)+ 'bin\' + GDS32DLL;
+        end;
+        RegCloseKey(Key);
       end;
-      RegCloseKey(Key);
+      if (HR <> ERROR_SUCCESS) then
+        Result := GDS32DLL;
     end;
-    if (HR <> ERROR_SUCCESS) then
-  {$ENDIF}
+  {$ELSE}
     Result := GDS32DLL;
+  {$ENDIF}
   end;
 
   function CreateDBParams(Params: AnsiString; Delimiter: AnsiChar = ';'): AnsiString;
@@ -2108,6 +2263,10 @@ const
             src^.SqlType := dst.sqltype;
             src^.SqlLen  := dst.sqllen;
             src^.SqlSubType := dst.sqlsubtype;
+            src^.SqlScale := dst.SqlScale;
+{$IFDEF IB7_UP}
+            src^.SqlPrecision := dst.SqlPrecision;
+{$ENDIF}
           end;
          Sqlda.AllocateDataBuffer(false); 
       finally
@@ -2786,38 +2945,6 @@ type
     end;
   end;
 
-//  procedure TUIBLibrary.BlobReadString(var BlobHandle: IscBlobHandle; var Str: UnicodeString);
-//  var
-//    BlobInfos: array[0..2] of TBlobInfo;
-//    CurrentLength: Word;
-//    Buffer: Pointer;
-//    TotalLen, Len: Integer;
-//  begin
-//  {$IFDEF UIBTHREADSAFE}
-//    FLIBCritSec.Enter;
-//    try
-//  {$ENDIF}
-//      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
-//        isc_info_blob_max_segment + isc_info_blob_total_length,
-//        SizeOf(BlobInfos), @BlobInfos));
-//  {$IFDEF UIBTHREADSAFE}
-//    finally
-//      FLIBCritSec.Leave;
-//    end;
-//  {$ENDIF}
-//    TotalLen := (BlobInfos[1].CardType div 2) * 2;
-//    SetLength(Str, TotalLen div 2);
-//    Buffer := PWideChar(Str);
-//    len := 0;
-//    while BlobGetSegment(BlobHandle, CurrentLength, TotalLen - len, Buffer) do
-//    begin
-//      inc(PtrInt(Buffer), CurrentLength);
-//      inc(len, CurrentLength);
-//      if len = TotalLen then
-//        Break;
-//    end;
-//  end;
-
   procedure TUIBLibrary.BlobReadBuffer(var BlobHandle: IscBlobHandle; var Size: Integer;
     var Buffer: Pointer; realloc: boolean);
   var
@@ -3447,10 +3574,12 @@ type
       SQL_TEXT    :
         begin
           Str := MBUDecode(Copy(sqldata, 0, sqllen), CharacterSetCP[FCharacterSet]);
-          if (SqlSubType > 1) then
-            SetLength(Str, sqllen div SqlSubType);
+          SetLength(Str, sqllen div BytesPerCharacter[FCharacterSet]);
         end;
-      SQL_VARYING : Str := MBUDecode(Copy(PAnsiChar(@PVary(sqldata).vary_string), 0, PVary(sqldata).vary_length), CharacterSetCP[FCharacterSet]);
+      SQL_VARYING :
+        Str := MBUDecode(
+          Copy(PAnsiChar(@PVary(sqldata).vary_string), 0, PVary(sqldata).vary_length),
+          CharacterSetCP[FCharacterSet]);
     end;
   end;
 

@@ -3,4 +3,4 @@
     * remplacer {.$DEFINE UIBLANG_FR} par {$DEFINE UIBLANG_FR}
     optionnel: * remplacer {$DEFINE HAVE_SYNEDIT} par {.$DEFINE HAVE_SYNEDIT}
 - Ajouter le chemin de bibliothèque $(Compos)\UIB\source
-- Installer le paquet packages\JvUIBD10Win32D.dproj
+- Installer le paquet packages\JvUIBD12Win32D.dproj
