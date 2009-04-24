@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppXMLStorage.pas 12167 2009-01-25 14:44:58Z jfudickar $
+// $Id: JvAppXMLStorage.pas 12254 2009-03-22 22:44:07Z jfudickar $
 
 unit JvAppXMLStorage;
 
@@ -201,8 +201,8 @@ procedure LoadPropertyStoreFromXmlFile(APropertyStore: TJvCustomPropertyStore;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppXMLStorage.pas $';
-    Revision: '$Revision: 12167 $';
-    Date: '$Date: 2009-01-25 15:44:58 +0100 (dim., 25 janv. 2009) $';
+    Revision: '$Revision: 12254 $';
+    Date: '$Date: 2009-03-22 23:44:07 +0100 (dim., 22 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -466,9 +466,12 @@ begin
 end;
 
 procedure TJvCustomAppXMLStorage.SplitKeyPath(const Path: string; out Key, ValueName: string);
+var
+  Index: Integer;
 begin
   inherited SplitKeyPath(Path, Key, ValueName);
-  ValueName := CheckNodeNameCharacters(ValueName);
+  if SplitNodeNameIndex (ValueName, Index) then
+    ValueName := ItemNameIndexPath(ValueName, Index); // Recombine both values again for strings which have value in an indexed path directly
   if Key = '' then
     Key := Path;
 end;

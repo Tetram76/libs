@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThreadDialog.pas 12148 2009-01-15 22:23:54Z ahuser $
+// $Id: JvThreadDialog.pas 12270 2009-04-13 20:47:03Z jfudickar $
 
 unit JvThreadDialog;
 
@@ -203,8 +203,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadDialog.pas $';
-    Revision: '$Revision: 12148 $';
-    Date: '$Date: 2009-01-15 23:23:54 +0100 (jeu., 15 janv. 2009) $';
+    Revision: '$Revision: 12270 $';
+    Date: '$Date: 2009-04-13 22:47:03 +0200 (lun., 13 avr. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -430,13 +430,15 @@ var
   H, W: Integer;
 begin
   if FInfoTextPanel.Visible then
-    W := FOrgInfoTextWidth + 80
+    W := FOrgInfoTextWidth + 20
   else
     W := 0;
   W := Round(W/10)*10;
   if W < 250 then
     W := 250;
-  if ClientWidth <> W then
+  if W > Screen.Width-100 then
+    W := Screen.Width-100;
+  if (ClientWidth < W) or (ClientWidth > W+50)then // Reduces the resize flickering when the text is changed to often
     ClientWidth := W;
   FCancelBtn.Left := (FCancelButtonPanel.Width - FCancelBtn.Width) div 2;
   FInfoText.Width := FInfoTextPanel.Width-FDefaultBorderWidth*2;
@@ -454,6 +456,8 @@ begin
   if FCancelButtonPanel.Visible then
     H := H + FCancelButtonPanel.Height;
   H := H + FDefaultBorderWidth*2;
+  if H > Screen.Height-100 then
+    H := Screen.Height-100;
   if ClientHeight <> H then
     ClientHeight := H;
 end;

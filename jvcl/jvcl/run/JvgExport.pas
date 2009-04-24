@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgExport.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvgExport.pas 12260 2009-03-27 10:41:19Z obones $
 
 unit JvgExport;
 
@@ -58,8 +58,8 @@ procedure ExportDataSetToExcel(DataSet: TDataSet; OnExportProgress: TOnExportPro
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgExport.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12260 $';
+    Date: '$Date: 2009-03-27 11:41:19 +0100 (ven., 27 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -107,7 +107,7 @@ begin
     XL := CreateOleObject(cExcelApplication);
   end;
 
-  GetTempPath(SizeOf(Buffer), Buffer);
+  GetTempPath(Length(Buffer), Buffer);
   TempFileName := Buffer + 'JvgExportToExcelTemp.txt';
   AExportFilter := TQRCommaSeparatedFilter.Create(TempFileName);
   try

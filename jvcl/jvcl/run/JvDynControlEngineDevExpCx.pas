@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCx.pas 12206 2009-02-09 21:53:00Z jfudickar $
+// $Id: JvDynControlEngineDevExpCx.pas 12269 2009-04-13 19:59:23Z jfudickar $
 
 unit JvDynControlEngineDevExpCx;
 
@@ -987,8 +987,8 @@ function DynControlEngineDevExpCx: TJvDynControlEngineDevExpCx;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCx.pas $';
-    Revision: '$Revision: 12206 $';
-    Date: '$Date: 2009-02-09 22:53:00 +0100 (lun., 09 févr. 2009) $';
+    Revision: '$Revision: 12269 $';
+    Date: '$Date: 2009-04-13 21:59:23 +0200 (lun., 13 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2733,6 +2733,7 @@ begin
   BevelInner := bvNone;
   BevelOuter := bvNone;
   PanelStyle.Active := True;
+  PanelStyle.BorderWidth := 0;
   Style.BorderStyle := ebsNone;
 end;
 
@@ -2923,7 +2924,9 @@ end;
 
 procedure TJvDynControlCxImage.ControlSetCxProperties(Value: TCxDynControlWrapper);
 begin
+  Properties.Center := True;
   Style.LookAndFeel.Assign(Value.LookAndFeel);
+  Properties.ShowFocusRect := False;
   if Assigned(Style.StyleController) then
   begin
     Style.StyleController := Value.StyleController;

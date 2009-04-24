@@ -29,7 +29,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEdit.pas 12252 2009-03-21 22:18:25Z ahuser $
+// $Id: JvRichEdit.pas 12281 2009-04-23 22:52:26Z remkobonte $
 
 unit JvRichEdit;
 
@@ -929,8 +929,8 @@ function BitmapToRTF2(ABitmap: TBitmap; AStream: TStream): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEdit.pas $';
-    Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12281 $';
+    Date: '$Date: 2009-04-24 00:52:26 +0200 (ven., 24 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3498,7 +3498,13 @@ end;
 function TJvCustomRichEdit.InsertObjectDialog: Boolean;
 var
   Data: TOleUIInsertObject;
+  {$IFDEF UNICODE}
+  { Mantis #4738: OleUIInsertObjectW() returns with OLEUI_IOERR_LPCLSIDEXCLUDEINVALID }
+  { Probably windows error; cchFile must be exactly MAXPATH }
+  NameBuffer: array[0..MAX_PATH div SizeOf(Char) - 1] of Char;
+  {$ELSE}
   NameBuffer: array[0..255] of Char;
+  {$ENDIF UNICODE}
   OleClientSite: IOleClientSite;
   Storage: IStorage;
   OleObject: IOleObject;

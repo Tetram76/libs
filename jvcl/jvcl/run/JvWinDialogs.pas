@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWinDialogs.pas 12045 2008-11-12 14:47:11Z obones $
+// $Id: JvWinDialogs.pas 12258 2009-03-24 20:54:58Z ahuser $
 
 unit JvWinDialogs;
 
@@ -628,8 +628,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWinDialogs.pas $';
-    Revision: '$Revision: 12045 $';
-    Date: '$Date: 2008-11-12 15:47:11 +0100 (mer., 12 nov. 2008) $';
+    Revision: '$Revision: 12258 $';
+    Date: '$Date: 2009-03-24 21:54:58 +0100 (mar., 24 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -788,7 +788,7 @@ const
   SHFMT_NOFORMAT = $FFFFFFFD; // Drive is not formatable
 
 type
-  LPFNORGFAV = function(Wnd: hWnd; Str: LPTSTR): Integer; stdcall;
+  LPFNORGFAV = function(Wnd: hWnd; Str: LPCSTR): Integer; stdcall;
 
 function ExtractIconFromFile(FileName: string; Index: Integer): HICON;
 var
@@ -807,18 +807,17 @@ end;
 
 function TJvOrganizeFavoritesDialog.Execute: Boolean;
 var
-  Path: string;
+  Path: AnsiString;
   lpfnDoOrganizeFavDlg: LPFNORGFAV;
 begin
   Result := False;
-  //  lpfnDoOrganizeFavDlg := nil;
-  if SHDocvwHandle > HINSTANCE_ERROR then
+  if SHDocvwHandle <> 0 then
   begin
-    Path := GetSpecialFolderPath('Favorites', True) + #0#0;
+    Path := AnsiString(GetSpecialFolderPath('Favorites', True)) + #0#0;
     lpfnDoOrganizeFavDlg := LPFNORGFAV(GetProcAddress(SHDocvwHandle, 'DoOrganizeFavDlg'));
     if not Assigned(lpfnDoOrganizeFavDlg) then
       raise EWinDialogError.CreateRes(@RsEFunctionNotSupported);
-    lpfnDoOrganizeFavDlg(GetForegroundWindow, PChar(Path));
+    lpfnDoOrganizeFavDlg(GetForegroundWindow, PAnsiChar(Path));
     Result := True;
   end;
 end;
@@ -1172,18 +1171,18 @@ begin
     for BufferIndex := 0 to High(Parameters) do
     begin
       PPointer(@ParamBuffer[BufferIndex * SizeOf(Pointer)])^ :=
-      Parameters[High(Parameters) - BufferIndex];
+        Parameters[High(Parameters) - BufferIndex];
     end;
     asm
       mov ECX, ParamCount
       cmp ECX, 0
       je  @MethodCall
       mov EDX, ParamBuffer
-      @StartLoop:
+@StartLoop:
       push DWORD PTR[EDX]
       add  EDX, 4
       loop @StartLoop
-      @MethodCall:
+@MethodCall:
       push Style
       push Caption
       push Text
@@ -1207,8 +1206,7 @@ begin
   ShellDLL := SafeLoadLibrary(Shell32);
   MethodPtr := GetProcAddress(ShellDLL, PChar(183));
   if Assigned(MethodPtr) then
-    Result := ExecuteShellMessageBox(MethodPtr, Instance, Owner, Text, Caption,
-      Style, Parameters)
+    Result := ExecuteShellMessageBox(MethodPtr, Instance, Owner, Text, Caption, Style, Parameters)
   else
     Result := ID_CANCEL;
 end;

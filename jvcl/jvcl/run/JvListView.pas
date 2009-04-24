@@ -28,7 +28,7 @@ Known Issues:
                (report for instance). As a workaround, always change the item's
                properties, never the canvas' directly.
 -----------------------------------------------------------------------------}
-// $Id: JvListView.pas 12252 2009-03-21 22:18:25Z ahuser $
+// $Id: JvListView.pas 12264 2009-04-10 20:08:13Z obones $
 
 unit JvListView;
 
@@ -484,8 +484,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListView.pas $';
-    Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12264 $';
+    Date: '$Date: 2009-04-10 22:08:13 +0200 (ven., 10 avr. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -502,7 +502,7 @@ uses
   {$ELSE}
   ActiveX,
   {$ENDIF HAS_UNIT_VARIANTS}
-  JclWideStrings,
+  JclWideStrings, 
   JvConsts, JvResources;
 
 type
@@ -965,7 +965,6 @@ end;
 
 const
   cLISTVIEW01 = 'LISTVIEW01'; // 10 chars
-  cLISTVIEW02 = 'LISTVIEW01'; // 10 chars
 
 constructor TJvListView.Create(AOwner: TComponent);
 begin

@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEditToHtml.pas 12015 2008-11-01 23:55:28Z ahuser $
+// $Id: JvRichEditToHtml.pas 12274 2009-04-15 18:39:07Z ahuser $
 
 unit JvRichEditToHtml;
 
@@ -105,8 +105,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEditToHtml.pas $';
-    Revision: '$Revision: 12015 $';
-    Date: '$Date: 2008-11-02 00:55:28 +0100 (dim., 02 nov. 2008) $';
+    Revision: '$Revision: 12274 $';
+    Date: '$Date: 2009-04-15 20:39:07 +0200 (mer., 15 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -497,14 +497,17 @@ begin
             St.Append(FEndSection);
             CurrAt.Assign(Att);
             St.Append(AttToHtml(Att));
-          end;
-
-          if CharInSet(Text[J], ['A'..'Z', 'a'..'z', '0'..'9']) then
-            St.Append(Text[J])
+            Value.SelStart := J;
+          end
           else
-            St.Append(CharToHtml(Text[J]));
-          Inc(J);
-          Value.SelStart := J - 1;
+          begin
+            if CharInSet(Text[J], ['A'..'Z', 'a'..'z', '0'..'9']) then
+              St.Append(Text[J])
+            else
+              St.Append(CharToHtml(Text[J]));
+            Inc(J);
+            Value.SelStart := J;
+          end;
         end;
         if I = 1 then
           Strings.Add(St.ToString())

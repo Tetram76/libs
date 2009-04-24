@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 12249 2009-03-21 16:28:49Z ahuser $
+// $Id: JvJVCLUtils.pas 12266 2009-04-12 18:41:58Z jfudickar $
 
 unit JvJVCLUtils;
 
@@ -916,8 +916,8 @@ function GenerateUniqueComponentName(AOwner, AComponent: TComponent; const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 12249 $';
-    Date: '$Date: 2009-03-21 17:28:49 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12266 $';
+    Date: '$Date: 2009-04-12 20:41:58 +0200 (dim., 12 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -8248,7 +8248,8 @@ var
   function GenerateName(const AName: string; ANumber: Integer): string;
   begin
     Result := ValidateName (AName);
-    Result := AOwner.Name + '_' + Result;
+    if Assigned(AOwner) and (AOwner.Name <> '') then
+      Result := AOwner.Name + '_' + Result;
     if ANumber > 0 then
       Result := Result + IntToStr(ANumber);
   end;

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditor.pas 12251 2009-03-21 17:45:12Z jfudickar $
+// $Id: JvPropertyStoreEditor.pas 12254 2009-03-22 22:44:07Z jfudickar $
 unit JvPropertyStoreEditor;
 
 {$I jvcl.inc}
@@ -111,8 +111,8 @@ type
     procedure GotoEditObject(EditObject: TPersistent);
     property InspectedObjectListEditorHandler: IJvPropertyListEditorHandler read
         FInspectedObjectListEditorHandlerIntf;
-    property PropertyStore: TComponent read FPropertyStore write SetPropertyStore;
   published
+    property PropertyStore: TComponent read FPropertyStore write SetPropertyStore;
     property Align;
     property Anchors;
     property AutoSize;
@@ -176,8 +176,8 @@ function EditPropertyStore(PropertyStore: TJvCustomPropertyStore): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditor.pas $';
-    Revision: '$Revision: 12251 $';
-    Date: '$Date: 2009-03-21 18:45:12 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12254 $';
+    Date: '$Date: 2009-03-22 23:44:07 +0100 (dim., 22 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

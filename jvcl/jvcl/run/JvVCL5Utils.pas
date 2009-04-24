@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVCL5Utils.pas 11971 2008-10-18 11:52:10Z ahuser $
+// $Id: JvVCL5Utils.pas 12264 2009-04-10 20:08:13Z obones $
 
 unit JvVCL5Utils;
 
@@ -192,10 +192,16 @@ function VarIsOrdinal(const V: Variant): Boolean;
 // Misc
 function GetMonitorWorkareaRect(Monitor: TMonitor): TRect;
 
+{$IFNDEF RTL200_UP}
 type
   UTF8String = type string;
+{$ENDIF ~RTL200_UP}
 
+{$IFNDEF DELPHI6_UP}
 function Utf8Decode(const S: UTF8String): WideString;
+function Utf8Encode(const S: WideString): UTF8String;
+{$ENDIF ~DELPHI6_UP}
+
 function Utf8ToAnsi(const S: UTF8String): string;
 
 // System
@@ -289,7 +295,7 @@ implementation
 
 uses
   CommCtrl,
-  JclSysUtils;
+  JclStringConversions, JclSysUtils;
 
 var
   GlobalCollectionHooked: Boolean = False;
@@ -1205,6 +1211,10 @@ begin
   Result := Utf8Decode(S);
 end;
 
+function Utf8Encode(const S: WideString): UTF8String;
+begin
+  Result := WideStringToUTF8(S);
+end;
 
 //=== { TCustomImageList } ===================================================
 

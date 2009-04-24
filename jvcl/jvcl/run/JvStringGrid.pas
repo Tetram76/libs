@@ -10,8 +10,8 @@ the specific language governing rights and limitations under the License.
 
 The Original Code is: JvStringGrid.PAS, released on 2001-02-28.
 
-The Initial Developer of the Original Code is S?stien Buysse [sbuysse att buypin dott com]
-Portions created by S?stien Buysse are Copyright (C) 2001 S?stien Buysse.
+The Initial Developer of the Original Code is Sebastien Buysse [sbuysse att buypin dott com]
+Portions created by Sebastien Buysse are Copyright (C) 2001 S?stien Buysse.
 All Rights Reserved.
 
 Contributor(s): Michael Beck [mbeck att bigfoot dott com].
@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStringGrid.pas 12247 2009-03-21 16:17:08Z ahuser $
+// $Id: JvStringGrid.pas 12257 2009-03-23 21:08:54Z ahuser $
 
 unit JvStringGrid;
 
@@ -253,8 +253,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStringGrid.pas $';
-    Revision: '$Revision: 12247 $';
-    Date: '$Date: 2009-03-21 17:17:08 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12257 $';
+    Date: '$Date: 2009-03-23 22:08:54 +0100 (lun., 23 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -892,7 +892,8 @@ begin
         else
           Bytes[K] := Byte(St[K + 1]);
       {$ENDIF}
-      Stream.Write(Bytes[0], Len);
+      if Len > 0 then
+        Stream.Write(Bytes[0], Len);
       if J <> ColCount - 1 then
         Stream.Write(A, 1);
     end;

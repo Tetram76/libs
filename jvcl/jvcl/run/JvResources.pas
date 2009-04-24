@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvResources.pas 12214 2009-02-19 20:24:46Z ahuser $
+// $Id: JvResources.pas 12275 2009-04-15 19:30:15Z ahuser $
 
 unit JvResources;
 
@@ -502,6 +502,7 @@ resourcestring
   RsECsvFieldLocationError = 'CSV field location error: %s';
   RsEFieldNotFound = 'Field %s not found in the data file';
   RsECsvStringTooLong = 'CSV string is too long: %s...';
+  RsECannotReadCsvFile = 'Can''t read CSV file %s';
   RsEInternalLimit = 'JvCsvData - Internal Limit of MAXCOLUMNS (%d) reached. CSV Data has too many columns';
   RsETableNameNotSet = 'TableName not specified';
   RsEGetMode = 'Invalid option to GetMode';
@@ -2425,8 +2426,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvResources.pas $';
-    Revision: '$Revision: 12214 $';
-    Date: '$Date: 2009-02-19 21:24:46 +0100 (jeu., 19 févr. 2009) $';
+    Revision: '$Revision: 12275 $';
+    Date: '$Date: 2009-04-15 21:30:15 +0200 (mer., 15 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

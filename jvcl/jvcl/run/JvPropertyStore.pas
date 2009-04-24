@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStore.pas 12211 2009-02-16 23:52:50Z jfudickar $
+// $Id: JvPropertyStore.pas 12254 2009-03-22 22:44:07Z jfudickar $
 
 unit JvPropertyStore;
 
@@ -226,8 +226,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStore.pas $';
-    Revision: '$Revision: 12211 $';
-    Date: '$Date: 2009-02-17 00:52:50 +0100 (mar., 17 févr. 2009) $';
+    Revision: '$Revision: 12254 $';
+    Date: '$Date: 2009-03-22 23:44:07 +0100 (dim., 22 mars 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -952,7 +952,8 @@ begin
   FItemName := cItem;
   FIntIgnoreProperties.Add('ItemName');
   FIntIgnoreProperties.Add('FreeObjects');
-  FIntIgnoreProperties.Add('CreateListEntries')
+  FIntIgnoreProperties.Add('CreateListEntries');
+  FItemsObjectName := 'ItemName';
 end;
 
 destructor TJvCustomPropertyListStore.Destroy;

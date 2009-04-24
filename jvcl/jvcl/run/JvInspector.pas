@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 12087 2008-12-22 13:42:23Z obones $
+// $Id: JvInspector.pas 12276 2009-04-16 16:28:41Z ahuser $
 
 unit JvInspector;
 
@@ -627,7 +627,6 @@ type
     procedure ReadValueColor(Reader: TReader);
     procedure ReadSelectedTextColor(Reader: TReader);
     procedure ReadHideSelectTextColor(Reader: TReader);
-
   protected
     procedure ApplyNameFont; virtual;
     procedure ApplyValueFont; virtual;
@@ -2073,8 +2072,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 12087 $';
-    Date: '$Date: 2008-12-22 14:42:23 +0100 (lun., 22 déc. 2008) $';
+    Revision: '$Revision: 12276 $';
+    Date: '$Date: 2009-04-16 18:28:41 +0200 (jeu., 16 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2111,10 +2110,6 @@ begin
     Result := TJvInspectorBorlandPainter.Create(nil);
   end;
 end;
-
-//=== { TOpenEdit } ==========================================================
-
-
 
 //============================================================================
 
@@ -2162,6 +2157,7 @@ type
   PComp = ^Comp;
   PPointer = ^Pointer;
   TCustomEditAccessProtected = class(TCustomEdit);
+
 var
   GlobalGenItemReg: TJvInspectorRegister = nil;
   GlobalVarItemReg: TJvInspectorRegister = nil;
@@ -2356,7 +2352,6 @@ end;
 function TInspReg.ApplicationDeactivate(var Msg: TMessage): Boolean;
 var
   I: Integer;
-
 begin
   Result := False;
   if (Msg.Msg = CM_ACTIVATE) or (Msg.Msg = CM_DEACTIVATE) then
@@ -2365,8 +2360,6 @@ begin
       if FInspectors[I].HandleAllocated then
         PostMessage(FInspectors[I].Handle, Msg.Msg, 0, 0);
 end;
-
-
 
 function TInspReg.IndexOf(const Inspector: TJvCustomInspector): Integer;
 begin
@@ -2558,8 +2551,6 @@ begin
   if (csDesigning in ComponentState) then
     AddComponent(Self, 'Test category for Inspector', True);
 end;
-
-
 
 function TJvCustomInspector.CalcImageHeight: Integer;
 var
@@ -3584,8 +3575,6 @@ begin
     Value := W - 2 * ItemHeight;
   if Value < (2 * ItemHeight) then
     Value := 2 * ItemHeight;
-  {  if DividerAbs <> Value then
-    begin}
   if RelativeDivider then
   begin
     if UseBands then
@@ -3600,7 +3589,6 @@ begin
     FDivider := Value;
   if HandleAllocated then
     UpdateScrollBars;
-  //  end;
 end;
 
 procedure TJvCustomInspector.SetExpandButton(const Value: TBitmap);
@@ -3914,14 +3902,12 @@ begin
   Result := RectWidth(ViewRect);
 end;
 
-
 procedure TJvCustomInspector.GetDlgCode(var Code: TDlgCodes);
 begin
   Code := [dcWantArrows];
   if WantTabs then
     Include(Code, dcWantTab);
 end;
-
 
 procedure TJvCustomInspector.FocusSet(PrevWnd: THandle);
 begin
@@ -3934,8 +3920,6 @@ end;
 procedure TJvCustomInspector.FocusKilled(NextWnd: THandle);
 begin
   inherited FocusKilled(NextWnd);
-{  if (Selected <> nil) and Selected.Editing and (Selected.EditCtrl.Handle <> NextWnd) then
-    Selected.EditCtrl.Invalidate;}
   Invalidate;
 end;
 
@@ -4007,8 +3991,6 @@ begin
   if Delta <> 0 then
     TopIndex := YToIdx(IdxToY(TopIndex) + Delta);
 end;
-
-
 
 function TJvCustomInspector.YToIdx(const Y: Integer): Integer;
 var
@@ -4188,8 +4170,6 @@ procedure TJvCustomInspector.ShowScrollBars(Bar: Integer; Visible: Boolean);
 begin
   ShowScrollBar(Handle, Bar, Visible);
 end;
-
-
 
 //=== { TJvInspectorPainter } ================================================
 
@@ -4427,8 +4407,7 @@ end;
 
 procedure TJvInspectorPainter.InitializeColors;
 begin
-  SetDefaultProp(Self,
-    ['BackgroundColor', 'DividerColor', 'CategoryColor', 'SelectedColor']);
+  SetDefaultProp(Self, ['BackgroundColor', 'DividerColor', 'CategoryColor', 'SelectedColor']);
 end;
 
 function TJvInspectorPainter.Loading: Boolean;
@@ -4969,9 +4948,7 @@ end;
 procedure TJvInspectorBorlandPainter.InitializeColors;
 begin
   inherited InitializeColors;
-
   SetDefaultProp(Self, 'DividerLightColor');
-
   ValueFont.Color := clNavy;
 end;
 
@@ -5323,16 +5300,12 @@ type
     property OnKillFocus: TNotifyEvent read FOnKillFocus write FOnKillFocus;
   end;
 
-
 procedure TJvInspectorMemo.WMKillFocus(var Msg: TWMKillFocus);
 begin
   inherited;
   if Assigned(FOnKillFocus) then
     FOnKillFocus(Self);
 end;
-
-
-
 
 //=== { TJvInspectorEdit } ===================================================
 
@@ -5346,16 +5319,12 @@ type
     property OnKillFocus: TNotifyEvent read FOnKillFocus write FOnKillFocus;
   end;
 
-
 procedure TJvInspectorEdit.WMKillFocus(var Msg: TWMKillFocus);
 begin
   inherited;
   if Assigned(FOnKillFocus) then
     FOnKillFocus(Self);
 end;
-
-
-
 
 //=== { TJvCustomInspectorItem } =============================================
 
@@ -5501,6 +5470,8 @@ end;
 procedure TJvCustomInspectorItem.ButtonClick(Sender: TObject);
 begin
   Edit;
+  if EditCtrl <> nil then
+    EditCtrl.Text := DisplayValue;
 end;
 
 function TJvCustomInspectorItem.CanEdit: Boolean;
@@ -5587,8 +5558,6 @@ procedure TJvCustomInspectorItem.DoDrawListItem(Control: TWinControl;
 begin
   DoDefaultDrawListItem(TListBox(Control).Canvas, Rect, TListBox(Control).Items[Index]);
 end;
-
-
 
 procedure TJvCustomInspectorItem.DoDropDownKeys(var Key: Word; Shift: TShiftState);
 begin
@@ -5729,25 +5698,15 @@ begin
   // To use it, set iifEdit in one of your item's Flags fields,
   // and then catch the JvInspector.OnItemEdit event.
   //
-  if Assigned(FInspector) then
-    if Assigned(FInspector.FOnItemEdit) then
-    begin
-      if Assigned(FEditCtrl) and (FEditCtrl.Text <> FData.AsString) then
-      begin
-        { Modified to something more useful, with no side effects:
-        FEditChanged := True;
-        //NEW: make sure latest changes in the EditControl are updated before we invoke the edit button.
-        // This is VCL-only because right now it looks like a post message is the primary way the Edit button
-        // notifies the inspector of a new edit value being accepted.
-        OnInternalEditControlExiting(FInspector);
-        Application.ProcessMessages; // Ugly, but necessary. }
-        Apply;
-      end;
-      DisplayStr := FData.AsString;
-      FInspector.FOnItemEdit(FInspector, Self, DisplayStr);
-      if DisplayStr <> Self.FData.AsString then
-        FData.SetAsString(DisplayStr); // modified!
-    end;
+  if Assigned(FInspector) and Assigned(FInspector.FOnItemEdit) then
+  begin
+    if Assigned(FEditCtrl) and (FEditCtrl.Text <> FData.AsString) then
+      Apply;
+    DisplayStr := FData.AsString;
+    FInspector.FOnItemEdit(FInspector, Self, DisplayStr);
+    if DisplayStr <> Self.FData.AsString then
+      FData.SetAsString(DisplayStr); // modified!
+  end;
 end;
 
 procedure TJvCustomInspectorItem.EditChange(Sender: TObject);
@@ -5762,17 +5721,26 @@ end;
 procedure TJvCustomInspectorItem.EditFocusLost(Sender: TObject);
 begin
   if Inspector.HandleAllocated and not Inspector.Focused then
+  begin
+    // Mantis 3391: When the focus is lost, the editing is finished, so that
+    // moving to another item or another control always updates the value.
+    try
+      Apply;
+    except
+      Application.HandleException(Self);
+      if (EditCtrl <> nil) and EditCtrl.CanFocus then
+        EditCtrl.SetFocus;
+    end;
+    InvalidateItem;
+
     Inspector.Invalidate;
+  end;
 end;
 
 procedure TJvCustomInspectorItem.EditKillFocus(Sender: TObject);
 begin
   if DroppedDown then
     CloseUp(False);
-
-  // Mantis 3391: When the focus is lost, the editing is finished, so that
-  // moving to another item or another control always updates the value.
-  DoneEdit;
 end;
 
 procedure TJvCustomInspectorItem.AutoCompleteStart(Sender: TObject);
@@ -5884,7 +5852,6 @@ begin
   Inspector.MouseUp(Button, Shift, InspCoord.X, InspCoord.Y);
 end;
 
-
 procedure TJvCustomInspectorItem.Edit_WndProc(var Msg: TMessage);
 var
   ExecInherited: Boolean;
@@ -5965,8 +5932,6 @@ begin
       end;
   end;
 end;
-
-
 
 function TJvCustomInspectorItem.GetAutoUpdate: Boolean;
 begin
@@ -6062,13 +6027,10 @@ begin
   Result := FDroppedDown;
 end;
 
-
 function TJvCustomInspectorItem.GetEditCtrl: TCustomEdit;
 begin
   Result := FEditCtrl;
 end;
-
-
 
 function TJvCustomInspectorItem.GetEditCtrlDestroying: Boolean;
 begin
@@ -6359,8 +6321,7 @@ begin
   end;
 end;
 
-procedure TJvCustomInspectorItem.MouseUp(Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+procedure TJvCustomInspectorItem.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   WasPressed: Boolean;
 begin
@@ -6455,10 +6416,7 @@ procedure TJvCustomInspectorItem.SetDisplayValue(const Value: string);
 begin
 end;
 
-
 procedure TJvCustomInspectorItem.SetEditCtrl(const Value: TCustomEdit);
-
-
 begin
   if EditCtrl <> Value then
   begin
@@ -6466,7 +6424,7 @@ begin
     begin
       FEditCtrlDestroying := True;
       try
-        if Inspector.CanFocus and EditCtrl.Focused then
+        if Inspector.CanFocus and (EditCtrl.Focused or Inspector.Focused) then // Without "Inspector.Focused" every second click looses the focus
           Inspector.SetFocus;
 
         // Following Mantis 3391, setting the Focus may set EditCtrl to nil
@@ -7014,32 +6972,6 @@ begin
     Dec(Result);
 end;
 
-// PROTECTED
-//NEW: prevent lost data entry if focus shifts away, and that change of focus causes a refresh of the inspector!
-
-{.$IFDEF VCL}
-{ marcelb: removed:
-procedure TJvCustomInspectorItem.OnInternalEditControlExiting(Sender: TObject);
-var
- Edit: TCustomEdit;
- Msg: TMessage;
-begin
- Edit := GetEditCtrl;
- if not Assigned(Edit) then
-   Exit;
- // Write change, if any. This is a first stab:
- if FEditChanged then
- begin
-    FEditChanged := False;
-    Msg.Msg := WM_KEYDOWN;
-    Msg.LParam := 0;
-    Msg.WParam := VK_DOWN;
-    PostMessage(Inspector.Handle, Msg.Msg, Msg.WParam, Msg.LParam);
-    Msg.Result := 1;
- end;
-end; }
-{.$ENDIF VCL}
-
 //=== { TJvInspectorListBox } ================================================
 
 type
@@ -7119,7 +7051,6 @@ begin
   begin
     if Multiline then
     begin
-      //Memo := TMemo.Create(Inspector);
       Memo := TJvInspectorMemo.Create(Inspector);
       Memo.OnContextPopup := Inspector.FOnEditorContextPopup;
       Memo.OnKeyUp := EditKeyUp;
@@ -7129,13 +7060,6 @@ begin
       Memo.ScrollBars := ssVertical;
       Memo.OnExit := EditFocusLost;
       TJvInspectorMemo(Memo).OnKillFocus := EditKillFocus;
-      {.$IFDEF VCL}
-      { marcelb: removed this stuff; it's not needed at all (especially with the new SaveValues
-        method) and it has the weird side effect of selecting the next item.
-      //NEW: prevent lost data entry if focus shifts away, and that change of focus causes a refresh of the inspector!
-      Memo.OnExit := OnInternalEditControlExiting; // NEW. VCL only.
-      FEditChanged := False; }
-      {.$ENDIF VCL}
       SetEditCtrl(Memo);
 
      if Assigned(Inspector.BeforeEdit) then
@@ -7143,20 +7067,12 @@ begin
     end
     else
     begin
-      //Edit := TEdit.Create(Inspector);
       Edit := TJvInspectorEdit.Create(Inspector);
       Edit.OnContextPopup := Inspector.FOnEditorContextPopup;
       Edit.OnKeyUp := EditKeyUp;
       Edit.OnKeyPress := EditKeyPress;
       Edit.OnExit := EditFocusLost;
       TJvInspectorEdit(Edit).OnKillFocus := EditKillFocus;
-      { marcelb: removed this stuff; it's not needed at all (especially with the new SaveValues
-        method) and it has the weird side effect of selecting the next item.
-      //NEW: prevent lost data entry if focus shifts away, and that change of focus causes a refresh of the inspector!
-      //NEW: prevent lost data entry if focus shifts away, and that change of focus causes a refresh of the inspector!
-      // VCL only, requires PostMessage
-      Edit.OnExit := OnInternalEditControlExiting;
-      FEditChanged := False;}
       SetEditCtrl(Edit);
 
       if Assigned(Inspector.BeforeEdit) then
@@ -7175,7 +7091,6 @@ begin
     TCustomEditAccessProtected(EditCtrl).AutoSize := False;
     if iifValueList in Flags then
     begin
-//      FListBox := TJvPopupListBox.Create(Inspector);
       FListBox := TJvInspectorListBox.Create(Inspector);
       ListBox.Parent := EditCtrl;
       ListBox.Visible := False;
@@ -7562,10 +7477,7 @@ begin
   end;
 end;
 
-
 function TJvInspectorCustomCompoundItem.GetEditCtrl: TCustomEdit;
-
-
 begin
   if SelectedColumn <> nil then
     Result := SelectedColumn.Item.EditCtrl
@@ -8583,7 +8495,7 @@ end;
 
 procedure TJvInspectorClassItem.SetDisplayValue(const Value: string);
 var
-  SL: TStringList;
+  SL: TStrings;
   I: Integer;
 begin
   if Value = '' then
@@ -10306,8 +10218,8 @@ var
 begin
   for I := High(FItems) downto Low(FItems) do
     Items[I].Free;
-  if FRegistered then
-    DataRegister.Remove(Self);
+  if FRegistered and (GlobalDataRegister <> nil) then
+    DataRegister().Remove(Self);
   inherited BeforeDestruction;
 end;
 
@@ -12510,4 +12422,3 @@ finalization
   {$ENDIF UNITVERSIONING}
 
 end.
-
