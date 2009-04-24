@@ -84,7 +84,7 @@ begin
   param := O['library'];
   if param <> nil then
     FLibrary.Load(string(param.AsString)) else
-    FLibrary.Load(GDS32DLL);
+    FLibrary.Load(GetClientLibrary);
 
   option := 'sql_dialect=3';
 
@@ -98,11 +98,9 @@ begin
 
   param := O['characterset'];
   if param <> nil then
-  begin
-    FCharacterSet := StrToCharacterSet(AnsiString(param.AsString));
-    option := option + ';lc_ctype=' + string(CharacterSetStr[FCharacterSet]);
-  end else
-    FCharacterSet := csNONE;
+    FCharacterSet := StrToCharacterSet(AnsiString(param.AsString)) else
+    FCharacterSet := GetSystemCharacterset;
+  option := option + ';lc_ctype=' + string(CharacterSetStr[FCharacterSet]);
 
   param := O['databasename'];
   if param <> nil then
@@ -224,7 +222,13 @@ var
         case FSQLResult.FieldType[i] of
           uftChar, uftVarchar, uftCstring: Result.AsArray.Add(TSuperObject.Create(FSQLResult.AsString[i]));
           uftSmallint, uftInteger, uftInt64: Result.AsArray.Add(TSuperObject.Create(FSQLResult.AsInteger[i]));
-          uftNumeric, uftFloat, uftDoublePrecision: Result.AsArray.Add(TSuperObject.Create(FSQLResult.AsDouble[i]));
+          uftNumeric:
+            begin
+              if FSQLResult.SQLScale[i] >= -4 then
+                Result.AsArray.Add(TSuperObject.CreateCurrency(FSQLResult.AsCurrency[i])) else
+                Result.AsArray.Add(TSuperObject.Create(FSQLResult.AsDouble[i]));
+            end;
+          uftFloat, uftDoublePrecision: Result.AsArray.Add(TSuperObject.Create(FSQLResult.AsDouble[i]));
           uftBlob, uftBlobId:
             begin
               if FSQLResult.Data^.sqlvar[i].SqlSubType = 1 then
@@ -254,7 +258,13 @@ var
         case FSQLResult.FieldType[i] of
           uftChar, uftVarchar, uftCstring: Result[FSQLResult.AliasName[i]] := TSuperObject.Create(FSQLResult.AsString[i]);
           uftSmallint, uftInteger, uftInt64: Result[FSQLResult.AliasName[i]] := TSuperObject.Create(FSQLResult.AsInteger[i]);
-          uftNumeric, uftFloat, uftDoublePrecision: Result[FSQLResult.AliasName[i]] := TSuperObject.Create(FSQLResult.AsDouble[i]);
+          uftNumeric:
+            begin
+              if FSQLResult.SQLScale[i] >= -4 then
+                Result[FSQLResult.AliasName[i]] := TSuperObject.CreateCurrency(FSQLResult.AsCurrency[i]) else
+                Result[FSQLResult.AliasName[i]] := TSuperObject.Create(FSQLResult.AsDouble[i]);
+            end;
+          uftFloat, uftDoublePrecision: Result[FSQLResult.AliasName[i]] := TSuperObject.Create(FSQLResult.AsDouble[i]);
           uftBlob, uftBlobId:
             begin
               if FSQLResult.Data^.sqlvar[i].SqlSubType = 1 then
@@ -286,7 +296,12 @@ var
     if ObjectIsType(value, stNull) then
       FSQLParams.IsNull[index] := true else
       case FSQLParams.FieldType[index] of
-        uftNumeric: FSQLParams.AsDouble[index] := value.AsDouble;
+        uftNumeric:
+          begin
+            if ObjectIsType(value, stCurrency) then
+              FSQLParams.AsCurrency[index] := value.AsCurrency else
+              FSQLParams.AsDouble[index] := value.AsDouble;
+          end;
         uftChar, uftVarchar, uftCstring: FSQLParams.AsString[index] := value.AsString;
         uftSmallint: FSQLParams.AsSmallint[index] := value.AsInteger;
         uftInteger: FSQLParams.AsInteger[index] := value.AsInteger;
@@ -346,11 +361,11 @@ var
       end else
       begin
         DSQLExecute(FTrHandle, FStHandle, 3, FSQLParams);
-        Result := nil;
+        Result := TSuperObject.Create( DSQLInfoRowsAffected(FStHandle, FStatementType));
       end;
   end;
 var
-  j: integer;
+  j, affected: integer;
   f: TSuperObjectIter;
 begin
   ctx := context;
@@ -383,8 +398,10 @@ begin
                 Result.AsArray.Add(Execute(O[j], ctx));
             end else
             begin
+              affected := 0;
               for j := 0 to Length - 1 do
-                Execute(O[j], ctx);
+                inc(affected, Execute(O[j], ctx).AsInteger);
+              Result := TSuperObject.Create(affected);
             end;
         end;
       end else
