@@ -36,9 +36,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-04-06 07:33:27 +0200 (lun., 06 avr. 2009)                          $ }
+{ Revision:      $Rev:: 2727                                                                     $ }
+{ Author:        $Author:: rrossmair                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -120,7 +120,7 @@ function SecondOfTime(const DateTime: TDateTime): Integer;
 
 { ISO 8601 support }
 
-function GetISOYearNumberOfDays(const Year: Word): Word;
+function GetISOYearNumberOfWeeks(const Year: Word): Word;
 function IsISOLongYear(const Year: Word): Boolean; overload;
 function IsISOLongYear(const DateTime: TDateTime): Boolean; overload;
 function ISODayOfWeek(const DateTime: TDateTime): Word;
@@ -242,8 +242,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclDateTime.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
+    Revision: '$Revision: 2727 $';
+    Date: '$Date: 2009-04-06 07:33:27 +0200 (lun., 06 avr. 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -512,7 +512,7 @@ begin
   Result := (IsLeapYear(Year) and ((TmpWeekday = 3) or (TmpWeekday = 4))) or (TmpWeekday = 4);
 end;
 
-function GetISOYearNumberOfDays(const Year: Word): Word;
+function GetISOYearNumberOfWeeks(const Year: Word): Word;
 begin
   Result := 52;
   if IsISOLongYear(Year) then
@@ -525,9 +525,9 @@ end;
 
 function ISOWeekNumber(DateTime: TDateTime; var YearOfWeekNumber, WeekDay: Integer): Integer;
 var
- TmpYear: Integer;
- January4th: TDateTime;
- FirstMonday: TDateTime;
+  TmpYear: Integer;
+  January4th: TDateTime;
+  FirstMonday: TDateTime;
 begin
   // Applying the rule: The first calender week is the week that includes January, 4th
   TmpYear := YearOfDate(DateTime);
@@ -543,7 +543,7 @@ begin
   // If our date is < FirstMonday we are in the last week of the previous year
   if DateTime < FirstMonday then
   begin
-    Result := GetISOYearNumberOfDays(TmpYear - 1);
+    Result := GetISOYearNumberOfWeeks(TmpYear - 1);
     YearOfWeekNumber := TmpYear - 1;
     Exit;
   end
@@ -553,8 +553,8 @@ begin
     Result := (Trunc(DateTime - FirstMonday) div 7) + 1;
   end;
 
-  if Result > GetISOYearNumberOfDays(YearOfDate(DateTime)) then
-    Result := GetISOYearNumberOfDays(YearOfDate(DateTime));
+  if Result > GetISOYearNumberOfWeeks(YearOfDate(DateTime)) then
+    Result := GetISOYearNumberOfWeeks(YearOfDate(DateTime));
 end;
 
 function ISOWeekNumber(DateTime: TDateTime; var YearOfWeekNumber: Integer): Integer;
@@ -573,8 +573,8 @@ end;
 
 function ISOWeekToDateTime(const Year, Week, Day: Integer): TDateTime;
 var
- January4th: TDateTime;
- FirstMonday: TDateTime;
+  January4th: TDateTime;
+  FirstMonday: TDateTime;
 begin
   January4th := DayOfTheYearToDateTime(Year, 4);
   FirstMonday := January4th + 1 - ISODayOfWeek(January4th);

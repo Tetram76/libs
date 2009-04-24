@@ -17,12 +17,13 @@
 {                                                                                                  }
 { Contributors:                                                                                    }
 {   Florent Ouchet (outchy)                                                                        }
+{   Uwe Schuster (uschuster)                                                                       }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-27 12:26:07 +0200 (sam., 27 sept. 2008)                    $ }
-{ Revision:      $Rev:: 2498                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-03-22 23:10:17 +0100 (dim., 22 mars 2009)                     $ }
+{ Revision:      $Rev:: 2703                                                                     $ }
+{ Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -39,6 +40,7 @@ uses
   JclBase;
 
 //=== JclOtaUtils.pas ========================================================
+{ TODO : consider replacing "Borland X Services" by "IDE X Services"}
 resourcestring
   RsENoOTAServices = 'Unable to get Borland IDE Services';
   RsENoNTAServices = 'Unable to get Borland NTA Services';
@@ -61,7 +63,7 @@ resourcestring
   RsAboutDialogTitle = 'JEDI Code Library';
   RsAboutCopyright = 'Copyright the JCL development team';
   RsAboutTitle = 'JEDI Code Library';
-  RsAboutDescription = 'JEDI Code Library http://jcl.sf.net' + NativeLineBreak +
+  RsAboutDescription = 'JEDI Code Library http://jcl.delphi-jedi.org/' + NativeLineBreak +
                        'The JCL is a member of the JEDI Project http://www.delphi-jedi.org' + NativeLineBreak +
                        'Covered under the Mozilla Public License v1.1 (MPL 1.1)' + NativeLineBreak +
                        'License available at http://www.mozilla.org/MPL/MPL-1.1.html';
@@ -87,7 +89,8 @@ resourcestring
                        ' - jedi newsgroups,' + NativeLineBreak +
                        ' - mailing list.' + NativeLineBreak +
                        'Details and guidelines for these tools are available at:';
-  RsReportURL = 'http://homepages.borland.com/jedi/jcl/page24.html';
+  { TODO : Should this link lead directly to the issue tracker at http://issuetracker.delphi-jedi.org/ ?}
+  RsReportURL = 'http://jcl.delphi-jedi.org/page24.html';
   RsReportCaption = 'JCL - Feedback&&Support - Report a bug page';
   RsDetailsExceptionName = 'Exception class name: ';
   RsDetailsExceptionMessage = 'Exception message: ';
@@ -113,6 +116,7 @@ resourcestring
   RsCancel = '&Cancel';
   RsSelectPage = 'Select a page';
   RsHomePage = '&JCL Home page';
+  RsHomePageURL = 'http://jcl.delphi-jedi.org/';
 
 //=== JclOtaWizardForm.pas ===================================================
 resourcestring
@@ -368,8 +372,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaResources.pas $';
-    Revision: '$Revision: 2498 $';
-    Date: '$Date: 2008-09-27 12:26:07 +0200 (sam., 27 sept. 2008) $';
+    Revision: '$Revision: 2703 $';
+    Date: '$Date: 2009-03-22 23:10:17 +0100 (dim., 22 mars 2009) $';
     LogPath: 'JCL\experts\common'
     );
 {$ENDIF UNITVERSIONING}

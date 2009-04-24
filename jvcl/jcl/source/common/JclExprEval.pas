@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-04-19 18:04:07 +0200 (dim., 19 avr. 2009)                          $ }
+{ Revision:      $Rev:: 2739                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -896,8 +896,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclExprEval.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 2739 $';
+    Date: '$Date: 2009-04-19 18:04:07 +0200 (dim., 19 avr. 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -3709,15 +3709,21 @@ begin
 end;
 
 function TExprUnaryFuncSym.Compile: TExprNode;
+var
+  X: TExprNode;
 begin
-  Result := NodeFactory.CallUnaryFunc(FFunc, CompileFirstArg);
+  X := CompileFirstArg;
   EndArgs;
+  Result := NodeFactory.CallUnaryFunc(FFunc, X);
 end;
 
 function TExprUnaryFuncSym.Evaluate: TFloat;
+var
+  X: TFloat;
 begin
-  Result := FFunc(EvalFirstArg);
+  X := EvalFirstArg;
   EndArgs;
+  Result := FFunc(X);
 end;
 
 //=== { TExprUnary32FuncSym } ================================================
@@ -3730,15 +3736,21 @@ begin
 end;
 
 function TExprUnary32FuncSym.Compile: TExprNode;
+var
+  X: TExprNode;
 begin
-  Result := NodeFactory.CallUnary32Func(FFunc, CompileFirstArg);
+  X := CompileFirstArg;
   EndArgs;
+  Result := NodeFactory.CallUnary32Func(FFunc, X);
 end;
 
 function TExprUnary32FuncSym.Evaluate: TFloat;
+var
+  X: TFloat;
 begin
-  Result := FFunc(EvalFirstArg);
+  X := EvalFirstArg;
   EndArgs;
+  Result := FFunc(X);
 end;
 
 //=== { TExprUnary64FuncSym } ================================================
@@ -3751,15 +3763,21 @@ begin
 end;
 
 function TExprUnary64FuncSym.Compile: TExprNode;
+var
+  X: TExprNode;
 begin
-  Result := NodeFactory.CallUnary64Func(FFunc, CompileFirstArg);
+  X := CompileFirstArg;
   EndArgs;
+  Result := NodeFactory.CallUnary64Func(FFunc, X);
 end;
 
 function TExprUnary64FuncSym.Evaluate: TFloat;
+var
+  X: TFloat;
 begin
-  Result := FFunc(EvalFirstArg);
+  X := EvalFirstArg;
   EndArgs;
+  Result := FFunc(X);
 end;
 
 //=== { TExprUnary80FuncSym } ================================================
@@ -3772,15 +3790,21 @@ begin
 end;
 
 function TExprUnary80FuncSym.Compile: TExprNode;
+var
+  X: TExprNode;
 begin
-  Result := NodeFactory.CallUnary80Func(FFunc, CompileFirstArg);
+  X := CompileFirstArg;
   EndArgs;
+  Result := NodeFactory.CallUnary80Func(FFunc, X);
 end;
 
 function TExprUnary80FuncSym.Evaluate: TFloat;
+var
+  X: TFloat;
 begin
-  Result := FFunc(EvalFirstArg);
+  X := EvalFirstArg;
   EndArgs;
+  Result := FFunc(X);
 end;
 
 //=== { TExprBinaryFuncSym } =================================================
@@ -3811,8 +3835,8 @@ var
 begin
   X := EvalFirstArg;
   Y := EvalNextArg;
-  Result := FFunc(X, Y);
   EndArgs;
+  Result := FFunc(X, Y);
 end;
 
 //=== { TExprBinary32FuncSym } ===============================================
@@ -4005,10 +4029,14 @@ begin
 end;
 
 function TExprTernary80FuncSym.Compile: TExprNode;
+var
+  X, Y, Z: TExprNode;
 begin
-  Result := NodeFactory.CallTernary80Func(FFunc, CompileFirstArg,
-    CompileNextArg, CompileNextArg);
+  X := CompileFirstArg;
+  Y := CompileNextArg;
+  Z := CompileNextArg;
   EndArgs;
+  Result := NodeFactory.CallTernary80Func(FFunc, X, Y, Z);
 end;
 
 function TExprTernary80FuncSym.Evaluate: TFloat;

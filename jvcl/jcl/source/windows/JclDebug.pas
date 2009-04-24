@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-12-22 22:06:21 +0100 (lun., 22 déc. 2008)                         $ }
-{ Revision:      $Rev:: 2576                                                                     $ }
+{ Last modified: $Date:: 2009-03-30 10:58:01 +0200 (lun., 30 mars 2009)                          $ }
+{ Revision:      $Rev:: 2711                                                                     $ }
 { Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -781,7 +781,7 @@ const
 type
   TJclStackTrackingOption =
     (stStack, stExceptFrame, stRawMode, stAllModules, stStaticModuleList,
-     stDelayedTrace, stTraceAllExceptions, stMainThreadOnly);
+     stDelayedTrace, stTraceAllExceptions, stMainThreadOnly, stDisableIfDebuggerAttached);
   TJclStackTrackingOptions = set of TJclStackTrackingOption;
 
 {$IFDEF KEEP_DEPRECATED}
@@ -808,8 +808,8 @@ function IsIgnoredException(const ExceptionClass: TClass): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 2576 $';
-    Date: '$Date: 2008-12-22 22:06:21 +0100 (lun., 22 déc. 2008) $';
+    Revision: '$Revision: 2711 $';
+    Date: '$Date: 2009-03-30 10:58:01 +0200 (lun., 30 mars 2009) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -4834,8 +4834,9 @@ end;
 procedure DoExceptNotify(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean;
   BaseOfStack: Pointer);
 begin
-  if TrackingActive and Assigned(ExceptObj) and (not IsIgnoredException(ExceptObj.ClassType)) and
-     (not (stMainThreadOnly in JclStackTrackingOptions) or (GetCurrentThreadId = MainThreadID)) then
+  if TrackingActive and (not (stDisableIfDebuggerAttached in JclStackTrackingOptions) or (not IsDebuggerAttached)) and
+    Assigned(ExceptObj) and (not IsIgnoredException(ExceptObj.ClassType)) and
+    (not (stMainThreadOnly in JclStackTrackingOptions) or (GetCurrentThreadId = MainThreadID)) then
   begin
     if stStack in JclStackTrackingOptions then
       DoExceptionStackTrace(ExceptObj, ExceptAddr, OSException, BaseOfStack);

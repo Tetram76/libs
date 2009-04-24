@@ -46,8 +46,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-15 15:02:23 +0100 (dim., 15 mars 2009)                          $ }
-{ Revision:      $Rev:: 2689                                                                     $ }
+{ Last modified: $Date:: 2009-03-27 16:54:44 +0100 (ven., 27 mars 2009)                          $ }
+{ Revision:      $Rev:: 2707                                                                     $ }
 { Author:        $Author:: obones                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -101,6 +101,8 @@ type
     function GetValueFromIndex(Index: Integer): AnsiString;
     procedure SetValueFromIndex(Index: Integer; const Value: AnsiString);
   protected
+    procedure AssignTo(Dest: TPersistent); override;
+
     procedure Error(const Msg: string; Data: Integer); overload;
     procedure Error(Msg: PResStringRec; Data: Integer); overload;
 
@@ -510,8 +512,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAnsiStrings.pas $';
-    Revision: '$Revision: 2689 $';
-    Date: '$Date: 2009-03-15 15:02:23 +0100 (dim., 15 mars 2009) $';
+    Revision: '$Revision: 2707 $';
+    Date: '$Date: 2009-03-27 16:54:44 +0100 (ven., 27 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -878,6 +880,27 @@ begin
     Exit;
   end;
   inherited Assign(Source);
+end;
+
+procedure TJclAnsiStrings.AssignTo(Dest: TPersistent);
+var
+  StringsDest: TStrings;
+  I: Integer;
+begin
+  if Dest is TStrings then
+  begin
+    StringsDest := TStrings(Dest);
+    StringsDest.BeginUpdate;
+    try
+      StringsDest.Clear;
+      StringsDest.Delimiter := Char(Delimiter);
+      StringsDest.NameValueSeparator := Char(NameValueSeparator);
+      for I := 0 to Count - 1 do
+        StringsDest.AddObject(string(Strings[I]), Objects[I]);
+    finally
+      StringsDest.EndUpdate;
+    end;
+  end;
 end;
 
 function TJclAnsiStrings.Add(const S: AnsiString): Integer;

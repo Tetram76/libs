@@ -29,9 +29,9 @@
 {                                                                                                  }
 { Important notes for C#Builder 1 and Delphi 8:                                                    }
 { These products were not shipped with their native compilers, but the toolkit to build design     }
-{ packages is available in codecentral (http://codecentral.borland.com):                           }
-{  - "IDE Integration pack for C#Builder 1.0" http://codecentral.borland.com/Item.aspx?ID=21334    }
-{  - "IDE Integration pack for Delphi 8" http://codecentral.borland.com/Item.aspx?ID=21333         }
+{ packages is available in codecentral (http://cc.embarcadero.com):                                }
+{  - "IDE Integration pack for C#Builder 1.0" http://cc.embarcadero.com/Item/21334                 }
+{  - "IDE Integration pack for Delphi 8" http://cc.embarcadero.com/Item/21333                      }
 { It's recommended to extract zip files using the standard pattern of Delphi directories:          }
 {  - Binary files go to \bin (DCC32.EXE, RLINK32.DLL and lnkdfm7*.dll)                             }
 {  - Compiler files go to \lib (designide.dcp, rtl.dcp, SysInit.dcu, vcl.dcp, vclactnband.dcp,     }
@@ -47,9 +47,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-16 18:28:54 +0100 (lun., 16 mars 2009)                         $ }
-{ Revision:      $Rev:: 2693                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2009-03-31 21:44:27 +0200 (mar., 31 mars 2009)                         $ }
+{ Revision:      $Rev:: 2713                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -913,8 +913,8 @@ procedure GetBPKFileInfo(const BPKFileName: string; out RunOnly: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBorlandTools.pas $';
-    Revision: '$Revision: 2693 $';
-    Date: '$Date: 2009-03-16 18:28:54 +0100 (lun., 16 mars 2009) $';
+    Revision: '$Revision: 2713 $';
+    Date: '$Date: 2009-03-31 21:44:27 +0200 (mar., 31 mars 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -2552,7 +2552,7 @@ type
           if Assigned(PersonalityNode) then
             PersonalityName := PersonalityNode.Value;
         end;
-        if AnsiSameText(PersonalityName, DProjDelphiPersonalityValue) or
+        if StrHasPrefix(PersonalityName, [DProjDelphiPersonalityValue]) or
           AnsiSameText(PersonalityName, DProjDelphiDotNetPersonalityValue) then
         begin
           ProjectConfiguration := '';
@@ -2569,7 +2569,10 @@ type
                     (AnsiPos(Format('%s|%s', [ProjectConfiguration, ProjectPlatform]), ConditionProperty.Value) > 0))
                    or
                    ((Version <> '') and (ProjectConfiguration <> '') and
-                    (AnsiPos(ProjectConfiguration, ConditionProperty.Value) > 0)) then
+                    (AnsiPos(ProjectConfiguration, ConditionProperty.Value) > 0))
+                   or
+                   ((Version <> '') and (ProjectConfiguration <> '') and
+                    (AnsiPos('$(Base)', ConditionProperty.Value) > 0)) then
                 begin
                   // this is the active configuration, check for overrides
                   ChildNode := PropertyGroupNode.Items.ItemNamed[DProjUsePackageNodeName];
@@ -5387,7 +5390,7 @@ begin
   try
     EnvOptionsFileName := GetMsBuildEnvOptionsFileName;
     EnvOptionsFile.LoadFromFile(EnvOptionsFileName);
-    EnvOptionsFile.Options := EnvOptionsFile.Options + [sxoAutoCreate];
+    EnvOptionsFile.Options := EnvOptionsFile.Options + [sxoAutoCreate,sxoDoNotSaveProlog];
 
     PropertyGroupNode := EnvOptionsFile.Root.Items.ItemNamed[MsBuildPropertyGroupNodeName];
     PropertyNode := PropertyGroupNode.Items.ItemNamed[OptionName];
