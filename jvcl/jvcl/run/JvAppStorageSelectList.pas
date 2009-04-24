@@ -16,7 +16,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorageSelectList.pas 12141 2009-01-10 23:19:12Z jfudickar $
+// $Id: JvAppStorageSelectList.pas 12261 2009-04-01 21:46:18Z jfudickar $
 
 unit JvAppStorageSelectList;
 
@@ -95,8 +95,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorageSelectList.pas $';
-    Revision: '$Revision: 12141 $';
-    Date: '$Date: 2009-01-11 00:19:12 +0100 (dim., 11 janv. 2009) $';
+    Revision: '$Revision: 12261 $';
+    Date: '$Date: 2009-04-01 23:46:18 +0200 (mer., 01 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -300,7 +300,7 @@ begin
   if Supports(ListBox, IJvDynControlDblClick, ITmpDblClick) then  // ListBox instead of ListBox.ClassType and ITmpControl are needed here for D5/C5 support (obones)
     ITmpDblClick.ControlSetOnDblClick(DialogOnOkButtonClick);
 
-  ComboBoxPanel.Height := ComboBox.Height + 10;
+  ComboBoxPanel.Height := ComboBox.Height + 12;
   ListBox.Align := alClient;
   ComboBox.Align := alClient;
 

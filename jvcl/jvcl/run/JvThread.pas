@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThread.pas 11813 2008-06-09 23:16:17Z jfudickar $
+// $Id: JvThread.pas 12262 2009-04-01 21:48:36Z jfudickar $
 
 unit JvThread;
 
@@ -305,8 +305,8 @@ procedure SynchronizeParams(Method: TJvNotifyParamsEvent; P: Pointer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThread.pas $';
-    Revision: '$Revision: 11813 $';
-    Date: '$Date: 2008-06-10 01:16:17 +0200 (mar., 10 juin 2008) $';
+    Revision: '$Revision: 12262 $';
+    Date: '$Date: 2009-04-01 23:48:36 +0200 (mer., 01 avr. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -407,6 +407,7 @@ end;
 
 procedure TJvCustomThreadDialogForm.CloseThreadForm;
 begin
+  Hide;
   if fsModal in FormState then
     ModalResult := mrCancel
   else
@@ -447,18 +448,12 @@ begin
   if not (csDestroying in ComponentState) then
   begin
     if not Assigned(ConnectedThread) then
-    begin
-      Hide; // no connected component
-      CloseThreadForm;
-    end
+      CloseThreadForm
     else  // connected component present
       if ConnectedThread.Terminated or not ConnectedThread.OneThreadIsRunning then
       begin
         if FormIsShown then
-        begin
-          Hide;
           CloseThreadForm;
-        end;
       end
       else // not terminated
       begin

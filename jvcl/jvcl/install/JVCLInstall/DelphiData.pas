@@ -22,7 +22,7 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: DelphiData.pas 12050 2008-11-18 16:27:32Z ahuser $
+// $Id: DelphiData.pas 12278 2009-04-19 09:54:46Z outchy $
 
 unit DelphiData;
 
@@ -873,6 +873,7 @@ begin
       try
         EnvOptions.LoadFromFile(GetEnvOptionsFileName);
         EnvOptions.Options := EnvOptions.Options - [sxoAutoCreate];
+        EnvOptions.Options := EnvOptions.Options + [sxoDoNotSaveProlog];
 
         PropertyGroupNode := EnvOptions.Root.Items.ItemNamed['PropertyGroup']; // do not localize
         if Assigned(PropertyGroupNode) then

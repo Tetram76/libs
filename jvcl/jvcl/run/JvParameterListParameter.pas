@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 12239 2009-03-18 00:17:32Z jfudickar $
+// $Id: JvParameterListParameter.pas 12253 2009-03-22 09:10:44Z outchy $
 
 unit JvParameterListParameter;
 
@@ -622,8 +622,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 12239 $';
-    Date: '$Date: 2009-03-18 01:17:32 +0100 (mer., 18 mars 2009) $';
+    Revision: '$Revision: 12253 $';
+    Date: '$Date: 2009-03-22 10:10:44 +0100 (dim., 22 mars 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1542,7 +1542,6 @@ end;
 
 procedure TJvListParameter.SetWinControlProperties;
 var
-  ITmpComboBox: IJvDynControlComboBox;
   ITmpItems: IJvDynControlItems;
 begin
   inherited SetWinControlProperties;

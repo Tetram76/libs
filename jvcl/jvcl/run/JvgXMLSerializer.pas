@@ -72,7 +72,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgXMLSerializer.pas 12252 2009-03-21 22:18:25Z ahuser $
+// $Id: JvgXMLSerializer.pas 12264 2009-04-10 20:08:13Z obones $
 
 unit JvgXMLSerializer;
 
@@ -167,8 +167,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgXMLSerializer.pas $';
-    Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12264 $';
+    Date: '$Date: 2009-04-10 22:08:13 +0200 (ven., 10 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -178,7 +178,7 @@ implementation
 
 uses
   {$IFDEF USEJVCL}
-  JvResources,
+  JvVCL5Utils, JvResources,
   {$ENDIF USEJVCL}
   JvgUtils;
 
