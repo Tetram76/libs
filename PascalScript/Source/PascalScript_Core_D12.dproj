@@ -13,6 +13,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
 			<DCC_Description>RemObjects Pascal Script - Core Package</DCC_Description>
 			<DCC_DependencyCheckOutputName>..\Dcu\D12\PascalScript_Core_D12.bpl</DCC_DependencyCheckOutputName>
 			<DCC_UnitSearchPath>..\Dcu\D12;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>

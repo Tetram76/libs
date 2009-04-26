@@ -6,6 +6,22 @@ interface
 uses
   Windows, SysUtils, Forms, Classes, Dialogs, Controls, StdCtrls;
 
+
+type
+  IMesurePerf = interface
+  ['{46EF7EF7-D12F-4AF0-9A29-321ABCA2A6B7}']
+  end;
+
+  TMesurePerf = class(TInterfacedObject, IMesurePerf)
+  private
+    FStart: TDateTime;
+    FLabel: string;
+  public
+    constructor Create(const Texte: string = '');
+    destructor Destroy; override;
+  end;
+
+function CanUseTaskDialog: Boolean;
 procedure RemplaceChaine(var Chaine: string; Quoi, parQuoi: string);
 procedure Split(var Chaine: string; const Sep: string);
 procedure Collapse(var Chaine: string; const Sep: string = '');
@@ -106,10 +122,22 @@ function IsRemoteSession: Boolean;
 implementation
 
 uses
-  Math;
+  Math, Themes;
 
 const
   VALIDCHARPOSTE: TSysCharSet = ['a'..'z', 'A'..'Z', '1'..'0', '!', '@', '#', '$', '%', '^', '&', '''', ')', '(', '.', '-', '_', '{', '}', '~', '.'];
+
+constructor TMesurePerf.Create(const Texte: string);
+begin
+  FStart := Now;
+  FLabel := Texte;
+end;
+
+destructor TMesurePerf.Destroy;
+begin
+  ShowMessage('Durée ' + FLabel + ': ' + FormatDateTime('hh:mm:ss:zzz', Now - FStart));
+  inherited;
+end;
 
   { TNotifyList }
 
@@ -1130,6 +1158,11 @@ begin
   end;
   if Result <> 0 then
     Result := Result div Abs(Result);
+end;
+
+function CanUseTaskDialog: Boolean;
+begin
+  Result := (Win32MajorVersion >= 6) and UseLatestCommonDialogs and ThemeServices.ThemesEnabled;
 end;
 
 end.

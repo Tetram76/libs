@@ -4934,7 +4934,7 @@ begin
     if Result then
     begin
       ReadBuffer(Header, SizeOf(Header));
-      Result := UpperCase(Header.Signature) = 'GIF';
+      Result := UpperCase(string(Header.Signature)) = 'GIF';
     end;
     Position := LastPosition;
   end;
@@ -5210,9 +5210,9 @@ begin
   with Stream, FImageProperties do
   begin
     ReadBuffer(Header, SizeOf(Header));
-    if UpperCase(Header.Signature) = 'GIF' then
+    if (string(Header.Signature)) = 'GIF' then
     begin
-      Version := StrToInt(Copy(Header.Version, 1, 2));
+      Version := StrToInt(string(Copy(Header.Version, 1, 2)));
       ColorScheme := csIndexed;
       SamplesPerPixel := 1;
       // might be overwritten
