@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  WinInet, StdCtrls, ShellAPI, Dialogs, ExtCtrls;
+  WinInet, StdCtrls, ShellAPI, Dialogs, ExtCtrls, Divers;
 
 type
   TfrmVerifUpgrade = class(TForm)
@@ -30,11 +30,9 @@ type
     FHomePage, FUpgrade, FProgramme, FVersion: string;
   end;
 
-function CheckVersion(const Titre, Code, CurrentVersion: string; ForceMessage, CanContinue: Boolean): Integer;
+function CheckVersion(const Titre, Code: string; CurrentVersion: TFileVersion; ForceMessage, CanContinue: Boolean): Integer;
 
 implementation
-
-uses Divers;
 
 {$R *.dfm}
 
@@ -59,7 +57,7 @@ begin
   raise EOSError.Create(PChar(@Buffer));
 end;
 
-function CheckVersion(const Titre, Code, CurrentVersion: string; ForceMessage, CanContinue: Boolean): Integer;
+function CheckVersion(const Titre, Code: string; CurrentVersion: TFileVersion; ForceMessage, CanContinue: Boolean): Integer;
 // Valeurs de retour:
 // -1: erreur durant l'interrogation du site
 // 0: pas de mise à jour
@@ -78,7 +76,7 @@ var
   frmVerifUpgrade: TfrmVerifUpgrade;
 begin
   Result := 0;
-  hISession := InternetOpen(PChar(Format('%s/%s', [Titre, CurrentVersion])), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  hISession := InternetOpen(PChar(Format('%s/%s', [Titre, string(CurrentVersion)])), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
   if (hISession = nil) then RaiseLastOsError;
   try
     hRequest := InternetOpenUrl(hISession, PChar('http://www.tetram.org/lastversion.php?programme=' + Code), nil, 0, INTERNET_FLAG_PRAGMA_NOCACHE or INTERNET_FLAG_RELOAD or INTERNET_FLAG_RESYNCHRONIZE, 0);
