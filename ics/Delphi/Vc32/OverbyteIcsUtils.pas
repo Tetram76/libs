@@ -3,7 +3,7 @@
 Author:       Arno Garrels <arno.garrels@gmx.de>
 Description:  A place for common utilities.
 Creation:     Apr 25, 2008
-Version:      7.23
+Version:      7.27
 EMail:        http://www.overbyte.be       francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -78,7 +78,14 @@ Oct 23, 2008 V7.21 A. Garrels added IcsStrNextChar, IcsStrPrevChar and
              a ANSI character stream with known code page to Unicode in
              chunks. Added a PAnsiChar overload to function AnsiToUnicode.
 Nov 13, 2008 v7.22 Arno added CharsetDetect, IsUtf8Valid use CharsetDetect.
-Dec 05, 2008 v/.23 Arno added function IcsCalcTickDiff.
+Dec 05, 2008 v7.23 Arno added function IcsCalcTickDiff.
+Apr 18, 2009 V7.24 Arno added a PWideChar overload to UnicodeToAnsi().
+May 02, 2009 V7.25 Arno added IcsNextCharIndex().
+May 03, 2009 V7.26 Arno added IsUtf8TrailByte and IsLeadChar.
+May 14, 2009 V7.27 Arno changed IcsNextCharIndex() to avoid a compiler
+             warning in C++ Builder (assertion moved one line up).
+             Removed uneccessary overload directives from IcsCharNextUtf8
+             and IcsCharPrevUtf8.
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsUtils;
@@ -159,6 +166,7 @@ type
     function  UnicodeToUsAscii(const Str: UnicodeString): AnsiString; overload;
     function  UsAsciiToUnicode(const Str: RawByteString; FailCh: AnsiChar): UnicodeString; overload;
     function  UsAsciiToUnicode(const Str: RawByteString): UnicodeString; overload;
+    function  UnicodeToAnsi(const Str: PWideChar; ACodePage: Cardinal; SetCodePage: Boolean = False): RawByteString; overload;
     function  UnicodeToAnsi(const Str: UnicodeString; ACodePage: Cardinal; SetCodePage: Boolean = False): RawByteString; overload;
     function  UnicodeToAnsi(const Str: UnicodeString): RawByteString; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
     function  AnsiToUnicode(const Str: PAnsiChar; ACodePage: Cardinal): UnicodeString; overload;
@@ -184,12 +192,17 @@ type
     function  Utf8ToStringW(const Str: RawByteString): UnicodeString; {$IFDEF USE_INLINE} inline; {$ENDIF}
     function  Utf8ToStringA(const Str: RawByteString; ACodePage: Cardinal = CP_ACP): AnsiString; {$IFDEF USE_INLINE} inline; {$ENDIF}
     function  CheckUnicodeToAnsi(const Str: UnicodeString; ACodePage: Cardinal = CP_ACP): Boolean;
+    { This is a weak check, it does not detect whether it's a valid UTF-8 byte }  
+    function  IsUtf8TrailByte(const B: Byte): Boolean; {$IFDEF USE_INLINE} inline; {$ENDIF}
+{$IFNDEF COMPILER12_UP}
+    function  IsLeadChar(Ch: WideChar): Boolean; {$IFDEF USE_INLINE} inline; {$ENDIF}
+{$ENDIF}
     function  IsUtf8Valid(const Str: RawByteString): Boolean; overload; {$IFDEF USE_INLINE} inline; {$ENDIF}
     function  IsUtf8Valid(const Buf: Pointer; Len: Integer): Boolean; overload; {$IFDEF USE_INLINE} inline; {$ENDIF}
     function  CharsetDetect(const Buf: Pointer; Len: Integer): TCharsetDetectResult; overload;
     function  CharsetDetect(const Str: RawByteString): TCharsetDetectResult; overload; {$IFDEF USE_INLINE} inline; {$ENDIF}
-    function  IcsCharNextUtf8(const Str: PAnsiChar): PAnsiChar;
-    function  IcsCharPrevUtf8(const Start, Current: PAnsiChar): PAnsiChar;
+    function  IcsCharNextUtf8(const Str: PAnsiChar): PAnsiChar; {$IFDEF USE_INLINE} inline; {$ENDIF}
+    function  IcsCharPrevUtf8(const Start, Current: PAnsiChar): PAnsiChar; {$IFDEF USE_INLINE} inline; {$ENDIF}
     function  ConvertCodepage(const Str: RawByteString; SrcCodePage: Cardinal; DstCodePage: Cardinal = CP_ACP): RawByteString;
     function  htoin(Value : PWideChar; Len : Integer) : Integer; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
     function  htoin(Value : PAnsiChar; Len : Integer) : Integer; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
@@ -224,7 +237,8 @@ type
     { preceding character in the string, or to the first character in the    }
     { string if the Current parameter equals the Start parameter.            }
     function  IcsStrPrevChar(const Start, Current: PAnsiChar; ACodePage: Cardinal = CP_ACP): PAnsiChar;
-    function  IcsStrCharLength(const Str: PAnsiChar; ACodePage: Cardinal = CP_ACP): Integer;
+    function  IcsStrCharLength(const Str: PAnsiChar; ACodePage: Cardinal = CP_ACP): Integer; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
+    function  IcsNextCharIndex(const S: RawByteString; Index: Integer; ACodePage: Cardinal = CP_ACP): Integer; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
 
 { Wide library }
     function IcsFileCreateW(const FileName: UnicodeString): Integer; overload;
@@ -397,6 +411,33 @@ begin
             SetLength(Result, Len - 1);
             MultiByteToWideChar(ACodePage, 0, Str, -1,
                                 Pointer(Result), Len);
+        end
+        else
+            Result := '';
+    end
+    else
+        Result := '';
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function UnicodeToAnsi(const Str: PWideChar; ACodePage: Cardinal;
+  SetCodePage: Boolean = False): RawByteString;
+var
+    Len : Integer;
+begin
+    if (Str <> nil) then begin
+        Len := WideCharToMultibyte(ACodePage, 0, Str, -1,
+                                   nil, 0, nil, nil);
+        if Len > 1 then begin // counts the null-terminator
+            SetLength(Result, Len - 1);
+            WideCharToMultibyte(ACodePage, 0, Str, -1,
+                                Pointer(Result), Len,
+                                nil, nil);
+        {$IFDEF COMPILER12_UP}
+            if SetCodePage and (ACodePage <> CP_ACP) then
+                PWord(Integer(Result) - 12)^ := ACodePage;
+        {$ENDIF}
         end
         else
             Result := '';
@@ -905,6 +946,23 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function IsUtf8TrailByte(const B: Byte): Boolean;
+begin
+    Result := (B and $C0 <> $C0) and
+              (B and $80 = $80) or (B and $C0 = $80);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFNDEF COMPILER12_UP}
+function IsLeadChar(Ch: WideChar): Boolean;
+begin
+    Result := (Ch >= #$D800) and (Ch <= #$DFFF);
+end;
+{$ENDIF}
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function CharsetDetect(const Buf: Pointer; Len: Integer): TCharsetDetectResult;
 var
     PEndBuf   : PByte;
@@ -1153,7 +1211,7 @@ begin
     if ACodePage = CP_UTF8 then
         Result := IcsCharNextUtf8(Str)
     else
-        Result := CharNextExA(Word(ACodePage), Str, 0);
+        Result := CharNextExA(Word(ACodePage), Str, 0); //CharNextExA doesn't work with UTF-8
 end;
 
 
@@ -1163,7 +1221,7 @@ begin
     if ACodePage = CP_UTF8 then
         Result := IcsCharPrevUtf8(Start, Current)
     else
-        Result := CharPrevExA(Word(ACodePage), Start, Current, 0);
+        Result := CharPrevExA(Word(ACodePage), Start, Current, 0); //CharPrevExA doesn't work with UTF-8
 end;
 
 
@@ -1171,6 +1229,17 @@ end;
 function IcsStrCharLength(const Str: PAnsiChar; ACodePage: Cardinal = CP_ACP): Integer;
 begin
     Result := Integer(IcsStrNextChar(Str, ACodePage)) - Integer(Str);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function IcsNextCharIndex(const S: RawByteString; Index: Integer; ACodePage: Cardinal = CP_ACP): Integer;
+begin
+    Assert((Index > 0) and (Index <= Length(S)));
+    Result := Index + 1;
+    if (ACodePage = CP_ACP) and not (S[Index] in LeadBytes) then
+        Exit;
+    Result := Index + IcsStrCharLength(PAnsiChar(S) + Index - 1, ACodePage);
 end;
 
 

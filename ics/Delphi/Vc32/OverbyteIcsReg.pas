@@ -1,6 +1,9 @@
 unit OverbyteIcsReg;
 
 {$I OverbyteIcsDefs.inc}
+{$IFDEF USE_SSL}
+    {$I OverbyteIcsSslDefs.inc}
+{$ENDIF}
 
 interface
 
@@ -14,6 +17,8 @@ uses
   OverbyteIcsTnCnx, OverbyteIcsTnEmulVT, OverbyteIcsTnScript,
   OverbyteIcsFtpCli, OverbyteIcsFtpSrv, OverbyteIcsMultipartFtpDownloader,
   OverbyteIcsHttpProt, OverbyteIcsHttpSrv, OverbyteIcsMultipartHttpDownloader,
+  OverbyteIcsHttpAppServer,
+  OverbyteIcsTimeList,
   OverbyteIcsPop3Prot,
   OverbyteIcsSmtpProt,
   OverbyteIcsNntpCli,
@@ -54,6 +59,8 @@ begin
     TDnsQuery, TEmulVT, TFingerCli, TPing,
     TMimeDecode, TMimeDecodeEx, TMimeDecodeW,
     TMultiProgressBar,
+    TTimeList,
+    THttpAppSrv,
     TTnCnx, TTnEmulVT, TTnScript,
     TFtpClient, TFtpServer, TMultipartFtpDownloader,
     THttpCli, THttpServer, TMultipartHttpDownloader,
@@ -78,6 +85,9 @@ begin
     TSslStaticLock
   {$IFNDEF NO_DYNLOCK}
     ,TSslDynamicLock
+  {$ENDIF}
+  {$IFNDEF OPENSSL_NO_ENGINE}
+    ,TSslEngine
   {$ENDIF}
   ]);
 {$ENDIF}
