@@ -19,13 +19,13 @@
 {   - Robert Rossmair - crossplatform & BCB support, refactoring                                   }
 {   - Florent Ouchet (outchy) - New installer core for .net compilation                            }
 {                                                                                                  }
-{ Last modified: $Date: 2008-11-29 23:31:01 +0100 (sam., 29 nov. 2008) $                          }
+{ Last modified: $Date: 2009-05-02 14:20:45 +0200 (sam., 02 mai 2009) $                          }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-11-29 23:31:01 +0100 (sam., 29 nov. 2008)                          $ }
-{ Revision:      $Rev:: 2564                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2009-05-02 14:20:45 +0200 (sam., 02 mai 2009)                           $ }
+{ Revision:      $Rev:: 2754                                                                     $ }
+{ Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -389,7 +389,7 @@ resourcestring
   RsCaptionDefContainer           = 'Container options';
   RsCaptionDefContainerAnsiStr    = 'Alias AnsiString containers to String containers';
   RsCaptionDefContainerWideStr    = 'Alias WideString containers to String containers';
-  RsCaptionDefContainerUnicodeStr = 'Alias UnicodeString containers to String containers (Delphi 2008 only)';
+  RsCaptionDefContainerUnicodeStr = 'Alias UnicodeString containers to String containers (Delphi 2009 only)';
   RsCaptionDefContainerNoStr      = 'Do not alias anything';
   // 7Z options
   RsCaptionDef7z               = 'Sevenzip options';

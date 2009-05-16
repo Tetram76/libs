@@ -46,8 +46,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-27 16:54:44 +0100 (ven., 27 mars 2009)                          $ }
-{ Revision:      $Rev:: 2707                                                                     $ }
+{ Last modified: $Date:: 2009-05-11 16:41:24 +0200 (lun., 11 mai 2009)                           $ }
+{ Revision:      $Rev:: 2758                                                                     $ }
 { Author:        $Author:: obones                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -512,8 +512,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAnsiStrings.pas $';
-    Revision: '$Revision: 2707 $';
-    Date: '$Date: 2009-03-27 16:54:44 +0100 (ven., 27 mars 2009) $';
+    Revision: '$Revision: 2758 $';
+    Date: '$Date: 2009-05-11 16:41:24 +0200 (lun., 11 mai 2009) $';
     LogPath: 'JCL\source\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -1034,7 +1034,7 @@ begin
     while Index <= Len do
     begin
       Start := Index;
-      while not (Value[Index] in [#10, #13]) do
+      while (Index <= Len) and not (Value[Index] in [#10, #13]) do
         Inc(Index);
 
       S := Copy(Value, Start, Index - Start);
