@@ -20,9 +20,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2490                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-05-09 12:34:22 +0200 (sam., 09 mai 2009)                           $ }
+{ Revision:      $Rev:: 2757                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 unit JclOtaWizardForm;
@@ -87,8 +87,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaWizardForm.pas $';
-    Revision: '$Revision: 2490 $';
-    Date: '$Date: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008) $';
+    Revision: '$Revision: 2757 $';
+    Date: '$Date: 2009-05-09 12:34:22 +0200 (sam., 09 mai 2009) $';
     LogPath: 'JCL\experts\common'
     );
 {$ENDIF UNITVERSIONING}
@@ -174,6 +174,10 @@ end;
 
 procedure TJclWizardForm.FormCreate(Sender: TObject);
 begin
+  {$IFDEF COMPILER7_UP}
+  PanelTitle.ParentBackground := False;
+  {$ENDIF COMPILER7_UP}
+
   ActionPrevious.Caption := RsPrevious;
   ActionNext.Caption := RsNext;
   ActionFinish.Caption := RsFinish;
