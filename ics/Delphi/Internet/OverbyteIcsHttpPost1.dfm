@@ -23,7 +23,6 @@ object HttpPostForm: THttpPostForm
     Height = 113
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 379
     object Label1: TLabel
       Left = 12
       Top = 12
@@ -108,8 +107,6 @@ object HttpPostForm: THttpPostForm
     ParentFont = False
     ScrollBars = ssBoth
     TabOrder = 1
-    ExplicitWidth = 379
-    ExplicitHeight = 102
   end
   object HttpCli1: THttpCli
     LocalAddr = '0.0.0.0'

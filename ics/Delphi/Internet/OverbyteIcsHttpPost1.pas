@@ -130,19 +130,7 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpPostForm.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-    IniFile : TIcsIniFile;
 begin
-    IniFile := TIcsIniFile.Create(FIniFileName);
-    IniFile.WriteInteger(SectionWindow, KeyTop,         Top);
-    IniFile.WriteInteger(SectionWindow, KeyLeft,        Left);
-    IniFile.WriteInteger(SectionWindow, KeyWidth,       Width);
-    IniFile.WriteInteger(SectionWindow, KeyHeight,      Height);
-    IniFile.WriteString(SectionData, KeyFirstName, FirstNameEdit.Text);
-    IniFile.WriteString(SectionData, KeyLastName,  LastNameEdit.Text);
-    IniFile.WriteString(SectionData, KeyActionURL, ActionURLEdit.Text);
-    IniFile.UpdateFile;
-    IniFile.Free;
 end;
 
 
@@ -168,9 +156,10 @@ procedure THttpPostForm.PostButtonClick(Sender: TObject);
 var
     Data : String;
 begin
-    Data := 'FirstName=' + UrlEncode(Trim(FirstNameEdit.Text)) + '&' +
-            'LastName='  + UrlEncode(Trim(LastNameEdit.Text))  + '&' +
-            'Submit=Submit';
+//    Data := 'FirstName=' + UrlEncode(Trim(FirstNameEdit.Text)) + '&' +
+//            'LastName='  + UrlEncode(Trim(LastNameEdit.Text))  + '&' +
+//            'Submit=Submit';
+  Data := 'sMotsRecherche=5410041424805&rechercher=rechercher';
     HttpCli1.SendStream := TMemoryStream.Create;
     HttpCli1.SendStream.Write(Data[1], Length(Data));
     HttpCli1.SendStream.Seek(0, 0);
