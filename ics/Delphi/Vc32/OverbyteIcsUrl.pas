@@ -75,8 +75,8 @@ uses
     {SysUtils,} OverbyteIcsUtils, OverbyteIcsLibrary;
 
 const
-  IcsUrlVersion = 601;
-  CopyRight: String = ' TIcsURL (c) 1997-2008 F. Piette V6.01 ';
+    IcsUrlVersion        = 601;
+    CopyRight : String   = ' TIcsURL (c) 1997-2008 F. Piette V6.01 ';
 
 { Syntax of an URL: protocol://[user[:password]@]server[:port]/path }
 procedure ParseURL(const URL : String;
@@ -208,27 +208,49 @@ begin
       s := Copy(s, 4, Length(s));
     end;
 
-    Path := CurPath + Copy(s, 1, Length(s));
-    Exit;
-  end;
-
-  p := pos('://', url);
-  q := p;
-  if p <> 0 then
-  begin
-    S := _LowerCase(Copy(url, 1, p - 1));
-    for i := 1 to Length(S) do
-    begin
-      if not (AnsiChar(S[i]) in UriProtocolSchemeAllowedChars) then
-      begin
-        q := i;
-        Break;
-      end;
+    p := pos('://', url);
+    q := p;
+    if p <> 0 then begin
+        S := _LowerCase(Copy(url, 1, p - 1));
+        for i := 1 to Length(S) do begin
+            if not (AnsiChar(S[i]) in UriProtocolSchemeAllowedChars) then begin
+                q := i;
+                Break;
+            end;
+        end;
+        if q < p then begin
+            p     := 0;
+            proto := 'http';
+        end;
     end;
-    if q < p then
-    begin
-      p := 0;
-      proto := 'http';
+    if p = 0 then begin
+        if (url[1] = '/') then begin
+            { Relative path without protocol specified }
+            proto := 'http';
+            p     := 1;
+            if (Length(url) > 1) and (url[2] <> '/') then begin
+                { Relative path }
+                Path := Copy(url, 1, Length(url));
+                Exit;
+            end;
+        end
+        else if _LowerCase(Copy(url, 1, 5)) = 'http:' then begin
+            proto := 'http';
+            p     := 6;
+            if (Length(url) > 6) and (url[7] <> '/') then begin
+                { Relative path }
+                Path := Copy(url, 6, Length(url));
+                Exit;
+            end;
+        end
+        else if _LowerCase(Copy(url, 1, 7)) = 'mailto:' then begin
+            proto := 'mailto';
+            p := pos(':', url);
+        end;
+    end
+    else begin
+        proto := _LowerCase(Copy(url, 1, p - 1));
+        inc(p, 2);
     end;
   end;
   if p = 0 then
@@ -348,9 +370,8 @@ begin
             RStr[J] := HexStr[2];
         end;
     end;
-  end;
-  SetLength(RStr, J);
-  Result := String(RStr);
+    SetLength(RStr, J);
+    Result := String(RStr);
 end;
 
 
@@ -384,29 +405,27 @@ end;
 function UrlDecode(const S : String; SrcCodePage: Cardinal = CP_ACP;
   DetectUtf8: Boolean = TRUE) : String;
 var
-  I, J, L: Integer;
-  U8Str: AnsiString;
-  Ch: AnsiChar;
+    I, J, L : Integer;
+    U8Str   : AnsiString;
+    Ch      : AnsiChar;
 begin
-  L := Length(S);
-  SetLength(U8Str, L);
-  I := 1;
-  J := 0;
-  while (I <= L) and (S[I] <> '&') do
-  begin
-    Ch := AnsiChar(S[I]);
-    if Ch = '%' then
-    begin
-      Ch := AnsiChar(htoi2(PChar(@S[I + 1])));
-      Inc(I, 2);
-    end
-    else if Ch = '+' then
-      Ch := ' ';
-    Inc(J);
-    U8Str[J] := Ch;
-    Inc(I);
-  end;
-  SetLength(U8Str, J);
+    L := Length(S);
+    SetLength(U8Str, L);
+    I := 1;
+    J := 0;
+    while (I <= L) and (S[I] <> '&') do begin
+        Ch := AnsiChar(S[I]);
+        if Ch = '%' then begin
+            Ch := AnsiChar(htoi2(PChar(@S[I + 1])));
+            Inc(I, 2);
+        end
+        else if Ch = '+' then
+            Ch := ' ';
+        Inc(J);
+        U8Str[J] := Ch;
+        Inc(I);
+    end;
+    SetLength(U8Str, J);
     if (SrcCodePage = CP_UTF8) or (DetectUtf8 and IsUtf8Valid(U8Str)) then
 {$IFDEF COMPILER12_UP}
         Result := Utf8ToStringW(U8Str)

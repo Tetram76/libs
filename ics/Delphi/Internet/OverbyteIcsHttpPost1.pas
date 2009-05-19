@@ -130,7 +130,19 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpPostForm.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+    IniFile : TIcsIniFile;
 begin
+    IniFile := TIcsIniFile.Create(FIniFileName);
+    IniFile.WriteInteger(SectionWindow, KeyTop,         Top);
+    IniFile.WriteInteger(SectionWindow, KeyLeft,        Left);
+    IniFile.WriteInteger(SectionWindow, KeyWidth,       Width);
+    IniFile.WriteInteger(SectionWindow, KeyHeight,      Height);
+    IniFile.WriteString(SectionData, KeyFirstName, FirstNameEdit.Text);
+    IniFile.WriteString(SectionData, KeyLastName,  LastNameEdit.Text);
+    IniFile.WriteString(SectionData, KeyActionURL, ActionURLEdit.Text);
+    IniFile.UpdateFile;
+    IniFile.Free;
 end;
 
 
