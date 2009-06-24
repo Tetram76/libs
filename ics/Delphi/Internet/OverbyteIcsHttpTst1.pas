@@ -144,10 +144,6 @@ type
     procedure CloseButtonClick(Sender: TObject);
     procedure ClearButtonClick(Sender: TObject);
     procedure PutButtonClick(Sender: TObject);
-    procedure HttpCli1DocData(Sender: TObject; Buffer: Pointer;
-      Len: Integer);
-    procedure HttpCli1SendData(Sender: TObject; Buffer: Pointer;
-      Len: Integer);
   private
     Initialized : Boolean;
     DocFileName : String;
@@ -569,12 +565,6 @@ begin
 end;
 
 
-procedure THttpTestForm.HttpCli1DocData(Sender: TObject; Buffer: Pointer;
-  Len: Integer);
-begin
-
-end;
-
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpTestForm.HttpCli1DocEnd(Sender: TObject);
 begin
@@ -609,12 +599,6 @@ begin
                 IntToStr(HttpCli1.StatusCode));
 end;
 
-
-procedure THttpTestForm.HttpCli1SendData(Sender: TObject; Buffer: Pointer;
-  Len: Integer);
-begin
-
-end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpTestForm.AbortButtonClick(Sender: TObject);

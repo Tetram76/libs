@@ -2028,13 +2028,6 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function IsDigit(Ch : Char) : Boolean; { V6.03 }
-begin
-    Result := (Ch >= '0') and (Ch <= '9');
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function IsLetterOrDigit(Ch : Char) : Boolean;
 begin
     Result := ((Ch >= 'a') and (Ch <= 'z')) or

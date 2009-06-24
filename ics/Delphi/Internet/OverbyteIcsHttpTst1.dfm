@@ -303,9 +303,7 @@ object HttpTestForm: THttpTestForm
     OnHeaderData = HttpCli1HeaderData
     OnCommand = HttpCli1Command
     OnDocBegin = HttpCli1DocBegin
-    OnDocData = HttpCli1DocData
     OnDocEnd = HttpCli1DocEnd
-    OnSendData = HttpCli1SendData
     OnRequestDone = HttpCli1RequestDone
     OnLocationChange = HttpCli1LocationChange
     OnCookie = HttpCli1Cookie
@@ -316,7 +314,6 @@ object HttpTestForm: THttpTestForm
   end
   object IcsLogger1: TIcsLogger
     LogFileOption = lfoAppend
-    LogFileEncoding = lfeUtf8
     LogOptions = [loDestOutDebug, loProtSpecErr, loProtSpecInfo]
     Left = 136
     Top = 136
