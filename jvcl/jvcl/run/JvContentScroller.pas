@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvContentScroller.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvContentScroller.pas 12399 2009-07-09 13:30:28Z obones $
 
 unit JvContentScroller;
 
@@ -40,14 +40,15 @@ uses
   JvExtComponent;
 
 type
-  TJvContentScrollDirection = (sdUp, sdDown);
+  TJvContentScrollDirection = (sdUp, sdDown, sdLeft, sdRight);
   TJvScrollAmount = 1..MaxInt;
 
   TJvContentScroller = class(TJvCustomPanel)
   private
     FTimer: TTimer;
     FActive: Boolean;
-    FPosition: Integer;
+    FYPosition: Integer;
+    FXPosition: Integer;
     FScrollAmount: TJvScrollAmount;
     FScrollIntervall: TJvScrollAmount;
     FMediaFile: TFileName;
@@ -70,7 +71,6 @@ type
     procedure SetScrollLength(Value: TJvScrollAmount);
     procedure SetScrollDirection(Value: TJvContentScrollDirection);
     procedure SetLoopCount(Value: Integer);
-    // procedure SetScrollStart(const Value: Integer);
   protected
     procedure Paint; override;
     procedure DoBeforeScroll; dynamic;
@@ -86,7 +86,6 @@ type
     property ScrollIntervall: TJvScrollAmount read FScrollIntervall write SetScrollIntervall default 50;
     property ScrollLength: TJvScrollAmount read FScrollLength write SetScrollLength default 250;
     property ScrollDirection: TJvContentScrollDirection read FScrollDirection write SetScrollDirection default sdUp;
-    // property ScrollStart: Integer read FScrollStart write SetScrollStart;
     {$IFDEF MSWINDOWS}
     property MediaFile: TFileName read FMediaFile write SetMediaFile;
     property LoopMedia: Boolean read FLoopMedia write SetLoopMedia default True;
@@ -150,8 +149,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvContentScroller.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12399 $';
+    Date: '$Date: 2009-07-09 15:30:28 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -190,8 +189,9 @@ var
 begin
   if not Assigned(FTimer) then
     FTimer := TTimer.Create(nil);
-  // FPosition := -Abs(FScrollStart);
-  // ScrollBy(0,FScrollStart);
+
+  FYPosition := 0;
+  FXPosition := 0;
   FTimer.Enabled := False;
   FTimer.OnTimer := DoTimer;
   FTimer.Interval := ScrollIntervall;
@@ -215,11 +215,20 @@ begin
     FTimer.Free;
     FTimer := nil;
   end;
-  if FScrollDirection = sdUp then
-    ScrollBy(0, FPosition)
-  else
-    ScrollBy(0, -FPosition);
-  FPosition := 0;
+
+  case FScrollDirection of
+    sdUp:
+      ScrollBy(0, FYPosition);
+    sdDown:
+      ScrollBy(0, -FYPosition);
+    sdLeft:
+      ScrollBy(FXPosition, 0);
+    sdRight:
+      ScrollBy(-FXPosition, 0);
+  end;
+
+  FYPosition := 0;
+  FXPosition := 0;
   {$IFDEF MSWINDOWS}
   if FileExists(FMediaFile) then
     PlaySound(nil, 0, SND_ASYNC);
@@ -257,11 +266,13 @@ end;
 
 procedure TJvContentScroller.ScrollContent(Amount: TJvScrollAmount);
 var
-  I: Integer;
+  DeltaY: Integer;
+  DeltaX: Integer;
 begin
   DisableAlign;
   try
-    if FPosition = 0 then
+    if ((FScrollDirection in [sdUp, sdDown]) and (FYPosition = 0)) or 
+       ((FScrollDirection in [sdLeft, sdRight]) and (FXPosition = 0)) then
     begin
       if FCurLoop = 0 then
         Active := False
@@ -270,31 +281,58 @@ begin
         Dec(FCurLoop);
     end;
 
-    if FScrollDirection = sdUp then
-    begin
-      if FPosition >= FScrollLength then
-      begin
-        I := FPosition + FScrollLength;
-        FPosition := -FScrollLength;
-        ScrollBy(0, I);
-      end;
-      I := -Amount;
-    end
-    else
-    begin
-      if FPosition >= FScrollLength then
-      begin
-        I := -FPosition - FScrollLength;
-        FPosition := -FScrollLength;
-        ScrollBy(0, I);
-      end;
-      I := Amount;
+    // Set to 0 to avoid warning
+    DeltaX := 0;
+    DeltaY := 0;
+    case FScrollDirection of
+      sdUp:
+        begin
+          if FYPosition >= FScrollLength then
+          begin
+            DeltaY := FScrollLength + Height;
+            FYPosition := -Height;
+            ScrollBy(0, DeltaY);
+          end;
+          DeltaY := -Amount;
+        end;
+      sdDown:
+        begin
+          if FYPosition >= Height then
+          begin
+            DeltaY := -FYPosition - FScrollLength;
+            FYPosition := -FScrollLength;
+            ScrollBy(0, DeltaY);
+          end;
+          DeltaY := Amount;
+        end;
+      sdLeft:
+        begin
+          if FXPosition >= FScrollLength then
+          begin
+            DeltaX := FScrollLength + Width;
+            FXPosition := -Width;
+            ScrollBy(DeltaX, 0);
+          end;
+          DeltaX := -Amount;
+        end;
+      sdRight:
+        begin
+          if FXPosition >= Width then
+          begin
+            DeltaX := -FXPosition - FScrollLength;
+            FXPosition := -FScrollLength;
+            ScrollBy(DeltaX, 0);
+          end;
+          DeltaX := Amount;
+        end;
     end;
 
     if Active then
     begin
-      ScrollBy(0, I);
-      FPosition := FPosition + Amount;
+      ScrollBy(DeltaX, DeltaY);
+      
+      FXPosition := FXPosition + Abs(DeltaX);
+      FYPosition := FYPosition + Abs(DeltaY);
     end;
   finally
     EnableAlign;
@@ -340,8 +378,25 @@ end;
 
 procedure TJvContentScroller.SetScrollDirection(Value: TJvContentScrollDirection);
 begin
-  if (FScrollDirection <> Value) and not FActive then
+  if (FScrollDirection <> Value) then
+  begin
+    case FScrollDirection of
+      sdUp: 
+        if Value = sdDown then
+          FYPosition := -FYPosition;
+      sdDown:
+        if Value = sdUp then
+          FYPosition := -FYPosition;
+      sdLeft:
+        if Value = sdRight then
+          FXPosition := -FXPosition;
+      sdRight:
+        if Value = sdLeft then
+          FXPosition := -FXPosition;
+    end;
+    
     FScrollDirection := Value;
+  end;
 end;
 
 procedure TJvContentScroller.SetLoopCount(Value: Integer);
@@ -360,15 +415,6 @@ begin
   inherited CreateWnd;
   Caption := '';
 end;
-
-
-{
-procedure TJvContentScroller.SetScrollStart(const Value: Integer);
-begin
-  if FScrollStart <> Value then
-    FScrollStart := Value;
-end;
-}
 
 procedure TJvContentScroller.Paint;
 begin

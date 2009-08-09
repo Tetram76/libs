@@ -24,7 +24,7 @@ description : Properties dialog for TJvHLEditor component
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHLEditorPropertyForm.pas 12131 2009-01-06 17:40:41Z ahuser $
+// $Id: JvHLEditorPropertyForm.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvHLEditorPropertyForm;
 
@@ -155,6 +155,7 @@ type
     procedure SetColorSamples(Value: TStrings);
     function IsPagesStored: Boolean;
     procedure SetJvHLEditor(const Value: TJvCustomEditorBase);
+    procedure SetStorage(const Value: TJvFormStorage);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
@@ -169,7 +170,7 @@ type
     procedure SaveCurrentHighlighterColors;
   published
     property JvHLEditor: TJvCustomEditorBase read FJvHLEditor write SetJvHLEditor;
-    property Storage: TJvFormStorage read FStorage write FStorage;
+    property Storage: TJvFormStorage read FStorage write SetStorage;
     property ColorSamples: TStrings read GetColorSamples write SetColorSamples;
     property HighlighterCombo: Boolean read FHighlighterCombo write FHighlighterCombo default True;
     property ActivePage: TJvHLEdActivePage read FActivePage write FActivePage default 0;
@@ -193,8 +194,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHLEditorPropertyForm.pas $';
-    Revision: '$Revision: 12131 $';
-    Date: '$Date: 2009-01-06 18:40:41 +0100 (mar., 06 janv. 2009) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -586,16 +587,17 @@ procedure TJvHLEdPropDlg.SetJvHLEditor(const Value: TJvCustomEditorBase);
 var
   HLed: IJvHLEditor;
 begin
-  if Value <> FJvHLEditor then
-  begin
+  if ReplaceComponentReference (Self, Value, TComponent(FJvHLEditor)) then
     if Value <> nil then
     begin
       if Value.GetInterface(IJvHLEditor, HLed) then
         FJvHLEditor := Value;
-    end
-    else
-      FJvHLEditor := nil;
-  end;
+    end;
+end;
+
+procedure TJvHLEdPropDlg.SetStorage(const Value: TJvFormStorage);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FStorage));
 end;
 
 //=== { TJvHLEditorParamsForm } ==============================================

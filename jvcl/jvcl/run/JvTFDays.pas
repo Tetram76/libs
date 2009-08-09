@@ -48,7 +48,7 @@ These changes peform the following functions.
 5) Remove the focus rectangle when ShowFocus is false (the focus rect is not shown in Outlook).
 
 -----------------------------------------------------------------------------}
-// $Id: JvTFDays.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvTFDays.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvTFDays;
 
@@ -57,17 +57,13 @@ unit JvTFDays;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ImgList,
   JvTFManager, JvTFSparseMatrix, JvTFUtils;
-
-// (ahuser) do not convert to JvExVCL. This package is USEJVCL'ed
 
 const
   AbsMinColWidth = 5;
@@ -1491,7 +1487,7 @@ type
       write SetAlwaysShowRowHdr;
   end;
 
-  TJvTFDaysPageInfo = class
+  TJvTFDaysPageInfo = class(TObject)
   private
     FPageNum: Integer;
     FStartRow: Integer;
@@ -1744,52 +1740,22 @@ type
     property GridEndTime: TTime read FGridEndTime write SetGridEndTime;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFDays.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
   Consts, Printers,
-  {$IFDEF USEJVCL}
   JvConsts, JvResources,
-  {$ENDIF USEJVCL}
   TypInfo;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsEInvalidPrimeTimeStartTime = 'Invalid PrimeTime StartTime';
-  RsEInvalidPrimeTimeEndTime = 'Invalid PrimeTime EndTime';
-  RsEColumnIndexOutOfBounds = 'Column index out of bounds';
-  RsERowIndexOutOfBounds = 'Row index out of bounds';
-  RsEMapColNotFoundForAppointment = 'Map column not found for appointment';
-  RsECorruptAppointmentMap = 'Corrupt appointment map';
-  RsEGridGranularityCannotBeGreater = 'Grid granularity cannot be greater ' +
-    'than the time block granularity';
-  RsETimeBlockGranularityMustBeEvenly = 'Time block granularity must be evenly ' +
-    'divisible by the grid granularity';
-  RsETimeBlocksMustBeginExactlyOn = 'Time blocks must begin exactly on ' +
-    'a grid time division';
-  RsEGridEndTimeCannotBePriorToGridStart = 'GridEndTime cannot be prior to GridStartTime';
-  RsEGridStartTimeCannotBeAfterGridEndTi = 'GridStartTime cannot be after GridEndTime';
-  RsEInvalidRowd = 'Invalid row (%d)';
-  RsEThereIsNoDataToPrint = 'There is no data to print';
-  RsENoPageInfoExists = 'No page info exists.  ' +
-    'Document must be prepared';
-  RsEATimeBlockNameCannotBeNull = 'A time block name cannot be null';
-  RsEAnotherTimeBlockWithTheName = 'Another time block with the name ' +
-    '"%s" already exists';
-  RsEATimeBlockWithTheNamesDoesNotExist = 'A time block with the name "%s" does not exist';
-  {$ENDIF !USEJVCL}
 
 //Type
   // DEF TIMEBLOCK (not conditionally compiled, just marked for reference)
@@ -4312,7 +4278,7 @@ end;
 
 procedure TJvTFDays.CMCtl3DChanged(var Msg: TMessage);
 begin
-  if NewStyleControls and (FBorderStyle = bsSingle) then
+  if FBorderStyle = bsSingle then
     RecreateWnd;
   inherited;
 end;
@@ -4899,7 +4865,7 @@ begin
   with Params do
   begin
     Style := Style or BorderStyles[FBorderStyle] or WS_CLIPCHILDREN;
-    if NewStyleControls and Ctl3D and (FBorderStyle = bsSingle) then
+    if Ctl3D and (FBorderStyle = bsSingle) then
     begin
       Style := Style and not WS_BORDER;
       ExStyle := ExStyle or WS_EX_CLIENTEDGE;
@@ -14674,7 +14640,6 @@ begin
   FVisible := Value;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -14682,7 +14647,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

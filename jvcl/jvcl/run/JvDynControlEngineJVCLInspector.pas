@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineJVCL.pas 11679 2008-01-08 01:59:25Z jfudickar $
+// $Id: JvDynControlEngineJVCLInspector.pas 12304 2009-05-05 20:10:29Z outchy $
 
 unit JvDynControlEngineJVCLInspector;
 
@@ -94,9 +94,9 @@ procedure RegisterJvDynControlRTTIInspectorControl(iEngine :
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net:443/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineJVCL.pas $';
-    Revision: '$Revision: 11679 $';
-    Date: '$Date: 2008-01-08 02:59:25 +0100 (Di, 08 Jan 2008) $';
+    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineJVCLInspector.pas $';
+    Revision: '$Revision: 12304 $';
+    Date: '$Date: 2009-05-05 22:10:29 +0200 (mar., 05 mai 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

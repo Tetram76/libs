@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDBToolscxVGrid.pas 12108 2008-12-28 20:54:13Z jfudickar $
+// $Id: JvDynControlEngineDBToolscxVGrid.pas 12353 2009-06-28 21:41:38Z jfudickar $
 
 unit JvDynControlEngineDBToolscxVGrid;
 
@@ -89,8 +89,8 @@ Var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDBToolscxVGrid.pas $';
-    Revision: '$Revision: 12108 $';
-    Date: '$Date: 2008-12-28 21:54:13 +0100 (dim., 28 déc. 2008) $';
+    Revision: '$Revision: 12353 $';
+    Date: '$Date: 2009-06-28 23:41:38 +0200 (dim., 28 juin 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -229,13 +229,13 @@ begin
           end;
         if not Fieldfound then
           CurrentRow.Visible := FALSE;
-        if DBDatabinding.Field.Datatype in [ftOraClob, ftMemo] then
+        if DBDatabinding.Field.Datatype in [ftOraClob, ftMemo, ftFMTMemo{$IFDEF COMPILER10_UP}, ftWideMemo{$ENDIF COMPILER10_UP}] then
         begin
           CurrentRow.Properties.EditPropertiesClass := TcxMemoProperties;
           TcxMemoProperties(CurrentRow.Properties.EditProperties).Scrollbars := ssBoth;
         end
         else
-          if DBDatabinding.Field.Datatype in [ftSmallint, ftInteger, ftWord, ftLargeint, ftAutoInc] then
+          if DBDatabinding.Field.Datatype in [ftSmallint, ftInteger, ftWord, ftLargeint, ftAutoInc{$IFDEF COMPILER12_UP},ftLongWord, ftShortint{$ENDIF COMPILER12_UP}] then
           begin
             CurrentRow.Properties.EditPropertiesClass := TcxSpinEditProperties;
             TcxSpinEditProperties(CurrentRow.Properties.EditProperties).ValueType := vtInt;
@@ -243,12 +243,12 @@ begin
 //            TcxSpinEditPropertiesAccess(CurrentRow.Properties.EditProperties).Buttons[1].Visible := False;
           end
           else
-            if DBDatabinding.Field.Datatype in [ftFloat, ftCurrency, ftBCD, ftFMTBcd] then
+            if DBDatabinding.Field.Datatype in [ftFloat, ftCurrency, ftBCD, ftFMTBcd{$IFDEF COMPILER12_UP},ftExtended{$ENDIF COMPILER12_UP}] then
             begin
               CurrentRow.Properties.EditPropertiesClass := TcxCalcEditProperties;
             end
             else
-              if DBDatabinding.Field.Datatype in [ftDate, ftTime, ftDateTime] then
+              if DBDatabinding.Field.Datatype in [ftDate, ftTime, ftDateTime {$IFDEF COMPILER10_UP},ftOraTimestamp{$ENDIF COMPILER10_UP}] then
               begin
                 CurrentRow.Properties.EditPropertiesClass := TcxDateEditProperties;
                 TcxDateEditProperties(CurrentRow.Properties.EditProperties).InputKind := ikStandard;

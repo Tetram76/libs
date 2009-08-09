@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgImage.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvgImage.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvgImage;
 
@@ -31,24 +31,16 @@ unit JvgImage;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls,
-  {$IFDEF USEJVCL}
   JvComponent,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgUtils, JvgCommClasses;
 
 type
-  {$IFDEF USEJVCL}
   TJvgBitmapImage = class(TJvGraphicControl)
-  {$ELSE}
-  TJvgBitmapImage = class(TGraphicControl)
-  {$ENDIF USEJVCL}
   private
     FAutoSize: Boolean;
     FImageAlign: TJvg2DAlign;
@@ -141,22 +133,20 @@ type
     property OnChangeParams: TNotifyEvent read FOnChangeParams write FOnChangeParams;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgImage.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
-  Math;
+  Math, JvJVCLUtils;
 
 constructor TJvgBitmapImage.Create(AOwner: TComponent);
 begin
@@ -424,7 +414,7 @@ end;
 
 procedure TJvgBitmapImage.SetImage(Value: TImage);
 begin
-  FImage := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FImage));
   if Assigned(FImage) and Assigned(FImage.Picture) and
     Assigned(FImage.Picture.Bitmap) then
     FBmp := FImage.Picture.Bitmap
@@ -538,19 +528,6 @@ begin
   end;
 end;
 
-{procedure TJvgBitmapImage.SetWidth(Value: Integer);
-begin
-  if FWidth = Value then Exit;
-  FWidth := Value; Invalidate;
-end;
-
-procedure TJvgBitmapImage.SetHeight(Value: Integer);
-begin
-  if FHeight = Value then Exit;
-  FHeight := Value; Invalidate;
-end;}
-
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -558,7 +535,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

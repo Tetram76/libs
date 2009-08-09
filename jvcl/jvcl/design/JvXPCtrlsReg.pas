@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPCtrlsReg.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvXPCtrlsReg.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvXPCtrlsReg;
 
@@ -43,24 +43,15 @@ uses
   {$ELSE}
   Contnrs, DsgnIntf,
   {$ENDIF COMPILER6_UP}
-  {$IFDEF USEJVCL}
   JvDsgnConsts, JvXPProgressBar,
-  {$ENDIF USEJVCL}
   JvXPCore, JvXPPropertyEditors, JvXPBar, JvXPContainer,
   JvXPButtons, JvXPCheckCtrls;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsPaletteXPControls = 'Jv XP Controls';
-{$ENDIF !USEJVCL}
 
 procedure Register;
 begin
   RegisterComponents(RsPaletteXPControls, [TJvXPStyleManager, TJvXPBar, TJvXPContainer,
     TJvXPButton, TJvXPToolButton, TJvXPCheckBox]);
-  {$IFDEF USEJVCL}
   RegisterComponents(RsPaletteXPControls, [TJvXPProgressBar]);
-  {$ENDIF USEJVCL}
   RegisterPropertyEditor(TypeInfo(TImageIndex), TJvXPBarItem, 'ImageIndex',
     TJvXPItemImageIndexProperty);
   RegisterComponentEditor(TJvXPBar, TJvXPBarItemEditor);

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActions.pas 12038 2008-11-06 23:04:29Z jfudickar $
+// $Id: JvVersionControlActions.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvVersionControlActions;
 
@@ -356,14 +356,17 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActions.pas $';
-    Revision: '$Revision: 12038 $';
-    Date: '$Date: 2008-11-07 00:04:29 +0100 (ven., 07 nov. 2008) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
 
   
 implementation
+
+uses
+  JvJVCLUtils;
 
 constructor TJvVersionControlActionList.Create(AOwner: TComponent);
 begin
@@ -417,11 +420,8 @@ procedure TJvVersionControlActionList.SetVersionControlComponent(Value: TCompone
 var
   I: Integer;
 begin
-  if Value <> FVersionControlComponent then
+  if ReplaceComponentReference (Self, Value, TComponent(FVersionControlComponent)) then
   begin
-    FVersionControlComponent := Value;
-    if FVersionControlComponent <> nil then
-      FVersionControlComponent.FreeNotification(Self);
     for I := 0 to ActionCount - 1 do
       if Actions[I] is TJvVersionControlBaseAction then
         TJvVersionControlBaseAction(Actions[I]).VersionControlComponent := Value;

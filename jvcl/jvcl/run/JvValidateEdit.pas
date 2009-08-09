@@ -1,4 +1,4 @@
-{-----------------------------------------------------------------------------
+﻿{-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -27,7 +27,7 @@ negative number format, negative currency format and positive currency format.
 This could be rectified by a custom-written formatting routine.
 
 -----------------------------------------------------------------------------}
-// $Id: JvValidateEdit.pas 11990 2008-10-26 12:13:54Z ahuser $
+// $Id: JvValidateEdit.pas 12427 2009-08-07 09:16:24Z obones $
 
 unit JvValidateEdit;
 
@@ -46,7 +46,8 @@ uses
 type
   TJvValidateEditDisplayFormat = (dfAlphabetic, dfAlphaNumeric, dfBinary,
     dfCheckChars, dfCurrency, dfCustom, dfFloat, dfFloatGeneral, dfHex, dfInteger,
-    dfNonCheckChars, dfNone, dfOctal, dfPercent, dfScientific, dfYear, dfDecimal);
+    dfNonCheckChars, dfNone, dfOctal, dfPercent, dfScientific, dfYear, dfDecimal,
+    dfIdentifier, dfFloatFixed);
 
   TJvValidateEditCriticalPointsCheck = (cpNone, cpMinValue, cpMaxValue, cpBoth);
 
@@ -140,6 +141,8 @@ type
     FOnDecimalRounding: TJvCustomDecimalRoundingEvent;
     FAllowEmpty: Boolean;
     FEnforcingMinMaxValue: Boolean;
+    FForceDecimalSeparatorInput: Boolean;
+    FLastDownKey: Word;
     procedure DisplayText;
     function ScientificStrToFloat(SciString: string): Double;
     procedure SetHasMaxValue(NewValue: Boolean);
@@ -209,6 +212,7 @@ type
     property AutoAlignment: Boolean read FAutoAlignment write FAutoAlignment;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
+    procedure KeyUp(var Key: Word; Shift: TShiftState); override;
     function DoValidate(const Key: Char; const AText: string;
       const Posn: Integer): Boolean;
     procedure Loaded; override;
@@ -216,16 +220,31 @@ type
     function CreateDataConnector: TJvFieldDataConnector; override;
 
     property OnIsValid: TJvCustomIsValidEvent read FOnIsValid write FOnIsValid;
+
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
     function IsValid: Boolean; virtual; // fires OnIsValid if assigned
 
+    // When the DecimalSeparator variable has changed, one should call
+    // RecalcCheckChars to ensure that it contains the new value (Mantis 4682)
+    procedure RecalcCheckChars;
+
     procedure Assign(Source: TPersistent); override;
     property AsInteger: Int64 read GetAsInteger write SetAsInteger;
     property AsCurrency: Currency read GetAsCurrency write SetAsCurrency;
     property AsFloat: Double read GetAsFloat write SetAsFloat;
+
+    // If true and the user presses the VK_DECIMAL key, the key read in KeyPress
+    // will always be replaced by the value of DecimalSeparator. This is made
+    // to overcome the problem where some keyboard layouts send "." instead of
+    // the decimal separator when using the decimal key on the numerical keypad.
+    // The most commonly encountered layout is the French AZERTY one.
+    // Note that this property will be set automatically to True by the
+    // constructor when the conversion of VK_DECIMAL into a character does not
+    // return the DecimalSeparator value
+    property ForceDecimalSeparatorInput: Boolean read FForceDecimalSeparatorInput write FForceDecimalSeparatorInput;
   end;
 
   TJvValidateEdit = class(TJvCustomValidateEdit)
@@ -320,8 +339,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidateEdit.pas $';
-    Revision: '$Revision: 11990 $';
-    Date: '$Date: 2008-10-26 13:13:54 +0100 (dim., 26 oct. 2008) $';
+    Revision: '$Revision: 12427 $';
+    Date: '$Date: 2009-08-07 11:16:24 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -426,6 +445,10 @@ end;
 //=== { TJvCustomValidateEdit } ==============================================
 
 constructor TJvCustomValidateEdit.Create(AOwner: TComponent);
+var
+  MappedDecimal: Cardinal;
+const
+  MAPVK_VK_TO_CHAR = 2;
 begin
   inherited Create(AOwner);
   FSelfChange := False;
@@ -446,6 +469,10 @@ begin
   FStandardFontColor := Font.Color;
   FOldFontChange := Font.OnChange;
   Font.OnChange := FontChange;
+
+  MappedDecimal := MapVirtualKey(VK_DECIMAL, MAPVK_VK_TO_CHAR);
+  if MappedDecimal <> 0 then
+    FForceDecimalSeparatorInput := Char(MappedDecimal) <> DecimalSeparator;
 end;
 
 destructor TJvCustomValidateEdit.Destroy;
@@ -556,16 +583,13 @@ begin
   if ControlState = [csReadingState] then
     FDecimalPlaces := NewValue
   else
-  if FDisplayFormat in [dfCurrency, dfFloat, dfFloatGeneral, dfScientific, dfPercent] then
+  if FDisplayFormat in [dfCurrency, dfFloat, dfFloatGeneral, dfScientific, dfPercent, dfFloatFixed] then
     FDecimalPlaces := NewValue;
   if not (csLoading in ComponentState) then
     EditText := FEditText;
 end;
 
 procedure TJvCustomValidateEdit.SetDisplayFormat(NewValue: TJvValidateEditDisplayFormat);
-const
-  Alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  Numbers = '0123456789';
 var
   OldFormat: TJvValidateEditDisplayFormat;
 begin
@@ -573,77 +597,28 @@ begin
   begin
     OldFormat := FDisplayFormat;
     FDisplayFormat := NewValue;
+
+    RecalcCheckChars;
+
     case FDisplayFormat of
-      dfAlphabetic:
-        begin
-          FCheckChars := Alphabet;
-          if FAutoAlignment then
-            Alignment := taLeftJustify;
-        end;
-      dfAlphaNumeric:
-        begin
-          FCheckChars := Alphabet + Numbers;
-          if FAutoAlignment then
-            Alignment := taLeftJustify;
-        end;
-      dfBinary:
-        begin
-          FCheckChars := '01';
-          if FAutoAlignment then
-            Alignment := taRightJustify;
-        end;
-      dfCheckChars, dfNonCheckChars:
+      dfAlphabetic, dfAlphaNumeric, dfIdentifier,
+      dfCheckChars, dfNonCheckChars, dfCustom, dfNone:
         if FAutoAlignment then
           Alignment := taLeftJustify;
-      dfCustom, dfNone:
-        begin
-          if (FDisplayFormat = dfCustom) or not (csLoading in ComponentState) then
-            FCheckChars := '';
-          if FAutoAlignment then
-            Alignment := taLeftJustify;
-        end;
       dfCurrency:
         begin
-          FCheckChars := Numbers + DecimalSeparator;
           if FAutoAlignment then
             Alignment := taRightJustify;
           if not (csLoading in ComponentState) then
             if FDecimalPlaces = 0 then
               FDecimalPlaces := CurrencyDecimals;
         end;
-      dfFloat, dfFloatGeneral, dfPercent, dfDecimal:
-        begin
-          FCheckChars := Numbers + DecimalSeparator;
-          if FAutoAlignment then
-            Alignment := taRightJustify;
-        end;
-      dfHex:
-        begin
-          FCheckChars := Numbers + 'ABCDEFabcdef';
-          if FAutoAlignment then
-            Alignment := taRightJustify;
-        end;
-      dfInteger:
-        begin
-          FCheckChars := Numbers;
-          if FAutoAlignment then
-            Alignment := taRightJustify;
-        end;
-      dfOctal:
-        begin
-          FCheckChars := '01234567';
-          if FAutoAlignment then
-            Alignment := taRightJustify;
-        end;
-      dfScientific:
-        begin
-          FCheckChars := Numbers + 'Ee' + DecimalSeparator;
-          if FAutoAlignment then
-            Alignment := taRightJustify;
-        end;
+      dfBinary, dfFloat, dfFloatGeneral, dfPercent, dfDecimal, dfHex,
+      dfInteger, dfOctal, dfScientific, dfFloatFixed:
+        if FAutoAlignment then
+          Alignment := taRightJustify;
       dfYear:
         begin
-          FCheckChars := Numbers;
           if FAutoAlignment then
             Alignment := taRightJustify;
           MaxLength := 4;
@@ -655,15 +630,15 @@ begin
 
     // Convert non-base 10 numbers to base 10 and base-10 numbers to non-base 10
     if (OldFormat = dfBinary) and
-      (NewValue in [dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfHex, dfInteger, dfOctal, dfPercent, dfScientific, dfYear]) then
+      (NewValue in [dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfHex, dfInteger, dfOctal, dfPercent, dfScientific, dfYear, dfFloatFixed]) then
       SetAsInteger(BaseToInt(FEditText, 2))
     else
-    if (OldFormat in [dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfPercent]) and
+    if (OldFormat in [dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfPercent, dfFloatFixed]) and
       (NewValue in [dfBinary, dfHex, dfOctal]) then
       SetAsFloat(JvSafeStrToFloatDef(FEditText, 0))
     else
     if (OldFormat = dfHex) and
-      (NewValue in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfInteger, dfOctal, dfPercent, dfScientific, dfYear]) then
+      (NewValue in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfInteger, dfOctal, dfPercent, dfScientific, dfYear, dfFloatFixed]) then
       SetAsInteger(BaseToInt(FEditText, 16))
     else
     if (OldFormat in [dfInteger, dfYear]) and
@@ -671,7 +646,7 @@ begin
       SetAsInteger(StrToIntDef(FEditText, 0))
     else
     if (OldFormat = dfOctal) and
-      (NewValue in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfHex, dfInteger, dfPercent, dfScientific, dfYear]) then
+      (NewValue in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfHex, dfInteger, dfPercent, dfScientific, dfYear, dfFloatFixed]) then
       SetAsInteger(BaseToInt(FEditText, 8))
     else
     begin
@@ -709,7 +684,7 @@ end;
 procedure TJvCustomValidateEdit.SetAsInteger(NewValue: Int64);
 begin
   case FDisplayFormat of
-    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfCustom,
+    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfIdentifier, dfCustom,
     dfNonCheckChars, dfNone:
       EditText := IntToStr(NewValue);
     dfBinary:
@@ -718,7 +693,7 @@ begin
       EditText := IntToBase(NewValue, 16);
     dfOctal:
       EditText := IntToBase(NewValue, 8);
-    dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfInteger, dfPercent, dfScientific, dfYear:
+    dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfInteger, dfPercent, dfScientific, dfYear, dfFloatFixed:
       EditText := IntToStr(IntRangeValue(NewValue));
   end;
 end;
@@ -740,7 +715,7 @@ end;
 procedure TJvCustomValidateEdit.SetAsCurrency(NewValue: Currency);
 begin
   case FDisplayFormat of
-    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfCustom,
+    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfIdentifier, dfCustom,
     dfNonCheckChars, dfNone:
       EditText := CurrToStr(NewValue);
     dfBinary:
@@ -749,7 +724,7 @@ begin
       EditText := IntToBase(Trunc(NewValue), 16);
     dfOctal:
       EditText := IntToBase(Trunc(NewValue), 8);
-    dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfInteger, dfPercent, dfScientific, dfYear:
+    dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfInteger, dfPercent, dfScientific, dfYear, dfFloatFixed:
       EditText := CurrToStr(CurrRangeValue(NewValue));
   end;
 end;
@@ -784,7 +759,7 @@ end;
 procedure TJvCustomValidateEdit.SetAsFloat(NewValue: Double);
 begin
   case FDisplayFormat of
-    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfCustom,
+    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfIdentifier, dfCustom,
     dfNonCheckChars, dfNone:
       EditText := FloatToStr(NewValue);
     dfBinary:
@@ -800,6 +775,8 @@ begin
       EditText := Format('%.*n', [FDecimalPlaces, FloatRangeValue(NewValue)]);
     dfFloatGeneral:
       EditText := Format('%.*g', [FDecimalPlaces, FloatRangeValue(NewValue)]);
+    dfFloatFixed:
+      EditText := Format('%.*f', [FDecimalPlaces, FloatRangeValue(NewValue)]);
     dfDecimal:
       EditText := FloatToStr(FloatRangeValue(NewValue));
     dfScientific:
@@ -822,7 +799,7 @@ begin
         VarCyFromStr(FEditText, LOCALE_USER_DEFAULT, 0, Cur);
         Result := Cur;
       end;
-    dfFloat, dfFloatGeneral, dfDecimal, dfPercent, dfScientific:
+    dfFloat, dfFloatGeneral, dfDecimal, dfPercent, dfScientific, dfFloatFixed:
       Result := JvSafeStrToFloatDef(FEditText, 0);
     dfInteger, dfYear:
       Result := StrToIntDef(FEditText, 0);
@@ -843,7 +820,7 @@ end;
 procedure TJvCustomValidateEdit.SetValue(NewValue: Variant);
 begin
   case FDisplayFormat of
-    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfNonCheckChars, dfNone, dfCustom:
+    dfAlphabetic, dfAlphaNumeric, dfCheckChars, dfNonCheckChars, dfIdentifier, dfNone, dfCustom:
       EditText := NewValue;
     dfBinary, dfHex, dfInteger, dfOctal, dfYear:
       {$IFDEF COMPILER5}
@@ -851,7 +828,7 @@ begin
       {$ELSE}
       SetAsInteger(NewValue);
       {$ENDIF COMPILER5}
-    dfCurrency, dfFloat, dfDecimal, dfFloatGeneral, dfPercent, dfScientific:
+    dfCurrency, dfFloat, dfDecimal, dfFloatGeneral, dfPercent, dfScientific, dfFloatFixed:
       SetAsFloat(NewValue);
   end;
 end;
@@ -877,6 +854,12 @@ begin
   if not IsValidChar(Text, Key, SelStart + 1) and (Key >= #32) then
     Key := #0;
   inherited KeyPress(Key);
+end;
+
+procedure TJvCustomValidateEdit.KeyUp(var Key: Word; Shift: TShiftState);
+begin
+  FLastDownKey := 0;
+  inherited KeyUp(Key, Shift);
 end;
 
 procedure TJvCustomValidateEdit.WMPaste(var Msg: TMessage);
@@ -905,6 +888,37 @@ begin
   SetLength(Result, L);
 end;
 
+procedure TJvCustomValidateEdit.RecalcCheckChars;
+const
+  Alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  Numbers = '0123456789';
+begin
+  case FDisplayFormat of
+    dfAlphabetic:
+      FCheckChars := Alphabet;
+    dfAlphaNumeric:
+      FCheckChars := Alphabet + Numbers;
+    dfIdentifier:
+      FCheckChars := Alphabet + Numbers + '_';
+    dfBinary:
+      FCheckChars := '01';
+    dfCustom, dfNone:
+      if (FDisplayFormat = dfCustom) or not (csLoading in ComponentState) then
+        FCheckChars := '';
+    dfCurrency,
+    dfFloat, dfFloatGeneral, dfPercent, dfDecimal, dfFloatFixed:
+      FCheckChars := Numbers + DecimalSeparator;
+    dfHex:
+      FCheckChars := Numbers + 'ABCDEFabcdef';
+    dfInteger, dfYear:
+      FCheckChars := Numbers;
+    dfOctal:
+      FCheckChars := '01234567';
+    dfScientific:
+      FCheckChars := Numbers + 'Ee' + DecimalSeparator;
+  end;
+end;
+
 function TJvCustomValidateEdit.IsValidChar(const S: string;
   var Key: Char; Posn: Integer): Boolean;
 var
@@ -912,6 +926,9 @@ var
   ExpectedNegPos: Integer;
   ExpectedNegChar: Char;
 begin
+  if (FLastDownKey = VK_DECIMAL) and ForceDecimalSeparatorInput then
+    Key := DecimalSeparator;
+
   case FDisplayFormat of
     dfBinary, dfCheckChars, dfHex, dfOctal, dfYear:
       Result := Pos(Key, FCheckChars) > 0;
@@ -925,7 +942,7 @@ begin
       Result := (Pos(Key, FCheckChars) > 0) or
         ((Key = '+') and (Posn = 1) and ((Pos('+', S) = 0) or (SelLength > 0))) or
         ((Key = '-') and (Posn = 1) and ((Pos('-', S) = 0) or (SelLength > 0)));
-    dfFloat, dfFloatGeneral, dfDecimal, dfPercent:
+    dfFloat, dfFloatGeneral, dfDecimal, dfPercent, dfFloatFixed:
       Result := ((Pos(Key, FCheckChars) > 0) and 
         (((Key = DecimalSeparator) and (Pos(DecimalSeparator, S) = 0)) or (Key <> DecimalSeparator))) or
         ((Key = '+') and (Posn = 1) and ((Pos('+', S) = 0) or (SelLength > 0))) or
@@ -1002,6 +1019,13 @@ begin
             Result := (Posn = 1) or (Posn = iPosE + 1);
         end;
       end;
+    dfIdentifier:
+      begin
+        if Posn = 1 then
+          Result := (Key = '_') or (IsCharAlpha(Key))
+        else
+          Result := Pos(Key, FCheckChars) > 0;
+      end
   else
     Result := False;
   end;
@@ -1017,6 +1041,7 @@ end;
 
 procedure TJvCustomValidateEdit.KeyDown(var Key: Word; Shift: TShiftState);
 begin
+  FLastDownKey := Key;
 // if Key = VK_DELETE then    EditText := MakeValid(inherited Text);
   if Key = VK_ESCAPE then
   begin
@@ -1071,7 +1096,7 @@ begin
     ((MaxLength = 0) or (MaxLength > 3)) then
     FEditText := IntToStr(MakeYear4Digit(StrToIntDef(FEditText, 0), TwoDigitYearCenturyWindow));
   if (FDisplayFormat in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfHex, dfInteger,
-    dfOctal, dfPercent, dfScientific, dfYear]) then
+    dfOctal, dfPercent, dfScientific, dfYear, dfFloatFixed]) then
   begin
     EnforceMaxValue;
     EnforceMinValue;
@@ -1154,7 +1179,7 @@ begin
   if FAllowEmpty and (FEditText = '') then
     ChangeText('')
   else
-  if (FDisplayFormat in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfInteger, dfOctal, dfPercent, dfScientific, dfYear]) and
+  if (FDisplayFormat in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfInteger, dfOctal, dfPercent, dfScientific, dfYear, dfFloatFixed]) and
     (AsFloat = 0) and FZeroEmpty then
     ChangeText('')
   else
@@ -1168,6 +1193,8 @@ begin
         ChangeText(Format('%.*n', [FDecimalPlaces, FormatedValue(AsFloat)]));
       dfFloatGeneral:
         ChangeText(Format('%.*g', [FDecimalPlaces, FormatedValue(AsFloat)]));
+      dfFloatFixed:
+        ChangeText(Format('%.*f', [FDecimalPlaces, FormatedValue(AsFloat)]));
       dfScientific:
         ChangeText(Format('%.*e', [FDecimalPlaces, FormatedValue(AsFloat)]));
       dfPercent:
@@ -1179,7 +1206,7 @@ begin
     // This needs to be done AFTER the text has been changed so that the color
     // is directly shown correctly. (Mantis 3493)
     if (FCriticalPoints.CheckPoints <> cpNone) and
-      (FDisplayFormat in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfHex, dfInteger, dfOctal, dfPercent, dfScientific, dfYear]) then
+      (FDisplayFormat in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfHex, dfInteger, dfOctal, dfPercent, dfScientific, dfYear, dfFloatFixed]) then
       SetFontColor;
   end;
 end;
@@ -1343,7 +1370,7 @@ procedure TJvCustomValidateEdit.EnforceMaxValue;
 begin
   { Check the Value is within this range }
   if FHasMaxValue and (FDisplayFormat in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral,
-    dfDecimal, dfHex, dfInteger, dfOctal, dfPercent, dfScientific, dfYear]) and
+    dfDecimal, dfHex, dfInteger, dfOctal, dfPercent, dfScientific, dfYear, dfFloatFixed]) and
     (AsFloat > FMaxValue) and not FEnforcingMinMaxValue then
   begin
     FEnforcingMinMaxValue := True;
@@ -1359,7 +1386,7 @@ procedure TJvCustomValidateEdit.EnforceMinValue;
 begin
   { Check the Value is within this range }
   if FHasMinValue and (FDisplayFormat in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral,
-    dfDecimal, dfHex, dfInteger, dfOctal, dfPercent, dfScientific, dfYear]) and
+    dfDecimal, dfHex, dfInteger, dfOctal, dfPercent, dfScientific, dfYear, dfFloatFixed]) and
     (AsFloat < FMinValue) and not FEnforcingMinMaxValue then
   begin
     FEnforcingMinMaxValue := True;

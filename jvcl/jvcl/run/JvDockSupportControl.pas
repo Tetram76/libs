@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportControl.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvDockSupportControl.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvDockSupportControl;
 
@@ -30,16 +30,12 @@ unit JvDockSupportControl;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Messages, Windows, CommCtrl, Graphics, Controls, Forms, Classes, ExtCtrls,
   ComCtrls, ImgList,
-  {$IFDEF USEJVCL}
   JvComponent, JvAppStorage,
-  {$ENDIF USEJVCL}
   JvDockTree;
 
 type
@@ -124,11 +120,7 @@ type
     // property DockClient:TObject read FDockClient write FDockClient;
   end;
 
-  {$IFDEF USEJVCL}
   TJvDockCustomControl = class(TJvCustomControl)
-  {$ELSE}
-  TJvDockCustomControl = class(TCustomControl)
-  {$ENDIF USEJVCL}
   private
     function GetJvDockManager: IJvDockManager;
   protected
@@ -277,11 +269,7 @@ type
     property TabStop default True;
   end;
 
-  {$IFDEF USEJVCL}
   TJvDockTabSheet = class(TJvWinControl)
-  {$ELSE}
-  TJvDockTabSheet = class(TWinControl)
-  {$ENDIF USEJVCL}
   private
     FImageIndex: TImageIndex;
     FPageControl: TJvDockPageControl;
@@ -442,21 +430,11 @@ type
     function GetFormVisible(DockWindow: TWinControl): Boolean;
     procedure SetTabDockHostBorderStyle(Value: TFormBorderStyle);
     procedure SetConjoinDockHostBorderStyle(Value: TFormBorderStyle);
-    {$IFDEF USEJVCL}
     procedure SaveDockTreeToAppStorage(AppStorage: TJvCustomAppStorage; const AppStoragePath: string = '');
     procedure LoadDockTreeFromAppStorage(AppStorage: TJvCustomAppStorage; const AppStoragePath: string = '');
-    {$ELSE}
-    procedure SaveDockTreeToFile(const FileName: string);
-    procedure LoadDockTreeFromFile(const FileName: string);
-    procedure SaveDockTreeToReg(RootKey: DWORD; const RegPatch: string);
-    procedure LoadDockTreeFromReg(RootKey: DWORD; const RegPatch: string);
-    {$ENDIF USEJVCL}
-    procedure BeginDrag(Control: TControl;
-      Immediate: Boolean; Threshold: Integer = -1); virtual;
-    procedure DragInitControl(Control: TControl;
-      Immediate: Boolean; Threshold: Integer); virtual;
-    procedure DragInit(ADragObject: TJvDockDragDockObject;
-      Immediate: Boolean; Threshold: Integer); virtual;
+    procedure BeginDrag(Control: TControl; Immediate: Boolean; Threshold: Integer = -1); virtual;
+    procedure DragInitControl(Control: TControl; Immediate: Boolean; Threshold: Integer); virtual;
+    procedure DragInit(ADragObject: TJvDockDragDockObject; Immediate: Boolean; Threshold: Integer); virtual;
     procedure DragTo(const Pos: TPoint); virtual;
     procedure DragDone(Drop: Boolean); virtual;
     procedure CancelDrag; virtual;
@@ -476,11 +454,7 @@ type
     property DragObject: TJvDockDragDockObject read FDragObject write FDragObject;
   end;
 
-  {$IFDEF USEJVCL}
   TJvDockCustomPanelSplitter = class(TJvCustomControl)
-  {$ELSE}
-  TJvDockCustomPanelSplitter = class(TCustomControl)
-  {$ENDIF USEJVCL}
   private
     FActiveControl: TWinControl;
     FAutoSnap: Boolean;
@@ -541,17 +515,15 @@ type
     property OnPaint: TNotifyEvent read FOnPaint write FOnPaint;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportControl.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -560,7 +532,7 @@ uses
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
-  JvDockGlobals, JvDockControlForm, JvDockSupportProc;
+  JvDockGlobals, JvDockControlForm, JvDockSupportProc, JvJVCLUtils;
 
 type
   TlbNCButtonProc = procedure(Msg: TWMNCHitMessage; Button: TMouseButton;
@@ -1534,15 +1506,9 @@ end;
 
 procedure TJvDockCustomTabControl.SetImages(Value: TCustomImageList);
 begin
+  ReplaceImageListReference(Self, Value, FImages, FImageChangeLink);
   if Images <> nil then
-    Images.UnRegisterChanges(FImageChangeLink);
-  FImages := Value;
-  if Images <> nil then
-  begin
-    Images.RegisterChanges(FImageChangeLink);
-    Images.FreeNotification(Self);
-    Perform(TCM_SETIMAGELIST, 0, Images.Handle);
-  end
+    Perform(TCM_SETIMAGELIST, 0, Images.Handle)
   else
     Perform(TCM_SETIMAGELIST, 0, 0);
 end;
@@ -2764,8 +2730,6 @@ begin
   Result := FSaveCount > 0;
 end;
 
-{$IFDEF USEJVCL}
-
 procedure TJvDockManager.LoadDockTreeFromAppStorage(AppStorage: TJvCustomAppStorage;
   const AppStoragePath: string = '');
 begin
@@ -2776,30 +2740,6 @@ begin
     EndLoad;
   end;
 end;
-
-{$ELSE}
-
-procedure TJvDockManager.LoadDockTreeFromFile(const FileName: string);
-begin
-  BeginLoad;
-  try
-    JvDockControlForm.LoadDockTreeFromFile(FileName);
-  finally
-    EndLoad;
-  end;
-end;
-
-procedure TJvDockManager.LoadDockTreeFromReg(RootKey: DWORD; const RegPatch: string);
-begin
-  BeginLoad;
-  try
-    JvDockControlForm.LoadDockTreeFromReg(RootKey, RegPatch);
-  finally
-    EndLoad;
-  end;
-end;
-
-{$ENDIF USEJVCL}
 
 procedure TJvDockManager.RegisterDockSite(Site: TWinControl; DoRegister: Boolean);
 var
@@ -2829,8 +2769,6 @@ begin
     JvGlobalDockClient.DockStyle.ResetCursor(DragObject);
 end;
 
-{$IFDEF USEJVCL}
-
 procedure TJvDockManager.SaveDockTreeToAppStorage(AppStorage: TJvCustomAppStorage;
   const AppStoragePath: string = '');
 begin
@@ -2841,30 +2779,6 @@ begin
     EndSave;
   end;
 end;
-
-{$ELSE}
-
-procedure TJvDockManager.SaveDockTreeToFile(const FileName: string);
-begin
-  BeginSave;
-  try
-    JvDockControlForm.SaveDockTreeToFile(FileName);
-  finally
-    EndSave;
-  end;
-end;
-
-procedure TJvDockManager.SaveDockTreeToReg(RootKey: DWORD; const RegPatch: string);
-begin
-  BeginSave;
-  try
-    JvDockControlForm.SaveDockTreeToReg(RootKey, RegPatch);
-  finally
-    EndSave;
-  end;
-end;
-
-{$ENDIF USEJVCL}
 
 procedure TJvDockManager.SetConjoinDockHostBorderStyle(Value: TFormBorderStyle);
 begin
@@ -3759,7 +3673,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -3767,6 +3680,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

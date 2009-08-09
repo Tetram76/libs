@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActions.pas 11812 2008-06-09 23:15:32Z jfudickar $
+// $Id: JvControlActions.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvControlActions;
 
@@ -72,7 +72,6 @@ type
     procedure UpdateTarget(Target: TObject); override;
     function HandlesTarget(Target: TObject): Boolean; override;
     procedure ExecuteTarget(Target: TObject); override;
-    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     property ActionControl: TControl read GetActionControl write SetActionControl;
     property ControlOperation: TJvControlActionOperation read FControlOperation
         write SetControlOperation;
@@ -143,8 +142,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActions.pas $';
-    Revision: '$Revision: 11812 $';
-    Date: '$Date: 2008-06-10 01:15:32 +0200 (mar., 10 juin 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -216,11 +215,6 @@ begin
       Result := False
   else
     Result := False;
-end;
-
-procedure TJvControlBaseAction.Notification(AComponent: TComponent; Operation: TOperation);
-begin
-  inherited Notification(AComponent, Operation);
 end;
 
 procedure TJvControlBaseAction.SetActionComponent(const Value: TComponent);

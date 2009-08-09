@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEIndex.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvBDEIndex.pas 12296 2009-04-29 14:53:38Z obones $
 
 unit JvBDEIndex;
 
@@ -112,8 +112,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEIndex.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12296 $';
+    Date: '$Date: 2009-04-29 16:53:38 +0200 (mer., 29 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -232,6 +232,9 @@ end;
 
 procedure TJvDBIndexCombo.SetDataSource(Value: TDataSource);
 begin
+  if FDataLink.DataSource <> nil then
+    FDataLink.DataSource.RemoveFreeNotification(Self);
+
   FDataLink.DataSource := Value;
   if Value <> nil then
     Value.FreeNotification(Self);

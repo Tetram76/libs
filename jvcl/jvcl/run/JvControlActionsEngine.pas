@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngine.pas 11854 2008-08-08 21:04:19Z jfudickar $
+// $Id: JvControlActionsEngine.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvControlActionsEngine;
 
@@ -52,7 +52,6 @@ type
   protected
     function GetEngineList: TJvActionEngineList; virtual; abstract;
     function GetSupportedOperations: TJvControlActionOperations; virtual; abstract;
-    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     property EngineList: TJvActionEngineList read GetEngineList;
   public
     constructor Create(AOwner: TComponent); override;
@@ -79,8 +78,8 @@ function RegisteredControlActionEngineList: TJvControlActionEngineList;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngine.pas $';
-    Revision: '$Revision: 11854 $';
-    Date: '$Date: 2008-08-08 23:04:19 +0200 (ven., 08 août 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -140,12 +139,6 @@ function TJvControlActionEngine.ExecuteOperation(const aOperation:
     TJvControlActionOperation; const aActionControl: TControl): Boolean;
 begin
   Result := False;
-end;
-
-procedure TJvControlActionEngine.Notification(AComponent: TComponent;
-    Operation: TOperation);
-begin
-  inherited Notification(AComponent, Operation);
 end;
 
 function TJvControlActionEngine.SupportsAction(AAction:

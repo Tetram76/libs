@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngine.pas 12141 2009-01-10 23:19:12Z jfudickar $
+// $Id: JvDynControlEngine.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvDynControlEngine;
 
@@ -217,8 +217,8 @@ type
     property DistanceBetweenLabelAndControlVert: Integer read FDistanceBetweenLabelAndControlVert write FDistanceBetweenLabelAndControlVert default 1;
   end;
 
-function IntfCast(Instance: TObject; const Intf: {$IFDEF CLR} TInterfaceRef {$ELSE} TGUID {$ENDIF}): IUnknown; overload;
-procedure IntfCast(Instance: TObject; const IID: {$IFDEF CLR} TInterfaceRef {$ELSE} TGUID {$ENDIF}; out Intf); overload;
+function IntfCast(Instance: TObject; const Intf: TGUID): IUnknown; overload;
+procedure IntfCast(Instance: TObject; const IID: TGUID; out Intf); overload;
 
 procedure SetDefaultDynControlEngine(AEngine: TJvDynControlEngine);
 function DefaultDynControlEngine: TJvDynControlEngine;
@@ -227,8 +227,8 @@ function DefaultDynControlEngine: TJvDynControlEngine;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngine.pas $';
-    Revision: '$Revision: 12141 $';
-    Date: '$Date: 2009-01-11 00:19:12 +0100 (dim., 11 janv. 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -243,24 +243,16 @@ uses
 var
   GlobalDefaultDynControlEngine: TJvDynControlEngine = nil;
 
-function IntfCast(Instance: TObject; const Intf: {$IFDEF CLR} TInterfaceRef {$ELSE} TGUID {$ENDIF}): IUnknown;
+function IntfCast(Instance: TObject; const Intf: TGUID): IUnknown;
 begin
-  {$IFDEF CLR}
-  Result := Instance as Intf;
-  {$ELSE}
   if not Supports(Instance, Intf, Result) then
     raise EIntfCastError.CreateRes(@RsEIntfCastError);
-  {$ENDIF CLR}
 end;
 
-procedure IntfCast(Instance: TObject; const IID: {$IFDEF CLR} TInterfaceRef {$ELSE} TGUID {$ENDIF}; out Intf);
+procedure IntfCast(Instance: TObject; const IID: TGUID; out Intf);
 begin
-  {$IFDEF CLR}
-  Intf := Instance as IID;
-  {$ELSE}
   if not Supports(Instance, IID, Intf) then
     raise EIntfCastError.CreateRes(@RsEIntfCastError);
-  {$ENDIF CLR}
 end;
 
 //=== { TJvCustomDynControlEngine } ==========================================
@@ -360,11 +352,7 @@ begin
     FRegisteredControlTypes.AddObject(ADynControlType, ControlClassObject);
   end
   else
-    {$IFDEF CLR}
-    raise EJVCLException.CreateFmt(RsEUnsupportedControlClass, [ADynControlType]);
-    {$ELSE}
     raise EJVCLException.CreateResFmt(@RsEUnsupportedControlClass, [ADynControlType]);
-    {$ENDIF CLR}
 end;
 
 function TJvCustomDynControlEngine.GetPropCount(Instance: TPersistent): Integer;
@@ -383,11 +371,6 @@ var
 begin
   Result := '';
   Data := GetTypeData(Instance.ClassInfo);
-  {$IFDEF CLR}
-  PropList := GetPropInfos(Instance.ClassInfo);
-  PropInfo := PropList[Index];
-  Result := PropInfo.Name;
-  {$ELSE}
   GetMem(PropList, Data^.PropCount * SizeOf(PPropInfo));
   try
     GetPropInfos(Instance.ClassInfo, PropList);
@@ -396,7 +379,6 @@ begin
   finally
     FreeMem(PropList, Data^.PropCount * SizeOf(PPropInfo));
   end;
-  {$ENDIF CLR}
 end;
 
 procedure TJvCustomDynControlEngine.SetPropertyValue(const APersistent: TPersistent;
@@ -538,7 +520,7 @@ begin
   else
     Result := nil;
   if Result = nil then
-    raise EJVCLException.CreateResFmt({$IFNDEF CLR}@{$ENDIF}RsENoRegisteredControlClass, [AControlType]);
+    raise EJVCLException.CreateResFmt(@RsENoRegisteredControlClass, [AControlType]);
   AfterCreateControl(Result);
 end;
 
@@ -727,8 +709,12 @@ end;
 
 function TJvDynControlEngine.CreateMemoControl(AOwner: TComponent;
   AParentControl: TWinControl; const AControlName: string): TWinControl;
+var
+  DynCtrlData: IJvDynControlData;
 begin
   Result := TWinControl(CreateControl(jctMemo, AOwner, AParentControl, AControlName));
+  IntfCast(Result, IJvDynControlData, DynCtrlData);
+  DynCtrlData.ControlValue := '';
 end;
 
 function TJvDynControlEngine.CreateRichEditControl(AOwner: TComponent;
@@ -903,11 +889,7 @@ var
   LabelControl: TControl;
 begin
   if not Assigned(AFocusControl) then
-    {$IFDEF CLR}
-    raise EJVCLException.Create(RsENoFocusControl);
-    {$ELSE}
     raise EJVCLException.CreateRes(@RsENoFocusControl);
-    {$ENDIF CLR}
   Panel := CreatePanelControl(AOwner, AParentControl, '', '', alNone);
   LabelControl := CreateLabelControl(AOwner, Panel, '', ACaption, AFocusControl);
   AFocusControl.Parent := Panel;

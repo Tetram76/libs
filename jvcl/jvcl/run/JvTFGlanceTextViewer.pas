@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFGlanceTextViewer.pas 11978 2008-10-24 17:32:08Z obones $
+// $Id: JvTFGlanceTextViewer.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvTFGlanceTextViewer;
 
@@ -31,15 +31,11 @@ unit JvTFGlanceTextViewer;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes, Windows, Messages, Graphics, Controls, Forms, Dialogs, StdCtrls,
-  {$IFDEF USEJVCL}
   JvComponent,
-  {$ENDIF USEJVCL}
   JvTFManager, JvTFGlance, JvTFUtils;
 
 type
@@ -76,11 +72,7 @@ type
     property LinkedAppt: TJvTFAppt read FLinkedAppt write FLinkedAppt;
   end;
 
-  {$IFDEF USEJVCL}
   TJvTFGVTextControl = class(TJvCustomControl)
-  {$else}
-  TJvTFGVTextControl = class(TCustomControl)
-  {$ENDIF USEJVCL}
   private
     FViewer: TJvTFGlanceTextViewer;
     FReplicating: Boolean;
@@ -106,10 +98,8 @@ type
     FWasInDblClick: Boolean;
     FHasScrolled: Boolean;
 
-    {$IFDEF USEJVCL}
     procedure MouseEnter(Control: TControl); override;
     procedure MouseLeave(Control: TControl); override;
-    {$ENDIF USEJVCL}
 
     procedure WMEraseBkgnd(var Msg: TMessage); message WM_ERASEBKGND;
     procedure DoEnter; override;
@@ -281,29 +271,20 @@ type
     property OnApptHint;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFGlanceTextViewer.pas $';
-    Revision: '$Revision: 11978 $';
-    Date: '$Date: 2008-10-24 19:32:08 +0200 (ven., 24 oct. 2008) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvJVCLUtils, JvResources;
-{$ENDIF USEJVCL}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsEGlanceControlNotAssigned = 'GlanceControl not assigned';
-{$ENDIF !USEJVCL}
 
 //=== { TJvTFGVTextControl } =================================================
 
@@ -869,8 +850,6 @@ begin
   inherited MouseUp(Button, Shift, X, Y);
 end;
 
-{$IFDEF USEJVCL}
-
 procedure TJvTFGVTextControl.MouseEnter(Control: TControl);
 begin
   FMouseInControl := True;
@@ -884,8 +863,6 @@ begin
   inherited MouseLeave(Control);
   Invalidate;
 end;
-
-{$ENDIF USEJVCL}
 
 procedure TJvTFGVTextControl.Scroll(ScrollBy: Integer);
 var
@@ -1611,7 +1588,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -1619,6 +1595,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

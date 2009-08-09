@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProgressUtils.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvProgressUtils.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvProgressUtils;
 
@@ -49,8 +49,8 @@ procedure SetProgressValue(Control: TControl; ProgressValue: Longint);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgressUtils.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -63,25 +63,18 @@ uses
 type
   TProgressProp = (ppMax, ppMin, ppProgress);
 
-  {$IFNDEF CLR}
   PProgressData = ^TProgressData;
-  {$ENDIF !CLR}
   TProgressData = record
     ControlClass: TControlClass;
     MaxProperty: string{$IFNDEF RTL200_UP}[63]{$ENDIF ~RTL200_UP};
     MinProperty: string{$IFNDEF RTL200_UP}[63]{$ENDIF ~RTL200_UP};
     ProgressProperty: string{$IFNDEF RTL200_UP}[63]{$ENDIF ~RTL200_UP};
   end;
-  {$IFDEF CLR}
-  PProgressData = TProgressData;
-  {$ENDIF CLR}
 
   TJvProgressList = class(TList)
   public
     constructor Create;
-    {$IFNDEF CLR}
     destructor Destroy; override;
-    {$ENDIF !CLR}
     procedure Add(AClass: TControlClass;
       const MaxPropName, MinPropName, ProgressPropName: string);
     function FindClass(AClass: TControlClass): Integer;
@@ -96,7 +89,6 @@ begin
   Add(TProgressBar, 'Max', 'Min', 'Position');
 end;
 
-{$IFNDEF CLR}
 destructor TJvProgressList.Destroy;
 var
   I: Integer;
@@ -105,19 +97,14 @@ begin
     Dispose(PProgressData(Items[I]));
   inherited Destroy;
 end;
-{$ENDIF !CLR}
 
 procedure TJvProgressList.Add(AClass: TControlClass;
   const MaxPropName, MinPropName, ProgressPropName: string);
 var
   NewRec: PProgressData;
 begin
-  {$IFDEF CLR}
-  with NewRec do
-  {$ELSE}
   New(NewRec);
   with NewRec^ do
-  {$ENDIF CLR}
   begin
     ControlClass := AClass;
     MaxProperty := MaxPropName;
@@ -150,9 +137,7 @@ begin
     P := PProgressData(Items[I]);
     if P.ControlClass.InheritsFrom(AClass) then
     begin
-      {$IFNDEF CLR}
       Dispose(P);
-      {$ENDIF !CLR}
       Delete(I);
     end;
   end;
@@ -181,11 +166,7 @@ begin
       end;
       PropInfo := GetPropInfo(Control.ClassInfo, PropName);
       if (PropInfo <> nil) and
-        {$IFDEF CLR}
-        (PropInfo.TypeKind
-        {$ELSE}
         (PropInfo^.PropType^.Kind
-        {$ENDIF CLR}
           in [tkInteger, tkFloat, tkVariant]) then
       begin
         SetOrdProp(Control, PropInfo, Value);

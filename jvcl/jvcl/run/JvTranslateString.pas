@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTranslateString.pas 11642 2007-12-24 22:20:02Z obones $
+// $Id: JvTranslateString.pas 12392 2009-07-09 11:15:37Z ahuser $
 
 unit JvTranslateString;
 
@@ -103,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTranslateString.pas $';
-    Revision: '$Revision: 11642 $';
-    Date: '$Date: 2007-12-24 23:20:02 +0100 (lun., 24 déc. 2007) $';
+    Revision: '$Revision: 12392 $';
+    Date: '$Date: 2009-07-09 13:15:37 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -189,16 +189,6 @@ begin
 end;
 
 function TJvTranslateString.GetVersionInfoAppName: string;
-{$IFDEF CLR} // todo: TJclFileVersionInfo for .NET
-begin
-  if not FAppNameHandled then
-  begin
-    FAppName := cDefaultAppName;
-    FAppNameHandled := True;
-  end;
-  Result := FAppName;
-end;
-{$ELSE}
 var
   VersionInfo: TJclFileVersionInfo;
 begin
@@ -226,19 +216,8 @@ begin
     raise;
   end;
 end;
-{$ENDIF CLR}
 
 function TJvTranslateString.GetVersionInfoFileVersion: string;
-{$IFDEF CLR} // todo: TJclFileVersionInfo for .NET
-begin
-  if not FFileVersionHandled then
-  begin
-    FFileVersion := cDefaultVersion;
-    FFileVersionHandled := True;
-  end;
-  Result := FFileVersion;
-end;
-{$ELSE}
 var
   VersionInfo: TJclFileVersionInfo;
 begin
@@ -266,19 +245,8 @@ begin
     raise;
   end;
 end;
-{$ENDIF CLR}
 
 function TJvTranslateString.GetVersionInfoProductVersion: string;
-{$IFDEF CLR} // todo: TJclFileVersionInfo for .NET
-begin
-  if not FProductVersionHandled then
-  begin
-    FProductVersion := cDefaultVersion;
-    FProductVersionHandled := True;
-  end;
-  Result := FProductVersion;
-end;
-{$ELSE}
 var
   VersionInfo: TJclFileVersionInfo;
 begin
@@ -306,19 +274,8 @@ begin
     raise;
   end;
 end;
-{$ENDIF CLR}
 
 function TJvTranslateString.GetVersionInfoCompanyName: string;
-{$IFDEF CLR} // todo: TJclFileVersionInfo for .NET
-begin
-  if not FCompanyNameHandled then
-  begin
-    FCompanyName := cDefaultCompanyName;
-    FCompanyNameHandled := True;
-  end;
-  Result := FCompanyName;
-end;
-{$ELSE}
 var
   VersionInfo: TJclFileVersionInfo;
 begin
@@ -346,7 +303,6 @@ begin
     raise;
   end;
 end;
-{$ENDIF CLR}
 
 function TJvTranslateString.ProcessCommand(const Command: string; var CommandResult: string): Boolean;
 var

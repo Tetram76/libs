@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEmbeddedForms.pas 11413 2007-07-11 20:23:46Z ahuser $
+// $Id: JvEmbeddedForms.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvEmbeddedForms;
 
@@ -136,8 +136,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEmbeddedForms.pas $';
-    Revision: '$Revision: 11413 $';
-    Date: '$Date: 2007-07-11 22:23:46 +0200 (mer., 11 juil. 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -146,7 +146,7 @@ implementation
 
 uses
   SysUtils, Graphics, Controls,
-  JvResources, JvConsts;
+  JvResources, JvConsts, JvJVCLUtils;
 
 //=== { TJvEmbeddedFormLink } ================================================
 
@@ -269,8 +269,7 @@ begin
       raise Exception.CreateRes(@RsELinkCircularRef)
     else
     begin
-      FLink := Value;
-      FLink.FreeNotification(Self);
+      ReplaceComponentReference (Self, Value, TComponent(FLink));
       InitLinkedForm;
     end;
   end;

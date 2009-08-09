@@ -7,10 +7,6 @@
   <C5Libs>wininet.lib</C5Libs>
   <C6Libs>wininet.lib</C6Libs>
   <ImageBase>49D00000</ImageBase>
-  <VersionMajorNumber>3</VersionMajorNumber>
-  <VersionMinorNumber>31</VersionMinorNumber>
-  <ReleaseNumber>0</ReleaseNumber>
-  <BuildNumber>0</BuildNumber>
   <Requires>
     <Package Name="JvCore-R" Targets="all" Condition=""/>
     <Package Name="JclD50" Targets="Dv5" Condition=""/>
@@ -28,6 +24,8 @@
   <Contains>
     <File Name="..\..\run\Ras32.pas" Targets="VCL" Formname="" Condition=""/>
     <File Name="..\..\run\Hid.pas" Targets="VCL" Formname="" Condition=""/>
+    <File Name="..\..\run\HidToken.pas" Targets="VCL" Formname="" Condition=""/>
+    <File Name="..\..\run\HidUsage.pas" Targets="VCL" Formname="" Condition=""/>
     <File Name="..\..\run\ModuleLoader.pas" Targets="VCL" Formname="" Condition=""/>
     <File Name="..\..\run\WinConvTypes.pas" Targets="VCL" Formname="" Condition=""/>
     <File Name="..\..\run\DBT.pas" Targets="VCL" Formname="" Condition=""/>

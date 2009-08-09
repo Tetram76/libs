@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCx.pas 12269 2009-04-13 19:59:23Z jfudickar $
+// $Id: JvDynControlEngineDevExpCx.pas 12410 2009-07-27 23:11:22Z jfudickar $
 
 unit JvDynControlEngineDevExpCx;
 
@@ -987,8 +987,8 @@ function DynControlEngineDevExpCx: TJvDynControlEngineDevExpCx;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCx.pas $';
-    Revision: '$Revision: 12269 $';
-    Date: '$Date: 2009-04-13 21:59:23 +0200 (lun., 13 avr. 2009) $';
+    Revision: '$Revision: 12410 $';
+    Date: '$Date: 2009-07-28 01:11:22 +0200 (mar., 28 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1694,7 +1694,10 @@ end;
 
 procedure TJvDynControlCxDateTimeEdit.ControlSetValue(Value: Variant);
 begin
-  Date := Value;
+  if VarIsStr(Value) then
+    Date := StrToDateTime(Value)
+  else
+    Date := Value;
 end;
 
 function TJvDynControlCxDateTimeEdit.ControlGetValue: Variant;
@@ -1777,7 +1780,10 @@ end;
 
 procedure TJvDynControlCxDateEdit.ControlSetValue(Value: Variant);
 begin
-  Date := Value;
+  if VarIsStr(Value) then
+    Date := StrToDateTime(Value)
+  else
+    Date := Value;
 end;
 
 function TJvDynControlCxDateEdit.ControlGetValue: Variant;
@@ -1859,7 +1865,10 @@ end;
 
 procedure TJvDynControlCxTimeEdit.ControlSetValue(Value: Variant);
 begin
-  Time := Value;
+  if VarIsStr(Value) then
+    Time := StrToTime(Value)
+  else
+    Time := Value;
 end;
 
 function TJvDynControlCxTimeEdit.ControlGetValue: Variant;
@@ -2735,6 +2744,7 @@ begin
   PanelStyle.Active := True;
   PanelStyle.BorderWidth := 0;
   Style.BorderStyle := ebsNone;
+  Style.TransparentBorder := False;
 end;
 
 procedure TJvDynControlCxPanel.ControlSetCaption(const Value: string);
@@ -2813,6 +2823,16 @@ begin
     BorderStyle := cxcbsNone
   else
     BorderStyle := cxcbsDefault;
+  if BorderStyle = cxcbsNone then
+  begin
+    if Style.BorderStyle <> ebsNone then
+      Style.BorderStyle := ebsNone;
+  end
+  else
+  begin
+    if svBorderStyle in Style.AssignedValues then
+      Style.AssignedValues := Style.AssignedValues - [ svBorderStyle ];
+  end;
 end;
 
 procedure TJvDynControlCxPanel.ControlSetBorderWidth(Value: Integer);

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMaxPixel.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvMaxPixel.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvMaxPixel;
 
@@ -65,8 +65,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMaxPixel.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -141,7 +141,7 @@ begin
 
       Result := TextWidth(Value) > Length;
       while (Value <> '') and (TextWidth(Value) > Length) do
-        Delete(Value, {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Length(Value), 1);
+        Delete(Value, System.Length(Value), 1);
     finally
       Free;
     end;

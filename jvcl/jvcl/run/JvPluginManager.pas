@@ -67,7 +67,7 @@ Versionhistory:
  V 01 : renamed objects, files, ressources
         fixed several Memory-leaks, fixed unload-bug, minimized uses-list
 -----------------------------------------------------------------------------}
-// $Id: JvPluginManager.pas 11607 2007-12-16 12:06:48Z ahuser $
+// $Id: JvPluginManager.pas 12402 2009-07-10 14:56:43Z obones $
 
 unit JvPluginManager;
 
@@ -151,7 +151,8 @@ type
     procedure GetLoadedPlugins(PlugInList: TStrings);
     property Plugins[Index: Integer]: TJvPlugIn read GetPlugin;
     property PluginCount: Integer read GetPluginCount;
-    procedure SendMessage(PluginMessage: Longint; PluginParams: string);
+    procedure SendMessage(PluginMessage: Longint; PluginParams: string); deprecated;
+    procedure BroadcastMessage(PluginMessage: Longint; PluginParams: string);
     function AddCustomPlugin(PlugIn: TJvPlugIn; const FileName: string = ''): Boolean;
   published
     property PluginFolder: string read FPluginFolder write FPluginFolder;
@@ -170,8 +171,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPluginManager.pas $';
-    Revision: '$Revision: 11607 $';
-    Date: '$Date: 2007-12-16 13:06:48 +0100 (dim., 16 déc. 2007) $';
+    Revision: '$Revision: 12402 $';
+    Date: '$Date: 2009-07-10 16:56:43 +0200 (ven., 10 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -185,6 +186,15 @@ uses
 const
   C_REGISTER_PLUGIN = 'RegisterPlugin';
   C_Extensions: array [plgDLL..plgCustom] of PChar = ('dll', 'bpl','xxx');
+
+procedure TJvPluginManager.BroadcastMessage(PluginMessage: Integer;
+  PluginParams: string);
+var
+  I: Integer;
+begin
+  for I := 0 to FPluginInfos.Count - 1 do
+    Plugins[I].SendPluginMessage(PluginMessage, PluginParams);
+end;
 
 constructor TJvPluginManager.Create(AOwner: TComponent);
 begin
@@ -473,11 +483,8 @@ begin
 end;
 
 procedure TJvPluginManager.SendMessage(PluginMessage: Longint; PluginParams: string);
-var
-  I: Integer;
 begin
-  for I := 0 to FPluginInfos.Count - 1 do
-    Plugins[I].SendPluginMessage(PluginMessage, PluginParams);
+  BroadcastMessage(PluginMessage, PluginParams);
 end;
 
 procedure TJvPluginManager.UnloadLibrary(Kind: TPluginKind; LibHandle: Integer);

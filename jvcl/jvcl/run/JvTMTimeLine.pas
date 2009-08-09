@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTMTimeLine.pas 12264 2009-04-10 20:08:13Z obones $
+// $Id: JvTMTimeLine.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvTMTimeLine;
 
@@ -327,8 +327,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTMTimeLine.pas $';
-    Revision: '$Revision: 12264 $';
-    Date: '$Date: 2009-04-10 22:08:13 +0200 (ven., 10 avr. 2009) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -926,7 +926,7 @@ begin
   begin
     if Assigned(FImages) then
       FImages.UnRegisterChanges(FChangeLink);
-    FImages := Value;
+    ReplaceComponentReference (Self, Value, TComponent(FImages));
     if Assigned(FImages) then
       FImages.RegisterChanges(FChangeLink);
     Invalidate;

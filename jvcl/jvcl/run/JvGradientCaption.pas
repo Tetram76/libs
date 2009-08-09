@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGradientCaption.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvGradientCaption.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvGradientCaption;
 
@@ -190,8 +190,8 @@ function GradientFormCaption(AForm: TCustomForm; AStartColor, AEndColor: TColor)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGradientCaption.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -490,9 +490,7 @@ end;
 
 procedure TJvGradientCaption.SetPopupMenu(Value: TPopupMenu);
 begin
-  FPopupMenu := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FPopupMenu));
 end;
 
 procedure TJvGradientCaption.SetCaptions(Value: TJvCaptionList);
@@ -738,7 +736,7 @@ function TJvGradientCaption.GetActive: Boolean;
 begin
   Result := FActive;
   if not (csDesigning in ComponentState) then
-    Result := Result and NewStyleControls and (Owner is TCustomForm);
+    Result := Result and (Owner is TCustomForm);
 end;
 
 procedure TJvGradientCaption.SetActive(Value: Boolean);

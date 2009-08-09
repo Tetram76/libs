@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgStringGrid.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvgStringGrid.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgStringGrid;
 
@@ -31,16 +31,12 @@ unit JvgStringGrid;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Controls, Graphics, ExtCtrls,
   Grids, StdCtrls, Forms,
-  {$IFDEF USEJVCL}
   JVCLVer,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgCommClasses, JvgUtils;
 
 const
@@ -73,9 +69,7 @@ type
 
   TJvgStringGrid = class(TStringGrid)
   private
-    {$IFDEF USEJVCL}
     FAboutJVCL: TJVCLAboutInfo;
-    {$ENDIF USEJVCL}
     FCaptionTextAlignment: TAlignment;
     FCaptionFont: TFont;
     FBitmap: TBitmap;
@@ -151,9 +145,7 @@ type
     procedure GetNextCell(var X, Y: Longint);
     procedure ClearSelection;
   published
-    {$IFDEF USEJVCL}
     property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-    {$ENDIF USEJVCL}
     property CaptionTextAlignment: TAlignment read FCaptionTextAlignment write
       SetCaptionTextAlignment default taCenter;
     property TextAlignment: TAlignment read FTextAlignment write
@@ -170,17 +162,15 @@ type
       FOnGetCellGradientParams write FOnGetCellGradientParams;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgStringGrid.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -795,7 +785,6 @@ begin
     Result := False;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -803,7 +792,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

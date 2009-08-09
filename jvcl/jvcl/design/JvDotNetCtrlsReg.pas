@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDotNetCtrlsReg.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvDotNetCtrlsReg.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvDotNetCtrlsReg;
 
@@ -38,21 +38,11 @@ implementation
 
 uses
   Classes,
-  {$IFDEF USEJVCL}
   JvDsgnConsts,
-  {$ENDIF USEJVCL}
   {$IFNDEF DelphiPersonalEdition}
   JvDBDotNetControls,
   {$ENDIF !DelphiPersonalEdition}
   JvDotNetControls;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsPaletteDotNet = 'Jv DotNet';
-  {$IFNDEF DelphiPersonalEdition}
-  RsPaletteDotNetDB = 'Jv DotNet DB';
-  {$ENDIF !DelphiPersonalEdition}
-{$ENDIF !USEJVCL}
 
 procedure Register;
 begin
@@ -60,14 +50,10 @@ begin
     TJvDotNetEdit, TJvDotNetHotKey, TJvDotNetListBox,
     TJvDotNetListView, TJvDotNetMaskEdit, TJvDotNetMemo,
     TJvDotNetRichEdit, TJvDotNetScrollBox, TJvDotNetTreeView, TJvDotNetButton]);
-  {$IFDEF USEJVCL}
   RegisterComponents(RsPaletteDotNet, [TJvDotNetFilenameEdit, TJvDotNetDirectoryEdit]);
-  {$ENDIF USEJVCL}
 
   {$IFNDEF DelphiPersonalEdition}
-  {$IFDEF USEJVCL}
   RegisterComponents(RsPaletteDotNetDB, [TJvDotNetDBFindEdit]);
-  {$ENDIF USEJVCL}
   RegisterComponents(RsPaletteDotNetDB, [TJvDotNetDBEdit, TJvDotNetDBListBox,
     TJvDotNetDBLookupListBox, TJvDotNetDBMemo, TJvDotNetDBRichEdit]);
   {$ENDIF !DelphiPersonalEdition}

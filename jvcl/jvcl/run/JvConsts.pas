@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvConsts.pas 12138 2009-01-10 13:35:10Z jfudickar $
+// $Id: JvConsts.pas 12304 2009-05-05 20:10:29Z outchy $
 
 unit JvConsts;
 
@@ -246,8 +246,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvConsts.pas $';
-    Revision: '$Revision: 12138 $';
-    Date: '$Date: 2009-01-10 14:35:10 +0100 (sam., 10 janv. 2009) $';
+    Revision: '$Revision: 12304 $';
+    Date: '$Date: 2009-05-05 22:10:29 +0200 (mar., 05 mai 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

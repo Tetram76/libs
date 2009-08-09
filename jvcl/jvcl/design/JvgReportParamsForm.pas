@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgReportParamsForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgReportParamsForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgReportParamsForm;
 
@@ -60,17 +60,10 @@ type
 implementation
 
 uses
-  {$IFDEF USEJVCL}
   JvDsgnConsts,
-  {$ENDIF USEJVCL}
   JvgReportParamsEditor;
 
 {$R *.dfm}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsEditParamsEllipsis = 'Edit params...';
-{$ENDIF !USEJVCL}
 
 procedure TJvgRepParamsEditor.ExecuteVerb(Index: Integer);
 begin

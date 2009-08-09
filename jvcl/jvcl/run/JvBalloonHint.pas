@@ -25,7 +25,7 @@ Known Issues:
   * Only dropdown shadow for windows xp systems.
   * Only custom animation for windows xp systems, because of use of window region.
 -----------------------------------------------------------------------------}
-// $Id: JvBalloonHint.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvBalloonHint.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvBalloonHint;
 
@@ -290,8 +290,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBalloonHint.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1727,9 +1727,7 @@ end;
 
 procedure TJvBalloonHint.SetImages(const Value: TCustomImageList);
 begin
-  FImages := Value;
-  if Images <> nil then
-    Images.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FImages));
 end;
 
 procedure TJvBalloonHint.SetOptions(const Value: TJvBalloonOptions);

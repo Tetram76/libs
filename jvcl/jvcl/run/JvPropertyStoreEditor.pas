@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditor.pas 12254 2009-03-22 22:44:07Z jfudickar $
+// $Id: JvPropertyStoreEditor.pas 12389 2009-07-09 10:25:10Z obones $
 unit JvPropertyStoreEditor;
 
 {$I jvcl.inc}
@@ -176,8 +176,8 @@ function EditPropertyStore(PropertyStore: TJvCustomPropertyStore): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditor.pas $';
-    Revision: '$Revision: 12254 $';
-    Date: '$Date: 2009-03-22 23:44:07 +0100 (dim., 22 mars 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -189,7 +189,7 @@ uses
   RTLConsts,
   {$ENDIF HAS_UNIT_RTLCONSTS}
   JvResources,
-  TypInfo, JvDynControlEngine;
+  TypInfo, JvDynControlEngine, JvJVCLUtils;
 
 {$R *.dfm}
 
@@ -552,11 +552,6 @@ var
 begin
   Result := '';
   Data := GetTypeData(Instance.ClassInfo);
-  {$IFDEF CLR}
-  PropList := GetPropInfos(Instance.ClassInfo);
-  PropInfo := PropList[Index];
-  Result := PropInfo.Name;
-  {$ELSE}
   GetMem(PropList, Data^.PropCount * SizeOf(PPropInfo));
   try
     GetPropInfos(Instance.ClassInfo, PropList);
@@ -565,7 +560,6 @@ begin
   finally
     FreeMem(PropList, Data^.PropCount * SizeOf(PPropInfo));
   end;
-  {$ENDIF CLR}
 end;
 
 procedure TJvPropertyStoreEditorControl.GotoEditObject(EditObject: TPersistent);
@@ -858,13 +852,11 @@ end;
 
 procedure TJvPropertyStoreEditorControl.SetPropertyStore(const Value: TComponent);
 begin
-  FPropertyStore := Value;
   if csDestroying in Componentstate then
     Exit;
   if Assigned(Value) and not Supports(Value, IJvPropertyEditorHandler) then
     Raise Exception.Create ('TJvPropertyStoreEditorControl.SetPropertyStore : PropertyStore must support IJvPropertyEditorHandler');
-  if Assigned(FPropertyStore) then
-    FPropertyStore.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FPropertyStore));
   FillTreeView(Value);
 end;
 

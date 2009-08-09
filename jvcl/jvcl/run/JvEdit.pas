@@ -36,7 +36,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEdit.pas 12043 2008-11-11 17:54:45Z ahuser $
+// $Id: JvEdit.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvEdit;
 
@@ -49,9 +49,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
-  {$IFDEF CLR}
-  Types,
-  {$ENDIF CLR}
   Classes, Graphics, Controls, Menus,
   JvCaret, JvMaxPixel, JvTypes, JvExStdCtrls, JvDataSourceIntf;
 
@@ -136,7 +133,7 @@ type
     function GetPopupMenu: TPopupMenu; override;
 
     function GetText: TCaption; virtual;
-    procedure SetText(const Value: TCaption); {$IFDEF CLR} reintroduce; {$ENDIF} virtual;
+    procedure SetText(const Value: TCaption); virtual;
     procedure CreateHandle; override;
     procedure DestroyWnd; override;
     procedure DoEnter; override;
@@ -270,8 +267,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEdit.pas $';
-    Revision: '$Revision: 12043 $';
-    Date: '$Date: 2008-11-11 18:54:45 +0100 (mar., 11 nov. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -295,11 +292,7 @@ begin
   try
     C.Control := Control;
     Result :=
-      {$IFDEF CLR}
-      not GetTextExtentPoint32(C.Handle, Text, Length(Text), Size) or
-      {$ELSE}
       not GetTextExtentPoint32(C.Handle, PChar(Text), Length(Text), Size) or
-      {$ENDIF CLR}
       { (rb) ClientWidth is too big, should be EM_GETRECT }
       (Control.ClientWidth > Size.cx);
   finally
@@ -399,28 +392,14 @@ end;
 
 
 procedure TJvCustomEdit.CMHintShow(var Msg: TMessage);
-{$IFDEF CLR}
-var
-  Info: THintInfo;
-{$ENDIF CLR}
 begin
   if AutoHint and not TextFitsInCtrl(Self, Self.Text) then
-    {$IFDEF CLR}
-    with TCMHintShow.Create(Msg) do
-    begin
-      Info := HintInfo;
-      Info.HintPos := Self.ClientToScreen(Point(-2, Height - 2));
-      Info.HintStr := Self.Text;
-      HintInfo := Info;
-    end
-    {$ELSE}
     with TCMHintShow(Msg) do
     begin
       HintInfo.HintPos := Self.ClientToScreen(Point(-2, Height - 2));
       HintInfo.HintStr := Self.Text;
       Result := 0;
     end
-    {$ENDIF CLR}
   else
     inherited;
 end;
@@ -614,11 +593,7 @@ end;
 function TJvCustomEdit.GetPasswordChar: Char;
 begin
   if HandleAllocated then
-    {$IFDEF CLR}
-    Result := Convert.ToChar(SendMessage(Handle, EM_GETPASSWORDCHAR, 0, 0))
-    {$ELSE}
     Result := Char(SendMessage(Handle, EM_GETPASSWORDCHAR, 0, 0))
-    {$ENDIF CLR}
   else
     Result := inherited PasswordChar;
 end;
@@ -651,7 +626,7 @@ function TJvCustomEdit.GetThemedFontHandle: HFONT;
 var
   AFont: TLogFont;
 begin
-  GetObject(GetStockObject(DEFAULT_GUI_FONT), SizeOf(AFont), {$IFNDEF CLR}@{$ENDIF}AFont);
+  GetObject(GetStockObject(DEFAULT_GUI_FONT), SizeOf(AFont), @AFont);
   AFont.lfHeight := Self.Font.Height;
   Result := CreateFontIndirect(AFont);
 end;
@@ -865,11 +840,7 @@ begin
   try
     ProtectPassword := False;
     if HandleAllocated then
-      {$IFDEF CLR}
-      inherited PasswordChar := Convert.ToChar(SendMessage(Handle, EM_GETPASSWORDCHAR, 0, 0));
-      {$ELSE}
       inherited PasswordChar := Char(SendMessage(Handle, EM_GETPASSWORDCHAR, 0, 0));
-      {$ENDIF CLR}
     inherited PasswordChar := Value;
   finally
     ProtectPassword := Tmp;

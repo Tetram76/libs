@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPoweredBy.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvPoweredBy.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvPoweredBy;
 
@@ -133,8 +133,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPoweredBy.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -142,9 +142,6 @@ const
 implementation
 
 uses
-  {$IFDEF CLR}
-  Borland.Vcl.Types, Borland.Vcl.WinUtils,
-  {$ENDIF CLR}
   JvJCLUtils, JvResources;
 
 {$R JvPoweredBy.res}
@@ -252,15 +249,9 @@ end;
 
 constructor TJvPoweredByJCL.Create(AOwner: TComponent);
 begin
-  {$IFDEF CLR}
-  inherited Create(AOwner);
-  if FResourceName = nil then
-    FResourceName := cPoweredByJCL;
-  {$ELSE}
   FResourceName := cPoweredByJCL;
   // simple trick with inherited
   inherited Create(AOwner);
-  {$ENDIF CLR}
   FURLActive := True;
   FURL := RsURLPoweredByJCL;
 end;
@@ -269,14 +260,8 @@ end;
 
 constructor TJvPoweredByJVCL.Create(AOwner: TComponent);
 begin
-  {$IFDEF CLR}
-  inherited Create(AOwner);
-  if FResourceName = nil then
-    FResourceName := cPoweredByJVCL;
-  {$ELSE}
   FResourceName := cPoweredByJVCL;
   inherited Create(AOwner);
-  {$ENDIF CLR}
   FURLActive := True;
   FURL := RsURLPoweredByJVCL;
 end;

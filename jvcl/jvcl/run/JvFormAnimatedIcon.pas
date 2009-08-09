@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormAnimatedIcon.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvFormAnimatedIcon.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvFormAnimatedIcon;
 
@@ -49,12 +49,14 @@ type
     procedure SetActive(const Value: Boolean);
     procedure SetDelay(const Value: Cardinal);
     procedure Animate(Sender: TObject);
+    procedure SetIcons(const Value: TImageList);
   protected
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
-    property Icons: TImageList read FIcons write FIcons;
+    property Icons: TImageList read FIcons write SetIcons;
     property Active: Boolean read FActive write SetActive default True;
     property Delay: Cardinal read FDelay write SetDelay default 100;
   end;
@@ -63,13 +65,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormAnimatedIcon.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+uses
+  JvJVCLUtils;
 
 
 constructor TJvFormAnimatedIcon.Create(AOwner: TComponent);
@@ -97,6 +102,18 @@ begin
   inherited Destroy;
 end;
 
+procedure TJvFormAnimatedIcon.Notification(AComponent: TComponent;
+  Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  
+  if Operation = opRemove then
+  begin
+    if AComponent = FIcons then
+      SetIcons(nil);
+  end;
+end;
+
 procedure TJvFormAnimatedIcon.Animate(Sender: TObject);
 
 begin
@@ -119,6 +136,11 @@ begin
   FDelay := Value;
   if not (csDesigning in ComponentState) then
     FTimer.Interval := FDelay;
+end;
+
+procedure TJvFormAnimatedIcon.SetIcons(const Value: TImageList);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FIcons));
 end;
 
 {$IFDEF UNITVERSIONING}

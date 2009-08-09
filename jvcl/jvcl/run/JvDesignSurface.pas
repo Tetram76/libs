@@ -28,7 +28,7 @@ Known Issues:
                on the form being designed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDesignSurface.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvDesignSurface.pas 12397 2009-07-09 11:59:39Z ahuser $
 
 unit JvDesignSurface;
 
@@ -265,8 +265,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignSurface.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12397 $';
+    Date: '$Date: 2009-07-09 13:59:39 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -329,7 +329,7 @@ begin
     case AMessage.Msg of
       WM_MOUSEFIRST..WM_MOUSELAST:
         Result := FOnDesignMessage(ASender, AMessage, MousePoint);
-      WM_KEYDOWN..WM_KEYUP, WM_PAINT, WM_ERASEBKGND:
+      WM_KEYDOWN..WM_KEYUP, WM_PAINT, WM_ERASEBKGND, WM_WINDOWPOSCHANGED, CN_KEYDOWN..CN_KEYUP:
         Result := FOnDesignMessage(ASender, AMessage, Point(0, 0));
       else
         Result := False;
@@ -810,6 +810,9 @@ begin
 end;
 }
 
+type
+  TAccessWinControl = class(TWinControl);
+
 function TJvDesignSurface.IsDesignMessage(ASender: TControl;
   var AMsg: TMessage; const APt: TPoint): Boolean;
 
@@ -835,7 +838,10 @@ function TJvDesignSurface.IsDesignMessage(ASender: TControl;
     end;
   end;
 }
-
+var
+  PosChangedHandle: HWND;
+  I: Integer;
+  Control: TAccessWinControl;
 begin
   if not Active then
     Result := False
@@ -853,10 +859,48 @@ begin
         Result := Controller.MouseUp(mbLeft, APt.X, APt.Y);
       WM_MOUSEMOVE:
         Result := Controller.MouseMove(APt.X, APt.Y);
-      WM_KEYDOWN:
+      WM_KEYDOWN, CN_KEYDOWN:
         Result := Controller.KeyDown(VirtKey);
-      WM_KEYUP:
+      WM_KEYUP, CN_KEYUP:
         Result := Controller.KeyUp(VirtKey);
+      WM_WINDOWPOSCHANGED:
+        begin
+          if AMsg.lParam <> 0 then
+          begin
+            PosChangedHandle := PWindowPos(AMsg.lParam).hwnd;
+
+            // If the window that has changed is a control owned by our container
+            // then we must update the designer. This allows to programatically
+            // change the location of a control while making the designer handles
+            // follow it around (Mantis 4693).
+            // For this to work properly, we MUST udpate the bounds of the
+            // control before calling UpdateDesigner because the VCL has not yet
+            // processed the WM_WINDOWPOSCHANGED message when this code executes.
+            // If we did not, the designer would use the previous position of the
+            // control to display the handles.
+            for I := 0 to Container.ComponentCount - 1 do
+            begin
+              if Container.Components[I] is TWinControl then
+              begin
+                Control := TAccessWinControl(Container.Components[I]);
+                if PosChangedHandle = Control.Handle then
+                begin
+                  if not (csDestroyingHandle in Control.ControlState) then
+                    {$IFDEF DELPHI10_UP}
+                    Control.UpdateBounds;
+                    {$ELSE}
+                    SendMessage(Control.Handle, AMsg.Msg, AMsg.wParam, AMsg.lParam);
+                    {$ENDIF DELPHI10_UP}
+
+                  UpdateDesigner;
+                end;
+              end;
+            end;
+          end;
+
+          // Must return False to let the VCL do its own work of placing the window
+          Result := False;
+        end;
       else
         Result := False;
     end;

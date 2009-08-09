@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDB.pas 12142 2009-01-10 23:27:19Z jfudickar $
+// $Id: JvDynControlEngineDB.pas 12351 2009-06-28 17:13:38Z jfudickar $
 
 unit JvDynControlEngineDB;
 
@@ -153,8 +153,8 @@ function DefaultDynControlEngineDB: TJvDynControlEngineDB;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDB.pas $';
-    Revision: '$Revision: 12142 $';
-    Date: '$Date: 2009-01-11 00:27:19 +0100 (dim., 11 janv. 2009) $';
+    Revision: '$Revision: 12351 $';
+    Date: '$Date: 2009-06-28 19:13:38 +0200 (dim., 28 juin 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -288,7 +288,7 @@ begin
   if not Assigned(AField) then
     raise EJVCLException.CreateRes(@RsEUnassignedField);
   case AField.DataType of
-    ftOraClob, ftMemo:
+    ftOraClob, ftMemo, ftFmtMemo{$IFDEF COMPILER10_UP}, ftWideMemo{$ENDIF COMPILER10_UP}:
       Result := jctDBMemo;
     ftGraphic:
       Result := jctDBImage;
@@ -298,7 +298,9 @@ begin
       Result := jctDBDateEdit;
     ftTime:
       Result := jctDBTimeEdit;
-    ftDateTime:
+    ftDateTime 
+      {$IFDEF COMPILER6_UP}, ftTimestamp{$ENDIF COMPILER6_UP} 
+      {$IFDEF COMPILER10_UP}, ftOraTimestamp{$ENDIF COMPILER10_UP}:
       Result := jctDBDateTimeEdit;
     ftBoolean:
       Result := jctDBCheckBox;

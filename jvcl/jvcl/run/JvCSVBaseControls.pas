@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCSVBaseControls.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvCSVBaseControls.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvCSVBaseControls;
 
@@ -160,8 +160,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCSVBaseControls.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -170,7 +170,7 @@ implementation
 
 uses
   SysUtils, Forms, Dialogs,
-  JvThemes, JvResources;
+  JvThemes, JvResources, JvJVCLUtils;
 
 {$R JvCSVBase.res}
 
@@ -650,7 +650,7 @@ end;
 
 procedure TJvCSVEdit.SetCSVDataBase(const Value: TJvCSVBase);
 begin
-  FCSVDataBase := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FCSVDataBase));
 end;
 
 procedure TJvCSVEdit.SetCSVField(const Value: string);
@@ -791,7 +791,7 @@ end;
 
 procedure TJvCSVNavigator.SetCSVDataBase(const Value: TJvCSVBase);
 begin
-  FCSVDataBase := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FCSVDataBase));
 end;
 
 //=== { TJvCSVComboBox } =====================================================
@@ -809,7 +809,7 @@ end;
 
 procedure TJvCSVComboBox.SetCSVDataBase(const Value: TJvCSVBase);
 begin
-  FCSVDataBase := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FCSVDataBase));
 end;
 
 procedure TJvCSVComboBox.SetCSVField(const Value: string);
@@ -837,7 +837,7 @@ end;
 
 procedure TJvCSVCheckBox.SetCSVDataBase(const Value: TJvCSVBase);
 begin
-  FCSVDataBase := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FCSVDataBase));
 end;
 
 procedure TJvCSVCheckBox.SetCSVField(const Value: string);

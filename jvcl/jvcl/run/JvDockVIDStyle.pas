@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVIDStyle.pas 11802 2008-05-12 19:54:51Z ahuser $
+// $Id: JvDockVIDStyle.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvDockVIDStyle;
 
@@ -30,11 +30,9 @@ unit JvDockVIDStyle;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Graphics, Controls, ComCtrls, ImgList,
   JvConsts, JvDockControlForm, JvDockSupportControl, JvDockTree,
   JvDockAdvTree, JvDockGlobals;
@@ -168,9 +166,6 @@ type
     procedure DoSystemInfoChange(Value: Boolean);
   public
     constructor Create(AOwner: TComponent); override;
-    {$IFNDEF USEJVCL}
-    function GetControlName: string; override;
-    {$ENDIF !USEJVCL}
     procedure SetDockBaseControl(IsCreate: Boolean; DockBaseControl: TJvDockBaseControl); override;
   published
     property AlwaysShowGrabber: Boolean read FAlwaysShowGrabber write SetAlwaysShowGrabber; {NEW}
@@ -587,17 +582,15 @@ type
 procedure PaintGradientBackground(Canvas: TCanvas; ARect: TRect; StartColor, EndColor: TColor;
   Vertical: Boolean = False);
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVIDStyle.pas $';
-    Revision: '$Revision: 11802 $';
-    Date: '$Date: 2008-05-12 21:54:51 +0200 (lun., 12 mai 2008) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -3881,13 +3874,6 @@ begin
   SetSheetSort(PChar(Msg.LParam));
 end;
 
-{$IFNDEF USEJVCL}
-function TJvDockVIDStyle.GetControlName: string;
-begin
-  Result := Format(RsDockLikeVIDStyle, [inherited GetControlName]);
-end;
-{$ENDIF !USEJVCL}
-
 //=== { TJvDockVIDDragDockObject } ===========================================
 
 constructor TJvDockVIDDragDockObject.Create(AControl: TControl);
@@ -4828,7 +4814,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -4836,7 +4821,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

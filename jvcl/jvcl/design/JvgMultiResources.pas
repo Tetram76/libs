@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgMultiResources.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgMultiResources.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgMultiResources;
 
@@ -33,9 +33,7 @@ interface
 uses
   Windows, Controls, Classes, Forms, SysUtils,
   Dialogs, TypInfo,
-  {$IFDEF USEJVCL}
   JvComponentBase,
-  {$ENDIF USEJVCL}
   {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, PropertyCategories;
   {$ELSE}
@@ -45,11 +43,7 @@ uses
 type
   TJvgResStringList = class(TStringList);
 
-  {$IFDEF USEJVCL}
   TJvgMultipleResources = class(TJvComponent)
-  {$ELSE}
-  TJvgMultipleResources = class(TComponent)
-  {$ENDIF USEJVCL}
   private
     FComps: TStringList;
     FResources: TJvgResStringList;

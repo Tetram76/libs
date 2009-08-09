@@ -26,7 +26,7 @@ Changes:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageListTreeView.pas 11742 2008-02-21 19:03:41Z obones $
+// $Id: JvPageListTreeView.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvPageListTreeView;
 
@@ -397,8 +397,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageListTreeView.pas $';
-    Revision: '$Revision: 11742 $';
-    Date: '$Date: 2008-02-21 20:03:41 +0100 (jeu., 21 févr. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -407,7 +407,7 @@ implementation
 
 uses
   JvResources,
-  Forms;
+  Forms, JvJVCLUtils;
 
 (* (ahuser) make Delphi 5 compiler happy
 procedure ResetAllNonParentNodes(Items: TTreeNodes; ImageIndex, SelectedIndex: Integer);

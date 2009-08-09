@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThemes.pas 12049 2008-11-17 23:32:53Z ahuser $
+// $Id: JvThemes.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvThemes;
 
@@ -90,9 +90,7 @@ type
   TThemedWindow = {$IFDEF COMPILER7_UP}Themes{$ELSE}ThemeSrv{$ENDIF}.TThemedWindow; {$EXTERNALSYM TThemedWindow}
   TThemeData = {$IFDEF COMPILER7_UP}Themes{$ELSE}ThemeSrv{$ENDIF}.TThemeData; {$EXTERNALSYM TThemeData}
 
-  {$IFNDEF CLR}
   PThemedElementDetails = {$IFDEF COMPILER7_UP}Themes{$ELSE}ThemeSrv{$ENDIF}.PThemedElementDetails; {$EXTERNALSYM PThemedElementDetails}
-  {$ENDIF ~CLR}
   TThemedElementDetails = {$IFDEF COMPILER7_UP}Themes{$ELSE}ThemeSrv{$ENDIF}.TThemedElementDetails; {$EXTERNALSYM TThemedElementDetails}
   TThemeServices = {$IFDEF COMPILER7_UP}Themes{$ELSE}ThemeSrv{$ENDIF}.TThemeServices; {$EXTERNALSYM TThemeServices}
 
@@ -798,8 +796,8 @@ procedure DrawGlassableImageList(ImageList: HIMAGELIST; Index: Integer; Dest: HD
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThemes.pas $';
-    Revision: '$Revision: 12049 $';
-    Date: '$Date: 2008-11-18 00:32:53 +0100 (mar., 18 nov. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -841,7 +839,7 @@ begin
         PerformEraseBackground(Control, Canvas.Handle, R)
       else
         ThemeServices.DrawParentBackground(TWinControl(Control).Handle, Canvas.Handle, nil,
-          False, {$IFNDEF CLR}@{$ENDIF}R);
+          False, @R);
     end
     else
       PerformEraseBackground(Control, Canvas.Handle, R)
@@ -866,7 +864,7 @@ var
 {$ENDIF JVCLThemesEnabled}
 begin
   {$IFDEF JVCLThemesEnabled}
-  GetObject(Brush, SizeOf(LogBrush), {$IFNDEF CLR}@{$ENDIF}LogBrush);
+  GetObject(Brush, SizeOf(LogBrush), @LogBrush);
   if ThemeServices.ThemesEnabled and
      (Control.Parent <> nil) and
      (LogBrush.lbColor = Cardinal(ColorToRGB(TWinControlThemeInfo(Control.Parent).Color))) and
@@ -878,8 +876,7 @@ begin
       if TWinControl(Control).DoubleBuffered then
         PerformEraseBackground(Control, DC, R)
       else
-        ThemeServices.DrawParentBackground(TWinControl(Control).Handle, DC, nil, False,
-          {$IFNDEF CLR}@{$ENDIF}R);
+        ThemeServices.DrawParentBackground(TWinControl(Control).Handle, DC, nil, False, @R);
     end
     else
       PerformEraseBackground(Control, DC, R)

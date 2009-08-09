@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCombobox.pas 12221 2009-03-04 19:34:50Z ahuser $
+// $Id: JvCombobox.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvCombobox;
 
@@ -35,9 +35,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls, Forms, StdCtrls, Menus,
-  {$IFDEF CLR}
-  Types,
-  {$ENDIF !CLR}
   {$IFDEF COMPILER5}
   JvAutoComplete,
   {$ENDIF COMPILER5}
@@ -83,7 +80,7 @@ type
     property Updating: Boolean read FUpdating;
     property DestroyCount: Integer read FDestroyCnt;
   public
-    constructor Create; {$IFDEF CLR}override;{$ENDIF CLR}{$IFDEF RTL200_UP}override;{$ENDIF RTL200_UP}
+    constructor Create; {$IFDEF RTL200_UP}override;{$ENDIF RTL200_UP}
     destructor Destroy; override;
     function Add(const S: string): Integer; override;
     procedure Clear; override;
@@ -110,10 +107,8 @@ type
     {$ENDIF COMPILER5}
     FMaxPixel: TJvMaxPixel;
     FReadOnly: Boolean;
-    {$IFNDEF CLR}
     FConsumerSvc: TJvDataConsumer;
     FProviderToggle: Boolean;
-    {$ENDIF !CLR}
     FProviderIsActive: Boolean;
     FIsFixedHeight: Boolean;
     FMeasureStyle: TJvComboBoxMeasureStyle;
@@ -169,12 +164,10 @@ type
     procedure UpdateItemCount;
     function HandleFindString(StartIndex: Integer; Value: string; ExactMatch: Boolean): Integer;
     procedure Loaded; override;
-    {$IFNDEF CLR}
     procedure SetConsumerService(Value: TJvDataConsumer);
     procedure ConsumerServiceChanged(Sender: TJvDataConsumer; Reason: TJvDataConsumerChangeReason);
     procedure ConsumerSubServiceCreated(Sender: TJvDataConsumer; SubSvc: TJvDataConsumerAggregatedObject);
     property Provider: TJvDataConsumer read FConsumerSvc write SetConsumerService;
-    {$ENDIF !CLR}
     {$IFDEF COMPILER5}
     property IsDropping: Boolean read FIsDropping write FIsDropping;
     property ItemHeight write SetItemHeight;
@@ -249,9 +242,7 @@ type
     property ParentFlat;
     property ParentFont;
     property ParentShowHint;
-    {$IFNDEF CLR}
     property Provider;
-    {$ENDIF !CLR}
     property PopupMenu;
     property ReadOnly;
     property ShowHint;
@@ -294,10 +285,12 @@ type
   private
     FCapSelAll: string;
     FCapDeselAll: string;
+    FCapInvertAll: string;
     FItems: TStrings;
     FListBox: TJvCheckListBox;
     FSelectAll: TMenuItem;
     FDeselectAll: TMenuItem;
+    FInvertAll: TMenuItem;
     FNoFocusColor: TColor;
     FSorted: Boolean;
     FQuoteStyle: TJvCHBQuoteStyle; // added 2000/04/08
@@ -306,6 +299,7 @@ type
     FDropDownLines: Integer;
     FDelimiter: Char;
     FIgnoreChange: Boolean;
+    FOrderedText: Boolean;
     procedure SetItems(AItems: TStrings);
     procedure ToggleOnOff(Sender: TObject);
     procedure KeyListBox(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -326,6 +320,8 @@ type
     function IsStoredCapDeselAll: Boolean;
     function IsStoredCapSelAll: Boolean;
     procedure ChangeText(const NewText: string);
+    procedure SetOrderedText(const Value: Boolean);
+    function GetOrderedTextValue: string;
   protected
     procedure DoEnter; override;
     procedure DoExit; override;
@@ -338,6 +334,7 @@ type
     procedure Clear; override;
     procedure SetUnCheckedAll(Sender: TObject = nil);
     procedure SetCheckedAll(Sender: TObject = nil);
+    procedure SetInvertAll(Sender: TObject = nil);
     function IsChecked(Index: Integer): Boolean;
     function GetText: string;
     property Checked[Index: Integer]: Boolean read GetChecked write SetChecked;
@@ -348,12 +345,14 @@ type
     property Items: TStrings read FItems write SetItems;
     property CapSelectAll: string read FCapSelAll write FCapSelAll stored IsStoredCapSelAll;
     property CapDeSelectAll: string read FCapDeselAll write FCapDeselAll stored IsStoredCapDeselAll;
+    property CapInvertAll: string read FCapInvertAll write FCapInvertAll;
     property NoFocusColor: TColor read FNoFocusColor write SetNoFocusColor;
     property Sorted: Boolean read FSorted write SetSorted default False;
     property QuoteStyle: TJvCHBQuoteStyle read FQuoteStyle write FQuoteStyle default qsNone; // added 2000/04/08
     property Columns: Integer read FColumns write SetColumns default 0;
     property DropDownLines: Integer read FDropDownLines write SetDropDownLines default 6;
     property Delimiter: Char read FDelimiter write SetDelimiter default ',';
+    property OrderedText: Boolean read FOrderedText write SetOrderedText default False;
   end;
 
   TJvCheckedComboBox = class(TJvCustomCheckedComboBox)
@@ -361,6 +360,7 @@ type
     property Items;
     property CapSelectAll;
     property CapDeSelectAll;
+    property CapInvertAll;
     property NoFocusColor default clWindow;
     property Sorted;
     property QuoteStyle;
@@ -425,8 +425,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCombobox.pas $';
-    Revision: '$Revision: 12221 $';
-    Date: '$Date: 2009-03-04 20:34:50 +0100 (mer., 04 mars 2009) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -571,6 +571,7 @@ begin
   Caption := '';
   FCapSelAll := RsCapSelAll;
   FCapDeselAll := RsCapDeselAll;
+  FCapInvertAll := RsCapInvertAll;
   Height := 24;
   Width := 121;
 
@@ -614,6 +615,11 @@ begin
   FDeselectAll.Caption := FCapDeselAll;
   FDeselectAll.OnClick := SetUnCheckedAll;
   FListBox.PopupMenu.Items.Insert(1, FDeselectAll);
+
+  FInvertAll := TMenuItem.Create(FListBox.PopupMenu);
+  FInvertAll.Caption := FCapInvertAll;
+  FInvertAll.OnClick := SetInvertAll;
+  FListBox.PopupMenu.Items.Insert(2, FInvertAll);
 end;
 
 destructor TJvCustomCheckedComboBox.Destroy;
@@ -637,21 +643,11 @@ begin
   GetTextMetrics(DC, Metrics);
   SelectObject(DC, SaveFont);
   ReleaseDC(HWND_DESKTOP, DC);
-  if NewStyleControls then
-  begin
-    if Ctl3D then
-      I := 8
-    else
-      I := 6;
-    I := GetSystemMetrics(SM_CYBORDER) * I;
-  end
+  if Ctl3D then
+    I := 8
   else
-  begin
-    I := SysMetrics.tmHeight;
-    if I > Metrics.tmHeight then
-      I := Metrics.tmHeight;
-    I := I div 4 + GetSystemMetrics(SM_CYBORDER) * 4;
-  end;
+    I := 6;
+  I := GetSystemMetrics(SM_CYBORDER) * I;
   Height := Metrics.tmHeight + I;
 end;
 
@@ -697,29 +693,47 @@ begin
 end;
 
 procedure TJvCustomCheckedComboBox.CreatePopup;
+var
+  DisplayDropDownLines: Integer;
 begin
   //Click;
-  if FColumns > 1 then
-    FDropDownLines := FListBox.Items.Count div FColumns + 1;
-  if FDropDownLines < MinDropLines then
-    FDropDownLines := MinDropLines;
-  if FDropDownLines > MaxDropLines then
-    FDropDownLines := MaxDropLines;
+  if fColumns > 1 then
+    // determine the real lines needed if FColumns > 1
+    DisplayDropDownLines := FListBox.Items.Count div FColumns + 1
+  else
+    // determine the real lines needed if FColumns = 1
+    DisplayDropDownLines := FListBox.Items.Count + 1;
+
+  if DisplayDropDownLines > FDropDownLines then
+    // If the actual lines > value of property "DropDownLines", revert to property value
+    DisplayDropDownLines := FDropDownLines;
+
+  // adjust "DisplayDropDownLines" according to Min and Max values
+  if DisplayDropDownLines < MinDropLines then
+    DisplayDropDownLines := MinDropLines;
+  if DisplayDropDownLines > MaxDropLines then
+    DisplayDropDownLines := MaxDropLines;
 
   FSelectAll.Caption := FCapSelAll;
   FDeselectAll.Caption := FCapDeselAll;
+  FInvertAll.Caption := FCapInvertAll;
+
   with TJvPrivForm(FPopup) do
   begin
     Font := Self.Font;
     Width := Self.Width;
-    Height := (FDropDownLines * FListBox.itemHeight + 4 { FEdit.Height });
+    // use the current "DisplayDropDownLines" to determine height of window
+    Height := (DisplayDropDownLines * FListBox.itemHeight + 4 { FEdit.Height });
   end;
 end;
 
 procedure TJvCustomCheckedComboBox.Change;
 begin
   if not FIgnoreChange then
+  begin
     DoChange;
+    FListBox.Refresh;
+  end;
 end;
 
 procedure TJvCustomCheckedComboBox.DoEnter;
@@ -758,6 +772,22 @@ begin
     Result := Text
   else
     Result := GetFormattedText(FQuoteStyle, Text, Delimiter);
+end;
+
+function TJvCustomCheckedComboBox.GetOrderedTextValue: string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to FListBox.Count - 1 do
+  begin
+    if FListBox.Checked[I] then
+    begin
+      if Result <> '' then
+        Result := Result + FDelimiter;
+      Result := Result + FListBox.Items[I];
+    end;
+  end;
 end;
 
 function TJvCustomCheckedComboBox.IsChecked(Index: Integer): Boolean;
@@ -847,6 +877,29 @@ begin
   Change;
 end;
 
+procedure TJvCustomCheckedComboBox.SetInvertAll(Sender: TObject);
+var
+  I: Integer;
+  S: string;
+begin
+  S := '';
+  for I := 0 to FListBox.Items.Count - 1 do
+  begin
+    FListBox.Checked[I] := not FListBox.Checked[I];
+
+    if FListBox.Checked[I] then begin
+       if S = '' then         
+         S := FListBox.Items[I]
+       else
+         S := S + Delimiter + FListBox.Items[I];
+    end;
+  end;
+  ChangeText(S);
+  FCheckedCount := FListBox.Items.Count;
+  Repaint;
+  Change;
+end;
+
 procedure TJvCustomCheckedComboBox.SetColumns(Value: Integer);
 begin
   if FColumns <> Value then
@@ -902,6 +955,17 @@ begin
   end;
 end;
 
+procedure TJvCustomCheckedComboBox.SetOrderedText(const Value: Boolean);
+begin
+  if FOrderedText <> Value then
+  begin
+    FOrderedText := Value;
+
+    if FOrderedText then
+      ChangeText(GetOrderedTextValue);
+  end;
+end;
+
 procedure TJvCustomCheckedComboBox.SetSorted(Value: Boolean);
 begin
   if FSorted <> Value then
@@ -937,12 +1001,21 @@ begin
   S := Text;
   if FListBox.Checked[FListBox.ItemIndex] then
   begin
-    if Add(FListBox.Items[FListBox.ItemIndex], S, Delimiter) then
+    if not PartExist(FListBox.Items[FListBox.ItemIndex], S, Delimiter) then
+    begin
+      if not OrderedText then
+        Add(FListBox.Items[FListBox.ItemIndex], S, Delimiter)
+      else
+        S := GetOrderedTextValue;
+
       FCheckedCount := FCheckedCount + 1;
+    end;
   end
   else
-  if Remove(FListBox.Items[FListBox.ItemIndex], S, Delimiter) then
-    FCheckedCount := FCheckedCount - 1;
+  begin
+    if Remove(FListBox.Items[FListBox.ItemIndex], S, Delimiter) then
+      FCheckedCount := FCheckedCount - 1;
+  end;
   ChangeText(S);
   Change;
 end;
@@ -986,15 +1059,9 @@ begin
       begin
         S := InternalList[0];
         Obj := InternalList.Objects[0];
-        {$IFDEF CLR}
-        Index := SendTextMessage(ComboBox.Handle, CB_ADDSTRING, 0, S);
-        if Index < 0 then
-          raise EOutOfResources.Create(SInsertLineError);
-        {$ELSE}
         Index := SendMessage(ComboBox.Handle, CB_ADDSTRING, 0, Longint(PChar(S)));
         if Index < 0 then
           raise EOutOfResources.CreateRes(@SInsertLineError);
-        {$ENDIF CLR}
         SendMessage(ComboBox.Handle, CB_SETITEMDATA, Index, Longint(Obj));
         InternalList.Delete(0);
       end;
@@ -1015,15 +1082,9 @@ begin
   else
   begin
     ComboBox.DeselectProvider;
-    {$IFDEF CLR}
-    Result := SendTextMessage(ComboBox.Handle, CB_ADDSTRING, 0, S);
-    if Result < 0 then
-      raise EOutOfResources.Create(SInsertLineError);
-    {$ELSE}
     Result := SendMessage(ComboBox.Handle, CB_ADDSTRING, 0, Longint(PChar(S)));
     if Result < 0 then
       raise EOutOfResources.CreateRes(@SInsertLineError);
-    {$ENDIF CLR}
   end;
 end;
 
@@ -1058,25 +1119,17 @@ end;
 
 function TJvComboBoxStrings.Get(Index: Integer): string;
 var
-  {$IFNDEF CLR}
   Text: array [0..4095] of Char;
-  {$ENDIF !CLR}
   Len: Integer;
 begin
   if UseInternal then
     Result := InternalList[Index]
   else
   begin
-    {$IFDEF CLR}
-    Len := SendGetTextMessage(ComboBox.Handle, CB_GETLBTEXT, Index, Result, 4096);
-    if Len = CB_ERR then //Len := 0;
-      Error(SListIndexError, Index);
-    {$ELSE}
     Len := SendMessage(ComboBox.Handle, CB_GETLBTEXT, Index, Longint(@Text));
     if Len = CB_ERR then //Len := 0;
       Error(SListIndexError, Index);
     SetString(Result, Text, Len);
-    {$ENDIF CLR}
   end;
 end;
 
@@ -1133,11 +1186,7 @@ begin
   if UseInternal then
     Result := InternalList.IndexOf(S)
   else
-    {$IFDEF CLR}
-    Result := SendTextMessage(ComboBox.Handle, CB_FINDSTRINGEXACT, -1, S);
-    {$ELSE}
     Result := SendMessage(ComboBox.Handle, CB_FINDSTRINGEXACT, -1, Longint(PChar(S)));
-    {$ENDIF CLR}
 end;
 
 procedure TJvComboBoxStrings.Insert(Index: Integer; const S: string);
@@ -1147,13 +1196,8 @@ begin
   else
   begin
     ComboBox.DeselectProvider;
-    {$IFDEF CLR}
-    if SendTextMessage(ComboBox.Handle, CB_INSERTSTRING, Index, S) < 0 then
-      raise EOutOfResources.Create(SInsertLineError);
-    {$ELSE}
     if SendMessage(ComboBox.Handle, CB_INSERTSTRING, Index, Longint(PChar(S))) < 0 then
       raise EOutOfResources.CreateRes(@SInsertLineError);
-    {$ENDIF CLR}
   end;
 end;
 
@@ -1163,10 +1207,8 @@ end;
 procedure TJvComboBoxStrings.MakeListInternal;
 var
   Cnt: Integer;
-  {$IFNDEF CLR}
   Text: array [0..4095] of Char;
   Len: Integer;
-  {$ENDIF !CLR}
   S: string;
   Obj: TObject;
 begin
@@ -1176,12 +1218,8 @@ begin
     Cnt := SendMessage(ComboBox.Handle, CB_GETCOUNT, 0, 0);
     while Cnt > 0 do
     begin
-      {$IFDEF CLR}
-      SendGetTextMessage(ComboBox.Handle, CB_GETLBTEXT, 0, S, 4096);
-      {$ELSE}
       Len := SendMessage(ComboBox.Handle, CB_GETLBTEXT, 0, Longint(@Text));
       SetString(S, Text, Len);
-      {$ENDIF CLR}
       Obj := TObject(SendMessage(ComboBox.Handle, CB_GETITEMDATA, 0, 0));
       SendMessage(ComboBox.Handle, CB_DELETESTRING, 0, 0);
       InternalList.AddObject(S, Obj);
@@ -1236,7 +1274,6 @@ begin
   {$IFDEF COMPILER5}
   FAutoComplete := True;
   {$ENDIF COMPILER5}
-  {$IFNDEF CLR}
   FConsumerSvc := TJvDataConsumer.Create(Self, [DPA_RenderDisabledAsGrayed,
     DPA_ConsumerDisplaysList]);
   FConsumerSvc.OnChanged := ConsumerServiceChanged;
@@ -1252,7 +1289,6 @@ begin
   TStrings(Pointer(@Self.Items)^) := TJvComboBoxStrings.Create; // create our own implementation and put it in place.
   TJvComboBoxStrings(Items).ComboBox := Self;                   // link it to the combo box.
   {$ENDIF COMPILER5}
-  {$ENDIF !CLR}
   {$IFDEF COMPILER5}
   FAutoCompleteCode := TJvComboBoxAutoComplete.Create(Self);
   FAutoCompleteCode.OnDropDown := DoDropDown;
@@ -1267,9 +1303,7 @@ end;
 destructor TJvCustomComboBox.Destroy;
 begin
   FMaxPixel.Free;
-  {$IFNDEF CLR}
   FreeAndNil(FConsumerSvc);
-  {$ENDIF !CLR}
   {$IFDEF COMPILER5}
   FAutoCompleteCode.Free;
   {$ENDIF COMPILER5}
@@ -1285,12 +1319,10 @@ end;
 {$ENDIF COMPILER5}
 
 procedure TJvCustomComboBox.CNCommand(var Msg: TWMCommand);
-{$IFNDEF CLR}
 var
   VL: IJvDataConsumerViewList;
   Item: IJvDataItem;
   ItemText: IJvDataItemText;
-{$ENDIF !CLR}
 begin
   {$IFDEF COMPILER5}
   if Msg.NotifyCode = CBN_DROPDOWN then
@@ -1308,7 +1340,6 @@ begin
         end;
       CBN_SELCHANGE:
         begin
-          {$IFNDEF CLR}
           if IsProviderSelected then
           begin
             Provider.Enter;
@@ -1334,7 +1365,6 @@ begin
             end;
           end
           else
-          {$ENDIF !CLR}
             inherited;
         end;
       else
@@ -1349,29 +1379,15 @@ begin
 end;
 
 procedure TJvCustomComboBox.CNMeasureItem(var Msg: TWMMeasureItem);
-{$IFDEF CLR}
-var
-  MeasureItemStruct: TMeasureItemStruct;
-  itemHeight: Integer;
-{$ENDIF CLR}
 begin
   inherited; // Normal behavior, specifically setting correct ItemHeight
   { Call MeasureItem if a provider is selected and the style is not csOwnerDrawVariable.
     if Style is set to csOwnerDrawVariable Measure will have been called already. }
   if (Style <> csOwnerDrawVariable) and IsProviderSelected then
-    {$IFDEF CLR}
-    MeasureItemStruct := Msg.MeasureItemStruct;
-    itemHeight := Integer(MeasureItemStruct.itemHeight);
-    MeasureItem(MeasureItemStruct.itemID, itemHeight);
-    MeasureItemStruct.itemHeight := itemHeight;
-    Msg.MeasureItemStruct := MeasureItemStruct;
-    {$ELSE}
     with Msg.MeasureItemStruct^ do
       MeasureItem(itemID, Integer(itemHeight));
-    {$ENDIF CLR}
 end;
 
-{$IFNDEF CLR}
 procedure TJvCustomComboBox.ConsumerServiceChanged(Sender: TJvDataConsumer;
   Reason: TJvDataConsumerChangeReason);
 begin
@@ -1411,7 +1427,6 @@ begin
     VL.RebuildView;
   end;
 end;
-{$ENDIF !CLR}
 
 procedure TJvCustomComboBox.CreateParams(var Params: TCreateParams);
 begin
@@ -1454,9 +1469,7 @@ end;
 
 procedure TJvCustomComboBox.DeselectProvider;
 begin
-  {$IFNDEF CLR}
   Provider.Provider := nil;
-  {$ENDIF !CLR}
 end;
 
 procedure TJvCustomComboBox.DestroyWnd;
@@ -1519,14 +1532,12 @@ var
   HeightIndex: Integer;
   NewHeight: Integer;
   InvokeOrgRender: Boolean;
-  {$IFNDEF CLR}
   VL: IJvDataConsumerViewList;
   Item: IJvDataItem;
   ItemsRenderer: IJvDataItemsRenderer;
   ItemRenderer: IJvDataItemRenderer;
   ItemText: IJvDataItemText;
   DrawState: TProviderDrawStates;
-  {$ENDIF !CLR}
 begin
   if csDestroying in ComponentState then
     Exit;
@@ -1546,7 +1557,6 @@ begin
     OnDrawItem(Self, Index, Rect, State)
   else
   begin
-    {$IFNDEF CLR}
     InvokeOrgRender := False;
     DrawState := DP_OwnerDrawStateToProviderDrawState(State);
     if not Enabled then
@@ -1591,7 +1601,6 @@ begin
       end;
     end
     else
-    {$ENDIF !CLR}
       InvokeOrgRender := True;
     if InvokeOrgRender then
     begin
@@ -1603,12 +1612,9 @@ begin
 end;
 
 function TJvCustomComboBox.GetItemCount: Integer;
-{$IFNDEF CLR}
 var
   VL: IJvDataConsumerViewList;
-{$ENDIF !CLR}
 begin
-  {$IFNDEF CLR}
   if IsProviderSelected then
   begin
     Provider.Enter;
@@ -1622,7 +1628,6 @@ begin
     end;
   end
   else
-  {$ENDIF !CLR}
     {$IFDEF COMPILER6_UP}
     Result := inherited GetItemCount;
     {$ELSE}
@@ -1638,14 +1643,11 @@ end;
 {$ENDIF COMPILER6_UP}
 
 function TJvCustomComboBox.GetItemText(Index: Integer): string;
-{$IFNDEF CLR}
 var
   VL: IJvDataConsumerViewList;
   Item: IJvDataItem;
   ItemText: IJvDataItemText;
-{$ENDIF !CLR}
 begin
-  {$IFNDEF CLR}
   if IsProviderSelected then
   begin
     if Supports(Provider as IJvDataConsumer, IJvDataConsumerViewList, VL) then
@@ -1671,7 +1673,6 @@ begin
 //      TJvComboBoxStrings(Items).Error(SListIndexError, Index);
   end
   else
-  {$ENDIF !CLR}
     Result := Items[Index];
 end;
 
@@ -1690,15 +1691,12 @@ end;
 
 function TJvCustomComboBox.HandleFindString(StartIndex: Integer; Value: string;
   ExactMatch: Boolean): Integer;
-{$IFNDEF CLR}
 var
   VL: IJvDataConsumerViewList;
   HasLooped: Boolean;
   Item: IJvDataItem;
   ItemText: IJvDataItemText;
-{$ENDIF CLR}
 begin
-  {$IFNDEF CLR}
   if IsProviderSelected and
     Supports(Provider as IJvDataConsumer, IJvDataConsumerViewList, VL) then
   begin
@@ -1737,7 +1735,6 @@ begin
     end;
   end
   else
-  {$ENDIF !CLR}
     Result := -1;
 end;
 
@@ -1832,20 +1829,17 @@ begin
 end;
 
 procedure TJvCustomComboBox.PerformMeasureItem(Index: Integer; var Height: Integer);
-{$IFNDEF CLR}
 var
   TmpSize: TSize;
   VL: IJvDataConsumerViewList;
   Item: IJvDataItem;
   ItemsRenderer: IJvDataItemsRenderer;
   ItemRenderer: IJvDataItemRenderer;
-{$ENDIF !CLR}
 begin
   if Assigned(OnMeasureItem) and (Style in [csOwnerDrawFixed, csOwnerDrawVariable]) then
     OnMeasureItem(Self, Index, Height)
   else
   begin
-    {$IFNDEF CLR}
     TmpSize.cy := Height;
     if IsProviderSelected then
     begin
@@ -1873,7 +1867,6 @@ begin
         Provider.Leave;
       end;
     end;
-    {$ENDIF !CLR}
   end;
 end;
 
@@ -1905,11 +1898,9 @@ begin
   Result := TJvItemsSearchs.SearchSubString(Items, Value, CaseSensitive);
 end;
 
-{$IFNDEF CLR}
 procedure TJvCustomComboBox.SetConsumerService(Value: TJvDataConsumer);
 begin
 end;
-{$ENDIF !CLR}
 
 procedure TJvCustomComboBox.SetDropDownWidth(Value: Integer);
 begin
@@ -1987,14 +1978,11 @@ begin
 end;
 
 procedure TJvCustomComboBox.UpdateItemCount;
-{$IFNDEF CLR}
 var
   VL: IJvDataConsumerViewList;
   Cnt: Integer;
   EmptyChr: Char;
-{$ENDIF !CLR}
 begin
-  {$IFNDEF CLR}
   if HandleAllocated and IsProviderSelected and
     Supports(Provider as IJvDataConsumer, IJvDataConsumerViewList, VL) then
   begin
@@ -2011,7 +1999,6 @@ begin
       Inc(Cnt);
     end;
   end;
-  {$ENDIF !CLR}
 end;
 
 procedure TJvCustomComboBox.WMInitDialog(var Msg: TWMInitDialog);
@@ -2086,7 +2073,6 @@ begin
         end;
     end;
   end;
-  {$IFNDEF CLR}
   if IsProviderSelected then
     case Msg.Msg of
       CB_FINDSTRING:
@@ -2113,7 +2099,6 @@ begin
           Exit;
         end;
     end;
-  {$ENDIF !CLR}
   inherited WndProc(Msg);
 end;
 

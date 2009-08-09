@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDriveCtrls.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvDriveCtrls.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvDriveCtrls;
 
@@ -381,8 +381,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDriveCtrls.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1148,19 +1148,14 @@ procedure TJvDirectoryListBox.SetFileList(Value: TJvFileListBox);
 begin
   if FFileList <> nil then
     FFileList.FDirList := nil;
-  FFileList := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FFileList));
   if FFileList <> nil then
-  begin
-    FFileList.FreeNotification(Self);
     FFileList.Directory := Directory;
-  end;
 end;
 
 procedure TJvDirectoryListBox.SetDirLabel(Value: TLabel);
 begin
-  FDirLabel := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FDirLabel));
   SetDirLabelCaption;
 end;
 
@@ -1482,12 +1477,11 @@ procedure TJvDirectoryListBox.SetDriveCombo(const Value: TJvDriveCombo);
 begin
   if FDriveCombo <> nil then
     FDriveCombo.FDirList := nil;
-  FDriveCombo := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FDriveCombo));
   if FDriveCombo <> nil then
   begin
     FDriveCombo.FDirList := Self;
     FDriveCombo.Drive := Drive;
-    FDriveCombo.FreeNotification(Self);
   end;
 end;
 

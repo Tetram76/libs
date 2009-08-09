@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPContainer.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvXPContainer.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvXPContainer;
 
@@ -31,16 +31,12 @@ unit JvXPContainer;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   TypInfo, Classes,
   Windows, Controls, Graphics, StdCtrls, ExtCtrls,
-  {$IFDEF USEJVCL}
   JvJCLUtils,
-  {$ENDIF USEJVCL}
   JvXPCore, JvXPCoreUtils;
 
 type
@@ -186,17 +182,15 @@ type
     property OnStartDrag;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPContainer.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -399,12 +393,7 @@ var
   procedure DoDrawText(ACanvas: TCanvas; const ACaption: TCaption; var ARect: TRect;
     AFlags: Integer);
   begin
-    {$IFDEF USEJVCL}
     DrawText(ACanvas, ACaption, -1, ARect, AFlags);
-    {$ELSE}
-    // (rom) Kludge! This will probably not work for CLX
-    DrawText(ACanvas.Handle, PChar(ACaption), -1, ARect, AFlags);
-    {$ENDIF USEJVCL}
   end;
 
 begin
@@ -475,7 +464,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -483,6 +471,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

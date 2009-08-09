@@ -26,7 +26,7 @@ Description:
 Known Issues:
  - BiDi support (checkbox should probably be on the right for RTL)
 -----------------------------------------------------------------------------}
-// $Id: JvCheckedMaskEdit.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvCheckedMaskEdit.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvCheckedMaskEdit;
 
@@ -175,8 +175,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckedMaskEdit.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -198,11 +198,7 @@ uses
 procedure TJvCustomCheckedMaskEdit.BeginInternalChange;
 begin
   if FInternalChange then
-    {$IFDEF CLR}
-    raise EJVCLException.Create(RsEBeginUnsupportedNestedCall);
-    {$ELSE}
     raise EJVCLException.CreateRes(@RsEBeginUnsupportedNestedCall);
-    {$ENDIF CLR}
   FInternalChange := True;
 end;
 
@@ -268,11 +264,7 @@ procedure TJvCustomCheckedMaskEdit.EndInternalChange;
 begin
   { TODO : if this assertion ever fails, it's time to switch to a counted locking scheme }
   if not FInternalChange then
-    {$IFDEF CLR}
-    raise EJVCLException.Create(RsEEndUnsupportedNestedCall);
-    {$ELSE}
     raise EJVCLException.CreateRes(@RsEEndUnsupportedNestedCall);
-    {$ENDIF CLR}
   FInternalChange := False;
 end;
 

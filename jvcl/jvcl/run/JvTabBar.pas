@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTabBar.pas 12140 2009-01-10 19:04:38Z ahuser $
+// $Id: JvTabBar.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvTabBar;
 
@@ -35,9 +35,6 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Graphics, Controls, Forms, ImgList, Menus, Buttons,
   ExtCtrls,
-  {$IFDEF CLR}
-  Types,
-  {$ENDIF CLR}
   SysUtils, Classes, Contnrs,
   JvVCL5Utils, JvThemes;
 
@@ -483,13 +480,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTabBar.pas $';
-    Revision: '$Revision: 12140 $';
-    Date: '$Date: 2009-01-10 20:04:38 +0100 (sam., 10 janv. 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+uses
+  JvJVCLUtils;
 
 //=== { TJvCustomTabBar } ====================================================
 
@@ -640,15 +640,11 @@ begin
   if Value <> FPainter then
   begin
     if Assigned(FPainter) then
-    begin
       FPainter.FOnChangeList.Extract(Self);
-      FPainter.RemoveFreeNotification(Self);
-    end;
-    FPainter := Value;
+    ReplaceComponentReference (Self, Value, tComponent(FPainter));
     if Assigned(FPainter) then
     begin
       FreeAndNil(FDefaultPainter);
-      FPainter.FreeNotification(Self);
       FPainter.FOnChangeList.Add(Self);
       if Parent <> nil then
         UpdateScrollButtons;
@@ -661,23 +657,9 @@ end;
 
 procedure TJvCustomTabBar.SetImages(Value: TCustomImageList);
 begin
-  if Value <> FImages then
-  begin
-    if Assigned(FImages) then
-    begin
-      FImages.UnregisterChanges(FChangeLink);
-      FImages.RemoveFreeNotification(Self);
-    end;
-    FImages := Value;
-    if Assigned(FImages) then
-    begin
-      FImages.RegisterChanges(FChangeLink);
-      FImages.FreeNotification(Self);
-    end;
-
+  if ReplaceImageListReference(Self, Value, FImages, FChangeLink) then
     if not (csDestroying in ComponentState) then
       Invalidate;
-  end;
 end;
 
 procedure TJvCustomTabBar.SetCloseButton(Value: Boolean);

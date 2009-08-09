@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCsvDataEditor.pas 11891 2008-09-09 20:33:00Z obones $
+// $Id: JvCsvDataEditor.pas 12309 2009-05-18 22:46:22Z ahuser $
 
 unit JvCsvDataEditor;
 
@@ -81,7 +81,7 @@ begin
   Result := inherited GetAttributes + [paDialog];
 end;
 
-function DoCsvDefDialog(OldValue: string; ASeparator: AnsiChar): string;
+function DoCsvDefDialog(OldValue: string; ASeparator: Char): string;
 var
   WindowList: Pointer;
 begin
@@ -110,7 +110,7 @@ begin
   S1 := GetValue;
   if S1 = '' then
     S1 := Component.GetCsvHeader;
-  S2 := DoCsvDefDialog(S1, TJvCsvDataSet(Component).Separator); {AnsiChar}
+  S2 := DoCsvDefDialog(S1, TJvCsvDataSet(Component).Separator);
 
   //if S1 <> S2 then begin // on change of csv value.
   SetValue(S2);

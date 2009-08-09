@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFUtils.pas 11919 2008-09-24 21:36:04Z jfudickar $
+// $Id: JvTFUtils.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvTFUtils;
 
@@ -31,11 +31,9 @@ unit JvTFUtils;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Graphics, Controls, Classes, SysUtils;
 
 {$HPPEMIT '#ifndef TDate'}
@@ -114,31 +112,20 @@ function RectHeight(ARect: TRect): Integer;
 function EmptyRect: TRect;
 function IsClassByName(Obj: TObject; ClassName: string): Boolean;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFUtils.pas $';
-    Revision: '$Revision: 11919 $';
-    Date: '$Date: 2008-09-24 23:36:04 +0200 (mer., 24 sept. 2008) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvResources;
-{$ENDIF USEJVCL}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsEResultDoesNotFallInMonth = 'Result does not fall in given month';
-  RsEInvalidMonthValue = 'Invalid Month Value (%d)';
-  RsEInvalidDayOfWeekValue = 'Invalid value for day of week (%d)';
-{$ENDIF !USEJVCL}
 
 function ExtractYear(ADate: TDateTime): Word;
 var
@@ -647,7 +634,6 @@ begin
       ClassRef := ClassRef.ClassParent;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -655,7 +641,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

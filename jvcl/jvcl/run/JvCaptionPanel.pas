@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCaptionPanel.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvCaptionPanel.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvCaptionPanel;
 
@@ -46,9 +46,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
-  {$IFDEF CLR}
-  Types,
-  {$ENDIF CLR}
   SysUtils, Classes, Graphics, Controls, Forms, ExtCtrls,
   JvComponent, JvExtComponent, JvExControls;
 
@@ -195,8 +192,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCaptionPanel.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -610,11 +607,7 @@ begin
       Tf := TFont.Create;
       try
         Tf.Assign(CaptionFont);
-        {$IFDEF CLR}
-        GetObject(Tf.Handle, SizeOf(Lf), Lf);
-        {$ELSE}
         GetObject(Tf.Handle, SizeOf(Lf), @Lf);
-        {$ENDIF CLR}
         Lf.lfEscapement := Rotation * 10;
         Lf.lfOrientation := Rotation * 10;
         Lf.lfOutPrecision := OUT_TT_PRECIS;

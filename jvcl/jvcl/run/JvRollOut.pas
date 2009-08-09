@@ -42,7 +42,7 @@ Changes 2003-03-23:
      - ImageOffset: change to ImageOptions.Offset // peter3
 
 -----------------------------------------------------------------------------}
-// $Id: JvRollOut.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvRollOut.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvRollOut;
 
@@ -294,8 +294,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRollOut.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -303,7 +303,7 @@ const
 implementation
 
 uses
-  Forms; // for IsAccel()
+  Forms, JvJVCLUtils; // for IsAccel()
 
 
 // (p3) not used
@@ -394,20 +394,7 @@ end;
 
 procedure TJvRollOutImageOptions.SetImages(const Value: TCustomImageList);
 begin
-  if FImages <> nil then
-  begin
-    FImages.UnRegisterChanges(FChangeLink);
-    if FOwner <> nil then
-      FImages.RemoveFreeNotification(FOwner);
-  end;
-
-  FImages := Value;
-  if FImages <> nil then
-  begin
-    FImages.RegisterChanges(FChangeLink);
-    if FOwner <> nil then
-      FImages.FreeNotification(FOwner);
-  end;
+  ReplaceImageListReference(FOwner, Value, FImages, FChangeLink);
   Change;
 end;
 
@@ -1245,14 +1232,7 @@ end;
 
 procedure TJvRollOutAction.SetRollOut(const Value: TJvCustomRollOut);
 begin
-  if FRollOut <> Value then
-  begin
-    if FRollOut <> nil then
-      FRollOut.RemoveFreeNotification(Self);
-    FRollOut := Value;
-    if FRollOut <> nil then
-      FRollOut.FreeNotification(Self);
-  end;
+  ReplaceComponentReference (Self, Value, TComponent(FRollOut));
 end;
 
 procedure TJvRollOutAction.UpdateTarget(Target: TObject);

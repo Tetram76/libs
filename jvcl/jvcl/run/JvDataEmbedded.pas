@@ -34,7 +34,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataEmbedded.pas 11830 2008-07-23 17:34:56Z obones $
+// $Id: JvDataEmbedded.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvDataEmbedded;
 
@@ -135,8 +135,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDataEmbedded.pas $';
-    Revision: '$Revision: 11830 $';
-    Date: '$Date: 2008-07-23 19:34:56 +0200 (mer., 23 juil. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -209,24 +209,13 @@ end;
 procedure TJvDataEmbedded.ReadUnpublishedStream(Stream: TStream);
 var
   I: Integer;
-  {$IFDEF CLR}
-  A: TBytes;
-  {$ENDIF CLR}
 begin
   if DefinePropertyIs(cEmbeddedData) then
   begin
-    {$IFDEF CLR}
-    Stream.Read(I);
-    FStream.Clear;
-    SetLength(A, I);
-    Stream.Read(A, I);
-    FStream.Write(A, I);
-    {$ELSE}
     Stream.Read(I, SizeOf(I));
     FStream.Clear;
     FStream.Size := I;
     Stream.Read(FStream.Memory^, I);
-    {$ENDIF CLR}
   end;
 end;
 
@@ -237,13 +226,8 @@ begin
   if DefinePropertyIs(cEmbeddedData) then
   begin
     I := FStream.Size;
-    {$IFDEF CLR}
-    Stream.Write(I);
-    Stream.Write(FStream.Memory, I);
-    {$ELSE}
     Stream.Write(I, SizeOf(I));
     Stream.Write(FStream.Memory^, I);
-    {$ENDIF CLR}
   end;
 end;
 

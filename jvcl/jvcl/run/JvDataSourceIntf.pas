@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataSourceIntf.pas 11981 2008-10-24 20:55:14Z ahuser $
+// $Id: JvDataSourceIntf.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvDataSourceIntf;
 
@@ -34,9 +34,6 @@ uses
   {$IFNDEF DelphiPersonalEdition}
   DB,
   {$ENDIF !DelphiPersonalEdition}
-  {$IFDEF CLR}
-  Variants,
-  {$ENDIF CLR}
   SysUtils, Classes, Contnrs;
 
 const

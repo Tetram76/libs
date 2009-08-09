@@ -36,7 +36,7 @@ inherit it with JVCL3 from JvDBLookupEdit, the specified errors occur.
 
 Michael Habbe [2003-10-20]
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupComboEdit.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvDBLookupComboEdit.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvDBLookupComboEdit;
 
@@ -161,8 +161,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupComboEdit.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -307,7 +307,11 @@ end;
 procedure TJvDBLookupComboEdit.SetDataSource(Value: TDataSource);
 begin
   if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+  begin
+    if FDataLink.DataSource <> nil then
+      FDataLink.DataSource.RemoveFreeNotification(Self);
     FDataLink.DataSource := Value;
+  end;
   if Value <> nil then
     Value.FreeNotification(Self);
 end;
@@ -486,7 +490,7 @@ begin
     with FCanvas do
     begin
       R := ClientRect;
-      if not (NewStyleControls and Ctl3D) and (BorderStyle = bsSingle) then
+      if not Ctl3D and (BorderStyle = bsSingle) then
       begin
         Brush.Color := clWindowFrame;
         FrameRect(R);
@@ -541,38 +545,15 @@ var
   I: Integer;
   SysMetrics, Metrics: TTextMetric;
 begin
-  if NewStyleControls then
-  begin
-    if BorderStyle = bsNone then
-      I := 0
-    else
-    if Ctl3D then
-      I := 1
-    else
-      I := 2;
-    Result.X := SendMessage(Handle, EM_GETMARGINS, 0, 0) and $0000FFFF + I;
-    Result.Y := I;
-  end
+  if BorderStyle = bsNone then
+    I := 0
   else
-  begin
-    if BorderStyle = bsNone then
-      I := 0
-    else
-    begin
-      DC := GetDC(HWND_DESKTOP);
-      GetTextMetrics(DC, SysMetrics);
-      SaveFont := SelectObject(DC, Font.Handle);
-      GetTextMetrics(DC, Metrics);
-      SelectObject(DC, SaveFont);
-      ReleaseDC(HWND_DESKTOP, DC);
-      I := SysMetrics.tmHeight;
-      if I > Metrics.tmHeight then
-        I := Metrics.tmHeight;
-      I := I div 4;
-    end;
-    Result.X := I;
-    Result.Y := I;
-  end;
+  if Ctl3D then
+    I := 1
+  else
+    I := 2;
+  Result.X := SendMessage(Handle, EM_GETMARGINS, 0, 0) and $0000FFFF + I;
+  Result.Y := I;
 end;
 
 function TJvDBLookupComboEdit.ExecuteAction(Action: TBasicAction): Boolean;

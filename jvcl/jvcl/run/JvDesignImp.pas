@@ -21,7 +21,7 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignImp.pas 11137 2007-01-05 11:24:49Z obones $
+// $Id: JvDesignImp.pas 12424 2009-08-05 13:59:07Z obones $
 
 unit JvDesignImp;
 
@@ -276,8 +276,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignImp.pas $';
-    Revision: '$Revision: 11137 $';
-    Date: '$Date: 2007-01-05 12:24:49 +0100 (ven., 05 janv. 2007) $';
+    Revision: '$Revision: 12424 $';
+    Date: '$Date: 2009-08-05 15:59:07 +0200 (mer., 05 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -852,9 +852,24 @@ var
   end;
 
   procedure FocusSurface;
+  var
+    WasActive: Boolean;
   begin
     if not Surface.Container.Focused and Surface.Container.CanFocus then
+    begin
+      // Mantis 4732: deactivate the container otherwise SetFocus does not work
+      // This bug apparently only happens under certain rare conditions
+      // under windows but its fix does not seem to have any negative impact
+      // on systems where it does not happen.
+      WasActive := TJvDesignPanel(Surface.Container).Active;
+      if WasActive then
+        TJvDesignPanel(Surface.Container).Active := False;
+
       Surface.Container.SetFocus;
+
+      if WasActive then
+        TJvDesignPanel(Surface.Container).Active := True;
+    end;
   end;
 
   procedure SelectDragMode;
@@ -1063,7 +1078,6 @@ begin
     CalcDragRects;
     for I := 0 to Surface.Count - 1 do
       Surface.Selection[I].BoundsRect := FDragRects[I];
-    Surface.UpdateDesigner;
     Surface.Change;
   end;
 end;
@@ -1185,7 +1199,6 @@ end;
 procedure TJvDesignSizer.ApplyDragRect;
 begin
   Surface.Selection[0].BoundsRect := FDragRect;
-  Surface.UpdateDesigner;
   Surface.Change;
 end;
 

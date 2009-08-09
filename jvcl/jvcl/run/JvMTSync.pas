@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTSync.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvMTSync.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvMTSync;
 
@@ -30,11 +30,9 @@ unit JvMTSync;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes, SyncObjs,
   {$IFDEF MSWINDOWS}
   Windows,
@@ -101,32 +99,21 @@ type
     function WaitFor(Timeout: LongWord): Boolean; override;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTSync.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
-  {$IFDEF USEJVCL}
   JvResources,
-  {$ENDIF USEJVCL}
   JvMTThreading;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsESemaphoreFailure = 'Semaphore failure (%d)';
-  RsESemaphoreAbandoned = 'Semaphore was abandoned';
-  RsEThreadAbandoned = 'Thread was abandoned';
-{$ENDIF !USEJVCL}
 
 //=== { TMTSemaphore } =======================================================
 
@@ -343,7 +330,6 @@ begin
   Windows.SetEvent(FHandle);
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -351,6 +337,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

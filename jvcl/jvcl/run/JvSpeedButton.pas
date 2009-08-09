@@ -34,7 +34,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 12106 2008-12-24 10:42:34Z ahuser $
+// $Id: JvSpeedButton.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvSpeedButton;
 
@@ -500,8 +500,8 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 12106 $';
-    Date: '$Date: 2008-12-24 11:42:34 +0100 (mer., 24 déc. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -584,7 +584,7 @@ var
 
 begin
   Result := Client;
-  NewStyle := (Style = bsNew) or (NewStyleControls and (Style = bsAutoDetect));
+  NewStyle := (Style = bsNew) or (Style = bsAutoDetect);
   ShadowColor := GetShadowColor(AColor);     // Honeymic
   HighlightColor := GetHighlightColor(AColor);  // Honeymic
 
@@ -1466,9 +1466,7 @@ end;
 
 procedure TJvCustomSpeedButton.SetDropdownMenu(Value: TPopupMenu);
 begin
-  FDropDownMenu := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FDropDownMenu));
   if FMarkDropDown then
     Invalidate;
 end;
@@ -1912,15 +1910,8 @@ end;
 
 procedure TJvImageSpeedButton.SetImages(const Value: TCustomImageList);
 begin
-  if FImages <> nil then
-    FImages.UnRegisterChanges(FImageChangeLink);
-  FImages := Value;
-  if FImages <> nil then
-  begin
-    FImages.RegisterChanges(FImageChangeLink);
-    FImages.FreeNotification(Self);
-  end
-  else
+  ReplaceImageListReference(Self, Value, FImages, FImageChangeLink);
+  if FImages = nil then
     SetImageIndex(-1);
   InvalidateImage;
 end;

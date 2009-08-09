@@ -48,7 +48,7 @@ Known Issues:
     ugly.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCaptionButton.pas 12228 2009-03-09 14:00:05Z ahuser $
+// $Id: JvCaptionButton.pas 12392 2009-07-09 11:15:37Z ahuser $
 
 unit JvCaptionButton;
 
@@ -144,14 +144,15 @@ type
     FSaveRgn: HRGN;
     FShowHint: Boolean;
     FParentShowHint: Boolean;
-
     {tool tip specific}
     FToolTipHandle: THandle;
     {tool tip specific end}
+    FCurrentWindowState: TWindowState;
 
     {$IFDEF JVCLThemesEnabled}
     FCaptionActive: Boolean;
     FForceDrawSimple: Boolean;
+    FForceRedraw: Boolean;
     function GetIsThemed: Boolean;
     procedure SetForceDrawSimple(const Value: Boolean);
     {$ENDIF JVCLThemesEnabled}
@@ -298,8 +299,8 @@ function AlphaBlend(hdcDest: HDC; nXOriginDest, nYOriginDest, nWidthDest,
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCaptionButton.pas $';
-    Revision: '$Revision: 12228 $';
-    Date: '$Date: 2009-03-09 15:00:05 +0100 (lun., 09 mars 2009) $';
+    Revision: '$Revision: 12392 $';
+    Date: '$Date: 2009-07-09 13:15:37 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -314,9 +315,8 @@ uses
   {$IFNDEF COMPILER7_UP}
   TmSchema,
   {$ENDIF !COMPILER7_UP}
-  JvJVCLUtils,
   {$ENDIF JVCLThemesEnabled}
-  JvDsgnIntf, JvConsts, JvJCLUtils, JvResources, JvWndProcHook;
+  JvDsgnIntf, JvConsts, JvJCLUtils, JvResources, JvWndProcHook, JvJVCLUtils;
 
 const
   { Msimg32.dll is included in Windows 98 and later }
@@ -429,6 +429,12 @@ var
   GGlobalXPData: TGlobalXPData;
 
 //=== Local procedures =======================================================
+
+function IsVistaOrNewer: Boolean;
+begin
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and
+            (Win32MajorVersion >= 6);
+end;
 
 function GlobalXPData: TGlobalXPData;
 begin
@@ -1212,8 +1218,15 @@ begin
   FImageChangeLink.OnChange := ImageListChange;
   FParentShowHint := True;
 
+  FCurrentWindowState := TCustomForm(AOwner).WindowState;
+
   {$IFDEF JVCLThemesEnabled}
   GlobalXPData.AddClient;
+  {$ENDIF JVCLThemesEnabled}
+
+  {$IFDEF JVCLThemesEnabled}
+  if IsVistaOrNewer and IsThemed then // Windows Vista
+    FForceRedraw := True;
   {$ENDIF JVCLThemesEnabled}
 
   Hook;
@@ -1358,6 +1371,7 @@ var
   Style: DWORD;
   ExStyle: DWORD;
   FrameSize: TSize;
+  Placement: WindowPlacement;
 begin
   if Wnd = 0 then
     Exit;
@@ -1369,13 +1383,20 @@ begin
   if not FHasCaption then
     Exit;
 
+  Placement.length := SizeOf(WindowPlacement);
+  GetWindowPlacement(Wnd, @Placement);
   ExStyle := GetWindowLong(Wnd, GWL_EXSTYLE);
   FHasSmallCaption := ExStyle and WS_EX_TOOLWINDOW = WS_EX_TOOLWINDOW;
   {$IFDEF JVCLThemesEnabled}
+  if not IsThemed and (Placement.showCmd = SW_SHOWMINIMIZED) then
+    FHasSmallCaption := False;
   FCaptionActive := (GetActiveWindow = Wnd) and IsForegroundTask;
+  {$ELSE}
+  if Placement.showCmd = SW_SHOWMINIMIZED then
+    FHasSmallCaption := False;
   {$ENDIF JVCLThemesEnabled}
 
-  if Style and WS_THICKFRAME = WS_THICKFRAME then
+  if (Style and WS_THICKFRAME = WS_THICKFRAME) and (Placement.showCmd <> SW_SHOWMINIMIZED) then
   begin
     FrameSize.cx := GetSystemMetrics(SM_CXSIZEFRAME);
     FrameSize.cy := GetSystemMetrics(SM_CYSIZEFRAME);
@@ -1399,7 +1420,28 @@ begin
   { 3. Calc FDefaultButtonWidth }
   {$IFDEF JVCLThemesEnabled}
   if IsThemed then
-    FDefaultButtonWidth := FDefaultButtonHeight
+  begin
+    if IsVistaOrNewer then
+    begin
+      if FHasSmallCaption then
+      begin
+        FDefaultButtonWidth := GetSystemMetrics(SM_CXSMSIZE) - 4
+      end
+      else
+      begin
+        // This is not exactly correct but WM_GETTITLEBARINFOEX returns the coordinates
+        // for the "Glass" style. But because we paint into the NC area, out window uses
+        // the "Basic" style.
+        FDefaultButtonWidth := GetSystemMetrics(SM_CXSIZE) - 4;
+      end;
+
+      // Adjust position
+      FDefaultButtonTop := FDefaultButtonTop - 2;
+      FDefaultButtonHeight := FCaptionHeight - 3;
+    end
+    else
+      FDefaultButtonWidth := FDefaultButtonHeight;
+  end
   else
   {$ENDIF JVCLThemesEnabled}
   if FHasSmallCaption then
@@ -2041,8 +2083,15 @@ begin
   GetWindowRect(Wnd, WindowRect);
   OffsetRect(LButtonRect, WindowRect.Left, WindowRect.Top);
   { Check if button rect is in the to be updated region.. }
-  if RectInRegion(FSaveRgn, LButtonRect) then
+  if RectInRegion(FSaveRgn, LButtonRect)
+    {$IFDEF JVCLThemesEnabled}
+    or FForceRedraw
+    {$ENDIF JVCLThemesEnabled}
+    then
   begin
+    {$IFDEF JVCLThemesEnabled}
+    FForceRedraw := False;
+    {$ENDIF JVCLThemesEnabled}
     { ..If so remove the button rectangle from the region (otherwise the caption
       background would be drawn over the button, which causes flicker) }
     with LButtonRect do
@@ -2270,6 +2319,8 @@ end;
 
 procedure TJvCaptionButton.SetAction(const Value: TBasicAction);
 begin
+  if (FActionLink <> nil) and (FActionLink.Action <> nil) then
+    FActionLink.Action.RemoveFreeNotification(Self);
   if Value = nil then
   begin
     FActionLink.Free;
@@ -2367,14 +2418,7 @@ end;
 
 procedure TJvCaptionButton.SetImages(const Value: TCustomImageList);
 begin
-  if FImages <> nil then
-    FImages.UnRegisterChanges(FImageChangeLink);
-  FImages := Value;
-  if FImages <> nil then
-  begin
-    FImages.RegisterChanges(FImageChangeLink);
-    FImages.FreeNotification(Self);
-  end;
+  ReplaceImageListReference(Self, Value, FImages, FImageChangeLink);
   if Standard = tsbNone then
     Redraw(rkIndirect);
 end;
@@ -2693,6 +2737,16 @@ begin
       end;
     WM_NOTIFY:
       Result := HandleNotify(TWMNotify(Msg));
+    WM_SIZE:
+      begin
+        if FCurrentWindowState <> ParentForm.WindowState then
+        begin
+          FNeedRecalculate := True;
+          FCurrentWindowState := ParentForm.WindowState;
+          RedrawWindow(ParentFormHandle, nil, 0, RDW_FRAME or RDW_INVALIDATE);
+        end;
+        Result := False;
+      end;
   else
     Result := False;
   end;

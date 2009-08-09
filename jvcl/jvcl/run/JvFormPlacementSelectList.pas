@@ -16,7 +16,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacementSelectList.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvFormPlacementSelectList.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvFormPlacementSelectList;
 
@@ -36,7 +36,6 @@ type
   private
     FFormStorage: TJvFormStorage;
   protected
-    function GetFormStorage: TJvFormStorage; virtual;
     procedure SetFormStorage(Value: TJvFormStorage); virtual;
     function GetAppStorage: TJvCustomAppStorage; override;
     procedure SetAppStorage(Value: TJvCustomAppStorage); override;
@@ -46,15 +45,15 @@ type
     function RestoreFormStorage(const ACaption: string = ''): Boolean;
     function SaveFormStorage(const ACaption: string = ''): Boolean;
   published
-    property FormStorage: TJvFormStorage read GetFormStorage write SetFormStorage;
+    property FormStorage: TJvFormStorage read FFormStorage write SetFormStorage;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacementSelectList.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -62,16 +61,11 @@ const
 implementation
 
 uses
-  JvConsts;
-
-function TJvFormStorageSelectList.GetFormStorage: TJvFormStorage;
-begin
-  Result := FFormStorage;
-end;
+  JvConsts, JvJVCLUtils;
 
 procedure TJvFormStorageSelectList.SetFormStorage(Value: TJvFormStorage);
 begin
-  FFormStorage := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FFormStorage));
 end;
 
 function TJvFormStorageSelectList.GetAppStorage: TJvCustomAppStorage;

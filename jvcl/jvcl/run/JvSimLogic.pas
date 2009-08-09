@@ -35,7 +35,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSimLogic.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvSimLogic.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvSimLogic;
 
@@ -334,13 +334,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimLogic.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+uses
+  JvJVCLUtils;
 
 
 {$R JvSimImages.res}
@@ -703,9 +706,10 @@ end;
 procedure TJvSIMConnector.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
-  if (Operation = opRemove) and (AComponent = FromLogic) then
-    FromLogic := nil;
-  if (Operation = opRemove) and (AComponent = ToLogic) then
+  if (Operation = opRemove) then
+  if (AComponent = FromLogic) then
+    FromLogic := nil
+  else if (AComponent = ToLogic) then
     ToLogic := nil;
 end;
 
@@ -819,7 +823,7 @@ end;
 
 procedure TJvSIMConnector.SetFromLogic(const Value: TJvLogic);
 begin
-  FFromLogic := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FFromLogic));
 end;
 
 procedure TJvSIMConnector.SetToGate(const Value: Integer);
@@ -829,7 +833,7 @@ end;
 
 procedure TJvSIMConnector.SetToLogic(const Value: TJvLogic);
 begin
-  FToLogic := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FToLogic));
 end;
 
 procedure TJvSIMConnector.SetFromPoint(const Value: TJvPointX);

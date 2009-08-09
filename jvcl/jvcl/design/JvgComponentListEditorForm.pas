@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgComponentListEditorForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgComponentListEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgComponentListEditorForm;
 
@@ -87,28 +87,10 @@ type
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvDsgnConsts, JvDsgnTypes;
-{$ENDIF USEJVCL}
 
 {$R *.dfm}
-
-{$IFNDEF USEJVCL}
-
-resourcestring
-  RsEditComponentListEllipsis = 'Edit component list...';
-
-type
-  {$IFDEF COMPILER6_UP}
-  IJvDesigner = DesignIntf.IDesigner;
-  IJvFormDesigner = DesignIntf.IDesigner;
-  {$ELSE}
-  IJvDesigner = IFormDesigner;
-  IJvFormDesigner = IFormDesigner;
-  {$ENDIF COMPILER6_UP}
-
-{$ENDIF !USEJVCL}
 
 //=== common proc ============================================================
 

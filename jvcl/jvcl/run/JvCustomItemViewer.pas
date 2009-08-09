@@ -26,7 +26,7 @@ Known Issues:
  * drag'n'drop edge scrolling - DONE (almost, needs some tweaks to look good as well)
  * icons don't scale, should be handled differently - DONE (explicitly calls DrawIconEx)
 -----------------------------------------------------------------------------}
-// $Id: JvCustomItemViewer.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvCustomItemViewer.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvCustomItemViewer;
 
@@ -352,8 +352,8 @@ function CenterRect(InnerRect, OuterRect: TRect): TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCustomItemViewer.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -910,7 +910,7 @@ end;
 
 procedure TJvCustomItemViewer.CMCtl3DChanged(var Msg: TMessage);
 begin
-  if NewStyleControls and (FBorderStyle = bsSingle) then
+  if FBorderStyle = bsSingle then
     RecreateWnd;
   inherited;
 end;
@@ -966,7 +966,7 @@ begin
   with Params do
   begin
     Style := Style or BorderStyles[BorderStyle];
-    if NewStyleControls and Ctl3D and (BorderStyle = bsSingle) then
+    if Ctl3D and (BorderStyle = bsSingle) then
     begin
       Style := Style and not WS_BORDER;
       ExStyle := ExStyle or WS_EX_CLIENTEDGE;

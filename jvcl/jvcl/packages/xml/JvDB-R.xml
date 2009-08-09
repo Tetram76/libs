@@ -7,10 +7,6 @@
   <C5Libs/>
   <C6Libs/>
   <ImageBase>4B200000</ImageBase>
-  <VersionMajorNumber>3</VersionMajorNumber>
-  <VersionMinorNumber>31</VersionMinorNumber>
-  <ReleaseNumber>0</ReleaseNumber>
-  <BuildNumber>0</BuildNumber>
   <Requires>
     <Package Name="JvCore-R" Targets="all" Condition=""/>
     <Package Name="JvDlgs-R" Targets="all" Condition=""/>
@@ -136,6 +132,7 @@
   <Contains>
     <File Name="..\..\run\JvAppStoragePropertyEngineDB.pas" Targets="DB" Formname="" Condition=""/>
     <File Name="..\..\run\JvMemoryDataset.pas" Targets="DB" Formname="" Condition=""/>
+    <File Name="..\..\run\JvExprParser.pas" Targets="DB" Formname="" Condition=""/>
     <File Name="..\..\run\JvCsvData.pas" Targets="DB" Formname="" Condition=""/>
     <File Name="..\..\run\JvCsvParse.pas" Targets="DB" Formname="" Condition=""/>
     <File Name="..\..\run\JvDBActions.pas" Targets="DB" Formname="" Condition=""/>

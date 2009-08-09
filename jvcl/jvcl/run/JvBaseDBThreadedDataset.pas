@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBThreadedDataset.pas 12142 2009-01-10 23:27:19Z jfudickar $
+// $Id: JvBaseDBThreadedDataset.pas 12411 2009-07-27 23:12:10Z jfudickar $
 
 unit JvBaseDBThreadedDataset;
 
@@ -426,8 +426,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBThreadedDataset.pas $';
-    Revision: '$Revision: 12142 $';
-    Date: '$Date: 2009-01-11 00:27:19 +0100 (dim., 11 janv. 2009) $';
+    Revision: '$Revision: 12411 $';
+    Date: '$Date: 2009-07-28 01:12:10 +0200 (mar., 28 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -855,9 +855,9 @@ end;
 
 procedure TJvBaseDatasetThreadHandler.AfterOpen;
 begin
+  ExecuteThreadSynchronize(IntSynchAfterOpen);
   if not ExecuteThreadIsActive and not OperationWasHandledInThread and (IntCurrentOperation <> tdoRefresh) then
     HandleAfterOpenRefresh;
-  ExecuteThreadSynchronize(IntSynchAfterOpen);
 end;
 
 procedure TJvBaseDatasetThreadHandler.AfterScroll;
@@ -1187,9 +1187,9 @@ begin
           end;
       end;
     end;
+    Dataset.Filtered := FIntDatasetWasFiltered;
     if Dataset.Active and (IntCurrentAction <> tdaCancel) then
       ExecuteThreadSynchronize(SynchAfterOpenFetch);
-    Dataset.Filtered := FIntDatasetWasFiltered;
   finally
     ExecuteThreadSynchronize(Dataset.EnableControls);
     IntCurrentAction := tdaNothing;

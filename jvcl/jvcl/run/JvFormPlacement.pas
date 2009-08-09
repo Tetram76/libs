@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacement.pas 12083 2008-12-22 12:42:35Z obones $
+// $Id: JvFormPlacement.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvFormPlacement;
                                               
@@ -118,6 +118,7 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormDestroy(Sender: TObject);
     function GetForm: TForm;
+    procedure SetAppStorage(const Value: TJvCustomAppStorage);
   protected
     procedure ResolveAppStoragePath;
     procedure Loaded; override;
@@ -147,7 +148,7 @@ type
     procedure EraseSections;
   published
     property Active: Boolean read FActive write FActive default True;
-    property AppStorage: TJvCustomAppStorage read FAppStorage write FAppStorage;
+    property AppStorage: TJvCustomAppStorage read FAppStorage write SetAppStorage;
     property AppStoragePath: string read FAppStoragePath write SetAppStoragePath;
     property MinMaxInfo: TJvWinMinMaxInfo read FWinMinMaxInfo write SetWinMinMaxInfo;
     property Options: TPlacementOptions read FOptions write FOptions default [fpState, fpSize, fpLocation];
@@ -287,8 +288,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacement.pas $';
-    Revision: '$Revision: 12083 $';
-    Date: '$Date: 2008-12-22 13:42:35 +0100 (lun., 22 déc. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -477,17 +478,11 @@ end;
 
 procedure TJvFormPlacement.WndMessage(Sender: TObject; var Msg: TMessage;
   var Handled: Boolean);
-{$IFDEF CLR}
-var
-  MinMax: TMinMaxInfo;
-  InitMenuPopup: TWMInitMenuPopup;
-{$ELSE}
 type
   PWMInitMenuPopup = ^TWMInitMenuPopup;
 var
   MinMax: PMinMaxInfo;
   InitMenuPopup: PWMInitMenuPopup;
-{$ENDIF CLR}
 begin
   if FPreventResize and (Owner is TCustomForm) then
   begin
@@ -495,25 +490,14 @@ begin
       WM_GETMINMAXINFO:
         if Form.HandleAllocated and IsWindowVisible(Form.Handle) then
         begin
-          {$IFDEF CLR}
-          MinMax := TWMGetMinMaxInfo.Create(Msg).MinMaxInfo;
-          {$ELSE}
           MinMax := TWMGetMinMaxInfo(Msg).MinMaxInfo;
-          {$ENDIF CLR}
           MinMax.ptMinTrackSize := Point(Form.Width, Form.Height);
           MinMax.ptMaxTrackSize := Point(Form.Width, Form.Height);
-          {$IFDEF CLR}
-          TWMGetMinMaxInfo.Create(Msg).MinMaxInfo := MinMax;
-          {$ENDIF CLR}
           Msg.Result := 1;
         end;
       WM_INITMENUPOPUP:
         begin
-          {$IFDEF CLR}
-          InitMenuPopup := TWMInitMenuPopup.Create(Msg);
-          {$ELSE}
           InitMenuPopup := PWMInitMenuPopup(@Msg);
-          {$ENDIF CLR}
           if InitMenuPopup.SystemMenu then
           begin
             if Form.Menu <> nil then
@@ -534,14 +518,10 @@ begin
   else
   if Msg.Msg = WM_GETMINMAXINFO then
   begin
-    {$IFDEF CLR}
-    MinMax := TWMGetMinMaxInfo.Create(Msg).MinMaxInfo;
-    {$ELSE}
     MinMax := TWMGetMinMaxInfo(Msg).MinMaxInfo;
-    {$ENDIF CLR}
     if CheckMinMaxInfo then
     begin
-      with MinMax{$IFNDEF CLR}^{$ENDIF} do
+      with MinMax^ do
       begin
         if FWinMinMaxInfo.MinTrackWidth <> 0 then
           ptMinTrackSize.X := FWinMinMaxInfo.MinTrackWidth;
@@ -566,9 +546,6 @@ begin
       MinMax.ptMaxPosition.X := 0;
       MinMax.ptMaxPosition.Y := 0;
     end;
-    {$IFDEF CLR}
-    TWMGetMinMaxInfo.Create(Msg).MinMaxInfo := MinMax;
-    {$ENDIF CLR}
     Msg.Result := 1;
   end;
 end;
@@ -628,7 +605,7 @@ begin
     if not (FPreventResize or CheckMinMaxInfo) then
     begin
       Placement.Length := SizeOf(TWindowPlacement);
-      GetWindowPlacement(Form.Handle, {$IFNDEF CLR}@{$ENDIF} Placement);
+      GetWindowPlacement(Form.Handle, @Placement);
       if not IsWindowVisible(Form.Handle) then
         Placement.ShowCmd := SW_HIDE;
       if Form.BorderStyle <> bsNone then
@@ -638,7 +615,7 @@ begin
       end
       else
         Placement.ptMaxPosition := Point(0, 0);
-      SetWindowPlacement(Form.Handle, {$IFNDEF CLR}@{$ENDIF} Placement);
+      SetWindowPlacement(Form.Handle, @Placement);
     end;
 end;
 
@@ -1156,11 +1133,7 @@ procedure TJvStoredValue.SetDisplayName(const AValue: string);
 begin
   if (AValue <> '') and (AnsiCompareText(AValue, FName) <> 0) and
     (Collection is TJvStoredValues) and (TJvStoredValues(Collection).IndexOf(AValue) >= 0) then
-    {$IFDEF CLR}
-    raise EJVCLException.Create(SDuplicateString);
-    {$ELSE}
     raise EJVCLException.CreateRes(@SDuplicateString);
-    {$ENDIF CLR}
   FName := AValue;
   inherited SetDisplayName(AValue);
 end;
@@ -1387,6 +1360,11 @@ begin
     else if (Owner is TCustomFrame) then
       StrReplace(FAppStoragePath, cFormNameMask,
         GetFullFrameName(Owner), [rfIgnoreCase])
+end;
+
+procedure TJvFormPlacement.SetAppStorage(const Value: TJvCustomAppStorage);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FAppStorage));
 end;
 
 { TJvFormStorageStringList }

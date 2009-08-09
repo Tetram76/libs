@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPPropertyEditors.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvXPPropertyEditors.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvXPPropertyEditors;
 
@@ -84,17 +84,8 @@ type
 implementation
 
 uses
-  {$IFDEF USEJVCL}
   JvDsgnConsts,
-  {$ENDIF USEJVCL}
   JvXPBar;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsItemEditorEllipsis = 'Item Editor...';
-  RsDefaultColorItem = 'Restore Default Colors';
-  RsDefaultFontsItem = 'Restore Default Fonts';
-{$ENDIF !USEJVCL}
 
 type
   TCustomWinXPBar = class(TJvXPCustomWinXPBar)

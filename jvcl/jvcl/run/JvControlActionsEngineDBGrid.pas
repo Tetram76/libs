@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineDBGrid.pas 11641 2007-12-24 16:34:00Z outchy $
+// $Id: JvControlActionsEngineDBGrid.pas 12351 2009-06-28 17:13:38Z jfudickar $
 
 unit JvControlActionsEngineDBGrid;
 
@@ -64,8 +64,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
     '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineDBGrid.pas $';
-    Revision: '$Revision: 11641 $';
-    Date: '$Date: 2007-12-24 17:34:00 +0100 (lun., 24 déc. 2007) $';
+    Revision: '$Revision: 12351 $';
+    Date: '$Date: 2009-06-28 19:13:38 +0200 (dim., 28 juin 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -153,7 +153,9 @@ begin
         if Assigned(Column.Field) then
           if Column.Field.DataType in [ftString, ftSmallint, ftInteger, ftWord, ftBoolean,
             ftFloat, ftCurrency, ftBCD, ftDate, ftTime, ftDateTime,
-            ftBytes, ftVarBytes, ftAutoInc, ftMemo, ftFmtMemo] then
+            ftBytes, ftVarBytes, ftAutoInc, ftMemo, ftFmtMemo
+            {$IFDEF COMPILER10_UP}, ftOraTimestamp, ftWideMemo, ftFixedWideChar{$ENDIF COMPILER10_UP}
+            {$IFDEF COMPILER12_UP}, ftLongWord, ftShortint, ftByte, ftExtended{$ENDIF COMPILER12_UP}] then
             if Column.Field.Visible and Column.Visible and not Column.Field.IsNull then
               if TAccessCustomDBGrid(DBGrid).Canvas.TextWidth(Column.Field.AsString + '  ') > Column.Width then
                 Column.Width := TAccessCustomDBGrid(DBGrid).Canvas.TextWidth(Column.Field.AsString + '  ');

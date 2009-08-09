@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVCStyle.pas 11238 2007-03-28 20:56:33Z remkobonte $
+// $Id: JvDockVCStyle.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvDockVCStyle;
 
@@ -30,11 +30,9 @@ unit JvDockVCStyle;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Graphics, Controls,
   JvDockControlForm, JvDockSupportControl, JvDockTree, JvDockAdvTree;
 
@@ -63,9 +61,6 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     function CanSetEachOtherDocked(ADockBaseControl: TJvDockBaseControl): Boolean; override;
-    {$IFNDEF USEJVCL}
-    function GetControlName: string; override;
-    {$ENDIF !USEJVCL}
     procedure SetDockBaseControl(IsCreate: Boolean;
       DockBaseControl: TJvDockBaseControl); override;
   published
@@ -196,17 +191,15 @@ type
     property DockOverBrush: TBrush read FDockOverBrush;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVCStyle.pas $';
-    Revision: '$Revision: 11238 $';
-    Date: '$Date: 2007-03-28 22:56:33 +0200 (mer., 28 mars 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -743,13 +736,6 @@ begin
   inherited FormStartDock(DockClient, Source);
   Source := TJvDockVCDragDockObject.Create(DockClient.ParentForm);
 end;
-
-{$IFNDEF USEJVCL}
-function TJvDockVCStyle.GetControlName: string;
-begin
-  Result := Format(RsDockLikeVCStyle, [inherited GetControlName]);
-end;
-{$ENDIF !USEJVCL}
 
 procedure TJvDockVCStyle.SetDockBaseControl(IsCreate: Boolean;
   DockBaseControl: TJvDockBaseControl);
@@ -2134,7 +2120,6 @@ begin
     BorderWidth := TJvDockVCConjoinServerOption(DockStyle.ConjoinServerOption).BorderWidth;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -2142,7 +2127,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

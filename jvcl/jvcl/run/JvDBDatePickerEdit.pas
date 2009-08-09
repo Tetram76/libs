@@ -33,7 +33,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBDatePickerEdit.pas 11495 2007-08-30 16:30:11Z ahuser $
+// $Id: JvDBDatePickerEdit.pas 12315 2009-05-27 15:54:15Z ahuser $
 
 unit JvDBDatePickerEdit;
 
@@ -161,6 +161,7 @@ type
     property Images;
     property NoDateShortcut;
     property NoDateText;
+    property NoDateValue;
     property NumGlyphs;
     property ParentColor;
     property ParentFont;
@@ -205,8 +206,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBDatePickerEdit.pas $';
-    Revision: '$Revision: 11495 $';
-    Date: '$Date: 2007-08-30 18:30:11 +0200 (jeu., 30 août 2007) $';
+    Revision: '$Revision: 12315 $';
+    Date: '$Date: 2009-05-27 17:54:15 +0200 (mer., 27 mai 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -252,13 +253,18 @@ procedure TJvCustomDBDatePickerEdit.Loaded;
 begin
   inherited Loaded;
   if AllowNoDate and not IsLinked then
-    InternalDate := 0.0;
+    InternalDate := NoDateValue;
 end;
 
 procedure TJvCustomDBDatePickerEdit.DataChange(Sender: TObject);
 begin
   if IsLinked and FDataLink.Active then
-    InternalDate := FDataLink.Field.AsDateTime;
+  begin
+    if AllowNoDate and FDataLink.Field.IsNull then
+      InternalDate := NoDateValue
+    else
+      InternalDate := FDataLink.Field.AsDateTime;
+  end;
 end;
 
 destructor TJvCustomDBDatePickerEdit.Destroy;
@@ -349,7 +355,7 @@ begin
       Result := True;
   end
   else
-    Result := AllowNoDate and (Date = 0.0);
+    Result := AllowNoDate and (Date = NoDateValue);
 end;
 
 function TJvCustomDBDatePickerEdit.IsLinked: Boolean;

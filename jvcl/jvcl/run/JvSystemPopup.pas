@@ -30,7 +30,7 @@ Modifications:
       with the popup menu (because GetSystemMenu( hWnd, True) does not work correctly
       inside a WM_INITMENU handler.
 -----------------------------------------------------------------------------}
-// $Id: JvSystemPopup.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvSystemPopup.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvSystemPopup;
 
@@ -82,8 +82,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSystemPopup.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -91,7 +91,7 @@ const
 implementation
 
 uses
-  JvWndProcHook, JvConsts, JvResources;
+  JvWndProcHook, JvConsts, JvResources, JvJVCLUtils;
 
 type
   TMenuItemAccessProtected = class(TMenuItem);
@@ -466,12 +466,9 @@ procedure TJvSystemPopup.SetPopup(const Value: TPopupMenu);
 begin
   if Assigned(FPopup) then
     FPopup.OnChange := nil;
-  FPopup := Value;
-  if Assigned(FPopup) then
-  begin
-    //FPopup.OnChange := MenuChanged;
-    FPopup.FreeNotification(Self);
-  end;
+  ReplaceComponentReference (Self, Value, TComponent(FPopup));
+  //if Assigned(FPopup) then
+  //  FPopup.OnChange := MenuChanged;
   //if not (csLoading in ComponentState) then
   //  Refresh;
 end;

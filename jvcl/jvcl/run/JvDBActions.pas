@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActions.pas 12256 2009-03-22 23:46:27Z jfudickar $
+// $Id: JvDBActions.pas 12349 2009-06-28 16:05:18Z jfudickar $
 
 unit JvDBActions;
 
@@ -522,8 +522,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActions.pas $';
-    Revision: '$Revision: 12256 $';
-    Date: '$Date: 2009-03-23 00:46:27 +0100 (lun., 23 mars 2009) $';
+    Revision: '$Revision: 12349 $';
+    Date: '$Date: 2009-06-28 18:05:18 +0200 (dim., 28 juin 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -552,7 +552,7 @@ uses
   {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
   {$ENDIF HAS_UNIT_VARIANTS}
-  Dialogs, StdCtrls, Clipbrd;
+  Dialogs, StdCtrls, Clipbrd, JvJVCLUtils;
 
 //=== { TJvDatabaseActionList } ==============================================
 
@@ -560,11 +560,8 @@ procedure TJvDatabaseActionList.SetDataComponent(Value: TComponent);
 var
   I: Integer;
 begin
-  if Value <> FDataComponent then
+  if ReplaceComponentReference (Self, Value, FDataComponent) then
   begin
-    FDataComponent := Value;
-    if FDataComponent <> nil then
-      FDataComponent.FreeNotification(Self);
     for I := 0 to ActionCount - 1 do
       if Actions[I] is TJvDatabaseBaseAction then
         TJvDatabaseBaseAction(Actions[I]).DataComponent := Value;
@@ -773,7 +770,9 @@ var
 begin
   Result := False;
   if Assigned(FBeforeExecute) then
-    FBeforeExecute(Self, DatabaseControlEngine, DataComponent, ContinueExecute);
+    FBeforeExecute(Self, DatabaseControlEngine, DataComponent, ContinueExecute)
+  else
+    ContinueExecute := True;
   if ContinueExecute then
   begin
     Result := inherited Execute;
@@ -1203,9 +1202,7 @@ end;
 procedure TJvDatabaseInsertAction.SetSingleRecordWindowAction(const Value:
     TJvDatabaseSingleRecordWindowAction);
 begin
-  FSingleRecordWindowAction := Value;
-  if Assigned(FSingleRecordWindowAction) then
-    FSingleRecordWindowAction.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FSingleRecordWindowAction));
 end;
 
 procedure TJvDatabaseInsertAction.SingleRecordOnFormShowEvent(ADatacomponent :
@@ -1299,9 +1296,7 @@ end;
 procedure TJvDatabaseCopyAction.SetSingleRecordWindowAction(const Value:
     TJvDatabaseSingleRecordWindowAction);
 begin
-  FSingleRecordWindowAction := Value;
-  if Assigned(FSingleRecordWindowAction) then
-    FSingleRecordWindowAction.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FSingleRecordWindowAction));
 end;
 
 procedure TJvDatabaseCopyAction.SingleRecordOnFormShowEvent(ADatacomponent :
@@ -1346,9 +1341,7 @@ end;
 procedure TJvDatabaseEditAction.SetSingleRecordWindowAction(const Value:
     TJvDatabaseSingleRecordWindowAction);
 begin
-  FSingleRecordWindowAction := Value;
-  if Assigned(FSingleRecordWindowAction) then
-    FSingleRecordWindowAction.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FSingleRecordWindowAction));
 end;
 
 procedure TJvDatabaseEditAction.SingleRecordOnFormShowEvent(ADatacomponent :

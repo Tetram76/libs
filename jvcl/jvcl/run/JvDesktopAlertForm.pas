@@ -26,7 +26,7 @@ Known Issues:
 * This form is used by the TJvDesktopAlert component
 
 -----------------------------------------------------------------------------}
-// $Id: JvDesktopAlertForm.pas 11631 2007-12-18 21:37:49Z ahuser $
+// $Id: JvDesktopAlertForm.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvDesktopAlertForm;
 
@@ -181,8 +181,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesktopAlertForm.pas $';
-    Revision: '$Revision: 11631 $';
-    Date: '$Date: 2007-12-18 22:37:49 +0100 (mar., 18 déc. 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -536,18 +536,8 @@ end;
 
 procedure TJvDesktopAlertButton.SetImages(const Value: TCustomImageList);
 begin
-  if FImages <> Value then
-  begin
-    if FImages <> nil then
-      FImages.UnRegisterChanges(FChangeLink);
-    FImages := Value;
-    if FImages <> nil then
-    begin
-      FImages.FreeNotification(Self);
-      FImages.RegisterChanges(FChangeLink);
-    end;
+  if ReplaceImageListReference(Self, Value, FImages, FChangeLink) then
     Invalidate;
-  end;
 end;
 
 procedure TJvDesktopAlertButton.SetToolType(const Value: TJvDesktopAlertButtonType);
@@ -631,8 +621,8 @@ end;
 procedure TJvCustomFormDesktopAlert.CreateParams(var Params: TCreateParams);
 begin
   inherited CreateParams(Params);
-  if IsLibrary then
-    Params.ExStyle := Params.ExStyle or WS_EX_TOOLWINDOW;
+  Params.ExStyle := Params.ExStyle or WS_EX_TOOLWINDOW;
+  Params.WndParent := HWND_DESKTOP;
 end;
 
 procedure TJvCustomFormDesktopAlert.DoClose(var Action: TCloseAction);

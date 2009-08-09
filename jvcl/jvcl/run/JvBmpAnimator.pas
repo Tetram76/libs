@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBmpAnimator.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvBmpAnimator.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvBmpAnimator;
 
@@ -130,13 +130,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBmpAnimator.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+uses
+  JvJVCLUtils;
 
 
 constructor TJvCustomBmpAnimator.Create(AOwner: TComponent);
@@ -281,26 +284,17 @@ procedure TJvCustomBmpAnimator.Notification(AComponent: TComponent; AOperation: 
 begin
   inherited Notification(AComponent, AOperation);
   if (AOperation = opRemove) and (AComponent = FImageList) then
-  begin
     SetImage(nil);
-    Active := False;
-  end;
 end;
 
 procedure TJvCustomBmpAnimator.SetImage(Value: TCustomImageList);
 begin
   if FImageList <> nil then
-  begin
-    FImageList.UnRegisterChanges(FImageChangeLink);
     SetNumGlyphs(0);
-  end;
 
-  FImageList := Value;
+  ReplaceImageListReference(Self, Value, FImageList, FImageChangeLink);
   if FImageList <> nil then
-  begin
-    FImageList.RegisterChanges(FImageChangeLink);
-    SetNumGlyphs(FImageList.Count);
-  end
+    SetNumGlyphs(FImageList.Count)
   else
     Active := False;
   Repaint;

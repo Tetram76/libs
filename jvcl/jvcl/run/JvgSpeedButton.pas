@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgSpeedButton.pas 11345 2007-06-19 13:11:28Z obones $
+// $Id: JvgSpeedButton.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgSpeedButton;
 
@@ -31,24 +31,18 @@ unit JvgSpeedButton;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Controls, Graphics,
   ExtCtrls, Buttons, StdCtrls, Forms,
-  {$IFDEF USEJVCL}
   JVCLVer,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgCommClasses, JvgUtils;
 
 type
   TJvgSpeedButton = class(TSpeedButton)
   private
-    {$IFDEF USEJVCL}
     FAboutJVCL: TJVCLAboutInfo;
-    {$ENDIF USEJVCL}
     FMouseEnter: Boolean;
     FColor: TColor;
     FIsDown: Boolean;
@@ -81,9 +75,7 @@ type
     procedure Click; override;
     property Canvas;
   published
-    {$IFDEF USEJVCL}
     property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-    {$ENDIF USEJVCL}
     property Color: TColor read FColor write SetColor;
     property ActiveColor: TColor read FActiveColor write FActiveColor;
     property Control: TControl read FControl write SetControl;
@@ -126,17 +118,15 @@ type
     property Font: TFont read GetFont write SetFont;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgSpeedButton.pas $';
-    Revision: '$Revision: 11345 $';
-    Date: '$Date: 2007-06-19 15:11:28 +0200 (mar., 19 juin 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -525,7 +515,6 @@ begin
   FStylePushed.Assign(Value);
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -533,7 +522,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

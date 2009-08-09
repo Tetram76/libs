@@ -18,7 +18,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageListViewer.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvImageListViewer.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvImageListViewer;
 
@@ -142,8 +142,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageListViewer.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -153,7 +153,7 @@ implementation
 uses
   CommCtrl,
   Math,
-  JvJCLUtils;
+  JvJCLUtils, JvJVCLUtils;
 
 //=== { TJvImageListViewerOptions } ==========================================
 
@@ -333,15 +333,12 @@ procedure TJvImageListViewer.SetImages(const Value: TCustomImageList);
 begin
   if FImages <> Value then
   begin
-    if FImages <> nil then
-      FImages.UnRegisterChanges(FChangeLink);
+    ReplaceImageListReference(Self, Value, FImages, FChangeLink);
     Count := 0;
-    FImages := Value;
     if FImages <> nil then
     begin
       Options.Width := Max(Options.Width, FImages.Width);
       Options.Height := Max(Options.Height, FImages.Height);
-      FImages.RegisterChanges(FChangeLink);
     end;
     DoImageChange(Value);
   end;

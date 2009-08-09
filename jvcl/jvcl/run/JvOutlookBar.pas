@@ -36,7 +36,7 @@ Known Issues:
                   Outlook bar buttons now have color properties (instead of
                   assuming we will use the clBtnFace type system colors)
 -----------------------------------------------------------------------------}
-// $Id: JvOutlookBar.pas 12201 2009-01-30 21:13:49Z obones $
+// $Id: JvOutlookBar.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvOutlookBar;
 
@@ -468,8 +468,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOutlookBar.pas $';
-    Revision: '$Revision: 12201 $';
-    Date: '$Date: 2009-01-30 22:13:49 +0100 (ven., 30 janv. 2009) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -478,7 +478,7 @@ implementation
 
 uses
   Math,
-  JvConsts;
+  JvConsts, JvJVCLUtils;
 
 {$R JvOutlookBar.res}
 
@@ -952,6 +952,8 @@ type
 
 procedure TJvOutlookBarButton.SetAction(Value: TBasicAction);
 begin
+  if (FActionLink <> nil) and (FActionLink.Action <> nil) then
+    FActionLink.Action.RemoveFreeNotification(GetOutlookBar);
   if Value = nil then
   begin
     FActionLink.Free;
@@ -1517,7 +1519,7 @@ begin
   with Params do
   begin
     Style := Style or BorderStyles[FBorderStyle];
-    if NewStyleControls and Ctl3D and (FBorderStyle = bsSingle) then
+    if Ctl3D and (FBorderStyle = bsSingle) then
     begin
       Style := Style and not WS_BORDER;
       ExStyle := ExStyle or WS_EX_CLIENTEDGE;
@@ -2298,15 +2300,8 @@ end;
 
 procedure TJvCustomOutlookBar.SetLargeImages(const Value: TCustomImageList);
 begin
-  if FLargeImages <> Value then
-  begin
-    if Assigned(FLargeImages) then
-      FLargeImages.UnRegisterChanges(FLargeChangeLink);
-    FLargeImages := Value;
-    if Assigned(FLargeImages) then
-      FLargeImages.RegisterChanges(FLargeChangeLink);
+  if ReplaceImageListReference(Self, Value, FLargeImages, FLargeChangeLink) then
     Invalidate;
-  end;
 end;
 
 procedure TJvCustomOutlookBar.SetPageButtonHeight(const Value: Integer);
@@ -2325,15 +2320,8 @@ end;
 
 procedure TJvCustomOutlookBar.SetSmallImages(const Value: TCustomImageList);
 begin
-  if FSmallImages <> Value then
-  begin
-    if Assigned(FSmallImages) then
-      FSmallImages.UnRegisterChanges(FSmallChangeLink);
-    FSmallImages := Value;
-    if Assigned(FSmallImages) then
-      FSmallImages.RegisterChanges(FSmallChangeLink);
+  if ReplaceImageListReference(Self, Value, FSmallImages, FSmallChangeLink) then
     Invalidate;
-  end;
 end;
 
 procedure TJvCustomOutlookBar.SetThemed(const Value: Boolean);
@@ -2818,15 +2806,8 @@ end;
 
 procedure TJvCustomOutlookBar.SetPageImages(const Value: TCustomImageList);
 begin
-  if FPageImages <> Value then
-  begin
-    if Assigned(FPageImages) then
-      FPageImages.UnRegisterChanges(FPageChangeLink);
-    FPageImages := Value;
-    if Assigned(FPageImages) then
-      FPageImages.RegisterChanges(FPageChangeLink);
+  if ReplaceImageListReference(Self, Value, FPageImages, FPageChangeLink) then
     Invalidate;
-  end;
 end;
 
 procedure TJvCustomOutlookBar.InitiateAction;

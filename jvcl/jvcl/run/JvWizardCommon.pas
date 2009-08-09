@@ -32,7 +32,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardCommon.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvWizardCommon.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvWizardCommon;
 
@@ -41,11 +41,9 @@ unit JvWizardCommon;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Controls, Graphics,
   {$IFDEF HAS_UNIT_TYPES}
   Types,
@@ -72,29 +70,20 @@ function JvWizardDrawBorderEdges(ACanvas: TCanvas; ABounds: TRect;
 procedure JvWizardDrawImage(ACanvas: TCanvas; AGraphic: TGraphic; ARect: TRect;
   Align: TJvWizardImageAlignment; ALayout: TJvWizardImageLayout);
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizardCommon.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvResources;
-{$ENDIF USEJVCL}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsETilingError = 'Tiling only works on images with dimensions > 0';
-{$ENDIF !USEJVCL}
 
 const
   { Frame Style Color constant arrays }
@@ -216,11 +205,7 @@ var
 begin
 
   if not Assigned(AGraphic) or (AGraphic.Width = 0) or (AGraphic.Height = 0) then
-    {$IFDEF CLR}
-    raise EJvWizardError.Create(RsETilingError);
-    {$ELSE}
     raise EJvWizardError.CreateRes(@RsETilingError);
-    {$ENDIF CLR}
   // Create a temporary bitmap to draw into. This is both to speed things up a bit
   // and also to clip the image to the ARect param (using Draw doesn't clip the image,
   // but it does support auto-detecting transparency)
@@ -295,7 +280,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -303,7 +287,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

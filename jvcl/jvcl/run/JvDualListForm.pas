@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDualListForm.pas 12219 2009-03-04 17:51:34Z ahuser $
+// $Id: JvDualListForm.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvDualListForm;
 
@@ -81,8 +81,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDualListForm.pas $';
-    Revision: '$Revision: 12219 $';
-    Date: '$Date: 2009-03-04 18:51:34 +0100 (mer., 04 mars 2009) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -248,8 +248,7 @@ begin
   OkBtn.Caption := SOKButton;
   CancelBtn.Caption := SCancelButton;
   HelpBtn.Caption := SHelpButton;
-  if NewStyleControls then
-    Font.Style := [];
+  Font.Style := [];
 end;
 
 procedure TJvDualListForm.FormResize(Sender: TObject);

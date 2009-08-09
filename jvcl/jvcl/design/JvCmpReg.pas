@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCmpReg.pas 12058 2008-11-25 18:33:16Z ahuser $
+// $Id: JvCmpReg.pas 12327 2009-06-05 22:25:57Z ahuser $
 
 unit JvCmpReg;
 
@@ -47,7 +47,7 @@ uses
   JvPageManager, JvPatchFile, JvStringHolder, JvTimeLimit,
   JvTranslator, JvPrint, JvEasterEgg, JvMouseGesture, JvLogFile,
   JvDataEmbeddedEditor, JvPatcherEditor, JvProfilerForm, JvPageManagerForm,
-  JvDsgnEditors, JvSpellChecker, JvspellerForm;
+  JvDsgnEditors, JvSpellChecker, JvSpellerForm;
 
 {$R JvCmpReg.dcr}
 

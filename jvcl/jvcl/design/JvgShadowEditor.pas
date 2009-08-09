@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgShadowEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgShadowEditor.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgShadowEditor;
 
@@ -50,15 +50,8 @@ implementation
 
 uses
   StdCtrls,
-  {$IFDEF USEJVCL}
   JvDsgnConsts,
-  {$ENDIF USEJVCL}
   JvgShadow;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsUpdateAllEditControl = 'Update all edit control';
-{$ENDIF !USEJVCL}
 
 procedure TJvgShadowEditor.ExecuteVerb(Index: Integer);
 var

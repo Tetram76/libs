@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPickDate.pas 11986 2008-10-25 15:34:10Z ahuser $
+// $Id: JvPickDate.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvPickDate;
 
@@ -35,9 +35,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  Types, System.Reflection, System.Security, System.Runtime.InteropServices,
-  {$ENDIF CLR}
   {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
   {$ENDIF HAS_UNIT_VARIANTS}
@@ -94,11 +91,6 @@ type
     procedure KeyPress(var Key: Char); override;
     function SelectCell(ACol, ARow: Longint): Boolean; override;
     procedure BoundsChanged; override;
-    {$IFDEF CLR}
-    // this is required to allow "protected reference over assembly borders
-    property Options;
-    property ParentFont;
-    {$ENDIF CLR}
   public
     constructor Create(AOwner: TComponent); override;
     procedure NextMonth;
@@ -153,8 +145,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPickDate.pas $';
-    Revision: '$Revision: 11986 $';
-    Date: '$Date: 2008-10-25 17:34:10 +0200 (sam., 25 oct. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -173,7 +165,7 @@ var
 
 begin
   NonClientMetrics.cbSize := SizeOf(NonClientMetrics);
-  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, {$IFNDEF CLR}@{$ENDIF}NonClientMetrics, 0) then
+  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, @NonClientMetrics, 0) then
     AFont.Handle := CreateFontIndirect(NonClientMetrics.lfMessageFont)
   else
     with AFont do

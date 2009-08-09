@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvDBSpinEdit.pas 11608 2007-12-16 12:25:00Z ahuser $
+// $Id: JvDBSpinEdit.pas 12373 2009-07-03 14:45:21Z obones $
 
 unit JvDBSpinEdit;
 
@@ -90,8 +90,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSpinEdit.pas $';
-    Revision: '$Revision: 11608 $';
-    Date: '$Date: 2007-12-16 13:25:00 +0100 (dim., 16 déc. 2007) $';
+    Revision: '$Revision: 12373 $';
+    Date: '$Date: 2009-07-03 16:45:21 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -265,6 +265,9 @@ begin
 end;
 
 procedure TJvDBSpinEdit.KeyDown(var Key: Word; Shift: TShiftState);
+var
+  KeyState: TKeyboardState;
+  AnsiChars: AnsiString;
 begin
   if (Key = VK_ESCAPE) and (FDataLink.Editing) then
   begin
@@ -273,8 +276,18 @@ begin
     Key := 0;
   end;
   inherited KeyDown(Key, Shift);
+
+  // Must convert from virtual key code to character
+  GetKeyboardState(KeyState);
+  SetLength(AnsiChars, 2);
+  case ToAscii(Key, MapVirtualKey(Key, 0), KeyState, @AnsiChars[1], 0) of
+    1: SetLength(AnsiChars, 1);
+    2: ;
+    else AnsiChars := '';
+  end;
+
   if (Key = VK_DELETE) or (Key = VK_BACK) or
-    ((Key = VK_INSERT) and (ssShift in Shift)) or IsValidChar(Char(Key)) then
+    ((Key = VK_INSERT) and (ssShift in Shift)) or ((Length(AnsiChars) > 0) and IsValidChar(Char(AnsiChars[1]))) then
     FDataLink.Edit;
 end;
 
@@ -303,7 +316,11 @@ procedure TJvDBSpinEdit.SetDataSource(Value: TDataSource); { Assigns new data so
 begin
   { FDataLink is built in TJvDBSpinEdit.Create; there's no need to check to see if it's assigned. }
   if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+  begin
+    if FDataLink.DataSource <> nil then
+      FDataLink.DataSource.RemoveFreeNotification(Self);
     FDataLink.DataSource := Value;
+  end;
   { Tell the new DataSource that our TJvDBSpinEdit component should be notified
     (using the Notification method) if the DataSource is ever removed from
     a data module or form that is different than the owner of this control. }

@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizard.pas 11974 2008-10-20 16:13:40Z ahuser $
+// $Id: JvWizard.pas 12389 2009-07-09 10:25:10Z obones $
 
 {+---------------------------------------------------------------------------+
  | CONTRIBUTORS:                                                             |
@@ -334,19 +334,15 @@ unit JvWizard;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes,
   Windows, Messages, Controls, Forms, Graphics, Buttons, ImgList,
   {$IFDEF HAS_UNIT_TYPES}
   Types,
   {$ENDIF HAS_UNIT_TYPES}
-  {$IFDEF USEJVCL}
   JvComponent, JvThemes,
-  {$ENDIF USEJVCL}
   JvWizardCommon;
 
 type
@@ -677,7 +673,6 @@ type
     procedure SetEnabledButtons(Value: TJvWizardButtonSet);
     procedure SetVisibleButtons(Value: TJvWizardButtonSet);
     procedure ImageChanged(Sender: TObject);
-    // (ahuser) Do not convert to JvExVCL: This package is USEJVCL'ed
     procedure WMEraseBkgnd(var Msg: TWMEraseBkgnd); message WM_ERASEBKGND;
     procedure CMFontChanged(var Msg: TMessage); message CM_FONTCHANGED;
     procedure CMTextChanged(var Msg: TMessage); message CM_TEXTCHANGED;
@@ -769,7 +764,7 @@ type
     FWizard: TJvWizard;
     function GetItems(Index: Integer): TJvWizardCustomPage;
   protected
-    procedure Notify(Ptr: {$IFDEF CLR} TObject {$ELSE} Pointer {$ENDIF}; Action: TListNotification); override;
+    procedure Notify(Ptr: Pointer; Action: TListNotification); override;
     property Wizard: TJvWizard read FWizard write FWizard;
   public
     destructor Destroy; override;
@@ -777,11 +772,7 @@ type
   end;
 
   { JvWizard Control }
-  {$IFDEF USEJVCL}
   TJvWizard = class(TJvCustomControl)
-  {$ELSE}
-  TJvWizard = class(TCustomControl)
-  {$ENDIF USEJVCL}
   private
     FPages: TJvWizardPageList;
     FActivePage: TJvWizardCustomPage;
@@ -799,9 +790,6 @@ type
     FImageChangeLink: TChangeLink;
     FAutoHideButtonBar: Boolean;
     FDefaultButtons: Boolean;
-    {$IFNDEF USEJVCL}
-    FAboutInfo: TJvWizardAboutInfoForm; // Add by Steve Forbes
-    {$ENDIF !USEJVCL}
     procedure SetShowDivider(Value: Boolean);
     function GetShowRouteMap: Boolean;
     procedure SetShowRouteMap(Value: Boolean);
@@ -844,15 +832,10 @@ type
   {$IFDEF COMPILER12_UP}
   public
   {$ENDIF COMPILER12_UP}
-    {$IFNDEF CLR}
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
-    {$ENDIF !CLR}
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    {$IFDEF CLR}
-    procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
-    {$ENDIF CLR}
     procedure SelectPriorPage;
     procedure SelectNextPage;
     procedure SelectFirstPage;
@@ -869,10 +852,6 @@ type
     property WizardPages[Index: Integer]: TJvWizardCustomPage read GetWizardPages;
   published
     property Pages: TJvWizardPageList read FPages;
-    {$IFNDEF USEJVCL}
-    // Add by Steve Forbes
-    property About: TJvWizardAboutInfoForm read FAboutInfo write FAboutInfo stored False;
-    {$ENDIF !USEJVCL}
     property ActivePage: TJvWizardCustomPage read FActivePage write SetActivePage;
     property AutoHideButtonBar: Boolean read FAutoHideButtonBar write SetAutoHideButtonBar default True;
     property ButtonBarHeight: Integer read FButtonBarHeight write SetButtonBarHeight;
@@ -910,47 +889,27 @@ type
     property Visible;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizard.pas $';
-    Revision: '$Revision: 11974 $';
-    Date: '$Date: 2008-10-20 18:13:40 +0200 (lun., 20 oct. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
-  {$IFDEF USEJVCL}
   JvResources,
-  {$ENDIF USEJVCL}
-  Consts;
+  Consts, JvJVCLUtils;
 
 const
   ciButtonWidth = 75;
   ciButtonHeight = 25;
   ciButtonBarHeight = 42;
   ciButtonPlacement = (ciButtonBarHeight - ciButtonHeight) div 2;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsBackButtonCaption = '< &Back';
-  RsNextButtonCaption = '&Next >';
-
-  RsFirstButtonCaption = 'To &Start Page';
-  RsLastButtonCaption = 'To &Last Page';
-  RsFinishButtonCaption = '&Finish';
-  RsWelcome = 'Welcome';
-  RsTitle = 'Title';
-  RsSubtitle = 'Subtitle';
-
-  RsEInvalidParentControl = 'The Parent should be TJvWizard or a descendant';
-  RsEInvalidWizardPage = 'The pages belong to another wizard';
-{$ENDIF !USEJVCL}
 
 type
   // (ahuser) introduced for refactoring the WizardButtons
@@ -1536,11 +1495,7 @@ begin
   if Assigned(AParent) then
   begin
     if not ((AParent is TJvWizard) or (AParent is TJvWizardCustomPage)) then
-      {$IFDEF CLR}
-      raise EJvWizardError.Create(RsEInvalidParentControl);
-      {$ELSE}
       raise EJvWizardError.CreateRes(@RsEInvalidParentControl);
-      {$ENDIF CLR}
     if AParent is TJvWizardCustomPage then
       AParent := TJvWizardCustomPage(AParent).Wizard;
   end;
@@ -1816,11 +1771,7 @@ begin
     with ACanvas do
     begin
       Brush.Style := bsClear;
-      {$IFDEF CLR}
-      DrawText(ACanvas.Handle, FText, -1, ATextRect, DT_WORDBREAK or Alignments[FAlignment]);
-      {$ELSE}
       DrawText(ACanvas.Handle, PChar(FText), -1, ATextRect, DT_WORDBREAK or Alignments[FAlignment]);
-      {$ENDIF CLR}
       { Draw outline at design time. }
       if csDesigning in FWizardPageHeader.WizardPage.ComponentState then
       begin
@@ -2470,13 +2421,8 @@ begin
     begin
       Canvas.Brush.Style := bsClear;
       Canvas.Font.Assign(Font);
-      {$IFNDEF CLR}
       DrawText(Canvas.Handle, PChar(Caption), -1, ARect,
         DT_SINGLELINE + DT_CENTER + DT_VCENTER);
-      {$ELSE}
-      DrawText(Canvas.Handle, Caption, -1, ARect,
-        DT_SINGLELINE + DT_CENTER + DT_VCENTER);
-      {$ENDIF CLR}
     end;
   finally
     FDrawing := False;
@@ -2627,7 +2573,7 @@ begin
   Result := TJvWizardCustomPage(inherited Items[Index]);
 end;
 
-procedure TJvWizardPageList.Notify(Ptr: {$IFDEF CLR} TObject {$ELSE} Pointer {$ENDIF}; Action: TListNotification);
+procedure TJvWizardPageList.Notify(Ptr: Pointer; Action: TListNotification);
 begin
   case Action of
     lnAdded:
@@ -3045,14 +2991,7 @@ end;
 
 procedure TJvWizard.SetHeaderImages(Value: TCustomImageList);
 begin
-  if Assigned(FHeaderImages) then
-    FHeaderImages.UnRegisterChanges(FImageChangeLink);
-  FHeaderImages := Value;
-  if Assigned(FHeaderImages) then
-  begin
-    FHeaderImages.RegisterChanges(FImageChangeLink);
-    FHeaderImages.FreeNotification(Self);
-  end;
+  ReplaceImageListReference(Self, Value, FHeaderImages, FImageChangeLink);
   if Assigned(FActivePage) then
     FActivePage.Invalidate;
 end;
@@ -3270,11 +3209,7 @@ function TJvWizard.IsForward(const FromPage, ToPage: TJvWizardCustomPage): Boole
 begin
   if Assigned(FromPage) and Assigned(ToPage) and
     (FromPage.Wizard <> ToPage.Wizard) then
-    {$IFDEF CLR}
-    raise EJvWizardError.Create(RsEInvalidWizardPage);
-    {$ELSE}
     raise EJvWizardError.CreateRes(@RsEInvalidWizardPage);
-    {$ENDIF CLR}
   Result := not Assigned(FromPage) or (Assigned(ToPage) and
     (FromPage.PageIndex < ToPage.PageIndex));
 end;
@@ -3325,7 +3260,6 @@ begin
   FNavigateButtons[TJvWizardButtonKind(Index)] := Value;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -3333,7 +3267,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

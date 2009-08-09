@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppIniStorage.pas 11938 2008-10-05 21:59:03Z jfudickar $
+// $Id: JvAppIniStorage.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvAppIniStorage;
 
@@ -37,9 +37,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Classes, IniFiles,
-  {$IFNDEF CLR}
   JclBase,
-  {$ENDIF !CLR}
   JvAppStorage, JvPropertyStore, JvTypes;
 
 type
@@ -157,8 +155,8 @@ procedure LoadPropertyStoreFromIniFile(APropertyStore: TJvCustomPropertyStore;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppIniStorage.pas $';
-    Revision: '$Revision: 11938 $';
-    Date: '$Date: 2008-10-05 23:59:03 +0200 (dim., 05 oct. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -404,21 +402,12 @@ var
   Section: string;
   Key: string;
   Value: string;
-  {$IFDEF CLR}
-  Buf: array [0..10 - 1] of Byte;
-  {$ENDIF CLR}
 begin
   SplitKeyPath(Path, Section, Key);
   if ValueExists(Section, Key) then
   begin
     Value := ReadValue(Section, Key);
-    {$IFDEF CLR}
-    if BinStrToBuf(Value, Buf, Length(Buf)) = Length(Buf) then
-      Result := ExtendedAsBytesToDouble(Buf)
-    else
-    {$ELSE}
     if BinStrToBuf(Value, @Result, SizeOf(Result)) <> SizeOf(Result) then
-    {$ENDIF CLR}
       Result := Default;
   end
   else
@@ -431,11 +420,7 @@ var
   Key: string;
 begin
   SplitKeyPath(Path, Section, Key);
-  {$IFDEF CLR}
-  WriteValue(Section, Key, BufToBinStr(DoubleToExtendedAsBytes(Value), 10));
-  {$ELSE}
   WriteValue(Section, Key, BufToBinStr(@Value, SizeOf(Value)));
-  {$ENDIF CLR}
 end;
 
 function TJvCustomAppIniStorage.DoReadString(const Path: string; const Default: string): string;
@@ -560,11 +545,7 @@ begin
   else
     Result := Section;
   if (Result = '') or (Result[1] = '.') then
-    {$IFDEF CLR}
-    raise EJVCLAppStorageError.Create(RsEReadValueFailed);
-    {$ELSE}
     raise EJVCLAppStorageError.CreateRes(@RsEReadValueFailed);
-    {$ENDIF CLR}
 end;
 
 function TJvCustomAppIniStorage.GetStorageOptions: TJvAppIniStorageOptions;

@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDualList.pas 11628 2007-12-18 19:46:27Z ahuser $
+// $Id: JvDualList.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvDualList;
 
@@ -97,8 +97,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDualList.pas $';
-    Revision: '$Revision: 11628 $';
-    Date: '$Date: 2007-12-18 20:46:27 +0100 (mar., 18 déc. 2007) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -107,7 +107,7 @@ implementation
 
 uses
   Consts, SysUtils,
-  JvDualListForm, JvResources;
+  JvDualListForm, JvResources, JvJVCLUtils;
 
 constructor TJvDualListDialog.Create(AOwner: TComponent);
 begin
@@ -140,14 +140,7 @@ end;
 
 procedure TJvDualListDialog.SetCenterOnControl(const Value: TControl);
 begin
-  if Value <> FCenterOnControl then
-  begin
-    if FCenterOnControl <> nil then
-      FCenterOnControl.RemoveFreeNotification(Self);
-    FCenterOnControl := Value;
-    if FCenterOnControl <> nil then
-      FCenterOnControl.FreeNotification(Self);
-  end;
+  ReplaceComponentReference (Self, Value, TComponent(FCenterOnControl));
 end;
 
 procedure TJvDualListDialog.SetList1(Value: TStrings);
@@ -208,8 +201,7 @@ begin
 
     Form.SrcList.ScrollBars := FScrollBars;
     Form.DstList.ScrollBars := FScrollBars;
-    if NewStyleControls then
-      Form.Font.Style := [];
+    Form.Font.Style := [];
     Form.ShowHelp := Self.ShowHelp;
     Form.SrcList.Sorted := Sorted;
     Form.DstList.Sorted := Sorted;

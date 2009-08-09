@@ -24,7 +24,7 @@ description : JvEditor with built-in highlighting for:
               pascal, cbuilder, sql, python, jscript,
               vbscript, perl, ini, html, not quite c
 -----------------------------------------------------------------------------}
-// $Id: JvUnicodeHLEditor.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvUnicodeHLEditor.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvUnicodeHLEditor;
 
@@ -112,8 +112,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUnicodeHLEditor.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -123,7 +123,7 @@ implementation
 uses
   Math,
   JvHLEditor, // for Assign
-  JvJCLUtils, JvConsts;
+  JvJCLUtils, JvConsts, JvJVCLUtils;
 
 function LastNonSpaceChar(const S: WideString): WideChar;
 var
@@ -236,9 +236,9 @@ end;
 procedure TJvWideHLEditor.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
+  inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and (AComponent = FSyntaxHighlighter) then
     SyntaxHighlighter := nil;
-  inherited Notification(AComponent, Operation);
 end;
 
 procedure TJvWideHLEditor.Loaded;
@@ -1814,7 +1814,7 @@ begin
       if FHighlighter = hlSyntaxHighlighter then
         FHighlighter := hlNone;
 
-    FSyntaxHighlighter := Value;
+    ReplaceComponentReference (Self, Value, TComponent(FSyntaxHighlighter));
     RescanLong(0);
     Invalidate;
   end;

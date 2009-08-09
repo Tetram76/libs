@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTData.pas 11430 2007-08-06 09:29:17Z obones $
+// $Id: JvMTData.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvMTData;
 
@@ -30,11 +30,9 @@ unit JvMTData;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes, Contnrs, SyncObjs,
   {$IFDEF MSWINDOWS}
   {$IFDEF DEBUGINFO_ON}
@@ -109,30 +107,20 @@ type
   end;
   {$M-}
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTData.pas $';
-    Revision: '$Revision: 11430 $';
-    Date: '$Date: 2007-08-06 11:29:17 +0200 (lun., 06 août 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvResources;
-{$ENDIF USEJVCL}
-
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsEMethodOnlyForMainThread = '%s method can only be used by the main VCL thread';
-{$ENDIF !USEJVCL}
 
 var
   GlobalDataThreadsMan: TMTManager = nil;
@@ -372,11 +360,9 @@ begin
 end;
 
 initialization
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   RegisterUnitVersion(HInstance, UnitVersioning);
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
 
 finalization
   {$IFDEF MSWINDOWS}
@@ -388,10 +374,8 @@ finalization
   {$ENDIF DEBUGINFO_ON}
   {$ENDIF MSWINDOWS}
   FreeAndNil(GlobalDataThreadsMan);
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
 
 end.

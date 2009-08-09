@@ -38,7 +38,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupTreeView.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvDBLookupTreeView.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvDBLookupTreeView;
 
@@ -449,8 +449,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupTreeView.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -520,10 +520,7 @@ end;
 constructor TJvDBLookupControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  if NewStyleControls then
-    ControlStyle := [csOpaque]
-  else
-    ControlStyle := [csOpaque, csFramed];
+  ControlStyle := [csOpaque];
   IncludeThemeStyle(Self, [csNeedsBorderPaint]);
 
   ParentColor := False;
@@ -770,6 +767,8 @@ end;
 
 procedure TJvDBLookupControl.SetDataSource(Value: TDataSource);
 begin
+  if FDataLink.DataSource <> nil then
+    FDataLink.DataSource.RemoveFreeNotification(Self);
   FDataLink.DataSource := Value;
   if Value <> nil then
     Value.FreeNotification(Self);
@@ -806,6 +805,8 @@ end;
 procedure TJvDBLookupControl.SetListSource(Value: TDataSource);
 begin
   CheckNotLookup;
+  if FListLink.DataSource <> nil then
+    FListLink.DataSource.RemoveFreeNotification(Self);
   FListLink.DataSource := Value;
   if Value <> nil then
     Value.FreeNotification(Self);
@@ -881,7 +882,7 @@ procedure TJvDBLookupTreeViewCombo.CreateParams(var Params: TCreateParams);
 begin
   inherited CreateParams(Params);
   with Params do
-    if NewStyleControls and Ctl3D then
+    if Ctl3D then
       ExStyle := ExStyle or WS_EX_CLIENTEDGE
     else
       Style := Style or WS_BORDER;
@@ -914,7 +915,7 @@ begin
   end
   {added by zelen}
   else
-  if not Enabled and NewStyleControls then
+  if not Enabled then
     Canvas.Font.Color := clGrayText;
   {/added by zelen}
   if (csPaintCopy in ControlState) and (FDataField <> nil) then
@@ -1258,11 +1259,8 @@ end;
 
 procedure TJvDBLookupTreeViewCombo.CMCtl3DChanged(var Msg: TMessage);
 begin
-  if NewStyleControls then
-  begin
-    RecreateWnd;
-    Height := 0;
-  end;
+  RecreateWnd;
+  Height := 0;
   inherited;
 end;
 
@@ -1460,7 +1458,7 @@ begin
   inherited CreateParams(Params);
   with Params do
     if FBorderStyle = bsSingle then
-      if NewStyleControls and Ctl3D then
+      if Ctl3D then
         ExStyle := ExStyle or WS_EX_CLIENTEDGE
       else
         Style := Style or WS_BORDER;

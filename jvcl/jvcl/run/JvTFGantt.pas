@@ -26,7 +26,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFGantt.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvTFGantt.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvTFGantt;
 
@@ -35,11 +35,9 @@ unit JvTFGantt;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes, Windows, Messages, Graphics, Controls,
   Forms, Dialogs, Menus, StdCtrls, ExtCtrls,
   JvTFUtils, JvTFManager;
@@ -127,30 +125,20 @@ type
     property Anchors;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFGantt.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvJVCLUtils, JvResources;
-{$ENDIF USEJVCL}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsThisIsTheMajorScale = 'This is the Major Scale';
-  RsThisIsTheMinorScale = 'This is the Minor Scale';
-{$ENDIF !USEJVCL}
 
 //=== { TJvTFGantt } =========================================================
 
@@ -234,18 +222,10 @@ begin
   Result := 0;
 
   Canvas.Font.Assign(FMajorScale.Font);
-  {$IFDEF USEJVCL}
   Result := Result + CanvasMaxTextHeight(Canvas);
-  {$ELSE}
-  Result := Result + Canvas.TextHeight('Ay');
-  {$ENDIF USEJVCL}
 
   Canvas.Font.Assign(FMinorScale.Font);
-  {$IFDEF USEJVCL}
   Result := Result + CanvasMaxTextHeight(Canvas);
-  {$ELSE}
-  Result := Result + Canvas.TextHeight('Ay');
-  {$ENDIF USEJVCL}
 
   Result := Result + 4;
 end;
@@ -575,7 +555,6 @@ begin
   SetScrollInfo(Handle, SB_CTL, Info, True);
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -583,7 +562,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

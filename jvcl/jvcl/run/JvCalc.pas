@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCalc.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvCalc.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvCalc;
 
@@ -35,9 +35,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  WinUtils,
-  {$ENDIF CLR}
   Windows, Messages, Classes, Controls, Forms, StdCtrls, Menus, ExtCtrls,
   JvBaseDlg, JvComponent;
 
@@ -120,8 +117,8 @@ procedure SetupPopupCalculator(PopupCalc: TWinControl; APrecision: Byte;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCalc.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -179,7 +176,7 @@ type
     FOnCalcKey: TKeyPressEvent;
     FOnDisplayChange: TNotifyEvent;
     FControl: TControl;
-    procedure SetText(const Value: string); {$IFDEF CLR} reintroduce; {$ENDIF}
+    procedure SetText(const Value: string);
     procedure CheckFirst;
     procedure CalcKey(Key: Char);
     procedure Clear;
@@ -280,11 +277,7 @@ var
 
 begin
   NonClientMetrics.cbSize := SizeOf(NonClientMetrics);
-  {$IFDEF CLR}
-  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, NonClientMetrics, 0) then
-  {$ELSE}
   if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, @NonClientMetrics, 0) then
-  {$ENDIF CLR}
     AFont.Handle := CreateFontIndirect(NonClientMetrics.lfMessageFont)
   else
     with AFont do
@@ -797,7 +790,7 @@ begin
     cbSgn:
       CalcKey('_');
     cbDcm:
-      CalcKey(DecimalSeparator{$IFDEF CLR}[1]{$ENDIF});
+      CalcKey(DecimalSeparator);
     cbDiv:
       CalcKey('/');
     cbMul:
@@ -871,7 +864,7 @@ begin
     Key := #0;
   if Assigned(FOnCalcKey) then
     FOnCalcKey(Self, Key);
-  if CharInSet(Key, [DecimalSeparator{$IFDEF CLR}[1]{$ENDIF}, '.', ',']) then
+  if CharInSet(Key, [DecimalSeparator, '.', ',']) then
   begin
     CheckFirst;
     if Pos(DecimalSeparator, Text) = 0 then
@@ -917,7 +910,7 @@ begin
         if (Length(Text) = 1) or ((Length(Text) = 2) and (Text[1] = '-')) then
           SetText('0')
         else
-          SetText({$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Copy(Text, 1, Length(Text) - 1));
+          SetText(System.Copy(Text, 1, Length(Text) - 1));
       end;
     '_':
       SetDisplay(-GetDisplay);
@@ -1031,7 +1024,7 @@ var
   I: Integer;
   BtnTag: Longint;
 begin
-  if CharInSet(Key, [DecimalSeparator{$IFDEF CLR}[1]{$ENDIF}, '.', ',']) then
+  if CharInSet(Key, [DecimalSeparator, '.', ',']) then
     Key := '.'
   else
   if Key = Cr then

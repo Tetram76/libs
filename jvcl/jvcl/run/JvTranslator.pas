@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTranslator.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvTranslator.pas 12343 2009-06-25 10:22:12Z obones $
 
 unit JvTranslator;
 
@@ -127,8 +127,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTranslator.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12343 $';
+    Date: '$Date: 2009-06-25 12:22:12 +0200 (jeu., 25 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -239,8 +239,6 @@ function TJvTranslator.ComponentToXML(const AComponent: TComponent; Recurse: Boo
 var
   AName: string;
   AElem: TJvSimpleXMLElem;
-  JclStream: TJclStringStream;
-  StringStream: TStringStream;
 
   procedure CollectionToXML(Collection: TCollection; Elem: TJvSimpleXMLElem; Recurse:Boolean); forward;
 
@@ -497,22 +495,7 @@ begin
   if AName <> '' then
   begin
     InnerComponentToXML(AComponent, AElem, Recurse);
-{$ifdef COMPILER12_UP}
-    StringStream := TStringStream.Create;
-{$else}
-    StringStream := TStringStream.Create('');
-{$endif}
-    try
-      JclStream := TJclStringStream.Create(StringStream);
-      try
-        FXML.Root.SaveToStringStream(JclStream);
-        Result := StringStream.DataString;
-      finally
-        JclStream.Free;
-      end;
-    finally
-      StringStream.Free;
-    end;
+    Result := FXML.Root.SaveToString;
   end;
 end;
 

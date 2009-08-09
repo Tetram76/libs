@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgLogicItemEditorForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgLogicItemEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgLogicItemEditorForm;
 
@@ -109,19 +109,10 @@ type
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvDsgnConsts;
-{$ENDIF USEJVCL}
 
 {$R *.dfm}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsLogicElements = 'Logic Element: %s';
-  RsResult = '[RESULT]';
-  RsNotDefined = '[ not defined ]';
-{$ENDIF !USEJVCL}
 
 const
   cLocalColor = $E0E0E0;

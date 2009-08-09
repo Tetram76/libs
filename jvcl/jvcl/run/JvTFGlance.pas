@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFGlance.pas 11976 2008-10-24 17:30:56Z obones $
+// $Id: JvTFGlance.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvTFGlance;
 
@@ -31,11 +31,9 @@ unit JvTFGlance;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes, Windows, Messages, Graphics, Controls, Forms, Dialogs, ImgList,
   {$IFDEF BCB}
   JvTypes, // TDate/TTime
@@ -756,37 +754,20 @@ type
     property OnConfigCells;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFGlance.pas $';
-    Revision: '$Revision: 11976 $';
-    Date: '$Date: 2008-10-24 19:30:56 +0200 (ven., 24 oct. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
-  JvConsts, JvResources, JclStrings;
-{$ENDIF USEJVCL}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsECellDatesCannotBeChanged = 'Cell Dates cannot be changed';
-  RsECellMapHasBeenCorrupteds = 'Cell map has been corrupted %s';
-  RsECellObjectNotAssigned = 'Cell object not assigned';
-  RsEInvalidColIndexd = 'Invalid col index (%d)';
-  RsEInvalidRowIndexd = 'Invalid row index (%d)';
-  RsEApptIndexOutOfBoundsd = 'Appt index out of bounds (%d)';
-  RsECellCannotBeSplit = 'Cell cannot be split';
-  RsEASubcellCannotBeSplit = 'A subcell cannot be split';
-  RsGlanceMainTitle = '(Title)';
-{$ENDIF !USEJVCL}
+  JvConsts, JvResources, JclStrings, JvJVCLUtils;
 
 //=== { TJvTFGlanceCell } ====================================================
 
@@ -1497,7 +1478,7 @@ end;
 
 procedure TJvTFCustomGlance.CMCtl3DChanged(var Msg: TMessage);
 begin
-  if NewStyleControls and (FBorderStyle = bsSingle) then
+  if FBorderStyle = bsSingle then
     RecreateWnd;
   inherited;
 end;
@@ -1510,7 +1491,7 @@ begin
   with Params do
   begin
     Style := Style or BorderStyles[FBorderStyle] or WS_CLIPCHILDREN;
-    if NewStyleControls and Ctl3D and (FBorderStyle = bsSingle) then
+    if Ctl3D and (FBorderStyle = bsSingle) then
     begin
       Style := Style and not WS_BORDER;
       ExStyle := ExStyle or WS_EX_CLIENTEDGE;
@@ -2064,21 +2045,8 @@ end;
 
 procedure TJvTFCustomGlance.SetCellPics(Value: TCustomImageList);
 begin
-  if Value <> FCellPics then
-  begin
-    if Assigned(FCellPics) then
-      FCellPics.UnregisterChanges(FImageChangeLink);
-
-    FCellPics := Value;
-
-    if Assigned(FCellPics) then
-    begin
-      FCellPics.RegisterChanges(FImageChangeLink);
-      FCellPics.FreeNotification(Self);
-    end;
-
+  if ReplaceImageListReference (Self, Value, FCellPics, FImageChangeLink) then
     Invalidate;
-  end;
 end;
 
 procedure TJvTFCustomGlance.SetCells(Value: TJvTFGlanceCells);
@@ -2175,7 +2143,7 @@ begin
       FViewer.Notify(Self, sncDisconnectControl);
     if Assigned(Value) then
       Value.Notify(Self, sncConnectControl);
-    FViewer := Value;
+    ReplaceComponentReference (Self, Value, TComponent(FViewer));
     if Assigned(FViewer) then
     begin
       FViewer.MoveTo(Cells.Cells[0, 0]);
@@ -2879,14 +2847,7 @@ var
   Handled: Boolean;
 begin
   if Assigned(FViewer) and FViewer.ShowSchedNamesInHint then
-{$IFDEF USEJVCL}
     ExtraDesc := StringsToStr(SchedNames, ', ', False);
-{$ELSE}
-  begin
-    SchedNames.Delimiter := ', ';
-    ExtraDesc := SchedNames.DelimitedText;
-  end;
-{$ENDIF USEJVCL}
   ExtraDesc := ExtraDesc + #13#10;
 
   Handled := False;
@@ -4120,7 +4081,6 @@ begin
     FOnApptHint(Sender, Appt, Handled);
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -4128,6 +4088,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

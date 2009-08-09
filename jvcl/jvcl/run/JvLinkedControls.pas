@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLinkedControls.pas 11342 2007-06-19 12:25:21Z obones $
+// $Id: JvLinkedControls.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvLinkedControls;
 
@@ -88,8 +88,8 @@ function CheckLinkControlEnabled(Enabled, Checked: Boolean; Options: TJvLinkedCo
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLinkedControls.pas $';
-    Revision: '$Revision: 11342 $';
-    Date: '$Date: 2007-06-19 14:25:21 +0200 (mar., 19 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -170,16 +170,13 @@ begin
     if (FOwnerControl = nil) and (Collection is TJvLinkedControls) then
       FOwnerControl := TJvLinkedControls(Collection).FControl;
     if (Value = FOwnerControl) and (FOwnerControl <> nil) then
-      {$IFDEF CLR}
-      raise Exception.Create(RsEOwnerLinkError);
-      {$ELSE}
       raise Exception.CreateRes(@RsEOwnerLinkError);
-      {$ENDIF CLR}
     if Assigned(FControl) then
     begin
       if Assigned(FOwnerControl) then
         FControl.RemoveFreeNotification(FOwnerControl);
-      if (Collection is TJvLinkedControls) and TJvLinkedControls(Collection).RestoreEnabled then
+      if (Collection is TJvLinkedControls) and TJvLinkedControls(Collection).RestoreEnabled and
+         not (csDestroying in FControl.ComponentState) then
         FControl.Enabled := FOriginalEnabled;
     end;
     if (FOwnerControl <> nil) and (csDestroying in FOwnerControl.ComponentState) then

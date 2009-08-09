@@ -32,7 +32,7 @@ Description:
 History:
   2004-07-23: Added TJvCheckedComboBox.
 -----------------------------------------------------------------------------}
-// $Id: JvComboListBox.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvComboListBox.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvComboListBox;
 
@@ -44,9 +44,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  Types,
-  {$ENDIF CLR}
   Windows, Messages,
   Classes, Graphics, Controls, Forms, StdCtrls, Buttons,
   JvListBox,
@@ -78,6 +75,7 @@ type
     function DestRect(Picture: TPicture; ARect: TRect): TRect;
     function GetOffset(OrigRect, ImageRect: TRect): TRect;
     procedure SetButtonWidth(const Value: Integer);
+    procedure SetDropdownMenu(const Value: TPopupMenu);
     procedure SetHotTrackCombo(const Value: Boolean);
   protected
     procedure InvalidateItem(Index: Integer);
@@ -103,7 +101,7 @@ type
   published
     property ButtonWidth: Integer read FButtonWidth write SetButtonWidth default 20;
     property HotTrackCombo: Boolean read FHotTrackCombo write SetHotTrackCombo default False;
-    property DropdownMenu: TPopupMenu read FDropdownMenu write FDropdownMenu;
+    property DropdownMenu: TPopupMenu read FDropdownMenu write SetDropdownMenu;
     property DrawStyle: TJvComboListBoxDrawStyle read FDrawStyle write SetDrawStyle default dsOriginal;
     property OnDrawText: TJvComboListDrawTextEvent read FOnDrawText write FOnDrawText;
     property OnDrawImage: TJvComboListDrawImageEvent read FOnDrawImage write FOnDrawImage;
@@ -174,8 +172,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComboListBox.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -183,7 +181,7 @@ const
 implementation
 
 uses
-  Math;
+  Math, JvJVCLUtils;
 
 constructor TJvComboListBox.Create(AOwner: TComponent);
 begin
@@ -401,7 +399,7 @@ begin
       begin
         AText := Items[Index];
         DoGetText(Index, AText);
-        DrawText(Canvas.Handle, {$IFDEF CLR} AText {$ELSE} PChar(AText) {$ENDIF}, Length(AText),
+        DrawText(Canvas.Handle, PChar(AText), Length(AText),
           TmpRect, DT_WORDBREAK or DT_LEFT or DT_TOP or DT_EDITCONTROL or DT_NOPREFIX or DT_END_ELLIPSIS);
       end;
     end;
@@ -493,7 +491,7 @@ begin
     R.Right := R.Right - ButtonWidth;
     // don't redraw content, just button
     ExcludeClipRect(Canvas.Handle, R.Left, R.Top, R.Right, R.Bottom);
-    Windows.InvalidateRect(Handle, {$IFNDEF CLR}@{$ENDIF}R2, False);
+    Windows.InvalidateRect(Handle, @R2, False);
   end;
 end;
 
@@ -628,6 +626,11 @@ begin
   Invalidate;
 end;
 
+procedure TJvComboListBox.SetDropdownMenu(const Value: TPopupMenu);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FDropdownMenu));
+end;
+
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -637,4 +640,5 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
+
 

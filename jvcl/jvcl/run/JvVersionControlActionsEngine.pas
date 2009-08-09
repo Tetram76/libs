@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActionsEngine.pas 11907 2008-09-18 23:14:56Z jfudickar $
+// $Id: JvVersionControlActionsEngine.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvVersionControlActionsEngine;
 
@@ -42,7 +42,6 @@ type
     FOnChangeActionComponent: TJvChangeActionComponent;
   protected
     function GetEngineList: TJvActionEngineList; virtual; abstract;
-    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     property EngineList: TJvActionEngineList read GetEngineList;
   public
     constructor Create(AOwner: TComponent); override;
@@ -74,8 +73,8 @@ function RegisteredVersionControlActionEngineList:
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActionsEngine.pas $';
-    Revision: '$Revision: 11907 $';
-    Date: '$Date: 2008-09-19 01:14:56 +0200 (ven., 19 sept. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -135,12 +134,6 @@ function TjvVersionControlActionEngine.GetFilename(aActionComponent:
     TComponent): string;
 begin
   Result := '';
-end;
-
-procedure TjvVersionControlActionEngine.Notification(AComponent: TComponent;
-    Operation: TOperation);
-begin
-  inherited Notification(AComponent, Operation);
 end;
 
 function TjvVersionControlActionEngine.SaveFile(aActionComponent: TComponent;

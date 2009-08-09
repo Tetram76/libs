@@ -26,7 +26,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInstallLabel.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvInstallLabel.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvInstallLabel;
 
@@ -105,8 +105,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInstallLabel.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -203,11 +203,7 @@ end;
 
 procedure TJvInstallLabel.SetImageList(Value: TCustomImageList);
 begin
-  if Images <> nil then
-    Images.UnRegisterChanges(FImageChangeLink);
-  FImageList := Value;
-  if Images <> nil then
-    Images.RegisterChanges(FImageChangeLink);
+  ReplaceImageListReference(Self, Value, FImageList, FImageChangeLink);
 end;
 
 function TJvInstallLabel.GetLines: TStrings;

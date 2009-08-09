@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMenus.pas 11957 2008-10-10 07:28:59Z obones $
+// $Id: JvMenus.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvMenus;
 
@@ -744,8 +744,8 @@ function StripHotkeyPrefix(const Text: string): string; // MBCS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMenus.pas $';
-    Revision: '$Revision: 11957 $';
-    Date: '$Date: 2008-10-10 09:28:59 +0200 (ven., 10 oct. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -885,21 +885,15 @@ procedure SetDefaultMenuFont(AFont: TFont);
 var
   NCMetrics: TNonCLientMetrics;
 begin
-  if NewStyleControls then
+  NCMetrics.cbSize := SizeOf(TNonCLientMetrics);
+  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, @NCMetrics, 0) then
   begin
-    NCMetrics.cbSize := SizeOf(TNonCLientMetrics);
-    if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, @NCMetrics, 0) then
-    begin
-      AFont.Handle := CreateFontIndirect(NCMetrics.lfMenuFont);
-      Exit;
-    end;
+    AFont.Handle := CreateFontIndirect(NCMetrics.lfMenuFont);
+    Exit;
   end;
   with AFont do
   begin
-    if NewStyleControls then
-      Name := 'MS Sans Serif'
-    else
-      Name := 'System';
+    Name := 'MS Sans Serif';
     Size := 8;
     Color := clMenuText;
     Style := [];
@@ -1042,14 +1036,8 @@ var
   OldOwnerDraw: Boolean;
 begin
   OldOwnerDraw := IsOwnerDrawMenu;
-  if FImages <> nil then
-    FImages.UnregisterChanges(FImageChangeLink);
-  FImages := Value;
-  if Value <> nil then
-  begin
-    FImages.RegisterChanges(FImageChangeLink);
-    FImages.FreeNotification(Self);
-  end;
+  ReplaceImageListReference(Self, Value, FImages, FImageChangeLink);
+
   if IsOwnerDrawMenu <> OldOwnerDraw then
     RefreshMenu(not OldOwnerDraw);
 
@@ -1069,14 +1057,9 @@ var
   OldOwnerDraw: Boolean;
 begin
   OldOwnerDraw := IsOwnerDrawMenu;
-  if FDisabledImages <> nil then
-    FDisabledImages.UnregisterChanges(FDisabledImageChangeLink);
-  FDisabledImages := Value;
-  if Value <> nil then
-  begin
-    FDisabledImages.RegisterChanges(FDisabledImageChangeLink);
-    FDisabledImages.FreeNotification(Self);
-  end;
+
+  ReplaceImageListReference(Self, Value, FDisabledImages, FDisabledImageChangeLink);
+
   if IsOwnerDrawMenu <> OldOwnerDraw then
     RefreshMenu(not OldOwnerDraw);
 end;
@@ -1092,14 +1075,7 @@ var
   OldOwnerDraw: Boolean;
 begin
   OldOwnerDraw := IsOwnerDrawMenu;
-  if FHotImages <> nil then
-    FHotImages.UnregisterChanges(FHotImageChangeLink);
-  FHotImages := Value;
-  if Value <> nil then
-  begin
-    FHotImages.RegisterChanges(FHotImageChangeLink);
-    FHotImages.FreeNotification(Self);
-  end;
+  ReplaceImageListReference(Self, Value, FHotImages, FHotImageChangeLink);
   if IsOwnerDrawMenu <> OldOwnerDraw then
     RefreshMenu(not OldOwnerDraw);
 end;
@@ -1350,7 +1326,10 @@ begin
   begin
     // Remove menu from current item painter
     if FItemPainter <> nil then
+    begin
+      FItemPainter.RemoveFreeNotification(Self);
       FItemPainter.Menu := nil;
+    end;
 
     // set value and if not nil, setup the painter correctly
     FItemPainter := Value;
@@ -1592,14 +1571,7 @@ var
   OldOwnerDraw: Boolean;
 begin
   OldOwnerDraw := IsOwnerDrawMenu;
-  if FImages <> nil then
-    FImages.UnregisterChanges(FImageChangeLink);
-  FImages := Value;
-  if Value <> nil then
-  begin
-    FImages.RegisterChanges(FImageChangeLink);
-    FImages.FreeNotification(Self);
-  end;
+  ReplaceImageListReference(Self, Value, FImages, FImageChangeLink);
   if IsOwnerDrawMenu <> OldOwnerDraw then
     RefreshMenu(not OldOwnerDraw);
 
@@ -1619,14 +1591,7 @@ var
   OldOwnerDraw: Boolean;
 begin
   OldOwnerDraw := IsOwnerDrawMenu;
-  if FDisabledImages <> nil then
-    FDisabledImages.UnregisterChanges(FDisabledImageChangeLink);
-  FDisabledImages := Value;
-  if Value <> nil then
-  begin
-    FDisabledImages.RegisterChanges(FDisabledImageChangeLink);
-    FDisabledImages.FreeNotification(Self);
-  end;
+  ReplaceImageListReference(Self, Value, FDisabledImages, FDisabledImageChangeLink);
   if IsOwnerDrawMenu <> OldOwnerDraw then
     RefreshMenu(not OldOwnerDraw);
 end;
@@ -1642,14 +1607,7 @@ var
   OldOwnerDraw: Boolean;
 begin
   OldOwnerDraw := IsOwnerDrawMenu;
-  if FHotImages <> nil then
-    FImages.UnregisterChanges(FHotImageChangeLink);
-  FHotImages := Value;
-  if Value <> nil then
-  begin
-    FHotImages.RegisterChanges(FHotImageChangeLink);
-    FHotImages.FreeNotification(Self);
-  end;
+  ReplaceImageListReference(Self, Value, FHotImages, FHotImageChangeLink);
   if IsOwnerDrawMenu <> OldOwnerDraw then
     RefreshMenu(not OldOwnerDraw);
 end;
@@ -2002,12 +1960,11 @@ begin
     if FItemPainter <> nil then
       FItemPainter.Menu := nil;
 
+    ReplaceComponentReference (Self, Value, TComponent(FItemPainter));
     // set value and if not nil, setup the painter correctly
-    FItemPainter := Value;
     if FItemPainter <> nil then
     begin
       Style := msItemPainter;
-      FItemPainter.FreeNotification(Self);
       FItemPainter.Menu := Self;
     end;
     Refresh;
@@ -2054,9 +2011,9 @@ begin
     GrayColor := clGrayText
   else
     GrayColor := clBtnShadow;
-  IsHighlight := NewStyleControls and ((not (mdSelected in FState)) or
+  IsHighlight := (not (mdSelected in FState)) or
     (GetNearestColor(Canvas.Handle, ColorToRGB(clGrayText)) =
-    GetNearestColor(Canvas.Handle, ColorToRGB(clHighlight))));
+    GetNearestColor(Canvas.Handle, ColorToRGB(clHighlight)));
   if Bitmap.Monochrome then
   begin
     SaveColor := Canvas.Brush.Color;
@@ -2092,7 +2049,7 @@ end;
 
 procedure TJvCustomMenuItemPainter.DrawMenuBitmap(X, Y: Integer; Bitmap: TBitmap);
 begin
-  if mdDisabled in FState then
+  if (mdDisabled in FState) and (FNumGlyphs < 2) then
     DrawDisabledBitmap(X, Y, Bitmap)
   else
   begin
@@ -2309,11 +2266,11 @@ begin
   // Force glyph to fit inside its allocated space, if it's not empty and it
   // does not fit into the glyph allocated space
   if not FGlyph.Empty and
-    ((ImageWidth <> FGlyph.Width) or (ImageHeight <> FGlyph.Height)) then
+    ((ImageWidth <> FGlyph.Width * FNumGlyphs) or (ImageHeight <> FGlyph.Height)) then
   begin
     Bmp := TBitmap.Create;
     try
-      Bmp.Width := ImageWidth;
+      Bmp.Width := ImageWidth * FNumGlyphs;
       Bmp.Height := ImageHeight;
       Bmp.Canvas.StretchDraw(Rect(0, 0, Bmp.Width, Bmp.Height), FGlyph);
       FGlyph.Width := Bmp.Width;
@@ -2628,10 +2585,8 @@ end;
 
 function TJvCustomMenuItemPainter.GetDrawHighlight: Boolean;
 begin
-  Result := NewStyleControls and
-    (not (mdSelected in FState) or
-    (GetNearestColor(Canvas.Handle, ColorToRGB(clGrayText)) = GetNearestColor(Canvas.Handle, ColorToRGB(clHighlight)))
-    );
+  Result := not (mdSelected in FState) or
+           (GetNearestColor(Canvas.Handle, ColorToRGB(clGrayText)) = GetNearestColor(Canvas.Handle, ColorToRGB(clHighlight)));
 end;
 
 function TJvCustomMenuItemPainter.GetGrayColor: TColor;
@@ -2805,17 +2760,9 @@ var
   LineTop: Integer;
 begin
   LineTop := (ARect.Top + ARect.Bottom) div 2 - 1;
-  if NewStyleControls then
-  begin
-    Canvas.Pen.Width := 1;
-    MenuLine(Canvas, clBtnShadow, ARect.Left - 1, LineTop, ARect.Right, LineTop);
-    MenuLine(Canvas, clBtnHighlight, ARect.Left, LineTop + 1, ARect.Right, LineTop + 1);
-  end
-  else
-  begin
-    Canvas.Pen.Width := 2;
-    MenuLine(Canvas, clMenuText, ARect.Left, LineTop + 1, ARect.Right, LineTop + 1);
-  end;
+  Canvas.Pen.Width := 1;
+  MenuLine(Canvas, clBtnShadow, ARect.Left - 1, LineTop, ARect.Right, LineTop);
+  MenuLine(Canvas, clBtnHighlight, ARect.Left, LineTop + 1, ARect.Right, LineTop + 1);
 end;
 
 procedure TJvCustomMenuItemPainter.DrawImageBackground(ARect: TRect);
@@ -3068,7 +3015,7 @@ end;
 
 function TJvBtnMenuItemPainter.GetDrawHighlight: Boolean;
 begin
-  Result := NewStyleControls;
+  Result := True;
 end;
 
 function TJvBtnMenuItemPainter.GetGrayColor: TColor;
@@ -3140,10 +3087,8 @@ end;
 
 function TJvOfficeMenuItemPainter.GetDrawHighlight: Boolean;
 begin
-  Result := NewStyleControls and
-    (not (mdSelected in FState) or (not IsPopup(FItem)) or
-    (GetNearestColor(Canvas.Handle, ColorToRGB(clGrayText)) = GetNearestColor(Canvas.Handle, ColorToRGB(clHighlight)))
-    );
+  Result := not (mdSelected in FState) or (not IsPopup(FItem)) or
+            (GetNearestColor(Canvas.Handle, ColorToRGB(clGrayText)) = GetNearestColor(Canvas.Handle, ColorToRGB(clHighlight)));
 end;
 
 procedure TJvOfficeMenuItemPainter.UpdateFieldsFromMenu;
@@ -3780,10 +3725,8 @@ end;
 
 function TJvXPMenuItemPainter.GetDrawHighlight: Boolean;
 begin
-  Result := NewStyleControls and
-    (not (mdSelected in FState) or (not IsPopup(FItem)) or
-    (GetNearestColor(Canvas.Handle, ColorToRGB(clGrayText)) = GetNearestColor(Canvas.Handle, ColorToRGB(clHighlight)))
-    );
+  Result := not (mdSelected in FState) or (not IsPopup(FItem)) or
+            (GetNearestColor(Canvas.Handle, ColorToRGB(clGrayText)) = GetNearestColor(Canvas.Handle, ColorToRGB(clHighlight)));
 end;
 
 function TJvXPMenuItemPainter.GetItemScreenRect(ParentItem: TMenuItem;

@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAutoComplete.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvAutoComplete.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvAutoComplete;
 
@@ -33,9 +33,6 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows,
   Messages,
-  {$IFDEF CLR}
-  System.Reflection,
-  {$ENDIF CLR}
   SysUtils, Classes, Controls, StdCtrls,
   JvVCL5Utils;
 
@@ -239,8 +236,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAutoComplete.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -251,14 +248,10 @@ uses
   {$IFDEF HAS_UNIT_STRUTILS}
   StrUtils,
   {$ENDIF HAS_UNIT_STRUTILS}
-  {$IFDEF CLR}
-  JvJCLUtils,
-  {$ELSE}
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
-  {$ENDIF CLR}
-  JvConsts;
+  JvConsts, JvJVCLUtils;
 
 //=== { TJvControlAutoComplete } =============================================
 
@@ -440,11 +433,7 @@ begin
     begin
       if PeekMessage(Msg, GetEditHandle, 0, 0, PM_NOREMOVE) and (Msg.Message = WM_CHAR) then
       begin
-        {$IFDEF CLR}
-        if SelectItem(SaveText + Convert.ToChar(Msg.WParam)) then
-        {$ELSE}
         if SelectItem(SaveText + Char(Msg.WParam)) then
-        {$ENDIF CLR}
         begin
           PeekMessage(Msg, GetEditHandle, 0, 0, PM_REMOVE);
           Key := #0;
@@ -486,11 +475,7 @@ end;
 
 procedure TJvBaseEditListAutoComplete.SetEditCtrl(Value: TCustomEdit);
 begin
-  if Assigned(FEditCtrl) then
-    FEditCtrl.RemoveFreeNotification(Self);
-  FEditCtrl := Value;
-  if Assigned(FEditCtrl) then
-    FEditCtrl.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FEditCtrl));
 
   if FEditCtrl <> nil then
     SetFilter(FEditCtrl.Text)
@@ -514,11 +499,7 @@ end;
 procedure TJvBaseEditListAutoComplete.GetEditSel(out StartPos, EndPos: Integer);
 
 begin
-  {$IFDEF CLR}
-  EditCtrl.GetType.GetMethod('SendGetSel').Invoke(EditCtrl, [TObject(StartPos), TObject(EndPos)]);
-  {$ELSE}
   SendMessage(EditCtrl.Handle, EM_GETSEL, WPARAM(@StartPos), LPARAM(@EndPos));
-  {$ENDIF CLR}
 end;
 
 procedure TJvBaseEditListAutoComplete.SetEditSel(StartPos, EndPos: Integer);
@@ -631,11 +612,7 @@ end;
 
 procedure TJvEditListBoxAutoComplete.SetListBox(Value: TCustomListBox);
 begin
-  if Assigned(FListBox) then
-    FListBox.RemoveFreeNotification(Self);
-  FListBox := Value;
-  if Assigned(FListBox) then
-    FListBox.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FListBox));
 
   if FListBox <> nil then
     List := FListBox.Items
@@ -668,11 +645,7 @@ function TJvComboBoxAutoComplete.GetActive: Boolean;
 begin
   Result := inherited GetActive and (ComboBox <> nil);
   if ComboBox <> nil then
-    {$IFDEF CLR}
-    FListSearch := not (TComboBoxStyle(ComboBox.GetType.GetProperty('Style').GetValue(ComboBox, [])) in [csDropDown, csSimple]);
-    {$ELSE}
     FListSearch := not (TCustomComboBoxAccess(ComboBox).Style in [csDropDown , csSimple ]);
-    {$ENDIF CLR}
 end;
 
 
@@ -685,11 +658,7 @@ end;
 procedure TJvComboBoxAutoComplete.GetEditSel(out StartPos, EndPos: Integer);
 
 begin
-  {$IFDEF CLR}
-  ComboBox.GetType.GetMethod('SendGetEditSel').Invoke(ComboBox, [TObject(StartPos), TObject(EndPos)]);
-  {$ELSE}
   SendMessage(ComboBox.Handle, CB_GETEDITSEL, WPARAM(@StartPos), LPARAM(@EndPos));
-  {$ENDIF CLR}
 end;
 
 procedure TJvComboBoxAutoComplete.SetEditSel(StartPos, EndPos: Integer);
@@ -727,20 +696,12 @@ end;
 
 function TJvComboBoxAutoComplete.GetText: TCaption;
 begin
-  {$IFDEF CLR}
-  Result := TCaption(ComboBox.GetType.GetProperty('Text').GetValue(ComboBox, []));
-  {$ELSE}
   Result := TCustomComboBoxAccess(ComboBox).Text;
-  {$ENDIF CLR}
 end;
 
 procedure TJvComboBoxAutoComplete.SetText(const Value: TCaption);
 begin
-  {$IFDEF CLR}
-  ComboBox.GetType.GetProperty('Text').SetValue(ComboBox, Value, []);
-  {$ELSE}
   TCustomComboBoxAccess(ComboBox).Text := Value;
-  {$ENDIF CLR}
 end;
 
 procedure TJvComboBoxAutoComplete.SetComboBox(Value: TCustomComboBox);
@@ -865,34 +826,20 @@ begin
 end;
 
 procedure TJvLookupAutoComplete.SetEdit(Value: TCustomEdit);
-{$IFDEF CLR}
-var
-  KeyPressProc: TKeyPressEvent;
-{$ENDIF CLR}
 begin
   if Value <> Edit then
   begin
     if Edit <> nil then
     begin
-      {$IFDEF CLR}
-      SetProtectedObjectEvent(Edit, 'OnKeyPress', @FOrgKeyPress);
-      {$ELSE}
       TCustomEditAccess(Edit).OnKeyPress := FOrgKeyPress;
-      {$ENDIF CLR}
       Edit.RemoveFreeNotification(Self);
     end;
     FAutoComplete.EditCtrl := Value;
     if Edit <> nil then
     begin
       Edit.FreeNotification(Self);
-      {$IFDEF CLR}
-      FOrgKeyPress := TKeyPressEvent(GetProtectedObjectEvent(Edit, 'OnKeyPress'));
-      KeyPressProc := EvKeyPress;
-      SetProtectedObjectEvent(Edit, 'OnKeyPress', @KeyPressProc);
-      {$ELSE}
       FOrgKeyPress := TCustomEditAccess(Edit).OnKeyPress;
       TCustomEditAccess(Edit).OnKeyPress := EvKeyPress;
-      {$ENDIF CLR}
     end;
   end;
 end;
@@ -926,11 +873,7 @@ procedure TJvLookupAutoComplete.SetListBox(Value: TCustomListBox);
 begin
   if Value <> FListBox then
   begin
-    if FListBox <> nil then
-      FListBox.RemoveFreeNotification(Self);
-    FListBox := Value;
-    if FListBox <> nil then
-      FListBox.FreeNotification(Self);
+    ReplaceComponentReference (Self, Value, TComponent(FListBox));
     if Kind = akListBox then
     begin
       if FListBox <> nil then

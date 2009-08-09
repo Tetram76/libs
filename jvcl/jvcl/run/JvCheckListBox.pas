@@ -26,7 +26,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckListBox.pas 12252 2009-03-21 22:18:25Z ahuser $
+// $Id: JvCheckListBox.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvCheckListBox;
 
@@ -38,9 +38,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  System.Runtime.InteropServices,
-  {$ENDIF CLR}
   Windows, Messages, SysUtils, Classes, Contnrs, Controls, Graphics, StdCtrls,
   JvExCheckLst, JvVCL5Utils, JvDataSourceIntf;
 
@@ -166,8 +163,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckListBox.pas $';
-    Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -253,9 +250,6 @@ var
   IsChecked: TList;
   ListKeyName, KeyName: TDataFieldString;
   I, Index: Integer;
-  {$IFDEF CLR}
-  Obj: TObject;
-  {$ENDIF CLR}
 begin
   FMap.Clear;
   FRecNumMap.Clear;
@@ -304,13 +298,7 @@ begin
       finally
         ListSource.EndUpdate;
       end;
-      {$IFDEF CLR}
-      if FRecNumMap.Find(TObject(ListSource.RecNo), Obj) then
-        Index := Integer(Obj)
-      else
-      {$ELSE}
       if not FRecNumMap.Find(TObject(ListSource.RecNo), Pointer(Index)) then
-      {$ENDIF CLR}
         Index := -1;
     end;
     FCheckListBox.ItemIndex := Index;
@@ -338,9 +326,6 @@ end;
 procedure TJvCheckListBoxDataConnector.RecordChanged;
 var
   Index: Integer;
-  {$IFDEF CLR}
-  Obj: TObject;
-  {$ENDIF CLR}
 begin
   if IsValid then
   begin
@@ -349,14 +334,8 @@ begin
     else
     if ListSource.RecNo <> -1 then
     begin
-      {$IFDEF CLR}
-      if FRecNumMap.Find(TObject(ListSource.RecNo), Obj) then
-      begin
-        Index := Integer(Obj);
-      {$ELSE}
       if FRecNumMap.Find(TObject(ListSource.RecNo), Pointer(Index)) then
       begin
-      {$ENDIF CLR}
         FCheckListBox.Items[Index] := List.Field.AsString;
         FCheckListBox.Checked[Index] := AnsiCompareText(Field.AsString, ValueUnchecked) <> 0;
         if Index <> FCheckListBox.ItemIndex then
@@ -630,7 +609,7 @@ begin
   if (Items.Count = 0) or (Msg.DrawItemStruct.itemID >= UINT(Items.Count)) then
     Exit;
   {$IFDEF COMPILER5}
-  with Msg.DrawItemStruct {$IFNDEF CLR}^{$ENDIF} do
+  with Msg.DrawItemStruct^ do
     if Header[itemID] then
       if not UseRightToLeftAlignment then
         rcItem.Left := rcItem.Left - GetCheckWidth
@@ -656,29 +635,16 @@ procedure TJvCheckListBox.LoadFromStream(Stream: TStream);
 var
   CheckLst: TCheckListRecord;
   UTF8Item: UTF8String;
-  {$IFDEF CLR}
-  Buf: TBytes;
-  {$ENDIF CLR}
 begin
   Items.Clear;
   while Stream.Position + SizeOf(TCheckListRecord) <= Stream.Size do
   begin
-    {$IFDEF CLR}
-    Stream.Read(CheckLst.Checked);
-    Stream.Read(CheckLst.StringSize);
-    {$ELSE}
     Stream.Read(CheckLst, SizeOf(TCheckListRecord));
-    {$ENDIF CLR}
     if Stream.Position + CheckLst.StringSize <= Stream.Size then
     begin
-      {$IFDEF CLR}
-      ReadCharsFromStream(Stream, Buf, CheckLst.StringSize);
-      UTF8Item := Buf;
-      {$ELSE}
       SetLength(UTF8Item, CheckLst.StringSize);
       if CheckLst.StringSize > 0 then
         Stream.Read(PAnsiChar(UTF8Item)^, CheckLst.StringSize);
-      {$ENDIF CLR}
       Checked[Items.Add(UTF8ToString(UTF8Item))] := CheckLst.Checked;
     end;
   end;
@@ -745,17 +711,8 @@ begin
     UTF8Item := UTF8Encode(Items[I]);
     CheckLst.Checked := Checked[I];
     CheckLst.StringSize := Length(UTF8Item);
-    {$IFDEF CLR}
-    Stream.Write(CheckLst.Checked);
-    Stream.Write(CheckLst.StringSize);
-    {$ELSE}
     Stream.Write(CheckLst, SizeOf(TCheckListRecord));
-    {$ENDIF CLR}
-    {$IFDEF CLR}
-    Stream.Write(BytesOf(Buf), CheckLst.StringSize);
-    {$ELSE}
     Stream.Write(PAnsiChar(UTF8Item)^, CheckLst.StringSize);
-    {$ENDIF CLR}
   end;
 end;
 
@@ -830,7 +787,7 @@ begin
     begin
       R := ClientRect;
       R.Right := R.Left + 20;
-      Windows.InvalidateRect(Handle, {$IFNDEF CLR}@{$ENDIF}R, False);
+      Windows.InvalidateRect(Handle, @R, False);
     end;
   end;
   if Assigned(FOnHScroll) then
@@ -851,14 +808,7 @@ begin
   case Msg.Msg of
     LB_ADDSTRING, LB_INSERTSTRING:
       begin
-        {$IFDEF CLR}
-        if Msg.LParam <> 0 then
-          ItemWidth := Canvas.TextWidth(Marshal.PtrToStringAuto(IntPtr(Msg.lParam)) + ' ')
-        else
-          ItemWidth := Canvas.TextWidth(' ');
-        {$ELSE}
         ItemWidth := Canvas.TextWidth(StrPas(PChar(Msg.lParam)) + ' ');
-        {$ENDIF CLR}
         Inc(ItemWidth, GetCheckWidth);
         if FMaxWidth < ItemWidth then
           FMaxWidth := ItemWidth;

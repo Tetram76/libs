@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStoragePropertyEngineDB.pas 11573 2007-11-15 12:45:12Z ahuser $
+// $Id: JvAppStoragePropertyEngineDB.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvAppStoragePropertyEngineDB;
 
@@ -43,8 +43,8 @@ procedure RegisterAppStoragePropertyEngines;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStoragePropertyEngineDB.pas $';
-    Revision: '$Revision: 11573 $';
-    Date: '$Date: 2007-11-15 13:45:12 +0100 (jeu., 15 nov. 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -79,21 +79,13 @@ procedure TJvAppStoragePropertyDBGridColumnsEngine.ReadProperty(AStorage: TJvCus
   const APath: string; AObject: TObject; AProperty: TObject; const Recursive, ClearFirst: Boolean);
 begin
   if Assigned(AObject) and (AObject is TCustomDBGrid) then
-    {$IFDEF CLR}
-    InvokeNonPublicMethod(AObject, 'BeginLayout', []);
-    {$ELSE}
     TAccessCustomDBGrid(AObject).BeginLayout;
-    {$ENDIF CLR}
   try
     if Assigned(AProperty) and (AProperty is TDBGridColumns) then
       AStorage.ReadCollection(APath, TCollection(AProperty), ClearFirst);
   finally
     if Assigned(AObject) and (AObject is TCustomDBGrid) then
-      {$IFDEF CLR}
-      InvokeNonPublicMethod(AObject, 'EndLayout', []);
-      {$ELSE}
       TAccessCustomDBGrid(AObject).EndLayout;
-      {$ENDIF CLR}
   end;
 end;
 

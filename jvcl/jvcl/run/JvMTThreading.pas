@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTThreading.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvMTThreading.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvMTThreading;
 
@@ -30,11 +30,9 @@ unit JvMTThreading;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes, SyncObjs, Contnrs,
   {$IFDEF MSWINDOWS}
   Windows, Messages,
@@ -144,33 +142,20 @@ type
 
 function CurrentMTThread: TMTThread;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTThreading.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvResources;
-{$ENDIF USEJVCL}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsECurThreadIsPartOfManager = 'Current MTThread is part of the MTManager';
-  RsECheckTerminateCalledByWrongThread = 'CheckTerminate can only be called by the same thread';
-  RsEThreadNotInitializedOrWaiting = 'Cannot run: thread is not Initializing or Waiting';
-  RsECannotChangeNameOfOtherActiveThread = 'Cannot change name of other active thread';
-  RsEReleaseOfUnusedTicket = 'Release of unused ticket';
-{$ENDIF !USEJVCL}
 
 threadvar
   _CurrentMTThread: TMTThread;
@@ -820,11 +805,9 @@ end;
 {$ENDIF COMPILER5}
 
 initialization
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   RegisterUnitVersion(HInstance, UnitVersioning);
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   {$IFDEF COMPILER5}
   InitializeCriticalSection(ThreadSyncLock);
   CreateSyncWindow;
@@ -837,10 +820,8 @@ finalization
   DestroyWindow(SyncWindow);
   SyncWindow := 0;
   {$ENDIF COMPILER5}
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
 
 end.

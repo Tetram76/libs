@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxTreeList.pas 11641 2007-12-24 16:34:00Z outchy $
+// $Id: JvControlActionsEngineCxTreeList.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvControlActionsEngineCxTreeList;
 
@@ -45,7 +45,7 @@ type
   private
   protected
     function GetSupportedOperations: TJvControlActionOperations; override;
-    function GetTreeList(AActionComponent: TComponent): TcxCustomTreeListControl;
+    function GetTreeList(AActionComponent: TComponent): TcxCustomTreeList;
   public
     function ExecuteOperation(const aOperation: TJvControlActionOperation; const
         aActionControl: TControl): Boolean; override;
@@ -58,8 +58,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxTreeList.pas $';
-    Revision: '$Revision: 11641 $';
-    Date: '$Date: 2007-12-24 17:34:00 +0100 (lun., 24 déc. 2007) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -97,11 +97,11 @@ begin
 end;
 
 function TJvControlActioncxGridEngine.GetTreeList(AActionComponent:
-    TComponent): TcxCustomTreeListControl;
+    TComponent): TcxCustomTreeList;
 begin
   if Assigned(AActionComponent) then
-    if AActionComponent is TcxCustomTreeListControl then
-      Result := TcxCustomTreeListControl(AActionComponent)
+    if AActionComponent is TcxCustomTreeList then
+      Result := TcxCustomTreeList(AActionComponent)
     else
       Result := nil
   else

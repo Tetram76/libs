@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_JvUtils.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvInterpreter_JvUtils.pas 12388 2009-07-09 08:42:03Z obones $
 
 unit JvInterpreter_JvUtils;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_JvUtils.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12388 $';
+    Date: '$Date: 2009-07-09 10:42:03 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -619,13 +619,6 @@ begin
   Value := DefStr(Args.Values[0], Args.Values[1]);
 end;
 
-{ function GetTempDir: string; }
-
-procedure JvInterpreter_GetTempDir(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := GetTempDir;
-end;
-
 { function GenTempFileName(FileName: string): string; }
 
 procedure JvInterpreter_GenTempFileName(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1036,7 +1029,6 @@ begin
     AddFunction(cJvStrUtil, 'HasAnyChar', JvInterpreter_HasAnyChar, 2, [varString, varString], varEmpty);
     AddFunction(cJvStrUtil, 'CountOfChar', JvInterpreter_CountOfChar, 2, [varEmpty, varString], varEmpty);
     AddFunction(cJvStrUtil, 'DefStr', JvInterpreter_DefStr, 2, [varString, varString], varEmpty);
-    AddFunction(cJvUtils, 'GetTempDir', JvInterpreter_GetTempDir, 0, [varEmpty], varEmpty);
     AddFunction(cJvUtils, 'GenTempFileName', JvInterpreter_GenTempFileName, 1, [varString], varEmpty);
     AddFunction(cJvUtils, 'GenTempFileNameExt', JvInterpreter_GenTempFileNameExt, 2, [varString, varString], varEmpty);
     AddFunction(cJvUtils, 'ClearDir', JvInterpreter_ClearDir, 1, [varString], varEmpty);

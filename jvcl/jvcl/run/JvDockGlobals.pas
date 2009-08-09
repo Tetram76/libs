@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockGlobals.pas 11274 2007-04-24 19:09:06Z remkobonte $
+// $Id: JvDockGlobals.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvDockGlobals;
 
@@ -30,13 +30,11 @@ unit JvDockGlobals;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Messages, Graphics,
-  JvDockControlForm {, JvDockInfo, JvDockSupportControl};
+  JvDockControlForm;
 
 const
   RsDockBaseDockTreeVersion = $00040000;
@@ -66,9 +64,6 @@ const
   JvDockXorColor = TColor($00FFD8CE);
 
 resourcestring
-  {$IFNDEF USEJVCL}
-  RsPaletteDocking = 'Jv Docking';
-  {$ENDIF !USEJVCL}
   RsDockServerName = 'JVCL Dock Server Component';
   RsDockClientName = 'JVCL Dock Client Component';
   RsDockStyleName = 'JVCL Dock Style Component';
@@ -120,12 +115,6 @@ resourcestring
   RsEDockCannotSetTabPosition = 'Cannot set TabPosition property to tpLeft or tpRight';
   RsEDockTabPositionMustBetpBottom = 'TabPosition property must be tpBottom';
 
-  RsDockLikeDelphiStyle = 'Similar to Delphi''s %s';
-  RsDockLikeVCStyle = 'Similar to Visual C++''s %s';
-  RsDockLikeVIDStyle = 'Similar to Visual InterDev''s %s';
-  RsDockLikeVSNETStyle = 'Similar to Visual Studio.Net''s %s';
-  RsDockLikeEclipseStyle = 'Similar to Java Eclipse''s %s';
-
   RsDockCannotFindWindow = 'Cannot find window';
 
   RsEInvalidDockSiteOrientationValue = 'Invalid DockSiteOrientation value doNoOrient';
@@ -145,21 +134,18 @@ var
   JvGlobalDockManager: TJvGlobalDockManager = nil;
   JvGlobalDockClient: TJvDockClient = nil;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockGlobals.pas $';
-    Revision: '$Revision: 11274 $';
-    Date: '$Date: 2007-04-24 21:09:06 +0200 (mar., 24 avr. 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -167,7 +153,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

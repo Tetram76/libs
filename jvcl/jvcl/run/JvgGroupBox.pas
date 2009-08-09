@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgGroupBox.pas 12024 2008-11-02 22:23:34Z ahuser $
+// $Id: JvgGroupBox.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgGroupBox;
 
@@ -32,25 +32,19 @@ unit JvgGroupBox;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Classes, Graphics, Controls,
   Forms, Dialogs, StdCtrls, ExtCtrls,
-  {$IFDEF USEJVCL}
   JVCLVer,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgCommClasses;
 
 type
   TCaptionAlignment = (fcaNone, fcaLeft, fcaRight, fcaCenter, fcaWidth);
   TJvgGroupBox = class(TCustomGroupBox)
   private
-    {$IFDEF USEJVCL}
     FAboutJVCL: TJVCLAboutInfo;
-    {$ENDIF USEJVCL}
     FBorder: TJvgBevelOptions;
     FCaptionBorder: TJvgBevelOptions;
     FGradient: TJvgGradient;
@@ -112,9 +106,7 @@ type
     destructor Destroy; override;
     procedure DefineProperties(Filer: TFiler); override;
   published
-    {$IFDEF USEJVCL}
     property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-    {$ENDIF USEJVCL}
     property Anchors;
     property Align;
     property Caption: string read GetCaption write SetCaption;
@@ -164,17 +156,15 @@ type
     property OnExpanded: TNotifyEvent read FOnExpanded write FOnExpanded;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgGroupBox.pas $';
-    Revision: '$Revision: 12024 $';
-    Date: '$Date: 2008-11-02 23:23:34 +0100 (dim., 02 nov. 2008) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -823,7 +813,6 @@ begin
   CaptionRect := R;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -831,7 +820,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

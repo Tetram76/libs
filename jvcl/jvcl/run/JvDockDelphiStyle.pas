@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockDelphiStyle.pas 11274 2007-04-24 19:09:06Z remkobonte $
+// $Id: JvDockDelphiStyle.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvDockDelphiStyle;
 
@@ -30,11 +30,9 @@ unit JvDockDelphiStyle;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Controls, Graphics,
   JvDockControlForm, JvDockSupportControl, JvDockTree;
 
@@ -45,9 +43,6 @@ type
       Source: TJvDockDragDockObject; X, Y: Integer); override;
   public
     constructor Create(AOwner: TComponent); override;
-    {$IFNDEF USEJVCL}
-    function GetControlName: string; override;
-    {$ENDIF !USEJVCL}
   published
     property ConjoinServerOption;
     property TabServerOption;
@@ -70,17 +65,15 @@ type
 
   TJvDockDelphiDragDockObject = class(TJvDockDragDockObject);
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockDelphiStyle.pas $';
-    Revision: '$Revision: 11274 $';
-    Date: '$Date: 2007-04-24 21:09:06 +0200 (mar., 24 avr. 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -198,13 +191,6 @@ begin
   end;
 end;
 
-{$IFNDEF USEJVCL}
-function TJvDockDelphiStyle.GetControlName: string;
-begin
-  Result := Format(RsDockLikeDelphiStyle, [inherited GetControlName]);
-end;
-{$ENDIF !USEJVCL}
-
 procedure TJvDockDelphiTabPageControl.CMDockClient(var Msg: TCMDockClient);
 var
   I: Integer;
@@ -227,7 +213,6 @@ begin
     inherited;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -235,7 +220,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

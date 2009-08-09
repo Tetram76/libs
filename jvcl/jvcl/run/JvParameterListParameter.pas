@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 12253 2009-03-22 09:10:44Z outchy $
+// $Id: JvParameterListParameter.pas 12406 2009-07-22 20:06:32Z jfudickar $
 
 unit JvParameterListParameter;
 
@@ -164,6 +164,7 @@ type
   private
     FArrangeSettings: TJvArrangeSettings;
     FParentControl: TWinControl;
+    procedure SetParentControl(const Value: TWinControl);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure SetArrangeSettings(Value: TJvArrangeSettings);
@@ -174,7 +175,7 @@ type
     procedure ArrangeControls; virtual;
     procedure DisableArrange; virtual;
     procedure EnableArrange; virtual;
-    property ParentControl: TWinControl read GetParentControl write FParentControl;
+    property ParentControl: TWinControl read GetParentControl write SetParentControl;
   published
     property ArrangeSettings: TJvArrangeSettings read FArrangeSettings write SetArrangeSettings;
     property Color;
@@ -622,8 +623,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 12253 $';
-    Date: '$Date: 2009-03-22 10:10:44 +0100 (dim., 22 mars 2009) $';
+    Revision: '$Revision: 12406 $';
+    Date: '$Date: 2009-07-22 22:06:32 +0200 (mer., 22 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1268,6 +1269,11 @@ begin
     Result := FParentControl
   else
     Result := WinControl;
+end;
+
+procedure TJvArrangeParameter.SetParentControl(const Value: TWinControl);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FParentControl));
 end;
 
 //=== { TJvPanelParameter } ==================================================
@@ -2521,6 +2527,7 @@ begin
     Scrollbox.Align := alClient;
     ScrollBox.AutoScroll := False;
     ScrollBox.BorderStyle := bsNone;
+    ScrollBox.ParentBackground := True;
     Panel := TJvPanel.Create(ParameterParent.Owner);
     Panel.Name := GenerateUniqueComponentName(ParameterParent.Owner, Panel, GetParameterName + '_' + Pages[i]);
     Panel.ArrangeSettings := ArrangeSettings;

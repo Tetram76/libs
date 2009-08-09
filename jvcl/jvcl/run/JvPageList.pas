@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvPageList.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvPageList.pas 12325 2009-06-01 17:43:36Z ahuser $
 
 unit JvPageList;
 
@@ -283,8 +283,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageList.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12325 $';
+    Date: '$Date: 2009-06-01 19:43:36 +0200 (lun., 01 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -643,6 +643,10 @@ begin
   NextPage := FindNextPage(APage, True, not (csDesigning in ComponentState));
   if NextPage = APage then
     NextPage := nil;
+  { If the last page is removed, go back to the prior page }
+  if (NextPage <> nil) and (NextPage.PageIndex = 0) and (APage.PageIndex > 0) then
+    NextPage := Pages[APage.PageIndex - 1];
+
   APage.Visible := False;
   APage.FPageList := nil;
   FPages.Remove(APage);
@@ -690,7 +694,8 @@ end;
 procedure TJvCustomPageList.ShowControl(AControl: TControl);
 begin
   if AControl is TJvCustomPage then
-    ActivePage := TJvCustomPage(AControl);
+    if ActivePage <> AControl then
+      ActivePage := TJvCustomPage(AControl);
   inherited ShowControl(AControl);
 end;
 
@@ -863,7 +868,7 @@ begin
       if GoForward then
       begin
         Inc(I);
-        if I >= FPages.Count - 1 then
+        if I >= FPages.Count then
           I := 0;
       end
       else

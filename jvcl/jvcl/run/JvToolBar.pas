@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvToolBar.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvToolBar.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvToolBar;
 
@@ -81,13 +81,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolBar.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+uses
+  JvJVCLUtils;
 
 constructor TJvToolBar.Create(AOwner: TComponent);
 begin
@@ -128,15 +131,11 @@ begin
   end;
   ShowCaptions := True;
   if Assigned(FMenu) then
-  begin
     for I := ButtonCount - 1 downto 0 do
       Buttons[I].Free;
-    FMenu.RemoveFreeNotification(Self);
-  end;
-  FMenu := AMenu;
+  ReplaceComponentReference (Self, AMenu, TComponent(FMenu));
   if not Assigned(FMenu) then
     Exit;
-  FMenu.FreeNotification(Self);
 
   for I := ButtonCount to FMenu.Items.Count - 1 do
   begin

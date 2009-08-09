@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTimeFrameworkReg.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvTimeFrameworkReg.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvTimeFrameworkReg;
 
@@ -66,19 +66,10 @@ implementation
 
 uses
   Classes,
-  {$IFDEF USEJVCL}
   JvDsgnConsts,
-  {$ENDIF USEJVCL}
   JvTFGlance, JvTFGlanceTextViewer, JvTFMonths, JvTFWeeks, JvTFDays,
   JvTFAlarm, JvTFManager;
   
-{$IFNDEF USEJVCL}
-resourcestring
-  RsPaletteTimeFramework = 'Jv TimeFrameWork';
-  RsGridLayout = 'Grid Layout';
-  RsCustomDraw = 'Custom Draw';
-{$ENDIF !USEJVCL}
-
 //=== { TJvTFGridLayoutCategory } ============================================
 
 {$IFDEF COMPILER5}

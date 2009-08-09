@@ -39,18 +39,11 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPBar.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvXPBar.pas 12418 2009-08-05 09:01:45Z obones $
 
 unit JvXPBar;
 
 {$I jvcl.inc}
-
-// sorry no theming as standalone
-
-{$IFNDEF USEJVCL}
-{$UNDEF JVCLThemesEnabled}
-{$UNDEF JVCLThemesEnabledD56}
-{$ENDIF !USEJVCL}
 
 // XP_TRANSPARENCY_FIX:
 //  WinXPSP2/WinServer2003 transparency workaround:
@@ -65,17 +58,12 @@ unit JvXPBar;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Classes, SysUtils,
   Graphics, Controls, Forms, ExtCtrls, ImgList, ActnList, Messages,
-  {$IFDEF USEJVCL}
-  JvConsts,
-  {$ENDIF USEJVCL}
-  JvXPCore, JvXPCoreUtils;
+  JvConsts, JvXPCore, JvXPCoreUtils;
 
 type
   TJvXPBarRollDirection = (rdExpand, rdCollapse);
@@ -106,9 +94,6 @@ const
   dxColor_FocusedColorXP = TColor($00D8ACB0);
   dxColor_CheckedColorXP = TColor($00D9C1BB);
   dxColor_BodyColorXP = TColor($00F7DFD6);
-  {$IFNDEF USEJVCL} // VisualCLX activates USEJVCL
-  clHotLight = TColor(COLOR_HOTLIGHT or $80000000);
-  {$ENDIF !USEJVCL}
 
   dxColor_FocusedFrameColorXP = clHotLight;
   dxColor_CheckedFrameColorXP = clHighlight;
@@ -464,11 +449,7 @@ type
     property OnItemClick: TJvXPBarOnItemClickEvent read FOnItemClick write FOnItemClick;
     procedure AdjustClientRect(var Rect: TRect); override;
     // show hints for individual items in the list
-    function HintShow(var HintInfo: {$IFDEF RTL200_UP}Controls.{$ENDIF RTL200_UP}THintInfo): Boolean;
-      {$IFDEF USEJVCL} override; {$ELSE} dynamic; {$ENDIF}
-    {$IFNDEF USEJVCL}
-    procedure CMHintShow(var Msg: TCMHintShow); message CM_HINTSHOW;
-    {$ENDIF !USEJVCL}
+    function HintShow(var HintInfo: {$IFDEF RTL200_UP}Controls.{$ENDIF RTL200_UP}THintInfo): Boolean; override;
     procedure DblClick; override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -573,17 +554,15 @@ type
 
 procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer);
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPBar.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12418 $';
+    Date: '$Date: 2009-08-05 11:01:45 +0200 (mer., 05 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -595,19 +574,10 @@ uses
   {$ENDIF !COMPILER7_UP}
   JvThemes,
   {$ENDIF JVCLThemesEnabled}
-  {$IFDEF USEJVCL}
   JvJCLUtils, JvResources,
-  {$ENDIF USEJVCL}
-  Menus;
+  Menus, JvJVCLUtils;
 
 {$R JvXPBar.res}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsUntitled = 'untitled';
-  RsUntitledFmt = '(%s %d)';
-  RsHintShortcutFmt = '%s (%s)';
-{$ENDIF !USEJVCL}
 
 const
   FC_HEADER_MARGIN = 6;
@@ -658,14 +628,12 @@ begin
   Client := AClient as TJvXPBarItem;
 end;
 
-
 {$IFDEF COMPILER6_UP}
 function TJvXPBarItemActionLink.IsAutoCheckLinked: Boolean;
 begin
   Result := (Client.AutoCheck = (Action as TCustomAction).AutoCheck);
 end;
 {$ENDIF COMPILER6_UP}
-
 
 function TJvXPBarItemActionLink.IsCaptionLinked: Boolean;
 begin
@@ -718,11 +686,7 @@ begin
 end;
 {$ENDIF COMPILER6_UP}
 
-
-
 procedure TJvXPBarItemActionLink.SetCaption(const Value: string);
-
-
 begin
   if IsCaptionLinked then
     Client.Caption := Value;
@@ -740,10 +704,7 @@ begin
     Client.Checked := Value;
 end;
 
-
 procedure TJvXPBarItemActionLink.SetHint(const Value: string);
-
-
 begin
   if IsHintLinked then
     Client.Hint := Value;
@@ -934,13 +895,7 @@ begin
     if (ItemCaption = '') and ((csDesigning in LBar.ComponentState) or (LBar.ControlCount = 0)) then
       ItemCaption := Format(RsUntitledFmt, [RsUntitled, Index]);
     SetBkMode(ACanvas.Handle, Windows.TRANSPARENT);
-    {$IFDEF USEJVCL}
-    DrawText(ACanvas, ItemCaption, -1, Rect,
-      DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS);
-    {$ELSE}
-    DrawText(ACanvas.Handle, PAnsiChar(ItemCaption), -1, Rect,
-      DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS);
-    {$ENDIF USEJVCL}
+    DrawText(ACanvas, ItemCaption, -1, Rect, DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS);
   end;
 end;
 
@@ -975,14 +930,12 @@ begin
     inherited Assign(Source);
 end;
 
-
 {$IFDEF COMPILER6_UP}
 function TJvXPBarItem.IsAutoCheckStored: Boolean;
 begin
   Result := (ActionLink = nil) or not FActionLink.IsAutoCheckLinked;
 end;
 {$ENDIF COMPILER6_UP}
-
 
 function TJvXPBarItem.IsCaptionStored: Boolean;
 begin
@@ -1035,6 +988,8 @@ end;
 
 procedure TJvXPBarItem.SetAction(Value: TBasicAction);
 begin
+  if (FActionLink <> nil) and (FActionLink.Action <> nil) then
+    FActionLink.Action.RemoveFreeNotification(FWinXPBar);
   if Value = nil then
   begin
     FActionLink.Free;
@@ -1736,6 +1691,9 @@ begin
   if (FHoverIndex <> -1) and (FVisibleItems[FHoverIndex] <> nil) and
     (not FVisibleItems[FHoverIndex].Checked) then
     DoDrawItem(FHoverIndex, []);
+
+  // Mantis 4867: Must reset hover index when leaving the bar
+  FHoverIndex := -1;
 end;
 
 
@@ -1930,18 +1888,8 @@ end;
 
 procedure TJvXPCustomWinXPBar.SetImageList(Value: TCustomImageList);
 begin
-  if Value <> FImageList then
-  begin
-    if FImageList <> nil then
-      FImageList.UnRegisterChanges(FImageChangeLink);
-    FImageList := Value;
-    if FImageList <> nil then
-    begin
-      FImageList.FreeNotification(Self);
-      FImageList.RegisterChanges(FImageChangeLink);
-    end;
+  if ReplaceImageListReference(Self, Value, FImageList, FImageChangeLink) then
     InternalRedraw;
-  end;
 end;
 
 procedure TJvXPCustomWinXPBar.SetItemHeight(Value: Integer);
@@ -2220,13 +2168,8 @@ var
       ACanvas.Font.Color := FHotTrackColor;
     ARect.Bottom := ARect.Top + FHeaderHeight;
     Dec(ARect.Right, 3);
-    {$IFDEF USEJVCL}
     DrawText(ACanvas, Caption, -1, ARect,
       DT_SINGLELINE or DT_LEFT or DT_VCENTER or DT_END_ELLIPSIS or DT_NOPREFIX);
-    {$ELSE}
-    DrawText(ACanvas.Handle, PChar(Caption), -1, ARect,
-      DT_SINGLELINE or DT_LEFT or DT_VCENTER or DT_END_ELLIPSIS or DT_NOPREFIX);
-    {$ENDIF USEJVCL}
   end;
 begin
   { get client rect }
@@ -2264,18 +2207,8 @@ end;
 
 procedure TJvXPCustomWinXPBar.SetRollImages(const Value: TCustomImageList);
 begin
-  if FRollImages <> Value then
-  begin
-    if FRollImages <> nil then
-      FRollImages.UnRegisterChanges(FRollChangeLink);
-    FRollImages := Value;
-    if FRollImages <> nil then
-    begin
-      FRollImages.FreeNotification(Self);
-      FRollImages.RegisterChanges(FRollChangeLink);
-    end;
+  if ReplaceImageListReference(Self, Value, FRollImages, FImageChangeLink) then
     InternalRedraw;
-  end;
 end;
 
 procedure TJvXPCustomWinXPBar.GroupMessage;
@@ -2350,17 +2283,7 @@ begin
   Result := False; // use default hint window
 end;
 
-{$IFNDEF USEJVCL}
-procedure TJvXPCustomWinXPBar.CMHintShow(var Msg: TCMHintShow);
-begin
-  Msg.Result := Ord(HintShow(Msg.HintInfo^));
-end;
-{$ENDIF !USEJVCL}
-
-
 function TJvXPBarItemActionLink.DoShowHint(var HintStr: string): Boolean;
-
-
 begin
   Result := True;
   if Action is TCustomAction then
@@ -2412,9 +2335,6 @@ begin
   end;
   inherited;
 end;
-
-
-
 
 class function TJvXPCustomWinXPBar.GetBarItemsClass: TJvXPBarItemsClass;
 begin
@@ -2488,16 +2408,13 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
-
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
 
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

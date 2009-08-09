@@ -25,7 +25,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTypes.pas 11993 2008-10-26 12:56:38Z ahuser $
+// $Id: JvTypes.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvTypes;
 
@@ -37,9 +37,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  System.Runtime.InteropServices,
-  {$ENDIF CLR}
   SysUtils, Classes, Consts,
   Windows, Messages, Controls, Forms, Graphics,
   {$IFDEF COMPILER5}
@@ -57,14 +54,9 @@ const
 {$HPPEMIT '#endif'}
 {$ENDIF !COMPILER12_UP}
 
-{$IFDEF CLR}
-type
-  TJvBytes = TBytes;
-{$ELSE}
 type
   TJvBytes = Pointer;
   IntPtr = Pointer;
-{$ENDIF CLR}
 
 type
   {$IFNDEF COMPILER9_UP}
@@ -97,9 +89,6 @@ type
   TInputKey = (ikAll, ikArrows, ikChars, ikButton, ikTabs, ikEdit, ikNative{, ikNav, ikEsc});
   TInputKeys = set of TInputKey;
 
-  {$IFDEF CLR}
-  [StructLayout(LayoutKind.Sequential)]
-  {$ENDIF CLR}
   TJvRGBTriple = packed record
     rgbBlue: Byte;
     rgbGreen: Byte;
@@ -123,9 +112,6 @@ type
   end;
   {$M-}
   {$ENDIF COMPILER6_UP}
-  {$IFDEF CLR}
-  IUnknown = IInterface;
-  {$ENDIF CLR}
 
   {$IFNDEF COMPILER6_UP}
   TInterfacedPersistent = class(TPersistent, IInterface)
@@ -579,7 +565,6 @@ type
     Height: Integer;
   end;
 
-{$IFNDEF CLR}
   TJvMessage = packed record
     Msg: Integer;
     case Integer of
@@ -723,14 +708,13 @@ type
       Button: TControl;
      );
   end;
-{$ENDIF !CLR}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTypes.pas $';
-    Revision: '$Revision: 11993 $';
-    Date: '$Date: 2008-10-26 13:56:38 +0100 (dim., 26 oct. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

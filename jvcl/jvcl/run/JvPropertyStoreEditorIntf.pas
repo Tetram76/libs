@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditorIntf.pas 12177 2009-01-25 21:21:34Z jfudickar $
+// $Id: JvPropertyStoreEditorIntf.pas 12389 2009-07-09 10:25:10Z obones $
 unit JvPropertyStoreEditorIntf;
 
 {$I jvcl.inc}
@@ -35,10 +35,6 @@ uses
   Classes;
 
 type
-  {$IFDEF CLR}
-  IUnknown = IInterface;
-  {$ENDIF CLR}
-
   IJvPropertyEditorHandler = interface
     ['{7DD4CC1F-335E-44F7-AE90-9DB630BF5B31}']
     function EditIntf_GetVisibleObjectName : string;
@@ -64,8 +60,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditorIntf.pas $';
-    Revision: '$Revision: 12177 $';
-    Date: '$Date: 2009-01-25 22:21:34 +0100 (dim., 25 janv. 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
