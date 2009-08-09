@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (lun., 17 sept. 2007)                         $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -38,9 +38,13 @@ unit MSTask;
 {$WEAKPACKAGEUNIT}
 interface
 
+{$I jcl.inc}
+
 uses
-  Windows,
-  ActiveX;
+  {$IFDEF BORLAND}
+  ActiveX,
+  {$ENDIF BORLAND}
+  Windows;
 
 
 (*$HPPEMIT '#include <MSTask.h>' *)
@@ -588,9 +592,11 @@ type
 {$EXTERNALSYM _PSP}
   _PSP = record end;
 
+{$IFNDEF FPC}
 type
 {$EXTERNALSYM HPROPSHEETPAGE}
   HPROPSHEETPAGE = ^_PSP;
+{$ENDIF ~FPC}
 
 type
 {$EXTERNALSYM _TASKPAGE}

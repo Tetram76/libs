@@ -22,9 +22,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-04 01:27:02 +0100 (mer., 04 févr. 2009)                      $ }
-{ Revision:      $Rev:: 2618                                                                     $ }
-{ Author:        $Author:: jfudickar                                                             $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -207,9 +207,11 @@ function VersionControlActionInfo(ActionType : TJclVersionControlActionType):
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionControl.pas $';
-    Revision: '$Revision: 2618 $';
-    Date: '$Date: 2009-02-04 01:27:02 +0100 (mer., 04 févr. 2009) $';
-    LogPath: 'JCL\source\vcl'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\source\vcl';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 

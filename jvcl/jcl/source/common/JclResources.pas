@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-20 18:30:42 +0100 (ven., 20 févr. 2009)                       $ }
-{ Revision:      $Rev:: 2658                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -66,10 +66,6 @@ resourcestring
   RsDynArrayError      = 'DynArrayInitialize: ElementSize out of bounds';
   RsSysErrorMessageFmt = 'Win32 Error %d (%x)';
   RsCantConvertAddr64  = 'The address %s%.16x cannot be converted to 32 bit';
-  {$IFDEF CLR}
-  RsEGetBytesExFmt     = 'GetBytesEx(): Unsupported value type: %s';
-  RsESetBytesExFmt     = 'SetBytesEx(): Unsupported value type: %s';
-  {$ENDIF CLR}
   RsEReplacementChar   = 'Failed to get ANSI replacement character';
 
 //=== JclBorlandTools ========================================================
@@ -82,13 +78,6 @@ resourcestring
   RsCSharpName          = 'C#Builder';
   RsBDSName             = 'Borland Developer Studio';
   RsRSName              = 'RAD Studio';
-  {$IFDEF KYLIX}
-  RsKylixName           = 'Kylix for %s';
-  RsKylixVersionName    = 'Kylix %d for %s';
-  RsOpenEdition         = 'Open Edition';
-  RsServerDeveloper     = 'Server Developer';
-  RsVclIncludeDir       = '/include/vcl/';
-  {$ENDIF KYLIX}
   {$IFDEF MSWINDOWS}
   RsClientServer        = 'Client/Server';
   RsStandard            = 'Standard';
@@ -162,6 +151,10 @@ resourcestring
   {$IFDEF MSWINDOWS}
   RsENoOpenHelp                 = 'open help not present in Borland Developer Studio';
   {$ENDIF MSWINDOWS}
+
+//=== JclCharsets ============================================================
+resourcestring
+  RsENoCharset = 'No matching charset';
 
 //=== JclCIL =================================================================
 resourcestring
@@ -843,6 +836,8 @@ resourcestring
   RsCompressionNsisExtensions        = '*.nsis';
   RsCompressionLzmaName              = 'Lzma archive';
   RsCompressionLzmaExtensions        = '*.lzma';
+  RsCompressionLzma86Name            = 'Lzma86 archive';
+  RsCompressionLzma86Extensions      = '*.lzma86';
   RsCompressionPeName                = 'Pe archive';
   // TODO: extension might be *.*, but then TJclCompressionStreamFormats.FindDecompressFormat can fail
   RsCompressionPeExtensions          = '*.';
@@ -883,6 +878,16 @@ resourcestring
   RsCompressionTarExtensions         = '*.tar';
   RsCompressionGZipName              = 'GZip archive';
   RsCompressionGZipExtensions        = '*.gz;*.gzip;*.tgz;*.tpz';
+  RsCompressionXzName                = 'xz archive';
+  RsCompressionXzExtensions          = '*.xz;*.txz';
+  RsCompressionNtfsName              = 'Ntfs archive';
+  RsCompressionNtfsExtensions        = '*.ntfs;*.img';
+  RsCompressionFatName               = 'Fat archive';
+  RsCompressionFatExtensions         = '*.fat;*.img';
+  RsCompressionMbrName               = 'Mbr archive';
+  RsCompressionMbrExtensions         = '*.mbr';
+  RsCompressionVhdName               = 'Vhd archive';
+  RsCompressionVhdExtensions         = '*.vhd;*.mbr';
   RsCompressionDuplicate             = 'The file %s already exists in the archive';
   RsCompressionReplaceError          = 'At least one compression volumes could not be replaced after an archive out-of-place update';
 
@@ -1002,18 +1007,6 @@ resourcestring
 
 
 const
-  {$IFDEF CLR}
-  RsEDIErrors: array [1..58] of string =
-    ( RsEDIError001, RsEDIError002, RsEDIError003, RsEDIError004, RsEDIError005, RsEDIError006, RsEDIError007,
-      RsEDIError008, RsEDIError009, RsEDIError010, RsEDIError011, RsEDIError012, RsEDIError013, RsEDIError014,
-      RsEDIError015, RsEDIError016, RsEDIError017, RsEDIError018, RsEDIError019, RsEDIError020, RsEDIError021,
-      RsEDIError022, RsEDIError023, RsEDIError024, RsEDIError025, RsEDIError026, RsEDIError027, RsEDIError028,
-      RsEDIError029, RsEDIError030, RsEDIError031, RsEDIError032, RsEDIError033, RsEDIError034, RsEDIError035,
-      RsEDIError036, RsEDIError037, RsEDIError038, RsEDIError039, RsEDIError040, RsEDIError041, RsEDIError042,
-      RsEDIError043, RsEDIError044, RsEDIError045, RsEDIError046, RsEDIError047, RsEDIError048, RsEDIError049,
-      RsEDIError050, RsEDIError051, RsEDIError052, RsEDIError053, RsEDIError054, RsEDIError055, RsEDIError056,
-      RsEDIError057, RsEDIError058 );
-  {$ELSE ~CLR}
   RsEDIErrors: array [1..58] of PResStringRec =
     ( @RsEDIError001, @RsEDIError002, @RsEDIError003, @RsEDIError004, @RsEDIError005, @RsEDIError006, @RsEDIError007,
       @RsEDIError008, @RsEDIError009, @RsEDIError010, @RsEDIError011, @RsEDIError012, @RsEDIError013, @RsEDIError014,
@@ -1024,7 +1017,6 @@ const
       @RsEDIError043, @RsEDIError044, @RsEDIError045, @RsEDIError046, @RsEDIError047, @RsEDIError048, @RsEDIError049,
       @RsEDIError050, @RsEDIError051, @RsEDIError052, @RsEDIError053, @RsEDIError054, @RsEDIError055, @RsEDIError056,
       @RsEDIError057, @RsEDIError058 );
-  {$ENDIF ~CLR}
 
 //== JclEDISEF ===============================================================
 resourcestring
@@ -1757,6 +1749,8 @@ resourcestring
   RsEInvalidHeaderExpectedsButFounds = 'Invalid Header: expected "%0:s" but found "%1:s"';
   RsEInvalidStylesheetExpectedsButFounds = 'Invalid Stylesheet: expected "%0:s" but found "%1:s"';
   RsEInvalidStylesheetUnexpectedEndOfDat = 'Invalid Stylesheet: Unexpected end of data';
+  RsEInvalidMSOExpectedsButFounds = 'Invalid MSO: expected "%0:s" but found "%1:s"';
+  RsEInvalidMSOUnexpectedEndOfDat = 'Invalid MSO: Unexpected end of data';
   RsEInvalidDocumentUnexpectedTextInFile = 'Invalid Document: Unexpected text in file prolog';
 
 //=== JclStatistics ==========================================================
@@ -1792,10 +1786,8 @@ resourcestring
   RsTabs_StopExpected = 'A tab stop was expected but not found.';
   RsTabs_CloseBracketExpected = 'Closing bracket expected.';
   RsTabs_TabWidthExpected = 'Tab width expected.';
-{$IFNDEF CLR}
   // Default text for the NullReferenceException in .NET
   RsArg_NullReferenceException = 'Object reference not set to an instance of an object.';
-{$ENDIF ~CLR}
 
 //=== JclStructStorage =======================================================
 resourcestring
@@ -1833,10 +1825,13 @@ resourcestring
   RsIntelCacheDescr05 = 'Data TLB1: 4 MByte pages, 4-way set associative, 32 entries';
   RsIntelCacheDescr06 = '1st level instruction cache: 8 KBytes, 4-way set associative, 32 byte line size';
   RsIntelCacheDescr08 = '1st level instruction cache: 16 KBytes, 4-way set associative, 32 byte line size';
+  RsIntelCacheDescr09 = '1st level instruction cache: 32 KBytes, 4-way set associative, 64 byte line size';
   RsIntelCacheDescr0A = '1st level data cache: 8 KBytes, 2-way set associative, 32 byte line size';
   RsIntelCacheDescr0B = 'Instruction TLB: 4 MByte pages, 4-way set associative, 4 entries';
   RsIntelCacheDescr0C = '1st level data cache: 16 KBytes, 4-way set associative, 32 byte line size';
-  RsIntelCacheDescr0E = '1st level data cache: 24 KBytes, 6-way set associative, 64 byte line size'; 
+  RsIntelCacheDescr0D = '1st level data cache: 16 KBytes, 4-way set associative, 64 byte line size';
+  RsIntelCacheDescr0E = '1st level data cache: 24 KBytes, 6-way set associative, 64 byte line size';
+  RsIntelCacheDescr21 = '2nd level cache: 256 KBytes, 8-way set associative, 64 byte line size';
   RsIntelCacheDescr22 = '3rd level cache: 512 KBytes, 4-way set associative, 64 byte line size, 2 lines per sector';
   RsIntelCacheDescr23 = '3rd level cache: 1 MBytes, 8-way set associative, 64 byte line size, 2 lines per sector';
   RsIntelCacheDescr25 = '3rd level cache: 2 MBytes, 8-way set associative, 64 byte line size, 2 lines per sector';
@@ -1861,15 +1856,18 @@ resourcestring
   RsIntelCacheDescr49 = '2nd-level cache: 4 MBytes, 16-way set associative, 64 byte line size';
   RsIntelCacheDescr4A = '3rd-level cache: 6MByte, 12-way set associative, 64 byte line size';
   RsIntelCacheDescr4B = '3rd-level cache: 8MByte, 16-way set associative, 64 byte line size';
+  RsIntelCacheDescr4C = '3rd-level cache: 12MByte, 12-way set associative, 64 byte line size';
   RsIntelCacheDescr4D = '3rd-level cache: 16MByte, 16-way set associative, 64 byte line size';
   RsIntelCacheDescr4E = '2nd-level cache: 6MByte, 24-way set associative, 64 byte line size';
   RsIntelCacheDescr4F = 'Instruction TLB: 4 KByte pages, 32 Entries';
   RsIntelCacheDescr50 = 'Instruction TLB: 4 KByte and 2 MByte or 4 MByte pages, 64 Entries';
   RsIntelCacheDescr51 = 'Instruction TLB: 4 KByte and 2 MByte or 4 MByte pages, 128 Entries';
   RsIntelCacheDescr52 = 'Instruction TLB: 4 KByte and 2 MByte or 4 MByte pages, 256 Entries';
+  RsIntelCacheDescr55 = 'Instruction TLB: 2-MByte or 4-MByte pages, fully associative, 7 entries';
   RsIntelCacheDescr56 = 'Data TLB0: 4 MByte pages, 4-way set associative, 16 entries';
   RsIntelCacheDescr57 = 'Data TLB0: 4 KByte pages, 4-way associative, 16 entries';
   RsIntelCacheDescr59 = 'Data TLB0: 4 KByte pages, fully associative, 16 entries';
+  RsIntelCacheDescr5A = 'Data TLB0: 2 MByte or 4 MByte pages, 4-way set associative, 32 entries';
   RsIntelCacheDescr5B = 'Data TLB: 4 KByte and 4 MByte pages, 64 Entries';
   RsIntelCacheDescr5C = 'Data TLB: 4 KByte and 4 MByte pages, 128 Entries';
   RsIntelCacheDescr5D = 'Data TLB: 4 KByte and 4 MByte pages, 256 Entries';
@@ -1897,12 +1895,16 @@ resourcestring
   RsIntelCacheDescr87 = '2nd-level cache: 1 MByte, 8-way set associative, 64 byte line size';
   RsIntelCacheDescrB0 = 'Instruction TLB: 4 KByte pages, 4-way set associative, 128 entries';
   RsIntelCacheDescrB1 = 'Instruction TLB: 2 MByte pages, 4-way, 8 entries or 4 MByte pages, 4-way, 4 entries';
+  RsIntelCacheDescrB2 = 'Instruction TLB: 4 KByte pages, 4-way set associative, 64 entries';
   RsIntelCacheDescrB3 = 'Data TLB: 4 KByte pages, 4-way set associative, 128 entries';
   RsIntelCacheDescrB4 = 'Data TLB1: 4 KByte pages, 4-way set associative, 256 entries';
   RsIntelCacheDescrBA = 'Data TLB1: 4 KByte pages, 4-way set associative, 64 entries';
   RsIntelCacheDescrC0 = 'Data TLB: 4 KByte and 4 MByte pages, 4-way set associative, 8 entries';
+  RsIntelCacheDescrCA = 'Shared 2nd-Level TLB: 4 KByte pages, 4-way associative, 512 entries';
+  RsIntelCacheDescrE4 = '3rd-level cache: 8 MByte, 16-way set associative, 64 byte line size';
   RsIntelCacheDescrF0 = '64-Byte Prefetching';
   RsIntelCacheDescrF1 = '128-Byte Prefetching';
+  RsIntelCacheDescrFF = 'CPUID leaf 2 does not report cache descriptor information, use CPUID leaf 4 to query cache parameters';
 
   RsUnknownAMDModel = 'Unknown AMD (Model %d)';
 
@@ -2064,7 +2066,10 @@ resourcestring
 resourcestring
   RsELibraryNotFound  = 'Library not found: %s';
   RsEFunctionNotFound = 'Function not found: %s.%s';
-
+  RsEWindowsVersionNotSupported = 'This windows version is not supported';
+  RsEWindowNotValid = 'The window with handle %d is not valid';
+  RsEProcessNotValid = 'The process with ID %d is not valid'; 
+  RsEModuleNotValid = 'The Module with handle %d is not valid'; 
 //=== JclWinMidi =============================================================
 resourcestring
   RsMidiInUnknownError  = 'Unknown MIDI-In error No. %d';
@@ -2074,9 +2079,11 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 2658 $';
-    Date: '$Date: 2009-02-20 18:30:42 +0100 (ven., 20 févr. 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 

@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-22 10:34:41 +0100 (dim., 22 mars 2009)                          $ }
-{ Revision:      $Rev:: 2699                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -43,6 +43,9 @@ unit pcre;
 {$I jcl.inc}
 
 interface
+
+uses
+  JclBase;
 
 (*************************************************
 *       Perl-Compatible Regular Expressions      *
@@ -126,6 +129,10 @@ const
   {$EXTERNALSYM PCRE_BSR_UNICODE}
   PCRE_JAVASCRIPT_COMPAT = $02000000;
   {$EXTERNALSYM PCRE_JAVASCRIPT_COMPAT}
+  PCRE_NO_START_OPTIMIZE = $04000000;
+  {$EXTERNALSYM PCRE_NO_START_OPTIMIZE}
+  PCRE_NO_START_OPTIMISE = $04000000;
+  {$EXTERNALSYM PCRE_NO_START_OPTIMISE}
 
   (* Exec-time and get-time error codes *)
 
@@ -243,14 +250,6 @@ const
   {$EXTERNALSYM PCRE_EXTRA_MATCH_LIMIT_RECURSION}
 
 type
-  (* Types *)
-  PPAnsiChar = ^PAnsiChar;
-  {$EXTERNALSYM PPAnsiChar}
-  PPPAnsiChar = ^PPAnsiChar;
-  {$EXTERNALSYM PPPAnsiChar}
-  PInteger = ^Integer;
-  {$EXTERNALSYM PInteger}
-
   real_pcre = packed record
     {magic_number: Longword;
     size: Integer;

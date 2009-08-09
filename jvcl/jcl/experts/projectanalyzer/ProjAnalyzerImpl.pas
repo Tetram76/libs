@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-27 12:26:07 +0200 (sam., 27 sept. 2008)                       $ }
-{ Revision:      $Rev:: 2498                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                       $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -81,9 +81,11 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/projectanalyzer/ProjAnalyzerImpl.pas $';
-    Revision: '$Revision: 2498 $';
-    Date: '$Date: 2008-09-27 12:26:07 +0200 (sam., 27 sept. 2008) $';
-    LogPath: 'JCL\experts\projectanalyser'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\experts\projectanalyser';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 

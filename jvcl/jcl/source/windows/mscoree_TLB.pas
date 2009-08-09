@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (lun., 17 sept. 2007)                         $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -19,7 +19,7 @@ unit mscoree_TLB;
 // manual modifications will be lost.                                         
 // ************************************************************************ //
 
-// PASTLWTR : $Revision: 2175 $
+// PASTLWTR : $Revision: 2892 $
 // File generated on 14.12.2003 01:39:55 from Type Library described below.
 
 // ************************************************************************  //
@@ -89,9 +89,11 @@ type
   IApartmentCallback = interface;
   IManagedObject = interface;
   ICatalogServices = interface;
+  {$IFNDEF FPC}
   IMarshal = interface;
   ISequentialStream = interface;
   IStream = interface;
+  {$ENDIF ~FPC}
   ICorRuntimeHost = interface;
   IGCHost = interface;
   ICorConfiguration = interface;
@@ -118,8 +120,10 @@ type
   PByte1 = ^Byte; {*}
   PUINT1 = ^LongWord; {*}
 
+  {$IFNDEF FPC}
   ULONG_PTR = LongWord;
   {$EXTERNALSYM ULONG_PTR}
+  {$ENDIF ~FPC}
 
   _LARGE_INTEGER = packed record
     QuadPart: Int64;
@@ -135,6 +139,7 @@ type
   end;
   {$EXTERNALSYM _FILETIME}
 
+  {$IFNDEF FPC}
   tagSTATSTG = packed record
     pwcsName: PWideChar;
     type_: LongWord;
@@ -149,6 +154,7 @@ type
     reserved: LongWord;
   end;
   {$EXTERNALSYM tagSTATSTG}
+  {$ENDIF ~FPC}
 
   _COR_GC_STATS = packed record
     Flags: LongWord;
@@ -213,6 +219,7 @@ type
     function NotAutodone: HResult; stdcall;
   end;
 
+  {$IFNDEF FPC}
 // *********************************************************************//
 // Interface: IMarshal
 // Flags:     (0)
@@ -268,6 +275,7 @@ type
     function Clone(out ppstm: ISequentialStream): HResult; stdcall;
   end;
   {$EXTERNALSYM IStream}
+  {$ENDIF ~FPC}
 
 // *********************************************************************//
 // Interface: ICorRuntimeHost

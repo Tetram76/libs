@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-27 12:26:07 +0200 (sam., 27 sept. 2008)                        $ }
-{ Revision:      $Rev:: 2498                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                        $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -113,9 +113,11 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/useswizard/JCLUsesWizard.pas $';
-    Revision: '$Revision: 2498 $';
-    Date: '$Date: 2008-09-27 12:26:07 +0200 (sam., 27 sept. 2008) $';
-    LogPath: 'JCL\experts\useswizard'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\experts\useswizard';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -521,13 +523,8 @@ var
 
   procedure LoadDcc32Strings;
   const
-    {$IFDEF COMPILER6}
     SErrorID = 4147; // 'Error'
     SUndeclaredIdentID = 47; // 'Undeclared identifier: ''%s'''
-    {$ELSE}
-    SErrorID = 4200;
-    SUndeclaredIdentID = 2;
-    {$ENDIF COMPILER6}
   var
     Dcc32FileName: string;
     Dcc32: HMODULE;
@@ -541,11 +538,9 @@ var
 
     // try to retrieve and prepend Delphi bin path
     S := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey;
-    {$IFDEF COMPILER6_UP}
     if RegKeyExists(HKEY_CURRENT_USER, S) then
       Dcc32FileName := PathAddSeparator(RegReadString(HKEY_CURRENT_USER, S, 'RootDir')) + 'Bin\' + Dcc32FileName
     else
-    {$ENDIF COMPILER6_UP}
     if RegKeyExists(HKEY_LOCAL_MACHINE, S) then
       Dcc32FileName := PathAddSeparator(RegReadString(HKEY_LOCAL_MACHINE, S, 'RootDir')) + 'Bin\' + Dcc32FileName;
 

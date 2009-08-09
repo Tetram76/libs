@@ -18,12 +18,10 @@
 { Contributor(s): Robert Rossmair (crossplatform & BCB support)                                    }
 {                 Florent Ouchet (new core for more than one target)                               }
 {                                                                                                  }
-{ Last modified: $Date: 2007-10-15 13:18:28 +0200 (lun., 15 oct. 2007) $                          }
-{                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-10-15 13:18:28 +0200 (lun., 15 oct. 2007)                          $ }
-{ Revision:      $Rev:: 2197                                                                     $ }
+{ Last modified: $Date:: 2009-07-08 13:50:22 +0200 (mer., 08 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2850                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -232,9 +230,6 @@ type
   TJediInstallCore = class(TComponent)
   private
     FInstallGUI: IJediInstallGUI;
-    {$IFDEF VisualCLX}
-    FGUIComponent: TComponent;
-    {$ENDIF VisualCLX}
     FProducts: IJclIntfList;
     FClosing: Boolean;
     FOptions: TStrings;
@@ -246,16 +241,11 @@ type
     function GetProduct(Index: Integer): IJediProduct;
     function GetInstallGUI: IJediInstallGUI;
     function GetConfiguration: IJediConfiguration;
-  {$IFDEF VisualCLX}
-  protected
-    procedure Notification(AComponent: TComponent;
-      Operation: TOperation); override;    
-  {$ENDIF VisualCLX}
   public
     constructor Create; reintroduce;
     destructor Destroy; override;
 
-    function AddProduct(AProduct: IJediProduct): Integer;
+    function AddProduct(const AProduct: IJediProduct): Integer;
     procedure Execute;
     function Install: Boolean;
     function Uninstall: Boolean;
@@ -263,8 +253,8 @@ type
     function AddInstallOption(const Name: string): Integer;
     function GetInstallOptionName(Id: Integer): string;
     function GetOptionCount: Integer;
-    function ProcessLogLine(const Line: string; var LineType: TCompileLineType;
-      Page: IJediInstallPage): string;
+    function ProcessLogLine(const Line: string; out LineType: TCompileLineType;
+      const Page: IJediInstallPage): string;
 
     property ProductCount: Integer read GetProductCount;
     property Products[Index: Integer]: IJediProduct read GetProduct;
@@ -322,7 +312,7 @@ begin
     Result := FOptions.Add(Name);
 end;
 
-function TJediInstallCore.AddProduct(AProduct: IJediProduct): Integer;
+function TJediInstallCore.AddProduct(const AProduct: IJediProduct): Integer;
 begin
   Result := FProducts.Size;
   FProducts.Add(AProduct);
@@ -396,9 +386,6 @@ end;
 
 function TJediInstallCore.GetInstallGUI: IJediInstallGUI;
 var
-{$IFDEF VisualCLX}
-  CompRef: IInterfaceComponentReference;
-{$ENDIF VisualCLX}
   AutoAcceptDialogs: TDialogTypes;
 begin
   if Assigned(FInstallGUICreator) and not Assigned(FInstallGUI) then
@@ -420,14 +407,6 @@ begin
     FInstallGUI.AutoUninstall := ParamPos('Uninstall') >= 1;
   end;
   Result := FInstallGUI;
-{$IFDEF VisualCLX}
-  Result.QueryInterface(IInterfaceComponentReference, CompRef);
-  if Assigned(CompRef) then
-  begin
-    FGUIComponent := CompRef.GetComponent;
-    FGuiComponent.FreeNotification(Self);
-  end;
-{$ENDIF VisualCLX}
 end;
 
 function TJediInstallCore.GetInstallOptionName(Id: Integer): string;
@@ -463,21 +442,8 @@ begin
   end;
 end;
 
-{$IFDEF VisualCLX}
-procedure TJediInstallCore.Notification(AComponent: TComponent;
-  Operation: TOperation);
-begin
-  inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) and (AComponent = FGUIComponent) then
-  begin
-    FGUIComponent := nil;
-    FInstallGUI := nil;
-  end;
-end;
-{$ENDIF VisualCLX}
-
 function TJediInstallCore.ProcessLogLine(const Line: string;
-  var LineType: TCompileLineType; Page: IJediInstallPage): string;
+  out LineType: TCompileLineType; const Page: IJediInstallPage): string;
 
   function HasText(Text: string; const Values: array of string): Boolean;
   var

@@ -33,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -441,9 +441,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDI_UNEDIFACT.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 {$ENDIF ~EDI_WEAK_PACKAGE_UNITS}
@@ -452,25 +454,6 @@ implementation
 
 uses
   JclResources, JclStrings;
-
-{$IFDEF CLR}
-function AsEDIDataObjectArray(const ElementArray: System.&Array): TEDIDataObjectArray;
-var
-  I: Integer;
-begin
-  if ElementArray <> nil then
-  begin
-    SetLength(Result, ElementArray.Length);
-    for I := 0 to High(Result) do
-      Result[I] := TEDIDataObject(ElementArray[I]);
-  end
-  else
-    Result := nil;
-end;
-{$ELSE ~CLR}
-type
-  AsEDIDataObjectArray = TEDIDataObjectArray;
-{$ENDIF ~CLR}
 
 //=== { TEDIElement } ========================================================
 
@@ -563,7 +546,7 @@ end;
 
 function TEDISegment.AppendElements(ElementArray: TEDIElementArray): Integer;
 begin
-  Result := AppendEDIDataObjects(AsEDIDataObjectArray(ElementArray));
+  Result := AppendEDIDataObjects(TEDIDataObjectArray(ElementArray));
 end;
 
 function TEDISegment.Assemble: string;
@@ -687,7 +670,7 @@ end;
 
 function TEDISegment.InsertElements(InsertIndex: Integer; ElementArray: TEDIElementArray): Integer;
 begin
-  Result := InsertEDIDataObjects(InsertIndex, AsEDIDataObjectArray(ElementArray));
+  Result := InsertEDIDataObjects(InsertIndex, TEDIDataObjectArray(ElementArray));
 end;
 
 function TEDISegment.InsertElements(InsertIndex, Count: Integer): Integer;
@@ -767,7 +750,7 @@ end;
 function TEDISegment.AppendCompositeElements(
   CompositeElementArray: TEDICompositeElementArray): Integer;
 begin
-  Result := AppendEDIDataObjects(AsEDIDataObjectArray(CompositeElementArray));
+  Result := AppendEDIDataObjects(TEDIDataObjectArray(CompositeElementArray));
 end;
 
 function TEDISegment.InsertCompositeElement(InsertIndex: Integer): Integer;
@@ -791,7 +774,7 @@ end;
 function TEDISegment.InsertCompositeElements(InsertIndex: Integer;
   CompositeElementArray: TEDICompositeElementArray): Integer;
 begin
-  Result := InsertEDIDataObjects(InsertIndex, AsEDIDataObjectArray(CompositeElementArray));
+  Result := InsertEDIDataObjects(InsertIndex, TEDIDataObjectArray(CompositeElementArray));
 end;
 
 //=== { TEDIMessageSegment } =================================================
@@ -894,7 +877,7 @@ end;
 
 function TEDIMessage.AppendSegments(SegmentArray: TEDISegmentArray): Integer;
 begin
-  Result := AppendEDIDataObjects(AsEDIDataObjectArray(SegmentArray));
+  Result := AppendEDIDataObjects(TEDIDataObjectArray(SegmentArray));
 end;
 
 function TEDIMessage.Assemble: string;
@@ -1034,7 +1017,7 @@ end;
 function TEDIMessage.InsertSegments(InsertIndex: Integer;
   SegmentArray: TEDISegmentArray): Integer;
 begin
-  Result := InsertEDIDataObjects(InsertIndex, AsEDIDataObjectArray(SegmentArray));
+  Result := InsertEDIDataObjects(InsertIndex, TEDIDataObjectArray(SegmentArray));
 end;
 
 function TEDIMessage.InternalAssignDelimiters: TEDIDelimiters;
@@ -1124,7 +1107,7 @@ end;
 function TEDIFunctionalGroup.AppendMessages(
   MessageArray: TEDIMessageArray): Integer;
 begin
-  Result := AppendEDIDataObjects(AsEDIDataObjectArray(MessageArray));
+  Result := AppendEDIDataObjects(TEDIDataObjectArray(MessageArray));
 end;
 
 function TEDIFunctionalGroup.Assemble: string;
@@ -1290,7 +1273,7 @@ end;
 function TEDIFunctionalGroup.InsertMessages(InsertIndex: Integer;
   MessageArray: TEDIMessageArray): Integer;
 begin
-  Result := InsertEDIDataObjects(InsertIndex, AsEDIDataObjectArray(MessageArray));
+  Result := InsertEDIDataObjects(InsertIndex, TEDIDataObjectArray(MessageArray));
 end;
 
 function TEDIFunctionalGroup.InsertMessages(InsertIndex, Count: Integer): Integer;
@@ -1388,7 +1371,7 @@ end;
 function TEDIInterchangeControl.AppendFunctionalGroups(
   FunctionalGroupArray: TEDIFunctionalGroupArray): Integer;
 begin
-  Result := AppendEDIDataObjects(AsEDIDataObjectArray(FunctionalGroupArray));
+  Result := AppendEDIDataObjects(TEDIDataObjectArray(FunctionalGroupArray));
 end;
 
 function TEDIInterchangeControl.Assemble: string;
@@ -1567,7 +1550,7 @@ end;
 function TEDIInterchangeControl.InsertFunctionalGroups(InsertIndex: Integer;
   FunctionalGroupArray: TEDIFunctionalGroupArray): Integer;
 begin
-  Result := InsertEDIDataObjects(InsertIndex, AsEDIDataObjectArray(FunctionalGroupArray));
+  Result := InsertEDIDataObjects(InsertIndex, TEDIDataObjectArray(FunctionalGroupArray));
 end;
 
 function TEDIInterchangeControl.InternalCreateFunctionalGroup: TEDIFunctionalGroup;
@@ -1640,7 +1623,7 @@ end;
 
 function TEDIInterchangeControl.AppendMessages(MessageArray: TEDIMessageArray): Integer;
 begin
-  Result := AppendEDIDataObjects(AsEDIDataObjectArray(MessageArray));
+  Result := AppendEDIDataObjects(TEDIDataObjectArray(MessageArray));
 end;
 
 function TEDIInterchangeControl.InsertMessage(InsertIndex: Integer; Message: TEDIMessage): Integer;
@@ -1663,7 +1646,7 @@ end;
 function TEDIInterchangeControl.InsertMessages(InsertIndex: Integer;
   MessageArray: TEDIMessageArray): Integer;
 begin
-  Result := InsertEDIDataObjects(InsertIndex, AsEDIDataObjectArray(MessageArray));
+  Result := InsertEDIDataObjects(InsertIndex, TEDIDataObjectArray(MessageArray));
 end;
 
 //=== { TEDIFile } ===========================================================
@@ -1700,7 +1683,7 @@ end;
 
 function TEDIFile.AppendInterchanges(InterchangeControlArray: TEDIInterchangeControlArray): Integer;
 begin
-  Result := AppendEDIDataObjects(AsEDIDataObjectArray(InterchangeControlArray));
+  Result := AppendEDIDataObjects(TEDIDataObjectArray(InterchangeControlArray));
 end;
 
 function TEDIFile.Assemble: string;
@@ -1881,7 +1864,7 @@ end;
 function TEDIFile.InsertInterchanges(InsertIndex: Integer;
   InterchangeControlArray: TEDIInterchangeControlArray): Integer;
 begin
-  Result := InsertEDIDataObjects(InsertIndex, AsEDIDataObjectArray(InterchangeControlArray));
+  Result := InsertEDIDataObjects(InsertIndex, TEDIDataObjectArray(InterchangeControlArray));
 end;
 
 procedure TEDIFile.InternalLoadFromFile;
@@ -1893,12 +1876,8 @@ begin
   begin
     EDIFileStream := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyNone);
     try
-      {$IFDEF CLR}
-      EDIFileStream.ReadStringAnsiBuffer(FData, EDIFileStream.Size);
-      {$ELSE ~CLR}
       SetLength(FData, EDIFileStream.Size);
       EDIFileStream.Read(Pointer(FData)^, EDIFileStream.Size);
-      {$ENDIF ~CLR}
     finally
       EDIFileStream.Free;
     end;
@@ -1927,11 +1906,7 @@ begin
   begin
     EDIFileStream := TFileStream.Create(FFileName, fmCreate or fmShareDenyNone);
     try
-      {$IFDEF CLR}
-      EDIFileStream.WriteStringAnsiBuffer(FData);
-      {$ELSE ~CLR}
       EDIFileStream.Write(Pointer(FData)^, Length(FData));
-      {$ENDIF ~CLR}
     finally
       EDIFileStream.Free;
     end;
@@ -1948,11 +1923,7 @@ begin
   begin
     EDIFileStream := TFileStream.Create(FFileName, fmCreate or fmShareDenyNone);
     try
-      {$IFDEF CLR}
-      EDIFileStream.WriteStringAnsiBuffer(FData);
-      {$ELSE ~CLR}
       EDIFileStream.Write(Pointer(FData)^, Length(FData));
-      {$ENDIF ~CLR}
     finally
       EDIFileStream.Free;
     end;
@@ -2055,7 +2026,7 @@ end;
 
 function TEDICompositeElement.AppendElements(ElementArray: TEDIElementArray): Integer;
 begin
-  Result := AppendEDIDataObjects(AsEDIDataObjectArray(ElementArray));
+  Result := AppendEDIDataObjects(TEDIDataObjectArray(ElementArray));
 end;
 
 function TEDICompositeElement.Assemble: string;
@@ -2166,7 +2137,7 @@ end;
 function TEDICompositeElement.InsertElements(InsertIndex: Integer;
   ElementArray: TEDIElementArray): Integer;
 begin
-  Result := InsertEDIDataObjects(InsertIndex, AsEDIDataObjectArray(ElementArray));
+  Result := InsertEDIDataObjects(InsertIndex, TEDIDataObjectArray(ElementArray));
 end;
 
 function TEDICompositeElement.InsertElements(InsertIndex, Count: Integer): Integer;

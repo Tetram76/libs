@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                        $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,9 +42,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF SUPPORTS_GENERICS}
-  {$IFDEF CLR}
-  System.Collections.Generic,
-  {$ENDIF CLR}
   JclAlgorithms,
   {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclSynch,
@@ -367,7 +364,6 @@ type
     function KeysCompare(const A\, B: Int64): Integer;
     function ValuesCompare(const A\, B: Int64): Integer;,,,const ,Int64,const ,Int64)*)
 
-  {$IFNDEF CLR}
 (*$JPPEXPANDMACRO JCLSORTEDMAPTYPESINT(TJclPtrIntfSortedEntry,Pointer,IInterface)*)
 
 (*$JPPEXPANDMACRO JCLSORTEDMAPINT(TJclPtrIntfSortedEntry,TJclPtrIntfSortedMap,TJclPtrAbstractContainer,IJclPtrIntfMap,IJclPtrIntfSortedMap,IJclPtrSet,IJclIntfCollection,,
@@ -397,7 +393,6 @@ type
     function FreeValue(var Value: Pointer): Pointer;
     function KeysCompare(A\, B: Pointer): Integer;
     function ValuesCompare(A\, B: Pointer): Integer;,,,,Pointer,,Pointer)*)
-  {$ENDIF ~CLR}
 
 (*$JPPEXPANDMACRO JCLSORTEDMAPTYPESINT(TJclIntfSortedEntry,IInterface,TObject)*)
 
@@ -581,7 +576,6 @@ type
   public
     property OwnsValues: Boolean read FOwnsValues;,,; AOwnsValues: Boolean,const ,Int64,,TObject)*)
 
-  {$IFNDEF CLR}
 (*$JPPEXPANDMACRO JCLSORTEDMAPTYPESINT(TJclPtrSortedEntry,Pointer,TObject)*)
 
 (*$JPPEXPANDMACRO JCLSORTEDMAPINT(TJclPtrSortedEntry,TJclPtrSortedMap,TJclPtrAbstractContainer,IJclPtrMap,IJclPtrSortedMap,IJclPtrSet,IJclCollection, IJclValueOwner\,,
@@ -597,7 +591,6 @@ type
     function ValuesCompare(A\, B: TObject): Integer;
   public
     property OwnsValues: Boolean read FOwnsValues;,,; AOwnsValues: Boolean,,Pointer,,TObject)*)
-  {$ENDIF ~CLR}
 
 (*$JPPEXPANDMACRO JCLSORTEDMAPTYPESINT(TJclSortedEntry,TObject,TObject)*)
 
@@ -719,9 +712,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclSortedMaps.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -1792,7 +1787,6 @@ begin
   Result := ItemsCompare(A, B);
 end;
 
-{$IFNDEF CLR}
 {$JPPDEFINEMACRO CREATEEMPTYARRAYSET(Param)TJclPtrArraySet.Create(Param)}
 {$JPPDEFINEMACRO CREATEEMPTYARRAYLIST(Param)TJclIntfArrayList.Create(Param)}
 {$JPPEXPANDMACRO JCLSORTEDMAPIMP(TJclPtrIntfSortedMap,TJclPtrIntfSortedEntry,IJclPtrIntfMap,IJclPtrIntfSortedMap,IJclPtrSet,IJclPtrIterator,IJclIntfCollection,,,,,Pointer,nil,const ,IInterface,nil)}
@@ -1906,7 +1900,6 @@ function TJclPtrPtrSortedMap.ValuesCompare(A, B: Pointer): Integer;
 begin
   Result := ItemsCompare(A, B);
 end;
-{$ENDIF ~CLR}
 
 {$JPPDEFINEMACRO CREATEEMPTYARRAYSET(Param)TJclIntfArraySet.Create(Param)}
 {$JPPDEFINEMACRO CREATEEMPTYARRAYLIST(Param)TJclArrayList.Create(Param, False)}
@@ -2456,7 +2449,6 @@ begin
     Result := 0;
 end;
 
-{$IFNDEF CLR}
 {$JPPDEFINEMACRO CREATEEMPTYARRAYSET(Param)TJclPtrArraySet.Create(Param)}
 {$JPPDEFINEMACRO CREATEEMPTYARRAYLIST(Param)TJclArrayList.Create(Param, False)}
 {$JPPEXPANDMACRO JCLSORTEDMAPIMP(TJclPtrSortedMap,TJclPtrSortedEntry,IJclPtrMap,IJclPtrSortedMap,IJclPtrSet,IJclPtrIterator,IJclCollection,,; AOwnsValues: Boolean,
@@ -2510,7 +2502,6 @@ begin
   else
     Result := 0;
 end;
-{$ENDIF ~CLR}
 
 {$JPPDEFINEMACRO CREATEEMPTYARRAYSET(Param)TJclArraySet.Create(Param, False)}
 {$JPPDEFINEMACRO CREATEEMPTYARRAYLIST(Param)TJclArrayList.Create(Param, False)}

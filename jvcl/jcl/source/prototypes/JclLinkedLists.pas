@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                       $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                       $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,9 +42,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF SUPPORTS_GENERICS}
-  {$IFDEF CLR}
-  System.Collections.Generic,
-  {$ENDIF CLR}
   JclAlgorithms,
   {$ENDIF SUPPORTS_GENERICS}
   Classes,
@@ -157,7 +154,6 @@ type
 
 (*$JPPEXPANDMACRO JCLLINKEDLISTITRINT(TJclInt64LinkedListIterator,IJclInt64Iterator,IJclInt64List,IJclInt64EqualityComparer,TJclInt64LinkedListItem,const ,AValue,Int64,0,GetValue,SetValue)*)
 
-{$IFNDEF CLR}
 (*$JPPEXPANDMACRO JCLLINKEDLISTTYPESINT(TJclPtrLinkedListItem,Pointer)*)
 
 (*$JPPEXPANDMACRO JCLLINKEDLISTINT(TJclPtrLinkedListItem,TJclPtrLinkedList,TJclPtrAbstractContainer,IJclPtrCollection,IJclPtrList,IJclPtrIterator, IJclPtrEqualityComparer\,,
@@ -165,7 +161,6 @@ type
     function CreateEmptyContainer: TJclAbstractContainerBase; override;,,,,APtr,Pointer,GetPointer,SetPointer)*)
 
 (*$JPPEXPANDMACRO JCLLINKEDLISTITRINT(TJclPtrLinkedListIterator,IJclPtrIterator,IJclPtrList,IJclPtrEqualityComparer,TJclPtrLinkedListItem,,AValue,Pointer,nil,GetPointer,SetPointer)*)
-{$ENDIF ~CLR}
 
 (*$JPPEXPANDMACRO JCLLINKEDLISTTYPESINT(TJclLinkedListItem,TObject)*)
 
@@ -230,9 +225,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclLinkedLists.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -363,7 +360,6 @@ end;
 (*$JPPEXPANDMACRO JCLLINKEDLISTITRIMP(TJclInt64LinkedListIterator,IJclInt64Iterator,IJclInt64List,IJclInt64EqualityComparer,TJclInt64LinkedListItem,const ,AValue,Int64,0,GetValue,SetValue)*)
 {$JPPUNDEFMACRO ITEMFREE(Item)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO JCLLINKEDLISTIMP(TJclPtrLinkedList,TJclPtrLinkedListItem,IJclPtrCollection,IJclPtrList,IJclPtrIterator,TJclPtrLinkedListIterator,,,,APtr,Pointer,nil,GetPointer,SetPointer,FreePointer)}
 
 function TJclPtrLinkedList.CreateEmptyContainer: TJclAbstractContainerBase;
@@ -375,7 +371,6 @@ end;
 {$JPPDEFINEMACRO ITEMFREE(Item)Item := nil}
 (*$JPPEXPANDMACRO JCLLINKEDLISTITRIMP(TJclPtrLinkedListIterator,IJclPtrIterator,IJclPtrList,IJclPtrEqualityComparer,TJclPtrLinkedListItem,,AValue,Pointer,nil,GetPointer,SetPointer)*)
 {$JPPUNDEFMACRO ITEMFREE(Item)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO JCLLINKEDLISTIMP(TJclLinkedList,TJclLinkedListItem,IJclCollection,IJclList,IJclIterator,TJclLinkedListIterator,; AOwnsObjects: Boolean,AOwnsObjects,,AObject,TObject,nil,GetObject,SetObject,FreeObject)}
 

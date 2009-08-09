@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -59,7 +59,7 @@ function JclInitializeCriticalSectionAndSpinCount(lpCriticalSection: TRTLCritica
 function JclGetFileAttributesEx(const lpFileName: string;
   fInfoLevelId: TGetFileExInfoLevels; lpFileInformation: Pointer): Boolean;
 function JclCreateWaitableTimer(lpTimerAttributes: PSecurityAttributes;
-  bManualReset: Boolean; const lpTimerName: string): THandle;
+  bManualReset: Boolean; const lpTimerName: AnsiString): THandle;
 function JclCancelWaitableTimer(hTimer: THandle): Boolean;
 
 function JclglGetString(name: Cardinal): PChar;
@@ -79,9 +79,11 @@ procedure JclCheckAndInitializeOpenGL;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWin32Ex.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -175,7 +177,7 @@ const
       DllName: opengl32; DllHandle: @OpenGl32DllHandle),
      // jwfgluErrorString
      (FunctionName: 'gluErrorString'; FunctionAddr: nil;
-      DllName: opengl32; DllHandle: @Glu32DllHandle)
+      DllName: Glu32; DllHandle: @Glu32DllHandle)
    );
 
 function LoadWin32ExFunction(const Win32ExFunction: TJclWin32ExFunction): Pointer;
@@ -216,7 +218,7 @@ begin
   if not Assigned(FunctionAddr) then
     FunctionAddr := LoadWin32ExFunction(jwfSignalObjectAndWait);
 
-  Result := TSignalObjectAndWaitProc(FunctionAddr)(hObjectToSignal, hObjectToSignal, dwMilliseconds, bAlertable);
+  Result := TSignalObjectAndWaitProc(FunctionAddr)(hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable);
 end;
 
 function JclSetCriticalSectionSpinCount(lpCriticalSection: TRTLCriticalSection; dwSpinCount: Cardinal): Cardinal;
@@ -263,7 +265,7 @@ begin
   Result := TGetFileAttributesExAProc(FunctionAddr)(PChar(lpFileName), fInfoLevelId, lpFileInformation);
 end;
 
-function JclCreateWaitableTimer(lpTimerAttributes: PSecurityAttributes; bManualReset: Boolean; const lpTimerName: string): THandle;
+function JclCreateWaitableTimer(lpTimerAttributes: PSecurityAttributes; bManualReset: Boolean; const lpTimerName: AnsiString): THandle;
 var
   FunctionAddr: Pointer;
 begin
@@ -271,7 +273,7 @@ begin
   if not Assigned(FunctionAddr) then
     FunctionAddr := LoadWin32ExFunction(jwfCreateWaitableTimer);
 
-  Result := TCreateWaitableTimerAProc(FunctionAddr)(lpTimerAttributes, bManualReset, PAnsiChar(lpTimerAttributes));
+  Result := TCreateWaitableTimerAProc(FunctionAddr)(lpTimerAttributes, bManualReset, PAnsiChar(lpTimerName));
 end;
 
 function JclCancelWaitableTimer(hTimer: THandle): Boolean;

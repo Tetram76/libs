@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2490                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -98,9 +98,11 @@ function InitializeFavOpenDialog: TFavOpenDialog;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/favfolders/OpenDlgFavAdapter.pas $';
-    Revision: '$Revision: 2490 $';
-    Date: '$Date: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008) $';
-    LogPath: 'JCL\experts\favfolders'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\experts\favfolders';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -111,7 +113,7 @@ uses
   Forms,
   {$ENDIF ~RTL140_UP}
   CommDlg, Dlgs,
-  JclFileUtils, JclStrings, JclSysInfo, JclSysUtils,
+  JclBase, JclFileUtils, JclStrings, JclSysInfo, JclSysUtils,
   JclOtaConsts, JclOtaResources, JclOtaUtils;
 
 {$R FavDlg.res}
@@ -156,10 +158,8 @@ begin
         begin
           if FavOpenDialog.DisableHelpButton then
             Flags := Flags and (not OFN_SHOWHELP);
-          {$IFDEF DELPHI6_UP}
           if FavOpenDialog.DisablePlacesBar and (lStructSize = SizeOf(TOpenFilename)) then
             FlagsEx := FlagsEx or OFN_EX_NOPLACESBAR;
-          {$ENDIF DELPHI6_UP}
         end;
       end
       else

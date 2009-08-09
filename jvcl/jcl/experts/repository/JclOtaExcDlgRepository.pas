@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-24 22:40:10 +0200 (mer., 24 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2496                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,6 +52,10 @@ type
     FFormName: string;
     FLogFile: Boolean;
     FLogFileName: string;
+    FAutoSaveWorkingDirectory: Boolean;
+    FAutoSaveApplicationDirectory: Boolean;
+    FAutoSaveDesktopDirectory: Boolean;
+    FLogSaveDialog: Boolean;
     FAddressOffset: Boolean;
     FVirtualAddress: Boolean;
     FActivePersonality: TJclBorPersonality;
@@ -68,14 +72,22 @@ type
     FUnitVersioning: Boolean;
     FOSInfo: Boolean;
     FActiveControls: Boolean;
+    FDisableIfDebuggerAttached: Boolean;
     FStackList: Boolean;
     FAutoScrollBars: Boolean;
-    FMainThreadOnly: Boolean;
+    FCatchMainThread: Boolean;
     FAllThreads: Boolean;
+    FAllRegisteredThreads: Boolean;
+    FMainExceptionThreads: Boolean;
+    FExceptionThread: Boolean;
+    FMainThread: Boolean;
     FTraceEAbort: Boolean;
     FIgnoredExceptions: TStrings;
     FTraceAllExceptions: Boolean;
     function GetIgnoredExceptionsCount: Integer;
+    function GetReportAllThreads: Boolean;
+    function GetReportExceptionThread: Boolean;
+    function GetReportMainThread: Boolean;
   public
     constructor Create; reintroduce;
     destructor Destroy; override; 
@@ -98,13 +110,19 @@ type
     // system options
     property DelayedTrace: Boolean read FDelayedTrace write FDelayedTrace;
     property HookDll: Boolean read FHookDll write FHookDll;
-    property LogFile: Boolean read FLogFile write FLogFile;
-    property LogFileName: string read FLogFileName write FLogFileName;
     property OSInfo: Boolean read FOSInfo write FOSInfo;
     property ModuleList: Boolean read FModuleList write FModuleList;
     property UnitVersioning: Boolean read FUnitVersioning write FUnitVersioning;
     property ActiveControls: Boolean read FActiveControls write FActiveControls;
-    property MainThreadOnly: Boolean read FMainThreadOnly write FMainThreadOnly;
+    property CatchMainThread: Boolean read FCatchMainThread write FCatchMainThread;
+    property DisableIfDebuggerAttached: Boolean read FDisableIfDebuggerAttached write FDisableIfDebuggerAttached;
+    // log options
+    property LogFile: Boolean read FLogFile write FLogFile;
+    property LogFileName: string read FLogFileName write FLogFileName;
+    property AutoSaveWorkingDirectory: Boolean read FAutoSaveWorkingDirectory write FAutoSaveWorkingDirectory;
+    property AutoSaveApplicationDirectory: Boolean read FAutoSaveApplicationDirectory write FAutoSaveApplicationDirectory;
+    property AutoSaveDesktopDirectory: Boolean read FAutoSaveDesktopDirectory write FAutoSaveDesktopDirectory;
+    property LogSaveDialog: Boolean read FLogSaveDialog write FLogSaveDialog;
     // ignored exceptions
     property TraceAllExceptions: Boolean read FTraceAllExceptions
       write FTraceAllExceptions;
@@ -116,7 +134,16 @@ type
     property RawData: Boolean read FRawData write FRawData;
     property ModuleName: Boolean read FModuleName write FModuleName;
     property ModuleOffset: Boolean read FModuleOffset write FModuleOffset;
+    // thread options (mutually exclusives)
     property AllThreads: Boolean read FAllThreads write FAllThreads;
+    property AllRegisterThreads: Boolean read FAllRegisteredThreads write FAllRegisteredThreads;
+    property MainExceptionThreads: Boolean read FMainExceptionThreads write FMainExceptionThreads;
+    property ExceptionThread: Boolean read FExceptionThread write FExceptionThread;
+    property MainThread: Boolean read FMainThread write FMainThread;
+    // composite properties
+    property ReportMainThread: Boolean read GetReportMainThread;
+    property ReportAllThreads: Boolean read GetReportAllThreads;
+    property ReportExceptionThread: Boolean read GetReportExceptionThread; 
     //property AddressOffset: Boolean read FAddressOffset write FAddressOffset;
     property CodeDetails: Boolean read FCodeDetails write FCodeDetails;
     property VirtualAddress: Boolean read FVirtualAddress write FVirtualAddress;
@@ -126,9 +153,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgRepository.pas $';
-    Revision: '$Revision: 2496 $';
-    Date: '$Date: 2008-09-24 22:40:10 +0200 (mer., 24 sept. 2008) $';
-    LogPath: 'JCL\experts\repository'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\experts\repository';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -153,7 +182,11 @@ begin
   FFormName := 'ExceptionDialog';
   FFormAncestor := TForm.ClassName;
   FLogFile := False;
-  FLogFileName := '';
+  FLogFileName := 'ExtractFileName(Application.ExeName) + ''-exception-'' + FormatDateTime(''yyyy-mm-dd'', Date) + ''.log''';
+  FAutoSaveWorkingDirectory := False;
+  FAutoSaveApplicationDirectory := False;
+  FAutoSaveDesktopDirectory := False;
+  FLogSaveDialog := False;
   FAddressOffset := True;
   FVirtualAddress := False;
   FActivePersonality := bpUnknown;
@@ -168,12 +201,18 @@ begin
   FUnitVersioning := True;
   FOSInfo := True;
   FActiveControls := True;
+  FDisableIfDebuggerAttached := False;
   FStackList := True;
   FAutoScrollBars := True;
-  FMainThreadOnly := False;
+  FCatchMainThread := False;
   FTraceEAbort := False;
   FTraceAllExceptions := False;
   FIgnoredExceptions := TStringList.Create;
+  FAllThreads := True;
+  FAllRegisteredThreads := False;
+  FMainExceptionThreads := False;
+  FExceptionThread := False;
+  FMainThread := False;
 end;
 
 destructor TJclOtaExcDlgParams.Destroy;
@@ -185,6 +224,21 @@ end;
 function TJclOtaExcDlgParams.GetIgnoredExceptionsCount: Integer;
 begin
   Result := FIgnoredExceptions.Count;
+end;
+
+function TJclOtaExcDlgParams.GetReportAllThreads: Boolean;
+begin
+  Result := FAllThreads or FAllRegisteredThreads;
+end;
+
+function TJclOtaExcDlgParams.GetReportExceptionThread: Boolean;
+begin
+  Result := FExceptionThread or FMainExceptionThreads;
+end;
+
+function TJclOtaExcDlgParams.GetReportMainThread: Boolean;
+begin
+  Result := FMainThread or FMainExceptionThreads or FAllThreads or FAllRegisteredThreads;
 end;
 
 {$IFDEF UNITVERSIONING}

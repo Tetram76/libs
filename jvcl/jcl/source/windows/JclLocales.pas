@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-21 21:22:23 +0200 (dim., 21 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2483                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -311,9 +311,11 @@ procedure JclLocalesInfoList(const Strings: TStrings; InfoType: Integer = LOCALE
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclLocales.pas $';
-    Revision: '$Revision: 2483 $';
-    Date: '$Date: 2008-09-21 21:22:23 +0200 (dim., 21 sept. 2008) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -991,6 +993,7 @@ var
   Cnt, I: Integer;
   Layouts: array [1..JclMaxKeyboardLayouts] of HKL;
 begin
+  Layouts[1] := 0;
   Cnt := Windows.GetKeyboardLayoutList(JclMaxKeyboardLayouts, Layouts);
   // Note: GetKeyboardLayoutList doesn't work as expected, when pass 0 to nBuff it always returns 0
   // on Win95.

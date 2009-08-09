@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-04 18:47:03 +0100 (mer., 04 mars 2009)                          $ }
-{ Revision:      $Rev:: 2672                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,9 +46,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF SUPPORTS_GENERICS}
-  {$IFDEF CLR}
-  System.Collections.Generic,
-  {$ENDIF CLR}
   JclAlgorithms,
   {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclAbstractContainers, JclContainerIntf, JclSynch;
@@ -1369,7 +1366,6 @@ type
     function GetPreviousCursor: TJclInt64TreeNode; override;
   end;
 
-{$IFNDEF CLR}
   TJclPtrTreeNode = class
   public
     Value: Pointer;
@@ -1498,7 +1494,6 @@ type
     function GetNextSibling: TJclPtrTreeNode; override;
     function GetPreviousCursor: TJclPtrTreeNode; override;
   end;
-{$ENDIF ~CLR}
 
   TJclTreeNode = class
   public
@@ -1806,9 +1801,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclTrees.pas $';
-    Revision: '$Revision: 2672 $';
-    Date: '$Date: 2009-03-04 18:47:03 +0100 (mer., 04 mars 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -15929,7 +15926,6 @@ begin
   end;
 end;
 
-{$IFNDEF CLR}
 //=== { TJclPtrTreeNode } =======================================================
 
 function TJclPtrTreeNode.IndexOfChild(AChild: TJclPtrTreeNode): Integer;
@@ -17340,7 +17336,6 @@ begin
       Result := TJclPtrTreeNode(Result.Children[Result.IndexOfChild(LastRet) - 1]);
   end;
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclTreeNode } =======================================================
 

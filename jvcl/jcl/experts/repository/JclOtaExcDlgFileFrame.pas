@@ -20,9 +20,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-08 13:13:13 +0100 (dim., 08 févr. 2009)                       $ }
-{ Revision:      $Rev:: 2629                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -75,9 +75,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgFileFrame.pas $';
-    Revision: '$Revision: 2629 $';
-    Date: '$Date: 2009-02-08 13:13:13 +0100 (dim., 08 févr. 2009) $';
-    LogPath: 'JCL\experts\repository'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\experts\repository';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 

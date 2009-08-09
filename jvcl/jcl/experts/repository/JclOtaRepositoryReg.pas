@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-10-10 15:36:26 +0200 (ven., 10 oct. 2008)                          $ }
-{ Revision:      $Rev:: 2539                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -89,9 +89,11 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaRepositoryReg.pas $';
-    Revision: '$Revision: 2539 $';
-    Date: '$Date: 2008-10-10 15:36:26 +0200 (ven., 10 oct. 2008) $';
-    LogPath: 'JCL\experts\repository'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\experts\repository';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 

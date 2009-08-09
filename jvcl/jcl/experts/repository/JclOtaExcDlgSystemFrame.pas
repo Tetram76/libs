@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-24 22:40:10 +0200 (mer., 24 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2496                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -44,21 +44,15 @@ type
   TJclOtaExcDlgSystemPage = class(TJclWizardFrame)
     CheckBoxDelayed: TCheckBox;
     CheckBoxHookDll: TCheckBox;
-    CheckBoxLogFile: TCheckBox;
-    LabelLogFileName: TLabel;
-    EditLogFileName: TEdit;
     CheckBoxModuleList: TCheckBox;
     CheckBoxOSInfo: TCheckBox;
     CheckBoxActiveControls: TCheckBox;
-    CheckBoxMainThreadOnly: TCheckBox;
+    CheckBoxCatchMainThread: TCheckBox;
     CheckBoxUnitVersioning: TCheckBox;
-    procedure CheckBoxLogFileClick(Sender: TObject);
+    CheckBoxDisableIfDebuggerAttached: TCheckBox;
     procedure CheckBoxModuleListClick(Sender: TObject);
   private
     FParams: TJclOtaExcDlgParams;
-    procedure UpdateLogEdits;
-  protected
-    function GetSupportsNext: Boolean; override;
   public
     constructor Create(AOwner: TComponent; AParams: TJclOtaExcDlgParams); reintroduce;
 
@@ -72,9 +66,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgSystemFrame.pas $';
-    Revision: '$Revision: 2496 $';
-    Date: '$Date: 2008-09-24 22:40:10 +0200 (mer., 24 sept. 2008) $';
-    LogPath: 'JCL\experts\repository'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\experts\repository';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -86,11 +82,6 @@ uses
   JclOtaResources;
 
 //=== { TJclOtaExcDlgSystemPage } ============================================
-
-procedure TJclOtaExcDlgSystemPage.CheckBoxLogFileClick(Sender: TObject);
-begin
-  UpdateLogEdits;
-end;
 
 procedure TJclOtaExcDlgSystemPage.CheckBoxModuleListClick(Sender: TObject);
 begin
@@ -106,18 +97,12 @@ begin
   Caption := RsExcDlgSystemOptions;
   CheckBoxDelayed.Caption := RsDelayedStackTrace;
   CheckBoxHookDll.Caption := RsHookDll;
-  CheckBoxLogFile.Caption := RsLogTrace;
-  LabelLogFileName.Caption := RsFileName;
   CheckBoxModuleList.Caption := RsModuleList;
   CheckBoxUnitVersioning.Caption := RsUnitVersioning;
   CheckBoxOSInfo.Caption := RsOSInfo;
   CheckBoxActiveControls.Caption := RsActiveControls;
-  CheckBoxMainThreadOnly.Caption := RsMainThreadOnly;
-end;
-
-function TJclOtaExcDlgSystemPage.GetSupportsNext: Boolean;
-begin
-  Result := (not CheckBoxLogFile.Checked) or (EditLogFileName.Text <> '');
+  CheckBoxCatchMainThread.Caption := RsCatchMainThread;
+  CheckBoxDisableIfDebuggerAttached.Caption := RsDisableIfDebuggerAttached;
 end;
 
 procedure TJclOtaExcDlgSystemPage.PageActivated(Direction: TJclWizardDirection);
@@ -126,15 +111,12 @@ begin
 
   CheckBoxDelayed.Checked := Params.DelayedTrace;
   CheckBoxHookDll.Checked := Params.HookDll;
-  CheckBoxLogFile.Checked := Params.LogFile;
-  EditLogFileName.Text := Params.LogFileName;
   CheckBoxModuleList.Checked := Params.ModuleList;
   CheckBoxUnitVersioning.Checked := Params.UnitVersioning;
   CheckBoxOSInfo.Checked := Params.OSInfo;
   CheckBoxActiveControls.Checked := Params.ActiveControls;
-  CheckBoxMainThreadOnly.Checked := Params.MainThreadOnly;
-
-  UpdateLogEdits;
+  CheckBoxCatchMainThread.Checked := Params.CatchMainThread;
+  CheckBoxDisableIfDebuggerAttached.Checked := Params.DisableIfDebuggerAttached;
 end;
 
 procedure TJclOtaExcDlgSystemPage.PageDesactivated(
@@ -144,27 +126,12 @@ begin
 
   Params.DelayedTrace := CheckBoxDelayed.Checked;
   Params.HookDll := CheckBoxHookDll.Checked;
-  Params.LogFile := CheckBoxLogFile.Checked;
-  Params.LogFileName := EditLogFileName.Text;
   Params.ModuleList := CheckBoxModuleList.Checked;
   Params.UnitVersioning := CheckBoxUnitVersioning.Checked;
   Params.OSInfo := CheckBoxOSInfo.Checked;
   Params.ActiveControls := CheckBoxActiveControls.Checked;
-  Params.MainThreadOnly := CheckBoxMainThreadOnly.Checked;
-end;
-
-procedure TJclOtaExcDlgSystemPage.UpdateLogEdits;
-begin
-  if CheckBoxLogFile.Checked then
-  begin
-    EditLogFileName.Enabled := True;
-    EditLogFileName.Color := clWindow;
-  end
-  else
-  begin
-    EditLogFileName.Enabled := False;
-    EditLogFileName.ParentColor := True;
-  end;
+  Params.CatchMainThread := CheckBoxCatchMainThread.Checked;
+  Params.DisableIfDebuggerAttached := CheckBoxDisableIfDebuggerAttached.Checked;
 end;
 
 {$IFDEF UNITVERSIONING}

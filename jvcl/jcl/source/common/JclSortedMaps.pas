@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009)                         $ }
-{ Revision:      $Rev:: 2698                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,9 +46,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF SUPPORTS_GENERICS}
-  {$IFDEF CLR}
-  System.Collections.Generic,
-  {$ENDIF CLR}
   JclAlgorithms,
   {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclSynch,
@@ -1433,7 +1430,6 @@ type
     destructor Destroy; override;
   end;
 
-  {$IFNDEF CLR}
   TJclPtrIntfSortedEntry = record
     Key: Pointer;
     Value: IInterface;
@@ -1577,7 +1573,6 @@ type
     constructor Create(ACapacity: Integer);
     destructor Destroy; override;
   end;
-  {$ENDIF ~CLR}
 
   TJclIntfSortedEntry = record
     Key: IInterface;
@@ -2141,7 +2136,6 @@ type
     destructor Destroy; override;
   end;
 
-  {$IFNDEF CLR}
   TJclPtrSortedEntry = record
     Key: Pointer;
     Value: TObject;
@@ -2195,7 +2189,6 @@ type
     constructor Create(ACapacity: Integer; AOwnsValues: Boolean);
     destructor Destroy; override;
   end;
-  {$ENDIF ~CLR}
 
   TJclSortedEntry = record
     Key: TObject;
@@ -2393,9 +2386,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSortedMaps.pas $';
-    Revision: '$Revision: 2698 $';
-    Date: '$Date: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -2770,51 +2765,6 @@ begin
 end;
 
 procedure TJclIntfIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -2837,7 +2787,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfIntfSortedMap.PutAll(const AMap: IJclIntfIntfMap);
 var
@@ -3440,51 +3389,6 @@ begin
 end;
 
 procedure TJclAnsiStrIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -3507,7 +3411,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclAnsiStrIntfSortedMap.PutAll(const AMap: IJclAnsiStrIntfMap);
 var
@@ -4116,51 +4019,6 @@ begin
 end;
 
 procedure TJclIntfAnsiStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -4183,7 +4041,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfAnsiStrSortedMap.PutAll(const AMap: IJclIntfAnsiStrMap);
 var
@@ -4792,51 +4649,6 @@ begin
 end;
 
 procedure TJclAnsiStrAnsiStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -4859,7 +4671,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclAnsiStrAnsiStrSortedMap.PutAll(const AMap: IJclAnsiStrAnsiStrMap);
 var
@@ -5462,51 +5273,6 @@ begin
 end;
 
 procedure TJclWideStrIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -5529,7 +5295,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclWideStrIntfSortedMap.PutAll(const AMap: IJclWideStrIntfMap);
 var
@@ -6138,51 +5903,6 @@ begin
 end;
 
 procedure TJclIntfWideStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -6205,7 +5925,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfWideStrSortedMap.PutAll(const AMap: IJclIntfWideStrMap);
 var
@@ -6814,51 +6533,6 @@ begin
 end;
 
 procedure TJclWideStrWideStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -6881,7 +6555,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclWideStrWideStrSortedMap.PutAll(const AMap: IJclWideStrWideStrMap);
 var
@@ -7485,51 +7158,6 @@ begin
 end;
 
 procedure TJclUnicodeStrIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -7552,7 +7180,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclUnicodeStrIntfSortedMap.PutAll(const AMap: IJclUnicodeStrIntfMap);
 var
@@ -8161,51 +7788,6 @@ begin
 end;
 
 procedure TJclIntfUnicodeStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -8228,7 +7810,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfUnicodeStrSortedMap.PutAll(const AMap: IJclIntfUnicodeStrMap);
 var
@@ -8837,51 +8418,6 @@ begin
 end;
 
 procedure TJclUnicodeStrUnicodeStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := '';
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -8904,7 +8440,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclUnicodeStrUnicodeStrSortedMap.PutAll(const AMap: IJclUnicodeStrUnicodeStrMap);
 var
@@ -9508,51 +9043,6 @@ begin
 end;
 
 procedure TJclSingleIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -9575,7 +9065,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclSingleIntfSortedMap.PutAll(const AMap: IJclSingleIntfMap);
 var
@@ -10184,51 +9673,6 @@ begin
 end;
 
 procedure TJclIntfSingleSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -10251,7 +9695,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfSingleSortedMap.PutAll(const AMap: IJclIntfSingleMap);
 var
@@ -10860,51 +10303,6 @@ begin
 end;
 
 procedure TJclSingleSingleSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -10927,7 +10325,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclSingleSingleSortedMap.PutAll(const AMap: IJclSingleSingleMap);
 var
@@ -11530,51 +10927,6 @@ begin
 end;
 
 procedure TJclDoubleIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -11597,7 +10949,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclDoubleIntfSortedMap.PutAll(const AMap: IJclDoubleIntfMap);
 var
@@ -12206,51 +11557,6 @@ begin
 end;
 
 procedure TJclIntfDoubleSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -12273,7 +11579,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfDoubleSortedMap.PutAll(const AMap: IJclIntfDoubleMap);
 var
@@ -12882,51 +12187,6 @@ begin
 end;
 
 procedure TJclDoubleDoubleSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -12949,7 +12209,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclDoubleDoubleSortedMap.PutAll(const AMap: IJclDoubleDoubleMap);
 var
@@ -13552,51 +12811,6 @@ begin
 end;
 
 procedure TJclExtendedIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -13619,7 +12833,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclExtendedIntfSortedMap.PutAll(const AMap: IJclExtendedIntfMap);
 var
@@ -14228,51 +13441,6 @@ begin
 end;
 
 procedure TJclIntfExtendedSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -14295,7 +13463,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfExtendedSortedMap.PutAll(const AMap: IJclIntfExtendedMap);
 var
@@ -14904,51 +14071,6 @@ begin
 end;
 
 procedure TJclExtendedExtendedSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := 0.0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -14971,7 +14093,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclExtendedExtendedSortedMap.PutAll(const AMap: IJclExtendedExtendedMap);
 var
@@ -15574,51 +14695,6 @@ begin
 end;
 
 procedure TJclIntegerIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -15641,7 +14717,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntegerIntfSortedMap.PutAll(const AMap: IJclIntegerIntfMap);
 var
@@ -16250,51 +15325,6 @@ begin
 end;
 
 procedure TJclIntfIntegerSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -16317,7 +15347,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfIntegerSortedMap.PutAll(const AMap: IJclIntfIntegerMap);
 var
@@ -16926,51 +15955,6 @@ begin
 end;
 
 procedure TJclIntegerIntegerSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -16993,7 +15977,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntegerIntegerSortedMap.PutAll(const AMap: IJclIntegerIntegerMap);
 var
@@ -17596,51 +16579,6 @@ begin
 end;
 
 procedure TJclCardinalIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -17663,7 +16601,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclCardinalIntfSortedMap.PutAll(const AMap: IJclCardinalIntfMap);
 var
@@ -18272,51 +17209,6 @@ begin
 end;
 
 procedure TJclIntfCardinalSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -18339,7 +17231,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfCardinalSortedMap.PutAll(const AMap: IJclIntfCardinalMap);
 var
@@ -18948,51 +17839,6 @@ begin
 end;
 
 procedure TJclCardinalCardinalSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -19015,7 +17861,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclCardinalCardinalSortedMap.PutAll(const AMap: IJclCardinalCardinalMap);
 var
@@ -19618,51 +18463,6 @@ begin
 end;
 
 procedure TJclInt64IntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -19685,7 +18485,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclInt64IntfSortedMap.PutAll(const AMap: IJclInt64IntfMap);
 var
@@ -20294,51 +19093,6 @@ begin
 end;
 
 procedure TJclIntfInt64SortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -20361,7 +19115,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfInt64SortedMap.PutAll(const AMap: IJclIntfInt64Map);
 var
@@ -20970,51 +19723,6 @@ begin
 end;
 
 procedure TJclInt64Int64SortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := 0;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -21037,7 +19745,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclInt64Int64SortedMap.PutAll(const AMap: IJclInt64Int64Map);
 var
@@ -21274,7 +19981,6 @@ begin
   Result := ItemsCompare(A, B);
 end;
 
-{$IFNDEF CLR}
 //=== { TJclPtrIntfSortedMap } ==============================================
 
 constructor TJclPtrIntfSortedMap.Create(ACapacity: Integer);
@@ -21641,51 +20347,6 @@ begin
 end;
 
 procedure TJclPtrIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -21708,7 +20369,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclPtrIntfSortedMap.PutAll(const AMap: IJclPtrIntfMap);
 var
@@ -22317,51 +20977,6 @@ begin
 end;
 
 procedure TJclIntfPtrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -22384,7 +20999,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfPtrSortedMap.PutAll(const AMap: IJclIntfPtrMap);
 var
@@ -22993,51 +21607,6 @@ begin
 end;
 
 procedure TJclPtrPtrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -23060,7 +21629,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclPtrPtrSortedMap.PutAll(const AMap: IJclPtrPtrMap);
 var
@@ -23296,7 +21864,6 @@ function TJclPtrPtrSortedMap.ValuesCompare(A, B: Pointer): Integer;
 begin
   Result := ItemsCompare(A, B);
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclIntfSortedMap } ==============================================
 
@@ -23665,51 +22232,6 @@ begin
 end;
 
 procedure TJclIntfSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -23732,7 +22254,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntfSortedMap.PutAll(const AMap: IJclIntfMap);
 var
@@ -24361,51 +22882,6 @@ begin
 end;
 
 procedure TJclAnsiStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -24428,7 +22904,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclAnsiStrSortedMap.PutAll(const AMap: IJclAnsiStrMap);
 var
@@ -25051,51 +23526,6 @@ begin
 end;
 
 procedure TJclWideStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -25118,7 +23548,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclWideStrSortedMap.PutAll(const AMap: IJclWideStrMap);
 var
@@ -25742,51 +24171,6 @@ begin
 end;
 
 procedure TJclUnicodeStrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := '';
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -25809,7 +24193,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclUnicodeStrSortedMap.PutAll(const AMap: IJclUnicodeStrMap);
 var
@@ -26433,51 +24816,6 @@ begin
 end;
 
 procedure TJclSingleSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -26500,7 +24838,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclSingleSortedMap.PutAll(const AMap: IJclSingleMap);
 var
@@ -27123,51 +25460,6 @@ begin
 end;
 
 procedure TJclDoubleSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -27190,7 +25482,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclDoubleSortedMap.PutAll(const AMap: IJclDoubleMap);
 var
@@ -27813,51 +26104,6 @@ begin
 end;
 
 procedure TJclExtendedSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0.0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -27880,7 +26126,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclExtendedSortedMap.PutAll(const AMap: IJclExtendedMap);
 var
@@ -28503,51 +26748,6 @@ begin
 end;
 
 procedure TJclIntegerSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -28570,7 +26770,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclIntegerSortedMap.PutAll(const AMap: IJclIntegerMap);
 var
@@ -29193,51 +27392,6 @@ begin
 end;
 
 procedure TJclCardinalSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -29260,7 +27414,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclCardinalSortedMap.PutAll(const AMap: IJclCardinalMap);
 var
@@ -29883,51 +28036,6 @@ begin
 end;
 
 procedure TJclInt64SortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := 0;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -29950,7 +28058,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclInt64SortedMap.PutAll(const AMap: IJclInt64Map);
 var
@@ -30206,7 +28313,6 @@ begin
     Result := 0;
 end;
 
-{$IFNDEF CLR}
 //=== { TJclPtrSortedMap } ==============================================
 
 constructor TJclPtrSortedMap.Create(ACapacity: Integer; AOwnsValues: Boolean);
@@ -30574,51 +28680,6 @@ begin
 end;
 
 procedure TJclPtrSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -30641,7 +28702,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclPtrSortedMap.PutAll(const AMap: IJclPtrMap);
 var
@@ -30896,7 +28956,6 @@ begin
   else
     Result := 0;
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclSortedMap } ==============================================
 
@@ -31266,51 +29325,6 @@ begin
 end;
 
 procedure TJclSortedMap.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := nil;
-        FEntries[FromIndex + I].Value := nil;
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -31333,7 +29347,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclSortedMap.PutAll(const AMap: IJclMap);
 var
@@ -31978,51 +29991,6 @@ begin
 end;
 
 procedure TJclSortedMap<TKey,TValue>.MoveArray(FromIndex, ToIndex, Count: Integer);
-{$IFDEF CLR}
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-      begin
-        FEntries[FromIndex + I].Key := Default(TKey);
-        FEntries[FromIndex + I].Value := Default(TValue);
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := Default(TKey);
-        FEntries[FromIndex + I].Value := Default(TValue);
-      end;
-  end
-  else
-  if FromIndex > ToIndex then
-  begin
-    for I := 0 to Count - 1 do
-      FEntries[ToIndex + I] := FEntries[FromIndex + I];
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := Default(TKey);
-        FEntries[FromIndex + I].Value := Default(TValue);
-      end
-    else
-      // independant
-      for I := 0 to Count - 1 do
-      begin
-        FEntries[FromIndex + I].Key := Default(TKey);
-        FEntries[FromIndex + I].Value := Default(TValue);
-      end;
-  end;
-end;
-{$ELSE}
 begin
   if Count > 0 then
   begin
@@ -32045,7 +30013,6 @@ begin
     end;
   end;
 end;
-{$ENDIF CLR}
 
 procedure TJclSortedMap<TKey,TValue>.PutAll(const AMap: IJclMap<TKey,TValue>);
 var

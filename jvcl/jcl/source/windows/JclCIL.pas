@@ -28,13 +28,13 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-// Last modified: $Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $
+// Last modified: $Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $
 
 unit JclCIL;
 
@@ -53,7 +53,7 @@ uses
   {$IFDEF HAS_UNIT_CONTNRS}
   Contnrs,
   {$ENDIF HAS_UNIT_CONTNRS}
-  JclBase, JclSysUtils, JclCLR, JclMetadata;
+  JclBase, JclSysUtils, JclMetadata;
 
 type
   TJclOpCode =
@@ -207,9 +207,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclCIL.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -219,7 +221,7 @@ uses
   {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
   {$ENDIF HAS_UNIT_VARIANTS}
-  JclStrings, JclResources;
+  JclStrings, JclResources, JclClr, JclPeImage;
 
 type
   TJclOpCodeInfoType = (itName, itFullName, itDescription);
@@ -581,10 +583,10 @@ begin
       Stream.Seek(0, soFromBeginning);
       while Stream.Position < Stream.Size do
       begin
-        OpCode := PByte(DWORD_PTR(Stream.Memory) + Stream.Position)^;
+        OpCode := PByte(PAnsiChar(Stream.Memory) + Stream.Position)^;
         if OpCode = STP1 then
         begin
-          OpCode := PByte(DWORD_PTR(Stream.Memory) + Stream.Position + 1)^;
+          OpCode := PByte(PAnsiChar(Stream.Memory) + Stream.Position + 1)^;
           Instruction := TJclInstruction.Create(Self, TJclOpCode(MaxByte + 1 + OpCode));
         end
         else
@@ -751,6 +753,7 @@ var
 begin
   FOffset := Stream.Position;
   try
+    Code := 0;
     Stream.Read(Code, SizeOf(Code));
     if WideOpCode then
     begin
@@ -791,10 +794,12 @@ begin
         end;
       ptArray:
         begin
+          ArraySize := 0;
           Stream.Read(ArraySize, SizeOf(ArraySize));
           FParam := VarArrayCreate([0, ArraySize-1], varInteger);
           for I := 0 to ArraySize-1 do  { TODO : ArraySize = 0 and we have a nearly endless loop }
           begin
+            Value := 0;
             Stream.Read(Value, SizeOf(Value));
             FParam[I] := Value;
           end;
