@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgQPrintPreviewForm.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvgQPrintPreviewForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgQPrintPreviewForm;
 
@@ -32,26 +32,18 @@ unit JvgQPrintPreviewForm;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls,
   QuickRpt, QRCtrls, QRPrntr,
   ComCtrls, ToolWin, ImgList, ShellAPI, StdCtrls,
-  {$IFDEF USEJVCL}
   JvComponent, JvExControls,
-  {$ENDIF USEJVCL}
   JvgQRLabel;
 
 type
-  {$IFDEF USEJVCL}
   TJvgfPrintPreview = class(TJvForm)
-  {$ELSE}
-  TJvgfPrintPreview = class(TForm)
-  {$ENDIF USEJVCL}
     Panel2: TPanel;
     ToolBar1: TToolBar;
     tbPrior: TToolButton;
@@ -110,33 +102,24 @@ var
   fPrintPreview: TJvgfPrintPreview;
   l: TJvgQRLabel;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgQPrintPreviewForm.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
   Printers,
-  {$IFDEF USEJVCL}
   JvResources, JvConsts,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgExport, JvgQPrintSetupForm;
 
 {$R *.dfm}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsPageOfPages = 'Page %d of %d';
-{$ENDIF !USEJVCL}
 
 procedure TJvgfPrintPreview.FormCreate(Sender: TObject);
 begin
@@ -311,7 +294,6 @@ begin
   ShowModal;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -319,6 +301,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

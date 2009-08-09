@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
   This file contains (most likely) greek comments.
 -----------------------------------------------------------------------------}
-// $Id: JvBaseThumbnail.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvBaseThumbnail.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvBaseThumbnail;
 
@@ -162,19 +162,6 @@ type
   TJvBaseThumbView = class(TJvExScrollBox)
   protected
     // function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
-    {$IFDEF CLR}
-    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
-    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
-    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
-    function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean; override;
-    function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean; override;
-    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
-    procedure KeyUp(var Key: Word; Shift: TShiftState); override;
-    procedure KeyPress(var Key: Char); override;
-    procedure Click; override;
-    procedure DblClick; override;
-    {$ENDIF CLR}
   public
     constructor Create(AOwner: TComponent); override;
   end;
@@ -192,8 +179,8 @@ function ReplaceAllStr(const Str, SearchFor, ReplaceWith: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseThumbnail.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -624,64 +611,6 @@ begin
   Result := False;
 end;
 }
-{$IFDEF CLR}
-{ Allow this unit to access protected members of anchestors. }
-procedure TJvBaseThumbView.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited MouseDown(Button, Shift, X, Y);
-end;
-
-procedure TJvBaseThumbView.MouseMove(Shift: TShiftState; X, Y: Integer);
-begin
-  inherited MouseMove(Shift, X, Y);
-end;
-
-procedure TJvBaseThumbView.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  inherited MouseUp(Button, Shift, X, Y);
-end;
-
-function TJvBaseThumbView.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
-begin
-  Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
-end;
-
-function TJvBaseThumbView.DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
-begin
-  Result := inherited DoMouseWheelDown(Shift, MousePos);
-end;
-
-function TJvBaseThumbView.DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
-begin
-  Result := inherited DoMouseWheelUp(Shift, MousePos);
-end;
-
-procedure TJvBaseThumbView.KeyDown(var Key: Word; Shift: TShiftState);
-begin
-  inherited KeyDown(Key, Shift);
-end;
-
-procedure TJvBaseThumbView.KeyUp(var Key: Word; Shift: TShiftState);
-begin
-  inherited KeyUp(Key, Shift);
-end;
-
-procedure TJvBaseThumbView.KeyPress(var Key: Char);
-begin
-  inherited KeyPress(Key);
-end;
-
-procedure TJvBaseThumbView.Click;
-begin
-  inherited Click;
-end;
-
-procedure TJvBaseThumbView.DblClick;
-begin
-  inherited DblClick;
-end;
-{$ENDIF CLR}
-
 //=== { TFileName } ==========================================================
 
 procedure TFileName.SetName(NewName: string);
@@ -709,27 +638,15 @@ begin
       FShortName := FLongName;
     //fdFileAccessed
     FileTimeToLocalFileTime(sr.FindData.ftLastAccessTime, Lft);
-    {$IFDEF CLR}
-    FileTimeToDosDateTimeDWord(Lft, Dft);
-    {$ELSE}
     FileTimeToDosDateTime(Lft, LongRec(Dft).Hi, LongRec(Dft).Lo);
-    {$ENDIF CLR}
     FAccessed := Dft;
     //fdFilechanged
     FileTimeToLocalFileTime(sr.FindData.ftLastwriteTime, Lft);
-    {$IFDEF CLR}
-    FileTimeToDosDateTimeDWord(Lft, Dft);
-    {$ELSE}
     FileTimeToDosDateTime(Lft, LongRec(Dft).Hi, LongRec(Dft).Lo);
-    {$ENDIF CLR}
     FModified := Dft;
     //fdFilecreated
     FileTimeToLocalFileTime(sr.FindData.ftCreationTime, Lft);
-    {$IFDEF CLR}
-    FileTimeToDosDateTimeDWord(Lft, Dft);
-    {$ELSE}
     FileTimeToDosDateTime(Lft, LongRec(Dft).Hi, LongRec(Dft).Lo);
-    {$ENDIF CLR}
     FCreated := Dft;
     FFileSize := (sr.FindData.nFileSizeHigh * MAXDWORD) + sr.FindData.nFileSizeLow;
     //FFileName:=NewName;
@@ -748,12 +665,12 @@ end;
 
 function TFileName.GetLength: Integer;
 begin
-  Result := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Length(FFileName);
+  Result := System.Length(FFileName);
 end;
 
 procedure TFileName.SetLength(NewLength: Integer);
 begin
-  {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.SetLength(FFileName, NewLength);
+  System.SetLength(FFileName, NewLength);
 end;
 
 {$IFDEF UNITVERSIONING}

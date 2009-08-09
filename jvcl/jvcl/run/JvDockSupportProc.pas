@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportProc.pas 12252 2009-03-21 22:18:25Z ahuser $
+// $Id: JvDockSupportProc.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvDockSupportProc;
 
@@ -30,11 +30,9 @@ unit JvDockSupportProc;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Graphics, Controls, Forms;
 
 type
@@ -92,26 +90,21 @@ function JvDockGetControlSize(AControl: TControl): Integer;
 procedure RegisterSettingChangeClient(Client: TObject; Event: TNotifyEvent);
 procedure UnRegisterSettingChangeClient(Client: TObject);
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportProc.pas $';
-    Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
   SysUtils, Math,
-  {$IFDEF USEJVCL}
-  JvJVCLUtils,
-  {$ENDIF USEJVCL}
-  JvDockControlForm, JvDockGlobals;
+  JvJVCLUtils, JvDockControlForm, JvDockGlobals;
 
 type
   { The dock style components used to hook the form they were dropped on, so
@@ -438,21 +431,13 @@ begin
   inherited Create;
   FClients := TList.Create;
   FNotifyEvents := TList.Create;
-  {$IFDEF USEJVCL}
   FHandle := AllocateHWndEx(WndProc);
-  {$ELSE}
-  FHandle := AllocateHWnd(WndProc);
-  {$ENDIF USEJVCL}
 end;
 
 destructor TJvMsgWindow.Destroy;
 begin
   if FHandle <> 0 then
-    {$IFDEF USEJVCL}
     DeallocateHWndEx(FHandle);
-    {$ELSE}
-    DeallocateHWnd(FHandle);
-    {$ENDIF USEJVCL}
   FClients.Free;
   FNotifyEvents.Free;
   inherited Destroy;
@@ -510,20 +495,16 @@ begin
 end;
 
 initialization
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   RegisterUnitVersion(HInstance, UnitVersioning);
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
 
 finalization
   FreeAndNil(JvDockTitleFont);
   FreeAndNil(GMsgHook);
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
 
 end.
 

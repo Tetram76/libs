@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDBTools.pas 12226 2009-03-09 00:16:13Z jfudickar $
+// $Id: JvDynControlEngineDBTools.pas 12406 2009-07-22 20:06:32Z jfudickar $
 
 unit JvDynControlEngineDBTools;
 
@@ -139,8 +139,8 @@ function ShowDataSourceEditDialog(ADataComponent: TComponent; const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDBTools.pas $';
-    Revision: '$Revision: 12226 $';
-    Date: '$Date: 2009-03-09 01:16:13 +0100 (lun., 09 mars 2009) $';
+    Revision: '$Revision: 12406 $';
+    Date: '$Date: 2009-07-22 22:06:32 +0200 (mer., 22 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -398,6 +398,7 @@ begin
     FScrollBox.Align := alClient;
     FScrollBox.BorderStyle := bsNone;
     FScrollBox.AutoScroll := True;
+    FScrollBox.ParentBackground := True;
     FForm.Constraints := ArrangeConstraints;
     ArrangePanel := TJvPanel.Create(FForm);
     ArrangePanel.Align := alTop;

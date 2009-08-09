@@ -31,7 +31,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBRemoteLogin.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvDBRemoteLogin.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvDBRemoteLogin;
 
@@ -104,8 +104,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBRemoteLogin.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -159,13 +159,10 @@ begin
   if FRemoteServer <> Value then
   begin
     UnprepareRemoteServer;
-    FRemoteServer := Value;
-    if Value <> nil then
-    begin
-      Value.FreeNotification(Self);
+    ReplaceComponentReference (Self, Value, TComponent(FRemoteServer));
+    if FRemoteServer <> nil then
       if not (csLoading in ComponentState) then
         PrepareRemoteServer;
-    end;
   end;
 end;
 

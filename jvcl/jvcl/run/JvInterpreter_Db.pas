@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Db.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvInterpreter_Db.pas 12351 2009-06-28 17:13:38Z jfudickar $
 
 unit JvInterpreter_Db;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Db.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12351 $';
+    Date: '$Date: 2009-06-28 19:13:38 +0200 (dim., 28 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2574,6 +2574,25 @@ begin
     AddConst(cDb, 'ftDBaseOle', Ord(ftDBaseOle));
     AddConst(cDb, 'ftTypedBinary', Ord(ftTypedBinary));
     AddConst(cDb, 'ftCursor', Ord(ftCursor));
+    {$IFDEF COMPILER6_UP}
+    AddConst(cDb, 'ftFMTBCD', Ord(ftFMTBCD));
+    AddConst(cDb, 'ftTimestamp', Ord(ftTimestamp));
+    {$ENDIF COMPILER6_UP}
+    {$IFDEF COMPILER10_UP}
+    AddConst(cDb, 'ftFixedWideChar', Ord(ftFixedWideChar));
+    AddConst(cDb, 'ftWideMemo', Ord(ftWideMemo));
+    AddConst(cDb, 'ftOraTimeStamp', Ord(ftOraTimeStamp));
+    AddConst(cDb, 'ftOraInterval', Ord(ftOraInterval));
+    {$ENDIF COMPILER10_UP}
+    {$IFDEF COMPILER12_UP}
+    AddConst(cDb, 'ftLongWord', Ord(ftLongWord));
+    AddConst(cDb, 'ftShortint', Ord(ftShortint));
+    AddConst(cDb, 'ftByte', Ord(ftByte));
+    AddConst(cDb, 'ftExtended', Ord(ftExtended));
+    AddConst(cDb, 'ftConnection', Ord(ftConnection));
+    AddConst(cDb, 'ftParams', Ord(ftParams));
+    AddConst(cDb, 'ftStream', Ord(ftStream));
+    {$ENDIF COMPILER12_UP}
     { TFieldDef }
     AddClass(cDb, TFieldDef, 'TFieldDef');
     AddGet(TFieldDef, 'Create', TFieldDef_Create, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty],

@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFindReplace.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvFindReplace.pas 12296 2009-04-29 14:53:38Z obones $
 
 unit JvFindReplace;
 
@@ -143,8 +143,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFindReplace.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12296 $';
+    Date: '$Date: 2009-04-29 16:53:38 +0200 (mer., 29 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -685,6 +685,8 @@ end;
 
 procedure TJvFindReplace.SetEditControl(Value: TJvEditControlName);
 begin
+  if FEditControl <> nil then
+    FEditControl.RemoveFreeNotification(Self);
   FEditControl := Value;
   if Value <> nil then
     Value.FreeNotification(Self);

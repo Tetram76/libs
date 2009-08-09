@@ -16,7 +16,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorageSelectList.pas 12261 2009-04-01 21:46:18Z jfudickar $
+// $Id: JvAppStorageSelectList.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvAppStorageSelectList;
 
@@ -95,8 +95,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorageSelectList.pas $';
-    Revision: '$Revision: 12261 $';
-    Date: '$Date: 2009-04-01 23:46:18 +0200 (mer., 01 avr. 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -105,10 +105,7 @@ implementation
 
 uses
   SysUtils,
-  {$IFDEF CLR}
-  Variants,
-  {$ENDIF CLR}
-  JvConsts, JvResources;
+  JvConsts, JvResources, JvJVCLUtils;
 
 constructor TJvAppStorageSelectList.Create(AOwner: TComponent);
 begin
@@ -128,8 +125,9 @@ end;
 procedure TJvAppStorageSelectList.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) and (AComponent = FAppStorage) then
-    FAppStorage := nil;
+  if (Operation = opRemove) then
+    if (AComponent = FAppStorage) then
+      FAppStorage := nil;
 end;
 
 function TJvAppStorageSelectList.GetSelectList: TStrings;
@@ -149,7 +147,7 @@ end;
 
 procedure TJvAppStorageSelectList.SetAppStorage(Value: TJvCustomAppStorage);
 begin
-  FAppStorage := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FAppStorage));
 end;
 
 procedure TJvAppStorageSelectList.SetSelectPath(Value: string);
@@ -220,11 +218,7 @@ var
   ITmpDblClick: IJvDynControlDblClick;
 begin
   if not Assigned(DynControlEngine) then
-    {$IFDEF CLR}
-    raise EJVCLException.Create(RsEDynControlEngineNotDefined);
-    {$ELSE}
     raise EJVCLException.CreateRes(@RsEDynControlEngineNotDefined);
-    {$ENDIF CLR}
 
   Operation := AOperation;
   FreeAndNil(FSelectDialog);
@@ -319,11 +313,7 @@ function TJvAppStorageSelectList.GetSelectListPath(AOperation: TJvAppStorageSele
   ACaption: string = ''): string;
 begin
   if not Assigned(AppStorage) then
-    {$IFDEF CLR}
-    raise EJVCLException.Create(RsEDynAppStorageNotDefined);
-    {$ELSE}
     raise EJVCLException.CreateRes(@RsEDynAppStorageNotDefined);
-    {$ENDIF CLR}
   try
     LoadSelectList;
     CreateDlg(AOperation, ACaption);

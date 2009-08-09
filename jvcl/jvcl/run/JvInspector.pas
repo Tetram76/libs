@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 12276 2009-04-16 16:28:41Z ahuser $
+// $Id: JvInspector.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvInspector;
 
@@ -2072,8 +2072,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 12276 $';
-    Date: '$Date: 2009-04-16 18:28:41 +0200 (jeu., 16 avr. 2009) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3638,18 +3638,14 @@ begin
         raise EJvInspector.CreateRes(@RsEJvInspPaintOnlyUsedOnce);
 
     if Painter <> nil then
-    begin
-      Painter.RemoveFreeNotification(Self);
       Painter.SetInspector(nil);
-    end;
 
-    FPainter := Value;
+    ReplaceComponentReference (Self, Value, TComponent(FPainter));
 
     if Painter <> nil then
     begin
       Style := isItemPainter;
       Painter.SetInspector(Self);
-      Painter.FreeNotification(Self);
 
       if HandleAllocated then
         UpdateScrollBars;

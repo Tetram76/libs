@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineVCL.pas 12213 2009-02-19 16:52:49Z jfudickar $
+// $Id: JvDynControlEngineVCL.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvDynControlEngineVCL;
 
@@ -800,8 +800,8 @@ procedure SetDynControlEngineVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineVCL.pas $';
-    Revision: '$Revision: 12213 $';
-    Date: '$Date: 2009-02-19 17:52:49 +0100 (jeu., 19 févr. 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1403,23 +1403,14 @@ end;
 
 procedure TJvDynControlVCLDateTimeEdit.ControlSetValue(Value: Variant);
 begin
-  {$IFDEF CLR}
-  FDatePicker.Date := VarToDateTime(Value).Date;
-  FTimePicker.Time := VarToDateTime(Value).Time;
-  {$ELSE}
   FDatePicker.Date := Value;
   FTimePicker.Time := Value;
-  {$ENDIF CLR}
 end;
 
 function TJvDynControlVCLDateTimeEdit.ControlGetValue: Variant;
 begin
   { TODO -oAHUser : Delphi.NET workaround }
-  {$IFDEF CLR}
-  Result := Trunc(FDatePicker.Date) + (Trunc(FTimePicker.Time) - Double(FTimePicker.Time));
-  {$ELSE}
   Result := Trunc(FDatePicker.Date) + (Trunc(FTimePicker.Time) - FTimePicker.Time);
-  {$ENDIF CLR}
 end;
 
 // IJvDynControlDate
@@ -1488,20 +1479,12 @@ end;
 
 procedure TJvDynControlVCLDateEdit.ControlSetValue(Value: Variant);
 begin
-  {$IFDEF CLR}
-  Date := VarToDateTime(Value).Date;
-  {$ELSE}
   Date := Value;
-  {$ENDIF CLR}
 end;
 
 function TJvDynControlVCLDateEdit.ControlGetValue: Variant;
 begin
-  {$IFDEF CLR}
-  Result := TDateTime(Date)
-  {$ELSE}
   Result := Date;
-  {$ENDIF CLR}
 end;
 
 // IJvDynControlDate
@@ -1568,20 +1551,12 @@ end;
 
 procedure TJvDynControlVCLTimeEdit.ControlSetValue(Value: Variant);
 begin
-  {$IFDEF CLR}
-  Time := VarToDateTime(Value).Time;
-  {$ELSE}
   Time := Value;
-  {$ENDIF CLR}
 end;
 
 function TJvDynControlVCLTimeEdit.ControlGetValue: Variant;
 begin
-  {$IFDEF CLR}
-  Result := TDateTime(Time);
-  {$ELSE}
   Result := Time;
-  {$ENDIF CLR}
 end;
 
 procedure TJvDynControlVCLTimeEdit.ControlSetFormat(const Value: string);
@@ -2185,7 +2160,7 @@ end;
 
 procedure TJvDynControlVCLComboBox.ControlSetOnChange(Value: TNotifyEvent);
 begin
-  //  OnChange := Value;
+  OnChange := Value;
 end;
 
 procedure TJvDynControlVCLComboBox.ControlSetOnClick(Value: TNotifyEvent);

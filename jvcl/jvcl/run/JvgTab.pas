@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgTab.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvgTab.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvgTab;
 
@@ -37,16 +37,12 @@ unit JvgTab;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   ComCtrls, CommCtrl, ExtCtrls, ImgList,
-  {$IFDEF USEJVCL}
   JVCLVer,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgUtils, JvgDrawTab, JvgTabComm, JvgCommClasses;
 
 // (rom) disabled  unused
@@ -56,9 +52,7 @@ uses
 type
   TJvgTabControl = class(TTabControl)
   private
-    {$IFDEF USEJVCL}
     FAboutJVCL: TJVCLAboutInfo;
-    {$ENDIF USEJVCL}
     FGlyphs: TImageList;
     FSingleGlyph: Boolean;
     FTabStyle: TJvgTabStyle;
@@ -112,9 +106,7 @@ type
     //     property GlyphState[Index: Integer]: Integer read GetGlyphState write SetGlyphState;
     property SuppressDraw: Boolean read FSuppressDraw write FSuppressDraw;
   published
-    {$IFDEF USEJVCL}
     property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-    {$ENDIF USEJVCL}
     property Glyphs: TImageList read FGlyphs write SetGlyphs;
     property SingleGlyph: Boolean read FSingleGlyph write SetSingleGlyph default False;
     property TabStyle: TJvgTabStyle read FTabStyle write FTabStyle;
@@ -132,22 +124,20 @@ type
     property OnGetItemFontColor: TglOnGetItemColorEvent read FOnGetItemFontColor write FOnGetItemFontColor;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgTab.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
-  Math;
+  Math, JvJVCLUtils;
 
 const
   FontDirs: array [TglSide] of TglLabelDir =
@@ -243,9 +233,11 @@ procedure TJvgTabControl.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if Assigned(Wallpaper) and (AComponent = Wallpaper.Image) and
-    (Operation = opRemove) then
-    Wallpaper.Image := nil;
+  if  (Operation = opRemove)  then
+    if Assigned(Wallpaper) and (AComponent = Wallpaper.Image) then
+      Wallpaper.Image := nil
+    else if (AComponent = Glyphs) then
+      Glyphs := nil;
 end;
 
 procedure TJvgTabControl.CNDrawItem(var Msg: TWMDrawItem);
@@ -392,12 +384,9 @@ var
   I: Word;
   B: Boolean;
 begin
-  if Assigned(FGlyphs) then
-    FGlyphs.UnregisterChanges(FGlyphsChangeLink);
-  FGlyphs := Value;
+  ReplaceImageListReference(Self, Value, TCustomImageList(FGlyphs), FGlyphsChangeLink);
   if Assigned(FGlyphs) then
   begin
-    FGlyphs.RegisterChanges(FGlyphsChangeLink);
     SendMessage(Handle, TCM_SETIMAGELIST, 0, Longint(FGlyphs.Handle));
     B := True;
     for I := 0 to Min(Tabs.Count - 1, FGlyphs.Count - 1) do
@@ -547,7 +536,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -555,7 +543,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

@@ -30,7 +30,7 @@ Changes 2002-10-22:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStaticText.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvStaticText.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvStaticText;
 
@@ -175,8 +175,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStaticText.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -411,9 +411,7 @@ end;
 
 procedure TJvCustomStaticText.SetFocusControl(Value: TWinControl);
 begin
-  FFocusControl := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FFocusControl));
 end;
 
 procedure TJvCustomStaticText.SetShowAccelChar(Value: Boolean);

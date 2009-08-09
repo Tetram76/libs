@@ -34,7 +34,7 @@ Known Issues:
   you collapse / expand the Options property in the OI manually. No known solution yet. SOLVED
 
 -----------------------------------------------------------------------------}
-// $Id: JvBehaviorLabel.pas 11567 2007-11-14 23:24:35Z ahuser $
+// $Id: JvBehaviorLabel.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvBehaviorLabel;
 
@@ -311,9 +311,11 @@ type
     procedure SetOptions(const Value: TJvLabelBehavior);
     procedure SetUseEffectText(const Value: Boolean);
   protected
+    procedure Loaded; override;
     procedure Resize; override;
     procedure DoStart; dynamic;
     procedure DoStop; dynamic;
+
     function GetLabelText: string; override;
     property Behavior: TJvLabelBehaviorName read FBehavior write SetBehavior stored BehaviorStored;
     property Caption;
@@ -323,6 +325,7 @@ type
   public
     constructor Create(AComponent: TComponent); override;
     destructor Destroy; override;
+
     // do not make these published
     property EffectText: TCaption read FEffectText write FEffectText;
     property UseEffectText: Boolean read FUseEffectText write SetUseEffectText;
@@ -392,8 +395,8 @@ procedure GetRegisteredLabelBehaviorOptions(Strings: TStrings);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBehaviorLabel.pas $';
-    Revision: '$Revision: 11567 $';
-    Date: '$Date: 2007-11-15 00:24:35 +0100 (jeu., 15 nov. 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -455,12 +458,12 @@ end;
 
 procedure NeedBehaviorLabel(const ClassName: string);
 begin
-  raise EJVCLException.CreateResFmt({$IFNDEF CLR}@{$ENDIF}RsENeedBehaviorLabel, [ClassName]);
+  raise EJVCLException.CreateResFmt(@RsENeedBehaviorLabel, [ClassName]);
 end;
 
 procedure NoOwnerLabelParent(const ClassName: string);
 begin
-  raise EJVCLException.CreateResFmt({$IFNDEF CLR}@{$ENDIF}RsENoOwnerLabelParent, [ClassName]);
+  raise EJVCLException.CreateResFmt(@RsENoOwnerLabelParent, [ClassName]);
 end;
 
 //=== { TJvLabelBehavior } ===================================================
@@ -590,6 +593,17 @@ begin
     UpdateDesigner;
   end;
   Result := FOptions;
+end;
+
+procedure TJvCustomBehaviorLabel.Loaded;
+begin
+  inherited Loaded;
+
+  // Start method usually exits immediately when the component is loading.
+  // As a result, when the component is loaded, we must start the behavior
+  // or the user won't see anything (Mantis 4809)
+  if BehaviorOptions.Active then
+    BehaviorOptions.Start;
 end;
 
 procedure TJvCustomBehaviorLabel.Resize;

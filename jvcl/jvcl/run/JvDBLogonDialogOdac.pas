@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLogonDialogOdac.pas 12145 2009-01-12 23:57:23Z jfudickar $
+// $Id: JvDBLogonDialogOdac.pas 12319 2009-05-30 10:13:21Z jfudickar $
 
 unit JvDBLogonDialogOdac;
 
@@ -47,6 +47,7 @@ type
     constructor Create(AOwner: TComponent); override;
     function ConnectString(ShowShortCut, ShowConnectGroup: Boolean): string;
         override;
+  published
     property Net: Boolean read FNet write FNet default false;
     property OracleHome: string read FOracleHome write FOracleHome;
   end;
@@ -176,8 +177,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLogonDialogOdac.pas $';
-    Revision: '$Revision: 12145 $';
-    Date: '$Date: 2009-01-13 00:57:23 +0100 (mar., 13 janv. 2009) $';
+    Revision: '$Revision: 12319 $';
+    Date: '$Date: 2009-05-30 12:13:21 +0200 (sam., 30 mai 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

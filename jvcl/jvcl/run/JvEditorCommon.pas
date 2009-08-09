@@ -23,7 +23,7 @@ Remko Bonte
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.sourceforge.net
 -----------------------------------------------------------------------------}
-// $Id: JvEditorCommon.pas 12243 2009-03-20 19:35:51Z ahuser $
+// $Id: JvEditorCommon.pas 12431 2009-08-07 11:48:25Z obones $
 
 { history
  (JVCL Library versions) :
@@ -1370,8 +1370,8 @@ function KeyPressed(VK: Integer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditorCommon.pas $';
-    Revision: '$Revision: 12243 $';
-    Date: '$Date: 2009-03-20 20:35:51 +0100 (ven., 20 mars 2009) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3192,7 +3192,7 @@ begin
   with Params do
   begin
     Style := Style or BorderStyles[FBorderStyle] or ScrollStyles[FScrollBars];
-    if NewStyleControls and Ctl3D and (FBorderStyle = bsSingle) then
+    if Ctl3D and (FBorderStyle = bsSingle) then
     begin
       Style := Style and not WS_BORDER;
       ExStyle := ExStyle or WS_EX_CLIENTEDGE;

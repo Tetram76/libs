@@ -23,7 +23,7 @@ tia
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUtils.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvDBUtils.pas 12430 2009-08-07 11:46:14Z obones $
 
 unit JvDBUtils;
 
@@ -41,24 +41,10 @@ uses
   {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
   {$ENDIF HAS_UNIT_VARIANTS}
-  {$IFDEF CLR}
-  DBCtrls,
-  {$ENDIF CLR}
   Classes, SysUtils, Contnrs, DB,
   JvAppStorage;
 
 type
-  {$IFDEF CLR}
-  IJvDataControl = IDataControl;
-  TJvDataLink = TDataLink;
-
-  TJvDataSetHelper = class helper for TDataSet
-  public
-    procedure GetFieldList(List: TList; const FieldNames: string); overload;
-  end;
-  {$ENDIF CLR}
-
-  {$IFNDEF CLR}
   IJvDataControl = interface
     ['{8B6910C8-D5FD-40BA-A427-FC54FE7B85E5}']
     function GetDataLink: TDataLink;
@@ -69,7 +55,6 @@ type
     procedure FocusControl(Field: TFieldRef); overload; override;
     procedure FocusControl(const Field: TField); reintroduce; overload; virtual;
   end;
-  {$ENDIF ~CLR}
 
   TCommit = (ctNone, ctStep, ctAll);
   TJvDBProgressEvent = procedure(UserData: Integer; var Cancel: Boolean; Line: Integer) of object;
@@ -201,8 +186,8 @@ procedure _DBError(const Msg: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUtils.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12430 $';
+    Date: '$Date: 2009-08-07 13:46:14 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -213,22 +198,6 @@ uses
   DBConsts, Math, Controls, Forms, Dialogs,
   JvJVCLUtils, JvJCLUtils, JvTypes, JvConsts, JvResources;
 
-{$IFDEF CLR}
-procedure TJvDataSetHelper.GetFieldList(List: TList; const FieldNames: string);
-var
-  ObjList: TObjectList;
-begin
-  ObjList := TObjectList.Create(False);
-  try
-    GetFieldList(ObjList, FieldNames);
-    List.Assign(ObjList);
-  finally
-    ObjList.Free;
-  end;
-end;
-{$ENDIF CLR}
-
-{$IFNDEF CLR}
 { TJvDataLink }
 
 procedure TJvDataLink.FocusControl(Field: TFieldRef);
@@ -239,7 +208,6 @@ end;
 procedure TJvDataLink.FocusControl(const Field: TField);
 begin
 end;
-{$ENDIF ~CLR}
 
 { Utility routines }
 
@@ -585,7 +553,7 @@ begin
           end;
         end;
       finally
-        if not Result {$IFNDEF CLR} and DataSet.BookmarkValid(TBookmark(Bookmark)) {$ENDIF} then
+        if not Result and DataSet.BookmarkValid(TBookmark(Bookmark)) then
           DataSet.Bookmark := Bookmark;
       end;
     finally

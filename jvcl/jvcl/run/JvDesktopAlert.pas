@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesktopAlert.pas 11335 2007-06-19 08:33:58Z obones $
+// $Id: JvDesktopAlert.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvDesktopAlert;
 
@@ -490,8 +490,8 @@ function CreateHandlerForStyle(Style: TJvAlertStyle; OwnerForm: TJvCustomFormDes
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesktopAlert.pas $';
-    Revision: '$Revision: 11335 $';
-    Date: '$Date: 2007-06-19 10:33:58 +0200 (mar., 19 juin 2007) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -975,12 +975,7 @@ end;
 
 procedure TJvDesktopAlert.SetImages(const Value: TCustomImageList);
 begin
-  if FImages <> Value then
-  begin
-    FImages := Value;
-    if FImages <> nil then
-      FImages.FreeNotification(Self);
-  end;
+  ReplaceComponentReference (Self, Value, TComponent(FImages));
 end;
 
 procedure TJvDesktopAlert.SetMessageText(const Value: string);
@@ -1732,15 +1727,9 @@ end;
 
 procedure TJvCustomDesktopAlert.SetAlertStack(const Value: TJvDesktopAlertStack);
 begin
-  if FStacker <> Value then
-  begin
-    FStacker := Value;
+  if ReplaceComponentReference (Self, Value, TComponent(FStacker)) then
     if FStacker <> nil then
-    begin
       Location.Position := FStacker.Position;
-      FStacker.FreeNotification(Self);
-    end;
-  end;
 end;
 
 procedure TJvCustomDesktopAlert.SetAlertStyle(const Value: TJvAlertStyle);

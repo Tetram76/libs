@@ -28,7 +28,7 @@ Known Issues:
                (report for instance). As a workaround, always change the item's
                properties, never the canvas' directly.
 -----------------------------------------------------------------------------}
-// $Id: JvListView.pas 12264 2009-04-10 20:08:13Z obones $
+// $Id: JvListView.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvListView;
 
@@ -484,8 +484,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListView.pas $';
-    Revision: '$Revision: 12264 $';
-    Date: '$Date: 2009-04-10 22:08:13 +0200 (ven., 10 avr. 2009) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1768,18 +1768,8 @@ end;
 
 procedure TJvListView.SetHeaderImages(const Value: TCustomImageList);
 begin
-  if FHeaderImages <> Value then
-  begin
-    if FHeaderImages <> nil then
-      FHeaderImages.UnRegisterChanges(FImageChangeLink);
-    FHeaderImages := Value;
-    if Assigned(FHeaderImages) then
-    begin
-      FHeaderImages.RegisterChanges(FImageChangeLink);
-      FHeaderImages.FreeNotification(Self);
-    end;
+  if ReplaceImageListReference(Self, Value, FHeaderImages, FImageChangeLink) then
     UpdateHeaderImages(ListView_GetHeader(Handle));
-  end;
 end;
 
 procedure TJvListView.SetExtendedColumns(

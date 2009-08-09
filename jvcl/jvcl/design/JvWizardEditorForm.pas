@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardEditorForm.pas 11065 2006-12-02 07:06:50Z marquardt $
+// $Id: JvWizardEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 {*****************************************************************************
   Purpose:   Jv Wizard Component Editor
@@ -144,23 +144,10 @@ type
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvDsgnConsts;
-{$ENDIF USEJVCL}
 
 {$R *.dfm}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsPageListEllipsis = 'Page List...';
-  RsNewWelcomePage = 'New Welcome Page';
-  RsNewInteriorPage = 'New Interior Page';
-  RsDeletePage = 'Delete Page';
-  RsNextPage = 'Next Page';
-  RsPreviousPage = 'Previous Page';
-  RsNone = '(none)';
-{$ENDIF !USEJVCL}
 
 procedure ShowWizardPageListEditor(Designer: IDesigner; AWizard: TJvWizard);
 var

@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbar.pas 12049 2008-11-17 23:32:53Z ahuser $
+// $Id: JvSpeedbar.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvSpeedbar;
 
@@ -500,8 +500,8 @@ function NewSpeedItem(AOwner: TComponent; ASpeedBar: TJvSpeedBar; Section: Integ
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedbar.pas $';
-    Revision: '$Revision: 12049 $';
-    Date: '$Date: 2008-11-18 00:32:53 +0100 (mar., 18 nov. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1554,7 +1554,7 @@ end;
 
 procedure TJvSpeedBar.WriteDesignStyle(Writer: TWriter);
 begin
-  Writer.WriteBoolean(NewStyleControls);
+  Writer.WriteBoolean(True);
 end;
 
 procedure TJvSpeedBar.ReadSections(Reader: TReader);
@@ -2487,14 +2487,7 @@ end;
 
 procedure TJvSpeedBar.SetImages(Value: TCustomImageList);
 begin
-  if Images <> nil then
-    Images.UnRegisterChanges(FImageChangeLink);
-  FImages := Value;
-  if FImages <> nil then
-  begin
-    FImages.RegisterChanges(FImageChangeLink);
-    FImages.FreeNotification(Self);
-  end;
+  ReplaceImageListReference(Self, Value, FImages, FImageChangeLink);
   ImageListChange(FImages);
 end;
 
@@ -3027,8 +3020,7 @@ begin
   begin
     Style := WS_POPUP or WS_DISABLED;
     WindowClass.Style := WindowClass.Style or CS_SAVEBITS;
-    if NewStyleControls then
-      ExStyle := WS_EX_TOOLWINDOW;
+    ExStyle := WS_EX_TOOLWINDOW;
   end;
 end;
 

@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGlobusReg.pas 12128 2009-01-06 10:39:52Z obones $
+// $Id: JvGlobusReg.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvGlobusReg;
 
@@ -107,9 +107,7 @@ begin
     TJvg3DColors, TJvgHint, {TJvginspectorGrid, }TJvgReport,
     {$IFNDEF DelphiPersonalEdition}
     TJvgExportExcel,
-    {$IFDEF USEJVCL}
     TJvgExportXML,
-    {$ENDIF USEJVCL}
     TJvgExportDataset,
     {$IFDEF JVCL_UseQuickReport}
     TJvgQRLabel, TJvgQRDBText, TJvgMyQRPreview,

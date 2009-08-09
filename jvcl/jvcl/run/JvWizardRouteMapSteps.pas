@@ -25,7 +25,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardRouteMapSteps.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvWizardRouteMapSteps.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvWizardRouteMapSteps;
 
@@ -34,11 +34,9 @@ unit JvWizardRouteMapSteps;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls, Forms,
   JvWizard;
@@ -89,31 +87,20 @@ type
     property ShowNavigation: Boolean read FShowNavigation write SetShowNavigation default True;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizardRouteMapSteps.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvResources;
-{$ENDIF USEJVCL}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsActiveStepFormat = 'Step %d of %d';
-  RsBackTo = 'Back to';
-  RsNextStep = 'Next Step';
-{$ENDIF !USEJVCL}
 
 constructor TJvWizardRouteMapSteps.Create(AOwner: TComponent);
 begin
@@ -400,7 +387,6 @@ begin
   Result := PreviousStepText <> RsBackTo;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 
 initialization
@@ -409,7 +395,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

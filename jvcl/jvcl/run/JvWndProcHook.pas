@@ -27,7 +27,7 @@ Known Issues:
       TJvHookInfos               -> TJvHookItem, TJvHookInfo, TJvHook
       TJvHookInfo                -> TJvHookData
 -----------------------------------------------------------------------------}
-// $Id: JvWndProcHook.pas 10613 2006-05-19 19:21:43Z jfudickar $
+// $Id: JvWndProcHook.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvWndProcHook;
 
@@ -94,32 +94,15 @@ procedure ReleaseObj(AObject: TObject);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWndProcHook.pas $';
-    Revision: '$Revision: 10613 $';
-    Date: '$Date: 2006-05-19 21:21:43 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
-{$IFDEF CLR}
-uses
-  Borland.Vcl.WinUtils;
-{$ENDIF CLR}
-
 type
-  {$IFDEF CLR}
-  TJvHookInfo = class(TObject)
-    Hook: TJvControlHook;
-    Next: TJvHookInfo;
-  end;
-  PJvHookInfo = TJvHookInfo;
-
-  THookInfoList = array of TJvHookInfo;
-  PHookInfoList = THookInfoList;
-
-  {$ELSE}
-
   PJvHookInfo = ^TJvHookInfo;
   TJvHookInfo = record
     Hook: TJvControlHook;
@@ -128,7 +111,6 @@ type
 
   PHookInfoList = ^THookInfoList;
   THookInfoList = array [0..MaxInt div 4 - 1] of PJvHookInfo;
-  {$ENDIF CLR}
 
   TJvWndProcHook = class;
 
@@ -155,9 +137,6 @@ type
     FControlDestroyed: Boolean;
     FOldWndProc: TWndMethod;
     FOldWndProcHandle: TFarProc;
-    {$IFDEF CLR}
-    FOldWndProcHandleInst: TFNWndProc;
-    {$ENDIF CLR}
     FHooked: Boolean;
     FController: TJvWndProcHook;
     procedure SetController(const Value: TJvWndProcHook);
@@ -205,15 +184,15 @@ type
       const Order: TJvHookOrder): Boolean; overload;
   end;
 
-  TJvReleaser = class({$IFDEF CLR} TControl {$ELSE} TObject {$ENDIF CLR})
+  TJvReleaser = class(TObject)
   private
     FHandle: THandle;
     FReleasing: TList;
     function GetHandle: THandle;
     procedure CMRelease(var Msg: TMessage); message CM_RELEASE;
-    procedure WndProc(var Msg: TMessage); {$IFDEF CLR}reintroduce;{$ENDIF}
+    procedure WndProc(var Msg: TMessage);
   public
-    constructor Create; {$IFDEF CLR}reintroduce;{$ENDIF} virtual;
+    constructor Create; virtual;
     destructor Destroy; override;
     procedure DefaultHandler(var Msg); override;
     class function Instance: TJvReleaser;
@@ -464,11 +443,7 @@ var
   HookInfo: PJvHookInfo;
   I: Integer;
 begin
-  {$IFDEF CLR}
-  HookInfo := TJvHookInfo.Create;
-  {$ELSE}
   New(HookInfo);
-  {$ENDIF CLR}
   HookInfo.Hook := Hook;
   HookInfo.Next := nil;
 
@@ -525,26 +500,22 @@ constructor TJvHookInfos.Create(AControl: TControl);
 begin
   inherited Create;
   FControl := AControl;
-  {$IFNDEF CLR}
   FillChar(FFirst, SizeOf(FFirst), 0);
   FillChar(FLast, SizeOf(FLast), 0);
   //FillChar(FStack, SizeOf(FStack), 0);
   //FillChar(FStackCapacity, SizeOf(FStackCapacity), 0);
   //FillChar(FStackCount, SizeOf(FStackCount), 0);
-  {$ENDIF !CLR}
 end;
 
 constructor TJvHookInfos.Create(AHandle: THandle);
 begin
   inherited Create;
   FHandle := AHandle;
-  {$IFNDEF CLR}
   FillChar(FFirst, SizeOf(FFirst), 0);
   FillChar(FLast, SizeOf(FLast), 0);
   //FillChar(FStack, SizeOf(FStack), 0);
   //FillChar(FStackCapacity, SizeOf(FStackCapacity), 0);
   //FillChar(FStackCount, SizeOf(FStackCount), 0);
-  {$ENDIF !CLR}
 end;
 
 procedure TJvHookInfos.DecDepth;
@@ -562,12 +533,8 @@ begin
   HookInfo := FFirst[Order];
   PrevHookInfo := nil;
   while (HookInfo <> nil) and
-    {$IFDEF CLR}
-    (@HookInfo.Hook <> @Hook) do
-    {$ELSE}
     ((TMethod(HookInfo.Hook).Code <> TMethod(Hook).Code) or
     (TMethod(HookInfo.Hook).Data <> TMethod(Hook).Data)) do
-    {$ENDIF CLR}
     {  This is unique: Code = the object whereto the method belongs
                        Data = identifies the method in the object }
   begin
@@ -600,9 +567,7 @@ begin
     Inc(I, 2);
   end;
 
-  {$IFNDEF CLR} // in .NET TJvHookInfo does not implement IDisposible
   Dispose(HookInfo);
-  {$ENDIF !CLR}
 
   if (FFirst[hoBeforeMsg] = nil) and (FFirst[hoAfterMsg] = nil) then
     { Could also call ReleaseObj(Self). Now this object stays in memory until
@@ -626,15 +591,9 @@ begin
     begin
       HookInfo := FFirst[Order];
       FFirst[Order] := HookInfo.Next;
-      {$IFNDEF CLR} // in .NET TJvHookInfo does not implement IDisposible
       Dispose(HookInfo);
-      {$ENDIF !CLR}
     end;
-  {$IFDEF CLR}
-  FStack := nil;
-  {$ELSE}
   FreeMem(FStack);
-  {$ENDIF CLR}
 
   inherited Destroy;
 end;
@@ -654,12 +613,7 @@ begin
   begin
     FOldWndProc := nil;
     FOldWndProcHandle := TFarProc(GetWindowLong(FHandle, GWL_WNDPROC));
-    {$IFDEF CLR}
-    FOldWndProcHandleInst := MakeObjectInstance(WindowProc);
-    SetWindowLong(FHandle, GWL_WNDPROC, FOldWndProcHandleInst);
-    {$ELSE}
     SetWindowLong(FHandle, GWL_WNDPROC, Integer(MakeObjectInstance(WindowProc)));
-    {$ENDIF CLR}
     FHooked := True;
   end;
 end;
@@ -671,11 +625,7 @@ begin
     { Upsize the stack }
     Inc(FStackCapacity);
     FStackCapacity := FStackCapacity * 2;
-    {$IFDEF CLR}
-    SetLength(FStack, 2 * FStackCapacity);
-    {$ELSE}
     ReallocMem(FStack, 2 * FStackCapacity * SizeOf(Pointer));
-    {$ENDIF CLR}
   end;
   Inc(FStackCount);
 end;
@@ -695,10 +645,8 @@ begin
 end;
 
 procedure TJvHookInfos.UnHookControl;
-{$IFNDEF CLR}
 var
   Ptr: TFarProc;
-{$ENDIF !CLR}
 begin
   if not FHooked or FControlDestroyed then
     Exit;
@@ -709,15 +657,9 @@ begin
   end
   else
   begin
-    {$IFDEF CLR}
-    SetWindowLong(FHandle, GWL_WNDPROC, Integer(FOldWndProcHandle));
-    FreeObjectInstance(FOldWndProcHandleInst);
-    FOldWndProcHandleInst := nil;
-    {$ELSE}
     Ptr := TFarProc(GetWindowLong(FHandle, GWL_WNDPROC));
     SetWindowLong(FHandle, GWL_WNDPROC, Integer(FOldWndProcHandle));
     FreeObjectInstance(Ptr);
-    {$ENDIF CLR}
     FHooked := False;
   end;
 end;
@@ -992,7 +934,7 @@ end;
 
 constructor TJvReleaser.Create;
 begin
-  inherited Create{$IFDEF CLR}(nil){$ENDIF};
+  inherited Create;
   FReleasing := TList.Create;
 end;
 

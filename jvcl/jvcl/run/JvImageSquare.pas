@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageSquare.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvImageSquare.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvImageSquare;
 
@@ -103,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageSquare.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -113,7 +113,7 @@ implementation
 
 uses
   ExtCtrls, CommCtrl,
-  JvThemes, JvResources;
+  JvThemes, JvResources, JvJVCLUtils;
 
 //=== { TJvImageSquare } =====================================================
 
@@ -238,11 +238,7 @@ end;
 
 procedure TJvImageSquare.SetImageList(Value: TCustomImageList);
 begin
-  if Images <> nil then
-    Images.UnRegisterChanges(FImageChangeLink);
-  FImageList := Value;
-  if Images <> nil then
-    FImageList.RegisterChanges(FImageChangeLink);
+  ReplaceImageListReference(Self, Value, FImageList, FImageChangeLink);
   Repaint;
 end;
 

@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSplit.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvSplit.pas 12296 2009-04-29 14:53:38Z obones $
 
 unit JvSplit;
 
@@ -127,8 +127,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSplit.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12296 $';
+    Date: '$Date: 2009-04-29 16:53:38 +0200 (mer., 29 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -533,6 +533,8 @@ procedure TJvxSplitter.SetControlFirst(Value: TControl);
 begin
   if Value <> FControlFirst then
   begin
+    if FControlFirst <> nil then
+      FControlFirst.RemoveFreeNotification(Self);
     if (Value = Self) or (Value is TForm) then
       FControlFirst := nil
     else
@@ -549,6 +551,8 @@ procedure TJvxSplitter.SetControlSecond(Value: TControl);
 begin
   if Value <> FControlSecond then
   begin
+    if FControlSecond <> nil then
+      FControlSecond.RemoveFreeNotification(Self);
     if (Value = Self) or (Value is TForm) then
       FControlSecond := nil
     else

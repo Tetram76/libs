@@ -28,7 +28,7 @@ but driver is available for manual installation (search for 'NetBEUI' on
 www.microsoft.com). Delivery network messages longer then 1365 bytes can be
 problem too (if it's possible at all).
 -----------------------------------------------------------------------------}
-// $Id: JvMailSlots.pas 12024 2008-11-02 22:23:34Z ahuser $
+// $Id: JvMailSlots.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvMailSlots;
 
@@ -95,8 +95,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMailSlots.pas $';
-    Revision: '$Revision: 12024 $';
-    Date: '$Date: 2008-11-02 23:23:34 +0100 (dim., 02 nov. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -136,7 +136,7 @@ begin
   // IMO Immediate return is better (no chance of hang up)
   FHandle := CreateMailSlot(PChar('\\.\mailslot\' + MailSlotName), High(Word), 0 , nil);
   if FHandle = INVALID_HANDLE_VALUE then
-    raise Exception.CreateRes({$IFNDEF CLR}@{$ENDIF}RsJvMailSlotServerErrorCreatingChan);
+    raise Exception.CreateRes(@RsJvMailSlotServerErrorCreatingChan);
   FTimer.Enabled := True;
 end;
 
@@ -182,7 +182,7 @@ begin
     else
       // default error notification; not recommended:
       // if error is permanent it will produce endless exceptions in timer
-      raise Exception.CreateRes({$IFNDEF CLR}@{$ENDIF}RsJvMailSlotServerErrorGatheringInf);
+      raise Exception.CreateRes(@RsJvMailSlotServerErrorGatheringInf);
   end
   else
   begin
@@ -205,7 +205,7 @@ begin
         else
           // default error notification; not recommended:
           // if error is permanent it will produce endless exceptions in timer
-          raise Exception.CreateRes({$IFNDEF CLR}@{$ENDIF}RsJvMailSlotServerErrorReadingMessa);
+          raise Exception.CreateRes(@RsJvMailSlotServerErrorReadingMessa);
       end;
     end;
   end;

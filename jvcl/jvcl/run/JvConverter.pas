@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvConverter.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvConverter.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvConverter;
 
@@ -148,8 +148,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvConverter.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -174,13 +174,8 @@ procedure TJvDateTimeFormat.ResetDefault;
 begin
   FAMString := TimeAMString;
   FPMString := TimePMString;
-  {$IFDEF CLR}
-  FTimeSeparator := SysUtils.TimeSeparator[1];
-  FDateSeparator := SysUtils.DateSeparator[1];
-  {$ELSE}
   FTimeSeparator := SysUtils.TimeSeparator;
   FDateSeparator := SysUtils.DateSeparator;
-  {$ENDIF CLR}
   FDateOrder := doDMY;
   FTimeFormat := tfHHMMSS;
   FLongDate := False;
@@ -418,11 +413,7 @@ begin
     dtInteger:
       Result := CharInSet(Ch, DigitSymbols + SignSymbols);
     dtFloat:
-      {$IFDEF CLR}
-      Result := Ch in DigitSymbols + SignSymbols + [AnsiChar(DecimalSeparator[1]), 'E', 'e'];
-      {$ELSE}
       Result := CharInSet(Ch, DigitSymbols + SignSymbols + [DecimalSeparator, 'E', 'e']);
-      {$ENDIF CLR}
     dtDateTime, dtDate, dtTime:
       Result := True;
     dtBoolean:
@@ -465,10 +456,10 @@ begin
   for I := 1 to Length(S) do
   begin
     if CharInSet(S[I], DateS) then
-      S[I] := DateSeparator{$IFDEF CLR}[1]{$ENDIF}
+      S[I] := DateSeparator
     else
     if CharInSet(S[I], TimeS) then
-      S[I] := TimeSeparator{$IFDEF CLR}[1]{$ENDIF};
+      S[I] := TimeSeparator;
   end;
   Result := StrToDateTime(S);
 end;

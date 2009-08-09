@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgExport.pas 12260 2009-03-27 10:41:19Z obones $
+// $Id: JvgExport.pas 12387 2009-07-09 08:37:24Z obones $
 
 unit JvgExport;
 
@@ -33,11 +33,9 @@ unit JvgExport;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Graphics, ExtCtrls, SysUtils, Classes, Controls, Forms,
   DB,
   {$IFDEF JVCL_USEQuickReport}
@@ -53,24 +51,21 @@ procedure ExportToExcel(QuickRep: TCustomQuickRep);
 {$ENDIF JVCL_UseQuickReport}
 procedure ExportDataSetToExcel(DataSet: TDataSet; OnExportProgress: TOnExportProgress);
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgExport.pas $';
-    Revision: '$Revision: 12260 $';
-    Date: '$Date: 2009-03-27 11:41:19 +0100 (ven., 27 mars 2009) $';
+    Revision: '$Revision: 12387 $';
+    Date: '$Date: 2009-07-09 10:37:24 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
-  {$IFDEF USEJVCL}
-  {$ENDIF USEJVCL}
   ComObj,
+  JclFileUtils,
   JvgUtils;
 
 const
@@ -88,7 +83,6 @@ var
   AExportFilter: TQRCommaSeparatedFilter;
   MemStream: TMemoryStream;
   TempFileName: string;
-  Buffer: array [0..MAX_PATH] of Char;
 
   function DeleteEOLs(const Str: string): string;
   var
@@ -107,8 +101,7 @@ begin
     XL := CreateOleObject(cExcelApplication);
   end;
 
-  GetTempPath(Length(Buffer), Buffer);
-  TempFileName := Buffer + 'JvgExportToExcelTemp.txt';
+  TempFileName := PathGetTempPath + 'JvgExportToExcelTemp.txt';
   AExportFilter := TQRCommaSeparatedFilter.Create(TempFileName);
   try
     QuickRep.ExportToFilter(AExportFilter);
@@ -235,7 +228,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -243,7 +235,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

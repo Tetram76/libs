@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLookOut.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvLookOut.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvLookOut;
 
@@ -95,10 +95,10 @@ type
     FFillColor: TColor;
     FHighlightFont: TFont;
     FButtonBorder: TJvButtonBorder;
-    FPopUpMenu: TPopupMenu;
+    FPopupMenu: TPopupMenu;
     FGroupIndex: Integer;
-    FSmallImages: TImageList;
-    FLargeImages: TImageList;
+    FSmallImages: TCustomImageList;
+    FLargeImages: TCustomImageList;
     FOnEdited: TJvLookOutEditedEvent;
     FLargeImageChangeLink: TChangeLink;
     FSmallImageChangeLink: TChangeLink;
@@ -112,8 +112,8 @@ type
     procedure SetSpacing(Value: Integer);
     procedure SetParentImageSize(Value: Boolean);
     procedure SetButtonBorder(Value: TJvButtonBorder);
-    procedure SetSmallImages(Value: TImageList);
-    procedure SetLargeImages(Value: TImageList);
+    procedure SetSmallImages(const Value: TCustomImageList);
+    procedure SetLargeImages(const Value: TCustomImageList);
     procedure SetImageIndex(Value: TImageIndex);
     procedure SetImageSize(Value: TJvImageSize);
     procedure DrawSmallImages;
@@ -124,6 +124,7 @@ type
     procedure CMLeaveButton(var Msg: TMessage); message CM_LEAVEBUTTON;
     procedure CMTextChanged(var Msg:TMessage); message CM_TEXTCHANGED;
     function ParentVisible: Boolean;
+    procedure SetPopupMenu(const Value: TPopupMenu);
   protected
 
     procedure ActionChange(Sender: TObject; CheckDefaults: Boolean); override;
@@ -156,10 +157,10 @@ type
     property ImageIndex: TImageIndex read FImageIndex write SetImageIndex default -1;
     property ImageSize: TJvImageSize read FImageSize write SetImageSize default isLarge;
     property ParentImageSize: Boolean read FParentImageSize write SetParentImageSize default True;
-    property PopupMenu: TPopupMenu read FPopUpMenu write FPopUpMenu;
-    property LargeImages: TImageList read FLargeImages write SetLargeImages;
+    property PopupMenu: TPopupMenu read FPopupMenu write SetPopupMenu;
+    property LargeImages: TCustomImageList read FLargeImages write SetLargeImages;
     property Spacing: Integer read FSpacing write SetSpacing default 4; { border offset from bitmap }
-    property SmallImages: TImageList read FSmallImages write SetSmallImages;
+    property SmallImages: TCustomImageList read FSmallImages write SetSmallImages;
     property Data: Pointer read FData write FData;
     property GroupIndex: Integer read FGroupIndex write SetGroupIndex default 0;
     property OnEdited: TJvLookOutEditedEvent read FOnEdited write FOnEdited;
@@ -474,8 +475,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLookOut.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -486,7 +487,7 @@ uses
   {$IFDEF COMPILER10_UP}
   Types,
   {$ENDIF COMPILER10_UP}
-  ActnList;
+  ActnList, JvJVCLUtils;
 
 const
   cSpeed = 20;
@@ -1143,25 +1144,15 @@ begin
   end;
 end;
 
-procedure TJvCustomLookOutButton.SetSmallImages(Value: TImageList);
+procedure TJvCustomLookOutButton.SetSmallImages(const Value: TCustomImageList);
 begin
-  if FSmallImages <> nil then
-    FSmallImages.UnRegisterChanges(FSmallImageChangeLink);
-  FSmallImages := Value;
-
-  if FSmallImages <> nil then
-    FSmallImages.RegisterChanges(FSmallImageChangeLink);
+  ReplaceImageListReference(Self, Value, FSmallImages, FSmallImageChangeLink);
   Invalidate;
 end;
 
-procedure TJvCustomLookOutButton.SetLargeImages(Value: TImageList);
+procedure TJvCustomLookOutButton.SetLargeImages(const Value: TCustomImageList);
 begin
-  if Assigned(FLargeImages) then
-    FLargeImages.UnRegisterChanges(FLargeImageChangeLink);
-  FLargeImages := Value;
-
-  if Assigned(FLargeImages) then
-    FLargeImages.RegisterChanges(FLargeImageChangeLink);
+  ReplaceImageListReference(Self, Value, FLargeImages, FLargeImageChangeLink);
   Invalidate;
 end;
 
@@ -1601,6 +1592,11 @@ end;
 function TJvCustomLookOutButton.GetActionLinkClass: TControlActionLinkClass;
 begin
   Result := TJvLookOutButtonActionLink;
+end;
+
+procedure TJvCustomLookOutButton.SetPopupMenu(const Value: TPopupMenu);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FPopupMenu));
 end;
 
 procedure TJvCustomLookOutButton.VisibleChanged;

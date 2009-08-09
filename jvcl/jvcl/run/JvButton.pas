@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvButton.pas 11474 2007-08-18 13:57:48Z ahuser $
+// $Id: JvButton.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvButton;
 
@@ -180,8 +180,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvButton.pas $';
-    Revision: '$Revision: 11474 $';
-    Date: '$Date: 2007-08-18 15:57:48 +0200 (sam., 18 août 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -580,12 +580,9 @@ end;
 
 procedure TJvCustomGraphicButton.SetDropDownMenu(const Value: TPopupMenu);
 begin
-  if FDropDownMenu <> Value then
-  begin
-    FDropDownMenu := Value;
+  if ReplaceComponentReference (Self, Value, TComponent(FDropDownMenu)) then
     if DropArrow then
       Invalidate;
-  end;
 end;
 
 
@@ -843,7 +840,7 @@ begin
   if (Parent <> nil) and Parent.HandleAllocated then
   begin
     R := BoundsRect;
-    InvalidateRect(Parent.Handle, {$IFNDEF CLR}@{$ENDIF}R, True);
+    InvalidateRect(Parent.Handle, @R, True);
   end;
   Repaint;
 end;

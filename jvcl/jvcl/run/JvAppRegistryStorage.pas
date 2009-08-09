@@ -51,7 +51,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppRegistryStorage.pas 11642 2007-12-24 22:20:02Z obones $
+// $Id: JvAppRegistryStorage.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvAppRegistryStorage;
 
@@ -65,9 +65,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Classes, Forms,
-  {$IFNDEF CLR}
   JclBase,
-  {$ENDIF !CLR}
   JvAppStorage, JvTypes, JvJVCLUtils;
 
 type
@@ -120,6 +118,8 @@ type
     procedure DoWriteString(const Path: string; const Value: string); override;
     function DoReadBinary(const Path: string; Buf: TJvBytes; BufSize: Integer): Integer; override;
     procedure DoWriteBinary(const Path: string; const Buf: TJvBytes; BufSize: Integer); override;
+    function DoReadWideString(const Path: string; const Default: Widestring): Widestring; override;
+    procedure DoWriteWideString(const Path: string; const Value: Widestring); override;
     class function GetStorageOptionsClass: TJvAppStorageOptionsClass; override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -139,8 +139,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppRegistryStorage.pas $';
-    Revision: '$Revision: 11642 $';
-    Date: '$Date: 2007-12-24 23:20:02 +0100 (lun., 24 déc. 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -512,6 +512,33 @@ begin
   SplitKeyPath(Path, SubKey, ValueName);
   CreateKey(SubKey);
   RegWriteString(FRegHKEY, SubKey, ValueName, Value);
+end;
+
+function TJvAppRegistryStorage.DoReadWideString(const Path: string; const Default: Widestring): Widestring;
+var
+  SubKey: string;
+  ValueName: string;
+begin
+  SplitKeyPath(Path, SubKey, ValueName);
+  try
+    Result := RegReadWideStringDef(FRegHKEY, SubKey, ValueName, Default);
+  except
+    on E: EJclRegistryError do
+      if StorageOptions.DefaultIfReadConvertError then
+        Result := Default
+      else
+        raise;
+  end;
+end;
+
+procedure TJvAppRegistryStorage.DoWriteWideString(const Path: string; const Value: Widestring);
+var
+  SubKey: string;
+  ValueName: string;
+begin
+  SplitKeyPath(Path, SubKey, ValueName);
+  CreateKey(SubKey);
+  RegWriteWideString(FRegHKEY, SubKey, ValueName, Value);
 end;
 
 function TJvAppRegistryStorage.DoReadBinary(const Path: string; Buf: TJvBytes; BufSize: Integer): Integer;

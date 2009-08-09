@@ -36,7 +36,7 @@ Known Issues:
     * PosAtDate is slightly better
     * FirstVisibleDate always start at day 1 of month
 -----------------------------------------------------------------------------}
-// $Id: JvTimeLine.pas 12252 2009-03-21 22:18:25Z ahuser $
+// $Id: JvTimeLine.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvTimeLine;
 
@@ -496,8 +496,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimeLine.pas $';
-    Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1301,21 +1301,8 @@ end;
 
 procedure TJvCustomTimeLine.SetImages(Value: TCustomImageList);
 begin
-  if FImages <> Value then
-  begin
-    if FImages <> nil then
-    begin
-      FImages.RemoveFreeNotification(Self);
-      FImages.UnRegisterChanges(FImageChangeLink);
-    end;
-    FImages := Value;
-    if FImages <> nil then
-    begin
-      FImages.FreeNotification(Self);
-      FImages.RegisterChanges(FImageChangeLink);
-    end;
+  if ReplaceImageListReference(Self, Value, FImages, FImageChangeLink) then
     Invalidate;
-  end;
 end;
 
 procedure TJvCustomTimeLine.SetSelectedItem(Value: TJvTimeItem);

@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEnterTab.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvEnterTab.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvEnterTab;
 
@@ -69,8 +69,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEnterTab.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -78,9 +78,6 @@ const
 implementation
 
 uses
-  {$IFDEF CLR}
-  Borland.Vcl.WinUtils,
-  {$ENDIF CLR}
   Forms, StdCtrls;
 
 {$R JvEnterTab.res}

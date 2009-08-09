@@ -29,7 +29,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEdit.pas 12281 2009-04-23 22:52:26Z remkobonte $
+// $Id: JvRichEdit.pas 12324 2009-06-01 14:41:54Z ahuser $
 
 unit JvRichEdit;
 
@@ -929,8 +929,8 @@ function BitmapToRTF2(ABitmap: TBitmap; AStream: TStream): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEdit.pas $';
-    Revision: '$Revision: 12281 $';
-    Date: '$Date: 2009-04-24 00:52:26 +0200 (ven., 24 avr. 2009) $';
+    Revision: '$Revision: 12324 $';
+    Date: '$Date: 2009-06-01 16:41:54 +0200 (lun., 01 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -6082,20 +6082,20 @@ end;
 
 function TJvRichEditStrings.Get(Index: Integer): string;
 var
-  Text: array[0..4095] of Char;
   L: Integer;
-  W: Word;
 begin
-  // (rom) reimplemented as Move
-  W := SizeOf(Text);
-  System.Move(W, Text[0], SizeOf(Word));
-  L := SendMessage(FRichEdit.Handle, EM_GETLINE, Index, Longint(@Text));
-  if (Text[L - 2] = Cr) and (Text[L - 1] = Lf) then
-    Dec(L, 2)
-  else
-  if (RichEditVersion >= 2) and (Text[L - 1] = Cr) then
-    Dec(L);
-  SetString(Result, Text, L);
+  L := FRichEdit.GetLineLength(Index);
+  SetLength(Result, L);
+  if L > 0 then
+  begin
+    PWord(Pointer(Result))^ := L;
+    L := SendMessage(FRichEdit.Handle, EM_GETLINE, Index, LPARAM(Pointer(Result)));
+    if (Result[L - 2] = Cr) and (Result[L - 1] = Lf) then
+      SetLength(Result, L - 2)
+    else
+    if (RichEditVersion >= 2) and (Result[L - 1] = Cr) then
+      SetLength(Result, L - 1);
+  end;
 end;
 
 function TJvRichEditStrings.GetCount: Integer;

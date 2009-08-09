@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRegistryTreeview.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvRegistryTreeview.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvRegistryTreeView;
 
@@ -66,6 +66,7 @@ type
     procedure CloseRegistry;
     function FindChildNode(ParentNode: TTreeNode;
       const Name: string): TTreeNode;
+    procedure SetListView(const Value: TCustomListView);
   protected
     procedure RefreshSubTrees(ANode: TTreeNode; Key, OldKey: string; Level: Integer); virtual;
     function CanCollapse(Node: TTreeNode): Boolean; override;
@@ -105,7 +106,7 @@ type
     property HideSelection;
     property RegistryKeys: TJvRegKeys read FRegistryKeys write SetRegistryKeys default
       [hkCurrentUser, hkLocalMachine];
-    property ListView: TCustomListView read FListView write FListView;
+    property ListView: TCustomListView read FListView write SetListView;
     property RootCaption: string read FRootCaption write SetRootCaption;
     property DefaultCaption: string read FDefaultCaption write SetDefaultCaption;
     property DefaultNoValueCaption: string read FDefaultNoValue write SetDefaultNoValue;
@@ -147,8 +148,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRegistryTreeview.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -156,7 +157,7 @@ const
 implementation
 
 uses
-  JvResources;
+  JvResources, JvJVCLUtils;
 
 {$R JvRegistryTreeView.res}
 
@@ -661,14 +662,15 @@ procedure TJvRegistryTreeView.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if (AComponent = FListView) and (Operation = opRemove) then
-  begin
-    if TListViewAccessProtected(FListView).SmallImages = FInternalImages then
-      TListViewAccessProtected(FListView).SmallImages := nil;
-    FListView := nil;
-  end;
-  if (AComponent = Images) and (Operation = opRemove) then
-    SetDefaultImages;
+  if (Operation = opRemove) then
+    if (AComponent = FListView) then
+    begin
+      if TListViewAccessProtected(FListView).SmallImages = FInternalImages then
+        TListViewAccessProtected(FListView).SmallImages := nil;
+      FListView := nil;
+    end
+    else if (AComponent = Images) then
+      SetDefaultImages;
 end;
 
 procedure TJvRegistryTreeView.RefreshNode(Node: TTreeNode);
@@ -798,6 +800,11 @@ begin
   OpenRegistry(Selected);
   Result := FReg.SaveKey(ShortPath, Filename);
   CloseRegistry;
+end;
+
+procedure TJvRegistryTreeView.SetListView(const Value: TCustomListView);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FListView));
 end;
 
 {$IFDEF UNITVERSIONING}

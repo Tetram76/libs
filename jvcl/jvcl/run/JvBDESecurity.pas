@@ -31,7 +31,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDESecurity.pas 10753 2006-06-28 08:12:28Z obones $
+// $Id: JvBDESecurity.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvBDESecurity;
 
@@ -99,14 +99,15 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDESecurity.pas $';
-    Revision: '$Revision: 10753 $';
-    Date: '$Date: 2006-06-28 10:12:28 +0200 (mer., 28 juin 2006) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+Uses JvJVCLUtils;
 
 constructor TJvDBSecurity.Create(AOwner: TComponent);
 begin
@@ -135,12 +136,7 @@ end;
 
 procedure TJvDBSecurity.SetDatabase(Value: TDatabase);
 begin
-  if FDatabase <> Value then
-  begin
-    FDatabase := Value;
-    if Value <> nil then
-      Value.FreeNotification(Self);
-  end;
+  ReplaceComponentReference (Self, Value, TComponent(FDatabase));
 end;
 
 procedure TJvDBSecurity.SetUsersTableName(const Value: TFileName);

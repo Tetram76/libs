@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStatusBar.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvStatusBar.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvStatusBar;
 
@@ -99,8 +99,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStatusBar.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -109,7 +109,7 @@ implementation
 
 uses
   Math,
-  JvThemes, JvResources, JvTypes;
+  JvThemes, JvResources, JvTypes, JvJVCLUtils;
 
 //=== { TJvStatusBar } =======================================================
 
@@ -292,9 +292,7 @@ var
   S: TJvStatusBar;
 begin
   S := TStatusPanelsAccessProtected(Collection).Owner as TJvStatusBar;
-  if FControl <> nil then
-    FControl.RemoveFreeNotification(S);
-  FControl := Value;
+  ReplaceComponentReference (S, Value, TComponent(FControl));
   if FControl <> nil then
   begin
     if FControl = S then
@@ -304,7 +302,6 @@ begin
     end;
     FControl.Parent := S;
     FControl.Height := S.ClientHeight - 4;
-    FControl.FreeNotification(S);
   end;
   Changed(False);
 end;

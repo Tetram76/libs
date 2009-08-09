@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTSyncMon.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvMTSyncMon.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvMTSyncMon;
 
@@ -30,11 +30,9 @@ unit JvMTSyncMon;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
@@ -89,17 +87,15 @@ type
     property Monitor: TMTMonitor read FMonitor;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTSyncMon.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -341,7 +337,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -349,6 +344,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

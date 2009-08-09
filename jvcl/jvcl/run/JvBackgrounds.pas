@@ -25,7 +25,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBackgrounds.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvBackgrounds.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvBackgrounds;
 
@@ -35,8 +35,6 @@ unit JvBackgrounds;
 interface
 
 {***************** Conditional Compiler Symbols ************************
-
- USEJVCL        JEDI VCL installed (http://sourceforge.net/projects/jvcl/)
 
  USE_JvGIF      use TGIFImage class from JVCL
 
@@ -50,7 +48,6 @@ interface
                 procedure.
  *********************************************************************** }
 
-{$DEFINE USEJVCL}
 {.$DEFINE USE_AM_GIF}
 {.$DEFINE USE_JvGIF}
 
@@ -59,11 +56,9 @@ interface
 {$ENDIF USE_JvGIF}
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Contnrs, Graphics, Controls, Forms, Classes,
   JclGraphUtils,
   JvTypes;
@@ -242,17 +237,15 @@ type
 
 procedure GetMappedGrays(var Shades: array of TColor; StartIntensity: Byte);
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBackgrounds.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 

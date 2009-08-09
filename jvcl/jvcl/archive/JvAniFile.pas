@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAniFile.pas 11993 2008-10-26 12:56:38Z ahuser $
+// $Id: JvAniFile.pas 12304 2009-05-05 20:10:29Z outchy $
 
 unit JvAniFile;
 
@@ -103,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/JvAniFile.pas $';
-    Revision: '$Revision: 11993 $';
-    Date: '$Date: 2008-10-26 13:56:38 +0100 (dim., 26 oct. 2008) $';
+    Revision: '$Revision: 12304 $';
+    Date: '$Date: 2009-05-05 22:10:29 +0200 (mar., 05 mai 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

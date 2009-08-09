@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgReportParamsEditor.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvgReportParamsEditor.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvgReportParamsEditor;
 
@@ -31,11 +31,9 @@ unit JvgReportParamsEditor;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, StdCtrls, Buttons, ExtCtrls, Mask,
   JvgStringGrid, JvgReport;
@@ -44,34 +42,36 @@ type
   TJvgReportParamsEditor = class(TComponent)
   private
     FReport: TJvgReport;
+    procedure SetReport(const Value: TJvgReport);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     procedure Edit;
   published
-    property Report: TJvgReport read FReport write FReport;
+    property Report: TJvgReport read FReport write SetReport;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgReportParamsEditor.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
+
+uses
+  JvJVCLUtils;
 
 procedure TJvgReportParamsEditor.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
+  inherited Notification(AComponent, Operation);
   if (AComponent = Report) and (Operation = opRemove) then
     Report := nil;
-  inherited Notification(AComponent, Operation);
 end;
 
 procedure TJvgReportParamsEditor.Edit;
@@ -181,7 +181,11 @@ begin //temporary commented
     }
 end;
 
-{$IFDEF USEJVCL}
+procedure TJvgReportParamsEditor.SetReport(const Value: TJvgReport);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FReport));
+end;
+
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -189,6 +193,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

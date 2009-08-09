@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
 * Using a divider as RecentMenu when MenuLocation = mruChild doesn't work
 -----------------------------------------------------------------------------}
-// $Id: JvMRUManager.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvMRUManager.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvMRUManager;
 
@@ -198,8 +198,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMRUManager.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -509,9 +509,7 @@ end;
 procedure TJvMRUManager.SetRecentMenu(Value: TMenuItem);
 begin
   ClearRecentMenu;
-  FRecentMenu := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FRecentMenu));
   FreeAndNil(FCanvas);
   UpdateRecentMenu;
 end;

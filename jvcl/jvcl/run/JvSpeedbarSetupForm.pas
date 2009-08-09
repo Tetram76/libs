@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbarSetupForm.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvSpeedbarSetupForm.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvSpeedbarSetupForm;
 
@@ -93,8 +93,8 @@ procedure ShowSpeedbarSetupWindow(Speedbar: TJvSpeedBar; HelpCtx: THelpContext);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedbarSetupForm.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -377,8 +377,7 @@ begin
   FSpeedbar := nil;
   FDrag := False;
   CloseBtn.Default := False;
-  if NewStyleControls then
-    Font.Style := [];
+  Font.Style := [];
   { Load string resources }
   CloseBtn.Caption := SOKButton;
   HelpBtn.Caption := SHelpButton;

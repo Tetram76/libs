@@ -23,7 +23,7 @@
  You may retrieve the latest version of this file at the Project JEDI home
  page, located at http://www.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvScheduledEvents.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvScheduledEvents.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvScheduledEvents;
 
@@ -110,7 +110,6 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure DoEndEvent(const Event: TJvEventCollectionItem);
     procedure DoStartEvent(const Event: TJvEventCollectionItem);
-    function GetAppStorage: TJvCustomAppStorage;
     procedure SetAppStorage(Value: TJvCustomAppStorage);
     function GetEvents: TJvEventCollection;
     procedure InitEvents;
@@ -127,7 +126,7 @@ type
     property AutoSave: Boolean read FAutoSave write FAutoSave;
     property OnStartEvent: TNotifyEvent read FOnStartEvent write FOnStartEvent;
     property OnEndEvent: TNotifyEvent read FOnEndEvent write FOnEndEvent;
-    property AppStorage: TJvCustomAppStorage read GetAppStorage write SetAppStorage;
+    property AppStorage: TJvCustomAppStorage read FAppStorage write SetAppStorage;
     property AppStoragePath: string read FAppStoragePath write FAppStoragePath;
   public
     constructor Create(AOwner: TComponent); override;
@@ -268,8 +267,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScheduledEvents.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -514,16 +513,9 @@ begin
   inherited Destroy;
 end;
 
-function TJvCustomScheduledEvents.GetAppStorage: TJvCustomAppStorage;
-begin
-  Result := FAppStorage;
-end;
-
 procedure TJvCustomScheduledEvents.SetAppStorage(Value: TJvCustomAppStorage);
 begin
-  FAppStorage := Value;
-  if Assigned(FAppStorage) then
-    FAppStorage.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FAppStorage));
 end;
 
 procedure TJvCustomScheduledEvents.Notification(AComponent: TComponent; Operation: TOperation);

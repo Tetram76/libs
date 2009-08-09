@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockingReg.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvDockingReg.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvDockingReg;
 
@@ -42,11 +42,7 @@ uses
   {$ELSE}
   DsgnIntf,
   {$ENDIF COMPILER6_UP}
-  {$IFDEF USEJVCL}
   JvDsgnConsts,
-  {$ELSE}
-  JvDockGlobals,
-  {$ENDIF USEJVCL}
   JvDockControlForm, JvDockPropertyEditors, JvDockVIDStyle,
   JvDockDelphiStyle, JvDockVCStyle, JvDockVIDVCStyle, JvDockVSNetStyle;
 
@@ -54,10 +50,6 @@ procedure Register;
 begin
   RegisterComponents(RsPaletteDocking, [TJvDockServer, TJvDockClient,
     TJvDockDelphiStyle,TJvDockVCStyle, TJvDockVIDStyle, TJvDockVIDVCStyle, TJvDockVSNetStyle]);
-  {$IFNDEF USEJVCL}
-  RegisterComponentEditor(TJvDockBaseControl, TJvDockControlEditor);
-  RegisterComponentEditor(TJvDockBasicStyle, TJvDockStyleEditor);
-  {$ENDIF !USEJVCL}
   RegisterComponentEditor(TJvDockVIDTabPageControl, TJvDockVIDTabPageControlEditor);
   RegisterComponentEditor(TJvDockVIDTabSheet, TJvDockVIDTabPageControlEditor);
 

@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEditToHtml.pas 12274 2009-04-15 18:39:07Z ahuser $
+// $Id: JvRichEditToHtml.pas 12404 2009-07-21 09:25:50Z obones $
 
 unit JvRichEditToHtml;
 
@@ -105,8 +105,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEditToHtml.pas $';
-    Revision: '$Revision: 12274 $';
-    Date: '$Date: 2009-04-15 20:39:07 +0200 (mer., 15 avr. 2009) $';
+    Revision: '$Revision: 12404 $';
+    Date: '$Date: 2009-07-21 11:25:50 +0200 (mar., 21 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -539,11 +539,11 @@ function TJvRichEditToHtml.ParaToHtml(Value: TJvRichEditParaAttributesRec): stri
 begin
   case Value.Alignment of
     paLeftJustify:
-      Result := 'ALIGN="LEFT"';
+      Result := 'STYLE="text-align: left;"';
     paRightJustify:
-      Result := 'ALIGN="RIGHT"';
+      Result := 'STYLE="text-align: right;"';
     paCenter:
-      Result := 'ALIGN="CENTER"';
+      Result := 'STYLE="text-align: center;"';
   end;
   if Value.Numbering = nsBullet then
   begin

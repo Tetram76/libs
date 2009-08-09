@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgMultiResourceEditorForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgMultiResourceEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgMultiResourceEditorForm;
 
@@ -69,18 +69,10 @@ var
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvDsgnConsts;
-{$ENDIF USEJVCL}
 
 {$R *.dfm}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsCellControlCaption = 'Control';
-  RsCellDefaultCaption = 'Default';
-{$ENDIF !USEJVCL}
 
 function TJvgResourcesProperty.GetAttributes: TPropertyAttributes;
 begin

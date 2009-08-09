@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMergeManager.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvMergeManager.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvMergeManager;
 
@@ -111,13 +111,14 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMergeManager.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
 
 
 //=== { TJvMergeManager } ====================================================
@@ -176,13 +177,8 @@ end;
 
 procedure TJvMergeManager.SetMergeFrame(Value: TWinControl);
 begin
-  if FMergeFrame <> Value then
-  begin
-    FMergeFrame := Value;
-    if Value <> nil then
-      Value.FreeNotification(Self);
+  if ReplaceComponentReference (Self, Value, TComponent(FMergeFrame)) then
     FFormHistory.ResetHistory;
-  end;
 end;
 
 function TJvMergeManager.GetActiveForm: TCustomForm;

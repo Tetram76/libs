@@ -55,7 +55,7 @@ Changes:
 Known Issues:
 * AutoSize calculations aren't correct when RoundedFrame and/or Shadow are active
 -----------------------------------------------------------------------------}
-// $Id: JvLabel.pas 12086 2008-12-22 13:09:46Z obones $
+// $Id: JvLabel.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvLabel;
 
@@ -322,8 +322,8 @@ procedure CalculateAngleInfo(Canvas: TCanvas; Angle: Integer; Text: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLabel.pas $';
-    Revision: '$Revision: 12086 $';
-    Date: '$Date: 2008-12-22 14:09:46 +0100 (lun., 22 déc. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -641,7 +641,7 @@ begin
   ColorShadow := FShadowColor;
   if not Enabled then
   begin
-    if (FShadowSize = 0) and NewStyleControls then
+    if FShadowSize = 0 then
     begin
       PosShadow := spRightBottom;
       SizeShadow := 1;
@@ -1050,9 +1050,7 @@ end;
 
 procedure TJvCustomLabel.SetFocusControl(Value: TWinControl);
 begin
-  FFocusControl := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FFocusControl));
   if FShowFocus then
     Invalidate;
 end;
@@ -1278,17 +1276,7 @@ begin
   if FImages <> Value then
   begin
     NonProviderChange;
-    if FImages <> nil then
-    begin
-      FImages.RemoveFreeNotification(Self);
-      FImages.UnRegisterChanges(FChangeLink);
-    end;
-    FImages := Value;
-    if FImages <> nil then
-    begin
-      FImages.FreeNotification(Self);
-      FImages.RegisterChanges(FChangeLink);
-    end;
+    ReplaceImageListReference(Self, Value, FImages, FChangeLink);
     if AutoSize then
     begin
       FNeedsResize := True;

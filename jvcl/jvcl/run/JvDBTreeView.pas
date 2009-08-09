@@ -41,7 +41,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvDBTreeView.pas 12257 2009-03-23 21:08:54Z ahuser $
+// $Id: JvDBTreeView.pas 12351 2009-06-28 17:13:38Z jfudickar $
 
 unit JvDBTreeView;
 
@@ -283,8 +283,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBTreeView.pas $';
-    Revision: '$Revision: 12257 $';
-    Date: '$Date: 2009-03-23 22:08:54 +0100 (lun., 23 mars 2009) $';
+    Revision: '$Revision: 12351 $';
+    Date: '$Date: 2009-06-28 19:13:38 +0200 (dim., 28 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -306,11 +306,20 @@ const
   DefaultValidMasterFields = [ftSmallInt, ftInteger, ftAutoInc, ftWord, ftFloat, ftString, ftWideString, ftBCD
     {$IFDEF COMPILER6_UP}, ftFMTBCD{$ENDIF}];
   DefaultValidDetailFields = DefaultValidMasterFields;
-  DefaultValidItemFields = [ftString, ftWideString, ftMemo, ftSmallInt, ftInteger, ftAutoInc,
+  DefaultValidItemFields = [ftString, ftWideString, ftMemo, ftFmtMemo, ftSmallInt, ftInteger, ftAutoInc,
     ftWord, ftBoolean, ftFloat, ftCurrency, ftDate, ftTime, ftDateTime, ftBCD
-	{$IFDEF COMPILER6_UP}, ftFMTBCD{$ENDIF}];
+	{$IFDEF COMPILER6_UP}, ftFMTBCD{$ENDIF}
+  {$IFDEF COMPILER10_UP}
+  , ftFixedWideChar, ftWideMemo, ftOraTimeStamp
+  {$ENDIF COMPILER10_UP}
+  {$IFDEF COMPILER12_UP}
+  ,ftLongWord, ftShortint, ftByte, ftExtended
+  {$ENDIF COMPILER12_UP}];
   DefaultValidIconFields = [ftSmallInt, ftAutoInc, ftInteger, ftWord, ftBCD
-	{$IFDEF COMPILER6_UP}, ftFMTBCD{$ENDIF}];
+	{$IFDEF COMPILER6_UP}, ftFMTBCD{$ENDIF}
+  {$IFDEF COMPILER12_UP}
+  ,ftLongWord, ftShortint
+  {$ENDIF COMPILER12_UP}];
 
 function Var2Type(V: Variant; const VarType: Integer): Variant;
 begin
@@ -526,6 +535,8 @@ begin
   if Value = FDataLink.DataSource then
     Exit;
   Items.Clear;
+  if FDataLink.DataSource <> nil then
+    FDataLink.DataSource.RemoveFreeNotification(Self);
   FDataLink.DataSource := Value;
   if Value <> nil then
     Value.FreeNotification(Self);

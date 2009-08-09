@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTComponents.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvMTComponents.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvMTComponents;
 
@@ -30,24 +30,16 @@ unit JvMTComponents;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes, SyncObjs,
   Consts,
-  {$IFDEF USEJVCL}
   JvComponentBase,
-  {$ENDIF USEJVCL}
   JvMTThreading, JvMTConsts, JvMTData, JvMTSync, JvMTSyncMon;
 
 type
-  {$IFDEF USEJVCL}
   TJvMTComponent = class(TJvComponent);
-  {$ELSE}
-  TJvMTComponent = class(TComponent);
-  {$ENDIF USEJVCL}
   TJvMTSingleThread = class(TMTThread);
   TJvMTThread = class;
 
@@ -245,32 +237,20 @@ type
     property Condition[ID: Integer]: TMTCondition read GetCondition; default;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTComponents.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
-  JvResources;
-{$ENDIF USEJVCL}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsENoThreadManager = 'No ThreadManager specified';
-  RsEOperatorNotAvailable = 'Operation not available while thread is active';
-  RsECannotChangePropertySection = 'Cannot change property of active section';
-  RsECannotChangePropertyBuffer = 'Cannot change property of active buffer';
-{$ENDIF !USEJVCL}
+  JvResources, JvJVCLUtils;
 
 constructor TJvMTManager.Create(AOwner: TComponent);
 begin
@@ -356,13 +336,7 @@ end;
 
 procedure TJvMTManagedComponent.SetManager(Value: TJvMTManager);
 begin
-  if Assigned(FManager) then
-    FManager.RemoveFreeNotification(Self);
-
-  FManager := Value;
-
-  if Assigned(FManager) then
-    FManager.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FManager));
 end;
 
 //=== { TJvMTThread } ========================================================
@@ -824,7 +798,6 @@ begin
   FMonitor.Leave;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -832,6 +805,5 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThread.pas 12262 2009-04-01 21:48:36Z jfudickar $
+// $Id: JvThread.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvThread;
 
@@ -75,7 +75,6 @@ type
 
   TJvCustomThreadDialogForm = class(TJvForm)
   private
-    FConnectedDataComponent: TComponent;
     FConnectedDataObject: TObject;
     FConnectedThread: TJvThread;
     FDialogOptions: TJvCustomThreadDialogOptions;
@@ -84,11 +83,14 @@ type
     FInternalTimer: TTimer;
     FInternalTimerInterval: Integer;
     FOnClose: TCloseEvent;
+    FSaveOnClose: TCloseEvent;
     FOnCloseQuery: TCloseQueryEvent;
     FOnPressCancel: TJvThreadCancelEvent;
     FOnShow: TNotifyEvent;
+    FSaveOnShow: TNotifyEvent;
     FParentHandle: HWND;
     procedure CloseThreadForm;
+    function GetConnectedDataComponent: TComponent;
     procedure SetConnectedDataComponent(Value: TComponent);
     procedure SetConnectedDataObject(Value: TObject);
     procedure SetInternalTimerInterval(Value: Integer);
@@ -98,21 +100,23 @@ type
     procedure CreateParams(var Params: TCreateParams); override;
     procedure InitializeFormContents; virtual;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    procedure ReplaceFormClose(Sender: TObject; var Action: TCloseAction);
+    procedure ReplaceFormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    procedure ReplaceFormShow(Sender: TObject);
     procedure TransferDialogOptions; virtual;
     procedure UpdateFormContents; virtual;
     property FormIsShown: Boolean read FFormIsShown default False;
     property OnPressCancel: TJvThreadCancelEvent read FOnPressCancel
         write FOnPressCancel;
+
   public
     constructor CreateNew(AOwner: TComponent; Dummy: Integer = 0); override;
     constructor CreateNewFormStyle(AOwner: TJvThread; FormStyle: TFormStyle;
       Parent: TWinControl = nil); virtual;
     destructor Destroy; override;
     procedure DefaultCancelBtnClick(Sender: TObject);
-    procedure ReplaceFormClose(Sender: TObject; var Action: TCloseAction);
-    procedure ReplaceFormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure ReplaceFormShow(Sender: TObject);
-    property ConnectedDataComponent: TComponent read FConnectedDataComponent write SetConnectedDataComponent;
+    property ConnectedDataComponent: TComponent read GetConnectedDataComponent
+        write SetConnectedDataComponent;
     property ConnectedDataObject: TObject read FConnectedDataObject write SetConnectedDataObject;
     property ConnectedThread: TJvThread read FConnectedThread;
     property DialogOptions: TJvCustomThreadDialogOptions read FDialogOptions write
@@ -186,6 +190,7 @@ type
   private
     FAfterCreateDialogForm: TJvCustomThreadDialogFormEvent;
     FBeforeResume: TNotifyEvent;
+    FConnectedDataObject: TObject;
     FDisalbeDialogShowDelayCounter: Integer;
     FThreads: TThreadList;
     FListLocker: TCriticalSection;
@@ -213,7 +218,11 @@ type
     function GetReturnValue: Integer;  // in context of thread in list - get return value (slower)
     procedure CreateThreadDialogForm;
     procedure CloseThreadDialogForm;
+    function GetConnectedDataComponent: TComponent;
     function GetCurrentThread: TJvBaseThread;
+    procedure SetConnectedDataComponent(Value: TComponent);
+    procedure SetConnectedDataObject(Value: TObject);
+    procedure SetThreadDialog(const Value: TJvCustomThreadDialog);
     procedure ShowThreadDialogForm;
   protected
     procedure InternalAfterCreateDialogForm(DialogForm: TJvCustomThreadDialogForm); virtual;
@@ -235,6 +244,10 @@ type
     procedure Lock;   // for safe use of property Threads[]
     procedure Unlock;
 
+    property ConnectedDataComponent: TComponent read GetConnectedDataComponent
+        write SetConnectedDataComponent;
+    property ConnectedDataObject: TObject read FConnectedDataObject write
+        SetConnectedDataObject;
     property Count: Integer read GetCount;
     property Threads[Index: Integer]: TJvBaseThread read GetThreads;
     property LastThread: TJvBaseThread read GetCurrentThread; //GetLastThread;
@@ -282,7 +295,7 @@ type
     property RunOnCreate: Boolean read FRunOnCreate write FRunOnCreate;
     property FreeOnTerminate: Boolean read FFreeOnTerminate write FFreeOnTerminate;
     property Priority: TThreadPriority read FPriority write FPriority default tpNormal;
-    property ThreadDialog: TJvCustomThreadDialog read FThreadDialog write FThreadDialog;
+    property ThreadDialog: TJvCustomThreadDialog read FThreadDialog write SetThreadDialog;
     property AfterCreateDialogForm: TJvCustomThreadDialogFormEvent
       read FAfterCreateDialogForm write FAfterCreateDialogForm;
     property BeforeResume: TNotifyEvent read FBeforeResume write FBeforeResume;
@@ -305,8 +318,8 @@ procedure SynchronizeParams(Method: TJvNotifyParamsEvent; P: Pointer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThread.pas $';
-    Revision: '$Revision: 12262 $';
-    Date: '$Date: 2009-04-01 23:48:36 +0200 (mer., 01 avr. 2009) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -314,7 +327,7 @@ const
 implementation
 
 uses
-  JvResources;
+  JvResources, JvJVCLUtils;
 
 var
   SyncMtx: THandle = 0;
@@ -378,6 +391,8 @@ begin
     FConnectedThread := TJvThread(AOwner)
   else
     raise EJVCLException.CreateRes(@RsENotATJvThread);
+  FSaveOnShow := inherited OnShow;
+  FSaveOnClose := inherited OnClose;
   inherited OnShow := ReplaceFormShow;
   inherited OnClose := ReplaceFormClose;
   inherited OnCloseQuery := ReplaceFormCloseQuery;
@@ -431,6 +446,14 @@ begin
   ModalResult := mrNone;
 end;
 
+function TJvCustomThreadDialogForm.GetConnectedDataComponent: TComponent;
+begin
+  if Assigned(FConnectedDataObject) and (FConnectedDataObject is TComponent) then
+    Result := TComponent(ConnectedDataObject)
+  else
+    Result := nil;
+end;
+
 procedure TJvCustomThreadDialogForm.InitializeFormContents;
 begin
 end;
@@ -439,8 +462,8 @@ procedure TJvCustomThreadDialogForm.Notification(AComponent: TComponent; Operati
 begin
   inherited Notification(AComponent, Operation);
   if Operation = opRemove then
-    if AComponent = FConnectedDataComponent then
-      FConnectedDataComponent := nil;
+    if AComponent = FConnectedDataObject then
+      ConnectedDataObject := nil;
 end;
 
 procedure TJvCustomThreadDialogForm.OnInternalTimer(Sender: TObject);
@@ -485,6 +508,8 @@ begin
   Action := caFree;
   if Assigned(FOnClose) then
     FOnClose(Sender, Action);
+  if Assigned(FSaveOnClose) then
+    FSaveOnClose(Sender, Action);
 end;
 
 procedure TJvCustomThreadDialogForm.ReplaceFormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -504,6 +529,10 @@ begin
   InitializeFormContents;
   UpdateFormContents;
   FInternalTimer.Enabled := True;
+  if Assigned(FOnShow) then
+    FOnShow(Sender);
+  if Assigned(FSaveOnShow) then
+    FSaveOnShow(Sender);
 end;
 
 procedure TJvCustomThreadDialogForm.TransferDialogOptions;
@@ -516,11 +545,14 @@ procedure TJvCustomThreadDialogForm.UpdateFormContents;
 begin
 end;
 
-procedure TJvCustomThreadDialogForm.SetConnectedDataComponent(Value: TComponent);
+procedure TJvCustomThreadDialogForm.SetConnectedDataComponent(Value:
+    TComponent);
 begin
-  FConnectedDataComponent := Value;
-  if Assigned(Value) then
-    FreeNotification(Value);
+  if Assigned(FConnectedDataObject) and (FConnectedDataObject is TComponent) then
+    TComponent(FConnectedDataObject).RemoveFreeNotification(self);
+  ConnectedDataObject := Value;
+  if Assigned(FConnectedDataObject) and (FConnectedDataObject is TComponent) then
+    TComponent(FConnectedDataObject).FreeNotification(self);
 end;
 
 procedure TJvCustomThreadDialogForm.SetConnectedDataObject(Value: TObject);
@@ -596,6 +628,9 @@ begin
     else
     if AComponent = FThreadDialogForm then
       FThreadDialogForm := nil
+    else
+    if AComponent = FConnectedDataObject then
+      ConnectedDataObject := nil;
 end;
 
 function TJvThread.Execute(P: Pointer): TJvBaseThread;
@@ -1054,6 +1089,7 @@ begin
     if Assigned(FThreadDialogForm) then
     begin
       FreeNotification(FThreadDialogForm);
+      FThreadDialogForm.ConnectedDataObject := ConnectedDataObject;
       FThreadDialogForm.TransferDialogOptions;
       InternalAfterCreateDialogForm(FThreadDialogForm);
     end;
@@ -1091,6 +1127,14 @@ begin
   end;
 end;
 
+function TJvThread.GetConnectedDataComponent: TComponent;
+begin
+  if Assigned(FConnectedDataObject) and (FConnectedDataObject is TComponent) then
+    Result := TComponent(ConnectedDataObject)
+  else
+    Result := nil;
+end;
+
 procedure TJvThread.InternalAfterCreateDialogForm(DialogForm: TJvCustomThreadDialogForm);
 begin
   if Assigned(FAfterCreateDialogForm) then
@@ -1100,6 +1144,27 @@ end;
 function TJvThread.IsDialogShowDelayDisabled: Boolean;
 begin
   Result := FDisalbeDialogShowDelayCounter > 0;
+end;
+
+procedure TJvThread.SetConnectedDataComponent(Value: TComponent);
+begin
+  if Assigned(FConnectedDataObject) and (FConnectedDataObject is TComponent) then
+    TComponent(FConnectedDataObject).RemoveFreeNotification(self);
+  ConnectedDataObject := Value;
+  if Assigned(FConnectedDataObject) and (FConnectedDataObject is TComponent) then
+    TComponent(FConnectedDataObject).FreeNotification(self);
+end;
+
+procedure TJvThread.SetConnectedDataObject(Value: TObject);
+begin
+  FConnectedDataObject := Value;
+  if Assigned(FThreadDialogForm) then
+    FThreadDialogForm.ConnectedDataObject := Value;
+end;
+
+procedure TJvThread.SetThreadDialog(const Value: TJvCustomThreadDialog);
+begin
+  ReplaceComponentReference (Self, Value, TComponent(FThreadDialog));
 end;
 
 procedure TJvThread.ShowThreadDialogForm;

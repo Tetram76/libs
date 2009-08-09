@@ -37,7 +37,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEExceptionForm.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvBDEExceptionForm.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvBDEExceptionForm;
 
@@ -111,8 +111,8 @@ procedure DbErrorIntercept(
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEExceptionForm.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -163,10 +163,7 @@ begin
           FPrevOnException(Sender, E);
       end
       else
-        if NewStyleControls then
-          Application.ShowException(E)
-        else
-          MessageDlg(E.Message + '.', mtError, [mbOk], 0);
+        Application.ShowException(E);
     end;
   except
     { ignore any exceptions }

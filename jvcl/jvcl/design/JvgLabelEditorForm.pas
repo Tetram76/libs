@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgLabelEditorForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgLabelEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgLabelEditorForm;
 
@@ -180,19 +180,11 @@ var
 
 implementation
 
-{$IFDEF USEJVCL}
 uses
   JvDsgnConsts;
-{$ENDIF USEJVCL}
 
 {$R *.dfm}
-
 {$R JvgLabelEditorForm.res}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsEditLabel = 'Edit &Label...';
-{$ENDIF !USEJVCL}
 
 function IntToTextStyle(Tag: Integer): TglTextStyle;
 begin

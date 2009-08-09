@@ -27,7 +27,7 @@ Known Issues:
        example DecimalPlaces/Decimal, CheckMinValue (name indicates action?
        maybe better: TJvValidateEdit's HasMinValue) etc.
 -----------------------------------------------------------------------------}
-// $Id: JvBaseEdits.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvBaseEdits.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvBaseEdits;
 
@@ -39,9 +39,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  WinUtils, Variants,
-  {$ENDIF CLR}
   Windows, Messages, Classes, Controls, ImgList,
   JvToolEdit;
 
@@ -87,7 +84,7 @@ type
   protected
     procedure WMPaste(var Msg: TMessage); message WM_PASTE;
     procedure SetBeepOnError(Value: Boolean); override;
-    procedure SetText(const AValue: string); {$IFDEF CLR} reintroduce; {$ENDIF} virtual;
+    procedure SetText(const AValue: string); virtual;
     procedure EnabledChanged; override;
     procedure DoEnter; override;
     procedure DoExit; override;
@@ -309,8 +306,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseEdits.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -333,35 +330,15 @@ var
 type
   TJvPopupWindowAccessProtected = class(TJvPopupWindow);
 
-{$IFDEF CLR}
-function DecimalSeparator: AnsiChar;
-begin
-  Result := AnsiChar(SysUtils.DecimalSeparator[1]);
-end;
-
-function ThousandSeparator: Char;
-begin
-  Result := SysUtils.ThousandSeparator[1];
-end;
-{$ENDIF CLR}
-
 function IsValidFloat(const Value: string; var RetValue: Extended): Boolean;
 var
   I: Integer;
-  {$IFDEF CLR}
-  d: Double;
-  {$ENDIF CLR}
 begin
   Result := False;
   for I := 1 to Length(Value) do
     if not CharInSet(Value[I], [DecimalSeparator, '-', '+', '0'..'9', 'e', 'E']) then
       Exit;
-  {$IFDEF CLR}
-  Result := TryStrToFloat(Value, d);
-  RetValue := d;
-  {$ELSE}
   Result := TextToFloat(PChar(Value), RetValue, fvExtended);
-  {$ENDIF CLR}
 end;
 
 function FormatFloatStr(const S: string; Thousands: Boolean): string;
@@ -379,11 +356,7 @@ begin
   I := Pos(DecimalSeparator, S);
   if I > 0 then
     MaxSym := I - 1;
-  {$IFDEF CLR}
-  I := Pos('E', UpperCase(S));
-  {$ELSE}
   I := Pos('E', AnsiUpperCase(S));
-  {$ENDIF CLR}
   if I > 0 then
     MaxSym := Min(I - 1, MaxSym);
   Result := Copy(S, MaxSym + 1, MaxInt);
@@ -736,11 +709,7 @@ begin
       end;
     end;
     if RaiseOnError and (Result <> NewValue) then
-      {$IFDEF CLR}
-      raise ERangeError.CreateFmt(RsEOutOfRangeXFloat,
-      {$ELSE}
       raise ERangeError.CreateResFmt(@RsEOutOfRangeXFloat,
-      {$ENDIF CLR}
         [DecimalPlaces, FMinValue, DecimalPlaces, FMaxValue]);
   end;
 end;
@@ -956,7 +925,7 @@ end;
 procedure TJvCustomNumEdit.EnabledChanged;
 begin
   inherited EnabledChanged;
-  if NewStyleControls and not FFocused then
+  if not FFocused then
     Invalidate;
 end;
 

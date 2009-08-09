@@ -29,7 +29,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgListBox.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvgListBox.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvgListBox;
 
@@ -38,16 +38,12 @@ unit JvgListBox;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Classes, Graphics, Controls,
   Forms, Dialogs, StdCtrls, CommCtrl, ExtCtrls, ImgList,
-  {$IFDEF USEJVCL}
   JVCLVer,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgCommClasses, Jvg3DColors;
 
 const
@@ -63,9 +59,7 @@ type
 
   TJvgListBox = class(TCustomListBox)
   private
-    {$IFDEF USEJVCL}
     FAboutJVCL: TJVCLAboutInfo;
-    {$ENDIF USEJVCL}
     FAutoTransparentColor: TglAutoTransparentColor;
     FWallpaper: TBitmap;
     FWallpaperImage: TImage;
@@ -134,9 +128,7 @@ type
     property SelectedObject: Pointer read GetSelectedObject;
     property SelCount: Integer read GetSelCount;
   published
-    {$IFDEF USEJVCL}
     property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-    {$ENDIF USEJVCL}
     property Anchors;
     property Align;
     property BorderStyle;
@@ -210,23 +202,21 @@ type
     constructor Create(AOwner: TComponent); override;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgListBox.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
   Math,
-  JvgUtils;
+  JvgUtils, JvJVCLUtils;
 
 //=== { TJvgListBox } ========================================================
 
@@ -795,7 +785,7 @@ end;
 
 procedure TJvgListBox.SetWallpaperImage(Value: TImage);
 begin
-  FWallpaperImage := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FWallpaperImage));
   Invalidate;
 end;
 
@@ -1050,7 +1040,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -1058,7 +1047,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

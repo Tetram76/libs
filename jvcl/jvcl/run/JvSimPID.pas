@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSimPID.pas 10821 2006-07-20 19:26:15Z obones $
+// $Id: JvSimPID.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvSimPID;
 
@@ -133,13 +133,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimPID.pas $';
-    Revision: '$Revision: 10821 $';
-    Date: '$Date: 2006-07-20 21:26:15 +0200 (jeu., 20 juil. 2006) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+uses
+  JvJVCLUtils;
 
 
 constructor TJvSimPID.Create(AOwner: TComponent);
@@ -331,12 +334,7 @@ end;
 
 procedure TJvSimPID.SetSource(const Value: TJvSimPID);
 begin
-  if FSource <> Value then
-  begin
-    FSource := Value;
-    if FSource <> nil then
-      FSource.FreeNotification(Self);
-  end;
+  ReplaceComponentReference (Self, Value, TComponent(FSource));
 end;
 
 procedure TJvSimPID.Execute;

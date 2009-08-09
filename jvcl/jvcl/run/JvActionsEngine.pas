@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 11854 2008-08-08 21:04:19Z jfudickar $
+// $Id: JvActionsEngine.pas 12349 2009-06-28 16:05:18Z jfudickar $
 
 unit JvActionsEngine;
 
@@ -107,8 +107,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 11854 $';
-    Date: '$Date: 2008-08-08 23:04:19 +0200 (ven., 08 août 2008) $';
+    Revision: '$Revision: 12349 $';
+    Date: '$Date: 2009-06-28 18:05:18 +0200 (dim., 28 juin 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -123,7 +123,7 @@ uses
   {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
   {$ENDIF HAS_UNIT_VARIANTS}
-  JvResources;
+  JvResources, JvJVCLUtils;
 
 //=== { TJvActionEngineList } ========================================
 
@@ -239,7 +239,7 @@ begin
     else
       intValue := nil;
     Changed := FActionComponent <> intValue;
-    FActionComponent := intValue;
+    ReplaceComponentReference (Self, intValue, FActionComponent);
     if changed then
       ChangeActionComponent(FActionComponent);
   end;

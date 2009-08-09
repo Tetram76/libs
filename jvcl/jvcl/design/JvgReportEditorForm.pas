@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgReportEditorForm.pas 12128 2009-01-06 10:39:52Z obones $
+// $Id: JvgReportEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgReportEditorForm;
 
@@ -39,10 +39,7 @@ uses
   {$ELSE}
   DsgnIntf,
   {$ENDIF COMPILER6_UP}
-  {$IFDEF USEJVCL}
-  JvComponentBase, JvExControls,
-  {$ENDIF USEJVCL}
-  JvRuler,
+  JvComponentBase, JvExControls, JvRuler,
   JvgReport, JvgReportParamEditorForm;
 
 type
@@ -60,11 +57,7 @@ type
     function GetVerbCount: Integer; override;
   end;
 
-  {$IFDEF USEJVCL}
   TJvgReportEditor = class(TJvComponent)
-  {$ELSE}
-  TJvgReportEditor = class(TComponent)
-  {$ENDIF USEJVCL}
   private
     FReport: TJvgReport;
   protected
@@ -278,25 +271,13 @@ implementation
 
 uses
   Math,
-  {$IFDEF USEJVCL}
   JvDsgnConsts,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgUtils, JvgAlignFunction, JvgAlignForm;
 
 {$R *.dfm}
 
 const
   IGNORE_VALUE = 65536;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsConfirm = 'Confirm?';
-
-  RsEditReport = 'Edit report...';
-  RsPreviewReportEllipsis = 'Preview report...';
-  RsDeleteObject = 'Delete object?';
-  RsPagePreview = 'Page Preview';
-{$ENDIF !USEJVCL}
 
 //=== common proc ============================================================
 

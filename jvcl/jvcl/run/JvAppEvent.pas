@@ -32,7 +32,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppEvent.pas 11867 2008-08-17 19:30:33Z jfudickar $
+// $Id: JvAppEvent.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvAppEvent;
 
@@ -181,8 +181,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppEvent.pas $';
-    Revision: '$Revision: 11867 $';
-    Date: '$Date: 2008-08-17 21:30:33 +0200 (dim., 17 août 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -221,8 +221,7 @@ type
     procedure DoHint(Sender: TObject);
     procedure DoMinimize(Sender: TObject);
     procedure DoRestore(Sender: TObject);
-    function DoHelp(Command: Word; Data: {$IFDEF CLR} TObject {$ELSE} Longint {$ENDIF};
-      var CallHelp: Boolean): Boolean;
+    function DoHelp(Command: Word; Data: Longint; var CallHelp: Boolean): Boolean;
     procedure DoMessage(var Msg: TMsg; var Handled: Boolean);
     procedure DoShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure DoShowHint(var HintStr: THintString; var CanShow: Boolean;
@@ -418,8 +417,7 @@ begin
 end;
 
 
-function TJvAppEventList.DoHelp(Command: Word; Data: {$IFDEF CLR} TObject {$ELSE} Longint {$ENDIF};
-  var CallHelp: Boolean): Boolean;
+function TJvAppEventList.DoHelp(Command: Word; Data: Longint; var CallHelp: Boolean): Boolean;
 var
   I: Integer;
 begin

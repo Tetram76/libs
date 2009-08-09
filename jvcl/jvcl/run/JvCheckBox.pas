@@ -25,7 +25,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckBox.pas 12137 2009-01-09 13:24:08Z ahuser $
+// $Id: JvCheckBox.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvCheckBox;
 
@@ -37,9 +37,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  Types,
-  {$ENDIF CLR}
   Windows, Messages, Classes, Graphics, Controls, StdCtrls,
   JvTypes, JvExStdCtrls, JvLinkedControls, JvDataSourceIntf;
 
@@ -149,8 +146,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckBox.pas $';
-    Revision: '$Revision: 12137 $';
-    Date: '$Date: 2009-01-09 14:24:08 +0100 (ven., 09 janv. 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -377,11 +374,7 @@ begin
     Exit;
   ASize := GetDefaultCheckBoxSize;
   // add some spacing
-  {$IFDEF CLR}
-  ASize.cy := ASize.cy + 4;
-  {$ELSE}
   Inc(ASize.cy, 4);
-  {$ENDIF CLR}
   FCanvas.Font := Font;
   R := Rect(0, 0, ClientWidth, ClientHeight);
   // This is slower than GetTextExtentPoint but it does consider hotkeys

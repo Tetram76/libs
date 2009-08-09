@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExceptionForm.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvExceptionForm.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvExceptionForm;
 
@@ -86,8 +86,8 @@ procedure JvErrorIntercept;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvExceptionForm.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -129,10 +129,7 @@ begin
     end
     else
     begin
-      if NewStyleControls then
-        Application.ShowException(E)
-      else
-        MessageDlg(E.Message + '.', mtError, [mbOk], 0);
+      Application.ShowException(E);
     end;
   except
     { ignore any exceptions }

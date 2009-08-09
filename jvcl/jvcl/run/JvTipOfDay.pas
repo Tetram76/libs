@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTipOfDay.pas 11830 2008-07-23 17:34:56Z obones $
+// $Id: JvTipOfDay.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvTipOfDay;
 
@@ -159,8 +159,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTipOfDay.pas $';
-    Revision: '$Revision: 11830 $';
-    Date: '$Date: 2008-07-23 19:34:56 +0200 (mer., 23 juil. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -170,7 +170,7 @@ implementation
 uses
   SysUtils, Windows, ExtCtrls, Dialogs,
   JvWndProcHook,
-  JvButton, JvResources, JvComponent;
+  JvButton, JvResources, JvComponent, JvJVCLUtils;
 
 {$R JvTipOfDay.res}
 
@@ -227,7 +227,7 @@ end;
 
 procedure TJvTipOfDay.SetAppStorage(Value: TJvCustomAppStorage);
 begin
-  FAppStorage := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FAppStorage));
 end;
 
 procedure TJvTipOfDay.AutoExecute;

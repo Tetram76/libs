@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgLogicsEditorForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgLogicsEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgLogicsEditorForm;
 
@@ -171,22 +171,12 @@ implementation
 
 uses
   Clipbrd,
-  {$IFDEF USEJVCL}
-  JvDsgnConsts,
-  {$ENDIF USEJVCL}
-  JvgTypes, JvgUtils, JvgLogicItemEditorForm;
+  JvDsgnConsts, JvgTypes, JvgUtils, JvgLogicItemEditorForm;
 
 {$R *.dfm}
 
 var
   JvgLogicItemEditor: TJvgLogicItemEditor;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsCaption = 'Caption';
-  RsComments = 'Comments';
-  RsEditComponentEllipsis = 'Edit component...';
-{$ENDIF !USEJVCL}
 
 //=== { TJvgLogicsEditorMain } ===============================================
 

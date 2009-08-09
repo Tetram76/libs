@@ -32,7 +32,7 @@ HOW TO USE THIS COMPONENT:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridFooter.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvDBGridFooter.pas 12368 2009-07-03 09:57:05Z obones $
 
 unit JvDBGridFooter;
 
@@ -145,11 +145,12 @@ type
   protected
     procedure JvDBGridLayoutChanged(Grid: TJvDBGrid; Kind: TJvDBGridLayoutChangeKind); dynamic;
 
-    procedure ReCalc;
     procedure DrawPanels; dynamic;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    procedure ReCalc;
   published
     property Columns: TFooterColumns read FColumns write SetColumns;
     property DataSource: TDataSource read GetDataSource write SetDataSource;
@@ -168,8 +169,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGridFooter.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12368 $';
+    Date: '$Date: 2009-07-03 11:57:05 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -406,6 +407,8 @@ begin
   if Assigned(DBGrid) then
     if Value <> DBGrid.DataSource then
       Value := DBGrid.DataSource;
+  if FDataLink.DataSource <> nil then
+    FDataLink.DataSource.RemoveFreeNotification(Self);
   FDataLink.DataSource := Value;
   if Value <> nil then
     Value.FreeNotification(Self);

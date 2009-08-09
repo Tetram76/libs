@@ -18,7 +18,7 @@ Contributor(s):
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvManagedThreadsReg.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvManagedThreadsReg.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvManagedThreadsReg;
 
@@ -28,9 +28,7 @@ interface
 
 uses
   Classes,
-  {$IFDEF USEJVCL}
   JvDsgnConsts,
-  {$ENDIF USEJVCL}
   JvMTComponents;
 
 procedure Register;
@@ -38,11 +36,6 @@ procedure Register;
 implementation
 
 {$R JvManagedThreadsReg.dcr}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsPaletteMTThreads = 'Jv Threading';
-{$ENDIF !USEJVCL}
 
 procedure Register;
 begin

@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Jvg3DColors.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: Jvg3DColors.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit Jvg3DColors;
 
@@ -31,11 +31,9 @@ unit Jvg3DColors;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms;
 
 type
@@ -72,31 +70,22 @@ type
     constructor Create(AOwner: TComponent); override;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/Jvg3DColors.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
   Math,
-  {$IFDEF USEJVCL}
   JvConsts, JvResources,
-  {$ENDIF USEJVCL}
   JvgUtils, JvgTypes;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsEOnlyOneInstanceOfTJvg3DLocalColors = 'Cannot create more than one instance of TJvg3DLocalColors component';
-{$ENDIF !USEJVCL}
 
 //=== { TJvg3DLocalColors } ==================================================
 
@@ -177,7 +166,6 @@ begin
     raise Exception.CreateRes(@RsEOnlyOneInstanceOfTJvg3DLocalColors);
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -185,7 +173,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

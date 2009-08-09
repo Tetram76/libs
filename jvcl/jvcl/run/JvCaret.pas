@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCaret.pas 12129 2009-01-06 16:57:19Z ahuser $
+// $Id: JvCaret.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvCaret;
 
@@ -94,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCaret.pas $';
-    Revision: '$Revision: 12129 $';
-    Date: '$Date: 2009-01-06 17:57:19 +0100 (mar., 06 janv. 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -109,11 +109,7 @@ constructor TJvCaret.Create(Owner: TWinControl);
 begin
   inherited Create;
   if not Assigned(Owner) then
-    {$IFDEF CLR}
-    raise EJVCLException.CreateFmt(RsEInvalidCaretOwner, [ClassName]);
-    {$ELSE}
     raise EJVCLException.CreateResFmt(@RsEInvalidCaretOwner, [ClassName]);
-    {$ENDIF CLR}
   FCaretOwner := Owner;
   FCaretBitmap := TBitmap.Create;
 end;

@@ -31,7 +31,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvScrollMax.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvScrollMax.pas 12393 2009-07-09 11:30:46Z obones $
 
 unit JvScrollMax;
 
@@ -318,8 +318,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScrollMax.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12393 $';
+    Date: '$Date: 2009-07-09 13:30:46 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -847,7 +847,10 @@ end;
 
 function TJvScrollMaxBand.CollapsedHeight: Integer;
 begin
-  Result := FButton.BoundsRect.Bottom + FButton.Top;
+  if ButtonVisible then
+    Result := FButton.BoundsRect.Bottom + FButton.Top
+  else
+    Result := 0;
 end;
 
 procedure TJvScrollMaxBand.UpdateSize(ATop: Integer);

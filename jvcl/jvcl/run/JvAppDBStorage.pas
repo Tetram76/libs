@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppDBStorage.pas 12090 2008-12-22 14:10:54Z obones $
+// $Id: JvAppDBStorage.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvAppDBStorage;
 
@@ -38,9 +38,7 @@ uses
   Variants,
   {$ENDIF HAS_UNIT_VARIANTS}
   DBCtrls,
-  {$IFNDEF CLR}
   JclBase,
-  {$ENDIF !CLR}
   JvAppStorage, JvTypes;
 
 // DB table must contain 3 fields for the storage
@@ -62,8 +60,8 @@ type
     FOnRead: TJvDBStorageReadEvent;
     FOnWrite: TJvDBStorageWriteEvent;
     FBookmark: {$IFDEF RTL200_UP}TBookmark{$ELSE}TBookmarkStr{$ENDIF RTL200_UP};
+    FDataSource: TDataSource;
     procedure SetDataSource(const Value: TDataSource);
-    function GetDataSource: TDataSource;
     function GetKeyField: string;
     function GetSectionField: string;
     function GetValueField: string;
@@ -103,7 +101,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   protected
-    property DataSource: TDataSource read GetDataSource write SetDataSource;
+    property DataSource: TDataSource read FDataSource write SetDataSource;
     property KeyField: string read GetKeyField write SetKeyField;
     property SectionField: string read GetSectionField write SetSectionField;
     property ValueField: string read GetValueField write SetValueField;
@@ -130,8 +128,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppDBStorage.pas $';
-    Revision: '$Revision: 12090 $';
-    Date: '$Date: 2008-12-22 15:10:54 +0100 (lun., 22 déc. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -143,7 +141,7 @@ uses
   Windows,
   {$ENDIF SUPPORTS_INLINE}
   JclMime,
-  JvJCLUtils, JvResources, JclStrings;
+  JvJCLUtils, JvResources, JclStrings, JvJVCLUtils;
 
 constructor TJvCustomAppDBStorage.Create(AOwner: TComponent);
 begin
@@ -291,11 +289,6 @@ begin
   Result := (FSectionLink.Field <> nil) and (FKeyLink.Field <> nil) and (FValueLink.Field <> nil);
 end;
 
-function TJvCustomAppDBStorage.GetDataSource: TDataSource;
-begin
-  Result := FSectionLink.DataSource;
-end;
-
 function TJvCustomAppDBStorage.GetKeyField: string;
 begin
   Result := FKeyLink.FieldName;
@@ -392,8 +385,7 @@ begin
     FKeyLink.DataSource := Value;
     FValueLink.DataSource := Value;
   end;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(fDatasource));
 end;
 
 procedure TJvCustomAppDBStorage.SetKeyField(const Value: string);

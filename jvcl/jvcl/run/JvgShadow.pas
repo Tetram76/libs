@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgShadow.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvgShadow.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvgShadow;
 
@@ -31,24 +31,16 @@ unit JvgShadow;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Controls, Graphics, Forms, Dialogs,
   StdCtrls, ExtCtrls, SysUtils, Mask,
-  {$IFDEF USEJVCL}
   JvComponent,
-  {$ENDIF USEJVCL}
   JvgCommClasses, JvgTypes, Jvg3DColors;
 
 type
-  {$IFDEF USEJVCL}
   TJvgShadow = class(TJvGraphicControl)
-  {$ELSE}
-  TJvgShadow = class(TGraphicControl)
-  {$ENDIF USEJVCL}
   private
     FControl: TControl;
     FStyle: TJvgTextBoxStyle;
@@ -123,22 +115,20 @@ type
     property OnControlExit: TNotifyEvent read FOnExit write FOnExit;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgShadow.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
-  JvgUtils;
+  JvgUtils, JvJVCLUtils;
 
 constructor TJvgShadow.Create(AOwner: TComponent);
 begin
@@ -371,8 +361,7 @@ end;
 
 procedure TJvgShadow.SetControl(Value: TControl);
 begin
-  if Value <> Self then
-    FControl := Value;
+  ReplaceComponentReference (Self, Value, TComponent(fControl));
   if FControl is TWinControl then
   begin
     TJvgPublicWinControl(FControl).OnEnter := ControlEnter;
@@ -522,7 +511,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -530,7 +518,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

@@ -31,7 +31,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgAskListBox.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvgAskListBox.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvgAskListBox;
 
@@ -40,16 +40,12 @@ unit JvgAskListBox;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, CommCtrl, ExtCtrls,
-  {$IFDEF USEJVCL}
   JVCLVer,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgCommClasses;
 
 type
@@ -59,9 +55,7 @@ type
 
   TJvgAskListBox = class(TCustomListBox)
   private
-    {$IFDEF USEJVCL}
     FAboutJVCL: TJVCLAboutInfo;
-    {$ENDIF USEJVCL}
     FAutoTransparentColor: TglAutoTransparentColor;
     FWallpaper: TBitmap;
     FWallpaperImage: TImage;
@@ -129,9 +123,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
-    {$IFDEF USEJVCL}
     property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-    {$ENDIF USEJVCL}
     property Align;
     property BorderStyle;
     property Color;
@@ -186,31 +178,21 @@ type
     property Options: TglAskLBOptions read FOptions write SetOptions;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgAskListBox.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
-  {$IFDEF USEJVCL}
   JvConsts, JvJCLUtils, JvResources,
-  {$ENDIF USEJVCL}
-  JvgUtils;
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsYes = 'yes';
-  RsNo = 'no';
-{$ENDIF !USEJVCL}
+  JvgUtils, JvJVCLUtils;
 
 constructor TJvgAskListBox.Create(AOwner: TComponent);
 begin
@@ -657,7 +639,7 @@ end;
 
 procedure TJvgAskListBox.SetWallpaperImage(Value: TImage);
 begin
-  FWallpaperImage := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FWallpaperImage));
   if (not IsItAFilledBitmap(FWallpaper)) and Assigned(Value) then
   begin
     WallpaperBmp := Value.Picture.Bitmap;
@@ -700,7 +682,7 @@ end;
 procedure TJvgAskListBox.SetGlyphs(Value: TImageList);
 begin
   //if (Value=nil)or(Value.Width<=0)or(Value.Height<=0) then Exit;
-  FGlyphs := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FGlyphs));
   if FShowGlyphs then
     Invalidate;
 end;
@@ -978,7 +960,6 @@ begin
     Glyphs := nil;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -986,7 +967,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

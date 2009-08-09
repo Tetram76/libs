@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCrossTable.pas 10855 2006-07-31 08:24:21Z obones $
+// $Id: JvgCrossTable.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 //  Компонент позволяет печатать так называемые Cross Tables, разбивая крупные
 //  таблицы на несколько листов как по ширине, так и по высоте.
@@ -185,16 +185,12 @@ unit JvgCrossTable;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Controls, Graphics, Buttons, Dialogs,
   StdCtrls, ExtCtrls, SysUtils, Forms, DB, DBCtrls, Menus, DBTables, Printers,
-  {$IFDEF USEJVCL}
   JvComponentBase,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgCommClasses, JvgUtils;
 
 const
@@ -292,11 +288,7 @@ type
     property _Bottom: Single read FBottom write FBottom;
   end;
 
-  {$IFDEF USEJVCL}
   TJvgPrintCrossTable = class(TJvComponent)
-  {$ELSE}
-  TJvgPrintCrossTable = class(TComponent)
-  {$ENDIF USEJVCL}
   private
     FDataSet: TDataSet;
     FColumnFieldName: string;
@@ -404,22 +396,20 @@ type
     property TitleAlignment: TAlignment read FTitleAlignment write FTitleAlignment;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCrossTable.pas $';
-    Revision: '$Revision: 10855 $';
-    Date: '$Date: 2006-07-31 10:24:21 +0200 (lun., 31 juil. 2006) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
-  Math;
+  Math, JvJVCLUtils;
 
 const
   MAX_COLS = 1024;
@@ -1172,7 +1162,7 @@ end;
 
 procedure TJvgPrintCrossTable.SetDataSet(Value: TDataSet);
 begin
-  FDataSet := Value;
+  ReplaceComponentReference (Self, Value, TComponent(FDataSet));
 end;
 
 procedure TJvgPrintCrossTable.SetColumnFieldName(const Value: string);
@@ -1195,7 +1185,6 @@ begin
   FOptions := Value;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -1203,7 +1192,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

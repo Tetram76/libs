@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataProvider.pas 11979 2008-10-24 20:42:46Z ahuser $
+// $Id: JvDataProvider.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvDataProvider;
 
@@ -43,8 +43,6 @@ uses
   JclBase,
   JvComponentBase, JvDataProviderIntf;
 
-{$IFDEF CLR}
-{$ELSE}
 type
   // Forwards
   TExtensibleInterfacedPersistent = class;
@@ -1209,14 +1207,12 @@ function HexBytes(const Buf; Length: Integer): string;
 // Move to other unit? Render text in a disabled way (much like TLabel does)
 procedure DisabledTextRect(ACanvas: TCanvas; var ARect: TRect; Left, Top: Integer; Text: string);
 
-{$ENDIF CLR}
-
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDataProvider.pas $';
-    Revision: '$Revision: 11979 $';
-    Date: '$Date: 2008-10-24 22:42:46 +0200 (ven., 24 oct. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1234,8 +1230,6 @@ uses
   JclStrings,
   JvTypes, JvConsts, JvResources, JvJCLUtils;
 
-{$IFDEF CLR}
-{$ELSE}
 const
   vifHasChildren = Integer($80000000);
   vifCanHaveChildren = Integer($40000000);
@@ -5581,14 +5575,10 @@ begin
   // Do not allow the consumer view list to be modified this way.
 end;
 
-{$ENDIF CLR}
-
 //============================================================================
 
 procedure Init;
 begin
-{$IFDEF CLR}
-{$ELSE}
   {$IFDEF COMPILER7_UP}
   GroupDescendentsWith(TExtensibleInterfacedPersistent, TControl);
   GroupDescendentsWith(TAggregatedPersistent, TControl);
@@ -5606,7 +5596,6 @@ begin
     TJvDataContexts,
     // Context related
     TJvDataContext, TJvManagedDataContext, TJvFixedDataContext]);
-{$ENDIF CLR}
 end;
 
 initialization

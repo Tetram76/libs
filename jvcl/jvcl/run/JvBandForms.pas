@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandForms.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvBandForms.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvBandForms;
 
@@ -292,8 +292,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBandForms.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -301,7 +301,7 @@ const
 implementation
 
 uses
-  JvJCLUtils;
+  JvJCLUtils, JvJVCLUtils;
 
 constructor TJvBandForm.Create(AOwner: TComponent);
 begin
@@ -382,10 +382,7 @@ end;
 
 procedure TJvBandForm.SetContextMenu(const Value: TPopupMenu);
 begin
-  FBandContextMenu := Value;
-  if Value = nil then
-    Exit;
-  Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FBandContextMenu));
 end;
 
 procedure TJvBandForm.Notification(AComponent: TComponent;

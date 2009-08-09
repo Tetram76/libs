@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBFindEdit.pas 12079 2008-12-19 08:56:19Z obones $
+// $Id: JvDBFindEdit.pas 12297 2009-04-29 17:02:25Z obones $
 
 unit JvDBFindEdit;
 
@@ -134,8 +134,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBFindEdit.pas $';
-    Revision: '$Revision: 12079 $';
-    Date: '$Date: 2008-12-19 09:56:19 +0100 (ven., 19 déc. 2008) $';
+    Revision: '$Revision: 12297 $';
+    Date: '$Date: 2009-04-29 19:02:25 +0200 (mer., 29 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -377,7 +377,11 @@ end;
 procedure TJvDBFindEdit.SetDataSource(const Value: TDataSource);
 begin
   if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+  begin
+    if FDataLink.DataSource <> nil then
+      FDataLink.DataSource.RemoveFreeNotification(Self);
     FDataLink.DataSource := Value;
+  end;
   if Value <> nil then
     Value.FreeNotification(Self);
 end;

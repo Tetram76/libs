@@ -30,7 +30,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvListComb.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvListComb.pas 12392 2009-07-09 11:15:37Z ahuser $
 
 unit JvListComb;
 
@@ -157,8 +157,7 @@ type
     property Objects[Index: Integer]: TObject read GetObjects write SetObjects;
   end;
 
-  TJvImageComboBoxBase = TJvCustomComboBox;
-  TJvImageComboBox = class(TJvImageComboBoxBase, IUnknown, IJvResetItemHeight)
+  TJvImageComboBox = class(TJvCustomComboBox, IUnknown, IJvResetItemHeight)
   private
     FItems: TJvImageItems;
     FImageList: TCustomImageList;
@@ -176,6 +175,7 @@ type
     FDroppedWidth: Integer;
     FFullWidthItemDraw: Boolean;
     FCanvas: TControlCanvas;
+    FSorted: Boolean;
     function GetCanvas: TCanvas;
     function GetDroppedWidth: Integer;
     procedure SetDroppedWidth(Value: Integer);
@@ -190,6 +190,8 @@ type
     procedure SetFullWidthItemDraw(const Value: Boolean);
     { IJvResetItemHeight }
     procedure ResetItemHeight;
+    function GetSorted: Boolean;
+    procedure SetSorted(const Value: Boolean);
   protected
     procedure MouseEnter(AControl: TControl); override;
     procedure MouseLeave(AControl: TControl); override;
@@ -264,7 +266,7 @@ type
     property Provider;
     property ReadOnly;
     property ShowHint;
-    property Sorted;
+    property Sorted: Boolean read GetSorted write SetSorted default False;
     property Tag;
     property TabOrder;
     property TabStop;
@@ -391,8 +393,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListComb.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12392 $';
+    Date: '$Date: 2009-07-09 13:15:37 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -400,7 +402,7 @@ const
 implementation
 
 uses
-  Math;
+  Math, JvJVCLUtils;
 
 type
   TWinControlAccessProtected = class(TWinControl);
@@ -866,23 +868,7 @@ procedure TJvImageComboBox.SetImageList(Value: TCustomImageList);
 begin
   if FImageList <> Value then
   begin
-    if FImageList <> nil then
-      FImageList.UnRegisterChanges(FChangeLink);
-    FImageList := Value;
-
-    if FImageList <> nil then
-      FImageList.RegisterChanges(FChangeLink);
-
-{    if Assigned(FImageList) then
-    begin
-      FWidth := FImageList.Width;
-      FHeight := FImageList.Height;
-    end
-    else
-    begin
-      FWidth := 0;
-      FHeight := 0;
-    end; }
+    ReplaceImageListReference(Self, Value, FImageList, FChangeLink);
     ResetItemHeight;
     RecreateWnd;
   end;
@@ -896,7 +882,6 @@ begin
     Invalidate
   end;
 end;
-
 
 
 procedure TJvImageComboBox.CreateWnd;
@@ -1207,6 +1192,22 @@ begin
   FItems.Update(nil);
 end;
 
+function NamesSorter(Item1, Item2: TCollectionItem): Integer;
+begin
+  Result := CompareStr(Item1.DisplayName, Item2.DisplayName);
+end;
+
+procedure TJvImageComboBox.SetSorted(const Value: Boolean);
+begin
+  if FSorted <> Value then
+  begin
+    FSorted := Value;
+
+    if FSorted then
+      FItems.Sort(NamesSorter);
+  end;
+end;
+
 procedure TJvImageComboBox.SetIndentSelected(const Value: Boolean);
 begin
   if FIndentSelected <> Value then
@@ -1225,6 +1226,11 @@ begin
     Result := FImageList.Width
   else
     Result := FImageWidth;
+end;
+
+function TJvImageComboBox.GetSorted: Boolean;
+begin
+  Result := FSorted;
 end;
 
 function TJvImageComboBox.GetImageHeight(Index: Integer): Integer;
@@ -1288,25 +1294,8 @@ end;
 
 procedure TJvImageListBox.SetImageList(Value: TCustomImageList);
 begin
-  if FImageList <> Value then
+  if ReplaceImageListReference(Self, Value, FImageList, FChangeLink) then
   begin
-    if FImageList <> nil then
-      FImageList.UnRegisterChanges(FChangeLink);
-    FImageList := Value;
-
-    if FImageList <> nil then
-      FImageList.RegisterChanges(FChangeLink);
-
-{    if Assigned(FImageList) then
-    begin
-      FWidth := FImageList.Width;
-      FHeight := FImageList.Height;
-    end
-    else
-    begin
-      FWidth := 0;
-      FHeight := 0;
-    end;}
     ResetItemHeight;
     RecreateWnd;
   end;

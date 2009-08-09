@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBrowseFolder.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvBrowseFolder.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvBrowseFolder;
 
@@ -47,16 +47,8 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  System.Text, System.Runtime.InteropServices, System.Security,
-  {$ENDIF CLR}
   Windows, Messages, ShlObj, Classes,
   JvBaseDlg;
-
-{$IFDEF CLR}
-type
-  IUnknown = IInterface;
-{$ENDIF CLR}
 
 const
   { Interfaces from ShObjIdl.h }
@@ -214,8 +206,8 @@ type
     FOnValidateFailed: TJvValidateFailedEvent;
 
     { For hooking the control }
-    FDefWndProc: {$IFDEF CLR}TFNBFFCallBack{$ELSE}Pointer{$ENDIF};
-    FObjectInstance: {$IFDEF CLR}TFNWndProc{$ELSE}Pointer{$ENDIF};
+    FDefWndProc: Pointer;
+    FObjectInstance: Pointer;
     FPositionSet: Boolean;
 
     // (p3) updates the status text. NOTE: doesn't work if odNewDialogStyle is true (MS limitation)!!!
@@ -301,8 +293,8 @@ function BrowseComputer(var AComputerName: string; const DlgText: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBrowseFolder.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -311,27 +303,17 @@ implementation
 
 uses
   SysUtils, ActiveX, Controls, Forms, Consts, Graphics,
-  {$IFNDEF CLR}
   JclShell,
-  {$ENDIF ~CLR}
   JvJCLUtils, JvJVCLUtils, JvConsts, JvResources, JvTypes;
 
 
 
-{$IFDEF CLR}
-// .NET loads the library on first access
-[SuppressUnmanagedCodeSecurity, DllImport('SHFolder.dll', CharSet = CharSet.Ansi, SetLastError = True, EntryPoint = 'SHGetFolderPathA')]
-function SHGetFolderPathProc(hWnd: HWND; CSIDL: Integer; hToken: THandle;
-    dwFlags: DWORD; pszPath: StringBuilder): HResult; external;
-
-{$ELSE}
 type
   TSHGetFolderPathProc = function(hWnd: HWND; CSIDL: Integer; hToken: THandle;
     dwFlags: DWORD; pszPath: PChar): HResult; stdcall;
 
 var
   SHGetFolderPathProc: TSHGetFolderPathProc = nil;
-{$ENDIF CLR}
 
 const
   { Taken from ShlObj.h & ShObjIdl.h }
@@ -466,19 +448,6 @@ end;
 { From QDialogs.pas }
 
 function StrRetToString(PIDL: PItemIDList; StrRet: TStrRet): string;
-{$IFDEF CLR}
-begin
-  case StrRet.uType of
-    STRRET_CSTR:
-      Result := Marshal.PtrToStringAnsi(StrRet.cStr);
-    STRRET_OFFSET:
-      Result := Marshal.PtrToStringAnsi(Marshal.ReadIntPtr(PIDL.mkid.abID, StrRet.uOffset - SizeOf(PIDL.mkid.cb)),
-        PIDL.mkid.cb - StrRet.uOffset);
-    STRRET_WSTR:
-      Result := Marshal.PtrToStringBSTR(StrRet.pOleStr);
-  end;
-end;
-{$ELSE}
 var
   P: PChar;
 begin
@@ -494,7 +463,6 @@ begin
       Result := StrRet.pOleStr;
   end;
 end;
-{$ENDIF CLR}
 
 type
   TFromDirectoryData = record
@@ -674,8 +642,6 @@ const
     CanSimulate: False; Alternative: fdNoSpecialFolder)
     );
 
-{$IFDEF CLR}
-{$ELSE}
 procedure InitSHFolder;
 const
   SHFolderDll = 'SHFolder.dll';
@@ -691,18 +657,13 @@ begin
     SHGetFolderPathProc := GetProcAddress(SHFolderHandle, 'SHGetFolderPathA');
     {$ENDIF UNICODE}
 end;
-{$ENDIF CLR}
 
 procedure GetCSIDLLocation(const ASpecialDirectory: TFromDirectory;
   var CSIDL: Cardinal; var APath: string);
 { This function is a bit overkill }
 var
   LSpecialDirectory: TFromDirectory;
-  {$IFDEF CLR}
-  Buffer: StringBuilder;
-  {$ELSE}
   Buffer: PChar;
-  {$ENDIF CLR}
 
   function IsOk: Boolean;
   begin
@@ -724,15 +685,6 @@ begin
   end;
 
   CSIDL := 0;
-  {$IFDEF CLR}
-  Buffer := StringBuilder.Create(MAX_PATH);
-  Buffer.Length := MAX_PATH;
-  if Succeeded(SHGetFolderPathProc(0, CSIDLLocations[LSpecialDirectory].CSIDL, 0, 0, Buffer)) then
-    APath := Buffer.ToString()
-  else
-    APath := '';
-
-  {$ELSE}
   GetMem(Buffer, MAX_PATH * SizeOf(Char));
   try
     if not Assigned(SHGetFolderPathProc) then
@@ -745,7 +697,6 @@ begin
   finally
     FreeMem(Buffer);
   end;
-  {$ENDIF CLR}
 end;
 
 function CreateIDListFromPath(const APath: string): PItemIDList;

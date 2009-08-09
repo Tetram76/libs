@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineIntf.pas 12205 2009-02-08 20:34:28Z jfudickar $
+// $Id: JvDynControlEngineIntf.pas 12392 2009-07-09 11:15:37Z ahuser $
 
 unit JvDynControlEngineIntf;
 
@@ -33,17 +33,10 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   ActnList, Graphics, ComCtrls, ImgList,
-  {$IFDEF CLR}
-  Variants,
-  {$ENDIF CLR}
   Classes, Controls, Forms, StdCtrls, ExtCtrls, Buttons, Dialogs,
   FileCtrl, SysUtils;
 
 type
-  {$IFDEF CLR}
-  IUnknown = IInterface;
-  {$ENDIF CLR}
-
   IJvDynControl = interface
     ['{E5A52F18-A7B2-4BE8-BAB6-D4F70A0999B3}']
     procedure ControlSetDefaultProperties;
@@ -378,8 +371,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineIntf.pas $';
-    Revision: '$Revision: 12205 $';
-    Date: '$Date: 2009-02-08 21:34:28 +0100 (dim., 08 févr. 2009) $';
+    Revision: '$Revision: 12392 $';
+    Date: '$Date: 2009-07-09 13:15:37 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

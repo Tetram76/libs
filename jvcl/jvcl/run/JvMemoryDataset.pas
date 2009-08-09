@@ -1,4 +1,4 @@
-{-----------------------------------------------------------------------------
+﻿{-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -50,7 +50,9 @@ Known Issues:
              (rsOriginal, rsInserted, rsUpdated), in the hidden field.
              Likewise, have a private List (FDeletedValues) with the primary key values
              from the Deleted records (rsDeleted).
-
+//********************** Added by c.schiffler (CS) **************************
+  Methods  (protected) SetFilterText <== hook up expression parsing.
+  Field FFilterParser - see unit JvExprParser.pas
 Implementation : 2004/03/03
 Revisions : 1st = 2004/09/19
             2nd = 2004/10/19
@@ -63,7 +65,7 @@ Revisions : 1st = 2004/09/19
 
 Comments and Bugs : cfzwit att yahoo dott com dott ar
 -----------------------------------------------------------------------------}
-// $Id: JvMemoryDataset.pas 12250 2009-03-21 17:23:44Z ahuser $
+// $Id: JvMemoryDataset.pas 12415 2009-08-04 07:34:04Z obones $
 
 unit JvMemoryDataset;
 
@@ -80,7 +82,8 @@ uses
   {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
   {$ENDIF HAS_UNIT_VARIANTS}
-  JvDBUtils;
+  JvDBUtils,
+  JvExprParser;
 
 type
   TPVariant = ^Variant;
@@ -139,6 +142,7 @@ type
     FAfterApply: TApplyEvent;
     FBeforeApplyRecord: TApplyRecordEvent;
     FAfterApplyRecord: TApplyRecordEvent;
+    FFilterParser: TExprParser; // CSchiffler. June 2009.  See JvExprParser.pas
     function AddRecord: TJvMemoryRecord;
     function InsertRecord(Index: Integer): TJvMemoryRecord;
     function FindRecordID(ID: Integer): TJvMemoryRecord;
@@ -214,6 +218,8 @@ type
     function GetRecNo: Integer; override;
     procedure SetRecNo(Value: Integer); override;
     procedure DoAfterOpen; override;
+    procedure SetFilterText(const Value: string); override;
+    function ParserGetVariableValue(Sender: TObject; const VarName: string; var Value: Variant): Boolean; virtual;
     property Records[Index: Integer]: TJvMemoryRecord read GetMemoryRecord;
   public
     constructor Create(AOwner: TComponent); override;
@@ -338,8 +344,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemoryDataset.pas $';
-    Revision: '$Revision: 12250 $';
-    Date: '$Date: 2009-03-21 18:23:44 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12415 $';
+    Date: '$Date: 2009-08-04 09:34:04 +0200 (mar., 04 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -347,7 +353,13 @@ const
 implementation
 
 uses
-  Forms, Dialogs, DBConsts, Math,
+  {$IFDEF COMPILER5}
+  Forms,
+  {$ENDIF COMPILER5}
+  DBConsts, Math,
+  {$IFDEF HAS_UNIT_ANSISTRINGS}
+  AnsiStrings,
+  {$ENDIF HAS_UNIT_ANSISTRINGS}
   {$IFDEF COMPILER6_UP}
   FMTBcd,
   {$ENDIF COMPILER6_UP}
@@ -358,13 +370,20 @@ uses
 
 const
   ftBlobTypes = [ftBlob, ftMemo, ftGraphic, ftFmtMemo, ftParadoxOle,
-    ftDBaseOle, ftTypedBinary, ftOraBlob, ftOraClob];
+    ftDBaseOle, ftTypedBinary, ftOraBlob, ftOraClob
+    {$IFDEF COMPILER10_UP}, ftWideMemo{$ENDIF COMPILER10_UP}];
 
   ftSupported = [ftString, ftSmallint, ftInteger, ftWord, ftBoolean,
     ftFloat, ftCurrency, ftDate, ftTime, ftDateTime, ftAutoInc, ftBCD,
     {$IFDEF COMPILER6_UP}
-    ftFMTBCD,
+    ftFMTBCD, ftTimestamp,
     {$ENDIF COMPILER6_UP}
+    {$IFDEF COMPILER10_UP}
+    ftOraTimestamp, ftFixedWideChar,
+    {$ENDIF COMPILER10_UP}
+    {$IFDEF COMPILER12_UP}
+    ftLongWord, ftShortint, ftByte, ftExtended,
+    {$ENDIF COMPILER12_UP}
     ftBytes, ftVarBytes, ftADT, ftFixedChar, ftWideString, ftLargeint,
     ftVariant, ftGuid] + ftBlobTypes;
 
@@ -430,6 +449,16 @@ begin
 end;
 
 {$ENDIF COMPILER5}
+
+procedure AppHandleException(Sender: TObject);
+begin
+  {$IFDEF COMPILER5}
+  Application.HandleException(Sender);
+  {$ELSE}
+  if Assigned(ApplicationHandleException) then
+    ApplicationHandleException(Sender);
+  {$ENDIF COMPILER5}
+end;
 
 function CalcFieldLen(FieldType: TFieldType; Size: Word): Word;
 begin
@@ -609,6 +638,7 @@ begin
   FRowsAffected := 0;
   FSaveLoadState := slsNone;
   FOneValueInArray := True;
+  FDataSetClosed := False;
 end;
 
 destructor TJvMemoryData.Destroy;
@@ -618,6 +648,8 @@ var
 begin
   if Active then
     Close;
+  if Assigned(FFilterParser) then
+    FreeAndNil(FFilterParser);
   if Assigned(FDeletedValues) then
   begin
     if FDeletedValues.Count > 0 then
@@ -644,9 +676,9 @@ begin
   case FieldType of
     ftString:
       if CaseInsensitive then
-        Result := AnsiCompareText(PChar(Data1), PChar(Data2))
+        Result := AnsiCompareText(PAnsiChar(Data1), PAnsiChar(Data2))
       else
-        Result := AnsiCompareStr(PChar(Data1), PChar(Data2));
+        Result := AnsiCompareStr(PAnsiChar(Data1), PAnsiChar(Data2));
     ftSmallint:
       if Smallint(Data1^) > Smallint(Data2^) then
         Result := 1
@@ -688,9 +720,9 @@ begin
         Result := -1;
     ftFixedChar:
       if CaseInsensitive then
-        Result := AnsiCompareText(PChar(Data1), PChar(Data2))
+        Result := AnsiCompareText(PAnsiChar(Data1), PAnsiChar(Data2))
       else
-        Result := AnsiCompareStr(PChar(Data1), PChar(Data2));
+        Result := AnsiCompareStr(PAnsiChar(Data1), PAnsiChar(Data2));
     ftWideString:
       if CaseInsensitive then
         Result := AnsiCompareText(WideCharToString(PWideChar(Data1)),
@@ -707,7 +739,7 @@ begin
     ftVariant:
       Result := 0;
     ftGuid:
-      Result := CompareText(PChar(Data1), PChar(Data2));
+      Result := CompareText(PAnsiChar(Data1), PAnsiChar(Data2));
   end;
 end;
 
@@ -1126,16 +1158,22 @@ var
   SaveState: TDataSetState;
 begin
   Result := True;
-  if Assigned(OnFilterRecord) then
+  if Assigned(OnFilterRecord) or Assigned(FFilterParser) then
   begin
     if (FRecordPos >= 0) and (FRecordPos < RecordCount) then
     begin
       SaveState := SetTempState(dsFilter);
       try
         RecordToBuffer(Records[FRecordPos], TempBuffer);
-        OnFilterRecord(Self, Result);
+        if Assigned(FFilterParser) and FFilterParser.Eval() then
+        begin
+          FFilterParser.EnableWildcardMatching := True;
+          Result := FFilterParser.Value;
+        end;
+        if Assigned(OnFilterRecord) then
+          OnFilterRecord(Self, Result);
       except
-        Application.HandleException(Self);
+        AppHandleException(Self);
       end;
       RestoreState(SaveState);
     end
@@ -1191,10 +1229,12 @@ begin
   if (Bookmark1 = nil) and (Bookmark2 <> nil) then
     Result := -1
   else
-  if TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark1[0]){$ELSE}Bookmark1{$ENDIF RTL200_UP}^) > TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark2[0]){$ELSE}Bookmark2{$ENDIF RTL200_UP}^) then
+  if TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark1[0]){$ELSE}Bookmark1{$ENDIF RTL200_UP}^) >
+   TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark2[0]){$ELSE}Bookmark2{$ENDIF RTL200_UP}^) then
     Result := 1
   else
-  if TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark1[0]){$ELSE}Bookmark1{$ENDIF RTL200_UP}^) < TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark2[0]){$ELSE}Bookmark2{$ENDIF RTL200_UP}^) then
+  if TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark1[0]){$ELSE}Bookmark1{$ENDIF RTL200_UP}^) < 
+  TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark2[0]){$ELSE}Bookmark2{$ENDIF RTL200_UP}^) then
     Result := -1
   else
     Result := 0;
@@ -1527,6 +1567,51 @@ begin
   if not IsEmpty then
     SortOnFields();
   inherited DoAfterOpen;
+End;
+
+// Filtering contribution June 2009 - C.Schiffler - MANTIS # 0004328
+// Uses expression parser.
+procedure TJvMemoryData.SetFilterText(const Value: string);
+
+  procedure UpdateFilter;
+  begin
+    FreeAndNil(FFilterParser);
+    if Filter <> '' then
+    begin
+      FFilterParser := TExprParser.Create;
+      FFilterParser.OnGetVariable := ParserGetVariableValue;
+      FFilterParser.Expression := Filter;
+    end;
+  end;
+
+begin
+  if Active then
+  begin
+    CheckBrowseMode;
+    inherited SetFilterText(Value);
+    UpdateFilter;
+    if Filtered then
+      First;
+  end
+  else
+  begin
+    inherited SetFilterText(Value);
+    UpdateFilter;
+  end;
+end;
+
+function TJvMemoryData.ParserGetVariableValue(Sender: TObject; const VarName: string; var Value: Variant): Boolean;
+var
+  Field: TField;
+begin
+  Field := FieldByName(Varname);
+  if Assigned(Field) then
+  begin
+    Value := Field.Value;
+    Result := True;
+  end
+  else
+    Result := False;
 end;
 
 procedure TJvMemoryData.InternalClose;
@@ -1542,7 +1627,7 @@ end;
 
 procedure TJvMemoryData.InternalHandleException;
 begin
-  Application.HandleException(Self);
+  AppHandleException(Self);
 end;
 
 procedure TJvMemoryData.InternalInitFieldDefs;
@@ -2754,9 +2839,8 @@ begin
     try
       FDataSet.DataEvent(deFieldChange, Longint(FField));
     except
-      Application.HandleException(Self);
+      AppHandleException(Self);
     end;
-  // (rom) added inherited Destroy;
   inherited Destroy;
 end;
 

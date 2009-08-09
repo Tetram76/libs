@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgHint.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvgHint.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgHint;
 
@@ -32,23 +32,15 @@ unit JvgHint;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, SysUtils, Graphics, Controls, Classes, Forms,
-  {$IFDEF USEJVCL}
   JvComponentBase,
-  {$ENDIF USEJVCL}
   JvgCommClasses;
 
 type
-  {$IFDEF USEJVCL}
   TJvgHint = class(TJvComponent)
-  {$ELSE}
-  TJvgHint = class(TComponent)
-  {$ENDIF USEJVCL}
   private
     FOnShowHint: TShowHintEvent;
     FOnHint: TNotifyEvent;
@@ -86,33 +78,24 @@ type
     property OnHint: TNotifyEvent read FOnHint write FOnHint;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgHint.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
   Math, ExtCtrls,
-  {$IFDEF USEJVCL}
   JvResources, JvConsts,
-  {$ENDIF USEJVCL}
   JvgTypes, JvgUtils;
 
 {$R JvgHint.res}
-
-{$IFNDEF USEJVCL}
-resourcestring
-  RsEOnlyOneInstanceOfTJvgHint = 'Cannot create more than one instance of TJvgHint component';
-{$ENDIF !USEJVCL}
 
 type
   TJvgHintWindow = class(THintWindow)
@@ -371,7 +354,6 @@ begin
   FGlyph.Assign(Value);
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -379,7 +361,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 12114 2008-12-30 22:36:29Z jfudickar $
+// $Id: JvComCtrls.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvComCtrls;
 
@@ -44,9 +44,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  WinUtils, System.Runtime.InteropServices,
-  {$ENDIF CLR}
   Windows, Messages, Contnrs, Graphics, Controls, Forms,
   Classes, // (ahuser) "Classes" after "Forms" (D5 warning)
   Menus, ComCtrls, ImgList, Buttons,
@@ -70,7 +67,7 @@ type
     Max: Byte;
   end;
 
-  TJvIPEditControlHelper = class({$IFDEF CLR} TControl {$ELSE} TObject {$ENDIF})
+  TJvIPEditControlHelper = class(TObject)
   private
     FHandle: THandle;
     FInstance: TFNWndProc;
@@ -78,10 +75,10 @@ type
     FOrgWndProc: TFarProc;
     procedure SetHandle(const Value: THandle);
   protected
-    procedure WndProc(var Msg: TMessage); {$IFDEF CLR}reintroduce;{$ENDIF} virtual;
+    procedure WndProc(var Msg: TMessage); virtual;
     property Handle: THandle read FHandle write SetHandle;
   public
-    constructor Create(AIPAddress: TJvIPAddress); {$IFDEF CLR}reintroduce;{$ENDIF}
+    constructor Create(AIPAddress: TJvIPAddress);
     destructor Destroy; override;
 
     procedure SetFocus;
@@ -484,7 +481,7 @@ type
   public
     class function CreateEnh(AOwner: TTreeNodes): TJvTreeNode;
 
-    constructor Create(AOwner: TTreeNodes); {$IFDEF CLR}reintroduce;{$ENDIF} {$IFDEF RTL200_UP}override{$ELSE}virtual{$ENDIF RTL200_UP};
+    constructor Create(AOwner: TTreeNodes); {$IFDEF RTL200_UP}override{$ELSE}virtual{$ENDIF RTL200_UP};
     destructor Destroy; override;
 
     procedure MoveTo(Destination: TTreeNode; Mode: TNodeAttachMode); override;
@@ -650,8 +647,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 12114 $';
-    Date: '$Date: 2008-12-30 23:36:29 +0100 (mar., 30 d√©c. 2008) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -660,6 +657,7 @@ implementation
 
 uses
   SysUtils,
+  Math,
   JclStrings,
   JvThemes,
   JvConsts, JvJCLUtils;
@@ -740,7 +738,7 @@ end;
 
 constructor TJvIPEditControlHelper.Create(AIPAddress: TJvIPAddress);
 begin
-  inherited Create{$IFDEF CLR}(nil){$ENDIF};
+  inherited Create;
   FHandle := 0;
   FIPAddress := AIPAddress;
   FInstance := MakeObjectInstance(WndProc);
@@ -788,13 +786,8 @@ begin
 
     if FHandle <> 0 then
     begin
-      {$IFDEF CLR}
-      FOrgWndProc := TFarProc(GetWindowLong(FHandle, GWL_WNDPROC));
-      SetWindowLong(FHandle, GWL_WNDPROC, FInstance);
-      {$ELSE}
       FOrgWndProc := Pointer(GetWindowLong(FHandle, GWL_WNDPROC));
       SetWindowLong(FHandle, GWL_WNDPROC, Integer(FInstance));
-      {$ENDIF CLR}
     end;
   end;
 end;
@@ -989,11 +982,7 @@ begin
   begin
     // Must use GetParentForm to fix Mantis 2812, where it wasn't possible
     // to tab outside the control
-    {$IFDEF CLR}
-    Control := TWinControl(InvokeNonPublicMethod(ParentForm, 'FindNextControl', [Self, not Previous, True, False]));
-    {$ELSE}
     Control := TWinControlAccess(ParentForm).FindNextControl(Self, not Previous, True, False);
-    {$ENDIF CLR}
     if Control <> nil then
       Control.SetFocus;
   end;
@@ -1140,23 +1129,12 @@ begin
 end;
 
 procedure TJvIPAddress.CNCommand(var Msg: TWMCommand);
-{$IFDEF CLR}
-var
-  AddressStruct: record
-    Address: Longint;
-  end;
-{$ENDIF CLR}
 begin
   with Msg do
     case NotifyCode of
       EN_CHANGE:
         begin
-          {$IFDEF CLR}
-          Perform(IPM_GETADDRESS, 0, AddressStruct);
-          FAddress := AddressStruct.Address;
-          {$ELSE}
           Perform(IPM_GETADDRESS, 0, Integer(@FAddress));
-          {$ENDIF CLR}
           if not FChanging then
             DoChange;
         end;
@@ -1199,28 +1177,11 @@ begin
 end;
 
 procedure TJvIPAddress.CNNotify(var Msg: TWMNotify);
-{$IFDEF CLR}
-var
-  IPAddr: TNMIPAddress;
-{$ENDIF CLR}
 begin
-  {$IFDEF CLR}
-  if Msg.NMHdr.code = IPN_FIELDCHANGED then
-  begin
-    IPAddr := TNMIPAddress(Marshal.PtrToStructure(IntPtr(Msg.OriginalMessage.LParam), TypeOf(TNMIPAddress)));
-    with IPAddr do
-      if hdr.code = IPN_FIELDCHANGED then
-      begin
-        DoFieldChange(iField, iValue);
-        Marshal.StructureToPtr(TObject(IPAddr), IntPtr(Msg.OriginalMessage.LParam), False);
-      end;
-  end;
-  {$ELSE}
   with Msg, NMHdr^ do
     if code = IPN_FIELDCHANGED then
       with PNMIPAddress(NMHdr)^ do
         DoFieldChange(iField, iValue);
-  {$ENDIF CLR}
   inherited;
 end;
 
@@ -1371,11 +1332,7 @@ begin
 
   // really long values for the text crashes the program (try: 127.0.0.8787787878787878), so we limit it here before it is set
   with AddressValues do
-    {$IFDEF CLR}
-    Msg.Text := Format('%d.%d.%d.%d', [Value1, Value2, Value3, Value4]);
-    {$ELSE}
     Msg.Text := PChar(Format('%d.%d.%d.%d', [Value1, Value2, Value3, Value4]));
-    {$ENDIF CLR}
 
   inherited;
 end;
@@ -1420,15 +1377,8 @@ procedure TJvIPAddress.WMSetFont(var Msg: TWMSetFont);
 var
   LF: TLogFont;
 begin
-  {$IFNDEF CLR}
-  FillChar(LF, SizeOf(TLogFont), #0);
-  {$ENDIF CLR}
   try
-    {$IFDEF CLR}
-    OSCheck(GetObject(Font.Handle, SizeOf(LF), LF) > 0);
-    {$ELSE}
     OSCheck(GetObject(Font.Handle, SizeOf(LF), @LF) > 0);
-    {$ENDIF CLR}
     DestroyLocalFont;
     FLocalFont := CreateFontIndirect(LF);
     Msg.Font := FLocalFont;
@@ -1540,12 +1490,22 @@ begin
   Change;
 end;
 
+type
+  TCustomTabControlAccess = class(TCustomTabControl)
+  end;
+
 procedure TJvTabDefaultPainter.DrawTab(AControl: TCustomTabControl;
   Canvas: TCanvas; Images: TCustomImageList; ImageIndex: Integer;
   const Caption: string; const Rect: TRect; Active, Enabled: Boolean);
 var
   TextRect, ImageRect: TRect;
   SaveState: Integer;
+  Bmp: TBitmap;
+  DrawRect: TRect;
+  Points: array [0..2] of TPoint;
+  TextRectWidth: Integer;
+  TextRectHeight: Integer;
+
   procedure DrawDivider(X, Y, X1, Y1: Integer);
   begin
     Canvas.Pen.Color := clBtnShadow;
@@ -1615,9 +1575,76 @@ begin
   end;
   if Caption <> '' then
   begin
-//    InflateRect(TextRect, -2, -2);
-    SetBkMode(Canvas.Handle, TRANSPARENT);
-    DrawText(Canvas, Caption, Length(Caption), TextRect, DT_SINGLELINE or DT_CENTER or DT_VCENTER);
+    if TCustomTabControlAccess(AControl).TabPosition in [tpTop, tpBottom] then
+    begin
+      SetBkMode(Canvas.Handle, TRANSPARENT);
+      DrawText(Canvas, Caption, Length(Caption), TextRect, DT_SINGLELINE or DT_CENTER or DT_VCENTER);
+    end
+    else
+    begin
+      Bmp := TBitmap.Create;
+      try
+        TextRectWidth := TextRect.Right - TextRect.Left + 1;
+        TextRectHeight := TextRect.Bottom - TextRect.Top + 1;
+
+        Bmp.Transparent := True;
+        Bmp.Canvas.Font := Canvas.Font;
+        Bmp.Height := Max(TextRectWidth, TextRectHeight);
+        Bmp.Width := Bmp.Height;
+
+        DrawRect := Classes.Rect(0, 0, Bmp.Width, Bmp.Height);
+
+        DrawText(Bmp.Canvas, Caption, Length(Caption), DrawRect, DT_SINGLELINE or DT_CENTER or DT_VCENTER);
+
+        case TCustomTabControlAccess(AControl).TabPosition of
+          tpLeft:
+            begin
+              // Rotate left by 90∞
+              Points[0].X := 0;
+              Points[0].Y := Bmp.Height - 1;
+              Points[1].X := 0;
+              Points[1].Y := 0;
+              Points[2].X := Bmp.Width - 1;
+              Points[2].Y := Bmp.Height - 1;
+            end;
+          tpRight:
+            begin
+              // Rotate right by 90∞
+              Points[0].X := Bmp.Width - 1;
+              Points[0].Y := 0;
+              Points[1].X := Bmp.Width - 1;
+              Points[1].Y := Bmp.Height - 1;
+              Points[2].X := 0;
+              Points[2].Y := 0;
+            end;
+        end;
+
+        if TextRectWidth < TextRectHeight then
+        begin
+          Dec(Points[0].X, (Bmp.Width - TextRectWidth + 1) div 2);
+          Dec(Points[1].X, (Bmp.Width - TextRectWidth + 1) div 2);
+          Dec(Points[2].X, (Bmp.Width - TextRectWidth + 1) div 2);
+        end
+        else if TextRectWidth > TextRectHeight then
+        begin
+          Dec(Points[0].Y, (Bmp.Height - TextRectHeight + 1) div 2);
+          Dec(Points[1].Y, (Bmp.Height - TextRectHeight + 1) div 2);
+          Dec(Points[2].Y, (Bmp.Height - TextRectHeight + 1) div 2);
+        end;
+
+        // Rotate and translate to the right place
+        PlgBlt(Bmp.Canvas.Handle, Points, Bmp.Canvas.Handle, 0, 0, Bmp.Width, Bmp.Height, 0, 0, 0);
+
+        // Erase left overs
+        Bmp.Canvas.FillRect(Classes.Rect(TextRectWidth, 0, Bmp.Width + 1, Bmp.Height));
+        Bmp.Canvas.FillRect(Classes.Rect(0, TextRectHeight, Bmp.Width, Bmp.Height + 1));
+
+        // Copy to the final canvas
+        Canvas.Draw(TextRect.Left, TextRect.Top, Bmp);
+      finally
+        Bmp.Free;
+      end;
+    end;
   end;
   if Active and ShowFocus then
   begin
@@ -1842,12 +1869,20 @@ begin
   if FTabPainter <> Value then
   begin
     if FTabPainter <> nil then
+    begin
+      FTabPainter.RemoveFreeNotification(Self);
       FTabPainter.UnRegisterChange(Self);
+    end;
     FTabPainter := Value;
     if FTabPainter <> nil then
     begin
       FTabPainter.FreeNotification(Self);
       FTabPainter.RegisterChange(Self);
+      OwnerDraw := True;
+    end
+    else
+    begin
+      OwnerDraw := False;
     end;
     Invalidate;
   end;
@@ -1962,23 +1997,12 @@ end;
 procedure TJvPageControl.TCMAdjustRect(var Msg: TMessage);
 var
   Offset: Integer;
-  {$IFDEF CLR}
-  M: TTCMAdjustRect;
-  R: TRect;
-  {$ENDIF CLR}
 begin
   inherited;
   if (Msg.WParam = 0) and (FClientBorderWidth <> JvDefPageControlBorder) then
   begin
     Offset := JvDefPageControlBorder - FClientBorderWidth;
-    {$IFDEF CLR}
-    M := TTCMAdjustRect.Create(Msg);
-    R := M.Prc;
-    InflateRect(R, Offset, Offset);
-    M.Prc := R;
-    {$ELSE}
     InflateRect(PRect(Msg.LParam)^, Offset, Offset);
-    {$ENDIF CLR}
   end;
 end;
 
@@ -2000,11 +2024,7 @@ begin
   hi.pt.X := Msg.XPos;
   hi.pt.Y := Msg.YPos;
   hi.flags := 0;
-  {$IFDEF CLR}
-  TabIndex := Perform(TCM_HITTEST, 0, hi);
-  {$ELSE}
   TabIndex := Perform(TCM_HITTEST, 0, Longint(@hi));
-  {$ENDIF CLR}
   I := 0;
   RealIndex := 0;
   while I <= TabIndex + RealIndex do
@@ -2095,11 +2115,7 @@ function TJvPageControl.CanChange: Boolean;
 begin
   Result := inherited CanChange;
   if Result and (ActivePage <> nil) and ReduceMemoryUse then
-    {$IFDEF CLR}
-    InvokeNonPublicMethod(ActivePage, 'DestroyHandle', []);
-    {$ELSE}
     TAccessTabSheet(ActivePage).DestroyHandle;
-    {$ENDIF}
 end;
 
 procedure TJvPageControl.SetReduceMemoryUse(const Value: Boolean);
@@ -2112,12 +2128,20 @@ begin
   if FTabPainter <> Value then
   begin
     if FTabPainter <> nil then
+    begin
+      FTabPainter.RemoveFreeNotification(Self);
       FTabPainter.UnRegisterChange(Self);
+    end;
     FTabPainter := Value;
     if FTabPainter <> nil then
     begin
       FTabPainter.FreeNotification(Self);
       FTabPainter.RegisterChange(Self);
+      OwnerDraw := True;
+    end
+    else
+    begin
+      OwnerDraw := False;
     end;
     Invalidate;
   end;
@@ -2219,27 +2243,9 @@ end;
 procedure TJvTrackBar.WMNotify(var Msg: TWMNotify);
 var
   ToolTipTextLocal: string;
-  {$IFDEF CLR}
-  DispInfo: TNMTTDispInfo;
-  {$ENDIF CLR}
 begin
   if (Msg.NMHdr.code = TTN_NEEDTEXTW) and Assigned(FOnToolTip) then
   begin
-    {$IFDEF CLR}
-    DispInfo := TNMTTDispInfo(Marshal.PtrToStructure(IntPtr(Msg.OriginalMessage.LParam), TypeOf(TNMTTDispInfo)));
-    with DispInfo do
-    begin
-      hinst := 0;
-      ToolTipTextLocal := IntToStr(Position);
-      FOnToolTip(Self, ToolTipTextLocal);
-      FToolTipText := ToolTipTextLocal;
-      lpszText := FToolTipText;
-      szText := #0;
-      Msg.Result := 1;
-
-      Marshal.StructureToPtr(TObject(DispInfo), IntPtr(Msg.OriginalMessage.LParam), False);
-    end;
-    {$ELSE}
     with PNMTTDispInfoW(Msg.NMHdr)^ do
     begin
       hinst := 0;
@@ -2250,7 +2256,6 @@ begin
       FillChar(szText, SizeOf(szText), #0);
       Msg.Result := 1;
     end;
-    {$ENDIF CLR}
   end
   else
     inherited;
@@ -2375,9 +2380,7 @@ begin
   if Value <> FBold then
   begin
     FBold := Value;
-    {$IFNDEF CLR}
     FillChar(Item, SizeOf(Item), 0);
-    {$ENDIF !CLR}
     with Item do
     begin
       mask := TVIF_STATE;
@@ -2399,9 +2402,7 @@ begin
   if Value <> FChecked then
   begin
     FChecked := Value;
-    {$IFNDEF CLR}
     FillChar(Item, SizeOf(Item), 0);
-    {$ENDIF !CLR}
     with Item do
     begin
       hItem := ItemId;
@@ -2428,18 +2429,14 @@ begin
   // to False. We could save those two properties, but it's better
   // to save the state, because we may have other properties inside
   // it in the future.
-  {$IFNDEF CLR}
   FillChar(SaveItem, SizeOf(SaveItem), 0);
-  {$ENDIF !CLR}
   SaveItem.hItem := ItemId;
   SaveItem.mask := TVIF_STATE;
   TreeView_GetItem(Handle, SaveItem);
 
   inherited MoveTo(Destination, Mode);
 
-  {$IFNDEF CLR}
   FillChar(Item, SizeOf(Item), 0);
-  {$ENDIF !CLR}
   Item.hItem := ItemId;
   Item.mask := TVIF_STATE;
   Item.stateMask := TVIS_STATEIMAGEMASK;
@@ -2711,7 +2708,7 @@ begin
   if Assigned(Node) and Node.IsVisible then
   begin
     R := Node.DisplayRect(True);
-    Windows.InvalidateRect(Handle, {$IFNDEF CLR}@{$ENDIF} R, False);
+    Windows.InvalidateRect(Handle, @R, False);
   end;
 end;
 
@@ -2724,7 +2721,7 @@ begin
     R := Node.DisplayRect(True);
     R.Right := R.Left;
     R.Left := R.Left - Images.Width * 3;
-    Windows.InvalidateRect(Handle, {$IFNDEF CLR}@{$ENDIF} R, True);
+    Windows.InvalidateRect(Handle, @R, True);
   end;
 end;
 
@@ -2961,10 +2958,15 @@ begin
   // Need to indicate ClearBeforeSelect if the item is about to change
   // or we would get rendering glitches because of an inconsistent
   // selection list. (Mantis 3250)
-  case Msg.NMHdr.code of
-    TVN_SELCHANGEDA, TVN_SELCHANGEDW:
-      if not Multiselect then
-        FClearBeforeSelect := True;
+  // Mantis 4699: Further limit this to when HideSelection is set to True.
+  // Mantis 4808: Well, it seems that fix for 4699 is doing more harm than good
+//  if HideSelection then
+  begin
+    case Msg.NMHdr.code of
+      TVN_SELCHANGEDA, TVN_SELCHANGEDW:
+        if not Multiselect then
+          FClearBeforeSelect := True;
+    end;
   end;
 
   inherited;
@@ -3205,25 +3207,20 @@ procedure TJvTreeView.SetMenu(const Value: TMenu);
 begin
   if FMenu <> Value then
   begin
-    if (FMenu <> nil) and not (csDesigning in ComponentState) then
-      {$IFDEF CLR}
-      SetProtectedObjectEvent(FMenu, 'OnChange', @FOldMenuChange);
-      {$ELSE}
-      TMenuAccessProtected(FMenu).OnChange := FOldMenuChange;
-      {$ENDIF CLR}
+    if (FMenu <> nil) then
+    begin
+      FMenu.RemoveFreeNotification(Self);
+      if not (csDesigning in ComponentState) then
+        TMenuAccessProtected(FMenu).OnChange := FOldMenuChange;
+    end;
     FMenu := Value;
     if FMenu <> nil then
     begin
       FMenu.FreeNotification(Self);
       if not (csDesigning in ComponentState) then
       begin
-        {$IFDEF CLR}
-        FOldMenuChange := TMenuChangeEvent(GetProtectedObjectEvent(FMenu, 'OnChange'));
-        SetProtectedObjectEvent(FMenu, 'OnChange', @DoMenuChange);
-        {$ELSE}
         FOldMenuChange := TMenuAccessProtected(FMenu).OnChange;
         TMenuAccessProtected(FMenu).OnChange := DoMenuChange;
-        {$ENDIF CLR}
       end;
     end;
     RebuildFromMenu;
@@ -3302,6 +3299,8 @@ procedure TJvTreeView.SetPageControl(const Value: TPageControl);
 begin
   if FPageControl <> Value then
   begin
+    if FPageControl <> nil then
+      FPageControl.RemoveFreeNotification(Self);
     FPageControl := Value;
     if FPageControl <> nil then
       FPageControl.FreeNotification(Self);

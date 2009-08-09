@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBCombobox.pas 12221 2009-03-04 19:34:50Z ahuser $
+// $Id: JvDBCombobox.pas 12296 2009-04-29 14:53:38Z obones $
 
 unit JvDBCombobox;
 
@@ -263,8 +263,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBCombobox.pas $';
-    Revision: '$Revision: 12221 $';
-    Date: '$Date: 2009-03-04 20:34:50 +0100 (mer., 04 mars 2009) $';
+    Revision: '$Revision: 12296 $';
+    Date: '$Date: 2009-04-29 16:53:38 +0200 (mer., 29 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -457,7 +457,11 @@ end;
 procedure TJvCustomDBComboBox.SetDataSource(Value: TDataSource);
 begin
   if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+  begin
+    if FDataLink.DataSource <> nil then
+      FDataLink.DataSource.RemoveFreeNotification(Self);
     FDataLink.DataSource := Value;
+  end;
   if Value <> nil then
     Value.FreeNotification(Self);
 end;

@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPCoreUtils.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvXPCoreUtils.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvXPCoreUtils;
 
@@ -31,16 +31,11 @@ unit JvXPCoreUtils;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   SysUtils, Classes, TypInfo, Windows, Graphics, Controls,
-  {$IFDEF USEJVCL}
-  JvJCLUtils,
-  {$ENDIF USEJVCL}
-  JvXPCore;
+  JvJCLUtils, JvXPCore;
 
 function JvXPMethodsEqual(const Method1, Method2: TMethod): Boolean;
 procedure JvXPDrawLine(const ACanvas: TCanvas; const X1, Y1, X2, Y2: Integer);
@@ -69,17 +64,15 @@ procedure JvXPPlaceText(const AParent: TControl; const ACanvas: TCanvas;
   const AText: TCaption; const AFont: TFont; const AEnabled, AShowAccelChar: Boolean;
   const AAlignment: TAlignment; const AWordWrap: Boolean; var Rect: TRect);
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPCoreUtils.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -293,12 +286,7 @@ procedure JvXPRenderText(const AParent: TControl; const ACanvas: TCanvas;
 
   procedure DoDrawText;
   begin
-    {$IFDEF USEJVCL}
     DrawText(ACanvas, ACaption, -1, ARect, AFlags);
-    {$ELSE}
-    // (rom) Kludge! This will probably not work for CLX
-    DrawText(ACanvas.Handle, PChar(ACaption), -1, ARect, AFlags);
-    {$ENDIF USEJVCL}
   end;
 
 begin
@@ -412,7 +400,6 @@ begin
   JvXPRenderText(AParent, ACanvas, AText, AFont, AEnabled, AShowAccelChar, Rect, Flags);
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -420,7 +407,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

@@ -106,7 +106,7 @@ if (!MyUltimGrid->SearchNext(ResultCol, ResultField, false, false, true)) ...
 -----------------------------------------------------------------------------
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUltimGrid.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvDBUltimGrid.pas 12328 2009-06-06 13:04:28Z ahuser $
 
 unit JvDBUltimGrid;
 
@@ -225,8 +225,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUltimGrid.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12328 $';
+    Date: '$Date: 2009-06-06 15:04:28 +0200 (sam., 06 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -597,6 +597,7 @@ var
   Start, ColNo, I: Integer;
   Found: Boolean;
   FieldText: string;
+  ValueToSearchStr: string;
 begin
   Result := False;
   if Assigned(DataLink) and DataLink.Active then
@@ -619,6 +620,7 @@ begin
         DSet.First;
       end;
 
+      ValueToSearchStr := VarToStr(FValueToSearch);
       // The search begins...
       while not DSet.Eof do
       begin
@@ -638,16 +640,16 @@ begin
                   if CaseSensitive then
                   begin
                     if WholeFieldOnly then
-                      Found := AnsiSameStr(string(FValueToSearch), FieldText)
+                      Found := AnsiSameStr(ValueToSearchStr, FieldText)
                     else
-                      Found := (StrSearch(string(FValueToSearch), FieldText) > 0);
+                      Found := StrSearch(ValueToSearchStr, FieldText) > 0;
                   end
                   else
                   begin
                     if WholeFieldOnly then
-                      Found := AnsiSameText(string(FValueToSearch), FieldText)
+                      Found := AnsiSameText(ValueToSearchStr, FieldText)
                     else
-                      Found := (StrFind(string(FValueToSearch), FieldText) > 0);
+                      Found := StrFind(ValueToSearchStr, FieldText) > 0;
                   end;
 
                   // Text found ! -> exit

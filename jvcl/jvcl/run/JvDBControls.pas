@@ -32,7 +32,7 @@ Known Issues:
         You can use it as a generic editor control inside a control grid.
           -- Warren Postma (warrenpstma att hotmail dott com)
 -----------------------------------------------------------------------------}
-// $Id: JvDBControls.pas 12210 2009-02-10 21:06:23Z jfudickar $
+// $Id: JvDBControls.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvDBControls;
 
@@ -710,8 +710,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBControls.pas $';
-    Revision: '$Revision: 12210 $';
-    Date: '$Date: 2009-02-10 22:06:23 +0100 (mar., 10 févr. 2009) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -858,7 +858,11 @@ end;
 procedure TJvDBMaskEdit.SetDataSource(Value: TDataSource);
 begin
   if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+  begin
+    if FDataLink.DataSource <> nil then
+      FDataLink.DataSource.RemoveFreeNotification(Self);
     FDataLink.DataSource := Value;
+  end;
   if Value <> nil then
     Value.FreeNotification(Self);
 end;
@@ -958,12 +962,14 @@ end;
 
 procedure TJvDBMaskEdit.UpdateData(Sender: TObject);
 var
+  OrgDefaultMask: Boolean;
   OrgMask: string;
 begin
   ValidateEdit;
   if IsMasked then
   begin
-    OrgMask := EditMask;
+    OrgDefaultMask := FDefaultMask;
+    OrgMask := inherited EditMask;
     try
       EditMask := '';
       if Text = '' then
@@ -972,6 +978,7 @@ begin
         Exit;
       end;
     finally
+      FDefaultMask := OrgDefaultMask;
       EditMask := OrgMask;
     end;
   end;
@@ -1105,7 +1112,7 @@ begin
     with FCanvas do
     begin
       R := ClientRect;
-      if not (NewStyleControls and Ctl3D) and (BorderStyle = bsSingle) then
+      if not Ctl3D and (BorderStyle = bsSingle) then
       begin
         Brush.Color := clWindowFrame;
         FrameRect(R);
@@ -1160,38 +1167,15 @@ var
   I: Integer;
   SysMetrics, Metrics: TTextMetric;
 begin
-  if NewStyleControls then
-  begin
-    if BorderStyle = bsNone then
-      I := 0
-    else
-    if Ctl3D then
-      I := 1
-    else
-      I := 2;
-    Result.X := SendMessage(Handle, EM_GETMARGINS, 0, 0) and $0000FFFF + I;
-    Result.Y := I;
-  end
+  if BorderStyle = bsNone then
+    I := 0
   else
-  begin
-    if BorderStyle = bsNone then
-      I := 0
-    else
-    begin
-      DC := GetDC(HWND_DESKTOP);
-      GetTextMetrics(DC, SysMetrics);
-      SaveFont := SelectObject(DC, Font.Handle);
-      GetTextMetrics(DC, Metrics);
-      SelectObject(DC, SaveFont);
-      ReleaseDC(HWND_DESKTOP, DC);
-      I := SysMetrics.tmHeight;
-      if I > Metrics.tmHeight then
-        I := Metrics.tmHeight;
-      I := I div 4;
-    end;
-    Result.X := I;
-    Result.Y := I;
-  end;
+  if Ctl3D then
+    I := 1
+  else
+    I := 2;
+  Result.X := SendMessage(Handle, EM_GETMARGINS, 0, 0) and $0000FFFF + I;
+  Result.Y := I;
 end;
 
 function TJvDBMaskEdit.ExecuteAction(Action: TBasicAction): Boolean;
@@ -1334,7 +1318,11 @@ end;
 procedure TJvDBComboEdit.SetDataSource(Value: TDataSource);
 begin
   if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+  begin
+    if FDataLink.DataSource <> nil then
+      FDataLink.DataSource.RemoveFreeNotification(Self);
     FDataLink.DataSource := Value;
+  end;
   if Value <> nil then
     Value.FreeNotification(Self);
 end;
@@ -1650,7 +1638,11 @@ end;
 procedure TJvDBDateEdit.SetDataSource(Value: TDataSource);
 begin
   if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+  begin
+    if FDataLink.DataSource <> nil then
+      FDataLink.DataSource.RemoveFreeNotification(Self);
     FDataLink.DataSource := Value;
+  end;
   if Value <> nil then
     Value.FreeNotification(Self);
 end;
@@ -2046,7 +2038,11 @@ begin
   if FDataLink.DataSource <> Value then
   begin
     if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+    begin
+      if FDataLink.DataSource <> nil then
+        FDataLink.DataSource.RemoveFreeNotification(Self);
       FDataLink.DataSource := Value;
+    end;
     if Value <> nil then
       Value.FreeNotification(Self);
     UpdateFieldParams;
@@ -2666,7 +2662,11 @@ end;
 procedure TJvDBStatusLabel.SetDataSource(Value: TDataSource);
 begin
   if not (FDataLink.DataSourceFixed and (csLoading in ComponentState)) then
+  begin
+    if FDataLink.DataSource <> nil then
+      FDataLink.DataSource.RemoveFreeNotification(Self);
     FDataLink.DataSource := Value;
+  end;
   if Value <> nil then
     Value.FreeNotification(Self);
   if not (csLoading in ComponentState) then

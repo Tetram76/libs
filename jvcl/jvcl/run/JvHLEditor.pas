@@ -28,7 +28,7 @@ Known Issues:
   (rom) source cleaning incomplete
   (rom) GetAttr should be broken up further
 -----------------------------------------------------------------------------}
-// $Id: JvHLEditor.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvHLEditor.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 { history
  (JVCL Library versions) :
@@ -168,8 +168,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHLEditor.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -178,7 +178,7 @@ implementation
 
 uses
   Math,
-  JvConsts, JvJCLUtils;
+  JvConsts, JvJCLUtils, JvJVCLUtils;
 
 function LastNonSpaceChar(const S: string): Char;
 var
@@ -298,9 +298,9 @@ end;
 
 procedure TJvHLEditor.Notification(AComponent: TComponent; Operation: TOperation);
 begin
+  inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and (AComponent = FSyntaxHighlighter) then
     SyntaxHighlighter := nil;
-  inherited Notification(AComponent, Operation);
 end;
 
 procedure TJvHLEditor.Loaded;
@@ -1874,7 +1874,7 @@ begin
       if FHighlighter = hlSyntaxHighlighter then
         FHighlighter := hlNone;
 
-    FSyntaxHighlighter := Value;
+    ReplaceComponentReference (Self, Value, TComponent(FSyntaxHighlighter));
     RescanLong(0);
     Invalidate;
   end;

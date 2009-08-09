@@ -28,7 +28,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvSpin.pas 12071 2008-12-10 21:38:08Z ahuser $
+// $Id: JvSpin.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvSpin;
 
@@ -474,8 +474,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpin.pas $';
-    Revision: '$Revision: 12071 $';
-    Date: '$Date: 2008-12-10 22:38:08 +0100 (mer., 10 déc. 2008) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -955,14 +955,7 @@ end;
 
 function TJvCustomSpinEdit.GetButtonKind: TSpinButtonKind;
 begin
-  if NewStyleControls then
-    Result := FButtonKind
-  else
-  begin
-    Result := bkDiagonal;
-    if Assigned(FButton) and (FButton.ButtonStyle = sbsClassic) then
-      Result := bkClassic;
-  end;
+  Result := FButtonKind;
 end;
 
 function TJvCustomSpinEdit.GetButtonWidth: Integer;
@@ -1190,7 +1183,7 @@ begin
   else
   if FButton <> nil then
   begin { bkDiagonal }
-    if NewStyleControls and  Ctl3D and  (BorderStyle = bsSingle) then
+    if Ctl3D and (BorderStyle = bsSingle) then
       if FButtonKind = bkClassic then
         R := Bounds(Width - DefBtnWidth - 4, -1, DefBtnWidth, Height - 3)
       else
@@ -1202,7 +1195,7 @@ begin
       R := Bounds(Width - Height, 0, Height, Height);
     if BiDiMode = bdRightToLeft then
     begin
-      if NewStyleControls and  Ctl3D and  (BorderStyle = bsSingle) then
+      if Ctl3D and (BorderStyle = bsSingle) then
       begin
         R.Left := -1;
         R.Right := Height - 4;
@@ -1745,9 +1738,7 @@ end;
 
 procedure TJvSpinButton.SetFocusControl(Value: TWinControl);
 begin
-  FFocusControl := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FFocusControl));
 end;
 
 procedure TJvSpinButton.SetUpGlyph(Value: TBitmap);

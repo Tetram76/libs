@@ -32,7 +32,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLVer.pas 12157 2009-01-21 20:32:56Z obones $
+// $Id: JVCLVer.pas 12348 2009-06-25 10:59:10Z obones $
 
 unit JVCLVer;
 
@@ -46,9 +46,9 @@ uses
 {$ENDIF UNITVERSIONING}
 
 const
-  sJVCLVersion = '3.37';
+  sJVCLVersion = '3.38';
   JVCLVersionMajor   = 3;    // 0=pre-release|beta/1, 2, ...=final
-  JVCLVersionMinor   = 37;   // minor release
+  JVCLVersionMinor   = 38;   // minor release
   JVCLVersionRelease = 0;    // 0: pre-release|beta/>=1: release
   JVCLVersionBuild   = 0;    // build number, days since march 1, 2006
 
@@ -64,8 +64,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JVCLVer.pas $';
-    Revision: '$Revision: 12157 $';
-    Date: '$Date: 2009-01-21 21:32:56 +0100 (mer., 21 janv. 2009) $';
+    Revision: '$Revision: 12348 $';
+    Date: '$Date: 2009-06-25 12:59:10 +0200 (jeu., 25 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

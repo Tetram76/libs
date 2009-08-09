@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDialButton.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvDialButton.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvDialButton;
 
@@ -242,8 +242,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDialButton.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1146,7 +1146,7 @@ const
 begin
   inherited CreateParams(Params);
   Params.Style := Params.Style or BorderStyles[FBorderStyle];
-  if NewStyleControls and Ctl3D and (FBorderStyle = bsSingle) then
+  if Ctl3D and (FBorderStyle = bsSingle) then
   begin
     Params.Style := Params.Style and not WS_BORDER;
     Params.ExStyle := Params.ExStyle or WS_EX_STATICEDGE;

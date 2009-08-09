@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEProgress.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvBDEProgress.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvBDEProgress;
 
@@ -131,8 +131,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEProgress.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -141,7 +141,7 @@ implementation
 
 uses
   SysUtils, Math, Forms, StdCtrls,
-  JvProgressUtils;
+  JvProgressUtils, JvJVCLUtils;
 
 const
   cbQRYPROGRESS = cbRESERVED4;
@@ -518,16 +518,12 @@ end;
 
 procedure TJvDBProgress.SetMessageControl(Value: TControl);
 begin
-  FMessageControl := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FMessageControl));
 end;
 
 procedure TJvDBProgress.SetGauge(Value: TControl);
 begin
-  FGauge := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FGauge));
 end;
 
 procedure TJvDBProgress.Notification(AComponent: TComponent; AOperation: TOperation);

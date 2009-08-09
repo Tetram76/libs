@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMaskEdit.pas 11610 2007-12-16 13:24:19Z ahuser $
+// $Id: JvMaskEdit.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvMaskEdit;
 
@@ -67,7 +67,7 @@ type
     procedure SetPasswordChar(const Value: Char);
     function GetPasswordChar: Char;
     function GetText: TCaption;
-    procedure SetText(const Value: TCaption); {$IFDEF CLR}reintroduce;{$ENDIF}
+    procedure SetText(const Value: TCaption);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
     procedure CaretChanged(Sender: TObject); dynamic;
@@ -188,8 +188,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMaskEdit.pas $';
-    Revision: '$Revision: 11610 $';
-    Date: '$Date: 2007-12-16 14:24:19 +0100 (dim., 16 déc. 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidators.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvValidators.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvValidators;
 
@@ -284,8 +284,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidators.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -306,7 +306,7 @@ uses
   TypInfo,
 //  JclUnicode, // for reg exp support
   JclWideStrings,
-  JvTypes, JvResources;
+  JvTypes, JvResources, JvJVCLUtils;
 
 var
   GlobalValidatorsList: TStringList = nil;
@@ -468,14 +468,8 @@ procedure TJvBaseValidator.SetControlToValidate(Value: TControl);
 var
   Obj: IJvValidationProperty;
 begin
-  if FControlToValidate <> Value then
-  begin
+  if ReplaceComponentReference (Self, Value, TComponent(FControlToValidate)) then
     if FControlToValidate <> nil then
-      FControlToValidate.RemoveFreeNotification(Self);
-    FControlToValidate := Value;
-    if FControlToValidate <> nil then
-    begin
-      FControlToValidate.FreeNotification(Self);
       if not (csLoading in ComponentState) then
       begin
         if Supports(FControlToValidate, IJvValidationProperty, Obj) then
@@ -483,20 +477,11 @@ begin
         else
           PropertyToValidate := '';
       end;
-    end;
-  end;
 end;
 
 procedure TJvBaseValidator.SetErrorControl(Value: TControl);
 begin
-  if FErrorControl <> Value then
-  begin
-    if FErrorControl <> nil then
-      FErrorControl.RemoveFreeNotification(Self);
-    FErrorControl := Value;
-    if FErrorControl <> nil then
-      FErrorControl.FreeNotification(Self);
-  end;
+  ReplaceComponentReference (Self, Value, TComponent(FErrorControl));
 end;
 
 procedure TJvBaseValidator.SetParentComponent(Value: TComponent);
@@ -711,20 +696,14 @@ procedure TJvControlsCompareValidator.SetCompareToControl(const Value: TControl)
 var
   Obj: IJvValidationProperty;
 begin
-  if FCompareToControl <> Value then
-  begin
-    if FCompareToControl <> nil then
-      FCompareToControl.RemoveFreeNotification(Self);
-    FCompareToControl := Value;
+  if ReplaceComponentReference (Self, Value, TComponent(FCompareToControl)) then
     if FCompareToControl <> nil then
     begin
-      FCompareToControl.FreeNotification(Self);
       if Supports(FCompareToControl, IJvValidationProperty, Obj) then
         CompareToProperty := Obj.GetValidationPropertyName
       else
         CompareToProperty := '';
     end;
-  end;
 end;
 
 procedure TJvControlsCompareValidator.Validate;
@@ -901,13 +880,10 @@ procedure TJvValidators.SetValidationSummaryComponent(Value: TComponent);
 var
   Obj: IJvValidationSummary;
 begin
-  if Value <> FValidationSummaryComponent then
+  if ReplaceComponentReference (Self, Value, TComponent(FValidationSummaryComponent)) then
   begin
-    if FValidationSummaryComponent <> nil then
-      FValidationSummaryComponent.RemoveFreeNotification(Self);
     if Value = nil then
     begin
-      FValidationSummaryComponent := nil;
       SetValidationSummary(nil);
       Exit;
     end;
@@ -916,8 +892,6 @@ begin
     if Value = Self then
       raise EValidatorError.CreateRes(@RsECircularReference);
     SetValidationSummary(Obj);
-    FValidationSummaryComponent := Value;
-    FValidationSummaryComponent.FreeNotification(Self);
   end;
 end;
 
@@ -925,13 +899,10 @@ procedure TJvValidators.SetErrorIndicatorComponent(Value: TComponent);
 var
   Obj: IJvErrorIndicator;
 begin
-  if Value <> FErrorIndicatorComponent then
+  if ReplaceComponentReference (Self, Value, TComponent(FErrorIndicatorComponent)) then
   begin
-    if FErrorIndicatorComponent <> nil then
-      FErrorIndicatorComponent.RemoveFreeNotification(Self);
     if Value = nil then
     begin
-      FErrorIndicatorComponent := nil;
       SetErrorIndicator(nil);
       Exit;
     end;
@@ -940,8 +911,6 @@ begin
     if Value = Self then
       raise EValidatorError.CreateRes(@RsECircularReference);
     SetErrorIndicator(Obj);
-    FErrorIndicatorComponent := Value;
-    FErrorIndicatorComponent.FreeNotification(Self);
   end;
 end;
 

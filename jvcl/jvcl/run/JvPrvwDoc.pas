@@ -49,7 +49,7 @@ Scrolling rules:
       and scroll Rows pages on each click (i.e if Rows = 4 -> scroll 4 pages)
     * if scaling would make pages too small, show as many pages as possible
 -----------------------------------------------------------------------------}
-// $Id: JvPrvwDoc.pas 11057 2006-11-29 14:32:05Z marquardt $
+// $Id: JvPrvwDoc.pas 12431 2009-08-07 11:48:25Z obones $
 
 unit JvPrvwDoc;
 
@@ -436,8 +436,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPrvwDoc.pas $';
-    Revision: '$Revision: 11057 $';
-    Date: '$Date: 2006-11-29 15:32:05 +0100 (mer., 29 nov. 2006) $';
+    Revision: '$Revision: 12431 $';
+    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1011,7 +1011,7 @@ end;
 
 procedure TJvCustomPreviewControl.CMCtl3DChanged(var Msg: TMessage);
 begin
-  if NewStyleControls and (FBorderStyle = bsSingle) then
+  if FBorderStyle = bsSingle then
     RecreateWnd;
   inherited;
 end;
@@ -1024,7 +1024,7 @@ begin
   with Params do
   begin
     Style := Style or BorderStyles[FBorderStyle];
-    if NewStyleControls and Ctl3D and (FBorderStyle = bsSingle) then
+    if Ctl3D and (FBorderStyle = bsSingle) then
     begin
       Style := Style and not WS_BORDER;
       ExStyle := ExStyle or WS_EX_CLIENTEDGE;

@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAnimatedImage.pas 12132 2009-01-07 12:53:11Z ahuser $
+// $Id: JvAnimatedImage.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvAnimatedImage;
 
@@ -182,8 +182,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAnimatedImage.pas $';
-    Revision: '$Revision: 12132 $';
-    Date: '$Date: 2009-01-07 13:53:11 +0100 (mer., 07 janv. 2009) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -191,9 +191,6 @@ const
 implementation
 
 uses
-  {$IFDEF CLR}
-  System.Threading,
-  {$ENDIF CLR}
   Forms,
   //JclSysUtils,
   JvConsts, JvJVCLUtils;
@@ -305,11 +302,7 @@ procedure TJvImageControl.DoPaintControl;
 var
   DC: HDC;
 begin
-  {$IFDEF CLR}
-  if System.Threading.Thread.CurrentThread = MainThread then
-  {$ELSE}
   if GetCurrentThreadID = MainThreadID then
-  {$ENDIF CLR}
   begin
     Repaint;
     Exit;

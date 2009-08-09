@@ -19,7 +19,7 @@ Contributor(s):
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.sourceforge.net
 -----------------------------------------------------------------------------}
-// $Id$
+// $Id: JvStdEditActions.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvStdEditActions;
 
@@ -110,10 +110,11 @@ type
 
 implementation
 
-{$IFDEF COMPILER5}
 uses
-  JvVCL5Utils;
+{$IFDEF COMPILER5}
+  JvVCL5Utils, 
 {$ENDIF COMPILER5}
+  JvJVCLUtils;
 
 //=== { TJvEditAction } ==========================================================
 
@@ -156,12 +157,7 @@ begin
   begin
     if not SupportsControl(Value) then
       Value := nil;
-
-    if FControl <> nil then
-      FControl.RemoveFreeNotification(Self);
-    FControl := Value;
-    if Value <> nil then
-      Value.FreeNotification(Self);
+    ReplaceComponentReference (Self, Value, TComponent(FControl));
   end;
 end;
 
@@ -234,13 +230,7 @@ begin
     Enabled :=  Intf.CanPaste
   else if Target is TCustomEdit then
   begin
-    {$IFDEF CLR}
-    Enabled := (IsClipboardFormatAvailable(CF_TEXT) or
-               IsClipboardFormatAvailable(CF_UNICODETEXT)) and
-               not GetEditControl(Target).ReadOnly;
-    {$ELSE}
     Enabled := Clipboard.HasFormat(CF_TEXT) and not TOpenCustomEdit(GetEditControl(Target)).ReadOnly;
-    {$ENDIF CLR}
   end;
 end;
 

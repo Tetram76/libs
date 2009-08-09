@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageDrawThread.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvImageDrawThread.pas 12369 2009-07-03 10:22:53Z obones $
 
 unit JvImageDrawThread;
 
@@ -48,6 +48,11 @@ type
     procedure Draw;
     procedure Execute; override;
   public
+    procedure Synchronize(AMethod: TThreadMethod); overload;
+    {$IFDEF RTL200_UP}
+    procedure Synchronize(AThreadProc: TThreadProcedure); overload;
+    {$ENDIF RTL200_UP}
+
     property Tag: Integer read FTag write FTag;
     property Delay: Cardinal read FDelay write FDelay;
     property OnDraw: TNotifyEvent read FOnDraw write FOnDraw;
@@ -58,8 +63,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageDrawThread.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12369 $';
+    Date: '$Date: 2009-07-03 12:22:53 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -85,6 +90,18 @@ begin
     // ignore exception
   end;
 end;
+
+procedure TJvImageDrawThread.Synchronize(AMethod: TThreadMethod);
+begin
+  inherited Synchronize(AMethod);
+end;
+
+{$IFDEF RTL200_UP}
+procedure TJvImageDrawThread.Synchronize(AThreadProc: TThreadProcedure);
+begin
+  inherited Synchronize(AThreadProc);
+end;
+{$ENDIF RTL200_UP}
 
 {$IFDEF UNITVERSIONING}
 initialization

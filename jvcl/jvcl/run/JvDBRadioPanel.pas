@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBRadioPanel.pas 11920 2008-09-24 21:42:54Z jfudickar $
+// $Id: JvDBRadioPanel.pas 12296 2009-04-29 14:53:38Z obones $
 
 unit JvDBRadioPanel;
 
@@ -154,8 +154,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBRadioPanel.pas $';
-    Revision: '$Revision: 11920 $';
-    Date: '$Date: 2008-09-24 23:42:54 +0200 (mer., 24 sept. 2008) $';
+    Revision: '$Revision: 12296 $';
+    Date: '$Date: 2009-04-29 16:53:38 +0200 (mer., 29 avr. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -512,6 +512,8 @@ end;
 
 procedure TJvDBRadioPanel.SetDataSource(Value: TDataSource);
 begin
+  if FDataLink.DataSource <> nil then
+    FDataLink.DataSource.RemoveFreeNotification(Self);
   FDataLink.DataSource := Value;
   if Value <> nil then
     Value.FreeNotification(Self);

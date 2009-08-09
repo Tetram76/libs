@@ -25,7 +25,7 @@ Description:
 Known Issues:
   fofConfirmMouse does nothing
 -----------------------------------------------------------------------------}
-// $Id: JvSHFileOperation.pas 11963 2008-10-16 09:12:52Z obones $
+// $Id: JvSHFileOperation.pas 12401 2009-07-09 15:09:08Z obones $
 
 unit JvSHFileOperation;
 
@@ -62,6 +62,7 @@ type
     FOperation: TJvSHFileOpType;
     FOptions: TJvSHFileOptions;
     FTitle: string;
+    FLastErrorMsg: string;
     FOnFileMapping: TJvShFileMappingEvent;
     function GetSourceFiles: TStrings;
     function GetDestFiles: TStrings;
@@ -76,6 +77,9 @@ type
     function Execute: Boolean; override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    // Returns the last error message when Execute has failed
+    property LastErrorMsg: string read FLastErrorMsg;
   published
     // the files to perform the operation on (one file on each row).
     // Filenames can contain wildcards
@@ -97,8 +101,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSHFileOperation.pas $';
-    Revision: '$Revision: 11963 $';
-    Date: '$Date: 2008-10-16 11:12:52 +0200 (jeu., 16 oct. 2008) $';
+    Revision: '$Revision: 12401 $';
+    Date: '$Date: 2009-07-09 17:09:08 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -182,7 +186,13 @@ begin
     wFunc := AOperation[FOperation];
     Wnd := GetWinHandle; // (Owner as TForm).Handle;
   end;
+  FLastErrorMsg := EmptyStr;
   Result := SHFileOperation(SFOS) = 0;
+
+  // If SHFileOperation fails save error message
+  if not Result then
+    FLastErrorMsg := SysErrorMessage(GetLastError);
+
   Result := Result and not SFOS.fAnyOperationsAborted;
 
   PNameMapping := Pointer(SFOS.hNameMappings);

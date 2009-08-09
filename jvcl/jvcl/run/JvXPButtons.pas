@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPButtons.pas 11472 2007-08-18 12:42:22Z ahuser $
+// $Id: JvXPButtons.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvXPButtons;
 
@@ -31,12 +31,10 @@ unit JvXPButtons;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JvJVCLUtils,
-  {$ENDIF USEJVCL}
   Classes, TypInfo,
   Windows, Messages, Graphics, Controls, Forms, ActnList, ImgList, Menus,
   JvXPCore, JvXPCoreUtils;
@@ -61,7 +59,7 @@ type
     FCkGradient: TBitmap;
     FDefault: Boolean;
     FFcGradient: TBitmap;
-    FGlyph: {$IFDEF USEJVCL}TJvPicture{$ELSE}TBitmap{$ENDIF USEJVCL};
+    FGlyph: TJvPicture;
     FHlGradient: TBitmap;
     FImageChangeLink: TChangeLink;
     FImageIndex: Integer;
@@ -82,7 +80,7 @@ type
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
     procedure SetAutoGray(Value: Boolean); virtual;
     procedure SetDefault(Value: Boolean); virtual;
-    procedure SetGlyph(Value: {$IFDEF USEJVCL}TJvPicture{$ELSE}TBitmap{$ENDIF USEJVCL}); virtual;
+    procedure SetGlyph(Value: TJvPicture); virtual;
     procedure SetLayout(Value: TJvXPLayout); virtual;
     procedure SetShowAccelChar(Value: Boolean); virtual;
     procedure SetShowFocusRect(Value: Boolean); virtual;
@@ -95,7 +93,7 @@ type
     property AutoGray: Boolean read FAutoGray write SetAutoGray default True;
     property Cancel: Boolean read FCancel write FCancel default False;
     property Default: Boolean read FDefault write SetDefault default False;
-    property Glyph: {$IFDEF USEJVCL}TJvPicture{$ELSE}TBitmap{$ENDIF USEJVCL} read FGlyph write SetGlyph;
+    property Glyph: TJvPicture read FGlyph write SetGlyph;
     property Layout: TJvXPLayout read FLayout write SetLayout default blGlyphLeft;
     property ShowAccelChar: Boolean read FShowAccelChar write SetShowAccelChar default True;
     property ShowFocusRect: Boolean read FShowFocusRect write SetShowFocusRect default False;
@@ -286,17 +284,15 @@ type
     property OnStartDrag;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPButtons.pas $';
-    Revision: '$Revision: 11472 $';
-    Date: '$Date: 2007-08-18 14:42:22 +0200 (sam., 18 août 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -345,7 +341,7 @@ begin
   FImageIndex := -1;
   FImageChangeLink := TChangeLink.Create;
   FImageChangeLink.OnChange := ImageListChange;
-  FGlyph := {$IFDEF USEJVCL}TJvPicture{$ELSE}TBitmap{$ENDIF USEJVCL}.Create;
+  FGlyph := TJvPicture.Create;
   FGlyph.OnChange := GlyphChange;
   FLayout := blGlyphLeft;
   FShowAccelChar := True;
@@ -421,10 +417,13 @@ begin
   end;
 end;
 
-procedure TJvXPCustomButton.SetGlyph(Value: {$IFDEF USEJVCL}TJvPicture{$ELSE}TBitmap{$ENDIF USEJVCL});
+procedure TJvXPCustomButton.SetGlyph(Value: TJvPicture);
 begin
-  FGlyph.Assign(Value);
-  LockedInvalidate;
+  if FGlyph <> Value then
+  begin
+    FGlyph.Assign(Value);
+    LockedInvalidate;
+  end;
 end;
 
 procedure TJvXPCustomButton.SetLayout(Value: TJvXPLayout);
@@ -908,18 +907,8 @@ end;
 
 procedure TJvXPCustomToolButton.SetImages(const Value: TCustomImageList);
 begin
-  if FImages <> Value then
-  begin
-    if FImages <> nil then
-      FImages.UnRegisterChanges(FChangeLink);
-    FImages := Value;
-    if FImages <> nil then
-    begin
-      FImages.FreeNotification(Self);
-      FImages.RegisterChanges(FChangeLink);
-    end;
+  if ReplaceImageListReference(Self, Value, FImages, FChangeLink) then
     LockedInvalidate;
-  end;
 end;
 
 procedure TJvXPCustomToolButton.SetImageIndex(const Value: TImageIndex);
@@ -933,13 +922,8 @@ end;
 
 procedure TJvXPCustomToolButton.SetDropDownMenu(const Value: TPopupMenu);
 begin
-  if FDropDownMenu <> Value then
-  begin
-    FDropDownMenu := Value;
-    if FDropDownMenu <> nil then
-      FDropDownMenu.FreeNotification(Self);
+  if ReplaceComponentReference (Self, Value, TComponent(FDropDownMenu)) then
     LockedInvalidate;
-  end;
 end;
 
 procedure TJvXPCustomToolButton.DoImagesChange(Sender: TObject);
@@ -947,7 +931,6 @@ begin
   LockedInvalidate;
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -955,7 +938,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBevel.pas 11567 2007-11-14 23:24:35Z ahuser $
+// $Id: JvBevel.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvBevel;
 
@@ -152,8 +152,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBevel.pas $';
-    Revision: '$Revision: 11567 $';
-    Date: '$Date: 2007-11-15 00:24:35 +0100 (jeu., 15 nov. 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -466,7 +466,7 @@ begin
   // set ourselves, replacing the fsd prefix by be before reading the value
   try
     if Reader.ReadValue <> vaSet then
-      raise EReadError.CreateRes({$IFNDEF CLR}@{$ENDIF}SInvalidPropertyValue);
+      raise EReadError.CreateRes(@SInvalidPropertyValue);
 
     EnumType := TypeInfo(TBevelEdge);
     Edges := [];
@@ -479,7 +479,7 @@ begin
       EnumName := StringReplace(EnumName, 'fsd', 'be', []);
       Value := GetEnumValue(EnumType, EnumName);
       if Value = -1 then
-        raise EReadError.CreateRes({$IFNDEF CLR}@{$ENDIF}SInvalidPropertyValue);
+        raise EReadError.CreateRes(@SInvalidPropertyValue);
 
       Include(FEdges, TBevelEdge(Value));
     end;

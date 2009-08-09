@@ -32,7 +32,7 @@ Description:
   To set the error, use the Error property: an empty error string, removes the error image
 
 -----------------------------------------------------------------------------}
-// $Id: JvErrorIndicator.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvErrorIndicator.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvErrorIndicator;
 
@@ -207,8 +207,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvErrorIndicator.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -218,7 +218,7 @@ implementation
 uses
   CommCtrl,
   SysUtils,
-  JvTypes, JvResources;
+  JvTypes, JvResources, JvJVCLUtils;
 
 {$R JvErrorIndicator.res}
 
@@ -492,17 +492,7 @@ begin
   if FImageList <> Value then
   begin
     StopThread;
-    if Assigned(FImageList) then
-    begin
-      FImageList.UnRegisterChanges(FChangeLink);
-      FImageList.RemoveFreeNotification(Self);
-    end;
-    FImageList := Value;
-    if Assigned(FImageList) then
-    begin
-      FImageList.RegisterChanges(FChangeLink);
-      FImageList.FreeNotification(Self);
-    end;
+    ReplaceImageListReference(Self, Value, FImageList, FChangeLink);
     UpdateControls;
   end;
 end;
@@ -729,9 +719,8 @@ end;
 
 procedure TJvErrorControl.SetImageList(const Value: TCustomImageList);
 begin
-  if FImageList <> Value then
+  if ReplaceComponentReference (Self, Value, TComponent(FImageList)) then
   begin
-    FImageList := Value;
     if FImageList <> nil then
       BoundsRect := CalcBoundsRect
     else
@@ -744,14 +733,9 @@ procedure TJvErrorControl.SetControl(const Value: TControl);
 begin
   if FControl <> Value then
   begin
+    ReplaceComponentReference (Self, Value, TComponent(FControl));
     if FControl <> nil then
-      FControl.RemoveFreeNotification(Self);
-    FControl := Value;
-    if FControl <> nil then
-    begin
-      FControl.FreeNotification(Self);
-      Parent := FControl.Parent;
-    end
+      Parent := FControl.Parent
     else
       Parent := nil;
   end;
@@ -761,8 +745,11 @@ procedure TJvErrorControl.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) and (AComponent = Control) then
-    Control := nil;
+  if (Operation = opRemove) then
+    if (AComponent = Control) then
+      Control := nil
+    else if (AComponent = FImageList) then
+      FImageList := nil
 end;
 
 //=== { TJvBlinkThread } =====================================================

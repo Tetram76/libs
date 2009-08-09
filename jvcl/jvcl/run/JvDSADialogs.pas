@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDSADialogs.pas 12271 2009-04-14 22:26:13Z jfudickar $
+// $Id: JvDSADialogs.pas 12375 2009-07-03 21:03:26Z jfudickar $
 
 unit JvDSADialogs;
 
@@ -464,8 +464,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDSADialogs.pas $';
-    Revision: '$Revision: 12271 $';
-    Date: '$Date: 2009-04-15 00:26:13 +0200 (mer., 15 avr. 2009) $';
+    Revision: '$Revision: 12375 $';
+    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -478,7 +478,7 @@ uses
   JclRegistry,
   {$ENDIF MSWINDOWS}
   JclBase, JclSysUtils,
-  JvConsts, JvResources;
+  JvConsts, JvResources, JvJVCLUtils;
 
 const
   cDSAStateValueName = 'DSA_State'; // do not localize
@@ -849,6 +849,7 @@ begin
     ResultForm.BorderStyle := bsDialog;
     ResultForm.Canvas.Font := ResultForm.Font;
     ResultForm.KeyPreview := True;
+    ResultForm.HelpContext := HelpCtx;
     ResultForm.OnKeyDown := ResultForm.CustomKeyDown;
     ResultForm.OnShow := ResultForm.CustomShow;
     ResultForm.OnMouseDown := ResultForm.CustomMouseDown;
@@ -981,6 +982,7 @@ begin
       if I = HelpButton then
         Button.OnClick := ResultForm.HelpButtonClick;
     end;
+    CheckBox := nil; // to avoid warnings
     if CheckCaption <> '' then
     begin
       CheckBox := DynControlEngine.CreateCheckboxControl(ResultForm, CheckPanel, 'DontShowAgain', CheckCaption);
@@ -2429,15 +2431,14 @@ end;
 
 procedure TJvDSADialog.Notification(AComponent: TComponent; Operation: TOperation);
 begin
+  inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and (AComponent = CheckControl) then
     CheckControl := nil;
-  inherited Notification(AComponent, Operation);
 end;
 
 procedure TJvDSADialog.SetCheckControl(Value: TWinControl);
 begin
-  if Value <> CheckControl then
-  begin
+  if ReplaceComponentReference (Self, Value, TComponent(FCheckControl)) then
     if Value <> nil then
     begin
       if GetPropInfo(Value, 'Checked') = nil then
@@ -2445,8 +2446,6 @@ begin
       if GetPropInfo(Value, 'Caption') = nil then
         raise EJvDSADialog.CreateRes(@RsECtrlHasNoCaptionProp);
     end;
-    FCheckControl := Value;
-  end;
 end;
 
 procedure TJvDSADialog.SetDialogID(Value: Integer);

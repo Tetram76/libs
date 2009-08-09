@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockControlForm.pas 12264 2009-04-10 20:08:13Z obones $
+// $Id: JvDockControlForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 { Changes:
 
@@ -45,16 +45,12 @@ unit JvDockControlForm;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Windows, Messages, Classes, Graphics, Controls, Forms, Menus,
   ExtCtrls, ComCtrls,
-  {$IFDEF USEJVCL}
   JvComponentBase, JvAppStorage, JvConsts,
-  {$ENDIF USEJVCL}
   JvDockTree, JvDockSupportClass, JvDockSupportControl, JvDockAdvTree;
 
 const
@@ -224,10 +220,6 @@ type
     function CanSetTopDocked(ADockBaseControl: TJvDockBaseControl): Boolean; virtual;
     function CanSetBottomDocked(ADockBaseControl: TJvDockBaseControl): Boolean; virtual;
     function CanSetEachOtherDocked(ADockBaseControl: TJvDockBaseControl): Boolean; virtual;
-    {$IFNDEF USEJVCL}
-    function GetControlName: string; virtual;
-    function GetDockStyleVersion: string; virtual;
-    {$ENDIF !USEJVCL}
 
     procedure ResetCursor(Source: TJvDockDragDockObject); virtual;
 
@@ -244,10 +236,6 @@ type
     property DockBaseControl[Index: Integer]: TJvDockBaseControl read GetDockBaseControl;
 
     procedure RestoreClient(DockClient: TJvDockClient); virtual;
-    {$IFNDEF USEJVCL}
-    property Version: string read GetDockStyleVersion;
-    property ControlName: string read GetControlName;
-    {$ENDIF !USEJVCL}
     property DockPanelClass: TJvDockPanelClass read FDockPanelClass write FDockPanelClass;
     property DockSplitterClass: TJvDockSplitterClass read FDockSplitterClass write FDockSplitterClass;
     property ConjoinPanelClass: TJvDockConjoinPanelClass read FConjoinPanelClass write FConjoinPanelClass;
@@ -263,11 +251,7 @@ type
     function DockClientWindowProc(DockClient: TJvDockClient; var Msg: TMessage): Boolean; override;
   end;
 
-  {$IFDEF USEJVCL}
   TJvDockBaseControl = class(TJvComponent)
-  {$ELSE}
-  TJvDockBaseControl = class(TComponent)
-  {$ENDIF USEJVCL}
   private
     FEnableDock: Boolean;
     FLeftDock: Boolean; { Can the parent form be docked into the Left dock? }
@@ -311,9 +295,6 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    {$IFNDEF USEJVCL}
-    function GetDockStyleVersion: string; virtual;
-    {$ENDIF !USEJVCL}
     { Owner of this component }
     property ParentForm: TForm read FParentForm;
     property EnableDock: Boolean read FEnableDock write SetEnableDock default True;
@@ -324,9 +305,6 @@ type
     property EachOtherDock: Boolean read FEachOtherDock write SetEachOtherDock default True;
     property CustomDock: Boolean read FCustomDock write FCustomDock default True; {NEW!}
     property DockStyle: TJvDockBasicStyle read FDockStyle write SetDockStyle;
-    {$IFNDEF USEJVCL}
-    property Version: string read GetDockStyleVersion;
-    {$ENDIF !USEJVCL}
   end;
 
   TJvDockCustomPanelEvent = procedure(Sender: TJvDockServer;
@@ -419,9 +397,6 @@ type
 
     property DockPanelWithAlign[Index: TAlign]: TJvDockPanel read GetDockPanelWithAlign;
     property DockSplitterWithAlign[Index: TAlign]: TJvDockSplitter read GetDockSplitterWithAlign;
-    {$IFNDEF USEJVCL}
-    property Version: string read GetDockStyleVersion;
-    {$ENDIF !USEJVCL}
   published
     property LeftSplitterStyle: TJvDockSplitterStyle index 0 read GetSplitterStyleIndex write SetSplitterStyleIndex;
     property RightSplitterStyle: TJvDockSplitterStyle index 1 read GetSplitterStyleIndex write SetSplitterStyleIndex;
@@ -823,12 +798,10 @@ procedure SetDockPageControlHotTrack(Value: Boolean);
 procedure SetTabDockHostBorderStyle(Value: TFormBorderStyle);
 procedure SetConjoinDockHostBorderStyle(Value: TFormBorderStyle);
 
-{$IFDEF USEJVCL}
 // Save Layout to JvAppStorage:
 procedure SaveDockTreeToAppStorage(AppStorage: TJvCustomAppStorage; AppStoragePath: string = '');
 // Load Layout from JvAppStorage:
 procedure LoadDockTreeFromAppStorage(AppStorage: TJvCustomAppStorage; AppStoragePath: string = '');
-{$ENDIF USEJVCL}
 
 procedure SaveDockTreeToFile(FileName: string);
 procedure LoadDockTreeFromFile(FileName: string);
@@ -873,28 +846,22 @@ function JvGlobalDockIsLoading: Boolean;
 procedure InvalidateDockHostSiteOfControl(Control: TControl; FocusLost: Boolean);
 {$ENDIF !COMPILER9_UP}
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockControlForm.pas $';
-    Revision: '$Revision: 12264 $';
-    Date: '$Date: 2009-04-10 22:08:13 +0200 (ven., 10 avr. 2009) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
 uses
   SysUtils,
-  {$IFDEF USEJVCL}
   JvAppRegistryStorage, JvAppIniStorage, JvTypes,
-  {$ELSE}
-  IniFiles, Registry,
-  {$ENDIF USEJVCL}
-  JvDockSupportProc, JvDockGlobals, JvDockInfo, JvDockVSNetStyle, JvVCL5Utils;
+  JvDockSupportProc, JvDockGlobals, JvDockInfo, JvDockVSNetStyle, JvVCL5Utils, JvJVCLUtils;
 
 {$R JvDockableForm.dfm}
 {$R JvDockConjoinHost.dfm}
@@ -903,13 +870,6 @@ uses
 type
   TControlAccessProtected = class(TControl);
   TWinControlAccessProtected = class(TWinControl);
-
-
-{$IFNDEF USEJVCL}
-const
-  cDefaultFormName = '_JVFORM_';
-  cDefaultNameSuffix = '_JVDOCK_';
-{$ENDIF !USEJVCL}
 
 var
   DockPageControlPopupMenu: TPopupMenu = nil;
@@ -1453,8 +1413,6 @@ begin
   end;
 end;
 
-{$IFDEF USEJVCL}
-
 procedure LoadDockTreeFromAppStorage(AppStorage: TJvCustomAppStorage; AppStoragePath: string = '');
 var
   JvDockInfoTree: TJvDockInfoTree;
@@ -1510,75 +1468,6 @@ begin
     JvAppStorage.Free;
   end;
 end;
-
-{$ELSE}
-
-procedure LoadDockTreeFromFile(FileName: string);
-var
-  JvDockInfoTree: TJvDockInfoTree;
-  Form: TForm;
-  MemFile: TMemIniFile;
-begin
-  HideAllPopupPanel(nil);
-
-  { Creating a form with size 0 before locking the desktop supposedly prevents
-    some screen flicker }
-  Form := TForm.CreateNew(nil);
-  Form.BorderStyle := bsNone;
-  Form.BoundsRect := Rect(0, 0, 0, 0);
-  Form.Visible := True;
-  Form.Name := cDefaultFormName;
-
-  JvDockInfoTree := TJvDockInfoTree.Create(TJvDockInfoZone);
-
-  MemFile := TMemIniFile.Create(FileName);
-  BeginDockLoading;
-  try
-    JvDockInfoTree.DockInfoIni := MemFile;
-    JvGlobalDockIsLoading := True;
-    JvDockInfoTree.ReadInfoFromIni;
-  finally
-    Form.Free;
-    EndDockLoading;
-    JvDockInfoTree.Free;
-    MemFile.Free;
-  end;
-end;
-
-procedure LoadDockTreeFromReg(ARootKey: DWORD; RegPatch: string);
-var
-  JvDockInfoTree: TJvDockInfoTree;
-  Form: TForm;
-begin
-  HideAllPopupPanel(nil);
-
-  { Creating a form with size 0 before locking the desktop supposedly prevents
-    some screen flicker }
-  Form := TForm.CreateNew(nil);
-  Form.BorderStyle := bsNone;
-  Form.BoundsRect := Rect(0, 0, 0, 0);
-  Form.Visible := True;
-  Form.Name := cDefaultFormName;
-
-  JvDockInfoTree := TJvDockInfoTree.Create(TJvDockInfoZone);
-
-  BeginDockLoading;
-  try
-    JvDockInfoTree.DockInfoReg := TRegistry.Create;
-    try
-      JvDockInfoTree.DockInfoReg.RootKey := ARootKey;
-      JvDockInfoTree.ReadInfoFromReg(RegPatch);
-    finally
-      JvDockInfoTree.DockInfoReg.Free;
-    end;
-  finally
-    EndDockLoading;
-    JvDockInfoTree.Free;
-    Form.Free;
-  end;
-end;
-
-{$ENDIF USEJVCL}
 
 procedure MakeDockClientEvent(Host: TControl; Visible: Boolean);
 var
@@ -1717,9 +1606,6 @@ begin
   ResetDockClient(FindDockClient(Control), NewTarget);
 end;
 
-
-{$IFDEF USEJVCL}
-
  // Save Layout to JvAppStorage:
  //
  // Uses Global VCL object Screens to go through all forms, and save layout for
@@ -1788,69 +1674,6 @@ begin
     JvAppStorage.Free;
   end;
 end;
-
-{$ELSE}
-
-procedure SaveDockTreeToFile(FileName: string);
-var
-  JvDockInfoTree: TJvDockInfoTree;
-  I: Integer;
-  MemFile: TMemIniFile;
-begin
-  HideAllPopupPanel(nil);
-  MemFile := TMemIniFile.Create(FileName);
-  try
-    JvDockInfoTree := TJvDockInfoTree.Create(TJvDockInfoZone);
-    try
-      for I := 0 to Screen.CustomFormCount - 1 do
-        if (Screen.CustomForms[I].Parent = nil) and
-          ((FindDockClient(Screen.CustomForms[I]) <> nil) or
-           (FindDockServer(Screen.CustomForms[I]) <> nil)) then
-          JvDockInfoTree.CreateZoneAndAddInfoFromApp(Screen.CustomForms[I]);
-
-      JvDockInfoTree.DockInfoIni := MemFile;
-      JvDockInfoTree.WriteInfoToIni;
-      MemFile.UpdateFile;
-    finally
-      JvDockInfoTree.Free;
-    end;
-  finally
-    MemFile.Free;
-  end;
-end;
-
-procedure SaveDockTreeToReg(ARootKey: DWORD; RegPatch: string);
-var
-  I: Integer;
-  JvDockInfoTree: TJvDockInfoTree;
-begin
-  HideAllPopupPanel(nil);
-
-  JvDockInfoTree := TJvDockInfoTree.Create(TJvDockInfoZone);
-  try
-    for I := 0 to Screen.CustomFormCount - 1 do
-      if (Screen.CustomForms[I].Parent = nil) and
-        (FindDockClient(Screen.CustomForms[I]) <> nil) then
-        JvDockInfoTree.CreateZoneAndAddInfoFromApp(Screen.CustomForms[I]);
-
-    for I := 0 to Screen.CustomFormCount - 1 do
-      if (Screen.CustomForms[I].Parent = nil) and
-        (FindDockServer(Screen.CustomForms[I]) <> nil) then
-        JvDockInfoTree.CreateZoneAndAddInfoFromApp(Screen.CustomForms[I]);
-
-    JvDockInfoTree.DockInfoReg := TRegistry.Create;
-    try
-      JvDockInfoTree.DockInfoReg.RootKey := ARootKey;
-      JvDockInfoTree.WriteInfoToReg(RegPatch);
-    finally
-      JvDockInfoTree.DockInfoReg.Free;
-    end;
-  finally
-    JvDockInfoTree.Free;
-  end;
-end;
-
-{$ENDIF USEJVCL}
 
 procedure SetConjoinDockHostBorderStyle(Value: TFormBorderStyle);
 var
@@ -2404,13 +2227,6 @@ begin
     FOldOnCreate(Sender);
 end;
 
-{$IFNDEF USEJVCL}
-function TJvDockBaseControl.GetDockStyleVersion: string;
-begin
-  Result := RsDockManagerVersion;
-end;
-{$ENDIF !USEJVCL}
-
 procedure TJvDockBaseControl.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
@@ -2442,8 +2258,6 @@ begin
     try
       if FDockStyle <> nil then
       begin
-        FDockStyle.RemoveFreeNotification(Self);
-
         { Remove Self from the internal list of the dock style component }
         FDockStyle.RemoveDockBaseControl(Self);
 
@@ -2451,7 +2265,7 @@ begin
         RemoveDockStyle(FDockStyle);
       end;
 
-      FDockStyle := ADockStyle;
+      ReplaceComponentReference (Self, ADockStyle, TComponent(FDockStyle));
 
       if FDockStyle <> nil then
       begin
@@ -2464,7 +2278,6 @@ begin
         { Give the ancestors a change to respond }
         AddDockStyle(FDockStyle);
 
-        FDockStyle.FreeNotification(Self);
       end;
     finally
       ParentForm.EnableAlign;
@@ -2768,13 +2581,6 @@ begin
   Result := True;
 end;
 
-{$IFNDEF USEJVCL}
-function TJvDockBasicStyle.GetControlName: string;
-begin
-  Result := RsDockStyleName;
-end;
-{$ENDIF !USEJVCL}
-
 function TJvDockBasicStyle.GetDockBaseControlCount: Integer;
 begin
   Result := FDockBaseControls.Count;
@@ -2814,13 +2620,6 @@ begin
     else
       Result := JvDockState_Docking;
 end;
-
-{$IFNDEF USEJVCL}
-function TJvDockBasicStyle.GetDockStyleVersion: string;
-begin
-  Result := RsDockStyleVersion;
-end;
-{$ENDIF !USEJVCL}
 
 procedure TJvDockBasicStyle.HideDockForm(ADockClient: TJvDockClient);
 begin
@@ -3491,17 +3290,11 @@ begin
   begin
     if FLastDockSite <> nil then
     begin
-      FLastDockSite.RemoveFreeNotification(Self);
-
       if TWinControlAccessProtected(FLastDockSite).UseDockManager and
         Supports(TWinControlAccessProtected(FLastDockSite).DockManager, IJvDockManager, JvDockManager) then
         JvDockManager.RemoveControl(Self.ParentForm);
     end;
-
-    FLastDockSite := ALastDockSite;
-
-    if FLastDockSite <> nil then
-      FLastDockSite.FreeNotification(Self);
+    ReplaceComponentReference (Self, ALastDockSite, TComponent(FLastDockSite));
   end;
 end;
 
@@ -3520,9 +3313,7 @@ end;
 
 procedure TJvDockClient.SetNCPopupMenu(Value: TPopupMenu);
 begin
-  FNCPopupMenu := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
+  ReplaceComponentReference (Self, Value, TComponent(FNCPopupMenu));
 end;
 
 procedure TJvDockClient.SetParentVisible(const Value: Boolean);
@@ -5337,20 +5128,16 @@ begin
 end;
 
 initialization
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   RegisterUnitVersion(HInstance, UnitVersioning);
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   InitDockManager;
 
 finalization
   DoneDockManager;
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
 
 end.
 

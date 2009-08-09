@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBitBtn.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvBitBtn.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvBitBtn;
 
@@ -84,8 +84,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBitBtn.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -195,7 +195,7 @@ end;
 procedure TJvBitBtn.CNDrawItem(var Msg: TWMDrawItem);
 begin
   inherited;
-  DrawItem(Msg.DrawItemStruct{$IFNDEF CLR}^{$ENDIF});
+  DrawItem(Msg.DrawItemStruct^);
 end;
 
 procedure TJvBitBtn.DrawItem(const DrawItemStruct: TDrawItemStruct);
@@ -208,11 +208,7 @@ begin
   FCanvas.Handle := DrawItemStruct.hDC;
   R := ClientRect;
   IsDown := DrawItemStruct.itemState and ODS_SELECTED <> 0;
-  {$IFDEF USEJVCL}
-  if (not MouseOver) and (not IsDown) then
-  {$ELSE}
-  if not IsDown then
-  {$ENDIF USEJVCL}
+  if not MouseOver and not IsDown then
   begin
     with FCanvas do
     begin

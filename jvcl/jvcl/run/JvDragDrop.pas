@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDragDrop.pas 11828 2008-07-23 13:28:54Z obones $
+// $Id: JvDragDrop.pas 12336 2009-06-09 23:40:40Z jfudickar $
 
 unit JvDragDrop;
 
@@ -145,8 +145,8 @@ function Malloc: IMalloc;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDragDrop.pas $';
-    Revision: '$Revision: 11828 $';
-    Date: '$Date: 2008-07-23 15:28:54 +0200 (mer., 23 juil. 2008) $';
+    Revision: '$Revision: 12336 $';
+    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -157,7 +157,7 @@ uses
   ShlObj, SysUtils, Forms,
   JvVCL5Utils,
   JvJCLUtils,
-  JvWndProcHook;
+  JvWndProcHook, JvJVCLUtils;
 
 var
   GlobalCF_FILEDESCRIPTOR: UINT = $FFFFFFF;
@@ -334,13 +334,7 @@ begin
     { This will implicitly unhook the current DropTarget }
     AcceptDrag := False;
 
-    if Assigned(FDropTarget) then
-      FDropTarget.RemoveFreeNotification(Self);
-
-    FDropTarget := Value;
-
-    if Assigned(FDropTarget) then
-      FDropTarget.FreeNotification(Self);
+    ReplaceComponentReference (Self, Value, TComponent(FDropTarget));
 
     if WasActive then
       { And hook again.. }
@@ -567,14 +561,7 @@ begin
   if Value <> FControl then
   begin
     UnregisterControl;
-    if Assigned(FControl) then
-      FControl.RemoveFreeNotification(Self);
-
-    FControl := Value;
-
-    if Assigned(FControl) then
-      FControl.FreeNotification(Self);
-
+    ReplaceComponentReference (Self, Value, TComponent(FControl));
     RegisterControl;
   end;
 end;

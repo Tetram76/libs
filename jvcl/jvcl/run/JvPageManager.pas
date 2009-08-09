@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageManager.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvPageManager.pas 12389 2009-07-09 10:25:10Z obones $
 
 unit JvPageManager;
 
@@ -32,9 +32,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  System.Reflection,
-  {$ENDIF CLR}
   Controls, Forms, StdCtrls, ExtCtrls, ActnList,
   SysUtils, Classes;
 
@@ -145,11 +142,7 @@ type
     procedure PageLeave(Next: Boolean);
     procedure PageShow(Next: Boolean);
     procedure PageHide(Next: Boolean);
-  {$IFDEF CLR}
-  public
-  {$ELSE}
   protected
-  {$ENDIF CLR}
     procedure SetParentComponent(Value: TComponent); override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -196,13 +189,16 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageManager.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12389 $';
+    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+uses
+  JvJVCLUtils;
 
 
 var
@@ -371,9 +367,7 @@ begin
   begin
     if not (csLoading in ComponentState) then
       SyncBtnClick(Index, False);
-    FButtons[Boolean(Index)] := Value;
-    if Value <> nil then
-      Value.FreeNotification(Self);
+    ReplaceComponentReference (Self, Value, tComponent(FButtons[Boolean(Index)]));
     if not (csLoading in ComponentState) then
       SyncBtnClick(Index, True);
   end;
@@ -451,11 +445,8 @@ end;
 
 procedure TJvPageManager.SetPageOwner(Value: TPageOwner);
 begin
-  if FPageOwner <> Value then
+  if ReplaceComponentReference (Self, Value, tComponent(FPageOwner)) then
   begin
-    FPageOwner := Value;
-    if Value <> nil then
-      Value.FreeNotification(Self);
     if not (csLoading in ComponentState) then
     begin
       Resync;
@@ -806,13 +797,7 @@ begin
     begin
       for I := 0 to Pages.Count - 1 do
         if PageIndex <> I then
-          {$IFDEF CLR}
-          Pages.Objects[I].GetType.GetMethod('DestroyHandle',
-            BindingFlags.NonPublic or BindingFlags.InvokeMethod).Invoke(
-              Pages.Objects[I], []);
-          {$ELSE}
           TWinControlAccessProtected(Pages.Objects[I]).DestroyHandle;
-          {$ENDIF CLR}
     end;
 end;
 

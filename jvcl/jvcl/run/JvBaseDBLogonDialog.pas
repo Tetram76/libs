@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBLogonDialog.pas 12255 2009-03-22 22:49:26Z jfudickar $
+// $Id: JvBaseDBLogonDialog.pas 12376 2009-07-03 21:34:17Z jfudickar $
 
 unit JvBaseDBLogonDialog;
 
@@ -165,6 +165,7 @@ type
     procedure CopyContents(iConnectionList: TJvBaseConnectionList; iClearBefore: Boolean);
     function CreateObject: TPersistent; override;
     function GetConnection(I: Longint): TJvBaseConnectionInfo;
+    procedure LoadData; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -391,8 +392,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBLogonDialog.pas $';
-    Revision: '$Revision: 12255 $';
-    Date: '$Date: 2009-03-22 23:49:26 +0100 (dim., 22 mars 2009) $';
+    Revision: '$Revision: 12376 $';
+    Date: '$Date: 2009-07-03 23:34:17 +0200 (ven., 03 juil. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1306,6 +1307,7 @@ begin
   TransferSessionDataToDialog;
   if (DialogUserName = '') and Options.SaveLastConnect then
     TransferConnectionInfoToDialog(ConnectionList.LastConnect);
+  SetConnectBtnEnabled;
 end;
 
 function TJvBaseDBLogonDialog.GetActivePage: TJvDBLogonDialogActivePage;
@@ -2241,6 +2243,15 @@ begin
   finally
     Connection.Free;
   end;
+end;
+
+procedure TJvBaseConnectionList.LoadData;
+var
+  i: Integer;
+begin
+  inherited LoadData;
+  for i := 0 to Items.Count - 1 do
+    Items[i] := Connection[i].UserDatabaseString;
 end;
 
 procedure TJvBaseConnectionList.SetLastConnect(const Value: TJvBaseConnectionInfo);

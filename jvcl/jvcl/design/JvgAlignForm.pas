@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgAlignForm.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvgAlignForm.pas 12337 2009-06-11 10:42:10Z ahuser $
 
 unit JvgAlignForm;
 
@@ -31,23 +31,14 @@ unit JvgAlignForm;
 interface
 
 uses
-  {$IFDEF USEJVCL}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$ENDIF USEJVCL}
   Classes, Forms,
-  {$IFDEF USEJVCL}
-  JvComponent,
-  {$ENDIF USEJVCL}
-  JvgTypes, StdCtrls, Controls, ExtCtrls;
+  JvComponent, JvgTypes, StdCtrls, Controls, ExtCtrls;
 
 type
-  {$IFDEF USEJVCL}
   TAlignForm = class(TJvForm)
-  {$ELSE}
-  TAlignForm = class(TForm)
-  {$ENDIF USEJVCL}
     g_Horz: TRadioGroup;
     g_Vert: TRadioGroup;
     B_Ok: TButton;
@@ -58,17 +49,15 @@ type
     Vert: TglVComponentAlign;
   end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/design/JvgAlignForm.pas $';
-    Revision: '$Revision: 11476 $';
-    Date: '$Date: 2007-08-18 18:59:46 +0200 (sam., 18 août 2007) $';
+    Revision: '$Revision: 12337 $';
+    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
     LogPath: 'JVCL\design'
   );
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 implementation
 
@@ -80,7 +69,6 @@ begin
   Vert := TglVComponentAlign(g_Vert.ItemIndex);
 end;
 
-{$IFDEF USEJVCL}
 {$IFDEF UNITVERSIONING}
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
@@ -88,7 +76,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-{$ENDIF USEJVCL}
 
 end.
 
