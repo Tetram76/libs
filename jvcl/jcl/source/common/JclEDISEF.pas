@@ -33,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                       $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -819,9 +819,11 @@ function InsertTableInto(DataObjectGroup: TEDISEFDataObjectGroup;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDISEF.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 {$ENDIF ~EDI_WEAK_PACKAGE_UNITS}
@@ -1059,6 +1061,7 @@ var
   CompareElement: TEDISEFElement;
   ListItem: TEDISEFDataObjectListItem;
 begin
+  Result := '';
   if Element.UserAttribute <> '' then
     Result := Result + Element.UserAttribute;
   Result := Result + Element.Id;
@@ -1332,6 +1335,7 @@ end;
 
 function CombineCOMSDataOfSEGSDefinition(CompositeElement: TEDISEFCompositeElement): string;
 begin
+  Result := '';
   if CompositeElement.UserAttribute <> '' then
     Result := Result + CompositeElement.UserAttribute;
   Result := Result + CompositeElement.Id;
@@ -1453,25 +1457,10 @@ end;
 procedure ParseSEGSDataOfSETSDefinition(Data: string; Segment: TEDISEFSegment;
   SEFFile: TEDISEFFile);
 
-  {$IFDEF CLR}
-  function ToPChar(const S: string): string;
-  var
-    I: Integer;
-  begin
-    for I := 1 to Length(S) do
-      if S[I] = #0 then
-      begin
-        Result := Copy(S, 1, I - 1);
-        Exit;
-      end;
-    Result := S;
-  end;
-  {$ELSE ~CLR}
   function ToPChar(const S: string): PChar;
   begin
     Result := PChar(S);
   end;
-  {$ENDIF ~CLR}
 
 var
   Temp: TStringList;
@@ -1551,6 +1540,7 @@ end;
 
 function CombineSEGSDataOfSETSDefinition(Segment: TEDISEFSegment): string;
 begin
+  Result := '';
   if Segment.UserAttribute <> '' then
     Result := Result + Segment.UserAttribute;
   Result := Result + Segment.Id;
@@ -4077,12 +4067,8 @@ begin
   begin
     EDIFileStream := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyNone);
     try
-      {$IFDEF CLR}
-      EDIFileStream.ReadStringAnsiBuffer(FData, EDIFileStream.Size);
-      {$ELSE ~CLR}
       SetLength(FData, EDIFileStream.Size);
       EDIFileStream.Read(Pointer(FData)^, EDIFileStream.Size);
-      {$ENDIF ~CLR}
     finally
       EDIFileStream.Free;
     end;
@@ -4211,11 +4197,7 @@ var
   SearchResult, SearchResult2: Integer;
 begin
   INI.Clear;
-  {$IFDEF COMPILER6_UP}
   INI.Delimiter := SEFDelimiter_Comma;
-  {$ELSE ~COMPILER6_UP}
-  // TODO : (rom) ?
-  {$ENDIF ~COMPILER6_UP}
   SearchResult := StrSearch(SectionTag_INI, FData, 1);
   if SearchResult > 0 then
   begin
@@ -4301,32 +4283,16 @@ var
   SearchResult, SearchResult2: Integer;
 begin
   STD.Clear;
-  {$IFDEF COMPILER6_UP}
   STD.Delimiter := SEFDelimiter_Comma;
-  {$ELSE ~COMPILER6_UP}
-  // TODO : (rom) ?
-  {$ENDIF ~COMPILER6_UP}
   SearchResult := StrSearch(SectionTag_STD, FData, 1);
   if SearchResult > 0 then
   begin
     SearchResult := SearchResult + Length(SectionTag_STD + NativeLineBreak);
     SearchResult2 := StrSearch(NativeLineBreak + SEFDelimiter_Period, FData, SearchResult + 1);
     if SearchResult2 <> 0 then
-    begin
-      {$IFDEF COMPILER6_UP}
-      STD.DelimitedText := Copy(FData, SearchResult, SearchResult2 - SearchResult);
-      {$ELSE ~COMPILER6_UP}
-      STD.Text := Copy(FData, SearchResult, SearchResult2 - SearchResult);
-      {$ENDIF ~COMPILER6_UP}
-    end
+      STD.DelimitedText := Copy(FData, SearchResult, SearchResult2 - SearchResult)
     else
-    begin
-      {$IFDEF COMPILER6_UP}
       STD.DelimitedText := Copy(FData, SearchResult, (Length(FData) - SearchResult) + 1);
-      {$ELSE ~COMPILER6_UP}
-      STD.Text := Copy(FData, SearchResult, (Length(FData) - SearchResult) + 1);
-      {$ENDIF ~COMPILER6_UP}
-    end;
   end;
 end;
 
@@ -4363,11 +4329,7 @@ begin
   begin
     EDIFileStream := TFileStream.Create(FFileName, fmCreate or fmShareDenyNone);
     try
-      {$IFDEF CLR}
-      EDIFileStream.WriteStringAnsiBuffer(FData);
-      {$ELSE ~CLR}
       EDIFileStream.Write(Pointer(FData)^, Length(FData));
-      {$ENDIF ~CLR}
     finally
       EDIFileStream.Free;
     end;

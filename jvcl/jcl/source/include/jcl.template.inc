@@ -36,9 +36,10 @@
 {                                                                                                  }
 {**************************************************************************************************}
 
-// $Id: jcl.template.inc 2466 2008-09-12 00:01:35Z outchy $
+// $Id: jcl.template.inc 2919 2009-08-07 10:02:54Z outchy $
 
 // Math precision selection, mutually exclusive
+// FPC does not support EXTENDED when targetting x86_64, MATH_DOUBLE_PRECISION is the default in this situation
 {.$DEFINE MATH_EXTENDED_PRECISION} // default
 {.$DEFINE MATH_DOUBLE_PRECISION}
 {.$DEFINE MATH_SINGLE_PRECISION}
@@ -60,14 +61,14 @@
 {.$DEFINE DROP_OBSOLETE_CODE}
 
 
-//Support for JclUnitVersioning.pas)
+//Support for JclUnitVersioning.pas, not supported by Delphi 2005 (automatically disabled afterward)
 {.$DEFINE UNITVERSIONING}
 
 
 // debug sources
 // defining these symbols will the debug source to be automatically registered
 {.$DEFINE DEBUG_NO_BINARY}
-{.$DEFINE DEBUG_NO_TD32}
+{.$DEFINE DEBUG_NO_TD32}     // automatically defined for FPC
 {.$DEFINE DEBUG_NO_MAP}
 {.$DEFINE DEBUG_NO_EXPORTS}
 {.$DEFINE DEBUG_NO_SYMBOLS}

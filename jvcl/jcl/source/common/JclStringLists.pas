@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,9 +41,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF CLR}
-  System.Text.RegularExpressions,
-  {$ENDIF CLR}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
@@ -57,9 +54,6 @@ uses
 {$IFDEF FPC}
  {$UNDEF HAS_TSTRINGS_COMPARESTRINGS}
 {$ENDIF FPC}
-{$IFDEF COMPILER5}
- {$UNDEF HAS_TSTRINGS_COMPARESTRINGS}
-{$ENDIF COMPILER5}
 
 type
   IJclStringList = interface;
@@ -81,9 +75,7 @@ type
     function GetValue(const Name: string): string;
     function Find(const S: string; var Index: Integer): Boolean;
     function IndexOf(const S: string): Integer;
-    {$IFDEF COMPILER6_UP}
     function GetCaseSensitive: Boolean;
-    {$ENDIF COMPILER6_UP}
     function GetDuplicates: TDuplicates;
     function GetOnChange: TNotifyEvent;
     function GetOnChanging: TNotifyEvent;
@@ -96,39 +88,29 @@ type
     function SaveToFile(const FileName: string): IJclStringList;
     function SaveToStream(Stream: TStream): IJclStringList;
     function GetCommaText: string;
-    {$IFDEF COMPILER6_UP}
     function GetDelimitedText: string;
     function GetDelimiter: Char;
-    {$ENDIF COMPILER6_UP}
     function GetName(Index: Integer): string;
     {$IFDEF COMPILER7_UP}
     function GetNameValueSeparator: Char;
     function GetValueFromIndex(Index: Integer): string;
     {$ENDIF COMPILER7_UP}
-    {$IFDEF COMPILER6_UP}
     function GetQuoteChar: Char;
-    {$ENDIF COMPILER6_UP}
     procedure SetCommaText(const Value: string);
-    {$IFDEF COMPILER6_UP}
     procedure SetDelimitedText(const Value: string);
     procedure SetDelimiter(const Value: Char);
-    {$ENDIF COMPILER6_UP}
     {$IFDEF COMPILER7_UP}
     procedure SetNameValueSeparator(const Value: Char);
     procedure SetValueFromIndex(Index: Integer; const Value: string);
     {$ENDIF COMPILER7_UP}
-    {$IFDEF COMPILER6_UP}
     procedure SetQuoteChar(const Value: Char);
-    {$ENDIF COMPILER6_UP}
     procedure AddStrings(Strings: TStrings); overload;
     procedure SetObjects(Index: Integer; const Value: TObject);
     procedure Put(Index: Integer; const S: string);
     procedure SetCapacity(NewCapacity: Integer);
     procedure SetTextStr(const Value: string);
     procedure SetValue(const Name, Value: string);
-    {$IFDEF COMPILER6_UP}
     procedure SetCaseSensitive(const Value: Boolean);
-    {$ENDIF COMPILER6_UP}
     procedure SetDuplicates(const Value: TDuplicates);
     procedure SetOnChange(const Value: TNotifyEvent);
     procedure SetOnChanging(const Value: TNotifyEvent);
@@ -141,19 +123,13 @@ type
     property Values[const Name: string]: string read GetValue write SetValue;
     property Duplicates: TDuplicates read GetDuplicates write SetDuplicates;
     property Sorted: Boolean read GetSorted write SetSorted;
-    {$IFDEF COMPILER6_UP}
     property CaseSensitive: Boolean read GetCaseSensitive write SetCaseSensitive;
-    {$ENDIF COMPILER6_UP}
     property OnChange: TNotifyEvent read GetOnChange write SetOnChange;
     property OnChanging: TNotifyEvent read GetOnChanging write SetOnChanging;
-    {$IFDEF COMPILER6_UP}
     property DelimitedText: string read GetDelimitedText write SetDelimitedText;
     property Delimiter: Char read GetDelimiter write SetDelimiter;
-    {$ENDIF COMPILER6_UP}
     property Names[Index: Integer]: string read GetName;
-    {$IFDEF COMPILER6_UP}
     property QuoteChar: Char read GetQuoteChar write SetQuoteChar;
-    {$ENDIF COMPILER6_UP}
     property CommaText: string read GetCommaText write SetCommaText;
     {$IFDEF COMPILER7_UP}
     property ValueFromIndex[Index: Integer]: string read GetValueFromIndex write SetValueFromIndex;
@@ -185,12 +161,7 @@ type
     function Trim: IJclStringList;
     function Join(const ASeparator: string = ''): string;
     function Split(const AText, ASeparator: string; AClearBeforeAdd: Boolean = True): IJclStringList;
-    {$IFDEF CLR}
-    function ExtractWords(const AText: string): IJclStringList; overload;
-    function ExtractWords(const AText: string; const ADelims: TSetOfAnsiChar; AClearBeforeAdd: Boolean = True): IJclStringList; overload;
-    {$ELSE ~CLR}
     function ExtractWords(const AText: string; const ADelims: TSetOfAnsiChar = [#0..' ']; AClearBeforeAdd: Boolean = True): IJclStringList;
-    {$ENDIF ~CLR}
     function Last: string;
     function First: string;
     function LastIndex: Integer;
@@ -237,9 +208,11 @@ function JclStringList(const AText: string): IJclStringList; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStringLists.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -248,21 +221,17 @@ implementation
 uses
   TypInfo,
   JclFileUtils,
-  {$IFNDEF CLR}
   JclPCRE,
-  {$ENDIF ~CLR}
   JclStrings;
 
 type
   TUpdateControl = class(TObject, IInterface)
   private
     FStrings: TStrings;
-  {$IFNDEF CLR}
   protected
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
-  {$ENDIF ~CLR}
   public
     constructor Create(AStrings: TStrings);
   end;
@@ -281,14 +250,10 @@ type
   private
     FObjectsMode: TJclStringListObjectsMode;
     FSelfAsInterface: IJclStringList;
-    {$IFDEF CLR}
-    FRegEx: System.Text.RegularExpressions.Regex;
-    FCustomSortCompare: TJclStringListSortCompare;
-    {$ELSE ~CLR}
     FLastRegExPattern: string;
     FRegEx: TJclAnsiRegEx;
-    {$ENDIF ~CLR}
     FUpdateControl: TUpdateControl;
+    FCompareFunction: TJclStringListSortCompare;
     function AutoUpdateControl: IInterface;
     function CanFreeObjects: Boolean;
     function MatchRegEx(const S, APattern: string): Boolean;
@@ -299,26 +264,20 @@ type
     function GetValue(const Name: string): string;
     function GetVariants(AIndex: Integer): Variant;
     function GetKeyList(const AKey: string): IJclStringList;
-    {$IFDEF COMPILER6_UP}
     function GetCaseSensitive: Boolean;
-    {$ENDIF COMPILER6_UP}
     function GetDuplicates: TDuplicates;
     function GetOnChange: TNotifyEvent;
     function GetOnChanging: TNotifyEvent;
     function GetSorted: Boolean;
     function GetCommaText: string;
-    {$IFDEF COMPILER6_UP}
     function GetDelimitedText: string;
     function GetDelimiter: Char;
-    {$ENDIF COMPILER6_UP}
     function GetName(Index: Integer): string;
     {$IFDEF COMPILER7_UP}
     function GetNameValueSeparator: Char;
     function GetValueFromIndex(Index: Integer): string;
     {$ENDIF COMPILER7_UP}
-    {$IFDEF COMPILER6_UP}
     function GetQuoteChar: Char;
-    {$ENDIF COMPILER6_UP}
     function GetInterfaceByIndex(AIndex: Integer): IInterface;
     function GetObjects(Index: Integer): TObject;
     procedure SetValue(const Name, Value: string);
@@ -328,39 +287,28 @@ type
     procedure SetKeyVariant(const AKey: string; const Value: Variant);
     procedure SetLists(Index: Integer; const Value: IJclStringList);
     procedure SetVariants(Index: Integer; const Value: Variant);
-    {$IFDEF COMPILER6_UP}
     procedure SetCaseSensitive(const Value: Boolean);
-    {$ENDIF COMPILER6_UP}
     procedure SetDuplicates(const Value: TDuplicates);
     procedure SetOnChange(const Value: TNotifyEvent);
     procedure SetOnChanging(const Value: TNotifyEvent);
     procedure SetSorted(const Value: Boolean);
     procedure SetCommaText(const Value: string);
-    {$IFDEF COMPILER6_UP}
     procedure SetDelimitedText(const Value: string);
     procedure SetDelimiter(const Value: Char);
-    {$ENDIF COMPILER6_UP}
     {$IFDEF COMPILER7_UP}
     procedure SetNameValueSeparator(const Value: Char);
     procedure SetValueFromIndex(Index: Integer; const Value: string);
     {$ENDIF COMPILER7_UP}
-    {$IFDEF COMPILER6_UP}
     procedure SetQuoteChar(const Value: Char);
-    {$ENDIF COMPILER6_UP}
     procedure SetInterfaceByIndex(Index: Integer; const Value: IInterface);
     procedure SetObjects(Index: Integer; const Value: TObject);
     procedure EnsureObjectsMode(AMode: TJclStringListObjectsMode);
     function GetObjectsMode: TJclStringListObjectsMode;
-    {$IFDEF CLR}
-    function SortByNameCmp(Index1, Index2: Integer): Integer;
-    {$ENDIF CLR}
   protected
-    {$IFNDEF CLR}
     FRefCount: Integer;
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
-    {$ENDIF ~CLR}
     {$IFNDEF HAS_TSTRINGS_COMPARESTRINGS}
     function CompareStrings(const S1, S2: string): Integer; virtual;
     {$ENDIF ~HAS_TSTRINGS_COMPARESTRINGS}
@@ -384,12 +332,7 @@ type
     function Delimit(const ADelimiter: string): IJclStringList;
     function Join(const ASeparator: string = ''): string;
     function Split(const AText, ASeparator: string; AClearBeforeAdd: Boolean = True): IJclStringList;
-    {$IFDEF CLR}
-    function ExtractWords(const AText: string): IJclStringList; overload;
-    function ExtractWords(const AText: string; const ADelims: TSetOfAnsiChar; AClearBeforeAdd: Boolean = True): IJclStringList; overload;
-    {$ELSE ~CLR}
     function ExtractWords(const AText: string; const ADelims: TSetOfAnsiChar = [#0..' ']; AClearBeforeAdd: Boolean = True): IJclStringList;
-    {$ENDIF ~CLR}
     function Last: string;
     function First: string;
     function LastIndex: Integer;
@@ -417,14 +360,10 @@ type
     function Assign(Source: TPersistent): IJclStringList; reintroduce;
     { From TStrings/TStringList }
     property Values[const Name: string]: string read GetValue write SetValue;
-    {$IFDEF COMPILER6_UP}
     property DelimitedText: string read GetDelimitedText write SetDelimitedText;
     property Delimiter: Char read GetDelimiter write SetDelimiter;
-    {$ENDIF COMPILER6_UP}
     property Names[Index: Integer]: string read GetName;
-    {$IFDEF COMPILER6_UP}
     property QuoteChar: Char read GetQuoteChar write SetQuoteChar;
-    {$ENDIF COMPILER6_UP}
     property CommaText: string read GetCommaText write SetCommaText;
     {$IFDEF COMPILER7_UP}
     property ValueFromIndex[Index: Integer]: string read GetValueFromIndex write SetValueFromIndex;
@@ -432,9 +371,7 @@ type
     {$ENDIF COMPILER7_UP}
     property Duplicates: TDuplicates read GetDuplicates write SetDuplicates;
     property Sorted: Boolean read GetSorted write SetSorted;
-    {$IFDEF COMPILER6_UP}
     property CaseSensitive: Boolean read GetCaseSensitive write SetCaseSensitive;
-    {$ENDIF COMPILER6_UP}
     property OnChange: TNotifyEvent read GetOnChange write SetOnChange;
     property OnChanging: TNotifyEvent read GetOnChanging write SetOnChanging;
     { New }
@@ -486,12 +423,6 @@ var
 begin
   AutoUpdateControl;
   for I := Low(A) to High(A) do
-    {$IFDEF CLR}
-    if A[I].GetType = TypeOf(Boolean) then
-      Add(BoolToStr[A[I] as Boolean])
-    else
-      Add(A[I].ToString);
-    {$ELSE ~CLR}
     case A[I].VType of
       vtInteger:
         Add(IntToStr(A[I].VInteger));
@@ -526,7 +457,6 @@ begin
         Add(string(A[I].VUnicodeString));
       {$ENDIF SUPPORTS_UNICODE_STRING}
     end;
-    {$ENDIF ~CLR}
   Result := FSelfAsInterface;
 end;
 
@@ -564,13 +494,6 @@ begin
   inherited EndUpdate;
   Result := FSelfAsInterface;
 end;
-
-{$IFDEF CLR}
-function TJclStringListImpl.ExtractWords(const AText: string): IJclStringList;
-begin
-  Result := ExtractWords(AText, [#0..' ']);
-end;
-{$ENDIF CLR}
 
 function TJclStringListImpl.ExtractWords(const AText: string; const ADelims: TSetOfAnsiChar;
   AClearBeforeAdd: Boolean): IJclStringList;
@@ -651,7 +574,6 @@ begin
   Result := FSelfAsInterface;
 end;
 
-{$IFNDEF CLR}
 function TJclStringListImpl.QueryInterface(const IID: TGUID; out Obj): HRESULT;
 begin
   if GetInterface(IID, Obj) then
@@ -679,7 +601,6 @@ begin
   if Result = 0 then
     Destroy;
 end;
-{$ENDIF ~CLR}
 
 function TJclStringListImpl.DeleteRegEx(const APattern: string): IJclStringList;
 var
@@ -705,29 +626,18 @@ end;
 
 function TJclStringListImpl.MatchRegEx(const S, APattern: string): Boolean;
 begin
-  {$IFDEF CLR}
-  if CaseSensitive then
-    FRegEx := System.Text.RegularExpressions.Regex.Create(APattern, RegexOptions.None)
-  else
-    FRegEx := System.Text.RegularExpressions.Regex.Create(APattern, RegexOptions.IgnoreCase);
-  { TODO -oAHUser : I don't think this is correct }
-  Result := FRegEx.IsMatch(S, APattern);
-  {$ELSE ~CLR}
   if FRegEx = nil then
     FRegEx := TJclAnsiRegEx.Create;
   if FLastRegExPattern <> APattern then
   begin
-    {$IFDEF COMPILER6_UP}
     if CaseSensitive then
       FRegEx.Options := FRegEx.Options - [roIgnoreCase]
     else
       FRegEx.Options := FRegEx.Options + [roIgnoreCase];
-    {$ENDIF COMPILER6_UP}
     FRegEx.Compile(APattern, False, True);
     FLastRegExPattern := APattern;
   end;
   Result := FRegEx.Match(S);
-  {$ENDIF ~CLR}
 end;
 
 destructor TJclStringListImpl.Destroy;
@@ -830,16 +740,8 @@ constructor TJclStringListImpl.Create;
 begin
   inherited Create;
   FUpdateControl := TUpdateControl.Create(Self);
-  {$IFDEF CLR}
-  FSelfAsInterface := Self;
-  {$ELSE ~CLR}
   if QueryInterface(IJclStringList, FSelfAsInterface) <> 0 then
-    {$IFDEF COMPILER5}
-    RunError(228 { reIntfCastError });
-    {$ELSE ~COMPILER5}
     System.Error(reIntfCastError);
-    {$ENDIF ~COMPILER5}
-  {$ENDIF ~CLR}
 end;
 
 function TJclStringListImpl.GetLists(Index: Integer): IJclStringList;
@@ -1061,65 +963,14 @@ begin
   Result := FSelfAsInterface;
 end;
 
-{$IFDEF CLR}
-function TJclStringListImpl_LocalSort(List: TStringList; Index1, Index2: Integer): Integer;
+function LocalSort(List: TStringList; Index1, Index2: Integer): Integer;
 begin
-  with TJclStringListImpl(List) do
-    Result := FCustomSortCompare(FSelfAsInterface, Index1, Index2);
+  Result := TJclStringListImpl(List).FCompareFunction(TJclStringListImpl(List).FSelfAsInterface, Index1, Index2);
 end;
 
 function TJclStringListImpl.Sort(ACompareFunction: TJclStringListSortCompare = nil): IJclStringList;
 begin
-  if not Assigned(ACompareFunction) then
-    inherited Sort
-  else
-  begin
-    FCustomSortCompare := ACompareFunction;
-    inherited CustomSort(TJclStringListImpl_LocalSort);
-    FCustomSortCompare := nil;
-  end;
-  Result := FSelfAsInterface;
-end;
-
-function TJclStringListImpl_LocalSortAsInteger(List: TStringList; Index1, Index2: Integer): Integer;
-begin
-  Result := StrToInt(List[Index1]) - StrToInt(List[Index2]);
-end;
-
-function TJclStringListImpl.SortAsInteger: IJclStringList;
-begin
-  inherited CustomSort(TJclStringListImpl_LocalSortAsInteger);
-  Result := FSelfAsInterface;
-end;
-
-function TJclStringListImpl.SortByNameCmp(Index1, Index2: Integer): Integer;
-begin
-  Result := CompareStrings(Names[Index1], Names[Index2]);
-end;
-
-function TJclStringListImpl_LocalSortByName(List: TStringList; Index1, Index2: Integer): Integer;
-begin
-  { It is not possible to call TStringList.CompareStrings from here because of
-    assembly boundaries. }
-  Result := TJclStringListImpl(List).SortByNameCmp(Index1, Index2);
-end;
-
-function TJclStringListImpl.SortByName: IJclStringList;
-begin
-  inherited CustomSort(TJclStringListImpl_LocalSortByName);
-  Result := FSelfAsInterface;
-end;
-
-{$ELSE ~CLR}
-
-function TJclStringListImpl.Sort(ACompareFunction: TJclStringListSortCompare = nil): IJclStringList;
-
-  function LocalSort(List: TStringList; Index1, Index2: Integer): Integer;
-  begin
-    Result := ACompareFunction(FSelfAsInterface, Index1, Index2);
-  end;
-
-begin
+  FCompareFunction := ACompareFunction;
   if not Assigned(ACompareFunction) then
     inherited Sort
   else
@@ -1127,13 +978,12 @@ begin
   Result := FSelfAsInterface;
 end;
 
+function LocalSortAsInteger(List: TStringList; Index1, Index2: Integer): Integer;
+begin
+  Result := StrToInt(List[Index1]) - StrToInt(List[Index2]);
+end;
+
 function TJclStringListImpl.SortAsInteger: IJclStringList;
-
-  function LocalSortAsInteger(List: TStringList; Index1, Index2: Integer): Integer;
-  begin
-    Result := StrToInt(List[Index1]) - StrToInt(List[Index2]);
-  end;
-
 begin
   inherited CustomSort(@LocalSortAsInteger);
   Result := FSelfAsInterface;
@@ -1146,18 +996,16 @@ begin
 end;
 {$ENDIF ~HAS_TSTRINGS_COMPARESTRINGS}
 
+function LocalSortByName(List: TStringList; Index1, Index2: Integer): Integer;
+begin
+  Result := TJclStringListImpl(List).CompareStrings(List.Names[Index1], List.Names[Index2]);
+end;
+
 function TJclStringListImpl.SortByName: IJclStringList;
-
-  function LocalSortByName(List: TStringList; Index1, Index2: Integer): Integer;
-  begin
-    Result := TJclStringListImpl(List).CompareStrings(List.Names[Index1], List.Names[Index2]);
-  end;
-
 begin
   inherited CustomSort(@LocalSortByName);
   Result := FSelfAsInterface;
 end;
-{$ENDIF ~CLR}
 
 function TJclStringListImpl.Insert(Index: Integer; const S: string): IJclStringList;
 begin
@@ -1171,12 +1019,10 @@ begin
   Result := FSelfAsInterface;
 end;
 
-{$IFDEF COMPILER6_UP}
 function TJclStringListImpl.GetCaseSensitive: Boolean;
 begin
   Result := inherited CaseSensitive;
 end;
-{$ENDIF COMPILER6_UP}
 
 function TJclStringListImpl.GetDuplicates: TDuplicates;
 begin
@@ -1198,12 +1044,10 @@ begin
   Result := inherited Sorted;
 end;
 
-{$IFDEF COMPILER6_UP}
 procedure TJclStringListImpl.SetCaseSensitive(const Value: Boolean);
 begin
   inherited CaseSensitive := Value;
 end;
-{$ENDIF COMPILER6_UP}
 
 procedure TJclStringListImpl.SetDuplicates(const Value: TDuplicates);
 begin
@@ -1254,8 +1098,6 @@ begin
   Result := inherited CommaText;
 end;
 
-{$IFDEF COMPILER6_UP}
-
 function TJclStringListImpl.GetDelimitedText: string;
 begin
   Result := inherited DelimitedText;
@@ -1265,8 +1107,6 @@ function TJclStringListImpl.GetDelimiter: Char;
 begin
   Result := inherited Delimiter;
 end;
-
-{$ENDIF COMPILER6_UP}
 
 function TJclStringListImpl.GetName(Index: Integer): string;
 begin
@@ -1287,19 +1127,15 @@ end;
 
 {$ENDIF COMPILER7_UP}
 
-{$IFDEF COMPILER6_UP}
 function TJclStringListImpl.GetQuoteChar: Char;
 begin
   Result := inherited QuoteChar;
 end;
-{$ENDIF COMPILER6_UP}
 
 procedure TJclStringListImpl.SetCommaText(const Value: string);
 begin
   inherited CommaText := Value;
 end;
-
-{$IFDEF COMPILER6_UP}
 
 procedure TJclStringListImpl.SetDelimitedText(const Value: string);
 begin
@@ -1310,8 +1146,6 @@ procedure TJclStringListImpl.SetDelimiter(const Value: Char);
 begin
   inherited Delimiter := Value;
 end;
-
-{$ENDIF COMPILER6_UP}
 
 {$IFDEF COMPILER7_UP}
 
@@ -1327,12 +1161,10 @@ end;
 
 {$ENDIF COMPILER7_UP}
 
-{$IFDEF COMPILER6_UP}
 procedure TJclStringListImpl.SetQuoteChar(const Value: Char);
 begin
   inherited QuoteChar := Value;
 end;
-{$ENDIF COMPILER6_UP}
 
 function TJclStringListImpl.Delimit(const ADelimiter: string): IJclStringList;
 var
@@ -1355,7 +1187,7 @@ begin
   begin
     S := ParamStr(I);
     if (S[1] = '-') or (S[1] = '/') then
-      {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Delete(S, 1, 1);
+      System.Delete(S, 1, 1);
     Add(S);
   end;
   Result := FSelfAsInterface;
@@ -1387,6 +1219,7 @@ var
   I, X: Integer;
 begin
   AutoUpdateControl;
+  X := 0;
   for I := LastIndex downto 0 do
     if not TryStrToInt(Strings[I], X) then
       Delete(I);
@@ -1398,6 +1231,7 @@ var
   I, X: Integer;
 begin
   AutoUpdateControl;
+  X := 0;
   for I := LastIndex downto 0 do
     if TryStrToInt(Strings[I], X) then
       Delete(I);
@@ -1480,7 +1314,6 @@ begin
   FStrings := AStrings;
 end;
 
-{$IFNDEF CLR}
 function TUpdateControl._AddRef: Integer;
 begin
   FStrings.BeginUpdate;
@@ -1500,7 +1333,6 @@ begin
   else
     Result := E_NOINTERFACE;
 end;
-{$ENDIF ~CLR}
 
 {$IFDEF UNITVERSIONING}
 initialization

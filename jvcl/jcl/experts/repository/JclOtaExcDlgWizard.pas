@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2490                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -57,9 +57,11 @@ function ExcDlgWizard(var AParams: TJclOtaExcDlgParams): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgWizard.pas $';
-    Revision: '$Revision: 2490 $';
-    Date: '$Date: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008) $';
-    LogPath: 'JCL\experts\repository'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\experts\repository';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -70,7 +72,9 @@ implementation
 uses
   JclOtaResources, 
   JclOtaExcDlgFileFrame, JclOtaExcDlgFormFrame,
-  JclOtaExcDlgSystemFrame, JclOtaExcDlgTraceFrame, JclOtaExcDlgIgnoreFrame;
+  JclOtaExcDlgSystemFrame, JclOtaExcDlgLogFrame,
+  JclOtaExcDlgTraceFrame, JclOtaExcDlgThreadFrame,
+  JclOtaExcDlgIgnoreFrame;
 
 function ExcDlgWizard(var AParams: TJclOtaExcDlgParams): Boolean;
 var
@@ -115,8 +119,10 @@ begin
   AddPage(TJclOtaExcDlgFilePage.Create(Self, Params));
   AddPage(TJclOtaExcDlgFormPage.Create(Self, Params));
   AddPage(TJclOtaExcDlgSystemPage.Create(Self, Params));
+  AddPage(TJclOtaExcDlgLogPage.Create(Self, Params));
   AddPage(TJclOtaExcDlgIgnorePage.Create(Self, Params));
   AddPage(TJclOtaExcDlgTracePage.Create(Self, Params));
+  AddPage(TJclOtaExcDlgThreadPage.Create(Self, Params));
 end;
 
 {$IFDEF UNITVERSIONING}

@@ -21,9 +21,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-22 23:10:17 +0100 (dim., 22 mars 2009)                     $ }
-{ Revision:      $Rev:: 2703                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                    $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -152,13 +152,22 @@ resourcestring
 resourcestring
   RsExcDlgSystemOptions = 'system options';
   RsDelayedStackTrace = '&Delayed stack traces (faster)';
-  RsLogTrace = '&Add crash data to log file';
   RsHookDll = '&Hook DLL';
   RsModuleList = '&Module list';
   RsUnitVersioning = '&Unit versioning';
   RsOSInfo = '&Operating system informations';
   RsActiveControls = '&List of active controls';
-  RsMainThreadOnly = '&Catch only exceptions of main thread';
+  RsCatchMainThread = '&Catch only exceptions of main thread';
+  RsDisableIfDebuggerAttached = 'Disable if the debu&gger is attached';
+
+//=== JclOtaExcDlgLogFrame.pas ===============================================
+resourcestring
+  RsExcDlgLogOptions = 'log options';
+  RsLogTrace = '&Add crash data to log file';
+  RsLogInWorkingDirectory = 'Autosave in &working directory';
+  RsLogInApplicationDirectory = 'Autosave in &application directory (not recommended)';
+  RsLogInDesktopDirectory = 'Autosave in &desktop directory';
+  RsLogSaveDialog = 'Add a save &button on dialog';
 
 //=== JclOtaExcDlgTraceFrame.pas =============================================
 resourcestring
@@ -171,7 +180,15 @@ resourcestring
   RsVirtualAddress = '&Virtual address';
   RsModuleOffset = 'Module &offset';
   RsPreview = '&Preview:';
-  RsAllThreads = 'Include traces for registered &threads';
+
+//=== JclOtaExcDlgThreadFrame.pas ============================================
+resourcestring
+  RsExcDlgThreadOptions = 'thread options';
+  RsAllThreads = 'Traces for &all threads';
+  RsAllRegisteredThreads = 'Traces for &registered threads';
+  RsMainExceptionThreads = 'Traces for main a&nd exception threads';
+  RsExceptionThread = 'Trace for &exception thread';
+  RsMainThread = 'Trace for &main thread';
 
 //=== JclOtaExcDlgIgnoreFrame.pas ============================================
 resourcestring
@@ -305,6 +322,8 @@ resourcestring
   RsModifyMM = 'Modification of MM%d';
   RsModifyXMM1 = 'Modification of XMM%d';
   RsModifyXMM2 = 'Modification of XMM%.2d';
+  RsModifyYMM1 = 'Modification of YMM%d';
+  RsModifyYMM2 = 'Modification of YMM%.2d';
 
   RsVectorIE = 'IE  ';
   RsVectorDE = 'DE  ';
@@ -352,7 +371,7 @@ resourcestring
 //=== JclOtaExcDlgRepository.pas =============================================
 resourcestring
   RsRepositoryExcDlgPage = 'Exception dialog';
-  
+
   RsRepositoryExcDlgDelphiName = 'Jcl Exception dialog for Delphi';
   RsRepositoryExcDlgDelphiDescription = 'Create an exception dialog for your Delphi project';
 
@@ -368,13 +387,27 @@ resourcestring
   RsActionCategory = 'JEDI Code Library';
   RsVersionCtrlSystemName = 'System';
 
+//=== JclStackTraceViewerImpl.pas ============================================
+resourcestring
+  rsStackTraceViewerCaption = 'Stack Traces';
+  rsStackTraceViewerOptionsPageName = 'Stack Trace Viewer';
+
+//=== JclStackTraceViewerMainFrame.pas =======================================
+resourcestring
+  rsSTVFindFilesInProjectGroup = 'Find files in active project group';
+  rsSTVFindFileInProjectGroup  = 'Find %s in active project group';
+  rsSTVFindFilesInBrowsingPath = 'Find files in browsing path';
+
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaResources.pas $';
-    Revision: '$Revision: 2703 $';
-    Date: '$Date: 2009-03-22 23:10:17 +0100 (dim., 22 mars 2009) $';
-    LogPath: 'JCL\experts\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\experts\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 

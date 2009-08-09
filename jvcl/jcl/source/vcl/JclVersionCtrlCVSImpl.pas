@@ -18,8 +18,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-11-04 16:09:48 +0100 (mar., 04 nov. 2008)                          $ }
-{ Revision:      $Rev:: 2552                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -58,16 +58,18 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionCtrlCVSImpl.pas $';
-    Revision: '$Revision: 2552 $';
-    Date: '$Date: 2008-11-04 16:09:48 +0100 (mar., 04 nov. 2008) $';
-    LogPath: 'JCL\source\vcl'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\vcl';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
 uses
-  JclFileUtils, JclRegistry, JclStrings;
+  JclFileUtils, JclSysUtils, JclRegistry, JclStrings;
 
 const
 //  JclVersionCtrlCVSTrtseShlDLL = 'TrtseShl.dll';
@@ -119,8 +121,8 @@ function TJclVersionControlCVS.ExecuteAction(const FileName: TFileName;
     ProcessInfo: TProcessInformation;
     CurrentDir, CommandLine: TFileName;
   begin
-    FillChar(StartupInfo,SizeOf(TStartupInfo),#0);
-    FillChar(ProcessInfo,SizeOf(TProcessInformation),#0);
+    ResetMemory(StartupInfo, SizeOf(TStartupInfo));
+    ResetMemory(ProcessInfo, SizeOf(TProcessInformation));
     startupInfo.cb := SizeOf(TStartupInfo);
     startupInfo.dwFlags := STARTF_USESHOWWINDOW;
     startupInfo.wShowWindow := SW_SHOW;

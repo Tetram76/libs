@@ -39,9 +39,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-12-28 22:55:28 +0100 (dim., 28 déc. 2008)                         $ }
-{ Revision:      $Rev:: 2580                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2009-07-30 18:31:32 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2898                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -87,6 +87,7 @@
   CPUx86_64           Defined when target platform is native x86_64 (win64)
   CPU32               Defined when target is 32-bit
   CPU64	              Defined when target is 64-bit
+  CPUASM              Defined when target assembler is available
 
 - Visual library Directives
 
@@ -446,7 +447,8 @@
   {$MODE DELPHI}
   {$ASMMODE Intel}
   {$UNDEF BORLAND}
-   // FPC defines CPU* and Unix automatically
+  {$DEFINE CPUASM}
+   // FPC defines CPU32, CPU64 and Unix automatically
 {$ENDIF}
 
 {$IFDEF BORLAND}
@@ -456,6 +458,7 @@
   {$IFNDEF CLR}
     {$DEFINE CPU386}  // For Borland compilers select the x86 compat assembler by default
     {$DEFINE CPU32}   // Assume Borland compilers are 32-bit (rather than 64-bit)
+    {$DEFINE CPUASM}
   {$ENDIF ~CLR}
 {$ENDIF BORLAND}
 
@@ -505,6 +508,7 @@
     {$IFDEF VER110}
       {$DEFINE COMPILER35}
       {$DEFINE BCB3}
+      {$DEFINE BCB}
       {$DEFINE RTL110_UP}
       {$UNDEF UNKNOWN_COMPILER_VERSION}
     {$ENDIF}
@@ -1137,9 +1141,9 @@
 { Cross-platform related defines                                               }
 {------------------------------------------------------------------------------}
 
-{$IFNDEF CPU386}
+{$IFNDEF CPUASM}
   {$DEFINE PUREPASCAL}
-{$ENDIF}
+{$ENDIF ~CPUASM}
 
 {$IFDEF WIN32}
   {$DEFINE MSWINDOWS} // predefined for D6+/BCB6+

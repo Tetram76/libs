@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009)                          $ }
+{ Revision:      $Rev:: 2907                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -84,9 +84,11 @@ function WideFormat(const Format: WideString; const Args: array of const): WideS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWideFormat.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 2907 $';
+    Date: '$Date: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -523,7 +525,7 @@ end;
   procedures, which negate integers. For the rest of the code in this unit,
   overflow isn't relevant. }
 
-{$Q-}
+{$OVERFLOWCHECKS OFF}
 
 procedure SafeNegate32(var Int: Integer);
 begin
@@ -536,7 +538,7 @@ begin
 end;
 
 {$IFDEF OVERFLOWCHECKS_ON}
-{$Q+}
+{$OVERFLOWCHECKS ON}
 {$ENDIF OVERFLOWCHECKS_ON}
 
 // === Argument-preparation routines ===========================================

@@ -45,9 +45,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-12-28 22:55:28 +0100 (dim., 28 déc. 2008)                        $ }
-{ Revision:      $Rev:: 2580                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -58,9 +58,9 @@ interface
 {$I jcl.inc}
 
 uses
-  JclBase,
   Windows,
-  ActiveX;
+  ActiveX,
+  JclBase;
 
 // Guid.txt  
 const
@@ -97,6 +97,12 @@ const
   CLSID_CFormatCab      : TGUID = '{23170F69-40C1-278A-1000-000110080000}';
   CLSID_CFormatNsis     : TGUID = '{23170F69-40C1-278A-1000-000110090000}';
   CLSID_CFormatLzma     : TGUID = '{23170F69-40C1-278A-1000-0001100A0000}';
+  CLSID_CFormatLzma86   : TGUID = '{23170F69-40C1-278A-1000-0001100B0000}';
+  CLSID_CFormatXz       : TGUID = '{23170F69-40C1-278A-1000-0001100C0000}';
+  CLSID_CFormatNtfs     : TGUID = '{23170F69-40C1-278A-1000-000110D90000}';
+  CLSID_CFormatFat      : TGUID = '{23170F69-40C1-278A-1000-000110DA0000}';
+  CLSID_CFormatMbr      : TGUID = '{23170F69-40C1-278A-1000-000110DB0000}';
+  CLSID_CFormatVhd      : TGUID = '{23170F69-40C1-278A-1000-000110DC0000}';
   CLSID_CFormatPe       : TGUID = '{23170F69-40C1-278A-1000-000110DD0000}';
   CLSID_CFormatElf      : TGUID = '{23170F69-40C1-278A-1000-000110DE0000}';
   CLSID_CFormatMacho    : TGUID = '{23170F69-40C1-278A-1000-000110DF0000}';

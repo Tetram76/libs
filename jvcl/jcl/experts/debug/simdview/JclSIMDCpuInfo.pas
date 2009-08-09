@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2490                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -63,19 +63,25 @@ type
     CheckBoxSSE4A: TCheckBox;
     CheckBoxSSE5: TCheckBox;
     CheckBoxSSE4B: TCheckBox;
+    CheckBoxAVX: TCheckBox;
+    CheckBoxEnabledFPU: TCheckBox;
+    CheckBoxEnabledSSE: TCheckBox;
+    CheckBoxEnabledAVX: TCheckBox;
   protected
     procedure CreateParams(var Params: TCreateParams); override;
   public
-    procedure Execute(const CpuInfo: TCPUInfo);
+    procedure Execute(const CpuInfo: TCPUInfo; const EnabledFeatures: TOSEnabledFeatures);
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/simdview/JclSIMDCpuInfo.pas $';
-    Revision: '$Revision: 2490 $';
-    Date: '$Date: 2008-09-23 01:01:34 +0200 (mar., 23 sept. 2008) $';
-    LogPath: 'JCL\experts\debug\simdview'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\experts\debug\simdview';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -99,7 +105,7 @@ begin
     Params.WndParent := Application.Handle;
 end;
 
-procedure TJclFormCpuInfo.Execute(const CpuInfo: TCPUInfo);
+procedure TJclFormCpuInfo.Execute(const CpuInfo: TCPUInfo; const EnabledFeatures: TOSEnabledFeatures);
 begin
   EditName.Text := string(AnsiString(CpuInfo.CpuName));
   EditVendor.Text := string(AnsiString(CpuInfo.VendorIDString));
@@ -116,6 +122,10 @@ begin
   CheckBoxSSE4A.Checked := sse4A in CpuInfo.SSE;
   CheckBoxSSE4B.Checked := sse4B in CpuInfo.SSE;
   CheckBoxSSE5.Checked := sse5 in CpuInfo.SSE;
+  CheckBoxAVX.Checked := avx in CpuInfo.SSE;
+  CheckBoxEnabledFPU.Checked := oefFPU in EnabledFeatures;
+  CheckBoxEnabledSSE.Checked := oefSSE in EnabledFeatures;
+  CheckBoxEnabledAVX.Checked := oefAVX in EnabledFeatures;
   ShowModal;
 end;
 

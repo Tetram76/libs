@@ -20,10 +20,10 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-24 18:42:51 +0100 (mar., 24 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2660                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
-{                $Date: 2009-02-24 18:42:51 +0100 (mar., 24 févr. 2009) $ xpin                                          }
+{                                                                                                  }
 {**************************************************************************************************}
 unit JclOtaUtils;
 
@@ -238,9 +238,11 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaUtils.pas $';
-    Revision: '$Revision: 2660 $';
-    Date: '$Date: 2009-02-24 18:42:51 +0100 (mar., 24 févr. 2009) $';
-    LogPath: 'JCL\experts\common'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\experts\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -269,9 +271,6 @@ var
   ConfigurationMenuItem: TMenuItem = nil;
   ActionConfigureSheet: TJclOtaActionConfigureFrame = nil;
   UnitVersioningSheet: TJclOtaUnitVersioningFrame = nil;
-  {$IFNDEF COMPILER6_UP}
-  OldFindGlobalComponentProc: TFindGlobalComponent = nil;
-  {$ENDIF COMPILER6_UP}
 
 function FindActions(const Name: string): TComponent;
 var
@@ -287,10 +286,6 @@ begin
         if (CompareText(Name,TestAction.Name) = 0) then
           Result := TestAction;
       end;
-    {$IFNDEF COMPILER6_UP}
-    if (not Assigned(Result)) and Assigned(OldFindGlobalComponentProc) then
-      Result := OldFindGlobalComponentProc(Name)
-    {$ENDIF COMPILER6_UP}
   except
     on ExceptionObj: TObject do
     begin
@@ -952,11 +947,7 @@ end;
 
 function TJclOTAExpertBase.GetDesigner: string;
 begin
-  {$IFDEF COMPILER6_UP}
   Result := GetOTAServices.GetActiveDesignerType;
-  {$ELSE COMPILER6_UP}
-  Result := JclDesignerAny;
-  {$ENDIF COMPILER6_UP}
 end;
 
 function TJclOTAExpertBase.GetDrcFileName(const Project: IOTAProject): TFileName;
@@ -1171,11 +1162,6 @@ begin
 end;
 
 function TJclOTAExpertBase.GetRootDir: string;
-{$IFDEF KYLIX}
-var
-  RADToolsInstallations: TJclBorRADToolInstallations;
-  RADToolInstallation: TJclBorRADToolInstallation;
-{$ENDIF KYLIX}
 begin
   if FRootDir = '' then
   begin
@@ -1186,24 +1172,6 @@ begin
     if FRootDir = '' then
       FRootDir := RegReadStringDef(HKEY_CURRENT_USER, Settings.BaseKeyName, DelphiRootDirKeyValue, '');
     {$ENDIF MSWINDOWS}
-    {$IFDEF KYLIX}
-    RADToolsInstallations := TJclBorRADToolInstallations.Create;
-    try
-      {$IFDEF KYLIX3}
-      {$IFDEF BCB}
-      RADToolInstallation := RADToolsInstallations.BCBInstallationFromVersion[3];
-      {$ELSE}
-      RADToolInstallation := RADToolsInstallations.DelphiInstallationFromVersion[3];
-      {$ENDIF BCB}
-      {$ELSE}
-      RADToolInstallation := nil;
-      {$ENDIF KYLIX3}
-      if Assigned(RADToolInstallation) then
-        FRootDir := RADToolInstallation.RootDir;
-    finally
-      RADToolsInstallations.Free;
-    end;
-    {$ENDIF KYLIX}
     if FRootDir = '' then
       raise EJclExpertException.CreateTrace(RsENoRootDir);
   end;
@@ -1340,18 +1308,12 @@ end;
 {$ENDIF BDS}
 
 procedure TJclOTAExpertBase.ReadEnvVariables;
-{$IFDEF COMPILER6_UP}
 var
   I: Integer;
   EnvNames: TStringList;
   {$IFDEF MSWINDOWS}
   EnvVarKeyName: string;
   {$ENDIF MSWINDOWS}
-  {$IFDEF KYLIX}
-  RADToolsInstallations: TJclBorRADToolInstallations;
-  RADToolInstallation: TJclBorRADToolInstallation;
-  {$ENDIF KYLIX}
-{$ENDIF COMPILER6_UP}
 begin
   FEnvVariables.Clear;
 
@@ -1359,7 +1321,6 @@ begin
   GetEnvironmentVars(FEnvVariables, False);
 
   // read Delphi environment variables
-  {$IFDEF COMPILER6_UP}
   EnvNames := TStringList.Create;
   try
     {$IFDEF MSWINDOWS}
@@ -1370,34 +1331,9 @@ begin
         FEnvVariables.Values[EnvNames[I]] :=
           RegReadStringDef(HKEY_CURRENT_USER, EnvVarKeyName, EnvNames[I], '');
     {$ENDIF MSWINDOWS}
-    {$IFDEF KYLIX}
-    RADToolsInstallations := TJclBorRADToolInstallations.Create;
-    try
-      {$IFDEF KYLIX3}
-      {$IFDEF BCB}
-      RADToolInstallation := RADToolsInstallations.BCBInstallationFromVersion[3];
-      {$ELSE}
-      RADToolInstallation := RADToolsInstallations.DelphiInstallationFromVersion[3];
-      {$ENDIF BCB}
-      {$ELSE}
-      RADToolInstallation := nil;
-      {$ENDIF KYLIX3}
-      if Assigned(RADToolInstallation) then
-      begin
-        for I := 0 to RADToolInstallation.EnvironmentVariables.Count - 1 do
-          EnvNames.Add(RADToolInstallation.EnvironmentVariables.Names[I]);
-        for I := 0 to EnvNames.Count - 1 do
-          FEnvVariables.Values[EnvNames[I]] :=
-            RADToolInstallation.EnvironmentVariables.Values[EnvNames[I]];
-      end;
-    finally
-      RADToolsInstallations.Free;
-    end;
-    {$ENDIF KYLIX}
   finally
     EnvNames.Free;
   end;
-  {$ENDIF COMPILER6_UP}
 
   // add the Delphi directory
   FEnvVariables.Values[DelphiEnvironmentVar] := RootDir;
@@ -1433,15 +1369,7 @@ begin
   if not Assigned(GlobalActionList) then
   begin
     GlobalActionList := TList.Create;
-    {$IFDEF COMPILER6_UP}
     RegisterFindGlobalComponentProc(FindActions);
-    {$ELSE COMPILER6_UP}
-    if not Assigned(OldFindGlobalComponentProc) then
-    begin
-      OldFindGlobalComponentProc := FindGlobalComponent;
-      FindGlobalComponent := FindActions;
-    end;
-    {$ENDIF COMPILER6_UP}
   end;
 
   GlobalActionList.Add(Action);
@@ -1460,11 +1388,7 @@ begin
     if (GlobalActionList.Count = 0) then
     begin
       FreeAndNil(GlobalActionList);
-      {$IFDEF COMPILER6_UP}
       UnRegisterFindGlobalComponentProc(FindActions);
-      {$ELSE COMPILER6_UP}
-      FindGlobalComponent := OldFindGlobalComponentProc;
-      {$ENDIF COMPILER6_UP}
     end;
   end;
 

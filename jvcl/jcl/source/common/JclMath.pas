@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-13 10:22:23 +0100 (ven., 13 mars 2009)                          $ }
-{ Revision:      $Rev:: 2678                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -126,11 +126,15 @@ var
   PrecisionTolerance: Float = 0.0000001;
   EpsSingle: Single;
   EpsDouble: Double;
+  {$IFDEF SUPPORTS_EXTENDED}
   EpsExtended: Extended;
+  {$ENDIF SUPPORTS_EXTENDED}
   Epsilon: Float;
   ThreeEpsSingle: Single;
   ThreeEpsDouble: Double;
+  {$IFDEF SUPPORTS_EXTENDED}
   ThreeEpsExtended: Extended;
+  {$ENDIF SUPPORTS_EXTENDED}
   ThreeEpsilon: Float;
 
 type
@@ -145,52 +149,66 @@ function DoubleToHex(const D: Double): string; {$IFDEF SUPPORTS_INLINE}inline;{$
 function HexToDouble(const Hex: string): Double;
 
 // Converts degrees to radians.
+{$IFDEF SUPPORTS_EXTENDED}
 function DegToRad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$ENDIF SUPPORTS_EXTENDED}
 function DegToRad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function DegToRad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 procedure FastDegToRad;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts radians to degrees.
+{$IFDEF SUPPORTS_EXTENDED}
 function RadToDeg(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$ENDIF SUPPORTS_EXTENDED}
 function RadToDeg(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function RadToDeg(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 procedure FastRadToDeg;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts grads to radians.
+{$IFDEF SUPPORTS_EXTENDED}
 function GradToRad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$ENDIF SUPPORTS_EXTENDED}
 function GradToRad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function GradToRad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 procedure FastGradToRad;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts radians to grads.
+{$IFDEF SUPPORTS_EXTENDED}
 function RadToGrad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$ENDIF SUPPORTS_EXTENDED}
 function RadToGrad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function RadToGrad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 procedure FastRadToGrad;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts degrees to grads.
+{$IFDEF SUPPORTS_EXTENDED}
 function DegToGrad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$ENDIF SUPPORTS_EXTENDED}
 function DegToGrad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function DegToGrad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 procedure FastDegToGrad;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts grads to degrees.
+{$IFDEF SUPPORTS_EXTENDED}
 function GradToDeg(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$ENDIF SUPPORTS_EXTENDED}
 function GradToDeg(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function GradToDeg(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 procedure FastGradToDeg;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
+
+{$IFDEF CPUASM}
 
 { Logarithmic }
 
@@ -215,7 +233,7 @@ function Exsecans(X: Float): Float; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function Haversine(X: Float): Float; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function Sec(X: Float): Float; overload;
 function Sin(X: Float): Float; overload;
-procedure SinCos(X: Float; var Sin, Cos: Float);
+procedure SinCos(X: Float; out Sin, Cos: Float);
 function Tan(X: Float): Float; overload;
 function Versine(X: Float): Float; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 
@@ -231,8 +249,10 @@ function CosH(X: Float): Float; overload;
 function CotH(X: Float): Float; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function CscH(X: Float): Float; overload;
 function SecH(X: Float): Float; overload;
-function SinH(X: Float): Float; overload; {$IFDEF CLR}{$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}{$ENDIF}
+function SinH(X: Float): Float; overload; {IFDEF SUPPORTS_INLINE inline; ENDIF}
 function TanH(X: Float): Float; overload;
+
+{$ENDIF CPUASM}
 
 { Coordinate conversion }
 
@@ -260,7 +280,9 @@ function SetPrecisionTolerance(NewTolerance: Float): Float; {$IFDEF SUPPORTS_INL
 procedure SwapFloats(var X, Y: Float); {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 procedure CalcMachineEpsSingle;
 procedure CalcMachineEpsDouble;
+{$IFDEF SUPPORTS_EXTENDED}
 procedure CalcMachineEpsExtended;
+{$ENDIF SUPPORTS_EXTENDED}
 procedure CalcMachineEps;
 procedure SetPrecisionToleranceToEpsilon; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 
@@ -289,20 +311,20 @@ function EnsureRange(const AValue, AMin, AMax: Double): Double; overload;
 
 function IsRelativePrime(const X, Y: Cardinal): Boolean; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function IsPrimeTD(N: Cardinal): Boolean;
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 function IsPrimeRM(N: Cardinal): Boolean;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 function IsPrimeFactor(const F, N: Cardinal): Boolean; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function PrimeFactors(N: Cardinal): TDynCardinalArray;
 
 var
   IsPrime: function(N: Cardinal): Boolean = IsPrimeTD;
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 procedure SetPrimalityTest(const Method: TPrimalityTestMethod);
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 { Floating point value classification }
 
 type
@@ -313,18 +335,25 @@ type
     fpDenormal, // denormalized finite
     fpInfinite, // infinite
     fpNaN,      // not a number
-    fpInvalid   // unsupported floating point format
+    fpInvalid,  // unsupported floating point format
+    fpEmpty     // should not happen
    );
 
 function FloatingPointClass(const Value: Single): TFloatingPointClass; overload;
 function FloatingPointClass(const Value: Double): TFloatingPointClass; overload;
+{$IFDEF SUPPORTS_EXTENDED}
 function FloatingPointClass(const Value: Extended): TFloatingPointClass; overload;
-{$ENDIF CPU386}
+{$ENDIF SUPPORTS_EXTENDED}
+{$ENDIF CPUASM}
 
 { NaN and INF support }
 
 type
-  TNaNTag = -$3FFFFF..$3FFFFE;
+  TNaNTag = type Integer;
+
+const
+  LowValidNaNTag = -$3FFFFF;
+  HighValidNaNTag = $3FFFFE;
 
 const
   Infinity    = 1/0;       // tricky
@@ -340,23 +369,30 @@ const
 
 function IsInfinite(const Value: Single): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function IsInfinite(const Value: Double): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$IFDEF SUPPORTS_EXTENDED}
 function IsInfinite(const Value: Extended): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$ENDIF SUPPORTS_EXTENDED}
 
 function IsNaN(const Value: Single): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function IsNaN(const Value: Double): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$IFDEF SUPPORTS_EXTENDED}
 function IsNaN(const Value: Extended): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+{$ENDIF SUPPORTS_EXTENDED}
 
 function IsSpecialValue(const X: Float): Boolean; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 
 procedure MakeQuietNaN(var X: Single; Tag: TNaNTag = 0); overload;
 procedure MakeQuietNaN(var X: Double; Tag: TNaNTag = 0); overload;
+{$IFDEF SUPPORTS_EXTENDED}
 procedure MakeQuietNaN(var X: Extended; Tag: TNaNTag = 0); overload;
+{$ENDIF SUPPORTS_EXTENDED}
 
 procedure MakeSignalingNaN(var X: Single; Tag: TNaNTag = 0); overload;
 procedure MakeSignalingNaN(var X: Double; Tag: TNaNTag = 0); overload;
+{$IFDEF SUPPORTS_EXTENDED}
 procedure MakeSignalingNaN(var X: Extended; Tag: TNaNTag = 0); overload;
+{$ENDIF SUPPORTS_EXTENDED}
 
-{$IFNDEF CLR}
 { Mine*Buffer fills "Buffer" with consecutive tagged signaling NaNs.
 
   This allows for real number arrays which enforce initialization: any attempt
@@ -371,11 +407,12 @@ procedure MineDoubleBuffer(var Buffer; Count: Integer; StartTag: TNaNTag = 0);
 
 function MinedSingleArray(Length: Integer): TDynSingleArray;
 function MinedDoubleArray(Length: Integer): TDynDoubleArray;
-{$ENDIF ~CLR}
 
 function GetNaNTag(const NaN: Single): TNaNTag; overload;
 function GetNaNTag(const NaN: Double): TNaNTag; overload;
+{$IFDEF SUPPORTS_EXTENDED}
 function GetNaNTag(const NaN: Extended): TNaNTag; overload;
+{$ENDIF SUPPORTS_EXTENDED}
 
 { Set support }
 
@@ -406,10 +443,10 @@ type
   end;
 
 type
-  {$IFNDEF CLR}
+  {$IFNDEF FPC}
   TPointerArray = array [0..MaxLongint div 256] of Pointer;
   PPointerArray = ^TPointerArray;
-  {$ENDIF ~CLR}
+  {$ENDIF ~FPC}
   TDelphiSet = set of Byte; // 256 elements
   PDelphiSet = ^TDelphiSet;
 
@@ -417,7 +454,6 @@ const
   EmptyDelphiSet: TDelphiSet = [];
   CompleteDelphiSet: TDelphiSet = [0..255];
 
-{$IFNDEF CLR}
 type
   TJclSparseFlatSet = class(TJclASet)
   private
@@ -432,7 +468,6 @@ type
     procedure SetRange(const Low, High: Integer; const Value: Boolean); override;
     function GetRange(const Low, High: Integer; const Value: Boolean): Boolean; override;
   end;
-{$ENDIF ~CLR}
 
 { Rational numbers }
 
@@ -505,7 +540,6 @@ type
 type
   EJclMathError = class(EJclError);
 
-  {$IFNDEF CLR}
   EJclNaNSignal = class(EJclMathError)
   private
     FTag: TNaNTag;
@@ -513,17 +547,13 @@ type
     constructor Create(ATag: TNaNTag; Dummy: Boolean = False);
     property Tag: TNaNTag read FTag;
   end;
-  {$ENDIF ~CLR}
 
 procedure DomainCheck(Err: Boolean);
 
 { Checksums }
 
-{$IFDEF CLR}
-function GetParity(Buffer: TDynByteArray; Len: Integer): Boolean;
-{$ELSE ~CLR}
-function GetParity(Buffer: PByte; Len: Integer): Boolean;
-{$ENDIF ~CLR}
+function GetParity(Buffer: TDynByteArray; Len: Integer): Boolean; overload;
+function GetParity(Buffer: PByte; Len: Integer): Boolean; overload;
 
 { CRC-16 }
 
@@ -584,10 +614,6 @@ function Crc16_A(const X: array of Byte; Crc: Word = 0): Word; overload;
 function CheckCrc16_P(X: PJclByteArray; N: Integer; Crc: Word): Integer; overload;
 function CheckCrc16(var X: array of Byte; N: Integer; Crc: Word): Integer; overload;
 function CheckCrc16_A(var X: array of Byte; Crc: Word): Integer; overload;
-
-{$IFDEF COMPILER5}
-function CheckCrc16D5(var X: array of Byte; N: Integer; Crc: Word): Integer;
-{$ENDIF COMPILER5}
 
 // change the default polynom
 procedure InitCrc16(Polynom, Start: Word); overload;
@@ -660,10 +686,6 @@ const
 function Crc32_P(X: PJclByteArray; N: Integer; Crc: Cardinal = 0): Cardinal; overload;
 function Crc32(const X: array of Byte; N: Integer; Crc: Cardinal = 0): Cardinal; overload;
 function Crc32_A(const X: array of Byte; Crc: Cardinal = 0): Cardinal; overload;
-
-{$IFDEF COMPILER5}
-function CheckCrc32D5(var X: array of Byte; N: Integer; Crc: Word): Integer;
-{$ENDIF COMPILER5}
 
 function CheckCrc32_P(X: PJclByteArray; N: Integer; Crc: Cardinal): Integer; overload;
 function CheckCrc32(var X: array of Byte; N: Integer; Crc: Cardinal): Integer; overload;
@@ -770,28 +792,31 @@ function CscH(const Z: TRectComplex): TRectComplex; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclMath.pas $';
-    Revision: '$Revision: 2678 $';
-    Date: '$Date: 2009-03-13 10:22:23 +0100 (ven., 13 mars 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
 uses
-  {$IFDEF Win32API}
+  {$IFDEF MSWINDOWS}
+  {$IFNDEF FPC}
   Windows,
-  {$ENDIF Win32API}
-  {$IFDEF CPU386}
+  {$ENDIF ~FPC}
+  {$ENDIF MSWINDOWS}
+  {$IFDEF CPUASM}
   Jcl8087,
-  {$ENDIF CPU386}
+  {$ENDIF CPUASM}
   JclResources;
 
 // Internal helper routines
 // Linux: Get Global Offset Table (GOT) adress for Position Independent Code
 // (PIC, used by shared objects)
 
-{$IFNDEF CLR}
 {$IFDEF PIC}
 function GetGOT: Pointer; export;
 begin
@@ -800,7 +825,6 @@ begin
   end;
 end;
 {$ENDIF PIC}
-{$ENDIF ~CLR}
 
 // to keep name space usage low
 const
@@ -829,27 +853,14 @@ begin
 end;
 
 function DoubleToHex(const D: Double): string;
-{$IFDEF CLR}
-begin
-  Result := IntToHex(BitConverter.DoubleToInt64Bits(D), 16);
-end;
-{$ELSE ~CLR}
 var
   Overlay: array [1..2] of Longint absolute D;
 begin
   // Look at element 2 before element 1 because of "Little Endian" order.
   Result := IntToHex(Overlay[2], 8) + IntToHex(Overlay[1], 8);
 end;
-{$ENDIF ~CLR}
 
 function HexToDouble(const Hex: string): Double;
-{$IFDEF CLR}
-begin
-  if Length(Hex) <> 16 then
-    raise EJclMathError.Create(RsUnexpectedValue);
-  Result := BitConverter.Int64BitsToDouble(StrToInt64('$' + Hex))
-end;
-{$ELSE ~CLR}
 var
   D: Double;
   Overlay: array [1..2] of Longint absolute D;
@@ -860,14 +871,15 @@ begin
   Overlay[2] := StrToInt('$' + Copy(Hex, 1, 8));
   Result := D;
 end;
-{$ENDIF ~CLR}
 
 // Converts degrees to radians.
 
+{$IFDEF SUPPORTS_EXTENDED}
 function DegToRad(const Value: Extended): Extended;
 begin
   Result := Value * RatioDegToRad;
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 function DegToRad(const Value: Double): Double;
 begin
@@ -879,28 +891,35 @@ begin
   Result := Value * RatioDegToRad;
 end;
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 // Expects degrees in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 180
 procedure FastDegToRad; assembler;
 asm
         {$IFDEF PIC}
         CALL    GetGOT
+        {$IFDEF CPU32}
         FLD     [EAX][RatioDegToRad]
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        FLD     [RAX][RatioDegToRad]
+        {$ENDIF CPU64}
         {$ELSE ~PIC}
         FLD     [RatioDegToRad]
         {$ENDIF ~PIC}
         FMULP
         FWAIT
 end;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts radians to degrees.
 
+{$IFDEF SUPPORTS_EXTENDED}
 function RadToDeg(const Value: Extended): Extended;
 begin
   Result := Value * RatioRadToDeg;
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 function RadToDeg(const Value: Double): Double;
 begin
@@ -912,28 +931,35 @@ begin
   Result := Value * RatioRadToDeg;
 end;
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 // Expects radians in ST(0), leaves degrees in ST(0)
 // ST(0) := ST(0) * (180 / PI);
 procedure FastRadToDeg; assembler;
 asm
         {$IFDEF PIC}
         CALL    GetGOT
+        {$IFDEF CPU32}
         FLD     [EAX][RatioRadToDeg]
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        FLD     [RAX][RatioRadToDeg]
+        {$ENDIF CPU64}
         {$ELSE ~PIC}
         FLD     [RatioRadToDeg]
         {$ENDIF ~PIC}
         FMULP
         FWAIT
 end;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts grads to radians.
 
+{$IFDEF SUPPORTS_EXTENDED}
 function GradToRad(const Value: Extended): Extended;
 begin
   Result := Value * RatioGradToRad;
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 function GradToRad(const Value: Double): Double;
 begin
@@ -945,28 +971,35 @@ begin
   Result := Value * RatioGradToRad;
 end;
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 // Expects grads in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 200
 procedure FastGradToRad; assembler;
 asm
         {$IFDEF PIC}
         CALL    GetGOT
+        {$IFDEF CPU32}
         FLD     [EAX][RatioGradToRad]
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        FLD     [RAX][RatioGradToRad]
+        {$ENDIF CPU64}
         {$ELSE ~PIC}
         FLD     [RatioGradToRad]
         {$ENDIF ~PIC}
         FMULP
         FWAIT
 end;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts radians to grads.
 
+{$IFDEF SUPPORTS_EXTENDED}
 function RadToGrad(const Value: Extended): Extended;
 begin
   Result := Value * RatioRadToGrad;
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 function RadToGrad(const Value: Double): Double;
 begin
@@ -978,28 +1011,35 @@ begin
   Result := Value * RatioRadToGrad;
 end;
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 // Expects radians in ST(0), leaves grads in ST(0)
 // ST(0) := ST(0) * (200 / PI);
 procedure FastRadToGrad; assembler;
 asm
         {$IFDEF PIC}
         CALL    GetGOT
+        {$IFDEF CPU32}
         FLD     [EAX][RatioRadToGrad]
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        FLD     [RAX][RatioRadToGrad]
+        {$ENDIF CPU64}
         {$ELSE ~PIC}
         FLD     [RatioRadToGrad]
         {$ENDIF ~PIC}
         FMULP
         FWAIT
 end;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts degrees to grads.
 
+{$IFDEF SUPPORTS_EXTENDED}
 function DegToGrad(const Value: Extended): Extended;
 begin
   Result := Value * RatioDegToGrad;
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 function DegToGrad(const Value: Double): Double;
 begin
@@ -1011,28 +1051,35 @@ begin
   Result := Value * RatioDegToGrad;
 end;
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 // Expects Degrees in ST(0), leaves grads in ST(0)
 // ST(0) := ST(0) * (200 / 180);
 procedure FastDegToGrad; assembler;
 asm
         {$IFDEF PIC}
         CALL    GetGOT
+        {$IFDEF CPU32}
         FLD     [EAX][RatioDegToGrad]
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        FLD     [RAX][RatioDegToGrad]
+        {$ENDIF CPU64}
         {$ELSE ~PIC}
         FLD     [RatioDegToGrad]
         {$ENDIF ~PIC}
         FMULP
         FWAIT
 end;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 // Converts grads to degrees.
 
+{$IFDEF SUPPORTS_EXTENDED}
 function GradToDeg(const Value: Extended): Extended;
 begin
   Result := Value * RatioGradToDeg;
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 function GradToDeg(const Value: Double): Double;
 begin
@@ -1044,80 +1091,63 @@ begin
   Result := Value * RatioGradToDeg;
 end;
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 // Expects grads in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 200
 procedure FastGradToDeg; assembler;
 asm
         {$IFDEF PIC}
         CALL    GetGOT
+        {$IFDEF CPU32}
         FLD     [EAX][RatioGradToDeg]
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        FLD     [RAX][RatioGradToDeg]
+        {$ENDIF CPU64}
         {$ELSE ~PIC}
         FLD     [RatioGradToDeg]
         {$ENDIF ~PIC}
         FMULP
         FWAIT
 end;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 procedure DomainCheck(Err: Boolean);
 begin
   if Err then
-    {$IFDEF CLR}
-    raise EJclMathError.Create(RsMathDomainError);
-    {$ELSE ~CLR}
     raise EJclMathError.CreateRes(@RsMathDomainError);
-    {$ENDIF ~CLR}
 end;
 
 //=== Logarithmic ============================================================
 
+{$IFDEF CPUASM}
 function LogBase10(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FLogBase10(X: Float): Float; assembler;
+begin
+  DomainCheck(X <= 0.0);
   asm
           FLDLG2
           FLD     X
           FYL2X
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(X <= 0.0);
-  {$IFDEF CLR}
-  Result := System.Math.Log10(X)
-  {$ELSE ~CLR}
-  Result := FLogBase10(X);
-  {$ENDIF ~CLR}
 end;
 
 function LogBase2(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FLogBase2(X: Float): Float; assembler;
+begin
+  DomainCheck(X <= 0.0);
   asm
           FLD1
           FLD     X
           FYL2X
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(X <= 0.0);
-  {$IFDEF CLR}
-  Result := System.Math.Log(X, 2);
-  {$ELSE ~CLR}
-  Result := FLogBase2(X);
-  {$ENDIF ~CLR}
 end;
 
 function LogBaseN(Base, X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FLogBaseN(Base, X: Float): Float; assembler;
+begin
+  DomainCheck((X <= 0.0) or (Base <= 0.0) or (Base = 1.0));
   asm
           FLD1
           FLD     X
@@ -1125,46 +1155,29 @@ function LogBaseN(Base, X: Float): Float;
           FLD1
           FLD     Base
           FYL2X
-          FDIV
+          FDIVP   ST(1), ST(0)
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck((X <= 0.0) or (Base <= 0.0) or (Base = 1.0));
-  {$IFDEF CLR}
-  Result := System.Math.Log(X, Base);
-  {$ELSE ~CLR}
-  Result := FLogBaseN(Base, X);
-  {$ENDIF ~CLR}
 end;
 
 //=== Transcendental =========================================================
 
 function ArcCos(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FArcCos(X: Float): Float; assembler;
+begin
+  DomainCheck(Abs(X) > 1.0);
   asm
           FLD     X
           FLD     ST(0)
-          FMUL    ST(0), ST
+          FMUL    ST(0), ST(0)
           FLD1
-          FSUBRP  ST(1), ST
+          FSUBRP  ST(1), ST(0)
           FSQRT
           FXCH
           FPATAN
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(Abs(X) > 1.0);
-  {$IFDEF CLR}
-  Result := System.Math.Acos(X);
-  {$ELSE ~CLR}
-  Result := FArcCos(X);
-  {$ENDIF ~CLR}
 end;
 
 function ArcCot(X: Float): Float;
@@ -1179,120 +1192,83 @@ begin
 end;
 
 function ArcSec(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FArcTan(X: Float): Float; assembler;
+begin
+  DomainCheck((X > -1) and (X < 1));
+  // FArcTan(Sqrt(X*X - 1));
   asm
+          FLD1
           FLD     X
+          FLD     ST(0)
+          FMULP
+          FSUBRP  ST(1), ST(0)
+          FSQRT
           FLD1
           FPATAN
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  {$IFDEF CLR}
-  Result := System.Math.Atan(Sqrt(X*X - 1))
-  {$ELSE ~CLR}
-  Result := FArcTan(Sqrt(X*X - 1));
-  {$ENDIF ~CLR}
 end;
 
 function ArcSin(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FArcSin(X: Float): Float; assembler;
+begin
+  DomainCheck(Abs(X) > 1.0);
   asm
           FLD     X
           FLD     ST(0)
-          FMUL    ST(0), ST
+          FMUL    ST(0), ST(0)
           FLD1
-          FSUBRP  ST(1), ST
+          FSUBRP  ST(1), ST(0)
           FSQRT
           FPATAN
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(Abs(X) > 1.0);
-  {$IFDEF CPU386}
-  Result := FArcSin(X);
-  {$ELSE ~CPU386}
-  Result := System.Math.Asin(X);
-  {$ENDIF ~CPU386}
 end;
 
 function ArcTan(X: Float): Float;
-{$IFDEF PUREPASCAL}
 begin
-  Result := ArcTan2(X, 1);
+  asm
+          FLD     X
+          FLD1
+          FPATAN
+          FWAIT
+          FSTP    Result
+  end;
 end;
-{$ELSE ~PUREPASCAL}
-assembler;
-asm
-        FLD     X
-        FLD1
-        FPATAN
-        FWAIT
-end;
-{$ENDIF ~PUREPASCAL}
 
-{$IFDEF CLR}
 function ArcTan2(Y, X: Float): Float;
 begin
-  Result := System.Math.ATan2(Y, X);
+  asm
+          FLD     Y
+          FLD     X
+          FPATAN
+          FWAIT
+          FSTP    Result
+  end;
 end;
-{$ELSE ~CLR}
-function ArcTan2(Y, X: Float): Float; assembler;
-asm
-        FLD     Y
-        FLD     X
-        FPATAN
-        FWAIT
-end;
-{$ENDIF ~CLR}
 
 function Cos(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FCos(X: Float): Float; assembler;
+begin
+  DomainCheck(Abs(X) > MaxAngle);
   asm
           FLD     X
           FCOS
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(Abs(X) > MaxAngle);
-  {$IFDEF CLR}
-  Result := System.Math.Cos(X);
-  {$ELSE ~CLR}
-  Result := FCos(X);
-  {$ENDIF ~CLR}
 end;
 
 function Cot(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FCot(X: Float): Float; assembler;
-  asm
-          FLD     X
-          FPTAN
-          FDIVRP
-          FWAIT
-  end;
-  {$ENDIF CPU386}
-
 begin
   DomainCheck(Abs(X) > MaxAngle);
   { TODO : Cot = 1 / Tan -> Tan(X) <> 0.0 }
-  {$IFDEF CLR}
-  Result := 1 / System.Math.Tan(X);
-  {$ELSE ~CLR}
-  Result := FCot(X);
-  {$ENDIF ~CLR}
+  asm
+          FLD     X
+          FPTAN
+          FDIVRP  ST(1), ST(0)
+          FWAIT
+          FSTP    Result
+  end;
 end;
 
 function Coversine(X: Float): Float;
@@ -1322,92 +1298,65 @@ begin
 end;
 
 function Sec(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FSec(X: Float): Float; assembler;
+begin
+  DomainCheck(Abs(X) > MaxAngle);
+  { TODO : Sec = 1 / Cos -> Cos(X) <> 0! }
   asm
           FLD     X
           FCOS
           FLD1
-          FDIVRP
+          FDIVRP  ST(1), ST(0)
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(Abs(X) > MaxAngle);
-  { TODO : Sec = 1 / Cos -> Cos(X) <> 0! }
-  {$IFDEF CLR}
-  Result := 1 / System.Math.Cos(X);
-  {$ELSE ~CLR}
-  Result := FSec(X);
-  {$ENDIF ~CLR}
 end;
 
 function Sin(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FSin(X: Float): Float; assembler;
-  asm
-          FLD     X
-          FSIN
-          FWAIT
-  end;
-  {$ENDIF CPU386}
-
 begin
   {$IFNDEF MATH_EXT_SPECIALVALUES}
   DomainCheck(Abs(X) > MaxAngle);
   {$ENDIF ~MATH_EXT_SPECIALVALUES}
-  {$IFDEF CLR}
-  Result := System.Math.Sin(X);
-  {$ELSE ~CLR}
-  Result := FSin(X);
-  {$ENDIF ~CLR}
-end;
-
-procedure SinCos(X: Float; var Sin, Cos: Float);
-
-  {$IFDEF CPU386}
-  procedure FSinCos(X: Float; var Sin, Cos: Float); assembler;
   asm
           FLD     X
+          FSIN
+          FWAIT
+          FSTP    Result
+  end;
+end;
+
+procedure SinCos(X: Float; out Sin, Cos: Float);
+begin
+  DomainCheck(Abs(X) > MaxAngle);
+  asm
+          FLD     X
+          {$IFDEF CPU32}
+          MOV     EDX, Cos
+          MOV     EAX, Sin
           FSINCOS
           FSTP    Float PTR [EDX]
           FSTP    Float PTR [EAX]
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          MOV     RDX, Cos
+          MOV     RAX, Sin
+          FSINCOS
+          FSTP    Float PTR [RDX]
+          FSTP    Float PTR [RAX]
+          {$ENDIF CPU64}
           FWAIT
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(Abs(X) > MaxAngle);
-  {$IFDEF CLR}
-  Sin := System.Math.Sin(X);
-  Cos := System.Math.Cos(X);
-  {$ELSE ~CLR}
-  FSinCos(X, Sin, Cos);
-  {$ENDIF ~CLR}
 end;
 
 function Tan(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FTan(X: Float): Float; assembler;
+begin
+  DomainCheck(Abs(X) > MaxAngle);
   asm
           FLD     X
           FPTAN
           FSTP    ST(0)
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(Abs(X) > MaxAngle);
-  {$IFDEF CLR}
-  Result := System.Math.Tan(X);
-  {$ELSE ~CLR}
-  Result := FTan(X);
-  {$ENDIF ~CLR}
 end;
 
 function Versine(X: Float): Float;
@@ -1418,108 +1367,74 @@ end;
 //=== Hyperbolic =============================================================
 
 function ArcCosH(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FArcCosH(X: Float): Float; assembler;
+begin
+  DomainCheck(X < 1.0);
   asm
           FLDLN2
           FLD     X
           FLD     ST(0)
-          FMUL    ST(0), ST
+          FMUL    ST(0), ST(0)
           FLD1
-          FSUBP   ST(1), ST
+          FSUBP   ST(1), ST(0)
           FSQRT
-          FADDP   ST(1), ST
+          FADDP   ST(1), ST(0)
           FYL2X
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(X < 1.0);
-  {$IFDEF CLR}
-  Result := System.Math.Log(X + Sqrt(X * X - 1));
-  {$ELSE ~CLR}
-  Result := FArcCosH(X);
-  {$ENDIF ~CLR}
 end;
 
 function ArcCotH(X: Float): Float;
 begin
   DomainCheck(Abs(X) = 1.0);
-  {$IFDEF CLR}
-  Result := 0.5 * System.Math.Log((X + 1.0) / (X - 1.0));
-  {$ELSE ~CLR}
   Result := 0.5 * System.Ln((X + 1.0) / (X - 1.0));
-  {$ENDIF ~CLR}
 end;
 
 function ArcCscH(X: Float): Float;
 begin
   DomainCheck(X = 0);
-  {$IFDEF CLR}
-  Result := System.Math.Log((Sgn(X) * Sqrt(Sqr(X) + 1.0) + 1.0) / X);
-  {$ELSE ~CLR}
   Result := System.Ln((Sgn(X) * Sqrt(Sqr(X) + 1.0) + 1.0) / X);
-  {$ENDIF ~CLR}
 end;
 
 function ArcSecH(X: Float): Float;
 begin
   DomainCheck(Abs(X) > 1.0);
-  {$IFDEF CLR}
-  Result := System.Math.Log((Sqrt(1.0 - Sqr(X)) + 1.0) / X);
-  {$ELSE ~CLR}
   Result := System.Ln((Sqrt(1.0 - Sqr(X)) + 1.0) / X);
-  {$ENDIF ~CLR}
 end;
 
 function ArcSinH(X: Float): Float;
-{$IFDEF CLR}
 begin
-  Result := System.Math.Log(X + Sqrt(X * X + 1));
+  asm
+          FLDLN2
+          FLD     X
+          FLD     ST(0)
+          FMUL    ST(0), ST(0)
+          FLD1
+          FADDP   ST(1), ST(0)
+          FSQRT
+          FADDP   ST(1), ST(0)
+          FYL2X
+          FSTP    Result
+  end;
 end;
-{$ELSE ~CLR}
-assembler;
-asm
-        FLDLN2
-        FLD     X
-        FLD     ST(0)
-        FMUL    ST(0), ST
-        FLD1
-        FADDP   ST(1), ST
-        FSQRT
-        FADDP   ST(1), ST
-        FYL2X
-end;
-{$ENDIF ~CLR}
 
 function ArcTanH(X: Float): Float;
-
-  {$IFDEF CPU386}
-  function FArcTanH(X: Float): Float; assembler;
+begin
+  DomainCheck(Abs(X) >= 1.0);
   asm
           FLDLN2
           FLD     X
           FLD     ST(0)
           FLD1
-          FADDP   ST(1), ST
+          FADDP   ST(1), ST(0)
           FXCH
           FLD1
-          FSUBRP  ST(1), ST
-          FDIVP   ST(1), ST
+          FSUBRP  ST(1), ST(0)
+          FDIVP   ST(1), ST(0)
           FSQRT
           FYL2X
           FWAIT
+          FSTP    Result
   end;
-  {$ENDIF CPU386}
-
-begin
-  DomainCheck(Abs(X) >= 1.0);
-  {$IFDEF CLR}
-  Result := System.Math.Log((1 + X) / (1 - X)) / 2;
-  {$ELSE ~CLR}
-  Result := FArcTanH(X);
-  {$ENDIF ~CLR}
 end;
 
 function CosH(X: Float): Float;
@@ -1533,39 +1448,52 @@ const
   OneHalf: Float = 0.5;
 var
   ControlWW: Word;
-asm
-        {$IFDEF PIC}
-        CALL    GetGOT
-        {$ENDIF PIC}
-        FLD     X    { TODO : Legal values for X? }
-        FLDL2E
-        FMULP   ST(1), ST
-        FSTCW   ControlWW
-        {$IFDEF PIC}
-        FLDCW   [EAX].RoundDown
-        {$ELSE ~PIC}
-        FLDCW   RoundDown
-        {$ENDIF ~PIC}
-        FLD     ST(0)
-        FRNDINT
-        FLDCW   ControlWW
-        FXCH
-        FSUB    ST, ST(1)
-        F2XM1
-        FLD1
-        FADDP   ST(1), ST
-        FSCALE
-        FST     ST(1)
-        FLD1
-        FDIVRP  ST(1), ST
-        FADDP   ST(1), ST
-        {$IFDEF PIC}
-        FLD     [EAX].OneHalf
-        {$ELSE ~PIC}
-        FLD     OneHalf
-        {$ENDIF ~PIC}
-        FMULP   ST(1), ST
-        FWAIT
+begin
+  asm
+          {$IFDEF PIC}
+          CALL    GetGOT
+          {$ENDIF PIC}
+          FLD     X    { TODO : Legal values for X? }
+          FLDL2E
+          FMULP   ST(1), ST(0)
+          FSTCW   ControlWW
+          {$IFDEF PIC}
+          {$IFDEF CPU32}
+          FLDCW   [EAX].RoundDown
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          FLDCW   [RAX].RoundDown
+          {$ENDIF CPU64}
+          {$ELSE ~PIC}
+          FLDCW   RoundDown
+          {$ENDIF ~PIC}
+          FLD     ST(0)
+          FRNDINT
+          FLDCW   ControlWW
+          FXCH
+          FSUB    ST(0), ST(1)
+          F2XM1
+          FLD1
+          FADDP   ST(1), ST(0)
+          FSCALE
+          FST     ST(1)
+          FLD1
+          FDIVRP  ST(1), ST(0)
+          FADDP   ST(1), ST(0)
+          {$IFDEF PIC}
+          {$IFDEF CPU32}
+          FLD     [EAX].OneHalf
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          FLD     [RAX].OneHalf
+          {$ENDIF CPU64}
+          {$ELSE ~PIC}
+          FLD     OneHalf
+          {$ENDIF ~PIC}
+          FMULP   ST(1), ST(0)
+          FWAIT
+          FSTP    Result
+  end;
 end;
 {$ENDIF ~PUREPASCAL}
 
@@ -1589,52 +1517,64 @@ begin
 end;
 
 function SinH(X: Float): Float;
-{$IFDEF CLR}
+{$IFDEF PUREPASCAL}
 begin
-  Result := System.Math.Sinh(X);
+  Result := 0.5 * (Exp(X) - Exp(-X));
 end;
-{$ELSE ~CLR}
-assembler;
+{$ELSE ~PUREPASCAL}
 const
   RoundDown: Word = $177F;
   OneHalf: Float = 0.5;
 var
   ControlWW: Word;
-asm
-        {$IFDEF PIC}
-        CALL    GetGOT
-        {$ENDIF PIC}
-        FLD     X  { TODO : Legal values for X? }
-        FLDL2E
-        FMULP   ST(1), ST
-        FSTCW   ControlWW
-        {$IFDEF PIC}
-        FLDCW   [EAX].RoundDown
-        {$ELSE ~PIC}
-        FLDCW   RoundDown
-        {$ENDIF ~PIC}
-        FLD     ST(0)
-        FRNDINT
-        FLDCW   ControlWW
-        FXCH
-        FSUB    ST, ST(1)
-        F2XM1
-        FLD1
-        FADDP   ST(1), ST
-        FSCALE
-        FST     ST(1)
-        FLD1
-        FDIVRP  ST(1), ST
-        FSUBP   ST(1), ST
-        {$IFDEF PIC}
-        FLD     [EAX].OneHalf
-        {$ELSE ~PIC}
-        FLD     OneHalf
-        {$ENDIF ~PIC}
-        FMULP   ST(1), ST
-        FWAIT
+begin
+  asm
+          {$IFDEF PIC}
+          CALL    GetGOT
+          {$ENDIF PIC}
+          FLD     X  { TODO : Legal values for X? }
+          FLDL2E
+          FMULP   ST(1), ST(0)
+          FSTCW   ControlWW
+          {$IFDEF PIC}
+          {$IFDEF CPU32}
+          FLDCW   [EAX].RoundDown
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          FLDCW   [RAX].RoundDown
+          {$ENDIF CPU64}
+          {$ELSE ~PIC}
+          FLDCW   RoundDown
+          {$ENDIF ~PIC}
+          FLD     ST(0)
+          FRNDINT
+          FLDCW   ControlWW
+          FXCH
+          FSUB    ST(0), ST(1)
+          F2XM1
+          FLD1
+          FADDP   ST(1), ST(0)
+          FSCALE
+          FST     ST(1)
+          FLD1
+          FDIVRP  ST(1), ST(0)
+          FSUBP   ST(1), ST(0)
+          {$IFDEF PIC}
+          {$IFDEF CPU32}
+          FLD     [EAX].OneHalf
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          FLD     [RAX].OneHalf
+          {$ENDIF CPU64}
+          {$ELSE ~PIC}
+          FLD     OneHalf
+          {$ENDIF ~PIC}
+          FMULP   ST(1), ST(0)
+          FWAIT
+          FSTP    Result
+  end;
 end;
-{$ENDIF ~CLR}
+{$ENDIF ~PUREPASCAL}
 
 function TanH(X: Float): Float;
 begin
@@ -1653,6 +1593,8 @@ begin
   end;
 end;
 
+{$ENDIF CPUASM}
+
 //=== Coordinate conversion ==================================================
 
 function DegMinSecToFloat(const Degs, Mins, Secs: Float): Float; // obsolete
@@ -1664,9 +1606,9 @@ procedure FloatToDegMinSec(const X: Float; var Degs, Mins, Secs: Float); // obso
 var
   Y: Float;
 begin
-  Degs := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Int(X);
+  Degs := System.Int(X);
   Y := Frac(X) * 60;
-  Mins := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Int(Y);
+  Mins := System.Int(Y);
   Secs := Frac(Y) * 60;
 end;
 
@@ -1685,7 +1627,7 @@ begin
   end;
   {$ENDIF MATH_EXT_EXTREMEVALUES}
 
-  Result := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Exp(X);
+  Result := System.Exp(X);
 end;
 
 function Power(const Base, Exponent: Float): Float;
@@ -1703,32 +1645,24 @@ begin
       {$IFDEF MATH_EXT_EXTREMEVALUES}
       Result := Infinity;
       {$ELSE ~MATH_EXT_EXTREMEVALUES}
-      {$IFDEF CLR}
-      raise EJclMathError.Create(RsPowerInfinite);
-      {$ELSE ~CLR}
       raise EJclMathError.CreateRes(@RsPowerInfinite);
-      {$ENDIF ~CLR}
       {$ENDIF ~MATH_EXT_EXTREMEVALUES}
   end
   else
   if Base > 0.0 then
-    Result := Exp(Exponent * {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Ln(Base))
+    Result := Exp(Exponent * System.Ln(Base))
   else
   begin
     IsAnInteger := (Frac(Exponent) = 0.0);
     if IsAnInteger then
     begin
-      Result := Exp(Exponent * {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Ln(Abs(Base)));
+      Result := Exp(Exponent * System.Ln(Abs(Base)));
       IsOdd := Abs(Round(ModFloat(Exponent, 2))) = 1;
       if IsOdd then
         Result := -Result;
     end
     else
-      {$IFDEF CLR}
-      raise EJclMathError.Create(RsPowerComplex);
-      {$ELSE ~CLR}
       raise EJclMathError.CreateRes(@RsPowerComplex);
-      {$ENDIF ~CLR}
   end;
 end;
 
@@ -1845,7 +1779,7 @@ var
   Z: Float;
 begin
   Result := X / Y;
-  Z := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Int(Result);
+  Z := System.Int(Result);
   if Frac(Result) < 0.0 then
     Z := Z - 1.0;
   Result := X - Y * Z;
@@ -1853,7 +1787,7 @@ end;
 
 function RemainderFloat(const X, Y: Float): Float;
 begin
-  Result := X - {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Int(X / Y) * Y;
+  Result := X - System.Int(X / Y) * Y;
 end;
 
 procedure SwapFloats(var X, Y: Float);
@@ -1895,6 +1829,7 @@ begin
   ThreeEpsDouble := 3.0 * EpsDouble;
 end;
 
+{$IFDEF SUPPORTS_EXTENDED}
 procedure CalcMachineEpsExtended;
 var
   One: Extended;
@@ -1909,6 +1844,7 @@ begin
   EpsExtended := 2.0 * EpsExtended;
   ThreeEpsExtended := 3.0 * EpsExtended;
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 procedure CalcMachineEps;
 begin
@@ -2348,7 +2284,6 @@ begin
   FBits[Idx] := Value;
 end;
 
-{$IFNDEF CLR}
 //== { TJclSparseFlatSet } ===================================================
 
 destructor TJclSparseFlatSet.Destroy;
@@ -2482,7 +2417,6 @@ begin
     end;
   Result := True;
 end;
-{$ENDIF ~CLR}
 
 //=== Ranges =================================================================
 
@@ -2573,11 +2507,7 @@ begin
     Max := Round(Sqrt (R));
     if Max > PrimeCacheLimit then
     begin
-      {$IFDEF CLR}
-      raise EJclMathError.Create(RsUnexpectedValue);
-      {$ELSE ~CLR}
       raise EJclMathError.CreateRes(@RsUnexpectedValue);
-      {$ENDIF ~CLR}
       Exit;
     end;
     I := 1;
@@ -2594,7 +2524,7 @@ begin
   end;
 end;
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 { Rabin-Miller Strong Primality Test }
 
 function IsPrimeRM(N: Cardinal): Boolean;
@@ -2611,7 +2541,8 @@ asm
         PUSH  EBX
         PUSH  EBP
         PUSH  EAX              // save N as Param for @@5
-        LEA   EBP,[EAX - 1]    // M == N -1, Exponent
+        MOV   EBP, EAX
+        DEC   EBP              // M == N -1, Exponent
         MOV   ECX,32           // calc remaining Bits of M and shift M'
         MOV   ESI,EBP
 @@2:    DEC   ECX
@@ -2645,9 +2576,17 @@ asm
         POP   ESI
         RET
 // do a Strong Pseudo Prime Test
-@@5:    MOV   EBX,[ESP + 12]   // N on stack
+@@5:
+        {$IFDEF CPU32}
+        MOV   EBX,[ESP + 12]   // N on stack
         MOV   ECX,[ESP +  8]   // remaining Bits
         MOV   ESI,[ESP +  4]   // M'
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        MOV   EBX,[RSP + 12]   // N on stack
+        MOV   ECX,[RSP +  8]   // remaining Bits
+        MOV   ESI,[RSP +  4]   // M'
+        {$ENDIF CPU64}
         MOV   EDI,EAX          // T = b, temp. Base
 @@6:    DEC   ECX
         MUL   EAX
@@ -2674,15 +2613,26 @@ asm
 @@9:    STC
 @@A:    RET
 @@B:    DB    3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73
-@@C:    MOV   EDX,OFFSET @@B
-        MOV   ECX,19
+        {$IFDEF CPU32}
+@@C:    MOV   ECX,19
+        MOV   EDX,OFFSET @@B
 @@D:    CMP   AL,[EDX + ECX]
         JE    @@E
         DEC   ECX
         JNL   @@D
 @@E:    SETE  AL
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+@@C:    MOV   RCX,19
+        MOV   RDX,OFFSET @@B
+@@D:    CMP   AL,[RDX + RCX]
+        JE    @@E
+        DEC   RCX
+        JNL   @@D
+@@E:    SETE  AL
+        {$ENDIF CPU64}
 end;
-{$ENDIF CPU386}
+{$ENDIF CPUASM}
 
 function PrimeFactors(N: Cardinal): TDynCardinalArray;
 var
@@ -2742,7 +2692,6 @@ begin
   Result := GCD(X, Y) = 1;
 end;
 
-{$IFNDEF CLR}
 procedure SetPrimalityTest(const Method: TPrimalityTestMethod);
 begin
   case Method of
@@ -2752,14 +2701,11 @@ begin
       IsPrime := IsPrimeRM;
   end;
 end;
-{$ENDIF ~CLR}
 
-{$IFDEF CPU386}
+{$IFDEF CPUASM}
 //=== Floating point value classification ====================================
 
 const
-  fpEmpty = TFloatingPointClass(Ord(High(TFloatingPointClass))+1);
-
   FPClasses: array [0..6] of TFloatingPointClass =
    (
     fpInvalid,
@@ -2767,16 +2713,21 @@ const
     fpNormal,
     fpInfinite,
     fpZero,
-    fpEmpty,    // should not happen
+    fpEmpty,
     fpDenormal
    );
 
 function _FPClass: TFloatingPointClass;
 // In: ST(0) Value to examine
-//     ECX   address of GOT (PIC only)
+//     ECX/RCX   address of GOT (PIC only)
 asm
         FXAM
+        {$IFDEF CPU32}
         XOR     EDX, EDX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        XOR     RDX, RDX
+        {$ENDIF CPU64}
         FNSTSW  AX
         FFREE   ST(0)
         FINCSTP
@@ -2786,72 +2737,102 @@ asm
         RCL     EDX, 1
         BT      EAX, 8  // C0
         RCL     EDX, 1
+        {$IFDEF CPU32}
         {$IFDEF PIC}
+        {$IFDEF CPU32}
         MOVZX   EAX, TFloatingPointClass([ECX].FPClasses[EDX])
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        MOVZX   EAX, TFloatingPointClass([RCX].FPClasses[RDX])
+        {$ENDIF CPU64}
         {$ELSE ~PIC}
         MOVZX   EAX, TFloatingPointClass(FPClasses[EDX])
         {$ENDIF ~PIC}
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        {$IFDEF PIC}
+        MOVZX   EAX, TFloatingPointClass([RCX].FPClasses[RDX])
+        {$ELSE ~PIC}
+        MOVZX   EAX, TFloatingPointClass(FPClasses[RDX])
+        {$ENDIF ~PIC}
+        {$ENDIF CPU64}
 end;
 
 function FloatingPointClass(const Value: Single): TFloatingPointClass; overload;
-asm
-        {$IFDEF PIC}
-        CALL    GetGOT
-        MOV     ECX, EAX
-        {$ENDIF PIC}
-        FLD     Value
-        CALL    _FPClass
+begin
+  asm
+          {$IFDEF PIC}
+          CALL    GetGOT
+          {$IFDEF CPU32}
+          MOV     ECX, EAX
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          MOV     RCX, RAX
+          {$ENDIF CPU64}
+          {$ENDIF PIC}
+          FLD     Value
+          CALL    _FPClass
+          MOV     Result, AL
+  end;
 end;
 
 function FloatingPointClass(const Value: Double): TFloatingPointClass; overload;
-asm
-        {$IFDEF PIC}
-        CALL    GetGOT
-        MOV     ECX, EAX
-        {$ENDIF PIC}
-        FLD     Value
-        CALL    _FPClass
+begin
+  asm
+          {$IFDEF PIC}
+          CALL    GetGOT
+          {$IFDEF CPU32}
+          MOV     ECX, EAX
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          MOV     RCX, RAX
+          {$ENDIF CPU64}
+          {$ENDIF PIC}
+          FLD     Value
+          CALL    _FPClass
+          MOV     Result, AL
+  end;
 end;
 
+{$IFDEF SUPPORTS_EXTENDED}
 function FloatingPointClass(const Value: Extended): TFloatingPointClass; overload;
-asm
-        {$IFDEF PIC}
-        CALL    GetGOT
-        MOV     ECX, EAX
-        {$ENDIF PIC}
-        FLD     Value
-        CALL    _FPClass
+begin
+  asm
+          {$IFDEF PIC}
+          CALL    GetGOT
+          {$IFDEF CPU32}
+          MOV     ECX, EAX
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          MOV     RCX, RAX
+          {$ENDIF CPU64}
+          {$ENDIF PIC}
+          FLD     Value
+          CALL    _FPClass
+          MOV     Result, AL
+  end;
 end;
-{$ENDIF CPU386}
+{$ENDIF SUPPORTS_EXTENDED}
+{$ENDIF CPUASM}
 
 //=== NaN and Infinity support ===============================================
 
 function IsInfinite(const Value: Single): Boolean; overload;
 begin
-  {$IFDEF CLR}
-  Result := System.Single.IsInfinity(Value);
-  {$ELSE ~CLR}
   Result := FloatingPointClass(Value) = fpInfinite;
-  {$ENDIF ~CLR}
 end;
 
 function IsInfinite(const Value: Double): Boolean; overload;
 begin
-  {$IFDEF CLR}
-  Result := System.Double.IsInfinity(Value);
-  {$ELSE ~CLR}
   Result := FloatingPointClass(Value) = fpInfinite;
-  {$ENDIF ~CLR}
 end;
 
+{$IFDEF SUPPORTS_EXTENDED}
 function IsInfinite(const Value: Extended): Boolean; overload;
 begin
-  {$IFDEF CLR}
-  Result := System.Double.IsInfinity(Value);
-  {$ELSE ~CLR}
   Result := FloatingPointClass(Value) = fpInfinite;
-  {$ENDIF ~CLR}
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 const
   sSignBit = 31;
@@ -2871,7 +2852,9 @@ type
   dExponentBits = 52..dSignBit-1;
   xExponentBits = 64..xSignBit-1;
 
+  {$IFNDEF FPC}
   QWord = Int64;
+  {$ENDIF ~FPC}
 
   PExtendedRec = ^TExtendedRec;
   TExtendedRec = packed record
@@ -2899,38 +2882,22 @@ const
 
 function IsNaN(const Value: Single): Boolean; overload;
 begin
-  {$IFDEF CLR}
-  Result := System.Single.IsNaN(Value);
-  {$ELSE ~CLR}
   Result := FloatingPointClass(Value) = fpNaN;
-  {$ENDIF ~CLR}
 end;
 
 function IsNaN(const Value: Double): Boolean; overload;
 begin
-  {$IFDEF CLR}
-  Result := System.Double.IsNaN(Value);
-  {$ELSE ~CLR}
   Result := FloatingPointClass(Value) = fpNaN;
-  {$ENDIF ~CLR}
 end;
 
+{$IFDEF SUPPORTS_EXTENDED}
 function IsNaN(const Value: Extended): Boolean; overload;
 begin
-  {$IFDEF CLR}
-  Result := System.Double.IsNaN(Value);
-  {$ELSE ~CLR}
   Result := FloatingPointClass(Value) = fpNaN;
-  {$ENDIF ~CLR}
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 procedure CheckNaN(const Value: Single); overload;
-{$IFDEF CLR}
-begin
-  if not IsNaN(Value) then
-    raise EJclMathError.Create(RsNoNaN);
-end;
-{$ELSE ~CLR}
 var
   SaveExMask: T8087Exceptions;
 begin
@@ -2942,15 +2909,8 @@ begin
     SetMasked8087Exceptions(SaveExMask);
   end;
 end;
-{$ENDIF ~CLR}
 
 procedure CheckNaN(const Value: Double); overload;
-{$IFDEF CLR}
-begin
-  if not IsNaN(Value) then
-    raise EJclMathError.Create(RsNoNaN);
-end;
-{$ELSE ~CLR}
 var
   SaveExMask: T8087Exceptions;
 begin
@@ -2962,15 +2922,9 @@ begin
     SetMasked8087Exceptions(SaveExMask);
   end;
 end;
-{$ENDIF ~CLR}
 
+{$IFDEF SUPPORTS_EXTENDED}
 procedure CheckNaN(const Value: Extended); overload;
-{$IFDEF CLR}
-begin
-  if not IsNaN(Value) then
-    raise EJclMathError.Create(RsNoNaN);
-end;
-{$ELSE ~CLR}
 var
   SaveExMask: T8087Exceptions;
 begin
@@ -2982,24 +2936,15 @@ begin
     SetMasked8087Exceptions(SaveExMask);
   end;
 end;
-{$ENDIF ~CLR}
+{$ENDIF SUPPORTS_EXTENDED}
 
 function GetNaNTag(const NaN: Single): TNaNTag;
 var
   Temp: Integer;
-  {$IFDEF CLR}
-  Bytes: Int32;
-  {$ENDIF CLR}
 begin
   CheckNaN(NaN);
-  {$IFDEF CLR}
-  Bytes := BitConverter.ToInt32(BitConverter.GetBytes(NaN), 0);
-  Temp := Bytes and NaNTagMask;
-  if Bytes and (1 shl sSignBit) <> 0 then
-  {$ELSE ~CLR}
   Temp := PLongint(@NaN)^ and NaNTagMask;
   if sSignBit in TSingleBits(NaN) then
-  {$ENDIF ~CLR}
     Result := -Temp
   else
   if Temp = ZeroTag then
@@ -3011,23 +2956,14 @@ end;
 function GetNaNTag(const NaN: Double): TNaNTag;
 var
   Temp: Integer;
-  {$IFDEF CLR}
-  Bytes: Int64;
-  {$ENDIF CLR}
 begin
   CheckNaN(NaN);
-  {$IFDEF CLR}
-  Bytes := BitConverter.DoubleToInt64Bits(NaN);
-  Temp := (Bytes shr dNanTagShift) and NaNTagMask;
-  if Bytes and (1 shl dSignBit) <> 0 then
-  {$ELSE ~CLR}
   Temp := (PInt64(@NaN)^ shr dNaNTagShift) and NaNTagMask;
   {$IFDEF FPC}
   if Int64(NaN) < 0 then
   {$ELSE ~FPC}
   if dSignBit in TDoubleBits(NaN) then
   {$ENDIF ~FPC}
-  {$ENDIF ~CLR}
     Result := -Temp
   else
   if Temp = ZeroTag then
@@ -3036,15 +2972,11 @@ begin
     Result := Temp;
 end;
 
+{$IFDEF SUPPORTS_EXTENDED}
 function GetNaNTag(const NaN: Extended): TNaNTag;
-{$IFNDEF CLR}
 var
   Temp: Integer;
-{$ENDIF ~CLR}
 begin
-  {$IFDEF CLR}
-  Result := GetNaNTag(Double(NaN));
-  {$ELSE ~CLR}
   CheckNaN(NaN);
   Temp := (PExtendedRec(@NaN)^.Significand shr xNaNTagShift) and NaNTagMask;
   {$IFDEF FPC}
@@ -3058,11 +2990,12 @@ begin
     Result := 0
   else
     Result := Temp;
-  {$ENDIF ~CLR}
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
-{$IFNDEF CLR}
 {$IFDEF MSWINDOWS}
+// ExceptObjProc is not used in FPC
+{$IFNDEF FPC}
 
 type
   TRealType = (rtUndef, rtSingle, rtDouble, rtExtended);
@@ -3148,10 +3081,6 @@ begin
     Result := EJclNaNSignal.Create(Tag);
 end;
 
-{$ENDIF MSWINDOWS}
-
-{$IFDEF MSWINDOWS}
-{$IFNDEF FPC}
 procedure InitExceptObjProc;
 
   function IsInitialized: Boolean;
@@ -3163,20 +3092,19 @@ procedure InitExceptObjProc;
 begin
  if not IsInitialized then
     if Win32Platform = VER_PLATFORM_WIN32_NT then
+      {$IFDEF FPC}
+      PrevExceptObjProc := Pointer(InterlockedExchange(TJclAddr(ExceptObjProc), TJclAddr(@GetExceptionObject)));
+      {$ELSE ~FPC}
       PrevExceptObjProc := Pointer(InterlockedExchange(Integer(ExceptObjProc), Integer(@GetExceptionObject)));
+      {$ENDIF ~FPC}
 end;
 {$ENDIF ~FPC}
 {$ENDIF MSWINDOWS}
-{$ENDIF ~CLR}
 
 procedure CheckTag(Tag: TNaNTag);
 begin
-  if (Tag < Low(TNaNTag)) or (Tag > High(TNaNTag)) then
-    {$IFDEF CLR}
-    raise EJclMathError.CreateFmt(RsNaNTagError, [Tag]);
-    {$ELSE ~CLR}
+  if (Tag < LowValidNaNTag) or (Tag > HighValidNaNTag) then
     raise EJclMathError.CreateResFmt(@RsNaNTagError, [Tag]);
-    {$ENDIF ~CLR}
 end;
 
 procedure MakeQuietNaN(var X: Single; Tag: TNaNTag);
@@ -3189,13 +3117,8 @@ begin
   else
     Bits := Abs(Tag) or sQuietNaNBits;
   if Tag < 0 then
-  {$IFDEF CLR}
-    Bits := Bits or (LongWord(1) shl sSignBit);
-  X := BitConverter.ToSingle(BitConverter.GetBytes(Bits), 0);
-  {$ELSE ~CLR}
     Include(TSingleBits(Bits), sSignBit);
   PLongWord(@X)^ := Bits;
-  {$ENDIF ~CLR}
 end;
 
 procedure MakeQuietNaN(var X: Double; Tag: TNaNTag);
@@ -3207,40 +3130,23 @@ begin
     Bits := ZeroTag
   else
     Bits := Abs(Tag);
-  {$IFDEF CLR}
-  X := BitConverter.Int64BitsToDouble((Bits shl dNaNTagShift) or dQuietNaNBits);
-  {$ELSE ~CLR}
   PInt64(@X)^ := (Bits shl dNaNTagShift) or dQuietNaNBits;
-  {$ENDIF ~CLR}
   if Tag < 0 then
-    {$IFDEF CLR}
-    X := BitConverter.Int64BitsToDouble(BitConverter.DoubleToInt64Bits(X) or (Int64(1) shl dSignBit));
-    {$ELSE ~CLR}
     {$IFDEF FPC}
     QWord(X) := QWord(X) or (1 shl dSignBit);
     {$ELSE ~FPC}
     Include(TDoubleBits(X), dSignBit);
     {$ENDIF ~FPC}
-    {$ENDIF ~CLR}
 end;
 
+{$IFDEF SUPPORTS_EXTENDED}
 procedure MakeQuietNaN(var X: Extended; Tag: TNaNTag);
-{$IFDEF CLR}
-var
-  d: Double;
-{$ELSE ~CLR}
 const
   QuietNaNSignificand = $C000000000000000;
   QuietNaNExponent = $7FFF;
 var
   Bits: Int64;
-{$ENDIF ~CLR}
 begin
-  {$IFDEF CLR}
-  d := X;
-  MakeQuietNaN(d);
-  X := d;
-  {$ELSE ~CLR}
   CheckTag(Tag);
   if Tag = 0 then
     Bits := ZeroTag
@@ -3254,18 +3160,11 @@ begin
     {$ELSE ~FPC}
     Include(TExtendedBits(X), xSignBit);
     {$ENDIF ~FPC}
-  {$ENDIF ~CLR}
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 procedure MakeSignalingNaN(var X: Single; Tag: TNaNTag);
 begin
-  {$IFDEF CLR}
-  MakeQuietNaN(X, Tag);
-  BitConverter.ToSingle(
-    BitConverter.GetBytes(
-      BitConverter.ToInt32(
-        BitConverter.GetBytes(X), 0) and not (1 shl sNaNQuietFlag)), 0);
-  {$ELSE ~CLR}
   {$IFDEF MSWINDOWS}
   {$IFNDEF FPC}
   InitExceptObjProc;
@@ -3273,54 +3172,40 @@ begin
   {$ENDIF MSWINDOWS}
   MakeQuietNaN(X, Tag);
   Exclude(TSingleBits(X), sNaNQuietFlag);
-  {$ENDIF ~CLR}
 end;
 
 procedure MakeSignalingNaN(var X: Double; Tag: TNaNTag);
 begin
-  {$IFDEF CLR}
-  MakeQuietNaN(X, Tag);
-  BitConverter.Int64BitsToDouble(
-    BitConverter.DoubleToInt64Bits(X) and not (1 shl sNaNQuietFlag));
-  {$ELSE ~CLR}
+  {$IFDEF MSWINDOWS}
+  {$IFNDEF FPC}
+  InitExceptObjProc;
+  {$ENDIF ~FPC}
+  {$ENDIF MSWINDOWS}
   {$IFDEF FPC}
   MakeQuietNaN(X, Tag);
   QWord(X) := QWord(X) and not (1 shl dNaNQuietFlag);
   {$ELSE ~FPC}
-  {$IFDEF MSWINDOWS}
-  InitExceptObjProc;
-  {$ENDIF MSWINDOWS}
   MakeQuietNaN(X, Tag);
   Exclude(TDoubleBits(X), dNaNQuietFlag);
   {$ENDIF ~FPC}
-  {$ENDIF ~CLR}
 end;
 
+{$IFDEF SUPPORTS_EXTENDED}
 procedure MakeSignalingNaN(var X: Extended; Tag: TNaNTag);
-{$IFDEF CLR}
-var
-  d: Double;
-{$ENDIF CLR}
 begin
-  {$IFDEF CLR}
-  d := X;
-  MakeSignalingNaN(d, Tag);
-  X := d;
-  {$ELSE ~CLR}
   {$IFDEF FPC}
   MakeQuietNaN(X, Tag);
   TExtendedRec(X).Significand := TExtendedRec(X).Significand and not (1 shl xNaNQuietFlag);
   {$ELSE ~FPC}
   {$IFDEF MSWINDOWS}
-  //InitExceptObjProc;
+  InitExceptObjProc;
   {$ENDIF MSWINDOWS}
   MakeQuietNaN(X, Tag);
   Exclude(TExtendedBits(X), xNaNQuietFlag);
   {$ENDIF ~FPC}
-  {$ENDIF ~CLR}
 end;
+{$ENDIF SUPPORTS_EXTENDED}
 
-{$IFNDEF CLR}
 procedure MineSingleBuffer(var Buffer; Count: Integer; StartTag: TNaNTag);
 var
   Tag, StopTag: TNaNTag;
@@ -3386,7 +3271,6 @@ begin
   SetLength(Result, Length);
   MineDoubleBuffer(Result[0], Length, 0);
 end;
-{$ENDIF ~CLR}
 
 function IsSpecialValue(const X: Float): Boolean;
 begin
@@ -3395,13 +3279,11 @@ end;
 
 //=== { EJclNaNSignal } ======================================================
 
-{$IFNDEF CLR}
 constructor EJclNaNSignal.Create(ATag: TNaNTag; Dummy: Boolean);
 begin
   FTag := ATag;
   CreateResFmt(@RsNaNSignal, [ATag]);
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclRational } =======================================================
 
@@ -3436,7 +3318,7 @@ begin
   if (FT = 1) or (FN = 1) or (FT = 0) then
     Exit;
 
-  I := GCD({$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Abs(FT), FN);
+  I := GCD(System.Abs(FT), FN);
   FT := FT div I;
   FN := FN div I;
 end;
@@ -3444,11 +3326,7 @@ end;
 procedure TJclRational.Assign(const Numerator: Integer; const Denominator: Integer);
 begin
   if Denominator = 0 then
-    {$IFDEF CLR}
-    raise EJclMathError.Create(RsInvalidRational);
-    {$ELSE ~CLR}
     raise EJclMathError.CreateRes(@RsInvalidRational);
-    {$ENDIF ~CLR}
   FT := Numerator;
   FN := Denominator;
   if FN <> 1 then
@@ -3616,8 +3494,8 @@ end;
 
 procedure TJclRational.Abs;
 begin
-  FT := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Abs(FT);
-  FN := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Abs(FN);
+  FT := System.Abs(FT);
+  FN := System.Abs(FN);
 end;
 
 function TJclRational.Sgn: Integer;
@@ -3636,11 +3514,7 @@ end;
 procedure TJclRational.Divide(const V: Integer);
 begin
   if V = 0 then
-    {$IFDEF CLR}
-    raise EJclMathError.Create(RsDivByZero);
-    {$ELSE ~CLR}
     raise EJclMathError.CreateRes(@RsDivByZero);
-    {$ENDIF ~CLR}
 
   FN := FN * V;
   Simplify;
@@ -3649,11 +3523,7 @@ end;
 procedure TJclRational.Divide(const R: TJclRational);
 begin
   if R.FT = 0 then
-    {$IFDEF CLR}
-    raise EJclMathError.Create(RsRationalDivByZero);
-    {$ELSE ~CLR}
     raise EJclMathError.CreateRes(@RsRationalDivByZero);
-    {$ENDIF ~CLR}
 
   FT := FT * R.FN;
   FN := FN * R.FT;
@@ -3668,11 +3538,7 @@ end;
 procedure TJclRational.Reciprocal;
 begin
   if FT = 0 then
-    {$IFDEF CLR}
-    raise EJclMathError.Create(RsRationalDivByZero);
-    {$ELSE ~CLR}
     raise EJclMathError.CreateRes(@RsRationalDivByZero);
-    {$ENDIF ~CLR}
 
   SwapOrd(FT, FN);
 end;
@@ -3717,58 +3583,66 @@ end;
 
 procedure TJclRational.Sqrt;
 begin
-  Assign({$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Sqrt(FT / FN));
+  Assign(System.Sqrt(FT / FN));
 end;
 
 procedure TJclRational.Sqr;
 begin
-  FT := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Sqr(FT);
-  FN := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Sqr(FN);
+  FT := System.Sqr(FT);
+  FN := System.Sqr(FN);
 end;
 
 //=== Checksums ==============================================================
 
 // See also: CountBitsSet in JclLogic (bug fixing etc.) - similar algorithm!
 
-{$IFDEF CLR}
 function GetParity(Buffer: TDynByteArray; Len: Integer): Boolean;
-{$ELSE ~CLR}
-function GetParity(Buffer: PByte; Len: Integer): Boolean;
-{$ENDIF ~CLR}
 const
   lu: packed array [0..15] of Byte =
     (0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
 var
   b: Byte;
   BitsSet: Cardinal;
-  {$IFDEF CLR}
   Index: Cardinal;
-  {$ENDIF CLR}
 begin
   BitsSet := 0;
-  {$IFDEF CLR}
   Index := 0;
   if Len > Length(Buffer) then
     Len := Length(Buffer);
-  {$ENDIF CLR}
   while Len > 0 do
   begin
-    {$IFDEF CLR}
     b := Buffer[Index];
-    {$ELSE ~CLR}
-    b := PByte(Buffer)^;
-    {$ENDIF ~CLR}
     // lower Nibble
     Inc(BitsSet, lu[b and $0F]);
     // upper Nibble
     Inc(BitsSet, lu[b shr 4]);
 
     Dec(Len);
-    {$IFDEF CLR}
     Inc(Index);
-    {$ELSE ~CLR}
+  end;
+
+  Result := (BitsSet mod 2) = 0;
+end;
+
+function GetParity(Buffer: PByte; Len: Integer): Boolean;
+const
+  lu: packed array [0..15] of Byte =
+    (0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4);
+var
+  b: Byte;
+  BitsSet: Cardinal;
+begin
+  BitsSet := 0;
+  while Len > 0 do
+  begin
+    b := PByte(Buffer)^;
+    // lower Nibble
+    Inc(BitsSet, lu[b and $0F]);
+    // upper Nibble
+    Inc(BitsSet, lu[b shr 4]);
+
+    Dec(Len);
     Inc(PByte(Buffer));
-    {$ENDIF ~CLR}
   end;
 
   Result := (BitsSet mod 2) = 0;
@@ -3864,81 +3738,42 @@ end;
 
 function Crc16(const Crc16Table: TCrc16Table; const X: array of Byte; N: Integer; Crc: Word): Word;
 begin
-  {$IFDEF CLR}
-  Result := Crc16_P(Crc16Table, X, N, Crc);
-  {$ELSE ~CLR}
   Result := Crc16_P(Crc16Table, @X, N, Crc);
-  {$ENDIF ~CLR}
 end;
 
 function Crc16(const X: array of Byte; N: Integer; Crc: Word): Word;
 begin
-  {$IFDEF CLR}
-  Result := Crc16_P(Crc16DefaultTable, X, N, Crc);
-  {$ELSE ~CLR}
   Result := Crc16_P(Crc16DefaultTable, @X, N, Crc);
-  {$ENDIF ~CLR}
 end;
 
 function CheckCrc16(const Crc16Table: TCrc16Table; var X: array of Byte; N: Integer; Crc: Word): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CheckCRC16_P(Crc16Table, X, N, CRC);
-  {$ELSE ~CLR}
   Result := CheckCRC16_P(Crc16Table, @X, N, CRC);
-  {$ENDIF ~CLR}
 end;
-
-{$IFDEF COMPILER5}
-function CheckCrc16D5(var X: array of Byte; N: Integer; Crc: Word): Integer;
-begin
-  Result := CheckCRC16_P(Crc16DefaultTable, @X, N, CRC);
-end;
-{$ENDIF COMPILER5}
 
 function CheckCrc16(var X: array of Byte; N: Integer; Crc: Word): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CheckCRC16_P(Crc16DefaultTable, X, N, CRC);
-  {$ELSE ~CLR}
   Result := CheckCRC16_P(Crc16DefaultTable, @X, N, CRC);
-  {$ENDIF ~CLR}
 end;
 
 function Crc16_A(const Crc16Table: TCrc16Table; const X: array of Byte; Crc: Word): Word;
 begin
-  {$IFDEF CLR}
-  Result := Crc16_P(Crc16Table, X, Length(X), Crc);
-  {$ELSE ~CLR}
   Result := Crc16_P(Crc16Table, @X, Length(X), Crc);
-  {$ENDIF ~CLR}
 end;
 
 function Crc16_A(const X: array of Byte; Crc: Word): Word;
 begin
-  {$IFDEF CLR}
-  Result := Crc16_P(Crc16DefaultTable, X, Length(X), Crc);
-  {$ELSE ~CLR}
   Result := Crc16_P(Crc16DefaultTable, @X, Length(X), Crc);
-  {$ENDIF ~CLR}
 end;
 
 function CheckCrc16_A(const Crc16Table: TCrc16Table; var X: array of Byte; Crc: Word): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CheckCrc16_P(Crc16Table, X, Length(X), Crc);
-  {$ELSE ~CLR}
   Result := CheckCrc16_P(Crc16Table, @X, Length(X), Crc);
-  {$ENDIF ~CLR}
 end;
 
 function CheckCrc16_A(var X: array of Byte; Crc: Word): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CheckCrc16_P(Crc16DefaultTable, X, Length(X), Crc);
-  {$ELSE ~CLR}
   Result := CheckCrc16_P(Crc16DefaultTable, @X, Length(X), Crc);
-  {$ENDIF ~CLR}
 end;
 
 // The CRC Table can be generated like this:
@@ -4082,81 +3917,42 @@ end;
 
 function Crc32(const Crc32Table: TCrc32Table; const X: array of Byte; N: Integer; Crc: Cardinal): Cardinal;
 begin
-  {$IFDEF CLR}
-  Result := Crc32_P(Crc32Table, X, N, Crc);
-  {$ELSE ~CLR}
   Result := Crc32_P(Crc32Table, @X, N, Crc);
-  {$ENDIF ~CLR}
 end;
 
 function Crc32(const X: array of Byte; N: Integer; Crc: Cardinal): Cardinal;
 begin
-  {$IFDEF CLR}
-  Result := Crc32_P(Crc32DefaultTable, X, N, Crc);
-  {$ELSE ~CLR}
   Result := Crc32_P(Crc32DefaultTable, @X, N, Crc);
-  {$ENDIF ~CLR}
 end;
 
 function CheckCrc32(const Crc32Table: TCrc32Table; var X: array of Byte; N: Integer; Crc: Cardinal): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CheckCRC32_P(Crc32Table, X, N, CRC);
-  {$ELSE ~CLR}
   Result := CheckCRC32_P(Crc32Table, @X, N, CRC);
-  {$ENDIF ~CLR}
 end;
-
-{$IFDEF COMPILER5}
-function CheckCrc32D5(var X: array of Byte; N: Integer; Crc: Word): Integer;
-begin
-  Result := CheckCRC32_P(Crc32DefaultTable, @X, N, CRC);
-end;
-{$ENDIF COMPILER5}
 
 function CheckCrc32(var X: array of Byte; N: Integer; Crc: Cardinal): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CheckCRC32_P(Crc32DefaultTable, X, N, CRC);
-  {$ELSE ~CLR}
   Result := CheckCRC32_P(Crc32DefaultTable, @X, N, CRC);
-  {$ENDIF ~CLR}
 end;
 
 function Crc32_A(const Crc32Table: TCrc32Table; const X: array of Byte; Crc: Cardinal): Cardinal;
 begin
-  {$IFDEF CLR}
-  Result := Crc32_P(Crc32Table, X, Length(X), Crc);
-  {$ELSE ~CLR}
   Result := Crc32_P(Crc32Table, @X, Length(X), Crc);
-  {$ENDIF ~CLR}
 end;
 
 function Crc32_A(const X: array of Byte; Crc: Cardinal): Cardinal;
 begin
-  {$IFDEF CLR}
-  Result := Crc32_P(Crc32DefaultTable, X, Length(X), Crc);
-  {$ELSE ~CLR}
   Result := Crc32_P(Crc32DefaultTable, @X, Length(X), Crc);
-  {$ENDIF ~CLR}
 end;
 
 function CheckCrc32_A(const Crc32Table: TCrc32Table; var X: array of Byte; Crc: Cardinal): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CheckCrc32_P(Crc32Table, X, Length(X), Crc);
-  {$ELSE ~CLR}
   Result := CheckCrc32_P(Crc32Table, @X, Length(X), Crc);
-  {$ENDIF ~CLR}
 end;
 
 function CheckCrc32_A(var X: array of Byte; Crc: Cardinal): Integer;
 begin
-  {$IFDEF CLR}
-  Result := CheckCrc32_P(Crc32DefaultTable, X, Length(X), Crc);
-  {$ELSE ~CLR}
   Result := CheckCrc32_P(Crc32DefaultTable, @X, Length(X), Crc);
-  {$ENDIF ~CLR}
 end;
 
 // The CRC Table can be generated like this:
@@ -4384,13 +4180,13 @@ end;
 
 function Ln(const Z: TPolarComplex): TRectComplex;
 begin
-  Result.Re := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Ln(Z.Radius);
+  Result.Re := System.Ln(Z.Radius);
   Result.Im := NormalizeAngle(Z.Angle);
 end;
 
 function Exp(const Z: TRectComplex): TPolarComplex;
 begin
-  Result.Radius := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Exp(Z.Re);
+  Result.Radius := System.Exp(Z.Re);
   Result.Angle := Z.Im;
 end;
 
@@ -4593,7 +4389,7 @@ end;
 
 class function TRectComplex.Exp(const Z: TRectComplex): TPolarComplex;
 begin
-  Result.Radius := {$IFDEF CLR}Borland.Delphi.{$ENDIF}System.Exp(Z.Re);
+  Result.Radius := System.Exp(Z.Re);
   Result.Angle := Z.Im;
 end;
 

@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009)                        $ }
-{ Revision:      $Rev:: 2698                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -49,9 +49,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF SUPPORTS_GENERICS}
-  {$IFDEF CLR}
-  System.Collections.Generic,
-  {$ENDIF CLR}
   JclAlgorithms,
   {$ENDIF SUPPORTS_GENERICS}
   Classes,
@@ -104,7 +101,8 @@ type
     procedure SetObject(Index: Integer; const AInterface: IInterface);
     function SubList(First, Count: Integer): IJclIntfList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclIntfCollection); overload;
     destructor Destroy; override;
     property Items: TDynIInterfaceArray read FItems;
   end;
@@ -138,7 +136,7 @@ type
     property Current: IInterface read GetObject;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclIntfList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclIntfList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   TJclAnsiStrVector = class(TJclAnsiStrAbstractCollection, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -185,7 +183,8 @@ type
     procedure SetString(Index: Integer; const AString: AnsiString);
     function SubList(First, Count: Integer): IJclAnsiStrList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclAnsiStrCollection); overload;
     destructor Destroy; override;
     property Items: TDynAnsiStringArray read FItems;
   end;
@@ -219,7 +218,7 @@ type
     property Current: AnsiString read GetString;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclAnsiStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclAnsiStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   TJclWideStrVector = class(TJclWideStrAbstractCollection, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -266,7 +265,8 @@ type
     procedure SetString(Index: Integer; const AString: WideString);
     function SubList(First, Count: Integer): IJclWideStrList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclWideStrCollection); overload;
     destructor Destroy; override;
     property Items: TDynWideStringArray read FItems;
   end;
@@ -300,7 +300,7 @@ type
     property Current: WideString read GetString;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclWideStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclWideStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
@@ -348,7 +348,8 @@ type
     procedure SetString(Index: Integer; const AString: UnicodeString);
     function SubList(First, Count: Integer): IJclUnicodeStrList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclUnicodeStrCollection); overload;
     destructor Destroy; override;
     property Items: TDynUnicodeStringArray read FItems;
   end;
@@ -382,7 +383,7 @@ type
     property Current: UnicodeString read GetString;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclUnicodeStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclUnicodeStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
@@ -440,7 +441,8 @@ type
     procedure SetValue(Index: Integer; const AValue: Single);
     function SubList(First, Count: Integer): IJclSingleList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclSingleCollection); overload;
     destructor Destroy; override;
     property Items: TDynSingleArray read FItems;
   end;
@@ -474,7 +476,7 @@ type
     property Current: Single read GetValue;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclSingleList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclSingleList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   TJclDoubleVector = class(TJclDoubleAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -521,7 +523,8 @@ type
     procedure SetValue(Index: Integer; const AValue: Double);
     function SubList(First, Count: Integer): IJclDoubleList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclDoubleCollection); overload;
     destructor Destroy; override;
     property Items: TDynDoubleArray read FItems;
   end;
@@ -555,7 +558,7 @@ type
     property Current: Double read GetValue;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclDoubleList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclDoubleList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   TJclExtendedVector = class(TJclExtendedAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -602,7 +605,8 @@ type
     procedure SetValue(Index: Integer; const AValue: Extended);
     function SubList(First, Count: Integer): IJclExtendedList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclExtendedCollection); overload;
     destructor Destroy; override;
     property Items: TDynExtendedArray read FItems;
   end;
@@ -636,7 +640,7 @@ type
     property Current: Extended read GetValue;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclExtendedList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclExtendedList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   {$IFDEF MATH_EXTENDED_PRECISION}
@@ -693,7 +697,8 @@ type
     procedure SetValue(Index: Integer; AValue: Integer);
     function SubList(First, Count: Integer): IJclIntegerList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclIntegerCollection); overload;
     destructor Destroy; override;
     property Items: TDynIntegerArray read FItems;
   end;
@@ -727,7 +732,7 @@ type
     property Current: Integer read GetValue;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclIntegerList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclIntegerList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   TJclCardinalVector = class(TJclCardinalAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -774,7 +779,8 @@ type
     procedure SetValue(Index: Integer; AValue: Cardinal);
     function SubList(First, Count: Integer): IJclCardinalList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclCardinalCollection); overload;
     destructor Destroy; override;
     property Items: TDynCardinalArray read FItems;
   end;
@@ -808,7 +814,7 @@ type
     property Current: Cardinal read GetValue;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclCardinalList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclCardinalList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   TJclInt64Vector = class(TJclInt64AbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -855,7 +861,8 @@ type
     procedure SetValue(Index: Integer; const AValue: Int64);
     function SubList(First, Count: Integer): IJclInt64List;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclInt64Collection); overload;
     destructor Destroy; override;
     property Items: TDynInt64Array read FItems;
   end;
@@ -889,10 +896,9 @@ type
     property Current: Int64 read GetValue;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclInt64List; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclInt64List; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
-  {$IFNDEF CLR}
   TJclPtrVector = class(TJclPtrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclPtrEqualityComparer,
     IJclPtrCollection, IJclPtrList, IJclPtrArray)
@@ -937,7 +943,8 @@ type
     procedure SetPointer(Index: Integer; APtr: Pointer);
     function SubList(First, Count: Integer): IJclPtrList;
   public
-    constructor Create(ACapacity: Integer);
+    constructor Create(ACapacity: Integer); overload;
+    constructor Create(const ACollection: IJclPtrCollection); overload;
     destructor Destroy; override;
     property Items: TDynPointerArray read FItems;
   end;
@@ -971,9 +978,8 @@ type
     property Current: Pointer read GetPointer;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclPtrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclPtrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
-  {$ENDIF ~CLR}
 
   TJclVector = class(TJclAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclObjectOwner, IJclEqualityComparer,
@@ -1019,7 +1025,8 @@ type
     procedure SetObject(Index: Integer; AObject: TObject);
     function SubList(First, Count: Integer): IJclList;
   public
-    constructor Create(ACapacity: Integer; AOwnsObjects: Boolean);
+    constructor Create(ACapacity: Integer; AOwnsObjects: Boolean); overload;
+    constructor Create(const ACollection: IJclCollection; AOwnsObjects: Boolean); overload;
     destructor Destroy; override;
     property Items: TDynObjectArray read FItems;
   end;
@@ -1053,7 +1060,7 @@ type
     property Current: TObject read GetObject;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   {$IFDEF SUPPORTS_GENERICS}
@@ -1106,7 +1113,8 @@ type
     procedure SetItem(Index: Integer; const AItem: T);
     function SubList(First, Count: Integer): IJclList<T>;
   public
-    constructor Create(ACapacity: Integer; AOwnsItems: Boolean);
+    constructor Create(ACapacity: Integer; AOwnsItems: Boolean); overload;
+    constructor Create(const ACollection: IJclCollection<T>; AOwnsItems: Boolean); overload;
     destructor Destroy; override;
     property Items: TDynArray read FItems;
   end;
@@ -1140,7 +1148,7 @@ type
     property Current: T read GetItem;
     {$ENDIF SUPPORTS_FOR_IN}
   public
-    constructor Create(const OwnList: IJclList<T>; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+    constructor Create(const AOwnList: IJclList<T>; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
   end;
 
   // E = External helper to compare items for equality (GetHashCode is not used)
@@ -1182,9 +1190,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclVectors.pas $';
-    Revision: '$Revision: 2698 $';
-    Date: '$Date: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -1201,6 +1211,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclIntfVector.Create(const ACollection: IJclIntfCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclIntfVector.Destroy;
 begin
   FReadOnly := False;
@@ -1210,7 +1229,7 @@ end;
 
 function TJclIntfVector.Add(const AInterface: IInterface): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -1223,8 +1242,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AInterface, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AInterface, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -1278,6 +1297,7 @@ end;
 procedure TJclIntfVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclIntfVector;
+  ACollection: IJclIntfCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclIntfVector then
@@ -1285,6 +1305,12 @@ begin
     ADest := TJclIntfVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclIntfCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -1302,6 +1328,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeObject(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -1325,14 +1352,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -1352,7 +1376,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AInterface) then
+      if ItemsEqual(FItems[I], AInterface) then
       begin
         Result := True;
         Break;
@@ -1389,6 +1413,8 @@ begin
 end;
 
 function TJclIntfVector.Delete(Index: Integer): IInterface;
+var
+  Extracted: IInterface;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -1397,15 +1423,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeObject(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeObject(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -1430,12 +1449,14 @@ begin
       if ItemsEqual(FItems[I], AInterface) then
       begin
         FItems[I] := nil;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -1482,7 +1503,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -1517,10 +1539,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := nil;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -1540,7 +1562,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AInterface) then
+      if ItemsEqual(FItems[I], AInterface) then
       begin
         Result := I;
         Break;
@@ -1583,7 +1605,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AInterface;
           Inc(FSize);
         end;
@@ -1646,7 +1669,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AInterface) then
+      if ItemsEqual(FItems[I], AInterface) then
       begin
         Result := I;
         Break;
@@ -1659,8 +1682,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclIntfVector.RaiseOutOfBoundsError: IInterface;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -1733,7 +1754,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -1752,10 +1773,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -1776,9 +1800,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AInterface, nil);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AInterface, nil);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -1824,7 +1848,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclIntfList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -1841,12 +1865,12 @@ end;
 
 //=== { TJclIntfVectorIterator } ===========================================================
 
-constructor TJclIntfVectorIterator.Create(const OwnList: IJclIntfList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclIntfVectorIterator.Create(const AOwnList: IJclIntfList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclIntfVectorIterator.Add(const AInterface: IInterface): Boolean;
@@ -2001,6 +2025,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclAnsiStrVector.Create(const ACollection: IJclAnsiStrCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclAnsiStrVector.Destroy;
 begin
   FReadOnly := False;
@@ -2010,7 +2043,7 @@ end;
 
 function TJclAnsiStrVector.Add(const AString: AnsiString): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -2023,8 +2056,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AString, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AString, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -2078,6 +2111,7 @@ end;
 procedure TJclAnsiStrVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclAnsiStrVector;
+  ACollection: IJclAnsiStrCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclAnsiStrVector then
@@ -2085,6 +2119,12 @@ begin
     ADest := TJclAnsiStrVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclAnsiStrCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -2102,6 +2142,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeString(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2125,14 +2166,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2152,7 +2190,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := True;
         Break;
@@ -2189,6 +2227,8 @@ begin
 end;
 
 function TJclAnsiStrVector.Delete(Index: Integer): AnsiString;
+var
+  Extracted: AnsiString;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -2197,15 +2237,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeString(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeString(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2230,12 +2263,14 @@ begin
       if ItemsEqual(FItems[I], AString) then
       begin
         FItems[I] := '';
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2282,7 +2317,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -2317,10 +2353,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := '';
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2340,7 +2376,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := I;
         Break;
@@ -2383,7 +2419,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AString;
           Inc(FSize);
         end;
@@ -2446,7 +2483,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := I;
         Break;
@@ -2459,8 +2496,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclAnsiStrVector.RaiseOutOfBoundsError: AnsiString;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -2533,7 +2568,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -2552,10 +2587,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2576,9 +2614,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AString, '');
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AString, '');
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -2624,7 +2662,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclAnsiStrList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2641,12 +2679,12 @@ end;
 
 //=== { TJclAnsiStrVectorIterator } ===========================================================
 
-constructor TJclAnsiStrVectorIterator.Create(const OwnList: IJclAnsiStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclAnsiStrVectorIterator.Create(const AOwnList: IJclAnsiStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclAnsiStrVectorIterator.Add(const AString: AnsiString): Boolean;
@@ -2801,6 +2839,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclWideStrVector.Create(const ACollection: IJclWideStrCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclWideStrVector.Destroy;
 begin
   FReadOnly := False;
@@ -2810,7 +2857,7 @@ end;
 
 function TJclWideStrVector.Add(const AString: WideString): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -2823,8 +2870,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AString, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AString, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -2878,6 +2925,7 @@ end;
 procedure TJclWideStrVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclWideStrVector;
+  ACollection: IJclWideStrCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclWideStrVector then
@@ -2885,6 +2933,12 @@ begin
     ADest := TJclWideStrVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclWideStrCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -2902,6 +2956,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeString(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2925,14 +2980,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -2952,7 +3004,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := True;
         Break;
@@ -2989,6 +3041,8 @@ begin
 end;
 
 function TJclWideStrVector.Delete(Index: Integer): WideString;
+var
+  Extracted: WideString;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -2997,15 +3051,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeString(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeString(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3030,12 +3077,14 @@ begin
       if ItemsEqual(FItems[I], AString) then
       begin
         FItems[I] := '';
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3082,7 +3131,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -3117,10 +3167,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := '';
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3140,7 +3190,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := I;
         Break;
@@ -3183,7 +3233,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AString;
           Inc(FSize);
         end;
@@ -3246,7 +3297,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := I;
         Break;
@@ -3259,8 +3310,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclWideStrVector.RaiseOutOfBoundsError: WideString;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -3333,7 +3382,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -3352,10 +3401,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3376,9 +3428,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AString, '');
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AString, '');
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -3424,7 +3476,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclWideStrList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3441,12 +3493,12 @@ end;
 
 //=== { TJclWideStrVectorIterator } ===========================================================
 
-constructor TJclWideStrVectorIterator.Create(const OwnList: IJclWideStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclWideStrVectorIterator.Create(const AOwnList: IJclWideStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclWideStrVectorIterator.Add(const AString: WideString): Boolean;
@@ -3602,6 +3654,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclUnicodeStrVector.Create(const ACollection: IJclUnicodeStrCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclUnicodeStrVector.Destroy;
 begin
   FReadOnly := False;
@@ -3611,7 +3672,7 @@ end;
 
 function TJclUnicodeStrVector.Add(const AString: UnicodeString): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -3624,8 +3685,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AString, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AString, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -3679,6 +3740,7 @@ end;
 procedure TJclUnicodeStrVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclUnicodeStrVector;
+  ACollection: IJclUnicodeStrCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclUnicodeStrVector then
@@ -3686,6 +3748,12 @@ begin
     ADest := TJclUnicodeStrVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclUnicodeStrCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -3703,6 +3771,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeString(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3726,14 +3795,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3753,7 +3819,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := True;
         Break;
@@ -3790,6 +3856,8 @@ begin
 end;
 
 function TJclUnicodeStrVector.Delete(Index: Integer): UnicodeString;
+var
+  Extracted: UnicodeString;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -3798,15 +3866,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeString(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeString(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3831,12 +3892,14 @@ begin
       if ItemsEqual(FItems[I], AString) then
       begin
         FItems[I] := '';
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3883,7 +3946,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -3918,10 +3982,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := '';
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -3941,7 +4005,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := I;
         Break;
@@ -3984,7 +4048,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AString;
           Inc(FSize);
         end;
@@ -4047,7 +4112,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AString) then
+      if ItemsEqual(FItems[I], AString) then
       begin
         Result := I;
         Break;
@@ -4060,8 +4125,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclUnicodeStrVector.RaiseOutOfBoundsError: UnicodeString;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -4134,7 +4197,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -4153,10 +4216,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -4177,9 +4243,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AString, '');
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AString, '');
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -4225,7 +4291,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclUnicodeStrList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -4242,12 +4308,12 @@ end;
 
 //=== { TJclUnicodeStrVectorIterator } ===========================================================
 
-constructor TJclUnicodeStrVectorIterator.Create(const OwnList: IJclUnicodeStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclUnicodeStrVectorIterator.Create(const AOwnList: IJclUnicodeStrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclUnicodeStrVectorIterator.Add(const AString: UnicodeString): Boolean;
@@ -4403,6 +4469,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclSingleVector.Create(const ACollection: IJclSingleCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclSingleVector.Destroy;
 begin
   FReadOnly := False;
@@ -4412,7 +4487,7 @@ end;
 
 function TJclSingleVector.Add(const AValue: Single): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -4425,8 +4500,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AValue, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AValue, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -4480,6 +4555,7 @@ end;
 procedure TJclSingleVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclSingleVector;
+  ACollection: IJclSingleCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclSingleVector then
@@ -4487,6 +4563,12 @@ begin
     ADest := TJclSingleVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclSingleCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -4504,6 +4586,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeSingle(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -4527,14 +4610,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -4554,7 +4634,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := True;
         Break;
@@ -4591,6 +4671,8 @@ begin
 end;
 
 function TJclSingleVector.Delete(Index: Integer): Single;
+var
+  Extracted: Single;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -4599,15 +4681,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeSingle(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeSingle(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -4632,12 +4707,14 @@ begin
       if ItemsEqual(FItems[I], AValue) then
       begin
         FItems[I] := 0.0;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -4684,7 +4761,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -4719,10 +4797,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := 0.0;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -4742,7 +4820,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -4785,7 +4863,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AValue;
           Inc(FSize);
         end;
@@ -4848,7 +4927,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -4861,8 +4940,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclSingleVector.RaiseOutOfBoundsError: Single;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -4935,7 +5012,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -4954,10 +5031,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -4978,9 +5058,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0.0);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0.0);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -5026,7 +5106,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclSingleList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -5043,12 +5123,12 @@ end;
 
 //=== { TJclSingleVectorIterator } ===========================================================
 
-constructor TJclSingleVectorIterator.Create(const OwnList: IJclSingleList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclSingleVectorIterator.Create(const AOwnList: IJclSingleList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclSingleVectorIterator.Add(const AValue: Single): Boolean;
@@ -5203,6 +5283,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclDoubleVector.Create(const ACollection: IJclDoubleCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclDoubleVector.Destroy;
 begin
   FReadOnly := False;
@@ -5212,7 +5301,7 @@ end;
 
 function TJclDoubleVector.Add(const AValue: Double): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -5225,8 +5314,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AValue, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AValue, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -5280,6 +5369,7 @@ end;
 procedure TJclDoubleVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclDoubleVector;
+  ACollection: IJclDoubleCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclDoubleVector then
@@ -5287,6 +5377,12 @@ begin
     ADest := TJclDoubleVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclDoubleCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -5304,6 +5400,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeDouble(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -5327,14 +5424,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -5354,7 +5448,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := True;
         Break;
@@ -5391,6 +5485,8 @@ begin
 end;
 
 function TJclDoubleVector.Delete(Index: Integer): Double;
+var
+  Extracted: Double;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -5399,15 +5495,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeDouble(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeDouble(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -5432,12 +5521,14 @@ begin
       if ItemsEqual(FItems[I], AValue) then
       begin
         FItems[I] := 0.0;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -5484,7 +5575,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -5519,10 +5611,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := 0.0;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -5542,7 +5634,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -5585,7 +5677,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AValue;
           Inc(FSize);
         end;
@@ -5648,7 +5741,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -5661,8 +5754,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclDoubleVector.RaiseOutOfBoundsError: Double;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -5735,7 +5826,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -5754,10 +5845,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -5778,9 +5872,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0.0);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0.0);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -5826,7 +5920,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclDoubleList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -5843,12 +5937,12 @@ end;
 
 //=== { TJclDoubleVectorIterator } ===========================================================
 
-constructor TJclDoubleVectorIterator.Create(const OwnList: IJclDoubleList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclDoubleVectorIterator.Create(const AOwnList: IJclDoubleList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclDoubleVectorIterator.Add(const AValue: Double): Boolean;
@@ -6003,6 +6097,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclExtendedVector.Create(const ACollection: IJclExtendedCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclExtendedVector.Destroy;
 begin
   FReadOnly := False;
@@ -6012,7 +6115,7 @@ end;
 
 function TJclExtendedVector.Add(const AValue: Extended): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -6025,8 +6128,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AValue, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AValue, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -6080,6 +6183,7 @@ end;
 procedure TJclExtendedVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclExtendedVector;
+  ACollection: IJclExtendedCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclExtendedVector then
@@ -6087,6 +6191,12 @@ begin
     ADest := TJclExtendedVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclExtendedCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -6104,6 +6214,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeExtended(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6127,14 +6238,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6154,7 +6262,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := True;
         Break;
@@ -6191,6 +6299,8 @@ begin
 end;
 
 function TJclExtendedVector.Delete(Index: Integer): Extended;
+var
+  Extracted: Extended;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -6199,15 +6309,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeExtended(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeExtended(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6232,12 +6335,14 @@ begin
       if ItemsEqual(FItems[I], AValue) then
       begin
         FItems[I] := 0.0;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6284,7 +6389,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -6319,10 +6425,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := 0.0;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6342,7 +6448,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -6385,7 +6491,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AValue;
           Inc(FSize);
         end;
@@ -6448,7 +6555,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -6461,8 +6568,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclExtendedVector.RaiseOutOfBoundsError: Extended;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -6535,7 +6640,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -6554,10 +6659,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6578,9 +6686,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0.0);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0.0);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -6626,7 +6734,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclExtendedList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6643,12 +6751,12 @@ end;
 
 //=== { TJclExtendedVectorIterator } ===========================================================
 
-constructor TJclExtendedVectorIterator.Create(const OwnList: IJclExtendedList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclExtendedVectorIterator.Create(const AOwnList: IJclExtendedList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclExtendedVectorIterator.Add(const AValue: Extended): Boolean;
@@ -6803,6 +6911,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclIntegerVector.Create(const ACollection: IJclIntegerCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclIntegerVector.Destroy;
 begin
   FReadOnly := False;
@@ -6812,7 +6929,7 @@ end;
 
 function TJclIntegerVector.Add(AValue: Integer): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -6825,8 +6942,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AValue, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AValue, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -6880,6 +6997,7 @@ end;
 procedure TJclIntegerVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclIntegerVector;
+  ACollection: IJclIntegerCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclIntegerVector then
@@ -6887,6 +7005,12 @@ begin
     ADest := TJclIntegerVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclIntegerCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -6904,6 +7028,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeInteger(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6927,14 +7052,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -6954,7 +7076,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := True;
         Break;
@@ -6991,6 +7113,8 @@ begin
 end;
 
 function TJclIntegerVector.Delete(Index: Integer): Integer;
+var
+  Extracted: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -6999,15 +7123,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeInteger(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeInteger(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7032,12 +7149,14 @@ begin
       if ItemsEqual(FItems[I], AValue) then
       begin
         FItems[I] := 0;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7084,7 +7203,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -7119,10 +7239,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := 0;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7142,7 +7262,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -7185,7 +7305,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AValue;
           Inc(FSize);
         end;
@@ -7248,7 +7369,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -7261,8 +7382,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclIntegerVector.RaiseOutOfBoundsError: Integer;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -7335,7 +7454,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -7354,10 +7473,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7378,9 +7500,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -7426,7 +7548,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclIntegerList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7443,12 +7565,12 @@ end;
 
 //=== { TJclIntegerVectorIterator } ===========================================================
 
-constructor TJclIntegerVectorIterator.Create(const OwnList: IJclIntegerList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclIntegerVectorIterator.Create(const AOwnList: IJclIntegerList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclIntegerVectorIterator.Add(AValue: Integer): Boolean;
@@ -7603,6 +7725,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclCardinalVector.Create(const ACollection: IJclCardinalCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclCardinalVector.Destroy;
 begin
   FReadOnly := False;
@@ -7612,7 +7743,7 @@ end;
 
 function TJclCardinalVector.Add(AValue: Cardinal): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -7625,8 +7756,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AValue, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AValue, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -7680,6 +7811,7 @@ end;
 procedure TJclCardinalVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclCardinalVector;
+  ACollection: IJclCardinalCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclCardinalVector then
@@ -7687,6 +7819,12 @@ begin
     ADest := TJclCardinalVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclCardinalCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -7704,6 +7842,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeCardinal(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7727,14 +7866,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7754,7 +7890,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := True;
         Break;
@@ -7791,6 +7927,8 @@ begin
 end;
 
 function TJclCardinalVector.Delete(Index: Integer): Cardinal;
+var
+  Extracted: Cardinal;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -7799,15 +7937,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeCardinal(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeCardinal(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7832,12 +7963,14 @@ begin
       if ItemsEqual(FItems[I], AValue) then
       begin
         FItems[I] := 0;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7884,7 +8017,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -7919,10 +8053,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := 0;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -7942,7 +8076,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -7985,7 +8119,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AValue;
           Inc(FSize);
         end;
@@ -8048,7 +8183,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -8061,8 +8196,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclCardinalVector.RaiseOutOfBoundsError: Cardinal;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -8135,7 +8268,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -8154,10 +8287,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -8178,9 +8314,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -8226,7 +8362,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclCardinalList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -8243,12 +8379,12 @@ end;
 
 //=== { TJclCardinalVectorIterator } ===========================================================
 
-constructor TJclCardinalVectorIterator.Create(const OwnList: IJclCardinalList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclCardinalVectorIterator.Create(const AOwnList: IJclCardinalList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclCardinalVectorIterator.Add(AValue: Cardinal): Boolean;
@@ -8403,6 +8539,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclInt64Vector.Create(const ACollection: IJclInt64Collection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclInt64Vector.Destroy;
 begin
   FReadOnly := False;
@@ -8412,7 +8557,7 @@ end;
 
 function TJclInt64Vector.Add(const AValue: Int64): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -8425,8 +8570,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AValue, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AValue, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -8480,6 +8625,7 @@ end;
 procedure TJclInt64Vector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclInt64Vector;
+  ACollection: IJclInt64Collection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclInt64Vector then
@@ -8487,6 +8633,12 @@ begin
     ADest := TJclInt64Vector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclInt64Collection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -8504,6 +8656,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeInt64(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -8527,14 +8680,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -8554,7 +8704,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := True;
         Break;
@@ -8591,6 +8741,8 @@ begin
 end;
 
 function TJclInt64Vector.Delete(Index: Integer): Int64;
+var
+  Extracted: Int64;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -8599,15 +8751,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeInt64(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeInt64(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -8632,12 +8777,14 @@ begin
       if ItemsEqual(FItems[I], AValue) then
       begin
         FItems[I] := 0;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -8684,7 +8831,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -8719,10 +8867,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := 0;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -8742,7 +8890,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -8785,7 +8933,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AValue;
           Inc(FSize);
         end;
@@ -8848,7 +8997,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AValue) then
+      if ItemsEqual(FItems[I], AValue) then
       begin
         Result := I;
         Break;
@@ -8861,8 +9010,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclInt64Vector.RaiseOutOfBoundsError: Int64;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -8935,7 +9082,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -8954,10 +9101,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -8978,9 +9128,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AValue, 0);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -9026,7 +9176,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclInt64List;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -9043,12 +9193,12 @@ end;
 
 //=== { TJclInt64VectorIterator } ===========================================================
 
-constructor TJclInt64VectorIterator.Create(const OwnList: IJclInt64List; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclInt64VectorIterator.Create(const AOwnList: IJclInt64List; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclInt64VectorIterator.Add(const AValue: Int64): Boolean;
@@ -9195,13 +9345,21 @@ begin
   FOwnList.SetValue(FCursor, AValue);
 end;
 
-{$IFNDEF CLR}
 //=== { TJclPtrVector } ======================================================
 
 constructor TJclPtrVector.Create(ACapacity: Integer);
 begin
   inherited Create();
   SetCapacity(ACapacity);
+end;
+
+constructor TJclPtrVector.Create(const ACollection: IJclPtrCollection);
+begin
+  inherited Create();
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
 end;
 
 destructor TJclPtrVector.Destroy;
@@ -9213,7 +9371,7 @@ end;
 
 function TJclPtrVector.Add(APtr: Pointer): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -9226,8 +9384,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(APtr, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(APtr, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -9281,6 +9439,7 @@ end;
 procedure TJclPtrVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclPtrVector;
+  ACollection: IJclPtrCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclPtrVector then
@@ -9288,6 +9447,12 @@ begin
     ADest := TJclPtrVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclPtrCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -9305,6 +9470,7 @@ begin
     for I := 0 to FSize - 1 do
       FreePointer(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -9328,14 +9494,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -9355,7 +9518,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], APtr) then
+      if ItemsEqual(FItems[I], APtr) then
       begin
         Result := True;
         Break;
@@ -9392,6 +9555,8 @@ begin
 end;
 
 function TJclPtrVector.Delete(Index: Integer): Pointer;
+var
+  Extracted: Pointer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -9400,15 +9565,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreePointer(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreePointer(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -9433,12 +9591,14 @@ begin
       if ItemsEqual(FItems[I], APtr) then
       begin
         FItems[I] := nil;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -9485,7 +9645,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -9520,10 +9681,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := nil;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -9543,7 +9704,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], APtr) then
+      if ItemsEqual(FItems[I], APtr) then
       begin
         Result := I;
         Break;
@@ -9586,7 +9747,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := APtr;
           Inc(FSize);
         end;
@@ -9649,7 +9811,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], APtr) then
+      if ItemsEqual(FItems[I], APtr) then
       begin
         Result := I;
         Break;
@@ -9662,8 +9824,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclPtrVector.RaiseOutOfBoundsError: Pointer;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -9736,7 +9896,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -9755,10 +9915,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -9779,9 +9942,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(APtr, nil);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(APtr, nil);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -9827,7 +9990,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclPtrList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -9844,12 +10007,12 @@ end;
 
 //=== { TJclPtrVectorIterator } ===========================================================
 
-constructor TJclPtrVectorIterator.Create(const OwnList: IJclPtrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclPtrVectorIterator.Create(const AOwnList: IJclPtrList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclPtrVectorIterator.Add(APtr: Pointer): Boolean;
@@ -9995,7 +10158,6 @@ begin
   CheckValid;
   FOwnList.SetPointer(FCursor, APtr);
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclVector } ======================================================
 
@@ -10003,6 +10165,15 @@ constructor TJclVector.Create(ACapacity: Integer; AOwnsObjects: Boolean);
 begin
   inherited Create(AOwnsObjects);
   SetCapacity(ACapacity);
+end;
+
+constructor TJclVector.Create(const ACollection: IJclCollection; AOwnsObjects: Boolean);
+begin
+  inherited Create(AOwnsObjects);
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
 end;
 
 destructor TJclVector.Destroy;
@@ -10014,7 +10185,7 @@ end;
 
 function TJclVector.Add(AObject: TObject): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -10027,8 +10198,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AObject, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AObject, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -10082,6 +10253,7 @@ end;
 procedure TJclVector.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclVector;
+  ACollection: IJclCollection;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclVector then
@@ -10089,6 +10261,12 @@ begin
     ADest := TJclVector(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclCollection, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -10106,6 +10284,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeObject(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10129,14 +10308,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10156,7 +10332,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AObject) then
+      if ItemsEqual(FItems[I], AObject) then
       begin
         Result := True;
         Break;
@@ -10193,6 +10369,8 @@ begin
 end;
 
 function TJclVector.Delete(Index: Integer): TObject;
+var
+  Extracted: TObject;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -10201,15 +10379,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeObject(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeObject(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10234,12 +10405,14 @@ begin
       if ItemsEqual(FItems[I], AObject) then
       begin
         FItems[I] := nil;
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10286,7 +10459,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -10321,10 +10495,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := nil;
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10344,7 +10518,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AObject) then
+      if ItemsEqual(FItems[I], AObject) then
       begin
         Result := I;
         Break;
@@ -10387,7 +10561,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AObject;
           Inc(FSize);
         end;
@@ -10450,7 +10625,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AObject) then
+      if ItemsEqual(FItems[I], AObject) then
       begin
         Result := I;
         Break;
@@ -10463,8 +10638,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclVector.RaiseOutOfBoundsError: TObject;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -10537,7 +10710,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -10556,10 +10729,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10580,9 +10756,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AObject, nil);
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AObject, nil);
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -10628,7 +10804,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclList;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10645,12 +10821,12 @@ end;
 
 //=== { TJclVectorIterator } ===========================================================
 
-constructor TJclVectorIterator.Create(const OwnList: IJclList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclVectorIterator.Create(const AOwnList: IJclList; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclVectorIterator.Add(AObject: TObject): Boolean;
@@ -10806,6 +10982,15 @@ begin
   SetCapacity(ACapacity);
 end;
 
+constructor TJclVector<T>.Create(const ACollection: IJclCollection<T>; AOwnsItems: Boolean);
+begin
+  inherited Create(AOwnsItems);
+  if ACollection = nil then
+    raise EJclNoCollectionError.Create;
+  SetCapacity(ACollection.Size);
+  AddAll(ACollection);
+end;
+
 destructor TJclVector<T>.Destroy;
 begin
   FReadOnly := False;
@@ -10815,7 +11000,7 @@ end;
 
 function TJclVector<T>.Add(const AItem: T): Boolean;
 var
-  I: Integer;
+  Index: Integer;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -10828,8 +11013,8 @@ begin
     if Result then
     begin
       if FDuplicates <> dupAccept then
-        for I := 0 to FSize - 1 do
-          if ItemsEqual(AItem, FItems[I]) then
+        for Index := 0 to FSize - 1 do
+          if ItemsEqual(AItem, FItems[Index]) then
           begin
             Result := CheckDuplicate;
             Break;
@@ -10883,6 +11068,7 @@ end;
 procedure TJclVector<T>.AssignDataTo(Dest: TJclAbstractContainerBase);
 var
   ADest: TJclVector<T>;
+  ACollection: IJclCollection<T>;
 begin
   inherited AssignDataTo(Dest);
   if Dest is TJclVector<T> then
@@ -10890,6 +11076,12 @@ begin
     ADest := TJclVector<T>(Dest);
     ADest.Clear;
     ADest.AddAll(Self);
+  end
+  else
+  if Supports(IInterface(Dest), IJclCollection<T>, ACollection) then
+  begin
+    ACollection.Clear;
+    ACollection.AddAll(Self);
   end;
 end;
 
@@ -10907,6 +11099,7 @@ begin
     for I := 0 to FSize - 1 do
       FreeItem(FItems[I]);
     FSize := 0;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10930,14 +11123,11 @@ begin
       Exit;
     if FSize <> ACollection.Size then
       Exit;
-    Result := True;
     It := ACollection.First;
     for I := 0 to FSize - 1 do
-      if not ItemsEqual(Items[I], It.Next) then
-      begin
-        Result := False;
-        Break;
-      end;
+      if not ItemsEqual(FItems[I], It.Next) then
+        Exit;
+    Result := True;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -10957,7 +11147,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := False;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AItem) then
+      if ItemsEqual(FItems[I], AItem) then
       begin
         Result := True;
         Break;
@@ -10994,6 +11184,8 @@ begin
 end;
 
 function TJclVector<T>.Delete(Index: Integer): T;
+var
+  Extracted: T;
 begin
   if ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -11002,15 +11194,8 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if (Index >= 0) and (Index < FSize) then
-    begin
-      Result := FreeItem(FItems[Index]);
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
-      Dec(FSize);
-      AutoPack;
-    end
-    else
-      Result := RaiseOutOfBoundsError;
+    Extracted := ExtractIndex(Index);
+    Result := FreeItem(Extracted);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -11035,12 +11220,14 @@ begin
       if ItemsEqual(FItems[I], AItem) then
       begin
         FItems[I] := Default(T);
-        MoveArray(FItems, I + 1, I, FSize - I);
+        if I < (FSize - 1) then
+          MoveArray(FItems, I + 1, I, FSize - I);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
           Break;
       end;
+    AutoPack;
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -11087,7 +11274,8 @@ begin
     if (Index >= 0) and (Index < FSize) then
     begin
       Result := FItems[Index];
-      MoveArray(FItems, Index + 1, Index, FSize - Index);
+      if Index < (FSize - 1) then
+        MoveArray(FItems, Index + 1, Index, FSize - Index);
       Dec(FSize);
       AutoPack;
     end
@@ -11122,10 +11310,10 @@ begin
   {$ENDIF THREADSAFE}
     Result := Default(T);
     if (Index >= 0) or (Index < FSize) then
-      Result := Items[Index]
+      Result := FItems[Index]
     else
     if not FReturnDefaultElements then
-      raise EJclNoSuchElementError.Create('');
+      raise EJclNoSuchElementError.Create(IntToStr(Index));
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -11145,7 +11333,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := 0 to FSize - 1 do
-      if ItemsEqual(Items[I], AItem) then
+      if ItemsEqual(FItems[I], AItem) then
       begin
         Result := I;
         Break;
@@ -11188,7 +11376,8 @@ begin
         Result := FSize < FCapacity;
         if Result then
         begin
-          MoveArray(FItems, Index, Index + 1, FSize - Index);
+          if Index < FSize then
+            MoveArray(FItems, Index, Index + 1, FSize - Index);
           FItems[Index] := AItem;
           Inc(FSize);
         end;
@@ -11251,7 +11440,7 @@ begin
   {$ENDIF THREADSAFE}
     Result := -1;
     for I := FSize - 1 downto 0 do
-      if ItemsEqual(Items[I], AItem) then
+      if ItemsEqual(FItems[I], AItem) then
       begin
         Result := I;
         Break;
@@ -11264,8 +11453,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-// fix ambiguous warnings when compiled on Delphi.net and earlier versions of Delphi.win32
-// complaining about possible unaffected result.
 function TJclVector<T>.RaiseOutOfBoundsError: T;
 begin
   raise EJclOutOfBoundsError.Create;
@@ -11338,7 +11525,7 @@ begin
       Exit;
     Result := True;
     for I := FSize - 1 downto 0 do
-      if not ACollection.Contains(Items[I]) then
+      if not ACollection.Contains(FItems[I]) then
         Delete(I);
   {$IFDEF THREADSAFE}
   finally
@@ -11357,10 +11544,13 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    if Value < FSize then
+    if Value >= FSize then
+    begin
+      SetLength(FItems, Value);
+      inherited SetCapacity(Value);
+    end
+    else
       raise EJclOutOfBoundsError.Create;
-    SetLength(FItems, Value);
-    inherited SetCapacity(Value);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -11381,9 +11571,9 @@ begin
     SyncReaderWriter.BeginWrite;
   try
   {$ENDIF THREADSAFE}
-    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AItem, Default(T));
     if (Index < 0) or (Index >= FSize) then
       raise EJclOutOfBoundsError.Create;
+    ReplaceItem := FAllowDefaultElements or not ItemsEqual(AItem, Default(T));
     if ReplaceItem then
     begin
       if FDuplicates <> dupAccept then
@@ -11429,7 +11619,7 @@ begin
       Last := FSize - 1;
     Result := CreateEmptyContainer as IJclList<T>;
     for I := First to Last do
-      Result.Add(Items[I]);
+      Result.Add(FItems[I]);
   {$IFDEF THREADSAFE}
   finally
     if FThreadSafe then
@@ -11440,12 +11630,12 @@ end;
 
 //=== { TJclVectorIterator<T> } ===========================================================
 
-constructor TJclVectorIterator<T>.Create(const OwnList: IJclList<T>; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
+constructor TJclVectorIterator<T>.Create(const AOwnList: IJclList<T>; ACursor: Integer; AValid: Boolean; AStart: TItrStart);
 begin
   inherited Create(AValid);
-  FOwnList := OwnList;
-  FCursor := ACursor;
+  FOwnList := AOwnList;
   FStart := AStart;
+  FCursor := ACursor;
 end;
 
 function TJclVectorIterator<T>.Add(const AItem: T): Boolean;
@@ -11597,11 +11787,33 @@ var
   I: Integer;
 begin
   if FromIndex < ToIndex then
-    for I := 0 to Count - 1 do
-      List[ToIndex + I] := List[FromIndex + I]
-  else
+  begin
     for I := Count - 1 downto 0 do
       List[ToIndex + I] := List[FromIndex + I];
+
+    if (ToIndex - FromIndex) < Count then
+      // overlapped source and target
+      for I := 0 to ToIndex - FromIndex - 1 do
+        List[FromIndex + I] := Default(T)
+    else
+      // independant
+      for I := 0 to Count - 1 do
+        List[FromIndex + I] := Default(T);
+  end
+  else
+  begin
+    for I := 0 to Count - 1 do
+      List[ToIndex + I] := List[FromIndex + I];
+
+    if (FromIndex - ToIndex) < Count then
+      // overlapped source and target
+      for I := Count - FromIndex + ToIndex to Count - 1 do
+        List[FromIndex + I] := Default(T)
+    else
+      // independant
+      for I := 0 to Count - 1 do
+        List[FromIndex + I] := Default(T);
+  end; 
 end;
 
 //=== { TJclVectorE<T> } =====================================================

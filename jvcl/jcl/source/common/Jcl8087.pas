@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 18:31:32 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2898                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -81,9 +81,11 @@ function Unmask8087Exceptions(Exceptions: T8087Exceptions; ClearBefore: Boolean 
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/Jcl8087.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2898 $';
+    Date: '$Date: 2009-07-30 18:31:32 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -94,14 +96,16 @@ const
 
 function Get8087ControlWord: Word; assembler;
 asm
-        {$IFDEF FPC}
+        {$IFDEF CPU32}
         SUB     ESP, $2
-        {$ELSE ~FPC}
-        SUB     ESP, TYPE WORD
-        {$ENDIF ~FPC}
         FSTCW   [ESP]
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        SUB     RSP, $2
+        FSTCW   [RSP]
+        {$ENDIF CPU64}
         FWAIT
-        POP AX
+        POP     AX
 end;
 
 function Get8087Infinity: T8087Infinity;
@@ -159,19 +163,20 @@ end;
 function Set8087ControlWord(const Control: Word): Word; assembler;
 asm
         FNCLEX
-        {$IFDEF FPC}
+        {$IFDEF CPU32}
         SUB     ESP, $2
-        {$ELSE ~FPC}
-        SUB     ESP, TYPE WORD
-        {$ENDIF ~FPC}
         FSTCW   [ESP]
         XCHG    [ESP], AX
         FLDCW   [ESP]
-        {$IFDEF FPC}
         ADD     ESP, $2
-        {$ELSE ~FPC}
-        ADD     ESP, TYPE WORD
-        {$ENDIF ~FPC}
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        SUB     RSP, $2
+        FSTCW   [RSP]
+        XCHG    [RSP], AX
+        FLDCW   [RSP]
+        ADD     RSP, $2
+        {$ENDIF CPU64}
 end;
 
 function ClearPending8087Exceptions: T8087Exceptions;
@@ -189,12 +194,14 @@ end;
 
 function GetMasked8087Exceptions: T8087Exceptions;
 asm
-        {$IFDEF FPC}
+        {$IFDEF CPU32}
         SUB     ESP, $2
-        {$ELSE ~FPC}
-        SUB     ESP, TYPE WORD
-        {$ENDIF ~FPC}
         FSTCW   [ESP]
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        SUB     RSP, $2
+        FSTCW   [RSP]
+        {$ENDIF CPU64}
         FWAIT
         POP     AX
         AND     AX, X87ExceptBits
@@ -206,11 +213,8 @@ asm
         JZ      @1
         FNCLEX                     // clear pending exceptions
 @1:
-        {$IFDEF FPC}
+        {$IFDEF CPU32}
         SUB     ESP, $2
-        {$ELSE ~FPC}
-        SUB     ESP, TYPE WORD
-        {$ENDIF ~FPC}
         FSTCW   [ESP]
         FWAIT
         AND     AX, X87ExceptBits  // mask exception mask bits 0..5
@@ -218,11 +222,19 @@ asm
         AND     WORD PTR [ESP], NOT X87ExceptBits
         OR      [ESP], AX
         FLDCW   [ESP]
-        {$IFDEF FPC}
         ADD     ESP, $2
-        {$ELSE ~FPC}
-        ADD     ESP, TYPE WORD
-        {$ENDIF ~FPC}
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        SUB     RSP, $2
+        FSTCW   [RSP]
+        FWAIT
+        AND     AX, X87ExceptBits  // mask exception mask bits 0..5
+        MOV     DX, [RSP]
+        AND     WORD PTR [RSP], NOT X87ExceptBits
+        OR      [RSP], AX
+        FLDCW   [RSP]
+        ADD     RSP, $2
+        {$ENDIF CPU64}
         MOV     AX, DX
         AND     AX, X87ExceptBits
 end;

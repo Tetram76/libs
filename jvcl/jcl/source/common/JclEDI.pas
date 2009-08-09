@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                       $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
+{ Last modified: $Date:: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009)                         $ }
+{ Revision:      $Rev:: 2907                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -86,9 +86,11 @@ var
 {$ENDIF ENABLE_EDI_DEBUGGING}
 
 type
-  {$M+}
+  {$TYPEINFO ON}
   TEDIObject = class(TObject); // Base EDI Object
-  {$M-}
+  {$IFNDEF TYPEINFO_ON}
+  {$TYPEINFO OFF}
+  {$ENDIF ~TYPEINFO_ON}
   TEDIObjectArray = array of TEDIObject;
 
   EJclEDIError = class(EJclError)
@@ -137,11 +139,7 @@ type
 
   TEDIDataObjectDataState = (ediCreated, ediAssembled, ediDisassembled);
 
-  {$IFDEF CLR}
-  TCustomData = TObject;
-  {$ELSE ~CLR}
   TCustomData = Pointer; // backward compatibility
-  {$ENDIF ~CLR}
 
   TEDIDataObject = class(TEDIObject)
   private
@@ -391,9 +389,11 @@ function StringReplace(const S, OldPattern, NewPattern: string; Flags: TReplaceF
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDI.pas $';
-    Revision: '$Revision: 2652 $';
-    Date: '$Date: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2907 $';
+    Date: '$Date: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 {$ENDIF ~EDI_WEAK_PACKAGE_UNITS}
@@ -541,20 +541,12 @@ end;
 
 constructor EJclEDIError.CreateID(ID: Cardinal);
 begin
-  {$IFDEF CLR}
-  Create(RsEDIErrors[ID]);
-  {$ELSE ~CLR}
   CreateRes(RsEDIErrors[ID]);
-  {$ENDIF ~CLR}
 end;
 
 constructor EJclEDIError.CreateIDFmt(ID: Cardinal; const Args: array of const);
 begin
-  {$IFDEF CLR}
-  Create(Format(RsEDIErrors[ID], Args));
-  {$ELSE ~CLR}
   CreateResFmt(RsEDIErrors[ID], Args);
-  {$ENDIF ~CLR}
 end;
 
 //=== { TEDIDelimiters } =====================================================

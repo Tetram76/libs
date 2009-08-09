@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html lang="en-us">
 <head>
-  <title>JEDI Code Library Beta 1.103</title>
+  <title>JEDI Code Library Release 1.105</title>
   <meta content="text/html;charset=ISO-8859-1" http-equiv="Content-Type">
 
 
@@ -18,9 +18,9 @@
 
 <h1>JEDI Code Library</h1>
 
-<p>Release 1.104<br>
-Build 3248
-21-January-2009</p>
+<p>Release 1.105<br>
+Build 3400
+22-June-2009</p>
 
 <hr><br>
 
@@ -66,12 +66,14 @@ use the facilities of our Subversion repository at Sourceforge.net&nbsp;
 <ul>
 
  <li>improved Unicode support for Delphi 2009 and C++Builder 2009;</li>
- <li>support for late and static binding to ZLib code;</li>
- <li>version control actions for CVS and SVN added to JCL runtime;</li>
- <li>the polynomial of CRC computations can be customized;</li>
- <li>speed improvement of TJclBufferedStream during write operations;</li>
- <li>new archive compression format provided with 7-zip: lzma, pe, elf, macho, udf, xar, mub, hfs, dmg; the wrapper has previous support for the compression and the decompression of zip, bzip2, gzip, 7z, tar and for the decompression of rar, iso, chm, deb, cab...</li>
- <li>new string conversion functions with failure detection.</li>
+ <li>support for solid archives in JclCompression (backend handled by 7-zip);</li>
+ <li>support for RPM, MUB and DMG archive formats (backend handled by 7-zip);</li>
+ <li>support for out-of-place and in-place archive updates (backend handled by 7-zip);</li>
+ <li>new string class TJclAnsiStrings to store AnsiString (improved Delphi 2009 backward compatibility);</li>
+ <li>JclPCRE update to PCRE 7.8;</li>
+ <li>the exception notifier can be disabled when a debugger is attached to the application;</li>
+ <li>support for multiple roots in TJclFileEnumerator;</li>
+ <li>new unit TJclCharsets.pas that contains the translations of charset names to codepages.</li>
 
 </ul>
 
@@ -79,6 +81,14 @@ use the facilities of our Subversion repository at Sourceforge.net&nbsp;
 </p>
 
 <ul>
+
+  <li>
+   <p>As of JCL 2.0, the library does not support Delphi 5 and C++Builder 5 anymore;</p>
+  </li>
+
+  <li>
+   <p>The support for Delphi 2005 is broken because of various compiler internal failures;</p>
+  </li>
 
   <li>
     <p>Note that the package naming has changed: the same package name is used by
@@ -129,7 +139,7 @@ Studio 2007). The packages belong to the Jedi.Jcl namespace.</p>
 
 <ul>
 
-  <li>Kylix 3 (cf <a href="#notes">Installation notes</a>)</li>
+  <li>None</li>
 
 </ul>
 
@@ -148,11 +158,9 @@ Studio 2007). The packages belong to the Jedi.Jcl namespace.</p>
 
 <ul>
 
-  <li>Delphi version 5, 6, 7;</li>
+  <li>Delphi 6, Delphi 7 and Delphi 2005;</li>
 
-  <li>C++Builder version 5 &amp; 6;</li>
-
-  <li>Delphi 2005 (Delphi.net personality);</li>
+  <li>C++Builder 6;</li>
 
   <li>Borland Developer Studio 2006 (Delphi for Win32, C++Builder Win32, Delphi.net and C#Builder personalities);</li>
 
@@ -173,9 +181,6 @@ Studio 2007). The packages belong to the Jedi.Jcl namespace.</p>
   <li>Not every unit supports all tools. Look out for <tt>*.exc</tt>
   files in the tool-specific <tt>lib/</tt>subdirectories for a list of units
   excluded from compilation.</li>
-
-  <li>Kylix 3 Delphi/C++ installation is back but specific code has not been tested with the latest
-  versions of the kernel. Please ensure you use the flavor of the JCL with Unix EOL.</li>
 
   <li>Free Pascal (<a href="http://www.freepascal.org/">http://www.freepascal.org/</a>)
   support has not been updated for this release; most units from
@@ -249,15 +254,7 @@ file.
   <li>Open and edit included file to customize options:</li>
   <ul>
 
-    <li>For Kylix 3 (Delphi): source\include\jclkd3.inc</li>
-
-    <li>For Kylix 3 (C++Builder): source\include\jclkc3.inc</li>
-
-    <li>For C++Builder 5: source\include\jclc5.inc</li>
-
     <li>For C++Builder 6: source\include\jclc6.inc</li>
-
-    <li>For Delphi 5: source\include\jcld5.inc</li>
 
     <li>For Delphi 6: source\include\jcld6.inc</li>
 
@@ -324,7 +321,7 @@ You can also use this list to voice your opinion, comments or suggestions.</li>
 bug fixed you need to log it!</font></b></p>
 
 <p>An issue tracking tool can be accessed via ('Code Library' category):
-<a href="http://homepages.codegear.com/jedi/issuetracker/">http://homepages.codegear.com/jedi/issuetracker/</a></p>
+<a href="http://issuetracker.delphi-jedi.org/">http://issuetracker.delphi-jedi.org/</a></p>
 
 <p>Please be aware that you are allowed there to enter feature request and code donations as well.</p>
 
@@ -360,7 +357,7 @@ feedback from users.</p>
 should install a Subversion client (we recommend TortoiseSVN <a href="http://tortoisesvn.tigris.org/">http://tortoisesvn.tigris.org/</a>
 and RapidSVN <a href="http://rapidsvn.tigris.org/">http://rapidsvn.tigris.org/</a>) and download the
 SVN repository files to your computer as explained in the repository page of the JEDI Wiki at
-<a href="http://homepages.codegear.com/jedi/wiki/index.php?title=Repository">http://homepages.codegear.com/jedi/wiki/index.php?title=Repository</a>&nbsp;
+<a href="http://wiki.delphi-jedi.org/index.php?title=Repository">http://wiki.delphi-jedi.org/index.php?title=Repository</a>&nbsp;
 With the SVN client, you can update your local repository at any time.
 You can also view the repository online via the web interface at <a href="http://jcl.svn.sourceforge.net/">http://jcl.svn.sourceforge.net/</a></p>
 
@@ -387,7 +384,7 @@ things we need your help on:
 
 <p>JCL accepts donations from developers as long as the source fullfills the
 requirements set up by the JEDI and JCL teams. To read more about these
-requirements, visit the page <a href="http://homepages.codegear.com/jedi/jcl">http://homepages.codegear.com/jedi/jcl</a></p>
+requirements, visit the page <a href="http://jcl.delphi-jedi.org/">http://jcl.delphi-jedi.org/</a></p>
 
 <p>You can also donate your time by writing help for the source already
 in JCL. We currently use Doc-o-Matic to create the finished help files but

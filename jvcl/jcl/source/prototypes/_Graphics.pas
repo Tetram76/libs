@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-27 14:39:00 +0200 (sam., 27 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2502                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -45,9 +45,7 @@
 {$IFNDEF PROTOTYPE}
 {$IFDEF VCL}
 unit JclGraphics;
-{$ELSE VisualCLX}
-unit JclQGraphics;
-{$ENDIF VisualCLX}
+{$ENDIF VCL}
 {$ENDIF ~PROTOTYPE}
 
 {$I jcl.inc}
@@ -62,11 +60,9 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF VisualCLX}
-  Types, QGraphics, JclQGraphUtils,
-  {$ELSE}
+  {$IFDEF VCL}
   Graphics, JclGraphUtils, Controls,
-  {$ENDIF VisualCLX}
+  {$ENDIF VCL}
   JclBase;
 
 type
@@ -559,14 +555,11 @@ procedure SetGamma(Gamma: Single = 0.7);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/_Graphics.pas $';
-    Revision: '$Revision: 2502 $';
-    Date: '$Date: 2008-09-27 14:39:00 +0200 (sam., 27 sept. 2008) $';
-    {$IFDEF VCL}
-    LogPath: 'JCL\source\vcl'
-    {$ENDIF VCL}
-    {$IFDEF VisualCLX}
-    LogPath: 'JCL\source\visclx'
-    {$ENDIF VisualCLX}
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\vcl';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -581,6 +574,7 @@ uses
   JclResources,
   {$ENDIF VCL}
   {$ENDIF MSWINDOWS}
+  JclSysUtils,
   JclLogic;
 
 type
@@ -1807,8 +1801,8 @@ var
   List: TIconRec;
   Length: Longint;
 begin
-  FillChar(CI, SizeOf(CI), 0);
-  FillChar(List, SizeOf(List), 0);
+  ResetMemory(CI, SizeOf(CI));
+  ResetMemory(List, SizeOf(List));
   GetDIBSizes(MaskBitmap, MonoInfoSize, MonoBitsSize);
   GetDIBSizes(ColorBitmap, ColorInfoSize, ColorBitsSize);
   MonoInfo := nil;
@@ -2117,7 +2111,7 @@ begin
   // Palette-device?
   if (GetDeviceCaps(WinDC, RASTERCAPS) and RC_PALETTE) = RC_PALETTE then
   begin
-    FillChar(Pal, SizeOf(TMaxLogPalette), #0);  // fill the structure with zeros
+    ResetMemory(Pal, SizeOf(TMaxLogPalette));  // fill the structure with zeros
     Pal.palVersion := $300;                     // fill in the palette version
 
     // grab the system palette entries...
@@ -2395,7 +2389,7 @@ begin
   if FHandle = 0 then
   begin
     if FOwnsHandle then
-      raise EJclWin32Error.CreateRes(@RsRegionCouldNotCreated)
+      raise EJclGraphicsError.CreateRes(@RsRegionCouldNotCreated)
     else
       raise EJclGraphicsError.CreateRes(@RsInvalidHandleForRegion);
   end;
@@ -2454,7 +2448,7 @@ procedure TJclRegion.FillGradient(Canvas: TCanvas; ColorCount: Integer;
   StartColor, EndColor: TColor; ADirection: TGradientDirection);
 begin
   SelectClipRgn(Canvas.Handle,FHandle);
-  {$IFDEF VisualCLX}JclQGraphics{$ELSE}JclGraphics{$ENDIF}.FillGradient(Canvas.Handle, Box, ColorCount, StartColor, EndColor, ADirection);
+  {$IFDEF VCL}JclGraphics{$ENDIF}.FillGradient(Canvas.Handle, Box, ColorCount, StartColor, EndColor, ADirection);
 end;
 
 procedure TJclRegion.Frame(Canvas: TCanvas; FrameWidth, FrameHeight: Integer);
@@ -2669,7 +2663,7 @@ begin
 
   FResetAlphaOnAssign := True;
 
-  FillChar(FBitmapInfo, SizeOf(TBitmapInfo), #0);
+  ResetMemory(FBitmapInfo, SizeOf(TBitmapInfo));
   with FBitmapInfo.bmiHeader do
   begin
     biSize := SizeOf(TBitmapInfoHeader);

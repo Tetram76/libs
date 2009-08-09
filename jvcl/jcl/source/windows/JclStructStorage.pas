@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -229,9 +229,11 @@ procedure CoMallocFree(P: Pointer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclStructStorage.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -244,30 +246,30 @@ uses
 var
   FMalloc: IMalloc = nil;
 
-type
-  PStgOptions = ^TStgOptions;
-  tagSTGOPTIONS = record
-    usVersion: Byte;
-    reserved: Byte;
-    ulSectorSize: DWORD;
-    pwcsTemplateFile: POleStr;
-  end;
-  {$EXTERNALSYM tagSTGOPTIONS}
-  TStgOptions = tagSTGOPTIONS;
+// type
+  // PStgOptions = ^TStgOptions;
+  // tagSTGOPTIONS = record
+  //   usVersion: Byte;
+  //   reserved: Byte;
+  //   ulSectorSize: DWORD;
+  //   pwcsTemplateFile: POleStr;
+  // end;
+  // {$EXTERNALSYM tagSTGOPTIONS}
+  // TStgOptions = tagSTGOPTIONS;
 
-  TStgCreateStorageExFunc = function(pwcsName: POleStr; grfMode: Longint; StgFmt: Longint; grfAttrs: DWORD; pStgOptions:
-    PStgOptions;
-    reserved2: Pointer; riid: TIID; out ppObjectOpen: IUnknown): HRESULT; stdcall;
-  TStgOpenStorageExFunc = function(pwcsName: POleStr; grfMode: Longint; StgFmt: Longint; grfAttrs: DWORD; pStgOptions:
-    PStgOptions;
-    reserved2: Pointer; riid: TIID; out ppObjectOpen: IUnknown): HRESULT; stdcall;
+  // TStgCreateStorageExFunc = function(pwcsName: POleStr; grfMode: Longint; StgFmt: Longint; grfAttrs: DWORD; pStgOptions:
+  //   PStgOptions;
+  //   reserved2: Pointer; riid: TIID; out ppObjectOpen: IUnknown): HRESULT; stdcall;
+  // TStgOpenStorageExFunc = function(pwcsName: POleStr; grfMode: Longint; StgFmt: Longint; grfAttrs: DWORD; pStgOptions:
+  //   PStgOptions;
+  //   reserved2: Pointer; riid: TIID; out ppObjectOpen: IUnknown): HRESULT; stdcall;
 
-var
+//var
   // replacements for StgCreateDocFile and StgOpenStorage on Win2k and XP - not currently used
-  StgCreateStorageEx: TStgCreateStorageExFunc = nil;
-  {$EXTERNALSYM StgCreateStorageEx}
-  StgOpenStorageEx: TStgOpenStorageExFunc = nil;
-  {$EXTERNALSYM StgOpenStorageEx}
+  // StgCreateStorageEx: TStgCreateStorageExFunc = nil;
+  // {$EXTERNALSYM StgCreateStorageEx}
+  // StgOpenStorageEx: TStgOpenStorageExFunc = nil;
+  // {$EXTERNALSYM StgOpenStorageEx}
 
 procedure CoMallocFree(P: Pointer);
 begin

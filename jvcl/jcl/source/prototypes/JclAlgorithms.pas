@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -59,9 +59,7 @@ uses
 {$JPPEXPANDMACRO SIMPLECOMPAREINT(IntegerSimpleCompare,,Integer)}
 {$JPPEXPANDMACRO SIMPLECOMPAREINT(CardinalSimpleCompare,,Cardinal)}
 {$JPPEXPANDMACRO SIMPLECOMPAREINT(Int64SimpleCompare,const ,Int64)}
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO SIMPLECOMPAREINT(PtrSimpleCompare,,Pointer)}
-{$ENDIF ~CLR}
 {$JPPEXPANDMACRO SIMPLECOMPAREINT(SimpleCompare,,TObject)}
 
 {$JPPEXPANDMACRO SIMPLECOMPAREINT(IntegerCompare,,TObject)}
@@ -81,9 +79,7 @@ uses
 {$JPPEXPANDMACRO SIMPLEEQUALITYCOMPAREINT(IntegerSimpleEqualityCompare,,Integer)}
 {$JPPEXPANDMACRO SIMPLEEQUALITYCOMPAREINT(CardinalSimpleEqualityCompare,,Cardinal)}
 {$JPPEXPANDMACRO SIMPLEEQUALITYCOMPAREINT(Int64SimpleEqualityCompare,const ,Int64)}
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO SIMPLEEQUALITYCOMPAREINT(PtrSimpleEqualityCompare,,Pointer)}
-{$ENDIF ~CLR}
 {$JPPEXPANDMACRO SIMPLEEQUALITYCOMPAREINT(SimpleEqualityCompare,,TObject)}
 
 // Apply algorithms
@@ -99,9 +95,7 @@ uses
 {$JPPEXPANDMACRO APPLYINT(Apply,IJclIntegerIterator,TIntegerApplyFunction)} overload;
 {$JPPEXPANDMACRO APPLYINT(Apply,IJclCardinalIterator,TCardinalApplyFunction)} overload;
 {$JPPEXPANDMACRO APPLYINT(Apply,IJclInt64Iterator,TInt64ApplyFunction)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO APPLYINT(Apply,IJclPtrIterator,TPtrApplyFunction)} overload;
-{$ENDIF ~CLR}
 {$JPPEXPANDMACRO APPLYINT(Apply,IJclIterator,TApplyFunction)} overload;
 
 // Find algorithms
@@ -127,10 +121,8 @@ uses
 {$JPPEXPANDMACRO FINDEQINT(Find,IJclCardinalIterator,,AValue,Cardinal,TCardinalEqualityCompare)} overload;
 {$JPPEXPANDMACRO FINDINT(Find,IJclInt64Iterator,const ,AValue,Int64,TInt64Compare)} overload;
 {$JPPEXPANDMACRO FINDEQINT(Find,IJclInt64Iterator,const ,AValue,Int64,TInt64EqualityCompare)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO FINDINT(Find,IJclPtrIterator,,APtr,Pointer,TPtrCompare)} overload;
 {$JPPEXPANDMACRO FINDEQINT(Find,IJclPtrIterator,,APtr,Pointer,TPtrEqualityCompare)} overload;
-{$ENDIF ~CLR}
 {$JPPEXPANDMACRO FINDINT(Find,IJclIterator,,AObject,TObject,TCompare)} overload;
 {$JPPEXPANDMACRO FINDEQINT(Find,IJclIterator,,AObject,TObject,TEqualityCompare)} overload;
 
@@ -157,10 +149,8 @@ uses
 {$JPPEXPANDMACRO COUNTOBJECTEQINT(CountObject,IJclCardinalIterator,,AValue,Cardinal,TCardinalEqualityCompare)} overload;
 {$JPPEXPANDMACRO COUNTOBJECTINT(CountObject,IJclInt64Iterator,const ,AValue,Int64,TInt64Compare)} overload;
 {$JPPEXPANDMACRO COUNTOBJECTEQINT(CountObject,IJclInt64Iterator,const ,AValue,Int64,TInt64EqualityCompare)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO COUNTOBJECTINT(CountObject,IJclPtrIterator,,APtr,Pointer,TPtrCompare)} overload;
 {$JPPEXPANDMACRO COUNTOBJECTEQINT(CountObject,IJclPtrIterator,,APtr,Pointer,TPtrEqualityCompare)} overload;
-{$ENDIF ~CLR}
 {$JPPEXPANDMACRO COUNTOBJECTINT(CountObject,IJclIterator,,AObject,TObject,TCompare)} overload;
 {$JPPEXPANDMACRO COUNTOBJECTEQINT(CountObject,IJclIterator,,AObject,TObject,TEqualityCompare)} overload;
 
@@ -177,9 +167,7 @@ uses
 {$JPPEXPANDMACRO COPYINT(Copy,IJclIntegerIterator)} overload;
 {$JPPEXPANDMACRO COPYINT(Copy,IJclCardinalIterator)} overload;
 {$JPPEXPANDMACRO COPYINT(Copy,IJclInt64Iterator)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO COPYINT(Copy,IJclPtrIterator)} overload;
-{$ENDIF ~CLR}
 {$JPPEXPANDMACRO COPYINT(Copy,IJclIterator)} overload;
 
 // Generate algorithms
@@ -195,9 +183,7 @@ uses
 {$JPPEXPANDMACRO GENERATEINT(Generate,IJclIntegerList,,AValue,Integer)} overload;
 {$JPPEXPANDMACRO GENERATEINT(Generate,IJclCardinalList,,AValue,Cardinal)} overload;
 {$JPPEXPANDMACRO GENERATEINT(Generate,IJclInt64List,const ,AValue,Int64)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO GENERATEINT(Generate,IJclPtrList,,APtr,Pointer)} overload;
-{$ENDIF CLR}
 {$JPPEXPANDMACRO GENERATEINT(Generate,IJclList,,AObject,TObject)} overload;
 
 // Fill algorithms
@@ -213,10 +199,8 @@ uses
 {$JPPEXPANDMACRO FILLINT(Fill,IJclIntegerIterator,,AValue,Integer)} overload;
 {$JPPEXPANDMACRO FILLINT(Fill,IJclCardinalIterator,,AValue,Cardinal)} overload;
 {$JPPEXPANDMACRO FILLINT(Fill,IJclInt64Iterator,const ,AValue,Int64)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO FILLINT(Fill,IJclPtrIterator,,APtr,Pointer)} overload;
-{$ENDIF ~CLR}
-{$JPPEXPANDMACRO FILLINT(Fill,IJclIterator,,AObject,TObject)} overload;
+{$JPPEXPANDMACRO FILLINT(Fill,IJclIterator,,AObject,TObject)} overload
 
 // Reverse algorithms
 {$JPPEXPANDMACRO REVERSEINT(Reverse,IJclIntfIterator)} overload;
@@ -231,9 +215,7 @@ uses
 {$JPPEXPANDMACRO REVERSEINT(Reverse,IJclIntegerIterator)} overload;
 {$JPPEXPANDMACRO REVERSEINT(Reverse,IJclCardinalIterator)} overload;
 {$JPPEXPANDMACRO REVERSEINT(Reverse,IJclInt64Iterator)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO REVERSEINT(Reverse,IJclPtrIterator)} overload;
-{$ENDIF CLR}
 {$JPPEXPANDMACRO REVERSEINT(Reverse,IJclIterator)} overload;
 
 {$JPPEXPANDMACRO SORTINT(QuickSort,IJclIntfList,L,R,TIntfCompare)} overload;
@@ -248,9 +230,7 @@ uses
 {$JPPEXPANDMACRO SORTINT(QuickSort,IJclIntegerList,L,R,TIntegerCompare)} overload;
 {$JPPEXPANDMACRO SORTINT(QuickSort,IJclCardinalList,L,R,TCardinalCompare)} overload;
 {$JPPEXPANDMACRO SORTINT(QuickSort,IJclInt64List,L,R,TInt64Compare)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO SORTINT(QuickSort,IJclPtrList,L,R,TPtrCompare)} overload;
-{$ENDIF ~CLR}
 {$JPPEXPANDMACRO SORTINT(QuickSort,IJclList,L,R,TCompare)} overload;
 
 var
@@ -266,9 +246,7 @@ var
   IntegerSortProc: TIntegerSortProc = QuickSort;
   CardinalSortProc: TCardinalSortProc = QuickSort;
   Int64SortProc: TInt64SortProc = QuickSort;
-  {$IFNDEF CLR}
   PtrSortProc: TPtrSortProc = QuickSort;
-  {$ENDIF ~CLR}
   SortProc: TSortProc = QuickSort;
 
 // Sort algorithms
@@ -284,9 +262,7 @@ var
 {$JPPEXPANDMACRO SORTINT(Sort,IJclIntegerList,First,Last,TIntegerCompare)} overload;
 {$JPPEXPANDMACRO SORTINT(Sort,IJclCardinalList,First,Last,TCardinalCompare)} overload;
 {$JPPEXPANDMACRO SORTINT(Sort,IJclInt64List,First,Last,TInt64Compare)} overload;
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO SORTINT(Sort,IJclPtrList,First,Last,TPtrCompare)} overload;
-{$ENDIF ~CLR}
 {$JPPEXPANDMACRO SORTINT(Sort,IJclList,First,Last,TCompare)} overload;
 
 {$IFDEF SUPPORTS_GENERICS}
@@ -315,9 +291,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclAlgorithms.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -455,7 +433,6 @@ begin
     Result := 0;
 end;
 
-{$IFNDEF CLR}
 function PtrSimpleCompare(Obj1, Obj2: Pointer): Integer;
 begin
   if Integer(Obj1) < Integer(Obj2) then
@@ -466,7 +443,6 @@ begin
   else
     Result := 0;
 end;
-{$ENDIF ~CLR}
 
 function SimpleCompare(Obj1, Obj2: TObject): Integer;
 begin
@@ -561,12 +537,10 @@ begin
   Result := Obj1 = Obj2;
 end;
 
-{$IFNDEF CLR}
 function PtrSimpleEqualityCompare(Obj1, Obj2: Pointer): Boolean;
 begin
   Result := Integer(Obj1) = Integer(Obj2);
 end;
-{$ENDIF ~CLR}
 
 function SimpleEqualityCompare(Obj1, Obj2: TObject): Boolean;
 begin
@@ -595,9 +569,7 @@ end;
 
 {$JPPEXPANDMACRO APPLYIMP(Apply,IJclInt64Iterator,TInt64ApplyFunction,SetValue)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO APPLYIMP(Apply,IJclPtrIterator,TPtrApplyFunction,SetPointer)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO APPLYIMP(Apply,IJclIterator,TApplyFunction,SetObject)}
 
@@ -643,11 +615,9 @@ end;
 
 {$JPPEXPANDMACRO FINDEQIMP(Find,IJclInt64Iterator,const ,AValue,Int64,TInt64EqualityCompare)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO FINDIMP(Find,IJclPtrIterator,,APtr,Pointer,TPtrCompare)}
 
 {$JPPEXPANDMACRO FINDEQIMP(Find,IJclPtrIterator,,APtr,Pointer,TPtrEqualityCompare)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO FINDIMP(Find,IJclIterator,,AObject,TObject,TCompare)}
 
@@ -695,11 +665,9 @@ end;
 
 {$JPPEXPANDMACRO COUNTOBJECTEQIMP(CountObject,IJclInt64Iterator,const ,AValue,Int64,TInt64EqualityCompare)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO COUNTOBJECTIMP(CountObject,IJclPtrIterator,,APtr,Pointer,TPtrCompare)}
 
 {$JPPEXPANDMACRO COUNTOBJECTEQIMP(CountObject,IJclPtrIterator,,APtr,Pointer,TPtrEqualityCompare)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO COUNTOBJECTIMP(CountObject,IJclIterator,,AObject,TObject,TCompare)}
 
@@ -727,9 +695,7 @@ end;
 
 {$JPPEXPANDMACRO COPYIMP(Copy,IJclInt64Iterator,SetValue)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO COPYIMP(Copy,IJclPtrIterator,SetPointer)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO COPYIMP(Copy,IJclIterator,SetObject)}
 
@@ -755,9 +721,7 @@ end;
 
 {$JPPEXPANDMACRO GENERATEIMP(Generate,IJclInt64List,const ,AValue,Int64)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO GENERATEIMP(Generate,IJclPtrList,,APtr,Pointer)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO GENERATEIMP(Generate,IJclList,,AObject,TObject)}
 
@@ -783,9 +747,7 @@ end;
 
 {$JPPEXPANDMACRO FILLIMP(Fill,IJclInt64Iterator,const ,AValue,Int64,SetValue)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO FILLIMP(Fill,IJclPtrIterator,,APtr,Pointer,SetPointer)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO FILLIMP(Fill,IJclIterator,,AObject,TObject,SetObject)}
 
@@ -811,9 +773,7 @@ end;
 
 {$JPPEXPANDMACRO REVERSEIMP(Reverse,IJclInt64Iterator,Int64,GetValue,SetValue)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO REVERSEIMP(Reverse,IJclPtrIterator,Pointer,GetPointer,SetPointer)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO REVERSEIMP(Reverse,IJclIterator,TObject,GetObject,SetObject)}
 
@@ -839,9 +799,7 @@ end;
 
 {$JPPEXPANDMACRO QUICKSORTIMP(QuickSort,IJclInt64List,L,R,TInt64Compare,Int64,GetValue,SetValue)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO QUICKSORTIMP(QuickSort,IJclPtrList,L,R,TPtrCompare,Pointer,GetPointer,SetPointer)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO QUICKSORTIMP(QuickSort,IJclList,L,R,TCompare,TObject,GetObject,SetObject)}
 
@@ -897,12 +855,10 @@ begin
   Int64SortProc(AList, First, Last, AComparator);
 end;
 
-{$IFNDEF CLR}
 procedure Sort(const AList: IJclPtrList; First, Last: Integer; AComparator: TPtrCompare);
 begin
   PtrSortProc(AList, First, Last, AComparator);
 end;
-{$ENDIF ~CLR}
 
 procedure Sort(const AList: IJclList; First, Last: Integer; AComparator: TCompare);
 begin

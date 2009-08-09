@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-04-19 18:04:07 +0200 (dim., 19 avr. 2009)                          $ }
-{ Revision:      $Rev:: 2739                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -71,7 +71,6 @@ type
 
 type
   TFloat = JclBase.Float;
-  PFloat = JclBase.PFloat;
 
   TFloat32 = Single;
   PFloat32 = ^TFloat32;
@@ -227,7 +226,7 @@ type
     etTilde, // '~' #$7E 126
     et127, // '' #$7F 127
     etEuro, // 'Ä' #$80 128
-    et129, // 'Å' #$81 129
+    et129, // '' #$81 129
     et130, // 'Ç' #$82 130
     et131, // 'É' #$83 131
     et132, // 'Ñ' #$84 132
@@ -239,10 +238,10 @@ type
     et138, // 'ä' #$8A 138
     et139, // 'ã' #$8B 139
     et140, // 'å' #$8C 140
-    et141, // 'ç' #$8D 141
+    et141, // '' #$8D 141
     et142, // 'é' #$8E 142
-    et143, // 'è' #$8F 143
-    et144, // 'ê' #$90 144
+    et143, // '' #$8F 143
+    et144, // '' #$90 144
     et145, // 'ë' #$91 145
     et146, // 'í' #$92 146
     et147, // 'ì' #$93 147
@@ -255,7 +254,7 @@ type
     et154, // 'ö' #$9A 154
     et155, // 'õ' #$9B 155
     et156, // 'ú' #$9C 156
-    et157, // 'ù' #$9D 157
+    et157, // '' #$9D 157
     et158, // 'û' #$9E 158
     et159, // 'ü' #$9F 159
     et160, // '†' #$A0 160
@@ -844,7 +843,7 @@ type
     procedure AddFunc(const AName: string; AFunc: TTernary80Func); overload;
     procedure Remove(const AName: string);
 
-    procedure Clear;
+    procedure Clear; virtual;
     property ExtContextSet: TExprSetContext read FExtContextSet;
   end;
 
@@ -889,25 +888,27 @@ type
     function Compile(const AExpr: string): TCompiledExpression;
     procedure Remove(const AExpr: string);
     procedure Delete(ACompiledExpression: TCompiledExpression);
-    procedure Clear;
+    procedure Clear; override;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclExprEval.pas $';
-    Revision: '$Revision: 2739 $';
-    Date: '$Date: 2009-04-19 18:04:07 +0200 (dim., 19 avr. 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
 uses
-  {$IFDEF MSWINDOWS}
+  {$IFDEF SUPPORTS_INLINE}
   Windows, // inline of AnsiSameText
-  {$ENDIF MSWINDOWS}
+  {$ENDIF SUPPORTS_INLINE}
   JclStrings;
 
 //=== { TExprHashContext } ===================================================
@@ -940,6 +941,7 @@ end;
 
 function TExprHashContext.Find(const AName: string): TExprSym;
 begin
+  Result := nil;
   if not FHashMap.Find(AName, Result) then
     Result := nil;
 end;
@@ -1752,8 +1754,6 @@ type
   public
     constructor Create(AVarLoc: Pointer);
   end;
-
-  TExprVarVmOpClass = class of TExprVarVmOp;
 
   { the var readers }
 
@@ -4295,6 +4295,7 @@ var
   Lexer: TExprSimpleLexer;
   NodeFactory: TExprVirtMachNodeFactory;
 begin
+  Ice := nil;
   if FExprHash.Find(AExpr, Ice) then
   begin
     // expression already exists, add reference
@@ -4386,6 +4387,7 @@ procedure TExpressionCompiler.Remove(const AExpr: string);
 var
   Ice: TInternalCompiledExpression;
 begin
+  Ice := nil;
   if not FExprHash.Find(AExpr, Ice) then
     raise EJclExprEvalError.CreateResFmt(@RsExprEvalExprNotFound, [AExpr]);
 
@@ -4401,6 +4403,8 @@ end;
 procedure TExpressionCompiler.Clear;
 begin
   FExprHash.Iterate(nil, Iterate_FreeObjects);
+  FExprHash.Clear;
+  inherited Clear;
 end;
 
 {$IFDEF UNITVERSIONING}

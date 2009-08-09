@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (lun., 17 sept. 2007)                         $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -43,7 +43,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Messages, Classes, SysUtils, Contnrs,
+  Windows, Classes, SysUtils, Contnrs,
   MSTask,
   JclBase, JclSysUtils, JclSysInfo, JclWideStrings, JclWin32;
 
@@ -165,9 +165,8 @@ type
     procedure SetData(const Value: TStream);                    { TODO : stream is owned by caller (copy) }
     function GetTrigger(const Idx: Integer): TJclTaskTrigger;
     function GetTriggerCount: Integer;
-  protected
-    constructor Create(const ATaskName: WideString; const AScheduledWorkItem: IScheduledWorkItem);
   public
+    constructor Create(const ATaskName: WideString; const AScheduledWorkItem: IScheduledWorkItem);
     destructor Destroy; override;
     procedure Save;
     procedure Refresh;
@@ -225,16 +224,21 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclTask.pas $';
-    Revision: '$Revision: 2175 $';
-    Date: '$Date: 2007-09-17 23:41:02 +0200 (lun., 17 sept. 2007) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
 uses
-  ActiveX, ComObj, CommCtrl,
+  ActiveX, ComObj,
+  {$IFDEF BORLAND}
+  CommCtrl,
+  {$ENDIF BORLAND}
   JclSvcCtrl;
 
 const
@@ -290,7 +294,7 @@ class function TJclTaskSchedule.IsRunning: Boolean;
   begin
     with TJclSCManager.Create do
     try
-      Refresh;
+      Refresh(True);
       Result := FindService('Schedule', NtSvc) and (NtSvc.ServiceState = ssRunning);
     finally
       Free;
@@ -313,9 +317,12 @@ class procedure TJclTaskSchedule.Start;
     si: TStartupInfo;
     pi: TProcessInformation;
   begin
+    FilePart := nil;
     Win32Check(SearchPath(nil, 'mstask.exe', nil, MAX_PATH, AppName, FilePart) > 0);
 
+    ResetMemory(si, SizeOf(si));
     si.cb := SizeOf(si);
+    ResetMemory(pi, SizeOf(pi));
     Win32Check(CreateProcess(AppName, nil, nil, nil, False,
       CREATE_NEW_CONSOLE or CREATE_NEW_PROCESS_GROUP, nil, nil, si, pi));
 
@@ -688,6 +695,7 @@ begin
   DateTimeToSystemTime(BeginTime, BeginSysTime);
   DateTimeToSystemTime(EndTime, EndSysTime);
 
+  Count := 0;
   if EndTime = InfiniteTime then
     OleCheck(FScheduledWorkItem.GetRunTimes(@BeginSysTime, nil, Count, TaskTimes))
   else
@@ -891,20 +899,39 @@ begin
   OleCheck(Task.SetWorkingDirectory(PWideChar(Value)));
 end;
 
+{$IFDEF FPC}
+// strange issue ther, PropertySheet is declared in commctrl but FPC cannot resolve it
+function PropertySheet(const lppsph:PROPSHEETHEADER):longint; external 'commctrl.dll' name 'PropertySheetW';
+{$ENDIF FPC}
+
 function TJclScheduledTask.ShowPage(Pages: TJclScheduleTaskPropertyPages): Boolean;
 var
-  PropPages: array [0..2] of MSTask.HPropSheetPage;
-  PropHeader: {CommCtrl.}TPropSheetHeader;
+  PageCount: Integer;
+  PropPages: array [0..2] of {$IFDEF BORLAND}MSTask.{$ENDIF}HPropSheetPage;
+  PropHeader: TPropSheetHeader;
 begin
-  OleCheck((FScheduledWorkItem as IProvideTaskPage).GetPage(TASKPAGE_TASK, True, PropPages[0]));
-  OleCheck((FScheduledWorkItem as IProvideTaskPage).GetPage(TASKPAGE_SCHEDULE, True, PropPages[1]));
-  OleCheck((FScheduledWorkItem as IProvideTaskPage).GetPage(TASKPAGE_SETTINGS, True, PropPages[2]));
+  PageCount := 0;
+  if ppTask in Pages then
+  begin
+    OleCheck((FScheduledWorkItem as IProvideTaskPage).GetPage(TASKPAGE_TASK, True, PropPages[PageCount]));
+    Inc(PageCount);
+  end;
+  if ppSchedule in Pages then
+  begin
+    OleCheck((FScheduledWorkItem as IProvideTaskPage).GetPage(TASKPAGE_SCHEDULE, True, PropPages[PageCount]));
+    Inc(PageCount);
+  end;
+  if ppSettings in Pages then
+  begin
+    OleCheck((FScheduledWorkItem as IProvideTaskPage).GetPage(TASKPAGE_SETTINGS, True, PropPages[PageCount]));
+    Inc(PageCount);
+  end;
 
-  FillChar(PropHeader, SizeOf(PropHeader), 0);
+  ResetMemory(PropHeader, SizeOf(PropHeader));
   PropHeader.dwSize := SizeOf(PropHeader);
   PropHeader.dwFlags := PSH_DEFAULT or PSH_NOAPPLYNOW;
   PropHeader.phpage := @PropPages;
-  PropHeader.nPages := Length(PropPages);
+  PropHeader.nPages := PageCount;
   Result := PropertySheet(PropHeader) > 0;
 end;
 

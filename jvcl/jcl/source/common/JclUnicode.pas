@@ -35,8 +35,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-21 20:11:54 +0100 (sam., 21 mars 2009)                          $ }
-{ Revision:      $Rev:: 2697                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -626,7 +626,6 @@ const
     (Range:(RangeStart: $F0000; RangeEnd: $FFFFF); Name: 'Supplementary Private Use Area-A'),
     (Range:(RangeStart: $100000; RangeEnd: $10FFFF); Name: 'Supplementary Private Use Area-B'));
 
-{$IFNDEF CLR}
 type
   TWideStrings = class;
 
@@ -924,7 +923,7 @@ type
     procedure HexDigitSetup(Symbol: PUcSymbolTableEntry);
     function MakeExpression(AType, LHS, RHS: Cardinal): Cardinal;
     function MakeHexNumber(NP: PUCS2; Limit: Cardinal; var Number: Cardinal): Cardinal;
-    function MakeSymbol(S: PUCS2; Limit: Cardinal; var Consumed: Cardinal): Cardinal;
+    function MakeSymbol(S: PUCS2; Limit: Cardinal; out Consumed: Cardinal): Cardinal;
     procedure MergeEquivalents;
     function ParsePropertyList(Properties: PUCS2; Limit: Cardinal; var Categories: TCharacterCategories): Cardinal;
     function Peek: Cardinal;
@@ -1033,7 +1032,6 @@ type
   end;
 
   //----- TWideStringList class
-  TDynWideCharArray = array of WideChar;
   TWideStringItem = record
     {$IFDEF OWN_WIDESTRING_MEMMGR}
     FString: PWideChar; // "array of WideChar";
@@ -1093,7 +1091,6 @@ type
 
 // functions involving null-terminated strings
 // NOTE: PWideChars as well as WideStrings are NOT managed by reference counting under Win32.
-//       In Kylix this is different. WideStrings are reference counted there, just like ANSI strings.
 function StrLenW(Str: PWideChar): Cardinal;
 function StrEndW(Str: PWideChar): PWideChar;
 function StrMoveW(Dest, Source: PWideChar; Count: Cardinal): PWideChar;
@@ -1132,7 +1129,6 @@ function WideDecompose(const S: WideString; Compatible: Boolean): WideString;
 function WideExtractQuotedStr(var Src: PWideChar; Quote: WideChar): WideString;
 function WideQuotedStr(const S: WideString; Quote: WideChar): WideString;
 function WideStringOfChar(C: WideChar; Count: Cardinal): WideString;
-{$ENDIF ~CLR}
 
 // case conversion function
 type
@@ -1149,13 +1145,11 @@ function WideTitleCase(const S: WideString): WideString; overload; {$IFDEF SUPPO
 function WideUpperCase(C: WideChar): WideString; overload; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF SUPPORTS_INLINE}
 function WideUpperCase(const S: WideString): WideString; overload; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF SUPPORTS_INLINE}
 
-{$IFNDEF CLR}
 function WideNormalize(const S: WideString; Form: TNormalizationForm): WideString;
 function WideSameText(const Str1, Str2: WideString): Boolean;
 function WideTrim(const S: WideString): WideString;
 function WideTrimLeft(const S: WideString): WideString;
 function WideTrimRight(const S: WideString): WideString;
-{$ENDIF ~CLR}
 
 type
   // result type for number retrieval functions
@@ -1166,7 +1160,7 @@ type
 
 // Low level character routines
 function UnicodeNumberLookup(Code: UCS4; var Number: TUcNumber): Boolean;
-function UnicodeCompose(const Codes: array of UCS4; var Composite: UCS4): Integer;
+function UnicodeCompose(const Codes: array of UCS4; out Composite: UCS4): Integer;
 function UnicodeCaseFold(Code: UCS4): TUCS4Array;
 function UnicodeToUpper(Code: UCS4): TUCS4Array;
 function UnicodeToLower(Code: UCS4): TUCS4Array;
@@ -1235,7 +1229,6 @@ function UnicodeIsHan(C: UCS4): Boolean;
 function UnicodeIsHangul(C: UCS4): Boolean;
 
 // Utility functions
-{$IFNDEF CLR}
 function CharSetFromLocale(Language: LCID): Byte;
 function GetCharSetFromLocale(Language: LCID; out FontCharSet: Byte): Boolean;
 function CodePageFromLocale(Language: LCID): Integer;
@@ -1247,7 +1240,6 @@ function KeyUnicode(C: Char): WideChar;
 function StringToWideStringEx(const S: AnsiString; CodePage: Word): WideString;
 function TranslateString(const S: AnsiString; CP1, CP2: Word): AnsiString;
 function WideStringToStringEx(const WS: WideString; CodePage: Word): AnsiString;
-{$ENDIF ~CLR}
 
 type
   TCompareFunc = function (const W1, W2: WideString; Locale: LCID): Integer;
@@ -1270,9 +1262,11 @@ procedure LoadCompositionData;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnicode.pas $';
-    Revision: '$Revision: 2697 $';
-    Date: '$Date: 2009-03-21 20:11:54 +0100 (sam., 21 mars 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -1297,7 +1291,9 @@ implementation
 
 uses
   {$IFDEF HAS_UNIT_RTLCONSTS}
+  {$IFDEF BORLAND}
   RtlConsts,
+  {$ENDIF BORLAND}
   {$ELSE ~HAS_UNIT_RTLCONSTS}
   {$IFNDEF FPC}
   Consts,
@@ -1313,9 +1309,6 @@ uses
   {$IFNDEF UNICODE_RAW_DATA}
   JclCompression,
   {$ENDIF ~UNICODE_RAW_DATA}
-  {$IFDEF CLR}
-  Borland.Vcl.WinUtils,
-  {$ENDIF CLR}
   JclResources, JclSynch, JclSysUtils, JclSysInfo, JclStringConversions;
 
 const
@@ -1453,9 +1446,7 @@ begin
             for J := 0 to Size - 1 do
               for K := Buffer[J].Start to Buffer[J].Stop do
               begin
-                {$IFNDEF CLR}
                 Assert(K < $1000000, LoadResString(@RsCategoryUnicodeChar));
-                {$ENDIF ~CLR}
 
                 First := (K shr 16) and $FF;
                 Second := (K shr 8) and $FF;
@@ -1483,9 +1474,7 @@ function CategoryLookup(Code: Cardinal; Cats: TCharacterCategories): Boolean; ov
 var
   First, Second, Third: Byte;
 begin
-  {$IFNDEF CLR}
   Assert(Code < $1000000, LoadResString(@RsCategoryUnicodeChar));
-  {$ENDIF ~CLR}
 
   // load property data if not already done
   if not CategoriesLoaded then
@@ -1534,9 +1523,7 @@ begin
         begin
           // a) read actual code point
           Code := Stream.ReadInteger;
-          {$IFNDEF CLR}
           Assert(Code < $1000000, LoadResString(@RsCasedUnicodeChar));
-          {$ENDIF ~CLR}
 
           // if there is no high byte entry in the first stage table then create one
           First := (Code shr 16) and $FF;
@@ -1597,9 +1584,7 @@ function CaseLookup(Code: Cardinal; CaseType: TCaseType; var Mapping: TUCS4Array
 var
   First, Second, Third: Byte;
 begin
-  {$IFNDEF CLR}
   Assert(Code < $1000000, LoadResString(@RsCasedUnicodeChar));
-  {$ENDIF ~CLR}
 
   // load case mapping data if not already done
   if not CaseDataLoaded then
@@ -1630,6 +1615,7 @@ function UnicodeCaseFold(Code: UCS4): TUCS4Array;
 // code, otherwise the lower case will be returned. This all applies only to cased code points.
 // Uncased code points are returned unchanged.
 begin
+  SetLength(Result, 0);
   if not CaseLookup(Code, ctFold, Result) then
   begin
     SetLength(Result, 1);
@@ -1639,6 +1625,7 @@ end;
 
 function UnicodeToUpper(Code: UCS4): TUCS4Array;
 begin
+  SetLength(Result, 0);
   if not CaseLookup(Code, ctUpper, Result) then
   begin
     SetLength(Result, 1);
@@ -1648,6 +1635,7 @@ end;
 
 function UnicodeToLower(Code: UCS4): TUCS4Array;
 begin
+  SetLength(Result, 0);
   if not CaseLookup(Code, ctLower, Result) then
   begin
     SetLength(Result, 1);
@@ -1657,6 +1645,7 @@ end;
 
 function UnicodeToTitle(Code: UCS4): TUCS4Array;
 begin
+  SetLength(Result, 0);
   if not CaseLookup(Code, ctTitle, Result) then
   begin
     SetLength(Result, 1);
@@ -1711,9 +1700,7 @@ begin
         begin
           Code := Stream.ReadInteger;
 
-          {$IFNDEF CLR}
           Assert((Code and not $40000000) < $1000000, LoadResString(@RsDecomposedUnicodeChar));
-          {$ENDIF ~CLR}
 
           // if there is no high byte entry in the first stage table then create one
           First := (Code shr 16) and $FF;
@@ -1783,9 +1770,7 @@ function UnicodeDecompose(Code: UCS4; Compatible: Boolean): TUCS4Array;
 var
   First, Second, Third: Byte;
 begin
-  {$IFNDEF CLR}
   Assert((Code and not $40000000) < $1000000, LoadResString(@RsDecomposedUnicodeChar));
-  {$ENDIF ~CLR}
 
   // load decomposition data if not already done
   if not DecompositionsLoaded then
@@ -1876,9 +1861,7 @@ begin
               for K := Buffer[J].Start to Buffer[J].Stop do
               begin
                 // (outchy) TODO: handle in a cleaner way
-                {$IFNDEF CLR}
                 Assert(K < $1000000, LoadResString(@RsCombiningClassUnicodeChar));
-                {$ENDIF ~CLR}
                 First := (K shr 16) and $FF;
                 Second := (K shr 8) and $FF;
                 Third := K and $FF;
@@ -1904,9 +1887,7 @@ function CanonicalCombiningClass(Code: Cardinal): Cardinal;
 var
   First, Second, Third: Byte;
 begin
-  {$IFNDEF CLR}
   Assert(Code < $1000000, LoadResString(@RsCombiningClassUnicodeChar));
-  {$ENDIF ~CLR}
 
   // load combining class data if not already done
   if not CCCsLoaded then
@@ -2066,7 +2047,7 @@ begin
   end;
 end;
 
-function UnicodeCompose(const Codes: array of UCS4; var Composite: UCS4): Integer;
+function UnicodeCompose(const Codes: array of UCS4; out Composite: UCS4): Integer;
 // Maps the sequence of Codes (up to MaxCompositionSize codes) to a composite
 // Result is the number of Codes that were composed (at least 1 if Codes is not empty)
 var
@@ -2135,8 +2116,6 @@ begin
 end;
 
 //=== { TSearchEngine } ======================================================
-
-{$IFNDEF CLR}
 
 constructor TSearchEngine.Create(AOwner: TWideStrings);
 begin
@@ -2660,6 +2639,8 @@ begin
   ClearResults;
   Run := Text;
   RunLen := TextLen;
+  Start := 0;
+  Stop := 0;
   // repeat to find all occurences of the pattern
   while Find(Run, RunLen, Start, Stop) do
   begin
@@ -3503,7 +3484,7 @@ begin
   end;
 end;
 
-function TURESearch.MakeSymbol(S: PUCS2; Limit: Cardinal; var Consumed: Cardinal): Cardinal;
+function TURESearch.MakeSymbol(S: PUCS2; Limit: Cardinal; out Consumed: Cardinal): Cardinal;
 // constructs a symbol, but only keep unique symbols
 var
   I: Integer;
@@ -3511,7 +3492,7 @@ var
   Symbol: TUcSymbolTableEntry;
 begin
   // Build the next symbol so we can test to see if it is already in the symbol table.
-  FillChar(Symbol, SizeOf(TUcSymbolTableEntry), 0);
+  ResetMemory(Symbol, SizeOf(TUcSymbolTableEntry));
   Consumed := CompileSymbol(S, Limit, @Symbol);
 
   // Check to see if the symbol exists.
@@ -4237,7 +4218,7 @@ begin
     States.States := nil;
     EquivalentList.Equivalents := nil;
   end;
-  FillChar(FUREBuffer, SizeOf(FUREBuffer), 0);
+  ResetMemory(FUREBuffer, SizeOf(FUREBuffer));
 end;
 
 procedure TURESearch.CompileURE(RE: PWideChar; RELength: Cardinal; Casefold: Boolean);
@@ -4378,7 +4359,7 @@ begin
     StateList.States := nil;
     TransitionList.Transitions := nil;
   end;
-  FillChar(FDFA, SizeOf(FDFA), 0);
+  ResetMemory(FDFA, SizeOf(FDFA));
 end;
 
 function IsSeparator(C: UCS4): Boolean;
@@ -4443,10 +4424,13 @@ begin
       end;
 
       if (FDFA.Flags and _URE_DFA_CASEFOLD) <> 0 then
+      begin
+        SetLength(LCMapping, 0);
         { TODO : use the entire mapping, not only the first character }
         // (CaseLookup used for a little extra speed: avoids dynamic array allocation)
         if CaseLookup(C, ctLower, LCMapping) then
           C := LCMapping[0];
+      end;
 
       // See if one of the transitions matches.
       I := LastState.NumberTransitions - 1;
@@ -4627,6 +4611,8 @@ begin
   Run := Text;
   RunLen := TextLen;
   // repeat to find all occurences of the pattern
+  Start := 0;
+  Stop := 0;
   while ExecuteURE(0, Run, RunLen, Start, Stop) do
   begin
     // store this result (consider text pointer movement)...
@@ -4650,7 +4636,7 @@ function TURESearch.FindFirst(Text: PWideChar; TextLen: Cardinal; var Start, Sto
 // interest if only one occurence needs to be found.
 begin
   ClearResults;
-  Result := ExecuteURE(0, PWideChar(Text), Length(Text), Start, Stop);
+  Result := ExecuteURE(0, Text, TextLen, Start, Stop);
   if Result then
     AddResult(Start, Stop);
 end;
@@ -4901,7 +4887,8 @@ procedure TWideStrings.Error(const Msg: string; Data: Integer);
 
   function ReturnAddr: Pointer;
   asm
-          MOV     EAX, [EBP + 4]
+          MOV     EAX, EBP
+          MOV     EAX, [EAX + 4]
   end;
 
 begin
@@ -5115,6 +5102,7 @@ begin
     Loaded := False;
 
     Size := Stream.Size - Stream.Position;
+    ByteOrderMask[0] := 0;
     BytesRead := Stream.Read(ByteOrderMask[0],SizeOf(ByteOrderMask));
 
     // UTF16 LSB = Unicode LSB
@@ -6890,7 +6878,6 @@ begin
   if Result then
     Result := StrICompW(PWideChar(Str1), PWideChar(Str2)) = 0;
 end;
-{$ENDIF ~CLR}
 
 //----------------- general purpose case mapping ---------------------------------------------------
 
@@ -6899,6 +6886,7 @@ var
   I, RPos: integer;
   Mapping: TUCS4Array;
 begin
+  SetLength(Mapping, 0);
   if not CaseLookup(UCS4(C), CaseType, Mapping) then
     Result := C
   else
@@ -6920,6 +6908,7 @@ var
   Code: UCS4;
   Mapping: TUCS4Array;
 begin
+  SetLength(Mapping, 0);
   SLen := Length(S);
   RLen := SLen;
   SetLength(Result, RLen);
@@ -7350,13 +7339,12 @@ begin
   Result := (C >= $AC00) and (C <= $D7FF);
 end;
 
-{$IFNDEF CLR}
 // I need to fix a problem (introduced by MS) here. The first parameter can be a pointer
 // (and is so defined) or can be a normal DWORD, depending on the dwFlags parameter.
 // As usual, lpSrc has been translated to a var parameter. But this does not work in
 // our case, hence the redeclaration of the function with a pointer as first parameter.
 
-function TranslateCharsetInfoEx(lpSrc: PDWORD; var lpCs: TCharsetInfo; dwFlags: DWORD): BOOL; stdcall;
+function TranslateCharsetInfoEx(lpSrc: PDWORD; out lpCs: TCharsetInfo; dwFlags: DWORD): BOOL; stdcall;
   external 'gdi32.dll' name 'TranslateCharsetInfo';
 
 function GetCharSetFromLocale(Language: LCID; out FontCharSet: Byte): Boolean;
@@ -7511,19 +7499,15 @@ begin
   Result:= WideStringToStringEx(StringToWideStringEx(S, CP1), CP2);
 end;
 
-{$ENDIF ~CLR}
-
 procedure PrepareUnicodeData;
 // Prepares structures which are globally needed.
 begin
   LoadInProgress := TJclCriticalSection.Create;
 
-  {$IFNDEF CLR}
   if (Win32Platform and VER_PLATFORM_WIN32_NT) <> 0 then
     @WideCompareText := @CompareTextWinNT
   else
     @WideCompareText := @CompareTextWin95;
-  {$ENDIF ~CLR}
 end;
 
 procedure FreeUnicodeData;

@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009)                        $ }
-{ Revision:      $Rev:: 2698                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                       $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,9 +46,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF SUPPORTS_GENERICS}
-  {$IFDEF CLR}
-  System.Collections.Generic,
-  {$ENDIF CLR}
   JclAlgorithms,
   {$ENDIF SUPPORTS_GENERICS}
   Classes,
@@ -919,7 +916,6 @@ type
     constructor Create(const AOwnList: IJclInt64List; ACursor: TJclInt64LinkedListItem; AValid: Boolean; AStart: TItrStart);
   end;
 
-{$IFNDEF CLR}
   TJclPtrLinkedListItem = class
   public
     Value: Pointer;
@@ -1003,7 +999,6 @@ type
   public
     constructor Create(const AOwnList: IJclPtrList; ACursor: TJclPtrLinkedListItem; AValid: Boolean; AStart: TItrStart);
   end;
-{$ENDIF ~CLR}
 
   TJclLinkedListItem = class
   public
@@ -1220,9 +1215,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclLinkedLists.pas $';
-    Revision: '$Revision: 2698 $';
-    Date: '$Date: 2009-03-21 21:17:27 +0100 (sam., 21 mars 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -13785,7 +13782,6 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-{$IFNDEF CLR}
 //=== { TJclLinkedList<T> } ==================================================
 
 constructor TJclPtrLinkedList.Create(const ACollection: IJclPtrCollection);
@@ -15040,7 +15036,6 @@ begin
   end;
   {$ENDIF THREADSAFE}
 end;
-{$ENDIF ~CLR}
 
 //=== { TJclLinkedList<T> } ==================================================
 

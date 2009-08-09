@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (lun., 17 sept. 2007)                         $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -37,9 +37,7 @@
 {$IFNDEF PROTOTYPE}
 {$IFDEF VCL}
 unit JclGraphUtils;
-{$ELSE VisualCLX}
-unit JclQGraphUtils;
-{$ENDIF VisualCLX}
+{$ENDIF VCL}
 {$ENDIF ~PROTOTYPE}
 
 interface
@@ -57,9 +55,6 @@ uses
   {$IFDEF VCL}
   Graphics,
   {$ENDIF VCL}
-  {$IFDEF VisualCLX}
-  Qt, QGraphics,
-  {$ENDIF VisualCLX}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -303,14 +298,11 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/_GraphUtils.pas $';
-    Revision: '$Revision: 2175 $';
-    Date: '$Date: 2007-09-17 23:41:02 +0200 (lun., 17 sept. 2007) $';
-    {$IFDEF VCL}
-    LogPath: 'JCL\source\vcl'
-    {$ENDIF VCL}
-    {$IFDEF VisualCLX}
-    LogPath: 'JCL\source\visclx'
-    {$ENDIF VisualCLX}
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\vcl';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -1148,11 +1140,7 @@ begin
   X := GetSystemMetrics(SM_CXSCREEN);
   Y := GetSystemMetrics(SM_CYSCREEN);
   {$ELSE ~MSWINDOWS}
-  {$IFDEF VisualCLX}
-  { TODO : Find a Qt-independent solution }
-  X := QWidget_width(QApplication_desktop);
-  Y := QWidget_height(QApplication_desktop);
-  {$ENDIF VisualCLX}
+  TODO: find a solution for other systems
   {$ENDIF ~MSWINDOWS}
   with R do
   begin

@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,9 +42,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF SUPPORTS_GENERICS}
-  {$IFDEF CLR}
-  System.Collections.Generic,
-  {$ENDIF CLR}
   JclAlgorithms,
   {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclAbstractContainers, JclContainerIntf, JclSynch;
@@ -156,7 +153,6 @@ type
 
 {$JPPEXPANDMACRO JCLTREEITRINT(TJclInt64TreeIterator,TJclPreOrderInt64TreeIterator,TJclPostOrderInt64TreeIterator,TJclInt64TreeNode,TJclInt64Tree,IJclInt64Iterator,IJclInt64TreeIterator,IJclInt64EqualityComparer,const ,AValue,Int64,0,GetValue,SetValue)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO JCLTREETYPESINT(TJclPtrTreeNode,IJclPtrEqualityComparer,,APtr,Pointer)}
 
 {$JPPEXPANDMACRO JCLTREEINT(TJclPtrTreeNode,TJclPtrTree,TJclPtrAbstractContainer,IJclPtrEqualityComparer,IJclPtrCollection,IJclPtrTree,IJclPtrIterator,IJclPtrTreeIterator,,
@@ -164,7 +160,6 @@ type
     function CreateEmptyContainer: TJclAbstractContainerBase; override;,,,,APtr,Pointer,nil)}
 
 {$JPPEXPANDMACRO JCLTREEITRINT(TJclPtrTreeIterator,TJclPreOrderPtrTreeIterator,TJclPostOrderPtrTreeIterator,TJclPtrTreeNode,TJclPtrTree,IJclPtrIterator,IJclPtrTreeIterator,IJclPtrEqualityComparer,,APtr,Pointer,nil,GetPointer,SetPointer)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO JCLTREETYPESINT(TJclTreeNode,IJclEqualityComparer,,AObject,TObject)}
 
@@ -230,9 +225,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclTrees.pas $';
-    Revision: '$Revision: 2461 $';
-    Date: '$Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -363,7 +360,6 @@ end;
 
 {$JPPEXPANDMACRO JCLTREEITRIMP(TJclInt64TreeIterator,TJclPreOrderInt64TreeIterator,TJclPostOrderInt64TreeIterator,TJclInt64TreeNode,TJclInt64Tree,IJclInt64Iterator,IJclInt64TreeIterator,IJclInt64EqualityComparer,const ,AValue,Int64,0,GetValue,SetValue,FreeInt64)}
 
-{$IFNDEF CLR}
 {$JPPEXPANDMACRO JCLTREETYPESIMP(TJclPtrTreeNode,IJclPtrEqualityComparer,,APtr,Pointer)}
 
 {$JPPEXPANDMACRO JCLTREEIMP(TJclPtrTreeNode,TJclPtrTree,TJclPreOrderPtrTreeIterator,TJclPostOrderPtrTreeIterator,IJclPtrCollection,IJclPtrIterator,IJclPtrTreeIterator,IJclPtrEqualityComparer,,,,APtr,Pointer,nil,FreePointer)}
@@ -375,7 +371,6 @@ begin
 end;
 
 {$JPPEXPANDMACRO JCLTREEITRIMP(TJclPtrTreeIterator,TJclPreOrderPtrTreeIterator,TJclPostOrderPtrTreeIterator,TJclPtrTreeNode,TJclPtrTree,IJclPtrIterator,IJclPtrTreeIterator,IJclPtrEqualityComparer,,APtr,Pointer,nil,GetPointer,SetPointer,FreePointer)}
-{$ENDIF ~CLR}
 
 {$JPPEXPANDMACRO JCLTREETYPESIMP(TJclTreeNode,IJclEqualityComparer,,AObject,TObject)}
 

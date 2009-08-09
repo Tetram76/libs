@@ -17,11 +17,12 @@
 {                                                                                                  }
 { Contributors:                                                                                    }
 {   Florent Ouchet (outchy)                                                                        }
+{   Uwe Schuster (uschuster)                                                                       }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-24 18:42:51 +0100 (mar., 24 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2660                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -43,9 +44,7 @@ const
   RegJclKey             = 'Jedi\JCL\';
   RegJclIDEKey          = RegJclKey + 'IDE\';
   DelphiEnvironmentVar  = 'DELPHI';
-  {$IFDEF COMPILER6_UP}
   EnvironmentVarsKey    = 'Environment Variables';
-  {$ENDIF COMPILER6_UP}
 
   //=== Various constants shared by different experts ========================
   JclLeft   = 'Left';
@@ -53,9 +52,8 @@ const
   JclWidth  = 'Right';
   JclHeight = 'Height';
 
-  JclDesignerAny = {$IFDEF COMPILER6_UP} dAny {$ELSE COMPILER6_UP} '' {$ENDIF COMPILER6_UP};
-  JclDesignerVcl = {$IFDEF COMPILER6_UP} dVcl {$ELSE COMPILER6_UP} '' {$ENDIF COMPILER6_UP};
-  JclDesignerClx = {$IFDEF COMPILER6_UP} dClx {$ELSE COMPILER6_UP} '' {$ENDIF COMPILER6_UP};
+  JclDesignerAny = dAny;
+  JclDesignerVcl = dVcl;
   JclDelphiPersonality = {$IFDEF BDS} sDelphiPersonality {$ELSE BDS} '' {$ENDIF BDS};
   JclCBuilderPersonality = {$IFDEF BDS} sCBuilderPersonality {$ELSE BDS} '' {$ENDIF BDS};
 
@@ -134,7 +132,7 @@ const
   //=== Repository Expert ====================================================
   JclRepositoryCategoryDelphiFiles = {$IFDEF BDS} sCategoryDelphiNewFiles {$ELSE BDS} '' {$ENDIF BDS};
   JclRepositoryCategoryCBuilderFiles = {$IFDEF BDS} sCategoryCBuilderNewFiles {$ELSE BDS} '' {$ENDIF BDS};
-  JclRepositoryModuleTypeForm = {$IFDEF COMPILER6_UP} omtForm {$ELSE COMPILER6_UP} 0 {$ENDIF COMPILER6_UP};  
+  JclRepositoryModuleTypeForm = omtForm;  
 
   //=== Version Control Expert ===============================================
   JclVersionCtrlMenuName = 'JclVersionCtrlMenu';
@@ -148,13 +146,21 @@ const
   JclVersionCtrlIconTypeNoIconValue = 'noicon';
   JclVersionCtrlIconTypeJclIconValue = 'jclicons';
 
+  //=== Stack Trace Viewer Expert ============================================
+  JclStackTraceViewerExpertName        = 'JclStackTraceViewerExpert';
+  JclStackTraceViewerActionName        = 'JCLStackTraceViewerCommand';
+  JclStackTraceViewerMenuName          = 'JCLStackTraceViewerMenu';
+  JclStackTraceViewerDesktopIniSection = 'JclStackTraceViewer';
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConsts.pas $';
-    Revision: '$Revision: 2660 $';
-    Date: '$Date: 2009-02-24 18:42:51 +0100 (mar., 24 févr. 2009) $';
-    LogPath: 'JCL\experts\common'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\experts\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 

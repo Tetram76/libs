@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-15 12:51:26 +0100 (dim., 15 mars 2009)                          $ }
-{ Revision:      $Rev:: 2688                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -53,7 +53,7 @@ uses
 
 // Exceptions
 type
-  EJclWideStringError = EJclError;
+  EJclWideStringError = class(EJclError);
 
 const
   // definitions of often used characters:
@@ -172,12 +172,12 @@ type
     procedure Insert(Index: Integer; const S: WideString); virtual;
     procedure InsertObject(Index: Integer; const S: WideString;
       AObject: TObject); virtual;
-    procedure LoadFromFile(const FileName: string;
+    procedure LoadFromFile(const FileName: TFileName;
       WideFileOptions: TWideFileOptions = []); virtual;
     procedure LoadFromStream(Stream: TStream;
       WideFileOptions: TWideFileOptions = []); virtual;
     procedure Move(CurIndex, NewIndex: Integer); virtual;
-    procedure SaveToFile(const FileName: string;
+    procedure SaveToFile(const FileName: TFileName;
       WideFileOptions: TWideFileOptions = []); virtual;
     procedure SaveToStream(Stream: TStream;
       WideFileOptions: TWideFileOptions = []); virtual;
@@ -277,9 +277,9 @@ function StrCopyW(Dest: PWideChar; const Source: PWideChar): PWideChar;
 function StrECopyW(Dest: PWideChar; const Source: PWideChar): PWideChar;
 function StrLCopyW(Dest: PWideChar; const Source: PWideChar; MaxLen: Cardinal): PWideChar;
 function StrPCopyWW(Dest: PWideChar; const Source: WideString): PWideChar;
-function StrPCopyW(Dest: PWideChar; const Source: string): PWideChar;
+function StrPCopyW(Dest: PWideChar; const Source: AnsiString): PWideChar;
 function StrPLCopyWW(Dest: PWideChar; const Source: WideString; MaxLen: Cardinal): PWideChar;
-function StrPLCopyW(Dest: PWideChar; const Source: string; MaxLen: Cardinal): PWideChar;
+function StrPLCopyW(Dest: PWideChar; const Source: AnsiString; MaxLen: Cardinal): PWideChar;
 function StrCatW(Dest: PWideChar; const Source: PWideChar): PWideChar;
 function StrLCatW(Dest: PWideChar; const Source: PWideChar; MaxLen: Cardinal): PWideChar;
 function StrCompW(const Str1, Str2: PWideChar): Integer;
@@ -338,9 +338,11 @@ function MultiSzDup(const Source: PWideMultiSz): PWideMultiSz;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclWideStrings.pas $';
-    Revision: '$Revision: 2688 $';
-    Date: '$Date: 2009-03-15 12:51:26 +0100 (dim., 15 mars 2009) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -517,7 +519,7 @@ var
 begin
   S1 := Str1;
   S2 := Str2;
-  Result := WideCompareText(Str1, Str2);
+  Result := WideCompareText(S1, S2);
 end;
 
 function StrPosW(const Str, SubStr: PWideChar): PWideChar;
@@ -763,7 +765,7 @@ function StrScanW(Str: PWideChar; Chr: WideChar; StrLen: Cardinal): PWideChar;
 asm
        TEST    EAX, EAX
        JZ      @@Exit        // get out if the string is nil or StrLen is 0
-       JCXZ    @@Exit
+       JECXZ   @@Exit
 @@Loop:
        CMP     [EAX], DX     // this unrolled loop is actually faster on modern processors
        JE      @@Exit        // than REP SCASW
@@ -790,14 +792,14 @@ begin
     Result := 0;
 end;
 
-function StrPCopyW(Dest: PWideChar; const Source: string): PWideChar;
+function StrPCopyW(Dest: PWideChar; const Source: AnsiString): PWideChar;
 // copies a Pascal-style string to a null-terminated wide string
 begin
   Result := StrPLCopyW(Dest, Source, Cardinal(Length(Source)));
   Result[Length(Source)] := WideNull;
 end;
 
-function StrPLCopyW(Dest: PWideChar; const Source: string; MaxLen: Cardinal): PWideChar;
+function StrPLCopyW(Dest: PWideChar; const Source: AnsiString; MaxLen: Cardinal): PWideChar;
 // copies characters from a Pascal-style string into a null-terminated wide string
 asm
        PUSH EDI
@@ -997,10 +999,7 @@ var
   P1, P2: PWideChar;
   C: WideChar;
 begin
-  // WideString are ref counted starting from COMPILER6_UP (Linux only)
-  {$IFDEF COMPILER6_UP}
   UniqueString(S);
-  {$ENDIF COMPILER6_UP}
   P1 := PWideChar(S);
   P2 := PWideChar(S) + Length(S) - 1;
   while P1 < P2 do
@@ -1513,7 +1512,7 @@ procedure TJclWideStrings.InsertObject(Index: Integer; const S: WideString; AObj
 begin
 end;
 
-procedure TJclWideStrings.LoadFromFile(const FileName: string;
+procedure TJclWideStrings.LoadFromFile(const FileName: TFileName;
   WideFileOptions: TWideFileOptions = []);
 var
   Stream: TFileStream;
@@ -1536,6 +1535,7 @@ begin
   BeginUpdate;
   try
     Clear;
+    WC := #0;
     Stream.Read(WC, SizeOf(WC));
     if (foAnsiFile in WideFileOptions) and (Hi(Word(WC)) <> 0) and (WC <> BOM_LSB_FIRST) and (WC <> BOM_MSB_FIRST) then
     begin
@@ -1595,7 +1595,7 @@ begin
   end;
 end;
 
-procedure TJclWideStrings.SaveToFile(const FileName: string; WideFileOptions: TWideFileOptions = []);
+procedure TJclWideStrings.SaveToFile(const FileName: TFileName; WideFileOptions: TWideFileOptions = []);
 var
   Stream: TFileStream;
 begin
@@ -1976,6 +1976,7 @@ function TJclWideStringList.IndexOf(const S: WideString): Integer;
 begin
   if Sorted then
   begin
+    Result := -1;
     if not Find(S, Result) then
       Result := -1;
   end
@@ -2162,6 +2163,7 @@ begin
   if Source <> nil then
   begin
     Len := MultiSzLength(Source);
+    Result := nil;
     AllocateMultiSz(Result, Len);
     Move(Source^, Result^, Len * SizeOf(WideChar));
   end

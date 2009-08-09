@@ -33,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-08-07 23:54:09 +0200 (jeu., 07 août 2008)                         $ }
-{ Revision:      $Rev:: 2412                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 17:15:55 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2897                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -97,9 +97,11 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDITranslators.pas $';
-    Revision: '$Revision: 2412 $';
-    Date: '$Date: 2008-08-07 23:54:09 +0200 (jeu., 07 août 2008) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2897 $';
+    Date: '$Date: 2009-07-30 17:15:55 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 {$ENDIF ~EDI_WEAK_PACKAGE_UNITS}

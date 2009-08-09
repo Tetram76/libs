@@ -23,8 +23,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-08-07 23:54:09 +0200 (jeu., 07 août 2008)                         $ }
-{ Revision:      $Rev:: 2412                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -47,16 +47,19 @@ function IsValidISBN(const ISBN: string): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclValidation.pas $';
-    Revision: '$Revision: 2412 $';
-    Date: '$Date: 2008-08-07 23:54:09 +0200 (jeu., 07 août 2008) $';
-    LogPath: 'JCL\source\common'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
 uses
-  JclBase;
+  JclBase,
+  JclSysUtils;
   
 { TODO -cDoc : Donator: Ivo Bauer }
 function IsValidISBN(const ISBN: string): Boolean;
@@ -127,9 +130,7 @@ begin
   Accumulator := 0;
   Counter := 10;
   Part := ipGroupID;
-  {$IFNDEF CLR}
-  FillChar(PartSizes[Low(PartSizes)], SizeOf(PartSizes), 0);
-  {$ENDIF ~CLR}
+  ResetMemory(PartSizes[Low(PartSizes)], SizeOf(PartSizes));
 
   while CurPtr <= EndPtr do
   begin

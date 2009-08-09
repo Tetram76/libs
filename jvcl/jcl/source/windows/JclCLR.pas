@@ -27,13 +27,13 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-03-14 13:28:46 +0100 (sam., 14 mars 2009)                        $ }
-{ Revision:      $Rev:: 2683                                                                     $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                       $ }
+{ Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-// Last modified: $Date: 2009-03-14 13:28:46 +0100 (sam., 14 mars 2009) $
+// Last modified: $Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $
 
 unit JclCLR;
 
@@ -173,10 +173,9 @@ type
     function GetOffset: DWORD;
     function GetSize: DWORD;
     function GetData: Pointer;
-  protected
+  public
     constructor Create(const AMetadata: TJclPeMetadata;
       AHeader: PClrStreamHeader); virtual;
-  public
     property Metadata: TJclPeMetadata read FMetadata;
     property Header: PClrStreamHeader read FHeader;
     property Name: string read GetName;
@@ -193,10 +192,9 @@ type
     function GetString(const Idx: Integer): WideString;
     function GetOffset(const Idx: Integer): DWORD;
     function GetStringCount: Integer;
-  protected
+  public
     constructor Create(const AMetadata: TJclPeMetadata;
       AHeader: PClrStreamHeader); override;
-  public
     destructor Destroy; override;
     function At(const Offset: DWORD): WideString;
     property Strings[const Idx: Integer]: WideString read GetString; default;
@@ -209,10 +207,9 @@ type
     FGuids: array of TGUID;
     function GetGuid(const Idx: Integer): TGUID;
     function GetGuidCount: Integer;
-  protected
+  public
     constructor Create(const AMetadata: TJclPeMetadata;
       AHeader: PClrStreamHeader); override;
-  public
     property Guids[const Idx: Integer]: TGUID read GetGuid; default;
     property GuidCount: Integer read GetGuidCount;
   end;
@@ -222,9 +219,8 @@ type
     FPtr: PJclByteArray;
     FOffset: DWORD;
     function GetData: PJclByteArray;
-  protected
-    constructor Create(const AStream: TJclClrStream; APtr: PJclByteArray);
   public
+    constructor Create(const AStream: TJclClrStream; APtr: PJclByteArray);
     function Dump(Indent: string): string;
     property Ptr: PJclByteArray read FPtr;
     property Offset: DWORD read FOffset;
@@ -236,10 +232,9 @@ type
     FBlobs: TObjectList;
     function GetBlob(const Idx: Integer): TJclClrBlobRecord;
     function GetBlobCount: Integer;
-  protected
+  public
     constructor Create(const AMetadata: TJclPeMetadata;
       AHeader: PClrStreamHeader); override;
-  public
     destructor Destroy; override;
     function At(const Offset: DWORD): TJclClrBlobRecord;
     property Blobs[const Idx: Integer]: TJclClrBlobRecord read GetBlob; default;
@@ -276,11 +271,11 @@ type
     FIndex: Integer;
     function GetToken: TJclClrToken;
   protected
-    constructor Create(const ATable: TJclClrTable); virtual;
     procedure Update; virtual;
     function DecodeTypeDefOrRef(const Encoded: DWORD): TJclClrTableRow;
     function DecodeResolutionScope(const Encoded: DWORD): TJclClrTableRow;
   public
+    constructor Create(const ATable: TJclClrTable); virtual;
     function DumpIL: string; virtual;
     property Table: TJclClrTable read FTable;
     property Index: Integer read FIndex;
@@ -299,8 +294,6 @@ type
     FSize: DWORD;
     function GetOffset: DWORD;
   protected
-    constructor Create(const AStream: TJclClrTableStream;
-      const Ptr: Pointer; const ARowCount: Integer); virtual;
     procedure Load; virtual;
     procedure SetSize(const Value: Integer);
     procedure Update; virtual;
@@ -312,6 +305,8 @@ type
     procedure Reset;
     class function TableRowClass: TJclClrTableRowClass; virtual;
   public
+    constructor Create(const AStream: TJclClrTableStream;
+      const Ptr: Pointer; const ARowCount: Integer); virtual;
     destructor Destroy; override;
     function ReadCompressedValue: DWORD;
     function ReadByte: Byte;
@@ -343,15 +338,14 @@ type
     function GetVersionString: string;
     function GetTable(const AKind: TJclClrTableKind): TJclClrTable;
     function GetBigHeap(const AHeapKind: TJclClrHeapKind): Boolean;
-  protected
+  public
     constructor Create(const AMetadata: TJclPeMetadata;
       AHeader: PClrStreamHeader); override;
-  public
     destructor Destroy; override;
     procedure Update; virtual;
     function DumpIL: string;
     function FindTable(const AKind: TJclClrTableKind;
-      var ATable: TJclClrTable): Boolean;
+      out ATable: TJclClrTable): Boolean;
     property Header: PClrTableStreamHeader read FHeader;
     property VersionString: string read GetVersionString;
     property BigHeap[const AHeapKind: TJclClrHeapKind]: Boolean read GetBigHeap;
@@ -385,13 +379,12 @@ type
     function GetFlags: Word;
     function UserGetString(const Idx: Integer): WideString;
     function UserGetStringCount: Integer;
-  protected
-    constructor Create(const AImage: TJclPeImage);
   public
+    constructor Create(const AImage: TJclPeImage);
     destructor Destroy; override;
     function DumpIL: string;
-    function FindStream(const AName: string; var Stream: TJclClrStream): Boolean; overload;
-    function FindStream(const AClass: TJclClrStreamClass; var Stream: TJclClrStream): Boolean; overload;
+    function FindStream(const AName: string; out Stream: TJclClrStream): Boolean; overload;
+    function FindStream(const AClass: TJclClrStreamClass; out Stream: TJclClrStream): Boolean; overload;
     function StringAt(const Offset: DWORD): WideString;
     function UserStringAt(const Offset: DWORD): WideString;
     function BlobAt(const Offset: DWORD): TJclClrBlobRecord;
@@ -425,9 +418,8 @@ type
     FData: Pointer;
     FOffset: DWORD;
     FRVA: DWORD;
-  protected
-    constructor Create(const AData: PAnsiChar; const AOffset: DWORD; const ARVA: DWORD);
   public
+    constructor Create(const AData: PAnsiChar; const AOffset: DWORD; const ARVA: DWORD);
     property Data: Pointer read FData;
     property Offset: DWORD read FOffset;
     property RVA: DWORD read FRVA;
@@ -443,10 +435,10 @@ type
     function GetKinds: TJclClrVTableKinds;
     function GetRVA: DWORD;
   protected
-    constructor Create(AData: PImageCorVTableFixup);
     class function VTableKinds(const Kinds: TJclClrVTableKinds): DWORD; overload;
     class function VTableKinds(const Kinds: DWORD): TJclClrVTableKinds; overload;
   public
+    constructor Create(AData: PImageCorVTableFixup);
     property Data: PImageCorVTableFixup read FData;
     property RVA: DWORD read GetRVA;                  // RVA of Vtable
     property Count: DWORD read GetCount;              // Number of entries in Vtable
@@ -495,20 +487,22 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclCLR.pas $';
-    Revision: '$Revision: 2683 $';
-    Date: '$Date: 2009-03-14 13:28:46 +0100 (sam., 14 mars 2009) $';
-    LogPath: 'JCL\source\windows'
+    Revision: '$Revision: 2892 $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
 uses
-  Math, TypInfo,
+  TypInfo,
   JclMetadata, JclResources, JclAnsiStrings, JclStringConversions;
 
 const
-  MetadataHeaderSignature = $424A5342; // 'BSJB'
+  // MetadataHeaderSignature = $424A5342; // 'BSJB'
 
   GUID_NULL: TGUID = '{00000000-0000-0000-0000-000000000000}';
 
@@ -611,7 +605,7 @@ end;
 
 function TJclClrStream.GetData: Pointer;
 begin
-  Result := Pointer(DWORD_PTR(FMetadata.Header) + FHeader.Offset);
+  Result := Pointer(PAnsiChar(FMetadata.Header) + FHeader.Offset);
 end;
 
 //=== { TJclClrStringsStream } ===============================================
@@ -631,7 +625,7 @@ begin
     if pch^ <> #0 then
       FStrings.AddObject(string(TUTF8String(pch)), TObject(off));
     pch := pch + StrLen(pch) + 1;
-    off := DWORD_PTR(pch - Data);
+    off := pch - PAnsiChar(Data);
   end;
 end;
 
@@ -745,6 +739,8 @@ var
     I: Integer;
     HexStr, AsciiStr: string;
   begin
+    HexStr := '';
+    AsciiStr := '';
     for I := 0 to Size - 1 do
     begin
       HexStr := HexStr + IntToHex(Integer(Buf[I]), 2) + ' ';
@@ -755,13 +751,13 @@ var
     end;
 
     if IsTail then
-      Result := HexStr + ')' + JclStrings.StrRepeat(' ', (BufSize-Size)*3) + ' // ' + AsciiStr
+      Result := HexStr + ')' + JclStrings.StrRepeat(' ', (BufSize-Size) * 3) + ' // ' + AsciiStr
     else
-      Result := HexStr + ' ' + JclStrings.StrRepeat(' ', (BufSize-Size)*3) + ' // ' + AsciiStr;
+      Result := HexStr + ' ' + JclStrings.StrRepeat(' ', (BufSize-Size) * 3) + ' // ' + AsciiStr;
     if IsHead then
       Result := Indent + '( ' + Result
     else
-      Result := JclStrings.StrRepeat(' ', Length(Indent)+2) + Result;
+      Result := JclStrings.StrRepeat(' ', Length(Indent) + 2) + Result;
   end;
 
 begin
@@ -781,7 +777,7 @@ end;
 
 function TJclClrBlobRecord.GetData: PJclByteArray;
 begin
-  Result := PJclByteArray(DWORD_PTR(Memory) + Position);
+  Result := PJclByteArray(PAnsiChar(Memory) + Position);
 end;
 
 //=== { TJclClrBlobStream } ==================================================
@@ -798,8 +794,8 @@ begin
   begin
     if ABlob.Size > 0 then
       FBlobs.Add(ABlob);
-    if (INT_PTR(ABlob.Memory) + ABlob.Size) < (INT_PTR(Self.Data) + Integer(Self.Size)) then
-      ABlob := TJclClrBlobRecord.Create(Self, Pointer(INT_PTR(ABlob.Memory) + ABlob.Size))
+    if (PAnsiChar(ABlob.Memory) + ABlob.Size) < (PAnsiChar(Self.Data) + Integer(Self.Size)) then
+      ABlob := TJclClrBlobRecord.Create(Self, Pointer(PAnsiChar(ABlob.Memory) + ABlob.Size))
     else
       ABlob := nil;
   end;
@@ -894,6 +890,7 @@ end;
 
 function TJclClrTableRow.DumpIL: string;
 begin
+  Result := '';
   // (rom) needs comment why empty
 end;
 
@@ -908,7 +905,7 @@ function TJclClrTableRow.GetToken: TJclClrToken;
   end;
 
 begin
-  Result := Byte(GetTableId) shl 24 + Index + 1;
+  Result := (DWORD(GetTableId) shl 24) + DWORD(Index + 1);
 end;
 
 procedure TJclClrTableRow.Update;
@@ -1183,7 +1180,7 @@ begin
 end;
 
 function TJclClrTableStream.FindTable(const AKind: TJclClrTableKind;
-  var ATable: TJclClrTable): Boolean;
+  out ATable: TJclClrTable): Boolean;
 begin
   ATable := FTables[AKind];
   Result := Assigned(ATable);
@@ -1202,6 +1199,7 @@ function TJclClrTableStream.DumpIL: string;
 var
   AKind: TJclClrTableKind;
 begin
+  Result := '';
   for AKind := Low(TJclClrTableKind) to High(TJclClrTableKind) do
     if Assigned(FTables[AKind]) then
       Result := Result + FTables[AKind].DumpIL;
@@ -1316,7 +1314,7 @@ begin
 end;
 
 function TJclPeMetadata.FindStream(const AName: string;
-  var Stream: TJclClrStream): Boolean;
+  out Stream: TJclClrStream): Boolean;
 var
   I: Integer;
 begin
@@ -1334,7 +1332,7 @@ begin
 end;
 
 function TJclPeMetadata.FindStream(const AClass: TJclClrStreamClass;
-  var Stream: TJclClrStream): Boolean;
+  out Stream: TJclClrStream): Boolean;
 var
   I: Integer;
 begin
@@ -1676,7 +1674,7 @@ end;
 
 procedure TJclClrHeaderEx.UpdateResources;
 var
-  Base, Ptr: PAnsiChar;
+  Base, Ptr, MappedBase: PAnsiChar;
   ARes: TJclClrResourceRecord;
 begin
   FResources := TObjectList.Create;
@@ -1686,7 +1684,8 @@ begin
     Ptr := Base;
     while DWORD(Ptr - Base) < Size do
     begin
-      ARes := TJclClrResourceRecord.Create(Ptr, Ptr - Base, Ptr - Image.LoadedImage.MappedAddress);
+      MappedBase := PAnsiChar(Image.LoadedImage.MappedAddress);
+      ARes := TJclClrResourceRecord.Create(Ptr, Ptr - Base, Ptr - MappedBase);
       FResources.Add(ARes);
       Ptr := PAnsiChar(ARes.Memory) + ARes.Size;
     end;

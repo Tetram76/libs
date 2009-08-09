@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-11-04 16:09:48 +0100 (mar., 04 nov. 2008)                      $ }
-{ Revision:      $Rev:: 2552                                                                     $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                     $ }
+{ Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -120,9 +120,11 @@ function CharIsAmpersand(const C: Char): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/versioncontrol/JclVersionControlImpl.pas $';
-    Revision: '$Revision: 2552 $';
-    Date: '$Date: 2008-11-04 16:09:48 +0100 (mar., 04 nov. 2008) $';
-    LogPath: 'JCL\experts\versioncontrol'
+    Revision: '$Revision: 2914 $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    LogPath: 'JCL\experts\versioncontrol';
+    Extra: '';
+    Data: nil
     );
 {$ENDIF UNITVERSIONING}
 
@@ -637,7 +639,6 @@ var
   AOTAModule: IOTAModule;
 begin
   AOTAModule := GetOTAModuleServices.CurrentModule;
-  {$IFDEF COMPILER6_UP}
   //SC  20/03/2007
   if Assigned(AOTAModule) and Assigned(AOTAModule.CurrentEditor) then
   begin
@@ -646,7 +647,6 @@ begin
   end
   //SC  20/03/2007
   else
-  {$ENDIF COMPILER6_UP}
   if Assigned(AOTAModule) and (AOTAModule.FileSystem = '') then
     Result := AOTAModule.FileName
   else
