@@ -954,12 +954,12 @@ end;
 
 function IsToogleKey(nVirtKey: Integer): Boolean;
 begin
-  Result := Bool(Lo(GetKeyState(nVirtKey)));
+  Result := Bool(Lo(GetAsyncKeyState(nVirtKey)));
 end;
 
 function IsDownKey(nVirtKey: Integer): Boolean;
 begin
-  Result := Bool(Hi(GetKeyState(nVirtKey)));
+  Result := Bool(Hi(GetAsyncKeyState(nVirtKey)));
 end;
 
 function ValidFileName(const FileName: string): string;
