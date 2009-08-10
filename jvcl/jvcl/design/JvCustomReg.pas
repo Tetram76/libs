@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCustomReg.pas 12020 2008-11-02 19:30:16Z ahuser $
+// $Id: JvCustomReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvCustomReg;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   Classes, ImgList,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   FiltEdit,
   {$IFNDEF COMPILER7_UP}
   ExptIntf,

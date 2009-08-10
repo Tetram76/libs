@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Graphics.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvInterpreter_Graphics.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvInterpreter_Graphics;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Graphics.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1774,13 +1774,11 @@ begin
     AddConst(cGraphics, 'cl3DLight', cl3DLight);
     AddConst(cGraphics, 'clInfoText', clInfoText);
     AddConst(cGraphics, 'clInfoBk', clInfoBk);
-    {$IFDEF COMPILER6_UP}
     AddConst(cGraphics, 'clHotLight', clHotLight);
     AddConst(cGraphics, 'clGradientActiveCaption', clGradientActiveCaption);
     AddConst(cGraphics, 'clGradientInactiveCaption', clGradientInactiveCaption);
     AddConst(cGraphics, 'clMenuHighlight', clMenuHighlight);
     AddConst(cGraphics, 'clMenuBar', clMenuBar);
-    {$ENDIF COMPILER6_UP}
 
     AddConst(cGraphics, 'clBlack', clBlack);
     AddConst(cGraphics, 'clMaroon', clMaroon);
@@ -1801,12 +1799,10 @@ begin
     AddConst(cGraphics, 'clDkGray', clDkGray);
     AddConst(cGraphics, 'clWhite', clWhite);
 
-    {$IFDEF COMPILER6_UP}
     AddConst(cGraphics, 'clMoneyGreen', clMoneyGreen);
     AddConst(cGraphics, 'clSkyBlue', clSkyBlue);
     AddConst(cGraphics, 'clCream', clCream);
     AddConst(cGraphics, 'clMedGray', clMedGray);
-    {$ENDIF COMPILER6_UP}
 
     AddConst(cGraphics, 'clNone', clNone);
     AddConst(cGraphics, 'clDefault', clDefault);

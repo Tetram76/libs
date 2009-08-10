@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActions.pas 12349 2009-06-28 16:05:18Z jfudickar $
+// $Id: JvDBActions.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBActions;
 
@@ -522,8 +522,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActions.pas $';
-    Revision: '$Revision: 12349 $';
-    Date: '$Date: 2009-06-28 18:05:18 +0200 (dim., 28 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -531,10 +531,7 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo,
-  {$IFDEF HAS_UNIT_STRUTILS}
-  StrUtils,
-  {$ENDIF HAS_UNIT_STRUTILS}
+  SysUtils, Grids, TypInfo, StrUtils,
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXGRID}
   cxGrid, cxGridDBDataDefinitions,
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
@@ -549,10 +546,7 @@ uses
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
   JvResources, JvParameterList, JvParameterListParameter,
   JvDSADialogs,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  Dialogs, StdCtrls, Clipbrd, JvJVCLUtils;
+  Variants, Dialogs, StdCtrls, Clipbrd, JvJVCLUtils;
 
 //=== { TJvDatabaseActionList } ==============================================
 

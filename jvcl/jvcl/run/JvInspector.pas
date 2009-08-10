@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvInspector.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvInspector;
 
@@ -2072,8 +2072,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2081,19 +2081,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_RTLCONSTS}
-  RTLConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
-  {$IFDEF HAS_UNIT_STRUTILS}
-  StrUtils,
-  {$ENDIF HAS_UNIT_STRUTILS}
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  Consts, Dialogs, Forms, Buttons,
+  RTLConsts, Types, StrUtils, Variants, Consts, Dialogs, Forms, Buttons,
   JclRTTI, JclLogic, JclStrings,
   JvJCLUtils, JvThemes, JvResources;
 
@@ -5430,9 +5418,6 @@ var
   TempList: TList;
   I: Integer;
   Item: TJvCustomInspectorItem;
-  {$IFDEF COMPILER5}
-  J: Integer;
-  {$ENDIF COMPILER5}
 begin
   TempList := TList.Create;
   try
@@ -5447,13 +5432,7 @@ begin
       else
       begin
         Item.BuildDisplayableList(TempList);
-        {$IFDEF COMPILER5}
-        for J := 0 to TempList.Count - 1 do
-          if ItemList.IndexOf(TempList[J]) = -1 then
-            ItemList.Add(TempList[J]);
-        {$ELSE}
         ItemList.Assign(TempList, laOr);
-        {$ENDIF COMPILER5}
         TempList.Clear;
       end;
       Inc(I);

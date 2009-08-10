@@ -41,7 +41,7 @@ Contributor(s):
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvTimerList.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvTimerList.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvTimerList;
 
@@ -54,7 +54,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Messages, SysUtils, Classes, JvVCL5Utils;
+  Windows, Messages, SysUtils, Classes;
 
 const
   DefaultInterval = 1000;
@@ -167,8 +167,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimerList.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -584,9 +584,7 @@ end;
 procedure TJvTimerEvents.Notify(Item: TCollectionItem;
   Action: TCollectionNotification);
 begin
-  {$IFDEF COMPILER6_UP}
   inherited Notify(Item, Action);
-  {$ENDIF COMPILER6_UP}
   if Action = cnAdded then
     with TJvTimerEvent(Item) do
     begin

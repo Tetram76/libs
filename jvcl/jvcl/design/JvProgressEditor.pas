@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProgressEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvProgressEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvProgressEditor;
 
@@ -32,11 +32,7 @@ interface
 uses
   Classes, SysUtils,
   Windows, Controls, Forms,
-  {$IFDEF COMPILER6_UP}
   VCLEditors, RTLConsts, DesignIntf, DesignEditors;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvProgressControlProperty = class(TComponentProperty)

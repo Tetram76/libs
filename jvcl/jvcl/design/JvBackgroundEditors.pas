@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBackgroundEditors.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvBackgroundEditors.pas 12441 2009-08-09 17:36:46Z outchy $
 
 unit JvBackgroundEditors;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   Classes,
-  {$IFDEF RTL140_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF RTL140_UP}
   JvBackgrounds, JvBackgroundEditForm;
 
 type
@@ -82,11 +78,7 @@ begin
   Editor := TJvBackgroundClientsEditor.Create(nil);
   try
     Clients := TJvBackgroundClients(GetOrdValue);
-    {$IFDEF RTL140_UP}
     EditorAddControl(Designer.Root.Name);
-    {$ELSE}
-    EditorAddControl(Designer.GetRoot.Name);
-    {$ENDIF RTL140_UP}
     Proc := EditorAddControl;
     Designer.GetComponentNames(GetTypeData(TWinControl.ClassInfo), Proc);
     Editor.SetButtons;

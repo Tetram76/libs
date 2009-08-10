@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvForth.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvForth.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvForth;
 
@@ -38,10 +38,7 @@ uses
   {$IFDEF MSWINDOWS}
   ShellAPI,
   {$ENDIF MSWINDOWS}
-  Windows, Messages, Forms, Dialogs, FileCtrl,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
+  Windows, Messages, Forms, Dialogs, FileCtrl, Variants,
   JvXMLTree, JvComponentBase, JvStrings, JvTypes;
 
 const
@@ -350,8 +347,8 @@ procedure Launch(const AFile: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvForth.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWinampLabel.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvWinampLabel.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvWinampLabel;
 
@@ -34,10 +34,10 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, Windows, Messages, Graphics, Controls, StdCtrls,
-  JvExStdCtrls;
+  JvExStdCtrls, JvThread;
 
 type
-  TJvWinampThread = class(TThread)
+  TJvWinampThread = class(TJvPausableThread)
   protected
     procedure Draw;
     procedure Execute; override;
@@ -128,8 +128,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWinampLabel.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -161,8 +161,15 @@ begin
   try
     while not Terminated do
     begin
-      // (rom) all other threads of this kind draw first then sleep
-      Synchronize(Draw);
+      EnterUnpauseableSection;
+      try
+        if Terminated then
+          Exit;
+
+        Synchronize(Draw);
+      finally
+        LeaveUnpauseableSection;
+      end;
       Sleep(FDelay);
     end;
   except
@@ -206,16 +213,9 @@ end;
 
 destructor TJvWinampLabel.Destroy;
 begin
-  Deactivate;
+  FTimer.Free;
   FBitmap.Free;
   FPicture.Free;
-  FTimer.Free;
-  {  //-----------------
-    FTimer.Terminate;
-    while (not FTimer.Terminated) do
-      Application.ProcessMessages;
-    FTimer.Free;
-    //-------------------}
   inherited Destroy;
 end;
 
@@ -279,7 +279,7 @@ procedure TJvWinampLabel.Activate;
 begin
   FActive := True;
   if not (csDesigning in ComponentState) then
-    FTimer.Resume;
+    FTimer.Paused := False;
   FTimer.FDelay := FScrollInterval;
   FWaiting := False;
 
@@ -291,13 +291,18 @@ end;
 procedure TJvWinampLabel.Deactivate;
 begin
   if not (csDesigning in ComponentState) then
-    FTimer.Suspend;
+    FTimer.Paused := True;
   FActive := False;
   Invalidate;
 end;
 
 procedure TJvWinampLabel.DoOnTimer(Sender: TObject);
 begin
+  // Must exit because we are "Synchronized" and our parent is already
+  // partly destroyed. If we did not exit, we would get an AV.
+  if csDestroying in ComponentState then
+    Exit;
+
   if FWaiting then
   begin
     FTimer.FDelay := FScrollInterval;

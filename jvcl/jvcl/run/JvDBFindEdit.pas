@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBFindEdit.pas 12297 2009-04-29 17:02:25Z obones $
+// $Id: JvDBFindEdit.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBFindEdit;
 
@@ -89,12 +89,10 @@ type
     property Constraints;
     property DragCursor;
     property Enabled;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property Flat;
     property ParentFlat;
     property Font;
@@ -134,8 +132,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBFindEdit.pas $';
-    Revision: '$Revision: 12297 $';
-    Date: '$Date: 2009-04-29 19:02:25 +0200 (mer., 29 avr. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

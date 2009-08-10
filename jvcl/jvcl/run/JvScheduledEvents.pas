@@ -1,4 +1,4 @@
-{-----------------------------------------------------------------------------
+﻿{-----------------------------------------------------------------------------
 
  Project JEDI Visible Component Library (J-VCL)
 
@@ -23,7 +23,7 @@
  You may retrieve the latest version of this file at the Project JEDI home
  page, located at http://www.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvScheduledEvents.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvScheduledEvents.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvScheduledEvents;
 
@@ -241,14 +241,6 @@ type
       const Hrs: Word = 0; const Days: Word = 0);
     procedure Start;
     procedure Stop;
-    // Persisting schedules: deprecated as of 2002/11/30
-    // (rom) deleted for JVCL 2.1
-    (*
-    procedure LoadFromStreamBin(const S: TStream);
-      {$IFDEF COMPILER6_UP} deprecated; {$ENDIF}
-    procedure SaveToStreamBin(const S: TStream);
-      {$IFDEF COMPILER6_UP} deprecated; {$ENDIF}
-    *)
     property Data: Pointer read FData write FData;
     property LastSnoozeInterval: TSystemTime read FLastSnoozeInterval;
     property NextFire: TTimeStamp read GetNextFire;
@@ -267,8 +259,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScheduledEvents.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -390,7 +382,7 @@ begin
     begin
       FEventComponents.Add(AComp);
       if Suspended then
-        Resume;
+        Suspended := False;
     end;
   finally
     FCritSect.Leave;
@@ -430,7 +422,7 @@ begin
   begin
     if GScheduleThread.Suspended then
     begin
-      GScheduleThread.Resume;
+      GScheduleThread.Suspended := False;
       // In order for the thread to actually start (and respond to Terminate)
       // we must indicate to the system that we want to be paused. This way
       // the thread can start and will start working.
@@ -835,12 +827,8 @@ begin
       DoEndEvent(TJvEventCollectionItem(WParam));
       Result := 1;
     except
-      {$IFDEF COMPILER6_UP}
       if Assigned(ApplicationHandleException) then
         ApplicationHandleException(Self);
-      {$ELSE}
-      Application.HandleException(Self);
-      {$ENDIF COMPILER6_UP}
     end
 end;
 

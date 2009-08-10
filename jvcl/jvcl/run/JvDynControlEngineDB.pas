@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDB.pas 12351 2009-06-28 17:13:38Z jfudickar $
+// $Id: JvDynControlEngineDB.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDynControlEngineDB;
 
@@ -153,8 +153,8 @@ function DefaultDynControlEngineDB: TJvDynControlEngineDB;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDB.pas $';
-    Revision: '$Revision: 12351 $';
-    Date: '$Date: 2009-06-28 19:13:38 +0200 (dim., 28 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -162,11 +162,8 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils, TypInfo,
-  JvResources, JvTypes, JvVCL5Utils, JvDynControlEngineIntf, JvDynControlEngineVCLDB;
+  Variants, SysUtils, TypInfo,
+  JvResources, JvTypes, JvDynControlEngineIntf, JvDynControlEngineVCLDB;
 
 var
   GlobalDefaultDynControlEngineDB: TJvDynControlEngineDB = nil;
@@ -298,8 +295,7 @@ begin
       Result := jctDBDateEdit;
     ftTime:
       Result := jctDBTimeEdit;
-    ftDateTime 
-      {$IFDEF COMPILER6_UP}, ftTimestamp{$ENDIF COMPILER6_UP} 
+    ftDateTime, ftTimestamp 
       {$IFDEF COMPILER10_UP}, ftOraTimestamp{$ENDIF COMPILER10_UP}:
       Result := jctDBDateTimeEdit;
     ftBoolean:

@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCxDB.pas 11456 2007-08-13 23:48:41Z jfudickar $
+// $Id: JvDynControlEngineDevExpCxDB.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDynControlEngineDevExpCxDB;
 
@@ -590,8 +590,8 @@ procedure SetDefaultDynControlEngineDBDevExp;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCxDB.pas $';
-    Revision: '$Revision: 11456 $';
-    Date: '$Date: 2007-08-14 01:48:41 +0200 (mar., 14 août 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -599,17 +599,14 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils, TypInfo,
+  Variants, SysUtils, TypInfo,
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
   cxTextEdit, cxMaskEdit, cxRadioGroup, cxDropDownEdit, cxDBRichEdit,
   cxEdit, cxTimeEdit, cxDBLookupComboBox, cxMemo, cxCheckbox,
   cxGridTableView, cxGridCustomView,
   cxGrid, cxGridCustomTableView, cxGridDBDataDefinitions,
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
-  JvDynControlEngineTools, JvConsts, JvJCLUtils, JvVCL5Utils;
+  JvDynControlEngineTools, JvConsts, JvJCLUtils;
 
 {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
 
@@ -1808,9 +1805,7 @@ end;
 
 procedure TJvDynControlCxDBImage.ControlSetProportional(Value: Boolean);
 begin
-  {$IFDEF COMPILER6_UP}
   //  Proportional := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 

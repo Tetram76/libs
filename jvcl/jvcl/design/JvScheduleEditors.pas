@@ -17,7 +17,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScheduleEditors.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvScheduleEditors.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvScheduleEditors;
 
@@ -27,11 +27,7 @@ interface
 
 uses
   SysUtils, Classes,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvScheduleEditorForm, JvScheduledEvents;
 
 type

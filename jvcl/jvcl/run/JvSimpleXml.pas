@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues: This component does not parse the !DOCTYPE tags but preserves them
 -----------------------------------------------------------------------------}
-// $Id: JvSimpleXml.pas 12413 2009-07-30 09:59:33Z outchy $
+// $Id: JvSimpleXml.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSimpleXml;
 
@@ -34,11 +34,7 @@ uses
   {$IFDEF MSWINDOWS}
   Windows, // Delphi 2005 inline
   {$ENDIF MSWINDOWS}
-  SysUtils,
-  Classes,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
+  SysUtils, Classes, Variants,
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -157,19 +153,14 @@ type
     property OnDecodeStream: TJvSimpleXMLEncodeStreamEvent read GetOnDecodeStream write SetOnDecodeStream;
   end;
 
-{$IFDEF COMPILER6_UP}
 type
   TXMLVariant = JclSimpleXml.TXMLVariant {$IFDEF COMPILER8_UP} deprecated {$IFDEF SUPPORTS_DEPRECATED_DETAILS} 'Use JclSimpleXml.TXMLVariant' {$ENDIF} {$ENDIF COMPILER8_UP};
-
-  TXMLVarData = JclSimpleXML.TXMLVarData {$IFDEF COMPILER8_UP} deprecated {$IFDEF SUPPORTS_DEPRECATED_DETAILS} 'Use JclSimpleXML.TXMLVarData' {$ENDIF} {$ENDIF COMPILER8_UP};
 
 procedure XMLCreateInto(var ADest: Variant; const AXML: TJvSimpleXMLElem); deprecated {$IFDEF SUPPORTS_DEPRECATED_DETAILS} 'Use JclSimpleXml.XMLCreateInto' {$ENDIF};
 function XMLCreate(const AXML: TJvSimpleXMLElem): Variant; overload; deprecated {$IFDEF SUPPORTS_DEPRECATED_DETAILS} 'Use JclSimpleXml.XMLCreate' {$ENDIF};
 function XMLCreate: Variant; overload; deprecated {$IFDEF SUPPORTS_DEPRECATED_DETAILS} 'Use JclSimpleXml.XMLCreate' {$ENDIF};
 
 function VarXML: TVarType; deprecated {$IFDEF SUPPORTS_DEPRECATED_DETAILS} 'Use JclSimpleXml.VarXML' {$ENDIF};
-
-{$ENDIF COMPILER6_UP}
 
 // Encodes a string into an internal format:
 // any character <= #127 is preserved
@@ -195,8 +186,8 @@ function EntityDecode(const S: string): string; {$IFDEF SUPPORTS_DEPRECATED} dep
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimpleXml.pas $';
-    Revision: '$Revision: 12413 $';
-    Date: '$Date: 2009-07-30 11:59:33 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -234,8 +225,6 @@ begin
   JclSimpleXml.SimpleXMLDecode(Result, False);
 end;
 
-{$IFDEF COMPILER6_UP}
-
 function VarXML: TVarType;
 begin
   Result := JclSimpleXml.VarXML;
@@ -255,8 +244,6 @@ function XMLCreate: Variant;
 begin
   Result := JclSimpleXml.XMLCreate;
 end;
-
-{$ENDIF COMPILER6_UP}
 
 //=== { TJvSimpleXML } =======================================================
 

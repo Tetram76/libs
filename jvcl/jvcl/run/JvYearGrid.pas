@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvYearGrid.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvYearGrid.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvYearGrid;
 
@@ -42,9 +42,7 @@ uses
   JvJVCLUtils, JvTypes,
   SysUtils, StdCtrls, Classes;
 
-{$IFDEF COMPILER6_UP}
 {$DEFINE USECUSTOMGRID}
-{$ENDIF COMPILER6_UP}
 
 const
   JvDefaultBorderColor = TColor($EEF5FF);
@@ -274,8 +272,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvYearGrid.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

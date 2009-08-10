@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreterReg.pas 11601 2007-12-15 13:55:52Z ahuser $
+// $Id: JvInterpreterReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvInterpreterReg;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   Classes,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts, JvDsgnConfig,
   JvInterpreterParser, JvInterpreter, JvInterpreter_all,
   JvInterpreter_Buttons, JvInterpreter_Classes,

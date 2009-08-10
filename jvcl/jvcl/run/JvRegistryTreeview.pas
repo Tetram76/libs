@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRegistryTreeview.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvRegistryTreeview.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvRegistryTreeView;
 
@@ -134,11 +134,7 @@ type
     property OnChanging;
     property OnChange;
     property OnCompare;
-    //PRY 2002.06.04
-    {$IFDEF COMPILER6_UP}
     property OnAddition;
-    {$ENDIF COMPILER6_UP}
-    // PRY END
     property OnDeletion;
     property OnGetImageIndex;
     property OnGetSelectedIndex;
@@ -148,8 +144,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRegistryTreeview.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

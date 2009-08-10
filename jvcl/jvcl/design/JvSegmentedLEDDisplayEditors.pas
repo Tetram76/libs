@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSegmentedLEDDisplayEditors.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvSegmentedLEDDisplayEditors.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSegmentedLEDDisplayEditors;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   Classes, Graphics, Menus, Windows,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf, DesignMenus, VCLEditors, 
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvColorEditor, JvSegmentedLEDDisplay;
 
 type
@@ -60,27 +56,19 @@ type
     procedure ExecuteVerb(Index: Integer); override;
     function GetVerb(Index: Integer): string; override;
     function GetVerbCount: Integer; override;
-    {$IFDEF COMPILER6_UP}
     procedure PrepareItem(Index: Integer; const AItem: IMenuItem); override;
-    {$ELSE}
-    procedure PrepareItem(Index: Integer; const AItem: TMenuItem); override;
-    {$ENDIF COMPILER6_UP}
   end;
 
-  TJvUnlitColorProperty = class(TColorProperty {$IFDEF COMPILER6_UP}, ICustomPropertyDrawing, ICustomPropertyListDrawing {$ENDIF})
-    {$IFDEF COMPILER6_UP}
+  TJvUnlitColorProperty = class(TColorProperty, ICustomPropertyDrawing, ICustomPropertyListDrawing)
     procedure ICustomPropertyListDrawing.ListDrawValue = ListDrawValue;
     procedure ICustomPropertyDrawing.PropDrawValue = PropDrawValue;
-    {$ENDIF COMPILER6_UP}
   public
     function GetValue: string; override;
     procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const Value: string); override;
     procedure ListDrawValue(const Value: string; ACanvas: TCanvas;
-      const ARect: TRect; ASelected: Boolean); {$IFDEF COMPILER5} override; {$ENDIF}
-    {$IFDEF COMPILER6_UP}
+      const ARect: TRect; ASelected: Boolean); 
     procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect; ASelected: Boolean);
-    {$ENDIF COMPILER6_UP}
   end;
 
 implementation
@@ -181,11 +169,7 @@ begin
   Result := 4;
 end;
 
-{$IFDEF COMPILER6_UP}
 procedure TJvSegmentedLEDDisplayEditor.PrepareItem(Index: Integer; const AItem: IMenuItem);
-{$ELSE}
-procedure TJvSegmentedLEDDisplayEditor.PrepareItem(Index: Integer; const AItem: TMenuItem);
-{$ENDIF COMPILER6_UP}
 begin
   if (Index = 1) and (DigitCount = 0) then
     AItem.Enabled := False;
@@ -251,7 +235,6 @@ begin
     end;
 end;
 
-{$IFDEF COMPILER6_UP}
 procedure TJvUnlitColorProperty.PropDrawValue(ACanvas: TCanvas; const ARect: TRect;
   ASelected: Boolean);
 begin
@@ -260,6 +243,5 @@ begin
   else
     DefaultPropertyDrawValue(Self, ACanvas, ARect);
 end;
-{$ENDIF COMPILER6_UP}
 
 end.

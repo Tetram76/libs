@@ -36,7 +36,7 @@ Known Issues:
       DateAndTime := JvDateTimePicker1.NullDate;
 
 -----------------------------------------------------------------------------}
-// $Id: JvDateTimePicker.pas 12386 2009-07-08 13:47:38Z obones $
+// $Id: JvDateTimePicker.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDateTimePicker;
 
@@ -61,10 +61,6 @@ type
     FKeepNullText: string;
     FShowTodayCircle: Boolean;
     FShowToday: Boolean;
-    {$IFDEF COMPILER5}
-    FFormat: string;
-    procedure SetFormat(const Value: string);
-    {$ENDIF COMPILER5}
     procedure CNNotify(var Msg: TWMNotify); message CN_NOTIFY;
     procedure SetNullDate(const Value: TDateTime);
     procedure SetNullText(const Value: string);
@@ -80,9 +76,6 @@ type
     constructor Create(AOwner: TComponent); override;
   published
     property AutoSize;
-    {$IFDEF COMPILER5}
-    property Format: string read FFormat write SetFormat;
-    {$ENDIF COMPILER5}
     // The initial date to display when the drop-down calendar is shown and NullDate = Date/Time
     property DropDownDate: TDate read FDropDownDate write FDropDownDate;
     // The Date/Time (depending on the Kind property) that represents an empty "null" value, default is 1899-12-31
@@ -102,8 +95,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDateTimePicker.pas $';
-    Revision: '$Revision: 12386 $';
-    Date: '$Date: 2009-07-08 15:47:38 +0200 (mer., 08 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -115,7 +108,6 @@ uses
   {$IFDEF HAS_TYPES}
   Types,
   {$ENDIF HAS_TYPES}
-  JvVCL5Utils,
 //  JvJCLUtils,
   JvResources;
 
@@ -199,17 +191,6 @@ begin
     CheckNullValue;
   end;
 end;
-
-{$IFDEF COMPILER5}
-procedure TJvDateTimePicker.SetFormat(const Value: string);
-begin
-  if FFormat <> Value then
-  begin
-    FFormat := Value;
-    CheckNullValue;
-  end;
-end;
-{$ENDIF COMPILER5}
 
 function TJvDateTimePicker.MsgSetDateTime(Value: TSystemTime): Boolean;
 begin

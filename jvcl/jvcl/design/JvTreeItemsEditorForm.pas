@@ -26,7 +26,7 @@ Changes:
   Drawing of State images differs from normal images since they are 1-based:
   the 0-th item for the state imagelist isn't drawn to alert the user to this fact
 -----------------------------------------------------------------------------}
-// $Id: JvTreeItemsEditorForm.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvTreeItemsEditorForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvTreeItemsEditorForm;
 
@@ -36,11 +36,7 @@ interface
 
 uses
   SysUtils, Classes,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   Windows, Messages, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, ActnList, ComCtrls, Menus, StdActns;
 

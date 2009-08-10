@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStatusBar.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvStatusBar.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvStatusBar;
 
@@ -39,7 +39,6 @@ uses
   JVCLVer, JvExComCtrls;
 
 type
-  {$IFDEF COMPILER6_UP}
   TJvStatusPanel = class(TStatusPanel)
   private
     FAboutJVCL: TJVCLAboutInfo;
@@ -59,14 +58,6 @@ type
     property MarginLeft: Integer read FMarginLeft write SetMarginLeft default 3;
     property MarginTop: Integer read FMarginTop write SetMarginTop default 3;
   end;
-  {$ELSE}
-  TJvStatusPanel = class(TStatusPanel)
-  private
-    FAboutJVCL: TJVCLAboutInfo;
-  published
-    property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-  end;
-  {$ENDIF COMPILER6_UP}
 
   TJvStatusBar = class(TJvExStatusBar)
   private
@@ -76,12 +67,10 @@ type
   protected
     procedure BoundsChanged; override;
     procedure CreateParams(var Params: TCreateParams); override;
-    {$IFDEF COMPILER6_UP}
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure MovePanelControls;
     function GetPanelClass: TStatusPanelClass;  override;
     procedure SBSetParts(var msg: TMessage); message SB_SETPARTS;
-    {$ENDIF COMPILER6_UP}
   public
     constructor Create(AOwner: TComponent); override;
     function ExecuteAction(Action: TBasicAction): Boolean; override;
@@ -99,8 +88,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStatusBar.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -123,9 +112,7 @@ procedure TJvStatusBar.BoundsChanged;
 begin
   inherited BoundsChanged;
   Realign;
-  {$IFDEF COMPILER6_UP}
   MovePanelControls;
-  {$ENDIF COMPILER6_UP}
 end;
 
 
@@ -217,8 +204,6 @@ begin
   end;
 end;
 
-{$IFDEF COMPILER6_UP}
-
 procedure TJvStatusBar.Notification(AComponent: TComponent; Operation: TOperation);
 var
   I: Integer;
@@ -259,11 +244,7 @@ begin
   MovePanelControls;
 end;
 
-{$ENDIF COMPILER6_UP}
-
 //=== { TJvStatusPanel } =====================================================
-
-{$IFDEF COMPILER6_UP}
 
 type
   TStatusPanelsAccessProtected = class(TStatusPanels);
@@ -323,8 +304,6 @@ begin
     Changed(False);
   end;
 end;
-
-{$ENDIF COMPILER6_UP}
 
 {$IFDEF UNITVERSIONING}
 initialization

@@ -42,7 +42,7 @@ Changes 2003-03-23:
      - ImageOffset: change to ImageOptions.Offset // peter3
 
 -----------------------------------------------------------------------------}
-// $Id: JvRollOut.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvRollOut.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvRollOut;
 
@@ -294,8 +294,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRollOut.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1158,7 +1158,6 @@ begin
   Result := inherited Execute;
   if Result then
   begin
-    {$IFDEF COMPILER6_UP}
     if ActionComponent is TJvCustomRollOut then
     begin
       if LinkCheckedToCollapsed then
@@ -1167,7 +1166,6 @@ begin
         TJvCustomRollOut(ActionComponent).Collapsed := not TJvCustomRollOut(ActionComponent).Collapsed;
     end
     else
-    {$ENDIF COMPILER6_UP}
     if RollOut <> nil then
     begin
       if LinkCheckedToCollapsed then
@@ -1222,10 +1220,8 @@ begin
       if RollOut <> nil then
         RollOut.Collapsed := not Checked
       else
-      {$IFDEF COMPILER6_UP}
       if ActionComponent is TJvCustomRollOut then
         TJvCustomRollOut(ActionComponent).Collapsed := not Checked;
-      {$ENDIF COMPILER6_UP}
     end;
   end;
 end;

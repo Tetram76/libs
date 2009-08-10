@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidatorsReg.pas 11550 2007-10-30 22:16:29Z peter3 $
+// $Id: JvValidatorsReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvValidatorsReg;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   Classes,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   JvErrorIndicator, JvValidators, JvValidatorsEditorForm, JvDsgnEditors;
 
@@ -60,12 +56,6 @@ begin
     'PropertyToValidate', TJvPropertyValidateProperty);
   RegisterPropertyEditor(TypeInfo(string), TJvBaseValidator,
     'CompareToProperty', TJvPropertyToCompareProperty);
-  {$IFDEF COMPILER5}
-  RegisterPropertyEditor(TypeInfo(TComponent), TComponent,
-    'ValidationSummary', TJvValidationSummaryProperty);
-  RegisterPropertyEditor(TypeInfo(TComponent), TComponent,
-    'ErrorIndicator', TJvErrorIndicatorProperty);
-  {$ENDIF COMPILER5}
 end;
 
 end.

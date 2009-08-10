@@ -34,7 +34,7 @@ History:
     * Rewritten almost everything.
 
 -----------------------------------------------------------------------------}
-// $Id: JvThreadTimer.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvThreadTimer.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvThreadTimer;
 
@@ -94,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadTimer.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -104,10 +104,6 @@ implementation
 
 uses
   Messages,
-  {$IFDEF COMPILER5}
-  Forms, // Application.HandleException
-  {$ENDIF COMPILER5}
-  JvVCL5Utils,
   JvJCLUtils;
 
 type
@@ -242,12 +238,8 @@ begin
     if Assigned(FOnTimer) then
       FOnTimer(Self);
   except
-    {$IFDEF COMPILER6_UP}
     if Assigned(ApplicationHandleException) then
       ApplicationHandleException(Self);
-    {$ELSE}
-    Application.HandleException(Self);
-    {$ENDIF COMPILER6_UP}
   end;
 end;
 

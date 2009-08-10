@@ -22,7 +22,7 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmCompileMessages.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: FrmCompileMessages.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit FrmCompileMessages;
 
@@ -265,16 +265,9 @@ begin
       W := TextWidth(Item.Msg);
     end;
 
-    {$IFDEF COMPILER6_UP}
     MaxW := 2 + ListBox.ClientWidth + 2;
     if (W > MaxW) and (W - MaxW > ListBox.ScrollWidth) then
       ListBox.ScrollWidth := W - MaxW;
-    {$ELSE}
-    // this code's purpose is to prevent the Delphi 5 compiler hint
-    MaxW := W;
-    if MaxW <> -1 then
-      ;
-    {$ENDIF COMPILER6_UP}
   end;
 end;
 

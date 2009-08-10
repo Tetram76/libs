@@ -96,7 +96,7 @@ Maciej Kaczkowski:
       when alignement is not left (need to rebuild the ItemHTDrawEx draw
       function)
 -----------------------------------------------------------------------------}
-// $Id: JvHtControls.pas 11822 2008-06-29 13:33:03Z ahuser $
+// $Id: JvHtControls.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvHtControls;
 
@@ -112,7 +112,6 @@ uses
   {$IFDEF MSWINDOWS}
   ShellAPI,
   {$ENDIF MSWINDOWS}
-  JvVCL5Utils,
   Windows, Messages, Graphics, Contnrs, Controls, StdCtrls, Dialogs,
   JvJVCLUtils, JvExStdCtrls, JvDataSourceIntf;
 
@@ -399,8 +398,8 @@ function PrepareText(const A: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHtControls.pas $';
-    Revision: '$Revision: 11822 $';
-    Date: '$Date: 2008-06-29 15:33:03 +0200 (dim., 29 juin 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

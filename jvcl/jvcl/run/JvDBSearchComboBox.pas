@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBSearchComboBox.pas 12168 2009-01-25 15:31:02Z ahuser $
+// $Id: JvDBSearchComboBox.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBSearchComboBox;
 
@@ -130,13 +130,11 @@ type
     property Anchors;
     property AutoComplete default True;
     property AutoSize;
-    {$IFDEF COMPILER6_UP}
     property AutoDropDown default False;
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property BiDiMode;
     property CharCase;
     property Constraints;
@@ -162,9 +160,7 @@ type
     property Visible;
     property OnChange;
     property OnClick;
-    {$IFDEF COMPILER6_UP}
     property OnCloseUp;
-    {$ENDIF COMPILER6_UP}
     property OnContextPopup;
     property OnDblClick;
     property OnDragDrop;
@@ -178,9 +174,7 @@ type
     property OnKeyPress;
     property OnKeyUp;
     property OnMeasureItem;
-    {$IFDEF COMPILER6_UP}
     property OnSelect;
-    {$ENDIF COMPILER6_UP}
     property OnMouseEnter;
     property OnMouseLeave;
     property OnParentColorChange;
@@ -190,8 +184,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSearchComboBox.pas $';
-    Revision: '$Revision: 12168 $';
-    Date: '$Date: 2009-01-25 16:31:02 +0100 (dim., 25 janv. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -199,10 +193,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils;
+  Variants, SysUtils;
 
 {$IFDEF COMPILER_GENERICS_WORKAROUND}
 //=== { TBookmarkList } ======================================================

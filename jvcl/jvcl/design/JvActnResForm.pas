@@ -22,7 +22,7 @@ description :
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActnResForm.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvActnResForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvActnResForm;
 
@@ -32,9 +32,6 @@ interface
 
 uses
   ActnList, ImgList, Controls,
-  {$IFDEF COMPILER5}
-  Forms,
-  {$ENDIF COMPILER5}
   SysUtils, Classes, StdActns,
   JvActions;
 

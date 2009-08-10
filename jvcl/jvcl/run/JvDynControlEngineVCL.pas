@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineVCL.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvDynControlEngineVCL.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDynControlEngineVCL;
 
@@ -35,10 +35,7 @@ uses
   {$IFDEF MSWINDOWS}
   ActnList, Graphics, ComCtrls, ImgList,
   {$ENDIF MSWINDOWS}
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  Classes, Controls, StdCtrls, ExtCtrls, Mask, Forms,
+  Variants, Classes, Controls, StdCtrls, ExtCtrls, Mask, Forms,
   Buttons, Dialogs, FileCtrl, ExtDlgs, CheckLst,
   JvDynControlEngine, JvDynControlEngineIntf;
 
@@ -800,8 +797,8 @@ procedure SetDynControlEngineVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineVCL.pas $';
-    Revision: '$Revision: 12389 $';
-    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1427,10 +1424,8 @@ end;
 
 procedure TJvDynControlVCLDateTimeEdit.ControlSetFormat(const Value: string);
 begin
-  {$IFDEF COMPILER6_UP}
   FDatePicker.Format := Value;
   FTimePicker.Format := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 //=== { TJvDynControlVCLDateEdit } ===========================================
@@ -1501,9 +1496,7 @@ end;
 
 procedure TJvDynControlVCLDateEdit.ControlSetFormat(const Value: string);
 begin
-  {$IFDEF COMPILER6_UP}
   Format := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 //=== { TJvDynControlVCLTimeEdit } ===========================================
@@ -1561,9 +1554,7 @@ end;
 
 procedure TJvDynControlVCLTimeEdit.ControlSetFormat(const Value: string);
 begin
-  {$IFDEF COMPILER6_UP}
   Format := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 
@@ -2103,18 +2094,12 @@ end;
 
 procedure TJvDynControlVCLCheckListBox.ControlSetHeader(Index: Integer; Value: Boolean);
 begin
-  {$IFDEF COMPILER6_UP}
   Header[Index] := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 function TJvDynControlVCLCheckListBox.ControlGetHeader(Index: Integer): Boolean;
 begin
-  {$IFDEF COMPILER6_UP}
   Result := Header[Index];
-  {$ELSE}
-  Result := False;
-  {$ENDIF COMPILER6_UP}
 end;
 
 procedure TJvDynControlVCLCheckListBox.ControlSetState(Index: Integer; Value: TCheckBoxState);
@@ -2423,9 +2408,7 @@ end;
 
 procedure TJvDynControlVCLImage.ControlSetProportional(Value: Boolean);
 begin
-  {$IFDEF COMPILER6_UP}
   Proportional := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 

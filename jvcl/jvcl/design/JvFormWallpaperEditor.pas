@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormWallpaperEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvFormWallpaperEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvFormWallpaperEditor;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, Controls, Forms,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvFormWallpaper;
 
 type

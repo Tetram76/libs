@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActionsEngineFileListBox.pas 11916 2008-09-23 20:42:56Z jfudickar $
+// $Id: JvVersionControlActionsEngineFileListBox.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvVersionControlActionsEngineFileListBox;
 
@@ -55,8 +55,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActionsEngineFileListBox.pas $';
-    Revision: '$Revision: 11916 $';
-    Date: '$Date: 2008-09-23 22:42:56 +0200 (mar., 23 sept. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -64,13 +64,7 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo,
-  {$IFDEF HAS_UNIT_STRUTILS}
-  StrUtils,
-  {$ENDIF HAS_UNIT_STRUTILS}
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
+  SysUtils, Grids, TypInfo, StrUtils, Variants,
   Dialogs, StdCtrls, Clipbrd, FileCtrl;
 
 

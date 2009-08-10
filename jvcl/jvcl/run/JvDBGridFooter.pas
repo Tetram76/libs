@@ -32,7 +32,7 @@ HOW TO USE THIS COMPONENT:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridFooter.pas 12368 2009-07-03 09:57:05Z obones $
+// $Id: JvDBGridFooter.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBGridFooter;
 
@@ -47,10 +47,7 @@ uses
   {$IFDEF MSWINDOWS}
   Windows, // inline
   {$ENDIF MSWINDOWS}
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  Sysutils, Classes, ComCtrls,
+  Variants, Sysutils, Classes, ComCtrls,
   DB, DBGrids, Grids, JvDBGrid;
 
 type
@@ -169,8 +166,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGridFooter.pas $';
-    Revision: '$Revision: 12368 $';
-    Date: '$Date: 2009-07-03 11:57:05 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

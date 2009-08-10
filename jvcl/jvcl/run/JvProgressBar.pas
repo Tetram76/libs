@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProgressBar.pas 11773 2008-03-22 22:55:33Z ahuser $
+// $Id: JvProgressBar.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvProgressBar;
 
@@ -188,11 +188,9 @@ type
     property OnMouseDown;
     property OnMouseMove;
     property OnMouseUp;
-    {$IFDEF COMPILER6_UP}
     property OnMouseWheel;
     property OnMouseWheelDown;
     property OnMouseWheelUp;
-    {$ENDIF COMPILER6_UP}
     property OnStartDrag;
   end;
 
@@ -200,8 +198,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgressBar.pas $';
-    Revision: '$Revision: 11773 $';
-    Date: '$Date: 2008-03-22 23:55:33 +0100 (sam., 22 mars 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

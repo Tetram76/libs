@@ -33,7 +33,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPanel.pas 12263 2009-04-01 23:17:57Z jfudickar $
+// $Id: JvPanel.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvPanel;
 
@@ -338,8 +338,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPanel.pas $';
-    Revision: '$Revision: 12263 $';
-    Date: '$Date: 2009-04-02 01:17:57 +0200 (jeu., 02 avr. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -347,9 +347,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_TYPES}
   Types,
-  {$ENDIF HAS_UNIT_TYPES}
   JvJCLUtils, JvJVCLUtils, JvResources;
 
 const
@@ -891,12 +889,7 @@ begin
 
   if not MouseOver and Enabled and (Control = nil) then
   begin
-    OtherDragging :=
-       {$IFDEF COMPILER6_UP}
-      Mouse.IsDragging;
-       {$ELSE}
-      KeyPressed(VK_LBUTTON);
-      {$ENDIF COMPILER6_UP}
+    OtherDragging := Mouse.IsDragging;
     NeedRepaint := not Transparent and
      ({IsThemed or} (FHotTrack and Enabled and not FDragging and not OtherDragging));
     inherited MouseEnter(Control); // set MouseOver
@@ -914,12 +907,7 @@ var
 begin
   if csDesigning in ComponentState then
     Exit;
-  OtherDragging :=
-     {$IFDEF COMPILER6_UP}
-    Mouse.IsDragging;
-     {$ELSE}
-    KeyPressed(VK_LBUTTON);
-     {$ENDIF COMPILER6_UP}
+  OtherDragging := Mouse.IsDragging;
   if MouseOver and Enabled and (Control = nil) then
   begin
     NeedRepaint := not Transparent and

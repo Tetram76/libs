@@ -26,7 +26,7 @@ Known Issues:
 * This form is used by the TJvDesktopAlert component
 
 -----------------------------------------------------------------------------}
-// $Id: JvDesktopAlertForm.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvDesktopAlertForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDesktopAlertForm;
 
@@ -181,8 +181,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesktopAlertForm.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -515,10 +515,8 @@ begin
             (Width - Images.Width) div 2 + Ord(bsMouseDown in MouseStates),
             (Height - Images.Height) div 2 + Ord(bsMouseDown in MouseStates),
             ImageIndex,
-            {$IFDEF COMPILER6_UP}
             dsTransparent,
             itImage,
-            {$ENDIF COMPILER6_UP}
             Enabled);
         end;
     end;

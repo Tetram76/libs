@@ -23,7 +23,7 @@ Description : JVCL Interpreter version 2
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_System.pas 10901 2006-08-22 12:49:18Z obones $
+// $Id: JvInterpreter_System.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvInterpreter_System;
 
@@ -35,9 +35,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
   JvInterpreter, SysUtils;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -46,8 +44,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_System.pas $';
-    Revision: '$Revision: 10901 $';
-    Date: '$Date: 2006-08-22 14:49:18 +0200 (mar., 22 août 2006) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -648,12 +646,10 @@ begin
     AddConst(cSystem, 'varTypeMask', Ord(varTypeMask));
     AddConst(cSystem, 'varArray', Ord(varArray));
     AddConst(cSystem, 'varByRef', Ord(varByRef));
-    {$IFDEF COMPILER6_UP}
     AddConst(cSystem, 'varShortInt', Ord(varShortInt));
     AddConst(cSystem, 'varWord', Ord(varWord));
     AddConst(cSystem, 'varLongWord', Ord(varLongWord));
     AddConst(cSystem, 'varInt64', Ord(varInt64));
-    {$ENDIF COMPILER6_UP}
   end;
 end;
 

@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBLogonDialog.pas 12376 2009-07-03 21:34:17Z jfudickar $
+// $Id: JvBaseDBLogonDialog.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvBaseDBLogonDialog;
 
@@ -392,8 +392,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBLogonDialog.pas $';
-    Revision: '$Revision: 12376 $';
-    Date: '$Date: 2009-07-03 23:34:17 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -404,11 +404,7 @@ const
 implementation
 
 uses
-  Windows, SysUtils,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
-  ExtCtrls, ComCtrls, StdCtrls, Dialogs,
+  Windows, SysUtils, Types, ExtCtrls, ComCtrls, StdCtrls, Dialogs,
   JvAppIniStorage, JvAppXMLStorage, JvDSADialogs, JvResources;
 
 

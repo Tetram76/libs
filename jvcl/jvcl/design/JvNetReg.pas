@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNetReg.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvNetReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvNetReg;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   Classes,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvRichEditToHTML, JvMail, JvMailEditor,
   JvUrlListGrabber, JvUrlGrabbers, JvUrlListGrabberEditors,JvProgramVersionCheck,
   JvHtmlParser, JvHtmlParserEditor,

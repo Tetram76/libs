@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppletEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvAppletEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvAppletEditor;
 
@@ -32,11 +32,7 @@ interface
 
 uses
   Windows, Classes, Controls, Forms, Dialogs,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvWinDialogs;
 
 type
@@ -60,9 +56,6 @@ implementation
 uses
   SysUtils,
   JclSysInfo,
-  {$IFDEF BCB5}
-  JvVCL5Utils,
-  {$ENDIF BCB5}
   JvJCLUtils, JvJVCLUtils;
 
 var

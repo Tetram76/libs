@@ -34,7 +34,7 @@ Changes:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvChangeNotify.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvChangeNotify.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvChangeNotify;
 
@@ -163,8 +163,8 @@ function ActionsToString(Actions: TJvChangeActions): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChangeNotify.pas $';
-    Revision: '$Revision: 12389 $';
-    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -173,7 +173,7 @@ implementation
 
 uses
   SysUtils,
-  JvVCL5Utils, JvJCLUtils, JvResources;
+  JvJCLUtils, JvResources;
   // JvJCLUtils for DirectoryExists
 
 function ActionsToString(Actions: TJvChangeActions): string;
@@ -195,7 +195,7 @@ end;
 
 //=== { TJvChangeItem } ======================================================
 
-constructor TJvChangeItem.Create(Collection: Classes.TCollection);  // TCollection redefined in JvVCL5Utils
+constructor TJvChangeItem.Create(Collection: TCollection);
 begin
   inherited Create(Collection);
   FParent := TJvChangeItems(Collection);

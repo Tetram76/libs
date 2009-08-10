@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEMemTableEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvBDEMemTableEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvBDEMemTableEditor;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   Classes, DB, SysUtils,
-  {$IFDEF COMPILER6_UP}
   RTLConsts, DesignIntf, DesignEditors, VCLEditors,
-  {$ELSE}
-  LibIntf, DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDBMemDatasetEditor, JvBDEMemTable;
 
 type

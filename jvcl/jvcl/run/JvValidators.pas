@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidators.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvValidators.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvValidators;
 
@@ -41,7 +41,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, SysUtils, Classes, Controls, Forms,
-  JvComponentBase, JvErrorIndicator, JvVCL5Utils;
+  JvComponentBase, JvErrorIndicator;
 
 type
   EValidatorError = class(Exception);
@@ -219,12 +219,6 @@ type
     FItems: TList;
     FValidationSummary: IJvValidationSummary;
     FErrorIndicator: IJvErrorIndicator;
-    {$IFNDEF COMPILER6_UP}
-    FValidationSummaryComponent: TComponent;
-    FErrorIndicatorComponent: TComponent;
-    procedure SetValidationSummaryComponent(Value: TComponent);
-    procedure SetErrorIndicatorComponent(Value: TComponent);
-    {$ENDIF COMPILER6_UP}
     procedure SetValidationSummary(const Value: IJvValidationSummary);
     procedure SetErrorIndicator(const Value: IJvErrorIndicator);
     function GetCount: Integer;
@@ -244,13 +238,8 @@ type
     property Items[Index: Integer]: TJvBaseValidator read GetItem; default;
     property Count: Integer read GetCount;
   published
-    {$IFDEF COMPILER6_UP}
     property ValidationSummary: IJvValidationSummary read FValidationSummary write SetValidationSummary;
     property ErrorIndicator: IJvErrorIndicator read FErrorIndicator write SetErrorIndicator;
-    {$ELSE}
-    property ValidationSummary: TComponent read FValidationSummaryComponent write SetValidationSummaryComponent;
-    property ErrorIndicator: TComponent read FErrorIndicatorComponent write SetErrorIndicatorComponent;
-    {$ENDIF COMPILER6_UP}
     property OnValidateFailed: TJvValidateFailEvent read FOnValidateFailed write FOnValidateFailed;
   end;
 
@@ -284,8 +273,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidators.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -300,9 +289,7 @@ uses
   DBCtrls,
   {$ENDIF JVVALIDATORS_SUPPORTS_DBCONTROLS}
   Masks,
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
   TypInfo,
 //  JclUnicode, // for reg exp support
   JclWideStrings,
@@ -840,17 +827,10 @@ begin
   inherited Notification(AComponent, Operation);
   if Operation = opRemove then
   begin
-    {$IFDEF COMPILER6_UP}
     if Assigned(ValidationSummary) and AComponent.IsImplementorOf(ValidationSummary) then
       ValidationSummary := nil;
     if Assigned(ErrorIndicator) and AComponent.IsImplementorOf(ErrorIndicator) then
       ErrorIndicator := nil;
-    {$ELSE}
-    if ValidationSummary = AComponent then
-      ValidationSummary := nil;
-    if ErrorIndicator = AComponent then
-      ErrorIndicator := nil;
-    {$ENDIF COMPILER6_UP}
   end;
 end;
 
@@ -865,56 +845,10 @@ end;
 
 procedure TJvValidators.SetValidationSummary(const Value: IJvValidationSummary);
 begin
-  {$IFDEF COMPILER6_UP}
   ReferenceInterface(FValidationSummary, opRemove);
   FValidationSummary := Value;
   ReferenceInterface(FValidationSummary, opInsert);
-  {$ELSE}
-  FValidationSummary := Value;
-  {$ENDIF COMPILER6_UP}
 end;
-
-{$IFNDEF COMPILER6_UP}
-
-procedure TJvValidators.SetValidationSummaryComponent(Value: TComponent);
-var
-  Obj: IJvValidationSummary;
-begin
-  if ReplaceComponentReference (Self, Value, TComponent(FValidationSummaryComponent)) then
-  begin
-    if Value = nil then
-    begin
-      SetValidationSummary(nil);
-      Exit;
-    end;
-    if not Supports(Value, IJvValidationSummary, Obj) then
-      raise EValidatorError.CreateResFmt(@RsEInterfaceNotSupported, [Value.Name, 'IJvValidationSummary']);
-    if Value = Self then
-      raise EValidatorError.CreateRes(@RsECircularReference);
-    SetValidationSummary(Obj);
-  end;
-end;
-
-procedure TJvValidators.SetErrorIndicatorComponent(Value: TComponent);
-var
-  Obj: IJvErrorIndicator;
-begin
-  if ReplaceComponentReference (Self, Value, TComponent(FErrorIndicatorComponent)) then
-  begin
-    if Value = nil then
-    begin
-      SetErrorIndicator(nil);
-      Exit;
-    end;
-    if not Supports(Value, IJvErrorIndicator, Obj) then
-      raise EValidatorError.CreateResFmt(@RsEInterfaceNotSupported, [Value.Name, 'IJvErrorIndicator']);
-    if Value = Self then
-      raise EValidatorError.CreateRes(@RsECircularReference);
-    SetErrorIndicator(Obj);
-  end;
-end;
-
-{$ENDIF COMPILER6_UP}
 
 procedure TJvValidators.Insert(AValidator: TJvBaseValidator);
 begin
@@ -951,13 +885,9 @@ end;
 
 procedure TJvValidators.SetErrorIndicator(const Value: IJvErrorIndicator);
 begin
-  {$IFDEF COMPILER6_UP}
   ReferenceInterface(FErrorIndicator, opRemove);
   FErrorIndicator := Value;
   ReferenceInterface(FErrorIndicator, opInsert);
-  {$ELSE}
-  FErrorIndicator := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 //=== { TJvValidationSummary } ===============================================

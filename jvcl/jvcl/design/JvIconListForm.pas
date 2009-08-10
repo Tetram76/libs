@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvIconListForm.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvIconListForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvIconListForm;
 
@@ -31,11 +31,7 @@ interface
 uses
   Classes, Windows, Messages, Forms, Controls, Dialogs, Graphics,
   StdCtrls, ExtCtrls, ExtDlgs, ImgList, ComCtrls, ToolWin,
-  {$IFDEF COMPILER6_UP}
   RTLConsts, DesignIntf, DesignEditors, VCLEditors,
-  {$ELSE}
-  LibIntf, DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvIconList, JvComponent;
 
 type

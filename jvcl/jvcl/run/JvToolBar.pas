@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvToolBar.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvToolBar.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvToolBar;
 
@@ -45,9 +45,6 @@ type
   TJvToolBar = class(TJvExToolBar)
   private
     FChangeLink: TJvMenuChangeLink;
-    {$IFDEF COMPILER5}
-    FMenu: TMainMenu;
-    {$ENDIF COMPILER5}
     FTempMenu: TJvPopupMenu;
     FButtonMenu: TMenuItem;
     FMenuShowingCount: Integer;
@@ -57,9 +54,6 @@ type
     procedure MenuChange(Sender: TJvMainMenu; Source: TMenuItem; Rebuild: Boolean);
     procedure CNNotify(var Msg: TWMNotify); message CN_NOTIFY;
     procedure CNDropDownClosed(var Msg: TMessage); message CN_DROPDOWNCLOSED;
-    {$IFDEF COMPILER5}
-    procedure BuildButtons(AMenu: TMainMenu);
-    {$ENDIF COMPILER5}
   protected
     procedure AdjustSize; override;
   {$IFDEF COMPILER12_UP}
@@ -81,8 +75,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolBar.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -111,49 +105,8 @@ end;
 
 function TJvToolBar.GetMenu: TMainMenu;
 begin
-  {$IFDEF COMPILER5}
-  Result := FMenu;
-  {$ELSE}
   Result := inherited Menu;
-  {$ENDIF COMPILER5}
 end;
-
-{$IFDEF COMPILER5}
-procedure TJvToolBar.BuildButtons(AMenu: TMainMenu);
-var
-  I: Integer;
-begin
-  if csAcceptsControls in ControlStyle then
-  begin
-    ControlStyle := [csCaptureMouse, csClickEvents,
-      csDoubleClicks, csMenuEvents, csSetCaption];
-    RecreateWnd;
-  end;
-  ShowCaptions := True;
-  if Assigned(FMenu) then
-    for I := ButtonCount - 1 downto 0 do
-      Buttons[I].Free;
-  ReplaceComponentReference (Self, AMenu, TComponent(FMenu));
-  if not Assigned(FMenu) then
-    Exit;
-
-  for I := ButtonCount to FMenu.Items.Count - 1 do
-  begin
-    with TToolButton.Create(Self) do
-    try
-      AutoSize := True;
-      Grouped := True;
-      Parent := Self;
-      Buttons[I].MenuItem := FMenu.Items[I];
-    except
-      Free;
-      raise;
-    end;
-  end;
-  for I := 0 to FMenu.Items.Count - 1 do
-    Buttons[I].MenuItem := FMenu.Items[I];
-end;
-{$ENDIF COMPILER5}
 
 procedure TJvToolBar.SetMenu(const Value: TMainMenu);
 begin
@@ -174,11 +127,7 @@ begin
   // and we set the inherited value, so that the inherited
   // methods can deal with the menu too, the most obvious
   // one being the creation of the required TToolButton
-  {$IFDEF COMPILER5}
-  BuildButtons(Value);
-  {$ELSE}
   inherited Menu := Value;
-  {$ENDIF COMPILER5}
 end;
 
 procedure TJvToolBar.MenuChange(Sender: TJvMainMenu; Source: TMenuItem; Rebuild: Boolean);

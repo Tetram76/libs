@@ -74,7 +74,7 @@ History:
     - introduced IFixedPopupIntf
     - speed optimation in THiddenPopupObject.GetPopupMenu
 -----------------------------------------------------------------------------}
-// $Id: JvFixedEditPopUp.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvFixedEditPopUp.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvFixedEditPopUp;
 
@@ -127,8 +127,8 @@ procedure FixedDefaultEditPopupUpdate(AEdit: TWinControl);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFixedEditPopUp.pas $';
-    Revision: '$Revision: 12389 $';
-    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -136,7 +136,7 @@ const
 implementation
 
 uses
-  JvVCL5Utils, JvJclUtils, JvResources, JvJVCLUtils;
+  JvJclUtils, JvResources, JvJVCLUtils;
 
 type
   THiddenPopupObject = class(TComponent)
@@ -267,11 +267,9 @@ begin
       PopupIntf.Undo
     else
     begin
-      {$IFDEF COMPILER6_UP} // Delphi 5 is not supported
       if Edit is TCustomCombo then
         SendMessage(EditHandle, WM_UNDO, 0, 0)
       else
-      {$ENDIF COMPILER6_UP}
         Edit.Perform(WM_UNDO, 0, 0);
     end;
   end;
@@ -456,20 +454,16 @@ begin
 end;
 
 
-{$IFDEF COMPILER6_UP} // Delphi 5 is not supported
 type
   TOpenCustomCombo = class(TCustomCombo);
-{$ENDIF COMPILER6_UP}
 
 function THiddenPopupObject.GetEditHandle: THandle;
 begin
   Result := Edit.Handle;
-  {$IFDEF COMPILER6_UP} // Delphi 5 is not supported
   if Edit is TCustomCombo then
   begin
     Result := TOpenCustomCombo(Edit).FEditHandle;
   end;
-  {$ENDIF COMPILER6_UP}
 end;
 
 function THiddenPopupObject.GetTextLen: Integer;

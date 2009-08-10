@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSystemReg.pas 12024 2008-11-02 22:23:34Z ahuser $
+// $Id: JvSystemReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSystemReg;
 
@@ -36,11 +36,7 @@ implementation
 uses
   Classes,
   Controls,
-  {$IFDEF COMPILER6_UP}
   FiltEdit, DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   JvClipboardMonitor, JvClipboardViewer, JvHidControllerClass,
   JvDragDrop, JvDdeCmd, JvAppCommand, JvScreenSaveSuppress, JvWndProcHook, JvSysRequirements,

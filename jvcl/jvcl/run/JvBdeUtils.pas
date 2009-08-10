@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBdeUtils.pas 11963 2008-10-16 09:12:52Z obones $
+// $Id: JvBdeUtils.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvBdeUtils;
 
@@ -225,8 +225,8 @@ procedure GetXYByPos(const S: string; const Pos: Integer; var X, Y: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBdeUtils.pas $';
-    Revision: '$Revision: 11963 $';
-    Date: '$Date: 2008-10-16 11:12:52 +0200 (jeu., 16 oct. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -235,13 +235,7 @@ implementation
 
 uses
   SysUtils, Registry, Forms, Controls, Dialogs, Consts, Math,
-  IniFiles, DBConsts, BDEConst, DBCommon,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  {$IFDEF HAS_UNIT_RTLCONSTS}
-  RTLConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
+  IniFiles, DBConsts, BDEConst, DBCommon, Variants, RTLConsts,
   JvConsts, JvJVCLUtils, JvJCLUtils, JvTypes, JvResources;
 
 { Utility routines }

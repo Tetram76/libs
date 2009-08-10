@@ -39,7 +39,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPBar.pas 12418 2009-08-05 09:01:45Z obones $
+// $Id: JvXPBar.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvXPBar;
 
@@ -130,10 +130,8 @@ type
     procedure SetCaption(const Value: string); override;
     procedure SetHint(const Value: string); override;
     function DoShowHint(var HintStr: string): Boolean; virtual;
-    {$IFDEF COMPILER6_UP}
     function IsAutoCheckLinked: Boolean; virtual;
     procedure SetAutoCheck(Value: Boolean); override;
-    {$ENDIF COMPILER6_UP}
     procedure SetChecked(Value: Boolean); override;
     procedure SetEnabled(Value: Boolean); override;
     procedure SetImageIndex(Value: Integer); override;
@@ -166,9 +164,7 @@ type
     FGroupIndex: Integer;
     FChecked: Boolean;
     FAutoCheck: Boolean;
-    {$IFDEF COMPILER6_UP}
     function IsAutoCheckStored: Boolean;
-    {$ENDIF COMPILER6_UP}
     function IsCaptionStored: Boolean;
     function IsEnabledStored: Boolean;
     function IsHintStored: Boolean;
@@ -208,8 +204,7 @@ type
     property WinXPBar: TJvXPCustomWinXPBar read FWinXPBar;
   published
     property Action: TBasicAction read GetAction write SetAction;
-    property AutoCheck: Boolean read FAutoCheck write FAutoCheck
-      {$IFDEF COMPILER6_UP} stored IsAutoCheckStored {$ENDIF} default False;
+    property AutoCheck: Boolean read FAutoCheck write FAutoCheck stored IsAutoCheckStored default False;
     property Caption: TCaption read FCaption write SetCaption stored IsCaptionStored;
     property Checked: Boolean read FChecked write SetChecked stored IsCheckedStored default False;
     property Enabled: Boolean read FEnabled write SetEnabled stored IsEnabledStored default True;
@@ -533,9 +528,7 @@ type
     property OnClick;
     property OnDblClick;
     property OnConstrainedResize;
-    {$IFDEF COMPILER6_UP}
     property OnContextPopup;
-    {$ENDIF COMPILER6_UP}
     property OnDragDrop;
     property OnDragOver;
     property OnEndDrag;
@@ -558,8 +551,8 @@ procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPBar.pas $';
-    Revision: '$Revision: 12418 $';
-    Date: '$Date: 2009-08-05 11:01:45 +0200 (mer., 05 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -628,12 +621,10 @@ begin
   Client := AClient as TJvXPBarItem;
 end;
 
-{$IFDEF COMPILER6_UP}
 function TJvXPBarItemActionLink.IsAutoCheckLinked: Boolean;
 begin
   Result := (Client.AutoCheck = (Action as TCustomAction).AutoCheck);
 end;
-{$ENDIF COMPILER6_UP}
 
 function TJvXPBarItemActionLink.IsCaptionLinked: Boolean;
 begin
@@ -677,14 +668,11 @@ begin
     JvXPMethodsEqual(TMethod(Client.OnClick), TMethod(Action.OnExecute));
 end;
 
-
-{$IFDEF COMPILER6_UP}
 procedure TJvXPBarItemActionLink.SetAutoCheck(Value: Boolean);
 begin
   if IsAutoCheckLinked then
     Client.AutoCheck := Value;
 end;
-{$ENDIF COMPILER6_UP}
 
 procedure TJvXPBarItemActionLink.SetCaption(const Value: string);
 begin
@@ -806,10 +794,8 @@ begin
     begin
       if not (csLoading in ComponentState) then
         Update;
-      {$IFDEF COMPILER6_UP}
       if not CheckDefaults or not Self.AutoCheck then
         Self.AutoCheck := AutoCheck;
-      {$ENDIF COMPILER6_UP}
       if not CheckDefaults or (Self.Caption = '') or (Self.Caption = Self.Name) then
         Self.Caption := Caption;
       if not CheckDefaults or not Self.Checked then
@@ -930,12 +916,10 @@ begin
     inherited Assign(Source);
 end;
 
-{$IFDEF COMPILER6_UP}
 function TJvXPBarItem.IsAutoCheckStored: Boolean;
 begin
   Result := (ActionLink = nil) or not FActionLink.IsAutoCheckLinked;
 end;
-{$ENDIF COMPILER6_UP}
 
 function TJvXPBarItem.IsCaptionStored: Boolean;
 begin
@@ -1952,12 +1936,8 @@ begin
     LItem := FVisibleItems[FHoverIndex];
     with LItem do
     begin
-      {$IFDEF COMPILER6_UP}
       if (not Assigned(ActionLink) and AutoCheck) or
         (Assigned(ActionLink) and not ActionLink.IsAutoCheckLinked and AutoCheck) then
-      {$ELSE}
-      if AutoCheck then
-      {$ENDIF COMPILER6_UP}
         LItem.Checked := not LItem.Checked;
     end;
     if FVisibleItems[FHoverIndex].Checked then
@@ -1978,7 +1958,7 @@ begin
         FVisibleItems[FHoverIndex].FOnClick(FVisibleItems[FHoverIndex])
       else
       if not (csDesigning in ComponentState) and Assigned(FVisibleItems[FHoverIndex].ActionLink) then
-        FVisibleItems[FHoverIndex].ActionLink.Execute{$IFDEF COMPILER6_UP}(Self){$ENDIF COMPILER6_UP}
+        FVisibleItems[FHoverIndex].ActionLink.Execute(Self)
       else
       if Assigned(FVisibleItems[FHoverIndex].FOnClick) then
         FVisibleItems[FHoverIndex].FOnClick(FVisibleItems[FHoverIndex]);

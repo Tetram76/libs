@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxGrid.pas 11865 2008-08-17 18:58:48Z jfudickar $
+// $Id: JvControlActionsEngineCxGrid.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvControlActionsEngineCxGrid;
 
@@ -63,8 +63,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxGrid.pas $';
-    Revision: '$Revision: 11865 $';
-    Date: '$Date: 2008-08-17 20:58:48 +0200 (dim., 17 août 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -76,10 +76,7 @@ uses
   cxGridDBDataDefinitions, cxGridDBChartView,
   cxCustomData, cxGridExportLink,
 {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
-{$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-{$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils, Dialogs;
+  Variants, SysUtils, Dialogs;
 
 //=== { TJvDatabaseActionDevExpCxGridControlEngine } =========================
 

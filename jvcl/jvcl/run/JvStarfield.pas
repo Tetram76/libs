@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStarfield.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvStarfield.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvStarfield;
 
@@ -94,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStarfield.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -129,7 +129,6 @@ begin
   SetLength(FStarfield, 0);
   FThread.OnDraw := nil;
   FThread.Terminate;
-  //FThread.WaitFor;
   FreeAndNil(FThread);
   FBmp.Free;
   inherited Destroy;
@@ -166,10 +165,7 @@ begin
     FOnActiveChanged(Self);
   FActive := Value;
   if not (csDesigning in ComponentState)  then
-    if FActive then
-      FThread.Resume
-    else
-      FThread.Suspend;
+    FThread.Paused := not FActive;
 end;
 
 procedure TJvStarfield.SetDelay(const Value: Cardinal);
@@ -187,6 +183,11 @@ procedure TJvStarfield.Paint;
 var
   I, J: Integer;
 begin
+  // Must exit because we are "Synchronized" and our parent is already
+  // partly destroyed. If we did not exit, we would get an AV.
+  if csDestroying in ComponentState then
+    Exit;
+
   if csDesigning in ComponentState then
   begin
     Canvas.Brush.Style := bsClear;

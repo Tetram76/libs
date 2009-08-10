@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStdCtrlsReg.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvStdCtrlsReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvStdCtrlsReg;
 
@@ -37,11 +37,7 @@ uses
   Classes, Controls,
   FiltEdit,
   ImgList,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts, JvTypes,
   JvRichEdit,
   JvDateTimePicker, JvDatePickerEdit, JvCalendar, JvxSlider, JvTextListBox,

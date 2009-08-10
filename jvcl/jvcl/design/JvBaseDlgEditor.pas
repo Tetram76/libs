@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDlgEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvBaseDlgEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvBaseDlgEditor;
 
@@ -33,11 +33,7 @@ interface
 uses
   SysUtils, Classes, Windows, Messages, Graphics, Controls, Forms, Dialogs,
   TypInfo,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   {$IFNDEF COMPILER7_UP}
   EditIntf, ToolIntf, ExptIntf,
   {$ENDIF !COMPILER7_UP}

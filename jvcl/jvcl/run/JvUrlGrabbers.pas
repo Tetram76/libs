@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvUrlGrabbers.pas 11884 2008-09-04 11:47:01Z obones $
+// $Id: JvUrlGrabbers.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvUrlGrabbers;
 
@@ -319,8 +319,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUrlGrabbers.pas $';
-    Revision: '$Revision: 11884 $';
-    Date: '$Date: 2008-09-04 13:47:01 +0200 (jeu., 04 sept. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -329,7 +329,6 @@ implementation
 
 uses
   WinInet,
-  JvVCL5Utils,
   JvResources;
 
 const

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMailEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvMailEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvMailEditor;
 
@@ -32,11 +32,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, Dlgs, Dialogs,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvMail;
   
 type

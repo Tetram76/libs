@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportProc.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvDockSupportProc.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDockSupportProc;
 
@@ -94,8 +94,8 @@ procedure UnRegisterSettingChangeClient(Client: TObject);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportProc.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -481,12 +481,8 @@ begin
     try
       NotifyClients;
     except
-      {$IFDEF COMPILER6_UP}
       if Assigned(ApplicationHandleException) then
         ApplicationHandleException(Self);
-      {$ELSE}
-      Application.HandleException(Self);
-      {$ENDIF COMPILER6_UP}
     end
     else
       { !! Call DefWindowProc, so messages like WM_QUERYENDSESSION are

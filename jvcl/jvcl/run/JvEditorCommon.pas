@@ -23,7 +23,7 @@ Remko Bonte
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.sourceforge.net
 -----------------------------------------------------------------------------}
-// $Id: JvEditorCommon.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvEditorCommon.pas 12439 2009-08-09 17:02:39Z obones $
 
 { history
  (JVCL Library versions) :
@@ -1370,8 +1370,8 @@ function KeyPressed(VK: Integer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditorCommon.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1383,10 +1383,7 @@ uses
   {$IFDEF SUPPORTS_INLINE}
   Types,
   {$ENDIF SUPPORTS_INLINE}
-  {$IFDEF HAS_UNIT_RTLCONSTS}
-  RTLConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
-  Math, Clipbrd,
+  RTLConsts, Math, Clipbrd,
   JvJCLUtils, JvThemes, JvResources;
 
 type

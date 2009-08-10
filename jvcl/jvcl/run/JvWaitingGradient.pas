@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWaitingGradient.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvWaitingGradient.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvWaitingGradient;
 
@@ -114,8 +114,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWaitingGradient.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -171,7 +171,7 @@ begin
   inherited Loaded;
   UpdateBitmap;
   if Active then
-    FScroll.Resume;
+    FScroll.Paused := False;
 end;
 
 procedure TJvWaitingGradient.UpdateBitmap;
@@ -230,6 +230,11 @@ end;
 
 procedure TJvWaitingGradient.Deplace(Sender: TObject);
 begin
+  // Must exit because we are "Synchronized" and our parent is already
+  // partly destroyed. If we did not exit, we would get an AV.
+  if csDestroying in ComponentState then
+    Exit;
+
   if FFromLeftToRight then
   begin
     if FLeftOffset + FGradientWidth >= Width then
@@ -288,15 +293,15 @@ begin
 //    Exit;
   if FScroll = nil then
     Exit;
-  if Value and FScroll.Suspended then
+  if Value then
   begin
-    FScroll.Resume;
+    FScroll.Paused := False;
     if AlwaysRestart then
       Restart;
   end
   else
-  if not Value and not FScroll.Suspended then
-    FScroll.Suspend;
+  if not Value then
+    FScroll.Paused := True;
 end;
 
 procedure TJvWaitingGradient.SetEndColor(const Value: TColor);

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTranslator.pas 12343 2009-06-25 10:22:12Z obones $
+// $Id: JvTranslator.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvTranslator;
 
@@ -127,8 +127,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTranslator.pas $';
-    Revision: '$Revision: 12343 $';
-    Date: '$Date: 2009-06-25 12:22:12 +0200 (jeu., 25 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -167,26 +167,12 @@ type
 
 function InternalGetWideStrProp(Instance: TObject; const PropName: string): WideString; overload;
 begin
-  {$IFDEF COMPILER6_UP}
   Result := GetWideStrProp(Instance, PropName);
-  {$ELSE}
-  Result := GetStrProp(Instance, PropName);
-  {$ENDIF COMPILER6_UP}
 end;
 
 function InternalGetPropList(AObject: TObject; out PropList: PPropList): Integer;
 begin
-  {$IFDEF COMPILER6_UP}
   Result := GetPropList(AObject, PropList);
-  {$ELSE}
-  Result := GetTypeData(AObject.ClassInfo)^.PropCount;
-  if Result > 0 then
-  begin
-    GetMem(PropList, Result * SizeOf(Pointer));
-    GetPropInfos(AObject.ClassInfo, PropList);
-  end;
-  Result := GetPropList(AObject.ClassInfo, tkProperties, PropList);
-  {$ENDIF COMPILER6_UP}
 end;
 
 //=== { TJvTranslator } ======================================================

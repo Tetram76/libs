@@ -47,7 +47,7 @@ xx) why keep UnicodeAvailable in every component? I wish Delphi could map
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMRUList.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvMRUList.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvMRUList;
 
@@ -180,8 +180,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMRUList.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -190,7 +190,7 @@ implementation
 
 uses
   Registry,
-  JvVCL5Utils, JvJCLUtils, JvResources;
+  JvJCLUtils, JvResources;
 
 var
   hComCtlDll: HMODULE = 0;

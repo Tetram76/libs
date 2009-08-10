@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCompDescription.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvgCompDescription.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvgCompDescription;
 
@@ -34,11 +34,7 @@ interface
 uses
   Classes, TypInfo,
   JvComponentBase,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, PropertyCategories;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvgPropInfos = class;

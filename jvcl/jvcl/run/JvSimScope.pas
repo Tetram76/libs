@@ -37,7 +37,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSimScope.pas 12135 2009-01-08 18:47:52Z wpostma $
+// $Id: JvSimScope.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSimScope;
 
@@ -50,9 +50,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes,
-  {$IFDEF COMPILER5}
-  JvVCL5Utils,
-  {$ENDIF COMPILER5}
   Graphics, Controls, Forms, ExtCtrls;
 
 const
@@ -224,11 +221,9 @@ type
     {$ENDIF COMPILER10_UP}
     property OnMouseMove;
     property OnMouseUp;
-    {$IFDEF COMPILER6_UP}
     property OnMouseWheel;
     property OnMouseWheelDown;
     property OnMouseWheelUp;
-    {$ENDIF COMPILER6_UP}
     property OnResize;
     property OnStartDock;
     property OnStartDrag;
@@ -238,8 +233,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimScope.pas $';
-    Revision: '$Revision: 12135 $';
-    Date: '$Date: 2009-01-08 19:47:52 +0100 (jeu., 08 janv. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

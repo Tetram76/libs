@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThread.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvThread.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvThread;
 
@@ -147,7 +147,40 @@ type
   TJvThreadShowMessageDlgEvent = procedure(const Msg: string; AType: TMsgDlgType;
       AButtons: TMsgDlgButtons; HelpCtx: Longint; var DlgResult : Word) of object;
 
-  TJvBaseThread = class(TThread)
+  // This thread is a descendent of TThread but proposes a different
+  // behaviour with regard to being suspended or resumed.
+  // Indeed, the MSDN recommends not to use them and it was even noticed
+  // that using Suspend and Resume under Windows NT, 2K and XP led to weird
+  // errors such as being refused access to the thread, despite being its
+  // creator.
+  // So another mechanism has been implemented : the thread must be
+  // paused instead of suspended.
+  // Pausing the thread actually acquires a critical section which the Execute
+  // function must try to get before it calls InternalExecute.
+  // Hence, if the critical section was acquired before this try, the Execute
+  // function is stopped and the thread paused until another thread (the main
+  // thread in most cases) releases the critical section when setting
+  // Paused to false.
+  // Obviously, the Execute method in derived classes has to be cooperative
+  // and actually acquire and release the FPauseSection critical section via
+  // the appropriate protected methods
+  TJvPausableThread = class(TThread)
+  private
+    FPauseSection: TCriticalSection;
+    FPaused: boolean;
+
+    procedure SetPaused(const Value: Boolean);
+  protected
+    procedure EnterUnpauseableSection;
+    procedure LeaveUnpauseableSection;
+  public
+    constructor Create (CreateSuspended : Boolean);
+    destructor Destroy; override;
+
+    property Paused : Boolean read FPaused write SetPaused;
+  end;
+
+  TJvBaseThread = class(TJvPausableThread)
   private
     FException: Exception;
     FExceptionAddr: Pointer;
@@ -318,8 +351,8 @@ procedure SynchronizeParams(Method: TJvNotifyParamsEvent; P: Pointer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThread.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -608,11 +641,8 @@ begin
   while OneThreadIsRunning do
   begin
     Sleep(1);
-    {$IFDEF COMPILER6_UP}
-    // Delphi 5 uses SendMessage -> no need for this code
     // Delphi 6+ uses an event and CheckSynchronize
     CheckSynchronize; // TThread.OnTerminate is synchronized
-    {$ENDIF COMPILER6_UP}
   end;
   FThreads.Free;
   FListLocker.Free;
@@ -1267,6 +1297,55 @@ begin
     FSynchHelpCtx := HelpCtx;
     Self.Synchronize(InternalMessageDlg);
     Result := FSynchMessageDlgResult;
+end;
+
+{ TJvPausableThread }
+
+constructor TJvPausableThread.Create(CreateSuspended: Boolean);
+begin
+  FPauseSection := TCriticalSection.Create;
+  inherited Create(CreateSuspended);
+end;
+
+destructor TJvPausableThread.Destroy;
+begin
+  if Paused then
+  begin
+    Terminate;
+    Paused := False;
+  end;
+
+  inherited Destroy;
+
+  FPauseSection.Free;
+end;
+
+procedure TJvPausableThread.EnterUnpauseableSection;
+begin
+  FPauseSection.Acquire;
+end;
+
+procedure TJvPausableThread.LeaveUnpauseableSection;
+begin
+  FPauseSection.Release;
+end;
+
+procedure TJvPausableThread.SetPaused(const Value: Boolean);
+begin
+  if FPaused <> Value then
+  begin
+    // store the Value
+    FPaused := Value;
+
+    if FPaused then
+      FPauseSection.Acquire
+    else
+      FPauseSection.Release;
+  end;
+
+  // If the thread was created "Suspended", then we must start it
+  if Suspended and not Paused then
+    Resume;
 end;
 
 initialization

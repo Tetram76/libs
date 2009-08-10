@@ -32,7 +32,7 @@ Description:
   To set the error, use the Error property: an empty error string, removes the error image
 
 -----------------------------------------------------------------------------}
-// $Id: JvErrorIndicator.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvErrorIndicator.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvErrorIndicator;
 
@@ -207,8 +207,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvErrorIndicator.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -552,7 +552,7 @@ begin
   begin
     FBlinkThread := TJvBlinkThread.Create(BlinkRate);
     TJvBlinkThread(FBlinkThread).OnBlink := DoBlink;
-    TJvBlinkThread(FBlinkThread).Resume;
+    FBlinkThread.Resume;
   end;
 end;
 
@@ -691,11 +691,7 @@ procedure TJvErrorControl.Paint;
 begin
   //  inherited Paint;
   if (Images <> nil) and Visible then
-    {$IFDEF COMPILER6_UP}
     Images.Draw(Canvas, 0, 0, ImageIndex, dsTransparent, itImage);
-    {$ELSE}
-    Images.Draw(Canvas, 0, 0, ImageIndex);
-    {$ENDIF COMPILER6_UP}
 end;
 
 procedure TJvErrorControl.SetError(const Value: string);

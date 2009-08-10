@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvDBSpinEdit.pas 12373 2009-07-03 14:45:21Z obones $
+// $Id: JvDBSpinEdit.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBSpinEdit;
 
@@ -90,8 +90,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSpinEdit.pas $';
-    Revision: '$Revision: 12373 $';
-    Date: '$Date: 2009-07-03 16:45:21 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -99,10 +99,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils;
+  Variants, SysUtils;
 
 //=== { TJvDBSpinEdit } ======================================================
 

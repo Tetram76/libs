@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCtrlsReg.pas 11905 2008-09-18 23:08:02Z jfudickar $
+// $Id: JvCtrlsReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvCtrlsReg;
 
@@ -36,11 +36,7 @@ implementation
 uses
   Classes,
   Controls, ImgList, ActnList,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts, JvDsgnIntf,
   JvCaptionButton, JvDriveCtrls, JvRegistryTreeView, JvPlaylist,
   JvPageScroller, JvUninstallControls, JvCharMap,

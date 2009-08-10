@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDateTimeForm.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvDateTimeForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDateTimeForm;
 
@@ -33,9 +33,7 @@ unit JvDateTimeForm;
 interface
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
   SysUtils, Controls, Forms, StdCtrls, ComCtrls, Menus,  Classes,
   JvComponent;
 

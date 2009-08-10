@@ -41,7 +41,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvDBTreeView.pas 12351 2009-06-28 17:13:38Z jfudickar $
+// $Id: JvDBTreeView.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBTreeView;
 
@@ -193,12 +193,10 @@ type
 
   TJvDBTreeView = class(TJvCustomDBTreeView)
   published
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property DataSource;
     property MasterField;
     property DetailField;
@@ -283,8 +281,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBTreeView.pas $';
-    Revision: '$Revision: 12351 $';
-    Date: '$Date: 2009-06-28 19:13:38 +0200 (dim., 28 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -292,10 +290,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils, Dialogs,
+  Variants, SysUtils, Dialogs,
   JvResources;
 
 // (rom) moved to implementation and removed type
@@ -303,20 +298,17 @@ uses
 const
   DnDScrollArea = 15;
   DnDInterval = 200;
-  DefaultValidMasterFields = [ftSmallInt, ftInteger, ftAutoInc, ftWord, ftFloat, ftString, ftWideString, ftBCD
-    {$IFDEF COMPILER6_UP}, ftFMTBCD{$ENDIF}];
+  DefaultValidMasterFields = [ftSmallInt, ftInteger, ftAutoInc, ftWord, ftFloat, ftString, ftWideString, ftBCD, ftFMTBCD];
   DefaultValidDetailFields = DefaultValidMasterFields;
   DefaultValidItemFields = [ftString, ftWideString, ftMemo, ftFmtMemo, ftSmallInt, ftInteger, ftAutoInc,
-    ftWord, ftBoolean, ftFloat, ftCurrency, ftDate, ftTime, ftDateTime, ftBCD
-	{$IFDEF COMPILER6_UP}, ftFMTBCD{$ENDIF}
+    ftWord, ftBoolean, ftFloat, ftCurrency, ftDate, ftTime, ftDateTime, ftBCD, ftFMTBCD
   {$IFDEF COMPILER10_UP}
   , ftFixedWideChar, ftWideMemo, ftOraTimeStamp
   {$ENDIF COMPILER10_UP}
   {$IFDEF COMPILER12_UP}
   ,ftLongWord, ftShortint, ftByte, ftExtended
   {$ENDIF COMPILER12_UP}];
-  DefaultValidIconFields = [ftSmallInt, ftAutoInc, ftInteger, ftWord, ftBCD
-	{$IFDEF COMPILER6_UP}, ftFMTBCD{$ENDIF}
+  DefaultValidIconFields = [ftSmallInt, ftAutoInc, ftInteger, ftWord, ftBCD, ftFMTBCD
   {$IFDEF COMPILER12_UP}
   ,ftLongWord, ftShortint
   {$ENDIF COMPILER12_UP}];

@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterList.pas 12412 2009-07-28 20:18:13Z jfudickar $
+// $Id: JvParameterList.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvParameterList;
 
@@ -33,9 +33,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Classes, SysUtils, Windows, Messages,
   StdCtrls, ExtCtrls, Graphics, Forms, Controls, Dialogs, ComCtrls,
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
   JvConsts, JvTypes, JvDynControlEngine, JvDynControlEngineIntf, JvDSADialogs,
   JvComponentBase, JvPanel, JvPropertyStore, JvAppStorage, JvAppStorageSelectList;
 
@@ -497,8 +495,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterList.pas $';
-    Revision: '$Revision: 12412 $';
-    Date: '$Date: 2009-07-28 22:18:13 +0200 (mar., 28 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -518,29 +516,6 @@ const
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_');
-
-  {$IFNDEF HAS_UNIT_VARIANTS}
-type
-  TVariantRelationship = (vrEqual, vrLessThan, vrGreaterThan, vrNotEqual);
-
-function VarCompareValue(const V1, V2: Variant): TVariantRelationship;
-begin
-  if VarIsNull(V1) and VarIsNull(V2) then
-    Result := vrEqual
-  else if VarIsNull(V1) or VarIsNull(V2) then
-    Result := vrNotEqual
-  else if VarIsEmpty(V1) and VarIsEmpty(V2) then
-    Result := vrEqual
-  else if VarIsEmpty(V1) or VarIsEmpty(V2) then
-    Result := vrNotEqual
-  else if V1 = V2 then
-    Result := vrEqual
-  else if V1 < V2 then
-    Result := vrLessThan
-  else
-    Result := vrGreaterThan;
-end;
-{$ENDIF !HAS_UNIT_VARIANTS}
 
 //=== { TJvParameterListMessages } ===========================================
 
@@ -969,13 +944,8 @@ begin
     except
       on E: EConvertError do
         ;
-      {$IFDEF COMPILER6_UP}
       on E: EVariantTypeCastError do
         ;
-      {$ELSE}
-      on E: EVariantError do
-        ;
-      {$ENDIF COMPILER6_UP}
     end;
 end;
 
@@ -1829,11 +1799,11 @@ begin
   ScrollBox.Parent := ParameterParent;
   ScrollBox.AutoScroll := False;
   ScrollBox.BorderStyle := bsNone;
+  {$IFDEF COMPILER10_UP}
   ScrollBox.ParentBackground := True;
-  {$IFDEF COMPILER6_UP}
+  {$ENDIF COMPILER10_UP}
   ScrollBox.BevelInner := bvNone;
   ScrollBox.BevelOuter := bvNone;
-  {$ENDIF COMPILER6_UP}
   ScrollBox.Align := alClient;
   ScrollBox.Width := ParameterParent.Width;
   RightPanel := TJvPanel.Create(Self);

@@ -23,7 +23,7 @@ tia
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUtils.pas 12430 2009-08-07 11:46:14Z obones $
+// $Id: JvDBUtils.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBUtils;
 
@@ -38,10 +38,7 @@ uses
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  Classes, SysUtils, Contnrs, DB,
+  Variants, Classes, SysUtils, Contnrs, DB,
   JvAppStorage;
 
 type
@@ -186,8 +183,8 @@ procedure _DBError(const Msg: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUtils.pas $';
-    Revision: '$Revision: 12430 $';
-    Date: '$Date: 2009-08-07 13:46:14 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

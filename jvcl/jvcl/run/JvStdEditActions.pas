@@ -19,7 +19,7 @@ Contributor(s):
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.sourceforge.net
 -----------------------------------------------------------------------------}
-// $Id: JvStdEditActions.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvStdEditActions.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvStdEditActions;
 
@@ -111,9 +111,6 @@ type
 implementation
 
 uses
-{$IFDEF COMPILER5}
-  JvVCL5Utils, 
-{$ENDIF COMPILER5}
   JvJVCLUtils;
 
 //=== { TJvEditAction } ==========================================================

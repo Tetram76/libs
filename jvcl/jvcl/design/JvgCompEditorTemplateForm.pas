@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCompEditorTemplateForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgCompEditorTemplateForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvgCompEditorTemplateForm;
 
@@ -33,11 +33,7 @@ uses
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls, Forms, Dialogs,
   ComCtrls, StdCtrls, Buttons, ExtCtrls,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, PropertyCategories;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvgCompEditorTemplate = class(TForm)

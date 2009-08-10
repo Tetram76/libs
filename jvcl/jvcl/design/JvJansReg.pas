@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
   this should be merged with other Registration Unit
 -----------------------------------------------------------------------------}
-// $Id: JvJansReg.pas 12060 2008-11-26 16:32:58Z ahuser $
+// $Id: JvJansReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvJansReg;
 
@@ -31,12 +31,8 @@ interface
 
 uses
   Classes, Controls,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
   VCLEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   JvShapedButton, JvSticker, JvJanTreeView, JvMarkupLabel, JvMarkupViewer,
   JvSAL, JvSALCore, JvSALMath, JvYearGrid, JvTracker, JvAirBrush, JvGridFilter,

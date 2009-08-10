@@ -34,7 +34,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvSpeedButton.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSpeedButton;
 
@@ -46,13 +46,8 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  CommCtrl,
-  {$IFDEF COMPILER6_UP}
-  Types,
-  {$ENDIF COMPILER6_UP}
-  SysUtils, Classes, Windows, Messages,
+  CommCtrl, Types, SysUtils, Classes, Windows, Messages,
   Controls, Graphics, Forms, ExtCtrls, Buttons, Menus, ImgList, ActnList,
-  JvVCL5Utils,
   JvExControls, JvComponent, JvButton, JvConsts, JvTypes, JvHotTrackPersistent,
   JvThemes;
 
@@ -210,10 +205,8 @@ type
     FClient: TJvImageSpeedButton;
     procedure AssignClient(AClient: TObject); override;
     function IsCheckedLinked: Boolean; override;
-    {$IFDEF COMPILER6_UP}
     function IsGroupIndexLinked: Boolean; override;
     procedure SetGroupIndex(Value: Integer); override;
-    {$ENDIF COMPILER6_UP}
     function IsImageIndexLinked: Boolean; override;
     procedure SetChecked(Value: Boolean); override;
     procedure SetImageIndex(Value: Integer); override;
@@ -224,10 +217,8 @@ type
     FClient: TJvSpeedButton;
     procedure AssignClient(AClient: TObject); override;
     function IsCheckedLinked: Boolean; override;
-    {$IFDEF COMPILER6_UP}
     function IsGroupIndexLinked: Boolean; override;
     procedure SetGroupIndex(Value: Integer); override;
-    {$ENDIF COMPILER6_UP}
     procedure SetChecked(Value: Boolean); override;
   end;
 
@@ -500,8 +491,8 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -946,13 +937,7 @@ begin
       {$ENDIF JVCLThemesEnabled}
       FHotTrack or (FFlat and Enabled and (DragMode <> dmAutomatic) and (GetCapture = NullHandle));
 
-    NeedRepaint := NeedRepaint
-      {$IFDEF COMPILER6_UP}
-      and not Mouse.IsDragging
-      {$ELSE}
-      and not KeyPressed(VK_LBUTTON)
-      {$ENDIF COMPILER6_UP}
-      ;
+    NeedRepaint := NeedRepaint and not Mouse.IsDragging;
 
     inherited MouseEnter(Control); // set MouseOver
     { Windows XP introduced hot states also for non-flat buttons. }
@@ -974,13 +959,7 @@ begin
       {$ENDIF JVCLThemesEnabled}
       HotTrack or (FFlat and Enabled and not FDragging and (GetCapture = NullHandle));
 
-    NeedRepaint := NeedRepaint
-      {$IFDEF COMPILER6_UP}
-      and not Mouse.IsDragging
-      {$ELSE}
-      and not KeyPressed(VK_LBUTTON)
-      {$ENDIF COMPILER6_UP}
-      ;
+    NeedRepaint := NeedRepaint and not Mouse.IsDragging;
 
     inherited MouseLeave(Control); // set MouseOver
     if NeedRepaint then
@@ -1930,9 +1909,6 @@ begin
     FClient.AllowAllUp and (FClient.Down = (Action as TCustomAction).Checked);
 end;
 
-{$IFDEF COMPILER6_UP}
-
-
 function TJvImageSpeedButtonActionLink.IsGroupIndexLinked: Boolean;
 begin
   { (rb) This will fail in D7 due to a bug in TCustomAction.SetGroupIndex }
@@ -1945,8 +1921,6 @@ begin
   if IsGroupIndexLinked then
     FClient.GroupIndex := Value;
 end;
-
-{$ENDIF COMPILER6_UP}
 
 function TJvImageSpeedButtonActionLink.IsImageIndexLinked: Boolean;
 begin
@@ -2118,8 +2092,6 @@ begin
     FClient.AllowAllUp and (FClient.Down = (Action as TCustomAction).Checked);
 end;
 
-{$IFDEF COMPILER6_UP}
-
 function TJvSpeedButtonActionLink.IsGroupIndexLinked: Boolean;
 begin
   Result := (FClient is TJvSpeedButton) and
@@ -2131,8 +2103,6 @@ begin
   if IsGroupIndexLinked then
     TJvSpeedButton(FClient).GroupIndex := Value;
 end;
-
-{$ENDIF COMPILER6_UP}
 
 procedure TJvSpeedButtonActionLink.SetChecked(Value: Boolean);
 begin

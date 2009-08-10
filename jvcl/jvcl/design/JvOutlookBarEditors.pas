@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOutlookBarEditors.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvOutlookBarEditors.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvOutlookBarEditors;
 
@@ -33,11 +33,7 @@ uses
   SysUtils, Classes,
   Windows, Controls, Forms, ToolWin,
   Menus, ActnList, ComCtrls, ImgList,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf, DesignMenus, DesignWindows,
-  {$ELSE}
-  DsgnIntf, DsgnWnds,
-  {$ENDIF COMPILER6_UP}
   JvDsgnEditors, JvOutlookBar;
 
 type
@@ -114,11 +110,7 @@ begin
   begin
     AEditor := TFrmOLBEditor.Create(Application);
     try
-      {$IFDEF COMPILER6_UP}
       AEditor.Designer := Designer;
-      {$ELSE}
-      AEditor.Designer := Designer as IFormDesigner;
-      {$ENDIF COMPILER6_UP}
       AEditor.OutlookBar := OutlookBar;
       AEditor.Show;
     except

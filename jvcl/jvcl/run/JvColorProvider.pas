@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorProvider.pas 11851 2008-08-07 21:56:33Z outchy $
+// $Id: JvColorProvider.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvColorProvider;
 
@@ -441,21 +441,13 @@ type
   private
     function GetColorProviderIntf: IJvColorProvider;
     procedure SetColorProviderIntf(Value: IJvColorProvider);
-    {$IFDEF COMPILER5}
-    function GetProviderComp: TComponent;
-    procedure SetProviderComp(Value: TComponent);
-    {$ENDIF COMPILER5}
   protected
     class function ItemsClass: TJvDataItemsClass; override;
     function ConsumerClasses: TClassArray; override;
   public
     property ProviderIntf: IJvColorProvider read GetColorProviderIntf write SetColorProviderIntf;
   published
-    {$IFDEF COMPILER6_UP}
     property Provider: IJvColorProvider read GetColorProviderIntf write SetColorProviderIntf;
-    {$ELSE}
-    property Provider: TComponent read GetProviderComp write SetProviderComp;
-    {$ENDIF COMPILER6_UP}
   end;
 
   TJvColorProviderServerNotify = class(TJvDataConsumerServerNotify)
@@ -506,8 +498,8 @@ function ColorProviderColorAdderRegister: TJvColorProviderColorAdderRegister;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorProvider.pas $';
-    Revision: '$Revision: 11851 $';
-    Date: '$Date: 2008-08-07 23:56:33 +0200 (jeu., 07 août 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -515,13 +507,7 @@ const
 implementation
 
 uses
-  SysUtils,
-  {$IFDEF HAS_UNIT_RTLCONSTS}
-  RTLConsts,
-  {$ELSE}
-  Consts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
-  Controls,
+  SysUtils, RTLConsts, Controls,
   JclStrings,
   JvJVCLUtils, JvJCLUtils, JvConsts, JvResources;
 
@@ -1187,36 +1173,6 @@ procedure TJvColorMappingProvider.SetColorProviderIntf(Value: IJvColorProvider);
 begin
   TJvColorMapItems(DataItemsImpl).ClientProvider := (Value as IJvDataProvider);
 end;
-
-{$IFDEF COMPILER5}
-
-function TJvColorMappingProvider.GetProviderComp: TComponent;
-var
-  ICR: IInterfaceComponentReference;
-begin
-  if Supports(GetColorProviderIntf, IInterfaceComponentReference, ICR) then
-    Result := ICR.GetComponent
-  else
-    Result := nil;
-end;
-
-procedure TJvColorMappingProvider.SetProviderComp(Value: TComponent);
-var
-  PI: IJvColorProvider;
-  ICR: IInterfaceComponentReference;
-begin
-  if (Value = nil) or Supports(Value, IJvColorProvider, PI) then
-  begin
-    if (Value = nil) or Supports(Value, IInterfaceComponentReference, ICR) then
-      SetColorProviderIntf(PI)
-    else
-      raise EJVCLException.CreateRes(@RsENoICR);
-  end
-  else
-    raise EJVCLException.CreateRes(@RsENoColProv);
-end;
-
-{$ENDIF COMPILER5}
 
 class function TJvColorMappingProvider.ItemsClass: TJvDataItemsClass;
 begin

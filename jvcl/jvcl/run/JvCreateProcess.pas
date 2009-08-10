@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCreateProcess.pas 11956 2008-10-09 20:34:23Z remkobonte $
+// $Id: JvCreateProcess.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvCreateProcess;
 
@@ -38,9 +38,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes,
-  {$IFDEF COMPILER5}
-  Forms,
-  {$ENDIF COMPILER5}
   ShellAPI, SyncObjs,
   JvComponentBase, JvTypes;
 
@@ -232,8 +229,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCreateProcess.pas $';
-    Revision: '$Revision: 11956 $';
-    Date: '$Date: 2008-10-09 22:34:23 +0200 (jeu., 09 oct. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -243,7 +240,7 @@ implementation
 uses
   Math,
   JclStrings,
-  JvVCL5Utils, JvJCLUtils, JvJVCLUtils, JvConsts, JvResources;
+  JvJCLUtils, JvJVCLUtils, JvConsts, JvResources;
 
 const
   CM_READ = WM_USER + 1;
@@ -1408,12 +1405,8 @@ begin
         Result := DefWindowProc(Handle, Msg, WParam, LParam);
       end;
   except
-    {$IFDEF COMPILER6_UP}
     if Assigned(ApplicationHandleException) then
       ApplicationHandleException(Self);
-    {$ELSE}
-    Application.HandleException(Self);
-    {$ENDIF COMPILER6_UP}
   end;
 end;
 

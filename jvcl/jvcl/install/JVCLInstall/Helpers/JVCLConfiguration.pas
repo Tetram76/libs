@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLConfiguration.pas 11892 2008-09-09 20:35:07Z obones $
+// $Id: JVCLConfiguration.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JVCLConfiguration;
 
@@ -31,14 +31,8 @@ unit JVCLConfiguration;
 interface
 
 uses
-  SysUtils, Classes, Contnrs, dpp_PascalParser,
-  {$IFDEF COMPILER6_UP}
-  StrUtils,
-  {$ELSE}
-  JvVCL5Utils,
-  {$ENDIF COMPILER6_UP}
-  JclBase,
-  Utils;
+  SysUtils, Classes, Contnrs, dpp_PascalParser, StrUtils,
+  JclBase, Utils;
 
 type
   TJVCLConfig = class;

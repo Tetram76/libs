@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridControlsEditorForm.pas 11154 2007-01-16 19:01:07Z ahuser $
+// $Id: JvDBGridControlsEditorForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBGridControlsEditorForm;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   Classes, Controls, Forms,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   StdCtrls, Buttons, Graphics,
   TypInfo,
   JvDBGrid;

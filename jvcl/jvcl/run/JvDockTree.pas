@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockTree.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvDockTree.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDockTree;
 
@@ -591,8 +591,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockTree.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -605,7 +605,7 @@ uses
   {$ENDIF JVCLThemesEnabled}
   Consts, SysUtils, Math,
   JvDockControlForm, JvDockSupportProc, JvDockGlobals, JvDockVSNetStyle,
-  JvDockAdvTree, JvVCL5Utils;
+  JvDockAdvTree;
 
 type
   TWinControlAccessProtected = class(TWinControl);
@@ -1909,17 +1909,10 @@ end;
 procedure TJvDockTree.InsertControl(Control: TControl; InsertAt: TAlign;
   DropCtl: TControl);
 const
-  {$IFDEF COMPILER6_UP}
   Orients: array [TAlign] of TDockOrientation =
     (doNoOrient, doHorizontal, doHorizontal, doVertical, doVertical, doNoOrient, doNoOrient);
   MakeLast: array [TAlign] of Boolean =
     (False, False, True, False, True, False, False);
-  {$ELSE}
-  Orients: array [TAlign] of TDockOrientation =
-    (doNoOrient, doHorizontal, doHorizontal, doVertical, doVertical, doNoOrient);
-  MakeLast: array [TAlign] of Boolean =
-    (False, False, True, False, True, False);
-  {$ENDIF COMPILER6_UP}
 var
   Sibling: TJvDockZone;
   Me: TJvDockZone;

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFullColorSpaces.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvFullColorSpaces.pas 12439 2009-08-09 17:02:39Z obones $
 
 // TColorBox is implemented in ExtCtrls in Delphi and BCB version 6 and +
 
@@ -321,8 +321,8 @@ function JoinColorParts(const Part1, Part2, Part3: Integer): TJvFullColor;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFullColorSpaces.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -330,9 +330,7 @@ const
 implementation
 
 uses
-  {$IFDEF COMPILER6_UP}
   Controls, StdCtrls, ExtCtrls,
-  {$ENDIF COMPILER6_UP}
   JvResources, TypInfo, JvJCLUtils ,JvJVCLUtils,
   JclMath;
 

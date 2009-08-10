@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBReg.pas 11694 2008-01-12 13:39:36Z jfudickar $
+// $Id: JvDBReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBReg;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   Classes, ComCtrls, ActnList,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   {$IFDEF JV_MIDAS}
   JvDBRemoteLogin,

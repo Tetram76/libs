@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAVICaptureEditors.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvAVICaptureEditors.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvAVICaptureEditors;
 
@@ -32,11 +32,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, VFW, 
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, DesignMenus, VCLEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvAVICapture, JvDsgnTypes;
 
 type

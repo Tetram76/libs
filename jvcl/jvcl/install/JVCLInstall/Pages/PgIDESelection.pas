@@ -22,7 +22,7 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PgIDESelection.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: PgIDESelection.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit PgIDESelection;
 
@@ -283,7 +283,7 @@ var
   Cmd, Dir: string;
   JCLExitCode: Cardinal;
 begin
-  Version := 5; // find the newest Delphi version
+  Version := 6; // find the newest Delphi version
   Tg := nil;
   // is there a Delphi?
   for i := 0 to Installer.Data.Targets.Count - 1 do

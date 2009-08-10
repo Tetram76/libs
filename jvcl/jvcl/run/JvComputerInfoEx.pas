@@ -32,7 +32,7 @@ Known Issues:
   * ResetSystemIcons only tested on W2k
 
 -----------------------------------------------------------------------------}
-// $Id: JvComputerInfoEx.pas 12217 2009-02-25 19:01:25Z outchy $
+// $Id: JvComputerInfoEx.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvComputerInfoEx;
 
@@ -50,7 +50,7 @@ uses
   Windows, Messages, SysUtils, ShlObj, ShellAPI,
   Classes, Graphics, Controls,
   JclWin32, JclSysInfo,
-  JvVCL5Utils, JvJVCLUtils, JvComponentBase, JvTypes;
+  JvJVCLUtils, JvComponentBase, JvTypes;
 
 {$HPPEMIT '#include <dbt.h>'}
 // these are defined here to avoid including DBT.pas
@@ -1452,8 +1452,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComputerInfoEx.pas $';
-    Revision: '$Revision: 12217 $';
-    Date: '$Date: 2009-02-25 20:01:25 +0100 (mer., 25 févr. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

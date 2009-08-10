@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActionsEngineControlCxPivotGrid.pas 11641 2007-12-24 16:34:00Z outchy $
+// $Id: JvDBActionsEngineControlCxPivotGrid.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBActionsEngineControlCxPivotGrid;
 
@@ -62,8 +62,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActionsEngineControlCxPivotGrid.pas $';
-    Revision: '$Revision: 11641 $';
-    Date: '$Date: 2007-12-24 17:34:00 +0100 (lun., 24 déc. 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -73,10 +73,7 @@ implementation
 uses
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils;
+  Variants, SysUtils;
 
 //=== { TJvDatabaseActionDevExpCxPivotGridControlEngine } =========================
 

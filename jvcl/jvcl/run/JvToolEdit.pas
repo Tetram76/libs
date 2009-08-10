@@ -1,4 +1,4 @@
-﻿{-----------------------------------------------------------------------------
+{-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -27,7 +27,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 12433 2009-08-07 12:08:47Z obones $
+// $Id: JvToolEdit.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvToolEdit;
 
@@ -44,13 +44,11 @@ uses
   Windows, Messages, ShellAPI, ActiveX,
   {$ENDIF MSWINDOWS}
   ShlObj,
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Menus,
   Buttons, FileCtrl, Mask, ImgList, ActnList, ExtDlgs,
   JclBase,
-  JvVCL5Utils, JvConsts,
+  JvConsts,
   JvExControls, JvSpeedButton, JvTypes, JvExMask, JvExForms, JvButton,
   JvDataSourceIntf;
 
@@ -268,9 +266,7 @@ type
     procedure SetNumGlyphs(const Value: TNumGlyphs);
     procedure SetShowButton(const Value: Boolean);
     procedure SetDataConnector(const Value: TJvCustomComboEditDataConnector);
-    {$IFDEF COMPILER6_UP}
     procedure UpdateBtnBounds(var NewLeft, NewTop, NewWidth, NewHeight: Integer);
-    {$ENDIF COMPILER6_UP}
     { (rb) renamed from UpdateEdit }
     procedure UpdateGroup;
     procedure CMWantSpecialKey(var Msg: TCMWantSpecialKey); message CM_WANTSPECIALKEY;
@@ -293,10 +289,8 @@ type
     FFocused: Boolean;
     FPopup: TWinControl;
     function CreateDataConnector: TJvCustomComboEditDataConnector; virtual;
-    {$IFDEF COMPILER6_UP}
     procedure CustomAlignPosition(Control: TControl; var NewLeft, NewTop, NewWidth,
       NewHeight: Integer; var AlignRect: TRect; AlignInfo: TAlignInfo); override;
-    {$ENDIF COMPILER6_UP}
     procedure WndProc(var Msg: TMessage); override;
     procedure WMClear(var Msg: TMessage); message WM_CLEAR;
     procedure WMCut(var Msg: TMessage); message WM_CUT;
@@ -418,12 +412,10 @@ type
     property AutoSize;
     property AutoCompleteItems;
     property AutoCompleteOptions;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property BiDiMode;
     property DragCursor;
     property DragKind;
@@ -620,12 +612,10 @@ type
     property DefaultExt: TFileExt read GetDefaultExt write SetDefaultExt;
     property AutoCompleteOptions;
     property AutoCompleteFileOptions default [acfFileSystem];
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property Flat;
     property ParentFlat;
     { (rb) Obsolete; added 'stored False', eventually remove }
@@ -736,12 +726,10 @@ type
     property DisplayLocalizedName: Boolean read FDisplayLocalizedName write SetDisplayLocalizedName default False;
     property AutoCompleteOptions;
     property AutoCompleteFileOptions default [acfFileSystem, acfFileSysDirs];
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property Flat;
     property ParentFlat;
     property DialogOptions: TSelectDirOpts read FOptions write FOptions default [sdAllowCreate];
@@ -983,12 +971,10 @@ type
     property DialogTitle;
     property DirectInput;
     property DragCursor;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property BiDiMode;
     property DragKind;
     property Flat;
@@ -1082,8 +1068,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 12433 $';
-    Date: '$Date: 2009-08-07 14:08:47 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1091,13 +1077,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_RTLCONSTS}
-  RTLConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
-  Math, Consts,
-  {$IFDEF COMPILER6_UP}
-  MaskUtils,
-  {$ENDIF COMPILER6_UP}
+  RTLConsts, Math, Consts, MaskUtils,
   MultiMon,
   JvBrowseFolder,
   JclFileUtils, JclStrings,
@@ -1111,11 +1091,7 @@ type
   TCustomMaskEditAccessPrivate = class(TCustomEdit)
   private
     // Do not remove these fields, although they are not used.
-    {$IFDEF COMPILER6_UP}
     FEditMask: TEditMask;
-    {$ELSE}
-    FEditMask: string;
-    {$ENDIF COMPILER6_UP}
     FMaskBlank: Char;
     FMaxChars: Integer;
     FMaskSave: Boolean;
@@ -1648,11 +1624,7 @@ begin
   FBtnControl.Height := 17;
   FBtnControl.Visible := True;
   FBtnControl.Parent := Self;
-  {$IFDEF COMPILER6_UP}
   FBtnControl.Align := alCustom;
-  {$ELSE}
-  FBtnControl.Align := alRight;
-  {$ENDIF COMPILER6_UP}
   FButton := TJvEditButton.Create(Self);
   FButton.SetBounds(0, 0, FBtnControl.Width, FBtnControl.Height);
   FButton.Visible := True;
@@ -1903,7 +1875,6 @@ begin
   end;
 end;
 
-{$IFDEF COMPILER6_UP}
 procedure TJvCustomComboEdit.CustomAlignPosition(Control: TControl;
   var NewLeft, NewTop, NewWidth, NewHeight: Integer;
   var AlignRect: TRect; AlignInfo: TAlignInfo);
@@ -1911,7 +1882,6 @@ begin
   if Control = FBtnControl then
     UpdateBtnBounds(NewLeft, NewTop, NewWidth, NewHeight);
 end;
-{$ENDIF COMPILER6_UP}
 
 class function TJvCustomComboEdit.DefaultImageIndex: TImageIndex;
 begin
@@ -2891,7 +2861,6 @@ begin
   end;
 end;
 
-{$IFDEF COMPILER6_UP}
 procedure TJvCustomComboEdit.UpdateBtnBounds(var NewLeft, NewTop, NewWidth, NewHeight: Integer);
 var
   BtnRect: TRect;
@@ -2953,7 +2922,6 @@ begin
   NewWidth := BtnRect.Right - BtnRect.Left;
   NewHeight := BtnRect.Bottom - BtnRect.Top;
 end;
-{$ENDIF COMPILER6_UP}
 
 procedure TJvCustomComboEdit.UpdateControls;
 begin

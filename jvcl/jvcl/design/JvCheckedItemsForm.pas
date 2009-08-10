@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckedItemsForm.pas 12327 2009-06-05 22:25:57Z ahuser $
+// $Id: JvCheckedItemsForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvCheckedItemsForm;
 
@@ -31,11 +31,7 @@ interface
 uses
   Windows, SysUtils, Classes, Graphics, Controls, Forms, StdCtrls,
   ExtCtrls, Menus, CheckLst,
-  {$IFDEF COMPILER6_UP}
   RTLConsts, DesignIntf, DesignEditors, VCLEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvComponent, JvExControls, JvxCheckListBox;
 
 type

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPaintBoxEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvPaintBoxEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvPaintBoxEditor;
 
@@ -31,27 +31,17 @@ interface
 
 uses
   SysUtils, Classes, Windows, Forms, Graphics, ImgList, Dialogs, Controls,
-  {$IFDEF COMPILER6_UP}
   VCLEditors, DesignIntf, DesignEditors, DesignMenus;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvPaintBoxEditor = class(TDefaultEditor)
   public
-    {$IFDEF COMPILER6_UP}
     procedure EditProperty(const PropertyEditor: IProperty;
       var Continue: Boolean); override;
-    {$ELSE}
-    procedure EditProperty(PropertyEditor: TPropertyEditor;
-      var Continue, FreeEditor: Boolean); override;
-    {$ENDIF COMPILER6_UP}
   end;
 
 implementation
 
-{$IFDEF COMPILER6_UP}
 procedure TJvPaintBoxEditor.EditProperty(const PropertyEditor: IProperty;
   var Continue: Boolean);
 begin
@@ -63,19 +53,6 @@ begin
   else
     inherited EditProperty(PropertyEditor, Continue);
 end;
-{$ELSE}
-procedure TJvPaintBoxEditor.EditProperty(PropertyEditor: TPropertyEditor;
-  var Continue, FreeEditor: Boolean);
-begin
-  if CompareText(PropertyEditor.GetName, 'OnPaint') = 0 then
-  begin
-    PropertyEditor.Edit;
-    Continue := False;
-  end
-  else
-    inherited EditProperty(PropertyEditor, Continue, FreeEditor);
-end;
-{$ENDIF COMPILER6_UP}
 
 end.
  

@@ -106,7 +106,7 @@ if (!MyUltimGrid->SearchNext(ResultCol, ResultField, false, false, true)) ...
 -----------------------------------------------------------------------------
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUltimGrid.pas 12328 2009-06-06 13:04:28Z ahuser $
+// $Id: JvDBUltimGrid.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBUltimGrid;
 
@@ -118,11 +118,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  Classes, Graphics, Controls, DB,
+  Windows, Variants, Classes, Graphics, Controls, DB,
   JvDBGrid, JvTypes; {JvTypes contains Exception base class}
 
 const
@@ -225,8 +221,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUltimGrid.pas $';
-    Revision: '$Revision: 12328 $';
-    Date: '$Date: 2009-06-06 15:04:28 +0200 (sam., 06 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

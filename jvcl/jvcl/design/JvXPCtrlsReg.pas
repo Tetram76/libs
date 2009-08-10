@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPCtrlsReg.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvXPCtrlsReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvXPCtrlsReg;
 
@@ -38,11 +38,7 @@ implementation
 
 uses
   Classes, ImgList,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, VCLEditors,
-  {$ELSE}
-  Contnrs, DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts, JvXPProgressBar,
   JvXPCore, JvXPPropertyEditors, JvXPBar, JvXPContainer,
   JvXPButtons, JvXPCheckCtrls;

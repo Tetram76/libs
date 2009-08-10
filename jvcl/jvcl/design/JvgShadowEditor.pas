@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgShadowEditor.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvgShadowEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvgShadowEditor;
 
@@ -33,11 +33,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   ExtCtrls, ComCtrls,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignWindows, DesignEditors;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvgShadowEditor = class(TComponentEditor)
