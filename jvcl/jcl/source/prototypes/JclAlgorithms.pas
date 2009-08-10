@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 16:39:32 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2923                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -291,8 +291,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclAlgorithms.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2923 $';
+    Date: '$Date: 2009-08-09 16:39:32 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -305,9 +305,6 @@ uses
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
-  {$IFNDEF RTL140_UP}
-  JclWideStrings,
-  {$ENDIF ~RTL140_UP}
   SysUtils;
 
 function IntfSimpleCompare(const Obj1, Obj2: IInterface): Integer;

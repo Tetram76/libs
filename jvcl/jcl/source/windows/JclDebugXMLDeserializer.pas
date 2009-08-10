@@ -10,7 +10,7 @@
 { ANY KIND, either express or implied. See the License for the specific language governing rights  }
 { and limitations under the License.                                                               }
 {                                                                                                  }
-{ The Original Code is JclDebugXMLSerializer.pas.                                                  }
+{ The Original Code is JclDebugXMLDeserializer.pas.                                                }
 {                                                                                                  }
 { The Initial Developer of the Original Code is Uwe Schuster.                                      }
 { Portions created by Uwe Schuster are Copyright (C) 2009 Uwe Schuster. All rights reserved.       }
@@ -20,37 +20,37 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-10 15:54:58 +0200 (lun., 10 août 2009)                         $ }
+{ Revision:      $Rev:: 2935                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-unit JclDebugXMLSerializer;
+unit JclDebugXMLDeserializer;
 
 {$I jcl.inc}
 
 interface
 
 uses
-  SysUtils, Classes,
+  SysUtils,
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclDebugSerialization;
+  JclDebugSerialization, JclSimpleXml;
 
 type
-  TJclXMLSerializer = class(TJclCustomSimpleSerializer)
+  TJclXMLDeserializer = class(TJclCustomSimpleSerializer)
   public
-    function SaveToString: string;
+    procedure LoadFromString(const AValue: string);
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclDebugXMLSerializer.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebugXMLDeserializer.pas $';
+    Revision: '$Revision: 2935 $';
+    Date: '$Date: 2009-08-10 15:54:58 +0200 (lun., 10 août 2009) $';
     LogPath: '';
     Extra: '';
     Data: nil
@@ -59,54 +59,30 @@ const
 
 implementation
 
-//=== { TJclXMLSerializer } ==================================================
+//=== { TJclXMLDeserializer } ================================================
 
-function TJclXMLSerializer.SaveToString: string;
+procedure TJclXMLDeserializer.LoadFromString(const AValue: string);
 
-  procedure AddToStrings(ASerializer: TJclCustomSimpleSerializer; AXMLStrings: TStringList; AIdent: Integer);
+  procedure AddItems(ASerializer: TJclCustomSimpleSerializer; AElem: TJclSimpleXMLElem);
   var
-    I, P: Integer;
-    S, S1, S2, V: string;
+    I: Integer;
   begin
-    if AIdent = 0 then
-      S := ''
-    else
-      S := StringOfChar(' ', AIdent);
-    V := '';
-    for I := 0 to ASerializer.Values.Count - 1 do
-    begin
-      S1 := ASerializer.Values[I];
-      P := Pos('=', S1);
-      if P > 0 then
-      begin
-        S2 := S1;
-        Delete(S1, P, Length(S1));
-        Delete(S2, 1, P);
-        V := V + ' ';
-        V := V + Format('%s="%s"', [S1, S2]);
-      end;
-    end;
-    if ASerializer.Count > 0 then
-    begin
-      AXMLStrings.Add(S + '<' + ASerializer.Name + V + '>');
-      for I := 0 to ASerializer.Count - 1 do
-        AddToStrings(ASerializer[I], AXMLStrings, AIdent + 2);
-      AXMLStrings.Add(S + '</' + ASerializer.Name + '>');
-    end
-    else
-      AXMLStrings.Add(S + '<' + ASerializer.Name + V + '/>');
+    for I := 0 to AElem.Properties.Count - 1 do
+      ASerializer.Values.Add(Format('%s=%s', [AElem.Properties[I].Name, AElem.Properties[I].Value]));
+    for I := 0 to AElem.Items.Count - 1 do
+      AddItems(ASerializer.AddChild(nil, AElem.Items[I].Name), AElem.Items[I])
   end;
 
-
 var
-  XMLStrings: TStringList;
+  XML: TJclSimpleXML;
 begin
-  XMLStrings := TStringList.Create;
+  XML := TJclSimpleXML.Create;
   try
-    AddToStrings(Self, XMLStrings, 0);
-    Result := XMLStrings.Text;
+    XML.LoadFromString(AValue);
+    Clear;
+    AddItems(Self, XML.Root);
   finally
-    XMLStrings.Free;
+    XML.Free;
   end;
 end;
 

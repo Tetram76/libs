@@ -47,8 +47,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2922                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -868,8 +868,8 @@ procedure GetBPKFileInfo(const BPKFileName: string; out RunOnly: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBorlandTools.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2922 $';
+    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -907,10 +907,6 @@ type
 
 const
   {$IFDEF MSWINDOWS}
-  {$IFNDEF RTL140_UP}
-  PathSep = ';';
-  {$ENDIF ~RTL140_UP}
-
   MSHelpSystemKeyName = '\SOFTWARE\Microsoft\Windows\Help';
 
   BCBKeyName          = '\SOFTWARE\Borland\C++Builder';

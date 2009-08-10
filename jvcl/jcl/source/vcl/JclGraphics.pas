@@ -40,8 +40,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -557,8 +557,8 @@ procedure SetGamma(Gamma: Single = 0.7);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclGraphics.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -662,21 +662,6 @@ end;
 //=== Internal low level routines ============================================
 
 procedure FillLongword(var X; Count: Integer; Value: Longword);
-{asm
-// EAX = X
-// EDX = Count
-// ECX = Value
-        TEST    EDX, EDX
-        JLE     @@EXIT
-
-        PUSH    EDI
-        MOV     EDI, EAX  // Point EDI to destination
-        MOV     EAX, ECX
-        MOV     ECX, EDX
-        REP     STOSD    // Fill count dwords
-        POP     EDI
-@@EXIT:
-end;}
 var
   P: PLongword;
 begin
@@ -701,22 +686,6 @@ begin
 end;
 
 procedure TestSwap(var A, B: Integer);
-{asm
-// EAX = [A]
-// EDX = [B]
-        MOV     ECX, [EAX]     // ECX := [A]
-        CMP     ECX, [EDX]     // ECX <= [B]? Exit
-        JLE     @@EXIT
-        //Replaced on more fast code
-        //XCHG    ECX, [EDX]     // ECX <-> [B];
-        //MOV     [EAX], ECX     // [A] := ECX
-        PUSH    EBX
-        MOV     EBX,[EDX]      // EBX := [B]
-        MOV     [EAX],EBX      // [A] := EBX
-        MOV     [EDX],ECX      // [B] := ECX
-        POP     EBX
-@@EXIT:
-end;}
 var
   X: Integer;
 begin

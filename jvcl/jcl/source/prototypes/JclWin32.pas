@@ -39,8 +39,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
-{ Revision:      $Rev:: 2914                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -133,6 +133,7 @@ type
 {$I win32api\ObjBase.int}
 {$I win32api\NtSecApi.int}
 {$I win32api\TlHelp32.int}
+{$I win32api\Winternl.int}
 
 {$IFDEF MSWINDOWS}
 
@@ -205,8 +206,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclWin32.pas $';
-    Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -282,6 +283,7 @@ end;
 {$I win32api\ObjBase.imp}
 {$I win32api\NtSecApi.imp}
 {$I win32api\TlHelp32.imp}
+{$I win32api\Winternl.imp}
 
 {$IFDEF UNITVERSIONING}
 initialization

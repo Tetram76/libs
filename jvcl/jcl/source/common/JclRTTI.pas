@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 16:45:38 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2924                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -147,17 +147,13 @@ type
     ['{7DAD5223-46EA-11D5-B0C0-4854E825F345}']
     function GetBaseType: IJclEnumerationTypeInfo;
     function GetNames(const I: Integer): string;
-    {$IFDEF RTL140_UP}
     function GetUnitName: string;
-    {$ENDIF RTL140_UP}
 
     function IndexOfName(const Name: string): Integer;
 
     property BaseType: IJclEnumerationTypeInfo read GetBaseType;
     property Names[const I: Integer]: string read GetNames; default;
-    {$IFDEF RTL140_UP}
     property UnitName: string read GetUnitName;
-    {$ENDIF RTL140_UP}
   end;
 
   IJclSetTypeInfo = interface(IJclOrdinalTypeInfo)
@@ -204,9 +200,9 @@ type
     function GetReaderType: TJclPropSpecKind;
     function GetWriterType: TJclPropSpecKind;
     function GetStoredType: TJclPropSpecKind;
-    function GetReaderValue: Integer;
-    function GetWriterValue: Integer;
-    function GetStoredValue: Integer;
+    function GetReaderValue: TJclAddr;
+    function GetWriterValue: TJclAddr;
+    function GetStoredValue: TJclAddr;
 
     function IsStored(const AInstance: TObject): Boolean;
     function HasDefault: Boolean;
@@ -219,9 +215,9 @@ type
     property ReaderType: TJclPropSpecKind read GetReaderType;
     property WriterType: TJclPropSpecKind read GetWriterType;
     property StoredType: TJclPropSpecKind read GetStoredType;
-    property ReaderValue: Integer read GetReaderValue;
-    property WriterValue: Integer read GetWriterValue;
-    property StoredValue: Integer read GetStoredValue;
+    property ReaderValue: TJclAddr read GetReaderValue;
+    property WriterValue: TJclAddr read GetWriterValue;
+    property StoredValue: TJclAddr read GetStoredValue;
     property Index: Integer read GetIndex;
     property Default: Longint read GetDefault;
     property NameIndex: Smallint read GetNameIndex;
@@ -283,17 +279,13 @@ type
     function GetParent: IJclInterfaceTypeInfo;
     function GetFlags: TIntfFlagsBase;
     function GetGUID: TGUID;
-    {$IFDEF RTL140_UP}
     function GetPropertyCount: Integer;
-    {$ENDIF RTL140_UP}
     function GetUnitName: string;
 
     property Parent: IJclInterfaceTypeInfo read GetParent;
     property Flags: TIntfFlagsBase read GetFlags;
     property GUID: TGUID read GetGUID;
-    {$IFDEF RTL140_UP}
     property PropertyCount: Integer read GetPropertyCount;
-    {$ENDIF RTL140_UP}
     property UnitName: string read GetUnitName;
   end;
 
@@ -307,7 +299,6 @@ type
     property MaxValue: Int64 read GetMaxValue;
   end;
 
-  {$IFDEF RTL140_UP}
   // Dynamic array types
   IJclDynArrayTypeInfo = interface(IJclTypeInfo)
     ['{7DAD522E-46EA-11D5-B0C0-4854E825F345}']
@@ -323,7 +314,6 @@ type
     property VarType: Integer read GetVarType;
     property UnitName: string read GetUnitName;
   end;
-  {$ENDIF RTL140_UP}
 
   EJclRTTIError = class(EJclError);
 
@@ -371,8 +361,8 @@ function JclIsClassByName(const AnObj: TObject; const AClass: TClass): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclRTTI.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2924 $';
+    Date: '$Date: 2009-08-09 16:45:38 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -655,9 +645,7 @@ type
   protected
     function GetBaseType: IJclEnumerationTypeInfo;
     function GetNames(const I: Integer): string;
-    {$IFDEF RTL140_UP}
     function GetUnitName: string;
-    {$ENDIF RTL140_UP}
     function IndexOfName(const Name: string): Integer;
     procedure WriteTo(const Dest: IJclInfoWriter); override;
     procedure DeclarationTo(const Dest: IJclInfoWriter); override;
@@ -685,13 +673,11 @@ begin
   P := @Base.TypeData.NameList;
   while Idx <> 0 do
   begin
-    Inc(Integer(P), Length(P^) + 1);
+    Inc(TJclAddr(P), Length(P^) + 1);
     Dec(Idx);
   end;
   Result := string(P^);
 end;
-
-{$IFDEF RTL140_UP}
 
 function TJclEnumerationTypeInfo.GetUnitName: string;
 var
@@ -704,7 +690,7 @@ begin
     P := @TypeData.NameList;
     while I >= 0 do
     begin
-      Inc(Integer(P), Length(P^) + 1);
+      Inc(TJclAddr(P), Length(P^) + 1);
       Dec(I);
     end;
     Result := string(P^);
@@ -712,8 +698,6 @@ begin
   else
     Result := string(TypeData.NameList);
 end;
-
-{$ENDIF RTL140_UP}
 
 function TJclEnumerationTypeInfo.IndexOfName(const Name: string): Integer;
 begin
@@ -731,9 +715,7 @@ var
   Prefix: string;
 begin
   inherited WriteTo(Dest);
-  {$IFDEF RTL140_UP}
   Dest.Writeln(LoadResString(@RsRTTIUnitName) + GetUnitName);
-  {$ENDIF RTL140_UP}
   Dest.Write(LoadResString(@RsRTTINameList));
   Prefix := '(';
   for Idx := MinValue to MaxValue do
@@ -1049,14 +1031,14 @@ type
     function GetDefault: Longint;
     function GetNameIndex: Smallint;
     function GetName: string;
-    function GetSpecKind(const Value: Integer): TJclPropSpecKind;
-    function GetSpecValue(const Value: Integer): Integer;
+    function GetSpecKind(const Value: TJclAddr): TJclPropSpecKind;
+    function GetSpecValue(const Value: TJclAddr): TJclAddr;
     function GetReaderType: TJclPropSpecKind;
     function GetWriterType: TJclPropSpecKind;
     function GetStoredType: TJclPropSpecKind;
-    function GetReaderValue: Integer;
-    function GetWriterValue: Integer;
-    function GetStoredValue: Integer;
+    function GetReaderValue: TJclAddr;
+    function GetWriterValue: TJclAddr;
+    function GetStoredValue: TJclAddr;
   public
     constructor Create(const APropInfo: PPropInfo);
     function IsStored(const AInstance: TObject): Boolean;
@@ -1071,9 +1053,9 @@ type
     property ReaderType: TJclPropSpecKind read GetReaderType;
     property WriterType: TJclPropSpecKind read GetWriterType;
     property StoredType: TJclPropSpecKind read GetStoredType;
-    property ReaderValue: Integer read GetReaderValue;
-    property WriterValue: Integer read GetWriterValue;
-    property StoredValue: Integer read GetStoredValue;
+    property ReaderValue: TJclAddr read GetReaderValue;
+    property WriterValue: TJclAddr read GetWriterValue;
+    property StoredValue: TJclAddr read GetStoredValue;
     property Index: Integer read GetIndex;
     property Default: Longint read GetDefault;
     property NameIndex: Smallint read GetNameIndex;
@@ -1131,11 +1113,16 @@ begin
   Result := string(PropInfo.Name);
 end;
 
-function TJclPropInfo.GetSpecKind(const Value: Integer): TJclPropSpecKind;
+function TJclPropInfo.GetSpecKind(const Value: TJclAddr): TJclPropSpecKind;
 var
   P: Integer;
 begin
+  {$IFDEF CPU32}
   P := Value shr 24;
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  P := Value shr 56;
+  {$ENDIF CPU64}
   case P of
     $00:
       if Value < 2 then
@@ -1151,15 +1138,25 @@ begin
   end;
 end;
 
-function TJclPropInfo.GetSpecValue(const Value: Integer): Integer;
+function TJclPropInfo.GetSpecValue(const Value: TJclAddr): TJclAddr;
 begin
   case GetSpecKind(Value) of
     pskStaticMethod, pskConstant:
       Result := Value;
     pskVirtualMethod:
-      Result := Smallint(Value and $0000FFFF);
+      {$IFDEF CPU32}
+      Result := Value and $0000FFFF;
+      {$ENDIF CPU32}
+      {$IFDEF CPU64}
+      Result := Value and $0000FFFFFFFFFFFF;
+      {$ENDIF CPU64}
     pskField:
+      {$IFDEF CPU32}
       Result := Value and $00FFFFFF;
+      {$ENDIF CPU32}
+      {$IFDEF CPU64}
+      Result := Value and $00FFFFFFFFFFFFFF;
+      {$ENDIF CPU64}
   else
     Result := 0;
   end;
@@ -1167,32 +1164,32 @@ end;
 
 function TJclPropInfo.GetReaderType: TJclPropSpecKind;
 begin
-  Result := GetSpecKind(Integer(Reader));
+  Result := GetSpecKind(TJclAddr(Reader));
 end;
 
 function TJclPropInfo.GetWriterType: TJclPropSpecKind;
 begin
-  Result := GetSpecKind(Integer(Writer));
+  Result := GetSpecKind(TJclAddr(Writer));
 end;
 
 function TJclPropInfo.GetStoredType: TJclPropSpecKind;
 begin
-  Result := GetSpecKind(Integer(StoredProc));
+  Result := GetSpecKind(TJclAddr(StoredProc));
 end;
 
-function TJclPropInfo.GetReaderValue: Integer;
+function TJclPropInfo.GetReaderValue: TJclAddr;
 begin
-  Result := GetSpecValue(Integer(Reader));
+  Result := GetSpecValue(TJclAddr(Reader));
 end;
 
-function TJclPropInfo.GetWriterValue: Integer;
+function TJclPropInfo.GetWriterValue: TJclAddr;
 begin
-  Result := GetSpecValue(Integer(Writer));
+  Result := GetSpecValue(TJclAddr(Writer));
 end;
 
-function TJclPropInfo.GetStoredValue: Integer;
+function TJclPropInfo.GetStoredValue: TJclAddr;
 begin
-  Result := GetSpecValue(Integer(StoredProc));
+  Result := GetSpecValue(TJclAddr(StoredProc));
 end;
 
 function TJclPropInfo.IsStored(const AInstance: TObject): Boolean;
@@ -1256,7 +1253,7 @@ var
   PropData: ^TPropData;
 begin
   PropData := @TypeData.UnitName;
-  Inc(Integer(PropData), 1 + Length(GetUnitName));
+  Inc(TJclAddr(PropData), 1 + Length(GetUnitName));
   Result := PropData.PropCount;
 end;
 
@@ -1268,21 +1265,21 @@ var
   RecSize: Integer;
 begin
   PropData := @TypeData.UnitName;
-  Inc(Integer(PropData), 1 + Length(GetUnitName));
+  Inc(TJclAddr(PropData), 1 + Length(GetUnitName));
   if PropIdx + 1 > PropData.PropCount then
     Result := Parent.Properties[PropIdx - PropData.PropCount]
   else
   begin
     Prop := PPropInfo(PropData);
-    Inc(Integer(Prop), 2);
+    Inc(TJclAddr(Prop), 2);
     if PropIdx > 0 then
     begin
       RecSize := SizeOf(TPropInfo) - SizeOf(ShortString);
       Idx := PropIdx;
       while Idx > 0 do
       begin
-        Inc(Integer(Prop), RecSize);
-        Inc(Integer(Prop), 1 + PByte(Prop)^);
+        Inc(TJclAddr(Prop), RecSize);
+        Inc(TJclAddr(Prop), 1 + PByte(Prop)^);
         Dec(Idx);
       end;
     end;
@@ -1494,7 +1491,7 @@ var
   PName: PShortString;
 begin
   PName := Param;
-  Inc(Integer(PName));
+  Inc(TJclAddr(PName));
   Result := string(PName^);
 end;
 
@@ -1508,8 +1505,8 @@ var
   PName: PShortString;
 begin
   PName := Param;
-  Inc(Integer(PName));
-  Inc(Integer(PName), PByte(PName)^ + 1);
+  Inc(TJclAddr(PName));
+  Inc(TJclAddr(PName), PByte(PName)^ + 1);
   Result := string(PName^);
 end;
 
@@ -1558,7 +1555,7 @@ begin
   while I >= 0 do
   begin
     Result := TJclEventParamInfo.Create(Param);
-    Inc(Integer(Param), Result.RecSize);
+    Inc(TJclAddr(Param), Result.RecSize);
     Dec(I);
   end;
 end;
@@ -1573,7 +1570,7 @@ begin
     if ParameterCount > 0 then
     begin
       LastParam := Parameters[ParameterCount-1];
-      ResPtr := Pointer(Integer(LastParam.Param) + LastParam.RecSize);
+      ResPtr := Pointer(TJclAddr(LastParam.Param) + TJclAddr(LastParam.RecSize));
     end
     else
       ResPtr := @TypeData.ParamList[0];
@@ -1665,9 +1662,7 @@ type
     function GetParent: IJclInterfaceTypeInfo;
     function GetFlags: TIntfFlagsBase;
     function GetGUID: TGUID;
-    {$IFDEF RTL140_UP}
     function GetPropertyCount: Integer;
-    {$ENDIF RTL140_UP}
     function GetUnitName: string;
     procedure WriteTo(const Dest: IJclInfoWriter); override;
     procedure DeclarationTo(const Dest: IJclInfoWriter); override;
@@ -1675,9 +1670,7 @@ type
     property Parent: IJclInterfaceTypeInfo read GetParent;
     property Flags: TIntfFlagsBase read GetFlags;
     property GUID: TGUID read GetGUID;
-    {$IFDEF RTL140_UP}
     property PropertyCount: Integer read GetPropertyCount;
-    {$ENDIF RTL140_UP}
   end;
 
 function TJclInterfaceTypeInfo.GetParent: IJclInterfaceTypeInfo;
@@ -1704,16 +1697,14 @@ begin
     Result := NullGUID;
 end;
 
-{$IFDEF RTL140_UP}
 function TJclInterfaceTypeInfo.GetPropertyCount: Integer;
 var
   PropData: ^TPropData;
 begin
   PropData := @TypeData.IntfUnit;
-  Inc(Integer(PropData), 1 + Length(GetUnitName));
+  Inc(TJclAddr(PropData), 1 + Length(GetUnitName));
   Result := PropData.PropCount;
 end;
-{$ENDIF RTL140_UP}
 
 function TJclInterfaceTypeInfo.GetUnitName: string;
 begin
@@ -1733,9 +1724,7 @@ begin
   Dest.Writeln(LoadResString(@RsRTTIUnitName) + GetUnitName);
   if Parent <> nil then
     Dest.Writeln(LoadResString(@RsRTTIParent) + Parent.Name);
-  {$IFDEF RTL140_UP}
   Dest.Writeln(LoadResString(@RsRTTIPropCount) + IntToStr(PropertyCount));
-  {$ENDIF RTL140_UP}
 end;
 
 procedure TJclInterfaceTypeInfo.DeclarationTo(const Dest: IJclInfoWriter);
@@ -1796,8 +1785,6 @@ begin
 end;
 
 //=== { TJclDynArrayTypeInfo } ===============================================
-
-{$IFDEF RTL140_UP}
 
 type
   TJclDynArrayTypeInfo = class(TJclTypeInfo, IJclDynArrayTypeInfo)
@@ -1894,8 +1881,6 @@ begin
     Dest.Writeln('; // Unit ' + GetUnitName);
 end;
 
-{$ENDIF RTL140_UP}
-
 //=== Typeinfo retrieval =====================================================
 
 function JclTypeInfo(ATypeInfo: PTypeInfo): IJclTypeInfo;
@@ -1919,10 +1904,8 @@ begin
       Result := TJclInterfaceTypeInfo.Create(ATypeInfo);
     tkInt64:
       Result := TJclInt64TypeInfo.Create(ATypeInfo);
-    {$IFDEF RTL140_UP}
     tkDynArray:
       Result := TJclDynArrayTypeInfo.Create(ATypeInfo);
-    {$ENDIF RTL140_UP}
   else
     Result := TJclTypeInfo.Create(ATypeInfo);
   end;
@@ -2096,7 +2079,7 @@ begin
     StringSize := StringSize + 1 + Length(Literals[I]);
   Result := AllocMem(SizeOf(TTypeInfo) + SizeOf(TOrdType) +
     (2*SizeOf(Integer)) + SizeOf(PPTypeInfo) +
-    StringSize {$IFDEF RTL140_UP}+ 1{$ENDIF RTL140_UP});
+    StringSize + 1);
   try
     with Result^ do
     begin
@@ -2119,11 +2102,9 @@ begin
     for I := Low(Literals) to High(Literals) do
     begin
       CurName^ := ShortString(Literals[I]);
-      Inc(Integer(CurName), Length(Literals[I])+1);
+      Inc(TJclAddr(CurName), Length(Literals[I])+1);
     end;
-    {$IFDEF RTL140_UP}
     CurName^ := ''; // Unit name unknown
-    {$ENDIF RTL140_UP}
     AddType(Result);
   except
     try
@@ -2429,9 +2410,10 @@ end;
 
 function JclIsClass(const AnObj: TObject; const AClass: TClass): Boolean;
 asm
-        { ->    EAX     left operand (class)    }
-        {       EDX VMT of right operand        }
-        { <-    AL      left is derived from right      }
+        {$IFDEF CPU32}
+        // 32 --> EAX AnObj
+        //        EDX AClass
+        //    <-- AL  Result
         TEST    EAX,EAX
         JE      @@exit
 @@loop:
@@ -2440,6 +2422,21 @@ asm
         JE      @@success
         MOV     EAX,[EAX].vmtParent
         TEST    EAX,EAX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        // 64 --> RCX AnObj
+        //        RDX AClass
+        //    <-- AL  Result
+        MOV     RAX,RCX
+        TEST    RAX,RAX
+        JE      @@exit
+@@loop:
+        MOV     RAX,[RAX]
+        CMP     RAX,RDX
+        JE      @@success
+        MOV     RAX,[RAX].vmtParent
+        TEST    RAX,RAX
+        {$ENDIF CPU64}
         JNE     @@loop
         JMP     @@exit
 @@success:

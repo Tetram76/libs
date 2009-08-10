@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-05 12:14:34 +0200 (mer., 05 août 2009)                         $ }
-{ Revision:      $Rev:: 2912                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -126,8 +126,8 @@ function SendString(const Wnd, OriginatorWnd: HWND;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclAppInst.pas $';
-    Revision: '$Revision: 2912 $';
-    Date: '$Date: 2009-08-05 12:14:34 +0200 (mer., 05 août 2009) $';
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -142,12 +142,12 @@ uses
 
 {$IFDEF FPC}  // missing declaration from unit Messages
 type
-  TWMCopyData = packed record
-    Msg: Cardinal;
-    From: THandle;
-    CopyDataStruct: PCopyDataStruct;
-    Result: Longint;
-  end;
+  TWMCopyData = record
+      Msg: UINT;
+      From: THandle;
+      CopyDataStruct: PCopyDataStruct;
+      Result : LRESULT;
+    End;
 {$ENDIF FPC}
 
 const
@@ -478,7 +478,7 @@ begin
   EnumWinRec.CopyData.cbData := Size;
   EnumWinRec.CopyData.lpData := Data;
   EnumWinRec.Self := Self;
-  Result := EnumWindows(@EnumWinProc, Integer(@EnumWinRec));
+  Result := EnumWindows(@EnumWinProc, LPARAM(@EnumWinRec));
 end;
 
 function TJclAppInstances.SendString(const WindowClassName: string;

@@ -20,18 +20,24 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-06-28 22:47:26 +0200 (dim., 28 juin 2009)                          $ }
-{ Revision:      $Rev:: 2837                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2009-08-10 17:00:08 +0200 (lun., 10 août 2009)                         $ }
+{ Revision:      $Rev:: 2936                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
 unit JclStackTraceViewerAPI;
 
+{$I jcl.inc}
+
 interface
 
 uses
-  Classes, ActiveX, Forms;
+  Classes, ActiveX,
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
+  Forms;
 
 const
   livLocationInfo = 1;
@@ -228,6 +234,18 @@ procedure UnregisterLineNumberTranslator(AIndex: Integer);
 function RegisterRevisionProvider(const ATranslator: IJclRevisionProvider): Integer;
 procedure UnregisterRevisionProvider(AIndex: Integer);
 
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerAPI.pas $';
+    Revision: '$Revision: 2936 $';
+    Date: '$Date: 2009-08-10 17:00:08 +0200 (lun., 10 août 2009) $';
+    LogPath: 'JCL\experts\stacktraceviewer';
+    Extra: '';
+    Data: nil
+    );
+{$ENDIF UNITVERSIONING}
+
 implementation
 
 function RegisterLineNumberTranslator(const ATranslator: IJclLineNumberTranslator): Integer;
@@ -249,5 +267,13 @@ procedure UnregisterRevisionProvider(AIndex: Integer);
 begin
   UnregisterRevisionProviderProc(AIndex);
 end;
+
+{$IFDEF UNITVERSIONING}
+initialization
+  RegisterUnitVersion(HInstance, UnitVersioning);
+
+finalization
+  UnregisterUnitVersion(HInstance);
+{$ENDIF UNITVERSIONING}
 
 end.

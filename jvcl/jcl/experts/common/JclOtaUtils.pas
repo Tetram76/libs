@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
-{ Revision:      $Rev:: 2914                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2922                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -238,8 +238,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaUtils.pas $';
-    Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Revision: '$Revision: 2922 $';
+    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil
@@ -968,7 +968,6 @@ begin
 
   ProjectFileName := Project.FileName;
   OutputDirectory := GetOutputDirectory(Project);
-  {$IFDEF RTL140_UP}
   if not Assigned(Project.ProjectOptions) then
     raise EJclExpertException.CreateTrace(RsENoProjectOptions);
   LibPrefix := Trim(VarToStr(Project.ProjectOptions.Values[LIBPREFIXOptionName]));
@@ -977,10 +976,6 @@ begin
     LibPrefix := '';
   if LibSuffix = 'false' then
     LibSuffix := '';
-  {$ELSE ~RTL140_UP}
-  LibPrefix := '';
-  LibSuffix := '';
-  {$ENDIF ~RTL140_UP}
   Result := PathAddSeparator(OutputDirectory) + LibPrefix +
     PathExtractFileNameNoExt(ProjectFileName) + LibSuffix + CompilerExtensionMAP;
 end;

@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009)                         $ }
-{ Revision:      $Rev:: 2907                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                          $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -359,8 +359,8 @@ function StartServiceByName(const AServer,AServiceName: String):Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclSvcCtrl.pas $';
-    Revision: '$Revision: 2907 $';
-    Date: '$Date: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009) $';
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -371,7 +371,6 @@ implementation
 
 uses
   {$IFDEF FPC}
-  WinSysUt,
   JwaRegStr,
   {$ELSE ~FPC}
   RegStr,

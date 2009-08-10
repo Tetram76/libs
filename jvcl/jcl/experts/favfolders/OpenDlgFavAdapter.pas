@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
-{ Revision:      $Rev:: 2914                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2922                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -98,8 +98,8 @@ function InitializeFavOpenDialog: TFavOpenDialog;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/favfolders/OpenDlgFavAdapter.pas $';
-    Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Revision: '$Revision: 2922 $';
+    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\experts\favfolders';
     Extra: '';
     Data: nil
@@ -109,9 +109,6 @@ const
 implementation
 
 uses
-  {$IFNDEF RTL140_UP}
-  Forms,
-  {$ENDIF ~RTL140_UP}
   CommDlg, Dlgs,
   JclBase, JclFileUtils, JclStrings, JclSysInfo, JclSysUtils,
   JclOtaConsts, JclOtaResources, JclOtaUtils;
