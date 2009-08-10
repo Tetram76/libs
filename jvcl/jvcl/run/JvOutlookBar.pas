@@ -36,7 +36,7 @@ Known Issues:
                   Outlook bar buttons now have color properties (instead of
                   assuming we will use the clBtnFace type system colors)
 -----------------------------------------------------------------------------}
-// $Id: JvOutlookBar.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvOutlookBar.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvOutlookBar;
 
@@ -57,7 +57,7 @@ uses
   {$ENDIF !COMPILER7_UP}
   {$ENDIF JVCLThemesEnabled}
 
-  JvJCLUtils, JvVCL5Utils, JvThemes, JvComponent, JvExButtons;
+  JvJCLUtils, JvThemes, JvComponent, JvExButtons;
 
 const
   CM_CAPTION_EDITING = CM_BASE + 756;
@@ -444,12 +444,8 @@ type
     property Font;
     property Height;
     property HelpContext;
-    //PRY 2002.06.04
-    {$IFDEF COMPILER6_UP}
     property HelpKeyword;
     property HelpType;
-    {$ENDIF COMPILER6_UP}
-    // PRY END
     property Hint;
     property ParentFont;
     property ParentShowHint;
@@ -468,8 +464,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOutlookBar.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -905,7 +901,7 @@ begin
     FOnClick(Self)
   else
   if (GetOutlookBar <> nil) and (FActionLink <> nil) and not (csDesigning in GetOutlookBar.ComponentState) then
-    FActionLink.Execute{$IFDEF COMPILER6_UP}(GetOutlookBar){$ENDIF COMPILER6_UP}
+    FActionLink.Execute(GetOutlookBar)
   else
   if Assigned(FOnClick) then
     FOnClick(Self);

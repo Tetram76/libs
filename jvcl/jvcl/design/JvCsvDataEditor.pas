@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCsvDataEditor.pas 12309 2009-05-18 22:46:22Z ahuser $
+// $Id: JvCsvDataEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvCsvDataEditor;
 
@@ -36,11 +36,7 @@ interface
 uses
   SysUtils, Classes, DB,
   Windows, Messages, Forms, Dialogs, Graphics,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvCsvData;
 
 type

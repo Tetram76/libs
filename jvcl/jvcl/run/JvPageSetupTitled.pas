@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageSetupTitled.pas 11910 2008-09-21 13:28:51Z obones $
+// $Id: JvPageSetupTitled.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvPageSetupTitled;
 
@@ -32,10 +32,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes, Messages,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
+  Classes, Messages, Types,
   JvPageSetup;
 
 type
@@ -64,8 +61,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageSetupTitled.pas $';
-    Revision: '$Revision: 11910 $';
-    Date: '$Date: 2008-09-21 15:28:51 +0200 (dim., 21 sept. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

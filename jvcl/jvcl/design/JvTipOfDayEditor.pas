@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTipOfDayEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvTipOfDayEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 
 unit JvTipOfDayEditor;
@@ -35,11 +35,7 @@ interface
 
 uses
   SysUtils,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   { a component editor that shows the "Tip of the Day" dialog }
@@ -60,22 +56,16 @@ procedure TJvTipOfDayEditor.Edit;
 var
   SavedOptions: TJvTipOfDayOptions;
 begin
-  {$IFDEF COMPILER6_UP}
   with GetComponent as TJvTipOfDay do
   begin
-  {$ELSE}
-  if Component is TJvTipOfDay then
-    with TJvTipOfDay(Component) do
-    begin
-  {$ENDIF COMPILER6_UP}
-      SavedOptions := Options;
-      Options := [toShowOnStartUp];
-      try
-        Execute;
-      finally
-        Options := SavedOptions;
-      end;
+    SavedOptions := Options;
+    Options := [toShowOnStartUp];
+    try
+      Execute;
+    finally
+      Options := SavedOptions;
     end;
+  end;
 end;
 
 procedure TJvTipOfDayEditor.ExecuteVerb(Index: Integer);

@@ -28,7 +28,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvSpin.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvSpin.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSpin;
 
@@ -42,7 +42,7 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Messages, CommCtrl, ComCtrls, Controls, ExtCtrls, Graphics, Forms,
-  JvEdit, JvExMask, JvMaskEdit, JvComponent, JvDataSourceIntf, JvVCL5Utils;
+  JvEdit, JvExMask, JvMaskEdit, JvComponent, JvDataSourceIntf;
 
 const
   DefaultInitRepeatPause = 400; { pause before repeat timer (ms) }
@@ -342,12 +342,10 @@ type
     property OnMouseWheelDown;
     property OnMouseWheelUp;
     property HideSelection;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property ClipboardCommands;
   end;
 
@@ -460,12 +458,10 @@ type
     property OnMouseWheelDown;
     property OnMouseWheelUp;
     property HideSelection;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property ClipboardCommands;
   end;
 
@@ -474,8 +470,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpin.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

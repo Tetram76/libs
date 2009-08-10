@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWinDialogs.pas 12258 2009-03-24 20:54:58Z ahuser $
+// $Id: JvWinDialogs.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvWinDialogs;
 
@@ -628,8 +628,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWinDialogs.pas $';
-    Revision: '$Revision: 12258 $';
-    Date: '$Date: 2009-03-24 21:54:58 +0100 (mar., 24 mars 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -637,7 +637,7 @@ const
 implementation
 
 uses
-  JvVCL5Utils, JvResources;
+  JvResources;
 
 const
   Shell32 = 'shell32.dll';

@@ -25,7 +25,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLED.pas 11423 2007-07-19 06:59:25Z marquardt $
+// $Id: JvLED.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvLED;
 
@@ -113,8 +113,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLED.pas $';
-    Revision: '$Revision: 11423 $';
-    Date: '$Date: 2007-07-19 08:59:25 +0200 (jeu., 19 juil. 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -243,11 +243,7 @@ end;
 
 procedure TJvCustomLED.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 begin
-  {$IFDEF COMPILER6_UP}
   if AutoSize and (Align in [alNone, alCustom]) then
-  {$ELSE}
-  if AutoSize and (Align = alNone) then
-  {$ENDIF COMPILER6_UP}
     inherited SetBounds(ALeft, ATop, FImgPict.Width, FImgPict.Height)
   else
     inherited SetBounds(ALeft, ATop, AWidth, AHeight);

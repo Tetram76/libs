@@ -54,7 +54,7 @@ Known issues / not (yet) implemented features:
   - it really is a control for date entry only.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDatePickerEdit.pas 12315 2009-05-27 15:54:15Z ahuser $
+// $Id: JvDatePickerEdit.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDatePickerEdit;
 
@@ -66,9 +66,6 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF COMPILER5}
-  Forms,
-  {$ENDIF COMPILER5}
   Windows, Messages, Classes, Controls, ImgList,
   JvCalendar, JvDropDownForm, JvCheckedMaskEdit, JvToolEdit;
 
@@ -261,12 +258,10 @@ type
     property DateSeparator;
     {property BiDiMode;}
     {property ParentBiDiMode;}
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property Flat;
     property ImeMode;
     property ImeName;
@@ -342,8 +337,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDatePickerEdit.pas $';
-    Revision: '$Revision: 12315 $';
-    Date: '$Date: 2009-05-27 17:54:15 +0200 (mer., 27 mai 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -351,12 +346,8 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils, Menus,
+  Variants, SysUtils, Menus,
   JclStrings,
-  JvVcl5Utils, // StrToXxxDef
   JvConsts, JvTypes, JvResources;
 
 const

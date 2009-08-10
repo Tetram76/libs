@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgReportEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvgReportEditorForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvgReportEditorForm;
 
@@ -34,11 +34,7 @@ interface
 uses
   Windows, Mask, Menus, ExtCtrls, StdCtrls, Buttons, ComCtrls, Controls,
   Dialogs, Forms, Classes, SysUtils, Graphics, ImgList, Printers,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, PropertyCategories,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvComponentBase, JvExControls, JvRuler,
   JvgReport, JvgReportParamEditorForm;
 

@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProviderTreeListDsgnFrame.pas 11692 2008-01-12 12:51:55Z jedi_mbe $
+// $Id: JvProviderTreeListDsgnFrame.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvProviderTreeListDsgnFrame;
 
@@ -34,11 +34,7 @@ uses
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls, Forms, Dialogs,
   ComCtrls, ImgList, Menus, ActnList,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDataProviderIntf, JvProviderTreeListFrame, JvDsgnTypes;
 
 type

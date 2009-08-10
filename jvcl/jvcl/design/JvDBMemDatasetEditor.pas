@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBMemDatasetEditor.pas 11891 2008-09-09 20:33:00Z obones $
+// $Id: JvDBMemDatasetEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBMemDatasetEditor;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   Classes, DB, SysUtils,
-  {$IFDEF COMPILER6_UP}
   RTLConsts, DesignIntf, DesignEditors, VCLEditors;
-  {$ELSE}
-  LibIntf, DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvAbstractMemDataSetEditor = class(TComponentEditor)
@@ -124,22 +120,11 @@ begin
   else
     Exit;
   Temp := Component.Name + Temp;
-  {$IFDEF COMPILER6_UP}
   Comp := Designer.GetComponent(Temp);
   if (Comp = nil) or (Comp = Field) then
     Result := Temp
   else
     Result := Designer.UniqueName(Temp);
-  {$ELSE}
-  I := 0;
-  repeat
-    Result := Temp;
-    if I > 0 then
-      Result := Result + IntToStr(I);
-    Comp := Designer.Form.FindComponent(Result);
-    Inc(I);
-  until (Comp = nil) or (Comp = Field);
-  {$ENDIF COMPILER6_UP}
   ShowMessage(Result);
 end;
 

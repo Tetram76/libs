@@ -1,4 +1,4 @@
-﻿{-----------------------------------------------------------------------------
+{-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -65,7 +65,7 @@ Revisions : 1st = 2004/09/19
 
 Comments and Bugs : cfzwit att yahoo dott com dott ar
 -----------------------------------------------------------------------------}
-// $Id: JvMemoryDataset.pas 12415 2009-08-04 07:34:04Z obones $
+// $Id: JvMemoryDataset.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvMemoryDataset;
 
@@ -78,10 +78,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, DB,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
+  SysUtils, Classes, DB, Variants,
   JvDBUtils,
   JvExprParser;
 
@@ -344,8 +341,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemoryDataset.pas $';
-    Revision: '$Revision: 12415 $';
-    Date: '$Date: 2009-08-04 09:34:04 +0200 (mar., 04 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -353,16 +350,11 @@ const
 implementation
 
 uses
-  {$IFDEF COMPILER5}
-  Forms,
-  {$ENDIF COMPILER5}
   DBConsts, Math,
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
-  {$IFDEF COMPILER6_UP}
   FMTBcd,
-  {$ENDIF COMPILER6_UP}
   {$IFNDEF UNICODE}
   JvJCLUtils,
   {$ENDIF ~UNICODE}
@@ -375,9 +367,7 @@ const
 
   ftSupported = [ftString, ftSmallint, ftInteger, ftWord, ftBoolean,
     ftFloat, ftCurrency, ftDate, ftTime, ftDateTime, ftAutoInc, ftBCD,
-    {$IFDEF COMPILER6_UP}
     ftFMTBCD, ftTimestamp,
-    {$ENDIF COMPILER6_UP}
     {$IFDEF COMPILER10_UP}
     ftOraTimestamp, ftFixedWideChar,
     {$ENDIF COMPILER10_UP}
@@ -393,71 +383,10 @@ const
 
   STATUSNAME = 'C67F70Z90'; (* Magic *)
 
-{$IFDEF COMPILER5} // Added 2005/01/05
-
-type
-  TVariantRelationship = (vrEqual, vrLessThan, vrGreaterThan, vrNotEqual);
-
-//=== { Utility routines } ===================================================
-
-function FindVarData(const V: Variant): PVarData;
-begin
-  Result := @TVarData(V);
-  while Result.VType = varByRef or varVariant do
-    Result := PVarData(Result.VPointer);
-end;
-
-function VarCompareValue(const A, B: Variant): TVariantRelationship;
-const
-  CTruth: array [Boolean] of TVariantRelationship = (vrNotEqual, vrEqual);
-var
-  LA, LB: TVarData;
-begin
-  LA := FindVarData(A)^;
-  LB := FindVarData(B)^;
-  if LA.VType = varEmpty then
-    Result := CTruth[LB.VType = varEmpty]
-  else
-  if LA.VType = varNull then
-    Result := CTruth[LB.VType = varNull]
-  else
-  if LB.VType in [varEmpty, varNull] then
-    Result := vrNotEqual
-  else
-  if A = B then
-    Result := vrEqual
-  else
-  if A < B then
-    Result := vrLessThan
-  else
-    Result := vrGreaterThan;
-end;
-
-function BcdCompare(const Bcd1, Bcd2: TBcd): Integer;
-var
-  Curr1, Curr2: Currency;
-begin
-  Result := 0;
-  if BCDToCurr(Bcd1, Curr1) and BCDToCurr(Bcd2, Curr2) then
-  begin
-    if Curr1 < Curr2 then
-      Result := -1
-    else
-    if Curr1 > Curr2 then
-      Result := 1;
-  end;
-end;
-
-{$ENDIF COMPILER5}
-
 procedure AppHandleException(Sender: TObject);
 begin
-  {$IFDEF COMPILER5}
-  Application.HandleException(Sender);
-  {$ELSE}
   if Assigned(ApplicationHandleException) then
     ApplicationHandleException(Sender);
-  {$ENDIF COMPILER5}
 end;
 
 function CalcFieldLen(FieldType: TFieldType; Size: Word): Word;
@@ -485,10 +414,7 @@ begin
         Result := SizeOf(Double);
       ftCurrency:
         Result := SizeOf(Double);
-      {$IFDEF COMPILER6_UP}
-      ftFMTBCD,
-      {$ENDIF COMPILER6_UP}
-      ftBCD:
+      ftFMTBCD, ftBCD:
         Result := SizeOf(TBcd);
       ftDate, ftTime:
         Result := SizeOf(Longint);
@@ -709,8 +635,7 @@ begin
       else
       if Double(Data1^) < Double(Data2^) then
         Result := -1;
-    {$IFDEF COMPILER6_UP} ftFMTBcd, {$ENDIF}
-    ftBcd:
+    ftFMTBcd, ftBcd:
       Result := BcdCompare(TBcd(Data1^), TBcd(Data2^));
     ftDateTime:
       if TDateTime(Data1^) > TDateTime(Data2^) then
@@ -1439,9 +1364,7 @@ var
   Status: TRecordStatus;
   NewChange: Boolean;
 begin
-  {$IFDEF COMPILER6_UP}
   inherited InternalPost;
-  {$ENDIF COMPILER6_UP}
 
   NewChange := False;
   if (FApplyMode <> amNone) and not IsLoading then

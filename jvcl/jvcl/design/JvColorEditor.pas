@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorEditor.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvColorEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvColorEditor;
 
@@ -30,11 +30,7 @@ interface
 
 uses
   SysUtils, Classes, Windows, Graphics,
-  {$IFDEF COMPILER6_UP}
   RTLConsts, DesignIntf, DesignEditors, VCLEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvConsts, JvJVCLUtils;
 
 type
@@ -44,8 +40,7 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
     procedure SetValue(const Value: string); override;
     procedure ListDrawValue(const Value: string; ACanvas: TCanvas;
-      const ARect: TRect; ASelected: Boolean);
-      {$IFDEF COMPILER5} override {$ELSE} virtual {$ENDIF};
+      const ARect: TRect; ASelected: Boolean); virtual;
   end;
 
 function JvIdentToColor(const Ident: string; var Color: Longint): Boolean;

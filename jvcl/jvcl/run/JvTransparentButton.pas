@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTransparentButton.pas 12277 2009-04-17 14:03:24Z ahuser $
+// $Id: JvTransparentButton.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvTransparentButton;
 
@@ -52,10 +52,8 @@ type
     FClient: TJvCustomGraphicButton;
     procedure AssignClient(AClient: TObject); override;
     function IsCheckedLinked: Boolean; override;
-    {$IFDEF COMPILER6_UP}
     function IsGroupIndexLinked: Boolean; override;
     procedure SetGroupIndex(Value: Integer); override;
-    {$ENDIF COMPILER6_UP}
     procedure SetChecked(Value: Boolean); override;
     procedure SetImageIndex(Value: Integer); override;
   end;
@@ -230,8 +228,8 @@ function DrawDisabledText(DC: HDC; Caption: TCaption; nCount: Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTransparentButton.pas $';
-    Revision: '$Revision: 12277 $';
-    Date: '$Date: 2009-04-17 16:03:24 +0200 (ven., 17 avr. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -404,7 +402,6 @@ begin
     Result := False;
 end;
 
-{$IFDEF COMPILER6_UP}
 function TJvTransparentButtonActionLink.IsGroupIndexLinked: Boolean;
 begin
   Result := False;
@@ -413,7 +410,6 @@ end;
 procedure TJvTransparentButtonActionLink.SetGroupIndex(Value: Integer);
 begin
 end;
-{$ENDIF COMPILER6_UP}
 
 procedure TJvTransparentButtonActionLink.SetChecked(Value: Boolean);
 begin

@@ -40,7 +40,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorBox.pas 12066 2008-12-02 19:25:24Z ahuser $
+// $Id: JvColorBox.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvColorBox;
 
@@ -52,10 +52,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Messages, Classes, Graphics, Controls, Forms, Menus,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
+  Windows, Messages, Classes, Graphics, Controls, Forms, Menus, Types,
   JvComponent;
 
 type
@@ -163,8 +160,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorBox.pas $';
-    Revision: '$Revision: 12066 $';
-    Date: '$Date: 2008-12-02 20:25:24 +0100 (mar., 02 déc. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

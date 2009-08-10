@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTimer.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvTimer.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvTimer;
 
@@ -74,8 +74,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimer.pas $';
-    Revision: '$Revision: 12389 $';
-    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -244,8 +244,6 @@ begin
   if Assigned(FTimerThread) then
   begin
     FTimerThread.Terminate;
-    while FTimerThread.Suspended do
-      FTimerThread.Resume;
     (FTimerThread as TJvTimerThread).Paused := False;
     FTimerThread.Free;
   end;
@@ -271,8 +269,6 @@ begin
       FTimerThread.Priority := FThreadPriority;
 
       TJvTimerThread(FTimerThread).Paused := False;
-      while FTimerThread.Suspended do
-        FTimerThread.Resume;
     end
     else
     begin

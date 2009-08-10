@@ -28,7 +28,7 @@ Description: JvInterpreter_Math adds most functions from math.pas to
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Math.pas 11103 2006-12-27 16:23:15Z ivan_ra $
+// $Id: JvInterpreter_Math.pas 12439 2009-08-09 17:02:39Z obones $
 
 { history (JVCL Library versions):
 
@@ -43,9 +43,7 @@ unit JvInterpreter_Math;
 interface
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
   JvInterpreter, SysUtils;
 
 

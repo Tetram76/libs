@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbar.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvSpeedbar.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSpeedbar;
 
@@ -35,10 +35,7 @@ uses
   SysUtils, Classes, IniFiles,
   Windows, Messages, Menus, Buttons, Controls,
   Graphics, Forms, ImgList, ActnList, ExtCtrls, Grids,
-  {$IFDEF HAS_UNIT_RTLCONSTS}
   RTLConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
-  JvVCL5Utils,
   JvSpeedButton, JvAppStorage, JvConsts, JvTypes, JvFormPlacement,
   JvComponent, JvExtComponent, JvThemes, JvExControls;
 
@@ -500,8 +497,8 @@ function NewSpeedItem(AOwner: TComponent; ASpeedBar: TJvSpeedBar; Section: Integ
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedbar.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

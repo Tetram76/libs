@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExButtons.pas 11802 2008-05-12 19:54:51Z ahuser $
+// $Id: JvExButtons.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvExButtons;
 
@@ -33,10 +33,7 @@ WARNINGHEADER
 interface
 
 uses
-  Windows, Messages,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
+  Windows, Messages, Types,
   SysUtils, Classes, Graphics, Controls, Forms, Buttons, StdCtrls,
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
@@ -52,8 +49,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/devtools/JvExVCL/src/JvExButtons.pas $';
-    Revision: '$Revision: 11802 $';
-    Date: '$Date: 2008-05-12 21:54:51 +0200 (lun., 12 mai 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

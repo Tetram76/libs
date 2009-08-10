@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
   ImageKind ikMappedResourceBitmap is not support so far
 -----------------------------------------------------------------------------}
-// $Id: JvImageList.pas 12017 2008-11-02 00:41:27Z ahuser $
+// $Id: JvImageList.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvImageList;
 
@@ -40,8 +40,7 @@ uses
   {$IFDEF MSWINDOWS}
   CommCtrl,
   {$ENDIF MSWINDOWS}
-  SysUtils, Classes, Graphics, Controls, ImgList,
-  JvVCL5Utils;
+  SysUtils, Classes, Graphics, Controls, ImgList;
 
 type
   TJvImageListMode = (imClassic, imPicture, imResourceIds, imItemList);
@@ -236,8 +235,8 @@ function LoadImageListFromBitmap(ImgList: TCustomImageList; const Bitmap: TBitma
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageList.pas $';
-    Revision: '$Revision: 12017 $';
-    Date: '$Date: 2008-11-02 01:41:27 +0100 (dim., 02 nov. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -368,7 +367,7 @@ end;
 
 //=== { TJvImageListItem } ===================================================
 
-constructor TJvImageListItem.Create(Collection: Classes.TCollection); // TCollection redeclared in JvVCL5Utils
+constructor TJvImageListItem.Create(Collection: TCollection); 
 begin
   inherited Create(Collection);
 

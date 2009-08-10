@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNTEventLog.pas 11992 2008-10-26 12:47:05Z ahuser $
+// $Id: JvNTEventLog.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvNTEventLog;
 
@@ -38,7 +38,7 @@ uses
   Windows,
   {$ENDIF MSWINDOWS}
   Classes, SysUtils,
-  JvVCL5Utils, JvComponentBase;
+  JvComponentBase;
 
 type
   TNotifyChangeEventLog = class;
@@ -131,8 +131,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvNTEventLog.pas $';
-    Revision: '$Revision: 11992 $';
-    Date: '$Date: 2008-10-26 13:47:05 +0100 (dim., 26 oct. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockingReg.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvDockingReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDockingReg;
 
@@ -37,11 +37,7 @@ implementation
 
 uses
   Classes,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf, VCLEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   JvDockControlForm, JvDockPropertyEditors, JvDockVIDStyle,
   JvDockDelphiStyle, JvDockVCStyle, JvDockVIDVCStyle, JvDockVSNetStyle;

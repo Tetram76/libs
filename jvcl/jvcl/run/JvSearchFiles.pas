@@ -26,7 +26,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSearchFiles.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvSearchFiles.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSearchFiles;
 
@@ -291,8 +291,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSearchFiles.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -300,8 +300,7 @@ const
 implementation
 
 uses
-  JclStrings, JclDateTime,
-  JvVCL5Utils;
+  JclStrings, JclDateTime;
 
 { Maybe TJvSearchFiles should be implemented with FindFirst, FindNext.
   There isn't a good reason to use FindFirstFile, FindNextFile instead of

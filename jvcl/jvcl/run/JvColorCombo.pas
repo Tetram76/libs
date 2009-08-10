@@ -29,7 +29,7 @@ Known Issues:
   custom color selected, not the last added as it should be thus AutoComplete is
   set to default to False. (p3)
 -----------------------------------------------------------------------------}
-// $Id: JvColorCombo.pas 12392 2009-07-09 11:15:37Z ahuser $
+// $Id: JvColorCombo.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvColorCombo;
 
@@ -124,9 +124,7 @@ type
   published
     property Anchors;
     property AutoComplete default False;
-    {$IFDEF COMPILER6_UP}
     property AutoDropDown;
-    {$ENDIF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind;
@@ -266,9 +264,7 @@ type
   published
     property Anchors;
     property AutoComplete default False;
-    {$IFDEF COMPILER6_UP}
     property AutoDropDown;
-    {$ENDIF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind;
@@ -321,8 +317,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorCombo.pas $';
-    Revision: '$Revision: 12392 $';
-    Date: '$Date: 2009-07-09 13:15:37 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}

@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPictureEditForm.pas 12116 2008-12-31 12:29:47Z ahuser $
+// $Id: JvPictureEditForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvPictureEditForm;
 
@@ -103,9 +103,6 @@ uses
   TypInfo, SysUtils,
   Clipbrd, Consts,
   ShellAPI, LibHelp,
-  {$IFDEF BCB5}
-  JvVCL5Utils,
-  {$ENDIF BCB5}
   JvJVCLUtils, JvJCLUtils, JvConsts, JvDsgnConsts, JvDirectoryListForm, JvTypes;
 
 

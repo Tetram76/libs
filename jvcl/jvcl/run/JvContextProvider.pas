@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvContextProvider.pas 11692 2008-01-12 12:51:55Z jedi_mbe $
+// $Id: JvContextProvider.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvContextProvider;
 
@@ -77,11 +77,7 @@ type
     property ProviderComp: TComponent read GetProviderComp write SetProviderComp;
     property ProviderIntf: IJvDataProvider read GetProviderIntf write SetProviderIntf;
   published
-    {$IFDEF COMPILER6_UP}
     property Provider: IJvDataProvider read GetProviderIntf write SetProviderIntf;
-    {$ELSE}
-    property Provider: TComponent read GetProviderComp write SetProviderComp;
-    {$ENDIF COMPILER6_UP}
   end;
 
   TJvContextProviderServerNotify = class(TJvDataConsumerServerNotify)
@@ -94,8 +90,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvContextProvider.pas $';
-    Revision: '$Revision: 11692 $';
-    Date: '$Date: 2008-01-12 13:51:55 +0100 (sam., 12 janv. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

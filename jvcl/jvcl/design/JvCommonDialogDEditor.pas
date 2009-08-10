@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCommonDialogDEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvCommonDialogDEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvCommonDialogDEditor;
 
@@ -32,11 +32,7 @@ interface
 
 uses
   SysUtils,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvCommonDialogD;
 
 type

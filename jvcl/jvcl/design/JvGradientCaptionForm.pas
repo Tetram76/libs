@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGradientCaptionForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvGradientCaptionForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvGradientCaptionForm;
 
@@ -30,11 +30,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Mask,
-  {$IFDEF COMPILER6_UP}
   RTLConsts, DesignIntf, DesignEditors, VCLEditors,
-  {$ELSE}
-  LibIntf, DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvFormPlacement, JvGradientCaption, JvListBox, JvCtrls,
   JvComponent, JvToolEdit, JvAppStorage, JvAppRegistryStorage, JvExMask;
 

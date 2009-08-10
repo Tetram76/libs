@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTMTimeLine.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvTMTimeLine.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvTMTimeLine;
 
@@ -227,10 +227,8 @@ type
 
   TJvTMTimeline = class(TJvCustomTMTimeline)
   public
-    {$IFDEF COMPILER6_UP}
     property RightButton;
     property LeftButton;
-    {$ENDIF COMPILER6_UP}
   published
     // gets / sets the borderstyle of the control and the scroll-buttons
     property BorderStyle;
@@ -327,8 +325,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTMTimeLine.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -337,7 +335,7 @@ implementation
 
 uses
   Consts,
-  JvJCLUtils, JvJVCLUtils, JvVCL5Utils, JvThemes;
+  JvJCLUtils, JvJVCLUtils, JvThemes;
 
 {$R JvTMTimeLine.res}
 
@@ -469,10 +467,8 @@ begin
     OnMouseDown := DoRMouseDown;
     OnMouseUp := DoMouseUp;
   end;
-  {$IFDEF COMPILER6_UP}
   FLeftBtn.SetSubComponent(True);
   FRightBtn.SetSubComponent(True);
-  {$ENDIF COMPILER6_UP}
   Height := 56;
   BevelInner := bvNone;
   BevelOuter := bvNone;

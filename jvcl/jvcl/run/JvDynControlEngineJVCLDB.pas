@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineJVCLDB.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvDynControlEngineJVCLDB.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDynControlEngineJVCLDB;
 
@@ -519,8 +519,8 @@ function DynControlEngineJVCLDB: TJvDynControlEngineDB;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineJVCLDB.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -528,10 +528,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils,
+  Variants, SysUtils,
   JvDynControlEngineVCLDB,
   JvDynControlEngineTools, JvDynControlEngineJVCL, JvConsts, JvJCLUtils;
 
@@ -1397,9 +1394,7 @@ end;
 
 procedure TJvDynControlJVCLDBDateEdit.ControlSetFormat(const Value: string);
 begin
-  {$IFDEF COMPILER6_UP}
   Format := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 procedure TJvDynControlJVCLDBDateEdit.ControlSetDataSource(Value: TDataSource);
@@ -1481,9 +1476,7 @@ end;
 
 procedure TJvDynControlJVCLDBTimeEdit.ControlSetFormat(const Value: string);
 begin
-  {$IFDEF COMPILER6_UP}
   Format := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 procedure TJvDynControlJVCLDBTimeEdit.ControlSetDataSource(Value: TDataSource);
@@ -1862,9 +1855,7 @@ end;
 
 procedure TJvDynControlJVCLDBImage.ControlSetProportional(Value: Boolean);
 begin
-  {$IFDEF COMPILER6_UP}
 //  Proportional := Value;
-  {$ENDIF COMPILER6_UP}
 end;
 
 

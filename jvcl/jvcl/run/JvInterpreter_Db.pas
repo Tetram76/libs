@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Db.pas 12351 2009-06-28 17:13:38Z jfudickar $
+// $Id: JvInterpreter_Db.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvInterpreter_Db;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Db.pas $';
-    Revision: '$Revision: 12351 $';
-    Date: '$Date: 2009-06-28 19:13:38 +0200 (dim., 28 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -52,11 +52,7 @@ const
 implementation
 
 uses
-  Classes,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  Db;
+  Classes, Variants, Db;
 
 { EDatabaseError }
 
@@ -2574,10 +2570,8 @@ begin
     AddConst(cDb, 'ftDBaseOle', Ord(ftDBaseOle));
     AddConst(cDb, 'ftTypedBinary', Ord(ftTypedBinary));
     AddConst(cDb, 'ftCursor', Ord(ftCursor));
-    {$IFDEF COMPILER6_UP}
     AddConst(cDb, 'ftFMTBCD', Ord(ftFMTBCD));
     AddConst(cDb, 'ftTimestamp', Ord(ftTimestamp));
-    {$ENDIF COMPILER6_UP}
     {$IFDEF COMPILER10_UP}
     AddConst(cDb, 'ftFixedWideChar', Ord(ftFixedWideChar));
     AddConst(cDb, 'ftWideMemo', Ord(ftWideMemo));

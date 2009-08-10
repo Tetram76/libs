@@ -22,7 +22,7 @@ home page, located at http://jcl.sourceforge.net / http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JediRegInfo.pas 11375 2007-06-23 17:01:12Z cycocrew $
+// $Id: JediRegInfo.pas 12441 2009-08-09 17:36:46Z outchy $
 
 {$A+,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
 
@@ -71,16 +71,6 @@ implementation
 
 uses
   Windows, Registry;
-
-{$IFNDEF RTL140_UP}
-function ExcludeTrailingPathDelimiter(const Path: string): string;
-begin
-  if (Path <> '') and (Path[Length(Path)] = '\') then
-    Result := Copy(Path, 1, Length(Path) - 1)
-  else
-    Result := Path;
-end;
-{$ENDIF ~RTL140_UP}
 
 function InstallJediRegInformation(const IdeRegKey, ProjectName, Version, DcpDir,
   BplDir, RootDir: string): Boolean;

@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageDrawThread.pas 12369 2009-07-03 10:22:53Z obones $
+// $Id: JvImageDrawThread.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvImageDrawThread;
 
@@ -35,11 +35,12 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  JvThread,
   Windows,
   Classes;
 
 type
-  TJvImageDrawThread = class(TThread)
+  TJvImageDrawThread = class(TJvPausableThread)
   private
     FTag: Integer;
     FDelay: Cardinal;
@@ -63,8 +64,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageDrawThread.pas $';
-    Revision: '$Revision: 12369 $';
-    Date: '$Date: 2009-07-03 12:22:53 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -84,7 +85,15 @@ begin
     while not Terminated do
     begin
       Sleep(FDelay);
-      Synchronize(Draw);
+      EnterUnpauseableSection;
+      try
+        if Terminated then
+          Exit;
+
+        Synchronize(Draw);
+      finally
+        LeaveUnpauseableSection;
+      end;
     end;
   except
     // ignore exception

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExtComponent.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvExtComponent.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvExtComponent;
 
@@ -33,11 +33,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF COMPILER5}
-  Windows,
-  {$ELSE}
   Types,
-  {$ENDIF COMPILER5}
   Classes, Graphics,
   JvComponentBase, JvComponent, JvExControls, JvExForms, JvExExtCtrls,
   JvExComCtrls;
@@ -74,8 +70,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvExtComponent.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

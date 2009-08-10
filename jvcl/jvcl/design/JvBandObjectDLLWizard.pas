@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandObjectDLLWizard.pas 10676 2006-06-09 08:00:10Z obones $
+// $Id: JvBandObjectDLLWizard.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvBandObjectDLLWizard;
 
@@ -50,11 +50,7 @@ type
     function GetAuthor: string;
     function GetComment: string;
     function GetPage: string;
-    {$IFDEF COMPILER6_UP}
     function GetGlyph: Cardinal;
-    {$ELSE}
-    function GetGlyph: HICON;
-    {$ENDIF COMPILER6_UP}
   end;
 
   TJvBandObjectProjectCreator = class(TInterfacedObject,
@@ -189,11 +185,7 @@ begin
   Result := RsCreatesABandObjectDLLProject;
 end;
 
-{$IFDEF COMPILER6_UP}
 function TJvBandObjectDLLWizard.GetGlyph: Cardinal;
-{$ELSE}
-function TJvBandObjectDLLWizard.GetGlyph: HICON;
-{$ENDIF COMPILER6_UP}
 begin
   Result := 0;
 end;

@@ -31,7 +31,7 @@ description : JVCL Interpreter version 2
 Known Issues:
    String fields in records binded from Delphi don't work
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter.pas 12252 2009-03-21 22:18:25Z ahuser $
+// $Id: JvInterpreter.pas 12439 2009-08-09 17:02:39Z obones $
 
 { history (JVCL Library versions):
   1.10:
@@ -189,10 +189,8 @@ uses
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  JvInterpreterParser, JvComponentBase, JvVCL5Utils;
+  JvInterpreterParser, JvComponentBase;
 
 const
   // (rom) renamed to longer names
@@ -1030,8 +1028,6 @@ type
     property OnStatement: TNotifyEvent read FOnStatement write FOnStatement;
   end;
 
-  {$IFDEF COMPILER6_UP}
-
   TJvSimpleVariantType = class(TCustomVariantType)
   public
     procedure Clear(var V: TVarData); override;
@@ -1047,8 +1043,6 @@ type
   TJvPointerVariantType = class(TJvSimpleVariantType);
   TJvSetVariantType = class(TJvSimpleVariantType);
   TJvArrayVariantType = class(TJvSimpleVariantType);
-
-  {$ENDIF COMPILER6_UP}
 
   EJvInterpreterError = class(Exception)
   private
@@ -1096,22 +1090,12 @@ procedure ClearList(List: TList);
 
 { additional variant types - TVarData.VType }
 
-{$IFDEF COMPILER6_UP}
 function varRecord: TVarType;
 function varObject: TVarType;
 function varClass: TVarType;
 function varPointer: TVarType;
 function varSet: TVarType;
 function varArray: TVarType;
-{$ELSE}
-const
-  varRecord = $0015;
-  varObject = $0010;
-  varClass = $0011;
-  varPointer = $0012;
-  varSet = $0013;
-  varArray = $0014;
-{$ENDIF COMPILER6_UP}
 
 { V2O - converts variant to object }
 function V2O(const V: Variant): TObject;
@@ -1263,8 +1247,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter.pas $';
-    Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1297,8 +1281,6 @@ end;
 var
   ObjCount: Integer = 0;
 {$ENDIF JvInterpreter_DEBUG}
-
-{$IFDEF COMPILER6_UP}
 
 var
   GlobalVariantRecordInstance: TJvRecordVariantType = nil;
@@ -1400,8 +1382,6 @@ function varArray: TVarType;
 begin
   Result := VariantArrayInstance.VarType;
 end;
-
-{$ENDIF COMPILER6_UP}
 
 //=== EJvInterpreterError ====================================================
 
@@ -1583,86 +1563,6 @@ begin
       Result := SizeOf(Integer);
   end;
 end;
-
-{$IFNDEF COMPILER6_UP}
-function VarArrayOffset(const A: Variant; const Indices: array of Integer): Integer;
-var
-  DimValue, h, l, Dim: Integer;
-begin
-  Result := 0;
-  DimValue := 1;
-  for Dim := 1 to VarArrayDimCount(A) do
-  begin
-    l := VarArrayLowBound(A, Dim);
-    h := VarArrayHighBound(A, Dim);
-    if Dim = 1 then
-    begin
-      Result := Indices[Dim - 1] - l;
-      DimValue := h - l + 1;
-    end
-    else
-    begin
-      Result := Result + (Indices[Dim - 1] - l) * DimValue;
-      DimValue:=(h - l + 1) * DimValue;
-    end;
-  end;
-end;
-
-function VarArrayGet(const A: Variant; Indices: array of Integer): Variant;
-var
-  P, P1: Pointer;
-  LVarType: Cardinal;
-begin
-  P := VarArrayLock(A);
-  try
-    LVarType := VarType(A) and varTypeMask;
-    P1 := Pointer(Integer(P) + Typ2Size(LVarType) * VarArrayOffset(A, Indices));
-    if LVarType = varVariant then
-      Result := PVariant(P1)^
-    else
-    begin
-      TVarData(Result).VType := LVarType;
-      Move(P1^, TVarData(Result).VInteger, Typ2Size(LVarType));
-    end;
-  finally
-    VarArrayUnlock(A);
-  end;
-end;
-
-procedure VarArrayPut(const A: Variant; const Value: Variant; const Indices: array of Integer);
-var
-  P, P1:pointer;
-  LVarType: Cardinal;
-  Temp: variant;
-begin
-  P := VarArrayLock(A);
-  try
-    LVarType := VarType(A) and varTypeMask;
-    P1 := Pointer(Integer(P) + Typ2Size(LVarType) * VarArrayOffset(A, Indices));
-
-    if LVarType = varVariant then
-      case TVarData(Value).VType of
-        varString:
-          PVariant(P1)^ := VarAsType(Value,varOleStr);
-      else
-        PVariant(P1)^ := Value;
-      end
-    else
-    begin
-      VarCast(Variant(Temp), Value, LVarType);
-      case LVarType of
-        varOleStr, varDispatch, varUnknown:
-          P := TVarData(Temp).VPointer;
-      else
-        P := @TVarData(Temp).VPointer;
-      end;
-      Move(P^, P1^, Typ2Size(LVarType));
-    end;
-  finally
-    VarArrayUnlock(A);
-  end;
-end;
-{$ENDIF}
 
 function TypeName2VarTyp(const TypeName: string): Word;
 begin
@@ -4758,10 +4658,8 @@ begin
       Value := O2V(TObject(GetOrdProp(Args.Obj, PropInf)));
     tkSet:
       Value := S2V(GetOrdProp(Args.Obj, PropInf));
-    {$IFDEF COMPILER6_UP}
     tkInterface:
       Value := GetInterfaceProp(Args.Obj, PropInf)
-    {$ENDIF COMPILER6_UP}
   else
     Exit;
   end;
@@ -4803,10 +4701,8 @@ begin
       SetOrdProp(Args.Obj, PropInf, Integer(V2O(Value)));
     tkSet:
       SetOrdProp(Args.Obj, PropInf, V2S(Value));
-    {$IFDEF COMPILER6_UP}
     tkInterface:
       SetInterfaceProp(Args.Obj, PropInf, Value);
-    {$ENDIF COMPILER6_UP}
   else
     Exit;
   end;
@@ -8352,14 +8248,12 @@ var
 procedure Finit;
 begin
   FreeAndNil(FieldGlobalJvInterpreterAdapter);
-  {$IFDEF COMPILER6_UP}
   FreeAndNil(GlobalVariantObjectInstance);
   FreeAndNil(GlobalVariantRecordInstance);
   FreeAndNil(GlobalVariantClassInstance);
   FreeAndNil(GlobalVariantPointerInstance);
   FreeAndNil(GlobalVariantSetInstance);
   FreeAndNil(GlobalVariantArrayInstance);
-  {$ENDIF COMPILER6_UP}
   {$IFDEF JvInterpreter_OLEAUTO}
   if OleInitialized then
     OleUnInitialize;

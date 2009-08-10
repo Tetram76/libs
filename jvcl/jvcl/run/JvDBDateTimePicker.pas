@@ -34,7 +34,7 @@ Known Issues:
 // Extending and add capability to integrate with database
 // www.geocities.com/ekosbg
 /////////////////////////////////////////////////////////////////////////
-// $Id: JvDBDateTimePicker.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvDBDateTimePicker.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBDateTimePicker;
 
@@ -100,8 +100,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBDateTimePicker.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -109,10 +109,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  SysUtils, ComCtrls, CommCtrl,
+  Variants, SysUtils, ComCtrls, CommCtrl,
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
@@ -322,7 +319,7 @@ function TJvDBDateTimePicker.IsDateAndTimeField: Boolean;
 begin
   with FDataLink do
     Result := (Field <> nil) and
-      (Field.DataType in [ftDateTime {$IFDEF COMPILER6_UP}, ftTimeStamp {$ENDIF}]) and
+      (Field.DataType in [ftDateTime, ftTimeStamp]) and
       not TrimValue;
 end;
 

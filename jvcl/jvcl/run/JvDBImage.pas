@@ -24,7 +24,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBImage.pas 11815 2008-06-21 10:59:03Z uschuster $
+// $Id: JvDBImage.pas 12439 2009-08-09 17:02:39Z obones $
 
 {
 Documentation:
@@ -88,12 +88,10 @@ type
   published
     property AutoSize;
     property AutoDisplay: Boolean read FAutoDisplay write SetAutoDisplay default True;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property Proportional: Boolean read FProportional write SetProportional default False;
     property Transparent: Boolean read FTransparent write SetTransparent default False;
     property OnGetGraphicClass: TJvGetGraphicClassEvent read FOnGetGraphicClass write FOnGetGraphicClass;
@@ -103,8 +101,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBImage.pas $';
-    Revision: '$Revision: 11815 $';
-    Date: '$Date: 2008-06-21 12:59:03 +0200 (sam., 21 juin 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -167,10 +165,6 @@ begin
 end;
 
 procedure TJvDBImage.AssignGraphicTo(Picture: TPicture);
-{$IFDEF COMPILER5}
-type
-  TBitmapClass = class of TBitmap;
-{$ENDIF COMPILER5}
 var
   Graphic: TGraphic;
   GraphicClass: TGraphicClass;
@@ -195,13 +189,6 @@ begin
     // If we got one, load it..
     if GraphicClass <> nil then
     begin
-      {$IFDEF COMPILER5}
-      // D5 workaround: somehow the overridden constructor is not called if
-      // GraphicClass is TGraphicClass
-      if GraphicClass.InheritsFrom(TBitmap) then
-        Graphic := TBitmapClass(GraphicClass).Create
-      else
-      {$ENDIF COMPILER5}
       Graphic := GraphicClass.Create;
       try
         Stream.Position := 0;

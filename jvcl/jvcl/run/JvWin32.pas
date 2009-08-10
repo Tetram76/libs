@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWin32.pas 12304 2009-05-05 20:10:29Z outchy $
+// $Id: JvWin32.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvWin32;
 
@@ -36,29 +36,6 @@ uses
 
 const
   SC_DRAGMOVE = $F012;
-
-  {$IFDEF COMPILER5}
-
-  { Standard Windows colors that are not defined in Delphi 5}
-  COLOR_MENUHILIGHT = 29;
-  {$EXTERNALSYM COLOR_MENUHILIGHT}
-  COLOR_MENUBAR = 30;
-  {$EXTERNALSYM COLOR_MENUBAR}
-
-  SPI_GETTOOLTIPANIMATION = $1016;
-  {$EXTERNALSYM SPI_GETTOOLTIPANIMATION}
-  SPI_GETTOOLTIPFADE = $1018;
-  {$EXTERNALSYM SPI_GETTOOLTIPFADE}
-
-  AC_SRC_ALPHA = $01;
-  {$EXTERNALSYM AC_SRC_ALPHA}
-
-  WS_EX_LAYERED = $00080000;
-  {$EXTERNALSYM WS_EX_LAYERED}
-  LWA_ALPHA = $00000002;
-  {$EXTERNALSYM LWA_ALPHA}
-
-  {$ENDIF COMPILER5}
 
   {$IFNDEF COMPILER7_UP}
   SPI_GETFLATMENU = $1022;
@@ -293,8 +270,8 @@ function GET_KEYSTATE_LPARAM(lParam: Integer): Word;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWin32.pas $';
-    Revision: '$Revision: 12304 $';
-    Date: '$Date: 2009-05-05 22:10:29 +0200 (mar., 05 mai 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

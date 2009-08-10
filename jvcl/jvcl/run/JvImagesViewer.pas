@@ -18,7 +18,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImagesViewer.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvImagesViewer.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvImagesViewer;
 
@@ -204,8 +204,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImagesViewer.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -213,10 +213,8 @@ const
 implementation
 
 uses
-  {$IFDEF COMPILER6_UP}
   StrUtils,
-  {$ENDIF COMPILER6_UP}
-  JvVCL5Utils, JvJCLUtils;
+  JvJCLUtils;
 
 //=== { TJvImageViewerOptions } ==============================================
 

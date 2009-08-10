@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEReg.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvBDEReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvBDEReg;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   SysUtils, Classes,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   JvBDEEditors, JvBdeUtils, JvBDEFilter, JvBDEIndex, JvBDELists, JvBDEMove,
   JvBDEProgress, JvBDEQBE, JvBDESecurity, JvBDEMemTable, JvBDEQuery,

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExExtCtrls.pas 11802 2008-05-12 19:54:51Z ahuser $
+// $Id: JvExExtCtrls.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvExExtCtrls;
 
@@ -33,10 +33,7 @@ WARNINGHEADER
 interface
 
 uses
-  Windows, Messages,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
+  Windows, Messages, Types,
   SysUtils, Classes, Graphics, Controls, Forms, ExtCtrls,
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
@@ -80,8 +77,6 @@ type
 
   WINCONTROL_DECL_DEFAULT(Header)
 
-  {$IFDEF COMPILER6_UP}
-
   CONTROL_DECL_DEFAULT(BoundLabel)
 
   WINCONTROL_DECL_DEFAULT(CustomLabeledEdit)
@@ -92,8 +87,6 @@ type
 
   WINCONTROL_DECL_DEFAULT(ColorBox)
 
-  {$ENDIF COMPILER6_UP}
-
 // SplitterMouseDownFix fixes a bug in the VCL that causes the splitter to no
 // more work with the control in the left/top of it when the control has a size
 // of 0. This is actually a TWinControl.AlignControl bug.
@@ -103,8 +96,8 @@ procedure SplitterMouseDownFix(Splitter: TSplitter);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/devtools/JvExVCL/src/JvExExtCtrls.pas $';
-    Revision: '$Revision: 11802 $';
-    Date: '$Date: 2008-05-12 21:54:51 +0200 (lun., 12 mai 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -137,8 +130,6 @@ WINCONTROL_IMPL_DEFAULT(Notebook)
 
 WINCONTROL_IMPL_DEFAULT(Header)
 
-{$IFDEF COMPILER6_UP}
-
 CONTROL_IMPL_DEFAULT(BoundLabel)
 
 WINCONTROL_IMPL_DEFAULT(CustomLabeledEdit)
@@ -148,8 +139,6 @@ WINCONTROL_IMPL_DEFAULT(LabeledEdit)
 WINCONTROL_IMPL_DEFAULT(CustomColorBox)
 
 WINCONTROL_IMPL_DEFAULT(ColorBox)
-
-{$ENDIF COMPILER6_UP}
 
 CONTROL_IMPL_DEFAULT(Splitter)
 

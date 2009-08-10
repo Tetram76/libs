@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDsgnTypes.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvDsgnTypes.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDsgnTypes;
 
@@ -30,20 +30,11 @@ unit JvDsgnTypes;
 interface
 
 uses
-  {$IFDEF COMPILER6_UP}
   DesignIntf;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
-  {$IFDEF COMPILER6_UP}
   IJvDesigner = DesignIntf.IDesigner;
   IJvFormDesigner = DesignIntf.IDesigner;
-  {$ELSE}
-  IJvDesigner = IFormDesigner;
-  IJvFormDesigner = IFormDesigner;
-  {$ENDIF COMPILER6_UP}
 
 implementation
 

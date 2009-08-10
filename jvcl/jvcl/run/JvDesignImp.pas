@@ -21,7 +21,7 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignImp.pas 12424 2009-08-05 13:59:07Z obones $
+// $Id: JvDesignImp.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDesignImp;
 
@@ -127,7 +127,7 @@ type
 
   TJvDesignAction = (daSelectParent, daDelete, daCopy, daCut, daPaste,
     daNudgeLeft, daNudgeRight, daNudgeUp, daNudgeDown, daGrowWidth,
-    daShrinkWidth, daGrowHeight, daShrinkHeight, daLastAction {$IFDEF COMPILER6_UP} = MaxInt {$ENDIF});
+    daShrinkWidth, daGrowHeight, daShrinkHeight, daLastAction = MaxInt);
 
   TJvDesignController = class(TJvDesignCustomController)
   private
@@ -203,7 +203,7 @@ type
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
   end;
 
-  TJvDesignDesigner = class(TComponent, {$IFDEF COMPILER5} IDesigner {$ELSE} IDesignerHook {$ENDIF})
+  TJvDesignDesigner = class(TComponent, IDesignerHook)
   private
     FMessenger: TJvDesignCustomMessenger;
   public
@@ -276,8 +276,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignImp.pas $';
-    Revision: '$Revision: 12424 $';
-    Date: '$Date: 2009-08-05 15:59:07 +0200 (mer., 05 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -969,9 +969,7 @@ function TJvDesignController.MouseUp(Button: TMouseButton; X, Y: Integer): Boole
     // AlignDisabled can become stuck.
     // This routine is to aid debugging only.
     if FClicked <> nil then
-      {$IFDEF COMPILER6_UP}
       while FClicked.Parent.AlignDisabled do
-      {$ENDIF COMPILER6_UP}
         FClicked.Parent.EnableAlign;
   end;
 

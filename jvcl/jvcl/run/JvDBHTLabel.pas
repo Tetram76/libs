@@ -25,7 +25,7 @@ Known Issues:
   <b>Name:</b><i><FIELD="contact"></i>, <b>Company:</b><i><FIELD="Company"></i>
 - The fieldname *must* be double-quoted!
 -----------------------------------------------------------------------------}
-// $Id: JvDBHTLabel.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvDBHTLabel.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBHTLabel;
 
@@ -38,11 +38,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Classes, DB, DBCtrls, Messages, Controls,
-  {$IFDEF COMPILER6_UP}
   VDBConsts,
-  {$ELSE}
-  DBConsts,
-  {$ENDIF COMPILER6_UP}
   JvHTControls;
 
 type
@@ -107,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBHTLabel.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

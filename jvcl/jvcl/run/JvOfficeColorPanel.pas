@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOfficeColorPanel.pas 11830 2008-07-23 17:34:56Z obones $
+// $Id: JvOfficeColorPanel.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvOfficeColorPanel;
 
@@ -460,8 +460,8 @@ procedure JvReaderReadStrings(Reader: TReader;Strings:TStrings);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOfficeColorPanel.pas $';
-    Revision: '$Revision: 11830 $';
-    Date: '$Date: 2008-07-23 19:34:56 +0200 (mer., 23 juil. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -499,10 +499,6 @@ const
 
 type
   TControlAccessProtected = class(TControl);
-
-  {$IFDEF COMPILER5}
-  PBoolean = ^Boolean;
-  {$ENDIF COMPILER5}
 
 { TJvOfficePanelDividerLine }
 

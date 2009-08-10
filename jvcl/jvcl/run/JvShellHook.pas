@@ -26,7 +26,7 @@ Description:
   NOTE: this might not work on all OS'es and versions!
 
 -----------------------------------------------------------------------------}
-// $Id: JvShellHook.pas 11394 2007-06-28 18:50:22Z ahuser $
+// $Id: JvShellHook.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvShellHook;
 
@@ -82,8 +82,8 @@ procedure UnInitJvShellHooks;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvShellHook.pas $';
-    Revision: '$Revision: 11394 $';
-    Date: '$Date: 2007-06-28 20:50:22 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -91,7 +91,7 @@ const
 implementation
 
 uses
-  JvJVCLUtils, JvVCL5Utils;
+  JvJVCLUtils;
 
 type
   TRegisterShellHookWindowFunc = function(THandle: HWND): BOOL; stdcall;

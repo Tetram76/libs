@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScrollText.pas 12370 2009-07-03 10:24:10Z obones $
+// $Id: JvScrollText.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvScrollText;
 
@@ -124,8 +124,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScrollText.pas $';
-    Revision: '$Revision: 12370 $';
-    Date: '$Date: 2009-07-03 12:24:10 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -186,8 +186,6 @@ begin
   if not (csDesigning in ComponentState) then
   begin
     FScroll.OnDraw := nil;
-    if FScroll.Suspended then
-      FScroll.Resume;
     FScroll.Free;
   end;
   Application.HintPause := FDeja;
@@ -339,6 +337,11 @@ var
   T: Integer;
   ScrollEnd: Boolean;
 begin
+  // Must exit because we are "Synchronized" and our parent is already
+  // partly destroyed. If we did not exit, we would get an AV.
+  if csDestroying in ComponentState then
+    Exit;
+
   //tag=1 pause
   if FTimerTag = 1 then
   begin
@@ -442,10 +445,7 @@ begin
   SetItems(FItems);
   FActive := Value;
   if not (csDesigning in ComponentState) then
-    if Value then
-      FScroll.Resume
-    else
-      FScroll.Suspend;
+    FScroll.Paused := not Value;
 end;
 
 procedure TJvScrollText.SetDelay(const Value: Cardinal);

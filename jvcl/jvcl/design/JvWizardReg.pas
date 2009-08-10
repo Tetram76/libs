@@ -30,7 +30,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardReg.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvWizardReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvWizardReg;
 
@@ -44,11 +44,7 @@ implementation
 
 uses
   Classes,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   JvWizard, JvWizardRouteMapNodes, JvWizardRouteMapSteps,
   JvWizardRouteMapList, JvWizardEditorForm;

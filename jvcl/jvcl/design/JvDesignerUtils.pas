@@ -23,7 +23,7 @@ description : routines for design-time
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignerUtils.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvDesignerUtils.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDesignerUtils;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   Windows, SysUtils, Classes, Graphics,
-  {$IFDEF COMPILER6_UP}
   DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnIntf, JvDsgnTypes;
 
 procedure DrawDesignFrame(Canvas: TCanvas; Rect: TRect);

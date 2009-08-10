@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgLogicsEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvgLogicsEditorForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvgLogicsEditorForm;
 
@@ -35,11 +35,7 @@ uses
   Windows, Messages,
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, ComCtrls, ToolWin, ImgList, RichEdit, Tabs,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, PropertyCategories,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvgLogics, JvgGroupBox;
 
 type

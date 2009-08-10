@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScheduleEditorForm.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvScheduleEditorForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvScheduleEditorForm;
 
@@ -595,7 +595,6 @@ const
   cDateFormat = 'dd-MM-yyyy';
 begin
   FTestSchedule := CreateSchedule;
-  {$IFDEF COMPILER6_UP}
   dtpStartDate.Format := cDateFormat;
   dtpStartTime.Format := cTimeFormat;
   dtpEndDate.Format := cDateFormat;
@@ -603,10 +602,6 @@ begin
   dtpDayFreqOneshot.Format := cTimeFormat;
   dtpFreqFrom.Format := cTimeFormat;
   dtpFreqTo.Format := cTimeFormat;
-  {$ELSE}
-  dtpStartDate.DateFormat := dfShort;
-  dtpEndDate.DateFormat := dfShort;
-  {$ENDIF COMPILER6_UP}
   dtpStartDate.DateTime := Now;
   dtpEndDate.DateTime := Now;
 

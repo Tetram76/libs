@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvPageListTreeViewReg.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvPageListTreeViewReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvPageListTreeViewReg;
 
@@ -38,11 +38,7 @@ implementation
 
 uses
   Classes, ImgList, ComCtrls,
-  {$IFDEF COMPILER6_UP}
   VCLEditors, DesignEditors, DesignIntf, DesignMenus,
-  {$ELSE}
-  DsgnIntf, Menus,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   JvNavigationPane, JvPageList, JvPageListTreeView, JvPageListEditors,
   JvNavPaneEditors, JvTreeItemsEditorForm, JvPageLinkEditorForm, JvPageListEditorForm;
@@ -65,9 +61,6 @@ begin
   RegisterClasses([TJvSettingsTreeView, TJvPageListTreeView, TJvPageList, TJvStandardPage]);
   RegisterComponentEditor(TJvCustomPageList, TJvCustomPageEditor);
   RegisterComponentEditor(TJvCustomPage, TJvCustomPageEditor);
-  {$IFDEF COMPILER5}
-  RegisterPropertyEditor(TypeInfo(TComponent), TJvCustomPageListTreeView, cPageList, TJvPageListProperty);
-  {$ENDIF COMPILER5}
   RegisterComponentEditor(TCustomTreeView, TJvTreeViewEditor);
   RegisterComponentEditor(TJvCustomPageListTreeView, TJvPageTreeViewEditor);
   // register for the standard TTreeView as well

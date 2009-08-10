@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNavigationPane.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvNavigationPane.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvNavigationPane;
 
@@ -35,7 +35,7 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Messages, Controls, Graphics, Menus, ExtCtrls, ImgList,
-  JvConsts, JvTypes, JvVCL5Utils, JvButton, JvPageList, JvComponentBase, JvComponent, JvExExtCtrls;
+  JvConsts, JvTypes, JvButton, JvPageList, JvComponentBase, JvComponent, JvExExtCtrls;
 
 type
   TJvCustomNavigationPane = class;
@@ -621,7 +621,7 @@ type
     procedure DoBackgroundChange(Sender: TObject);
   protected
     procedure UpdatePageList;
-    function GetAction: TBasicAction; {$IFDEF COMPILER6_UP} override; {$ENDIF}
+    function GetAction: TBasicAction; override;
     procedure SetParent( AParent: TWinControl); override;
     procedure SetPageIndex(Value: Integer); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -1135,8 +1135,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvNavigationPane.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1367,10 +1367,8 @@ begin
     Parent := Self;
   end;
   FParentStyleManager := True;
-  {$IFDEF COMPILER6_UP}
   FIconPanel.SetSubComponent(True);
   FSplitter.SetSubComponent(True);
-  {$ENDIF COMPILER6_UP}
 end;
 
 destructor TJvCustomNavigationPane.Destroy;
@@ -3133,11 +3131,7 @@ end;
 
 function TJvNavPanelPage.GetAction: TBasicAction;
 begin
-  {$IFDEF COMPILER6_UP}
   Result := inherited GetAction;
-  {$ELSE}
-  Result := inherited Action;
-  {$ENDIF COMPILER6_UP}
 end;
 
 procedure TJvNavPanelPage.SetAction(const Value: TBasicAction);

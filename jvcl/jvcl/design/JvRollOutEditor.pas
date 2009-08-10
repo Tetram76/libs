@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRollOutEditor.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvRollOutEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvRollOutEditor;
 
@@ -30,11 +30,7 @@ unit JvRollOutEditor;
 interface
 
 uses
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,   
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   ImgList,
   JvDsgnEditors, JvRollOut;
 
@@ -73,7 +69,6 @@ procedure TJvRollOutDefaultEditor.Edit;
 var
   R: TJvRollOut;
 begin
-  {$IFDEF COMPILER6_UP}
   if GetComponent is TJvRollOut then
   begin
     R := TJvRollOut(GetComponent);
@@ -83,17 +78,6 @@ begin
       Designer.Modified;
     end;
   end;
-  {$ELSE}
-  if Component is TJvRollOut then
-  begin
-    R := TJvRollOut(Component);
-    if R.MouseIsOnButton then
-    begin
-      R.Collapsed := not R.Collapsed;
-      Designer.Modified;
-    end;
-  end;
-  {$ENDIF COMPILER6_UP}
 end;
 
 end.

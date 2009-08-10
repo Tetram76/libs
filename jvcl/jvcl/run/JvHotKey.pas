@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHotKey.pas 10699 2006-06-10 17:49:41Z obones $
+// $Id: JvHotKey.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvHotKey;
 
@@ -40,12 +40,10 @@ uses
 type
   TJvHotKey = class(TJvExHotKey)
   published
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property HintColor;
     property OnMouseEnter;
     property OnMouseLeave;
@@ -70,8 +68,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHotKey.pas $';
-    Revision: '$Revision: 10699 $';
-    Date: '$Date: 2006-06-10 19:49:41 +0200 (sam., 10 juin 2006) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

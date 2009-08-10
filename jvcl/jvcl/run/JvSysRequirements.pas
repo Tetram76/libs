@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSysRequirements.pas 11641 2007-12-24 16:34:00Z outchy $
+// $Id: JvSysRequirements.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSysRequirements;
 
@@ -36,7 +36,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, SysUtils, Classes, Forms,
-  JvVCL5Utils,
   JvComponentBase,
   JclSysInfo;
 
@@ -105,8 +104,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSysRequirements.pas $';
-    Revision: '$Revision: 11641 $';
-    Date: '$Date: 2007-12-24 17:34:00 +0100 (lun., 24 déc. 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

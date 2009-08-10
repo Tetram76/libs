@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppFrmReg.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvAppFrmReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvAppFrmReg;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   Classes, Graphics,
-  {$IFDEF COMPILER6_UP}
   DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvDsgnConsts,
   JvFormMagnet, JvFormTransparent, JvAppHotKey, JvGradientCaptionForm,
   JvGradientCaption, JvAppAnimatedIcon, JvAppEvent,

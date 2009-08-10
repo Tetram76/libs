@@ -28,7 +28,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAni.pas 11993 2008-10-26 12:56:38Z ahuser $
+// $Id: JvAni.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvAni;
 
@@ -40,11 +40,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes,
-  {$IFDEF HAS_UNIT_RTLCONSTS}
-  RTLConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
-  Windows, Graphics, Controls, ExtCtrls, Dialogs,
+  Classes, RTLConsts, Windows, Graphics, Controls, ExtCtrls, Dialogs,
   JvTypes;
 
 type
@@ -136,8 +132,8 @@ function LoadJvAniDialog: TJvAni;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAni.pas $';
-    Revision: '$Revision: 11993 $';
-    Date: '$Date: 2008-10-26 13:56:38 +0100 (dim., 26 oct. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataConsumerItemSelectForm.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvDataConsumerItemSelectForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDataConsumerItemSelectForm;
 
@@ -33,11 +33,7 @@ interface
 uses
   SysUtils, Classes, Windows, Messages, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvBaseDsgnForm, JvProviderTreeListFrame, JvDataProvider, JvDataProviderIntf,
   JvDsgnTypes;
 

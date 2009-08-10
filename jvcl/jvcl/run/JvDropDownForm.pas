@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDropDownForm.pas 11619 2007-12-16 18:44:51Z ahuser $
+// $Id: JvDropDownForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDropDownForm;
 
@@ -75,8 +75,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDropDownForm.pas $';
-    Revision: '$Revision: 11619 $';
-    Date: '$Date: 2007-12-16 19:44:51 +0100 (dim., 16 déc. 2007) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -85,7 +85,7 @@ implementation
 
 uses
   SysUtils,
-  JvConsts, JvResources, JvVCL5Utils, JvJVCLUtils;
+  JvConsts, JvResources, JvJVCLUtils;
 
 type
   TCustomEditAccessProtected = class(TCustomEdit);
@@ -151,11 +151,7 @@ begin
 
   if Screen.MonitorCount > 0 then
   begin
-    {$IFDEF COMPILER6_UP}
     LScreenRect := Monitor.WorkareaRect;
-    {$ELSE}
-    LScreenRect := GetMonitorWorkareaRect(Monitor);
-    {$ENDIF COMPILER6_UP}
     if (Left + Width > LScreenRect.Right) then
       Left := LScreenRect.Right - Width;
     if (Top + Height > LScreenRect.Bottom) then

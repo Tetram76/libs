@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGroupHeaderEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvGroupHeaderEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvGroupHeaderEditor;
 
@@ -32,11 +32,7 @@ interface
 uses
   SysUtils, Classes,
   Windows, Forms, Graphics, ImgList, Dialogs, Controls,
-  {$IFDEF COMPILER6_UP}
   VCLEditors, DesignIntf, DesignEditors, DesignMenus;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvGroupHeaderEditor = class(TComponentEditor)

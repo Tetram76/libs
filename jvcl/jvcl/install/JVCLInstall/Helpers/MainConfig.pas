@@ -22,7 +22,7 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: MainConfig.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: MainConfig.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit MainConfig;
 
@@ -112,10 +112,8 @@ begin
   ActiveControl := CheckListBox;
   if CheckListBox.Items.Count > 0 then
   begin
-    {$IFDEF COMPILER6_UP}
     CheckListBox.Selected[0] := True;
     CheckListBoxClick(CheckListBox);
-    {$ENDIF COMPILER6_UP}
   end;
 end;
 

@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 12406 2009-07-22 20:06:32Z jfudickar $
+// $Id: JvParameterListParameter.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvParameterListParameter;
 
@@ -33,10 +33,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Classes, SysUtils, StdCtrls, ExtCtrls, Graphics, Forms,
-  Controls, FileCtrl, Dialogs, ComCtrls, Buttons,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
+  Controls, FileCtrl, Dialogs, ComCtrls, Buttons, Variants,
   JvPanel, JvPropertyStore, JvParameterList, JvDynControlEngine, JvDSADialogs,
   JvDynControlEngineIntf;
 
@@ -623,8 +620,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 12406 $';
-    Date: '$Date: 2009-07-22 22:06:32 +0200 (mer., 22 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1433,8 +1430,7 @@ begin
   if VarIsNull(Value) then
     ItemIndex := -1
   else if VariantAsItemIndex then
-    if VarType(Value) in [varSmallInt, varInteger, varByte
-      {$IFDEF COMPILER6_UP}, varShortInt, varWord, varLongWord{$ENDIF}] then
+    if VarType(Value) in [varSmallInt, varInteger, varByte, varShortInt, varWord, varLongWord] then
       ItemIndex := Value
     else
       SetAsString(Value)
@@ -2527,7 +2523,9 @@ begin
     Scrollbox.Align := alClient;
     ScrollBox.AutoScroll := False;
     ScrollBox.BorderStyle := bsNone;
+    {$IFDEF COMPILER10_UP}
     ScrollBox.ParentBackground := True;
+    {$ENDIF COMPILER10_UP}
     Panel := TJvPanel.Create(ParameterParent.Owner);
     Panel.Name := GenerateUniqueComponentName(ParameterParent.Owner, Panel, GetParameterName + '_' + Pages[i]);
     Panel.ArrangeSettings := ArrangeSettings;

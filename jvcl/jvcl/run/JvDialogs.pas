@@ -25,7 +25,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDialogs.pas 11754 2008-03-09 23:02:21Z ahuser $
+// $Id: JvDialogs.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDialogs;
 
@@ -59,9 +59,6 @@ type
     FOriginalRect: TRect;
     FParentWndInstance, FOldParentWndInstance: Pointer;
     FParentWnd: THandle;
-    {$IFDEF COMPILER5}
-    FShowPlacesBar: Boolean;
-    {$ENDIF COMPILER5}
     FOnShareViolation: TCloseQueryEvent;
     FHeight: Integer;
     FWidth: Integer;
@@ -99,9 +96,6 @@ type
     property DefBtnCaption: string read FDefBtnCaption write SetDefBtnCaption;
     property FilterLabelCaption: string read FFilterLabelCaption write SetFilterLabelCaption;
     property Height: Integer read FHeight write FHeight;
-    {$IFDEF COMPILER5}
-    property ShowPlacesBar: Boolean read FShowPlacesBar write FShowPlacesBar default True;
-    {$ENDIF COMPILER5}
     property UseUserSize: Boolean read FUseUserSize write FUseUserSize default False;
     property Width: Integer read FWidth write FWidth;
     property OnError: TDialogErrorEvent read FOnError write FOnError;
@@ -141,8 +135,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDialogs.pas $';
-    Revision: '$Revision: 11754 $';
-    Date: '$Date: 2008-03-10 00:02:21 +0100 (lun., 10 mars 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -203,9 +197,6 @@ begin
   FActiveStyle := asSmallIcon;
   FMakeResizeable := GetWindowsVersion in [wvWin95, wvWin95OSR2, wvWinNT4];
   FParentWndInstance := JvMakeObjectInstance(ParentWndProc);
-  {$IFDEF COMPILER5}
-  FShowPlacesBar := True;
-  {$ENDIF COMPILER5}
   FParentWndInstance := JvMakeObjectInstance(ParentWndProc);
 end;
 
@@ -419,12 +410,6 @@ begin
 end;
 
 function TJvOpenDialog.TaskModalDialog(DialogFunc: Pointer; var DialogData): Bool;
-{$IFDEF COMPILER5}
-const
-  PlacesBar: array [Boolean] of DWORD = (OFN_EX_NOPLACESBAR, 0);
-var
-  DialogData2000: TOpenFileName2000;
-{$ENDIF COMPILER5}
 begin
   TOpenFileName(DialogData).hInstance := FindClassHInstance(Self.ClassType);
   FActiveSettingDone := False;
@@ -432,16 +417,7 @@ begin
   begin
     if ActiveStyle = asReport then
       InstallW2kFix;
-    {$IFDEF COMPILER5}
-    FillChar(DialogData2000, SizeOf(DialogData2000), #0);
-    DialogData2000.OpenFileName := TOpenFileName(DialogData);
-    DialogData2000.OpenFileName.lStructSize := SizeOf(DialogData2000);
-    DialogData2000.FlagsEx := PlacesBar[FShowPlacesBar];
-    Result := inherited TaskModalDialog(DialogFunc, DialogData2000);
-    TOpenFileName(DialogData).nFilterIndex := DialogData2000.OpenFileName.nFilterIndex;
-    {$ELSE}
     Result := inherited TaskModalDialog(DialogFunc, DialogData);
-    {$ENDIF COMPILER5}
   end
   else
     Result := inherited TaskModalDialog(DialogFunc, DialogData);

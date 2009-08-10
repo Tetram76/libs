@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNavPaneEditors.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvNavPaneEditors.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvNavPaneEditors;
 
@@ -32,11 +32,7 @@ interface
 uses
   SysUtils, Classes,
   Windows, Controls, Forms, ToolWin, Menus, ActnList, ComCtrls, ImgList,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf, DesignMenus, DesignWindows,
-  {$ELSE}
-  DsgnIntf, DsgnWnds,
-  {$ENDIF COMPILER6_UP}
   JvDsgnEditors, JvNavigationPane;
 
 type

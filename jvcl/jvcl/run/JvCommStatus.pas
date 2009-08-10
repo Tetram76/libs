@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCommStatus.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvCommStatus.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvCommStatus;
 
@@ -35,12 +35,12 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Classes,
-  JvComponentBase;
+  JvComponentBase, JvThread;
 
 type
   TJvCommPort = 0..8;
 
-  TJvCommWatcher = class(TThread)
+  TJvCommWatcher = class(TJvPausableThread)
   private
     FHandle: THandle;
     FStat: Cardinal;
@@ -81,8 +81,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCommStatus.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -174,10 +174,7 @@ begin
   begin
     FWatcher.FHandle := FHandle;
     FWatcher.FStat := 0;
-    if FHandle <> 0 then
-      FWatcher.Resume
-    else
-      FWatcher.Suspend;
+    FWatcher.Paused := FHandle = 0;
   end;
   OnChange(Self);
 end;
@@ -197,14 +194,22 @@ begin
   try
     while not Terminated do
     begin
-      if FHandle <> 0 then
-      begin
-        GetCommModemStatus(FHandle, Mask);
-        if Mask <> FStat then
+      EnterUnpauseableSection;
+      try
+        if Terminated then
+          Exit;
+
+        if FHandle <> 0 then
         begin
-          FStat := Mask;
-          Synchronize(Changed);
+          GetCommModemStatus(FHandle, Mask);
+          if Mask <> FStat then
+          begin
+            FStat := Mask;
+            Synchronize(Changed);
+          end;
         end;
+      finally
+        LeaveUnpauseableSection;
       end;
       Sleep(50);
     end;

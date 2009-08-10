@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHLEditEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvHLEditEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JVHLEditEditor;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   Classes, SysUtils, Windows, Controls,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, PropertyCategories, VCLEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvEditor, JvHLEditor, JvHLEditorPropertyForm, JvFormPlacement;
 
 type

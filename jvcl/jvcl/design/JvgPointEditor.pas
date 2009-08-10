@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgPointEditor.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvgPointEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvgPointEditor;
 
@@ -32,11 +32,7 @@ interface
 
 uses
   Windows, SysUtils, Classes,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, PropertyCategories,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   TypInfo;
 
 type

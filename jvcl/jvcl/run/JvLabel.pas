@@ -55,7 +55,7 @@ Changes:
 Known Issues:
 * AutoSize calculations aren't correct when RoundedFrame and/or Shadow are active
 -----------------------------------------------------------------------------}
-// $Id: JvLabel.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvLabel.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvLabel;
 
@@ -68,9 +68,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls, StdCtrls, ImgList,
-  {$IFNDEF COMPILER6_UP}
-  JvVCL5Utils,
-  {$ENDIF COMPILER6_UP}
   JvTypes, JvComponent, JvDataProvider, JvExControls, JvHotTrackPersistent;
 
 type
@@ -322,8 +319,8 @@ procedure CalculateAngleInfo(Canvas: TCanvas; Angle: Integer; Text: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLabel.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1134,12 +1131,7 @@ var
   OldValue, OtherDragging: Boolean;
 begin
   OldValue := MouseOver;
-  OtherDragging :=
-    KeyPressed(VK_LBUTTON)
-    {$IFDEF COMPILER6_UP}
-    or Mouse.IsDragging
-    {$ENDIF COMPILER6_UP}
-    ;
+  OtherDragging := KeyPressed(VK_LBUTTON) or Mouse.IsDragging;
 
   MouseOver := Enabled and not OtherDragging and
     (FindDragTarget(Mouse.CursorPos, True) = Self) and IsForegroundTask;
@@ -1204,12 +1196,7 @@ begin
 
   if not MouseOver and Enabled and IsForegroundTask then
   begin
-    OtherDragging :=
-      KeyPressed(VK_LBUTTON)
-      {$IFDEF COMPILER6_UP}
-      or Mouse.IsDragging
-      {$ENDIF COMPILER6_UP}
-      ;
+    OtherDragging := KeyPressed(VK_LBUTTON) or Mouse.IsDragging;
     NeedRepaint := not Transparent and
       (
       {$IFDEF JVCLThemesEnabled}
@@ -1235,12 +1222,7 @@ begin
     Exit;
   if  MouseOver and Enabled then
   begin
-    OtherDragging :=
-      KeyPressed(VK_LBUTTON)
-      {$IFDEF COMPILER6_UP}
-      or Mouse.IsDragging
-      {$ENDIF COMPILER6_UP}
-      ;
+    OtherDragging := KeyPressed(VK_LBUTTON) or Mouse.IsDragging;
 
     NeedRepaint := not Transparent and
       (

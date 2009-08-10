@@ -38,7 +38,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupTreeView.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvDBLookupTreeView.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBLookupTreeView;
 
@@ -270,12 +270,10 @@ type
     property ImeMode;
     property ImeName;
     property Anchors;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property BiDiMode;
     property BorderWidth;
     property Constraints;
@@ -372,12 +370,10 @@ type
     destructor Destroy; override;
   published
     property Align;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property BorderStyle: TBorderStyle read FBorderStyle write SetBorderStyle default bsSingle;
     property Color;
     property DataField;
@@ -449,8 +445,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupTreeView.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -458,12 +454,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  {$IFDEF COMPILER6_UP}
-  VDBConsts,
-  {$ENDIF COMPILER6_UP}
+  Variants, VDBConsts,
   {$IFDEF COMPILER10_UP}
   Types,  // to allow inline expansion
   {$ENDIF COMPILER10_UP}

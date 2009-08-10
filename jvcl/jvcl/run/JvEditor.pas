@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvEditor.pas 12243 2009-03-20 19:35:51Z ahuser $
+// $Id: JvEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvEditor;
 
@@ -386,8 +386,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditor.pas $';
-    Revision: '$Revision: 12243 $';
-    Date: '$Date: 2009-03-20 20:35:51 +0100 (ven., 20 mars 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -395,11 +395,7 @@ const
 implementation
 
 uses
-  Consts,
-  {$IFDEF HAS_UNIT_RTLCONSTS}
-  RTLConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
-  SysUtils, Math, Graphics, Clipbrd,
+  Consts, RTLConsts, SysUtils, Math, Graphics, Clipbrd,
   JvUnicodeCanvas, JvJCLUtils, JvThemes, JvConsts, JvResources;
 
 type

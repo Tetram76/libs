@@ -27,7 +27,7 @@ Known Issues:
        example DecimalPlaces/Decimal, CheckMinValue (name indicates action?
        maybe better: TJvValidateEdit's HasMinValue) etc.
 -----------------------------------------------------------------------------}
-// $Id: JvBaseEdits.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvBaseEdits.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvBaseEdits;
 
@@ -214,12 +214,10 @@ type
 
   TJvCalcEdit = class(TJvCustomCalcEdit)
   published
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property BiDiMode;
     property DragCursor;
     property DragKind;
@@ -306,8 +304,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseEdits.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -317,7 +315,7 @@ implementation
 uses
   SysUtils, Math, Consts, Graphics,
 //  JclLogic,
-  JvVCL5Utils, JvJCLUtils, JvCalc, JvConsts, JvResources;
+  JvJCLUtils, JvCalc, JvConsts, JvResources;
 
 {$R JvBaseEdits.Res}
 

@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMenus.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvMenus.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvMenus;
 
@@ -38,7 +38,7 @@ uses
   Windows, Messages, SysUtils, Contnrs, Graphics, Controls, Forms, Classes,
   ExtCtrls, ImgList, Menus,
   JclBase,
-  JvTypes, JvWndProcHook, JVCLVer, JvVCL5Utils;
+  JvTypes, JvWndProcHook, JVCLVer;
 
 const
   // custom painter constants
@@ -744,8 +744,8 @@ function StripHotkeyPrefix(const Text: string): string; // MBCS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMenus.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -753,10 +753,7 @@ const
 implementation
 
 uses
-  CommCtrl, Consts, Math,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
+  CommCtrl, Consts, Math, Types,
   {$IFNDEF COMPILER7_UP}
   JvWin32,
   {$ENDIF ~COMPILER7_UP}

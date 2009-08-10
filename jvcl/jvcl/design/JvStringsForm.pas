@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStringsForm.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvStringsForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvStringsForm;
 
@@ -34,11 +34,7 @@ interface
 
 uses
   Classes, Windows, Forms, Controls, Dialogs, StdCtrls, ExtCtrls,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvComponent;
 
 type

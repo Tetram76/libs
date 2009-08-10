@@ -23,7 +23,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgUtils.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvgUtils.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvgUtils;
 
@@ -142,8 +142,8 @@ function DeleteObject(P1: HGDIOBJ): BOOL; stdcall;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgUtils.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -153,8 +153,7 @@ implementation
 uses
   JvJCLUtils,
   ShlObj, Math,
-  JvResources, JvConsts,
-  JvVCL5Utils;
+  JvResources, JvConsts;
 
 { debug func }
 {$IFDEF glDEBUG}

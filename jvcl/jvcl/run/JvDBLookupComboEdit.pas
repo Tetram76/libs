@@ -36,7 +36,7 @@ inherit it with JVCL3 from JvDBLookupEdit, the specified errors occur.
 
 Michael Habbe [2003-10-20]
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupComboEdit.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvDBLookupComboEdit.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBLookupComboEdit;
 
@@ -105,12 +105,10 @@ type
     property AutoSelect;
     property AutoSize;
     property BeepOnError: Boolean read FBeepOnError write FBeepOnError default True;
-    {$IFDEF COMPILER6_UP}
     property BevelEdges;
     property BevelInner;
     property BevelKind default bkNone;
     property BevelOuter;
-    {$ENDIF COMPILER6_UP}
     property BiDiMode;
     property BorderStyle;
     property CharCase;
@@ -161,8 +159,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupComboEdit.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -540,10 +538,7 @@ end;
 
 function TJvDBLookupComboEdit.GetTextMargins: TPoint;
 var
-  DC: HDC;
-  SaveFont: HFont;
   I: Integer;
-  SysMetrics, Metrics: TTextMetric;
 begin
   if BorderStyle = bsNone then
     I := 0

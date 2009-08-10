@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVCStyle.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvDockVCStyle.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDockVCStyle;
 
@@ -195,8 +195,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVCStyle.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -962,7 +962,6 @@ var
 
   procedure DrawExpendBotton(Left, Top: Integer);
   const
-    {$IFDEF COMPILER6_UP}
     ArrowOrient: array [TAlign] of DWORD =
       (0, DFCS_SCROLLUP, DFCS_SCROLLDOWN, DFCS_SCROLLLEFT, DFCS_SCROLLRIGHT, 0, 0);
     {$IFDEF JVCLThemesEnabled}
@@ -970,15 +969,6 @@ var
      (tsScrollBarDontCare, tsArrowBtnUpNormal, tsArrowBtnDownNormal, tsArrowBtnLeftNormal,
       tsArrowBtnRightNormal, tsScrollBarDontCare, tsScrollBarDontCare);
     {$ENDIF JVCLThemesEnabled}
-    {$ELSE}
-    ArrowOrient: array [TAlign] of DWORD =
-      (0, DFCS_SCROLLUP, DFCS_SCROLLDOWN, DFCS_SCROLLLEFT, DFCS_SCROLLRIGHT, 0);
-    {$IFDEF JVCLThemesEnabled}
-    ArrowOrientTheme: array [TAlign] of TThemedScrollBar =
-     (tsScrollBarDontCare, tsArrowBtnUpNormal, tsArrowBtnDownNormal, tsArrowBtnLeftNormal,
-      tsArrowBtnRightNormal, tsScrollBarDontCare);
-    {$ENDIF JVCLThemesEnabled}
-    {$ENDIF COMPILER6_UP}
     CurrArrow: array [Boolean, TDockOrientation] of TAlign =
       ((alNone, alLeft, alTop), (alNone, alRight, alBottom));
   var

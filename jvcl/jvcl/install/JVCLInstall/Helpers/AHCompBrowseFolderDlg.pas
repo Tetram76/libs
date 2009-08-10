@@ -22,17 +22,15 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: AHCompBrowseFolderDlg.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: AHCompBrowseFolderDlg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit AHCompBrowseFolderDlg;
 
 {$I jvcl.inc}
 {$I windowsonly.inc}
 
-{$IFDEF COMPILER6_UP}
- {$WARN UNIT_PLATFORM OFF}
- {$WARN SYMBOL_PLATFORM OFF}
-{$ENDIF}
+{$WARN UNIT_PLATFORM OFF}
+{$WARN SYMBOL_PLATFORM OFF}
 
 interface
 

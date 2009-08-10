@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXmlTree.pas 11025 2006-11-22 19:07:34Z ahuser $
+// $Id: JvXmlTree.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvXmlTree;
 
@@ -33,10 +33,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
+  SysUtils, Classes, Variants,
   JvStrings;
 
 type
@@ -174,8 +171,8 @@ procedure PreProcessXML(AList: TStrings);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXmlTree.pas $';
-    Revision: '$Revision: 11025 $';
-    Date: '$Date: 2006-11-22 20:07:34 +0100 (mer., 22 nov. 2006) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

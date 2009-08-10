@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActionsEngine.pas 12226 2009-03-09 00:16:13Z jfudickar $
+// $Id: JvDBActionsEngine.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBActionsEngine;
 
@@ -190,8 +190,8 @@ function RegisteredDatabaseActionEngineList: TJvDatabaseActionEngineList;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActionsEngine.pas $';
-    Revision: '$Revision: 12226 $';
-    Date: '$Date: 2009-03-09 01:16:13 +0100 (lun., 09 mars 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -199,16 +199,9 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo,
-  {$IFDEF HAS_UNIT_STRUTILS}
-  StrUtils,
-  {$ENDIF HAS_UNIT_STRUTILS}
+  SysUtils, Grids, TypInfo, StrUtils,
   JvResources, JvParameterList, JvParameterListParameter, JvDSADialogs,
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  JvDBActions,
-  Dialogs;
+  Variants, JvDBActions, Dialogs;
 
 var
   IntRegisteredActionEngineList: TJvDatabaseActionEngineList;

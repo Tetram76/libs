@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTranslateString.pas 12392 2009-07-09 11:15:37Z ahuser $
+// $Id: JvTranslateString.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvTranslateString;
 
@@ -84,11 +84,7 @@ type
     procedure SetDateTimeFormat(const Value: string);
   public
     constructor Create(AOwner: TComponent); override;
-    {$IFDEF BCB5}
-    function TranslateStringWithChanged(InString: string; var Changed: Boolean): string; 
-    {$ELSE}
     function TranslateString(InString: string; var Changed: Boolean): string; overload;
-    {$ENDIF BCB5}
     function TranslateString(InString: string): string; overload;
   published
     property DateFormat: string read FDateFormat write FDateFormat;
@@ -103,8 +99,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTranslateString.pas $';
-    Revision: '$Revision: 12392 $';
-    Date: '$Date: 2009-07-09 13:15:37 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -112,11 +108,7 @@ const
 implementation
 
 uses
-  SysUtils,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
-  ExtCtrls, ComCtrls, StdCtrls, Forms, Dialogs,
+  SysUtils, Types, ExtCtrls, ComCtrls, StdCtrls, Forms, Dialogs,
   JclFileUtils,
   JvJVCLUtils;
 
@@ -413,11 +405,7 @@ begin
   end;
 end;
 
-{$IFDEF BCB5}
-function TJvTranslateString.TranslateStringWithChanged(InString: string; var Changed: Boolean): string;
-{$ELSE}
 function TJvTranslateString.TranslateString(InString: string; var Changed: Boolean): string;
-{$ENDIF BCB5}
 var
   I, J: Integer;
   Command: string;

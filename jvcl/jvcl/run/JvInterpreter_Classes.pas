@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Classes.pas 12252 2009-03-21 22:18:25Z ahuser $
+// $Id: JvInterpreter_Classes.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvInterpreter_Classes;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Classes.pas $';
-    Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -52,10 +52,7 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  Classes;
+  Variants, Classes;
 
 { TList }
 { constructor }

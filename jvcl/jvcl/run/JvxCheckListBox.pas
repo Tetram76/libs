@@ -35,7 +35,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvxCheckListBox.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvxCheckListBox.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvxCheckListBox;
 
@@ -48,12 +48,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Controls, Graphics, StdCtrls, Forms,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
-  {$IFDEF HAS_UNIT_RTLCONSTS}
-  RTLConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
+  Types, RTLConsts,
   JvAppStorage, JvFormPlacement, JvComponent;
 
 type
@@ -320,8 +315,8 @@ function CheckBitmap: TBitmap;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvxCheckListBox.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -811,8 +806,7 @@ type
 const
   BorderStyles: array [TBorderStyle] of Longword = (0, WS_BORDER);
   Styles: array [TListBoxStyle] of Longword =
-    (0, LBS_OWNERDRAWFIXED, LBS_OWNERDRAWVARIABLE
-    {$IFDEF COMPILER6_UP}, LBS_OWNERDRAWFIXED, LBS_OWNERDRAWFIXED {$ENDIF});
+    (0, LBS_OWNERDRAWFIXED, LBS_OWNERDRAWVARIABLE, LBS_OWNERDRAWFIXED, LBS_OWNERDRAWFIXED);
   Sorteds: TSelects = (0, LBS_SORT);
   MultiSelects: TSelects = (0, LBS_MULTIPLESEL);
   ExtendSelects: TSelects = (0, LBS_EXTENDEDSEL);

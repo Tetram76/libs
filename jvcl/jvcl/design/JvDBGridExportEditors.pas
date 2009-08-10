@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridExportEditors.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvDBGridExportEditors.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvDBGridExportEditors;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   Classes,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, VCLEditors;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvDBGridExportWordFormatProperty = class(TIntegerProperty)

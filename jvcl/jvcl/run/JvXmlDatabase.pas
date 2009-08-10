@@ -26,7 +26,7 @@ Known Issues:
   -Where conditions *MUST* be enclosed between parenthesis as ... WHERE (Col = 5) AND (Col2 < Col3) ...
   -Update statements are limited to simple operations like ... SET Col1 = Col1 + 1, Col2 = 4 ...
 -----------------------------------------------------------------------------}
-// $Id: JvXmlDatabase.pas 11946 2008-10-07 14:04:58Z wpostma $
+// $Id: JvXmlDatabase.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvXmlDatabase;
 
@@ -38,10 +38,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, Contnrs, Math,
-  {$IFDEF COMPILER6_UP}
-  DateUtils,
-  {$ENDIF COMPILER6_UP}
+  SysUtils, Classes, Contnrs, Math, DateUtils,
   JvTypes, JvComponentBase, JvSimpleXml;
 
 type
@@ -211,8 +208,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXmlDatabase.pas $';
-    Revision: '$Revision: 11946 $';
-    Date: '$Date: 2008-10-07 16:04:58 +0200 (mar., 07 oct. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -223,7 +220,7 @@ uses
   {$IFDEF SUPPORTS_INLINE}
   Windows,
   {$ENDIF SUPPORTS_INLINE}
-  JvVCL5Utils, JvJCLUtils, JvResources;
+  JvJCLUtils, JvResources;
 
 //=== { TJvXMLDatabase } =====================================================
 

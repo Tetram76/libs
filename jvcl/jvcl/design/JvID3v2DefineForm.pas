@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvID3v2DefineForm.pas 11891 2008-09-09 20:33:00Z obones $
+// $Id: JvID3v2DefineForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvID3v2DefineForm;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   SysUtils, Classes, Windows, Messages, Graphics, Controls, Forms, Dialogs, StdCtrls,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf, DesignMenus, DesignWindows,
-  {$ELSE}
-  DsgnIntf, DsgnWnds,
-  {$ENDIF COMPILER6_UP}
   JvID3v2Base, JvID3v2Types, JvComponent;
 
 type

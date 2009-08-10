@@ -36,7 +36,7 @@ Known Issues:
     * PosAtDate is slightly better
     * FirstVisibleDate always start at day 1 of month
 -----------------------------------------------------------------------------}
-// $Id: JvTimeLine.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvTimeLine.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvTimeLine;
 
@@ -50,8 +50,7 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls, Forms, StdCtrls, ExtCtrls, ImgList,
-  JvConsts, JvVCL5Utils,
-  JvComponent;
+  JvConsts, JvComponent;
 
 type
   TJvTimeItems = class;
@@ -496,8 +495,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimeLine.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -505,10 +504,7 @@ const
 implementation
 
 uses
-  Math,
-  {$IFDEF COMPILER6_UP}
-  DateUtils,
-  {$ENDIF COMPILER6_UP}
+  Math, DateUtils,
   JvJCLUtils, JvJVCLUtils, JvThemes;
 
 {$R JvTimeLine.res}
@@ -2271,39 +2267,39 @@ begin
     with Items[I] do
     begin
       S := Caption + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       S := IntToStr(ColorToRGB(Color)) + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       S := DateTimeToStr(Date) + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       S := Hint + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       S := IntToStr(ImageIndex) + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       S := IntToStr(Level) + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       S := IntToStr(Ord(Selected)) + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       S := IntToStr(ColorToRGB(TextColor)) + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       S := IntToStr(Width) + Cr;
-      UTF8Str := {$IFDEF COMPILER6_UP}UTF8Encode{$ENDIF COMPILER6_UP}(S);
+      UTF8Str := UTF8Encode(S);
       Stream.Write(UTF8Str[1], Length(UTF8Str));
 
       { let the user save his data stuff }

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHtmlParserEditor.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvHtmlParserEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvHtmlParserEditor;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   SysUtils, Classes, Forms,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvParserForm;
 
 type

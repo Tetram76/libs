@@ -25,7 +25,7 @@ Known Issues:
   * Automatic unlit color calculation is not working properly. Maybe a function in JclGraphUtil
     can help out there.
 -----------------------------------------------------------------------------}
-// $Id: JvSegmentedLEDDisplay.pas 11964 2008-10-16 16:22:00Z obones $
+// $Id: JvSegmentedLEDDisplay.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvSegmentedLEDDisplay;
 
@@ -428,8 +428,8 @@ procedure UnregisterModuleSegmentedLEDDigitClasses(Module: HMODULE);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSegmentedLEDDisplay.pas $';
-    Revision: '$Revision: 11964 $';
-    Date: '$Date: 2008-10-16 18:22:00 +0200 (jeu., 16 oct. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2262,9 +2262,7 @@ initialization
   RegisterIntegerConsts(TypeInfo(TUnlitColor), IdentToUnlitColor, UnlitColorToIdent);
 
 finalization
-  {$IFDEF COMPILER6_UP}
   UnregisterIntegerConsts(TypeInfo(TUnlitColor), IdentToUnlitColor, UnlitColorToIdent);
-  {$ENDIF COMPILER6_UP}
   UnregisterModuleSegmentedLEDDigitClasses(HInstance);
   FreeAndNil(GDigitClassList);
   RemoveModuleUnloadProc(ModuleUnload);

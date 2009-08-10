@@ -22,7 +22,7 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: VclClxCvt.pas 11089 2006-12-16 22:32:51Z ahuser $
+// $Id: VclClxCvt.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit VclClxCvt;
 
@@ -158,7 +158,7 @@ type
       { Directory where the generated file should be stored. }
 
     property ReduceConditions: Boolean read FReduceConditions write FReduceConditions default True;
-      { Removes VCL,COMPILER5,COMPILER6,BCB5,BCB6,BCB condition content and
+      { Removes VCL,COMPILER6,BCB6,BCB condition content and
         VisualCLX conditions. If False If False the ($I jvcl.inc) is replaced by
         ($I qjvcl.inc) }
     property KeepLines: Boolean read FKeepLines write FKeepLines default True;

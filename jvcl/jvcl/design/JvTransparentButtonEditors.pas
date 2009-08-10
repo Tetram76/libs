@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTransparentButtonEditors.pas 11476 2007-08-18 16:59:46Z ahuser $
+// $Id: JvTransparentButtonEditors.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvTransparentButtonEditors;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   SysUtils,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, DesignMenus, VCLEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   ImgList,
   JvDsgnEditors, JvTransparentButton;
 

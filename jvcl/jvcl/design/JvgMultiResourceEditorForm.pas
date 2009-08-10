@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgMultiResourceEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvgMultiResourceEditorForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvgMultiResourceEditorForm;
 
@@ -34,11 +34,7 @@ uses
   Windows, Messages,
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, Grids,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors, PropertyCategories,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvgMultiResources;
 
 type

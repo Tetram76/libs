@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGrids.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvGrids.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvGrids;
 
@@ -33,7 +33,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Classes, Windows, Messages, Controls, Graphics, StdCtrls, Forms, Grids,
-  JvConsts, JvVCL5Utils, JvAppStorage, JvFormPlacement, JvComponent, JvExGrids;
+  JvConsts, JvAppStorage, JvFormPlacement, JvComponent, JvExGrids;
 
 type
   TAcceptKeyEvent = function(Sender: TObject; var Key: Char): Boolean of object;
@@ -191,8 +191,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGrids.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -200,10 +200,7 @@ const
 implementation
 
 uses
-  SysUtils, Math,
-{$IFDEF HAS_UNIT_TYPES}
-  Types,
-{$ENDIF HAS_UNIT_TYPES}
+  SysUtils, Math, Types,
   JvJCLUtils, JvJVCLUtils;
 
 const

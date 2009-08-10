@@ -20,7 +20,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMinMaxForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvMinMaxForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvMinMaxForm;
 
@@ -32,11 +32,7 @@ uses
   SysUtils, Classes,
   Windows,  Messages, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Buttons, Mask, Consts,
-  {$IFDEF COMPILER6_UP}
   RTLConsts, DesignIntf, VCLEditors, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvJVCLUtils, JvFormPlacement, JvComponent;
 
 type

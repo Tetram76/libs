@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckTreeView.pas 11734 2008-02-20 17:39:53Z ahuser $
+// $Id: JvCheckTreeView.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvCheckTreeView;
 
@@ -156,8 +156,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckTreeView.pas $';
-    Revision: '$Revision: 11734 $';
-    Date: '$Date: 2008-02-20 18:39:53 +0100 (mer., 20 févr. 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -165,10 +165,7 @@ const
 implementation
 
 uses
-  CommCtrl, SysUtils,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
+  CommCtrl, SysUtils, Types,
   JvConsts;
 
 procedure ToggleTreeViewCheckBoxes(Node: TTreeNode;

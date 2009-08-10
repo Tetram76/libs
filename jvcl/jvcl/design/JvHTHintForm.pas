@@ -23,7 +23,7 @@ description : Design-time Hint Editor
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHTHintForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvHTHintForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvHTHintForm;
 
@@ -33,11 +33,7 @@ interface
 
 uses
   SysUtils, Classes, Windows, Controls, Forms, StdCtrls,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvHint, JvComponent;
 
 type

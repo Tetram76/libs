@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageRotate.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvImageRotate.pas 12444 2009-08-10 11:48:00Z obones $
 
 unit JvImageRotate;
 
@@ -65,8 +65,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageRotate.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12444 $';
+    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -115,15 +115,17 @@ begin
   FRotating := Value;
   if not (csDesigning in ComponentState) then
   begin
-    if FRotating then
-      FTimer.Resume
-    else
-      FTimer.Suspend;
+    FTimer.Paused := not FRotating;
   end;
 end;
 
 procedure TJvImageRotate.Rotate(Sender: TObject);
 begin
+  // Must exit because we are "Synchronized" and our parent is already
+  // partly destroyed. If we did not exit, we would get an AV.
+  if csDestroying in ComponentState then
+    Exit;
+
   if FTimer.Tag = 0 then //0 from Left to Right
   begin
     if FPosition = 181 then

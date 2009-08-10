@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorProviderDesignerForm.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvColorProviderDesignerForm.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvColorProviderDesignerForm;
 
@@ -34,11 +34,7 @@ uses
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls, Forms, Dialogs,
   StdCtrls, Buttons, ActnList,
-  {$IFDEF COMPILER6_UP}
   DesignIntf, DesignEditors,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   JvBaseDsgnForm, JvProviderTreeListFrame, JvComponent,
   JvDataProvider, JvDataProviderIntf, JvContextProvider,
   JvProviderTreeListDsgnFrame, JvColorProvider, JvDsgnTypes,

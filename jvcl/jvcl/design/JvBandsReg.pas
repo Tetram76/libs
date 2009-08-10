@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandsReg.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvBandsReg.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvBandsReg;
 
@@ -35,11 +35,7 @@ implementation
 
 uses
   Classes, ToolsAPI,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf,
-  {$ELSE}
-  DsgnIntf,
-  {$ENDIF COMPILER6_UP}
   {$IFNDEF COMPILER7_UP}
   ExptIntf,
   {$ENDIF !COMPILER7_UP}

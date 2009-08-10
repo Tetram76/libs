@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 12349 2009-06-28 16:05:18Z jfudickar $
+// $Id: JvActionsEngine.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvActionsEngine;
 
@@ -107,8 +107,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 12349 $';
-    Date: '$Date: 2009-06-28 18:05:18 +0200 (dim., 28 juin 2009) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -116,13 +116,7 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo,
-  {$IFDEF HAS_UNIT_STRUTILS}
-  StrUtils,
-  {$ENDIF HAS_UNIT_STRUTILS}
-  {$IFDEF HAS_UNIT_VARIANTS}
-  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
+  SysUtils, Grids, TypInfo, StrUtils, Variants,
   JvResources, JvJVCLUtils;
 
 //=== { TJvActionEngineList } ========================================

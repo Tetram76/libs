@@ -22,7 +22,7 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Bpg2MakeUtils.pas 11963 2008-10-16 09:12:52Z obones $
+// $Id: Bpg2MakeUtils.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit Bpg2MakeUtils;
 
@@ -171,11 +171,6 @@ begin
   end;
 end;
 
-{$IFDEF COMPILER5}
-type
-  UTF8String = type string;
-{$ENDIF COMPILER5}
-
 function LoadUtf8File(const Filename: string): string;
 const
   BOM_UTF16_LSB: array [0..1] of Char = #$FF#$FE;
@@ -195,11 +190,7 @@ begin
   if Copy(Content, 1, 3) = BOM_UTF8 then
   begin
     Delete(Content, 1, 3);
-    {$IFDEF COMPILER6_UP}
     Result := Utf8ToAnsi(Content);
-	{$ELSE}
-    Result := Content;	
-    {$ENDIF COMPILER6_UP}
   end
   else
     Result := Content;

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExComCtrls.pas 11802 2008-05-12 19:54:51Z ahuser $
+// $Id: JvExComCtrls.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvExComCtrls;
 
@@ -33,10 +33,7 @@ WARNINGHEADER
 interface
 
 uses
-  Windows, Messages,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
+  Windows, Messages, Types,
   SysUtils, Classes, Graphics, Controls, Forms, ComCtrls,
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
@@ -44,9 +41,7 @@ uses
   JvConsts, JvTypes, JvThemes, JVCLVer, JvExControls;
 
 type
-  {$IFDEF COMPILER6_UP}
   WINCONTROL_DECL_DEFAULT(CustomHeaderControl)
-  {$ENDIF COMPILER6_UP}
 
   WINCONTROL_DECL_DEFAULT(HeaderControl)
 
@@ -68,15 +63,11 @@ type
 
   WINCONTROL_DECL_DEFAULT(Animate)
 
-  {$IFDEF COMPILER6_UP}
-
   WINCONTROL_DECL_DEFAULT(CustomComboBoxEx)
 
   WINCONTROL_DECL_DEFAULT(CustomStatusBar)
 
   WINCONTROL_DECL_DEFAULT(ComboBoxEx)
-
-  {$ENDIF COMPILER6_UP}
 
   WINCONTROL_DECL_DEFAULT(CoolBar)
 
@@ -110,15 +101,13 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/devtools/JvExVCL/src/JvExComCtrls.pas $';
-    Revision: '$Revision: 11802 $';
-    Date: '$Date: 2008-05-12 21:54:51 +0200 (lun., 12 mai 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
-
-{$IFDEF COMPILER6_UP}
 
 WINCONTROL_IMPL_DEFAULT(CustomComboBoxEx)
 
@@ -127,8 +116,6 @@ WINCONTROL_IMPL_DEFAULT(CustomStatusBar)
 WINCONTROL_IMPL_DEFAULT(ComboBoxEx)
 
 WINCONTROL_IMPL_DEFAULT(CustomHeaderControl)
-
-{$ENDIF COMPILER6_UP}
 
 WINCONTROL_IMPL_DEFAULT(HeaderControl)
 

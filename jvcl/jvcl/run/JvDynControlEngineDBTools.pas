@@ -19,7 +19,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDBTools.pas 12406 2009-07-22 20:06:32Z jfudickar $
+// $Id: JvDynControlEngineDBTools.pas 12437 2009-08-09 15:43:09Z obones $
 
 unit JvDynControlEngineDBTools;
 
@@ -139,8 +139,8 @@ function ShowDataSourceEditDialog(ADataComponent: TComponent; const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDBTools.pas $';
-    Revision: '$Revision: 12406 $';
-    Date: '$Date: 2009-07-22 22:06:32 +0200 (mer., 22 juil. 2009) $';
+    Revision: '$Revision: 12437 $';
+    Date: '$Date: 2009-08-09 17:43:09 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -149,7 +149,7 @@ implementation
 
 uses
   StdCtrls, SysUtils,
-  JvDBActions, JvDynControlEngineIntf, JvResources, JvVCL5Utils;
+  JvDBActions, JvDynControlEngineIntf, JvResources;
 
 procedure TJvDynControlDataSourceEditDialog.SetDataComponent(Value: TComponent);
 begin
@@ -398,7 +398,9 @@ begin
     FScrollBox.Align := alClient;
     FScrollBox.BorderStyle := bsNone;
     FScrollBox.AutoScroll := True;
+    {$IFDEF COMPILER10_UP}
     FScrollBox.ParentBackground := True;
+    {$ENDIF COMPILER10_UP}
     FForm.Constraints := ArrangeConstraints;
     ArrangePanel := TJvPanel.Create(FForm);
     ArrangePanel.Align := alTop;

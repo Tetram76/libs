@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExStdCtrls.pas 11802 2008-05-12 19:54:51Z ahuser $
+// $Id: JvExStdCtrls.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvExStdCtrls;
 
@@ -33,10 +33,7 @@ WARNINGHEADER
 interface
 
 uses
-  Windows, Messages,
-  {$IFDEF HAS_UNIT_TYPES}
-  Types,
-  {$ENDIF HAS_UNIT_TYPES}
+  Windows, Messages, Types,
   SysUtils, Classes, Graphics, Controls, Forms, StdCtrls,
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
@@ -58,9 +55,7 @@ type
 
   EDITCONTROL_DECL_DEFAULT(CustomMemo)
 
-  {$IFDEF COMPILER6_UP}
   WINCONTROL_DECL_DEFAULT(CustomCombo)
-  {$ENDIF COMPILER6_UP}
 
   WINCONTROL_DECL_DEFAULT(CustomComboBox)
 
@@ -88,8 +83,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/devtools/JvExVCL/src/JvExStdCtrls.pas $';
-    Revision: '$Revision: 11802 $';
-    Date: '$Date: 2008-05-12 21:54:51 +0200 (lun., 12 mai 2008) $';
+    Revision: '$Revision: 12439 $';
+    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -110,9 +105,7 @@ EDITCONTROL_IMPL_DEFAULT(CustomEdit)
 
 EDITCONTROL_IMPL_DEFAULT(CustomMemo)
 
-{$IFDEF COMPILER6_UP}
 WINCONTROL_IMPL_DEFAULT(CustomCombo)
-{$ENDIF COMPILER6_UP}
 
 WINCONTROL_IMPL_DEFAULT(CustomComboBox)
 

@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFindReplaceEditor.pas 11641 2007-12-24 16:34:00Z outchy $
+// $Id: JvFindReplaceEditor.pas 12439 2009-08-09 17:02:39Z obones $
 
 unit JvFindReplaceEditor;
 
@@ -31,11 +31,7 @@ interface
 
 uses
   Classes, SysUtils,
-  {$IFDEF COMPILER6_UP}
   DesignEditors, DesignIntf;
-  {$ELSE}
-  DsgnIntf;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvFindReplaceProperty = class(TComponentProperty)
