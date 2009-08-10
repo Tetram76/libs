@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -366,8 +366,8 @@ function MIDINoteToStr(Note: TMIDINote): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclMIDI.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -431,7 +431,7 @@ end;
 
 procedure CheckMIDIChannelNum(Channel: TMIDIChannel);
 begin
-  if (Channel < Low(TMIDIChannel)) or (Channel > High(TMIDIChannel)) then
+  if (Integer(Channel) < Low(TMIDIChannel)) or (Integer(Channel) > High(TMIDIChannel)) then
     raise EJclMIDIError.CreateResFmt(@RsMidiInvalidChannelNum, [Channel]);
 end;
 

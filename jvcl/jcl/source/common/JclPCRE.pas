@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -165,15 +165,15 @@ procedure InitializeLocaleSupport;
 procedure TerminateLocaleSupport;
 
 // Args is an array of pairs (CaptureIndex, Value) or (CaptureName, Value).
-// For example: NewIp := StrReplaceRegEx(DirIP, '(\d+)\.(\d+)\.(\d+)\.(\d+)', [3, '128', 4, '254']); 
+// For example: NewIp := StrReplaceRegEx(DirIP, '(\d+)\.(\d+)\.(\d+)\.(\d+)', [3, '128', 4, '254']);
 function StrReplaceRegEx(const Subject, Pattern: string; Args: array of const): string;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPCRE.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -202,10 +202,10 @@ begin
     Result := string(S);
 end;
 
-function TranslateIndex(const S: string; ToUTF8: Boolean; Index: Integer): Integer;
+function TranslateIndex(const S: string; ToUTF8: Boolean; Index: SizeInt): SizeInt;
 var
   UTF8Buffer: TUTF8String;
-  UTF8Pos, StrPos, StrLen: Integer;
+  UTF8Pos, StrPos, StrLen: SizeInt;
   Ch: UCS4;
 begin
   if ToUTF8 then
@@ -235,7 +235,7 @@ end;
 var
   GTables: PAnsiChar;
 
-function JclPCREGetMem(Size: Integer): Pointer; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+function JclPCREGetMem(Size: SizeInt): Pointer; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 begin
   GetMem(Result, Size);
 end;
@@ -380,7 +380,7 @@ begin
       PCRECheck(pcre_fullinfo(FCode, FExtra, PCRE_INFO_CAPTURECOUNT, @FCaptureCount));
       FVectorSize := (FCaptureCount + 1) * 3;
     end;
-    ReAllocMem(FVector, FVectorSize * SizeOf(Integer));
+    ReAllocMem(FVector, FVectorSize * SizeOf(FVector[0]));
   end;
 end;
 
@@ -428,7 +428,8 @@ end;
 
 function TJclRegEx.GetResult: string;
 var
-  Index, CaptureIndex, Pos: Integer;
+  Index, CaptureIndex: Integer;
+  Pos: Integer;
   Range: TJclCaptureRange;
 begin
   if Assigned(FChangedCaptures) and (FChangedCaptures.Count > 0) then
@@ -437,13 +438,13 @@ begin
     Result := '';
     for Index := 0 to FChangedCaptures.Count - 1 do
     begin
-      CaptureIndex := Integer(FChangedCaptures[Index]);
+      CaptureIndex := SizeInt(FChangedCaptures[Index]);
       Range := GetCaptureRange(CaptureIndex);
-      
+
       Result := Result +
-        Copy(FSubject, Pos, Range.FirstPos - Pos) + 
+        Copy(FSubject, Pos, Range.FirstPos - Pos) +
         FResultValues[CaptureIndex];
-        
+
       Pos := Range.LastPos + 1;
     end;
     if Pos <= Length(FSubject) then
@@ -455,13 +456,13 @@ end;
 
 function TJclRegEx.GetCapture(Index: Integer): string;
 var
-  FromPos, ToPos: Integer;
+  FromPos, ToPos: SizeInt;
 begin
   if (Index < 0) or (Index >= FCaptureCount) then
     PCRECheck(PCRE_ERROR_NOSUBSTRING)
   else
   begin
-    if FViewChanges and (FChangedCaptures.IndexOf(Pointer(Index)) >= 0) then
+    if FViewChanges and (FChangedCaptures.IndexOf(Pointer(SizeInt(Index))) >= 0) then
     begin
       Result := FResultValues[Index];
       Exit;
@@ -490,8 +491,8 @@ begin
       SetLength(FResultValues, FCaptureCount);
     end;
 
-    if FChangedCaptures.IndexOf(Pointer(Index)) < 0 then
-      FChangedCaptures.Add(Pointer(Index));
+    if FChangedCaptures.IndexOf(Pointer(SizeInt(Index))) < 0 then
+      FChangedCaptures.Add(Pointer(SizeInt(Index)));
     FResultValues[Index] := Value;
   end;
 end;

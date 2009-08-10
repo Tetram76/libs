@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009)                         $ }
-{ Revision:      $Rev:: 2907                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -144,8 +144,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStrHashMap.pas $';
-    Revision: '$Revision: 2907 $';
-    Date: '$Date: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009) $';
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -220,7 +220,6 @@ end;
 
 function StrHash(const S: string): Cardinal;
 const
-  cLongBits = 32;
   cOneEight = 4;
   cThreeFourths = 24;
   cHighBits = $F0000000;
@@ -236,7 +235,7 @@ begin
   I := Length(S);
   while I > 0 do
   begin
-    Result := (Result shl cOneEight) + Ord(P^);
+    Result := (Result shl cOneEight) or Ord(P^);
     Temp := Result and cHighBits;
     if Temp <> 0 then
       Result := (Result xor (Temp shr cThreeFourths)) and (not cHighBits);
@@ -247,7 +246,6 @@ end;
 
 function TextHash(const S: string): Cardinal;
 const
-  cLongBits = 32;
   cOneEight = 4;
   cThreeFourths = 24;
   cHighBits = $F0000000;
@@ -263,7 +261,7 @@ begin
   I := Length(S);
   while I > 0 do
   begin
-    Result := (Result shl cOneEight) + Ord(UpCase(P^));
+    Result := (Result shl cOneEight) or Ord(UpCase(P^));
     Temp := Result and cHighBits;
     if Temp <> 0 then
       Result := (Result xor (Temp shr cThreeFourths)) and (not cHighBits);
@@ -274,7 +272,6 @@ end;
 
 function DataHash(var AValue; ASize: Cardinal): THashValue;
 const
-  cLongBits = 32;
   cOneEight = 4;
   cThreeFourths = 24;
   cHighBits = $F0000000;
@@ -288,7 +285,7 @@ begin
 
   while ASize > 0 do
   begin
-    Result := (Result shl cOneEight) + Ord(P^);
+    Result := (Result shl cOneEight) or Ord(P^);
     Temp := Result and cHighBits;
     if Temp <> 0 then
       Result := (Result xor (Temp shr cThreeFourths)) and (not cHighBits);

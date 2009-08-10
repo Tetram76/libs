@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 11:36:43 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2920                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 19:06:40 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2930                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -525,8 +525,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 2920 $';
-    Date: '$Date: 2009-08-09 11:36:43 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2930 $';
+    Date: '$Date: 2009-08-09 19:06:40 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -988,7 +988,7 @@ begin
       AOutStream := TMemoryStream.Create;
       DoFree := True;
       FOnDecodeStream(Self, Stream, AOutStream);
-      StreamSeek(AOutStream, 0, soBeginning);
+      AOutStream.Seek(0, soBeginning);
     end
     else
       AOutStream := Stream;
@@ -1148,7 +1148,7 @@ begin
     end;
     if Assigned(FOnEncodeStream) then
     begin
-      StreamSeek(AOutStream, 0, soBeginning);
+      AOutStream.Seek(0, soBeginning);
       FOnEncodeStream(Self, AOutStream, Stream);
     end;
   finally

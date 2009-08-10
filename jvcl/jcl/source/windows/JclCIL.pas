@@ -28,13 +28,13 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2922                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-// Last modified: $Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $
+// Last modified: $Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $
 
 unit JclCIL;
 
@@ -207,8 +207,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclCIL.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2922 $';
+    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -221,7 +221,9 @@ uses
   {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
   {$ENDIF HAS_UNIT_VARIANTS}
-  JclStrings, JclResources, JclClr, JclPeImage;
+  JclCLR,
+  JclPeImage,
+  JclStrings, JclResources;
 
 type
   TJclOpCodeInfoType = (itName, itFullName, itDescription);
@@ -742,7 +744,7 @@ begin
   else
     Result := 0;
   end;
-  Result := OpCodeSize[OpCode in [opNop..opPrefixRef]] + Result;
+  Inc(Result, OpCodeSize[OpCode in [opNop..opPrefixRef]]);
 end;
 
 procedure TJclInstruction.Load(Stream: TStream);
@@ -804,7 +806,6 @@ begin
             FParam[I] := Value;
           end;
         end;
-      {$IFDEF RTL140_UP}  { TODO -cTest : since RTL 14.0 or 15.0? }
       ptSOff, ptI1:
         begin
           Stream.Read(VShortInt, SizeOf(ShortInt));
@@ -825,7 +826,6 @@ begin
           Stream.Read(VInt64, SizeOf(Int64));
           VType := varInt64;
         end;
-      {$ENDIF RTL140_UP}
     end;
   except
     Stream.Position := FOffset;
@@ -836,10 +836,8 @@ end;
 procedure TJclInstruction.Save(Stream: TStream);
 var
   Code: Byte;
-  {$IFDEF RTL140_UP}  { TODO -cTest : since RTL 14.0 or 15.0? }
   ArraySize: DWORD;
   I, Value: Integer;
-  {$ENDIF RTL140_UP}
 begin
   if WideOpCode then
   begin
@@ -861,7 +859,6 @@ begin
       Stream.Write(TVarData(FParam).VSingle, SizeOf(Single));
     ptR8:
       Stream.Write(TVarData(FParam).VDouble, SizeOf(Double));
-    {$IFDEF RTL140_UP}  { TODO -cTest : since RTL 14.0 or 15.0? }
     ptSOff, ptI1:
       Stream.Write(TVarData(FParam).VShortInt, SizeOf(ShortInt));
     ptU2:
@@ -881,7 +878,6 @@ begin
           Stream.Write(Value, SizeOf(Value));
         end;
       end;
-    {$ENDIF RTL140_UP}
   end;
 end;
 
@@ -912,10 +908,8 @@ function TJclInstruction.DumpILOption(Option: TJclInstructionDumpILOption): stri
   end;
 
 var
-  {$IFDEF RTL140_UP}  { TODO -cTest : since RTL 14.0 or 15.0? }
   I: Integer;
   Row: TJclClrTableRow;
-  {$ENDIF RTL140_UP}
   CodeStr, ParamStr: string;
 begin
   case Option of
@@ -934,7 +928,6 @@ begin
             ParamStr := IntToHex(TVarData(FParam).VByte, 2);
           ptArray:
             ParamStr := 'Array';
-          {$IFDEF RTL140_UP}  { TODO -cTest : since RTL 14.0 or 15.0? }
           ptI2, ptU2:
             ParamStr := IntToHex(TVarData(FParam).VWord, 4);
           ptLOff, ptI4, ptU4, ptR4:
@@ -943,7 +936,6 @@ begin
             ParamStr := IntToHex(TVarData(FParam).VInt64, 16);
           ptToken:
             ParamStr := TokenToString(TVarData(FParam).VLongWord);
-          {$ENDIF RTL140_UP}
         else
           ParamStr := '';
         end;
@@ -956,8 +948,7 @@ begin
         ptVoid:
           ; // do nothing
         ptLOff:
-          Result := FormatLabel(Integer(Offset + Size) + TVarData(Param).VInteger - 1);
-        {$IFDEF RTL140_UP}  { TODO -cTest : since RTL 14.0 or 15.0? }
+          Result := FormatLabel(Integer(Offset) + + Integer(Size) + TVarData(Param).VInteger - 1);
         ptToken:
           begin
             if Byte(TJclPeMetadata.TokenTable(TVarData(Param).VLongWord)) = $70 then
@@ -1005,7 +996,6 @@ begin
             end;
             Result := ' (' + Result + ')';
           end;
-        {$ENDIF RTL140_UP}
         else
           Result := VarToStr(Param);
         end;

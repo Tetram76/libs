@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-26 13:32:58 +0200 (mer., 26 sept. 2007)                         $ }
-{ Revision:      $Rev:: 2188                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 19:36:17 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2931                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -79,16 +79,6 @@ implementation
 
 uses
   Registry;
-
-{$IFNDEF RTL140_UP}
-function ExcludeTrailingPathDelimiter(const Path: string): string;
-begin
-  if (Path <> '') and (Path[Length(Path)] = '\') then
-    Result := Copy(Path, 1, Length(Path) - 1)
-  else
-    Result := Path;
-end;
-{$ENDIF ~RTL140_UP}
 
 function InstallJediRegInformation(const IdeRegKey, ProjectName, Version, DcpDir,
   BplDir, RootDir: string; RootKey: HKEY): Boolean;

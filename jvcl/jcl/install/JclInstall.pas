@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-07 12:02:54 +0200 (ven., 07 août 2009)                        $ }
-{ Revision:      $Rev:: 2919                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 18:34:56 +0200 (dim., 09 août 2009)                        $ }
+{ Revision:      $Rev:: 2929                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -2046,6 +2046,7 @@ var
   Index: Integer;
   ATarget: TJclBorRADToolInstallation;
 begin
+  FLogLines.OpenLog;
   AProfilesManager := InstallCore.ProfilesManager;
   try
     Target.OutputCallback := WriteLog;
@@ -2097,6 +2098,7 @@ begin
     WriteLog('');
     if Assigned(GUIPage) then
       GUIPage.EndInstall;
+    FLogLines.CloseLog;
   end;
 end;
 
@@ -2366,6 +2368,7 @@ var
   AProfilesManager: IJediProfilesManager;
   ATarget: TJclBorRADToolInstallation;
 begin
+  FLogLines.OpenLog;
   AProfilesManager := InstallCore.ProfilesManager;
   try
     Target.OutputCallback := WriteLog;
@@ -2418,6 +2421,7 @@ begin
     // TODO: ioJclMakeDemos:
   finally
     Target.OutputCallback := nil;
+    FLogLines.CloseLog;
   end;
 
   Result := True;

@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -213,8 +213,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclDateTime.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2921 $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -778,6 +778,8 @@ var
   LocalFileTime: TFileTime;
 begin
   LocalFileTime := DateTimeToFileTime(DateTime);
+  Result.dwHighDateTime := 0;
+  Result.dwLowDateTime := 0;
   ResultCheck(LocalFileTimeToFileTime(LocalFileTime, Result));
   { TODO : daylight saving time }
 end;
@@ -863,6 +865,8 @@ end;
 
 function SystemTimeToFileTime(const SystemTime: TSystemTime): TFileTime;  overload;
 begin
+  Result.dwHighDateTime := 0;
+  Result.dwLowDateTime := 0;
   ResultCheck(Windows.SystemTimeToFileTime(SystemTime, Result));
 end;
 
@@ -883,6 +887,8 @@ end;
 
 function DosDateTimeToFileTime(DosTime: TDosDateTime): TFileTime; overload;
 begin
+  Result.dwHighDateTime := 0;
+  Result.dwLowDateTime := 0;
   ResultCheck(Windows.DosDateTimeToFileTime(HIWORD(DosTime), LOWORD(DosTime), Result));
 end;
 

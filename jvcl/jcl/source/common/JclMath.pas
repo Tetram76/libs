@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
-{ Revision:      $Rev:: 2914                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 16:46:49 +0200 (dim., 09 août 2009)                         $ }
+{ Revision:      $Rev:: 2925                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -138,7 +138,7 @@ var
   ThreeEpsilon: Float;
 
 type
-  TPrimalityTestMethod = (ptTrialDivision, ptRabinMiller);
+  TPrimalityTestMethod = (ptTrialDivision {$IFDEF CPU32}, ptRabinMiller{$ENDIF CPU32});
 
 // swaps 2 bytes
 procedure SwapOrd(var X, Y: Integer); {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
@@ -154,9 +154,7 @@ function DegToRad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_I
 {$ENDIF SUPPORTS_EXTENDED}
 function DegToRad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function DegToRad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPUASM}
 procedure FastDegToRad;
-{$ENDIF CPUASM}
 
 // Converts radians to degrees.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -164,9 +162,7 @@ function RadToDeg(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_I
 {$ENDIF SUPPORTS_EXTENDED}
 function RadToDeg(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function RadToDeg(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPUASM}
 procedure FastRadToDeg;
-{$ENDIF CPUASM}
 
 // Converts grads to radians.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -174,9 +170,7 @@ function GradToRad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_
 {$ENDIF SUPPORTS_EXTENDED}
 function GradToRad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function GradToRad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPUASM}
 procedure FastGradToRad;
-{$ENDIF CPUASM}
 
 // Converts radians to grads.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -184,9 +178,7 @@ function RadToGrad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_
 {$ENDIF SUPPORTS_EXTENDED}
 function RadToGrad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function RadToGrad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPUASM}
 procedure FastRadToGrad;
-{$ENDIF CPUASM}
 
 // Converts degrees to grads.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -194,9 +186,7 @@ function DegToGrad(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_
 {$ENDIF SUPPORTS_EXTENDED}
 function DegToGrad(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function DegToGrad(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPUASM}
 procedure FastDegToGrad;
-{$ENDIF CPUASM}
 
 // Converts grads to degrees.
 {$IFDEF SUPPORTS_EXTENDED}
@@ -204,11 +194,7 @@ function GradToDeg(const Value: Extended): Extended; overload; {$IFDEF SUPPORTS_
 {$ENDIF SUPPORTS_EXTENDED}
 function GradToDeg(const Value: Double): Double; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function GradToDeg(const Value: Single): Single; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
-{$IFDEF CPUASM}
 procedure FastGradToDeg;
-{$ENDIF CPUASM}
-
-{$IFDEF CPUASM}
 
 { Logarithmic }
 
@@ -251,8 +237,6 @@ function CscH(X: Float): Float; overload;
 function SecH(X: Float): Float; overload;
 function SinH(X: Float): Float; overload; {IFDEF SUPPORTS_INLINE inline; ENDIF}
 function TanH(X: Float): Float; overload;
-
-{$ENDIF CPUASM}
 
 { Coordinate conversion }
 
@@ -311,20 +295,17 @@ function EnsureRange(const AValue, AMin, AMax: Double): Double; overload;
 
 function IsRelativePrime(const X, Y: Cardinal): Boolean; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function IsPrimeTD(N: Cardinal): Boolean;
-{$IFDEF CPUASM}
+{$IFDEF CPU32}
 function IsPrimeRM(N: Cardinal): Boolean;
-{$ENDIF CPUASM}
+{$ENDIF CPU32}
 function IsPrimeFactor(const F, N: Cardinal): Boolean; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function PrimeFactors(N: Cardinal): TDynCardinalArray;
 
 var
   IsPrime: function(N: Cardinal): Boolean = IsPrimeTD;
 
-{$IFDEF CPUASM}
 procedure SetPrimalityTest(const Method: TPrimalityTestMethod);
-{$ENDIF CPUASM}
 
-{$IFDEF CPUASM}
 { Floating point value classification }
 
 type
@@ -344,7 +325,6 @@ function FloatingPointClass(const Value: Double): TFloatingPointClass; overload;
 {$IFDEF SUPPORTS_EXTENDED}
 function FloatingPointClass(const Value: Extended): TFloatingPointClass; overload;
 {$ENDIF SUPPORTS_EXTENDED}
-{$ENDIF CPUASM}
 
 { NaN and INF support }
 
@@ -792,8 +772,8 @@ function CscH(const Z: TRectComplex): TRectComplex; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclMath.pas $';
-    Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Revision: '$Revision: 2925 $';
+    Date: '$Date: 2009-08-09 16:46:49 +0200 (dim., 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -808,10 +788,9 @@ uses
   Windows,
   {$ENDIF ~FPC}
   {$ENDIF MSWINDOWS}
-  {$IFDEF CPUASM}
   Jcl8087,
-  {$ENDIF CPUASM}
-  JclResources;
+  JclResources,
+  JclSynch;
 
 // Internal helper routines
 // Linux: Get Global Offset Table (GOT) adress for Position Independent Code
@@ -821,7 +800,12 @@ uses
 function GetGOT: Pointer; export;
 begin
   asm
+        {$IFDEF CPU32}
         MOV Result, EBX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        XOR Result, RBX
+        {$ENDIF CPU64}
   end;
 end;
 {$ENDIF PIC}
@@ -891,7 +875,6 @@ begin
   Result := Value * RatioDegToRad;
 end;
 
-{$IFDEF CPUASM}
 // Expects degrees in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 180
 procedure FastDegToRad; assembler;
@@ -910,7 +893,6 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF CPUASM}
 
 // Converts radians to degrees.
 
@@ -931,7 +913,6 @@ begin
   Result := Value * RatioRadToDeg;
 end;
 
-{$IFDEF CPUASM}
 // Expects radians in ST(0), leaves degrees in ST(0)
 // ST(0) := ST(0) * (180 / PI);
 procedure FastRadToDeg; assembler;
@@ -950,7 +931,6 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF CPUASM}
 
 // Converts grads to radians.
 
@@ -971,7 +951,6 @@ begin
   Result := Value * RatioGradToRad;
 end;
 
-{$IFDEF CPUASM}
 // Expects grads in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 200
 procedure FastGradToRad; assembler;
@@ -990,7 +969,6 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF CPUASM}
 
 // Converts radians to grads.
 
@@ -1011,7 +989,6 @@ begin
   Result := Value * RatioRadToGrad;
 end;
 
-{$IFDEF CPUASM}
 // Expects radians in ST(0), leaves grads in ST(0)
 // ST(0) := ST(0) * (200 / PI);
 procedure FastRadToGrad; assembler;
@@ -1030,7 +1007,6 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF CPUASM}
 
 // Converts degrees to grads.
 
@@ -1051,7 +1027,6 @@ begin
   Result := Value * RatioDegToGrad;
 end;
 
-{$IFDEF CPUASM}
 // Expects Degrees in ST(0), leaves grads in ST(0)
 // ST(0) := ST(0) * (200 / 180);
 procedure FastDegToGrad; assembler;
@@ -1070,7 +1045,6 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF CPUASM}
 
 // Converts grads to degrees.
 
@@ -1091,7 +1065,6 @@ begin
   Result := Value * RatioGradToDeg;
 end;
 
-{$IFDEF CPUASM}
 // Expects grads in ST(0), leaves radians in ST(0)
 // ST(0) := ST(0) * PI / 200
 procedure FastGradToDeg; assembler;
@@ -1110,7 +1083,6 @@ asm
         FMULP
         FWAIT
 end;
-{$ENDIF CPUASM}
 
 procedure DomainCheck(Err: Boolean);
 begin
@@ -1120,7 +1092,6 @@ end;
 
 //=== Logarithmic ============================================================
 
-{$IFDEF CPUASM}
 function LogBase10(X: Float): Float;
 begin
   DomainCheck(X <= 0.0);
@@ -1593,8 +1564,6 @@ begin
   end;
 end;
 
-{$ENDIF CPUASM}
-
 //=== Coordinate conversion ==================================================
 
 function DegMinSecToFloat(const Degs, Mins, Secs: Float): Float; // obsolete
@@ -2055,6 +2024,15 @@ end;
 assembler;
 { Euclid's algorithm }
 asm
+   // 32 --> EAX X
+   //        EDX Y
+   //    <-- EAX Result
+   // 64 --> ECX X
+   //        EDX Y
+   //    <-- EAX Result
+        {$IFDEF CPU64}
+        MOV     EAX, ECX
+        {$ENDIF CPU64}
         JMP     @01      // We start with EAX <- X, EDX <- Y, and check to see if Y=0
 @00:
         MOV     ECX, EDX // ECX <- EDX prepare for division
@@ -2084,9 +2062,18 @@ end;
 {$ELSE ~PUREPASCAL}
 assembler;
 asm
+  // 32 --> AX I
+  //    <-- AX Result
+  // 64 --> CX I
+  //    <-- AX Result
+        {$IFDEF CPU32}
         PUSH    EBX
-
         MOV     CX, AX  // load argument
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        PUSH    RBX
+        {$ENDIF CPU64}
+
         MOV     AX, -1  // init Result
         CWD             // init odd numbers to -1
         XOR     BX, BX  // init perfect squares to 0
@@ -2098,7 +2085,12 @@ asm
         CMP     BX, CX  // perfect square > argument ?
         JBE     @LOOP   // until square greater than argument
 
+        {$IFDEF CPU32}
         POP     EBX
+        {$ENDIF CPU32}
+        {$IFDEF CPU64}
+        POP     RBX
+        {$ENDIF CPU64}
 end;
 {$ENDIF ~PUREPASCAL}
 
@@ -2524,11 +2516,16 @@ begin
   end;
 end;
 
-{$IFDEF CPUASM}
+{$IFDEF CPU32}
+// OF: need a complete rewrite for CPU64
+// OF: why is there less pop than push?
+
 { Rabin-Miller Strong Primality Test }
 
 function IsPrimeRM(N: Cardinal): Boolean;
 asm
+        // 32 --> EAX N
+        //    <-- AL  Result
         TEST  EAX,1            // Odd(N) ??
         JNZ   @@1
         CMP   EAX,2            // N == 2 ??
@@ -2577,16 +2574,9 @@ asm
         RET
 // do a Strong Pseudo Prime Test
 @@5:
-        {$IFDEF CPU32}
         MOV   EBX,[ESP + 12]   // N on stack
         MOV   ECX,[ESP +  8]   // remaining Bits
         MOV   ESI,[ESP +  4]   // M'
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
-        MOV   EBX,[RSP + 12]   // N on stack
-        MOV   ECX,[RSP +  8]   // remaining Bits
-        MOV   ESI,[RSP +  4]   // M'
-        {$ENDIF CPU64}
         MOV   EDI,EAX          // T = b, temp. Base
 @@6:    DEC   ECX
         MUL   EAX
@@ -2613,7 +2603,6 @@ asm
 @@9:    STC
 @@A:    RET
 @@B:    DB    3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73
-        {$IFDEF CPU32}
 @@C:    MOV   ECX,19
         MOV   EDX,OFFSET @@B
 @@D:    CMP   AL,[EDX + ECX]
@@ -2621,18 +2610,8 @@ asm
         DEC   ECX
         JNL   @@D
 @@E:    SETE  AL
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
-@@C:    MOV   RCX,19
-        MOV   RDX,OFFSET @@B
-@@D:    CMP   AL,[RDX + RCX]
-        JE    @@E
-        DEC   RCX
-        JNL   @@D
-@@E:    SETE  AL
-        {$ENDIF CPU64}
 end;
-{$ENDIF CPUASM}
+{$ENDIF CPU32}
 
 function PrimeFactors(N: Cardinal): TDynCardinalArray;
 var
@@ -2697,12 +2676,13 @@ begin
   case Method of
     ptTrialDivision:
       IsPrime := IsPrimeTD;
+    {$IFDEF CPU32}
     ptRabinMiller:
       IsPrime := IsPrimeRM;
+    {$ENDIF CPU32}
   end;
 end;
 
-{$IFDEF CPUASM}
 //=== Floating point value classification ====================================
 
 const
@@ -2813,7 +2793,6 @@ begin
   end;
 end;
 {$ENDIF SUPPORTS_EXTENDED}
-{$ENDIF CPUASM}
 
 //=== NaN and Infinity support ===============================================
 
@@ -3023,7 +3002,7 @@ type
 
 var
   PrevExceptObjProc: TExceptObjProc;
-  ExceptObjProcInitialized: Boolean = False;
+  ExceptObjProcInitialized: Integer = 0;
 
 function GetExceptionObject(P: PExceptionRecord): Exception;
 var
@@ -3082,15 +3061,8 @@ begin
 end;
 
 procedure InitExceptObjProc;
-
-  function IsInitialized: Boolean;
-  asm
-          MOV       AL, True
-          LOCK XCHG AL, ExceptObjProcInitialized
-  end;
-
 begin
- if not IsInitialized then
+  if LockedExchange(ExceptObjProcInitialized, 1) = 0 then
     if Win32Platform = VER_PLATFORM_WIN32_NT then
       {$IFDEF FPC}
       PrevExceptObjProc := Pointer(InterlockedExchange(TJclAddr(ExceptObjProc), TJclAddr(@GetExceptionObject)));

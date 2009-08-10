@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                        $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                        $ }
+{ Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -2033,15 +2033,6 @@ begin
   Result := inflateBackInit_(strm, windowBits, window, ZLIB_VERSION, sizeof(TZStreamRec));
 end;
 
-{$IFDEF MSWINDOWS}
-type
-  TModuleHandle = HINST;
-{$ENDIF MSWINDOWS}
-{$IFDEF LINUX}
-type
-  TModuleHandle = Pointer;
-{$ENDIF LINUX}
-
 {$IFDEF ZLIB_STATICLINK}
 
 {$LINK ..\windows\obj\zlib\adler32.obj} // OS: CHECKTHIS - Unix version may need forward slashes?
@@ -2178,6 +2169,15 @@ end;
 
 {$ENDIF ~LINK_TO_MSVCRT}
 {$ELSE ~ZLIB_STATICLINK}
+
+{$IFDEF MSWINDOWS}
+type
+  TModuleHandle = HINST;
+{$ENDIF MSWINDOWS}
+{$IFDEF LINUX}
+type
+  TModuleHandle = Pointer;
+{$ENDIF LINUX}
 
 const
   {$IFDEF MSWINDOWS}
