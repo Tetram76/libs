@@ -119,6 +119,9 @@ function MulDiv(Number, Numerator, Denominator: Integer; Default: Real = 0): Rea
 procedure ClearList(List: TList);
 function IsRemoteSession: Boolean;
 
+function MAKELANGID(p, s: word): Word;
+function MAKELCID(lgid, srtid: Word): dword;
+
 implementation
 
 uses
@@ -1163,6 +1166,16 @@ end;
 function CanUseTaskDialog: Boolean;
 begin
   Result := (Win32MajorVersion >= 6) and UseLatestCommonDialogs and ThemeServices.ThemesEnabled;
+end;
+
+function MAKELANGID(p, s: word): Word;
+begin
+  Result := (s shl 10) + (p);
+end;
+
+function MAKELCID(lgid, srtid: Word): dword;
+begin
+  Result := (srtid shl 16) + (lgid);
 end;
 
 end.
