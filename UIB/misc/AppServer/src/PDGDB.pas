@@ -15,6 +15,7 @@ type
   IPDGConnectionPool = interface
     ['{27621D9A-AAE9-4E24-82F5-A18D84E415F3}']
     function GetConnection: IPDGConnection;
+    function GetSize: Integer;
   end;
 
   IPDGConnection = interface
@@ -50,6 +51,11 @@ type
   IPDGBlob = interface
   ['{F478FC21-00B3-49C7-8531-85572AD3C98E}']
     function getData: TStream;
+  end;
+
+  IPDGDateTime = interface
+  ['{11B92F12-7E04-4442-A84E-9252FDAE2C37}']
+    function AsDateTime: Double;
   end;
 
   // Abstact classes
@@ -98,6 +104,11 @@ type
 
     function AsBoolean: Boolean; override; // true if length > 0
     function AsInteger: SuperInt; override; // stream length
+  end;
+
+  TPDGDateTime = class(TSuperObject, IPDGDateTime)
+  protected
+    function AsDateTime: Double;
   end;
 
   function blob(stream: TStream = nil): ISuperObject; overload;
@@ -278,7 +289,7 @@ begin
          C[1] := Base64Code[((V[0] shl 4) and $3F) or V[1] shr 4];
          C[2] := Base64Code[((V[1] shl 2) and $3F) or 0    shr 6];
          inc(Result, writer.Append(@C, 3));
-         inc(Result, writer.Append(@QUOTE, 1));
+         inc(Result, writer.Append(EQ2, 1));
          Break;
        end;
     1: begin
@@ -295,6 +306,13 @@ begin
        end;
     end;
   inc(Result, writer.Append(@QUOTE, 1));
+end;
+
+{ TPDGDateTime }
+
+function TPDGDateTime.AsDateTime: Double;
+begin
+  Result := JavaToDelphiDateTime(AsInteger);
 end;
 
 end.
