@@ -15,12 +15,12 @@ Portions created by Marcel van Brakel are Copyright (C) 2002 Marcel van Brakel.
 All Rights Reserved.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
    TODO OWNER
 -----------------------------------------------------------------------------}
-// $Id: JvObjectPickerDialog.pas 11887 2008-09-08 08:29:14Z obones $
+// $Id: JvObjectPickerDialog.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvObjectPickerDialog;
 
@@ -266,8 +266,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvObjectPickerDialog.pas $';
-    Revision: '$Revision: 11887 $';
-    Date: '$Date: 2008-09-08 10:29:14 +0200 (lun., 08 sept. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -770,4 +770,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

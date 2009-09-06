@@ -16,11 +16,11 @@ Copyright (c) 2001,2002 SGB Software
 All Rights Reserved.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDECheckPasswordForm.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvBDECheckPasswordForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvBDECheckPasswordForm;
 
@@ -49,8 +49,8 @@ function ChangePasswordDialog(Database: TDatabase; AttemptNumber: Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDECheckPasswordForm.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -231,4 +231,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

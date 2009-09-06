@@ -17,14 +17,14 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   unit to centralize all resourcestrings of the JVCL for easier translation
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvResources.pas 12420 2009-08-05 10:05:30Z obones $
+// $Id: JvResources.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvResources;
 
@@ -1661,10 +1661,8 @@ resourcestring
 
 //=== JvPoweredBy.pas ========================================================
 resourcestring
-  //RsURLPoweredByJCL = 'http://homepages.codegear.com/jedi/jcl/PoweredByJCL.htm';
-  RsURLPoweredByJCL = 'http://homepages.codegear.com/jedi/jcl/';
-  //RsURLPoweredByJVCL = 'http://homepages.codegear.com/jedi/jvcl/PoweredByJVCL.htm';
-  RsURLPoweredByJVCL = 'http://homepages.codegear.com/jedi/jvcl/';
+  RsURLPoweredByJCL = 'http://jcl.delphi-jedi.org/';
+  RsURLPoweredByJVCL = 'http://jvcl.delphi-jedi.org/';
 
 //=== JvProfilerForm.pas =====================================================
 resourcestring
@@ -2356,8 +2354,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvResources.pas $';
-    Revision: '$Revision: 12420 $';
-    Date: '$Date: 2009-08-05 12:05:30 +0200 (mer., 05 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

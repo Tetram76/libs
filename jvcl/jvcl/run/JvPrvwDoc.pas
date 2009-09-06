@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 TODO :
     * Adjust zoom when Cols or Rows change - DONE
@@ -49,7 +49,7 @@ Scrolling rules:
       and scroll Rows pages on each click (i.e if Rows = 4 -> scroll 4 pages)
     * if scaling would make pages too small, show as many pages as possible
 -----------------------------------------------------------------------------}
-// $Id: JvPrvwDoc.pas 12431 2009-08-07 11:48:25Z obones $
+// $Id: JvPrvwDoc.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvPrvwDoc;
 
@@ -436,8 +436,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPrvwDoc.pas $';
-    Revision: '$Revision: 12431 $';
-    Date: '$Date: 2009-08-07 13:48:25 +0200 (ven., 07 août 2009) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1909,7 +1909,7 @@ begin
   FDelay := Delay;
   if FDelay = 0 then
     FDelay := Application.HintHidePause;
-  Resume;
+  {$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
 end;
 
 procedure TDeactiveHintThread.Execute;
@@ -1996,4 +1996,3 @@ finalization
   {$ENDIF UNITVERSIONING}
 
 end.
-

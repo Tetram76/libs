@@ -16,11 +16,11 @@ Copyright (c) 2001,2002 SGB Software
 All Rights Reserved.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvConsts.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvConsts.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvConsts;
 
@@ -74,6 +74,9 @@ const
   {$IFDEF DELPHI12}
   SDelphiKey = 'Software\CodeGear\BDS\6.0';
   {$ENDIF DELPHI12}
+  {$IFDEF DELPHI14}
+  SDelphiKey = 'Software\CodeGear\BDS\7.0';
+  {$ENDIF DELPHI14}
   { JvDataProvider constants }
   { Consumer attributes }
   DPA_RenderDisabledAsGrayed = 1;
@@ -215,8 +218,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvConsts.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -232,5 +235,4 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-
 

@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLData.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JVCLData.pas 12476 2009-08-25 21:11:31Z obones $
 
 unit JVCLData;
 
@@ -32,7 +32,7 @@ interface
 
 uses
   Windows, Registry, SysUtils, Classes, Contnrs,
-  JVCLConfiguration, DelphiData, PackageUtils, Intf, GenerateUtils,
+  JVCLConfiguration, DelphiData, PackageUtils, Intf, GenerateUtils, PackageGenerator,
   IniFiles, JCLData, JVCLVer, RegConfig,
   JclDebug;
 
@@ -336,6 +336,7 @@ type
     FIgnoreMakeErrors: Boolean;
     FJclLibrary: HModule;
     FJclLinkMapFile: TJclLinkMapFile;
+    FPackageGenerator: TPackageGenerator;
 
     function GetTargetConfig(Index: Integer): TTargetConfig;
     function GetJVCLDir: string;
@@ -382,6 +383,8 @@ type
 
     property TargetConfig[Index: Integer]: TTargetConfig read GetTargetConfig;
     property Targets: TCompileTargetList read FTargets;
+
+    property PackageGenerator: TPackageGenerator read FPackageGenerator;
   end;
 
 implementation
@@ -426,11 +429,12 @@ var
   ErrMsg: string;
 begin
   inherited Create;
+  FPackageGenerator := TPackageGenerator.Create;
   FDeleteFilesOnUninstall := True;
   FVerbose := False;
 
   ErrMsg := '';
-  LoadConfig(JVCLDir + '\' + sPackageGeneratorFile, 'JVCL', ErrMsg);
+  FPackageGenerator.LoadConfig(JVCLDir + '\' + sPackageGeneratorFile, 'JVCL', ErrMsg);
 
   FTargets := TCompileTargetList.Create;
   SetLength(FConfigs, Targets.Count);
@@ -455,6 +459,7 @@ begin
   for i := 0 to High(FConfigs) do
     FConfigs[I].Free;
   FTargets.Free;
+  FPackageGenerator.Free;
   inherited Destroy;
 end;
 
@@ -1278,6 +1283,7 @@ var
   Ini: TMemIniFile;
   Mode: TInstallMode;
   Filename: string;
+  Version: Integer;
 begin
   for Kind := pkFirst to pkLast do
   begin
@@ -1313,8 +1319,14 @@ begin
 
     // Load jvcl%t.inc. Or the jvclbase.inc when no jvcl%t.inc exists
     if Target.IsBDS then
+    begin
+      if Target.IDEVersion < 7 then
+        Version := Target.IDEVersion + 6  // BDS 3 is Delphi 9
+      else
+        Version := Target.IDEVersion + 7; // BDS 7 is Delphi 14
       Filename := GetJVCLDir + '\common\' + Format('jvcl%s%d.inc', // do not localize
-          [LowerCase(Target.TargetType), Target.IDEVersion + 6]) // BDS 3 is Delphi 9
+          [LowerCase(Target.TargetType), Version]);
+    end
     else
       Filename := GetJVCLDir + '\common\' + Format('jvcl%s%d.inc', // do not localize
           [LowerCase(Target.TargetType), Target.Version]);

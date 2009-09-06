@@ -17,12 +17,12 @@ Contributor(s):
   Jens Fudickar
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvJclUnitVersioningBrowser.pas 12234 2009-03-10 00:20:35Z jfudickar $
+// $Id: JvJclUnitVersioningBrowser.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvJclUnitVersioningBrowser;
 
@@ -57,8 +57,8 @@ procedure ShowUnitVersioning(const aDynControlEngine: tJvDynControlEngine =
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJclUnitVersioningBrowser.pas $';
-    Revision: '$Revision: 12234 $';
-    Date: '$Date: 2009-03-10 01:20:35 +0100 (mar., 10 mars 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -19,11 +19,11 @@ Contributor(s):
   Robert Marquardt
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGroupBox.pas 12149 2009-01-15 22:27:09Z ahuser $
+// $Id: JvGroupBox.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvGroupBox;
 
@@ -83,8 +83,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGroupBox.pas $';
-    Revision: '$Revision: 12149 $';
-    Date: '$Date: 2009-01-15 23:27:09 +0100 (jeu., 15 janv. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -313,4 +313,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

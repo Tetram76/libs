@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): Michael Beck [mbeck att bigfoot dott com].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRgbToHtml.pas 10622 2006-05-28 12:33:53Z jfudickar $
+// $Id: JvRgbToHtml.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvRgbToHtml;
 
@@ -57,8 +57,8 @@ function HtmlToRgb(const Value: string): TColor;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRgbToHtml.pas $';
-    Revision: '$Revision: 10622 $';
-    Date: '$Date: 2006-05-28 14:33:53 +0200 (dim., 28 mai 2006) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -131,4 +131,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

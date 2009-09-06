@@ -17,14 +17,14 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   A TCustomPanel descendant that can scroll its content.
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvContentScroller.pas 12399 2009-07-09 13:30:28Z obones $
+// $Id: JvContentScroller.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvContentScroller;
 
@@ -149,8 +149,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvContentScroller.pas $';
-    Revision: '$Revision: 12399 $';
-    Date: '$Date: 2009-07-09 15:30:28 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -439,4 +439,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): Michael Beck [mbeck att bigfoot dott com].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCopyError.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvCopyError.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvCopyError;
 
@@ -64,8 +64,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCopyError.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -119,4 +119,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

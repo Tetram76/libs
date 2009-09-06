@@ -17,13 +17,13 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Menus.pas 10612 2006-05-19 19:04:09Z jfudickar $
+// $Id: JvInterpreter_Menus.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvInterpreter_Menus;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Menus.pas $';
-    Revision: '$Revision: 10612 $';
-    Date: '$Date: 2006-05-19 21:04:09 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -489,7 +489,7 @@ end;
 
 procedure JvInterpreter_ShortCut(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := ShortCut(Args.Values[0], TShiftState(Byte(V2S(Args.Values[1]))));
+  Value := ShortCut(Args.Values[0], TShiftState(TJvInterpreterShiftStateCastType(V2S(Args.Values[1]))));
 end;
 
 { procedure ShortCutToKey(ShortCut: TShortCut; var Key: Word; var Shift: TShiftState); }
@@ -498,9 +498,9 @@ procedure JvInterpreter_ShortCutToKey(var Value: Variant; Args: TJvInterpreterAr
 var
   Shift: TShiftState;
 begin
-  Shift := TShiftState(Byte(V2S(Args.Values[2])));
+  Shift := TShiftState(TJvInterpreterShiftStateCastType(V2S(Args.Values[2])));
   ShortCutToKey(Args.Values[0], Word(TVarData(Args.Values[1]).vSmallint), Shift);
-  Args.Values[2] := S2V(Byte(Shift));
+  Args.Values[2] := S2V(TJvInterpreterShiftStateCastType(Shift));
 end;
 
 { function ShortCutToText(ShortCut: TShortCut): string; }
@@ -651,4 +651,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

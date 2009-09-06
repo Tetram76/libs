@@ -19,11 +19,11 @@ Michael Beck [mbeck att bigfoot dott com].
 Burov Dmitry, translation of russian text.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgLogicItemEditorForm.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvgLogicItemEditorForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvgLogicItemEditorForm;
 

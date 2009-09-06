@@ -20,11 +20,11 @@ Contributor(s):
   Remko Bonte [remkobonte att myrealbox dott com]
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBrowseFolder.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvBrowseFolder.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvBrowseFolder;
 
@@ -168,6 +168,10 @@ type
   // (p3) shouldn't TOptionsDir be changed to T(Jv)OptionsDirectories?
   TOptionsDir = set of TOptionsDirectory;
 
+const
+  DefaultJvBrowseFolderDialogOptions = [odStatusAvailable, odNewDialogStyle];
+
+type
   TJvBrowseForFolderDialog = class(TJvCommonDialogF, IFolderFilter)
   private
     { Handle to the owner form of the dialog, used if Position = fpFormCenter }
@@ -254,7 +258,7 @@ type
     property DisplayName: string read FDisplayName write FDisplayName stored False;
     property HelpContext: THelpContext read FHelpContext write FHelpContext default 0;
     property Options: TOptionsDir read FOptions write SetOptions default
-      [odStatusAvailable, odNewDialogStyle];
+      DefaultJvBrowseFolderDialogOptions;
     property Position: TJvFolderPos read FPosition write FPosition default fpScreenCenter;
     property RootDirectory: TFromDirectory read FRootDirectory write SetRootDirectory default fdNoSpecialFolder;
     property RootDirectoryPath: string read GetRootDirectoryPath write SetRootDirectoryPath
@@ -284,8 +288,8 @@ function BrowseComputer(var AComputerName: string; const DlgText: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBrowseFolder.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -881,7 +885,7 @@ end;
 constructor TJvBrowseForFolderDialog.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FOptions := [odStatusAvailable, odNewDialogStyle];
+  FOptions := DefaultJvBrowseFolderDialogOptions;
   FPosition := fpScreenCenter; // ahuser: changed from fpDefault - I think no one wants the dialog in the right bottom corner
   FRootDirectory := fdNoSpecialFolder;
   FObjectInstance := JvMakeObjectInstance(MainWndProc);
@@ -1438,4 +1442,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

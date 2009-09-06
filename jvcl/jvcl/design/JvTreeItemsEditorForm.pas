@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 
@@ -26,7 +26,7 @@ Changes:
   Drawing of State images differs from normal images since they are 1-based:
   the 0-th item for the state imagelist isn't drawn to alert the user to this fact
 -----------------------------------------------------------------------------}
-// $Id: JvTreeItemsEditorForm.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvTreeItemsEditorForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvTreeItemsEditorForm;
 
@@ -563,4 +563,3 @@ begin
 end;
 
 end.
-

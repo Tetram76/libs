@@ -17,14 +17,14 @@ All Rights Reserved.
 Contributor(s): Ivan Ravin (ivan_ra)
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description : JVCL Interpreter version 2
 Component   : form runner for JvInterpreter
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreterFm.pas 11963 2008-10-16 09:12:52Z obones $
+// $Id: JvInterpreterFm.pas 12461 2009-08-14 17:21:33Z obones $
 
 { history (JVCL Library versions):
   1.10:
@@ -147,8 +147,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreterFm.pas $';
-    Revision: '$Revision: 11963 $';
-    Date: '$Date: 2008-10-16 11:12:52 +0200 (jeu., 16 oct. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -751,4 +751,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

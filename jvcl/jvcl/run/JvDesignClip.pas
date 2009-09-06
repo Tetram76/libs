@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): Olivier Sannier (JVCL Integration)
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignClip.pas 11755 2008-03-10 17:03:24Z ahuser $
+// $Id: JvDesignClip.pas 12461 2009-08-14 17:21:33Z obones $
 unit JvDesignClip;
 
 {$I jvcl.inc}
@@ -60,8 +60,8 @@ procedure DesignCopyStreamToClipboard(InFmt: Cardinal; InS: TStream);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignClip.pas $';
-    Revision: '$Revision: 11755 $';
-    Date: '$Date: 2008-03-10 18:03:24 +0100 (lun., 10 mars 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -232,4 +232,3 @@ finalization
   {$ENDIF UNITVERSIONING}
 
 end.
-

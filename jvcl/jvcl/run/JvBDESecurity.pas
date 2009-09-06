@@ -27,11 +27,11 @@ Changes:
        property Caption to support a custom dialog Caption.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDESecurity.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvBDESecurity.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvBDESecurity;
 
@@ -99,8 +99,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDESecurity.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -202,4 +202,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

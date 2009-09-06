@@ -16,11 +16,11 @@ Copyright (c) 2001,2002 SGB Software
 All Rights Reserved.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGIFCtrl.pas 12245 2009-03-21 14:52:15Z ahuser $
+// $Id: JvGIFCtrl.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvGIFCtrl;
 
@@ -131,8 +131,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGIFCtrl.pas $';
-    Revision: '$Revision: 12245 $';
-    Date: '$Date: 2009-03-21 15:52:15 +0100 (sam., 21 mars 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -614,4 +614,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

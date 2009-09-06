@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageUtils.pas 12032 2008-11-03 22:47:18Z ahuser $
+// $Id: PackageUtils.pas 12471 2009-08-23 21:20:48Z outchy $
 
 unit PackageUtils;
 
@@ -33,7 +33,6 @@ interface
 uses
   SysUtils, Classes, Contnrs,
   JclBase,
-  JvSimpleXml,
   Utils, DelphiData, Intf, GenerateUtils, PackageInformation;
 
 type
@@ -222,7 +221,7 @@ end;
 
 function TProjectGroup.GetBplNameOf(Package: TRequiredPackage): string;
 begin
-  if StartsWith(Package.Name, 'Jv', True) then
+  if Utils.StartsWith(Package.Name, 'Jv', True) then
     Result := inherited GetBplNameOf(Package)
   else
     Result := Package.Name;
@@ -302,10 +301,11 @@ var
   i: Integer;
 begin
   FJvDependencies.Clear;
+  FJclDependencies.Clear;
   for i := 0 to Info.RequireCount - 1 do
   begin
     // JVCL dependencies
-    if StartsWith(Info.Requires[i].Name, 'Jv', True) then // do not localize
+    if Utils.StartsWith(Info.Requires[i].Name, 'Jv', True) then // do not localize
     begin
       if FileExists(Info.XmlDir + '\' + Info.Requires[i].Name + '.xml') and // do not localize
          (Owner.FindPackagebyXmlName(Info.Requires[i].Name) <> nil) and
@@ -316,9 +316,9 @@ begin
     end
     else
     // is it a JCL dependency
-    if StartsWith(Info.Requires[i].Name, 'Jcl', True) or // do not localize
-       StartsWith(Info.Requires[i].Name, 'JclD', True) or // do not localize
-       StartsWith(Info.Requires[i].Name, 'JclC', True) then // do not localize
+    if Utils.StartsWith(Info.Requires[i].Name, 'Jcl', True) or // do not localize
+       Utils.StartsWith(Info.Requires[i].Name, 'JclD', True) or // do not localize
+       Utils.StartsWith(Info.Requires[i].Name, 'JclC', True) then // do not localize
     begin
       if Info.Requires[i].IsRequiredByTarget(Owner.TargetSymbol) then
         FJclDependencies.AddObject(Info.Requires[i].Name, Info.Requires[i]);
@@ -397,6 +397,5 @@ end;
 
 initialization
   BplNameToGenericNameHook := BplNameToGenericName;
-  ExpandPackageTargets := ExpandTargets;
 
 end.

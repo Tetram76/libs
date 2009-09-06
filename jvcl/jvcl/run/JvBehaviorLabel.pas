@@ -19,7 +19,7 @@ SÈbastien Buysse [sbuysse att buypin dott com] - original author of the merged c
 Michael Beck [mbeck att bigfoot dott com].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
 * TJvBehaviorLabel is a merging of several label components in JVCL: JvSpecialLabel,
@@ -34,7 +34,7 @@ Known Issues:
   you collapse / expand the Options property in the OI manually. No known solution yet. SOLVED
 
 -----------------------------------------------------------------------------}
-// $Id: JvBehaviorLabel.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvBehaviorLabel.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvBehaviorLabel;
 
@@ -395,8 +395,8 @@ procedure GetRegisteredLabelBehaviorOptions(Strings: TStrings);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBehaviorLabel.pas $';
-    Revision: '$Revision: 12389 $';
-    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 ao√ªt 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1312,4 +1312,3 @@ finalization
   {$ENDIF UNITVERSIONING}
 
 end.
-

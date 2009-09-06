@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): Michael Beck [mbeck att bigfoot dott com].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThread.pas 12444 2009-08-10 11:48:00Z obones $
+// $Id: JvThread.pas 12486 2009-08-28 16:30:08Z ahuser $
 
 unit JvThread;
 
@@ -33,7 +33,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, Syncobjs,
+  SysUtils, Classes, SyncObjs,
   {$IFDEF MSWINDOWS}
   Windows, Controls, ExtCtrls,
   {$ENDIF MSWINDOWS}
@@ -106,21 +106,17 @@ type
     procedure TransferDialogOptions; virtual;
     procedure UpdateFormContents; virtual;
     property FormIsShown: Boolean read FFormIsShown default False;
-    property OnPressCancel: TJvThreadCancelEvent read FOnPressCancel
-        write FOnPressCancel;
-
+    property OnPressCancel: TJvThreadCancelEvent read FOnPressCancel write FOnPressCancel;
   public
     constructor CreateNew(AOwner: TComponent; Dummy: Integer = 0); override;
     constructor CreateNewFormStyle(AOwner: TJvThread; FormStyle: TFormStyle;
       Parent: TWinControl = nil); virtual;
     destructor Destroy; override;
     procedure DefaultCancelBtnClick(Sender: TObject);
-    property ConnectedDataComponent: TComponent read GetConnectedDataComponent
-        write SetConnectedDataComponent;
+    property ConnectedDataComponent: TComponent read GetConnectedDataComponent write SetConnectedDataComponent;
     property ConnectedDataObject: TObject read FConnectedDataObject write SetConnectedDataObject;
     property ConnectedThread: TJvThread read FConnectedThread;
-    property DialogOptions: TJvCustomThreadDialogOptions read FDialogOptions write
-        FDialogOptions;
+    property DialogOptions: TJvCustomThreadDialogOptions read FDialogOptions write FDialogOptions;
     property InternalTimerInterval: Integer read FInternalTimerInterval write SetInternalTimerInterval;
   published
     property OnClose: TCloseEvent read FOnClose write SetOnClose;
@@ -140,8 +136,7 @@ type
     function CreateThreadDialogForm(ConnectedThread: TJvThread): TJvCustomThreadDialogForm; virtual; abstract;
   published
     property DialogOptions: TJvCustomThreadDialogOptions read FDialogOptions write FDialogOptions;
-    property OnPressCancel: TJvThreadCancelEvent read FOnPressCancel
-        write FOnPressCancel;
+    property OnPressCancel: TJvThreadCancelEvent read FOnPressCancel write FOnPressCancel;
   end;
 
   TJvThreadShowMessageDlgEvent = procedure(const Msg: string; AType: TMsgDlgType;
@@ -201,10 +196,12 @@ type
   protected
     procedure InternalMessageDlg;
   public
-    constructor Create(Sender: TObject; Event: TJvNotifyParamsEvent; Params:
-        Pointer); virtual;
-    destructor Destroy; override;
-    procedure Resume;
+    constructor Create(Sender: TObject; Event: TJvNotifyParamsEvent;
+      Params: Pointer); virtual;
+    {$IFNDEF COMPILER14_UP}
+    procedure Resume; // There is no way to silence the compiler ("Resume" is deprecated)
+    {$ENDIF ~COMPILER14_UP}
+    procedure ResumeThread;
     procedure Execute; override;
     procedure Synchronize(Method: TThreadMethod);
     function SynchMessageDlg(const Msg: string; AType: TMsgDlgType;
@@ -277,10 +274,8 @@ type
     procedure Lock;   // for safe use of property Threads[]
     procedure Unlock;
 
-    property ConnectedDataComponent: TComponent read GetConnectedDataComponent
-        write SetConnectedDataComponent;
-    property ConnectedDataObject: TObject read FConnectedDataObject write
-        SetConnectedDataObject;
+    property ConnectedDataComponent: TComponent read GetConnectedDataComponent write SetConnectedDataComponent;
+    property ConnectedDataObject: TObject read FConnectedDataObject write SetConnectedDataObject;
     property Count: Integer read GetCount;
     property Threads[Index: Integer]: TJvBaseThread read GetThreads;
     property LastThread: TJvBaseThread read GetCurrentThread; //GetLastThread;
@@ -288,8 +283,7 @@ type
     property ReturnValue: Integer read GetReturnValue write SetReturnValue; // in context of thread in list - set return value (slower)
     property OneThreadIsRunning: Boolean read GetOneThreadIsRunning;
     //1 Property to allow/disallow the thread dialog form
-    property ThreadDialogAllowed: Boolean read FThreadDialogAllowed write
-        FThreadDialogAllowed default True;
+    property ThreadDialogAllowed: Boolean read FThreadDialogAllowed write FThreadDialogAllowed default True;
     property ThreadDialogForm: TJvCustomThreadDialogForm read FThreadDialogForm;
 (*
     function GetPriority(Thread: THandle): TThreadPriority;
@@ -333,8 +327,7 @@ type
       read FAfterCreateDialogForm write FAfterCreateDialogForm;
     property BeforeResume: TNotifyEvent read FBeforeResume write FBeforeResume;
     property OnBegin: TNotifyEvent read FOnBegin write FOnBegin;
-    property OnCancelExecute: TJvThreadCancelEvent read FOnCancelExecute write
-        FOnCancelExecute;
+    property OnCancelExecute: TJvThreadCancelEvent read FOnCancelExecute write FOnCancelExecute;
     property OnExecute: TJvNotifyParamsEvent read FOnExecute write FOnExecute;
     property OnFinish: TNotifyEvent read FOnFinish write FOnFinish;
     property OnFinishAll: TNotifyEvent read FOnFinishAll write FOnFinishAll;
@@ -351,8 +344,8 @@ procedure SynchronizeParams(Method: TJvNotifyParamsEvent; P: Pointer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThread.pas $';
-    Revision: '$Revision: 12444 $';
-    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
+    Revision: '$Revision: 12486 $';
+    Date: '$Date: 2009-08-28 18:30:08 +0200 (ven., 28 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -733,13 +726,13 @@ end;
 
 procedure TJvThread.Resume(BaseThread: TJvBaseThread);
 var
- B: Boolean;
+  B: Boolean;
 begin
   if Assigned(BaseThread) then
   begin
     CreateThreadDialogForm;
     B := BaseThread.FOnResumeDone;
-    BaseThread.Resume;
+    BaseThread.ResumeThread;
     if (not B) and
        (not BaseThread.FInternalTerminate) and
        (not BaseThread.Finished) then
@@ -778,7 +771,7 @@ var
 begin
   Thread := GetCurrentThread;
   if Assigned(Thread) then
-    Thread.Suspend // suspend itself
+    Thread.Suspended := True // suspend itself
   else
   begin
     List := FThreads.LockList;  // suspend all
@@ -787,7 +780,7 @@ begin
         try  // against "Access denied" for already finished threads
           Thread := TJvBaseThread(List[I]);
           if not Thread.Finished then // it's faster (prevents raising exceptions in most cases)
-            Thread.Suspend;
+            Thread.Suspended := True
         except
         end;
     finally
@@ -1139,7 +1132,7 @@ end;
 procedure TJvThread.ExecuteWithDialog(P: Pointer);
 begin
   if Assigned(ThreadDialog) and ThreadDialog.DialogOptions.ShowDialog and
-    ThreadDialog.DialogOptions.ShowModal then
+     ThreadDialog.DialogOptions.ShowModal then
     ExecuteAndWait(P)
   else
     Execute(P);
@@ -1220,7 +1213,7 @@ end;
 //=== { TJvBaseThread } ======================================================
 
 constructor TJvBaseThread.Create(Sender: TObject; Event: TJvNotifyParamsEvent;
-    Params: Pointer);
+  Params: Pointer);
 begin
   inherited Create(True);
   FSender := Sender;
@@ -1228,17 +1221,12 @@ begin
   FParams := Params;
 end;
 
-destructor TJvBaseThread.Destroy;
-begin
-  inherited Destroy;
-end;
-
 procedure TJvBaseThread.ExceptionHandler;
 begin
   ShowException(FException, FExceptionAddr);
 end;
 
-procedure TJvBaseThread.Resume;
+procedure TJvBaseThread.ResumeThread;
 begin
   if not FOnResumeDone then
   begin
@@ -1254,29 +1242,38 @@ begin
       end;
     FExecuteIsActive := True;
   end;
+  {$WARNINGS OFF}
   inherited Resume;     // after suspend too
+  {$WARNINGS ON}
 end;
+
+{$IFNDEF COMPILER14_UP}
+procedure TJvBaseThread.Resume;
+begin
+  ResumeThread;
+end;
+{$ENDIF ~COMPILER14_UP}
 
 procedure TJvBaseThread.Execute;
 begin
   try
     FExecuteIsActive := True;
     if FInternalTerminate then
-      Self.Terminate;
+      Terminate;
     FExecuteEvent(Self, FParams);
   except
     on E: Exception do
     begin
       FException := E;
       FExceptionAddr := ExceptAddr;
-      Self.Synchronize(ExceptionHandler);
+      Synchronize(ExceptionHandler);
     end;
   end;
 end;
 
 procedure TJvBaseThread.Synchronize(Method: TThreadMethod);
 begin
- inherited Synchronize(Method);
+  inherited Synchronize(Method);
 end;
 
 procedure TJvBaseThread.InternalMessageDlg;
@@ -1291,12 +1288,12 @@ end;
 function TJvBaseThread.SynchMessageDlg(const Msg: string; AType: TMsgDlgType;
   AButtons: TMsgDlgButtons; HelpCtx: Longint): Word;
 begin
-    FSynchMsg := Msg;
-    FSynchAType := AType;
-    FSynchAButtons := AButtons;
-    FSynchHelpCtx := HelpCtx;
-    Self.Synchronize(InternalMessageDlg);
-    Result := FSynchMessageDlgResult;
+  FSynchMsg := Msg;
+  FSynchAType := AType;
+  FSynchAButtons := AButtons;
+  FSynchHelpCtx := HelpCtx;
+  Self.Synchronize(InternalMessageDlg);
+  Result := FSynchMessageDlgResult;
 end;
 
 { TJvPausableThread }
@@ -1316,7 +1313,6 @@ begin
   end;
 
   inherited Destroy;
-
   FPauseSection.Free;
 end;
 
@@ -1345,7 +1341,7 @@ begin
 
   // If the thread was created "Suspended", then we must start it
   if Suspended and not Paused then
-    Resume;
+    Suspended := False;
 end;
 
 initialization

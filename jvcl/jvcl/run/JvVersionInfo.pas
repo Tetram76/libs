@@ -16,11 +16,11 @@ Copyright (c) 2001,2002 SGB Software
 All Rights Reserved.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionInfo.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvVersionInfo.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvVersionInfo;
 
@@ -441,4 +441,3 @@ begin
 end;
 
 end.
-

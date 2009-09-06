@@ -16,14 +16,14 @@ Copyright (c) 2001,2002 SGB Software
 All Rights Reserved.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Contributors:
 tia
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUtils.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvDBUtils.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDBUtils;
 
@@ -183,8 +183,8 @@ procedure _DBError(const Msg: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUtils.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -480,7 +480,7 @@ var
   var
     S: string;
   begin
-    if Field.DataType = ftString then
+    if Field.DataType in [ftString{$IFDEF UNICODE}, ftWideString{$ENDIF UNICODE}] then
     begin
       if Value = Null then
         Result := Field.IsNull
@@ -595,7 +595,7 @@ begin
   Field := DataSet.FindField(FieldName);
   if Field = nil then
     Exit;
-  if Field.DataType = ftString then
+  if Field.DataType in [ftString{$IFDEF UNICODE}, ftWideString{$ENDIF UNICODE}] then
   begin
     DataSet.DisableControls;
     BookMk := DataSet.GetBookmark;
@@ -853,7 +853,7 @@ begin
   FieldValue := '';
   DateValue := NullDate;
   Exact := Exact or not (FieldType in
-    [ftString, ftDate, ftTime, ftDateTime]);
+    [ftString{$IFDEF UNICODE}, ftWideString{$ENDIF UNICODE}, ftDate, ftTime, ftDateTime]);
   if FieldType in [ftDate, ftTime, ftDateTime] then
   begin
     DateValue := StrToDateDef(Value, NullDate);
@@ -867,7 +867,7 @@ begin
     if not (Exact or EmptyValue) then
       FieldValue := ReplaceStr(ReplaceStr(StrMaskSQL(FieldValue),
         '*', '%'), '?', '_');
-    if FieldType = ftString then
+    if FieldType in [ftString{$IFDEF UNICODE}, ftWideString{$ENDIF UNICODE}] then
       FieldValue := '''' + FieldValue + '''';
   end;
   LogicOperator := Operator;
@@ -877,7 +877,7 @@ begin
       LogicOperator := '='
     else
     begin
-      if FieldType = ftString then
+      if FieldType in [ftString{$IFDEF UNICODE}, ftWideString{$ENDIF UNICODE}] then
         LogicOperator := 'LIKE'
       else
         LogicOperator := '>=';
@@ -902,7 +902,7 @@ var
   S, Esc: string;
 begin
   Esc := '';
-  if not Exact and (FieldType = ftString) then
+  if not Exact and (FieldType in [ftString{$IFDEF UNICODE}, ftWideString{$ENDIF UNICODE}]) then
   begin
     S := ReplaceStr(ReplaceStr(ReplaceStr(Value, '/', '//'),
       '_', '/_'), '%', '/%');

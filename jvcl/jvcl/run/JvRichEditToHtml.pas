@@ -18,11 +18,11 @@ Contributor(s): Michael Beck [mbeck att bigfoot dott com],
                 Andreas Hausladen [Andreas dott Hausladen att gmx dott de].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEditToHtml.pas 12404 2009-07-21 09:25:50Z obones $
+// $Id: JvRichEditToHtml.pas 12466 2009-08-23 12:02:33Z ahuser $
 
 unit JvRichEditToHtml;
 
@@ -79,34 +79,37 @@ type
     FEndSection: string;
     FEndPara: string;
     FTitle: string;
-    FFooter: TStringList;
-    FHeader: TStringList;
+    FFooter: TStrings;
+    FHeader: TStrings;
     function AttToHtml(Value: TFontInfo): string;
-    function ParaToHtml(Value: TJvParaAttributesRec): string;overload;
-    function ParaToHtml(Value: TJvRichEditParaAttributesRec): string;overload;
-    function GetFooter: TStrings;
-    function GetHeader: TStrings;
+    function ParaToHtml(Value: TJvParaAttributesRec): string; overload;
+    function ParaToHtml(Value: TJvRichEditParaAttributesRec): string; overload;
     procedure SetFooter(const Value: TStrings);
     procedure SetHeader(const Value: TStrings);
+    function IsFooterStored: Boolean;
+    function IsHeaderStored: Boolean;
+    procedure WriteEmptyStrings(Writer: TWriter);
+  protected
+    procedure DefineProperties(Filer: TFiler); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure ConvertToHtml(Value: TRichEdit; const FileName: string);overload;
-    procedure ConvertToHtml(Value: TJvRichEdit; const FileName: string);overload;
-    procedure ConvertToHtmlStrings(Value: TRichEdit; Strings: TStrings);overload;
-    procedure ConvertToHtmlStrings(Value: TJvRichEdit; Strings: TStrings);overload;
+    procedure ConvertToHtml(Value: TRichEdit; const FileName: string); overload;
+    procedure ConvertToHtml(Value: TJvRichEdit; const FileName: string); overload;
+    procedure ConvertToHtmlStrings(Value: TRichEdit; Strings: TStrings); overload;
+    procedure ConvertToHtmlStrings(Value: TJvRichEdit; Strings: TStrings); overload;
   published
     property Title: string read FTitle write FTitle;
-    property Header: TStrings read GetHeader write SetHeader;
-    property Footer: TStrings read GetFooter write SetFooter;
+    property Header: TStrings read FHeader write SetHeader stored IsHeaderStored;
+    property Footer: TStrings read FFooter write SetFooter stored IsFooterStored;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEditToHtml.pas $';
-    Revision: '$Revision: 12404 $';
-    Date: '$Date: 2009-07-21 11:25:50 +0200 (mar., 21 juil. 2009) $';
+    Revision: '$Revision: 12466 $';
+    Date: '$Date: 2009-08-23 14:02:33 +0200 (dim., 23 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -151,6 +154,18 @@ const
 
   cHTMLListBegin = '<LI>';
   cHTMLListEnd = '</LI>';
+
+  cDefaultHeader: array[0..4] of string = (
+    '<HTML>',
+    '  <HEAD>',
+    '    <TITLE><#TITLE></TITLE>',
+    '  </HEAD>',
+    '  <BODY>'
+  );
+  cDefaultFooter: array[0..1] of string = (
+    '  </BODY>',
+    '</HTML>'
+  );
 
 //=== { TFontInfo } ==========================================================
 
@@ -207,20 +222,18 @@ end;
 //=== { TJvRichEditToHtml } ==================================================
 
 constructor TJvRichEditToHtml.Create(AOwner: TComponent);
+var
+  I: Integer;
 begin
   inherited Create(AOwner);
   FCToH := TJvRgbToHtml.Create(Self);
   FCharToH := TJvStrToHtml.Create(Self);
   FHeader := TStringList.Create;
-  FHeader.Add('<HTML>');
-  FHeader.Add('  <HEAD>');
-  FHeader.Add('    <TITLE><#TITLE></TITLE>');
-  FHeader.Add('  </HEAD>');
-  FHeader.Add('  <BODY>');
-
+  for I := 0 to High(cDefaultHeader) do
+    FHeader.Add(cDefaultHeader[I]);
   FFooter := TStringList.Create;
-  FFooter.Add('  </BODY>');
-  FFooter.Add('</HTML>');
+  for I := 0 to High(cDefaultFooter) do
+    FFooter.Add(cDefaultFooter[I]);
 end;
 
 destructor TJvRichEditToHtml.Destroy;
@@ -391,7 +404,7 @@ begin
           end
           else
           begin
-            if CharInSet(Text[J], ['A'..'Z', 'a'..'z', '0'..'9']) then
+            if CharIsAlphaNum(Text[J]) then
               St.Append(Text[J])
             else
               St.Append(CharToHtml(Text[J]));
@@ -501,7 +514,7 @@ begin
           end
           else
           begin
-            if CharInSet(Text[J], ['A'..'Z', 'a'..'z', '0'..'9']) then
+            if CharIsAlphaNum(Text[J]) then
               St.Append(Text[J])
             else
               St.Append(CharToHtml(Text[J]));
@@ -561,11 +574,11 @@ function TJvRichEditToHtml.ParaToHtml(Value: TJvParaAttributesRec): string;
 begin
   case Value.Alignment of
     Classes.taLeftJustify:
-      Result := 'ALIGN="LEFT"';
+      Result := 'STYLE="text-align: left;"';
     Classes.taRightJustify:
-      Result := 'ALIGN="RIGHT"';
+      Result := 'STYLE="text-align: right;"';
     Classes.taCenter:
-      Result := 'ALIGN="CENTER"';
+      Result := 'STYLE="text-align: center;"';
   end;
   if Value.Numbering = ComCtrls.nsBullet then
   begin
@@ -579,24 +592,86 @@ begin
   end
 end;
 
-function TJvRichEditToHtml.GetFooter: TStrings;
-begin
-  Result := FFooter;
-end;
-
-function TJvRichEditToHtml.GetHeader: TStrings;
-begin
-  Result := FHeader;
-end;
-
 procedure TJvRichEditToHtml.SetFooter(const Value: TStrings);
 begin
-  FFooter.Assign(Value);
+  if Value <> FFooter then
+    FFooter.Assign(Value);
 end;
 
 procedure TJvRichEditToHtml.SetHeader(const Value: TStrings);
 begin
-  FHeader.Assign(Value);
+  if Value <> FHeader then
+    FHeader.Assign(Value);
+end;
+
+function TJvRichEditToHtml.IsFooterStored: Boolean;
+var
+  I: Integer;
+begin
+  Result := Footer.Count <> Length(cDefaultFooter);
+  if not Result then
+  begin
+    Result := True;
+    for I := 0 to High(cDefaultFooter) do
+      if Footer[I] <> cDefaultFooter[I] then
+        Exit;
+    Result := False;
+  end;
+end;
+
+function TJvRichEditToHtml.IsHeaderStored: Boolean;
+var
+  I: Integer;
+begin
+  Result := Header.Count <> Length(cDefaultHeader);
+  if not Result then
+  begin
+    Result := True;
+    for I := 0 to High(cDefaultHeader) do
+      if Header[I] <> cDefaultHeader[I] then
+        Exit;
+    Result := False;
+  end;
+end;
+
+procedure TJvRichEditToHtml.WriteEmptyStrings(Writer: TWriter);
+begin
+  Writer.WriteListBegin;
+  Writer.WriteListEnd;
+end;
+
+procedure TJvRichEditToHtml.DefineProperties(Filer: TFiler);
+
+  function DoWriteHeader: Boolean;
+  begin
+    Result := Header.Count = 0;
+    if Result and (Filer.Ancestor <> nil) then
+    begin
+      Result := True;
+      if Filer.Ancestor is TJvRichEditToHtml then
+        Result := not Header.Equals(TJvRichEditToHtml(Filer.Ancestor).Header)
+    end;
+  end;
+
+  function DoWriteFooter: Boolean;
+  begin
+    Result := Footer.Count = 0;
+    if Result and (Filer.Ancestor <> nil) then
+    begin
+      Result := True;
+      if Filer.Ancestor is TJvRichEditToHtml then
+        Result := not Footer.Equals(TJvRichEditToHtml(Filer.Ancestor).Footer)
+    end;
+  end;
+
+begin
+  inherited DefineProperties(Filer);
+  { Write empty Header/Footer to DFM because the default value differs from '' }
+  if Filer is TWriter then
+  begin
+    Filer.DefineProperty('Header.Strings', nil, WriteEmptyStrings, DoWriteHeader);
+    Filer.DefineProperty('Footer.Strings', nil, WriteEmptyStrings, DoWriteFooter);
+  end;
 end;
 
 {$IFDEF UNITVERSIONING}
@@ -608,4 +683,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

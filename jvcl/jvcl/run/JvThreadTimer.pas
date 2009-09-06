@@ -21,7 +21,7 @@ Peter Thrnqvist
 Ivo Bauer
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 
@@ -34,7 +34,7 @@ History:
     * Rewritten almost everything.
 
 -----------------------------------------------------------------------------}
-// $Id: JvThreadTimer.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvThreadTimer.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvThreadTimer;
 
@@ -94,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadTimer.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -147,7 +147,7 @@ begin
   FInterval := ATimer.FInterval;
   FTimer := ATimer;
   Priority := ATimer.Priority;
-  Resume;
+  {$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
 end;
 
 destructor TJvTimerThread.Destroy;
@@ -161,7 +161,7 @@ end;
 procedure TJvTimerThread.DoSuspend;
 begin
   FHasBeenSuspended := True;
-  Suspend;
+  Suspended := True;
 end;
 
 procedure TJvTimerThread.Execute;
@@ -205,7 +205,7 @@ begin
   Terminate;
   SetEvent(FEvent);
   if Suspended then
-    Resume;
+    Suspended := False;
   Sleep(0);
 end;
 
@@ -331,7 +331,7 @@ begin
       FThread := TJvTimerThread.Create(Self);
 
     if FThread.Suspended then
-      FThread.Resume;
+      FThread.Suspended := False;
   end
   else
   if FThread is TJvTimerThread then
@@ -352,4 +352,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

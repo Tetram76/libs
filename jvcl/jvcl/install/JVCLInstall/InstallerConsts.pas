@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: InstallerConsts.pas 12032 2008-11-03 22:47:18Z ahuser $
+// $Id: InstallerConsts.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit InstallerConsts;
 
@@ -181,7 +181,7 @@ resourcestring
   RsDownloadUpdatesFrom = 'Download from';
   RsJCLVersionRequired = 'JCL %s or higher not installed';
   RsDownloadOrSelectJclDir = 'Download the JCL, close the JVCL Installer and install the JCL before restarting the JVCL Installer.|' +
-    'http://homepages.borland.com/jedi/jcl/'; // http://jcl.sourceforge.net
+    'http://jcl.delphi-jedi.org/'; 
   RsInstalledJVCLVersion = 'Installed JVCL version: %s';
   RsInstallJCL = 'Install JCL';
 //  RsNoJclVersionFound = 'No JCL %s found.';

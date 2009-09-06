@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): Michael Beck [mbeck att bigfoot dott com].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCommStatus.pas 12444 2009-08-10 11:48:00Z obones $
+// $Id: JvCommStatus.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvCommStatus;
 
@@ -81,8 +81,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCommStatus.pas $';
-    Revision: '$Revision: 12444 $';
-    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -109,7 +109,7 @@ begin
     FWatcher.FStat := 0;
     FWatcher.FOnChange := OnChange;
 
-    FWatcher.Resume;
+    FWatcher.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
   end
   else
     FWatcher := nil;
@@ -226,4 +226,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

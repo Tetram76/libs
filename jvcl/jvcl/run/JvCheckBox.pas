@@ -21,11 +21,11 @@ Robert Marquardt RightButton renamed to LeftText
 Peter Thörnqvist- added LinkedControls property
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckBox.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvCheckBox.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvCheckBox;
 
@@ -146,8 +146,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckBox.pas $';
-    Revision: '$Revision: 12389 $';
-    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 aoÃ»t 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -580,4 +580,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

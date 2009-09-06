@@ -15,11 +15,11 @@ Contributor(s):
 Jens Fudickar [jens dott fudickar att oratool dott de]
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineIntf.pas 12392 2009-07-09 11:15:37Z ahuser $
+// $Id: JvDynControlEngineIntf.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDynControlEngineIntf;
 
@@ -371,8 +371,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineIntf.pas $';
-    Revision: '$Revision: 12392 $';
-    Date: '$Date: 2009-07-09 13:15:37 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -388,4 +388,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

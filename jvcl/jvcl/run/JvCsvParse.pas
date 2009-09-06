@@ -20,7 +20,7 @@ Contributor(s):  Warren Postma (warrenpstma att hotmail dott com)
                Changed StrSplit Function (has one new parameter).
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   Internal pchar-manipulation functions required by TJvCsvDataSet data access component.
@@ -37,7 +37,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCsvParse.pas 12309 2009-05-18 22:46:22Z ahuser $
+// $Id: JvCsvParse.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvCsvParse;
 
@@ -113,8 +113,8 @@ procedure ResetTokenCount;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCsvParse.pas $';
-    Revision: '$Revision: 12309 $';
-    Date: '$Date: 2009-05-19 00:46:22 +0200 (mar., 19 mai 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -954,4 +954,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

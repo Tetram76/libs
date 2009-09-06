@@ -20,11 +20,11 @@ Contributor(s):
   Remko Bonte <remkobonte att myrealbox dott com> (redirect console output)
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCreateProcess.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvCreateProcess.pas 12476 2009-08-25 21:11:31Z obones $
 
 unit JvCreateProcess;
 
@@ -229,8 +229,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCreateProcess.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12476 $';
+    Date: '$Date: 2009-08-25 23:11:31 +0200 (mar., 25 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1256,7 +1256,7 @@ begin
 
       FWaitThread := TJvConsoleThread.Create(FProcessInfo.hProcess, LocalHandles.ExtractWrite);
       FWaitThread.OnTerminate := WaitThreadTerminated;
-      FWaitThread.Resume;
+      FWaitThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
 
       TJvReader(FInputReader).CreateThread(LocalHandles.ExtractRead);
 
@@ -1270,7 +1270,7 @@ begin
 
       FWaitThread := TJvWaitForProcessThread.Create(FProcessInfo.hProcess);
       FWaitThread.OnTerminate := WaitThreadTerminated;
-      FWaitThread.Resume;
+      FWaitThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
     end
     else
     begin
@@ -1438,7 +1438,7 @@ begin
 
   FThread := TJvReadThread.Create(Self, AReadHandle, FCreateProcess.Handle);
   FThread.OnTerminate := ThreadTerminated;
-  FThread.Resume;
+  FThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
 end;
 
 procedure TJvReader.DoRawReadEvent(Data: PAnsiChar; const ASize: Cardinal);

@@ -17,12 +17,12 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   Example of control that implements background image support
 -----------------------------------------------------------------------------}
-// $Id: JvBackgroundTreeview.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: JvBackgroundTreeview.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvBackgroundTreeview;
 

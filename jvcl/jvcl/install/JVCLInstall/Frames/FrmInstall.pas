@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmInstall.pas 12032 2008-11-03 22:47:18Z ahuser $
+// $Id: FrmInstall.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit FrmInstall;
 

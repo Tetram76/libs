@@ -30,11 +30,11 @@ Changes:
   * fixed bug: memory leak in TJvCustomSpeedButton.Paint;
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvSpeedButton.pas 12470 2009-08-23 19:37:27Z ahuser $
 
 unit JvSpeedButton;
 
@@ -491,8 +491,8 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12470 $';
+    Date: '$Date: 2009-08-23 21:37:27 +0200 (dim., 23 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2686,7 +2686,12 @@ begin
         TJvGlyphList(FGlyphList).Delete(FIndexs[I]);
     FIndexs[I] := -1;
   end;
-  GlyphCache.ReturnList(TJvGlyphList(FGlyphList));
+
+  { Fix for Mantis #4864: JvSpeedButton AV }
+  if GlyphCache <> nil then
+    GlyphCache.ReturnList(TJvGlyphList(FGlyphList))
+  else
+    FGlyphList.Free;
   FGlyphList := nil;
 end;
 
@@ -2761,5 +2766,4 @@ finalization
   FreeAndNil(TempBrushBitmap);
 
 end.
-
 

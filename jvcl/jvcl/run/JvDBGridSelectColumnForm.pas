@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridSelectColumnForm.pas 11596 2007-12-05 19:16:09Z ahuser $
+// $Id: JvDBGridSelectColumnForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDBGridSelectColumnForm;
 
@@ -71,8 +71,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGridSelectColumnForm.pas $';
-    Revision: '$Revision: 11596 $';
-    Date: '$Date: 2007-12-05 20:16:09 +0100 (mer., 05 déc. 2007) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -252,4 +252,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

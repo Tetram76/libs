@@ -28,11 +28,11 @@ Changes:
         Helps conditional compiling in BCB.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLVer.pas 12348 2009-06-25 10:59:10Z obones $
+// $Id: JVCLVer.pas 12477 2009-08-25 21:12:53Z obones $
 
 unit JVCLVer;
 
@@ -46,9 +46,9 @@ uses
 {$ENDIF UNITVERSIONING}
 
 const
-  sJVCLVersion = '3.38';
+  sJVCLVersion = '3.39';
   JVCLVersionMajor   = 3;    // 0=pre-release|beta/1, 2, ...=final
-  JVCLVersionMinor   = 38;   // minor release
+  JVCLVersionMinor   = 39;   // minor release
   JVCLVersionRelease = 0;    // 0: pre-release|beta/>=1: release
   JVCLVersionBuild   = 0;    // build number, days since march 1, 2006
 
@@ -64,8 +64,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JVCLVer.pas $';
-    Revision: '$Revision: 12348 $';
-    Date: '$Date: 2009-06-25 12:59:10 +0200 (jeu., 25 juin 2009) $';
+    Revision: '$Revision: 12477 $';
+    Date: '$Date: 2009-08-25 23:12:53 +0200 (mar., 25 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -81,4 +81,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

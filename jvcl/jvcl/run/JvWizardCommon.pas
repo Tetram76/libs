@@ -18,7 +18,7 @@ Contributor(s):
 Peter Th�rnqvist - converted to JVCL naming conventions on 2003-07-11
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Purpose:
   All common functions and procedures which used by all components
@@ -32,7 +32,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardCommon.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvWizardCommon.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvWizardCommon;
 
@@ -70,8 +70,8 @@ procedure JvWizardDrawImage(ACanvas: TCanvas; AGraphic: TGraphic; ARect: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizardCommon.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -285,4 +285,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

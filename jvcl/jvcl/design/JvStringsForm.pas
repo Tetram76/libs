@@ -17,14 +17,14 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   TStrings property editor originally from the Rx library (duplicated for internal use)
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStringsForm.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvStringsForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvStringsForm;
 
@@ -137,4 +137,3 @@ begin
 end;
 
 end.
-

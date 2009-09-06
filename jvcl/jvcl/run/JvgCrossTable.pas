@@ -19,11 +19,11 @@ Michael Beck [mbeck att bigfoot dott com].
 Burov Dmitry, translation of russian text.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCrossTable.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvgCrossTable.pas 12461 2009-08-14 17:21:33Z obones $
 
 //  Компонент позволяет печатать так называемые Cross Tables, разбивая крупные
 //  таблицы на несколько листов как по ширине, так и по высоте.
@@ -400,8 +400,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCrossTable.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 aoГ»t 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1194,4 +1194,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

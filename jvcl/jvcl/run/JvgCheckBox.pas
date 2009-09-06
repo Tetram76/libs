@@ -18,11 +18,11 @@ Contributor(s):
 Michael Beck [mbeck att bigfoot dott com].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCheckBox.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvgCheckBox.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvgCheckBox;
 
@@ -161,8 +161,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCheckBox.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

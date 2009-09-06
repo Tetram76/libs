@@ -18,11 +18,11 @@ Contributor(s):
   Olivier Sannier [obones att altern dott org]
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: ConditionParser.pas 11891 2008-09-09 20:33:00Z obones $
+// $Id: ConditionParser.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit ConditionParser;
 

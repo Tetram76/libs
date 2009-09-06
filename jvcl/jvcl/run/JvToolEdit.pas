@@ -22,12 +22,12 @@ Contributers:
   Andreas Hausladen
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvToolEdit.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvToolEdit;
 
@@ -50,7 +50,7 @@ uses
   JclBase,
   JvConsts,
   JvExControls, JvSpeedButton, JvTypes, JvExMask, JvExForms, JvButton,
-  JvDataSourceIntf;
+  JvDataSourceIntf, JvBrowseFolder;
 
 const
   scAltDown = scAlt + VK_DOWN;
@@ -699,6 +699,8 @@ type
     FDialogKind: TDirDialogKind;
     FPhysicalDirectory: string;
     FDisplayLocalizedName: Boolean;
+    FOptionsWin32: TOptionsDir;
+
     procedure SetDirectory(const Value: string);
     function GetDirectory: string;
     procedure SetDisplayLocalizedName(const Value: Boolean);
@@ -733,6 +735,7 @@ type
     property Flat;
     property ParentFlat;
     property DialogOptions: TSelectDirOpts read FOptions write FOptions default [sdAllowCreate];
+    property DialogOptionsWin32: TOptionsDir read FOptionsWin32 write FOptionsWin32 default DefaultJvBrowseFolderDialogOptions;
     property InitialDir: string read FInitialDir write FInitialDir;
     property MultipleDirs: Boolean read FMultipleDirs write FMultipleDirs default False;
     property AutoSelect;
@@ -1068,8 +1071,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1079,7 +1082,6 @@ implementation
 uses
   RTLConsts, Math, Consts, MaskUtils,
   MultiMon,
-  JvBrowseFolder,
   JclFileUtils, JclStrings,
   JvPickDate, JvJCLUtils, JvJVCLUtils,
   JvThemes, JvResources;
@@ -3896,6 +3898,7 @@ constructor TJvDirectoryEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FOptions := [sdAllowCreate];
+  FOptionsWin32 := DefaultJvBrowseFolderDialogOptions;
   FAutoCompleteFileOptions := [acfFileSystem, acfFileSysDirs];
   FDialogKind := dkWin32;
 end;
@@ -4077,6 +4080,7 @@ procedure TJvDirectoryEdit.PopupDropDown(DisableEdit: Boolean);
 var
   Temp, Txt: string;
   Action: Boolean;
+  BrowseForFolder: TJvBrowseForFolderDialog;
 begin
   Temp := Directory;
   Action := True;
@@ -4093,12 +4097,32 @@ begin
 
   if not DirectoryExists(Temp) then
     Temp := PathDelim;
-  DisableSysErrors;
-  try
-    Action := SelectDirectory(Temp, FOptions, Self.HelpContext);
-  finally
-    EnableSysErrors;
+
+  case DialogKind of
+    dkVCL:
+      begin
+        DisableSysErrors;
+        try
+          Action := SelectDirectory(Temp, FOptions, Self.HelpContext);
+        finally
+          EnableSysErrors;
+        end;
+      end;
+    dkWin32:
+      begin
+        BrowseForFolder := TJvBrowseForFolderDialog.Create(Self);
+        try
+          BrowseForFolder.Options := DialogOptionsWin32;
+          BrowseForFolder.Directory := Temp;
+          BrowseForFolder.StatusText := DialogText;
+          Action := BrowseForFolder.Execute;
+          Temp := BrowseForFolder.Directory;
+        finally
+          BrowseForFolder.Free;
+        end;
+      end;
   end;
+
   if CanFocus then
     SetFocus;
   DoAfterDialog(Temp, Action);

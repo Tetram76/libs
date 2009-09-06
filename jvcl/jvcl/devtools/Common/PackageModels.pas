@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageModels.pas 10877 2006-08-11 16:21:40Z outchy $
+// $Id: PackageModels.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit PackageModels;
 

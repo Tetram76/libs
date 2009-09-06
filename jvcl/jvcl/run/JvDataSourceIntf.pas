@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataSourceIntf.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvDataSourceIntf.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDataSourceIntf;
 
@@ -1000,4 +1000,3 @@ begin
 end;
 
 end.
-

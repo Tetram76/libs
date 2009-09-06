@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Main.pas 12075 2008-12-14 23:17:22Z ahuser $
+// $Id: Main.pas 12461 2009-08-14 17:21:33Z obones $
 
 {
   command line arguments:

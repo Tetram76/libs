@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): Michael Beck [mbeck att bigfoot dott com].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHidControllerClass.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvHidControllerClass.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvHidControllerClass;
 
@@ -438,8 +438,8 @@ function HidErrorString(const RetVal: NTSTATUS): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHidControllerClass.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1146,7 +1146,7 @@ begin
   begin
     FDataThread := TJvHidDeviceReadThread.CtlCreate(Self);
     FDataThread.FreeOnTerminate := False;
-    FDataThread.Resume;
+    FDataThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
   end;
 end;
 
@@ -2266,4 +2266,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

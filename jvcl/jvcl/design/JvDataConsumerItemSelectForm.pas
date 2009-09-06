@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataConsumerItemSelectForm.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvDataConsumerItemSelectForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDataConsumerItemSelectForm;
 

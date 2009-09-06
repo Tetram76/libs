@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActions.pas 12236 2009-03-14 12:38:14Z outchy $
+// $Id: JvActions.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvActions;
 
@@ -113,8 +113,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActions.pas $';
-    Revision: '$Revision: 12236 $';
-    Date: '$Date: 2009-03-14 13:38:14 +0100 (sam., 14 mars 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -276,4 +276,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

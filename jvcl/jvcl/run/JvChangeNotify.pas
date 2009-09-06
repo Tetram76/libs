@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   A wrapper for the Find[First/Next]ChangeNotification API calls.
@@ -34,7 +34,7 @@ Changes:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvChangeNotify.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvChangeNotify.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvChangeNotify;
 
@@ -163,8 +163,8 @@ function ActionsToString(Actions: TJvChangeActions): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChangeNotify.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -421,7 +421,7 @@ begin
         FThread.OnChangeNotify := nil;
         FThread.Terminate;
         if FThread.Suspended then
-          FThread.Resume;
+          FThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
         if FreeOnTerminate then
           FThread := nil
         else
@@ -432,7 +432,7 @@ begin
       end;
       FThread := TJvChangeThread.Create(FNotifyArray, FCollection.Count, FInterval, FFreeOnTerminate);
       FThread.OnChangeNotify := DoThreadChangeNotify;
-      FThread.Resume;
+      FThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
     end
     else
     if FThread <> nil then
@@ -440,7 +440,7 @@ begin
       FThread.OnChangeNotify := nil;
       FThread.Terminate;
       if FThread.Suspended then
-        FThread.Resume;
+        FThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
       if FreeOnTerminate then
         FThread := nil
       else
@@ -574,4 +574,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

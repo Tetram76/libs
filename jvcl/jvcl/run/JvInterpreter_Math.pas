@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s):  Peter Schraut (http://www.console-dev.de)
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description: JvInterpreter_Math adds most functions from math.pas to
              to JvInterpreter. Functions in this file are
@@ -28,7 +28,7 @@ Description: JvInterpreter_Math adds most functions from math.pas to
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Math.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvInterpreter_Math.pas 12461 2009-08-14 17:21:33Z obones $
 
 { history (JVCL Library versions):
 
@@ -500,5 +500,4 @@ end;
 
 
 end.
-
 

@@ -11,11 +11,11 @@ the specific language governing rights and limitations under the License.
 The Original Code is: JVCL.INC, released on 2004-04-14.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: jvcl.inc 10872 2006-08-09 17:03:16Z outchy $
+// $Id: jvcl.inc 12461 2009-08-14 17:21:33Z obones $
 
 {***************************************************************************}
 {* THIS IS A SPECIAL VERSION OF THE jvcl.inc THAT IS ONLY USED BY THE JVCL *}
@@ -35,4 +35,3 @@ Known Issues:
  {$WARN UNSAFE_CODE OFF}
  {$WARN UNSAFE_CAST OFF}
 {$ENDIF}
-

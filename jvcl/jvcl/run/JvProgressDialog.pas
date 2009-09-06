@@ -18,7 +18,7 @@ Contributor(s):
   Ralf Kaiser - ScreenPosition property
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 - OnCancel is executed before the progress dialog is closed.
@@ -79,7 +79,7 @@ NB!
  *current* values in the dialog (as changed in OnProgress). After execution, the
  properties are reset to their original ("start") values.
 -----------------------------------------------------------------------------}
-// $Id: JvProgressDialog.pas 12160 2009-01-22 23:17:11Z ahuser $
+// $Id: JvProgressDialog.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvProgressDialog;
 
@@ -177,8 +177,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgressDialog.pas $';
-    Revision: '$Revision: 12160 $';
-    Date: '$Date: 2009-01-23 00:17:11 +0100 (ven., 23 janv. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -448,4 +448,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

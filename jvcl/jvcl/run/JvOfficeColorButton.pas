@@ -16,7 +16,7 @@ All Rights Reserved.
 Contributor(s):dejoy.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   A office color selection button look like Microsoft office Color picker, make to customable Highly.
@@ -24,7 +24,7 @@ Description:
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvOfficeColorButton.pas 11830 2008-07-23 17:34:56Z obones $
+// $Id: JvOfficeColorButton.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvOfficeColorButton;
 
@@ -314,8 +314,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOfficeColorButton.pas $';
-    Revision: '$Revision: 11830 $';
-    Date: '$Date: 2008-07-23 19:34:56 +0200 (mer., 23 juil. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1406,5 +1406,4 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-
 

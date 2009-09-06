@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProviderTreeListFrame.pas 11692 2008-01-12 12:51:55Z jedi_mbe $
+// $Id: JvProviderTreeListFrame.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvProviderTreeListFrame;
 

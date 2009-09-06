@@ -16,11 +16,11 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActnResForm.pas 11427 2007-07-29 19:16:10Z jfudickar $
+// $Id: JvDBActnResForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDBActnResForm;
 

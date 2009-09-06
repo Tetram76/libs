@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s): Michael Beck [mbeck att bigfoot dott com].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
   - the associated TPopupMenu would also be changed during the process :(
@@ -30,7 +30,7 @@ Modifications:
       with the popup menu (because GetSystemMenu( hWnd, True) does not work correctly
       inside a WM_INITMENU handler.
 -----------------------------------------------------------------------------}
-// $Id: JvSystemPopup.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvSystemPopup.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvSystemPopup;
 
@@ -82,8 +82,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSystemPopup.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -530,4 +530,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

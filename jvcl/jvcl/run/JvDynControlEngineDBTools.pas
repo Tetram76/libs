@@ -15,11 +15,11 @@ Contributor(s):
 Jens Fudickar [jens dott fudickar att oratool dott de]
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDBTools.pas 12437 2009-08-09 15:43:09Z obones $
+// $Id: JvDynControlEngineDBTools.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDynControlEngineDBTools;
 
@@ -139,8 +139,8 @@ function ShowDataSourceEditDialog(ADataComponent: TComponent; const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDBTools.pas $';
-    Revision: '$Revision: 12437 $';
-    Date: '$Date: 2009-08-09 17:43:09 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -492,5 +492,4 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-
 

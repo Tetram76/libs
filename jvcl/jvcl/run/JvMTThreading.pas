@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTThreading.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvMTThreading.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvMTThreading;
 
@@ -134,8 +134,8 @@ function CurrentMTThread: TMTThread;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTThreading.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -219,7 +219,7 @@ begin
     FIntThread.OnTerminate := OnIntThreadTerminate;
     FIntThread.FreeOnTerminate := True;
     FIntThread.Name := FName;
-    FIntThread.Resume;
+    FIntThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
   finally
     FStatusChange.Release;
   end;
@@ -334,7 +334,7 @@ begin
       CreateAndRun
     else
     if Status = tsWaiting then
-      FIntThread.Resume
+      FIntThread.Suspended := False
     else
       raise EMTThreadError.CreateRes(@RsEThreadNotInitializedOrWaiting);
   finally

@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Dcc32FileAgePatch.pas 12304 2009-05-05 20:10:29Z outchy $
+// $Id: Dcc32FileAgePatch.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit Dcc32FileAgePatch;
 

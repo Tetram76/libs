@@ -17,14 +17,14 @@ All Rights Reserved.
 Contributor(s): Robert Love [rlove att slcdug dott org].
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
   When Position 0 you can not click on the far left of the button to move.
   When Position 100 you can not click on the far Right of the button to move.
 
 -----------------------------------------------------------------------------}
-// $Id: JvTracker.pas 11994 2008-10-27 17:37:35Z ahuser $
+// $Id: JvTracker.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvTracker;
 
@@ -178,8 +178,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTracker.pas $';
-    Revision: '$Revision: 11994 $';
-    Date: '$Date: 2008-10-27 18:37:35 +0100 (lun., 27 oct. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

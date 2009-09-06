@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActions.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvVersionControlActions.pas 12476 2009-08-25 21:11:31Z obones $
 
 unit JvVersionControlActions;
 
@@ -356,8 +356,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActions.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12476 $';
+    Date: '$Date: 2009-08-25 23:11:31 +0200 (mar., 25 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -533,7 +533,7 @@ begin
     AFileName := CurrentVersionControlFilename;
     if VersionControlActionInfo(ActionType).SaveFile and Assigned (VersionControlActionEngine) and
        VersionControlActionEngine.SupportsSaveFile(VersionControlComponent) then
-      if not VersionControlActionEngine.SupportsNeedsSaveFile(VersionControlComponent) or  
+      if not VersionControlActionEngine.SupportsNeedsSaveFile(VersionControlComponent) or
          VersionControlActionEngine.NeedsSaveFile(VersionControlComponent) then
         VersionControlActionEngine.SaveFile(VersionControlComponent, CurrentVersionControlFilename);
 

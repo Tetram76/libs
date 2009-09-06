@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   A scrolling TToolWindow like the ones in IE 4.0 with popup scrollbuttons
@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScrollPanel.pas 11423 2007-07-19 06:59:25Z marquardt $
+// $Id: JvScrollPanel.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvScrollPanel;
 
@@ -185,8 +185,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScrollPanel.pas $';
-    Revision: '$Revision: 11423 $';
-    Date: '$Date: 2007-07-19 08:59:25 +0200 (jeu., 19 juil. 2007) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -766,4 +766,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-
