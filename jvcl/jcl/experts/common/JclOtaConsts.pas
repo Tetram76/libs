@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
-{ Revision:      $Rev:: 2914                                                                     $ }
+{ Last modified: $Date:: 2009-09-01 22:07:14 +0200 (mar., 01 sept. 2009)                         $ }
+{ Revision:      $Rev:: 2979                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -56,7 +56,8 @@ const
   JclDesignerVcl = dVcl;
   JclDelphiPersonality = {$IFDEF BDS} sDelphiPersonality {$ELSE BDS} '' {$ENDIF BDS};
   JclCBuilderPersonality = {$IFDEF BDS} sCBuilderPersonality {$ELSE BDS} '' {$ENDIF BDS};
-
+  MapFileOptionDetailed = 3;
+  MapFileOptionDetailedSegments = 'DetailedSegments';
 
   //=== Configuration ========================================================
   JclConfigurationSettings = 'JclExpertConfigurationForm';
@@ -74,6 +75,8 @@ const
   JclDebugInsertJdbgRegValue    = 'JclDebugInsertJdbg';
   JclDebugDeleteMapFileRegValue = 'JclDebugDeleteMapFile';
   MapFileOptionName             = 'MapFile';
+  DccMapFileOptionName          = 'DCC_MapFile';
+  ILinkMapFileTypeOptionName    = 'ILINK_MapFileType';
   OutputDirOptionName           = 'OutputDir';
   FinalOutputDirOptionName      = 'FinalOutputDir';
   RuntimeOnlyOptionName         = 'RuntimeOnly';
@@ -85,12 +88,16 @@ const
   JclDebugMessagePrefix         = 'Jcl Debug Expert';
   JclDebugExpertActionName      = 'JCLDebugExpertCommand';
   JclDebugExpertMenuName        = 'JCLDebugExpertMenu';
+  JclDebugExpertProjMenuName    = 'JCLDebugExpertProjMenu';
   JclGenerateJdbgActionName     = 'JCLGenerateJdbgCommand';
   JclGenerateJdbgMenuName       = 'JCLGenerateJdbgMenu';
+  JclGenerateJdbgProjMenuName   = 'JCLGenerateJdbgProjMenu';
   JclInsertJdbgActionName       = 'JCLInsertJdbgCommand';
   JclInsertJdbgMenuName         = 'JCLInsertJdbgMenu';
+  JclInsertJdbgProjMenuName     = 'JCLInsertJdbgProjMenu';
   JclDeleteMapFileActionName    = 'JCLDeleteMapFileCommand';
   JclDeleteMapFileMenuName      = 'JCLDeleteMapFileMenu';
+  JclDeleteMapFileProjMenuName  = 'JCLDeleteMapFileProjMenu';
   JclDebugGenerateJdbgSetting   = 'JCL_DEBUG_EXPERT_GENERATEJDBG';
   JclDebugInsertJdbgSetting     = 'JCL_DEBUG_EXPERT_INSERTJDBG';
   JclDebugDeleteMapfileSetting  = 'JCL_DEBUG_EXPERT_DELETEMAPFILE';
@@ -156,8 +163,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConsts.pas $';
-    Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Revision: '$Revision: 2979 $';
+    Date: '$Date: 2009-09-01 22:07:14 +0200 (mar., 01 sept. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

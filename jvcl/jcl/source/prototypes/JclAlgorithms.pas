@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:39:32 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2923                                                                     $ }
+{ Last modified: $Date:: 2009-08-25 17:21:12 +0200 (mar., 25 août 2009)                         $ }
+{ Revision:      $Rev:: 2966                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -200,7 +200,7 @@ uses
 {$JPPEXPANDMACRO FILLINT(Fill,IJclCardinalIterator,,AValue,Cardinal)} overload;
 {$JPPEXPANDMACRO FILLINT(Fill,IJclInt64Iterator,const ,AValue,Int64)} overload;
 {$JPPEXPANDMACRO FILLINT(Fill,IJclPtrIterator,,APtr,Pointer)} overload;
-{$JPPEXPANDMACRO FILLINT(Fill,IJclIterator,,AObject,TObject)} overload
+{$JPPEXPANDMACRO FILLINT(Fill,IJclIterator,,AObject,TObject)} overload;
 
 // Reverse algorithms
 {$JPPEXPANDMACRO REVERSEINT(Reverse,IJclIntfIterator)} overload;
@@ -291,8 +291,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclAlgorithms.pas $';
-    Revision: '$Revision: 2923 $';
-    Date: '$Date: 2009-08-09 16:39:32 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2966 $';
+    Date: '$Date: 2009-08-25 17:21:12 +0200 (mar., 25 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

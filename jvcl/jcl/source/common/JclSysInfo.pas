@@ -23,6 +23,7 @@
 {   Carl Clark                                                                                     }
 {   Eric S. Fisher                                                                                 }
 {   Florent Ouchet (outchy)                                                                        }
+{   Heiko Adams                                                                                    }
 {   James Azarja                                                                                   }
 {   Jean-Fabien Connault (cycocrew)                                                                }
 {   John C Molyneux                                                                                }
@@ -49,8 +50,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-08-13 15:13:34 +0200 (jeu., 13 août 2009)                         $ }
+{ Revision:      $Rev:: 2946                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -132,6 +133,7 @@ function GetCommonProgramsFolder: string;
 function GetCommonDesktopdirectoryFolder: string;
 function GetCommonAppdataFolder: string;
 function GetAppdataFolder: string;
+function GetLocalAppData: string;
 function GetCommonFavoritesFolder: string;
 function GetTemplatesFolder: string;
 function GetInternetCacheFolder: string;
@@ -1311,8 +1313,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2946 $';
+    Date: '$Date: 2009-08-13 15:13:34 +0200 (jeu., 13 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1843,6 +1845,11 @@ end;
 function GetAppdataFolder: string;
 begin
   Result := GetSpecialFolderLocation(CSIDL_APPDATA);
+end;
+
+function GetLocalAppData: string;
+begin
+  Result := GetSpecialFolderLocation(CSIDL_LOCAL_APPDATA);
 end;
 
 function GetPrinthoodFolder: string;
@@ -4256,16 +4263,16 @@ function CPUID: TCpuInfo;
       // CPUID
       CPUID
       // store results
-      MOV     RDI, ReturnedEAX
-      MOV     Cardinal PTR [RDI], EAX
-      MOV     RAX, ReturnedEBX
-      MOV     RDI, ReturnedECX
-      MOV     Cardinal PTR [RAX], EBX
-      MOV     Cardinal PTR [RDI], ECX
-      MOV     RAX, ReturnedEDX
-      MOV     Cardinal PTR [RAX], EDX
+      MOV     R8, ReturnedEAX
+      MOV     R9, ReturnedEBX
+      MOV     R10, ReturnedECX
+      MOV     R11, ReturnedEDX
+      MOV     Cardinal PTR [R8], EAX
+      MOV     Cardinal PTR [R9], EBX
+      MOV     Cardinal PTR [R10], ECX
+      MOV     Cardinal PTR [R11], EDX
       // restore context
-      POP  RBX
+      POP     RBX
       {$ENDIF CPU64}
     end;
   end;

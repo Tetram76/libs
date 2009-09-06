@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                    $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-03 21:20:41 +0200 (jeu., 03 sept. 2009)                         $ }
+{ Revision:      $Rev:: 2988                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -227,7 +227,7 @@ resourcestring
 resourcestring
   RsAnalyzeActionCaption = 'Analyze project %s';
   RsProjectNone = '[none]';
-  RsCantFindFiles = 'Can''t find MAP or executable file';
+  RsCantFindMAPFile = 'Can''t find MAP "%s" for project "%s"';
   RsBuildingProject = 'Building project %s ...';
   RsAnalyseMenuItemNotInserted = 'Can''t insert the analyse menu item';
 
@@ -254,6 +254,7 @@ resourcestring
 //=== JclDebugIdeImpl.pas ====================================================
 resourcestring
   RsENoProjectOptions = 'Project options are not available';
+  RsENoProjectOptionsConfigurations = 'Project options configurations are not available';
   RsCantInsertToInstalledPackage = 'JCL Debug IDE Expert: Can not insert debug information to installed package' +
     NativeLineBreak + '%s' + NativeLineBreak + 'Would you like to disable the insertion of JCL Debug data ?';
   RsChangeMapFileOption = 'JCL Debug expert: the project "%s" must be configured to generate a detailled MAP file.' +
@@ -403,8 +404,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaResources.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2988 $';
+    Date: '$Date: 2009-09-03 21:20:41 +0200 (jeu., 03 sept. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

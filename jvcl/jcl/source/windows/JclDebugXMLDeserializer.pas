@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-10 15:54:58 +0200 (lun., 10 août 2009)                         $ }
-{ Revision:      $Rev:: 2935                                                                     $ }
+{ Last modified: $Date:: 2009-08-10 20:10:24 +0200 (lun., 10 août 2009)                         $ }
+{ Revision:      $Rev:: 2942                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -49,9 +49,9 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebugXMLDeserializer.pas $';
-    Revision: '$Revision: 2935 $';
-    Date: '$Date: 2009-08-10 15:54:58 +0200 (lun., 10 août 2009) $';
-    LogPath: '';
+    Revision: '$Revision: 2942 $';
+    Date: '$Date: 2009-08-10 20:10:24 +0200 (lun., 10 août 2009) $';
+    LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
     );

@@ -47,9 +47,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2922                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-08-27 23:05:26 +0200 (jeu., 27 août 2009)                         $ }
+{ Revision:      $Rev:: 2975                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -65,7 +65,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF MSWINDOWS}
-  Windows,
+  Windows, ShlObj,
   MSHelpServices_TLB,
   {$ENDIF MSWINDOWS}
   Classes, SysUtils, IniFiles, Contnrs,
@@ -80,9 +80,9 @@ type
   TJclBorRADToolPath = string;
 
 const
-  SupportedDelphiVersions = [5, 6, 7, 8, 9, 10, 11, 12];
-  SupportedBCBVersions    = [5, 6, 10, 11, 12];
-  SupportedBDSVersions    = [1, 2, 3, 4, 5, 6];
+  SupportedDelphiVersions = [5, 6, 7, 8, 9, 10, 11, 12, 14];
+  SupportedBCBVersions    = [5, 6, 10, 11, 12, 14];
+  SupportedBDSVersions    = [1, 2, 3, 4, 5, 6, 7];
 
   // Object Repository
   BorRADToolRepositoryPagesSection    = 'Repository Pages';
@@ -524,6 +524,7 @@ type
     function GetPalette: TJclBorRADToolPalette;
     function GetRepository: TJclBorRADToolRepository;
     function GetUpdateNeeded: Boolean;
+    function GetDefaultBDSCommonDir: string;
   protected
     function ProcessMapFile(const BinaryFileName: string): Boolean;
 
@@ -742,9 +743,11 @@ type
     function GetCppBrowsingPath: TJclBorRADToolPath;
     function GetCppSearchPath: TJclBorRADToolPath;
     function GetCppLibraryPath: TJclBorRADToolPath;
+    function GetCppIncludePath: TJclBorRADToolPath;
     procedure SetCppBrowsingPath(const Value: TJclBorRADToolPath);
     procedure SetCppSearchPath(const Value: TJclBorRADToolPath);
     procedure SetCppLibraryPath(const Value: TJclBorRADToolPath);
+    procedure SetCppIncludePath(const Value: TJclBorRADToolPath);
     function GetMaxDelphiCLRVersion: string;
     function GetDCCIL: TJclDCCIL;
 
@@ -786,14 +789,17 @@ type
     function AddToCppSearchPath(const Path: string): Boolean;
     function AddToCppBrowsingPath(const Path: string): Boolean;
     function AddToCppLibraryPath(const Path: string): Boolean;
+    function AddToCppIncludePath(const Path: string): Boolean;
     function RemoveFromCppSearchPath(const Path: string): Boolean;
     function RemoveFromCppBrowsingPath(const Path: string): Boolean;
     function RemoveFromCppLibraryPath(const Path: string): Boolean;
+    function RemoveFromCppIncludePath(const Path: string): Boolean;
 
     property CppSearchPath: TJclBorRADToolPath read GetCppSearchPath write SetCppSearchPath;
     property CppBrowsingPath: TJclBorRADToolPath read GetCppBrowsingPath write SetCppBrowsingPath;
     // Only exists in BDS 5 and upper
     property CppLibraryPath: TJclBorRADToolPath read GetCppLibraryPath write SetCppLibraryPath;
+    property CppIncludePath: TJclBorRADToolPath read GetCppIncludePath write SetCppIncludePath;
 
     function RegisterPackage(const BinaryFileName, Description: string): Boolean; override;
     function UnregisterPackage(const BinaryFileName: string): Boolean; override;
@@ -868,8 +874,8 @@ procedure GetBPKFileInfo(const BPKFileName: string; out RunOnly: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBorlandTools.pas $';
-    Revision: '$Revision: 2922 $';
-    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2975 $';
+    Date: '$Date: 2009-08-27 23:05:26 +0200 (jeu., 27 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -914,7 +920,9 @@ const
   CDSKeyName          = '\SOFTWARE\CodeGear\BDS';
   DelphiKeyName       = '\SOFTWARE\Borland\Delphi';
 
-  BDSVersions: array [1..6] of TBDSVersionInfo = (
+  RADStudioDirName = 'RAD Studio';
+
+  BDSVersions: array [1..7] of TBDSVersionInfo = (
     (
       Name: RsCSharpName;
       VersionStr: '1.0';
@@ -950,6 +958,12 @@ const
       VersionStr: '2009';
       Version: 12;
       CoreIdeVersion: '120';
+      Supported: True),
+    (
+      Name: RsRSName;
+      VersionStr: '2010';
+      Version: 14;
+      CoreIdeVersion: '140';
       Supported: True)
   );
   {$ENDIF MSWINDOWS}
@@ -976,6 +990,7 @@ const
   CppBrowsingPathValueName   = 'BrowsingPath';
   CppSearchPathValueName     = 'SearchPath';
   CppLibraryPathValueName    = 'LibraryPath';
+  CppIncludePathValueName    = 'IncludePath';
 
   TransferKeyName            = 'Transfer';
   TransferCountValueName     = 'Count';
@@ -1064,6 +1079,7 @@ const
   MsBuildCBuilderBPLOutputPathNodeName = 'CBuilderBPLOutputPath';
   MsBuildCBuilderBrowsingPathNodeName = 'CBuilderBrowsingPath';
   MsBuildCBuilderLibraryPathNodeName = 'CBuilderLibraryPath';
+  MsBuildCBuilderIncludePathNodeName = 'CBuilderIncludePath';
   MsBuildPropertyGroupNodeName = 'PropertyGroup';
 
 function AnsiStartsText(const SubStr, S: string): Boolean;
@@ -1752,10 +1768,13 @@ begin
   FHxPlugin := nil;
   if Assigned(Installation) then
   begin
-  if (Installation.IDEVersionNumber = 6) then
-    FIdeNameSpace := 'embarcadero.rs2009'
-  else
-    FIdeNameSpace := Format(Help2BorlandNameSpace, [Installation.IDEVersionNumber]);
+    if (Installation.IDEVersionNumber = 7) then
+      FIdeNameSpace := 'embarcadero.rs2010'
+    else
+    if (Installation.IDEVersionNumber = 6) then
+      FIdeNameSpace := 'embarcadero.rs2009'
+    else
+      FIdeNameSpace := Format(Help2BorlandNameSpace, [Installation.IDEVersionNumber]);
   end
   else
     FIdeNameSpace := '';
@@ -2412,8 +2431,15 @@ begin
   if Assigned(FOutputCallback) then
   begin
     {$IFDEF MSWINDOWS}
-    // Text is OEM
+    // Text is OEM under Windows
+    // Code below seems to crash older compilers at times, so we only do
+    // the casts when it's absolutely necessary, that is when compiling
+    // with a unicode compiler.
+    {$IFDEF UNICODE}
     AnsiText := string(StrOemToAnsi(AnsiString(Text)));
+    {$ELSE}
+    AnsiText := StrOemToAnsi(Text);
+    {$ENDIF UNICODE}
     {$ELSE ~MSWINDOWS}
     AnsiText := Text;
     {$ENDIF ~MSWINDOWS}
@@ -3232,30 +3258,45 @@ function TJclBorRADToolInstallation.AddToDebugDCUPath(const Path: string): Boole
 var
   TempDebugDCUPath: TJclBorRADToolPath;
 begin
-  TempDebugDCUPath := DebugDCUPath;
-  PathListIncludeItems(TempDebugDCUPath, Path);
-  Result := True;
-  DebugDCUPath := TempDebugDCUPath;
+  if Path <> '' then
+  begin
+    TempDebugDCUPath := DebugDCUPath;
+    PathListIncludeItems(TempDebugDCUPath, Path);
+    Result := True;
+    DebugDCUPath := TempDebugDCUPath;
+  end
+  else
+    Result := False;
 end;
 
 function TJclBorRADToolInstallation.AddToLibrarySearchPath(const Path: string): Boolean;
 var
   TempLibraryPath: TJclBorRADToolPath;
 begin
-  TempLibraryPath := LibrarySearchPath;
-  PathListIncludeItems(TempLibraryPath, Path);
-  Result := True;
-  LibrarySearchPath := TempLibraryPath;
+  if Path <> '' then
+  begin
+    TempLibraryPath := LibrarySearchPath;
+    PathListIncludeItems(TempLibraryPath, Path);
+    Result := True;
+    LibrarySearchPath := TempLibraryPath;
+  end
+  else
+    Result := False;
 end;
 
 function TJclBorRADToolInstallation.AddToLibraryBrowsingPath(const Path: string): Boolean;
 var
   TempLibraryPath: TJclBorRADToolPath;
 begin
-  TempLibraryPath := LibraryBrowsingPath;
-  PathListIncludeItems(TempLibraryPath, Path);
-  Result := True;
-  LibraryBrowsingPath := TempLibraryPath;
+  if Path <> '' then
+  begin
+    TempLibraryPath := LibraryBrowsingPath;
+    PathListIncludeItems(TempLibraryPath, Path);
+    Result := True;
+    LibraryBrowsingPath := TempLibraryPath;
+  end
+  else
+    Result := False;
 end;
 
 function TJclBorRADToolInstallation.AnyInstanceRunning: Boolean;
@@ -3544,6 +3585,19 @@ begin
     end;
 end;
 
+function TJclBorRADToolInstallation.GetDefaultBDSCommonDir: string;
+const
+  CSIDL_COMMON_DOCUMENTS = $002E; // All Users\Documents
+var
+  CommonDocuments: array[0..MAX_PATH] of Char;
+begin
+  if (RadToolKind = brBorlandDevStudio) and (IDEVersionNumber >= 6) and
+     SHGetSpecialFolderPath(GetActiveWindow, CommonDocuments, CSIDL_COMMON_DOCUMENTS, False) then
+    Result := IncludeTrailingPathDelimiter(CommonDocuments) + RADStudioDirName  + PathDelim + Format('%d.0', [IDEVersionNumber])
+  else
+    Result := GetEnvironmentVariable(EnvVariableBDSCOMDIRValueName);
+end;
+
 function TJclBorRADToolInstallation.GetEnvironmentVariables: TStrings;
 var
   EnvNames: TStringList;
@@ -3559,6 +3613,11 @@ begin
     for I := FEnvironmentVariables.count-1 downto 0 do
       if FEnvironmentVariables.Names[I] = EmptyStr then
         FEnvironmentVariables.Delete(I);
+
+    // Overwrite BDSCommonDir because it conflicts with older versions and
+    // the RAD Studio 2009 setup doesn't update the environment variable anymore
+    if (RadToolKind = brBorlandDevStudio) and (IDEVersionNumber >= 6) then
+      FEnvironmentVariables.Values[EnvVariableBDSCOMDIRValueName] := GetDefaultBDSCommonDir;
 
     // read environment variable overrides
     if ((VersionNumber >= 6) or (RadToolKind = brBorlandDevStudio)) and
@@ -3958,7 +4017,10 @@ procedure TJclBorRADToolInstallation.ReadInformation;
           1:
             Result := 'cs1';
         else
-          Result := Format('d%d', [Num + 6]);  // BDS 2 goes to D8
+          if Num < 7 then
+            Result := Format('d%d', [Num + 6])  // BDS 2 goes to D8
+          else
+            Result := Format('d%d', [Num + 7]); // BDS 7 goes to D14
         end;
     end;
   end;
@@ -4670,7 +4732,7 @@ function TJclBDSInstallation.AddToCppBrowsingPath(const Path: string): Boolean;
 var
   TempCppPath: TJclBorRADToolPath;
 begin
-  if bpBCBuilder32 in Personalities then
+  if (bpBCBuilder32 in Personalities) and (Path <> '') then
   begin
     TempCppPath := CppBrowsingPath;
     PathListIncludeItems(TempCppPath, Path);
@@ -4685,7 +4747,7 @@ function TJclBDSInstallation.AddToCppSearchPath(const Path: string): Boolean;
 var
   TempCppPath: TJclBorRADToolPath;
 begin
-  if bpBCBuilder32 in Personalities then
+  if (bpBCBuilder32 in Personalities) and (Path <> '') then
   begin
     TempCppPath := CppSearchPath;
     PathListIncludeItems(TempCppPath, Path);
@@ -4700,12 +4762,27 @@ function TJclBDSInstallation.AddToCppLibraryPath(const Path: string): Boolean;
 var
   TempLibraryPath: TJclBorRADToolPath;
 begin
-  if (bpBCBuilder32 in Personalities) and (IDEVersionNumber >= 5) then
+  if (bpBCBuilder32 in Personalities) and (IDEVersionNumber >= 5) and (Path <> '') then
   begin
     TempLibraryPath := CppLibraryPath;
     PathListIncludeItems(TempLibraryPath, Path);
     Result := True;
     CppLibraryPath := TempLibraryPath;
+  end
+  else
+    Result := False;
+end;
+
+function TJclBDSInstallation.AddToCppIncludePath(const Path: string): Boolean;
+var
+  TempIncludePath: TJclBorRADToolPath;
+begin
+  if (bpBCBuilder32 in Personalities) and (IDEVersionNumber >= 5) and (Path <> '') then
+  begin
+    TempIncludePath := CppIncludePath;
+    PathListIncludeItems(TempIncludePath, Path);
+    Result := True;
+    CppIncludePath := TempIncludePath;
   end
   else
     Result := False;
@@ -4911,6 +4988,11 @@ end;
 function TJclBDSInstallation.GetCppLibraryPath: TJclBorRADToolPath;
 begin
   Result := ConfigData.ReadString(GetCppPathsKeyName, CppLibraryPathValueName, '');
+end;
+
+function TJclBDSInstallation.GetCppIncludePath: TJclBorRADToolPath;
+begin
+  Result := ConfigData.ReadString(GetCppPathsKeyName, CppIncludePathValueName, '');
 end;
 
 function TJclBDSInstallation.GetDCCIL: TJclDCCIL;
@@ -5151,7 +5233,7 @@ function TJclBDSInstallation.RemoveFromCppSearchPath(const Path: string): Boolea
 var
   TempCppPath: TJclBorRADToolPath;
 begin
-  if bpBCBuilder32 in Personalities then
+  if (bpBCBuilder32 in Personalities) and (Path <> '') then
   begin
     TempCppPath := CppSearchPath;
     Result := RemoveFromPath(TempCppPath, Path);
@@ -5165,11 +5247,25 @@ function TJclBDSInstallation.RemoveFromCppLibraryPath(const Path: string): Boole
 var
   TempLibraryPath: TJclBorRADToolPath;
 begin
-  if (bpBCBuilder32 in Personalities) and (IDEVersionNumber >= 5) then
+  if (bpBCBuilder32 in Personalities) and (IDEVersionNumber >= 5) and (Path <> '') then
   begin
     TempLibraryPath := CppLibraryPath;
     Result := RemoveFromPath(TempLibraryPath, Path);
     CppLibraryPath := TempLibraryPath;
+  end
+  else
+    Result := False;
+end;
+
+function TJclBDSInstallation.RemoveFromCppIncludePath(const Path: string): Boolean;
+var
+  TempIncludePath: TJclBorRADToolPath;
+begin
+  if (bpBCBuilder32 in Personalities) and (IDEVersionNumber >= 5) and (Path <> '') then
+  begin
+    TempIncludePath := CppIncludePath;
+    Result := RemoveFromPath(TempIncludePath, Path);
+    CppIncludePath := TempIncludePath;
   end
   else
     Result := False;
@@ -5196,6 +5292,17 @@ begin
   // update EnvOptions.dproj
   if IDEVersionNumber >= 5 then
     SetMsBuildEnvOption(MsBuildCBuilderLibraryPathNodeName, Value);
+end;
+
+procedure TJclBDSInstallation.SetCppIncludePath(const Value: TJclBorRADToolPath);
+begin
+  if IDEVersionNumber >= 5 then
+  begin
+    // update registry
+    ConfigData.WriteString(GetCppPathsKeyName, CppIncludePathValueName, Value);
+    // update EnvOptions.dproj
+    SetMsBuildEnvOption(MsBuildCBuilderIncludePathNodeName, Value);
+  end;
 end;
 
 procedure TJclBDSInstallation.SetDebugDCUPath(const Value: TJclBorRADToolPath);
@@ -5342,7 +5449,8 @@ begin
           Break;
         end;
       brBorlandDevStudio:
-        if (VersionNumber >= 10) and (Installations[I].IDEVersionNumber = (VersionNumber - 6)) then
+        if ((VersionNumber >= 14) and (Installations[I].IDEVersionNumber = (VersionNumber - 7))) or
+          ((VersionNumber >= 10) and (Installations[I].IDEVersionNumber = (VersionNumber - 6))) then
         begin
           Result := Installations[I];
           Break;
@@ -5365,7 +5473,8 @@ begin
           Break;
         end;
       brBorlandDevStudio:
-        if (VersionNumber >= 8) and (Installations[I].IDEVersionNumber = (VersionNumber - 6)) then
+        if ((VersionNumber >= 14) and (Installations[I].IDEVersionNumber = (VersionNumber - 7))) or
+          ((VersionNumber >= 8) and (Installations[I].IDEVersionNumber = (VersionNumber - 6))) then
         begin
           Result := Installations[I];
           Break;

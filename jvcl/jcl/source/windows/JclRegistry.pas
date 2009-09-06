@@ -37,8 +37,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-13 16:24:24 +0200 (jeu., 13 août 2009)                         $ }
+{ Revision:      $Rev:: 2947                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -297,8 +297,8 @@ function RegDelList(const RootKey: DelphiHKEY; const Key: string; const ListName
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclRegistry.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2947 $';
+    Date: '$Date: 2009-08-13 16:24:24 +0200 (jeu., 13 août 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -577,29 +577,38 @@ begin
           RegKinds := [REG_BINARY, REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ]
         else
           RegKinds := [REG_BINARY, REG_SZ, REG_EXPAND_SZ];
-        if not (DataType in RegKinds) then
-          DataError(RootKey, Key, Name);
-        if Win32Platform = VER_PLATFORM_WIN32_NT then
+        if DataType in RegKinds then
         begin
-          DataLength := DataSize div SizeOf(WideChar);
-          SetLength(TmpRet, DataLength);
-          Result := InternalRegQueryValueEx(RegKey, PWideChar(Name), nil, nil, PWideChar(TmpRet), @DataSize) = ERROR_SUCCESS;
-          if Result then
-            RetValue := AnsiString(Copy(TmpRet, 1, DataLength - 1));
+          if Win32Platform = VER_PLATFORM_WIN32_NT then
+          begin
+            DataLength := DataSize div SizeOf(WideChar);
+            SetLength(TmpRet, DataLength);
+            Result := InternalRegQueryValueEx(RegKey, PWideChar(Name), nil, nil, PWideChar(TmpRet), @DataSize) = ERROR_SUCCESS;
+            if Result then
+              RetValue := AnsiString(Copy(TmpRet, 1, DataLength - 1));
+          end
+          else
+          begin
+            DataLength := DataSize div SizeOf(AnsiChar);
+            SetLength(RetValue, DataLength);
+            Result := InternalRegQueryValueEx(RegKey, PWideChar(Name), nil, nil, PAnsiChar(RetValue), @DataSize) = ERROR_SUCCESS;
+            if Result then
+              SetLength(RetValue, DataLength - 1);
+          end;
+          if not Result then
+          begin
+            RetValue := '';
+            if RaiseException then
+              ValueError(RootKey, Key, Name)
+            else
+              Result := False;
+          end;
         end
         else
         begin
-          DataLength := DataSize div SizeOf(AnsiChar);
-          SetLength(RetValue, DataLength);
-          Result := InternalRegQueryValueEx(RegKey, PWideChar(Name), nil, nil, PAnsiChar(RetValue), @DataSize) = ERROR_SUCCESS;
-          if Result then
-            SetLength(RetValue, DataLength - 1);
-        end;
-        if not Result then
-        begin
           RetValue := '';
           if RaiseException then
-            ValueError(RootKey, Key, Name)
+            DataError(RootKey, Key, Name)
           else
             Result := False;
         end;
@@ -643,17 +652,26 @@ begin
           RegKinds := [REG_BINARY, REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ]
         else
           RegKinds := [REG_BINARY, REG_SZ, REG_EXPAND_SZ];
-        if not (DataType in RegKinds) then
-          DataError(RootKey, Key, Name);
-        DataLength := DataSize div SizeOf(WideChar);
-        SetLength(RetValue, DataLength);
-        if InternalRegQueryValueEx(RegKey, PWideChar(Name), nil, nil, PWideChar(RetValue), @DataSize) = ERROR_SUCCESS then
-          SetLength(RetValue, DataLength - 1)
+        if DataType in RegKinds then
+        begin
+          DataLength := DataSize div SizeOf(WideChar);
+          SetLength(RetValue, DataLength);
+          if InternalRegQueryValueEx(RegKey, PWideChar(Name), nil, nil, PWideChar(RetValue), @DataSize) = ERROR_SUCCESS then
+            SetLength(RetValue, DataLength - 1)
+          else
+          begin
+            RetValue := '';
+            if RaiseException then
+              ValueError(RootKey, Key, Name)
+            else
+              Result := False;
+          end;
+        end
         else
         begin
           RetValue := '';
           if RaiseException then
-            ValueError(RootKey, Key, Name)
+            DataError(RootKey, Key, Name)
           else
             Result := False;
         end;

@@ -3,7 +3,8 @@
 { Project JEDI Code Library (JCL)                                                                  }
 {                                                                                                  }
 { The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License"); }
-{ you may not use this file except in compliance with the License. You may obtain a copy of the    }
+						{ The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License"); }
+		{ you may not use this file except in compliance with the License. You may obtain a copy of the    }
 { License at http://www.mozilla.org/MPL/                                                           }
 {                                                                                                  }
 { Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF   }
@@ -38,9 +39,10 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2922                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+	{ Last modified: $Date:: 2009-09-02 10:15:56 +0200 (mer., 02 sept. 2009)                         $ }
+{ Last modified: $Date:: 2009-09-02 10:15:56 +0200 (mer., 02 sept. 2009)                         $ }
+{ Revision:      $Rev:: 2983                                                                     $ }
+{ Author:        $Author:: sfarrow                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1131,7 +1133,8 @@ resourcestring
   // TJclFileVersionInfo
   RsFileUtilsNoVersionInfo = 'File contains no version information';
   RsFileUtilsLanguageIndex = 'Illegal language index';
-
+  RsFileUtilsEmptyValue = 'No value was supplied';
+  RsFileUtilsValueNotFound = 'The value %s was not found.';
   // Strings returned from OSIdentTOString()
   RsVosUnknown      = 'Unknown';
   RsVosDos          = 'MS-DOS';
@@ -1771,7 +1774,7 @@ resourcestring
 resourcestring
   RsBlankSearchString       = 'Search string cannot be blank';
   RsInvalidEmptyStringItem  = 'String list passed to StringsToMultiSz cannot contain empty strings.';
-  RsNumericConstantTooLarge = 'Numeric constant too large.';
+  RsNumericConstantTooLarge = 'Numeric constant too large (%d) at position %d.';
   RsFormatException         = 'Format exception';
   RsDotNetFormatNullFormat  = 'Format string is null';
   RsArgumentIsNull          = 'Argument %d is null';
@@ -2074,8 +2077,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 2922 $';
-    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2983 $';
+    Date: '$Date: 2009-09-02 10:15:56 +0200 (mer., 02 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

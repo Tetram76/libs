@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-10 12:02:59 +0200 (lun., 10 août 2009)                         $ }
-{ Revision:      $Rev:: 2934                                                                     $ }
+{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
+{ Revision:      $Rev:: 2969                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -789,7 +789,7 @@ type
     procedure DoSyncHandleException; dynamic;
     procedure HandleException(Sender: TObject = nil);
   public
-    constructor Create(Suspended: Boolean; const AThreadName: string = '');
+    constructor Create(ASuspended: Boolean; const AThreadName: string = '');
     destructor Destroy; override;
     property SyncException: TObject read FSyncException;
     property ThreadInfo: string read GetThreadInfo;
@@ -1001,8 +1001,8 @@ function IsIgnoredException(const ExceptionClass: TClass): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 2934 $';
-    Date: '$Date: 2009-08-10 12:02:59 +0200 (lun., 10 août 2009) $';
+    Revision: '$Revision: 2969 $';
+    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -5535,13 +5535,17 @@ end;
 
 //=== { TJclDebugThread } ====================================================
 
-constructor TJclDebugThread.Create(Suspended: Boolean; const AThreadName: string);
+constructor TJclDebugThread.Create(ASuspended: Boolean; const AThreadName: string);
 begin
   FThreadName := AThreadName;
   inherited Create(True);
   JclDebugThreadList.RegisterThread(Self, AThreadName);
-  if not Suspended then
+  {$IFDEF RTL210_UP}
+  Suspended := False;
+  {$ELSE ~RTL210_UP}
+  if not ASuspended then
     Resume;
+  {$ENDIF ~RTL210_UP}
 end;
 
 destructor TJclDebugThread.Destroy;

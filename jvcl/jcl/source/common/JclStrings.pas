@@ -49,8 +49,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 19:06:40 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2930                                                                     $ }
+{ Last modified: $Date:: 2009-09-02 17:51:57 +0200 (mer., 02 sept. 2009)                         $ }
+{ Revision:      $Rev:: 2986                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -585,8 +585,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStrings.pas $';
-    Revision: '$Revision: 2930 $';
-    Date: '$Date: 2009-08-09 19:06:40 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2986 $';
+    Date: '$Date: 2009-09-02 17:51:57 +0200 (mer., 02 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1023,19 +1023,17 @@ begin
 end;
 
 function StrEscapedToString(const S: string): string;
-var
-  I, Len: SizeInt;
-
-  procedure HandleHexEscapeSeq;
+  procedure HandleHexEscapeSeq(const S: string; var I: SizeInt; Len: SizeInt; var Dest: string);
   const
     HexDigits = string('0123456789abcdefABCDEF');
   var
-    Val, N: SizeInt;
+    StartI, Val, N: SizeInt;
   begin
+    StartI := I;
     N := Pos(S[I + 1], HexDigits) - 1;
     if N < 0 then
       // '\x' without hex digit following is not escape sequence
-      Result := Result + '\x'
+      Dest := Dest + '\x'
     else
     begin
       Inc(I); // Jump over x
@@ -1056,18 +1054,19 @@ var
       end;
 
       if Val > Ord(High(Char)) then
-        raise EJclStringError.CreateRes(@RsNumericConstantTooLarge);
+        raise EJclStringError.CreateResFmt(@RsNumericConstantTooLarge, [Val, StartI]);
 
-      Result := Result + Char(Val);
+      Dest := Dest + Char(Val);
     end;
   end;
 
-  procedure HandleOctEscapeSeq;
+  procedure HandleOctEscapeSeq(const S: string; var I: SizeInt; Len: SizeInt; var Dest: string);
   const
     OctDigits = string('01234567');
   var
-    Val, N: SizeInt;
+    StartI, Val, N: SizeInt;
   begin
+    StartI := I;
     // first digit
     Val := Pos(S[I], OctDigits) - 1;
     if I < Len then
@@ -1090,11 +1089,13 @@ var
     end;
 
     if Val > Ord(High(Char)) then
-      raise EJclStringError.CreateRes(@RsNumericConstantTooLarge);
+      raise EJclStringError.CreateResFmt(@RsNumericConstantTooLarge, [Val, StartI]);
 
-    Result := Result + Char(Val);
+    Dest := Dest + Char(Val);
   end;
 
+var
+  I, Len: SizeInt;
 begin
   Result := '';
   I := 1;
@@ -1132,13 +1133,13 @@ begin
         'x':
           if I < Len then
             // Start of hex escape sequence
-            HandleHexEscapeSeq
+            HandleHexEscapeSeq(S, I, Len, Result)
           else
             // '\x' at end of string is not escape sequence
             Result := Result + '\x';
         '0'..'7':
           // start of octal escape sequence
-          HandleOctEscapeSeq;
+          HandleOctEscapeSeq(S, I, Len, Result);
       else
         // no escape sequence
         Result := Result + '\' + S[I];
@@ -2520,9 +2521,10 @@ begin
     SubP := PChar(Substr);
     SPI := SP;
     Inc(SPI, Index);
+    Dec(SPI);
     SPI := StrPos(SPI, SubP);
     if SPI <> nil then
-      Result := SPI - SP
+      Result := SPI - SP + 1
     else
       Result := 0;
   end

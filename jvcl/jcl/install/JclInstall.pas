@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 18:34:56 +0200 (dim., 09 août 2009)                        $ }
-{ Revision:      $Rev:: 2929                                                                     $ }
+{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                        $ }
+{ Revision:      $Rev:: 2969                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -2635,6 +2635,7 @@ begin
     Compiler.Options.Add('-$J+'); // writeable constants
     Compiler.Options.Add('-$Z1'); // minimum enum size
 
+    Compiler.Options.Add('-$J+'); // writable constants
     if Debug then
     begin
       Compiler.Options.Add('-$C+'); // assertions
@@ -3149,7 +3150,7 @@ function TJclDistribution.CreateInstall(Target: TJclBorRADToolInstallation): Boo
         Result := Target.VersionNumber in [6];
       brBorlandDevStudio :
         Result := ((Target.VersionNumber in [1, 2]) and (bpDelphi32 in Target.Personalities))
-          or (Target.VersionNumber in [3, 4, 5, 6]);
+          or (Target.VersionNumber in [3, 4, 5, 6, 7]);
       else
         Result := False;
     end;

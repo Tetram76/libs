@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-09-02 13:56:05 +0200 (mer., 02 sept. 2009)                         $ }
+{ Revision:      $Rev:: 2984                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -177,6 +177,7 @@ type
     constructor Create(SecAttr: PSecurityAttributes; InitialOwner: Boolean;
       const Name: string);
     constructor Open(Access: Cardinal; Inheritable: Boolean; const Name: string);
+    function Acquire(const TimeOut: Cardinal = INFINITE): Boolean;
     function Release: Boolean;
   end;
 
@@ -334,8 +335,8 @@ function ValidateMutexName(const aName: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSynch.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2984 $';
+    Date: '$Date: 2009-09-02 13:56:05 +0200 (mer., 02 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1027,6 +1028,11 @@ begin
 end;
 
 //=== { TJclMutex } ==========================================================
+
+function TJclMutex.Acquire(const TimeOut: Cardinal): Boolean;
+begin
+  Result := WaitFor(TimeOut) = wrSignaled;
+end;
 
 constructor TJclMutex.Create(SecAttr: PSecurityAttributes; InitialOwner: Boolean; const Name: string);
 begin
