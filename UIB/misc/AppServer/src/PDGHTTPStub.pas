@@ -95,7 +95,11 @@ function HTTPDecode(const AStr: string; codepage: Integer = 0): string;
 function HttpResponseStrings(code: integer): RawByteString;
 
 implementation
-uses SysUtils, StrUtils {$ifdef madExcept}, madexcept {$endif}
+uses
+{$IFDEF MSWINDOWS}
+ windows,
+{$ENDIF}
+SysUtils, StrUtils {$ifdef madExcept}, madexcept {$endif}
 {$IFDEF UNICODE}, AnsiStrings{$ENDIF}
 {$IFDEF UNIX}, baseunix{$ENDIF}
 ;
@@ -268,9 +272,10 @@ begin
     Result := MBUDecode(RawByteString(Result), codepage)
 end;
 
-function HTTPGetAuthorization(str: string): ISuperObject;
+function HTTPGetAuthorization(const str: string): ISuperObject;
 var
   i: integer;
+  data: string;
 begin
   Result := nil;
   if str <> '' then
@@ -278,13 +283,13 @@ begin
     i := pos('Basic ', str);
     if i = 1  then
     begin
-      str := Base64ToStr(RawByteString(Copy(str, 7, Length(str) - 6)));
-      i := pos(':', str);
+      data := Base64ToStr(Copy(str, 7, Length(str) - 6));
+      i := pos(':', data);
       if i > 0 then
       begin
         Result := TSuperObject.Create;
-        Result.AsObject.S['user'] := copy(str, 1, i-1);
-        Result.AsObject.S['pass'] := copy(str, i+1, Length(str)-i);
+        Result.AsObject.S['user'] := copy(data, 1, i-1);
+        Result.AsObject.S['pass'] := copy(data, i+1, Length(data)-i);
       end;
     end;
   end;
@@ -312,8 +317,13 @@ begin
 end;
 
 function THTTPMessage.GetContentString: SOString;
+var
+  Data: RawByteString;
 begin
-  Result := SOString(StreamToAnsiString(FContent));
+  FContent.Seek(0, soFromBeginning);
+  SetLength(Data, FContent.Size);
+  FContent.Read(PAnsiChar(Data)^, FContent.Size);
+  Result := SOString(Data);
 end;
 
 { THTTPStub }
@@ -422,7 +432,7 @@ begin
                if (param <> '') and (str > marker) then
                begin
                  if not DecodeURI(marker, str - marker, value) then exit;
-                 FRequest['@params'].S[HTTPDecode(param)] := HTTPDecode(value);
+                 FRequest.S['params.'+HTTPDecode(param)] := HTTPDecode(value);
                end;
                if {$IFDEF UNICODE}(str^ < #256) and {$ENDIF}(AnsiChar(str^) in [SP, NL]) then
                  Break;
@@ -634,6 +644,7 @@ end;
 
 procedure THTTPStub.doBeforeProcessRequest(ctx: ISuperObject);
 begin
+  FRequest.I['tickcount'] := GetTickCount;
   FRequest['cookies'] := HTTPInterprete(PSOChar(Request.S['env.cookie']), true);
   FRequest['content-type'] := HTTPInterprete(PSOChar(Request.S['env.content-type']));
   FRequest['authorization'] := HTTPGetAuthorization(Request.S['env.authorization']);
@@ -726,7 +737,6 @@ begin
   begin
     streamout := TPooledMemoryStream.Create;
     try
-      stream.Seek(0, soFromBeginning);
       CompressStream(stream, streamout, Response.I['compresslevel']);
       // don't send first 2 bytes !
       WriteLine(format(AnsiString('Content-Length: %d'), [streamout.size - 2]));

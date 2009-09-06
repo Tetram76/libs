@@ -14,11 +14,13 @@ type
   TPDGUIBConnectionPool = class(TSuperObject, IPDGConnectionPool)
   private
     FCriticalSection: TCriticalSection;
+    FMax: Integer;
   protected
     function GetConnection: IPDGConnection;
+    function GetSize: Integer;
   public
-    constructor Create(const Options: ISuperObject); reintroduce; overload;
-    constructor Create(const Options: string); reintroduce; overload;
+    constructor Create(const Options: ISuperObject; max: Integer); reintroduce; overload;
+    constructor Create(const Options: string; max: Integer); reintroduce; overload;
     destructor Destroy; override;
   end;
 
@@ -188,7 +190,11 @@ begin
   begin
     DSQLAllocateStatement(FDbHandle, FStHandle);
     FStatementType := DSQLPrepare(FDbHandle, Context.FTrHandle, FStHandle,
+{$IFDEF UNICODE}
+      MBUEncode(FSQLParams.Parse(PSOChar(self.S['sql'])), CharacterSetCP[FCharacterSet]), 3, FSQLResult);
+{$ELSE}
       AnsiString(FSQLParams.Parse(PSOChar(self.S['sql']))), 3, FSQLResult);
+{$ENDIF}
     if (FSQLParams.FieldCount > 0) then
       DSQLDescribeBind(FStHandle, 3, FSQLParams);
   end;
@@ -242,7 +248,7 @@ var
                 Result.AsArray.Add(blob as ISuperObject);
               end;
             end;
-          uftTimestamp, uftDate, uftTime: Result.AsArray.Add(TSuperObject.Create(DelphiToJavaDateTime(FSQLResult.AsDateTime[i])));
+          uftTimestamp, uftDate, uftTime: Result.AsArray.Add(TPDGDateTime.Create(DelphiToJavaDateTime(FSQLResult.AsDateTime[i])));
         {$IFDEF IB7_UP}
           uftBoolean: Result.AsArray.Add(TSuperObject.Create(PChar(FSQLResult.AsBoolean[i])));
         {$ENDIF}
@@ -278,7 +284,7 @@ var
                 Result[FSQLResult.AliasName[i]] := blob as ISuperObject;
               end;
             end;
-          uftTimestamp, uftDate, uftTime: Result[FSQLResult.AliasName[i]] := TSuperObject.Create(DelphiToJavaDateTime(FSQLResult.AsDateTime[i]));
+          uftTimestamp, uftDate, uftTime: Result[FSQLResult.AliasName[i]] := TPDGDateTime.Create(DelphiToJavaDateTime(FSQLResult.AsDateTime[i]));
         {$IFDEF IB7_UP}
           uftBoolean: Result[FSQLResult.AliasName[i]] := TSuperObject.Create(PChar(FSQLResult.AsBoolean[i]));
         {$ENDIF}
@@ -524,18 +530,19 @@ end;
 
 { TPDGUIBConnectionPool }
 
-constructor TPDGUIBConnectionPool.Create(const Options: ISuperObject);
+constructor TPDGUIBConnectionPool.Create(const Options: ISuperObject; max: Integer);
 begin
   inherited Create(stObject);
   DataPtr := Self;
-  O['options'] := Options;
-  O['pool'] := TSuperObject.Create(stArray);
+  AsObject['options'] := Options;
+  AsObject['pool'] := TSuperObject.Create(stArray);
   FCriticalSection := TCriticalSection.Create;
+  FMax := max;
 end;
 
-constructor TPDGUIBConnectionPool.Create(const Options: string);
+constructor TPDGUIBConnectionPool.Create(const Options: string; max: Integer);
 begin
-  Create(SO(Options));
+  Create(SO(Options), max);
 end;
 
 destructor TPDGUIBConnectionPool.Destroy;
@@ -554,25 +561,41 @@ begin
 
   FCriticalSection.Enter;
   try
-    ar := O['pool'].AsArray;
-    for j := 0 to ar.Length - 1 do
+    ar := AsObject['pool'].AsArray;
+    while Result = nil do
     begin
-      cnx := ar.O[j];
-      k := cnx._AddRef;
-      try
-        if k = 3 then
-        begin
-          Result := cnx as IPDGConnection;
-          Exit;
+      for j := 0 to ar.Length - 1 do
+      begin
+        cnx := ar.O[j];
+        k := cnx._AddRef;
+        try
+          if k = 3 then
+          begin
+            Result := cnx as IPDGConnection;
+            Exit;
+          end;
+        finally
+          cnx._Release;
+          cnx := nil;
         end;
-      finally
-        cnx._Release;
-        cnx := nil;
+      end;
+      if (Result = nil) and ((FMax < 1) or (ar.Length < FMax)) then
+      begin
+        Result := TPDGUIBConnection.Create(AsObject['options']);
+        ar.Add(Result as ISuperObject);
+        Exit;
       end;
     end;
-    if Result = nil then
-      Result := TPDGUIBConnection.Create(O['options']);
-    ar.Add(Result as ISuperObject);
+  finally
+    FCriticalSection.Leave;
+  end;
+end;
+
+function TPDGUIBConnectionPool.GetSize: Integer;
+begin
+  FCriticalSection.Enter;
+  try
+    Result := AsObject['pool'].AsArray.Length;
   finally
     FCriticalSection.Leave;
   end;

@@ -33,17 +33,79 @@ procedure HTTPOutput(const this: ISuperObject; const str: string); overload;
 procedure HTTPCompress(const this: ISuperObject; level: integer = 5);
 function HTTPIsPost(const this: ISuperObject): boolean;
 procedure HTTPRedirect(const This: ISuperObject; const location: string);
+procedure lua_render(const This: ISuperObject; const script: string);
 
 const
   DEFAULT_CP = 65001;
   DEFAULT_CHARSET = 'utf-8';
 
 implementation
-uses SysUtils, PDGService{$ifdef madExcept}, madExcept {$endif};
+uses SysUtils, PDGLua, PDGOpenSSL, PDGZlib, PDGDB, PDGService{$ifdef madExcept}, madExcept {$endif};
 
 const
   ReadTimeOut: Integer = 60000; // 1 minute
   COOKIE_NAME = 'PDGCookie';
+  PASS_PHRASE: PAnsiChar = 'dc62rtd6fc14ss6df464c2s3s3rt324h14vh27d3fc321h2vfghv312';
+
+function EncodeObject(const obj: ISuperObject): SOString;
+var
+  StreamA, streamB: TPooledMemoryStream;
+begin
+  StreamB := TPooledMemoryStream.Create;
+  StreamA := TPooledMemoryStream.Create;
+  try
+    // ansi
+    obj.SaveTo(StreamA);
+
+    // zlib
+    CompressStream(StreamA, StreamB, 4);
+
+    // aes
+    StreamA.Seek(0, soFromBeginning);
+    AesEncryptStream(StreamB, StreamA, PASS_PHRASE, 128);
+    StreamA.Size := StreamA.Position;
+    //StreamA.SaveToFile('c:\test.aes');
+
+    // base64
+    StreamB.Seek(0, soFromBeginning);
+    StreamToBase64(StreamA, StreamB);
+    StreamB.Size := StreamB.Position;
+
+    // string
+    Result := StreamToStr(StreamB);
+  finally
+    StreamA.Free;
+    StreamB.Free;
+  end;
+end;
+
+function DecodeObject(const str: SOString): ISuperObject;
+var
+  StreamA, StreamB: TPooledMemoryStream;
+begin
+  StreamA := TPooledMemoryStream.Create;
+  StreamB := TPooledMemoryStream.Create;
+  try
+    // base64
+    Base64ToStream(str, streamA);
+    streamA.Size := streamA.Position;
+
+    // aes
+    AesDecryptStream(StreamA, StreamB, PASS_PHRASE, 128);
+
+    // zlib
+    StreamA.Seek(0, soFromBeginning);
+    DecompressStream(StreamB, StreamA);
+    StreamA.Size := StreamA.Position;
+
+    // superobject
+    StreamA.Seek(0, soFromBeginning);
+    Result := TSuperObject.ParseStream(StreamA);
+  finally
+    StreamA.Free;
+    StreamB.Free;
+  end;
+end;
 
 procedure HTTPOutput(const this, obj: ISuperObject; format: boolean); overload;
 begin
@@ -112,7 +174,7 @@ end;
 
 procedure THTTPConnexion.doAfterProcessRequest(ctx: ISuperObject);
 begin
-  Response.S['env.Set-Cookie'] := COOKIE_NAME + '=' + SOString(StrTobase64(ctx['session'].AsJSon)) + '; path=/';
+  Response.S['env.Set-Cookie'] := COOKIE_NAME + '=' + EncodeObject(ctx['session']) + '; path=/';
   Response.S['Cache-Control'] := 'no-cache';
   HTTPCompress(ctx);
   inherited;
@@ -148,8 +210,8 @@ begin
   obj := Request['cookies.' + COOKIE_NAME];
   if obj <> nil then
   case obj.DataType of
-    stString: ctx['session'].Merge(Base64ToStr(RawByteString(obj.AsString)));
-    stArray: ctx['session'].Merge(Base64ToStr(RawByteString(obj.AsArray.S[0])));
+    stString: ctx['session'].Merge(DecodeObject(obj.AsString));
+    stArray: ctx['session'].Merge(DecodeObject(obj.AsArray.S[0]));
   end;
 
   // get parametters
@@ -213,6 +275,7 @@ begin
 //      ctx.B['session.authenticate'] := false;
 //  end;
 
+  path := ExtractFilePath(ParamStr(0)) + 'HTTP';
   if ctx['params.controller'] <> nil then
     with ctx['params'] do
     begin
@@ -243,11 +306,18 @@ begin
           Response.S['env.Content-Type'] := FFormats.S[S['format'] + '.content'] + '; charset=' + FFormats.S[S['format'] + '.charset'] else
           Response.S['env.Content-Type'] := FFormats.S[S['format'] + '.content'];
         exit;
+      end else
+      begin
+        str := path + '/' + S['controller'] + '/' + S['action'] + '.' + S['format'] + '.lua';
+        if FileExists(str) then
+        begin
+          lua_render(ctx, str);
+          exit;
+        end;
       end;
     end;
 
   str := Request.S['uri'];
-  path := ExtractFilePath(ParamStr(0)) + 'HTTP';
 
   if {$IFDEF UNICODE}(str[Length(str)] < #256) and {$ENDIF}(AnsiChar(str[Length(str)]) in ['/','\']) then
   begin
@@ -285,6 +355,58 @@ begin
   app_controller_initialize(Result);
   app_view_initialize(Result);
 
+end;
+
+function lua_print(state: Plua_State): Integer; cdecl;
+var
+  p: Pointer;
+  i: Integer;
+  o: ISuperObject;
+begin
+  lua_getglobal(state, '@this');
+  p := lua_touserdata(state, -1);
+  if p <> nil then
+    for i := 1 to lua_gettop(state) do
+    begin
+      o := lua_tosuperobject(state, i);
+      if o <> nil then
+        HTTPOutput(ISuperObject(p), o.AsString);
+    end;
+  Result := 0;
+end;
+
+function lua_gettickcount(state: Plua_State): Integer; cdecl;
+begin
+  lua_pushinteger(state, Integer(GetTickCount));
+  Result := 1;
+end;
+
+procedure lua_render(const This: ISuperObject; const script: string);
+var
+  state: Plua_State;
+  ite: TSuperObjectIter;
+begin
+  state := lua_newstate(@lua_app_alloc, nil);
+  This._AddRef;
+  try
+    luaL_openlibs(state);
+    lua_pushlightuserdata(state, Pointer(This));
+    lua_setglobal(state, '@this');
+    lua_pushcfunction(state, @lua_print);
+    lua_setglobal(state, 'print');
+    lua_pushcfunction(state, lua_gettickcount);
+    lua_setglobal(state, 'gettickcount');
+    if ObjectFindFirst(This, ite) then
+    repeat
+      lua_pushsuperobject(state, ite.val);
+      lua_setglobal(state, PAnsiChar(UTF8Encode(ite.key)));
+    until not ObjectFindNext(ite);
+    ObjectFindClose(ite);
+    lua_processsor_dofile(state, script);
+  finally
+    This._Release;
+    lua_close(state);
+  end;
 end;
 
 initialization
