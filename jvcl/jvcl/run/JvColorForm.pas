@@ -17,14 +17,14 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   Color form for the @link(TJvColorButton) component
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorForm.pas 11413 2007-07-11 20:23:46Z ahuser $
+// $Id: JvColorForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvColorForm;
 
@@ -89,8 +89,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorForm.pas $';
-    Revision: '$Revision: 11413 $';
-    Date: '$Date: 2007-07-11 22:23:46 +0200 (mer., 11 juil. 2007) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -328,4 +328,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

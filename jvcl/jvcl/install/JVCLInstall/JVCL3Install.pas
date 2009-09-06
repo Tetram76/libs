@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCL3Install.pas 12018 2008-11-02 16:37:30Z ahuser $
+// $Id: JVCL3Install.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JVCL3Install;
 

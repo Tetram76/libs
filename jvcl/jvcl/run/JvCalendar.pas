@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s): Oliver Giesen [ogware att gmx dott net]
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   A wrapper component for the MS MonthCal control available in
@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCalendar.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvCalendar.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvCalendar;
 
@@ -289,8 +289,8 @@ function DayStatesToString(Days: TMonthDayState): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCalendar.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1409,4 +1409,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

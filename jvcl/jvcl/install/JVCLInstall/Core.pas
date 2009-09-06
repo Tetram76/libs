@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Core.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id: Core.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit Core;
 
@@ -373,4 +373,3 @@ finalization
   FreeAndNil(PackageInstaller);
 
 end.
-

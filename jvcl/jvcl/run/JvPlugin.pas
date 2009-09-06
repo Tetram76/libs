@@ -20,7 +20,7 @@ Gustavo Bianconi
 Steefan Lesage - converted to use new OTA
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 
@@ -28,7 +28,7 @@ Todo : Why the "stdcall" definitions ? (routines Configure, Initialize...)
        Why the TriggerConfigureEvent (and similar) procedures ? necessary ?
        What for the GlobalNameSpace.BeginWrite ?
 -----------------------------------------------------------------------------}
-// $Id: JvPlugin.pas 11606 2007-12-16 11:07:33Z ahuser $
+// $Id: JvPlugin.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvPlugin;
 
@@ -134,8 +134,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPlugin.pas $';
-    Revision: '$Revision: 11606 $';
-    Date: '$Date: 2007-12-16 12:07:33 +0100 (dim., 16 déc. 2007) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -310,4 +310,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

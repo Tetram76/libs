@@ -19,11 +19,11 @@ Contributor(s):
   Peter Th�rnqvist
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataProvider.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvDataProvider.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDataProvider;
 
@@ -1198,8 +1198,8 @@ procedure DisabledTextRect(ACanvas: TCanvas; var ARect: TRect; Left, Top: Intege
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDataProvider.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -5547,4 +5547,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

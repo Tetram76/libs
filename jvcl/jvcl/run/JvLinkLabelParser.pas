@@ -19,7 +19,7 @@ Contributor(s): Cetkovsky
 Current Version: 2.00
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
   Please see the accompanying documentation.
@@ -31,7 +31,7 @@ Description:
   Note: Documentation for this unit can be found in Doc\Source.txt and
         Doc\Readme.txt!
 -----------------------------------------------------------------------------}
-// $Id: JvLinkLabelParser.pas 11741 2008-02-21 13:25:32Z obones $
+// $Id: JvLinkLabelParser.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvLinkLabelParser;
 
@@ -94,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLinkLabelParser.pas $';
-    Revision: '$Revision: 11741 $';
-    Date: '$Date: 2008-02-21 14:25:32 +0100 (jeu., 21 févr. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -473,4 +473,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

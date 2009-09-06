@@ -19,7 +19,7 @@ Contributor(s):
   Robert Marquardt
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   Wrapper for the TFind / TReplace dialogs and a stand-alone full
@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFindReplace.pas 12296 2009-04-29 14:53:38Z obones $
+// $Id: JvFindReplace.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvFindReplace;
 
@@ -143,8 +143,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFindReplace.pas $';
-    Revision: '$Revision: 12296 $';
-    Date: '$Date: 2009-04-29 16:53:38 +0200 (mer., 29 avr. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -824,4 +824,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

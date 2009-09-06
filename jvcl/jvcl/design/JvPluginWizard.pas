@@ -21,7 +21,7 @@ Ramzi Haidar - fix for RAD Studio 2007
 Florent Ouchet - updated OTA
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 
@@ -39,7 +39,7 @@ Known Issues:
  V 05 : uses-list minimized
 
  -----------------------------------------------------------------------------}
-// $Id: JvPluginWizard.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvPluginWizard.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvPluginWizard;
 
@@ -491,6 +491,7 @@ begin
     {$ENDIF BCB}
     {$IFDEF DELPHI}
     Repository := Installations.DelphiInstallationFromVersion[
+      {$IFDEF DELPHI14} 14 {$ENDIF}
       {$IFDEF DELPHI12} 12 {$ENDIF}
       {$IFDEF DELPHI11} 11 {$ENDIF}
       {$IFDEF DELPHI10} 10 {$ENDIF}
@@ -1761,4 +1762,3 @@ initialization
   RegisterContainerModule;
 
 end.
-

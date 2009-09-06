@@ -11,11 +11,11 @@ the specific language governing rights and limitations under the License.
 The Original Code is: clxonly.inc, released on 2004-05-17.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: clxonly.inc 10610 2006-05-19 13:35:08Z elahn $
+// $Id: clxonly.inc 12461 2009-08-14 17:21:33Z obones $
 
 // This inc file depends on jedi.inc which has to
 // be included first (usually indirectly through

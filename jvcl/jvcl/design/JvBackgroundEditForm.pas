@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBackgroundEditForm.pas 11031 2006-11-24 07:16:32Z marquardt $
+// $Id: JvBackgroundEditForm.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvBackgroundEditForm;
 

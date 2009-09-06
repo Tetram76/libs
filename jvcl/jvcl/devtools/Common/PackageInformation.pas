@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageInformation.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: PackageInformation.pas 12471 2009-08-23 21:20:48Z outchy $
 
 unit PackageInformation;
 
@@ -32,7 +32,7 @@ interface
 
 uses
   SysUtils, Classes, Contnrs,
-  JvSimpleXml;
+  JclSimpleXml;
   
 type
   { xml Package files }
@@ -49,7 +49,7 @@ type
   TPackageXmlInfoItem = class(TObject)
   private
     FName: string;
-    FTargets: TStrings;
+    FTargets: TStringList;
     FCondition: string;
   public
     constructor Create(const AName, ATargets, ACondition: string);
@@ -60,7 +60,7 @@ type
         list. }
 
     property Name: string read FName;
-    property Targets: TStrings read FTargets;
+    property Targets: TStringList read FTargets;
     property Condition: string read FCondition;
   end;
 
@@ -265,7 +265,6 @@ type
   TPackageInfo = class(TObject)
   private
     FOwner: TBpgPackageTarget;
-    FXmlInfo: TPackageXmlInfo;
     FXmlDir: string;
 
     function GetRequireCount: Integer;
@@ -278,6 +277,7 @@ type
     function GetProjectType: TProjectType;
     function GetName: string;
     function GetRequiresDB: Boolean;
+    function GetXmlInfo: TPackageXmlInfo;
   public
     constructor Create(AOwner: TBpgPackageTarget; const AXmlDir: string);
 
@@ -292,7 +292,7 @@ type
     property Contains[Index: Integer]: TContainedFile read GetContains;
     property ProjectType: TProjectType read GetProjectType;
 
-    property XmlInfo: TPackageXmlInfo read FXmlInfo;
+    property XmlInfo: TPackageXmlInfo read GetXmlInfo;
 
     property Owner: TBpgPackageTarget read FOwner;
     property XmlDir: string read FXmlDir;
@@ -354,10 +354,24 @@ function ProjectTypeIsPackage(AProjectType: TProjectType): Boolean;
   /// </summary>
 function ProjectTypeToProjectName(ProjectType: TProjectType): string;
 
+  // <summary>
+  // Clear the cache of XML package files
+  // </summary>
+procedure ClearXmlFileCache;
+
 implementation
 
 var
   XmlFileCache: TStringList; // cache for .xml files ( TPackageXmlInfo )
+
+procedure ClearXmlFileCache;
+var
+  i: Integer;
+begin
+  for i := 0 to XmlFileCache.Count - 1 do
+    XmlFileCache.Objects[i].Free;
+  XmlFileCache.Clear;
+end;
 
 function BplNameToGenericName(const BplName: string): string;
 begin
@@ -656,10 +670,10 @@ begin
   inherited Create;
   FName := AName;
   FTargets := TStringList.Create;
-  TStringList(FTargets).Duplicates := dupIgnore;
+  FTargets.Duplicates := dupIgnore;
   FTargets.CommaText := ATargets;
   ExpandTargets(FTargets);
-  TStringList(FTargets).Sorted := True; // sort the targets
+  FTargets.Sorted := True; // sort the targets
   FCondition := ACondition;
 end;
 
@@ -673,7 +687,7 @@ function TPackageXmlInfoItem.IsIncluded(const TargetSymbol: string): Boolean;
 var
   Index: Integer;
 begin
-  Result := TStringList(FTargets).Find(TargetSymbol, Index);
+  Result := FTargets.Find(TargetSymbol, Index);
 end;
 
 { TRequiredPackage }
@@ -766,18 +780,18 @@ var
   i: Integer;
   RequirePkgName, RequireTarget,
   ContainsFileName, FormName, Condition: string;
-  xml: TJvSimpleXML;
-  RootNode : TJvSimpleXmlElemClassic;
-  RequiredNode: TJvSimpleXmlElem;
-  PackageNode: TJvSimpleXmlElem;
-  ContainsNode: TJvSimpleXmlElem;
-  FileNode: TJvSimpleXmlElem;
+  xml: TJclSimpleXML;
+  RootNode : TJclSimpleXmlElemClassic;
+  RequiredNode: TJclSimpleXmlElem;
+  PackageNode: TJclSimpleXmlElem;
+  ContainsNode: TJclSimpleXmlElem;
+  FileNode: TJclSimpleXmlElem;
 begin
   FRequires.Clear;
   FRequiresDB := False;
   FContains.Clear;
 
-  xml := TJvSimpleXML.Create(nil);
+  xml := TJclSimpleXML.Create;
   try
     xml.LoadFromFile(Filename);
     RootNode := xml.Root;
@@ -998,13 +1012,13 @@ end;
 
 procedure TPackageGroup.LoadBDSGroupFile;
 var
-  xml: TJvSimpleXML;
-  Options, Projects: TJvSimpleXMLElem;
+  xml: TJclSimpleXML;
+  Options, Projects: TJclSimpleXMLElem;
   i, OptIndex, PrjIndex: Integer;
   Personality: string;
   TgName: string;
 begin
-  xml := TJvSimpleXML.Create(nil);
+  xml := TJclSimpleXML.Create;
   try
     xml.LoadFromString(LoadUtf8File(Filename));
 
@@ -1094,13 +1108,13 @@ end;
 
 procedure TPackageGroup.LoadGroupProjFile;
 var
-  xml: TJvSimpleXML;
-  CurItem, MsBuild: TJvSimpleXMLElem;
-  NameProperty: TJvSimpleXMLProp;
+  xml: TJclSimpleXML;
+  CurItem, MsBuild: TJclSimpleXMLElem;
+  NameProperty: TJclSimpleXMLProp;
   i: Integer;
   TgName: string;
 begin
-  xml := TJvSimpleXML.Create(nil);
+  xml := TJclSimpleXML.Create;
   try
     xml.LoadFromString(LoadUtf8File(Filename));
 
@@ -1224,7 +1238,6 @@ begin
   inherited Create;
   FOwner := AOwner;
   FXmlDir := AXmlDir;
-  FXmlInfo := GetPackageXmlInfo(Owner.TargetName, AXmlDir);
 end;
 
 function TPackageInfo.GetBplName: string;
@@ -1234,56 +1247,52 @@ end;
 
 function TPackageInfo.GetContainCount: Integer;
 begin
-  Result := FXmlInfo.ContainCount;
+  Result := XmlInfo.ContainCount;
 end;
 
 function TPackageInfo.GetContains(Index: Integer): TContainedFile;
 begin
-  Result := FXmlInfo.Contains[Index];
+  Result := XmlInfo.Contains[Index];
 end;
 
 function TPackageInfo.GetRequireCount: Integer;
 begin
-  Result := FXmlInfo.RequireCount;
+  Result := XmlInfo.RequireCount;
 end;
 
 function TPackageInfo.GetRequires(Index: Integer): TRequiredPackage;
 begin
-  Result := FXmlInfo.Requires[Index];
+  Result := XmlInfo.Requires[Index];
 end;
 
 function TPackageInfo.GetDescription: string;
 begin
-  Result := FXmlInfo.Description;
+  Result := XmlInfo.Description;
 end;
 
 function TPackageInfo.GetDisplayName: string;
 begin
-  Result := FXmlInfo.DisplayName;
+  Result := XmlInfo.DisplayName;
 end;
 
 function TPackageInfo.GetProjectType: TProjectType;
 begin
-  Result := FXmlInfo.ProjectType;
+  Result := XmlInfo.ProjectType;
 end;
 
 function TPackageInfo.GetName: string;
 begin
-  Result := FXmlInfo.Name;
+  Result := XmlInfo.Name;
 end;
 
 function TPackageInfo.GetRequiresDB: Boolean;
 begin
-  Result := FXmlInfo.RequiresDB;
+  Result := XmlInfo.RequiresDB;
 end;
 
-procedure FinalizeXmlFileCache;
-var
-  i: Integer;
+function TPackageInfo.GetXmlInfo: TPackageXmlInfo;
 begin
-  for i := 0 to XmlFileCache.Count - 1 do
-    XmlFileCache.Objects[i].Free;
-  XmlFileCache.Free;
+  Result := GetPackageXmlInfo(Owner.TargetName, XmlDir);
 end;
 
 initialization
@@ -1291,6 +1300,7 @@ initialization
   XmlFileCache.Sorted := True;
 
 finalization
-  FinalizeXmlFileCache;
+  ClearXmlFileCache;
+  XmlFileCache.Free;
 
 end.

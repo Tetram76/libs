@@ -17,13 +17,13 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Forms.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvInterpreter_Forms.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvInterpreter_Forms;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Forms.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1180,14 +1180,14 @@ end;
 
 procedure JvInterpreter_KeysToShiftState(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := S2V(Byte(KeysToShiftState(Args.Values[0])));
+  Value := S2V(TJvInterpreterShiftStateCastType(KeysToShiftState(Args.Values[0])));
 end;
 
 { function KeyDataToShiftState(KeyData: Longint): TShiftState; }
 
 procedure JvInterpreter_KeyDataToShiftState(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := S2V(Byte(KeyDataToShiftState(Args.Values[0])));
+  Value := S2V(TJvInterpreterShiftStateCastType(KeyDataToShiftState(Args.Values[0])));
 end;
 
 { function ForegroundTask: Boolean; }
@@ -1504,4 +1504,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

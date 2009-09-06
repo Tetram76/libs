@@ -17,7 +17,7 @@ Contributor(s):  Warren Postma (warrenpstma att hotmail dott com)
 2003-07-29 Warren Postma - New features (Sorting, Indexing, UserData)
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 ii
 
 Description:
@@ -58,7 +58,7 @@ Known Issues and Updates:
                 properly when attached to JvCsvDataset.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCsvData.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvCsvData.pas 12463 2009-08-23 09:42:02Z ahuser $
 
 
 
@@ -931,8 +931,8 @@ function JvCsvNumCondition(FieldValue: Double; CompareOperator: TJvCsvFilterNumC
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCsvData.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12463 $';
+    Date: '$Date: 2009-08-23 11:42:02 +0200 (dim., 23 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1172,21 +1172,17 @@ begin
     if LStreamIndex >= LStreamSize then
       Break;
 
-    Buf[n] := LStreamBuffer[LStreamIndex]; // p^;
+    Buf[n] := LStreamBuffer[LStreamIndex];
     Inc(LStreamIndex);
 
     case Buf[n] of
       JvCsvQuote: {34} // quote
         QuoteFlag := not QuoteFlag;
       JvCsvLf: {10} // linefeed
-        begin
-          Inc(n);
-          if not QuoteFlag then
-            Break;
-        end;
+        if not QuoteFlag then
+          Break;
       JvCsvCR: {13} // carriage return
         begin
-          Inc(n);
           if not QuoteFlag then
           begin
             { If it is a CRLF we must skip the LF. Otherwise the next call to ReadLine
@@ -1199,13 +1195,11 @@ begin
             Break;
           end;
         end
-    else
-      Inc(n);
     end;
+    Inc(n);
   end;
   FStreamIndex := LStreamIndex;
 
-  //Inc(n); { ahuser: This cause the string to include CR or LF. Is this by intention? }
   SetString(Result, PAnsiChar(@Buf[0]), n);
 end;
 
@@ -5692,4 +5686,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

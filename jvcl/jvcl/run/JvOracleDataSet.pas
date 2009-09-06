@@ -16,14 +16,14 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   Oracle Dataset with Threaded Functions
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOracleDataSet.pas 12111 2008-12-30 01:27:39Z jfudickar $
+// $Id: JvOracleDataSet.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvOracleDataSet;
 
@@ -73,6 +73,7 @@ type
 
   TJvOracleDataset = class(TOracleDataset, IJvThreadedDatasetInterface)
     procedure BreakExecution;
+    function DoGetInheritedNextRecord: Boolean;
     procedure DoInheritedAfterOpen;
     procedure DoInheritedAfterRefresh;
     procedure DoInheritedAfterScroll;
@@ -107,6 +108,7 @@ type
     procedure DoAfterRefresh; override;
     procedure DoBeforeOpen; override;
     procedure DoBeforeRefresh; override;
+    function GetNextRecord: Boolean; override;
     function GetOnThreadException: TJvThreadedDatasetThreadExceptionEvent;
     procedure InternalLast; override;
     procedure InternalRefresh; override;
@@ -143,8 +145,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOracleDataSet.pas $';
-    Revision: '$Revision: 12111 $';
-    Date: '$Date: 2008-12-30 02:27:39 +0100 (mar., 30 déc. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -228,6 +230,11 @@ end;
 procedure TJvOracleDataset.DoBeforeRefresh;
 begin
   ThreadHandler.BeforeRefresh;
+end;
+
+function TJvOracleDataset.DoGetInheritedNextRecord: Boolean;
+begin
+  Result := Inherited GetNextRecord;
 end;
 
 procedure TJvOracleDataset.DoInheritedAfterOpen;
@@ -342,6 +349,14 @@ begin
     Result := ThreadHandler.AfterOpenFetch
   else
     Result := nil;
+end;
+
+function TJvOracleDataset.GetNextRecord: Boolean;
+begin
+  if Assigned(ThreadHandler) then
+    Result := ThreadHandler.GetNextRecord
+  else
+    Result := inherited GetNextRecord;
 end;
 
 function TJvOracleDataset.GetOnThreadException:
@@ -498,5 +513,4 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-
 

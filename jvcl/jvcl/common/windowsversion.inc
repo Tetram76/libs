@@ -14,12 +14,12 @@ the specific language governing rights and limitations under the License.
 The Original Code is: windowsversion.inc, released on 2004-10-28.
 
 You may retrieve the latest version of this file at the JCL home page,
-located at http://homepages.borland.com/jedi/jcl/
+located at http://jcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
 
-// Last modified: $Date: 2007-03-24 06:55:15 +0100 (sam., 24 mars 2007) $
+// Last modified: $Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $
 // For history see end of file
 
 // This file is intended for C header conversions.
@@ -123,4 +123,3 @@ Known Issues:
 //
 
 {$ENDIF ~WINDOWSVERSION_INC}
-

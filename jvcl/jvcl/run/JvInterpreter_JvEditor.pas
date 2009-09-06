@@ -17,13 +17,13 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_JvEditor.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvInterpreter_JvEditor.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit JvInterpreter_JvEditor;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_JvEditor.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -68,15 +68,15 @@ end;
 
 procedure TKeyboard_Add(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TJvKeyboard(Args.Obj).Add(Args.Values[0], Args.Values[1], TShiftState(Byte(V2S(Args.Values[2]))));
+  TJvKeyboard(Args.Obj).Add(Args.Values[0], Args.Values[1], TShiftState(TJvInterpreterShiftStateCastType(V2S(Args.Values[2]))));
 end;
 
 { procedure Add2(const ACommand: TEditCommand; const AKey1: word; const AShift1: TShiftState; const AKey2: word; const AShift2: TShiftState); }
 
 procedure TKeyboard_Add2(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TJvKeyboard(Args.Obj).Add2(Args.Values[0], Args.Values[1], TShiftState(Byte(V2S(Args.Values[2]))), Args.Values[3],
-    TShiftState(Byte(V2S(Args.Values[4]))));
+  TJvKeyboard(Args.Obj).Add2(Args.Values[0], Args.Values[1], TShiftState(TJvInterpreterShiftStateCastType(V2S(Args.Values[2]))), Args.Values[3],
+    TShiftState(TJvInterpreterShiftStateCastType(V2S(Args.Values[4]))));
 end;
 
 { procedure Clear; }
@@ -677,4 +677,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

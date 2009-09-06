@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDotNetUtils.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvDotNetUtils.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDotNetUtils;
 
@@ -45,8 +45,8 @@ procedure SetDotNetFrameColors(FocusedColor, UnfocusedColor: TColor);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDotNetUtils.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -119,4 +119,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

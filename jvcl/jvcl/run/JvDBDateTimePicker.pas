@@ -21,7 +21,7 @@ Contributor(s): ______________________________________.
 Current Version: 1.00
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
   (rom) comments should be ripped by the help writer
@@ -34,7 +34,7 @@ Known Issues:
 // Extending and add capability to integrate with database
 // www.geocities.com/ekosbg
 /////////////////////////////////////////////////////////////////////////
-// $Id: JvDBDateTimePicker.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvDBDateTimePicker.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDBDateTimePicker;
 
@@ -100,8 +100,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBDateTimePicker.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -588,4 +588,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

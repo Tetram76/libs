@@ -1,4 +1,4 @@
-﻿{-----------------------------------------------------------------------------
+{-----------------------------------------------------------------------------
 
  Project JEDI Visible Component Library (J-VCL)
 
@@ -23,7 +23,7 @@
  You may retrieve the latest version of this file at the Project JEDI home
  page, located at http://www.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvScheduledEvents.pas 12444 2009-08-10 11:48:00Z obones $
+// $Id: JvScheduledEvents.pas 12445 2009-08-10 17:21:13Z obones $
 
 unit JvScheduledEvents;
 
@@ -259,8 +259,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScheduledEvents.pas $';
-    Revision: '$Revision: 12444 $';
-    Date: '$Date: 2009-08-10 13:48:00 +0200 (lun., 10 août 2009) $';
+    Revision: '$Revision: 12445 $';
+    Date: '$Date: 2009-08-10 19:21:13 +0200 (lun., 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

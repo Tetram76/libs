@@ -19,7 +19,7 @@ Michael Beck [mbeck att bigfoot dott com].
 Peter Thörnqvist <peter3 at sourceforge dot net>
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Changes 2002-10-22:
   Totally reimplemented (though a lot of code was taken from original TStaticText) to add new properties:
@@ -30,7 +30,7 @@ Changes 2002-10-22:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStaticText.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvStaticText.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvStaticText;
 
@@ -175,8 +175,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStaticText.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 aoÃ»t 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -518,4 +518,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

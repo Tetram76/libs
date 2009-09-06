@@ -16,11 +16,11 @@ All Rights Reserved.
 Contributors:
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThemes.pas 12389 2009-07-09 10:25:10Z obones $
+// $Id: JvThemes.pas 12491 2009-09-04 22:18:49Z ahuser $
 
 unit JvThemes;
 
@@ -796,8 +796,8 @@ procedure DrawGlassableImageList(ImageList: HIMAGELIST; Index: Integer; Dest: HD
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThemes.pas $';
-    Revision: '$Revision: 12389 $';
-    Date: '$Date: 2009-07-09 12:25:10 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12491 $';
+    Date: '$Date: 2009-09-05 00:18:49 +0200 (sam., 05 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1288,7 +1288,7 @@ var
 {$ENDIF COMPILER11_UP}
 begin
   {$IFDEF COMPILER11_UP}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.ThemesEnabled and CheckWin32Version(6, 0) then
   begin
     FillChar(Options, SizeOf(Options), 0);
     Options.dwSize := SizeOf(Options);
@@ -1328,7 +1328,7 @@ var
 {$ENDIF COMPILER11_UP}
 begin
   {$IFDEF COMPILER11_UP}
-  if PaintOnGlass then
+  if PaintOnGlass and CheckWin32Version(6, 0) then
   begin
     { TODO : Not working correctly on a JvSpeedButton. But it works if used direcly on
              a sheet of glass. Some optimizations could be done. }

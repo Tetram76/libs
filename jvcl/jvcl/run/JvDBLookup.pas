@@ -23,11 +23,11 @@ Portions copyright (c) 1995, 1996 AO ROSNO
 Portions copyright (c) 1997, 1998 Master-Bank
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvDBLookup.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDBLookup;
 
@@ -661,8 +661,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2741,7 +2741,10 @@ procedure TJvDBLookupCombo.InvalidateText;
 var
   R: TRect;
 begin
-  SetRect(R, 1, 1, ClientWidth - FButtonWidth - 1, ClientHeight - 1);
+  if BiDiMode = bdRightToLeft then
+    SetRect(R, FButtonWidth + 1, 1, ClientWidth - 1, ClientHeight - 1)
+  else
+    SetRect(R, 1, 1, ClientWidth - FButtonWidth - 1, ClientHeight - 1);
   Windows.InvalidateRect(Self.Handle, {$IFNDEF COMPILER12_UP}@{$ENDIF ~COMPILER12_UP}R, False);
   UpdateWindow(Self.Handle);
 end;
@@ -3205,7 +3208,7 @@ begin
     SetRect(R, 1, 1, W - 1, ClientHeight - 1);
     if TextMargin > 0 then
       Inc(TextMargin);
-    X := 0 {2} + TextMargin;
+    X := 4 + TextMargin;
     if not (FListVisible and (FDataList.FSearchText <> '')) and not DrawList then
       case Alignment of
         taRightJustify:
@@ -3223,7 +3226,7 @@ begin
       end;
       if BiDiMode = bdRightToLeft then
       begin
-        Inc(X, FButtonWidth);
+        Dec(X, TextMargin);
         Inc(R.Left, FButtonWidth);
         R.Right := ClientWidth;
       end;
@@ -3254,7 +3257,10 @@ begin
       end;
       if Image <> nil then
       begin
-        ImageRect.Right := ImageRect.Left + TextMargin + 2;
+        if BidiMode = bdRightToLeft then
+          ImageRect.Left := ImageRect.Right - (TextMargin + 2)
+        else
+          ImageRect.Right := ImageRect.Left + TextMargin + 2;
         DrawPicture(Bmp.Canvas, ImageRect, Image);
       end;
       Canvas.Draw(R.Left, R.Top, Bmp);

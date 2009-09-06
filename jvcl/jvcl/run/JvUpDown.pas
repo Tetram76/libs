@@ -19,7 +19,7 @@ Sebastien Buysse [sbuysse att buypin dott com].
 Peter Thörnqvist [peter3 at sourceforge dot net] - TJvDomainUpDown
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   TJvDomainUpDown works just like a TJvUpDown but instead of scrolling
@@ -28,7 +28,7 @@ Description:
 Known Issues:
 - Can't set Position of TJvDomainUpDown at design-time. SOLVED 2003-05-30
 -----------------------------------------------------------------------------}
-// $Id: JvUpDown.pas 11754 2008-03-09 23:02:21Z ahuser $
+// $Id: JvUpDown.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvUpDown;
 
@@ -196,8 +196,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUpDown.pas $';
-    Revision: '$Revision: 11754 $';
-    Date: '$Date: 2008-03-10 00:02:21 +0100 (lun., 10 mars 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 aoÃ»t 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -574,4 +574,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

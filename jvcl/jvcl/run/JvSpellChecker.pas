@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 - Items in the UserDictionary are not added to the internal WordTable/SoundexTable when
@@ -25,7 +25,7 @@ Known Issues:
   UserDictionary entries are loaded into the dictionary table in BuildTables, so to get
   them added make sure UserDictionary is filled before setting the Dictionary property.
 -----------------------------------------------------------------------------}
-// $Id: JvSpellChecker.pas 12058 2008-11-25 18:33:16Z ahuser $
+// $Id: JvSpellChecker.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvSpellChecker;
 
@@ -74,8 +74,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpellChecker.pas $';
-    Revision: '$Revision: 12058 $';
-    Date: '$Date: 2008-11-25 19:33:16 +0100 (mar., 25 nov. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -632,4 +632,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

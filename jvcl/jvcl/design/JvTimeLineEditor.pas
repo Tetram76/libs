@@ -17,14 +17,14 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   Property editor(s) for the @link(TJvTimeLine) component
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTimeLineEditor.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvTimeLineEditor.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvTimeLineEditor;
 
@@ -85,4 +85,3 @@ begin
 end;
 
 end.
-

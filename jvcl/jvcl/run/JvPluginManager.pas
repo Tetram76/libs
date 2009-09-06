@@ -21,7 +21,7 @@ Steefan Lesage - converted to use new OTA
 
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 
@@ -67,7 +67,7 @@ Versionhistory:
  V 01 : renamed objects, files, ressources
         fixed several Memory-leaks, fixed unload-bug, minimized uses-list
 -----------------------------------------------------------------------------}
-// $Id: JvPluginManager.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvPluginManager.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvPluginManager;
 
@@ -171,8 +171,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPluginManager.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -481,10 +481,12 @@ begin
   FPluginInfos.Delete(Index);
 end;
 
+{$WARN SYMBOL_DEPRECATED OFF}
 procedure TJvPluginManager.SendMessage(PluginMessage: Longint; PluginParams: string);
 begin
   BroadcastMessage(PluginMessage, PluginParams);
 end;
+{$WARN SYMBOL_DEPRECATED ON}
 
 procedure TJvPluginManager.UnloadLibrary(Kind: TPluginKind; LibHandle: Integer);
 begin
@@ -505,4 +507,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

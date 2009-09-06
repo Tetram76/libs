@@ -15,11 +15,11 @@ Contributor(s):
 Jens Fudickar [jens dott fudickar att oratool dott de]
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListTools.pas 11866 2008-08-17 19:30:17Z jfudickar $
+// $Id: JvParameterListTools.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvParameterListTools;
 
@@ -40,8 +40,8 @@ function ParameterListRadioGroupBox(SelectList: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListTools.pas $';
-    Revision: '$Revision: 11866 $';
-    Date: '$Date: 2008-08-17 21:30:17 +0200 (dim., 17 août 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -118,4 +118,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

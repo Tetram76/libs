@@ -13,7 +13,7 @@ The Original Code is: JVCL.INC, released on 2002-07-04.
 Last Modified: 2008-11-11
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
@@ -84,6 +84,11 @@ ALERT_jedi_inc_incompatible
  {$DEFINE JVCL_CONFIGURED}
 {$ENDIF DELPHI12}
 {-----------------------------------------------------------------------------}
+{$IFDEF DELPHI14}
+ {$I jvcld14.inc}
+ {$DEFINE JVCL_CONFIGURED}
+{$ENDIF DELPHI14}
+{-----------------------------------------------------------------------------}
 { C++Builder                                                                  }
 {-----------------------------------------------------------------------------}
 {$IFDEF BCB6}
@@ -105,6 +110,11 @@ ALERT_jedi_inc_incompatible
  {$I jvcld12.inc}   // same include file for BDS based C++
  {$DEFINE JVCL_CONFIGURED}
 {$ENDIF BCB12}
+{-----------------------------------------------------------------------------}
+{$IFDEF BCB14}
+ {$I jvcld14.inc}   // same include file for BDS based C++
+ {$DEFINE JVCL_CONFIGURED}
+{$ENDIF BCB14}
 
 {$ENDIF DEFAULT_JVCL_INC}
 {-----------------------------------------------------------------------------}
@@ -144,4 +154,3 @@ ALERT_jedi_inc_incompatible
  {$UNDEF JVCLThemesEnabled}
  {$UNDEF JVCLThemesEnabledD56}
 {$ENDIF !VCL}
-

@@ -18,11 +18,11 @@ Contributor(s): Christophe Paris.
                 Florent Ouchet (move from the JVCL to the JCL).
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues: This component does not parse the !DOCTYPE tags but preserves them
 -----------------------------------------------------------------------------}
-// $Id: JvSimpleXml.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvSimpleXml.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvSimpleXml;
 
@@ -186,8 +186,8 @@ function EntityDecode(const S: string): string; {$IFDEF SUPPORTS_DEPRECATED} dep
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimpleXml.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -468,4 +468,3 @@ finalization
   {$ENDIF UNITVERSIONING}
 
 end.
-

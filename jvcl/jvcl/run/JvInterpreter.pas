@@ -23,7 +23,7 @@ Copyright (C) 2003 ProgramBank Ltd.
 All Rights Reserved.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 component   : JvInterpreterProgram and more..
 description : JVCL Interpreter version 2
@@ -31,7 +31,7 @@ description : JVCL Interpreter version 2
 Known Issues:
    String fields in records binded from Delphi don't work
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvInterpreter.pas 12481 2009-08-26 08:39:55Z obones $
 
 { history (JVCL Library versions):
   1.10:
@@ -1097,6 +1097,9 @@ function varPointer: TVarType;
 function varSet: TVarType;
 function varArray: TVarType;
 
+type
+  TJvInterpreterShiftStateCastType = {$IFDEF COMPILER14_UP}Word{$ELSE}Byte{$ENDIF};
+
 { V2O - converts variant to object }
 function V2O(const V: Variant): TObject;
 
@@ -1247,8 +1250,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12481 $';
+    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -8281,4 +8284,3 @@ finalization
   {$ENDIF UNITVERSIONING}
 
 end.
-

@@ -18,11 +18,11 @@ Contributor(s):
   Steve Magruder
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDSADialogs.pas 12375 2009-07-03 21:03:26Z jfudickar $
+// $Id: JvDSADialogs.pas 12490 2009-09-04 19:39:35Z jfudickar $
 
 unit JvDSADialogs;
 
@@ -51,7 +51,9 @@ type
     FTimer: TTimer;
     FCountdown: IJvDynControlCaption;
     FMsg: string;
+    FDefaultButton : {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF};
   protected
+    property DefaultButton : {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF} read FDefaultButton write FDefaultButton ;
     procedure CustomKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure CustomMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure CustomShow(Sender: TObject);
@@ -66,6 +68,7 @@ type
     function IsDSAChecked: Boolean;
     property Msg: string read FMsg write FMsg;
     property Timeout: Integer read FTimeout write FTimeout;
+
   end;
 
 //----------------------------------------------------------------------------
@@ -464,8 +467,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDSADialogs.pas $';
-    Revision: '$Revision: 12375 $';
-    Date: '$Date: 2009-07-03 23:03:26 +0200 (ven., 03 juil. 2009) $';
+    Revision: '$Revision: 12490 $';
+    Date: '$Date: 2009-09-04 21:39:35 +0200 (ven., 04 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -562,6 +565,11 @@ begin
   begin
     WriteToClipboard(GetFormText);
   end;
+  if Key = VK_RETURN then
+    if ActiveControl is {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF} then
+      {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF}(ActiveControl).Click
+    else if Assigned(DefaultButton) then
+      DefaultButton.Click;
 end;
 
 procedure TDSAMessageForm.CustomMouseDown(Sender: TObject; Button: TMouseButton;
@@ -968,15 +976,18 @@ begin
 
     MessageLabel.BiDiMode := ResultForm.BiDiMode;
 
+    ResultForm.DefaultButton := nil;
     X := (ResultForm.ClientWidth - ButtonGroupWidth) div 2;
     for I := Low(Buttons) to High(Buttons) do
     begin
       Button := DynControlEngine.CreateButton(ResultForm, BottomPanel, 'Button' + IntToStr(I), Buttons[I], '', nil, False, False);
       Button.ModalResult := Results[I];
       if I = DefaultButton then
-        Button.Default := True;
+        ResultForm.DefaultButton := Button;
+//        Button.Default := True;
       if I = CancelButton then
         Button.Cancel := True;
+      Button.TabStop := True;
       Button.SetBounds(X, VertSpacing, ButtonWidth, ButtonHeight);
       Inc(X, ButtonWidth + ButtonSpacing);
       if I = HelpButton then
@@ -2636,4 +2647,3 @@ finalization
   {$ENDIF UNITVERSIONING}
 
 end.
-

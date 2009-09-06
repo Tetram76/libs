@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JCLData.pas 12348 2009-06-25 10:59:10Z obones $
+// $Id: JCLData.pas 12476 2009-08-25 21:11:31Z obones $
 
 unit JCLData;
 
@@ -35,8 +35,8 @@ const
     requires the user to install or compile the JCL. Changing this constant
     will only change the displayed string but not the JCL version testing
     code. }
-  JCLMinVersion = '1.105.0.3400';
-  JCLVersion = '1.105';
+  JCLMinVersion = '2.0.1.3449';
+  JCLVersion = '2.0';
 
   { JCLDcpFiles specifies the .dcp files that must exist in the JCLDcpDir in
     order to mark the JCL installation as valid. }

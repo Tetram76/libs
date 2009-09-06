@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActionsEngineDatasetOdac.pas 11693 2008-01-12 13:39:19Z jfudickar $
+// $Id: JvDBActionsEngineDatasetOdac.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvDBActionsEngineDatasetOdac;
 
@@ -53,8 +53,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActionsEngineDatasetOdac.pas $';
-    Revision: '$Revision: 11693 $';
-    Date: '$Date: 2008-01-12 14:39:19 +0100 (sam., 12 janv. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -129,4 +129,3 @@ finalization
   {$ENDIF UNITVERSIONING}
 
 end.
-

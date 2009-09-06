@@ -18,11 +18,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL
-home page, located at http://jvcl.sourceforge.net
+home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: DelphiData.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: DelphiData.pas 12481 2009-08-26 08:39:55Z obones $
 
 unit DelphiData;
 
@@ -35,7 +35,7 @@ uses
   Windows, SysUtils, Classes, Contnrs, Registry;
 
 const
-  BDSVersions: array[1..6] of record
+  BDSVersions: array[1..7] of record
                                 Name: string;
                                 VersionStr: string;
                                 Version: Integer;
@@ -48,7 +48,8 @@ const
     (Name: 'Delphi'; VersionStr: '2005'; Version: 9; CIV: '90'; ProjectDirResId1: 64431; Supported: True),
     (Name: 'Borland Developer Studio'; VersionStr: '2006'; Version: 10; CIV: '100'; Supported: True),
     (Name: 'CodeGear RAD Studio'; VersionStr: '2007'; Version: 11; CIV: '100'; Supported: True),
-    (Name: 'CodeGear RAD Studio'; VersionStr: '2009'; Version: 12; CIV: '120'; Supported: True)
+    (Name: 'CodeGear RAD Studio'; VersionStr: '2009'; Version: 12; CIV: '120'; Supported: True),
+    (Name: 'CodeGear RAD Studio'; VersionStr: '2010'; Version: 14; CIV: '140'; Supported: True)
   );
 
 type

@@ -19,11 +19,11 @@ Contributor(s): Michael Beck [mbeck att bigfoot dott com].
                 CarlEfird.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHtmlParser.pas 12023 2008-11-02 21:14:20Z ahuser $
+// $Id: JvHtmlParser.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvHtmlParser;
 
@@ -111,8 +111,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHtmlParser.pas $';
-    Revision: '$Revision: 12023 $';
-    Date: '$Date: 2008-11-02 22:14:20 +0100 (dim., 02 nov. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -492,4 +492,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

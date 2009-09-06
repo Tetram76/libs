@@ -20,12 +20,12 @@ Contributor(s): ______________________________________.
 Current Version: 0.50
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
   Doesn't work with Paegasus Mail because it has no MAPI support at all.
 -----------------------------------------------------------------------------}
-// $Id: JvMail.pas 12313 2009-05-25 16:18:27Z ahuser $
+// $Id: JvMail.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvMail;
 
@@ -180,8 +180,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMail.pas $';
-    Revision: '$Revision: 12313 $';
-    Date: '$Date: 2009-05-25 18:18:27 +0200 (lun., 25 mai 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

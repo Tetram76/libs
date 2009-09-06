@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportControl.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvDockSupportControl.pas 12476 2009-08-25 21:11:31Z obones $
 
 unit JvDockSupportControl;
 
@@ -519,8 +519,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportControl.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    Revision: '$Revision: 12476 $';
+    Date: '$Date: 2009-08-25 23:11:31 +0200 (mar., 25 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -671,7 +671,7 @@ procedure TJvDockCustomControl.CustomPositionDockRect(Source: TJvDockDragDockObj
 var
   NewWidth, NewHeight: Integer;
   TempX, TempY: Double;
-  R: TRect;
+  R, TempDockRect: TRect;
 begin
   with Source do
   begin
@@ -681,13 +681,15 @@ begin
       NewHeight := Control.UndockHeight;
       TempX := DragPos.X - ((NewWidth) * MouseDeltaX);
       TempY := DragPos.Y - ((NewHeight) * MouseDeltaY);
-      with DockRect do
+      TempDockRect := DockRect;
+      with TempDockRect do
       begin
         Left := Round(TempX);
         Top := Round(TempY);
         Right := Left + NewWidth;
         Bottom := Top + NewHeight;
       end;
+      DockRect := TempDockRect;
       AdjustDockRect(DockRect);
     end
     else

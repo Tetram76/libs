@@ -17,7 +17,7 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   A wrapper component for the SHFileOperation function
@@ -25,7 +25,7 @@ Description:
 Known Issues:
   fofConfirmMouse does nothing
 -----------------------------------------------------------------------------}
-// $Id: JvSHFileOperation.pas 12401 2009-07-09 15:09:08Z obones $
+// $Id: JvSHFileOperation.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvSHFileOperation;
 
@@ -101,8 +101,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSHFileOperation.pas $';
-    Revision: '$Revision: 12401 $';
-    Date: '$Date: 2009-07-09 17:09:08 +0200 (jeu., 09 juil. 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -274,4 +274,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

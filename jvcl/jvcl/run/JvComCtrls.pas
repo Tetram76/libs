@@ -25,14 +25,14 @@ Kai Gossens - TJvIPAddress: changing Color, drawing bug on XP (fat frame on edit
 dejoy - TJvTreeView.MoveUp/MoveDown
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
   TJvTreeView:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvComCtrls.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvComCtrls;
 
@@ -632,8 +632,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 ao√ªt 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 ao√ªt 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1584,7 +1584,7 @@ begin
         case TCustomTabControlAccess(AControl).TabPosition of
           tpLeft:
             begin
-              // Rotate left by 90∞
+              // Rotate left by 90
               Points[0].X := 0;
               Points[0].Y := Bmp.Height - 1;
               Points[1].X := 0;
@@ -1594,7 +1594,7 @@ begin
             end;
           tpRight:
             begin
-              // Rotate right by 90∞
+              // Rotate right by 90
               Points[0].X := Bmp.Width - 1;
               Points[0].Y := 0;
               Points[1].X := Bmp.Width - 1;
@@ -3350,4 +3350,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

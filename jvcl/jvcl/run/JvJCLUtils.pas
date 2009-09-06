@@ -21,12 +21,12 @@ Contributor(s):
   Dejoy den
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvJCLUtils.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvJCLUtils.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvJCLUtils;
 
@@ -794,8 +794,8 @@ function CharIsMoney(const Ch: Char): Boolean;
 // Note: before using JvSafeStrToFloatDef, please be aware that it will ignore
 // any character that is not a valid character for a float, which is different
 // from what StrToFloatDef in Delphi 6 up is doing. This has been documented in Mantis
-// issue# 2935: http://homepages.codegear.com/jedi/issuetracker/view.php?id=2935
-// and in Mantis 4466: http://homepages.codegear.com/jedi/issuetracker/view.php?id=4466
+// issue# 2935: http://issuetracker.delphi-jedi.org/view.php?id=2935
+// and in Mantis 4466: http://issuetracker.delphi-jedi.org/view.php?id=4466
 
 function JvSafeStrToFloatDef(const Str: string; Def: Extended; aDecimalSeparator: Char = ' '): Extended; {NOTE: default value of Space is a magic wildcard}
 
@@ -1079,8 +1079,8 @@ procedure CollectionSort(Collection: Classes.TCollection; SortProc: TCollectionS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJCLUtils.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -8854,5 +8854,4 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-
 

@@ -20,11 +20,11 @@ Robert Marquardt copied implementation of TJvCheckBox
 Peter Thörnqvist- added LinkedControls property
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRadioButton.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvRadioButton.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvRadioButton;
 
@@ -111,8 +111,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRadioButton.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 aoÃ»t 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -408,4 +408,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

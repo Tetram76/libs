@@ -9,7 +9,7 @@
  Contributor(s):
 
  You may retrieve the latest version of this file at the JEDI-JVCL
- home page, located at http://jvcl.sourceforge.net
+ home page, located at http://jvcl.delphi-jedi.org
 
  The contents of this file are used with permission, subject to
  the Mozilla Public License Version 1.1 (the "License"); you may
@@ -175,8 +175,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/examples/JvParameterList/JvParameterListMainForm.pas $';
-    Revision: '$Revision: 12232 $';
-    Date: '$Date: 2009-03-10 01:07:11 +0100 (mar., 10 mars 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\examples\JvParameterList'
     );
 
@@ -1325,4 +1325,3 @@ finalization
   UnregisterUnitVersion(HInstance);
 
 end.
-

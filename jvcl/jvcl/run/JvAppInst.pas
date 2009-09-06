@@ -17,11 +17,11 @@ All Rights Reserved.
 Contributor(s): -
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppInst.pas 11534 2007-10-12 10:06:37Z obones $
+// $Id: JvAppInst.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvAppInst;
 
@@ -107,8 +107,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppInst.pas $';
-    Revision: '$Revision: 11534 $';
-    Date: '$Date: 2007-10-12 12:06:37 +0200 (ven., 12 oct. 2007) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -357,4 +357,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

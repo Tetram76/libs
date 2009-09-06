@@ -35,11 +35,11 @@ Contributors(s): matej golob
   --add property TopSpace
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPBar.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvXPBar.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvXPBar;
 
@@ -497,10 +497,10 @@ type
     //property BevelInner;
     //property BevelOuter;
     //property BevelWidth;
-    //property BiDiMode;
+    property BiDiMode;
     //property Ctl3D;
     //property DockSite;
-    //property ParentBiDiMode;
+    property ParentBiDiMode;
     //property ParentCtl3D;
     //property TabOrder;
     //property TabStop;
@@ -551,8 +551,8 @@ procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPBar.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -881,7 +881,15 @@ begin
     if (ItemCaption = '') and ((csDesigning in LBar.ComponentState) or (LBar.ControlCount = 0)) then
       ItemCaption := Format(RsUntitledFmt, [RsUntitled, Index]);
     SetBkMode(ACanvas.Handle, Windows.TRANSPARENT);
-    DrawText(ACanvas, ItemCaption, -1, Rect, DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS);
+    if LBar.BiDiMode = bdRightToLeft then
+    begin
+      Dec(Rect.Right, 4);
+      DrawText(ACanvas, ItemCaption, -1, Rect,
+        DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS or DT_RTLREADING or DT_RIGHT);
+    end
+    else
+      DrawText(ACanvas, ItemCaption, -1, Rect,
+        DT_SINGLELINE or DT_VCENTER or DT_END_ELLIPSIS);
   end;
 end;
 
@@ -2112,7 +2120,10 @@ var
           end;
           // Transparency fix not needed Here! -WPostma
           Bitmap.Transparent := True;
-          ACanvas.Draw(R.Right - 24, R.Top + (HeaderHeight - GetRollHeight) div 2, Bitmap);
+          if BiDiMode = bdRightToLeft then
+            ACanvas.Draw(R.Left + 5, R.Top + (HeaderHeight - GetRollHeight) div 2, Bitmap)
+          else
+            ACanvas.Draw(R.Right - 24, R.Top + (HeaderHeight - GetRollHeight) div 2, Bitmap);
         finally
           Bitmap.Free;
         end;
@@ -2121,12 +2132,10 @@ var
       Inc(R.Left, 22);
       ACanvas.Pen.Color := FColors.SeparatorColor;
       JvXPDrawLine(ACanvas, 1, ARect.Top + FHeaderHeight, Width - 1, ARect.Top + FHeaderHeight);
-      if not FIcon.Empty then
-      begin
-        ACanvas.Draw(2, 0, FIcon);
+      if BiDiMode = bdRightToLeft then
+        Inc(ARect.Right, 28)
+      else
         Inc(R.Left, 16);
-      end;
-      Dec(ARect.Right, 25);
     end;
 
     { draw seperator line }
@@ -2134,22 +2143,32 @@ var
     JvXPDrawLine(ACanvas, 1, ARect.Top + FHeaderHeight, Width - 1, ARect.Top + FHeaderHeight);
 
     { draw icon }
-//    Inc(ARect.Left, 22);
+
     if not FIcon.Empty then
     begin
-      ACanvas.Draw(2, 1, FIcon);
-      Inc(ARect.Left, 6);
-    end
-    else
-      Dec(ARect.Left, 16);
+      if BiDiMode = bdRightToLeft then
+        begin
+          ACanvas.Draw(ARect.Right-FICon.Width-2, 0, FIcon);
+          Dec(ARect.Right, FIcon.Width+6);
+        end
+      else
+        begin
+          ACanvas.Draw(2, 1, FIcon);
+          Inc(ARect.Right, FIcon.Width+6);
+        end;
+
+    end;
     SetBkMode(ACanvas.Handle, TRANSPARENT);
     ACanvas.Font.Assign(FHeaderFont);
     if FHotTrack and (dsHighlight in DrawState) and (FHitTest <> htNone) and (FHotTrackColor <> clNone) then
       ACanvas.Font.Color := FHotTrackColor;
     ARect.Bottom := ARect.Top + FHeaderHeight;
-    Dec(ARect.Right, 3);
-    DrawText(ACanvas, Caption, -1, ARect,
-      DT_SINGLELINE or DT_LEFT or DT_VCENTER or DT_END_ELLIPSIS or DT_NOPREFIX);
+    if BiDiMode = bdRightToLeft then
+      DrawText(ACanvas, Caption, -1, ARect,
+        DT_SINGLELINE or DT_RTLREADING or DT_RIGHT or DT_VCENTER or DT_END_ELLIPSIS or DT_NOPREFIX)
+    else
+      DrawText(ACanvas, Caption, -1, ARect,
+        DT_SINGLELINE or DT_LEFT or DT_VCENTER or DT_END_ELLIPSIS or DT_NOPREFIX);
   end;
 begin
   { get client rect }
@@ -2397,4 +2416,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

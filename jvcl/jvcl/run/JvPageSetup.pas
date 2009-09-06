@@ -15,11 +15,11 @@ Portions created by Pasha Sivtsov are Copyright (C) 2000 Pasha Sivtsov.
 All Rights Reserved.
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageSetup.pas 11963 2008-10-16 09:12:52Z obones $
+// $Id: JvPageSetup.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvPageSetup;
 
@@ -135,8 +135,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageSetup.pas $';
-    Revision: '$Revision: 11963 $';
-    Date: '$Date: 2008-10-16 11:12:52 +0200 (jeu., 16 oct. 2008) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -671,4 +671,3 @@ finalization
 {$ENDIF UNITVERSIONING}
 
 end.
-

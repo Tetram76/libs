@@ -17,12 +17,12 @@ All Rights Reserved.
 Contributor(s):
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvPageList.pas 12325 2009-06-01 17:43:36Z ahuser $
+// $Id: JvPageList.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvPageList;
 
@@ -283,8 +283,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageList.pas $';
-    Revision: '$Revision: 12325 $';
-    Date: '$Date: 2009-06-01 19:43:36 +0200 (lun., 01 juin 2009) $';
+    Revision: '$Revision: 12461 $';
+    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

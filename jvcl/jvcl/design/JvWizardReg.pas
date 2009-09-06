@@ -18,7 +18,7 @@ Contributor(s):
 Peter Thörnqvist - converted to JVCL naming conventions on 2003-07-11
 
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
-located at http://jvcl.sourceforge.net
+located at http://jvcl.delphi-jedi.org
 
 Description:
   Jv Wizard Component Editor
@@ -30,7 +30,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardReg.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvWizardReg.pas 12461 2009-08-14 17:21:33Z obones $
 
 unit JvWizardReg;
 
