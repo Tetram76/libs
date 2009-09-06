@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                       $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-03 21:20:41 +0200 (jeu., 03 sept. 2009)                         $ }
+{ Revision:      $Rev:: 2988                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -54,8 +54,23 @@ type
     procedure UnregisterCommands; override;
   end;
 
+  {$IFDEF BDS7_UP}
+  // RAD Studio 2010 and newer
+  TProjectManagerMultipleNotifier = class(TNotifierObject, IOTANotifier, IOTAProjectMenuItemCreatorNotifier)
+  private
+    FProjectAnalyser: TJclProjectAnalyzerExpert;
+  protected
+    procedure MenuExecute(const MenuContextList: IInterfaceList);
+    { IOTAProjectMenuItemCreatorNotifier }
+    procedure AddMenu(const Project: IOTAProject; const Ident: TStrings;
+      const ProjectManagerMenuList: IInterfaceList; IsMultiSelect: Boolean);
+  public
+    constructor Create(AProjectAnalyzer: TJclProjectAnalyzerExpert);
+  end;
+  {$ELSE ~BDS7_UP}
   {$IFDEF BDS4_UP}
-  TProjectManagerNotifier = class(TNotifierObject, IOTANotifier, INTAProjectMenuCreatorNotifier)
+  // BDS 2006, RAD Studio 2007 and RAD Studio 2009
+  TProjectManagerSimpleNotifier = class(TNotifierObject, IOTANotifier, INTAProjectMenuCreatorNotifier)
   private
     FProjectAnalyser: TJclProjectAnalyzerExpert;
     FOTAProjectManager: IOTAProjectManager;
@@ -68,6 +83,7 @@ type
     constructor Create(AProjectAnalyzer: TJclProjectAnalyzerExpert; const AOTAProjectManager: IOTAProjectManager);
   end;
   {$ENDIF BDS4_UP}
+  {$ENDIF ~BDS7_UP}
 
 // design package entry point
 procedure Register;
@@ -81,8 +97,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/projectanalyzer/ProjAnalyzerImpl.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2988 $';
+    Date: '$Date: 2009-09-03 21:20:41 +0200 (jeu., 03 sept. 2009) $';
     LogPath: 'JCL\experts\projectanalyser';
     Extra: '';
     Data: nil
@@ -205,9 +221,13 @@ procedure TJclProjectAnalyzerExpert.AnalyzeProject(const AProject: IOTAProject);
 var
   BuildOK, Succ: Boolean;
   ProjOptions: IOTAProjectOptions;
-  SaveMapFile: Variant;
+  SaveMapFile, SaveDccMapFileType, SaveILinkMapFileType: Variant;
   ProjectName, OutputDirectory: string;
   ProjectFileName, MapFileName, ExecutableFileName: TFileName;
+  {$IFDEF BDS6_UP}
+  ProjOptionsConfigurations: IOTAProjectOptionsConfigurations;
+  ActiveConfiguration: IOTABuildConfiguration;
+  {$ENDIF BDS6_UP}
 begin
   try
     JclDisablePostCompilationProcess := True;
@@ -231,15 +251,44 @@ begin
     ProjectAnalyzerForm.ClearContent;
     ProjectAnalyzerForm.StatusBarText := Format(RsBuildingProject, [ProjectName]);
 
+    {$IFDEF BDS6_UP}
+    Supports(ProjOptions, IOTAProjectOptionsConfigurations, ProjOptionsConfigurations);
+    if not Assigned(ProjOptionsConfigurations) then
+      raise EJclExpertException.CreateTrace(RsENoProjectOptionsConfigurations);
+
+    // get the current build configuration
+    ActiveConfiguration := ProjOptionsConfigurations.ActiveConfiguration;
+
+    // retrieve options from this build configuration
+    SaveMapFile := ActiveConfiguration.GetValue(MapFileOptionName, True);
+    SaveDccMapFileType := ActiveConfiguration.GetValue(DccMapFileOptionName, True);
+    SaveILinkMapFileType := ActiveConfiguration.GetValue(ILinkMapFileTypeOptionName, True);
+    ActiveConfiguration.SetValue(MapFileOptionName, IntToStr(MapFileOptionDetailed));
+    ActiveConfiguration.SetValue(DccMapFileOptionName, IntToStr(MapFileOptionDetailed));
+    ActiveConfiguration.SetValue(ILinkMapFileTypeOptionName, MapFileOptionDetailedSegments);
+    {$ELSE ~BDS6_UP}
     SaveMapFile := ProjOptions.Values[MapFileOptionName];
+    SaveDccMapFileType := ProjOptions.Values[DccMapFileOptionName];
+    SaveILinkMapFileType := ProjOptions.Values[ILinkMapFileTypeOptionName];
     ProjOptions.Values[MapFileOptionName] := MapFileOptionDetailed;
+    ProjOptions.Values[DccMapFileOptionName] := MapFileOptionDetailed;
+    ProjOptions.Values[ILinkMapFileTypeOptionName] := MapFileOptionDetailedSegments;
+    {$ENDIF ~BDS6_UP}
     // workaround for MsBuild, the project has to be saved (seems useless with Delphi 2007 update 1)
     ProjOptions.ModifiedState := True;
     //TempActiveProject.Save(False, True);
 
     BuildOK := AProject.ProjectBuilder.BuildProject(cmOTABuild, False);
 
+    {$IFDEF BDS6_UP}
+    ActiveConfiguration.SetValue(MapFileOptionName, SaveMapFile);
+    ActiveConfiguration.SetValue(DccMapFileOptionName, SaveDccMapFileType);
+    ActiveConfiguration.SetValue(ILinkMapFileTypeOptionName, SaveILinkMapFileType);
+    {$ELSE ~BDS6_UP}
     ProjOptions.Values[MapFileOptionName] := SaveMapFile;
+    ProjOptions.Values[DccMapFileOptionName] := SaveDccMapFileType;
+    ProjOptions.Values[ILinkMapFileTypeOptionName] := SaveILinkMapFileType;
+    {$ENDIF ~BDS6_UP}
     // workaround for MsBuild, the project has to be saved (seems useless with Delphi 2007 update 1)
     ProjOptions.ModifiedState := True;
     //TempActiveProject.Save(False, True);
@@ -262,7 +311,7 @@ begin
     begin
       ProjectAnalyzerForm.StatusBarText := '';
       if BuildOK then
-        MessageDlg(RsCantFindFiles, mtError, [mbOk], 0);
+        MessageDlg(Format(LoadResString(@RsCantFindMAPFile), [MapFileName, ProjectFileName]), mtError, [mbOk], 0);
     end;
   finally
     JclDisablePostCompilationProcess := False;
@@ -301,11 +350,16 @@ begin
   end;
 
   // create project manager notifier
+  {$IFDEF BDS7_UP}
+  OTAProjectManager := GetOTAProjectManager;
+  FProjectManagerNotifierIndex := OTAProjectManager.AddMenuItemCreatorNotifier(TProjectManagerMultipleNotifier.Create(Self));
+  {$ELSE ~BDS7_UP}
   {$IFDEF BDS4_UP}
   OTAProjectManager := GetOTAProjectManager;
-  FProjectManagerNotifierIndex := OTAProjectManager.AddMenuCreatorNotifier(TProjectManagerNotifier.Create(Self,
+  FProjectManagerNotifierIndex := OTAProjectManager.AddMenuCreatorNotifier(TProjectManagerSimpleNotifier.Create(Self,
     OTAProjectManager));
   {$ENDIF BDS4_UP}
+  {$ENDIF ~BDS7_UP}
 
   // create menu item
   IDEMainMenu := NTAServices.MainMenu;
@@ -345,21 +399,83 @@ procedure TJclProjectAnalyzerExpert.UnregisterCommands;
 begin
   inherited UnregisterCommands;
   // remove notifier
+  {$IFDEF BDS7_UP}
+  // RAD Studio 2010 and newer
+  if FProjectManagerNotifierIndex <> -1 then
+    GetOTAProjectManager.RemoveMenuItemCreatorNotifier(FProjectManagerNotifierIndex);
+  {$ELSE ~BDS7_UP}
   {$IFDEF BDS4_UP}
+  // BDS 2006, RAD Studio 2007 and RAD Studio 2009
   if FProjectManagerNotifierIndex <> -1 then
     GetOTAProjectManager.RemoveMenuCreatorNotifier(FProjectManagerNotifierIndex);
   {$ENDIF BDS4_UP}
+  {$ENDIF ~BDS7_UP}
 
   UnregisterAction(FBuildAction);
   FreeAndNil(FBuildMenuItem);
   FreeAndNil(FBuildAction);
 end;
 
+{$IFDEF BDS7_UP}
+// RAD Studio 2010 and newer
+
+//=== { TProjectManagerMultipleNotifier } ====================================
+
+constructor TProjectManagerMultipleNotifier.Create(AProjectAnalyzer: TJclProjectAnalyzerExpert);
+begin
+  inherited Create;
+  FProjectAnalyser := AProjectAnalyzer;
+end;
+
+procedure TProjectManagerMultipleNotifier.AddMenu(const Project: IOTAProject; const Ident: TStrings;
+  const ProjectManagerMenuList: IInterfaceList; IsMultiSelect: Boolean);
+var
+  AMenu: TJclOTAProjectManagerMenu;
+begin
+  if (not IsMultiSelect) and Assigned(Project) and (Ident.IndexOf(sProjectContainer) <> -1) then
+  begin
+    AMenu := TJclOTAProjectManagerMenu.Create;
+    AMenu.Enabled := True;
+    AMenu.Caption := Format(RsAnalyzeActionCaption, [ExtractFileName(Project.FileName)]);
+    AMenu.IsMultiSelectable := True;
+    AMenu.OnExecute := MenuExecute;
+    AMenu.Position := pmmpUserBuild;
+    ProjectManagerMenuList.Add(AMenu);
+  end;
+end;
+
+procedure TProjectManagerMultipleNotifier.MenuExecute(const MenuContextList: IInterfaceList);
+var
+  Index: Integer;
+  MenuContext: IOTAProjectMenuContext;
+  Project: IOTAProject;
+begin
+  try
+    for Index := 0 to MenuContextList.Count - 1 do
+    begin
+      MenuContext := MenuContextList.Items[Index] as IOTAProjectMenuContext;
+      Project := MenuContext.Project;
+      if Project <> nil then
+        FProjectAnalyser.AnalyzeProject(Project)
+      else
+        raise EJclExpertException.CreateTrace(RsENoActiveProject);
+    end;
+  except
+    on ExceptionObj: TObject do
+    begin
+      JclExpertShowExceptionDialog(ExceptionObj);
+      raise;
+    end;
+  end;
+end;
+
+{$ELSE ~BDS7_UP}
 {$IFDEF BDS4_UP}
+// BDS 2006, RAD Studio 2007 and RAD Studio 2009
 
-//=== { TProjectManagerNotifier } ============================================
+//=== { TProjectManagerSimpleNotifier } ======================================
 
-constructor TProjectManagerNotifier.Create(AProjectAnalyzer: TJclProjectAnalyzerExpert;
+constructor TProjectManagerSimpleNotifier.Create(AProjectAnalyzer: TJclProjectAnalyzerExpert;
   const AOTAProjectManager: IOTAProjectManager);
 begin
   inherited Create;
@@ -367,7 +483,7 @@ begin
   FOTAProjectManager := AOTAProjectManager;
 end;
 
-function TProjectManagerNotifier.AddMenu(const Ident: string): TMenuItem;
+function TProjectManagerSimpleNotifier.AddMenu(const Ident: string): TMenuItem;
 var
   SelectedIdent: string;
   AProject: IOTAProject;
@@ -394,7 +510,7 @@ begin
   end;
 end;
 
-procedure TProjectManagerNotifier.AnalyzeProjectMenuClick(Sender: TObject);
+procedure TProjectManagerSimpleNotifier.AnalyzeProjectMenuClick(Sender: TObject);
 var
   TempProject: IOTAProject;
   SelectedIdent: string;
@@ -415,12 +531,13 @@ begin
   end;
 end;
 
-function TProjectManagerNotifier.CanHandle(const Ident: string): Boolean;
+function TProjectManagerSimpleNotifier.CanHandle(const Ident: string): Boolean;
 begin
   Result := Ident = sProjectContainer;
 end;
 
 {$ENDIF BDS4_UP}
+{$ENDIF ~BDS7_UP}
 
 {$IFDEF UNITVERSIONING}
 initialization

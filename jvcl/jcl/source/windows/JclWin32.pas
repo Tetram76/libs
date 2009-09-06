@@ -43,8 +43,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
+{ Revision:      $Rev:: 2969                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -88,7 +88,9 @@ uses
 {$HPPEMIT '#include <propidl.h>'}
 {$HPPEMIT '#include <msidefs.h>'}
 {$HPPEMIT '#include <shlguid.h>'}
+{$IFNDEF COMPILER14_UP}
 {$HPPEMIT '#include <imgguids.h>'}
+{$ENDIF ~COMPILER14_UP}
 {$HPPEMIT '#include <objbase.h>'}
 {$HPPEMIT '#include <ntsecapi.h>'}
 {$HPPEMIT ''}
@@ -1863,7 +1865,9 @@ type
   IMAGE_TLS_DIRECTORY64 = _IMAGE_TLS_DIRECTORY64;
   {$EXTERNALSYM IMAGE_TLS_DIRECTORY64}
   TImageTlsDirectory64 = IMAGE_TLS_DIRECTORY64;
+  {$EXTERNALSYM TImageTlsDirectory64}
   PImageTlsDirectory64 = PIMAGE_TLS_DIRECTORY64;
+  {$EXTERNALSYM PImageTlsDirectory64}
 
   PIMAGE_TLS_DIRECTORY32 = ^IMAGE_TLS_DIRECTORY32;
   {$EXTERNALSYM PIMAGE_TLS_DIRECTORY32}
@@ -1879,8 +1883,10 @@ type
   IMAGE_TLS_DIRECTORY32 = _IMAGE_TLS_DIRECTORY32;
   {$EXTERNALSYM IMAGE_TLS_DIRECTORY32}
   TImageTlsDirectory32 = IMAGE_TLS_DIRECTORY32;
+  {$EXTERNALSYM TImageTlsDirectory32}
   PImageTlsDirectory32 = PIMAGE_TLS_DIRECTORY32;
-
+  {$EXTERNALSYM PImageTlsDirectory32}
+  
 const
   IMAGE_ORDINAL_FLAG = IMAGE_ORDINAL_FLAG32;
   {$EXTERNALSYM IMAGE_ORDINAL_FLAG}
@@ -1905,7 +1911,9 @@ type
   PIMAGE_TLS_DIRECTORY = PIMAGE_TLS_DIRECTORY32;
   {$EXTERNALSYM PIMAGE_TLS_DIRECTORY}
   TImageTlsDirectory = TImageTlsDirectory32;
+  {$EXTERNALSYM TImageTlsDirectory}
   PImageTlsDirectory = PImageTlsDirectory32;
+  {$EXTERNALSYM PImageTlsDirectory}
 
   TIIDUnion = record
     case Integer of
@@ -5588,6 +5596,7 @@ const
 
 
 const
+  CSIDL_LOCAL_APPDATA        = $001C; { <user name>\Local Settings\Application Data (non roaming) }
   CSIDL_COMMON_APPDATA       = $0023; { All Users\Application Data }
   CSIDL_WINDOWS              = $0024; { GetWindowsDirectory() }
   CSIDL_SYSTEM               = $0025; { GetSystemDirectory() }
@@ -5609,6 +5618,7 @@ const
   CSIDL_CDBURN_AREA          = $003B; { USERPROFILE\Local Settings\Application Data\Microsoft\CD Burning }
   CSIDL_COMPUTERSNEARME      = $003D; { Computers Near Me (computered from Workgroup membership) }
 
+  {$EXTERNALSYM CSIDL_LOCAL_APPDATA}
   {$EXTERNALSYM CSIDL_COMMON_APPDATA}
   {$EXTERNALSYM CSIDL_WINDOWS}
   {$EXTERNALSYM CSIDL_SYSTEM}
@@ -7569,8 +7579,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWin32.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2969 $';
+    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}

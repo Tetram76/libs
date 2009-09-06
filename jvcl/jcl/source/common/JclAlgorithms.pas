@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2922                                                                     $ }
+{ Last modified: $Date:: 2009-08-25 17:21:12 +0200 (mar., 25 août 2009)                         $ }
+{ Revision:      $Rev:: 2966                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -263,7 +263,7 @@ procedure Fill(const First: IJclIntegerIterator; Count: Integer; AValue: Integer
 procedure Fill(const First: IJclCardinalIterator; Count: Integer; AValue: Cardinal); overload;
 procedure Fill(const First: IJclInt64Iterator; Count: Integer; const AValue: Int64); overload;
 procedure Fill(const First: IJclPtrIterator; Count: Integer; APtr: Pointer); overload;
-procedure Fill(const First: IJclIterator; Count: Integer; AObject: TObject); overload
+procedure Fill(const First: IJclIterator; Count: Integer; AObject: TObject); overload;
 
 // Reverse algorithms
 procedure Reverse(const First, Last: IJclIntfIterator); overload;
@@ -359,8 +359,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAlgorithms.pas $';
-    Revision: '$Revision: 2922 $';
-    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2966 $';
+    Date: '$Date: 2009-08-25 17:21:12 +0200 (mar., 25 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

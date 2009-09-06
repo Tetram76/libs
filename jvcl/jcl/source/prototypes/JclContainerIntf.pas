@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-10 19:54:31 +0200 (lun., 10 août 2009)                         $ }
+{ Revision:      $Rev:: 2940                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -792,7 +792,9 @@ type
 {$JPPEXPANDMACRO COLLECTION(IJclCollection,IJclContainer,58947EF1-CD21-4DD1-AE3D-225C3AAD7EE5,,AObject,TObject,IJclIterator)}
 
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
 {$JPPEXPANDMACRO COLLECTION(IJclCollection<T>,IJclContainer,67EE8AF3-19B0-4DCA-A730-3C9B261B8EC5,const ,AItem,T,IJclIterator<T>)}
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
 {$JPPEXPANDMACRO LIST(IJclIntfList,IJclIntfCollection,E14EDA4B-1DAA-4013-9E6C-CDCB365C7CF9,const ,AInterface,IInterface,GetObject,SetObject,Objects)}
@@ -1595,8 +1597,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclContainerIntf.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2940 $';
+    Date: '$Date: 2009-08-10 19:54:31 +0200 (lun., 10 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

@@ -51,9 +51,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2922                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-09-02 10:15:56 +0200 (mer., 02 sept. 2009)                         $ }
+{ Revision:      $Rev:: 2983                                                                     $ }
+{ Author:        $Author:: sfarrow                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -620,6 +620,7 @@ type
     procedure ExtractFlags;
     function GetBinFileVersion: string;
     function GetBinProductVersion: string;
+    function GetCustomFieldValue(const FieldName: string): string;
     function GetFileOS: DWORD;
     function GetFileSubType: DWORD;
     function GetFileType: DWORD;
@@ -1029,8 +1030,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 2922 $';
-    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2983 $';
+    Date: '$Date: 2009-09-02 10:15:56 +0200 (mer., 02 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -5101,6 +5102,23 @@ begin
       LoWord(dwProductVersionLS)]);
 end;
 
+function TJclFileVersionInfo.GetCustomFieldValue(const FieldName: string): string;
+var
+  ItemIndex: Integer;
+begin
+  if FieldName <> '' then
+  begin
+    ItemIndex := FItems.IndexOfName(FieldName);
+    if ItemIndex <> -1 then
+      //Return the required value, the value the user passed in was found.
+      Result := FItems.Values[FieldName]
+    else
+      raise EJclFileVersionInfoError.CreateResFmt(@RsFileUtilsValueNotFound, [FieldName]);
+  end
+  else
+    raise EJclFileVersionInfoError.CreateRes(@RsFileUtilsEmptyValue);
+end;
+
 function TJclFileVersionInfo.GetFileOS: DWORD;
 begin
   Result := FFixedInfo^.dwFileOS;
@@ -6259,7 +6277,11 @@ begin
   Task := TEnumFileThread(CreateTask);
   Task.FFileHandlerEx := Handler;
   Result := Task.ID;
+  {$IFDEF RTL210_UP}
+  Task.Suspended := False;
+  {$ELSE ~RTL210_UP}
   Task.Resume;
+  {$ENDIF ~RTL210_UP}
 end;
 
 function TJclFileEnumerator.ForEach(Handler: TFileHandler): TFileSearchTaskID;
@@ -6269,7 +6291,11 @@ begin
   Task := TEnumFileThread(CreateTask);
   Task.FFileHandler := Handler;
   Result := Task.ID;
+  {$IFDEF RTL210_UP}
+  Task.Suspended := False;
+  {$ELSE ~RTL210_UP}
   Task.Resume;
+  {$ENDIF ~RTL210_UP}
 end;
 
 function TJclFileEnumerator.GetRunningTasks: Integer;

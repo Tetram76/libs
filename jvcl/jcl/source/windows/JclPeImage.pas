@@ -33,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                        $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
+{ Revision:      $Rev:: 2969                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1080,8 +1080,8 @@ function PeUnmangleName(const Name: string; out Unmangled: string): TJclPeUmResu
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclPeImage.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2969 $';
+    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -4805,7 +4805,11 @@ end;
 
 procedure TJclPeNameSearch.Start;
 begin
+  {$IFDEF RTL210_UP}
+  Suspended := False;
+  {$ELSE ~RTL210_UP}
   Resume;
+  {$ENDIF ~RTL210_UP}
 end;
 
 //=== PE Image miscellaneous functions =======================================

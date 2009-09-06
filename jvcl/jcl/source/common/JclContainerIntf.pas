@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-08-10 19:54:31 +0200 (lun., 10 août 2009)                         $ }
+{ Revision:      $Rev:: 2940                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1816,6 +1816,7 @@ type
   end;
 
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
   IJclCollection<T> = interface(IJclContainer)
     ['{67EE8AF3-19B0-4DCA-A730-3C9B261B8EC5}']
     function Add(const AItem: T): Boolean;
@@ -1837,6 +1838,7 @@ type
     function GetEnumerator: IJclIterator<T>;
     {$ENDIF SUPPORTS_FOR_IN}
   end;
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
   IJclIntfList = interface(IJclIntfCollection)
@@ -4415,8 +4417,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclContainerIntf.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2940 $';
+    Date: '$Date: 2009-08-10 19:54:31 +0200 (lun., 10 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

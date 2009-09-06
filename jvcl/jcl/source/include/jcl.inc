@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-07 12:02:54 +0200 (ven., 07 août 2009)                         $ }
-{ Revision:      $Rev:: 2919                                                                     $ }
+{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
+{ Revision:      $Rev:: 2969                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -129,6 +129,11 @@ ALERT_jedi_inc_incompatible
       {$I jcld12.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS6}
+    {----------------------------}
+    {$IFDEF BDS7}
+      {$I jcld14.inc}
+      {$DEFINE JCL_CONFIGURED}
+    {$ENDIF BDS7}
     {----------------------------}
     {$IFDEF FPC}
       {$I jclfpc.inc}

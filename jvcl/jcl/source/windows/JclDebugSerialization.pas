@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-10 15:54:58 +0200 (lun., 10 août 2009)                         $ }
-{ Revision:      $Rev:: 2935                                                                     $ }
+{ Last modified: $Date:: 2009-08-10 23:20:25 +0200 (lun., 10 août 2009)                         $ }
+{ Revision:      $Rev:: 2943                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -182,9 +182,9 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebugSerialization.pas $';
-    Revision: '$Revision: 2935 $';
-    Date: '$Date: 2009-08-10 15:54:58 +0200 (lun., 10 août 2009) $';
-    LogPath: '';
+    Revision: '$Revision: 2943 $';
+    Date: '$Date: 2009-08-10 23:20:25 +0200 (lun., 10 août 2009) $';
+    LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
     );
@@ -410,6 +410,7 @@ procedure TJclSerializableLocationInfo.Serialize(ASerializer: TJclCustomSimpleSe
 var
   S: string;
 begin
+  S := '';
   ASerializer.WriteString(Self, 'VAddress', Format('%p', [VAddress]));
   ASerializer.WriteString(Self, 'ModuleName', ModuleName);
   ASerializer.WriteString(Self, 'Address', Format('%p', [Address]));

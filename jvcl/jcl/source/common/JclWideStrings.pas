@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:39:32 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2923                                                                     $ }
+{ Last modified: $Date:: 2009-08-12 20:31:19 +0200 (mer., 12 août 2009)                         $ }
+{ Revision:      $Rev:: 2944                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -338,8 +338,8 @@ function MultiSzDup(const Source: PWideMultiSz): PWideMultiSz;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclWideStrings.pas $';
-    Revision: '$Revision: 2923 $';
-    Date: '$Date: 2009-08-09 16:39:32 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2944 $';
+    Date: '$Date: 2009-08-12 20:31:19 +0200 (mer., 12 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -816,6 +816,9 @@ asm
        POP     ESI
        {$ENDIF CPU32}
        {$IFDEF CPU64}
+       // save context
+       PUSH    RDI
+       PUSH    RSI
        // --> RCX Str
        MOV     RSI, RCX
        MOV     RDI, RSI
@@ -828,6 +831,9 @@ asm
        STOSW
        JMP     @@1
 @@2:
+       // restore context
+       POP     RSI
+       POP     RDI
        {$ENDIF CPU64}
 end;
 

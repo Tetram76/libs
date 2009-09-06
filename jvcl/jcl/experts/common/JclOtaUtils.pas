@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2922                                                                     $ }
+{ Last modified: $Date:: 2009-09-01 22:07:14 +0200 (mar., 01 sept. 2009)                         $ }
+{ Revision:      $Rev:: 2979                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -50,9 +50,6 @@ uses
   {$ENDIF MSWINDOWS}
   JclBorlandTools,
   ToolsAPI;
-
-const
-  MapFileOptionDetailed = 3;
 
 type
   // class of actions with a drop down menu on tool bars
@@ -204,15 +201,81 @@ type
 
   TJclOTAExpert = class(TJclOTAExpertBase, IOTAWizard, IOTANotifier)
   protected
+    { IOTANotifier }
     procedure AfterSave; virtual;
     procedure BeforeSave; virtual;
     procedure Destroyed; virtual;
     procedure Modified; virtual;
+    { IOTAWizard }
     procedure Execute; virtual;
     function GetIDString: string; virtual;
     function GetName: string; virtual;
     function GetState: TWizardState; virtual;
   end;
+
+  {$IFDEF BDS7_UP}
+  TJclOTALocalMenu = class(TInterfacedObject, IOTANotifier, IOTALocalMenu)
+  private
+    FCaption: string;
+    FChecked: Boolean;
+    FEnabled: Boolean;
+    FHelpContext: Integer;
+    FName: string;
+    FParent: string;
+    FPosition: Integer;
+    FVerb: string;
+  protected
+    { IOTANotifier }
+    procedure AfterSave;
+    procedure BeforeSave;
+    procedure Destroyed;
+    procedure Modified;
+  protected
+    { IOTALocalMenu }
+    function GetCaption: string;
+    function GetChecked: Boolean;
+    function GetEnabled: Boolean;
+    function GetHelpContext: Integer;
+    function GetName: string;
+    function GetParent: string;
+    function GetPosition: Integer;
+    function GetVerb: string;
+    procedure SetCaption(const Value: string);
+    procedure SetChecked(Value: Boolean);
+    procedure SetEnabled(Value: Boolean);
+    procedure SetHelpContext(Value: Integer);
+    procedure SetName(const Value: string);
+    procedure SetParent(const Value: string);
+    procedure SetPosition(Value: Integer);
+    procedure SetVerb(const Value: string);
+  public
+    property Caption: string read GetCaption write SetCaption;
+    property Checked: Boolean read GetChecked write SetChecked;
+    property Enabled: Boolean read GetEnabled write SetEnabled;
+    property HelpContext: Integer read GetHelpContext write SetHelpContext;
+    property Name: string read GetName write SetName;
+    property Parent: string read GetParent write SetParent;
+    property Position: Integer read GetPosition write SetPosition;
+    property Verb: string read GetVerb write SetVerb;
+  end;
+
+  TJclProjectManagerMenuExecuteEvent = procedure (const MenuContextList: IInterfaceList) of object;
+
+  TJclOTAProjectManagerMenu = class(TJclOTALocalMenu, IOTANotifier, IOTALocalMenu, IOTAProjectManagerMenu)
+  private
+    FIsMultiSelectable: Boolean;
+    FOnExecute: TJclProjectManagerMenuExecuteEvent;
+  protected
+    function GetIsMultiSelectable: Boolean;
+    procedure SetIsMultiSelectable(Value: Boolean);
+    procedure Execute(const MenuContextList: IInterfaceList); overload;
+    function PreExecute(const MenuContextList: IInterfaceList): Boolean;
+    function PostExecute(const MenuContextList: IInterfaceList): Boolean;
+  public
+    property IsMultiSelectable: Boolean read GetIsMultiSelectable write SetIsMultiSelectable;
+    property OnExecute: TJclProjectManagerMenuExecuteEvent read FOnExecute write FOnExecute;
+  end;
+  {$ENDIF BDS7_UP}
 
 // procedure SaveOptions(const Options: IOTAOptions; const FileName: string);
 function JclExpertShowExceptionDialog(AExceptionObj: TObject): Boolean;
@@ -238,8 +301,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaUtils.pas $';
-    Revision: '$Revision: 2922 $';
-    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 2979 $';
+    Date: '$Date: 2009-09-01 22:07:14 +0200 (mar., 01 sept. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil
@@ -1510,6 +1573,140 @@ begin
 
 end;
 
+{$IFDEF BDS7_UP}
+
+//=== { TJclOTALocalMenu } ===================================================
+
+procedure TJclOTALocalMenu.AfterSave;
+begin
+
+end;
+
+procedure TJclOTALocalMenu.BeforeSave;
+begin
+
+end;
+
+procedure TJclOTALocalMenu.Destroyed;
+begin
+
+end;
+
+procedure TJclOTALocalMenu.Modified;
+begin
+
+end;
+
+function TJclOTALocalMenu.GetCaption: string;
+begin
+  Result := FCaption;
+end;
+
+function TJclOTALocalMenu.GetChecked: Boolean;
+begin
+  Result := FChecked;
+end;
+
+function TJclOTALocalMenu.GetEnabled: Boolean;
+begin
+  Result := FEnabled;
+end;
+
+function TJclOTALocalMenu.GetHelpContext: Integer;
+begin
+  Result := FHelpContext;
+end;
+
+function TJclOTALocalMenu.GetName: string;
+begin
+  Result := FName;
+end;
+
+function TJclOTALocalMenu.GetParent: string;
+begin
+  Result := FParent;
+end;
+
+function TJclOTALocalMenu.GetPosition: Integer;
+begin
+  Result := FPosition;
+end;
+
+function TJclOTALocalMenu.GetVerb: string;
+begin
+  Result := FVerb;
+end;
+
+procedure TJclOTALocalMenu.SetCaption(const Value: string);
+begin
+  FCaption := Value;
+end;
+
+procedure TJclOTALocalMenu.SetChecked(Value: Boolean);
+begin
+  FChecked := Value;
+end;
+
+procedure TJclOTALocalMenu.SetEnabled(Value: Boolean);
+begin
+  FEnabled := Value;
+end;
+
+procedure TJclOTALocalMenu.SetHelpContext(Value: Integer);
+begin
+  FHelpContext := Value;
+end;
+
+procedure TJclOTALocalMenu.SetName(const Value: string);
+begin
+  FName := Value;
+end;
+
+procedure TJclOTALocalMenu.SetParent(const Value: string);
+begin
+  FParent := Value;
+end;
+
+procedure TJclOTALocalMenu.SetPosition(Value: Integer);
+begin
+  FPosition := Value;
+end;
+
+procedure TJclOTALocalMenu.SetVerb(const Value: string);
+begin
+  FVerb := Value;
+end;
+
+//=== { TJclOTAProjectManagerMenu } ==========================================
+
+function TJclOTAProjectManagerMenu.GetIsMultiSelectable: Boolean;
+begin
+  Result := FIsMultiSelectable;
+end;
+
+procedure TJclOTAProjectManagerMenu.SetIsMultiSelectable(Value: Boolean);
+begin
+  FIsMultiSelectable := Value;
+end;
+
+procedure TJclOTAProjectManagerMenu.Execute(const MenuContextList: IInterfaceList);
+begin
+  if Assigned(FOnExecute) then
+    FOnExecute(MenuContextList);
+end;
+
+function TJclOTAProjectManagerMenu.PreExecute(const MenuContextList: IInterfaceList): Boolean;
+begin
+  Result := True;
+end;
+
+function TJclOTAProjectManagerMenu.PostExecute(const MenuContextList: IInterfaceList): Boolean;
+begin
+  Result := True;
+end;
+
+{$ENDIF BDS7_UP}
+
 {$IFDEF BDS}
 var
   AboutBoxServices: IOTAAboutBoxServices = nil;
@@ -1598,25 +1795,5 @@ except
     raise;
   end;
 end;
-
-//=== Helper routines ========================================================
-
-{ (rom) disabled, unused
-procedure SaveOptions(const Options: IOTAOptions; const FileName: string);
-var
-  OptArray: TOTAOptionNameArray;
-  I: Integer;
-begin
-  OptArray := Options.GetOptionNames;
-  with TStringList.Create do
-  try
-    for I := Low(OptArray) to High(OptArray) do
-      Add(OptArray[I].Name + '=' + VarToStr(Options.Values[OptArray[I].Name]));
-    SaveToFile(FileName);
-  finally
-    Free;
-  end;
-end;
-}
 
 end.
