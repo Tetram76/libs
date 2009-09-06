@@ -15,8 +15,12 @@ function UnloadProc(Caller: TPSExec; p: TPSExternalProcRec; Global, Stack: TPSSt
 
 implementation
 uses
-  {$IFDEF LINUX}
+  {$IFDEF UNIX}
+  {$IFDEF Darwin}
+  LCLIntf, Unix, baseunix, dynlibs, termio, sockets;
+  {$ELSE}
   LibC{$IFNDEF FPC}, Windows{$ENDIF};
+  {$ENDIF}
   {$ELSE}
   Windows;
   {$ENDIF}
@@ -98,7 +102,7 @@ begin
   s2 := copy(s, 1, pos(tbtchar(#0), s)-1);
   delete(s, 1, length(s2)+1);
   h := makehash(s2);
-  s3 := copy(s, 1, pos(#0, s)-1);
+  s3 := copy(s, 1, pos(tbtchar(#0), s)-1);
   delete(s, 1, length(s3)+1);
   loadwithalteredsearchpath := bytebool(s[3]);
   i := 2147483647; // maxint
@@ -114,13 +118,17 @@ begin
         Result := False;
         exit;
       end;
-      {$IFDEF LINUX}
+      {$IFDEF UNIX}
+	  {$IFDEF DARWIN}
+	  dllhandle := LoadLibrary(PChar(s2));
+	  {$ELSE}
       dllhandle := dlopen(PChar(s2), RTLD_LAZY);
+	  {$ENDIF}
       {$ELSE}
       if loadwithalteredsearchpath then
-        dllhandle := LoadLibraryExA(PAnsichar(s2), 0, LOAD_WITH_ALTERED_SEARCH_PATH)
+        dllhandle := LoadLibraryExA(PAnsiChar(AnsiString(s2)), 0, LOAD_WITH_ALTERED_SEARCH_PATH)
       else
-        dllhandle := LoadLibraryA(Pansichar(s2));
+        dllhandle := LoadLibraryA(PAnsiChar(AnsiString(s2)));
       {$ENDIF}
       if dllhandle = {$IFDEF LINUX}nil{$ELSE}0{$ENDIF}then
       begin
