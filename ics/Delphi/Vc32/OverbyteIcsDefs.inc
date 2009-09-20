@@ -66,10 +66,11 @@ Oct 05, 2008 V1.09 USE_LINE for COMPILER10_UP, removed UNICODE check for .NET.
   DELPHI5_UP       Delphi 5  or higher
   DELPHI6_UP       Delphi 6  or higher
   DELPHI7_UP       Delphi 7  or higher  (Delphi 8 is .NET only. No way here)
-  DELPHI9_UP       Delphi 9  or higher  (Delphi 2005 has W32 compiler)
-  DELPHI10_UP      Delphi 10 or higher  (Delphi 2006)
+  DELPHI9_UP       Delphi 9  or higher  (Delphi 2005 - Diamondback, has W32 compiler)
+  DELPHI10_UP      Delphi 10 or higher  (Delphi 2006 - Dexter)
   DELPHI11_UP      Delphi 11 or higher  (Delphi 2007 - Highlander)
-  DELPHI12_UP      Delphi 12 or higher  (Tiburon)
+  DELPHI12_UP      Delphi 12 or higher  (Delphi 2009 - Tiburon)
+  DELPHI14_UP      Delphi 14 or higher  (Delphi 2010 - Weaver)
 
   BCB1             C++ Builder 1
   BCB3             C++ Builder 3
@@ -106,17 +107,32 @@ Oct 05, 2008 V1.09 USE_LINE for COMPILER10_UP, removed UNICODE check for .NET.
   COMPILER10_UP    Delphi 10 or C++ Builder 10 or higher
   COMPILER11_UP    Delphi or C++ Builder 2007 or higher (Highlander)
   COMPILER12_UP    Delphi or C++ Builder 12 or higher (Tiburon)
+  COMPILER14_UP    Delphi or C++ Builder 14 or higher (Weaver)
 
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * }
 
-{ User defines : enable or disable these defines depending on how you want your 
-  ICS Packages to be compiled }
-  
-{#$DEFINE USE_SSL}
+{ User defines: Enable or disable these defines depending on how you want    }
+{ your ICS Packages to be compiled.                                          }
+
+{ If NO_ADV_MT is defined, then there is less multithread code compiled.     }
+{.$DEFINE NO_ADV_MT}
+
+{ Uncomment next line to always include SSL code into the binary.            }
+{ In most cases leave it commented and define USE_SSL in the project options }
+{ if required.                                                               }
+{.$DEFINE USE_SSL}
+
+{ Next line specifies to link the ZLIB .obj files.                           }
 {$DEFINE ZLIB_OBJ}
 
-{ Dont not change anything below this line ! }
+{ Next symbol affects D2010 and later only. If defined adds RTTI directive   }
+{ "$RTTI EXPLICIT METHODS([]) FIELDS([]) PROPERTIES([])" to all units which  }
+{ disables all the inherited RTTI options and sets the new ones to not emit  }
+{ any extended RTTI information.                                             }
+{$DEFINE NO_EXTENDED_RTTI}
 
+{ Do not change anything below this line !                                   }
+{----------------------------------------------------------------------------}
 {$IFDEF FPC}
   {$MODE Delphi}                           { delphi mode            }
   {$H+}                                    { Use long strings       }
@@ -144,6 +160,16 @@ Oct 05, 2008 V1.09 USE_LINE for COMPILER10_UP, removed UNICODE check for .NET.
   {$DEFINE COMPILER3_UP}
   {$DEFINE COMPILER2_UP}
   {$DEFINE COMPILER1_UP}
+{$ENDIF}
+
+{$IFDEF VER210}
+  {$DEFINE COMPILER14}
+  {$IFDEF BCB}
+    {$DEFINE BCB14}
+  {$ELSE}
+    {$DEFINE DELPHI14}
+    {$DEFINE DELPHI}
+  {$ENDIF}
 {$ENDIF}
 
 {$IFDEF VER200}
@@ -269,6 +295,21 @@ Oct 05, 2008 V1.09 USE_LINE for COMPILER10_UP, removed UNICODE check for .NET.
   {$DEFINE DELPHI}
 {$ENDIF}
 
+{$IFDEF DELPHI14}
+  {$DEFINE DELPHI14_UP} 
+  {$DEFINE DELPHI12_UP}
+  {$DEFINE DELPHI11_UP}
+  {$DEFINE DELPHI10_UP}
+  {$DEFINE DELPHI9_UP}
+  {$DEFINE DELPHI7_UP}
+  {$DEFINE DELPHI6_UP}
+  {$DEFINE DELPHI5_UP}
+  {$DEFINE DELPHI4_UP}
+  {$DEFINE DELPHI3_UP}
+  {$DEFINE DELPHI2_UP}
+  {$DEFINE DELPHI1_UP}
+{$ENDIF}
+
 {$IFDEF DELPHI12}
   {$DEFINE DELPHI12_UP}
   {$DEFINE DELPHI11_UP}
@@ -366,6 +407,22 @@ Oct 05, 2008 V1.09 USE_LINE for COMPILER10_UP, removed UNICODE check for .NET.
 
 {$IFDEF DELPHI1}
   {$DEFINE DELPHI1_UP}
+{$ENDIF}
+
+{$IFDEF COMPILER14}
+  {$DEFINE COMPILER14_UP}
+  {$DEFINE COMPILER12_UP}
+  {$DEFINE COMPILER11_UP}
+  {$DEFINE COMPILER10_UP}
+  {$DEFINE COMPILER9_UP}
+  {$DEFINE COMPILER7_UP}
+  {$DEFINE COMPILER6_UP}
+  {$DEFINE COMPILER5_UP}
+  {$DEFINE COMPILER4_UP}
+  {$DEFINE COMPILER35_UP}
+  {$DEFINE COMPILER3_UP}
+  {$DEFINE COMPILER2_UP}
+  {$DEFINE COMPILER1_UP}
 {$ENDIF}
 
 {$IFDEF COMPILER12}
@@ -480,6 +537,19 @@ Oct 05, 2008 V1.09 USE_LINE for COMPILER10_UP, removed UNICODE check for .NET.
 
 {$IFDEF COMPILER1}
   {$DEFINE COMPILER1_UP}
+{$ENDIF}
+
+{$IFDEF BCB14}
+  {$DEFINE BCB14_UP}
+  {$DEFINE BCB12_UP}
+  {$DEFINE BCB11_UP}
+  {$DEFINE BCB10_UP}
+  {$DEFINE BCB7_UP}
+  {$DEFINE BCB6_UP}
+  {$DEFINE BCB5_UP}
+  {$DEFINE BCB4_UP}
+  {$DEFINE BCB3_UP}
+  {$DEFINE BCB1_UP}
 {$ENDIF}
 
 {$IFDEF BCB12}

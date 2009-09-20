@@ -4,7 +4,7 @@ Author:       François PIETTE
 Description:  THttpAppSrv is a specialized THttpServer component to ease
               his use for writing application servers.
 Creation:     Dec 20, 2003
-Version:      7.03
+Version:      7.05
 EMail:        francois.piette@overbyte.be         http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -65,6 +65,13 @@ History:
                  Added overloaded CheckSession.
 Jun 12, 2009 V7.03 don't ignore event Flags in TriggerGetDocument otherwise
                     authentication fails
+Jul 14, 2009 V7.04 F. Piette added THttpAppSrvConnection.OnDestroying and
+                   related processing.
+Sept 1, 2009 V7.05 Angus added TriggerHeadDocument, can not ignore HEAD
+                     command for virtual pages else 404 returned
+                   Added OnVirtualException event to report exceptions
+                     creating virtual pages
+
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *_*}
@@ -76,6 +83,11 @@ unit OverbyteIcsHttpAppServer;
 {$H+}           { Use long strings                    }
 {$J+}           { Allow typed constant to be modified }
 {$I OVERBYTEICSDEFS.INC}
+{$IFDEF COMPILER14_UP}
+  {$IFDEF NO_EXTENDED_RTTI}
+    {$RTTI EXPLICIT METHODS([]) FIELDS([]) PROPERTIES([])}
+  {$ENDIF}
+{$ENDIF}
 {$IFDEF DELPHI6_UP}
     {$WARN SYMBOL_PLATFORM   OFF}
     {$WARN SYMBOL_LIBRARY    OFF}
@@ -94,10 +106,15 @@ uses
     OverbyteIcsUtils;
 
 type
+    TVirtualExceptionEvent = procedure (Sender : TObject;
+                                  E          : Exception;
+                                  Method     : THttpMethod;
+                                  const Path : string) of object;  { V7.05 }
     TMyHttpHandler        = procedure (var Flags: THttpGetFlag) of object;
-    TUrlHandler          = class;
+    TUrlHandler           = class;
     THttpAppSrvConnection = class(THttpConnection)
     protected
+        FOnDestroying  : TNotifyEvent;
         function GetHostName: String;
     public
         PostedData     : PAnsiChar; // Will hold dynamically allocated buffer
@@ -130,6 +147,8 @@ type
                                         var OK : Boolean); virtual;
         procedure  NoGetHandler(var OK : Boolean); virtual;
         property HostName : String read GetHostName;
+        property OnDestroying  : TNotifyEvent read  FOnDestroying
+                                              write FOnDestroying;
     end;
 
     THttpAllowedFlag = (afBeginBy, afExactMatch, afDirList);
@@ -157,8 +176,9 @@ type
         function  GetWSession: TWebSession;
         function  GetDocStream: TStream;
         procedure setDocStream(const Value: TStream);
-        function GetOnGetRowData: THttpGetRowDataEvent;
+        function  GetOnGetRowData: THttpGetRowDataEvent;
         procedure SetOnGetRowData(const Value: THttpGetRowDataEvent);
+        procedure ClientDestroying(Sender : TObject); virtual;
     public
         procedure Execute; virtual;
         procedure Finish; virtual;
@@ -246,6 +266,7 @@ type
         FMsg_WM_FINISH   : UINT;
         FHasAllocateHWnd : Boolean;
         FOnDeleteSession : TDeleteSessionEvent;
+        FOnVirtualExceptionEvent : TVirtualExceptionEvent;      { V7.05 }
         procedure AllocateMsgHandlers; override;
         procedure FreeMsgHandlers; override;
         function  MsgHandlersCount: Integer; override;
@@ -262,6 +283,9 @@ type
                                       var Flags : THttpGetFlag); override;
         procedure TriggerGetDocument(Sender    : TObject;
                                      var Flags : THttpGetFlag); override;
+        procedure TriggerHeadDocument(       { V7.05 can not ignore HEAD command }
+                                     Sender     : TObject;
+                                     var Flags  : THttpGetFlag); override;
         procedure TriggerPostedData(Sender: TObject; ErrCode: WORD); override;
         procedure TriggerClientConnect(Client : TObject; ErrCode : WORD); override;
         function  GetSessions(nIndex: Integer): TWebSession;
@@ -304,6 +328,8 @@ type
                                                           write SetSessionTimeout;
         property OnDeleteSession : TDeleteSessionEvent    read  FOnDeleteSession
                                                           write FOnDeleteSession;
+        property OnVirtualException : TVirtualExceptionEvent read  FOnVirtualExceptionEvent
+                                                             write FOnVirtualExceptionEvent;      { V7.05 }
     end;
 
 function ReverseTextFileToHtmlToString(
@@ -622,13 +648,14 @@ begin
                         TMyHttpHandler(Proc)(Flags);
                 end
                 else if Disp.SObjClass <> nil then begin
-                    SObj := Disp.SobjClass.Create(Self);
+                    SObj := Disp.SObjClass.Create(Self);
                     try
-                        SObj.FClient        := ClientCnx;
-                        SObj.FFlags         := Disp.FLags;
-                        SObj.FMsg_WM_FINISH := FMsg_WM_FINISH;
-                        SObj.FWndHandle     := FHandle;
-                        SObj.FMethod        := httpMethodPost;
+                        SObj.FClient           := ClientCnx;
+                        SObj.FFlags            := Disp.FLags;
+                        SObj.FMsg_WM_FINISH    := FMsg_WM_FINISH;
+                        SObj.FWndHandle        := FHandle;
+                        SObj.FMethod           := httpMethodPost;
+                        ClientCnx.OnDestroying := SObj.ClientDestroying;
                         ClientCnx.BeforeObjPostHandler(SObj, OK);
                         if OK then begin
                             SObj.Execute;
@@ -639,7 +666,12 @@ begin
                             FreeAndNil(SObj);
                         end;
                     except
-                        FreeAndNil(SObj);
+                        on E:Exception do
+                        begin
+                            FreeAndNil(SObj);
+                            if Assigned (FOnVirtualExceptionEvent) then  { V7.05 }
+                                FOnVirtualExceptionEvent (Self, E, httpMethodPost, ClientCnx.Path);
+                        end;
                     end;
                 end;
             end
@@ -711,7 +743,12 @@ begin
                         FreeAndNil(SObj);
                     end;
                 except
-                    FreeAndNil(SObj);
+                    on E:Exception do
+                    begin
+                        FreeAndNil(SObj);
+                        if Assigned (FOnVirtualExceptionEvent) then  { V7.05 }
+                            FOnVirtualExceptionEvent (Self, E, httpMethodGet, ClientCnx.Path);
+                    end;
                 end;
             end;
             Exit;
@@ -786,6 +823,29 @@ begin
     Flags := hg404;
 end;
 
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpAppSrv.TriggerHeadDocument(       { V7.05 can not ignore HEAD command }
+     Sender     : TObject;
+     var Flags  : THttpGetFlag);
+begin
+//OutputDebugString(PChar('HTTP_HEAD  ' + (Sender as THttpAppSrvConnection).Path));
+    inherited TriggerHeadDocument(Sender, Flags);
+    if Flags in [hgWillSendMySelf, hg404, hg403, hg401, hgAcceptData,
+                                                        hgSendDirList] then
+        Exit ;
+
+    // Handle all virtual documents. Returns TRUE if document handled.
+    if GetDispatchVirtualDocument(Sender as THttpAppSrvConnection, Flags) then
+        Exit;
+
+    // Handle all normal (static) documents. Returns TRUE if document handled.
+    if GetDispatchNormalDocument(Sender as THttpConnection, Flags) then
+        Exit;
+
+    // Reject anything else
+    Flags := hg404;
+end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpAppSrv.TriggerPostDocument(
@@ -926,6 +986,9 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 destructor THttpAppSrvConnection.Destroy;
 begin
+    if Assigned(FOnDestroying) then
+        FOnDestroying(Self);
+    
     if Assigned(PostedData) then begin
         FreeMem(PostedData);
         PostedData := nil;
@@ -1399,51 +1462,74 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TUrlHandler.ClientDestroying(Sender : TObject);
+begin
+    if FClient = Sender then
+        FClient := nil;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TUrlHandler.GetDocStream: TStream;
 begin
-    Result := Client.DocStream;
+    if Assigned(Client) then
+        Result := Client.DocStream
+    else
+        Result := nil;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TUrlHandler.GetOnGetRowData: THttpGetRowDataEvent;
 begin
-    Result := Client.OnGetRowData;
+    if Assigned(Client) then
+        Result := Client.OnGetRowData
+    else
+        Result := nil;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TUrlHandler.SetOnGetRowData(const Value: THttpGetRowDataEvent);
 begin
-    Client.OnGetRowData := Value;
+    if Assigned(Client) then
+        Client.OnGetRowData := Value;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TUrlHandler.SetDocStream(const Value: TStream);
 begin
-    Client.DocStream := Value;
+    if Assigned(Client) then
+        Client.DocStream := Value;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TUrlHandler.GetWSession: TWebSession;
 begin
-    Result := Client.WSession;
+    if Assigned(Client) then
+        Result := Client.WSession
+    else
+        Result := nil;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TUrlHandler.GetParams: String;
 begin
-    Result := Client.Params;
+    if Assigned(Client) then
+        Result := Client.Params
+    else
+        Result := '';
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TUrlHandler.SetParams(const Value: String);
 begin
-    Client.Params := Value;
+    if Assigned(Client) then
+        Client.Params := Value;
 end;
 
 
@@ -1452,14 +1538,16 @@ procedure TUrlHandler.AnswerPage(
     const Status, Header, HtmlFile: String;
     UserData: TObject; Tags: array of const);
 begin
-    Client.AnswerPage(FFlags, Status, Header, HtmlFile, UserData, Tags);
+    if Assigned(Client) then
+        Client.AnswerPage(FFlags, Status, Header, HtmlFile, UserData, Tags);
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TUrlHandler.AnswerStream(const Status, ContType, Header: String);
 begin
-    Client.AnswerStream(FFlags, Status, ContType, Header);
+    if Assigned(Client) then
+        Client.AnswerStream(FFlags, Status, ContType, Header);
 end;
 
 
@@ -1467,14 +1555,18 @@ end;
 procedure TUrlHandler.AnswerString(
     const Status, ContType, Header, Body: String);
 begin
-    Client.AnswerString(FFlags, Status, ContType, Header, Body);
+    if Assigned(Client) then
+        Client.AnswerString(FFlags, Status, ContType, Header, Body);
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TUrlHandler.CheckSession(const NegativeAnswerHtml: String): Boolean;
 begin
-    Result := Client.CheckSession(FFlags, NegativeAnswerHtml);
+    if Assigned(Client) then
+        Result := Client.CheckSession(FFlags, NegativeAnswerHtml)
+    else
+        Result := FALSE;
 end;
 
 
@@ -1483,8 +1575,11 @@ function TUrlHandler.CheckSession(
     const Status, Header, NegativeAnswerHtml: String;
     UserData: TObject; Tags: array of const): Boolean;
 begin
-    Result := Client.CheckSession(FFlags, Status, Header, NegativeAnswerHtml,
-                                  UserData, Tags);
+    if Assigned(Client) then
+        Result := Client.CheckSession(FFlags, Status, Header,
+                                      NegativeAnswerHtml, UserData, Tags)
+    else
+        Result := FALSE;
 end;
 
 
@@ -1493,21 +1588,28 @@ function TUrlHandler.CreateSession(
     const Params: String; Expiration: TDateTime;
     SessionData: TWebSessionData): String;
 begin
-    Result := Client.CreateSession(Params, Expiration, SessionData);
+    if Assigned(Client) then
+        Result := Client.CreateSession(Params, Expiration, SessionData)
+    else
+        Result := NO_CACHE;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TUrlHandler.DeleteSession;
 begin
-    Client.WSessions.DeleteSession(Client.WSessionID);
+    if Assigned(Client) then
+        Client.WSessions.DeleteSession(Client.WSessionID);
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TUrlHandler.ValidateSession: Boolean;
 begin
-    Result := Client.ValidateSession;
+    if Assigned(Client) then
+        Result := Client.ValidateSession
+    else
+        Result := FALSE;
 end;
 
 

@@ -3,11 +3,11 @@
 Author:       François PIETTE
 Description:  TWSocket class encapsulate the Windows Socket paradigm
 Creation:     April 1996
-Version:      7.24
+Version:      7.32
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1996-2008 by François PIETTE
+Legal issues: Copyright (C) 1996-2009 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
@@ -707,6 +707,23 @@ Apr 24, 2009 V7.23 A. Garrels added *experimental* OpenSSL engine support which
 Jun 12, 2009 V7.24 Angus added WriteCount property, how many bytes sent since
                      connection opened
                    Only reset ReadCount when connection opened, not closed
+Jul 16, 2009 V7.25 Arno fixed and changed SetCounterClass()
+Jul 19, 2009 V7.26 Arno - SSL code ignored FPaused flag, the change is in
+                   TCustomSslWSocket.TriggerEvent.
+Sep 04, 2009 V7.27 Set option TCP_NODELAY in Dup as well as provide a public
+                   method to set this option, similar as suggested by
+                   Samuel Soldat.
+Sep 08, 2009 V7.28 Arno - Minor Unicode bugfix in TX509Base.GetExtension().
+Sep 09, 2009 V7.29 Arno - Added new public methods TX509Base.WriteToBio() and
+                   TX509Base.ReadFromBio(). Method SafeToPemFile got an arg.
+                   that adds human readable certificate text to the output.
+                   InitializeSsl inlined. Removed a Delphi 1 conditional.
+Sep 17, 2009 V7.30 Anton Sviridov optimized setting of SSL options.
+Sep 17, 2009 V7.31 Arno fixed a Unicode bug in TX509Base.GetExtension and
+                   a general bug in TX509Base.GetSha1Hash (AnsiString as
+                   digest buffer should really be avoided)
+Sep 18, 2009 V7.32 Arno changed visibility of TX509Base.WriteToBio() and
+                   TX509Base.ReadFromBio() to protected.
 
 }
 
@@ -757,10 +774,17 @@ unit OverbyteIcsWSocket;
 {$B-}           { Enable partial boolean evaluation   }
 {$T-}           { Untyped pointers                    }
 {$X+}           { Enable extended syntax              }
+{$H+}           { Use long strings                    }
+{$J+}           { Allow typed constant to be modified }
 {$ALIGN 8}
 {$I OverbyteIcsDefs.inc}
 {$IFDEF USE_SSL}
     {$I OverbyteIcsSslDefs.inc}
+{$ENDIF}
+{$IFDEF COMPILER14_UP}
+  {$IFDEF NO_EXTENDED_RTTI}
+    {$RTTI EXPLICIT METHODS([]) FIELDS([]) PROPERTIES([])}
+  {$ENDIF}
 {$ENDIF}
 {$IFDEF COMPILER12_UP}
     { These are usefull for debugging !}
@@ -774,17 +798,8 @@ unit OverbyteIcsWSocket;
     {$WARN SYMBOL_LIBRARY    OFF}
     {$WARN SYMBOL_DEPRECATED OFF}
 {$ENDIF}
-{$IFDEF COMPILER2_UP}{ Not for Delphi 1                    }
-    {$H+}            { Use long strings                    }
-    {$J+}            { Allow typed constant to be modified }
-{$ENDIF}
 {$IFDEF BCB3_UP}
     {$ObjExportAll On}
-{$ENDIF}
-
-{ If NO_ADV_MT is defined, then there is less multithread code compiled.    }
-{$IFDEF DELPHI1}
-    {$DEFINE NO_ADV_MT}
 {$ENDIF}
 
 {$IFDEF WIN32}
@@ -816,8 +831,8 @@ uses
   OverbyteIcsWinsock;
 
 const
-  WSocketVersion            = 722;
-  CopyRight    : String     = ' TWSocket (c) 1996-2008 Francois Piette V7.22 ';
+  WSocketVersion            = 732;
+  CopyRight    : String     = ' TWSocket (c) 1996-2009 Francois Piette V7.32 ';
   WSA_WSOCKET_TIMEOUT       = 12001;
 {$IFNDEF BCB}
   { Manifest constants for Shutdown }
@@ -1157,6 +1172,7 @@ type  { <== Required to make D7 code explorer happy, AG 05/24/2007 }
     function    GetSockName(var saddr : TSockAddrIn; var saddrlen : Integer) : Integer; virtual;
     procedure   SetLingerOption;
     procedure   SetKeepAliveOption;
+    function    SetTcpNoDelayOption: Boolean; { V7.27 }
     procedure   Dup(NewHSocket : TSocket); virtual;
     procedure   Shutdown(How : Integer); virtual;
     procedure   Pause; virtual;
@@ -1530,7 +1546,7 @@ type
         procedure   RaiseLastOpenSslError(EClass          : ExceptClass;
                                           Dump            : Boolean = FALSE;
                                           const CustomMsg : String  = ''); virtual;
-        procedure   InitializeSsl;
+        procedure   InitializeSsl; {$IFDEF USE_INLINE} inline; {$ENDIF}
         procedure   FinalizeSsl;
     public
         constructor Create(AOwner: TComponent); override;
@@ -1574,13 +1590,14 @@ const                                                             {AG 02/06/06}
 {$ENDIF}
 type
     EX509Exception = class(Exception);
+
     TExtension = record
         Critical  : Boolean;
         ShortName : String;
         Value     : String; // may be also one or multiple Name=value pairs,
     end;                    // separated by a CRLF
-
     PExtension = ^TExtension;
+
     TBioOpenMethode = (bomRead, bomWrite);
     TX509Base = class(TSslBaseComponent)
     private
@@ -1613,6 +1630,10 @@ type
         function    GetSha1Hash: AnsiString;
         function    OpenFileBio(const FileName  : String;
                                 Methode         : TBioOpenMethode): PBIO;
+        procedure   ReadFromBio(ABio: PBIO; IncludePrivateKey: Boolean = FALSE;
+                                const Password: String = ''); virtual;
+        procedure   WriteToBio(ABio: PBIO; IncludePrivateKey: Boolean = FALSE;
+                               AddRawText: Boolean = FALSE); virtual;
     public
         constructor Create(AOwner: TComponent; X509: Pointer = nil); reintroduce;
         destructor  Destroy; override;
@@ -1623,7 +1644,8 @@ type
                                     IncludePrivateKey: Boolean = False;
                                     const Password: String = '');
         procedure   SaveToPemFile(const FileName: String;
-                                  IncludePrivateKey: Boolean = False);
+                                  IncludePrivateKey: Boolean = FALSE;
+                                  AddRawText: Boolean = FALSE);
         procedure   PrivateKeyLoadFromPemFile(const FileName: String;
                                               const Password: String = '');
         procedure   PrivateKeySaveToPemFile(const FileName: String);
@@ -5344,12 +5366,23 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomWSocket.SetCounterClass(const Value: TWSocketCounterClass);
+var
+    NewCounter : TWSocketCounter;
 begin
-    if Assigned(FCounter) then
-        raise ESocketException.Create('Property CounterClass can only be set ' +
-              'when property Counter is not assigned! Call DestroyCounter first.');
     if Value = nil then
         raise ESocketException.Create('Property CounterClass may not be nil!');
+    if Value <> FCounterClass then begin
+        FCounterClass := Value;
+        if Assigned(FCounter) then begin
+            NewCounter              := FCounterClass.Create;
+            NewCounter.ConnectDT    := FCounter.ConnectDT;
+            NewCounter.ConnectTick  := FCounter.ConnectTick;
+            NewCounter.LastRecvTick := FCounter.LastRecvTick;
+            NewCounter.LastSendTick := FCounter.LastSendTick;
+            FCounter.Free;
+            FCounter := NewCounter;
+        end;
+    end;
 end;
 
 
@@ -5451,6 +5484,9 @@ begin
         Exit;
     end;
 
+    if HasOption(FComponentOptions, wsoTcpNoDelay) and { V7.27 }
+                (not SetTcpNoDelayOption) then
+        Exit;
     SetLingerOption;
     SetKeepAliveOption;  // AG { 05/23/07)
 
@@ -7127,6 +7163,7 @@ var
 begin
     if FKeepAliveOnOff = wsKeepAliveOff then
         Exit;
+    Assert(FHSocket <> INVALID_SOCKET); { V7.27 }
     if FKeepAliveOnOff = wsKeepAliveOnSystem then begin
         OptVal := 1;
         Status := WSocket_Synchronized_setsockopt(FHSocket, SOL_SOCKET,
@@ -7181,6 +7218,24 @@ begin
         SocketError('setsockopt(SO_LINGER)');
         Exit;
     end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomWSocket.SetTcpNoDelayOption: Boolean; { V7.27 }
+var
+    optval  : Integer;
+begin
+    Assert(FHSocket <> INVALID_SOCKET);
+    if HasOption(FComponentOptions, wsoTcpNoDelay) then
+        optval := -1 { true }
+    else
+        optval := 0; { false }
+    Result := WSocket_Synchronized_setsockopt(FHSocket, IPPROTO_TCP,
+                                              TCP_NODELAY,
+                                              optval, SizeOf(optval)) = 0;
+    if not Result then
+        SocketError('setsockopt(IPPROTO_TCP, TCP_NODELAY)');
 end;
 
 
@@ -7348,16 +7403,9 @@ begin
             Exit;
         end;
 
-        if HasOption(FComponentOptions, wsoTcpNoDelay) then begin
-            optval := -1; { true, 0=false }
-            iStatus := WSocket_Synchronized_setsockopt(FHsocket, IPPROTO_TCP,
-                                                       TCP_NODELAY, optval, SizeOf(optval));
-            if iStatus <> 0 then begin
-                SocketError('setsockopt(IPPROTO_TCP, TCP_NODELAY)');
-                Exit;
-            end;
-        end;
-
+        if HasOption(FComponentOptions, wsoTcpNoDelay) and { V7.27 }
+                    (not SetTcpNoDelayOption) then
+            Exit;
         SetLingerOption;
         SetKeepAliveOption;
 
@@ -10048,6 +10096,7 @@ end;
 { You must define USE_SSL so that SSL code is included in the component.    }
 { Either in OverbyteIcsDefs.inc or in the project/package options.          }
 {$IFDEF USE_SSL}
+
 var
     //GSslInitialized     : Integer = 0;
     SslRefCount               : Integer = 0;
@@ -10460,7 +10509,7 @@ begin
         Len := 20;
         SetLength(Hash, Len);
         f_X509_digest(X509, f_EVP_sha1, PAnsiChar(Hash), @Len);
-        SetLength(Hash, _StrLen(PAnsiChar(@Hash[1])));
+        SetLength(Hash, _StrLen(PAnsiChar(Hash)));
         Result := GetByHash(Hash);
     end
     else
@@ -10605,6 +10654,38 @@ end;
 {$ENDIF OPENSSL_NO_ENGINE}
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+const
+    SslIntOptions: array[TSslOption] of Integer =                   { V7.30 }
+           (SSL_OP_CIPHER_SERVER_PREFERENCE,
+            SSL_OP_MICROSOFT_SESS_ID_BUG,
+            SSL_OP_NETSCAPE_CHALLENGE_BUG,
+            SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG,
+            SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG,
+            SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER,
+            SSL_OP_MSIE_SSLV2_RSA_PADDING,
+            SSL_OP_SSLEAY_080_CLIENT_DH_BUG,
+            SSL_OP_TLS_D5_BUG,
+            SSL_OP_TLS_BLOCK_PADDING_BUG,
+            SSL_OP_TLS_ROLLBACK_BUG,
+            SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS,
+            SSL_OP_SINGLE_DH_USE,
+            SSL_OP_EPHEMERAL_RSA,
+            SSL_OP_NO_SSLv2,
+            SSL_OP_NO_SSLv3,
+            SSL_OP_NO_TLSv1,
+            SSL_OP_PKCS1_CHECK_1,
+            SSL_OP_PKCS1_CHECK_2,
+            SSL_OP_NETSCAPE_CA_DN_BUG,
+            SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION,
+            SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG);
+
+  SslIntSessCacheModes: array[TSslSessCacheMode] of Integer =     { V7.30 }
+            (SSL_SESS_CACHE_CLIENT,
+             SSL_SESS_CACHE_SERVER,
+             SSL_SESS_CACHE_NO_AUTO_CLEAR,
+             SSL_SESS_CACHE_NO_INTERNAL_LOOKUP,
+             SSL_SESS_CACHE_NO_INTERNAL_STORE);
+
 constructor TSslContext.Create(AOwner: TComponent);
 begin
     inherited Create(AOwner);
@@ -11810,58 +11891,19 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TSslContext.GetSslOptions: TSslOptions;
+function TSslContext.GetSslOptions: TSslOptions; { V7.30 }
+var 
+    Opt: TSslOption;
 begin
 {$IFNDEF NO_ADV_MT}
     Lock;
     try
 {$ENDIF}
         Result := [];
-        if (FSslOptionsValue and SSL_OP_CIPHER_SERVER_PREFERENCE) <> 0 then
-            Result := Result + [sslOpt_CIPHER_SERVER_PREFERENCE];
-        if (FSslOptionsValue and SSL_OP_MICROSOFT_SESS_ID_BUG) <> 0 then
-            Result := Result + [sslOpt_MICROSOFT_SESS_ID_BUG];
-        if (FSslOptionsValue and SSL_OP_NETSCAPE_CHALLENGE_BUG) <> 0 then
-            Result := Result + [sslOpt_NETSCAPE_CHALLENGE_BUG];
-        if (FSslOptionsValue and SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG) <> 0 then
-            Result := Result + [sslOpt_NETSCAPE_REUSE_CIPHER_CHANGE_BUG];
-        if (FSslOptionsValue and SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG) <> 0 then
-            Result := Result + [sslOpt_SSLREF2_REUSE_CERT_TYPE_BUG];
-        if (FSslOptionsValue and SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER) <> 0 then
-            Result := Result + [sslOpt_MICROSOFT_BIG_SSLV3_BUFFER];
-        if (FSslOptionsValue and SSL_OP_MSIE_SSLV2_RSA_PADDING) <> 0 then
-            Result := Result + [sslOpt_MSIE_SSLV2_RSA_PADDING];
-        if (FSslOptionsValue and SSL_OP_SSLEAY_080_CLIENT_DH_BUG) <> 0 then
-            Result := Result + [sslOpt_SSLEAY_080_CLIENT_DH_BUG];
-        if (FSslOptionsValue and SSL_OP_TLS_D5_BUG) <> 0 then
-            Result := Result + [sslOpt_TLS_D5_BUG];
-        if (FSslOptionsValue and SSL_OP_TLS_BLOCK_PADDING_BUG) <> 0 then
-            Result := Result + [sslOpt_TLS_BLOCK_PADDING_BUG];
-        if (FSslOptionsValue and SSL_OP_TLS_ROLLBACK_BUG) <> 0 then
-            Result := Result + [sslOpt_TLS_ROLLBACK_BUG];
-        if (FSslOptionsValue and SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS) <> 0 then
-            Result := Result + [sslOpt_DONT_INSERT_EMPTY_FRAGMENTS];
-        if (FSslOptionsValue and SSL_OP_SINGLE_DH_USE) <> 0 then
-            Result := Result + [sslOpt_SINGLE_DH_USE];
-        if (FSslOptionsValue and SSL_OP_EPHEMERAL_RSA) <> 0 then
-            Result := Result + [sslOpt_EPHEMERAL_RSA];
-        if (FSslOptionsValue and SSL_OP_NO_SSLv2) <> 0 then
-            Result := Result + [sslOpt_NO_SSLv2];
-        if (FSslOptionsValue and SSL_OP_NO_SSLv3) <> 0 then
-            Result := Result + [sslOpt_NO_SSLv3];
-        if (FSslOptionsValue and SSL_OP_NO_TLSv1) <> 0 then
-            Result := Result + [sslOpt_NO_TLSv1];
-        if (FSslOptionsValue and SSL_OP_PKCS1_CHECK_1) <> 0 then
-            Result := Result + [sslOpt_PKCS1_CHECK_1];
-        if (FSslOptionsValue and SSL_OP_PKCS1_CHECK_2) <> 0 then
-            Result := Result + [sslOpt_PKCS1_CHECK_2];
-        if (FSslOptionsValue and SSL_OP_NETSCAPE_CA_DN_BUG) <> 0 then
-            Result := Result + [sslOpt_NETSCAPE_CA_DN_BUG];
-        if (FSslOptionsValue and SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION) <> 0 then
-            Result := Result + [sslOpt_NO_SESSION_RESUMPTION_ON_RENEGOTIATION];
-        if (FSslOptionsValue and SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG) <> 0 then
-            Result := Result + [sslOpt_NETSCAPE_DEMO_CIPHER_CHANGE_BUG];
-{$IFNDEF NO_ADV_MT}            
+        for Opt := Low(TSslOption) to High(TSslOption) do
+            if (FSslOptionsValue and SslIntOptions[Opt]) <> 0 then
+                Include(Result, Opt);
+{$IFNDEF NO_ADV_MT}
     finally
         Unlock
     end;
@@ -11870,58 +11912,19 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure TSslContext.SetSslOptions(Value: TSslOptions);
+procedure TSslContext.SetSslOptions(Value: TSslOptions); { V7.30 }
+var 
+    Opt: TSslOption;
 begin
 {$IFNDEF NO_ADV_MT}
     Lock;
     try
 {$ENDIF}
         FSslOptionsValue := 0;
-        if sslOpt_CIPHER_SERVER_PREFERENCE in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_CIPHER_SERVER_PREFERENCE;
-        if sslOpt_MICROSOFT_SESS_ID_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_MICROSOFT_SESS_ID_BUG;
-        if sslOpt_NETSCAPE_CHALLENGE_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_NETSCAPE_CHALLENGE_BUG;
-        if sslOpt_NETSCAPE_REUSE_CIPHER_CHANGE_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG;
-        if sslOpt_SSLREF2_REUSE_CERT_TYPE_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG;
-        if sslOpt_MICROSOFT_BIG_SSLV3_BUFFER in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER;
-        if sslOpt_MSIE_SSLV2_RSA_PADDING in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_MSIE_SSLV2_RSA_PADDING;
-        if sslOpt_SSLEAY_080_CLIENT_DH_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_SSLEAY_080_CLIENT_DH_BUG;
-        if sslOpt_TLS_D5_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_TLS_D5_BUG;
-        if sslOpt_TLS_BLOCK_PADDING_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_TLS_BLOCK_PADDING_BUG;
-        if sslOpt_TLS_ROLLBACK_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_TLS_ROLLBACK_BUG;
-        if sslOpt_DONT_INSERT_EMPTY_FRAGMENTS in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_DONT_INSERT_EMPTY_FRAGMENTS;
-        if sslOpt_SINGLE_DH_USE in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_SINGLE_DH_USE;
-        if sslOpt_EPHEMERAL_RSA in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_EPHEMERAL_RSA;
-        if sslOpt_NO_SSLv2 in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_NO_SSLv2;
-        if sslOpt_NO_SSLv3 in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_NO_SSLv3;
-        if sslOpt_NO_TLSv1 in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_NO_TLSv1;
-        if sslOpt_PKCS1_CHECK_1 in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_PKCS1_CHECK_1;
-        if sslOpt_PKCS1_CHECK_2 in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_PKCS1_CHECK_2;
-        if sslOpt_NETSCAPE_CA_DN_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_NETSCAPE_CA_DN_BUG;
-        if sslOpt_NO_SESSION_RESUMPTION_ON_RENEGOTIATION in Value then
-            FSslOptionsValue := FSslOptionsValue + SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION;
-        if sslOpt_NETSCAPE_DEMO_CIPHER_CHANGE_BUG in Value then
-            FSslOptionsValue := FSslOptionsValue + LongInt(SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG);
-{$IFNDEF NO_ADV_MT}            
+        for Opt := Low(TSslOption) to High(TSslOption) do
+            if Opt in Value then
+                FSslOptionsValue := FSslOptionsValue or SslIntOptions[Opt];
+{$IFNDEF NO_ADV_MT}
     finally
         Unlock;
     end;
@@ -11930,61 +11933,40 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure TSslContext.SetSslSessCacheModes(Value: TSslSessCacheModes);
+procedure TSslContext.SetSslSessCacheModes(Value: TSslSessCacheModes); { V7.30 }
+var 
+    SessMode: TSslSessCacheMode;
 begin
 {$IFNDEF NO_ADV_MT}
     Lock;
     try
 {$ENDIF}
         FSslSessCacheModeValue := SSL_SESS_CACHE_OFF;
-        {if sslCm_SSL_SESS_CACHE_OFF in Value then
-            FSslSessCacheModeValue := FSslSessCacheModeValue or SSL_SESS_CACHE_OFF;}
-        if sslSESS_CACHE_CLIENT in Value then
-            FSslSessCacheModeValue := FSslSessCacheModeValue or SSL_SESS_CACHE_CLIENT;
-        if sslSESS_CACHE_SERVER in Value then
-            FSslSessCacheModeValue := FSslSessCacheModeValue or SSL_SESS_CACHE_SERVER;
-        {if sslSESS_CACHE_BOTH in Value then
-            FSslSessCacheModeValue := FSslSessCacheModeValue or SSL_SESS_CACHE_BOTH;}
-        if sslSESS_CACHE_NO_AUTO_CLEAR in Value then
-            FSslSessCacheModeValue := FSslSessCacheModeValue or SSL_SESS_CACHE_NO_AUTO_CLEAR;
-        if sslSESS_CACHE_NO_INTERNAL_LOOKUP in Value then
-            FSslSessCacheModeValue := FSslSessCacheModeValue or SSL_SESS_CACHE_NO_INTERNAL_LOOKUP;
-        if sslSESS_CACHE_NO_INTERNAL_STORE in Value then
-            FSslSessCacheModeValue := FSslSessCacheModeValue or SSL_SESS_CACHE_NO_INTERNAL_STORE;
-        {if sslSESS_CACHE_NO_INTERNAL in Value then
-            FSslSessCacheModeValue := FSslSessCacheModeValue or SSL_SESS_CACHE_NO_INTERNAL;}
-{$IFNDEF NO_ADV_MT}            
+        for SessMode := Low(TSslSessCacheMode) to High(TSslSessCacheMode) do
+            if SessMode in Value then
+                FSslSessCacheModeValue := FSslSessCacheModeValue or SslIntSessCacheModes[SessMode];
+{$IFNDEF NO_ADV_MT}
     finally
         Unlock;
     end;
-{$ENDIF}    
+{$ENDIF}
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TSslContext.GetSslSessCacheModes: TSslSessCacheModes;
+function TSslContext.GetSslSessCacheModes: TSslSessCacheModes; { V7.30 }
+var 
+    SessMode: TSslSessCacheMode;
 begin
 {$IFNDEF NO_ADV_MT}
     Lock;
     try
 {$ENDIF}
         Result := [];
-        {if (FSslSessCacheModeValue and SSL_SESS_CACHE_OFF) <> 0 then
-            Result := [sslSESS_CACHE_OFF];}
-        if (FSslSessCacheModeValue and SSL_SESS_CACHE_CLIENT) <> 0 then
-            Result := Result + [sslSESS_CACHE_CLIENT];
-        if (FSslSessCacheModeValue and SSL_SESS_CACHE_SERVER) <> 0 then
-            Result := Result + [sslSESS_CACHE_SERVER];
-        {if (FSslSessCacheModeValue and SSL_SESS_CACHE_BOTH) <> 0 then
-            Result := Result + [sslSESS_CACHE_BOTH];}
-        if (FSslSessCacheModeValue and SSL_SESS_CACHE_NO_AUTO_CLEAR) <> 0 then
-            Result := Result + [sslSESS_CACHE_NO_AUTO_CLEAR];
-        if (FSslSessCacheModeValue and SSL_SESS_CACHE_NO_INTERNAL_LOOKUP) <> 0 then
-            Result := Result + [sslSESS_CACHE_NO_INTERNAL_LOOKUP];
-        if (FSslSessCacheModeValue and SSL_SESS_CACHE_NO_INTERNAL_STORE) <> 0 then
-            Result := Result + [sslSESS_CACHE_NO_INTERNAL_STORE];
-        {if (FSslSessCacheModeValue and SSL_SESS_CACHE_NO_INTERNAL) <> 0 then
-            Result := Result + [sslSESS_CACHE_NO_INTERNAL]; }
+        for SessMode := Low(TSslSessCacheMode) to High(TSslSessCacheMode) do
+            if FSslSessCacheModeValue and SslIntSessCacheModes[SessMode] <> 0 then
+                Include(Result, SessMode);
+
 {$IFNDEF NO_ADV_MT}            
     finally
         Unlock;
@@ -12412,15 +12394,14 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function TX509Base.GetSha1Hash: AnsiString;
+function TX509Base.GetSha1Hash: AnsiString; { V7.31 }
 var
     Len : Integer;
 begin
     if Assigned(FX509) then begin
-        Len := 20;
-        SetLength(Result, Len);
-        f_X509_digest(FX509, f_EVP_sha1, PAnsiChar(Result), @Len);
-        SetLength(Result, _StrLen(PAnsiChar(@Result[1])));
+        SetLength(Result, 20);
+        if f_X509_digest(FX509, f_EVP_sha1, PAnsiChar(Result), @Len) = 0 then
+            Result := '';    
     end
     else
         Result := '';
@@ -12467,6 +12448,7 @@ var
     ext_str  : Pointer;
     B        : PBIO;
     Nid      : Integer;
+    ABuf     : AnsiString;
 begin
     Result.Critical  := FALSE;
     Result.ShortName := '';
@@ -12495,10 +12477,11 @@ begin
             try
                 f_i2a_ASN1_OBJECT(B, f_X509_EXTENSION_get_object(Ext));
                 J := f_BIO_ctrl(B, BIO_CTRL_PENDING, 0, nil);
-                SetLength(Result.ShortName, J);
+                SetLength(ABuf, J);
                 if J > 0 then begin
-                    f_Bio_read(B, PChar(Result.ShortName), J);
-                    SetLength(Result.ShortName, _StrLen(PChar(Result.ShortName)));
+                    f_Bio_read(B, PAnsiChar(ABuf), J);
+                    SetLength(ABuf, _StrLen(PAnsiChar(ABuf)));
+                    Result.ShortName := String(ABuf);
                 end;
             finally
                 f_bio_free(B);
@@ -12554,10 +12537,11 @@ begin
                 try
                     Meth.i2r(Meth, ext_str, B, 0);
                     J := f_BIO_ctrl(B, BIO_CTRL_PENDING, 0, nil);
-                    SetLength(Result.Value, J);
+                    SetLength(ABuf, J);                          { V7.31 }
                     if J > 0 then begin
-                        f_Bio_read(B, PChar(Result.Value), J);
-                        SetLength(Result.Value, _StrLen(PChar(Result.Value)));
+                        f_Bio_read(B, PAnsiChar(ABuf), J);
+                        SetLength(ABuf, _StrLen(PAnsiChar(ABuf)));
+                        Result.Value := String(ABuf);
                         { This method separates multiple values by LF } // should I remove this stuff?
                         while (Length(Result.Value) > 0) and
                               (Result.Value[Length(Result.Value)] = #10) do
@@ -12864,45 +12848,11 @@ procedure TX509Base.LoadFromPemFile(const FileName: String;
     IncludePrivateKey: Boolean = FALSE; const Password: String = '');
 var
     FileBio : PBIO;
-    X       : PX509;
-    PKey    : PEVP_PKEY;
 begin
     InitializeSsl;
-    FileBio   := OpenFileBio(FileName, bomRead);
+    FileBio := OpenFileBio(FileName, bomRead);
     try
-        X := f_PEM_read_bio_X509(FileBio, nil, nil,
-                                      PAnsiChar(AnsiString(Password)));
-        if not Assigned(X) then
-            RaiseLastOpenSslError(EX509Exception, TRUE,
-                                  'Error reading certificate file "' +
-                                  Filename + '"');
-        try
-            if (not IncludePrivateKey) and Assigned(FPrivateKey) then
-                if f_X509_check_private_key(X, FPrivateKey) < 1 then
-                    raise EX509Exception.Create('Certificate and private key ' +
-                                                'do not match');
-            if IncludePrivateKey then begin
-                f_BIO_ctrl(FileBio, BIO_CTRL_RESET, 0, nil);
-                PKey := f_PEM_read_bio_PrivateKey(FileBio, nil, nil,
-                                              PAnsiChar(AnsiString(Password)));
-                if not Assigned(PKey) then
-                    RaiseLastOpenSslError(EX509Exception, TRUE,
-                                          'Error reading private key file "' +
-                                           Filename + '"');
-                try
-                    if f_X509_check_private_key(X, PKey) < 1 then
-                        raise EX509Exception.Create('Certificate and private key ' +
-                                                    'do not match');
-                     X509       := X;
-                     PrivateKey := PKey;
-                finally
-                    f_EVP_PKEY_free(PKey);
-                end;
-            end else
-                X509 := X;
-        finally
-            f_X509_free(X);
-        end;
+        ReadFromBio(FileBio, IncludePrivateKey, Password);
     finally
         f_bio_free(FileBio);
     end;
@@ -12910,30 +12860,89 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{ todo: Actually the private key is written unprotected }
+{ todo: Currently private key is written unprotected }
 procedure TX509Base.SaveToPemFile(const FileName: String;
-    IncludePrivateKey: Boolean = FALSE);
+    IncludePrivateKey: Boolean = FALSE; AddRawText: Boolean = FALSE);
 var
     FileBio : PBIO;
 begin
     InitializeSsl;
-    if not Assigned(FX509) then
-        raise EX509Exception.Create('X509 not assigned');
-    if IncludePrivateKey and (not Assigned(FPrivateKey)) then
-        raise EX509Exception.Create('Private key not assigned');
     FileBio := OpenFileBio(FileName, bomWrite);
     try
-        if IncludePrivateKey and
-           (f_PEM_write_bio_PrivateKey(FileBio, FPrivateKey, nil, nil, 0,
-                                       nil, nil) = 0) then
-            RaiseLastOpenSslError(EX509Exception, TRUE,
-                                  'Error writing private key to file');
-        if f_PEM_write_bio_X509(FileBio, FX509) = 0 then
-            RaiseLastOpenSslError(EX509Exception, TRUE,
-                                  'Error writing certificate to file');
+        WriteToBio(FileBio, IncludePrivateKey, AddRawText);
     finally
         f_bio_free(FileBio);
     end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TX509Base.ReadFromBio(ABio: PBIO; IncludePrivateKey: Boolean = FALSE;
+  const Password: String = '');
+var
+    X     : PX509;
+    PKey  : PEVP_PKEY;
+begin
+    InitializeSsl;
+    if not Assigned(ABio) then
+        raise EX509Exception.Create('BIO not assigned');
+    X := f_PEM_read_bio_X509(ABio, nil, nil, PAnsiChar(AnsiString(Password)));
+    if not Assigned(X) then
+        RaiseLastOpenSslError(EX509Exception, TRUE,
+                              'Error reading certificate from BIO');
+    try
+        if (not IncludePrivateKey) and Assigned(FPrivateKey) then
+            if f_X509_check_private_key(X, FPrivateKey) < 1 then
+                raise EX509Exception.Create('Certificate and private key ' +
+                                            'do not match');
+        if IncludePrivateKey then begin
+            f_BIO_ctrl(ABio, BIO_CTRL_RESET, 0, nil);
+            PKey := f_PEM_read_bio_PrivateKey(ABio, nil, nil,
+                                              PAnsiChar(AnsiString(Password)));
+            if not Assigned(PKey) then
+                RaiseLastOpenSslError(EX509Exception, TRUE,
+                                      'Error reading private key from BIO');
+            try
+                if f_X509_check_private_key(X, PKey) < 1 then
+                    raise EX509Exception.Create('Certificate and private key ' +
+                                                'do not match');
+                 X509       := X;
+                 PrivateKey := PKey;
+            finally
+                f_EVP_PKEY_free(PKey);
+            end;
+        end else
+            X509 := X;
+    finally
+        f_X509_free(X);
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ todo: Currently private key is written unprotected }
+procedure TX509Base.WriteToBio(ABio: PBIO;
+  IncludePrivateKey: Boolean = FALSE; AddRawText: Boolean = FALSE);
+begin
+    InitializeSsl;
+    if not Assigned(ABio) then
+        raise EX509Exception.Create('BIO not assigned');
+    if not Assigned(FX509) then
+        raise EX509Exception.Create('X509 not assigned');
+    if IncludePrivateKey and not Assigned(FPrivateKey) then
+        raise EX509Exception.Create('Private key not assigned');
+    if AddRawText and
+       (f_X509_print(ABio, FX509) = 0) then
+        RaiseLastOpenSslError(EX509Exception, TRUE,
+                              'Error writing raw text to BIO');
+    if IncludePrivateKey and
+       (f_PEM_write_bio_PrivateKey(ABio, FPrivateKey, nil, nil, 0,
+                                   nil, nil) = 0) then
+        RaiseLastOpenSslError(EX509Exception, TRUE,
+                              'Error writing private key to BIO');
+    if f_PEM_write_bio_X509(ABio, FX509) = 0 then
+        RaiseLastOpenSslError(EX509Exception, TRUE,
+                              'Error writing certificate to BIO');
 end;
 
 
@@ -13441,8 +13450,9 @@ var
 {$ENDIF}
 begin
     Result := FALSE;
-    if not FSslEnable then Exit;
-    { Returns TRUE if a message was posted successfully }
+    if (not FSslEnable) or FPaused then { AG V7.26 FPause condition added }
+        Exit;
+    { Returns TRUE if a message was posted successfully and the socket isn't paused }
     if not (Event in FPendingSslEvents) then begin
         case Event of
             sslFdRead  :  Result := _PostMessage(Handle, FMsg_WM_SSL_ASYNCSELECT,

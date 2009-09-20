@@ -1,9 +1,9 @@
 object SmtpTestForm: TSmtpTestForm
-  Left = 336
-  Top = 151
-  Width = 584
-  Height = 518
-  Caption = 'SmtpTestForm'
+  Left = 197
+  Top = 144
+  Width = 601
+  Height = 525
+  Caption = 'SmtpTestForm - http://www.overbyte.be'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,7 +20,7 @@ object SmtpTestForm: TSmtpTestForm
   object MsgMemo: TMemo
     Left = 0
     Top = 235
-    Width = 576
+    Width = 593
     Height = 120
     Hint = 'Enter the message text in this memo'
     Align = alTop
@@ -40,8 +40,8 @@ object SmtpTestForm: TSmtpTestForm
   object DisplayMemo: TMemo
     Left = 0
     Top = 441
-    Width = 576
-    Height = 43
+    Width = 593
+    Height = 50
     Hint = 'This memo shows info messages'
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
@@ -61,12 +61,12 @@ object SmtpTestForm: TSmtpTestForm
   object ToolsPanel: TPanel
     Left = 0
     Top = 0
-    Width = 576
+    Width = 593
     Height = 235
     Align = alTop
     TabOrder = 2
     DesignSize = (
-      576
+      593
       235)
     object Label5: TLabel
       Left = 12
@@ -671,7 +671,7 @@ object SmtpTestForm: TSmtpTestForm
   object AttachPanel: TPanel
     Left = 0
     Top = 355
-    Width = 576
+    Width = 593
     Height = 17
     Align = alTop
     TabOrder = 3
@@ -686,7 +686,7 @@ object SmtpTestForm: TSmtpTestForm
   object FileAttachMemo: TMemo
     Left = 0
     Top = 372
-    Width = 576
+    Width = 593
     Height = 49
     Hint = 'Enter the attached file path, one per line'
     Align = alTop
@@ -707,12 +707,12 @@ object SmtpTestForm: TSmtpTestForm
   object InfoPanel: TPanel
     Left = 0
     Top = 421
-    Width = 576
+    Width = 593
     Height = 20
     Align = alTop
     TabOrder = 5
     DesignSize = (
-      576
+      593
       20)
     object Label7: TLabel
       Left = 16
@@ -764,6 +764,7 @@ object SmtpTestForm: TSmtpTestForm
     OnGetData = SmtpClientGetData
     OnHeaderLine = SmtpClientHeaderLine
     OnRequestDone = SmtpClientRequestDone
+    XMailer = 'ICS SMTP Component V%VER%'
     OnAttachContentTypeEh = SmtpClientAttachContentTypeEh
     Left = 32
     Top = 258
