@@ -7,7 +7,7 @@ Object:       TSmtpCli class implements the SMTP protocol (RFC-821)
               Support authentification (RFC-2104)
               Support HTML mail with embedded images.
 Creation:     09 october 1997
-Version:      7.26
+Version:      7.29
 EMail:        http://www.overbyte.be        francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -371,6 +371,12 @@ May 09, 2009 V7.26  Arno added code page support and charset conversion
                     suggest to use UTF-8 rather than UTF-7 since UTF-7 is really
                     very special.
                     Fixed missing filenames in THtmlSmtpCli part headers.
+Jul 16, 2009 V7.27  Arno added property XMailer, the string may contain a place
+                    holder "%VER%" that is replaced by current version number of
+                    this unit. 
+Jul 31, 2009 V7.28  Arno enlarged send buffer size to 2048 byte see const
+                    SMTP_SND_BUF_SIZE declared in MimeUtils.pas.
+Aug 12, 2009 V7.29  Bjørnar Nielsen found a bug with conditional define NO_ADV_MT.
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -384,6 +390,11 @@ interface
 {$H+}           { Use long strings                    }
 {$J+}           { Allow typed constant to be modified }
 {$I OverbyteIcsDefs.inc}
+{$IFDEF COMPILER14_UP}
+  {$IFDEF NO_EXTENDED_RTTI}
+    {$RTTI EXPLICIT METHODS([]) FIELDS([]) PROPERTIES([])}
+  {$ENDIF}
+{$ENDIF}
 {$IFNDEF COMPILER7_UP}
     Bomb = 'No support for ancient compiler';
 {$ENDIF}
@@ -431,8 +442,8 @@ uses
     OverbyteIcsMimeUtils;
 
 const
-  SmtpCliVersion     = 726;
-  CopyRight : String = ' SMTP component (c) 1997-2009 Francois Piette V7.26 ';
+  SmtpCliVersion     = 729;
+  CopyRight : String = ' SMTP component (c) 1997-2009 Francois Piette V7.29 ';
   smtpProtocolError  = 20600; {AG}
   SMTP_RCV_BUF_SIZE  = 4096;
   
@@ -718,6 +729,8 @@ type
         FMaxMsgSize          : Int64;  { Maximum message size accepted by the server }
         FOldSendMode         : TSmtpSendMode;
         FOldOnDisplay        : TSmtpDisplay;
+        FXMailer             : String;
+        function    GetXMailerValue: String;
         procedure   SetCharset(const Value: String);           {AG}
         procedure   SetConvertToCharset(const Value: Boolean); {AG}
         procedure   SetWrapMsgMaxLineLen(const Value: Integer); {AG}
@@ -918,6 +931,8 @@ type
         property SizeSupported     : Boolean         read  FSizeExt;
         property WrapMsgMaxLineLen : Integer         read  FWrapMsgMaxLineLen
                                                      write SetWrapMsgMaxLineLen;
+        property XMailer : String                    read  FXMailer
+                                                     write FXMailer;
     end;
 
     { Descending component adding MIME (file attach) support }
@@ -1012,6 +1027,7 @@ type
         property OnSessionConnected;
         property OnSessionClosed;
         property OnMessageDataSent;      {AG}
+        property XMailer;
         property EmailFiles : TStrings               read  FEmailFiles
                                                      write SetEmailFiles;
         property OnAttachContentType : TSmtpAttachmentContentType
@@ -1652,7 +1668,11 @@ begin
     inherited Create(AOwner);
     AllocateHWnd;
     CreateSocket;                                                     {AG/SSL}
+{$IFDEF NO_ADV_MT}
+    FWSocket.Name            := ClassName + '_Socket' + IntToStr(WSocketGCount);
+{$ELSE}
     FWSocket.Name            := ClassName + '_Socket' + IntToStr(SafeWSocketGCount);
+{$ENDIF}
     FWSocket.OnSessionClosed := WSocketSessionClosed;
     FState                   := smtpReady;
     FRcptName                := TStringList.Create;
@@ -1672,6 +1692,7 @@ begin
 {$ENDIF}
     FWrapMsgMaxLineLen       := SmtpDefaultLineLength;
     Randomize;                                                           {AG}
+    XMailer                  := 'ICS SMTP Component V%VER%';
 end;
 
 
@@ -2856,6 +2877,18 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomSmtpClient.GetXMailerValue: String;
+var
+    VerNum : String;
+begin
+    VerNum := IntToStr(SmtpCliVersion div 100) + '.' +
+              IntToStr(SmtpCliVersion mod 100);
+    Result := StringReplace(FXMailer, '%VER%', VerNum,
+                            [rfReplaceAll, rfIgnoreCase]);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomSmtpClient.SetCharset(const Value: String);
 begin
     FCharSet := _LowerCase(Value);
@@ -2995,13 +3028,13 @@ begin
         end;
         FMessageID := GenerateMessageID;        
         FHdrLines.Add('Message-ID: <' + FMessageID + '>');       
-            
-       if FConfirmReceipt and (Length(FHdrFrom) > 0) then
+
+        if FConfirmReceipt and (Length(FHdrFrom) > 0) then
              FHdrLines.AddAddrHdr('Disposition-Notification-To: ', FHdrFrom);
 
-        FHdrLines.Add('X-Mailer: ICS SMTP Component V' +
-                      IntToStr(SmtpCliVersion div 100) + '.' +
-                      IntToStr(SmtpCliVersion mod 100));
+        if FXMailer <> '' then
+            FHdrLines.AddHdr('X-Mailer: ', GetXMailerValue);
+
         TriggerProcessHeader(FHdrLines);
         { An empty line mark the header's end }
         FHdrLines.Add('');
@@ -3019,7 +3052,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomSmtpClient.DataNext;
 var
-    MsgLine  : array [0..1023] of AnsiChar;
+    MsgLine  : array [0..SMTP_SND_BUF_SIZE -1] of AnsiChar;
     BExit : Boolean;
 begin
     { If we have been disconnected, then do nothing.                      }
@@ -3058,7 +3091,7 @@ begin
                 MsgLine[0] := #0;
                 { Enough room for double a dot and a nul char }
                 TriggerGetData(FLineNum, @MsgLine,
-                              (SizeOf(MsgLine) - (SizeOf(Char) * 2)),
+                               SizeOf(MsgLine) - 2,
                                FMoreLines);
             except
                 FMoreLines := FALSE;
