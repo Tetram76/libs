@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -73,8 +73,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConfigurationForm.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil
@@ -230,11 +230,11 @@ end;
 
 procedure TJclOtaOptionsForm.FormCreate(Sender: TObject);
 begin
-  Caption := RsConfigurationCaption;
-  ButtonOk.Caption := RsOk;
-  ButtonCancel.Caption := RsCancel;
-  LabelSelectPage.Caption := RsSelectPage;
-  LabelHomePage.Caption := RsHomePage;
+  Caption := LoadResString(@RsConfigurationCaption);
+  ButtonOk.Caption := LoadResString(@RsOk);
+  ButtonCancel.Caption := LoadResString(@RsCancel);
+  LabelSelectPage.Caption := LoadResString(@RsSelectPage);
+  LabelHomePage.Caption := LoadResString(@RsHomePage);
 
   SetBounds(Settings.LoadInteger(JclLeft, Left),
             Settings.LoadInteger(JclTop, Top),
@@ -254,7 +254,7 @@ end;
 
 procedure TJclOtaOptionsForm.LabelHomePageClick(Sender: TObject);
 begin
-  ShellExecute(Handle, 'open', PChar(RsHomePageURL), '', '', SW_SHOW);
+  ShellExecute(Handle, 'open', PChar(LoadResString(@RsHomePageURL)), '', '', SW_SHOW);
 end;
 
 procedure TJclOtaOptionsForm.TreeViewCategoriesChange(Sender: TObject;

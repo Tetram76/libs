@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-26 13:32:58 +0200 (mer., 26 sept. 2007)                         $ }
-{ Revision:      $Rev:: 2188                                                                     $ }
+{ Last modified: $Date:: 2009-09-18 15:53:34 +0200 (ven. 18 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3014                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -24,7 +24,9 @@ uses
   JediGUIInstall in 'VclGui\JediGUIInstall.pas' {InstallFrame: TFrame},
   JediGUIMain in 'VclGui\JediGUIMain.pas' {MainForm},
   JediGUIProfiles in 'VclGui\JediGUIProfiles.pas' {ProfilesFrame: TFrame},
-  JediProfiles in 'JediProfiles.pas';
+  JediProfiles in 'JediProfiles.pas',
+  JclInstallResources in 'JclInstallResources.pas',
+  JediInstallResources in 'JediInstallResources.pas';
 
 {$R *.res}
 {$R ..\source\windows\JclCommCtrlAsInvoker.res}

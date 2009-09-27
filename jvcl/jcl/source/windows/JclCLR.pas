@@ -27,13 +27,11 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2922                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
-
-// Last modified: $Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $
 
 unit JclCLR;
 
@@ -487,8 +485,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclCLR.pas $';
-    Revision: '$Revision: 2922 $';
-    Date: '$Date: 2009-08-09 16:37:14 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1756,7 +1754,7 @@ function TJclClrHeaderEx.DumpIL: string;
 begin
   with TStringList.Create do
   try
-    Add(RsClrCopyright);
+    Add(LoadResString(@RsClrCopyright));
     Add(Format('.corflags 0x%.8x', [Header.Flags]));
     Result := Text + NativeLineBreak + Metadata.DumpIL;
   finally

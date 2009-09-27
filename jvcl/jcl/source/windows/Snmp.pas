@@ -1,6 +1,6 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{  Borland Delphi Runtime Library                                                                  }
+{  Delphi Runtime Library                                                                          }
 {  SNMP functions interface unit                                                                   }
 {                                                                                                  }
 {  The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License") }
@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-02-17 15:39:19 +0100 (mar., 17 févr. 2009)                        $ }
-{ Revision:      $Rev:: 2652                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-09-11 23:36:32 +0200 (ven. 11 sept. 2009)                          $ }
+{ Revision:      $Rev:: 2992                                                                     $ }
+{ Author:        $Author:: wpostma                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -54,6 +54,10 @@ interface
 {$ENDIF SUPPORTS_WEAKPACKAGEUNIT}
 {$ENDIF ~SNMP_DYNAMIC_LINK}
 
+{$IFDEF UNICODE}
+{$A4}  // MANTIS 4931 - GetMacAddress crash in Delphi 2009. record alignment fix.
+{$ENDIF}
+
 uses
   Windows, SysUtils;
 
@@ -62,7 +66,7 @@ uses
 type
   PAsnOctetString = ^TAsnOctetString;
   TAsnOctetString = record
-    stream: PChar;
+    stream: PAnsiChar;
     length: UINT;
     dynamic_: Boolean;
   end;
@@ -361,8 +365,8 @@ var
   SnmpUtilMemFree: procedure(pMem: Pointer); stdcall;
   SnmpUtilMemAlloc: function(nBytes: UINT): Pointer; stdcall;
   SnmpUtilMemReAlloc: function(pMem: Pointer; nBytes: UINT): Pointer; stdcall;
-  SnmpUtilOidToA: function(Oid: PAsnObjectIdentifier): PChar; stdcall;
-  SnmpUtilIdsToA: function(Ids: PUINT; IdLength: UINT): PChar; stdcall;
+  SnmpUtilOidToA: function(Oid: PAsnObjectIdentifier): PAnsiChar; stdcall;
+  SnmpUtilIdsToA: function(Ids: PUINT; IdLength: UINT): PAnsiChar; stdcall;
   SnmpUtilPrintOid: procedure(Oid: PAsnObjectIdentifier); stdcall;
   SnmpUtilPrintAsnAny: procedure(pAny: PAsnAny); stdcall;
   SnmpSvcGetUptime: function: DWORD; stdcall;
@@ -389,8 +393,8 @@ procedure SnmpUtilVarBindListFree(pVbl: PSnmpVarBindList); stdcall;
 procedure SnmpUtilMemFree(pMem: Pointer); stdcall;
 function SnmpUtilMemAlloc(nBytes: UINT): Pointer; stdcall;
 function SnmpUtilMemReAlloc(pMem: Pointer; nBytes: UINT): Pointer; stdcall;
-function SnmpUtilOidToA(Oid: PAsnObjectIdentifier): PChar; stdcall;
-function SnmpUtilIdsToA(Ids: PUINT; IdLength: UINT): PChar; stdcall;
+function SnmpUtilOidToA(Oid: PAsnObjectIdentifier): PAnsiChar; stdcall;
+function SnmpUtilIdsToA(Ids: PUINT; IdLength: UINT): PAnsiChar; stdcall;
 procedure SnmpUtilPrintOid(Oid: PAsnObjectIdentifier); stdcall;
 procedure SnmpUtilPrintAsnAny(pAny: PAsnAny); stdcall;
 function SnmpSvcGetUptime: DWORD; stdcall;
@@ -454,12 +458,12 @@ const
 
 {$IFNDEF SNMP_DYNAMIC_LINK}
 
-procedure SnmpUtilDbgPrint(nLogLevel: Integer; szFormat: PChar); stdcall;
+procedure SnmpUtilDbgPrint(nLogLevel: Integer; szFormat: PAnsiChar); stdcall;
 
 {$ELSE SNMP_DYNAMIC_LINK}
 
 var
-  SnmpUtilDbgPrint: procedure (nLogLevel: Integer; szFormat: PChar); stdcall;
+  SnmpUtilDbgPrint: procedure (nLogLevel: Integer; szFormat: PAnsiChar); stdcall;
 
 {$ENDIF ~SNMP_DYNAMIC_LINK}
 

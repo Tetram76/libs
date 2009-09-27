@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -57,8 +57,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerConfigFrame.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -69,12 +69,17 @@ implementation
 
 {$R *.dfm}
 
+uses
+  JclOtaResources;
+
 //=== { TJclStackTraceViewerConfigFrame } ====================================
 
 constructor TJclStackTraceViewerConfigFrame.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FOptions := TExceptionViewerOption.Create;
+  cbExpandTreeView.Caption := LoadResString(@RsExpandTreeView);
+  cbModuleVersionAsRevision.Caption := LoadResString(@RsModuleVersionAsRevision);
 end;
 
 destructor TJclStackTraceViewerConfigFrame.Destroy;

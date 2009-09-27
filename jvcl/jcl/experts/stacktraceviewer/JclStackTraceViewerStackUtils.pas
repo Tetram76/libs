@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -56,6 +56,10 @@ type
     FRootDir: string;
     procedure DoProgress(AStatus: TLocationInfoProcessorProgressStatus; APos, AMax: Integer; const AText: string);
   public
+    property OnProgress: TJclLocationInfoProgressEvent read FOnProgress write FOnProgress;
+    property Options: TExceptionViewerOption read FOptions write FOptions;
+    property RootDir: string read FRootDir write FRootDir;
+
     { IInterface }
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
@@ -64,17 +68,15 @@ type
     function GetModuleInfoList: IJclModuleInfoList;
     procedure PrepareLocationInfoList(AStack: IJclPreparedLocationInfoList; AForce: Boolean = False);
     procedure SetModuleInfoList(AValue: IJclModuleInfoList);
-    property OnProgress: TJclLocationInfoProgressEvent read FOnProgress write FOnProgress;
-    property Options: TExceptionViewerOption read FOptions write FOptions;
-    property RootDir: string read FRootDir write FRootDir;
+    property ModuleList: IJclModuleInfoList read GetModuleInfoList write SetModuleInfoList;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerStackUtils.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -315,7 +317,7 @@ begin
       try
         FindFileList.Sorted := True;
         //check if the files can be found in a project in the current project group
-        DoProgress(lippsUnknown, 0, AStack.Count, rsSTVFindFilesInProjectGroup);
+        DoProgress(lippsUnknown, 0, AStack.Count, LoadResString(@RsSTVFindFilesInProjectGroup));
         for I := 0 to AStack.Count - 1 do
           if AStack.Items[I].QueryInterface(IJclPreparedLocationInfo, StackViewItem) = S_OK then
           begin
@@ -333,7 +335,7 @@ begin
             begin
               if AStack.Items[I].SourceName <> '' then
               begin
-                DoProgress(lippsUnknown, I + 1, AStack.Count, Format(rsSTVFindFileInProjectGroup, [AStack.Items[I].SourceName]));
+                DoProgress(lippsUnknown, I + 1, AStack.Count, Format(LoadResString(@RsSTVFindFileInProjectGroup), [AStack.Items[I].SourceName]));
                 FileName := FindModuleAndProject(AStack.Items[I].SourceName, ProjectName);
               end
               else
@@ -352,7 +354,7 @@ begin
               StackViewItem.FileName := FileName;
               StackViewItem.ProjectName := ProjectName;
             end;
-            DoProgress(lippsUnknown, I + 1, AStack.Count, rsSTVFindFilesInProjectGroup);
+            DoProgress(lippsUnknown, I + 1, AStack.Count, LoadResString(@RsSTVFindFilesInProjectGroup));
           end;
 
         //use the build number from the version number as revision number if the revision number is empty
@@ -443,9 +445,9 @@ begin
                 end;
                 if FileSearcher.Count > 0 then
                 begin
-                  DoProgress(lippsUnknown, 0, 100, rsSTVFindFilesInBrowsingPath);
+                  DoProgress(lippsUnknown, 0, 100, LoadResString(@RsSTVFindFilesInBrowsingPath));
                   FileSearcher.Search;
-                  DoProgress(lippsUnknown, 75, 100, rsSTVFindFilesInBrowsingPath);
+                  DoProgress(lippsUnknown, 75, 100, LoadResString(@RsSTVFindFilesInBrowsingPath));
                   for I := 0 to FindFileList.Count - 1 do
                   begin
                     FindMapping := TFindMapping(FindFileList.Objects[I]);
@@ -465,7 +467,7 @@ begin
                         end;
                       end;
                     end;
-                    DoProgress(lippsUnknown, FindFileList.Count * 3 + I + 1, FindFileList.Count * 4, rsSTVFindFilesInBrowsingPath);
+                    DoProgress(lippsUnknown, FindFileList.Count * 3 + I + 1, FindFileList.Count * 4, LoadResString(@RsSTVFindFilesInBrowsingPath));
                   end;
                 end;
               end;

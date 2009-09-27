@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009)                         $ }
-{ Revision:      $Rev:: 2907                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -61,7 +61,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$ENDIF ~EDI_WEAK_PACKAGE_UNITS}
-  JclBase;
+  JclBase, JclResources;
 
 const
   NA_LoopId = 'N/A'; // Constant used for loop id comparison
@@ -384,13 +384,25 @@ type
 function StringRemove(const S, Pattern: string; Flags: TReplaceFlags): string;
 function StringReplace(const S, OldPattern, NewPattern: string; Flags: TReplaceFlags): string;
 
+const
+  EDIErrors: array [1..58] of PResStringRec =
+    ( @RsEDIError001, @RsEDIError002, @RsEDIError003, @RsEDIError004, @RsEDIError005, @RsEDIError006, @RsEDIError007,
+      @RsEDIError008, @RsEDIError009, @RsEDIError010, @RsEDIError011, @RsEDIError012, @RsEDIError013, @RsEDIError014,
+      @RsEDIError015, @RsEDIError016, @RsEDIError017, @RsEDIError018, @RsEDIError019, @RsEDIError020, @RsEDIError021,
+      @RsEDIError022, @RsEDIError023, @RsEDIError024, @RsEDIError025, @RsEDIError026, @RsEDIError027, @RsEDIError028,
+      @RsEDIError029, @RsEDIError030, @RsEDIError031, @RsEDIError032, @RsEDIError033, @RsEDIError034, @RsEDIError035,
+      @RsEDIError036, @RsEDIError037, @RsEDIError038, @RsEDIError039, @RsEDIError040, @RsEDIError041, @RsEDIError042,
+      @RsEDIError043, @RsEDIError044, @RsEDIError045, @RsEDIError046, @RsEDIError047, @RsEDIError048, @RsEDIError049,
+      @RsEDIError050, @RsEDIError051, @RsEDIError052, @RsEDIError053, @RsEDIError054, @RsEDIError055, @RsEDIError056,
+      @RsEDIError057, @RsEDIError058 );
+
 {$IFNDEF EDI_WEAK_PACKAGE_UNITS}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDI.pas $';
-    Revision: '$Revision: 2907 $';
-    Date: '$Date: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009) $';
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -401,7 +413,7 @@ const
 implementation
 
 uses
-  JclResources, JclStrings;
+  JclStrings;
 
 //  Other
 function StringRemove(const S, Pattern: string; Flags: TReplaceFlags): string;
@@ -541,12 +553,12 @@ end;
 
 constructor EJclEDIError.CreateID(ID: Cardinal);
 begin
-  CreateRes(RsEDIErrors[ID]);
+  CreateRes(EDIErrors[ID]);
 end;
 
 constructor EJclEDIError.CreateIDFmt(ID: Cardinal; const Args: array of const);
 begin
-  CreateResFmt(RsEDIErrors[ID], Args);
+  CreateResFmt(EDIErrors[ID], Args);
 end;
 
 //=== { TEDIDelimiters } =====================================================

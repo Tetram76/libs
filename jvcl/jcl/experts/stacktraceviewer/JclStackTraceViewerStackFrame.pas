@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -47,32 +47,35 @@ type
     procedure lvDblClick(Sender: TObject);
     procedure lvChange(Sender: TObject; Item: TListItem; Change: TItemChange);
   private
-    { Private declarations }
     FStackList: IJclLocationInfoList;
     FOnSelectStackLine: TNotifyEvent;
     procedure DoSelectStackLine;
+    procedure UpdateListView;
+  public
+    constructor Create(AOwner: TComponent); override;
+    procedure LoadState(AIni: TCustomIniFile; const ASection, APrefix: string);
+    procedure SaveState(AIni: TCustomIniFile; const ASection, APrefix: string);
+    { IJclStackTraceViewerStackFrame }
     function GetStackList: IJclLocationInfoList;
     procedure SetStackList(const Value: IJclLocationInfoList);
     procedure UpdateView;
+    { IJclStackTraceViewerPreparableStackFrame }
     function GetPreparableLocationInfoListCount: Integer;
     function GetPreparableLocationInfoList(AIndex: Integer): IJclPreparedLocationInfoList;
     procedure UpdateViews;
-    function GetSelected: IJclLocationInfo;
-    procedure UpdateListView;
-  public
-    { Public declarations }
-    procedure LoadState(AIni: TCustomIniFile; const ASection, APrefix: string);
-    procedure SaveState(AIni: TCustomIniFile; const ASection, APrefix: string);
     property StackList: IJclLocationInfoList read FStackList write SetStackList;
     property OnSelectStackLine: TNotifyEvent read FOnSelectStackLine write FOnSelectStackLine;
+    { IJclStackTraceViewerStackSelection }
+    function GetSelected: IJclLocationInfo;
+    property Selected: IJclLocationInfo read GetSelected;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerStackFrame.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -83,7 +86,24 @@ implementation
 
 {$R *.dfm}
 
+uses
+  JclOtaResources;
+
 { TfrmStack }
+
+constructor TfrmStack.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  lv.Columns.Items[0].Caption := LoadResString(@RsStackModuleName);
+  lv.Columns.Items[0].Caption := LoadResString(@RsSourceUnitName);
+  lv.Columns.Items[0].Caption := LoadResString(@RsProcedureName);
+  lv.Columns.Items[0].Caption := LoadResString(@RsSourceName);
+  lv.Columns.Items[0].Caption := LoadResString(@RsLineNumber);
+  lv.Columns.Items[0].Caption := LoadResString(@RsLineNumberOffsetFromProcedureStart);
+  lv.Columns.Items[0].Caption := LoadResString(@RsRevision);
+  lv.Columns.Items[0].Caption := LoadResString(@RsProjectFile);
+  lv.Columns.Items[0].Caption := LoadResString(@RsTranslatedLineNumber);
+end;
 
 procedure TfrmStack.DoSelectStackLine;
 begin

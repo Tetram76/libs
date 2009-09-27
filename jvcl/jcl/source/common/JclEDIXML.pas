@@ -37,8 +37,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -62,7 +62,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$ENDIF ~EDI_WEAK_PACKAGE_UNITS}
-  JclBase, JclEDI, JclEDI_ANSIX12;
+  JclBase, JclResources, JclEDI, JclEDI_ANSIX12;
 
 const
   XMLTag_Element = 'Element';
@@ -455,13 +455,31 @@ type
       XMLTransactionSet: TEDIXMLTransactionSet): TEDITransactionSet;
   end;
 
+  EJclEDIXMLError = class(EJclEDIError)
+  public
+    constructor CreateID(ID: Cardinal);
+    constructor CreateIDFmt(ID: Cardinal; const Args: array of const);
+  end;
+
+const
+  EDIXMLErrors: array [1..62] of PResStringRec =
+    ( @EDIXMLError001, @EDIXMLError002, @EDIXMLError003, @EDIXMLError004, @EDIXMLError005, @EDIXMLError006, @EDIXMLError007,
+      @EDIXMLError008, @EDIXMLError009, @EDIXMLError010, @EDIXMLError011, @EDIXMLError012, @EDIXMLError013, @EDIXMLError014,
+      @EDIXMLError015, @EDIXMLError016, @EDIXMLError017, @EDIXMLError018, @EDIXMLError019, @EDIXMLError020, @EDIXMLError021,
+      @EDIXMLError022, @EDIXMLError023, @EDIXMLError024, @EDIXMLError025, @EDIXMLError026, @EDIXMLError027, @EDIXMLError028,
+      @EDIXMLError029, @EDIXMLError030, @EDIXMLError031, @EDIXMLError032, @EDIXMLError033, @EDIXMLError034, @EDIXMLError035,
+      @EDIXMLError036, @EDIXMLError037, @EDIXMLError038, @EDIXMLError039, @EDIXMLError040, @EDIXMLError041, @EDIXMLError042,
+      @EDIXMLError043, @EDIXMLError044, @EDIXMLError045, @EDIXMLError046, @EDIXMLError047, @EDIXMLError048, @EDIXMLError049,
+      @EDIXMLError050, @EDIXMLError051, @EDIXMLError052, @EDIXMLError053, @EDIXMLError054, @EDIXMLError055, @EDIXMLError056,
+      @EDIXMLError057, @EDIXMLError058, @EDIXMLError059, @EDIXMLError060, @EDIXMLError061, @EDIXMLError062 );
+
 {$IFNDEF EDI_WEAK_PACKAGE_UNITS}
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDIXML.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -472,7 +490,7 @@ const
 implementation
 
 uses
-  JclResources, JclStrings;
+  JclStrings;
 
 const
   EDIXML_Ampersand = '&';
@@ -2701,6 +2719,18 @@ begin
     else
       raise EJclEDIError.CreateIDFmt(62, [EDILoop[I].ClassName]);
   end;
+end;
+
+//=== { EJclEDIXMLError } ====================================================
+
+constructor EJclEDIXMLError.CreateID(ID: Cardinal);
+begin
+  CreateRes(EDIXMLErrors[ID]);
+end;
+
+constructor EJclEDIXMLError.CreateIDFmt(ID: Cardinal; const Args: array of const);
+begin
+  CreateResFmt(EDIXMLErrors[ID], Args);
 end;
 
 {$IFNDEF EDI_WEAK_PACKAGE_UNITS}

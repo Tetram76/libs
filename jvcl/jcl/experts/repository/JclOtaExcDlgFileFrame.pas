@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
-{ Revision:      $Rev:: 2914                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -75,8 +75,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgFileFrame.pas $';
-    Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -124,7 +124,7 @@ procedure TJclOtaExcDlgFilePage.ButtonFileBrowseClick(Sender: TObject);
   end;
 begin
   SaveDialogFileName.FileName := EditFileName.Text;
-  SaveDialogFileName.Title := RsFileNameDialog;
+  SaveDialogFileName.Title := LoadResString(@RsFileNameDialog);
 
   SaveDialogFileName.Filter := '';
   AddFilter('All files', '.*');
@@ -161,11 +161,11 @@ begin
   FParams := AParams;
   inherited Create(AOwner);
   
-  Caption := RsExcDlgFileOptions;
-  LabelLanguage.Caption := RsLanguage;
-  LabelFileName.Caption := RsFileName;
-  LabelFormName.Caption := RsFormName;
-  LabelFormAncestor.Caption := RsFormAncestor;
+  Caption := LoadResString(@RsExcDlgFileOptions);
+  LabelLanguage.Caption := LoadResString(@RsLanguage);
+  LabelFileName.Caption := LoadResString(@RsFileName);
+  LabelFormName.Caption := LoadResString(@RsFormName);
+  LabelFormAncestor.Caption := LoadResString(@RsFormAncestor);
 end;
 
 function TJclOtaExcDlgFilePage.GetSelectedLanguage: TJclBorPersonality;

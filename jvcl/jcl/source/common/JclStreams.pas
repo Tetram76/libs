@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 19:06:40 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2930                                                                     $ }
+{ Last modified: $Date:: 2009-09-22 23:44:42 +0200 (mar. 22 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3019                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -553,8 +553,8 @@ function CompareFiles(const FileA, FileB: TFileName; BufferSize: Longint = Strea
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStreams.pas $';
-    Revision: '$Revision: 2930 $';
-    Date: '$Date: 2009-08-09 19:06:40 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 3019 $';
+    Date: '$Date: 2009-09-22 23:44:42 +0200 (mar. 22 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1199,6 +1199,7 @@ begin
   if Stream <> nil then
     FPosition := Stream.Position;
   BufferSize := StreamDefaultBufferSize;
+  LoadBuffer;
 end;
 
 destructor TJclBufferedStream.Destroy;
@@ -1342,16 +1343,8 @@ begin
   Result := Count + Offset;
   while Count > 0 do
   begin
-    if not BufferHit then
-    begin
-      if (FBufferStart <= FPosition) and (FPosition < (FBufferStart + FBufferSize)) then
-      begin
-        if Length(FBuffer) <> FBufferSize then
-          SetLength(FBuffer, FBufferSize);
-      end
-      else
-        LoadBuffer;
-    end;
+    if (FBufferStart > FPosition) or (FPosition >= (FBufferStart + FBufferSize)) then
+      LoadBuffer;
     Dec(Count, WriteToBuffer(Buffer, Count, Result - Count));
   end;
   Result := Result - Count - Offset;

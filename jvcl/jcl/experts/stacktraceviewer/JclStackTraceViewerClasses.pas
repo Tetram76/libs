@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-21 23:25:05 +0200 (lun. 21 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3017                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -72,6 +72,23 @@ type
     function GetUnitVersionRevision: string;
     function GetVAddress: Pointer;
     function GetValues: Integer;
+    property Address: Pointer read GetAddress;
+    property BinaryFileName: string read GetBinaryFileName;
+    property LineNumber: Integer read GetLineNumber;
+    property LineNumberOffsetFromProcedureStart: Integer read GetLineNumberOffsetFromProcedureStart;
+    property ModuleName: string read GetModuleName;
+    property OffsetFromLineNumber: Integer read GetOffsetFromLineNumber;
+    property OffsetFromProcName: Integer read GetOffsetFromProcName;
+    property ProcedureName: string read GetProcedureName;
+    property SourceName: string read GetSourceName;
+    property SourceUnitName: string read GetSourceUnitName;
+    property UnitVersionDateTime: TDateTime read GetUnitVersionDateTime;
+    property UnitVersionExtra: string read GetUnitVersionExtra;
+    property UnitVersionLogPath: string read GetUnitVersionLogPath;
+    property UnitVersionRCSfile: string read GetUnitVersionRCSfile;
+    property UnitVersionRevision: string read GetUnitVersionRevision;
+    property VAddress: Pointer read GetVAddress;
+    property Values: Integer read GetValues;
     { IJclPreparedLocationInfo }
     function GetFileName: string;
     function GetFoundFile: Boolean;
@@ -83,7 +100,6 @@ type
     procedure SetProjectName(AValue: string);
     procedure SetRevision(AValue: string);
     procedure SetTranslatedLineNumber(AValue: Integer);
-
     property FileName: string read FFileName write FFileName;
     property FoundFile: Boolean read FFoundFile write FFoundFile;
     property ProjectName: string read FProjectName write FProjectName;
@@ -99,6 +115,8 @@ type
     function GetItems(AIndex: Integer): TJclStackTraceViewerLocationInfo;
   public
     constructor Create; override;
+    function Add(Addr: Pointer): TJclStackTraceViewerLocationInfo;
+    property Items[AIndex: Integer]: TJclStackTraceViewerLocationInfo read GetItems;
 
     { IInterface }
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
@@ -107,13 +125,12 @@ type
     { IJclLocationInfoList }
     function GetCount: Integer;
     function GetLocationItems(AIndex: Integer): IJclLocationInfo;
+    property Count: Integer read GetCount;
+    property LocationItems[AIndex: Integer]: IJclLocationInfo read GetLocationItems; default;
+    { IJclPreparedLocationInfoList }
     function GetPrepared: Boolean;
     procedure SetPrepared(AValue: Boolean);
-    { IJclPreparedLocationInfoList }
     function GetModuleInfoList: IJclModuleInfoList;
-
-    function Add(Addr: Pointer): TJclStackTraceViewerLocationInfo;
-    property Items[AIndex: Integer]: TJclStackTraceViewerLocationInfo read GetItems; default;
     property ModuleInfoList: IJclModuleInfoList read FModuleInfoList write FModuleInfoList;
     property Prepared: Boolean read FPrepared write FPrepared;
   end;
@@ -150,6 +167,8 @@ type
     { IJclModuleInfo }
     function GetBinFileVersion: string;
     function GetModuleName: string;
+    property BinFileVersion: string read GetBinFileVersion;
+    property ModuleName: string read GetModuleName;
   end;
 
   TJclStackTraceViewerModuleInfoList = class(TObject, IJclModuleInfoList)
@@ -158,6 +177,9 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    function Add: TJclStackTraceViewerModuleModuleInfo;
+    procedure Clear;
+
     { IInterface }
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
@@ -165,9 +187,8 @@ type
     { IJclModuleInfoList }
     function GetModuleCount: Integer;
     function GetModuleInfo(AIndex: Integer): IJclModuleInfo;
-
-    function Add: TJclStackTraceViewerModuleModuleInfo;
-    procedure Clear;
+    property Count: Integer read GetModuleCount;
+    property Items[AIndex: Integer]: IJclModuleInfo read GetModuleInfo; default;
   end;
 
   TJclStackTraceViewerExceptionInfo = class(TObject)
@@ -189,8 +210,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerClasses.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3017 $';
+    Date: '$Date: 2009-09-21 23:25:05 +0200 (lun. 21 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -497,11 +518,11 @@ end;
 function TJclStackTraceViewerLocationInfo.GetValues: Integer;
 begin
   Result := 0;
-  if lievLocationInfo in Values then
+  if lievLocationInfo in (inherited Values) then
     Inc(Result, livLocationInfo);
-  if lievProcedureStartLocationInfo in Values then
+  if lievProcedureStartLocationInfo in (inherited Values) then
     Inc(Result, livProcedureStartLocationInfo);
-  if lievUnitVersionInfo in Values then
+  if lievUnitVersionInfo in (inherited Values) then
     Inc(Result, livUnitVersionInfo);
 end;
 

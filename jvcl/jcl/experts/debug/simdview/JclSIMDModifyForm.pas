@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -121,8 +121,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/simdview/JclSIMDModifyForm.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\debug\simdview';
     Extra: '';
     Data: nil
@@ -132,6 +132,9 @@ const
 implementation
 
 {$R *.dfm}
+
+uses
+  JclOtaResources;
 
 const
   NbEdits: array [TJclRegisterType, TJclPackedContentType] of Byte =
@@ -153,8 +156,23 @@ const
 
 constructor TJclSIMDModifyFrm.Create(AOwner: TComponent;
   ADebuggerServices: IOTADebuggerServices; ASettings: TJclOTASettings);
+var
+  ContentType: TJclPackedContentType;
 begin
   inherited Create(AOwner);
+
+  for ContentType := Low(TJclPackedContentType) to High(TJClPackedContentType) do
+    ComboBoxDisplay.Items.Add(Texts[ContentType] + 's');
+  ComboBoxFormat.Items.Add(LoadResString(@RsBinary));
+  ComboBoxFormat.Items.Add(LoadResString(@RsSignedDecimal));
+  ComboBoxFormat.Items.Add(LoadResString(@RsUnsignedDecimal));
+  ComboBoxFormat.Items.Add(LoadResString(@RsHexadecimal));
+  LabelDisplay.Caption := LoadResString(@RsDisplay);
+  LabelFormat.Caption := LoadResString(@RsFormat);
+  LabelBlank.Caption := LoadResString(@RsKeepBlank);
+  ButtonOK.Caption := LoadResString(@RsOk);
+  ButtonCancel.Caption := LoadResString(@RsCancel);
+  MemoTip.Lines.Text := LoadResString(@RsSIMDModificationDescription);
 
   FDebuggerServices := ADebuggerServices;
   FSettings := ASettings;

@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -59,8 +59,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeResult.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil
@@ -74,7 +74,8 @@ implementation
 uses
   Clipbrd, Math,
   JclStrings,
-  JclOtaConsts;
+  JclOtaConsts,
+  JclOtaResources;
 
 procedure ListViewToStrings(ListView: TListView; Strings: TStrings;
   SelectedOnly: Boolean = False; Headers: Boolean = True);
@@ -188,6 +189,15 @@ begin
             Settings.LoadInteger(JclTop, Top),
             Settings.LoadInteger(JclWidth, Width),
             Settings.LoadInteger(JclHeight, Height));
+
+  OkBtn.Caption := LoadResString(@RsOk);
+  ResultListView.Columns.Items[0].Caption := LoadResString(@RsProject);
+  ResultListView.Columns.Items[1].Caption := LoadResString(@RsMapFileSize);
+  ResultListView.Columns.Items[2].Caption := LoadResString(@RsJCLDebugSize);
+  ResultListView.Columns.Items[3].Caption := LoadResString(@RsRatio);
+  ResultListView.Columns.Items[4].Caption := LoadResString(@RsExecutableFileName);
+  ResultListView.Columns.Items[5].Caption := LoadResString(@RsLinkerBug);
+  ResultListView.Columns.Items[6].Caption := LoadResString(@RsLineErrors);
 
   with ResultListView.Columns do
     for Index := 0 to Count - 1 do

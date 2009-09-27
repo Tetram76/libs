@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -68,8 +68,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgLogFrame.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -96,13 +96,13 @@ begin
   FParams := AParams;
   inherited Create(AOwner);
 
-  Caption := RsExcDlgLogOptions;
-  CheckBoxLogFile.Caption := RsLogTrace;
-  LabelLogFileName.Caption := RsFileName;
-  CheckBoxLogInWorkingDirectory.Caption := RsLogInWorkingDirectory;
-  CheckBoxLogInApplicationDirectory.Caption := RsLogInApplicationDirectory;
-  CheckBoxLogInDesktopDirectory.Caption := RsLogInDesktopDirectory;
-  CheckBoxSaveDialog.Caption := RsLogSaveDialog;
+  Caption := LoadResString(@RsExcDlgLogOptions);
+  CheckBoxLogFile.Caption := LoadResString(@RsLogTrace);
+  LabelLogFileName.Caption := LoadResString(@RsFileName);
+  CheckBoxLogInWorkingDirectory.Caption := LoadResString(@RsLogInWorkingDirectory);
+  CheckBoxLogInApplicationDirectory.Caption := LoadResString(@RsLogInApplicationDirectory);
+  CheckBoxLogInDesktopDirectory.Caption := LoadResString(@RsLogInDesktopDirectory);
+  CheckBoxSaveDialog.Caption := LoadResString(@RsLogSaveDialog);
 end;
 
 function TJclOtaExcDlgLogPage.GetSupportsNext: Boolean;

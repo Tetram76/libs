@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,9 +46,8 @@ type
   private
     FModuleList: TJclSerializableModuleInfoList;
     procedure SetModuleList(const Value: TJclSerializableModuleInfoList);
-    { Private declarations }
   public
-    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
     property ModuleList: TJclSerializableModuleInfoList read FModuleList write SetModuleList;
     procedure LoadState(AIni: TCustomIniFile; const ASection: string);
     procedure SaveState(AIni: TCustomIniFile; const ASection: string);
@@ -58,8 +57,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerModuleFrame.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -70,7 +69,22 @@ implementation
 
 {$R *.dfm}
 
+uses
+  JclOtaResources;
+
 { TfrmModule }
+
+constructor TfrmModule.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  lv.Columns.Items[0].Caption := LoadResString(@RsStartAddr);
+  lv.Columns.Items[1].Caption := LoadResString(@RsEndAddr);
+  lv.Columns.Items[2].Caption := LoadResString(@RsSystemModule);
+  lv.Columns.Items[3].Caption := LoadResString(@RsBinFileName);
+  lv.Columns.Items[4].Caption := LoadResString(@RsBinFileVersion);
+  lv.Columns.Items[5].Caption := LoadResString(@RsFileVersion);
+  lv.Columns.Items[6].Caption := LoadResString(@RsFileDescription);
+end;
 
 procedure TfrmModule.LoadState(AIni: TCustomIniFile; const ASection: string);
 var

@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -298,8 +298,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/_GraphUtils.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -313,7 +313,7 @@ uses
   Classes, Consts,
   {$ENDIF VCL}
   Math,
-  JclResources, JclSysInfo, JclLogic;
+  JclVclResources, JclSysInfo, JclLogic;
 
 type
   // resampling support types

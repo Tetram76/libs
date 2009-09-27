@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -87,8 +87,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaWizardForm.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil
@@ -180,11 +180,11 @@ begin
   PanelTitle.ParentBackground := False;
   {$ENDIF COMPILER7_UP}
 
-  ActionPrevious.Caption := RsPrevious;
-  ActionNext.Caption := RsNext;
-  ActionFinish.Caption := RsFinish;
-  ButtonCancel.Caption := RsCancel;
-  LabelJcl.Caption := RsAboutDialogTitle;
+  ActionPrevious.Caption := LoadResString(@RsPrevious);
+  ActionNext.Caption := LoadResString(@RsNext);
+  ActionFinish.Caption := LoadResString(@RsFinish);
+  ButtonCancel.Caption := LoadResString(@RsCancel);
+  LabelJcl.Caption := LoadResString(@RsAboutDialogTitle);
   try
     ImageJcl.Picture.Bitmap.TransparentMode := tmAuto;
     ImageJcl.Picture.Bitmap.Transparent := True;
@@ -247,7 +247,7 @@ begin
   begin
     AFrame.PageActivated(Direction);
     AFrame.Visible := True;
-    LabelProgression.Caption := Format(RsWizardProgression, [PageIndex+1 {one based}, PageCount, AFrame.Caption]);
+    LabelProgression.Caption := Format(LoadResString(@RsWizardProgression), [PageIndex+1 {one based}, PageCount, AFrame.Caption]);
   end;
 end;
 

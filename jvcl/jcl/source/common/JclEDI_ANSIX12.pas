@@ -33,7 +33,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
+{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu. 06 août 2009)                          $ }
 { Revision:      $Rev:: 2914                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -642,7 +642,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDI_ANSIX12.pas $';
     Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu. 06 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

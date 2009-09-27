@@ -18,8 +18,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                        $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                         $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -117,8 +117,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/versioncontrol/JclVersionCtrlCommonOptions.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\versioncontrol';
     Extra: '';
     Data: nil
@@ -133,25 +133,6 @@ uses
   TypInfo, ToolsAPI,
   JclStrings, JclVersionControl,
   JclOtaUtils, JclOtaResources, JclVersionControlImpl;
-
-resourcestring
-  RsEInvalidMenuCaption = 'Menu caption cannot contain \, _ and numbers';
-  RsDisableActions = '&Enable/disable actions';
-  RsHideUnsupportedActions = '&Hide unsupported actions';
-  RsSaveConfirmation = '&Save confirmation';
-  RsActOnTopSandBox = '&Act on top sandbox';
-  RsIcons = '&Icons:';
-  RsNewItem = 'New item';
-  RsNewSeparator = 'New &separator';
-  RsNewSubMenu = 'New s&ub menu';
-  RsNewAction = 'New &action';
-  RsDeleteItem = '&Delete';
-  RsRenameItem = '&Rename';
-  RsMoveItemUp = 'Move &up';
-  RsMoveItemDown = 'Move &down';
-  RsMenuOrganization = 'Menu &organization:';
-  RsNoIcon = 'No icon';
-  RsJCLIcons = 'JCL icons';
 
 //=== TJclVersionCtrlOptionsFrame ============================================
 
@@ -253,9 +234,9 @@ begin
     ATreeNode := ATreeNode.Parent;
 
   if Assigned(ATreeNode) and (ATreeNode.getNextSibling <> nil) then
-    NewTreeNode := TreeViewMenu.Items.Insert(ATreeNode.getNextSibling, RsNewItem)
+    NewTreeNode := TreeViewMenu.Items.Insert(ATreeNode.getNextSibling, LoadResString(@RsNewItem))
   else
-    NewTreeNode := TreeViewMenu.Items.Add(ATreeNode, RsNewItem);
+    NewTreeNode := TreeViewMenu.Items.Add(ATreeNode, LoadResString(@RsNewItem));
 
   NewTreeNode.ImageIndex := -1;
   NewTreeNode.SelectedIndex := -1;
@@ -323,26 +304,26 @@ begin
 
   Supports(BorlandIDEServices, INTAServices, NTAServices);
   if not Assigned(NTAServices) then
-    raise EJclExpertException.CreateTrace(RsENoNTAServices);
+    raise EJclExpertException.CreateRes(@RsENoNTAServices);
     
   TreeViewMenu.Images := NTAServices.ImageList;
   PopupMenuActions.Images := NTAServices.ImageList;
 
-  CheckBoxActOnTopSandbox.Caption := RsActOnTopSandBox;
-  CheckBoxDisableActions.Caption := RsDisableActions;
-  CheckBoxHideActions.Caption := RsHideUnsupportedActions;
-  CheckBoxSaveConfirmation.Caption := RsSaveConfirmation;
-  ActionNewSubMenu.Caption := RsNewSubMenu;
-  ActionNewSeparator.Caption := RsNewSeparator;
-  ActionNewAction.Caption := RsNewAction;
-  ActionDeleteItem.Caption := RsDeleteItem;
-  ActionRenameItem.Caption := RsRenameItem;
-  ActionMoveItemUp.Caption := RsMoveItemUp;
-  ActionMoveItemDown.Caption := RsMoveItemDown;
-  LabelIcons.Caption := RsIcons;
-  LabelMenuOrganization.Caption := RsMenuOrganization;
-  ComboBoxIcons.Items.Strings[0] := RsNoIcon;
-  ComboBoxIcons.Items.Strings[1] := RsJCLIcons;
+  CheckBoxActOnTopSandbox.Caption := LoadResString(@RsActOnTopSandBox);
+  CheckBoxDisableActions.Caption := LoadResString(@RsDisableActions);
+  CheckBoxHideActions.Caption := LoadResString(@RsHideUnsupportedActions);
+  CheckBoxSaveConfirmation.Caption := LoadResString(@RsSaveConfirmation);
+  ActionNewSubMenu.Caption := LoadResString(@RsNewSubMenu);
+  ActionNewSeparator.Caption := LoadResString(@RsNewSeparator);
+  ActionNewAction.Caption := LoadResString(@RsNewAction);
+  ActionDeleteItem.Caption := LoadResString(@RsDeleteItem);
+  ActionRenameItem.Caption := LoadResString(@RsRenameItem);
+  ActionMoveItemUp.Caption := LoadResString(@RsMoveItemUp);
+  ActionMoveItemDown.Caption := LoadResString(@RsMoveItemDown);
+  LabelIcons.Caption := LoadResString(@RsIcons);
+  LabelMenuOrganization.Caption := LoadResString(@RsMenuOrganization);
+  ComboBoxIcons.Items.Strings[0] := LoadResString(@RsNoIcon);
+  ComboBoxIcons.Items.Strings[1] := LoadResString(@RsJCLIcons);
 end;
 
 destructor TJclVersionCtrlOptionsFrame.Destroy;
@@ -574,7 +555,7 @@ begin
   if StrContainsChars(S, CharIsInvalid, True) then
   begin
     S := Node.Text;
-    MessageDlg(RsEInvalidMenuCaption, mtError, [mbAbort], 0);
+    MessageDlg(LoadResString(@RsEInvalidMenuCaption), mtError, [mbAbort], 0);
   end;
 end;
 

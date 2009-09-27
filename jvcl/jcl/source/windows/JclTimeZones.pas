@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 17:11:21 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2965                                                                     $ }
+{ Last modified: $Date:: 2009-09-13 11:57:20 +0200 (dim. 13 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3009                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -171,8 +171,8 @@ function UTCNow: TDateTime;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclTimeZones.pas $';
-    Revision: '$Revision: 2965 $';
-    Date: '$Date: 2009-08-25 17:11:21 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3009 $';
+    Date: '$Date: 2009-09-13 11:57:20 +0200 (dim. 13 sept. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -183,12 +183,8 @@ implementation
 
 uses
   Messages,
+  JclResources,
   JclDateTime, JclRegistry;
-
-resourcestring
-  RsEDaylightSavingsNotSupported = 'Daylight Savings not supported by this timezone';
-  RsEAutoAdjustNotEnabled = 'Auto adjust for Daylight Savings is not enabled.  Date is not available';
-  RsENoCallbackFunc = 'No callback function assigned';
 
 const
   cAutoAdjustKey = '\System\CurrentControlSet\Control\TimeZoneInformation';

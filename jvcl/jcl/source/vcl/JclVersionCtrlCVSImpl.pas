@@ -18,8 +18,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -58,8 +58,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionCtrlCVSImpl.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -69,6 +69,7 @@ const
 implementation
 
 uses
+  JclVclResources,
   JclFileUtils, JclSysUtils, JclRegistry, JclStrings;
 
 const
@@ -94,11 +95,6 @@ const
   JclVersionControlCVSUpdateVerb = 'CVSUpdate';
   JclVersionControlCVSUpdateDialogVerb = 'CVSUpdateDialog';
   JclVersionControlCVSUnEditVerb = 'CVSUnedit';
-
-resourcestring
-  RsVersionCtrlCVSName = 'cvs';
-  RsEEmptyFileName = 'Error: empty file name';
-  RSENoTortoiseCVS = 'TortoiseCVS is not detected on the system';
 
 //=== TJclVersionControlCVS ==================================================
 
@@ -258,7 +254,7 @@ end;
 
 function TJclVersionControlCVS.GetName: string;
 begin
-  Result := RsVersionCtrlCVSName;
+  Result := LoadResString(@RsVersionCtrlCVSName);
 end;
 
 function TJclVersionControlCVS.GetSandboxActions(

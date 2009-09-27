@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 2997                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -63,6 +63,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -74,9 +77,6 @@ type
     function Enqueue(const AInterface: IInterface): Boolean;
     function Peek: IInterface;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   TJclAnsiStrQueue = class(TJclAnsiStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -90,6 +90,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -101,9 +104,6 @@ type
     function Enqueue(const AString: AnsiString): Boolean;
     function Peek: AnsiString;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   TJclWideStrQueue = class(TJclWideStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -117,6 +117,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -128,9 +131,6 @@ type
     function Enqueue(const AString: WideString): Boolean;
     function Peek: WideString;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
@@ -145,6 +145,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -156,9 +159,6 @@ type
     function Enqueue(const AString: UnicodeString): Boolean;
     function Peek: UnicodeString;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
@@ -183,6 +183,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -194,9 +197,6 @@ type
     function Enqueue(const AValue: Single): Boolean;
     function Peek: Single;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   TJclDoubleQueue = class(TJclDoubleAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -210,6 +210,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -221,9 +224,6 @@ type
     function Enqueue(const AValue: Double): Boolean;
     function Peek: Double;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   TJclExtendedQueue = class(TJclExtendedAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -237,6 +237,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -248,9 +251,6 @@ type
     function Enqueue(const AValue: Extended): Boolean;
     function Peek: Extended;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   {$IFDEF MATH_EXTENDED_PRECISION}
@@ -274,6 +274,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -285,9 +288,6 @@ type
     function Enqueue(AValue: Integer): Boolean;
     function Peek: Integer;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   TJclCardinalQueue = class(TJclCardinalAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -301,6 +301,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -312,9 +315,6 @@ type
     function Enqueue(AValue: Cardinal): Boolean;
     function Peek: Cardinal;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   TJclInt64Queue = class(TJclInt64AbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -328,6 +328,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -339,9 +342,6 @@ type
     function Enqueue(const AValue: Int64): Boolean;
     function Peek: Int64;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   TJclPtrQueue = class(TJclPtrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -355,6 +355,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -366,9 +369,6 @@ type
     function Enqueue(APtr: Pointer): Boolean;
     function Peek: Pointer;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer);
-    destructor Destroy; override;
   end;
 
   TJclQueue = class(TJclAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -382,6 +382,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer; AOwnsObjects: Boolean);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -393,9 +396,6 @@ type
     function Enqueue(AObject: TObject): Boolean;
     function Peek: TObject;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer; AOwnsObjects: Boolean);
-    destructor Destroy; override;
   end;
 
   {$IFDEF SUPPORTS_GENERICS}
@@ -413,6 +413,9 @@ type
     FTail: Integer;
   protected
     procedure AssignDataTo(Dest: TJclAbstractContainerBase); override;
+  public
+    constructor Create(ACapacity: Integer; AOwnsItems: Boolean);
+    destructor Destroy; override;
     { IJclPackable }
     procedure Pack; override;
     procedure SetCapacity(Value: Integer); override;
@@ -424,9 +427,6 @@ type
     function Enqueue(const AItem: T): Boolean;
     function Peek: T;
     function Size: Integer;
-  public
-    constructor Create(ACapacity: Integer; AOwnsItems: Boolean);
-    destructor Destroy; override;
   end;
 
   // E = external helper to compare items for equality (GetHashCode is not used)
@@ -437,10 +437,10 @@ type
   protected
     procedure AssignPropertiesTo(Dest: TJclAbstractContainerBase); override;
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
-    function ItemsEqual(const A, B: T): Boolean; override;
   public
     constructor Create(const AEqualityComparer: IEqualityComparer<T>; ACapacity: Integer; AOwnsItems: Boolean);
-
+    { IJclEqualityComparer<T> }
+    function ItemsEqual(const A, B: T): Boolean; override;
     property EqualityComparer: IEqualityComparer<T> read FEqualityComparer write FEqualityComparer;
   end;
 
@@ -458,6 +458,8 @@ type
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclQueue<T>, IJclItemOwner<T>)
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
+  public
+    { IJclEqualityComparer<T> }
     function ItemsEqual(const A, B: T): Boolean; override;
   end;
   {$ENDIF SUPPORTS_GENERICS}
@@ -466,8 +468,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclQueues.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2997 $';
+    Date: '$Date: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

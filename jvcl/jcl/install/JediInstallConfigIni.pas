@@ -23,8 +23,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (lun., 17 sept. 2007)                         $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2009-09-18 15:53:34 +0200 (ven. 18 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3014                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -86,8 +86,8 @@ uses
   SysUtils, Classes,
   JclSysInfo, JclFileUtils;
 
-resourcestring
-  RsIniFileName = 'JCL-install.ini';
+const
+  DefaultIniFileName = 'JCL-install.ini';
 
 function CreateConfigIni: IJediConfiguration;
 begin
@@ -113,7 +113,7 @@ begin
     AFileName := '';
 
   if AFileName = '' then
-    AFileName := RsIniFileName;
+    AFileName := DefaultIniFileName;
 
   if not PathIsAbsolute(AFileName) then
     AFileName := ExtractFilePath(ParamStr(0)) + AFileName;

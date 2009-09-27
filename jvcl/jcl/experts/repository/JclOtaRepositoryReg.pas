@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-22 17:18:41 +0200 (sam., 22 août 2009)                         $ }
-{ Revision:      $Rev:: 2961                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -90,8 +90,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaRepositoryReg.pas $';
-    Revision: '$Revision: 2961 $';
-    Date: '$Date: 2009-08-22 17:18:41 +0200 (sam., 22 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -284,8 +284,8 @@ end;
 
 constructor TJclExcDlgDelphiExpert.Create;
 begin
-  inherited Create(RsRepositoryExcDlgDelphiName, RsRepositoryExcDlgDelphiDescription,
-    RsAboutDialogTitle, RsRepositoryExcDlgPage, JclRepositoryCategoryDelphiFiles,
+  inherited Create(LoadResString(@RsRepositoryExcDlgDelphiName), LoadResString(@RsRepositoryExcDlgDelphiDescription),
+    LoadResString(@RsAboutDialogTitle), LoadResString(@RsRepositoryExcDlgPage), JclRepositoryCategoryDelphiFiles,
     JclDesignerVcl, JclDelphiPersonality, LoadIcon(FindResourceHInstance(HInstance), 'JclExcDlg'), ritForm);
 end;
 
@@ -320,8 +320,8 @@ end;
 
 constructor TJclExcDlgCBuilderExpert.Create;
 begin
-  inherited Create(RsRepositoryExcDlgCBuilderName, RsRepositoryExcDlgCBuilderDescription,
-    RsAboutDialogTitle, RsRepositoryExcDlgPage, JclRepositoryCategoryCBuilderFiles,
+  inherited Create(LoadResString(@RsRepositoryExcDlgCBuilderName), LoadResString(@RsRepositoryExcDlgCBuilderDescription),
+    LoadResString(@RsAboutDialogTitle), LoadResString(@RsRepositoryExcDlgPage), JclRepositoryCategoryCBuilderFiles,
     JclDesignerVcl, JclCBuilderPersonality, LoadIcon(FindResourceHInstance(HInstance), 'JclExcDlgCPP'), ritForm);
 end;
 
