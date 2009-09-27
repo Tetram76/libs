@@ -46,7 +46,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-02 17:51:57 +0200 (mer., 02 sept. 2009)                         $ }
+{ Last modified: $Date:: 2009-09-02 17:51:57 +0200 (mer. 02 sept. 2009)                          $ }
 { Revision:      $Rev:: 2986                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -491,7 +491,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAnsiStrings.pas $';
     Revision: '$Revision: 2986 $';
-    Date: '$Date: 2009-09-02 17:51:57 +0200 (mer., 02 sept. 2009) $';
+    Date: '$Date: 2009-09-02 17:51:57 +0200 (mer. 02 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

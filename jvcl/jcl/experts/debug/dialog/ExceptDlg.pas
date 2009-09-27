@@ -17,9 +17,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-11-01 23:11:22 +0100 (sam., 01 nov. 2008)                         $ }
-{ Revision:      $Rev:: 2548                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                         $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -300,7 +300,7 @@ begin
     StackList := JclGetExceptStackList(FThreadID);
     if Assigned(StackList) then
     begin
-      DetailsMemo.Lines.Add(Format(RsStackList, [DateTimeToStr(StackList.TimeStamp)]));
+      DetailsMemo.Lines.Add(Format(LoadResString(@RsStackList), [DateTimeToStr(StackList.TimeStamp)]));
       StackList.AddToStrings(DetailsMemo.Lines, True, True, True, True);
       NextDetailBlock;
     end;
@@ -392,7 +392,7 @@ begin
           if UnitVersioningModule.Instance = ModuleBase then
           begin
             if UnitVersioningModule.Count > 0 then
-              DetailsMemo.Lines.Add(StrRepeat(' ', 11) + RsUnitVersioningIntro);
+              DetailsMemo.Lines.Add(StrRepeat(' ', 11) + LoadResString(@RsUnitVersioningIntro));
             for UnitIndex := 0 to UnitVersioningModule.Count - 1 do
             begin
               UnitVersion := UnitVersioningModule.Items[UnitIndex];

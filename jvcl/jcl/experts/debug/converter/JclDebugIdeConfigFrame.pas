@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                        $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                         $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -69,8 +69,8 @@ function ApplyDebugExpertState(GlobalState: TDebugExpertState; LocalEnabled: Boo
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeConfigFrame.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil
@@ -186,23 +186,23 @@ constructor TJclDebugIdeConfigFrame.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  RadioGroupGenerateJdbg.Caption := RsDebugGenerateJdbg;
-  RadioGroupGenerateJdbg.Items.Strings[0] := RsAlwaysDisabled;
-  RadioGroupGenerateJdbg.Items.Strings[1] := RsDefaultDisabled;
-  RadioGroupGenerateJdbg.Items.Strings[2] := RsDefaultEnabled;
-  RadioGroupGenerateJdbg.Items.Strings[3] := RsAlwaysEnabled;
+  RadioGroupGenerateJdbg.Caption := LoadResString(@RsDebugGenerateJdbg);
+  RadioGroupGenerateJdbg.Items.Strings[0] := LoadResString(@RsAlwaysDisabled);
+  RadioGroupGenerateJdbg.Items.Strings[1] := LoadResString(@RsDefaultDisabled);
+  RadioGroupGenerateJdbg.Items.Strings[2] := LoadResString(@RsDefaultEnabled);
+  RadioGroupGenerateJdbg.Items.Strings[3] := LoadResString(@RsAlwaysEnabled);
 
-  RadioGroupInsertJdbg.Caption := RsDebugInsertJdbg;
-  RadioGroupInsertJdbg.Items.Strings[0] := RsAlwaysDisabled;
-  RadioGroupInsertJdbg.Items.Strings[1] := RsDefaultDisabled;
-  RadioGroupInsertJdbg.Items.Strings[2] := RsDefaultEnabled;
-  RadioGroupInsertJdbg.Items.Strings[3] := RsAlwaysEnabled;
+  RadioGroupInsertJdbg.Caption := LoadResString(@RsDebugInsertJdbg);
+  RadioGroupInsertJdbg.Items.Strings[0] := LoadResString(@RsAlwaysDisabled);
+  RadioGroupInsertJdbg.Items.Strings[1] := LoadResString(@RsDefaultDisabled);
+  RadioGroupInsertJdbg.Items.Strings[2] := LoadResString(@RsDefaultEnabled);
+  RadioGroupInsertJdbg.Items.Strings[3] := LoadResString(@RsAlwaysEnabled);
 
-  RadioGroupDeleteMapFile.Caption := RsDeleteMapFile;
-  RadioGroupDeleteMapFile.Items.Strings[0] := RsAlwaysDisabled;
-  RadioGroupDeleteMapFile.Items.Strings[1] := RsDefaultDisabled;
-  RadioGroupDeleteMapFile.Items.Strings[2] := RsDefaultEnabled;
-  RadioGroupDeleteMapFile.Items.Strings[3] := RsAlwaysEnabled;
+  RadioGroupDeleteMapFile.Caption := LoadResString(@RsDeleteMapFile);
+  RadioGroupDeleteMapFile.Items.Strings[0] := LoadResString(@RsAlwaysDisabled);
+  RadioGroupDeleteMapFile.Items.Strings[1] := LoadResString(@RsDefaultDisabled);
+  RadioGroupDeleteMapFile.Items.Strings[2] := LoadResString(@RsDefaultEnabled);
+  RadioGroupDeleteMapFile.Items.Strings[3] := LoadResString(@RsAlwaysEnabled);
 end;
 
 function TJclDebugIdeConfigFrame.GetGenerateJdbgState: TDebugExpertState;

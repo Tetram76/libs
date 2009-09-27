@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -57,8 +57,8 @@ function ExcDlgWizard(var AParams: TJclOtaExcDlgParams): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgWizard.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -114,7 +114,7 @@ end;
 procedure TJclOtaExcDlgForm.FormCreate(Sender: TObject);
 begin
   inherited FormCreate(Sender);
-  Caption := RsExceptionDialogConfigure;
+  Caption := LoadResString(@RsExceptionDialogConfigure);
 
   AddPage(TJclOtaExcDlgFilePage.Create(Self, Params));
   AddPage(TJclOtaExcDlgFormPage.Create(Self, Params));

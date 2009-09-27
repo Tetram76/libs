@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 2997                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -193,10 +193,10 @@ type
   protected
     procedure AssignPropertiesTo(Dest: TJclAbstractContainerBase); override;
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
-    { IJclEqualityComparer<T> }
-    function ItemsEqual(const A, B: T): Boolean; override;
   public
     constructor Create(const AEqualityComparer: IJclEqualityComparer<T>; AOwnsItems: Boolean);
+    { IJclEqualityComparer<T> }
+    function ItemsEqual(const A, B: T): Boolean; override;
     property EqualityComparer: IJclEqualityComparer<T> read FEqualityComparer write FEqualityComparer;
   end;
 
@@ -216,6 +216,7 @@ type
     IJclCollection<T>, IJclTree<T>)
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
+  public
     { IJclEqualityComparer<T> }
     function ItemsEqual(const A, B: T): Boolean; override;
   end;
@@ -225,8 +226,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclTrees.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2997 $';
+    Date: '$Date: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

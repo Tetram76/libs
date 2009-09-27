@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 13:56:34 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 2994                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -119,25 +119,6 @@ type
     property WinVer: string read GetWinVer write SetWinVer;
   end;
 
-function GetMsdosSys: IJclMsdosSys;
-
-{$IFDEF UNITVERSIONING}
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclMsdosSys.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
-    LogPath: 'JCL\source\windows';
-    Extra: '';
-    Data: nil
-    );
-{$ENDIF UNITVERSIONING}
-
-implementation
-
-const
-  cMsdosSys = 'C:\MSDOS.SYS';
-
 type
   TJclMsdosSys = class(TInterfacedObject, IJclMsdosSys)
   private
@@ -163,6 +144,10 @@ type
     FLogo: Boolean;
     FNetwork: Boolean;
     FWinVer: string;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    { IJclMsdosSys }
     function GetAutoScan: Boolean;
     function GetBootDelay: Cardinal;
     function GetBootGUI: Boolean;
@@ -211,9 +196,6 @@ type
     procedure SetString(var ANew: string; AOld: string);
     procedure ReadMsdosSys;
     procedure WriteMsdosSys;
-  public
-    constructor Create;
-    destructor Destroy; override;
     property UninstallDir: Char read GetUninstallDir write SetUninstallDir;
     property WinDir: string read GetWinDir write SetWinDir;
     property WinBootDir: string read GetWinBootDir write SetWinBootDir;
@@ -238,10 +220,32 @@ type
     property WinVer: string read GetWinVer write SetWinVer;
   end;
 
+
+function GetMsdosSys: IJclMsdosSys;
+
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclMsdosSys.pas $';
+    Revision: '$Revision: 2994 $';
+    Date: '$Date: 2009-09-12 13:56:34 +0200 (sam. 12 sept. 2009) $';
+    LogPath: 'JCL\source\windows';
+    Extra: '';
+    Data: nil
+    );
+{$ENDIF UNITVERSIONING}
+
+implementation
+
+const
+  cMsdosSys = 'C:\MSDOS.SYS';
+
 function GetMsdosSys: IJclMsdosSys;
 begin
   Result := TJclMsdosSys.Create;
 end;
+
+//=== { TJclMsdosSys } =======================================================
 
 constructor TJclMsdosSys.Create;
 begin

@@ -32,7 +32,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-12 20:31:19 +0200 (mer., 12 août 2009)                         $ }
+{ Last modified: $Date:: 2009-08-12 20:31:19 +0200 (mer. 12 août 2009)                          $ }
 { Revision:      $Rev:: 2944                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -339,7 +339,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclWideStrings.pas $';
     Revision: '$Revision: 2944 $';
-    Date: '$Date: 2009-08-12 20:31:19 +0200 (mer., 12 août 2009) $';
+    Date: '$Date: 2009-08-12 20:31:19 +0200 (mer. 12 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

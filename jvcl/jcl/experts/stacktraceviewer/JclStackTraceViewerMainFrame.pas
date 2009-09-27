@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -90,19 +90,20 @@ type
     destructor Destroy; override;
     procedure LoadWindowState(ADesktop: TCustomIniFile);
     procedure SaveWindowState(ADesktop: TCustomIniFile; AIsProject: Boolean);
+    property Options: TExceptionViewerOption read FOptions write SetOptions;
+    property RootDir: string read FRootDir write FRootDir;
+    { IJclStackTraceViewerStackServices }
     function GetDefaultFrameClass(const AFrameClassID: Integer): TCustomFrameClass;
     procedure ShowTree(ARootLink: IJclStackTraceViewerTreeViewLink);
     procedure UnregisterFrameClass(AFrameClass: TCustomFrameClass);
-    property Options: TExceptionViewerOption read FOptions write SetOptions;
-    property RootDir: string read FRootDir write FRootDir;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerMainFrame.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -120,32 +121,32 @@ uses
 type
   TCustomTreeViewLink = class(TObject, IJclStackTraceViewerTreeViewLink)
   private
-    function GetCount: Integer;
     function GetInternalItems(AIndex: Integer): TCustomTreeViewLink;
   protected
     FData: TObject;
     FItems: TObjectList;
     FOwnsData: Boolean;
     FParent: TCustomTreeViewLink;
-    procedure DoShow(AFrame: TCustomFrame); virtual;
-    function GetFrameClass: TCustomFrameClass; virtual;
-    function GetItems(AIndex: Integer): IJclStackTraceViewerTreeViewLink;
-    function GetText: string; virtual;
   public
     constructor Create(AParent: TCustomTreeViewLink);
     destructor Destroy; override;
+    procedure Show(AFrame: TCustomFrame);
+    property Data: TObject read FData write FData;
+    property OwnsData: Boolean read FOwnsData write FOwnsData;
+    property Parent: TCustomTreeViewLink read FParent;
     { IInterface }
     function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
-
-    procedure Show(AFrame: TCustomFrame);
+    { IJclStackTraceViewerTreeViewLink }
+    procedure DoShow(AFrame: TCustomFrame); virtual;
+    function GetCount: Integer;
+    function GetFrameClass: TCustomFrameClass; virtual;
+    function GetItems(AIndex: Integer): IJclStackTraceViewerTreeViewLink;
+    function GetText: string; virtual;
     property Count: Integer read GetCount;
-    property Data: TObject read FData write FData;
     property FrameClass: TCustomFrameClass read GetFrameClass;
     property Items[AIndex: Integer]: TCustomTreeViewLink read GetInternalItems; default;
-    property OwnsData: Boolean read FOwnsData write FOwnsData;
-    property Parent: TCustomTreeViewLink read FParent;
     property Text: string read GetText;
   end;
 
@@ -476,6 +477,12 @@ end;
 constructor TfrmMain.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+
+  acJumpToCodeLine.Caption := LoadResString(@RsJumpToCodeLine);
+  acLoadStack.Caption := LoadResString(@RsLoadStack);
+  acOptions.Caption := LoadResString(@RsOptions);
+  acUpdateLocalInfo.Caption := LoadResString(@RsUpdateLocalInfo);
+
   FExceptionInfo := TJclStackTraceViewerExceptionInfo.Create;
   FThreadInfoList := FExceptionInfo.ThreadInfoList;
   FTreeViewLinkList := TObjectList.Create;
@@ -656,7 +663,7 @@ end;
 procedure TfrmMain.acOptionsExecute(Sender: TObject);
 begin
   inherited;
-  TJclOTAExpertBase.ConfigurationDialog(rsStackTraceViewerOptionsPageName);
+  TJclOTAExpertBase.ConfigurationDialog(LoadResString(@RsStackTraceViewerOptionsPageName));
 end;
 
 procedure TfrmMain.acUpdateLocalInfoExecute(Sender: TObject);

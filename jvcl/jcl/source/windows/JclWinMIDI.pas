@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 13:56:34 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 2994                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -60,6 +60,32 @@ type
     property Volume: Word read GetVolume write SetVolume;
   end;
 
+type
+  TJclWinMidiOut = class(TJclMidiOut, IJclWinMidiOut)
+  private
+    FHandle: HMIDIOUT;
+    FDeviceID: Cardinal;
+    FDeviceCaps: MIDIOUTCAPS;
+    FVolume: DWORD;
+    procedure SetLRVolume(const LeftValue, RightValue: Word);
+  protected
+    procedure LongMessage(const Data: array of Byte);
+    procedure DoSendMessage(const Data: array of Byte); override;
+  public
+    constructor Create(ADeviceID: Cardinal);
+    destructor Destroy; override;
+    property DeviceID: Cardinal read FDeviceID;
+    function GetName: string; override;
+    property Name: string read GetName;
+    { IJclWinMidiOut }
+    function GetChannelVolume(Channel: TStereoChannel): Word;
+    procedure SetChannelVolume(Channel: TStereoChannel; const Value: Word);
+    function GetVolume: Word;
+    procedure SetVolume(const Value: Word);
+    property ChannelVolume[Channel: TStereoChannel]: Word read GetChannelVolume write SetChannelVolume;
+    property Volume: Word read GetVolume write SetVolume;
+  end;
+
 function MidiOut(DeviceID: Cardinal): IJclWinMidiOut;
 procedure GetMidiOutputs(const List: TStrings);
 procedure MidiOutCheck(Code: MMResult);
@@ -71,8 +97,8 @@ procedure MidiInCheck(Code: MMResult);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWinMIDI.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2994 $';
+    Date: '$Date: 2009-09-12 13:56:34 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -137,49 +163,24 @@ begin
     raise EJclMidiError.Create(GetMidiOutErrorMessage(Code));
 end;
 
-//=== { TMidiOut } ===========================================================
-
-type
-  TMidiOut = class(TJclMidiOut, IJclWinMidiOut)
-  private
-    FHandle: HMIDIOUT;
-    FDeviceID: Cardinal;
-    FDeviceCaps: MIDIOUTCAPS;
-    FVolume: DWORD;
-    function GetChannelVolume(Channel: TStereoChannel): Word;
-    procedure SetChannelVolume(Channel: TStereoChannel; const Value: Word);
-    function GetVolume: Word;
-    procedure SetVolume(const Value: Word);
-    procedure SetLRVolume(const LeftValue, RightValue: Word);
-  protected
-    function GetName: string; override;
-    procedure LongMessage(const Data: array of Byte);
-    procedure DoSendMessage(const Data: array of Byte); override;
-  public
-    constructor Create(ADeviceID: Cardinal);
-    destructor Destroy; override;
-    property DeviceID: Cardinal read FDeviceID;
-    property Name: string read GetName;
-    property ChannelVolume[Channel: TStereoChannel]: Word read GetChannelVolume write SetChannelVolume;
-    property Volume: Word read GetVolume write SetVolume;
-  end;
+//=== { TJclWinMidiOut } =====================================================
 
 var
   MidiMapperDeviceID: Cardinal = MIDI_MAPPER;
 
 function MidiOut(DeviceID: Cardinal): IJclWinMidiOut;
 var
-  Device: TMidiOut;
+  Device: TJclWinMidiOut;
 begin
   if DeviceID = MIDI_MAPPER then
     DeviceID := MidiMapperDeviceID;
   Device := nil;
   if DeviceID <> MIDI_MAPPER then
-    Device := TMidiOut(MidiOutputs.Objects[DeviceID]);
+    Device := TJclWinMidiOut(MidiOutputs.Objects[DeviceID]);
   // make instance a singleton for a given device ID
   if not Assigned(Device) then
   begin
-    Device := TMidiOut.Create(DeviceID);
+    Device := TJclWinMidiOut.Create(DeviceID);
     if DeviceID = MIDI_MAPPER then
       MidiMapperDeviceID := Device.DeviceID;
     // cannot use DeviceID argument as index here, since it might be MIDI_MAPPER
@@ -188,7 +189,7 @@ begin
   Result := Device;
 end;
 
-constructor TMidiOut.Create(ADeviceID: Cardinal);
+constructor TJclWinMidiOut.Create(ADeviceID: Cardinal);
 begin
   inherited Create;
   FVolume := $FFFFFFFF; // max. volume, in case Get/SetChannelVolume not supported
@@ -197,19 +198,19 @@ begin
   MidiOutCheck(midiOutGetID(FHandle, @FDeviceID));
 end;
 
-destructor TMidiOut.Destroy;
+destructor TJclWinMidiOut.Destroy;
 begin
   inherited Destroy;
   midiOutClose(FHandle);
   MidiOutputs.Objects[FDeviceID] := nil;
 end;
 
-function TMidiOut.GetName: string;
+function TJclWinMidiOut.GetName: string;
 begin
   Result := FDeviceCaps.szPName;
 end;
 
-procedure TMidiOut.LongMessage(const Data: array of Byte);
+procedure TJclWinMidiOut.LongMessage(const Data: array of Byte);
 var
   Hdr: MIDIHDR;
 begin
@@ -224,7 +225,7 @@ begin
   until (Hdr.dwFlags and MHDR_DONE) <> 0;
 end;
 
-procedure TMidiOut.DoSendMessage(const Data: array of Byte);
+procedure TJclWinMidiOut.DoSendMessage(const Data: array of Byte);
 var
   I: Integer;
   Msg: packed record
@@ -245,13 +246,13 @@ begin
     LongMessage(Data);
 end;
 
-function TMidiOut.GetChannelVolume(Channel: TStereoChannel): Word;
+function TJclWinMidiOut.GetChannelVolume(Channel: TStereoChannel): Word;
 begin
   midiOutGetVolume(FHandle, @FVolume);
   Result := FVolume;
 end;
 
-procedure TMidiOut.SetChannelVolume(Channel: TStereoChannel; const Value: Word);
+procedure TJclWinMidiOut.SetChannelVolume(Channel: TStereoChannel; const Value: Word);
 begin
   if Channel = scLeft then
     SetLRVolume(Value, ChannelVolume[scRight])
@@ -259,17 +260,17 @@ begin
     SetLRVolume(ChannelVolume[scLeft], Value);
 end;
 
-function TMidiOut.GetVolume: Word;
+function TJclWinMidiOut.GetVolume: Word;
 begin
   Result := GetChannelVolume(scLeft);
 end;
 
-procedure TMidiOut.SetVolume(const Value: Word);
+procedure TJclWinMidiOut.SetVolume(const Value: Word);
 begin
   SetLRVolume(Value, Value);
 end;
 
-procedure TMidiOut.SetLRVolume(const LeftValue, RightValue: Word);
+procedure TJclWinMidiOut.SetLRVolume(const LeftValue, RightValue: Word);
 var
   Value: DWORD;
 begin

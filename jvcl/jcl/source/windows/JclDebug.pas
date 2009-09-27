@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -142,8 +142,9 @@ type
     constructor Create(const MapFileName: TFileName); overload;
     destructor Destroy; override;
     procedure Parse;
-    class function MapStringToStr(MapString: PJclMapString; IgnoreSpaces: Boolean = False): string;
     class function MapStringToFileName(MapString: PJclMapString): string;
+    class function MapStringToModuleName(MapString: PJclMapString): string;
+    class function MapStringToStr(MapString: PJclMapString; IgnoreSpaces: Boolean = False): string;
     property LinkerBug: Boolean read FLinkerBug;
     property LinkerBugUnitName: string read GetLinkerBugUnitName;
     property Stream: TJclFileMappingStream read FStream;
@@ -1001,8 +1002,8 @@ function IsIgnoredException(const ExceptionClass: TClass): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1269,6 +1270,28 @@ end;
 
 class function TJclAbstractMapParser.MapStringToFileName(MapString: PJclMapString): string;
 var
+  PEnd: PJclMapString;
+begin
+  if MapString = nil then
+  begin
+    Result := '';
+    Exit;
+  end;
+  PEnd := MapString;
+  while (PEnd^ <> '=') and not CharIsReturn(Char(PEnd^)) do
+    Inc(PEnd);
+  if (PEnd^ = '=') then
+  begin
+    while (PEnd >= MapString) and not (PEnd^ = NativeSpace) do
+      Dec(PEnd);
+    while (PEnd >= MapString) and ((PEnd-1)^ = NativeSpace) do
+      Dec(PEnd);
+  end;
+  SetString(Result, MapString, PEnd - MapString);
+end;
+
+class function TJclAbstractMapParser.MapStringToModuleName(MapString: PJclMapString): string;
+var
   PStart, PEnd, PExtension: PJclMapString;
 begin
   if MapString = nil then
@@ -1281,22 +1304,23 @@ begin
     Inc(PEnd);
   if (PEnd^ = '=') then
   begin
-    while not (PEnd^ = NativeSpace) do
+    while (PEnd >= MapString) and not (PEnd^ = NativeSpace) do
       Dec(PEnd);
-    while ((PEnd-1)^ = NativeSpace) do
+    while (PEnd >= MapString) and ((PEnd-1)^ = NativeSpace) do
       Dec(PEnd);
   end;
   PExtension := PEnd;
-  while (PExtension^ <> '.') and (PExtension^ <> '|') and (PExtension >= MapString) do
+  while (PExtension >= MapString) and (PExtension^ <> '.') and (PExtension^ <> '|') do
     Dec(PExtension);
   if (PExtension^ = '.') then
     PEnd := PExtension;
   PExtension := PEnd;
-  while (PExtension^ <> '|') and (PExtension^ <> '\') and (PExtension >= MapString) do
+  while (PExtension >= MapString) and (PExtension^ <> '|') and (PExtension^ <> '\') do
     Dec(PExtension);
-  if (PExtension^ = '|') or (PExtension^ = '\') then
+  if PExtension >= MapString then
     PStart := PExtension + 1
-  else PStart := MapString;
+  else
+    PStart := MapString;
   SetString(Result, PStart, PEnd - PStart);
 end;
 
@@ -1629,7 +1653,7 @@ procedure TJclMapParser.SegmentItem(const Address: TJclMapAddress;
   Len: Integer; GroupName, UnitName: PJclMapString);
 begin
   if Assigned(FOnSegmentItem) then
-    FOnSegmentItem(Self, Address, Len, MapStringToStr(GroupName), MapStringToFileName(UnitName));
+    FOnSegmentItem(Self, Address, Len, MapStringToStr(GroupName), MapStringToModuleName(UnitName));
 end;
 
 //=== { TJclMapScanner } =====================================================
@@ -1769,7 +1793,7 @@ begin
   for I := Length(FSegments) - 1 downto 0 do
     if (FSegments[I].StartVA <= Addr) and (Addr < FSegments[I].EndVA) then
     begin
-      Result := MapStringToStr(FSegments[I].UnitName);
+      Result := MapStringToModuleName(FSegments[I].UnitName);
       Break;
     end;
 end;
@@ -1895,11 +1919,22 @@ var
   I: Integer;
   ModuleStartVA: DWORD;
 begin
+  // try with line numbers first (Delphi compliance)
   ModuleStartVA := ModuleStartFromAddr(Addr);
   Result := '';
   I := SearchDynArray(FSourceNames, SizeOf(FSourceNames[0]), Search_MapProcName, @Addr, True);
   if (I <> -1) and (FSourceNames[I].VA >= ModuleStartVA) then
     Result := MapStringToStr(FSourceNames[I].ProcName);
+  if Result = '' then
+  begin
+    // try with module names (C++Builder compliance)
+    for I := Length(FSegments) - 1 downto 0 do
+      if (FSegments[I].StartVA <= Addr) and (Addr < FSegments[I].EndVA) then
+    begin
+      Result := MapStringToFileName(FSegments[I].UnitName);
+      Break;
+    end;
+  end;
 end;
 
 // JCL binary debug format string encoding/decoding routines
@@ -2392,7 +2427,7 @@ begin
       if IsSegmentStored(FSegments[I].Segment) then
     begin
       WriteValueOfs(FSegments[I].StartVA, L1);
-      WriteValueOfs(AddWord(MapStringToStr(FSegments[I].UnitName)), L2);
+      WriteValueOfs(AddWord(MapStringToModuleName(FSegments[I].UnitName)), L2);
     end;
     WriteValue(MaxInt);
 
@@ -3468,7 +3503,7 @@ begin
           if not IsAddressInThisExportedFunction(Addr, FModule + Items[I].Address) then
           begin
             //Info.UnitName := '[' + AnsiLowerCase(ExtractFileName(GetModulePath(FModule))) + ']'
-            Info.ProcedureName := Format(RsUnknownFunctionAt, [Info.ProcedureName]);
+            Info.ProcedureName := Format(LoadResString(@RsUnknownFunctionAt), [Info.ProcedureName]);
           end;
 
           Break;
@@ -5462,12 +5497,16 @@ begin
   Result := RegisteredThreadList;
 end;
 
+type
+  TKernel32_CreateThread = function(SecurityAttributes: Pointer; StackSize: LongWord;
+    ThreadFunc: TThreadFunc; Parameter: Pointer;
+    CreationFlags: LongWord; var ThreadId: LongWord): Integer; stdcall;
+  TKernel32_ExitThread = procedure(ExitCode: Integer); stdcall;
+
 var
   ThreadsHooked: Boolean;
-  Kernel32_CreateThread: function(SecurityAttributes: Pointer; StackSize: LongWord;
-    ThreadFunc: TThreadFunc; Parameter: Pointer;
-    CreationFlags: LongWord; var ThreadId: LongWord): Integer; stdcall = nil;
-  Kernel32_ExitThread: procedure(ExitCode: Integer); stdcall = nil;
+  Kernel32_CreateThread: TKernel32_CreateThread = nil;
+  Kernel32_ExitThread: TKernel32_ExitThread = nil;
 
 function HookedCreateThread(SecurityAttributes: Pointer; StackSize: LongWord;
   ThreadFunc: TThreadFunc; Parameter: Pointer;

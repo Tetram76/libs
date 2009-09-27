@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -286,19 +286,21 @@ type
     FRunningStatusEnabled: Boolean;
     FActiveNotes: array [TMIDIChannel] of TMIDINotes;
   protected
-    function GetActiveNotes(Channel: TMIDIChannel): TMIDINotes;
-    function GetName: string; virtual; abstract;
-    function GetMIDIStatus: TMIDIStatusByte;
     function IsRunningStatus(StatusByte: TMIDIStatusByte): Boolean;
-    function GetRunningStatusEnabled: Boolean;
-    procedure SetRunningStatusEnabled(const Value: Boolean);
     procedure SendChannelMessage(Msg: TMIDIStatusByte; Channel: TMIDIChannel;
       Data1, Data2: TMIDIDataByte);
     procedure DoSendMessage(const Data: array of Byte); virtual; abstract;
-    procedure SendMessage(const Data: array of Byte);
   public
     destructor Destroy; override;
-    // Channel Voice Messages
+    { IJclMIDIOut }
+    // property access methods
+    function GetActiveNotes(Channel: TMIDIChannel): TMIDINotes;
+    function GetName: string; virtual; abstract;
+    function GetMIDIStatus: TMIDIStatusByte;
+    function GetRunningStatusEnabled: Boolean;
+    procedure SetRunningStatusEnabled(const Value: Boolean);
+    // General message send method
+    procedure SendMessage(const Data: array of Byte);    // Channel Voice Messages
     procedure SendNoteOff(Channel: TMIDIChannel; Key: TMIDINote; Velocity: TMIDIDataByte = $40);
     procedure SendNoteOn(Channel: TMIDIChannel; Key: TMIDINote; Velocity: TMIDIDataByte);
     procedure SendPolyphonicKeyPressure(Channel: TMIDIChannel; Key: TMIDINote; Value: TMIDIDataByte);
@@ -366,8 +368,8 @@ function MIDINoteToStr(Note: TMIDINote): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclMIDI.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -440,30 +442,30 @@ const
   HalftonesPerOctave = 12;
 begin
   case Note mod HalftonesPerOctave of
-     0:
-       Result := RsOctaveC;
-     1:
-       Result := RsOctaveCSharp;
-     2:
-       Result := RsOctaveD;
-     3:
-       Result := RsOctaveDSharp;
-     4:
-       Result := RsOctaveE;
-     5:
-       Result := RsOctaveF;
-     6:
-       Result := RsOctaveFSharp;
-     7:
-       Result := RsOctaveG;
-     8:
-       Result := RsOctaveGSharp;
-     9:
-       Result := RsOctaveA;
+    0:
+      Result := LoadResString(@RsOctaveC);
+    1:
+      Result := LoadResString(@RsOctaveCSharp);
+    2:
+      Result := LoadResString(@RsOctaveD);
+    3:
+      Result := LoadResString(@RsOctaveDSharp);
+    4:
+      Result := LoadResString(@RsOctaveE);
+    5:
+      Result := LoadResString(@RsOctaveF);
+    6:
+      Result := LoadResString(@RsOctaveFSharp);
+    7:
+      Result := LoadResString(@RsOctaveG);
+    8:
+      Result := LoadResString(@RsOctaveGSharp);
+    9:
+      Result := LoadResString(@RsOctaveA);
     10:
-      Result := RsOctaveASharp;
+      Result := LoadResString(@RsOctaveASharp);
     11:
-      Result := RsOctaveB;
+      Result := LoadResString(@RsOctaveB);
   end;
   Result := Format('%s%d', [Result, Note div HalftonesPerOctave - 2]);
 end;

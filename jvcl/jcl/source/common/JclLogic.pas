@@ -35,7 +35,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
+{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009)                          $ }
 { Revision:      $Rev:: 2921                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -298,7 +298,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclLogic.pas $';
     Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

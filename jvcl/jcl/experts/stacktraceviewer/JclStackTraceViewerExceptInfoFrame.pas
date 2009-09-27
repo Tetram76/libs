@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -49,9 +49,8 @@ type
   private
     FException: TJclSerializableException;
     procedure SetException(const Value: TJclSerializableException);
-    { Private declarations }
   public
-    { Public declarations }
+    constructor Create(AOwner: TComponent); override;
     property Exception: TJclSerializableException read FException write SetException;
   end;
 
@@ -59,8 +58,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerExceptInfoFrame.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -71,7 +70,17 @@ implementation
 
 {$R *.dfm}
 
+uses
+  JclOtaResources;
+
 { TfrmException }
+
+constructor TfrmException.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Label1.Caption := LoadResString(@RsExceptionClassName);
+  Label2.Caption := LoadResString(@RsExceptionMessage);
+end;
 
 procedure TfrmException.SetException(const Value: TJclSerializableException);
 begin

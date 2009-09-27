@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 18:06:20 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3003                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -213,7 +213,7 @@ type
   public
     constructor Create(AKind: TJclLocalesKind = lkInstalled);
     destructor Destroy; override;
-    procedure FillStrings(Strings: TStrings; InfoType: Integer);
+    procedure FillStrings(AStrings: TStrings; InfoType: Integer);
     property CodePages: TStrings read GetCodePages;
     property ItemFromLangID[LangID: LANGID]: TJclLocaleInfo read GetItemFromLangID;
     property ItemFromLangIDPrimary[LangIDPrimary: Word]: TJclLocaleInfo read GetItemFromLangIDPrimary;
@@ -311,8 +311,8 @@ procedure JclLocalesInfoList(const Strings: TStrings; InfoType: Integer = LOCALE
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclLocales.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 3003 $';
+    Date: '$Date: 2009-09-12 18:06:20 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -699,17 +699,17 @@ begin
   end;
 end;
 
-procedure TJclLocalesList.FillStrings(Strings: TStrings; InfoType: Integer);
+procedure TJclLocalesList.FillStrings(AStrings: TStrings; InfoType: Integer);
 var
   I: Integer;
 begin
-  Strings.BeginUpdate;
+  AStrings.BeginUpdate;
   try
     for I := 0 to Count - 1 do
       with Items[I] do
-        Strings.AddObject(StringInfo[InfoType], Pointer(LocaleId));
+        AStrings.AddObject(StringInfo[InfoType], Pointer(LocaleId));
   finally
-    Strings.EndUpdate;
+    AStrings.EndUpdate;
   end;
 end;
 

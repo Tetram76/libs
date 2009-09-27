@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -54,8 +54,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaUnitVersioningSheet.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil
@@ -94,8 +94,8 @@ var
   LongFileName: string;
 begin
   inherited Create(AOwner);
-  ButtonCopyToClipboard.Caption := RsCopyToClipboard;
-  ButtonSaveAsText.Caption := RsSaveAsText;
+  ButtonCopyToClipboard.Caption := LoadResString(@RsCopyToClipboard);
+  ButtonSaveAsText.Caption := LoadResString(@RsSaveAsText);
   
   UnitVersioning := GetUnitVersioning;
   UnitVersioning.RegisterProvider(TJclDefaultUnitVersioningProvider);

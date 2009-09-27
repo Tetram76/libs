@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                        $ }
-{ Revision:      $Rev:: 2914                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -113,8 +113,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/useswizard/JCLUsesWizard.pas $';
-    Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\useswizard';
     Extra: '';
     Data: nil
@@ -305,7 +305,7 @@ begin
       Read := Reader.GetText(ReaderPos, @Buf, BufSize);
       Inc(ReaderPos, Read);
       if (Read < 0) or (Read > BufSize) then
-        raise EJclExpertException.CreateTrace(RsEErrorReadingBuffer);
+        raise EJclExpertException.CreateRes(@RsEErrorReadingBuffer);
       Buf[Read] := #0;
       Stream.WriteString(Buf);
     until Read < BufSize;
@@ -381,7 +381,7 @@ begin
   FFrameJclOptions.Active := Active;
   FFrameJclOptions.ConfirmChanges := ConfirmChanges;
   FFrameJclOptions.ConfigFileName := IniFile;
-  AddPageFunc(FFrameJclOptions, RsUsesSheet, Self);
+  AddPageFunc(FFrameJclOptions, LoadResString(@RsUsesSheet), Self);
 end;
 
 procedure TJCLUsesWizard.ConfigurationClosed(AControl: TControl;

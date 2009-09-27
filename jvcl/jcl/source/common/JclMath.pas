@@ -36,9 +36,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 16:46:49 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2925                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-09-27 02:41:54 +0200 (dim. 27 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3025                                                                     $ }
+{ Author:        $Author:: rrossmair                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -772,8 +772,8 @@ function CscH(const Z: TRectComplex): TRectComplex; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclMath.pas $';
-    Revision: '$Revision: 2925 $';
-    Date: '$Date: 2009-08-09 16:46:49 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 3025 $';
+    Date: '$Date: 2009-09-27 02:41:54 +0200 (dim. 27 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2685,8 +2685,11 @@ end;
 
 //=== Floating point value classification ====================================
 
+type
+  TC3C2C0 = 0..6;
+
 const
-  FPClasses: array [0..6] of TFloatingPointClass =
+  FPClasses: array [TC3C2C0] of TFloatingPointClass =
    (
     fpInvalid,
     fpNaN,
@@ -2697,17 +2700,17 @@ const
     fpDenormal
    );
 
-function _FPClass: TFloatingPointClass;
+// _C3C2C0 returns the set of condition code flags C0, C2, and C3 of the FPU status word
+// to indicate the class of value or number in register ST(0) as follows:
+// C0 in Bit 0 of EAX
+// C2 in Bit 1 of EAX
+// C3 in Bit 2 of EAX
+
+function _C3C2C0: TC3C2C0;
 // In: ST(0) Value to examine
-//     ECX/RCX   address of GOT (PIC only)
 asm
         FXAM
-        {$IFDEF CPU32}
         XOR     EDX, EDX
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
-        XOR     RDX, RDX
-        {$ENDIF CPU64}
         FNSTSW  AX
         FFREE   ST(0)
         FINCSTP
@@ -2717,80 +2720,43 @@ asm
         RCL     EDX, 1
         BT      EAX, 8  // C0
         RCL     EDX, 1
-        {$IFDEF CPU32}
-        {$IFDEF PIC}
-        {$IFDEF CPU32}
-        MOVZX   EAX, TFloatingPointClass([ECX].FPClasses[EDX])
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
-        MOVZX   EAX, TFloatingPointClass([RCX].FPClasses[RDX])
-        {$ENDIF CPU64}
-        {$ELSE ~PIC}
-        MOVZX   EAX, TFloatingPointClass(FPClasses[EDX])
-        {$ENDIF ~PIC}
-        {$ENDIF CPU32}
-        {$IFDEF CPU64}
-        {$IFDEF PIC}
-        MOVZX   EAX, TFloatingPointClass([RCX].FPClasses[RDX])
-        {$ELSE ~PIC}
-        MOVZX   EAX, TFloatingPointClass(FPClasses[RDX])
-        {$ENDIF ~PIC}
-        {$ENDIF CPU64}
+        MOV     EAX, EDX
 end;
+
+function C3C2C0(const Value: Single): TC3C2C0; overload;
+asm
+        FLD     Value
+        CALL    _C3C2C0
+end;
+
+function C3C2C0(const Value: Double): TC3C2C0; overload;
+asm
+        FLD     Value
+        CALL    _C3C2C0
+end;
+
+{$IFDEF SUPPORTS_EXTENDED}
+function C3C2C0(const Value: Extended): TC3C2C0; overload;
+asm
+        FLD     Value
+        CALL    _C3C2C0
+end;
+{$ENDIF SUPPORTS_EXTENDED}
 
 function FloatingPointClass(const Value: Single): TFloatingPointClass; overload;
 begin
-  asm
-          {$IFDEF PIC}
-          CALL    GetGOT
-          {$IFDEF CPU32}
-          MOV     ECX, EAX
-          {$ENDIF CPU32}
-          {$IFDEF CPU64}
-          MOV     RCX, RAX
-          {$ENDIF CPU64}
-          {$ENDIF PIC}
-          FLD     Value
-          CALL    _FPClass
-          MOV     Result, AL
-  end;
+  Result := FPClasses[C3C2C0(Value)];
 end;
 
 function FloatingPointClass(const Value: Double): TFloatingPointClass; overload;
 begin
-  asm
-          {$IFDEF PIC}
-          CALL    GetGOT
-          {$IFDEF CPU32}
-          MOV     ECX, EAX
-          {$ENDIF CPU32}
-          {$IFDEF CPU64}
-          MOV     RCX, RAX
-          {$ENDIF CPU64}
-          {$ENDIF PIC}
-          FLD     Value
-          CALL    _FPClass
-          MOV     Result, AL
-  end;
+  Result := FPClasses[C3C2C0(Value)];
 end;
 
 {$IFDEF SUPPORTS_EXTENDED}
 function FloatingPointClass(const Value: Extended): TFloatingPointClass; overload;
 begin
-  asm
-          {$IFDEF PIC}
-          CALL    GetGOT
-          {$IFDEF CPU32}
-          MOV     ECX, EAX
-          {$ENDIF CPU32}
-          {$IFDEF CPU64}
-          MOV     RCX, RAX
-          {$ENDIF CPU64}
-          {$ENDIF PIC}
-          FLD     Value
-          CALL    _FPClass
-          MOV     Result, AL
-  end;
+  Result := FPClasses[C3C2C0(Value)];
 end;
 {$ENDIF SUPPORTS_EXTENDED}
 

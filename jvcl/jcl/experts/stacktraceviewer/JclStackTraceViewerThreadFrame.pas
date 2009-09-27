@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 2993                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -60,16 +60,10 @@ type
     procedure SetCreationStackList(const Value: TJclStackTraceViewerLocationInfoList);
     procedure SetException(const Value: TJclSerializableException);
     procedure SetStackList(const Value: TJclStackTraceViewerLocationInfoList);
-    function GetSelected: IJclLocationInfo;
     procedure HandleStackSelection(ASender: TObject);
     procedure UpdateSplitterState;
-    function GetPreparableLocationInfoListCount: Integer;
-    function GetPreparableLocationInfoList(AIndex: Integer): IJclPreparedLocationInfoList;
-    procedure UpdateViews;
     procedure UpdatePreparableLocationInfoLists;
-    { Private declarations }
   public
-    { Public declarations }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure LoadState(AIni: TCustomIniFile; const ASection: string);
@@ -77,14 +71,24 @@ type
     property CreationStackList: TJclStackTraceViewerLocationInfoList read FCreationStackList write SetCreationStackList;
     property Exception: TJclSerializableException read FException write SetException;
     property StackList: TJclStackTraceViewerLocationInfoList read FStackList write SetStackList;
+
+    { IJclStackTraceViewerPreparableStackFrame }
+    function GetPreparableLocationInfoListCount: Integer;
+    function GetPreparableLocationInfoList(AIndex: Integer): IJclPreparedLocationInfoList;
+    procedure UpdateViews;
+    property PreparableLocationInfoListCount: Integer read GetPreparableLocationInfoListCount;
+    property PreparableLocationInfoList[AIndex: Integer]: IJclPreparedLocationInfoList read GetPreparableLocationInfoList;
+    { IJclStackTraceViewerStackSelection }
+    function GetSelected: IJclLocationInfo;
+    property Selected: IJclLocationInfo read GetSelected;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerThreadFrame.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 2993 $';
+    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil

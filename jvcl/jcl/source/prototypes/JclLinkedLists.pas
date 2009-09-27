@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                       $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009)                        $ }
+{ Revision:      $Rev:: 2997                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -192,11 +192,12 @@ type
     FEqualityComparer: IJclEqualityComparer<T>;
   protected
     procedure AssignPropertiesTo(Dest: TJclAbstractContainerBase); override;
-    function ItemsEqual(const A, B: T): Boolean; override;
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
   public
     constructor Create(const AEqualityComparer: IJclEqualityComparer<T>; const ACollection: IJclCollection<T>;
       AOwnsItems: Boolean);
+    { IJclEqualityComparer<T> }
+    function ItemsEqual(const A, B: T): Boolean; override;
     property EqualityComparer: IJclEqualityComparer<T> read FEqualityComparer write FEqualityComparer;
   end;
 
@@ -216,8 +217,10 @@ type
     IJclIntfCloneable, IJclCloneable, IJclContainer, IJclCollection<T>, IJclList<T>, IJclEqualityComparer<T>,
     IJclItemOwner<T>)
   protected
-    function ItemsEqual(const A, B: T): Boolean; override;
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
+  public
+    { IJclEqualityComparer<T> }
+    function ItemsEqual(const A, B: T): Boolean; override;
   end;
   {$ENDIF SUPPORTS_GENERICS}
 
@@ -225,8 +228,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclLinkedLists.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 2997 $';
+    Date: '$Date: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

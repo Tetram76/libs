@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 19:06:40 +0200 (dim., 09 août 2009)                         $ }
-{ Revision:      $Rev:: 2930                                                                     $ }
+{ Last modified: $Date:: 2009-09-23 15:16:08 +0200 (mer. 23 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3022                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1879,8 +1879,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompression.pas $';
-    Revision: '$Revision: 2930 $';
-    Date: '$Date: 2009-08-09 19:06:40 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 3022 $';
+    Date: '$Date: 2009-09-23 15:16:08 +0200 (mer. 23 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2030,7 +2030,7 @@ begin
       AFormat := CompressFormats[IndexFormat];
       StrTokenToStrings(AFormat.StreamExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if StrMatches(Filters.Strings[IndexFilter], StrLower(AFileName)) then
+        if IsFileNameMatch(Filters.Strings[IndexFilter], AFileName) then
       begin
         Result := AFormat;
         Break;
@@ -2057,7 +2057,7 @@ begin
       AFormat := DecompressFormats[IndexFormat];
       StrTokenToStrings(AFormat.StreamExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if StrMatches(Filters.Strings[IndexFilter], AFileName) then
+        if IsFileNameMatch(Filters.Strings[IndexFilter], AFileName) then
       begin
         Result := AFormat;
         Break;
@@ -2818,9 +2818,9 @@ begin
   begin
     if not FDataEnded then
       // the decompressed stream is stopping before the compressed stream
-      raise EJclCompressionError(RsCompressionGZipInternalError);
+      raise EJclCompressionError.CreateRes(@RsCompressionGZipInternalError);
     if AutoCheckDataCRC32 and (FComputedDataCRC32 <> FFooter.DataCRC32) then
-      raise EJclCompressionError(RsCompressionGZipDataCRCFailed);
+      raise EJclCompressionError.CreateRes(@RsCompressionGZipDataCRCFailed);
   end;
 end;
 
@@ -3660,10 +3660,10 @@ begin
     LastWriteTime := AFindData.ftLastWriteTime;
     // TODO: user name and group (using file handle and GetSecurityInfo)
     {$IFDEF MSWINDOWS}
-    HostOS := RsCompression7zWindows;
+    HostOS := LoadResString(@RsCompression7zWindows);
     {$ENDIF MSWINDOWS}
     {$IFDEF UNIX}
-    HostOS := RsCompression7zUnix;
+    HostOS := LoadResString(@RsCompression7zUnix);
     {$ENDIF UNIX}
   end;
 end;
@@ -3753,7 +3753,7 @@ begin
           try
             FPackedNames.Add(Value);
           except
-            raise EJclCompressionError(Format(RsCompressionDuplicate, [Value]));
+            raise EJclCompressionError(Format(LoadResString(@RsCompressionDuplicate), [Value]));
           end;
         end;
       end;
@@ -3920,7 +3920,7 @@ begin
       AFormat := CompressFormats[IndexFormat];
       StrTokenToStrings(AFormat.ArchiveExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if StrMatches(Filters.Strings[IndexFilter], AFileName) then
+        if IsFileNameMatch(Filters.Strings[IndexFilter], AFileName) then
       begin
         Result := AFormat;
         Break;
@@ -3947,7 +3947,7 @@ begin
       AFormat := DecompressFormats[IndexFormat];
       StrTokenToStrings(AFormat.ArchiveExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if StrMatches(Filters.Strings[IndexFilter], AFileName) then
+        if IsFileNameMatch(Filters.Strings[IndexFilter], AFileName) then
       begin
         Result := AFormat;
         Break;
@@ -4484,10 +4484,10 @@ begin
     AItem.LastAccessTime := NowFileTime;
     AItem.LastWriteTime := NowFileTime;
     {$IFDEF MSWINDOWS}
-    AItem.HostOS := RsCompression7zWindows;
+    AItem.HostOS := LoadResString(@RsCompression7zWindows);
     {$ENDIF MSWINDOWS}
     {$IFDEF UNIX}
-    AItem.HostOS := RsCompression7zUnix;
+    AItem.HostOS := LoadResString(@RsCompression7zUnix);
     {$ENDIF UNIX}
   except
     AItem.Destroy;
@@ -4551,7 +4551,7 @@ begin
           end;
         daError:
           begin
-            S := Format(RsCompressionDuplicate, [NewItem.PackedName]);
+            S := Format(LoadResString(@RsCompressionDuplicate), [NewItem.PackedName]);
             NewItem.Free;
             raise EJclCompressionError.Create(S);
           end;

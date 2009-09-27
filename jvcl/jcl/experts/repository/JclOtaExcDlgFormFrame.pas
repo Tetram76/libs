@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -69,8 +69,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgFormFrame.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -97,13 +97,13 @@ begin
   FParams := AParams;
   inherited Create(AOwner);
 
-  Caption := RsExcDlgFormOptions;
-  CheckBoxMail.Caption := RsDialogWithMailButton;
-  LabelEMailAddress.Caption := RsEMail;
-  LabelSubject.Caption := RsSubject;
-  CheckBoxModalDialog.Caption := RsModalDialog;
-  CheckBoxSizeable.Caption := RsSizeableDialog;
-  CheckBoxAutoScrollBars.Caption := RsAutoScrollBars;
+  Caption := LoadResString(@RsExcDlgFormOptions);
+  CheckBoxMail.Caption := LoadResString(@RsDialogWithMailButton);
+  LabelEMailAddress.Caption := LoadResString(@RsEMail);
+  LabelSubject.Caption := LoadResString(@RsSubject);
+  CheckBoxModalDialog.Caption := LoadResString(@RsModalDialog);
+  CheckBoxSizeable.Caption := LoadResString(@RsSizeableDialog);
+  CheckBoxAutoScrollBars.Caption := LoadResString(@RsAutoScrollBars);
 end;
 
 function TJclOtaExcDlgFormPage.GetSupportsNext: Boolean;

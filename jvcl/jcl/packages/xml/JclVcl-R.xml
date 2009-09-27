@@ -12,7 +12,7 @@
     <Package Name="rtl" Targets="allLibSuffix" Condition=""/>
     <Package Name="vcl" Targets="allLibSuffix" Condition=""/>
     <Package Name="vcljpg" Targets="c6,d6,d7,d8,d9,d10,cs1,d11" Condition=""/>
-    <Package Name="vclimg" Targets="allv12up" Condition=""/>
+    <Package Name="vclimg" Targets="allv11up" Condition=""/>
     <Package Name="Jcl-R" Targets="all" Condition=""/>
   </Requires>
   <Contains>
@@ -20,6 +20,9 @@
     <File Name="..\..\source\vcl\JclGraphUtils.pas" Targets="Vcl" Formname="" Condition=""/>
     <File Name="..\..\source\vcl\JclGraphics.pas" Targets="Vcl" Formname="" Condition=""/>
     <File Name="..\..\source\vcl\JclFont.pas" Targets="Vcl" Formname="" Condition=""/>
+    <File Name="..\..\source\vcl\JclOpenDialogHooks.pas" Targets="Vcl" Formname="" Condition=""/>
+    <File Name="..\..\source\vcl\JclOpenDialogFavorites.pas" Targets="Vcl" Formname="" Condition=""/>
+    <File Name="..\..\source\vcl\JclVclResources.pas" Targets="Vcl" Formname="" Condition=""/>
     <File Name="..\..\source\vcl\JclVersionControl.pas" Targets="Vcl" Formname="" Condition=""/>
     <File Name="..\..\source\vcl\JclVersionCtrlCVSImpl.pas" Targets="Vcl" Formname="" Condition=""/>
     <File Name="..\..\source\vcl\JclVersionCtrlSVNImpl.pas" Targets="Vcl" Formname="" Condition=""/>

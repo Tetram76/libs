@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3020                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -31,7 +31,7 @@ interface
 
 uses
   SysUtils,
-  ToolsAPI, OpenDlgFavAdapter,
+  ToolsAPI, JclOpenDialogFavorites,
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -40,7 +40,7 @@ uses
 type
   TJclOpenDialogsFavoriteExpert = class(TJclOTAExpert)
   private
-    FFavOpenDialog: TFavOpenDialog;
+    FOpenDialog: TJclOpenDialogFavoritesHook;
     procedure DialogClose(Sender: TObject);
     procedure DialogShow(Sender: TObject);
   public
@@ -61,8 +61,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/favfolders/IdeOpenDlgFavoriteUnit.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3020 $';
+    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009) $';
     LogPath: 'JCL\experts\favfolders';
     Extra: '';
     Data: nil
@@ -130,30 +130,31 @@ end;
 
 procedure TJclOpenDialogsFavoriteExpert.DialogClose(Sender: TObject);
 begin
-  Settings.SaveStrings(JclFavoritesListSubKey, FFavOpenDialog.FavoriteFolders);
-  Settings.SaveString(PictDialogFolderItemName, FFavOpenDialog.PictureDialogLastFolder);
+  Settings.SaveStrings(JclFavoritesListSubKey, FOpenDialog.FavoriteFolders);
+  Settings.SaveString(PictDialogFolderItemName, FOpenDialog.PictureDialogLastFolder);
 end;
 
 procedure TJclOpenDialogsFavoriteExpert.DialogShow(Sender: TObject);
 begin
-  Settings.LoadStrings(JclFavoritesListSubKey, FFavOpenDialog.FavoriteFolders);
+  Settings.LoadStrings(JclFavoritesListSubKey, FOpenDialog.FavoriteFolders);
 end;
 
 procedure TJclOpenDialogsFavoriteExpert.RegisterCommands;
 begin
   inherited RegisterCommands;
-  FFavOpenDialog := InitializeFavOpenDialog;
-  FFavOpenDialog.DisableHelpButton := True;
-  FFavOpenDialog.HookDialogs;
-  FFavOpenDialog.OnClose := DialogClose;
-  FFavOpenDialog.OnShow := DialogShow;
-  FFavOpenDialog.PictureDialogLastFolder := Settings.LoadString(PictDialogFolderItemName,
+  FOpenDialog := InitializeOpenDialogFavorites;
+  FOpenDialog.DisableHelpButton := True;
+  FOpenDialog.HookDialogs;
+  FOpenDialog.OnClose := DialogClose;
+  FOpenDialog.OnShow := DialogShow;
+  FOpenDialog.PictureDialogLastFolder := Settings.LoadString(PictDialogFolderItemName,
     PathAddSeparator(GetCommonFilesFolder) + BorlandImagesPath);
 end;
 
 procedure TJclOpenDialogsFavoriteExpert.UnregisterCommands;
 begin
-  FFavOpenDialog.UnhookDialogs;
+  FOpenDialog.UnhookDialogs;
+  FinalizeOpenDialogFavorites;
   inherited UnregisterCommands;
 end;
 

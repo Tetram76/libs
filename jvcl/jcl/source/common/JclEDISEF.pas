@@ -33,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009)                         $ }
-{ Revision:      $Rev:: 2914                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3007                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -819,8 +819,8 @@ function InsertTableInto(DataObjectGroup: TEDISEFDataObjectGroup;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDISEF.pas $';
-    Revision: '$Revision: 2914 $';
-    Date: '$Date: 2009-08-06 20:31:25 +0200 (jeu., 06 août 2009) $';
+    Revision: '$Revision: 3007 $';
+    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -883,7 +883,7 @@ begin
     caAmpersand:
       Result := EDISEFUserAttributeAmpersandDesc;
   else
-    Result := RsUnknownAttribute;
+    Result := LoadResString(@RsUnknownAttribute);
   end;
 end;
 
@@ -903,7 +903,7 @@ begin
     EDISEFUserAttributeAmpersand:
       Result := EDISEFUserAttributeAmpersandDesc;
   else
-    Result := RsUnknownAttribute;
+    Result := LoadResString(@RsUnknownAttribute);
   end;
 end;
 
@@ -4578,30 +4578,30 @@ begin
   case FEDISEFWhereType of
     twSet:
       case FWhat[1] of
-        SEFTextSetsCode_Set0: Result := SEFTextSetsCode_Set0_Desc;
-        SEFTextSetsCode_Set1: Result := SEFTextSetsCode_Set1_Desc;
-        SEFTextSetsCode_Set2: Result := SEFTextSetsCode_Set2_Desc;
-        SEFTextSetsCode_Set3: Result := SEFTextSetsCode_Set3_Desc;
-        SEFTextSetsCode_Set4: Result := SEFTextSetsCode_Set4_Desc;
-        SEFTextSetsCode_Set5: Result := SEFTextSetsCode_Set5_Desc;
+        SEFTextSetsCode_Set0: Result := LoadResString(@SEFTextSetsCode_Set0_Desc);
+        SEFTextSetsCode_Set1: Result := LoadResString(@SEFTextSetsCode_Set1_Desc);
+        SEFTextSetsCode_Set2: Result := LoadResString(@SEFTextSetsCode_Set2_Desc);
+        SEFTextSetsCode_Set3: Result := LoadResString(@SEFTextSetsCode_Set3_Desc);
+        SEFTextSetsCode_Set4: Result := LoadResString(@SEFTextSetsCode_Set4_Desc);
+        SEFTextSetsCode_Set5: Result := LoadResString(@SEFTextSetsCode_Set5_Desc);
       end;
     twSegment:
       case FWhat[1] of
-        SEFTextSetsCode_Seg0: Result := SEFTextSetsCode_Seg0_Desc;
-        SEFTextSetsCode_Seg1: Result := SEFTextSetsCode_Seg1_Desc;
-        SEFTextSetsCode_Seg2: Result := SEFTextSetsCode_Seg2_Desc;
-        SEFTextSetsCode_Seg3: Result := SEFTextSetsCode_Seg3_Desc;
-        SEFTextSetsCode_Seg4: Result := SEFTextSetsCode_Seg4_Desc;
-        SEFTextSetsCode_Seg5: Result := SEFTextSetsCode_Seg5_Desc;
-        SEFTextSetsCode_Seg6: Result := SEFTextSetsCode_Seg6_Desc;
-        SEFTextSetsCode_Seg7: Result := SEFTextSetsCode_Seg7_Desc;
+        SEFTextSetsCode_Seg0: Result := LoadResString(@SEFTextSetsCode_Seg0_Desc);
+        SEFTextSetsCode_Seg1: Result := LoadResString(@SEFTextSetsCode_Seg1_Desc);
+        SEFTextSetsCode_Seg2: Result := LoadResString(@SEFTextSetsCode_Seg2_Desc);
+        SEFTextSetsCode_Seg3: Result := LoadResString(@SEFTextSetsCode_Seg3_Desc);
+        SEFTextSetsCode_Seg4: Result := LoadResString(@SEFTextSetsCode_Seg4_Desc);
+        SEFTextSetsCode_Seg5: Result := LoadResString(@SEFTextSetsCode_Seg5_Desc);
+        SEFTextSetsCode_Seg6: Result := LoadResString(@SEFTextSetsCode_Seg6_Desc);
+        SEFTextSetsCode_Seg7: Result := LoadResString(@SEFTextSetsCode_Seg7_Desc);
       end;
     twElementOrCompositeElement, twSubElement:
       case FWhat[1] of
-        SEFTextSetsCode_Elm0: Result := SEFTextSetsCode_Elm0_Desc;
-        SEFTextSetsCode_Elm1: Result := SEFTextSetsCode_Elm1_Desc;
-        SEFTextSetsCode_Elm2: Result := SEFTextSetsCode_Elm2_Desc;
-        SEFTextSetsCode_Elm4: Result := SEFTextSetsCode_Elm4_Desc;
+        SEFTextSetsCode_Elm0: Result := LoadResString(@SEFTextSetsCode_Elm0_Desc);
+        SEFTextSetsCode_Elm1: Result := LoadResString(@SEFTextSetsCode_Elm1_Desc);
+        SEFTextSetsCode_Elm2: Result := LoadResString(@SEFTextSetsCode_Elm2_Desc);
+        SEFTextSetsCode_Elm4: Result := LoadResString(@SEFTextSetsCode_Elm4_Desc);
       end;
   end;
 end;

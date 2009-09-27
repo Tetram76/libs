@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-01 22:07:14 +0200 (mar., 01 sept. 2009)                         $ }
-{ Revision:      $Rev:: 2979                                                                     $ }
+{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3020                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -107,8 +107,6 @@ const
   JclFavoritesListSubKey     = 'Favorites';
   PictDialogFolderItemName   = 'PictureDialogPath';
   BorlandImagesPath          = 'Borland Shared\Images';
-  FavDialogTemplateName      = 'FAVDLGTEMPLATE';
-  OpenPictDialogTemplateName = 'DLGTEMPLATE';
 
   //=== Threads Expert =======================================================
   JclThreadsExpertName = 'JclThreadsExpert';
@@ -163,8 +161,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConsts.pas $';
-    Revision: '$Revision: 2979 $';
-    Date: '$Date: 2009-09-01 22:07:14 +0200 (mar., 01 sept. 2009) $';
+    Revision: '$Revision: 3020 $';
+    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 17:21:12 +0200 (mar., 25 août 2009)                         $ }
-{ Revision:      $Rev:: 2966                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 2993                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -359,8 +359,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAlgorithms.pas $';
-    Revision: '$Revision: 2966 $';
-    Date: '$Date: 2009-08-25 17:21:12 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 2993 $';
+    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

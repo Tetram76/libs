@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -77,8 +77,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/simdview/JclSIMDCpuInfo.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\debug\simdview';
     Extra: '';
     Data: nil
@@ -88,6 +88,9 @@ const
 implementation
 
 {$R *.dfm}
+
+uses
+  JclOtaResources;
 
 //=== { TJclFormCpuInfo } ====================================================
 
@@ -107,6 +110,28 @@ end;
 
 procedure TJclFormCpuInfo.Execute(const CpuInfo: TCPUInfo; const EnabledFeatures: TOSEnabledFeatures);
 begin
+  Caption := LoadResString(@RsCpuInfoTitle);
+  LabelName.Caption := LoadResString(@RsName);
+  LabelVendor.Caption := LoadResString(@RsVendor);
+  LabelFrequency.Caption := LoadResString(@RsFrequency);
+  CheckBoxMMX.Caption := LoadResString(@RsMMX);
+  CheckBoxExMMX.Caption := LoadResString(@RsMMXExt);
+  CheckBox3DNow.Caption := LoadResString(@Rs3DNow);
+  CheckBoxEx3DNow.Caption := LoadResString(@Rs3DNowExt);
+  CheckBox64Bits.Caption := LoadResString(@RsLong);
+  CheckBoxEnabledFPU.Caption := LoadResString(@RsEnabledFPU);
+  CheckBoxEnabledSSE.Caption := LoadResString(@RsEnabledSSE);
+  CheckBoxEnabledAVX.Caption := LoadResString(@RsEnabledAVX);
+  CheckBoxSSE1.Caption := LoadResString(@RsSSE1);
+  CheckBoxSSE2.Caption := LoadResString(@RsSSE2);
+  CheckBoxSSE3.Caption := LoadResString(@RsSSE3);
+  CheckBoxSSSE3.Caption := LoadResString(@RsSSE3Ext);
+  CheckBoxSSE4A.Caption := LoadResString(@RsSSE4A);
+  CheckBoxSSE4B.Caption := LoadResString(@RsSSE4B);
+  CheckBoxSSE5.Caption := LoadResString(@RsSSE5);
+  CheckBoxAVX.Caption := LoadResString(@RsAVX);
+  ButtonClose.Caption := LoadResString(@RsClose);
+
   EditName.Text := string(AnsiString(CpuInfo.CpuName));
   EditVendor.Text := string(AnsiString(CpuInfo.VendorIDString));
   EditFrequency.Text := IntToStr(CpuInfo.FrequencyInfo.NormFreq);

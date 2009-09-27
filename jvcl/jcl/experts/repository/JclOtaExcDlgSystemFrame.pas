@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -66,8 +66,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgSystemFrame.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -94,15 +94,15 @@ begin
   FParams := AParams;
   inherited Create(AOwner);
 
-  Caption := RsExcDlgSystemOptions;
-  CheckBoxDelayed.Caption := RsDelayedStackTrace;
-  CheckBoxHookDll.Caption := RsHookDll;
-  CheckBoxModuleList.Caption := RsModuleList;
-  CheckBoxUnitVersioning.Caption := RsUnitVersioning;
-  CheckBoxOSInfo.Caption := RsOSInfo;
-  CheckBoxActiveControls.Caption := RsActiveControls;
-  CheckBoxCatchMainThread.Caption := RsCatchMainThread;
-  CheckBoxDisableIfDebuggerAttached.Caption := RsDisableIfDebuggerAttached;
+  Caption := LoadResString(@RsExcDlgSystemOptions);
+  CheckBoxDelayed.Caption := LoadResString(@RsDelayedStackTrace);
+  CheckBoxHookDll.Caption := LoadResString(@RsHookDll);
+  CheckBoxModuleList.Caption := LoadResString(@RsModuleList);
+  CheckBoxUnitVersioning.Caption := LoadResString(@RsUnitVersioning);
+  CheckBoxOSInfo.Caption := LoadResString(@RsOSInfo);
+  CheckBoxActiveControls.Caption := LoadResString(@RsActiveControls);
+  CheckBoxCatchMainThread.Caption := LoadResString(@RsCatchMainThread);
+  CheckBoxDisableIfDebuggerAttached.Caption := LoadResString(@RsDisableIfDebuggerAttached);
 end;
 
 procedure TJclOtaExcDlgSystemPage.PageActivated(Direction: TJclWizardDirection);

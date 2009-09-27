@@ -31,7 +31,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-10 19:54:31 +0200 (lun., 10 août 2009)                         $ }
+{ Last modified: $Date:: 2009-08-10 19:54:31 +0200 (lun. 10 août 2009)                          $ }
 { Revision:      $Rev:: 2940                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -4418,7 +4418,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclContainerIntf.pas $';
     Revision: '$Revision: 2940 $';
-    Date: '$Date: 2009-08-10 19:54:31 +0200 (lun., 10 août 2009) $';
+    Date: '$Date: 2009-08-10 19:54:31 +0200 (lun. 10 août 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

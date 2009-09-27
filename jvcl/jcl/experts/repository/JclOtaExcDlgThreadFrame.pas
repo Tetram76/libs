@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009)                         $ }
-{ Revision:      $Rev:: 2907                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -80,8 +80,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaExcDlgThreadFrame.pas $';
-    Revision: '$Revision: 2907 $';
-    Date: '$Date: 2009-08-02 11:02:42 +0200 (dim., 02 août 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -138,14 +138,14 @@ begin
   inherited Create(AOwner);
   FTestThread := TTestThread.Create(False, 'MyTaskThread');
 
-  Caption := RsExcDlgThreadOptions;
-  CheckBoxStackList.Caption := RsStackList;
-  LabelPreview.Caption := RsPreview;
-  RadioButtonAllThreads.Caption := RsAllThreads;
-  RadioButtonAllRegisteredThreads.Caption := RsAllRegisteredThreads;
-  RadioButtonMainExceptionThreads.Caption := RsMainExceptionThreads;
-  RadioButtonExceptionThread.Caption := RsExceptionThread;
-  RadioButtonMainThread.Caption := RsMainThread;
+  Caption := LoadResString(@RsExcDlgThreadOptions);
+  CheckBoxStackList.Caption := LoadResString(@RsStackList);
+  LabelPreview.Caption := LoadResString(@RsPreview);
+  RadioButtonAllThreads.Caption := LoadResString(@RsAllThreads);
+  RadioButtonAllRegisteredThreads.Caption := LoadResString(@RsAllRegisteredThreads);
+  RadioButtonMainExceptionThreads.Caption := LoadResString(@RsMainExceptionThreads);
+  RadioButtonExceptionThread.Caption := LoadResString(@RsExceptionThread);
+  RadioButtonMainThread.Caption := LoadResString(@RsMainThread);
 end;
 
 destructor TJclOtaExcDlgThreadPage.Destroy;

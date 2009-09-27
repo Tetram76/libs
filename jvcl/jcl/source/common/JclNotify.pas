@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-02 15:24:19 +0200 (jeu., 02 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2841                                                                     $ }
+{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
+{ Revision:      $Rev:: 2993                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -74,8 +74,9 @@ type
     IJclListener and vice versa. }
 type
   TJclBaseListener = class (TInterfacedObject, IJclListener)
-  protected
-    procedure Notification(msg: IJclNotificationMessage); virtual; stdcall; 
+  public
+    { IJclListener }
+    procedure Notification(msg: IJclNotificationMessage); virtual; stdcall;
   end;
 
   TJclBaseNotificationMessage = class (TInterfacedObject, IJclNotificationMessage)
@@ -90,7 +91,8 @@ type
     {$IFDEF THREADSAFE}
     FSynchronizer: TJclMultiReadExclusiveWrite;
     {$ENDIF}
-  protected
+  public
+    { IJclNotifier }
     procedure Add(listener: IJclListener); stdcall;
     procedure Notify(msg: IJclNotificationMessage); stdcall;
     procedure Remove(listener: IJclListener); stdcall;

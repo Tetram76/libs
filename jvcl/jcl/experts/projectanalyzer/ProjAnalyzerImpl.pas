@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-03 21:20:41 +0200 (jeu., 03 sept. 2009)                         $ }
-{ Revision:      $Rev:: 2988                                                                     $ }
+{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3012                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -59,13 +59,12 @@ type
   TProjectManagerMultipleNotifier = class(TNotifierObject, IOTANotifier, IOTAProjectMenuItemCreatorNotifier)
   private
     FProjectAnalyser: TJclProjectAnalyzerExpert;
-  protected
+  public
+    constructor Create(AProjectAnalyzer: TJclProjectAnalyzerExpert);
     procedure MenuExecute(const MenuContextList: IInterfaceList);
     { IOTAProjectMenuItemCreatorNotifier }
     procedure AddMenu(const Project: IOTAProject; const Ident: TStrings;
       const ProjectManagerMenuList: IInterfaceList; IsMultiSelect: Boolean);
-  public
-    constructor Create(AProjectAnalyzer: TJclProjectAnalyzerExpert);
   end;
   {$ELSE ~BDS7_UP}
   {$IFDEF BDS4_UP}
@@ -74,13 +73,12 @@ type
   private
     FProjectAnalyser: TJclProjectAnalyzerExpert;
     FOTAProjectManager: IOTAProjectManager;
+  public
+    constructor Create(AProjectAnalyzer: TJclProjectAnalyzerExpert; const AOTAProjectManager: IOTAProjectManager);
     procedure AnalyzeProjectMenuClick(Sender: TObject);
-  protected
     { INTAProjectMenuCreatorNotifier }
     function AddMenu(const Ident: string): TMenuItem;
     function CanHandle(const Ident: string): Boolean;
-  public
-    constructor Create(AProjectAnalyzer: TJclProjectAnalyzerExpert; const AOTAProjectManager: IOTAProjectManager);
   end;
   {$ENDIF BDS4_UP}
   {$ENDIF ~BDS7_UP}
@@ -97,8 +95,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/projectanalyzer/ProjAnalyzerImpl.pas $';
-    Revision: '$Revision: 2988 $';
-    Date: '$Date: 2009-09-03 21:20:41 +0200 (jeu., 03 sept. 2009) $';
+    Revision: '$Revision: 3012 $';
+    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JCL\experts\projectanalyser';
     Extra: '';
     Data: nil
@@ -110,6 +108,7 @@ implementation
 {$R ProjAnalyzerIcon.res}
 
 uses
+  Variants,
   JclDebug, JclFileUtils, JclOtaConsts, 
   JclOtaResources;
 
@@ -183,7 +182,7 @@ begin
     if ActiveProject <> nil then
       AnalyzeProject(ActiveProject)
     else
-      raise EJclExpertException.CreateTrace(RsENoActiveProject);
+      raise EJclExpertException.CreateRes(@RsENoActiveProject);
   except
     on ExceptionObj: TObject do
     begin
@@ -206,8 +205,8 @@ begin
       ProjectName := '';
     FBuildAction.Enabled := Assigned(ActiveProject);
     if not FBuildAction.Enabled then
-      ProjectName := RsProjectNone;
-    FBuildAction.Caption := Format(RsAnalyzeActionCaption, [ProjectName]);
+      ProjectName := LoadResString(@RsProjectNone);
+    FBuildAction.Caption := Format(LoadResString(@RsAnalyzeActionCaption), [ProjectName]);
   except
     on ExceptionObj: TObject do
     begin
@@ -238,8 +237,8 @@ begin
 
     ProjOptions := AProject.ProjectOptions;
     if not Assigned(ProjOptions) then
-      raise EJclExpertException.CreateTrace(RsENoProjectOptions);
-      
+      raise EJclExpertException.CreateRes(@RsENoProjectOptions);
+
     OutputDirectory := GetOutputDirectory(AProject);
     MapFileName := GetMapFileName(AProject);
 
@@ -249,12 +248,12 @@ begin
       ProjectAnalyzerForm.Show;
     end;
     ProjectAnalyzerForm.ClearContent;
-    ProjectAnalyzerForm.StatusBarText := Format(RsBuildingProject, [ProjectName]);
+    ProjectAnalyzerForm.StatusBarText := Format(LoadResString(@RsBuildingProject), [ProjectName]);
 
     {$IFDEF BDS6_UP}
     Supports(ProjOptions, IOTAProjectOptionsConfigurations, ProjOptionsConfigurations);
     if not Assigned(ProjOptionsConfigurations) then
-      raise EJclExpertException.CreateTrace(RsENoProjectOptionsConfigurations);
+      raise EJclExpertException.CreateRes(@RsENoProjectOptionsConfigurations);
 
     // get the current build configuration
     ActiveConfiguration := ProjOptionsConfigurations.ActiveConfiguration;
@@ -301,7 +300,7 @@ begin
         ProjectAnalyzerForm.SetFileName(ExecutableFileName, MapFileName, ProjectName);
         ProjectAnalyzerForm.Show;
       end;
-      if Integer(SaveMapFile) <> MapFileOptionDetailed then
+      if (not VarIsOrdinal(SaveMapFile)) or (Integer(SaveMapFile) <> MapFileOptionDetailed) then
       begin // delete MAP and DRC file
         DeleteFile(MapFileName);
         DeleteFile(ChangeFileExt(MapFileName, DrcFileExtension));
@@ -336,7 +335,7 @@ begin
 
   // create actions
   FBuildAction := TAction.Create(nil);
-  FBuildAction.Caption := Format(RsAnalyzeActionCaption, [RsProjectNone]);
+  FBuildAction.Caption := Format(LoadResString(@RsAnalyzeActionCaption), [LoadResString(@RsProjectNone)]);
   FBuildAction.Visible := True;
   FBuildAction.OnExecute := ActionExecute;
   FBuildAction.OnUpdate := ActionUpdate;
@@ -372,7 +371,7 @@ begin
         Break;
       end;
   if not Assigned(IDEProjectItem) then
-    raise EJclExpertException.CreateTrace(RsENoProjectMenuItem);
+    raise EJclExpertException.CreateRes(@RsENoProjectMenuItem);
 
   with IDEProjectItem do
     for I := 0 to Count - 1 do
@@ -392,7 +391,7 @@ begin
         System.Break;
       end;
   if not Assigned(FBuildMenuItem.Parent) then
-    raise EJclExpertException.CreateTrace(RsAnalyseMenuItemNotInserted);
+    raise EJclExpertException.CreateRes(@RsAnalyseMenuItemNotInserted);
 end;
 
 procedure TJclProjectAnalyzerExpert.UnregisterCommands;
@@ -436,7 +435,7 @@ begin
   begin
     AMenu := TJclOTAProjectManagerMenu.Create;
     AMenu.Enabled := True;
-    AMenu.Caption := Format(RsAnalyzeActionCaption, [ExtractFileName(Project.FileName)]);
+    AMenu.Caption := Format(LoadResString(@RsAnalyzeActionCaption), [ExtractFileName(Project.FileName)]);
     AMenu.IsMultiSelectable := True;
     AMenu.OnExecute := MenuExecute;
     AMenu.Position := pmmpUserBuild;
@@ -458,7 +457,7 @@ begin
       if Project <> nil then
         FProjectAnalyser.AnalyzeProject(Project)
       else
-        raise EJclExpertException.CreateTrace(RsENoActiveProject);
+        raise EJclExpertException.CreateRes(@RsENoActiveProject);
     end;
   except
     on ExceptionObj: TObject do
@@ -496,11 +495,11 @@ begin
       // root item
       Result := TMenuItem.Create(nil);
       Result.Visible := True;
-      Result.Caption := Format(RsAnalyzeActionCaption, [ExtractFileName(AProject.FileName)]);
+      Result.Caption := Format(LoadResString(@RsAnalyzeActionCaption), [ExtractFileName(AProject.FileName)]);
       Result.OnClick := AnalyzeProjectMenuClick;
     end
     else
-      raise EJclExpertException.CreateTrace(RsENoActiveProject);
+      raise EJclExpertException.CreateRes(@RsENoActiveProject);
   except
     on ExceptionObj: TObject do
     begin
@@ -521,7 +520,7 @@ begin
     if TempProject <> nil then
       FProjectAnalyser.AnalyzeProject(TempProject)
     else
-      raise EJclExpertException.CreateTrace(RsENoActiveProject);
+      raise EJclExpertException.CreateRes(@RsENoActiveProject);
   except
     on ExceptionObj: TObject do
     begin
