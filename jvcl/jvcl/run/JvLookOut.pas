@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLookOut.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvLookOut.pas 12511 2009-09-22 14:46:54Z obones $
 
 unit JvLookOut;
 
@@ -475,8 +475,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLookOut.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12511 $';
+    Date: '$Date: 2009-09-22 16:46:54 +0200 (mar. 22 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2194,6 +2194,10 @@ begin
 
         if not Controls[I].Visible and not (csDesigning in ComponentState) then
           Continue;
+          
+        if Controls[I].Align = alClient then
+          Continue;
+
         AList.Insert(AList.Count, Controls[I]);
       end;
 

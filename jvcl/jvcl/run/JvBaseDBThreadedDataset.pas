@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBThreadedDataset.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBaseDBThreadedDataset.pas 12555 2009-10-05 23:38:44Z jfudickar $
 
 unit JvBaseDBThreadedDataset;
 
@@ -429,8 +429,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBThreadedDataset.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12555 $';
+    Date: '$Date: 2009-10-06 01:38:44 +0200 (mar. 06 oct. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1204,14 +1204,15 @@ begin
       end;
     end;
     Dataset.Filtered := FIntDatasetWasFiltered;
-    if Dataset.Active and (IntCurrentAction <> tdaCancel) then
-      ExecuteThreadSynchronize(SynchAfterOpenFetch);
   finally
     ExecuteThreadSynchronize(Dataset.EnableControls);
     IntCurrentAction := tdaNothing;
   end;
   if Dataset.Active and (IntCurrentAction <> tdaCancel) then
+  begin
     ExecuteThreadSynchronize(MoveToRecordPositionAfterOpen);
+    ExecuteThreadSynchronize(SynchAfterOpenFetch);
+  end;
 end;
 
 procedure TJvBaseDatasetThreadHandler.HandleAfterOpenRefreshThread;

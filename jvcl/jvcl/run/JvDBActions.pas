@@ -523,7 +523,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActions.pas $';
     Revision: '$Revision: 12487 $';
-    Date: '$Date: 2009-08-31 23:22:35 +0200 (lun., 31 août 2009) $';
+    Date: '$Date: 2009-08-31 23:22:35 +0200 (lun. 31 août 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

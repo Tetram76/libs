@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWinDialogs.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvWinDialogs.pas 12549 2009-10-03 18:07:44Z ahuser $
 
 unit JvWinDialogs;
 
@@ -364,11 +364,20 @@ type
     property DriveChar: Char read FDriveChar write SetDriveChar default 'C';
   end;
 
+  TJvExitWindowsKind = (
+    ekXPDialog = 0,        // Show XP style shutdown dialog
+    ekVistaLogoff = 1,     // Vista Logoff without dialog
+    ekVistaShutdown = 2    // Vista Shutdown without dialog
+  );
+
   TJvExitWindowsDialog = class(TJvCommonDialogP)
+  private
+    FKind: TJvExitWindowsKind;
   public
     function Execute: Boolean; override;
+  published
+    property Kind: TJvExitWindowsKind read FKind write FKind default ekXPDialog;
   end;
-
 
   // (p3) this extension (PlacesBar) is already in TJvOpenDialog
   TJvOpenDialog2000 = class(TOpenDialog)
@@ -564,6 +573,7 @@ type
   SHFormatDriveProc = function(Wnd: THandle; Drive: UINT; fmtID: UINT;
     Options: UINT): DWORD; stdcall;
   SHShutDownDialogProc = procedure(Wnd: THandle); stdcall;
+  SHShutDownDialog6Proc = procedure(Wnd: THandle; Kind: Integer); stdcall; // Vista or newer
   SHRunDialogProc = function(Wnd: THandle; Unknown1: Integer; Unknown2: Pointer;
     szTitle: PChar; szPrompt: PChar; uiFlages: Integer): DWORD; stdcall;
   SHFindFilesProc = function(Root: PItemIDList; SavedSearchFile: PItemIDList): LongBool; stdcall;
@@ -608,6 +618,7 @@ var
   GetSaveFileNameEx: GetSaveFileNameExProc = nil;
   SHFormatDrive: SHFormatDriveProc = nil;
   SHShutDownDialog: SHShutDownDialogProc = nil;
+  SHShutDownDialog6: SHShutDownDialog6Proc = nil;
   SHRunDialog: SHRunDialogProc = nil;
   SHFindFiles: SHFindFilesProc = nil;
   SHFindComputer: SHFindComputerProc = nil;
@@ -628,8 +639,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWinDialogs.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12549 $';
+    Date: '$Date: 2009-10-03 20:07:44 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -652,8 +663,6 @@ var
   URLHandle: THandle = 0;
   SHDocvwHandle: THandle = 0;
 
-
-
 procedure LoadJvDialogs;
 begin
   ShellHandle := SafeLoadLibrary(Shell32);
@@ -665,7 +674,10 @@ begin
       @SHChangeIcon := GetProcAddress(ShellHandle, PAnsiChar(62));
     @SHFormatDrive := GetProcAddress(ShellHandle, PAnsiChar('SHFormatDrive'));
     @FreePIDL := GetProcAddress(ShellHandle, PAnsiChar(155));
-    @SHShutDownDialog := GetProcAddress(ShellHandle, PAnsiChar(60));
+    if CheckWin32Version(6, 0) then
+      @SHShutDownDialog6 := GetProcAddress(ShellHandle, PAnsiChar(60))
+    else
+      @SHShutDownDialog := GetProcAddress(ShellHandle, PAnsiChar(60));
     @SHRunDialog := GetProcAddress(ShellHandle, PAnsiChar(61));
     @SHFindFiles := GetProcAddress(ShellHandle, PAnsiChar(90));
     @SHFindComputer := GetProcAddress(ShellHandle, PAnsiChar(91));
@@ -1590,9 +1602,6 @@ begin
   Result := GetDriveType(PChar(DriveChar + ':\')) = 3;
   if Result then
     SHHandleDiskFull(GetForegroundWindow, GetDrive);
-  // (rom) disabled to make Result work
-  //else
-  //  raise EWinDialogError.CreateResFmt(@RsEUnSupportedDisk, [DriveChar]);
 end;
 
 procedure TJvDiskFullDialog.SetDriveChar(Value: Char);
@@ -1607,7 +1616,12 @@ end;
 
 function TJvExitWindowsDialog.Execute: Boolean;
 begin
-  SHShutDownDialog(GetForegroundWindow);
+  if not Assigned(SHShutDownDialog) and not Assigned(SHShutDownDialog6) then
+    raise EWinDialogError.CreateRes(@RsENotSupported);
+  if Assigned(SHShutDownDialog6) then
+    SHShutDownDialog6(GetForegroundWindow, Integer(Kind)) // Vista or newer
+  else
+    SHShutDownDialog(GetForegroundWindow);
   Result := True;
 end;
 
@@ -1678,8 +1692,6 @@ begin
   else
     Result := inherited Execute;
 end;
-
-
 
 //=== { TJvURLAssociationDialog } ============================================
 

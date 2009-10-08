@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvJVCLUtils.pas 12543 2009-10-03 15:31:24Z ahuser $
 
 unit JvJVCLUtils;
 
@@ -125,6 +125,8 @@ function CreateIconFromBitmap(Bitmap: TBitmap; TransparentColor: TColor): TIcon;
 
 function CreateRotatedFont(Font: TFont; Angle: Integer): HFONT;
 
+//1 This function validates if the control or any of it subcontrols has the focus.
+function IsSubControlFocused(iControl : TWinControl): Boolean;
 
 // launches the specified CPL file
 // format: <Filename> [,@n] or [,,m] or [,@n,m]
@@ -705,7 +707,7 @@ function SelectColorByLuminance(AColor, DarkColor, BrightColor: TColor): TColor;
 
 // (peter3) implementation moved from JvHTControls.
 type
-  TJvHTMLCalcType = (htmlShow, htmlCalcWidth, htmlCalcHeight);
+  TJvHTMLCalcType = (htmlShow, htmlCalcWidth, htmlCalcHeight, htmlHyperLink);
 
 procedure HTMLDrawTextEx(Canvas: TCanvas; Rect: TRect;
   const State: TOwnerDrawState; const Text: string; var Width: Integer;
@@ -713,6 +715,9 @@ procedure HTMLDrawTextEx(Canvas: TCanvas; Rect: TRect;
   var LinkName: string; Scale: Integer = 100);
 function HTMLDrawText(Canvas: TCanvas; Rect: TRect;
   const State: TOwnerDrawState; const Text: string; Scale: Integer = 100): string;
+function HTMLDrawTextHL(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string; MouseX, MouseY: Integer;
+  Scale: Integer = 100): string;
 function HTMLTextWidth(Canvas: TCanvas; Rect: TRect;
   const State: TOwnerDrawState; const Text: string; Scale: Integer = 100): Integer;
 function HTMLPlainText(const Text: string): string;
@@ -730,6 +735,16 @@ type
     procedure ReadBitmapData(Stream: TStream);
   protected
     procedure DefineProperties(Filer: TFiler); override;
+  end;
+
+// This class is here because of issue 4859. Basically, using TBitmap as a
+// parameter for an event handler is the source of an ambiguity under
+// C++ Builder because of Windows::TBitmap. The only solution is to replace
+// TBitmap by TJvBitmap in the event handler declarations. This, however,
+// forces the Delphi users to change their event handlers so that the IDE
+// will not complain when opening the forms.
+type
+  TJvBitmap = class(TBitmap)
   end;
 
 {
@@ -875,8 +890,8 @@ function ReplaceComponentReference(This, NewReference: TComponent; var VarRefere
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12543 $';
+    Date: '$Date: 2009-10-03 17:31:24 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -6906,7 +6921,7 @@ const
     (Html: '&quot;'; Text: '"'),
     (Html: '&reg;'; Text: #$C2#$AE),
     (Html: '&copy;'; Text: #$C2#$A9),
-    (Html: '&trade;'; Text:#$E2#$84#$A2),
+    (Html: '&trade;'; Text: #$E2#$84#$A2),
     (Html: '&euro;'; Text: #$E2#$82#$AC),
     (Html: '&nbsp;'; Text: ' ')
   );
@@ -6926,9 +6941,9 @@ function HTMLBeforeTag(var Str: string; DeleteToTag: Boolean = False): string;
 begin
   if Pos(cTagBegin, Str) > 0 then
   begin
-    Result := Copy(Str, 1, Pos(cTagBegin, Str)-1);
+    Result := Copy(Str, 1, Pos(cTagBegin, Str) - 1);
     if DeleteToTag then
-      Delete(Str, 1, Pos(cTagBegin, Str)-1);
+      Delete(Str, 1, Pos(cTagBegin, Str) - 1);
   end
   else
   begin
@@ -6958,7 +6973,7 @@ end;
 procedure HTMLDrawTextEx(Canvas: TCanvas; Rect: TRect;
   const State: TOwnerDrawState; const Text: string; var Width: Integer;
   CalcType: TJvHTMLCalcType;  MouseX, MouseY: Integer; var MouseOnLink: Boolean;
-  var LinkName: string; Scale: Integer = 100);
+  var LinkName: string; Scale: Integer);
 const
   DefaultLeft = 0; // (ahuser) was 2
 var
@@ -7176,7 +7191,7 @@ begin
                     else
                       Alignment := taLeftJustify;
                     CurLeft := DefaultLeft;
-                    if CalcType = htmlShow then
+                    if CalcType in [htmlShow, htmlHyperLink] then
                       CurLeft := CalcPos(vText);
                   end
                   else
@@ -7228,7 +7243,7 @@ begin
                   NewLine(HTMLDeleteTag(vText) <> '');
                 end;
               'F':
-                if (Pos(cTagEnd, vText) > 0) and (not Selected) and Assigned(Canvas) {and (CalcType = htmlShow)} then // F from FONT
+                if (Pos(cTagEnd, vText) > 0) and (not Selected) and Assigned(Canvas) {and (CalcType in [htmlShow, htmlHyperLink])} then // F from FONT
                 begin
                   TagPrp := UpperCase(Copy(vText, 2, Pos(cTagEnd, vText)-2));
                   RemFontColor  := Canvas.Font.Color;
@@ -7291,13 +7306,24 @@ begin
 end;
 
 function HTMLDrawText(Canvas: TCanvas; Rect: TRect;
-  const State: TOwnerDrawState; const Text: string; Scale: Integer = 100): string;
+  const State: TOwnerDrawState; const Text: string; Scale: Integer): string;
 var
   W: Integer;
   S: Boolean;
   St: string;
 begin
   HTMLDrawTextEx(Canvas, Rect, State, Text, W, htmlShow, 0, 0, S, St, Scale);
+end;
+
+function HTMLDrawTextHL(Canvas: TCanvas; Rect: TRect;
+  const State: TOwnerDrawState; const Text: string; MouseX, MouseY: Integer;
+  Scale: Integer): string;
+var
+  W: Integer;
+  S: Boolean;
+  St: string;
+begin
+  HTMLDrawTextEx(Canvas, Rect, State, Text, W, htmlShow, MouseX, MouseY, S, St, Scale);
 end;
 
 function HTMLPlainText(const Text: string): string;
@@ -7942,6 +7968,33 @@ begin
         VarReference.FreeNotification(This);
       end;
     end;
+end;
+
+function IsSubControlFocused(iControl : TWinControl): Boolean;
+var Form : TCustomForm;
+  Ctrl: TWinControl;
+begin
+  Result := False;
+  if not Assigned(iControl) then
+    Exit;
+  if iControl.Focused then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Form := GetParentForm(iControl);
+  if not Assigned (Form) then
+    Exit;
+  Ctrl := Form.ActiveControl;
+  while Assigned(Ctrl) do
+  begin
+    if Ctrl = iControl then
+    begin
+      Result:= true;
+      exit;
+    end;
+    Ctrl := Ctrl.Parent;
+  end;
 end;
 
 initialization

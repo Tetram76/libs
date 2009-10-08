@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckTreeView.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCheckTreeView.pas 12547 2009-10-03 17:11:04Z ahuser $
 
 unit JvCheckTreeView;
 
@@ -156,8 +156,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckTreeView.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12547 $';
+    Date: '$Date: 2009-10-03 19:11:04 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -296,15 +296,15 @@ begin
 
   case Msg.NMHdr.code of
     TVN_SELCHANGINGA:
-    begin
-      pnmtvA := PNMTREEVIEWA(Msg.NMHdr);
-      TreeView_GetItemRect(Handle, pnmtvA.itemNew.hItem, FNextItemRect, False);
-    end;
+      begin
+        pnmtvA := PNMTREEVIEWA(Msg.NMHdr);
+        TreeView_GetItemRect(Handle, pnmtvA.itemNew.hItem, FNextItemRect, False);
+      end;
     TVN_SELCHANGINGW:
-    begin
-      pnmtvW := PNMTREEVIEWW(Msg.NMHdr);
-      TreeView_GetItemRect(Handle, pnmtvW.itemNew.hItem, FNextItemRect, False);
-    end;
+      begin
+        pnmtvW := PNMTREEVIEWW(Msg.NMHdr);
+        TreeView_GetItemRect(Handle, pnmtvW.itemNew.hItem, FNextItemRect, False);
+      end;
   end;
 end;
 
@@ -438,9 +438,7 @@ begin
     end;
   end
   else
-  begin
     CheckBoxOptions.Style := cbsNone;
-  end;
 end;
 
 procedure TJvCheckTreeView.SetCheckBoxOptions(const Value: TJvTreeViewCheckBoxOptions);

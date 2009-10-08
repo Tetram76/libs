@@ -29,7 +29,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvRichEdit.pas 12541 2009-10-03 13:50:21Z ahuser $
 
 unit JvRichEdit;
 
@@ -239,8 +239,7 @@ type
     property Alignment: TParaAlignment read GetAlignment write SetAlignment;
     property FirstIndent: Longint read GetFirstIndent write SetFirstIndent;
     property HeadingStyle: THeadingStyle read GetHeadingStyle write SetHeadingStyle;
-    property IndentationStyle: TJvIndentationStyle read FIndentationStyle
-      write FIndentationStyle; // added by J.G. Boerema
+    property IndentationStyle: TJvIndentationStyle read FIndentationStyle write FIndentationStyle;
     property LeftIndent: Longint read GetLeftIndent write SetLeftIndent;
     property LineSpacing: Longint read GetLineSpacing write SetLineSpacing;
     property LineSpacingRule: TLineSpacingRule read GetLineSpacingRule write SetLineSpacingRule;
@@ -485,8 +484,7 @@ type
   TRichSearchTypes = set of TRichSearchType;
   TRichSelection = (stText, stObject, stMultiChar, stMultiObject);
   TRichSelectionType = set of TRichSelection;
-  TRichLangOption = (rlAutoKeyboard, rlAutoFont, rlImeCancelComplete,
-    rlImeAlwaysSendNotify);
+  TRichLangOption = (rlAutoKeyboard, rlAutoFont, rlImeCancelComplete, rlImeAlwaysSendNotify);
   TRichLangOptions = set of TRichLangOption;
   TRichStreamFormat = (sfDefault, sfRichText, sfPlainText);
   TRichStreamMode = (smSelection, smPlainRtf, smNoObjects, smUnicode);
@@ -604,8 +602,7 @@ type
     procedure UpdateTextModes(Plain: Boolean);
     procedure UpdateTypographyOptions(const Advanced: Boolean);
     procedure AdjustFindDialogPosition(Dialog: TFindDialog);
-    procedure SetupFindDialog(Dialog: TFindDialog; const SearchStr,
-      ReplaceStr: string);
+    procedure SetupFindDialog(Dialog: TFindDialog; const SearchStr, ReplaceStr: string);
     function FindEditText(Dialog: TFindDialog; AdjustPos, Events: Boolean): Boolean;
     function GetCanFindNext: Boolean;
     procedure FindDialogFind(Sender: TObject);
@@ -647,14 +644,13 @@ type
     procedure TextNotFound(Dialog: TFindDialog); virtual;
     procedure RequestSize(const Rect: TRect); virtual;
     procedure SelectionChange; dynamic;
-    function ProtectChange(const Msg: TMessage; StartPos,
-      EndPos: Integer): Boolean; dynamic;
+    function ProtectChange(const Msg: TMessage; StartPos, EndPos: Integer): Boolean; dynamic;
     function SaveClipboard(NumObj, NumChars: Integer): Boolean; dynamic;
     procedure URLClick(const URLText: string; Button: TMouseButton); dynamic;
     function DoDragAllowed(const ShiftState: TShiftState; var AllowedEffects: TRichDropEffects): Boolean; dynamic;
     function DoGetDragDropEffect(const ShiftState: TShiftState; var Effects: TRichDropEffects): Boolean; dynamic;
-    function DoQueryAcceptData(const ADataObject: IDataObject;
-      var AFormat: TClipFormat; ClipboardOperationKind: Cardinal; Really: Boolean; IconMetaPict: HGLOBAL): Boolean; dynamic;
+    function DoQueryAcceptData(const ADataObject: IDataObject; var AFormat: TClipFormat;
+      ClipboardOperationKind: Cardinal; Really: Boolean; IconMetaPict: HGLOBAL): Boolean; dynamic;
     procedure SetPlainText(Value: Boolean); virtual;
     procedure CloseFindDialog(Dialog: TFindDialog); virtual;
     procedure DoSetMaxLength(Value: Integer); override;
@@ -672,8 +668,7 @@ type
     property AutoURLDetect: Boolean read GetAutoURLDetect write SetAutoURLDetect default True;
     property AutoVerbMenu: Boolean read FAutoVerbMenu write FAutoVerbMenu default True;
     property HideSelection: Boolean read FHideSelection write SetHideSelection default True;
-    property HideScrollBars: Boolean read FHideScrollBars
-      write SetHideScrollBars default True;
+    property HideScrollBars: Boolean read FHideScrollBars write SetHideScrollBars default True;
     property Title: string read FTitle write SetTitle;
     property LangOptions: TRichLangOptions read GetLangOptions write SetLangOptions default [rlAutoFont];
     property Lines: TStrings read FLines write SetRichEditStrings;
@@ -746,6 +741,10 @@ type
     procedure SetSelection(StartPos, EndPos: Longint; ScrollCaret: Boolean);
     function GetSelection: TCharRange;
     function GetTextRange(StartPos, EndPos: Longint): string;
+    // GetTextLenEx is to be used when printing the RichEdit using EM_FORMATRANGE
+    // because GetTextLen is unreliable in this case.
+    // See Mantis 4782 and http://edn.embarcadero.com/article/26772 for details
+    function GetTextLenEx: Integer;
     function LineFromChar(CharIndex: Integer): Integer;
     function GetLineIndex(LineNo: Integer): Integer;
     function GetLineLength(CharIndex: Integer): Integer;
@@ -792,7 +791,7 @@ type
     property Align;
     property Alignment;
     property AutoAdvancedTypography;
-    property AutoSize;
+    property AutoSize default False;
     property AutoURLDetect;
     property AutoVerbMenu;
     property AllowObjects;
@@ -927,8 +926,8 @@ function BitmapToRTF2(ABitmap: TBitmap; AStream: TStream): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12541 $';
+    Date: '$Date: 2009-10-03 15:50:21 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2500,6 +2499,9 @@ begin
   Height := 89;
   AutoSize := False;
   DoubleBuffered := False;
+  {$IFDEF COMPILER12_UP}
+  ParentDoubleBuffered := False;
+  {$ENDIF COMPILER12_UP}
   FAllowObjects := True;
   FAllowInPlace := True;
   FAutoVerbMenu := True;
@@ -2877,7 +2879,8 @@ begin
 end;
 
 function TJvCustomRichEdit.DoQueryAcceptData(const ADataObject: IDataObject;
-  var AFormat: TClipFormat; ClipboardOperationKind: Cardinal; Really: Boolean; IconMetaPict: HGLOBAL): Boolean;
+  var AFormat: TClipFormat; ClipboardOperationKind: Cardinal; Really: Boolean;
+  IconMetaPict: HGLOBAL): Boolean;
 begin
   Result := False;
   // ClipboardOperationKind is either RECO_DROP or RECO_PASTE
@@ -3322,6 +3325,23 @@ begin
   Result := TJvRichEditStrings(Lines).Mode;
 end;
 
+function TJvCustomRichEdit.GetTextLenEx: Integer;
+var
+  TextLenEx: TGetTextLengthEx;
+begin
+  if RichEditVersion >= 2 then
+  begin
+    with TextLenEx do
+    begin
+      Flags := GTL_DEFAULT;
+      codepage := CP_ACP;
+    end;
+    Result := Perform(EM_GETTEXTLENGTHEX, WParam(@TextLenEx), 0);
+  end
+  else
+    Result := GetTextLen;
+end;
+
 function TJvCustomRichEdit.GetTextRange(StartPos, EndPos: Longint): string;
 var
   TextRange: TTextRange;
@@ -3579,8 +3599,7 @@ begin
     Result := False;
 end;
 
-procedure TJvCustomRichEdit.InsertObjectFromFile(const FileName: string;
-  Iconic: Boolean);
+procedure TJvCustomRichEdit.InsertObjectFromFile(const FileName: string; Iconic: Boolean);
 var
   Info: TCreateInfo;
 begin
@@ -3591,8 +3610,7 @@ begin
   InsertObjectFromInfo(Info);
 end;
 
-procedure TJvCustomRichEdit.InsertObjectFromInfo(
-  const Info: TCreateInfo);
+procedure TJvCustomRichEdit.InsertObjectFromInfo(const Info: TCreateInfo);
 var
   OleClientSite: IOleClientSite;
   Storage: IStorage;
@@ -3860,7 +3878,6 @@ var
   Range: TFormatRange;
   LastChar, MaxLen, LogX, LogY, OldMap: Integer;
   SaveRect: TRect;
-  TextLenEx: TGetTextLengthEx;
 begin
   FillChar(Range, SizeOf(TFormatRange), 0);
   with Printer, Range do
@@ -3886,17 +3903,7 @@ begin
     rcPage := rc;
     SaveRect := rc;
     LastChar := 0;
-    if RichEditVersion >= 2 then
-    begin
-      with TextLenEx do
-      begin
-        Flags := GTL_DEFAULT;
-        codepage := CP_ACP;
-      end;
-      MaxLen := Perform(EM_GETTEXTLENGTHEX, WParam(@TextLenEx), 0);
-    end
-    else
-      MaxLen := GetTextLen;
+    MaxLen := GetTextLenEx;
     chrg.cpMax := -1;
     { ensure printer DC is in text map mode }
     OldMap := SetMapMode(HDC, MM_TEXT);
@@ -3917,8 +3924,8 @@ begin
   end;
 end;
 
-function TJvCustomRichEdit.ProtectChange(const Msg: TMessage; StartPos,
-  EndPos: Integer): Boolean;
+function TJvCustomRichEdit.ProtectChange(const Msg: TMessage;
+  StartPos, EndPos: Integer): Boolean;
 begin
   Result := False;
   if Assigned(OnProtectChangeEx) then
@@ -3933,8 +3940,7 @@ begin
   SendMessage(Handle, EM_REDO, 0, 0);
 end;
 
-class procedure TJvCustomRichEdit.RegisterConversionFormat(
-  AConverter: TJvConversion);
+class procedure TJvCustomRichEdit.RegisterConversionFormat(AConverter: TJvConversion);
 begin
   if Assigned(AConverter) then
     GConversionFormatList.Add(AConverter);
@@ -3995,8 +4001,7 @@ begin
   end;
 end;
 
-function TJvCustomRichEdit.ReplaceDialog(const SearchStr,
-  ReplaceStr: string): TReplaceDialog;
+function TJvCustomRichEdit.ReplaceDialog(const SearchStr, ReplaceStr: string): TReplaceDialog;
 begin
   if FReplaceDialog = nil then
   begin
@@ -4884,8 +4889,7 @@ begin
   FCchFetchLpszError := nil;
 end;
 
-function TJvMSTextConversion.HandleExportCallback(cchBuff,
-  nPercent: Integer): Longint;
+function TJvMSTextConversion.HandleExportCallback(cchBuff, nPercent: Integer): Longint;
 begin
   if FBuffer = 0 then
   begin
@@ -4911,8 +4915,7 @@ begin
     Result := FBytesAvailable;
 end;
 
-function TJvMSTextConversion.HandleImportCallback(cchBuff,
-  nPercent: Integer): Longint;
+function TJvMSTextConversion.HandleImportCallback(cchBuff, nPercent: Integer): Longint;
 begin
   // cchBuff = a count of the bytes of RTF data that the converter has placed in
   //           ghBuff.
@@ -5110,8 +5113,7 @@ var
 begin
   H := FRichEditReady.Handle;
 
-  while MsgWaitForMultipleObjects(1, H, False, INFINITE,
-    QS_SENDMESSAGE) <> WAIT_OBJECT_0 do
+  while MsgWaitForMultipleObjects(1, H, False, INFINITE, QS_SENDMESSAGE) <> WAIT_OBJECT_0 do
   begin
     PeekMessage(Msg, 0, 0, 0, PM_NOREMOVE);
   end;
@@ -5124,8 +5126,7 @@ var
 begin
   H := FThreadReady.Handle;
 
-  while MsgWaitForMultipleObjects(1, H, False, INFINITE,
-    QS_SENDMESSAGE) <> WAIT_OBJECT_0 do
+  while MsgWaitForMultipleObjects(1, H, False, INFINITE, QS_SENDMESSAGE) <> WAIT_OBJECT_0 do
   begin
     if PeekMessage(Msg, 0, 0, 0, PM_NOREMOVE) then
       Application.HandleMessage;
@@ -6051,7 +6052,7 @@ function TJvRichEditStrings.Get(Index: Integer): string;
 var
   L: Integer;
 begin
-  L := FRichEdit.GetLineLength(Index);
+  L := FRichEdit.GetLineLength(FRichEdit.GetLineIndex(Index));
   SetLength(Result, L);
   if L > 0 then
   begin
@@ -6417,8 +6418,7 @@ begin
   inherited Done;
 end;
 
-function TJvStreamConversion.Open(Stream: TStream;
-  const AKind: TJvConversionKind): Boolean;
+function TJvStreamConversion.Open(Stream: TStream; const AKind: TJvConversionKind): Boolean;
 begin
   FFreeStream := False;
   FStream := Stream;
@@ -7090,8 +7090,7 @@ begin
   SetAttributes(Format);
 end;
 
-procedure TJvTextAttributes.SetUnderlineColor(
-  const Value: TUnderlineColor);
+procedure TJvTextAttributes.SetUnderlineColor(const Value: TUnderlineColor);
 var
   Format: TCharFormat2;
   LUnderlineType: TUnderlineType;

@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgImageGroup.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgImageGroup.pas 12537 2009-10-03 09:55:35Z ahuser $
 
 unit JvgImageGroup;
 
@@ -107,8 +107,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgImageGroup.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12537 $';
+    Date: '$Date: 2009-10-03 11:55:35 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -191,7 +191,7 @@ begin
     FImageList.GetBitmap(I, Bitmap);
 
     if FMasked then
-      ChangeBitmapColor(FImage, FMaskedColor, clBtnFace);
+      JvgUtils.ChangeBitmapColor(FImage, FMaskedColor, clBtnFace);
 
     CreateBitmapExt(FImage.Canvas.Handle, Bitmap, ClientRect,
       I * FImageList.Width, 0,

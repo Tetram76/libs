@@ -940,7 +940,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChart.pas $';
     Revision: '$Revision: 12489 $';
-    Date: '$Date: 2009-09-04 18:42:54 +0200 (ven., 04 sept. 2009) $';
+    Date: '$Date: 2009-09-04 18:42:54 +0200 (ven. 04 sept. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

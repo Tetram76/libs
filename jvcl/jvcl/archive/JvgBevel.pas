@@ -125,7 +125,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/JvgBevel.pas $';
     Revision: '$Revision: 10855 $';
-    Date: '$Date: 2006-07-31 10:24:21 +0200 (lun., 31 juil. 2006) $';
+    Date: '$Date: 2006-07-31 10:24:21 +0200 (lun. 31 juil. 2006) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

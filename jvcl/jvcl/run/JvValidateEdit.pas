@@ -27,7 +27,7 @@ negative number format, negative currency format and positive currency format.
 This could be rectified by a custom-written formatting routine.
 
 -----------------------------------------------------------------------------}
-// $Id: JvValidateEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvValidateEdit.pas 12521 2009-09-24 10:18:07Z obones $
 
 unit JvValidateEdit;
 
@@ -179,6 +179,7 @@ type
     procedure EnforceMaxValue;
     procedure EnforceMinValue;
     procedure SetTrimDecimals(const Value: Boolean);
+    function GetUnprefixedUnsuffixedText(const Value: string): string;
   protected
     function IsValidChar(const S: string; var Key: Char; Posn: Integer): Boolean; virtual;
     function MakeValid(const ParseString: string): string;virtual;
@@ -337,8 +338,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidateEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12521 $';
+    Date: '$Date: 2009-09-24 12:18:07 +0200 (jeu. 24 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -836,8 +837,15 @@ begin
 end;
 
 procedure TJvCustomValidateEdit.KeyPress(var Key: Char);
+var
+  StrippedText: string;
 begin
-  if not IsValidChar(Text, Key, SelStart + 1) and (Key >= #32) then
+  // Mantis 4952:
+  // - Must not take the prefix/suffix into account when checking a character's validity
+  // - Must not take into account the CurrencyString into account when checking a character's validity
+  StrippedText := GetUnprefixedUnsuffixedText(Text);
+
+  if not IsValidChar(StrippedText, Key, SelStart + 1) and (Key >= #32) then
     Key := #0;
   inherited KeyPress(Key);
 end;
@@ -851,7 +859,7 @@ end;
 procedure TJvCustomValidateEdit.WMPaste(var Msg: TMessage);
 begin
   inherited;
-  EditText := MakeValid(inherited Text);
+  EditText := MakeValid(GetUnprefixedUnsuffixedText(inherited Text));
 end;
 
 function TJvCustomValidateEdit.MakeValid(const ParseString: string): string;
@@ -1074,9 +1082,16 @@ begin
   Result := FEditText;
 end;
 
+function TJvCustomValidateEdit.GetUnprefixedUnsuffixedText(
+  const Value: string): string;
+begin
+  Result := StrEnsureNoPrefix(DisplayPrefix, StrEnsureNoSuffix(DisplaySuffix, Value));
+  Result := StrEnsureNoPrefix(CurrencyString, StrEnsureNoSuffix(CurrencyString, Result));
+end;
+
 procedure TJvCustomValidateEdit.SetEditText(const NewValue: string);
 begin
-  FEditText := MakeValid(NewValue);
+  FEditText := MakeValid(GetUnprefixedUnsuffixedText(NewValue));
   if (FDisplayFormat = dfYear) and ((not FHasMaxValue) or
     (FHasMaxValue and (FMaxValue > 2000 + TwoDigitYearCenturyWindow))) and
     ((MaxLength = 0) or (MaxLength > 3)) then
@@ -1105,9 +1120,7 @@ begin
   if not (csDestroying in ComponentState) then
   begin
     DisplayedText := inherited Text;
-    DisplayedText := StrEnsureNoPrefix(DisplayPrefix, DisplayedText);
-    DisplayedText := StrEnsureNoSuffix(DisplaySuffix, DisplayedText);
-    EditText := DisplayedText;
+    EditText := GetUnprefixedUnsuffixedText(DisplayedText);
   end;
   inherited FocusKilled(NextWnd);
 end;
@@ -1260,9 +1273,7 @@ begin
   if not FSelfChange then
   begin
     DisplayedText := inherited Text;
-    DisplayedText := StrEnsureNoPrefix(DisplayPrefix, DisplayedText);
-    DisplayedText := StrEnsureNoSuffix(DisplaySuffix, DisplayedText);
-    FEditText := DisplayedText;
+    FEditText := GetUnprefixedUnsuffixedText(DisplayedText);
   end;
   inherited Change;
 end;

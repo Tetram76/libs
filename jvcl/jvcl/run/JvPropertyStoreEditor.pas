@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditor.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPropertyStoreEditor.pas 12554 2009-10-05 19:37:25Z jfudickar $
 unit JvPropertyStoreEditor;
 
 {$I jvcl.inc}
@@ -34,7 +34,8 @@ uses
   {$ENDIF UNITVERSIONING}
   Variants,
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, ComCtrls, JvExComCtrls, JvComCtrls, ExtCtrls, JvExControls,
+  Dialogs, ComCtrls,
+  JvComponent, JvExComCtrls, JvComCtrls, ExtCtrls, JvExControls,
   JvInspector, StdCtrls, JvExStdCtrls, JvListBox, JvPropertyStore,
   JvPropertyStoreEditorIntf, JvDynControlEngineIntf;
 
@@ -151,7 +152,7 @@ type
   end;
 
 type
-  TJvPropertyStoreEditorForm = class(TForm)
+  TJvPropertyStoreEditorForm = class(TJvForm)
     procedure FormDestroy(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
@@ -174,8 +175,8 @@ function EditPropertyStore(PropertyStore: TJvCustomPropertyStore): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditor.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12554 $';
+    Date: '$Date: 2009-10-05 21:37:25 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

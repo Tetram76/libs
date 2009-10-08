@@ -36,7 +36,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvEdit.pas 12510 2009-09-22 14:37:09Z obones $
 
 unit JvEdit;
 
@@ -265,8 +265,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12510 $';
+    Date: '$Date: 2009-09-22 16:37:09 +0200 (mar. 22 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -730,7 +730,6 @@ begin
     begin
       I := SelStart;
       J := SelLength;
-      Flat := False;
       SelStart := I;
       SelLength := J;
     end;
@@ -749,7 +748,6 @@ begin
     begin
       I := SelStart;
       J := SelLength;
-      Flat := True;
       SelStart := I;
       SelLength := J;
     end;

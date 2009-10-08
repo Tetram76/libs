@@ -260,7 +260,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScheduledEvents.pas $';
     Revision: '$Revision: 12445 $';
-    Date: '$Date: 2009-08-10 19:21:13 +0200 (lun., 10 août 2009) $';
+    Date: '$Date: 2009-08-10 19:21:13 +0200 (lun. 10 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

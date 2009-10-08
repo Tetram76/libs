@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvDBSpinEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBSpinEdit.pas 12544 2009-10-03 15:51:41Z ahuser $
 
 unit JvDBSpinEdit;
 
@@ -90,8 +90,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSpinEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12544 $';
+    Date: '$Date: 2009-10-03 17:51:41 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -161,7 +161,7 @@ begin
       end
       else
       begin
-        FIsNull := (FDataLink.Field.DisplayText = '');
+        FIsNull := FDataLink.Field.DisplayText = '';
         // Mantis 2131, see above
         if (FDataLink.Field is TNumericField) and
           (Length((FDataLink.Field as TNumericField).DisplayFormat) <> 0) then
@@ -344,7 +344,7 @@ begin
     if not FDataChanging and (FDataLink.Field <> nil) then
     begin
       if (IsNull and not FDataLink.Field.IsNull) or
-         (not IsNull and FDataLink.Field.Value <> NewValue) then
+         (not IsNull and not VarSameValue(FDataLink.Field.Value, NewValue)) then
         FDataLink.Edit;
     end;
   end;
@@ -386,7 +386,7 @@ begin
   { Never masked? }
   {ValidateEdit;}
   if FDataLink.Editing then
-    FDataLink.Field.Text := Text;
+    FDataLink.Field.AsFloat := Value;
 end;
 
 {$IFDEF UNITVERSIONING}

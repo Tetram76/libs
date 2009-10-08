@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockControlForm.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvDockControlForm.pas 12553 2009-10-05 13:22:42Z obones $
 
 { Changes:
 
@@ -50,7 +50,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls, Forms, Menus,
   ExtCtrls, ComCtrls,
-  JvComponentBase, JvAppStorage, JvConsts,
+  JvComponentBase, JvComponent, JvAppStorage, JvConsts,
   JvDockTree, JvDockSupportClass, JvDockSupportControl, JvDockAdvTree;
 
 const
@@ -697,7 +697,7 @@ type
      and TJvDockTabHostForm which are the base classes for the two kinds of
      docked-views possible for handling multiple controls docked to the same
      dock site. }
-  TJvDockableForm = class(TForm)
+  TJvDockableForm = class(TJvForm)
   private
     FDockClient: TJvDockClient;
     FDockableControl: TWinControl;
@@ -850,8 +850,8 @@ procedure InvalidateDockHostSiteOfControl(Control: TControl; FocusLost: Boolean)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockControlForm.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
+    Revision: '$Revision: 12553 $';
+    Date: '$Date: 2009-10-05 15:22:42 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

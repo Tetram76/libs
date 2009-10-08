@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCtrls.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCtrls.pas 12541 2009-10-03 13:50:21Z ahuser $
 
 unit JvCtrls;
 
@@ -204,8 +204,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCtrls.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12541 $';
+    Date: '$Date: 2009-10-03 15:50:21 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -979,6 +979,9 @@ begin
     KillTimer(Handle, 1);
     FCurrentAnimateFrame := 0;
     DoubleBuffered := False;
+    {$IFDEF COMPILER12_UP}
+    ParentDoubleBuffered := False;
+    {$ENDIF COMPILER12_UP}
     FAnimating := False;
   end;
 end;

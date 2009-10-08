@@ -28,7 +28,7 @@ Known Issues:
                on the form being designed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDesignSurface.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDesignSurface.pas 12535 2009-10-02 09:36:42Z ahuser $
 
 unit JvDesignSurface;
 
@@ -265,8 +265,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignSurface.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12535 $';
+    Date: '$Date: 2009-10-02 11:36:42 +0200 (ven. 02 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -702,7 +702,7 @@ procedure TJvDesignSurface.CopyComponents;
 var
   I: Integer;
 begin
-  with TJvDesignComponentClipboard.Create do
+  with TJvDesignComponentClipboard.Create(Container) do
   try
     OpenWrite;
     try
@@ -753,7 +753,7 @@ var
   end;
 
 begin
-  with TJvDesignComponentClipboard.Create do
+  with TJvDesignComponentClipboard.Create(Container) do
   try
     OpenRead;
     try
@@ -889,7 +889,7 @@ begin
                     {$IFDEF DELPHI10_UP}
                     Control.UpdateBounds;
                     {$ELSE}
-                    SendMessage(Control.Handle, AMsg.Msg, AMsg.wParam, AMsg.lParam);
+                    Control.Dispatch(AMsg);
                     {$ENDIF DELPHI10_UP}
 
                   UpdateDesigner;

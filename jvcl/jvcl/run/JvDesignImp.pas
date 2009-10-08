@@ -21,7 +21,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignImp.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDesignImp.pas 12534 2009-10-02 09:20:57Z ahuser $
 
 unit JvDesignImp;
 
@@ -276,8 +276,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignImp.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12534 $';
+    Date: '$Date: 2009-10-02 11:20:57 +0200 (ven. 02 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1064,7 +1064,7 @@ var
   I: Integer;
 begin
   for I := 0 to Surface.Count - 1 do
-    DesignPaintRubberbandRect(FDragRects[I], psDot);
+    DesignPaintRubberbandRect(Surface.Container, FDragRects[I], psDot);
 end;
 
 procedure TJvDesignMover.ApplyDragRects;
@@ -1130,7 +1130,7 @@ end;
 
 procedure TJvDesignBander.PaintDragRect;
 begin
-  DesignPaintRubberbandRect(GetPaintRect, psDot);
+  DesignPaintRubberbandRect(Surface.Container, GetPaintRect, psDot);
 end;
 
 procedure TJvDesignBander.MouseDown(Button: TMouseButton; Shift: TShiftState;

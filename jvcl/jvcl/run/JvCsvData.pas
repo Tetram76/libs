@@ -58,7 +58,7 @@ Known Issues and Updates:
                 properly when attached to JvCsvDataset.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCsvData.pas 12463 2009-08-23 09:42:02Z ahuser $
+// $Id: JvCsvData.pas 12533 2009-10-02 08:59:22Z ahuser $
 
 
 
@@ -453,6 +453,7 @@ type
     FTimeZoneCorrection: Integer; // defaults to 0 (none)
     FFileDirty: Boolean; // file needs to be written back to disk?
 
+    FDefaultCsvFieldDefs: Boolean; // True if the CsvFieldDefs come from the file
     FCsvFieldDef: string; // Our own "Csv Field Definition String"
     FCsvKeyDef: string; // CSV Key Definition string. Required if FCsvUniqueKeys is True
     FCsvKeyCount: Integer; // Set by parsing FCsvKeyDef
@@ -807,7 +808,7 @@ type
 
     property AlwaysEnquoteStrings: Boolean read FAlwaysEnquoteStrings write FAlwaysEnquoteStrings default False; // Always put Double quotes around strings (for some CSV file reading software this is required.)
     property AlwaysEnquoteFloats: Boolean read FAlwaysEnquoteFloats write FAlwaysEnquoteFloats default False; // Always put Double quotes around floating point values (useful when DecimalSeparator==CsvSeparator)
-    property UseSystemDecimalSeparator: Boolean read FUseSystemDecimalSeparator write FUseSystemDecimalSeparator default false; // Default is false which always uses US mode.  Must be false by default because of existing code assuming this behaviour.
+    property UseSystemDecimalSeparator: Boolean read FUseSystemDecimalSeparator write FUseSystemDecimalSeparator default False; // Default is false which always uses US mode.  Must be false by default because of existing code assuming this behaviour.
 
     property AppendOnly: Boolean read FAppendOnly write FAppendOnly default False; // If true, we don't load the entire content of the CSV from disk, only the last row, and every time we append and write, we only maintain the last row in memory (saves a lot of RAM.)
 
@@ -931,8 +932,8 @@ function JvCsvNumCondition(FieldValue: Double; CompareOperator: TJvCsvFilterNumC
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCsvData.pas $';
-    Revision: '$Revision: 12463 $';
-    Date: '$Date: 2009-08-23 11:42:02 +0200 (dim., 23 août 2009) $';
+    Revision: '$Revision: 12533 $';
+    Date: '$Date: 2009-10-02 10:59:22 +0200 (ven. 02 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1038,7 +1039,7 @@ begin
   P := Pointer(RowItem);
   Inc(P, RowItem.WordFieldsAddr);
 
-  Result :=  PJvCsvRowWordFields(P);
+  Result := PJvCsvRowWordFields(P);
   Magic := Result^.Magic2;
   if Magic <> JvCsvRowMagic2 then
     raise EJvCsvDataSetError.Create('Memory Corruption Suspected in WordFields area of CsvRow memory'); // memory corruption check!
@@ -1609,7 +1610,7 @@ begin
     PRow := PCsvRow(FData[I]);
     Assert(Assigned(PRow));
     // if custom function returns False, hide the row.
-    PRow^.Filtered  := not FilterCallback(I);
+    PRow^.Filtered := not FilterCallback(I);
   end;
   FIsFiltered := True;
   if Active then
@@ -1847,6 +1848,7 @@ begin
   begin
     CheckInactive;
     FCsvFieldDef := Value;
+    FDefaultCsvFieldDefs := False;
     FHeaderRow := '';
     FieldDefs.Clear; // Clear VCL Database field definitions
     FCsvColumns.Clear; // Clear our own CSV related field Data
@@ -3000,7 +3002,7 @@ begin
   if Assigned(FData) then
     Result := FData.BackslashCrLf
   else
-    Result := false;
+    Result := False;
 end;
 
 procedure TJvCustomCsvDataSet.GetBookmarkData(Buffer: TJvRecordBuffer; Data: Pointer);
@@ -3059,7 +3061,7 @@ end;
 procedure TJvCustomCsvDataSet.SetBackslashCrLf(const Value: Boolean);
 begin
   if Assigned(FData) then
-    FData.BackslashCrLf := Value; 
+    FData.BackslashCrLf := Value;
 end;
 
 procedure TJvCustomCsvDataSet.SetBookmarkData(Buffer: TJvRecordBuffer; Data: Pointer);
@@ -3114,12 +3116,13 @@ begin
     FieldDefs.Clear; // Clear VCL Database field definitions
     FCsvColumns.Clear; // Clear our own CSV related field Data
 
+    FDefaultCsvFieldDefs := False;
     aCsvFieldDef := CsvFieldDef;
     if aCsvFieldDef = '' then
     begin
       if FHasHeaderRow and ReadCsvFileStream then
       begin
-        aCsvFieldDef := FCsvFileTopLine; {formerly FCsvFileAsStrings[0];}
+        aCsvFieldDef := FCsvFileTopLine;
         {$IFDEF DEBUGINFO_ON}
         if aCsvFieldDef = '' then
           OutputDebugString('Top line of file empty. CsvFieldDef not provided either.');
@@ -3128,6 +3131,7 @@ begin
 
       if ExtendedHeaderInfo then
         CsvFieldDef := aCsvFieldDef;
+      FDefaultCsvFieldDefs := True;
     end;
 
     if aCsvFieldDef <> '' then
@@ -3389,8 +3393,15 @@ begin
   FCursorOpen := False;
   FRecordPos := JvCsv_ON_BOF_CRACK;
   FOpenFileName := '';
-  FCsvFileLoaded  := false;
-  FData.FRecordsValid:=false;
+  FCsvFileLoaded := False;
+  FData.FRecordsValid := False;
+  if FDefaultCsvFieldDefs then
+  begin
+    FCsvFieldDef := '';
+    FHeaderRow := '';
+    FieldDefs.Clear;
+    Fields.Clear;
+  end;
 end;
 
 procedure TJvCustomCsvDataSet.InternalHandleException;
@@ -3434,7 +3445,7 @@ var
   aStr: string;
 begin
   Result := False;
-  LogicalRow  := PCsvRow(FData.AllocRecordBuffer);
+  LogicalRow := PCsvRow(FData.AllocRecordBuffer);
   PhysicalRow := PCsvRow(FData.AllocRecordBuffer);
   try
     JvStringToCsvRow(Key + Separator, Separator, LogicalRow, False, False); // initialize row and put items in their logical order.
@@ -3567,7 +3578,7 @@ begin
     Exit; // don't repeat!
   end;
 
-  FCsvFileLoaded  := True;
+  FCsvFileLoaded := True;
 
   if FLoadsFromFile then 
   begin
@@ -3585,7 +3596,7 @@ begin
     // We can at least still open UTF8 files if they are really just ASCII
     // files plus a BOM marker like Windows notepad and some other apps add.
     //-------------------------------------------------------------------------
-    FUtf8Detected := false; {Future.}
+    FUtf8Detected := False; {Future.}
     if Length(Line) > 3 then
     begin
       // JvCsvData can detect the standard UTF-8 mark and work anyways when it is present
@@ -3680,9 +3691,7 @@ begin
     FOpenFileName := GetFileName; // Always use the same file name to save as you did to load!!! MARCH 2004.WP
   end
   else
-  begin
     FOpenFileName := '';
-  end;
 
   InternalInitFieldDefs; // initialize FieldDef objects.
 
@@ -3705,69 +3714,74 @@ begin
   BookmarkSize := SizeOf(Integer);
   // initialize bookmark size for VCL (Integer uses 4 bytes on 32 bit operating systems)
 
-  csvFileExists:= False;
-  if FLoadsFromFile then // ReadCsvFileStream:Creates file stream and start reading it. Sets FCsvFileTopLine.
-    csvFileExists := ReadCsvFileStream;
+  csvFileExists := False;
+  try
+    if FLoadsFromFile then // ReadCsvFileStream:Creates file stream and start reading it. Sets FCsvFileTopLine.
+      csvFileExists := ReadCsvFileStream;
 
-  if FHasHeaderRow then
-  begin
-    if csvFileExists and not ExtendedHeaderInfo and (FCsvFileTopLine <> '') then
-      FHeaderRow := FCsvFileTopLine
-    else
+    if FHasHeaderRow then
     begin
-      FHeaderRow := GetColumnsAsString;     // creating a new file! set up HeaderRow
-      FCsvFileTopLine := FHeaderRow;
-    end;
-
-    if FHeaderRow <> '' then
-      try
-        ProcessCsvHeaderRow;
-      except
-        FHeaderRow := '';
-        FreeAndNil(FCsvStream);
-        raise;
-      end;
-
-    if FAppendedFieldCount > 0 then
-    begin
-      SetLength(AppendStr, FAppendedFieldCount);
-      FillNativeChar(AppendStr[1], FAppendedFieldCount, Separator);
-    end;
-  end;
-
-  // Load rows from disk to memory, using Stream object to read line by line.
-  if FLoadsFromFile and Assigned(FCsvStream) then
-  begin
-    while not FCsvStream.Eof do
-    begin
-      CsvLine := JvTrimAnsiStringCrLf(FCsvStream.ReadLine);// leading space, trailing space and crlf are removed by Trim!
-      if CsvLine <> '' then
+      if csvFileExists and not ExtendedHeaderInfo and (FCsvFileTopLine <> '') then
+        FHeaderRow := FCsvFileTopLine
+      else
       begin
-        if (FSpecialDataMarker <> '')
-          and (Pos(FSpecialDataMarker, CsvLine) = 1)
-          and Assigned(FOnSpecialData) then
-        begin
-          // This very rarely used feature should
-          // probably be removed from the JVCL? -WPostma.
-          FOnSpecialData(Self, Counter, CsvLine);
-        end
-        else
-        begin
-          // Process the row:
-          {$IFDEF UNICODE}
-          if FUtf8Detected then
-            ProcessCsvDataRow(Utf8ToAnsi(CsvLine), Counter)
-          else
-          {$ENDIF UNICODE}
-            ProcessCsvDataRow(string(AnsiString(CsvLine)), Counter);
-          Inc(Counter);
-        end;
+        FHeaderRow := GetColumnsAsString;     // creating a new file! set up HeaderRow
+        FCsvFileTopLine := FHeaderRow;
       end;
-    end; {while}
-  end;{if}
-  if Active then
-    First;
-  FCursorOpen := True;
+
+      if FHeaderRow <> '' then
+        try
+          ProcessCsvHeaderRow;
+        except
+          FHeaderRow := '';
+          FreeAndNil(FCsvStream);
+          raise;
+        end;
+
+      if FAppendedFieldCount > 0 then
+      begin
+        SetLength(AppendStr, FAppendedFieldCount);
+        FillNativeChar(AppendStr[1], FAppendedFieldCount, Separator);
+      end;
+    end;
+
+    // Load rows from disk to memory, using Stream object to read line by line.
+    if FLoadsFromFile and Assigned(FCsvStream) then
+    begin
+      while not FCsvStream.Eof do
+      begin
+        CsvLine := JvTrimAnsiStringCrLf(FCsvStream.ReadLine);// leading space, trailing space and crlf are removed by Trim!
+        if CsvLine <> '' then
+        begin
+          if (FSpecialDataMarker <> '')
+            and (Pos(FSpecialDataMarker, CsvLine) = 1)
+            and Assigned(FOnSpecialData) then
+          begin
+            // This very rarely used feature should
+            // probably be removed from the JVCL? -WPostma.
+            FOnSpecialData(Self, Counter, CsvLine);
+          end
+          else
+          begin
+            // Process the row:
+            {$IFDEF UNICODE}
+            if FUtf8Detected then
+              ProcessCsvDataRow(Utf8ToAnsi(CsvLine), Counter)
+            else
+            {$ENDIF UNICODE}
+              ProcessCsvDataRow(string(AnsiString(CsvLine)), Counter);
+            Inc(Counter);
+          end;
+        end;
+      end; {while}
+    end;{if}
+    if Active then
+      First;
+    FCursorOpen := True;
+  except
+    FCsvFileLoaded := False;
+    raise;
+  end;
 
   { clean up stream object }
   FreeAndNil(FCsvStream);
@@ -3896,7 +3910,7 @@ begin
 //    FTableName := ChangeFileExt(FTableName,'.csv');
 
   { update internal filename table }
-//  FBmkFileName:= ChangeFileExt(FTableName, '.bmk' ); // bookmark file
+//  FBmkFileName := ChangeFileExt(FTableName, '.bmk' ); // bookmark file
 end;
 
 procedure TJvCustomCsvDataSet.SetTextBufferSize(const Value: Integer);
@@ -3906,7 +3920,6 @@ begin
   Assert(Assigned(FData));
   FData.TextBufferSize := Value;
 end;
-
 
 procedure TJvCustomCsvDataSet.EmptyTable;
 begin
@@ -3937,7 +3950,7 @@ begin
   case Column^.FFlag of
     jcsvNumeric:
       begin
-        NumLeft  := JvCsvStrToFloatDef(StrLeft, -99999.9, GetDecimalSeparator);
+        NumLeft := JvCsvStrToFloatDef(StrLeft, -99999.9, GetDecimalSeparator);
         NumRight := JvCsvStrToFloatDef(StrRight, -99999.9, GetDecimalSeparator);
         Diff := NumLeft - NumRight;
         if Diff < -0.02 then
@@ -4210,7 +4223,7 @@ end;
 procedure TJvCsvRows.InternalInitRecord(Buffer: TJvRecordBuffer);
 var
   RowPtr: PCsvRow;
-  p: TJvRecordBuffer;
+  P: TJvRecordBuffer;
 begin
   RowPtr := PCsvRow(Buffer);
   RowPtr.Magic := JvCsvRowMagic;
@@ -4220,12 +4233,12 @@ begin
   RowPtr.Separator := AnsiChar(Separator);
 
   // initialize magic in WordFields:
-  p := Buffer;
-  Inc(p, RowPtr.WordFieldsAddr );
-  PJvCsvRowWordFields(p)^.Magic2 := JvCsvRowMagic2;
-  //DebugPJvCsvRowWordFields := PJvCsvRowWordFields(p);
+  P := Buffer;
+  Inc(P, RowPtr.WordFieldsAddr);
+  PJvCsvRowWordFields(P)^.Magic2 := JvCsvRowMagic2;
+  //DebugPJvCsvRowWordFields := PJvCsvRowWordFields(P);
 
-  FREcordsValid := true;
+  FREcordsValid := True;
 end;
 
 function TJvCsvRows.RecordSize: Word;
@@ -4494,13 +4507,13 @@ begin
     if not ValidateHeaderRow then
     begin
       for I := 0 to FCsvColumns.Count - 1 do
-        PCsvColumn(FCsvColumns.Get(I))^.FPhysical := I;
+        PCsvColumn(FCsvColumns[I])^.FPhysical := I;
       Exit;
     end;
     FAppendedFieldCount := 0;
     //  Columns Not Yet Found:
     for I := 0 to FCsvColumns.Count - 1 do
-      PCsvColumn(FCsvColumns.Get(I))^.FPhysical := -1;
+      PCsvColumn(FCsvColumns[I])^.FPhysical := -1;
 
     // Do initial parse.
     JvStringToCsvRow(FHeaderRow, Separator, CsvFieldRec, False, False);
@@ -4512,14 +4525,14 @@ begin
 
       // Mantis 3192: Remove the options from the field name or FindByName will
       // never find the column which will lead to a Database error being triggered
-      ColonPos := Pos(':', string(CsvFieldName));
+      ColonPos := Pos(':', CsvFieldName);
       if (ColonPos > 0) then
         CsvFieldName := Copy(CsvFieldName, 1, ColonPos - 1);
 
       if CsvFieldName = '' then
         JvCsvDatabaseError(FTableName, RsEErrorProcessingFirstLine);
 
-      PtrCsvColumn := FCsvColumns.FindByName( string(CsvFieldName));
+      PtrCsvColumn := FCsvColumns.FindByName(CsvFieldName);
 
       if PtrCsvColumn = nil then
       begin // raise database exception:
@@ -5557,9 +5570,9 @@ begin
       if MatchSourceField[I].DataType=ftString then
       begin
         if MatchSourceField[I].IsNull then
-          StrValue :=  ''
+          StrValue := ''
         else
-          StrValue :=  MatchSourceField[I].Value;
+          StrValue := MatchSourceField[I].Value;
         MatchDestField[I].Value := StrValue;
       end
       else

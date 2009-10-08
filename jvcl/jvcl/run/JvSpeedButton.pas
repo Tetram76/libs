@@ -492,7 +492,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
     Revision: '$Revision: 12470 $';
-    Date: '$Date: 2009-08-23 21:37:27 +0200 (dim., 23 août 2009) $';
+    Date: '$Date: 2009-08-23 21:37:27 +0200 (dim. 23 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

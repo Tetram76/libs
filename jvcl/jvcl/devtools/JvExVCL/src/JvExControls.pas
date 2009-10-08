@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExControls.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvExControls.pas 12517 2009-09-23 09:30:43Z obones $
 
 unit JvExControls;
 
@@ -104,8 +104,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/devtools/JvExVCL/src/JvExControls.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12517 $';
+    Date: '$Date: 2009-09-23 11:30:43 +0200 (mer. 23 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -202,7 +202,7 @@ end;
 
 function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: TControl): TMessage;
 begin
-  Result := CreateWMMessage(Msg, WParam, 0);
+  Result := CreateWMMessage(Msg, WParam, Integer(LParam));
 end;
 
 { TStructPtrMessage }

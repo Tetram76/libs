@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgImage.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgImage.pas 12537 2009-10-03 09:55:35Z ahuser $
 
 unit JvgImage;
 
@@ -137,8 +137,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgImage.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12537 $';
+    Date: '$Date: 2009-10-03 11:55:35 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -307,7 +307,7 @@ begin
     FTransparent, FTransparentColor, FDisabledMaskColor);
 
   if FMasked then
-    ChangeBitmapColor(FResBitmap, FMaskedColor, FMaskedToColor);
+    JvgUtils.ChangeBitmapColor(FResBitmap, FMaskedColor, FMaskedToColor);
 
   {  GetObject( FResBitmap.Handle, SizeOf(Windows.TBitmap), @BmpInfo );
     if BmpInfo.bmBitsPixel >= 8 then

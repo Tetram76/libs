@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
     2004-07-27 - Read the 'ALL USERS READ THIS' section below.
 -----------------------------------------------------------------------------}
-// $Id: JvZlibMultiple.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvZlibMultiple.pas 12505 2009-09-16 18:42:08Z wpostma $
 
 {$I jvcl.inc}
 
@@ -83,6 +83,8 @@ type
   TFileBeforeWriteEvent = procedure(Sender: TObject; const FileName: string; var WriteFile: Boolean) of object;
   TFileAfterWriteEvent = procedure(Sender: TObject; const FileName: string; const FileSize: Longword) of object;
 
+  TFileSkipEvent = procedure (Sender:Tobject;const Filename,errortype,errormessage:String);
+
   TFileEvent = procedure(Sender: TObject; const FileName: string) of object;
   TProgressEvent = procedure(Sender: TObject; Position, Total: Integer) of object;
 
@@ -95,6 +97,8 @@ type
     FOnCompressingFile: TFileEvent;
     FOnCompressedFile: TFileEvent;
     FOnCompletedAction: TNotifyEvent;
+    FOnFileSkip : TFileSkipEvent;
+     
     // July 26, 2004: New improved event types for decompression: Allow user to
     // skip writing of files they want skipped on extraction, and if they
     // extract nothing, they can use this "nil extraction" to scan the contents
@@ -140,6 +144,9 @@ type
     procedure StopDecompression; // Note #1
     property CompressionPaused: Boolean read FCompressionPause write FCompressionPause; // Note #1
     property DecompressionPaused: Boolean read FDecompressionPause write FDecompressionPause;  // Note #1
+
+    property  OnFileSkip :TFileSkipEvent read FOnFileSkip write FOnFileSkip;
+
   published
     property StorePaths: Boolean read FStorePaths  write FStorePaths default True;
     // NOTE : This property allows you to override already opened files - USE WITH CAUTION!!! opened files may still be writing data
@@ -160,8 +167,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvZlibMultiple.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12505 $';
+    Date: '$Date: 2009-09-16 20:42:08 +0200 (mer. 16 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -199,6 +206,7 @@ function TJvZlibMultiple.CompressDirectory(Directory: string; Recursive: Boolean
   var
     SearchRec: TSearchRec;
     Res: Integer;
+    fn:String;
   begin
     // (rom) this may not work for network drives and compressed files
     // (rom) because of faAnyFile
@@ -208,8 +216,20 @@ function TJvZlibMultiple.CompressDirectory(Directory: string; Recursive: Boolean
       begin
         if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
         begin
-          if (SearchRec.Attr and faDirectory) = 0 then
-            AddFile(SearchRec.Name, SDirectory, Directory + SDirectory + SearchRec.Name, Result)
+          if (SearchRec.Attr and faDirectory) = 0 then begin
+            try
+              fn := Directory + SDirectory + SearchRec.Name;
+              AddFile(SearchRec.Name, SDirectory, fn, Result)
+            except
+                on E:EFOpenError do begin
+                    if Assigned(FOnFileSkip) then begin
+                        FOnFileSkip(Self, fn, String(E.ClassName) ,E.Message );
+                    end;
+                end;
+
+
+            end;
+          end
           else
           if Recursive then
             SearchDirectory(SDirectory + SearchRec.Name + PathDelim);
@@ -231,7 +251,8 @@ begin
   Result.Position := 0;
 end;
 
-procedure TJvZlibMultiple.AddFile(const FileName, Directory, FilePath: string; DestStream: TStream);
+procedure TJvZlibMultiple.AddFile(const FileName, Directory, FilePath: string;
+  DestStream: TStream);
 var
   Stream: TStream;
   FileStream: TFileStream;
@@ -269,6 +290,14 @@ begin
     FileStream := TFileStream.Create(FilePath, fmOpenRead or fmShareDenyWrite)
   else
     FileStream := TFileStream.Create(FilePath, fmOpenRead or fmShareDenyNone);
+
+
+  if FileStream.Size=0 then begin
+      Stream.Free;
+      FileStream.Free;
+      exit;
+  end;
+
   try
     ZStream := TJclZLibCompressStream.Create(Stream, CompressionLevel);
     try
@@ -287,6 +316,7 @@ begin
         while CompressionPaused do
           Sleep(1);
       until (Count = 0) or FTerminateCompress;
+      ZStream.Flush; // Warren added.
     finally
       ZStream.Free;
     end;
