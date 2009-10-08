@@ -52,7 +52,7 @@ KNOWN ISSUES:
 -----------------------------------------------------------------------------
 2004/07/08 - WPostma merged changes by Frédéric Leneuf-Magaud and ahuser.}
 
-// $Id: JvDBGrid.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBGrid.pas 12529 2009-10-02 07:36:09Z ahuser $
 
 unit JvDBGrid;
 
@@ -72,7 +72,10 @@ uses
 
 const
   DefJvGridOptions = [dgEditing, dgTitles, dgIndicator, dgColumnResize,
-    dgColLines, dgRowLines, dgTabs, dgConfirmDelete, dgCancelOnExit];
+    dgColLines, dgRowLines, dgTabs, dgConfirmDelete, dgCancelOnExit
+    {$IFDEF COMPILER14_UP}
+    , dgTitleClick, dgTitleHotTrack
+    {$ENDIF COMPILER14_UP}];
 
   {$IFDEF BCB}
   {$NODEFINE DefJvGridOptions}
@@ -592,8 +595,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGrid.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 aoÃ»t 2009) $';
+    Revision: '$Revision: 12529 $';
+    Date: '$Date: 2009-10-02 09:36:09 +0200 (ven. 02 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -1669,7 +1669,7 @@ uses
 {$ENDIF LINUX}
 
 const
-  VersionInfo = '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/QWindows.pas $' + #13 + '$Revision: 11641 $' + #13 + '$Date: 2007-12-24 17:34:00 +0100 (lun., 24 déc. 2007) $' + #13;
+  VersionInfo = '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/QWindows.pas $' + #13 + '$Revision: 11641 $' + #13 + '$Date: 2007-12-24 17:34:00 +0100 (lun. 24 déc. 2007) $' + #13;
 
 type
   THackCanvas = class(TCanvas);

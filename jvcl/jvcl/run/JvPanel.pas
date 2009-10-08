@@ -33,7 +33,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPanel.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPanel.pas 12528 2009-10-01 09:02:50Z obones $
 
 unit JvPanel;
 
@@ -205,6 +205,8 @@ type
     procedure DoArrangeSettingsPropertyChanged(Sender: TObject; const PropName: string); virtual;
     procedure AlignControls(AControl: TControl; var Rect: TRect); override;
     function GetNextControlByTabOrder(ATabOrder: Integer): TWinControl;
+    procedure SetSizeableCursor;
+    procedure RestoreSizeableCursor;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -338,8 +340,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPanel.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12528 $';
+    Date: '$Date: 2009-10-01 11:02:50 +0200 (jeu. 01 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -913,11 +915,30 @@ begin
     NeedRepaint := not Transparent and
      ({IsThemed or} (FHotTrack and (FDragging or (Enabled and not OtherDragging))));
     inherited MouseLeave(Control); // set MouseOver
+
+    if Sizeable then
+      RestoreSizeableCursor;;
+
     if NeedRepaint then
       Repaint;
   end
   else
     inherited MouseLeave(Control);
+end;
+
+procedure TJvCustomArrangePanel.SetSizeableCursor;
+begin
+  if Screen.Cursor <> crSizeNWSE then
+  begin
+    FLastScreenCursor := Screen.Cursor;
+    Screen.Cursor := crSizeNWSE;
+  end;
+end;
+
+procedure TJvCustomArrangePanel.RestoreSizeableCursor;
+begin
+  if Screen.Cursor = crSizeNWSE then
+    Screen.Cursor := FLastScreenCursor;
 end;
 
 procedure TJvCustomArrangePanel.SetTransparent(const Value: Boolean);
@@ -998,11 +1019,7 @@ begin
     FDragging := True;
     FLastPos := Point(X, Y);
     MouseCapture := True;
-    if Screen.Cursor <> crSizeNWSE then
-    begin
-      FLastScreenCursor := Screen.Cursor;
-      Screen.Cursor := crSizeNWSE;
-    end;
+    SetSizeableCursor;
   end
   else
     inherited MouseDown(Button, Shift, X, Y);
@@ -1052,11 +1069,9 @@ begin
   if Sizeable then
   begin
     if ((Width - X) < 12) and ((Height - Y) < 12) then
-    if Screen.Cursor <> crSizeNWSE then
-    begin
-      FLastScreenCursor := Screen.Cursor;
-      Screen.Cursor := crSizeNWSE;
-    end;
+      SetSizeableCursor
+    else
+      RestoreSizeableCursor;
   end;
 end;
 
@@ -1067,8 +1082,7 @@ begin
   begin
     FDragging := False;
     MouseCapture := False;
-    if Screen.Cursor = crSizeNWSE then
-      Screen.Cursor := FLastScreenCursor;
+    RestoreSizeableCursor;
     Refresh;
   end
   else

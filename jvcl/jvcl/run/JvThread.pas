@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThread.pas 12486 2009-08-28 16:30:08Z ahuser $
+// $Id: JvThread.pas 12500 2009-09-14 20:47:45Z ahuser $
 
 unit JvThread;
 
@@ -49,7 +49,7 @@ type
   TJvThread = class;
 
   TJvCustomThreadDialogFormEvent = procedure(DialogForm: TJvCustomThreadDialogForm) of object;
-  TJvThreadCancelEvent = procedure(CurrentThread : TJvThread) of object;
+  TJvThreadCancelEvent = procedure(CurrentThread: TJvThread) of object;
 
   TJvCustomThreadDialogOptions = class(TPersistent)
   private
@@ -140,7 +140,7 @@ type
   end;
 
   TJvThreadShowMessageDlgEvent = procedure(const Msg: string; AType: TMsgDlgType;
-      AButtons: TMsgDlgButtons; HelpCtx: Longint; var DlgResult : Word) of object;
+      AButtons: TMsgDlgButtons; HelpCtx: Longint; var DlgResult: Word) of object;
 
   // This thread is a descendent of TThread but proposes a different
   // behaviour with regard to being suspended or resumed.
@@ -148,7 +148,7 @@ type
   // that using Suspend and Resume under Windows NT, 2K and XP led to weird
   // errors such as being refused access to the thread, despite being its
   // creator.
-  // So another mechanism has been implemented : the thread must be
+  // So another mechanism has been implemented: the thread must be
   // paused instead of suspended.
   // Pausing the thread actually acquires a critical section which the Execute
   // function must try to get before it calls InternalExecute.
@@ -162,17 +162,17 @@ type
   TJvPausableThread = class(TThread)
   private
     FPauseSection: TCriticalSection;
-    FPaused: boolean;
+    FPaused: Boolean;
 
     procedure SetPaused(const Value: Boolean);
   protected
     procedure EnterUnpauseableSection;
     procedure LeaveUnpauseableSection;
   public
-    constructor Create (CreateSuspended : Boolean);
+    constructor Create(CreateSuspended: Boolean);
     destructor Destroy; override;
 
-    property Paused : Boolean read FPaused write SetPaused;
+    property Paused: Boolean read FPaused write SetPaused;
   end;
 
   TJvBaseThread = class(TJvPausableThread)
@@ -196,8 +196,7 @@ type
   protected
     procedure InternalMessageDlg;
   public
-    constructor Create(Sender: TObject; Event: TJvNotifyParamsEvent;
-      Params: Pointer); virtual;
+    constructor Create(Sender: TObject; Event: TJvNotifyParamsEvent; Params: Pointer); virtual;
     {$IFNDEF COMPILER14_UP}
     procedure Resume; // There is no way to silence the compiler ("Resume" is deprecated)
     {$ENDIF ~COMPILER14_UP}
@@ -344,8 +343,8 @@ procedure SynchronizeParams(Method: TJvNotifyParamsEvent; P: Pointer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThread.pas $';
-    Revision: '$Revision: 12486 $';
-    Date: '$Date: 2009-08-28 18:30:08 +0200 (ven., 28 août 2009) $';
+    Revision: '$Revision: 12500 $';
+    Date: '$Date: 2009-09-14 22:47:45 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1212,8 +1211,7 @@ end;
 
 //=== { TJvBaseThread } ======================================================
 
-constructor TJvBaseThread.Create(Sender: TObject; Event: TJvNotifyParamsEvent;
-  Params: Pointer);
+constructor TJvBaseThread.Create(Sender: TObject; Event: TJvNotifyParamsEvent; Params: Pointer);
 begin
   inherited Create(True);
   FSender := Sender;

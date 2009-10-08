@@ -101,7 +101,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$RCSfile$';
     Revision: '$Revision: 10610 $';
-    Date: '$Date: 2006-05-19 15:35:08 +0200 (ven., 19 mai 2006) $';
+    Date: '$Date: 2006-05-19 15:35:08 +0200 (ven. 19 mai 2006) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

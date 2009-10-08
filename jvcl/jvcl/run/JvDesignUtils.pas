@@ -21,7 +21,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignUtils.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDesignUtils.pas 12535 2009-10-02 09:36:42Z ahuser $
 
 unit JvDesignUtils;
 
@@ -47,7 +47,7 @@ function DesignValidateRect(const ARect: TRect): TRect;
 function DesignNameIsUnique(AOwner: TComponent; const AName: string): Boolean;
 function DesignUniqueName(AOwner: TComponent; const AClassName: string): string;
 
-procedure DesignPaintRubberbandRect(const ARect: TRect; APenStyle: TPenStyle);
+procedure DesignPaintRubberbandRect(AContainer: TWinControl; ARect: TRect; APenStyle: TPenStyle);
 procedure DesignPaintGrid(ACanvas: TCanvas; const ARect: TRect;
   ABackColor: TColor = clBtnFace; AGridColor: TColor = clBlack;
   ADivPixels: Integer = 8);
@@ -66,8 +66,8 @@ procedure DesignLoadComponentFromFile(AComp: TComponent;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignUtils.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12535 $';
+    Date: '$Date: 2009-10-02 11:36:42 +0200 (ven. 02 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -161,13 +161,20 @@ begin
   until DesignNameIsUnique(AOwner, Result);
 end;
 
-procedure DesignPaintRubberbandRect(const ARect: TRect; APenStyle: TPenStyle);
+procedure DesignPaintRubberbandRect(AContainer: TWinControl; ARect: TRect; APenStyle: TPenStyle);
 var
   DesktopWindow: HWND;
   DC: HDC;
   C: TCanvas;
 begin
-  DesktopWindow := GetDesktopWindow;
+  if AContainer = nil then
+    DesktopWindow := GetDesktopWindow
+  else
+  begin
+    DesktopWindow := AContainer.Handle;
+    ARect.TopLeft := AContainer.ScreenToClient(ARect.TopLeft);
+    ARect.BottomRight := AContainer.ScreenToClient(ARect.BottomRight);
+  end;
   DC := GetDCEx(DesktopWindow, 0, DCX_CACHE or DCX_LOCKWINDOWUPDATE);
   try
     C := TCanvas.Create;
@@ -269,24 +276,37 @@ begin
   end;
 end;
 
+type
+  TAccessComponent = class(TComponent);
+
 function DesignLoadComponentFromStream(AComp: TComponent; AStream: TStream;
   AOnError: TReaderError): TComponent;
 var
-  MS: TMemoryStream;
+  MemStream: TMemoryStream;
+  CompDesigning: Boolean;
 begin
-  MS := TMemoryStream.Create;
+  MemStream := TMemoryStream.Create;
   try
-    ObjectTextToBinary(AStream, MS);
-    MS.Position := 0;
-    with TReader.Create(MS, 4096) do
+    ObjectTextToBinary(AStream, MemStream);
+    MemStream.Position := 0;
+    with TReader.Create(MemStream, 4096) do
     try
       OnError := AOnError;
-      Result := ReadRootComponent(AComp);
+      { We have to set the container into design mode so all loaded components
+        are in design mode. }
+      CompDesigning := csDesigning in AComp.ComponentState;
+      TAccessComponent(AComp).SetDesigning(True, False);
+      try
+        Result := ReadRootComponent(AComp);
+      finally
+        if not CompDesigning then
+          TAccessComponent(AComp).SetDesigning(CompDesigning, False);
+      end;
     finally
       Free;
     end;
   finally
-    MS.Free;
+    MemStream.Free;
   end;
 end;
 

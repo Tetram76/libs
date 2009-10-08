@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScheduleEditorForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvScheduleEditorForm.pas 12498 2009-09-13 08:01:22Z outchy $
 
 unit JvScheduleEditorForm;
 
@@ -481,7 +481,7 @@ begin
                   edMonthlyIndexInterval.Text := IntToStr(Interval);
                 end;
             else
-              raise ESchedule.CreateRes(@RsEInvalidScheduleSettingsFound);
+              raise EJclScheduleError.CreateRes(@RsEInvalidScheduleSettingsFound);
             end;
           end;
         end;
@@ -516,7 +516,7 @@ begin
                   edYearlyIndexInterval.Text := IntToStr(Interval);
                 end;
             else
-              raise ESchedule.CreateRes(@RsEInvalidScheduleSettingsFound);
+              raise EJclScheduleError.CreateRes(@RsEInvalidScheduleSettingsFound);
             end;
           end;
         end;

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExForms.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvExForms.pas 12553 2009-10-05 13:22:42Z obones $
 
 unit JvExForms;
 
@@ -563,8 +563,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvExForms.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12553 $';
+    Date: '$Date: 2009-10-05 15:22:42 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

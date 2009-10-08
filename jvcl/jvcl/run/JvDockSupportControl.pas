@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportControl.pas 12476 2009-08-25 21:11:31Z obones $
+// $Id: JvDockSupportControl.pas 12552 2009-10-05 13:18:31Z obones $
 
 unit JvDockSupportControl;
 
@@ -39,7 +39,7 @@ uses
   JvDockTree;
 
 type
-  TJvAlphaBlendedForm = class(TForm)
+  TJvAlphaBlendedForm = class(TJvForm)
   protected
     procedure CreateParams(var Params: TCreateParams); override;
   end;
@@ -519,8 +519,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportControl.pas $';
-    Revision: '$Revision: 12476 $';
-    Date: '$Date: 2009-08-25 23:11:31 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 12552 $';
+    Date: '$Date: 2009-10-05 15:18:31 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2958,6 +2958,10 @@ procedure TJvDockPageControl.CMUnDockClient(var Msg: TCMUnDockClient);
 var
   Page: TJvDockTabSheet;
 begin
+{$ifdef VER210}
+  if (csDestroying in Self.ComponentState) then exit; // rather ugly workaround for Delphi2010 crash at shutdown.
+{$endif}
+
   Msg.Result := 0;
   Page := GetPageFromDockClient(Msg.Client);
   if Page <> nil then

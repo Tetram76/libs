@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppIniStorage.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvAppIniStorage.pas 12547 2009-10-03 17:11:04Z ahuser $
 
 unit JvAppIniStorage;
 
@@ -36,7 +36,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Classes, IniFiles,
+  Windows, SysUtils, Classes, IniFiles,
   JclBase,
   JvAppStorage, JvPropertyStore, JvTypes;
 
@@ -68,6 +68,10 @@ type
     function CalcDefaultSection(Section: string): string;
     function GetStorageOptions: TJvAppIniStorageOptions;
     procedure SetStorageOptions(Value: TJvAppIniStorageOptions);
+    {$IFDEF UNICODE}
+    function GetEncoding: TEncoding;
+    procedure SetEncoding(const Value: TEncoding);
+    {$ENDIF UNICODE}
   protected
     class function GetStorageOptionsClass: TJvAppStorageOptionsClass; override;
 
@@ -111,6 +115,9 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    {$IFDEF UNICODE}
+    property Encoding: TEncoding read GetEncoding write SetEncoding;
+    {$ENDIF UNICODE}
   published
     property StorageOptions: TJvAppIniStorageOptions read GetStorageOptions write SetStorageOptions;
   end;
@@ -155,8 +162,8 @@ procedure LoadPropertyStoreFromIniFile(APropertyStore: TJvCustomPropertyStore;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppIniStorage.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12547 $';
+    Date: '$Date: 2009-10-03 19:11:04 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -164,7 +171,6 @@ const
 implementation
 
 uses
-  SysUtils,
   JvJCLUtils, // BinStrToBuf & BufToBinStr
   JvConsts, JvResources,
   JclStrings; // JvConsts or PathDelim under D5 and BCB5
@@ -195,7 +201,7 @@ begin
     ReplaceCRLF := TJvAppIniStorageOptions(Source).ReplaceCRLF;
     PreserveLeadingTrailingBlanks := TJvAppIniStorageOptions(Source).PreserveLeadingTrailingBlanks;
   end;
-  inherited assign(Source);
+  inherited Assign(Source);
 end;
 
 procedure TJvAppIniStorageOptions.SetReplaceCRLF(Value: Boolean);
@@ -220,12 +226,10 @@ type
     function DoesValueExists(const Section, Ident: string): Boolean;
   end;
 
-  {$HINTS OFF}
   TMemIniFileAccessPrivate = class(TCustomIniFile)
-  private
+  public
     FSections: TStringList;
   end;
-  {$HINTS ON}
 
 function TJvMemIniFile.DoesValueExists(const Section, Ident: string): Boolean;
 var
@@ -731,6 +735,18 @@ begin
     TmpList.Free;
   end;
 end;
+
+{$IFDEF UNICODE}
+function TJvCustomAppIniStorage.GetEncoding: TEncoding;
+begin
+  Result := FIniFile.Encoding;
+end;
+
+procedure TJvCustomAppIniStorage.SetEncoding(const Value: TEncoding);
+begin
+  FIniFile.Encoding := Value;
+end;
+{$ENDIF UNICODE}
 
 procedure TJvCustomAppIniStorage.SetAsString(const Value: string);
 var

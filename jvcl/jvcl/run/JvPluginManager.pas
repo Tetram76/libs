@@ -67,7 +67,7 @@ Versionhistory:
  V 01 : renamed objects, files, ressources
         fixed several Memory-leaks, fixed unload-bug, minimized uses-list
 -----------------------------------------------------------------------------}
-// $Id: JvPluginManager.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPluginManager.pas 12519 2009-09-23 14:48:34Z obones $
 
 unit JvPluginManager;
 
@@ -84,14 +84,14 @@ uses
   {$ENDIF MSWINDOWS}
   Graphics, Forms,
   SysUtils, Classes,
-  JvComponentBase, JvPlugin;
+  JvComponentBase, JvPlugin, JvJVCLUtils;
 
 {const
   C_VersionString = '5.10';}
 
 type
   TNewCommandEvent = procedure(Sender: TObject; ACaption, AHint, AData: string;
-    AShortCut: TShortCut; ABitmap: TBitmap;
+    AShortCut: TShortCut; ABitmap: TJvBitmap;
     AEvent: TNotifyEvent) of object;
 
   TJvBeforeLoadEvent = procedure(Sender: TObject; FileName: string; var AllowLoad: Boolean) of object;
@@ -171,8 +171,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPluginManager.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12519 $';
+    Date: '$Date: 2009-09-23 16:48:34 +0200 (mer. 23 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -326,7 +326,7 @@ begin
       if Assigned(FOnNewCommand) then
         for Counter := 0 to PlugIn.Commands.Count - 1 do
           with TJvPluginCommand(PlugIn.Commands.Items[Counter]) do
-            FOnNewCommand(Self, Caption, Hint, Data, ShortCut, Bitmap, OnExecute);
+            FOnNewCommand(Self, Caption, Hint, Data, ShortCut, TJvBitmap(Bitmap), OnExecute);
     finally
       if Assigned(FOnAfterNewCommand) then
         FOnAfterNewCommand(Self, PlugIn);

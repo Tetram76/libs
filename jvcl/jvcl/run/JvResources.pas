@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvResources.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvResources.pas 12502 2009-09-16 17:35:10Z ahuser $
 
 unit JvResources;
 
@@ -2049,6 +2049,10 @@ resourcestring
 resourcestring
   RsUnknown = 'Unknown';
 
+//=== JvTimer.pas ============================================================
+resourcestring
+  RsCannotChangeInTimerEvent = 'Cannot change %s in the timer event';
+
 //=== JvTimeLimit.pas ========================================================
 resourcestring
   RsExpired = 'The test period has expired, please register this application';
@@ -2354,8 +2358,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvResources.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12502 $';
+    Date: '$Date: 2009-09-16 19:35:10 +0200 (mer. 16 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

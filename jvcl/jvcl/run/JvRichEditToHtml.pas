@@ -109,7 +109,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEditToHtml.pas $';
     Revision: '$Revision: 12466 $';
-    Date: '$Date: 2009-08-23 14:02:33 +0200 (dim., 23 août 2009) $';
+    Date: '$Date: 2009-08-23 14:02:33 +0200 (dim. 23 août 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

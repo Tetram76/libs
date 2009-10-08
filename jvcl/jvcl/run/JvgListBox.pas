@@ -29,7 +29,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgListBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgListBox.pas 12537 2009-10-03 09:55:35Z ahuser $
 
 unit JvgListBox;
 
@@ -43,7 +43,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Graphics, Controls,
   Forms, Dialogs, StdCtrls, CommCtrl, ExtCtrls, ImgList,
-  JVCLVer,
+  JVCLVer, JvJVCLUtils,
   JvgTypes, JvgCommClasses, Jvg3DColors;
 
 const
@@ -54,7 +54,7 @@ type
   TglLBChangeEvent = procedure(Sender: TObject;
     FOldSelItemIndex, FSelItemIndex: Integer) of object;
   TglLBOnDrawEvent = procedure(Sender: TObject; Msg: TWMDrawItem) of object;
-  TglOnGetDragImageEvent = procedure(Sender: TObject; Bitmap: TBitmap;
+  TglOnGetDragImageEvent = procedure(Sender: TObject; Bitmap: TJvBitmap;
     var TransparentColor: TColor; var HotSpotX, HotSpotY: Integer) of object;
 
   TJvgListBox = class(TCustomListBox)
@@ -206,8 +206,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgListBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12537 $';
+    Date: '$Date: 2009-10-03 11:55:35 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -216,7 +216,7 @@ implementation
 
 uses
   Math,
-  JvgUtils, JvJVCLUtils;
+  JvgUtils;
 
 //=== { TJvgListBox } ========================================================
 
@@ -414,7 +414,7 @@ var
     begin
       FGlyphs.GetBitmap(I, FTmpBitmap);
       if LSelected and (fboChangeGlyphColor in Options) then
-        ChangeBitmapColor(FTmpBitmap, FChangeGlyphColor.FromColor,
+        JvgUtils.ChangeBitmapColor(FTmpBitmap, FChangeGlyphColor.FromColor,
           FChangeGlyphColor.ToColor);
 
       if FAutoTransparentColor = ftcUser then
@@ -427,7 +427,7 @@ var
         fwoNone, fdsDefault, True, FTranspColor, clBlack);
         //      else
         //      begin
- //        ChangeBitmapColor( FTmpBitmap, FTranspColor, ItemStyle.Color );
+ //        JvgUtils.ChangeBitmapColor( FTmpBitmap, FTranspColor, ItemStyle.Color );
  //        BitBlt( DC, R.Left, R.Top, FTmpBitmap.Width, FTmpBitmap.Height, FTmpBitmap.Canvas.Handle,
  //                0, 0, SRCCOPY );
  //      end;
@@ -716,7 +716,7 @@ procedure TJvgListBox.CreateDragImage;
 var
   HotSpotX, HotSpotY: Integer;
   TranspColor: TColor;
-  Bmp: TBitmap;
+  Bmp: TJvBitmap;
   Pt: TPoint;
   R: TRect;
 begin
@@ -725,7 +725,7 @@ begin
     Exit;
   R := ItemRect(ItemIndex);
 
-  Bmp := TBitmap.Create;
+  Bmp := TJvBitmap.Create;
   with Bmp do
   try
     GetCursorPos(Pt);

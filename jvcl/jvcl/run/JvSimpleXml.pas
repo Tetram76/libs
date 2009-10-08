@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues: This component does not parse the !DOCTYPE tags but preserves them
 -----------------------------------------------------------------------------}
-// $Id: JvSimpleXml.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSimpleXml.pas 12548 2009-10-03 17:30:21Z ahuser $
 
 unit JvSimpleXml;
 
@@ -38,7 +38,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclSimpleXml;
+  JclSimpleXml, JclStreams;
 
 type
   TJvOnSimpleXMLParsed = TJclOnSimpleXMLParsed;
@@ -133,8 +133,8 @@ type
     procedure LoadFromFile(const FileName: TFileName);
     procedure LoadFromStream(Stream: TStream);
     procedure LoadFromResourceName(Instance: THandle; const ResName: string);
-    procedure SaveToFile(FileName: TFileName);
-    procedure SaveToStream(Stream: TStream);
+    procedure SaveToFile(FileName: TFileName; Encoding: TJclStringEncoding = seAuto; CodePage: Word = CP_ACP);
+    procedure SaveToStream(Stream: TStream; Encoding: TJclStringEncoding = seAuto; CodePage: Word = CP_ACP);
     function SaveToString: string;
     property Prolog: TJvSimpleXMLElemsProlog read GetProlog write SetProlog;
     property Root: TJvSimpleXMLElemClassic read GetRoot write SetRoot;
@@ -186,8 +186,8 @@ function EntityDecode(const S: string): string; {$IFDEF SUPPORTS_DEPRECATED} dep
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimpleXml.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12548 $';
+    Date: '$Date: 2009-10-03 19:30:21 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -375,14 +375,14 @@ begin
   FJclSimpleXML.LoadFromString(Value);
 end;
 
-procedure TJvSimpleXML.SaveToFile(FileName: TFileName);
+procedure TJvSimpleXML.SaveToFile(FileName: TFileName; Encoding: TJclStringEncoding; CodePage: Word);
 begin
-  FJclSimpleXML.SaveToFile(FileName);
+  FJclSimpleXML.SaveToFile(FileName, Encoding, CodePage);
 end;
 
-procedure TJvSimpleXML.SaveToStream(Stream: TStream);
+procedure TJvSimpleXML.SaveToStream(Stream: TStream; Encoding: TJclStringEncoding; CodePage: Word);
 begin
-  FJclSimpleXML.SaveToStream(Stream);
+  FJclSimpleXML.SaveToStream(Stream, Encoding, CodePage);
 end;
 
 function TJvSimpleXML.SaveToString: string;

@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCreateProcess.pas 12476 2009-08-25 21:11:31Z obones $
+// $Id: JvCreateProcess.pas 12554 2009-10-05 19:37:25Z jfudickar $
 
 unit JvCreateProcess;
 
@@ -229,8 +229,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCreateProcess.pas $';
-    Revision: '$Revision: 12476 $';
-    Date: '$Date: 2009-08-25 23:11:31 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 12554 $';
+    Date: '$Date: 2009-10-05 21:37:25 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -805,7 +805,7 @@ begin
       begin
         // Need to upscale FInputBuffer
         FInputBufferSize := FInputBufferSize * 2;
-        ReallocMem(FInputBuffer, FInputBufferSize);
+        ReallocMem(FInputBuffer, FInputBufferSize * SizeOf(Byte));
       end;
     end;
 

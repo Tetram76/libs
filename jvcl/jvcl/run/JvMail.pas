@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   Doesn't work with Paegasus Mail because it has no MAPI support at all.
 -----------------------------------------------------------------------------}
-// $Id: JvMail.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvMail.pas 12493 2009-09-07 18:35:38Z remkobonte $
 
 unit JvMail;
 
@@ -180,8 +180,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMail.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12493 $';
+    Date: '$Date: 2009-09-07 20:35:38 +0200 (lun. 07 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -443,7 +443,7 @@ var
       FillChar(FRecipArray[RecipIndex], SizeOf(TMapiRecipDesc), #0);
       FRecipArray[RecipIndex].ulRecipClass := RecipList.RecipientClass;
       FRecipArray[RecipIndex].lpszAddress := StrNew(PAnsiChar(AnsiString(RecipList[I].Address)));
-      if Name = '' then // some clients requires Name item always filled
+      if RecipList[I].Name = '' then // some clients requires Name item always filled
         FRecipArray[RecipIndex].lpszName := FRecipArray[RecipIndex].lpszAddress
       else
         FRecipArray[RecipIndex].lpszName := StrNew(PAnsiChar(AnsiString(RecipList[I].Name)));

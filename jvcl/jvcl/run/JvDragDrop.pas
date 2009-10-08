@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDragDrop.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDragDrop.pas 12554 2009-10-05 19:37:25Z jfudickar $
 
 unit JvDragDrop;
 
@@ -145,8 +145,8 @@ function Malloc: IMalloc;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDragDrop.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12554 $';
+    Date: '$Date: 2009-10-05 21:37:25 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -228,7 +228,7 @@ begin
 
   { Note: Do not use fixed stack buffers of size MAX_PATH,
           to prevent buffer overrun attacks, be paranoid <g> }
-  GetMem(Buffer, BufferLength);
+  GetMem(Buffer, BufferLength * SizeOf(Char));
   try
     { Return value is a count of the dropped files }
     Count := DragQueryFile(Handle, $FFFFFFFF, nil, 0);
@@ -241,7 +241,7 @@ begin
       if NeededLength > BufferLength then
       begin
         BufferLength := NeededLength;
-        ReallocMem(Buffer, BufferLength);
+        ReallocMem(Buffer, BufferLength * SizeOf(Char));
       end;
       DragQueryFile(Handle, I, Buffer, BufferLength);
       FFiles.Add(Buffer);

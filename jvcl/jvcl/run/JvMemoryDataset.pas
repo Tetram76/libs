@@ -65,7 +65,7 @@ Revisions : 1st = 2004/09/19
 
 Comments and Bugs : cfzwit att yahoo dott com dott ar
 -----------------------------------------------------------------------------}
-// $Id: JvMemoryDataset.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvMemoryDataset.pas 12542 2009-10-03 14:30:42Z ahuser $
 
 unit JvMemoryDataset;
 
@@ -341,8 +341,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemoryDataset.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12542 $';
+    Date: '$Date: 2009-10-03 16:30:42 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1139,8 +1139,8 @@ end;
 function TJvMemoryData.BookmarkValid(Bookmark: TBookmark): Boolean;
 begin
   Result := (Bookmark <> nil) and FActive and
-   (TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark[0]){$ELSE}Bookmark{$ENDIF RTL200_UP}^) > Low(Integer)) and
-   (TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark[0]){$ELSE}Bookmark{$ENDIF RTL200_UP}^) <= FLastID);
+   (TBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark[0]){$ELSE}Bookmark{$ENDIF RTL200_UP}^) > Low(Integer)) and
+   (TBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark[0]){$ELSE}Bookmark{$ENDIF RTL200_UP}^) <= FLastID);
 end;
 
 function TJvMemoryData.CompareBookmarks(Bookmark1, Bookmark2: TBookmark): Integer;
@@ -1154,12 +1154,12 @@ begin
   if (Bookmark1 = nil) and (Bookmark2 <> nil) then
     Result := -1
   else
-  if TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark1[0]){$ELSE}Bookmark1{$ENDIF RTL200_UP}^) >
-   TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark2[0]){$ELSE}Bookmark2{$ENDIF RTL200_UP}^) then
+  if TBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark1[0]){$ELSE}Bookmark1{$ENDIF RTL200_UP}^) >
+     TBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark2[0]){$ELSE}Bookmark2{$ENDIF RTL200_UP}^) then
     Result := 1
   else
-  if TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark1[0]){$ELSE}Bookmark1{$ENDIF RTL200_UP}^) < 
-  TBookmarkData({$IFDEF RTL200_UP}PByte(@Bookmark2[0]){$ELSE}Bookmark2{$ENDIF RTL200_UP}^) then
+  if TBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark1[0]){$ELSE}Bookmark1{$ENDIF RTL200_UP}^) <
+     TBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark2[0]){$ELSE}Bookmark2{$ENDIF RTL200_UP}^) then
     Result := -1
   else
     Result := 0;
@@ -1167,14 +1167,12 @@ end;
 
 procedure TJvMemoryData.GetBookmarkData(Buffer: PJvMemBuffer; Data: Pointer);
 begin
-  Move(PMemBookmarkInfo(Buffer + FBookmarkOfs)^.BookmarkData, Data^,
-    SizeOf(TBookmarkData));
+  Move(PMemBookmarkInfo(Buffer + FBookmarkOfs)^.BookmarkData, Data^, SizeOf(TBookmarkData));
 end;
 
 procedure TJvMemoryData.SetBookmarkData(Buffer: PJvMemBuffer; Data: Pointer);
 begin
-  Move(Data^, PMemBookmarkInfo(Buffer + FBookmarkOfs)^.BookmarkData,
-    SizeOf(TBookmarkData));
+  Move(Data^, PMemBookmarkInfo(Buffer + FBookmarkOfs)^.BookmarkData, SizeOf(TBookmarkData));
 end;
 
 function TJvMemoryData.GetBookmarkFlag(Buffer: PJvMemBuffer): TBookmarkFlag;

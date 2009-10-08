@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandForms.pas 12336 2009-06-09 23:40:40Z jfudickar $
+// $Id: JvBandForms.pas 12553 2009-10-05 13:22:42Z obones $
 
 unit JvBandForms;
 
@@ -34,7 +34,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Messages, ComObj, Classes, Forms, Controls, Menus;
+  Windows, Messages, ComObj, Classes, Forms, Controls, Menus, JvComponent;
 
 type
   {:Band object mode flag.
@@ -62,7 +62,7 @@ type
   {:Base class for band forms.
   @cat JvBandFormComponents
   }
-  TJvBandForm = class(TForm)
+  TJvBandForm = class(TJvForm)
   private
     FBandObject: TComObject;
     FBandModeFlags: TJvBandModeFlags;
@@ -292,8 +292,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBandForms.pas $';
-    Revision: '$Revision: 12336 $';
-    Date: '$Date: 2009-06-10 01:40:40 +0200 (mer., 10 juin 2009) $';
+    Revision: '$Revision: 12553 $';
+    Date: '$Date: 2009-10-05 15:22:42 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

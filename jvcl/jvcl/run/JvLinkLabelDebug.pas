@@ -26,7 +26,7 @@ Description:
 Known Issues:
   Please see the accompanying documentation.
 -----------------------------------------------------------------------------}
-// $Id: JvLinkLabelDebug.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvLinkLabelDebug.pas 12538 2009-10-03 12:18:34Z ahuser $
 
 unit JvLinkLabelDebug;
 
@@ -53,8 +53,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLinkLabelDebug.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12538 $';
+    Date: '$Date: 2009-10-03 14:18:34 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -83,10 +83,8 @@ class procedure TDebugLinkLabelTools.NodeTreeToTreeNodes(const LinkLabel: TJvLin
       ntActionNode:
         Result := Result + ' (' +
           GetEnumName(TypeInfo(TActionType), Integer((Node as TActionNode).Action)) + ')';
-      // Bianconi
       ntColorNode:
         Result := Result + ' ( ' + ColorToString(TColorNode(Node).Color) + ' )';
-      // End of Bianconi
       ntUnknownNode:
         Result := Result + ' ("' + (Node as TUnknownNode).Tag + '")';
     end;

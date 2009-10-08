@@ -21,7 +21,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignClip.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDesignClip.pas 12515 2009-09-23 07:51:16Z obones $
 unit JvDesignClip;
 
 {$I jvcl.inc}
@@ -38,10 +38,13 @@ type
   TJvDesignComponentClipboard = class(TObject)
   protected
     Stream: TMemoryStream;
+    FParentComponent: TComponent;
     procedure Close;
     procedure Open;
     procedure ReadError(Reader: TReader; const Msg: string; var Handled: Boolean);
   public
+    constructor Create(ParentComponent: TComponent);
+
     function GetComponent: TComponent;
     procedure CloseRead;
     procedure CloseWrite;
@@ -60,8 +63,8 @@ procedure DesignCopyStreamToClipboard(InFmt: Cardinal; InS: TStream);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignClip.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12515 $';
+    Date: '$Date: 2009-09-23 09:51:16 +0200 (mer. 23 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -105,8 +108,9 @@ begin
     MS.Position := 0;
     with TReader.Create(MS, 4096) do
     try
+      Parent := InComponent;
       OnError := InOnError;
-      Result := ReadRootComponent(InComponent);
+      Result := ReadRootComponent(nil);
     finally
       Free;
     end;
@@ -183,10 +187,17 @@ begin
   Close;
 end;
 
+constructor TJvDesignComponentClipboard.Create(ParentComponent: TComponent);
+begin
+  inherited Create;
+
+  FParentComponent := ParentComponent;
+end;
+
 function TJvDesignComponentClipboard.GetComponent: TComponent;
 begin
   if Stream.Position < Stream.Size then
-    Result := DesignLoadComponentFromBinaryStream(Stream, nil, ReadError)
+    Result := DesignLoadComponentFromBinaryStream(Stream, FParentComponent, ReadError)
   else
     Result := nil;
 end;

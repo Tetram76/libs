@@ -39,7 +39,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPBar.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvXPBar.pas 12519 2009-09-23 14:48:34Z obones $
 
 unit JvXPBar;
 
@@ -63,7 +63,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Classes, SysUtils,
   Graphics, Controls, Forms, ExtCtrls, ImgList, ActnList, Messages,
-  JvConsts, JvXPCore, JvXPCoreUtils;
+  JvConsts, JvXPCore, JvXPCoreUtils, JvJVCLUtils;
 
 type
   TJvXPBarRollDirection = (rdExpand, rdCollapse);
@@ -110,7 +110,7 @@ type
     Collapsing: Boolean) of object;
 
   TJvXPBarOnDrawItemEvent = procedure(Sender: TObject; ACanvas: TCanvas;
-    Rect: TRect; State: TJvXPDrawState; Item: TJvXPBarItem; Bitmap: TBitmap) of object;
+    Rect: TRect; State: TJvXPDrawState; Item: TJvXPBarItem; Bitmap: TJvBitmap) of object;
   TJvXPBarOwnerDrawEvent = procedure(Sender: TObject; ACanvas: TCanvas; var ARect: TRect) of object;
 
   TJvXPBarOnItemClickEvent = procedure(Sender: TObject; Item: TJvXPBarItem) of object;
@@ -551,8 +551,8 @@ procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPBar.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12519 $';
+    Date: '$Date: 2009-09-23 16:48:34 +0200 (mer. 23 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -568,7 +568,7 @@ uses
   JvThemes,
   {$ENDIF JVCLThemesEnabled}
   JvJCLUtils, JvResources,
-  Menus, JvJVCLUtils;
+  Menus;
 
 {$R JvXPBar.res}
 
@@ -1982,11 +1982,11 @@ end;
 
 procedure TJvXPCustomWinXPBar.DoDrawItem(const Index: Integer; State: TJvXPDrawState);
 var
-  Bitmap: TBitmap;
+  Bitmap: TJvBitmap;
   ItemRect: TRect;
   HasImages: Boolean;
 begin
-  Bitmap := TBitmap.Create;
+  Bitmap := TJvBitmap.Create;
   with Canvas do
   try
     Bitmap.Assign(nil);

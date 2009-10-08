@@ -19,7 +19,7 @@ located at http://jcl.delphi-jedi.org
 Known Issues:
 -----------------------------------------------------------------------------}
 
-// Last modified: $Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $
+// Last modified: $Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $
 // For history see end of file
 
 // This file is intended for C header conversions.

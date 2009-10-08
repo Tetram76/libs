@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportProc.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDockSupportProc.pas 12524 2009-09-24 20:41:37Z wpostma $
 
 unit JvDockSupportProc;
 
@@ -34,6 +34,14 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls, Forms;
+
+const
+  // Classic XP Era record sizes for TNONCLIENTMETRICSA or TNONCLIENTMETRICSW
+  {$ifdef UNICODE}
+  JVDOCK_TNONCLIENTMETRICS_SZ =  500;  // TNONCLIENTMETRICSW
+  {$else}
+  JVDOCK_TNONCLIENTMETRICS_SZ =  340;  // TNONCLIENTMETRICSA
+  {$endif}
 
 type
   TJvDockListScanKind = (lskForward, lskBackward);
@@ -94,8 +102,8 @@ procedure UnRegisterSettingChangeClient(Client: TObject);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportProc.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12524 $';
+    Date: '$Date: 2009-09-24 22:41:37 +0200 (jeu. 24 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -264,7 +272,7 @@ end;
 
 function JvDockGetNoNClientMetrics: TNONCLIENTMETRICS;
 begin
-  Result.cbSize := SizeOf(TNONCLIENTMETRICS);
+  Result.cbSize := JVDOCK_TNONCLIENTMETRICS_SZ; // Delphi 2010 and higher require this fix.
   SystemParametersInfo(SPI_GETNONCLIENTMETRICS, Result.cbSize,
     @Result, 0);
 end;

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWaitingProgress.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvWaitingProgress.pas 12550 2009-10-05 11:58:39Z obones $
 
 unit JvWaitingProgress;
 
@@ -37,6 +37,10 @@ uses
   Messages, Graphics, Controls, Forms,
   JvSpecialProgress, JvImageDrawThread, JvComponent;
 
+const
+  WM_DELAYED_INTERNAL_ACTIVATE = WM_APP + 245;
+  WM_DELAYED_DO_ENDED = WM_APP + 246;
+
 type
   TJvWaitingProgress = class(TJvWinControl)
   private
@@ -46,6 +50,8 @@ type
     FOnEnded: TNotifyEvent;
     FWait: TJvImageDrawThread;
     FProgress: TJvSpecialProgress;
+    FInOnScroll: Boolean;
+
     function GetProgressColor: TColor;
     procedure InternalActivate;
     procedure SetActive(const Value: Boolean);
@@ -53,12 +59,16 @@ type
     procedure SetRefreshInterval(const Value: Cardinal);
     procedure SetProgressColor(const Value: TColor);
     procedure OnScroll(Sender: TObject);
+    procedure DoEnded;
     //function GetBColor: TColor;
     //procedure SetBColor(const Value: TColor);
   protected
     procedure BoundsChanged; override;
     procedure ColorChanged; override;
     procedure Loaded; override;
+
+    procedure WmDelayedInternalActivate(var Msg: TMessage); message WM_DELAYED_INTERNAL_ACTIVATE;
+    procedure WmDelayedDoEnded(var Msg: TMessage); message WM_DELAYED_DO_ENDED;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -80,14 +90,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWaitingProgress.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12550 $';
+    Date: '$Date: 2009-10-05 13:58:39 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+uses
+  Windows;
 
 constructor TJvWaitingProgress.Create(AOwner: TComponent);
 begin
@@ -130,6 +142,12 @@ begin
   inherited Destroy;
 end;
 
+procedure TJvWaitingProgress.DoEnded;
+begin
+  if Assigned(FOnEnded) then
+    FOnEnded(Self);
+end;
+
 procedure TJvWaitingProgress.Loaded;
 begin
   inherited Loaded;
@@ -155,16 +173,19 @@ begin
     Exit;
 
   //Step
-  if Integer(FProgress.Position) + Integer(FRefreshInterval) > Integer(FLength) then
-  begin
-    FProgress.Position := FLength;
-    SetActive(False);
-    if Assigned(FOnEnded) then
-      FOnEnded(Self);
-  end
-  else
-    FProgress.Position := FProgress.Position + Integer(FRefreshInterval);
-  Application.ProcessMessages;
+  FInOnScroll := True;
+  try
+    if Integer(FProgress.Position) + Integer(FRefreshInterval) > Integer(FLength) then
+    begin
+      FProgress.Position := FLength;
+      SetActive(False);
+      PostMessage(Handle, WM_DELAYED_DO_ENDED, 0, 0);
+    end
+    else
+      FProgress.Position := FProgress.Position + Integer(FRefreshInterval);
+  finally
+    FInOnScroll := False;
+  end;
 end;
 
 procedure TJvWaitingProgress.InternalActivate;
@@ -184,7 +205,10 @@ begin
   begin
     FActive := Value;
     if not (csLoading in ComponentState) then
-      InternalActivate;
+      if FInOnScroll then // OnScroll is "Synchronized", we must thus finish it before locking the thread
+        PostMessage(Handle, WM_DELAYED_INTERNAL_ACTIVATE, 0, 0)
+      else
+        InternalActivate;
   end;
 end;
 
@@ -214,6 +238,16 @@ procedure TJvWaitingProgress.SetRefreshInterval(const Value: Cardinal);
 begin
   FRefreshInterval := Value;
   FWait.Delay := FRefreshInterval;
+end;
+
+procedure TJvWaitingProgress.WmDelayedDoEnded(var Msg: TMessage);
+begin
+  DoEnded;
+end;
+
+procedure TJvWaitingProgress.WmDelayedInternalActivate(var Msg: TMessage);
+begin
+  InternalActivate;
 end;
 
 procedure TJvWaitingProgress.BoundsChanged;

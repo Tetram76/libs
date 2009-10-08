@@ -34,7 +34,7 @@ History:
     * Rewritten almost everything.
 
 -----------------------------------------------------------------------------}
-// $Id: JvThreadTimer.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvThreadTimer.pas 12501 2009-09-14 20:59:58Z ahuser $
 
 unit JvThreadTimer;
 
@@ -94,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadTimer.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
+    Revision: '$Revision: 12501 $';
+    Date: '$Date: 2009-09-14 22:59:58 +0200 (lun. 14 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -113,6 +113,7 @@ type
     FHasBeenSuspended: Boolean;
     FInterval: Cardinal;
     FTimer: TJvThreadTimer;
+    FPriority: TThreadPriority;
   protected
     procedure DoSuspend;
     procedure Execute; override;
@@ -136,8 +137,7 @@ end;
 
 constructor TJvTimerThread.Create(ATimer: TJvThreadTimer);
 begin
-  { Create suspended because of priority setting }
-  inherited Create(True);
+  inherited Create(False);
 
   FreeOnTerminate := True;
   { Manually reset = false; Initial State = false }
@@ -146,8 +146,7 @@ begin
     RaiseLastOSError;
   FInterval := ATimer.FInterval;
   FTimer := ATimer;
-  Priority := ATimer.Priority;
-  {$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
+  FPriority := ATimer.Priority; // setting the priority is deferred to Execute()
 end;
 
 destructor TJvTimerThread.Destroy;
@@ -168,6 +167,7 @@ procedure TJvTimerThread.Execute;
 var
   Offset, TickCount: Cardinal;
 begin
+  Priority := FPriority;
   if WaitForSingleObject(FEvent, Interval) <> WAIT_TIMEOUT then
     Exit;
 

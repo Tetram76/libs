@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActions.pas 12476 2009-08-25 21:11:31Z obones $
+// $Id: JvVersionControlActions.pas 12497 2009-09-13 07:55:16Z outchy $
 
 unit JvVersionControlActions;
 
@@ -356,8 +356,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActions.pas $';
-    Revision: '$Revision: 12476 $';
-    Date: '$Date: 2009-08-25 23:11:31 +0200 (mar., 25 août 2009) $';
+    Revision: '$Revision: 12497 $';
+    Date: '$Date: 2009-09-13 09:55:16 +0200 (dim. 13 sept. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -638,7 +638,7 @@ procedure TJvVersionControlBaseAction.SetActionType(const Value:
 begin
   FActionType := Value;
   if Caption = '' then
-    Caption := VersionControlActionInfo(Value).Caption;
+    Caption := LoadResString(VersionControlActionInfo(Value).Caption);
   if Name = '' then
     Name := VersionControlActionInfo(Value).ActionName;
 end;

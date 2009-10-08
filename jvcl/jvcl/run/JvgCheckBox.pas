@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCheckBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgCheckBox.pas 12540 2009-10-03 12:48:54Z ahuser $
 
 unit JvgCheckBox;
 
@@ -72,16 +72,13 @@ type
     FOnlyTextStyleChanged: Boolean;
     FAlignment: TLeftRight;
     FNeedRebuildBackground: Boolean;
+    FInitialPainted: Boolean; // set to True after the first call to Paint(), this is only a workaround
     function IsCustomGlyph: Boolean;
     procedure SetChecked(Value: Boolean);
     procedure SetGlyph(Value: TBitmap);
-    function GetGlyph: TBitmap;
     procedure SetGlyphOn(Value: TBitmap);
-    function GetGlyphOn: TBitmap;
     procedure SetGlyphOff(Value: TBitmap);
-    function GetGlyphOff: TBitmap;
     procedure SetGlyphDisabled(Value: TBitmap);
-    function GetGlyphDisabled: TBitmap;
     procedure SetGroupIndex(Value: Integer);
     procedure SetOptions(Value: TglCheckBoxOptions);
     procedure SetTransparent(Value: Boolean);
@@ -90,8 +87,8 @@ type
     procedure SetFocusControl(Value: TWinControl);
     procedure SetGlyphKind(Value: TglGlyphKind);
 
-    procedure OnGradientChanged(Sender: TObject);
-    procedure OnIlluminationChanged(Sender: TObject);
+    procedure GradientChanged(Sender: TObject);
+    procedure IlluminationChanged(Sender: TObject);
     procedure WMLButtonUp(var Msg: TMessage); message WM_LBUTTONUP;
     procedure WMLButtonDown(var Msg: TMessage); message WM_LBUTTONDOWN;
     procedure SetAlignment(const Value: TLeftRight);
@@ -100,17 +97,17 @@ type
     procedure MouseLeave(Control: TControl); override;
     procedure FontChanged; override;
     procedure TextChanged; override;
-    procedure Resize; override;
     procedure Paint; override;
     procedure HookFocusControlWndProc;
     procedure UnhookFocusControlWndProc;
     procedure FocusControlWndHookProc(var Msg: TMessage);
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
-    function GetCheckedItemInGroup: TJvgCheckBox;
-    procedure SetCheckedItemInGroup(TagNo: Integer);
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    function GetCheckedItemInGroup: TJvgCheckBox;
+    procedure SetCheckedItemInGroup(TagNo: Integer);
   published
     property Anchors;
     property Align;
@@ -133,12 +130,12 @@ type
     property Font;
 
     property Alignment: TLeftRight read FAlignment write SetAlignment default taRightJustify;
-    property GlyphKind: TglGlyphKind read FGlyphKind write SetGlyphKind default fgkDefault;
+    property GlyphKind: TglGlyphKind read FGlyphKind write SetGlyphKind default fgkDefault; // must be above "GlyphOn/Off/Disabled"
     property Checked: Boolean read FChecked write SetChecked default False;
-    property Glyph: TBitmap read GetGlyph write SetGlyph;
-    property GlyphOn: TBitmap read GetGlyphOn write SetGlyphOn stored IsCustomGlyph;
-    property GlyphOff: TBitmap read GetGlyphOff write SetGlyphOff stored IsCustomGlyph;
-    property GlyphDisabled: TBitmap read GetGlyphDisabled write SetGlyphDisabled stored IsCustomGlyph;
+    property Glyph: TBitmap read FGlyph write SetGlyph;
+    property GlyphOn: TBitmap read FGlyphOn write SetGlyphOn stored IsCustomGlyph;
+    property GlyphOff: TBitmap read FGlyphOff write SetGlyphOff stored IsCustomGlyph;
+    property GlyphDisabled: TBitmap read FGlyphDisabled write SetGlyphDisabled stored IsCustomGlyph;
     property GroupIndex: Integer read FGroupIndex write SetGroupIndex default 0;
     property GlyphShift: TJvgPointClass read FGlyphShift write FGlyphShift;
     property Transparent: Boolean read FTransparent write SetTransparent default False;
@@ -161,8 +158,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCheckBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12540 $';
+    Date: '$Date: 2009-10-03 14:48:54 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -183,9 +180,12 @@ begin
   //  ControlStyle := ControlStyle + [csOpaque, csReplicatable];
   IncludeThemeStyle(Self, [csParentBackground]);
 
-  //  FGlyphOn := TBitmap.Create;
-  //  FGlyphOff := TBitmap.Create;
+  FGlyphOn := TBitmap.Create;
+  FGlyphOff := TBitmap.Create;
+  FGlyphDisabled := TBitmap.Create;
+  FGlyph := TBitmap.Create;
   FImg := TBitmap.Create;
+
   TextStyles := TJvgLabelTextStyles.Create;
   Colors := TJvgLabelColors.Create;
   Gradient := TJvgGradient.Create;
@@ -198,11 +198,11 @@ begin
   FAlignment := taRightJustify;
   FChecked := False;
   FTransparent := False;
-  FGradient.OnChanged := OnGradientChanged;
-  FIllumination.OnChanged := OnIlluminationChanged;
-  TextStyles.OnChanged := OnIlluminationChanged;
-  Colors.OnChanged := OnIlluminationChanged;
-  FGlyphShift.OnChanged := OnGradientChanged;
+  FGradient.OnChanged := GradientChanged;
+  FIllumination.OnChanged := IlluminationChanged;
+  TextStyles.OnChanged := IlluminationChanged;
+  Colors.OnChanged := IlluminationChanged;
+  FGlyphShift.OnChanged := GradientChanged;
   FOptions := [fcoFastDraw];
   FGroupIndex := 0;
   FInterspace := 0;
@@ -246,10 +246,9 @@ end;
 
 procedure TJvgCheckBox.MouseEnter(Control: TControl);
 begin
-  if csDesigning in ComponentState then
+  if (csDesigning in ComponentState) or not FInitialPainted then
     Exit;
-  if not Enabled or (fcoIgnoreMouse in Options) or
-    FShowAsActiveWhileControlFocused then
+  if not Enabled or (fcoIgnoreMouse in Options) or FShowAsActiveWhileControlFocused then
     Exit;
   if Assigned(FocusControl) and (FocusControlMethod = fcmOnMouseEnter) then
     FocusControl.SetFocus;
@@ -262,8 +261,7 @@ begin
     if (fcoDelineatedText in Options) and (DelineateActive <> Delineate) then
       Repaint
     else
-    if (not Transparent) and (Colors.Background <>
-      Colors.BackgroundActive) then
+    if (not Transparent) and (Colors.Background <> Colors.BackgroundActive) then
       Repaint
     else
     if (TextActive <> Text) or (fcoUnderlinedActive in Options) then
@@ -276,10 +274,9 @@ end;
 
 procedure TJvgCheckBox.MouseLeave(Control: TControl);
 begin
-  if csDesigning in ComponentState then
+  if (csDesigning in ComponentState) or not FInitialPainted then
     Exit;
-  if not Enabled or (fcoIgnoreMouse in Options) or
-    FShowAsActiveWhileControlFocused then
+  if not Enabled or (fcoIgnoreMouse in Options) or FShowAsActiveWhileControlFocused then
     Exit;
   FNeedRebuildBackground := True;
   FActiveNow := False;
@@ -290,8 +287,7 @@ begin
     if (fcoDelineatedText in Options) and (DelineateActive <> Delineate) then
       Repaint
     else
-    if (not Transparent) and (Colors.Background <>
-      Colors.BackgroundActive) then
+    if (not Transparent) and (Colors.Background <> Colors.BackgroundActive) then
       Repaint
     else
     if TextActive <> Text then
@@ -337,12 +333,6 @@ begin
     FocusControl.SetFocus;
 end;
 
-procedure TJvgCheckBox.Resize;
-begin
-  inherited Resize;
-  //  Img.Width := Width; Img.Height := Height;
-end;
-
 procedure TJvgCheckBox.Paint;
 var
   X, Y: Integer;
@@ -356,6 +346,8 @@ var
   R: TRect;
   BackBrush: HBRUSH;
 begin
+  FInitialPainted := True;
+
   //FNeedUpdateOnlyMainText := False;
   //FNeedRebuildBackground := False;
   FSuppressCMFontChanged := True;
@@ -364,6 +356,7 @@ begin
       Font.Style := Font.Style + [fsBold]
     else
       Font.Style := Font.Style - [fsBold];
+
   if Enabled then
   begin
     if Checked then
@@ -419,8 +412,7 @@ begin
       else
         Font.Style := Font.Style - [fsUnderline];
   end;
-  GetTextExtentPoint32(FImg.Canvas.Handle, PChar(Caption),
-    length(Caption), Size);
+  GetTextExtentPoint32(FImg.Canvas.Handle, PChar(Caption), Length(Caption), Size);
   Y := Max(0, (Height - Size.cy) div 2);
   X := 0;
   if Assigned(FGlyphOn) then
@@ -435,7 +427,7 @@ begin
   FImg.Width := Width;
   FImg.Height := Height;
 
-  if (not FNeedUpdateOnlyMainText) {and (not Transparent)} then
+  if not FNeedUpdateOnlyMainText {and not Transparent} then
   begin
     R := GetClientRect;
     if FActiveNow then
@@ -446,11 +438,10 @@ begin
     DeleteObject(BackBrush);
   end;
 
-  if FTransparent and (not FNeedUpdateOnlyMainText) then
-    if (not (fcoFastDraw in Options)) or FNeedRebuildBackground or (csDesigning
-      in ComponentState) then
-      GetParentImageRect(Self, Bounds(Left, Top, Width, Height),
-        FImg.Canvas.Handle);
+  if FTransparent and not FNeedUpdateOnlyMainText then
+    if not (fcoFastDraw in Options) or FNeedRebuildBackground or
+       (csDesigning in ComponentState) then
+      GetParentImageRect(Self, Bounds(Left, Top, Width, Height), FImg.Canvas.Handle);
 
   if Alignment = taLeftJustify then
   begin
@@ -482,8 +473,8 @@ begin
       if FGlyph <> nil then //...TransparentColor -> Left Bottom Pixel
       begin
         if not Transparent then
-          ChangeBitmapColor(FGlyph, GetPixel(FGlyph.Canvas.Handle, 0,
-            FGlyph.Height - 1), clBtnFace);
+          JvgUtils.ChangeBitmapColor(FGlyph, GetPixel(FGlyph.Canvas.Handle, 0, FGlyph.Height - 1),
+            clBtnFace);
 
         // glyph always left
         CreateBitmapExt(FImg.Canvas.Handle, FGlyph, ClientRect, 0,
@@ -497,11 +488,11 @@ begin
     end;
     if not Transparent then
       if FActiveNow then
-        ChangeBitmapColor(Bitmap, GetPixel(Bitmap.Canvas.Handle, 0,
-          Bitmap.Height - 1), Colors.BackgroundActive)
+        JvgUtils.ChangeBitmapColor(Bitmap, GetPixel(Bitmap.Canvas.Handle, 0, Bitmap.Height - 1),
+          Colors.BackgroundActive)
       else
-        ChangeBitmapColor(Bitmap, GetPixel(Bitmap.Canvas.Handle, 0,
-          Bitmap.Height - 1), Colors.Background);
+        JvgUtils.ChangeBitmapColor(Bitmap, GetPixel(Bitmap.Canvas.Handle, 0, Bitmap.Height - 1),
+          Colors.Background);
 
     if Alignment = taRightJustify then
       X := GlyphShift.X
@@ -581,29 +572,29 @@ begin
     WM_DESTROY: {fNeedRehookFocusControl := True};
   end;
   with Msg do
-    Result := CallWindowProc(FPrevWndProc, TForm(Owner).Handle, Msg, WParam,
-      LParam);
+    Result := CallWindowProc(FPrevWndProc, TForm(Owner).Handle, Msg, WParam, LParam);
 end;
 
 procedure TJvgCheckBox.SetFocusControl(Value: TWinControl);
 begin
-  if FFocusControl = Value then
-    Exit;
-  if (fcoActiveWhileControlFocused in Options) and Assigned(FFocusControl) then
-    UnhookFocusControlWndProc;
-  ReplaceComponentReference (Self, Value, TComponent(FFocusControl));
-  if (fcoActiveWhileControlFocused in Options) and Assigned(FFocusControl) then
-    HookFocusControlWndProc;
+  if FFocusControl <> Value then
+  begin
+    if (fcoActiveWhileControlFocused in Options) and Assigned(FFocusControl) then
+      UnhookFocusControlWndProc;
+    ReplaceComponentReference (Self, Value, TComponent(FFocusControl));
+    if (fcoActiveWhileControlFocused in Options) and Assigned(FFocusControl) then
+      HookFocusControlWndProc;
+  end;
 end;
 
-procedure TJvgCheckBox.OnGradientChanged(Sender: TObject);
+procedure TJvgCheckBox.GradientChanged(Sender: TObject);
 begin
   if not (csLoading in ComponentState) then
     FNeedUpdateOnlyMainText := True;
   Repaint;
 end;
 
-procedure TJvgCheckBox.OnIlluminationChanged(Sender: TObject);
+procedure TJvgCheckBox.IlluminationChanged(Sender: TObject);
 begin
   CalcShadowAndHighlightColors((Parent as TWinControl).Brush.Color, Colors);
   Repaint;
@@ -619,21 +610,21 @@ var
   I: Integer;
 begin
   if FChecked then
+    Result := Self
+  else
   begin
-    Result := Self;
-    Exit;
-  end;
-  Result := nil;
-  if GroupIndex <> 0 then
-  begin
-    for I := 0 to Owner.ComponentCount - 1 do
-      if (Owner.Components[I] is TJvgCheckBox) and
-        (TJvgCheckBox(Owner.Components[I]).GroupIndex = GroupIndex) and
-        (TJvgCheckBox(Owner.Components[I]).Checked) then
-      begin
-        Result := TJvgCheckBox(Owner.Components[I]);
-        Break;
-      end;
+    Result := nil;
+    if GroupIndex <> 0 then
+    begin
+      for I := 0 to Owner.ComponentCount - 1 do
+        if (Owner.Components[I] is TJvgCheckBox) and
+          (TJvgCheckBox(Owner.Components[I]).GroupIndex = GroupIndex) and
+          (TJvgCheckBox(Owner.Components[I]).Checked) then
+        begin
+          Result := TJvgCheckBox(Owner.Components[I]);
+          Break;
+        end;
+    end;
   end;
 end;
 
@@ -659,96 +650,57 @@ procedure TJvgCheckBox.SetChecked(Value: Boolean);
 var
   I: Integer;
 begin
-  if FChecked = Value then
-    Exit;
-  FNeedRebuildBackground := True;
-  if GroupIndex <> 0 then
+  if FChecked <> Value then
   begin
-    if not FChecked then
+    FNeedRebuildBackground := True;
+    if GroupIndex <> 0 then
     begin
-      for I := 0 to Owner.ComponentCount - 1 do
-        if (Owner.Components[I] is TJvgCheckBox) and
-          (TJvgCheckBox(Owner.Components[I]).GroupIndex = GroupIndex) and
-          (TJvgCheckBox(Owner.Components[I]).Checked) and
-          (Owner.Components[I] <> Self) then
-        begin
-          TJvgCheckBox(Owner.Components[I]).FChecked := False;
-          TJvgCheckBox(Owner.Components[I]).FNeedRebuildBackground := True;
-          TJvgCheckBox(Owner.Components[I]).Invalidate;
-        end;
-      FChecked := True;
-    end;
-  end
-  else
-    FChecked := Value;
-  Invalidate;
+      if not FChecked then
+      begin
+        for I := 0 to Owner.ComponentCount - 1 do
+          if (Owner.Components[I] is TJvgCheckBox) and
+            (TJvgCheckBox(Owner.Components[I]).GroupIndex = GroupIndex) and
+            (TJvgCheckBox(Owner.Components[I]).Checked) and
+            (Owner.Components[I] <> Self) then
+          begin
+            TJvgCheckBox(Owner.Components[I]).FChecked := False;
+            TJvgCheckBox(Owner.Components[I]).FNeedRebuildBackground := True;
+            TJvgCheckBox(Owner.Components[I]).Invalidate;
+          end;
+        FChecked := True;
+      end;
+    end
+    else
+      FChecked := Value;
+    Invalidate;
+  end;
 end;
 
 procedure TJvgCheckBox.SetGlyph(Value: TBitmap);
 begin
-  if Assigned(FGlyph) then
-    FGlyph.Free;
-  FGlyph := TBitmap.Create;
   FGlyph.Assign(Value);
   FNeedRebuildBackground := True;
   Invalidate;
 end;
 
-function TJvgCheckBox.GetGlyph: TBitmap;
-begin
-  if not Assigned(FGlyph) then
-    FGlyph := TBitmap.Create;
-  Result := FGlyph;
-end;
-
 procedure TJvgCheckBox.SetGlyphOn(Value: TBitmap);
 begin
-  if Assigned(FGlyphOn) then
-    FGlyphOn.Free;
-  FGlyphOn := TBitmap.Create;
   FGlyphKind := fgkCustom;
   FGlyphOn.Assign(Value);
   Invalidate;
 end;
 
-function TJvgCheckBox.GetGlyphOn: TBitmap;
-begin
-  if not Assigned(FGlyphOn) then
-    FGlyphOn := TBitmap.Create;
-  Result := FGlyphOn;
-end;
-
 procedure TJvgCheckBox.SetGlyphOff(Value: TBitmap);
 begin
-  if Assigned(FGlyphOff) then
-    FGlyphOff.Free;
-  FGlyphOff := TBitmap.Create;
   FGlyphKind := fgkCustom;
   FGlyphOff.Assign(Value);
   Invalidate;
 end;
 
-function TJvgCheckBox.GetGlyphOff: TBitmap;
-begin
-  if not Assigned(FGlyphOff) then
-    FGlyphOff := TBitmap.Create;
-  Result := FGlyphOff;
-end;
-
 procedure TJvgCheckBox.SetGlyphDisabled(Value: TBitmap);
 begin
-  if Assigned(FGlyphDisabled) then
-    FGlyphDisabled.Free;
-  FGlyphDisabled := TBitmap.Create;
   FGlyphDisabled.Assign(Value);
   Invalidate;
-end;
-
-function TJvgCheckBox.GetGlyphDisabled: TBitmap;
-begin
-  if not Assigned(FGlyphDisabled) then
-    FGlyphDisabled := TBitmap.Create;
-  Result := FGlyphDisabled;
 end;
 
 procedure TJvgCheckBox.SetGroupIndex(Value: Integer);
@@ -810,46 +762,43 @@ end;
 
 procedure TJvgCheckBox.SetGlyphKind(Value: TglGlyphKind);
 begin
-  FGlyphKind := Value;
+  if Value <> FGlyphKind then
+  begin
+    FGlyphKind := Value;
 
-  if (FGlyphKind = fgkCustom) and (csReading in ComponentState) then
-  begin
-    GlyphOn := nil;
-    GlyphOff := nil;
-    GlyphDisabled := nil;
-  end
-  else
-  //if (csDesigning in ComponentState){and not(csLoading in ComponentState)}then
-  begin
-    if not Assigned(FGlyphOn) then
-      FGlyphOn := TBitmap.Create
+    if (FGlyphKind = fgkCustom) and (csReading in ComponentState) then
+    begin
+      FGlyphOn.Assign(nil);
+      FGlyphOff.Assign(nil);
+      FGlyphDisabled.Assign(nil);
+    end
     else
+    //if (csDesigning in ComponentState){and not(csLoading in ComponentState)}then
+    begin
       FGlyphOn.Assign(nil); // fixes GDI resource leak
-    if not Assigned(FGlyphOff) then
-      FGlyphOff := TBitmap.Create
-    else
       FGlyphOff.Assign(nil); // fixes GDI resource leak
-    if not Assigned(FGlyphDisabled) then
-      FGlyphDisabled := TBitmap.Create
-    else
       FGlyphDisabled.Assign(nil); // fixes GDI resource leak
-    FGlyphOn.LoadFromResourceName(HInstance, 'JvgON');
-    FGlyphOff.LoadFromResourceName(HInstance, 'JvgOFF');
-    FGlyphDisabled.LoadFromResourceName(HInstance, 'JvgDISABLED');
+      FGlyphOn.LoadFromResourceName(HInstance, 'JvgON');
+      FGlyphOff.LoadFromResourceName(HInstance, 'JvgOFF');
+      FGlyphDisabled.LoadFromResourceName(HInstance, 'JvgDISABLED');
 
-    FGlyphOn.Transparent := True;
-    FGlyphOn.TransparentMode := tmAuto;
-    FGlyphOff.Transparent := True;
-    FGlyphOff.TransparentMode := tmAuto;
-    FGlyphDisabled.Transparent := True;
-    FGlyphDisabled.TransparentMode := tmAuto;
+      FGlyphOn.Transparent := True;
+      FGlyphOn.TransparentMode := tmAuto;
+      FGlyphOff.Transparent := True;
+      FGlyphOff.TransparentMode := tmAuto;
+      FGlyphDisabled.Transparent := True;
+      FGlyphDisabled.TransparentMode := tmAuto;
+    end;
   end;
 end;
 
 procedure TJvgCheckBox.SetAlignment(const Value: TLeftRight);
 begin
-  FAlignment := Value;
-  Invalidate;
+  if Value <> FAlignment then
+  begin
+    FAlignment := Value;
+    Invalidate;
+  end;
 end;
 
 {$IFDEF UNITVERSIONING}
