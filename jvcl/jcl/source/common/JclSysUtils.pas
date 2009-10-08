@@ -40,8 +40,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2009-10-03 11:34:58 +0200 (sam. 03 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3034                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -617,7 +617,7 @@ type
   TJclSimpleLog = class (TObject)
   private
     FDateTimeFormatStr: String;
-    FLogFileHandle: THandle;
+    FLogFileHandle: {$IFDEF BORLAND}Integer{$ELSE}THandle{$ENDIF};
     FLogFileName: string;
     FLoggingActive: Boolean;
     FLogWasEmpty: Boolean;
@@ -656,8 +656,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysUtils.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3034 $';
+    Date: '$Date: 2009-10-03 11:34:58 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -3245,7 +3245,11 @@ begin
     FLogFileName := CreateDefaultFileName
   else
     FLogFileName := ALogFileName;
+  {$IFDEF BORLAND}
+  FLogFileHandle := Integer(INVALID_HANDLE_VALUE);
+  {$ELSE ~BORLAND}
   FLogFileHandle := INVALID_HANDLE_VALUE;
+  {$ENDIF ~BORLAND}
   FLoggingActive := True;
 end;
 
@@ -3281,7 +3285,11 @@ begin
   if LogOpen then
   begin
     FileClose(FLogFileHandle);
+    {$IFDEF BORLAND}
+    FLogFileHandle := Integer(INVALID_HANDLE_VALUE);
+    {$ELSE ~BORLAND}
     FLogFileHandle := INVALID_HANDLE_VALUE;
+    {$ENDIF ~BORLAND}
     FLogWasEmpty := False;
   end;
 end;

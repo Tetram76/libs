@@ -30,14 +30,14 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Various mathematics classes and routines. Includes prime numbers, rational                       }
-{ numbers, generic floating point routines, hyperbolic and transcendenatal                         }
-{ routines, NAN and INF support and more.                                                          }
+{ Various mathematics classes and routines. Includes prime numbers, rational numbers,              }
+{ complex numbers, generic floating point routines, hyperbolic and transcendenatal routines,       }
+{ NAN and INF support and more.                                                                    }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-27 02:41:54 +0200 (dim. 27 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3025                                                                     $ }
+{ Last modified: $Date:: 2009-10-08 06:55:10 +0200 (jeu. 08 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3042                                                                     $ }
 { Author:        $Author:: rrossmair                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -86,7 +86,7 @@ const
   LogE: Float      = 0.43429448190325182765112891891661; // Log10(E)
   E: Float         = 2.7182818284590452353602874713527;  // Natural constant
   hLn2Pi: Float    = 0.91893853320467274178032973640562; // Ln(2*PI)/2
-  inv2Pi: Float    = 0.159154943091895;                  // 0.5 / Pi
+  inv2Pi: Float    = 0.15915494309189533576888376337251436203445964574046; // 0.5 / Pi
   TwoToPower63: Float = 9223372036854775808.0;           // 2^63
   GoldenMean: Float   = 1.618033988749894848204586834365638;  // GoldenMean
   EulerMascheroni: Float = 0.5772156649015328606065120900824;  // Euler GAMMA
@@ -219,7 +219,11 @@ function Exsecans(X: Float): Float; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function Haversine(X: Float): Float; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function Sec(X: Float): Float; overload;
 function Sin(X: Float): Float; overload;
-procedure SinCos(X: Float; out Sin, Cos: Float);
+procedure SinCos(X: Single; out Sin, Cos: Single); overload;
+procedure SinCos(X: Double; out Sin, Cos: Double); overload;
+{$IFDEF SUPPORTS_EXTENDED}
+procedure SinCos(X: Extended; out Sin, Cos: Extended); overload;
+{$ENDIF SUPPORTS_EXTENDED}
 function Tan(X: Float): Float; overload;
 function Versine(X: Float): Float; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 
@@ -689,32 +693,71 @@ procedure InitCrc32(Polynom, Start: Cardinal; out Crc32Table: TCrc32Table); over
 { Complex numbers }
 
 type
-  TPolarComplex = record
-    Radius: Float;
-    Angle: Float;
-  end;
-
   TRectComplex = record
     Re: Float;
     Im: Float;
     {$IFDEF SUPPORTS_CLASS_OPERATORS}
     class operator Implicit(const Value: Float): TRectComplex;
-    class operator Implicit(const Value: Integer): TRectComplex;
-    class operator Implicit(const Value: Int64): TRectComplex;
-    class operator Implicit(const Z: TPolarComplex): TRectComplex;
-
     class operator Equal(const Z1, Z2: TRectComplex): Boolean;
     class operator NotEqual(const Z1, Z2: TRectComplex): Boolean;
-
-    class operator Add(const Z1, Z2: TRectComplex): TRectComplex; inline;
+    class operator Add(const Z1, Z2: TRectComplex): TRectComplex;
     class operator Subtract(const Z1, Z2: TRectComplex): TRectComplex;
     class operator Multiply(const Z1, Z2: TRectComplex): TRectComplex;
     class operator Divide(const Z1, Z2: TRectComplex): TRectComplex;
     class operator Negative(const Z: TRectComplex): TRectComplex;
-
-    class function Exp(const Z: TRectComplex): TPolarComplex; static;
+    class operator Positive(const Z: TRectComplex): TRectComplex;
+    function AsString: string;
+    function Conjugate: TRectComplex;
+    function IsZero: Boolean;
+    function IsInfinite: Boolean;
     {$ENDIF SUPPORTS_CLASS_OPERATORS}
   end;
+
+  TPolarComplex = record
+    Radius: Float;
+    Angle: Float;
+    {$IFDEF SUPPORTS_CLASS_OPERATORS}
+    class operator Implicit(const Value: Float): TPolarComplex;
+    class operator Implicit(const Z: TPolarComplex): TRectComplex;
+    class operator Implicit(const Z: TRectComplex): TPolarComplex;
+    {$IFNDEF CPPBUILDER}
+    // OK with Delphi, but will yield errors in .hpp files:
+    class operator Explicit(const Z: TPolarComplex): TRectComplex;
+    class operator Explicit(const Z: TRectComplex): TPolarComplex;
+    {$ENDIF CPPBUILDER}
+    class operator Equal(const Z1, Z2: TPolarComplex): Boolean;
+    class operator NotEqual(const Z1, Z2: TPolarComplex): Boolean;
+    class operator Add(const Z1, Z2: TPolarComplex): TRectComplex;
+    class operator Subtract(const Z1, Z2: TPolarComplex): TRectComplex;
+    class operator Multiply(const Z1, Z2: TPolarComplex): TPolarComplex;
+    class operator Divide(const Z1, Z2: TPolarComplex): TPolarComplex;
+    class operator Negative(const Z: TPolarComplex): TPolarComplex;
+    class operator Positive(const Z: TPolarComplex): TPolarComplex;
+    function AsString: string;
+    function Conjugate: TPolarComplex;
+    function IsZero: Boolean;
+    function IsInfinite: Boolean;
+    function Power(const Exponent: TRectComplex): TPolarComplex; overload;
+    function Power(const Exponent: Float): TPolarComplex; overload;
+    function Power(const Exponent: Integer): TPolarComplex; overload;
+    // computes the kth nth root, k in 1..n
+    function Root(const K, N: Cardinal): TPolarComplex;
+    {$ENDIF SUPPORTS_CLASS_OPERATORS}
+  end;
+
+{$IFDEF DEBUG}
+var
+  // accumulated count of (computational costly) TRectComplex <-> TPolarComplex conversions
+  ComplexTypeConversions: Cardinal;
+{$ENDIF DEBUG}
+
+// sets format string for ComplexToStr(TRectComplex) and TRectComplex.AsString
+procedure SetRectComplexFormatStr(const S: string);
+// sets format string for ComplexToStr(TPolarComplex) and TPolarComplex.AsString
+procedure SetPolarComplexFormatStr(const S: string);
+
+function ComplexToStr(const Z: TRectComplex): string; overload;
+function ComplexToStr(const Z: TPolarComplex): string; overload;
 
 function RectComplex(const Re: Float; const Im: Float = 0): TRectComplex; overload;
 function RectComplex(const Z: TPolarComplex): TRectComplex; overload;
@@ -745,13 +788,17 @@ function Sum(const Z: array of TRectComplex): TRectComplex; overload;
 function Diff(const Z1, Z2: TRectComplex): TRectComplex;
 function Product(const Z1, Z2: TRectComplex): TRectComplex; overload;
 function Product(const Z1, Z2: TPolarComplex): TPolarComplex; overload;
-function Quotient(const Z1, Z2: TRectComplex): TRectComplex;
+function Product(const Z: array of TPolarComplex): TPolarComplex; overload;
+function Quotient(const Z1, Z2: TRectComplex): TRectComplex; overload;
+function Quotient(const Z1, Z2: TPolarComplex): TPolarComplex; overload;
 
 function Ln(const Z: TPolarComplex): TRectComplex;
 function Exp(const Z: TRectComplex): TPolarComplex; overload;
 function Power(const Z: TPolarComplex; const Exponent: TRectComplex): TPolarComplex; overload;
 function Power(const Z: TPolarComplex; const Exponent: Float): TPolarComplex; overload;
 function PowerInt(const Z: TPolarComplex; const Exponent: Integer): TPolarComplex; overload;
+// a complex number has n different nth roots in the complex plane
+// Root() computes the kth nth root, k in 1..n
 function Root(const Z: TPolarComplex; const K, N: Cardinal): TPolarComplex;
 
 function Cos(const Z: TRectComplex): TRectComplex; overload;
@@ -772,8 +819,8 @@ function CscH(const Z: TRectComplex): TRectComplex; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclMath.pas $';
-    Revision: '$Revision: 3025 $';
-    Date: '$Date: 2009-09-27 02:41:54 +0200 (dim. 27 sept. 2009) $';
+    Revision: '$Revision: 3042 $';
+    Date: '$Date: 2009-10-08 06:55:10 +0200 (jeu. 08 oct. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -791,6 +838,9 @@ uses
   Jcl8087,
   JclResources,
   JclSynch;
+
+// Note (rrossmair): Usage of the "assembler" directive seems to be an Free Pascal requirement
+// (it's obsolete in Delphi since v. 2 I believe).
 
 // Internal helper routines
 // Linux: Get Global Offset Table (GOT) adress for Position Independent Code
@@ -1196,6 +1246,17 @@ begin
   end;
 end;
 
+{$IFDEF CPU32}
+function ArcTan(X: Float): Float; assembler;
+asm
+          FLD     X
+          FLD1
+          FPATAN
+          FWAIT
+end;
+{$ENDIF CPU32}
+
+{$IFDEF CPU64}
 function ArcTan(X: Float): Float;
 begin
   asm
@@ -1206,7 +1267,19 @@ begin
           FSTP    Result
   end;
 end;
+{$ENDIF CPU64}
 
+{$IFDEF CPU32}
+function ArcTan2(Y, X: Float): Float; assembler;
+asm
+          FLD     Y
+          FLD     X
+          FPATAN
+          FWAIT
+end;
+{$ENDIF CPU32}
+
+{$IFDEF CPU64}
 function ArcTan2(Y, X: Float): Float;
 begin
   asm
@@ -1217,6 +1290,7 @@ begin
           FSTP    Result
   end;
 end;
+{$ENDIF CPU64}
 
 function Cos(X: Float): Float;
 begin
@@ -1295,7 +1369,8 @@ begin
   end;
 end;
 
-procedure SinCos(X: Float; out Sin, Cos: Float);
+{$IFDEF SUPPORTS_EXTENDED}
+procedure SinCos(X: Extended; out Sin, Cos: Extended);
 begin
   DomainCheck(Abs(X) > MaxAngle);
   asm
@@ -1304,15 +1379,62 @@ begin
           MOV     EDX, Cos
           MOV     EAX, Sin
           FSINCOS
-          FSTP    Float PTR [EDX]
-          FSTP    Float PTR [EAX]
+          FSTP    Extended PTR [EDX]
+          FSTP    Extended PTR [EAX]
           {$ENDIF CPU32}
           {$IFDEF CPU64}
           MOV     RDX, Cos
           MOV     RAX, Sin
           FSINCOS
-          FSTP    Float PTR [RDX]
-          FSTP    Float PTR [RAX]
+          FSTP    Extended PTR [RDX]
+          FSTP    Extended PTR [RAX]
+          {$ENDIF CPU64}
+          FWAIT
+  end;
+end;
+{$ENDIF SUPPORTS_EXTENDED}
+
+procedure SinCos(X: Double; out Sin, Cos: Double);
+begin
+  DomainCheck(Abs(X) > MaxAngle);
+  asm
+          FLD     X
+          {$IFDEF CPU32}
+          MOV     EDX, Cos
+          MOV     EAX, Sin
+          FSINCOS
+          FSTP    Double PTR [EDX]
+          FSTP    Double PTR [EAX]
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          MOV     RDX, Cos
+          MOV     RAX, Sin
+          FSINCOS
+          FSTP    Double PTR [RDX]
+          FSTP    Double PTR [RAX]
+          {$ENDIF CPU64}
+          FWAIT
+  end;
+end;
+
+procedure SinCos(X: Single; out Sin, Cos: Single);
+begin
+  DomainCheck(Abs(X) > MaxAngle);
+  asm
+          FLD     X
+          {$IFDEF CPU32}
+          MOV     EDX, Cos
+          MOV     EAX, Sin
+          FSINCOS
+          FSTP    Single PTR [EDX]
+          FSTP    Single PTR [EAX]
+          {$ENDIF CPU32}
+          {$IFDEF CPU64}
+          MOV     RDX, Cos
+          MOV     RAX, Sin
+          FSINCOS
+          FSTP    Single PTR [RDX]
+          FSTP    Single PTR [RAX]
           {$ENDIF CPU64}
           FWAIT
   end;
@@ -1372,6 +1494,22 @@ begin
   Result := System.Ln((Sqrt(1.0 - Sqr(X)) + 1.0) / X);
 end;
 
+{$IFDEF CPU32}
+function ArcSinH(X: Float): Float; assembler;
+asm
+          FLDLN2
+          FLD     X
+          FLD     ST(0)
+          FMUL    ST(0), ST(0)
+          FLD1
+          FADDP   ST(1), ST(0)
+          FSQRT
+          FADDP   ST(1), ST(0)
+          FYL2X
+end;
+{$ENDIF CPU32}
+
+{$IFDEF CPU64}
 function ArcSinH(X: Float): Float;
 begin
   asm
@@ -1387,6 +1525,7 @@ begin
           FSTP    Result
   end;
 end;
+{$ENDIF CPU64}
 
 function ArcTanH(X: Float): Float;
 begin
@@ -2108,6 +2247,9 @@ end;
 function NormalizeAngle(const Angle: Float): Float;
 begin
   Result := Angle;
+  if Result = 0 then
+    Exit;
+
   {$IFDEF MATH_ANGLE_DEGREES}
   Result := DegToRad(Result);
   {$ENDIF MATH_ANGLE_DEGREES}
@@ -2115,14 +2257,15 @@ begin
   Result := GradToRad(Result);
   {$ENDIF MATH_ANGLE_GRADS}
 
-  Result := Frac(Result * Inv2Pi);
-  if Result < -0.5 then
-    Result := Result + 1.0
-  else
-  if Result >= 0.5 then
-    Result := Result - 1.0;
-
-  Result := Result * TwoPi;
+  if (Result < -Pi) or (Result >= Pi) then
+  begin
+    Result := Frac(Result * Inv2Pi);
+    if Result < 0 then
+      Result := Result + 1.0
+    else
+      Result := Result - 1.0;
+    Result := Result * TwoPi;
+  end;
 
   {$IFDEF MATH_ANGLE_DEGREES}
   Result := RadToDeg(Result);
@@ -2522,7 +2665,7 @@ end;
 
 { Rabin-Miller Strong Primality Test }
 
-function IsPrimeRM(N: Cardinal): Boolean;
+function IsPrimeRM(N: Cardinal): Boolean; assembler;
 asm
         // 32 --> EAX N
         //    <-- AL  Result
@@ -2706,7 +2849,7 @@ const
 // C2 in Bit 1 of EAX
 // C3 in Bit 2 of EAX
 
-function _C3C2C0: TC3C2C0;
+function _C3C2C0: TC3C2C0; assembler;
 // In: ST(0) Value to examine
 asm
         FXAM
@@ -2723,20 +2866,20 @@ asm
         MOV     EAX, EDX
 end;
 
-function C3C2C0(const Value: Single): TC3C2C0; overload;
+function C3C2C0(const Value: Single): TC3C2C0; overload; assembler;
 asm
         FLD     Value
         CALL    _C3C2C0
 end;
 
-function C3C2C0(const Value: Double): TC3C2C0; overload;
+function C3C2C0(const Value: Double): TC3C2C0; overload; assembler;
 asm
         FLD     Value
         CALL    _C3C2C0
 end;
 
 {$IFDEF SUPPORTS_EXTENDED}
-function C3C2C0(const Value: Extended): TC3C2C0; overload;
+function C3C2C0(const Value: Extended): TC3C2C0; overload; assembler;
 asm
         FLD     Value
         CALL    _C3C2C0
@@ -3953,7 +4096,30 @@ end;
 const
   RectOne: TRectComplex = (Re: 1.0; Im: 0.0);
   RectZero: TRectComplex = (Re: 0.0; Im: 0.0);
-  //RectInfinity: TRectComplex = (Re: Infinity; Im: Infinity);
+
+var
+  RectComplexFormatStr: string = '%g + %gi';
+  PolarComplexFormatStr: string = '%g e^%gi';
+
+procedure SetRectComplexFormatStr(const S: string);
+begin
+  RectComplexFormatStr := S;
+end;
+
+procedure SetPolarComplexFormatStr(const S: string);
+begin
+  PolarComplexFormatStr := S;
+end;
+
+function ComplexToStr(const Z: TRectComplex): string;
+begin
+  Result := Format(RectComplexFormatStr, [Z.Re, Z.Im]);
+end;
+
+function ComplexToStr(const Z: TPolarComplex): string;
+begin
+  Result := Format(PolarComplexFormatStr, [Z.Radius, Z.Angle]);
+end;
 
 function RectComplex(const Re: Float; const Im: Float = 0): TRectComplex;
 begin
@@ -3965,6 +4131,9 @@ function RectComplex(const Z: TPolarComplex): TRectComplex;
 var
   ASin, ACos: Float;
 begin
+  {$IFDEF DEBUG}
+  Inc(ComplexTypeConversions);
+  {$ENDIF DEBUG}
   SinCos(Z.Angle, ASin, ACos);
   Result.Re := Z.Radius * ACos;
   Result.Im := Z.Radius * ASin;
@@ -3972,13 +4141,24 @@ end;
 
 function PolarComplex(const Radius: Float; const Angle: Float = 0): TPolarComplex;
 begin
-  Result.Radius := Radius;
-  Result.Angle := Angle;
+  if Radius < 0 then
+  begin
+    Result.Radius := -Radius;
+    Result.Angle := Pi;
+  end
+  else
+  begin
+    Result.Radius := Radius;
+    Result.Angle := 0.0;
+  end;
 end;
 
 function PolarComplex(const Z: TRectComplex): TPolarComplex;
 begin
-  Result.Radius := Sqrt(Sqr(Z.Re) + Sqr(Z.Im));
+  {$IFDEF DEBUG}
+  Inc(ComplexTypeConversions);
+  {$ENDIF DEBUG}
+  Result.Radius := Norm(Z);
   Result.Angle := ArcTan2(Z.Im, Z.Re);
 end;
 
@@ -3989,7 +4169,8 @@ end;
 
 function Equal(const Z1, Z2: TPolarComplex): Boolean;
 begin
-  Result := (Z1.Radius = Z2.Radius) and IsFloatZero(NormalizeAngle(Z1.Angle - Z2.Angle));
+  Result := (Z1.Radius = Z2.Radius)
+    and ((Z1.Radius = 0) or IsFloatZero(NormalizeAngle(Z1.Angle - Z2.Angle)));
 end;
 
 function IsZero(const Z: TRectComplex): Boolean;
@@ -4032,13 +4213,13 @@ begin
   Result := Sqr(Z.Radius);
 end;
 
-function Conjugate(const Z: TRectComplex): TRectComplex; overload;
+function Conjugate(const Z: TRectComplex): TRectComplex;
 begin
   Result.Re :=  Z.Re;
   Result.Im := -Z.Im;
 end;
 
-function Conjugate(const Z: TPolarComplex): TPolarComplex; overload;
+function Conjugate(const Z: TPolarComplex): TPolarComplex;
 begin
   Result.Radius :=  Z.Radius;
   Result.Angle := -Z.Angle;
@@ -4059,13 +4240,13 @@ begin
   Result.Angle := - Z.Angle;
 end;
 
-function Neg(const Z: TRectComplex): TRectComplex; overload;
+function Neg(const Z: TRectComplex): TRectComplex;
 begin
   Result.Re := -Z.Re;
   Result.Im := -Z.Im;
 end;
 
-function Neg(const Z: TPolarComplex): TPolarComplex; overload;
+function Neg(const Z: TPolarComplex): TPolarComplex;
 begin
   Result.Radius := Z.Radius;
   Result.Angle := NormalizeAngle(Z.Angle + Pi);
@@ -4104,8 +4285,23 @@ end;
 function Product(const Z1, Z2: TPolarComplex): TPolarComplex;
 begin
   Result.Radius := Z1.Radius * Z2.Radius;
-  Result.Angle := Z1.Angle + Z2.Angle;
+  Result.Angle := NormalizeAngle(Z1.Angle + Z2.Angle);
 end;
+
+function Product(const Z: array of TPolarComplex): TPolarComplex;
+var
+  I: Integer;
+begin
+  Result.Radius := 1.0;
+  Result.Angle := 0;
+  for I := Low(Z) to High(Z) do
+  begin
+    Result.Radius := Result.Radius * Z[I].Radius;
+    Result.Angle := Result.Angle + Z[I].Angle;
+  end;
+  Result.Angle := NormalizeAngle(Result.Angle);
+end;
+
 
 function Quotient(const Z1, Z2: TRectComplex): TRectComplex;
 var
@@ -4114,6 +4310,12 @@ begin
   Denom := Sqr(Z2.Re) + Sqr(Z2.Im);
   Result.Re := (Z1.Re * Z2.Re + Z1.Im * Z2.Im) / Denom;
   Result.Im := (Z1.Im * Z2.Re - Z1.Re * Z2.Im) / Denom;
+end;
+
+function Quotient(const Z1, Z2: TPolarComplex): TPolarComplex;
+begin
+  Result.Radius := Z1.Radius / Z2.Radius;
+  Result.Angle := NormalizeAngle(Z1.Angle - Z2.Angle);
 end;
 
 function Ln(const Z: TPolarComplex): TRectComplex;
@@ -4257,34 +4459,16 @@ end;
 
 {$IFDEF SUPPORTS_CLASS_OPERATORS}
 
+{ TRectComplex }
+
 class operator TRectComplex.Implicit(const Value: Float): TRectComplex;
 begin
-  Result.Re := Value;
-  Result.Im := 0;
-end;
-
-class operator TRectComplex.Implicit(const Value: Integer): TRectComplex;
-begin
-  Result.Re := Value;
-end;
-
-class operator TRectComplex.Implicit(const Value: Int64): TRectComplex;
-begin
-  Result.Re := Value;
-end;
-
-class operator TRectComplex.Implicit(const Z: TPolarComplex): TRectComplex;
-var
-  ASin, ACos: Float;
-begin
-  SinCos(Z.Angle, ASin, ACos);
-  Result.Re := Z.Radius * ACos;
-  Result.Im := Z.Radius * ASin;
+  Result := RectComplex(Value);
 end;
 
 class operator TRectComplex.Equal(const Z1, Z2: TRectComplex): Boolean;
 begin
-  Result := (Z1.Re = Z2.Re) and (Z1.Im = Z2.Im);
+  Result := Equal(Z1, Z2);
 end;
 
 class operator TRectComplex.NotEqual(const Z1, Z2: TRectComplex): Boolean;
@@ -4294,41 +4478,161 @@ end;
 
 class operator TRectComplex.Add(const Z1, Z2: TRectComplex): TRectComplex;
 begin
-  Result.Re := Z1.Re + Z2.Re;
-  Result.Im := Z1.Im + Z2.Im;
+  Result := Sum(Z1, Z2);
 end;
 
 class operator TRectComplex.Subtract(const Z1, Z2: TRectComplex): TRectComplex;
 begin
-  Result.Re := Z1.Re - Z2.Re;
-  Result.Im := Z1.Im - Z2.Im;
+  Result := Diff(Z1, Z2);
 end;
 
 class operator TRectComplex.Multiply(const Z1, Z2: TRectComplex): TRectComplex;
 begin
-  Result.Re := Z1.Re * Z2.Re - Z1.Im * Z2.Im;
-  Result.Im := Z1.Re * Z2.Im + Z1.Im * Z2.Re;
+  Result := Product(Z1, Z2);
 end;
 
 class operator TRectComplex.Divide(const Z1, Z2: TRectComplex): TRectComplex;
-var
-  Denom: Float;
 begin
-  Denom := Sqr(Z2.Re) + Sqr(Z2.Im);
-  Result.Re := (Z1.Re * Z2.Re + Z1.Im * Z2.Im) / Denom;
-  Result.Im := (Z1.Im * Z2.Re - Z1.Re * Z2.Im) / Denom;
+  Result := Quotient(Z1, Z2);
 end;
 
 class operator TRectComplex.Negative(const Z: TRectComplex): TRectComplex;
 begin
-  Result.Re := -Z.Re;
-  Result.Im := -Z.Im;
+  Result := Neg(Z);
 end;
 
-class function TRectComplex.Exp(const Z: TRectComplex): TPolarComplex;
+class operator TRectComplex.Positive(const Z: TRectComplex): TRectComplex;
 begin
-  Result.Radius := System.Exp(Z.Re);
-  Result.Angle := Z.Im;
+  Result := Z;
+end;
+
+function TRectComplex.AsString: string;
+begin
+  Result := ComplexToStr(Self);
+end;
+
+function TRectComplex.Conjugate: TRectComplex;
+begin
+  Result := JclMath.Conjugate(Self);
+end;
+
+function TRectComplex.IsZero: Boolean;
+begin
+  Result := JclMath.IsZero(Self);
+end;
+
+function TRectComplex.IsInfinite: Boolean;
+begin
+  Result := JclMath.IsInfinite(Self);
+end;
+
+{ TPolarComplex }
+
+class operator TPolarComplex.Implicit(const Value: Float): TPolarComplex;
+begin
+  Result := PolarComplex(Value);
+end;
+
+class operator TPolarComplex.Implicit(const Z: TPolarComplex): TRectComplex;
+begin
+  Result := RectComplex(Z);
+end;
+
+class operator TPolarComplex.Implicit(const Z: TRectComplex): TPolarComplex;
+begin
+  Result := PolarComplex(Z);
+end;
+
+{$IFNDEF CPPBUILDER}
+class operator TPolarComplex.Explicit(const Z: TPolarComplex): TRectComplex;
+begin
+  Result := RectComplex(Z);
+end;
+
+class operator TPolarComplex.Explicit(const Z: TRectComplex): TPolarComplex;
+begin
+  Result := PolarComplex(Z);
+end;
+{$ENDIF CPPBUILDER}
+
+class operator TPolarComplex.Equal(const Z1, Z2: TPolarComplex): Boolean;
+begin
+  Result := Equal(Z1, Z2);
+end;
+
+class operator TPolarComplex.NotEqual(const Z1, Z2: TPolarComplex): Boolean;
+begin
+  Result := not Equal(Z1, Z2);
+end;
+
+class operator TPolarComplex.Add(const Z1, Z2: TPolarComplex): TRectComplex;
+begin
+  Result := Sum(Z1, Z2);
+end;
+
+class operator TPolarComplex.Subtract(const Z1, Z2: TPolarComplex): TRectComplex;
+begin
+  Result := Diff(Z1, Z2);
+end;
+
+class operator TPolarComplex.Multiply(const Z1, Z2: TPolarComplex): TPolarComplex;
+begin
+  Result := Product(Z1, Z2);
+end;
+
+class operator TPolarComplex.Divide(const Z1, Z2: TPolarComplex): TPolarComplex;
+begin
+  Result := Quotient(Z1, Z2);
+end;
+
+class operator TPolarComplex.Negative(const Z: TPolarComplex): TPolarComplex;
+begin
+  Result := Neg(Z);
+end;
+
+class operator TPolarComplex.Positive(const Z: TPolarComplex): TPolarComplex;
+begin
+  Result := Z;
+end;
+
+function TPolarComplex.AsString: string;
+begin
+  Result := ComplexToStr(Self);
+end;
+
+function TPolarComplex.Conjugate: TPolarComplex;
+begin
+  Result := JclMath.Conjugate(Self);
+end;
+
+function TPolarComplex.IsZero: Boolean;
+begin
+  Result := JclMath.IsZero(Self);
+end;
+
+function TPolarComplex.IsInfinite: Boolean;
+begin
+  Result := JclMath.IsInfinite(Self);
+end;
+
+function TPolarComplex.Power(const Exponent: TRectComplex): TPolarComplex;
+begin
+  Result := JclMath.Power(Self, Exponent);
+end;
+
+function TPolarComplex.Power(const Exponent: Float): TPolarComplex;
+begin
+  Result := JclMath.Power(Self, Exponent);
+end;
+
+function TPolarComplex.Power(const Exponent: Integer): TPolarComplex;
+begin
+  Result := JclMath.PowerInt(Self, Exponent);
+end;
+
+function TPolarComplex.Root(const K, N: Cardinal): TPolarComplex;
+begin
+  Result := JclMath.Root(Self, K, N);
 end;
 
 {$ENDIF SUPPORTS_CLASS_OPERATORS}

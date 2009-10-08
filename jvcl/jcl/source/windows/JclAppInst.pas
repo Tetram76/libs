@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009)                          $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-10-03 12:20:22 +0200 (sam. 03 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3036                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -126,8 +126,8 @@ function SendString(const Wnd, OriginatorWnd: HWND;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclAppInst.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 3036 $';
+    Date: '$Date: 2009-10-03 12:20:22 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -441,7 +441,7 @@ var
   PID: DWORD;
   Found: Boolean;
 begin
-  if (GetClassName(Wnd, ClassName, SizeOf(ClassName)) > 0) and
+  if (GetClassName(Wnd, ClassName, Length(ClassName) - 1) > 0) and
     (StrComp(ClassName, Data.WindowClassName) = 0) then
   begin
     GetWindowThreadProcessId(Wnd, @PID);
