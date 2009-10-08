@@ -51,9 +51,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-10-03 02:07:26 +0200 (sam. 03 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3031                                                                     $ }
+{ Author:        $Author:: SFarrow                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -640,7 +640,11 @@ type
     constructor Attach(VersionInfoData: Pointer; Size: Integer);
     constructor Create(const FileName: string); overload;
     {$IFDEF MSWINDOWS}
+    {$IFDEF FPC}
     constructor Create(const Window: HWND; Dummy: Pointer = nil); overload;
+    {$ELSE}
+    constructor Create(const Window: HWND); overload;
+    {$ENDIF}
     constructor Create(const Module: HMODULE); overload;
     {$ENDIF MSWINDOWS}
     destructor Destroy; override;
@@ -1033,8 +1037,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3031 $';
+    Date: '$Date: 2009-10-03 02:07:26 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -4804,7 +4808,11 @@ begin
 end;
 
 {$IFDEF MSWINDOWS}
-constructor TJclFileVersionInfo.Create(const Window: HWND; Dummy: Pointer);
+{$IFDEF FPC}
+constructor TJclFileVersionInfo.Create(const Window: HWND; Dummy: Pointer = nil);
+{$ELSE}
+constructor TJclFileVersionInfo.Create(const Window: HWND);
+{$ENDIF}
 type
   {$IFDEF SUPPORTS_UNICODE}
   TGetModuleFileNameEx =function(hProcess: THandle; hModule: HMODULE; FileName: PWideChar; nSize: DWORD): DWORD; stdcall;

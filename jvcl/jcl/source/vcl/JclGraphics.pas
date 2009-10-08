@@ -40,8 +40,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-13 00:02:32 +0200 (dim. 13 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3008                                                                     $ }
+{ Last modified: $Date:: 2009-09-29 22:00:11 +0200 (mar. 29 sept. 2009)                          $ }
+{ Revision:      $Rev:: 3026                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -567,8 +567,8 @@ procedure SetGamma(Gamma: Single = 0.7);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclGraphics.pas $';
-    Revision: '$Revision: 3008 $';
-    Date: '$Date: 2009-09-13 00:02:32 +0200 (dim. 13 sept. 2009) $';
+    Revision: '$Revision: 3026 $';
+    Date: '$Date: 2009-09-29 22:00:11 +0200 (mar. 29 sept. 2009) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -2306,9 +2306,9 @@ constructor TJclRegion.CreatePoly(const Points: TDynPointArray; Count: Integer;
 begin
   case FillMode of
     fmAlternate:
-      Create(CreatePolygonRgn(Points, Count, ALTERNATE), True);
+      Create(CreatePolygonRgn(Points[0], Count, ALTERNATE), True);
     fmWinding:
-      Create(CreatePolygonRgn(Points, Count, WINDING), True);
+      Create(CreatePolygonRgn(Points[0], Count, WINDING), True);
   end;
 end;
 
@@ -2317,9 +2317,9 @@ constructor TJclRegion.CreatePolyPolygon(const Points: TDynPointArray;
 begin
   case FillMode of
     fmAlternate:
-      Create(CreatePolyPolygonRgn(Points, Vertex, Count, ALTERNATE), True);
+      Create(CreatePolyPolygonRgn(Points[0], Vertex[0], Count, ALTERNATE), True);
     fmWinding:
-      Create(CreatePolyPolygonRgn(Points, Vertex, Count, WINDING), True);
+      Create(CreatePolyPolygonRgn(Points[0], Vertex[0], Count, WINDING), True);
   end;
 end;
 

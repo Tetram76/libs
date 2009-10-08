@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3020                                                                     $ }
+{ Last modified: $Date:: 2009-10-03 12:13:30 +0200 (sam. 03 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3035                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -93,8 +93,8 @@ procedure FinalizeOpenDialogHook;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclOpenDialogHooks.pas $';
-    Revision: '$Revision: 3020 $';
-    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009) $';
+    Revision: '$Revision: 3035 $';
+    Date: '$Date: 2009-10-03 12:13:30 +0200 (sam. 03 oct. 2009) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -238,6 +238,7 @@ begin
   FParentWnd := GetParent(FHandle);
   if IsWin2k or IsWinXP then
     FOldParentWndInstance := Pointer(SetWindowLongPtr(FParentWnd, GWLP_WNDPROC, LONG_PTR(FParentWndInstance)));
+  DoShow;
 end;
 
 procedure TJclOpenDialogHook.DoClose;

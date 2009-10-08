@@ -45,8 +45,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009)                          $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2009-10-05 16:47:30 +0200 (lun. 05 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3039                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -99,6 +99,10 @@ const
   CLSID_CFormatLzma     : TGUID = '{23170F69-40C1-278A-1000-0001100A0000}';
   CLSID_CFormatLzma86   : TGUID = '{23170F69-40C1-278A-1000-0001100B0000}';
   CLSID_CFormatXz       : TGUID = '{23170F69-40C1-278A-1000-0001100C0000}';
+  CLSID_CFormatMslz     : TGUID = '{23170F69-40C1-278A-1000-000110D50000}';
+  CLSID_CFormatFlv      : TGUID = '{23170F69-40C1-278A-1000-000110D60000}';
+  CLSID_CFormatSwf      : TGUID = '{23170F69-40C1-278A-1000-000110D70000}';
+  CLSID_CFormatSwfc     : TGUID = '{23170F69-40C1-278A-1000-000110D80000}';
   CLSID_CFormatNtfs     : TGUID = '{23170F69-40C1-278A-1000-000110D90000}';
   CLSID_CFormatFat      : TGUID = '{23170F69-40C1-278A-1000-000110DA0000}';
   CLSID_CFormatMbr      : TGUID = '{23170F69-40C1-278A-1000-000110DB0000}';

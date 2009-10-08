@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-23 15:16:08 +0200 (mer. 23 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3022                                                                     $ }
+{ Last modified: $Date:: 2009-10-05 19:06:06 +0200 (lun. 05 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3041                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -101,6 +101,7 @@ uses
    |         |-- TJclTarCompressArchive     handled by sevenzip http://sevenzip.sourceforge.net/
    |         |-- TJclGZipCompressArchive    handled by sevenzip http://sevenzip.sourceforge.net/
    |         |-- TJclXzCompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
+   |         |-- TJclSwfcCompressArchive    handled by sevenzip http://sevenzip.sourceforge.net/
    |
    |-- TJclDecompressArchive
    |    |
@@ -141,7 +142,10 @@ uses
    |         |-- TJclFatDecompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
    |         |-- TJclMbrDecompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
    |         |-- TJclVhdDecompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
-
+   |         |-- TJclMslzDecompressArchive     handled by sevenzip http://sevenzip.sourceforge.net/
+   |         |-- TJclFlvDecompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
+   |         |-- TJclSwfDecompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
+   |         |-- TJclSwfcDecompressArchive     handled by sevenzip http://sevenzip.sourceforge.net/
    |
    |-- TJclUpdateArchive
         |
@@ -153,7 +157,8 @@ uses
              |-- TJclTarUpdateArchive       handled by sevenzip http://sevenzip.sourceforge.net/
              |-- TJclGZipUpdateArchive      handled by sevenzip http://sevenzip.sourceforge.net/
              |-- TJclXzUpdateArchive        handled by sevenzip http://sevenzip.sourceforge.net/
-  
+             |-- TJclSwfcUpdateArchive      handled by sevenzip http://sevenzip.sourceforge.net/
+
 **************************************************************************************************}
 
 type
@@ -1316,6 +1321,14 @@ type
     procedure SetCompressionMethod(Value: TJclCompressionMethod);
   end;
 
+  TJclSwfcCompressArchive = class(TJclSevenzipCompressArchive, IInterface)
+  protected
+    function GetCLSID: TGUID; override;
+  public
+    class function ArchiveExtensions: string; override;
+    class function ArchiveName: string; override;
+  end;
+
 // sevenzip classes for decompression
 type
   TJclSevenzipDecompressArchive = class(TJclDecompressArchive, IInterface)
@@ -1668,6 +1681,38 @@ type
     class function ArchiveName: string; override;
   end;
 
+  TJclMslzDecompressArchive = class(TJclSevenzipDecompressArchive, IInterface)
+  protected
+    function GetCLSID: TGUID; override;
+  public
+    class function ArchiveExtensions: string; override;
+    class function ArchiveName: string; override;
+  end;
+
+  TJclFlvDecompressArchive = class(TJclSevenzipDecompressArchive, IInterface)
+  protected
+    function GetCLSID: TGUID; override;
+  public
+    class function ArchiveExtensions: string; override;
+    class function ArchiveName: string; override;
+  end;
+
+  TJclSwfDecompressArchive = class(TJclSevenzipDecompressArchive, IInterface)
+  protected
+    function GetCLSID: TGUID; override;
+  public
+    class function ArchiveExtensions: string; override;
+    class function ArchiveName: string; override;
+  end;
+
+  TJclSwfcDecompressArchive = class(TJclSevenzipDecompressArchive, IInterface)
+  protected
+    function GetCLSID: TGUID; override;
+  public
+    class function ArchiveExtensions: string; override;
+    class function ArchiveName: string; override;
+  end;
+
 //sevenzip classes for updates (read and write)
 type
   TJclSevenzipUpdateArchive = class(TJclOutOfPlaceUpdateArchive, IInterface)
@@ -1873,14 +1918,23 @@ type
     function GetSupportedCompressionMethods: TJclCompressionMethods;
     procedure SetCompressionMethod(Value: TJclCompressionMethod);
   end;
+
+  TJclSwfcUpdateArchive = class(TJclSevenzipUpdateArchive, IInterface)
+  protected
+    function GetCLSID: TGUID; override;
+  public
+    class function ArchiveExtensions: string; override;
+    class function ArchiveName: string; override;
+  end;
+
 {$ENDIF MSWINDOWS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompression.pas $';
-    Revision: '$Revision: 3022 $';
-    Date: '$Date: 2009-09-23 15:16:08 +0200 (mer. 23 sept. 2009) $';
+    Revision: '$Revision: 3041 $';
+    Date: '$Date: 2009-10-05 19:06:06 +0200 (lun. 05 oct. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2030,7 +2084,7 @@ begin
       AFormat := CompressFormats[IndexFormat];
       StrTokenToStrings(AFormat.StreamExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if IsFileNameMatch(Filters.Strings[IndexFilter], AFileName) then
+        if IsFileNameMatch(AFileName, Filters.Strings[IndexFilter]) then
       begin
         Result := AFormat;
         Break;
@@ -2057,7 +2111,7 @@ begin
       AFormat := DecompressFormats[IndexFormat];
       StrTokenToStrings(AFormat.StreamExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if IsFileNameMatch(Filters.Strings[IndexFilter], AFileName) then
+        if IsFileNameMatch(AFileName, Filters.Strings[IndexFilter]) then
       begin
         Result := AFormat;
         Break;
@@ -3852,12 +3906,15 @@ begin
   FCompressFormats := TList.Create;
   FDecompressFormats := TList.Create;
   FUpdateFormats := TList.Create;
+  // register compression archives
   RegisterFormat(TJclZipCompressArchive);
   RegisterFormat(TJclBZ2CompressArchive);
   RegisterFormat(TJcl7zCompressArchive);
   RegisterFormat(TJclTarCompressArchive);
   RegisterFormat(TJclGZipCompressArchive);
   RegisterFormat(TJclXzCompressArchive);
+  RegisterFormat(TJclSwfcCompressArchive);
+  // register decompression archives
   RegisterFormat(TJclZipDecompressArchive);
   RegisterFormat(TJclBZ2DecompressArchive);
   RegisterFormat(TJclRarDecompressArchive);
@@ -3891,11 +3948,17 @@ begin
   RegisterFormat(TJclFatDecompressArchive);
   RegisterFormat(TJclMbrDecompressArchive);
   RegisterFormat(TJclVhdDecompressArchive);
+  RegisterFormat(TJclMslzDecompressArchive);
+  RegisterFormat(TJclFlvDecompressArchive);
+  RegisterFormat(TJclSwfDecompressArchive);
+  RegisterFormat(TJclSwfcDecompressArchive);
+  // register update archives
   RegisterFormat(TJclZipUpdateArchive);
   RegisterFormat(TJclBZ2UpdateArchive);
   RegisterFormat(TJcl7zUpdateArchive);
   RegisterFormat(TJclTarUpdateArchive);
   RegisterFormat(TJclGZipUpdateArchive);
+  RegisterFormat(TJclSwfcUpdateArchive);
 end;
 
 destructor TJclCompressionArchiveFormats.Destroy;
@@ -3920,7 +3983,7 @@ begin
       AFormat := CompressFormats[IndexFormat];
       StrTokenToStrings(AFormat.ArchiveExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if IsFileNameMatch(Filters.Strings[IndexFilter], AFileName) then
+        if IsFileNameMatch(AFileName, Filters.Strings[IndexFilter]) then
       begin
         Result := AFormat;
         Break;
@@ -3947,7 +4010,7 @@ begin
       AFormat := DecompressFormats[IndexFormat];
       StrTokenToStrings(AFormat.ArchiveExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if IsFileNameMatch(Filters.Strings[IndexFilter], AFileName) then
+        if IsFileNameMatch(AFileName, Filters.Strings[IndexFilter]) then
       begin
         Result := AFormat;
         Break;
@@ -3974,7 +4037,7 @@ begin
       AFormat := UpdateFormats[IndexFormat];
       StrTokenToStrings(AFormat.ArchiveExtensions, DirSeparator, Filters);
       for IndexFilter := 0 to Filters.Count - 1 do
-        if StrMatches(Filters.Strings[IndexFilter], AFileName) then
+        if IsFileNameMatch(AFileName, Filters.Strings[IndexFilter]) then
       begin
         Result := AFormat;
         Break;
@@ -6527,6 +6590,23 @@ begin
   FCompressionMethod := Value;
 end;
 
+//=== { TJclSwfcCompressArchive } ============================================
+
+class function TJclSwfcCompressArchive.ArchiveExtensions: string;
+begin
+  Result := LoadResString(@RsCompressionSwfcExtensions);
+end;
+
+class function TJclSwfcCompressArchive.ArchiveName: string;
+begin
+  Result := LoadResString(@RsCompressionSwfcName);
+end;
+
+function TJclSwfcCompressArchive.GetCLSID: TGUID;
+begin
+  Result := CLSID_CFormatSwfc;
+end;
+
 //=== { TJclSevenzipOpenCallback } ===========================================
 
 type
@@ -7645,6 +7725,74 @@ begin
   Result := CLSID_CFormatVhd;
 end;
 
+//=== { TJclMslzDecompressArchive } ==========================================
+
+class function TJclMslzDecompressArchive.ArchiveExtensions: string;
+begin
+  Result := LoadResString(@RsCompressionMslzExtensions);
+end;
+
+class function TJclMslzDecompressArchive.ArchiveName: string;
+begin
+  Result := LoadResString(@RsCompressionMslzName);
+end;
+
+function TJclMslzDecompressArchive.GetCLSID: TGUID;
+begin
+  Result := CLSID_CFormatMslz;
+end;
+
+//=== { TJclFlvDecompressArchive } ===========================================
+
+class function TJclFlvDecompressArchive.ArchiveExtensions: string;
+begin
+  Result := LoadResString(@RsCompressionFlvExtensions);
+end;
+
+class function TJclFlvDecompressArchive.ArchiveName: string;
+begin
+  Result := LoadResString(@RsCompressionFlvName);
+end;
+
+function TJclFlvDecompressArchive.GetCLSID: TGUID;
+begin
+  Result := CLSID_CFormatFlv;
+end;
+
+//=== { TJclSwfDecompressArchive } ===========================================
+
+class function TJclSwfDecompressArchive.ArchiveExtensions: string;
+begin
+  Result := LoadResString(@RsCompressionSwfExtensions);
+end;
+
+class function TJclSwfDecompressArchive.ArchiveName: string;
+begin
+  Result := LoadResString(@RsCompressionSwfName);
+end;
+
+function TJclSwfDecompressArchive.GetCLSID: TGUID;
+begin
+  Result := CLSID_CFormatSwf;
+end;
+
+//=== { TJclSwfcDecompressArchive } ==========================================
+
+class function TJclSwfcDecompressArchive.ArchiveExtensions: string;
+begin
+  Result := LoadResString(@RsCompressionSwfcExtensions);
+end;
+
+class function TJclSwfcDecompressArchive.ArchiveName: string;
+begin
+  Result := LoadResString(@RsCompressionSwfcName);
+end;
+
+function TJclSwfcDecompressArchive.GetCLSID: TGUID;
+begin
+  Result := CLSID_CFormatSwfc;
+end;
+
 //=== { TJclSevenzipUpdateArchive } ==========================================
 
 destructor TJclSevenzipUpdateArchive.Destroy;
@@ -8588,6 +8736,23 @@ begin
   CheckNotDecompressing;
   CheckNotCompressing;
   FCompressionMethod := Value;
+end;
+
+//=== { TJclSwfcUpdateArchive } ==============================================
+
+class function TJclSwfcUpdateArchive.ArchiveExtensions: string;
+begin
+  Result := LoadResString(@RsCompressionSwfcExtensions);
+end;
+
+class function TJclSwfcUpdateArchive.ArchiveName: string;
+begin
+  Result := LoadResString(@RsCompressionSwfcName);
+end;
+
+function TJclSwfcUpdateArchive.GetCLSID: TGUID;
+begin
+  Result := CLSID_CFormatSwfc;
 end;
 
 {$ENDIF MSWINDOWS}
