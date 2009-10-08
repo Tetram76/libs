@@ -456,7 +456,7 @@ interface
     {$UNDEF UseDigestAuthentication}
     {$UNDEF UseContentCoding}
 {$ENDIF}
-
+{$D+}
 uses
     Messages,
 {$IFDEF USEWINDOWS}
