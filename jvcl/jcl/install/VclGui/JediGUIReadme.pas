@@ -10,7 +10,7 @@
 { ANY KIND, either express or implied. See the License for the specific language governing rights  }
 { and limitations under the License.                                                               }
 {                                                                                                  }
-{ The Original Code is JediGUIProfiles.pas.                                                        }
+{ The Original Code is JediGUIReadme.pas.                                                          }
 {                                                                                                  }
 { The Initial Developer of the Original Code is Florent Ouchet. Portions created by Florent Ouchet }
 { are Copyright (C) of Florent Ouchet. All Rights Reserved.                                        }
@@ -19,34 +19,42 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-18 15:53:34 +0200 (ven., 18 sept. 2009)                         $ }
-{ Revision:      $Rev:: 3014                                                                     $ }
+{ Last modified: $Date:: 2009-08-21 17:40:34 +0200 (ven., 21 août 2009)                         $ }
+{ Revision:      $Rev:: 2954                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-unit JediGUIProfiles;
+unit JediGUIReadme;
 
 {$I jcl.inc}
+{$I crossplatform.inc}
 
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, 
-  Dialogs, JediInstall, StdCtrls, ComCtrls;
+  Windows, Messages,
+  SysUtils, Classes,
+  Graphics, Controls, Forms, Dialogs, StdCtrls, ComCtrls,
+  JediInstall;
 
 type
-  TProfilesFrame = class(TFrame, IJediProfilesPage, IJediPage)
-    MemoComment: TMemo;
+  TReadmeFrame = class(TFrame, IJediReadmePage, IJediPage)
+    ReadmePane: TRichEdit;
+    procedure ReadmePaneDblClick(Sender: TObject);
+  private
+    FReadmeFileName: string;
   public
-    constructor Create(AOwner: TComponent); override;
     // IJediPage
     function GetCaption: string;
     procedure SetCaption(const Value: string);
     function GetHintAtPos(ScreenX, ScreenY: Integer): string;
-    // IJediProfilesPage
-    function GetProfileEnabled(Index: Integer): Boolean;
-    procedure SetProfileEnabled(Index: Integer; Value: Boolean);
+    procedure Show;
+    // IJediReadmePage
+    procedure SetReadmeFileName(const Value: string);
+    function GetReadmeFileName: string;
+
+    property ReadmeFileName: string read GetReadmeFileName write SetReadmeFileName;
   end;
 
 implementation
@@ -54,54 +62,47 @@ implementation
 {$R *.dfm}
 
 uses
-  JediInstallResources;
+  JclShell;
 
-//=== { TProfilesFrame } =====================================================
-
-constructor TProfilesFrame.Create(AOwner: TComponent);
-var
-  Index: Integer;
-  ACheckBox: TCheckBox;
-  AProfilesManager: IJediProfilesManager;
-begin
-  inherited Create(AOwner);
-  MemoComment.Lines.Text := LoadResString(@RsGUIProfiles);
-  MemoComment.WordWrap := True;
-  AProfilesManager := InstallCore.ProfilesManager;
-  for Index := 0 to AProfilesManager.ProfileCount - 1 do
-  begin
-    ACheckBox := TCheckBox.Create(Self);
-    ACheckBox.SetBounds(48, Index * 32 + 100, Width - 96, ACheckBox.Height);
-    ACheckBox.Anchors := [akLeft, akTop, akRight];
-    ACheckBox.Parent := Self;
-    ACheckBox.Checked := True;
-    ACheckBox.Caption := AProfilesManager.ProfileNames[Index];
-  end;
-end;
-
-function TProfilesFrame.GetCaption: string;
+function TReadmeFrame.GetCaption: string;
 begin
   Result := (Parent as TTabSheet).Caption;
 end;
 
-function TProfilesFrame.GetHintAtPos(ScreenX, ScreenY: Integer): string;
+function TReadmeFrame.GetReadmeFileName: string;
 begin
-  Result := '';
+  Result := FReadmeFileName;
 end;
 
-function TProfilesFrame.GetProfileEnabled(Index: Integer): Boolean;
+procedure TReadmeFrame.ReadmePaneDblClick(Sender: TObject);
 begin
-  Result := (Controls[Index + 1] as TCheckBox).Checked;
+  { TODO: implement for Unix }
+  ShellExecEx(ReadmeFileName);
 end;
 
-procedure TProfilesFrame.SetCaption(const Value: string);
+procedure TReadmeFrame.SetCaption(const Value: string);
 begin
   (Parent as TTabSheet).Caption := Value;
 end;
 
-procedure TProfilesFrame.SetProfileEnabled(Index: Integer; Value: Boolean);
+function TReadmeFrame.GetHintAtPos(ScreenX, ScreenY: Integer): string;
 begin
-  (Controls[Index + 1] as TCheckBox).Checked := Value;
+  Result := '';
+end;
+
+procedure TReadmeFrame.SetReadmeFileName(const Value: string);
+begin
+  FReadmeFileName := Value;
+  if FileExists(Value) then
+    ReadmePane.Lines.LoadFromFile(Value);
+end;
+
+procedure TReadmeFrame.Show;
+var
+  ATabSheet: TTabSheet;
+begin
+  ATabSheet := Parent as TTabSheet;
+  (ATabSheet.Parent as TPageControl).ActivePage := ATabSheet;
 end;
 
 end.
