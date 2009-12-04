@@ -257,7 +257,7 @@ type
     { Remove the Registered Exception class. }
     procedure UnRegisterExceptions(Excpt: EUIBExceptionClass);
     { Create a database with a default page size of 4096. }
-    procedure CreateDatabase(PageSize: Integer = 4096);
+    procedure CreateDatabase(DefaultCharacterSet: TCharacterSet; PageSize: Integer = 4096);
     { Drop the database. }
     procedure DropDatabase;
     { Return a TMetaDatabase class corresponding to the current connection. }
@@ -1357,23 +1357,28 @@ begin
 {$ENDIF}
 end;
 
-procedure TUIBDataBase.CreateDatabase(PageSize: Integer);
+procedure TUIBDataBase.CreateDatabase(DefaultCharacterSet: TCharacterSet; PageSize: Integer);
 var TrHandle: IscTrHandle;
 const
-  CreateDb = 'CREATE DATABASE ''%s'' USER ''%s'' PASSWORD ''%s'' '+
-    'PAGE_SIZE %d DEFAULT CHARACTER SET %s';
+  CreateDb = 'CREATE DATABASE ''%s'' USER ''%s'' PASSWORD ''%s'' ' +
+    'SET NAMES ''%s'' PAGE_SIZE %d DEFAULT CHARACTER SET %s';
 begin
   TrHandle := nil;
   Connected := False;
   FLibrary.Load(FLiBraryName);
 {$IFDEF UNICODE}
   FLibrary.DSQLExecuteImmediate(FDbHandle, TrHandle,
-    MBUEncode(Format(CreateDb, [DatabaseName, UserName, PassWord, PageSize,
-    CharacterSetStr[CharacterSet]]), CharacterSetCP[CharacterSet]), SQLDialect);
+    MBUEncode(Format(CreateDb, [DatabaseName, UserName, PassWord,
+                     CharacterSetStr[CharacterSet],
+                     PageSize, CharacterSetStr[DefaultCharacterSet]]),
+              CharacterSetCP[CharacterSet]),
+    SQLDialect);
 {$ELSE}
   FLibrary.DSQLExecuteImmediate(FDbHandle, TrHandle,
-    Format(CreateDb, [DatabaseName, UserName, PassWord, PageSize,
-    CharacterSetStr[CharacterSet]]), SQLDialect);
+    Format(CreateDb, [DatabaseName, UserName, PassWord,
+           CharacterSetStr[CharacterSet],
+           PageSize, CharacterSetStr[DefaultCharacterSet]]),
+    SQLDialect);
 {$ENDIF}
 end;
 
@@ -4918,7 +4923,7 @@ end;
 constructor TUIBEventThread.Create(Owner: TUIBEvents;
   Block: Integer; SyncMainThread: boolean);
 begin
-  inherited Create(True);
+  inherited Create(false);
   FSyncMainThread := SyncMainThread;
   FCurrentEvent := 0;
   FEventID := 0;
@@ -4929,7 +4934,6 @@ begin
   FSignal := TSimpleEvent.Create;
   FBlock := Block;
   OnTerminate := SyncTerminate;
-  Resume;
 end;
 
 destructor TUIBEventThread.Destroy;

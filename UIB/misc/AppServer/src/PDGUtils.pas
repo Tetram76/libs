@@ -577,7 +577,7 @@ function StreamToStr(stream: TStream): string;
 begin
   stream.Seek(0, soFromBeginning);
   SetLength(Result, stream.Size div SizeOf(Char));
-  stream.Read(PWideChar(Result)^, stream.Size);
+  stream.Read(PChar(Result)^, stream.Size);
 end;
 
 function FileToString(const FileName: string): string;
@@ -635,7 +635,8 @@ end;
 
 function TPooledMemoryStream.LoadFromSocket(socket: longint; readsize: boolean = true): boolean;
 var
-  s, count, i: integer;
+  count, i, j: integer;
+  p: PByte;
 begin
   Result := False;
   if readsize then
@@ -644,15 +645,20 @@ begin
     SetSize(count);
   end else
     count := Size;
-  i := 0;
-  while count > 0 do
+
+  for i := 0 to FList.Count - 1 do
   begin
-    if count > FPageSize then
-      s := FPageSize else
-      s := count;
-    if receive(socket, FList[i]^, s, 0) <> s then exit;
-    dec(count, s);
-    inc(i);
+    p := FList[i];
+    for j := 0 to FPageSize - 1 do
+    begin
+      if count > 0 then
+      begin
+        if receive(socket, p^, 1, 0) <> 1 then exit;
+        dec(count);
+      end else
+        Break;
+      inc(p);
+    end;
   end;
   Result := true;
 end;

@@ -5211,6 +5211,9 @@ end;
       varCurrency:                       SetAsCurrency(Index, Value);
       varDate:                           SetAsDateTime(Index, Value);
       varOleStr, varString:              SetAsString(Index, Value);
+{$IFDEF UNICODE}
+      varUString:                        SetAsString(Index, Value);
+{$ENDIF}
 {$IFDEF IB7_UP}
       varBoolean:                        SetAsBoolean(Index, Value);
 {$ENDIF}
@@ -5250,6 +5253,7 @@ end;
       if FXSQLDA.sqlvar[Result].AliasNameLength = Length(name) then
         if StrLIComp(PansiChar(@FXSQLDA.sqlvar[Result].aliasname), PAnsiChar(Name),
           FXSQLDA.sqlvar[Result].AliasNameLength) = 0 then Exit;
+
     raise Exception.CreateFmt(EUIB_FIELDSTRNOTFOUND, [name]);
   end;
 
