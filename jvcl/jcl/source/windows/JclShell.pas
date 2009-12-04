@@ -37,8 +37,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-02 11:02:42 +0200 (dim. 02 août 2009)                          $ }
-{ Revision:      $Rev:: 2907                                                                     $ }
+{ Last modified: $Date:: 2009-11-25 22:14:27 +0100 (mer. 25 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3086                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -202,8 +202,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclShell.pas $';
-    Revision: '$Revision: 2907 $';
-    Date: '$Date: 2009-08-02 11:02:42 +0200 (dim. 02 août 2009) $';
+    Revision: '$Revision: 3086 $';
+    Date: '$Date: 2009-11-25 22:14:27 +0100 (mer. 25 nov. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -450,22 +450,31 @@ var
   FolderPidl: PItemIdList;
 begin
   ClearEnumFolderRec(F, False, False);
-  SHGetDesktopFolder(DesktopFolder);
-  if SpecialFolder = CSIDL_DESKTOP then
-    F.Folder := DesktopFolder
-  else
+  Result := Succeeded(SHGetDesktopFolder(DesktopFolder));
+  if Result then
   begin
-    SHGetSpecialFolderLocation(0, SpecialFolder, FolderPidl);
-    try
-      DesktopFolder.BindToObject(FolderPidl, nil, IID_IShellFolder, Pointer(F.Folder));
-    finally
-      PidlFree(FolderPidl);
+    if SpecialFolder = CSIDL_DESKTOP then
+      F.Folder := DesktopFolder
+    else
+    begin
+      Result := Succeeded(SHGetSpecialFolderLocation(0, SpecialFolder, FolderPidl));
+      if Result then
+      begin
+        try
+          Result := Succeeded(DesktopFolder.BindToObject(FolderPidl, nil, IID_IShellFolder, Pointer(F.Folder)));
+        finally
+          CoTaskMemFree(FolderPidl);
+        end;
+      end;
     end;
   end;
-  F.Folder.EnumObjects(0, EnumFolderFlagsToCardinal(Flags), F.EnumIdList);
-  Result := SHEnumFolderNext(F);
-  if not Result then
-    SHEnumFolderClose(F);
+  if Result then
+  begin
+    F.Folder.EnumObjects(0, EnumFolderFlagsToCardinal(Flags), F.EnumIdList);
+    Result := SHEnumFolderNext(F);
+    if not Result then
+      SHEnumFolderClose(F);
+  end;
 end;
 
 function SHEnumFolderFirst(const Folder: string; Flags: TEnumFolderFlags;
@@ -495,7 +504,7 @@ begin
   if Succeeded(SHGetSpecialFolderLocation(0, FolderID, FolderPidl)) then
   begin
     Result := PidlToPath(FolderPidl);
-    PidlFree(FolderPidl);
+    CoTaskMemFree(FolderPidl);
   end
   else
     Result := '';
@@ -685,13 +694,11 @@ end;
 
 function OpenSpecialFolder(FolderID: Integer; Parent: THandle; Explore: Boolean): Boolean;
 var
-  Malloc: IMalloc;
   Pidl: PItemIDList;
   Sei: TShellExecuteInfo;
 begin
   Result := False;
-  if Succeeded(SHGetMalloc(Malloc)) and
-    Succeeded(SHGetSpecialFolderLocation(Parent, FolderID, Pidl)) then
+  if Succeeded(SHGetSpecialFolderLocation(Parent, FolderID, Pidl)) then
   begin
     ResetMemory(Sei, SizeOf(Sei));
     with Sei do
@@ -718,7 +725,7 @@ begin
     {$IFNDEF TYPEDADDRESS_ON}
     {$TYPEDADDRESS OFF}
     {$ENDIF ~TYPEDADDRESS_ON}
-    Malloc.Free(Pidl);
+    CoTaskMemFree(Pidl);
   end;
 end;
 
@@ -816,7 +823,7 @@ begin
         end;
       end;
     end;
-    PidlFree(Drives);
+    CoTaskMemFree(Drives);
   end;
 end;
 
@@ -925,6 +932,7 @@ begin
     Result := True
   else
   begin
+    Malloc := nil;
     if Succeeded(SHGetMalloc(Malloc)) and (Malloc.DidAlloc(IdList) > 0) then
     begin
       Malloc.Free(IdList);
@@ -1047,11 +1055,15 @@ begin
   SetLength(Path, MAX_PATH);
   if Succeeded(SHGetSpecialFolderLocation(0, Folder, Pidl)) then
   begin
-    Path := PidltoPath(Pidl);
-    if Path <> '' then
-    begin
-      StrResetLength(Path);
-      Result := ShellLinkCreate(Link, PathAddSeparator(Path) + FileName);
+    try
+      Path := PidltoPath(Pidl);
+      if Path <> '' then
+      begin
+        StrResetLength(Path);
+        Result := ShellLinkCreate(Link, PathAddSeparator(Path) + FileName);
+      end;
+    finally
+      CoTaskMemFree(Pidl);
     end;
   end;
 end;

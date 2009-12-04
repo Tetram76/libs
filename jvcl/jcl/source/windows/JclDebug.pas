@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2009-11-04 13:12:24 +0100 (mer. 04 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3064                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -45,8 +45,6 @@ unit JclDebug;
 interface
 
 {$I jcl.inc}
-{$RANGECHECKS OFF}
-{$OVERFLOWCHECKS OFF}
 
 uses
   {$IFDEF UNITVERSIONING}
@@ -116,7 +114,7 @@ type
   PJclMapAddress = ^TJclMapAddress;
   TJclMapAddress = packed record
     Segment: Word;
-    Offset: Integer;
+    Offset: TJclAddr;
   end;
 
   PJclMapString = PAnsiChar;
@@ -1002,8 +1000,8 @@ function IsIgnoredException(const ExceptionClass: TClass): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3064 $';
+    Date: '$Date: 2009-11-04 13:12:24 +0100 (mer. 04 nov. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1671,7 +1669,7 @@ begin
   //                     only one segment of code
   // after Delphi 2005: segments started at code base address (module base address + $10000)
   //                    2 segments of code
-  if (Length(FSegmentClasses) > 0) and (FSegmentClasses[0].Addr > 0) then
+  if (Length(FSegmentClasses) > 0) and (FSegmentClasses[0].Addr > 0) and (Addr > 0) then
     // Delphi 2005 and later
     // The first segment should be code starting at module base address + $10000
     Result := Addr - FSegmentClasses[0].Addr
@@ -1750,7 +1748,7 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    VA := AddrToVA(TJclAddr(Address.Offset) + FSegmentClasses[SegIndex].Addr);
+    VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
     { Starting with Delphi 2005, "empty" units are listes with the last line and
       the VA 0001:00000000. When we would accept 0 VAs here, System.pas functions
       could be mapped to other units and line numbers. Discaring such items should
@@ -1855,7 +1853,7 @@ begin
     if FProcNamesCnt mod 256 = 0 then
       SetLength(FProcNames, FProcNamesCnt + 256);
     FProcNames[FProcNamesCnt].Segment := FSegmentClasses[SegIndex].Segment;
-    FProcNames[FProcNamesCnt].VA := AddrToVA(TJclAddr(Address.Offset) + FSegmentClasses[SegIndex].Addr);
+    FProcNames[FProcNamesCnt].VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
     FProcNames[FProcNamesCnt].ProcName := Name;
     Inc(FProcNamesCnt);
     Break;
@@ -1902,7 +1900,7 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    VA := AddrToVA(TJclAddr(Address.Offset) + FSegmentClasses[SegIndex].Addr);
+    VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
     if FSegmentCnt mod 16 = 0 then
       SetLength(FSegments, FSegmentCnt + 16);
     FSegments[FSegmentCnt].Segment := FSegmentClasses[SegIndex].Segment;
@@ -2299,6 +2297,8 @@ begin
   inherited Destroy;
 end;
 
+{$OVERFLOWCHECKS OFF}
+
 function TJclBinDebugGenerator.CalculateCheckSum: Boolean;
 var
   Header: PJclDbgHeader;
@@ -2322,6 +2322,10 @@ begin
     Header^.CheckSum := CheckSum;
   end;
 end;
+
+{$IFDEF OVERFLOWCHECKS_ON}
+{$OVERFLOWCHECKS ON}
+{$ENDIF OVERFLOWCHECKS_ON}
 
 procedure TJclBinDebugGenerator.CreateData;
 var
@@ -2582,6 +2586,8 @@ begin
   end;
 end;
 
+{$OVERFLOWCHECKS OFF}
+
 procedure TJclBinDebugScanner.CheckFormat;
 var
   CheckSum: Integer;
@@ -2606,6 +2612,10 @@ begin
     FValidFormat := (CheckSum = Header^.CheckSum);
   end;
 end;
+
+{$IFDEF OVERFLOWCHECKS_ON}
+{$OVERFLOWCHECKS ON}
+{$ENDIF OVERFLOWCHECKS_ON}
 
 function TJclBinDebugScanner.DataToStr(A: Integer): string;
 var
@@ -4506,7 +4516,10 @@ begin
     IgnoreLevels := Cardinal(-1); // because of the "IgnoreLevels + 1" in TJclStackInfoList.StoreToList()
   if OSException then
   begin
-    Inc(IgnoreLevels); // => HandleAnyException
+    if IgnoreLevels = Cardinal(-1) then
+      IgnoreLevels := 0
+    else
+      Inc(IgnoreLevels); // => HandleAnyException
     FirstCaller := ExceptAddr;
   end
   else
@@ -4828,7 +4841,8 @@ procedure TJclStackInfoList.StoreToList(const StackInfo: TStackInfo);
 var
   Item: TJclStackInfoItem;
 begin
-  if StackInfo.Level > IgnoreLevels + 1 then
+  if ((IgnoreLevels = Cardinal(-1)) and (StackInfo.Level > 0)) or
+     (StackInfo.Level > (IgnoreLevels + 1)) then
   begin
     Item := TJclStackInfoItem.Create;
     Item.FStackInfo := StackInfo;
@@ -5022,84 +5036,88 @@ begin
   // todo: 64 bit version
 
   // First check that the address is within range of our code segment!
-  C8P := PDWORD(CodeAddr - 8);
-  C4P := PDWORD(CodeAddr - 4);
-  Result := (CodeAddr > 8) and ValidCodeAddr(TJclAddr(C8P), FModuleInfoList) and not IsBadReadPtr(C8P, 8);
-
-  // Now check to see if the instruction preceding the return address
-  // could be a valid CALL instruction
+  Result := CodeAddr > 8;
   if Result then
   begin
-    try
-      CodeDWORD8 := PDWORD(C8P)^;
-      CodeDWORD4 := PDWORD(C4P)^;
-      // CodeDWORD8 = (ReturnAddr-5):(ReturnAddr-6):(ReturnAddr-7):(ReturnAddr-8)
-      // CodeDWORD4 = (ReturnAddr-1):(ReturnAddr-2):(ReturnAddr-3):(ReturnAddr-4)
+    C8P := PDWORD(CodeAddr - 8);
+    C4P := PDWORD(CodeAddr - 4);
+    Result := ValidCodeAddr(TJclAddr(C8P), FModuleInfoList) and not IsBadReadPtr(C8P, 8);
 
-      // ModR/M bytes contain the following bits:
-      // Mod        = (76)
-      // Reg/Opcode = (543)
-      // R/M        = (210)
-      RM1 := (CodeDWORD4 shr 24) and $7;
-      RM2 := (CodeDWORD4 shr 16) and $7;
-      //RM3 := (CodeDWORD4 shr 8)  and $7;
-      //RM4 :=  CodeDWORD4         and $7;
-      RM5 := (CodeDWORD8 shr 24) and $7;
-      //RM6 := (CodeDWORD8 shr 16) and $7;
-      //RM7 := (CodeDWORD8 shr 8)  and $7;
+    // Now check to see if the instruction preceding the return address
+    // could be a valid CALL instruction
+    if Result then
+    begin
+      try
+        CodeDWORD8 := PDWORD(C8P)^;
+        CodeDWORD4 := PDWORD(C4P)^;
+        // CodeDWORD8 = (ReturnAddr-5):(ReturnAddr-6):(ReturnAddr-7):(ReturnAddr-8)
+        // CodeDWORD4 = (ReturnAddr-1):(ReturnAddr-2):(ReturnAddr-3):(ReturnAddr-4)
 
-      // Check the instruction prior to the potential call site.
-      // We consider it a valid call site if we find a CALL instruction there
-      // Check the most common CALL variants first
-      if ((CodeDWORD8 and $FF000000) = $E8000000) then
-        // 5 bytes, "CALL NEAR REL32" (E8 cd)
-        CallInstructionSize := 5
-      else
-      if ((CodeDWORD4 and $F8FF0000) = $10FF0000) and not (RM1 in [4, 5]) then
-        // 2 bytes, "CALL NEAR [EAX]" (FF /2) where Reg = 010, Mod = 00, R/M <> 100 (1 extra byte)
-        // and R/M <> 101 (4 extra bytes)
-        CallInstructionSize := 2
-      else
-      if ((CodeDWORD4 and $F8FF0000) = $D0FF0000) then
-        // 2 bytes, "CALL NEAR EAX" (FF /2) where Reg = 010 and Mod = 11
-        CallInstructionSize := 2
-      else
-      if ((CodeDWORD4 and $00FFFF00) = $0014FF00) then
-        // 3 bytes, "CALL NEAR [EAX+EAX*i]" (FF /2) where Reg = 010, Mod = 00 and RM = 100
-        // SIB byte not validated
-        CallInstructionSize := 3
-      else
-      if ((CodeDWORD4 and $00F8FF00) = $0050FF00) and (RM2 <> 4) then
-        // 3 bytes, "CALL NEAR [EAX+$12]" (FF /2) where Reg = 010, Mod = 01 and RM <> 100 (1 extra byte)
-        CallInstructionSize := 3
-      else
-      if ((CodeDWORD4 and $0000FFFF) = $000054FF) then
-        // 4 bytes, "CALL NEAR [EAX+EAX+$12]" (FF /2) where Reg = 010, Mod = 01 and RM = 100
-        // SIB byte not validated
-        CallInstructionSize := 4
-      else
-      if ((CodeDWORD8 and $FFFF0000) = $15FF0000) then
-        // 6 bytes, "CALL NEAR [$12345678]" (FF /2) where Reg = 010, Mod = 00 and RM = 101
-        CallInstructionSize := 6
-      else
-      if ((CodeDWORD8 and $F8FF0000) = $90FF0000) and (RM5 <> 4) then
-        // 6 bytes, "CALL NEAR [EAX+$12345678]" (FF /2) where Reg = 010, Mod = 10 and RM <> 100 (1 extra byte)
-        CallInstructionSize := 6
-      else
-      if ((CodeDWORD8 and $00FFFF00) = $0094FF00) then
-        // 7 bytes, "CALL NEAR [EAX+EAX+$1234567]" (FF /2) where Reg = 010, Mod = 10 and RM = 100
-        CallInstructionSize := 7
-      else
-      if ((CodeDWORD8 and $0000FF00) = $00009A00) then
-        // 7 bytes, "CALL FAR $1234:12345678" (9A ptr16:32)
-        CallInstructionSize := 7
-      else
+        // ModR/M bytes contain the following bits:
+        // Mod        = (76)
+        // Reg/Opcode = (543)
+        // R/M        = (210)
+        RM1 := (CodeDWORD4 shr 24) and $7;
+        RM2 := (CodeDWORD4 shr 16) and $7;
+        //RM3 := (CodeDWORD4 shr 8)  and $7;
+        //RM4 :=  CodeDWORD4         and $7;
+        RM5 := (CodeDWORD8 shr 24) and $7;
+        //RM6 := (CodeDWORD8 shr 16) and $7;
+        //RM7 := (CodeDWORD8 shr 8)  and $7;
+
+        // Check the instruction prior to the potential call site.
+        // We consider it a valid call site if we find a CALL instruction there
+        // Check the most common CALL variants first
+        if ((CodeDWORD8 and $FF000000) = $E8000000) then
+          // 5 bytes, "CALL NEAR REL32" (E8 cd)
+          CallInstructionSize := 5
+        else
+        if ((CodeDWORD4 and $F8FF0000) = $10FF0000) and not (RM1 in [4, 5]) then
+          // 2 bytes, "CALL NEAR [EAX]" (FF /2) where Reg = 010, Mod = 00, R/M <> 100 (1 extra byte)
+          // and R/M <> 101 (4 extra bytes)
+          CallInstructionSize := 2
+        else
+        if ((CodeDWORD4 and $F8FF0000) = $D0FF0000) then
+          // 2 bytes, "CALL NEAR EAX" (FF /2) where Reg = 010 and Mod = 11
+          CallInstructionSize := 2
+        else
+        if ((CodeDWORD4 and $00FFFF00) = $0014FF00) then
+          // 3 bytes, "CALL NEAR [EAX+EAX*i]" (FF /2) where Reg = 010, Mod = 00 and RM = 100
+          // SIB byte not validated
+          CallInstructionSize := 3
+        else
+        if ((CodeDWORD4 and $00F8FF00) = $0050FF00) and (RM2 <> 4) then
+          // 3 bytes, "CALL NEAR [EAX+$12]" (FF /2) where Reg = 010, Mod = 01 and RM <> 100 (1 extra byte)
+          CallInstructionSize := 3
+        else
+        if ((CodeDWORD4 and $0000FFFF) = $000054FF) then
+          // 4 bytes, "CALL NEAR [EAX+EAX+$12]" (FF /2) where Reg = 010, Mod = 01 and RM = 100
+          // SIB byte not validated
+          CallInstructionSize := 4
+        else
+        if ((CodeDWORD8 and $FFFF0000) = $15FF0000) then
+          // 6 bytes, "CALL NEAR [$12345678]" (FF /2) where Reg = 010, Mod = 00 and RM = 101
+          CallInstructionSize := 6
+        else
+        if ((CodeDWORD8 and $F8FF0000) = $90FF0000) and (RM5 <> 4) then
+          // 6 bytes, "CALL NEAR [EAX+$12345678]" (FF /2) where Reg = 010, Mod = 10 and RM <> 100 (1 extra byte)
+          CallInstructionSize := 6
+        else
+        if ((CodeDWORD8 and $00FFFF00) = $0094FF00) then
+          // 7 bytes, "CALL NEAR [EAX+EAX+$1234567]" (FF /2) where Reg = 010, Mod = 10 and RM = 100
+          CallInstructionSize := 7
+        else
+        if ((CodeDWORD8 and $0000FF00) = $00009A00) then
+          // 7 bytes, "CALL FAR $1234:12345678" (9A ptr16:32)
+          CallInstructionSize := 7
+        else
+          Result := False;
+        // Because we're not doing a complete disassembly, we will potentially report
+        // false positives. If there is odd code that uses the CALL 16:32 format, we
+        // can also get false negatives.
+      except
         Result := False;
-      // Because we're not doing a complete disassembly, we will potentially report
-      // false positives. If there is odd code that uses the CALL 16:32 format, we
-      // can also get false negatives.
-    except
-      Result := False;
+      end;
     end;
   end;
 end;
@@ -5139,9 +5157,10 @@ begin
   JclCreateExceptFrameList(4);
 end;
 
+{$OVERFLOWCHECKS OFF}
+
 function GetJmpDest(Jmp: PJmpInstruction): Pointer;
 begin
-  {$OVERFLOWCHECKS OFF}
   // TODO : 64 bit version
   if Jmp^.opCode = $E9 then
     Result := Pointer(TJclAddr(Jmp) + TJclAddr(Jmp^.distance) + 5)
@@ -5153,10 +5172,11 @@ begin
   if (Result <> nil) and (PJmpTable(Result).OPCode = $25FF) then
     if not IsBadReadPtr(PJmpTable(Result).Ptr, SizeOf(Pointer)) then
       Result := Pointer(PJclAddr(PJmpTable(Result).Ptr)^);
-  {$IFDEF OVERFLOWCHECKS_ON}
-  {$OVERFLOWCHECKS ON}
-  {$ENDIF OVERFLOWCHECKS_ON}
 end;
+
+{$IFDEF OVERFLOWCHECKS_ON}
+{$OVERFLOWCHECKS ON}
+{$ENDIF OVERFLOWCHECKS_ON}
 
 //=== { TJclExceptFrame } ====================================================
 
@@ -5168,6 +5188,8 @@ begin
   FCodeLocation := nil;
   AnalyseExceptFrame(AExcDesc);
 end;
+
+{$RANGECHECKS OFF}
 
 procedure TJclExceptFrame.AnalyseExceptFrame(AExcDesc: PExcDesc);
 var
@@ -5232,12 +5254,18 @@ begin
   end;
 end;
 
+{$IFDEF RANGECHECKS_ON}
+{$RANGECHECKS ON}
+{$ENDIF RANGECHECKS_ON}
+
 function TJclExceptFrame.Handles(ExceptObj: TObject): Boolean;
 var
   Handler: Pointer;
 begin
   Result := HandlerInfo(ExceptObj, Handler);
 end;
+
+{$OVERFLOWCHECKS OFF}
 
 function TJclExceptFrame.HandlerInfo(ExceptObj: TObject; out HandlerAt: Pointer): Boolean;
 var
@@ -5255,7 +5283,6 @@ begin
       Result := FExcTab[I].VTable = nil;
       while (not Result) and (VTable <> nil) do
       begin
-        {$OVERFLOWCHECKS OFF}
         Result := (FExcTab[I].VTable = VTable) or
           (PShortString(PPointer(PJclAddr(FExcTab[I].VTable)^ + TJclAddr(vmtClassName))^)^ =
            PShortString(PPointer(TJclAddr(VTable) + TJclAddr(vmtClassName))^)^);
@@ -5269,9 +5296,6 @@ begin
           else
             VTable := ParentVTable;
         end;
-        {$IFDEF OVERFLOWCHECKS_ON}
-        {$OVERFLOWCHECKS ON}
-        {$ENDIF OVERFLOWCHECKS_ON}
       end;
       if Result then
         Break;
@@ -5283,6 +5307,10 @@ begin
   else
     HandlerAt := nil;
 end;
+
+{$IFDEF OVERFLOWCHECKS_ON}
+{$OVERFLOWCHECKS ON}
+{$ENDIF OVERFLOWCHECKS_ON}
 
 //=== { TJclExceptFrameList } ================================================
 

@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009)                          $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2009-11-18 21:49:29 +0100 (mer. 18 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3083                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -77,7 +77,8 @@ type
     roNotEmpty, roUTF8, roNoAutoCapture, roNoUTF8Check, roAutoCallout,
     roPartial, roDfaShortest, roDfaRestart, roDfaFirstLine, roDupNames,
     roNewLineCR, roNewLineLF, roNewLineCRLF, roNewLineAny, roBSRAnyCRLF,
-    roBSRUnicode, roJavascriptCompat, roNoStartOptimize);
+    roBSRUnicode, roJavascriptCompat, roNoStartOptimize, roPartialHard,
+    roNotEmptyAtStart);
   TJclRegExOptions = set of TJclRegExOption;
   TJclCaptureRange = record
     FirstPos: Integer;
@@ -172,8 +173,8 @@ function StrReplaceRegEx(const Subject, Pattern: string; Args: array of const): 
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPCRE.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 3083 $';
+    Date: '$Date: 2009-11-18 21:49:29 +0100 (mer. 18 nov. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -390,19 +391,23 @@ const
     roAnchored, roDollarEndOnly, roExtra, roNotBOL, roNotEOL, roUnGreedy,
     roNotEmpty, roUTF8, roNoAutoCapture, roNoUTF8Check, roAutoCallout,
     roPartial, roDfaShortest, roDfaRestart, roDfaFirstLine, roDupNames,
-    roNewLineCR, roNewLineLF, roNewLineCRLF, roNewLineAny }
+    roNewLineCR, roNewLineLF, roNewLineCRLF, roNewLineAny, roBSRAnyCRLF,
+    roBSRUnicode, roJavascriptCompat, roNoStartOptimize, roPartialHard,
+    roNotEmptyAtStart }
   cDesignOptions: array [TJclRegExOption] of Integer =
    (PCRE_CASELESS, PCRE_MULTILINE, PCRE_DOTALL, PCRE_EXTENDED, PCRE_ANCHORED,
     PCRE_DOLLAR_ENDONLY, PCRE_EXTRA, 0, 0, PCRE_UNGREEDY, 0, PCRE_UTF8,
     PCRE_NO_AUTO_CAPTURE, PCRE_NO_UTF8_CHECK, PCRE_AUTO_CALLOUT, 0, 0, 0, 0,
     PCRE_DUPNAMES, PCRE_NEWLINE_CR, PCRE_NEWLINE_LF, PCRE_NEWLINE_CRLF,
     PCRE_NEWLINE_ANY, PCRE_BSR_ANYCRLF, PCRE_BSR_UNICODE,
-    PCRE_JAVASCRIPT_COMPAT, PCRE_NO_START_OPTIMIZE);
+    PCRE_JAVASCRIPT_COMPAT, PCRE_NO_START_OPTIMIZE, PCRE_PARTIAL_HARD,
+    PCRE_NOTEMPTY_ATSTART);
   cRunOptions: array [TJclRegExOption] of Integer =
    (0, 0, 0, 0, 0, 0, 0, PCRE_NOTBOL, PCRE_NOTEOL, 0, PCRE_NOTEMPTY, 0, 0,
    PCRE_NO_UTF8_CHECK, 0, PCRE_PARTIAL, 0, 0, 0, 0, PCRE_NEWLINE_CR,
    PCRE_NEWLINE_LF, PCRE_NEWLINE_CRLF, PCRE_NEWLINE_ANY, PCRE_BSR_ANYCRLF,
-   PCRE_BSR_UNICODE, PCRE_JAVASCRIPT_COMPAT, PCRE_NO_START_OPTIMIZE);
+   PCRE_BSR_UNICODE, PCRE_JAVASCRIPT_COMPAT, PCRE_NO_START_OPTIMIZE,
+   PCRE_PARTIAL_HARD, PCRE_NOTEMPTY_ATSTART);
 var
   I: TJclRegExOption;
   SUPPORT_UTF8: Integer;

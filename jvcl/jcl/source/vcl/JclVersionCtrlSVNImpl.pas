@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2009-11-05 17:06:40 +0100 (jeu. 05 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3068                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -60,8 +60,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionCtrlSVNImpl.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3068 $';
+    Date: '$Date: 2009-11-05 17:06:40 +0100 (jeu. 05 nov. 2009) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -72,7 +72,7 @@ implementation
 
 uses
   JclVclResources,
-  JclFileUtils, JclSysUtils, JclRegistry, JclStrings;
+  JclFileUtils, JclSysInfo, JclSysUtils, JclRegistry, JclStrings;
 
 const
   JclVersionCtrlRegKeyName = 'SOFTWARE\TortoiseSVN';
@@ -97,18 +97,33 @@ const
   JclVersionCtrlSVNUnlockVerb = 'unlock';
 //  JclVersionCtrlSVNTortoiseDLL = 'TortoiseSVN.dll';
   JclVersionCtrlSVNDirectory1 = '.svn\';
-  JclVersionCtrlSVNDirectory2 = '_svn\';  
+  JclVersionCtrlSVNDirectory2 = '_svn\';
   JclVersionCtrlSVNEntryFile = 'entries';
 
   JclVersionCtrlSVNDirectories: array [0..1] of string =
-   ( JclVersionCtrlSVNDirectory1, JclVersionCtrlSVNDirectory2 ); 
+   ( JclVersionCtrlSVNDirectory1, JclVersionCtrlSVNDirectory2 );
 
 //=== TJclVersionControlSVN ==================================================
 
 constructor TJclVersionControlSVN.Create;
+var
+  SaveAcc: TJclRegWOW64Access;
 begin
   inherited Create;
-  FTortoiseSVNProc := RegReadStringDef(HKLM, JclVersionCtrlRegKeyName, JclVersionCtrlRegValueName, '');
+
+  if IsWindows64 then
+  begin
+    // on 64 bit machines look in the 64bit section of registy for tortoise SVN (64bit) registry stuff
+    SaveAcc := RegGetWOW64AccessMode;
+    try
+      RegSetWOW64AccessMode(ra64Key);
+      FTortoiseSVNProc := RegReadStringDef(HKLM, JclVersionCtrlRegKeyName, JclVersionCtrlRegValueName, '');
+    finally
+      RegSetWOW64AccessMode(SaveAcc);
+    end;
+  end
+  else
+    FTortoiseSVNProc := RegReadStringDef(HKLM, JclVersionCtrlRegKeyName, JclVersionCtrlRegValueName, '');
 end;
 
 destructor TJclVersionControlSVN.Destroy;

@@ -45,8 +45,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-05 16:47:30 +0200 (lun. 05 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3039                                                                     $ }
+{ Last modified: $Date:: 2009-11-07 16:35:39 +0100 (sam. 07 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3080                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -173,6 +173,7 @@ type
 // PropID.h
 const
   kpidNoProperty = 0;
+  kpidMainSubfile = 1;
   kpidHandlerItemIndex = 2;
   kpidPath = 3;
   kpidName = 4;
@@ -226,6 +227,12 @@ const
   kpidChecksum = 46;
   kpidCharacts = 47;
   kpidVa = 48;
+  kpidId = 49;
+  kpidShortName = 50;
+  kpidCreatorApp = 51;
+  kpidSectorSize = 52;
+  kpidPosixAttrib = 53;
+  kpidLink = 54;
 
   kpidTotalSize = $1100;
   kpidFreeSpace = $1101;
@@ -598,15 +605,18 @@ type
   TCreateObjectFunc = function (ClsID: PGUID; IID: PGUID; out Obj): HRESULT; stdcall;
   TGetNumberOfFormatsFunc = function (NumFormats: PCardinal): HRESULT; stdcall;
   TGetNumberOfMethodsFunc = function (NumMethods: PCardinal): HRESULT; stdcall;
+  TSetLargePageMode = function: HRESULT; stdcall;
 
 var
   CreateObject: TCreateObjectFunc = nil;
   GetNumberOfFormats: TGetNumberOfFormatsFunc = nil;
   GetNumberOfMethods: TGetNumberOfMethodsFunc = nil;
+  SetLargePageMode: TSetLargePageMode = nil;
 {$ELSE ~7ZIP_LINKONREQUEST}
 function CreateObject(ClsID: PGUID; IID: PGUID; out Obj): HRESULT; stdcall;
 function GetNumberOfFormats(NumFormats: PCardinal): HRESULT; stdcall;
 function GetNumberOfMethods(NumMethods: PCardinal): HRESULT; stdcall;
+function SetLargePageMode: HRESULT; stdcall;
 {$ENDIF ~7ZIP_LINKONREQUEST}
 
 function Load7Zip: Boolean;
@@ -628,12 +638,14 @@ const
   CreateObjectExportName = 'CreateObject';
   GetNumberOfFormatsExportName = 'GetNumberOfFormats';
   GetNumberOfMethodsExportName = 'GetNumberOfMethods';
+  SetLargePageModeExportName = 'SetLargePageMode';
   INVALID_MODULEHANDLE_VALUE = TModuleHandle(0);
 
 {$IFDEF 7ZIP_LINKDLL}
 function CreateObject; external sz7Zip name CreateObjectExportName;
 function GetNumberOfFormats; external sz7Zip name GetNumberOfFormatsExportName;
 function GetNumberOfMethods; external sz7Zip name GetNumberOfMethodsExportName;
+function SetLargePageMode; external sz7Zip name SetLargePageModeExportName;
 {$ENDIF 7ZIP_LINKDLL}
 
 {$IFDEF 7ZIP_LINKONREQUEST}
@@ -668,6 +680,9 @@ begin
       @CreateObject := GetSymbol(CreateObjectExportName);
       @GetNumberOfFormats := GetSymbol(GetNumberOfFormatsExportName);
       @GetNumberOfMethods := GetSymbol(GetNumberOfMethodsExportName);
+      @SetLargePageMode := GetSymbol(SetLargePageModeExportName);
+      Result := Assigned(@CreateObject) and Assigned(@GetNumberOfFormats) and
+        Assigned(@GetNumberOfMethods) and Assigned(@SetLargePageMode);
     end;
   end;
 end;
@@ -689,6 +704,10 @@ end;
 procedure Unload7Zip;
 begin
   {$IFDEF 7ZIP_LINKONREQUEST}
+  @CreateObject := nil;
+  @GetNumberOfFormats := nil;
+  @GetNumberOfMethods := nil;
+  @SetLargePageMode := nil;
   if SevenzipLib <> INVALID_MODULEHANDLE_VALUE then
     {$IFDEF MSWINDOWS}
     FreeLibrary(SevenzipLib);

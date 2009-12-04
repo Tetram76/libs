@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2009-11-25 22:30:35 +0100 (mer. 25 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3087                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -285,8 +285,8 @@ function MapiErrorMessage(const ErrorCode: DWORD): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclMapi.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3087 $';
+    Date: '$Date: 2009-11-25 22:30:35 +0100 (mer. 25 nov. 2009) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1060,7 +1060,7 @@ begin
               else
                 RealAddresses[I] := FAddress;
             lpszName := PAnsiChar(AnsiString(RealNames[I]));
-            lpszAddress := PAnsiChar(AnsiString(RealAddresses[I]));
+            lpszAddress := PAnsiCharOrNil(AnsiString(RealAddresses[I]));
           end;
         end;
       end

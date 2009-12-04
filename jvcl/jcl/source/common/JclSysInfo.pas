@@ -50,8 +50,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2009-11-25 22:47:49 +0100 (mer. 25 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3088                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1313,8 +1313,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3088 $';
+    Date: '$Date: 2009-11-25 22:47:49 +0100 (mer. 25 nov. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1342,27 +1342,6 @@ uses
 {$IFDEF FPC}
 {$IFDEF MSWINDOWS}
 
-function PidlFree(var IdList: PItemIdList): Boolean;
-var
-  Malloc: IMalloc;
-begin
-  Result := False;
-  if IdList = nil then
-    Result := True
-  else
-  begin
-    Malloc := nil;
-    if Succeeded(SHGetMalloc(Malloc)) and (Malloc.DidAlloc(IdList) > 0) then
-    begin
-      Malloc.Free(IdList);
-      IdList := nil;
-      Result := True;
-    end;
-  end;
-end;
-
-//----------------------------------------------------------------------------
-
 function PidlToPath(IdList: PItemIdList): string;
 begin
   SetLength(Result, MAX_PATH);
@@ -1381,8 +1360,11 @@ begin
   FolderPidl := nil;
   if Succeeded(SHGetSpecialFolderLocation(0, Folder, FolderPidl)) then
   begin
-    Result := PidlToPath(FolderPidl);
-    PidlFree(FolderPidl);
+    try
+      Result := PidlToPath(FolderPidl);
+    finally
+      CoTaskMemFree(FolderPidl);
+    end;
   end
   else
     Result := '';
@@ -2248,8 +2230,42 @@ begin
 end;
 {$ENDIF UNIX}
 {$IFDEF MSWINDOWS}
+//091123 HA Use LookupAccountSid to fetch the current users domain ...
+//begin
+//  Result := GetUserDomainName(GetLocalUserName);
+//end;
+var
+  hProcess, hAccessToken: THandle;
+  InfoBuffer: PChar;
+  AccountName: array [0..UNLEN] of Char;
+  DomainName: array [0..UNLEN] of Char;
+
+  InfoBufferSize: Cardinal;
+  AccountSize: Cardinal;
+  DomainSize: Cardinal;
+  snu: SID_NAME_USE;
 begin
-  Result := GetUserDomainName(GetLocalUserName);
+  InfoBufferSize := 1000;
+  AccountSize := SizeOf(AccountName);
+  DomainSize := SizeOf(DomainName);
+
+  hProcess := GetCurrentProcess;
+  if OpenProcessToken(hProcess, TOKEN_READ, hAccessToken) then
+  try
+    GetMem(InfoBuffer, InfoBufferSize);
+    try
+      if GetTokenInformation(hAccessToken, TokenUser, InfoBuffer, InfoBufferSize, InfoBufferSize) then
+        LookupAccountSid(nil, PSIDAndAttributes(InfoBuffer)^.sid, AccountName, AccountSize,
+                         DomainName, DomainSize, snu)
+      else
+        RaiseLastOSError;
+    finally
+      FreeMem(InfoBuffer)
+    end;
+    Result := DomainName;
+  finally
+    CloseHandle(hAccessToken);
+  end
 end;
 {$ENDIF MSWINDOWS}
 

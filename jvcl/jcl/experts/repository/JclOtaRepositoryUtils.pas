@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 2993                                                                     $ }
+{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3044                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -173,8 +173,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaRepositoryUtils.pas $';
-    Revision: '$Revision: 2993 $';
-    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3044 $';
+    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -245,7 +245,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -278,7 +277,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -312,7 +310,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -337,7 +334,7 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
+      Result := False;
     end;
   end;
 end;
@@ -355,7 +352,7 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
+      Result := False;
     end;
   end;
 end;
