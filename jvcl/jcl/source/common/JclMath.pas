@@ -36,9 +36,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-08 06:55:10 +0200 (jeu. 08 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3042                                                                     $ }
-{ Author:        $Author:: rrossmair                                                             $ }
+{ Last modified: $Date:: 2009-11-05 17:51:58 +0100 (jeu. 05 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3070                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -324,6 +324,20 @@ type
     fpEmpty     // should not happen
    );
 
+const
+  Infinity    = 1/0;       // tricky
+  {$EXTERNALSYM Infinity}
+  NaN         = 0/0;       // tricky
+  {$EXTERNALSYM NaN}
+  NegInfinity = -Infinity;
+  {$EXTERNALSYM NegInfinity}
+
+{$HPPEMIT 'static const Infinity    =  1.0 / 0.0;'}
+{$HPPEMIT 'static const NaN         =  0.0 / 0.0;'}
+{$HPPEMIT 'static const NegInfinity = -1.0 / 0.0;'}
+
+{$IFDEF CPU32}
+
 function FloatingPointClass(const Value: Single): TFloatingPointClass; overload;
 function FloatingPointClass(const Value: Double): TFloatingPointClass; overload;
 {$IFDEF SUPPORTS_EXTENDED}
@@ -338,18 +352,6 @@ type
 const
   LowValidNaNTag = -$3FFFFF;
   HighValidNaNTag = $3FFFFE;
-
-const
-  Infinity    = 1/0;       // tricky
-  {$EXTERNALSYM Infinity}
-  NaN         = 0/0;       // tricky
-  {$EXTERNALSYM NaN}
-  NegInfinity = -Infinity;
-  {$EXTERNALSYM NegInfinity}
-
-{$HPPEMIT 'static const Infinity    =  1.0 / 0.0;'}
-{$HPPEMIT 'static const NaN         =  0.0 / 0.0;'}
-{$HPPEMIT 'static const NegInfinity = -1.0 / 0.0;'}
 
 function IsInfinite(const Value: Single): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
 function IsInfinite(const Value: Double): Boolean; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
@@ -397,6 +399,8 @@ function GetNaNTag(const NaN: Double): TNaNTag; overload;
 {$IFDEF SUPPORTS_EXTENDED}
 function GetNaNTag(const NaN: Extended): TNaNTag; overload;
 {$ENDIF SUPPORTS_EXTENDED}
+
+{$ENDIF CPU32}
 
 { Set support }
 
@@ -524,6 +528,7 @@ type
 type
   EJclMathError = class(EJclError);
 
+  {$IFDEF CPU32}
   EJclNaNSignal = class(EJclMathError)
   private
     FTag: TNaNTag;
@@ -531,6 +536,7 @@ type
     constructor Create(ATag: TNaNTag; Dummy: Boolean = False);
     property Tag: TNaNTag read FTag;
   end;
+  {$ENDIF CPU32}
 
 procedure DomainCheck(Err: Boolean);
 
@@ -769,8 +775,10 @@ function Equal(const Z1, Z2: TPolarComplex): Boolean; overload;
 
 function IsZero(const Z: TRectComplex): Boolean; overload;
 function IsZero(const Z: TPolarComplex): Boolean; overload;
+{$IFDEF CPU32}
 function IsInfinite(const Z: TRectComplex): Boolean; overload;
 function IsInfinite(const Z: TPolarComplex): Boolean; overload;
+{$ENDIF CPU32}
 
 function Norm(const Z: TRectComplex): Float; overload;
 function Norm(const Z: TPolarComplex): Float; overload;
@@ -819,8 +827,8 @@ function CscH(const Z: TRectComplex): TRectComplex; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclMath.pas $';
-    Revision: '$Revision: 3042 $';
-    Date: '$Date: 2009-10-08 06:55:10 +0200 (jeu. 08 oct. 2009) $';
+    Revision: '$Revision: 3070 $';
+    Date: '$Date: 2009-11-05 17:51:58 +0100 (jeu. 05 nov. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2826,6 +2834,8 @@ begin
   end;
 end;
 
+{$IFDEF CPU32}
+
 //=== Floating point value classification ====================================
 
 type
@@ -3366,6 +3376,8 @@ begin
   CreateResFmt(@RsNaNSignal, [ATag]);
 end;
 
+{$ENDIF CPU32}
+
 //=== { TJclRational } =======================================================
 
 constructor TJclRational.Create(const Numerator: Integer; const Denominator: Integer);
@@ -3380,7 +3392,7 @@ begin
   AssignZero;
 end;
 
-constructor TJclRational.Create(const R: Float); 
+constructor TJclRational.Create(const R: Float);
 begin
   inherited Create;
   Assign(R);
@@ -4183,6 +4195,8 @@ begin
   Result := IsFloatZero(Z.Radius);
 end;
 
+{$IFDEF CPU32}
+
 function IsInfinite(const Z: TRectComplex): Boolean;
 begin
   Result := IsInfinite(Z.Re) or IsInfinite(Z.Im);
@@ -4192,6 +4206,8 @@ function IsInfinite(const Z: TPolarComplex): Boolean;
 begin
   Result := IsInfinite(Z.Radius);
 end;
+
+{$ENDIF CPU32}
 
 function Norm(const Z: TRectComplex): Float;
 begin

@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3020                                                                     $ }
+{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3044                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -61,8 +61,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/favfolders/IdeOpenDlgFavoriteUnit.pas $';
-    Revision: '$Revision: 3020 $';
-    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009) $';
+    Revision: '$Revision: 3044 $';
+    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
     LogPath: 'JCL\experts\favfolders';
     Extra: '';
     Data: nil
@@ -83,7 +83,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;

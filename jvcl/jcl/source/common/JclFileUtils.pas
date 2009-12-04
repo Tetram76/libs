@@ -51,8 +51,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-03 02:07:26 +0200 (sam. 03 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3031                                                                     $ }
+{ Last modified: $Date:: 2009-10-27 06:39:27 +0100 (mar. 27 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3059                                                                     $ }
 { Author:        $Author:: SFarrow                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -623,7 +623,6 @@ type
     procedure ExtractFlags;
     function GetBinFileVersion: string;
     function GetBinProductVersion: string;
-    function GetCustomFieldValue(const FieldName: string): string;
     function GetFileOS: DWORD;
     function GetFileSubType: DWORD;
     function GetFileType: DWORD;
@@ -648,6 +647,7 @@ type
     constructor Create(const Module: HMODULE); overload;
     {$ENDIF MSWINDOWS}
     destructor Destroy; override;
+    function GetCustomFieldValue(const FieldName: string): string;
     class function VersionLanguageId(const LangIdRec: TLangIdRec): string;
     class function VersionLanguageName(const LangId: Word): string;
     function TranslationMatchesLanguages(Exact: Boolean = True): Boolean;
@@ -1037,8 +1037,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 3031 $';
-    Date: '$Date: 2009-10-03 02:07:26 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 3059 $';
+    Date: '$Date: 2009-10-27 06:39:27 +0100 (mar. 27 oct. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2257,7 +2257,10 @@ begin
   I := Pos(':', Path); // for Windows' sake
   K := Pos(DirDelimiter, Path);
   IsAbsolute := K - I = 1;
-  if not IsAbsolute then
+  if IsAbsolute then begin
+    if Copy(Path, 1, Length(PathUncPrefix)) = PathUncPrefix then // UNC path
+      K := 2;
+  end else
     K := I;
   if K = 0 then
     S := Path

@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-05 19:06:06 +0200 (lun. 05 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3041                                                                     $ }
+{ Last modified: $Date:: 2009-11-07 16:35:39 +0100 (sam. 07 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3080                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -57,7 +57,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF MSWINDOWS}
-  Windows, Sevenzip,
+  Windows, Sevenzip, ActiveX,
   {$ENDIF MSWINDOWS}
   {$IFDEF UNIX}
   Types,
@@ -1927,14 +1927,139 @@ type
     class function ArchiveName: string; override;
   end;
 
+// internal sevenzip stuff, do not use it directly
+type
+  TJclSevenzipOutStream = class(TInterfacedObject, ISequentialOutStream,
+    IOutStream, IUnknown)
+  private
+    FArchive: TJclCompressionArchive;
+    FItemIndex: Integer;
+    FStream: TStream;
+    FOwnsStream: Boolean;
+    FTruncateOnRelease: Boolean;
+    FMaximumPosition: Int64;
+    procedure NeedStream;
+    procedure ReleaseStream;
+  public
+    constructor Create(AArchive: TJclCompressionArchive; AItemIndex: Integer); overload;
+    constructor Create(AStream: TStream; AOwnsStream: Boolean; ATruncateOnRelease: Boolean); overload;
+    destructor Destroy; override;
+    // ISequentialOutStream
+    function Write(Data: Pointer; Size: Cardinal; ProcessedSize: PCardinal): HRESULT; stdcall;
+    // IOutStream
+    function Seek(Offset: Int64; SeekOrigin: Cardinal; NewPosition: PInt64): HRESULT; stdcall;
+    function SetSize(NewSize: Int64): HRESULT; stdcall;
+  end;
+
+  TJclSevenzipInStream = class(TInterfacedObject, ISequentialInStream,
+    IInStream, IStreamGetSize, IUnknown)
+  private
+    FArchive: TJclCompressionArchive;
+    FItemIndex: Integer;
+    FStream: TStream;
+    FOwnsStream: Boolean;
+    procedure NeedStream;
+    procedure ReleaseStream;
+  public
+    constructor Create(AArchive: TJclCompressionArchive; AItemIndex: Integer); overload;
+    constructor Create(AStream: TStream; AOwnsStream: Boolean); overload;
+    destructor Destroy; override;
+    // ISequentialInStream
+    function Read(Data: Pointer; Size: Cardinal; ProcessedSize: PCardinal): HRESULT; stdcall;
+    // IInStream
+    function Seek(Offset: Int64; SeekOrigin: Cardinal; NewPosition: PInt64): HRESULT; stdcall;
+    // IStreamGetSize
+    function GetSize(Size: PInt64): HRESULT; stdcall;
+  end;
+
+  TJclSevenzipOpenCallback = class(TInterfacedObject, IArchiveOpenCallback,
+    ICryptoGetTextPassword, IUnknown)
+  private
+    FArchive: TJclCompressionArchive;
+  public
+    constructor Create(AArchive: TJclCompressionArchive);
+    // IArchiveOpenCallback
+    function SetCompleted(Files: PInt64; Bytes: PInt64): HRESULT; stdcall;
+    function SetTotal(Files: PInt64; Bytes: PInt64): HRESULT; stdcall;
+    // ICryptoGetTextPassword
+    function CryptoGetTextPassword(password: PBStr): HRESULT; stdcall;
+  end;
+
+  TJclSevenzipExtractCallback = class(TInterfacedObject, IUnknown, IProgress,
+    IArchiveExtractCallback, ICryptoGetTextPassword)
+  private
+    FArchive: TJclCompressionArchive;
+    FLastStream: Cardinal;
+  public
+    constructor Create(AArchive: TJclCompressionArchive);
+    // IArchiveExtractCallback
+    function GetStream(Index: Cardinal; out OutStream: ISequentialOutStream;
+      askExtractMode: Cardinal): HRESULT; stdcall;
+    function PrepareOperation(askExtractMode: Cardinal): HRESULT; stdcall;
+    function SetOperationResult(resultEOperationResult: Integer): HRESULT; stdcall;
+    // IProgress
+    function SetCompleted(CompleteValue: PInt64): HRESULT; stdcall;
+    function SetTotal(Total: Int64): HRESULT; stdcall;
+    // ICryptoGetTextPassword
+    function CryptoGetTextPassword(password: PBStr): HRESULT; stdcall;
+  end;
+
+  TJclSevenzipUpdateCallback = class(TInterfacedObject, IUnknown, IProgress,
+    IArchiveUpdateCallback, IArchiveUpdateCallback2, ICryptoGetTextPassword2)
+  private
+    FArchive: TJclCompressionArchive;
+    FLastStream: Cardinal;
+  public
+    constructor Create(AArchive: TJclCompressionArchive);
+    // IProgress
+    function SetCompleted(CompleteValue: PInt64): HRESULT; stdcall;
+    function SetTotal(Total: Int64): HRESULT; stdcall;
+    // IArchiveUpdateCallback
+    function GetProperty(Index: Cardinal; PropID: Cardinal; out Value: tagPROPVARIANT): HRESULT; stdcall;
+    function GetStream(Index: Cardinal; out InStream: ISequentialInStream): HRESULT; stdcall;
+    function GetUpdateItemInfo(Index: Cardinal; NewData: PInteger;
+      NewProperties: PInteger; IndexInArchive: PCardinal): HRESULT; stdcall;
+    function SetOperationResult(OperationResult: Integer): HRESULT; stdcall;
+    // IArchiveUpdateCallback2
+    function GetVolumeSize(Index: Cardinal; Size: PInt64): HRESULT; stdcall;
+    function GetVolumeStream(Index: Cardinal;
+      out VolumeStream: ISequentialOutStream): HRESULT; stdcall;
+    // ICryptoGetTextPassword2
+    function CryptoGetTextPassword2(PasswordIsDefined: PInteger;
+      Password: PBStr): HRESULT; stdcall;
+  end;
+
+type
+  TWideStringSetter = procedure (const Value: WideString) of object;
+  TCardinalSetter = procedure (Value: Cardinal) of object;
+  TInt64Setter = procedure (const Value: Int64) of object;
+  TFileTimeSetter = procedure (const Value: TFileTime) of object;
+  TBoolSetter = procedure (const Value: Boolean) of object;
+
+procedure SevenzipCheck(Value: HRESULT);
+function Get7zWideStringProp(const AArchive: IInArchive; ItemIndex: Integer;
+  PropID: Cardinal; const Setter: TWideStringSetter): Boolean;
+function Get7zCardinalProp(const AArchive: IInArchive; ItemIndex: Integer;
+  PropID: Cardinal; const Setter: TCardinalSetter): Boolean;
+function Get7zInt64Prop(const AArchive: IInArchive; ItemIndex: Integer;
+  PropID: Cardinal; const Setter: TInt64Setter): Boolean;
+function Get7zFileTimeProp(const AArchive: IInArchive; ItemIndex: Integer;
+  PropID: Cardinal; const Setter: TFileTimeSetter): Boolean;
+function Get7zBoolProp(const AArchive: IInArchive; ItemIndex: Integer;
+  PropID: Cardinal; const Setter: TBoolSetter): Boolean;
+procedure Load7zFileAttribute(AInArchive: IInArchive; ItemIndex: Integer;
+  AItem: TJclCompressionItem);
+procedure GetSevenzipArchiveCompressionProperties(AJclArchive: IInterface; ASevenzipArchive: IInterface);
+procedure SetSevenzipArchiveCompressionProperties(AJclArchive: IInterface; ASevenzipArchive: IInterface);
+
 {$ENDIF MSWINDOWS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompression.pas $';
-    Revision: '$Revision: 3041 $';
-    Date: '$Date: 2009-10-05 19:06:06 +0200 (lun. 05 oct. 2009) $';
+    Revision: '$Revision: 3080 $';
+    Date: '$Date: 2009-11-07 16:35:39 +0100 (sam. 07 nov. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1944,9 +2069,6 @@ const
 implementation
 
 uses
-  {$IFDEF MSWINDOWS}
-  ActiveX,
-  {$ENDIF MSWINDOWS}
   JclUnicode, // WideSameText
   JclDateTime, JclFileUtils, JclResources, JclStrings, JclSysUtils;
 
@@ -5046,29 +5168,6 @@ end;
 
 //=== { TJclSevenzipOutStream } ==============================================
 
-type
-  TJclSevenzipOutStream = class(TInterfacedObject, ISequentialOutStream,
-    IOutStream, IUnknown)
-  private
-    FArchive: TJclCompressionArchive;
-    FItemIndex: Integer;
-    FStream: TStream;
-    FOwnsStream: Boolean;
-    FTruncateOnRelease: Boolean;
-    FMaximumPosition: Int64;
-    procedure NeedStream;
-    procedure ReleaseStream;
-  public
-    constructor Create(AArchive: TJclCompressionArchive; AItemIndex: Integer); overload;
-    constructor Create(AStream: TStream; AOwnsStream: Boolean; ATruncateOnRelease: Boolean); overload;
-    destructor Destroy; override;
-    // ISequentialOutStream
-    function Write(Data: Pointer; Size: Cardinal; ProcessedSize: PCardinal): HRESULT; stdcall;
-    // IOutStream
-    function Seek(Offset: Int64; SeekOrigin: Cardinal; NewPosition: PInt64): HRESULT; stdcall;
-    function SetSize(NewSize: Int64): HRESULT; stdcall;
-  end;
-
 constructor TJclSevenzipOutStream.Create(AArchive: TJclCompressionArchive; AItemIndex: Integer);
 begin
   inherited Create;
@@ -5104,9 +5203,6 @@ procedure TJclSevenzipOutStream.NeedStream;
 begin
   if Assigned(FArchive) and not Assigned(FStream) then
     FStream := FArchive.Items[FItemIndex].Stream;
-
-  if not Assigned(FStream) then
-    raise EJclCompressionError.CreateRes(@RsCompression7zUnassignedStream);
 end;
 
 procedure TJclSevenzipOutStream.ReleaseStream;
@@ -5129,23 +5225,33 @@ var
 begin
   NeedStream;
 
-  Result := S_OK;
-  // STREAM_SEEK_SET	= 0 = soFromBeginning
-  // STREAM_SEEK_CUR	= 1 = soFromCurrent
-  // STREAM_SEEK_END  = 2 = soFromEnd
-  NewPos := FStream.Seek(Offset, TSeekOrigin(SeekOrigin));
-  if Assigned(NewPosition) then
-    NewPosition^ := NewPos;
+  if Assigned(FStream) then
+  begin
+    Result := S_OK;
+    // STREAM_SEEK_SET = 0 = soFromBeginning
+    // STREAM_SEEK_CUR = 1 = soFromCurrent
+    // STREAM_SEEK_END = 2 = soFromEnd
+    NewPos := FStream.Seek(Offset, TSeekOrigin(SeekOrigin));
+    if Assigned(NewPosition) then
+      NewPosition^ := NewPos;
+  end
+  else
+    Result := S_FALSE;
 end;
 
 function TJclSevenzipOutStream.SetSize(NewSize: Int64): HRESULT;
 begin
   NeedStream;
 
-  Result := S_OK;
-  FStream.Size := NewSize;
-  if FTruncateOnRelease and (FMaximumPosition < NewSize) then
-    FMaximumPosition := NewSize;
+  if Assigned(FStream) then
+  begin
+    Result := S_OK;
+    FStream.Size := NewSize;
+    if FTruncateOnRelease and (FMaximumPosition < NewSize) then
+      FMaximumPosition := NewSize;
+  end
+  else
+    Result := S_FALSE;
 end;
 
 function TJclSevenzipOutStream.Write(Data: Pointer; Size: Cardinal;
@@ -5156,41 +5262,24 @@ var
 begin
   NeedStream;
 
-  Result := S_OK;
-  Processed := FStream.Write(Data^, Size);
-  if Assigned(ProcessedSize) then
-    ProcessedSize^ := Processed;
-  if FTruncateOnRelease then
+  if Assigned(FStream) then
   begin
-    APosition := FStream.Position;
-    if FMaximumPosition < APosition then
-      FMaximumPosition := APosition;
-  end;
+    Result := S_OK;
+    Processed := FStream.Write(Data^, Size);
+    if Assigned(ProcessedSize) then
+      ProcessedSize^ := Processed;
+    if FTruncateOnRelease then
+    begin
+      APosition := FStream.Position;
+      if FMaximumPosition < APosition then
+        FMaximumPosition := APosition;
+    end;
+  end
+  else
+    Result := S_FALSE;
 end;
 
 //=== { TJclSevenzipInStream } ===============================================
-
-type
-  TJclSevenzipInStream = class(TInterfacedObject, ISequentialInStream,
-    IInStream, IStreamGetSize, IUnknown)
-  private
-    FArchive: TJclCompressionArchive;
-    FItemIndex: Integer;
-    FStream: TStream;
-    FOwnsStream: Boolean;
-    procedure NeedStream;
-    procedure ReleaseStream;
-  public
-    constructor Create(AArchive: TJclCompressionArchive; AItemIndex: Integer); overload;
-    constructor Create(AStream: TStream; AOwnsStream: Boolean); overload;
-    destructor Destroy; override;
-    // ISequentialInStream
-    function Read(Data: Pointer; Size: Cardinal; ProcessedSize: PCardinal): HRESULT; stdcall;
-    // IInStream
-    function Seek(Offset: Int64; SeekOrigin: Cardinal; NewPosition: PInt64): HRESULT; stdcall;
-    // IStreamGetSize
-    function GetSize(Size: PInt64): HRESULT; stdcall;
-  end;
 
 constructor TJclSevenzipInStream.Create(AArchive: TJclCompressionArchive; AItemIndex: Integer);
 begin
@@ -5222,18 +5311,20 @@ function TJclSevenzipInStream.GetSize(Size: PInt64): HRESULT;
 begin
   NeedStream;
 
-  if Assigned(Size) then
-    Size^ := FStream.Size;
-  Result := S_OK;
+  if Assigned(FStream) then
+  begin
+    if Assigned(Size) then
+      Size^ := FStream.Size;
+    Result := S_OK;
+  end
+  else
+    Result := S_FALSE;
 end;
 
 procedure TJclSevenzipInStream.NeedStream;
 begin
   if Assigned(FArchive) and not Assigned(FStream) then
     FStream := FArchive.Items[FItemIndex].Stream;
-
-  if not Assigned(FStream) then
-    raise EJclCompressionError.CreateRes(@RsCompression7zUnassignedStream);
 end;
 
 function TJclSevenzipInStream.Read(Data: Pointer; Size: Cardinal;
@@ -5243,10 +5334,15 @@ var
 begin
   NeedStream;
 
-  Processed := FStream.Read(Data^, Size);
-  if Assigned(ProcessedSize) then
-    ProcessedSize^ := Processed;
-  Result := S_OK;
+  if Assigned(FStream) then
+  begin
+    Processed := FStream.Read(Data^, Size);
+    if Assigned(ProcessedSize) then
+      ProcessedSize^ := Processed;
+    Result := S_OK;
+  end
+  else
+    Result := S_FALSE;
 end;
 
 procedure TJclSevenzipInStream.ReleaseStream;
@@ -5265,13 +5361,18 @@ var
 begin
   NeedStream;
 
-  // STREAM_SEEK_SET	= 0 = soFromBeginning
-	// STREAM_SEEK_CUR	= 1 = soFromCurrent
-	// STREAM_SEEK_END  = 2 = soFromEnd
-  NewPos := FStream.Seek(Offset, TSeekOrigin(SeekOrigin));
-  if Assigned(NewPosition) then
-    NewPosition^ := NewPos;
-  Result := S_OK;
+  if Assigned(FStream) then
+  begin
+    // STREAM_SEEK_SET = 0 = soFromBeginning
+    // STREAM_SEEK_CUR = 1 = soFromCurrent
+    // STREAM_SEEK_END = 2 = soFromEnd
+    NewPos := FStream.Seek(Offset, TSeekOrigin(SeekOrigin));
+    if Assigned(NewPosition) then
+      NewPosition^ := NewPos;
+    Result := S_OK;
+  end
+  else
+    Result := S_FALSE;
 end;
 
 // sevenzip helper functions
@@ -5281,13 +5382,6 @@ begin
   if Value <> S_OK then
     raise EJclCompressionError.CreateResFmt(@RsCompression7zReturnError, [Value, SysErrorMessage(Value)]);
 end;
-
-type
-  TWideStringSetter = procedure (const Value: WideString) of object;
-  TCardinalSetter = procedure (Value: Cardinal) of object;
-  TInt64Setter = procedure (const Value: Int64) of object;
-  TFileTimeSetter = procedure (const Value: TFileTime) of object;
-  TBoolSetter = procedure (const Value: Boolean) of object;
 
 function Get7zWideStringProp(const AArchive: IInArchive; ItemIndex: Integer;
   PropID: Cardinal; const Setter: TWideStringSetter): Boolean;
@@ -5654,32 +5748,6 @@ end;
 
 //=== { TJclSevenzipOutputCallback } =========================================
 
-type
-  TJclSevenzipUpdateCallback = class(TInterfacedObject, IUnknown, IProgress,
-    IArchiveUpdateCallback, IArchiveUpdateCallback2, ICryptoGetTextPassword2)
-  private
-    FArchive: TJclCompressionArchive;
-    FLastStream: Cardinal;
-  public
-    constructor Create(AArchive: TJclCompressionArchive);
-    // IProgress
-    function SetCompleted(CompleteValue: PInt64): HRESULT; stdcall;
-    function SetTotal(Total: Int64): HRESULT; stdcall;
-    // IArchiveUpdateCallback
-    function GetProperty(Index: Cardinal; PropID: Cardinal; out Value: tagPROPVARIANT): HRESULT; stdcall;
-    function GetStream(Index: Cardinal; out InStream: ISequentialInStream): HRESULT; stdcall;
-    function GetUpdateItemInfo(Index: Cardinal; NewData: PInteger;
-      NewProperties: PInteger; IndexInArchive: PCardinal): HRESULT; stdcall;
-    function SetOperationResult(OperationResult: Integer): HRESULT; stdcall;
-    // IArchiveUpdateCallback2
-    function GetVolumeSize(Index: Cardinal; Size: PInt64): HRESULT; stdcall;
-    function GetVolumeStream(Index: Cardinal;
-      out VolumeStream: ISequentialOutStream): HRESULT; stdcall;
-    // ICryptoGetTextPassword2
-    function CryptoGetTextPassword2(PasswordIsDefined: PInteger;
-      Password: PBStr): HRESULT; stdcall;
-  end;
-
 constructor TJclSevenzipUpdateCallback.Create(
   AArchive: TJclCompressionArchive);
 begin
@@ -5712,7 +5780,8 @@ begin
   case PropID of
     kpidNoProperty:
       Value.vt := VT_NULL;
-    //kpidHandlerItemIndex: (seems unused)
+    // kpidMainSubfile: ;
+    // kpidHandlerItemIndex: ;
     kpidPath:
       begin
         Value.vt := VT_BSTR;
@@ -5734,7 +5803,7 @@ begin
         Value.vt := VT_UI8;
         Value.uhVal.QuadPart := AItem.FileSize;
       end;
-    //kpidPackSize:
+    // kpidPackSize: ;
     kpidAttrib:
       begin
         Value.vt := VT_UI4;
@@ -5760,32 +5829,73 @@ begin
         Value.vt := VT_BOOL;
         Value.bool := True;
       end;
-    {kpidCommented:
-    kpidEncrypted:
-    kpidSplitBefore:
-    kpidSplitAfter:
-    kpidDictionarySize:
-    kpidCRC:
-    kpidType:}
+    // kpidCommented: ;
+    // kpidEncrypted: ;
+    // kpidSplitBefore: ;
+    // kpidSplitAfter: ;
+    // kpidDictionarySize: ;
+    // kpidCRC: ;
+    // kpidType: ;
     kpidIsAnti:
       begin
         Value.vt := VT_BOOL;
         Value.bool := False;
       end;
-    {kpidMethod:
-    kpidHostOS:
-    kpidFileSystem:
+    // kpidMethod: ;
+    // kpidHostOS: ;
+    // kpidFileSystem: ;
     kpidUser:
+      begin
+        Value.vt := VT_BSTR;
+        Value.bstrVal := SysAllocString(PWideChar(AItem.User));
+      end;
     kpidGroup:
-    kpidBlock:
-    kpidComment:
-    kpidPosition:
-    kpidPrefix:}
+      begin
+        Value.vt := VT_BSTR;
+        Value.bstrVal := SysAllocString(PWideChar(AItem.Group));
+      end;
+    // kpidBlock: ;
+    // kpidComment: ;
+    // kpidPosition: ;
+    // kpidPrefix: ;
+    // kpidNumSubDirs: ;
+    // kpidNumSubFiles: ;
+    // kpidUnpackVer: ;
+    // kpidVolume: ;
+    // kpidIsVolume: ;
+    // kpidOffset: ;
+    // kpidLinks: ;
+    // kpidNumBlocks: ;
+    // kpidNumVolumes: ;
     kpidTimeType:
       begin
         Value.vt := VT_UI4;
         Value.ulVal := kWindows;
       end;
+    // kpidBit64: ;
+    // kpidBigEndian: ;
+    // kpidCpu: ;
+    // kpidPhySize: ;
+    // kpidHeadersSize: ;
+    // kpidChecksum: ;
+    // kpidCharacts: ;
+    // kpidVa: ;
+    // kpidId: ;
+    // kpidShortName: ;
+    // kpidCreatorApp: ;
+    // kpidSectorSize: ;
+    kpidPosixAttrib:
+      begin
+        Value.vt := VT_EMPTY;
+      end;
+    // kpidLink: ;
+    // kpidTotalSize: ;
+    // kpidFreeSpace: ;
+    // kpidClusterSize: ;
+    // kpidVolumeName: ;
+    // kpidLocalName: ;
+    // kpidProvider: ;
+    // kpidUserDefined: ;
   else
     Value.vt := VT_EMPTY;
     Result := S_FALSE;
@@ -6609,20 +6719,6 @@ end;
 
 //=== { TJclSevenzipOpenCallback } ===========================================
 
-type
-  TJclSevenzipOpenCallback = class(TInterfacedObject, IArchiveOpenCallback,
-    ICryptoGetTextPassword, IUnknown)
-  private
-    FArchive: TJclCompressionArchive;
-  public
-    constructor Create(AArchive: TJclCompressionArchive);
-    // IArchiveOpenCallback
-    function SetCompleted(Files: PInt64; Bytes: PInt64): HRESULT; stdcall;
-    function SetTotal(Files: PInt64; Bytes: PInt64): HRESULT; stdcall;
-    // ICryptoGetTextPassword
-    function CryptoGetTextPassword(password: PBStr): HRESULT; stdcall;
-  end;
-
 constructor TJclSevenzipOpenCallback.Create(
   AArchive: TJclCompressionArchive);
 begin
@@ -6653,26 +6749,6 @@ begin
 end;
 
 //=== { TJclSevenzipExtractCallback } ========================================
-
-type
-  TJclSevenzipExtractCallback = class(TInterfacedObject, IUnknown, IProgress,
-    IArchiveExtractCallback, ICryptoGetTextPassword)
-  private
-    FArchive: TJclCompressionArchive;
-    FLastStream: Cardinal;
-  public
-    constructor Create(AArchive: TJclCompressionArchive);
-    // IArchiveExtractCallback
-    function GetStream(Index: Cardinal; out OutStream: ISequentialOutStream;
-      askExtractMode: Cardinal): HRESULT; stdcall;
-    function PrepareOperation(askExtractMode: Cardinal): HRESULT; stdcall;
-    function SetOperationResult(resultEOperationResult: Integer): HRESULT; stdcall;
-    // IProgress
-    function SetCompleted(CompleteValue: PInt64): HRESULT; stdcall;
-    function SetTotal(Total: Int64): HRESULT; stdcall;
-    // ICryptoGetTextPassword
-    function CryptoGetTextPassword(password: PBStr): HRESULT; stdcall;
-  end;
 
 constructor TJclSevenzipExtractCallback.Create(
   AArchive: TJclCompressionArchive);

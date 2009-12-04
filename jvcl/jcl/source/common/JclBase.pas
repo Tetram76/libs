@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar. 25 août 2009)                          $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2009-11-05 20:10:50 +0100 (jeu. 05 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3077                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -54,9 +54,9 @@ uses
 // Version
 const
   JclVersionMajor   = 2;    // 0=pre-release|beta/1, 2, ...=final
-  JclVersionMinor   = 1;    // Fifth minor release since JCL 1.90
+  JclVersionMinor   = 2;    // Fifth minor release since JCL 1.90
   JclVersionRelease = 0;    // 0: pre-release|beta/ 1: release
-  JclVersionBuild   = 3450; // build number, days since march 1, 2000
+  JclVersionBuild   = 3537; // build number, days since march 1, 2000
   JclVersion = (JclVersionMajor shl 24) or (JclVersionMinor shl 16) or
     (JclVersionRelease shl 15) or (JclVersionBuild shl 0);
 
@@ -383,8 +383,8 @@ procedure GetMem(out P; Size: Longint);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBase.pas $';
-    Revision: '$Revision: 2969 $';
-    Date: '$Date: 2009-08-25 20:22:46 +0200 (mar. 25 août 2009) $';
+    Revision: '$Revision: 3077 $';
+    Date: '$Date: 2009-11-05 20:10:50 +0100 (jeu. 05 nov. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

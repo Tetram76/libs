@@ -18,8 +18,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3012                                                                     $ }
+{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3044                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -57,8 +57,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaExceptionForm.pas $';
-    Revision: '$Revision: 3012 $';
-    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
+    Revision: '$Revision: 3044 $';
+    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil
@@ -111,6 +111,7 @@ end;
 procedure TJclExpertExceptionForm.ShowException(AExceptionObj: TObject);
 var
   AStackInfoList: TJclStackInfoList;
+  AJclExpertException: EJclExpertException;
 begin
   MemoCallStack.Lines.Clear;
 
@@ -121,25 +122,23 @@ begin
     if AExceptionObj is Exception then
     begin
       MemoCallStack.Lines.Add(Format(LoadResString(@RsDetailsExceptionMessage), [Exception(AExceptionObj).Message]));
-{$IFDEF MSWINDOWS}
       if (AExceptionObj is EJclExpertException) then
-        with EJclExpertException(AExceptionObj) do
-          if Assigned(StackInfo) then
       begin
-        StackInfo.AddToStrings(MemoCallStack.Lines, True, True, True, True);
-        Exit;
+        AJclExpertException := EJclExpertException(AExceptionObj);
+        if Assigned(AJclExpertException.StackInfo) then
+        begin
+          AJclExpertException.StackInfo.AddToStrings(MemoCallStack.Lines, True, True, True, True);
+          Exit;
+        end;
       end;
-{$ENDIF MSWINDOWS}
     end;
 
-{$IFDEF MSWINDOWS}
-    AStackInfoList := JclCreateStackList(False, 0, nil);
+    AStackInfoList := JclCreateStackList(True, 0, nil, False);
     try
       AStackInfoList.AddToStrings(MemoCallStack.Lines, True, True, True, True);
     finally
       AStackInfoList.Free;
     end;
-{$ENDIF MSWINDOWS}
   except
     MemoCallStack.Lines.Add(LoadResString(@RsErrorWhileFormatting));
   end;

@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3012                                                                     $ }
+{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3044                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -215,8 +215,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeImpl.pas $';
-    Revision: '$Revision: 3012 $';
-    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
+    Revision: '$Revision: 3044 $';
+    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil
@@ -243,7 +243,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -656,7 +655,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -800,7 +798,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -925,7 +922,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -1110,7 +1106,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -1577,7 +1572,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -1591,7 +1585,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      //raise; Do not lock out the user from compiling anything
     end;
   end;
 end;
@@ -1715,7 +1708,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -1749,7 +1741,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -1886,7 +1877,7 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
+      Result := nil;
     end;
   end;
 end;
@@ -1912,7 +1903,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -1933,7 +1923,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -1954,7 +1943,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;

@@ -31,9 +31,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2009-11-05 18:00:22 +0100 (jeu. 05 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3071                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -277,6 +277,7 @@ type
 
   IJclPropInfo = interface
     ['{7DAD5227-46EA-11D5-B0C0-4854E825F345}']
+    function GetPropInfo: PPropInfo;
     function GetPropType: IJclTypeInfo;
     function GetReader: Pointer;
     function GetWriter: Pointer;
@@ -296,6 +297,7 @@ type
     function HasDefault: Boolean;
     function HasIndex: Boolean;
 
+    property PropInfo: PPropInfo read GetPropInfo;
     property PropType: IJclTypeInfo read GetPropType;
     property Reader: Pointer read GetReader;
     property Writer: Pointer read GetWriter;
@@ -596,8 +598,8 @@ function JclIsClassByName(const AnObj: TObject; const AClass: TClass): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclRTTI.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3071 $';
+    Date: '$Date: 2009-11-05 18:00:22 +0100 (jeu. 05 nov. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

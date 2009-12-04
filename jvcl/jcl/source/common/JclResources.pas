@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-05 16:47:30 +0200 (lun. 05 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3039                                                                     $ }
+{ Last modified: $Date:: 2009-11-05 18:19:08 +0100 (jeu. 05 nov. 2009)                           $ }
+{ Revision:      $Rev:: 3072                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1074,13 +1074,13 @@ resourcestring
   RsCompressionUnavailableProperty   = 'Property is not available';
   RsCompressionCompressingError      = 'Operation is not supported while compressing';
   RsCompressionDecompressingError    = 'Operation is not supported while decompressing';
+  RsCompressionNoFileName            = 'File name not supplied';
   RsCompressionUnsupportedMethod     = 'Unsupported method';
   RsCompressionDataError             = 'Data error';
   RsCompressionCRCError              = 'CRC error';
   RsCompressionUnknownError          = 'Unknown error';
   RsCompression7zLoadError           = 'Sevenzip: Failed to load 7z.dll';
   RsCompression7zReturnError         = 'Sevenzip: Error result (%.8x) "%s"';
-  RsCompression7zUnassignedStream    = 'Sevenzip: Stream object is not assigned';
   RsCompression7zOutArchiveError     = 'Sevenzip: Failed to get out archive interface for class %s';
   RsCompression7zInArchiveError      = 'Sevenzip: Failed to get in archive interface for class %s';
   RsCompression7zUnknownValueType    = 'Sevenzip: Unknown value type (%d) for property ID %d';
@@ -2215,8 +2215,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3039 $';
-    Date: '$Date: 2009-10-05 16:47:30 +0200 (lun. 05 oct. 2009) $';
+    Revision: '$Revision: 3072 $';
+    Date: '$Date: 2009-11-05 18:19:08 +0100 (jeu. 05 nov. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

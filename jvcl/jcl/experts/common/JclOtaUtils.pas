@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3012                                                                     $ }
+{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
+{ Revision:      $Rev:: 3044                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -70,7 +70,6 @@ type
 //   on ExceptionObj: TObject do
 //   begin
 //     JclExpertShowExceptionDialog(ExceptionObj);
-//     raise;
 //   end;
 // end;
 // entry points for experts are usually:
@@ -299,8 +298,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaUtils.pas $';
-    Revision: '$Revision: 3012 $';
-    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
+    Revision: '$Revision: 3044 $';
+    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil
@@ -338,8 +337,8 @@ var
   Index: Integer;
   TestAction: TCustomAction;
 begin
+  Result := nil;
   try
-    Result := nil;
     if Assigned(GlobalActionList) then
       for Index := 0 to GlobalActionList.Count-1 do
       begin
@@ -351,7 +350,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -665,7 +663,7 @@ end;
 procedure EJclExpertException.AfterConstruction;
 begin
   inherited AfterConstruction;
-  FStackInfo := JclCreateStackList(False, 0, nil, False);
+  FStackInfo := JclCreateStackList(True, 0, nil, False);
 end;
 
 destructor EJclExpertException.Destroy;
@@ -871,7 +869,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -884,7 +881,6 @@ begin
     on ExceptionObj: TObject do
     begin
       JclExpertShowExceptionDialog(ExceptionObj);
-      raise;
     end;
   end;
 end;
@@ -1791,7 +1787,6 @@ except
   on ExceptionObj: TObject do
   begin
     JclExpertShowExceptionDialog(ExceptionObj);
-    raise;
   end;
 end;
 
@@ -1811,7 +1806,6 @@ except
   on ExceptionObj: TObject do
   begin
     JclExpertShowExceptionDialog(ExceptionObj);
-    raise;
   end;
 end;
 
