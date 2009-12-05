@@ -32,7 +32,7 @@ Known Issues:
   * ResetSystemIcons only tested on W2k
 
 -----------------------------------------------------------------------------}
-// $Id: JvComputerInfoEx.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvComputerInfoEx.pas 12596 2009-11-05 16:20:15Z outchy $
 
 unit JvComputerInfoEx;
 
@@ -1452,8 +1452,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComputerInfoEx.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12596 $';
+    Date: '$Date: 2009-11-05 17:20:15 +0100 (jeu. 05 nov. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1580,6 +1580,45 @@ begin
     Result := Result or ARW_TOPRIGHT;
 end;
 
+function RegNativeReadStringDef(const RootKey: DelphiHKEY; const Key, Name: string; Def: string): string;
+var
+  LastAccess: TJclRegWOW64Access;
+begin
+  LastAccess := RegGetWOW64AccessMode;
+  try
+    RegSetWOW64AccessMode(raNative);
+    Result := RegReadStringDef(RootKey, Key, Name, Def);
+  finally
+    RegSetWOW64AccessMode(LastAccess);
+  end;
+end;
+
+procedure RegNativeWriteString(const RootKey: DelphiHKEY; const Key, Name, Value: string);
+var
+  LastAccess: TJclRegWOW64Access;
+begin
+  LastAccess := RegGetWOW64AccessMode;
+  try
+    RegSetWOW64AccessMode(raNative);
+    RegWriteString(RootKey, Key, Name, Value);
+  finally
+    RegSetWOW64AccessMode(LastAccess);
+  end;
+end;
+
+function RegNativeReadIntegerDef(const RootKey: DelphiHKEY; const Key, Name: string; Def: Integer): Integer;
+var
+  LastAccess: TJclRegWOW64Access;
+begin
+  LastAccess := RegGetWOW64AccessMode;
+  try
+    RegSetWOW64AccessMode(raNative);
+    Result := RegReadIntegerDef(RootKey, Key, Name, Def);
+  finally
+    RegSetWOW64AccessMode(LastAccess);
+  end;
+end;
+
 //=== { TJvWriteableInfo } ===================================================
 
 constructor TJvWriteableInfo.Create;
@@ -1678,12 +1717,12 @@ end;
 
 function TJvOSVersionInfo.GetWinProductID: string;
 begin
-  Result := RegReadStringDef(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'ProductID', '');
+  Result := RegNativeReadStringDef(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'ProductID', '');
 end;
 
 function TJvOSVersionInfo.GetWinProductName: string;
 begin
-  Result := RegReadStringDef(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'ProductName', '');
+  Result := RegNativeReadStringDef(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'ProductName', '');
 end;
 
 function TJvOSVersionInfo.GetWinServicePackVersion: DWORD;
@@ -2476,9 +2515,9 @@ function TJvIdentification.GetComment: string;
 begin
   if IsWinNT then
     // (p3) should return empty string on unsupported NT OS's
-    Result := RegReadStringDef(HKEY_LOCAL_MACHINE, cCommentRegPathNT, 'srvcomment', '')
+    Result := RegNativeReadStringDef(HKEY_LOCAL_MACHINE, cCommentRegPathNT, 'srvcomment', '')
   else
-    Result := RegReadStringDef(HKEY_LOCAL_MACHINE, cCommentRegPath, 'Comment', '')
+    Result := RegNativeReadStringDef(HKEY_LOCAL_MACHINE, cCommentRegPath, 'Comment', '')
 end;
 
 function TJvIdentification.GetDomainName: string;
@@ -2568,7 +2607,7 @@ function TJvIdentification.GetLocalWorkgroup: string;
 var
   LanInfo: PWkstaInfo100;
 begin
-  Result := RegReadStringDef(HKEY_LOCAL_MACHINE, 'System\CurrentControlSet\Services\Vxd\VNETSUP', 'Workgroup', '');
+  Result := RegNativeReadStringDef(HKEY_LOCAL_MACHINE, 'System\CurrentControlSet\Services\Vxd\VNETSUP', 'Workgroup', '');
   if (Result = '') and IsWinNT then
   begin
     LanInfo := nil;
@@ -2619,7 +2658,7 @@ begin
     // Currently, only allow to write if known to be supported and raise error if not supported,
     // but maybe that's a bad idea?
     if IsWinXP then // "srvcomment" property only supported on WinXP AFAIK
-      RegWriteString(HKEY_LOCAL_MACHINE, cCommentRegPathNT, 'srvcomment', Value)
+      RegNativeWriteString(HKEY_LOCAL_MACHINE, cCommentRegPathNT, 'srvcomment', Value)
     else
     if not IsWinNT then
       // Win95/98 both support Comment
@@ -2665,7 +2704,7 @@ end;
 procedure TJvIdentification.SetRegisteredCompany(const Value: string);
 begin
   if not IsDesigning and not ReadOnly then
-    RegWriteString(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'RegisteredOrganization', Value)
+    RegNativeWriteString(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'RegisteredOrganization', Value)
   else
     RaiseReadOnly;
 end;
@@ -2673,7 +2712,7 @@ end;
 procedure TJvIdentification.SetRegisteredOwner(const Value: string);
 begin
   if not IsDesigning and not ReadOnly then
-    RegWriteString(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'RegisteredOwner', Value)
+    RegNativeWriteString(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'RegisteredOwner', Value)
   else
     RaiseReadOnly;
 end;
@@ -2889,7 +2928,7 @@ end;
 
 function TJvAppVersions.GetADOVersion: string;
 begin
-  Result := RegReadStringDef(HKEY_LOCAL_MACHINE, '\SOFTWARE\Microsoft\DataAccess', 'Version', '');
+  Result := RegNativeReadStringDef(HKEY_LOCAL_MACHINE, '\SOFTWARE\Microsoft\DataAccess', 'Version', '');
 end;
 
 function TJvAppVersions.GetBDELocation: string;
@@ -2919,7 +2958,7 @@ end;
 
 function TJvAppVersions.GetIEVersion: string;
 begin
-  Result := RegReadStringDef(HKEY_LOCAL_MACHINE, '\SOFTWARE\Microsoft\Internet Explorer', 'Version', '');
+  Result := RegNativeReadStringDef(HKEY_LOCAL_MACHINE, '\SOFTWARE\Microsoft\Internet Explorer', 'Version', '');
 end;
 
 function TJvAppVersions.GetOpenGLVersion: string;
@@ -2935,7 +2974,7 @@ end;
 
 function TJvAppVersions.GetDirectXVersion: string;
 begin
-  Result := RegReadStringDef(HKEY_LOCAL_MACHINE, '\SOFTWARE\Microsoft\DirectX', 'Version', '');
+  Result := RegNativeReadStringDef(HKEY_LOCAL_MACHINE, '\SOFTWARE\Microsoft\DirectX', 'Version', '');
 end;
 
 procedure TJvAppVersions.SetADOVersion(const Value: string);
@@ -3151,7 +3190,7 @@ end;
 
 function TJvMiscInfo.GetDVDRegion: Integer;
 begin
-  Result := RegReadIntegerDef(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'DVD_Region', -1);
+  Result := RegNativeReadIntegerDef(HKEY_LOCAL_MACHINE, REG_CURRENT_VERSION, 'DVD_Region', -1);
 end;
 
 function TJvMiscInfo.GetHardwareProfile: TJvHardwareProfile;
@@ -3184,9 +3223,33 @@ begin
 end;
 
 function TJvMiscInfo.GetNetBIOS: Boolean;
+type
+  _NCB64 = record
+    ncb_command: UCHAR;  // command code
+    ncb_retcode: UCHAR;  // return code
+    ncb_lsn: UCHAR;      // local session number
+    ncb_num: UCHAR;      // number of our network name
+    ncb_buffer: PUCHAR;  // address of message buffer
+    ncb_length: Word;    // size of message buffer
+    ncb_callname: array [0..NCBNAMSZ - 1] of UCHAR; // blank-padded name of remote
+    ncb_name: array [0..NCBNAMSZ - 1] of UCHAR;     // our blank-padded netname
+    ncb_rto: UCHAR;      // rcv timeout/retry count
+    ncb_sto: UCHAR;      // send timeout/sys timeout
+    ncb_post: TNcbPost;  // POST routine address
+    ncb_lana_num: UCHAR; // lana (adapter) number
+    ncb_cmd_cplt: UCHAR; // 0xff => commmand pending
+    ncb_reserve: array [0..17] of UCHAR; // reserved, used by BIOS
+    ncb_event: THandle;   // HANDLE to Win32 event which
+                         // will be set to the signalled
+                         // state when an ASYNCH command
+                         // completes
+  end;
+
 var
-  P: _NCB;
+  P: _NCB64; // 64bit structure is larger than the 32bit structure
 begin
+  FillChar(P, SizeOf(P), 0);
+  P.ncb_command := NCBASTAT;
   Result := RtdlNetBios(@P) <> NRC_OPENERR;
 end;
 

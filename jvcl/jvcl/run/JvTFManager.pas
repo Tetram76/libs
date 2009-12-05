@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFManager.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTFManager.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvTFManager;
 
@@ -1036,8 +1036,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFManager.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2860,7 +2860,7 @@ begin
   NotifyApptCtrl(ApptCtrl, Self, sncRefresh);
   {
     If Assigned(ApptCtrl) Then
-      Windows.PostMessage(ApptCtrl.Handle, CN_REQUESTREFRESH, Integer(Schedule), 0)
+      Windows.PostMessage(ApptCtrl.Handle, CN_REQUESTREFRESH, WPARAM(Schedule), 0)
     Else
       Raise EJvTFScheduleManagerError.Create('Could not send refresh request.  ' +
                                         'ApptCtrl not assigned');

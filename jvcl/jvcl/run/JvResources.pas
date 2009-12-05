@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvResources.pas 12502 2009-09-16 17:35:10Z ahuser $
+// $Id: JvResources.pas 12594 2009-11-03 12:38:16Z ahuser $
 
 unit JvResources;
 
@@ -1124,6 +1124,7 @@ resourcestring
   RsHLEdPropDlg_cbBackspaceUnindents = 'Backspace &unindents';
   RsHLEdPropDlg_cbGroupUndo = '&Group undo';
   RsHLEdPropDlg_cbCursorBeyondEOF = 'Cursor beyond &EOF';
+  RsHLEdPropDlg_cbCursorBeyondEOL = 'Cursor beyond end of &line';
   RsHLEdPropDlg_cbUndoAfterSave = '&Undo after sa&ve';
   RsHLEdPropDlg_cbKeepTrailingBlanks = '&Keep trailing blanks';
   RsHLEdPropDlg_cbDoubleClickLine = '&Double click line';
@@ -2358,8 +2359,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvResources.pas $';
-    Revision: '$Revision: 12502 $';
-    Date: '$Date: 2009-09-16 19:35:10 +0200 (mer. 16 sept. 2009) $';
+    Revision: '$Revision: 12594 $';
+    Date: '$Date: 2009-11-03 13:38:16 +0100 (mar. 03 nov. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

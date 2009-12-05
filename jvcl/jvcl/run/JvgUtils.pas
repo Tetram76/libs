@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgUtils.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgUtils.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvgUtils;
 
@@ -142,8 +142,8 @@ function DeleteObject(P1: HGDIOBJ): BOOL; stdcall;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgUtils.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1268,7 +1268,7 @@ begin
           begin
             SaveIndex := SaveDC(DC);
             SetViewportOrgEx(DC, Left + X, Top + Y, nil);
-            Perform(WM_PAINT, Longint(DC), 0);
+            Perform(WM_PAINT, WPARAM(DC), 0);
             RestoreDC(DC, SaveIndex);
           end;
     end;
@@ -1320,7 +1320,7 @@ begin
           SaveIndex := SaveDC(DC);
           SetViewportOrgEx(DC, Left + X, Top + Y, nil);
           IntersectClipRect(DC, 0, 0, Width, Height);
-          Perform(WM_PAINT, Longint(DC), 0);
+          Perform(WM_PAINT, WPARAM(DC), 0);
           RestoreDC(DC, SaveIndex);
         end;
       end;

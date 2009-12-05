@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppDBStorage.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvAppDBStorage.pas 12572 2009-10-25 15:37:51Z ahuser $
 
 unit JvAppDBStorage;
 
@@ -124,8 +124,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppDBStorage.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12572 $';
+    Date: '$Date: 2009-10-25 16:37:51 +0100 (dim. 25 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -381,7 +381,7 @@ begin
     FKeyLink.DataSource := Value;
     FValueLink.DataSource := Value;
   end;
-  ReplaceComponentReference (Self, Value, TComponent(fDatasource));
+  ReplaceComponentReference(Self, Value, TComponent(FDataSource));
 end;
 
 procedure TJvCustomAppDBStorage.SetKeyField(const Value: string);

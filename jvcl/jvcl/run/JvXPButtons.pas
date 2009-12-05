@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPButtons.pas 12464 2009-08-23 10:43:09Z ahuser $
+// $Id: JvXPButtons.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvXPButtons;
 
@@ -288,8 +288,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPButtons.pas $';
-    Revision: '$Revision: 12464 $';
-    Date: '$Date: 2009-08-23 12:43:09 +0200 (dim. 23 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -412,7 +412,7 @@ begin
     FDefault := Value;
     if GetParentForm(Self) <> nil then
       with GetParentForm(Self) do
-        Perform(CM_FOCUSCHANGED, 0, Longint(ActiveControl));
+        Perform(CM_FOCUSCHANGED, 0, LPARAM(ActiveControl));
   end;
 end;
 

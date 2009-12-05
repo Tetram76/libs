@@ -11,7 +11,7 @@ the specific language governing rights and limitations under the License.
 The Original Code is: JvDateTimePicker.PAS, released on 2001-02-28.
 
 The Initial Developer of the Original Code is S?stien Buysse [sbuysse att buypin dott com]
-Portions created by S?stien Buysse are Copyright (C) 2001 S?stien Buysse.
+Portions created by SÈbastien Buysse are Copyright (C) 2001 SÈbastien Buysse.
 All Rights Reserved.
 
 Contributor(s):
@@ -36,7 +36,7 @@ Known Issues:
       DateAndTime := JvDateTimePicker1.NullDate;
 
 -----------------------------------------------------------------------------}
-// $Id: JvDateTimePicker.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDateTimePicker.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvDateTimePicker;
 
@@ -95,8 +95,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDateTimePicker.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 ao√ªt 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -171,9 +171,9 @@ begin
       ((AKind = dtkTime) and WithinDelta(ADateTime, ANullDate)));
 
   if Result then
-    SendMessage(Handle, DTM_SETFORMAT, 0, Integer(PChar('''' + ANullText + '''')))
+    SendMessage(Handle, DTM_SETFORMAT, 0, LPARAM(PChar('''' + ANullText + '''')))
   else
-    SendMessage(Handle, DTM_SETFORMAT, 0, Integer(PChar(AFormat)));
+    SendMessage(Handle, DTM_SETFORMAT, 0, LPARAM(PChar(AFormat)));
 end;
 
 procedure TJvDateTimePicker.SetNullDate(const Value: TDateTime);

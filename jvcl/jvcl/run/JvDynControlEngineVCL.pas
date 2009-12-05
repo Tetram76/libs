@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineVCL.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDynControlEngineVCL.pas 12563 2009-10-19 23:55:49Z jfudickar $
 
 unit JvDynControlEngineVCL;
 
@@ -286,7 +286,7 @@ type
 
   TJvDynControlVCLMemo = class(TMemo, IUnknown,
     IJvDynControl, IJvDynControlData, IJvDynControlItems, IJvDynControlMemo,
-    IJvDynControlReadOnly, IJvDynControlAlignment)
+    IJvDynControlReadOnly, IJvDynControlAlignment,IJvDynControlFont)
   public
     procedure ControlSetDefaultProperties;
     procedure ControlSetReadOnly(Value: Boolean);
@@ -312,11 +312,14 @@ type
     procedure ControlSetScrollBars(Value: TScrollStyle);
     //IJvDynControlAlignment
     procedure ControlSetAlignment(Value: TAlignment);
+    //IJvDynControlFont
+    procedure ControlSetFont(Value: TFont);
+    function ControlGetFont: TFont;
   end;
 
   TJvDynControlVCLRichEdit = class(TRichEdit, IUnknown,
     IJvDynControl, IJvDynControlData, IJvDynControlItems, IJvDynControlMemo,
-    IJvDynControlReadOnly)
+    IJvDynControlReadOnly,IJvDynControlFont)
   public
     procedure ControlSetDefaultProperties;
     procedure ControlSetReadOnly(Value: Boolean);
@@ -340,6 +343,10 @@ type
     procedure ControlSetWantReturns(Value: Boolean);
     procedure ControlSetWordWrap(Value: Boolean);
     procedure ControlSetScrollBars(Value: TScrollStyle);
+
+    //IJvDynControlFont
+    function ControlGetFont: TFont;
+    procedure ControlSetFont(Value: TFont);
   end;
 
   TJvDynControlVCLRadioGroup = class(TRadioGroup, IUnknown,
@@ -797,8 +804,8 @@ procedure SetDynControlEngineVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineVCL.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12563 $';
+    Date: '$Date: 2009-10-20 01:55:49 +0200 (mar. 20 oct. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1648,6 +1655,11 @@ begin
   Result := State;
 end;
 
+function TJvDynControlVCLMemo.ControlGetFont: TFont;
+begin
+  Result := Font;
+end;
+
 //=== { TJvDynControlVCLMemo } ===============================================
 
 procedure TJvDynControlVCLMemo.ControlSetDefaultProperties;
@@ -1743,6 +1755,16 @@ begin
   Alignment := Value;
 end;
 
+procedure TJvDynControlVCLMemo.ControlSetFont(Value: TFont);
+begin
+  Font.Assign(Value);
+end;
+
+function TJvDynControlVCLRichEdit.ControlGetFont: TFont;
+begin
+  Result := Font;
+end;
+
 //=== { TJvDynControlVCLRichEdit } ===========================================
 
 procedure TJvDynControlVCLRichEdit.ControlSetDefaultProperties;
@@ -1811,6 +1833,11 @@ end;
 function TJvDynControlVCLRichEdit.ControlGetItems: TStrings;
 begin
   Result := Lines;
+end;
+
+procedure TJvDynControlVCLRichEdit.ControlSetFont(Value: TFont);
+begin
+  Font.Assign(Value);
 end;
 
 procedure TJvDynControlVCLRichEdit.ControlSetWantTabs(Value: Boolean);

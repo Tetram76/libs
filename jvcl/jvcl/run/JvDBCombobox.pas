@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBCombobox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBCombobox.pas 12588 2009-10-30 15:11:55Z ahuser $
 
 unit JvDBCombobox;
 
@@ -147,7 +147,6 @@ type
     procedure ComboWndProc(var Msg: TMessage; ComboWnd: HWND; ComboProc: Pointer); override;
 
     procedure CreateWnd; override;
-    procedure DropDown; override;
     function GetPaintText: string; virtual;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
@@ -247,8 +246,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBCombobox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12588 $';
+    Date: '$Date: 2009-10-30 16:11:55 +0100 (ven. 30 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -409,22 +408,19 @@ end;
 procedure TJvCustomDBComboBox.Change;
 begin
   FDataLink.Edit;
-  inherited Change;
-  FDataLink.Modified;
   if UpdateFieldImmediatelly then
     FDataLink.UpdateRecord;
+  inherited Change;
+  FDataLink.Modified;
 end;
 
 procedure TJvCustomDBComboBox.Click;
 begin
   FDataLink.Edit;
+  if UpdateFieldImmediatelly then
+    FDataLink.UpdateRecord;
   inherited Click;
   FDataLink.Modified;
-end;
-
-procedure TJvCustomDBComboBox.DropDown;
-begin
-  inherited DropDown;
 end;
 
 function TJvCustomDBComboBox.GetDataSource: TDataSource;

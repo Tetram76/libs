@@ -24,7 +24,7 @@ description : Properties dialog for TJvHLEditor component
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHLEditorPropertyForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvHLEditorPropertyForm.pas 12594 2009-11-03 12:38:16Z ahuser $
 
 unit JvHLEditorPropertyForm;
 
@@ -93,6 +93,7 @@ type
     Cell7: TPanel;
     Cell11: TPanel;
     Cell15: TPanel;
+    cbCursorBeyondEOL: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure NotImplemented(Sender: TObject);
     procedure lbElementsClick(Sender: TObject);
@@ -194,8 +195,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHLEditorPropertyForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12594 $';
+    Date: '$Date: 2009-11-03 13:38:16 +0100 (mar. 03 nov. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -208,7 +209,8 @@ uses
 
 {$R *.dfm}
 
-function GetHardCodedExamples: string; forward;
+function GetHardCodedExamples: string;
+  forward;
 
 function Pixels(Control: TControl; APixels: Integer): Integer;
 var
@@ -336,6 +338,7 @@ begin
       StoredValue['BackspaceUnindents'] := FJvHLEditor.BackSpaceUnindents;
       StoredValue['GroupUndo'] := FJvHLEditor.GroupUndo;
       StoredValue['CursorBeyondEOF'] := FJvHLEditor.CursorBeyondEOF;
+      StoredValue['CursorBeyondEOL'] := FJvHLEditor.CursorBeyondEOL;
       StoredValue['SyntaxHighlighting'] := HLed.SyntaxHighlighting;
       StoredValue['TabStops'] := FJvHLEditor.TabStops;
       StoredValue['RightMargin'] := FJvHLEditor.RightMargin;
@@ -365,6 +368,7 @@ begin
       FJvHLEditor.BackSpaceUnindents := DefaultValue['BackspaceUnindents', FJvHLEditor.BackSpaceUnindents];
       FJvHLEditor.GroupUndo := DefaultValue['GroupUndo', FJvHLEditor.GroupUndo];
       FJvHLEditor.CursorBeyondEOF := DefaultValue['CursorBeyondEOF', FJvHLEditor.CursorBeyondEOF];
+      FJvHLEditor.CursorBeyondEOL := DefaultValue['CursorBeyondEOL', FJvHLEditor.CursorBeyondEOL];
       HLed.SyntaxHighlighting := DefaultValue['SyntaxHighlighting', HLed.SyntaxHighlighting];
       FJvHLEditor.TabStops := DefaultValue['TabStops', FJvHLEditor.TabStops];
       FJvHLEditor.RightMargin := DefaultValue['RightMargin', FJvHLEditor.RightMargin];
@@ -644,6 +648,7 @@ begin
   cbBackspaceUnindents.Checked := Params.FJvHLEditor.BackSpaceUnindents;
   cbGroupUndo.Checked := Params.FJvHLEditor.GroupUndo;
   cbCursorBeyondEOF.Checked := Params.FJvHLEditor.CursorBeyondEOF;
+  cbCursorBeyondEOL.Checked := Params.FJvHLEditor.CursorBeyondEOL;
   cbSytaxHighlighting.Checked := HLed.SyntaxHighlighting;
   eTabStops.Text := string(Params.FJvHLEditor.TabStops);
   cbColorSettings.ItemIndex := Integer(FHighlighter);
@@ -673,6 +678,7 @@ begin
   Params.FJvHLEditor.BackSpaceUnindents := cbBackspaceUnindents.Checked;
   Params.FJvHLEditor.GroupUndo := cbGroupUndo.Checked;
   Params.FJvHLEditor.CursorBeyondEOF := cbCursorBeyondEOF.Checked;
+  Params.FJvHLEditor.CursorBeyondEOL := cbCursorBeyondEOL.Checked;
   HLed.SyntaxHighlighting := cbSytaxHighlighting.Checked;
   Params.FJvHLEditor.TabStops := eTabStops.Text;
   if Params.Storage <> nil then
@@ -1026,6 +1032,7 @@ begin
   cbBackspaceUnindents.Caption := RsHLEdPropDlg_cbBackspaceUnindents;
   cbGroupUndo.Caption := RsHLEdPropDlg_cbGroupUndo;
   cbCursorBeyondEOF.Caption := RsHLEdPropDlg_cbCursorBeyondEOF;
+  cbCursorBeyondEOL.Caption := RsHLEdPropDlg_cbCursorBeyondEOL;
   cbUndoAfterSave.Caption := RsHLEdPropDlg_cbUndoAfterSave;
   cbKeepTrailingBlanks.Caption := RsHLEdPropDlg_cbKeepTrailingBlanks;
   cbDoubleClickLine.Caption := RsHLEdPropDlg_cbDoubleClickLine;

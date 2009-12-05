@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGrids.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvGrids.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvGrids;
 
@@ -191,8 +191,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGrids.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -302,7 +302,7 @@ begin
   SetRect(R, 2, 2, Width - 2, Height);
   if FEditStyle <> ieSimple then
     Dec(R.Right, FButtonWidth);
-  SendMessage(Handle, EM_SETRECTNP, 0, Longint(@R));
+  SendMessage(Handle, EM_SETRECTNP, 0, LPARAM(@R));
   SendMessage(Handle, EM_SCROLLCARET, 0, 0);
   if SysLocale.FarEast then
     SetImeCompositionWindow(Font, R.Left, R.Top);
@@ -444,7 +444,7 @@ begin
       begin
         StopTracking;
         MousePos := PointToSmallPoint(ListPos);
-        SendMessage(FActiveList.Handle, WM_LBUTTONDOWN, 0, Integer(MousePos));
+        SendMessage(FActiveList.Handle, WM_LBUTTONDOWN, 0, LPARAM(MousePos));
         Exit;
       end;
     end;

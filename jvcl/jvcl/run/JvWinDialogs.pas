@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWinDialogs.pas 12549 2009-10-03 18:07:44Z ahuser $
+// $Id: JvWinDialogs.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvWinDialogs;
 
@@ -205,7 +205,7 @@ type
   end;
 
   // the signature of procedures in CPL's that implements Control Panel functionality
-  TCplApplet = function(hwndCPl: THandle; uMsg: DWORD; lParam1, lParam2: Longint): Longint; stdcall;
+  TCplApplet = function(hwndCPl: THandle; uMsg: UINT; lParam1, lParam2: LPARAM): Longint; stdcall;
 
   // (rom) largely reimplemented
   TJvAppletDialog = class(TJvCommonDialogF)
@@ -639,8 +639,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWinDialogs.pas $';
-    Revision: '$Revision: 12549 $';
-    Date: '$Date: 2009-10-03 20:07:44 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -914,7 +914,7 @@ begin
         SetLength(FAppletInfo, FCount);
         for I := 0 to Count - 1 do
         begin
-          FAppletFunc(GetForegroundWindow, CPL_INQUIRE, I, Longint(@AplInfo));
+          FAppletFunc(GetForegroundWindow, CPL_INQUIRE, I, LPARAM(@AplInfo));
           with FAppletInfo[I] do
           begin
             Icon := TIcon.Create;

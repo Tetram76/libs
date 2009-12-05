@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgGroupBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgGroupBox.pas 12590 2009-10-31 13:04:44Z jfudickar $
 
 unit JvgGroupBox;
 
@@ -134,6 +134,16 @@ type
     property OnMouseUp;
     property OnStartDrag;
     property Enabled;
+    property BevelEdges;
+    {$IFDEF DELPHI2006_UP}
+    property Padding;
+    {$ENDIF DELPHI2006_UP}
+    {$IFDEF DELPHI2009_UP}
+    property DoubleBuffered;
+    {$ENDIF DELPHI2009_UP}
+    {$IFDEF DELPHI2010_UP}
+    property Touch;
+    {$ENDIF DELPHI2010_UP}
     property Border: TJvgBevelOptions read FBorder write FBorder;
     property CaptionAlignment: TCaptionAlignment
       read FCaptionAlignment write SetCaptionAlignment default fcaNone;
@@ -160,8 +170,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgGroupBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12590 $';
+    Date: '$Date: 2009-10-31 14:04:44 +0100 (sam. 31 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -328,11 +338,11 @@ begin
       MoveWindowOrg(Canvas.Handle, -Left, -Top);
       Canvas.Lock;
       try
-        Parent.Perform(WM_ERASEBKGND, Canvas.Handle, Canvas.Handle);
+        Parent.Perform(WM_ERASEBKGND, WPARAM(Canvas.Handle), LPARAM(Canvas.Handle));
         {$IFDEF COMPILER7_UP}
-        Parent.Perform(WM_PRINTCLIENT, Canvas.Handle, PRF_CLIENT);
+        Parent.Perform(WM_PRINTCLIENT, WPARAM(Canvas.Handle), PRF_CLIENT);
         {$ELSE}
-        Parent.Perform(WM_PAINT, Canvas.Handle, 0);
+        Parent.Perform(WM_PAINT, WPARAM(Canvas.Handle), 0);
         {$ENDIF COMPILER7_UP}
       finally
         Canvas.Unlock;

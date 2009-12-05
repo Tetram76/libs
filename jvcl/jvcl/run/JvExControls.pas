@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExControls.pas 12517 2009-09-23 09:30:43Z obones $
+// $Id: JvExControls.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvExControls;
 
@@ -373,8 +373,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvExControls.pas $';
-    Revision: '$Revision: 12517 $';
-    Date: '$Date: 2009-09-23 11:30:43 +0200 (mer. 23 sept. 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -480,7 +480,7 @@ begin
   inherited Create;
   Self.Msg.Msg := Msg;
   Self.Msg.WParam := WParam;
-  Self.Msg.LParam := Longint(@LParam);
+  Self.Msg.LParam := Windows.LPARAM(@LParam);
   Self.Msg.Result := 0;
 end;
 
@@ -560,7 +560,7 @@ begin
         if Assigned(AControl) and Assigned(AControl.Parent) then
         begin
           AHintInfo := HintInfo;
-          AControl.Parent.Perform(CM_HINTSHOW, 0, Integer(@AHintInfo));
+          AControl.Parent.Perform(CM_HINTSHOW, 0, LPARAM(@AHintInfo));
           HintInfo.HintColor := AHintInfo.HintColor;
         end;
       end;

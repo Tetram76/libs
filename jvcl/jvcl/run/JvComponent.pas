@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvComponent.pas 12537 2009-10-03 09:55:35Z ahuser $
+// $Id: JvComponent.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvComponent;
 
@@ -84,8 +84,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComponent.pas $';
-    Revision: '$Revision: 12537 $';
-    Date: '$Date: 2009-10-03 11:55:35 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -244,7 +244,7 @@ begin
         FSearchTickCount := TickCount;
         if Length(FSearchText) < 32 then
           FSearchText := FSearchText + Key;
-        SendMessage(Handle, LB_SELECTSTRING, WPARAM(-1), LPARAM(PChar(FSearchText)));
+        SendMessage(Handle, LB_SELECTSTRING, -1, LPARAM(PChar(FSearchText)));
         Key := #0;
       end;
   end;

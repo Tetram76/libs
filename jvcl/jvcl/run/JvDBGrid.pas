@@ -52,7 +52,7 @@ KNOWN ISSUES:
 -----------------------------------------------------------------------------
 2004/07/08 - WPostma merged changes by Frédéric Leneuf-Magaud and ahuser.}
 
-// $Id: JvDBGrid.pas 12529 2009-10-02 07:36:09Z ahuser $
+// $Id: JvDBGrid.pas 12613 2009-12-04 15:03:35Z obones $
 
 unit JvDBGrid;
 
@@ -595,8 +595,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGrid.pas $';
-    Revision: '$Revision: 12529 $';
-    Date: '$Date: 2009-10-02 09:36:09 +0200 (ven. 02 oct. 2009) $';
+    Revision: '$Revision: 12613 $';
+    Date: '$Date: 2009-12-04 16:03:35 +0100 (ven. 04 dÃ©c. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -660,6 +660,18 @@ begin
     GridBitmaps[BmpType].LoadFromResourceName(HInstance, GridBmpNames[BmpType]);
   end;
   Result := GridBitmaps[BmpType];
+end;
+
+function DrawBiDiText(DC: HDC; const Text: string; var R: TRect; Flags: UINT;
+  Alignment: TAlignment; RightToLeft: Boolean; CanvasOrientation: TCanvasOrientation): Integer;
+const
+  AlignFlags: array [TAlignment] of UINT = (DT_LEFT, DT_RIGHT, DT_CENTER);
+  RTL: array [Boolean] of UINT = (0, DT_RTLREADING);
+begin
+  if CanvasOrientation = coRightToLeft then
+    ChangeBiDiModeAlignment(Alignment);
+  Result := Windows.DrawText(DC, PChar(Text), Length(Text), R,
+    AlignFlags[Alignment] or RTL[RightToLeft] or Flags);
 end;
 
 {$IFNDEF COMPILER7_UP}
@@ -1461,7 +1473,7 @@ var
     with DataLink.DataSet do
     begin
       DoSelection(Select, 1);
-      if AutoAppend and Eof and CanModify and (not ReadOnly) and (dgEditing in Options) then
+      if AutoAppend and Eof and CanModify and not ReadOnly and (dgEditing in Options) then
         Append;
     end;
   end;
@@ -1477,7 +1489,8 @@ var
   begin
     ACol := Col;
     Original := ACol;
-    if MultiSelect and DataLink.Active then
+    BeginUpdate;
+    try
       while True do
       begin
         if GoForward then
@@ -1486,20 +1499,30 @@ var
           Dec(ACol);
         if ACol >= ColCount then
         begin
-          ClearSelections;
+          if MultiSelect then
+            ClearSelections;
+          NextRow(False);
           ACol := IndicatorOffset;
         end
-        else
-        if ACol < IndicatorOffset then
+        else if ACol < IndicatorOffset then
         begin
-          ClearSelections;
-          ACol := ColCount;
+          if MultiSelect then
+            ClearSelections;
+          PriorRow(False);
+          ACol := ColCount - IndicatorOffset;
         end;
         if ACol = Original then
           Exit;
         if TabStops[ACol] then
+        begin
+          //MoveCol(ACol, 0);
+          SelectedIndex := ACol - IndicatorOffset;
           Exit;
+        end;
       end;
+    finally
+      EndUpdate;
+    end;
   end;
 
   function DeletePrompt: Boolean;
@@ -1588,7 +1611,10 @@ begin
         ClearSelections
       else
       if (Key = VK_TAB) and not (ssAlt in Shift) then
+      begin
         CheckTab(not (ssShift in Shift));
+        Exit;
+      end;
     end;
 
   OnKeyDown := nil;
@@ -2338,41 +2364,44 @@ begin
             Exit;
         end;
       end;
-      if (Cell.X < FixedCols + IndicatorOffset) and DataLink.Active then
+      if Cell.Y >= 0 then
       begin
-        if dgIndicator in Options then
-          inherited MouseDown(Button, Shift, 1, Y)
-        else
-        if Cell.Y >= TitleOffset then
-          if Cell.Y - Row <> 0 then
-            DataLink.DataSet.MoveBy(Cell.Y - Row);
-      end
-      else
-      begin
-        { Do not show the editor if the user right clicks on the cell. Otherwise
-          the grid's popup menu will never show. }
-        WasAlwaysShowEditor := dgAlwaysShowEditor in Options;
-        if WasAlwaysShowEditor and (Button = mbRight) {and (PopupMenu <> nil)} then
-          Options := Options - [dgAlwaysShowEditor];
-        try
-          //-------------------------------------------------------------------------------
-          // Prevents the grid from going back to the first column when dgRowSelect is True
-          // Does not work if there's no indicator column
-          //-------------------------------------------------------------------------------
-          if (dgRowSelect in Options) and (Cell.Y >= TitleOffset) then
+        if (Cell.X < FixedCols + IndicatorOffset) and DataLink.Active then
+        begin
+          if dgIndicator in Options then
             inherited MouseDown(Button, Shift, 1, Y)
           else
-            inherited MouseDown(Button, Shift, X, Y);
-          if (Col = LastCell.X) and (Row <> LastCell.Y) then
-          begin
-            { ColEnter is not invoked when switching between rows staying in the
-              same column. }
-            if FAlwaysShowEditor and not EditorMode then
-              ShowEditor;
-          end;
-        finally
+          if Cell.Y >= TitleOffset then
+            if Cell.Y - Row <> 0 then
+              DataLink.DataSet.MoveBy(Cell.Y - Row);
+        end
+        else
+        begin
+          { Do not show the editor if the user right clicks on the cell. Otherwise
+            the grid's popup menu will never show. }
+          WasAlwaysShowEditor := dgAlwaysShowEditor in Options;
           if WasAlwaysShowEditor and (Button = mbRight) {and (PopupMenu <> nil)} then
-            Options := Options + [dgAlwaysShowEditor];
+            Options := Options - [dgAlwaysShowEditor];
+          try
+            //-------------------------------------------------------------------------------
+            // Prevents the grid from going back to the first column when dgRowSelect is True
+            // Does not work if there's no indicator column
+            //-------------------------------------------------------------------------------
+            if (dgRowSelect in Options) and (Cell.Y >= TitleOffset) then
+              inherited MouseDown(Button, Shift, 1, Y)
+            else
+              inherited MouseDown(Button, Shift, X, Y);
+            if (Col = LastCell.X) and (Row <> LastCell.Y) then
+            begin
+              { ColEnter is not invoked when switching between rows staying in the
+                same column. }
+              if FAlwaysShowEditor and not EditorMode then
+                ShowEditor;
+            end;
+          finally
+            if WasAlwaysShowEditor and (Button = mbRight) {and (PopupMenu <> nil)} then
+              Options := Options + [dgAlwaysShowEditor];
+          end;
         end;
       end;
       MouseDownEvent := OnMouseDown;
@@ -2806,9 +2835,7 @@ var
   begin
     with CellCanvas do
     begin
-      if Canvas.CanvasOrientation = coRightToLeft then
-        ChangeBiDiModeAlignment(Alignment);
-      DrawOptions := AlignFlags[Alignment] or RTL[ARightToLeft];
+      DrawOptions := DT_EXPANDTABS or DT_NOPREFIX;
       if Options <> 0 then
         DrawOptions := DrawOptions or Options;
       if WordWrap then
@@ -2822,7 +2849,7 @@ var
         FillRect(B);
       end;
       SetBkMode(Handle, TRANSPARENT);
-      Windows.DrawText(Handle, PChar(Text), Length(Text), R, DrawOptions);
+      DrawBiDiText(Handle, Text, R, DrawOptions, Alignment, ARightToLeft, Canvas.CanvasOrientation);
     end;
   end;
 
@@ -2866,8 +2893,12 @@ begin
   else
   begin
     // No offscreen bitmap - The display is faster but flickers
-    with ARect do
-      R := Rect(Left + DX, Top + DY, Right - 1, Bottom - 1);
+    if IsRightToLeft then
+      with ARect do
+        R := Rect(Left, Top, Right - 1 - DX, Bottom - DY - 1)
+    else
+      with ARect do
+        R := Rect(Left + DX, Top + DY, Right - 1, Bottom - 1);
     B := ARect;
     DrawAText(Canvas);
   end;
@@ -2956,6 +2987,12 @@ end;
 
 procedure TJvDBGrid.DrawTitleCaption(Canvas: TCanvas; const TextRect: TRect; DrawColumn: TColumn);
 const
+  AlignFlags: array [TAlignment] of Integer =
+    (DT_LEFT or DT_EXPANDTABS or DT_NOPREFIX,
+     DT_RIGHT or DT_EXPANDTABS or DT_NOPREFIX,
+     DT_CENTER or DT_EXPANDTABS or DT_NOPREFIX);
+  RTL: array [Boolean] of Integer = (0, DT_RTLREADING);
+const
   MinOffs = 1;
 var
   CalcRect: TRect;
@@ -2969,8 +3006,9 @@ begin
     begin
       CalcRect := TextRect;
       Dec(CalcRect.Right, MinOffs + 1);
-      Windows.DrawText(Canvas.Handle, PChar(Caption), -1, CalcRect,
-        DT_CALCRECT or DT_LEFT or DT_EXPANDTABS or DT_NOPREFIX or DT_WORDBREAK);
+      DrawBiDiText(Canvas.Handle, Caption, CalcRect,
+        DT_EXPANDTABS or DT_NOPREFIX or DT_CALCRECT or DT_WORDBREAK,
+        Alignment, IsRightToLeft, Canvas.CanvasOrientation);
       if CalcRect.Bottom > TextRect.Bottom then
       begin
         TitleOptions := DT_END_ELLIPSIS or DT_SINGLELINE;

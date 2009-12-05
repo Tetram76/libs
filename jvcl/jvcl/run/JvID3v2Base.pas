@@ -25,7 +25,7 @@ Known Issues:
   * Some tags are not supported, see var DefaultFrameClasses. Values nil in that
     list indicate not supported frames.
 -----------------------------------------------------------------------------}
-// $Id: JvID3v2Base.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvID3v2Base.pas 12585 2009-10-29 20:27:56Z ahuser $
 
 unit JvID3v2Base;
 
@@ -1181,8 +1181,8 @@ function NiceGenreToGenre(const ANiceGenre: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvID3v2Base.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12585 $';
+    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu. 29 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -7928,8 +7928,8 @@ begin
         Capacity := Pos;
       Size := Pos;
     end;
-    FillChar(Pointer(Longint(Memory) + Position)^, Count, 0);
-    //System.Move(Buffer, Pointer(Longint(FMemory) + FPosition)^, Count);
+    FillChar(Pointer(PAnsiChar(Memory) + Position)^, Count, 0);
+    //System.Move(Buffer, Pointer(PAnsiChar(FMemory) + FPosition)^, Count);
     Position := Pos;
     Result := Count;
     Exit;

@@ -32,7 +32,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLVer.pas 12477 2009-08-25 21:12:53Z obones $
+// $Id: JVCLVer.pas 12601 2009-11-05 21:39:03Z obones $
 
 unit JVCLVer;
 
@@ -46,9 +46,9 @@ uses
 {$ENDIF UNITVERSIONING}
 
 const
-  sJVCLVersion = '3.39';
+  sJVCLVersion = '3.40';
   JVCLVersionMajor   = 3;    // 0=pre-release|beta/1, 2, ...=final
-  JVCLVersionMinor   = 39;   // minor release
+  JVCLVersionMinor   = 40;   // minor release
   JVCLVersionRelease = 0;    // 0: pre-release|beta/>=1: release
   JVCLVersionBuild   = 0;    // build number, days since march 1, 2006
 
@@ -64,8 +64,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JVCLVer.pas $';
-    Revision: '$Revision: 12477 $';
-    Date: '$Date: 2009-08-25 23:12:53 +0200 (mar. 25 août 2009) $';
+    Revision: '$Revision: 12601 $';
+    Date: '$Date: 2009-11-05 22:39:03 +0100 (jeu. 05 nov. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

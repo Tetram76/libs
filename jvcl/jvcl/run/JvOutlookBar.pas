@@ -36,7 +36,7 @@ Known Issues:
                   Outlook bar buttons now have color properties (instead of
                   assuming we will use the clBtnFace type system colors)
 -----------------------------------------------------------------------------}
-// $Id: JvOutlookBar.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvOutlookBar.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvOutlookBar;
 
@@ -464,8 +464,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOutlookBar.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -540,13 +540,13 @@ end;
 
 procedure TJvOutlookBarEdit.EditAccept;
 begin
-  Parent.Perform(CM_CAPTION_EDIT_ACCEPT, Integer(Self), Tag);
+  Parent.Perform(CM_CAPTION_EDIT_ACCEPT, WPARAM(Self), Tag);
   Hide;
 end;
 
 procedure TJvOutlookBarEdit.EditCancel;
 begin
-  Parent.Perform(CM_CAPTION_EDIT_CANCEL, Integer(Self), Tag);
+  Parent.Perform(CM_CAPTION_EDIT_CANCEL, WPARAM(Self), Tag);
   Hide;
 end;
 
@@ -838,7 +838,7 @@ end;
 procedure TJvOutlookBarButton.EditCaption;
 begin
   SendMessage(TCustomControl(TJvOutlookBarPages(TCollectionItem(TJvOutlookBarButtons(Collection).Owner).Collection).Owner).Handle,
-    CM_CAPTION_EDITING, Integer(Self), 0);
+    CM_CAPTION_EDITING, WPARAM(Self), 0);
 end;
 
 function TJvOutlookBarButton.GetDisplayName: string;
@@ -1202,7 +1202,7 @@ end;
 
 procedure TJvOutlookBarPage.EditCaption;
 begin
-  SendMessage(TCustomControl(TJvOutlookBarPages(Collection).Owner).Handle, CM_CAPTION_EDITING, Integer(Self), 1);
+  SendMessage(TCustomControl(TJvOutlookBarPages(Collection).Owner).Handle, CM_CAPTION_EDITING, WPARAM(Self), 1);
 end;
 
 function TJvOutlookBarPage.GetDisplayName: string;

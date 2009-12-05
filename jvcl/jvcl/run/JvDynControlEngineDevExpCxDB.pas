@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCxDB.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDynControlEngineDevExpCxDB.pas 12563 2009-10-19 23:55:49Z jfudickar $
 
 unit JvDynControlEngineDevExpCxDB;
 
@@ -31,7 +31,7 @@ interface
 
 {$IFDEF UNITVERSIONING}
 uses
-  JclUnitVersioning;
+  JclUnitVersioning, JvDynControlEngineDevExpcx, JvDynControlEngineIntf;
 {$ENDIF UNITVERSIONING}
 
 {$ELSE}
@@ -261,9 +261,8 @@ type
     procedure ControlSetCxProperties(Value: TCxDynControlWrapper);
   end;
 
-  TJvDynControlCxDBMemo = class(TcxDBMemo, IUnknown,
-      IJvDynControl, IJvDynControlDevExpCx, IJvDynControlData, IJvDynControlItems,
-      IJvDynControlMemo, IJvDynControlReadOnly, IJvDynControlDatabase)
+  TJvDynControlCxDBMemo = class(TcxDBMemo, IUnknown, IJvDynControl, IJvDynControlDevExpCx, IJvDynControlData,
+      IJvDynControlItems, IJvDynControlMemo, IJvDynControlReadOnly, IJvDynControlDatabase, IJvDynControlFont)
   public
     procedure ControlSetDefaultProperties;
     procedure ControlSetReadOnly(Value: Boolean);
@@ -297,6 +296,11 @@ type
 
     //IJvDynControlDevExpCx
     procedure ControlSetCxProperties(Value: TCxDynControlWrapper);
+
+    //IJvDynControlFont
+    procedure ControlSetFont(Value: TFont);
+    function ControlGetFont: TFont;
+
   end;
 
   TJvDynControlCxDBRadioGroup = class(TcxDBRadioGroup, IUnknown,
@@ -590,8 +594,8 @@ procedure SetDefaultDynControlEngineDBDevExp;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCxDB.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12563 $';
+    Date: '$Date: 2009-10-20 01:55:49 +0200 (mar. 20 oct. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1397,6 +1401,11 @@ begin
   Result := Databinding.DataField;
 end;
 
+function TJvDynControlCxDBMemo.ControlGetFont: TFont;
+begin
+  Result := Font;
+end;
+
 procedure TJvDynControlCxDBMemo.ControlSetAnchors(Value: TAnchors);
 begin
   Anchors := Value;
@@ -1406,6 +1415,11 @@ procedure TJvDynControlCxDBMemo.ControlSetCxProperties(Value: TCxDynControlWrapp
 begin
   Style.LookAndFeel.Assign(Value.LookAndFeel);
   Style.StyleController := Value.StyleController;
+end;
+
+procedure TJvDynControlCxDBMemo.ControlSetFont(Value: TFont);
+begin
+  Font.Assign(Value);
 end;
 
 //=== { TJvDynControlCxDBRadioGroup } ========================================

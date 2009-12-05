@@ -74,7 +74,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorage.pas 12507 2009-09-19 12:03:14Z ahuser $
+// $Id: JvAppStorage.pas 12605 2009-11-15 12:57:56Z jfudickar $
 
 unit JvAppStorage;
 
@@ -435,6 +435,9 @@ type
         Integer; virtual;
     procedure WriteListItemCount(const Path: string; const ItemCount: Integer;
         const ItemName: string = cItem); virtual;
+    // Change the ReadOnly CurrentInstanceCreateEvent Event
+    procedure SetCurrentInstanceCreateEvent(const Value:
+        TJvAppStorageObjectListItemCreateEvent);
     property CurrentInstanceCreateEvent: TJvAppStorageObjectListItemCreateEvent
         read FCurrentInstanceCreateEvent;
   public
@@ -953,8 +956,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorage.pas $';
-    Revision: '$Revision: 12507 $';
-    Date: '$Date: 2009-09-19 14:03:14 +0200 (sam. 19 sept. 2009) $';
+    Revision: '$Revision: 12605 $';
+    Date: '$Date: 2009-11-15 13:57:56 +0100 (dim. 15 nov. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -2199,12 +2202,12 @@ begin
     if ClearFirst then
       List.Clear;
     ResolvePath(Path + cSubStorePath, TargetStore, TargetPath); // Only needed for assigning the event
-    FOldInstanceCreateEvent := TargetStore.FCurrentInstanceCreateEvent;
+    FOldInstanceCreateEvent := TargetStore.CurrentInstanceCreateEvent;
     try
-      TargetStore.FCurrentInstanceCreateEvent := ItemCreator;
+      TargetStore.SetCurrentInstanceCreateEvent(ItemCreator);
       Result := ReadList(Path, List, ReadObjectListItem, ItemName);
     finally
-      TargetStore.FCurrentInstanceCreateEvent := FOldInstanceCreateEvent;
+      TargetStore.SetCurrentInstanceCreateEvent(FOldInstanceCreateEvent);
     end;
   end;
 end;
@@ -2318,6 +2321,7 @@ function TJvCustomAppStorage.ReadStringObjectList(const Path: string;
 var
   TargetStore: TJvCustomAppStorage;
   TargetPath: string;
+  FOldInstanceCreateEvent: TJvAppStorageObjectListItemCreateEvent;
 begin
   if not ListStoredInt(Path, ItemName) and StorageOptions.DefaultIfValueNotExists then
     Result := SL.Count
@@ -2330,7 +2334,13 @@ begin
       if ClearFirst then
         SL.Clear;
       ReadPersistent(Path,SL,True,False);
-      Result := TargetStore.ReadList(TargetPath, SL, TargetStore.ReadStringObjectListItem, ItemName);
+      FOldInstanceCreateEvent := TargetStore.CurrentInstanceCreateEvent;
+      try
+        TargetStore.SetCurrentInstanceCreateEvent(ItemCreator);
+        Result := TargetStore.ReadList(TargetPath, SL, TargetStore.ReadStringObjectListItem, ItemName);
+      finally
+        TargetStore.SetCurrentInstanceCreateEvent(FOldInstanceCreateEvent);
+      end;
     finally
       SL.EndUpdate;
     end;
@@ -2617,7 +2627,7 @@ begin
         SetOrdProp(PersObj, PropName, TmpValue);
       end;
     tkVariant:
-      SetStrProp(PersObj, PropName, ReadString(Path, GetVariantProp(PersObj, PropName)));
+      SetVariantProp(PersObj, PropName, ReadString(Path, GetVariantProp(PersObj, PropName)));
     tkSet:
       begin
         TmpValue := GetOrdProp(PersObj, PropName);
@@ -3153,6 +3163,12 @@ function TJvCustomAppStorage.ReadWideString(const Path: string;
   const Default: WideString = ''): WideString;
 begin
   Result := DoReadWideString(Path,Default);
+end;
+
+procedure TJvCustomAppStorage.SetCurrentInstanceCreateEvent(const Value:
+    TJvAppStorageObjectListItemCreateEvent);
+begin
+  FCurrentInstanceCreateEvent := Value;
 end;
 
 procedure TJvCustomAppStorage.WriteWideString(const Path: string;

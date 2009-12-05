@@ -1,5 +1,5 @@
 { included in JVCLData.pas (at the bottom) }
-// $Id: InstalledPackages.inc 11924 2008-09-26 20:23:48Z jfudickar $
+// $Id: InstalledPackages.inc 12564 2009-10-20 21:52:23Z jfudickar $
 
 function GetSystemDir: string;
 begin
@@ -142,6 +142,8 @@ begin
     Result := FileExists(Target.RootDir + '\Bin\OdacVcl105.bpl')
   else if Target.Version = 12 then
     Result := FileExists(Target.RootDir + '\Bin\OdacVcl120.bpl')
+  else if Target.Version = 14 then
+    Result := FileExists(Target.RootDir + '\Bin\OdacVcl140.bpl')
   else
     Result := FileExists(Target.RootDir + Format('\Odac\Bin\OdacVcl%d.bpl', [Target.Version]));
 end;

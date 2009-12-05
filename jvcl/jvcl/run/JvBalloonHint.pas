@@ -25,7 +25,7 @@ Known Issues:
   * Only dropdown shadow for windows xp systems.
   * Only custom animation for windows xp systems, because of use of window region.
 -----------------------------------------------------------------------------}
-// $Id: JvBalloonHint.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBalloonHint.pas 12602 2009-11-06 15:57:39Z ahuser $
 
 unit JvBalloonHint;
 
@@ -286,8 +286,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBalloonHint.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12602 $';
+    Date: '$Date: 2009-11-06 16:57:39 +0100 (ven. 06 nov. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -795,6 +795,7 @@ begin
     FCloseBtnRect := Rect(0, 0, ASize.cx, ASize.cy);
 
     Inc(FHeaderRect.Right, ASize.cx);
+    Inc(FMsgRect.Right, ASize.cx);
   end;
 
   if IsWinVista_UP and (GetComCtlVersion >= ComCtlVersionIE6) then

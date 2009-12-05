@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacement.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvFormPlacement.pas 12581 2009-10-27 21:14:42Z ahuser $
 
 unit JvFormPlacement;
                                               
@@ -147,16 +147,16 @@ type
     property PreventResize: Boolean read FPreventResize write SetPreventResize default False;
     property Version: Integer read FVersion write FVersion default 0;
     property VersionCheck: TJvFormPlacementVersionCheck read FVersionCheck write FVersionCheck default fpvcCheckGreaterEqual;
-    property BeforeSavePlacement: TNotifyEvent read FBeforeSavePlacement write
-        FBeforeSavePlacement;
+    property BeforeSavePlacement: TNotifyEvent read FBeforeSavePlacement
+      write FBeforeSavePlacement;
     property OnSavePlacement: TNotifyEvent read FOnSavePlacement write FOnSavePlacement;
-    property AfterSavePlacement: TNotifyEvent read FAfterSavePlacement write
-        FAfterSavePlacement;
+    property AfterSavePlacement: TNotifyEvent read FAfterSavePlacement
+      write FAfterSavePlacement;
     property BeforeRestorePlacement: TNotifyEvent read FBeforeRestorePlacement
-        write FBeforeRestorePlacement;
+      write FBeforeRestorePlacement;
     property OnRestorePlacement: TNotifyEvent read FOnRestorePlacement write FOnRestorePlacement;
-    property AfterRestorePlacement: TNotifyEvent read FAfterRestorePlacement write
-        FAfterRestorePlacement;
+    property AfterRestorePlacement: TNotifyEvent read FAfterRestorePlacement
+      write FAfterRestorePlacement;
   end;
 
   TJvStoredValues = class;
@@ -191,7 +191,7 @@ type
     procedure SetNotification;
     property StoredValue[const Name: string]: Variant read GetStoredValue write SetStoredValue;
     property DefaultValue[const Name: string; DefValue: Variant]: Variant
-        read GetDefaultStoredValue write SetDefaultStoredValue;
+      read GetDefaultStoredValue write SetDefaultStoredValue;
   published
     property StoredProps: TStrings read GetStoredProps write SetStoredProps;
     property StoredValues: TJvStoredValues read FStoredValues write SetStoredValues;
@@ -280,8 +280,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacement.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12581 $';
+    Date: '$Date: 2009-10-27 22:14:42 +0100 (mar. 27 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1336,27 +1336,25 @@ procedure TJvFormPlacement.ResolveAppStoragePath;
     if AOwner = nil then
       Result := ''
     else
-      begin
-        Own := GetFullFrameName(AOwner.Owner);
-        if Own <> '' then
-          Own := Own + '.';
-        Result := Own + AOwner.Name;
-      end;
+    begin
+      Own := GetFullFrameName(AOwner.Owner);
+      if Own <> '' then
+        Own := Own + '.';
+      Result := Own + AOwner.Name;
+    end;
   end;
 
 begin
-  if (StrFind(cFormNameMask, FAppStoragePath) <> 0) and
-    Assigned(Owner) then
+  if (StrFind(cFormNameMask, FAppStoragePath) <> 0) and Assigned(Owner) then
     if (Owner is TCustomForm) then
       StrReplace(FAppStoragePath, cFormNameMask, Owner.Name, [rfIgnoreCase])
     else if (Owner is TCustomFrame) then
-      StrReplace(FAppStoragePath, cFormNameMask,
-        GetFullFrameName(Owner), [rfIgnoreCase])
+      StrReplace(FAppStoragePath, cFormNameMask, GetFullFrameName(Owner), [rfIgnoreCase])
 end;
 
 procedure TJvFormPlacement.SetAppStorage(const Value: TJvCustomAppStorage);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FAppStorage));
+  ReplaceComponentReference(Self, Value, TComponent(FAppStorage));
 end;
 
 { TJvFormStorageStringList }

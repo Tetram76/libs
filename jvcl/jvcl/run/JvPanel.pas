@@ -33,7 +33,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPanel.pas 12528 2009-10-01 09:02:50Z obones $
+// $Id: JvPanel.pas 12590 2009-10-31 13:04:44Z jfudickar $
 
 unit JvPanel;
 
@@ -298,6 +298,7 @@ type
     property OnGetSiteInfo;
     property OnStartDock;
     property OnUnDock;
+    property BevelEdges;
     property BevelInner;
     property BevelOuter;
     property BevelWidth;
@@ -306,9 +307,15 @@ type
     property Caption;
     property Color;
     property Constraints;
+    {$IFDEF DELPHI2009_UP}
+    property DoubleBuffered;
+    {$ENDIF DELPHI2009_UP}
     property DragMode;
     property Enabled;
     property Font;
+    {$IFDEF DELPHI2006_UP}
+    property Padding;
+    {$ENDIF DELPHI2006_UP}
     {$IFDEF JVCLThemesEnabled}
     property ParentBackground default True;
     {$ENDIF JVCLThemesEnabled}
@@ -319,6 +326,9 @@ type
     property ShowHint;
     property TabOrder;
     property TabStop;
+    {$IFDEF DELPHI2010_UP}
+    property Touch;
+    {$ENDIF DELPHI2010_UP}
     property Visible;
     property OnClick;
     property OnConstrainedResize;
@@ -340,8 +350,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPanel.pas $';
-    Revision: '$Revision: 12528 $';
-    Date: '$Date: 2009-10-01 11:02:50 +0200 (jeu. 01 oct. 2009) $';
+    Revision: '$Revision: 12590 $';
+    Date: '$Date: 2009-10-31 14:04:44 +0100 (sam. 31 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

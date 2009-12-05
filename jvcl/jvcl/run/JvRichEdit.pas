@@ -29,7 +29,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEdit.pas 12541 2009-10-03 13:50:21Z ahuser $
+// $Id: JvRichEdit.pas 12612 2009-12-04 14:21:07Z obones $
 
 unit JvRichEdit;
 
@@ -849,6 +849,7 @@ type
     property WordWrap;
     property Zoom; // added by J.G. Boerema
     property OnChange;
+	property OnClick;
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
@@ -926,8 +927,8 @@ function BitmapToRTF2(ABitmap: TBitmap; AStream: TStream): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEdit.pas $';
-    Revision: '$Revision: 12541 $';
-    Date: '$Date: 2009-10-03 15:50:21 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12612 $';
+    Date: '$Date: 2009-12-04 15:21:07 +0100 (ven. 04 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1349,7 +1350,7 @@ const
   CFU_UNDERLINENONE = 0;
 
   AttrFlags: array[TJvAttributeType] of Word =
-  (0, SCF_SELECTION, SCF_WORD or SCF_SELECTION);
+    (0, SCF_SELECTION, SCF_WORD or SCF_SELECTION);
 
   CF_EMBEDDEDOBJECT = 'Embedded Object';
   CF_LINKSOURCE = 'Link Source';
@@ -1741,7 +1742,7 @@ end;
 
 function GetRichEditOle(Wnd: HWND; var RichEditOle): Boolean;
 begin
-  Result := SendMessage(Wnd, EM_GETOLEINTERFACE, 0, Longint(@RichEditOle)) <> 0;
+  Result := SendMessage(Wnd, EM_GETOLEINTERFACE, 0, LPARAM(@RichEditOle)) <> 0;
 end;
 
 function StreamSave(dwCookie: Longint; pbBuff: PByte;
@@ -2647,7 +2648,7 @@ begin
   BiDiOptions.cbSize := sizeof(BiDiOptions);
   BiDiOptions.wMask := BOM_NEUTRALOVERRIDE or BOM_CONTEXTREADING or BOM_CONTEXTALIGNMENT;
   BiDiOptions.wEffects := BOE_NEUTRALOVERRIDE or BOE_CONTEXTREADING or BOE_CONTEXTALIGNMENT;
-  SendMessage(Handle, EM_SETBIDIOPTIONS, 0, Integer(@BiDiOptions));
+  SendMessage(Handle, EM_SETBIDIOPTIONS, 0, LPARAM(@BiDiOptions));
 
   Paragraph.GetAttributes(AParagraph);
   AParagraph.dwMask := PFM_ALIGNMENT;
@@ -2815,7 +2816,7 @@ begin
   SetWordSelection(FWordSelection);
   if RichEditVersion >= 2 then
   begin
-    SendMessage(Handle, EM_AUTOURLDETECT, Longint(FAutoURLDetect), 0);
+    SendMessage(Handle, EM_AUTOURLDETECT, WPARAM(FAutoURLDetect), 0);
     FUndoLimit := SendMessage(Handle, EM_SETUNDOLIMIT, FUndoLimit, 0);
     UpdateTextModes(PlainText);
     // GetAdvancedTypography returns now always false, because the handle
@@ -2919,7 +2920,7 @@ procedure TJvCustomRichEdit.EMReplaceSel(var Msg: TMessage);
 var
   CharRange: TCharRange;
 begin
-  Perform(EM_EXGETSEL, 0, Longint(@CharRange));
+  Perform(EM_EXGETSEL, 0, LPARAM(@CharRange));
   with CharRange do
     cpMax := cpMin + Integer(StrLen(PChar(Msg.LParam)));
   if (FUndoLimit > 1) and (RichEditVersion >= 2) and (not FLinesUpdating or ForceUndo) then
@@ -2927,7 +2928,7 @@ begin
   inherited;
   if FLinesUpdating then
     CharRange.cpMin := CharRange.cpMax;
-  Perform(EM_EXSETSEL, 0, Longint(@CharRange));
+  Perform(EM_EXSETSEL, 0, LPARAM(@CharRange));
   Perform(Messages.EM_SCROLLCARET, 0, 0);
 end;
 
@@ -3033,10 +3034,10 @@ begin
   if stMatchCase in Options then
     Flags := Flags or {$IFDEF RTL200_UP}FR_MATCHCASE{$ELSE}FT_MATCHCASE{$ENDIF RTL200_UP};
   Find.lpstrText := PChar(SearchStr);
-  Result := SendMessage(Handle, EM_FINDTEXTEX, Flags, Longint(@Find));
+  Result := SendMessage(Handle, EM_FINDTEXTEX, Flags, LPARAM(@Find));
   if (Result >= 0) and (stSetSelection in Options) then
   begin
-    SendMessage(Handle, EM_EXSETSEL, 0, Longint(@Find.chrgText));
+    SendMessage(Handle, EM_EXSETSEL, 0, LPARAM(@Find.chrgText));
     SendMessage(Handle, Messages.EM_SCROLLCARET, 0, 0);
   end;
 end;
@@ -3095,7 +3096,7 @@ function TJvCustomRichEdit.GetCaretPos: TPoint;
 var
   CharRange: TCharRange;
 begin
-  SendMessage(Handle, EM_EXGETSEL, 0, Longint(@CharRange));
+  SendMessage(Handle, EM_EXGETSEL, 0, LPARAM(@CharRange));
   Result.X := CharRange.cpMax;
   Result.Y := LineFromChar(Result.X);
   Dec(Result.X, GetLineIndex(-1));
@@ -3117,7 +3118,7 @@ begin
       Result.Y := HiWord(Res);
     end
     else { RichEdit 1.0 and 3.0 }
-      SendMessage(Handle, EM_POSFROMCHAR, WParam(@Result), CharIndex);
+      SendMessage(Handle, EM_POSFROMCHAR, WPARAM(@Result), CharIndex);
   end;
 end;
 
@@ -3266,7 +3267,7 @@ end;
 
 function TJvCustomRichEdit.GetSelection: TCharRange;
 begin
-  SendMessage(Handle, EM_EXGETSEL, 0, Longint(@Result));
+  SendMessage(Handle, EM_EXGETSEL, 0, LPARAM(@Result));
 end;
 
 function TJvCustomRichEdit.GetSelectionType: TRichSelectionType;
@@ -3336,7 +3337,7 @@ begin
       Flags := GTL_DEFAULT;
       codepage := CP_ACP;
     end;
-    Result := Perform(EM_GETTEXTLENGTHEX, WParam(@TextLenEx), 0);
+    Result := Perform(EM_GETTEXTLENGTHEX, WPARAM(@TextLenEx), 0);
   end
   else
     Result := GetTextLen;
@@ -3350,7 +3351,7 @@ begin
   TextRange.chrg.cpMin := StartPos;
   TextRange.chrg.cpMax := EndPos;
   TextRange.lpstrText := PChar(Result);
-  SetLength(Result, SendMessage(Handle, EM_GETTEXTRANGE, 0, Longint(@TextRange)));
+  SetLength(Result, SendMessage(Handle, EM_GETTEXTRANGE, 0, LPARAM(@TextRange)));
 end;
 
 function TJvCustomRichEdit.GetUndoName: TUndoName;
@@ -3375,7 +3376,7 @@ begin
   Result := 100;
   if (RichEditVersion >= 3) and HandleAllocated then
   begin
-    SendMessage(Handle, EM_GETZOOM, Integer(@WP), Integer(@LP));
+    SendMessage(Handle, EM_GETZOOM, WPARAM(@WP), LPARAM(@LP));
     if (LP > 0) then
       Result := MulDiv(100, WP, LP);
   end;
@@ -3428,10 +3429,10 @@ begin
           //  Data.dwFlags and PSF_CHECKDISPLAYASICON <> 0,
           //  Data.hMetaPict, dvAspect));
         end;
-        SendMessage(Handle, EM_EXGETSEL, 0, Longint(@Selection));
+        SendMessage(Handle, EM_EXGETSEL, 0, LPARAM(@Selection));
         Selection.cpMax := Selection.cpMin + 1;
         OleCheck(IRichEditOle(FRichEditOle).InsertObject(ReObject));
-        SendMessage(Handle, EM_EXSETSEL, 0, Longint(@Selection));
+        SendMessage(Handle, EM_EXSETSEL, 0, LPARAM(@Selection));
         IRichEditOle(FRichEditOle).SetDvaspect(
           Longint(REO_IOB_SELECTION), ReObject.dvAspect);
       finally
@@ -3574,10 +3575,10 @@ begin
           OleCheck(OleSetDrawAspect(OleObject,
             Data.dwFlags and IOF_CHECKDISPLAYASICON <> 0,
             Data.hMetaPict, ReObject.dvAspect));
-          SendMessage(Handle, EM_EXGETSEL, 0, Longint(@Selection));
+          SendMessage(Handle, EM_EXGETSEL, 0, LPARAM(@Selection));
           Selection.cpMax := Selection.cpMin + 1;
           OleCheck(IRichEditOle(FRichEditOle).InsertObject(ReObject));
-          SendMessage(Handle, EM_EXSETSEL, 0, Longint(@Selection));
+          SendMessage(Handle, EM_EXSETSEL, 0, LPARAM(@Selection));
           SendMessage(Handle, Messages.EM_SCROLLCARET, 0, 0);
           IRichEditOle(FRichEditOle).SetDvaspect(
             Longint(REO_IOB_SELECTION), ReObject.dvAspect);
@@ -3664,10 +3665,10 @@ begin
         end;
         OleCheck(OleSetDrawAspect(OleObject, ShowAsIcon,
           IconMetaPict, ReObject.dvAspect));
-        SendMessage(Handle, EM_EXGETSEL, 0, Longint(@Selection));
+        SendMessage(Handle, EM_EXGETSEL, 0, LPARAM(@Selection));
         Selection.cpMax := Selection.cpMin + 1;
         OleCheck(IRichEditOle(FRichEditOle).InsertObject(ReObject));
-        SendMessage(Handle, EM_EXSETSEL, 0, Longint(@Selection));
+        SendMessage(Handle, EM_EXSETSEL, 0, LPARAM(@Selection));
         SendMessage(Handle, Messages.EM_SCROLLCARET, 0, 0);
         IRichEditOle(FRichEditOle).SetDvaspect(
           Longint(REO_IOB_SELECTION), ReObject.dvAspect);
@@ -3727,7 +3728,6 @@ begin
   ReObject.cbStruct := SizeOf(ReObject);
   if Succeeded(IRichEditOle(FRichEditOle).GetObject(Longint(REO_IOB_SELECTION),
     ReObject, REO_GETOBJ_POLEOBJ or REO_GETOBJ_POLESITE)) then
-  try
     if ReObject.dwFlags and REO_INPLACEACTIVE = 0 then
     begin
       ObjectProps.cbStruct := SizeOf(ObjectProps);
@@ -3754,8 +3754,6 @@ begin
       LinkProps.dwFlags := ELF_DISABLECANCELLINK;
       Result := OleUIObjectProperties(ObjectProps) = OLEUI_OK;
     end;
-  finally
-  end;
 end;
 
 procedure TJvCustomRichEdit.ObjectPropsClick(Sender: TObject);
@@ -3912,7 +3910,7 @@ begin
       repeat
         rc := SaveRect;
         chrg.cpMin := LastChar;
-        LastChar := SendMessage(Self.Handle, EM_FORMATRANGE, 1, Longint(@Range));
+        LastChar := SendMessage(Self.Handle, EM_FORMATRANGE, 1, LPARAM(@Range));
         if (LastChar < MaxLen) and (LastChar <> -1) then
           NewPage;
       until (LastChar >= MaxLen) or (LastChar = -1);
@@ -4107,7 +4105,7 @@ begin
       FImageRect.Bottom := ClientHeight;
     end;
     // Determine draw width ("formatting rectangle"), FImageRect is control width
-    SendMessage(Handle, EM_GETRECT, 0, Integer(@R));
+    SendMessage(Handle, EM_GETRECT, 0, LPARAM(@R));
     // According to MSDN the selection bar is not included in the formatting
     // rectangle, but this seems to be NOT true
     if SelectionBar then
@@ -4126,7 +4124,7 @@ begin
     Range.rcPage := R;
     Range.chrg.cpMin := 0;
     Range.chrg.cpMax := -1;
-    SendMessage(Handle, EM_FORMATRANGE, 1, Integer(@Range));
+    SendMessage(Handle, EM_FORMATRANGE, 1, LPARAM(@Range));
     SendMessage(Handle, EM_FORMATRANGE, 0, 0); { flush buffer }
     Picture.Assign(ABmp);
   finally
@@ -4163,7 +4161,7 @@ begin
   begin
     FAutoURLDetect := Value;
     if HandleAllocated and (RichEditVersion >= 2) then
-      SendMessage(Handle, EM_AUTOURLDETECT, Longint(FAutoURLDetect), 0);
+      SendMessage(Handle, EM_AUTOURLDETECT, WPARAM(FAutoURLDetect), 0);
   end;
 end;
 
@@ -4191,7 +4189,7 @@ begin
   if HideSelection <> Value then
   begin
     FHideSelection := Value;
-    SendMessage(Handle, EM_HIDESELECTION, Ord(HideSelection), LParam(True));
+    SendMessage(Handle, EM_HIDESELECTION, Ord(HideSelection), LPARAM(True));
   end;
 end;
 
@@ -4207,7 +4205,7 @@ begin
     for I := Low(TRichLangOption) to High(TRichLangOption) do
       if I in Value then
         Flags := Flags or RichLangOptions[I];
-    SendMessage(Handle, EM_SETLANGOPTIONS, 0, LParam(Flags));
+    SendMessage(Handle, EM_SETLANGOPTIONS, 0, LPARAM(Flags));
   end;
 end;
 
@@ -4276,7 +4274,7 @@ begin
     cpMin := StartPos;
     cpMax := EndPos;
   end;
-  SendMessage(Handle, EM_EXSETSEL, 0, Longint(@CharRange));
+  SendMessage(Handle, EM_EXSETSEL, 0, LPARAM(@CharRange));
   if ScrollCaret then
     SendMessage(Handle, Messages.EM_SCROLLCARET, 0, 0);
 end;
@@ -4413,7 +4411,7 @@ end;
 
 procedure TJvCustomRichEdit.SetWordSelection(Value: Boolean);
 var
-  Options: LParam;
+  Options: LPARAM;
 begin
   FWordSelection := Value;
   if HandleAllocated then
@@ -4473,10 +4471,7 @@ const
   UndoModes: array[Boolean] of DWORD = (TM_SINGLELEVELUNDO, TM_MULTILEVELUNDO);
 begin
   if (RichEditVersion >= 2) and HandleAllocated then
-  begin
-    SendMessage(Handle, EM_SETTEXTMODE, TextModes[Plain] or
-      UndoModes[FUndoLimit > 1], 0);
-  end;
+    SendMessage(Handle, EM_SETTEXTMODE, WPARAM(TextModes[Plain] or UndoModes[FUndoLimit > 1]), 0);
 end;
 
 procedure TJvCustomRichEdit.UpdateTypographyOptions(const Advanced: Boolean);
@@ -4484,10 +4479,7 @@ const
   AdvancedModes: array[Boolean] of DWORD = (0, TO_ADVANCEDTYPOGRAPHY);
 begin
   if HandleAllocated and (RichEditVersion >= 3) then
-  begin
-    SendMessage(Handle, EM_SETTYPOGRAPHYOPTIONS, AdvancedModes[Advanced],
-      TO_ADVANCEDTYPOGRAPHY);
-  end;
+    SendMessage(Handle, EM_SETTYPOGRAPHYOPTIONS, WPARAM(AdvancedModes[Advanced]), TO_ADVANCEDTYPOGRAPHY);
 end;
 
 procedure TJvCustomRichEdit.URLClick(const URLText: string; Button: TMouseButton);
@@ -4549,7 +4541,7 @@ begin
   { RichEd20 does not pass the WM_RBUTTONUP message to defwndproc, }
   { so we get no WM_CONTEXTMENU message. Simulate message here.    }
   if ((RichEditVersion <> 1) or (Win32MajorVersion < 5)) and AllowObjects then
-    Perform(WM_CONTEXTMENU, Handle, LParam(PointToSmallPoint(
+    Perform(WM_CONTEXTMENU, Handle, LPARAM(PointToSmallPoint(
       ClientToScreen(SmallPointToPoint(TWMMouse(Msg).Pos)))));
   inherited;
 end;
@@ -5243,7 +5235,7 @@ procedure TJvParaAttributes.GetAttributes(var Paragraph: TParaFormat2);
 begin
   InitPara(Paragraph);
   if FRichEdit.HandleAllocated then
-    SendMessage(FRichEdit.Handle, EM_GETPARAFORMAT, 0, LParam(@Paragraph));
+    SendMessage(FRichEdit.Handle, EM_GETPARAFORMAT, 0, LPARAM(@Paragraph));
 end;
 
 function TJvParaAttributes.GetFirstIndent: Longint;
@@ -5487,7 +5479,7 @@ begin
       else
       if Paragraph.wAlignment = PFA_RIGHT then
         Paragraph.wAlignment := PFA_LEFT;
-    SendMessage(FRichEdit.Handle, EM_SETPARAFORMAT, 0, LParam(@Paragraph));
+    SendMessage(FRichEdit.Handle, EM_SETPARAFORMAT, 0, LPARAM(@Paragraph));
   end;
 end;
 
@@ -5895,10 +5887,10 @@ begin
     if Selection.cpMax = -1 then
       Selection.cpMax := Selection.cpMin +
         FRichEdit.GetLineLength(Selection.cpMin);
-    SendMessage(FRichEdit.Handle, EM_EXSETSEL, 0, Longint(@Selection));
+    SendMessage(FRichEdit.Handle, EM_EXSETSEL, 0, LPARAM(@Selection));
     FRichEdit.FLinesUpdating := True;
     try
-      SendMessage(FRichEdit.Handle, EM_REPLACESEL, 0, Longint(Empty));
+      SendMessage(FRichEdit.Handle, EM_REPLACESEL, 0, LPARAM(Empty));
     finally
       FRichEdit.FLinesUpdating := False;
     end;
@@ -5942,7 +5934,7 @@ begin
   end;
   if smSelection in Mode then
     TextType := TextType or SFF_SELECTION;
-  SendMessage(FRichEdit.Handle, EM_STREAMOUT, TextType, Longint(@EditStream));
+  SendMessage(FRichEdit.Handle, EM_STREAMOUT, TextType, LPARAM(@EditStream));
 
   if not AConverter.UserCancel then
   begin
@@ -5994,7 +5986,7 @@ begin
     end;
     if smSelection in Mode then
       TextType := TextType or SFF_SELECTION;
-    SendMessage(FRichEdit.Handle, EM_STREAMIN, TextType, Longint(@EditStream));
+    SendMessage(FRichEdit.Handle, EM_STREAMIN, TextType, LPARAM(@EditStream));
 
     if not AConverter.UserCancel then
     begin
@@ -6016,7 +6008,7 @@ begin
             TextType := TextType or SFF_PLAINRTF;
           EditStream.pfnCallback := StreamLoad;
         end;
-        SendMessage(FRichEdit.Handle, EM_STREAMIN, TextType, Longint(@EditStream));
+        SendMessage(FRichEdit.Handle, EM_STREAMIN, TextType, LPARAM(@EditStream));
       end;
 
       if AConverter.Error then
@@ -6035,7 +6027,7 @@ end;
 
 procedure TJvRichEditStrings.EnableChange(const Value: Boolean);
 var
-  EventMask: Longint;
+  EventMask: LPARAM;
 begin
   with FRichEdit do
   begin
@@ -6124,11 +6116,11 @@ begin
       end;
     end;
     Selection.cpMax := Selection.cpMin;
-    SendMessage(FRichEdit.Handle, EM_EXSETSEL, 0, Longint(@Selection));
+    SendMessage(FRichEdit.Handle, EM_EXSETSEL, 0, LPARAM(@Selection));
     Str := SysUtils.Format(Fmt, [S]);
     FRichEdit.FLinesUpdating := True;
     try
-      SendMessage(FRichEdit.Handle, EM_REPLACESEL, 0, Longint(PChar(Str)));
+      SendMessage(FRichEdit.Handle, EM_REPLACESEL, 0, LPARAM(PChar(Str)));
     finally
       FRichEdit.FLinesUpdating := False;
     end;
@@ -6228,10 +6220,10 @@ begin
     begin
       Selection.cpMax := Selection.cpMin +
         FRichEdit.GetLineLength(Selection.cpMin);
-      SendMessage(FRichEdit.Handle, EM_EXSETSEL, 0, Longint(@Selection));
+      SendMessage(FRichEdit.Handle, EM_EXSETSEL, 0, LPARAM(@Selection));
       FRichEdit.FLinesUpdating := True;
       try
-        SendMessage(FRichEdit.Handle, EM_REPLACESEL, 0, Longint(PChar(S)));
+        SendMessage(FRichEdit.Handle, EM_REPLACESEL, 0, LPARAM(PChar(S)));
       finally
         FRichEdit.FLinesUpdating := False;
       end;
@@ -6572,8 +6564,7 @@ procedure TJvTextAttributes.GetAttributes(var Format: TCharFormat2);
 begin
   InitFormat(Format);
   if FRichEdit.HandleAllocated then
-    SendMessage(FRichEdit.Handle, EM_GETCHARFORMAT, AttrFlags[FType],
-      LParam(@Format));
+    SendMessage(FRichEdit.Handle, EM_GETCHARFORMAT, AttrFlags[FType], LPARAM(@Format));
 end;
 
 function TJvTextAttributes.GetBackColor: TColor;
@@ -6858,8 +6849,7 @@ end;
 procedure TJvTextAttributes.SetAttributes(var Format: TCharFormat2);
 begin
   if FRichEdit.HandleAllocated then
-    SendMessage(FRichEdit.Handle, EM_SETCHARFORMAT, AttrFlags[FType],
-      LParam(@Format));
+    SendMessage(FRichEdit.Handle, EM_SETCHARFORMAT, AttrFlags[FType], LPARAM(@Format));
 end;
 
 procedure TJvTextAttributes.SetBackColor(Value: TColor);

@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCreateProcess.pas 12554 2009-10-05 19:37:25Z jfudickar $
+// $Id: JvCreateProcess.pas 12611 2009-12-03 14:46:50Z obones $
 
 unit JvCreateProcess;
 
@@ -211,7 +211,7 @@ type
   published
     property ApplicationName: string read FApplicationName write FApplicationName;
     property CommandLine: string read FCommandLine write SetCommandLine;
-    property CreationFlags: TJvCPSFlags read FCreationFlags write FCreationFlags default [];
+    property CreationFlags: TJvCPSFlags read FCreationFlags write FCreationFlags default [{$IFDEF UNICODE}cfUnicode{$ENDIF UNICODE}];
     property CurrentDirectory: string read FCurrentDirectory write FCurrentDirectory;
     property Environment: TStrings read GetEnvironment write SetEnvironment;
     property Priority: TJvProcessPriority read FPriority write FPriority default ppNormal;
@@ -229,8 +229,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCreateProcess.pas $';
-    Revision: '$Revision: 12554 $';
-    Date: '$Date: 2009-10-05 21:37:25 +0200 (lun. 05 oct. 2009) $';
+    Revision: '$Revision: 12611 $';
+    Date: '$Date: 2009-12-03 15:46:50 +0100 (jeu. 03 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -388,7 +388,7 @@ begin
   EnumWinRec.ProcessID := ProcessID;
   EnumWinRec.PostQuit := UseQuit;
   EnumWinRec.FoundWin := False;
-  EnumWindows(@EnumWinProc, Integer(@EnumWinRec));
+  EnumWindows(@EnumWinProc, LPARAM(@EnumWinRec));
   Result := EnumWinRec.FoundWin;
 end;
 
@@ -817,7 +817,7 @@ begin
   end;
 
   // Notify TJvCreateProcess that data has been read from the pipe
-  PostMessage(FDestHandle, CM_READ, Integer(FOwner), 0);
+  PostMessage(FDestHandle, CM_READ, WPARAM(FOwner), 0);
 end;
 
 procedure TJvReadThread.Execute;
@@ -1041,7 +1041,7 @@ end;
 constructor TJvCreateProcess.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FCreationFlags := [];
+  FCreationFlags := [{$IFDEF UNICODE}cfUnicode{$ENDIF UNICODE}];
   FEnvironment := TStringList.Create;
   FPriority := ppNormal;
   FState := psReady;

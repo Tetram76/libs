@@ -48,7 +48,7 @@ Known Issues:
     ugly.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCaptionButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCaptionButton.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvCaptionButton;
 
@@ -296,8 +296,8 @@ function AlphaBlend(hdcDest: HDC; nXOriginDest, nYOriginDest, nWidthDest,
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCaptionButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1535,7 +1535,7 @@ begin
   ToolInfo.lpszText := LPSTR_TEXTCALLBACK;
 
   // register button with tooltip
-  SendMessage(FToolTipHandle, TTM_ADDTOOL, 0, Integer(@ToolInfo));
+  SendMessage(FToolTipHandle, TTM_ADDTOOL, 0, LPARAM(@ToolInfo));
 end;
 
 procedure TJvCaptionButton.DestroyToolTip;
@@ -1834,7 +1834,7 @@ begin
   ForwardMsg.wParam := Msg.WParam;
   ForwardMsg.message := Msg.Msg;
   ForwardMsg.hwnd := ParentFormHandle;
-  SendMessage(FToolTipHandle, TTM_RELAYEVENT, 0, Integer(@ForwardMsg));
+  SendMessage(FToolTipHandle, TTM_RELAYEVENT, 0, LPARAM(@ForwardMsg));
 end;
 
 function TJvCaptionButton.GetAction: TBasicAction;
