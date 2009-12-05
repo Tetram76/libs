@@ -28,7 +28,7 @@ Description:
 Known Issues:
 - Can't set Position of TJvDomainUpDown at design-time. SOLVED 2003-05-30
 -----------------------------------------------------------------------------}
-// $Id: JvUpDown.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvUpDown.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvUpDown;
 
@@ -196,8 +196,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUpDown.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -363,9 +363,9 @@ begin
   end;
   SendMessage(Handle, UDM_SETRANGE32, FMin, FMax);
   SendMessage(Handle, UDM_SETBASE, cBase[Format], 0);
-  SendMessage(Handle, UDM_GETACCEL, 1, Longint(@AccelArray));
+  SendMessage(Handle, UDM_GETACCEL, 1, LPARAM(@AccelArray));
   AccelArray[0].nInc := FIncrement;
-  SendMessage(Handle, UDM_SETACCEL, 1, Longint(@AccelArray));
+  SendMessage(Handle, UDM_SETACCEL, 1, LPARAM(@AccelArray));
   SetPosition(Position);
   SetAssociate(FAssociate);
 end;

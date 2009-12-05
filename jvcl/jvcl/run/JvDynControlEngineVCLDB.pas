@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineVCLDB.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDynControlEngineVCLDB.pas 12563 2009-10-19 23:55:49Z jfudickar $
 
 unit JvDynControlEngineVCLDB;
 
@@ -269,6 +269,10 @@ type
     procedure ControlSetDataField(const Value: string);
     function ControlGetDataField: string;
     procedure ControlSetAnchors(Value : TAnchors);
+
+    //IJvDynControlFont
+    function ControlGetFont: TFont;
+    procedure ControlSetFont(Value: TFont);
   end;
 
   TJvDynControlVCLDBRadioGroup = class(TDBRadioGroup, IUnknown,
@@ -466,8 +470,8 @@ function DynControlEngineVCLDB: TJvDynControlEngineDB;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineVCLDB.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12563 $';
+    Date: '$Date: 2009-10-20 01:55:49 +0200 (mar. 20 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1270,9 +1274,19 @@ begin
   Result := DataField;
 end;
 
+function TJvDynControlVCLDBMemo.ControlGetFont: TFont;
+begin
+  Result := Font;
+end;
+
 procedure TJvDynControlVCLDBMemo.ControlSetAnchors(Value : TAnchors);
 begin
   Anchors := Value;
+end;
+
+procedure TJvDynControlVCLDBMemo.ControlSetFont(Value: TFont);
+begin
+  Font.Assign(Value);
 end;
 
 //=== { TJvDynControlVCLDBRadioGroup } =======================================

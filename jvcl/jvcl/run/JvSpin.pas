@@ -28,7 +28,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvSpin.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSpin.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvSpin;
 
@@ -470,8 +470,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpin.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1305,7 +1305,7 @@ begin
     SetRect(Loc, 0, 0, ClientWidth - GetButtonWidth - 2, ClientHeight + 1);
     SendMessage(Handle, EM_SETMARGINS, EC_RIGHTMARGIN, MakeLong(0, GetButtonWidth));
   end;
-  SendMessage(Handle, EM_SETRECTNP, 0, Longint(@Loc));
+  SendMessage(Handle, EM_SETRECTNP, 0, LPARAM(@Loc));
 end;
 
 procedure TJvCustomSpinEdit.SetFocused(Value: Boolean);

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLinkedControls.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvLinkedControls.pas 12556 2009-10-13 18:34:42Z ahuser $
 
 unit JvLinkedControls;
 
@@ -88,8 +88,8 @@ function CheckLinkControlEnabled(Enabled, Checked: Boolean; Options: TJvLinkedCo
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLinkedControls.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12556 $';
+    Date: '$Date: 2009-10-13 20:34:42 +0200 (mar. 13 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -262,8 +262,7 @@ begin
   end;
 end;
 
-procedure TJvLinkedControls.SetItems(Index: Integer;
-  const Value: TJvLinkedControl);
+procedure TJvLinkedControls.SetItems(Index: Integer; const Value: TJvLinkedControl);
 begin
   inherited Items[Index] := Value;
 end;

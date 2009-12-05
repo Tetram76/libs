@@ -113,7 +113,7 @@
                    an exception will not occur.
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDebugHandler.pas 11375 2007-06-23 17:01:12Z cycocrew $
+// $Id: JvDebugHandler.pas 12591 2009-11-02 18:01:51Z ahuser $
 
 unit JvDebugHandler;
 
@@ -127,12 +127,14 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, Forms,
-  JclDebug, JclHookExcept;
+  JclDebug, JclHookExcept,
+  AppEvnts;
 
 type
   TJvDebugHandler = class(TComponent)
   private
     FExceptionLogging: Boolean;
+    FAppEvents: TApplicationEvents;
     FStackTrackingEnable: Boolean;
     FUnhandledExceptionsOnly: Boolean;
     FLogToFile: Boolean;
@@ -141,7 +143,6 @@ type
     FIsLoaded: Boolean;
 
     FOnOtherDestination: TNotifyEvent;
-    FOldExceptionHandler: TExceptionEvent;
     procedure SetUnhandled(Value: Boolean);
     procedure HandleUnKnownException(Sender: TObject; E: Exception);
     procedure SetStackTracking(Value: Boolean);
@@ -166,8 +167,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDebugHandler.pas $';
-    Revision: '$Revision: 11375 $';
-    Date: '$Date: 2007-06-23 19:01:12 +0200 (sam. 23 juin 2007) $';
+    Revision: '$Revision: 12591 $';
+    Date: '$Date: 2009-11-02 19:01:51 +0100 (lun. 02 nov. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -190,14 +191,13 @@ begin
   JclStopExceptionTracking;
   JclRemoveExceptNotifier(ExceptionNotifier);
   JclUnhookExceptions;
+  FreeAndNil(FAppEvents);
   inherited Destroy;
 end;
 
 procedure TJvDebugHandler.HandleUnKnownException(Sender: TObject; E: Exception);
 begin
   ExceptionNotifier(E, ExceptAddr, False);
-  if Assigned(FOldExceptionHandler) then
-    FOldExceptionHandler(Sender, E);
 end;
 
 procedure TJvDebugHandler.SetUnhandled(Value: Boolean);
@@ -208,15 +208,15 @@ begin
     if FUnhandledExceptionsOnly then
     begin
       JclRemoveExceptNotifier(ExceptionNotifier);
-      FOldExceptionHandler := Application.OnException;
-      Application.OnException := HandleUnKnownException
+      if FAppEvents = nil then
+        FAppEvents := TApplicationEvents.Create(nil);
+      FAppEvents.OnException := HandleUnknownException;
     end
     else
     begin
-      if Assigned(FOldExceptionHandler) then
+      if FAppEvents <> nil then
       begin
-        Application.OnException := FOldExceptionHandler;
-        FOldExceptionHandler := nil;
+        FreeAndNil(FAppEvents);
         JclAddExceptNotifier(ExceptionNotifier);
       end;
     end;

@@ -36,7 +36,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTrayIcon.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTrayIcon.pas 12587 2009-10-29 21:58:32Z obones $
 
 unit JvTrayIcon;
 
@@ -240,8 +240,8 @@ procedure RefreshTray;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTrayIcon.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12587 $';
+    Date: '$Date: 2009-10-29 22:58:32 +0100 (jeu. 29 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -484,7 +484,7 @@ begin
   if TrayHandle = 0 then
     Exit;
 
-  EnumChildWindows(TrayHandle, @FindToolbar, Longint(@Result));
+  EnumChildWindows(TrayHandle, @FindToolbar, LPARAM(@Result));
 end;
 
 function GetIconRect(const AWnd: THandle; const AID: UINT; var IconRect: TRect): Boolean;
@@ -501,7 +501,7 @@ begin
           Exit;
 
         // Retrieve the button rectangle..
-        SendMessage(ToolbarHandle, TB_GETITEMRECT, Index, Longint(Data));
+        SendMessage(ToolbarHandle, TB_GETITEMRECT, Index, LPARAM(Data));
         // ..and copy it to the current process. If it fails no need to continue
         if not ReadProcessMemory(FData, SizeOf(IconRect), IconRect) then
           Exit;
@@ -1478,11 +1478,14 @@ begin
                 end;
             end;
           end;
+        {$IFNDEF DELPHI2009_UP}
         // Add by Winston Feng 2003-9-28
         // Handle the QueryEndSession and TaskbarCreated message, so trayicon
         // will be deleted and restored correctly.
+        // For D2009 and upper, we must let the default window proc handle it.
         WM_QUERYENDSESSION:
           Result := 1;
+        {$ENDIF ~DELPHI2009_UP}
         WM_ENDSESSION:
           // (rb) Is it really necessairy to respond to WM_ENDSESSION?
           if TWMEndSession(Mesg).EndSession then
@@ -1598,7 +1601,7 @@ begin
 
   while FIndex >= 0 do
   begin
-    SendMessage(FToolbarHandle, TB_GETBUTTON, FIndex, Longint(FData));
+    SendMessage(FToolbarHandle, TB_GETBUTTON, FIndex, LPARAM(FData));
 
     // Read the data from the tray process into the current process.
     if ReadProcessMemory(FData, SizeOf(FButton), FButton) then

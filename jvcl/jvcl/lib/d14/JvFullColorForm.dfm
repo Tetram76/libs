@@ -15,7 +15,7 @@ object JvFullColorFrm: TJvFullColorFrm
   Font.Style = []
   KeyPreview = True
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poScreenCenter
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
@@ -34,6 +34,7 @@ object JvFullColorFrm: TJvFullColorFrm
     AutoSize = False
     Color = clBlack
     ParentColor = False
+    Transparent = False
     OnClick = LabelDrawOldClick
   end
   object LabelDrawNew: TLabel
@@ -44,6 +45,7 @@ object JvFullColorFrm: TJvFullColorFrm
     AutoSize = False
     Color = clWhite
     ParentColor = False
+    Transparent = False
   end
   object LabelOld: TLabel
     Left = 240

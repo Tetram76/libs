@@ -31,7 +31,7 @@ description : JVCL Interpreter version 2
 Known Issues:
    String fields in records binded from Delphi don't work
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvInterpreter.pas 12585 2009-10-29 20:27:56Z ahuser $
 
 { history (JVCL Library versions):
   1.10:
@@ -1250,8 +1250,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer. 26 août 2009) $';
+    Revision: '$Revision: 12585 $';
+    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu. 29 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1363,7 +1363,7 @@ end;
 
 function varObject: TVarType;
 begin
-  Result := VariantObjectInstance.VarType
+  Result := VariantObjectInstance.VarType;
 end;
 
 function varClass: TVarType;
@@ -1563,7 +1563,7 @@ begin
       Result := SizeOf(TVarData);
   else
     if ATyp = varObject then
-      Result := SizeOf(Integer);
+      Result := SizeOf(TObject);
   end;
 end;
 
@@ -1882,7 +1882,7 @@ begin
         varInteger:
           Result := iFunc;
         varBoolean:
-          Result := Boolean(Integer(fFunc));
+          Result := Boolean(Ord(fFunc));
         varEmpty:
           Func;
       else
@@ -2060,40 +2060,35 @@ procedure JvInterpreterArraySetElement(Element: TJvInterpreterArrayValues; Value
   JvInterpreterArrayRec: PJvInterpreterArrayRec);
 var
   Offset: Integer;
+  P: Pointer;
 begin
   if JvInterpreterArrayRec^.Dimension > 1 then
     Offset := GetArrayOffset(JvInterpreterArrayRec^.Dimension, JvInterpreterArrayRec^.BeginPos,
       JvInterpreterArrayRec^.EndPos, Element)
   else
     Offset := Element[0] - JvInterpreterArrayRec^.BeginPos[0];
+  P := Pointer(PAnsiChar(JvInterpreterArrayRec^.Memory) + (Offset * JvInterpreterArrayRec^.ElementSize));
   case JvInterpreterArrayRec^.ItemType of
     varInteger:
-      PInteger(Pointer(Integer(JvInterpreterArrayRec^.Memory) +
-        (Offset * JvInterpreterArrayRec^.ElementSize)))^ := Value;
+      PInteger(P)^ := Value;
     varDouble:
-      PDouble(Pointer(Integer(JvInterpreterArrayRec^.Memory) +
-        (Offset * JvInterpreterArrayRec^.ElementSize)))^ := Value;
+      PDouble(P)^ := Value;
     varByte:
-      PByte(Pointer(Integer(JvInterpreterArrayRec^.Memory) +
-        (Offset * JvInterpreterArrayRec^.ElementSize)))^ := Value;
+      PByte(P)^ := Value;
     varSmallint:
-      PSmallInt(Pointer(Integer(JvInterpreterArrayRec^.Memory) +
-        (Offset * JvInterpreterArrayRec^.ElementSize)))^ := Value;
+      PSmallInt(P)^ := Value;
     varDate:
-      PDouble(Pointer(Integer(JvInterpreterArrayRec^.Memory) +
-        (Offset * JvInterpreterArrayRec^.ElementSize)))^ := Value;
+      PDouble(P)^ := Value;
     varString:
       begin
         Value := VarAsType(Value, varString);
         TStringList(JvInterpreterArrayRec^.Memory).Strings[Offset] := Value;
       end;
     varEmpty:
-      JvInterpreterVarAssignment(Variant(PVarData(PAnsiChar(JvInterpreterArrayRec^.Memory) +
-        Offset * JvInterpreterArrayRec^.ElementSize)^), Value)
+      JvInterpreterVarAssignment(Variant(PVarData(P)^), Value);
   else
     if JvInterpreterArrayRec^.ItemType = varObject then
-      PInteger(Pointer(Integer(JvInterpreterArrayRec^.Memory) +
-        (Offset * JvInterpreterArrayRec^.ElementSize)))^ := TVarData(Value).VInteger;
+      TObject(P^) := V2O(Value);
   end;
 end;
 
@@ -2103,40 +2098,32 @@ function JvInterpreterArrayGetElement(Element: TJvInterpreterArrayValues;
   JvInterpreterArrayRec: PJvInterpreterArrayRec): Variant;
 var
   Offset: Integer;
+  P: Pointer;
 begin
   if JvInterpreterArrayRec^.Dimension > 1 then
     Offset := GetArrayOffset(JvInterpreterArrayRec^.Dimension, JvInterpreterArrayRec^.BeginPos,
       JvInterpreterArrayRec^.EndPos, Element)
   else
     Offset := Element[0] - JvInterpreterArrayRec^.BeginPos[0];
+  P := Pointer(PAnsiChar(JvInterpreterArrayRec^.Memory) + (Offset * JvInterpreterArrayRec^.ElementSize));
   case JvInterpreterArrayRec^.ItemType of
     varInteger:
-      Result := Integer(Pointer(Integer(JvInterpreterArrayRec^.Memory) + ((Offset) *
-        JvInterpreterArrayRec^.ElementSize))^);
+      Result := Integer(P^);
     varDouble:
-      Result := Double(Pointer(Integer(JvInterpreterArrayRec^.Memory) + ((Offset) *
-        JvInterpreterArrayRec^.ElementSize))^);
+      Result := Double(P^);
     varByte:
-      Result := Byte(Pointer(Integer(JvInterpreterArrayRec^.Memory) + ((Offset) *
-        JvInterpreterArrayRec^.ElementSize))^);
+      Result := Byte(P^);
     varSmallint:
-      Result := Smallint(Pointer(Integer(JvInterpreterArrayRec^.Memory) + ((Offset) *
-        JvInterpreterArrayRec^.ElementSize))^);
+      Result := Smallint(P^);
     varDate:
-      Result := TDateTime(Pointer(Integer(JvInterpreterArrayRec^.Memory) + ((Offset) *
-        JvInterpreterArrayRec^.ElementSize))^);
+      Result := TDateTime(P^);
     varString:
       Result := TStringList(JvInterpreterArrayRec^.Memory).Strings[Offset];
     varEmpty:
-      JvInterpreterVarCopy(Result, Variant(PVarData(PAnsiChar(JvInterpreterArrayRec^.Memory) + Offset *
-        JvInterpreterArrayRec^.ElementSize)^))
+      JvInterpreterVarCopy(Result, Variant(PVarData(P)^));
   else
     if JvInterpreterArrayRec^.ItemType = varObject then
-    begin
-      Result := Integer(Pointer(Integer(JvInterpreterArrayRec^.Memory) + ((Offset) *
-        JvInterpreterArrayRec^.ElementSize))^);
-      TVarData(Result).VType := varObject;
-    end;
+      Result := O2V(TObject(P^));
   end;
 end;
 
@@ -3789,7 +3776,7 @@ var
     AWord: Word;
     iRes: Integer;
     Func: Pointer;
-    REAX, REDX, RECX: Integer;
+    RegEAX, RegEDX, RegECX: Integer;
   begin
     Result := False;
     iRes := 0;
@@ -3833,7 +3820,7 @@ var
             else
               JvInterpreterErrorN(ieDirectInvalidArgument, -1, Identifier);
 
-          REAX := Integer(Args.Obj);
+          RegEAX := Integer(Args.Obj);
           if JvInterpreterMethod.ParamCount > 0 then
             if (JvInterpreterMethod.ParamTypes[0] = varInteger) or
               (JvInterpreterMethod.ParamTypes[0] = varObject) or
@@ -3841,7 +3828,7 @@ var
               (JvInterpreterMethod.ParamTypes[0] = varBoolean) or
               (JvInterpreterMethod.ParamTypes[0] = varSmallint) or
               (JvInterpreterMethod.ParamTypes[0] = varString) then
-              REDX := TVarData(Args.Values[0]).VInteger
+              RegEDX := TVarData(Args.Values[0]).VInteger
             else
               JvInterpreterErrorN(ieDirectInvalidArgument, -1, Identifier);
 
@@ -3852,7 +3839,7 @@ var
               (JvInterpreterMethod.ParamTypes[1] = varBoolean) or
               (JvInterpreterMethod.ParamTypes[1] = varSmallint) or
               (JvInterpreterMethod.ParamTypes[1] = varString) then
-              RECX := TVarData(Args.Values[1]).VInteger
+              RegECX := TVarData(Args.Values[1]).VInteger
             else
               JvInterpreterErrorN(ieDirectInvalidArgument, -1, Identifier);
 
@@ -3863,9 +3850,9 @@ var
             (JvInterpreterMethod.ResTyp = varObject) or
             (JvInterpreterMethod.ResTyp = varPointer) then
             asm
-              mov      EAX, REAX
-              mov      EDX, REDX
-              mov      ECX, RECX
+              mov      EAX, RegEAX
+              mov      EDX, RegEDX
+              mov      ECX, RegECX
               call     Func
               mov      iRes, EAX
             end

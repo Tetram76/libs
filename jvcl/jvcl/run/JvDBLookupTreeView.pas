@@ -38,7 +38,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupTreeView.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBLookupTreeView.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvDBLookupTreeView;
 
@@ -445,8 +445,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupTreeView.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1209,7 +1209,7 @@ begin
       begin
         StopTracking;
         MousePos := PointToSmallPoint(ListPos);
-        SendMessage(FDataList.FTree.Handle, WM_LBUTTONDOWN, 0, Integer(MousePos));
+        SendMessage(FDataList.FTree.Handle, WM_LBUTTONDOWN, 0, LPARAM(MousePos));
         Exit;
       end;
     end;

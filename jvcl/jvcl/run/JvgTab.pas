@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgTab.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgTab.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvgTab;
 
@@ -128,8 +128,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgTab.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -281,7 +281,7 @@ end;
 procedure TJvgTabControl.GlyphsListChanged(Sender: TObject);
 begin
   if HandleAllocated then
-    SendMessage(Handle, TCM_SETIMAGELIST, 0, Longint(TImageList(Sender).Handle));
+    SendMessage(Handle, TCM_SETIMAGELIST, 0, LPARAM(TImageList(Sender).Handle));
 end;
 
 procedure TJvgTabControl.DrawItem(lpDrawItemStr: PDrawItemStruct);
@@ -387,7 +387,7 @@ begin
   ReplaceImageListReference(Self, Value, TCustomImageList(FGlyphs), FGlyphsChangeLink);
   if Assigned(FGlyphs) then
   begin
-    SendMessage(Handle, TCM_SETIMAGELIST, 0, Longint(FGlyphs.Handle));
+    SendMessage(Handle, TCM_SETIMAGELIST, 0, LPARAM(FGlyphs.Handle));
     B := True;
     for I := 0 to Min(Tabs.Count - 1, FGlyphs.Count - 1) do
       if GlyphIndex[I] <> -1 then
@@ -399,7 +399,7 @@ begin
       SetSingleGlyph(FSingleGlyph);
   end
   else
-    SendMessage(Handle, TCM_SETIMAGELIST, 0, Longint(0));
+    SendMessage(Handle, TCM_SETIMAGELIST, 0, 0);
 end;
 
 procedure TJvgTabControl.SetGlyphIndex(Index: Integer; ImgIndex: Integer);
@@ -409,8 +409,8 @@ var
 begin
   Item.iImage := ImgIndex;
   Item.mask := TCIF_IMAGE;
-  SendMessage(Handle, TCM_SETITEM, Index, Longint(@Item));
-  SendMessage(Handle, TCM_GETITEMRECT, Index, Longint(@R));
+  SendMessage(Handle, TCM_SETITEM, Index, LPARAM(@Item));
+  SendMessage(Handle, TCM_GETITEMRECT, Index, LPARAM(@R));
   InvalidateRect(Handle, @R, True);
 end;
 
@@ -421,7 +421,7 @@ begin
   if Assigned(FGlyphs) then
   begin
     ImgItem.mask := TCIF_IMAGE;
-    SendMessage(Handle, TCM_GETITEM, Index, Longint(@ImgItem));
+    SendMessage(Handle, TCM_GETITEM, Index, LPARAM(@ImgItem));
     Result := ImgItem.iImage;
   end
   else
@@ -532,7 +532,7 @@ begin
     //  Repaint;
     TCItem.mask := TCIF_TEXT;
     TCItem.pszText := PChar(Tabs[Index]);
-    SendMessage(Handle, TCM_SETITEM, Index, Longint(@TCItem));
+    SendMessage(Handle, TCM_SETITEM, Index, LPARAM(@TCItem));
   end;
 end;
 

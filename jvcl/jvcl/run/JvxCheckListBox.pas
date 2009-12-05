@@ -35,7 +35,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvxCheckListBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvxCheckListBox.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvxCheckListBox;
 
@@ -315,8 +315,8 @@ function CheckBitmap: TBitmap;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvxCheckListBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -641,7 +641,7 @@ begin
   Result := FItemHeight;
   if HandleAllocated and (FStyle = lbStandard) then
   begin
-    Perform(LB_GETITEMRECT, 0, Longint(@R));
+    Perform(LB_GETITEMRECT, 0, LPARAM(@R));
     Result := R.Bottom - R.Top;
   end;
 end;
@@ -771,7 +771,7 @@ begin
     Count := Items.Count;
     while Result < Count do
     begin
-      Perform(LB_GETITEMRECT, Result, Longint(@ItemRect));
+      Perform(LB_GETITEMRECT, Result, LPARAM(@ItemRect));
       if PtInRect(ItemRect, Pos) then
         Exit;
       Inc(Result);
@@ -788,11 +788,11 @@ var
 begin
   Count := Items.Count;
   if (Index = 0) or (Index < Count) then
-    Perform(LB_GETITEMRECT, Index, Longint(@Result))
+    Perform(LB_GETITEMRECT, Index, LPARAM(@Result))
   else
   if Index = Count then
   begin
-    Perform(LB_GETITEMRECT, Index - 1, Longint(@Result));
+    Perform(LB_GETITEMRECT, Index - 1, LPARAM(@Result));
     OffsetRect(Result, 0, Result.Bottom - Result.Top);
   end
   else
@@ -1566,7 +1566,7 @@ begin
   if HandleAllocated and ((FStyle = lbStandard) or
     ((FStyle = lbOwnerDrawFixed) and not Assigned(FOnDrawItem))) then
   begin
-    Perform(LB_GETITEMRECT, 0, Longint(@R));
+    Perform(LB_GETITEMRECT, 0, LPARAM(@R));
     Result := R.Bottom - R.Top;
   end;
 end;

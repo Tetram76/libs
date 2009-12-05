@@ -42,7 +42,7 @@ Notes (2003-05-21) // Remko Bonte
   of flickering, best avoid it or set ScrollBars to ssNone.
 * Updated drag image to use with MultiLine.
 -----------------------------------------------------------------------------}
-// $Id: JvListBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvListBox.pas 12585 2009-10-29 20:27:56Z ahuser $
 
 unit JvListBox;
 
@@ -292,8 +292,7 @@ type
     procedure MoveSelectedDown; virtual;
     procedure DeleteSelected; override;
     procedure DeleteAllButSelected;
-    procedure SetBounds(ALeft: Integer; ATop: Integer; AWidth: Integer;
-      AHeight: Integer); override;
+    procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
   protected
     property MultiLine: Boolean read FMultiline write SetMultiline default False;
     property SelectedColor: TColor read FSelectedColor write SetSelectedColor default clHighlight;
@@ -391,8 +390,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12585 $';
+    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu. 29 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -400,7 +399,7 @@ const
 implementation
 
 uses
-  Consts, TypInfo,
+  Consts,
   {$IFDEF COMPILER10_UP}
   Types,
   {$ENDIF COMPILER10_UP}
@@ -445,7 +444,7 @@ begin
     SetLength(Result, Len);
     if Len <> 0 then
     begin
-      Len := SendMessage(ListBox.Handle, LB_GETTEXT, Index, Longint(PChar(Result)));
+      Len := SendMessage(ListBox.Handle, LB_GETTEXT, Index, LPARAM(PChar(Result)));
       SetLength(Result, Len);
     end;
   end;
@@ -559,7 +558,7 @@ begin
     if ListBox.Style in [lbVirtual, lbVirtualOwnerDraw] then
       Exit;
     ListBox.DeselectProvider;
-    Result := SendMessage(ListBox.Handle, LB_ADDSTRING, 0, Longint(PChar(S)));
+    Result := SendMessage(ListBox.Handle, LB_ADDSTRING, 0, LPARAM(PChar(S)));
     if Result < 0 then
       raise EOutOfResources.CreateRes(@SInsertLineError);
   end;
@@ -597,7 +596,7 @@ begin
   if ListBox.Style in [lbVirtual, lbVirtualOwnerDraw] then
     Result := ListBox.DoFindData(S)
   else
-    Result := SendMessage(ListBox.Handle, LB_FINDSTRINGEXACT, -1, Longint(PChar(S)));
+    Result := SendMessage(ListBox.Handle, LB_FINDSTRINGEXACT, -1, LPARAM(PChar(S)));
 end;
 
 procedure TJvListBoxStrings.Insert(Index: Integer; const S: string);
@@ -609,7 +608,7 @@ begin
     ListBox.DeselectProvider;
     if ListBox.Style in [lbVirtual, lbVirtualOwnerDraw] then
       Exit;
-    if SendMessage(ListBox.Handle, LB_INSERTSTRING, Index, Longint(PChar(S))) < 0 then
+    if SendMessage(ListBox.Handle, LB_INSERTSTRING, Index, LPARAM(PChar(S))) < 0 then
       raise EOutOfResources.CreateRes(@SInsertLineError);
   end;
 end;
@@ -664,7 +663,7 @@ begin
       Cnt := 0;
     while Cnt > 0 do
     begin
-      Len := SendMessage(ListBox.Handle, LB_GETTEXT, 0, Longint(@Text));
+      Len := SendMessage(ListBox.Handle, LB_GETTEXT, 0, LPARAM(@Text));
       SetString(S, Text, Len);
       Obj := TObject(SendMessage(ListBox.Handle, LB_GETITEMDATA, 0, 0));
       SendMessage(ListBox.Handle, LB_DELETESTRING, 0, 0);
@@ -693,10 +692,10 @@ begin
       begin
         S := InternalList[0];
         Obj := InternalList.Objects[0];
-        Index := SendMessage(ListBox.Handle, LB_ADDSTRING, 0, Longint(PChar(S)));
+        Index := SendMessage(ListBox.Handle, LB_ADDSTRING, 0, LPARAM(PChar(S)));
         if Index < 0 then
           raise EOutOfResources.CreateRes(@SInsertLineError);
-        SendMessage(ListBox.Handle, LB_SETITEMDATA, Index, Longint(Obj));
+        SendMessage(ListBox.Handle, LB_SETITEMDATA, Index, LPARAM(Obj));
         InternalList.Delete(0);
       end;
     finally
@@ -713,7 +712,6 @@ end;
 
 constructor TJvCustomListBox.Create(AOwner: TComponent);
 var
-  PI: PPropInfo;
   PStringsAddr: PStrings;
 begin
   inherited Create(AOwner);
@@ -727,13 +725,12 @@ begin
   FConsumerSvc.AfterCreateSubSvc := ConsumerSubServiceCreated;
   FConsumerStrings := TJvConsumerStrings.Create(FConsumerSvc);
   { The following hack assumes that TJvListBox.Items reads directly from the private FItems field
-    of TCustomListBox and that TJvListBox.Items is actually published.
+    of TCustomListBox.
 
     What we do here is remove the original string list used and place our own version in it's place.
     This would give us the benefit of keeping the list of strings (and objects) even if a provider
     is active and the list box windows has no strings at all. }
-  PI := GetPropInfo(TJvListBox, 'Items');
-  PStringsAddr := Pointer(Integer(PI.GetProc) and $00FFFFFF + Integer(Self));
+  PStringsAddr := @Self.Items;
   Items.Free;                                 // remove original item list (TListBoxStrings instance)
   PStringsAddr^ := GetItemsClass.Create;      // create our own implementation and put it in place.
   TJvListBoxStrings(Items).ListBox := Self;   // link it to the list box.
@@ -841,7 +838,7 @@ begin
     begin
       if Background.DoDraw then
       begin
-        Perform(WM_ERASEBKGND, Canvas.Handle, 0);
+        Perform(WM_ERASEBKGND, WPARAM(Canvas.Handle), 0);
         if odFocused in State then
           DrawFocusRect(hDC, rcItem);
       end
@@ -1375,7 +1372,7 @@ begin
     EmptyChr := #0;
     while Cnt > 0 do
     begin
-      SendMessage(Handle, LB_ADDSTRING, 0, LParam(@EmptyChr));
+      SendMessage(Handle, LB_ADDSTRING, 0, LPARAM(@EmptyChr));
       Dec(Cnt);
     end;
     while Cnt < 0 do
@@ -2089,11 +2086,11 @@ var
 begin
   Count := ItemsShowing.Count;
   if (Index >= 0) and (Index < Count) then
-    Perform(LB_GETITEMRECT, Index, Longint(@Result))
+    Perform(LB_GETITEMRECT, Index, LPARAM(@Result))
   else
   if Index = Count then
   begin
-    Perform(LB_GETITEMRECT, Index - 1, Longint(@Result));
+    Perform(LB_GETITEMRECT, Index - 1, LPARAM(@Result));
     OffsetRect(Result, 0, Result.Bottom - Result.Top);
   end
   else

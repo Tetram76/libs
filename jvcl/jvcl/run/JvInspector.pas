@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvInspector.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvInspector;
 
@@ -2072,8 +2072,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -4133,7 +4133,7 @@ begin
   if (Selected <> nil) and Selected.DroppedDown then
   begin
     LbPos := Selected.ListBox.ScreenToClient(ClientToScreen(MousePos));
-    Selected.ListBox.Perform(WM_MOUSEWHEEL, WheelDelta shl 16, LbPos.X + (LbPos.Y shl 16));
+    Selected.ListBox.Perform(WM_MOUSEWHEEL, WheelDelta shl 16, MakeLong(LbPos.X, LbPos.Y));
   end
   else
   begin
@@ -6289,7 +6289,7 @@ begin
       begin
         StopTracking;
         MousePos := PointToSmallPoint(ListPos);
-        SendMessage(ListBox.Handle, WM_LBUTTONDOWN, 0, Integer(MousePos));
+        SendMessage(ListBox.Handle, WM_LBUTTONDOWN, 0, LPARAM(MousePos));
         Exit;
       end;
     end;

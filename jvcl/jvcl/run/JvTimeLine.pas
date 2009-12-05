@@ -36,7 +36,7 @@ Known Issues:
     * PosAtDate is slightly better
     * FirstVisibleDate always start at day 1 of month
 -----------------------------------------------------------------------------}
-// $Id: JvTimeLine.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTimeLine.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvTimeLine;
 
@@ -495,8 +495,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimeLine.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2490,7 +2490,7 @@ begin
             // Really finish it (See TBaseVirtualTree.DragFinished;)
             GetCursorPos(P);
             P := ScreenToClient(P);
-            Perform(WM_LBUTTONUP, 0, Longint(PointToSmallPoint(P)));
+            Perform(WM_LBUTTONUP, 0, LPARAM(PointToSmallPoint(P)));
           end;
 
           if Msg.DragMessage = dmDragMove then

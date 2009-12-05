@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBackgrounds.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBackgrounds.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvBackgrounds;
 
@@ -241,8 +241,8 @@ procedure GetMappedGrays(var Shades: array of TColor; StartIntensity: Byte);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBackgrounds.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1414,7 +1414,7 @@ begin
           begin
             UnhookClient;
             if not (csDestroying in FClient.ComponentState) then
-              PostMessage(FBackground.FHandle, CM_RECREATEWINDOW, 0, Longint(Self));
+              PostMessage(FBackground.FHandle, CM_RECREATEWINDOW, 0, Windows.LPARAM(Self));
           end;
         WM_SIZE:
           if not (FMode in [bmTile, bmTopLeft]) then
@@ -1548,7 +1548,7 @@ end;
 procedure TJvBackgroundClientLink.Release;
 begin
   UnhookClient;
-  PostMessage(FBackground.FHandle, CM_RELEASECLIENTLINK, 0, Longint(Self));
+  PostMessage(FBackground.FHandle, CM_RELEASECLIENTLINK, 0, LPARAM(Self));
 end;
 
 //=== { TJvBackgroundClients } ===============================================

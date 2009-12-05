@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvComCtrls.pas 12586 2009-10-29 21:58:01Z obones $
 
 unit JvComCtrls;
 
@@ -53,7 +53,15 @@ uses
 const
   JvDefPageControlBorder = 4;
   JvDefaultInactiveColorFrom = TColor($D7D7D7);
-  JvDefaultInactiveColorTo= TColor($ADADAD);
+  JvDefaultInactiveColorTo = TColor($ADADAD);
+
+  WM_CHECKSTATECHANGED = WM_USER + 1;
+
+  JvDefaultTreeViewMultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly];
+  
+  {$IFNDEF COMPILER7_UP}
+  ComCtlVersionIE6 = $00060000;
+  {$ENDIF ~COMPILER7_UP}
 
 type
   TJvIPAddress = class;
@@ -498,10 +506,7 @@ type
   TJvTreeView = class(TJvExTreeView)
   private
     FAutoDragScroll: Boolean;
-    FClearBeforeSelect: Boolean;
     FScrollDirection: Integer;
-    FSelectedList: TObjectList;
-    FSelectThisNode: Boolean;
     FOnCustomDrawItem: TTVCustomDrawItemEvent;
     FOnEditCancelled: TNotifyEvent;
     FOnSelectionChange: TNotifyEvent;
@@ -516,16 +521,17 @@ type
     FMenuDblClick: Boolean;
     FReinitializeTreeNode: Boolean;
     FOnNodeCheckedChange: TJvTreeViewNodeCheckedChange;
+    FCheckEventsDisabled: Boolean;
 
     procedure InternalCustomDrawItem(Sender: TCustomTreeView;
       Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
     function GetSelectedCount: Integer;
     function GetSelectedItem(Index: Integer): TTreeNode;
     procedure SetScrollDirection(const Value: Integer);
-    procedure WMLButtonDown(var Msg: TWMLButtonDown); message WM_LBUTTONDOWN;
     procedure WMTimer(var Msg: TWMTimer); message WM_TIMER;
     procedure WMHScroll(var Msg: TWMHScroll); message WM_HSCROLL;
     procedure WMVScroll(var Msg: TWMVScroll); message WM_VSCROLL;
+    procedure WMCheckStateChanged(var Msg: TMessage); message WM_CHECKSTATECHANGED;
     function GetItemHeight: Integer;
     procedure SetItemHeight(Value: Integer);
     function GetInsertMarkColor: TColor;
@@ -541,6 +547,7 @@ type
     procedure SetPageControl(const Value: TPageControl);
     function GetItemIndex: Integer;
     procedure SetItemIndex(const Value: Integer);
+    procedure PostCheckStateChanged(Node: TTreeNode);
   protected
     procedure DoNodeCheckedChange(Node: TJvTreeNode);
     procedure TreeNodeCheckedChange(Sender: TObject); virtual;
@@ -556,7 +563,6 @@ type
     procedure CNNotify(var Msg: TWMNotify); message CN_NOTIFY;
     procedure WMPaint(var Msg: TMessage); message WM_PAINT;
     procedure Change(Node: TTreeNode); override;
-    procedure Delete(Node: TTreeNode); override;
     procedure DoEditCancelled; dynamic;
     procedure DoEnter; override;
     procedure DoExit; override;
@@ -568,22 +574,17 @@ type
     procedure InvalidateNode(Node: TTreeNode);
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
-    procedure ResetPostOperationFlags;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer); override;
     property ScrollDirection: Integer read FScrollDirection write SetScrollDirection;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure DblClick; override;
   public
     constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-    procedure ClearSelection; reintroduce;
     function IsNodeSelected(Node: TTreeNode): Boolean;
+    procedure Select(Node: TTreeNode; ShiftState: TShiftState = []); override;
     procedure InvalidateNodeIcon(Node: TTreeNode);
     procedure InvalidateSelectedItems;
     procedure SelectItem(Node: TTreeNode; Unselect: Boolean = False);
-    property SelectedItems[Index: Integer]: TTreeNode read GetSelectedItem;
-    { SelectedCount now returns 1 (Selected<>nil) or 0 (Selected=nil) if MultiSelect=False.
-      The former implementation always returned -1 if MultiSelect=False }
-    property SelectedCount: Integer read GetSelectedCount;
     function GetBold(Node: TTreeNode): Boolean;
     procedure SetBold(Node: TTreeNode; Value: Boolean);
     function GetChecked(Node: TTreeNode): Boolean;
@@ -597,6 +598,10 @@ type
     function MoveUp(AAbsoluteIndex: Integer; Focus: Boolean = True): Integer;
     { move down the display order }
     function MoveDown(AAbsoluteIndex: Integer; Focus: Boolean = True): Integer;
+
+    { Backward compatibility }
+    property SelectedItems[Index: Integer]: TTreeNode read GetSelectedItem; // deprecated 'use Selections[]'
+    property SelectedCount: Integer read GetSelectedCount; // deprecated 'use SelectionCount'
 
     property InsertMarkColor: TColor read GetInsertMarkColor write SetInsertMarkColor;
     property Checked[Node: TTreeNode]: Boolean read GetChecked write SetChecked;
@@ -613,6 +618,8 @@ type
     property Checkboxes: Boolean read FCheckBoxes write SetCheckBoxes default False;
     property PageControl: TPageControl read FPageControl write SetPageControl;
     property AutoDragScroll: Boolean read FAutoDragScroll write FAutoDragScroll default False;
+    property CheckEventsDisabled: Boolean read FCheckEventsDisabled write FCheckEventsDisabled default False;
+    property MultiSelectStyle default JvDefaultTreeViewMultiSelectStyle;
     property OnVerticalScroll: TNotifyEvent read FOnVScroll write FOnVScroll;
     property OnHorizontalScroll: TNotifyEvent read FOnHScroll write FOnHScroll;
     property OnPageChanged: TPageChangedEvent read FOnPage write FOnPage;
@@ -632,8 +639,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12586 $';
+    Date: '$Date: 2009-10-29 22:58:01 +0100 (jeu. 29 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -641,11 +648,9 @@ const
 implementation
 
 uses
-  SysUtils,
-  Math,
+  SysUtils, Math,
   JclStrings,
-  JvThemes,
-  JvConsts, JvJCLUtils;
+  JvConsts, JvThemes, JvJCLUtils;
 
 const
   TVIS_CHECKED = $2000;
@@ -803,7 +808,8 @@ begin
       end;
     // mouse messages are sent through TJvIPAddress.WMParentNotify
   end;
-  Dispatch(Msg);
+  with Msg do
+    Result := DefWindowProc(Handle, Msg, WParam, LParam);
 end;
 
 //=== { TJvIPAddressDataConnector } ==========================================
@@ -1119,7 +1125,7 @@ begin
     case NotifyCode of
       EN_CHANGE:
         begin
-          Perform(IPM_GETADDRESS, 0, Integer(@FAddress));
+          Perform(IPM_GETADDRESS, 0, LPARAM(@FAddress));
           if not FChanging then
             DoChange;
         end;
@@ -1128,7 +1134,7 @@ begin
           FChanging := True;
           try
             if not IsBlank then
-              Perform(IPM_SETADDRESS, 0, FAddress);
+              Perform(IPM_SETADDRESS, 0, LPARAM(FAddress));
           finally
             FChanging := False;
           end;
@@ -2009,7 +2015,7 @@ begin
   hi.pt.X := Msg.XPos;
   hi.pt.Y := Msg.YPos;
   hi.flags := 0;
-  TabIndex := Perform(TCM_HITTEST, 0, Longint(@hi));
+  TabIndex := Perform(TCM_HITTEST, 0, LPARAM(@hi));
   I := 0;
   RealIndex := 0;
   while I <= TabIndex + RealIndex do
@@ -2448,52 +2454,19 @@ constructor TJvTreeView.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FCheckBoxes := False;
-  // ControlStyle := ControlStyle + [csAcceptsControls];
-  FSelectedList := TObjectList.Create(False);
+  MultiSelectStyle := JvDefaultTreeViewMultiSelectStyle;
+
   // Since IsCustomDrawn method is not virtual we have to assign ancestor's
   // OnCustomDrawItem event to enable custom drawing
   if not (csDesigning in ComponentState) then
     inherited OnCustomDrawItem := InternalCustomDrawItem;
 end;
 
-destructor TJvTreeView.Destroy;
-begin
-  FreeAndNil(FSelectedList);
-  inherited Destroy;
-end;
-
 procedure TJvTreeView.Change(Node: TTreeNode);
 begin
-  if FClearBeforeSelect then
-  begin
-    FClearBeforeSelect := False;
-    ClearSelection;
-  end;
-  if FSelectThisNode then
-  begin
-    FSelectThisNode := False;
-    SelectItem(Node);
-  end;
   inherited Change(Node);
   if not MenuDblClick and IsMenuItemClick(Node) then
     TMenuItem(Node.Data).OnClick(TMenuItem(Node.Data));
-end;
-
-procedure TJvTreeView.ClearSelection;
-var
-  NeedInvalidate: array of TTreeNode;
-  I: Integer;
-begin
-  FClearBeforeSelect := False;
-  if not Assigned(FSelectedList) or (FSelectedList.Count = 0) then
-    Exit;
-  DoSelectionChange;
-  SetLength(NeedInvalidate, FSelectedList.Count);
-  for I := 0 to FSelectedList.Count - 1 do
-    NeedInvalidate[I] := SelectedItems[I];
-  FSelectedList.Clear;
-  for I := 0 to Length(NeedInvalidate) - 1 do
-    InvalidateNode(NeedInvalidate[I]);
 end;
 
 function TJvTreeView.CreateNode: TTreeNode;
@@ -2534,13 +2507,6 @@ begin
   for I := 0 to Items.Count - 1 do
     TJvTreeNode(Items[I]).FChecked := TJvTreeNode(Items[I]).Checked;
   inherited DestroyWnd;
-end;
-
-procedure TJvTreeView.Delete(Node: TTreeNode);
-begin
-  if MultiSelect then
-    FSelectedList.Remove(Node);
-  inherited Delete(Node);
 end;
 
 procedure TJvTreeView.DoEditCancelled;
@@ -2612,15 +2578,12 @@ end;
 
 function TJvTreeView.GetSelectedCount: Integer;
 begin
-  if MultiSelect or (Selected <> nil) then
-    Result := FSelectedList.Count
-  else
-    Result := 0;
+  Result := SelectionCount;
 end;
 
 function TJvTreeView.GetSelectedItem(Index: Integer): TTreeNode;
 begin
-  Result := TTreeNode(FSelectedList[Index]);
+  Result := Selections[Index];
 end;
 
 function TJvTreeView.GetItemIndex: Integer;
@@ -2642,46 +2605,6 @@ begin
     Canvas.Font := TJvTreeNode(Node).Font;
     Canvas.Brush := TJvTreeNode(Node).Brush;
   end;
-
-  if MultiSelect then
-  begin
-    with Canvas.Font do
-    begin // fix HotTrack bug in custom drawing
-      OnChange(nil);
-      if cdsHot in State then
-      begin
-        Style := Style + [fsUnderLine];
-        if cdsSelected in State then
-          Color := clHighlightText
-        else
-          Color := clHighlight;
-      end;
-    end;
-  end;
-
-  // Mantis 3250: This needs to be done wether we are multiselecting or not
-  // but it forces the rest of the code to ensure that the list of selected
-  // nodes is consistent with the desired display (see CNNotify).
-  if IsNodeSelected(Node) then
-  begin
-    if Focused then
-    begin
-      Canvas.Font.Color := clHighlightText;
-      Canvas.Brush.Color := clHighlight;
-    end
-    else
-    if not HideSelection then
-    begin
-      Canvas.Font.Color := Font.Color;
-      Canvas.Brush.Color := clInactiveBorder;
-    end;
-  end
-  else
-  begin
-    Canvas.Font.Color := Font.Color;
-    Canvas.Brush.Color := Color;
-  end;
-
   if Assigned(FOnCustomDrawItem) then
     FOnCustomDrawItem(Self, Node, State, DefaultDraw);
 end;
@@ -2721,32 +2644,16 @@ end;
 
 function TJvTreeView.IsNodeSelected(Node: TTreeNode): Boolean;
 begin
-  Result := FSelectedList.IndexOf(Node) <> -1;
+  Result := (Node <> nil) and Node.Selected;
 end;
 
 procedure TJvTreeView.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  if MultiSelect then
-  begin
-    ResetPostOperationFlags;
-    if not (ssAlt in Shift) and not IsEditing then
-    begin
-      if Key = VK_SPACE then
-        SelectItem(Selected, IsNodeSelected(Selected))
-      else
-      begin
-        FSelectThisNode := True;
-        if Shift * [ssShift, ssCtrl] = [] then
-          FClearBeforeSelect := True;
-      end;
-    end;
-  end
-  else
-  begin
-    FClearBeforeSelect := True;
-    FSelectThisNode := True;
-  end;
+  if Checkboxes and (GetComCtlVersion < ComCtlVersionIE6) and (Key = VK_SPACE) then // emulate missing notify message
+    PostCheckStateChanged(Selected);
+
   inherited KeyDown(Key, Shift);
+
   if ((Key = VK_SPACE) or (Key = VK_RETURN)) and MenuDblClick and IsMenuItemClick(Selected) then
     TMenuItem(Selected.Data).OnClick(TMenuItem(Selected.Data));
 end;
@@ -2757,12 +2664,6 @@ begin
     Key := #0
   else
     inherited KeyPress(Key);
-end;
-
-procedure TJvTreeView.ResetPostOperationFlags;
-begin
-  FClearBeforeSelect := False;
-  FSelectThisNode := not MultiSelect;
 end;
 
 procedure TJvTreeView.SetItemIndex(const Value: Integer);
@@ -2776,13 +2677,9 @@ end;
 procedure TJvTreeView.SelectItem(Node: TTreeNode; Unselect: Boolean);
 begin
   if Unselect then
-    FSelectedList.Remove(Node)
+    Deselect(Node)
   else
-  if not IsNodeSelected(Node) then
-    FSelectedList.Add(Node);
-  if HandleAllocated then
-    InvalidateNode(Node);
-  DoSelectionChange;
+    Select(Node);
 end;
 
 procedure TJvTreeView.SetBold(Node: TTreeNode; Value: Boolean);
@@ -2798,7 +2695,8 @@ end;
 
 procedure TJvTreeView.TreeNodeCheckedChange(Sender: TObject);
 begin
-  DoNodeCheckedChange(Sender as TJvTreeNode);
+  if not FCheckEventsDisabled then
+    DoNodeCheckedChange(Sender as TJvTreeNode);
 end;
 
 procedure TJvTreeView.SetCheckBoxes(const Value: Boolean);
@@ -2856,52 +2754,6 @@ begin
     FOnHScroll(Self);
 end;
 
-procedure TJvTreeView.WMLButtonDown(var Msg: TWMLButtonDown);
-var
-  Node: TTreeNode;
-  FirstNodeIndex, I: Integer;
-begin
-  ResetPostOperationFlags;
-  with Msg do
-    if (htOnItem in GetHitTestInfoAt(XPos, YPos)) then
-    begin
-      if MultiSelect then
-      begin
-        Node := GetNodeAt(XPos, YPos);
-        if Assigned(Node) and (ssCtrl in KeysToShiftState(Keys)) then
-        begin
-          SelectItem(Node, IsNodeSelected(Node));
-        end
-        else
-        if Assigned(Node) and (ssShift in KeysToShiftState(Keys)) then
-        begin
-          FirstNodeIndex := 0;
-
-          if SelectionCount > 0 then
-            FirstNodeIndex := Selections[0].Index;
-
-          ClearSelection;
-          if FirstNodeIndex < Node.Index then
-          begin
-            for I := FirstNodeIndex to Node.Index do
-              SelectItem(Items[I]);
-          end
-          else
-          begin
-            for I := FirstNodeIndex downto Node.Index do
-              SelectItem(Items[I]);
-          end;
-        end
-        else
-        begin
-          ClearSelection;
-          SelectItem(Node);
-        end;
-      end;
-    end;
-  inherited;
-end;
-
 procedure TJvTreeView.WMPaint(var Msg: TMessage);
 var
   I: Integer;
@@ -2918,70 +2770,84 @@ begin
 end;
 
 procedure TJvTreeView.CNNotify(var Msg: TWMNotify);
+{$IF not declared(NM_TVSTATEIMAGECHANGING)}
+const
+  NM_TVSTATEIMAGECHANGING = NM_FIRST - 24;
+type
+  { For IE >= 0x0600 }
+  tagNMTVSTATEIMAGECHANGING = packed record
+    hdr: NMHDR;
+    hti: HTREEITEM;
+    iOldStateImageIndex: Integer;
+    iNewStateImageIndex: Integer;
+  end;
+  PNMTVStateImageChanging = ^TNMTVStateImageChanging;
+  TNMTVStateImageChanging = tagNMTVSTATEIMAGECHANGING;
+{$IFEND}
 var
   Node: TTreeNode;
   Point: TPoint;
   I, J: Integer;
 begin
-  // Need to indicate ClearBeforeSelect if the item is about to change
-  // or we would get rendering glitches because of an inconsistent
-  // selection list. (Mantis 3250)
-  // Mantis 4699: Further limit this to when HideSelection is set to True.
-  // Mantis 4808: Well, it seems that fix for 4699 is doing more harm than good
-//  if HideSelection then
-  begin
-    case Msg.NMHdr.code of
-      TVN_SELCHANGEDA, TVN_SELCHANGEDW:
-        if not Multiselect then
-          FClearBeforeSelect := True;
-    end;
-  end;
-
   inherited;
   if Windows.GetCursorPos(Point) then // prevent AV after "computer locked" dialog
   begin
     Point := ScreenToClient(Point);
-    with Msg, Point do
-      case NMHdr.code of
-        NM_CLICK, NM_RCLICK:
+    case Msg.NMHdr.code of
+      NM_TVSTATEIMAGECHANGING: // ComCtrls 6+
+        begin
+          if CheckBoxes and (GetComCtlVersion >= ComCtlVersionIE6) then
           begin
-            Node := GetNodeAt(X, Y);
-            if Assigned(Node) then
-              Selected := Node
-            else
+            Node := Items.GetNode(PNMTVStateImageChanging(Msg.NMHdr).hti);
+            PostCheckStateChanged(Node);
+          end;
+        end;
+      NM_CLICK, NM_RCLICK:
+        begin
+          Node := GetNodeAt(Point.X, Point.Y);
+          if Assigned(Node) and not MultiSelect then
+            Selected := Node;
+
+          if (Node <> nil) and (Msg.NMHdr.code = NM_RCLICK) then
+            if Assigned(TJvTreeNode(Node).PopupMenu) then  // Popup menu may not be assigned
+              TJvTreeNode(Node).PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
+
+          if Checkboxes and (GetComCtlVersion < ComCtlVersionIE6) and (Node <> nil) and  // emulate missing notify message
+             (htOnStateIcon in GetHitTestInfoAt(Point.X, Point.Y)) then
+            PostCheckStateChanged(Node);
+        end;
+      TVN_SELCHANGEDA, TVN_SELCHANGEDW:
+        begin
+          DoSelectionChange;
+
+          if Assigned(FPageControl) then
+            if Selected <> nil then
             begin
-              if FCheckBoxes then
+              //Search for the correct page
+              J := -1;
+              for I := 0 to FPageControl.PageCount - 1 do
+                if DoComparePage(FPageControl.Pages[I], Selected) then
+                  J := I;
+              if J <> -1 then
               begin
-                Node := GetNodeAt(X + 16, Y);
-                if Assigned(Node) then
-                  Selected := Node
+                FPageControl.ActivePage := FPageControl.Pages[J];
+                if Assigned(FOnPage) then
+                  FOnPage(Self, Selected, FPageControl.Pages[J]);
               end;
             end;
-            if (Selected <> nil) and (NMHdr.code = NM_RCLICK) then
-              if Assigned(TJvTreeNode(Selected).PopupMenu) then  // Popup menu may not be assigned
-                TJvTreeNode(Selected).PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
-          end;
-        TVN_SELCHANGEDA, TVN_SELCHANGEDW:
-          begin
-            DoSelectionChange;  // mantis 4393
-            if Assigned(FPageControl) then
-              if Selected <> nil then
-              begin
-                //Search for the correct page
-                J := -1;
-                for I := 0 to FPageControl.PageCount - 1 do
-                  if DoComparePage(FPageControl.Pages[I], Selected) then
-                    J := I;
-                if J <> -1 then
-                begin
-                  FPageControl.ActivePage := FPageControl.Pages[J];
-                  if Assigned(FOnPage) then
-                    FOnPage(Self, Selected, FPageControl.Pages[J]);
-                end;
-              end;
-          end;
-      end;
+        end;
+    end;
   end;
+end;
+
+procedure TJvTreeView.WMCheckStateChanged(var Msg: TMessage);
+var
+  Node: TTreeNode;
+begin
+  Node := Items.GetNode(HTREEITEM(Msg.LParam));
+  if Node <> nil then
+    if Ord(TJvTreeNode(Node).Checked) <> Msg.WParam then // do not trigger if nothing was changed
+      TJvTreeNode(Node).DoCheckedChange;
 end;
 
 function TJvTreeView.DoComparePage(Page: TTabSheet; Node: TTreeNode): Boolean;
@@ -3062,7 +2928,7 @@ begin
     if Node = nil then
       RemoveMark
     else
-      SendMessage(Handle, TVM_SETINSERTMARK, Integer(MarkAfter), Integer(Node.ItemId));
+      SendMessage(Handle, TVM_SETINSERTMARK, WPARAM(MarkAfter), LPARAM(Node.ItemId));
 end;
 
 procedure TJvTreeView.RemoveMark;
@@ -3077,6 +2943,16 @@ begin
     Result := SendMessage(Handle, TVM_GETLINECOLOR, 0, 0)
   else
     Result := clDefault;
+end;
+
+procedure TJvTreeView.Select(Node: TTreeNode; ShiftState: TShiftState);
+var
+  WasSelected: Boolean;
+begin
+  WasSelected := (Node <> nil) and Node.Selected;
+  inherited Select(Node, ShiftState);
+  if WasSelected <> ((Node <> nil) and Node.Selected) then
+    DoSelectionChange; // trigger the missing OnSelectionChange event
 end;
 
 function TJvTreeView.MoveUp(AAbsoluteIndex: Integer; Focus: Boolean): Integer;
@@ -3102,6 +2978,31 @@ begin
     end;
     Result := lNode.AbsoluteIndex;
   end;
+end;
+
+procedure TJvTreeView.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Node: TTreeNode;
+  SelCount: Cardinal;
+begin
+  if (Button = mbLeft) and MultiSelect then
+  begin
+    Node := GetNodeAt(X, Y);
+    if (Node <> nil) and (htOnItem in GetHitTestInfoAt(X, Y)) then
+    begin
+      SelCount := SelectionCount;
+      // The VCL doesn't do this but it's standard Windows behavior to select only the clicked
+      // item if you click on it without pressing Ctrl/Shift.
+      if (SelCount > 1) and (Node <> nil) and Node.Selected and ([ssShift, ssCtrl] * Shift = []) then
+        ClearSelection(True);
+
+      inherited MouseDown(Button, Shift, X, Y);
+      if SelCount <> SelectionCount then
+        DoSelectionChange; // trigger the missing OnSelectionChange event
+      Exit;
+    end;
+  end;
+  inherited MouseDown(Button, Shift, X, Y);
 end;
 
 function TJvTreeView.MoveDown(AAbsoluteIndex: Integer; Focus: Boolean): Integer;
@@ -3165,7 +3066,7 @@ begin
   // only try to change value if not running on NT platform
   // (see MSDN: CCM_SETUNICODEFORMAT explanation for details)
   if HandleAllocated and (Win32Platform <> VER_PLATFORM_WIN32_NT) then
-    SendMessage(Handle, TVM_SETUNICODEFORMAT, Integer(Value), 0);
+    SendMessage(Handle, TVM_SETUNICODEFORMAT, WPARAM(Value), 0);
 end;
 
 type
@@ -3248,6 +3149,12 @@ begin
     if AComponent = FPageControl then
       PageControl := nil;
   end;
+end;
+
+procedure TJvTreeView.PostCheckStateChanged(Node: TTreeNode);
+begin
+  if Node <> nil then
+    PostMessage(Handle, WM_CHECKSTATECHANGED, Ord(TJvTreeNode(Node).Checked), LPARAM(Node.ItemId));
 end;
 
 procedure TJvTreeView.DblClick;

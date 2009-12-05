@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCalendar.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCalendar.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvCalendar;
 
@@ -289,8 +289,8 @@ function DayStatesToString(Days: TMonthDayState): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCalendar.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -880,7 +880,7 @@ begin
     end;
   end;
 
-  SendMessage(Handle, MCM_SETDAYSTATE, VisibleMonths, Longint(@DayArray));
+  SendMessage(Handle, MCM_SETDAYSTATE, VisibleMonths, LPARAM(@DayArray));
   //  MonthCal_SetDayState(Handle,VisibleMonths,aNMDayState);
 end;
 
@@ -1137,7 +1137,7 @@ begin
   Index := High(DayStates) - Low(DayStates);
   if (Index < MonthCount) or (Index < VisibleMonths) then
     raise EMonthCalError.CreateRes(@RsEInvalidArgumentToSetDayStates);
-  SendMessage(Handle, MCM_SETDAYSTATE, MonthCount, Longint(@DayStates));
+  SendMessage(Handle, MCM_SETDAYSTATE, MonthCount, LPARAM(@DayStates));
 end;
 
 // first default width  = 166
@@ -1153,7 +1153,7 @@ function TJvCustomMonthCalendar.GetMinSize: TRect;
 begin
   if HandleAllocated then
   begin
-    SendMessage(Handle, MCM_GETMINREQRECT, 0, Longint(@Result));
+    SendMessage(Handle, MCM_GETMINREQRECT, 0, LPARAM(@Result));
     OffSetRect(Result, -Result.Left, -Result.Top);
   end
   else

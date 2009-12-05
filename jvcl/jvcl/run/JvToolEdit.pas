@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvToolEdit.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvToolEdit;
 
@@ -1071,8 +1071,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1967,7 +1967,7 @@ begin
     if GetCursorPos(Pt) then
     begin
       Pt := ScreenToClient(Pt);
-      PostMessage(Handle, CM_FIXCARETPOSITION, 0, LPARAM((Pt.Y shl 16) or (Pt.X and $FFFF)));
+      PostMessage(Handle, CM_FIXCARETPOSITION, 0, MakeLong(Word(Pt.X), Word(Pt.Y)));
     end;
   end;
   inherited DoEnter;

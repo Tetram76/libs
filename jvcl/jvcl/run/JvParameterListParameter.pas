@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvParameterListParameter.pas 12563 2009-10-19 23:55:49Z jfudickar $
 
 unit JvParameterListParameter;
 
@@ -620,8 +620,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12563 $';
+    Date: '$Date: 2009-10-20 01:55:49 +0200 (mar. 20 oct. 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -2393,8 +2393,12 @@ end;
 procedure TJvMemoParameter.SetWinControlProperties;
 var
   ITmpMemo: IJvDynControlMemo;
+  ITmpFont: IJvDynControlFont;
 begin
   inherited SetWinControlProperties;
+  if FontName <> '' then
+    if Supports(WinControl, IJvDynControlFont, ITmpFont) then
+      ITmpFont.ControlFont.Name := FontName;
   if Supports(WinControl, IJvDynControlMemo, ITmpMemo) then
   begin
     ITmpMemo.ControlSetWantTabs(WantTabs);
@@ -2428,8 +2432,12 @@ end;
 procedure TJvRichEditParameter.SetWinControlProperties;
 var
   ITmpMemo: IJvDynControlMemo;
+  ITmpFont: IJvDynControlFont;
 begin
   inherited SetWinControlProperties;
+  if FontName <> '' then
+    if Supports(WinControl, IJvDynControlFont, ITmpFont) then
+      ITmpFont.ControlFont.Name := FontName;
   if Supports(WinControl, IJvDynControlMemo, ITmpMemo) then
   begin
     ITmpMemo.ControlSetWantTabs(WantTabs);

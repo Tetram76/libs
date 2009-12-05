@@ -74,7 +74,7 @@ History:
     - introduced IFixedPopupIntf
     - speed optimation in THiddenPopupObject.GetPopupMenu
 -----------------------------------------------------------------------------}
-// $Id: JvFixedEditPopUp.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvFixedEditPopUp.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvFixedEditPopUp;
 
@@ -127,8 +127,8 @@ procedure FixedDefaultEditPopupUpdate(AEdit: TWinControl);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFixedEditPopUp.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -492,7 +492,7 @@ begin
   begin
     StartPos := 0;
     EndPos := 0;
-    MsgResult := SendMessage(EditHandle, EM_GETSEL, Longint(@StartPos), Longint(@EndPos));
+    MsgResult := SendMessage(EditHandle, EM_GETSEL, WPARAM(@StartPos), LPARAM(@EndPos));
     Result := EndPos - StartPos;
     if (Result <= 0) and (MsgResult > 0) then
       Result := LongRec(MsgResult).Hi - LongRec(MsgResult).Lo;

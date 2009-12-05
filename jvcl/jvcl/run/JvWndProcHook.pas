@@ -27,7 +27,7 @@ Known Issues:
       TJvHookInfos               -> TJvHookItem, TJvHookInfo, TJvHook
       TJvHookInfo                -> TJvHookData
 -----------------------------------------------------------------------------}
-// $Id: JvWndProcHook.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvWndProcHook.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvWndProcHook;
 
@@ -94,8 +94,8 @@ procedure ReleaseObj(AObject: TObject);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWndProcHook.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -980,7 +980,7 @@ begin
   if FReleasing.IndexOf(AObject) < 0 then
   begin
     FReleasing.Add(AObject);
-    PostMessage(Handle, CM_RELEASE, Integer(AObject), 0);
+    PostMessage(Handle, CM_RELEASE, WPARAM(AObject), 0);
   end;
 end;
 

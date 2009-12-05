@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThemes.pas 12491 2009-09-04 22:18:49Z ahuser $
+// $Id: JvThemes.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvThemes;
 
@@ -796,8 +796,8 @@ procedure DrawGlassableImageList(ImageList: HIMAGELIST; Index: Integer; Dest: HD
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThemes.pas $';
-    Revision: '$Revision: 12491 $';
-    Date: '$Date: 2009-09-05 00:18:49 +0200 (sam. 05 sept. 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1884,12 +1884,12 @@ begin
       Exit;
 
     Code.Jmp := $E9;
-    Code.Offset := Integer(@WMEraseBkgndHook) - (Integer(@P) + 1) - SizeOf(Code);
+    Code.Offset := PAnsiChar(@WMEraseBkgndHook) - (PAnsiChar(@P) + 1) - SizeOf(Code);
 
     { The strange thing is that the $e9 cannot be overriden with a "PUSH xxx" }
-    if ReadProcessMemory(GetCurrentProcess, Pointer(Cardinal(@P) + 1),
+    if ReadProcessMemory(GetCurrentProcess, Pointer(PAnsiChar(@P) + 1),
                          @SavedWinControlCode, SizeOf(SavedWinControlCode), N) and
-      WriteProtectedMemory(Pointer(Cardinal(@P) + 1), @Code, SizeOf(Code), N) then
+      WriteProtectedMemory(Pointer(PAnsiChar(@P) + 1), @Code, SizeOf(Code), N) then
     begin
       WinControlHookInstalled := True;
       ThemeHooks.FEraseBkgndHooked := True;

@@ -22,7 +22,7 @@ home page, located at http://cnxmanager.sourceforge.net
 
 Known Issues: none to date.
 -----------------------------------------------------------------------------}
-// $Id: JvClipbrd.pas 12439 2009-08-09 17:02:39Z obones $
+// $Id: JvClipbrd.pas 12567 2009-10-22 08:50:56Z outchy $
 
 unit JvClipbrd;
 
@@ -222,8 +222,8 @@ function JvClipboard: TJvClipboard;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvClipbrd.pas $';
-    Revision: '$Revision: 12439 $';
-    Date: '$Date: 2009-08-09 19:02:39 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 12567 $';
+    Date: '$Date: 2009-10-22 10:50:56 +0200 (jeu. 22 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -370,19 +370,8 @@ begin
 end;
 
 function TJvClipboard.RegisterFormat(const Name: string): Word;
-var
-  Tmp: PChar;
 begin
-  GetMem(Tmp, Length(Name) + 1); // don't forget +1 for trailing #0
-  try
-    StrPCopy(Tmp, Name);
-    Result := RegisterClipboardFormat(Tmp);
-  finally
-    FreeMem(Tmp);
-  end;
-  // Note : Yes, we could have used PChar(name) as an argument to
-  // RegisterClipboardFormat, but this only works under Delphi 6
-  // and this code have to work under older versions
+  Result := RegisterClipboardFormat(PChar(Name));
 end;
 
 procedure TJvClipboard.RenderFormat(Format: Word);

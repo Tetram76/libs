@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExceptionForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvExceptionForm.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvExceptionForm;
 
@@ -86,8 +86,8 @@ procedure JvErrorIntercept;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvExceptionForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -342,7 +342,7 @@ begin
       dwContextId := HelpContext;
       GetCursorPos(MousePos);
     end;
-    Perform(WM_HELP, 0, Longint(@Info));
+    Perform(WM_HELP, 0, LPARAM(@Info));
   end;
 
 end;

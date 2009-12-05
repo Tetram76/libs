@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCx.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDynControlEngineDevExpCx.pas 12563 2009-10-19 23:55:49Z jfudickar $
 
 unit JvDynControlEngineDevExpCx;
 
@@ -360,8 +360,9 @@ type
 
   TJvDynControlCxMemo = class(TcxMemo, IUnknown, IJvDynControl, IJvDynControlData,
     IJvDynControlItems, IJvDynControlMemo, IJvDynControlDevExpCx, IJvDynControlReadOnly,
-    IJvDynControlAlignment)
+    IJvDynControlAlignment, IJvDynControlFont)
   public
+    //IJvDynControlFont
     procedure ControlSetDefaultProperties;
     procedure ControlSetReadOnly(Value: Boolean);
     procedure ControlSetTabOrder(Value: Integer);
@@ -388,10 +389,13 @@ type
     procedure ControlSetCxProperties(Value: TCxDynControlWrapper);
     //IJvDynControlAlignment
     procedure ControlSetAlignment(Value: TAlignment);
+    //IJvDynControlFont
+    function ControlGetFont: TFont;
+    procedure ControlSetFont(Value: TFont);
   end;
 
   TJvDynControlCxRichEdit = class(TcxRichEdit, IUnknown, IJvDynControl, IJvDynControlData,
-    IJvDynControlItems, IJvDynControlMemo, IJvDynControlDevExpCx, IJvDynControlReadOnly)
+    IJvDynControlItems, IJvDynControlMemo, IJvDynControlDevExpCx, IJvDynControlReadOnly, IJvDynControlFont)
   public
     procedure ControlSetDefaultProperties;
     procedure ControlSetReadOnly(Value: Boolean);
@@ -417,6 +421,10 @@ type
     procedure ControlSetScrollBars(Value: TScrollStyle);
 
     procedure ControlSetCxProperties(Value: TCxDynControlWrapper);
+
+    //IJvDynControlFont
+    function ControlGetFont: TFont;
+    procedure ControlSetFont(Value: TFont);
   end;
 
   TJvDynControlCxRadioGroup = class(TcxRadioGroup, IUnknown, IJvDynControl,
@@ -987,8 +995,8 @@ function DynControlEngineDevExpCx: TJvDynControlEngineDevExpCx;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCx.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12563 $';
+    Date: '$Date: 2009-10-20 01:55:49 +0200 (mar. 20 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2014,6 +2022,11 @@ begin
   Result := Font;
 end;
 
+function TJvDynControlCxMemo.ControlGetFont: TFont;
+begin
+  Result := Font;
+end;
+
 //=== { TJvDynControlCxMemo } ================================================
 
 procedure TJvDynControlCxMemo.ControlSetDefaultProperties;
@@ -2115,6 +2128,16 @@ begin
   Properties.Alignment := Value;
 end;
 
+procedure TJvDynControlCxMemo.ControlSetFont(Value: TFont);
+begin
+  Font.Assign(Value);
+end;
+
+
+function TJvDynControlCxRichEdit.ControlGetFont: TFont;
+begin
+  Result := Font;
+end;
 
 //=== { TJvDynControlCxRichEdit } ============================================
 
@@ -2210,6 +2233,11 @@ procedure TJvDynControlCxRichEdit.ControlSetCxProperties(Value: TCxDynControlWra
 begin
   Style.LookAndFeel.Assign(Value.LookAndFeel);
   Style.StyleController := Value.StyleController;
+end;
+
+procedure TJvDynControlCxRichEdit.ControlSetFont(Value: TFont);
+begin
+  Font.Assign(Value);
 end;
 
 //=== { TJvDynControlCxRadioGroup } ===========================================

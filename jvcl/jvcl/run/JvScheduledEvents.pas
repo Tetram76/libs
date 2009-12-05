@@ -23,7 +23,7 @@
  You may retrieve the latest version of this file at the Project JEDI home
  page, located at http://www.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvScheduledEvents.pas 12445 2009-08-10 17:21:13Z obones $
+// $Id: JvScheduledEvents.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvScheduledEvents;
 
@@ -259,8 +259,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScheduledEvents.pas $';
-    Revision: '$Revision: 12445 $';
-    Date: '$Date: 2009-08-10 19:21:13 +0200 (lun. 10 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -341,7 +341,7 @@ begin
               begin
                 TskColl[I].Triggered;
                 PostMessage(TJvCustomScheduledEvents(FEventComponents[FEventIdx]).Handle,
-                  CM_EXECEVENT, Integer(TskColl[I]), 0);
+                  CM_EXECEVENT, LPARAM(TskColl[I]), 0);
               end;
               Inc(I);
             end;

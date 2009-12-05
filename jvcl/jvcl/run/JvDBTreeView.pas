@@ -41,7 +41,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvDBTreeView.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBTreeView.pas 12575 2009-10-25 17:17:10Z ahuser $
 
 unit JvDBTreeView;
 
@@ -104,7 +104,6 @@ type
     {**** Drag'n'Drop ****}
     procedure TimerDnDTimer(Sender: TObject);
   protected
-    //FSavedActive: Boolean;
     FMastersStream: TStream;
 
     procedure DragOver(Source: TObject; X, Y: Integer; State: TDragState;
@@ -281,8 +280,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBTreeView.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12575 $';
+    Date: '$Date: 2009-10-25 18:17:10 +0100 (dim. 25 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1355,12 +1354,19 @@ var
   HT: THitTests;
 begin
   inherited DragOver(Source, X, Y, State, Accept);
+
   if ValidDataSet and (DragMode = dmAutomatic) and not FDataLink.ReadOnly and
-     not ReadOnly and not Accept then
+     not ReadOnly then
   begin
     HT := GetHitTestInfoAt(X, Y);
     Node := GetNodeAt(X, Y);
-    Accept := (Source = Self) and Assigned(Selected) and
+
+    { Mantis #4815: Do not allow drag over if the user callback said no; see TControl.DragOver impl. }
+    if not Assigned(OnDragOver) then
+      Accept := True;
+
+    Accept := Accept and
+      (Source = Self) and Assigned(Selected) and
       (Node <> Selected) and Assigned(Node) and
       not Node.HasAsParent(Selected) and
       (HT - [htOnLabel, htOnItem, htOnIcon, htNowhere, htOnIndent, htOnButton] <> HT);

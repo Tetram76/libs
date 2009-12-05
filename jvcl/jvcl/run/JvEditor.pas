@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvEditor.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvEditor.pas 12594 2009-11-03 12:38:16Z ahuser $
 
 unit JvEditor;
 
@@ -181,6 +181,7 @@ type
     property AutoIndent;
     property KeepTrailingBlanks;
     property CursorBeyondEOF;
+    property CursorBeyondEOL;
     property BracketHighlighting;
     property SelForeColor;
     property SelBackColor;
@@ -238,7 +239,7 @@ type
     property AutoSize;
     property BiDiMode;
     property Constraints;
-    property UseDockManager default True;
+    property UseDockManager;
     property DockSite;
     property ParentBiDiMode;
     property OnCanResize;
@@ -278,7 +279,7 @@ type
   published
     property Identifiers: TStrings index 0 read GetStrings write SetStrings;
     property Templates: TStrings index 1 read GetStrings write SetStrings;
-    property CaretChar: Char read FCaretChar write FCaretChar;
+    property CaretChar: Char read FCaretChar write FCaretChar default '|';
     property CRLF: string read FCRLF write FCRLF;
     property Separator: string read FSeparator write FSeparator;
   end;
@@ -386,8 +387,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditor.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12594 $';
+    Date: '$Date: 2009-11-03 13:38:16 +0100 (mar. 03 nov. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1377,7 +1378,10 @@ begin
             Invalidate;
             Changed;
           end;
-        end;
+        end
+        else
+        if not PersistentBlocks and FSelection.IsSelected then
+          DoCommand(ecDelete, X, Y, CaretUndo);
     ecDelete:
       if not ReadOnly then
       begin

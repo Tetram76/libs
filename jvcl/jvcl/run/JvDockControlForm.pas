@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockControlForm.pas 12553 2009-10-05 13:22:42Z obones $
+// $Id: JvDockControlForm.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 { Changes:
 
@@ -850,8 +850,8 @@ procedure InvalidateDockHostSiteOfControl(Control: TControl; FocusLost: Boolean)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockControlForm.pas $';
-    Revision: '$Revision: 12553 $';
-    Date: '$Date: 2009-10-05 15:22:42 +0200 (lun. 05 oct. 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -3628,7 +3628,7 @@ end;
 
 procedure TJvDockConjoinPanel.DockDrop(Source: TDragDockObject; X, Y: Integer);
 begin
-  if Perform(CM_DOCKCLIENT, Integer(Source), Integer(SmallPoint(X, Y))) >= 0 then
+  if Perform(CM_DOCKCLIENT, WPARAM(Source), LPARAM(SmallPoint(X, Y))) >= 0 then
   begin
     if Source.Control is TForm then
     begin
@@ -3661,7 +3661,7 @@ begin
     { It's possible that 2 WM_CLOSE are send to the parent form  }
     PostMessage(Parent.Handle, WM_CLOSE, 0, 0);
   UpdateCaption(Client);
-  Result := Perform(CM_UNDOCKCLIENT, Integer(NewTarget), Integer(Client)) = 0;
+  Result := Perform(CM_UNDOCKCLIENT, WPARAM(NewTarget), LPARAM(Client)) = 0;
 end;
 
 function TJvDockConjoinPanel.GetDockClient: TJvDockClient;
@@ -3816,7 +3816,7 @@ end;
 
 procedure TJvDockPanel.DockDrop(Source: TDragDockObject; X, Y: Integer);
 begin
-  if Perform(CM_DOCKCLIENT, Integer(Source), Integer(SmallPoint(X, Y))) >= 0 then
+  if Perform(CM_DOCKCLIENT, WPARAM(Source), LPARAM(SmallPoint(X, Y))) >= 0 then
   begin
     if Source.Control is TForm then
     begin
@@ -3832,7 +3832,7 @@ function TJvDockPanel.DoUnDock(NewTarget: TWinControl; Client: TControl): Boolea
 begin
   Result := IsDockable(Self, Client);
   ShowDockPanel(False, nil);
-  Result := Result and (Perform(CM_UNDOCKCLIENT, Integer(NewTarget), Integer(Client)) = 0);
+  Result := Result and (Perform(CM_UNDOCKCLIENT, WPARAM(NewTarget), LPARAM(Client)) = 0);
   if Result then
     if not (Client is TJvDockableForm) then
       SetDockSite(TForm(Client), True);
@@ -4741,7 +4741,7 @@ begin
     try
       DragDockObject.DockRect := Source.DockRect;
       DragDockObject.Control := Source.Control;
-      Perform(CM_DOCKCLIENT, Integer(DragDockObject), Integer(SmallPoint(X, Y)));
+      Perform(CM_DOCKCLIENT, WPARAM(DragDockObject), LPARAM(SmallPoint(X, Y)));
       UpdateCaption(nil);
     finally
       DragDockObject.Free;
@@ -4812,13 +4812,13 @@ begin
   if (VisibleDockClientCount = 1) or (DockClientCount <= 2) then
     PostMessage(Parent.Handle, WM_CLOSE, 0, 0);
   UpdateCaption(Client);
-  Result := Perform(CM_UNDOCKCLIENT, Integer(NewTarget), Integer(Client)) = 0;
+  Result := Perform(CM_UNDOCKCLIENT, WPARAM(NewTarget), LPARAM(Client)) = 0;
 end;
 
 procedure TJvDockTabPageControl.DockDrop(Source: TDragDockObject; X,
   Y: Integer);
 begin
-  if Perform(CM_DOCKCLIENT, Integer(Source), Integer(SmallPoint(X, Y))) >= 0 then
+  if Perform(CM_DOCKCLIENT, WPARAM(Source), LPARAM(SmallPoint(X, Y))) >= 0 then
   begin
     if Source.Control is TForm then
     begin
@@ -4845,7 +4845,7 @@ begin
     (DockClientCount <= 2) then
     PostMessage(Parent.Handle, WM_CLOSE, 0, 0);
   UpdateCaption(Client);
-  Result := Perform(CM_UNDOCKCLIENT, Integer(NewTarget), Integer(Client)) = 0;
+  Result := Perform(CM_UNDOCKCLIENT, WPARAM(NewTarget), LPARAM(Client)) = 0;
 end;
 
 function TJvDockTabPageControl.GetActiveDockForm: TCustomForm;

@@ -24,7 +24,7 @@ Known Issues:
 * the TStrings previewer has a *very* simple word-wrap feature - use the RTF variant if possible
 
 -----------------------------------------------------------------------------}
-// $Id: JvPrvwRender.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPrvwRender.pas 12579 2009-10-26 19:59:53Z ahuser $
 
 unit JvPrvwRender;
 
@@ -254,8 +254,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPrvwRender.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12579 $';
+    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -433,7 +433,7 @@ begin
     try
       SendMessage(RichEdit.Handle, EM_FORMATRANGE, 0, 0); // flush buffer
       Range.chrg.cpMin := FLastChar;
-      FLastChar := SendMessage(RichEdit.Handle, EM_FORMATRANGE, 1, Longint(@Range));
+      FLastChar := SendMessage(RichEdit.Handle, EM_FORMATRANGE, 1, LPARAM(@Range));
       FFinished := (FLastChar >= MaxLen) or (FLastChar = -1);
       NeedMorePages := not FFinished;
       SendMessage(RichEdit.Handle, EM_FORMATRANGE, 0, 0); // flush buffer
@@ -510,7 +510,7 @@ begin
         Flags := GTL_DEFAULT;
         codepage := CP_ACP;
       end;
-      MaxLen := RichEdit.Perform(EM_GETTEXTLENGTHEX, WParam(@TextLenEx), 0);
+      MaxLen := RichEdit.Perform(EM_GETTEXTLENGTHEX, WPARAM(@TextLenEx), 0);
     end
     else
       MaxLen := RichEdit.GetTextLen;
@@ -522,7 +522,7 @@ begin
     try
       SendMessage(RichEdit.Handle, EM_FORMATRANGE, 0, 0); // flush buffer
       Range.chrg.cpMin := FLastChar;
-      ALastChar := SendMessage(RichEdit.Handle, EM_FORMATRANGE, 1, Longint(@Range));
+      ALastChar := SendMessage(RichEdit.Handle, EM_FORMATRANGE, 1, LPARAM(@Range));
       FFinished := (ALastChar >= MaxLen) or (ALastChar = -1) or (ALastChar <= FLastChar);
       FLastChar := ALastChar;
       NeedMorePages := not FFinished;
