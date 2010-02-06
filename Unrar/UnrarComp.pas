@@ -107,7 +107,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-  published
+
     function RAROpenArchiveEx: PRAROpenArchiveDataEx;
     property ArcName: string read GetArcName write SetArcName;
     property ArcNameW: WideString read GetArcNameW write SetArcNameW;
