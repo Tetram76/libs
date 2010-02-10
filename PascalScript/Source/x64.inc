@@ -3,6 +3,8 @@
 const
   EmptyPchar: array[0..0] of char = #0;
 {$ASMMODE INTEL}
+
+{$IFDEF WINDOWS}
 procedure x64call(
   Address: Pointer;
   out _RAX: IPointer;
@@ -19,8 +21,8 @@ asm
 
     fpc inserts an 20h emty space
 *)
-  push ebp
-  mov ebp,esp
+  push rbp
+  mov rbp,rsp
 //  call debugbreak
   push rcx  // address
   push rdx  // _rax
@@ -67,13 +69,197 @@ asm
   leave
   ret
 end;
+{$ELSE}
+type
+  TRegisters = packed record
+    _RDI,               //  0
+    _RSI,               //  8
+    _RDX,               // 16
+    _RCX,               // 24
+    _R8,                // 32
+    _R9: IPointer;      // 40
+    _XMM1,              // 48
+    _XMM2,              // 56
+    _XMM3,              // 64
+    _XMM4,              // 72
+    _XMM5,              // 80
+    _XMM6,              // 88
+    _XMM7: Double;      // 96
+    SingleBits: Integer; //104
+  end;
+
+procedure x64call(
+  Address: Pointer;
+  out _RAX: IPointer;
+
+  var Registers: TRegisters;
+  aStack: Pointer; aItems: Integer; var _XMM0: Double); assembler; nostackframe;
+
+
+asm
+(* Registers:
+    RDI: Address
+    RSI: _RAX
+    RDX: Registers
+    RCX: aStack
+    R8:  aItems
+    R9:  XMM0
+
+    rbp-8    addr
+    rbp-16   _rax
+    rbp-24   _xmm0
+    rbp-32   regs
+*)
+  push rbp
+  mov rbp,rsp
+  push rdi  // address
+  push rsi  // _rax
+  push r9   // xmm0
+  push rdx
+{$IFDEF PS_STACKALIGN}
+  bt r8, 0
+  jnc @skipjump
+  sub rsp, 8
+@skipjump:
+{$ENDIF}
+  mov rax, rdx
+  jmp @compareitems
+@work:
+  push [rcx]
+  dec r8
+  sub rcx,8
+@compareitems:
+  or r8, r8
+  jnz @work
+
+  // copy registers
+  // xmm0
+  mov rdx,[rbp-24]
+  bt [rax+104], 0
+  jnc @skipxmm0
+  cvtsd2ss xmm0,[rdx]
+  jmp @skipxmm0re
+  @skipxmm0:
+  movd xmm0,[rdx]
+  @skipxmm0re:
+
+  // xmm1
+  bt [rax+104], 1
+  jnc @skipxmm1
+  cvtsd2ss xmm1,[rax+48]
+  jmp @skipxmm1re
+  @skipxmm1:
+  movd xmm1,[rax+48]
+  @skipxmm1re:
+
+  // xmm2
+  bt [rax+104], 2
+  jnc @skipxmm2
+  cvtsd2ss xmm2,[rax+56]
+  jmp @skipxmm2re
+  @skipxmm2:
+  movd xmm2,[rax+56]
+  @skipxmm2re:
+
+  // xmm3
+  bt [rax+104], 3
+  jnc @skipxmm3
+  cvtsd2ss xmm3,[rax+64]
+  jmp @skipxmm3re
+  @skipxmm3:
+  movd xmm3,[rax+64]
+  @skipxmm3re:
+
+  // xmm4
+  bt [rax+104], 4
+  jnc @skipxmm4
+  cvtsd2ss xmm4,[rax+72]
+  jmp @skipxmm4re
+  @skipxmm4:
+  movd xmm4,[rax+72]
+  @skipxmm4re:
+
+  // xmm5
+  bt [rax+104], 5
+  jnc @skipxmm5
+  cvtsd2ss xmm5,[rax+80]
+  jmp @skipxmm5re
+  @skipxmm5:
+  movd xmm5,[rax+80]
+  @skipxmm5re:
+
+  // xmm6
+  bt [rax+104], 6
+  jnc @skipxmm6
+  cvtsd2ss xmm6,[rax+88]
+  jmp @skipxmm6re
+  @skipxmm6:
+  movd xmm6,[rax+88]
+  @skipxmm6re:
+// xmm7
+  bt [rax+104], 7
+  jnc @skipxmm7
+  cvtsd2ss xmm7,[rax+96]
+  jmp @skipxmm7re
+  @skipxmm7:
+  movd xmm7,[rax+96]
+  @skipxmm7re:
+
+
+  mov RDI, [rax]
+  mov RSI, [rax+ 8]
+  mov RDX, [rax+16]
+  mov RCX, [rax+24]
+  mov R8,  [rax+32]
+  mov R9,  [rax+40]
+
+  // weird thing on windows, it needs 32 bytes in the CALLEE side to do whatever in; not sure about linux
+  //sub RSP, 32
+
+  mov rax, [rbp-8]
+  call RAX
+
+//  add rsp, 8
+
+  // add RSP, 32 // undo the damage done earlier
+
+  // copy result back
+  mov rsi, [rbp-16]
+  mov [rsi], RAX
+  mov rsi, [rbp-24]
+
+  // xmm0 res
+  mov rax, [rbp-32]
+  bt [rax+104], 8
+  jnc @skipres
+  cvtss2sd xmm1,xmm0
+  movd [rsi],xmm1
+  jmp @skipresre
+  @skipres:
+  movd [rsi],xmm0
+  @skipresre:
+
+  pop rdx
+  pop r9   // xmm0
+  pop rsi  // _rax
+  pop rdi  // address
+  leave
+  ret
+end;
+{$ENDIF}
 
 function TPSExec.InnerfuseCall(_Self, Address: Pointer; CallingConv: TPSCallingConvention; Params: TPSList; res: PPSVariantIFC): Boolean;
 var
   Stack: array of Byte;
-  _RAX,
+  _RAX: IPointer;
+{$IFDEF WINDOWS}
   _RCX, _RDX, _R8, _R9: IPointer;
   _XMM0, _XMM1, _XMM2, _XMM3: Double;
+{$ELSE}
+_XMM0: Double;
+  Registers: TRegisters;
+  RegUsageFloat: Byte;
+{$ENDIF}
   RegUsage: Byte;
   CallData: TPSList;
   I: Integer;
@@ -93,7 +279,7 @@ var
     end;
     Result := p;
   end;
-
+{$IFDEF WINDOWS}
   procedure StoreReg(data: IPointer);   overload;
   var p: Pointer;
   begin
@@ -109,7 +295,25 @@ var
     end;
     end;
   end;
-
+  {$ELSE}
+  procedure StoreReg(data: IPointer);   overload;
+  var p: Pointer;
+  begin
+    case RegUsage of
+      0: begin inc(RegUsage); Registers._RDI:=Data; end;
+      1: begin inc(RegUsage); Registers._RSI:=Data; end;
+      2: begin inc(RegUsage); Registers._RDX:=Data; end;
+      3: begin inc(RegUsage); Registers._RCX:=Data; end;
+      4: begin inc(RegUsage); Registers._R8:=Data; end;
+      5: begin inc(RegUsage); Registers._R9:=Data; end;
+    else begin
+      SetLength(Stack, Length(Stack)+8);
+      p := @Stack[LEngth(Stack)-8];
+      IPointer(p^) := data;
+    end;
+    end;
+  end;
+{$ENDIF}
 
   procedure StoreStack(const aData; Len: Integer);
   var
@@ -124,6 +328,7 @@ var
     Move(aData, p^, Len);
   end;
 
+{$IFDEF WINDOWS}
   procedure StoreReg(data: Double); overload;
   var p: Pointer;
   begin
@@ -139,12 +344,51 @@ var
     end;
     end;
   end;
-
+  {$ELSE}
+  procedure StoreReg(data: Double); overload;
+  var p: Pointer;
+  begin
+    case RegUsageFloat of
+      0: begin inc(RegUsageFloat); _XMM0:=Data; end;
+      1: begin inc(RegUsageFloat); Registers._XMM1:=Data; end;
+      2: begin inc(RegUsageFloat); Registers._XMM2:=Data; end;
+      3: begin inc(RegUsageFloat); Registers._XMM3:=Data; end;
+      4: begin inc(RegUsageFloat); Registers._XMM4:=Data; end;
+      5: begin inc(RegUsageFloat); Registers._XMM5:=Data; end;
+      6: begin inc(RegUsageFloat); Registers._XMM6:=Data; end;
+      7: begin inc(RegUsageFloat); Registers._XMM7:=Data; end;
+    else begin
+      SetLength(Stack, Length(Stack)+8);
+      p := @Stack[LEngth(Stack)-8];
+      Double(p^) := data;
+    end;
+    end;
+  end;
+  procedure StoreReg(data: Single); overload;
+  var p: Pointer;
+  begin
+    case RegUsageFloat of
+      0: begin inc(RegUsageFloat); Registers.SingleBits := Registers.SingleBits or 1; _XMM0:=Data; end;
+      1: begin inc(RegUsageFloat); Registers.SingleBits := Registers.SingleBits or 2; Registers._XMM1:=Data; end;
+      2: begin inc(RegUsageFloat); Registers.SingleBits := Registers.SingleBits or 4; Registers._XMM2:=Data; end;
+      3: begin inc(RegUsageFloat); Registers.SingleBits := Registers.SingleBits or 8; Registers._XMM3:=Data; end;
+      4: begin inc(RegUsageFloat); Registers.SingleBits := Registers.SingleBits or 16; Registers._XMM4:=Data; end;
+      5: begin inc(RegUsageFloat); Registers.SingleBits := Registers.SingleBits or 32; Registers._XMM5:=Data; end;
+      6: begin inc(RegUsageFloat); Registers.SingleBits := Registers.SingleBits or 64; Registers._XMM6:=Data; end;
+      7: begin inc(RegUsageFloat); Registers.SingleBits := Registers.SingleBits or 128; Registers._XMM7:=Data; end;
+    else begin
+      SetLength(Stack, Length(Stack)+8);
+      p := @Stack[LEngth(Stack)-8];
+      Double(p^) := data;
+    end;
+    end;
+  end;
+  {$ENDIF}
   function GetPtr(fVar: PPSVariantIFC): Boolean;
   var
     varPtr: Pointer;
-    UseReg: Boolean;
-    tempstr: tbtstring;
+    //UseReg: Boolean;
+    //tempstr: tbtstring;
     p: Pointer;
   begin
     Result := False;
@@ -165,7 +409,7 @@ var
               Exit;
             end else begin
               varptr := fvar.Dta;
-              Exit;
+//              Exit;
             end;
           end;
         btVariant,
@@ -187,7 +431,7 @@ var
 
       StoreReg(IPointer(VarPtr));
     end else begin
-      UseReg := True;
+//      UseReg := True;
       case fVar^.aType.BaseType of
         btSet:
           begin
@@ -212,11 +456,22 @@ var
               Result := True;
               exit;
             end else begin
+            {$IFDEF FPC}
+              StoreReg(IPointer(FVar.Dta));
+            {$ELSE}
               StoreReg(IPointer(FVar.Dta^));
+            {$ENDIF}
             end;
           end;
+        btRecord:
+          begin
+            if fvar^.aType.RealSize <= sizeof(IPointer) then
+              StoreReg(IPointer(fvar.dta^))
+            else
+              StoreReg(IPointer(fVar.Dta));
+          end;
         btVariant
-        , btStaticArray, btRecord:
+        , btStaticArray:
           begin
             StoreReg(IPointer(fVar.Dta));
           end;
@@ -286,6 +541,17 @@ begin
   if res <> nil then
     res.VarParam := true;
   try
+{$IFNDEF WINDOWS}
+    (*_RSI := 0;
+    _RDI := 0;
+    _XMM4 := 0;
+    _XMM5 := 0;
+    _XMM6 := 0;
+    _XMM7 := 0;*)
+    FillChar(Registers, Sizeof(REgisters), 0);
+    _XMM0 := 0;
+    RegUsageFloat := 0;
+{$ELSE}
     _RCX := 0;
     _RDX := 0;
     _R8 := 0;
@@ -294,31 +560,60 @@ begin
     _XMM1 := 0;
     _XMM2 := 0;
     _XMM3 := 0;
+{$ENDIF}
+    _RAX := 0;
     RegUsage := 0;
     if assigned(_Self) then begin
-      RegUsage := 1;
-      _RCX := Longint(_Self);
+      StoreReg(IPointer(_Self));
     end;
+{$IFNDEF WINDOWS}
+    if assigned(res) and (res^.atype.basetype = btSingle) then begin
+      Registers.Singlebits  := Registers.Singlebits or 256;
+    end;
+{$ENDIF}
+{$IFDEF PS_RESBEFOREPARAMETERS}
+   if assigned(res) then begin
+    case res^.aType.BaseType of
+      {$IFDEF x64_string_result_as_varparameter}
+      btstring, btWideString, btUnicodeString,
+      {$ENDIF}
+      btInterface, btArray, btVariant, btStaticArray:
+        GetPtr(res);
+      btSet:
+        begin
+          if res.aType.RealSize > PointerSize then GetPtr(res);
+        end;
+    end;
+   end;
+{$ENDIF}
     for I := 0 to Params.Count - 1 do
     begin
       if not GetPtr(rp(Params[I])) then Exit;
     end;
-
     if assigned(res) then begin
+{$IFNDEF PS_RESBEFOREPARAMETERS}
       case res^.aType.BaseType of
-        btWideString, btUnicodeString,
-        btInterface, btArray, btrecord, btstring, btVariant, btStaticArray: GetPtr(res);
+        {$IFDEF x64_string_result_as_varparameter}
+        btstring, btWideString, btUnicodeString,
+        {$ENDIF}
+        btInterface, btArray, btVariant, btStaticArray:
+          GetPtr(res);
         btSet:
           begin
-            if TPSTypeRec_Set(res.aType).aByteSize > PointerSize then GetPtr(res);
+            if res.aType.RealSize > PointerSize then GetPtr(res);
           end;
       end;
+{$ENDIF}
       if Stack = nil then pp := nil else pp := @Stack[Length(Stack) -8];
+{$IFDEF WINDOWS}
       x64call(Address, _RAX, _RCX, _RDX, _R8, _R9, _XMM0, _XMM1, _XMM2, _XMM3, pp, Length(Stack) div 8);
+{$ELSE}
+      x64call(Address, _RAX, Registers, pp, Length(Stack) div 8, _XMM0);
+{$ENDIF}
       case res^.aType.BaseType of
-        btSet:
+        btRecord, btSet:
           begin
-            case TPSTypeRec_Set(res.aType).aByteSize  of
+            case res.aType.RealSize of
               1: byte(res.Dta^) := _RAX;
               2: word(res.Dta^) := _RAX;
               3,
@@ -338,14 +633,23 @@ begin
         btCurrency:    tbtCurrency(res.Dta^) := Int64(_RAX);
         btInterface,
         btVariant,
-        btWidestring,btUnicodestring,
-        btStaticArray, btArray, btrecord, btstring :;
+        {$IFDEF x64_string_result_as_varparameter}
+        btWidestring,btUnicodestring, btstring ,
+        {$ENDIF}
+        btStaticArray, btArray:;
+        {$IFNDEF x64_string_result_as_varparameter}
+        btUnicodeString, btWideString, btstring:  Int64(res.dta^) := _RAX;
+        {$ENDIF}
       else
         exit;
       end;
     end else begin
       if Stack = nil then pp := nil else pp := @Stack[Length(Stack) -8];
+{$IFDEF WINDOWS}
        x64call(Address, _RAX, _RCX, _RDX, _R8, _R9, _XMM0, _XMM1, _XMM2, _XMM3, pp, Length(Stack) div 8);
+{$ELSE}
+       x64call(Address, _RAX, Registers, pp, Length(Stack) div 8, _XMM0);
+{$ENDIF}
     end;
     Result := True;
   finally

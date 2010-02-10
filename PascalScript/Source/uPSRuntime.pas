@@ -1702,8 +1702,9 @@ begin
     {$IFNDEF PS_NOWIDESTRING}btWideChar, {$ENDIF}bts16, btU16: FrealSize := 2;
     {$IFNDEF PS_NOWIDESTRING}btWideString,
     btUnicodeString,
-    {$ENDIF}{$IFNDEF PS_NOINTERFACES}btInterface, {$ENDIF}btSingle, bts32, btU32,
+    {$ENDIF}{$IFNDEF PS_NOINTERFACES}btInterface, {$ENDIF}
     btclass, btPChar, btString: FrealSize := PointerSize;
+    btSingle, bts32, btU32: FRealSize := 4;
     btProcPtr: FRealSize := 2 * sizeof(Pointer) + sizeof(Cardinal);
     btCurrency: FrealSize := Sizeof(Currency);
     btPointer: FRealSize := 2 * sizeof(Pointer) + sizeof(LongBool); // ptr, type, freewhendone
@@ -1856,7 +1857,7 @@ begin
         t := TPSTypeRec_Array(aType).ArrayType;
         elsize := t.RealSize;
         darr := Pointer(IPointer(darr) + PointerSize);
-        l := Longint(darr^);
+        l := Longint(darr^) {$IFDEF FPC}+1{$ENDIF};
         darr := Pointer(IPointer(darr) + PointerSize);
         case t.BaseType of
           btString, {$IFNDEF PS_NOWIDESTRING}
@@ -3723,6 +3724,7 @@ begin
   end;
 end;
 
+
 procedure PSSetAnsiString(Src: Pointer; aType: TPSTypeRec; var Ok: Boolean; const Val: tbtString);
 begin
   if (Src = nil) or (aType = nil) then begin Ok := false; exit; end;
@@ -3734,9 +3736,12 @@ begin
   end;
   case aType.BaseType of
     btString: tbtstring(src^) := val;
+    btChar: if AnsiString(val) <> '' then tbtchar(src^) := AnsiString(val)[1];
 {$IFNDEF PS_NOWIDESTRING}
     btUnicodeString: tbtunicodestring(src^) := tbtUnicodeString(AnsiString(val));
-    btWideString: tbtwidestring(src^) := tbtwidestring(AnsiString(val));{$ENDIF}
+    btWideString: tbtwidestring(src^) := tbtwidestring(AnsiString(val));
+    btWideChar: if AnsiString(val) <> '' then tbtwidechar(src^) := tbtwidechar(AnsiString(val)[1]);
+    {$ENDIF}
     btVariant:
       begin
         try
@@ -3759,6 +3764,8 @@ begin
     if (src = nil) or (aType = nil) then begin Ok := false; exit; end;
   end;
   case aType.BaseType of
+    btChar: if val <> '' then tbtchar(src^) := tbtChar(val[1]);
+    btWideChar: if val <> '' then tbtwidechar(src^) := val[1];
     btString: tbtstring(src^) := tbtString(val);
     btWideString: tbtwidestring(src^) := val;
     btUnicodeString: tbtunicodestring(src^) := val;
@@ -3773,6 +3780,7 @@ begin
     else ok := false;
   end;
 end;
+
 procedure PSSetUnicodeString(Src: Pointer; aType: TPSTypeRec; var Ok: Boolean; const Val: tbtunicodestring);
 begin
   if (Src = nil) or (aType = nil) then begin Ok := false; exit; end;
@@ -4108,7 +4116,7 @@ end;
 function PSDynArrayGetLength(arr: Pointer; aType: TPSTypeRec): Longint;
 begin
   if aType.BaseType <> btArray then raise Exception.Create(RPS_InvalidArray);
-  if arr = nil then Result := 0 else Result := Longint(Pointer(IPointer(arr)-PointerSize)^);
+  if arr = nil then Result := 0 else Result := Longint(Pointer(IPointer(arr)-PointerSize)^) {$IFDEF FPC} +1 {$ENDIF};
 end;
 
 procedure PSDynArraySetLength(var arr: Pointer; aType: TPSTypeRec; NewLength: Longint);
@@ -4136,7 +4144,7 @@ begin
     end;
     ReallocMem(arr, NewLength * elSize + PointerSize2);
     arr := Pointer(IPointer(Arr)+PointerSize);
-    Longint(Arr^) := NewLength;
+    Longint(Arr^) := NewLength {$IFDEF FPC} -1 {$ENDIF};
     arr := Pointer(IPointer(Arr)+PointerSize);
     for i := OldLen to NewLength -1 do
     begin
@@ -4156,7 +4164,7 @@ begin
     GetMem(p, NewLength * elSize + PointerSize2);
     Longint(p^) := 1;
     p:= Pointer(IPointer(p)+PointerSize);
-    Longint(p^) := NewLength;
+    Longint(p^) := NewLength {$IFDEF FPC} -1 {$ENDIF};
     p := Pointer(IPointer(p)+PointerSize);
     if OldLen <> 0 then
     begin
@@ -5042,6 +5050,15 @@ begin
                   b := not b;
                 end else result := False;
               end;
+            btRecord:
+              begin
+                if var1Type = var2Type then
+                begin
+                  Set_Equal(var1, var2, TPSTypeRec_Record(var1Type).RealSize, b);
+                  b := not b;
+                end else result := False;
+              end
+
           else begin
               CMD_Err(erTypeMismatch);
               exit;
@@ -5142,6 +5159,13 @@ begin
                   Set_Equal(var1, var2, TPSTypeRec_Set(var1Type).aByteSize, b);
                 end else result := False;
               end;
+            btRecord:
+              begin
+                if var1Type = var2Type then
+                begin
+                  Set_Equal(var1, var2, TPSTypeRec_Record(var1Type).RealSize, b);
+                end else result := False;
+              end
           else begin
               CMD_Err(erTypeMismatch);
               exit;
@@ -6529,12 +6553,15 @@ begin
               Inc(FCurrentPosition, 4);
               Pointer(Dest.P^) := nil;
               SetLength(tbtstring(Dest.P^), Param);
+              if Param <> 0 then begin
               if not ReadData(tbtstring(Dest.P^)[1], Param) then
               begin
                 CMD_Err(erOutOfRange);
                 FTempVars.Pop;
                 Result := False;
                 exit;
+              end;
+                pansichar(dest.p^)[Param] := #0;
               end;
             end;
           {$IFNDEF PS_NOWIDESTRING}
@@ -8854,7 +8881,7 @@ begin
     38: Stack.SetAnsiString(-1, tbtString(AnsiLowercase(string(Stack.GetAnsiString(-2))))); // AnsiLowerCase
 {$IFNDEF PS_NOINT64}
     39: Stack.SetInt64(-1, StrToInt64(string(Stack.GetAnsiString(-2))));  // StrToInt64
-    40: Stack.SetAnsiString(-1, SysUtils.IntToStr(Stack.GetInt64(-2)));// Int64ToStr
+    40: Stack.SetAnsiString(-1, tbtstring(SysUtils.IntToStr(Stack.GetInt64(-2))));// Int64ToStr
 {$ENDIF}
     41:  // sizeof
       begin
@@ -12099,9 +12126,6 @@ begin
 end;
 
 function TPSStack.PushType(aType: TPSTypeRec): PPSVariant;
-var
-  o: Cardinal;
-  p: Pointer;
 begin
   Result := Push(aType.RealSize + Sizeof(Pointer));
   Result.FType := aType;

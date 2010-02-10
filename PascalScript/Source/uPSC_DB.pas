@@ -115,8 +115,13 @@ With RegClassS(cl,'TCOMPONENT','TDATASET') do
   RegisterMethod('Procedure EDIT');
   RegisterMethod('Procedure ENABLECONTROLS');
 {$IFDEF DELPHI2006UP}
+{$IFDEF DELPHI2009UP}
+  RegisterMethod('Function FIELDBYNAME( const FIELDNAME : String): TFIELD');
+  RegisterMethod('Function FINDFIELD( const FIELDNAME : String) : TFIELD');
+{$ELSE}
   RegisterMethod('Function FIELDBYNAME( const FIELDNAME : WIDESTRING) : TFIELD');
   RegisterMethod('Function FINDFIELD( const FIELDNAME : WideString) : TFIELD');
+{$ENDIF}
 {$ELSE}
   RegisterMethod('Function FIELDBYNAME( const FIELDNAME : STRING) : TFIELD');
   RegisterMethod('Function FINDFIELD( const FIELDNAME : STRING) : TFIELD');
