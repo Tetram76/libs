@@ -81,26 +81,10 @@ type
 { All UIB components inherith from this class to encapsulate Critical Sections.
   Critical Sections make UIB THread Safe. }
 {$IFDEF UIB_NO_COMPONENT}
-  TUIBComponent = class(TObject)
+  TUIBComponent = class(TObject) end;
 {$ELSE}
-  TUIBComponent = class(TComponent)
+  TUIBComponent = class(TComponent) end;
 {$ENDIF}
-  private
-  {$IFDEF UIBTHREADSAFE}
-    FCriticalsection: TCriticalSection;
-  {$ENDIF}
-  public
-    { @exclude }
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ELSE}; virtual{$ENDIF};
-    { @exclude }
-    destructor Destroy; override;
-  {$IFDEF UIBTHREADSAFE}
-    { Lock the critical Section. }
-    procedure Lock; virtual;
-    { UnLock the critical Section. }
-    procedure UnLock; virtual;
-  {$ENDIF}
-  end;
 
   // Forward declarations
   TUIBTransaction = class;
@@ -165,6 +149,7 @@ type
     FBeforeConnect: TNotifyEvent;
     FBeforeDisconnect: TNotifyEvent;
     FTransactions: TList;
+    FStatements: TList;
     FOnConnectionLost: TNotifyEvent;
     FExceptions: TList;
     FMetadata: TObject;
@@ -206,6 +191,10 @@ type
     procedure RemoveTransaction(Transaction: TUIBTransaction);
     procedure ClearTransactions;
     procedure CloseTransactions;
+    procedure AddStatement(Statement: TUIBStatement);
+    procedure RemoveStatement(Statement: TUIBStatement);
+    procedure ClearStatements;
+    procedure CloseStatements;
     procedure SetDbHandle(const Value: IscDbHandle);
     procedure SetLibraryName(const Lib: TFileName);
     function GetTransactions(const Index: Cardinal): TUIBTransaction;
@@ -484,7 +473,7 @@ type
     qsExecImme,    // Query executed immediately without the need of statement handle
     qsStatement,   // have a statement handle
     qsPrepare,     // Query prepared
-    qsExecute      // Query executed 
+    qsExecute      // Query executed
   );
 
   {Oo.......................................................................oO
@@ -552,14 +541,11 @@ type
     FDataBases: TList;
     FTrHandle: IscTrHandle;
     FSQLComponent: TList;
-    FStatements: Integer;
     FOptions   : TTransParams;
     FLockRead  : string;
     FLockWrite : string;
-   // FSQLDialect: Integer;
     FOnStartTransaction: TNotifyEvent;
     FOnEndTransaction: TOnEndTransaction;
-    FAutoRetain: boolean;
     FAutoStart: boolean;
     FAutoStop: boolean;
     FDefaultAction: TEndTransMode;
@@ -588,8 +574,6 @@ type
     procedure ClearDataBases;
     function GetDatabases(const Index: Integer): TUIBDataBase;
     function GetDatabasesCount: Integer;
-    function GetAutoRetain: boolean;
-    procedure SetAutoRetain(const Value: boolean);
     procedure SetDefaultAction(const Value: TEndTransMode);
   protected
   {$IFNDEF UIB_NO_COMPONENT}
@@ -601,12 +585,6 @@ type
     constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
     { Destructor method.}
     destructor Destroy; override;
-{$IFDEF UIBTHREADSAFE}
-    { cf TUIBComponent.Lock }
-    procedure Lock; override;
-    { cf TUIBComponent.UnLock }
-    procedure UnLock; override;
-{$ENDIF}
     { Add a database to the transaction. }
     procedure AddDataBase(ADataBase: TUIBDataBase);
     { Remove a database from a transaction. }
@@ -663,9 +641,6 @@ type
     property OnStartTransaction: TNotifyEvent read FOnStartTransaction write FOnStartTransaction;
     {This evenet occur before to end the transaction, you can change the ETM parametter.}
     property OnEndTransaction: TOnEndTransaction read FOnEndTransaction write FOnEndTransaction;
-    {If false, commit and rollback close all connected statements and finally close transaction.
-     If True, commit and rollback are modified to commitretaining or rollbackretaining if at least one statement is open.}
-    property AutoRetain: boolean read GetAutoRetain write SetAutoRetain default False;
     {If True, transaction automatically started when needed.
      if False you must explicitely call "starttransaction".}
     property AutoStart: boolean read FAutoStart write FAutoStart default True;
@@ -722,14 +697,15 @@ type
     procedure BeginExecImme; virtual;
 
     procedure EndTransaction(const ETM: TEndTransMode; Auto: boolean); virtual;
-    procedure EndStatement(const ETM: TEndTransMode; Auto: boolean); virtual;
-    procedure EndPrepare(const ETM: TEndTransMode; Auto: boolean); virtual;
-    procedure EndExecute(const ETM: TEndTransMode; Auto: boolean); virtual;
+    procedure EndStatement(const ETM: TEndTransMode; Auto, Drop: boolean); virtual;
+    procedure EndPrepare(const ETM: TEndTransMode; Auto, Drop: boolean); virtual;
+    procedure EndExecute(const ETM: TEndTransMode; Auto, Drop: boolean); virtual;
     procedure EndExecImme(const ETM: TEndTransMode; Auto: boolean); virtual;
 
     procedure InternalNext; virtual;
     procedure InternalPrior; virtual;
-    procedure InternalClose(const Mode: TEndTransMode; Auto: boolean); virtual;
+    procedure InternalTryCache(const Mode: TEndTransMode; Auto: boolean); virtual;
+    procedure InternalClose(const Mode: TEndTransMode; Auto, Drop: boolean); virtual;
 
     function  ParamsClass: TSQLParamsClass; virtual;
     function  ResultClass: TSQLResultClass; virtual;
@@ -750,12 +726,6 @@ type
     constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
     { Destructor method. }
     destructor Destroy; override;
-{$IFDEF UIBTHREADSAFE}
-    { cf TUIBComponent.Lock }
-    procedure Lock; override;
-    { cf TUIBComponent.UnLock }
-    procedure UnLock; override;
-{$ENDIF}
     { Close the statement. You can commit or rollback the transaction when closing. }
     procedure Close(const Mode: TEndTransMode = etmStayIn); virtual;
     { Fetch all records returned by the query. }
@@ -1034,7 +1004,7 @@ type
   end;
 
   TSecurityAction = (saAddUser, saDeleteUser, saModifyUser, saDisplayUser, saDisplayUsers);
-  TSecurityParam = (spRole, spUser, spPass, spFirstName, spMiddleName, spLastName, spUserID, spGroupID);
+  TSecurityParam = (spRole, spUser, spPass, spFirstName, spMiddleName, spLastName, spUserID, spGroupID{$IFDEF FB25_UP}, spAdmin{$ENDIF});
   TSecurityParams = set of TSecurityParam;
 
   TUserInfo = class(TObject)
@@ -1049,15 +1019,21 @@ type
 
   TUIBSecurity = class(TUIBService)
   private
-    FIntegerParams: array[ord(spUserID)..ord(spGroupID)] of Integer;
+    FIntegerParams: array[ord(spUserID)..ord(high(TSecurityParam))] of Integer;
     FStringParams: array[ord(spRole)..ord(spLastName)] of string;
     FModifiedParams: TSecurityParams;
     FUserInfos: TObjectList;
     procedure ClearParams;
+{$IFDEF FB25_UP}
+    function GetBooleanParam(aParam: Integer): Boolean;
+{$ENDIF}
     function GetIntegerParam(aParam: Integer): Integer;
     function GetStringParam(aParam: Integer): string;
     function GetUserInfo(aIndex: Integer): TUserInfo;
     function GetUserInfoCount: Integer;
+{$IFDEF FB25_UP}
+    procedure SetBooleanParam(aParam: Integer; const aValue: Boolean);
+{$ENDIF}
     procedure SetIntegerParam(aParam: Integer; const aValue: Integer);
     procedure SetStringParam(aParam: Integer; const aValue: string);
     procedure RunAction(aAction: TSecurityAction);
@@ -1091,10 +1067,14 @@ type
     property MiddleName: string index ord(spMiddleName) read GetStringParam write SetStringParam;
     { The last name of the user being added/modified }
     property LastName: string index ord(spLastName) read GetStringParam write SetStringParam;
-    { an integer that specifies a user ID of the user being added/modified }
+    { An integer that specifies a user ID of the user being added/modified }
     property UserID: Integer index ord(spUserID) read GetIntegerParam write SetIntegerParam;
-    { an integer that specifies a group ID of the user being added/modified }
+    { An integer that specifies a group ID of the user being added/modified }
     property GroupID: Integer index ord(spGroupID) read GetIntegerParam write SetIntegerParam;
+{$IFDEF FB25_UP}
+    { A Boolean that specifies if user is admin }
+    property Admin: Boolean index ord(spAdmin) read GetBooleanParam write SetBooleanParam;
+{$ENDIF}
   end;
 
   TRepairOption = (roValidateDB, roValidateFull, roSweepDB, roMendDB,
@@ -1255,8 +1235,18 @@ begin
     TUIBTransaction(FTransactions.Last).RemoveDatabase(Self);
 end;
 
+procedure TUIBDataBase.CloseStatements;
+var
+  i: Integer;
+begin
+  if (FStatements <> nil) then
+    for i := 0 to FStatements.Count - 1 do
+      TUIBStatement(FStatements.Items[i]).InternalClose(etmStayIn, true, true);
+end;
+
 procedure TUIBDataBase.CloseTransactions;
-var i: Integer;
+var
+  i: Integer;
 begin
   if (FTransactions <> nil) then
     for i := 0 to FTransactions.Count - 1 do
@@ -1266,6 +1256,8 @@ end;
 constructor TUIBDataBase.Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF};
 begin
   inherited;
+  FStatements := nil;
+  FTransactions := nil;
   FLibrary := TUIBLibrary.Create;
   FLibraryName := GetClientLibrary;
   FLibrary.OnConnectionLost := DoOnConnectionLost;
@@ -1285,24 +1277,16 @@ end;
 
 destructor TUIBDataBase.Destroy;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    Connected := False;
-    ClearTransactions;
-    ClearEvents;
-    TStringList(FParams).Free;
-    ClearExceptions;
-    FExceptions.Free;
-    FEventNotifiers.Free;
-    FLibrary.Free;
-    FMetaDataOptions.Free;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  Connected := False;
+  ClearStatements;
+  ClearTransactions;
+  ClearEvents;
+  TStringList(FParams).Free;
+  ClearExceptions;
+  FExceptions.Free;
+  FEventNotifiers.Free;
+  FLibrary.Free;
+  FMetaDataOptions.Free;
   inherited;
 end;
 
@@ -1325,16 +1309,7 @@ end;
 
 function TUIBDataBase.GetConnected: boolean;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    result := FDbHandle <> nil;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  result := FDbHandle <> nil;
 end;
 
 function TUIBDataBase.GetPassWord: string;
@@ -1408,22 +1383,13 @@ function TUIBDataBase.ReadParamString(Param, Default: String): String;
 var
   I: Integer;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    I := FParams.IndexOfName(Param);
-    if I >= 0 then
-    begin
-      Result := Copy(FParams[I], Length(Param) + 2, Maxint);
-      Exit;
-    end;
-    Result := Default;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
+  I := FParams.IndexOfName(Param);
+  if I >= 0 then
+  begin
+    Result := Copy(FParams[I], Length(Param) + 2, Maxint);
+    Exit;
   end;
-{$ENDIF}
+  Result := Default;
 end;
 
 procedure TUIBDataBase.RemoveTransaction(Transaction: TUIBTransaction);
@@ -1447,44 +1413,36 @@ end;
 procedure TUIBDataBase.SetConnected(const Value: boolean);
 begin
   if (Value = Connected) then Exit;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    with FLibrary do
-    case Value of
-      True  :
+  with FLibrary do
+  case Value of
+    True  :
+      begin
+        if not CanConnect then
+          Exit;
+        if Assigned(BeforeConnect) then BeforeConnect(Self);
+        FLibrary.Load(FLiBraryName);
+        if not FHandleShared then
+          AttachDatabase(AnsiString(FDatabaseName), FDbHandle, AnsiString(FParams.Text), BreakLine);
+        RegisterEvents;
+        if Assigned(AfterConnect) then AfterConnect(Self);
+      end;
+    False :
+      begin
+        if Assigned(BeforeDisconnect) then BeforeDisconnect(Self);
+        CloseStatements;
+        CloseTransactions;
+        UnRegisterEvents;
+        if FMetadata <> nil then
+          FreeAndNil(FMetadata);
+        if FHandleShared then
         begin
-          if not CanConnect then
-            Exit;
-          if Assigned(BeforeConnect) then BeforeConnect(Self);
-          FLibrary.Load(FLiBraryName);
-          if not FHandleShared then
-            AttachDatabase(AnsiString(FDatabaseName), FDbHandle, AnsiString(FParams.Text), BreakLine);
-          RegisterEvents;
-          if Assigned(AfterConnect) then AfterConnect(Self);
-        end;
-      False :
-        begin
-          if Assigned(BeforeDisconnect) then BeforeDisconnect(Self);
-          CloseTransactions;
-          UnRegisterEvents;
-          if FMetadata <> nil then
-            FreeAndNil(FMetadata);
-          if FHandleShared then
-          begin
-            FDbHandle := nil;
-            FHandleShared := False;
-          end else
-            DetachDatabase(FDbHandle);
-          if Assigned(AfterDisconnect) then AfterDisconnect(Self);
-        end;
-    end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
+          FDbHandle := nil;
+          FHandleShared := False;
+        end else
+          DetachDatabase(FDbHandle);
+        if Assigned(AfterDisconnect) then AfterDisconnect(Self);
+      end;
   end;
-{$ENDIF}
 end;
 
 procedure TUIBDataBase.SetDatabaseName(const Value: TFileName);
@@ -1558,21 +1516,12 @@ var
   I: Integer;
   S: string;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    S := Param + '=' + Value;
-    I := FParams.IndexOfName(Param);
-    if I >= 0 then
-      FParams[I] := S
-    else
-      FParams.Add(S);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  S := Param + '=' + Value;
+  I := FParams.IndexOfName(Param);
+  if I >= 0 then
+    FParams[I] := S
+  else
+    FParams.Add(S);
 end;
 
 procedure TUIBDataBase.ClearExceptions;
@@ -1581,6 +1530,12 @@ begin
   for i := 0 to FExceptions.Count - 1 do
     FreeMem(FExceptions[i]);
   FExceptions.Clear;
+end;
+
+procedure TUIBDataBase.ClearStatements;
+begin
+  while (FStatements <> nil) do
+    TUIBStatement(FStatements.Last).DataBase := nil;
 end;
 
 procedure TUIBDataBase.RegisterException(Excpt: EUIBExceptionClass;
@@ -1744,38 +1699,20 @@ end;
 function TUIBDataBase.GetInfoIntValue(const item: Integer): integer;
 begin
   SetConnected(true);
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    case item of
-      isc_info_implementation,
-      isc_info_base_level:
-      result := byte(FLibrary.DatabaseInfoString(FDbHandle, item, 8)[5]);
-    else
-      result := FLibrary.DatabaseInfoIntValue(FDbHandle, AnsiChar(item));
-    end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
+  case item of
+    isc_info_implementation,
+    isc_info_base_level:
+    result := byte(FLibrary.DatabaseInfoString(FDbHandle, item, 8)[5]);
+  else
+    result := FLibrary.DatabaseInfoIntValue(FDbHandle, AnsiChar(item));
   end;
-{$ENDIF}
 end;
 
 {$IFDEF FB20_UP}
 function TUIBDataBase.GetInfoDateTimeValue(const item: Integer): TDateTime;
 begin
   SetConnected(true);
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    result := FLibrary.DatabaseInfoDateTime(FDbHandle, item);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  result := FLibrary.DatabaseInfoDateTime(FDbHandle, item);
 end;
 {$ENDIF}
 
@@ -1790,16 +1727,7 @@ var
   data: RawByteString;
 begin
   SetConnected(true);
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    data := FLibrary.DatabaseInfoString(FDbHandle, item, 256);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  data := FLibrary.DatabaseInfoString(FDbHandle, item, 256);
   case Item of
     isc_info_cur_logfile_name, isc_info_wal_prv_ckpt_fname:
       begin
@@ -1824,16 +1752,7 @@ var
 begin
   SetConnected(true);
   result := 0;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    data := FLibrary.DatabaseInfoString(FDbHandle, Item, 8);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  data := FLibrary.DatabaseInfoString(FDbHandle, Item, 8);
   for i := 0 to PWord(@data[2])^ div sizeof(TTableOperation) - 1 do
   begin
     p := PTableOperation(@data[4+ i * sizeof(TTableOperation)]);
@@ -1857,16 +1776,7 @@ var
   p: PAnsiChar;
 begin
   SetConnected(true);
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    data := FLibrary.DatabaseInfoString(FDbHandle, item, 256);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  data := FLibrary.DatabaseInfoString(FDbHandle, item, 256);
   p := PAnsiChar(data);
   result := 0;
   while byte(p^) = item do
@@ -1890,16 +1800,7 @@ var
   len: integer;
 begin
   SetConnected(true);
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    data := FLibrary.DatabaseInfoString(FDbHandle, item, 256);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  data := FLibrary.DatabaseInfoString(FDbHandle, item, 256);
   p := PAnsiChar(data);
   result := 0;
   while byte(p^) = item do
@@ -1923,16 +1824,7 @@ var
   i: Integer;
 begin
   SetConnected(true);
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    Data := FLibrary.DatabaseInfoString(FDBHandle, isc_info_db_id, 1024);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  Data := FLibrary.DatabaseInfoString(FDBHandle, isc_info_db_id, 1024);
   p := @data[5];
   for i := 1 to ord(data[4]) do
   begin
@@ -1970,9 +1862,29 @@ begin
     FEventNotifiers.Delete(i);
 end;
 
+procedure TUIBDataBase.RemoveStatement(Statement: TUIBStatement);
+begin
+  if (FStatements <> nil) then
+  begin
+    FStatements.Remove(Statement);
+    if FStatements.Count = 0 then
+    begin
+      FStatements.free;
+      FStatements := nil;
+    end;
+  end;
+end;
+
 procedure TUIBDataBase.AddEventNotifier(Event: TUIBEvents);
 begin
   FEventNotifiers.Add(Event);
+end;
+
+procedure TUIBDataBase.AddStatement(Statement: TUIBStatement);
+begin
+  if (FStatements = nil) then
+    FStatements := TList.Create;
+  FStatements.Add(Statement);
 end;
 
 procedure TUIBDataBase.ActiveAllTriggers;
@@ -2135,9 +2047,7 @@ begin
   begin
     if (FTransaction <> nil) then
     begin
-      if FTransaction.AutoRetain then
-        InternalClose(etmDefault, True) else
-        InternalClose(etmStayIn, True);
+      InternalTryCache(etmStayIn, True);
       FTransaction.RemoveSQLComponent(Self);
     end;
     FTransaction := Transaction;
@@ -2145,9 +2055,12 @@ begin
     begin
       Transaction.AddSQLComponent(Self);
       if Transaction.DataBase <> nil then
+      begin
         FParameter.CharacterSet := Transaction.DataBase.CharacterSet;
+        if DataBase = nil then
+          Database := Transaction.DataBase;
+      end;
     end;
-    FCurrentState := qsDataBase;
   end;
 end;
 
@@ -2155,15 +2068,15 @@ procedure TUIBStatement.SetDataBase(ADataBase: TUIBDataBase);
 begin
   if (FDataBase <> ADataBase) then
   begin
-    if (FTransaction <> nil) then
-    begin
-      if FTransaction.AutoRetain then
-        InternalClose(etmDefault, True) else
-        InternalClose(etmStayIn, True);
-    end;
+    InternalClose(etmStayIn, True, True);
+    if FDataBase <> nil then
+      FDataBase.RemoveStatement(Self);
     FDataBase := ADataBase;
     if FDataBase <> nil then
+    begin
+      FDataBase.AddStatement(Self);
       FParameter.CharacterSet := FDataBase.CharacterSet;
+    end;
   end;
 end;
 
@@ -2177,7 +2090,7 @@ end;
 
 procedure TUIBStatement.Close(const Mode: TEndTransMode);
 begin
-  InternalClose(Mode, False);
+  InternalTryCache(Mode, False);
 end;
 
 procedure TUIBStatement.Open(FetchFirst: boolean = True);
@@ -2250,25 +2163,16 @@ begin
   if Fields.ScrollEOF then
     Fields.Next else
   begin
-  {$IFDEF UIBTHREADSAFE}
-    Lock;
+    with FindDataBase, FLibrary do
     try
-  {$ENDIF}
-      with FindDataBase, FLibrary do
-      try
-        if FSQLResult.FetchBlobs then
-          DSQLFetchWithBlobs(FDbHandle, FTransaction.FTrHandle, FStHandle, GetSQLDialect, FSQLResult) else
-          DSQLFetch(FDbHandle, FTransaction.FTrHandle, FStHandle, GetSQLDialect, FSQLResult);
-      except
-        if FOnError <> etmStayIn then
-          EndExecute(FOnError, False);
-        raise;
-      end;
-  {$IFDEF UIBTHREADSAFE}
-    finally
-      UnLock;
+      if FSQLResult.FetchBlobs then
+        DSQLFetchWithBlobs(FDbHandle, FTransaction.FTrHandle, FStHandle, GetSQLDialect, FSQLResult) else
+        DSQLFetch(FDbHandle, FTransaction.FTrHandle, FStHandle, GetSQLDialect, FSQLResult);
+    except
+      if FOnError <> etmStayIn then
+        EndExecute(FOnError, False, True);
+      raise;
     end;
-  {$ENDIF}
   end;
 end;
 
@@ -2291,6 +2195,17 @@ begin
   str := MBUDecode(aStr, CharacterSetCP[sqlda.CharacterSet]);
 end;
 
+procedure TUIBStatement.InternalTryCache(const Mode: TEndTransMode; Auto: boolean);
+begin
+  if FDatabase <> nil then
+  begin
+    CloseCursor;
+    if FTransaction <> nil then
+      FTransaction.EndTransaction(Mode, Self, Auto);
+  end else
+    InternalClose(Mode, Auto, True);
+end;
+
 procedure TUIBStatement.EndTransaction(const ETM: TEndTransMode; Auto: boolean);
 begin
   if FTransaction <> nil then
@@ -2304,49 +2219,41 @@ end;
 procedure TUIBStatement.BeginStatement;
 begin
   BeginTransaction;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
+  with FindDataBase.FLibrary do
   try
+{$IFDEF FB25_UP}
+    if FStHandle = nil then
+{$ELSE}
+    FStHandle := nil;
 {$ENDIF}
-    with FindDataBase.FLibrary do
-    try
-      FStHandle := nil;
       DSQLAllocateStatement(FindDataBase.FDbHandle, FStHandle);
-    except
-      EndTransaction(FOnError, False);
-      raise;
-    end;
-    inc(FTransaction.FStatements);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
+  except
+    EndTransaction(FOnError, False);
+    raise;
   end;
-{$ENDIF}
   FCurrentState := qsStatement;
 end;
 
-procedure TUIBStatement.EndStatement(const ETM: TEndTransMode; Auto: boolean);
+procedure TUIBStatement.EndStatement(const ETM: TEndTransMode; Auto, Drop: boolean);
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
+  with FindDataBase.FLibrary do
+{$IFDEF FB25_UP}
+    if Drop then
+    begin
 {$ENDIF}
-    with FindDataBase.FLibrary do
       DSQLFreeStatement(FStHandle, DSQL_drop);
-
-    FStHandle := nil;
-    Dec(FTransaction.FStatements);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
+      FStHandle := nil;
+{$IFDEF FB25_UP}
+    end else
+      DSQLFreeStatement(FStHandle, DSQL_unprepare);
 {$ENDIF}
+
   FCurrentState := qsTransaction;
   if (ETM <> etmStayIn) then
     EndTransaction(ETM, Auto);
 
   if Assigned(FOnClose) then
-    FOnClose(Self);    
+    FOnClose(Self);
 end;
 
 procedure TUIBStatement.BeginPrepare(describeParams: boolean = false);
@@ -2354,82 +2261,65 @@ begin
   if (FStHandle = nil) then BeginStatement;
 
   FSQLResult := ResultClass.Create(FindDataBase.CharacterSet, 0, FCachedFetch, FFetchBlobs, FBufferChunks);
-{$IFDEF UIBTHREADSAFE}
-  Lock;
+  with FindDataBase, FLibrary do
   try
-{$ENDIF}
-    with FindDataBase, FLibrary do
-    try
-      if (FQuickScript or (not FParseParams)) then
+    if (FQuickScript or (not FParseParams)) then
 {$IFDEF UNICODE}
-        FStatementType := DSQLPrepare(FDbHandle, FTransaction.FTrHandle, FStHandle,
-          MBUEncode(FSQL.Text, CharacterSetCP[CharacterSet]), GetSQLDialect, FSQLResult) else
-        FStatementType := DSQLPrepare(FDbHandle, FTransaction.FTrHandle, FStHandle,
-          MBUEncode(FParsedSQL, CharacterSetCP[CharacterSet]), GetSQLDialect, FSQLResult);
+      FStatementType := DSQLPrepare(FDbHandle, FTransaction.FTrHandle, FStHandle,
+        MBUEncode(FSQL.Text, CharacterSetCP[CharacterSet]), GetSQLDialect, FSQLResult) else
+      FStatementType := DSQLPrepare(FDbHandle, FTransaction.FTrHandle, FStHandle,
+        MBUEncode(FParsedSQL, CharacterSetCP[CharacterSet]), GetSQLDialect, FSQLResult);
 {$ELSE}
-        FStatementType := DSQLPrepare(FDbHandle, FTransaction.FTrHandle, FStHandle,
-          FSQL.Text, GetSQLDialect, FSQLResult) else
-        FStatementType := DSQLPrepare(FDbHandle, FTransaction.FTrHandle, FStHandle,
-          FParsedSQL, GetSQLDialect, FSQLResult);
+      FStatementType := DSQLPrepare(FDbHandle, FTransaction.FTrHandle, FStHandle,
+        FSQL.Text, GetSQLDialect, FSQLResult) else
+      FStatementType := DSQLPrepare(FDbHandle, FTransaction.FTrHandle, FStHandle,
+        FParsedSQL, GetSQLDialect, FSQLResult);
 {$ENDIF}
-        FCursorName := 'C' + inttostr(PtrInt(FStHandle));
-        if FUseCursor then
-          DSQLSetCursorName(FStHandle, AnsiString(FCursorName));
-        if describeParams and (FParameter.ParamCount > 0) then
-          DSQLDescribeBind(FStHandle, GetSQLDialect, FParameter);
-    except
-      FSQLResult.free;
-      FSQLResult := nil;
-      EndStatement(FOnError, False);
-      raise;
-    end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
+      FCursorName := 'C' + inttostr(PtrInt(FStHandle));
+      if FUseCursor and (FStatementType in [stSelect, stSelectForUpdate]) then
+        DSQLSetCursorName(FStHandle, AnsiString(FCursorName));
+      if describeParams and (FParameter.ParamCount > 0) then
+        DSQLDescribeBind(FStHandle, GetSQLDialect, FParameter);
+  except
+    FSQLResult.free;
+    FSQLResult := nil;
+    EndStatement(FOnError, False, True);
+    raise;
   end;
-{$ENDIF}
   FCurrentState := qsPrepare;
 end;
 
-procedure TUIBStatement.EndPrepare(const ETM: TEndTransMode; Auto: boolean);
+procedure TUIBStatement.EndPrepare(const ETM: TEndTransMode; Auto, Drop: boolean);
 begin
   FSQLResult.free;
   FSQLResult := nil;
   FCurrentState := qsStatement;
-  EndStatement(ETM, Auto);
+  EndStatement(ETM, Auto, Drop);
 end;
 
 procedure TUIBStatement.BeginExecute;
 begin
   if (FSQLResult = nil) then BeginPrepare;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
+  with FindDataBase, FLibrary do
   try
-{$ENDIF}
-    with FindDataBase, FLibrary do
-    try
-      if (FStatementType = stExecProcedure) then
-        DSQLExecute2(FTransaction.FTrHandle, FStHandle,
-          GetSQLDialect, FParameter, FSQLResult) else
-        DSQLExecute(FTransaction.FTrHandle, FStHandle,
-          GetSQLDialect, FParameter);
-    except
-      if (FOnError <> etmStayIn) then
-        EndPrepare(FOnError, False);
-      raise;
-    end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
+    FTransaction.BeginTransaction(true);
+    if (FStatementType = stExecProcedure) then
+      DSQLExecute2(FTransaction.FTrHandle, FStHandle,
+        GetSQLDialect, FParameter, FSQLResult) else
+      DSQLExecute(FTransaction.FTrHandle, FStHandle,
+        GetSQLDialect, FParameter);
+  except
+    if (FOnError <> etmStayIn) then
+      EndPrepare(FOnError, False, True);
+    raise;
   end;
-{$ENDIF}
   FCurrentState := qsExecute;
 end;
 
-procedure TUIBStatement.EndExecute(const ETM: TEndTransMode; Auto: boolean);
+procedure TUIBStatement.EndExecute(const ETM: TEndTransMode; Auto, Drop: boolean);
 begin
   FCurrentState := qsPrepare;
-  EndPrepare(ETM, Auto);
+  EndPrepare(ETM, Auto, Drop);
 end;
 
 procedure TUIBStatement.BeginExecImme;
@@ -2438,29 +2328,20 @@ var
   procedure ExecuteQuery(const AQuery: string; sqlParams: TSQLParams);
   begin
     if (Trim(AQuery) = '') then exit;
-  {$IFDEF UIBTHREADSAFE}
-    Lock;
+    with FindDataBase, FLibrary do
     try
-  {$ENDIF}
-      with FindDataBase, FLibrary do
-      try
 {$IFDEF UNICODE}
-        DSQLExecuteImmediate(FDbHandle, FTransaction.FTrHandle,
-          MBUEncode(AQuery, CharacterSetCP[CharacterSet]), GetSQLDialect, sqlParams);
+      DSQLExecuteImmediate(FDbHandle, FTransaction.FTrHandle,
+        MBUEncode(AQuery, CharacterSetCP[CharacterSet]), GetSQLDialect, sqlParams);
 {$ELSE}
-        DSQLExecuteImmediate(FDbHandle, FTransaction.FTrHandle,
-          AQuery, GetSQLDialect, sqlParams);
+      DSQLExecuteImmediate(FDbHandle, FTransaction.FTrHandle,
+        AQuery, GetSQLDialect, sqlParams);
 {$ENDIF}
-      except
-        if (FOnError <> etmStayIn) then
-          EndExecImme(FOnError, False);
-        raise;
-      end;
-  {$IFDEF UIBTHREADSAFE}
-    finally
-      UnLock;
+    except
+      if (FOnError <> etmStayIn) then
+        EndExecImme(FOnError, False);
+      raise;
     end;
-  {$ENDIF}
   end;
 begin
   BeginTransaction;
@@ -2492,22 +2373,6 @@ begin
   Result := TSQLResult;
 end;
 
-{$IFDEF UIBTHREADSAFE}
-procedure TUIBStatement.Lock;
-begin
-  inherited;
-    Ftransaction.Lock;
-end;
-{$ENDIF}
-
-{$IFDEF UIBTHREADSAFE}
-procedure TUIBStatement.UnLock;
-begin
-    Ftransaction.UnLock;
-  inherited;
-end;
-{$ENDIF}
-
 procedure TUIBStatement.SetSQL(const Value: TStrings);
 begin
   FSQL.Assign(Value);
@@ -2515,18 +2380,9 @@ end;
 
 function TUIBStatement.GetPlan: string;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    if (FCurrentState < qsPrepare) then
-      Raise Exception.Create(EUIB_MUSTBEPREPARED)else
-        Result := FindDataBase.FLibrary.DSQLInfoPlan(FStHandle);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock
-  end;
-{$ENDIF}
+  if (FCurrentState < qsPrepare) then
+    Raise Exception.Create(EUIB_MUSTBEPREPARED)else
+      Result := FindDataBase.FLibrary.DSQLInfoPlan(FStHandle);
 end;
 
 function TUIBStatement.GetStatementType: TUIBStatementType;
@@ -2538,7 +2394,7 @@ end;
 
 procedure TUIBStatement.DoSQLChange(Sender: TObject);
 begin
-  InternalClose(etmStayIn, True);
+  InternalClose(etmStayIn, True, False);
   if (not FQuickScript or FParseParams) then
     FParsedSQL := FParameter.Parse(FSQL.Text);
 end;
@@ -2587,6 +2443,7 @@ end;
 constructor TUIBStatement.Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF};
 begin
   inherited;
+  FSQLResult := nil;
   FUseCursor := True;
   FCurrentState := qsDataBase;
   FSQL         := TStringList.Create;
@@ -2604,6 +2461,7 @@ begin
     Transaction := TUIBTransaction(AOwner) else
 {$ENDIF}
     FTransaction := nil;
+  FStHandle := nil;
 end;
 
 destructor TUIBStatement.Destroy;
@@ -2611,6 +2469,8 @@ begin
   FSQL.Free;
   FParameter.free;
   FParameter := nil;
+  InternalClose(etmStayIn, False, True);
+  SetDataBase(nil);
   SetTransaction(nil);
   inherited;
 end;
@@ -2666,13 +2526,8 @@ end;
 procedure TUIBStatement.ParamsSetBlob(const Index: Word; Stream: TStream);
 var BlobHandle: IscBlobHandle;
 begin
-  if (FCurrentState < qsTransaction) then
-    BeginTransaction;
+  BeginTransaction;
   BlobHandle := nil;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
   with FindDataBase.FLibrary do
   begin
     Params.AsQuad[Index] := BlobCreate(FindDataBase.FDbHandle,
@@ -2683,11 +2538,6 @@ begin
       BlobClose(BlobHandle);
     end;
   end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
 end;
 
 procedure TUIBStatement.ParamsSetBlobA(const Index: Word; const str: AnsiString);
@@ -2703,83 +2553,53 @@ procedure TUIBStatement.ParamsSetBlobB(const Index: Word; const str: RawByteStri
 var
   BlobHandle: IscBlobHandle;
 begin
-  if (FCurrentState < qsTransaction) then
-    BeginTransaction;
+  BeginTransaction;
   BlobHandle := nil;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    with FindDataBase.FLibrary do
-    begin
-      Params.AsQuad[Index] := BlobCreate(FindDataBase.FDbHandle,
-        FTransaction.FTrHandle, BlobHandle);
-      try
-        BlobWriteString(BlobHandle, str);
-      finally
-        BlobClose(BlobHandle);
-      end;
+  with FindDataBase.FLibrary do
+  begin
+    Params.AsQuad[Index] := BlobCreate(FindDataBase.FDbHandle,
+      FTransaction.FTrHandle, BlobHandle);
+    try
+      BlobWriteString(BlobHandle, str);
+    finally
+      BlobClose(BlobHandle);
     end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
   end;
-{$ENDIF}
 end;
 
 procedure TUIBStatement.ParamsSetBlob(const Index: Word; Buffer: Pointer;
   Size: Cardinal);
 var BlobHandle: IscBlobHandle;
 begin
-  if (FCurrentState < qsTransaction) then
-    BeginTransaction;
+  BeginTransaction;
   BlobHandle := nil;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    with FindDataBase.FLibrary do
-    begin
-      Params.AsQuad[Index] := BlobCreate(FindDataBase.FDbHandle,
-        FTransaction.FTrHandle, BlobHandle);
-      try
-        BlobWriteSegment(BlobHandle, Size, Buffer);
-      finally
-        BlobClose(BlobHandle);
-      end;
+  with FindDataBase.FLibrary do
+  begin
+    Params.AsQuad[Index] := BlobCreate(FindDataBase.FDbHandle,
+      FTransaction.FTrHandle, BlobHandle);
+    try
+      BlobWriteSegment(BlobHandle, Size, Buffer);
+    finally
+      BlobClose(BlobHandle);
     end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
   end;
-{$ENDIF}
 end;
 
 procedure TUIBStatement.ParamsSetBlob(const Name: string; Stream: TStream);
 var BlobHandle: IscBlobHandle;
 begin
-  if (FCurrentState < qsTransaction) then
-    BeginTransaction;
+  BeginTransaction;
   BlobHandle := nil;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    with FindDataBase.FLibrary do
-    begin
-      Params.ByNameAsQuad[Name] := BlobCreate(FindDataBase.FDbHandle,
-        FTransaction.FTrHandle, BlobHandle);
-      try
-        BlobWriteStream(BlobHandle, Stream);
-      finally
-        BlobClose(BlobHandle);
-      end;
+  with FindDataBase.FLibrary do
+  begin
+    Params.ByNameAsQuad[Name] := BlobCreate(FindDataBase.FDbHandle,
+      FTransaction.FTrHandle, BlobHandle);
+    try
+      BlobWriteStream(BlobHandle, Stream);
+    finally
+      BlobClose(BlobHandle);
     end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
   end;
-{$ENDIF}
 end;
 
 procedure TUIBStatement.ParamsSetBlobA(const Name: string; const str: AnsiString);
@@ -2795,28 +2615,18 @@ procedure TUIBStatement.ParamsSetBlobB(const Name: string; const str: RawByteStr
 var
   BlobHandle: IscBlobHandle;
 begin
-  if (FCurrentState < qsTransaction) then
-    BeginTransaction;
+  BeginTransaction;
   BlobHandle := nil;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    with FindDataBase.FLibrary do
-    begin
-      Params.ByNameAsQuad[Name] := BlobCreate(FindDataBase.FDbHandle,
-        FTransaction.FTrHandle, BlobHandle);
-      try
-        BlobWriteString(BlobHandle, str);
-      finally
-        BlobClose(BlobHandle);
-      end;
+  with FindDataBase.FLibrary do
+  begin
+    Params.ByNameAsQuad[Name] := BlobCreate(FindDataBase.FDbHandle,
+      FTransaction.FTrHandle, BlobHandle);
+    try
+      BlobWriteString(BlobHandle, str);
+    finally
+      BlobClose(BlobHandle);
     end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
   end;
-{$ENDIF}
 end;
 
 procedure TUIBStatement.ParamsSetBlobW(const Name: string; const str: UnicodeString);
@@ -2836,28 +2646,18 @@ end;
 procedure TUIBStatement.ParamsSetBlob(const Name: string; Buffer: Pointer; Size: Cardinal);
 var BlobHandle: IscBlobHandle;
 begin
-  if (FCurrentState < qsTransaction) then
-    BeginTransaction;
+  BeginTransaction;
   BlobHandle := nil;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    with FindDataBase.FLibrary do
-    begin
-      Params.ByNameAsQuad[Name] := BlobCreate(FindDataBase.FDbHandle,
-        FTransaction.FTrHandle, BlobHandle);
-      try
-        BlobWriteSegment(BlobHandle, Size, Buffer);
-      finally
-        BlobClose(BlobHandle);
-      end;
+  with FindDataBase.FLibrary do
+  begin
+    Params.ByNameAsQuad[Name] := BlobCreate(FindDataBase.FDbHandle,
+      FTransaction.FTrHandle, BlobHandle);
+    try
+      BlobWriteSegment(BlobHandle, Size, Buffer);
+    finally
+      BlobClose(BlobHandle);
     end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
   end;
-{$ENDIF}
 end;
 
 procedure TUIBStatement.ParamsSetBlobW(const Index: Word;
@@ -2884,26 +2684,17 @@ begin
     raise EUIBConvertError.Create(EUIB_CASTERROR);
   if (not sqlda.IsNull[Index]) then
   begin
-  {$IFDEF UIBTHREADSAFE}
-    Lock;
-    try
-  {$ENDIF}
-      with FindDataBase.FLibrary do
-      begin
-        BlobHandle := nil;
-        BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
-          BlobHandle, sqlda.AsQuad[Index]);
-        try
-          BlobSaveToStream(BlobHandle, Stream);
-        finally
-          BlobClose(BlobHandle);
-        end;
+    with FindDataBase.FLibrary do
+    begin
+      BlobHandle := nil;
+      BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
+        BlobHandle, sqlda.AsQuad[Index]);
+      try
+        BlobSaveToStream(BlobHandle, Stream);
+      finally
+        BlobClose(BlobHandle);
       end;
-  {$IFDEF UIBTHREADSAFE}
-    finally
-      UnLock;
     end;
-  {$ENDIF}
   end;
 end;
 
@@ -2940,37 +2731,28 @@ begin
     raise EUIBConvertError.Create(EUIB_CASTERROR);
   if (not sqlda.IsNull[Index]) then
   begin
-  {$IFDEF UIBTHREADSAFE}
-    Lock;
-    try
-  {$ENDIF}
-      with FindDataBase.FLibrary do
-      begin
-        BlobHandle := nil;
-        BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
-          BlobHandle, sqlda.AsQuad[Index]);
-        try
-          BlobReadVariant(BlobHandle, Value);
-        finally
-          BlobClose(BlobHandle);
-        end;
+    with FindDataBase.FLibrary do
+    begin
+      BlobHandle := nil;
+      BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
+        BlobHandle, sqlda.AsQuad[Index]);
+      try
+        BlobReadVariant(BlobHandle, Value);
+      finally
+        BlobClose(BlobHandle);
       end;
-  {$IFDEF UIBTHREADSAFE}
-    finally
-      UnLock;
     end;
-  {$ENDIF}
   end;
 end;
 
 procedure TUIBStatement.InternalClose(const Mode: TEndTransMode;
-  Auto: boolean);
+  Auto, Drop: boolean);
 begin
   case FCurrentState of
-    qsStatement : EndStatement(Mode, Auto);
+    qsStatement : EndStatement(Mode, Auto, Drop);
     qsExecImme  : EndExecImme(Mode, Auto);
-    qsPrepare   : EndPrepare(Mode, Auto);
-    qsExecute   : EndExecute(Mode, Auto);
+    qsPrepare   : EndPrepare(Mode, Auto, Drop);
+    qsExecute   : EndExecute(Mode, Auto, Drop);
   end;
 end;
 
@@ -2982,26 +2764,17 @@ begin
     raise EUIBConvertError.Create(EUIB_CASTERROR);
   if (not sqlda.IsNull[Index]) then
   begin
-  {$IFDEF UIBTHREADSAFE}
-    Lock;
-    try
-  {$ENDIF}
-      with FindDataBase.FLibrary do
-      begin
-        BlobHandle := nil;
-        BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
-          BlobHandle, sqlda.AsQuad[Index]);
-        try
-          BlobSize(BlobHandle, Size);
-        finally
-          BlobClose(BlobHandle);
-        end;
+    with FindDataBase.FLibrary do
+    begin
+      BlobHandle := nil;
+      BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
+        BlobHandle, sqlda.AsQuad[Index]);
+      try
+        BlobSize(BlobHandle, Size);
+      finally
+        BlobClose(BlobHandle);
       end;
-  {$IFDEF UIBTHREADSAFE}
-    finally
-      UnLock;
     end;
-  {$ENDIF}
   end;
 end;
 
@@ -3079,26 +2852,17 @@ begin
   if sqlda.IsNull[Index] then
      Exit else
   begin
-  {$IFDEF UIBTHREADSAFE}
-    Lock;
-    try
-  {$ENDIF}
-      with FindDataBase.FLibrary do
-      begin
-        BlobHandle := nil;
-        BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
-          BlobHandle, sqlda.AsQuad[Index]);
-        try
-          BlobReadSizedBuffer(BlobHandle, Buffer);
-        finally
-          BlobClose(BlobHandle);
-        end;
+    with FindDataBase.FLibrary do
+    begin
+      BlobHandle := nil;
+      BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
+        BlobHandle, sqlda.AsQuad[Index]);
+      try
+        BlobReadSizedBuffer(BlobHandle, Buffer);
+      finally
+        BlobClose(BlobHandle);
       end;
-  {$IFDEF UIBTHREADSAFE}
-    finally
-      UnLock;
     end;
-  {$ENDIF}
   end;
 end;
 
@@ -3112,68 +2876,41 @@ begin
   if sqlda.IsNull[Index] then
      str := '' else
   begin
-  {$IFDEF UIBTHREADSAFE}
-    Lock;
-    try
-  {$ENDIF}
-      with FindDataBase.FLibrary do
-      begin
-        BlobHandle := nil;
-        BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
-          BlobHandle, sqlda.AsQuad[Index]);
-        try
-          BlobReadString(BlobHandle, str);
-        finally
-          BlobClose(BlobHandle);
-        end;
+    with FindDataBase.FLibrary do
+    begin
+      BlobHandle := nil;
+      BlobOpen(FindDataBase.FDbHandle, FTransaction.FTrHandle,
+        BlobHandle, sqlda.AsQuad[Index]);
+      try
+        BlobReadString(BlobHandle, str);
+      finally
+        BlobClose(BlobHandle);
       end;
-  {$IFDEF UIBTHREADSAFE}
-    finally
-      UnLock;
     end;
-  {$ENDIF}
   end;
 end;
 
 function TUIBStatement.GetRowsAffected: Cardinal;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Result := 0;
-  Lock;
-  try
-{$ENDIF}
-    if (FCurrentState < qsPrepare) then
-      Raise Exception.Create(EUIB_MUSTBEPREPARED) else
-      Result := FindDataBase.FLibrary.DSQLInfoRowsAffected(FStHandle, FStatementType);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock
-  end;
-{$ENDIF}
+  if (FCurrentState < qsPrepare) then
+    Raise Exception.Create(EUIB_MUSTBEPREPARED) else
+    Result := FindDataBase.FLibrary.DSQLInfoRowsAffected(FStHandle, FStatementType);
 end;
 
 procedure TUIBStatement.CloseCursor;
 begin
   if (FCurrentState = qsExecute) then
   begin
-  {$IFDEF UIBTHREADSAFE}
-    Lock;
     try
-  {$ENDIF}
-      try
-        FSQLResult.ClearRecords;
+      FSQLResult.ClearRecords;
+      if FUseCursor and (FStatementType in [stSelect, stSelectForUpdate]) then
         with FindDataBase.FLibrary do
           DSQLFreeStatement(FStHandle, DSQL_close);
-      except
-        InternalClose(FOnError, False);
-        raise;
-      end;
-      FCurrentState := qsPrepare;
-  {$IFDEF UIBTHREADSAFE}
-    finally
-      UnLock;
+    except
+      InternalClose(FOnError, False, True);
+      raise;
     end;
-  {$ENDIF}
+    FCurrentState := qsPrepare;
   end;
 end;
 
@@ -3184,7 +2921,7 @@ var
   i, r: Integer;
   Str: string;
 begin
-  InternalClose(etmStayIn, True);
+  InternalClose(etmStayIn, True, False);
   r := 0;
   TStringList(FSQL).OnChange := nil;
   try
@@ -3275,11 +3012,11 @@ begin
     except
       FParsedSQL := '';
       Params.Clear;
-      InternalClose(FOnError, False);
+      InternalClose(FOnError, False, True);
       raise;
     end;
   finally
-    InternalClose(etmStayIn, True);
+    InternalClose(etmStayIn, True, True);
     TStringList(FSQL).OnChange := DoSQLChange;
   end;
 end;
@@ -3291,9 +3028,7 @@ begin
   inherited;
   FOptions       := [tpConcurrency,tpWait,tpWrite];
   FTrHandle      := nil;
-  FStatements    := 0;
   FDataBases     := TList.Create;
-  FAutoRetain    := False;
   FAutoStart     := True;
   FAutoStop      := True;
   FDefaultAction := etmCommit;
@@ -3331,18 +3066,9 @@ procedure TUIBTransaction.Close(const Mode: TEndTransMode; Auto: boolean);
 var
   i: Integer;
 begin
-{$IFDEF UIBTHREADSAFE}
-  lock;
-  try
-{$ENDIF}
-    if (FStatements > 0) and (FSQLComponent <> nil) then
-      for i := 0 to FSQLComponent.Count -1 do
-        TUIBQuery(FSQLComponent.Items[i]).InternalClose(etmStayIn, Auto);
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  if FSQLComponent <> nil then
+    for i := 0 to FSQLComponent.Count -1 do
+      TUIBQuery(FSQLComponent.Items[i]).InternalTryCache(etmStayIn, Auto);
   EndTransaction(Mode, nil, Auto);
 end;
 
@@ -3397,44 +3123,35 @@ var
   ATPB: AnsiString;
 begin
   BeginDataBase;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    with FDataBase.FLibrary do
-    if (FTrHandle = nil) then
-    begin
-      If Auto and (not FAutoStart) then
-        raise EUIBException.Create(EUIB_EXPLICITTRANS);
+  with FDataBase.FLibrary do
+  if (FTrHandle = nil) then
+  begin
+    If Auto and (not FAutoStart) then
+      raise EUIBException.Create(EUIB_EXPLICITTRANS);
 
-      if FDataBases.Count = 1 then
-      begin
-        TransactionStart(FTrHandle, FDataBase.FDbHandle, TPB);
-      end else
-      begin
-        GetMem(Buffer,  SizeOf(TISCTEB) * FDataBases.Count);
-        try
-          ATPB := TPB;
-          for i := 0 to FDataBases.Count - 1 do
-            with TEBDynArray(Buffer)[i] do
-            begin
-              Handle  := @TUIBDatabase(FDataBases[i]).FDbHandle;
-              Len     := Length(ATPB);
-              Address := PAnsiChar(ATPB);
-            end;
-          TransactionStartMultiple(FTrHandle, FDataBases.Count, Buffer);
-        finally
-          FreeMem(Buffer);
-        end;
+    if FDataBases.Count = 1 then
+    begin
+      TransactionStart(FTrHandle, FDataBase.FDbHandle, TPB);
+    end else
+    begin
+      GetMem(Buffer,  SizeOf(TISCTEB) * FDataBases.Count);
+      try
+        ATPB := TPB;
+        for i := 0 to FDataBases.Count - 1 do
+          with TEBDynArray(Buffer)[i] do
+          begin
+            Handle  := @TUIBDatabase(FDataBases[i]).FDbHandle;
+            Len     := Length(ATPB);
+            Address := PAnsiChar(ATPB);
+          end;
+        TransactionStartMultiple(FTrHandle, FDataBases.Count, Buffer);
+      finally
+        FreeMem(Buffer);
       end;
-      if Assigned(FOnStartTransaction) then
-        FOnStartTransaction(Self);
     end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
+    if Assigned(FOnStartTransaction) then
+      FOnStartTransaction(Self);
   end;
-{$ENDIF}
 end;
 
 function TUIBTransaction.EndTransaction(ETM: TEndTransMode; From: TUIBStatement;
@@ -3444,61 +3161,46 @@ begin
   Result := False;
   // don't lock if it is not necessary
   if (ETM = etmStayIn) then Exit;
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    // Default Action
-    if (ETM = etmDefault) then ETM := FDefaultAction;
-    if (FTrHandle <> nil) then
-      with FDataBase.FLibrary do
-      try
-        if Assigned(FOnEndTransaction) then
-          FOnEndTransaction(Self, ETM);
-       { If there is Statements alive I must keep handle only if FAutoRetain = True.}
-        if (FStatements > 0) and FAutoRetain then
-          case ETM of
-            etmCommit   : ETM := etmCommitRetaining;
-            etmRollback : ETM := etmRollbackRetaining;
-          end else
-            if (ETM in [etmCommit, etmRollback]) then
-            begin
-              if (FStatements > 0) and (FSQLComponent <> nil) then
-                for i := 0 to FSQLComponent.Count -1 do
-                  if (From <> FSQLComponent.Items[i]) then
-                    TUIBQuery(FSQLComponent.Items[i]).InternalClose(etmStayIn, Auto);
-            end;
-
-        Assert( FAutoStop or (not Auto), EUIB_NOAUTOSTOP);
-
-        case ETM of
-          etmCommit            :
-            begin
-              TransactionCommit(FTrHandle);
-              Result := True;
-            end;
-          etmCommitRetaining   : TransactionCommitRetaining(FTrHandle);
-          etmRollback          :
-            begin
-              TransactionRollback(FTrHandle);
-              Result := True;
-            end;
-          etmRollbackRetaining : TransactionRollbackRetaining(FTrHandle);
-        end;
-      except
-        case ETM of
-          etmCommit, etmRollback :
-            TransactionRollback(FTrHandle);
-          etmCommitRetaining, etmRollbackRetaining :
-            TransactionRollbackRetaining(FTrHandle);
-        end;
-        raise;
+  // Default Action
+  if (ETM = etmDefault) then ETM := FDefaultAction;
+  if (FTrHandle <> nil) then
+    with FDataBase.FLibrary do
+    try
+      if Assigned(FOnEndTransaction) then
+        FOnEndTransaction(Self, ETM);
+      if (ETM in [etmCommit, etmRollback]) then
+      begin
+        if FSQLComponent <> nil then
+          for i := 0 to FSQLComponent.Count -1 do
+            if (From <> FSQLComponent.Items[i]) then
+              TUIBQuery(FSQLComponent.Items[i]).InternalTryCache(etmStayIn, Auto);
       end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+
+      Assert( FAutoStop or (not Auto), EUIB_NOAUTOSTOP);
+
+      case ETM of
+        etmCommit            :
+          begin
+            TransactionCommit(FTrHandle);
+            Result := True;
+          end;
+        etmCommitRetaining   : TransactionCommitRetaining(FTrHandle);
+        etmRollback          :
+          begin
+            TransactionRollback(FTrHandle);
+            Result := True;
+          end;
+        etmRollbackRetaining : TransactionRollbackRetaining(FTrHandle);
+      end;
+    except
+      case ETM of
+        etmCommit, etmRollback :
+          TransactionRollback(FTrHandle);
+        etmCommitRetaining, etmRollbackRetaining :
+          TransactionRollbackRetaining(FTrHandle);
+      end;
+      raise;
+    end;
 end;
 
 procedure TUIBTransaction.AddSQLComponent(Component: TUIBStatement);
@@ -3527,26 +3229,6 @@ begin
   end;
 end;
 
-{$IFDEF UIBTHREADSAFE}
-procedure TUIBTransaction.Lock;
-var i: Integer;
-begin
-  inherited;
-  for i := 0 to FDataBases.Count - 1 do
-    TUIBDataBase(FDataBases[i]).Lock;
-end;
-{$ENDIF}
-
-{$IFDEF UIBTHREADSAFE}
-procedure TUIBTransaction.UnLock;
-var i: Integer;
-begin
-  for i := 0 to FDataBases.Count - 1 do
-    TUIBDataBase(FDataBases[i]).UnLock;
-  inherited;
-end;
-{$ENDIF}
-
 procedure TUIBTransaction.AddDataBase(ADataBase: TUIBDataBase);
 var i: Integer;
 begin
@@ -3567,8 +3249,6 @@ var
 begin
   if (ADataBase <> nil) then
   begin
-    if ADataBase = FDataBase then
-      FDataBase := nil;
     for i := 0 to FDataBases.Count - 1 do
       if FDataBases[i] = ADataBase then
       begin
@@ -3577,6 +3257,8 @@ begin
         FDataBases.Delete(i);
         Exit;
       end;
+    if ADataBase = FDataBase then
+      FDataBase := nil;
   end;
 end;
 
@@ -3710,128 +3392,37 @@ end;
 
 function TUIBTransaction.GetOptions: TTransParams;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    Result := FOptions;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  Result := FOptions;
 end;
 
 procedure TUIBTransaction.SetOptions(const Value: TTransParams);
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    FOptions := Value;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  FOptions := Value;
 end;
 
 function TUIBTransaction.GetLockRead: string;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    Result := FLockRead;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  Result := FLockRead;
 end;
 
 function TUIBTransaction.GetLockWrite: string;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    Result := FLockWrite;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  Result := FLockWrite;
 end;
 
 procedure TUIBTransaction.SetLockRead(const Value: string);
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    FLockRead := Value;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  FLockRead := Value;
 end;
 
 procedure TUIBTransaction.SetLockWrite(const Value: string);
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    FLockWrite := Value;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  FLockWrite := Value;
 end;
 
 function TUIBTransaction.GetDataBase: TUIBDataBase;
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    Result := FDataBase;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
-end;
-
-function TUIBTransaction.GetAutoRetain: boolean;
-begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    Result := FAutoRetain;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
-end;
-
-procedure TUIBTransaction.SetAutoRetain(const Value: boolean);
-begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    FAutoRetain := Value;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
-{$ENDIF}
+  Result := FDataBase;
 end;
 
 procedure TUIBTransaction.StartTransaction;
@@ -3847,23 +3438,14 @@ end;
 
 procedure TUIBTransaction.ExecuteImmediate(const sql: string);
 begin
-{$IFDEF UIBTHREADSAFE}
-  Lock;
-  try
-{$ENDIF}
-    BeginTransaction;
-    with FDataBase, FLibrary do
+  BeginTransaction;
+  with FDataBase, FLibrary do
 {$IFDEF UNICODE}
-      DSQLExecuteImmediate(FDataBase.FDbHandle,
-        FTrHandle, MBUEncode(sql, CharacterSetCP[CharacterSet]), GetSQLDialect);
+    DSQLExecuteImmediate(FDataBase.FDbHandle,
+      FTrHandle, MBUEncode(sql, CharacterSetCP[CharacterSet]), GetSQLDialect);
 {$ELSE}
-      DSQLExecuteImmediate(FDataBase.FDbHandle,
-        FTrHandle, sql, GetSQLDialect);
-{$ENDIF}
-{$IFDEF UIBTHREADSAFE}
-  finally
-    UnLock;
-  end;
+    DSQLExecuteImmediate(FDataBase.FDbHandle,
+      FTrHandle, sql, GetSQLDialect);
 {$ENDIF}
 end;
 
@@ -3873,38 +3455,6 @@ begin
     Result := GetDataBase.FLibrary.TransactionGetId(FTrHandle) else
     Result := 0;
 end;
-
-{ TUIBComponent }
-
-constructor TUIBComponent.Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF};
-begin
-  inherited;
-{$IFDEF UIBTHREADSAFE}
-  FCriticalsection := TCriticalSection.Create;
-{$ENDIF}
-end;
-
-destructor TUIBComponent.Destroy;
-begin
-{$IFDEF UIBTHREADSAFE}
-  FCriticalsection.Free;
-{$ENDIF}
-  inherited Destroy;
-end;
-
-{$IFDEF UIBTHREADSAFE}
-procedure TUIBComponent.Lock;
-begin
-  FCriticalsection.Enter;
-end;
-{$ENDIF}
-
-{$IFDEF UIBTHREADSAFE}
-procedure TUIBComponent.UnLock;
-begin
-  FCriticalsection.Leave;
-end;
-{$ENDIF}
 
 { TUIBService }
 
@@ -4186,6 +3736,13 @@ begin
   Result := TUserInfo(FUserInfos[aIndex]);
 end;
 
+{$IFDEF FB25_UP}
+function TUIBSecurity.GetBooleanParam(aParam: Integer): Boolean;
+begin
+  Result := FIntegerParams[aParam] <> 0;
+end;
+{$ENDIF}
+
 function TUIBSecurity.GetIntegerParam(aParam: Integer): Integer;
 begin
   Result := FIntegerParams[aParam];
@@ -4195,6 +3752,14 @@ function TUIBSecurity.GetStringParam(aParam: Integer): string;
 begin
   Result := FStringParams[aParam];
 end;
+
+{$IFDEF FB25_UP}
+procedure TUIBSecurity.SetBooleanParam(aParam: Integer; const aValue: Boolean);
+begin
+  FIntegerParams[aParam] := ord(aValue);
+  Include(FModifiedParams, TSecurityParam(aParam));
+end;
+{$ENDIF}
 
 procedure TUIBSecurity.SetIntegerParam(aParam: Integer; const aValue: Integer);
 begin
@@ -4216,7 +3781,7 @@ const
   IscParams : array[TSecurityParam] of AnsiChar = (
     isc_spb_sql_role_name, isc_spb_sec_username, isc_spb_sec_password,
     isc_spb_sec_firstname, isc_spb_sec_middlename, isc_spb_sec_lastname,
-    isc_spb_sec_userid, isc_spb_sec_groupid);
+    isc_spb_sec_userid, isc_spb_sec_groupid {$IFDEF FB25_UP},isc_spb_sec_admin{$ENDIF});
 var
   StartParams, Buffer: RawByteString;
   Position: Integer;
@@ -4431,22 +3996,13 @@ begin
               FLibrary.Load(FLiBraryName);
               // I MUST provide the real DB Handle (not nil)
               // because altering forein key can fail otherwise.
-            {$IFDEF UIBTHREADSAFE}
-              FQuery.FindDataBase.Lock;
-              try
-            {$ENDIF}
 {$IFDEF UNICODE}
-                FLibrary.DSQLExecuteImmediate(
-                  FDbHandle, TrHandle, MBUEncode(Parser.Statement, CharacterSetCP[CharacterSet]), SQLDialect);
+              FLibrary.DSQLExecuteImmediate(
+                FDbHandle, TrHandle, MBUEncode(Parser.Statement, CharacterSetCP[CharacterSet]), SQLDialect);
 {$ELSE}
-                FLibrary.DSQLExecuteImmediate(
-                  FDbHandle, TrHandle, Parser.Statement, SQLDialect);
+              FLibrary.DSQLExecuteImmediate(
+                FDbHandle, TrHandle, Parser.Statement, SQLDialect);
 {$ENDIF}
-            {$IFDEF UIBTHREADSAFE}
-              finally
-                FQuery.FindDataBase.UnLock;
-              end;
-            {$ENDIF}
             end;
             FQuery.FindDataBase.DatabaseName := Parser.Params.Values['DATABASE'];
             FQuery.FindDataBase.UserName := Parser.Params.Values['USER'];
@@ -4516,7 +4072,6 @@ begin
                 raise Exception.Create(EUIB_UNEXPECTEDERROR);
               end;
             end;
-            //FQuery.Params.FieldType[i]
 
             FQuery.Execute;
           end
@@ -4952,18 +4507,7 @@ begin
   try
     db := FindDataBase;
     with db, Flibrary do
-    begin
-    {$IFDEF UIBTHREADSAFE}
-      db.Lock;
-      try
-    {$ENDIF}
-        EventCancel(FDbHandle, FEventID);
-    {$IFDEF UIBTHREADSAFE}
-      finally
-        db.UnLock;
-      end;
-    {$ENDIF}
-    end;
+      EventCancel(FDbHandle, FEventID);
   except
     on E : Exception do
       if Assigned(FOwner.FOnException) then
@@ -4977,19 +4521,8 @@ begin
   try
     db := FindDataBase;
     with db, FLibrary do
-  {$IFDEF UIBTHREADSAFE}
-    begin
-      db.Lock;
-      try
-  {$ENDIF}
-        EventQueue(FdbHandle, FEventID, FEventBufferLen, FEventBuffer,
-          @EventCallback, self);
-  {$IFDEF UIBTHREADSAFE}
-      finally
-        db.UnLock;
-      end;
-    end;
-  {$ENDIF}
+      EventQueue(FdbHandle, FEventID, FEventBufferLen, FEventBuffer,
+        @EventCallback, self);
   except
     on E : Exception do
       if Assigned(FOwner.FOnException) then

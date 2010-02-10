@@ -37,9 +37,6 @@ uses
   libc,
 {$ENDIF FPC}
 {$ENDIF UNIX}
-{$IFDEF UIBTHREADSAFE}
-  SyncObjs,
-{$ENDIF UIBTHREADSAFE}
   SysUtils;
 
 (* Basic data types *)
@@ -90,6 +87,10 @@ type
     gds_quad_low: ULONG;
   end;
   TGDSQuad = GDS_QUAD;
+
+{$IFDEF FB25_UP}
+  FB_SHUTDOWN_CALLBACK = function(const reason, mask: Integer; arg: Pointer): Integer; cdecl;
+{$ENDIF}
 
   // *************************************************
   // TMN: some misc data types from all over the place
@@ -151,6 +152,10 @@ const
   FB_API_VER = 20;
 {$ENDIF FB20}
 
+{$IFDEF FB25}
+  FB_API_VER = 25;
+{$ENDIF FB25}
+
   GDS_TRUE = 1;
   GDS_FALSE = 0;
 
@@ -198,18 +203,34 @@ type
   PISCUChar = ^ISCUChar;
 
 const
+  ISC_STATUS_LENGTH = 20;
+type
+  ISC_STATUS_ARRAY = array[0..ISC_STATUS_LENGTH - 1] of ISC_STATUS;
+
+{$IFDEF FB25_UP}
+const
+  FB_SQLSTATE_SIZE  = 6;
+type
+  FB_SQLSTATE_STRING = array[0..FB_SQLSTATE_SIZE-1] of AnsiChar;
+{$ENDIF}
+
+const
   DSQL_close = 1;
   DSQL_drop = 2;
 
-  {$IFDEF IB65ORYF867}
+{$IFDEF IB65ORYF867}
   DSQL_cancel = 4;
-  {$ENDIF IB65ORYF867}
+{$ENDIF IB65ORYF867}
 
-  {$IFDEF IB7_UP}
+{$IFDEF FB25_UP}
+  DSQL_unprepare = 4;
+{$ENDIF}
+
+{$IFDEF IB7_UP}
   METADATALENGTH = 68;
-  {$ELSE}
+{$ELSE}
   METADATALENGTH = 32;
-  {$ENDIF IB7_UP}
+{$ENDIF IB7_UP}
 
 (******************************************************************
  * Define type, export and other stuff based on c/c++ and Windows *
@@ -497,7 +518,12 @@ const
   dtype_blob = 17;
   dtype_array = 18;
   dtype_int64 = 19;
+{$IFDEF FB25_UP}
+  dtype_dbkey = 20;
+  DTYPE_TYPE_MAX = 21;
+{$ELSE}
   DTYPE_TYPE_MAX = 20;
+{$ENDIF}
 {$ENDIF FB102ORYF867}
 
 (***************************
@@ -660,8 +686,12 @@ type
   IscWinHandle = {$IFDEF TYPE_IDENTITY} type {$ENDIF} isc_win_handle;
   PIscWinHandle = ^IscWinHandle;
 
-  isc_callback = procedure;
-  IscCallback = isc_callback;
+//  isc_callback = procedure;
+//  IscCallback = isc_callback;
+
+  ISC_PRINT_CALLBACK = procedure(p: Pointer; v: ISC_SHORT; const c: PAnsiChar); cdecl;
+  ISC_VERSION_CALLBACK = procedure(p: Pointer; const c: PAnsiChar); cdecl;
+  ISC_EVENT_CALLBACK = procedure(user_data: Pointer; length: ISC_USHORT; const updated: PAnsiChar); cdecl;
 
   isc_resv_handle = ISC_LONG;
   IscResvHandle = isc_resv_handle;
@@ -775,6 +805,10 @@ const
   blr_domain_name = 18;
   blr_domain_name2 = 19;
   blr_not_nullable = 20;
+{$IFDEF FB25_UP}
+  blr_column_name  = 21;
+  blr_column_name2 = 22;
+{$ENDIF}
 
   blr_domain_type_of = 0;
   blr_domain_full = 1;
@@ -1117,6 +1151,30 @@ const
   blr_sys_function = 186;
 {$ENDIF}
 
+{$IFDEF FB25_UP}
+  blr_auto_trans   = 187;
+  blr_similar      = 188;
+  blr_exec_stmt    = 189;
+
+  blr_exec_stmt_inputs      = 1;
+  blr_exec_stmt_outputs     = 2;
+  blr_exec_stmt_sql         = 3;
+  blr_exec_stmt_proc_block  = 4;
+  blr_exec_stmt_data_src    = 5;
+  blr_exec_stmt_user        = 6;
+  blr_exec_stmt_pwd         = 7;
+  blr_exec_stmt_tran        = 8;
+  blr_exec_stmt_tran_clone  = 9;
+  blr_exec_stmt_privs       = 10;
+  blr_exec_stmt_in_params   = 11;
+  blr_exec_stmt_in_params2  = 12;
+  blr_exec_stmt_out_params  = 13;
+  blr_exec_stmt_role        = 14;
+
+  blr_stmt_expr             = 190;
+  blr_derived_expr          = 191;
+{$ENDIF}
+
 (**********************************
  * Database parameter block stuff *
  **********************************)
@@ -1190,6 +1248,26 @@ const
   isc_dpb_gfix_attach = 66;
   isc_dpb_gstat_attach = 67;
 
+ {$IFDEF FB25_UP}
+  fb_shut_confirmation        =  1;
+  fb_shut_preproviders        =  2;
+  fb_shut_postproviders       =  4;
+  fb_shut_finish              =  8;
+
+  fb_shutrsn_svc_stopped      = -1;
+  fb_shutrsn_no_connection    = -2;
+  fb_shutrsn_app_stopped      = -3;
+  fb_shutrsn_device_removed   = -4;
+  fb_shutrsn_signal           = -5;
+  fb_shutrsn_services         = -6;
+  fb_shutrsn_exit_called      = -7;
+
+  fb_cancel_disable           =  1;
+  fb_cancel_enable            =  2;
+  fb_cancel_raise             =  3;
+  fb_cancel_abort             =  4;
+{$ENDIF}
+
 {$IFDEF FB103_UP}
   isc_dpb_set_db_charset = 68;
 {$ENDIF FB103_UP}
@@ -1204,6 +1282,13 @@ const
   isc_dpb_no_db_triggers = 72;
   isc_dpb_trusted_auth = 73;
   isc_dpb_process_name = 74;
+{$ENDIF}
+
+{$IFDEF FB25_UP}
+  isc_dpb_trusted_role = 75;
+  isc_dpb_org_filename = 76;
+  isc_dpb_utf8_filename = 77;
+  isc_dpb_ext_call_depth = 78;
 {$ENDIF}
 
 {$IFDEF IB65ORYF867}
@@ -1246,6 +1331,9 @@ const
 {$IFDEF IB75}
   isc_dpb_Max_Value = 71;
 {$ELSE}
+{$IFDEF FB25}
+  isc_dpb_Max_Value = 78;
+{$ELSE}
 {$IFDEF FB21}
   isc_dpb_Max_Value = 74;
 {$ELSE}
@@ -1267,6 +1355,7 @@ const
 {$ENDIF FB15}
 {$ENDIF FB20}
 {$ENDIF FB21}
+{$ENDIF FB25}
 {$ENDIF IB75}
 {$ENDIF IB71}
 {$ENDIF IB7}
@@ -1455,6 +1544,10 @@ const
   isc_spb_process_name = AnsiChar(#112);
 {$ENDIF}
 
+{$IFDEF FB25_UP}
+   isc_spb_trusted_role = AnsiChar(#113);
+{$ENDIF}
+
   isc_spb_connect_timeout = AnsiChar(isc_dpb_connect_timeout);
   isc_spb_dummy_packet_interval = AnsiChar(isc_dpb_dummy_packet_interval);
   isc_spb_sql_role_name = AnsiChar(isc_dpb_sql_role_name);
@@ -1586,6 +1679,10 @@ const
 {$IFDEF FB21_UP}
   isc_info_db_file_size = 112;
 {$ENDIF}
+{$IFDEF FB25_UP}
+  fb_info_page_contents = 113;
+{$ENDIF}
+
 
   isc_info_version = isc_info_isc_version;
 
@@ -1668,6 +1765,19 @@ const
   isc_info_db_impl_linux_mipsel = 71;
   isc_info_db_impl_linux_mips = 72;
   isc_info_db_impl_darwin_x64 = 73;
+{$ENDIF}
+{$IFDEF FB25_UP}
+  isc_info_db_impl_sun_amd64 = 74;
+
+  isc_info_db_impl_linux_arm = 75;
+  isc_info_db_impl_linux_ia64 = 76;
+
+  isc_info_db_impl_darwin_ppc64 = 77;
+  isc_info_db_impl_linux_s390x = 78;
+  isc_info_db_impl_linux_s390 = 79;
+
+  isc_info_db_impl_linux_sh = 80;
+  isc_info_db_impl_linux_sheb = 81;
 {$ENDIF}
 
   isc_info_db_impl_isc_a = isc_info_db_impl_isc_apl_68K;
@@ -1836,6 +1946,18 @@ const
 {$IFDEF FB20_UP}
   isc_action_svc_get_fb_log = #12;	// Retrieves the Firebird log file from the server
 {$ENDIF}
+{$IFDEF FB25_UP}
+  isc_action_svc_nbak           = #20;
+  isc_action_svc_nrest          = #21;
+  isc_action_svc_trace_start    = #22;
+  isc_action_svc_trace_stop     = #23;
+  isc_action_svc_trace_suspend  = #24;
+  isc_action_svc_trace_resume   = #25;
+  isc_action_svc_trace_list     = #26;
+  isc_action_svc_set_mapping    = #27;
+  isc_action_svc_drop_mapping   = #28;
+  isc_action_svc_last           = #29;
+{$ENDIF}
 
   (*****************************
    * Service information items *
@@ -1892,6 +2014,9 @@ const
   isc_spb_sec_firstname = #10;
   isc_spb_sec_middlename = #11;
   isc_spb_sec_lastname = #12;
+{$IFDEF FB25_UP}
+  isc_spb_sec_admin = #13;
+{$ENDIF}
 
   (*******************************************************
    * Parameters for isc_action_svc_(add|remove)_license, *
@@ -1919,6 +2044,9 @@ const
   isc_spb_bkp_non_transportable = $20;
   isc_spb_bkp_convert = $40;
   isc_spb_bkp_expand = $80;
+{$IFDEF FB25_UP}
+  isc_spb_bkp_no_triggers = $8000;
+{$ENDIF}
 
   (********************************************
    * Parameters for isc_action_svc_properties *
@@ -1935,6 +2063,18 @@ const
   isc_spb_prp_set_sql_dialect = #14;
   isc_spb_prp_activate = $0100;
   isc_spb_prp_db_online = $0200;
+{$IFDEF FB25_UP}
+  isc_spb_prp_force_shutdown              = #41;
+  isc_spb_prp_attachments_shutdown        = #42;
+  isc_spb_prp_transactions_shutdown       = #43;
+  isc_spb_prp_shutdown_mode               = #44;
+  isc_spb_prp_online_mode                 = #45;
+
+  isc_spb_prp_sm_normal          = 0;
+  isc_spb_prp_sm_multi           = 1;
+  isc_spb_prp_sm_single          = 2;
+  isc_spb_prp_sm_full            = 3;
+{$ENDIF}
 
   (********************************************
    * Parameters for isc_spb_prp_reserve_space *
@@ -1997,6 +2137,10 @@ const
   isc_spb_res_page_size = #10;
   isc_spb_res_length = #11;
   isc_spb_res_access_mode = #12;
+{$IFDEF FB25_UP}
+  isc_spb_res_fix_fss_data = #13;
+  isc_spb_res_fix_fss_metadata = #14;
+{$ENDIF}
   isc_spb_res_deactivate_idx = $0100;
   isc_spb_res_no_shadow = $0200;
   isc_spb_res_no_validity = $0400;
@@ -2051,6 +2195,16 @@ const
 
 {$IFDEF FB20_UP}
   isc_spb_sts_nocreation		= $80;
+{$ENDIF}
+
+{$IFDEF FB25_UP}
+  isc_spb_nbk_level       = 5;
+  isc_spb_nbk_file        = 6;
+  isc_spb_nbk_no_triggers = $01;
+
+  isc_spb_trc_id          = 1;
+  isc_spb_trc_name        = 2;
+  isc_spb_trc_cfg         = 3;
 {$ENDIF}
 
   (*************************
@@ -2282,6 +2436,26 @@ const
 {$IFDEF FB21_UP}
   isc_dyn_coll_from_external = 239;
 {$ENDIF}
+{$IFDEF FB25_UP}
+  isc_dyn_mapping        = 243;
+  isc_dyn_map_role       = 1;
+  isc_dyn_unmap_role     = 2;
+  isc_dyn_map_user       = 3;
+  isc_dyn_unmap_user     = 4;
+  isc_dyn_automap_role   = 5;
+  isc_dyn_autounmap_role = 6;
+
+  isc_dyn_user           = 244;
+  isc_dyn_user_add       = 1;
+  isc_dyn_user_mod       = 2;
+  isc_dyn_user_del       = 3;
+  isc_dyn_user_passwd    = 4;
+  isc_dyn_user_first     = 5;
+  isc_dyn_user_middle    = 6;
+  isc_dyn_user_last      = 7;
+  isc_dyn_user_admin     = 8;
+  isc_user_end           = 0;
+{$ENDIF}
 
   isc_dyn_delete_shadow = 35;
 {$IFDEF IB75_UP}
@@ -2289,6 +2463,9 @@ const
 {$ENDIF}
   isc_dyn_grant = 30;
   isc_dyn_revoke = 31;
+{$IFDEF FB25_UP}
+  isc_dyn_revoke_all = 246;
+{$ENDIF}
   isc_dyn_def_primary_key = 37;
   isc_dyn_def_foreign_key = 38;
   isc_dyn_def_unique = 40;
@@ -2405,6 +2582,9 @@ const
   isc_dyn_del_validation = 198;
   isc_dyn_single_validation = 199;
   isc_dyn_fld_character_set = 203;
+{$IFDEF FB25_UP}
+  isc_dyn_del_computed = 242;
+{$ENDIF}
 
   (***********************************
    * Local field specific attributes *
@@ -2453,6 +2633,9 @@ const
 {$IFDEF FB102ORYF867}
   isc_dyn_grant_role = 218;
   isc_dyn_grant_user_explicit = 219;
+{$ENDIF}
+{$IFDEF FB25_UP}
+  isc_dyn_grant_grantor = 245;
 {$ENDIF}
 
   (**********************************
@@ -2630,10 +2813,14 @@ const
    * Last $dyn value assigned *
    ****************************)
 
+{$IFDEF FB25}
+  isc_dyn_last_dyn_value = 247;
+{$ENDIF FB20}
+
 {$IFDEF FB21}
   isc_dyn_last_dyn_value = 242;
 {$ENDIF FB20}
-   
+
 {$IFDEF FB20}
   isc_dyn_last_dyn_value = 227;
 {$ENDIF FB20}
@@ -2731,6 +2918,10 @@ const
   SQL_TYPE_DATE = 570;
   SQL_INT64 = 580;
 
+{$IFDEF FB25_UP}
+  SQL_NULL = 32766;
+{$ENDIF}
+
 {$IFDEF IB7_UP}
   SQL_BOOLEAN = 590;
 {$ENDIF IB7_UP}
@@ -2827,10 +3018,6 @@ type
     FCryptLib: Pointer;
     FGDS32Lib: Pointer;
   {$ENDIF UNIX}
-  {$IFDEF UIBTHREADSAFE}
-  protected
-    FLIBCritSec: TCriticalSection;
-  {$ENDIF UIBTHREADSAFE}
   protected
     BLOB_close: function(Stream: PBStream): Integer;
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
@@ -3153,9 +3340,14 @@ type
     isc_prepare_transaction2: function(user_status: PISCStatus; tra_handle: PIscTrHandle;
       msg_length: ISCUShort; msg: PISCUChar): ISCStatus;
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
-    isc_print_blr: function(blr: PAnsiChar; callback: IscCallback; callback_argument: PPointer;
+    isc_print_blr: function(blr: PAnsiChar; callback: ISC_PRINT_CALLBACK; callback_argument: PPointer;
       language: Smallint): ISCStatus;
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
+{$IFDEF FB25_UP}
+    fb_print_blr: function(const blr: PAnsiChar; blr_length: ISC_ULONG; routine: ISC_PRINT_CALLBACK;
+			user_arg: Pointer; language: Smallint): Integer;
+      {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
+{$ENDIF}
     isc_print_sqlerror: procedure(sqlcode: ISCShort; status_vector: PISCStatus);
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
     isc_print_status: function(status_vector: PISCStatus): ISCStatus;
@@ -3170,7 +3362,7 @@ type
     isc_qtoq: procedure(quad1, quad2: PISCQuad);
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
     isc_que_events: function(user_status: PISCStatus; handle: PIscDbHandle; id: PISCLong;
-      length: ISCUShort; events: PAnsiChar; ast: IscCallback; arg: PPointer): ISCStatus;
+      length: ISCUShort; events: PAnsiChar; ast: ISC_EVENT_CALLBACK; arg: PPointer): ISCStatus;
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
     isc_receive: function(user_status: PISCStatus; req_handle: PIscReqHandle; msg_type,
       msg_length: Smallint; msg: PPointer; level: Smallint): ISCStatus;
@@ -3205,14 +3397,27 @@ type
     isc_service_start: function(status_vector: PISCStatus; svc_handle: PIscSvcHandle;
       reserved: PIscResvHandle; spb_length: Word; spb: PAnsiChar): ISCStatus;
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
-    {$IFDEF INTERBASEORFIREBIRD}
+{$IFDEF FB25_UP}
+    fb_shutdown: function(timeout: Cardinal; const reason: Integer): Integer;
+      {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
+    fb_shutdown_callback: function(user_status: PISCStatus; callBack: FB_SHUTDOWN_CALLBACK;
+      const mask: Integer; arg: Pointer): ISC_STATUS;
+      {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
+    fb_cancel_operation: function(user_status: PISCStatus; handle: PIscDbHandle; option: ISC_USHORT): ISC_STATUS;
+      {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
+{$ENDIF}
+{$IFDEF INTERBASEORFIREBIRD}
     isc_set_debug: procedure(flag: Integer);
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
-    {$ENDIF INTERBASEORFIREBIRD}
+{$ENDIF INTERBASEORFIREBIRD}
     isc_sql_interprete: procedure(SQLCODE: Smallint; buffer: PAnsiChar; buffer_length: Smallint);
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
     isc_sqlcode: function(user_status: PISCStatus): ISCLong;
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
+{$IFDEF FB25_UP}
+    fb_sqlstate: procedure(buffer: PAnsiChar; const user_status: PISCStatus);
+      {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
+{$ENDIF}
     isc_start_and_send: function(user_status: PISCStatus; req_handle: PIscReqHandle;
       tra_handle: PIscTrHandle; msg_type, msg_length: Smallint; msg: PPointer;
       level: Smallint): ISCStatus;
@@ -3225,6 +3430,10 @@ type
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
     isc_start_transaction: function(user_status: PISCStatus; tra_handle: PIscTrHandle; count: Smallint;
       db_handle: PIscDbHandle; tpb_length: ISCUShort; tpb_ad: PAnsiChar): ISCStatus; cdecl;
+{$IFDEF FB25_UP}
+//    fb_disconnect_transaction: function(user_status: PISCStatus; tra_handle: PIscTrHandle): ISC_STATUS;
+//      {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
+{$ENDIF}
     isc_transact_request: function(user_status: PISCStatus; db_handle: PIscDbHandle;
       tra_handle: PIscTrHandle; blr_length: Word; blr: PAnsiChar; in_msg_length: Word; in_msg: PAnsiChar;
       out_msg_length: Word; out_msg: PAnsiChar): ISCStatus;
@@ -3237,7 +3446,7 @@ type
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
     isc_vax_integer: function(ptr: PAnsiChar; length: Smallint): ISCLong;
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
-    isc_version: function(db_handle: PIscDbHandle; callback: IscCallback;
+    isc_version: function(db_handle: PIscDbHandle; callback: ISC_VERSION_CALLBACK;
       callback_argument: PPointer): Integer;
       {$IFDEF UNIX} cdecl; {$ELSE} stdcall; {$ENDIF}
     isc_vtof: procedure(string1, string2: PAnsiChar; length: Word);
@@ -3354,9 +3563,6 @@ end;
 
 constructor TUIBaseLibrary.Create;
 begin
-{$IFDEF UIBTHREADSAFE}
-  FLIBCritSec := TCriticalSection.Create;
-{$ENDIF UIBTHREADSAFE}
 {$IFDEF MSWINDOWS}
   FGDS32Lib := 0;
 {$ENDIF MSWINDOWS}
@@ -3416,208 +3622,199 @@ end;
 
 function TUIBaseLibrary.Unload: Boolean;
 begin
-{$IFDEF UIBTHREADSAFE}
-  FLIBCritSec.Enter;
-  try
-{$ENDIF UIBTHREADSAFE}
-    Result := True;
-    if Loaded then
+  Result := True;
+  if Loaded then
+  begin
+  {$IFDEF MSWINDOWS}
+    Result := Boolean(FreeLibrary(FGDS32Lib));
+    FGDS32Lib := 0;
+  {$ENDIF MSWINDOWS}
+  {$IFDEF UNIX}
+    FGDS32Lib := nil;
+    if FCryptLib <> nil then
     begin
-    {$IFDEF MSWINDOWS}
-      Result := Boolean(FreeLibrary(FGDS32Lib));
-      FGDS32Lib := 0;
-    {$ENDIF MSWINDOWS}
-    {$IFDEF UNIX}
-      FGDS32Lib := nil;
-      if FCryptLib <> nil then
-      begin
-        dlclose(FCryptLib);
-        FCryptLib := nil;
-      end;
-    {$ENDIF UNIX}
-      BLOB_close := nil;
-    {$IFDEF INTERBASEORFIREBIRD}
-      BLOB_display := nil;
-    {$ENDIF INTERBASEORFIREBIRD}
-      BLOB_dump := nil;
-      BLOB_edit := nil;
-      BLOB_get := nil;
-      BLOB_load := nil;
-      BLOB_open := nil;
-      BLOB_put := nil;
-      BLOB_text_dump := nil;
-      BLOB_text_load := nil;
-      Bopen := nil;
-      isc_add_user := nil;
-      isc_array_gen_sdl := nil;
-      isc_array_get_slice := nil;
-      isc_array_lookup_bounds := nil;
-      isc_array_lookup_desc := nil;
-      isc_array_put_slice := nil;
-      isc_array_set_desc := nil;
-      isc_attach_database := nil;
-      isc_blob_default_desc := nil;
-      isc_blob_gen_bpb := nil;
-      isc_blob_info := nil;
-      isc_blob_lookup_desc := nil;
-      isc_blob_set_desc := nil;
-      isc_cancel_blob := nil;
-      isc_cancel_events := nil;
-      isc_close := nil;
-      isc_close_blob := nil;
-      isc_commit_retaining := nil;
-      isc_commit_transaction := nil;
-      isc_compile_request := nil;
-      isc_compile_request2 := nil;
-      isc_create_blob := nil;
-      isc_create_blob2 := nil;
-      isc_create_database := nil;
-      isc_database_info := nil;
-      isc_ddl := nil;
-      isc_declare := nil;
-      isc_decode_date := nil;
-      isc_decode_sql_date := nil;
-      isc_decode_sql_time := nil;
-      isc_decode_timestamp := nil;
-      isc_delete_user := nil;
-      isc_describe := nil;
-      isc_describe_bind := nil;
-      isc_detach_database := nil;
-      isc_drop_database := nil;
-      isc_dsql_alloc_statement2 := nil;
-      isc_dsql_allocate_statement := nil;
-      isc_dsql_describe := nil;
-      isc_dsql_describe_bind := nil;
-      isc_dsql_exec_immed2 := nil;
-      isc_dsql_exec_immed3_m := nil;
-      isc_dsql_execute := nil;
-      isc_dsql_execute_immediate := nil;
-      isc_dsql_execute_immediate_m := nil;
-      isc_dsql_execute_m := nil;
-      isc_dsql_execute2 := nil;
-      isc_dsql_execute2_m := nil;
-      isc_dsql_fetch := nil;
-      isc_dsql_fetch_m := nil;
-      isc_dsql_finish := nil;
-      isc_dsql_free_statement := nil;
-      isc_dsql_insert := nil;
-      isc_dsql_insert_m := nil;
-      isc_dsql_prepare := nil;
-      isc_dsql_prepare_m := nil;
-      isc_dsql_release := nil;
-      isc_dsql_set_cursor_name := nil;
-      isc_dsql_sql_info := nil;
-      isc_embed_dsql_close := nil;
-      isc_embed_dsql_declare := nil;
-      isc_embed_dsql_describe := nil;
-      isc_embed_dsql_describe_bind := nil;
-      isc_embed_dsql_execute := nil;
-      isc_embed_dsql_execute_immed := nil;
-      isc_embed_dsql_execute2 := nil;
-      isc_embed_dsql_fetch := nil;
-      isc_embed_dsql_insert := nil;
-      isc_embed_dsql_open := nil;
-      isc_embed_dsql_open2 := nil;
-      isc_embed_dsql_prepare := nil;
-      isc_embed_dsql_release := nil;
-      isc_encode_date := nil;
-      isc_encode_sql_date := nil;
-      isc_encode_sql_time := nil;
-      isc_encode_timestamp := nil;
-      isc_event_block := nil;
-{$IFDEF FB21_UP}
-      isc_event_block_a := nil;
-{$ENDIF}
-      isc_event_counts := nil;
-      isc_execute := nil;
-      isc_execute_immediate := nil;
-      isc_expand_dpb := nil;
-      isc_fetch := nil;
-      isc_free := nil;
-      isc_ftof := nil;
-      isc_get_segment := nil;
-      isc_get_slice := nil;
-      isc_interprete := nil;
-      isc_modify_dpb := nil;
-      isc_modify_user := nil;
-      isc_open := nil;
-      isc_open_blob := nil;
-      isc_open_blob2 := nil;
-      isc_portable_integer := nil;
-      isc_prepare := nil;
-      isc_prepare_transaction := nil;
-      isc_prepare_transaction2 := nil;
-      isc_print_blr := nil;
-      isc_print_sqlerror := nil;
-      isc_print_status := nil;
-      isc_put_segment := nil;
-      isc_put_slice := nil;
-      isc_qtoq := nil;
-      isc_que_events := nil;
-      isc_receive := nil;
-      isc_reconnect_transaction := nil;
-      isc_release_request := nil;
-      isc_request_info := nil;
-      isc_rollback_retaining := nil;
-      isc_rollback_transaction := nil;
-      isc_seek_blob := nil;
-      isc_send := nil;
-      isc_service_attach := nil;
-      isc_service_detach := nil;
-      isc_service_query := nil;
-      isc_service_start := nil;
-    {$IFDEF INTERBASEORFIREBIRD}
-      isc_set_debug := nil;
-    {$ENDIF INTERBASEORFIREBIRD}
-      isc_sql_interprete := nil;
-      isc_sqlcode := nil;
-      isc_start_and_send := nil;
-      isc_start_multiple := nil;
-      isc_start_request := nil;
-      isc_start_transaction := nil;
-      isc_transact_request := nil;
-      isc_transaction_info := nil;
-      isc_unwind_request := nil;
-      isc_vax_integer := nil;
-      isc_version := nil;
-      isc_vtof := nil;
-      isc_vtov := nil;
-      isc_wait_for_event := nil;
-    {$IFDEF FB15_UP}{$IFNDEF UNIX}
-      isc_reset_fpe := nil;
-    {$ENDIF}{$ENDIF FB15_UP}
-    {$IFDEF IB7_UP}
-      isc_array_gen_sdl2 := nil;
-      isc_array_gen_sdl2 := nil;
-      isc_array_get_slice2 := nil;
-      isc_array_lookup_bounds2 := nil;
-      isc_array_lookup_desc2 := nil;
-      isc_array_put_slice2 := nil;
-      isc_array_set_desc2 := nil;
-      isc_blob_default_desc2 := nil;
-      isc_blob_gen_bpb2 := nil;
-      isc_blob_lookup_desc2 := nil;
-      isc_blob_set_desc2 := nil;
-    {$ENDIF IB7_UP}
-    {$IFDEF IB7ORFB15}
-      isc_get_client_version := nil;
-      isc_get_client_major_version := nil;
-      isc_get_client_minor_version := nil;
-    {$ENDIF IB7ORFB15}
-    {$IFDEF IB71_UP}
-      isc_release_savepoint := nil;
-      isc_rollback_savepoint := nil;
-      isc_start_savepoint := nil;
-    {$ENDIF IB71_UP}
-    {$IFDEF FB20_UP}
-      fb_interpret := nil;
-    {$ENDIF}
+      dlclose(FCryptLib);
+      FCryptLib := nil;
     end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    FLIBCritSec.Leave;
+  {$ENDIF UNIX}
+    BLOB_close := nil;
+  {$IFDEF INTERBASEORFIREBIRD}
+    BLOB_display := nil;
+  {$ENDIF INTERBASEORFIREBIRD}
+    BLOB_dump := nil;
+    BLOB_edit := nil;
+    BLOB_get := nil;
+    BLOB_load := nil;
+    BLOB_open := nil;
+    BLOB_put := nil;
+    BLOB_text_dump := nil;
+    BLOB_text_load := nil;
+    Bopen := nil;
+    isc_add_user := nil;
+    isc_array_gen_sdl := nil;
+    isc_array_get_slice := nil;
+    isc_array_lookup_bounds := nil;
+    isc_array_lookup_desc := nil;
+    isc_array_put_slice := nil;
+    isc_array_set_desc := nil;
+    isc_attach_database := nil;
+    isc_blob_default_desc := nil;
+    isc_blob_gen_bpb := nil;
+    isc_blob_info := nil;
+    isc_blob_lookup_desc := nil;
+    isc_blob_set_desc := nil;
+    isc_cancel_blob := nil;
+    isc_cancel_events := nil;
+    isc_close := nil;
+    isc_close_blob := nil;
+    isc_commit_retaining := nil;
+    isc_commit_transaction := nil;
+    isc_compile_request := nil;
+    isc_compile_request2 := nil;
+    isc_create_blob := nil;
+    isc_create_blob2 := nil;
+    isc_create_database := nil;
+    isc_database_info := nil;
+    isc_ddl := nil;
+    isc_declare := nil;
+    isc_decode_date := nil;
+    isc_decode_sql_date := nil;
+    isc_decode_sql_time := nil;
+    isc_decode_timestamp := nil;
+    isc_delete_user := nil;
+    isc_describe := nil;
+    isc_describe_bind := nil;
+    isc_detach_database := nil;
+    isc_drop_database := nil;
+    isc_dsql_alloc_statement2 := nil;
+    isc_dsql_allocate_statement := nil;
+    isc_dsql_describe := nil;
+    isc_dsql_describe_bind := nil;
+    isc_dsql_exec_immed2 := nil;
+    isc_dsql_exec_immed3_m := nil;
+    isc_dsql_execute := nil;
+    isc_dsql_execute_immediate := nil;
+    isc_dsql_execute_immediate_m := nil;
+    isc_dsql_execute_m := nil;
+    isc_dsql_execute2 := nil;
+    isc_dsql_execute2_m := nil;
+    isc_dsql_fetch := nil;
+    isc_dsql_fetch_m := nil;
+    isc_dsql_finish := nil;
+    isc_dsql_free_statement := nil;
+    isc_dsql_insert := nil;
+    isc_dsql_insert_m := nil;
+    isc_dsql_prepare := nil;
+    isc_dsql_prepare_m := nil;
+    isc_dsql_release := nil;
+    isc_dsql_set_cursor_name := nil;
+    isc_dsql_sql_info := nil;
+    isc_embed_dsql_close := nil;
+    isc_embed_dsql_declare := nil;
+    isc_embed_dsql_describe := nil;
+    isc_embed_dsql_describe_bind := nil;
+    isc_embed_dsql_execute := nil;
+    isc_embed_dsql_execute_immed := nil;
+    isc_embed_dsql_execute2 := nil;
+    isc_embed_dsql_fetch := nil;
+    isc_embed_dsql_insert := nil;
+    isc_embed_dsql_open := nil;
+    isc_embed_dsql_open2 := nil;
+    isc_embed_dsql_prepare := nil;
+    isc_embed_dsql_release := nil;
+    isc_encode_date := nil;
+    isc_encode_sql_date := nil;
+    isc_encode_sql_time := nil;
+    isc_encode_timestamp := nil;
+    isc_event_block := nil;
+{$IFDEF FB21_UP}
+    isc_event_block_a := nil;
+{$ENDIF}
+    isc_event_counts := nil;
+    isc_execute := nil;
+    isc_execute_immediate := nil;
+    isc_expand_dpb := nil;
+    isc_fetch := nil;
+    isc_free := nil;
+    isc_ftof := nil;
+    isc_get_segment := nil;
+    isc_get_slice := nil;
+    isc_interprete := nil;
+    isc_modify_dpb := nil;
+    isc_modify_user := nil;
+    isc_open := nil;
+    isc_open_blob := nil;
+    isc_open_blob2 := nil;
+    isc_portable_integer := nil;
+    isc_prepare := nil;
+    isc_prepare_transaction := nil;
+    isc_prepare_transaction2 := nil;
+    isc_print_blr := nil;
+    isc_print_sqlerror := nil;
+    isc_print_status := nil;
+    isc_put_segment := nil;
+    isc_put_slice := nil;
+    isc_qtoq := nil;
+    isc_que_events := nil;
+    isc_receive := nil;
+    isc_reconnect_transaction := nil;
+    isc_release_request := nil;
+    isc_request_info := nil;
+    isc_rollback_retaining := nil;
+    isc_rollback_transaction := nil;
+    isc_seek_blob := nil;
+    isc_send := nil;
+    isc_service_attach := nil;
+    isc_service_detach := nil;
+    isc_service_query := nil;
+    isc_service_start := nil;
+  {$IFDEF INTERBASEORFIREBIRD}
+    isc_set_debug := nil;
+  {$ENDIF INTERBASEORFIREBIRD}
+    isc_sql_interprete := nil;
+    isc_sqlcode := nil;
+    isc_start_and_send := nil;
+    isc_start_multiple := nil;
+    isc_start_request := nil;
+    isc_start_transaction := nil;
+    isc_transact_request := nil;
+    isc_transaction_info := nil;
+    isc_unwind_request := nil;
+    isc_vax_integer := nil;
+    isc_version := nil;
+    isc_vtof := nil;
+    isc_vtov := nil;
+    isc_wait_for_event := nil;
+  {$IFDEF FB15_UP}{$IFNDEF UNIX}
+    isc_reset_fpe := nil;
+  {$ENDIF}{$ENDIF FB15_UP}
+  {$IFDEF IB7_UP}
+    isc_array_gen_sdl2 := nil;
+    isc_array_gen_sdl2 := nil;
+    isc_array_get_slice2 := nil;
+    isc_array_lookup_bounds2 := nil;
+    isc_array_lookup_desc2 := nil;
+    isc_array_put_slice2 := nil;
+    isc_array_set_desc2 := nil;
+    isc_blob_default_desc2 := nil;
+    isc_blob_gen_bpb2 := nil;
+    isc_blob_lookup_desc2 := nil;
+    isc_blob_set_desc2 := nil;
+  {$ENDIF IB7_UP}
+  {$IFDEF IB7ORFB15}
+    isc_get_client_version := nil;
+    isc_get_client_major_version := nil;
+    isc_get_client_minor_version := nil;
+  {$ENDIF IB7ORFB15}
+  {$IFDEF IB71_UP}
+    isc_release_savepoint := nil;
+    isc_rollback_savepoint := nil;
+    isc_start_savepoint := nil;
+  {$ENDIF IB71_UP}
+  {$IFDEF FB20_UP}
+    fb_interpret := nil;
+  {$ENDIF}
   end;
-{$ENDIF UIBTHREADSAFE}
 end;
 
 {$IFDEF FPC}
@@ -3637,313 +3834,320 @@ end;
 {$ENDIF UNIX}
 
 begin
-{$IFDEF UIBTHREADSAFE}
-  FLIBCritSec.Enter;
-  try
-{$ENDIF UIBTHREADSAFE}
-    Result := Loaded;
-    if not Result then
+  Result := Loaded;
+  if not Result then
+  begin
+  {$IFDEF MSWINDOWS}
+    FGDS32Lib := LoadLibrary(PChar(lib));
+  {$ENDIF MSWINDOWS}
+  {$IFDEF UNIX}
+    FCryptLib := dlopen('libcrypt.so', RTLD_GLOBAL); // Service
+    FGDS32Lib := dlopen(PChar(lib), RTLD_GLOBAL);
+  {$ENDIF UNIX}
+    if Loaded then
     begin
-    {$IFDEF MSWINDOWS}
-      FGDS32Lib := LoadLibrary(PChar(lib));
-    {$ENDIF MSWINDOWS}
-    {$IFDEF UNIX}
-      FCryptLib := dlopen('libcrypt.so', RTLD_GLOBAL); // Service
-      FGDS32Lib := dlopen(PChar(lib), RTLD_GLOBAL);
-    {$ENDIF UNIX}
-      if Loaded then
-      begin
-        BLOB_close := GetProcAddress(FGDS32Lib, 'BLOB_close');
-      {$IFDEF INTERBASEORFIREBIRD}
-        BLOB_display := GetProcAddress(FGDS32Lib, 'BLOB_display');
-      {$ENDIF INTERBASEORFIREBIRD}
-        BLOB_dump := GetProcAddress(FGDS32Lib, 'BLOB_dump');
-        BLOB_edit := GetProcAddress(FGDS32Lib, 'BLOB_edit');
-        BLOB_get := GetProcAddress(FGDS32Lib, 'BLOB_get');
-        BLOB_load := GetProcAddress(FGDS32Lib, 'BLOB_load');
-        BLOB_open := GetProcAddress(FGDS32Lib, 'BLOB_open');
-        BLOB_put := GetProcAddress(FGDS32Lib, 'BLOB_put');
-        BLOB_text_dump := GetProcAddress(FGDS32Lib, 'BLOB_text_dump');
-        BLOB_text_load := GetProcAddress(FGDS32Lib, 'BLOB_text_load');
-        Bopen := GetProcAddress(FGDS32Lib, 'Bopen');
-        isc_add_user := GetProcAddress(FGDS32Lib, 'isc_add_user');
-        isc_array_gen_sdl := GetProcAddress(FGDS32Lib, 'isc_array_gen_sdl');
-        isc_array_get_slice := GetProcAddress(FGDS32Lib, 'isc_array_get_slice');
-        isc_array_lookup_bounds := GetProcAddress(FGDS32Lib, 'isc_array_lookup_bounds');
-        isc_array_lookup_desc := GetProcAddress(FGDS32Lib, 'isc_array_lookup_desc');
-        isc_array_put_slice := GetProcAddress(FGDS32Lib, 'isc_array_put_slice');
-        isc_array_set_desc := GetProcAddress(FGDS32Lib, 'isc_array_set_desc');
-        isc_attach_database := GetProcAddress(FGDS32Lib, 'isc_attach_database');
-        isc_blob_default_desc := GetProcAddress(FGDS32Lib, 'isc_blob_default_desc');
-        isc_blob_gen_bpb := GetProcAddress(FGDS32Lib, 'isc_blob_gen_bpb');
-        isc_blob_info := GetProcAddress(FGDS32Lib, 'isc_blob_info');
-        isc_blob_lookup_desc := GetProcAddress(FGDS32Lib, 'isc_blob_lookup_desc');
-        isc_blob_set_desc := GetProcAddress(FGDS32Lib, 'isc_blob_set_desc');
-        isc_cancel_blob := GetProcAddress(FGDS32Lib, 'isc_cancel_blob');
-        isc_cancel_events := GetProcAddress(FGDS32Lib, 'isc_cancel_events');
-        isc_close := GetProcAddress(FGDS32Lib, 'isc_close');
-        isc_close_blob := GetProcAddress(FGDS32Lib, 'isc_close_blob');
-        isc_commit_retaining := GetProcAddress(FGDS32Lib, 'isc_commit_retaining');
-        isc_commit_transaction := GetProcAddress(FGDS32Lib, 'isc_commit_transaction');
-        isc_compile_request := GetProcAddress(FGDS32Lib, 'isc_compile_request');
-        isc_compile_request2 := GetProcAddress(FGDS32Lib, 'isc_compile_request2');
-        isc_create_blob := GetProcAddress(FGDS32Lib, 'isc_create_blob');
-        isc_create_blob2 := GetProcAddress(FGDS32Lib, 'isc_create_blob2');
-        isc_create_database := GetProcAddress(FGDS32Lib, 'isc_create_database');
-        isc_database_info := GetProcAddress(FGDS32Lib, 'isc_database_info');
-        isc_ddl := GetProcAddress(FGDS32Lib, 'isc_ddl');
-        isc_declare := GetProcAddress(FGDS32Lib, 'isc_declare');
-        isc_decode_date := GetProcAddress(FGDS32Lib, 'isc_decode_date');
-        isc_decode_sql_date := GetProcAddress(FGDS32Lib, 'isc_decode_sql_date');
-        isc_decode_sql_time := GetProcAddress(FGDS32Lib, 'isc_decode_sql_time');
-        isc_decode_timestamp := GetProcAddress(FGDS32Lib, 'isc_decode_timestamp');
-        isc_delete_user := GetProcAddress(FGDS32Lib, 'isc_delete_user');
-        isc_describe := GetProcAddress(FGDS32Lib, 'isc_describe');
-        isc_describe_bind := GetProcAddress(FGDS32Lib, 'isc_describe_bind');
-        isc_detach_database := GetProcAddress(FGDS32Lib, 'isc_detach_database');
-        isc_drop_database := GetProcAddress(FGDS32Lib, 'isc_drop_database');
-        isc_dsql_alloc_statement2 := GetProcAddress(FGDS32Lib, 'isc_dsql_alloc_statement2');
-        isc_dsql_allocate_statement := GetProcAddress(FGDS32Lib, 'isc_dsql_allocate_statement');
-        isc_dsql_describe := GetProcAddress(FGDS32Lib, 'isc_dsql_describe');
-        isc_dsql_describe_bind := GetProcAddress(FGDS32Lib, 'isc_dsql_describe_bind');
-        isc_dsql_exec_immed2 := GetProcAddress(FGDS32Lib, 'isc_dsql_exec_immed2');
-        isc_dsql_exec_immed3_m := GetProcAddress(FGDS32Lib, 'isc_dsql_exec_immed3_m');
-        isc_dsql_execute := GetProcAddress(FGDS32Lib, 'isc_dsql_execute');
-        isc_dsql_execute_immediate := GetProcAddress(FGDS32Lib, 'isc_dsql_execute_immediate');
-        isc_dsql_execute_immediate_m := GetProcAddress(FGDS32Lib, 'isc_dsql_execute_immediate_m');
-        isc_dsql_execute_m := GetProcAddress(FGDS32Lib, 'isc_dsql_execute_m');
-        isc_dsql_execute2 := GetProcAddress(FGDS32Lib, 'isc_dsql_execute2');
-        isc_dsql_execute2_m := GetProcAddress(FGDS32Lib, 'isc_dsql_execute2_m');
-        isc_dsql_fetch := GetProcAddress(FGDS32Lib, 'isc_dsql_fetch');
-        isc_dsql_fetch_m := GetProcAddress(FGDS32Lib, 'isc_dsql_fetch_m');
-        isc_dsql_finish := GetProcAddress(FGDS32Lib, 'isc_dsql_finish');
-        isc_dsql_free_statement := GetProcAddress(FGDS32Lib, 'isc_dsql_free_statement');
-        isc_dsql_insert := GetProcAddress(FGDS32Lib, 'isc_dsql_insert');
-        isc_dsql_insert_m := GetProcAddress(FGDS32Lib, 'isc_dsql_insert_m');
-        isc_dsql_prepare := GetProcAddress(FGDS32Lib, 'isc_dsql_prepare');
-        isc_dsql_prepare_m := GetProcAddress(FGDS32Lib, 'isc_dsql_prepare_m');
-        isc_dsql_release := GetProcAddress(FGDS32Lib, 'isc_dsql_release');
-        isc_dsql_set_cursor_name := GetProcAddress(FGDS32Lib, 'isc_dsql_set_cursor_name');
-        isc_dsql_sql_info := GetProcAddress(FGDS32Lib, 'isc_dsql_sql_info');
-        isc_embed_dsql_close := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_close');
-        isc_embed_dsql_declare := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_declare');
-        isc_embed_dsql_describe := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_describe');
-        isc_embed_dsql_describe_bind := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_describe_bind');
-        isc_embed_dsql_execute := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_execute');
-        isc_embed_dsql_execute_immed := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_execute_immed');
-        isc_embed_dsql_execute2 := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_execute2');
-        isc_embed_dsql_fetch := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_fetch');
-        isc_embed_dsql_insert := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_insert');
-        isc_embed_dsql_open := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_open');
-        isc_embed_dsql_open2 := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_open2');
-        isc_embed_dsql_prepare := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_prepare');
-        isc_embed_dsql_release := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_release');
-        isc_encode_date := GetProcAddress(FGDS32Lib, 'isc_encode_date');
-        isc_encode_sql_date := GetProcAddress(FGDS32Lib, 'isc_encode_sql_date');
-        isc_encode_sql_time := GetProcAddress(FGDS32Lib, 'isc_encode_sql_time');
-        isc_encode_timestamp := GetProcAddress(FGDS32Lib, 'isc_encode_timestamp');
-        isc_event_block := GetProcAddress(FGDS32Lib, 'isc_event_block');
+      BLOB_close := GetProcAddress(FGDS32Lib, 'BLOB_close');
+    {$IFDEF INTERBASEORFIREBIRD}
+      BLOB_display := GetProcAddress(FGDS32Lib, 'BLOB_display');
+    {$ENDIF INTERBASEORFIREBIRD}
+      BLOB_dump := GetProcAddress(FGDS32Lib, 'BLOB_dump');
+      BLOB_edit := GetProcAddress(FGDS32Lib, 'BLOB_edit');
+      BLOB_get := GetProcAddress(FGDS32Lib, 'BLOB_get');
+      BLOB_load := GetProcAddress(FGDS32Lib, 'BLOB_load');
+      BLOB_open := GetProcAddress(FGDS32Lib, 'BLOB_open');
+      BLOB_put := GetProcAddress(FGDS32Lib, 'BLOB_put');
+      BLOB_text_dump := GetProcAddress(FGDS32Lib, 'BLOB_text_dump');
+      BLOB_text_load := GetProcAddress(FGDS32Lib, 'BLOB_text_load');
+      Bopen := GetProcAddress(FGDS32Lib, 'Bopen');
+      isc_add_user := GetProcAddress(FGDS32Lib, 'isc_add_user');
+      isc_array_gen_sdl := GetProcAddress(FGDS32Lib, 'isc_array_gen_sdl');
+      isc_array_get_slice := GetProcAddress(FGDS32Lib, 'isc_array_get_slice');
+      isc_array_lookup_bounds := GetProcAddress(FGDS32Lib, 'isc_array_lookup_bounds');
+      isc_array_lookup_desc := GetProcAddress(FGDS32Lib, 'isc_array_lookup_desc');
+      isc_array_put_slice := GetProcAddress(FGDS32Lib, 'isc_array_put_slice');
+      isc_array_set_desc := GetProcAddress(FGDS32Lib, 'isc_array_set_desc');
+      isc_attach_database := GetProcAddress(FGDS32Lib, 'isc_attach_database');
+      isc_blob_default_desc := GetProcAddress(FGDS32Lib, 'isc_blob_default_desc');
+      isc_blob_gen_bpb := GetProcAddress(FGDS32Lib, 'isc_blob_gen_bpb');
+      isc_blob_info := GetProcAddress(FGDS32Lib, 'isc_blob_info');
+      isc_blob_lookup_desc := GetProcAddress(FGDS32Lib, 'isc_blob_lookup_desc');
+      isc_blob_set_desc := GetProcAddress(FGDS32Lib, 'isc_blob_set_desc');
+      isc_cancel_blob := GetProcAddress(FGDS32Lib, 'isc_cancel_blob');
+      isc_cancel_events := GetProcAddress(FGDS32Lib, 'isc_cancel_events');
+      isc_close := GetProcAddress(FGDS32Lib, 'isc_close');
+      isc_close_blob := GetProcAddress(FGDS32Lib, 'isc_close_blob');
+      isc_commit_retaining := GetProcAddress(FGDS32Lib, 'isc_commit_retaining');
+      isc_commit_transaction := GetProcAddress(FGDS32Lib, 'isc_commit_transaction');
+      isc_compile_request := GetProcAddress(FGDS32Lib, 'isc_compile_request');
+      isc_compile_request2 := GetProcAddress(FGDS32Lib, 'isc_compile_request2');
+      isc_create_blob := GetProcAddress(FGDS32Lib, 'isc_create_blob');
+      isc_create_blob2 := GetProcAddress(FGDS32Lib, 'isc_create_blob2');
+      isc_create_database := GetProcAddress(FGDS32Lib, 'isc_create_database');
+      isc_database_info := GetProcAddress(FGDS32Lib, 'isc_database_info');
+      isc_ddl := GetProcAddress(FGDS32Lib, 'isc_ddl');
+      isc_declare := GetProcAddress(FGDS32Lib, 'isc_declare');
+      isc_decode_date := GetProcAddress(FGDS32Lib, 'isc_decode_date');
+      isc_decode_sql_date := GetProcAddress(FGDS32Lib, 'isc_decode_sql_date');
+      isc_decode_sql_time := GetProcAddress(FGDS32Lib, 'isc_decode_sql_time');
+      isc_decode_timestamp := GetProcAddress(FGDS32Lib, 'isc_decode_timestamp');
+      isc_delete_user := GetProcAddress(FGDS32Lib, 'isc_delete_user');
+      isc_describe := GetProcAddress(FGDS32Lib, 'isc_describe');
+      isc_describe_bind := GetProcAddress(FGDS32Lib, 'isc_describe_bind');
+      isc_detach_database := GetProcAddress(FGDS32Lib, 'isc_detach_database');
+      isc_drop_database := GetProcAddress(FGDS32Lib, 'isc_drop_database');
+      isc_dsql_alloc_statement2 := GetProcAddress(FGDS32Lib, 'isc_dsql_alloc_statement2');
+      isc_dsql_allocate_statement := GetProcAddress(FGDS32Lib, 'isc_dsql_allocate_statement');
+      isc_dsql_describe := GetProcAddress(FGDS32Lib, 'isc_dsql_describe');
+      isc_dsql_describe_bind := GetProcAddress(FGDS32Lib, 'isc_dsql_describe_bind');
+      isc_dsql_exec_immed2 := GetProcAddress(FGDS32Lib, 'isc_dsql_exec_immed2');
+      isc_dsql_exec_immed3_m := GetProcAddress(FGDS32Lib, 'isc_dsql_exec_immed3_m');
+      isc_dsql_execute := GetProcAddress(FGDS32Lib, 'isc_dsql_execute');
+      isc_dsql_execute_immediate := GetProcAddress(FGDS32Lib, 'isc_dsql_execute_immediate');
+      isc_dsql_execute_immediate_m := GetProcAddress(FGDS32Lib, 'isc_dsql_execute_immediate_m');
+      isc_dsql_execute_m := GetProcAddress(FGDS32Lib, 'isc_dsql_execute_m');
+      isc_dsql_execute2 := GetProcAddress(FGDS32Lib, 'isc_dsql_execute2');
+      isc_dsql_execute2_m := GetProcAddress(FGDS32Lib, 'isc_dsql_execute2_m');
+      isc_dsql_fetch := GetProcAddress(FGDS32Lib, 'isc_dsql_fetch');
+      isc_dsql_fetch_m := GetProcAddress(FGDS32Lib, 'isc_dsql_fetch_m');
+      isc_dsql_finish := GetProcAddress(FGDS32Lib, 'isc_dsql_finish');
+      isc_dsql_free_statement := GetProcAddress(FGDS32Lib, 'isc_dsql_free_statement');
+      isc_dsql_insert := GetProcAddress(FGDS32Lib, 'isc_dsql_insert');
+      isc_dsql_insert_m := GetProcAddress(FGDS32Lib, 'isc_dsql_insert_m');
+      isc_dsql_prepare := GetProcAddress(FGDS32Lib, 'isc_dsql_prepare');
+      isc_dsql_prepare_m := GetProcAddress(FGDS32Lib, 'isc_dsql_prepare_m');
+      isc_dsql_release := GetProcAddress(FGDS32Lib, 'isc_dsql_release');
+      isc_dsql_set_cursor_name := GetProcAddress(FGDS32Lib, 'isc_dsql_set_cursor_name');
+      isc_dsql_sql_info := GetProcAddress(FGDS32Lib, 'isc_dsql_sql_info');
+      isc_embed_dsql_close := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_close');
+      isc_embed_dsql_declare := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_declare');
+      isc_embed_dsql_describe := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_describe');
+      isc_embed_dsql_describe_bind := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_describe_bind');
+      isc_embed_dsql_execute := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_execute');
+      isc_embed_dsql_execute_immed := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_execute_immed');
+      isc_embed_dsql_execute2 := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_execute2');
+      isc_embed_dsql_fetch := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_fetch');
+      isc_embed_dsql_insert := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_insert');
+      isc_embed_dsql_open := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_open');
+      isc_embed_dsql_open2 := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_open2');
+      isc_embed_dsql_prepare := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_prepare');
+      isc_embed_dsql_release := GetProcAddress(FGDS32Lib, 'isc_embed_dsql_release');
+      isc_encode_date := GetProcAddress(FGDS32Lib, 'isc_encode_date');
+      isc_encode_sql_date := GetProcAddress(FGDS32Lib, 'isc_encode_sql_date');
+      isc_encode_sql_time := GetProcAddress(FGDS32Lib, 'isc_encode_sql_time');
+      isc_encode_timestamp := GetProcAddress(FGDS32Lib, 'isc_encode_timestamp');
+      isc_event_block := GetProcAddress(FGDS32Lib, 'isc_event_block');
 {$IFDEF FB21_UP}
-        isc_event_block_a := GetProcAddress(FGDS32Lib, 'isc_event_block_a');
+      isc_event_block_a := GetProcAddress(FGDS32Lib, 'isc_event_block_a');
 {$ENDIF}
-        isc_event_counts := GetProcAddress(FGDS32Lib, 'isc_event_counts');
-        isc_execute := GetProcAddress(FGDS32Lib, 'isc_execute');
-        isc_execute_immediate := GetProcAddress(FGDS32Lib, 'isc_execute_immediate');
-        isc_expand_dpb := GetProcAddress(FGDS32Lib, 'isc_expand_dpb');
-        isc_fetch := GetProcAddress(FGDS32Lib, 'isc_fetch');
-        isc_free := GetProcAddress(FGDS32Lib, 'isc_free');
-        isc_ftof := GetProcAddress(FGDS32Lib, 'isc_ftof');
-        isc_get_segment := GetProcAddress(FGDS32Lib, 'isc_get_segment');
-        isc_get_slice := GetProcAddress(FGDS32Lib, 'isc_get_slice');
-        isc_interprete := GetProcAddress(FGDS32Lib, 'isc_interprete');
-        isc_modify_dpb := GetProcAddress(FGDS32Lib, 'isc_modify_dpb');
-        isc_modify_user := GetProcAddress(FGDS32Lib, 'isc_modify_user');
-        isc_open := GetProcAddress(FGDS32Lib, 'isc_open');
-        isc_open_blob := GetProcAddress(FGDS32Lib, 'isc_open_blob');
-        isc_open_blob2 := GetProcAddress(FGDS32Lib, 'isc_open_blob2');
-        isc_portable_integer := GetProcAddress(FGDS32Lib, 'isc_portable_integer');
-        isc_prepare := GetProcAddress(FGDS32Lib, 'isc_prepare');
-        isc_prepare_transaction := GetProcAddress(FGDS32Lib, 'isc_prepare_transaction');
-        isc_prepare_transaction2 := GetProcAddress(FGDS32Lib, 'isc_prepare_transaction2');
-        isc_print_blr := GetProcAddress(FGDS32Lib, 'isc_print_blr');
-        isc_print_sqlerror := GetProcAddress(FGDS32Lib, 'isc_print_sqlerror');
-        isc_print_status := GetProcAddress(FGDS32Lib, 'isc_print_status');
-        isc_put_segment := GetProcAddress(FGDS32Lib, 'isc_put_segment');
-        isc_put_slice := GetProcAddress(FGDS32Lib, 'isc_put_slice');
-        isc_qtoq := GetProcAddress(FGDS32Lib, 'isc_qtoq');
-        isc_que_events := GetProcAddress(FGDS32Lib, 'isc_que_events');
-        isc_receive := GetProcAddress(FGDS32Lib, 'isc_receive');
-        isc_reconnect_transaction := GetProcAddress(FGDS32Lib, 'isc_reconnect_transaction');
-        isc_release_request := GetProcAddress(FGDS32Lib, 'isc_release_request');
-        isc_request_info := GetProcAddress(FGDS32Lib, 'isc_request_info');
-        isc_rollback_retaining := GetProcAddress(FGDS32Lib, 'isc_rollback_retaining');
-        isc_rollback_transaction := GetProcAddress(FGDS32Lib, 'isc_rollback_transaction');
-        isc_seek_blob := GetProcAddress(FGDS32Lib, 'isc_seek_blob');
-        isc_send := GetProcAddress(FGDS32Lib, 'isc_send');
-        isc_service_attach := GetProcAddress(FGDS32Lib, 'isc_service_attach');
-        isc_service_detach := GetProcAddress(FGDS32Lib, 'isc_service_detach');
-        isc_service_query := GetProcAddress(FGDS32Lib, 'isc_service_query');
-        isc_service_start := GetProcAddress(FGDS32Lib, 'isc_service_start');
-      {$IFDEF INTERBASEORFIREBIRD}
-        isc_set_debug := GetProcAddress(FGDS32Lib, 'isc_set_debug');
-      {$ENDIF INTERBASEORFIREBIRD}
-        isc_sql_interprete := GetProcAddress(FGDS32Lib, 'isc_sql_interprete');
-        isc_sqlcode := GetProcAddress(FGDS32Lib, 'isc_sqlcode');
-        isc_start_and_send := GetProcAddress(FGDS32Lib, 'isc_start_and_send');
-        isc_start_multiple := GetProcAddress(FGDS32Lib, 'isc_start_multiple');
-        isc_start_request := GetProcAddress(FGDS32Lib, 'isc_start_request');
-        isc_start_transaction := GetProcAddress(FGDS32Lib, 'isc_start_transaction');
-        isc_transact_request := GetProcAddress(FGDS32Lib, 'isc_transact_request');
-        isc_transaction_info := GetProcAddress(FGDS32Lib, 'isc_transaction_info');
-        isc_unwind_request := GetProcAddress(FGDS32Lib, 'isc_unwind_request');
-        isc_vax_integer := GetProcAddress(FGDS32Lib, 'isc_vax_integer');
-        isc_version := GetProcAddress(FGDS32Lib, 'isc_version');
-        isc_vtof := GetProcAddress(FGDS32Lib, 'isc_vtof');
-        isc_vtov := GetProcAddress(FGDS32Lib, 'isc_vtov');
-        isc_wait_for_event := GetProcAddress(FGDS32Lib, 'isc_wait_for_event');
+      isc_event_counts := GetProcAddress(FGDS32Lib, 'isc_event_counts');
+      isc_execute := GetProcAddress(FGDS32Lib, 'isc_execute');
+      isc_execute_immediate := GetProcAddress(FGDS32Lib, 'isc_execute_immediate');
+      isc_expand_dpb := GetProcAddress(FGDS32Lib, 'isc_expand_dpb');
+      isc_fetch := GetProcAddress(FGDS32Lib, 'isc_fetch');
+      isc_free := GetProcAddress(FGDS32Lib, 'isc_free');
+      isc_ftof := GetProcAddress(FGDS32Lib, 'isc_ftof');
+      isc_get_segment := GetProcAddress(FGDS32Lib, 'isc_get_segment');
+      isc_get_slice := GetProcAddress(FGDS32Lib, 'isc_get_slice');
+      isc_interprete := GetProcAddress(FGDS32Lib, 'isc_interprete');
+      isc_modify_dpb := GetProcAddress(FGDS32Lib, 'isc_modify_dpb');
+      isc_modify_user := GetProcAddress(FGDS32Lib, 'isc_modify_user');
+      isc_open := GetProcAddress(FGDS32Lib, 'isc_open');
+      isc_open_blob := GetProcAddress(FGDS32Lib, 'isc_open_blob');
+      isc_open_blob2 := GetProcAddress(FGDS32Lib, 'isc_open_blob2');
+      isc_portable_integer := GetProcAddress(FGDS32Lib, 'isc_portable_integer');
+      isc_prepare := GetProcAddress(FGDS32Lib, 'isc_prepare');
+      isc_prepare_transaction := GetProcAddress(FGDS32Lib, 'isc_prepare_transaction');
+      isc_prepare_transaction2 := GetProcAddress(FGDS32Lib, 'isc_prepare_transaction2');
+      isc_print_blr := GetProcAddress(FGDS32Lib, 'isc_print_blr');
+      isc_print_sqlerror := GetProcAddress(FGDS32Lib, 'isc_print_sqlerror');
+      isc_print_status := GetProcAddress(FGDS32Lib, 'isc_print_status');
+      isc_put_segment := GetProcAddress(FGDS32Lib, 'isc_put_segment');
+      isc_put_slice := GetProcAddress(FGDS32Lib, 'isc_put_slice');
+      isc_qtoq := GetProcAddress(FGDS32Lib, 'isc_qtoq');
+      isc_que_events := GetProcAddress(FGDS32Lib, 'isc_que_events');
+      isc_receive := GetProcAddress(FGDS32Lib, 'isc_receive');
+      isc_reconnect_transaction := GetProcAddress(FGDS32Lib, 'isc_reconnect_transaction');
+      isc_release_request := GetProcAddress(FGDS32Lib, 'isc_release_request');
+      isc_request_info := GetProcAddress(FGDS32Lib, 'isc_request_info');
+      isc_rollback_retaining := GetProcAddress(FGDS32Lib, 'isc_rollback_retaining');
+      isc_rollback_transaction := GetProcAddress(FGDS32Lib, 'isc_rollback_transaction');
+      isc_seek_blob := GetProcAddress(FGDS32Lib, 'isc_seek_blob');
+      isc_send := GetProcAddress(FGDS32Lib, 'isc_send');
+      isc_service_attach := GetProcAddress(FGDS32Lib, 'isc_service_attach');
+      isc_service_detach := GetProcAddress(FGDS32Lib, 'isc_service_detach');
+      isc_service_query := GetProcAddress(FGDS32Lib, 'isc_service_query');
+      isc_service_start := GetProcAddress(FGDS32Lib, 'isc_service_start');
+    {$IFDEF INTERBASEORFIREBIRD}
+      isc_set_debug := GetProcAddress(FGDS32Lib, 'isc_set_debug');
+    {$ENDIF INTERBASEORFIREBIRD}
+      isc_sql_interprete := GetProcAddress(FGDS32Lib, 'isc_sql_interprete');
+      isc_sqlcode := GetProcAddress(FGDS32Lib, 'isc_sqlcode');
+      isc_start_and_send := GetProcAddress(FGDS32Lib, 'isc_start_and_send');
+      isc_start_multiple := GetProcAddress(FGDS32Lib, 'isc_start_multiple');
+      isc_start_request := GetProcAddress(FGDS32Lib, 'isc_start_request');
+      isc_start_transaction := GetProcAddress(FGDS32Lib, 'isc_start_transaction');
+      isc_transact_request := GetProcAddress(FGDS32Lib, 'isc_transact_request');
+      isc_transaction_info := GetProcAddress(FGDS32Lib, 'isc_transaction_info');
+      isc_unwind_request := GetProcAddress(FGDS32Lib, 'isc_unwind_request');
+      isc_vax_integer := GetProcAddress(FGDS32Lib, 'isc_vax_integer');
+      isc_version := GetProcAddress(FGDS32Lib, 'isc_version');
+      isc_vtof := GetProcAddress(FGDS32Lib, 'isc_vtof');
+      isc_vtov := GetProcAddress(FGDS32Lib, 'isc_vtov');
+      isc_wait_for_event := GetProcAddress(FGDS32Lib, 'isc_wait_for_event');
 
+    {$IFDEF FB15_UP}{$IFNDEF UNIX}
+      isc_reset_fpe := GetProcAddress(FGDS32Lib, 'isc_reset_fpe');
+    {$ENDIF}{$ENDIF FB15_UP}
+    {$IFDEF IB7_UP}
+      isc_array_gen_sdl2 := GetProcAddress(FGDS32Lib, 'isc_array_gen_sdl2');
+      isc_array_get_slice2 := GetProcAddress(FGDS32Lib, 'isc_array_get_slice2');
+      isc_array_lookup_bounds2 := GetProcAddress(FGDS32Lib, 'isc_array_lookup_bounds2');
+      isc_array_lookup_desc2 := GetProcAddress(FGDS32Lib, 'isc_array_lookup_desc2');
+      isc_array_put_slice2 := GetProcAddress(FGDS32Lib, 'isc_array_put_slice2');
+      isc_array_set_desc2 := GetProcAddress(FGDS32Lib, 'isc_array_set_desc2');
+      isc_blob_default_desc2 := GetProcAddress(FGDS32Lib, 'isc_blob_default_desc2');
+      isc_blob_gen_bpb2 := GetProcAddress(FGDS32Lib, 'isc_blob_gen_bpb2');
+      isc_blob_lookup_desc2 := GetProcAddress(FGDS32Lib, 'isc_blob_lookup_desc2');
+      isc_blob_set_desc2 := GetProcAddress(FGDS32Lib, 'isc_blob_set_desc2');
+    {$ENDIF IB7_UP}
+    {$IFDEF IB7ORFB15}
+      isc_get_client_version := GetProcAddress(FGDS32Lib, 'isc_get_client_version');
+      isc_get_client_major_version := GetProcAddress(FGDS32Lib, 'isc_get_client_major_version');
+      isc_get_client_minor_version := GetProcAddress(FGDS32Lib, 'isc_get_client_minor_version');
+    {$ENDIF IB7ORFB15}
+    {$IFDEF IB71_UP}
+      isc_release_savepoint := GetProcAddress(FGDS32Lib, 'isc_release_savepoint');
+      isc_rollback_savepoint := GetProcAddress(FGDS32Lib, 'isc_rollback_savepoint');
+      isc_start_savepoint := GetProcAddress(FGDS32Lib, 'isc_start_savepoint');
+    {$ENDIF IB71_UP}
+    {$IFDEF FB20_UP}
+      fb_interpret := GetProcAddress(FGDS32Lib, 'fb_interpret');
+    {$ENDIF}
+
+    {$IFDEF FB25_UP}
+      fb_print_blr := GetProcAddress(FGDS32Lib, 'fb_print_blr');
+      fb_shutdown := GetProcAddress(FGDS32Lib, 'fb_shutdown');
+      fb_shutdown_callback := GetProcAddress(FGDS32Lib, 'fb_shutdown_callback');
+      fb_cancel_operation := GetProcAddress(FGDS32Lib, 'fb_cancel_operation');
+      fb_sqlstate := GetProcAddress(FGDS32Lib, 'fb_sqlstate');
+     // fb_disconnect_transaction := GetProcAddress(FGDS32Lib, 'fb_disconnect_transaction');
+    {$ENDIF}
+
+
+      Result := Assigned(BLOB_close) and Assigned(BLOB_dump) and
+        Assigned(BLOB_edit) and Assigned(BLOB_get) and Assigned(BLOB_load) and
+        Assigned(BLOB_open) and Assigned(BLOB_put) and Assigned(BLOB_text_dump) and
+        Assigned(BLOB_text_load) and Assigned(Bopen) and Assigned(isc_add_user) and
+        Assigned(isc_array_gen_sdl) and Assigned(isc_array_get_slice) and
+        Assigned(isc_array_lookup_bounds) and Assigned(isc_array_lookup_desc) and
+        Assigned(isc_array_put_slice) and Assigned(isc_array_set_desc) and
+        Assigned(isc_attach_database) and Assigned(isc_blob_default_desc) and
+        Assigned(isc_blob_gen_bpb) and Assigned(isc_blob_info) and
+        Assigned(isc_blob_lookup_desc) and Assigned(isc_blob_set_desc) and
+        Assigned(isc_cancel_blob) and Assigned(isc_cancel_events) and Assigned(isc_close) and
+        Assigned(isc_close_blob) and Assigned(isc_commit_retaining) and
+        Assigned(isc_commit_transaction) and Assigned(isc_compile_request) and
+        Assigned(isc_compile_request2) and Assigned(isc_create_blob) and
+        Assigned(isc_create_blob2) and Assigned(isc_create_database) and
+        Assigned(isc_database_info) and Assigned(isc_ddl) and Assigned(isc_declare) and
+        Assigned(isc_decode_date) and Assigned(isc_decode_sql_date) and
+        Assigned(isc_decode_sql_time) and Assigned(isc_decode_timestamp) and
+        Assigned(isc_delete_user) and Assigned(isc_describe) and Assigned(isc_describe_bind) and
+        Assigned(isc_detach_database) and Assigned(isc_drop_database) and
+        Assigned(isc_dsql_alloc_statement2) and Assigned(isc_dsql_allocate_statement) and
+        Assigned(isc_dsql_describe) and Assigned(isc_dsql_describe_bind) and
+        Assigned(isc_dsql_exec_immed2) and Assigned(isc_dsql_exec_immed3_m) and
+        Assigned(isc_dsql_execute) and Assigned(isc_dsql_execute_immediate) and
+        Assigned(isc_dsql_execute_immediate_m) and Assigned(isc_dsql_execute_m) and
+        Assigned(isc_dsql_execute2) and Assigned(isc_dsql_execute2_m) and
+        Assigned(isc_dsql_fetch) and Assigned(isc_dsql_fetch_m) and
+        Assigned(isc_dsql_finish) and Assigned(isc_dsql_free_statement) and
+        Assigned(isc_dsql_insert) and Assigned(isc_dsql_insert_m) and
+        Assigned(isc_dsql_prepare) and Assigned(isc_dsql_prepare_m) and
+        Assigned(isc_dsql_release) and Assigned(isc_dsql_set_cursor_name) and
+        Assigned(isc_dsql_sql_info) and Assigned(isc_embed_dsql_close) and
+        Assigned(isc_embed_dsql_declare) and Assigned(isc_embed_dsql_describe) and
+        Assigned(isc_embed_dsql_describe_bind) and Assigned(isc_embed_dsql_execute) and
+        Assigned(isc_embed_dsql_execute_immed) and Assigned(isc_embed_dsql_execute2) and
+        Assigned(isc_embed_dsql_fetch) and Assigned(isc_embed_dsql_insert) and
+        Assigned(isc_embed_dsql_open) and Assigned(isc_embed_dsql_open2) and
+        Assigned(isc_embed_dsql_prepare) and Assigned(isc_embed_dsql_release) and
+        Assigned(isc_encode_date) and Assigned(isc_encode_sql_date) and
+        Assigned(isc_encode_sql_time) and Assigned(isc_encode_timestamp) and
+        Assigned(isc_event_block)
+{$IFDEF FB21_UP}
+        and Assigned(isc_event_block_a)
+{$ENDIF}
+        and Assigned(isc_event_counts) and Assigned(isc_execute) and
+        Assigned(isc_execute_immediate) and Assigned(isc_expand_dpb) and
+        Assigned(isc_free) and Assigned(isc_ftof) and Assigned(isc_get_segment) and
+        Assigned(isc_fetch) and Assigned(isc_get_slice) and Assigned(isc_interprete) and
+        Assigned(isc_modify_dpb) and Assigned(isc_modify_user) and Assigned(isc_open) and
+        Assigned(isc_open_blob) and Assigned(isc_open_blob2) and Assigned(isc_portable_integer) and
+        Assigned(isc_prepare) and Assigned(isc_prepare_transaction) and
+        Assigned(isc_prepare_transaction2) and Assigned(isc_print_blr) and
+        Assigned(isc_print_sqlerror) and Assigned(isc_print_status) and Assigned(isc_put_segment) and
+        Assigned(isc_put_slice) and Assigned(isc_qtoq) and Assigned(isc_que_events) and
+        Assigned(isc_receive) and Assigned(isc_reconnect_transaction) and
+        Assigned(isc_release_request) and Assigned(isc_request_info) and
+        Assigned(isc_rollback_retaining) and Assigned(isc_rollback_transaction) and
+        Assigned(isc_seek_blob) and Assigned(isc_send) and Assigned(isc_service_attach) and
+        Assigned(isc_service_detach) and Assigned(isc_service_query) and
+        Assigned(isc_service_start) and Assigned(isc_sql_interprete) and
+        Assigned(isc_sqlcode) and Assigned(isc_start_and_send) and Assigned(isc_start_multiple) and
+        Assigned(isc_start_request) and Assigned(isc_start_transaction) and
+        Assigned(isc_transact_request) and Assigned(isc_transaction_info) and
+        Assigned(isc_unwind_request) and Assigned(isc_vax_integer) and
+        Assigned(isc_version) and Assigned(isc_vtof) and Assigned(isc_vtov) and
+        Assigned(isc_wait_for_event)
+      {$IFDEF INTERBASEORFIREBIRD}
+        and Assigned(isc_set_debug) and Assigned(BLOB_display)
+      {$ENDIF INTERBASEORFIREBIRD}
       {$IFDEF FB15_UP}{$IFNDEF UNIX}
-        isc_reset_fpe := GetProcAddress(FGDS32Lib, 'isc_reset_fpe');
+        and Assigned(isc_reset_fpe)
       {$ENDIF}{$ENDIF FB15_UP}
       {$IFDEF IB7_UP}
-        isc_array_gen_sdl2 := GetProcAddress(FGDS32Lib, 'isc_array_gen_sdl2');
-        isc_array_get_slice2 := GetProcAddress(FGDS32Lib, 'isc_array_get_slice2');
-        isc_array_lookup_bounds2 := GetProcAddress(FGDS32Lib, 'isc_array_lookup_bounds2');
-        isc_array_lookup_desc2 := GetProcAddress(FGDS32Lib, 'isc_array_lookup_desc2');
-        isc_array_put_slice2 := GetProcAddress(FGDS32Lib, 'isc_array_put_slice2');
-        isc_array_set_desc2 := GetProcAddress(FGDS32Lib, 'isc_array_set_desc2');
-        isc_blob_default_desc2 := GetProcAddress(FGDS32Lib, 'isc_blob_default_desc2');
-        isc_blob_gen_bpb2 := GetProcAddress(FGDS32Lib, 'isc_blob_gen_bpb2');
-        isc_blob_lookup_desc2 := GetProcAddress(FGDS32Lib, 'isc_blob_lookup_desc2');
-        isc_blob_set_desc2 := GetProcAddress(FGDS32Lib, 'isc_blob_set_desc2');
+        and Assigned(isc_array_gen_sdl2) and Assigned(isc_array_get_slice2)
+        and Assigned(isc_array_lookup_bounds2) and Assigned(isc_array_lookup_desc2)
+        and Assigned(isc_array_put_slice2) and Assigned(isc_array_set_desc2)
+        and Assigned(isc_blob_default_desc2) and Assigned(isc_blob_gen_bpb2)
+        and Assigned(isc_blob_lookup_desc2) and Assigned(isc_blob_set_desc2)
       {$ENDIF IB7_UP}
       {$IFDEF IB7ORFB15}
-        isc_get_client_version := GetProcAddress(FGDS32Lib, 'isc_get_client_version');
-        isc_get_client_major_version := GetProcAddress(FGDS32Lib, 'isc_get_client_major_version');
-        isc_get_client_minor_version := GetProcAddress(FGDS32Lib, 'isc_get_client_minor_version');
+        and Assigned(isc_get_client_version) and Assigned(isc_get_client_major_version)
+        and Assigned(isc_get_client_minor_version)
       {$ENDIF IB7ORFB15}
       {$IFDEF IB71_UP}
-        isc_release_savepoint := GetProcAddress(FGDS32Lib, 'isc_release_savepoint');
-        isc_rollback_savepoint := GetProcAddress(FGDS32Lib, 'isc_rollback_savepoint');
-        isc_start_savepoint := GetProcAddress(FGDS32Lib, 'isc_start_savepoint');
+        and Assigned(isc_release_savepoint) and Assigned(isc_rollback_savepoint)
+        and Assigned(isc_start_savepoint)
       {$ENDIF IB71_UP}
       {$IFDEF FB20_UP}
-        fb_interpret := GetProcAddress(FGDS32Lib, 'fb_interpret');
+        and assigned(fb_interpret)
+      {$ENDIF}
+      {$IFDEF FB25_UP}
+        and assigned(fb_print_blr)
+        and assigned(fb_shutdown)
+        and assigned(fb_shutdown_callback)
+        and assigned(fb_cancel_operation)
+        and assigned(fb_sqlstate)
+//        and assigned(fb_disconnect_transaction)
       {$ENDIF}
 
-        Result := Assigned(BLOB_close) and Assigned(BLOB_dump) and
-          Assigned(BLOB_edit) and Assigned(BLOB_get) and Assigned(BLOB_load) and
-          Assigned(BLOB_open) and Assigned(BLOB_put) and Assigned(BLOB_text_dump) and
-          Assigned(BLOB_text_load) and Assigned(Bopen) and Assigned(isc_add_user) and
-          Assigned(isc_array_gen_sdl) and Assigned(isc_array_get_slice) and
-          Assigned(isc_array_lookup_bounds) and Assigned(isc_array_lookup_desc) and
-          Assigned(isc_array_put_slice) and Assigned(isc_array_set_desc) and
-          Assigned(isc_attach_database) and Assigned(isc_blob_default_desc) and
-          Assigned(isc_blob_gen_bpb) and Assigned(isc_blob_info) and
-          Assigned(isc_blob_lookup_desc) and Assigned(isc_blob_set_desc) and
-          Assigned(isc_cancel_blob) and Assigned(isc_cancel_events) and Assigned(isc_close) and
-          Assigned(isc_close_blob) and Assigned(isc_commit_retaining) and
-          Assigned(isc_commit_transaction) and Assigned(isc_compile_request) and
-          Assigned(isc_compile_request2) and Assigned(isc_create_blob) and
-          Assigned(isc_create_blob2) and Assigned(isc_create_database) and
-          Assigned(isc_database_info) and Assigned(isc_ddl) and Assigned(isc_declare) and
-          Assigned(isc_decode_date) and Assigned(isc_decode_sql_date) and
-          Assigned(isc_decode_sql_time) and Assigned(isc_decode_timestamp) and
-          Assigned(isc_delete_user) and Assigned(isc_describe) and Assigned(isc_describe_bind) and
-          Assigned(isc_detach_database) and Assigned(isc_drop_database) and
-          Assigned(isc_dsql_alloc_statement2) and Assigned(isc_dsql_allocate_statement) and
-          Assigned(isc_dsql_describe) and Assigned(isc_dsql_describe_bind) and
-          Assigned(isc_dsql_exec_immed2) and Assigned(isc_dsql_exec_immed3_m) and
-          Assigned(isc_dsql_execute) and Assigned(isc_dsql_execute_immediate) and
-          Assigned(isc_dsql_execute_immediate_m) and Assigned(isc_dsql_execute_m) and
-          Assigned(isc_dsql_execute2) and Assigned(isc_dsql_execute2_m) and
-          Assigned(isc_dsql_fetch) and Assigned(isc_dsql_fetch_m) and
-          Assigned(isc_dsql_finish) and Assigned(isc_dsql_free_statement) and
-          Assigned(isc_dsql_insert) and Assigned(isc_dsql_insert_m) and
-          Assigned(isc_dsql_prepare) and Assigned(isc_dsql_prepare_m) and
-          Assigned(isc_dsql_release) and Assigned(isc_dsql_set_cursor_name) and
-          Assigned(isc_dsql_sql_info) and Assigned(isc_embed_dsql_close) and
-          Assigned(isc_embed_dsql_declare) and Assigned(isc_embed_dsql_describe) and
-          Assigned(isc_embed_dsql_describe_bind) and Assigned(isc_embed_dsql_execute) and
-          Assigned(isc_embed_dsql_execute_immed) and Assigned(isc_embed_dsql_execute2) and
-          Assigned(isc_embed_dsql_fetch) and Assigned(isc_embed_dsql_insert) and
-          Assigned(isc_embed_dsql_open) and Assigned(isc_embed_dsql_open2) and
-          Assigned(isc_embed_dsql_prepare) and Assigned(isc_embed_dsql_release) and
-          Assigned(isc_encode_date) and Assigned(isc_encode_sql_date) and
-          Assigned(isc_encode_sql_time) and Assigned(isc_encode_timestamp) and
-          Assigned(isc_event_block)
-{$IFDEF FB21_UP}
-          and Assigned(isc_event_block_a)
-{$ENDIF}
-          and Assigned(isc_event_counts) and Assigned(isc_execute) and
-          Assigned(isc_execute_immediate) and Assigned(isc_expand_dpb) and
-          Assigned(isc_free) and Assigned(isc_ftof) and Assigned(isc_get_segment) and
-          Assigned(isc_fetch) and Assigned(isc_get_slice) and Assigned(isc_interprete) and
-          Assigned(isc_modify_dpb) and Assigned(isc_modify_user) and Assigned(isc_open) and
-          Assigned(isc_open_blob) and Assigned(isc_open_blob2) and Assigned(isc_portable_integer) and
-          Assigned(isc_prepare) and Assigned(isc_prepare_transaction) and
-          Assigned(isc_prepare_transaction2) and Assigned(isc_print_blr) and
-          Assigned(isc_print_sqlerror) and Assigned(isc_print_status) and Assigned(isc_put_segment) and
-          Assigned(isc_put_slice) and Assigned(isc_qtoq) and Assigned(isc_que_events) and
-          Assigned(isc_receive) and Assigned(isc_reconnect_transaction) and
-          Assigned(isc_release_request) and Assigned(isc_request_info) and
-          Assigned(isc_rollback_retaining) and Assigned(isc_rollback_transaction) and
-          Assigned(isc_seek_blob) and Assigned(isc_send) and Assigned(isc_service_attach) and
-          Assigned(isc_service_detach) and Assigned(isc_service_query) and
-          Assigned(isc_service_start) and Assigned(isc_sql_interprete) and
-          Assigned(isc_sqlcode) and Assigned(isc_start_and_send) and Assigned(isc_start_multiple) and
-          Assigned(isc_start_request) and Assigned(isc_start_transaction) and
-          Assigned(isc_transact_request) and Assigned(isc_transaction_info) and
-          Assigned(isc_unwind_request) and Assigned(isc_vax_integer) and
-          Assigned(isc_version) and Assigned(isc_vtof) and Assigned(isc_vtov) and
-          Assigned(isc_wait_for_event)
-        {$IFDEF INTERBASEORFIREBIRD}
-          and Assigned(isc_set_debug) and Assigned(BLOB_display)
-        {$ENDIF INTERBASEORFIREBIRD}
-        {$IFDEF FB15_UP}{$IFNDEF UNIX}
-          and Assigned(isc_reset_fpe)
-        {$ENDIF}{$ENDIF FB15_UP}
-        {$IFDEF IB7_UP}
-          and Assigned(isc_array_gen_sdl2) and Assigned(isc_array_get_slice2)
-          and Assigned(isc_array_lookup_bounds2) and Assigned(isc_array_lookup_desc2)
-          and Assigned(isc_array_put_slice2) and Assigned(isc_array_set_desc2)
-          and Assigned(isc_blob_default_desc2) and Assigned(isc_blob_gen_bpb2)
-          and Assigned(isc_blob_lookup_desc2) and Assigned(isc_blob_set_desc2)
-        {$ENDIF IB7_UP}
-        {$IFDEF IB7ORFB15}
-          and Assigned(isc_get_client_version) and Assigned(isc_get_client_major_version)
-          and Assigned(isc_get_client_minor_version)
-        {$ENDIF IB7ORFB15}
-        {$IFDEF IB71_UP}
-          and Assigned(isc_release_savepoint) and Assigned(isc_rollback_savepoint)
-          and Assigned(isc_start_savepoint)
-        {$ENDIF IB71_UP}
-        {$IFDEF FB20_UP}
-          and assigned(fb_interpret)
-        {$ENDIF}
-        ;
-        if not Result then
-        begin
-          Unload;
-          raise Exception.Create(EUIB_INVALIDEIBVERSION);
-        end;
-      end
-      else
-        raise Exception.CreateFmt(EUIB_CANTLOADLIB, [lib]);
-    end;
-{$IFDEF UIBTHREADSAFE}
-  finally
-    FLIBCritSec.Leave;
+      ;
+      if not Result then
+      begin
+        Unload;
+        raise Exception.Create(EUIB_INVALIDEIBVERSION);
+      end;
+    end
+    else
+      raise Exception.CreateFmt(EUIB_CANTLOADLIB, [lib]);
   end;
-{$ENDIF UIBTHREADSAFE}
 end;
 
 destructor TUIBaseLibrary.Destroy;
 begin
   Unload;
-{$IFDEF UIBTHREADSAFE}
-  FLIBCritSec.Free;
-{$ENDIF UIBTHREADSAFE}
   inherited Destroy;
 end;
 
