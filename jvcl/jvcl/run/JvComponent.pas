@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvComponent.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvComponent.pas 12633 2009-12-31 09:54:44Z obones $
 
 unit JvComponent;
 
@@ -51,7 +51,9 @@ type
   TJvForm = class(TJvExForm)
   private
     FIsFocusable: Boolean;
+    {$IFNDEF DELPHI2009_UP}
     procedure CMShowingChanged(var Message: TMessage); message CM_SHOWINGCHANGED;
+    {$ENDIF ~DELPHI2009_UP}
     procedure WMMouseActivate(var Msg: TMessage); message WM_MOUSEACTIVATE;
   public
     constructor Create(AOwner: TComponent); override;
@@ -84,8 +86,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComponent.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12633 $';
+    Date: '$Date: 2009-12-31 10:54:44 +0100 (jeu. 31 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -144,6 +146,7 @@ end;
 
 {$ENDIF USE_DXGETTEXT}
 
+{$IFNDEF DELPHI2009_UP}
 procedure TJvForm.CMShowingChanged(var Message: TMessage);
 var
   NewParent: HWND;
@@ -180,6 +183,7 @@ begin
   end;
   inherited;
 end;
+{$ENDIF ~DELPHI2009_UP}
 
 function TJvForm.ShowModal: Integer;
 var

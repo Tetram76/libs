@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCoreReg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCoreReg.pas 12661 2010-01-07 18:58:43Z ahuser $
 
 unit JvCoreReg;
 
@@ -47,7 +47,8 @@ uses
   JvPaintBoxEditor, JvColorProviderEditors, JvDataProviderEditors,
   JvBackgrounds, JvBackgroundEditors,
   JvAppRegistryStorage, JvAppIniStorage, JvAppStorage, JvAppStorageSelectList,
-  JvAutoComplete, JvTranslateString, JvStdEditActions;
+  JvAutoComplete, JvTranslateString, JvStdEditActions,
+  JvErrorIndicator, JvValidators, JvValidatorsEditorForm;
 
 {$R JvCoreReg.dcr}
 
@@ -237,6 +238,17 @@ begin
 
   RegisterActions(RsJVCLActionsCategory, [TJvSendMailAction, TJvWebAction], TJvStandardActions);
   RegisterZoom;
+
+  // Validators
+  RegisterComponents(RsPaletteValidators, [TJvValidators, TJvValidationSummary, TJvErrorIndicator]);
+  RegisterNoIcon([TJvRequiredFieldValidator, TJvCompareValidator,
+    TJvRangeValidator, TJvRegularExpressionValidator, TJvCustomValidator, TJvControlsCompareValidator]);
+
+  RegisterComponentEditor(TJvValidators, TJvValidatorEditor);
+  RegisterPropertyEditor(TypeInfo(Integer), TJvErrorIndicator, 'ImageIndex', TJvDefaultImageIndexProperty);
+//  RegisterPropertyEditor(TypeInfo(string), TJvCustomFormatEdit, 'Characters', TJvCharStringProperty);
+  RegisterPropertyEditor(TypeInfo(string), TJvBaseValidator, 'PropertyToValidate', TJvPropertyValidateProperty);
+  RegisterPropertyEditor(TypeInfo(string), TJvBaseValidator, 'CompareToProperty', TJvPropertyToCompareProperty);
 end;
 
 {$IFDEF RTL170_UP}

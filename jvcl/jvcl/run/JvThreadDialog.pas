@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThreadDialog.pas 12580 2009-10-26 22:37:27Z jfudickar $
+// $Id: JvThreadDialog.pas 12624 2009-12-26 21:30:15Z jfudickar $
 
 unit JvThreadDialog;
 
@@ -103,10 +103,14 @@ type
 
   TJvThreadSimpleDialogOptions = class(TJvThreadBaseDialogOptions)
   private
+    FProgressBarPosition: Integer;
     FShowProgressBar: Boolean;
+    procedure SetProgressBarPosition(const Value: Integer);
     procedure SetShowProgressBar(const Value: Boolean);
   public
     constructor Create(AOwner: TJvCustomThreadDialog); override;
+    property ProgressBarPosition: Integer read FProgressBarPosition write
+        SetProgressBarPosition;
   published
     property ShowProgressBar: Boolean read FShowProgressBar write SetShowProgressBar default False;
   end;
@@ -203,8 +207,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadDialog.pas $';
-    Revision: '$Revision: 12580 $';
-    Date: '$Date: 2009-10-26 23:37:27 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12624 $';
+    Date: '$Date: 2009-12-26 22:30:15 +0100 (sam. 26 déc. 2009) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -348,6 +352,13 @@ constructor TJvThreadSimpleDialogOptions.Create(AOwner: TJvCustomThreadDialog);
 begin
   inherited Create(AOwner);
   FShowProgressBar := False;
+  FProgressBarPosition := -1;
+end;
+
+procedure TJvThreadSimpleDialogOptions.SetProgressBarPosition(const Value:
+    Integer);
+begin
+  FProgressBarPosition := Value;
 end;
 
 procedure TJvThreadSimpleDialogOptions.SetShowProgressBar(const Value: Boolean);
@@ -510,7 +521,10 @@ begin
       ITmpControl.ControlSetCaption (FormatDateTime('hh:nn:ss', Now - FStartTime));
 
     if Supports(FProgressbar, IJvDynControlProgressbar, ITmpProgressbar) then
-      ITmpProgressbar.ControlSetPosition(((FCounter*10) mod 110));
+      if (DialogOptions.ProgressBarPosition >= 0) and (DialogOptions.ProgressBarPosition <= 100)  then
+        ITmpProgressbar.ControlSetPosition(DialogOptions.ProgressBarPosition)
+      else
+        ITmpProgressbar.ControlSetPosition(((FCounter*10) mod 110));
     case FCounter mod 4 of
       0: Caption := DialogOptions.Caption + ' | ';
       1: Caption := DialogOptions.Caption + ' / ';

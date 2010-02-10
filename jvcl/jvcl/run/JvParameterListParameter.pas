@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 12563 2009-10-19 23:55:49Z jfudickar $
+// $Id: JvParameterListParameter.pas 12615 2009-12-07 00:37:51Z jfudickar $
 
 unit JvParameterListParameter;
 
@@ -620,8 +620,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 12563 $';
-    Date: '$Date: 2009-10-20 01:55:49 +0200 (mar. 20 oct. 2009) $';
+    Revision: '$Revision: 12615 $';
+    Date: '$Date: 2009-12-07 01:37:51 +0100 (lun. 07 déc. 2009) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1622,9 +1622,10 @@ end;
 
 procedure TJvComboBoxParameter.GetData;
 begin
-  Value := Null;
   if Assigned(WinControl) then
-    Value := WinControlData;
+    Value := WinControlData
+  else
+    Value := Null;
 end;
 
 procedure TJvComboBoxParameter.SetData;

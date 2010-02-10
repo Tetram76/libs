@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStore.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPropertyStore.pas 12694 2010-02-08 23:11:12Z jfudickar $
 
 unit JvPropertyStore;
 
@@ -144,7 +144,7 @@ type
     property Tag;
 
     //1 Creates a new instance of the same objecttype and assigns the property contents to the new instance
-    function Clone(AOwner: TComponent): TJvCustomPropertyStore;
+    function Clone(AOwner: TComponent): TJvCustomPropertyStore; virtual;
     //IJvPropertyEditorHandler = interface
     function EditIntf_GetVisibleObjectName: string; virtual;
     function EditIntf_TranslatePropertyName(const PropertyName: string): string;
@@ -167,6 +167,14 @@ type
     FItemName: string;
     FItemsObjectName: string;
     function GetItems: TStringList;
+    //IJvPropertyListEditorHandler = interface
+    function ListEditIntf_ObjectCount: integer;
+    function ListEditIntf_GetObject(Index: integer): TPersistent;
+    procedure ListEditIntf_MoveObjectPosition(CurIndex, NewIndex: Integer);
+    procedure ListEditIntf_SortObjects(iAscending : Boolean);
+    function ListEditIntf_CloneNewObject(Index: integer): TPersistent;
+    procedure ListEditIntf_DeleteObject(Index: integer);
+    function ListEditIntf_IndexOfObject(AObject : TPersistent): Integer;
   protected
     function GetString(Index: Integer): string;
     function GetObject(Index: Integer): TObject;
@@ -184,6 +192,7 @@ type
     function GetSorted: Boolean;
     procedure SetSorted(Value: Boolean);
     function GetDuplicates: TDuplicates;
+    function ListEditIntf_CreateNewObject: TPersistent; virtual;
     procedure SetDuplicates(Value: TDuplicates);
     procedure StoreData; override;
     procedure LoadData; override;
@@ -215,14 +224,6 @@ type
     property ItemsObjectName: string read FItemsObjectName write FItemsObjectName;
     property Sorted: Boolean read GetSorted write SetSorted;
     function CreateAddObject(const aObjectName: String): TPersistent;
-    //IJvPropertyListEditorHandler = interface
-    function ListEditIntf_ObjectCount: integer;
-    function ListEditIntf_GetObject(Index: integer): TPersistent;
-    procedure ListEditIntf_MoveObjectPosition(CurIndex, NewIndex: Integer);
-    procedure ListEditIntf_SortObjects(iAscending : Boolean);
-    function ListEditIntf_CreateNewObject: TPersistent;
-    function ListEditIntf_CloneNewObject(Index: integer): TPersistent;
-    procedure ListEditIntf_DeleteObject(Index: integer);
     function ValidateData: Boolean; override;
   end;
 
@@ -231,8 +232,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStore.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12694 $';
+    Date: '$Date: 2010-02-09 00:11:12 +0100 (mar. 09 févr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1231,15 +1232,18 @@ begin
 end;
 
 procedure TJvCustomPropertyListStore.ListEditIntf_DeleteObject(Index: integer);
+var obj : TObject;
 begin
   if (Index >= 0) and (Index < Count) then
   begin
     if Assigned(Objects[Index]) then
-      Objects[Index].Free // The item will be deleted automaticly
-    else
-      Items.Delete(Index);
+    begin
+      obj := Objects[Index];
+      Items.Objects[Index] := nil;
+      obj.Free;
+    end;
+    Items.Delete(Index);
   end;
-
 end;
 
 function TJvCustomPropertyListStore.ListEditIntf_GetObject(Index: integer):
@@ -1265,6 +1269,11 @@ begin
     Result := 1
   else
     Result := -1;
+end;
+
+function TJvCustomPropertyListStore.ListEditIntf_IndexOfObject(AObject : TPersistent): Integer;
+begin
+  Result := Items.IndexOfObject(AObject);
 end;
 
 procedure TJvCustomPropertyListStore.ListEditIntf_SortObjects(iAscending :

@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAnimatedImage.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvAnimatedImage.pas 12620 2009-12-19 15:53:00Z remkobonte $
 
 unit JvAnimatedImage;
 
@@ -180,8 +180,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAnimatedImage.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12620 $';
+    Date: '$Date: 2009-12-19 16:53:00 +0100 (sam. 19 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -263,6 +263,7 @@ begin
   try
     Bmp.Width := ClientWidth;
     Bmp.Height := ClientHeight;
+    Bmp.Canvas.Lock;
     DC := Canvas.Handle;
     try
       Canvas.Handle := Bmp.Canvas.Handle;
@@ -275,6 +276,7 @@ begin
     finally
       Canvas.Handle := DC;
       Canvas.Draw(0, 0, Bmp);
+      Bmp.Canvas.Unlock;
     end;
   finally
     Bmp.Free;

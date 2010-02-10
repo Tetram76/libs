@@ -26,7 +26,7 @@ Changes:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageListTreeView.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPageListTreeView.pas 12628 2009-12-28 10:22:09Z ahuser $
 
 unit JvPageListTreeView;
 
@@ -377,13 +377,12 @@ type
     property Items;
   end;
 
-
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageListTreeView.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12628 $';
+    Date: '$Date: 2009-12-28 11:22:09 +0100 (lun. 28 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -393,56 +392,6 @@ implementation
 uses
   JvResources,
   Forms, JvJVCLUtils;
-
-(* (ahuser) make Delphi 5 compiler happy
-procedure ResetAllNonParentNodes(Items: TTreeNodes; ImageIndex, SelectedIndex: Integer);
-var
-  N: TTreeNode;
-begin
-  N := Items.GetFirstNode;
-  while Assigned(N) do
-  begin
-    if not N.HasChildren then
-    begin
-      N.ImageIndex := ImageIndex;
-      N.SelectedIndex := SelectedIndex;
-    end;
-    N := N.GetNext;
-  end;
-end;
-
-procedure ResetSiblings(Node: TTreeNode; ImageIndex, SelectedIndex: Integer; Recurse: Boolean = False);
-var
-  N: TTreeNode;
-begin
-  N := Node.getPrevSibling;
-  while Assigned(N) do
-  begin
-    if not N.HasChildren then
-    begin
-      N.ImageIndex := ImageIndex;
-      N.SelectedIndex := SelectedIndex;
-    end
-    else
-    if Recurse then
-      ResetSiblings(N.getFirstChild, ImageIndex, SelectedIndex, Recurse);
-    N := N.getPrevSibling;
-  end;
-  N := Node.getNextSibling;
-  while Assigned(N) do
-  begin
-    if not N.HasChildren then
-    begin
-      N.ImageIndex := ImageIndex;
-      N.SelectedIndex := SelectedIndex;
-    end
-    else
-    if Recurse then
-      ResetSiblings(N.getFirstChild, ImageIndex, SelectedIndex, Recurse);
-    N := N.getNextSibling;
-  end;
-end;
-*)
 
 procedure ResetSiblingFolders(Node: TTreeNode; ImageIndex, SelectedIndex: Integer; Recurse: Boolean = False);
 var
@@ -768,7 +717,6 @@ begin
     FLastSelected := nil;
 end;
 
-
 procedure TJvCustomSettingsTreeView.DoGetImageIndex(Sender: TObject;
   Node: TTreeNode);
 begin
@@ -786,7 +734,6 @@ begin
   else
     GetSelectedIndex(Node);
 end;
-
 
 procedure TJvCustomSettingsTreeView.Expand(Node: TTreeNode);
 var
@@ -841,7 +788,6 @@ procedure TJvCustomSettingsTreeView.GetSelectedIndex(Node: TTreeNode);
 begin
   GetImageIndex(Node);
 end;
-
 
 procedure TJvCustomSettingsTreeView.Loaded;
 begin

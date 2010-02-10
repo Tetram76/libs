@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLogonDialogOdac.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBLogonDialogOdac.pas 12682 2010-01-28 23:20:13Z jfudickar $
 
 unit JvDBLogonDialogOdac;
 
@@ -177,8 +177,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLogonDialogOdac.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12682 $';
+    Date: '$Date: 2010-01-29 00:20:13 +0100 (ven. 29 janv. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -187,7 +187,7 @@ implementation
 
 uses
   SysUtils, StdCtrls, Dialogs,
-  OraClasses, OraError, OraCall,
+  OraClasses, OraError, OraCall, OraServices,
   JvDSADialogs, JvDBPasswordDialogOdac, JvResources;
 
 //=== { TJvDBOdacLogonDialogOptions } ========================================
@@ -440,7 +440,19 @@ begin
 end;
 
 procedure TJvDBOdacLogonDialog.FillDatabaseComboBoxDefaultValues(Items: TStrings);
+var
+  Enum: TOraServerEnumerator;
+  List: TStringList;
 begin
+  List := TStringList.Create;
+  Enum := TOraServerEnumerator.Create;
+  try
+    Enum.GetServerList(List);
+    Items.AddStrings(List);
+  finally
+    Enum.Free;
+    List.Free;
+  end;
 end;
 
 class function TJvDBOdacLogonDialog.GetDBLogonConnectionListClass:

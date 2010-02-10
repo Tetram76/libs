@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActionsEngineDatasetOdac.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBActionsEngineDatasetOdac.pas 12669 2010-01-07 23:17:07Z jfudickar $
 
 unit JvDBActionsEngineDatasetOdac;
 
@@ -53,8 +53,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActionsEngineDatasetOdac.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12669 $';
+    Date: '$Date: 2010-01-08 00:17:07 +0100 (ven. 08 janv. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -64,11 +64,12 @@ implementation
 {$IFDEF USE_3RDPARTY_CORELAB_ODAC}
 
 uses
-  DBAccess;
+  DBAccess, SysUtils, Variants;
 
 function TJvDatabaseActionOdacDatasetEngine.GetSQL(AActionComponent :
     TComponent): string;
 var Dataset : TCustomDADataSet;
+    s : String;
     i : integer;
 begin
   if GetDataset(AActionComponent) is TCustomDADataSet then
@@ -78,7 +79,25 @@ begin
     if Dataset.ParamCount > 0 then
       Result := Result + #13#10+#13#10+'Bind Variables : ';
     for i := 0 to Dataset.ParamCount - 1 do
-      Result := Result + #13#10+Dataset.Params[i].Name+' : "'+Dataset.Params[i].AsString+'"';
+    begin
+      Result := Result + #13#10' :'+Dataset.Params[i].Name+' : ';
+      if Dataset.Params[i].isNull then
+        Result := Result + 'NULL'
+      else
+      begin
+        Result := Result +''''+Dataset.Params[i].AsString+'''';
+        case Dataset.Params[i].DataType of
+          ftDate,
+          ftDateTime,
+          ftTimeStamp,
+          ftOraTimeStamp :
+          begin
+            DateTimeToString(s, 'dd.mm.yyyy hh:nn:ss', Dataset.Params[i].AsDateTime);
+            Result := Result + ' - TO_DATE('''+s+''', ''DD.MM.YYYY HH24:MI:SS'')';
+          end;
+        end;
+      end;
+    end;
   end;
 end;
 

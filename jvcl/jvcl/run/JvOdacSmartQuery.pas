@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOdacSmartQuery.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvOdacSmartQuery.pas 12683 2010-01-29 22:50:54Z jfudickar $
 
 unit JvOdacSmartQuery;
 
@@ -84,6 +84,7 @@ type
 
   TJvOdacSmartQuery = class(TSmartQuery, IJvThreadedDatasetInterface)
     procedure BreakExecution;
+    procedure BringThreadDialogToFront;
     function DoGetInheritedNextRecord: Boolean;
     procedure DoInheritedAfterOpen;
     procedure DoInheritedAfterRefresh;
@@ -154,6 +155,7 @@ type
 
   TJvOdacOraQuery = class(TOraQuery, IJvThreadedDatasetInterface)
     procedure BreakExecution;
+    procedure BringThreadDialogToFront;
     function DoGetInheritedNextRecord: Boolean;
     procedure DoInheritedAfterOpen;
     procedure DoInheritedAfterRefresh;
@@ -228,6 +230,7 @@ type
 type
   TJvOdacOraTable = class(TOraTable, IJvThreadedDatasetInterface)
     procedure BreakExecution;
+    procedure BringThreadDialogToFront;
     function DoGetInheritedNextRecord: Boolean;
     procedure DoInheritedAfterOpen;
     procedure DoInheritedAfterRefresh;
@@ -300,8 +303,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOdacSmartQuery.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12683 $';
+    Date: '$Date: 2010-01-29 23:50:54 +0100 (ven. 29 janv. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -328,6 +331,12 @@ end;
 procedure TJvOdacSmartQuery.BreakExecution;
 begin
   BreakExec;
+end;
+
+procedure TJvOdacSmartQuery.BringThreadDialogToFront;
+begin
+  if Assigned(ThreadHandler) then
+    ThreadHandler.BringDialogToFront;
 end;
 
 function TJvOdacSmartQuery.CurrentFetchDuration: TDateTime;
@@ -738,6 +747,12 @@ begin
   BreakExec;
 end;
 
+procedure TJvOdacOraQuery.BringThreadDialogToFront;
+begin
+  if Assigned(ThreadHandler) then
+    ThreadHandler.BringDialogToFront;
+end;
+
 function TJvOdacOraQuery.CurrentFetchDuration: TDateTime;
 begin
   if Assigned(ThreadHandler) then
@@ -1054,6 +1069,12 @@ end;
 procedure TJvOdacOraTable.BreakExecution;
 begin
   BreakExec;
+end;
+
+procedure TJvOdacOraTable.BringThreadDialogToFront;
+begin
+  if Assigned(ThreadHandler) then
+    ThreadHandler.BringDialogToFront;
 end;
 
 function TJvOdacOraTable.CurrentFetchDuration: TDateTime;

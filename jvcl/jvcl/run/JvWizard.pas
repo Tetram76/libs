@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizard.pas 12464 2009-08-23 10:43:09Z ahuser $
+// $Id: JvWizard.pas 12645 2010-01-07 15:15:13Z ahuser $
 
 {+---------------------------------------------------------------------------+
  | CONTRIBUTORS:                                                             |
@@ -890,8 +890,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizard.pas $';
-    Revision: '$Revision: 12464 $';
-    Date: '$Date: 2009-08-23 12:43:09 +0200 (dim. 23 août 2009) $';
+    Revision: '$Revision: 12645 $';
+    Date: '$Date: 2010-01-07 16:15:13 +0100 (jeu. 07 janv. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2355,10 +2355,10 @@ end;
 
 procedure TJvWizardCustomPage.WMEraseBkgnd(var Msg: TWMEraseBkgnd);
 begin
-  {$IFDEF JVCLThemesEnabledD56}
+  {$IFDEF JVCLThemesEnabledD6}
   if ThemeServices.ThemesEnabled then
     inherited;
-  {$ENDIF JVCLThemesEnabledD56}
+  {$ENDIF JVCLThemesEnabledD6}
   {$IFDEF COMPILER9_UP}
   inherited;
   Msg.Result := 0;
@@ -2889,10 +2889,10 @@ end;
 
 procedure TJvWizard.WMEraseBkgnd(var Msg: TWMEraseBkgnd);
 begin
-  {$IFDEF JVCLThemesEnabledD56}
+  {$IFDEF JVCLThemesEnabledD6}
   if ThemeServices.ThemesEnabled then
     inherited;
-  {$ENDIF JVCLThemesEnabledD56}
+  {$ENDIF JVCLThemesEnabledD6}
   Msg.Result := 1;
 end;
 

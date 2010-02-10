@@ -1118,9 +1118,9 @@ function TPackageGenerator.LoadDefines(const Target: string; Filename: string): 
 var
   incfile : TStringList;
   ps: Integer;
+  TargetDefines: TStrings;
 begin
   Result := False;
-  FreeAndNil(FDefinesConditionParser);
 
   // read the include file for this target or the default file if jvclxx.inc does not exist
   ps := Pos('%t', Filename);
@@ -1132,11 +1132,20 @@ begin
       Filename := FIncDefFileName;
     Result := True;
   end;
+
+  if Length(Target) <> 0 then
+    TargetDefines := FTargetList[GetNonPersoTarget(Target)].Defines
+  else
+    TargetDefines := nil;
+
   incfile := TStringList.Create;
   try
     if FileExists(Filename) then
       incfile.LoadFromFile(Filename);
-    FDefinesConditionParser := TDefinesConditionParser.Create(incfile, FTargetList[GetNonPersoTarget(Target)].Defines);
+    if not Assigned(FDefinesConditionParser) then
+      FDefinesConditionParser := TDefinesConditionParser.Create(incfile, TargetDefines)
+    else
+      FDefinesConditionParser.Append(incfile, TargetDefines);
   finally
     incfile.free;
   end;
@@ -1186,7 +1195,10 @@ begin
 
   if incFileName = '' then
     incFileName := FIncFileName;
-  GenericIncFile := LoadDefines('', incFileName);
+  GenericIncFile := LoadDefines('', ExtractFilePath(incFileName) + 'jedi%t.inc') and
+                    LoadDefines('', incFileName);
+  FDefinesConditionParser.Defines.RemoveDefine('JEDI_INC');
+  FDefinesConditionParser.Defines.RemoveDefine('UNKNOWN_COMPILER_VERSION');
 
   FCallBack := CallBack;
 

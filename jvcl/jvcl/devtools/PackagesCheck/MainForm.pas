@@ -21,16 +21,18 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: MainForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: MainForm.pas 12678 2010-01-15 18:54:05Z outchy $
 
 unit MainForm;
+
+{$I jvcl.inc}
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls,
-  JvSimpleXml, TargetInfo, JvComponentBase, JvDualList;
+  JclSimpleXml, TargetInfo, JvComponentBase, JvDualList;
 
 type
   TPackageCheckForm = class(TForm)
@@ -50,8 +52,8 @@ type
   private
     FXMLFileName: string;
     FTargetsInfo: TTargetsInfo;
-    FSettings: TJvSimpleXml;
-    FPGSettings: TJvSimpleXml;
+    FSettings: TJclSimpleXml;
+    FPGSettings: TJclSimpleXml;
   public
 
   end;
@@ -136,7 +138,7 @@ var
   procedure CheckPackageTarget(const PackageInfo: TPackageXmlInfo;
     const TargetName: string);
   var
-    KnownUnits, IncludeDirs, PackageUsesList, DefinedSymbols, DependencyList: TStringList;
+    IncludeDirs, DependencyList, KnownUnits, PackageUsesList, DefinedSymbols: TStringList;
     IndexTarget, IndexRequire, IndexContained, IndexUnit, IndexJVCLPackage,
     IndexTargetPackage, IndexInclude, NbContained: Integer;
     ARequiredPackage: TRequiredPackage;
@@ -145,7 +147,7 @@ var
     BPackageInfo: TPackageXmlInfo;
     ATargetPackage: TTargetPackage;
     AUsesParser: TUsesParser;
-    UnitFileName, RequiredPackageName: string;
+    UnitFileName{, RequiredPackageName}: string;
     RequiredPackageUsed: Boolean;
   begin
     StatusBar.SimpleText := Format('Checking package %s for target %s', [PackageInfo.Name, TargetName]);
@@ -180,7 +182,7 @@ var
       end;
 
       // check that all required packages are part of the current package
-      for IndexContained := 0 to DependencyList.Count - 1 do
+      {for IndexContained := 0 to DependencyList.Count - 1 do
       begin
         RequiredPackageName := DependencyList.Strings[IndexContained];
         RequiredPackageUsed := False;
@@ -194,9 +196,9 @@ var
             Break;
           end;
         end;
-        //if not RequiredPackageUsed then
-        //  MemoMessages.Lines.Add(Format('Package %s need package %s for dependency', [PackageInfo.Name, RequiredPackageName]));
-      end;
+        if not RequiredPackageUsed then
+          MemoMessages.Lines.Add(Format('Package %s need package %s for dependency', [PackageInfo.Name, RequiredPackageName]));
+      end;}
 
       // build list of unit contained in required packages
       for IndexRequire := 0 to PackageInfo.RequireCount - 1 do
@@ -353,11 +355,11 @@ var
 var
   IndexPackage, IndexTarget, IndexAlias, IndexList: Integer;
   ModelsNode, ModelNode, TargetsNode, TargetNode, AliasesNode, AliasNode,
-  GUINode, SelectedPackageNode: TJvSimpleXMLElem;
+  GUINode, SelectedPackageNode: TJclSimpleXMLElem;
   APackageXmlInfo: TPackageXmlInfo;
   PackageName: string;
   IsClx: Boolean;
-  PersonalProperty, IsClxProperty: TJvSimpleXMLProp;
+  PersonalProperty, IsClxProperty: TJclSimpleXMLProp;
 begin
   if ComboBoxModel.ItemIndex < 0 then
     Exit;
@@ -461,12 +463,12 @@ end;
 
 procedure TPackageCheckForm.FormCreate(Sender: TObject);
 var
-  ModelsNode, GUINode, FormNode, TargetsNode: TJvSimpleXMLElem;
+  ModelsNode, GUINode, FormNode, TargetsNode: TJclSimpleXMLElem;
   Index: Integer;
 begin
   FXMLFileName := ChangeFileExt(Application.ExeName, '.xml');
 
-  FSettings := TJvSimpleXML.Create(Self);
+  FSettings := TJclSimpleXML.Create;
   if FileExists(FXMLFileName) then
     FSettings.LoadFromFile(FXMLFileName)
   else
@@ -478,7 +480,7 @@ begin
   FTargetsInfo := TTargetsInfo.Create;
   FTargetsInfo.LoadFromXMLElem(TargetsNode);
 
-  FPGSettings := TJvSimpleXML.Create(Self);
+  FPGSettings := TJclSimpleXML.Create;
   FPGSettings.LoadFromFile(PathAddSeparator(ExtractFilePath(Application.ExeName)) + 'PGEdit.xml');
   FPGSettings.Options := FPGSettings.Options - [sxoAutoCreate];
 
@@ -499,7 +501,7 @@ end;
 
 procedure TPackageCheckForm.FormDestroy(Sender: TObject);
 var
-  GUINode, TargetsNode, FormNode: TJvSimpleXMLElem;
+  GUINode, TargetsNode, FormNode: TJclSimpleXMLElem;
 begin
   GUINode := FSettings.Root.Items.ItemNamed['GUI'];
   GUINode.Items.ItemNamed['MODEL'].Value := ComboBoxModel.Text;

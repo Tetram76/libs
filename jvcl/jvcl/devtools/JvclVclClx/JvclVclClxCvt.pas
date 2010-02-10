@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvclVclClxCvt.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvclVclClxCvt.pas 12640 2010-01-06 18:06:24Z outchy $
 
 unit JvclVclClxCvt;
 
@@ -76,19 +76,6 @@ implementation
 
 uses
   Utils, StrUtils;
-
-function JvclBplNameToGenericNameHook(const BplName: string): string;
-begin
-   // obtain package name used in the xml file
-  Result := ChangeFileExt(BplName, '');
-  Delete(Result, Length(Result) - 2, 2);
-  if Length(Result) > 2 then
-  begin
-    if Result[3] = 'Q' then
-      Delete(Result, 3, 1);
-    Insert('-', Result, Length(Result)); // do not localize
-  end;
-end;
 
 { TJVCLConverter }
 
@@ -286,8 +273,5 @@ begin
   if not Result then
     Result := Cvt.IgnoreUnits.Find(ChangeFileExt(ExtractFileName(Filename), ''), Index);
 end;
-
-initialization
-  BplNameToGenericNameHook := JvclBplNameToGenericNameHook;
 
 end.

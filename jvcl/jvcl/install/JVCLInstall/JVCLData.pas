@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLData.pas 12476 2009-08-25 21:11:31Z obones $
+// $Id: JVCLData.pas 12666 2010-01-07 21:30:04Z ahuser $
 
 unit JVCLData;
 
@@ -41,15 +41,6 @@ const
   sDxgettextRegKey = '\bplfile\Shell\Extract strings\Command';
   sJvclIncFile = '%s\common\jvcl.inc';
   sBCBIncludeDir = '%s\Include\Vcl';
-
-  { Before any package is compiled these package files and units are deleted from the
-    output directories. }
-  sRemovedPackages: array[0..0] of string = (
-    'Jv3rd-R'
-  );
-  sRemovedUnits: array[0..0] of string = (
-    'JvgMailSlots'
-  );
 
 type
   TJVCLData = class;
@@ -340,6 +331,8 @@ type
 
     function GetTargetConfig(Index: Integer): TTargetConfig;
     function GetJVCLDir: string;
+    function GetJVCLIncludeDir: string;
+    function GetJVCLSourceDir: string;
     function GetJVCLPackagesDir: string;
     function GetJVCLPackagesXmlDir: string;
     function GetOptionState(Index: Integer): Integer;
@@ -364,6 +357,8 @@ type
     property IsDxgettextInstalled: Boolean read FIsDxgettextInstalled;
 
     property JVCLDir: string read GetJVCLDir;
+    property JVCLSourceDir: string read GetJVCLSourceDir;
+    property JVCLIncludeDir: string read GetJVCLIncludeDir;
     property JVCLPackagesDir: string read GetJVCLPackagesDir;
     property JVCLPackagesXmlDir: string read GetJVCLPackagesXmlDir;
 
@@ -493,6 +488,16 @@ begin
     end;
   end;
   Result := FJVCLDir;
+end;
+
+function TJVCLData.GetJVCLSourceDir: string;
+begin
+  Result := JVCLDir + '\run';
+end;
+
+function TJVCLData.GetJVCLIncludeDir: string;
+begin
+  Result := JVCLDir + '\common';
 end;
 
 function TJVCLData.GetJVCLPackagesDir: string;
@@ -884,15 +889,12 @@ begin
 end;
 
 function TTargetConfig.VersionedJVCLXmlDcp(const Name: string): string;
-var
-  Suffix: string;
 begin
   { TODO : Keep in sync with JVCL naming schema }
-  if Target.IsBCB then
-    Suffix := Format('C%d', [Target.Version])
+  if EndsWith(Name, '-R', True) or EndsWith(Name, '-D', True) then
+    Result := Copy(Name, 1, Length(Name) - 2) + '.dcp'
   else
-    Suffix := Format('D%d', [Target.Version]);
-  Result := StringReplace(Name, '-', Suffix, []) + '.dcp';
+    Result := Name;
 end;
 
 function TTargetConfig.VersionedJVCLXmlBpl(const Name: string): string;
@@ -900,11 +902,17 @@ var
   Suffix: string;
 begin
   { TODO : Keep in sync with JVCL naming schema }
-  if Target.IsBCB then
-    Suffix := Format('C%d', [Target.Version])
+  if Target.Version >= 7 then
+    Suffix := Format('%d0', [Target.Version])
+  else if Target.IsBCB then
+    Suffix := Format('C%d0', [Target.Version])
   else
-    Suffix := Format('D%d', [Target.Version]);
-  Result := StringReplace(Name, '-', Suffix, []) + '.bpl';
+    Suffix := Format('D%d0', [Target.Version]);
+
+  if EndsWith(Name, '-R', True) or EndsWith(Name, '-D', True) then
+    Result := Copy(Name, 1, Length(Name) - 2) + Suffix + '.bpl'
+  else
+    Result := Name;
 end;
 
 function TTargetConfig.LinkMapFile(const BinaryFileName, MapFileName: string;
@@ -1684,10 +1692,15 @@ procedure TTargetConfig.GetPackageBinariesForDeletion(List: TStrings);
 var
   Mask: string;
 begin
-  if Target.IsBCB then
-    Mask := 'Jv*C' + IntToStr(Target.Version) + '?.*'  // do not localize
+  if Target.Version = 6 then
+  begin
+    if Target.IsBCB then
+      Mask := 'Jv*C' + IntToStr(Target.Version) + '0.*'   // do not localize
+    else
+      Mask := 'Jv*D' + IntToStr(Target.Version) + '0.*';  // do not localize
+  end
   else
-    Mask := 'Jv*D' + IntToStr(Target.Version) + '?.*';  // do not localize
+    Mask := 'Jv*' + IntToStr(Target.Version) + '0.*';  // do not localize
 
   FindFiles(BplDir, Mask, False, List,
     ['.bpl', '.dcp', '.lib', '.bpi', '.tds', '.map']);  // do not localize

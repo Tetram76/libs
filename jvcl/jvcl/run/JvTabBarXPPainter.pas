@@ -20,13 +20,15 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTabBarXPPainter.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTabBarXPPainter.pas 12653 2010-01-07 16:00:02Z ahuser $
 
 unit JvTabBarXPPainter;
 
 {$I jvcl.inc}
 
 interface
+
+{$IFDEF JVCLThemesEnabled}
 
 uses
   Windows, SysUtils, Classes, Graphics, JvTabBar;
@@ -48,7 +50,11 @@ type
     property FixedTabSize: Integer read FFixedTabSize write SetFixedTabSize;
   end;
 
+{$ENDIF JVCLThemesEnabled}
+
 implementation
+
+{$IFDEF JVCLThemesEnabled}
 
 uses
   Math, JvThemes;
@@ -190,5 +196,6 @@ begin
     Changed;
   end;
 end;
+{$ENDIF JVCLThemesEnabled}
 
 end.

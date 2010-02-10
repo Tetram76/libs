@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActions.pas 12487 2009-08-31 21:22:35Z jfudickar $
+// $Id: JvDBActions.pas 12681 2010-01-28 20:53:01Z jfudickar $
 
 unit JvDBActions;
 
@@ -422,7 +422,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure SMEWizardDlgGetCellParams(Sender: TObject; Field: TField; var Text: TSMEString;
+    procedure SMEWizardDlgGetCellParams(Sender: TObject; Field: TField; var Text: string;
       AFont: TFont; var Alignment: TAlignment; var Background: TColor; var CellType: TCellType);
     procedure SMEWizardDlgOnBeforeExecute(Sender: TObject);
   published
@@ -522,8 +522,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActions.pas $';
-    Revision: '$Revision: 12487 $';
-    Date: '$Date: 2009-08-31 23:22:35 +0200 (lun. 31 août 2009) $';
+    Revision: '$Revision: 12681 $';
+    Date: '$Date: 2010-01-28 21:53:01 +0100 (jeu. 28 janv. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1461,7 +1461,7 @@ begin
 end;
 
 procedure TJvDatabaseSMExportOptions.SMEWizardDlgGetCellParams(Sender: TObject; Field: TField;
-  var Text: TSMEString; AFont: TFont; var Alignment: TAlignment; var Background: TColor; var CellType: TCellType);
+  var Text: string; AFont: TFont; var Alignment: TAlignment; var Background: TColor; var CellType: TCellType);
 const
   SToDateFormatLong = 'TO_DATE(''%s'', ''DD.MM.YYYY HH24:MI:SS'')';
   SToDateFormatShort = 'TO_DATE(''%s'', ''DD.MM.YYYY'')';
