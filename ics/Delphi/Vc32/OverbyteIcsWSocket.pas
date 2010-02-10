@@ -3,7 +3,7 @@
 Author:       François PIETTE
 Description:  TWSocket class encapsulate the Windows Socket paradigm
 Creation:     April 1996
-Version:      7.34
+Version:      7.37
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -728,7 +728,26 @@ Nov 01, 2009 V7.33 Arno fixed a memory overwrite bug in
                    TCustomSocksWSocket.DoRecv().
 Nov 07, 2009 V7.34 OpenSSL V0.9.8L disables session renegotiation due to
                    TLS renegotiation vulnerability.
- 
+Dec 20, 2009 V7.35 Arno added support for SSL Server Name Indication (SNI).
+                   SNI has to be turned on in OverbyteIcsSslDefs.inc, see define
+                   "OPENSSL_NO_TLSEXT". Exchanged symbol "NO_ADV_MT" in the
+                   SSL source by "NO_SSL_MT" (This and SNI was sponsored by
+                   Fastream Technologies).
+                   SNI Howto: In SSL server mode assign event OnSslServerName,
+                   it triggers whenever a client sent a server name in the TLS
+                   client helo. From the event handler read public property
+                   SslServerName, lookup and pass a matching, valid and
+                   initialized SslContext instance associated with the server name.
+                   In SSL client mode, if property SslServerName was not empty
+                   this server name is sent to the server in the TLS client helo.
+                   Currently IE 7 and FireFox >= V2 support SNI, note that both
+                   browers don't send both "localhost" and IP addresses as
+                   server names, this is specified in RFC.
+Dec 24, 2009 V7.36 SSL SNI - Do not switch context if not initialized.
+Dec 26, 2009 V7.37 Arno fixed TCustomSyncWSocket.ReadLine for Unicode. It 
+                   now takes an AnsiString buffer. Since this method is highly
+                   deprecated it's also marked as "deprecated". Do not use it
+                   in new applications.
 
 }
 
@@ -836,8 +855,8 @@ uses
   OverbyteIcsWinsock;
 
 const
-  WSocketVersion            = 734;
-  CopyRight    : String     = ' TWSocket (c) 1996-2009 Francois Piette V7.34 ';
+  WSocketVersion            = 737;
+  CopyRight    : String     = ' TWSocket (c) 1996-2009 Francois Piette V7.37 ';
   WSA_WSOCKET_TIMEOUT       = 12001;
 {$IFNDEF BCB}
   { Manifest constants for Shutdown }
@@ -1082,7 +1101,7 @@ type  { <== Required to make D7 code explorer happy, AG 05/24/2007 }
     procedure   BindSocket; virtual;
     procedure   SendText(const Str : RawByteString); {$IFDEF COMPILER12_UP} overload;
     procedure   SendText(const Str : UnicodeString); overload;
-    procedure   SendText(const Str : UnicodeString; ACodePage : Cardinal); overload;
+    procedure   SendText(const Str : UnicodeString; ACodePage : LongWord); overload;
     {$ENDIF}
     function    RealSend(var Data : TWSocketData; Len : Integer) : Integer; virtual;
 //  procedure   RaiseExceptionFmt(const Fmt : String; args : array of const); virtual;
@@ -1143,7 +1162,7 @@ type  { <== Required to make D7 code explorer happy, AG 05/24/2007 }
     function    ReceiveStr : String; virtual;
     function    ReceiveStrA : AnsiString; virtual;
 {$IFDEF COMPILER12_UP}
-    function    ReceiveStrW(ACodePage: Cardinal) : UnicodeString; overload; virtual;
+    function    ReceiveStrW(ACodePage: LongWord) : UnicodeString; overload; virtual;
     function    ReceiveStrW : UnicodeString; overload; virtual;
 {$ENDIF}
     function    ReceiveFrom(Buffer      : TWSocketData;
@@ -1159,7 +1178,7 @@ type  { <== Required to make D7 code explorer happy, AG 05/24/2007 }
                        Len        : Integer) : Integer; virtual;
     function    SendStr(const Str : RawByteString) : Integer; {$IFDEF COMPILER12_UP} overload; {$ENDIF} virtual;
 {$IFDEF COMPILER12_UP}
-    function    SendStr(const Str : UnicodeString; ACodePage: Cardinal) : Integer; overload; virtual;
+    function    SendStr(const Str : UnicodeString; ACodePage: LongWord) : Integer; overload; virtual;
     function    SendStr(const Str : UnicodeString) : Integer; overload; virtual;
 {$ENDIF}
     procedure   DnsLookup(const AHostName : String); virtual;
@@ -1185,7 +1204,7 @@ type  { <== Required to make D7 code explorer happy, AG 05/24/2007 }
     procedure   PutDataInSendBuffer(Data : TWSocketData; Len : Integer); virtual;
     procedure   PutStringInSendBuffer(const Str : RawByteString); {$IFDEF COMPILER12_UP} overload; {$ENDIF}
 {$IFDEF COMPILER12_UP}
-    procedure   PutStringInSendBuffer(const Str : UnicodeString; ACodePage: Cardinal); overload;
+    procedure   PutStringInSendBuffer(const Str : UnicodeString; ACodePage: LongWord); overload;
     procedure   PutStringInSendBuffer(const Str : UnicodeString); overload;
 {$ENDIF}    
     procedure   DeleteBufferedData;
@@ -1518,7 +1537,7 @@ const
      SSL_BUFFER_SIZE                  = 4096;
      msgSslCtxNotInit                 = 'SSL context not initialized';
 
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
 var
      LockPwdCB          : TRtlCriticalSection;
      LockVerifyCB       : TRtlCriticalSection;
@@ -1527,6 +1546,9 @@ var
      LockNewSessCB      : TRtlCriticalSection;
      LockGetSessCB      : TRtlCriticalSection;
      LockClientCertCB   : TRtlCriticalSection;
+   {$IFNDEF OPENSSL_NO_TLSEXT}
+     LockServerNameCB   : TRtlCriticalSection;
+   {$ENDIF}
 {$ENDIF}
      procedure UnloadSsl;
      procedure LoadSsl;
@@ -1534,6 +1556,7 @@ var
 type
 //    TSslDebugLevel = (ssldbgNone, ssldbgError, ssldbgInfo, ssldbgDump); angus
 
+    EOpenSslError = class(Exception);
     TSslBaseComponent = class(TComponent)
     protected
         FSslInitialized : Boolean;
@@ -1757,6 +1780,7 @@ type
                    sslOpt_PKCS1_CHECK_1,
                    sslOpt_PKCS1_CHECK_2,
                    sslOpt_NETSCAPE_CA_DN_BUG,
+                   //sslOP_NO_TICKET,
                    sslOpt_NO_SESSION_RESUMPTION_ON_RENEGOTIATION, // 12/09/05
                    sslOpt_NETSCAPE_DEMO_CIPHER_CHANGE_BUG);
     TSslOptions = set of TSslOption;
@@ -1847,7 +1871,7 @@ type
         FAutoEnableBuiltinEngines   : Boolean;
         FCtxEngine                  : TSslEngine;
     {$ENDIF}
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
         FLock                       : TRtlCriticalSection;
         procedure Lock;
         procedure Unlock;
@@ -1931,13 +1955,13 @@ type
         property  SslSessionCacheModes : TSslSessCacheModes
                                                     read  GetSslSessCacheModes
                                                     write SetSslSessCacheModes;
-        property  SslCipherList     : String            read  FSslCipherList
-                                                        write SetSslCipherList;
+        property  SslCipherList     : String        read  FSslCipherList
+                                                    write SetSslCipherList;
         property  SslVersionMethod  : TSslVersionMethod
-                                                        read  FSslVersionMethod
-                                                        write SetSslVersionMethod;
-        property  SslSessionTimeout : Longword          read  FSslSessionTimeout
-                                                        write SetSslSessionTimeout;
+                                                    read  FSslVersionMethod
+                                                    write SetSslVersionMethod;
+        property  SslSessionTimeout : Longword      read  FSslSessionTimeout
+                                                    write SetSslSessionTimeout;
         property  SslSessionCacheSize : Integer
                                                     read  FSslSessionCacheSize
                                                     write SetSslSessionCacheSize;
@@ -1947,10 +1971,10 @@ type
         {property  SslX509Trust      : TSslX509Trust         read  FSslX509Trust
                                                             write SetSslX509Trust;}
         property  OnRemoveSession   : TSslContextRemoveSession
-                                                        read  FOnRemoveSession
-                                                        write FOnRemoveSession;
-        property  OnBeforeInit  : TNotifyEvent       read  FOnBeforeInit
-                                                     write FOnBeforeInit;
+                                                    read  FOnRemoveSession
+                                                    write FOnRemoveSession;
+        property  OnBeforeInit  : TNotifyEvent      read  FOnBeforeInit
+                                                    write FOnBeforeInit;
         {property  SslKeyFormat : TSslCertKeyFormat
                                                      read  FSslKeyFormat
                                                      write FSslKeyFormat;}
@@ -2022,6 +2046,19 @@ type
   TSslShutDownComplete      = procedure(Sender          : TObject;
                                         Bidirectional   : Boolean;
                                         ErrCode         : Integer) of object;
+{$IFNDEF OPENSSL_NO_TLSEXT}
+  TTlsExtError = (teeOk, teeAlertWarning, teeAlertFatal, teeNoAck);
+{
+  SSL_TLSEXT_ERR_OK                           = 0;
+  SSL_TLSEXT_ERR_ALERT_WARNING                = 1;
+  SSL_TLSEXT_ERR_ALERT_FATAL                  = 2;
+  SSL_TLSEXT_ERR_NOACK                        = 3;
+}
+  TSslServerNameEvent       = procedure(Sender               : TObject;                                        
+                                        var Ctx              : TSslContext;
+                                        var ErrCode          : TTlsExtError) of object;
+{$ENDIF}
+
   TCustomSslWSocket = class(TCustomSocksWSocket)
   protected
         FSslContext                 : TSslContext;
@@ -2030,6 +2067,9 @@ type
         FOnSslCliGetSession         : TSslCliGetSession;
         FOnSslCliNewSession         : TSslCliNewSession;
         FOnSslSetSessionIDContext   : TSslSetSessionIDContext;
+    {$IFNDEF OPENSSL_NO_TLSEXT}
+        FOnSslServerName            : TSslServerNameEvent;
+    {$ENDIF}
         FOnSslCliCertRequest        : TSslCliCertRequest;
         FX509Class                  : TX509Class;
         FSslCertChain               : TX509List;
@@ -2081,6 +2121,9 @@ type
         FOnSslVerifyPeer            : TSslVerifyPeerEvent;
         FOnSslHandshakeDone         : TSslHandshakeDoneEvent;
         FHandShakeCount             : Integer;
+    {$IFNDEF OPENSSL_NO_TLSEXT}
+        FSslServerName              : String;
+    {$ENDIF}
         //procedure   SetSslEnable(const Value: Boolean); virtual;
         procedure   RaiseLastOpenSslError(EClass          : ExceptClass;
                                           Dump            : Boolean = FALSE;
@@ -2154,6 +2197,10 @@ type
         property    LastSslError       : Integer          read FLastSslError;
         property    ExplizitSsl        : Boolean          read  FExplizitSsl
                                                           write FExplizitSsl;
+    {$IFNDEF OPENSSL_NO_TLSEXT}
+        property    SslServerName      : String           read  FSslServerName
+                                                          write FSslServerName;
+    {$ENDIF}
         property  OnSslShutDownComplete : TSslShutDownComplete
                                                read   FOnSslShutDownComplete
                                                write  FOnSslShutDownComplete;
@@ -2188,6 +2235,11 @@ type
         property  OnSslSetSessionIDContext : TSslSetSessionIDContext
                                                           read  FOnSslSetSessionIDContext
                                                           write FOnSslSetSessionIDContext;
+    {$IFNDEF OPENSSL_NO_TLSEXT}
+        property  OnSslServerName    : TSslServerNameEvent
+                                                          read  FOnSslServerName
+                                                          write FOnSslServerName;
+    {$ENDIF}
         property  SslAcceptableHosts : TStrings           read  FSslAcceptableHosts
                                                           write SetSslAcceptableHosts;
         property  SslMode            : TSslMode           read  FSslMode
@@ -2304,14 +2356,15 @@ type
       FLinePointer : TBytes;
 {$ENDIF}
 {$IFDEF WIN32}
-      FLinePointer : ^String;
+      FLinePointer : ^AnsiString;
 {$ENDIF}
       function    Synchronize(Proc         : TWSocketSyncNextProc;
                               var DoneFlag : Boolean) : Integer; virtual;
       function    WaitUntilReady(var DoneFlag : Boolean) : Integer; virtual;
       procedure   InternalDataAvailable(Sender: TObject; Error: Word);
   public
-      procedure   ReadLine(Timeout : Integer; var Buffer : String);
+      procedure   ReadLine(Timeout : Integer; var Buffer : AnsiString); deprecated
+          {$IFDEF COMPILER12_UP}'Do not use in new applications'{$ENDIF};
   end;
 
 {$IFDEF CLR}
@@ -2402,6 +2455,10 @@ type
       property  X509Class;
       //property  SslEstablished;
       property  SslState;
+{$IFNDEF OPENSSL_NO_TLSEXT}
+      property  SslServerName;
+      property  OnSslServerName;
+{$ENDIF}
   published
 {$IFNDEF NO_DEBUG_LOG}
       property IcsLogger;                      { V5.21 }
@@ -3538,49 +3595,6 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFDEF WIN32}
 function WSocketGetProc(const ProcName : AnsiString) : Pointer;
-{$IFDEF DELPHI1}
-var
-    Error     : THandle;
-    Buf       : String;
-    LastError : LongInt;
-begin
-    if FDllHandle = 0 then begin
-       { Delphi 1 strings are not nul terminated }
-        Buf := winsocket + #0;
-        FDllHandle := LoadLibrary(@Buf[1]);
-        if FDllHandle < HINSTANCE_ERROR then begin
-            Error      := FDllHandle;
-            FDllHandle := 0;
-        {    raise ESocketException.Create('Unable to load ' + winsocket +
-                                          ' Error #' + IntToStr(Error));  }
-            raise ESocketException.Create('Unable to load ' + winsocket +
-                                     ' - ' + GetWindowsErr (Error)); { V5.26 }
-        end;
-{$IFDEF DELPHI1}
-        { Delphi 1 support only Winsock 1.01 }
-        LastError := WSocket_WSAStartup($101, GInitData);
-{$ELSE}
-        LastError := WSocket_WSAStartup(MAKEWORD(GReqVerLow, GReqVerHigh) { $202 $101}, GInitData);
-{$ENDIF}
-        if LastError <> 0 then begin
-          {  raise ESocketException.CreateFmt('%s: WSAStartup error #%d',
-                                             [winsocket, LastError]);  }
-            raise ESocketException.Create('Winsock startup error ' + winsocket +
-                                  ' - ' + GetWindowsErr (LastError)); { V5.26 }
-        end;
-    end;
-    if Length(ProcName) = 0 then
-        Result := nil
-    else begin
-        { Delphi 1 strings are not nul terminated }
-        Buf := ProcName + #0;
-        Result := GetProcAddress(FDllHandle, @Buf[1]);
-        if Result = nil then
-            raise ESocketException.Create('Procedure ' + ProcName +
-               ' not found in ' + winsocket + ' - ' + GetWindowsErr (GetLastError)); { V5.26 }
-    end;
-end;
-{$ELSE}
 var
     LastError : LongInt;
 begin
@@ -3617,11 +3631,9 @@ begin
         _LeaveCriticalSection(GWSockCritSect);
     end;
 end;
-{$ENDIF}
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{$IFDEF COMPILER2_UP}
 function WSocket2GetProc(const ProcName : AnsiString) : Pointer;
 begin
     { Prevents compiler warning "Return value might be undefined"  }
@@ -3653,7 +3665,6 @@ begin
         _LeaveCriticalSection(GWSockCritSect);
     end;
 end;
-{$ENDIF}
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -3661,20 +3672,16 @@ function WinsockInfo : TWSADATA;
 begin
 {    LoadWinsock(winsocket); 14/02/99 }
     { Load winsock and initialize it as needed }
-{$IFDEF COMPILER2_UP}
     _EnterCriticalSection(GWSockCritSect);
     try
-{$ENDIF}
         WSocketGetProc('');
         Result := GInitData;
         { If no socket created, then unload winsock immediately }
         if WSocketGCount <= 0 then
             WSocketUnloadWinsock;
-{$IFDEF COMPILER2_UP}
     finally
         _LeaveCriticalSection(GWSockCritSect);
     end;
-{$ENDIF}
 end;
 {$ENDIF}
 
@@ -5607,7 +5614,7 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFDEF COMPILER12_UP}
-function TCustomWSocket.ReceiveStrW(ACodePage : Cardinal) : UnicodeString;
+function TCustomWSocket.ReceiveStrW(ACodePage : LongWord) : UnicodeString;
 begin
     Result :=  AnsiToUniCode(ReceiveStrA, ACodePage);
 end;
@@ -5863,7 +5870,7 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFDEF COMPILER12_UP}                                              
-procedure TCustomWSocket.PutStringInSendBuffer(const Str : UnicodeString; ACodePage: Cardinal);
+procedure TCustomWSocket.PutStringInSendBuffer(const Str : UnicodeString; ACodePage: LongWord);
 begin
     if ACodePage = 1200 then // UTF-16Le, default UnicodeString => send as is
         PutDataInSendBuffer(Pointer(Str), Length(Str) * 2)
@@ -5962,7 +5969,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { Return -1 if error, else return number of bytes written }
 {$IFDEF COMPILER12_UP}
-function TCustomWSocket.SendStr(const Str : UnicodeString; ACodePage : Cardinal) : Integer;
+function TCustomWSocket.SendStr(const Str : UnicodeString; ACodePage : LongWord) : Integer;
 begin
     if Length(Str) > 0 then
     begin
@@ -6018,7 +6025,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure TCustomWSocket.SendText(const Str : UnicodeString; ACodePage : Cardinal);
+procedure TCustomWSocket.SendText(const Str : UnicodeString; ACodePage : LongWord);
 begin
     SendStr(Str, ACodePage);
 end;
@@ -6051,7 +6058,8 @@ begin
 {$IFDEF WIN32}
     Result := [];
     for I := Low(Opts) to High(Opts) do
-        Result := Result + [Opts[I]];
+        //Result := Result + [Opts[I]];  { Anton Sviridov }
+        Include(Result, Opts[I]);
 {$ENDIF}
 end;
 
@@ -6368,7 +6376,7 @@ begin
         FDnsLookupCheckMsg := TRUE;
         Exit;
     end
-    else if msg.wParam <> LongInt(FDnsLookupHandle) then
+    else if msg.wParam <> WPARAM(FDnsLookupHandle) then
         Exit;
 
     FDnsLookupHandle := 0;
@@ -6385,10 +6393,10 @@ begin
 {$IFDEF WIN32}
     if ErrCode = 0 then begin
         Phe := PHostent(@FDnsLookupBuffer);
-        if phe <> nil then begin
+        //if phe <> nil then begin
             GetIpList(Phe, FDnsResultList);
             FDnsResult := FDnsResultList.Strings[0];
-        end;
+        //end;
     end;
 {$ENDIF}
     TriggerDnsLookupDone(ErrCode);
@@ -6406,7 +6414,7 @@ var
 {$ENDIF}
     ErrCode : Word;
 begin
-    if msg.wParam <> LongInt(FDnsLookupHandle) then
+    if msg.wParam <> WPARAM(FDnsLookupHandle) then
         Exit;
     FDnsLookupHandle := 0;
     ErrCode          := HiWord(Msg.LParam);
@@ -7700,8 +7708,8 @@ procedure TCustomWSocket.Shutdown(How : Integer);
 begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loWsockInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-      DebugLog(loWsockInfo, {$IFNDEF CLR}_IntToHex(Integer(Self), 8) + ' ' +{$ENDIF}
-                      'TCustomWSocket.Shutdown ' + _IntToStr(How) + ' ' + _IntToStr(FHSocket));
+      DebugLog(loWsockInfo, {$IFNDEF CLR}_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) + ' ' +{$ENDIF}
+               'TCustomWSocket.Shutdown ' + _IntToStr(How) + ' ' + _IntToStr(FHSocket));
 {$ENDIF}
     if FHSocket <> INVALID_SOCKET then
         WSocket_Synchronized_shutdown(FHSocket, How);
@@ -8153,8 +8161,11 @@ procedure TCustomWSocket.TriggerDataSent(Error : Word);
 begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loWsockDump) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loWsockDump, {$IFNDEF CLR}_IntToHex(Integer(Self), 8) + ' ' +{$ENDIF}
-                      'TriggerDataSent ' + _IntToStr(FHSocket));
+        DebugLog(loWsockDump,
+                {$IFNDEF CLR}
+                _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) + ' ' +
+                {$ENDIF}
+                'TriggerDataSent ' + _IntToStr(FHSocket));
 {$ENDIF}
     if Assigned(FOnDataSent) then
         FOnDataSent(Self, Error);
@@ -10031,7 +10042,7 @@ end;
 { Instead, use pure event-driven design using OnDataAvailable event.        }
 procedure TCustomSyncWSocket.ReadLine(
     Timeout    : Integer;  { seconds if positive, milli-seconds if negative }
-    var Buffer : String);
+    var Buffer : AnsiString);
 var
     OldDataAvailable : TDataAvailable;
     OldLineMode      : Boolean;
@@ -10147,7 +10158,7 @@ begin
             // Must be loaded before SSlEAY for the versioncheck to work!
             if not OverbyteIcsLIBEAY.Load then begin
             {$IFDEF LOADSSL_ERROR_FILE}
-                AssignFile(F, ExtractFilePath(ParamStr(0)) + 'FailedIcsLIBEAY.txt');
+                AssignFile(F, _ExtractFilePath(ParamStr(0)) + 'FailedIcsLIBEAY.txt');
                 Rewrite(F);
                 S := OverbyteIcsLIBEAY.WhichFailedToLoad;
                 I := 1;
@@ -10169,7 +10180,7 @@ begin
             // Load SSlEAY DLL
             if not OverbyteIcsSSLEAY.Load then begin
             {$IFDEF LOADSSL_ERROR_FILE}
-                AssignFile(F, ExtractFilePath(ParamStr(0)) + 'FailedIcsSSLEAY.txt');
+                AssignFile(F, _ExtractFilePath(ParamStr(0)) + 'FailedIcsSSLEAY.txt');
                 Rewrite(F);
                 S := OverbyteIcsSSLEAY.WhichFailedToLoad;
                 I := 1;
@@ -10181,7 +10192,7 @@ begin
                     WriteLn(F, Copy(S, J, I - J));
                 end;
                 CloseFile(F);
-            {$ENDIF}    
+            {$ENDIF}
                 if OverbyteIcsSSLEAY.GSSLEAY_DLL_Handle <> 0 then begin
                     _FreeLibrary(OverbyteIcsSSLEAY.GSSLEAY_DLL_Handle);
                     OverbyteIcsSSLEAY.GSSLEAY_DLL_Handle := 0;
@@ -10210,7 +10221,7 @@ begin
         {$IFNDEF OPENSSL_NO_ENGINE}
             //* Load all bundled ENGINEs into memory and make them visible */
             f_ENGINE_load_builtin_engines;
-        {$ENDIF}    
+        {$ENDIF}
         end; // SslRefCount = 0
         Inc(SslRefCount);
     finally
@@ -10220,6 +10231,19 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ Reminder:
+  /* thread-local cleanup */
+  ERR_remove_state(0);
+
+  /* thread-safe cleanup */
+  ENGINE_cleanup();
+  CONF_modules_unload(1);
+
+  /* global application exit cleanup (after all SSL activity is shutdown) */
+  ERR_free_strings();
+  EVP_cleanup();
+  CRYPTO_cleanup_all_ex_data();
+}
 procedure UnloadSsl;
 begin
     _EnterCriticalSection(SslCritSect);
@@ -10241,7 +10265,7 @@ begin
             f_ERR_free_strings;
             f_EVP_cleanup;
             f_CRYPTO_cleanup_all_ex_data;
-            
+
             if OverbyteIcsSSLEAY.GSSLEAY_DLL_Handle <> 0 then begin
                 _FreeLibrary(OverbyteIcsSSLEAY.GSSLEAY_DLL_Handle);
                 OverbyteIcsSSLEAY.GSSLEAY_DLL_Handle := 0;
@@ -10440,8 +10464,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 destructor TX509List.Destroy;
 begin
-    if Assigned(FList) then
-        _FreeAndNil(FList);
+    _FreeAndNil(FList);
     inherited Destroy;
 end;
 
@@ -10707,7 +10730,7 @@ const
 constructor TSslContext.Create(AOwner: TComponent);
 begin
     inherited Create(AOwner);
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _InitializeCriticalSection(FLock);
 {$ENDIF}
     FSslCtx := nil;
@@ -10724,7 +10747,7 @@ end;
 destructor TSslContext.Destroy;
 begin
     DeInitContext;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _DeleteCriticalSection(FLock);
 {$ENDIF}
     inherited Destroy;
@@ -10789,7 +10812,7 @@ function TSslContext.TrustCert(Cert: TX509Base): Boolean;
 var
     St : PX509_STORE;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -10811,7 +10834,7 @@ begin
         if (not Result) then
             f_ERR_clear_error;
 {$ENDIF}
-{$IFNDEF NO_ADV_MT}    
+{$IFNDEF NO_SSL_MT}    
     finally
         Unlock;
     end;
@@ -10829,7 +10852,7 @@ var
     Obj : TSslContext;
     SslPassPhraseA : AnsiString;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _EnterCriticalSection(LockPwdCB);
     try
 {$ENDIF}
@@ -10842,7 +10865,7 @@ begin
             Move(Pointer(SslPassPhraseA)^, Buf^, Length(SslPassPhraseA) + 1);
             Result := Length(SslPassPhraseA);
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         _LeaveCriticalSection(LockPwdCB);
     end;
@@ -10856,7 +10879,7 @@ function PinCallback(ui: PUI; uis: PUI_STRING): Integer; cdecl;
 var
     Obj : TSslContext;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _EnterCriticalSection(LockPwdCB);
     try
 {$ENDIF}
@@ -10864,7 +10887,7 @@ begin
         f_UI_set_result(ui, uis, PAnsiChar(AnsiString(Obj.FSslPassPhrase)));
         Result := 1;
 
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         _LeaveCriticalSection(LockPwdCB);
     end;
@@ -10884,7 +10907,7 @@ var
     Cert    : PX509;
     CurCert : TX509Base;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _EnterCriticalSection(LockVerifyCB);
     try
 {$ENDIF}
@@ -10892,7 +10915,7 @@ begin
         MySsl := f_X509_STORE_CTX_get_ex_data(
                                 StoreCtx, f_SSL_get_ex_data_X509_STORE_CTX_idx);
         // Retrieve the object reference we stored at index 0
-        Obj   := TCustomSslWSocket(f_SSL_get_ex_data(MySsl, 0));
+        Obj := TCustomSslWSocket(f_SSL_get_ex_data(MySsl, 0));
         if Assigned(Obj) then begin
             Obj.Pause;
             Obj.FSsl_In_CB := TRUE;
@@ -10932,7 +10955,7 @@ begin
             end;
         end;
         Result := Ok;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         _LeaveCriticalSection(LockVerifyCB);
     end;
@@ -10951,7 +10974,7 @@ begin
    { Also: It is invoked whenever a SSL_SESSION is destroyed.  It is called }
    { just before the session object is destroyed because it is invalid or   }
    { has expired.                                                           }
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _EnterCriticalSection(LockRemSessCB);
     try
 {$ENDIF}                                                             
@@ -10964,7 +10987,7 @@ begin
             if Assigned(Obj.FOnRemoveSession) then
                 Obj.FOnRemoveSession(Obj, Sess);
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         _LeaveCriticalSection(LockRemSessCB);
     end;
@@ -11022,7 +11045,7 @@ begin
     { -1 and SSL_want_x509_lookup(ssl) returns TRUE.  Remember that            }
     { application data can be attached to an SSL structure via the             }
 
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _EnterCriticalSection(LockClientCertCB);
     try
 {$ENDIF}
@@ -11059,7 +11082,7 @@ begin
                     _PostMessage(Obj.FWindowHandle, Obj.FMsg_WM_RESET_SSL, 0, 0);
             end;
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         _LeaveCriticalSection(LockClientCertCB)
     end;
@@ -11068,7 +11091,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
 procedure TSslContext.Lock;
 begin
     _EnterCriticalSection(FLock)
@@ -11098,7 +11121,7 @@ begin
    { Also: If this function returns 0,  the session object will not be     }
    { cached. A nonzero return allows the session to be cached              }
    
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _EnterCriticalSection(LockNewSessCB);
     try
 {$ENDIF}
@@ -11126,7 +11149,7 @@ begin
             if Obj.FHSocket = INVALID_SOCKET then
                 _PostMessage(Obj.FWindowHandle, Obj.FMsg_WM_RESET_SSL, 0, 0);
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         _LeaveCriticalSection(LockNewSessCB);
     end;
@@ -11153,7 +11176,7 @@ begin
     { nonzero if the object's reference count should be incremented;      }
     { otherwise, zero is returned                                         }
 
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _EnterCriticalSection(LockGetSessCB);
     try
 {$ENDIF}
@@ -11181,7 +11204,7 @@ begin
             if Obj.FHSocket = INVALID_SOCKET then
                 _PostMessage(Obj.FWindowHandle, Obj.FMsg_WM_RESET_SSL, 0, 0);
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         _LeaveCriticalSection(LockGetSessCB);
     end;
@@ -11281,7 +11304,7 @@ var
     St       : PX509_STORE;
     CrlStack : PStack;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11322,7 +11345,7 @@ begin
                 f_sk_pop_free(CrlStack, @f_X509_CRL_free);
             end;
         end;
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}        
     finally
         Unlock;
     end;
@@ -11362,11 +11385,8 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.LoadVerifyLocations(const CAFile, CAPath: String);
 var
-    PCAPath : Pointer;
-    PCAFile : Pointer;
-{$IFDEF COMPILER12_UP}
-    CAPathA, CAFileA : AnsiString;
-{$ENDIF}
+    PCAPath : PAnsiChar;
+    PCAFile : PAnsiChar;
 begin
     // Load the CAs we trust
     //
@@ -11393,24 +11413,12 @@ begin
     if (Length(CAPath) > 0) and (not _DirectoryExists(CAPath)) then
         raise ESslContextException.Create('Directory not found "' + CAPath + '"');
 
-    if Length(CAPath) > 0 then begin
-    {$IFDEF COMPILER12_UP}
-        CAPathA := AnsiString(CAPath);
-        PCAPath := PAnsiChar(CAPathA);
-    {$ELSE}
-        PCAPath := PChar(CAPath);
-    {$ENDIF}
-    end
+    if CAPath <> '' then
+        PCAPath := PAnsiChar(AnsiString(CAPath))
     else
         PCAPath := nil;
-    if Length(CAFile) > 0 then begin
-    {$IFDEF COMPILER12_UP}
-        CAFileA := AnsiString(CAFile);
-        PCAFile := PAnsiChar(CAFileA);
-    {$ELSE}
-        PCAFile := PChar(CAFile);
-    {$ENDIF}
-    end
+    if CAFile <> '' then
+        PCAFile := PAnsiChar(AnsiString(CAFile))
     else
         PCAFile := nil;
     if ((PCAFile <> nil) or (PCAPath <> nil)) and
@@ -11585,7 +11593,7 @@ var
     SslSessCacheModes : TSslSessCacheModes;
 begin
     InitializeSsl; //loads libs
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11693,7 +11701,7 @@ begin
             end;
             raise
         end;
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}        
     finally
         Unlock
     end;
@@ -11704,7 +11712,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.DeInitContext;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11723,7 +11731,7 @@ begin
             f_SSL_CTX_free(FSslCtx);
             FSslCtx := nil;
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock;
     end;
@@ -11735,7 +11743,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslCAFile(const Value: String);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11744,7 +11752,7 @@ begin
         FSslCAFile := Value;
         if Assigned(FSslCtx) then
             LoadVerifyLocations(FSslCAFile, FSslCAPath);
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -11755,7 +11763,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslCAPath(const Value: String);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11764,7 +11772,7 @@ begin
         FSslCAPath := Value;
         if Assigned(FSslCtx) then
             LoadVerifyLocations(FSslCAFile, FSslCAPath);
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}        
     finally
         Unlock
     end;
@@ -11775,7 +11783,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslCertFile(const Value: String);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11784,7 +11792,7 @@ begin
         FSslCertFile := Value;
         if Assigned(FSslCtx) then
             LoadCertFromChainFile(FSslCertFile);
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}        
     finally
         Unlock
     end;
@@ -11795,12 +11803,12 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslCRLFile(const Value: String);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
         FSslCRLFile := Value
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}        
     finally
         Unlock
     end;
@@ -11811,12 +11819,12 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslCRLPath(const Value: String);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
         FSslCRLPath := Value
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -11827,12 +11835,12 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslPassPhrase(const Value: String);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
         FSslPassPhrase := Value
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -11843,7 +11851,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslPrivKeyFile(const Value: String);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11852,7 +11860,7 @@ begin
         FSslPrivKeyFile := Value;
         if Assigned(FSslCtx) then
             LoadPKeyFromFile(FSslPrivKeyFile);
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -11863,12 +11871,12 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslSessionCacheSize(Value: Longint);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
         FSslSessionCacheSize := Value
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -11879,12 +11887,12 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslSessionTimeout(Value: Longword);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
         FSslSessionTimeout := Value
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -11895,12 +11903,12 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslVersionMethod(Value: TSslVersionMethod);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
         FSslVersionMethod := Value
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -11913,7 +11921,7 @@ function TSslContext.GetSslOptions: TSslOptions; { V7.30 }
 var 
     Opt: TSslOption;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11921,7 +11929,7 @@ begin
         for Opt := Low(TSslOption) to High(TSslOption) do
             if (FSslOptionsValue and SslIntOptions[Opt]) <> 0 then
                 Include(Result, Opt);
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -11934,7 +11942,7 @@ procedure TSslContext.SetSslOptions(Value: TSslOptions); { V7.30 }
 var 
     Opt: TSslOption;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11942,7 +11950,7 @@ begin
         for Opt := Low(TSslOption) to High(TSslOption) do
             if Opt in Value then
                 FSslOptionsValue := FSslOptionsValue or SslIntOptions[Opt];
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock;
     end;
@@ -11955,7 +11963,7 @@ procedure TSslContext.SetSslSessCacheModes(Value: TSslSessCacheModes); { V7.30 }
 var 
     SessMode: TSslSessCacheMode;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11963,7 +11971,7 @@ begin
         for SessMode := Low(TSslSessCacheMode) to High(TSslSessCacheMode) do
             if SessMode in Value then
                 FSslSessCacheModeValue := FSslSessCacheModeValue or SslIntSessCacheModes[SessMode];
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock;
     end;
@@ -11976,7 +11984,7 @@ function TSslContext.GetSslSessCacheModes: TSslSessCacheModes; { V7.30 }
 var 
     SessMode: TSslSessCacheMode;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -11985,7 +11993,7 @@ begin
             if FSslSessCacheModeValue and SslIntSessCacheModes[SessMode] <> 0 then
                 Include(Result, SessMode);
 
-{$IFNDEF NO_ADV_MT}            
+{$IFNDEF NO_SSL_MT}            
     finally
         Unlock;
     end;
@@ -11996,7 +12004,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslCipherList(const Value: String);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -12004,7 +12012,7 @@ begin
             Exit;   // No change, do nothing
         // Now should check the syntax. Will do later :-)
         FSslCipherList := Value;
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}        
     finally
         Unlock
     end;
@@ -12016,7 +12024,7 @@ end;
 procedure TSslContext.SetSslVerifyPeerModes(
     const Value: TSslVerifyPeerModes);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -12051,7 +12059,7 @@ begin
             f_SSL_CTX_set_verify(FSslCtx, 0, nil);
             f_SSL_CTX_set_verify_depth(FSslCtx, 0);
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock;
     end;
@@ -12062,7 +12070,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslContext.SetSslVerifyPeer(const Value: Boolean);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -12070,7 +12078,7 @@ begin
             FSslVerifyPeer := Value;
             SetSslVerifyPeerModes(FSslVerifyPeerModes);
         end;
-{$IFNDEF NO_ADV_MT}        
+{$IFNDEF NO_SSL_MT}        
     finally
         Unlock;
     end;
@@ -12082,7 +12090,7 @@ end;
 procedure TSslContext.SetSslDefaultSessionIDContext(
     Value: TSslSessionIdContext);
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     Lock;
     try
 {$ENDIF}
@@ -12100,7 +12108,7 @@ begin
                     f_SSL_CTX_set_session_id_context(FSslCtx, nil, 0);
             end;
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         Unlock
     end;
@@ -13014,8 +13022,8 @@ begin
     if CheckLogOptions(loSslInfo) then begin  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
     Inc(TraceCount);
         DebugLog(loSslInfo, _Format('%s BIO_ctrl_pending(%s) = %d   [%d]',
-                       [_IntToHex(Integer(Self), 8), GetMyBioName(b),
-                        Result, TraceCount]));
+                 [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                 GetMyBioName(b), Result, TraceCount]));
     end;
 {$ENDIF}
 end;
@@ -13052,16 +13060,15 @@ begin
     if CheckLogOptions(loSslInfo) then begin  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
     Inc(TraceCount);
         DebugLog(loSslInfo, _Format('%s BIO_read(%s, 0x%x, %d) = %d   [%d]',
-                       [_IntToHex(Integer(Self), 8), GetMyBioName(b),
-                       Integer(Buf), Len, Result,
-                              TraceCount]));
+                       [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                       GetMyBioName(b), INT_PTR(Buf), Len, Result, TraceCount]));
     end
     else if CheckLogOptions(loSslDump) then begin
         Inc(TraceCount);
         DebugLog(loSslDump, _Format('%s BIO_read(%s, 0x%x, %d) = %d   [%d] Data:%s',
-                       [_IntToHex(Integer(Self), 8), GetMyBioName(b),
-                       Integer(Buf), Len, Result,
-                              TraceCount, DataToString(Buf, Result)]));
+                       [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                       GetMyBioName(b), INT_PTR(Buf), Len, Result,
+                       TraceCount, DataToString(Buf, Result)]));
     end;
 {$ENDIF}
 end;
@@ -13104,9 +13111,9 @@ begin
     if CheckLogOptions(loSslInfo) then begin  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
     Inc(TraceCount);
         DebugLog(loSslInfo, _Format('%s BIO_ctrl(%s, %s, %s, 0x%x) = %d   [%d]',
-                             [_IntToHex(Integer(Self), 8), GetMyBioName(bp),
-                              CmdName, LArgName, Integer(PArg), Result,
-                              TraceCount]));
+                             [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                             GetMyBioName(bp), CmdName, LArgName, INT_PTR(PArg),
+                             Result, TraceCount]));
     end;
 {$ENDIF}
 end;
@@ -13124,9 +13131,10 @@ begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then begin  { V5.21 }
     Inc(TraceCount);
-        DebugLog(loSslInfo, _Format('%s BIO_ctrl_get_write_guarantee(%s) = %d   [%d]',
-                       [_IntToHex(Integer(Self), 8), GetMyBioName(b),
-                        Result, TraceCount]));
+        DebugLog(loSslInfo,
+                 _Format('%s BIO_ctrl_get_write_guarantee(%s) = %d   [%d]',
+                 [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2), GetMyBioName(b),
+                 Result, TraceCount]));
     end;
 {$ENDIF}
 end;
@@ -13146,8 +13154,8 @@ begin
     if CheckLogOptions(loSslInfo) then begin  { V5.21 }
         Inc(TraceCount);
         DebugLog(loSslInfo, _Format('%s BIO_ctrl_get_read_request(%s) = %d   [%d]',
-                                   [_IntToHex(Integer(Self), 8), GetMyBioName(b),
-                                   Result, TraceCount]));
+                                   [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                                   GetMyBioName(b), Result, TraceCount]));
     end;
 {$ENDIF}    
 end;
@@ -13166,14 +13174,16 @@ begin
     if CheckLogOptions(loSslInfo) then begin  { V5.21 }
         Inc(TraceCount);
         DebugLog(loSslInfo, _Format('%s BIO_write(%s, 0x%x, %d) = %d   [%d]',
-                                   [_IntToHex(Integer(Self), 8), GetMyBioName(b),
-                                   Integer(Buf),  Len, Result, TraceCount]));
+                                   [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                                   GetMyBioName(b),
+                                   INT_PTR(Buf),  Len, Result, TraceCount]));
     end
     else if CheckLogOptions(loSslDump) then begin
         Inc(TraceCount);
         DebugLog(loSslDump, _Format('%s BIO_write(%s, 0x%x, %d) = %d   [%d] Data:%s',
-                                   [_IntToHex(Integer(Self), 8), GetMyBioName(b),
-                                   Integer(Buf), Len, Result,
+                                   [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                                   GetMyBioName(b),
+                                   INT_PTR(Buf), Len, Result,
                                    TraceCount, DataToString(Buf, Result)]));
     end;
 {$ENDIF}
@@ -13190,7 +13200,7 @@ begin
     if CheckLogOptions(loSslErr) then begin
         Inc(TraceCount);
         DebugLog(loSslErr, _Format('%s  %d  [%d] %s',
-                                  [_IntToHex(Integer(Self), 8),
+                                  [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
                                    FHSocket, TraceCount,
                                    LastOpenSslErrMsg(TRUE)]));
     end
@@ -13211,8 +13221,8 @@ begin
     if CheckLogOptions(loSslInfo) then begin  { V5.21 }
         Inc(TraceCount);
         DebugLog(loSslInfo, _Format('%s Winsock recv( %d, 0x%x, %d, %d) = %d   [%d]',
-                                   [_IntToHex(Integer(Self), 8), s, Integer(Buf),
-                                   Len, Flags, Result, TraceCount]));
+                                   [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                                   s, INT_PTR(Buf), Len, Flags, Result, TraceCount]));
     end;
 {$ENDIF}
 end;
@@ -13226,8 +13236,9 @@ begin
     if CheckLogOptions(loSslInfo) then begin  { V5.21 }
         Inc(TraceCount);
         DebugLog(loSslInfo, _Format('%s my_RealSend (0x%x, %d, %d) = %d   [%d]',
-                                   [_IntToHex(Integer(Self), 8), FHSocket,
-                                   Integer(Buf), Len, Result, TraceCount]));
+                                   [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                                   FHSocket,
+                                   INT_PTR(Buf), Len, Result, TraceCount]));
     end;
 {$ENDIF}
 end;
@@ -13245,8 +13256,8 @@ begin
     if CheckLogOptions(loSslInfo) then begin  { V5.21 }
         Inc(TraceCount);
         DebugLog(loSslInfo, _Format('%s BIO_should_retry(%s) = %d   [%d]',
-                       [_IntToHex(Integer(Self), 8), GetMyBioName(b),
-                       Ord(Result), TraceCount]))
+                               [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                               GetMyBioName(b), Ord(Result), TraceCount]))
     end;
 {$ENDIF}
 end;
@@ -13260,6 +13271,7 @@ begin
     FSslAcceptableHosts     := TStringList.Create;
     FSslCertChain           := TX509List.Create(Self);
     FX509Class              := TX509Base;
+    {
     FSsl                    := nil;
     FSslbio                 := nil;
     FIBIO                   := nil;
@@ -13269,12 +13281,12 @@ begin
     FNetworkError           := 0;
     FSslIntShutDown         := 0;
     FSslVerifyResult        := 0;
-
+    }
     FMayTriggerFD_Read      := TRUE;
     FMayTriggerFD_Write     := TRUE;
     FMayTriggerDoRecv       := TRUE;
     FMayTriggerSslTryToSend := TRUE;
-    FCloseCalled            := FALSE;
+    //FCloseCalled            := FALSE;
     //FCloseReceived          := FALSE;
     
     //FMayInternalSslShut     := TRUE;
@@ -13291,12 +13303,10 @@ end;
 destructor TCustomSslWSocket.Destroy;
 begin
     inherited Destroy;
-    if Assigned(FSslAcceptableHosts) then
-        _FreeAndNil(FSslAcceptableHosts);
+    _FreeAndNil(FSslAcceptableHosts);
     DeleteBufferedSslData;
     _FreeAndNil(FSslBufList);
-    if Assigned(FSslCertChain) then
-        _FreeAndNil(FSslCertChain);
+    _FreeAndNil(FSslCertChain);
     FinalizeSSL;
 end;
 
@@ -13334,7 +13344,7 @@ procedure TCustomSslWSocket.Do_FD_ACCEPT(var Msg: TMessage);
 begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' Do_FD_ACCEPT ' + _IntToStr(FHSocket));
 {$ENDIF}
     inherited Do_FD_ACCEPT(msg);  
@@ -13357,7 +13367,7 @@ begin
     end;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                  ' Socket data pending: ' + _IntToStr(Count) + ' Err: ' +
                  _IntToStr(FLastError) + ' ' + _IntToStr(FHSocket));
 {$ENDIF}
@@ -13376,7 +13386,7 @@ begin
     end;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' TCustomSslWSocket.Do_FD_CLOSE error #' +
                       _IntToStr(msg.LParamHi) + ' ' + _IntToStr(FHSocket));
 {$ENDIF}
@@ -13389,7 +13399,7 @@ begin
         FCloseCalled := TRUE;
 {$IFNDEF NO_DEBUG_LOG}        
         if CheckLogOptions(loSslInfo) then
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                      ' *CloseCalled ' + _IntToStr(FHSocket));
 {$ENDIF}
     end;
@@ -13429,7 +13439,7 @@ begin
 
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                  ' FCloseInvoked=' + _IntToStr(Ord(FCloseInvoked)) + ' ' +
                  _IntToStr(FHSocket));
 {$ENDIF}
@@ -13492,7 +13502,7 @@ begin
             else
                 S := 'Unknown';
         end;
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                  ' TriggerEvent ' + S + _IntToStr(FHSocket));
     end;
 {$ENDIF}
@@ -13555,7 +13565,7 @@ begin
 
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' TCustomSslWSocket.Do_FD_READ ' + _IntToStr(FHSocket));
 {$ENDIF}
 
@@ -13566,7 +13576,7 @@ begin
        (my_BIO_ctrl_pending(FSslbio) > 0) then begin
 {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                ' TriggerDataAvailable (Do_FD_READ_1) ' + _IntToStr(FHSocket));
 {$ENDIF}
         TriggerDataAvailable(0);
@@ -13620,7 +13630,8 @@ begin
                     end;
 {$IFNDEF NO_DEBUG_LOG}
                     if CheckLogOptions(loSslInfo) then  { V5.21 }
-                        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+                        DebugLog(loSslInfo,
+                                _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                                  ' NetworkError #' + _IntToStr(FNetworkError));
 {$ENDIF}
                     Exit;
@@ -13669,18 +13680,19 @@ begin
             TriggerEvent(sslFdClose, 0);
 {$IFNDEF NO_DEBUG_LOG}
             if CheckLogOptions(loSslErr) then  { V5.21 }
-                DebugLog(loSslErr, _IntToHex(Integer(Self), 8) +
+                DebugLog(loSslErr, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                          ' NetworkError #' + _IntToStr(FNetworkError));
 {$ENDIF}
             Exit;
         end;
     end;
 
-    if (f_SSL_state(FSsl) = SSL_ST_OK) {(FSslState >= sslEstablished)} and (FSslBioWritePendingBytes < 0) and // <= 12/08/05
+    if (f_SSL_state(FSsl) = SSL_ST_OK) {(FSslState >= sslEstablished)} and
+       (FSslBioWritePendingBytes < 0) and // <= 12/08/05
        (my_BIO_ctrl_pending(FSslbio) > 0) then begin
 {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                      ' TriggerDataAvailable (Do_FD_READ_2) ' +
                      _IntToStr(FHSocket));
 {$ENDIF}
@@ -13713,7 +13725,7 @@ begin
     end;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' TCustomSslWSocket.Do_FD_WRITE ' + _IntToStr(FHSocket));
 {$ENDIF}
     if (FNetworkError > 0) then
@@ -13727,14 +13739,16 @@ begin
     if (FHSocket = INVALID_SOCKET) then begin
 {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +  ' INVALID_SOCKET');
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
+                                          ' INVALID_SOCKET');
 {$ENDIF}
         Exit;
     end
     else if not bAllSent then begin
 {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) + ' * Not bAllSent ' + _IntToStr(FHSocket));
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
+                               ' * Not bAllSent ' + _IntToStr(FHSocket));
 {$ENDIF}
         FMayTriggerFD_Write := TRUE;
         { AG 01/10/07 - Outcommented next line in order to avoid too many  }
@@ -13768,7 +13782,8 @@ begin
                     TriggerEvent(sslFdClose, 0);    
 {$IFNDEF NO_DEBUG_LOG}
                     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-                        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+                        DebugLog(loSslInfo,
+                            _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                             ' Winsock Error ' + WSocketErrorDesc(FNetworkError) +
                             ' ' + _IntToStr(FHSocket));
 {$ENDIF}
@@ -13831,7 +13846,7 @@ begin
     end;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' TCustomSslWSocket.DoRecv ' + _IntToStr(FHSocket));
 {$ENDIF}
     if FNetworkError > 0 then begin
@@ -13917,7 +13932,7 @@ begin
             end;
 {$IFNDEF NO_DEBUG_LOG}
             if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-                DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+                DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                                  ' NetworkError #' + _IntToStr(FNetworkError));
 {$ENDIF}
             Exit;
@@ -13985,7 +14000,7 @@ begin
         FSslBiShutDownFlag := FALSE;
 {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loSslInfo) then
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                      ' *CloseCalled ' + _IntToStr(FHSocket));
 {$ENDIF}
     end;
@@ -14009,7 +14024,7 @@ begin
     end;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                  ' TCustomSslWSocket.ShutDown ' + _IntToStr(How) + ' ' +
                  _IntToStr(FHSocket));
 {$ENDIF}
@@ -14088,7 +14103,7 @@ begin
     finally
 {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loSslInfo) then
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                      ' SslShutdownCompleted *'+ _IntToStr(Ord(Result)) + '* ' +
                      _IntToStr(FHSocket));
 {$ENDIF}
@@ -14114,7 +14129,7 @@ begin
     end;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                  ' SslInternalShutdown ' + _IntToStr(FHSocket));
 {$ENDIF}
 
@@ -14182,7 +14197,8 @@ begin
     if CheckLogOptions(loSslInfo) then
         DebugLog(loSslInfo,
                  _Format('%s TriggerSslShutDownComplete(%d) %d',
-                        [_IntToHex(Integer(Self), 8), ErrCode, FHSocket]));
+                        [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                        ErrCode, FHSocket]));
 {$ENDIF}
     if Assigned(FOnSslShutdownComplete) then
         FOnSslShutdownComplete(Self, FSslBiShutDownFlag, ErrCode);
@@ -14286,7 +14302,7 @@ procedure TCustomSslWSocket.Dup(NewHSocket: Integer);
 begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' Dup accepting accepted socket = ' +
                       _IntToStr(NewHSocket));
 {$ENDIF}
@@ -14322,7 +14338,7 @@ var
 {$ENDIF}
     Obj : TCustomSslWSocket;
 begin
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     _EnterCriticalSection(LockInfoCB);
     try
 {$ENDIF}
@@ -14408,12 +14424,122 @@ begin
             if Obj.FHSocket = INVALID_SOCKET then
                 _PostMessage(Obj.FWindowHandle, Obj.FMsg_WM_RESET_SSL, 0, 0);
         end;
-{$IFNDEF NO_ADV_MT}
+{$IFNDEF NO_SSL_MT}
     finally
         _LeaveCriticalSection(LockInfoCB);
     end;
 {$ENDIF}
 end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFNDEF OPENSSL_NO_TLSEXT}
+function ServerNameCallback(SSL: PSSL; var ad: Integer; arg: Pointer): Longint; cdecl;
+var
+    Ws : TCustomSslWSocket;
+    PServerName : PAnsiChar; // Pointer to UTF-8 string
+    Ctx : TSslContext;
+    Err : TTlsExtError;
+begin
+{$IFNDEF NO_SSL_MT}
+    _EnterCriticalSection(LockServerNameCB);
+    try
+{$ENDIF}
+    PServerName := f_SSL_get_servername(SSL, TLSEXT_NAMETYPE_host_name);
+    if Assigned(PServerName) then
+    begin
+        Ws := TCustomSslWSocket(f_SSL_get_ex_data(SSL, 0));
+        if Assigned(Ws) and Assigned(Ws.FOnSslServerName) then
+        begin
+            Ws.FSsl_In_CB := TRUE;
+            try
+                Ws.FSslServerName := String(UTF8String(PServerName));
+                Ctx := nil;
+                Err := teeAlertWarning; //SSL_TLSEXT_ERR_ALERT_WARNING
+                Ws.FOnSslServerName(Ws, Ctx, Err);
+                { Do not switch context if not initialized }
+                if Assigned(Ctx) and Assigned(Ctx.FSslCtx) then
+                begin
+                    if Ws.SslContext <> Ctx then
+                    begin
+                        Ws.SslContext := Ctx;
+                        f_SSL_set_SSL_CTX(SSL, Ctx.FSslCtx);
+                        f_SSL_set_options(SSL, f_SSL_CTX_get_options(ctx.FSslCtx));
+                        f_SSL_CTX_set_tlsext_servername_callback(Ctx.FSslCtx,
+                                                         @ServerNameCallBack);
+                    {$IFNDEF NO_DEBUG_LOG}
+                        if Ws.CheckLogOptions(loSslInfo) then
+                            Ws.DebugLog(loSslInfo,
+                                    'SNICB> Switching context server_name "'
+                                    + Ws.FSslServerName + '"');
+                    {$ENDIF}
+                    end;
+                    Result := SSL_TLSEXT_ERR_OK;
+                end
+                else
+                    Result := Ord(Err);
+            finally
+                Ws.FSsl_In_CB := FALSE;
+                if Ws.FHSocket = INVALID_SOCKET then
+                    _PostMessage(Ws.FWindowHandle, Ws.FMsg_WM_RESET_SSL, 0, 0);
+            end;
+        end
+        else
+            Result := SSL_TLSEXT_ERR_OK;// SSL_TLSEXT_ERR_NOACK;
+    end
+    else
+        Result := SSL_TLSEXT_ERR_OK;
+{$IFNDEF NO_SSL_MT}
+    finally
+        _LeaveCriticalSection(LockServerNameCB);
+    end;
+{$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFDEF NEVER}
+procedure TlsExtension_cb(SSL: PSSL; client_server: Integer; type_: Integer;
+  data: PAnsiChar; len: Integer; arg: Pointer); cdecl;
+var
+    ExtName : String;
+    CS : String;
+    Ws : TCustomSslWSocket;
+begin
+    Ws := TCustomSslWSocket(f_SSL_get_ex_data(Ssl, 0));
+    case type_ of
+      TLSEXT_TYPE_server_name :
+          ExtName := 'server name';
+      TLSEXT_TYPE_max_fragment_length :
+          ExtName := 'max fragment length';
+      TLSEXT_TYPE_client_certificate_url :
+          ExtName := 'client certificate URL';
+      TLSEXT_TYPE_trusted_ca_keys :
+          ExtName := 'trusted CA keys';
+      TLSEXT_TYPE_truncated_hmac :
+          ExtName := 'truncated HMAC';
+      TLSEXT_TYPE_status_request :
+          ExtName := 'status request';
+      TLSEXT_TYPE_elliptic_curves :
+          ExtName := 'elliptic curves';
+      TLSEXT_TYPE_ec_point_formats :
+          ExtName := 'EC point formats';
+      TLSEXT_TYPE_session_ticket :
+          ExtName := 'server ticket';
+    else
+        ExtName := 'unknown';
+    end;
+    if client_server = 0 then
+        CS := 'client'
+    else
+        CS := 'server';
+    if Ws.CheckLogOptions(loSslInfo) then
+         Ws.DebugLog(loSslInfo, _Format('TLSExtCB> TLS %s extension "%s" (id=%d), len=%d',
+                                        [CS, ExtName, Type_, len]));
+end;
+{$ENDIF}
+
+{$ENDIF OPENSSL_NO_TLSEXT}
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -14474,7 +14600,7 @@ begin
                          _Format('%s ! Cannot start re-negotiation  State ' +
                                 '%d Version (0x%x) RenegotiatePending %d ' +
                                 'NO_RENEGOTIATION %d %d',
-                                [_IntToHex(Integer(Self), 8),
+                                [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
                                 TmpInt, Ver, Pen, Ord(ICS_SSL_NO_RENEGOTIATION),
                                 FHSocket]));
             end;
@@ -14485,7 +14611,7 @@ begin
             HandleSslError;
 {$IFNDEF NO_DEBUG_LOG}
             if CheckLogOptions(loSslErr) then begin  { V5.21 }
-                DebugLog(loSslErr, _IntToHex(Integer(Self), 8) +
+                DebugLog(loSslErr, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                          ' ! SSL_renegotiate() failed');
             end
 {$ENDIF}
@@ -14498,7 +14624,8 @@ begin
                     HandleSslError;
 {$IFNDEF NO_DEBUG_LOG}
                     if CheckLogOptions(loSslErr) then
-                        DebugLog(loSslErr, _IntToHex(Integer(Self), 8) +
+                        DebugLog(loSslErr,
+                                 _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                                  ' ! Re-negotiation failed');
 {$ENDIF}
                     FNetworkError := WSAECONNABORTED;
@@ -14509,7 +14636,7 @@ begin
             end;
 {$IFNDEF NO_DEBUG_LOG}
             if CheckLogOptions(loSslInfo) then  { V5.21 }
-                DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+                DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                          ' ! Re-negotiation started ' +  _IntToStr(FHSocket));
 {$ENDIF}
             Result := TRUE;
@@ -14527,7 +14654,7 @@ procedure TCustomSslWSocket.StartSslHandshake;
 begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' StartSslHandshake ' + _IntToStr(FHSocket));
 {$ENDIF}
     if not FSslEnable then
@@ -14535,7 +14662,7 @@ begin
     if not Assigned(FSslContext) then
         raise ESslContextException.Create('SSL requires a context object');
     if Assigned(FSsl) then
-        ResetSsl;    
+        ResetSsl;
     FSslState := sslHandshakeInit;
     FSslMode  := sslModeClient;
     try
@@ -14547,7 +14674,7 @@ begin
             FSslState := sslNone;
 {$IFNDEF NO_DEBUG_LOG}
             if CheckLogOptions(loSslInfo) then  { V5.21 }
-                DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+                DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                           ' Fatal error SSL handshake ' + _IntToStr(FHSocket) +
                           ' ' + E.Classname + ' ' + E.Message);
 {$ENDIF}
@@ -14563,7 +14690,7 @@ procedure TCustomSslWSocket.AcceptSslHandshake;
 begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' AcceptSslHandshake ' + _IntToStr(FHSocket));
 {$ENDIF}
     if not FSslEnable then
@@ -14583,7 +14710,7 @@ begin
             FSslState  := sslNone; 
 {$IFNDEF NO_DEBUG_LOG}
             if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-                DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+                DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                           ' Fatal error SSL handshake ' + _IntToStr(FHSocket) +
                           ' ' + E.Classname + ': ' + E.Message);
 {$ENDIF}
@@ -14599,7 +14726,7 @@ procedure TCustomSslWSocket.DupConnected;
 begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' DupConnected');
 {$ENDIF}
 end;
@@ -14631,7 +14758,7 @@ begin
     end;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' SslInternalClose ' + _IntToStr(FHSocket));
 {$ENDIF}
     if FHSocket = INVALID_SOCKET then begin
@@ -14665,7 +14792,7 @@ begin
     inherited Listen;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' Listening');
 {$ENDIF}                      
 end;
@@ -14695,13 +14822,14 @@ var
     SessionIDContext  : TSslSessionIdContext; // for session caching in ssl server mode
     SslCachedSession  : Pointer;
     FreeSession       : Boolean;
+    SIdCtxLen         : Integer;
 begin
     if not FSslEnable then
         Exit;
     //Inc(FCount); // Test
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' InitSSLConnection ' + _IntToStr(FHSocket));
 {$ENDIF}
     FSslCertChain.Clear;
@@ -14731,17 +14859,18 @@ begin
             if not Assigned(FSsl) then
                 RaiseLastOpenSslError(Exception, TRUE,
                                       'Error on creating the Ssl object');
-
             //Create BIOs
-            FSslBio := f_BIO_new(f_BIO_f_ssl());
+            FSslBio := f_BIO_new(f_BIO_f_ssl);
             f_BIO_new_bio_pair(@FIBio, SSL_BUFFER_SIZE, @FNBio, SSL_BUFFER_SIZE);
             if (FSslBio = nil) or (FNBio = nil) or (FIBio = nil) then
                 RaiseLastOpenSslError(Exception, TRUE,
                                       'Creating BIOs failed');
 
-            Options := f_SSL_ctrl(FSsl, SSL_CTRL_OPTIONS, 0, nil);
-            Options := Options or SSL_OP_ALL;
-            f_SSL_ctrl(FSsl, SSL_CTRL_OPTIONS, Options, nil);
+            Options := f_SSL_get_options(FSsl);
+            { Currently no Tickets! Otherwise handshake fatal }
+            { errors or session resumption won't work.        }
+            Options := Options or SSL_OP_ALL or SSL_OP_NO_TICKET;
+            f_SSL_set_options(FSsl, Options);
 
             if f_SSL_set_ex_data(FSsl, 0, Self) <> 1 then
                 RaiseLastOpenSslError(Exception, TRUE,
@@ -14756,8 +14885,8 @@ begin
                 if (FSslContext.SslCertFile = '') and
                    Assigned(FOnSslCliCertRequest) and
                    (not Assigned(f_SSL_CTX_get_client_cert_cb(
-                          FSslContext.FSslCtx))) then
-                    f_SSL_CTX_set_client_cert_cb(FSslContext.FSslCtx,
+                          pSSLContext{FSslContext.FSslCtx}))) then
+                    f_SSL_CTX_set_client_cert_cb(pSSLContext{FSslContext.FSslCtx},
                                                  ClientCertCallBack);
                 // Get a cached session from the application
                 SslCachedSession := nil;
@@ -14766,12 +14895,14 @@ begin
                     FOnSslCliGetSession(Self, SslCachedSession, FreeSession);
                 if Assigned(SslCachedSession) and
                    (f_SSL_set_session(FSsl, SslCachedSession) = 1) then begin  // 01/14/06 AG
-{$IFNDEF NO_DEBUG_LOG}
+                {$IFNDEF NO_DEBUG_LOG}
                     if CheckLogOptions(loSslInfo) then  { V5.21 }
-                        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+                        DebugLog(loSslInfo,
+                                 _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                                  ' Reuse session [' +
-                                 _IntToHex(Integer(SslCachedSession), 8) +']');
-{$ENDIF}
+                                 _IntToHex(INT_PTR(SslCachedSession),
+                                 SizeOf(SslCachedSession) * 2) +']');
+                {$ENDIF}
                     if FreeSession then
                         f_SSL_SESSION_Free(SslCachedSession);
                     SslCachedSession := nil;
@@ -14779,35 +14910,65 @@ begin
                 else
                     f_SSL_set_session(FSsl, nil);
 
+            {$IFNDEF OPENSSL_NO_TLSEXT}
+                { FSslServerName is the servername to be sent in client helo. }
+                { If not empty, enables SNI in SSL client mode.               }
+                if (FSslServerName <> '') and
+                    (f_SSL_set_tlsext_host_name(FSsl, FSslServerName) = 0) then
+                        RaiseLastOpenSslError(EOpenSslError, TRUE,
+                             'Unable to set TLS servername extension');
+            {$ENDIF}
+            
                 f_SSL_set_connect_state(FSsl);
             end
             else begin // Server mode
                 if Assigned(FOnSslSetSessionIDContext) then begin
                     SessionIDContext := '';
                     FOnSslSetSessionIDContext(Self, SessionIDContext);
-                    if Length(SessionIDContext) > 0 then begin
-                        if Length(SessionIDContext) > SSL_MAX_SSL_SESSION_ID_LENGTH then
-                            SetLength(SessionIDContext, SSL_MAX_SSL_SESSION_ID_LENGTH);
+                    { This is so bad. We should consider a breaking change }
+                    { and use AnsiString, same for session keys :(         }
+                    SIdCtxLen := Length(SessionIDContext) * SizeOf(Char);
+                    if SIdCtxLen > 0 then begin
+                        if SIdCtxLen > SSL_MAX_SSL_SESSION_ID_LENGTH then
+                        { Should trigger an exception rather than silently }
+                        { truncate the data..                              }
+                            SIdCtxLen := SSL_MAX_SSL_SESSION_ID_LENGTH;
+                        { So with Unicode there are only 16 items left.    }
                         if f_ssl_set_session_id_context(FSsl,
-                               @SessionIDContext[1],
-                               Length(SessionIDContext)) = 0 then begin
-{$IFNDEF NO_DEBUG_LOG}
+                             @SessionIDContext[1], SIdCtxLen) = 0 then begin
+                    {$IFNDEF NO_DEBUG_LOG}
                             if CheckLogOptions(loSslErr) then { V5.21 }
-                                DebugLog(loSslErr, _IntToHex(Integer(Self), 8) +
+                                DebugLog(loSslErr,
+                                _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                                     ' ssl_set_session_id_context failed' +
                                     _IntToStr(FHSocket));
-
                         end
                         else begin
                             if CheckLogOptions(loSslInfo) then
-                                DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+                                DebugLog(loSslInfo,
+                                _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                                 ' SessionIDContext: ' + SessionIDContext + ' ' +
                                 _IntToStr(FHSocket));
-{$ENDIF}
+                    {$ENDIF}
                         end;
                     end;
-                end; {else
-                    f_SSL_set_session(FSsl, nil)};
+                end;
+
+            {$IFNDEF OPENSSL_NO_TLSEXT}
+                { FSslServerName receives the servername from client helo if }
+                { FOnSslServerName was assigned in SSL server mode.          }
+                FSslServerName := '';
+                if Assigned(FOnSslServerName) and
+                   (f_SSL_CTX_set_tlsext_servername_callback(pSSLContext,
+                                            @ServerNameCallBack) = 0) then
+                    RaiseLastOpenSslError(EOpenSslError, TRUE,
+                            'Unable to initialize servername callback for SNI');
+                {$IFDEF NEVER}
+                    if CheckLogOptions(loSslInfo) then
+                        f_SSL_set_tlsext_debug_callback(FSsl, @TlsExtension_CB);
+                {$ENDIF}
+            {$ENDIF}
+
                 f_SSL_set_accept_state(FSsl);
             end;
 
@@ -14876,14 +15037,15 @@ begin
         Inc(TraceCount);
         DebugLog(loSslInfo,
                  _Format('%s PutDataInSslBuffer %s len %d  [%d] ',
-                       [_IntToHex(Integer(Self), 8), _IntToStr(FHSocket),
-                        Len, TraceCount]));
+                       [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                       _IntToStr(FHSocket), Len, TraceCount]));
     end
     else if CheckLogOptions(loSslDump) then begin  { V5.21 }
         Inc(TraceCount);
         DebugLog(loSslDump,
                  _Format('%s PutDataInSslBuffer %s [%d] Data:%s',
-                        [_IntToHex(Integer(Self), 8), _IntToStr(FHSocket),
+                        [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                        _IntToStr(FHSocket),
                         TraceCount, DataToString(Data, Len)]));
     end;
 {$ENDIF}
@@ -14914,7 +15076,7 @@ begin
         Exit;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) and Assigned(FSsl) then  { V5.21 }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                  ' ResetSslSession ' + _IntToStr(FHSocket));
 {$ENDIF}
     DeleteBufferedSslData;
@@ -15131,7 +15293,7 @@ begin
     if (not FSslEnable) or (FSocksState <> socksData) then begin
 {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' TryToSend ' + _IntToStr(FHSocket));
 {$ENDIF}
         inherited TryToSend;
@@ -15139,7 +15301,7 @@ begin
     end;
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) +
+        DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
                       ' SslTryToSend ' + _IntToStr(FHSocket));
 {$ENDIF}
     FSslBufList.Lock;
@@ -15363,8 +15525,8 @@ begin
     State := f_SSL_state(FSsl);
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loSslInfo) then begin { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-        Str := _IntToHex(Integer(Self), 8) +  ' TriggerEvents ' +
-                   _IntToStr(FHSocket) + ' SslState: ';
+        Str := _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
+               ' TriggerEvents ' + _IntToStr(FHSocket) + ' SslState: ';
         if State and SSL_ST_INIT <> 0  then
             Str := Str + 'SSL_ST_INIT '
         else if State = SSL_ST_OK then
@@ -15506,9 +15668,10 @@ begin
         IncRefCount := FALSE;
 {$IFNDEF NO_DEBUG_LOG}
         if CheckLogOptions(loSslInfo) then  { V5.21 } { replaces $IFDEF DEBUG_OUTPUT  }
-            DebugLog(loSslInfo, _IntToHex(Integer(Self), 8) + ' CliNewSession [' +
-                          _IntToHex(Integer(CurrentSession), 8) + '] ' +
-                              'Reused: ' + _BoolToStr(SslSessionReused, TRUE));
+            DebugLog(loSslInfo, _IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2) +
+                     ' CliNewSession [' +
+                     _IntToHex(INT_PTR(CurrentSession), SizeOf(CurrentSession) * 2) + '] ' +
+                     'Reused: ' + _BoolToStr(SslSessionReused, TRUE));
 {$ENDIF}
         _EnterCriticalSection(SslCritSect);
         try
@@ -15572,8 +15735,8 @@ begin
         DebugLog(loSslInfo, _Format('%s SslHandshakeDone(%d) %d. Secure connection ' +
                              'with %s, cipher %s, %d secret bits (%d total), ' +
                              'session reused=%s',
-                             [_IntToHex(Integer(Self), 8), ErrCode, FHSocket,
-                             SslVersion, SslCipher, SslSecretBits,
+                             [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                             ErrCode, FHSocket, SslVersion, SslCipher, SslSecretBits,
                              SslTotalBits, _BoolToStr(SslSessionReused, TRUE)]));
 {$ENDIF}
     { No peer certificate in the chain, let's create a dummy }
@@ -15605,14 +15768,15 @@ begin
         if CheckLogOptions(loSslInfo) then begin { V5.21 }
             Inc(TraceCount);
             DebugLog(loSslDump, _Format('%s PutDataInSendBuffer %s  len %d [%d]',
-                             [_IntToHex(Integer(Self), 8), _IntToStr(FHSocket),
-                             Len, TraceCount]));
+                             [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                             _IntToStr(FHSocket), Len, TraceCount]));
         end
         else if CheckLogOptions(loSslDump) then begin { V5.21 }
             Inc(TraceCount);
             DebugLog(loSslDump, _Format('%s PutDataInSendBuffer %s [%d] Data:%s',
-                             [_IntToHex(Integer(Self), 8), _IntToStr(FHSocket),
-                             TraceCount, DataToString(Data, Len)]));
+                             [_IntToHex(INT_PTR(Self), SizeOf(Pointer) * 2),
+                             _IntToStr(FHSocket), TraceCount,
+                             DataToString(Data, Len)]));
         end;
 {$ENDIF}
         inherited PutDataInSendBuffer(Data, Len);
@@ -15679,7 +15843,7 @@ initialization
     _InitializeCriticalSection(GWSockCritSect);
 {$IFDEF USE_SSL}
     _InitializeCriticalSection(SslCritSect);
-    {$IFNDEF NO_ADV_MT}
+    {$IFNDEF NO_SSL_MT}
         _InitializeCriticalSection(LockPwdCB);
         _InitializeCriticalSection(LockVerifyCB);
         _InitializeCriticalSection(LockInfoCB);
@@ -15687,6 +15851,9 @@ initialization
         _InitializeCriticalSection(LockNewSessCB);
         _InitializeCriticalSection(LockGetSessCB);
         _InitializeCriticalSection(LockClientCertCB);
+      {$IFNDEF OPENSSL_NO_TLSEXT}
+        _InitializeCriticalSection(LockServerNameCB);
+      {$ENDIF}
     {$ENDIF}
 {$ENDIF}
 
@@ -15701,7 +15868,7 @@ finalization
         _DeleteCriticalSection(GWSockCritSect);
     end;
 {$IFDEF USE_SSL}
-    {$IFNDEF NO_ADV_MT}
+    {$IFNDEF NO_SSL_MT}
         _DeleteCriticalSection(LockPwdCB);
         _DeleteCriticalSection(LockVerifyCB);
         _DeleteCriticalSection(LockInfoCB);
@@ -15709,6 +15876,9 @@ finalization
         _DeleteCriticalSection(LockNewSessCB);
         _DeleteCriticalSection(LockGetSessCB);
         _DeleteCriticalSection(LockClientCertCB);
+      {$IFNDEF OPENSSL_NO_TLSEXT}
+        _DeleteCriticalSection(LockServerNameCB);
+      {$ENDIF}
     {$ENDIF}
     _DeleteCriticalSection(SslCritSect);
 {$ENDIF}

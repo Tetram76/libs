@@ -4,7 +4,7 @@ Author:       François PIETTE
 Description:  TFtpServer class encapsulate the FTP protocol (server side)
               See RFC-959 for a complete protocol description.
 Creation:     April 21, 1998
-Version:      7.10
+Version:      7.11
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -384,6 +384,7 @@ June 04, 2009 V7.09 Angus called TriggerMd5Calculated when changing file date/ti
                  data channel not control channel, it must be shorter than TimeoutSecsIdle
              SessIdInfo add client numeric id to identify separate sessions from same IP
 Sept 03, 2009 V7.10 Arno exchanged TThread.Resume by TThread.Start for D2010 and later
+Dec  15, 2009 V7.11 Arno added type TFtpSrvCommandTable to make C++Builder happy.
 
 
 
@@ -459,6 +460,7 @@ uses
     {$ELSE}
         OverbyteIcsZLibDll,     {interface to access zLib1.dll}
     {$ENDIF}
+    OverbyteIcsTypes,
     OverbyteIcsUtils,
     OverbyteIcsWndControl,
     OverbyteIcsWinsock,
@@ -474,8 +476,8 @@ uses
 
 
 const
-    FtpServerVersion         = 710;
-    CopyRight : String       = ' TFtpServer (c) 1998-2009 F. Piette V7.10 ';
+    FtpServerVersion         = 711;
+    CopyRight : String       = ' TFtpServer (c) 1998-2009 F. Piette V7.11 ';
     UtcDateMaskPacked        = 'yyyymmddhhnnss';         { angus V1.38 }
     DefaultRcvSize           = 16384;    { V7.00 used for both xmit and recv, was 2048, too small }
 
@@ -657,16 +659,16 @@ type
         FOnDisplay         : TDisplayEvent;
         FOnCommand         : TCommandEvent;
         FOptions           : TFtpOptions;    { AG 7.02 }
-        FCodePage          : Cardinal;       { AG 7.02 }
-        FCurrentCodePage   : Cardinal;       { AG 7.02 }
+        FCodePage          : LongWord;       { AG 7.02 }
+        FCurrentCodePage   : LongWord;       { AG 7.02 }
         procedure TriggerSessionConnected(Error : Word); override;
         function  TriggerDataAvailable(Error : Word) : boolean; override;
         procedure TriggerCommand(CmdBuf : PAnsiChar; CmdLen : Integer); virtual; { AG 7.02 }
         procedure SetRcvSize(newValue : Integer);
         procedure SetHomeDir(const newValue: String);   { AG V1.52}
         procedure SetOptions(const Opts : TFtpOptions); { AG 7.02 }
-        procedure SetCodePage(const Value: Cardinal);   { AG 7.02 }
-        procedure SetCurrentCodePage(const Value: Cardinal); { AG 7.02 }
+        procedure SetCodePage(const Value: LongWord);   { AG 7.02 }
+        procedure SetCurrentCodePage(const Value: LongWord); { AG 7.02 }
     public
         FtpServer         : TFtpServer; { AG V7.02 }
         BinaryMode        : Boolean;
@@ -743,21 +745,21 @@ type
         function    SslSendPlain(Data : TWSocketData; Len : Integer) : Integer;
 {$ENDIF}
         procedure   DataStreamWriteString(const Str: AnsiString);  overload; { AG 7.02 }
-        procedure   DataStreamWriteString(const Str: AnsiString; DstCodePage: Cardinal);  overload; { AG 7.02 }
+        procedure   DataStreamWriteString(const Str: AnsiString; DstCodePage: LongWord);  overload; { AG 7.02 }
     {$IFDEF COMPILER12_UP}
-        procedure   DataStreamWriteString(const Str: UnicodeString; DstCodePage: Cardinal); overload;
+        procedure   DataStreamWriteString(const Str: UnicodeString; DstCodePage: LongWord); overload;
         procedure   DataStreamWriteString(const Str: UnicodeString); overload;
     {$ENDIF}
         procedure   DataStreamReadString(var Str: AnsiString; Len: TFtpBigInt); overload;
-        procedure   DataStreamReadString(var Str: AnsiString; Len: TFtpBigInt; SrcCodePage: Cardinal); overload;    { AG 7.02 }
+        procedure   DataStreamReadString(var Str: AnsiString; Len: TFtpBigInt; SrcCodePage: LongWord); overload;    { AG 7.02 }
     {$IFDEF COMPILER12_UP}
-        procedure   DataStreamReadString(var Str: UnicodeString; Len: TFtpBigInt; SrcCodePage: Cardinal); overload; { AG 7.02 }
+        procedure   DataStreamReadString(var Str: UnicodeString; Len: TFtpBigInt; SrcCodePage: LongWord); overload; { AG 7.02 }
         procedure   DataStreamReadString(var Str: UnicodeString; Len: TFtpBigInt); overload;
     {$ENDIF}
         property    DataSocket     : TWSocket    read  FDataSocket;
-        property    CodePage       : Cardinal    read  FCodePage        { AG 7.02 }
+        property    CodePage       : LongWord    read  FCodePage        { AG 7.02 }
                                                  write SetCodePage; 
-        property    CurrentCodePage: Cardinal    read  FCurrentCodePage { AG 7.02 }
+        property    CurrentCodePage: LongWord    read  FCurrentCodePage { AG 7.02 }
                                                  write SetCurrentCodePage;
         property    ConnectedSince : TDateTime   read  FConnectedSince;
         property    LastCommand    : TDateTime   read  FLastCommand;
@@ -898,6 +900,8 @@ type
                                     KeyWord : String;
                                     Proc    : TFtpSrvCommandProc;
                                 end;
+    TFtpSrvCommandTable = array of TFtpSrvCommandTableItem; { AG V7.11 }
+
     TFtpSecurityContextEvent  = procedure (Sender : TObject;     { AG V1.52 }
                                            Client : TFtpCtrlSocket) of object;
     TFtpSrvGeneralEvent = procedure (Sender        : TObject;      { angus V1.54 }
@@ -943,7 +947,7 @@ type
         FSocketServer           : TWSocketServer ;    { new  angus V7.00 }
         FClientClass            : TFtpCtrlSocketClass;
         FMaxClients             : LongInt;
-        FCmdTable               : array of TFtpSrvCommandTableItem;  { AG V1.51 }
+        FCmdTable               : TFtpSrvCommandTable; { AG V7.11 }
         FLastCmd                : Integer;
         FUserData               : LongInt;      { Reserved for component user }
         FPasvPortRangeStart     : Integer;
@@ -964,7 +968,7 @@ type
         FZlibMinSpace           : Integer;      { angus V1.54 }
         FAlloExtraSpace         : Integer;      { angus V1.54 }
         FZlibMaxSize            : Int64;        { angus V1.55 }
-        FCodePage               : Cardinal;     { angus V7.01 for UTF8 support }
+        FCodePage               : LongWord;     { angus V7.01 for UTF8 support }
         FLanguage               : String;       { angus V7.01 for UTF8 support }
         FMaxAttempts            : Integer;      { angus V7.06 }
         FMsg_WM_FTPSRV_CLOSE_REQUEST  : UINT;
@@ -1023,7 +1027,7 @@ type
         FOnHost                 : TFtpSrvHostEvent;          { angus V7.01 }
         FOnRein                 : TFtpSrvReinEvent;          { angus V7.01 }
         FOnLang                 : TFtpSrvLangEvent;          { angus V7.01 }
-        FSystemCodePage         : Cardinal;                  { AG 7.02 }
+        FSystemCodePage         : LongWord;                  { AG 7.02 }
         FOnAddVirtFiles         : TFtpSrvAddVirtFilesEvent;  { angus V7.08 }
 {$IFNDEF NO_DEBUG_LOG}
         function  GetIcsLogger: TIcsLogger;                                      { V1.46 }
@@ -1513,7 +1517,7 @@ type
                                                       write FZlibMinSpace;   { angus V1.54 }
         property  ZlibMaxSize            : Int64      read  FZlibMaxSize
                                                       write FZlibMaxSize ;   { angus V1.55 }
-        property  CodePage               : Cardinal   read  FCodePage
+        property  CodePage               : LongWord   read  FCodePage
                                                       write FCodePage;       { angus V7.01 }
         property  Language               : String     read  FLanguage
                                                       write FLanguage;       { angus V7.01 }
@@ -2455,7 +2459,7 @@ begin
 
 {$IFNDEF NO_DEBUG_LOG}                                       { V1.46 }
     if CheckLogOptions(loProtSpecDump) then
-        DebugLog(loProtSpecDump,  IntToHex(Integer(MyClient), 8) +
+        DebugLog(loProtSpecDump,  IntToHex(INT_PTR(MyClient), SizeOf(Pointer) * 2) +
                  ' Client Connect Error - ' + GetWinsockErr(Error) + ' ' +
                   IntToStr(MyClient.HSocket));
 {$ENDIF}
@@ -4158,7 +4162,7 @@ begin
                 exit;
             end;
         end;
-        PostMessage(Handle, FMsg_WM_FTPSRV_START_SEND, 0, LongInt(Client));
+        PostMessage(Handle, FMsg_WM_FTPSRV_START_SEND, 0, LPARAM(Client));
     except
         on E: Exception do begin
             Answer := Format(msgRetrFailed, [E.Message]);
@@ -6534,7 +6538,7 @@ begin
                 Answer := AThread.InData;
                 AThread.Client.AnswerDelayed := FALSE;
                 PostMessage(Handle, FMsg_WM_FTPSRV_START_SEND, 0,
-                                                     LongInt(AThread.Client));
+                                                     LPARAM(AThread.Client));
             end
             else begin  { compress failed }
                 CloseFileStreams(AThread.Client);
@@ -6713,7 +6717,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure TFtpCtrlSocket.SetCodePage(const Value: Cardinal);{ AG 7.02 }
+procedure TFtpCtrlSocket.SetCodePage(const Value: LongWord);{ AG 7.02 }
 begin
     if Value = FtpServer.FSystemCodePage then
         FCodePage := CP_ACP
@@ -6723,7 +6727,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure TFtpCtrlSocket.SetCurrentCodePage(const Value: Cardinal);{ AG 7.02 }
+procedure TFtpCtrlSocket.SetCurrentCodePage(const Value: LongWord);{ AG 7.02 }
 begin
     if Value = FtpServer.FSystemCodePage then
         FCurrentCodePage := CP_ACP
@@ -6842,7 +6846,7 @@ end;
 {$IFDEF COMPILER12_UP}
 procedure TFtpCtrlSocket.DataStreamWriteString(
     const Str: UnicodeString;
-    DstCodePage: Cardinal);{ AG 7.02 }
+    DstCodePage: LongWord);{ AG 7.02 }
 begin
     StreamWriteString(DataStream, Str, DstCodePage);
 end;
@@ -6865,7 +6869,7 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TFtpCtrlSocket.DataStreamWriteString(                     { AG 7.02 }
-  const Str: AnsiString; DstCodePage: Cardinal);
+  const Str: AnsiString; DstCodePage: LongWord);
 var
     S : AnsiString;
 begin
@@ -6894,7 +6898,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { Potential data loss if SrcCodePage <> CP_ACP!                       AG 7.02 }
 procedure TFtpCtrlSocket.DataStreamReadString(
-  var Str: AnsiString; Len: TFtpBigInt; SrcCodePage: Cardinal);
+  var Str: AnsiString; Len: TFtpBigInt; SrcCodePage: LongWord);
 var
     BytesRead : Cardinal;
     Buf       : PAnsiChar;
@@ -6937,7 +6941,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFDEF COMPILER12_UP}
 procedure TFtpCtrlSocket.DataStreamReadString(var Str: UnicodeString;
-  Len: TFtpBigInt; SrcCodePage: Cardinal); { AG 7.02 }
+  Len: TFtpBigInt; SrcCodePage: LongWord); { AG 7.02 }
 var
     SBuf : array [0..2047] of AnsiChar;
     HBuf : PAnsiChar;
