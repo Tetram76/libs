@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmPackageSelection.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: FrmPackageSelection.pas 12668 2010-01-07 21:53:17Z ahuser $
 
 unit FrmPackageSelection;
 
@@ -630,6 +630,10 @@ begin
   CheckListBoxPackages.ParentDoubleBuffered := False;
   CheckListBoxFrameworks.ParentDoubleBuffered := False;
   {$ENDIF COMPILER12_UP}
+  {$IFDEF COMPILER11_UP}
+  CheckListBoxPackages.DoubleBuffered := False;
+  CheckListBoxFrameworks.DoubleBuffered := False;
+  {$ENDIF COMPILER11_UP}
 end;
 
 end.

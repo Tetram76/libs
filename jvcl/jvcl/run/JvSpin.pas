@@ -28,7 +28,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvSpin.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvSpin.pas 12618 2009-12-11 16:25:13Z wpostma $
 
 unit JvSpin;
 
@@ -238,6 +238,9 @@ type
     procedure KeyPress(var Key: Char); override;
     procedure UpClick(Sender: TObject); virtual;
     property ButtonWidth: Integer read GetButtonWidth;
+
+    procedure DoTopClick;
+    procedure DoBottomClick;
   public
     procedure Loaded; override;
     constructor Create(AOwner: TComponent); override;
@@ -470,8 +473,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpin.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12618 $';
+    Date: '$Date: 2009-12-11 17:25:13 +0100 (ven. 11 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -834,6 +837,12 @@ begin
     inherited;
 end;
 
+procedure TJvCustomSpinEdit.DoBottomClick;
+begin
+  if Assigned(FOnBottomClick) then
+    FOnBottomClick(Self);
+end;
+
 procedure TJvCustomSpinEdit.DoEnter;
 begin
   SetFocused(True);
@@ -877,6 +886,12 @@ begin
   Result := True;
 end;
 
+procedure TJvCustomSpinEdit.DoTopClick;
+begin
+  if Assigned(FOnTopClick) then
+    FOnTopClick(Self);
+end;
+
 procedure TJvCustomSpinEdit.DownClick(Sender: TObject);
 var
   OldText: string;
@@ -897,8 +912,7 @@ begin
       Modified := True;
       Change;
     end;
-    if Assigned(FOnBottomClick) then
-      FOnBottomClick(Self);
+    DoBottomClick;
   end;
 end;
 
@@ -1411,8 +1425,7 @@ begin
       Modified := True;
       Change;
     end;
-    if Assigned(FOnTopClick) then
-      FOnTopClick(Self);
+    DoTopClick;
   end;
 end;
 
@@ -2912,7 +2925,13 @@ end;
 
 procedure TJvCustomTimeEdit.UpClick(Sender: TObject);
 begin
-  UpdateTimeDigits(True);
+  if ReadOnly then
+    DoBeepOnError
+  else
+  begin
+    UpdateTimeDigits(True);
+    DoTopClick;
+  end;
 end;
 
 destructor TJvCustomTimeEdit.Destroy;
@@ -2935,7 +2954,13 @@ end;
 
 procedure TJvCustomTimeEdit.DownClick(Sender: TObject);
 begin
-  UpdateTimeDigits(False);
+  if ReadOnly then
+    DoBeepOnError
+  else
+  begin
+    UpdateTimeDigits(False);
+    DoBottomClick;
+  end;
 end;
 
 procedure TJvCustomTimeEdit.KeyDown(var Key: Word; Shift: TShiftState);
@@ -2986,11 +3011,12 @@ end;
 
 function TJvCustomTimeEdit.GetValue: Extended;
 begin
-  Result := 0.0;
+  Result := Time;
 end;
 
 procedure TJvCustomTimeEdit.SetValue(NewValue: Extended);
 begin
+  Time := NewValue;
 end;
 
 //=== { TJvCustomTimeEditDataConnector } ====================================

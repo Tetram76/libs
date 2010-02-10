@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvInspector.pas 12684 2010-02-01 15:06:49Z wpostma $
 
 unit JvInspector;
 
@@ -2072,8 +2072,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12684 $';
+    Date: '$Date: 2010-02-01 16:06:49 +0100 (lun. 01 févr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -8299,7 +8299,8 @@ end;
 procedure TJvInspectorInt64Item.SetDisplayValue(const Value: string);
 begin
   // (rom) is this safe? StrToInt64 can throw exceptions.
-  Data.AsInt64 := StrToInt64(Value);
+  // (wpostma) definitely not safe. This is a crap implementation.
+  Data.AsInt64 := StrToInt64Def(Value,0);
 end;
 
 //=== { TJvInspectorStringItem } =============================================

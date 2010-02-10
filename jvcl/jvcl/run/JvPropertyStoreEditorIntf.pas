@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditorIntf.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPropertyStoreEditorIntf.pas 12694 2010-02-08 23:11:12Z jfudickar $
 unit JvPropertyStoreEditorIntf;
 
 {$I jvcl.inc}
@@ -49,6 +49,7 @@ type
     ['{BC1F664F-867F-4041-B718-0FD76A0CA3E8}']
     function ListEditIntf_ObjectCount : integer;
     function ListEditIntf_GetObject(Index : integer): TPersistent;
+    function ListEditIntf_IndexOfObject(AObject : TPersistent) : Integer;
     procedure ListEditIntf_MoveObjectPosition (Index : Integer; PosDelta : Integer);
     procedure ListEditIntf_SortObjects (iAscending : Boolean);
     function ListEditIntf_CreateNewObject: TPersistent;
@@ -60,8 +61,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditorIntf.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12694 $';
+    Date: '$Date: 2010-02-09 00:11:12 +0100 (mar. 09 févr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

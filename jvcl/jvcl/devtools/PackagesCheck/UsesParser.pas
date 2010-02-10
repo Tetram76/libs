@@ -21,9 +21,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: UsesParser.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: UsesParser.pas 12678 2010-01-15 18:54:05Z outchy $
 
 unit UsesParser;
+
+{$I jvcl.inc}
 
 interface
 
@@ -56,7 +58,37 @@ type
 implementation
 
 uses
-  JclStrings, JclFileUtils;
+  JclStrings, JclFileUtils, JclStreams;
+
+function LoadFile(const FileName: string): string;
+var
+  AFileStream: TStream;
+  AStringStream: TJclAutoStream;
+  Start, Count: Integer;
+begin
+  Result := '';
+  AFileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+  if AFileStream.Size > MaxInt then
+    raise ERangeError.CreateFmt('File %s too big', [FileName]);
+  SetLength(Result, AFileStream.Size);
+  try
+    AStringStream := TJclAutoStream.Create(AFileStream);
+    try
+      Start := 0;
+      repeat
+        Count := AFileStream.Size;
+        SetLength(Result, Length(Result) + Count);
+        Count := AStringStream.ReadString(Result, Start + 1, Count);
+        Inc(Start, Count);
+      until Count = 0;
+      SetLength(Result, Start);
+    finally
+      AStringStream.Free;
+    end;
+  finally
+    AFileStream.Free;
+  end;
+end;
 
 function ParseFile(const AFileContent: string;
   ADefines, AIncludeDirs, UsesList: TStrings; var IfDefCount: Integer;
@@ -65,10 +97,10 @@ function ParseFile(const AFileContent: string;
   var
     PtrStart: PChar;
   begin
-    while not (Ptr^ in [AnsiNull, 'a'..'z', 'A'..'Z', '_', '0'..'9']) do
+    while (Ptr^ <> NativeNull) and not CharIsValidIdentifierLetter(Ptr^) do
       Inc(Ptr);
     PtrStart := Ptr;
-    while Ptr^ in ['a'..'z', 'A'..'Z', '_', '.', '0'..'9'] do
+    while (Ptr^ = '.') or CharIsValidIdentifierLetter(Ptr^) do
       Inc(Ptr);
     SetString(Result, PtrStart, Ptr - PtrStart);
   end;
@@ -101,28 +133,19 @@ function ParseFile(const AFileContent: string;
   end;
   function ParseInclude(const Symbol: string): Boolean;
   var
-    AFileStream: TFileStream;
     BFileContent: string;
     Index: Integer;
     AFileName, BFileName: string;
   begin
     Result := False;
-    AFileName := AnsiDequotedStr(AnsiDequotedStr(Symbol, ''''), '"');
+    AFileName := StrTrimQuotes(string(Symbol));
     for Index := 0 to AIncludeDirs.Count - 1 do
     begin
       BFileName := PathAddSeparator(AIncludeDirs.Strings[Index]) + AFileName;
       if FileExists(BFileName) then
       begin
-        AFileStream := TFileStream.Create(BFileName, fmOpenRead or fmShareDenyWrite);
-        try
-          if AFileStream.Size > MaxInt then
-            raise ERangeError.CreateFmt('File %s too big', [BFileName]);
-          SetLength(BFileContent, AFileStream.Size);
-          AFileStream.Read(BFileContent[1], AFileStream.Size);
-          Result := ParseFile(BFileContent, ADefines, AIncludeDirs, UsesList, IfDefCount, InUsesSection);
-        finally
-          AFileStream.Free;
-        end;
+        BFileContent := LoadFile(BFileName);
+        Result := ParseFile(BFileContent, ADefines, AIncludeDirs, UsesList, IfDefCount, InUsesSection);
         Exit;
       end;
     end;
@@ -138,11 +161,11 @@ begin
   while True do
   begin
     case Ptr^ of
-      AnsiNull :
+      NativeNull :
         Exit;
-      AnsiForwardSlash :
+      NativeForwardSlash :
         if Ptr[1] = '/' then
-          while not (Ptr^ in [AnsiNull, AnsiCarriageReturn, AnsiLineFeed]) do
+          while (Ptr^ <> NativeNull) and (Ptr^ <> NativeCarriageReturn) and (Ptr^ <> NativeLineFeed) do
             Inc(Ptr);
       '{' :
         begin
@@ -155,13 +178,15 @@ begin
               if (IfDefCount > 0) or not IfDef(GetNextWord(@Ptr[7])) then
                 Inc(IfDefCount);
             end
-            else if SameText(WordAtPtr, 'IFNDEF') then
+            else
+            if SameText(WordAtPtr, 'IFNDEF') then
             begin
               // inside $IFNDEF
               if (IfDefCount > 0) or IfDef(GetNextWord(@Ptr[8])) then
                 Inc(IfDefCount);
             end
-            else if SameText(WordAtPtr, 'ELSE') then
+            else
+            if SameText(WordAtPtr, 'ELSE') then
             begin
               // inside $ELSE
               if IfDefCount = 1 then
@@ -169,25 +194,29 @@ begin
               else if IfDefCount = 0 then
                 IfDefCount := 1;
             end
-            else if SameText(WordAtPtr, 'ENDIF') then
+            else
+            if SameText(WordAtPtr, 'ENDIF') then
             begin
               if IfDefCount > 0 then
                 Dec(IfDefCount);
               // inside $ENDIF
             end
-            else if SameText(WordAtPtr, 'DEFINE') then
+            else
+            if SameText(WordAtPtr, 'DEFINE') then
             begin
               // inside $DEFINE
               if IfDefCount = 0 then
                 Define(GetNextWord(@Ptr[8]));
             end
-            else if SameText(WordAtPtr, 'UNDEF') then
+            else
+            if SameText(WordAtPtr, 'UNDEF') then
             begin
               // inside $UNDEF
               if IfDefCount = 0 then
                 Undef(GetNextWord(@Ptr[7]));
             end
-            else if SameText(WordAtPtr, 'INCLUDE') then
+            else
+            if SameText(WordAtPtr, 'INCLUDE') then
             begin
               // inside $INCLUDE
               if IfDefCount = 0 then
@@ -197,7 +226,8 @@ begin
                   Exit;
               end;
             end
-            else if SameText(WordAtPtr, 'I') then
+            else
+            if SameText(WordAtPtr, 'I') then
             begin
               // inside $I
               if IfDefCount = 0 then
@@ -209,20 +239,21 @@ begin
             end; // TODO: $IF + condition
           end;
 
-          while not (Ptr^ in [AnsiNull, '}']) do
+          while (Ptr^ <> NativeNull) and (Ptr^ <>  '}') do
             Inc(Ptr);
         end;
-      AnsiSingleQuote :
+      NativeSingleQuote :
         begin
           Inc(Ptr);
-          while not (Ptr^ in [AnsiNull, AnsiCarriageReturn, AnsiLineFeed, AnsiSingleQuote]) do
+          while (Ptr^ <> NativeNull) and (Ptr^ <> NativeCarriageReturn) and
+                (Ptr^ <> NativeLineFeed) and (Ptr^ <> NativeSingleQuote) do
             Inc(Ptr);
         end;
       '(' :
         if Ptr[1] = '*' then
         begin
           Inc(Ptr, 2);
-          while Ptr^ <> AnsiNull do
+          while Ptr^ <> NativeNull do
             if (Ptr^ = '*') and (Ptr[1] = ')') then
           begin
             Inc(Ptr, 2);
@@ -236,12 +267,13 @@ begin
       '_' :
         begin
           PtrStartWord := Ptr;
-          while Ptr^ in ['a'..'z', 'A'..'Z', '_', '0'..'9'] do
+          while (Ptr^ = '.') or CharIsValidIdentifierLetter(Ptr^) do
             Inc(Ptr);
           SetString(WordAtPtr, PtrStartWord, Ptr - PtrStartWord);
           if SameText(WordAtPtr, 'uses') and (IfDefCount = 0) then
             InUsesSection := True
-          else if InUsesSection and (UsesList.IndexOf(WordAtPtr) = -1)
+          else
+          if InUsesSection and (UsesList.IndexOf(WordAtPtr) = -1)
             and (IfDefCount = 0) then
             UsesList.Add(WordAtPtr);
         end;
@@ -250,7 +282,7 @@ begin
           InUsesSection := False;
     end;
     case Ptr^ of
-      AnsiNull :
+      NativeNull :
         Exit;
       ';' :
         if IfDefCount = 0 then
@@ -279,23 +311,10 @@ begin
 end;
 
 function TUsesParser.LoadFromFile(const FileName: string): Boolean;
-var
-  AFileStream: TFileStream;
 begin
   SetLength(FFileContent, 0);
   if FileExists(FileName) then
-  begin
-    AFileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
-    try
-      if AFileStream.Size > MaxInt then
-        raise ERangeError.CreateFmt('File %s is too big', [FileName]);
-      SetLength(FFileContent, AFileStream.Size);
-      AFileStream.Read(FFileContent[1], AFileStream.Size);
-    finally
-      AFileStream.Free;
-    end;
-  end;
-
+    FFileContent := LoadFile(FileName);
   Result := Length(FileContent) > 0;
 end;
 

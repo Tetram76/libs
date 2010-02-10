@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOracleDataSet.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvOracleDataSet.pas 12683 2010-01-29 22:50:54Z jfudickar $
 
 unit JvOracleDataSet;
 
@@ -73,6 +73,7 @@ type
 
   TJvOracleDataset = class(TOracleDataset, IJvThreadedDatasetInterface)
     procedure BreakExecution;
+    procedure BringThreadDialogToFront;
     function DoGetInheritedNextRecord: Boolean;
     procedure DoInheritedAfterOpen;
     procedure DoInheritedAfterRefresh;
@@ -145,8 +146,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOracleDataSet.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12683 $';
+    Date: '$Date: 2010-01-29 23:50:54 +0100 (ven. 29 janv. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -170,6 +171,12 @@ procedure TJvOracleDataset.BreakExecution;
 begin
   if Assigned(Session) and Session.Connected then
     Session.BreakExecution;
+end;
+
+procedure TJvOracleDataset.BringThreadDialogToFront;
+begin
+  if Assigned(ThreadHandler) then
+    ThreadHandler.BringDialogToFront;
 end;
 
 function TJvOracleDataset.CurrentFetchDuration: TDateTime;

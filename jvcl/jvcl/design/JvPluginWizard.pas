@@ -39,7 +39,7 @@ Known Issues:
  V 05 : uses-list minimized
 
  -----------------------------------------------------------------------------}
-// $Id: JvPluginWizard.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvPluginWizard.pas 12688 2010-02-03 19:43:34Z outchy $
 
 unit JvPluginWizard;
 
@@ -392,7 +392,7 @@ implementation
 uses
   Controls, SysUtils, Dialogs, Classes, ActnList, Menus,
   DesignIntf, DesignEditors,
-  JclFileUtils, JclBorlandTools,
+  JclFileUtils, JclIDEUtils,
   JvPlugin, JvPluginParamsForm, JvConsts, JvDsgnConsts;
 
 {$R JvPluginWiz.res}

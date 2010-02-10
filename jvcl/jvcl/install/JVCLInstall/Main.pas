@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Main.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: Main.pas 12645 2010-01-07 15:15:13Z ahuser $
 
 {
   command line arguments:
@@ -54,8 +54,7 @@ type
     ImageLogo: TImage;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure JvWizardActivePageChanging(Sender: TObject;
-      var ToPage: TJvWizardCustomPage);
+    procedure JvWizardActivePageChanging(Sender: TObject; var ToPage: TJvWizardCustomPage);
     procedure JvWizardFinishButtonClick(Sender: TObject);
     procedure JvWizardCancelButtonClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);

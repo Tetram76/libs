@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 12585 2009-10-29 20:27:56Z ahuser $
+// $Id: JvJVCLUtils.pas 12693 2010-02-08 22:57:23Z jfudickar $
 
 unit JvJVCLUtils;
 
@@ -889,8 +889,8 @@ function ReplaceComponentReference(This, NewReference: TComponent; var VarRefere
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 12585 $';
-    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu. 29 oct. 2009) $';
+    Revision: '$Revision: 12693 $';
+    Date: '$Date: 2010-02-08 23:57:23 +0100 (lun. 08 févr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -4138,21 +4138,14 @@ begin
     if (WinState = wsMinimized) and ((Form = Application.MainForm) or
       (Application.MainForm = nil)) then
     begin
-      {$IFNDEF DELPHI2010_UP}
       TWindowState(Pointer(@Form.WindowState)^) := wsNormal;
-      {$ELSE}
-      Form.WindowState := wsNormal;
-      {$ENDIF}
       PostMessage(Application.Handle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
       Exit;
     end;
-    {$IFNDEF DELPHI2010_UP} // Using this Hack didn't work with D2010
     if Form.FormStyle in [fsMDIChild, fsMDIForm] then
       TWindowState(Pointer(@Form.WindowState)^) := WinState
     else
-    {$ELSE}
       Form.WindowState := WinState;
-    {$ENDIF}
   end;
   Form.Update;
 end;
@@ -7772,12 +7765,13 @@ var
     for I := 1 to Length(AName)  do
     begin
       C := AName[I];
-      if CharInSet(C, ['A'..'Z', 'a'..'z', '_', '0'..'9']) then
+      if CharInSet(C, ['A'..'Z', 'a'..'z', '_']) or
+         ((Result <> '') and CharInSet(C, ['0'..'9'])) then
       begin
         Ignore := False;
         Result := Result+C;
       end
-      else
+      else if Result <> '' then
       begin
         if not Ignore then
           Result := Result+'_';
@@ -7800,13 +7794,14 @@ var
     I: Integer;
   begin
     Result := True;
-    for I := 0 to AOwner.ComponentCount - 1 do
-      if (AOwner.Components[I] <> AComponent) and
-        (CompareText(AOwner.Components[I].Name, AName) = 0) then
-      begin
-        Result := False;
-        Break;
-      end;
+    if AName <> '' then
+      for I := 0 to AOwner.ComponentCount - 1 do
+        if (AOwner.Components[I] <> AComponent) and
+          (CompareText(AOwner.Components[I].Name, AName) = 0) then
+        begin
+          Result := False;
+          Break;
+        end;
   end;
 
 begin

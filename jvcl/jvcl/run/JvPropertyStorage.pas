@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStorage.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPropertyStorage.pas 12636 2010-01-03 16:44:34Z jfudickar $
 
 unit JvPropertyStorage;
 
@@ -100,8 +100,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStorage.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12636 $';
+    Date: '$Date: 2010-01-03 17:44:34 +0100 (dim. 03 janv. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -443,19 +443,43 @@ end;
 procedure TJvPropertyStorage.ReadProperty(const APath, AStorageName: string; const PersObj: TPersistent; const PropName: {$IFDEF RTL200_UP}ShortString{$ELSE}string{$ENDIF RTL200_UP});
 var
   NPath: string;
+  SearchCompName : string;
+  SearchOwner : TComponent;
+  i : Integer;
 begin
   if Assigned(AppStorage) then
   begin
-    NPath := AppStorage.ConcatPaths([APath, AppStorage.TranslatePropertyName(PersObj, AStorageName, True)]);
-    if AppStorage.ValueStored(NPath) or AppStorage.IsFolder(NPath, False) then
-      AppStorage.ReadProperty(NPath, PersObj, string(PropName), True, True);
+    if (PropType(PersObj, string(PropName)) = tkClass) and (GetObjectProp(PersObj, string(PropName)) is TComponent) then
+    begin
+      SearchCompName := AppStorage.ReadString(AppStorage.ConcatPaths([APath, AppStorage.TranslatePropertyName(PersObj, AStorageName, False)]));
+      SearchOwner := fOwner;
+      while Assigned(SearchOwner)  do
+      begin
+        for I := 0 to SearchOwner.ComponentCount - 1 do
+          if SearchOwner.Components[i].Name = SearchCompName then
+          begin
+            SetObjectProp(PersObj, string(PropName), SearchOwner.Components[i]);
+            Exit;
+          end;
+        SearchOwner := SearchOwner.Owner;
+      end;
+    end
+    else
+    begin
+      NPath := AppStorage.ConcatPaths([APath, AppStorage.TranslatePropertyName(PersObj, AStorageName, True)]);
+      if AppStorage.ValueStored(NPath) or AppStorage.IsFolder(NPath, False) then
+        AppStorage.ReadProperty(NPath, PersObj, string(PropName), True, True);
+    end;
   end;
 end;
 
 procedure TJvPropertyStorage.WriteProperty(const APath, AStorageName: string; const PersObj: TPersistent; const PropName: {$IFDEF RTL200_UP}ShortString{$ELSE}string{$ENDIF RTL200_UP});
 begin
   if Assigned(AppStorage) then
-    AppStorage.WriteProperty(AppStorage.ConcatPaths([APath, AppStorage.TranslatePropertyName(PersObj, AStorageName, False)]), PersObj, string(PropName), True);
+    if (PropType(PersObj, string(PropName)) = tkClass) and (GetObjectProp(PersObj, string(PropName)) is TComponent) then
+      AppStorage.WriteString(AppStorage.ConcatPaths([APath, AppStorage.TranslatePropertyName(PersObj, AStorageName, False)]), TComponent(GetObjectProp(PersObj, string(PropName))).Name)
+    else
+      AppStorage.WriteProperty(AppStorage.ConcatPaths([APath, AppStorage.TranslatePropertyName(PersObj, AStorageName, False)]), PersObj, string(PropName), True);
 end;
 
 {$IFDEF UNITVERSIONING}

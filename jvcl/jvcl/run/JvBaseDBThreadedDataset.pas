@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBThreadedDataset.pas 12555 2009-10-05 23:38:44Z jfudickar $
+// $Id: JvBaseDBThreadedDataset.pas 12683 2010-01-29 22:50:54Z jfudickar $
 
 unit JvBaseDBThreadedDataset;
 
@@ -64,6 +64,7 @@ type
   IJvThreadedDatasetInterface = interface
     ['{220CC94D-AA41-4195-B90C-ECA24BAD3CDB}']
     procedure BreakExecution;
+    procedure BringThreadDialogToFront;
     function CurrentFetchDuration: TDateTime;
     function CurrentOpenDuration: TDateTime;
     procedure DoInheritedInternalLast;
@@ -391,6 +392,7 @@ type
     procedure AfterRefresh; virtual;
     procedure BeforeOpen; virtual;
     procedure BeforeRefresh; virtual;
+    procedure BringDialogToFront;
     procedure CapitalizeDatasetLabels;
     function CheckContinueRecordFetch: TJvThreadedDatasetContinueCheckResult;
     function GetNextRecord: Boolean;
@@ -429,8 +431,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBThreadedDataset.pas $';
-    Revision: '$Revision: 12555 $';
-    Date: '$Date: 2009-10-06 01:38:44 +0200 (mar. 06 oct. 2009) $';
+    Revision: '$Revision: 12683 $';
+    Date: '$Date: 2010-01-29 23:50:54 +0100 (ven. 29 janv. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -911,6 +913,13 @@ begin
     FetchMode := tdfmStop;
   end;
   IntRowCheckEnabled := False;
+end;
+
+procedure TJvBaseDatasetThreadHandler.BringDialogToFront;
+begin
+  if Assigned(ExecuteThread) and ExecuteThread.OneThreadIsRunning
+    and Assigned(ExecuteThread.ThreadDialogForm) then
+    ExecuteThread.ThreadDialogForm.BringToFront;
 end;
 
 procedure TJvBaseDatasetThreadHandler.CapitalizeDatasetLabels;

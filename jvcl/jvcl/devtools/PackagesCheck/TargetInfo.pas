@@ -21,9 +21,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: TargetInfo.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: TargetInfo.pas 12676 2010-01-13 20:03:11Z outchy $
 
 unit TargetInfo;
+
+{$I jvcl.inc}
 
 interface
 

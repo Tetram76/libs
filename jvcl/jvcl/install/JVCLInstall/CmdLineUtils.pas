@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: CmdLineUtils.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: CmdLineUtils.pas 12645 2010-01-07 15:15:13Z ahuser $
 
 unit CmdLineUtils;
 
@@ -31,7 +31,7 @@ unit CmdLineUtils;
 interface
 
 uses
-  Windows, SysUtils, Contnrs, Utils;
+  Windows, SysUtils, Classes, Contnrs, Utils;
 
 type
   TCmdOptions = class(TObject)

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGroupBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvGroupBox.pas 12645 2010-01-07 15:15:13Z ahuser $
 
 unit JvGroupBox;
 
@@ -65,9 +65,9 @@ type
     property Canvas;
   published
     property HintColor;
-    {$IFDEF JVCLThemesEnabledD56}
+    {$IFDEF JVCLThemesEnabledD6}
     property ParentBackground default True;
-    {$ENDIF JVCLThemesEnabledD56}
+    {$ENDIF JVCLThemesEnabledD6}
     property Caption: TCaption read GetCaption write SetCaption;
     property Checkable: Boolean read FCheckable write SetCheckable default False;
     property Checked: Boolean read GetChecked write SetChecked stored StoredCheckable;
@@ -83,8 +83,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGroupBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12645 $';
+    Date: '$Date: 2010-01-07 16:15:13 +0100 (jeu. 07 janv. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -100,9 +100,9 @@ begin
   FPropagateEnable := False;
   FCheckable := False;
   ControlStyle := ControlStyle + [csAcceptsControls];
-  {$IFDEF JVCLThemesEnabledD56}
+  {$IFDEF JVCLThemesEnabledD6}
   IncludeThemeStyle(Self, [csParentBackground]);
-  {$ENDIF JVCLThemesEnabledD56}
+  {$ENDIF JVCLThemesEnabledD6}
 end;
 
 procedure TJvGroupBox.Paint;
@@ -110,10 +110,10 @@ var
   H: Integer;
   R: TRect;
   Flags: Longint;
-  {$IFDEF JVCLThemesEnabledD56}
+  {$IFDEF JVCLThemesEnabledD6}
   Details: TThemedElementDetails;
   CaptionRect: TRect;
-  {$ENDIF JVCLThemesEnabledD56}
+  {$ENDIF JVCLThemesEnabledD6}
   LastBkMode: Integer;
 begin
   {$IFDEF JVCLThemesEnabled}

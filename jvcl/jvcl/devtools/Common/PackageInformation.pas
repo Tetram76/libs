@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageInformation.pas 12471 2009-08-23 21:20:48Z outchy $
+// $Id: PackageInformation.pas 12662 2010-01-07 19:00:31Z ahuser $
 
 unit PackageInformation;
 
@@ -283,7 +283,7 @@ type
 
     property Name: string read GetName; // "PackageName-"[R|D]
     property DisplayName: string read GetDisplayName; // "PackageName"
-    property BplName: string read GetBplName; // "PackageName"[D|C][5-7][R|D]
+    property BplName: string read GetBplName; // "PackageName"[D|C][60-140]
     property Description: string read GetDescription;
     property RequiresDB: Boolean read GetRequiresDB;
     property RequireCount: Integer read GetRequireCount;
@@ -299,16 +299,28 @@ type
   end;
 
 var
-  BplNameToGenericNameHook: function(const BplName: string): string = nil;
   ExpandPackageTargets: procedure(Targets: TStrings) = nil;
   ExpandPackageTargetsObj: procedure(Targets: TStrings) of object = nil;
 
+  /// <summary>
+  /// BplNameToGenericName converts a "JvCoreDesign140.XXX" to "JvCore-D" }
+  /// </summary>
 function BplNameToGenericName(const BplName: string): string;
-  { BplNameToGenericName converts a "JvCoreD7D.XXX" to "JvCore-D" }
+
+  /// <summary>
+  /// GenericNameToBplName converts a "JvCore-D" to "JvCoreDesign140.bpl'}
+  /// </summary>
+function GenericNameToBplName(const GenericName: string; CompilerVersion: Integer): string;
+
+  /// <summary>
+  /// returns a cached TPackageXmlInfo instance.
+  /// </summary>
 function GetPackageXmlInfo(const BplName, XmlDir: string): TPackageXmlInfo; overload;
-  { returns a cached TPackageXmlInfo instance. }
+
+  /// <summary>
+  /// returns a cached TPackageXmlInfo instance.
+  /// </summary>
 function GetPackageXmlInfo(const XmlFilename: string): TPackageXmlInfo; overload;
-  { returns a cached TPackageXmlInfo instance. }
 
   /// <summary>
   /// ProjectTypeToChar convert a project type into one char
@@ -361,6 +373,9 @@ procedure ClearXmlFileCache;
 
 implementation
 
+uses
+  JvJCLUtils;
+
 var
   XmlFileCache: TStringList; // cache for .xml files ( TPackageXmlInfo )
 
@@ -374,17 +389,30 @@ begin
 end;
 
 function BplNameToGenericName(const BplName: string): string;
+var
+  I, Len : Integer;
 begin
-  if Assigned(BplNameToGenericNameHook) then
-    Result := BplNameToGenericNameHook(BplName)
+   // obtain package name used in the xml file
+  Result := ChangeFileExt(BplName, '');
+
+  // Remove numbers from the end of the package name
+  Len := Length(Result);
+  I := Len;
+  while (I > 0) and CharInSet(Result[I], ['0'..'9']) do
+    Dec(I);
+  if (I > 0) and ((Result[I] = 'D') or (Result[I] = 'C')) then
+    Dec(I);
+  Delete(Result, I+1, Len-I);
+end;
+
+function GenericNameToBplName(const GenericName: string; CompilerVersion: Integer): string;
+begin
+  if EndsText('-R', GenericName) then
+    Result := Copy(GenericName, 1, Length(GenericName) - 2) + IntToStr(CompilerVersion) + '0.bpl'
+  else if EndsText('-D', GenericName) then
+    Result := Copy(GenericName, 1, Length(GenericName) - 2) + 'Design' + IntToStr(CompilerVersion) + '0.bpl'
   else
-  begin
-     // obtain package name used in the xml file
-    Result := ChangeFileExt(BplName, '');
-    Delete(Result, Length(Result) - 2, 2);
-    if Length(Result) > 2 then
-      Insert('-', Result, Length(Result)); // do not localize
-  end;
+    Result := GenericName;
 end;
 
 procedure ExpandTargets(Targets: TStrings);
@@ -401,9 +429,12 @@ end;
 function GetPackageXmlInfo(const BplName, XmlDir: string): TPackageXmlInfo; overload;
 var
   Index: Integer;
-  Name: string;
+  GenericPrefix, Name: string;
 begin
-  Name := XmlDir + PathDelim + BplNameToGenericName(BplName) + '.xml';
+  GenericPrefix := XmlDir + PathDelim + BplNameToGenericName(BplName);
+  Name := GenericPrefix + '-R.xml';
+  if not FileExists(Name) then
+    Name := GenericPrefix + '-D.xml';
  // already in the cache
   if XmlFileCache.Find(Name, Index) then
     Result := TPackageXmlInfo(XmlFileCache.Objects[Index])
@@ -904,9 +935,12 @@ begin
 end;
 
 function TPackageGroup.Add(const TargetName, SourceName: string): TBpgPackageTarget;
+var
+  GenericPrefix: string;
 begin
   Result := nil;
-  if FileExists(PackagesXmlDir + PathDelim + BplNameToGenericName(TargetName) + '.xml') then // do not localize
+  GenericPrefix := PackagesXmlDir + PathDelim + BplNameToGenericName(TargetName);
+  if FileExists(GenericPrefix + '-R.xml') or FileExists(GenericPrefix + '-D.xml') then // do not localize
   begin
     try
       Result := GetPackageTargetClass.Create(Self, TargetName, SourceName)
@@ -1112,7 +1146,10 @@ var
   CurItem, MsBuild: TJclSimpleXMLElem;
   NameProperty: TJclSimpleXMLProp;
   i: Integer;
-  TgName: string;
+  TgName, S: string;
+  DpkFilename: string;
+  Lines: TStrings;
+  LineIndex: Integer;
 begin
   xml := TJclSimpleXML.Create;
   try
@@ -1127,11 +1164,34 @@ begin
          (Assigned(NameProperty)) and (Pos(':MAKE', UpperCase(NameProperty.Value)) > 0) and
          (CurItem.Items.Count > 0) then
       begin
-        MsBuild := CurItem.Items[0];
+        TgName := Copy(NameProperty.Value, 1, Pos(':', NameProperty.Value) - 1);
 
-        TgName := Copy(NameProperty.Value, 1, Pos(':', NameProperty.Value) - 1) + '.bpl';
+        MsBuild := CurItem.Items[0];
         // change .dproj to .dpk and add the target
-        Add(TgName, ChangeFileExt(MsBuild.Properties.ItemNamed['Projects'].Value, '.dpk'));
+        DpkFilename := ChangeFileExt(MsBuild.Properties.ItemNamed['Projects'].Value, '.dpk');
+
+        // The package could use $LIBSUFFIX. And that means that we must get the LIBSUFFIX
+        //  from the dpk file.
+        Lines := TStringList.Create;
+        try
+          Lines.LoadFromFile(ExtractFilePath(Filename) + DpkFilename);
+          for LineIndex := 0 to Lines.Count - 1 do
+          begin
+            S := Trim(Lines[LineIndex]);
+            if StartsText('{$LIBSUFFIX', S) or StartsText('(*LIBSUFFIX', S) then
+            begin
+              S := Copy(S, Pos('''', S) + 1, MaxInt);
+              S := Copy(S, 1, Pos('''', S) - 1);
+              TgName := TgName + S;
+              Break;
+            end;
+          end;
+        finally
+          Lines.Free;
+        end;
+
+        TgName := TgName + '.bpl';
+        Add(TgName, DpkFilename);
       end;
     end;
   finally

@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: DelphiData.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: DelphiData.pas 12688 2010-02-03 19:43:34Z outchy $
 
 unit DelphiData;
 
@@ -274,7 +274,7 @@ uses
   {$ENDIF ~COMPILER12_UP}
   CmdLineUtils, Utils,
   JvConsts,
-  JclBase, JclSysInfo, JclSimpleXml, JclSysUtils, JclFileUtils, JclBorlandTools;
+  JclBase, JclSysInfo, JclSimpleXml, JclSysUtils, JclFileUtils, JclIDEUtils;
 
 function DequoteStr(const S: string): string;
 begin
@@ -1345,6 +1345,8 @@ end;
 
 function TCompileTarget.VersionedDCP(const Filename: string): string;
 begin
+  { This function is used for 3rd-Party dependency packages. No JVCL package name is going
+    through this function. }
   if Version > 5 then
     Result := Filename
   else
@@ -1353,6 +1355,8 @@ end;
 
 function TCompileTarget.VersionedBPL(const Filename: string): string;
 begin
+  { This function is used for 3rd-Party dependency packages. No JVCL package name is going
+    through this function. }
   Result := ChangeFileExt(Filename, '') + IntToStr(Version) + '0' + ExtractFileExt(Filename);
 end;
 

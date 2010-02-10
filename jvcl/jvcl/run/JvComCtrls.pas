@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 12586 2009-10-29 21:58:01Z obones $
+// $Id: JvComCtrls.pas 12630 2009-12-28 15:45:12Z obones $
 
 unit JvComCtrls;
 
@@ -639,8 +639,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 12586 $';
-    Date: '$Date: 2009-10-29 22:58:01 +0100 (jeu. 29 oct. 2009) $';
+    Revision: '$Revision: 12630 $';
+    Date: '$Date: 2009-12-28 16:45:12 +0100 (lun. 28 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -808,8 +808,8 @@ begin
       end;
     // mouse messages are sent through TJvIPAddress.WMParentNotify
   end;
-  with Msg do
-    Result := DefWindowProc(Handle, Msg, WParam, LParam);
+
+  Dispatch(Msg);
 end;
 
 //=== { TJvIPAddressDataConnector } ==========================================
