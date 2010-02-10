@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3020                                                                     $ }
+{ Last modified: $Date:: 2010-01-27 14:17:56 +0100 (mer. 27 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3151                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,6 +42,7 @@ uses
 const
   DelphiRootDirKeyValue = 'RootDir';
   RegJclKey             = 'Jedi\JCL\';
+  JclRootDirValueName   = 'RootDir';
   RegJclIDEKey          = RegJclKey + 'IDE\';
   DelphiEnvironmentVar  = 'DELPHI';
   EnvironmentVarsKey    = 'Environment Variables';
@@ -85,7 +86,6 @@ const
   LIBPREFIXOptionName           = 'SOPrefix';
   LIBSUFFIXOptionName           = 'SOSuffix';
   ColumnRegName                 = 'Column%d';
-  JclDebugMessagePrefix         = 'Jcl Debug Expert';
   JclDebugExpertActionName      = 'JCLDebugExpertCommand';
   JclDebugExpertMenuName        = 'JCLDebugExpertMenu';
   JclDebugExpertProjMenuName    = 'JCLDebugExpertProjMenu';
@@ -124,7 +124,6 @@ const
   SRegWizardActive    = 'Uses Wizard Active';
   SRegWizardConfirm   = 'Uses Wizard Confirm';
   SRegWizardIniFile   = 'Configuration File';
-  JclRootDirValueName = 'RootDir';
   JclIniFileLocation  = 'experts\useswizard\JediUsesWizard.ini';
 
   //=== Project analyser =====================================================
@@ -161,8 +160,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConsts.pas $';
-    Revision: '$Revision: 3020 $';
-    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009) $';
+    Revision: '$Revision: 3151 $';
+    Date: '$Date: 2010-01-27 14:17:56 +0100 (mer. 27 janv. 2010) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

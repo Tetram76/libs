@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-18 21:49:29 +0100 (mer. 18 nov. 2009)                           $ }
-{ Revision:      $Rev:: 3083                                                                     $ }
+{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3139                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -577,20 +577,14 @@ procedure UnloadPCRE;
 implementation
 
 uses
-  SysUtils,
   {$IFDEF MSWINDOWS}
-  Windows;
+  Windows,
   {$ENDIF MSWINDOWS}
-  {$IFDEF UNIX}
-  {$IFDEF HAS_UNIT_TYPES}
   Types,
-  {$ENDIF HAS_UNIT_TYPES}
   {$IFDEF HAS_UNIT_LIBC}
-  Libc;
-  {$ELSE ~HAS_UNIT_LIBC}
-  dl;
-  {$ENDIF ~HAS_UNIT_LIBC}
-  {$ENDIF UNIX}
+  Libc,
+  {$ENDIF HAS_UNIT_LIBC}
+  SysUtils;
 
 {$IFDEF PCRE_STATICLINK}
 

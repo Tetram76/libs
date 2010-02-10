@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3044                                                                     $ }
+{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3163                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -215,8 +215,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeImpl.pas $';
-    Revision: '$Revision: 3044 $';
-    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
+    Revision: '$Revision: 3163 $';
+    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil
@@ -229,10 +229,8 @@ implementation
 
 uses
   TypInfo,
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
-  JclBase, JclBorlandTools, JclDebug, JclDebugIdeResult,
+  JclBase, JclIDEUtils, JclDebug, JclDebugIdeResult,
   JclOtaResources;
 
 procedure Register;
@@ -329,10 +327,9 @@ var
   procedure OutputToolMessage(const Msg: string);
   begin
     if Assigned(FCurrentProject) then
-      OTAMessageServices.AddToolMessage(FCurrentProject.FileName, Msg,
-        JclDebugMessagePrefix, 1, 1)
+      OTAMessageServices.AddToolMessage(FCurrentProject.FileName, Msg, LoadResString(@RsJclDebugMessagePrefix), 1, 1)
     else
-      OTAMessageServices.AddToolMessage('', Msg, JclDebugMessagePrefix, 1, 1);
+      OTAMessageServices.AddToolMessage('', Msg, LoadResString(@RsJclDebugMessagePrefix), 1, 1);
   end;
 
 begin
@@ -548,8 +545,13 @@ begin
       DisplayResults;
     except
       on ExceptionObj: TObject do
-        JclExpertShowExceptionDialog(ExceptionObj);
-      // raise is useless because trapped by the finally section
+      begin
+        if ExceptionObj is EFOpenError then
+          // when ".ridl" files are not found by IDE, reraise the exception
+          raise
+        else
+          JclExpertShowExceptionDialog(ExceptionObj);
+      end;
     end;
   finally
     EndStoreResults;
@@ -565,8 +567,13 @@ begin
       DisplayResults;
     except
       on ExceptionObj: TObject do
-        JclExpertShowExceptionDialog(ExceptionObj);
-      // raise is useless because trapped by the finally section
+      begin
+        if ExceptionObj is EFOpenError then
+          // when ".ridl" files are not found by IDE, reraise the exception
+          raise
+        else
+          JclExpertShowExceptionDialog(ExceptionObj);
+      end;
     end;
   finally
     EndStoreResults;

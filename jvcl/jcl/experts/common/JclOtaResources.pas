@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3020                                                                     $ }
+{ Last modified: $Date:: 2010-02-03 22:53:34 +0100 (mer. 03 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3175                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -73,6 +73,7 @@ resourcestring
   RsENoEnvironmentOptions = 'Environment options are not available';
   RsELineTooLong = 'Line too long in project file';
   RsEUnterminatedComment = 'Unterminated comment in project file';
+  RsBrowseToJCLRootDir = 'Browse to JCL root directory';
 
 //=== JclExceptionForm.pas ===================================================
 resourcestring
@@ -205,14 +206,6 @@ resourcestring
   RsUndeclIdent = '[Error] %s(%d) Undeclared identifier: ''%s''';
   RsConfirmChanges = '%s: Confirm changes';
 
-//=== JclParseUses.pas =======================================================
-resourcestring
-  RsEDuplicateUnit = 'Duplicate unit ''%s''';
-  RsEInvalidLibrary = 'Invalid library';
-  RsEInvalidProgram = 'Invalid program';
-  RsEInvalidUnit = 'Invalid unit';
-  RsEInvalidUses = 'Invalid uses clause';
-
 //=== ProjAnalyserImpl.pas ===================================================
 resourcestring
   RsAnalyzeActionCaption = 'Analyze project %s';
@@ -282,6 +275,7 @@ resourcestring
   RsENoBuildAllAction = 'Build All action not found';
   RsDebugConfigPageCaption = 'Debug info converter';
   RsEProjectPropertyFailed = 'Unable to save project properties, project file may be read-only';
+  RsJclDebugMessagePrefix = 'JCL Debug Expert';
 
 //=== JclDebugIdeConfigFrame.pas =============================================
 resourcestring
@@ -414,10 +408,10 @@ resourcestring
 resourcestring
   RsRepositoryExcDlgPage = 'Exception dialog';
 
-  RsRepositoryExcDlgDelphiName = 'Jcl Exception dialog for Delphi';
+  RsRepositoryExcDlgDelphiName = 'JCL Exception dialog for Delphi';
   RsRepositoryExcDlgDelphiDescription = 'Create an exception dialog for your Delphi project';
 
-  RsRepositoryExcDlgCBuilderName = 'Jcl Exception dialog for C++Builder';
+  RsRepositoryExcDlgCBuilderName = 'JCL Exception dialog for C++Builder';
   RsRepositoryExcDlgCBuilderDescription = 'Create an exception dialog for your C++Builder';
 
 //=== JclVersionControlImpl.pas ==============================================
@@ -506,8 +500,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaResources.pas $';
-    Revision: '$Revision: 3020 $';
-    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009) $';
+    Revision: '$Revision: 3175 $';
+    Date: '$Date: 2010-02-03 22:53:34 +0100 (mer. 03 févr. 2010) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

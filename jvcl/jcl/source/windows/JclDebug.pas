@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-04 13:12:24 +0100 (mer. 04 nov. 2009)                           $ }
-{ Revision:      $Rev:: 3064                                                                     $ }
+{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3160                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -64,10 +64,8 @@ uses
 procedure AssertKindOf(const ClassName: string; const Obj: TObject); overload;
 procedure AssertKindOf(const ClassType: TClass; const Obj: TObject); overload;
 
-{$IFDEF KEEP_DEPRECATED}
-procedure Trace(const Msg: string);
-{$EXTERNALSYM Trace}
-{$ENDIF KEEP_DEPRECATED}
+// use TraceMsg
+// procedure Trace(const Msg: string);
 procedure TraceMsg(const Msg: string);
 procedure TraceFmt(const Fmt: string; const Args: array of const);
 procedure TraceLoc(const Msg: string);
@@ -688,6 +686,9 @@ function JclGetExceptStackListToStrings(ThreadID: DWORD; Strings: TStrings;
   IncludeModuleName: Boolean = False; IncludeAddressOffset: Boolean = False;
   IncludeStartProcLineOffset: Boolean = False; IncludeVAddress: Boolean = False): Boolean;
 
+// helper function for DUnit runtime memory leak check
+procedure JclClearGlobalStackData;
+
 // Exception frame info routines
 type
   PJmpInstruction = ^TJmpInstruction;
@@ -976,11 +977,9 @@ type
      stDelayedTrace, stTraceAllExceptions, stMainThreadOnly, stDisableIfDebuggerAttached);
   TJclStackTrackingOptions = set of TJclStackTrackingOption;
 
-{$IFDEF KEEP_DEPRECATED}
-const
+//const
   // replaced by RemoveIgnoredException(EAbort)
-  stTraceEAbort = stTraceAllExceptions;
-{$ENDIF KEEP_DEPRECATED}
+  // stTraceEAbort = stTraceAllExceptions;
 
 var
   JclStackTrackingOptions: TJclStackTrackingOptions = [stStack];
@@ -1000,8 +999,8 @@ function IsIgnoredException(const ExceptionClass: TClass): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 3064 $';
-    Date: '$Date: 2009-11-04 13:12:24 +0100 (mer. 04 nov. 2009) $';
+    Revision: '$Revision: 3160 $';
+    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1092,14 +1091,6 @@ procedure AssertKindOf(const ClassType: TClass; const Obj: TObject);
 begin
   Assert(Obj.InheritsFrom(ClassType));
 end;
-
-
-{$IFDEF KEEP_DEPRECATED}
-procedure Trace(const Msg: string);
-begin
-  TraceMsg(Msg);
-end;
-{$ENDIF KEEP_DEPRECATED}
 
 procedure TraceMsg(const Msg: string);
 begin
@@ -2037,7 +2028,7 @@ end;
 
 function EncodeNameString(const S: string): AnsiString;
 var
-  I, StartIndex: Integer;
+  I, StartIndex, EndIndex: Integer;
   C: Byte;
   P: PByte;
 begin
@@ -2057,9 +2048,13 @@ begin
     P^ := 2 // store '@' leading char information
   else
     Dec(P);
-  for I := 0 to Length(S) - StartIndex do // including null char
+  EndIndex := Length(S) - StartIndex;
+  for I := 0 to EndIndex do // including null char
   begin
-    C := Byte(S[I + 1 + StartIndex]);
+    if I = EndIndex then
+      C := 0
+    else
+      C := Byte(S[I + 1 + StartIndex]);
     case AnsiChar(C) of
       #0:
         C := 0;
@@ -2088,7 +2083,7 @@ begin
         end;
       2:
         begin
-          P^ := P^ or (C shl 4);
+          P^ := P^ or Byte(C shl 4);
           Inc(P);
           P^ := (C shr 4) and $03;
         end;
@@ -4254,6 +4249,7 @@ type
   public
     destructor Destroy; override;
     procedure AddObject(AObject: TJclStackBaseList);
+    procedure Clear;
     procedure LockThreadID(TID: DWORD);
     procedure UnlockThreadID;
     function FindObject(TID: DWORD; AClass: TJclStackBaseListClass): TJclStackBaseList;
@@ -4290,6 +4286,22 @@ begin
       ReplacedObj.Free;
     end;
     Add(AObject);
+  finally
+    UnlockList;
+  end;
+end;
+
+procedure TJclGlobalStackList.Clear;
+begin
+  with LockList do
+  try
+    while Count > 0 do
+      TObject(Items[0]).Free;
+    { The following call to Clear seems to be useless, but it deallocates memory
+      by setting the lists capacity back to zero. For the runtime memory leak check
+      within DUnit it is important that the allocated memory before and after the
+      test is equal. }
+    Clear; // do not remove
   finally
     UnlockList;
   end;
@@ -4560,6 +4572,11 @@ begin
   if Result then
     List.AddToStrings(Strings, IncludeModuleName, IncludeAddressOffset, IncludeStartProcLineOffset,
       IncludeVAddress);
+end;
+
+procedure JclClearGlobalStackData;
+begin
+  GlobalStackList.Clear;
 end;
 
 function JclCreateStackList(Raw: Boolean; AIgnoreLevels: DWORD; FirstCaller: Pointer): TJclStackInfoList;
@@ -5290,7 +5307,7 @@ begin
           HandlerAt := FExcTab[I].Handler
         else
         begin
-          ParentVTable := PPointer(TJclAddr(VTable) + TJclAddr(vmtParent))^;
+          ParentVTable := TClass(VTable).ClassParent;
           if ParentVTable = VTable then
             VTable := nil
           else
@@ -5358,7 +5375,7 @@ end;
 //=== Exception hooking ======================================================
 
 var
-  TrackingActive: Boolean;
+  TrackingActiveCount: Integer;
   IgnoredExceptions: TThreadList = nil;
   IgnoredExceptionClassNames: TStringList = nil;
   IgnoredExceptionClassNamesCritSect: TJclCriticalSection = nil;
@@ -5468,7 +5485,7 @@ end;
 procedure DoExceptNotify(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean;
   BaseOfStack: Pointer);
 begin
-  if TrackingActive and (not (stDisableIfDebuggerAttached in JclStackTrackingOptions) or (not IsDebuggerAttached)) and
+  if (TrackingActiveCount > 0) and (not (stDisableIfDebuggerAttached in JclStackTrackingOptions) or (not IsDebuggerAttached)) and
     Assigned(ExceptObj) and (not IsIgnoredException(ExceptObj.ClassType)) and
     (not (stMainThreadOnly in JclStackTrackingOptions) or (GetCurrentThreadId = MainThreadID)) then
   begin
@@ -5481,34 +5498,51 @@ end;
 
 function JclStartExceptionTracking: Boolean;
 begin
-  if TrackingActive then
-    Result := False
+  {Increment the tracking count only if exceptions are already being tracked or tracking can be started
+   successfully.}
+  if TrackingActiveCount = 0 then
+  begin
+    if JclHookExceptions and JclAddExceptNotifier(DoExceptNotify, npFirstChain) then
+    begin
+      TrackingActiveCount := 1;
+      Result := True;
+    end
+    else
+      Result := False;
+  end
   else
   begin
-    Result := JclHookExceptions and JclAddExceptNotifier(DoExceptNotify, npFirstChain);
-    TrackingActive := Result;
+    Inc(TrackingActiveCount);
+    Result := False;
   end;
 end;
 
 function JclStopExceptionTracking: Boolean;
 begin
-  if TrackingActive then
+  {If the current tracking count is 1, an attempt is made to stop tracking exceptions. If successful the
+   tracking count is set back to 0. If the current tracking count is > 1 it is simply decremented.}
+  if TrackingActiveCount = 1 then
   begin
     Result := JclRemoveExceptNotifier(DoExceptNotify);
-    TrackingActive := False;
+    if Result then
+      Dec(TrackingActiveCount);
   end
   else
+  begin
+    if TrackingActiveCount > 0 then
+      Dec(TrackingActiveCount);
     Result := False;
+  end;
 end;
 
 function JclExceptionTrackingActive: Boolean;
 begin
-  Result := TrackingActive;
+  Result := TrackingActiveCount > 0;
 end;
 
 function JclTrackExceptionsFromLibraries: Boolean;
 begin
-  Result := TrackingActive;
+  Result := TrackingActiveCount > 0;
   if Result then
     JclInitializeLibrariesHookExcept;
 end;

@@ -39,9 +39,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-19 14:01:00 +0200 (sam. 19 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3016                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2010-02-07 14:32:08 +0100 (dim. 07 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3186                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -424,6 +424,10 @@
   XPLATFORM_RTL                  The RTL supports crossplatform function names (e.g. RaiseLastOSError) (D6+/BCB6+/FPC)
   SUPPORTS_UNICODE               string type is aliased to an unicode string (WideString or UnicodeString) (DX.NET, D12+)
   SUPPORTS_UNICODE_STRING        Compiler supports UnicodeString (D12+)
+  SUPPORTS_INT_ALIASES           Types Int8, Int16, Int32, UInt8, UInt16 and UInt32 are defined in the unit System (D12+)
+  HAS_UNIT_RTTI                  Unit RTTI is available (D14+)
+  SUPPORTS_CAST_INTERFACE_TO_OBJ The compiler supports casts from interfaces to objects (D14+)
+  SUPPORTS_DELAYED_LOADING       The compiler generates stubs for delaying imported function loads (D14+)
 
 
 - Compiler Settings
@@ -1148,6 +1152,7 @@
 {$IFDEF COMPILER12_UP}
   {$DEFINE SUPPORTS_GENERICS}
   {$DEFINE SUPPORTS_DEPRECATED_DETAILS}
+  {$DEFINE SUPPORTS_INT_ALIASES}
   {$IFNDEF CLR}
     {$DEFINE SUPPORTS_UNICODE}
     {$DEFINE SUPPORTS_UNICODE_STRING}
@@ -1156,6 +1161,9 @@
 
 {$IFDEF COMPILER14_UP}
   {$DEFINE SUPPORTS_CLASS_CTORDTORS}
+  {$DEFINE HAS_UNIT_RTTI}
+  {$DEFINE SUPPORTS_CAST_INTERFACE_TO_OBJ}
+  {$DEFINE SUPPORTS_DELAYED_LOADING}
 {$ENDIF COMPILER14_UP}
 
 {$IFDEF RTL130_UP}

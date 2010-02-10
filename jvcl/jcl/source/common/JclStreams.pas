@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-22 23:44:42 +0200 (mar. 22 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3019                                                                     $ }
+{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3160                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,13 +46,11 @@ uses
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
-  {$IFDEF LINUX}
+  {$IFDEF HAS_UNIT_LIBC}
   Libc,
-  {$ENDIF LINUX}
+  {$ENDIF HAS_UNIT_LIBC}
   SysUtils, Classes,
-  {$IFDEF HAS_UNIT_CONTNRS}
   Contnrs,
-  {$ENDIF HAS_UNIT_CONTNRS}
   JclBase, JclStringConversions;
 
 const
@@ -280,9 +278,7 @@ type
     procedure WriteCString(const Value: string); {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
     procedure WriteCAnsiString(const Value: AnsiString);
     procedure WriteCWideString(const Value: WideString);
-    {$IFDEF KEEP_DEPRECATED}
-    procedure WriteStringDelimitedByNull(const Value: string);
-    {$ENDIF KEEP_DEPRECATED}
+    // use WriteCString
     procedure WriteShortString(const Value: ShortString);
     procedure WriteSingle(const Value: Single);
     procedure WriteSizedString(const Value: string); {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
@@ -480,6 +476,7 @@ type
     function WriteWideChar(Value: WideChar): Boolean;
     function SkipBOM: LongInt; virtual;
     function WriteBOM: Longint; virtual;
+    property PeekPosition: Int64 read FPeekPosition;
   end;
 
   TJclStringStreamClass = class of TJclStringStream;
@@ -527,13 +524,6 @@ type
     property Encoding: TJclStringEncoding read FEncoding;
   end;
 
-{$IFDEF KEEP_DEPRECATED}
-// call TStream.Seek(Int64,TSeekOrigin) if present (TJclStream or COMPILER6_UP)
-// otherwize call TStream.Seek(LongInt,Word) with range checking
-function StreamSeek(Stream: TStream; const Offset: Int64;
-  const Origin: TSeekOrigin): Int64;
-{$ENDIF KEEP_DEPRECATED}
-
 // buffered copy of all available bytes from Source to Dest
 // returns the number of bytes that were copied
 function StreamCopy(Source: TStream; Dest: TStream; BufferSize: Longint = StreamDefaultBufferSize): Int64;
@@ -553,8 +543,8 @@ function CompareFiles(const FileA, FileB: TFileName; BufferSize: Longint = Strea
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStreams.pas $';
-    Revision: '$Revision: 3019 $';
-    Date: '$Date: 2009-09-22 23:44:42 +0200 (mar. 22 sept. 2009) $';
+    Revision: '$Revision: 3160 $';
+    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -565,17 +555,6 @@ implementation
 
 uses
   JclResources, JclCharsets, JclMath, JclSysUtils;
-
-{$IFDEF KEEP_DEPRECATED}
-function StreamSeek(Stream: TStream; const Offset: Int64;
-  const Origin: TSeekOrigin): Int64; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF SUPPORTS_INLINE}
-begin
-  if Assigned(Stream) then
-    Result := Stream.Seek(Offset, Origin)
-  else
-    Result := -1;
-end;
-{$ENDIF KEEP_DEPRECATED}
 
 function StreamCopy(Source: TStream; Dest: TStream; BufferSize: Longint): Int64;
 var
@@ -1665,13 +1644,6 @@ begin
   WriteBuffer(Value[1], (StrSize + 1) * SizeOf(Value[1]));
 end;
 
-{$IFDEF KEEP_DEPRECATED}
-procedure TJclEasyStream.WriteStringDelimitedByNull(const Value: string);
-begin
-  WriteCString(Value);
-end;
-{$ENDIF KEEP_DEPRECATED}
-
 procedure TJclEasyStream.WriteShortString(const Value: ShortString);
 begin
   WriteBuffer(Value[0], Length(Value) + 1);
@@ -2346,8 +2318,8 @@ begin
   Result := InternalGetNextChar(Self, Ch);
   if Result then
     Buffer := UCS4ToAnsiChar(Ch);
+  FPeekPosition := FPosition;
   FPosition := Pos;
-  FPeekPosition := FPeekPosition + 1;
 end;
 
 function TJclStringStream.PeekChar(out Buffer: Char): Boolean;
@@ -2360,8 +2332,8 @@ begin
   Result := InternalGetNextChar(Self, Ch);
   if Result then
     Buffer := UCS4ToChar(Ch);
+  FPeekPosition := FPosition;
   FPosition := Pos;
-  FPeekPosition := FPeekPosition + 1;
 end;
 
 function TJclStringStream.PeekWideChar(out Buffer: WideChar): Boolean;
@@ -2374,8 +2346,8 @@ begin
   Result := InternalGetNextChar(Self, Ch);
   if Result then
     Buffer := UCS4ToWideChar(Ch);
+  FPeekPosition := FPosition;
   FPosition := Pos;
-  FPeekPosition := FPeekPosition + 1;
 end;
 
 function TJclStringStream.ReadString(var Buffer: string; Start, Count: Longint): Longint;

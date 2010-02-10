@@ -40,8 +40,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-03 11:34:58 +0200 (sam. 03 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3034                                                                     $ }
+{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3139                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -402,6 +402,20 @@ function InheritsFromByName(AClass: TClass; const AClassName: string): Boolean;
 // Interface information
 function GetImplementorOfInterface(const I: IInterface): TObject;
 
+// interfaced persistent
+type
+  TJclInterfacedPersistent = class(TPersistent, IInterface)
+  protected
+    FOwnerInterface: IInterface;
+    FRefCount: Integer;
+  public
+    procedure AfterConstruction; override;
+    { IInterface }
+    function QueryInterface(const IID: TGUID; out Obj): HRESULT; virtual; stdcall;
+    function _AddRef: Integer; stdcall;
+    function _Release: Integer; stdcall;
+  end;
+
 // Numeric formatting routines
 type
   TDigitCount = 0..255;
@@ -656,8 +670,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysUtils.pas $';
-    Revision: '$Revision: 3034 $';
-    Date: '$Date: 2009-10-03 11:34:58 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 3139 $';
+    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -667,16 +681,10 @@ const
 implementation
 
 uses
-  {$IFDEF HAS_UNIT_TYPES}
   Types,
-  {$ENDIF HAS_UNIT_TYPES}
-  {$IFDEF UNIX}
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
-  {$ELSE ~HAS_UNIT_LIBC}
-  dl,
-  {$ENDIF ~HAS_UNIT_LIBC}
-  {$ENDIF UNIX}
+  {$ENDIF HAS_UNIT_LIBC}
   {$IFDEF MSWINDOWS}
   JclConsole,
   {$ENDIF MSWINDOWS}
@@ -2079,6 +2087,44 @@ begin
     end;
   except
     Result := nil;
+  end;
+end;
+
+//=== { TJclInterfacedPersistent } ===========================================
+
+procedure TJclInterfacedPersistent.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  if GetOwner <> nil then
+    GetOwner.GetInterface(IInterface, FOwnerInterface);
+end;
+
+function TJclInterfacedPersistent.QueryInterface(const IID: TGUID;
+  out Obj): HRESULT;
+begin
+  if GetInterface(IID, Obj) then
+    Result := S_OK
+  else
+    Result := E_NOINTERFACE;
+end;
+
+function TJclInterfacedPersistent._AddRef: Integer;
+begin
+  if FOwnerInterface <> nil then
+    Result := FOwnerInterface._AddRef
+  else
+    Result := InterlockedIncrement(FRefCount);
+end;
+
+function TJclInterfacedPersistent._Release: Integer;
+begin
+  if FOwnerInterface <> nil then
+    Result := FOwnerInterface._Release
+  else
+  begin
+    Result := InterlockedDecrement(FRefCount);
+    if Result = 0 then
+      Destroy;
   end;
 end;
 

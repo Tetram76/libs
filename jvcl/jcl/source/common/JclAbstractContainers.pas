@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 2993                                                                     $ }
+{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3160                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,9 +52,8 @@ uses
   JclAnsiStrings;
 
 type
-  {$IFDEF KEEP_DEPRECATED}
-  TJclIntfCriticalSection = JclSysUtils.TJclIntfCriticalSection;
-  {$ENDIF KEEP_DEPRECATED}
+  // (OF) was moved to JclSysUtils
+  // TJclIntfCriticalSection = JclSysUtils.TJclIntfCriticalSection;
 
   TJclAbstractLockable = class(TInterfacedObject {$IFDEF THREADSAFE}, IJclLockable {$ENDIF THREADSAFE})
   {$IFDEF THREADSAFE}
@@ -697,8 +696,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAbstractContainers.pas $';
-    Revision: '$Revision: 2993 $';
-    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3160 $';
+    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

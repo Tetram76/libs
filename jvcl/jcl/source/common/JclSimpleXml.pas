@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3139                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -48,9 +48,7 @@ uses
   Windows, // Delphi 2005 inline
   {$ENDIF MSWINDOWS}
   SysUtils, Classes,
-  {$IFDEF HAS_UNIT_VARIANTS}
   Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
   IniFiles,
   JclBase, JclStreams;
 
@@ -384,20 +382,34 @@ type
     procedure SaveToStringStream(StringStream: TJclStringStream; const Level: string = ''; AParent: TJclSimpleXML = nil); override;
   end;
 
-  TJclSimpleXMLElemHeader = class(TJclSimpleXMLElem)
-  private
-    FStandalone: Boolean;
-    FEncoding: string;
-    FVersion: string;
+  TJclSimpleXMLElemProcessingInstruction = class(TJclSimpleXMLElem)
   public
-    procedure Assign(Value: TJclSimpleXMLElem); override;
-    
     procedure LoadFromStringStream(StringStream: TJclStringStream; AParent: TJclSimpleXML = nil); override;
     procedure SaveToStringStream(StringStream: TJclStringStream; const Level: string = ''; AParent: TJclSimpleXML = nil); override;
-    property Version: string read FVersion write FVersion;
-    property StandAlone: Boolean read FStandalone write FStandalone;
-    property Encoding: string read FEncoding write FEncoding;
-    constructor Create(const AOwner: TJclSimpleXMLElem); override;
+  end;
+
+  TJclSimpleXMLElemHeader = class(TJclSimpleXMLElemProcessingInstruction)
+  private
+    function GetEncoding: string;
+    function GetStandalone: Boolean;
+    function GetVersion: string;
+    procedure SetEncoding(const Value: string);
+    procedure SetStandalone(const Value: Boolean);
+    procedure SetVersion(const Value: string);
+  public
+    procedure LoadFromStringStream(StringStream: TJclStringStream; AParent: TJclSimpleXML = nil); override;
+    procedure SaveToStringStream(StringStream: TJclStringStream; const Level: string = ''; AParent: TJclSimpleXML = nil); override;
+    property Version: string read GetVersion write SetVersion;
+    property StandAlone: Boolean read GetStandalone write SetStandalone;
+    property Encoding: string read GetEncoding write SetEncoding;
+  end;
+
+  // for backward compatibility
+  TJclSimpleXMLElemSheet = class(TJclSimpleXMLElemProcessingInstruction)
+  end;
+
+  // for backward compatibility
+  TJclSimpleXMLElemMSOApplication = class(TJclSimpleXMLElemProcessingInstruction)
   end;
 
   TJclSimpleXMLElemDocType = class(TJclSimpleXMLElem)
@@ -406,20 +418,9 @@ type
     procedure SaveToStringStream(StringStream: TJclStringStream; const Level: string = ''; AParent: TJclSimpleXML = nil); override;
   end;
 
-  TJclSimpleXMLElemSheet = class(TJclSimpleXMLElem)
-  public
-    procedure LoadFromStringStream(StringStream: TJclStringStream; AParent: TJclSimpleXML = nil); override;
-    procedure SaveToStringStream(StringStream: TJclStringStream; const Level: string = ''; AParent: TJclSimpleXML = nil); override;
-  end;
-
-  TJclSimpleXMLElemMSOApplication = class(TJclSimpleXMLElem)
-  public
-    procedure LoadFromStringStream(StringStream: TJclStringStream; AParent: TJclSimpleXML = nil); override;
-    procedure SaveToStringStream(StringStream: TJclStringStream; const Level: string = ''; AParent: TJclSimpleXML = nil); override;
-  end;
-
   TJclSimpleXMLOptions = set of (sxoAutoCreate, sxoAutoIndent, sxoAutoEncodeValue,
-    sxoAutoEncodeEntity, sxoDoNotSaveProlog, sxoTrimPrecedingTextWhitespace);
+    sxoAutoEncodeEntity, sxoDoNotSaveProlog, sxoTrimPrecedingTextWhitespace,
+    sxoTrimFollowingTextWhitespace);
   TJclSimpleXMLEncodeEvent = procedure(Sender: TObject; var Value: string) of object;
   TJclSimpleXMLEncodeStreamEvent = procedure(Sender: TObject; InStream, OutStream: TStream) of object;
 
@@ -525,8 +526,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3139 $';
+    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1005,7 +1006,8 @@ begin
         AStringStream := TJclUTF16Stream.Create(AOutStream, False);
     else
       AStringStream := TJclAutoStream.Create(AOutStream, False);
-      TJclAutoStream(AStringStream).CodePage := CodePage;
+      if CodePage <> CP_ACP then
+        TJclAutoStream(AStringStream).CodePage := CodePage;
     end;
     try
       AStringStream.SkipBOM;
@@ -2069,8 +2071,14 @@ begin
                 lElem := TJclSimpleXMLElemComment.Create(Parent);
                 lPos := rsWaitingTag;
                 St := '';
+              end
+              else
+              if St = '<?' then
+              begin
+                lElem := TJclSimpleXMLElemProcessingInstruction.Create(Parent);
+                lPos := rsWaitingTag;
+                St := '';
               end;
-                //<?
             end;
           end;
 
@@ -2486,7 +2494,7 @@ begin
             // end of properties
             Break
           else
-            FmtError(LoadResString(@RsEInvalidXMLElementUnexpectedCharacte), [Ch]);
+            FmtError(LoadResString(@RsEInvalidXMLElementUnexpectedCharacte), [Ch, StringStream.PeekPosition]);
         end;
 
       ptReadingName: //We are reading a property name
@@ -2509,7 +2517,7 @@ begin
           if CharIsWhiteSpace(Ch) then
             lPos := ptSpaceBeforeEqual
           else
-            FmtError(LoadResString(@RsEInvalidXMLElementUnexpectedCharacte), [Ch]);
+            FmtError(LoadResString(@RsEInvalidXMLElementUnexpectedCharacte), [Ch, StringStream.PeekPosition]);
         end;
 
       ptStartingContent: //We are going to start a property content
@@ -2525,7 +2533,7 @@ begin
             lPos := ptReadingValue;
           end
           else
-            FmtError(LoadResString(@RsEInvalidXMLElementUnexpectedCharacte_), [Ch]);
+            FmtError(LoadResString(@RsEInvalidXMLElementUnexpectedCharacte_), [Ch, StringStream.PeekPosition]);
         end;
 
       ptReadingValue: //We are reading a property
@@ -2552,7 +2560,7 @@ begin
           if Ch = '=' then
             lPos := ptStartingContent
           else
-            FmtError(LoadResString(@RsEInvalidXMLElementUnexpectedCharacte), [Ch]);
+            FmtError(LoadResString(@RsEInvalidXMLElementUnexpectedCharacte), [Ch, StringStream.PeekPosition]);
         end;
     else
       Assert(False, RsEUnexpectedValueForLPos);
@@ -2696,7 +2704,7 @@ begin
           lPos := rsOpeningName // read name
         else
         if not CharIsWhiteSpace(Ch) then
-          FmtError(LoadResString(@RsEInvalidXMLElementExpectedBeginningO), [Ch]);
+          FmtError(LoadResString(@RsEInvalidXMLElementExpectedBeginningO), [Ch, StringStream.PeekPosition]);
 
       rsOpeningName:
         if CharIsValidIdentifierLetter(Ch) or (Ch = '-') or (Ch = '.') then
@@ -2710,7 +2718,7 @@ begin
         else
         if CharIsWhiteSpace(Ch) and (St = '') then
           // whitespace after "<" (no name)
-          Error(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn))
+          FmtError(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn), [StringStream.PeekPosition])
         else
         if CharIsWhiteSpace(Ch) then
         begin
@@ -2736,7 +2744,7 @@ begin
         end
         else
           // other invalid characters
-          Error(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn));
+          FmtError(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn), [StringStream.PeekPosition]);
 
       rsTypeOpeningTag:
         if CharIsWhiteSpace(Ch) then
@@ -2752,13 +2760,13 @@ begin
           lPos := rsWaitingClosingTag1;
         end
         else
-          Error(Format(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch]));
+          FmtError(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch, StringStream.PeekPosition]);
 
       rsEndSingleTag:
         if Ch = '>' then
           Break
         else
-          Error(Format(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch]));
+          FmtError(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch, StringStream.PeekPosition]);
 
       rsWaitingClosingTag1:
         if CharIsWhiteSpace(Ch) then
@@ -2767,13 +2775,13 @@ begin
         if Ch = '<' then
           lPos := rsWaitingClosingTag2
         else
-          Error(Format(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch]));
+          FmtError(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch, StringStream.PeekPosition]);
 
       rsWaitingClosingTag2:
         if Ch = '/' then
           lPos := rsClosingName
         else
-          Error(Format(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch]));
+          FmtError(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch, StringStream.PeekPosition]);
 
       rsClosingName:
         if CharIsWhiteSpace(Ch) or (Ch = '>') then
@@ -2781,11 +2789,11 @@ begin
           if lNameSpace <> '' then
           begin
             if not StrSame(lNameSpace + ':' + lName, St) then
-              FmtError(LoadResString(@RsEInvalidXMLElementErroneousEndOfTagE), [lName, St]);
+              FmtError(LoadResString(@RsEInvalidXMLElementErroneousEndOfTagE), [lName, St, StringStream.PeekPosition]);
           end
           else
             if not StrSame(lName, St) then
-              FmtError(LoadResString(@RsEInvalidXMLElementErroneousEndOfTagE), [lName, St]);
+              FmtError(LoadResString(@RsEInvalidXMLElementErroneousEndOfTagE), [lName, St, StringStream.PeekPosition]);
           //Set value if only one sub element
           //This might reduce speed, but this is for compatibility issues
           if (Items.Count = 1) and (Items[0] is TJclSimpleXMLElemText) then
@@ -2800,7 +2808,7 @@ begin
           St := St + Ch
         else
           // other invalid characters
-          Error(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn));
+          FmtError(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn), [StringStream.PeekPosition]);
     end;
   end;
 
@@ -2908,7 +2916,7 @@ begin
           Inc(lPos)
         else
         if not CharIsWhiteSpace(Ch) then
-          FmtError(LoadResString(@RsEInvalidCommentExpectedsButFounds), [CS_START_COMMENT[lPos], Ch]);
+          FmtError(LoadResString(@RsEInvalidCommentExpectedsButFounds), [CS_START_COMMENT[lPos], Ch, StringStream.PeekPosition]);
       5:
         if Ch = CS_STOP_COMMENT[lPos] then
           Inc(lPos)
@@ -2929,12 +2937,12 @@ begin
           Break; //End if
         end
         else // -- is not authorized in comments
-          Error(LoadResString(@RsEInvalidCommentNotAllowedInsideComme));
+          FmtError(LoadResString(@RsEInvalidCommentNotAllowedInsideComme), [StringStream.PeekPosition]);
     end;
   end;
 
   if not lOk then
-    Error(LoadResString(@RsEInvalidCommentUnexpectedEndOfData));
+    FmtError(LoadResString(@RsEInvalidCommentUnexpectedEndOfData), [StringStream.PeekPosition]);
 
   Value := St;
   Name := '';
@@ -2985,7 +2993,7 @@ begin
           Inc(lPos)
         else
         if not CharIsWhiteSpace(Ch) then
-          FmtError(LoadResString(@RsEInvalidCDATAExpectedsButFounds), [CS_START_CDATA[lPos], Ch]);
+          FmtError(LoadResString(@RsEInvalidCDATAExpectedsButFounds), [CS_START_CDATA[lPos], Ch, StringStream.PeekPosition]);
       10:
         if Ch = CS_STOP_CDATA[lPos] then
           Inc(lPos)
@@ -3014,7 +3022,7 @@ begin
   end;
 
   if not lOk then
-    Error(LoadResString(@RsEInvalidCDATAUnexpectedEndOfData));
+    FmtError(LoadResString(@RsEInvalidCDATAUnexpectedEndOfData), [StringStream.PeekPosition]);
 
   Value := St;
   Name := '';
@@ -3043,14 +3051,11 @@ procedure TJclSimpleXMLElemText.LoadFromStringStream(StringStream: TJclStringStr
 var
   Ch: Char;
   St: string;
-  lTrimWhiteSpace: Boolean;
 begin
   St := '';
 
   if AParent <> nil then
     AParent.DoLoadProgress(StringStream.Stream.Position, StringStream.Stream.Size);
-
-  lTrimWhiteSpace := Assigned(SimpleXML) and (sxoTrimPrecedingTextWhitespace in SimpleXML.Options);
 
   while StringStream.PeekChar(Ch) do
     case Ch of
@@ -3063,12 +3068,18 @@ begin
         St := St + Ch;
       end;
   end;
-  if GetSimpleXML <> nil then
+
+  if Assigned(SimpleXML) then
+  begin
     GetSimpleXML.DoDecodeValue(St);
-  if lTrimWhiteSpace then
-    Value := TrimLeft(St)
-  else
-    Value := St;
+
+    if sxoTrimPrecedingTextWhitespace in SimpleXML.Options then
+      St := TrimLeft(St);
+    if sxoTrimFollowingTextWhitespace in SimpleXML.Options then
+      St := TrimRight(St);
+  end;
+
+  Value := St;
   Name := '';
 
   if AParent <> nil then
@@ -3092,39 +3103,21 @@ begin
     AParent.DoSaveProgress;
 end;
 
-//=== { TJclSimpleXMLElemHeader } ============================================
+//=== { TJclSimpleXMLElemProcessingInstruction } =============================
 
-procedure TJclSimpleXMLElemHeader.Assign(Value: TJclSimpleXMLElem);
-begin
-  inherited Assign(Value);
-  if Value is TJclSimpleXMLElemHeader then
-  begin
-    FStandalone := TJclSimpleXMLElemHeader(Value).FStandalone;
-    FEncoding := TJclSimpleXMLElemHeader(Value).FEncoding;
-    FVersion := TJclSimpleXMLElemHeader(Value).FVersion;
-  end;
-end;
-
-constructor TJclSimpleXMLElemHeader.Create(const AOwner: TJclSimpleXMLElem);
-begin
-  inherited Create(AOwner);
-  FVersion := '1.0';
-  FEncoding := 'iso-8859-1';
-  FStandalone := False;
-end;
-
-procedure TJclSimpleXMLElemHeader.LoadFromStringStream(StringStream: TJclStringStream; AParent: TJclSimpleXML);
-//<?xml version="1.0" encoding="iso-xyzxx" standalone="yes"?>
-const
-  CS_START_HEADER = '<?xml';
-  CS_STOP_HEADER  = '     ?>';
+procedure TJclSimpleXMLElemProcessingInstruction.LoadFromStringStream(
+  StringStream: TJclStringStream; AParent: TJclSimpleXML);
+type
+  TReadStatus = (rsWaitingOpeningTag, rsOpeningTag, rsOpeningName, rsEndTag1, rsEndTag2);
 var
-  lPos: Integer;
+  lPos: TReadStatus;
   lOk: Boolean;
+  St, lName, lNameSpace: string;
   Ch: Char;
-  CodePage: Word;
 begin
-  lPos := 1;
+  St := '';
+  lNameSpace := '';
+  lPos := rsWaitingOpeningTag;
   lOk := False;
 
   if AParent <> nil then
@@ -3133,54 +3126,121 @@ begin
   while StringStream.ReadChar(Ch) do
   begin
     case lPos of
-      1..4: //<?xm
-        if Ch = CS_START_HEADER[lPos] then
-          Inc(lPos)
+      rsWaitingOpeningTag: // wait beginning of tag
+        if Ch = '<' then
+          lPos := rsOpeningTag
         else
         if not CharIsWhiteSpace(Ch) then
-          FmtError(LoadResString(@RsEInvalidHeaderExpectedsButFounds), [CS_START_HEADER[lPos], Ch]);
-      5: //l
-        if Ch = CS_START_HEADER[lPos] then
+          FmtError(LoadResString(@RsEInvalidXMLElementExpectedBeginningO), [Ch, StringStream.PeekPosition]);
+
+      rsOpeningTag:
+        if Ch = '?' then
+          lPos := rsOpeningName // read name
+        else
+          FmtError(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn), [StringStream.PeekPosition]);
+
+      rsOpeningName:
+        if CharIsValidIdentifierLetter(Ch) or (Ch = '-') or (Ch = '.') then
+          St := St + Ch
+        else
+        if (Ch = ':') and (lNameSpace = '') then
         begin
-          Properties.LoadFromStringStream(StringStream);
-          Inc(lPos);
-
-          // Use current value as default value, this will allow reading
-          // xml file that do not specify encoding.
-          FVersion := Properties.Value('version', FVersion);
-          FEncoding := Properties.Value('encoding', FEncoding);
-          FStandalone := Properties.Value('standalone') = 'yes';
-
-          Properties.Clear;
+          lNameSpace := St;
+          St := '';
         end
         else
-          FmtError(LoadResString(@RsEInvalidHeaderExpectedsButFounds), [CS_START_HEADER[lPos], Ch]);
-      6: //?
-        if Ch = CS_STOP_HEADER[lPos] then
-          Inc(lPos)
+        if CharIsWhiteSpace(Ch) and (St = '') then
+          // whitespace after "<" (no name)
+          FmtError(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn), [StringStream.PeekPosition])
         else
         if CharIsWhiteSpace(Ch) then
-          // spaces before ?>
-        else
-          FmtError(LoadResString(@RsEInvalidHeaderExpectedsButFounds), [CS_STOP_HEADER[lPos], Ch]);
-      7: //>
-        if Ch = CS_STOP_HEADER[lPos] then
         begin
-          lOk := True;
-          Break; //End if
+          lName := St;
+          St := '';
+          Properties.LoadFromStringStream(StringStream);
+          lPos := rsEndTag1;
         end
         else
-          FmtError(LoadResString(@RsEInvalidHeaderExpectedsButFounds), [CS_STOP_HEADER[lPos], Ch]);
+        if Ch = '?' then
+        begin
+          lName := St;
+          lPos := rsEndTag2;
+        end
+        else
+          // other invalid characters
+          FmtError(LoadResString(@RsEInvalidXMLElementMalformedTagFoundn), [StringStream.PeekPosition]);
+
+      rsEndTag1:
+        if Ch = '?' then
+          lPos := rsEndTag2
+        else
+        if not CharIsWhiteSpace(Ch) then
+          FmtError(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch, StringStream.PeekPosition]);
+
+      rsEndTag2:
+        if Ch = '>' then
+        begin
+          lOk := True;
+          Break;
+        end
+        else
+          FmtError(LoadResString(@RsEInvalidXMLElementExpectedEndOfTagBu), [Ch, StringStream.PeekPosition]);
     end;
   end;
 
   if not lOk then
-    Error(LoadResString(@RsEInvalidCommentUnexpectedEndOfData));
+    FmtError(LoadResString(@RsEInvalidCommentUnexpectedEndOfData), [StringStream.PeekPosition]);
 
-  Name := '';
+  Name := lName;
+  NameSpace := lNameSpace;
+end;
 
-  if FEncoding <> '' then
-    CodePage := CodePageFromCharsetName(FEncoding)
+procedure TJclSimpleXMLElemProcessingInstruction.SaveToStringStream(
+  StringStream: TJclStringStream; const Level: string; AParent: TJclSimpleXML);
+var
+  St: string;
+begin
+  St := Level + '<?';
+  if NameSpace <> '' then
+    St := St + NameSpace + ':' + Name
+  else
+    St := St + Name;
+  StringStream.WriteString(St, 1, Length(St));
+  Properties.SaveToStringStream(StringStream);
+  St := '?>' + sLineBreak;
+  StringStream.WriteString(St, 1, Length(St));
+  if AParent <> nil then
+    AParent.DoSaveProgress;
+end;
+
+//=== { TJclSimpleXMLElemHeader } ============================================
+
+function TJclSimpleXMLElemHeader.GetEncoding: string;
+begin
+  Result := Properties.Value('encoding', 'iso-8859-1');
+end;
+
+function TJclSimpleXMLElemHeader.GetStandalone: Boolean;
+begin
+  Result := Properties.Value('standalone') = 'yes';
+end;
+
+function TJclSimpleXMLElemHeader.GetVersion: string;
+begin
+  Result := Properties.Value('version', '1.0');
+end;
+
+procedure TJclSimpleXMLElemHeader.LoadFromStringStream(StringStream: TJclStringStream; AParent: TJclSimpleXML);
+//<?xml version="1.0" encoding="iso-xyzxx" standalone="yes"?>
+var
+  CodePage: Word;
+  EncodingProp: TJclSimpleXMLProp;
+begin
+  inherited LoadFromStringStream(StringStream, AParent);
+  
+  EncodingProp := Properties.ItemNamed['encoding'];
+  if Assigned(EncodingProp) and (EncodingProp.Value <> '') then
+    CodePage := CodePageFromCharsetName(EncodingProp.Value)
   else
     CodePage := CP_ACP;
 
@@ -3195,20 +3255,48 @@ begin
     Error(LoadResString(@RsENoCharset));
 end;
 
-procedure TJclSimpleXMLElemHeader.SaveToStringStream(StringStream: TJclStringStream;
-  const Level: string; AParent: TJclSimpleXML);
-var
-  St: string;
+procedure TJclSimpleXMLElemHeader.SaveToStringStream(
+  StringStream: TJclStringStream; const Level: string; AParent: TJclSimpleXML);
 begin
-  St := Level + '<?xml version="' + FVersion + '"';
-  if Encoding <> '' then
-    St := St + ' encoding="' + Encoding + '"';
-  if StandAlone then
-    St := St + ' standalone="yes"';
-  St := St + '?>' + sLineBreak;
-  StringStream.WriteString(St, 1, Length(St));
-  if AParent <> nil then
-    AParent.DoSaveProgress;
+  SetVersion(GetVersion);
+  SetEncoding(GetEncoding);
+  SetStandalone(GetStandalone);
+  inherited SaveToStringStream(StringStream, Level, AParent);
+end;
+
+procedure TJclSimpleXMLElemHeader.SetEncoding(const Value: string);
+var
+  Prop: TJclSimpleXMLProp;
+begin
+  Prop := Properties.GetItemNamed('encoding');
+  if Assigned(Prop) then
+    Prop.Value := Value
+  else
+    Properties.Add('encoding', Value);
+end;
+
+procedure TJclSimpleXMLElemHeader.SetStandalone(const Value: Boolean);
+var
+  Prop: TJclSimpleXMLProp;
+const
+  BooleanValues: array [Boolean] of string = ('no', 'yes');
+begin
+  Prop := Properties.GetItemNamed('standalone');
+  if Assigned(Prop) then
+    Prop.Value := BooleanValues[Value]
+  else
+    Properties.Add('standalone', BooleanValues[Value]);
+end;
+
+procedure TJclSimpleXMLElemHeader.SetVersion(const Value: string);
+var
+  Prop: TJclSimpleXMLProp;
+begin
+  Prop := Properties.GetItemNamed('version');
+  if Assigned(Prop) then
+    Prop.Value := Value
+  else
+    Properties.Add('version', Value);
 end;
 
 //=== { TJclSimpleXMLElemDocType } ===========================================
@@ -3248,7 +3336,7 @@ begin
           Inc(lPos)
         else
         if not CharIsWhiteSpace(Ch) then
-          FmtError(LoadResString(@RsEInvalidHeaderExpectedsButFounds), [CS_START_DOCTYPE[lPos], Ch]);
+          FmtError(LoadResString(@RsEInvalidHeaderExpectedsButFounds), [CS_START_DOCTYPE[lPos], Ch, StringStream.PeekPosition]);
       10: //]> or >
         if lChar = Ch then
         begin
@@ -3273,7 +3361,7 @@ begin
   end;
 
   if not lOk then
-    Error(LoadResString(@RsEInvalidCommentUnexpectedEndOfData));
+    FmtError(LoadResString(@RsEInvalidCommentUnexpectedEndOfData), [StringStream.PeekPosition]);
 
   Name := '';
   Value := StrTrimCharsLeft(St, CharIsWhiteSpace);
@@ -3288,160 +3376,6 @@ var
   St: string;
 begin
   St := Level + '<!DOCTYPE ' + Value + '>' + sLineBreak;
-  StringStream.WriteString(St, 1, Length(St));
-  if AParent <> nil then
-    AParent.DoSaveProgress;
-end;
-
-//=== { TJclSimpleXMLElemSheet } =============================================
-
-procedure TJclSimpleXMLElemSheet.LoadFromStringStream(StringStream: TJclStringStream;
-  AParent: TJclSimpleXML);
-//<?xml-stylesheet alternate="yes" type="text/xsl" href="sheet.xsl"?>
-const
-  CS_START_PI = '<?xml-stylesheet';
-  CS_STOP_PI  = '                ?>';
-var
-  lPos: Integer;
-  lOk: Boolean;
-  Ch: Char;
-begin
-  lPos := 1;
-  lOk := False;
-
-  if AParent <> nil then
-    AParent.DoLoadProgress(StringStream.Stream.Position, StringStream.Stream.Size);
-
-  while StringStream.ReadChar(Ch) do
-  begin
-    case lPos of
-      1..15: //<?xml-styleshee
-        if Ch = CS_START_PI[lPos] then
-          Inc(lPos)
-        else
-        if not CharIsWhiteSpace(Ch) then
-          FmtError(LoadResString(@RsEInvalidStylesheetExpectedsButFounds), [CS_START_PI[lPos], Ch]);
-      16: //t
-        if Ch = CS_START_PI[lPos] then
-        begin
-          Properties.LoadFromStringStream(StringStream);
-          Inc(lPos);
-        end
-        else
-          FmtError(LoadResString(@RsEInvalidStylesheetExpectedsButFounds), [CS_START_PI[lPos], Ch]);
-      17: //?
-        if Ch = CS_STOP_PI[lPos] then
-          Inc(lPos)
-        else
-        if CharIsWhiteSpace(Ch) then
-          // space after properties
-        else
-          FmtError(LoadResString(@RsEInvalidStylesheetExpectedsButFounds), [CS_STOP_PI[lPos], Ch]);
-      18: //>
-        if Ch = CS_STOP_PI[lPos] then
-        begin
-          lOk := True;
-          Break; //End if
-        end
-        else
-          FmtError(LoadResString(@RsEInvalidStylesheetExpectedsButFounds), [CS_STOP_PI[lPos], Ch]);
-    end;
-  end;
-
-  if not lOk then
-    Error(LoadResString(@RsEInvalidStylesheetUnexpectedEndOfDat));
-
-  Name := '';
-end;
-
-procedure TJclSimpleXMLElemSheet.SaveToStringStream(StringStream: TJclStringStream;
-  const Level: string; AParent: TJclSimpleXML);
-var
-  I: Integer;
-  St: string;
-begin
-  St := Level + '<?xml-stylesheet';
-  StringStream.WriteString(St, 1, Length(St));
-  for I := 0 to Properties.GetCount - 1 do
-    Properties.Item[I].SaveToStringStream(StringStream);
-  St := '?>' + sLineBreak;
-  StringStream.WriteString(St, 1, Length(St));
-  if AParent <> nil then
-    AParent.DoSaveProgress;
-end;
-
-//=== { TJclSimpleXMLElemMSOApplication } =============================================
-
-procedure TJclSimpleXMLElemMSOApplication.LoadFromStringStream(StringStream: TJclStringStream;
-  AParent: TJclSimpleXML);
-//<?mso-application progid="Word.Document"?>
-const
-  CS_START_PI = '<?mso-application';
-  CS_STOP_PI  = '                 ?>';
-var
-  lPos: Integer;
-  lOk: Boolean;
-  Ch: Char;
-begin
-  lPos := 1;
-  lOk := False;
-
-  if AParent <> nil then
-    AParent.DoLoadProgress(StringStream.Stream.Position, StringStream.Stream.Size);
-
-  while StringStream.ReadChar(Ch) do
-  begin
-    case lPos of
-      1..16: //<?mso-applicatio
-        if Ch = CS_START_PI[lPos] then
-          Inc(lPos)
-        else
-        if not CharIsWhiteSpace(Ch) then
-          FmtError(LoadResString(@RsEInvalidMSOExpectedsButFounds), [CS_START_PI[lPos], Ch]);
-      17: //n
-        if Ch = CS_START_PI[lPos] then
-        begin
-          Properties.LoadFromStringStream(StringStream);
-          Inc(lPos);
-        end
-        else
-          FmtError(LoadResString(@RsEInvalidMSOExpectedsButFounds), [CS_START_PI[lPos], Ch]);
-      18: //?
-        if Ch = CS_STOP_PI[lPos] then
-          Inc(lPos)
-        else
-        if CharIsWhiteSpace(Ch) then
-          // space after properties
-        else
-          FmtError(LoadResString(@RsEInvalidMSOExpectedsButFounds), [CS_STOP_PI[lPos], Ch]);
-      19: //>
-        if Ch = CS_STOP_PI[lPos] then
-        begin
-          lOk := True;
-          Break; //End if
-        end
-        else
-          FmtError(LoadResString(@RsEInvalidMSOExpectedsButFounds), [CS_STOP_PI[lPos], Ch]);
-    end;
-  end;
-
-  if not lOk then
-    Error(LoadResString(@RsEInvalidMSOUnexpectedEndOfDat));
-
-  Name := '';
-end;
-
-procedure TJclSimpleXMLElemMSOApplication.SaveToStringStream(StringStream: TJclStringStream;
-  const Level: string; AParent: TJclSimpleXML);
-var
-  I: Integer;
-  St: string;
-begin
-  St := Level + '<?mso-application';      
-  StringStream.WriteString(St, 1, Length(St));
-  for I := 0 to Properties.GetCount - 1 do
-    Properties.Item[I].SaveToStringStream(StringStream);
-  St := '?>' + sLineBreak;
   StringStream.WriteString(St, 1, Length(St));
   if AParent <> nil then
     AParent.DoSaveProgress;
@@ -3521,7 +3455,7 @@ begin
             St := Ch;
           end
           else
-            Error(LoadResString(@RsEInvalidDocumentUnexpectedTextInFile));
+            FmtError(LoadResString(@RsEInvalidDocumentUnexpectedTextInFile), [StringStream.PeekPosition]);
         end;
       1: //We are trying to determine the kind of the tag
         begin
@@ -3547,6 +3481,9 @@ begin
           else
           if St = '<?mso-application' then
             lElem := TJclSimpleXMLElemMSOApplication.Create(nil)
+          else
+          if (Length(St) > 3) and (St[2] = '?') and CharIsWhiteSpace(St[Length(St)]) then
+            lElem := TJclSimpleXMLElemProcessingInstruction.Create(nil)
           else
           if (Length(St) > 1) and (St[2] <> '!') and (St[2] <> '?') then
             lEnd := True;

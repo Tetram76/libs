@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009)                         $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                        $ }
+{ Revision:      $Rev:: 3163                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -37,20 +37,13 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclBorlandTools;
+  JclIDEUtils,
+  JppState;
 
 type
-  TJclOtaTemplateParams = class(TPersistent)
-  protected
-    FLanguage: TJclBorPersonality;
+  TJclOtaTemplateParams = class(TPppState)
   public
-    function GetBoolValue(const Name: string): Boolean; virtual;
-    function IsDefined(const Name: string): Boolean; virtual;
-    function GetStrValue(const Name: string): string; virtual;
-    function GetIntValue(const Name: string): Integer; virtual;
-    function GetStringsValue(const Name: string): TStrings; virtual;
-
-    property Language: TJclBorPersonality read FLanguage write FLanguage;
+    constructor Create;
   end;
 
 const
@@ -72,8 +65,8 @@ function ApplyTemplate(const Template: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaTemplates.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009) $';
+    Revision: '$Revision: 3163 $';
+    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -84,11 +77,17 @@ implementation
 
 uses
   SysUtils,
-  {$IFDEF HAS_UNIT_VARIANTS}
-//  Variants,
-  {$ENDIF HAS_UNIT_VARIANTS}
   TypInfo,
-  JclStrings, JclSysUtils;
+  JclStrings, JclSysUtils,
+  JppParser;
+
+//=== { TJclOtaTemplateParams } ==============================================
+
+constructor TJclOtaTemplateParams.Create;
+begin
+  inherited Create;
+  Options := Options + [poProcessDefines, poProcessMacros, poProcessValues];
+end;
 
 function GetFinalFormContent(const Content, FormIdent,
   AncestorIdent: string): string;
@@ -114,212 +113,20 @@ end;
 
 function ApplyTemplate(const Template: string;
   const Params: TJclOtaTemplateParams): string;
-  procedure CopyStr(var Dest: string; var IndexDest: Integer;
-    var DestCharCount: Integer; const Src: string; IndexSrc: Integer;
-    CharCount: Integer);
-  begin
-    if (Length(Src) - IndexSrc + 1) < CharCount then
-      CharCount := Length(Src) - IndexSrc + 1;
-    while (DestCharCount - IndexDest + 1) < CharCount do
-    begin
-      DestCharCount := 2 * DestCharCount;
-      SetLength(Dest, DestCharCount);
+var
+  JppParser: TJppParser;
+begin
+  Params.PushState;
+  try
+    JppParser := TJppParser.Create(Template, Params);
+    try
+      Result := JppParser.Parse;
+    finally
+      JppParser.Free;
     end;
-
-    if CharCount > 0 then
-    begin
-      Move(Src[IndexSrc], Dest[IndexDest], CharCount*SizeOf(Char));
-      Inc(IndexDest, CharCount);
-    end;
+  finally
+    Params.PopState;
   end;
-  function SkipBlanks(const Str: string; const Index: Integer;
-    Count: Integer): Integer;
-  begin
-    Result := Index;
-    while (Result <= Count) and CharIsWhiteSpace(Str[Result]) do
-      Inc(Result);
-  end;
-  function GetIdentifier(const Str: string; var Index: Integer;
-    Count: Integer): string;
-  var
-    IndexStart: Integer;
-  begin
-    IndexStart := Index;
-    while (Index <= Count) and CharIsValidIdentifierLetter(Str[Index]) or (Str[Index] = '%') do
-      Inc(Index);
-    Result := Copy(Str, IndexStart, Index - IndexStart);
-  end;
-var
-  IndexInput, IndexOutput, TokenPos, CharCountIn, CharCountOut,
-  IfCount, StrIndex, RepeatCount: Integer;
-  Identifier, Command, Symbol, StrValue, RepeatPattern, RepeatValue: string;
-  StrList: TStrings;
-begin
-  CharCountIn := Length(Template);
-  CharCountOut := 2*CharCountIn;
-  SetLength(Result, CharCountOut);
-  IndexInput := 1;
-  IndexOutput := 1;
-  IfCount := 0;
-  while IndexInput < CharCountIn do
-  begin
-    TokenPos := CharPos(Template, '%', IndexInput);
-
-    if TokenPos = 0 then
-    begin
-      CopyStr(Result, IndexOutput, CharCountOut, Template, IndexInput, CharCountIn - IndexInput + 1);
-      SetLength(Result, IndexOutput - 1);
-      Exit;
-    end
-    else
-    begin
-      if IfCount = 0 then
-        CopyStr(Result, IndexOutput, CharCountOut, Template, IndexInput, TokenPos - IndexInput);
-
-      Identifier := GetIdentifier(Template, TokenPos, CharCountIn);
-      Command := StrUpper(Identifier);
-
-      if Command = '%IF' then
-      begin
-        TokenPos := SkipBlanks(Template, TokenPos, CharCountIn);
-        Symbol := GetIdentifier(Template, TokenPos, CharCountIn);
-        if (IfCount > 0) or not Params.IsDefined(Symbol) then
-        begin
-          Inc(IfCount);
-        end;
-      end
-      else if Command = '%IFNOT' then
-      begin
-        TokenPos := SkipBlanks(Template, TokenPos, CharCountIn);
-        Symbol := GetIdentifier(Template, TokenPos, CharCountIn);
-        if (IfCount > 0) or Params.IsDefined(Symbol) then
-          Inc(IfCount);
-      end
-      else if Command = '%ELSE' then
-      begin
-        if IfCount = 1 then
-          IfCount := 0
-        else if IfCount = 0 then
-          IfCount := 1;
-      end
-      else if Command = '%ENDIF' then
-      begin
-        if IfCount > 0 then
-          Dec(IfCount);
-      end
-      else if Command = '%STRVALUE' then
-      begin
-        TokenPos := SkipBlanks(Template, TokenPos, CharCountIn);
-        Symbol := GetIdentifier(Template, TokenPos, CharCountIn);
-        if IfCount = 0 then
-        begin
-          StrValue := Params.GetStrValue(Symbol);
-          CopyStr(Result, IndexOutput, CharCountOut, StrValue, 1, Length(StrValue));
-        end;
-      end
-      else if Command = '%INTVALUE' then
-      begin
-        TokenPos := SkipBlanks(Template, TokenPos, CharCountIn);
-        Symbol := GetIdentifier(Template, TokenPos, CharCountIn);
-        if IfCount = 0 then
-        begin
-          StrValue := IntToStr(Params.GetIntValue(Symbol));
-          CopyStr(Result, IndexOutput, CharCountOut, StrValue, 1, Length(StrValue));
-        end;
-      end
-      else if Command = '%BOOLVALUE' then
-      begin
-        TokenPos := SkipBlanks(Template, TokenPos, CharCountIn);
-        Symbol := GetIdentifier(Template, TokenPos, CharCountIn);
-        if IfCount = 0 then
-        begin
-          StrValue := BooleanToStr(Params.GetBoolValue(Symbol));
-          CopyStr(Result, IndexOutput, CharCountOut, StrValue, 1, Length(StrValue));
-        end;
-      end
-      else if Command = '%REPEATLINE' then
-      begin
-        TokenPos := SkipBlanks(Template, TokenPos, CharCountIn);
-        Symbol := GetIdentifier(Template, TokenPos, CharCountIn);
-        if IfCount = 0 then
-        begin
-          RepeatCount := Params.GetIntValue(Symbol);
-          StrIndex := TokenPos;
-          while (StrIndex <= CharCountIn) and not CharIsReturn(Template[StrIndex]) do
-            Inc(StrIndex);
-          RepeatPattern := Copy(Template, TokenPos, StrIndex - TokenPos);
-          TokenPos := StrIndex;
-
-          while RepeatCount > 0 do
-          begin
-            StrValue := RepeatPattern;
-            StrIndex := Pos('%', StrValue);
-            while StrIndex > 0 do
-            begin
-              Inc(StrIndex);
-              Symbol := GetIdentifier(StrValue, StrIndex, Length(StrValue));
-              StrList := Params.GetStringsValue(Symbol);
-              if Assigned(StrList) then
-                RepeatValue := StrList.Strings[RepeatCount - 1]
-              else
-                RepeatValue := '';
-              StrReplace(StrValue, '%' + Symbol, RepeatValue, [rfReplaceAll, rfIgnoreCase]);
-              StrIndex := Pos('%', StrValue);
-            end;
-            CopyStr(Result, IndexOutput, CharCountOut, StrValue, 1, Length(StrValue));
-            CopyStr(Result, IndexOutput, CharCountOut, NativeLineBreak, 1, Length(NativeLineBreak));
-            Dec(RepeatCount);
-          end;
-        end;
-      end
-      else if IfCount = 0 then
-        CopyStr(Result, IndexOutput, CharCountOut, Identifier, 1, Length(Identifier));
-        
-      IndexInput := TokenPos;
-    end;
-  end;
-end;
-
-//=== { TJclOtaTemplateParams } ==============================================
-
-function TJclOtaTemplateParams.GetBoolValue(const Name: string): Boolean;
-var
-  VariantValue: Variant;
-begin
-  VariantValue := GetPropValue(Self, Name);
-  Result := Boolean(VariantValue);
-end;
-
-function TJclOtaTemplateParams.GetIntValue(const Name: string): Integer;
-var
-  VariantValue: Variant;
-begin
-  VariantValue := GetPropValue(Self, Name);
-  Result := Integer(VariantValue);
-end;
-
-function TJclOtaTemplateParams.GetStringsValue(const Name: string): TStrings;
-var
-  Instance: TObject;
-begin
-  Instance := TObject(GetOrdProp(Self, Name));
-  if Instance is TStrings then
-    Result := TStrings(Instance)
-  else
-    Result := nil;
-end;
-
-function TJclOtaTemplateParams.GetStrValue(const Name: string): string;
-var
-  VariantValue: Variant;
-begin
-  VariantValue := GetPropValue(Self, Name, True);
-  Result := string(VariantValue);
-end;
-
-function TJclOtaTemplateParams.IsDefined(const Name: string): Boolean;
-begin
-  Result := GetBoolValue(Name);
 end;
 
 {$IFDEF UNITVERSIONING}

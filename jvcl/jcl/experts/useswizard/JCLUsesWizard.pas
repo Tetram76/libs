@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3012                                                                     $ }
+{ Last modified: $Date:: 2010-02-05 12:57:29 +0100 (ven. 05 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3178                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -113,8 +113,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/useswizard/JCLUsesWizard.pas $';
-    Revision: '$Revision: 3012 $';
-    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
+    Revision: '$Revision: 3178 $';
+    Date: '$Date: 2010-02-05 12:57:29 +0100 (ven. 05 févr. 2010) $';
     LogPath: 'JCL\experts\useswizard';
     Extra: '';
     Data: nil
@@ -125,7 +125,7 @@ implementation
 
 uses
   IniFiles,
-  JclFileUtils, JclParseUses, JclRegistry, JclStrings,
+  JclFileUtils, JclUsesUtils, JclRegistry, JclStrings, JclStringConversions,
   JclUsesDialog,
   JclOtaConsts, JclOtaResources;
 
@@ -764,7 +764,7 @@ begin
                 try
                   Writer.CopyTo(Length(TextBeforeUses));
                   Writer.DeleteTo(Length(TextBeforeUses) + IntfLength);
-                  Writer.Insert(PChar(UsesList.Text));
+                  Writer.Insert(PAnsiChar(StringToUTF8(UsesList.Text)));
                   Writer.CopyTo(Length(GoalSource));
                 finally
                   Writer := nil;
@@ -810,7 +810,7 @@ begin
                 try
                   Writer.CopyTo(Length(TextBeforeUses));
                   Writer.DeleteTo(Length(TextBeforeUses) + IntfLength);
-                  Writer.Insert(PChar(UsesList.Text));
+                  Writer.Insert(PAnsiChar(StringToUTF8(UsesList.Text)));
                   Writer.CopyTo(Length(GoalSource));
                 finally
                   Writer := nil;
@@ -886,10 +886,10 @@ begin
                 try
                   Writer.CopyTo(Length(TextBeforeIntf));
                   Writer.DeleteTo(Length(TextBeforeIntf) + IntfLength);
-                  Writer.Insert(PChar(UsesIntf.Text));
+                  Writer.Insert(PAnsiChar(StringToUTF8(UsesIntf.Text)));
                   Writer.CopyTo(Length(TextBeforeIntf) + IntfLength + Length(TextAfterIntf));
                   Writer.DeleteTo(Length(TextBeforeIntf) + IntfLength + Length(TextAfterIntf) + ImplLength);
-                  Writer.Insert(PChar(UsesImpl.Text));
+                  Writer.Insert(PAnsiChar(StringToUTF8(UsesImpl.Text)));
                   Writer.CopyTo(Length(GoalSource));
                 finally
                   Writer := nil;

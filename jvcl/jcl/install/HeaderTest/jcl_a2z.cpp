@@ -36,9 +36,6 @@
 #include <JclBinaryTrees.hpp>
 #endif TEST_COMMON
 #ifdef TEST_COMMON
-#include <JclBorlandTools.hpp>
-#endif TEST_COMMON
-#ifdef TEST_COMMON
 #include <JclCharsets.hpp>
 #endif TEST_COMMON
 #ifdef TEST_WINDOWS
@@ -50,6 +47,9 @@
 #ifdef TEST_WINDOWS
 #include <JclCOM.hpp>
 #endif TEST_WINDOWS
+#ifdef TEST_COMMON
+#include <JclCompilerUtils.hpp>
+#endif TEST_COMMON
 #ifdef TEST_COMMON
 #include <JclComplex.hpp>
 #endif TEST_COMMON
@@ -80,6 +80,9 @@
 #ifdef TEST_WINDOWS
 #include <JclDebugXMLSerializer.hpp>
 #endif TEST_WINDOWS
+#ifdef TEST_COMMON
+#include <JclDevToolsResources.hpp>
+#endif TEST_COMMON
 //#ifdef TEST_WINDOWS
 //#include <JclDotNet.hpp> mscorlib_TLB is known to fail
 //#endif TEST_WINDOWS
@@ -129,8 +132,14 @@
 #include <JclHashSets.hpp>
 #endif TEST_COMMON
 #ifdef TEST_WINDOWS
+#include <JclHelpUtils.hpp>
+#endif TEST_WINDOWS
+#ifdef TEST_WINDOWS
 #include <JclHookExcept.hpp>
 #endif TEST_WINDOWS
+#ifdef TEST_COMMON
+#include <JclIDEUtils.hpp>
+#endif TEST_COMMON
 #ifdef TEST_COMMON
 #include <JclIniFiles.hpp>
 #endif TEST_COMMON
@@ -290,9 +299,6 @@
 #ifdef TEST_VCL
 #include <JclVersionCtrlSVNImpl.hpp>
 #endif TEST_VCL
-#ifdef TEST_WINDOWS
-#include <JclWideFormat.hpp>
-#endif TEST_WINDOWS
 #ifdef TEST_COMMON
 #include <JclWideStrings.hpp>
 #endif TEST_COMMON

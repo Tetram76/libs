@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-03 11:21:03 +0200 (sam. 03 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3032                                                                     $ }
+{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3163                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -37,7 +37,7 @@ interface
 
 uses
   SysUtils, Classes, Contnrs,
-  JclSysUtils, JclBorlandTools, JediInstall;
+  JclSysUtils, JclIDEUtils, JediInstall;
 
 type
   TInstallerOption = (
@@ -198,7 +198,7 @@ type
     property OptionChecked[Option: TInstallerOption]: Boolean read GetOptionChecked;
     property LogFileName: string read FLogFileName;
     property Silent: Boolean read FSilent write FSilent;
-    property RuntimeInstallation: Boolean read FRuntimeInstallation; // false for C#Builder 1, Delphi 8 and .net targets
+    property RuntimeInstallation: Boolean read FRuntimeInstallation; // false for C#Builder 1 and Delphi 8 targets
 
     property IsProfileEnabled[Index: Integer]: Boolean read GetIsProfileEnabled;
     property ProfileTargets[Index: Integer]: TJclBorRADToolInstallation read GetProfilesTarget;
@@ -307,6 +307,7 @@ uses
   JclShell,
   {$ENDIF MSWINDOWS}
   JclFileUtils, JclStrings,
+  JclCompilerUtils,
   JediInstallResources,
   JclInstallResources;
 
@@ -417,9 +418,10 @@ const
   VersionDirExp = '\%%s';
 
   // native packages
-  JclDpk           = 'Jcl';
-  JclContainersDpk = 'JclContainers';
-  JclVclDpk        = 'JclVcl';
+  JclDpk               = 'Jcl';
+  JclContainersDpk     = 'JclContainers';
+  JclDeveloperToolsDpk = 'JclDeveloperTools';
+  JclVclDpk            = 'JclVcl';
 
   JclExpertBase             = 'JclBaseExpert';
   JclExpertDebug            = 'JclDebugExpert';
@@ -457,9 +459,13 @@ const
   JclSourceDirs: array[0..1] of string = (JclSrcDirCommon, JclSrcDirUnix);
   {$ENDIF UNIX}
 
-  ExceptDlgPath = 'experts' + DirDelimiter + 'debug' + DirDelimiter + 'dialog' + DirDelimiter;
+  ExceptDlgPath = 'experts' + DirDelimiter + 'repository' + DirDelimiter + 'ExceptionDialog' + DirDelimiter + 'StandardDialogs' + DirDelimiter;
   ExceptDlgVclFileName    = 'ExceptDlg.pas';
   ExceptDlgVclSndFileName = 'ExceptDlgMail.pas';
+
+  ExceptIcoPath = 'experts' + DirDelimiter + 'repository' + DirDelimiter + 'ExceptionDialog' + DirDelimiter + 'Icons' + DirDelimiter;
+  ExceptIcoVclFileName    = 'ExceptDlg.ico';
+  ExceptIcoVclSndFileName = 'ExceptDlgMail.ico';
 
   JclChmHelpFile    = 'help' + DirDelimiter + 'JCLHelp.chm';
   JclHlpHelpFile    = 'help' + DirDelimiter + 'JCLHelp.hlp';
@@ -539,7 +545,7 @@ begin
   FTargetPlatform := ATargetPlatform;
   FTargetName := Target.Name;
 
-  // exclude C#Builder 1, Delphi 8 and .net targets
+  // exclude C#Builder 1 and Delphi 8 targets
   FRunTimeInstallation := (Target.RadToolKind <> brBorlandDevStudio)
     or ((Target.VersionNumber >= 3) and (bpDelphi32 in Target.Personalities));
 
@@ -1478,7 +1484,8 @@ var
       MarkOptionBegin(joJCLPackages);
 
       Result := CompilePackage(FullPackageFileName(Target, JclDpk))
-        and CompilePackage(FullPackageFileName(Target, JclContainersDpk));
+        and CompilePackage(FullPackageFileName(Target, JclContainersDpk))
+        and CompilePackage(FullPackageFileName(Target, JclDeveloperToolsDpk));
 
       if Result and OptionChecked[joJCLVclPackage] then
       begin
@@ -1944,12 +1951,14 @@ function TJclInstallation.Uninstall(AUninstallHelp: Boolean): Boolean;
       ABDSTarget := ATarget as TJclBDSInstallation;
       ABDSTarget.CleanPackageCache(BinaryFileName(GetBPLPath, Distribution.JclPath + FullPackageFileName(ATarget, JclDpk)));
       ABDSTarget.CleanPackageCache(BinaryFileName(GetBPLPath, Distribution.JclPath + FullPackageFileName(ATarget, JclContainersDpk)));
+      ABDSTarget.CleanPackageCache(BinaryFileName(GetBPLPath, Distribution.JclPath + FullPackageFileName(ATarget, JclDeveloperToolsDpk)));
       if RuntimeInstallation and ATarget.SupportsVCL then
         ABDSTarget.CleanPackageCache(BinaryFileName(GetBPLPath, Distribution.JclPath + FullPackageFileName(ATarget, JclVclDpk)));
     end;
     //ioJclPackages
     ATarget.UnregisterPackage(Distribution.JclPath + FullPackageFileName(ATarget, JclDpk), GetBplPath);
     ATarget.UnregisterPackage(Distribution.JclPath + FullPackageFileName(ATarget, JclContainersDpk), GetBplPath);
+    ATarget.UnregisterPackage(Distribution.JclPath + FullPackageFileName(ATarget, JclDeveloperToolsDpk), GetBplPath);
     if RuntimeInstallation and ATarget.SupportsVCL then
       ATarget.UnregisterPackage(Distribution.JclPath + FullPackageFileName(ATarget, JclVclDpk), GetBplPath);
     {$IFDEF MSWINDOWS}
@@ -1961,6 +1970,7 @@ function TJclInstallation.Uninstall(AUninstallHelp: Boolean): Boolean;
   begin
     DeletePackage(FullPackageFileName(Target, JclDpk));
     DeletePackage(FullPackageFileName(Target, JclContainersDpk));
+    DeletePackage(FullPackageFileName(Target, JclDeveloperToolsDpk));
     if RuntimeInstallation and Target.SupportsVCL then
       DeletePackage(FullPackageFileName(Target, JclVclDpk));
   end;
@@ -3017,9 +3027,10 @@ procedure TJclDistribution.Init;
 
     ExceptDialogsPath := FJclPath + ExceptDlgPath;
     FVclDialogFileName := ExceptDialogsPath + ExceptDlgVclFileName;
-    FVclDialogIconFileName := ChangeFileExt(FVclDialogFileName, '.ico');
     FVclDialogSendFileName := ExceptDialogsPath + ExceptDlgVclSndFileName;
-    FVclDialogSendIconFileName := ChangeFileExt(FVclDialogSendFileName, '.ico');
+    ExceptDialogsPath := FJclPath + ExceptIcoPath;
+    FVclDialogIconFileName := ExceptDialogsPath + ExceptIcoVclFileName;
+    FVclDialogSendIconFileName := ExceptDialogsPath + ExceptIcoVclSndFileName;
     FJclChmHelpFileName := FJclPath + JclChmHelpFile;
     FJclHlpHelpFileName := FJclPath + JclHlpHelpFile;
     FJclHxSHelpFileName := FJclPath + JclHxSHelpFile;

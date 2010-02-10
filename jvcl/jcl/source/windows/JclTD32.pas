@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009)                          $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3160                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -829,28 +829,6 @@ type
     function SourceNameFromAddr(AAddr: DWORD): string;
   end;
 
-  {$IFDEF _KEEP_DEPRECATED}
-  TJclModuleInfo = TJclTD32ModuleInfo;
-  TJclLineInfo = TJclTD32LineInfo;
-  TJclSourceModuleInfo = TJclTD32SourceModuleInfo;
-  TJclSymbolInfo = TJclTD32SymbolInfo;
-  TJclProcSymbolInfo = TJclTD32ProcSymbolInfo;
-  TJclLocalProcSymbolInfo = TJclTD32LocalProcSymbolInfo;
-  TJclGlobalProcSymbolInfo = TJclTD32GlobalProcSymbolInfo;
-  TJclObjNameSymbolInfo = TJclTD32ObjNameSymbolInfo;
-  TJclDataSymbolInfo = TJclTD32DataSymbolInfo;
-  TJclLDataSymbolInfo = TJclTD32LDataSymbolInfo;
-  TJclGDataSymbolInfo = TJclTD32GDataSymbolInfo;
-  TJclPublicSymbolInfo = TJclTD32PublicSymbolInfo;
-  TJclWithSymbolInfo = TJclTD32WithSymbolInfo;
-  TJclLabelSymbolInfo = TJclTD32LabelSymbolInfo;
-  TJclConstantSymbolInfo = TJclTD32ConstantSymbolInfo;
-  TJclUdtSymbolInfo = TJclTD32UdtSymbolInfo;
-  TJclVftPathSymbolInfo = TJclTD32VftPathSymbolInfo;
-  TJclInfoParser = TJclTD32InfoParser;
-  TJclInfoScanner = TJclTD32InfoScanner;
-  {$ENDIF KEEP_DEPRECATED}
-
   {$IFDEF BORLAND}
   // PE Image with TD32 information and source location support 
   TJclPeBorTD32Image = class(TJclPeBorImage)
@@ -876,8 +854,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclTD32.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 3160 $';
+    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

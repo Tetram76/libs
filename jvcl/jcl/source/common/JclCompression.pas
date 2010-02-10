@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-07 16:35:39 +0100 (sam. 07 nov. 2009)                           $ }
-{ Revision:      $Rev:: 3080                                                                     $ }
+{ Last modified: $Date:: 2010-02-05 22:47:38 +0100 (ven. 05 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3182                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -59,9 +59,7 @@ uses
   {$IFDEF MSWINDOWS}
   Windows, Sevenzip, ActiveX,
   {$ENDIF MSWINDOWS}
-  {$IFDEF UNIX}
   Types,
-  {$ENDIF UNIX}
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
@@ -146,6 +144,7 @@ uses
    |         |-- TJclFlvDecompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
    |         |-- TJclSwfDecompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
    |         |-- TJclSwfcDecompressArchive     handled by sevenzip http://sevenzip.sourceforge.net/
+   |         |-- TJclAPMDecompressArchive      handled by sevenzip http://sevenzip.sourceforge.net/
    |
    |-- TJclUpdateArchive
         |
@@ -1713,6 +1712,14 @@ type
     class function ArchiveName: string; override;
   end;
 
+  TJclAPMDecompressArchive = class(TJclSevenzipDecompressArchive, IInterface)
+  protected
+    function GetCLSID: TGUID; override;
+  public
+    class function ArchiveExtensions: string; override;
+    class function ArchiveName: string; override;
+  end;
+
 //sevenzip classes for updates (read and write)
 type
   TJclSevenzipUpdateArchive = class(TJclOutOfPlaceUpdateArchive, IInterface)
@@ -2058,8 +2065,8 @@ procedure SetSevenzipArchiveCompressionProperties(AJclArchive: IInterface; ASeve
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompression.pas $';
-    Revision: '$Revision: 3080 $';
-    Date: '$Date: 2009-11-07 16:35:39 +0100 (sam. 07 nov. 2009) $';
+    Revision: '$Revision: 3182 $';
+    Date: '$Date: 2010-02-05 22:47:38 +0100 (ven. 05 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -5221,7 +5228,7 @@ end;
 function TJclSevenzipOutStream.Seek(Offset: Int64; SeekOrigin: Cardinal;
   NewPosition: PInt64): HRESULT;
 var
-  NewPos: Integer;
+  NewPos: Int64;
 begin
   NeedStream;
 
@@ -7005,7 +7012,7 @@ var
 begin
   if not FOpened then
   begin
-    if (FVolumeMaxSize <> 0) or (FVolumes.Count <> 0) then
+    if (VolumeFileNameMask <> '') or (VolumeMaxSize <> 0) or (FVolumes.Count <> 0) then
     begin
       SplitStream := TJclDynamicSplitStream.Create(False);
       SplitStream.OnVolume := NeedStream;
@@ -7867,6 +7874,23 @@ end;
 function TJclSwfcDecompressArchive.GetCLSID: TGUID;
 begin
   Result := CLSID_CFormatSwfc;
+end;
+
+//=== { TJclAPMDecompressArchive } ===========================================
+
+class function TJclAPMDecompressArchive.ArchiveExtensions: string;
+begin
+  Result := LoadResString(@RsCompressionApmExtensions);
+end;
+
+class function TJclAPMDecompressArchive.ArchiveName: string;
+begin
+  Result := LoadResString(@RsCompressionApmName);
+end;
+
+function TJclAPMDecompressArchive.GetCLSID: TGUID;
+begin
+  Result := CLSID_CFormatAPM;
 end;
 
 //=== { TJclSevenzipUpdateArchive } ==========================================
