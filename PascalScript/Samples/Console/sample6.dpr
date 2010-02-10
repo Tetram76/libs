@@ -31,7 +31,7 @@ function ScriptOnExportCheck(Sender: TPSPascalCompiler; Proc: TPSInternalProcedu
 begin
   if Proc.Name = 'TEST' then // Check if the proc is the Test proc we want.
   begin
-    if not ExportCheck(Sender, Proc, [0, btString], [pmIn]) then // Check if the proc has the correct params.
+    if not ExportCheck(Sender, Proc, [0, {$IFDEF UNICODE}btUnicodeString{$ELSE}btString{$ENDIF}], [pmIn]) then // Check if the proc has the correct params.
     begin
       { Something is wrong, so cause an error at the declaration position of the proc. }
       Sender.MakeError('', ecTypeMismatch, '');
@@ -71,7 +71,7 @@ var
   Exec: TPSExec;
    { TPSExec is the executer part of the scriptengine. It uses the output of
     the compiler to run a script. }
-  {$IFDEF UNICODE}Data: AnsiString;{$ELSE}Data: string{$ENDIF}
+  {$IFDEF UNICODE}Data: AnsiString;{$ELSE}Data: string;{$ENDIF}
 
   N: PIfVariant;
   { The variant in which we are going to store the parameter }
