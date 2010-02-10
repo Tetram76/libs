@@ -2,14 +2,12 @@
 <Package Name="Jcl" Design="0">
   <Description>JEDI Code Library RTL package</Description>
   <GUID>{44DB645B-C167-410D-9334-38AF9F0C7913}</GUID>
-  <C5PFlags/>
   <C6PFlags/>
-  <C5Libs/>
   <C6Libs/>
   <CompilerDefines>RELEASE</CompilerDefines>
   <ImageBase>48000000</ImageBase>
   <Requires>
-    <Package Name="rtl" Targets="allLibSuffix" Condition=""/>
+    <Package Name="rtl" Targets="Delphi,Bcb,Bds" Condition=""/>
     <Package Name="FCL" Targets="fpc" Condition=""/>
   </Requires>
   <Contains>
@@ -17,7 +15,6 @@
     <File Name="..\..\source\common\Jcl8087.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclAnsiStrings.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclBase.pas" Targets="all" Formname="" Condition=""/>
-    <File Name="..\..\source\common\JclBorlandTools.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclCharsets.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclComplex.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclCompression.pas" Targets="all" Formname="" Condition=""/>
@@ -42,8 +39,8 @@
     <File Name="..\..\source\common\JclPCRE.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclResources.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclRTTI.pas" Targets="all" Formname="" Condition=""/>
-    <File Name="..\..\source\common\JclSimpleXml.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclSchedule.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\source\common\JclSimpleXml.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclStatistics.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclStreams.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclStrHashMap.pas" Targets="all" Formname="" Condition=""/>
@@ -90,13 +87,11 @@
     <File Name="..\..\source\windows\JclTask.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\JclTD32.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\JclTimeZones.pas" Targets="Windows" Formname="" Condition=""/>
-    <File Name="..\..\source\windows\JclWideFormat.pas" Targets="Delphi" Formname="" Condition=""/>
     <File Name="..\..\source\windows\JclWin32.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\JclWin32Ex.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\JclWinMIDI.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\mscoree_TLB.pas" Targets="Pascal" Formname="" Condition=""/>
     <File Name="..\..\source\windows\mscorlib_TLB.pas" Targets="Pascal" Formname="" Condition=""/>
-    <File Name="..\..\source\windows\MSHelpServices_TLB.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\MSTask.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\sevenzip.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\Snmp.pas" Targets="Windows" Formname="" Condition=""/>

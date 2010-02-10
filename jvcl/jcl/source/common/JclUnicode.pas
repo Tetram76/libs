@@ -35,8 +35,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 19:06:40 +0200 (dim. 09 août 2009)                          $ }
-{ Revision:      $Rev:: 2930                                                                     $ }
+{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3139                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1263,8 +1263,8 @@ procedure LoadCompositionData;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnicode.pas $';
-    Revision: '$Revision: 2930 $';
-    Date: '$Date: 2009-08-09 19:06:40 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 3139 $';
+    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1292,14 +1292,8 @@ implementation
 
 uses
   {$IFDEF HAS_UNIT_RTLCONSTS}
-  {$IFDEF BORLAND}
   RtlConsts,
-  {$ENDIF BORLAND}
-  {$ELSE ~HAS_UNIT_RTLCONSTS}
-  {$IFNDEF FPC}
-  Consts,
-  {$ENDIF ~FPC}
-  {$ENDIF ~HAS_UNIT_RTLCONSTS}
+  {$ENDIF HAS_UNIT_RTLCONSTS}
   {$IFDEF UNICODE_BZIP2_DATA}
   BZip2,
   {$ENDIF UNICODE_BZIP2_DATA}

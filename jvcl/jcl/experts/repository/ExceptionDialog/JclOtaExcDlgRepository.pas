@@ -1,0 +1,275 @@
+{**************************************************************************************************}
+{                                                                                                  }
+{ Project JEDI Code Library (JCL)                                                                  }
+{                                                                                                  }
+{ The contents of this file are subject to the Mozilla Public License Version 1.1 (the "License"); }
+{ you may not use this file except in compliance with the License. You may obtain a copy of the    }
+{ License at http://www.mozilla.org/MPL/                                                           }
+{                                                                                                  }
+{ Software distributed under the License is distributed on an "AS IS" basis, WITHOUT WARRANTY OF   }
+{ ANY KIND, either express or implied. See the License for the specific language governing rights  }
+{ and limitations under the License.                                                               }
+{                                                                                                  }
+{ The Original Code is JclOtaRepositoryReg.pas.                                                    }
+{                                                                                                  }
+{ The Initial Developer of the Original Code is Florent Ouchet                                     }
+{         <outchy att users dott sourceforge dott net>                                             }
+{ Portions created by Florent Ouchet are Copyright (C) of Florent Ouchet. All rights reserved.     }
+{                                                                                                  }
+{ Contributors:                                                                                    }
+{                                                                                                  }
+{**************************************************************************************************}
+{                                                                                                  }
+{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3163                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
+{                                                                                                  }
+{**************************************************************************************************}
+
+unit JclOtaExcDlgRepository;
+
+{$I jcl.inc}
+
+interface
+
+{$IFDEF DELPHI6_UP}
+{$DEFINE DELPHIEXCDLG}
+{$ENDIF DELPHI6_UP}
+
+{$IFDEF BCB6_UP}
+{$DEFINE CBUILDEREXCDLG}
+{$ENDIF BCB6_UP}
+
+{$IFDEF COMPILER10_UP}
+{$DEFINE DELPHIEXCDLG}
+{$DEFINE CBUILDEREXCDLG}
+{$ENDIF COMPILER10_UP}
+
+uses
+  SysUtils, Classes,
+  ToolsAPI,
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
+  JclIDEUtils,
+  JclOtaUtils, JclOtaRepositoryUtils, JclOtaExcDlgParams;
+
+type
+  TJclExcDlgExpert = class(TJclOtaRepositoryExpert)
+  public
+    procedure CreateExceptionDialog(const Params: TJclOtaExcDlgParams);
+  end;
+
+  TJclExcDlgDelphiExpert = class(TJclExcDlgExpert)
+  public
+    constructor Create; override;
+
+    procedure DoExecute(const Personality: TJclBorPersonality); override;
+    function IsVisible(const Personality: TJclBorPersonality): Boolean; override;
+  end;
+
+  TJclExcDlgCBuilderExpert = class(TJclExcDlgExpert)
+  public
+    constructor Create; override;
+
+    procedure DoExecute(const Personality: TJclBorPersonality); override;
+    function IsVisible(const Personality: TJclBorPersonality): Boolean; override;
+  end;
+
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgRepository.pas $';
+    Revision: '$Revision: 3163 $';
+    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
+    LogPath: 'JCL\experts\repository\ExceptionDialog';
+    Extra: '';
+    Data: nil
+    );
+{$ENDIF UNITVERSIONING}
+
+implementation
+
+uses
+  Windows,
+  JclStrings, JclFileUtils, JclRegistry,
+  JclOtaResources, JclOtaConsts,
+  JclOtaTemplates, JclOtaRepositoryReg, JclOtaExcDlgWizard;
+
+//=== { TJclExcDlgExpert } ===================================================
+
+procedure TJclExcDlgExpert.CreateExceptionDialog(
+  const Params: TJclOtaExcDlgParams);
+  function LoadTemplate(const FileName: string): string;
+  var
+    AFileStream: TFileStream;
+    StreamLength: Int64;
+    AnsiResult: AnsiString;
+  begin
+    AnsiResult := '';
+    if FileExists(FileName) then
+    begin
+      AFileStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+      try
+        StreamLength := AFileStream.Size;
+        SetLength(AnsiResult, StreamLength);
+        AFileStream.ReadBuffer(AnsiResult[1], StreamLength);
+      finally
+        AFileStream.Free;
+      end;
+    end;
+    Result := string(AnsiResult);
+  end;
+const
+  TemplateSubDir = 'experts\repository\ExceptionDialog\Templates\';
+  DelphiTemplate = 'ExceptDlg.Delphi32';
+  BCBTemplate = 'ExceptDlg.CBuilder32';
+var
+  TemplatePath, FormExtension, FormTemplate, FormContent, FormFileName,
+  HeaderExtension, HeaderTemplate, HeaderContent, HeaderFileName,
+  SourceExtension, SourceTemplate, SourceContent, SourceFileName: string;
+begin
+  TemplatePath := PathAddSeparator(JCLRootDir) + TemplateSubDir;
+
+  case Params.Language of
+    bpDelphi32:
+      begin
+        FormExtension := JclBorDesignerFormExtension[Params.Designer];
+        FormTemplate := DelphiTemplate + FormExtension;
+        HeaderExtension := '';
+        HeaderTemplate := '';
+        SourceExtension := SourceExtensionPAS;
+        SourceTemplate := DelphiTemplate + SourceExtension;
+      end;
+    bpBCBuilder32:
+      begin
+        FormExtension := JclBorDesignerFormExtension[Params.Designer];
+        FormTemplate := BCBTemplate + FormExtension;
+        HeaderExtension := SourceExtensionH;
+        HeaderTemplate := BCBTemplate + HeaderExtension;
+        SourceExtension := SourceExtensionCPP;
+        SourceTemplate := BCBTemplate + SourceExtension;
+      end;
+  else
+      begin
+        FormExtension := '';
+        FormTemplate := '';
+        HeaderExtension := '';
+        HeaderTemplate := '';
+        SourceExtension := '';
+        SourceTemplate := '';
+      end;
+  end;
+
+  FormTemplate := LoadTemplate(TemplatePath + FormTemplate);
+  HeaderTemplate := LoadTemplate(TemplatePath + HeaderTemplate);
+  SourceTemplate := LoadTemplate(TemplatePath + SourceTemplate);
+
+  FormContent := ApplyTemplate(FormTemplate, Params);
+  HeaderContent := ApplyTemplate(HeaderTemplate, Params);
+  SourceContent := ApplyTemplate(SourceTemplate, Params);
+
+  if Params.FileName <> '' then
+  begin
+    FormFileName := ChangeFileExt(Params.FileName, FormExtension);
+    HeaderFileName := ChangeFileExt(Params.FileName, HeaderExtension);
+    SourceFileName := ChangeFileExt(Params.FileName, SourceExtension);
+  end
+  else
+  begin
+    FormFileName := '';
+    HeaderFileName := '';
+    SourceFileName := '';
+  end;
+
+  CreateForm(Params.FormAncestor, Params.FormName, FormFileName, FormContent, SourceFileName,
+    SourceContent, HeaderFileName, HeaderContent);
+end;
+
+//=== { TJclRepositoryExpert } ===============================================
+
+constructor TJclExcDlgDelphiExpert.Create;
+begin
+  inherited Create(LoadResString(@RsRepositoryExcDlgDelphiName), LoadResString(@RsRepositoryExcDlgDelphiDescription),
+    LoadResString(@RsAboutDialogTitle), LoadResString(@RsRepositoryExcDlgPage), JclRepositoryCategoryDelphiFiles,
+    JclDesignerVcl, JclDelphiPersonality, LoadIcon(FindResourceHInstance(HInstance), 'JclExcDlg'), ritForm);
+end;
+
+procedure TJclExcDlgDelphiExpert.DoExecute(const Personality: TJclBorPersonality);
+var
+  AParams: TJclOtaExcDlgParams;
+begin
+  AParams := TJclOtaExcDlgParams.Create;
+  try
+    AParams.Languages := [bpDelphi32];
+    AParams.Language := bpDelphi32;
+    AParams.ActivePersonality := bpDelphi32;
+    if ExcDlgWizard(AParams) and (AParams.Language <> bpUnknown) then
+      CreateExceptionDialog(AParams);
+  finally
+    AParams.Free;
+  end;
+end;
+
+function TJclExcDlgDelphiExpert.IsVisible(
+  const Personality: TJclBorPersonality): Boolean;
+begin
+  Result := Personality = bpDelphi32;
+end;
+
+//=== { TJclExcDlgCBuilderExpert } ===========================================
+
+constructor TJclExcDlgCBuilderExpert.Create;
+begin
+  inherited Create(LoadResString(@RsRepositoryExcDlgCBuilderName), LoadResString(@RsRepositoryExcDlgCBuilderDescription),
+    LoadResString(@RsAboutDialogTitle), LoadResString(@RsRepositoryExcDlgPage), JclRepositoryCategoryCBuilderFiles,
+    JclDesignerVcl, JclCBuilderPersonality, LoadIcon(FindResourceHInstance(HInstance), 'JclExcDlgCPP'), ritForm);
+end;
+
+procedure TJclExcDlgCBuilderExpert.DoExecute(
+  const Personality: TJclBorPersonality);
+var
+  AParams: TJclOtaExcDlgParams;
+begin
+  AParams := TJclOtaExcDlgParams.Create;
+  try
+    AParams.Languages := [bpDelphi32];
+    AParams.Language := bpDelphi32;
+    AParams.ActivePersonality := bpBCBuilder32;
+    if ExcDlgWizard(AParams) and (AParams.Language <> bpUnknown) then
+      CreateExceptionDialog(AParams);
+  finally
+    AParams.Free;
+  end;
+end;
+
+function TJclExcDlgCBuilderExpert.IsVisible(
+  const Personality: TJclBorPersonality): Boolean;
+begin
+  Result := Personality = bpBCBuilder32;
+end;
+
+initialization
+  {$IFDEF UNITVERSIONING}
+  RegisterUnitVersion(HInstance, UnitVersioning);
+  {$ENDIF UNITVERSIONING}
+
+  {$IFDEF DELPHIEXCDLG}
+  RegisterJclOTARepositoryExpert(TJclExcDlgDelphiExpert, JclDelphiPersonality);
+  {$ENDIF DELPHIEXCDLG}
+  {$IFDEF CBUILDEREXCDLG}
+  RegisterJclOTARepositoryExpert(TJclExcDlgCBuilderExpert, JclCBuilderPersonality);
+  {$ENDIF CBUILDEREXCDLG}
+
+finalization
+  {$IFDEF DELPHIEXCDLG}
+  //UnregisterJclOTARepositoryExpert(TJclExcDlgDelphiExpert);
+  {$ENDIF DELPHIEXCDLG}
+  {$IFDEF CBUILDEREXCDLG}
+  //UnregisterJclOTARepositoryExpert(TJclExcDlgCBuilderExpert);
+  {$ENDIF CBUILDEREXCDLG}
+  {$IFDEF UNITVERSIONING}
+  UnregisterUnitVersion(HInstance);
+  {$ENDIF UNITVERSIONING}
+
+end.

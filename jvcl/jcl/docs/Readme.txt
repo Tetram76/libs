@@ -85,8 +85,7 @@ Both supports (run time and design time):
  - Delphi 6, Delphi 7 and Delphi 2005;
  - C++Builder 6;
  - Delphi 2005 (without unit versioning support);
- - Borland Developer Studio 2006 (Delphi for Win32, C++Builder for Win32,
-   Delphi.net and C#Builder personalities);
+ - Borland Developer Studio 2006 (Delphi for Win32, C++Builder for Win32);
  - Turbo Delphi (explorer and professional - cf Installation notes);
  - CodeGear RAD Studio 2007 (Delphi for Win32 and C++Builder for Win32
    personalities);
@@ -154,11 +153,8 @@ For each tool you want to install the JCL in, repeat the following steps:
  - For Delphi 6: source\include\jcld6.inc
  - For Delphi 7: source\include\jcld7.inc
  - For Delphi 2005: source\include\jcld9.inc
- - For Delphi.net 2005: source\include\jcld9.net.inc
  - For BDS 2006 (Delphi and C++Builder): source\include\jcld10.inc
- - For Delphi.net 2006: source\include\jcld10.net.inc
  - For CodeGear Delphi 2007 for Win32 and C++Builder 2007: source\include\jcld11.inc
- - For Delphi.net 2007: source\include\jcld11.net.inc
  - For Delphi 2009 and C++Builder 2009: source\include\include\jcld12.inc
  - For Delphi 2010 and C++Builder 2010: source\include\include\jcld14.inc
  - For FreePascal: source\include\jclfpc.inc
@@ -188,19 +184,19 @@ docs\MPL FAQ.html             - Frequently Asked Questions about the MPL
 docs\cps.html                 - Cross Platform Strategy
 experts                       - JCL IDE experts source code
 experts\debug                 - JCL Debug IDE expert for using JclDebug unit
-experts\debug\dialog          - Application exception dialog replacement
 experts\debug\simdview        - Low-level debug window for XMM registers
 experts\debug\threadnames     - IDE expert showing class names for debugged threads
 experts\debug\tools           - Tools for creating files with JCL debug information
 experts\favfolders            - Favorite folders combobox in IDE open/save file dialogs
 experts\projectanalyzer       - Project Analyzer IDE expert
 experts\repository            - Repository expert
+experts\repository\ExceptionDialog - Repository expert for exception dialogs
+experts\repository\ExceptionDialog\StandardDialogs - standard exception dialogs
 experts\stacktraceviewer      - stack trace expert
 experts\useswizard            - JCL uses wizard
 experts\versioncontrol        - Integration of TortoiseCVS and TortoiseSVN in the IDE
 examples                      - JCL example applications
 examples\common               - CLX and Win32 example applications in Delphi
-examples\dotnet               - JCL example applications for Delphi.net
 examples\windows              - JCL example applications for Delphi.Win32
 examples\windows\delphitools  - Collection of system tools using JCL
 help                          - Help file (distributed in a separate archive)

@@ -43,8 +43,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2010-01-12 22:12:01 +0100 (mar. 12 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3120                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -2949,6 +2949,7 @@ const
 // line 3189
   
 
+
 function BackupSeek(hFile: THandle; dwLowBytesToSeek, dwHighBytesToSeek: DWORD;
   out lpdwLowByteSeeked, lpdwHighByteSeeked: DWORD;
   var lpContext: Pointer): BOOL; stdcall;
@@ -3072,14 +3073,17 @@ procedure SetExtendedFeaturesMask(ContextEx: PCONTEXT_EX; const FeatureMask: Int
 {$EXTERNALSYM SetExtendedFeaturesMask}
 
 
+
 // From JwaAclApi
 
 // line 185
+
 
 function SetNamedSecurityInfoW(pObjectName: LPWSTR; ObjectType: SE_OBJECT_TYPE;
   SecurityInfo: SECURITY_INFORMATION; psidOwner, psidGroup: PSID;
   pDacl, pSacl: PACL): DWORD; stdcall;
 {$EXTERNALSYM SetNamedSecurityInfoW}
+
 
 const
   IMAGE_SEPARATION = (64*1024);
@@ -3109,6 +3113,7 @@ type
   PLoadedImage = PLOADED_IMAGE;
 
 // line 152
+
 
 
 function ReBaseImage(CurrentImageName: PAnsiChar; SymbolPath: PAnsiChar; fReBase: BOOL;
@@ -3163,6 +3168,7 @@ function ImageRvaToSection(NtHeaders: PImageNtHeaders; Base: Pointer; Rva: ULONG
 function ImageRvaToVa(NtHeaders: PImageNtHeaders; Base: Pointer; Rva: ULONG;
   LastRvaSection: PPImageSectionHeader): Pointer; stdcall;
 {$EXTERNALSYM ImageRvaToVa}
+
 
 
 // line 461
@@ -7579,8 +7585,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWin32.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3120 $';
+    Date: '$Date: 2010-01-12 22:12:01 +0100 (mar. 12 janv. 2010) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}

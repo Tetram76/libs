@@ -31,9 +31,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-05 18:00:22 +0100 (jeu. 05 nov. 2009)                           $ }
-{ Revision:      $Rev:: 3071                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3139                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -47,14 +47,10 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF HAS_UNIT_TYPES}
   Types,
-  {$IFDEF SUPPORTS_INLINE}
+  {$IFDEF MSWINDOWS}
   Windows,
-  {$ENDIF SUPPORTS_INLINE}
-  {$ELSE ~HAS_UNIT_TYPES}
-  Windows,
-  {$ENDIF ~HAS_UNIT_TYPES}
+  {$ENDIF MSWINDOWS}
   Classes, SysUtils, TypInfo,
   JclBase;
 
@@ -598,8 +594,8 @@ function JclIsClassByName(const AnObj: TObject; const AClass: TClass): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclRTTI.pas $';
-    Revision: '$Revision: 3071 $';
-    Date: '$Date: 2009-11-05 18:00:22 +0100 (jeu. 05 nov. 2009) $';
+    Revision: '$Revision: 3139 $';
+    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

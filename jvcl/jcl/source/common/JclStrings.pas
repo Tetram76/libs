@@ -49,8 +49,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 2993                                                                     $ }
+{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3160                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -207,6 +207,10 @@ function StrRepeatLength(const S: string; L: SizeInt): string;
 function StrReverse(const S: string): string;
 procedure StrReverseInPlace(var S: string);
 function StrSingleQuote(const S: string): string;
+procedure StrSkipChars(var S: PChar; const Chars: TCharValidator); overload;
+procedure StrSkipChars(var S: PChar; const Chars: array of Char); overload;
+procedure StrSkipChars(const S: string; var Index: SizeInt; const Chars: TCharValidator); overload;
+procedure StrSkipChars(const S: string; var Index: SizeInt; const Chars: array of Char); overload;
 function StrSmartCase(const S: string; const Delimiters: TCharValidator): string; overload;
 function StrSmartCase(const S: string; const Delimiters: array of Char): string; overload;
 function StrStringToEscaped(const S: string): string;
@@ -353,9 +357,8 @@ procedure TrimStringsLeft(const List: TStrings; DeleteIfEmpty: Boolean = True);
 function AddStringToStrings(const S: string; Strings: TStrings; const Unique: Boolean): Boolean;
 
 // Miscellaneous
-{$IFDEF KEEP_DEPRECATED}
-function BooleanToStr(B: Boolean): string;
-{$ENDIF KEEP_DEPRECATED}
+// (OF) moved to JclSysUtils
+// function BooleanToStr(B: Boolean): string;
  // AnsiString here because it is binary data
 function FileToString(const FileName: string): {$IFDEF COMPILER12_UP}RawByteString{$ELSE}AnsiString{$ENDIF};
 procedure StringToFile(const FileName: string; const Contents: {$IFDEF COMPILER12_UP}RawByteString{$ELSE}AnsiString{$ENDIF};
@@ -366,6 +369,8 @@ procedure StrTokens(const S: string; const List: TStrings);
 procedure StrTokenToStrings(S: string; Separator: Char; const List: TStrings);
 function StrWord(const S: string; var Index: SizeInt; out Word: string): Boolean; overload;
 function StrWord(var S: PChar; out Word: string): Boolean; overload;
+function StrIdent(const S: string; var Index: SizeInt; out Ident: string): Boolean; overload;
+function StrIdent(var S: PChar; out Ident: string): Boolean; overload;
 function StrToFloatSafe(const S: string): Float;
 function StrToIntSafe(const S: string): Integer;
 procedure StrNormIndex(const StrLen: SizeInt; var Index: SizeInt; var Count: SizeInt); overload;
@@ -587,8 +592,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStrings.pas $';
-    Revision: '$Revision: 2993 $';
-    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3160 $';
+    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1620,6 +1625,30 @@ end;
 function StrSingleQuote(const S: string): string;
 begin
   Result := NativeSingleQuote + S + NativeSingleQuote;
+end;
+
+procedure StrSkipChars(var S: PChar; const Chars: TCharValidator);
+begin
+  while Chars(S^) do
+    Inc(S);
+end;
+
+procedure StrSkipChars(var S: PChar; const Chars: array of Char);
+begin
+  while ArrayContainsChar(Chars, S^) do
+    Inc(S);
+end;
+
+procedure StrSkipChars(const S: string; var Index: SizeInt; const Chars: TCharValidator);
+begin
+  while Chars(S[Index]) do
+    Inc(Index);
+end;
+
+procedure StrSkipChars(const S: string; var Index: SizeInt; const Chars: array of Char);
+begin
+  while ArrayContainsChar(Chars, S[Index]) do
+    Inc(Index);
 end;
 
 function StrSmartCase(const S: string; const Delimiters: TCharValidator): string;
@@ -3207,15 +3236,6 @@ end;
 
 //=== Miscellaneous ==========================================================
 
-{$IFDEF KEEP_DEPRECATED}
-function BooleanToStr(B: Boolean): string;
-const
-  Bools: array [Boolean] of string = ('False', 'True');
-begin
-  Result := Bools[B];
-end;
-{$ENDIF KEEP_DEPRECATED}
-
 function FileToString(const FileName: string): {$IFDEF COMPILER12_UP}RawByteString{$ELSE}AnsiString{$ENDIF};
 var
   fs: TFileStream;
@@ -3285,7 +3305,7 @@ begin
     List.Clear;
     Start := Pointer(S);
     repeat
-      Done := StrWord(Start, Token);
+      Done := JclStrings.StrWord(Start, Token);
       if Token <> '' then
         List.Add(Token);
     until Done;
@@ -3309,7 +3329,8 @@ begin
   Result := False;
   while True do
   begin
-    case S[Index] of
+    C := S[Index];
+    case C of
       #0:
         begin
           if Start <> 0 then
@@ -3326,14 +3347,12 @@ begin
           end
           else
           begin
-            C := S[Index];
-            while (C = NativeSpace) or (C = NativeLineFeed) or (C = NativeCarriageReturn) do
+            while CharIsWhiteSpace(C) do
             begin
               Inc(Index);
               C := S[Index];
             end;
           end;
-
         end;
     else
       if Start = 0 then
@@ -3381,6 +3400,88 @@ begin
         Start := S;
       Inc(S);
     end;
+  end;
+end;
+
+function StrIdent(const S: string; var Index: SizeInt; out Ident: string): Boolean;
+var
+  Start: SizeInt;
+  C: Char;
+begin
+  Ident := '';
+  if (S = '') then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Start := Index;
+  Result := False;
+  while True do
+  begin
+    C := S[Index];
+    if CharIsValidIdentifierLetter(C) then
+    begin
+      if Start = 0 then
+        Start := Index;
+    end
+    else
+    if C = #0 then
+    begin
+      if Start <> 0 then
+        Ident := Copy(S, Start, Index - Start);
+      Result := True;
+      Exit;
+    end
+    else
+    begin
+      if Start <> 0 then
+      begin
+        Ident := Copy(S, Start, Index - Start);
+        Exit;
+      end;
+    end;
+    Inc(Index);
+  end;
+end;
+
+function StrIdent(var S: PChar; out Ident: string): Boolean;
+var
+  Start: PChar;
+  C: Char;
+begin
+  Ident := '';
+  if S = nil then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Start := nil;
+  Result := False;
+  while True do
+  begin
+    C := S^;
+    if CharIsValidIdentifierLetter(C) then
+    begin
+      if Start = nil then
+        Start := S;
+    end
+    else
+    if C = #0 then
+    begin
+      if Start <> nil then
+        SetString(Ident, Start, S - Start);
+      Result := True;
+      Exit;
+    end
+    else
+    begin
+      if Start <> nil then
+      begin
+        SetString(Ident, Start, S - Start);
+        Exit;
+      end
+    end;
+    Inc(S);
   end;
 end;
 
@@ -4422,17 +4523,11 @@ class function TJclTabSet.FromString(const S: string): TJclTabSet;
 var
   cur: PChar;
 
-  procedure SkipWhiteSpace;
-  begin
-    while CharIsWhiteSpace(cur^) do
-      Inc(cur);
-  end;
-
   function ParseNumber: Integer;
   var
     head: PChar;
   begin
-    SkipWhiteSpace;
+    StrSkipChars(cur, CharIsWhiteSpace);
     head := cur;
     while CharIsDigit(cur^) do
       Inc(cur);
@@ -4446,7 +4541,7 @@ var
     openBracket, hadComma: Boolean;
     num: SizeInt;
   begin
-    SkipWhiteSpace;
+    StrSkipChars(cur, CharIsWhiteSpace);
     openBracket := cur^ = '[';
     hadComma := False;
     if openBracket then
@@ -4458,7 +4553,7 @@ var
       else
       if num >= 0 then
         Result.Add(num);
-      SkipWhiteSpace;
+      StrSkipChars(cur, CharIsWhiteSpace);
       hadComma := cur^ = ',';
       if hadComma then
         Inc(cur);
@@ -4474,11 +4569,11 @@ var
   var
     num: SizeInt;
   begin
-    SkipWhiteSpace;
+    StrSkipChars(cur, CharIsWhiteSpace);
     if cur^ = '+' then
     begin
       Inc(cur);
-      SkipWhiteSpace;
+      StrSkipChars(cur, CharIsWhiteSpace);
       num := ParseNumber;
       if (num < 0) then
         raise EJclStringError.CreateRes(@RsTabs_TabWidthExpected)
@@ -4489,14 +4584,14 @@ var
 
   procedure ParseZeroBasedFlag;
   begin
-    SkipWhiteSpace;
+    StrSkipChars(cur, CharIsWhiteSpace);
     if cur^ = '0' then
     begin
       Inc(cur);
       if CharIsWhiteSpace(cur^) or (cur^ = #0) or (cur^ = '[') then
       begin
         Result.ZeroBased := True;
-        SkipWhiteSpace;
+        StrSkipChars(cur, CharIsWhiteSpace);
       end
       else
         Dec(cur);

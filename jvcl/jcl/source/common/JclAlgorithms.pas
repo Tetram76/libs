@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 2993                                                                     $ }
+{ Last modified: $Date:: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3147                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -337,15 +337,15 @@ type
   public
     class procedure Apply(const First: IJclIterator<T>; Count: Integer; F: TApplyFunction<T>);
     class function Find(const First: IJclIterator<T>; Count: Integer; const AItem: T;
-  AComparator: TCompare<T>): IJclIterator<T>; overload;
+      AComparator: TCompare<T>): IJclIterator<T>; overload;
     class function Find(const First: IJclIterator<T>; Count: Integer; const AItem: T;
-  AEqualityComparator: TEqualityCompare<T>): IJclIterator<T>; overload;
+      AEqualityComparator: TEqualityCompare<T>): IJclIterator<T>; overload;
     class function CountObject(const First: IJclIterator<T>; Count: Integer;
-  const AItem: T; AComparator: TCompare<T>): Integer; overload;
+      const AItem: T; AComparator: TCompare<T>): Integer; overload;
     class function CountObject(const First: IJclIterator<T>; Count: Integer;
-  const AItem: T; AEqualityComparator: TEqualityCompare<T>): Integer; overload;
+      const AItem: T; AEqualityComparator: TEqualityCompare<T>): Integer; overload;
     class procedure Copy(const First: IJclIterator<T>; Count: Integer;
-  const Output: IJclIterator<T>);
+      const Output: IJclIterator<T>);
     class procedure Generate(const List: IJclList<T>; Count: Integer; const AItem: T);
     class procedure Fill(const First: IJclIterator<T>; Count: Integer; const AItem: T);
     class procedure Reverse(const First, Last: IJclIterator<T>);
@@ -359,8 +359,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAlgorithms.pas $';
-    Revision: '$Revision: 2993 $';
-    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3147 $';
+    Date: '$Date: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

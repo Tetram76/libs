@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009)                        $ }
-{ Revision:      $Rev:: 2997                                                                     $ }
+{ Last modified: $Date:: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010)                        $ }
+{ Revision:      $Rev:: 3147                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1218,8 +1218,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclLinkedLists.pas $';
-    Revision: '$Revision: 2997 $';
-    Date: '$Date: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3147 $';
+    Date: '$Date: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2163,6 +2163,7 @@ begin
   AssignPropertiesTo(Result);
 end;
 
+
 //=== { TJclIntfLinkedListIterator } ============================================================
 
 constructor TJclIntfLinkedListIterator.Create(const AOwnList: IJclIntfList; ACursor: TJclIntfLinkedListItem; AValid: Boolean; AStart: TItrStart);
@@ -2485,6 +2486,7 @@ begin
   end;
   {$ENDIF THREADSAFE}
 end;
+
 
 //=== { TJclLinkedList<T> } ==================================================
 
@@ -7185,7 +7187,6 @@ begin
   AssignPropertiesTo(Result);
 end;
 
-
 //=== { TJclSingleLinkedListIterator } ============================================================
 
 constructor TJclSingleLinkedListIterator.Create(const AOwnList: IJclSingleList; ACursor: TJclSingleLinkedListItem; AValid: Boolean; AStart: TItrStart);
@@ -7508,7 +7509,6 @@ begin
   end;
   {$ENDIF THREADSAFE}
 end;
-
 
 //=== { TJclLinkedList<T> } ==================================================
 

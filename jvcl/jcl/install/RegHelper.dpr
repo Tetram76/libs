@@ -17,12 +17,10 @@
 {                                                                                                  }
 { Contributor(s):                                                                                  }
 {                                                                                                  }
-{ Last modified: $Date: 2007-09-17 23:41:02 +0200 (lun. 17 sept. 2007) $                           }
-{                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (lun. 17 sept. 2007)                          $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2010-02-05 12:51:15 +0100 (ven. 05 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3177                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -33,7 +31,7 @@ program RegHelper;
 
 uses
   SysUtils, Windows, ActiveX,
-  JclAnsiStrings, JclBorlandTools, JclSysUtils;
+  JclAnsiStrings, JclHelpUtils, JclSysUtils;
 
 {$R ..\source\windows\JclNoDepAdmin.res}
 {$R RegHelper.res}
@@ -312,7 +310,7 @@ begin
   try
     CoInitialize(nil); // Help2 interfaces are COM
     try
-      Help2Manager := TJclHelp2Manager.Create;
+      Help2Manager := TJclHelp2Manager.Create(0);
       try
         Assign(RegHelperOutput, ''); // stdout
         Rewrite(RegHelperOutput);

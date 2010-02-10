@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-12 20:31:19 +0200 (mer. 12 août 2009)                          $ }
-{ Revision:      $Rev:: 2944                                                                     $ }
+{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3139                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -338,8 +338,8 @@ function MultiSzDup(const Source: PWideMultiSz): PWideMultiSz;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclWideStrings.pas $';
-    Revision: '$Revision: 2944 $';
-    Date: '$Date: 2009-08-12 20:31:19 +0200 (mer. 12 août 2009) $';
+    Revision: '$Revision: 3139 $';
+    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -351,9 +351,7 @@ implementation
 uses
   {$IFDEF HAS_UNIT_RTLCONSTS}
   RTLConsts,
-  {$ELSE ~HAS_UNIT_RTLCONSTS}
-  Consts,
-  {$ENDIF ~HAS_UNIT_RTLCONSTS}
+  {$ENDIF HAS_UNIT_RTLCONSTS}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}

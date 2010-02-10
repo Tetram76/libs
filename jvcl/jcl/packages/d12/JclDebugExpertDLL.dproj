@@ -27,7 +27,7 @@
 			<GenDll>true</GenDll>
 			<GenPackage>true</GenPackage>
 			<DCC_ImageBase>$58020000</DCC_ImageBase>
-			<DCC_UsePackage>rtl;vcl;designide;Jcl;JclBaseExpert</DCC_UsePackage>
+			<DCC_UsePackage>rtl;vcl;designide;Jcl;JclBaseExpert;JclDeveloperTools</DCC_UsePackage>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_Release)'!=''">
 			<DCC_AssertionsAtRuntime>false</DCC_AssertionsAtRuntime>
@@ -60,14 +60,15 @@
 			<DelphiCompile Include="JclDebugExpertDLL.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="rtl.dcp" />
-			<DCCReference Include="vcl.dcp" />
-			<DCCReference Include="designide.dcp" />
-			<DCCReference Include="Jcl.dcp" />
-			<DCCReference Include="JclBaseExpert.dcp" />
-			<DCCReference Include="..\..\experts\debug\converter\JclDebugIdeResult.pas" />
-			<DCCReference Include="..\..\experts\debug\converter\JclDebugIdeImpl.pas" />
-			<DCCReference Include="..\..\experts\debug\converter\JclDebugIdeConfigFrame.pas" />
+			<DCCReference Include="rtl.dcp"/>
+			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="designide.dcp"/>
+			<DCCReference Include="Jcl.dcp"/>
+			<DCCReference Include="JclBaseExpert.dcp"/>
+			<DCCReference Include="JclDeveloperTools.dcp"/>
+			<DCCReference Include="..\..\experts\debug\converter\JclDebugIdeResult.pas"/>
+			<DCCReference Include="..\..\experts\debug\converter\JclDebugIdeImpl.pas"/>
+			<DCCReference Include="..\..\experts\debug\converter\JclDebugIdeConfigFrame.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -113,7 +114,7 @@
 						<VersionInfoKeys Name="FileVersion">2.2.0.3537</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">JclDebugExpertDLL</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2009 Project JEDI</VersionInfoKeys>
-						<VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
+						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">JclDebugExpertDLL120.dll</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">JEDI Code Library</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductVersion">2.2 Build 3537</VersionInfoKeys>

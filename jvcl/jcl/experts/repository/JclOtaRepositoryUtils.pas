@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3044                                                                     $ }
+{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3163                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -39,7 +39,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclBorlandTools,
+  JclIDEUtils,
   JclOtaUtils;
 
 type
@@ -64,9 +64,10 @@ type
     FDesigner: string;
     FPersonality: string;
   public
-    constructor Create(AName, ADescription, AAuthor, APage, AGalleryCategory,
+    constructor Create(const AName, ADescription, AAuthor, APage, AGalleryCategory,
       ADesigner, APersonality: string; AGlyph: Cardinal;
-      AItemType: TJclRepositoryItemType); reintroduce;
+      AItemType: TJclRepositoryItemType); reintroduce; overload; virtual;
+    constructor Create; reintroduce; overload; virtual; abstract;
     destructor Destroy; override;
 
     // override to customize
@@ -117,6 +118,8 @@ type
       const SourceFileName: TFileName; const SourceContent: string;
       const HeaderFileName: TFileName; const HeaderContent: string): IOTAModule;
   end;
+
+  TJclOTARepositoryExpertClass = class of TJclOTARepositoryExpert;
 
   TJclOtaFormCreator = class(TInterfacedObject, IOTACreator, IOTAModuleCreator)
   private
@@ -173,8 +176,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaRepositoryUtils.pas $';
-    Revision: '$Revision: 3044 $';
-    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
+    Revision: '$Revision: 3163 $';
+    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -187,9 +190,9 @@ uses
   Classes, ActiveX,
   JclDateTime, JclFileUtils, JclOtaResources, JclOtaTemplates;
 
-//=== { TJclOTARepositoryExpert } ============================================
+//=== { TJclOTARepositoryExpertBase } ========================================
 
-constructor TJclOTARepositoryExpert.Create(AName, ADescription, AAuthor, APage,
+constructor TJclOTARepositoryExpert.Create(const AName, ADescription, AAuthor, APage,
   AGalleryCategory, ADesigner, APersonality: string; AGlyph: Cardinal;
   AItemType: TJclRepositoryItemType);
 begin

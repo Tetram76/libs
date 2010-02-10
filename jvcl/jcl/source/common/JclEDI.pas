@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2010-02-05 13:21:47 +0100 (ven. 05 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3180                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -401,8 +401,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclEDI.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3180 $';
+    Date: '$Date: 2010-02-05 13:21:47 +0100 (ven. 05 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -502,13 +502,13 @@ begin
   if rfReplaceAll in Flags then
     while SearchResult <> 0 do
     begin
-      Inc(SearchResult);
+      Inc(SearchResult, SearchPatternLength); // Increment match position, by length of match
       Inc(ReplaceCount);
       SearchResult := StrSearch(SearchPattern, SearchString, SearchResult);
     end
   else
-    if SearchResult <> 0 then
-      Inc(ReplaceCount);
+  if SearchResult <> 0 then
+    Inc(ReplaceCount);
   SetLength(Result, Length(S) + ((ReplacePatternLength - SearchPatternLength) * ReplaceCount));
   // Copy the characters by looping through the result and source at the same time
   ReplaceCount := 0;

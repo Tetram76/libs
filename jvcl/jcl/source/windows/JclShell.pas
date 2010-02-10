@@ -37,8 +37,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-25 22:14:27 +0100 (mer. 25 nov. 2009)                           $ }
-{ Revision:      $Rev:: 3086                                                                     $ }
+{ Last modified: $Date:: 2010-02-05 13:18:47 +0100 (ven. 05 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3179                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -202,8 +202,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclShell.pas $';
-    Revision: '$Revision: 3086 $';
-    Date: '$Date: 2009-11-25 22:14:27 +0100 (mer. 25 nov. 2009) $';
+    Revision: '$Revision: 3179 $';
+    Date: '$Date: 2010-02-05 13:18:47 +0100 (ven. 05 févr. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -273,7 +273,7 @@ begin
   Exclude(Options, doFilesOnly);
   Result := SHDeleteFiles(Parent, PathAddSeparator(Folder) + '*.*', Options);
   if Result then
-    SHDeleteFiles(Parent, Folder, Options);
+    Result := SHDeleteFiles(Parent, PathRemoveSeparator(Folder), Options);
 end;
 
 // Helper function to map a TSHRenameOptions set to a cardinal

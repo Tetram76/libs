@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-05 18:19:08 +0100 (jeu. 05 nov. 2009)                           $ }
-{ Revision:      $Rev:: 3072                                                                     $ }
+{ Last modified: $Date:: 2010-02-02 16:04:18 +0100 (mar. 02 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3159                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -59,83 +59,6 @@ uses
 resourcestring
   RsCantConvertAddr64  = 'The address %s%.16x cannot be converted to 32 bit';
   RsEReplacementChar   = 'Failed to get ANSI replacement character';
-
-//=== JclBorlandTools ========================================================
-resourcestring
-  RsNeedUpdate          = 'You should install latest Update Pack #%d for %s';
-  RsUpdatePackName      = 'Update Pack #%d';
-  RsDelphiName          = 'Delphi';
-  RsBCBName             = 'C++Builder';
-  RsCSharpName          = 'C#Builder';
-  RsBDSName             = 'Borland Developer Studio';
-  RsRSName              = 'RAD Studio';
-  {$IFDEF MSWINDOWS}
-  RsClientServer        = 'Client/Server';
-  RsStandard            = 'Standard';
-  {$ENDIF MSWINDOWS}
-  RsArchitect           = 'Architect';
-  RsEnterprise          = 'Enterprise';
-  RsPersonal            = 'Personal';
-  RsProfessional        = 'Professional';
-
-  RsMsBuildNotSupported = 'MSBuild is not supported by this IDE';
-
-  RsPackageInstallationStarted    = 'Installing package %s';
-  RsPackageInstallationFinished   = 'Installation of package finished';
-  RsPackageUninstallationStarted  = 'Uninstalling package %s';
-  RsPackageUninstallationFinished = 'Uninstallation of package finished';
-  RsIdePackageInstallationStarted    = 'Installing ide package %s';
-  RsIdePackageInstallationFinished   = 'Installation of ide package finished';
-  RsIdePackageUninstallationStarted  = 'Uninstalling ide package %s';
-  RsIdePackageUninstallationFinished = 'Uninstallation of ide package finished';
-  RsExpertInstallationStarted     = 'Installing expert %s';
-  RsExpertInstallationFinished    = 'Installation of expert finished';
-  RsExpertUninstallationStarted   = 'Uninstalling expert %s';
-  RsExpertUninstallationFinished  = 'Uninstallation of expert finished';
-
-  RsCompilingPackage            = 'Compiling package %s';
-  RsCompilingProject            = 'Compiling project %s';
-  RsCompilationOk               = 'Compilation success';
-  RsCompilationFailed           = 'Compilation failure';
-  RsCreatingJdbg                = 'Creating JEDI Debug informations for %s';
-  RsInsertingJdbg               = 'Inserting JEDI Debug informations in %s';
-  RsJdbgInfo                    = 'Bug unit: %s; MAP size: %d; Debug size: %d';
-  RsJdbgInfoOk                  = 'JDBG successfully generated';
-  RsJdbgInfoFailed              = 'Cannot generate JDBG informations';
-  RsDeletingFile                = 'Deleting file %s';
-  RsFileDeletionOk              = 'File deletion success';
-  RsFileDeletionFailed          = 'File deletion failure';
-  RsRegisteringPackage          = 'Registering package %s';
-  RsRegisteringIdePackage       = 'Registering ide package %s';
-  RsRegisteringExpert           = 'Registering expert %s';
-  RsRegistrationOk              = 'Registration ok';
-  RsRegistrationFailed          = 'Registration failed';
-  RsUnregisteringPackage        = 'Removing from registry package %s';
-  RsUnregisteringIdePackage     = 'Removing from registry ide package %s';
-  RsUnregisteringExpert         = 'Removing from registry expert %s';
-  RsUnregistrationOk            = 'Unregistration ok';
-  RsUnregistrationFailed        = 'Unregistration failed';
-  RsCleaningPackageCache        = 'Cleaning package cache for %s';
-  RsCleaningOk                  = 'Cleaning ok';
-  RsCleaningFailed              = 'Cleaning failed';
-
-  RsEUnknownPackageExtension    = '%s not a known package extension';
-  RsEUnknownProjectExtension    = '%s not a known project extension';
-  RsEUnknownIdePackageExtension = '%s not a known IDE package extension';
-  RsEIndexOufOfRange            = 'Index out of range';
-  RsECmdLineToolOutputInvalid   = '%s: Output invalid, when OutputCallback assigned.';
-  RsENotABcbPackage             = '%s not a C++Builder package source file';
-  RsENotADelphiProject          = '%s not a Delphi project source file';
-  RsENotADelphiPackage          = '%s not a Delphi package source file';
-  RsENotFound                   = '%s not found';
-  RsECannotInstallRunOnly       = 'A run-only package cannot be installed';
-  RsENotABcbProject             = '%s not a C++Builder project source file';
-  RsENoSupportedPersonality     = 'No personalities supported';
-  RsEDualPackageNotSupported    = 'This installation of %s doesn''t support dual packages';
-  RsEx64PlatformNotValid        = 'This installation cannot generate x64 binaries';
-  {$IFDEF MSWINDOWS}
-  RsENoOpenHelp                 = 'open help not present in Borland Developer Studio';
-  {$ENDIF MSWINDOWS}
 
 //=== JclCharsets ============================================================
 resourcestring
@@ -1167,6 +1090,8 @@ resourcestring
   RsCompressionSwfExtensions         = '*.swf';
   RsCompressionSwfcName              = 'Swf archive';
   RsCompressionSwfcExtensions        = '*.swf';
+  RsCompressionApmName               = 'APM archive';
+  RsCompressionApmExtensions         = '*.';
   RsCompressionDuplicate             = 'The file %s already exists in the archive';
   RsCompressionReplaceError          = 'At least one compression volumes could not be replaced after an archive out-of-place update';
 
@@ -1903,26 +1828,26 @@ resourcestring
 //=== JclSimpleXml ===========================================================
 resourcestring
   RsEInvalidXMLElementUnexpectedCharacte =
-    'Invalid XML Element: Unexpected character in property declaration ("%s" found)';
+    'Invalid XML Element: Unexpected character in property declaration ("%s" found at position %d)';
   RsEInvalidXMLElementUnexpectedCharacte_ =
-    'Invalid XML Element: Unexpected character in property declaration. Expecting " or '' but "%s"  found';
-  RsEUnexpectedValueForLPos = 'Unexpected value for lPos';
-  RsEInvalidXMLElementExpectedBeginningO = 'Invalid XML Element: Expected beginning of tag but "%s" found';
-  RsEInvalidXMLElementExpectedEndOfTagBu = 'Invalid XML Element: Expected end of tag but "%s" found';
-  RsEInvalidXMLElementMalformedTagFoundn = 'Invalid XML Element: malformed tag found (no valid name)';
+    'Invalid XML Element: Unexpected character in property declaration. Expecting " or '' but "%s"  found at position %d';
+  RsEUnexpectedValueForLPos = 'Unexpected value for lPos at position %d';
+  RsEInvalidXMLElementExpectedBeginningO = 'Invalid XML Element: Expected beginning of tag but "%s" found at position %d';
+  RsEInvalidXMLElementExpectedEndOfTagBu = 'Invalid XML Element: Expected end of tag but "%s" found at position %d';
+  RsEInvalidXMLElementMalformedTagFoundn = 'Invalid XML Element: malformed tag found (no valid name) at position %d';
   RsEInvalidXMLElementErroneousEndOfTagE =
-    'Invalid XML Element: Erroneous end of tag, expecting </%0:s> but </%1:s> found';
-  RsEInvalidCommentExpectedsButFounds = 'Invalid Comment: expected "%0:s" but found "%1:s"';
-  RsEInvalidCommentNotAllowedInsideComme = 'Invalid Comment: "--" not allowed inside comments';
-  RsEInvalidCommentUnexpectedEndOfData = 'Invalid Comment: Unexpected end of data';
-  RsEInvalidCDATAExpectedsButFounds = 'Invalid CDATA: expected "%0:s" but found "%1:s"';
-  RsEInvalidCDATAUnexpectedEndOfData = 'Invalid CDATA: Unexpected end of data';
-  RsEInvalidHeaderExpectedsButFounds = 'Invalid Header: expected "%0:s" but found "%1:s"';
-  RsEInvalidStylesheetExpectedsButFounds = 'Invalid Stylesheet: expected "%0:s" but found "%1:s"';
-  RsEInvalidStylesheetUnexpectedEndOfDat = 'Invalid Stylesheet: Unexpected end of data';
-  RsEInvalidMSOExpectedsButFounds = 'Invalid MSO: expected "%0:s" but found "%1:s"';
-  RsEInvalidMSOUnexpectedEndOfDat = 'Invalid MSO: Unexpected end of data';
-  RsEInvalidDocumentUnexpectedTextInFile = 'Invalid Document: Unexpected text in file prolog';
+    'Invalid XML Element: Erroneous end of tag, expecting </%0:s> but </%1:s> found at position %d';
+  RsEInvalidCommentExpectedsButFounds = 'Invalid Comment: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidCommentNotAllowedInsideComme = 'Invalid Comment: "--" not allowed inside comments at position %d';
+  RsEInvalidCommentUnexpectedEndOfData = 'Invalid Comment: Unexpected end of data at position %d';
+  RsEInvalidCDATAExpectedsButFounds = 'Invalid CDATA: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidCDATAUnexpectedEndOfData = 'Invalid CDATA: Unexpected end of data at position %d';
+  RsEInvalidHeaderExpectedsButFounds = 'Invalid Header: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidStylesheetExpectedsButFounds = 'Invalid Stylesheet: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidStylesheetUnexpectedEndOfDat = 'Invalid Stylesheet: Unexpected end of data at position %d';
+  RsEInvalidMSOExpectedsButFounds = 'Invalid MSO: expected "%0:s" but found "%1:s" at position %d';
+  RsEInvalidMSOUnexpectedEndOfDat = 'Invalid MSO: Unexpected end of data at position %d';
+  RsEInvalidDocumentUnexpectedTextInFile = 'Invalid Document: Unexpected text in file prolog at position %d';
 
 //=== JclStatistics ==========================================================
 resourcestring
@@ -2072,7 +1997,21 @@ resourcestring
   RsIntelCacheDescrBA = 'Data TLB1: 4 KByte pages, 4-way set associative, 64 entries';
   RsIntelCacheDescrC0 = 'Data TLB: 4 KByte and 4 MByte pages, 4-way set associative, 8 entries';
   RsIntelCacheDescrCA = 'Shared 2nd-Level TLB: 4 KByte pages, 4-way associative, 512 entries';
+  RsIntelCacheDescrD0 = '3rd-level cache: 512 KByte, 4-way set associative, 64 byte line size';
+  RsIntelCacheDescrD1 = '3rd-level cache: 1 MByte, 4-way set associative, 64 byte line size';
+  RsIntelCacheDescrD2 = '3rd-level cache: 2 MByte, 4-way set associative, 64 byte line size';
+  RsIntelCacheDescrD6 = '3rd-level cache: 1 MByte, 8-way set associative, 64 byte line size';
+  RsIntelCacheDescrD7 = '3rd-level cache: 2 MByte, 8-way set associative, 64 byte line size';
+  RsIntelCacheDescrD8 = '3rd-level cache: 4 MByte, 8-way set associative, 64 byte line size';
+  RsIntelCacheDescrDC = '3rd-level cache: 1.5 MByte, 12-way set associative, 64 byte line size';
+  RsIntelCacheDescrDD = '3rd-level cache: 3 MByte, 12-way set associative, 64 byte line size';
+  RsIntelCacheDescrDE = '3rd-level cache: 6 MByte, 12-way set associative, 64 byte line size';
+  RsIntelCacheDescrE2 = '3rd-level cache: 2 MByte, 16-way set associative, 64 byte line size';
+  RsIntelCacheDescrE3 = '3rd-level cache: 4 MByte, 16-way set associative, 64 byte line size';
   RsIntelCacheDescrE4 = '3rd-level cache: 8 MByte, 16-way set associative, 64 byte line size';
+  RsIntelCacheDescrEA = '3rd-level cache: 12 MByte, 24-way set associative, 64 byte line size';
+  RsIntelCacheDescrEB = '3rd-level cache: 18 MByte, 24-way set associative, 64 byte line size';
+  RsIntelCacheDescrEC = '3rd-level cache: 24 MByte, 24-way set associative, 64 byte line size';
   RsIntelCacheDescrF0 = '64-Byte Prefetching';
   RsIntelCacheDescrF1 = '128-Byte Prefetching';
   RsIntelCacheDescrFF = 'CPUID leaf 2 does not report cache descriptor information, use CPUID leaf 4 to query cache parameters';
@@ -2192,14 +2131,6 @@ resourcestring
   RsTempConvTypeError = 'An invalid type has been provided for the %s parameter';
   RsConvTempBelowAbsoluteZero = 'Temperature can not be below Absolute Zero!';
 
-//=== JclWideFormat ==========================================================
-resourcestring
-  RsFormatSyntaxError = 'Syntax error at index %u';
-  RsFormatNoArgument = 'No argument at index %u';
-  RsFormatBadArgumentType = 'Invalid argument type (%s) at index %u. Expected [%s]';
-  RsFormatBadArgumentTypeEx = 'Invalid argument type (%s) at index %u for format ''%s''. Expected [%s]';
-  RsFormatNoArgumentEx = 'No argument at index %u for format ''%s''';
-
 //=== JclWin32 ===============================================================
 resourcestring
   RsWin32Error        = 'Win32 error: %s (%u)%s%s';
@@ -2215,8 +2146,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3072 $';
-    Date: '$Date: 2009-11-05 18:19:08 +0100 (jeu. 05 nov. 2009) $';
+    Revision: '$Revision: 3159 $';
+    Date: '$Date: 2010-02-02 16:04:18 +0100 (mar. 02 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

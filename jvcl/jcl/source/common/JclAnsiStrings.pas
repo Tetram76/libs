@@ -46,8 +46,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-05 09:17:06 +0100 (jeu. 05 nov. 2009)                           $ }
-{ Revision:      $Rev:: 3066                                                                     $ }
+{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3160                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -161,11 +161,12 @@ type
     FCount: Integer;
     FDuplicates: TDuplicates;
     FSorted: Boolean;
-
+    FCaseSensitive: Boolean;
     procedure Grow;
     procedure QuickSort(L, R: Integer; SCompare: TJclAnsiStringListSortCompare);
     procedure SetSorted(Value: Boolean);
   protected
+    procedure AssignTo(Dest: TPersistent); override;
     function GetString(Index: Integer): AnsiString; override;
     procedure SetString(Index: Integer; const Value: AnsiString); override;
     function GetObject(Index: Integer): TObject; override;
@@ -173,8 +174,12 @@ type
     function GetCapacity: Integer; override;
     procedure SetCapacity(const Value: Integer); override;
     function GetCount: Integer; override;
+    function CompareStrings(const S1, S2: AnsiString): Integer; override;
   public
+    constructor Create;
+
     function AddObject(const S: AnsiString; AObject: TObject): Integer; override;
+    procedure Assign(Source: TPersistent); override;
     procedure InsertObject(Index: Integer; const S: AnsiString; AObject: TObject); override;
     procedure Delete(Index: Integer); override;
     function Find(const S: AnsiString; var Index: Integer): Boolean; virtual;
@@ -182,6 +187,7 @@ type
     procedure Sort; virtual;
     procedure Clear; override;
 
+    property CaseSensitive: Boolean read FCaseSensitive write FCaseSensitive;
     property Duplicates: TDuplicates read FDuplicates write FDuplicates;
     property Sorted: Boolean read FSorted write SetSorted;
   end;
@@ -333,6 +339,8 @@ function StrRepeatLength(const S: AnsiString; const L: SizeInt): AnsiString;
 function StrReverse(const S: AnsiString): AnsiString;
 procedure StrReverseInPlace(var S: AnsiString);
 function StrSingleQuote(const S: AnsiString): AnsiString;
+procedure StrSkipChars(var S: PAnsiChar; const Chars: TSysCharSet); overload;
+procedure StrSkipChars(const S: AnsiString; var Index: SizeInt; const Chars: TSysCharSet); overload;
 function StrSmartCase(const S: AnsiString; Delimiters: TSysCharSet): AnsiString;
 function StrStringToEscaped(const S: AnsiString): AnsiString;
 function StrStripNonNumberChars(const S: AnsiString): AnsiString;
@@ -455,15 +463,17 @@ procedure TrimStringsLeft(const List: TJclAnsiStrings; DeleteIfEmpty: Boolean = 
 function AddStringToStrings(const S: AnsiString; Strings: TJclAnsiStrings; const Unique: Boolean): Boolean;
 
 // Miscellaneous
-{$IFDEF KEEP_DEPRECATED}
-function BooleanToStr(B: Boolean): AnsiString;
-{$ENDIF KEEP_DEPRECATED}
+// (OF) moved to JclSysUtils
+//function BooleanToStr(B: Boolean): AnsiString;
 function FileToString(const FileName: TFileName): AnsiString;
 procedure StringToFile(const FileName: TFileName; const Contents: AnsiString; Append: Boolean = False);
 function StrToken(var S: AnsiString; Separator: AnsiChar): AnsiString;
 procedure StrTokens(const S: AnsiString; const List: TJclAnsiStrings);
 procedure StrTokenToStrings(S: AnsiString; Separator: AnsiChar; const List: TJclAnsiStrings);
-function StrWord(var S: PAnsiChar; out Word: AnsiString): Boolean;
+function StrWord(const S: AnsiString; var Index: SizeInt; out Word: AnsiString): Boolean; overload;
+function StrWord(var S: PAnsiChar; out Word: AnsiString): Boolean; overload;
+function StrIdent(const S: AnsiString; var Index: SizeInt; out Ident: AnsiString): Boolean; overload;
+function StrIdent(var S: PAnsiChar; out Ident: AnsiString): Boolean; overload;
 function StrToFloatSafe(const S: AnsiString): Float;
 function StrToIntSafe(const S: AnsiString): Integer;
 procedure StrNormIndex(const StrLen: SizeInt; var Index: SizeInt; var Count: SizeInt); overload;
@@ -490,8 +500,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAnsiStrings.pas $';
-    Revision: '$Revision: 3066 $';
-    Date: '$Date: 2009-11-05 09:17:06 +0100 (jeu. 05 nov. 2009) $';
+    Revision: '$Revision: 3160 $';
+    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -505,9 +515,7 @@ uses
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
   {$IFDEF SUPPORTS_UNICODE}
-  {$IFDEF HAS_UNIT_RTLCONSTS}
   RtlConsts,
-  {$ENDIF HAS_UNIT_RTLCONSTS}
   {$ENDIF SUPPORTS_UNICODE}
   JclLogic, JclResources, JclStreams, JclSynch;
 
@@ -1003,6 +1011,59 @@ begin
 end;
 
 //=== { TJclAnsiStringList } =================================================
+
+constructor TJclAnsiStringList.Create;
+begin
+  inherited Create;
+  FCaseSensitive := True;
+end;
+
+procedure TJclAnsiStringList.Assign(Source: TPersistent);
+var
+  StringListSource: TStringList;
+begin
+  if Source is TStringList then
+  begin
+    StringListSource := TStringList(Source);
+    FDuplicates := StringListSource.Duplicates;
+    FSorted := StringListSource.Sorted;
+    FCaseSensitive := StringListSource.CaseSensitive;
+  end;
+  inherited Assign(Source);
+end;
+
+procedure TJclAnsiStringList.AssignTo(Dest: TPersistent);
+var
+  StringListDest: TStringList;
+  AnsiStringListDest: TJclAnsiStringList;
+begin
+  if Dest is TStringList then
+  begin
+    StringListDest := TStringList(Dest);
+    StringListDest.Clear; // make following assignments a lot faster
+    StringListDest.Duplicates := FDuplicates;
+    StringListDest.Sorted := FSorted;
+    StringListDest.CaseSensitive := FCaseSensitive;
+  end
+  else
+  if Dest is TJclAnsiStringList then
+  begin
+    AnsiStringListDest := TJclAnsiStringList(Dest);
+    AnsiStringListDest.Clear;
+    AnsiStringListDest.FDuplicates := FDuplicates;
+    AnsiStringListDest.FSorted := FSorted;
+    AnsiStringListDest.FCaseSensitive := FCaseSensitive;
+  end;
+  inherited AssignTo(Dest);
+end;
+
+function TJclAnsiStringList.CompareStrings(const S1: AnsiString; const S2: AnsiString): Integer;
+begin
+  if FCaseSensitive then
+    Result := CompareStr(S1, S2)
+  else
+    Result := CompareText(S1, S2);
+end;
 
 procedure TJclAnsiStringList.Grow;
 var
@@ -1932,6 +1993,18 @@ end;
 function StrSingleQuote(const S: AnsiString): AnsiString;
 begin
   Result := AnsiSingleQuote + S + AnsiSingleQuote;
+end;
+
+procedure StrSkipChars(var S: PAnsiChar; const Chars: TSysCharSet);
+begin
+  while S^ in Chars do
+    Inc(S);
+end;
+
+procedure StrSkipChars(const S: AnsiString; var Index: SizeInt; const Chars: TSysCharSet);
+begin
+  while S[Index] in Chars do
+    Inc(Index);
 end;
 
 function StrSmartCase(const S: AnsiString; Delimiters: TSysCharSet): AnsiString;
@@ -3302,15 +3375,6 @@ end;
 
 //=== Miscellaneous ==========================================================
 
-{$IFDEF KEEP_DEPRECATED}
-function BooleanToStr(B: Boolean): AnsiString;
-const
-  Bools: array [Boolean] of AnsiString = ('False', 'True');
-begin
-  Result := Bools[B];
-end;
-{$ENDIF KEEP_DEPRECATED}
-
 function FileToString(const FileName: TFileName): AnsiString;
 var
   FS: TFileStream;
@@ -3410,6 +3474,54 @@ begin
   end;
 end;
 
+function StrWord(const S: AnsiString; var Index: SizeInt; out Word: AnsiString): Boolean;
+var
+  Start: SizeInt;
+  C: AnsiChar;
+begin
+  Word := '';
+  if (S = '') then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Start := Index;
+  Result := False;
+  while True do
+  begin
+    C := S[Index];
+    case C of
+      #0:
+        begin
+          if Start <> 0 then
+            Word := Copy(S, Start, Index - Start);
+          Result := True;
+          Exit;
+        end;
+      AnsiSpace, AnsiLineFeed, AnsiCarriageReturn:
+        begin
+          if Start <> 0 then
+          begin
+            Word := Copy(S, Start, Index - Start);
+            Exit;
+          end
+          else
+          begin
+            while CharIsWhiteSpace(C) do
+            begin
+              Inc(Index);
+              C := S[Index];
+            end;
+          end;
+        end;
+    else
+      if Start = 0 then
+        Start := Index;
+      Inc(Index);
+    end;
+  end;
+end;
+
 function StrWord(var S: PAnsiChar; out Word: AnsiString): Boolean;
 var
   Start: PAnsiChar;
@@ -3426,28 +3538,110 @@ begin
   begin
     case S^ of
       #0:
-        begin
-          if Start <> nil then
-            SetString(Word, Start, S - Start);
-          Result := True;
-          Exit;
-        end;
+      begin
+        if Start <> nil then
+          SetString(Word, Start, S - Start);
+        Result := True;
+        Exit;
+      end;
       AnsiSpace, AnsiLineFeed, AnsiCarriageReturn:
+      begin
+        if Start <> nil then
         begin
-          if Start <> nil then
-          begin
-            SetString(Word, Start, S - Start);
-            Exit;
-          end
-          else
-            while S^ in [AnsiSpace, AnsiLineFeed, AnsiCarriageReturn] do
-              Inc(S);
-        end;
+          SetString(Word, Start, S - Start);
+          Exit;
+        end
+        else
+          while CharIsWhiteSpace(S^) do
+            Inc(S);
+      end;
     else
       if Start = nil then
         Start := S;
       Inc(S);
     end;
+  end;
+end;
+
+function StrIdent(const S: AnsiString; var Index: SizeInt; out Ident: AnsiString): Boolean;
+var
+  Start: SizeInt;
+  C: AnsiChar;
+begin
+  Ident := '';
+  if (S = '') then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Start := Index;
+  Result := False;
+  while True do
+  begin
+    C := S[Index];
+    if CharIsValidIdentifierLetter(C) then
+    begin
+      if Start = 0 then
+        Start := Index;
+    end
+    else
+    if C = #0 then
+    begin
+      if Start <> 0 then
+        Ident := Copy(S, Start, Index - Start);
+      Result := True;
+      Exit;
+    end
+    else
+    begin
+      if Start <> 0 then
+      begin
+        Ident := Copy(S, Start, Index - Start);
+        Exit;
+      end;
+    end;
+    Inc(Index);
+  end;
+end;
+
+function StrIdent(var S: PAnsiChar; out Ident: AnsiString): Boolean;
+var
+  Start: PAnsiChar;
+  C: AnsiChar;
+begin
+  Ident := '';
+  if S = nil then
+  begin
+    Result := True;
+    Exit;
+  end;
+  Start := nil;
+  Result := False;
+  while True do
+  begin
+    C := S^;
+    if CharIsValidIdentifierLetter(C) then
+    begin
+      if Start = nil then
+        Start := S;
+    end
+    else
+    if C = #0 then
+    begin
+      if Start <> nil then
+        SetString(Ident, Start, S - Start);
+      Result := True;
+      Exit;
+    end
+    else
+    begin
+      if Start <> nil then
+      begin
+        SetString(Ident, Start, S - Start);
+        Exit;
+      end
+    end;
+    Inc(S);
   end;
 end;
 

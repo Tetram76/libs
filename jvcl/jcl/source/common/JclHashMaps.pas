@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 2997                                                                     $ }
+{ Last modified: $Date:: 2010-01-12 22:12:01 +0100 (mar. 12 janv. 2010)                          $ }
+{ Revision:      $Rev:: 3120                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -51,6 +51,18 @@ uses
   {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclSynch,
   JclContainerIntf, JclAbstractContainers, JclArrayLists, JclArraySets;
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 type
@@ -2551,8 +2563,8 @@ function HashMul(Key, Range: Integer): Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclHashMaps.pas $';
-    Revision: '$Revision: 2997 $';
-    Date: '$Date: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3120 $';
+    Date: '$Date: 2010-01-12 22:12:01 +0100 (mar. 12 janv. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

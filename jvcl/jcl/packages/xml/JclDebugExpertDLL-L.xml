@@ -2,18 +2,17 @@
 <Package Name="JclDebugExpertDLL" Type="L">
   <Description>JCL Debug IDE extension</Description>
   <GUID>{36195812-0F7A-45E7-BE07-04EABA463169}</GUID>
-  <C5PFlags/>
   <C6PFlags>-LUdesignide</C6PFlags>
-  <C5Libs/>
   <C6Libs/>
   <CompilerDefines>RELEASE</CompilerDefines>
   <ImageBase>58020000</ImageBase>
   <Requires>
-    <Package Name="rtl" Targets="allLibSuffix" Condition=""/>
-    <Package Name="vcl" Targets="allLibSuffix" Condition=""/>
-    <Package Name="designide" Targets="allLibSuffix" Condition=""/>
+    <Package Name="rtl" Targets="Delphi,Bcb,Bds" Condition=""/>
+    <Package Name="vcl" Targets="Delphi,Bcb,Bds" Condition=""/>
+    <Package Name="designide" Targets="Delphi,Bcb,Bds" Condition=""/>
     <Package Name="Jcl-R" Targets="all" Condition=""/>
     <Package Name="JclBaseExpert-D" Targets="all" Condition=""/>
+    <Package Name="JclDeveloperTools-R" Targets="all" Condition=""/>
   </Requires>
   <Contains>
     <File Name="..\..\experts\debug\converter\JclDebugIdeResult.pas" Targets="runtimeIDE" Formname="JclDebugResultForm" Condition=""/>
