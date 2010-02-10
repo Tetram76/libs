@@ -4,11 +4,11 @@ Author:       François PIETTE
 Description:  THttpAppSrv is a specialized THttpServer component to ease
               his use for writing application servers.
 Creation:     Dec 20, 2003
-Version:      7.05
+Version:      7.07
 EMail:        francois.piette@overbyte.be         http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 2003-2009 by François PIETTE
+Legal issues: Copyright (C) 2003-2010 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
               <francois.piette@overbyte.be>
 
@@ -71,7 +71,10 @@ Sept 1, 2009 V7.05 Angus added TriggerHeadDocument, can not ignore HEAD
                      command for virtual pages else 404 returned
                    Added OnVirtualException event to report exceptions
                      creating virtual pages
-
+Feb 05, 2010 V7.06 F. Piette added overloaded AnswerPage to get template from
+                   resource.
+Feb 08, 2010 V7.07 F. Piette fixed a bug introduced in 7.06 with ResType
+                   (Need to be PChar instead of PAnsiChar).
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *_*}
@@ -193,12 +196,21 @@ type
                                const NegativeAnswerHtml : String;
                                UserData                 : TObject;
                                Tags                     : array of const) : Boolean; overload;
+        // Answer a page from a template file
         procedure AnswerPage(
             const Status   : String;   // if empty, default to '200 OK'
             const Header   : String;   // Do not use Content-Length nor Content-Type
             const HtmlFile : String;
             UserData       : TObject;
-            Tags           : array of const);
+            Tags           : array of const); overload;
+        // Answer a page from a template resource
+        procedure AnswerPage(
+            const Status   : String;    // if empty, default to '200 OK'
+            const Header   : String;    // Do not use Content-Length nor Content-Type
+            const ResName  : String;    // Resource name
+            const ResType  : PChar;     // Resource type
+            UserData       : TObject;
+            Tags           : array of const); overload;
         procedure AnswerStream(const Status   : String;
                                const ContType : String;
                                const Header   : String);
@@ -1457,7 +1469,7 @@ begin
     // one of his methods. Delaying the detroy until all queued events are
     // processed is better. This is why we use an intermediate message.
     if (FWndHandle <> 0) and (FMsg_WM_FINISH > 0) then
-        PostMessage(FWndHandle, FMsg_WM_FINISH, 0, Cardinal(Self));
+        PostMessage(FWndHandle, FMsg_WM_FINISH, 0, LPARAM(Self));
 end;
 
 
@@ -1540,6 +1552,21 @@ procedure TUrlHandler.AnswerPage(
 begin
     if Assigned(Client) then
         Client.AnswerPage(FFlags, Status, Header, HtmlFile, UserData, Tags);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TUrlHandler.AnswerPage(
+    const Status   : String;    // if empty, default to '200 OK'
+    const Header   : String;    // Do not use Content-Length nor Content-Type
+    const ResName  : String;    // Resource name
+    const ResType  : PChar;     // Resource type
+    UserData       : TObject;
+    Tags           : array of const);
+begin
+    if Assigned(Client) then
+        Client.AnswerPage(FFlags, Status, Header,
+                          ResName, ResType, UserData, Tags);
 end;
 
 

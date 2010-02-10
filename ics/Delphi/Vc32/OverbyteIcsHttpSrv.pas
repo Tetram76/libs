@@ -9,11 +9,11 @@ Description:  THttpServer implement the HTTP server protocol, that is a
               check for '..\', '.\', drive designation and UNC.
               Do the check in OnGetDocument and similar event handlers.
 Creation:     Oct 10, 1999
-Version:      7.24
+Version:      7.26
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1999-2009 by François PIETTE
+Legal issues: Copyright (C) 1999-2010 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
@@ -278,11 +278,19 @@ Jun 15, 2009 V7.20 pdfe@sapo.pt and Angus added content encoding using zlib
 Jul 3, 2009  V7.21 Angus commonised content encoding with CheckContentEncoding
              and DoContentEncoding which are virtual to allow replacement
 Aug 12, 2009 V7.22 Bjørnar Nielsen found a bug with conditional define NO_ADV_MT.
-Oct 03, 2009 V7.23 Arno - Initialize client's counter in WSocketServerClientCreate 
+Oct 03, 2009 V7.23 Arno - Initialize client's counter in WSocketServerClientCreate
              otherwise the client might be disconnected before a single byte is
-             sent/received. Happened rather frequently with SSL which led to SSL 
+             sent/received. Happened rather frequently with SSL which led to SSL
              handshake errors.
 Nov 29, 2009 7.24 Bjørnar Nielsen found a bug UrlDecode.
+Feb 05, 2010 7.25 FPiette made StreamReadStrA, StreamWriteA and VarrecToString
+             public.
+             Added overloaded HtmlPageProducer to support template located
+             in resource and in stream in adding to the existing file template.
+Feb 08, 2010 V7.26 F. Piette fixed a bug introduced in 7.25 with ResType
+                   (Need to be PChar instead of PAnsiChar).
+                   TRL fixed HtmlPageProducerFromMemory which added an extra
+                   empty line and passed the wrong length to HandleTableRow.
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -708,9 +716,16 @@ type
         procedure   AnswerPage(var   Flags    : THttpGetFlag;
                                const Status   : String;
                                const Header   : String;
-                               const HtmlFile : String;
+                               const HtmlFile : String;  // Template file name
                                UserData       : TObject;
-                               Tags           : array of const); virtual;
+                               Tags           : array of const); overload; virtual;
+        procedure   AnswerPage(var   Flags    : THttpGetFlag;
+                               const Status   : String;
+                               const Header   : String;
+                               const ResName  : String;    // Template resource name
+                               const ResType  : PChar;     // Template resource type
+                               UserData       : TObject;
+                               Tags           : array of const); overload; virtual;
         procedure   AnswerStream(var   Flags    : THttpGetFlag;
                                  const Status   : String;
                                  const ContType : String;
@@ -742,7 +757,12 @@ type
         procedure HtmlPageProducerToStream(const HtmlFile: String;
                                            UserData: TObject;
                                            Tags: array of const;
-                                           DestStream: TStream); virtual;
+                                           DestStream: TStream); overload; virtual;
+        procedure HtmlPageProducerToStream(const ResName : String;
+                                           const ResType : PChar;
+                                           UserData: TObject;
+                                           Tags: array of const;
+                                           DestStream: TStream); overload; virtual;
         property SndBlkSize : Integer read FSndBlkSize write SetSndBlkSize;
         { Method contains GET/POST/HEAD as requested by client }
         property Method                    : String read  FMethod;
@@ -1299,14 +1319,14 @@ function ExtractURLEncodedValue(
     Msg         : PChar;            { URL Encoded stream                    }
     Name        : String;           { Variable name to look for             }
     var Value   : String;           { Where to put variable value           }
-    SrcCodePage : Cardinal = CP_ACP;{ D2006 and older CP_UTF8 only          }
+    SrcCodePage : LongWord = CP_ACP;{ D2006 and older CP_UTF8 only          }
     DetectUtf8  : Boolean  = TRUE)
     : Boolean; overload;
 function ExtractURLEncodedValue(
     const Msg   : String;           { URL Encoded stream                     }
     Name        : String;           { Variable name to look for              }
     var Value   : String;           { Where to put variable value            }
-    SrcCodePage : Cardinal = CP_ACP;{ D2006 and older CP_UTF8 only          }
+    SrcCodePage : LongWord = CP_ACP;{ D2006 and older CP_UTF8 only          }
     DetectUtf8  : Boolean  = TRUE)
     : Boolean; overload;
 function ExtractURLEncodedParamList(
@@ -1317,9 +1337,9 @@ function ExtractURLEncodedParamList(
     const Msg : String;            { URL Encoded stream                     }
     Params    : TStrings)          { Where to put the list of parameters    }
     : Integer; overload;           { Number of parameters found             }
-function UrlEncode(const S : String; DstCodePage : Cardinal = CP_UTF8) : String;
+function UrlEncode(const S : String; DstCodePage : LongWord = CP_UTF8) : String;
 function UrlDecode(const Url   : String;
-                   SrcCodePage : Cardinal = CP_ACP;
+                   SrcCodePage : LongWord = CP_ACP;
                    DetectUtf8  : Boolean = TRUE) : String;
 function FileDate(FileName : String) : TDateTime;
 function RFC1123_Date(aDate : TDateTime) : String;
@@ -1333,11 +1353,22 @@ function AbsolutisePath(const Path : String) : String;
 function MakeCookie(const Name, Value : String;
                     Expires           : TDateTime;
                     const Path        : String) : String;
+function HtmlPageProducer(const FromStream   : TStream;
+                          Tags               : array of const;
+                          RowDataGetter      : PTableRowDataGetter;
+                          UserData           : TObject;
+                          DestStream         : TStream) : Boolean; overload;
 function HtmlPageProducer(const HtmlFileName : String;
                           Tags               : array of const;
                           RowDataGetter      : PTableRowDataGetter;
                           UserData           : TObject;
-                          DestStream         : TStream) : Boolean;
+                          DestStream         : TStream) : Boolean; overload;
+function HtmlPageProducer(const ResName      : String;
+                          const ResType      : PChar;
+                          Tags               : array of const;
+                          RowDataGetter      : PTableRowDataGetter;
+                          UserData           : TObject;
+                          DestStream         : TStream) : Boolean; overload;
 function HtmlPageProducerFromMemory(
     Buf                : PChar;
     BufLen             : Integer;
@@ -1352,6 +1383,9 @@ function AuthTypesToString(Types : TAuthenticationTypes) : String;
 {$ENDIF}
 function StreamWriteStrA(AStrm : TStream; const AStr: String): Integer;
 function StreamWriteLnA(AStrm : TStream; const AStr: String): Integer;
+function StreamReadStrA(AStrm : TStream; ByteCnt: Integer): String;
+function StreamWriteA(AStream : TStream; Buf: PChar; CharCnt: Integer): Integer;
+function VarRecToString(V : TVarRec) : String;
 
 const
     HttpConnectionStateName : array [THttpConnectionState] of String =
@@ -2655,6 +2689,28 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.HtmlPageProducerToStream(
+    const ResName : String;
+    const ResType : PChar;
+    UserData      : TObject;
+    Tags          : array of const;
+    DestStream    : TStream);
+var
+    UD : THttpSrvRowDataGetterUserData;
+begin
+    UD := THttpSrvRowDataGetterUserData.Create;
+    try
+        UD.UserData := UserData;
+        UD.Event    := Self.TriggerGetRowData;
+        HtmlPageProducer(ResName, ResType, Tags,
+                         @RowDataGetterProc, UD, DestStream);
+    finally
+        UD.Free;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpConnection.AnswerPage(
     var   Flags    : THttpGetFlag;
     const Status   : String;   { if empty, default to '200 OK'              }
@@ -2666,6 +2722,23 @@ begin
     DocStream.Free;
     DocStream := TMemoryStream.Create;
     HtmlPageProducerToStream(HtmlFile, UserData, Tags, DocStream);
+    AnswerStream(Flags, Status, 'text/html', Header);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.AnswerPage(
+    var   Flags    : THttpGetFlag;
+    const Status   : String;
+    const Header   : String;
+    const ResName  : String;
+    const ResType  : PChar;
+    UserData       : TObject;
+    Tags           : array of const);
+begin
+    DocStream.Free;
+    DocStream := TMemoryStream.Create;
+    HtmlPageProducerToStream(ResName, ResType, UserData, Tags, DocStream);
     AnswerStream(Flags, Status, 'text/html', Header);
 end;
 
@@ -3802,7 +3875,7 @@ function ExtractURLEncodedValue(
     Msg         : PChar;    { URL Encoded stream                     }
     Name        : String;   { Variable name to look for              }
     var Value   : String;   { Where to put variable value            }
-    SrcCodePage : Cardinal; { D2006 and older CP_UTF8 only           }
+    SrcCodePage : LongWord; { D2006 and older CP_UTF8 only           }
     DetectUtf8  : Boolean)
     : Boolean;              { Found or not found that's the question }
 var
@@ -3866,7 +3939,7 @@ function ExtractURLEncodedValue(
     const Msg   : String;           { URL Encoded stream                    }
     Name        : String;           { Variable name to look for             }
     var Value   : String;           { Where to put variable value           }
-    SrcCodePage : Cardinal = CP_ACP;{ D2006 and older CP_UTF8 only          }
+    SrcCodePage : LongWord = CP_ACP;{ D2006 and older CP_UTF8 only          }
     DetectUtf8  : Boolean  = TRUE)
     : Boolean; overload;
 begin
@@ -4271,7 +4344,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function UrlEncode(const S : String; DstCodePage: Cardinal = CP_UTF8) : String;
+function UrlEncode(const S : String; DstCodePage: LongWord = CP_UTF8) : String;
 var
     I, J   : Integer;
     AStr   : AnsiString;
@@ -4311,7 +4384,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function  UrlDecode(const Url : String; SrcCodePage: Cardinal = CP_ACP;
+function  UrlDecode(const Url : String; SrcCodePage: LongWord = CP_ACP;
   DetectUtf8: Boolean = TRUE) : String;
 var
     I, J, L : Integer;
@@ -4632,7 +4705,8 @@ begin
             Q := SearchTableRowsEnd(P + J + 1, Cnt - J - 1);
             if Q = nil then
                 Q := P + Cnt;
-            HandleTableRow(TagParams, P + J + 1, Q - P - J,
+            //Feb 08, 2010 TRL the row to handle was 1 char too long
+            HandleTableRow(TagParams, P + J + 1, Q - P - J - 1,
                            RowDataGetter, UserData, DestStream);
             Cnt := P + Cnt - Q;
             P := Q;
@@ -4647,7 +4721,8 @@ begin
         Inc(P, J);
         Dec(Cnt, J);
     end;
-    StreamWriteLnA(DestStream, '');
+//    Feb 08, 2010 TRL no need to add extra line.
+//    StreamWriteLnA(DestStream, '');
     Result := TRUE;
 end;
 
@@ -4781,6 +4856,84 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function HtmlPageProducer(
+    const FromStream  : TStream;
+    Tags              : array of const;
+    RowDataGetter     : PTableRowDataGetter;
+    UserData          : TObject;
+    DestStream        : TStream) : Boolean;
+var
+    Str        : String;
+    TagData    : TStringIndex;
+    TagIndex   : Integer;
+begin
+    if ((High(Tags) - Low(Tags) + 1) and 1) <> 0 then begin
+        StreamWriteLnA(DestStream, '<HTML><BODY>' +
+                                   'Odd number of tags for substition<BR>' +
+                                   '</BODY></HTML>');
+        Result := FALSE;
+        Exit;
+    end;
+    if not Assigned(FromStream) then begin
+        StreamWriteLnA(DestStream, '<HTML><BODY>' +
+                                   'Template stream not assigned<BR>'+
+                                   '</BODY></HTML>');
+        Result := FALSE;
+        Exit;
+    end;
+    TagData := TStringIndex.Create;
+    try
+        TagIndex := Low(Tags);
+        while TagIndex < High(Tags) do begin
+            TagData.Add(VarRecToString(Tags[TagIndex]),
+                        VarRecToString(Tags[TagIndex + 1]));
+            Inc(TagIndex, 2);
+        end;
+        Str    := StreamReadStrA(FromStream, FromStream.Size);
+        Result := HtmlPageProducerFromMemory(PChar(Str), Length(Str){ + 1},
+                                             TagData,
+                                             RowDataGetter, UserData,
+                                             DestStream);
+    finally
+        TagData.Free;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function HtmlPageProducer(
+    const ResName      : String;
+    const ResType      : PChar;
+    Tags               : array of const;
+    RowDataGetter      : PTableRowDataGetter;
+    UserData           : TObject;
+    DestStream         : TStream) : Boolean;
+var
+    FromStream : TResourceStream;
+begin
+    try
+        FromStream := TResourceStream.Create(HInstance, ResName, ResType);
+    except
+        on E: Exception do begin
+            StreamWriteLnA(DestStream, '<HTML><BODY>');
+            StreamWriteLnA(DestStream, 'Unable to open resource ''' +
+                                       ResName + ' (' + ResType + ')''<BR>');
+            StreamWriteLnA(DestStream, E.ClassName + ': ' + E.Message);
+            StreamWriteLnA(DestStream, '</BODY></HTML>');
+            Result := FALSE;
+            Exit;
+        end;
+    end;
+    try
+        Result := HtmlPageProducer(FromStream, Tags, RowDataGetter,
+                                   UserData, DestStream);
+    finally
+        FromStream.Free;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function HtmlPageProducer(
     const HtmlFileName : String;
     Tags               : array of const;
     RowDataGetter      : PTableRowDataGetter;
@@ -4788,20 +4941,7 @@ function HtmlPageProducer(
     DestStream         : TStream) : Boolean;
 var
     FromStream : TFileStream;
-    //Buf        : PChar;
-    //BufLen     : Integer;
-    Str        : String;
-    TagData    : TStringIndex;
-    TagIndex   : Integer;
 begin
-    if ((High(Tags) - Low(Tags) + 1) and 1) <> 0 then begin
-        StreamWriteLnA(DestStream, '<HTML><BODY>');
-        StreamWriteLnA(DestStream, 'Odd number of tags for substition in ' +
-                                  '''' + HtmlFileName + '''<BR>');
-        StreamWriteLnA(DestStream, '</BODY></HTML>');
-        Result := FALSE;
-        Exit;
-    end;
     try
         FromStream := TFileStream.Create(HtmlFileName,
                                          fmOpenRead or fmShareDenyWrite);
@@ -4815,33 +4955,11 @@ begin
             Exit;
         end;
     end;
-    TagData := TStringIndex.Create;
     try
-        TagIndex := Low(Tags);
-        while TagIndex < High(Tags) do begin
-            TagData.Add(VarRecToString(Tags[TagIndex]),
-                        VarRecToString(Tags[TagIndex + 1]));
-            Inc(TagIndex, 2);
-        end;
-        try
-            //BufLen := FromStream.Size;
-            //GetMem(Buf, BufLen + 1);
-            //try
-                Str := StreamReadStrA(FromStream, FromStream.Size);
-                //FromStream.Read(Buf^, BufLen);
-                //Buf[BufLen] := #0;
-                Result := HtmlPageProducerFromMemory(PChar(Str), Length(Str) + 1,
-                                                     TagData,
-                                                     RowDataGetter, UserData,
-                                                     DestStream);
-            //finally
-                //FreeMem(Buf, BufLen + 1);
-            //end;
-        finally
-            FromStream.Free;
-        end;
+        Result := HtmlPageProducer(FromStream, Tags, RowDataGetter,
+                                   UserData, DestStream);
     finally
-        TagData.Free;
+        FromStream.Free;
     end;
 end;
 
