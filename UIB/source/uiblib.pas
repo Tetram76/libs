@@ -32,6 +32,9 @@ uses
   {$IFDEF COMPILER6_UP}
   Variants,
   {$ENDIF COMPILER6_UP}
+{$IFDEF DELPHI14_UP}
+  rtti, typinfo,
+{$ENDIF}
   {$IFDEF FPC}
   Variants,
   {$ENDIF FPC}
@@ -40,7 +43,9 @@ uses
 type
 
 {$IFNDEF UNICODE}
+{$IFNDEF FPC}
   UnicodeString = WideString;
+{$ENDIF}
   RawByteString = AnsiString;
 {$ENDIF}
 
@@ -59,11 +64,17 @@ type
   private
     FGDSCode: Integer;
     FErrorCode: Integer;
-    FSQLCode  : Integer;
+    FSQLCode: Integer;
+{$IFDEF FB25_UP}
+    FSQLState: RawByteString;
+{$ENDIF}
   public
     property ErrorCode: Integer read FErrorCode;
     property SQLCode: Integer read FSQLCode;
     property GDSCode: Integer read FGDSCode;
+{$IFDEF FB25_UP}
+    property SQLState: RawByteString read FSQLState;
+{$ENDIF}
   end;
 
   EUIBException = class(EUIBError)
@@ -121,6 +132,58 @@ type
   ,csCP943C
 {$ENDIF}
   );
+
+  // Transaction parameters
+  TTransParam = (
+    { prevents a transaction from accessing tables if they are written to by
+      other transactions.}
+    tpConsistency,
+    { allows concurrent transactions to read and write shared data. }
+    tpConcurrency,
+    { Concurrent, shared access of a specified table among all transactions. }
+  {$IFNDEF FB_21UP}
+    tpShared,
+    { Concurrent, restricted access of a specified table. }
+    tpProtected,
+    tpExclusive,
+  {$ENDIF}
+    { Specifies that the transaction is to wait until the conflicting resource
+      is released before retrying an operation [Default]. }
+    tpWait,
+    { Specifies that the transaction is not to wait for the resource to be
+      released, but instead, should return an update conflict error immediately. }
+    tpNowait,
+    { Read-only access mode that allows a transaction only to select data from tables. }
+    tpRead,
+    { Read-write access mode of that allows a transaction to select, insert,
+      update, and delete table data [Default]. }
+    tpWrite,
+    { Read-only access of a specified table. Use in conjunction with tpShared,
+      tpProtected, and tpExclusive to establish the lock option. }
+    tpLockRead,
+    { Read-write access of a specified table. Use in conjunction with tpShared,
+      tpProtected, and tpExclusive to establish the lock option [Default]. }
+    tpLockWrite,
+    tpVerbTime,
+    tpCommitTime,
+    tpIgnoreLimbo,
+    { Unlike a concurrency transaction, a read committed transaction sees changes
+      made and committed by transactions that were active after this transaction started. }
+    tpReadCommitted,
+    tpAutoCommit,
+    { Enables an tpReadCommitted transaction to read only the latest committed
+      version of a record. }
+    tpRecVersion,
+    tpNoRecVersion,
+    tpRestartRequests,
+    tpNoAutoUndo
+  {$IFDEF FB20_UP}
+    ,tpLockTimeout
+  {$ENDIF}
+  );
+
+  { Set of transaction parameters. }
+  TTransParams = set of TTransParam;
 
 const
   CharacterSetStr : array[TCharacterSet] of AnsiString = (
@@ -293,6 +356,8 @@ const
 
   function StrToCharacterSet(const CharacterSet: RawByteString): TCharacterSet;
   function CreateDBParams(Params: AnsiString; Delimiter: AnsiChar = ';'): AnsiString;
+
+  function CreateTRParams(Options: TTransParams; const LockRead: string = ''; const LockWrite: string = ''{$IFDEF FB20_UP}; LockTimeout: Word = 0{$ENDIF}): RawByteString;
   function GetClientLibrary: string;
   function CreateBlobParams(Params: AnsiString; Delimiter: AnsiChar = ';'): AnsiString;
 
@@ -458,6 +523,9 @@ type
     function GetAsDate(const Index: Word): Integer;
     function GetAsTime(const Index: Word): Cardinal;
     function GetAsBoolean(const Index: Word): boolean;
+{$IFDEF DELPHI14_UP}
+    function GetAsTValue(const Index: Word): TValue;
+{$ENDIF}
   {$IFDEF GUID_TYPE}
     function GetAsGUID(const Index: Word): TGUID;
   {$ENDIF}
@@ -502,6 +570,10 @@ type
     function GetByNameAsBoolean(const Name: string): boolean;
     function GetByNameAsDate(const Name: string): Integer;
     function GetByNameAsTime(const Name: string): Cardinal;
+  {$IFDEF DELPHI14_UP}
+    function GetByNameAsTValue(const Name: string): TValue;
+  {$ENDIF}
+
   {$IFDEF GUID_TYPE}
     function GetByNameAsGUID(const Name: string): TGUID;
   {$ENDIF}
@@ -528,6 +600,9 @@ type
     procedure CheckRange(const Index: Word);
     function GetFieldIndex(const name: AnsiString): Word; virtual;
     function TryGetFieldIndex(const name: AnsiString; out index: Word): Boolean; virtual;
+{$IFDEF DELPHI14_UP}
+    function GetAsType<T>(var ctx: TRttiContext): T;
+{$ENDIF}
     property Data: PUIBSQLDa read FXSQLDA;
     property IsBlob[const Index: Word]: boolean read GetIsBlob;
     property IsBlobText[const Index: Word]: boolean read GetIsBlobText;
@@ -559,6 +634,9 @@ type
     property AsDate       [const Index: Word]: Integer    read GetAsDate       write SetAsDate;
     property AsTime       [const Index: Word]: Cardinal   read GetAsTime       write SetAsTime;
     property AsVariant    [const Index: Word]: Variant    read GetAsVariant    write SetAsVariant;
+  {$IFDEF DELPHI14_UP}
+    property AsTValue     [const Index: Word]: TValue     read GetAsTValue;
+  {$ENDIF}
   {$IFDEF GUID_TYPE}
     property AsGUID       [const Index: Word]: TGUID      read GetAsGUID       write SetAsGUID;
   {$ENDIF}
@@ -938,8 +1016,11 @@ type
     procedure ServiceStart(var SvcHandle: IscSvcHandle; const Spb: RawByteString);
 
     function ErrSqlcode: ISCLong;
-    function ErrInterprete: AnsiString;
+    function ErrInterprete: RawByteString;
     function ErrSQLInterprete(SQLCODE: Smallint): RawByteString;
+{$IFDEF FB25_UP}
+    function ErrSqlState: FB_SQLSTATE_STRING;
+{$ENDIF}
 
     procedure BlobOpen(var DBHandle: IscDbHandle; var TraHandle: IscTrHandle;
       var BlobHandle: IscBlobHandle; BlobId: TISCQuad; BPB: AnsiString = '');
@@ -1102,13 +1183,9 @@ const
     (Name: 'set_db_sql_dialect';     ParamType: prCard), // ok Change sqldialect (1,2,3))
     (Name: 'gfix_attach';            ParamType: prNone), // ok FB15: don't work
     (Name: 'gstat_attach';           ParamType: prNone)  // ok FB15: don't work
-{$IFDEF IB65ORYF867}
+{$IFDEF IB65_UP}
    ,(Name: 'gbak_ods_version';       ParamType: prCard) // ??
    ,(Name: 'gbak_ods_minor_version'; ParamType: prCard) // ??
-{$ENDIF}
-
-{$IFDEF YF867_UP}
-   ,(Name: 'numeric_scale_reduction';ParamType: prNone)
 {$ENDIF}
 
 {$IFDEF IB7_UP}
@@ -1423,6 +1500,9 @@ const
         Exception.Message := Exception.Message + string(ErrSQLInterprete(Exception.FSQLCode)) + NewLine;
       Exception.FGDSCode := Status;
       Exception.FErrorCode := GETCode(Status);
+{$IFDEF FB25_UP}
+      Exception.FSQLState := ErrSqlState;
+{$ENDIF}
       Exception.Message := Exception.Message + 'Error Code: ' + IntToStr(Exception.FErrorCode);
       raise Exception;
     end;
@@ -1627,6 +1707,80 @@ const
     end;
     SetLength(Result, FinalSize);
   end;
+
+  function CreateTRParams(Options: TTransParams; const LockRead, LockWrite: string{$IFDEF FB20_UP}; LockTimeout: Word{$ENDIF}): RawByteString;
+  var
+    tp: TTransParam;
+    procedure ParseStrOption(const code: AnsiChar; const Value: AnsiString);
+    var
+      P, Start: PAnsiChar;
+      S: AnsiString;
+    begin
+      P := Pointer(Value);
+      if P <> nil then
+        while (P^ <> #0) do
+        begin
+          Start := P;
+          while not (P^ in [#0, ';']) do Inc(P);
+          if (P - Start) > 0 then
+          begin
+            SetString(S, Start, P - Start);
+            Result := Result + code + AnsiChar(P - Start) + S;
+          end;
+          if P^ =';' then inc(P);
+        end;
+    end;
+  const
+    tpc: array[TTransParam] of AnsiChar = (
+      isc_tpb_consistency,
+      isc_tpb_concurrency,
+    {$IFNDEF FB_21UP}
+      isc_tpb_shared,
+      isc_tpb_protected,
+      isc_tpb_exclusive,
+    {$ENDIF}
+      isc_tpb_wait,
+      isc_tpb_nowait,
+      isc_tpb_read,
+      isc_tpb_write,
+      isc_tpb_lock_read,
+      isc_tpb_lock_write,
+      isc_tpb_verb_time,
+      isc_tpb_commit_time,
+      isc_tpb_ignore_limbo,
+      isc_tpb_read_committed,
+      isc_tpb_autocommit,
+      isc_tpb_rec_version,
+      isc_tpb_no_rec_version,
+      isc_tpb_restart_requests,
+      isc_tpb_no_auto_undo
+    {$IFDEF FB20_UP}
+      ,isc_tpb_lock_timeout
+    {$ENDIF}
+      );
+
+  begin
+    if Options = [tpConcurrency,tpWait,tpWrite] then
+      result := ''
+    else
+      begin
+        Result := isc_tpb_version3;
+        for tp := Low(TTransParam) to High(TTransParam) do
+          if (tp in Options) then
+          begin
+            case tp of
+              tpLockRead    : ParseStrOption(tpc[tp], AnsiString(LockRead));
+              tpLockWrite   : ParseStrOption(tpc[tp], AnsiString(LockWrite));
+            {$IFDEF FB20_UP}
+              tpLockTimeout : Result := Result + tpc[tp] + PAnsiChar(@LockTimeout)[0] + PAnsiChar(LockTimeout)[1];
+            {$ENDIF}
+            else
+              Result := Result + tpc[tp];
+            end;
+          end;
+      end;
+  end;
+
 
   procedure TUIBLibrary.AttachDatabase(const FileName: AnsiString; var DbHandle: IscDbHandle;
     Params: AnsiString; Sep: AnsiChar = ';');
@@ -1964,7 +2118,7 @@ const
                   if (not Sqlda.FCachedFetch) and        // not stored
                     (BlobData.Size > 0)  then // not null (null if the first one)
                       FreeMem(BlobData.Buffer);
-                      
+
                   if Sqlda.IsNull[Sqlda.FBlobsIndex[i]] then
                   begin
                     BlobData.Size := 0;
@@ -2209,7 +2363,7 @@ const
       Result := isc_sqlcode(@FStatusVector);
     end;
 
-  function TUIBLibrary.ErrInterprete: AnsiString;
+  function TUIBLibrary.ErrInterprete: RawByteString;
   var
     StatusVector: PStatusVector;
     len: Integer;
@@ -2238,6 +2392,13 @@ const
     for i := 1 to 255 do if Result[i] = #0 then Break; // Quick trim
     SetLength(Result, i-1);
   end;
+
+{$IFDEF FB25_UP}
+  function TUIBLibrary.ErrSqlState: FB_SQLSTATE_STRING;
+  begin
+    fb_sqlstate(@Result, @FStatusVector);
+  end;
+{$ENDIF}
 
 //******************************************************************************
 // Services
@@ -3099,7 +3260,7 @@ type
             end;
         end;
         if (sqlind <> nil) then
-          sqlind^ := 0;        
+          sqlind^ := 0;
       end;
     end;
 
@@ -3638,6 +3799,106 @@ type
     end;
   end;
 
+{$IFDEF DELPHI14_UP}
+  function TSQLDA.GetAsTValue(const Index: Word): TValue;
+  var
+    ASQLCode: SmallInt;
+    Dbl: Double;
+  begin
+    CheckRange(Index);
+    with FXSQLDA.sqlvar[Index] do
+    begin
+      if (sqlind <> nil) and (sqlind^ = -1) then
+        Exit(TValue.Empty);
+      ASQLCode := (sqltype and not(1));
+      // Is Numeric ?
+      if (sqlscale < 0)  then
+      begin
+        case ASQLCode of
+          SQL_SHORT  : Result := PSmallInt(sqldata)^ / ScaleDivisor[sqlscale];
+          SQL_LONG   : Result := PInteger(sqldata)^  / ScaleDivisor[sqlscale];
+          SQL_INT64,
+          SQL_QUAD   :
+            if (SqlScale = -4) then
+              TValue.Make(@sqldata, TypeInfo(Currency), Result) else
+              Result := PInt64(sqldata)^ / ScaleDivisor[sqlscale];
+          SQL_D_FLOAT,
+          SQL_DOUBLE : Result := PDouble(sqldata)^;
+        else
+          raise EUIBConvertError.Create(EUIB_UNEXPECTEDERROR);
+        end;
+      end else
+        case ASQLCode of
+          SQL_D_FLOAT,
+          SQL_DOUBLE    : Result := PDouble(sqldata)^;
+          SQL_TIMESTAMP : Result := TDateTime(DecodeTimeStamp(PISCTimeStamp(sqldata)));
+          SQL_TYPE_DATE :
+            begin
+              Dbl := PInteger(sqldata)^ - DateOffset;
+              Result := TDateTime(Dbl);
+            end;
+          SQL_TYPE_TIME : Result := PCardinal(sqldata)^ / TimeCoeff;
+          SQL_LONG      : Result := PInteger(sqldata)^;
+          SQL_FLOAT     : Result := PSingle(sqldata)^;
+{$IFDEF IB7_UP}
+          SQL_BOOLEAN   : Result := PSmallint(sqldata)^ = 1;
+{$ENDIF}
+          SQL_SHORT     : Result := PSmallint(sqldata)^;
+{$IFDEF COMPILER6_UP}
+          SQL_INT64     : Result := PInt64(sqldata)^;
+{$ELSE}
+  {$IFDEF FPC}
+          SQL_INT64     : Result := PInt64(sqldata)^;
+  {$ELSE}
+          SQL_INT64     : Result := Integer(PInt64(sqldata)^);
+  {$ENDIF}
+{$ENDIF}
+          SQL_TEXT      : Result := DecodeString(SQL_TEXT, Index);
+          SQL_VARYING   : Result := DecodeString(SQL_VARYING, Index);
+        else
+          raise EUIBConvertError.Create(EUIB_CASTERROR);
+        end;
+    end;
+  end;
+
+  function TSQLDA.GetByNameAsTValue(const Name: string): TValue;
+  begin
+    Result := GetAsTValue(GetFieldIndex(AnsiString(Name)));
+  end;
+
+  function TSQLDA.GetAsType<T>(var ctx: TRttiContext): T;
+  var
+    v: TValue;
+    p: PTypeInfo;
+    r: TRttiType;
+    f: TRttiField;
+    o: TObject;
+  begin
+    p := TypeInfo(T);
+    if p <> nil then
+    case p.Kind of
+      tkRecord:
+        begin
+          TValue.Make(@Result, p, v);
+          r := ctx.GetType(p);
+          for f in r.GetFields do
+            f.SetValue(@Result, GetByNameAsTValue(f.Name));
+        end;
+      tkClass:
+        begin
+          o := GetTypeData(p).ClassType.Create;
+          r := ctx.GetType(p);
+          for f in r.GetFields do
+            f.SetValue(o, GetByNameAsTValue(f.Name));
+          PPointer(@Result)^ := o;
+        end;
+    else
+      raise EUIBException.Create('Invalid data type');
+    end;
+  end;
+
+{$ENDIF}
+
   function TSQLDA.GetAsDateTime(const Index: Word): TDateTime;
   var ASQLCode: SmallInt;
   begin
@@ -3953,19 +4214,19 @@ end;
           {$ELSE}
             if sqllen = SizeOf(TGUID) then
               Move(sqldata^, Result, sqllen)
-          {$ENDIF}        
+          {$ENDIF}
             else
               raise EUIBConvertError.Create(EUIB_CASTERROR);
           end;
           SQL_VARYING :
-          begin            
+          begin
           {$IFDEF GUID_AS_TEXT}
             if PVary(sqldata).vary_length  = 38 then
               Result := StringToGUID(DecodeString(SQL_VARYING, Index))
           {$ELSE}
             if PVary(sqldata).vary_length  = SizeOf(TGUID) then
               Move(PVary(sqldata).vary_string, Result, PVary(sqldata).vary_length)
-          {$ENDIF}            
+          {$ENDIF}
             else
               raise EUIBConvertError.Create(EUIB_CASTERROR);
           end;
@@ -4583,7 +4844,7 @@ end;
       varInteger:               SetAsInteger(Index, Value);
 {$IFNDEF COMPILER5}
       varLongWord, varInt64:             SetAsInt64(Index, Value);
-{$ENDIF}      
+{$ENDIF}
       varSingle:                         SetAsSingle(Index, Value);
       varDouble:                         SetAsDouble(Index, Value);
       varCurrency:                       SetAsCurrency(Index, Value);

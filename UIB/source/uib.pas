@@ -365,7 +365,7 @@ type
     { Number of users currently attached to the database.
       Use this property with the "OnInfoUserNames" event to retrieve the user names. }
     property InfoUserNames: Integer index isc_info_user_names read GetInfoStringCount;
-  {$IFDEF FB102ORYF867}
+  {$IFDEF FB102_UP}
     { Cached "oldest interesting" transaction. }
     property InfoOldestTransaction: Integer index isc_info_oldest_transaction read GetInfoIntValue;
     { Cached "oldest active" transaction. }
@@ -480,57 +480,6 @@ type
                                   TUIBTransaction
    Oo.......................................................................oO}
 
-  // Transaction parameters
-  TTransParam = (
-    { prevents a transaction from accessing tables if they are written to by
-      other transactions.}
-    tpConsistency,
-    { allows concurrent transactions to read and write shared data. }
-    tpConcurrency,
-    { Concurrent, shared access of a specified table among all transactions. }
-  {$IFNDEF FB_21UP}
-    tpShared,
-    { Concurrent, restricted access of a specified table. }
-    tpProtected,
-    tpExclusive,
-  {$ENDIF}
-    { Specifies that the transaction is to wait until the conflicting resource
-      is released before retrying an operation [Default]. }
-    tpWait,
-    { Specifies that the transaction is not to wait for the resource to be
-      released, but instead, should return an update conflict error immediately. }
-    tpNowait,
-    { Read-only access mode that allows a transaction only to select data from tables. }
-    tpRead,
-    { Read-write access mode of that allows a transaction to select, insert,
-      update, and delete table data [Default]. }
-    tpWrite,
-    { Read-only access of a specified table. Use in conjunction with tpShared,
-      tpProtected, and tpExclusive to establish the lock option. }
-    tpLockRead,
-    { Read-write access of a specified table. Use in conjunction with tpShared,
-      tpProtected, and tpExclusive to establish the lock option [Default]. }
-    tpLockWrite,
-    tpVerbTime,
-    tpCommitTime,
-    tpIgnoreLimbo,
-    { Unlike a concurrency transaction, a read committed transaction sees changes
-      made and committed by transactions that were active after this transaction started. }
-    tpReadCommitted,
-    tpAutoCommit,
-    { Enables an tpReadCommitted transaction to read only the latest committed
-      version of a record. }
-    tpRecVersion,
-    tpNoRecVersion,
-    tpRestartRequests,
-    tpNoAutoUndo
-  {$IFDEF FB20_UP}
-    ,tpLockTimeout
-  {$ENDIF}
-  );
-
-  { Set of transaction parameters. }
-  TTransParams = set of TTransParam;
   {This evenet occur before to end the transaction, you can change the ETM parametter.}
   TOnEndTransaction = procedure(Sender: TObject; var Mode: TEndTransMode) of object;
 
@@ -544,16 +493,15 @@ type
     FOptions   : TTransParams;
     FLockRead  : string;
     FLockWrite : string;
+  {$IFDEF FB20_UP}
+    FLockTimeout: Word;
+  {$ENDIF}
     FOnStartTransaction: TNotifyEvent;
     FOnEndTransaction: TOnEndTransaction;
     FAutoStart: boolean;
     FAutoStop: boolean;
     FDefaultAction: TEndTransMode;
-  {$IFDEF FB20_UP}
-    FLockTimeout: Word;
-  {$ENDIF}
     function GetInTransaction: boolean;
-    function TPB: RawByteString;
     function GetOptions: TTransParams;
     procedure SetOptions(const Value: TTransParams);
     function GetLockRead: string;
@@ -1190,14 +1138,14 @@ type
 
   TUIBServerInfo = class(TUIBService)
   private
-    FOnInfoAttachments: TOnInfoIntegerCount;  
+    FOnInfoAttachments: TOnInfoIntegerCount;
     FOnInfoDatabases: TOnInfoIntegerCount;
     FOnInfoDbName: TOnInfoStringCount;
   public
     procedure GetServerInfo;
   published
     property OnInfoAttachments: TOnInfoIntegerCount read FOnInfoAttachments write FOnInfoAttachments;
-    property OnInfoDatabases: TOnInfoIntegerCount read FOnInfoDatabases write FOnInfoDatabases;  
+    property OnInfoDatabases: TOnInfoIntegerCount read FOnInfoDatabases write FOnInfoDatabases;
     property OnInfoDbName: TOnInfoStringCount read FOnInfoDbName write FOnInfoDbName;
   end;
 
@@ -1343,10 +1291,9 @@ begin
   FLibrary.Load(FLiBraryName);
 {$IFDEF UNICODE}
   FLibrary.DSQLExecuteImmediate(FDbHandle, TrHandle,
-    MBUEncode(Format(CreateDb, [DatabaseName, UserName, PassWord,
+    AnsiString(Format(CreateDb, [DatabaseName, UserName, PassWord,
                      CharacterSetStr[CharacterSet],
-                     PageSize, CharacterSetStr[DefaultCharacterSet]]),
-              CharacterSetCP[CharacterSet]),
+                     PageSize, CharacterSetStr[DefaultCharacterSet]])),
     SQLDialect);
 {$ELSE}
   FLibrary.DSQLExecuteImmediate(FDbHandle, TrHandle,
@@ -1782,7 +1729,7 @@ begin
   while byte(p^) = item do
   begin
     inc(result, 1);
-  {$IFDEF FB102ORYF867}
+  {$IFDEF FB102_UP}
     case item of
       isc_info_active_transactions:
         if assigned(FOnInfoActiveTransactions) then
@@ -2057,7 +2004,8 @@ begin
       if Transaction.DataBase <> nil then
       begin
         FParameter.CharacterSet := Transaction.DataBase.CharacterSet;
-        if DataBase = nil then
+        // if not a multibase transaction affect database
+        if Transaction.DatabasesCount <= 1 then
           Database := Transaction.DataBase;
       end;
     end;
@@ -2100,7 +2048,7 @@ begin
   // execute the query again to save
   // the prepare time !
   if (FCurrentState = qsExecute) then
-    CloseCursor; 
+    CloseCursor;
 
   if FetchFirst then
     InternalNext else
@@ -2258,7 +2206,9 @@ end;
 
 procedure TUIBStatement.BeginPrepare(describeParams: boolean = false);
 begin
-  if (FStHandle = nil) then BeginStatement;
+  if (FStHandle = nil) then
+    BeginStatement else ;
+    BeginTransaction;
 
   FSQLResult := ResultClass.Create(FindDataBase.CharacterSet, 0, FCachedFetch, FFetchBlobs, FBufferChunks);
   with FindDataBase, FLibrary do
@@ -2426,7 +2376,7 @@ begin
     result := FDataBase else
      if FTransaction <> nil then
        result := FTransaction.FDataBase else
-       raise Exception.Create(EUIB_DATABASENOTDEF);  
+       raise Exception.Create(EUIB_DATABASENOTDEF);
 end;
 
 {$IFNDEF UIB_NO_COMPONENT}
@@ -3056,10 +3006,15 @@ end;
 {$ENDIF}
 
 procedure TUIBTransaction.SetDataBase(const ADatabase: TUIBDataBase);
+var
+  i: Integer;
 begin
   RemoveDatabase(FDataBase);
   AddDataBase(ADatabase);
   FDataBase := ADatabase;
+  if (FDataBase <> nil) and (FSQLComponent <> nil) then
+    for i := 0 to FSQLComponent.Count - 1 do
+      TUIBStatement(FSQLComponent[i]).FParameter.CharacterSet := FDataBase.CharacterSet;
 end;
 
 procedure TUIBTransaction.Close(const Mode: TEndTransMode; Auto: boolean);
@@ -3131,12 +3086,12 @@ begin
 
     if FDataBases.Count = 1 then
     begin
-      TransactionStart(FTrHandle, FDataBase.FDbHandle, TPB);
+      TransactionStart(FTrHandle, FDataBase.FDbHandle, CreateTRParams(FOptions, FLockRead, FLockWrite{$IFDEF FB20_UP}, FLockTimeout{$ENDIF}));
     end else
     begin
       GetMem(Buffer,  SizeOf(TISCTEB) * FDataBases.Count);
       try
-        ATPB := TPB;
+        ATPB := CreateTRParams(FOptions, FLockRead, FLockWrite);
         for i := 0 to FDataBases.Count - 1 do
           with TEBDynArray(Buffer)[i] do
           begin
@@ -3315,79 +3270,6 @@ end;
 function TUIBTransaction.GetInTransaction: boolean;
 begin
   Result := (FTrHandle <> nil);
-end;
-
-function TUIBTransaction.TPB: RawByteString;
-var
-  tp: TTransParam;
-  procedure ParseStrOption(const code: AnsiChar; const Value: AnsiString);
-  var
-    P, Start: PAnsiChar;
-    S: AnsiString;
-  begin
-    P := Pointer(Value);
-    if P <> nil then
-      while (P^ <> #0) do
-      begin
-        Start := P;
-        while not (P^ in [#0, ';']) do Inc(P);
-        if (P - Start) > 0 then
-        begin
-          SetString(S, Start, P - Start);
-          Result := Result + code + AnsiChar(P - Start) + S;
-        end;
-        if P^ =';' then inc(P);
-      end;
-  end;
-const
-  tpc: array[TTransParam] of AnsiChar = (
-    isc_tpb_consistency,
-    isc_tpb_concurrency,
-  {$IFNDEF FB_21UP}
-    isc_tpb_shared,
-    isc_tpb_protected,
-    isc_tpb_exclusive,
-  {$ENDIF}
-    isc_tpb_wait,
-    isc_tpb_nowait,
-    isc_tpb_read,
-    isc_tpb_write,
-    isc_tpb_lock_read,
-    isc_tpb_lock_write,
-    isc_tpb_verb_time,
-    isc_tpb_commit_time,
-    isc_tpb_ignore_limbo,
-    isc_tpb_read_committed,
-    isc_tpb_autocommit,
-    isc_tpb_rec_version,
-    isc_tpb_no_rec_version,
-    isc_tpb_restart_requests,
-    isc_tpb_no_auto_undo
-  {$IFDEF FB20_UP}
-    ,isc_tpb_lock_timeout
-  {$ENDIF}
-    );
-
-begin
-  if FOptions = [tpConcurrency,tpWait,tpWrite] then
-    result := ''
-  else
-    begin
-      Result := isc_tpb_version3;
-      for tp := Low(TTransParam) to High(TTransParam) do
-        if (tp in FOptions) then
-        begin
-          case tp of
-            tpLockRead    : ParseStrOption(tpc[tp], AnsiString(FLockRead));
-            tpLockWrite   : ParseStrOption(tpc[tp], AnsiString(FLockWrite));
-          {$IFDEF FB20_UP}
-            tpLockTimeout : Result := Result + tpc[tp] + PAnsiChar(@FLockTimeout)[0] + PAnsiChar(@FLockTimeout)[1];
-          {$ENDIF}
-          else
-            Result := Result + tpc[tp];
-          end;
-        end;
-    end;
 end;
 
 function TUIBTransaction.GetOptions: TTransParams;
