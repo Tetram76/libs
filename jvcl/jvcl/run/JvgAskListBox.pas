@@ -31,7 +31,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgAskListBox.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvgAskListBox.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvgAskListBox;
 
@@ -182,8 +182,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgAskListBox.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -639,7 +639,7 @@ end;
 
 procedure TJvgAskListBox.SetWallpaperImage(Value: TImage);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FWallpaperImage));
+  ReplaceComponentReference(Self, Value, TComponent(FWallpaperImage));
   if (not IsItAFilledBitmap(FWallpaper)) and Assigned(Value) then
   begin
     WallpaperBmp := Value.Picture.Bitmap;
@@ -682,7 +682,7 @@ end;
 procedure TJvgAskListBox.SetGlyphs(Value: TImageList);
 begin
   //if (Value=nil)or(Value.Width<=0)or(Value.Height<=0) then Exit;
-  ReplaceComponentReference (Self, Value, TComponent(FGlyphs));
+  ReplaceComponentReference(Self, Value, TComponent(FGlyphs));
   if FShowGlyphs then
     Invalidate;
 end;

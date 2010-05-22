@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 12693 2010-02-08 22:57:23Z jfudickar $
+// $Id: JvJVCLUtils.pas 12753 2010-04-19 22:04:08Z ahuser $
 
 unit JvJVCLUtils;
 
@@ -889,8 +889,8 @@ function ReplaceComponentReference(This, NewReference: TComponent; var VarRefere
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 12693 $';
-    Date: '$Date: 2010-02-08 23:57:23 +0100 (lun. 08 févr. 2010) $';
+    Revision: '$Revision: 12753 $';
+    Date: '$Date: 2010-04-20 00:04:08 +0200 (mar. 20 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2711,12 +2711,10 @@ begin
     Screen.Cursors[crMultiDragAlt] := Screen.Cursors[crMultiDrag];
     crMultiDragLinkAlt := GetNextFreeCursorIndex(crJVCLFirst, False);
     Screen.Cursors[crMultiDragLinkAlt] := Screen.Cursors[crMultiDrag];
-    { begin RxLib }
     crHand := GetNextFreeCursorIndex(crJVCLFirst, False);
     Screen.Cursors[crHand] := LoadCursor(HInstance, 'JvHANDCURSOR');
     crDragHand := GetNextFreeCursorIndex(crJVCLFirst, False);
     Screen.Cursors[crDragHand] := LoadCursor(hInstance, 'JvDRAGCURSOR');
-    { end RxLib }
   end;
 end;
 
@@ -3959,7 +3957,7 @@ begin
       siListCount]), 0);
     if Count > 0 then
     begin
-      for I := 0 to Count - 1 do
+      for I := Count - 1 downto 0 do
       begin
         FormClass :=
           TFormClass(GetClass(AppStorage.ReadString(AppStorage.ConcatPaths([StorePath,
@@ -4099,18 +4097,14 @@ begin
           else
           if fpSize in Options then
           begin
-            {.$IFDEF DELPHI????_UP}  // Change to the right version 5 or 6 ?
             if Form.Position = poDefault then
               ChangePosition(poDefaultPosOnly);
-            {.ENDIF}
           end
           else
           if fpLocation in Options then // obsolete but better to read
-            {.$IFDEF DELPHI????_UP}  // Change to the right version 5 or 6 ?
             if Form.Position = poDefault then
               ChangePosition(poDefaultSizeOnly)
             else
-            {.ENDIF}
             if Form.Position <> poDesigned then
               ChangePosition(poDesigned);
         end;
@@ -5822,11 +5816,9 @@ end;
 procedure JvListViewToStrings(ListView: TListView; Strings: TStrings;
   SelectedOnly: Boolean; Headers: Boolean);
 var
-  R, C: Integer;
   ColWidths: array of Word;
-  S: string;
 
-  procedure AddLine;
+  procedure AddLine(const S: string);
   begin
     Strings.Add(TrimRight(S));
   end;
@@ -5854,6 +5846,9 @@ var
         Result := StrPadLeft(Text, ColWidths[Index]) + ' ';
   end;
 
+var
+  R, C: Integer;
+  S: string;
 begin
   SetLength(S, 256);
   with ListView do
@@ -5878,11 +5873,11 @@ begin
           S := '';
           for C := 0 to Count - 1 do
             S := S + MakeCellStr(Items[C].Caption, C);
-          AddLine;
+          AddLine(S);
           S := '';
           for C := 0 to Count - 1 do
             S := S + StringOfChar('-', ColWidths[C]) + ' ';
-          AddLine;
+          AddLine(S);
         end;
       for R := 0 to Items.Count - 1 do
         if not SelectedOnly or Items[R].Selected then
@@ -5891,7 +5886,7 @@ begin
             S := MakeCellStr(Caption, 0);
             for C := 0 to Min(SubItems.Count, Columns.Count - 1) - 1 do
               S := S + MakeCellStr(SubItems[C], C + 1);
-            AddLine;
+            AddLine(S);
           end;
     finally
       Strings.EndUpdate;
@@ -5934,8 +5929,6 @@ end;
 
 procedure JvListViewCompare(ListView: TListView; Item1, Item2: TListItem;
   var Compare: Integer);
-var
-  ColIndex: Integer;
 
   function FmtStrToInt(S: string): Integer;
   var
@@ -5950,6 +5943,8 @@ var
     Result := StrToInt(S);
   end;
 
+var
+  ColIndex: Integer;
 begin
   with ListView do
   begin
@@ -6238,7 +6233,6 @@ begin
     if Screen <> nil then
     begin
       // now only available through SetDefaultJVCLCursors
-      { (ahuser) if used in VisualCLX mode Application.Destroy crashes }
       Screen.Cursors[crMultiDragLink] := Screen.Cursors[crMultiDrag];
       Screen.Cursors[crDragAlt] := Screen.Cursors[crDrag];
       Screen.Cursors[crMultiDragAlt] := Screen.Cursors[crMultiDrag];
@@ -6249,8 +6243,8 @@ begin
 end;
 
 const
-  Lefts = ['[', '{', '('];
-  Rights = [']', '}', ')'];
+  LeftBrackets = ['[', '{', '('];
+  RightsBrackets = [']', '}', ')'];
 
 { Utilities routines }
 
@@ -6322,7 +6316,6 @@ begin
 end;
 
 
-
 function RectToStr(Rect: TRect): string;
 begin
   Result := Format('[%d,%d,%d,%d]', [Rect.Left, Rect.Top, Rect.Right, Rect.Bottom]);
@@ -6336,7 +6329,7 @@ var
 begin
   Result := Def;
   S := Str;
-  if (S <> '') and CharInSet(S[1], Lefts) and CharInSet(S[Length(S)], Rights) then
+  if (S <> '') and CharInSet(S[1], LeftBrackets) and CharInSet(S[Length(S)], RightsBrackets) then
   begin
     Delete(S, 1, 1);
     SetLength(S, Length(S) - 1);
@@ -6379,7 +6372,7 @@ var
 begin
   Result := Def;
   S := Str;
-  if (S <> '') and CharInSet(S[1], Lefts) and CharInSet(S[Length(Str)], Rights) then
+  if (S <> '') and CharInSet(S[1], LeftBrackets) and CharInSet(S[Length(Str)], RightsBrackets) then
   begin
     Delete(S, 1, 1);
     SetLength(S, Length(S) - 1);
@@ -7751,8 +7744,6 @@ end;
 
 function GenerateUniqueComponentName(AOwner, AComponent: TComponent; const
     AComponentName: string = ''): string;
-var
-  I: Integer;
 
   function ValidateName(const AName: string): String;
   var
@@ -7804,6 +7795,8 @@ var
         end;
   end;
 
+var
+  I: Integer;
 begin
   if not Assigned(AOwner) then
     Result := ''

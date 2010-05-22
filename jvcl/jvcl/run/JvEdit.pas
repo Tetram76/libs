@@ -36,7 +36,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEdit.pas 12510 2009-09-22 14:37:09Z obones $
+// $Id: JvEdit.pas 12701 2010-03-08 14:30:19Z obones $
 
 unit JvEdit;
 
@@ -265,8 +265,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEdit.pas $';
-    Revision: '$Revision: 12510 $';
-    Date: '$Date: 2009-09-22 16:37:09 +0200 (mar. 22 sept. 2009) $';
+    Revision: '$Revision: 12701 $';
+    Date: '$Date: 2010-03-08 15:30:19 +0100 (lun. 08 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -391,7 +391,7 @@ end;
 
 procedure TJvCustomEdit.CMHintShow(var Msg: TMessage);
 begin
-  if AutoHint and not TextFitsInCtrl(Self, Self.Text) then
+  if AutoHint and not TextFitsInCtrl(Self, Self.Text) and (PasswordChar = #0) then
     with TCMHintShow(Msg) do
     begin
       HintInfo.HintPos := Self.ClientToScreen(Point(-2, Height - 2));

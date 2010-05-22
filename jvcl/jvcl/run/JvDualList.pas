@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDualList.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDualList.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvDualList;
 
@@ -97,8 +97,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDualList.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -140,7 +140,7 @@ end;
 
 procedure TJvDualListDialog.SetCenterOnControl(const Value: TControl);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FCenterOnControl));
+  ReplaceComponentReference(Self, Value, TComponent(FCenterOnControl));
 end;
 
 procedure TJvDualListDialog.SetList1(Value: TStrings);

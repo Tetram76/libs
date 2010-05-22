@@ -39,7 +39,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPBar.pas 12519 2009-09-23 14:48:34Z obones $
+// $Id: JvXPBar.pas 12769 2010-05-15 15:18:30Z ahuser $
 
 unit JvXPBar;
 
@@ -551,8 +551,8 @@ procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPBar.pas $';
-    Revision: '$Revision: 12519 $';
-    Date: '$Date: 2009-09-23 16:48:34 +0200 (mer. 23 sept. 2009) $';
+    Revision: '$Revision: 12769 $';
+    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1254,11 +1254,10 @@ end;
 constructor TJvXPFadeThread.Create(WinXPBar: TJvXPCustomWinXPBar;
   RollDirection: TJvXPBarRollDirection);
 begin
-  inherited Create(True);
+  inherited Create(False);
   FWinXPBar := WinXPBar;
   FRollDirection := RollDirection;
   FreeOnTerminate := True;
-  Suspended := False;
 end;
 
 procedure TJvXPFadeThread.DoWinXPBarInternalRedraw;
@@ -1958,7 +1957,9 @@ begin
       FOnItemClick(Self, FVisibleItems[FHoverIndex]);
       CallInherited := False;
     end;
-    if Assigned(FVisibleItems[FHoverIndex].FOnClick) then
+
+    // OnItemClick might steer focus away, thus removing the hovering item
+    if (FHoverIndex > -1) and Assigned(FVisibleItems[FHoverIndex].FOnClick) then
     begin
       { set linked 'action' as Sender }
       if Assigned(FVisibleItems[FHoverIndex].Action) and

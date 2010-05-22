@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPCore.pas 12464 2009-08-23 10:43:09Z ahuser $
+// $Id: JvXPCore.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvXPCore;
 
@@ -325,8 +325,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPCore.pas $';
-    Revision: '$Revision: 12464 $';
-    Date: '$Date: 2009-08-23 12:43:09 +0200 (dim. 23 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -774,7 +774,7 @@ begin
       Value.RegisterControls([Self])
     else if Assigned(FStyleManager) then
       FStyleManager.UnregisterControls([Self]);
-    ReplaceComponentReference (Self, Value, TComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, TComponent(FStyleManager));
     InternalRedraw;
   end;
 end;

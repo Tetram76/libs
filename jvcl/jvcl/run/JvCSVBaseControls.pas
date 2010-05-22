@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCSVBaseControls.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCSVBaseControls.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvCSVBaseControls;
 
@@ -160,8 +160,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCSVBaseControls.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -650,7 +650,7 @@ end;
 
 procedure TJvCSVEdit.SetCSVDataBase(const Value: TJvCSVBase);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FCSVDataBase));
+  ReplaceComponentReference(Self, Value, TComponent(FCSVDataBase));
 end;
 
 procedure TJvCSVEdit.SetCSVField(const Value: string);
@@ -791,7 +791,7 @@ end;
 
 procedure TJvCSVNavigator.SetCSVDataBase(const Value: TJvCSVBase);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FCSVDataBase));
+  ReplaceComponentReference(Self, Value, TComponent(FCSVDataBase));
 end;
 
 //=== { TJvCSVComboBox } =====================================================
@@ -809,7 +809,7 @@ end;
 
 procedure TJvCSVComboBox.SetCSVDataBase(const Value: TJvCSVBase);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FCSVDataBase));
+  ReplaceComponentReference(Self, Value, TComponent(FCSVDataBase));
 end;
 
 procedure TJvCSVComboBox.SetCSVField(const Value: string);
@@ -837,7 +837,7 @@ end;
 
 procedure TJvCSVCheckBox.SetCSVDataBase(const Value: TJvCSVBase);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FCSVDataBase));
+  ReplaceComponentReference(Self, Value, TComponent(FCSVDataBase));
 end;
 
 procedure TJvCSVCheckBox.SetCSVField(const Value: string);

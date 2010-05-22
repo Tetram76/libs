@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbarForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSpeedbarForm.pas 12702 2010-03-08 14:41:42Z obones $
 
 unit JvSpeedbarForm;
 
@@ -799,7 +799,7 @@ type
   PParamData = ^TParamData;
   TParamData = record
     Flags: TParamFlags;
-    ParamNameAndType: array [0..100] of Char;
+    ParamNameAndType: array [0..100] of AnsiChar;
   end;
 var
   Btn: TJvSpeedItem;
@@ -841,11 +841,11 @@ begin
             begin
               Flags := [];
               // (rom) WARNING! Needs check against buffer overflow.
-              ParamNameAndType[0] := Char(Length(cSender));
-              Move(cSender[1], ParamNameAndType[1], Length(cSender) * SizeOf(Char));
-              ParamNameAndType[Length(cSender) + 1] := Char(Length(cObject));
+              ParamNameAndType[0] := AnsiChar(Length(cSender));
+              Move(cSender[1], ParamNameAndType[1], Length(cSender) * SizeOf(AnsiChar));
+              ParamNameAndType[Length(cSender) + 1] := AnsiChar(Length(cObject));
               Move(cObject[1], ParamNameAndType[Length(cSender) + 2],
-                Length(cObject) * SizeOf(Char));
+                Length(cObject) * SizeOf(AnsiChar));
             end;
             Method := IJvFormDesigner(Designer).CreateMethod(MethodName, TypeData);
             Method.Data := OwnerForm;

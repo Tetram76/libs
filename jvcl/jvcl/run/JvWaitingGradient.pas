@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWaitingGradient.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvWaitingGradient.pas 12708 2010-03-09 09:57:37Z obones $
 
 unit JvWaitingGradient;
 
@@ -114,8 +114,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWaitingGradient.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12708 $';
+    Date: '$Date: 2010-03-09 10:57:37 +0100 (mar. 09 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -284,7 +284,7 @@ end;
 
 function TJvWaitingGradient.GetActive: Boolean;
 begin
-  Result := not FScroll.Suspended;
+  Result := not FScroll.Paused;
 end;
 
 procedure TJvWaitingGradient.SetActive(const Value: Boolean);
@@ -300,8 +300,9 @@ begin
       Restart;
   end
   else
-  if not Value then
+  begin
     FScroll.Paused := True;
+  end;
 end;
 
 procedure TJvWaitingGradient.SetEndColor(const Value: TColor);

@@ -58,9 +58,11 @@ type
     FOnExecuteFunction: TOnExecuteFunction;
     FEnableWildcardMatching: Boolean;
     FErrorMessage: string;
+    FCaseInsensitive: Boolean;
     procedure SetExpression(const Value: string);
     function DoGetVariable(const VarName: string; var Value: Variant): Boolean;
     function DoExecuteFunction(const FuncName: string; const Args: Variant; var ResVal: Variant): Boolean;
+    procedure SetCaseInsensitive(const Value: Boolean);
   public
     constructor Create();
     destructor Destroy; override;
@@ -75,6 +77,7 @@ type
     property OnExecuteFunction: TOnExecuteFunction read FOnExecuteFunction write FOnExecuteFunction;
     property Value: Variant read FValue;
     property EnableWildcardMatching: Boolean read FEnableWildcardMatching write FEnableWildcardMatching;
+    property CaseInsensitive: Boolean read FCaseInsensitive write SetCaseInsensitive;
   end;
 
   EExprParserError = class(Exception);
@@ -107,7 +110,8 @@ const
     '>',
     '&',
     '|',
-    '!'];
+    '!',
+    '~'];
 
 type
   TToken = (tkNA, tkEOF, tkError,
@@ -413,10 +417,15 @@ begin
           if CompareText(S, 'and') = 0 then
             Add(TLex.Create(tkOperator, '&', StartIdx))
           else
-          if CompareText(S, 'or') = 0 then
-            Add(TLex.Create(tkOperator, '|', StartIdx))
-          else
-            Add(TLex.Create(CToken, S, StartIdx));
+            if CompareText(S, 'or') = 0 then
+              Add(TLex.Create(tkOperator, '|', StartIdx))
+            else
+            begin
+              if CompareText(S, 'like')=0 then
+                Add(TLex.Create(tkOperator, '~', StartIdx))
+              else
+                Add(TLex.Create(CToken, S, StartIdx));
+            end;
           S := '';
         end
       else
@@ -473,7 +482,10 @@ begin
       Result := True;
     except
       on E: Exception do
+      begin
         FErrorMessage := E.Message;
+//        raise;
+      end;
     end;
   end;
 end;
@@ -542,7 +554,7 @@ begin
 
     if Lex.Token = tkOperator then
     begin
-      if Lex.Chr in ['*', '/', '=', '&', '|', '<', '>'] then
+      if Lex.Chr in ['*', '/', '=', '&', '|', '<', '>', '~'] then
       begin
         LexAccept();
         RightNode := Expr();
@@ -670,17 +682,66 @@ begin
 end;
 
 function TNodeBin.Eval: Variant;
+var
+  LeftValue, RightValue: Variant;
 
-  function EvalEquality: Boolean;
+  function FixupBoolean(var AVal1: Variant; var AVal2: Variant): Boolean;
+  begin
+    Result := (TVarData(AVal1).VType = varBoolean) or (TVarData(AVal2).VType = varBoolean);
+    if Result then
+    begin
+      if UpperCase(AVal1) = 'TRUE' then
+        AVal1 := 1
+      else
+        AVal1 := 0;
+
+      if UpperCase(AVal2) = 'TRUE' then
+        AVal2 := 1
+      else
+        AVal1 := 0;
+    end;
+  end;
+
+  function FixupDateTime(var AVal1: Variant; var AVal2: Variant): Boolean;
+  begin
+    Result := TVarData(AVal1).VType = varDate;
+    if Result then
+    begin
+      if TVarData(AVal2).VType = varString then
+        AVal2 := StrToDateTime(AVal2); //convert;
+    end;
+  end;
+
+  function FixupString(var aVal: Variant): Boolean;
+  begin
+    Result:=((TVarData(aVal).VType = varString) {$IFDEF UNICODE}or (TVarData(aVal).VType = varUString){$ENDIF UNICODE}) and FParser.Parent.FCaseInsensitive;
+    if Result then
+      aVal := AnsiUpperCase(aVal);
+  end;
+
+  //returns 'True' if a conversion was necessary.
+  function FixupValues(var AVal1: Variant; var AVal2: Variant): Boolean;
+  var
+    bChanged: Boolean;
+  begin
+    Result := FixupDateTime(AVal1, AVal2);
+    if not Result then
+      Result := FixupDateTime(AVal2, AVal1);
+    if not Result then
+      Result := FixupBoolean(AVal1, AVal2);
+    if not Result then //ensure that the 'String' case is the last one
+    begin
+      Result := FixupString(AVal1);
+      bChanged := FixupString(AVal2);
+      Result := Result or bChanged; //ensure that both Fixups are executed regardless of optimisations
+    end;
+  end;
+
+  function EvalLike: Boolean;
   var
     Wildcard1, Wildcard2: Boolean;
-    LeftValue, RightValue: Variant;
     LeftStr, RightStr: string;
   begin
-    // Determine values to have them handy.
-    LeftValue := FLeftNode.Eval;
-    RightValue := FRightNode.Eval;
-    // Special case, at least one of both is null:
     if (LeftValue = Null) or (RightValue = Null) then
       Result := (LeftValue = Null) and (RightValue = Null)
     else
@@ -689,19 +750,31 @@ function TNodeBin.Eval: Variant;
       // Left hand contains wildcards -> Match right hand against left hand.
       // Right hand contains wildcards -> Match left hand against right hand.
       // Both hands contain wildcards -> Match for string equality as if no wildcards are supported.
-      if FParser.Parent.FEnableWildcardMatching then
+
+      LeftStr := LeftValue;
+      RightStr := RightValue;
+      Wildcard1 := (Pos('*', LeftStr) > 0) or (Pos('?', LeftStr) > 0);
+      Wildcard2 := (Pos('*', RightStr) > 0) or (Pos('?', RightStr) > 0);
+      if Wildcard1 and not Wildcard2 then
+        Result := MatchesMask(RightStr, LeftStr)
+      else
+      if Wildcard2 then
+        Result := MatchesMask(LeftStr, RightStr)
+      else
+        Result := LeftValue = RightValue;
+    end;
+  end;
+
+  function EvalEquality: Boolean;
+  begin
+    // Special case, at least one of both is null:
+    if (LeftValue = Null) or (RightValue = Null) then
+      Result := (LeftValue = Null) and (RightValue = Null)
+    else
+    begin
+      if FParser.Parent.FEnableWildcardMatching and (TVarData(LeftValue).VType<>varDate) then
       begin
-        LeftStr := LeftValue;
-        RightStr := RightValue;
-        Wildcard1 := (Pos('*', LeftStr) > 0) or (Pos('?', LeftStr) > 0);
-        Wildcard2 := (Pos('*', RightStr) > 0) or (Pos('?', RightStr) > 0);
-        if Wildcard1 and not Wildcard2 then
-          Result := MatchesMask(RightStr, LeftStr)
-        else
-        if Wildcard2 then
-          Result := MatchesMask(LeftStr, RightStr)
-        else
-          Result := LeftValue = RightValue;
+        Result := EvalLike;
       end
       else
         Result := LeftValue = RightValue;
@@ -709,13 +782,7 @@ function TNodeBin.Eval: Variant;
   end;
 
   function EvalLT: Boolean;
-  var
-    LeftValue, RightValue: Variant;
   begin
-    // Determine values to have them handy.
-    LeftValue := FLeftNode.Eval;
-    RightValue := FRightNode.Eval;
-    //RightValue := FRightNode.Eval;
     // Special case, at least one of both is Null:
     if (LeftValue = Null) or (RightValue = Null) then
       // Null is considered to be smaller than any value.
@@ -725,12 +792,7 @@ function TNodeBin.Eval: Variant;
   end;
 
   function EvalGT: Boolean;
-  var
-    LeftValue, RightValue: Variant;
   begin
-    // Determine values to have them handy.
-    LeftValue := FLeftNode.Eval;
-    RightValue := FRightNode.Eval;
     // Special case, at least one of both is Null:
     if (LeftValue = Null) or (RightValue = Null) then
       // Null is considered to be smaller than any value.
@@ -740,28 +802,29 @@ function TNodeBin.Eval: Variant;
   end;
 
 var
-  LeftValue: Variant;
   LeftStr, RightStr: string;
 begin
+  // Determine values to have them handy.
+  LeftValue := FLeftNode.Eval;
+  RightValue := FRightNode.Eval;
+  FixupValues(LeftValue, RightValue);
+
   case FOperator.Chr of
     '+':
       begin
-        LeftValue := FLeftNode.Eval;
         // force string concatenation
         if (TVarData(LeftValue).VType = varString) or
           (TVarData(LeftValue).VType = varOleStr) then
         begin
           LeftStr := LeftValue;
-          RightStr := FRightNode.Eval;
+          RightStr := RightValue;
           LeftStr := LeftStr + RightStr;
           Result := LeftStr;
         end
         else
-        begin
-          Result := LeftValue + FRightNode.Eval;
-        end;
+          Result := LeftValue + RightValue;
       end;
-    '-': Result := FLeftNode.Eval - FRightNode.Eval;
+    '-': Result := LeftValue - RightValue;
     '*': Result := FLeftNode.Eval * FRightNode.Eval;
     '/': Result := FLeftNode.Eval / FRightNode.Eval;
     '=': Result := EvalEquality();
@@ -769,6 +832,7 @@ begin
     '>': Result := EvalGT();
     '&': Result := FLeftNode.Eval and FRightNode.Eval;
     '|': Result := FLeftNode.Eval or FRightNode.Eval;
+    '~': Result := EvalLike;
   else
     Result := Null;
   end;
@@ -846,6 +910,7 @@ var
   VArgs: Variant;
   I: Integer;
 begin
+
   VArgs := VarArrayCreate([0, FArgs.Count - 1], varVariant);
   for I := 0 to FArgs.Count - 1 do
     VArgs[I] := TNode(FArgs[I]).Eval();
@@ -927,6 +992,11 @@ function TExprParser.Eval(const AExpression: string): Boolean;
 begin
   SetExpression(AExpression);
   Result := Eval();
+end;
+
+procedure TExprParser.SetCaseInsensitive(const Value: Boolean);
+begin
+  FCaseInsensitive := Value;
 end;
 
 procedure TExprParser.SetExpression(const Value: string);

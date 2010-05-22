@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditor.pas 12694 2010-02-08 23:11:12Z jfudickar $
+// $Id: JvPropertyStoreEditor.pas 12741 2010-04-02 10:43:13Z ahuser $
 unit JvPropertyStoreEditor;
 
 {$I jvcl.inc}
@@ -202,8 +202,8 @@ function EditPropertyStore(PropertyStore: TJvCustomPropertyStore): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditor.pas $';
-    Revision: '$Revision: 12694 $';
-    Date: '$Date: 2010-02-09 00:11:12 +0100 (mar. 09 févr. 2010) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1022,7 +1022,7 @@ begin
     Exit;
   if Assigned(Value) and not Supports(Value, IJvPropertyEditorHandler) then
     Raise Exception.Create ('TJvPropertyStoreEditorControl.SetPropertyStore : PropertyStore must support IJvPropertyEditorHandler');
-  ReplaceComponentReference (Self, Value, TComponent(FPropertyStore));
+  ReplaceComponentReference(Self, Value, TComponent(FPropertyStore));
   FillTreeView(Value);
 end;
 

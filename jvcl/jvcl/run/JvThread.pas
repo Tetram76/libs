@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThread.pas 12580 2009-10-26 22:37:27Z jfudickar $
+// $Id: JvThread.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvThread;
 
@@ -343,8 +343,8 @@ procedure SynchronizeParams(Method: TJvNotifyParamsEvent; P: Pointer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThread.pas $';
-    Revision: '$Revision: 12580 $';
-    Date: '$Date: 2009-10-26 23:37:27 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1186,7 +1186,7 @@ end;
 
 procedure TJvThread.SetThreadDialog(const Value: TJvCustomThreadDialog);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FThreadDialog));
+  ReplaceComponentReference(Self, Value, TComponent(FThreadDialog));
 end;
 
 procedure TJvThread.ShowThreadDialogForm;

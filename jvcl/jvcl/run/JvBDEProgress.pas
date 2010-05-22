@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEProgress.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBDEProgress.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvBDEProgress;
 
@@ -131,8 +131,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEProgress.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -518,12 +518,12 @@ end;
 
 procedure TJvDBProgress.SetMessageControl(Value: TControl);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FMessageControl));
+  ReplaceComponentReference(Self, Value, TComponent(FMessageControl));
 end;
 
 procedure TJvDBProgress.SetGauge(Value: TControl);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FGauge));
+  ReplaceComponentReference(Self, Value, TComponent(FGauge));
 end;
 
 procedure TJvDBProgress.Notification(AComponent: TComponent; AOperation: TOperation);

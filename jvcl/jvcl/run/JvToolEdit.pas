@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvToolEdit.pas 12777 2010-05-16 20:08:50Z ahuser $
 
 unit JvToolEdit;
 
@@ -1071,8 +1071,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12777 $';
+    Date: '$Date: 2010-05-16 22:08:50 +0200 (dim. 16 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2753,7 +2753,7 @@ end;
 
 procedure TJvCustomComboEdit.SetImages(const Value: TCustomImageList);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FImages));
+  ReplaceComponentReference(Self, Value, TComponent(FImages));
   if FImages = nil then
     SetImageIndex(-1);
   if ImageKind = ikCustom then
@@ -3851,7 +3851,7 @@ end;
 
 procedure TJvCustomDateEdit.ValidateEdit;
 begin
-  if TextStored then
+  if TextStored and CheckOnExit then
     CheckValidDate;
 end;
 

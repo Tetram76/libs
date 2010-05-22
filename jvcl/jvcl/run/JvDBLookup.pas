@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvDBLookup.pas 12737 2010-04-02 09:43:21Z ahuser $
 
 unit JvDBLookup;
 
@@ -64,6 +64,8 @@ type
     procedure UpdateData; override;
   end;
 
+  TJvLookupSourceLinkMethod = procedure of object;
+
   TLookupSourceLink = class(TDataLink)
   private
     FDataControl: TJvLookupControl;
@@ -71,6 +73,7 @@ type
     procedure ActiveChanged; override;
     procedure LayoutChanged; override;
     procedure DataSetChanged; override;
+    procedure DataSetScrolled(Distance: Integer); override;
   end;
 
   TJvLookupControl = class(TJvCustomControl)
@@ -153,6 +156,7 @@ type
     procedure DrawPicture(Canvas: TCanvas; Rect: TRect; Image: TGraphic);
     procedure UpdateDisplayValue;
     function EmptyRowVisible: Boolean;
+    procedure SetDisplayIndex(const Value: Integer);
   protected
     procedure FocusKilled(NextWnd: THandle); override;
     procedure FocusSet(PrevWnd: THandle); override;
@@ -167,8 +171,8 @@ type
     procedure DataLinkUpdateData; virtual;
     procedure ListLinkActiveChanged; virtual;
     procedure ListLinkDataChanged; virtual;
-    procedure Notification(AComponent: TComponent;
-      Operation: TOperation); override;
+    procedure ListLinkDataSetChanged; virtual;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     function GetPicture(Current, Empty: Boolean; var TextMargin: Integer): TGraphic; virtual;
     procedure UpdateDisplayEmpty(const Value: string); virtual;
     function SearchText(var AValue: string): Boolean;
@@ -181,12 +185,11 @@ type
     property EmptyItemColor: TColor read FEmptyItemColor write SetEmptyItemColor default clWindow;
     property IgnoreCase: Boolean read FIgnoreCase write FIgnoreCase default True;
     property IndexSwitch: Boolean read FIndexSwitch write FIndexSwitch default True;
-    property ItemHeight: Integer read GetItemHeight write SetItemHeight
-      stored ItemHeightStored;
+    property ItemHeight: Integer read GetItemHeight write SetItemHeight stored ItemHeightStored;
     property ListStyle: TLookupListStyle read FListStyle write SetListStyle default lsFixed;
     property FieldsDelimiter: Char read FFieldsDelimiter write SetFieldsDelimiter default DefFieldsDelimiter;
     property LookupDisplay: string read FLookupDisplay write SetLookupDisplay;
-    property LookupDisplayIndex: Integer read FDisplayIndex write FDisplayIndex default 0;
+    property LookupDisplayIndex: Integer read FDisplayIndex write SetDisplayIndex default 0;
     property LookupField: string read GetLookupField write SetLookupField;
     property LookupFormat: string read FLookupFormat write SetLookupFormat;
     property LookupSource: TDataSource read GetLookupSource write SetLookupSource;
@@ -205,8 +208,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure ClearValue;
-    function Locate(const SearchField: TField; const AValue: string;
-      Exact: Boolean): Boolean;
+    function Locate(const SearchField: TField; const AValue: string; Exact: Boolean): Boolean;
     procedure ResetField; virtual;
     function ExecuteAction(Action: TBasicAction): Boolean; override;
     function UpdateAction(Action: TBasicAction): Boolean; override;
@@ -373,8 +375,8 @@ type
     FOnDropDown: TNotifyEvent;
     FOnCloseUp: TNotifyEvent;
     FLastValue: Variant;
-    procedure ListMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    FInListDataSetChanged: Boolean;
+    procedure ListMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure StopTracking;
     procedure TrackButton(X, Y: Integer);
     function GetMinHeight: Integer;
@@ -419,16 +421,15 @@ type
     procedure DisplayValueChanged; override;
     procedure ListLinkActiveChanged; override;
     procedure ListLinkDataChanged; override;
+    procedure ListLinkDataSetChanged; override;
     procedure DataLinkRecordChanged(AField: TField); override;
     procedure DataLinkUpdateData; override;
     procedure Paint; override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
-    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer); override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-    procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure UpdateDisplayEmpty(const Value: string); override;
     procedure DefineProperties(Filer: TFiler); override;
   public
@@ -661,8 +662,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12737 $';
+    Date: '$Date: 2010-04-02 11:43:21 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -760,6 +761,12 @@ begin
 end;
 
 procedure TLookupSourceLink.DataSetChanged;
+begin
+  if FDataControl <> nil then
+    FDataControl.ListLinkDataSetChanged;
+end;
+
+procedure TLookupSourceLink.DataSetScrolled(Distance: Integer);
 begin
   if FDataControl <> nil then
     FDataControl.ListLinkDataChanged;
@@ -863,6 +870,17 @@ begin
       FLookupSource.DataSet := nil;
       FMasterField := FDataField;
     end;
+end;
+
+procedure TJvLookupControl.SetUseRecordCount(const Value: Boolean);
+begin
+  if Value <> FUseRecordCount then
+  begin
+    FUseRecordCount := Value;
+    ListLinkActiveChanged;
+    if FListActive then
+      DataLinkRecordChanged(nil);
+  end;
 end;
 
 function TJvLookupControl.GetKeyValue: Variant;
@@ -1081,6 +1099,11 @@ procedure TJvLookupControl.ListLinkDataChanged;
 begin
 end;
 
+procedure TJvLookupControl.ListLinkDataSetChanged;
+begin
+  ListLinkDataChanged;
+end;
+
 function TJvLookupControl.LocateDisplay: Boolean;
 begin
   Result := False;
@@ -1166,21 +1189,9 @@ end;
 
 procedure TJvLookupControl.ResetField;
 begin
-  { if (FDataLink.DataSource = nil) or
-    ((FDataLink.DataSource <> nil) and CanModify) then
+  if (FDataLink.DataSource = nil) or (FMasterField = nil) or FDataLink.Edit then
   begin
-    if (FDataLink.DataSource <> nil) and (FMasterField <> nil) and
-      FDataLink.Edit then
-    begin
-      if FEmptyValue = '' then
-        FMasterField.Clear
-      else
-        FMasterField.AsString := FEmptyValue;
-                  end; }// Polaris
-  if (FDataLink.DataSource = nil) or
-    (FMasterField = nil) or FDataLink.Edit then
-  begin
-    if FDataLink.Edit then
+    if FDataLink.Edit and (FMasterField <> nil) then
       SetFieldValue(FMasterField, FEmptyValue);
     FValue := FEmptyValue;
     FDisplayValue := '';
@@ -1271,6 +1282,15 @@ begin
     FDisplayEmpty := Value;
     if not (csReading in ComponentState) then
       Invalidate;
+  end;
+end;
+
+procedure TJvLookupControl.SetDisplayIndex(const Value: Integer);
+begin
+  if Value <> FDisplayIndex then
+  begin
+    FDisplayIndex := Value;
+    ListLinkActiveChanged;
   end;
 end;
 
@@ -2666,7 +2686,7 @@ begin
     if Assigned(AnimateWindowProc) and Animate then
     begin
       { Can't use SWP_SHOWWINDOW here, because the window is then immediately shown }
-      SetWindowPos(FDataList.Handle, HWND_TOP, Max(P.X, 0), Y, 0, 0,
+      SetWindowPos(FDataList.Handle, HWND_TOP, Max(P.X, Rect.Left), Y, 0, 0,
         SWP_NOSIZE or SWP_NOACTIVATE {or SWP_SHOWWINDOW});
       if Y < P.Y then
         SlideStyle := AW_VER_NEGATIVE
@@ -2679,7 +2699,7 @@ begin
       FDataList.Invalidate;
     end
     else
-    SetWindowPos(FDataList.Handle, HWND_TOP, Max(P.X, 0), Y, 0, 0,
+    SetWindowPos(FDataList.Handle, HWND_TOP, Max(P.X, Rect.Left), Y, 0, 0,
       SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
 
     FListVisible := True;
@@ -2952,6 +2972,23 @@ begin
   if FDataLink.Active and FDataLink.DataSet.IsLinkedTo(LookupSource) then
     if FListActive then
       DataLinkRecordChanged(nil);
+end;
+
+procedure TJvDBLookupCombo.ListLinkDataSetChanged;
+begin
+  inherited ListLinkDataSetChanged;
+  if not FInListDataSetChanged and not FListVisible then
+  begin
+    FInListDataSetChanged := True;
+    try
+      if FListActive and Assigned(FMasterField) then
+        UpdateKeyValue
+      else
+        KeyValueChanged;
+    finally
+      FInListDataSetChanged := False;
+    end;
+  end;
 end;
 
 procedure TJvDBLookupCombo.ListLinkActiveChanged;
@@ -3839,17 +3876,6 @@ end;
 procedure TJvDBLookupEdit.SetUseRecordCount(const Value: Boolean);
 begin
   TJvPopupDataWindow(FPopup).UseRecordCount := Value;
-end;
-
-procedure TJvLookupControl.SetUseRecordCount(const Value: Boolean);
-begin
-  if Value <> FUseRecordCount then
-  begin
-    FUseRecordCount := Value;
-    ListLinkActiveChanged;
-    if FListActive then
-      DataLinkRecordChanged(nil);
-  end;
 end;
 
 {$IFDEF UNITVERSIONING}

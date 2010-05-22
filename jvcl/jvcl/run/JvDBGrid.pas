@@ -52,7 +52,7 @@ KNOWN ISSUES:
 -----------------------------------------------------------------------------
 2004/07/08 - WPostma merged changes by Frédéric Leneuf-Magaud and ahuser.}
 
-// $Id: JvDBGrid.pas 12613 2009-12-04 15:03:35Z obones $
+// $Id: JvDBGrid.pas 12729 2010-03-17 17:48:26Z ahuser $
 
 unit JvDBGrid;
 
@@ -453,6 +453,10 @@ type
     function GetDataLink: TDataLink; virtual;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
+    {$IFDEF SUPPORTS_CLASS_CTORDTORS}
+    class destructor Destroy;
+    {$ENDIF SUPPORTS_CLASS_CTORDTORS}
+
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure DefaultDataCellDraw(const Rect: TRect; Field: TField; State: TGridDrawState);
@@ -595,8 +599,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGrid.pas $';
-    Revision: '$Revision: 12613 $';
-    Date: '$Date: 2009-12-04 16:03:35 +0100 (ven. 04 dÃ©c. 2009) $';
+    Revision: '$Revision: 12729 $';
+    Date: '$Date: 2010-03-17 18:48:26 +0100 (mer. 17 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1001,6 +1005,13 @@ begin
 end;
 
 //=== { TJvDBGrid } ==========================================================
+
+{$IFDEF SUPPORTS_CLASS_CTORDTORS}
+class destructor TJvDBGrid.Destroy;
+begin
+  FinalizeGridBitmaps;
+end;
+{$ENDIF SUPPORTS_CLASS_CTORDTORS}
 
 constructor TJvDBGrid.Create(AOwner: TComponent);
 var
@@ -4736,7 +4747,10 @@ initialization
   {$ENDIF UNITVERSIONING}
 
 finalization
+  {$IFNDEF SUPPORTS_CLASS_CTORDTORS}
   FinalizeGridBitmaps;
+  {$ENDIF ~SUPPORTS_CLASS_CTORDTORS}
+
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActions.pas 12497 2009-09-13 07:55:16Z outchy $
+// $Id: JvVersionControlActions.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvVersionControlActions;
 
@@ -356,8 +356,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActions.pas $';
-    Revision: '$Revision: 12497 $';
-    Date: '$Date: 2009-09-13 09:55:16 +0200 (dim. 13 sept. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -420,7 +420,7 @@ procedure TJvVersionControlActionList.SetVersionControlComponent(Value: TCompone
 var
   I: Integer;
 begin
-  if ReplaceComponentReference (Self, Value, TComponent(FVersionControlComponent)) then
+  if ReplaceComponentReference(Self, Value, TComponent(FVersionControlComponent)) then
   begin
     for I := 0 to ActionCount - 1 do
       if Actions[I] is TJvVersionControlBaseAction then

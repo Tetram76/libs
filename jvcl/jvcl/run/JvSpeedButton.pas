@@ -34,7 +34,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 12470 2009-08-23 19:37:27Z ahuser $
+// $Id: JvSpeedButton.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvSpeedButton;
 
@@ -491,8 +491,8 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 12470 $';
-    Date: '$Date: 2009-08-23 21:37:27 +0200 (dim. 23 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1445,7 +1445,7 @@ end;
 
 procedure TJvCustomSpeedButton.SetDropdownMenu(Value: TPopupMenu);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FDropDownMenu));
+  ReplaceComponentReference(Self, Value, TComponent(FDropDownMenu));
   if FMarkDropDown then
     Invalidate;
 end;

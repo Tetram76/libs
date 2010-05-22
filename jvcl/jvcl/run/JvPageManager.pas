@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageManager.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPageManager.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvPageManager;
 
@@ -189,8 +189,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageManager.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -367,7 +367,7 @@ begin
   begin
     if not (csLoading in ComponentState) then
       SyncBtnClick(Index, False);
-    ReplaceComponentReference (Self, Value, tComponent(FButtons[Boolean(Index)]));
+    ReplaceComponentReference(Self, Value, tComponent(FButtons[Boolean(Index)]));
     if not (csLoading in ComponentState) then
       SyncBtnClick(Index, True);
   end;
@@ -445,7 +445,7 @@ end;
 
 procedure TJvPageManager.SetPageOwner(Value: TPageOwner);
 begin
-  if ReplaceComponentReference (Self, Value, tComponent(FPageOwner)) then
+  if ReplaceComponentReference(Self, Value, tComponent(FPageOwner)) then
   begin
     if not (csLoading in ComponentState) then
     begin

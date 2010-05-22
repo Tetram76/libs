@@ -32,7 +32,7 @@ Description:
   To set the error, use the Error property: an empty error string, removes the error image
 
 -----------------------------------------------------------------------------}
-// $Id: JvErrorIndicator.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvErrorIndicator.pas 12769 2010-05-15 15:18:30Z ahuser $
 
 unit JvErrorIndicator;
 
@@ -207,8 +207,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvErrorIndicator.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer. 26 août 2009) $';
+    Revision: '$Revision: 12769 $';
+    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -237,8 +237,7 @@ type
   protected
     procedure Execute; override;
   public
-    constructor Create(BlinkRate: Integer);
-    property OnBlink: TJvBlinkThreadEvent read FOnBlink write FOnBlink;
+    constructor Create(BlinkRate: Integer; AOnBlink: TJvBlinkThreadEvent);
   end;
 
 //=== { TJvErrorIndicator } ==================================================
@@ -549,11 +548,7 @@ end;
 procedure TJvErrorIndicator.StartThread;
 begin
   if BlinkStyle <> ebsNeverBlink then
-  begin
-    FBlinkThread := TJvBlinkThread.Create(BlinkRate);
-    TJvBlinkThread(FBlinkThread).OnBlink := DoBlink;
-    FBlinkThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
-  end;
+    FBlinkThread := TJvBlinkThread.Create(BlinkRate, DoBlink);
 end;
 
 procedure TJvErrorIndicator.StopThread;
@@ -715,7 +710,7 @@ end;
 
 procedure TJvErrorControl.SetImageList(const Value: TCustomImageList);
 begin
-  if ReplaceComponentReference (Self, Value, TComponent(FImageList)) then
+  if ReplaceComponentReference(Self, Value, TComponent(FImageList)) then
   begin
     if FImageList <> nil then
       BoundsRect := CalcBoundsRect
@@ -729,7 +724,7 @@ procedure TJvErrorControl.SetControl(const Value: TControl);
 begin
   if FControl <> Value then
   begin
-    ReplaceComponentReference (Self, Value, TComponent(FControl));
+    ReplaceComponentReference(Self, Value, TComponent(FControl));
     if FControl <> nil then
       Parent := FControl.Parent
     else
@@ -750,11 +745,12 @@ end;
 
 //=== { TJvBlinkThread } =====================================================
 
-constructor TJvBlinkThread.Create(BlinkRate: Integer);
+constructor TJvBlinkThread.Create(BlinkRate: Integer; AOnBlink: TJvBlinkThreadEvent);
 begin
-  inherited Create(True);
+  inherited Create(False);
   FBlinkRate := BlinkRate;
   FErase := False;
+  FOnBlink := AOnBlink;
 end;
 
 procedure TJvBlinkThread.Blink;

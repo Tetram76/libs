@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineVCL.pas 12694 2010-02-08 23:11:12Z jfudickar $
+// $Id: JvDynControlEngineVCL.pas 12696 2010-02-15 21:14:37Z jfudickar $
 
 unit JvDynControlEngineVCL;
 
@@ -834,8 +834,8 @@ procedure SetDynControlEngineVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineVCL.pas $';
-    Revision: '$Revision: 12694 $';
-    Date: '$Date: 2010-02-09 00:11:12 +0100 (mar. 09 févr. 2010) $';
+    Revision: '$Revision: 12696 $';
+    Date: '$Date: 2010-02-15 22:14:37 +0100 (lun. 15 févr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -2310,7 +2310,7 @@ end;
 
 procedure TJvDynControlVCLComboBox.ControlSetValue(Value: Variant);
 begin
-  if Style = csDropDownList then
+  if (Style = csDropDownList) and VarIsInt(Value) then
     ItemIndex := Items.IndexOf(VarToStr(Value))
   else
     Text := Value;

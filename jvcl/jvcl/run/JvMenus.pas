@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMenus.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvMenus.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvMenus;
 
@@ -744,8 +744,8 @@ function StripHotkeyPrefix(const Text: string): string; // MBCS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMenus.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1957,7 +1957,7 @@ begin
     if FItemPainter <> nil then
       FItemPainter.Menu := nil;
 
-    ReplaceComponentReference (Self, Value, TComponent(FItemPainter));
+    ReplaceComponentReference(Self, Value, TComponent(FItemPainter));
     // set value and if not nil, setup the painter correctly
     if FItemPainter <> nil then
     begin

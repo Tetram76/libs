@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDSADialogs.pas 12490 2009-09-04 19:39:35Z jfudickar $
+// $Id: JvDSADialogs.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvDSADialogs;
 
@@ -467,8 +467,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDSADialogs.pas $';
-    Revision: '$Revision: 12490 $';
-    Date: '$Date: 2009-09-04 21:39:35 +0200 (ven. 04 sept. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2449,7 +2449,7 @@ end;
 
 procedure TJvDSADialog.SetCheckControl(Value: TWinControl);
 begin
-  if ReplaceComponentReference (Self, Value, TComponent(FCheckControl)) then
+  if ReplaceComponentReference(Self, Value, TComponent(FCheckControl)) then
     if Value <> nil then
     begin
       if GetPropInfo(Value, 'Checked') = nil then

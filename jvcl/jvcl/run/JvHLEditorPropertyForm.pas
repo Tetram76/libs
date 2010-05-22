@@ -24,7 +24,7 @@ description : Properties dialog for TJvHLEditor component
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHLEditorPropertyForm.pas 12594 2009-11-03 12:38:16Z ahuser $
+// $Id: JvHLEditorPropertyForm.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvHLEditorPropertyForm;
 
@@ -195,8 +195,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHLEditorPropertyForm.pas $';
-    Revision: '$Revision: 12594 $';
-    Date: '$Date: 2009-11-03 13:38:16 +0100 (mar. 03 nov. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -591,7 +591,7 @@ procedure TJvHLEdPropDlg.SetJvHLEditor(const Value: TJvCustomEditorBase);
 var
   HLed: IJvHLEditor;
 begin
-  if ReplaceComponentReference (Self, Value, TComponent(FJvHLEditor)) then
+  if ReplaceComponentReference(Self, Value, TComponent(FJvHLEditor)) then
     if Value <> nil then
     begin
       if Value.GetInterface(IJvHLEditor, HLed) then
@@ -601,7 +601,7 @@ end;
 
 procedure TJvHLEdPropDlg.SetStorage(const Value: TJvFormStorage);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FStorage));
+  ReplaceComponentReference(Self, Value, TComponent(FStorage));
 end;
 
 //=== { TJvHLEditorParamsForm } ==============================================

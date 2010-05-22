@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Compile.pas 12668 2010-01-07 21:53:17Z ahuser $
+// $Id: Compile.pas 12751 2010-04-05 09:40:25Z ahuser $
 
 unit Compile;
 

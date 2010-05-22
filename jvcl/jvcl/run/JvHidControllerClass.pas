@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHidControllerClass.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvHidControllerClass.pas 12769 2010-05-15 15:18:30Z ahuser $
 
 unit JvHidControllerClass;
 
@@ -438,8 +438,8 @@ function HidErrorString(const RetVal: NTSTATUS): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHidControllerClass.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer. 26 août 2009) $';
+    Revision: '$Revision: 12769 $';
+    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -467,7 +467,7 @@ function WriteFileEx(hFile: THandle; var Buffer; nNumberOfBytesToWrite: DWORD;
 
 constructor TJvHidDeviceReadThread.CtlCreate(const Dev: TJvHidDevice);
 begin
-  inherited Create(True);
+  inherited Create(False);
   Device := Dev;
   NumBytesRead := 0;
   SetLength(Report, Dev.Caps.InputReportByteLength);
@@ -784,7 +784,7 @@ begin
         end;
     end;
 
-  PnPInfo.Free;
+  FPnPInfo.Free;
   inherited Destroy;
 end;
 
@@ -1145,8 +1145,6 @@ begin
     HasReadWriteAccess and not Assigned(FDataThread) then
   begin
     FDataThread := TJvHidDeviceReadThread.CtlCreate(Self);
-    FDataThread.FreeOnTerminate := False;
-    FDataThread.{$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
   end;
 end;
 
@@ -1699,7 +1697,8 @@ var
               HidDev := TJvHidDevice.CtlCreate(PnPInfo, Self);
               NewList.Add(HidDev);
             except
-              // ignore device if unreadable
+              // ignore device if unreadable but still free used memory
+              PnPInfo.Free;
             end;
             Inc(Devn);
           end;

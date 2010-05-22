@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFullColorCtrls.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvFullColorCtrls.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvFullColorCtrls;
 
@@ -710,8 +710,8 @@ function AxisConfigToString(AxisConfig: TJvFullColorAxisConfig;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFullColorCtrls.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1294,7 +1294,7 @@ begin
     FColorTrackBar.FreeLink;
   end;
 
-  ReplaceComponentReference (Self, Value, TComponent(FColorTrackBar));
+  ReplaceComponentReference(Self, Value, TComponent(FColorTrackBar));
 
   if Assigned(FColorTrackBar) then
   begin
@@ -2073,7 +2073,7 @@ begin
     FBlueColorTrackBar.FreeLink;
   end;
 
-  ReplaceComponentReference (Self, Value, TComponent(FBlueColorTrackBar));
+  ReplaceComponentReference(Self, Value, TComponent(FBlueColorTrackBar));
 
   if Assigned(FBlueColorTrackBar) then
   begin
@@ -2097,7 +2097,7 @@ begin
     FGreenColorTrackBar.FreeLink;
   end;
 
-  ReplaceComponentReference (Self, Value, TComponent(FGreenColorTrackBar));
+  ReplaceComponentReference(Self, Value, TComponent(FGreenColorTrackBar));
 
   if Assigned(FGreenColorTrackBar) then
   begin
@@ -2121,7 +2121,7 @@ begin
     FRedColorTrackBar.FreeLink;
   end;
 
-  ReplaceComponentReference (Self, Value, TComponent(FRedColorTrackBar));
+  ReplaceComponentReference(Self, Value, TComponent(FRedColorTrackBar));
 
   if Assigned(FRedColorTrackBar) then
   begin
@@ -2145,7 +2145,7 @@ begin
     FCommonColorTrackBar.FreeLink;
   end;
 
-  ReplaceComponentReference (Self, Value, TComponent(FCommonColorTrackBar));
+  ReplaceComponentReference(Self, Value, TComponent(FCommonColorTrackBar));
 
   if Assigned(FCommonColorTrackBar) then
   begin

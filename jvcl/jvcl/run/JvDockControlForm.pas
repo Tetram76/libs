@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockControlForm.pas 12692 2010-02-07 16:05:31Z obones $
+// $Id: JvDockControlForm.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 { Changes:
 
@@ -855,8 +855,8 @@ procedure InvalidateDockHostSiteOfControl(Control: TControl; FocusLost: Boolean)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockControlForm.pas $';
-    Revision: '$Revision: 12692 $';
-    Date: '$Date: 2010-02-07 17:05:31 +0100 (dim. 07 févr. 2010) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -2322,7 +2322,7 @@ begin
         RemoveDockStyle(FDockStyle);
       end;
 
-      ReplaceComponentReference (Self, ADockStyle, TComponent(FDockStyle));
+      ReplaceComponentReference(Self, ADockStyle, TComponent(FDockStyle));
 
       if FDockStyle <> nil then
       begin
@@ -3353,7 +3353,7 @@ begin
         Supports(TWinControlAccessProtected(FLastDockSite).DockManager, IJvDockManager, JvDockManager) then
         JvDockManager.RemoveControl(Self.ParentForm);
     end;
-    ReplaceComponentReference (Self, ALastDockSite, TComponent(FLastDockSite));
+    ReplaceComponentReference(Self, ALastDockSite, TComponent(FLastDockSite));
   end;
 end;
 
@@ -3372,7 +3372,7 @@ end;
 
 procedure TJvDockClient.SetNCPopupMenu(Value: TPopupMenu);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FNCPopupMenu));
+  ReplaceComponentReference(Self, Value, TComponent(FNCPopupMenu));
 end;
 
 procedure TJvDockClient.SetParentVisible(const Value: Boolean);

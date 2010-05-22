@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNavigationPane.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvNavigationPane.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvNavigationPane;
 
@@ -1135,8 +1135,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvNavigationPane.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1258,7 +1258,7 @@ begin
 
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
-    ReplaceComponentReference (Self, Value, TComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, TComponent(FStyleManager));
     if FStyleManager <> nil then
     begin
       FStyleManager.RegisterChanges(FStyleLink);
@@ -1696,7 +1696,7 @@ begin
     ParentStyleManager := False;
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
-    ReplaceComponentReference (Self, Value, TComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, TComponent(FStyleManager));
     if FStyleManager <> nil then
     begin
       FStyleManager.RegisterChanges(FStyleLink);
@@ -2181,7 +2181,7 @@ begin
     ParentStyleManager := False;
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
-    ReplaceComponentReference (Self, Value, TComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, TComponent(FStyleManager));
     if FStyleManager <> nil then
     begin
       FStyleManager.RegisterChanges(FStyleLink);
@@ -2382,7 +2382,7 @@ begin
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
     FStyleManager := Value;
-    ReplaceComponentReference (Self, Value, TComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, TComponent(FStyleManager));
     if FStyleManager <> nil then
     begin
       FStyleManager.RegisterChanges(FStyleLink);
@@ -2930,7 +2930,7 @@ begin
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
     FStyleManager := Value;
-    ReplaceComponentReference (Self, Value, TComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, TComponent(FStyleManager));
     if FStyleManager <> nil then
     begin
       FStyleManager.RegisterChanges(FStyleLink);
@@ -2962,7 +2962,7 @@ procedure TJvNavPanelPage.SetIconPanel(const Value: TJvIconPanel);
 begin
   if (FIconPanel <> Value) and not (csDestroying in ComponentState) then
   begin
-    ReplaceComponentReference (Self, Value, TComponent(FIconPanel));
+    ReplaceComponentReference(Self, Value, TComponent(FIconPanel));
     if IconButton <> nil then
       if FIconPanel <> nil then
         IconButton.Parent := FIconPanel
@@ -3276,7 +3276,7 @@ begin
     ParentStyleManager := False;
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
-    ReplaceComponentReference (Self, Value, tComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, tComponent(FStyleManager));
     FStyleManager := Value;
     if FStyleManager <> nil then
     begin
@@ -3514,7 +3514,7 @@ begin
     ParentStyleManager := False;
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
-    ReplaceComponentReference (Self, Value, tComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, tComponent(FStyleManager));
     if FStyleManager <> nil then
     begin
       FStyleManager.RegisterChanges(FStyleLink);
@@ -3712,7 +3712,7 @@ begin
     ParentStyleManager := False;
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
-    ReplaceComponentReference (Self, Value, tComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, tComponent(FStyleManager));
     if FStyleManager <> nil then
     begin
       FStyleManager.RegisterChanges(FStyleLink);
@@ -4515,7 +4515,7 @@ begin
     ParentStyleManager := False;
     if FStyleManager <> nil then
       FStyleManager.UnregisterChanges(FStyleLink);
-    ReplaceComponentReference (Self, Value, tComponent(FStyleManager));
+    ReplaceComponentReference(Self, Value, tComponent(FStyleManager));
     if FStyleManager <> nil then
     begin
       FStyleManager.RegisterChanges(FStyleLink);

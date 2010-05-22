@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterList.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvParameterList.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvParameterList;
 
@@ -495,8 +495,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterList.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -968,7 +968,7 @@ procedure TJvBaseParameter.SetWinControl(const Value: TWinControl);
 begin
   FJvDynControl := nil;
   FJvDynControlCaption := nil;
-  ReplaceComponentReference (Self, Value, TComponent(FWinControl));
+  ReplaceComponentReference(Self, Value, TComponent(FWinControl));
   if not Assigned(Value) then
     Exit;
   Supports(FWinControl, IJvDynControl, FJvDynControl);
@@ -1151,7 +1151,7 @@ end;
 
 procedure TJvBaseParameter.SetParameterList(const Value: TJvParameterList);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FParameterList));
+  ReplaceComponentReference(Self, Value, TComponent(FParameterList));
 end;
 
 //=== { TJvParameterList } ===================================================
@@ -2163,7 +2163,7 @@ end;
 
 procedure TJvParameterListPropertyStore.SetParameterList(const Value: TJvParameterList);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FParameterList));
+  ReplaceComponentReference(Self, Value, TComponent(FParameterList));
 end;
 
 procedure TJvParameterListPropertyStore.StoreData;
@@ -2198,7 +2198,7 @@ end;
 
 procedure TJvParameterListSelectList.SetParameterList(Value: TJvParameterList);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FParameterList));
+  ReplaceComponentReference(Self, Value, TComponent(FParameterList));
 end;
 
 function TJvParameterListSelectList.GetAppStorage: TJvCustomAppStorage;

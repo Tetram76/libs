@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThumbViews.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvThumbViews.pas 12775 2010-05-16 13:59:21Z ahuser $
 
 unit JvThumbViews;
 
@@ -146,7 +146,7 @@ type
     procedure AddThumb(ATitle: string; Redraw: Boolean);
     function AddFromFile(AFile: string) : Integer;
     procedure AddFromStream(AStream: TStream; AType: TGRFKind); overload;
-    function AddFromStream(AStream: TStream; AType: TGRFKind; aTitle : String): Integer; overload;
+    function AddFromStream(AStream: TStream; AType: TGRFKind; const aTitle: string): Integer; overload;
 
     procedure Delete(No: Longint);
     procedure EmptyList;
@@ -201,8 +201,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThumbViews.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12775 $';
+    Date: '$Date: 2010-05-16 15:59:21 +0200 (dim. 16 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -366,8 +366,8 @@ procedure TJvThumbView.ScrollTo(const Number: Longint);
 var
   TN: TJvThumbnail;
 begin
-// if AutoScrolling then if (Number>-1) then
-  if (Number < 0) or (Number > FThumbList.Count - 1) then
+// if AutoScrolling then
+  if (Number < 0) or (Number >= FThumbList.Count) then
     Exit;
   TN := TJvThumbnail(FThumbList.Objects[Number]);
   case ScrollMode of
@@ -458,6 +458,9 @@ procedure TJvThumbView.SetSelected(Number: Longint);
 var
   TN: TJvThumbnail;
 begin
+  if (Number < 0) or (Number >= FThumbList.Count) then
+    Number := -1;
+
   if FThumbList.Count > 0 then
   begin
     if FSelected <> -1 then
@@ -489,7 +492,9 @@ begin
       if Assigned(FOnChange) then
         FOnChange(Self);
     end;
-  end;
+  end
+  else
+    FSelected := -1;
 end;
 
 function TJvThumbView.GetSelectedFile;
@@ -583,7 +588,7 @@ begin
   Invalidate;
 end;
 
-procedure TJvThumbView.Reposition;
+procedure TJvThumbView.Reposition(Start: Integer);
 var
   I: Integer;
   Tmp1: Longint;
@@ -781,10 +786,10 @@ end;
 
 procedure TJvThumbView.AddFromStream(AStream: TStream; AType: TGRFKind);
 begin
-   Self.AddFromStream(AStream, AType, '');
+  AddFromStream(AStream, AType, '');
 end;
 
-function TJvThumbView.AddFromStream(AStream: TStream; AType: TGRFKind; aTitle : String): Integer;
+function TJvThumbView.AddFromStream(AStream: TStream; AType: TGRFKind; const aTitle: string): Integer;
 var
   Thb: TJvThumbnail;
 begin
@@ -804,6 +809,7 @@ begin
   Result := FThumbList.AddObject(Thb.Title, Thb);
   InsertControl(Thb);
   CalculateSize;
+  Reposition(Result);
 end;
 
 function  TJvThumbView.AddFromFile(AFile: string) : Integer;
@@ -908,15 +914,14 @@ procedure TJvThumbView.EmptyList;
 var
   Metr: Integer;
 begin
-  // (rom) Metr was of type Word which caused a crash here
-  // (rom) Count = 0 resulted in Count-1 = 65535
-  for Metr := 0 to Count - 1 do
-    if Assigned(FThumbList.Objects[0]) then
+  for Metr := Count - 1 downto 0 do
+    if FThumbList.Objects[Metr] <> nil then
     begin
-      TJvThumbnail(FThumbList.Objects[0]).Parent := nil;
-      TJvThumbnail(FThumbList.Objects[0]).Free;
-      FThumbList.Delete(0);
+      TJvThumbnail(FThumbList.Objects[Metr]).Parent := nil;
+      TJvThumbnail(FThumbList.Objects[Metr]).Free;
+      FThumbList.Delete(Metr);
     end;
+  FSelected := -1; // Mantis #5140
 end;
 
 procedure TJvThumbView.SetMaxWidth(W: Longint);

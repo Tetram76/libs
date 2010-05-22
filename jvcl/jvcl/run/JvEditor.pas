@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvEditor.pas 12594 2009-11-03 12:38:16Z ahuser $
+// $Id: JvEditor.pas 12762 2010-05-11 21:58:42Z ahuser $
 
 unit JvEditor;
 
@@ -90,7 +90,6 @@ type
     FOnGetLineAttr: TJvGetLineAttrEvent;
     FOnCompletionApply: TOnCompletionApply;
 
-    procedure WMGetText(var Msg: TWMGetText); message WM_GETTEXT;
     { get/set for properties }
     function GetLines: TStrings;
     procedure SetLines(ALines: TStrings);
@@ -142,6 +141,7 @@ type
     procedure SetSelText(const AValue: string);
     function GetWordOnCaret: string;
     procedure SelectWordOnCaret; override;
+    function GetText: string; override;
 
     procedure InsertText(const Text: string);
     procedure InsertColumnText(X, Y: Integer; const Text: string);
@@ -387,8 +387,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditor.pas $';
-    Revision: '$Revision: 12594 $';
-    Date: '$Date: 2009-11-03 13:38:16 +0100 (mar. 03 nov. 2009) $';
+    Revision: '$Revision: 12762 $';
+    Date: '$Date: 2010-05-11 23:58:42 +0200 (mar. 11 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1621,6 +1621,11 @@ begin
   end;
 end;
 
+function TJvCustomEditor.GetText: string;
+begin
+  Result := FLines.Text;
+end;
+
 procedure TJvCustomEditor.ClipboardCopy;
 var
   S: string;
@@ -2229,21 +2234,6 @@ begin
   end;
 end;
 
-procedure TJvCustomEditor.WMGetText(var Msg: TWMGetText);
-var
-  S: AnsiString;
-begin
-  if Msg.Text = nil then
-    Msg.Result := 0
-  else
-  begin
-    S := AnsiString(FLines.Text);   // losing data here, but with an ansi editor, what can we do?
-    Msg.Result := Min(Length(S) + 1, Msg.TextMax);
-    if Msg.Result > 0 then
-      Move(S[1], Msg.Text^, Msg.Result);
-  end;
-end;
-
 //=== { TJvInsertUndo } ======================================================
 
 constructor TJvInsertUndo.Create(AJvEditor: TJvCustomEditor;
@@ -2636,7 +2626,7 @@ begin
       try
         BeginCompound;
         try
-          ClearSelection;
+          Deselect;
           ReLine;
 
           if Length(W) = 0 then

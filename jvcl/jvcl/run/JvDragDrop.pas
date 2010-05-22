@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDragDrop.pas 12554 2009-10-05 19:37:25Z jfudickar $
+// $Id: JvDragDrop.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvDragDrop;
 
@@ -145,8 +145,8 @@ function Malloc: IMalloc;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDragDrop.pas $';
-    Revision: '$Revision: 12554 $';
-    Date: '$Date: 2009-10-05 21:37:25 +0200 (lun. 05 oct. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -333,7 +333,7 @@ begin
     { This will implicitly unhook the current DropTarget }
     AcceptDrag := False;
 
-    ReplaceComponentReference (Self, Value, TComponent(FDropTarget));
+    ReplaceComponentReference(Self, Value, TComponent(FDropTarget));
 
     if WasActive then
       { And hook again.. }
@@ -560,7 +560,7 @@ begin
   if Value <> FControl then
   begin
     UnregisterControl;
-    ReplaceComponentReference (Self, Value, TComponent(FControl));
+    ReplaceComponentReference(Self, Value, TComponent(FControl));
     RegisterControl;
   end;
 end;
