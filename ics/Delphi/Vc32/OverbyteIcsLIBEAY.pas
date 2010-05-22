@@ -4,7 +4,7 @@ Author:       François PIETTE
 Description:  Delphi encapsulation for LIBEAY32.DLL (OpenSSL)
               This is only the subset needed by ICS.
 Creation:     Jan 12, 2003
-Version:      1.07
+Version:      1.10
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list ics-ssl@elists.org
               Follow "SSL" link at http://www.overbyte.be for subscription.
@@ -70,6 +70,15 @@ Dec 20, 2009 A.Garrels added plenty of stuff. Some is not yet used some is, like
              Server Name Indication (SNI) and an option to let OpenSSL use the
              default Delphi memory manager (both needs to be turned on in
              OverbyteIcsSslDefs.inc).
+May 07, 2010 A. Garrels moved declaration of size_t to OverbyteIcsTypes,
+             changed user type CRYPTO_dynlock_value to use TRTLCriticalSection.
+May 08, 2010 Arno Garrels added support for OpenSSL 0.9.8n. 
+             In OSSL v0.9.8L and v0.9.8m renegotiation support was disabled
+             due to vulnerability of the SSL protocol. In v0.9.8n renegotiation
+             support was re-enabled and RFC5746 implemented but require the
+             extension as needed. It's also possible to enable unsafe legacy
+             renegotiation explicitly by setting new option
+             sslOpt_ALLOW_UNSAFE_LEGACY_RENEGOTIATION of TSslContext.
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -97,22 +106,28 @@ interface
 {$IFDEF USE_SSL}
 
 uses
-    Windows, SysUtils, OverbyteIcsSSLEAY;
+{$IFDEF MSWINDOWS}
+    OverbyteIcsTypes, // size_t
+    Windows,
+{$ENDIF}
+{$IFDEF POSIX}
+    PosixSysTypes,
+{$ENDIF}
+    SysUtils, SyncObjs,
+    OverbyteIcsSSLEAY;
 
 const
-    IcsLIBEAYVersion   = 107;
-    CopyRight : String = ' IcsLIBEAY (c) 2003-2009 F. Piette V1.07 ';
+    IcsLIBEAYVersion   = 110;
+    CopyRight : String = ' IcsLIBEAY (c) 2003-2010 F. Piette V1.10 ';
 
 type
-    size_t = LongWord; // x86
-    
     EIcsLibeayException = class(Exception);
 
     TStatLockLockCallback = procedure(Mode : Integer; N : Integer; const _File : PAnsiChar; Line : Integer); cdecl;
     TStatLockIDCallback   = function : Longword; cdecl;
 
-    TCRYPTO_dynlock_value_st = packed record
-        Mutex : THandle;
+    TCRYPTO_dynlock_value_st = record
+        Mutex : TRTLCriticalSection;
     end;
     PCRYPTO_dynlock_value = ^TCRYPTO_dynlock_value_st;
     CRYPTO_dynlock_value  = TCRYPTO_dynlock_value_st;
@@ -120,7 +135,7 @@ type
     TDynLockCreateCallback  = function(const _file : PAnsiChar; Line: Integer): PCRYPTO_dynlock_value; cdecl;
     TDynLockLockCallback    = procedure(Mode : Integer; L : PCRYPTO_dynlock_value; _File : PAnsiChar; Line: Integer); cdecl;
     TDynLockDestroyCallback = procedure(L : PCRYPTO_dynlock_value; _File : PAnsiChar; Line: Integer); cdecl;
-
+   
 const
     V_ASN1_UNIVERSAL                    = $00;
     V_ASN1_APPLICATION                  = $40;
@@ -1223,6 +1238,9 @@ function f_Ics_X509_LOOKUP_load_file(Ctx: PX509_LOOKUP; FileName: PAnsiChar; Typ
 function f_Ics_X509_LOOKUP_add_dir(Ctx: PX509_LOOKUP; DirName: PAnsiChar; Type_: Longword): Integer; {$IFDEF USE_INLINE} inline; {$ENDIF}
 function f_Ics_X509_get_signature_algorithm(X509: PX509): Integer; {$IFDEF USE_INLINE} inline; {$ENDIF}
 
+{ 0.9.8n }
+function f_SSL_get_secure_renegotiation_support(S: PSSL): Longint; {$IFDEF USE_INLINE} inline; {$ENDIF}
+
 const
     GLIBEAY_DLL_Handle   : THandle = 0;
     GLIBEAY_DLL_Name     : String  = 'LIBEAY32.DLL';
@@ -1264,18 +1282,19 @@ const
     OSSL_VER_0908I = $0090809f;
     OSSL_VER_0908K = $009080bf;
     OSSL_VER_0908L = $009080cf;
+    OSSL_VER_0908N = $009080ef;
     // Or should we also create an dynamic array of Longword we would add only
     // tested/wanted versions?
 {$IFDEF BEFORE_OSSL_098E}
     MIN_OSSL_VER   = OSSL_VER_0907G;
-    MAX_OSSL_VER   = OSSL_VER_0908L;
+    MAX_OSSL_VER   = OSSL_VER_0908N; //OSSL_VER_0908L;
 {$ELSE}
     {$IFNDEF OPENSSL_NO_TLSEXT}
         MIN_OSSL_VER = OSSL_VER_0908F;
     {$ELSE}
         MIN_OSSL_VER = OSSL_VER_0908E;
     {$ENDIF}
-    MAX_OSSL_VER   = OSSL_VER_0908L;
+    MAX_OSSL_VER   = OSSL_VER_0908N;//OSSL_VER_0908L;
 {$ENDIF}
 
 {$ENDIF} // USE_SSL
@@ -1339,7 +1358,9 @@ begin
         Exit;
     end;
     ICS_OPENSSL_VERSION_NUMBER := f_SSLeay;
-    ICS_SSL_NO_RENEGOTIATION   := ICS_OPENSSL_VERSION_NUMBER >= OSSL_VER_0908L;
+    ICS_SSL_NO_RENEGOTIATION   :=
+            (ICS_OPENSSL_VERSION_NUMBER >= OSSL_VER_0908L) and
+            (ICS_OPENSSL_VERSION_NUMBER < OSSL_VER_0908N);
 
     { Version Check }
 {$IFNDEF NO_OSSL_VERSION_CHECK}
@@ -2646,6 +2667,16 @@ begin
                                   Pointer(Result), Len);
 {$ENDIF}
       end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function f_SSL_get_secure_renegotiation_support(S: PSSL): Longint;
+begin
+    if ICS_OPENSSL_VERSION_NUMBER >= OSSL_VER_0908N then
+        Result := f_SSL_ctrl(S, SSL_CTRL_GET_RI_SUPPORT, 0, nil)
+    else
+        Result := 0;
 end;
 
 
