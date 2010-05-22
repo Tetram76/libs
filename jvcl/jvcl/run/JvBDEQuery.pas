@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEQuery.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvBDEQuery.pas 12769 2010-05-15 15:18:30Z ahuser $
 
 unit JvBDEQuery;
 
@@ -184,8 +184,8 @@ procedure CreateQueryParams(List: TParams; const Value: PChar; Macro: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEQuery.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer. 26 août 2009) $';
+    Revision: '$Revision: 12769 $';
+    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -660,14 +660,12 @@ end;
 constructor TJvQueryThread.Create(Data: TBDEDataSet; RunMode: TRunQueryMode;
   Prepare, CreateSuspended: Boolean);
 begin
-  inherited Create(True);
+  inherited Create(CreateSuspended);
   FData := Data;
   FMode := RunMode;
   FPrepare := Prepare;
   FreeOnTerminate := True;
   FData.DisableControls;
-  if not CreateSuspended then
-    {$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
 end;
 
 procedure TJvQueryThread.DoTerminate;

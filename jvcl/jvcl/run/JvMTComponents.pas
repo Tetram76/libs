@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTComponents.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvMTComponents.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvMTComponents;
 
@@ -241,8 +241,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTComponents.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu. 11 juin 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -336,7 +336,7 @@ end;
 
 procedure TJvMTManagedComponent.SetManager(Value: TJvMTManager);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FManager));
+  ReplaceComponentReference(Self, Value, TComponent(FManager));
 end;
 
 //=== { TJvMTThread } ========================================================

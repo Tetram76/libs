@@ -49,7 +49,7 @@ Scrolling rules:
       and scroll Rows pages on each click (i.e if Rows = 4 -> scroll 4 pages)
     * if scaling would make pages too small, show as many pages as possible
 -----------------------------------------------------------------------------}
-// $Id: JvPrvwDoc.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvPrvwDoc.pas 12769 2010-05-15 15:18:30Z ahuser $
 
 unit JvPrvwDoc;
 
@@ -432,15 +432,15 @@ type
     property OnUnDock;
   end;
 
-  {$IFDEF UNITVERSIONING}
+{$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPrvwDoc.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer. 26 août 2009) $';
+    Revision: '$Revision: 12769 $';
+    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
     LogPath: 'JVCL\run'
-    );
-  {$ENDIF UNITVERSIONING}
+  );
+{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -1047,33 +1047,36 @@ var
 begin
   Result := False;
   ACanvas := TMetaFileCanvas.Create(AMetaFile, DeviceInfo.ReferenceHandle);
-  SetMapMode(ACanvas.Handle, MM_ANISOTROPIC);
-  with DeviceInfo do
-  begin
-    SetWindowOrgEx(ACanvas.Handle, 0, 0, nil);
-    SetWindowExtEx(ACanvas.Handle, PhysicalWidth, PhysicalHeight, nil);
-    SetViewportExtEx(ACanvas.Handle, PhysicalWidth, PhysicalHeight, nil);
-  end;
-  // NB! Font.Size is changed when PPI is changed, so store and reset
-  I := ACanvas.Font.Size;
-  ACanvas.Font.PixelsPerInch := DeviceInfo.LogPixelsY;
-  ACanvas.Font.Size := I;
-
-  if Assigned(FOnAddPage) then
+  try
+    SetMapMode(ACanvas.Handle, MM_ANISOTROPIC);
     with DeviceInfo do
     begin
-      APageRect := Rect(0, 0, PhysicalWidth, PhysicalHeight);
-      APrintRect := APageRect;
-
-      Inc(APrintRect.Left, OffsetLeft);
-      Inc(APrintRect.Top, OffsetTop);
-      Dec(APrintRect.Right, OffsetRight);
-      Dec(APrintRect.Bottom, OffsetBottom);
-
-      FOnAddPage(Self, PageIndex, ACanvas, APageRect, APrintRect, Result);
+      SetWindowOrgEx(ACanvas.Handle, 0, 0, nil);
+      SetWindowExtEx(ACanvas.Handle, PhysicalWidth, PhysicalHeight, nil);
+      SetViewportExtEx(ACanvas.Handle, PhysicalWidth, PhysicalHeight, nil);
     end;
-  // spool canvas to metafile
-  ACanvas.Free;
+    // NB! Font.Size is changed when PPI is changed, so store and reset
+    I := ACanvas.Font.Size;
+    ACanvas.Font.PixelsPerInch := DeviceInfo.LogPixelsY;
+    ACanvas.Font.Size := I;
+
+    if Assigned(FOnAddPage) then
+      with DeviceInfo do
+      begin
+        APageRect := Rect(0, 0, PhysicalWidth, PhysicalHeight);
+        APrintRect := APageRect;
+
+        Inc(APrintRect.Left, OffsetLeft);
+        Inc(APrintRect.Top, OffsetTop);
+        Dec(APrintRect.Right, OffsetRight);
+        Dec(APrintRect.Bottom, OffsetBottom);
+
+        FOnAddPage(Self, PageIndex, ACanvas, APageRect, APrintRect, Result);
+      end;
+  finally
+    // spool canvas to metafile
+    ACanvas.Free;
+  end;
 end;
 
 procedure TJvCustomPreviewControl.DoDrawPreviewPage(PageIndex: Integer;
@@ -1903,13 +1906,12 @@ end;
 
 constructor TDeactiveHintThread.Create(Delay: Integer; HintWindow: THintWindow);
 begin
-  inherited Create(True);
+  inherited Create(False);
   FreeOnTerminate := True;
   FHintWindow := HintWindow;
   FDelay := Delay;
   if FDelay = 0 then
     FDelay := Application.HintHidePause;
-  {$IFDEF COMPILER14_UP}Start{$ELSE}Resume{$ENDIF COMPILER14_UP};
 end;
 
 procedure TDeactiveHintThread.Execute;

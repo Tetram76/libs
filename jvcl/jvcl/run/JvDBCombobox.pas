@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBCombobox.pas 12588 2009-10-30 15:11:55Z ahuser $
+// $Id: JvDBCombobox.pas 12695 2010-02-11 08:41:46Z ahuser $
 
 unit JvDBCombobox;
 
@@ -65,7 +65,7 @@ type
     FOutfilteredValueFont: TFont;
     FComboBox: TJvCustomDBComboBox;
     procedure SetDataSource(const Value: TDataSource);
-    procedure SetFilter(const Value: string);
+    procedure SetFilter(Value: string);
     function GetDataSource: TDataSource;
     procedure SetDisplayField(const Value: string);
     procedure SetKeyField(const Value: string);
@@ -246,8 +246,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBCombobox.pas $';
-    Revision: '$Revision: 12588 $';
-    Date: '$Date: 2009-10-30 16:11:55 +0100 (ven. 30 oct. 2009) $';
+    Revision: '$Revision: 12695 $';
+    Date: '$Date: 2010-02-11 09:41:46 +0100 (jeu. 11 févr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -787,6 +787,7 @@ var
   FilterExpr: TJvDBFilterExpression;
   LKeyField, LDisplayField: TField;
   DataSet: TDataSet;
+  LastText: string;
 begin
   if ([csDesigning, csLoading, csDestroying] * ComponentState = []) and
      (ListSettings.DataSource <> nil) and (ListSettings.DataSource.DataSet <> nil) and
@@ -796,6 +797,7 @@ begin
     Items.BeginUpdate;
     Values.BeginUpdate;
     try
+      LastText := GetComboText();
       Items.Clear;
       Values.Clear;
       if ListSettings.IsValid and ListSettings.DataSource.DataSet.Active and (ListSettings.KeyField <> '') then
@@ -846,6 +848,7 @@ begin
       Items.EndUpdate;
       Values.EndUpdate;
     end;
+    SetComboText(LastText);
   end;
 end;
 
@@ -947,13 +950,15 @@ begin
   end;
 end;
 
-procedure TJvDBComboBoxListSettings.SetFilter(const Value: string);
+procedure TJvDBComboBoxListSettings.SetFilter(Value: string);
 begin
+  Value := Trim(Value);
   if Value <> FFilter then
   begin
-    FFilter := Trim(Value);
+    FFilter := Value;
     ComboBox.UpdateDropDownItems;
-    ComboBox.DataChange(Self);
+    if ComboBox.UpdateFieldImmediatelly then
+      ComboBox.DataChange(Self);
   end;
 end;
 
@@ -1003,7 +1008,8 @@ begin
   if FListDataLink.Active and (DataSource.State = dsBrowse) then
   begin
     ComboBox.UpdateDropDownItems;
-    ComboBox.DataChange(Self);
+    if ComboBox.UpdateFieldImmediatelly then
+      ComboBox.DataChange(Self);
   end;
 end;
 

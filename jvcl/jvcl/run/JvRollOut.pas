@@ -42,7 +42,7 @@ Changes 2003-03-23:
      - ImageOffset: change to ImageOptions.Offset // peter3
 
 -----------------------------------------------------------------------------}
-// $Id: JvRollOut.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvRollOut.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvRollOut;
 
@@ -294,8 +294,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRollOut.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1228,7 +1228,7 @@ end;
 
 procedure TJvRollOutAction.SetRollOut(const Value: TJvCustomRollOut);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FRollOut));
+  ReplaceComponentReference(Self, Value, TComponent(FRollOut));
 end;
 
 procedure TJvRollOutAction.UpdateTarget(Target: TObject);

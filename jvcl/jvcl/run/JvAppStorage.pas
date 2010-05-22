@@ -74,7 +74,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorage.pas 12605 2009-11-15 12:57:56Z jfudickar $
+// $Id: JvAppStorage.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvAppStorage;
 
@@ -91,7 +91,7 @@ uses
   {$IFDEF COMPILER10_UP}
   WideStrings,
   {$ENDIF COMPILER10_UP}
-  SysUtils, Classes, TypInfo,
+  SysUtils, Classes, TypInfo, Variants,
   JclBase,
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
@@ -441,6 +441,10 @@ type
     property CurrentInstanceCreateEvent: TJvAppStorageObjectListItemCreateEvent
         read FCurrentInstanceCreateEvent;
   public
+    {$IFDEF SUPPORTS_CLASS_CTORDTORS}
+    class destructor Destroy;
+    {$ENDIF SUPPORTS_CLASS_CTORDTORS}
+
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     // (p3) moved Flush, Reload and AutoFlush to the base storage because users
@@ -956,8 +960,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorage.pas $';
-    Revision: '$Revision: 12605 $';
-    Date: '$Date: 2009-11-15 13:57:56 +0100 (dim. 15 nov. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -992,6 +996,27 @@ begin
      not GlobalRegisteredAppStoragePropertyEngineListDestroyed then
     GlobalRegisteredAppStoragePropertyEngineList := TJvAppStoragePropertyEngineList.Create;
   Result := GlobalRegisteredAppStoragePropertyEngineList;
+end;
+
+//=== Global Engine Handling =================================================
+
+procedure RegisterAppStoragePropertyEngine(AEngineClass: TJvAppStoragePropertyBaseEngineClass);
+begin
+  if RegisteredAppStoragePropertyEngineList <> nil then
+    RegisteredAppStoragePropertyEngineList.RegisterEngine(AEngineClass);
+end;
+
+procedure UnregisterAppStoragePropertyEngine(AEngineClass: TJvAppStoragePropertyBaseEngineClass);
+begin
+  if RegisteredAppStoragePropertyEngineList <> nil then
+    RegisteredAppStoragePropertyEngineList.UnregisterEngine(AEngineClass);
+end;
+
+procedure DestroyAppStoragePropertyEngineList;
+begin
+  GlobalRegisteredAppStoragePropertyEngineListDestroyed := True;
+  GlobalRegisteredAppStoragePropertyEngineList.Free;
+  GlobalRegisteredAppStoragePropertyEngineList := nil;
 end;
 
 const
@@ -1286,6 +1311,13 @@ begin
 end;
 
 //=== { TJvCustomAppStorage } ================================================
+
+{$IFDEF SUPPORTS_CLASS_CTORDTORS}
+class destructor TJvCustomAppStorage.Destroy;
+begin
+  DestroyAppStoragePropertyEngineList;
+end;
+{$ENDIF SUPPORTS_CLASS_CTORDTORS}
 
 constructor TJvCustomAppStorage.Create(AOwner: TComponent);
 begin
@@ -2627,7 +2659,7 @@ begin
         SetOrdProp(PersObj, PropName, TmpValue);
       end;
     tkVariant:
-      SetVariantProp(PersObj, PropName, ReadString(Path, GetVariantProp(PersObj, PropName)));
+      SetVariantProp(PersObj, PropName, ReadString(Path, VarToStr(GetVariantProp(PersObj, PropName))));
     tkSet:
       begin
         TmpValue := GetOrdProp(PersObj, PropName);
@@ -2745,7 +2777,7 @@ begin
         WriteWideString(Path, GetWideStrProp(PersObj, PropName));
     tkVariant:
       if StorageOptions.StoreDefaultValues or not IsDefaultStrProp(P) then
-        WriteString(Path, GetVariantProp(PersObj, PropName));
+        WriteString(Path, VarToStr(GetVariantProp(PersObj, PropName)));
     tkEnumeration:
       begin
         if StorageOptions.StoreDefaultValues or not IsDefaultOrdProp(P) then
@@ -3156,7 +3188,7 @@ end;
 
 procedure TJvCustomAppStorage.SetTranslateStringEngine(const Value: TJvTranslateString);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FTranslateStringEngine));
+  ReplaceComponentReference(Self, Value, TComponent(FTranslateStringEngine));
 end;
 
 function TJvCustomAppStorage.ReadWideString(const Path: string;
@@ -3416,7 +3448,7 @@ begin
   begin
     if (Value <> nil) and (Value.HasSubStorage(OwnerStore) or (Value = OwnerStore)) then
       raise EJVCLAppStorageError.CreateRes(@RsECircularReferenceOfStorages);
-    ReplaceComponentReference (OwnerStore, Value, TComponent(FAppstorage));
+    ReplaceComponentReference(OwnerStore, Value, TComponent(FAppstorage));
   end;
 end;
 
@@ -3706,34 +3738,16 @@ begin
     Engine.WriteProperty(AStorage, APath, AObject, AProperty, Recursive);
 end;
 
-//=== Global Engine Handling =================================================
-
-procedure RegisterAppStoragePropertyEngine(AEngineClass: TJvAppStoragePropertyBaseEngineClass);
-begin
-  if RegisteredAppStoragePropertyEngineList <> nil then
-    RegisteredAppStoragePropertyEngineList.RegisterEngine(AEngineClass);
-end;
-
-procedure UnregisterAppStoragePropertyEngine(AEngineClass: TJvAppStoragePropertyBaseEngineClass);
-begin
-  if RegisteredAppStoragePropertyEngineList <> nil then
-    RegisteredAppStoragePropertyEngineList.UnregisterEngine(AEngineClass);
-end;
-
-procedure DestroyAppStoragePropertyEngineList;
-begin
-  GlobalRegisteredAppStoragePropertyEngineListDestroyed := True;
-  GlobalRegisteredAppStoragePropertyEngineList.Free;
-  GlobalRegisteredAppStoragePropertyEngineList := nil;
-end;
-
 initialization
   {$IFDEF UNITVERSIONING}
   RegisterUnitVersion(HInstance, UnitVersioning);
   {$ENDIF UNITVERSIONING}
 
 finalization
+  {$IFNDEF SUPPORTS_CLASS_CTORDTORS}
   DestroyAppStoragePropertyEngineList;
+  {$ENDIF ~SUPPORTS_CLASS_CTORDTORS}
+
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}

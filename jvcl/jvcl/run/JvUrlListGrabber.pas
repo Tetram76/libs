@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvUrlListGrabber.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvUrlListGrabber.pas 12719 2010-03-11 22:38:01Z jfudickar $
 
 unit JvUrlListGrabber;
 
@@ -561,8 +561,8 @@ function JvUrlGrabberClassList: TJvUrlGrabberClassList;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUrlListGrabber.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer. 26 août 2009) $';
+    Revision: '$Revision: 12719 $';
+    Date: '$Date: 2010-03-11 23:38:01 +0100 (jeu. 11 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1115,8 +1115,8 @@ begin
   // Get the port
   if Pos(':', Host) <> 0 then
   begin
-    Host := Copy(Host, 1, Pos(':', Host) - 1);
     Port := StrToIntDef(Copy(Host, Pos(':', Host) + 1, Length(Host)), 0);
+    Host := Copy(Host, 1, Pos(':', Host) - 1);
   end;
 end;
 

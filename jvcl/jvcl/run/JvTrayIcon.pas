@@ -36,7 +36,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTrayIcon.pas 12587 2009-10-29 21:58:32Z obones $
+// $Id: JvTrayIcon.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvTrayIcon;
 
@@ -240,8 +240,8 @@ procedure RefreshTray;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTrayIcon.pas $';
-    Revision: '$Revision: 12587 $';
-    Date: '$Date: 2009-10-29 22:58:32 +0100 (jeu. 29 oct. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1176,7 +1176,7 @@ end;
 
 procedure TJvTrayIcon.SetDropDownMenu(const Value: TPopupMenu);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FDropDownMenu));
+  ReplaceComponentReference(Self, Value, TComponent(FDropDownMenu));
 end;
 
 procedure TJvTrayIcon.SetHint(Value: string);
@@ -1210,7 +1210,7 @@ end;
 
 procedure TJvTrayIcon.SetIcons(const Value: TCustomImageList);
 begin
-  if ReplaceComponentReference (Self, Value, TComponent(FIcons)) then
+  if ReplaceComponentReference(Self, Value, TComponent(FIcons)) then
     IconPropertyChanged; //HEG: New
 end;
 
@@ -1224,7 +1224,7 @@ end;
 
 procedure TJvTrayIcon.SetPopupMenu(const Value: TPopupMenu);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FPopupMenu));
+  ReplaceComponentReference(Self, Value, TComponent(FPopupMenu));
 end;
 
 procedure TJvTrayIcon.SetTask(const Value: Boolean);

@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCheckBox.pas 12540 2009-10-03 12:48:54Z ahuser $
+// $Id: JvgCheckBox.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvgCheckBox;
 
@@ -158,8 +158,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCheckBox.pas $';
-    Revision: '$Revision: 12540 $';
-    Date: '$Date: 2009-10-03 14:48:54 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -581,7 +581,7 @@ begin
   begin
     if (fcoActiveWhileControlFocused in Options) and Assigned(FFocusControl) then
       UnhookFocusControlWndProc;
-    ReplaceComponentReference (Self, Value, TComponent(FFocusControl));
+    ReplaceComponentReference(Self, Value, TComponent(FFocusControl));
     if (fcoActiveWhileControlFocused in Options) and Assigned(FFocusControl) then
       HookFocusControlWndProc;
   end;

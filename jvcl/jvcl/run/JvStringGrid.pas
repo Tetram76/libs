@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStringGrid.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvStringGrid.pas 12719 2010-03-11 22:38:01Z jfudickar $
 
 unit JvStringGrid;
 
@@ -242,8 +242,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStringGrid.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12719 $';
+    Date: '$Date: 2010-03-11 23:38:01 +0100 (jeu. 11 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -957,7 +957,8 @@ begin
   Col := Msg.Column;
   Row := Msg.Row;
   EditorMode := True;
-  InplaceEditor.SelectAll;
+  if Assigned(InplaceEditor) then
+    InplaceEditor.SelectAll;
 end;
 
 procedure TJvStringGrid.InvalidateCell(AColumn, ARow: Integer);

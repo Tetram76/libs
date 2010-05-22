@@ -26,7 +26,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvArrowButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvArrowButton.pas 12766 2010-05-14 17:38:51Z ahuser $
 
 unit JvArrowButton;
 
@@ -63,6 +63,8 @@ type
     FOnDrop: TNotifyEvent;
     FVerticalAlignment: TVerticalAlignment;
     FAlignment: TAlignment;
+    FFlatArrowColor: TColor;
+    FFlatArrowDisabledColor: TColor;
     procedure GlyphChanged(Sender: TObject);
     procedure UpdateExclusive;
     function GetGlyph: TBitmap;
@@ -84,20 +86,19 @@ type
     procedure CMSysColorChange(var Msg: TMessage); message CM_SYSCOLORCHANGE;
     procedure SetAlignment(const Value: TAlignment);
     procedure SetVerticalAlignment(const Value: TVerticalAlignment);
+    procedure SetFlatArrowColor(const Value: TColor);
+    procedure SetFlatArrowDisabledColor(const Value: TColor);
   protected
     FState: TButtonState;
     function GetPalette: HPALETTE; override;
     procedure Loaded; override;
-    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer); override;
-    procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer); override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure Paint; override;
     procedure MouseEnter(Control: TControl); override;
     procedure MouseLeave(Control: TControl); override;
 
-    function WantKey(Key: Integer; Shift: TShiftState;
-      const KeyText: WideString): Boolean; override;
+    function WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean; override;
     procedure EnabledChanged; override;
     procedure FontChanged; override;
     procedure TextChanged; override;
@@ -119,6 +120,8 @@ type
     property Caption;
     property Enabled;
     property Flat: Boolean read FFlat write SetFlat default False;
+    property FlatArrowColor: TColor read FFlatArrowColor write SetFlatArrowColor default clBlack;
+    property FlatArrowDisabledColor: TColor read FFlatArrowDisabledColor write SetFlatArrowDisabledColor default clBtnShadow;
     property Font;
     property FillFont: TFont read FFillFont write SetFillFont;
     property Glyph: TBitmap read GetGlyph write SetGlyph;
@@ -144,8 +147,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvArrowButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12766 $';
+    Date: '$Date: 2010-05-14 19:38:51 +0200 (ven. 14 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -787,6 +790,8 @@ begin
   TButtonGlyph(FGlyph).OnChange := GlyphChanged;
   FFillFont := TFont.Create;
   FFillFont.Assign(Font);
+  FFlatArrowColor := clBlack;
+  FFlatArrowDisabledColor := clBtnShadow;
   FAllowAllUp := False;
   FArrowWidth := 13;
   FGroupIndex := 0;
@@ -864,6 +869,7 @@ begin
       {$IFDEF JVCLThemesEnabled}
       if ThemeServices.ThemesEnabled then
       begin
+        Details := ThemeServices.GetElementDetails(ttbButtonNormal);
         if FState in [bsDown, bsExclusive] then
           Details := ThemeServices.GetElementDetails(ttbButtonPressed)
         else if FMouseInControl and (FState <> bsDisabled) or (csDesigning in ComponentState) then
@@ -939,7 +945,6 @@ begin
       else if FMouseInControl and (FState <> bsDisabled) or (csDesigning in ComponentState) then
         Details := ThemeServices.GetElementDetails(ttbButtonHot);
       ThemeServices.DrawElement(Canvas.Handle, Details, PaintRect);
-      //PaintRect := ThemeServices.ContentRect(Canvas.Handle, Details, PaintRect);
     end
     else
     {$ENDIF JVCLThemesEnabled}
@@ -959,14 +964,22 @@ begin
     Right := (Right - DivX div 2);
   end;
 
-  if not Flat then
-    Dec(Offset.X);
   OffsetRect(PaintRect, Offset.X, Offset.Y);
 
-  if Enabled then
-    Canvas.Pen.Color := clBlack
+  if Flat and (not FMouseInControl or (csDesigning in ComponentState)) then
+  begin
+    if Enabled then
+      Canvas.Pen.Color := FFlatArrowColor
+    else
+      Canvas.Pen.Color := FFlatArrowDisabledColor;
+  end
   else
-    Canvas.Pen.Color := clBtnShadow;
+  begin
+    if Enabled then
+      Canvas.Pen.Color := clBlack
+    else
+      Canvas.Pen.Color := clBtnShadow;
+  end;
 
   { Draw arrow }
   while PaintRect.Left < PaintRect.Right + 1 do
@@ -1172,6 +1185,24 @@ begin
       ControlStyle := ControlStyle - [csOpaque]
     else
       ControlStyle := ControlStyle + [csOpaque];
+    Invalidate;
+  end;
+end;
+
+procedure TJvArrowButton.SetFlatArrowColor(const Value: TColor);
+begin
+  if Value <> FFlatArrowColor then
+  begin
+    FFlatArrowColor := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TJvArrowButton.SetFlatArrowDisabledColor(const Value: TColor);
+begin
+  if Value <> FFlatArrowDisabledColor then
+  begin
+    FFlatArrowDisabledColor := Value;
     Invalidate;
   end;
 end;

@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineIntf.pas 12694 2010-02-08 23:11:12Z jfudickar $
+// $Id: JvDynControlEngineIntf.pas 12696 2010-02-15 21:14:37Z jfudickar $
 
 unit JvDynControlEngineIntf;
 
@@ -116,6 +116,13 @@ type
     procedure ControlSetItems(Value: TStrings);
     function ControlGetItems: TStrings;
     property ControlItems: TStrings read ControlGetItems write ControlSetItems;
+  end;
+
+  IJvDynControlCheckComboBox = interface
+    ['{86D2DD54-5114-42B2-9E44-1D32ECFDA5D0}']
+    procedure ControlSetDelimiter(Value: string);
+    function ControlGetDelimiter: string;
+    property Delimiter: string read ControlGetDelimiter write ControlSetDelimiter;
   end;
 
   IJvDynControlItemIndex = interface
@@ -402,8 +409,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineIntf.pas $';
-    Revision: '$Revision: 12694 $';
-    Date: '$Date: 2010-02-09 00:11:12 +0100 (mar. 09 févr. 2010) $';
+    Revision: '$Revision: 12696 $';
+    Date: '$Date: 2010-02-15 22:14:37 +0100 (lun. 15 févr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 12684 2010-02-01 15:06:49Z wpostma $
+// $Id: JvInspector.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvInspector;
 
@@ -2072,8 +2072,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 12684 $';
-    Date: '$Date: 2010-02-01 16:06:49 +0100 (lun. 01 févr. 2010) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3628,7 +3628,7 @@ begin
     if Painter <> nil then
       Painter.SetInspector(nil);
 
-    ReplaceComponentReference (Self, Value, TComponent(FPainter));
+    ReplaceComponentReference(Self, Value, TComponent(FPainter));
 
     if Painter <> nil then
     begin

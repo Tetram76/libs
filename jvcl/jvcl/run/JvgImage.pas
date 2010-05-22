@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgImage.pas 12537 2009-10-03 09:55:35Z ahuser $
+// $Id: JvgImage.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvgImage;
 
@@ -137,8 +137,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgImage.pas $';
-    Revision: '$Revision: 12537 $';
-    Date: '$Date: 2009-10-03 11:55:35 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -414,7 +414,7 @@ end;
 
 procedure TJvgBitmapImage.SetImage(Value: TImage);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FImage));
+  ReplaceComponentReference(Self, Value, TComponent(FImage));
   if Assigned(FImage) and Assigned(FImage.Picture) and
     Assigned(FImage.Picture.Bitmap) then
     FBmp := FImage.Picture.Bitmap

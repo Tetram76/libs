@@ -35,7 +35,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSimLogic.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSimLogic.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvSimLogic;
 
@@ -334,8 +334,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimLogic.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -823,7 +823,7 @@ end;
 
 procedure TJvSIMConnector.SetFromLogic(const Value: TJvLogic);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FFromLogic));
+  ReplaceComponentReference(Self, Value, TComponent(FFromLogic));
 end;
 
 procedure TJvSIMConnector.SetToGate(const Value: Integer);
@@ -833,7 +833,7 @@ end;
 
 procedure TJvSIMConnector.SetToLogic(const Value: TJvLogic);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FToLogic));
+  ReplaceComponentReference(Self, Value, TComponent(FToLogic));
 end;
 
 procedure TJvSIMConnector.SetFromPoint(const Value: TJvPointX);

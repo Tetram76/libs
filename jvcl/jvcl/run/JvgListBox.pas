@@ -29,7 +29,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgListBox.pas 12537 2009-10-03 09:55:35Z ahuser $
+// $Id: JvgListBox.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvgListBox;
 
@@ -206,8 +206,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgListBox.pas $';
-    Revision: '$Revision: 12537 $';
-    Date: '$Date: 2009-10-03 11:55:35 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -785,7 +785,7 @@ end;
 
 procedure TJvgListBox.SetWallpaperImage(Value: TImage);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FWallpaperImage));
+  ReplaceComponentReference(Self, Value, TComponent(FWallpaperImage));
   Invalidate;
 end;
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGridPreviewForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvGridPreviewForm.pas 12767 2010-05-14 17:39:21Z ahuser $
 
 unit JvGridPreviewForm;
 
@@ -101,8 +101,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGridPreviewForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12767 $';
+    Date: '$Date: 2010-05-14 19:39:21 +0200 (ven. 14 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -658,7 +658,7 @@ begin
   Printer.Copies := GridPrinter.PrintOptions.Copies;
   Printer.Orientation := GridPrinter.PrintOptions.Orientation;
   Printer.BeginDoc;
-  DrawToCanvas(Printer.Canvas, pmPrint, 1, Grid.ColCount - 1);
+  DrawToCanvas(Printer.Canvas, pmPrint, 1, Grid.RowCount - 1);
   Printer.EndDoc;
 end;
 

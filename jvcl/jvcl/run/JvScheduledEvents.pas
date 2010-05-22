@@ -23,7 +23,7 @@
  You may retrieve the latest version of this file at the Project JEDI home
  page, located at http://www.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvScheduledEvents.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvScheduledEvents.pas 12772 2010-05-16 12:57:30Z ahuser $
 
 unit JvScheduledEvents;
 
@@ -129,6 +129,10 @@ type
     property AppStorage: TJvCustomAppStorage read FAppStorage write SetAppStorage;
     property AppStoragePath: string read FAppStoragePath write FAppStoragePath;
   public
+    {$IFDEF SUPPORTS_CLASS_CTORDTORS}
+    class destructor Destroy;
+    {$ENDIF SUPPORTS_CLASS_CTORDTORS}
+
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property Handle: THandle read FWnd;
@@ -230,6 +234,7 @@ type
   public
     constructor Create(Collection: TCollection); override;
     destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
     procedure LoadState(const TriggerStamp: TTimeStamp; const TriggerCount, DayCount: Integer;
       const SnoozeStamp: TTimeStamp; const ALastSnoozeInterval: TSystemTime;
       const AEventInfo: TScheduledEventStateInfo); virtual;
@@ -259,8 +264,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScheduledEvents.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12772 $';
+    Date: '$Date: 2010-05-16 14:57:30 +0200 (dim. 16 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -476,6 +481,13 @@ end;
 
 //=== { TJvCustomScheduledEvents } ===========================================
 
+{$IFDEF SUPPORTS_CLASS_CTORDTORS}
+class destructor TJvCustomScheduledEvents.Destroy;
+begin
+  FinalizeScheduleThread;
+end;
+{$ENDIF SUPPORTS_CLASS_CTORDTORS}
+
 constructor TJvCustomScheduledEvents.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -507,7 +519,7 @@ end;
 
 procedure TJvCustomScheduledEvents.SetAppStorage(Value: TJvCustomAppStorage);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FAppStorage));
+  ReplaceComponentReference(Self, Value, TComponent(FAppStorage));
 end;
 
 procedure TJvCustomScheduledEvents.Notification(AComponent: TComponent; Operation: TOperation);
@@ -780,7 +792,6 @@ begin
   FEvents.Assign(Value);
 end;
 
-
 procedure TJvCustomScheduledEvents.WndProc(var Msg: TMessage);
 var
   List: TList;
@@ -796,17 +807,20 @@ begin
           // "to be restarted", stop and then restart them.
           List := TList.Create;
           try
-            for I := 0 to FEvents.Count - 1 do
-            begin
-              if FEvents[I].State in [sesTriggered, sesExecuting, sesPaused] then
+            ScheduleThread.Lock;
+            try
+              for I := 0 to FEvents.Count - 1 do
               begin
-                List.Add(FEvents[I]);
-                FEvents[I].Stop;
+                if FEvents[I].State in [sesTriggered, sesExecuting, sesPaused] then
+                begin
+                  List.Add(FEvents[I]);
+                  FEvents[I].Stop;
+                end;
               end;
-            end;
-            for I := 0 to List.Count - 1 do
-            begin
-              TJvEventCollectionItem(List[I]).Start;
+              for I := 0 to List.Count - 1 do
+                TJvEventCollectionItem(List[I]).Start;
+            finally
+              ScheduleThread.Unlock;
             end;
           finally
             List.Free;
@@ -816,7 +830,6 @@ begin
       Result := DefWindowProc(Handle, Msg, WParam, LParam);
     end;
 end;
-
 
 procedure TJvCustomScheduledEvents.CMExecEvent(var Msg: TMessage);
 begin
@@ -913,6 +926,19 @@ begin
   finally
     ScheduleThread.Unlock;
   end;
+end;
+
+procedure TJvEventCollectionItem.Assign(Source: TPersistent);
+begin
+  if Source is TJvEventCollectionItem then
+  begin
+    Name := TJvEventCollectionItem(Source).Name;
+    CountMissedEvents := TJvEventCollectionItem(Source).CountMissedEvents;
+    Schedule := TJvEventCollectionItem(Source).Schedule;
+    OnExecute := TJvEventCollectionItem(Source).OnExecute;
+  end
+  else
+    inherited Assign(Source);
 end;
 
 procedure TJvEventCollectionItem.Triggered;
@@ -1581,7 +1607,9 @@ initialization
   {$ENDIF UNITVERSIONING}
 
 finalization
+  {$IFNDEF SUPPORTS_CLASS_CTORDTORS}
   FinalizeScheduleThread;
+  {$ENDIF ~SUPPORTS_CLASS_CTORDTORS}
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}

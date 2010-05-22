@@ -53,6 +53,7 @@ Known Issues:
 //********************** Added by c.schiffler (CS) **************************
   Methods  (protected) SetFilterText <== hook up expression parsing.
   Field FFilterParser - see unit JvExprParser.pas
+
 Implementation : 2004/03/03
 Revisions : 1st = 2004/09/19
             2nd = 2004/10/19
@@ -62,10 +63,8 @@ Revisions : 1st = 2004/09/19
             6th = 2006/03/24
             7th = 2007/03/25
             8th = 2007/06/20
-
-Comments and Bugs : cfzwit att yahoo dott com dott ar
 -----------------------------------------------------------------------------}
-// $Id: JvMemoryDataset.pas 12542 2009-10-03 14:30:42Z ahuser $
+// $Id: JvMemoryDataset.pas 12736 2010-03-29 16:54:56Z ahuser $
 
 unit JvMemoryDataset;
 
@@ -79,16 +78,14 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, DB, Variants,
-  JvDBUtils,
-  JvExprParser;
+  JvDBUtils, JvExprParser;
 
 type
   TPVariant = ^Variant;
   TApplyMode = (amNone, amAppend, amMerge);
   TApplyEvent = procedure(Dataset: TDataset; Rows: Integer) of object;
   TRecordStatus = (rsOriginal, rsUpdated, rsInserted, rsDeleted);
-  TApplyRecordEvent = procedure(Dataset: TDataset; RecStatus: TRecordStatus;
-    FoundApply: Boolean) of object;
+  TApplyRecordEvent = procedure(Dataset: TDataset; RecStatus: TRecordStatus; FoundApply: Boolean) of object;
   TMemBlobData = string;
   TMemBlobArray = array[0..0] of TMemBlobData;
   PMemBlobArray = ^TMemBlobArray;
@@ -140,6 +137,8 @@ type
     FBeforeApplyRecord: TApplyRecordEvent;
     FAfterApplyRecord: TApplyRecordEvent;
     FFilterParser: TExprParser; // CSchiffler. June 2009.  See JvExprParser.pas
+    FCopyFromDataSetFieldDefs: array of Integer; // only valid while CopyFromDataSet is executed
+    FClearing: Boolean;
     function AddRecord: TJvMemoryRecord;
     function InsertRecord(Index: Integer): TJvMemoryRecord;
     function FindRecordID(ID: Integer): TJvMemoryRecord;
@@ -217,6 +216,7 @@ type
     procedure DoAfterOpen; override;
     procedure SetFilterText(const Value: string); override;
     function ParserGetVariableValue(Sender: TObject; const VarName: string; var Value: Variant): Boolean; virtual;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     property Records[Index: Integer]: TJvMemoryRecord read GetMemoryRecord;
   public
     constructor Create(AOwner: TComponent); override;
@@ -257,6 +257,7 @@ type
     property Active;
     property AutoCalcFields;
     property Filtered;
+    property FilterOptions;
     property FieldDefs;
     property ObjectView default False;
     property DataSet: TDataSet read FDataSet write SetDataSet;
@@ -341,8 +342,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemoryDataset.pas $';
-    Revision: '$Revision: 12542 $';
-    Date: '$Date: 2009-10-03 16:30:42 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12736 $';
+    Date: '$Date: 2010-03-29 18:54:56 +0200 (lun. 29 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -358,6 +359,7 @@ uses
   {$IFNDEF UNICODE}
   JvJCLUtils,
   {$ENDIF ~UNICODE}
+  JvJVCLUtils,
   JvResources;
 
 const
@@ -383,10 +385,46 @@ const
 
   STATUSNAME = 'C67F70Z90'; (* Magic *)
 
+type
+  TBookmarkData = Integer;
+  PMemBookmarkInfo = ^TMemBookmarkInfo;
+
+  TMemBookmarkInfo = record
+    BookmarkData: TBookmarkData;
+    BookmarkFlag: TBookmarkFlag;
+  end;
+
 procedure AppHandleException(Sender: TObject);
 begin
   if Assigned(ApplicationHandleException) then
     ApplicationHandleException(Sender);
+end;
+
+procedure CopyFieldValue(DestField, SourceField: TField);
+begin
+  if SourceField.IsNull then
+    DestField.Clear
+  else if DestField.ClassType = SourceField.ClassType then
+  begin
+    case DestField.DataType of
+      ftInteger, ftSmallint, ftWord:
+        DestField.AsInteger := SourceField.AsInteger;
+      ftBCD, ftCurrency:
+        DestField.AsCurrency := SourceField.AsCurrency;
+      ftFMTBcd:
+        DestField.AsBCD := SourceField.AsBCD;
+      ftString:
+        DestField.AsString := SourceField.AsString;
+      ftFloat:
+        DestField.AsFloat := SourceField.AsFloat;
+      ftDateTime:
+        DestField.AsDateTime := SourceField.AsDateTime;
+    else
+      DestField.Assign(SourceField);
+    end;
+  end
+  else
+    DestField.Assign(SourceField);;
 end;
 
 function CalcFieldLen(FieldType: TFieldType; Size: Word): Word;
@@ -465,15 +503,6 @@ begin
   DatabaseErrorFmt(Msg, Args);
 end;
 
-type
-  TBookmarkData = Integer;
-  PMemBookmarkInfo = ^TMemBookmarkInfo;
-
-  TMemBookmarkInfo = record
-    BookmarkData: TBookmarkData;
-    BookmarkFlag: TBookmarkFlag;
-  end;
-
 //=== { TJvMemoryRecord } ====================================================
 
 constructor TJvMemoryRecord.Create(MemoryData: TJvMemoryData);
@@ -510,7 +539,8 @@ begin
   begin
     if FMemoryData <> nil then
     begin
-      FMemoryData.FRecords.Remove(Self);
+      if not FMemoryData.FClearing then
+        FMemoryData.FRecords.Remove(Self);
       if FMemoryData.BlobFieldCount > 0 then
         Finalize(PMemBlobArray(FBlobs)[0], FMemoryData.BlobFieldCount);
       ReallocMem(FBlobs, 0);
@@ -590,6 +620,7 @@ begin
   end;
   FreeIndexList;
   ClearRecords;
+  SetDataSet(nil);
   FRecords.Free;
   FOffsets := nil;
   inherited Destroy;
@@ -745,7 +776,10 @@ var
   DataType: TFieldType;
 begin
   Result := nil;
-  Index := FieldDefList.IndexOf(Field.FullName);
+  if Length(FCopyFromDataSetFieldDefs) > 0 then
+    Index := FCopyFromDataSetFieldDefs[Field.Index]
+  else
+    Index := FieldDefList.IndexOf(Field.FullName);
   if (Index >= 0) and (Buffer <> nil) then
   begin
     DataType := FieldDefList[Index].DataType;
@@ -776,9 +810,17 @@ begin
 end;
 
 procedure TJvMemoryData.ClearRecords;
+var
+  I: Integer;
 begin
-  while FRecords.Count > 0 do
-    TObject(FRecords.Last).Free;
+  FClearing := True;
+  try
+    for I := FRecords.Count - 1 downto 0  do
+      TJvMemoryRecord(FRecords[I]).Free;
+    FRecords.Clear;
+  finally
+    FClearing := False;
+  end;
   FLastID := Low(Integer);
   FRecordPos := -1;
 end;
@@ -1092,7 +1134,8 @@ begin
         RecordToBuffer(Records[FRecordPos], TempBuffer);
         if Assigned(FFilterParser) and FFilterParser.Eval() then
         begin
-          FFilterParser.EnableWildcardMatching := True;
+          FFilterParser.EnableWildcardMatching := not (foNoPartialCompare in FilterOptions);
+          FFilterParser.CaseInsensitive := foCaseInsensitive in FilterOptions;
           Result := FFilterParser.Value;
         end;
         if Assigned(OnFilterRecord) then
@@ -1501,6 +1544,9 @@ procedure TJvMemoryData.SetFilterText(const Value: string);
     begin
       FFilterParser := TExprParser.Create;
       FFilterParser.OnGetVariable := ParserGetVariableValue;
+      if foCaseInsensitive in FilterOptions then
+        FFilterParser.Expression := AnsiUpperCase(Filter)
+      else
       FFilterParser.Expression := Filter;
     end;
   end;
@@ -1692,6 +1738,13 @@ begin
   end;
 end;
 
+procedure TJvMemoryData.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation = opRemove) and (AComponent = DataSet) then
+    SetDataSet(nil);
+end;
+
 procedure TJvMemoryData.EmptyTable;
 begin
   if Active then
@@ -1725,8 +1778,6 @@ begin
 end;
 
 procedure TJvMemoryData.CheckStructure(UseAutoIncAsInteger: Boolean);
-var
-  I: Integer;
 
   procedure CheckDataTypes(FieldDefs: TFieldDefs);
   var
@@ -1741,6 +1792,8 @@ var
     end;
   end;
 
+var
+  I: Integer;
 begin
   CheckDataTypes(FieldDefs);
   for I := 0 to FieldDefs.Count - 1 do
@@ -1752,7 +1805,8 @@ end;
 
 procedure TJvMemoryData.SetDataSet(ADataSet: TDataSet);
 begin
-  FDataSet := ADataSet;
+  if ADataSet <> Self then
+    ReplaceComponentReference(Self, ADataSet, TComponent(FDataSet));
 end;
 
 procedure TJvMemoryData.FixReadOnlyFields(MakeReadOnly: Boolean);
@@ -1830,9 +1884,7 @@ begin
     //**********************************
     try
       if RecordCount > 0 then
-      begin
-        MovedCount := RecordCount;
-      end
+        MovedCount := RecordCount
       else
       begin
         Source.First;
@@ -2237,16 +2289,18 @@ end;
 function TJvMemoryData.CopyFromDataSet: Integer;
 var
   I, Len: Integer;
-  FOriginal, FClient: TField;
+  Original, StatusField: TField;
+  OriginalFields: array of TField;
+  FieldReadOnly: Boolean;
 begin
   Result := 0;
   if FDataSet = nil then
     Exit;
   if FApplyMode <> amNone then
-    Len := FieldDefs.Count - 2
+    Len := FieldDefs.Count - 1
   else
-    Len := FieldDefs.Count - 1;
-  if Len < 1 then
+    Len := FieldDefs.Count;
+  if Len < 2 then
     Exit;
   try
     if not FDataSet.Active then
@@ -2265,24 +2319,54 @@ begin
   DisableControls;
   FSaveLoadState := slsLoading;
   try
+    SetLength(OriginalFields, Len);
+    SetLength(FCopyFromDataSetFieldDefs, Len);
+    for I := 0 to Len - 1 do
+    begin
+      OriginalFields[I] := FDataSet.FindField(Fields[I].FieldName);
+      FCopyFromDataSetFieldDefs[I] := FieldDefList.IndexOf(Fields[I].FullName);
+    end;
+    StatusField := nil;
+    if FApplyMode <> amNone then
+      StatusField := FieldByName(FStatusName);
+
+    FAutoIncField := nil;
+    // find first source autoinc field
+    FSrcAutoIncField := nil;
+    for I := 0 to FDataSet.FieldCount - 1 do
+      if FDataSet.Fields[I].DataType = ftAutoInc then
+      begin
+        FSrcAutoIncField := FDataSet.Fields[I];
+        Break;
+      end;
+    if FSrcAutoIncField <> nil then
+      FAutoIncField := FindField(FSrcAutoIncField.FieldName);
+
     FDataSet.First;
     while not FDataSet.EOF do
     begin
       Append;
-      for I := 0 to Len do
+      for I := 0 to Len - 1 do
       begin
-        FClient := Fields[I];
-        FOriginal := FDataSet.FindField(FClient.FieldName);
-        if (FClient <> nil) and (FOriginal <> nil) then
+        Original := OriginalFields[I];
+        if Original <> nil then
         begin
-          if FOriginal.IsNull then
-            Fields[I].Clear
-          else
-            Fields[I].Value := FOriginal.Value;
+          FieldReadOnly := Fields[I].ReadOnly;
+          if FieldReadOnly then
+            Fields[I].ReadOnly := False;
+          try
+            CopyFieldValue(Fields[I], Original);
+          finally
+            if FieldReadOnly then
+              Fields[I].ReadOnly := True;
+          end;
         end;
       end;
+      // assign AutoInc value manually (make user keep largest if source isn't sorted by autoinc field)
+      if (FAutoIncField <> nil) and (FSrcAutoIncField <> nil) then
+        FAutoInc := Max(FAutoInc, FSrcAutoIncField.AsInteger);
       if FApplyMode <> amNone then
-        FieldByName(FStatusName).AsInteger := Integer(rsOriginal);
+        StatusField.AsInteger := Integer(rsOriginal);
       Post;
       Inc(Result);
       FDataSet.Next;
@@ -2290,6 +2374,7 @@ begin
     FRowsChanged := 0;
     FRowsAffected := 0;
   finally
+    SetLength(FCopyFromDataSetFieldDefs, 0);
     FSaveLoadState := slsNone;
     EnableControls;
     FDataSet.EnableControls;

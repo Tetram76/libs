@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvResources.pas 12594 2009-11-03 12:38:16Z ahuser $
+// $Id: JvResources.pas 12750 2010-04-04 13:58:22Z jfudickar $
 
 unit JvResources;
 
@@ -592,6 +592,7 @@ resourcestring
   SModifyAllClearFieldValues = 'Clear Field Values';
   SShowSQLStatementCaption = 'Show Current SQL Statement';
   SSQLStatementClipboardButton = '&Clipboard';
+  SSQLStatementWordWrapped = '&Word Wrapped';
 
 
 //=== JvDBControls.pas =======================================================
@@ -2359,8 +2360,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvResources.pas $';
-    Revision: '$Revision: 12594 $';
-    Date: '$Date: 2009-11-03 13:38:16 +0100 (mar. 03 nov. 2009) $';
+    Revision: '$Revision: 12750 $';
+    Date: '$Date: 2010-04-04 15:58:22 +0200 (dim. 04 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

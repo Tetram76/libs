@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNTEventLog.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvNTEventLog.pas 12769 2010-05-15 15:18:30Z ahuser $
 
 unit JvNTEventLog;
 
@@ -131,8 +131,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvNTEventLog.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12769 $';
+    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -369,14 +369,12 @@ end;
 
 constructor TNotifyChangeEventLog.Create(AOwner: TComponent);
 begin
-  inherited Create(True); // Create thread suspended
+  inherited Create(False);
 
   // initialize system events
   FEventLog := TJvNTEventLog(AOwner);
   FEventHandle := CreateEvent(nil, True, False, nil);
   NotifyChangeEventLog(FEventLog.FLogHandle, FEventHandle);
-
-  Suspended := False; // Continue the thread
 end;
 
 procedure TNotifyChangeEventLog.DoChange;

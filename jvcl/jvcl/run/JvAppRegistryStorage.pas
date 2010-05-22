@@ -51,7 +51,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppRegistryStorage.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvAppRegistryStorage.pas 12747 2010-04-02 12:27:37Z ahuser $
 
 unit JvAppRegistryStorage;
 
@@ -139,8 +139,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppRegistryStorage.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12747 $';
+    Date: '$Date: 2010-04-02 14:27:37 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -459,11 +459,15 @@ function TJvAppRegistryStorage.DoReadFloat(const Path: string; Default: Extended
 var
   SubKey: string;
   ValueName: string;
+  DataType: Cardinal;
 begin
   SplitKeyPath(Path, SubKey, ValueName);
   Result := Default;
   try
-    RegReadBinary(FRegHKEY, SubKey, ValueName, Result, SizeOf(Result));
+    if not RegGetDataType(FRegHKEY, SubKey, ValueName, DataType) or (DataType = REG_BINARY) then
+      RegReadBinary(FRegHKEY, SubKey, ValueName, Result, SizeOf(Result))
+    else
+      raise EJclRegistryError.CreateResFmt(@RsWrongDataType, ['', SubKey, ValueName]);
   except
     on E: EJclRegistryError do
       if StorageOptions.DefaultIfReadConvertError then

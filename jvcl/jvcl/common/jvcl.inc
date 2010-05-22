@@ -135,6 +135,11 @@ ALERT_jedi_inc_incompatible
  {$UNDEF QREPORT4}
 {$ENDIF !JVCL_UseQuickReport}
 
+{$IFDEF JVCL_GENERATE_CPP_PACKAGE_FILES}
+  // dcc32 -IL does not support class constructor/destructor
+  {$UNDEF SUPPORTS_CLASS_CTORDTORS}
+{$ENDIF JVCL_GENERATE_CPP_PACKAGE_FILES}
+
 {$IFDEF NO_UNITVERSIONING} // used by the Installer
  {$UNDEF UNITVERSIONING}
 {$ENDIF NO_UNITVERSIONING}

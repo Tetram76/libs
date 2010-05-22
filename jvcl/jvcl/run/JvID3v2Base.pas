@@ -25,7 +25,7 @@ Known Issues:
   * Some tags are not supported, see var DefaultFrameClasses. Values nil in that
     list indicate not supported frames.
 -----------------------------------------------------------------------------}
-// $Id: JvID3v2Base.pas 12585 2009-10-29 20:27:56Z ahuser $
+// $Id: JvID3v2Base.pas 12743 2010-04-02 11:10:53Z ahuser $
 
 unit JvID3v2Base;
 
@@ -1181,8 +1181,8 @@ function NiceGenreToGenre(const ANiceGenre: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvID3v2Base.pas $';
-    Revision: '$Revision: 12585 $';
-    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu. 29 oct. 2009) $';
+    Revision: '$Revision: 12743 $';
+    Date: '$Date: 2010-04-02 13:10:53 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1285,7 +1285,7 @@ var
     nil, { fiSyncedLyrics }
     nil, { fiSyncedTempo }
     TJvID3TextFrame, { fiAlbum }
-    TJvID3NumberFrame, { fiBPM }
+    TJvID3TextFrame, { fiBPM } // was NumberFrame changed 03/15/10 DW
     TJvID3SimpleListFrame, { fiComposer }
     TJvID3SimpleListFrame, { fiContentType }
     TJvID3TextFrame, { fiCopyright }
@@ -4134,7 +4134,7 @@ begin
   TStringList(FList).OnChange := ListChanged;
   {$ELSE}
   FList := JclUnicode.TWideStringList.Create;
-  TWideStringList(FList).OnChange := ListChanged;
+  JclUnicode.TWideStringList(FList).OnChange := ListChanged;
   {$ENDIF COMPILER12_UP}
 end;
 
@@ -7158,7 +7158,7 @@ begin
   TStringList(FList).OnChange := ListChanged;
   {$ELSE}
   FList := JclUnicode.TWideStringList.Create;
-  TWideStringList(FList).OnChange := ListChanged;
+  JclUnicode.TWideStringList(FList).OnChange := ListChanged;
   {$ENDIF COMPILER12_UP}
 end;
 

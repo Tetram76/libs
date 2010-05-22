@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 12630 2009-12-28 15:45:12Z obones $
+// $Id: JvComCtrls.pas 12744 2010-04-02 11:40:59Z ahuser $
 
 unit JvComCtrls;
 
@@ -58,10 +58,6 @@ const
   WM_CHECKSTATECHANGED = WM_USER + 1;
 
   JvDefaultTreeViewMultiSelectStyle = [msControlSelect, msShiftSelect, msVisibleOnly];
-  
-  {$IFNDEF COMPILER7_UP}
-  ComCtlVersionIE6 = $00060000;
-  {$ENDIF ~COMPILER7_UP}
 
 type
   TJvIPAddress = class;
@@ -639,8 +635,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 12630 $';
-    Date: '$Date: 2009-12-28 16:45:12 +0100 (lun. 28 déc. 2009) $';
+    Revision: '$Revision: 12744 $';
+    Date: '$Date: 2010-04-02 13:40:59 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -654,6 +650,15 @@ uses
 
 const
   TVIS_CHECKED = $2000;
+
+function NeedCheckStateEmulation(): Boolean; // ComCtrls 6+ under Vista+
+{$IFNDEF COMPILER7_UP}
+const
+  ComCtlVersionIE6 = $00060000;
+{$ENDIF ~COMPILER7_UP}
+begin
+  Result := (GetComCtlVersion < ComCtlVersionIE6) or not CheckWin32Version(6, 0);
+end;
 
 //=== { TJvIPAddressRange } ==================================================
 
@@ -2649,7 +2654,7 @@ end;
 
 procedure TJvTreeView.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  if Checkboxes and (GetComCtlVersion < ComCtlVersionIE6) and (Key = VK_SPACE) then // emulate missing notify message
+  if Checkboxes and NeedCheckStateEmulation() and (Key = VK_SPACE) then // emulate missing notify message
     PostCheckStateChanged(Selected);
 
   inherited KeyDown(Key, Shift);
@@ -2794,9 +2799,9 @@ begin
   begin
     Point := ScreenToClient(Point);
     case Msg.NMHdr.code of
-      NM_TVSTATEIMAGECHANGING: // ComCtrls 6+
+      NM_TVSTATEIMAGECHANGING: // ComCtrls 6+ and WinVer >= 6.0
         begin
-          if CheckBoxes and (GetComCtlVersion >= ComCtlVersionIE6) then
+          if CheckBoxes and not NeedCheckStateEmulation() then
           begin
             Node := Items.GetNode(PNMTVStateImageChanging(Msg.NMHdr).hti);
             PostCheckStateChanged(Node);
@@ -2812,7 +2817,7 @@ begin
             if Assigned(TJvTreeNode(Node).PopupMenu) then  // Popup menu may not be assigned
               TJvTreeNode(Node).PopupMenu.Popup(Mouse.CursorPos.X, Mouse.CursorPos.Y);
 
-          if Checkboxes and (GetComCtlVersion < ComCtlVersionIE6) and (Node <> nil) and  // emulate missing notify message
+          if Checkboxes and NeedCheckStateEmulation() and (Node <> nil) and  // emulate missing notify message
              (htOnStateIcon in GetHitTestInfoAt(Point.X, Point.Y)) then
             PostCheckStateChanged(Node);
         end;

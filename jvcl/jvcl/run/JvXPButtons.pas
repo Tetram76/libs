@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPButtons.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvXPButtons.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvXPButtons;
 
@@ -288,8 +288,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPButtons.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -923,7 +923,7 @@ end;
 
 procedure TJvXPCustomToolButton.SetDropDownMenu(const Value: TPopupMenu);
 begin
-  if ReplaceComponentReference (Self, Value, TComponent(FDropDownMenu)) then
+  if ReplaceComponentReference(Self, Value, TComponent(FDropDownMenu)) then
     LockedInvalidate;
 end;
 

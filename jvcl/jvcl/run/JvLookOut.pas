@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLookOut.pas 12511 2009-09-22 14:46:54Z obones $
+// $Id: JvLookOut.pas 12741 2010-04-02 10:43:13Z ahuser $
 
 unit JvLookOut;
 
@@ -475,8 +475,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLookOut.pas $';
-    Revision: '$Revision: 12511 $';
-    Date: '$Date: 2009-09-22 16:46:54 +0200 (mar. 22 sept. 2009) $';
+    Revision: '$Revision: 12741 $';
+    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1592,7 +1592,7 @@ end;
 
 procedure TJvCustomLookOutButton.SetPopupMenu(const Value: TPopupMenu);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FPopupMenu));
+  ReplaceComponentReference(Self, Value, TComponent(FPopupMenu));
 end;
 
 procedure TJvCustomLookOutButton.VisibleChanged;

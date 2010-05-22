@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCaptionPanel.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCaptionPanel.pas 12725 2010-03-16 22:12:27Z ahuser $
 
 unit JvCaptionPanel;
 
@@ -192,8 +192,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCaptionPanel.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12725 $';
+    Date: '$Date: 2010-03-16 23:12:27 +0100 (mar. 16 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -796,7 +796,12 @@ procedure TJvCaptionPanel.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y
 begin
   inherited MouseUp(Button, Shift, X, Y);
   if FDragging then
+  begin
+    {$IFDEF JVCAPTIONPANEL_STD_BEHAVE}
+    ReleaseCapture;
+    {$ENDIF JVCAPTIONPANEL_STD_BEHAVE}
     DoLeaveDrag;
+  end;
   FDragging := False;
 end;
 

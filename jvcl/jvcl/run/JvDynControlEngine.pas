@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngine.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDynControlEngine.pas 12696 2010-02-15 21:14:37Z jfudickar $
 
 unit JvDynControlEngine;
 
@@ -54,6 +54,7 @@ const
   jctRichEdit = TJvDynControlType('RichEdit');
   jctListBox = TJvDynControlType('ListBox');
   jctCheckListBox = TJvDynControlType('CheckListBox');
+  jctCheckComboBox = TJvDynControlType('CheckComboBox');
   jctDateTimeEdit = TJvDynControlType('DateTimeEdit');
   jctDateEdit = TJvDynControlType('DateEdit');
   jctTimeEdit = TJvDynControlType('TimeEdit');
@@ -162,9 +163,8 @@ type
       const AControlName: string): TWinControl; virtual;
     function CreateListBoxControl(AOwner: TComponent; AParentControl: TWinControl;
       const AControlName: string; AItems: TStrings): TWinControl; virtual;
-    function CreateCheckListBoxControl(AOwner: TComponent; AParentControl:
-        TWinControl; const AControlName: string; AItems: TStrings): TWinControl;
-        virtual;
+    function CreateCheckListBoxControl(AOwner: TComponent; AParentControl: TWinControl; const AControlName: string; AItems:
+        TStrings): TWinControl; virtual;
     function CreateDateTimeControl(AOwner: TComponent; AParentControl: TWinControl;
       const AControlName: string): TWinControl; virtual;
     function CreateDateControl(AOwner: TComponent; AParentControl: TWinControl;
@@ -193,6 +193,8 @@ type
       const ARadioButtonName, ACaption: string): TWinControl; virtual;
     function CreateButtonEditControl(AOwner: TComponent; AParentControl: TWinControl;
       const AControlName: string; AOnButtonClick: TNotifyEvent): TWinControl; virtual;
+    function CreateCheckComboBoxControl(AOwner: TComponent; AParentControl: TWinControl; const AControlName: string;
+        AItems: TStrings; ADelimiter: string): TWinControl; virtual;
     function CreateColorComboboxControl(AOwner: TComponent; AParentControl:
         TWinControl; const AControlName: string; ADefaultColor: TColor):
         TWinControl; virtual;
@@ -225,8 +227,8 @@ function DefaultDynControlEngine: TJvDynControlEngine;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngine.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12696 $';
+    Date: '$Date: 2010-02-15 22:14:37 +0100 (lun. 15 févr. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -730,9 +732,8 @@ begin
   end;
 end;
 
-function TJvDynControlEngine.CreateCheckListBoxControl(AOwner: TComponent;
-    AParentControl: TWinControl; const AControlName: string; AItems: TStrings):
-    TWinControl;
+function TJvDynControlEngine.CreateCheckListBoxControl(AOwner: TComponent; AParentControl: TWinControl; const
+    AControlName: string; AItems: TStrings): TWinControl;
 var
   DynCtrlItems: IJvDynControlItems;
 begin
@@ -854,6 +855,22 @@ begin
   Result := TWinControl(CreateControl(jctButtonEdit, AOwner, AParentControl, AControlName));
   IntfCast(Result, IJvDynControlButtonEdit, DynCtrlButtonEdit);
   DynCtrlButtonEdit.ControlSetOnButtonClick(AOnButtonClick);
+end;
+
+function TJvDynControlEngine.CreateCheckComboBoxControl(AOwner: TComponent; AParentControl: TWinControl; const
+    AControlName: string; AItems: TStrings; ADelimiter: string): TWinControl;
+var
+  DynCtrlItems: IJvDynControlItems;
+  DynControlCheckComboBox: IJvDynControlCheckComboBox;
+begin
+  Result := TWinControl(CreateControl(jctCheckComboBox, AOwner, AParentControl, AControlName));
+  if Assigned(AItems) then
+  begin
+    IntfCast(Result, IJvDynControlItems, DynCtrlItems);
+    DynCtrlItems.ControlSetItems(AItems);
+    IntfCast(Result, IJvDynControlCheckComboBox, DynControlCheckComboBox);
+    DynControlCheckComboBox.Delimiter := ADelimiter;
+  end;
 end;
 
 function TJvDynControlEngine.CreateColorComboboxControl(AOwner: TComponent;

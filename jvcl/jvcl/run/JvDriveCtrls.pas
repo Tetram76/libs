@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDriveCtrls.pas 12546 2009-10-03 16:32:19Z ahuser $
+// $Id: JvDriveCtrls.pas 12770 2010-05-16 12:43:57Z ahuser $
 
 unit JvDriveCtrls;
 
@@ -178,7 +178,7 @@ type
     constructor Create(AOwner: TComponent); override;
     procedure CreateWnd; override;
     destructor Destroy; override;
-    procedure Refresh;
+    procedure Refresh; // ahuser: This hides the TControl.Refresh method, why was that name used
     property Drives[Index: Integer]: string read GetDrives;
     property DriveCount: Integer read GetDriveCount;
     property Items stored False;
@@ -386,8 +386,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDriveCtrls.pas $';
-    Revision: '$Revision: 12546 $';
-    Date: '$Date: 2009-10-03 18:32:19 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12770 $';
+    Date: '$Date: 2010-05-16 14:43:57 +0200 (dim. 16 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -791,7 +791,7 @@ var
   S: string;
   Options: Integer;
   Drv: Char;
-  Tmp: array [0..104] of Char;
+  Tmp: array [0..105] of Char;
   P: PChar;
   LastErrorMode: Cardinal;
 begin
@@ -813,7 +813,7 @@ begin
   FillChar(Tmp[0], SizeOf(Tmp), #0);
   LastErrorMode := SetErrorMode(SEM_NOOPENFILEERRORBOX);
   try
-    GetLogicalDriveStrings(SizeOf(Tmp), Tmp);
+    GetLogicalDriveStrings(Length(Tmp) - 1, Tmp);
     P := Tmp;
     while P^ <> #0 do
     begin
@@ -1047,7 +1047,8 @@ procedure TJvDriveList.Change;
 begin
   if ItemIndex <> -1 then
     FItemIndex := ItemIndex;
-  Drive := FDrives[FItemIndex][1];
+  if (FItemIndex >= 0) and (FItemIndex < FDrives.Count) then
+    Drive := FDrives[FItemIndex][1];
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
@@ -1166,14 +1167,14 @@ procedure TJvDirectoryListBox.SetFileList(Value: TJvFileListBox);
 begin
   if FFileList <> nil then
     FFileList.FDirList := nil;
-  ReplaceComponentReference (Self, Value, TComponent(FFileList));
+  ReplaceComponentReference(Self, Value, TComponent(FFileList));
   if FFileList <> nil then
     FFileList.Directory := Directory;
 end;
 
 procedure TJvDirectoryListBox.SetDirLabel(Value: TLabel);
 begin
-  ReplaceComponentReference (Self, Value, TComponent(FDirLabel));
+  ReplaceComponentReference(Self, Value, TComponent(FDirLabel));
   SetDirLabelCaption;
 end;
 
@@ -1495,7 +1496,7 @@ procedure TJvDirectoryListBox.SetDriveCombo(const Value: TJvDriveCombo);
 begin
   if FDriveCombo <> nil then
     FDriveCombo.FDirList := nil;
-  ReplaceComponentReference (Self, Value, TComponent(FDriveCombo));
+  ReplaceComponentReference(Self, Value, TComponent(FDriveCombo));
   if FDriveCombo <> nil then
   begin
     FDriveCombo.FDirList := Self;

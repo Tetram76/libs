@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvId3v2.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvId3v2.pas 12743 2010-04-02 11:10:53Z ahuser $
 
 unit JvID3v2;
 
@@ -34,12 +34,10 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Classes, Graphics, Controls,
-  JvID3v2Types, JvID3v2Base
-  {$IFDEF COMPILER12_UP}
-  {$ELSE}
-  ,JclUnicode
-  {$ENDIF COMPILER12_UP}
-  ;
+  {$IFNDEF COMPILER12_UP}
+  JclUnicode,
+  {$ENDIF ~COMPILER12_UP}
+  JvID3v2Types, JvID3v2Base;
 
 type
   TJvID3Persistent = class(TPersistent)
@@ -60,6 +58,8 @@ type
     procedure SetList(const FrameID: Integer{TJvID3FrameID}; const Value: {$IFDEF COMPILER12_UP}TStrings{$ELSE}TWideStrings{$ENDIF COMPILER12_UP});
     procedure SetNumber(const FrameID: Integer{TJvID3FrameID}; const Value: Cardinal);
     procedure SetText(const FrameID: Integer{TJvID3FrameID}; const Value: WideString);
+    function GetBPM: Cardinal;
+    procedure SetBPM(const Value: Cardinal);
   public
     constructor Create(AController: TJvID3Controller);
     destructor Destroy; override;
@@ -68,7 +68,8 @@ type
     property Album: WideString index fiAlbum read GetText write SetText stored False;
     property AlbumSortOrder: WideString index fiAlbumSortOrder read GetText write SetText stored False;
     property Band: WideString index fiBand read GetText write SetText stored False;
-    property BPM: Cardinal index fiBPM read GetNumber write SetNumber stored False;
+    property BPM: Cardinal read GetBPM write SetBPM stored False;
+    property BPMStr: WideString index fiBPM read GetText write SetText stored False;
     property Composer: {$IFDEF COMPILER12_UP}TStrings{$ELSE}TWideStrings{$ENDIF COMPILER12_UP} index fiComposer read GetList write SetList stored False;
     property Conductor: WideString index fiConductor read GetText write SetText stored False;
     property ContentType: {$IFDEF COMPILER12_UP}TStrings{$ELSE}TWideStrings{$ENDIF COMPILER12_UP} index fiContentType read GetList write SetList stored False;
@@ -339,8 +340,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvId3v2.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12743 $';
+    Date: '$Date: 2010-04-02 13:10:53 +0200 (ven. 02 avr. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -763,6 +764,16 @@ begin
     Result := Frame.Text
   else
     Result := '';
+end;
+
+function TJvID3Text.GetBPM: Cardinal;
+begin
+  Result := Trunc(StrToFloat(StringReplace(BPMStr, '.', DecimalSeparator, [])));
+end;
+
+procedure TJvID3Text.SetBPM(const Value: Cardinal);
+begin
+  BPMStr := IntToStr(Value);
 end;
 
 procedure TJvID3Text.SetDateTime(const FrameID: Integer{TJvID3FrameID};
