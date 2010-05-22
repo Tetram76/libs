@@ -44,13 +44,18 @@
 {                                                                              }
 { **************************************************************************** }
 
-// Last modified: $Date: 2010-01-21 18:40:28 +0100 (jeu. 21 janv. 2010) $
+// Last modified: $Date: 2010-02-22 19:40:02 +0100 (lun. 22 févr. 2010) $
 
 unit JppLexer;
+
+{$I jcl.inc}
 
 interface
 
 uses
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   JclStrHashMap, JclStrings;
 
@@ -58,7 +63,8 @@ type
   TJppToken = (ptEof, ptComment, ptText, ptEol,
     ptDefine, ptUndef, ptIfdef, ptIfndef, ptIfopt, ptElse, ptEndif,
     ptInclude, ptJppDefineMacro, ptJppExpandMacro, ptJppUndefMacro,
-    ptJppStrValue, ptJppIntValue, ptJppBoolValue, ptJppRepeat, ptJppRepeatStrValue);
+    ptJppGetStrValue, ptJppGetIntValue, ptJppGetBoolValue,
+    ptJppSetStrValue, ptJppSetIntValue, ptJppSetBoolValue, ptJppLoop);
 
   EJppLexerError = class(Exception);
 
@@ -87,6 +93,18 @@ type
       file name / preprocessor symbol. }
     property RawComment: string read FRawComment;
   end;
+
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/devtools/jpp/JppLexer.pas $';
+    Revision: '$Revision: 3201 $';
+    Date: '$Date: 2010-02-22 19:40:02 +0100 (lun. 22 févr. 2010) $';
+    LogPath: 'JCL\devtools\jpp';
+    Extra: '';
+    Data: nil
+    );
+{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -117,11 +135,16 @@ begin
   AddToken('jppdefinemacro', ptjppDefineMacro);
   AddToken('jppexpandmacro', ptJppExpandMacro);
   AddToken('jppundefmacro', ptJppUndefMacro);
-  AddToken('jppstrvalue', ptJppStrValue);
-  AddToken('jpprepeatstrvalue', ptJppRepeatStrValue);
-  AddToken('jppintvalue', ptJppIntValue);
-  AddToken('jppboolvalue', ptJppBoolValue);
-  AddToken('jpprepeat', ptJppRepeat);
+  AddToken('jppstrvalue', ptJppGetStrValue);   // backward compatibility
+  AddToken('jppintvalue', ptJppGetIntValue);   // backward compatibility
+  AddToken('jppboolvalue', ptJppGetBoolValue); // backward compatibility
+  AddToken('jppgetstrvalue', ptJppGetStrValue);
+  AddToken('jppgetintvalue', ptJppGetIntValue);
+  AddToken('jppgetboolvalue', ptJppGetBoolValue);
+  AddToken('jppsetstrvalue', ptJppSetStrValue);
+  AddToken('jppsetintvalue', ptJppSetIntValue);
+  AddToken('jppsetboolvalue', ptJppSetBoolValue);
+  AddToken('jpploop', ptJppLoop);
 
   FBuf := ABuffer;
   Reset;
@@ -194,10 +217,12 @@ procedure TJppLexer.NextTok;
         ptUndef,
         ptIfdef,
         ptIfndef,
-        ptJppStrValue,
-        ptJppIntValue,
-        ptJppBoolValue,
-        ptJppRepeatStrValue:
+        ptJppGetStrValue,
+        ptJppGetIntValue,
+        ptJppGetBoolValue,
+        ptJppSetStrValue,
+        ptJppSetIntValue,
+        ptJppSetBoolValue:
           begin
             BPos := APos;
             StrSkipChars(BPos, CharIsWhiteSpace);
@@ -389,6 +414,14 @@ begin
   FCurrLine := 1;
   NextTok;
 end;
+
+{$IFDEF UNITVERSIONING}
+initialization
+  RegisterUnitVersion(HInstance, UnitVersioning);
+
+finalization
+  UnregisterUnitVersion(HInstance);
+{$ENDIF UNITVERSIONING}
 
 end.
 

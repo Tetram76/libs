@@ -38,16 +38,19 @@
 {                                                                              }
 { **************************************************************************** }
 
-// Last modified: $Date: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010) $
+// Last modified: $Date: 2010-02-22 19:40:02 +0100 (lun. 22 févr. 2010) $
 
 unit JppParser;
 
-{$I jedi.inc}
+{$I jcl.inc}
 
 interface
 
 uses
   SysUtils, Classes,
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
   JppState, JppLexer;
 
 type
@@ -64,10 +67,9 @@ type
     FSkipLevel: Integer;
     FAllWhiteSpaceIn: Boolean;
     FAllWhiteSpaceOut: Boolean;
-    FRepeatIndex: Integer;
     procedure RemoveOrphanedLineBreaks;
   protected
-    procedure AddResult(const S: string);
+    procedure AddResult(const S: string; FixIndent: Boolean = False);
     function IsExcludedInclude(const FileName: string): Boolean;
 
     procedure NextToken;
@@ -83,11 +85,13 @@ type
     procedure ParseExpandMacro;
     procedure ParseUndefMacro;
 
-    procedure ParseBoolValue;
-    procedure ParseIntValue;
-    procedure ParseRepeat;
-    procedure ParseStrValue;
-    procedure ParseRepeatStrValue;
+    procedure ParseGetBoolValue;
+    procedure ParseGetIntValue;
+    procedure ParseGetStrValue;
+    procedure ParseLoop;
+    procedure ParseSetBoolValue;
+    procedure ParseSetIntValue;
+    procedure ParseSetStrValue;
 
     // same as ParseText, but throws result away
     procedure Skip;
@@ -100,10 +104,22 @@ type
     function Parse: string;
   end;
 
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/devtools/jpp/JppParser.pas $';
+    Revision: '$Revision: 3201 $';
+    Date: '$Date: 2010-02-22 19:40:02 +0100 (lun. 22 févr. 2010) $';
+    LogPath: 'JCL\devtools\jpp';
+    Extra: '';
+    Data: nil
+    );
+{$ENDIF UNITVERSIONING}
+
 implementation
 
 uses
-  JclBase, JclStrings, JclStreams;
+  JclBase, JclStrings, JclStreams, JclSysUtils;
   
 {$IFDEF MSWINDOWS}
 const
@@ -249,7 +265,6 @@ begin
   FState := APppState;
   FTriState := ttUnknown;
   FState.Undef('PROTOTYPE');
-  FRepeatIndex := -1;
 end;
 
 destructor TJppParser.Destroy;
@@ -258,16 +273,118 @@ begin
   inherited;
 end;
 
-procedure TJppParser.AddResult(const S: string);
+procedure TJppParser.AddResult(const S: string; FixIndent: Boolean);
+var
+  I, J: Integer;
+  LinePrefix, AResult: string;
+  TempMemoryStream: TMemoryStream;
+  TempStringStream: TJclAutoStream;
+  TempLexer: TJppLexer;
+  TempParser: TJppParser;
+  Lines: TStrings;
+  Recurse: Boolean;
 begin
+  AResult := S;
+  // recurse macro expanding
+  if StrIPos('$JPP', AResult) > 0 then
+  begin
+    Recurse := False;
+    TempLexer := TJppLexer.Create(AResult);
+    try
+      while True do
+      begin
+        case TempLexer.CurrTok of
+          ptEof:
+            Break;
+          ptJppDefineMacro,
+          ptJppExpandMacro,
+          ptJppUndefMacro,
+          ptJppGetStrValue,
+          ptJppGetIntValue,
+          ptJppGetBoolValue,
+          ptJppSetStrValue,
+          ptJppSetIntValue,
+          ptJppSetBoolValue,
+          ptJppLoop:
+            begin
+              Recurse := True;
+              Break;
+            end;
+        end;
+        TempLexer.NextTok;
+      end;
+    finally
+      TempLexer.Free;
+    end;
+    if Recurse then
+    begin
+      TempMemoryStream := TMemoryStream.Create;
+      try
+        TempStringStream := TJclAutoStream.Create(TempMemoryStream);
+        try
+          TempStringStream.WriteString(AResult, 1, Length(AResult));
+          TempStringStream.Seek(0, soBeginning);
+          TempParser := TJppParser.Create(TempStringStream.ReadString, State);
+          try
+            AResult := TempParser.Parse;
+          finally
+            TempParser.Free;
+          end;
+        finally
+          TempStringStream.Free;
+        end;
+      finally
+        TempMemoryStream.Free;
+      end;
+    end;
+  end;
+  if FixIndent then
+  begin
+    // find the number of white space at the beginning of the current line (indentation level)
+    I := FResultLen + 1;
+    while (I > 1) and not CharIsReturn(FResult[I - 1]) do
+     Dec(I);
+    J := I;
+    while (J <= FResultLen) and CharIsWhiteSpace(FResult[J]) do
+      Inc(J);
+    LinePrefix := StrRepeat(NativeSpace, J - I);
+
+    Lines := TStringList.Create;
+    try
+      StrToStrings(AResult, NativeLineBreak, Lines);
+      // remove first empty lines
+      while Lines.Count > 0 do
+      begin
+        if Lines.Strings[0] = '' then
+          Lines.Delete(0)
+        else
+          Break;
+      end;
+      // remove last empty lines
+      for I := Lines.Count - 1 downto 0 do
+      begin
+        if Lines.Strings[I] = '' then
+          Lines.Delete(I)
+        else
+          Break;
+      end;
+      // fix line offsets
+      if LinePrefix <> '' then
+        for I := 1 to Lines.Count - 1 do
+          Lines.Strings[I] := LinePrefix + Lines.Strings[I];
+      AResult := StringsToStr(Lines, NativeLineBreak);
+    finally
+      Lines.Free;
+    end;
+  end;
   if FSkipLevel > 0 then
     Exit;
-  while FResultLen + Length(S) > Length(FResult) do
+  while FResultLen + Length(AResult) > Length(FResult) do
     SetLength(FResult, Length(FResult) * 2);
-  Move(S[1], FResult[FResultLen + 1], Length(S) * SizeOf(Char));
+  Move(AResult[1], FResult[FResultLen + 1], Length(AResult) * SizeOf(Char));
   if FAllWhiteSpaceOut then
     FAllWhiteSpaceOut := AllWhiteSpace(@FResult[FLineBreakPos]);
-  Inc(FResultLen, Length(S));
+  Inc(FResultLen, Length(AResult));
 end;
 
 function TJppParser.IsExcludedInclude(const FileName: string): Boolean;
@@ -321,11 +438,13 @@ begin
     ptJppDefineMacro,
     ptJppExpandMacro,
     ptJppUndefMacro,
-    ptJppStrValue,
-    ptJppIntValue,
-    ptJppBoolValue,
-    ptJppRepeat,
-    ptJppRepeatStrValue:
+    ptJppGetStrValue,
+    ptJppGetIntValue,
+    ptJppGetBoolValue,
+    ptJppSetStrValue,
+    ptJppSetIntValue,
+    ptJppSetBoolValue,
+    ptJppLoop:
       FAllWhiteSpaceIn := False;
     ptInclude:
       FAllWhiteSpaceIn := IsExcludedInclude(Lexer.TokenAsString);
@@ -351,7 +470,7 @@ var
   SavedTriState: TTriState;
 begin
   SavedTriState := FTriState;
-  FTriState := State.DefineTriState[Lexer.TokenAsString];
+  FTriState := State.Defines[Lexer.TokenAsString];
   try
     if FTriState = ttUnknown then
     begin
@@ -403,7 +522,7 @@ begin
   case FTriState of
     ttUnknown:
       begin
-        State.DefineTriState[Lexer.TokenAsString] := ttUnknown;
+        State.Defines[Lexer.TokenAsString] := ttUnknown;
         AddResult(Lexer.RawComment);
       end;
     ttDefined: State.Define(Lexer.TokenAsString);
@@ -434,109 +553,15 @@ end;
 
 procedure TJppParser.ParseExpandMacro;
 var
-  MacroText, MacroName, AResult, LinePrefix: string;
+  MacroText, MacroName, AResult: string;
   ParamNames: TDynStringArray;
-  I, J: Integer;
-  TempMemoryStream: TMemoryStream;
-  TempStringStream: TJclAutoStream;
-  TempLexer: TJppLexer;
-  TempParser: TJppParser;
-  Recurse: Boolean;
-  Lines: TStrings;
 begin
   MacroText := Lexer.TokenAsString;
   // expand the macro
   ParseMacro(MacroText, MacroName, ParamNames, False);
   AResult := State.ExpandMacro(MacroName, ParamNames);
-  // recurse macro expanding
-  if StrIPos('$JPP', AResult) > 0 then
-  begin
-    Recurse := False;
-    TempLexer := TJppLexer.Create(AResult);
-    try
-      while True do
-      begin
-        case TempLexer.CurrTok of
-          ptEof:
-            Break;
-          ptJppDefineMacro,
-          ptJppExpandMacro,
-          ptJppUndefMacro,
-          ptJppStrValue,
-          ptJppIntValue,
-          ptJppBoolValue,
-          ptJppRepeat,
-          ptJppRepeatStrValue:
-            begin
-              Recurse := True;
-              Break;
-            end;
-        end;
-        TempLexer.NextTok;
-      end;
-    finally
-      TempLexer.Free;
-    end;
-    if Recurse then
-    begin
-      TempMemoryStream := TMemoryStream.Create;
-      try
-        TempStringStream := TJclAutoStream.Create(TempMemoryStream);
-        try
-          TempStringStream.WriteString(AResult, 1, Length(AResult));
-          TempStringStream.Seek(0, soBeginning);
-          TempParser := TJppParser.Create(TempStringStream.ReadString, State);
-          try
-            AResult := TempParser.Parse;
-          finally
-            TempParser.Free;
-          end;
-        finally
-          TempStringStream.Free;
-        end;
-      finally
-        TempMemoryStream.Free;
-      end;
-    end;
-  end;
-  // find the number of white space at the beginning of the current line (indentation level)
-  I := FResultLen + 1;
-  while (I > 1) and not CharIsReturn(FResult[I - 1]) do
-    Dec(I);
-  J := I;
-  while (J <= FResultLen) and CharIsWhiteSpace(FResult[J]) do
-    Inc(J);
-  LinePrefix := StrRepeat(NativeSpace, J - I);
-
-  Lines := TStringList.Create;
-  try
-    StrToStrings(AResult, NativeLineBreak, Lines);
-    // remove first empty lines
-    while Lines.Count > 0 do
-    begin
-      if Lines.Strings[0] = '' then
-        Lines.Delete(0)
-      else
-        Break;
-    end;
-    // remove last empty lines
-    for I := Lines.Count - 1 downto 0 do
-    begin
-      if Lines.Strings[I] = '' then
-        Lines.Delete(I)
-      else
-        Break;
-    end;
-    // fix line offsets
-    if LinePrefix <> '' then
-      for I := 1 to Lines.Count - 1 do
-        Lines.Strings[I] := LinePrefix + Lines.Strings[I];
-    AResult := StringsToStr(Lines, NativeLineBreak);
-  finally
-    Lines.Free;
-  end;
   // add result to buffer
-  AddResult(AResult);
+  AddResult(AResult, True);
   NextToken;
 end;
 
@@ -545,7 +570,7 @@ begin
   case FTriState of
     ttUnknown:
       begin
-        State.DefineTriState[Lexer.TokenAsString] := ttUnknown;
+        State.Defines[Lexer.TokenAsString] := ttUnknown;
         AddResult(Lexer.RawComment);
       end;
     ttDefined: State.Undef(Lexer.TokenAsString);
@@ -605,79 +630,141 @@ begin
   NextToken;
 end;
 
-procedure TJppParser.ParseStrValue;
+procedure TJppParser.ParseGetStrValue;
 var
   Name: string;
 begin
   Name := Lexer.TokenAsString;
-  AddResult(State.GetStrValue(Name));
+  AddResult(State.StringValues[Name]);
   NextToken;
 end;
 
-procedure TJppParser.ParseIntValue;
+procedure TJppParser.ParseGetIntValue;
 var
   Name: string;
 begin
   Name := Lexer.TokenAsString;
-  AddResult(IntToStr(State.GetIntValue(Name)));
+  AddResult(IntToStr(State.IntegerValues[Name]));
   NextToken;
 end;
 
-procedure TJppParser.ParseBoolValue;
+procedure TJppParser.ParseGetBoolValue;
 var
   Name: string;
 begin
   Name := Lexer.TokenAsString;
-  AddResult(BoolToStr(State.GetBoolValue(Name), True));
+  AddResult(BoolToStr(State.BoolValues[Name], True));
   NextToken;
 end;
 
-procedure TJppParser.ParseRepeat;
+procedure TJppParser.ParseLoop;
+var
+  I, J, RepeatIndex, RepeatCount: Integer;
+  RepeatText, IndexName, CountName: string;
+begin
+  I := 1;
+  RepeatText := Lexer.RawComment;
+  while (I <= Length(RepeatText)) and not CharIsWhiteSpace(RepeatText[I]) do
+    Inc(I);
+  while (I <= Length(RepeatText)) and CharIsWhiteSpace(RepeatText[I]) do
+    Inc(I);
+  J := I;
+  while (J <= Length(RepeatText)) and CharIsValidIdentifierLetter(RepeatText[J]) do
+    Inc(J);
+  IndexName := Copy(RepeatText, I, J - I);
+  while (J <= Length(RepeatText)) and CharIsWhiteSpace(RepeatText[J]) do
+    Inc(J);
+  I := J;
+  while (J <= Length(RepeatText)) and CharIsValidIdentifierLetter(RepeatText[I]) do
+    Inc(I);
+  CountName := Copy(RepeatText, J, I - J);
+
+  J := Length(RepeatText);
+  if RepeatText[J] = ')' then
+    Dec(J);
+  RepeatText := Copy(RepeatText, I, J - I);
+  RepeatCount := State.IntegerValues[CountName];
+  for RepeatIndex := 0 to RepeatCount - 1 do
+  begin
+    State.IntegerValues[IndexName] := RepeatIndex;
+    AddResult(RepeatText);
+  end;
+  NextToken;
+end;
+
+procedure TJppParser.ParseSetStrValue;
 var
   I, J: Integer;
-  RepeatText, CountName: string;
+  Text, Name, Value: string;
 begin
-  if FRepeatIndex = -1 then
-  begin
-    I := 1;
-    RepeatText := Lexer.RawComment;
-    while (I <= Length(RepeatText)) and not CharIsWhiteSpace(RepeatText[I]) do
-      Inc(I);
-    while (I <= Length(RepeatText)) and CharIsWhiteSpace(RepeatText[I]) do
-      Inc(I);
-    J := I;
-    while (J <= Length(RepeatText)) and CharIsValidIdentifierLetter(RepeatText[J]) do
-      Inc(J);
-    CountName := Copy(RepeatText, I, J - I);
-    I := Length(RepeatText);
-    if RepeatText[I] = ')' then
-      Dec(I);
-    RepeatText := Copy(RepeatText, J, I - J);
-    FRepeatIndex := State.GetIntValue(CountName);
-    while FRepeatIndex > 0 do
-    begin
-      Dec(FRepeatIndex);
-      AddResult(RepeatText);
-    end;
-    FRepeatIndex := -1;
-    NextToken;
-  end
-  else
-    raise EPppParserError.Create('Nested repeat');
+  I := 1;
+  Text := Lexer.RawComment;
+  while (I <= Length(Text)) and not CharIsWhiteSpace(Text[I]) do
+    Inc(I);
+  while (I <= Length(Text)) and CharIsWhiteSpace(Text[I]) do
+    Inc(I);
+  J := I;
+  while (J <= Length(Text)) and CharIsValidIdentifierLetter(Text[J]) do
+    Inc(J);
+  Name := Copy(Text, I, J - I);
+  while (J <= Length(Text)) and CharIsWhiteSpace(Text[J]) do
+    Inc(J);
+  I := Length(Text);
+  if Text[I] = ')' then
+    Dec(I);
+  Value := Copy(Text, J, I - J);
+  State.StringValues[Name] := Value;
+  NextToken;
 end;
 
-procedure TJppParser.ParseRepeatStrValue;
+procedure TJppParser.ParseSetIntValue;
 var
-  Name: string;
+  I, J: Integer;
+  Text, Name, Value: string;
 begin
-  if FRepeatIndex > -1 then
-  begin
-    Name := Lexer.TokenAsString;
-    AddResult(State.GetStringsValue(Name).Strings[FRepeatIndex]);
-    NextToken;
-  end
-  else
-    raise EPppParserError.Create('JPPREPEATSTRVALUE outside JPPREPEAT');
+  I := 1;
+  Text := Lexer.RawComment;
+  while (I <= Length(Text)) and not CharIsWhiteSpace(Text[I]) do
+    Inc(I);
+  while (I <= Length(Text)) and CharIsWhiteSpace(Text[I]) do
+    Inc(I);
+  J := I;
+  while (J <= Length(Text)) and CharIsValidIdentifierLetter(Text[J]) do
+    Inc(J);
+  Name := Copy(Text, I, J - I);
+  while (J <= Length(Text)) and CharIsWhiteSpace(Text[J]) do
+    Inc(J);
+  I := Length(Text);
+  if Text[I] = ')' then
+    Dec(I);
+  Value := Copy(Text, J, I - J);
+  State.IntegerValues[Name] := StrToInt(Value);
+  NextToken;
+end;
+
+procedure TJppParser.ParseSetBoolValue;
+var
+  I, J: Integer;
+  Text, Name, Value: string;
+begin
+  I := 1;
+  Text := Lexer.RawComment;
+  while (I <= Length(Text)) and not CharIsWhiteSpace(Text[I]) do
+    Inc(I);
+  while (I <= Length(Text)) and CharIsWhiteSpace(Text[I]) do
+    Inc(I);
+  J := I;
+  while (J <= Length(Text)) and CharIsValidIdentifierLetter(Text[J]) do
+    Inc(J);
+  Name := Copy(Text, I, J - I);
+  while (J <= Length(Text)) and CharIsWhiteSpace(Text[J]) do
+    Inc(J);
+  I := Length(Text);
+  if Text[I] = ')' then
+    Dec(I);
+  Value := Copy(Text, J, I - J);
+  State.BoolValues[Name] := StrToBoolean(Value);
+  NextToken;
 end;
 
 procedure TJppParser.ParseText;
@@ -746,19 +833,29 @@ begin
         else
           AddRawComment;
 
-      ptJppStrValue, ptJppIntValue, ptJppBoolValue, ptJppRepeat, ptJppRepeatStrValue:
+      ptJppGetStrValue,
+      ptJppGetIntValue,
+      ptJppGetBoolValue,
+      ptJppSetStrValue,
+      ptJppSetIntValue,
+      ptJppSetBoolValue,
+      ptJppLoop:
         if poProcessValues in State.Options then
           case Lexer.CurrTok of
-            ptJppStrValue:
-              ParseStrValue;
-            ptJppIntValue:
-              ParseIntValue;
-            ptJppBoolValue:
-              ParseBoolValue;
-            ptJppRepeat:
-              ParseRepeat;
-            ptJppRepeatStrValue:
-              ParseRepeatStrValue;
+            ptJppGetStrValue:
+              ParseGetStrValue;
+            ptJppGetIntValue:
+              ParseGetIntValue;
+            ptJppGetBoolValue:
+              ParseGetBoolValue;
+            ptJppSetStrValue:
+              ParseSetStrValue;
+            ptJppSetIntValue:
+              ParseSetIntValue;
+            ptJppSetBoolValue:
+              ParseSetBoolValue;
+            ptJppLoop:
+              ParseLoop;
           end
         else
           AddRawComment;
@@ -776,5 +873,13 @@ begin
     Dec(FSkipLevel);
   end;
 end;
+
+{$IFDEF UNITVERSIONING}
+initialization
+  RegisterUnitVersion(HInstance, UnitVersioning);
+
+finalization
+  UnregisterUnitVersion(HInstance);
+{$ENDIF UNITVERSIONING}
 
 end.

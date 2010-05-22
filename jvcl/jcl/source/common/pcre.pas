@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3139                                                                     $ }
+{ Last modified: $Date:: 2010-02-22 11:08:20 +0100 (lun. 22 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3196                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -45,13 +45,22 @@ unit pcre;
 interface
 
 uses
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
   JclBase;
 
 (*************************************************
 *       Perl-Compatible Regular Expressions      *
 *************************************************)
 
-{$WEAKPACKAGEUNIT ON}
+{$IFDEF SUPPORTS_WEAKPACKAGEUNIT}
+  {$IFDEF UNITVERSIONING}
+    {$WEAKPACKAGEUNIT OFF}
+  {$ELSE ~UNITVERSIONING}
+    {$WEAKPACKAGEUNIT ON}
+  {$ENDIF ~UNITVERSIONING}
+{$ENDIF SUPPORTS_WEAKPACKAGEUNIT}
 
 // (p3) this is the switch to change between static and dynamic linking.
 // It is set to dynamic by default. To disable simply insert a '.' before the '$'
@@ -573,6 +582,18 @@ var
 function IsPCRELoaded: Boolean;
 function LoadPCRE: Boolean;
 procedure UnloadPCRE;
+
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/pcre.pas $';
+    Revision: '$Revision: 3196 $';
+    Date: '$Date: 2010-02-22 11:08:20 +0100 (lun. 22 févr. 2010) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
+  );
+{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -1128,6 +1149,14 @@ function pcre_refcount; external libpcremodulename name PCRERefCountExportName;
 function pcre_study; external libpcremodulename name PCREStudyExportName;
 function pcre_version; external libpcremodulename name PCREVersionExportName;
 {$ENDIF PCRE_LINKDLL}
+
+{$IFDEF UNITVERSIONING}
+initialization
+  RegisterUnitVersion(HInstance, UnitVersioning);
+
+finalization
+  UnregisterUnitVersion(HInstance);
+{$ENDIF UNITVERSIONING}
 
 end.
 

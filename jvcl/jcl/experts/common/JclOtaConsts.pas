@@ -21,9 +21,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-27 14:17:56 +0100 (mer. 27 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3151                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010)                            $ }
+{ Revision:      $Rev:: 3248                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -101,6 +101,7 @@ const
   JclDebugGenerateJdbgSetting   = 'JCL_DEBUG_EXPERT_GENERATEJDBG';
   JclDebugInsertJdbgSetting     = 'JCL_DEBUG_EXPERT_INSERTJDBG';
   JclDebugDeleteMapfileSetting  = 'JCL_DEBUG_EXPERT_DELETEMAPFILE';
+  JclDebugQuietSetting          = 'JCL_DEBUG_EXPERT_QUIET';
 
   //=== Favorite Folders Expert ==============================================
   JclFavoritesExpertName     = 'JclFavoriteFoldersExpert';
@@ -160,8 +161,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConsts.pas $';
-    Revision: '$Revision: 3151 $';
-    Date: '$Date: 2010-01-27 14:17:56 +0100 (mer. 27 janv. 2010) $';
+    Revision: '$Revision: 3248 $';
+    Date: '$Date: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

@@ -21,9 +21,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 22:53:34 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3175                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010)                            $ }
+{ Revision:      $Rev:: 3248                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -285,6 +285,7 @@ resourcestring
   RsDebugInsertJdbg = 'Insert JDBG data into the binary';
   RsDeleteMapFile = 'Delete map files after conversion';
   RsEInvalidDebugExpertState = '%d is not a valid debug expert state';
+  RsQuiet = 'Do not show dialogs or log entries';
 
 //=== JclDebugIdeResult.pas ==================================================
 resourcestring
@@ -500,8 +501,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaResources.pas $';
-    Revision: '$Revision: 3175 $';
-    Date: '$Date: 2010-02-03 22:53:34 +0100 (mer. 03 févr. 2010) $';
+    Revision: '$Revision: 3248 $';
+    Date: '$Date: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

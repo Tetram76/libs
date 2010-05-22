@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-10 19:54:31 +0200 (lun. 10 août 2009)                          $ }
-{ Revision:      $Rev:: 2940                                                                     $ }
+{ Last modified: $Date:: 2010-02-21 12:36:35 +0100 (dim. 21 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3195                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -65,7 +65,7 @@ type
   // function pointer types
 
   // apply functions Type -> Type
-  {$JPPEXPANDMACRO APPLYFUNCTION(TIntfApplyFunction,const ,AInterface,IInterface)}
+  {$JPPEXPANDMACRO APPLYFUNCTION(TYPENAME=IInterface,FUNCNAME=TIntfApplyFunction,CONSTKEYWORD=const ,PARAMETERNAME=AInterface)}
   {$JPPEXPANDMACRO APPLYFUNCTION(TAnsiStrApplyFunction,const ,AString,AnsiString)}
   {$JPPEXPANDMACRO APPLYFUNCTION(TWideStrApplyFunction,const ,AString,WideString)}
   {$IFDEF SUPPORTS_UNICODE_STRING}
@@ -1597,8 +1597,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclContainerIntf.pas $';
-    Revision: '$Revision: 2940 $';
-    Date: '$Date: 2009-08-10 19:54:31 +0200 (lun. 10 août 2009) $';
+    Revision: '$Revision: 3195 $';
+    Date: '$Date: 2010-02-21 12:36:35 +0100 (dim. 21 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

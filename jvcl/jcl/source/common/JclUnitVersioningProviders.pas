@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009)                          $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3188                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -99,6 +99,16 @@ type
 function InsertUnitVersioningSection(const ExecutableFileName: TFileName;
   AUnitList: TJclUnitVersioningList): Boolean;
 {$ENDIF MSWINDOWS}
+
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnitVersioningProviders.pas $';
+    Revision: '$Revision: 3188 $';
+    Date: '$Date: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
+  );
 
 implementation
 
@@ -393,16 +403,6 @@ begin
   if Idx <> -1 then
     FModules.Delete(Idx);
 end;
-
-const
-  UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnitVersioningProviders.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009) $';
-    LogPath: 'JCL\source\common';
-    Extra: '';
-    Data: nil
-  );
 
 initialization
   RegisterUnitVersion(HInstance, UnitVersioning);

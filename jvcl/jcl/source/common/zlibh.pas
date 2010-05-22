@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3139                                                                     $ }
+{ Last modified: $Date:: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3188                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -63,6 +63,9 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
   JclBase;
 
 {$IFNDEF FPC}
@@ -1990,6 +1993,18 @@ function IsZLibLoaded: Boolean;
 function LoadZLib: Boolean;
 procedure UnloadZLib;
 
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/zlibh.pas $';
+    Revision: '$Revision: 3188 $';
+    Date: '$Date: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
+  );
+{$ENDIF UNITVERSIONING}
+
 implementation
 
 uses
@@ -2348,8 +2363,13 @@ function inflateSyncPoint;     external szZLIB name ZLIBinflateSyncPointExportNa
 function get_crc_table;        external szZLIB name ZLIBget_crc_tableExportName;
 {$ENDIF ZLIB_LINKDLL}
 
+{$IFDEF UNITVERSIONING}
+initialization
+  RegisterUnitVersion(HInstance, UnitVersioning);
+
+finalization
+  UnregisterUnitVersion(HInstance);
+{$ENDIF UNITVERSIONING}
+
 end.
-
-
-
 

@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-02-22 18:11:16 +0100 (lun. 22 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3198                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -84,11 +84,13 @@ type
     FMainThread: Boolean;
     FTraceEAbort: Boolean;
     FIgnoredExceptions: TStrings;
+    FIgnoredExceptionsIndex: Integer;
     FTraceAllExceptions: Boolean;
     function GetIgnoredExceptionsCount: Integer;
     function GetReportAllThreads: Boolean;
     function GetReportExceptionThread: Boolean;
     function GetReportMainThread: Boolean;
+    function GetIgnoredException: string;
   public
     constructor Create; reintroduce;
     destructor Destroy; override; 
@@ -129,7 +131,9 @@ type
     property TraceAllExceptions: Boolean read FTraceAllExceptions
       write FTraceAllExceptions;
     property TraceEAbort: Boolean read FTraceEAbort write FTraceEAbort;
+    property IgnoredException: string read GetIgnoredException;
     property IgnoredExceptions: TStrings read FIgnoredExceptions write FIgnoredExceptions;
+    property IgnoredExceptionsIndex: Integer read FIgnoredExceptionsIndex write FIgnoredExceptionsIndex;
     property IgnoredExceptionsCount: Integer read GetIgnoredExceptionsCount;
     // trace options
     property StackList: Boolean read FStackList write FStackList;
@@ -155,8 +159,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgParams.pas $';
-    Revision: '$Revision: 3163 $';
-    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
+    Revision: '$Revision: 3198 $';
+    Date: '$Date: 2010-02-22 18:11:16 +0100 (lun. 22 févr. 2010) $';
     LogPath: 'JCL\experts\repository\ExceptionDialog';
     Extra: '';
     Data: nil
@@ -221,6 +225,11 @@ destructor TJclOtaExcDlgParams.Destroy;
 begin
   FIgnoredExceptions.Free;
   inherited Destroy;
+end;
+
+function TJclOtaExcDlgParams.GetIgnoredException: string;
+begin
+  Result := FIgnoredExceptions.Strings[FIgnoredExceptionsIndex];
 end;
 
 function TJclOtaExcDlgParams.GetIgnoredExceptionsCount: Integer;

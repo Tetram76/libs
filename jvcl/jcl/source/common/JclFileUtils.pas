@@ -51,9 +51,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3160                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-03-28 19:05:50 +0200 (dim. 28 mars 2010)                           $ }
+{ Revision:      $Rev:: 3221                                                                     $ }
+{ Author:        $Author:: sfarrow                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -172,7 +172,8 @@ type
   TFileHandlerEx = procedure (const Directory: string; const FileInfo: TSearchRec) of object;
   TFileInfoHandlerEx = procedure (const FileInfo: TSearchRec) of object;
 
-function BuildFileList(const Path: string; const Attr: Integer; const List: TStrings): Boolean;
+function BuildFileList(const Path: string; const Attr: Integer; const List: TStrings; IncludeDirectoryName: Boolean =
+    False): Boolean;
 function AdvBuildFileList(const Path: string; const Attr: Integer; const Files: TStrings;
   const AttributeMatch: TJclAttributeMatch = amSuperSetOf; const Options: TFileListOptions = [];
   const SubfoldersMask: string = ''; const FileMatchFunc: TFileMatchFunc = nil): Boolean;
@@ -711,8 +712,11 @@ type
 function OSIdentToString(const OSIdent: DWORD): string;
 function OSFileTypeToString(const OSFileType: DWORD; const OSFileSubType: DWORD = 0): string;
 
-function VersionResourceAvailable(const FileName: string): Boolean;
+function VersionResourceAvailable(const FileName: string): Boolean; overload;
+function VersionResourceAvailable(const Window: HWND): Boolean; overload;
+function VersionResourceAvailable(const Module: HMODULE): Boolean; overload;
 
+function WindowToModuleFileName(const Window: HWND): string;
 {$ENDIF MSWINDOWS}
 
 // Version Info formatting
@@ -1038,8 +1042,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 3160 $';
-    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
+    Revision: '$Revision: 3221 $';
+    Date: '$Date: 2010-03-28 19:05:50 +0200 (dim. 28 mars 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -3099,8 +3103,8 @@ end;
    FileMask Seperator = ';'
  *}
 
-function BuildFileList(const Path: string; const Attr: Integer;
-  const List: TStrings): Boolean;
+function BuildFileList(const Path: string; const Attr: Integer; const List: TStrings; IncludeDirectoryName: Boolean =
+    False): Boolean;
 var
   SearchRec: TSearchRec;
   IndexMask: Integer;
@@ -3139,7 +3143,10 @@ begin
             and ((SearchRec.Attr and Attr) = (SearchRec.Attr and faAnyFile))
             and IsFileNameMatch(SearchRec.Name, MaskList.Strings[IndexMask]) then
         begin
-          List.Add(SearchRec.Name);
+          if IncludeDirectoryName then
+            List.Add(Directory+SearchRec.Name)
+          else
+            List.Add(SearchRec.Name);
           Break;
         end;
 
@@ -3203,14 +3210,11 @@ var
   SH: SHFILEOPSTRUCT;
 begin
   ResetMemory(SH, SizeOf(SH));
-  with SH do
-  begin
-    Wnd    := 0;
-    wFunc  := FO_COPY;
-    pFrom  := PChar(PathRemoveSeparator(ExistingDirectoryName) + #0);
-    pTo    := PChar(PathRemoveSeparator(NewDirectoryName) + #0);
-    fFlags := FOF_ALLOWUNDO or FOF_NOCONFIRMATION or FOF_NOCONFIRMMKDIR or FOF_SILENT;
-  end;
+  SH.Wnd    := 0;
+  SH.wFunc  := FO_COPY;
+  SH.pFrom  := PChar(PathRemoveSeparator(ExistingDirectoryName) + #0);
+  SH.pTo    := PChar(PathRemoveSeparator(NewDirectoryName) + #0);
+  SH.fFlags := FOF_ALLOWUNDO or FOF_NOCONFIRMATION or FOF_NOCONFIRMMKDIR or FOF_SILENT;
   Result := SHFileOperation(SH) = 0;
 end;
 
@@ -3219,14 +3223,11 @@ var
   SH: SHFILEOPSTRUCT;
 begin
   ResetMemory(SH, SizeOf(SH));
-  with SH do
-  begin
-    Wnd    := 0;
-    wFunc  := FO_MOVE;
-    pFrom  := PChar(PathRemoveSeparator(ExistingDirectoryName) + #0);
-    pTo    := PChar(PathRemoveSeparator(NewDirectoryName) + #0);
-    fFlags := FOF_ALLOWUNDO or FOF_NOCONFIRMATION or FOF_NOCONFIRMMKDIR or FOF_SILENT;
-  end;
+  SH.Wnd    := 0;
+  SH.wFunc  := FO_MOVE;
+  SH.pFrom  := PChar(PathRemoveSeparator(ExistingDirectoryName) + #0);
+  SH.pTo    := PChar(PathRemoveSeparator(NewDirectoryName) + #0);
+  SH.fFlags := FOF_ALLOWUNDO or FOF_NOCONFIRMATION or FOF_NOCONFIRMMKDIR or FOF_SILENT;
   Result := SHFileOperation(SH) = 0;
 end;
 
@@ -4167,11 +4168,8 @@ end;
 function GetSizeOfFile(const FileInfo: TSearchRec): Int64;
 {$IFDEF MSWINDOWS}
 begin
-  with Int64Rec(Result) do
-  begin
-    Lo := FileInfo.FindData.nFileSizeLow;
-    Hi := FileInfo.FindData.nFileSizeHigh;
-  end;
+  Int64Rec(Result).Lo := FileInfo.FindData.nFileSizeLow;
+  Int64Rec(Result).Hi := FileInfo.FindData.nFileSizeHigh;
 end;
 {$ENDIF MSWINDOWS}
 {$IFDEF UNIX}
@@ -4674,6 +4672,107 @@ begin
   end;
 end;
 
+function VersionResourceAvailable(const Window: HWND): Boolean;
+begin
+  Result := VersionResourceAvailable(WindowToModuleFileName(Window));
+end;
+
+function VersionResourceAvailable(const Module: HMODULE): Boolean;
+begin
+  if Module <> 0 then
+    Result :=VersionResourceAvailable(GetModulePath(Module))
+  else
+    raise EJclError.CreateResFmt(@RsEModuleNotValid, [Module]);
+end;
+
+function WindowToModuleFileName(const Window: HWND): string;
+type
+  {$IFDEF SUPPORTS_UNICODE}
+  TGetModuleFileNameEx = function(hProcess: THandle; hModule: HMODULE; FileName: PWideChar; nSize: DWORD): DWORD; stdcall;
+  TQueryFullProcessImageName = function(HProcess: THandle; dwFlags: DWORD; lpExeName: PWideChar; lpdwSize: PDWORD): integer; stdcall;
+  {$ELSE ~SUPPORTS_UNICODE}
+  TGetModuleFileNameEx = function(hProcess: THandle; hModule: HMODULE; FileName: PAnsiChar; nSize: DWORD): DWORD; stdcall;
+  TQueryFullProcessImageName = function(HProcess: THandle; dwFlags: DWORD; lpExeName: PAnsiChar; lpdwSize: PDWORD): integer; stdcall;
+  {$ENDIF ~SUPPORTS_UNICODE}
+var
+  FileName: array[0..300] of Char;
+  DllHinst: HMODULE;
+  ProcessID: DWORD;
+  HProcess: THandle;
+  GetModuleFileNameExAddress: TGetModuleFileNameEx;
+  QueryFullProcessImageNameAddress: TQueryFullProcessImageName;
+begin
+  Result := '';
+  if Window <> 0 then
+  begin
+    Windows.GetWindowThreadProcessId(Window, @ProcessID);
+    hProcess := Windows.OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, false, ProcessID);
+    if hProcess <> 0 then
+    begin
+      if GetWindowsVersion() < WVWin2000 then
+        raise EJclWin32Error.CreateRes(@RsEWindowsVersionNotSupported)
+      else if GetWindowsVersion >=WvWinVista then
+      begin
+        DllHinst := LoadLibrary('Kernel32.dll');
+        if DllHinst < HINSTANCE_ERROR then
+        begin
+          try
+            {$IFDEF SUPPORTS_UNICODE}
+            QueryFullProcessImageNameAddress := GetProcAddress(DllHinst, 'QueryFullProcessImageNameW');
+            {$ELSE ~SUPPORTS_UNICODE}
+            QueryFullProcessImageNameAddress := GetProcAddress(DllHinst, 'QueryFullProcessImageNameA');
+            {$ENDIF ~SUPPORTS_UNICODE}
+            if Assigned(QueryFullProcessImageNameAddress) then
+            begin
+              QueryFullProcessImageNameAddress(hProcess, 0, FileName, PDWORD(sizeof(FileName)));
+              Result := FileName;
+            end
+            else
+            begin
+              raise EJclError.CreateResFmt(@RsEFunctionNotFound, ['Kernel32.dll', 'QueryFullProcessImageName']);
+            end
+          finally
+            FreeLibrary(DllHinst);
+          end;
+        end
+        else
+          raise EJclError.CreateResFmt(@RsELibraryNotFound, ['Kernel32.dll']);
+      end
+      else
+      begin
+        DllHinst := LoadLibrary('Psapi.dll');
+        if DllHinst < HINSTANCE_ERROR then
+        begin
+          try
+            {$IFDEF SUPPORTS_UNICODE}
+            GetModuleFileNameExAddress := GetProcAddress(DllHinst, 'GetModuleFileNameExW');
+            {$ELSE ~SUPPORTS_UNICODE}
+            GetModuleFileNameExAddress := GetProcAddress(DllHinst, 'GetModuleFileNameExA');
+            {$ENDIF ~SUPPORTS_UNICODE}
+            if Assigned(GetModuleFileNameExAddress) then
+            begin
+              GetModuleFileNameExAddress(hProcess, 0, FileName, sizeof(FileName));
+              Result := FileName;
+            end
+            else
+            begin
+              raise EJclError.CreateResFmt(@RsEFunctionNotFound, ['Psapi.dll', 'GetModuleFileNameEx']);
+            end
+          finally
+            FreeLibrary(DllHinst);
+          end;
+        end
+        else
+          raise EJclError.CreateResFmt(@RsELibraryNotFound, ['Psapi.dll']);
+      end;
+    end
+    else
+      raise EJclError.CreateResFmt(@RsEProcessNotValid, [ProcessID]);
+  end
+  else
+    raise EJclError.CreateResFmt(@RsEWindowNotValid, [Window]);
+end;
+
 {$ENDIF MSWINDOWS}
 
 // Version Info formatting
@@ -4691,14 +4790,13 @@ end;
 
 function FormatVersionString(const FixedInfo: TVSFixedFileInfo; VersionFormat: TFileVersionFormat): string;
 begin
-  with FixedInfo do
-    case VersionFormat of
-      vfMajorMinor:
-        Result := Format('%u.%u', [HiWord(dwFileVersionMS), LoWord(dwFileVersionMS)]);
-      vfFull:
-        Result := Format('%u.%u.%u.%u', [HiWord(dwFileVersionMS), LoWord(dwFileVersionMS),
-          HiWord(dwFileVersionLS), LoWord(dwFileVersionLS)]);
-    end;
+  case VersionFormat of
+    vfMajorMinor:
+      Result := Format('%u.%u', [HiWord(FixedInfo.dwFileVersionMS), LoWord(FixedInfo.dwFileVersionMS)]);
+    vfFull:
+      Result := Format('%u.%u.%u.%u', [HiWord(FixedInfo.dwFileVersionMS), LoWord(FixedInfo.dwFileVersionMS),
+        HiWord(FixedInfo.dwFileVersionLS), LoWord(FixedInfo.dwFileVersionLS)]);
+  end;
 end;
 
 // Version Info extracting
@@ -4785,60 +4883,8 @@ constructor TJclFileVersionInfo.Create(const Window: HWND; Dummy: Pointer = nil)
 {$ELSE}
 constructor TJclFileVersionInfo.Create(const Window: HWND);
 {$ENDIF}
-type
-  {$IFDEF SUPPORTS_UNICODE}
-  TGetModuleFileNameEx =function(hProcess: THandle; hModule: HMODULE; FileName: PWideChar; nSize: DWORD): DWORD; stdcall;
-  {$ELSE ~SUPPORTS_UNICODE}
-  TGetModuleFileNameEx =function(hProcess: THandle; hModule: HMODULE; FileName: PAnsiChar; nSize: DWORD): DWORD; stdcall;
-  {$ENDIF ~SUPPORTS_UNICODE}
-var
-  FileName: array[0..300] of Char;
-  DllHinst: HMODULE;
-  ProcessID: DWORD;
-  HProcess: THandle;
-  GetModuleFileNameExAddress: TGetModuleFileNameEx;
 begin
-  if Window <>0 then
-  begin
-    Windows.GetWindowThreadProcessId(Window, @ProcessID);
-    hProcess := Windows.OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, false, ProcessID);
-    if hProcess <> 0 then
-    begin
-      if GetWindowsVersion() < WVWin2000 then
-        raise EJclWin32Error.CreateRes(@RsEWindowsVersionNotSupported)
-      else
-      begin
-        DllHinst := LoadLibrary('Psapi.dll');
-        if DllHinst < HINSTANCE_ERROR then
-        begin
-          try
-            {$IFDEF SUPPORTS_UNICODE}
-            GetModuleFileNameExAddress := GetProcAddress(DllHinst, 'GetModuleFileNameExW');
-            {$ELSE ~SUPPORTS_UNICODE}
-            GetModuleFileNameExAddress := GetProcAddress(DllHinst, 'GetModuleFileNameExA');
-            {$ENDIF ~SUPPORTS_UNICODE}
-            if Assigned(GetModuleFileNameExAddress) then
-            begin
-              GetModuleFileNameExAddress(hProcess, 0, FileName, sizeof(FileName));
-              Create(FileName);
-            end
-            else
-            begin
-              raise EJclError.CreateResFmt(@RsEFunctionNotFound, ['Psapi.dll', 'GetModuleFileNameEx']);
-            end
-          finally
-            FreeLibrary(DllHinst);
-          end;
-        end
-        else
-          raise EJclError.CreateResFmt(@RsELibraryNotFound, ['Psapi.dll']);
-      end;
-    end
-    else
-      raise EJclError.CreateResFmt(@RsEProcessNotValid, [ProcessID]);
-  end
-  else
-    raise EJclError.CreateResFmt(@RsEWindowNotValid, [Window]);
+  Create(WindowToModuleFileName(Window));
 end;
 
 constructor TJclFileVersionInfo.Create(const Module: HMODULE);
@@ -5074,17 +5120,16 @@ end;
 
 function TJclFileVersionInfo.GetBinFileVersion: string;
 begin
-  with FFixedInfo^ do
-    Result := Format('%u.%u.%u.%u', [HiWord(dwFileVersionMS),
-      LoWord(dwFileVersionMS), HiWord(dwFileVersionLS), LoWord(dwFileVersionLS)]);
+  Result := Format('%u.%u.%u.%u', [HiWord(FFixedInfo^.dwFileVersionMS),
+    LoWord(FFixedInfo^.dwFileVersionMS), HiWord(FFixedInfo^.dwFileVersionLS),
+    LoWord(FFixedInfo^.dwFileVersionLS)]);
 end;
 
 function TJclFileVersionInfo.GetBinProductVersion: string;
 begin
-  with FFixedInfo^ do
-    Result := Format('%u.%u.%u.%u', [HiWord(dwProductVersionMS),
-      LoWord(dwProductVersionMS), HiWord(dwProductVersionLS),
-      LoWord(dwProductVersionLS)]);
+  Result := Format('%u.%u.%u.%u', [HiWord(FFixedInfo^.dwProductVersionMS),
+    LoWord(FFixedInfo^.dwProductVersionMS), HiWord(FFixedInfo^.dwProductVersionLS),
+    LoWord(FFixedInfo^.dwProductVersionLS)]);
 end;
 
 function TJclFileVersionInfo.GetCustomFieldValue(const FieldName: string): string;
@@ -6494,11 +6539,10 @@ var
   I: Integer;
 begin
   for I := 0 to FTasks.Count - 1 do
-    with TEnumFileThread(FTasks[I]) do
-    begin
-      FNotifyOnTermination := not Silently;
-      Terminate;
-    end;
+  begin
+    TEnumFileThread(FTasks[I]).FNotifyOnTermination := not Silently;
+    TEnumFileThread(FTasks[I]).Terminate;
+  end;
 end;
 
 procedure TJclFileEnumerator.TaskTerminated(Sender: TObject);
@@ -6506,8 +6550,7 @@ begin
   FTasks.Remove(Sender);
   try
     if Assigned(FOnTerminateTask) then
-      with TEnumFileThread(Sender) do
-        FOnTerminateTask(ID, Terminated);
+      FOnTerminateTask(TEnumFileThread(Sender).ID, TEnumFileThread(Sender).Terminated);
   finally
     if FRefCount > 0 then
       _Release;
