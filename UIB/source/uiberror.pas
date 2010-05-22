@@ -549,13 +549,13 @@ const
   isc_optimizer_between_err             = 335544813;
   isc_service_not_supported             = 335544814;
 
-{$IFDEF FB102ORYF867}
+{$IFDEF FB102_UP}
   isc_generator_name                    = 335544815;
   isc_udf_name                          = 335544816;
   isc_bad_limit_param                   = 335544817;
   isc_bad_skip_param                    = 335544818;
   isc_io_32bit_exceeded_err             = 335544819;
-{$ENDIF FB102ORYF867}
+{$ENDIF FB102_UP}
 
 {$IFDEF FB15_UP}
   isc_invalid_savepoint                 = 335544820;
@@ -735,6 +735,7 @@ const
   isc_out_of_temp_space                = 335544985;
   isc_eds_expl_tran_ctrl               = 335544986;
   isc_no_trusted_spb                   = 335544987;
+  isc_async_active                     = 335545017;
 {$ENDIF}
 
 {$IFDEF IB71_UP}
@@ -790,10 +791,10 @@ const
   isc_dsql_warn_precision_ambiguous1    = 336003083;
   isc_dsql_warn_precision_ambiguous2    = 336003084;
 
-{$IFDEF FB102ORYF867}
+{$IFDEF FB102_UP}
   isc_dsql_ambiguous_field_name         = 336003085;
   isc_dsql_udf_return_pos_err           = 336003086;
-{$ENDIF FB102ORYF867}
+{$ENDIF FB102_UP}
 
 {$IFDEF FB15_UP}
   isc_dsql_invalid_label                = 336003087;
@@ -859,9 +860,9 @@ const
   isc_dyn_invalid_dtype_conversion      = 336068817;
   isc_dyn_dtype_conv_invalid            = 336068818;
 
-{$IFDEF FB102ORYF867}
+{$IFDEF FB102_UP}
   isc_dyn_zero_len_id                   = 336068820;
-{$ENDIF FB102ORYF867}
+{$ENDIF FB102_UP}
 
 {$IFDEF FB21_UP}
   isc_max_coll_per_charset             = 336068829;
@@ -971,10 +972,15 @@ const
   isc_gbak_not_ownr                     = 336331026;
   isc_gbak_mode_req                     = 336331031;
 
-{$IFDEF FB102ORYF867}
+{$IFDEF FB102_UP}
   isc_gbak_just_data                    = 336331033;
   isc_gbak_data_only                    = 336331034;
-{$ENDIF FB102ORYF867}
+{$ENDIF FB102_UP}
+
+{$IFDEF FB25_UP}
+  isc_gbak_invalid_metadata            = 336331093;
+  isc_gbak_invalid_data                = 336331094;
+{$ENDIF}
 
 {$IFDEF FB20_UP}
   isc_dsql_too_old_ods                 = 336397205;
@@ -1131,6 +1137,7 @@ const
   isc_fbsvcmgr_fp_open                 = 336986160;
   isc_fbsvcmgr_fp_read                 = 336986161;
   isc_fbsvcmgr_fp_empty                = 336986162;
+  isc_fbsvcmgr_bad_arg                 = 336986164;
   isc_utl_trusted_switch               = 337051649;
 {$ENDIF}
 
@@ -1155,12 +1162,8 @@ const
 {$ENDIF FB20}
 
 {$IFDEF FB25}
-  isc_err_max                           = 960;
+  isc_err_max                           = 964;
 {$ENDIF}
-
-{$IFDEF YF867}
-  isc_err_max                           = 699;
-{$ENDIF YF867}
 
 {$IFDEF IB601}
   isc_err_max                           = 689;
