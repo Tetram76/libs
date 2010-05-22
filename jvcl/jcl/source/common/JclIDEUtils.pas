@@ -47,9 +47,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 21:57:44 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3170                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-03-03 23:55:01 +0100 (mer. 03 mars 2010)                           $ }
+{ Revision:      $Rev:: 3205                                                                     $ }
+{ Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -675,8 +675,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclIDEUtils.pas $';
-    Revision: '$Revision: 3170 $';
-    Date: '$Date: 2010-02-03 21:57:44 +0100 (mer. 03 févr. 2010) $';
+    Revision: '$Revision: 3205 $';
+    Date: '$Date: 2010-03-03 23:55:01 +0100 (mer. 03 mars 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1895,7 +1895,7 @@ begin
     if not (clDcc32 in CommandLineTools) then
       raise EJclBorRadException.CreateResFmt(@RsENotFound, [Dcc32ExeName]);
     FDCC32 := TJclDCC32.Create(BinFolderName, LongPathBug, CompilerSettingsFormat,
-                               SupportsNoConfig, DCPOutputPath, LibFolderName, ObjFolderName);
+                               SupportsNoConfig, DCPOutputPath, LibFolderName, LibDebugFolderName, ObjFolderName);
   end;
   Result := FDCC32;
 end;
@@ -3358,7 +3358,7 @@ begin
     if not (clDccIL in CommandLineTools) then
       raise EJclBorRadException.CreateResFmt(@RsENotFound, [DccILExeName]);
     FDCCIL := TJclDCCIL.Create(BinFolderName, LongPathBug, CompilerSettingsFormat,
-                               SupportsNoConfig, DCPOutputPath, LibFolderName, ObjFolderName);
+                               SupportsNoConfig, DCPOutputPath, LibFolderName, LibDebugFolderName, ObjFolderName);
   end;
   Result := FDCCIL;
 end;

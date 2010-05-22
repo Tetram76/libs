@@ -36,9 +36,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-05 22:47:38 +0100 (ven. 05 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3182                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-05-09 17:12:11 +0200 (dim. 09 mai 2010)                            $ }
+{ Revision:      $Rev:: 3247                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -63,9 +63,7 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
-  {$IFNDEF SUPPORTS_UNICODE}
   JclWideStrings,
-  {$ENDIF ~SUPPORTS_UNICODE}
   SysUtils, Classes, Contnrs,
   zlibh, bzip2,
   JclBase, JclStreams;
@@ -938,13 +936,15 @@ type
     procedure InternalAddDirectory(const Directory: string);
   protected
     FCompressing: Boolean;
-    FPackedNames: {$IFDEF SUPPORTS_UNICODE}TStringList{$ELSE}TWStringList{$ENDIF};
+    FPackedNames: TJclWideStringList;
     procedure CheckNotCompressing;
     function AddFileCheckDuplicate(NewItem: TJclCompressionItem): Integer;
   public
     class function VolumeAccess: TJclStreamAccess; override;
     class function ItemAccess: TJclStreamAccess; override;
 
+    destructor Destroy; override;
+    
     function AddDirectory(const PackedName: WideString;
       const DirName: string = ''; RecurseIntoDir: Boolean = False;
       AddFilesInDir: Boolean = False): Integer; overload; virtual;
@@ -2059,14 +2059,20 @@ procedure Load7zFileAttribute(AInArchive: IInArchive; ItemIndex: Integer;
 procedure GetSevenzipArchiveCompressionProperties(AJclArchive: IInterface; ASevenzipArchive: IInterface);
 procedure SetSevenzipArchiveCompressionProperties(AJclArchive: IInterface; ASevenzipArchive: IInterface);
 
+
+function Create7zFile(SourceFiles: TStrings; const DestinationFile: TFileName; VolumeSize: Int64 = 0; Password: String
+    = ''; OnArchiveProgress: TJclCompressionProgressEvent = nil): Boolean; overload;
+function Create7zFile(const SourceFile, DestinationFile: TFileName; VolumeSize: Int64 = 0; Password: String = '';
+    OnArchiveProgress: TJclCompressionProgressEvent = nil): Boolean; overload;
+
 {$ENDIF MSWINDOWS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompression.pas $';
-    Revision: '$Revision: 3182 $';
-    Date: '$Date: 2010-02-05 22:47:38 +0100 (ven. 05 févr. 2010) $';
+    Revision: '$Revision: 3247 $';
+    Date: '$Date: 2010-05-09 17:12:11 +0200 (dim. 09 mai 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2334,15 +2340,12 @@ begin
   Assert(FBufferSize > 0);
 
   // Initialize ZLib StreamRecord
-  with ZLibRecord do
-  begin
-    zalloc := nil; // Use build-in memory allocation functionality
-    zfree := nil;
-    next_in := nil;
-    avail_in := 0;
-    next_out := FBuffer;
-    avail_out := FBufferSize;
-  end;
+  ZLibRecord.zalloc := nil; // Use build-in memory allocation functionality
+  ZLibRecord.zfree := nil;
+  ZLibRecord.next_in := nil;
+  ZLibRecord.avail_in := 0;
+  ZLibRecord.next_out := FBuffer;
+  ZLibRecord.avail_out := FBufferSize;
 
   FWindowBits := DEF_WBITS;
   FMemLevel := DEF_MEM_LEVEL;
@@ -2494,15 +2497,12 @@ begin
   LoadZLib;
 
   // Initialize ZLib StreamRecord
-  with ZLibRecord do
-  begin
-    zalloc := nil; // Use build-in memory allocation functionality
-    zfree := nil;
-    next_in := nil;
-    avail_in := 0;
-    next_out := FBuffer;
-    avail_out := FBufferSize;
-  end;
+  ZLibRecord.zalloc := nil; // Use build-in memory allocation functionality
+  ZLibRecord.zfree := nil;
+  ZLibRecord.next_in := nil;
+  ZLibRecord.avail_in := 0;
+  ZLibRecord.next_out := FBuffer;
+  ZLibRecord.avail_out := FBufferSize;
 
   FInflateInitialized := False;
   FWindowBits := WindowBits;
@@ -2817,17 +2817,17 @@ var
       HeaderCRC := crc32(HeaderCRC, @Byte(Buffer), SizeOfBuffer);
   end;
 
-  function ReadCString: string;
+  function ReadCString: AnsiString;
   var
-    Dummy: Char;
+    Buf: AnsiChar;
   begin
     Result := '';
+    Buf := #0;
     repeat
-      Dummy := #0;
-      Source.ReadBuffer(Dummy, SizeOf(Dummy));
-      Result := Result + Dummy;
-    until Dummy = #0;
-    SetLength(Result, Length(Result) - 1);
+      Source.ReadBuffer(Buf, SizeOf(Buf));
+      if Buf = #0 then Break;
+      Result := Result + Buf;
+    until False;
   end;
 
 begin
@@ -2855,9 +2855,9 @@ begin
   end;
 
   if (FHeader.Flags and JCL_GZIP_FLAG_NAME) <> 0 then
-    FOriginalFileName := ReadCString;
+    FOriginalFileName := TFileName(ReadCString);
   if (FHeader.Flags and JCL_GZIP_FLAG_COMMENT) <> 0 then
-    FComment := ReadCString;
+    FComment := string(ReadCString);
 
   if CheckHeaderCRC then
   begin
@@ -3927,19 +3927,19 @@ begin
   begin
     CheckSetProperty(ipPackedName);
     if FArchive is TJclCompressArchive then
-      with FArchive as TJclCompressArchive do
+    begin
+      PackedNamesIndex := -1;
+      if (TJclCompressArchive(FArchive).FPackedNames <> nil) and
+         TJclCompressArchive(FArchive).FPackedNames.Find(FPackedName, PackedNamesIndex) then
       begin
-        PackedNamesIndex := -1;
-        if (FPackedNames <> nil) and FPackedNames.Find(FPackedName, PackedNamesIndex) then
-        begin
-          FPackedNames.Delete(PackedNamesIndex);
-          try
-            FPackedNames.Add(Value);
-          except
-            raise EJclCompressionError(Format(LoadResString(@RsCompressionDuplicate), [Value]));
-          end;
+        TJclCompressArchive(FArchive).FPackedNames.Delete(PackedNamesIndex);
+        try
+          TJclCompressArchive(FArchive).FPackedNames.Add(Value);
+        except
+          raise EJclCompressionError(Format(LoadResString(@RsCompressionDuplicate), [Value]));
         end;
       end;
+    end;
     FPackedName := Value;
     Include(FModifiedProperties, ipPackedName);
     Include(FValidProperties, ipPackedName);
@@ -3982,7 +3982,7 @@ begin
   Result := FFileName <> '';
   if Result then
   begin
-    FileHandle := CreateFile(PChar(FFileName), FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nil, OPEN_EXISTING, 0, 0);
+    FileHandle := CreateFile(PChar(FFileName), FILE_WRITE_ATTRIBUTES, FILE_SHARE_READ, nil, OPEN_ALWAYS, 0, 0);
     try
       // creation time should be the oldest
       if ipCreationTime in FValidProperties then
@@ -4601,6 +4601,12 @@ end;
 
 //=== { TJclCompressArchive } ================================================
 
+destructor TJclCompressArchive.Destroy;
+begin
+  FPackedNames.Free;
+  inherited Destroy;
+end;
+
 function TJclCompressArchive.AddDirectory(const PackedName: WideString;
   const DirName: string; RecurseIntoDir: Boolean; AddFilesInDir: Boolean): Integer;
 var
@@ -4700,7 +4706,7 @@ begin
   begin
     if FPackedNames = nil then
     begin
-      FPackedNames := {$IFDEF SUPPORTS_UNICODE}TStringList{$ELSE}TWStringList{$ENDIF}.Create;
+      FPackedNames := TJclWideStringList.Create;
       FPackedNames.Sorted := True;
       {$IFDEF UNIX}
       FPackedNames.CaseSensitive := True;
@@ -5750,6 +5756,69 @@ begin
     end;
     if Length(PropNames) > 0 then
       SevenZipCheck(PropertySetter.SetProperties(@PropNames[0], @PropValues[0], Length(PropNames)));
+  end;
+end;
+
+function Create7zFile(SourceFiles: TStrings; const DestinationFile: TFileName; VolumeSize: Int64 = 0; Password: String
+    = ''; OnArchiveProgress: TJclCompressionProgressEvent = nil): Boolean;
+var
+  ArchiveFileName: string;
+  SourceFile : String;
+  AFormat: TJclUpdateArchiveClass;
+  Archive : TJclCompressionArchive;
+  i: Integer;
+  InnerList : tStringList;
+  j: Integer;
+begin
+  Result := False;
+  ArchiveFileName := DestinationFile;
+
+  AFormat := GetArchiveFormats.FindUpdateFormat(ArchiveFileName);
+
+  if AFormat <> nil then
+  begin
+
+    if VolumeSize <> 0 then
+      ArchiveFileName := ArchiveFileName + '.%.3d';
+
+    Archive := AFormat.Create(ArchiveFileName, VolumeSize, VolumeSize <> 0);
+    try
+      Archive.Password := Password;
+      Archive.OnProgress := OnArchiveProgress;
+
+      InnerList := tStringList.Create;
+      try
+        for i := 0 to SourceFiles.Count - 1 do
+        begin
+          InnerList.Clear;
+          BuildFileList(SourceFiles[i], faAnyFile, InnerList, True);
+          for j := 0 to InnerList.Count - 1 do
+          begin
+            SourceFile:=InnerList[j];
+            (Archive as TJclCompressArchive).AddFile(ExtractFileName(SourceFile), SourceFile);
+            Result := True;
+          end;
+        end;
+      finally
+        InnerList.Free;
+      end;
+      (Archive as TJclCompressArchive).Compress;
+    finally
+      Archive.Free;
+    end;
+  end;
+end;
+
+function Create7zFile(const SourceFile, DestinationFile: TFileName; VolumeSize: Int64 = 0; Password: String = '';
+    OnArchiveProgress: TJclCompressionProgressEvent = nil): Boolean;
+var SourceFiles : TStringList;
+begin
+  SourceFiles := TStringList.Create;
+  try
+    SourceFiles.Add(SourceFile);
+    Result := Create7zFile(SourceFiles, DestinationFile, VolumeSize, Password, OnArchiveProgress);
+  finally
+    SourceFiles.Free;
   end;
 end;
 

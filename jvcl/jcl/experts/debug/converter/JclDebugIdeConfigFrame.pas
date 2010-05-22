@@ -19,9 +19,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                         $ }
-{ Revision:      $Rev:: 3012                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010)                           $ }
+{ Revision:      $Rev:: 3248                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -43,6 +43,7 @@ type
     RadioGroupGenerateJdbg: TRadioGroup;
     RadioGroupInsertJdbg: TRadioGroup;
     RadioGroupDeleteMapFile: TRadioGroup;
+    CheckBoxQuiet: TCheckBox;
   private
     function GetGenerateJdbgState: TDebugExpertState;
     function GetInsertJdbgState: TDebugExpertState;
@@ -50,12 +51,15 @@ type
     procedure SetGenerateJdbgState(Value: TDebugExpertState);
     procedure SetInsertJdbgState(Value: TDebugExpertState);
     procedure SetDeleteMapFileState(Value: TDebugExpertState);
+    function GetQuiet: Boolean;
+    procedure SetQuiet(const Value: Boolean);
   public
     constructor Create(AOwner: TComponent); override;
 
     property GenerateJdbgState: TDebugExpertState read GetGenerateJdbgState write SetGenerateJdbgState;
     property InsertJdbgState: TDebugExpertState read GetInsertJdbgState write SetInsertJdbgState;
     property DeleteMapFileState: TDebugExpertState read GetDeleteMapFileState write SetDeleteMapFileState;
+    property Quiet: Boolean read GetQuiet write SetQuiet;
   end;
 
 function DebugExpertStateToInt(Value: TDebugExpertState): Integer;
@@ -69,8 +73,8 @@ function ApplyDebugExpertState(GlobalState: TDebugExpertState; LocalEnabled: Boo
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeConfigFrame.pas $';
-    Revision: '$Revision: 3012 $';
-    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
+    Revision: '$Revision: 3248 $';
+    Date: '$Date: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil
@@ -203,6 +207,8 @@ begin
   RadioGroupDeleteMapFile.Items.Strings[1] := LoadResString(@RsDefaultDisabled);
   RadioGroupDeleteMapFile.Items.Strings[2] := LoadResString(@RsDefaultEnabled);
   RadioGroupDeleteMapFile.Items.Strings[3] := LoadResString(@RsAlwaysEnabled);
+
+  CheckBoxQuiet.Caption := LoadResString(@RsQuiet);
 end;
 
 function TJclDebugIdeConfigFrame.GetGenerateJdbgState: TDebugExpertState;
@@ -220,6 +226,11 @@ begin
   Result := IntToDebugExpertState(RadioGroupDeleteMapFile.ItemIndex);
 end;
 
+function TJclDebugIdeConfigFrame.GetQuiet: Boolean;
+begin
+  Result := CheckBoxQuiet.Checked;
+end;
+
 procedure TJclDebugIdeConfigFrame.SetGenerateJdbgState(Value: TDebugExpertState);
 begin
   RadioGroupGenerateJdbg.ItemIndex := DebugExpertStateToInt(Value);
@@ -233,6 +244,11 @@ end;
 procedure TJclDebugIdeConfigFrame.SetDeleteMapFileState(Value: TDebugExpertState);
 begin
   RadioGroupDeleteMapFile.ItemIndex := DebugExpertStateToInt(Value);
+end;
+
+procedure TJclDebugIdeConfigFrame.SetQuiet(const Value: Boolean);
+begin
+  CheckBoxQuiet.Checked := Value;
 end;
 
 {$IFDEF UNITVERSIONING}

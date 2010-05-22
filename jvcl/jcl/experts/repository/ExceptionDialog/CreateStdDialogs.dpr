@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-02-22 19:36:33 +0100 (lun. 22 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3200                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -87,7 +87,7 @@ begin
       Params.HookDll := True;
       Params.LogFile := True;
       Params.LogSaveDialog := True;
-      Params.LogFileName := 'filename.log';
+      Params.LogFileName := '''filename.log''';
       Params.OSInfo := True;
       Params.ModuleList := True;
       Params.ActiveControls := True;

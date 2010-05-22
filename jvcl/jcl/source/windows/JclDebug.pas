@@ -34,9 +34,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3160                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-05-18 22:38:49 +0200 (mar. 18 mai 2010)                            $ }
+{ Revision:      $Rev:: 3251                                                                     $ }
+{ Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -180,10 +180,11 @@ type
   // MAP file scanner
   PJclMapSegmentClass = ^TJclMapSegmentClass;
   TJclMapSegmentClass = record
-    Segment: Word;
-    Addr: DWORD;
-    VA: DWORD;
-    Len: DWORD;
+    Segment: Word; // segment ID
+    Start: DWORD;  // start as in the map file
+    Addr: DWORD;   // start as in process memory
+    VA: DWORD;     // position relative to module base adress
+    Len: DWORD;    // segment length
     SectionName: PJclMapString;
     GroupName: PJclMapString;
   end;
@@ -223,7 +224,7 @@ type
     FProcNamesCnt: Integer;
     FSegmentCnt: Integer;
   protected
-    function AddrToVA(const Addr: DWORD): DWORD;
+    function MAPAddrToVA(const Addr: DWORD): DWORD;
     procedure ClassTableItem(const Address: TJclMapAddress; Len: Integer; SectionName, GroupName: PJclMapString); override;
     procedure SegmentItem(const Address: TJclMapAddress; Len: Integer; GroupName, UnitName: PJclMapString); override;
     procedure PublicsByNameItem(const Address: TJclMapAddress; Name: PJclMapString); override;
@@ -538,7 +539,7 @@ procedure ClearLocationData;
 
 function FileByLevel(const Level: Integer = 0): string;
 function ModuleByLevel(const Level: Integer = 0): string;
-function ProcByLevel(const Level: Integer = 0): string;
+function ProcByLevel(const Level: Integer = 0; OnlyProcedureName: boolean =false): string;
 function LineByLevel(const Level: Integer = 0): Integer;
 function MapByLevel(const Level: Integer; var File_, Module_, Proc_: string; var Line_: Integer): Boolean;
 
@@ -994,13 +995,15 @@ procedure AddIgnoredExceptionByName(const AExceptionClassName: string);
 procedure RemoveIgnoredException(const ExceptionClass: TClass);
 procedure RemoveIgnoredExceptionByName(const AExceptionClassName: string);
 function IsIgnoredException(const ExceptionClass: TClass): Boolean;
+// function to add additional system modules to be included in the stack trace
+procedure AddModule(const ModuleName: string);
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 3160 $';
-    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
+    Revision: '$Revision: 3251 $';
+    Date: '$Date: 2010-05-18 22:38:49 +0200 (mar. 18 mai 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1403,7 +1406,7 @@ var
     end;
   end;
 
-  function ReadHexValue: Integer;
+  function ReadHexValue: DWORD;
   var
     C: Char;
   begin
@@ -1653,17 +1656,17 @@ begin
   Scan;
 end;
 
-function TJclMapScanner.AddrToVA(const Addr: DWORD): DWORD;
+function TJclMapScanner.MAPAddrToVA(const Addr: DWORD): DWORD;
 begin
   // MAP file format was changed in Delphi 2005
   // before Delphi 2005: segments started at offset 0
   //                     only one segment of code
   // after Delphi 2005: segments started at code base address (module base address + $10000)
   //                    2 segments of code
-  if (Length(FSegmentClasses) > 0) and (FSegmentClasses[0].Addr > 0) and (Addr > 0) then
+  if (Length(FSegmentClasses) > 0) and (FSegmentClasses[0].Start > 0) and (Addr > FSegmentClasses[0].Start) then
     // Delphi 2005 and later
     // The first segment should be code starting at module base address + $10000
-    Result := Addr - FSegmentClasses[0].Addr
+    Result := Addr - FSegmentClasses[0].Start
   else
     // before Delphi 2005
     Result := Addr;
@@ -1678,8 +1681,9 @@ begin
   C := Length(FSegmentClasses);
   SetLength(FSegmentClasses, C + 1);
   FSegmentClasses[C].Segment := Address.Segment;
-  FSegmentClasses[C].Addr := Address.Offset;
-  FSegmentClasses[C].VA := AddrToVA(Address.Offset);
+  FSegmentClasses[C].Start := Address.Offset;
+  FSegmentClasses[C].Addr := Address.Offset; // will be fixed below while considering module mapped address
+  FSegmentClasses[C].VA := MAPAddrToVA(FSegmentClasses[C].Start);
   FSegmentClasses[C].Len := Len;
   FSegmentClasses[C].SectionName := SectionName;
   FSegmentClasses[C].GroupName := GroupName;
@@ -1739,7 +1743,7 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
+    VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
     { Starting with Delphi 2005, "empty" units are listes with the last line and
       the VA 0001:00000000. When we would accept 0 VAs here, System.pas functions
       could be mapped to other units and line numbers. Discaring such items should
@@ -1844,7 +1848,7 @@ begin
     if FProcNamesCnt mod 256 = 0 then
       SetLength(FProcNames, FProcNamesCnt + 256);
     FProcNames[FProcNamesCnt].Segment := FSegmentClasses[SegIndex].Segment;
-    FProcNames[FProcNamesCnt].VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
+    FProcNames[FProcNamesCnt].VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
     FProcNames[FProcNamesCnt].ProcName := Name;
     Inc(FProcNamesCnt);
     Break;
@@ -1891,7 +1895,7 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    VA := AddrToVA(Address.Offset + FSegmentClasses[SegIndex].Addr);
+    VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
     if FSegmentCnt mod 16 = 0 then
       SetLength(FSegments, FSegmentCnt + 16);
     FSegments[FSegmentCnt].Segment := FSegmentClasses[SegIndex].Segment;
@@ -4095,12 +4099,17 @@ begin
   Result := GetLocationInfo(Caller(Level + 1)).UnitName;
 end;
 
-function ProcByLevel(const Level: Integer): string;
+function ProcByLevel(const Level: Integer; OnlyProcedureName: boolean): string;
 begin
   Result := GetLocationInfo(Caller(Level + 1)).ProcedureName;
+  if OnlyProcedureName = true then
+  begin
+    if StrILastPos('.', Result) > 0 then
+      Result :=StrRestOf(Result, StrILastPos('.', Result)+1);
+  end;
 end;
 
-function LineByLevel(const Level: Integer): Integer;
+  function LineByLevel(const Level: Integer): Integer;
 begin
   Result := GetLocationInfo(Caller(Level + 1)).LineNumber;
 end;
@@ -4382,12 +4391,14 @@ end;
 type
   TJclGlobalModulesList = class(TObject)
   private
+    FAddedModules: TStringList;
     FHookedModules: TJclModuleArray;
     FLock: TJclCriticalSection;
     FModulesList: TJclModuleInfoList;
   public
     constructor Create;
     destructor Destroy; override;
+    procedure AddModule(const ModuleName: string);
     function CreateModulesList: TJclModuleInfoList;
     procedure FreeModulesList(var ModulesList: TJclModuleInfoList);
     function ValidateAddress(Addr: Pointer): Boolean;
@@ -4405,7 +4416,29 @@ destructor TJclGlobalModulesList.Destroy;
 begin
   FreeAndNil(FLock);
   FreeAndNil(FModulesList);
+  FreeAndNil(FAddedModules);
   inherited Destroy;
+end;
+
+procedure TJclGlobalModulesList.AddModule(const ModuleName: string);
+var
+  IsMultiThreaded: Boolean;
+begin
+  IsMultiThreaded := IsMultiThread;
+  if IsMultiThreaded then
+    FLock.Enter;
+  try
+    if not Assigned(FAddedModules) then
+    begin
+      FAddedModules := TStringList.Create;
+      FAddedModules.Sorted := True;
+      FAddedModules.Duplicates := dupIgnore;
+    end;
+    FAddedModules.Add(ModuleName);
+  finally
+    if IsMultiThreaded then
+      FLock.Leave;
+  end;
 end;
 
 function TJclGlobalModulesList.CreateModulesList: TJclModuleInfoList;
@@ -4413,6 +4446,7 @@ var
   I: Integer;
   SystemModulesOnly: Boolean;
   IsMultiThreaded: Boolean;
+  AddedModuleHandle: HMODULE;
 begin
   IsMultiThreaded := IsMultiThread;
   if IsMultiThreaded then
@@ -4426,6 +4460,14 @@ begin
       if SystemModulesOnly and JclHookedExceptModulesList(FHookedModules) then
         for I := Low(FHookedModules) to High(FHookedModules) do
           Result.AddModule(FHookedModules[I], True);
+      if Assigned(FAddedModules) then
+        for I := 0 to FAddedModules.Count - 1 do
+        begin
+          AddedModuleHandle := GetModuleHandle(PChar(FAddedModules[I]));
+          if (AddedModuleHandle <> 0) and
+            not Assigned(Result.ModuleFromAddress[Pointer(AddedModuleHandle)]) then
+            Result.AddModule(AddedModuleHandle, True);
+        end;
       if stStaticModuleList in JclStackTrackingOptions then
         FModulesList := Result;
     end
@@ -5480,6 +5522,11 @@ begin
       IgnoredExceptionClassNamesCritSect.Leave;
     end;
   end;
+end;
+
+procedure AddModule(const ModuleName: string);
+begin
+  GlobalModulesList.AddModule(ModuleName);
 end;
 
 procedure DoExceptNotify(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean;

@@ -49,9 +49,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3160                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-05-21 10:50:09 +0200 (ven. 21 mai 2010)                            $ }
+{ Revision:      $Rev:: 3252                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -592,8 +592,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStrings.pas $';
-    Revision: '$Revision: 3160 $';
-    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
+    Revision: '$Revision: 3252 $';
+    Date: '$Date: 2010-05-21 10:50:09 +0200 (ven. 21 mai 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -4144,11 +4144,11 @@ end;
 
 function TJclStringBuilder.Remove(StartIndex, Length: SizeInt): TJclStringBuilder;
 begin
-  if (StartIndex < 0) or (Length < 0) or (StartIndex + Length > FLength) then
+  if (StartIndex < 0) or (Length < 0) or (StartIndex + Length >= FLength) then
     raise ArgumentOutOfRangeException.CreateRes(@RsArgumentOutOfRange);
   if Length > 0 then
   begin
-    MoveChar(FChars[StartIndex + Length], FChars[StartIndex], Length);
+    MoveChar(FChars[StartIndex + Length], FChars[StartIndex], FLength - (StartIndex + Length));
     Dec(FLength, Length);
   end;
   Result := Self;

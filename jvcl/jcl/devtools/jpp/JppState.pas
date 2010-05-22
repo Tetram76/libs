@@ -35,7 +35,7 @@
 {    under either the MPL or the LPGL License.                                 }
 {                                                                              }
 { **************************************************************************** }
-{ $Id: JppState.pas 3132 2010-01-21 17:40:28Z outchy $ }
+{ $Id: JppState.pas 3203 2010-03-01 21:33:35Z jfudickar $ }
 
 { Brief: The state of the preprocessor; options (e.g. remove comments),
     defines, include search path, etc. }
@@ -48,7 +48,11 @@ interface
 {$I jcl.inc}
 
 uses
-  SysUtils, Classes, JclBase, JclContainerIntf;
+  SysUtils, Classes,
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
+  JclBase, JclContainerIntf;
 
 type
   EPppState = class(Exception);
@@ -59,22 +63,45 @@ type
 
   TTriState = (ttUnknown, ttUndef, ttDefined);
 
-  TPppState = class(TPersistent)
+  TPppProvider = class(TPersistent)
+  protected
+    function GetBoolValue(const Name: string): Boolean; virtual; abstract;
+    function GetDefine(const ASymbol: string): TTriState; virtual; abstract;
+    function GetIntegerValue(const Name: string): Integer; virtual; abstract;
+    function GetStringValue(const Name: string): string; virtual; abstract;
+    procedure SetBoolValue(const Name: string; Value: Boolean); virtual; abstract;
+    procedure SetDefine(const ASymbol: string; const Value: TTriState); virtual; abstract;
+    procedure SetIntegerValue(const Name: string; Value: Integer); virtual; abstract;
+    procedure SetStringValue(const Name, Value: string); virtual; abstract;
+  public
+    property Defines[const ASymbol: string]: TTriState read GetDefine write SetDefine;
+    property BoolValues[const Name: string]: Boolean read GetBoolValue write SetBoolValue;
+    property StringValues[const Name: string]: string read GetStringValue write SetStringValue;
+    property IntegerValues[const Name: string]: Integer read GetIntegerValue write SetIntegerValue;
+  end;
+
+  TPppState = class(TPppProvider)
   private
     FStateStack: IJclStack;
     FOptions: TPppOptions;
     procedure InternalPushState(const ExcludedFiles, SearchPath: IJclStrList;
-      const Macros: IJclStrStrMap; const Defines: IJclStrMap);
+      const Macros: IJclStrIntfMap; const Defines: IJclStrMap);
     function InternalPeekDefines: IJclStrMap;
     function InternalPeekExcludedFiles: IJclStrList;
-    function InternalPeekMacros: IJclStrStrMap;
+    function InternalPeekMacros: IJclStrIntfMap;
     function InternalPeekSearchPath: IJclStrList;
   protected
     function GetOptions: TPppOptions;
     procedure SetOptions(AOptions: TPppOptions);
 
-    function GetDefineTriState(const ASymbol: string): TTriState;
-    procedure SetDefineTriState(const ASymbol: string; const Value: TTriState);
+    function GetBoolValue(const Name: string): Boolean; override;
+    function GetDefine(const ASymbol: string): TTriState; override;
+    function GetIntegerValue(const Name: string): Integer; override;
+    function GetStringValue(const Name: string): string; override;
+    procedure SetBoolValue(const Name: string; Value: Boolean); override;
+    procedure SetDefine(const ASymbol: string; const Value: TTriState); override;
+    procedure SetIntegerValue(const Name: string; Value: Integer); override;
+    procedure SetStringValue(const Name, Value: string); override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -84,12 +111,6 @@ type
       in scope. }
     procedure PushState;
     procedure PopState;
-
-    function IsDefined(const ASymbol: string): Boolean;
-    function GetBoolValue(const Name: string): Boolean;
-    function GetStrValue(const Name: string): string;
-    function GetIntValue(const Name: string): Integer;
-    function GetStringsValue(const Name: string): TStrings;
 
     procedure Define(const ASymbol: string);
     procedure Undef(const ASymbol: string);
@@ -106,8 +127,19 @@ type
     procedure UndefMacro(const AName: string; const ParamNames: TDynStringArray);
 
     property Options: TPppOptions read GetOptions write SetOptions;
-    property DefineTriState[const ASymbol: string]: TTriState read GetDefineTriState write SetDefineTriState;
   end;
+
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/devtools/jpp/JppState.pas $';
+    Revision: '$Revision: 3203 $';
+    Date: '$Date: 2010-03-01 22:33:35 +0100 (lun. 01 mars 2010) $';
+    LogPath: 'JCL\devtools\jpp';
+    Extra: '';
+    Data: nil
+    );
+{$ENDIF UNITVERSIONING}
 
 implementation
 
@@ -120,7 +152,7 @@ type
   public
     DefinedKeywords: IJclStrMap;
     ExcludedFiles: IJclStrList;
-    Macros: IJclStrStrMap;
+    Macros: IJclStrIntfMap;
     SearchPath: IJclStrList;
   end;
 
@@ -130,7 +162,7 @@ constructor TPppState.Create;
 begin
   FStateStack := TJclStack.Create(16, True);
   InternalPushState(TJclStrArrayList.Create(16), TJclStrArrayList.Create(16),
-    TJclStrStrHashMap.Create(16), TJclStrHashMap.Create(16, False));
+    TJclStrIntfHashMap.Create(16), TJclStrHashMap.Create(16, False));
 end;
 
 destructor TPppState.Destroy;
@@ -152,11 +184,14 @@ end;
 function TPppState.ExpandMacro(const AName: string;
   const ParamValues: TDynStringArray): string;
 var
-  AMacros: IJclStrStrMap;
+  AMacros: IJclStrIntfMap;
+  AMacro: IJclStrList;
   AMacroNames: IJclStrIterator;
-  AMacroName: string;
-  Index: Integer;
+  AMacroName, AMacroText, AParamName, AParamText: string;
+  Index, ParamIndex: Integer;
   Params: array of TVarRec;
+  StrParams: TStrings;
+  AssociationByName: Boolean;
 begin
   AMacros := InternalPeekMacros;
   AMacroName := Format('%s`%d', [AName, Length(ParamValues)]);
@@ -165,18 +200,45 @@ begin
   begin
     if JclStrings.StrSame(AMacroNames.Next, AMacroName) then
     begin
-      SetLength(Params, Length(ParamValues));
-      for Index := Low(ParamValues) to High(ParamValues) do
-      begin
-        {$IFDEF SUPPORTS_UNICODE}
-        Params[Index].VType := vtPWideChar;
-        Params[Index].VPWideChar := PWideChar(ParamValues[Index]);
-        {$ELSE ~SUPPORTS_UNICODE}
-        Params[Index].VType := vtPChar;
-        Params[Index].VPChar := PAnsiChar(ParamValues[Index]);
-        {$ENDIF ~SUPPORTS_UNICODE}
+      AMacro := AMacros.Items[AMacroNames.GetString] as IJclStrList;
+      // the macro text is the last item, previous items are the macro parameter names
+      AMacroText := AMacro.Strings[AMacro.Size - 1];
+      AssociationByName := True;
+      StrParams := TStringList.Create;
+      try
+        for Index := Low(ParamValues) to High(ParamValues) do
+        begin
+          StrParams.Add(ParamValues[Index]);
+          AParamName := StrParams.Names[Index];
+          if AParamName <> '' then
+          begin
+            // verify parameter names
+            ParamIndex := AMacro.IndexOf(AParamName);
+            if (ParamIndex < 0) or (ParamIndex > (AMacro.Size - 1)) then
+              AssociationByName := False;
+          end
+          else
+            AssociationByName := False;
+        end;
+        SetLength(Params, Length(ParamValues));
+        for Index := Low(ParamValues) to High(ParamValues) do
+        begin
+          if AssociationByName then
+            AParamText := StrParams.Values[AMacro.Strings[Index]]
+          else
+            AParamText := StrParams.Strings[Index];
+          {$IFDEF SUPPORTS_UNICODE}
+          Params[Index].VType := vtPWideChar;
+          Params[Index].VPWideChar := PWideChar(AParamText);
+          {$ELSE ~SUPPORTS_UNICODE}
+          Params[Index].VType := vtPChar;
+          Params[Index].VPChar := PAnsiChar(AParamText);
+          {$ENDIF ~SUPPORTS_UNICODE}
+        end;
+        Result := Format(AMacroText, Params);
+      finally
+        StrParams.Free;
       end;
-      Result := Format(AMacros.Items[AMacroNames.GetString], Params);
       Exit;
     end;
   end;
@@ -185,13 +247,14 @@ end;
 
 procedure TPppState.Define(const ASymbol: string);
 begin
-  SetDefineTriState(ASymbol, ttDefined);
+  Defines[ASymbol] := ttDefined;
 end;
 
 procedure TPppState.DefineMacro(const AName: string;
   const ParamNames: TDynStringArray; const Value: string);
 var
-  AMacros: IJclStrStrMap;
+  AMacro: IJclStrList;
+  AMacros: IJclStrIntfMap;
   AMacroNames: IJclStrIterator;
   AMacroName, AMacroFormat: string;
   Index: Integer;
@@ -203,9 +266,16 @@ begin
     if JclStrings.StrSame(AMacroNames.Next, AMacroName) then
       raise EPppState.CreateFmt('macro "%s" is already defined', [AName]);
   AMacroFormat := Value;
+  AMacro := TJclStrArrayList.Create(16);
   for Index := Low(ParamNames) to High(ParamNames) do
+  begin
     StrReplace(AMacroFormat, ParamNames[Index], '%' + IntToStr(Index) + ':s', [rfReplaceAll, rfIgnoreCase]);
-  AMacros.Items[AMacroName] := AMacroFormat;
+    // the first elements in the list are the macro parameter names
+    AMacro.Add(ParamNames[Index]);
+  end;
+  // the macro text is the last element in the list
+  AMacro.Add(AMacroFormat);
+  AMacros.Items[AMacroName] := AMacro;
 end;
 
 function TPppState.FindFile(const AName: string): TStream;
@@ -241,7 +311,7 @@ begin
   Result := Boolean(VariantValue);
 end;
 
-function TPppState.GetIntValue(const Name: string): Integer;
+function TPppState.GetIntegerValue(const Name: string): Integer;
 var
   VariantValue: Variant;
 begin
@@ -249,18 +319,7 @@ begin
   Result := Integer(VariantValue);
 end;
 
-function TPppState.GetStringsValue(const Name: string): TStrings;
-var
-  Instance: TObject;
-begin
-  Instance := TObject(GetOrdProp(Self, Name));
-  if Instance is TStrings then
-    Result := TStrings(Instance)
-  else
-    Result := nil;
-end;
-
-function TPppState.GetStrValue(const Name: string): string;
+function TPppState.GetStringValue(const Name: string): string;
 var
   VariantValue: Variant;
 begin
@@ -273,7 +332,7 @@ begin
   Result := FOptions;
 end;
 
-function TPppState.GetDefineTriState(const ASymbol: string): TTriState;
+function TPppState.GetDefine(const ASymbol: string): TTriState;
 var
   ADefines: IJclStrMap;
   ASymbolNames: IJclStrIterator;
@@ -296,7 +355,11 @@ begin
     PI := GetPropInfo(Self, ASymbol);
     if Assigned(PI) then
     begin
-      PV := GetPropValue(Self, ASymbol);
+      {$IFDEF DELPHI8_UP}   	  
+      PV := GetPropValue(Self, PI);
+      {$ELSE}
+      PV := GetPropValue(Self, PI^.Name);
+      {$ENDIF}
       if Boolean(PV) then
         Result := ttDefined
       else
@@ -319,7 +382,7 @@ begin
   Result := (FStateStack.Peek as TSimplePppStateItem).ExcludedFiles;
 end;
 
-function TPppState.InternalPeekMacros: IJclStrStrMap;
+function TPppState.InternalPeekMacros: IJclStrIntfMap;
 begin
   if FStateStack.Empty then
     raise EPppState.Create('Internal error: PPP State stack is empty');
@@ -333,8 +396,8 @@ begin
   Result := (FStateStack.Peek as TSimplePppStateItem).SearchPath;
 end;
 
-procedure TPppState.InternalPushState(const ExcludedFiles,
-  SearchPath: IJclStrList; const Macros: IJclStrStrMap; const Defines: IJclStrMap);
+procedure TPppState.InternalPushState(const ExcludedFiles, SearchPath: IJclStrList;
+  const Macros: IJclStrIntfMap; const Defines: IJclStrMap);
 var
   AStateItem: TSimplePppStateItem;
 begin
@@ -344,11 +407,6 @@ begin
   AStateItem.Macros := Macros;
   AStateItem.SearchPath := SearchPath;
   FStateStack.Push(AStateItem);
-end;
-
-function TPppState.IsDefined(const ASymbol: string): Boolean;
-begin
-  Result := DefineTriState[ASymbol] = ttDefined;
 end;
 
 function TPppState.IsFileExcluded(const AName: string): Boolean;
@@ -380,12 +438,12 @@ procedure TPppState.PushState;
 var
   AExcludedFiles, ASearchPath: IJclStrList;
   ADefines: IJclStrMap;
-  AMacros: IJclStrStrMap;
+  AMacros: IJclStrIntfMap;
 begin
   ADefines := (InternalPeekDefines as IJclIntfCloneable).IntfClone as IJclStrMap;
   AExcludedFiles := (InternalPeekExcludedFiles as IJclIntfCloneable).IntfClone as IJclStrList;
   ASearchPath := (InternalPeekSearchPath as IJclIntfCloneable).IntfClone as IJclStrList;
-  AMacros := (InternalPeekMacros as IJclIntfCloneable).IntfClone as IJclStrStrMap;
+  AMacros := (InternalPeekMacros as IJclIntfCloneable).IntfClone as IJclStrIntfMap;
 
   InternalPushState(AExcludedFiles, ASearchPath, AMacros, ADefines);
 end;
@@ -395,14 +453,21 @@ begin
   FOptions := AOptions;
 end;
 
-procedure TPppState.SetDefineTriState(const ASymbol: string;
+procedure TPppState.SetBoolValue(const Name: string; Value: Boolean);
+var
+  VariantValue: Variant;
+begin
+  VariantValue := Value;
+  SetPropValue(Self, Name, VariantValue);
+end;
+
+procedure TPppState.SetDefine(const ASymbol: string;
   const Value: TTriState);
 var
   ADefines: IJclStrMap;
   ASymbolNames: IJclStrIterator;
-  Found: Boolean;
+  PI: PPropInfo;
 begin
-  Found := False;
   ADefines := InternalPeekDefines;
   ASymbolNames := ADefines.KeySet.First;
   while ASymbolNames.HasNext do
@@ -410,22 +475,56 @@ begin
     if JclStrings.StrSame(ASymbolNames.Next, ASymbol) then
     begin
       ADefines.Items[ASymbolNames.GetString] := TObject(Value);
-      Found := True;
-      Break;
+      Exit;
     end;
   end;
-  if not Found then
-    ADefines.Items[ASymbol] := TObject(Value);
+  if Value <> ttUnknown then
+  begin
+    PI := GetPropInfo(Self, ASymbol);
+    if Assigned(PI) then
+    begin
+      if Value = ttDefined then
+        {$IFDEF DELPHI8_UP}   	  
+        SetPropValue(Self, PI, True)
+        {$ELSE}
+        SetPropValue(Self, PI^.Name, True)
+        {$ENDIF}
+      else
+        {$IFDEF DELPHI8_UP}   	  
+        SetPropValue(Self, PI, False);
+		{$ELSE}
+        SetPropValue(Self, PI^.Name, False);
+		{$ENDIF}
+      Exit;
+    end;
+  end;
+  ADefines.Items[ASymbol] := TObject(Value);
+end;
+
+procedure TPppState.SetIntegerValue(const Name: string; Value: Integer);
+var
+  VariantValue: Variant;
+begin
+  VariantValue := Value;
+  SetPropValue(Self, Name, VariantValue);
+end;
+
+procedure TPppState.SetStringValue(const Name, Value: string);
+var
+  VariantValue: Variant;
+begin
+  VariantValue := Value;
+  SetPropValue(Self, Name, VariantValue);
 end;
 
 procedure TPppState.Undef(const ASymbol: string);
 begin
-  SetDefineTriState(ASymbol, ttUndef);
+  Defines[ASymbol] := ttUndef;
 end;
 
 procedure TPppState.UndefMacro(const AName: string; const ParamNames: TDynStringArray);
 var
-  AMacros: IJclStrStrMap;
+  AMacros: IJclStrIntfMap;
   AMacroNames: IJclStrIterator;
   AMacroName: string;
 begin
@@ -436,5 +535,13 @@ begin
     if JclStrings.StrSame(AMacroNames.Next, AMacroName) then
       AMacros.Remove(AMacroNames.GetString);
 end;
+
+{$IFDEF UNITVERSIONING}
+initialization
+  RegisterUnitVersion(HInstance, UnitVersioning);
+
+finalization
+  UnregisterUnitVersion(HInstance);
+{$ENDIF UNITVERSIONING}
 
 end.

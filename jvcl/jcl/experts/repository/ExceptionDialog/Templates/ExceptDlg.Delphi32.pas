@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-21 18:40:28 +0100 (jeu. 21 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3132                                                                     $ }
+{ Last modified: $Date:: 2010-02-22 18:24:06 +0100 (lun. 22 févr. 2010)                         $ }
+{ Revision:      $Rev:: 3199                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -281,7 +281,7 @@ begin
   with TSaveDialog.Create(Self) do
   try
     DefaultExt := '.log';
-    FileName := {$JPPEXPANDMACRO QUOTE}{$JPPSTRVALUE LogFileName}{$JPPEXPANDMACRO QUOTE};
+    FileName := {$JPPSTRVALUE LogFileName};
     Filter := 'Log Files (*.log)|*.log|All files (*.*)|*.*';
     Title := 'Save log as...';
     Options := [ofHideReadOnly,ofPathMustExist,ofNoReadOnlyReturn,ofEnableSizing,ofDontAddToRecent];
@@ -309,9 +309,9 @@ begin
   try
     CreateReport;
 {$IFDEF LogFile}
-{$IFDEF AutoSaveWorkingDirectory}    SaveToLogFile(%StrValue LogFileName);{$ENDIF}
-{$IFDEF AutoSaveApplicationDirectory}    SaveToLogFile(PathAddSeparator(ExtractFilePath(Application.ExeName)) + %StrValue LogFileName);{$ENDIF}
-{$IFDEF AutoSaveDesktopDirectory}    SaveToLogFile(PathAddSeparator(GetDesktopFolder) + %StrValue LogFileName);{$ENDIF}
+{$IFDEF AutoSaveWorkingDirectory}    SaveToLogFile({$JPPSTRVALUE LogFileName});{$ENDIF}
+{$IFDEF AutoSaveApplicationDirectory}    SaveToLogFile(PathAddSeparator(ExtractFilePath(Application.ExeName)) + {$JPPSTRVALUE LogFileName});{$ENDIF}
+{$IFDEF AutoSaveDesktopDirectory}    SaveToLogFile(PathAddSeparator(GetDesktopFolder) + {$JPPSTRVALUE LogFileName});{$ENDIF}
 {$ENDIF}
     DetailsMemo.SelStart := 0;
     SendMessage(DetailsMemo.Handle, EM_SCROLLCARET, 0, 0);
@@ -774,7 +774,7 @@ begin
   begin
     AppEvents := TApplicationEvents.Create(nil);
     AppEvents.OnException := T%FORMNAME%.ExceptionHandler;
-(*$JPPREPEAT IgnoredExceptionsCount    AddIgnoredException({$JPPREPEATSTRVALUE IgnoredExceptions});*)
+(*$JPPLOOP IgnoredExceptionsIndex IgnoredExceptionsCount    AddIgnoredException({$JPPSTRVALUE IgnoredException});*)
 {$IFDEF TraceEAbort}    RemoveIgnoredException(EAbort);{$ENDIF}
 {$IFDEF TraceAllExceptions}    JclStackTrackingOptions := JclStackTrackingOptions + [stTraceAllExceptions];{$ENDIF}
 {$IFDEF RawData}    JclStackTrackingOptions := JclStackTrackingOptions + [stRawMode];{$ENDIF}

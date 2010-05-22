@@ -17,9 +17,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3012                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-03-04 22:17:07 +0100 (jeu. 04 mars 2010)                           $ }
+{ Revision:      $Rev:: 3206                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -42,7 +42,7 @@ type
     ResultListView: TListView;
     ImageList1: TImageList;
     procedure FormDestroy(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
@@ -59,8 +59,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeResult.pas $';
-    Revision: '$Revision: 3012 $';
-    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
+    Revision: '$Revision: 3206 $';
+    Date: '$Date: 2010-03-04 22:17:07 +0100 (jeu. 04 mars 2010) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil
@@ -181,7 +181,7 @@ begin
     Params.WndParent := Application.Handle;
 end;
 
-procedure TJclDebugResultForm.FormCreate(Sender: TObject);
+procedure TJclDebugResultForm.FormShow(Sender: TObject);
 var
   Index: Integer;
 begin

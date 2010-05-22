@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 2993                                                                     $ }
+{ Last modified: $Date:: 2010-02-18 22:16:35 +0100 (jeu. 18 févr. 2010)                        $ }
+{ Revision:      $Rev:: 3192                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -37,10 +37,13 @@ unit JclNotify;
 interface
 
 uses
+  {$IFDEF UNITVERSIONING}
+  JclUnitVersioning,
+  {$ENDIF UNITVERSIONING}
   JclBase,
   {$IFDEF THREADSAFE}
   JclSynch,
-  {$ENDIF}
+  {$ENDIF THREADSAFE}
   Classes;
 
   { The following interfaces provide a basic notifier/listener setup. Whenever code issues a notification through the
@@ -90,7 +93,7 @@ type
     FListeners: TInterfaceList;
     {$IFDEF THREADSAFE}
     FSynchronizer: TJclMultiReadExclusiveWrite;
-    {$ENDIF}
+    {$ENDIF THREADSAFE}
   public
     { IJclNotifier }
     procedure Add(listener: IJclListener); stdcall;
@@ -98,12 +101,90 @@ type
     procedure Remove(listener: IJclListener); stdcall;
   end;
 
+type
+  TJclMethodArray = array of TMethod;
+
+  // base class for all object methods broadcasts
+  TJclMethodBroadCast = class
+  protected
+    FHandlers: TJclMethodArray;
+    FHandlerCount: Integer;
+    function GetHandler(Index: Integer): TMethod;
+  public
+    function AddHandler(const AHandler: TMethod): Integer;
+    procedure RemoveHandler(const AHandler: TMethod);
+    procedure DeleteHandler(Index: Integer);
+    property HandlerCount: Integer read FHandlerCount;
+  end;
+
+  // This class broadcasts a notification event to a list of handlers
+  TJclNotifyEventBroadcast = class(TJclMethodBroadCast)
+  protected
+    function GetHandler(Index: Integer): TNotifyEvent;
+  public
+    function AddHandler(const AHandler: TNotifyEvent): Integer;
+    procedure RemoveHandler(const AHandler: TNotifyEvent);
+    procedure Notify(Sender: TObject);
+    property Handlers[Index: Integer]: TNotifyEvent read GetHandler;
+  end;
+
+  TJclProcedureEvent = procedure of object;
+
+  // This class broadcasts an event to a list of handlers
+  TJclProcedureEventBroadcast = class(TJclMethodBroadCast)
+  protected
+    function GetHandler(Index: Integer): TJclProcedureEvent;
+  public
+    function AddHandler(const AHandler: TJclProcedureEvent): Integer;
+    procedure RemoveHandler(const AHandler: TJclProcedureEvent);
+    procedure CallAllProcedures;
+    property Handlers[Index: Integer]: TJclProcedureEvent read GetHandler;
+  end;
+
+  TJclBooleanProcedureEvent = procedure(Value: Boolean) of object;
+
+  // This class broadcasts an event to a list of handlers
+  TJclBooleanProcedureEventBroadcast = class(TJclMethodBroadCast)
+  protected
+    function GetHandler(Index: Integer): TJclBooleanProcedureEvent;
+  public
+    function AddHandler(const AHandler: TJclBooleanProcedureEvent): Integer;
+    procedure RemoveHandler(const AHandler: TJclBooleanProcedureEvent);
+    procedure CallAllProcedures(Value: Boolean);
+    property Handlers[Index: Integer]: TJclBooleanProcedureEvent read GetHandler;
+  end;
+
+  TJclBooleanEvent = function: Boolean of object;
+
+  // This class broadcasts a predicate to a list of handlers
+  TJclBooleanEventBroadcast = class(TJclMethodBroadCast)
+  protected
+    function GetHandler(Index: Integer): TJclBooleanEvent;
+  public
+    function AddHandler(const AHandler: TJclBooleanEvent): Integer;
+    procedure RemoveHandler(const AHandler: TJclBooleanEvent);
+    function LogicalAnd: Boolean;
+    property Handlers[Index: Integer]: TJclBooleanEvent read GetHandler;
+  end;
+
+{$IFDEF UNITVERSIONING}
+const
+  UnitVersioning: TUnitVersionInfo = (
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclNotify.pas $';
+    Revision: '$Revision: 3192 $';
+    Date: '$Date: 2010-02-18 22:16:35 +0100 (jeu. 18 févr. 2010) $';
+    LogPath: 'JCL\source\common';
+    Extra: '';
+    Data: nil
+    );
+{$ENDIF UNITVERSIONING}
+
 implementation
 
 uses
   SysUtils;
 
-{ TJclBaseNotifier }
+//=== { TJclBaseNotifier } ===================================================
 
 constructor TJclBaseNotifier.Create;
 begin
@@ -171,7 +252,7 @@ begin
   try
   {$ENDIF THREADSAFE}
     idx := FListeners.IndexOf(listener);
-    if idx < 0 then
+    if idx >= 0 then
       FListeners.Delete(idx);
   {$IFDEF THREADSAFE}
   finally
@@ -180,11 +261,182 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-{ TJclBaseListener }
+//=== { TJclBaseListener } ===================================================
 
 procedure TJclBaseListener.Notification(msg: IJclNotificationMessage);
 begin
   // do nothing; descendants should override this method to process incoming notifications
 end;
+
+//=== { TNotifyEventBroadcast } ==============================================
+
+function TJclMethodBroadcast.AddHandler(
+  const AHandler: TMethod): Integer;
+var
+  HandlerLength: Integer;
+begin
+  HandlerLength := Length(FHandlers);
+  if FHandlerCount >= HandlerLength then
+  begin
+    if HandlerLength > 0 then
+      HandlerLength := HandlerLength * 2
+    else
+      HandlerLength := 4;
+    SetLength(FHandlers, HandlerLength);
+  end;
+  Result := FHandlerCount;
+  Inc(FHandlerCount);
+  FHandlers[Result] := AHandler;
+end;
+
+procedure TJclMethodBroadcast.DeleteHandler(Index: Integer);
+var
+  I: Integer;
+  HandlerLength: Integer;
+begin
+  for I := Index to FHandlerCount - 2 do
+    FHandlers[I] := FHandlers[I + 1];
+
+  HandlerLength := Length(FHandlers);
+  Dec(FHandlerCount);
+  if (FHandlerCount > 0) and ((2 * FHandlerCount) < HandlerLength) then
+  begin
+    HandlerLength := HandlerLength div 2;
+    SetLength(FHandlers, HandlerLength);
+  end;
+end;
+
+function TJclMethodBroadcast.GetHandler(Index: Integer): TMethod;
+begin
+  Result := FHandlers[Index];
+end;
+
+procedure TJclMethodBroadcast.RemoveHandler(const AHandler: TMethod);
+var
+  Index: Integer;
+begin
+  for Index := FHandlerCount - 1 downto 0 do
+    if (TMethod(FHandlers[Index]).Code = TMethod(AHandler).Code) and
+       (TMethod(FHandlers[Index]).Data = TMethod(AHandler).Data) then
+      DeleteHandler(Index);
+end;
+
+//=== { TJclNotifyEventBroadcast } ===========================================
+
+function TJclNotifyEventBroadcast.AddHandler(
+  const AHandler: TNotifyEvent): Integer;
+begin
+  Result := inherited AddHandler(TMethod(AHandler));
+end;
+
+function TJclNotifyEventBroadcast.GetHandler(Index: Integer): TNotifyEvent;
+begin
+  Result := TNotifyEvent(inherited GetHandler(Index));
+end;
+
+procedure TJclNotifyEventBroadcast.Notify(Sender: TObject);
+var
+  Index: Integer;
+begin
+  for Index := 0 to FHandlerCount - 1 do
+    TNotifyEvent(FHandlers[Index])(Sender);
+end;
+
+procedure TJclNotifyEventBroadcast.RemoveHandler(const AHandler: TNotifyEvent);
+begin
+  inherited RemoveHandler(TMethod(AHandler));
+end;
+
+//=== { TJclProcedureBroadcast } =============================================
+
+function TJclProcedureEventBroadcast.AddHandler(
+  const AHandler: TJclProcedureEvent): Integer;
+begin
+  Result := inherited AddHandler(TMethod(AHandler));
+end;
+
+function TJclProcedureEventBroadcast.GetHandler(Index: Integer): TJclProcedureEvent;
+begin
+  Result := TJclProcedureEvent(inherited GetHandler(Index));
+end;
+
+procedure TJclProcedureEventBroadcast.CallAllProcedures;
+var
+  Index: Integer;
+begin
+  for Index := 0 to FHandlerCount - 1 do
+    TJclProcedureEvent(FHandlers[Index]);
+end;
+
+procedure TJclProcedureEventBroadcast.RemoveHandler(const AHandler: TJclProcedureEvent);
+begin
+  inherited RemoveHandler(TMethod(AHandler));
+end;
+
+//=== { TJclBooleanProcedureBroadcast } =============================================
+
+function TJclBooleanProcedureEventBroadcast.AddHandler(
+  const AHandler: TJclBooleanProcedureEvent): Integer;
+begin
+  Result := inherited AddHandler(TMethod(AHandler));
+end;
+
+function TJclBooleanProcedureEventBroadcast.GetHandler(Index: Integer): TJclBooleanProcedureEvent;
+begin
+  Result := TJclBooleanProcedureEvent(inherited GetHandler(Index));
+end;
+
+procedure TJclBooleanProcedureEventBroadcast.CallAllProcedures(Value: Boolean);
+var
+  Index: Integer;
+begin
+  for Index := 0 to FHandlerCount - 1 do
+    TJclBooleanProcedureEvent(FHandlers[Index])(Value);
+end;
+
+procedure TJclBooleanProcedureEventBroadcast.RemoveHandler(const AHandler: TJclBooleanProcedureEvent);
+begin
+  inherited RemoveHandler(TMethod(AHandler));
+end;
+
+//=== { TJclBooleanEventBroadcast } ==========================================
+
+function TJclBooleanEventBroadcast.AddHandler(
+  const AHandler: TJclBooleanEvent): Integer;
+begin
+  Result := inherited AddHandler(TMethod(AHandler));
+end;
+
+function TJclBooleanEventBroadcast.GetHandler(Index: Integer): TJclBooleanEvent;
+begin
+  Result := TJclBooleanEvent(inherited GetHandler(Index));
+end;
+
+function TJclBooleanEventBroadcast.LogicalAnd: Boolean;
+var
+  Index: Integer;
+begin
+  Result := True;
+  for Index := 0 to FHandlerCount - 1 do
+  begin
+    Result := TJclBooleanEvent(FHandlers[Index]);
+    if not Result then
+      Break;
+  end;
+end;
+
+procedure TJclBooleanEventBroadcast.RemoveHandler(
+  const AHandler: TJclBooleanEvent);
+begin
+  inherited RemoveHandler(TMethod(AHandler));
+end;
+
+{$IFDEF UNITVERSIONING}
+initialization
+  RegisterUnitVersion(HInstance, UnitVersioning);
+
+finalization
+  UnregisterUnitVersion(HInstance);
+{$ENDIF UNITVERSIONING}
 
 end.
