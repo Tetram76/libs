@@ -15,7 +15,7 @@ function UnloadProc(Caller: TPSExec; p: TPSExternalProcRec; Global, Stack: TPSSt
 implementation
 uses
   {$IFDEF UNIX}
-  LCLIntf, Unix, baseunix, dynlibs, termio, sockets;
+  Unix, baseunix, dynlibs, termio, sockets;
   {$ELSE}
   Windows;
   {$ENDIF}
@@ -188,7 +188,7 @@ begin
   end else n := nil;
   try
     TMYExec(Caller).InnerfuseCall(nil, p.Ext1, cc, MyList, n);
-    {$IFNDEF LINUX}
+    {$IFNDEF UNIX}
     DLLSetLastError(Caller, GetLastError);
     {$ENDIF}
   finally

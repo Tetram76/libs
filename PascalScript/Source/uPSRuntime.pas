@@ -1537,7 +1537,11 @@ begin
       tkVariant: begin Result := '[Variant]'; exit; end;
 	  {$IFDEF DELPHI6UP}
 	  {$IFNDEF PS_NOWIDESTRING}
-      tkWString: begin Result := ''''+tbtString(GetWideStrProp(Instance, pp))+''; end; {$ENDIF}
+      tkWString: begin Result := ''''+tbtString(GetWideStrProp(Instance, pp))+''; end;
+	  {$IFDEF DELPHI2009UP}
+      tkUString: begin Result := ''''+tbtString(GetUnicodeStrProp(Instance, pp))+''; end;
+	  {$ENDIF}
+      {$ENDIF}
 	  {$ENDIF}
       else begin Result := '[Unknown]'; exit; end;
     end;
@@ -1975,7 +1979,7 @@ end;
 
 class function TPSExec.About: tbtString;
 begin
-  Result := 'RemObjects Pascal Script. Copyright (c) 2004-2009 by RemObjects Software';
+  Result := 'RemObjects Pascal Script. Copyright (c) 2004-2010 by RemObjects Software';
 end;
 
 procedure TPSExec.Cleanup;
@@ -3984,6 +3988,10 @@ begin
         begin
           for i := 0 to Len -1 do
           begin
+            if Pointer(Dest^) <> nil then
+            begin
+              PSDynArraySetLength(Pointer(Dest^), aType, 0);
+            end;
             Pointer(Dest^) := Pointer(Src^);
             if Pointer(Dest^) <> nil then
             begin
@@ -4570,19 +4578,19 @@ begin
       if Tmp is EDivByZero then
       begin
         Result := False;
-        CMD_Err3(erDivideByZero, '', Tmp);
+        CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
       if Tmp is EZeroDivide then
       begin
         Result := False;
-        CMD_Err3(erDivideByZero, '', Tmp);
+        CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
       if Tmp is EMathError then
       begin
         Result := False;
-        CMD_Err3(erMathError, '', Tmp);
+        CMD_Err3(erMathError, tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
     end;
@@ -5261,19 +5269,19 @@ begin
       if Tmp is EDivByZero then
       begin
         Result := False;
-        CMD_Err3(erDivideByZero, '', Tmp);
+        CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
       if Tmp is EZeroDivide then
       begin
         Result := False;
-        CMD_Err3(erDivideByZero, '', Tmp);
+        CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
       if Tmp is EMathError then
       begin
         Result := False;
-        CMD_Err3(erMathError, '', Tmp);
+        CMD_Err3(erMathError, tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
     end;
@@ -6279,19 +6287,19 @@ begin
       if Tmp is EDivByZero then
       begin
         Result := False;
-        CMD_Err3(erDivideByZero, '', Tmp);
+        CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
       if Tmp is EZeroDivide then
       begin
         Result := False;
-        CMD_Err3(erDivideByZero, '', Tmp);
+        CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
       if Tmp is EMathError then
       begin
         Result := False;
-        CMD_Err3(erMathError, '', Tmp);
+        CMD_Err3(erMathError,tbtString(Exception(Tmp).Message), Tmp);
         Exit;
       end;
     end;
@@ -7177,19 +7185,19 @@ begin
           if Tmp is EDivByZero then
           begin
             Result := False;
-            CMD_Err3(erDivideByZero, '', Tmp);
+            CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
             Exit;
           end;
           if Tmp is EZeroDivide then
           begin
             Result := False;
-            CMD_Err3(erDivideByZero, '', Tmp);
+            CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
             Exit;
           end;
           if Tmp is EMathError then
           begin
             Result := False;
-            CMD_Err3(erMathError, '', Tmp);
+            CMD_Err3(erMathError, tbtString(Exception(Tmp).Message), Tmp);
             Exit;
           end;
         end;
@@ -7826,17 +7834,17 @@ begin
                     end else
                     if Tmp is EDivByZero then
                     begin
-                      CMD_Err3(erDivideByZero, '', Tmp);
+                      CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
                       Break;
                     end;
                     if Tmp is EZeroDivide then
                     begin
-                      CMD_Err3(erDivideByZero, '', Tmp);
+                      CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
                       Break;
                     end;
                     if Tmp is EMathError then
                     begin
-                      CMD_Err3(erMathError, '', Tmp);
+                      CMD_Err3(erMathError, tbtString(Exception(Tmp).Message), Tmp);
                       Break;
                     end;
                   end;
@@ -8512,17 +8520,17 @@ begin
                       end else
                       if Tmp is EDivByZero then
                       begin
-                        CMD_Err3(erDivideByZero, '', Tmp);
+                        CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
                         break;
                       end;
                       if Tmp is EZeroDivide then
                       begin
-                        CMD_Err3(erDivideByZero, '', Tmp);
+                        CMD_Err3(erDivideByZero, tbtString(Exception(Tmp).Message), Tmp);
                         break;
                       end;
                       if Tmp is EMathError then
                       begin
-                        CMD_Err3(erMathError, '', Tmp);
+                        CMD_Err3(erMathError, tbtString(Exception(Tmp).Message), Tmp);
                         break;
                       end;
                     end;
@@ -8674,24 +8682,26 @@ begin
     1: Stack.SetInt(-1, StrToInt(Stack.GetAnsiString(-2))); // strtoint
     2: Stack.SetInt(-1, StrToIntDef(Stack.GetAnsiString(-2), Stack.GetInt(-3))); // strtointdef
     3:
+{$IFNDEF PS_NOWIDESTRING}
       if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString then
         Stack.SetInt(-1, Pos(Stack.GetUnicodeString(-2), Stack.GetUnicodeString(-3)))// pos
       else
       if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btWideString then
         Stack.SetInt(-1, Pos(Stack.GetWideString(-2), Stack.GetWideString(-3)))// pos
-      else
+      else{$ENDIF}
         Stack.SetInt(-1, Pos(Stack.GetAnsiString(-2), Stack.GetAnsiString(-3)));// pos
     4:
-      if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btWideString then
+{$IFNDEF PS_NOWIDESTRING}      if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btWideString then
         Stack.SetWideString(-1, Copy(Stack.GetWideString(-2), Stack.GetInt(-3), Stack.GetInt(-4))) // copy
       else
       if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString then
         Stack.SetUnicodeString(-1, Copy(Stack.GetUnicodeString(-2), Stack.GetInt(-3), Stack.GetInt(-4))) // copy
-      else
+      else{$ENDIF}
         Stack.SetAnsiString(-1, Copy(Stack.GetAnsiString(-2), Stack.GetInt(-3), Stack.GetInt(-4))); // copy
     5: //delete
       begin
         temp := NewTPSVariantIFC(Stack[Stack.Count -1], True);
+{$IFNDEF PS_NOWIDESTRING}
         if (temp.Dta <> nil) and (temp.aType.BaseType = btUnicodeString) then
         begin
           Delete(tbtUnicodeString(temp.Dta^), Stack.GetInt(-2), Stack.GetInt(-3));
@@ -8699,7 +8709,7 @@ begin
         if (temp.Dta <> nil) and (temp.aType.BaseType = btWideString) then
         begin
           Delete(tbtwidestring(temp.Dta^), Stack.GetInt(-2), Stack.GetInt(-3));
-        end else begin
+        end else {$ENDIF} begin
           if (temp.Dta = nil) or (temp.aType.BaseType <> btString) then
           begin
             Result := False;
@@ -8711,11 +8721,12 @@ begin
     6: // insert
       begin
         temp := NewTPSVariantIFC(Stack[Stack.Count -2], True);
+{$IFNDEF PS_NOWIDESTRING}
         if (temp.Dta <> nil) and (temp.aType.BaseType = btUnicodeString) then begin
           Insert(Stack.GetUnicodeString(-1), tbtUnicodeString(temp.Dta^), Stack.GetInt(-3));
         end else if (temp.Dta <> nil) and (temp.aType.BaseType = btWideString) then begin
           Insert(Stack.GetWideString(-1), tbtwidestring(temp.Dta^), Stack.GetInt(-3));
-        end else begin
+        end else {$ENDIF} begin
           if (temp.Dta = nil) or (temp.aType.BaseType <> btString) then
           begin
             Result := False;
@@ -8759,6 +8770,7 @@ begin
         tbtstring(temp.Dta^)[i] := tbtchar(Stack.GetInt(-1));
       end;
     10:
+{$IFNDEF PS_NOWIDESTRING}
 {$IFDEF DELPHI2009UP}
       if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString then
         Stack.SetUnicodeString(-1, UpperCase(Stack.GetUnicodeString(-2))) // Uppercase
@@ -8768,8 +8780,10 @@ begin
         (Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString) then
         Stack.SetWideString(-1, WideUpperCase(Stack.GetWideString(-2))) // Uppercase
       else
+{$ENDIF}
         Stack.SetAnsiString(-1, FastUppercase(Stack.GetAnsiString(-2))); // Uppercase
     11:
+{$IFNDEF PS_NOWIDESTRING}
 {$IFDEF DELPHI2009UP}
       if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString then
         Stack.SetUnicodeString(-1, LowerCase(Stack.GetUnicodeString(-2))) // Uppercase
@@ -8779,14 +8793,17 @@ begin
         (Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString) then
         Stack.SetWideString(-1, WideLowerCase(Stack.GetWideString(-2))) // Uppercase
       else
+{$ENDIF}
         Stack.SetAnsiString(-1, FastLowercase(Stack.GetAnsiString(-2)));// LowerCase
     12:
+{$IFNDEF PS_NOWIDESTRING}
       if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString then
-        Stack.SetUnicodeString(-1, SysUtils.Trim(Stack.GetUnicodestring(-2))) // Uppercase
+        Stack.SetUnicodeString(-1, SysUtils.Trim(Stack.GetUnicodestring(-2))) // Trim
       else if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btWideString then
-        Stack.SetWideString(-1, SysUtils.Trim(Stack.GetWideString(-2))) // Uppercase
+        Stack.SetWideString(-1, SysUtils.Trim(Stack.GetWideString(-2))) // Trim
       else
-        Stack.SetAnsiString(-1, Trim(Stack.GetAnsiString(-2)));// Trim
+{$ENDIF}      
+        Stack.SetAnsiString(-1, AnsiString(SysUtils.Trim(String(Stack.GetAnsiString(-2)))));// Trim
     13: Stack.SetInt(-1, Length(Stack.GetAnsiString(-2))); // Length
     14: // SetLength
       begin
@@ -8809,28 +8826,31 @@ begin
     23: Stack.SetReal(-1, StrToFloat(Stack.GetAnsiString(-2))); // StrToFloat
     24: Stack.SetAnsiString(-1, FloatToStr(Stack.GetReal(-2)));// FloatToStr
     25:
+{$IFNDEF PS_NOWIDESTRING}
     if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString then
       Stack.SetUnicodeString(-1, upadL(Stack.GetUnicodeString(-2), Stack.GetInt(-3))) //  PadL
     else
     if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btWideString then
       Stack.SetWideString(-1, wPadL(Stack.GetWideString(-2), Stack.GetInt(-3))) //  PadL
-    else
+    else{$ENDIF}
       Stack.SetAnsiString(-1, PadL(Stack.GetAnsiString(-2), Stack.GetInt(-3))); //  PadL
     26:
+{$IFNDEF PS_NOWIDESTRING}
     if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString then
       Stack.SetUnicodeString(-1, uPadR(Stack.GetUnicodeString(-2), Stack.GetInt(-3))) // PadR
     else
     if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btWideString then
       Stack.SetWideString(-1, wPadR(Stack.GetWideString(-2), Stack.GetInt(-3))) // PadR
-    else
+    else{$ENDIF}
       Stack.SetAnsiString(-1, PadR(Stack.GetAnsiString(-2), Stack.GetInt(-3))); // PadR
     27:
+{$IFNDEF PS_NOWIDESTRING}
     if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btUnicodeString then
       Stack.SetUnicodeString(-1, uPadZ(Stack.GetUnicodeString(-2), Stack.GetInt(-3)))// PadZ
     else
     if Stack.GetItem(Stack.Count -2)^.FType.BaseType = btWideString then
       Stack.SetWideString(-1, wPadZ(Stack.GetWideString(-2), Stack.GetInt(-3)))// PadZ
-    else
+    else{$ENDIF}
       Stack.SetAnsiString(-1, PadZ(Stack.GetAnsiString(-2), Stack.GetInt(-3)));// PadZ
     28: Stack.SetAnsiString(-1, StringOfChar(tbtChar(Stack.GetInt(-2)), Stack.GetInt(-3))); // Replicate/StrOfChar
     29: // Assigned
@@ -9176,6 +9196,16 @@ begin
   end;
 end;
 
+function _VarArrayGet(var S : Variant; I : Integer) : Variant;
+begin
+  result := VarArrayGet(S, [I]);
+end;
+
+procedure _VarArraySet(const c : Variant; I : Integer; var s : Variant);
+begin
+  VarArrayPut(s, c, [i]);
+end;
+
 
 procedure TPSExec.RegisterStandardProcs;
 begin
@@ -9253,6 +9283,8 @@ begin
   RegisterFunctionName('WSTRGET', DefProc, Pointer(42), nil);
   RegisterFunctionName('WSTRSET', DefProc, Pointer(43), nil);
   {$ENDIF}
+  RegisterDelphiFunction(@_VarArrayGet, 'VARARRAYGET', cdRegister);
+  RegisterDelphiFunction(@_VarArraySet, 'VARARRAYSET', cdRegister);
 
   RegisterInterfaceLibraryRuntime(Self);
 end;
@@ -10095,7 +10127,7 @@ begin
     v := NewPPSVariantIFC(Stack[CurrStack + 1], True);
   end else v := nil;
   try
-    Result := Caller.InnerfuseCall(FSelf, p.Ext1, TPSCallingConvention(Integer(cc) or 64), MyList, v);
+    Result := Caller.InnerfuseCall(FSelf, p.Ext1, {$IFDEF FPC}TPSCallingConvention(Integer(cc) or 64){$ELSE}cc{$ENDIF}, MyList, v);
   finally
     DisposePPSVariantIFC(v);
     DisposePPSVariantIFCList(mylist);
@@ -10180,7 +10212,7 @@ begin
     v := NewPPSVariantIFC(Stack[CurrStack + 1], True);
   end else v := nil;
   try
-    Result := Caller.InnerfuseCall(FSelf, VirtualClassMethodPtrToPtr(p.Ext1, FSelf), cc, MyList, v);
+    Result := Caller.InnerfuseCall(FSelf, VirtualClassMethodPtrToPtr(p.Ext1, FSelf), {$IFDEF FPC}TPSCallingConvention(Integer(cc) or 128){$ELSE}cc{$ENDIF}, MyList, v);
   finally
     DisposePPSVariantIFC(v);
     DisposePPSVariantIFCList(mylist);
@@ -11098,18 +11130,40 @@ begin
 end;
 
 function TPSExec.LastExParam: tbtString;
+var
+  pp: TPSExceptionHandler;
 begin
-  result := ExParam;
+  if FExceptionStack.Count = 0 then begin
+    result := ExParam;
+    exit;
+  end;
+  pp := fExceptionStack[fExceptionStack.Count-1];
+  result := pp.ExceptionParam;
 end;
 
 function TPSExec.LastExPos: Integer;
+var
+  pp: TPSExceptionHandler;
 begin
-  result := ExPos;
+  if FExceptionStack.Count = 0 then begin
+    result := ExPos;
+    exit;
+  end;
+  pp := fExceptionStack[fExceptionStack.Count-1];
+  result := pp.ExceptOffset;
+
 end;
 
 function TPSExec.LastExProc: Integer;
+var
+  pp: TPSExceptionHandler;
 begin
-  result := exProc;
+  if FExceptionStack.Count = 0 then begin
+    result := ExProc;
+    exit;
+  end;
+  pp := fExceptionStack[fExceptionStack.Count-1];
+  result := FProcs.IndexOf(pp.CurrProc);
 end;
 
 { TPSRuntimeClass }
@@ -12072,6 +12126,7 @@ begin
   Result := PSGetUInt(@PPSVariantData(val).Data, val.FType);
 end;
 
+{$IFNDEF PS_NOWIDESTRING}
 function TPSStack.GetUnicodeString(ItemNo: Integer): tbtunicodestring;
 var
   val: PPSVariant;
@@ -12083,7 +12138,6 @@ begin
   Result := PSGetUnicodeString(@PPSVariantData(val).Data, val.FType);
 end;
 
-{$IFNDEF PS_NOWIDESTRING}
 function TPSStack.GetWideString(ItemNo: Longint): tbtWideString;
 var
   val: PPSVariant;
@@ -12349,6 +12403,9 @@ var
   aName: PWideChar;
   WSFreeList: TPSList;
 begin
+  if Self = nil then begin
+    raise EPSException.Create('Variant is null, cannot invoke', nil, 0, 0);
+  end;
   FillChar(ExceptInfo, SizeOf(ExceptInfo), 0);
   if Name='' then begin
    DispatchId:=0;
