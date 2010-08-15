@@ -2213,7 +2213,7 @@ end;
 procedure TUIBStatement.BeginPrepare(describeParams: boolean = false);
 begin
   if (FStHandle = nil) then
-    BeginStatement else ;
+    BeginStatement else
     BeginTransaction;
 
   FSQLResult := ResultClass.Create(FindDataBase.CharacterSet, 0, FCachedFetch, FFetchBlobs, FBufferChunks);
@@ -4246,6 +4246,7 @@ end;
 
 procedure EventCallback(UserData: Pointer; Length: Smallint; Updated: PAnsiChar); cdecl;
 begin
+  if (Length > 0) and (Updated <> nil) then
   if (Assigned(UserData) and Assigned(Updated)) then
   with TUIBEventThread(UserData) do
   begin
