@@ -25,7 +25,7 @@ Known Issues:
   * Some tags are not supported, see var DefaultFrameClasses. Values nil in that
     list indicate not supported frames.
 -----------------------------------------------------------------------------}
-// $Id: JvID3v2Base.pas 12743 2010-04-02 11:10:53Z ahuser $
+// $Id: JvID3v2Base.pas 12785 2010-06-06 17:57:35Z cycocrew $
 
 unit JvID3v2Base;
 
@@ -1181,8 +1181,8 @@ function NiceGenreToGenre(const ANiceGenre: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvID3v2Base.pas $';
-    Revision: '$Revision: 12743 $';
-    Date: '$Date: 2010-04-02 13:10:53 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12785 $';
+    Date: '$Date: 2010-06-06 19:57:35 +0200 (dim. 06 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -6645,20 +6645,24 @@ begin
       TmpFileName := SysUtils.IncludeTrailingPathDelimiter(PathGetTempPath) + cPictureFrameFileNameTemplate;
       TmpFileName := FindUnusedFileName(TmpFileName, MIMETypeToExt(string(MIMEType)), '');
 
-      SaveToFile(TmpFileName);
       try
+        SaveToFile(TmpFileName);
         try
-          if Dest is TPicture then
-            TPicture(Dest).LoadFromFile(TmpFileName)
-          else
-          if Dest is TGraphic then
-            TGraphic(Dest).LoadFromFile(TmpFileName);
-        except
-          on EInvalidGraphic do
-            ; { Do nothing }
-        end
-      finally
-        SysUtils.DeleteFile(TmpFileName);
+          try
+            if Dest is TPicture then
+              TPicture(Dest).LoadFromFile(TmpFileName)
+            else
+            if Dest is TGraphic then
+              TGraphic(Dest).LoadFromFile(TmpFileName);
+          except
+            on EInvalidGraphic do
+              ; { Do nothing }
+          end
+        finally
+          SysUtils.DeleteFile(TmpFileName);
+        end;
+      except
+        { Something went wrong while saving picture to file }
       end;
     end
     else

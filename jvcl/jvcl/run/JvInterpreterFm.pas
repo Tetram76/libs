@@ -24,7 +24,7 @@ Component   : form runner for JvInterpreter
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreterFm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvInterpreterFm.pas 12781 2010-05-23 23:30:10Z ahuser $
 
 { history (JVCL Library versions):
   1.10:
@@ -147,8 +147,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreterFm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12781 $';
+    Date: '$Date: 2010-05-24 01:30:10 +0200 (lun. 24 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -170,14 +170,13 @@ type
 
   TJvInterpreterAdapterAccessProtected = class(TJvInterpreterAdapter);
 
-function TJvInterpreterReader.FindMethod(Root: TComponent;
-  const MethodName: string): Pointer;
+function TJvInterpreterReader.FindMethod(Root: TComponent; const MethodName: string): Pointer;
 var
   Len: Integer;
 begin
   // (rom) explicit allocation instead of deprecated NewStr
-  Len := StrLen(PChar(MethodName))+1;
-  GetMem(Result, Len);
+  Len := Length(MethodName) + 1;
+  GetMem(Result, Len * SizeOf(Char));
   Move(PChar(MethodName)^, Result^, Len * SizeOf(Char));
   TJvInterpreterForm(Root).FMethodList.Add(Result);
 end;
@@ -245,7 +244,7 @@ procedure TJvInterpreterForm.FixupMethods;
           end;
         end;
     finally
-      FreeMem(PropList, NumProps * SizeOf(Pointer));
+      FreeMem(PropList);
     end;
   end;
 

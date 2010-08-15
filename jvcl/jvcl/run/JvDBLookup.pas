@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 12737 2010-04-02 09:43:21Z ahuser $
+// $Id: JvDBLookup.pas 12821 2010-07-07 05:18:03Z ahuser $
 
 unit JvDBLookup;
 
@@ -662,8 +662,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 12737 $';
-    Date: '$Date: 2010-04-02 11:43:21 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12821 $';
+    Date: '$Date: 2010-07-07 07:18:03 +0200 (mer. 07 juil. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2977,7 +2977,8 @@ end;
 procedure TJvDBLookupCombo.ListLinkDataSetChanged;
 begin
   inherited ListLinkDataSetChanged;
-  if not FInListDataSetChanged and not FListVisible then
+  if not FInListDataSetChanged and not FListVisible and
+    (FLookupSource <> nil) and (FLookupSource.DataSet <> nil) and (FLookupSource.DataSet.State = dsBrowse) then
   begin
     FInListDataSetChanged := True;
     try

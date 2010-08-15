@@ -28,7 +28,7 @@ Known Issues:
                on the form being designed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDesignSurface.pas 12535 2009-10-02 09:36:42Z ahuser $
+// $Id: JvDesignSurface.pas 12790 2010-06-07 08:34:28Z obones $
 
 unit JvDesignSurface;
 
@@ -265,8 +265,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignSurface.pas $';
-    Revision: '$Revision: 12535 $';
-    Date: '$Date: 2009-10-02 11:36:42 +0200 (ven. 02 oct. 2009) $';
+    Revision: '$Revision: 12790 $';
+    Date: '$Date: 2010-06-07 10:34:28 +0200 (lun. 07 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -878,12 +878,16 @@ begin
             // processed the WM_WINDOWPOSCHANGED message when this code executes.
             // If we did not, the designer would use the previous position of the
             // control to display the handles.
+            // Additionnaly, we must not work with controls that don't have their
+            // handle allocated. In some instances, creating the handle may trigger
+            // a second WM_WINDOWPOSCHANGED message, thus leading to an infinite
+            // loop and a crash (Mantis 5225)
             for I := 0 to Container.ComponentCount - 1 do
             begin
               if Container.Components[I] is TWinControl then
               begin
                 Control := TAccessWinControl(Container.Components[I]);
-                if PosChangedHandle = Control.Handle then
+                if Control.HandleAllocated and (PosChangedHandle = Control.Handle) then
                 begin
                   if not (csDestroyingHandle in Control.ControlState) then
                     {$IFDEF DELPHI10_UP}

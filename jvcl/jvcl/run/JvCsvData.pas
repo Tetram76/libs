@@ -58,7 +58,7 @@ Known Issues and Updates:
                 properly when attached to JvCsvDataset.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCsvData.pas 12776 2010-05-16 14:05:19Z ahuser $
+// $Id: JvCsvData.pas 12794 2010-06-07 14:38:23Z ahuser $
 
 
 
@@ -930,8 +930,8 @@ function JvCsvNumCondition(FieldValue: Double; CompareOperator: TJvCsvFilterNumC
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCsvData.pas $';
-    Revision: '$Revision: 12776 $';
-    Date: '$Date: 2010-05-16 16:05:19 +0200 (dim. 16 mai 2010) $';
+    Revision: '$Revision: 12794 $';
+    Date: '$Date: 2010-06-07 16:38:23 +0200 (lun. 07 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3446,12 +3446,12 @@ begin
   PhysicalRow := PCsvRow(FData.AllocRecordBuffer);
   try
     JvStringToCsvRow(Key + Separator, Separator, LogicalRow, False, False); // initialize row and put items in their logical order.
-    CsvRowInit(@PhysicalRow);
+    CsvRowInit(PhysicalRow);
     // Move from Logical (TFieldDef order) to their physical (As found in CSV file) ordering:
     for I := 0 to FCsvKeyCount - 1 do
     begin
-      aStr := GetCsvRowItem(@LogicalRow, I);
-      SetCsvRowItem(@PhysicalRow, FCsvKeyFields[I].FPhysical, aStr);
+      aStr := GetCsvRowItem(LogicalRow, I);
+      SetCsvRowItem(PhysicalRow, FCsvKeyFields[I].FPhysical, aStr);
     end;
     RecNo := InternalFindByKey(PhysicalRow);
     if RecNo < 0 then
@@ -4234,7 +4234,7 @@ begin
   PJvCsvRowWordFields(P)^.Magic2 := JvCsvRowMagic2;
   //DebugPJvCsvRowWordFields := PJvCsvRowWordFields(P);
 
-  FREcordsValid := True;
+  FRecordsValid := True;
 end;
 
 function TJvCsvRows.RecordSize: Word;

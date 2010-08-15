@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGroupHeader.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvGroupHeader.pas 12784 2010-06-04 11:32:38Z ahuser $
 
 unit JvGroupHeader;
 
@@ -81,10 +81,10 @@ type
     procedure SetBevelOptions(Value: TJvGroupHeaderOptions);
     procedure SetBevelSpace(Value: Integer);
 //    procedure SetLabelOptions(Value: TJvGroupHeaderOptions);
-    procedure StyleChanged(Sender: TObject);
-    procedure BevelLine(C: TColor; X, Y, Width: Integer);
-    procedure DoDrawText(var Rect: TRect; Flags: Longint);
   protected
+    procedure StyleChanged(Sender: TObject); virtual;
+    procedure BevelLine(C: TColor; X, Y, Width: Integer); virtual;
+    procedure DoDrawText(var Rect: TRect; Flags: Longint); virtual;
     function GetLabelText: string; virtual;
     procedure Paint; override;
     procedure TextChanged; override;
@@ -138,8 +138,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGroupHeader.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12784 $';
+    Date: '$Date: 2010-06-04 13:32:38 +0200 (ven. 04 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -247,7 +247,6 @@ begin
   {$IFDEF JVCLThemesEnabled}
   IncludeThemeStyle(Self, [csParentBackground]);
   {$ENDIF JVCLThemesEnabled}
-  Font.Name := 'Tahoma';
   Width := 200;
   Height := 17;
 

@@ -23,7 +23,7 @@ Remko Bonte
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvEditorCommon.pas 12762 2010-05-11 21:58:42Z ahuser $
+// $Id: JvEditorCommon.pas 12817 2010-07-01 13:22:30Z ahuser $
 
 { history
  (JVCL Library versions) :
@@ -1391,8 +1391,8 @@ function KeyPressed(VK: Integer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditorCommon.pas $';
-    Revision: '$Revision: 12762 $';
-    Date: '$Date: 2010-05-11 23:58:42 +0200 (mar. 11 mai 2010) $';
+    Revision: '$Revision: 12817 $';
+    Date: '$Date: 2010-07-01 15:22:30 +0200 (jeu. 01 juil. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -5324,7 +5324,6 @@ begin
   Result := 0;
   for I := 0 to LineCount - 1 do
     Inc(Result, LineLength[I] + sLineBreakLen);
-  Dec(Result, sLineBreakLen);
 end;
 
 procedure TJvCustomEditorBase.BeginUpdate;

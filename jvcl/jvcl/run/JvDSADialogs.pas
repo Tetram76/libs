@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDSADialogs.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvDSADialogs.pas 12805 2010-06-10 14:11:07Z obones $
 
 unit JvDSADialogs;
 
@@ -467,8 +467,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDSADialogs.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12805 $';
+    Date: '$Date: 2010-06-10 16:11:07 +0200 (jeu. 10 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -549,8 +549,12 @@ var
 
 begin
   inherited CreateNew(AOwner, Dummy);
+  {$IFDEF RTL210_UP}
+  NonClientMetrics.cbSize := TNonClientMetrics.SizeOf;
+  {$ELSE}
   NonClientMetrics.cbSize := SizeOf(NonClientMetrics);
-  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, @NonClientMetrics, 0) then
+  {$ENDIF RTL210_UP}
+  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, NonClientMetrics.cbSize, @NonClientMetrics, 0) then
     Font.Handle := CreateFontIndirect(NonClientMetrics.lfMessageFont);
   FTimer := TTimer.Create(Self);
   FTimer.Enabled := False;

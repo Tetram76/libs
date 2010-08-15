@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBFilterExpr.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBFilterExpr.pas 12795 2010-06-07 15:16:51Z ahuser $
 
 unit JvDBFilterExpr;
 
@@ -59,7 +59,7 @@ var
 type
   TExprParserAccess = class
   protected
-    FDecimalSeparator: Char;
+    FDecimalSeparator: {$IF CompilerVersion > 17.0}WideChar{$ELSE}Char{$IFEND}; // Delphi 2006+ use WideChar
     FFilter: TFilterExpr;
   end;
 

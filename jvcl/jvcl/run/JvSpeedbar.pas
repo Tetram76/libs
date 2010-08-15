@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbar.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvSpeedbar.pas 12805 2010-06-10 14:11:07Z obones $
 
 unit JvSpeedbar;
 
@@ -498,8 +498,8 @@ function NewSpeedItem(AOwner: TComponent; ASpeedBar: TJvSpeedBar; Section: Integ
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedbar.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12805 $';
+    Date: '$Date: 2010-06-10 16:11:07 +0200 (jeu. 10 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1665,8 +1665,12 @@ begin
   ParentFont := False;
   with Font do
   begin
+    {$IFDEF RTL210_UP}
+    NCMetrics.cbSize := TNonClientMetrics.SizeOf;
+    {$ELSE}
     NCMetrics.cbSize := SizeOf(TNonClientMetrics);
-    if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, @NCMetrics, 0) then
+    {$ENDIF RTL210_UP}
+    if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, NCMetrics.cbSize, @NCMetrics, 0) then
     begin
       Handle := CreateFontIndirect(NCMetrics.lfMenuFont);
       Charset := DEFAULT_CHARSET;

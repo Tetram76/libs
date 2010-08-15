@@ -64,7 +64,7 @@ Revisions : 1st = 2004/09/19
             7th = 2007/03/25
             8th = 2007/06/20
 -----------------------------------------------------------------------------}
-// $Id: JvMemoryDataset.pas 12736 2010-03-29 16:54:56Z ahuser $
+// $Id: JvMemoryDataset.pas 12795 2010-06-07 15:16:51Z ahuser $
 
 unit JvMemoryDataset;
 
@@ -78,7 +78,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, DB, Variants,
-  JvDBUtils, JvExprParser;
+  JvDBUtils, JvExprParser, JvDBFilterExpr;
 
 type
   TPVariant = ^Variant;
@@ -137,8 +137,10 @@ type
     FBeforeApplyRecord: TApplyRecordEvent;
     FAfterApplyRecord: TApplyRecordEvent;
     FFilterParser: TExprParser; // CSchiffler. June 2009.  See JvExprParser.pas
+    FFilterExpression: TJvDBFilterExpression; // ahuser. Same filter expression parser that ClientDataSet uses
     FCopyFromDataSetFieldDefs: array of Integer; // only valid while CopyFromDataSet is executed
     FClearing: Boolean;
+    FUseDataSetFilter: Boolean;
     function AddRecord: TJvMemoryRecord;
     function InsertRecord(Index: Integer): TJvMemoryRecord;
     function FindRecordID(ID: Integer): TJvMemoryRecord;
@@ -164,6 +166,7 @@ type
     procedure DoAfterApply(ADataset: TDataset; RowsApplied: Integer);
     procedure DoBeforeApplyRecord(ADataset: TDataset; RS: TRecordStatus; Found: Boolean);
     procedure DoAfterApplyRecord(ADataset: TDataset; RS: TRecordStatus; Apply: Boolean);
+    procedure SetUseDataSetFilter(const Value: Boolean);
   protected
     function FindFieldData(Buffer: Pointer; Field: TField): Pointer;
     function CompareFields(Data1, Data2: Pointer; FieldType: TFieldType;
@@ -258,6 +261,7 @@ type
     property AutoCalcFields;
     property Filtered;
     property FilterOptions;
+    property UseDataSetFilter: Boolean read FUseDataSetFilter write SetUseDataSetFilter default False;
     property FieldDefs;
     property ObjectView default False;
     property DataSet: TDataSet read FDataSet write SetDataSet;
@@ -342,8 +346,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemoryDataset.pas $';
-    Revision: '$Revision: 12736 $';
-    Date: '$Date: 2010-03-29 18:54:56 +0200 (lun. 29 mars 2010) $';
+    Revision: '$Revision: 12795 $';
+    Date: '$Date: 2010-06-07 17:16:51 +0200 (lun. 07 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -604,8 +608,10 @@ var
 begin
   if Active then
     Close;
-  if Assigned(FFilterParser) then
+  if FFilterParser <> nil then
     FreeAndNil(FFilterParser);
+  if FFilterExpression <> nil then
+    FreeAndNil(FFilterExpression);
   if Assigned(FDeletedValues) then
   begin
     if FDeletedValues.Count > 0 then
@@ -1125,19 +1131,23 @@ var
   SaveState: TDataSetState;
 begin
   Result := True;
-  if Assigned(OnFilterRecord) or Assigned(FFilterParser) then
+  if Assigned(OnFilterRecord) or (FFilterParser <> nil) or (FFilterExpression <> nil) then
   begin
     if (FRecordPos >= 0) and (FRecordPos < RecordCount) then
     begin
       SaveState := SetTempState(dsFilter);
       try
         RecordToBuffer(Records[FRecordPos], TempBuffer);
-        if Assigned(FFilterParser) and FFilterParser.Eval() then
+        if (FFilterParser <> nil) and FFilterParser.Eval() then
         begin
           FFilterParser.EnableWildcardMatching := not (foNoPartialCompare in FilterOptions);
           FFilterParser.CaseInsensitive := foCaseInsensitive in FilterOptions;
           Result := FFilterParser.Value;
-        end;
+        end
+        else
+        if FFilterExpression <> nil then
+          Result := FFilterExpression.Evaluate();
+
         if Assigned(OnFilterRecord) then
           OnFilterRecord(Self, Result);
       except
@@ -1540,14 +1550,20 @@ procedure TJvMemoryData.SetFilterText(const Value: string);
   procedure UpdateFilter;
   begin
     FreeAndNil(FFilterParser);
+    FreeAndNil(FFilterExpression);
     if Filter <> '' then
     begin
-      FFilterParser := TExprParser.Create;
-      FFilterParser.OnGetVariable := ParserGetVariableValue;
-      if foCaseInsensitive in FilterOptions then
-        FFilterParser.Expression := AnsiUpperCase(Filter)
+      if UseDataSetFilter then
+        FFilterExpression := TJvDBFilterExpression.Create(Self, Value, FilterOptions)
       else
-      FFilterParser.Expression := Filter;
+      begin
+        FFilterParser := TExprParser.Create;
+        FFilterParser.OnGetVariable := ParserGetVariableValue;
+        if foCaseInsensitive in FilterOptions then
+          FFilterParser.Expression := AnsiUpperCase(Filter)
+        else
+          FFilterParser.Expression := Filter;
+      end;
     end;
   end;
 
@@ -1630,6 +1646,15 @@ begin
     FRecordPos := Value - 1;
     Resync([]);
     DoAfterScroll;
+  end;
+end;
+
+procedure TJvMemoryData.SetUseDataSetFilter(const Value: Boolean);
+begin
+  if Value <> FUseDataSetFilter then
+  begin
+    FUseDataSetFilter := Value;
+    SetFilterText(Filter); // update the filter engine
   end;
 end;
 

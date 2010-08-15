@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgUtils.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvgUtils.pas 12781 2010-05-23 23:30:10Z ahuser $
 
 unit JvgUtils;
 
@@ -142,8 +142,8 @@ function DeleteObject(P1: HGDIOBJ): BOOL; stdcall;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgUtils.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12781 $';
+    Date: '$Date: 2010-05-24 01:30:10 +0200 (lun. 24 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2038,55 +2038,23 @@ begin
     end;
 end;
 
-{ StrPosExt - Looks for position of one string inside another with given length
-  Outperforms StrPos on long strings in 10-100 times (1-2 orders) }
-
+{ StrPosExt - Looks for position of one string inside another with given length }
 function StrPosExt(const Str1, Str2: PChar; Str2Len: DWORD): PChar;
-asm
-        PUSH    EDI
-        PUSH    ESI
-        PUSH    EBX
-        OR      EAX,EAX         // Str1
-        JE      @@2             // If Str1 is empty - get out
-        OR      EDX,EDX         // Str2
-        JE      @@2             // If Str2 is empty - get out
-        MOV     EBX,EAX
-        MOV     EDI,EDX         // Setting offset for SCASB - substring Str2
-        XOR     AX,AX           // Zero AX
-
-        push ECX                // String length
-
-        MOV     ECX,0FFFFFFFFH  // to be assured it will never underflow
-        REPNE   SCASW           // Searching for end of Str2 substring
-        NOT     ECX             // Inverting ECX - getting string length +1
-        DEC     ECX             // And here is exact length
-
-        JE      @@2             // length = 0? get out!
-        MOV     ESI,ECX         // Saving substring length in ESI
-
-        pop ECX
-
-        SUB     ECX,ESI         // ECX := Length(Str1) - Length(Str2)
-        JBE     @@2             // Length(substring) > Length(containing string) ? get out!
-        MOV     EDI,EBX         // EDI points to the beginning od Str1
-        LEA     EBX,[ESI-1]     // EBX - length of comparision of strings
-@@1:    MOV     ESI,EDX         // ESI - offset of Str2 string
-        LODSW                   // Loading 1st byte of substring into AL
-        REPNE   SCASW           // Searching that very char in EDI string
-        JNE     @@2             // Char not found? get out!
-        MOV     EAX,ECX         // Saving difference of lengths of strings
-        PUSH    EDI             // Saving current offset of search
-        MOV     ECX,EBX
-        REPE    CMPSW           // per-byte comparision of strings
-        POP     EDI
-        MOV     ECX,EAX
-        JNE     @@1             // If strings do not match - searching for 1st substring's char again
-        LEA     EAX,[EDI-2]
-        JMP     @@3
-@@2:    XOR     EAX,EAX
-@@3:    POP     EBX
-        POP     ESI
-        POP     EDI
+var
+  StartCh: Char;
+begin
+  if (Str1 <> nil) and (Str2 <> nil) then
+  begin
+    StartCh := Str2^;
+    Result := StrScan(Str1, StartCh);
+    while Result <> nil do
+    begin
+      if StrLComp(Result + 1, Str2 + 1, Str2Len - 1) = 0 then
+        Exit;
+      Result := StrScan(Result + 1, StartCh);
+    end;
+  end;
+  Result := nil;
 end;
 
 {$IFDEF UNITVERSIONING}

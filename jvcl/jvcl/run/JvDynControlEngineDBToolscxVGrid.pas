@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDBToolscxVGrid.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDynControlEngineDBToolscxVGrid.pas 12806 2010-06-12 17:27:30Z uschuster $
 
 unit JvDynControlEngineDBToolscxVGrid;
 
@@ -42,9 +42,8 @@ uses
   //JvPanel,
   JvDynControlEngineTools, JvDynControlEngine, JvDynControlEngineDB;
 
-type
-
 {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXVERTICALGRID}
+type
   TJvDataSourceEditDialogCreateDataControlscxVGridEventClass = class(TObject)
   private
     FInternalDBVGrid: TcxDBVerticalGrid;
@@ -89,8 +88,8 @@ Var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDBToolscxVGrid.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12806 $';
+    Date: '$Date: 2010-06-12 19:27:30 +0200 (sam. 12 juin 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

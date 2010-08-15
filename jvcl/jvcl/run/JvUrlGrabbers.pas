@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvUrlGrabbers.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvUrlGrabbers.pas 12781 2010-05-23 23:30:10Z ahuser $
 
 unit JvUrlGrabbers;
 
@@ -319,8 +319,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUrlGrabbers.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12781 $';
+    Date: '$Date: 2010-05-24 01:30:10 +0200 (lun. 24 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -368,10 +368,13 @@ var
 begin
   dwIndex := 0;
   dwBufLen := 1024;
-  GetMem(Buffer, dwBufLen);
-  InternetGetLastResponseInfo(dwIndex, Buffer, dwBufLen);
-  Result := StrPas(Buffer);
-  FreeMem(Buffer);
+  GetMem(Buffer, dwBufLen * SizeOf(Char));
+  try
+    InternetGetLastResponseInfo(dwIndex, Buffer, dwBufLen);
+    Result := StrPas(Buffer);
+  finally
+    FreeMem(Buffer);
+  end;
 end;
 
 // helper procedure to trigger various events depending on the
@@ -840,7 +843,7 @@ begin
 
       dwIndex := 0;
       dwBufLen := 1024;
-      GetMem(Buffer, dwBufLen);
+      GetMem(Buffer, dwBufLen * SizeOf(Char));
 
       HttpQueryInfo(hDownload, HTTP_QUERY_STATUS_CODE , Buffer, dwBufLen, dwIndex);
       Grabber.FHTTPStatus := Buffer;

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBCombobox.pas 12695 2010-02-11 08:41:46Z ahuser $
+// $Id: JvDBCombobox.pas 12796 2010-06-07 15:41:44Z ahuser $
 
 unit JvDBCombobox;
 
@@ -181,9 +181,14 @@ type
   end;
 
   TJvDBComboBox = class(TJvCustomDBComboBox)
+  private
+    { The "AutoSize" property was published what it never should have been. TComboBox doesn't
+      support it and TJvCustomComboBox/TJvDBCustomComboBox do not support it either. }
+    procedure ReadIgnoredBoolean(Reader: TReader);
+  protected
+    procedure DefineProperties(Filer: TFiler); override;
   published
     property Align;
-    property AutoSize;
     property Style default csDropDownList; { must be published before Items }
     property BeepOnError;
     property BevelEdges;
@@ -246,8 +251,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBCombobox.pas $';
-    Revision: '$Revision: 12695 $';
-    Date: '$Date: 2010-02-11 09:41:46 +0100 (jeu. 11 févr. 2010) $';
+    Revision: '$Revision: 12796 $';
+    Date: '$Date: 2010-06-07 17:41:44 +0200 (lun. 07 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1011,6 +1016,19 @@ begin
     if ComboBox.UpdateFieldImmediatelly then
       ComboBox.DataChange(Self);
   end;
+end;
+
+{ TJvDBComboBox }
+
+procedure TJvDBComboBox.ReadIgnoredBoolean(Reader: TReader);
+begin
+  Reader.ReadBoolean;
+end;
+
+procedure TJvDBComboBox.DefineProperties(Filer: TFiler);
+begin
+  inherited DefineProperties(Filer);
+  Filer.DefineProperty('AutoSize', ReadIgnoredBoolean, nil, False);
 end;
 
 {$IFDEF UNITVERSIONING}
