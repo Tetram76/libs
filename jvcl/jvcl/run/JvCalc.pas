@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCalc.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCalc.pas 12806 2010-06-12 17:27:30Z uschuster $
 
 unit JvCalc;
 
@@ -117,8 +117,8 @@ procedure SetupPopupCalculator(PopupCalc: TWinControl; APrecision: Byte;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCalc.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12806 $';
+    Date: '$Date: 2010-06-12 19:27:30 +0200 (sam. 12 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -273,8 +273,12 @@ var
   NonClientMetrics: TNonClientMetrics;
 
 begin
+  {$IFDEF RTL210_UP}
+  NonClientMetrics.cbSize := TNonClientMetrics.SizeOf;
+  {$ELSE}
   NonClientMetrics.cbSize := SizeOf(NonClientMetrics);
-  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, @NonClientMetrics, 0) then
+  {$ENDIF RTL210_UP}
+  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, NonClientMetrics.cbSize, @NonClientMetrics, 0) then
     AFont.Handle := CreateFontIndirect(NonClientMetrics.lfMessageFont)
   else
     with AFont do

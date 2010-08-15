@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMenus.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvMenus.pas 12805 2010-06-10 14:11:07Z obones $
 
 unit JvMenus;
 
@@ -744,8 +744,8 @@ function StripHotkeyPrefix(const Text: string): string; // MBCS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMenus.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12805 $';
+    Date: '$Date: 2010-06-10 16:11:07 +0200 (jeu. 10 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -882,8 +882,12 @@ procedure SetDefaultMenuFont(AFont: TFont);
 var
   NCMetrics: TNonCLientMetrics;
 begin
+  {$IFDEF RTL210_UP}
+  NCMetrics.cbSize := TNonClientMetrics.SizeOf;
+  {$ELSE}
   NCMetrics.cbSize := SizeOf(TNonCLientMetrics);
-  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, @NCMetrics, 0) then
+  {$ENDIF RTL210_UP}
+  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, NCMetrics.cbSize, @NCMetrics, 0) then
   begin
     AFont.Handle := CreateFontIndirect(NCMetrics.lfMenuFont);
     Exit;

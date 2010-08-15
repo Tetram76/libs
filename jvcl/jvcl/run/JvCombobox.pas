@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCombobox.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvCombobox.pas 12823 2010-08-13 11:11:53Z ahuser $
 
 unit JvCombobox;
 
@@ -285,6 +285,7 @@ type
     procedure ChangeText(const NewText: string);
     procedure SetOrderedText(const Value: Boolean);
     function GetOrderedTextValue: string;
+    procedure RefreshCheckedCount;
   protected
     procedure DoEnter; override;
     procedure DoExit; override;
@@ -388,8 +389,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCombobox.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12823 $';
+    Date: '$Date: 2010-08-13 13:11:53 +0200 (ven. 13 août 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -762,11 +763,23 @@ begin
   Result := FCapSelAll <> RsCapDeselAll;
 end;
 
+procedure TJvCustomCheckedComboBox.RefreshCheckedCount;
+var
+  I, Count: Integer;
+begin
+  Count := 0;
+  for I := 0 to Items.Count - 1 do
+    if Checked[I] then
+      Inc(Count);
+  FCheckedCount := Count;
+end;
+
 procedure TJvCustomCheckedComboBox.ItemsChange(Sender: TObject);
 begin
   FListBox.Clear;
   ChangeText('');
   FListBox.Items.Assign(FItems);
+  RefreshCheckedCount;
 end;
 
 procedure TJvCustomCheckedComboBox.KeyListBox(Sender: TObject; var Key: Word;

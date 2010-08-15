@@ -52,7 +52,7 @@ KNOWN ISSUES:
 -----------------------------------------------------------------------------
 2004/07/08 - WPostma merged changes by Frédéric Leneuf-Magaud and ahuser.}
 
-// $Id: JvDBGrid.pas 12729 2010-03-17 17:48:26Z ahuser $
+// $Id: JvDBGrid.pas 12803 2010-06-08 08:30:44Z ahuser $
 
 unit JvDBGrid;
 
@@ -299,6 +299,10 @@ type
     FOnSelectColumns: TJvDBSelectColumnsEvent;
     FOnBeforePaint: TNotifyEvent;
     FOnAfterPaint: TNotifyEvent;
+
+    FDelphi2010OptionsMigrated: Boolean;
+    procedure ReadDelphi2010OptionsMigrated(Reader: TReader);
+    procedure WriteDelphi2010OptionsMigrated(Writer: TWriter);
 
     {$IFDEF COMPILER10_UP}
     procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
@@ -599,8 +603,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGrid.pas $';
-    Revision: '$Revision: 12729 $';
-    Date: '$Date: 2010-03-17 18:48:26 +0100 (mer. 17 mars 2010) $';
+    Revision: '$Revision: 12803 $';
+    Date: '$Date: 2010-06-08 10:30:44 +0200 (mar. 08 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1500,7 +1504,8 @@ var
   begin
     ACol := Col;
     Original := ACol;
-    BeginUpdate;
+    //BeginUpdate;
+    inherited BeginUpdate;
     try
       while True do
       begin
@@ -1528,11 +1533,12 @@ var
         begin
           //MoveCol(ACol, 0);
           SelectedIndex := ACol - IndicatorOffset;
-          Exit;
+          Break;
         end;
       end;
     finally
-      EndUpdate;
+      inherited EndUpdate;
+      //EndUpdate; // => EndLayout => ... => Initialize => Col := FixedCols + 1
     end;
   end;
 
@@ -2854,11 +2860,14 @@ var
       {$IFDEF JVCLThemesEnabled}
       if not FixCell or not (UseXPThemes and ThemeServices.ThemesEnabled) then
       {$ENDIF JVCLThemesEnabled}
-      begin
-        if Brush.Style <> bsSolid then
-          Brush.Style := bsSolid;
-        FillRect(B);
-      end;
+        {$IFDEF COMPILER14_UP}
+        if not FixCell or (DrawingStyle = gdsClassic) then
+        {$ENDIF COMPILER14_UP}
+        begin
+          if Brush.Style <> bsSolid then
+            Brush.Style := bsSolid;
+          FillRect(B);
+        end;
       SetBkMode(Handle, TRANSPARENT);
       DrawBiDiText(Handle, Text, R, DrawOptions, Alignment, ARightToLeft, Canvas.CanvasOrientation);
     end;
@@ -3296,11 +3305,25 @@ begin
         {$IFDEF JVCLThemesEnabled}
         if not (UseXPThemes and ThemeServices.ThemesEnabled) then
         {$ENDIF JVCLThemesEnabled}
+        begin
+          {$IFDEF COMPILER14_UP}
+          DrawCellBackground(TitleRect, FixedColor, AState, ACol, ARow - TitleOffset);
+          {$ELSE}
           Canvas.FillRect(TitleRect);
+          {$ENDIF COMPILER14_UP}
+        end;
       end
       else
       if DrawColumn <> nil then
       begin
+        {$IFDEF JVCLThemesEnabled}
+        if not (UseXPThemes and ThemeServices.ThemesEnabled) then
+        {$ENDIF JVCLThemesEnabled}
+        begin
+          {$IFDEF COMPILER14_UP}
+          DrawCellBackground(TitleRect, FixedColor, AState, ACol, ARow - TitleOffset);
+          {$ENDIF COMPILER14_UP}
+        end;
         case ASortMarker of
           smDown:
             Bmp := GetGridBitmap(gpMarkDown);
@@ -3336,7 +3359,11 @@ begin
             {$IFDEF JVCLThemesEnabled}
             if not (UseXPThemes and ThemeServices.ThemesEnabled) then
             {$ENDIF JVCLThemesEnabled}
+              {$IFDEF COMPILER14_UP}
+              DrawCellBackground(Rect(TextRect.Right, TitleRect.Top, TitleRect.Right, TitleRect.Bottom), FixedColor, AState, ACol, ARow - TitleOffset);
+              {$ELSE}
               Canvas.FillRect(Rect(TextRect.Right, TitleRect.Top, TitleRect.Right, TitleRect.Bottom));
+              {$ENDIF COMPILER14_UP}
             if (ALeft > TitleRect.Left) and (ALeft + Bmp.Width < TitleRect.Right) then
               DrawBitmapTransparent(Canvas, ALeft, (TitleRect.Bottom +
                 TitleRect.Top - Bmp.Height) div 2, Bmp, clFuchsia);
@@ -3755,12 +3782,31 @@ begin
   end;
 end;
 
+procedure TJvDBGrid.ReadDelphi2010OptionsMigrated(Reader: TReader);
+begin
+  FDelphi2010OptionsMigrated := Reader.ReadBoolean;
+end;
+
+procedure TJvDBGrid.WriteDelphi2010OptionsMigrated(Writer: TWriter);
+begin
+  Writer.WriteBoolean(True);
+end;
+
 procedure TJvDBGrid.DefineProperties(Filer: TFiler);
 begin
   inherited DefineProperties(Filer);
   Filer.DefineProperty('AlternRowColor', ReadAlternateRowColor, nil, False);
   Filer.DefineProperty('AlternRowFontColor', ReadAlternateRowFontColor, nil, False);
   Filer.DefineProperty('PostOnEnter', ReadPostOnEnter, nil, False);
+
+  // We need to migrate the Options set for Delphi 2010 due to the added flags
+  Filer.DefineProperty('Delphi2010OptionsMigrated', ReadDelphi2010OptionsMigrated, WriteDelphi2010OptionsMigrated,
+    {$IFDEF COMPILER14_UP}
+    [dgTitleClick, dgTitleHotTrack] * Options = [] // if one of them is set we already know that we are migrated
+    {$ELSE}
+    False
+    {$ENDIF COMPILER14_UP}
+  );
 end;
 
 procedure TJvDBGrid.ReadPostOnEnter(Reader: TReader);
@@ -4043,6 +4089,14 @@ var
   WinControl: TWinControl;
 begin
   inherited Loaded;
+  {$IFDEF COMPILER14_UP}
+  // Fix the bug that Embarcadero has introduced when they added new flags to the Options set
+  if not FDelphi2010OptionsMigrated and ([dgTitleClick, dgTitleHotTrack] * Options = []) then
+  begin
+    FDelphi2010OptionsMigrated := True;
+    Options := Options + [dgTitleClick, dgTitleHotTrack];
+  end;
+  {$ENDIF COMPILER14_UP}
 
   // Edit controls are hidden
   for Ctrl_Idx := 0 to FControls.Count - 1 do

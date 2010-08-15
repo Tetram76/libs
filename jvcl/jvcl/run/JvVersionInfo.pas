@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionInfo.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvVersionInfo.pas 12781 2010-05-23 23:30:10Z ahuser $
 
 unit JvVersionInfo;
 
@@ -66,7 +66,7 @@ type
   private
     FFileName: TFileName;
     FValid: Boolean;
-    FBuffer: PChar;
+    FBuffer: Pointer;
     procedure ReadVersionInfo;
     procedure SetFileName(const Value: TFileName);
     function GetTranslation: Pointer;

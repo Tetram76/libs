@@ -98,7 +98,7 @@ Maciej Kaczkowski:
       when alignement is not left (need to rebuild the ItemHTDrawEx draw
       function)
 -----------------------------------------------------------------------------}
-// $Id: JvHtControls.pas 12543 2009-10-03 15:31:24Z ahuser $
+// $Id: JvHtControls.pas 12800 2010-06-07 17:29:08Z ahuser $
 
 unit JvHtControls;
 
@@ -314,11 +314,14 @@ type
     property Constraints;
   end;
 
+  TJvHTLabelMouseButtons = set of TMouseButton;
+
   TJvCustomHTLabel = class(TJvExCustomLabel)
   private
     FHyperlinkHovered: Boolean;
     FOnHyperLinkClick: TJvHyperLinkClickEvent;
     FMouseX, FMouseY: Integer;
+    FHyperLinkMouseButtons: TJvHTLabelMouseButtons;
   protected
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -330,7 +333,11 @@ type
     procedure SetAutoSize(Value: Boolean); override;
     procedure Paint; override;
     procedure Loaded; override;
+
+    property HyperLinkMouseButtons: TJvHTLabelMouseButtons read FHyperLinkMouseButtons write FHyperLinkMouseButtons default [mbLeft];
     property OnHyperLinkClick: TJvHyperLinkClickEvent read FOnHyperLinkClick write FOnHyperLinkClick;
+  public
+    constructor Create(AOwner: TComponent); override;
   end;
 
   TJvHTLabel = class(TJvCustomHTLabel)
@@ -374,6 +381,7 @@ type
     property OnStartDrag;
     property Layout;
     property Constraints;
+    property HyperLinkMouseButtons;
     property OnHyperLinkClick;
   end;
 
@@ -386,9 +394,11 @@ function ItemHTDraw(Canvas: TCanvas; Rect: TRect;
   const State: TOwnerDrawState; const Text: string; Scale: Integer = 100): string;
 function ItemHTDrawHL(Canvas: TCanvas; Rect: TRect;
   const State: TOwnerDrawState; const Text: string; MouseX, MouseY: Integer; Scale: Integer = 100): string;
+function ItemHTPlain(const Text: string): string;
+function ItemHTExtent(Canvas: TCanvas; Rect: TRect; const State: TOwnerDrawState;
+  const Text: string; Scale: Integer = 100): TSize;
 function ItemHTWidth(Canvas: TCanvas; Rect: TRect;
   const State: TOwnerDrawState; const Text: string; Scale: Integer = 100): Integer;
-function ItemHTPlain(const Text: string): string;
 function ItemHTHeight(Canvas: TCanvas; const Text: string; Scale: Integer = 100): Integer;
 function PrepareText(const A: string): string; deprecated;
 
@@ -396,8 +406,8 @@ function PrepareText(const A: string): string; deprecated;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHtControls.pas $';
-    Revision: '$Revision: 12543 $';
-    Date: '$Date: 2009-10-03 17:31:24 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12800 $';
+    Date: '$Date: 2010-06-07 19:29:08 +0200 (lun. 07 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -449,6 +459,12 @@ end;
 function ItemHTPlain(const Text: string): string;
 begin
   Result := HTMLPlainText(Text);
+end;
+
+function ItemHTExtent(Canvas: TCanvas; Rect: TRect; const State: TOwnerDrawState;
+  const Text: string; Scale: Integer = 100): TSize;
+begin
+  Result := HTMLTextExtent(Canvas, Rect, State, Text, Scale);
 end;
 
 function ItemHTWidth(Canvas: TCanvas; Rect: TRect;
@@ -770,6 +786,12 @@ end;
 
 //=== { TJvCustomHTLabel } ===================================================
 
+constructor TJvCustomHTLabel.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FHyperLinkMouseButtons := [mbLeft];
+end;
+
 procedure TJvCustomHTLabel.FontChanged;
 begin
   inherited FontChanged;
@@ -914,17 +936,20 @@ begin
   FMouseX := X;
   FMouseY := Y;
   inherited MouseUp(Button, Shift, X, Y);
-  R := ClientRect;
-  case Layout of
-    tlTop:
-      ;
-    tlBottom:
-      R.Top := R.Bottom - ItemHTHeight(Canvas, Caption);
-    tlCenter:
-      R.Top := (R.Bottom - R.Top - ItemHTHeight(Canvas, Caption)) div 2;
+  if Button in FHyperLinkMouseButtons then
+  begin
+    R := ClientRect;
+    case Layout of
+      tlTop:
+        ;
+      tlBottom:
+        R.Top := R.Bottom - ItemHTHeight(Canvas, Caption);
+      tlCenter:
+        R.Top := (R.Bottom - R.Top - ItemHTHeight(Canvas, Caption)) div 2;
+    end;
+    if IsHyperLink(Canvas, R, Caption, X, Y, LinkName) then
+      ExecuteHyperlink(Self, FOnHyperLinkClick, LinkName);
   end;
-  if IsHyperLink(Canvas, R, Caption, X, Y, LinkName) then
-    ExecuteHyperlink(Self, FOnHyperLinkClick, LinkName);
 end;
 
 procedure TJvCustomHTLabel.MouseLeave(AControl: TControl);
