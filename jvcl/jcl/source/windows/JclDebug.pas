@@ -34,9 +34,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-18 22:38:49 +0200 (mar. 18 mai 2010)                            $ }
-{ Revision:      $Rev:: 3251                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2010-08-12 14:32:25 +0200 (jeu. 12 août 2010)                          $ }
+{ Revision:      $Rev:: 3308                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -634,7 +634,7 @@ type
     FDelayedTrace: Boolean;
     FInStackTracing: Boolean;
     FRaw: Boolean;
-    FStackOffset: TJclAddr;
+    FStackOffset: Int64;
     function GetItems(Index: Integer): TJclStackInfoItem;
     function NextStackFrame(var StackFrame: PStackFrame; var StackInfo: TStackInfo): Boolean;
     procedure StoreToList(const StackInfo: TStackInfo);
@@ -1002,8 +1002,8 @@ procedure AddModule(const ModuleName: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 3251 $';
-    Date: '$Date: 2010-05-18 22:38:49 +0200 (mar. 18 mai 2010) $';
+    Revision: '$Revision: 3308 $';
+    Date: '$Date: 2010-08-12 14:32:25 +0200 (jeu. 12 août 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1304,7 +1304,8 @@ begin
   PExtension := PEnd;
   while (PExtension >= MapString) and (PExtension^ <> '.') and (PExtension^ <> '|') do
     Dec(PExtension);
-  if (PExtension^ = '.') then
+  if (StrLIComp(PExtension, '.pas ', 5) = 0) or
+     (StrLIComp(PExtension, '.obj ', 5) = 0) then
     PEnd := PExtension;
   PExtension := PEnd;
   while (PExtension >= MapString) and (PExtension^ <> '|') and (PExtension^ <> '\') do
@@ -1415,20 +1416,11 @@ var
       C := Char(CurrPos^);
       case C of
         '0'..'9':
-          begin
-            Result := Result * 16;
-            Inc(Result, Ord(C) - Ord('0'));
-          end;
+          Result := (Result shl 4) or DWORD(Ord(C) - Ord('0'));
         'A'..'F':
-          begin
-            Result := Result * 16;
-            Inc(Result, Ord(C) - Ord('A') + 10);
-          end;
+          Result := (Result shl 4) or DWORD(Ord(C) - Ord('A') + 10);
         'a'..'f':
-          begin
-            Result := Result * 16;
-            Inc(Result, Ord(C) - Ord('a') + 10);
-          end;
+          Result := (Result shl 4) or DWORD(Ord(C) - Ord('a') + 10);
         'H', 'h':
           begin
             Inc(CurrPos);
@@ -1663,7 +1655,7 @@ begin
   //                     only one segment of code
   // after Delphi 2005: segments started at code base address (module base address + $10000)
   //                    2 segments of code
-  if (Length(FSegmentClasses) > 0) and (FSegmentClasses[0].Start > 0) and (Addr > FSegmentClasses[0].Start) then
+  if (Length(FSegmentClasses) > 0) and (FSegmentClasses[0].Start > 0) and (Addr >= FSegmentClasses[0].Start) then
     // Delphi 2005 and later
     // The first segment should be code starting at module base address + $10000
     Result := Addr - FSegmentClasses[0].Start
@@ -1683,7 +1675,11 @@ begin
   FSegmentClasses[C].Segment := Address.Segment;
   FSegmentClasses[C].Start := Address.Offset;
   FSegmentClasses[C].Addr := Address.Offset; // will be fixed below while considering module mapped address
-  FSegmentClasses[C].VA := MAPAddrToVA(FSegmentClasses[C].Start);
+  // test GroupName because SectionName = '.tls' in Delphi and '_tls' in BCB
+  if StrLIComp(GroupName, 'TLS', 3) = 0 then
+    FSegmentClasses[C].VA := FSegmentClasses[C].Start
+  else
+    FSegmentClasses[C].VA := MAPAddrToVA(FSegmentClasses[C].Start);
   FSegmentClasses[C].Len := Len;
   FSegmentClasses[C].SectionName := SectionName;
   FSegmentClasses[C].GroupName := GroupName;
@@ -1743,7 +1739,10 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName, 'TLS', 3) = 0 then
+      Va := Address.Offset
+    else
+      VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
     { Starting with Delphi 2005, "empty" units are listes with the last line and
       the VA 0001:00000000. When we would accept 0 VAs here, System.pas functions
       could be mapped to other units and line numbers. Discaring such items should
@@ -1848,7 +1847,10 @@ begin
     if FProcNamesCnt mod 256 = 0 then
       SetLength(FProcNames, FProcNamesCnt + 256);
     FProcNames[FProcNamesCnt].Segment := FSegmentClasses[SegIndex].Segment;
-    FProcNames[FProcNamesCnt].VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName, 'TLS', 3) = 0 then
+      FProcNames[FProcNamesCnt].VA := Address.Offset
+    else
+      FProcNames[FProcNamesCnt].VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
     FProcNames[FProcNamesCnt].ProcName := Name;
     Inc(FProcNamesCnt);
     Break;
@@ -1895,7 +1897,10 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName, 'TLS', 3) = 0 then
+      VA := Address.Offset
+    else
+      VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
     if FSegmentCnt mod 16 = 0 then
       SetLength(FSegments, FSegmentCnt + 16);
     FSegments[FSegmentCnt].Segment := FSegmentClasses[SegIndex].Segment;
@@ -5074,7 +5079,7 @@ begin
     //CopyMemory(FStackData, StackPtr, StackDataSize);
   end;
 
-  FStackOffset := TJclAddr(FStackData) - TJclAddr(StackPtr);
+  FStackOffset := Int64(FStackData) - Int64(StackPtr);
   FFramePointer := Pointer(TJclAddr(FFramePointer) + FStackOffset);
   TopOfStack := TopOfStack + FStackOffset;
 end;

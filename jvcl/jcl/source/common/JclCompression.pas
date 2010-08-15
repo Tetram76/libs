@@ -36,9 +36,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-09 17:12:11 +0200 (dim. 09 mai 2010)                            $ }
-{ Revision:      $Rev:: 3247                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3266                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1720,6 +1720,14 @@ type
     class function ArchiveName: string; override;
   end;
 
+  TJclPpmdDecompressArchive = class(TJclSevenzipDecompressArchive, IInterface)
+  protected
+    function GetCLSID: TGUID; override;
+  public
+    class function ArchiveExtensions: string; override;
+    class function ArchiveName: string; override;
+  end;
+
 //sevenzip classes for updates (read and write)
 type
   TJclSevenzipUpdateArchive = class(TJclOutOfPlaceUpdateArchive, IInterface)
@@ -2071,8 +2079,8 @@ function Create7zFile(const SourceFile, DestinationFile: TFileName; VolumeSize: 
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompression.pas $';
-    Revision: '$Revision: 3247 $';
-    Date: '$Date: 2010-05-09 17:12:11 +0200 (dim. 09 mai 2010) $';
+    Revision: '$Revision: 3266 $';
+    Date: '$Date: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -7960,6 +7968,23 @@ end;
 function TJclAPMDecompressArchive.GetCLSID: TGUID;
 begin
   Result := CLSID_CFormatAPM;
+end;
+
+//=== { TJclPpmdDecompressArchive } ==========================================
+
+class function TJclPpmdDecompressArchive.ArchiveExtensions: string;
+begin
+  Result := LoadResString(@RsCompressionPpmdExtensions);
+end;
+
+class function TJclPpmdDecompressArchive.ArchiveName: string;
+begin
+  Result := LoadResString(@RsCompressionPpmdName);
+end;
+
+function TJclPpmdDecompressArchive.GetCLSID: TGUID;
+begin
+  Result := CLSID_CFormatPpmd;
 end;
 
 //=== { TJclSevenzipUpdateArchive } ==========================================

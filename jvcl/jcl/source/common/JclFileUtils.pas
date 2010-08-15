@@ -51,8 +51,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-03-28 19:05:50 +0200 (dim. 28 mars 2010)                           $ }
-{ Revision:      $Rev:: 3221                                                                     $ }
+{ Last modified: $Date:: 2010-07-18 20:04:25 +0200 (dim. 18 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3261                                                                     $ }
 { Author:        $Author:: sfarrow                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1042,8 +1042,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 3221 $';
-    Date: '$Date: 2010-03-28 19:05:50 +0200 (dim. 28 mars 2010) $';
+    Revision: '$Revision: 3261 $';
+    Date: '$Date: 2010-07-18 20:04:25 +0200 (dim. 18 juil. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -4868,6 +4868,8 @@ var
   Handle: DWORD;
   Size: DWORD;
 begin
+  if not FileExists(FileName) then
+    raise EJclFileVersionInfoError.CreateResFmt(@RsFileUtilsFileDoesNotExist, [FileName]);
   Handle := 0;
   Size := GetFileVersionInfoSize(PChar(FileName), Handle);
   if Size = 0 then

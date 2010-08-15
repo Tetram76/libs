@@ -22,9 +22,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-03-03 23:55:01 +0100 (mer. 03 mars 2010)                           $ }
-{ Revision:      $Rev:: 3205                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2010-08-08 14:56:48 +0200 (dim. 08 août 2010)                          $ }
+{ Revision:      $Rev:: 3287                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -92,13 +92,10 @@ type
         joJCLEnvDebugDCUPath,
       joJCLMake,
         joJCLMakeRelease,
-          joJCLMakeReleaseVCL,
         joJCLMakeDebug,
-          joJCLMakeDebugVCL,
         joJCLCopyHppFiles,
         joJCLCheckHppFiles,
       joJCLPackages,
-        joJCLVclPackage,
         joJCLDualPackages,
         joJCLCopyPackagesHppFiles,
         joJCLMapCreate,
@@ -210,7 +207,6 @@ type
     FJclBinDir: string;
     FLibReleaseDirMask: string;
     FLibDebugDirMask: string;
-    FJclSourceDir: string;
     FJclIncludeDir: string;
     FJclSourcePath: string;
     FJclExamplesDir: string;
@@ -268,7 +264,6 @@ type
     property JclBinDir: string read FJclBinDir;
     property LibReleaseDirMask: string read FLibReleaseDirMask;
     property LibDebugDirMask: string read FLibDebugDirMask;
-    property JclSourceDir: string read FJclSourceDir;
     property JclIncludeDir: string read FJclIncludeDir;
     property JclSourcePath: string read FJclSourcePath;
     property JclExamplesDir: string read FJclExamplesDir;
@@ -372,13 +367,10 @@ var
       (Id: -1; Caption: @RsCaptionEnvDebugDCUPath;         Hint: @RsHintEnvDebugDCUPath), // joEnvDebugDCUPath
       (Id: -1; Caption: @RsCaptionMake;                    Hint: @RsHintMake), // joMake
       (Id: -1; Caption: @RsCaptionMakeRelease;             Hint: @RsHintMakeRelease), // joMakeRelease
-      (Id: -1; Caption: @RsCaptionMakeVCL;                 Hint: @RsHintMakeReleaseVCL), // joMakeReleaseVCL
       (Id: -1; Caption: @RsCaptionMakeDebug;               Hint: @RsHintMakeDebug), // joMakeDebug
-      (Id: -1; Caption: @RsCaptionMakeVCL;                 Hint: @RsHintMakeDebugVCL), // joMakeDebugVCL
       (Id: -1; Caption: @RsCaptionCopyHppFiles;            Hint: @RsHintCopyHppFiles), // joCopyHppFiles
       (Id: -1; Caption: @RsCaptionCheckHppFiles;           Hint: @RsHintCheckHppFiles), // joCheckHppFiles
       (Id: -1; Caption: @RsCaptionPackages;                Hint: @RsHintPackages), // joPackages
-      (Id: -1; Caption: @RsCaptionVclPackage;              Hint: @RsHintVclPackage), // joVclPackage
       (Id: -1; Caption: @RsCaptionDualPackages;            Hint: @RsHintDualPackages), // joDualPackages
       (Id: -1; Caption: @RsCaptionCopyPackagesHppFiles;    Hint: @RsHintCopyPackagesHppFiles), // joCopyPackagesHppFiles
       (Id: -1; Caption: @RsCaptionMapCreate;               Hint: @RsHintMapCreate), // joMapCreate
@@ -444,19 +436,22 @@ const
   OldExperts: array [0..6] of string =
     ( 'JclDebugIde', 'ProjectAnalyzer', 'IdeOpenDlgFavorite', 'ThreadNameExpert', 'JediUses', 'JclSIMDView', 'JclVersionControl' );
 
-  JclSrcDirWindows  = 'windows';
-  JclSrcDirUnix     = 'unix';
-  JclSrcDirVcl      = 'vcl';
-  JclSrcDirCommon   = 'common';
+  JclSrcDirWindows   = 'source' + DirDelimiter + 'windows';
+  JclSrcDirUnix      = 'source' + DirDelimiter + 'unix';
+  JclSrcDirVcl       = 'source' + DirDelimiter + 'vcl';
+  JclSrcDirCommon    = 'source' + DirDelimiter + 'common';
+  JclJppDir          = 'devtools' + DirDelimiter + 'jpp';
+  JClJppDirTemplates = 'devtools' + DirDelimiter + 'jpp' + DirDelimiter + 'Templates';
 
   BCBIncludePath = '%s' + DirSeparator + '%s' + DirSeparator + '$(BCB)' + DirDelimiter + 'include;$(BCB)' + DirDelimiter + 'include' + DirDelimiter + 'vcl';
   {$IFDEF MSWINDOWS}
   BCBObjectPath  = '%s;%s;$(BCB)\Lib\Obj';
-  JclSourceDirs: array[0..2] of string = (JclSrcDirCommon, JclSrcDirWindows, JclSrcDirVcl);
+  // to be compiled and added to IDE browsing path
+  JclSrcPaths: array[0..4] of string = (JclSrcDirCommon, JclSrcDirWindows, JclSrcDirVcl, JclJppDir, JclJppDirTemplates);
   {$ENDIF MSWINDOWS}
   {$IFDEF UNIX}
   BCBObjectPath  = BCBIncludePath;
-  JclSourceDirs: array[0..1] of string = (JclSrcDirCommon, JclSrcDirUnix);
+  JclSrcPaths: array[0..3] of string = (JclSrcDirCommon, JclSrcDirUnix, JclJppDir, JclJppDirTemplates);
   {$ENDIF UNIX}
 
   ExceptDlgPath = 'experts' + DirDelimiter + 'repository' + DirDelimiter + 'ExceptionDialog' + DirDelimiter + 'StandardDialogs' + DirDelimiter;
@@ -527,6 +522,16 @@ begin
       Result := Format(S + 'DLL%s', [VersionNumberStr, BaseName, ProjectSourceFileExtension])
     else
       Result := Format(S + 'DLL%s0%3:s', [VersionNumberStr, BaseName, VersionNumberStr, ProjectSourceFileExtension]);
+end;
+
+function SortFileNameA2Z(List: TStringList; Index1, Index2: Integer): Integer;
+begin
+  Result := CompareText(List.Strings[Index1], List.Strings[Index2]);
+end;
+
+function SortFileNameZ2A(List: TStringList; Index1, Index2: Integer): Integer;
+begin
+  Result := -CompareText(List.Strings[Index1], List.Strings[Index2]);
 end;
 
 //=== { TJclInstallation } ===================================================
@@ -809,12 +814,6 @@ procedure TJclInstallation.Init;
     AddOption(joJCLMakeRelease, [goStandAloneParent, goExpandable, goChecked], Parent);
     AddOption(joJCLMakeDebug, [goStandAloneParent, goExpandable, goChecked], Parent);
 
-    if Target.SupportsVCL then
-    begin
-      AddOption(joJCLMakeReleaseVCL, [goChecked], joJCLMakeRelease);
-      AddOption(joJCLMakeDebugVCL, [goChecked], joJCLMakeDebug);
-    end;
-
     if bpBCBuilder32 in Target.Personalities then
     begin
       AddOption(joJCLCopyHppFiles, [goChecked], OptionData[joJCLMake].Id,
@@ -869,8 +868,6 @@ procedure TJclInstallation.Init;
 
   procedure AddPackageOptions(Parent: TInstallerOption);
   begin
-    if RuntimeInstallation and Target.SupportsVCL then
-      AddOption(joJCLVclPackage, [goChecked], Parent);
     if (bpBCBuilder32 in Target.Personalities) and RunTimeInstallation then
     begin
       if (Target.RadToolKind = brBorlandDevStudio) and (Target.VersionNumber >= 4) then
@@ -1122,8 +1119,7 @@ var
     Result := True;
 
     {$IFDEF MSWINDOWS}
-    if (not OptionChecked[joJCLPackages] or (Target.SupportsVCL and not OptionChecked[joJCLVCLPackage])) and
-      Assigned(GUI) and not Target.IsTurboExplorer then
+    if not OptionChecked[joJCLPackages] and Assigned(GUI) and not Target.IsTurboExplorer then
       Result := GUI.Dialog(LoadResString(@RsWarningPackageNodeNotSelected), dtConfirmation, [drYes, drNo]) = drYes;
     {$ENDIF MSWINDOWS}
 
@@ -1392,10 +1388,43 @@ var
     function CheckHppFiles: Boolean;
     var
       SaveDir, Options: string;
+      UnitList, CppFile: TStrings;
+      I: Integer;
     begin
       SaveDir := GetCurrentDir;
-      SetCurrentDir(Format('%sinstall%sHeaderTest', [Distribution.JclPath, DirDelimiter]));
       try
+        SetCurrentDir(Distribution.JclPath);
+
+        UnitList := TStringList.Create;
+        CppFile := TStringList.Create;
+        try
+          for I := Low(JclSrcPaths) to High(JclSrcPaths) do
+            BuildFileList(PathAddSeparator(JclSrcPaths[I]) + '*.pas', faAnyFile, UnitList, False);
+          // these headers are known to fail
+          UnitList.Delete(UnitList.IndexOf('JclDotNet.pas'));
+          UnitList.Delete(UnitList.IndexOf('JclNTFS.pas'));
+          UnitList.Delete(UnitList.IndexOf('mscorlib_TLB.pas'));
+
+          SetCurrentDir(Format('%sinstall%sHeaderTest', [Distribution.JclPath, DirDelimiter]));
+
+          TStringList(UnitList).CustomSort(SortFileNameA2Z);
+          CppFile.Clear;
+          CppFile.Add('#pragma hdrstop');
+          for I := 0 to UnitList.Count - 1 do
+            CppFile.Add(Format('#include <%s>', [ChangeFileExt(UnitList.Strings[I], '.hpp')]));
+          CppFile.SaveToFile('jcl_a2z.cpp');
+
+          TStringList(UnitList).CustomSort(SortFileNameZ2A);
+          CppFile.Clear;
+          CppFile.Add('#pragma hdrstop');
+          for I := 0 to UnitList.Count - 1 do
+            CppFile.Add(Format('#include <%s>', [ChangeFileExt(UnitList.Strings[I], '.hpp')]));
+          CppFile.SaveToFile('jcl_z2a.cpp');
+        finally
+          UnitList.Free;
+          CppFile.Free;
+        end;
+
         Target.BCC32.Options.Clear;
         Target.BCC32.Options.Add('-c'); // compile only
         Target.BCC32.Options.Add('-Ve'); // compatibility
@@ -1411,15 +1440,6 @@ var
         Target.BCC32.Options.Add('-w-par'); // warning
         Target.BCC32.Options.Add('-w-aus'); // warning
         Target.BCC32.AddPathOption('I', Format('%sinclude%s%s%s%s%sinclude%s%s', [Distribution.JclPath, DirSeparator, Distribution.JclSourcePath, DirSeparator, Target.RootDir, DirDelimiter, DirSeparator, Target.VclIncludeDir]));
-        Target.BCC32.Options.Add('-DTEST_COMMON');
-        {$IFDEF MSWINDOWS}
-        Target.BCC32.Options.Add('-DTEST_WINDOWS');
-        {$ENDIF MSWINDOWS}
-        {$IFDEF UNIX}
-        Target.BCC32.Options.Add('-DTEST_UNIX');
-        {$ENDIF UNIX}
-        if OptionChecked[joJCLMakeReleaseVCL] or OptionChecked[joJCLMakeDebugVCL] then
-          Target.BCC32.Options.Add('-DTEST_VCL');
         Options := StringsToStr(Target.BCC32.Options, NativeSpace);
         Result := Target.BCC32.Execute(Options + ' "jcl_a2z.cpp"')
           and Target.BCC32.Execute(Options + ' "jcl_z2a.cpp"'); 
@@ -1438,29 +1458,16 @@ var
       if OptionChecked[joJCLMakeRelease] then
       begin
         MarkOptionBegin(joJCLMakeRelease);
-
-        for I := Low(JclSourceDirs) to High(JclSourceDirs) do
-        begin
-          if (JclSourceDirs[I] = JclSrcDirVcl) and OptionChecked[joJCLMakeReleaseVCL] then
-            MarkOptionBegin(joJCLMakeReleaseVCL);
-          Result := Result and CompileLibraryUnits(JclSourceDirs[I], False);
-          if (JclSourceDirs[I] = JclSrcDirVcl) and OptionChecked[joJCLMakeReleaseVCL] then
-            MarkOptionEnd(joJCLMakeReleaseVCL, Result);
-        end;
+        for I := Low(JclSrcPaths) to High(JclSrcPaths) do
+          Result := Result and CompileLibraryUnits(JclSrcPaths[I], False);
         MarkOptionEnd(joJCLMakeRelease, Result);
       end;
 
       if Result and OptionChecked[joJCLMakeDebug] then
       begin
         MarkOptionBegin(joJCLMakeDebug);
-        for I := Low(JclSourceDirs) to High(JclSourceDirs) do
-        begin
-          if (JclSourceDirs[I] = JclSrcDirVcl) and OptionChecked[joJCLMakeDebugVCL] then
-            MarkOptionBegin(joJCLMakeDebugVCL);
-          Result := Result and CompileLibraryUnits(JclSourceDirs[I], True);
-          if (JclSourceDirs[I] = JclSrcDirVcl) and OptionChecked[joJCLMakeDebugVCL] then
-            MarkOptionEnd(joJCLMakeDebugVCL, Result);
-        end;
+        for I := Low(JclSrcPaths) to High(JclSrcPaths) do
+          Result := Result and CompileLibraryUnits(JclSrcPaths[I], True);
         MarkOptionEnd(joJCLMakeDebug, Result);
       end;
 
@@ -1487,12 +1494,8 @@ var
         and CompilePackage(FullPackageFileName(Target, JclContainersDpk))
         and CompilePackage(FullPackageFileName(Target, JclDeveloperToolsDpk));
 
-      if Result and OptionChecked[joJCLVclPackage] then
-      begin
-        MarkOptionBegin(joJCLVclPackage);
+      if Result and Target.SupportsVCL then
         Result := Result and CompilePackage(FullPackageFileName(Target, JclVclDpk));
-        MarkOptionEnd(joJCLVclPackage, Result);
-      end;
 
       MarkOptionEnd(joJCLPackages, Result);
     end;
@@ -1507,7 +1510,7 @@ var
     {$IFDEF MSWINDOWS}
     InstallJediRegInformation(ATarget.ConfigDataLocation, 'JCL',
       Format('%d.%d.%d.%d', [JclVersionMajor, JclVersionMinor, JclVersionRelease, JclVersionBuild]),
-      GetDcpPath, GetBplPath, Distribution.FJclPath, ATarget.RootKey);
+      GetDcpPath, GetBplPath, Distribution.JclPath, ATarget.RootKey);
 
     PathEnvVar := RegReadStringDef(ATarget.RootKey, RegHKCUEnvironmentVar, PathEnvironmentVar, '');
     PathListIncludeItems(PathEnvVar, RegReadStringDef(HKLM, RegHKLMEnvironmentVar, PathEnvironmentVar, ''));
@@ -1873,9 +1876,8 @@ function TJclInstallation.Uninstall(AUninstallHelp: Boolean): Boolean;
   begin
     //ioJclEnvLibPath
     if ATarget.RemoveFromLibrarySearchPath(FLibReleaseDir) and
-       ATarget.RemoveFromLibrarySearchPath(Distribution.JclSourceDir) and
        ATarget.RemoveFromLibrarySearchPath(Distribution.JclIncludeDir) then
-      WriteLog(Format(LoadResString(@RsLogDelLibrarySearchPath3), [FLibReleaseDir, Distribution.JclSourceDir, Distribution.JclIncludeDir]))
+      WriteLog(Format(LoadResString(@RsLogDelLibrarySearchPath2), [FLibReleaseDir, Distribution.JclIncludeDir]))
     else
       WriteLog(LoadResString(@RsLogFailedDelLibrarySearchPath));
     {$IFDEF MSWINDOWS}
@@ -1883,10 +1885,9 @@ function TJclInstallation.Uninstall(AUninstallHelp: Boolean): Boolean;
       with TJclBDSInstallation(ATarget) do
     begin
       if RemoveFromCppSearchPath(FLibReleaseDir) and
-         RemoveFromCppSearchPath(Distribution.JclSourceDir) and
          RemoveFromCppSearchPath(Distribution.JclIncludeDir) and
          ((IDEVersionNumber < 5) or RemoveFromCppLibraryPath(FLibReleaseDir)) then
-        WriteLog(Format(LoadResString(@RsLogDelCppSearchPath3), [FLibReleaseDir, Distribution.JclSourceDir, Distribution.JclIncludeDir]))
+        WriteLog(Format(LoadResString(@RsLogDelCppSearchPath2), [FLibReleaseDir, Distribution.JclIncludeDir]))
       else
         WriteLog(LoadResString(@RsLogFailedDelCppSearchPath));
     end;
@@ -2274,15 +2275,6 @@ begin
 end;
 
 function TJclInstallation.CompileLibraryUnits(const SubDir: string; Debug: Boolean): Boolean;
-var
-  UnitList: TStrings;
-  Compiler: TJclDCC32;
-
-
-  function CompileUnits: Boolean;
-  begin
-    Result := Compiler.Execute(StringsToStr(UnitList, ' '));
-  end;
 
   function CopyFiles(Files: TStrings; const TargetDir: string; Overwrite: Boolean = True): Boolean;
   var
@@ -2310,7 +2302,7 @@ var
     end;
   end;
 
-  function CopyHppFiles(const TargetDir: string): Boolean;
+  function CopyHppFiles(UnitList: TStrings; const TargetDir: string): Boolean;
   var
     I: Integer;
     FileName: string;
@@ -2335,14 +2327,16 @@ var
 var
   UnitType, LibDescriptor, SaveDir, UnitOutputDir, Path, ExclusionFileName: string;
   Index, ExcIndex: Integer;
-  Exclusions: TStrings;
+  UnitList, Exclusions: TStrings;
+  Compiler: TJclDCC32;
 begin
   Result := True;
   if Debug then
     UnitType := 'debug ';
   LibDescriptor := Format(LoadResString(@RsLogLibDescriptor), [SubDir, UnitType, TargetName]);
   WriteLog(Format(LoadResString(@RsLogBuilding), [LibDescriptor]));
-  Path := Format('%s' + DirDelimiter + '%s', [Distribution.JclSourceDir, SubDir]);
+  Path := Distribution.JclPath + SubDir;
+
   UnitList := TStringList.Create;
   try
     BuildFileList(PathAddSeparator(Path) + '*.pas', faAnyFile, UnitList);
@@ -2447,7 +2441,7 @@ begin
     Compiler.AddPathOption('I', Distribution.JclIncludeDir);
     Compiler.AddPathOption('U', Distribution.JclSourcePath);
     Compiler.AddPathOption('R', Distribution.JclSourcePath);
-    
+
     SaveDir := GetCurrentDir;
     Result := SetCurrentDir(Path);
     {$IFDEF WIN32}
@@ -2457,12 +2451,12 @@ begin
     {$ENDIF}
     try
       WriteLog('');
-      Result := Result and CompileUnits;
+      Result := Result and Compiler.Execute(StringsToStr(UnitList, ' '));
       CopyResFiles(UnitOutputDir);
       if OptionChecked[joJCLCopyHppFiles] then
       begin
         MarkOptionBegin(joJCLCopyHppFiles);
-        Result := Result and CopyHppFiles(Target.VclIncludeDir);
+        Result := Result and CopyHppFiles(UnitList, Target.VclIncludeDir);
         MarkOptionEnd(joJCLCopyHppFiles, Result);
       end;
     finally
@@ -2471,6 +2465,7 @@ begin
   finally
     UnitList.Free;
   end;
+
   if not Result then
     WriteLog(LoadResString(@RsLogFailed));
 end;
@@ -2944,7 +2939,7 @@ function TJclDistribution.GetVersion: string;
   begin
     Result := 0;
 
-    DailyFileName := FJclPath + DailyRevisionFileName;
+    DailyFileName := JclPath + DailyRevisionFileName;
     if FileExists(DailyFileName) then
     begin
       // directory from a daily zip
@@ -2959,9 +2954,9 @@ function TJclDistribution.GetVersion: string;
 
     if Result = 0 then
     begin
-      SvnEntriesFileName := FJclPath + EntriesFileName1;
+      SvnEntriesFileName := JclPath + EntriesFileName1;
       if not FileExists(SvnEntriesFileName) then
-        SvnEntriesFileName := FJclPath + EntriesFileName2;
+        SvnEntriesFileName := JclPath + EntriesFileName2;
       if FileExists(SvnEntriesFileName) then
       begin
         // directory from subversion
@@ -3015,25 +3010,24 @@ procedure TJclDistribution.Init;
     InstallerFileName := ParamStr(0);
 
     FJclPath := PathAddSeparator(ExpandFileName(PathExtractFileDirFixed(InstallerFileName) + '..'));
-    FLibReleaseDirMask := Format('%slib' + VersionDirExp, [FJclPath]);
+    FLibReleaseDirMask := Format('%slib' + VersionDirExp, [JclPath]);
     FLibDebugDirMask := FLibReleaseDirMask + DirDelimiter + 'debug';
-    FJclBinDir := FJclPath + 'bin';
-    FJclSourceDir := FJclPath + 'source';
-    FJclIncludeDir := PathAddSeparator(FJclSourceDir) + 'include';
-    FJclExamplesDir := FJclPath + 'examples';
+    FJclBinDir := JclPath + 'bin';
+    FJclIncludeDir := PathAddSeparator(JclPath + 'source') + 'include';
+    FJclExamplesDir := JclPath + 'examples';
     FJclSourcePath := '';
-    for Index := Low(JclSourceDirs) to High(JclSourceDirs) do
-      ListAddItems(FJclSourcePath, DirSeparator, PathAddSeparator(FJclSourceDir) + JclSourceDirs[Index]);
+    for Index := Low(JclSrcPaths) to High(JclSrcPaths) do
+      ListAddItems(FJclSourcePath, DirSeparator, JclPath + JclSrcPaths[Index]);
 
-    ExceptDialogsPath := FJclPath + ExceptDlgPath;
+    ExceptDialogsPath := JclPath + ExceptDlgPath;
     FVclDialogFileName := ExceptDialogsPath + ExceptDlgVclFileName;
     FVclDialogSendFileName := ExceptDialogsPath + ExceptDlgVclSndFileName;
-    ExceptDialogsPath := FJclPath + ExceptIcoPath;
+    ExceptDialogsPath := JclPath + ExceptIcoPath;
     FVclDialogIconFileName := ExceptDialogsPath + ExceptIcoVclFileName;
     FVclDialogSendIconFileName := ExceptDialogsPath + ExceptIcoVclSndFileName;
-    FJclChmHelpFileName := FJclPath + JclChmHelpFile;
-    FJclHlpHelpFileName := FJclPath + JclHlpHelpFile;
-    FJclHxSHelpFileName := FJclPath + JclHxSHelpFile;
+    FJclChmHelpFileName := JclPath + JclChmHelpFile;
+    FJclHlpHelpFileName := JclPath + JclHlpHelpFile;
+    FJclHxSHelpFileName := JclPath + JclHxSHelpFile;
     if not FileExists(FJclChmHelpFileName) then
       FJclChmHelpFileName := '';
     if not FileExists(FJclHlpHelpFileName) then
@@ -3047,7 +3041,7 @@ procedure TJclDistribution.Init;
     FileSetAttr(FVclDialogSendFileName, faArchive);
     FileSetAttr(ChangeFileExt(FVclDialogSendFileName, '.dfm'), faArchive);
     {$ENDIF MSWINDOWS}
-    FJclReadmeFileName := FJclPath + 'docs' + DirDelimiter + ReadmeFileName;
+    FJclReadmeFileName := JclPath + 'docs' + DirDelimiter + ReadmeFileName;
     if Assigned(GUI) then
     begin
       ReadMePage := GUI.CreateReadmePage;

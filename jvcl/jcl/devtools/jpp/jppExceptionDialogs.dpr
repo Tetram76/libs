@@ -20,13 +20,13 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-22 19:36:33 +0100 (lun. 22 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3200                                                                     $ }
+{ Last modified: $Date:: 2010-07-29 20:30:12 +0200 (jeu. 29 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3272                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-program CreateStdDialogs;
+program jppExceptionDialogs;
 
 {$APPTYPE CONSOLE}
 
@@ -34,11 +34,15 @@ uses
   SysUtils,
   Classes,
   JclIDEUtils,
-  JclOtaTemplates in '..\JclOtaTemplates.pas',
-  JclOtaExcDlgParams in 'JclOtaExcDlgParams.pas',
-  JppState in '..\..\..\devtools\jpp\JppState.pas',
-  JppLexer in '..\..\..\devtools\jpp\JppLexer.pas',
-  JppParser in '..\..\..\devtools\jpp\JppParser.pas';
+  JclTemplates in 'Templates\JclTemplates.pas',
+  JclExcDlgTemplates in 'Templates\JclExcDlgTemplates.pas',
+  JppState in 'JppState.pas',
+  JppLexer in 'JppLexer.pas',
+  JppParser in 'JppParser.pas';
+
+const
+  TemplateDirectory = '..\experts\repository\ExceptionDialog\Templates\';
+  StdDlgsDirectory = '..\experts\repository\ExceptionDialog\StandardDialogs\';
 
 function LoadTemplate(const FileName: TFileName): string;
 var
@@ -71,10 +75,10 @@ begin
 end;
 
 var
-  Params: TJclOtaExcDlgParams;
+  Params: TJclExcDlgParams;
 begin
   try
-    Params := TJclOtaExcDlgParams.Create;
+    Params := TJclExcDlgParams.Create;
     try
       Params.ActivePersonality := bpDelphi32;
       Params.FormName := 'ExceptionDialog';
@@ -100,16 +104,16 @@ begin
       Params.CodeDetails := True;
       Params.VirtualAddress := True;
 
-      SaveFile('StandardDialogs\ExceptDlg.pas', GetFinalSourceContent(ApplyTemplate(LoadTemplate('Templates\ExceptDlg.Delphi32.pas'), Params), 'ExceptDlg', 'ExceptionDialog', 'TForm'));
-      SaveFile('StandardDialogs\ExceptDlg.dfm', GetFinalSourceContent(ApplyTemplate(LoadTemplate('Templates\ExceptDlg.Delphi32.dfm'), Params), 'ExceptDlg', 'ExceptionDialog', 'TForm'));
+      SaveFile(StdDlgsDirectory + 'ExceptDlg.pas', GetFinalSourceContent(ApplyTemplate(LoadTemplate(TemplateDirectory + 'ExceptDlg.Delphi32.pas'), Params), 'ExceptDlg', 'ExceptionDialog', 'TForm'));
+      SaveFile(StdDlgsDirectory + 'ExceptDlg.dfm', GetFinalSourceContent(ApplyTemplate(LoadTemplate(TemplateDirectory + 'ExceptDlg.Delphi32.dfm'), Params), 'ExceptDlg', 'ExceptionDialog', 'TForm'));
 
       Params.FormName := 'ExceptionDialogMail';
       Params.SendEMail := True;
       Params.EMailAddress := 'name@domain.ext';
       Params.EMailSubject := 'email subject';
 
-      SaveFile('StandardDialogs\ExceptDlgMail.pas', GetFinalSourceContent(ApplyTemplate(LoadTemplate('Templates\ExceptDlg.Delphi32.pas'), Params), 'ExceptDlgMail', 'ExceptionDialogMail', 'TForm'));
-      SaveFile('StandardDialogs\ExceptDlgMail.dfm', GetFinalSourceContent(ApplyTemplate(LoadTemplate('Templates\ExceptDlg.Delphi32.dfm'), Params), 'ExceptDlgMail', 'ExceptionDialogMail', 'TForm'));
+      SaveFile(StdDlgsDirectory + 'ExceptDlgMail.pas', GetFinalSourceContent(ApplyTemplate(LoadTemplate(TemplateDirectory + 'ExceptDlg.Delphi32.pas'), Params), 'ExceptDlgMail', 'ExceptionDialogMail', 'TForm'));
+      SaveFile(StdDlgsDirectory + 'ExceptDlgMail.dfm', GetFinalSourceContent(ApplyTemplate(LoadTemplate(TemplateDirectory + 'ExceptDlg.Delphi32.dfm'), Params), 'ExceptDlgMail', 'ExceptionDialogMail', 'TForm'));
     finally
       Params.Free;
     end;

@@ -1,10 +1,11 @@
 #
 # Generates platform dependent units from common code base
 #
-# $Id: Makefile.mak 2838 2009-06-28 21:05:51Z outchy $
+# $Id: Makefile.mak 3273 2010-08-02 19:09:40Z outchy $
 #
 
 jpp		= ..\..\devtools\jpp.exe
+jppContainers	= ..\..\devtools\jppContainers.exe
 touch		= $(MAKEDIR)\touch.exe
 
 Options			= -c -dJCL -dSUPPORTS_DEFAULTPARAMS -dSUPPORTS_INT64
@@ -116,7 +117,7 @@ JclVectors.pas: \
 	$(touch) $@
 
 {.}.pas{..\common}.pas:
-	$(jpp) $(ContainerOptions) $<
+	$(jppContainers) $(ContainerOptions) $<
 
 {.}.pas{..\windows}.pas:
 	$(jpp) $(WinOptions) $<

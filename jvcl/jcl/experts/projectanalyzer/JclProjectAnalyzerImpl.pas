@@ -17,13 +17,13 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3044                                                                     $ }
+{ Last modified: $Date:: 2010-08-07 11:44:18 +0200 (sam. 07 août 2010)                          $ }
+{ Revision:      $Rev:: 3279                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-unit ProjAnalyzerImpl;
+unit JclProjectAnalyzerImpl;
 
 {$I jcl.inc}
 
@@ -34,7 +34,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclOtaUtils, ProjAnalyzerFrm;
+  JclOtaUtils, JclProjectAnalyzerFrm;
 
 type
   TJclProjectAnalyzerExpert = class(TJclOTAExpert)
@@ -94,9 +94,9 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/projectanalyzer/ProjAnalyzerImpl.pas $';
-    Revision: '$Revision: 3044 $';
-    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/projectanalyzer/JclProjectAnalyzerImpl.pas $';
+    Revision: '$Revision: 3279 $';
+    Date: '$Date: 2010-08-07 11:44:18 +0200 (sam. 07 août 2010) $';
     LogPath: 'JCL\experts\projectanalyser';
     Extra: '';
     Data: nil
@@ -105,7 +105,7 @@ const
 
 implementation
 
-{$R ProjAnalyzerIcon.res}
+{$R JclProjectAnalyzerIcon.res}
 
 uses
   Variants,

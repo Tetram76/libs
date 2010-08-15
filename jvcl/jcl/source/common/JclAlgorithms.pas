@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3147                                                                     $ }
+{ Last modified: $Date:: 2010-08-11 01:09:34 +0200 (mer. 11 août 2010)                          $ }
+{ Revision:      $Rev:: 3301                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -48,6 +48,7 @@ uses
   JclBase, JclContainerIntf;
 
 // Compare functions
+
 function IntfSimpleCompare(const Obj1, Obj2: IInterface): Integer;
 function AnsiStrSimpleCompare(const Obj1, Obj2: AnsiString): Integer;
 function WideStrSimpleCompare(const Obj1, Obj2: WideString): Integer;
@@ -67,7 +68,14 @@ function SimpleCompare(Obj1, Obj2: TObject): Integer;
 
 function IntegerCompare(Obj1, Obj2: TObject): Integer;
 
+function AnsiStrSimpleCompareI(const Obj1, Obj2: AnsiString): Integer;
+function WideStrSimpleCompareI(const Obj1, Obj2: WideString): Integer;
+{$IFDEF SUPPORTS_UNICODE_STRING}
+function UnicodeStrSimpleCompareI(const Obj1, Obj2: UnicodeString): Integer;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
 // Compare functions for equality
+
 function IntfSimpleEqualityCompare(const Obj1, Obj2: IInterface): Boolean;
 function AnsiStrSimpleEqualityCompare(const Obj1, Obj2: AnsiString): Boolean;
 function WideStrSimpleEqualityCompare(const Obj1, Obj2: WideString): Boolean;
@@ -85,7 +93,81 @@ function Int64SimpleEqualityCompare(const Obj1, Obj2: Int64): Boolean;
 function PtrSimpleEqualityCompare(Obj1, Obj2: Pointer): Boolean;
 function SimpleEqualityCompare(Obj1, Obj2: TObject): Boolean;
 
+function AnsiStrSimpleEqualityCompareI(const Obj1, Obj2: AnsiString): Boolean;
+function WideStrSimpleEqualityCompareI(const Obj1, Obj2: WideString): Boolean;
+{$IFDEF SUPPORTS_UNICODE_STRING}
+function UnicodeStrSimpleEqualityCompareI(const Obj1, Obj2: UnicodeString): Boolean;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+// Hash conversion functions
+
+function IntfSimpleHashConvert(const AInterface: IInterface): Integer;
+function AnsiStrSimpleHashConvert(const AString: AnsiString): Integer;
+function WideStrSimpleHashConvert(const AString: WideString): Integer;
+{$IFDEF SUPPORTS_UNICODE_STRING}
+function UnicodeStrSimpleHashConvert(const AString: UnicodeString): Integer;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+function StrSimpleHashConvert(const AString: string): Integer;
+function SingleSimpleHashConvert(const AValue: Single): Integer;
+function DoubleSimpleHashConvert(const AValue: Double): Integer;
+function ExtendedSimpleHashConvert(const AValue: Extended): Integer;
+function FloatSimpleHashConvert(const AValue: Float): Integer;
+function IntegerSimpleHashConvert(AValue: Integer): Integer;
+function CardinalSimpleHashConvert(AValue: Cardinal): Integer;
+function Int64SimpleHashConvert(const AValue: Int64): Integer;
+function PtrSimpleHashConvert(APtr: Pointer): Integer;
+function SimpleHashConvert(AObject: TObject): Integer;
+
+function AnsiStrSimpleHashConvertI(const AString: AnsiString): Integer;
+function AnsiStrSimpleHashConvertU(const AString: AnsiString): Integer;
+function AnsiStrSimpleHashConvertUI(const AString: AnsiString): Integer;
+function WideStrSimpleHashConvertI(const AString: WideString): Integer;
+{$IFDEF SUPPORTS_UNICODE_STRING}
+function UnicodeStrSimpleHashConvertI(const AString: UnicodeString): Integer;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+// move array algorithms
+
+procedure MoveArray(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_UNICODE_STRING}
+procedure MoveArray(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+procedure MoveArray(var List: TDynSingleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynDoubleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynExtendedArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynIntegerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynCardinalArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynInt64Array; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynPointerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynObjectArray; FromIndex, ToIndex, Count: SizeInt); overload;
+
+procedure MoveArray(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFNDEF FPC}
+procedure MoveArray(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure MoveArray(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$ENDIF ~FPC}
+
+// Iterate algorithms
+
+procedure Iterate(const First: IJclIntfIterator; Count: Integer; F: TIntfIterateProcedure); overload;
+procedure Iterate(const First: IJclAnsiStrIterator; Count: Integer; F: TAnsiStrIterateProcedure); overload;
+procedure Iterate(const First: IJclWideStrIterator; Count: Integer; F: TWideStrIterateProcedure); overload;
+{$IFDEF SUPPORTS_UNICODE_STRING}
+procedure Iterate(const First: IJclUnicodeStrIterator; Count: Integer; F: TUnicodeStrIterateProcedure); overload;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+procedure Iterate(const First: IJclSingleIterator; Count: Integer; F: TSingleIterateProcedure); overload;
+procedure Iterate(const First: IJclDoubleIterator; Count: Integer; F: TDoubleIterateProcedure); overload;
+procedure Iterate(const First: IJclExtendedIterator; Count: Integer; F: TExtendedIterateProcedure); overload;
+procedure Iterate(const First: IJclIntegerIterator; Count: Integer; F: TIntegerIterateProcedure); overload;
+procedure Iterate(const First: IJclCardinalIterator; Count: Integer; F: TCardinalIterateProcedure); overload;
+procedure Iterate(const First: IJclInt64Iterator; Count: Integer; F: TInt64IterateProcedure); overload;
+procedure Iterate(const First: IJclPtrIterator; Count: Integer; F: TPtrIterateProcedure); overload;
+procedure Iterate(const First: IJclIterator; Count: Integer; F: TIterateProcedure); overload;
+
 // Apply algorithms
+
 procedure Apply(const First: IJclIntfIterator; Count: Integer; F: TIntfApplyFunction); overload;
 procedure Apply(const First: IJclAnsiStrIterator; Count: Integer; F: TAnsiStrApplyFunction); overload;
 procedure Apply(const First: IJclWideStrIterator; Count: Integer; F: TWideStrApplyFunction); overload;
@@ -102,6 +184,7 @@ procedure Apply(const First: IJclPtrIterator; Count: Integer; F: TPtrApplyFuncti
 procedure Apply(const First: IJclIterator; Count: Integer; F: TApplyFunction); overload;
 
 // Find algorithms
+
 function Find(const First: IJclIntfIterator; Count: Integer; const AInterface: IInterface;
   AComparator: TIntfCompare): IJclIntfIterator; overload;
 function Find(const First: IJclIntfIterator; Count: Integer; const AInterface: IInterface;
@@ -117,6 +200,8 @@ function Find(const First: IJclWideStrIterator; Count: Integer; const AString: W
 {$IFDEF SUPPORTS_UNICODE_STRING}
 function Find(const First: IJclUnicodeStrIterator; Count: Integer; const AString: UnicodeString;
   AComparator: TUnicodeStrCompare): IJclUnicodeStrIterator; overload;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+{$IFDEF SUPPORTS_UNICODE_STRING}
 function Find(const First: IJclUnicodeStrIterator; Count: Integer; const AString: UnicodeString;
   AEqualityComparator: TUnicodeStrEqualityCompare): IJclUnicodeStrIterator; overload;
 {$ENDIF SUPPORTS_UNICODE_STRING}
@@ -154,6 +239,7 @@ function Find(const First: IJclIterator; Count: Integer; AObject: TObject;
   AEqualityComparator: TEqualityCompare): IJclIterator; overload;
 
 // CountObject algorithms
+
 function CountObject(const First: IJclIntfIterator; Count: Integer;
   const AInterface: IInterface; AComparator: TIntfCompare): Integer; overload;
 function CountObject(const First: IJclIntfIterator; Count: Integer;
@@ -169,6 +255,8 @@ function CountObject(const First: IJclWideStrIterator; Count: Integer;
 {$IFDEF SUPPORTS_UNICODE_STRING}
 function CountObject(const First: IJclUnicodeStrIterator; Count: Integer;
   const AString: UnicodeString; AComparator: TUnicodeStrCompare): Integer; overload;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+{$IFDEF SUPPORTS_UNICODE_STRING}
 function CountObject(const First: IJclUnicodeStrIterator; Count: Integer;
   const AString: UnicodeString; AEqualityComparator: TUnicodeStrEqualityCompare): Integer; overload;
 {$ENDIF SUPPORTS_UNICODE_STRING}
@@ -206,6 +294,7 @@ function CountObject(const First: IJclIterator; Count: Integer;
   AObject: TObject; AEqualityComparator: TEqualityCompare): Integer; overload;
 
 // Copy algorithms
+
 procedure Copy(const First: IJclIntfIterator; Count: Integer;
   const Output: IJclIntfIterator); overload;
 procedure Copy(const First: IJclAnsiStrIterator; Count: Integer;
@@ -234,6 +323,7 @@ procedure Copy(const First: IJclIterator; Count: Integer;
   const Output: IJclIterator); overload;
 
 // Generate algorithms
+
 procedure Generate(const List: IJclIntfList; Count: Integer; const AInterface: IInterface); overload;
 procedure Generate(const List: IJclAnsiStrList; Count: Integer; const AString: AnsiString); overload;
 procedure Generate(const List: IJclWideStrList; Count: Integer; const AString: WideString); overload;
@@ -250,6 +340,7 @@ procedure Generate(const List: IJclPtrList; Count: Integer; APtr: Pointer); over
 procedure Generate(const List: IJclList; Count: Integer; AObject: TObject); overload;
 
 // Fill algorithms
+
 procedure Fill(const First: IJclIntfIterator; Count: Integer; const AInterface: IInterface); overload;
 procedure Fill(const First: IJclAnsiStrIterator; Count: Integer; const AString: AnsiString); overload;
 procedure Fill(const First: IJclWideStrIterator; Count: Integer; const AString: WideString); overload;
@@ -266,6 +357,7 @@ procedure Fill(const First: IJclPtrIterator; Count: Integer; APtr: Pointer); ove
 procedure Fill(const First: IJclIterator; Count: Integer; AObject: TObject); overload;
 
 // Reverse algorithms
+
 procedure Reverse(const First, Last: IJclIntfIterator); overload;
 procedure Reverse(const First, Last: IJclAnsiStrIterator); overload;
 procedure Reverse(const First, Last: IJclWideStrIterator); overload;
@@ -280,6 +372,7 @@ procedure Reverse(const First, Last: IJclCardinalIterator); overload;
 procedure Reverse(const First, Last: IJclInt64Iterator); overload;
 procedure Reverse(const First, Last: IJclPtrIterator); overload;
 procedure Reverse(const First, Last: IJclIterator); overload;
+
 
 procedure QuickSort(const AList: IJclIntfList; L, R: Integer; AComparator: TIntfCompare); overload;
 procedure QuickSort(const AList: IJclAnsiStrList; L, R: Integer; AComparator: TAnsiStrCompare); overload;
@@ -313,6 +406,7 @@ var
   SortProc: TSortProc = QuickSort;
 
 // Sort algorithms
+
 procedure Sort(const AList: IJclIntfList; First, Last: Integer; AComparator: TIntfCompare); overload;
 procedure Sort(const AList: IJclAnsiStrList; First, Last: Integer; AComparator: TAnsiStrCompare); overload;
 procedure Sort(const AList: IJclWideStrList; First, Last: Integer; AComparator: TWideStrCompare); overload;
@@ -335,6 +429,7 @@ type
   private
     //FSortProc: TSortProc;
   public
+    class procedure Iterate(const First: IJclIterator<T>; Count: Integer; F: TIterateProcedure<T>);
     class procedure Apply(const First: IJclIterator<T>; Count: Integer; F: TApplyFunction<T>);
     class function Find(const First: IJclIterator<T>; Count: Integer; const AItem: T;
       AComparator: TCompare<T>): IJclIterator<T>; overload;
@@ -355,12 +450,32 @@ type
   end;
 {$ENDIF SUPPORTS_GENERICS}
 
+const
+  // table of byte permutations without inner loop
+  BytePermTable: array [Byte] of Byte =
+   ( 22,  133, 0,   244, 194, 193, 4,   164, 69,  211, 166, 235, 75,  110, 9,   140,
+     125, 84,  64,  209, 57,  47,  197, 76,  237, 48,  189, 87,  221, 254, 20,  132,
+     25,  162, 203, 225, 186, 165, 72,  228, 61,  208, 158, 185, 114, 173, 1,   66,
+     202, 46,  198, 214, 27,  161, 178, 238, 8,   68,  97,  17,  199, 210, 96,  196,
+     85,  240, 233, 71,  232, 142, 148, 70,  184, 152, 90,  206, 139, 182, 34,  101,
+     104, 12,  143, 227, 24,  247, 175, 150, 39,  31,  36,  123, 62,  119, 236, 28,
+     117, 100, 230, 223, 30,  154, 18,  153, 127, 192, 176, 19,  174, 134, 2,   216,
+     218, 91,  45,  7,   128, 138, 126, 40,  16,  54,  207, 181, 11,  137, 60,  191,
+     51,  231, 121, 213, 86,  111, 141, 172, 98,  226, 179, 249, 136, 58,  88,  93,
+     201, 195, 118, 144, 146, 113, 212, 32,  21,  131, 177, 33,  151, 130, 205, 171,
+     92,  251, 168, 29,  156, 124, 224, 200, 3,   187, 105, 52,  239, 147, 82,  94,
+     26,  102, 243, 242, 145, 163, 49,  135, 43,  78,  112, 83,  63,  35,  170, 167,
+     250, 159, 73,  37,  6,   79,  106, 215, 129, 74,  109, 42,  41,  120, 23,  160,
+     107, 180, 103, 77,  53,  169, 89,  149, 44,  38,  81,  246, 188, 67,  15,  80,
+     155, 99,  95,  5,   229, 108, 13,  255, 59,  241, 252, 245, 222, 248, 115, 55,
+     217, 56,  65,  219, 204, 190, 10,  50,  253, 183, 234, 116, 122, 220, 14,  157);
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAlgorithms.pas $';
-    Revision: '$Revision: 3147 $';
-    Date: '$Date: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010) $';
+    Revision: '$Revision: 3301 $';
+    Date: '$Date: 2010-08-11 01:09:34 +0200 (mer. 11 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -373,6 +488,7 @@ uses
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
+  JclAnsiStrings, JclStringConversions, JclUnicode,
   SysUtils;
 
 function IntfSimpleCompare(const Obj1, Obj2: IInterface): Integer;
@@ -386,22 +502,41 @@ begin
     Result := 0;
 end;
 
+// default is case-sensitive
 function AnsiStrSimpleCompare(const Obj1, Obj2: AnsiString): Integer;
 begin
-  // (rom) changed to case sensitive compare
   Result := CompareStr(Obj1, Obj2);
 end;
 
+// case-insensitive
+function AnsiStrSimpleCompareI(const Obj1, Obj2: AnsiString): Integer;
+begin
+  Result := CompareText(Obj1, Obj2);
+end;
+
+// default is case-sensitive
 function WideStrSimpleCompare(const Obj1, Obj2: WideString): Integer;
 begin
-  // (rom) changed to case sensitive compare
   Result := WideCompareStr(Obj1, Obj2);
 end;
 
+// case-insensitive
+function WideStrSimpleCompareI(const Obj1, Obj2: WideString): Integer;
+begin
+  Result := WideCompareText(Obj1, Obj2);
+end;
+
 {$IFDEF SUPPORTS_UNICODE_STRING}
+// default is case-sensitive
 function UnicodeStrSimpleCompare(const Obj1, Obj2: UnicodeString): Integer;
 begin
   Result := CompareStr(Obj1, Obj2);
+end;
+
+// case-insensitive
+function UnicodeStrSimpleCompareI(const Obj1, Obj2: UnicodeString): Integer;
+begin
+  Result := CompareText(Obj1, Obj2);
 end;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
@@ -536,22 +671,41 @@ begin
   Result := Integer(Obj1) = Integer(Obj2);
 end;
 
+// default is case-sensitive
 function AnsiStrSimpleEqualityCompare(const Obj1, Obj2: AnsiString): Boolean;
 begin
-  // (rom) changed to case sensitive compare
   Result := CompareStr(Obj1, Obj2) = 0;
 end;
 
+// case-insensitive
+function AnsiStrSimpleEqualityCompareI(const Obj1, Obj2: AnsiString): Boolean;
+begin
+  Result := CompareText(Obj1, Obj2) = 0;
+end;
+
+// default is case-sensitive
 function WideStrSimpleEqualityCompare(const Obj1, Obj2: WideString): Boolean;
 begin
-  // (rom) changed to case sensitive compare
   Result := WideCompareStr(Obj1, Obj2) = 0;
 end;
 
+// case-insensitive
+function WideStrSimpleEqualityCompareI(const Obj1, Obj2: WideString): Boolean;
+begin
+  Result := WideCompareText(Obj1, Obj2) = 0;
+end;
+
 {$IFDEF SUPPORTS_UNICODE_STRING}
+// default is case-sensitive
 function UnicodeStrSimpleEqualityCompare(const Obj1, Obj2: UnicodeString): Boolean;
 begin
   Result := CompareStr(Obj1, Obj2) = 0;
+end;
+
+// case-insensitive
+function UnicodeStrSimpleEqualityCompareI(const Obj1, Obj2: UnicodeString): Boolean;
+begin
+  Result := CompareText(Obj1, Obj2) = 0;
 end;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
@@ -611,6 +765,1075 @@ function SimpleEqualityCompare(Obj1, Obj2: TObject): Boolean;
 begin
   Result := Integer(Obj1) = Integer(Obj2);
 end;
+
+function IntfSimpleHashConvert(const AInterface: IInterface): Integer;
+begin
+  Result := Integer(AInterface) and MaxInt;
+end;
+
+// from "Fast Hashing of Variable-Length Text Strings", Peter K. Pearson, 1990
+// http://portal.acm.org/citation.cfm?id=78978
+type
+  TIntegerHash = packed record
+    case Byte of
+      0: (H1, H2, H3, H4: Byte);
+      1: (H: Integer);
+      2: (C: UCS4);
+  end;
+
+// default is case-sensitive and ISO-encoded
+function AnsiStrSimpleHashConvert(const AString: AnsiString): Integer;
+var
+  I: Integer;
+  C: Byte;
+  IntegerHash: TIntegerHash;
+begin
+  IntegerHash.H1 := 0;
+  IntegerHash.H2 := 1;
+  IntegerHash.H3 := 2;
+  IntegerHash.H4 := 3;
+  for I := 1 to Length(AString) do
+  begin
+    C := Ord(AString[I]);
+    IntegerHash.H1 := BytePermTable[IntegerHash.H1 xor C];
+    IntegerHash.H2 := BytePermTable[IntegerHash.H2 xor C];
+    IntegerHash.H3 := BytePermTable[IntegerHash.H3 xor C];
+    IntegerHash.H4 := BytePermTable[IntegerHash.H4 xor C];
+  end;
+  Result := IntegerHash.H and MaxInt;
+end;
+
+// case-insensitive and ISO-encoded
+function AnsiStrSimpleHashConvertI(const AString: AnsiString): Integer;
+var
+  I: Integer;
+  C: Byte;
+  IntegerHash: TIntegerHash;
+begin
+  IntegerHash.H1 := 0;
+  IntegerHash.H2 := 1;
+  IntegerHash.H3 := 2;
+  IntegerHash.H4 := 3;
+  for I := 1 to Length(AString) - 1 do
+  begin
+    C := Ord(JclAnsiStrings.CharUpper(AString[I]));
+    IntegerHash.H1 := BytePermTable[IntegerHash.H1 xor C];
+    IntegerHash.H2 := BytePermTable[IntegerHash.H2 xor C];
+    IntegerHash.H3 := BytePermTable[IntegerHash.H3 xor C];
+    IntegerHash.H4 := BytePermTable[IntegerHash.H4 xor C];
+  end;
+  Result := IntegerHash.H and MaxInt;
+end;
+
+// case-sensitive and UTF8-encoded
+function AnsiStrSimpleHashConvertU(const AString: AnsiString): Integer;
+var
+  I: Integer;
+  C, IntegerHash: TIntegerHash;
+begin
+  IntegerHash.H1 := 0;
+  IntegerHash.H2 := 1;
+  IntegerHash.H3 := 2;
+  IntegerHash.H4 := 3;
+  I := 1;
+  while I < Length(AString) do
+  begin
+    C.C := UTF8GetNextChar(AString, I);
+    if I = -1 then
+      raise EJclUnexpectedEOSequenceError.Create;
+    IntegerHash.H1 := BytePermTable[IntegerHash.H1 xor C.H1];
+    IntegerHash.H2 := BytePermTable[IntegerHash.H2 xor C.H2];
+    IntegerHash.H3 := BytePermTable[IntegerHash.H3 xor C.H3];
+    IntegerHash.H4 := BytePermTable[IntegerHash.H4 xor C.H4];
+  end;
+  Result := IntegerHash.H and MaxInt;
+end;
+
+// case-insensitive and UTF8-encoded
+function AnsiStrSimpleHashConvertUI(const AString: AnsiString): Integer;
+var
+  I, J: Integer;
+  C, IntegerHash: TIntegerHash;
+  CA: TUCS4Array;
+begin
+  IntegerHash.H1 := 0;
+  IntegerHash.H2 := 1;
+  IntegerHash.H3 := 2;
+  IntegerHash.H4 := 3;
+  I := 1;
+  SetLength(CA, 0);
+  while I < Length(AString) do
+  begin
+    C.C := UTF8GetNextChar(AString, I);
+    CA := UnicodeCaseFold(C.C);
+    for J := Low(CA) to High(CA) do
+    begin
+      C.C := CA[J];
+      if I = -1 then
+        raise EJclUnexpectedEOSequenceError.Create;
+      IntegerHash.H1 := BytePermTable[IntegerHash.H1 xor C.H1];
+      IntegerHash.H2 := BytePermTable[IntegerHash.H2 xor C.H2];
+      IntegerHash.H3 := BytePermTable[IntegerHash.H3 xor C.H3];
+      IntegerHash.H4 := BytePermTable[IntegerHash.H4 xor C.H4];
+    end;
+  end;
+  Result := IntegerHash.H and MaxInt;
+end;
+
+// default is case-sensitive
+function WideStrSimpleHashConvert(const AString: WideString): Integer;
+var
+  I: Integer;
+  C, IntegerHash: TIntegerHash;
+begin
+  IntegerHash.H1 := 0;
+  IntegerHash.H2 := 1;
+  IntegerHash.H3 := 2;
+  IntegerHash.H4 := 3;
+  I := 1;
+  while I < Length(AString) do
+  begin
+    C.C := UTF16GetNextChar(AString, I);
+    if I = -1 then
+      raise EJclUnexpectedEOSequenceError.Create;
+    IntegerHash.H1 := BytePermTable[IntegerHash.H1 xor C.H1];
+    IntegerHash.H2 := BytePermTable[IntegerHash.H2 xor C.H2];
+    IntegerHash.H3 := BytePermTable[IntegerHash.H3 xor C.H3];
+    IntegerHash.H4 := BytePermTable[IntegerHash.H4 xor C.H4];
+  end;
+  Result := IntegerHash.H and MaxInt;
+end;
+
+// case-insensitive
+function WideStrSimpleHashConvertI(const AString: WideString): Integer;
+var
+  I, J: Integer;
+  C, IntegerHash: TIntegerHash;
+  CA: TUCS4Array;
+begin
+  IntegerHash.H1 := 0;
+  IntegerHash.H2 := 1;
+  IntegerHash.H3 := 2;
+  IntegerHash.H4 := 3;
+  SetLength(CA, 0);
+  I := 1;
+  while I < Length(AString) do
+  begin
+    C.C := UTF16GetNextChar(AString, I);
+    CA := UnicodeCaseFold(C.C);
+    for J := Low(CA) to High(CA) do
+    begin
+      C.C := CA[J];
+      if I = -1 then
+        raise EJclUnexpectedEOSequenceError.Create;
+      IntegerHash.H1 := BytePermTable[IntegerHash.H1 xor C.H1];
+      IntegerHash.H2 := BytePermTable[IntegerHash.H2 xor C.H2];
+      IntegerHash.H3 := BytePermTable[IntegerHash.H3 xor C.H3];
+      IntegerHash.H4 := BytePermTable[IntegerHash.H4 xor C.H4];
+    end;
+  end;
+  Result := IntegerHash.H and MaxInt;
+end;
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
+// default is case-sensitive
+function UnicodeStrSimpleHashConvert(const AString: UnicodeString): Integer;
+var
+  I: Integer;
+  C, IntegerHash: TIntegerHash;
+begin
+  IntegerHash.H1 := 0;
+  IntegerHash.H2 := 1;
+  IntegerHash.H3 := 2;
+  IntegerHash.H4 := 3;
+  I := 1;
+  while I < Length(AString) do
+  begin
+    C.C := UTF16GetNextChar(AString, I);
+    if I = -1 then
+      raise EJclUnexpectedEOSequenceError.Create;
+    IntegerHash.H1 := BytePermTable[IntegerHash.H1 xor C.H1];
+    IntegerHash.H2 := BytePermTable[IntegerHash.H2 xor C.H2];
+    IntegerHash.H3 := BytePermTable[IntegerHash.H3 xor C.H3];
+    IntegerHash.H4 := BytePermTable[IntegerHash.H4 xor C.H4];
+  end;
+  Result := IntegerHash.H and MaxInt;
+end;
+
+// case-insensitive
+function UnicodeStrSimpleHashConvertI(const AString: UnicodeString): Integer;
+var
+  I, J: Integer;
+  C, IntegerHash: TIntegerHash;
+  CA: TUCS4Array;
+begin
+  IntegerHash.H1 := 0;
+  IntegerHash.H2 := 1;
+  IntegerHash.H3 := 2;
+  IntegerHash.H4 := 3;
+  SetLength(CA, 0);
+  I := 1;
+  while I < Length(AString) do
+  begin
+    C.C := UTF16GetNextChar(AString, I);
+    CA := UnicodeCaseFold(C.C);
+    for J := Low(CA) to High(CA) do
+    begin
+      C.C := CA[J];
+      if I = -1 then
+        raise EJclUnexpectedEOSequenceError.Create;
+      IntegerHash.H1 := BytePermTable[IntegerHash.H1 xor C.H1];
+      IntegerHash.H2 := BytePermTable[IntegerHash.H2 xor C.H2];
+      IntegerHash.H3 := BytePermTable[IntegerHash.H3 xor C.H3];
+      IntegerHash.H4 := BytePermTable[IntegerHash.H4 xor C.H4];
+    end;
+  end;
+  Result := IntegerHash.H and MaxInt;
+end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+function StrSimpleHashConvert(const AString: string): Integer;
+begin
+  {$IFDEF SUPPORTS_UNICODE}
+  {$IFDEF SUPPORTS_UNICODE_STRING}
+  Result := UnicodeStrSimpleHashConvert(AString);
+  {$ELSE ~SUPPORTS_UNICODE_STRING}
+  Result := WideStrSimpleHashConvert(AString);
+  {$ENDIF ~SUPPORTS_UNICODE_STRING}
+  {$ELSE ~SUPPORTS_UNICODE}
+  Result := AnsiStrSimpleHashConvert(AString);
+  {$ENDIF ~SUPPORTS_UNICODE}
+end;
+
+function SingleSimpleHashConvert(const AValue: Single): Integer;
+const
+  A = 0.6180339887; // (sqrt(5) - 1) / 2
+begin
+  Result := Round(MaxInt * Frac(AValue * A));
+end;
+
+function DoubleSimpleHashConvert(const AValue: Double): Integer;
+const
+  A = 0.6180339887; // (sqrt(5) - 1) / 2
+begin
+  Result := Round(MaxInt * Frac(AValue * A));
+end;
+
+function ExtendedSimpleHashConvert(const AValue: Extended): Integer;
+const
+  A = 0.6180339887; // (sqrt(5) - 1) / 2
+begin
+  Result := Round(MaxInt * Frac(AValue * A));
+end;
+
+function FloatSimpleHashConvert(const AValue: Float): Integer;
+const
+  A = 0.6180339887; // (sqrt(5) - 1) / 2
+begin
+  Result := Round(MaxInt * Frac(AValue * A));
+end;
+
+function IntegerSimpleHashConvert(AValue: Integer): Integer;
+begin
+  Result := AValue and MaxInt;
+end;
+
+function CardinalSimpleHashConvert(AValue: Cardinal): Integer;
+begin
+  Result := AValue and MaxInt;
+end;
+
+function Int64SimpleHashConvert(const AValue: Int64): Integer;
+begin
+  Result := AValue and MaxInt;
+end;
+
+function PtrSimpleHashConvert(APtr: Pointer): Integer;
+begin
+  Result := Integer(APtr) and MaxInt;
+end;
+
+function SimpleHashConvert(AObject: TObject): Integer;
+begin
+  Result := Integer(AObject) and MaxInt;
+end;
+
+
+procedure FinalizeArrayBeforeMove(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  Assert(Count > 0);
+  if FromIndex < ToIndex then
+  begin
+    if Count > (ToIndex - FromIndex) then
+      Finalize(List[FromIndex + Count], ToIndex - FromIndex)
+    else
+      Finalize(List[ToIndex], Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if Count > (FromIndex - ToIndex) then
+      Count := FromIndex - ToIndex;
+    Finalize(List[ToIndex], Count)
+  end;
+end;
+
+procedure InitializeArray(var List: TDynIInterfaceArray; FromIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  {$IFDEF FPC}
+  while Count > 0 do
+  begin
+    Initialize(List[FromIndex]);
+    Inc(FromIndex);
+    Dec(Count);
+  end;
+  {$ELSE ~FPC}
+  Initialize(List[FromIndex], Count);
+  {$ENDIF ~FPC}
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Keep reference counting working }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    InitializeArray(List, FromIndex, Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      InitializeArray(List, ToIndex + Count, FromIndex - ToIndex)
+    else
+      InitializeArray(List, FromIndex, Count);
+  end;
+end;
+
+procedure MoveArray(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+    FinalizeArrayBeforeMove(List, FromIndex, ToIndex, Count);
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure FinalizeArrayBeforeMove(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  Assert(Count > 0);
+  if FromIndex < ToIndex then
+  begin
+    if Count > (ToIndex - FromIndex) then
+      Finalize(List[FromIndex + Count], ToIndex - FromIndex)
+    else
+      Finalize(List[ToIndex], Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if Count > (FromIndex - ToIndex) then
+      Count := FromIndex - ToIndex;
+    Finalize(List[ToIndex], Count)
+  end;
+end;
+
+procedure InitializeArray(var List: TDynAnsiStringArray; FromIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  {$IFDEF FPC}
+  while Count > 0 do
+  begin
+    Initialize(List[FromIndex]);
+    Inc(FromIndex);
+    Dec(Count);
+  end;
+  {$ELSE ~FPC}
+  Initialize(List[FromIndex], Count);
+  {$ENDIF ~FPC}
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Keep reference counting working }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    InitializeArray(List, FromIndex, Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      InitializeArray(List, ToIndex + Count, FromIndex - ToIndex)
+    else
+      InitializeArray(List, FromIndex, Count);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+    FinalizeArrayBeforeMove(List, FromIndex, ToIndex, Count);
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+
+  end;
+end;
+
+procedure FinalizeArrayBeforeMove(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  Assert(Count > 0);
+  if FromIndex < ToIndex then
+  begin
+    if Count > (ToIndex - FromIndex) then
+      Finalize(List[FromIndex + Count], ToIndex - FromIndex)
+    else
+      Finalize(List[ToIndex], Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if Count > (FromIndex - ToIndex) then
+      Count := FromIndex - ToIndex;
+    Finalize(List[ToIndex], Count)
+  end;
+end;
+
+procedure InitializeArray(var List: TDynWideStringArray; FromIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  {$IFDEF FPC}
+  while Count > 0 do
+  begin
+    Initialize(List[FromIndex]);
+    Inc(FromIndex);
+    Dec(Count);
+  end;
+  {$ELSE ~FPC}
+  Initialize(List[FromIndex], Count);
+  {$ENDIF ~FPC}
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Keep reference counting working }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    InitializeArray(List, FromIndex, Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      InitializeArray(List, ToIndex + Count, FromIndex - ToIndex)
+    else
+      InitializeArray(List, FromIndex, Count);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+    FinalizeArrayBeforeMove(List, FromIndex, ToIndex, Count);
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+
+  end;
+end;
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
+
+procedure FinalizeArrayBeforeMove(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  Assert(Count > 0);
+  if FromIndex < ToIndex then
+  begin
+    if Count > (ToIndex - FromIndex) then
+      Finalize(List[FromIndex + Count], ToIndex - FromIndex)
+    else
+      Finalize(List[ToIndex], Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if Count > (FromIndex - ToIndex) then
+      Count := FromIndex - ToIndex;
+    Finalize(List[ToIndex], Count)
+  end;
+end;
+
+procedure InitializeArray(var List: TDynUnicodeStringArray; FromIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  {$IFDEF FPC}
+  while Count > 0 do
+  begin
+    Initialize(List[FromIndex]);
+    Inc(FromIndex);
+    Dec(Count);
+  end;
+  {$ELSE ~FPC}
+  Initialize(List[FromIndex], Count);
+  {$ENDIF ~FPC}
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Keep reference counting working }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    InitializeArray(List, FromIndex, Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      InitializeArray(List, ToIndex + Count, FromIndex - ToIndex)
+    else
+      InitializeArray(List, FromIndex, Count);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+    FinalizeArrayBeforeMove(List, FromIndex, ToIndex, Count);
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+procedure InitializeArrayAfterMove(var List: TDynSingleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynSingleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynDoubleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynDoubleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynExtendedArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynExtendedArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynIntegerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynIntegerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynCardinalArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynCardinalArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynInt64Array; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynInt64Array; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynPointerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynPointerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynObjectArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynObjectArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+
+{$IFNDEF FPC}
+procedure FinalizeArrayBeforeMove(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  Assert(Count > 0);
+  if FromIndex < ToIndex then
+  begin
+    if Count > (ToIndex - FromIndex) then
+      Finalize(List[FromIndex + Count], ToIndex - FromIndex)
+    else
+      Finalize(List[ToIndex], Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if Count > (FromIndex - ToIndex) then
+      Count := FromIndex - ToIndex;
+    Finalize(List[ToIndex], Count)
+  end;
+end;
+
+procedure InitializeArray(var List: TDynStringArray; FromIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  
+  Initialize(List[FromIndex], Count);
+  
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Keep reference counting working }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    InitializeArray(List, FromIndex, Count);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      InitializeArray(List, ToIndex + Count, FromIndex - ToIndex)
+    else
+      InitializeArray(List, FromIndex, Count);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+    FinalizeArrayBeforeMove(List, FromIndex, ToIndex, Count);
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+
+  end;
+end;
+
+procedure InitializeArrayAfterMove(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+begin
+  { Clean array }
+  if FromIndex < ToIndex then
+  begin
+    if (ToIndex - FromIndex) < Count then
+      Count := ToIndex - FromIndex;
+    FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end
+  else
+  if FromIndex > ToIndex then
+  begin
+    if (FromIndex - ToIndex) < Count then
+      FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
+    else
+      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+  end;
+end;
+
+
+procedure MoveArray(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;
+begin
+  if Count > 0 then
+  begin
+
+    Move(List[FromIndex], List[ToIndex], Count * SizeOf(List[0]));
+    InitializeArrayAfterMove(List, FromIndex, ToIndex, Count);
+  end;
+end;
+{$ENDIF ~FPC}
+
+
+procedure Iterate(const First: IJclIntfIterator; Count: Integer; F: TIntfIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclAnsiStrIterator; Count: Integer; F: TAnsiStrIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclWideStrIterator; Count: Integer; F: TWideStrIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
+procedure Iterate(const First: IJclUnicodeStrIterator; Count: Integer; F: TUnicodeStrIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+procedure Iterate(const First: IJclSingleIterator; Count: Integer; F: TSingleIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclDoubleIterator; Count: Integer; F: TDoubleIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclExtendedIterator; Count: Integer; F: TExtendedIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclIntegerIterator; Count: Integer; F: TIntegerIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclCardinalIterator; Count: Integer; F: TCardinalIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclInt64Iterator; Count: Integer; F: TInt64IterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclPtrIterator; Count: Integer; F: TPtrIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
+procedure Iterate(const First: IJclIterator; Count: Integer; F: TIterateProcedure);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
 
 procedure Apply(const First: IJclIntfIterator; Count: Integer; F: TIntfApplyFunction);
 var
@@ -746,6 +1969,7 @@ begin
       Break;
 end;
 
+
 function Find(const First: IJclIntfIterator; Count: Integer;
   const AInterface: IInterface; AComparator: TIntfCompare): IJclIntfIterator;
 var
@@ -879,7 +2103,9 @@ begin
     else
       Break;
 end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
 
+{$IFDEF SUPPORTS_UNICODE_STRING}
 function Find(const First: IJclUnicodeStrIterator; Count: Integer;
   const AString: UnicodeString; AEqualityComparator: TUnicodeStrEqualityCompare): IJclUnicodeStrIterator;
 var
@@ -1204,6 +2430,7 @@ begin
       Break;
 end;
 
+
 function CountObject(const First: IJclIntfIterator; Count: Integer;
   const AInterface: IInterface; AComparator: TIntfCompare): Integer;
 var
@@ -1295,7 +2522,9 @@ begin
     else
       Break;
 end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
 
+{$IFDEF SUPPORTS_UNICODE_STRING}
 function CountObject(const First: IJclUnicodeStrIterator; Count: Integer;
   const AString: UnicodeString; AEqualityComparator: TUnicodeStrEqualityCompare): Integer;
 var
@@ -1518,6 +2747,7 @@ begin
       Break;
 end;
 
+
 procedure Copy(const First: IJclIntfIterator; Count: Integer;
   const Output: IJclIntfIterator);
 var
@@ -1700,6 +2930,7 @@ begin
       Break;
 end;
 
+
 procedure Generate(const List: IJclIntfList; Count: Integer;
   const AInterface: IInterface);
 var
@@ -1821,6 +3052,7 @@ begin
   for I := 0 to Count - 1 do
     List.Add(AObject);
 end;
+
 
 procedure Fill(const First: IJclIntfIterator; Count: Integer;
   const AInterface: IInterface);
@@ -2003,6 +3235,7 @@ begin
     else
       Break;
 end;
+
 
 procedure Reverse(const First, Last: IJclIntfIterator);
 var
@@ -2209,6 +3442,7 @@ begin
     Last.SetObject(Obj);
   end;
 end;
+
 
 procedure QuickSort(const AList: IJclIntfList; L, R: Integer;
   AComparator: TIntfCompare);
@@ -2644,6 +3878,7 @@ begin
   until I >= R;
 end;
 
+
 procedure Sort(const AList: IJclIntfList; First, Last: Integer; AComparator: TIntfCompare);
 begin
   IntfSortProc(AList, First, Last, AComparator);
@@ -2707,6 +3942,17 @@ begin
 end;
 
 {$IFDEF SUPPORTS_GENERICS}
+class procedure TJclAlgorithms<T>.Iterate(const First: IJclIterator<T>; Count: Integer; F: TIterateProcedure<T>);
+var
+  I: Integer;
+begin
+  for I := Count - 1 downto 0 do
+    if First.HasNext then
+      F(First.Next)
+    else
+      Break;
+end;
+
 class procedure TJclAlgorithms<T>.Apply(const First: IJclIterator<T>; Count: Integer; F: TApplyFunction<T>);
 var
   I: Integer;

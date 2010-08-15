@@ -35,8 +35,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-04 23:05:47 +0200 (mar. 04 mai 2010)                            $ }
-{ Revision:      $Rev:: 3242                                                                     $ }
+{ Last modified: $Date:: 2010-05-28 23:11:15 +0200 (ven. 28 mai 2010)                            $ }
+{ Revision:      $Rev:: 3256                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1265,7 +1265,6 @@ function UnicodeIsDash(C: UCS4): Boolean;
 function UnicodeIsMath(C: UCS4): Boolean;
 function UnicodeIsCurrency(C: UCS4): Boolean;
 function UnicodeIsModifierSymbol(C: UCS4): Boolean;
-function UnicodeIsNonSpacingMark(C: UCS4): Boolean;
 function UnicodeIsSpacingMark(C: UCS4): Boolean;
 function UnicodeIsEnclosing(C: UCS4): Boolean;
 function UnicodeIsPrivate(C: UCS4): Boolean;
@@ -1279,13 +1278,10 @@ function UnicodeIsUndefined(C: UCS4): Boolean;
 function UnicodeIsHan(C: UCS4): Boolean;
 function UnicodeIsHangul(C: UCS4): Boolean;
 
-function UnicodeIsSeparatorLine(C: UCS4): Boolean;
-function UnicodeIsSeparatorParagraph(C: UCS4): Boolean;
 function UnicodeIsUnassigned(C: UCS4): Boolean;
-function UnicodeIsLetterModifier(C: UCS4): Boolean;
 function UnicodeIsLetterOther(C: UCS4): Boolean;
+function UnicodeIsConnector(C: UCS4): Boolean;
 function UnicodeIsPunctuationOther(C: UCS4): Boolean;
-function UnicodeIsSymbolModifier(C: UCS4): Boolean;
 function UnicodeIsSymbolOther(C: UCS4): Boolean;
 function UnicodeIsLeftToRightEmbedding(C: UCS4): Boolean;
 function UnicodeIsLeftToRightOverride(C: UCS4): Boolean;
@@ -1301,7 +1297,6 @@ function UnicodeIsCommonNumberSeparator(C: UCS4): Boolean;
 function UnicodeIsBoundaryNeutral(C: UCS4): Boolean;
 function UnicodeIsSegmentSeparator(C: UCS4): Boolean;
 function UnicodeIsOtherNeutrals(C: UCS4): Boolean;
-function UnicodeIsAssigned(C: UCS4): Boolean;
 function UnicodeIsASCIIHexDigit(C: UCS4): Boolean;
 function UnicodeIsBidiControl(C: UCS4): Boolean;
 function UnicodeIsDeprecated(C: UCS4): Boolean;
@@ -1365,8 +1360,8 @@ procedure LoadCompositionData;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnicode.pas $';
-    Revision: '$Revision: 3242 $';
-    Date: '$Date: 2010-05-04 23:05:47 +0200 (mar. 04 mai 2010) $';
+    Revision: '$Revision: 3256 $';
+    Date: '$Date: 2010-05-28 23:11:15 +0200 (ven. 28 mai 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -4532,7 +4527,7 @@ begin
       end;
 
       // Determine if the character is non-spacing and should be skipped.
-      if ((Flags and URE_IGNORE_NONSPACING) <> 0) and UnicodeIsNonSpacingMark(C) then
+      if ((Flags and URE_IGNORE_NONSPACING) <> 0) and UnicodeIsNonSpacing(C) then
       begin
         Inc(Run);
         Continue;
@@ -6723,12 +6718,6 @@ begin
   Result := CategoryLookup(C, [ccSymbolModifier]);
 end;
 
-function UnicodeIsNonSpacingMark(C: UCS4): Boolean;
-// Is the character a non-spacing mark?
-begin
-  Result := CategoryLookup(C, [ccMarkNonSpacing]);
-end;
-
 function UnicodeIsSpacingMark(C: UCS4): Boolean;
 // Is the character a spacing mark?
 begin
@@ -6802,24 +6791,9 @@ begin
   Result := (C >= $AC00) and (C <= $D7FF);
 end;
 
-function UnicodeIsSeparatorLine(C: UCS4): Boolean;
-begin
-  Result := CategoryLookup(C, [ccSeparatorLine]);
-end;
-
-function UnicodeIsSeparatorParagraph(C: UCS4): Boolean;
-begin
-  Result := CategoryLookup(C, [ccSeparatorParagraph]);
-end;
-
 function UnicodeIsUnassigned(C: UCS4): Boolean;
 begin
   Result := CategoryLookup(C, [ccOtherUnassigned]);
-end;
-
-function UnicodeIsLetterModifier(C: UCS4): Boolean;
-begin
-  Result := CategoryLookup(C, [ccLetterModifier]);
 end;
 
 function UnicodeIsLetterOther(C: UCS4): Boolean;
@@ -6835,11 +6809,6 @@ end;
 function UnicodeIsPunctuationOther(C: UCS4): Boolean;
 begin
   Result := CategoryLookup(C, [ccPunctuationOther]);
-end;
-
-function UnicodeIsSymbolModifier(C: UCS4): Boolean;
-begin
-  Result := CategoryLookup(C, [ccSymbolModifier]);
 end;
 
 function UnicodeIsSymbolOther(C: UCS4): Boolean;
@@ -6915,11 +6884,6 @@ end;
 function UnicodeIsOtherNeutrals(C: UCS4): Boolean;
 begin
   Result := CategoryLookup(C, [ccOtherNeutrals]);
-end;
-
-function UnicodeIsAssigned(C: UCS4): Boolean;
-begin
-  Result := CategoryLookup(C, [ccAssigned]);
 end;
 
 function UnicodeIsASCIIHexDigit(C: UCS4): Boolean;

@@ -38,7 +38,7 @@
 {                                                                              }
 { **************************************************************************** }
 
-// Last modified: $Date: 2010-02-22 19:40:02 +0100 (lun. 22 févr. 2010) $
+// Last modified: $Date: 2010-08-11 00:56:10 +0200 (mer. 11 août 2010) $
 
 unit JppParser;
 
@@ -60,16 +60,14 @@ type
   private
     FLexer: TJppLexer;
     FState: TPppState;
-    FTriState: TTriState;
     FResult: string;
     FResultLen: Integer;
     FLineBreakPos: Integer;
-    FSkipLevel: Integer;
     FAllWhiteSpaceIn: Boolean;
     FAllWhiteSpaceOut: Boolean;
     procedure RemoveOrphanedLineBreaks;
   protected
-    procedure AddResult(const S: string; FixIndent: Boolean = False);
+    procedure AddResult(const S: string; FixIndent: Boolean = False; ForceRecurseTest: Boolean = False);
     function IsExcludedInclude(const FileName: string): Boolean;
 
     procedure NextToken;
@@ -78,8 +76,8 @@ type
     procedure ParseCondition(Token: TJppToken);
     function ParseInclude: string;
 
-    procedure ParseDefine;
-    procedure ParseUndef;
+    procedure ParseDefine(Skip: Boolean);
+    procedure ParseUndef(Skip: Boolean);
 
     procedure ParseDefineMacro;
     procedure ParseExpandMacro;
@@ -93,9 +91,6 @@ type
     procedure ParseSetIntValue;
     procedure ParseSetStrValue;
 
-    // same as ParseText, but throws result away
-    procedure Skip;
-
     property Lexer: TJppLexer read FLexer;
     property State: TPppState read FState;
   public
@@ -108,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/devtools/jpp/JppParser.pas $';
-    Revision: '$Revision: 3201 $';
-    Date: '$Date: 2010-02-22 19:40:02 +0100 (lun. 22 févr. 2010) $';
+    Revision: '$Revision: 3300 $';
+    Date: '$Date: 2010-08-11 00:56:10 +0200 (mer. 11 août 2010) $';
     LogPath: 'JCL\devtools\jpp';
     Extra: '';
     Data: nil
@@ -233,10 +228,15 @@ begin
           SetLength(ParamNames, Length(ParamNames) + 1);
           ParamNames[High(ParamNames)] := Copy(MacroText, J, I - J);
           StrReplace(ParamNames[High(ParamNames)], '\,', ',', [rfReplaceAll]);
+          if (I < Length(MacroText)) and (MacroText[I] = ')') then
+          begin
+            J := I;
+            Break;
+          end;
           if (I < Length(MacroText)) and (MacroText[I] = ',') then
             Inc(I);
           J := I;
-        until (J > Length(MacroText)) or (MacroText[J] = ')');
+        until J > Length(MacroText);
       end;
       if J <= Length(MacroText) then
       begin
@@ -263,7 +263,6 @@ begin
 
   FLexer := TJppLexer.Create(ABuffer);
   FState := APppState;
-  FTriState := ttUnknown;
   FState.Undef('PROTOTYPE');
 end;
 
@@ -273,10 +272,10 @@ begin
   inherited;
 end;
 
-procedure TJppParser.AddResult(const S: string; FixIndent: Boolean);
+procedure TJppParser.AddResult(const S: string; FixIndent, ForceRecurseTest: Boolean);
 var
   I, J: Integer;
-  LinePrefix, AResult: string;
+  LinePrefix, AResult, Line: string;
   TempMemoryStream: TMemoryStream;
   TempStringStream: TJclAutoStream;
   TempLexer: TJppLexer;
@@ -284,21 +283,44 @@ var
   Lines: TStrings;
   Recurse: Boolean;
 begin
+  if State.TriState = ttUndef then
+    Exit;
+
   AResult := S;
   // recurse macro expanding
-  if StrIPos('$JPP', AResult) > 0 then
+  if ForceRecurseTest or (StrIPos('$JPP', AResult) > 0) then
   begin
     Recurse := False;
     TempLexer := TJppLexer.Create(AResult);
     try
+      State.PushState;
       while True do
       begin
         case TempLexer.CurrTok of
           ptEof:
             Break;
+          ptDefine,
+          ptJppDefine:
+            if poProcessDefines in State.Options then
+              State.Define(TempLexer.TokenAsString);
+          ptUndef,
+          ptJppUndef:
+            if poProcessDefines in State.Options then
+              State.Undef(TempLexer.TokenAsString);
+          ptIfdef, ptIfndef:
+            if (poProcessDefines in State.Options) and (State.Defines[TempLexer.TokenAsString] in [ttDefined, ttUndef]) then
+            begin
+              Recurse := True;
+              Break;
+            end;
           ptJppDefineMacro,
           ptJppExpandMacro,
-          ptJppUndefMacro,
+          ptJppUndefMacro:
+            if poProcessMacros in State.Options then
+            begin
+              Recurse := True;
+              Break;
+            end;
           ptJppGetStrValue,
           ptJppGetIntValue,
           ptJppGetBoolValue,
@@ -306,6 +328,7 @@ begin
           ptJppSetIntValue,
           ptJppSetBoolValue,
           ptJppLoop:
+            if poProcessValues in State.Options then
             begin
               Recurse := True;
               Break;
@@ -314,6 +337,7 @@ begin
         TempLexer.NextTok;
       end;
     finally
+      State.PopState;
       TempLexer.Free;
     end;
     if Recurse then
@@ -371,14 +395,16 @@ begin
       // fix line offsets
       if LinePrefix <> '' then
         for I := 1 to Lines.Count - 1 do
-          Lines.Strings[I] := LinePrefix + Lines.Strings[I];
+      begin
+        Line := Lines.Strings[I];
+        if Line <> '' then
+          Lines.Strings[I] := LinePrefix + Line;
+      end;
       AResult := StringsToStr(Lines, NativeLineBreak);
     finally
       Lines.Free;
     end;
   end;
-  if FSkipLevel > 0 then
-    Exit;
   while FResultLen + Length(AResult) > Length(FResult) do
     SetLength(FResult, Length(FResult) * 2);
   Move(AResult[1], FResult[FResultLen + 1], Length(AResult) * SizeOf(Char));
@@ -396,7 +422,7 @@ procedure TJppParser.NextToken;
 begin
   Lexer.NextTok;
 
-  if FSkipLevel = 0 then
+  if State.TriState in [ttUnknown, ttDefined] then
     RemoveOrphanedLineBreaks;
 end;
 
@@ -435,6 +461,8 @@ begin
     ptIfopt,
     ptElse,
     ptEndif,
+    ptJppDefine,
+    ptJppUndef,
     ptJppDefineMacro,
     ptJppExpandMacro,
     ptJppUndefMacro,
@@ -467,65 +495,116 @@ end;
 
 procedure TJppParser.ParseCondition(Token: TJppToken);
 var
-  SavedTriState: TTriState;
+  Condition: string;
+  ConditionTriState: TTriState;
 begin
-  SavedTriState := FTriState;
-  FTriState := State.Defines[Lexer.TokenAsString];
+  Condition := Lexer.TokenAsString;
+  ConditionTriState := State.Defines[Condition];
+  // parse the first part of the $IFDEF or $IFNDEF
+  State.PushState;
   try
-    if FTriState = ttUnknown then
-    begin
-      AddResult(Lexer.RawComment);
+    case ConditionTriState of
+      ttUnknown:
+        begin
+          // preserve the $IFDEF or $IFNDEF
+          AddResult(Lexer.RawComment);
+          // assume that the symbol is defined in the $IFDEF
+          if Token = ptIfdef then
+            State.Define(Condition)
+          else
+          // assume that the symbol is not defined in the $IFNDEF
+          if Token = ptIfndef then
+            State.Undef(Condition);
+        end;
+      ttUndef:
+        if Token = ptIfdef then
+          State.TriState := ttUndef
+        else
+        if Token = ptIfndef then
+          State.TriState := ttDefined;
+      ttDefined:
+        if Token = ptIfdef then
+          State.TriState := ttDefined
+        else
+        if Token = ptIfndef then
+          State.TriState := ttUndef;
+    end;
+    NextToken;
+    ParseText;
+  finally
+    State.PopState;
+  end;
+  // part the second part of the $IFDEF or $IFNDEF if any
+  if Lexer.CurrTok = ptElse then
+  begin
+    State.PushState;
+    try
+      case ConditionTriState of
+        ttUnknown:
+          begin
+            // preserve the $ELSE
+            AddResult(Lexer.RawComment);
+            // assume that the symbol is not defined after the $IFDEF
+            if Token = ptIfdef then
+              State.Undef(Condition)
+            else
+            // assume that the symbol is defined after the $IFNDEF
+            if Token = ptIfndef then
+              State.Define(Condition);
+          end;
+        ttUndef:
+          begin
+            if Token = ptIfdef then
+              State.TriState := ttDefined
+            else
+            if Token = ptIfndef then
+              State.TriState := ttUndef;
+            State.Defines[Condition] := ttDefined;
+          end;
+        ttDefined:
+          begin
+            if Token = ptIfdef then
+              State.TriState := ttUndef
+            else
+            if Token = ptIfndef then
+              State.TriState := ttDefined;
+            State.Defines[Condition] := ttUndef;
+          end;
+      end;
       NextToken;
       ParseText;
-      if Lexer.CurrTok = ptElse then
-      begin
-        AddResult(Lexer.RawComment);
-        NextToken;
-        ParseText;
-      end;
-      AddResult(Lexer.RawComment);
-    end
-    else
-      if ((Token = ptIfdef) and (FTriState = ttDefined))
-      or ((Token = ptIfndef) and (FTriState = ttUndef)) then
-      begin
-        NextToken;
-        ParseText;
-        if Lexer.CurrTok = ptElse then
-        begin
-          NextToken;
-          Skip;
-        end;
-      end
-      else
-      begin
-        NextToken;
-        Skip;
-        if Lexer.CurrTok = ptElse then
-        begin
-          NextToken;
-          ParseText;
-        end
-        else
-          ;
-      end;
-    if Lexer.CurrTok <> ptEndif then
-      Lexer.Error('$ENDIF expected');
-    NextToken;
-  finally
-    FTriState := SavedTriState;
+    finally
+      State.PopState;
+    end;
   end;
+  if Lexer.CurrTok <> ptEndif then
+    Lexer.Error('$ENDIF expected');
+  case ConditionTriState of
+    ttUnknown:
+      // preserve the $ENDIF
+      AddResult(Lexer.RawComment);
+    ttUndef: ;
+    ttDefined: ;
+  end;
+  NextToken;
 end;
 
-procedure TJppParser.ParseDefine;
+procedure TJppParser.ParseDefine(Skip: Boolean);
+var
+  Condition: string;
 begin
-  case FTriState of
-    ttUnknown:
+  Condition := Lexer.TokenAsString;
+  case State.Defines[Condition] of
+    // the symbol is not defined
+    ttUnknown,
+    ttUndef:
       begin
-        State.Defines[Lexer.TokenAsString] := ttUnknown;
-        AddResult(Lexer.RawComment);
+        State.Defines[Lexer.TokenAsString] := ttDefined;
+        if not Skip then
+          AddResult(Lexer.RawComment);
       end;
-    ttDefined: State.Define(Lexer.TokenAsString);
+    // the symbol is already defined, always skip it
+    ttDefined: ;
   end;
   NextToken;
 end;
@@ -557,23 +636,35 @@ var
   ParamNames: TDynStringArray;
 begin
   MacroText := Lexer.TokenAsString;
-  // expand the macro
   ParseMacro(MacroText, MacroName, ParamNames, False);
-  AResult := State.ExpandMacro(MacroName, ParamNames);
-  // add result to buffer
-  AddResult(AResult, True);
+  // macros are expanded in a sub-state
+  State.PushState;
+  try
+    AResult := State.ExpandMacro(MacroName, ParamNames);
+    // add result to buffer
+    AddResult(AResult, True, True);
+  finally
+    State.PopState;
+  end;
   NextToken;
 end;
 
-procedure TJppParser.ParseUndef;
+procedure TJppParser.ParseUndef(Skip: Boolean);
+var
+  Condition: string;
 begin
-  case FTriState of
-    ttUnknown:
+  Condition := Lexer.TokenAsString;
+  case State.Defines[Condition] of
+    // the symbol is not defined
+    ttUnknown,
+    ttDefined:
       begin
-        State.Defines[Lexer.TokenAsString] := ttUnknown;
-        AddResult(Lexer.RawComment);
+        State.Defines[Lexer.TokenAsString] := ttUndef;
+        if not Skip then
+          AddResult(Lexer.RawComment);
       end;
-    ttDefined: State.Undef(Lexer.TokenAsString);
+    // the symbol is already defined, skip it
+    ttUndef: ;
   end;
   NextToken;
 end;
@@ -689,6 +780,7 @@ begin
     State.IntegerValues[IndexName] := RepeatIndex;
     AddResult(RepeatText);
   end;
+  State.IntegerValues[IndexName] := -1;
   NextToken;
 end;
 
@@ -791,13 +883,17 @@ begin
         NextToken;
       end;
 
-      ptDefine, ptUndef, ptIfdef, ptIfndef, ptIfopt:
+      ptDefine, ptJppDefine, ptUndef, ptJppUndef, ptIfdef, ptIfndef, ptIfopt:
         if poProcessDefines in State.Options then
           case Lexer.CurrTok of
             ptDefine:
-              ParseDefine;
+              ParseDefine(False);
+            ptJppDefine:
+              ParseDefine(True);
             ptUndef:
-              ParseUndef;
+              ParseUndef(False);
+            ptJppUndef:
+              ParseUndef(True);
             ptIfdef:
               ParseCondition(ptIfdef);
             ptIfndef:
@@ -862,16 +958,6 @@ begin
     else
       Break;
     end;
-end;
-
-procedure TJppParser.Skip;
-begin
-  Inc(FSkipLevel);
-  try
-    ParseText;
-  finally;
-    Dec(FSkipLevel);
-  end;
 end;
 
 {$IFDEF UNITVERSIONING}

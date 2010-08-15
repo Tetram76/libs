@@ -35,7 +35,7 @@
 {    under either the MPL or the LPGL License.                                 }
 {                                                                              }
 { **************************************************************************** }
-{ $Id: JppState.pas 3203 2010-03-01 21:33:35Z jfudickar $ }
+{ $Id: JppState.pas 3300 2010-08-10 22:56:10Z outchy $ }
 
 { Brief: The state of the preprocessor; options (e.g. remove comments),
     defines, include search path, etc. }
@@ -43,9 +43,9 @@
 // Modifications by Robert Rossmair:  Addition of TTriState type, TriState methods
 unit JppState;
 
-interface
-
 {$I jcl.inc}
+
+interface
 
 uses
   SysUtils, Classes,
@@ -85,14 +85,20 @@ type
     FStateStack: IJclStack;
     FOptions: TPppOptions;
     procedure InternalPushState(const ExcludedFiles, SearchPath: IJclStrList;
-      const Macros: IJclStrIntfMap; const Defines: IJclStrMap);
+      const Macros: IJclStrIntfMap; const Defines: IJclStrMap; ATriState: TTriState);
     function InternalPeekDefines: IJclStrMap;
     function InternalPeekExcludedFiles: IJclStrList;
     function InternalPeekMacros: IJclStrIntfMap;
     function InternalPeekSearchPath: IJclStrList;
+    function InternalPeekTriState: TTriState;
+    procedure InternalSetTriState(Value: TTriState);
   protected
     function GetOptions: TPppOptions;
     procedure SetOptions(AOptions: TPppOptions);
+
+    function FindMacro(const AMacroName: string): IJclStrList;
+    function AssociateParameters(const ParamNames: IJclStrList;
+      const ParamValues: TDynStringArray): TDynWideStringArray;
 
     function GetBoolValue(const Name: string): Boolean; override;
     function GetDefine(const ASymbol: string): TTriState; override;
@@ -112,6 +118,8 @@ type
     procedure PushState;
     procedure PopState;
 
+    property TriState: TTriState read InternalPeekTriState write InternalSetTriState;
+
     procedure Define(const ASymbol: string);
     procedure Undef(const ASymbol: string);
 
@@ -121,7 +129,7 @@ type
     procedure AddFileToExclusionList(const AName: string);
     function IsFileExcluded(const AName: string): Boolean;
 
-    function ExpandMacro(const AName: string; const ParamValues: TDynStringArray): string;
+    function ExpandMacro(const AName: string; const ParamValues: TDynStringArray): string; virtual;
     procedure DefineMacro(const AName: string; const ParamNames: TDynStringArray;
       const Value: string);
     procedure UndefMacro(const AName: string; const ParamNames: TDynStringArray);
@@ -129,12 +137,14 @@ type
     property Options: TPppOptions read GetOptions write SetOptions;
   end;
 
+  TPppStateClass = class of TPppState;
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/devtools/jpp/JppState.pas $';
-    Revision: '$Revision: 3203 $';
-    Date: '$Date: 2010-03-01 22:33:35 +0100 (lun. 01 mars 2010) $';
+    Revision: '$Revision: 3300 $';
+    Date: '$Date: 2010-08-11 00:56:10 +0200 (mer. 11 août 2010) $';
     LogPath: 'JCL\devtools\jpp';
     Extra: '';
     Data: nil
@@ -154,6 +164,8 @@ type
     ExcludedFiles: IJclStrList;
     Macros: IJclStrIntfMap;
     SearchPath: IJclStrList;
+    TriState: TTriState;
+    ParentTriState: TTriState;
   end;
 
 //=== { TPppState } ==========================================================
@@ -162,7 +174,7 @@ constructor TPppState.Create;
 begin
   FStateStack := TJclStack.Create(16, True);
   InternalPushState(TJclStrArrayList.Create(16), TJclStrArrayList.Create(16),
-    TJclStrIntfHashMap.Create(16), TJclStrHashMap.Create(16, False));
+    TJclStrIntfHashMap.Create(16), TJclStrHashMap.Create(16, False), ttUnknown);
 end;
 
 destructor TPppState.Destroy;
@@ -181,68 +193,67 @@ begin
   InternalPeekSearchPath.Add(AName);
 end;
 
+function TPppState.AssociateParameters(const ParamNames: IJclStrList;
+  const ParamValues: TDynStringArray): TDynWideStringArray;
+var
+  StrParams: TStrings;
+  AssociationByName: Boolean;
+  Index, ParamIndex: Integer;
+  AParamName, AParamText: string;
+begin
+  SetLength(Result, Length(ParamValues));
+  AssociationByName := True;
+  StrParams := TStringList.Create;
+  try
+    for Index := Low(ParamValues) to High(ParamValues) do
+    begin
+      StrParams.Add(ParamValues[Index]);
+      AParamName := StrParams.Names[Index];
+      if AParamName <> '' then
+      begin
+        // verify parameter names
+        ParamIndex := ParamNames.IndexOf(AParamName);
+        if ParamIndex < 0 then
+          AssociationByName := False;
+      end
+      else
+        AssociationByName := False;
+    end;
+    for Index := Low(ParamValues) to High(ParamValues) do
+    begin
+      if AssociationByName then
+        AParamText := StrParams.Values[ParamNames.Strings[Index]]
+      else
+        AParamText := StrParams.Strings[Index];
+      Result[Index] := WideString(AParamText);
+    end;
+  finally
+    StrParams.Free;
+  end;
+end;
+
 function TPppState.ExpandMacro(const AName: string;
   const ParamValues: TDynStringArray): string;
 var
-  AMacros: IJclStrIntfMap;
   AMacro: IJclStrList;
-  AMacroNames: IJclStrIterator;
-  AMacroName, AMacroText, AParamName, AParamText: string;
-  Index, ParamIndex: Integer;
+  AMacroName, AMacroText: string;
+  Index: Integer;
   Params: array of TVarRec;
-  StrParams: TStrings;
-  AssociationByName: Boolean;
+  AMacroParams: TDynWideStringArray;
 begin
-  AMacros := InternalPeekMacros;
   AMacroName := Format('%s`%d', [AName, Length(ParamValues)]);
-  AMacroNames := AMacros.KeySet.First;
-  while AMacroNames.HasNext do
+  AMacro := FindMacro(AMacroName);
+  // the macro text is the last item, previous items are the macro parameter names
+  AMacroText := AMacro.Strings[AMacro.Size - 1];
+  AMacroParams := AssociateParameters(AMacro.SubList(0, AMacro.Size - 1), ParamValues);
+
+  SetLength(Params, Length(ParamValues));
+  for Index := Low(ParamValues) to High(ParamValues) do
   begin
-    if JclStrings.StrSame(AMacroNames.Next, AMacroName) then
-    begin
-      AMacro := AMacros.Items[AMacroNames.GetString] as IJclStrList;
-      // the macro text is the last item, previous items are the macro parameter names
-      AMacroText := AMacro.Strings[AMacro.Size - 1];
-      AssociationByName := True;
-      StrParams := TStringList.Create;
-      try
-        for Index := Low(ParamValues) to High(ParamValues) do
-        begin
-          StrParams.Add(ParamValues[Index]);
-          AParamName := StrParams.Names[Index];
-          if AParamName <> '' then
-          begin
-            // verify parameter names
-            ParamIndex := AMacro.IndexOf(AParamName);
-            if (ParamIndex < 0) or (ParamIndex > (AMacro.Size - 1)) then
-              AssociationByName := False;
-          end
-          else
-            AssociationByName := False;
-        end;
-        SetLength(Params, Length(ParamValues));
-        for Index := Low(ParamValues) to High(ParamValues) do
-        begin
-          if AssociationByName then
-            AParamText := StrParams.Values[AMacro.Strings[Index]]
-          else
-            AParamText := StrParams.Strings[Index];
-          {$IFDEF SUPPORTS_UNICODE}
-          Params[Index].VType := vtPWideChar;
-          Params[Index].VPWideChar := PWideChar(AParamText);
-          {$ELSE ~SUPPORTS_UNICODE}
-          Params[Index].VType := vtPChar;
-          Params[Index].VPChar := PAnsiChar(AParamText);
-          {$ENDIF ~SUPPORTS_UNICODE}
-        end;
-        Result := Format(AMacroText, Params);
-      finally
-        StrParams.Free;
-      end;
-      Exit;
-    end;
+    Params[Index].VType := vtPWideChar;
+    Params[Index].VPWideChar := PWideChar(AMacroParams[Index]);
   end;
-  raise EPppState.CreateFmt('unknown macro "%s"', [AMacroName]);
+  Result := Format(AMacroText, Params);
 end;
 
 procedure TPppState.Define(const ASymbol: string);
@@ -303,6 +314,24 @@ begin
   Result := TFileStream.Create(fn, fmOpenRead or fmShareDenyWrite);
 end;
 
+function TPppState.FindMacro(const AMacroName: string): IJclStrList;
+var
+  AMacros: IJclStrIntfMap;
+  AMacroNames: IJclStrIterator;
+begin
+  AMacros := InternalPeekMacros;
+  AMacroNames := AMacros.KeySet.First;
+  while AMacroNames.HasNext do
+  begin
+    if JclStrings.StrSame(AMacroNames.Next, AMacroName) then
+    begin
+      Result := AMacros.Items[AMacroNames.GetString] as IJclStrList;
+      Exit;
+    end;
+  end;
+  raise EPppState.CreateFmt('unknown macro "%s"', [AMacroName]);
+end;
+
 function TPppState.GetBoolValue(const Name: string): Boolean;
 var
   VariantValue: Variant;
@@ -355,11 +384,11 @@ begin
     PI := GetPropInfo(Self, ASymbol);
     if Assigned(PI) then
     begin
-      {$IFDEF DELPHI8_UP}   	  
+      {$IFDEF COMPILER8_UP}
       PV := GetPropValue(Self, PI);
-      {$ELSE}
+      {$ELSE ~COMPILER8_UP}
       PV := GetPropValue(Self, PI^.Name);
-      {$ENDIF}
+      {$ENDIF ~COMPILER8_UP}
       if Boolean(PV) then
         Result := ttDefined
       else
@@ -396,8 +425,15 @@ begin
   Result := (FStateStack.Peek as TSimplePppStateItem).SearchPath;
 end;
 
+function TPppState.InternalPeekTriState: TTriState;
+begin
+  if FStateStack.Empty then
+    raise EPppState.Create('Internal error: PPP State stack is empty');
+  Result := (FStateStack.Peek as TSimplePppStateItem).TriState;
+end;
+
 procedure TPppState.InternalPushState(const ExcludedFiles, SearchPath: IJclStrList;
-  const Macros: IJclStrIntfMap; const Defines: IJclStrMap);
+  const Macros: IJclStrIntfMap; const Defines: IJclStrMap; ATriState: TTriState);
 var
   AStateItem: TSimplePppStateItem;
 begin
@@ -406,7 +442,23 @@ begin
   AStateItem.DefinedKeywords := Defines;
   AStateItem.Macros := Macros;
   AStateItem.SearchPath := SearchPath;
+  AStateItem.TriState := ATriState;
+  if FStateStack.Empty then
+    AStateItem.ParentTriState := ttUnknown
+  else
+    AStateItem.ParentTriState := InternalPeekTriState;
   FStateStack.Push(AStateItem);
+end;
+
+procedure TPppState.InternalSetTriState(Value: TTriState);
+var
+  ASimplePppStateItem: TSimplePppStateItem;
+begin
+  if FStateStack.Empty then
+    raise EPppState.Create('Internal error: PPP State stack is empty');
+  ASimplePppStateItem := FStateStack.Peek as TSimplePppStateItem;
+  if (ASimplePppStateItem.ParentTriState <> ttUndef) or (Value = ttUndef) then
+    ASimplePppStateItem.TriState := Value;
 end;
 
 function TPppState.IsFileExcluded(const AName: string): Boolean;
@@ -439,13 +491,15 @@ var
   AExcludedFiles, ASearchPath: IJclStrList;
   ADefines: IJclStrMap;
   AMacros: IJclStrIntfMap;
+  ATriState: TTriState;
 begin
   ADefines := (InternalPeekDefines as IJclIntfCloneable).IntfClone as IJclStrMap;
   AExcludedFiles := (InternalPeekExcludedFiles as IJclIntfCloneable).IntfClone as IJclStrList;
   ASearchPath := (InternalPeekSearchPath as IJclIntfCloneable).IntfClone as IJclStrList;
   AMacros := (InternalPeekMacros as IJclIntfCloneable).IntfClone as IJclStrIntfMap;
+  ATriState := InternalPeekTriState;
 
-  InternalPushState(AExcludedFiles, ASearchPath, AMacros, ADefines);
+  InternalPushState(AExcludedFiles, ASearchPath, AMacros, ADefines, ATriState);
 end;
 
 procedure TPppState.SetOptions(AOptions: TPppOptions);
@@ -484,17 +538,17 @@ begin
     if Assigned(PI) then
     begin
       if Value = ttDefined then
-        {$IFDEF DELPHI8_UP}   	  
+        {$IFDEF COMPILER8_UP}
         SetPropValue(Self, PI, True)
-        {$ELSE}
+        {$ELSE ~COMPILER8_UP}
         SetPropValue(Self, PI^.Name, True)
-        {$ENDIF}
+        {$ENDIF ~COMPILER8_UP}
       else
-        {$IFDEF DELPHI8_UP}   	  
+        {$IFDEF COMPILER8_UP}
         SetPropValue(Self, PI, False);
-		{$ELSE}
+        {$ELSE ~COMPILER8_UP}
         SetPropValue(Self, PI^.Name, False);
-		{$ENDIF}
+        {$ENDIF ~COMPILER8_UP}
       Exit;
     end;
   end;

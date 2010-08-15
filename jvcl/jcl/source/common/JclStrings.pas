@@ -49,9 +49,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-21 10:50:09 +0200 (ven. 21 mai 2010)                            $ }
-{ Revision:      $Rev:: 3252                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2010-08-10 13:01:50 +0200 (mar. 10 août 2010)                          $ }
+{ Revision:      $Rev:: 3292                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -592,8 +592,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStrings.pas $';
-    Revision: '$Revision: 3252 $';
-    Date: '$Date: 2010-05-21 10:50:09 +0200 (ven. 21 mai 2010) $';
+    Revision: '$Revision: 3292 $';
+    Date: '$Date: 2010-08-10 13:01:50 +0200 (mar. 10 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -4309,6 +4309,8 @@ begin
 end;
 
 function TTabSetData.Add(Column: SizeInt): SizeInt;
+var
+  I: SizeInt;
 begin
   if Column < Ord(FZeroBased) then
     raise ArgumentOutOfRangeException.Create('Column');
@@ -4319,8 +4321,9 @@ begin
     Result := not Result;
     // increase the tab stop array
     SetLength(FStops, Length(FStops) + 1);
-    // make room at the insert position
-    MoveArray(FStops, Result, Result + 1, High(FStops) - Result);
+    // shift rooms after the insert position
+    for I := High(FStops) - 1 downto Result do
+      FStops[I + 1] := FStops[I];
     // add the tab stop at the correct location
     FStops[Result] := Column;
     CalcRealWidth;
@@ -4369,8 +4372,11 @@ begin
 end;
 
 procedure TTabSetData.RemoveAt(Index: SizeInt);
+var
+  I: SizeInt;
 begin
-  MoveArray(FStops, Succ(Index), Index, High(FStops) - Index);
+  for I := Index to High(FStops) - 1 do
+    FStops[I] := FStops[I + 1];
   SetLength(FStops, High(FStops));
   CalcRealWidth;
 end;

@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-18 15:53:34 +0200 (ven. 18 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3014                                                                     $ }
+{ Last modified: $Date:: 2010-08-08 13:47:54 +0200 (dim. 08 août 2010)                          $ }
+{ Revision:      $Rev:: 3285                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -117,13 +117,11 @@ resourcestring
   RsCaptionMake          = 'Make library units';
   RsCaptionMakeRelease   = 'Release';
   RsCaptionMakeDebug     = 'Debug';
-  RsCaptionMakeVCL       = 'Visual Component Library';
   RsCaptionCopyHppFiles  = 'Copy HPP files to %s';
   RsCaptionCheckHppFiles = 'Check HPP files';
 
   // packages
   RsCaptionPackages             = 'Packages';
-  RsCaptionVclPackage           = 'VCL Package';
   RsCaptionDualPackages         = 'Dual packages';
   RsCaptionCopyPackagesHppFiles = 'Output HPP files to %s';
 
@@ -231,16 +229,13 @@ resourcestring
   // make units
   RsHintMake            = 'Generate .dcu files.' + NativeLineBreak + 'Recommended.';
   RsHintMakeRelease     = 'Make precompiled units for release, i.e. optimized, w/o debug information.';
-  RsHintMakeReleaseVcl  = 'Make precompiled VCL units for release';
   RsHintMakeDebug       = 'Make precompiled units for debugging, i.e.optimization off, debug information included.' + NativeLineBreak +
     'When installed, available through Project Options|Compiler|Use Debug DCUs.';
-  RsHintMakeDebugVcl    = 'Make precompiled VCL units for debugging';
   RsHintCopyHppFiles    = 'Copy .hpp files into C++Builder''s include path.';
   RsHintCheckHppFiles   = 'Compile some C++ source files to verify JCL headers';
 
   // packages
   RsHintPackages             = 'Build and eventually install JCL runtime packages and optional IDE experts.';
-  RsHintVclPackage           = 'Build JCL runtime package containing VCL extensions';
   RsHintDualPackages         = 'The same package introduce code for Delphi Win32 and C++Builder Win32';
   RsHintCopyPackagesHppFiles = 'Output .hpp files into C++Builder''s include path instead of ' +
     'the source paths.';
@@ -275,7 +270,7 @@ resourcestring
   RsHintMakeDemos = 'Make JCL demo applications';
 
 // warning messages
-  RsWarningPackageNodeNotSelected = 'The "Packages" or "VCL package" nodes are not selected.' + sLineBreak +
+  RsWarningPackageNodeNotSelected = 'The "Packages" node is not selected.' + sLineBreak +
     'Various libraries (including the JVCL) require JCL packages to be compiled' + sLineBreak +
     'Do you want to continue without compiling JCL packages?';
   RsWarningCreatePath = 'The path where %s files will be created doesn''t exists.' + sLineBreak +
@@ -305,11 +300,11 @@ resourcestring
   RsLogAddLibrarySearchPath2 = 'Added "%s;%s" to library search path.';
   RsLogAddLibrarySearchPath1 = 'Added "%s" to library search path.';
   RsLogFailedAddLibrarySearchPath = 'Failed to add library search paths.';
-  RsLogDelLibrarySearchPath3 = 'Removed "%s;%s;%s" from library search path.';
+  RsLogDelLibrarySearchPath2 = 'Removed "%s;%s" from library search path.';
   RsLogFailedDelLibrarySearchPath = 'Failed to remove library search path.';
   RsLogAddCppSearchPath2 = 'Added "%s;%s" to cpp search path.';
   RsLogFailedAddCppSearchPath = 'Failed to add cpp search paths.';
-  RsLogDelCppSearchPath3 = 'Removed "%s;%s;%s" from cpp search path.';
+  RsLogDelCppSearchPath2 = 'Removed "%s;%s" from cpp search path.';
   RsLogFailedDelCppSearchPath = 'Failed to remove cpp search path.';
   RsLogAddLibraryBrowsingPath = 'Added "%s" to library browsing path.';
   RsLogFailedAddLibraryBrowsingPath = 'Failed to add library browsing path';

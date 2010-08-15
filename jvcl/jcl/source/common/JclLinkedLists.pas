@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010)                        $ }
-{ Revision:      $Rev:: 3147                                                                     $ }
+{ Last modified: $Date:: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010)                        $ }
+{ Revision:      $Rev:: 3273                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -53,6 +53,7 @@ uses
 
 type
   TItrStart = (isFirst, isLast);
+
 
   TJclIntfLinkedListItem = class
   public
@@ -306,14 +307,16 @@ type
     {$ENDIF SUPPORTS_FOR_IN}
   end;
 
-{$IFDEF SUPPORTS_UNICODE_STRING}
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrLinkedListItem = class
   public
     Value: UnicodeString;
     Next: TJclUnicodeStrLinkedListItem;
     Previous: TJclUnicodeStrLinkedListItem;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrLinkedList = class(TJclUnicodeStrAbstractCollection, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer, IJclUnicodeStrFlatContainer, IJclUnicodeStrEqualityComparer,
     IJclUnicodeStrCollection, IJclUnicodeStrList)
@@ -357,7 +360,9 @@ type
     procedure SetString(Index: Integer; const AString: UnicodeString);
     function SubList(First, Count: Integer): IJclUnicodeStrList;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrLinkedListIterator = class(TJclAbstractIterator, IJclUnicodeStrIterator, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable)
   private
@@ -390,7 +395,17 @@ type
     property Current: UnicodeString read GetString;
     {$ENDIF SUPPORTS_FOR_IN}
   end;
-{$ENDIF SUPPORTS_UNICODE_STRING}
+  {$ENDIF SUPPORTS_UNICODE_STRING}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrLinkedListItem = TJclAnsiStrLinkedListItem;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrLinkedListItem = TJclWideStrLinkedListItem;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclStrLinkedListItem = TJclUnicodeStrLinkedListItem;
+  {$ENDIF CONTAINER_UNICODESTR}
 
   {$IFDEF CONTAINER_ANSISTR}
   TJclStrLinkedList = TJclAnsiStrLinkedList;
@@ -400,6 +415,16 @@ type
   {$ENDIF CONTAINER_WIDESTR}
   {$IFDEF CONTAINER_UNICODESTR}
   TJclStrLinkedList = TJclUnicodeStrLinkedList;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrLinkedListIterator = TJclAnsiStrLinkedListIterator;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrLinkedListIterator = TJclWideStrLinkedListIterator;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclStrLinkedListIterator = TJclUnicodeStrLinkedListIterator;
   {$ENDIF CONTAINER_UNICODESTR}
 
   TJclSingleLinkedListItem = class
@@ -654,15 +679,35 @@ type
     {$ENDIF SUPPORTS_FOR_IN}
   end;
 
-  {$IFDEF MATH_EXTENDED_PRECISION}
-  TJclFloatLinkedList = TJclExtendedLinkedList;
-  {$ENDIF MATH_EXTENDED_PRECISION}
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclFloatLinkedListItem = TJclSingleLinkedListItem;
+  {$ENDIF MATH_SINGLE_PRECISION}
   {$IFDEF MATH_DOUBLE_PRECISION}
-  TJclFloatLinkedList = TJclDoubleLinkedList;
+  TJclFloatLinkedListItem = TJclDoubleLinkedListItem;
   {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatLinkedListItem = TJclExtendedLinkedListItem;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
   {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatLinkedList = TJclSingleLinkedList;
   {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatLinkedList = TJclDoubleLinkedList;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatLinkedList = TJclExtendedLinkedList;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclFloatLinkedListIterator = TJclSingleLinkedListIterator;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatLinkedListIterator = TJclDoubleLinkedListIterator;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatLinkedListIterator = TJclExtendedLinkedListIterator;
+  {$ENDIF MATH_EXTENDED_PRECISION}
 
   TJclIntegerLinkedListItem = class
   public
@@ -980,12 +1025,12 @@ type
   public
     constructor Create(const AOwnList: IJclPtrList; ACursor: TJclPtrLinkedListItem; AValid: Boolean; AStart: TItrStart);
     { IJclPtrIterator }
-    function Add(AValue: Pointer): Boolean;
+    function Add(APtr: Pointer): Boolean;
     procedure Extract;
     function GetPointer: Pointer;
     function HasNext: Boolean;
     function HasPrevious: Boolean;
-    function Insert(AValue: Pointer): Boolean;
+    function Insert(APtr: Pointer): Boolean;
     function IteratorEquals(const AIterator: IJclPtrIterator): Boolean;
     function Next: Pointer;
     function NextIndex: Integer;
@@ -993,7 +1038,7 @@ type
     function PreviousIndex: Integer;
     procedure Remove;
     procedure Reset;
-    procedure SetPointer(AValue: Pointer);
+    procedure SetPointer(APtr: Pointer);
     {$IFDEF SUPPORTS_FOR_IN}
     function MoveNext: Boolean;
     property Current: Pointer read GetPointer;
@@ -1218,8 +1263,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclLinkedLists.pas $';
-    Revision: '$Revision: 3147 $';
-    Date: '$Date: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010) $';
+    Revision: '$Revision: 3273 $';
+    Date: '$Date: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1231,7 +1276,8 @@ implementation
 uses
   SysUtils;
 
-//=== { TJclLinkedList<T> } ==================================================
+
+//=== { TJclIntfLinkedList } ==================================================
 
 constructor TJclIntfLinkedList.Create(const ACollection: IJclIntfCollection);
 begin
@@ -2163,7 +2209,6 @@ begin
   AssignPropertiesTo(Result);
 end;
 
-
 //=== { TJclIntfLinkedListIterator } ============================================================
 
 constructor TJclIntfLinkedListIterator.Create(const AOwnList: IJclIntfList; ACursor: TJclIntfLinkedListItem; AValid: Boolean; AStart: TItrStart);
@@ -2487,8 +2532,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclAnsiStrLinkedList } ==================================================
 
 constructor TJclAnsiStrLinkedList.Create(const ACollection: IJclAnsiStrCollection);
 begin
@@ -3743,7 +3787,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclWideStrLinkedList } ==================================================
 
 constructor TJclWideStrLinkedList.Create(const ACollection: IJclWideStrCollection);
 begin
@@ -4999,7 +5043,7 @@ begin
 end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclUnicodeStrLinkedList } ==================================================
 
 constructor TJclUnicodeStrLinkedList.Create(const ACollection: IJclUnicodeStrCollection);
 begin
@@ -5931,6 +5975,9 @@ begin
   AssignPropertiesTo(Result);
 end;
 
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclUnicodeStrLinkedListIterator } ============================================================
 
 constructor TJclUnicodeStrLinkedListIterator.Create(const AOwnList: IJclUnicodeStrList; ACursor: TJclUnicodeStrLinkedListItem; AValid: Boolean; AStart: TItrStart);
@@ -6255,7 +6302,7 @@ begin
 end;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclSingleLinkedList } ==================================================
 
 constructor TJclSingleLinkedList.Create(const ACollection: IJclSingleCollection);
 begin
@@ -7510,7 +7557,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclDoubleLinkedList } ==================================================
 
 constructor TJclDoubleLinkedList.Create(const ACollection: IJclDoubleCollection);
 begin
@@ -8765,7 +8812,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclExtendedLinkedList } ==================================================
 
 constructor TJclExtendedLinkedList.Create(const ACollection: IJclExtendedCollection);
 begin
@@ -10020,7 +10067,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclIntegerLinkedList } ==================================================
 
 constructor TJclIntegerLinkedList.Create(const ACollection: IJclIntegerCollection);
 begin
@@ -11275,7 +11322,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclCardinalLinkedList } ==================================================
 
 constructor TJclCardinalLinkedList.Create(const ACollection: IJclCardinalCollection);
 begin
@@ -12530,7 +12577,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclInt64LinkedList } ==================================================
 
 constructor TJclInt64LinkedList.Create(const ACollection: IJclInt64Collection);
 begin
@@ -13785,7 +13832,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclPtrLinkedList } ==================================================
 
 constructor TJclPtrLinkedList.Create(const ACollection: IJclPtrCollection);
 begin
@@ -14728,9 +14775,9 @@ begin
   FEqualityComparer := AOwnList as IJclPtrEqualityComparer;
 end;
 
-function TJclPtrLinkedListIterator.Add(AValue: Pointer): Boolean;
+function TJclPtrLinkedListIterator.Add(APtr: Pointer): Boolean;
 begin
-  Result := FOwnList.Add(AValue);
+  Result := FOwnList.Add(APtr);
 end;
 
 procedure TJclPtrLinkedListIterator.AssignPropertiesTo(Dest: TJclAbstractIterator);
@@ -14827,7 +14874,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-function TJclPtrLinkedListIterator.Insert(AValue: Pointer): Boolean;
+function TJclPtrLinkedListIterator.Insert(APtr: Pointer): Boolean;
 var
   NewCursor: TJclPtrLinkedListItem;
 begin
@@ -14841,17 +14888,17 @@ begin
     Result := FCursor <> nil;
     if Result then
     begin
-      Result := FOwnList.AllowDefaultElements or not FEqualityComparer.ItemsEqual(AValue, nil);
+      Result := FOwnList.AllowDefaultElements or not FEqualityComparer.ItemsEqual(APtr, nil);
       if Result then
       begin
         case FOwnList.Duplicates of
           dupIgnore:
-            Result := not FOwnList.Contains(AValue);
+            Result := not FOwnList.Contains(APtr);
           dupAccept:
             Result := True;
           dupError:
             begin
-              Result := FOwnList.Contains(AValue);
+              Result := FOwnList.Contains(APtr);
               if not Result then
                 raise EJclDuplicateElementError.Create;
             end;
@@ -14859,7 +14906,7 @@ begin
         if Result then
         begin
           NewCursor := TJclPtrLinkedListItem.Create;
-          NewCursor.Value := AValue;
+          NewCursor.Value := APtr;
           NewCursor.Next := FCursor;
           NewCursor.Previous := FCursor.Previous;
           if FCursor.Previous <> nil then
@@ -15022,7 +15069,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-procedure TJclPtrLinkedListIterator.SetPointer(AValue: Pointer);
+procedure TJclPtrLinkedListIterator.SetPointer(APtr: Pointer);
 begin
   if FOwnList.ReadOnly then
     raise EJclReadOnlyError.Create;
@@ -15032,7 +15079,7 @@ begin
   {$ENDIF THREADSAFE}
     CheckValid;
     FCursor.Value := nil;
-    FCursor.Value := AValue;
+    FCursor.Value := APtr;
   {$IFDEF THREADSAFE}
   finally
     FOwnList.WriteUnlock;
@@ -15040,7 +15087,7 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
-//=== { TJclLinkedList<T> } ==================================================
+//=== { TJclLinkedList } ==================================================
 
 constructor TJclLinkedList.Create(const ACollection: IJclCollection; AOwnsObjects: Boolean);
 begin

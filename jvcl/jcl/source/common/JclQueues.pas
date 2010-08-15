@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 2997                                                                     $ }
+{ Last modified: $Date:: 2010-08-10 18:13:22 +0200 (mar. 10 août 2010)                          $ }
+{ Revision:      $Rev:: 3296                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -45,13 +45,12 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF SUPPORTS_GENERICS}
   JclAlgorithms,
-  {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclAbstractContainers, JclContainerIntf, JclSynch;
 
 
 type
+
   TJclIntfQueue = class(TJclIntfAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclIntfEqualityComparer,
     IJclIntfQueue)
@@ -133,7 +132,7 @@ type
     function Size: Integer;
   end;
 
-{$IFDEF SUPPORTS_UNICODE_STRING}
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrQueue = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer, IJclUnicodeStrEqualityComparer,
     IJclUnicodeStrQueue)
@@ -160,7 +159,7 @@ type
     function Peek: UnicodeString;
     function Size: Integer;
   end;
-{$ENDIF SUPPORTS_UNICODE_STRING}
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
   {$IFDEF CONTAINER_ANSISTR}
   TJclStrQueue = TJclAnsiStrQueue;
@@ -253,15 +252,15 @@ type
     function Size: Integer;
   end;
 
-  {$IFDEF MATH_EXTENDED_PRECISION}
-  TJclFloatQueue = TJclExtendedQueue;
-  {$ENDIF MATH_EXTENDED_PRECISION}
-  {$IFDEF MATH_DOUBLE_PRECISION}
-  TJclFloatQueue = TJclDoubleQueue;
-  {$ENDIF MATH_DOUBLE_PRECISION}
   {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatQueue = TJclSingleQueue;
   {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatQueue = TJclDoubleQueue;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatQueue = TJclExtendedQueue;
+  {$ENDIF MATH_EXTENDED_PRECISION}
 
   TJclIntegerQueue = class(TJclIntegerAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclIntegerEqualityComparer,
@@ -372,7 +371,7 @@ type
   end;
 
   TJclQueue = class(TJclAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclEqualityComparer, IJclObjectOwner,
+    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclObjectOwner, IJclEqualityComparer,
     IJclQueue)
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
@@ -468,8 +467,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclQueues.pas $';
-    Revision: '$Revision: 2997 $';
-    Date: '$Date: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3296 $';
+    Date: '$Date: 2010-08-10 18:13:22 +0200 (mar. 10 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -480,6 +479,7 @@ implementation
 
 uses
   SysUtils;
+
 
 //=== { TJclIntfQueue } =======================================================
 
@@ -1613,6 +1613,7 @@ begin
   Result := TJclUnicodeStrQueue.Create(Size + 1);
   AssignPropertiesTo(Result);
 end;
+
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
 //=== { TJclSingleQueue } =======================================================

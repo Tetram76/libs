@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-22 11:08:20 +0100 (lun. 22 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3196                                                                     $ }
+{ Last modified: $Date:: 2010-06-15 20:16:00 +0200 (mar. 15 juin 2010)                           $ }
+{ Revision:      $Rev:: 3259                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -587,8 +587,8 @@ procedure UnloadPCRE;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/pcre.pas $';
-    Revision: '$Revision: 3196 $';
-    Date: '$Date: 2010-02-22 11:08:20 +0100 (lun. 22 févr. 2010) $';
+    Revision: '$Revision: 3259 $';
+    Date: '$Date: 2010-06-15 20:16:00 +0200 (mar. 15 juin 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -661,6 +661,11 @@ function pcre_maketables; external;
 function pcre_refcount; external;
 function pcre_study; external;
 function pcre_version; external;
+
+procedure __llmul;
+asm
+  JMP System.__llmul
+end;
 
 type
   size_t = Longint;

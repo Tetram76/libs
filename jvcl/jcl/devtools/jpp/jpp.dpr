@@ -38,7 +38,7 @@
 {                                                                              }
 { **************************************************************************** }
 
-// Last modified: $Date: 2010-02-22 19:42:06 +0100 (lun. 22 févr. 2010) $
+// Last modified: $Date: 2010-07-29 20:20:41 +0200 (jeu. 29 juil. 2010) $
 
 {$APPTYPE CONSOLE}
 program jpp;
@@ -51,21 +51,27 @@ uses
   JppMain in 'JppMain.pas';
 
 var
+  State: TPppState;
   CommandLine: string;
   i: Integer;
 begin
   try
-    i := 1;
-    if ParamCount = 0 then
-      Syntax
-    else
-    begin
-      while i <= ParamCount do
+    State := TPppState.Create;
+    try
+      i := 1;
+      if ParamCount = 0 then
+        Syntax
+      else
       begin
-        CommandLine := CommandLine + ' ' + ParamStr(i);
-        Inc(i);
+        while i <= ParamCount do
+        begin
+          CommandLine := CommandLine + ' ' + ParamStr(i);
+          Inc(i);
+        end;
+        Params(State, PChar(CommandLine));
       end;
-      Params(PChar(CommandLine));
+    finally
+      State.Free;
     end;
   except
     on e: Exception do

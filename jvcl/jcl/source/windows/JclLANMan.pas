@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009)                          $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2010-07-01 16:56:19 +0200 (jeu. 01 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3260                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -94,8 +94,8 @@ function IsLocalAccount(const AccountName: string): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclLANMan.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009) $';
+    Revision: '$Revision: 3260 $';
+    Date: '$Date: 2010-07-01 16:56:19 +0200 (jeu. 01 juil. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -385,8 +385,11 @@ var
   sd: PSID;
   AccountNameLen, DomainNameLen: DWORD;
   SidNameUse: SID_NAME_USE;
+  AccountName, DomainName: string;
 begin
   Result := '';
+  AccountName := '';
+  DomainName := '';
   rd2 := 0;
 
   if RID = wkrEveryOne then
@@ -408,15 +411,19 @@ begin
     AccountNameLen := 0;
     DomainNameLen := 0;
     SidNameUse := SidTypeUnknown;
-    if not LookupAccountSID(PChar(Server), sd, PChar(Result), AccountNameLen,
-      nil, DomainNameLen, SidNameUse) then
-      SetLength(Result, AccountNamelen);
+    if not LookupAccountSID(PChar(Server), sd, PChar(AccountName), AccountNameLen,
+      PChar(DomainName), DomainNameLen, SidNameUse) then
+    begin
+      SetLength(AccountName, AccountNamelen);
+      SetLength(DomainName, DomainNameLen);
+    end;
 
-    if LookupAccountSID(PChar(Server), sd, PChar(Result), AccountNameLen,
-      nil, DomainNameLen, sidNameUse) then
-      StrResetLength(Result)
+    if LookupAccountSID(PChar(Server), sd, PChar(AccountName), AccountNameLen,
+      PChar(DomainName), DomainNameLen, sidNameUse) then
+      StrResetLength(AccountName)
     else
       RaiseLastOSError;
+    Result := AccountName;
   finally
     FreeSID(sd);
   end;

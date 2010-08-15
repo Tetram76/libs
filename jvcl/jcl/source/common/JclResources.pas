@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-07 20:49:22 +0200 (ven. 07 mai 2010)                            $ }
-{ Revision:      $Rev:: 3246                                                                     $ }
+{ Last modified: $Date:: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3266                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1092,6 +1092,8 @@ resourcestring
   RsCompressionSwfcExtensions        = '*.swf';
   RsCompressionApmName               = 'APM archive';
   RsCompressionApmExtensions         = '*.';
+  RsCompressionPpmdName              = 'PPMD archive';
+  RsCompressionPpmdExtensions        = '*.pmd';
   RsCompressionDuplicate             = 'The file %s already exists in the archive';
   RsCompressionReplaceError          = 'At least one compression volumes could not be replaced after an archive out-of-place update';
 
@@ -1163,6 +1165,7 @@ resourcestring
 
   // TJclFileVersionInfo
   RsFileUtilsNoVersionInfo = 'File contains no version information';
+  RsFileUtilsFileDoesNotExist = 'The file %s does not exist';
   RsFileUtilsLanguageIndex = 'Illegal language index';
   RsFileUtilsEmptyValue = 'No value was supplied';
   RsFileUtilsValueNotFound = 'The value %s was not found.';
@@ -1988,8 +1991,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3246 $';
-    Date: '$Date: 2010-05-07 20:49:22 +0200 (ven. 07 mai 2010) $';
+    Revision: '$Revision: 3266 $';
+    Date: '$Date: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

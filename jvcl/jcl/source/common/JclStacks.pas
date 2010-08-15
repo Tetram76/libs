@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 2997                                                                     $ }
+{ Last modified: $Date:: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010)                          $ }
+{ Revision:      $Rev:: 3273                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,6 +52,7 @@ uses
   JclBase, JclAbstractContainers, JclContainerIntf, JclSynch;
 
 type
+
   TJclIntfStack = class(TJclIntfAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclIntfEqualityComparer,
     IJclIntfStack)
@@ -124,7 +125,7 @@ type
     function Size: Integer;
   end;
 
-{$IFDEF SUPPORTS_UNICODE_STRING}
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrStack = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer, IJclUnicodeStrEqualityComparer,
     IJclUnicodeStrStack)
@@ -148,7 +149,7 @@ type
     function Push(const AString: UnicodeString): Boolean;
     function Size: Integer;
   end;
-{$ENDIF SUPPORTS_UNICODE_STRING}
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
   {$IFDEF CONTAINER_ANSISTR}
   TJclStrStack = TJclAnsiStrStack;
@@ -232,15 +233,15 @@ type
     function Size: Integer;
   end;
 
-  {$IFDEF MATH_EXTENDED_PRECISION}
-  TJclFloatStack = TJclExtendedStack;
-  {$ENDIF MATH_EXTENDED_PRECISION}
-  {$IFDEF MATH_DOUBLE_PRECISION}
-  TJclFloatStack = TJclDoubleStack;
-  {$ENDIF MATH_DOUBLE_PRECISION}
   {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatStack = TJclSingleStack;
   {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatStack = TJclDoubleStack;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatStack = TJclExtendedStack;
+  {$ENDIF MATH_EXTENDED_PRECISION}
 
   TJclIntegerStack = class(TJclIntegerAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclIntegerEqualityComparer,
@@ -339,7 +340,7 @@ type
   end;
 
   TJclStack = class(TJclAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclEqualityComparer, IJclObjectOwner,
+    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclObjectOwner, IJclEqualityComparer,
     IJclStack)
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
@@ -431,8 +432,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStacks.pas $';
-    Revision: '$Revision: 2997 $';
-    Date: '$Date: 2009-09-12 14:21:23 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3273 $';
+    Date: '$Date: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -443,6 +444,7 @@ implementation
 
 uses
   SysUtils;
+
 
 //=== { TJclIntfStack } =======================================================
 
@@ -1200,6 +1202,7 @@ begin
   Result := TJclUnicodeStrStack.Create(FSize);
   AssignPropertiesTo(Result);
 end;
+
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
 //=== { TJclSingleStack } =======================================================

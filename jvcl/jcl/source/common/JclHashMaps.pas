@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-12 22:12:01 +0100 (mar. 12 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3120                                                                     $ }
+{ Last modified: $Date:: 2010-08-09 17:10:10 +0200 (lun. 09 août 2010)                          $ }
+{ Revision:      $Rev:: 3291                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,29 +46,16 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF SUPPORTS_GENERICS}
   JclAlgorithms,
-  {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclSynch,
   JclContainerIntf, JclAbstractContainers, JclArrayLists, JclArraySets;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 type
   // Hash Function
   // Result must be in 0..Range-1
   TJclHashFunction = function(Key, Range: Integer): Integer;
+
 
   TJclIntfIntfHashEntry = record
     Key: IInterface;
@@ -429,7 +416,7 @@ type
     function Values: IJclWideStrCollection;
   end;
 
-{$IFDEF SUPPORTS_UNICODE_STRING}
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrIntfHashEntry = record
     Key: UnicodeString;
     Value: IInterface;
@@ -441,7 +428,9 @@ type
     Entries: array of TJclUnicodeStrIntfHashEntry;
     procedure MoveArray(FromIndex, ToIndex, Count: Integer);
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrIntfHashMap = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer,
     IJclUnicodeStrIntfMap)
@@ -480,7 +469,9 @@ type
     function Size: Integer;
     function Values: IJclIntfCollection;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclIntfUnicodeStrHashEntry = record
     Key: IInterface;
     Value: UnicodeString;
@@ -492,7 +483,9 @@ type
     Entries: array of TJclIntfUnicodeStrHashEntry;
     procedure MoveArray(FromIndex, ToIndex, Count: Integer);
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclIntfUnicodeStrHashMap = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer,
     IJclIntfUnicodeStrMap)
@@ -532,7 +525,9 @@ type
     function Size: Integer;
     function Values: IJclUnicodeStrCollection;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrUnicodeStrHashEntry = record
     Key: UnicodeString;
     Value: UnicodeString;
@@ -544,7 +539,9 @@ type
     Entries: array of TJclUnicodeStrUnicodeStrHashEntry;
     procedure MoveArray(FromIndex, ToIndex, Count: Integer);
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrUnicodeStrHashMap = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer,
     IJclUnicodeStrUnicodeStrMap)
@@ -583,21 +580,74 @@ type
     function Size: Integer;
     function Values: IJclUnicodeStrCollection;
   end;
-{$ENDIF SUPPORTS_UNICODE_STRING}
+  {$ENDIF SUPPORTS_UNICODE_STRING}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrIntfHashEntry = TJclAnsiStrIntfHashEntry;
+  TJclStrIntfBucket = TJclAnsiStrIntfBucket;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrIntfHashEntry = TJclWideStrIntfHashEntry;
+  TJclStrIntfBucket = TJclWideStrIntfBucket;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclStrIntfHashEntry = TJclUnicodeStrIntfHashEntry;
+  TJclStrIntfBucket = TJclUnicodeStrIntfBucket;
+  {$ENDIF CONTAINER_UNICODESTR}
 
   {$IFDEF CONTAINER_ANSISTR}
   TJclStrIntfHashMap = TJclAnsiStrIntfHashMap;
-  TJclIntfStrHashMap = TJclIntfAnsiStrHashMap;
-  TJclStrStrHashMap = TJclAnsiStrAnsiStrHashMap;
   {$ENDIF CONTAINER_ANSISTR}
   {$IFDEF CONTAINER_WIDESTR}
   TJclStrIntfHashMap = TJclWideStrIntfHashMap;
-  TJclIntfStrHashMap = TJclIntfWideStrHashMap;
-  TJclStrStrHashMap = TJclWideStrWideStrHashMap;
   {$ENDIF CONTAINER_WIDESTR}
   {$IFDEF CONTAINER_UNICODESTR}
   TJclStrIntfHashMap = TJclUnicodeStrIntfHashMap;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclIntfStrHashEntry = TJclIntfAnsiStrHashEntry;
+  TJclIntfStrBucket = TJclIntfAnsiStrBucket;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclIntfStrHashEntry = TJclIntfWideStrHashEntry;
+  TJclIntfStrBucket = TJclIntfWideStrBucket;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclIntfStrHashEntry = TJclIntfUnicodeStrHashEntry;
+  TJclIntfStrBucket = TJclIntfUnicodeStrBucket;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclIntfStrHashMap = TJclIntfAnsiStrHashMap;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclIntfStrHashMap = TJclIntfWideStrHashMap;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
   TJclIntfStrHashMap = TJclIntfUnicodeStrHashMap;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrStrHashEntry = TJclAnsiStrAnsiStrHashEntry;
+  TJclStrStrBucket = TJclAnsiStrAnsiStrBucket;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrStrHashEntry = TJclWideStrWideStrHashEntry;
+  TJclStrStrBucket = TJclWideStrWideStrBucket;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclStrStrHashEntry = TJclUnicodeStrUnicodeStrHashEntry;
+  TJclStrStrBucket = TJclUnicodeStrUnicodeStrBucket;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrStrHashMap = TJclAnsiStrAnsiStrHashMap;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrStrHashMap = TJclWideStrWideStrHashMap;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
   TJclStrStrHashMap = TJclUnicodeStrUnicodeStrHashMap;
   {$ENDIF CONTAINER_UNICODESTR}
 
@@ -1063,21 +1113,74 @@ type
     function Values: IJclExtendedCollection;
   end;
 
-  {$IFDEF MATH_EXTENDED_PRECISION}
-  TJclFloatIntfHashMap = TJclExtendedIntfHashMap;
-  TJclIntfFloatHashMap = TJclIntfExtendedHashMap;
-  TJclFloatFloatHashMap = TJclExtendedExtendedHashMap;
-  {$ENDIF MATH_EXTENDED_PRECISION}
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclFloatIntfHashEntry = TJclSingleIntfHashEntry;
+  TJclFloatIntfBucket = TJclSingleIntfBucket;
+  {$ENDIF MATH_SINGLE_PRECISION}
   {$IFDEF MATH_DOUBLE_PRECISION}
-  TJclFloatIntfHashMap = TJclDoubleIntfHashMap;
-  TJclIntfFloatHashMap = TJclIntfDoubleHashMap;
-  TJclFloatFloatHashMap = TJclDoubleDoubleHashMap;
+  TJclFloatIntfHashEntry = TJclDoubleIntfHashEntry;
+  TJclFloatIntfBucket = TJclDoubleIntfBucket;
   {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatIntfHashEntry = TJclExtendedIntfHashEntry;
+  TJclFloatIntfBucket = TJclExtendedIntfBucket;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
   {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatIntfHashMap = TJclSingleIntfHashMap;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatIntfHashMap = TJclDoubleIntfHashMap;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatIntfHashMap = TJclExtendedIntfHashMap;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclIntfFloatHashEntry = TJclIntfSingleHashEntry;
+  TJclIntfFloatBucket = TJclIntfSingleBucket;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclIntfFloatHashEntry = TJclIntfDoubleHashEntry;
+  TJclIntfFloatBucket = TJclIntfDoubleBucket;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclIntfFloatHashEntry = TJclIntfExtendedHashEntry;
+  TJclIntfFloatBucket = TJclIntfExtendedBucket;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
   TJclIntfFloatHashMap = TJclIntfSingleHashMap;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclIntfFloatHashMap = TJclIntfDoubleHashMap;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclIntfFloatHashMap = TJclIntfExtendedHashMap;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclFloatFloatHashEntry = TJclSingleSingleHashEntry;
+  TJclFloatFloatBucket = TJclSingleSingleBucket;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatFloatHashEntry = TJclDoubleDoubleHashEntry;
+  TJclFloatFloatBucket = TJclDoubleDoubleBucket;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatFloatHashEntry = TJclExtendedExtendedHashEntry;
+  TJclFloatFloatBucket = TJclExtendedExtendedBucket;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatFloatHashMap = TJclSingleSingleHashMap;
   {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatFloatHashMap = TJclDoubleDoubleHashMap;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatFloatHashMap = TJclExtendedExtendedHashMap;
+  {$ENDIF MATH_EXTENDED_PRECISION}
 
   TJclIntegerIntfHashEntry = record
     Key: Integer;
@@ -1707,7 +1810,7 @@ type
     procedure MoveArray(FromIndex, ToIndex, Count: Integer);
   end;
 
-  TJclIntfHashMap = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
+  TJclIntfHashMap = class(TJclIntfAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclValueOwner,
     IJclIntfMap)
   private
@@ -1715,7 +1818,6 @@ type
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
     function FreeKey(var Key: IInterface): IInterface;
-    function Hash(const AInterface: IInterface): Integer; reintroduce;
     function KeysEqual(const A, B: IInterface): Boolean;
     function ValuesEqual(A, B: TObject): Boolean;
   public
@@ -1822,7 +1924,7 @@ type
     procedure MoveArray(FromIndex, ToIndex, Count: Integer);
   end;
 
-  TJclWideStrHashMap = class(TJclwideStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
+  TJclWideStrHashMap = class(TJclWideStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclWideStrContainer, IJclValueOwner,
     IJclWideStrMap)
   private
@@ -1867,7 +1969,7 @@ type
     function Values: IJclCollection;
   end;
 
-{$IFDEF SUPPORTS_UNICODE_STRING}
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrHashEntry = record
     Key: UnicodeString;
     Value: TObject;
@@ -1879,7 +1981,9 @@ type
     Entries: array of TJclUnicodeStrHashEntry;
     procedure MoveArray(FromIndex, ToIndex, Count: Integer);
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrHashMap = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer, IJclValueOwner,
     IJclUnicodeStrMap)
@@ -1924,7 +2028,20 @@ type
     function Size: Integer;
     function Values: IJclCollection;
   end;
-{$ENDIF SUPPORTS_UNICODE_STRING}
+  {$ENDIF SUPPORTS_UNICODE_STRING}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrHashEntry = TJclAnsiStrHashEntry;
+  TJclStrBucket = TJclAnsiStrBucket;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrHashEntry = TJclWideStrHashEntry;
+  TJclStrBucket = TJclWideStrBucket;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclStrHashEntry = TJclUnicodeStrHashEntry;
+  TJclStrBucket = TJclUnicodeStrBucket;
+  {$ENDIF CONTAINER_UNICODESTR}
 
   {$IFDEF CONTAINER_ANSISTR}
   TJclStrHashMap = TJclAnsiStrHashMap;
@@ -2107,15 +2224,28 @@ type
     function Values: IJclCollection;
   end;
 
-  {$IFDEF MATH_EXTENDED_PRECISION}
-  TJclFloatHashMap = TJclExtendedHashMap;
-  {$ENDIF MATH_EXTENDED_PRECISION}
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclFloatHashEntry = TJclSingleHashEntry;
+  TJclFloatBucket = TJclSingleBucket;
+  {$ENDIF MATH_SINGLE_PRECISION}
   {$IFDEF MATH_DOUBLE_PRECISION}
-  TJclFloatHashMap = TJclDoubleHashMap;
+  TJclFloatHashEntry = TJclDoubleHashEntry;
+  TJclFloatBucket = TJclDoubleBucket;
   {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatHashEntry = TJclExtendedHashEntry;
+  TJclFloatBucket = TJclExtendedBucket;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
   {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatHashMap = TJclSingleHashMap;
   {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatHashMap = TJclDoubleHashMap;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatHashMap = TJclExtendedHashMap;
+  {$ENDIF MATH_EXTENDED_PRECISION}
 
   TJclIntegerHashEntry = record
     Key: Integer;
@@ -2563,8 +2693,8 @@ function HashMul(Key, Range: Integer): Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclHashMaps.pas $';
-    Revision: '$Revision: 3120 $';
-    Date: '$Date: 2010-01-12 22:12:01 +0100 (mar. 12 janv. 2010) $';
+    Revision: '$Revision: 3291 $';
+    Date: '$Date: 2010-08-09 17:10:10 +0200 (lun. 09 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2584,6 +2714,7 @@ const
 begin
   Result := Trunc(Range * (Frac(Abs(Key * A))));
 end;
+
 
 //=== { TJclIntfIntfBucket } ==========================================
 
@@ -3738,7 +3869,7 @@ end;
 
 function TJclAnsiStrIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfAnsiStrBucket } ==========================================
@@ -4311,12 +4442,12 @@ end;
 
 function TJclIntfAnsiStrHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfAnsiStrHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfAnsiStrHashMap.ValuesEqual(const A, B: AnsiString): Boolean;
@@ -5477,7 +5608,7 @@ end;
 
 function TJclWideStrIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfWideStrBucket } ==========================================
@@ -6050,12 +6181,12 @@ end;
 
 function TJclIntfWideStrHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfWideStrHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfWideStrHashMap.ValuesEqual(const A, B: WideString): Boolean;
@@ -6636,7 +6767,7 @@ begin
   Result := ItemsEqual(A, B);
 end;
 
-function TJclWideStrWideStrHashMap.ValuesEqual(const A, B: Widestring): Boolean;
+function TJclWideStrWideStrHashMap.ValuesEqual(const A, B: WideString): Boolean;
 begin
   Result := ItemsEqual(A, B);
 end;
@@ -6667,7 +6798,9 @@ begin
     end;
   end;
 end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
 
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclUnicodeStrIntfHashMap } ==========================================
 
 constructor TJclUnicodeStrIntfHashMap.Create(ACapacity: Integer);
@@ -7217,9 +7350,12 @@ end;
 
 function TJclUnicodeStrIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclIntfUnicodeStrBucket } ==========================================
 
 procedure TJclIntfUnicodeStrBucket.MoveArray(FromIndex, ToIndex, Count: Integer);
@@ -7245,7 +7381,9 @@ begin
     end;
   end;
 end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
 
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclIntfUnicodeStrHashMap } ==========================================
 
 constructor TJclIntfUnicodeStrHashMap.Create(ACapacity: Integer);
@@ -7790,12 +7928,12 @@ end;
 
 function TJclIntfUnicodeStrHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfUnicodeStrHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfUnicodeStrHashMap.ValuesEqual(const A, B: UnicodeString): Boolean;
@@ -7803,6 +7941,9 @@ begin
   Result := ItemsEqual(A, B);
 end;
 
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclUnicodeStrUnicodeStrBucket } ==========================================
 
 procedure TJclUnicodeStrUnicodeStrBucket.MoveArray(FromIndex, ToIndex, Count: Integer);
@@ -7828,7 +7969,9 @@ begin
     end;
   end;
 end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
 
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclUnicodeStrUnicodeStrHashMap } ==========================================
 
 constructor TJclUnicodeStrUnicodeStrHashMap.Create(ACapacity: Integer);
@@ -8376,7 +8519,7 @@ begin
   Result := ItemsEqual(A, B);
 end;
 
-function TJclUnicodeStrUnicodeStrHashMap.ValuesEqual(const A, B: Unicodestring): Boolean;
+function TJclUnicodeStrUnicodeStrHashMap.ValuesEqual(const A, B: UnicodeString): Boolean;
 begin
   Result := ItemsEqual(A, B);
 end;
@@ -8958,7 +9101,7 @@ end;
 
 function TJclSingleIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfSingleBucket } ==========================================
@@ -9531,12 +9674,12 @@ end;
 
 function TJclIntfSingleHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfSingleHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfSingleHashMap.ValuesEqual(const A, B: Single): Boolean;
@@ -10697,7 +10840,7 @@ end;
 
 function TJclDoubleIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfDoubleBucket } ==========================================
@@ -11270,12 +11413,12 @@ end;
 
 function TJclIntfDoubleHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfDoubleHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfDoubleHashMap.ValuesEqual(const A, B: Double): Boolean;
@@ -12436,7 +12579,7 @@ end;
 
 function TJclExtendedIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfExtendedBucket } ==========================================
@@ -13009,12 +13152,12 @@ end;
 
 function TJclIntfExtendedHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfExtendedHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfExtendedHashMap.ValuesEqual(const A, B: Extended): Boolean;
@@ -14175,7 +14318,7 @@ end;
 
 function TJclIntegerIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfIntegerBucket } ==========================================
@@ -14748,12 +14891,12 @@ end;
 
 function TJclIntfIntegerHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfIntegerHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfIntegerHashMap.ValuesEqual(A, B: Integer): Boolean;
@@ -15914,7 +16057,7 @@ end;
 
 function TJclCardinalIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfCardinalBucket } ==========================================
@@ -16487,12 +16630,12 @@ end;
 
 function TJclIntfCardinalHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfCardinalHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfCardinalHashMap.ValuesEqual(A, B: Cardinal): Boolean;
@@ -17653,7 +17796,7 @@ end;
 
 function TJclInt64IntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfInt64Bucket } ==========================================
@@ -18226,12 +18369,12 @@ end;
 
 function TJclIntfInt64HashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfInt64HashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfInt64HashMap.ValuesEqual(const A, B: Int64): Boolean;
@@ -19392,7 +19535,7 @@ end;
 
 function TJclPtrIntfHashMap.ValuesEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntfPtrBucket } ==========================================
@@ -19965,12 +20108,12 @@ end;
 
 function TJclIntfPtrHashMap.Hash(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface);
+  Result := IntfSimpleHashConvert(AInterface);
 end;
 
 function TJclIntfPtrHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := IntfSimpleEqualityCompare(A, B);
 end;
 
 function TJclIntfPtrHashMap.ValuesEqual(A, B: Pointer): Boolean;
@@ -21138,19 +21281,14 @@ begin
   Result := FOwnsValues;
 end;
 
-function TJclIntfHashMap.Hash(const AInterface: IInterface): Integer;
-begin
-  Result := Integer(AInterface);
-end;
-
 function TJclIntfHashMap.KeysEqual(const A, B: IInterface): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := ItemsEqual(A, B);
 end;
 
 function TJclIntfHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclAnsiStrBucket } ==========================================
@@ -21742,7 +21880,7 @@ end;
 
 function TJclAnsiStrHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclWideStrBucket } ==========================================
@@ -22334,7 +22472,7 @@ end;
 
 function TJclWideStrHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
@@ -22363,7 +22501,9 @@ begin
     end;
   end;
 end;
+{$ENDIF SUPPORTS_UNICODE_STRING}
 
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclUnicodeStrHashMap } ==========================================
 
 constructor TJclUnicodeStrHashMap.Create(ACapacity: Integer; AOwnsValues: Boolean);
@@ -22927,8 +23067,9 @@ end;
 
 function TJclUnicodeStrHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
+
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
 //=== { TJclSingleBucket } ==========================================
@@ -23520,7 +23661,7 @@ end;
 
 function TJclSingleHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclDoubleBucket } ==========================================
@@ -24112,7 +24253,7 @@ end;
 
 function TJclDoubleHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclExtendedBucket } ==========================================
@@ -24704,7 +24845,7 @@ end;
 
 function TJclExtendedHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclIntegerBucket } ==========================================
@@ -25296,7 +25437,7 @@ end;
 
 function TJclIntegerHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclCardinalBucket } ==========================================
@@ -25888,7 +26029,7 @@ end;
 
 function TJclCardinalHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclInt64Bucket } ==========================================
@@ -26480,7 +26621,7 @@ end;
 
 function TJclInt64HashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclPtrBucket } ==========================================
@@ -27072,7 +27213,7 @@ end;
 
 function TJclPtrHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 //=== { TJclBucket } ==========================================
@@ -27673,17 +27814,17 @@ end;
 
 function TJclHashMap.Hash(AObject: TObject): Integer;
 begin
-  Result := Integer(AObject);
+  Result := SimpleHashConvert(AObject);
 end;
 
 function TJclHashMap.KeysEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 function TJclHashMap.ValuesEqual(A, B: TObject): Boolean;
 begin
-  Result := Integer(A) = Integer(B);
+  Result := SimpleEqualityCompare(A, B);
 end;
 
 {$IFDEF SUPPORTS_GENERICS}

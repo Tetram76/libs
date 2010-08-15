@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3269                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,12 +52,12 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JclIDEUtils,
-  JclOtaUtils, JclOtaRepositoryUtils, JclOtaExcDlgParams;
+  JclOtaUtils, JclOtaRepositoryUtils, JclExcDlgTemplates;
 
 type
   TJclExcDlgExpert = class(TJclOtaRepositoryExpert)
   public
-    procedure CreateExceptionDialog(const Params: TJclOtaExcDlgParams);
+    procedure CreateExceptionDialog(const Params: TJclExcDlgParams);
   end;
 
   TJclExcDlgDelphiExpert = class(TJclExcDlgExpert)
@@ -80,8 +80,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgRepository.pas $';
-    Revision: '$Revision: 3163 $';
-    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
+    Revision: '$Revision: 3269 $';
+    Date: '$Date: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010) $';
     LogPath: 'JCL\experts\repository\ExceptionDialog';
     Extra: '';
     Data: nil
@@ -94,12 +94,14 @@ uses
   Windows,
   JclStrings, JclFileUtils, JclRegistry,
   JclOtaResources, JclOtaConsts,
-  JclOtaTemplates, JclOtaRepositoryReg, JclOtaExcDlgWizard;
+  JclTemplates, JclOtaRepositoryReg, JclOtaExcDlgWizard;
+
+{$R JclOtaExcDlgIcons.res}
 
 //=== { TJclExcDlgExpert } ===================================================
 
 procedure TJclExcDlgExpert.CreateExceptionDialog(
-  const Params: TJclOtaExcDlgParams);
+  const Params: TJclExcDlgParams);
   function LoadTemplate(const FileName: string): string;
   var
     AFileStream: TFileStream;
@@ -197,9 +199,9 @@ end;
 
 procedure TJclExcDlgDelphiExpert.DoExecute(const Personality: TJclBorPersonality);
 var
-  AParams: TJclOtaExcDlgParams;
+  AParams: TJclExcDlgParams;
 begin
-  AParams := TJclOtaExcDlgParams.Create;
+  AParams := TJclExcDlgParams.Create;
   try
     AParams.Languages := [bpDelphi32];
     AParams.Language := bpDelphi32;
@@ -229,9 +231,9 @@ end;
 procedure TJclExcDlgCBuilderExpert.DoExecute(
   const Personality: TJclBorPersonality);
 var
-  AParams: TJclOtaExcDlgParams;
+  AParams: TJclExcDlgParams;
 begin
-  AParams := TJclOtaExcDlgParams.Create;
+  AParams := TJclExcDlgParams.Create;
   try
     AParams.Languages := [bpDelphi32];
     AParams.Language := bpDelphi32;

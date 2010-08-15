@@ -20,13 +20,13 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                        $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-07-29 17:12:03 +0200 (jeu. 29 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3270                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-unit JclOtaTemplates;
+unit JclTemplates;
 
 interface
 
@@ -37,11 +37,10 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclIDEUtils,
   JppState;
 
 type
-  TJclOtaTemplateParams = class(TPppState)
+  TJclTemplateParams = class(TPppState)
   public
     constructor Create;
   end;
@@ -58,16 +57,15 @@ function GetFinalHeaderContent(const Content, ModuleIdent, FormIdent,
 function GetFinalSourceContent(const Content, ModuleIdent, FormIdent,
   AncestorIdent: string): string;
 
-function ApplyTemplate(const Template: string;
-  const Params: TJclOtaTemplateParams): string;
+function ApplyTemplate(const Template: string; const Params: TJclTemplateParams): string;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaTemplates.pas $';
-    Revision: '$Revision: 3163 $';
-    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
-    LogPath: 'JCL\experts\repository';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/devtools/jpp/Templates/JclTemplates.pas $';
+    Revision: '$Revision: 3270 $';
+    Date: '$Date: 2010-07-29 17:12:03 +0200 (jeu. 29 juil. 2010) $';
+    LogPath: 'JCL\devtools\jpp\Templates';
     Extra: '';
     Data: nil
     );
@@ -81,9 +79,9 @@ uses
   JclStrings, JclSysUtils,
   JppParser;
 
-//=== { TJclOtaTemplateParams } ==============================================
+//=== { TJclTemplateParams } =================================================
 
-constructor TJclOtaTemplateParams.Create;
+constructor TJclTemplateParams.Create;
 begin
   inherited Create;
   Options := Options + [poProcessDefines, poProcessMacros, poProcessValues];
@@ -111,8 +109,7 @@ begin
   Result := StringReplace(Result, ModulePattern, ModuleIdent, [rfReplaceAll, rfIgnoreCase]);
 end;
 
-function ApplyTemplate(const Template: string;
-  const Params: TJclOtaTemplateParams): string;
+function ApplyTemplate(const Template: string; const Params: TJclTemplateParams): string;
 var
   JppParser: TJppParser;
 begin

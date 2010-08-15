@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-12 22:12:01 +0100 (mar. 12 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3120                                                                     $ }
+{ Last modified: $Date:: 2010-08-09 17:10:10 +0200 (lun. 09 août 2010)                          $ }
+{ Revision:      $Rev:: 3291                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -45,24 +45,12 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF SUPPORTS_GENERICS}
   JclAlgorithms,
-  {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclSynch,
   JclAbstractContainers, JclContainerIntf, JclArrayLists, JclArraySets;
 
-
-
-
-
-
-
-
-
-
-
-
 type
+
   TJclIntfIntfSortedEntry = record
     Key: IInterface;
     Value: IInterface;
@@ -399,12 +387,14 @@ type
     function TailMap(const FromKey: WideString): IJclWideStrWideStrSortedMap;
   end;
 
-{$IFDEF SUPPORTS_UNICODE_STRING}
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrIntfSortedEntry = record
     Key: UnicodeString;
     Value: IInterface;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrIntfSortedMap = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer,
     IJclUnicodeStrIntfMap, IJclUnicodeStrIntfSortedMap)
@@ -447,12 +437,16 @@ type
     function SubMap(const FromKey, ToKey: UnicodeString): IJclUnicodeStrIntfSortedMap;
     function TailMap(const FromKey: UnicodeString): IJclUnicodeStrIntfSortedMap;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclIntfUnicodeStrSortedEntry = record
     Key: IInterface;
     Value: UnicodeString;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclIntfUnicodeStrSortedMap = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer,
     IJclIntfUnicodeStrMap, IJclIntfUnicodeStrSortedMap)
@@ -495,12 +489,16 @@ type
     function SubMap(const FromKey, ToKey: IInterface): IJclIntfUnicodeStrSortedMap;
     function TailMap(const FromKey: IInterface): IJclIntfUnicodeStrSortedMap;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrUnicodeStrSortedEntry = record
     Key: UnicodeString;
     Value: UnicodeString;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrUnicodeStrSortedMap = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer,
     IJclUnicodeStrUnicodeStrMap, IJclUnicodeStrUnicodeStrSortedMap)
@@ -543,21 +541,65 @@ type
     function SubMap(const FromKey, ToKey: UnicodeString): IJclUnicodeStrUnicodeStrSortedMap;
     function TailMap(const FromKey: UnicodeString): IJclUnicodeStrUnicodeStrSortedMap;
   end;
-{$ENDIF SUPPORTS_UNICODE_STRING}
+  {$ENDIF SUPPORTS_UNICODE_STRING}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrIntfSortedEntry = TJclAnsiStrIntfSortedEntry;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrIntfSortedEntry = TJclWideStrIntfSortedEntry;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclStrIntfSortedEntry = TJclUnicodeStrIntfSortedEntry;
+  {$ENDIF CONTAINER_UNICODESTR}
 
   {$IFDEF CONTAINER_ANSISTR}
   TJclStrIntfSortedMap = TJclAnsiStrIntfSortedMap;
-  TJclIntfStrSortedMap = TJclIntfAnsiStrSortedMap;
-  TJclStrStrSortedMap = TJclAnsiStrAnsiStrSortedMap;
   {$ENDIF CONTAINER_ANSISTR}
   {$IFDEF CONTAINER_WIDESTR}
   TJclStrIntfSortedMap = TJclWideStrIntfSortedMap;
-  TJclIntfStrSortedMap = TJclIntfWideStrSortedMap;
-  TJclStrStrSortedMap = TJclWideStrWideStrSortedMap;
   {$ENDIF CONTAINER_WIDESTR}
   {$IFDEF CONTAINER_UNICODESTR}
   TJclStrIntfSortedMap = TJclUnicodeStrIntfSortedMap;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclIntfStrSortedEntry = TJclIntfAnsiStrSortedEntry;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclIntfStrSortedEntry = TJclIntfWideStrSortedEntry;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclIntfStrSortedEntry = TJclIntfUnicodeStrSortedEntry;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclIntfStrSortedMap = TJclIntfAnsiStrSortedMap;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclIntfStrSortedMap = TJclIntfWideStrSortedMap;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
   TJclIntfStrSortedMap = TJclIntfUnicodeStrSortedMap;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrStrSortedEntry = TJclAnsiStrAnsiStrSortedEntry;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrStrSortedEntry = TJclWideStrWideStrSortedEntry;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclStrStrSortedEntry = TJclUnicodeStrUnicodeStrSortedEntry;
+  {$ENDIF CONTAINER_UNICODESTR}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrStrSortedMap = TJclAnsiStrAnsiStrSortedMap;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrStrSortedMap = TJclWideStrWideStrSortedMap;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
   TJclStrStrSortedMap = TJclUnicodeStrUnicodeStrSortedMap;
   {$ENDIF CONTAINER_UNICODESTR}
 
@@ -993,21 +1035,65 @@ type
     function TailMap(const FromKey: Extended): IJclExtendedExtendedSortedMap;
   end;
 
-  {$IFDEF MATH_EXTENDED_PRECISION}
-  TJclFloatIntfSortedMap = TJclExtendedIntfSortedMap;
-  TJclIntfFloatSortedMap = TJclIntfExtendedSortedMap;
-  TJclFloatFloatSortedMap = TJclExtendedExtendedSortedMap;
-  {$ENDIF MATH_EXTENDED_PRECISION}
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclFloatIntfSortedEntry = TJclSingleIntfSortedEntry;
+  {$ENDIF MATH_SINGLE_PRECISION}
   {$IFDEF MATH_DOUBLE_PRECISION}
-  TJclFloatIntfSortedMap = TJclDoubleIntfSortedMap;
-  TJclIntfFloatSortedMap = TJclIntfDoubleSortedMap;
-  TJclFloatFloatSortedMap = TJclDoubleDoubleSortedMap;
+  TJclFloatIntfSortedEntry = TJclDoubleIntfSortedEntry;
   {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatIntfSortedEntry = TJclExtendedIntfSortedEntry;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
   {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatIntfSortedMap = TJclSingleIntfSortedMap;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatIntfSortedMap = TJclDoubleIntfSortedMap;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatIntfSortedMap = TJclExtendedIntfSortedMap;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclIntfFloatSortedEntry = TJclIntfSingleSortedEntry;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclIntfFloatSortedEntry = TJclIntfDoubleSortedEntry;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclIntfFloatSortedEntry = TJclIntfExtendedSortedEntry;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
   TJclIntfFloatSortedMap = TJclIntfSingleSortedMap;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclIntfFloatSortedMap = TJclIntfDoubleSortedMap;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclIntfFloatSortedMap = TJclIntfExtendedSortedMap;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclFloatFloatSortedEntry = TJclSingleSingleSortedEntry;
+  {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatFloatSortedEntry = TJclDoubleDoubleSortedEntry;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatFloatSortedEntry = TJclExtendedExtendedSortedEntry;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
+  {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatFloatSortedMap = TJclSingleSingleSortedMap;
   {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatFloatSortedMap = TJclDoubleDoubleSortedMap;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatFloatSortedMap = TJclExtendedExtendedSortedMap;
+  {$ENDIF MATH_EXTENDED_PRECISION}
 
   TJclIntegerIntfSortedEntry = record
     Key: Integer;
@@ -1747,12 +1833,14 @@ type
     function TailMap(const FromKey: WideString): IJclWideStrSortedMap;
   end;
 
-{$IFDEF SUPPORTS_UNICODE_STRING}
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrSortedEntry = record
     Key: UnicodeString;
     Value: TObject;
   end;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrSortedMap = class(TJclUnicodeStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclGrowable, IJclPackable, IJclContainer, IJclStrContainer, IJclUnicodeStrContainer, IJclValueOwner,
     IJclUnicodeStrMap, IJclUnicodeStrSortedMap)
@@ -1801,7 +1889,17 @@ type
     function SubMap(const FromKey, ToKey: UnicodeString): IJclUnicodeStrSortedMap;
     function TailMap(const FromKey: UnicodeString): IJclUnicodeStrSortedMap;
   end;
-{$ENDIF SUPPORTS_UNICODE_STRING}
+  {$ENDIF SUPPORTS_UNICODE_STRING}
+
+  {$IFDEF CONTAINER_ANSISTR}
+  TJclStrSortedEntry = TJclAnsiStrSortedEntry;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  TJclStrSortedEntry = TJclWideStrSortedEntry;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  TJclStrSortedEntry = TJclUnicodeStrSortedEntry;
+  {$ENDIF CONTAINER_UNICODESTR}
 
   {$IFDEF CONTAINER_ANSISTR}
   TJclStrSortedMap = TJclAnsiStrSortedMap;
@@ -1975,15 +2073,25 @@ type
     function TailMap(const FromKey: Extended): IJclExtendedSortedMap;
   end;
 
-  {$IFDEF MATH_EXTENDED_PRECISION}
-  TJclFloatSortedMap = TJclExtendedSortedMap;
-  {$ENDIF MATH_EXTENDED_PRECISION}
+  {$IFDEF MATH_SINGLE_PRECISION}
+  TJclFloatSortedEntry = TJclSingleSortedEntry;
+  {$ENDIF MATH_SINGLE_PRECISION}
   {$IFDEF MATH_DOUBLE_PRECISION}
-  TJclFloatSortedMap = TJclDoubleSortedMap;
+  TJclFloatSortedEntry = TJclDoubleSortedEntry;
   {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatSortedEntry = TJclExtendedSortedEntry;
+  {$ENDIF MATH_EXTENDED_PRECISION}
+
   {$IFDEF MATH_SINGLE_PRECISION}
   TJclFloatSortedMap = TJclSingleSortedMap;
   {$ENDIF MATH_SINGLE_PRECISION}
+  {$IFDEF MATH_DOUBLE_PRECISION}
+  TJclFloatSortedMap = TJclDoubleSortedMap;
+  {$ENDIF MATH_DOUBLE_PRECISION}
+  {$IFDEF MATH_EXTENDED_PRECISION}
+  TJclFloatSortedMap = TJclExtendedSortedMap;
+  {$ENDIF MATH_EXTENDED_PRECISION}
 
   TJclIntegerSortedEntry = record
     Key: Integer;
@@ -2397,8 +2505,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSortedMaps.pas $';
-    Revision: '$Revision: 3120 $';
-    Date: '$Date: 2010-01-12 22:12:01 +0100 (mar. 12 janv. 2010) $';
+    Revision: '$Revision: 3291 $';
+    Date: '$Date: 2010-08-09 17:10:10 +0200 (lun. 09 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2409,6 +2517,7 @@ implementation
 
 uses
   SysUtils;
+
 
 //=== { TJclIntfIntfSortedMap } ==============================================
 
@@ -3655,13 +3764,7 @@ end;
 
 function TJclAnsiStrIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfAnsiStrSortedMap } ==============================================
@@ -4280,13 +4383,7 @@ end;
 
 function TJclIntfAnsiStrSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfAnsiStrSortedMap.ValuesCompare(const A, B: AnsiString): Integer;
@@ -5539,13 +5636,7 @@ end;
 
 function TJclWideStrIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfWideStrSortedMap } ==============================================
@@ -6164,13 +6255,7 @@ end;
 
 function TJclIntfWideStrSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfWideStrSortedMap.ValuesCompare(const A, B: WideString): Integer;
@@ -7424,15 +7509,12 @@ end;
 
 function TJclUnicodeStrIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclIntfUnicodeStrSortedMap } ==============================================
 
 constructor TJclIntfUnicodeStrSortedMap.Create(ACapacity: Integer);
@@ -8049,13 +8131,7 @@ end;
 
 function TJclIntfUnicodeStrSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfUnicodeStrSortedMap.ValuesCompare(const A, B: UnicodeString): Integer;
@@ -8063,6 +8139,9 @@ begin
   Result := ItemsCompare(A, B);
 end;
 
+{$ENDIF SUPPORTS_UNICODE_STRING}
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
 //=== { TJclUnicodeStrUnicodeStrSortedMap } ==============================================
 
 constructor TJclUnicodeStrUnicodeStrSortedMap.Create(ACapacity: Integer);
@@ -8686,6 +8765,7 @@ function TJclUnicodeStrUnicodeStrSortedMap.ValuesCompare(const A, B: UnicodeStri
 begin
   Result := ItemsCompare(A, B);
 end;
+
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
 //=== { TJclSingleIntfSortedMap } ==============================================
@@ -9309,13 +9389,7 @@ end;
 
 function TJclSingleIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfSingleSortedMap } ==============================================
@@ -9934,13 +10008,7 @@ end;
 
 function TJclIntfSingleSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfSingleSortedMap.ValuesCompare(const A, B: Single): Integer;
@@ -11193,13 +11261,7 @@ end;
 
 function TJclDoubleIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfDoubleSortedMap } ==============================================
@@ -11818,13 +11880,7 @@ end;
 
 function TJclIntfDoubleSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfDoubleSortedMap.ValuesCompare(const A, B: Double): Integer;
@@ -13077,13 +13133,7 @@ end;
 
 function TJclExtendedIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfExtendedSortedMap } ==============================================
@@ -13702,13 +13752,7 @@ end;
 
 function TJclIntfExtendedSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfExtendedSortedMap.ValuesCompare(const A, B: Extended): Integer;
@@ -14961,13 +15005,7 @@ end;
 
 function TJclIntegerIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfIntegerSortedMap } ==============================================
@@ -15586,13 +15624,7 @@ end;
 
 function TJclIntfIntegerSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfIntegerSortedMap.ValuesCompare(A, B: Integer): Integer;
@@ -16845,13 +16877,7 @@ end;
 
 function TJclCardinalIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfCardinalSortedMap } ==============================================
@@ -17470,13 +17496,7 @@ end;
 
 function TJclIntfCardinalSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfCardinalSortedMap.ValuesCompare(A, B: Cardinal): Integer;
@@ -18729,13 +18749,7 @@ end;
 
 function TJclInt64IntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfInt64SortedMap } ==============================================
@@ -19354,13 +19368,7 @@ end;
 
 function TJclIntfInt64SortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfInt64SortedMap.ValuesCompare(const A, B: Int64): Integer;
@@ -20613,13 +20621,7 @@ end;
 
 function TJclPtrIntfSortedMap.ValuesCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 //=== { TJclIntfPtrSortedMap } ==============================================
@@ -21238,13 +21240,7 @@ end;
 
 function TJclIntfPtrSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := IntfSimpleCompare(A, B);
 end;
 
 function TJclIntfPtrSortedMap.ValuesCompare(A, B: Pointer): Integer;
@@ -22506,24 +22502,12 @@ end;
 
 function TJclIntfSortedMap.KeysCompare(const A, B: IInterface): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := ItemsCompare(A, B);
 end;
 
 function TJclIntfSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclAnsiStrSortedMap } ==============================================
@@ -23161,13 +23145,7 @@ end;
 
 function TJclAnsiStrSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclWideStrSortedMap } ==============================================
@@ -23805,13 +23783,7 @@ end;
 
 function TJclWideStrSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
@@ -24450,14 +24422,9 @@ end;
 
 function TJclUnicodeStrSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
+
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
 //=== { TJclSingleSortedMap } ==============================================
@@ -25095,13 +25062,7 @@ end;
 
 function TJclSingleSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclDoubleSortedMap } ==============================================
@@ -25739,13 +25700,7 @@ end;
 
 function TJclDoubleSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclExtendedSortedMap } ==============================================
@@ -26383,13 +26338,7 @@ end;
 
 function TJclExtendedSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclIntegerSortedMap } ==============================================
@@ -27027,13 +26976,7 @@ end;
 
 function TJclIntegerSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclCardinalSortedMap } ==============================================
@@ -27671,13 +27614,7 @@ end;
 
 function TJclCardinalSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclInt64SortedMap } ==============================================
@@ -28315,13 +28252,7 @@ end;
 
 function TJclInt64SortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclPtrSortedMap } ==============================================
@@ -28959,13 +28890,7 @@ end;
 
 function TJclPtrSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 //=== { TJclSortedMap } ==============================================
@@ -29600,7 +29525,7 @@ begin
   end;
 end;
 
-function TJclSortedMap.GetOWnsKeys: Boolean;
+function TJclSortedMap.GetOwnsKeys: Boolean;
 begin
   Result := FOwnsKeys;
 end;
@@ -29612,25 +29537,14 @@ end;
 
 function TJclSortedMap.KeysCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
 
 function TJclSortedMap.ValuesCompare(A, B: TObject): Integer;
 begin
-  if Integer(A) > Integer(B) then
-    Result := 1
-  else
-  if Integer(A) < Integer(B) then
-    Result := -1
-  else
-    Result := 0;
+  Result := SimpleCompare(A, B);
 end;
+
 
 {$IFDEF SUPPORTS_GENERICS}
 
