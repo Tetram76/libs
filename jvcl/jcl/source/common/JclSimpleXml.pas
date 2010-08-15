@@ -26,9 +26,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-03-02 13:46:49 +0100 (mar. 02 mars 2010)                           $ }
-{ Revision:      $Rev:: 3204                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2010-08-12 13:53:27 +0200 (jeu. 12 août 2010)                          $ }
+{ Revision:      $Rev:: 3306                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -529,8 +529,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 3204 $';
-    Date: '$Date: 2010-03-02 13:46:49 +0100 (mar. 02 mars 2010) $';
+    Revision: '$Revision: 3306 $';
+    Date: '$Date: 2010-08-12 13:53:27 +0200 (jeu. 12 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -3006,12 +3006,12 @@ begin
         else
         if not CharIsWhiteSpace(Ch) then
           FmtError(LoadResString(@RsEInvalidCDATAExpectedsButFounds), [CS_START_CDATA[lPos], Ch, StringStream.PeekPosition]);
-      10:
+      10: // ]
         if Ch = CS_STOP_CDATA[lPos] then
           Inc(lPos)
         else
           St := St + Ch;
-      11: //-
+      11: // ]
         if Ch = CS_STOP_CDATA[lPos] then
           Inc(lPos)
         else
@@ -3025,6 +3025,10 @@ begin
           lOk := True;
           Break; //End if
         end
+        else
+        // ]]]
+        if Ch = CS_STOP_CDATA[lPos-1] then
+          St := St + ']'
         else
         begin
           St := St + ']]' + Ch;

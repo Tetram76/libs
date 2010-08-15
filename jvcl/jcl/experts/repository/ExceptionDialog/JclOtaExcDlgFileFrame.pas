@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3269                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -38,7 +38,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclIDEUtils, JclOtaWizardFrame, JclOtaExcDlgParams, JclOtaConsts, JclOtaUtils;
+  JclIDEUtils, JclOtaWizardFrame, JclExcDlgTemplates, JclOtaConsts, JclOtaUtils;
 
 type
   TJclOtaExcDlgFilePage = class(TJclWizardFrame)
@@ -55,7 +55,7 @@ type
     procedure ButtonFileBrowseClick(Sender: TObject);
     procedure ComboBoxLanguageClick(Sender: TObject);
   private
-    FParams: TJclOtaExcDlgParams;
+    FParams: TJclExcDlgParams;
     procedure AdjustFileExtension;
     function GetSelectedLanguage: TJclBorPersonality;
   protected
@@ -63,20 +63,20 @@ type
     property SelectedLanguage: TJclBorPersonality read GetSelectedLanguage;
   public
     constructor Create(AOwner: TComponent;
-      AParams: TJclOtaExcDlgParams); reintroduce;
+      AParams: TJclExcDlgParams); reintroduce;
 
     procedure PageActivated(Direction: TJclWizardDirection); override;
     procedure PageDesactivated(Direction: TJclWizardDirection); override;
 
-    property Params: TJclOtaExcDlgParams read FParams write FParams;
+    property Params: TJclExcDlgParams read FParams write FParams;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgFileFrame.pas $';
-    Revision: '$Revision: 3163 $';
-    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
+    Revision: '$Revision: 3269 $';
+    Date: '$Date: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010) $';
     LogPath: 'JCL\experts\repository\ExceptionDialog';
     Extra: '';
     Data: nil
@@ -156,7 +156,7 @@ begin
 end;
 
 constructor TJclOtaExcDlgFilePage.Create(AOwner: TComponent;
-  AParams: TJclOtaExcDlgParams);
+  AParams: TJclExcDlgParams);
 begin
   FParams := AParams;
   inherited Create(AOwner);

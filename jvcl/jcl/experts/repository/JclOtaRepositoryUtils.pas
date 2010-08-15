@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-07-29 16:32:39 +0200 (jeu. 29 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3268                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -176,8 +176,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaRepositoryUtils.pas $';
-    Revision: '$Revision: 3163 $';
-    Date: '$Date: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010) $';
+    Revision: '$Revision: 3268 $';
+    Date: '$Date: 2010-07-29 16:32:39 +0200 (jeu. 29 juil. 2010) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -188,7 +188,7 @@ implementation
 
 uses
   Classes, ActiveX,
-  JclDateTime, JclFileUtils, JclOtaResources, JclOtaTemplates;
+  JclDateTime, JclFileUtils, JclOtaResources, JclTemplates;
 
 //=== { TJclOTARepositoryExpertBase } ========================================
 

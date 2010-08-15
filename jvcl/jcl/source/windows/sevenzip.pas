@@ -45,8 +45,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3188                                                                     $ }
+{ Last modified: $Date:: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3266                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -102,6 +102,7 @@ const
   CLSID_CFormatLzma     : TGUID = '{23170F69-40C1-278A-1000-0001100A0000}';
   CLSID_CFormatLzma86   : TGUID = '{23170F69-40C1-278A-1000-0001100B0000}';
   CLSID_CFormatXz       : TGUID = '{23170F69-40C1-278A-1000-0001100C0000}';
+  CLSID_CFormatPpmd     : TGUID = '{23170F69-40C1-278A-1000-0001100D0000}';
   CLSID_CFormatAPM      : TGUID = '{23170F69-40C1-278A-1000-000110D40000}';
   CLSID_CFormatMslz     : TGUID = '{23170F69-40C1-278A-1000-000110D50000}';
   CLSID_CFormatFlv      : TGUID = '{23170F69-40C1-278A-1000-000110D60000}';
@@ -631,8 +632,8 @@ procedure Unload7Zip;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/sevenzip.pas $';
-    Revision: '$Revision: 3188 $';
-    Date: '$Date: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010) $';
+    Revision: '$Revision: 3266 $';
+    Date: '$Date: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

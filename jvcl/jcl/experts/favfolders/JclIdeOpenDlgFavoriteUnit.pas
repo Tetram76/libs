@@ -17,13 +17,13 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3044                                                                     $ }
+{ Last modified: $Date:: 2010-08-07 11:24:29 +0200 (sam. 07 août 2010)                          $ }
+{ Revision:      $Rev:: 3278                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-unit IdeOpenDlgFavoriteUnit;
+unit JclIdeOpenDlgFavoriteUnit;
 
 interface
 
@@ -60,9 +60,9 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/favfolders/IdeOpenDlgFavoriteUnit.pas $';
-    Revision: '$Revision: 3044 $';
-    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
+    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/favfolders/JclIdeOpenDlgFavoriteUnit.pas $';
+    Revision: '$Revision: 3278 $';
+    Date: '$Date: 2010-08-07 11:24:29 +0200 (sam. 07 août 2010) $';
     LogPath: 'JCL\experts\favfolders';
     Extra: '';
     Data: nil

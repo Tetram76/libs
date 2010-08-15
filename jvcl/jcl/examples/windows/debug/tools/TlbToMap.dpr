@@ -17,27 +17,27 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Command line tool for converting JCL debug data created from MAP files                           }
+{ Command line tool for converting JCL debug data created from TLB files                           }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2007-09-17 23:41:02 +0200 (lun. 17 sept. 2007)                          $ }
-{ Revision:      $Rev:: 2175                                                                     $ }
+{ Last modified: $Date:: 2010-08-08 10:59:23 +0200 (dim. 08 août 2010)                          $ }
+{ Revision:      $Rev:: 3280                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
-program MapToJdbg;
+program TlbToMap;
 
 uses
   Forms,
-  MapToJdbgMain in 'MapToJdbgMain.pas' {MainForm};
+  TlbToMapMain in 'TlbToMapMain.pas' {MainForm};
 
 {$R *.RES}
 
 begin
   Application.Initialize;
-  Application.Title := 'MAP to JDBG';
+  Application.Title := 'TLB to MAP';
   Application.CreateForm(TMainForm, MainForm);
   Application.Run;
 end.

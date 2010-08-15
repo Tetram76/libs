@@ -24,9 +24,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-03-03 23:55:01 +0100 (mer. 03 mars 2010)                           $ }
-{ Revision:      $Rev:: 3205                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2010-08-08 12:54:21 +0200 (dim. 08 août 2010)                          $ }
+{ Revision:      $Rev:: 3283                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -205,8 +205,8 @@ procedure GetBPKFileInfo(const BPKFileName: string; out RunOnly: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompilerUtils.pas $';
-    Revision: '$Revision: 3205 $';
-    Date: '$Date: 2010-03-03 23:55:01 +0100 (mer. 03 mars 2010) $';
+    Revision: '$Revision: 3283 $';
+    Date: '$Date: 2010-08-08 12:54:21 +0200 (dim. 08 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1096,11 +1096,11 @@ begin
       Option := Options.Strings[OptionIndex];
       if IsPathOption(Option, SwitchLen) then
       begin
-
         StrToStrings(StrTrimQuotes(Copy(Option, SwitchLen + 1, Length(Option) - SwitchLen)), PathSep, PathList);
-        // change to relative paths to avoid DCC32 126 character path limit
-        for PathIndex := 0 to PathList.Count - 1 do
-          PathList.Strings[PathIndex] := PathGetRelativePath(CurrentFolder, ExpandFileName(PathList[PathIndex]));
+        if LongPathBug then
+          // change to relative paths to avoid DCC32 126 character path limit
+          for PathIndex := 0 to PathList.Count - 1 do
+            PathList.Strings[PathIndex] := PathGetRelativePath(CurrentFolder, ExpandFileName(PathList[PathIndex]));
         if PathList.Count > 0 then
           Arguments := Format('%s %s"%s"', [Arguments, Copy(Option, 1, SwitchLen),
             StringsToStr(PathList, PathSep)]);

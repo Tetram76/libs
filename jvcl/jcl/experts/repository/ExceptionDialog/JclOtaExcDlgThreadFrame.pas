@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-04 23:15:17 +0100 (lun. 04 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3108                                                                     $ }
+{ Last modified: $Date:: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3269                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -38,7 +38,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclOtaExcDlgParams, JclOtaWizardFrame;
+  JclExcDlgTemplates, JclOtaWizardFrame;
 
 type
   TJclOtaExcDlgThreadPage = class(TJclWizardFrame)
@@ -53,18 +53,18 @@ type
     procedure RadioButtonClick(Sender: TObject);
     procedure CheckBoxStackListClick(Sender: TObject);
   private
-    FParams: TJclOtaExcDlgParams;
+    FParams: TJclExcDlgParams;
     FTestThread: TJclDebugThread;
     procedure UpdatePreview;
     procedure UpdateCheckBoxes;
   public
-    constructor Create(AOwner: TComponent; AParams: TJclOtaExcDlgParams); reintroduce;
+    constructor Create(AOwner: TComponent; AParams: TJclExcDlgParams); reintroduce;
     destructor Destroy; override;
 
     procedure PageActivated(Direction: TJclWizardDirection); override;
     procedure PageDesactivated(Direction: TJclWizardDirection); override;
 
-    property Params: TJclOtaExcDlgParams read FParams write FParams;
+    property Params: TJclExcDlgParams read FParams write FParams;
   end;
 
   // in interface to be exported and have basic debug informations based on exports
@@ -80,8 +80,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgThreadFrame.pas $';
-    Revision: '$Revision: 3108 $';
-    Date: '$Date: 2010-01-04 23:15:17 +0100 (lun. 04 janv. 2010) $';
+    Revision: '$Revision: 3269 $';
+    Date: '$Date: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010) $';
     LogPath: 'JCL\experts\repository\ExceptionDialog';
     Extra: '';
     Data: nil
@@ -132,7 +132,7 @@ begin
 end;
 
 constructor TJclOtaExcDlgThreadPage.Create(AOwner: TComponent;
-  AParams: TJclOtaExcDlgParams);
+  AParams: TJclExcDlgParams);
 begin
   FParams := AParams;
   inherited Create(AOwner);

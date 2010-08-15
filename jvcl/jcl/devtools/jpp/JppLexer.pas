@@ -44,7 +44,7 @@
 {                                                                              }
 { **************************************************************************** }
 
-// Last modified: $Date: 2010-02-22 19:40:02 +0100 (lun. 22 févr. 2010) $
+// Last modified: $Date: 2010-08-10 23:03:32 +0200 (mar. 10 août 2010) $
 
 unit JppLexer;
 
@@ -64,7 +64,9 @@ type
     ptDefine, ptUndef, ptIfdef, ptIfndef, ptIfopt, ptElse, ptEndif,
     ptInclude, ptJppDefineMacro, ptJppExpandMacro, ptJppUndefMacro,
     ptJppGetStrValue, ptJppGetIntValue, ptJppGetBoolValue,
-    ptJppSetStrValue, ptJppSetIntValue, ptJppSetBoolValue, ptJppLoop);
+    ptJppSetStrValue, ptJppSetIntValue, ptJppSetBoolValue, ptJppLoop,
+    // same as $DEFINE and $UNDEF but they will not be written to the final file
+    ptJppDefine, ptJppUndef);
 
   EJppLexerError = class(Exception);
 
@@ -98,8 +100,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/devtools/jpp/JppLexer.pas $';
-    Revision: '$Revision: 3201 $';
-    Date: '$Date: 2010-02-22 19:40:02 +0100 (lun. 22 févr. 2010) $';
+    Revision: '$Revision: 3299 $';
+    Date: '$Date: 2010-08-10 23:03:32 +0200 (mar. 10 août 2010) $';
     LogPath: 'JCL\devtools\jpp';
     Extra: '';
     Data: nil
@@ -145,6 +147,8 @@ begin
   AddToken('jppsetintvalue', ptJppSetIntValue);
   AddToken('jppsetboolvalue', ptJppSetBoolValue);
   AddToken('jpploop', ptJppLoop);
+  AddToken('jppdefine', ptJppDefine);
+  AddToken('jppundef', ptJppUndef);
 
   FBuf := ABuffer;
   Reset;
@@ -217,6 +221,8 @@ procedure TJppLexer.NextTok;
         ptUndef,
         ptIfdef,
         ptIfndef,
+        ptJppDefine,
+        ptJppUndef,
         ptJppGetStrValue,
         ptJppGetIntValue,
         ptJppGetBoolValue,

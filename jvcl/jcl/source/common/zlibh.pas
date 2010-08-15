@@ -29,9 +29,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3188                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-07-24 03:17:28 +0200 (sam. 24 juil. 2010)                          $ }
+{ Revision:      $Rev:: 3265                                                                     $ }
+{ Author:        $Author:: wpostma                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -173,9 +173,17 @@ const
 
 const
   {$EXTERNALSYM ZLIB_VERSION}
-  ZLIB_VERSION = '1.2.3';
+  ZLIB_VERSION = '1.2.5';
   {$EXTERNALSYM ZLIB_VERNUM}
-  ZLIB_VERNUM = $1230;
+  ZLIB_VERNUM = $1250;
+  {$EXTERNALSYM ZLIB_VER_MAJOR}
+  ZLIB_VER_MAJOR = 1;
+  {$EXTERNALSYM ZLIB_VER_MINOR}
+  ZLIB_VER_MINOR = 2;
+  {$EXTERNALSYM ZLIB_VER_REVISION}
+  ZLIB_VER_REVISION = 5;
+  {$EXTERNALSYM ZLIB_VER_SUBREVISION}
+  ZLIB_VER_SUBREVISION = 0;
 
 {*
      The 'zlib' compression library provides in-memory compression and
@@ -307,6 +315,8 @@ const
   Z_FINISH        = 4;
   {$EXTERNALSYM Z_BLOCK}
   Z_BLOCK         = 5;
+  {$EXTERNALSYM Z_TREES}
+  Z_TREES         = 6;
 
 {* Allowed flush values; see deflate() and inflate() below for details *}
 
@@ -349,14 +359,18 @@ const
   Z_HUFFMAN_ONLY       = 2;
   {$EXTERNALSYM Z_RLE}
   Z_RLE                = 3;
+  {$EXTERNALSYM Z_FIXED}
+  Z_FIXED              = 4;
   {$EXTERNALSYM Z_DEFAULT_STRATEGY}
   Z_DEFAULT_STRATEGY   = 0;
 {* compression strategy; see deflateInit2() below for details *}
 
   {$EXTERNALSYM Z_BINARY}
   Z_BINARY  = 0;
+  {$EXTERNALSYM Z_TEXT}
+  Z_TEXT    = 1;
   {$EXTERNALSYM Z_ASCII}
-  Z_ASCII   = 1;
+  Z_ASCII   = Z_TEXT;
   {$EXTERNALSYM Z_UNKNOWN}
   Z_UNKNOWN = 2;
 {* Possible values of the data_type field (though see inflate()) *}
@@ -367,8 +381,6 @@ const
 
   {$EXTERNALSYM Z_NULL}
   Z_NULL  = 0;  {* for initializing zalloc, zfree, opaque *}
-
-{* for compatibility with versions < 1.0.2 *}
 
                         {* basic functions *}
 
@@ -1997,8 +2009,8 @@ procedure UnloadZLib;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/zlibh.pas $';
-    Revision: '$Revision: 3188 $';
-    Date: '$Date: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010) $';
+    Revision: '$Revision: 3265 $';
+    Date: '$Date: 2010-07-24 03:17:28 +0200 (sam. 24 juil. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
