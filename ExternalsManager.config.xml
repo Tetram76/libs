@@ -3,7 +3,7 @@
   <TempFolder>.\temp</TempFolder>
   <externals>
     <external Name="JCL" Kind="ekVendorBranch">
-      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\jvcl\jcl</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/jvcl/jcl</RepositoryExternalPath>
@@ -21,7 +21,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="JVCL" Kind="ekVendorBranch">
-      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\jvcl\jvcl</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/jvcl/jvcl</RepositoryExternalPath>
@@ -39,7 +39,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="UIB" Kind="ekVendorBranch">
-      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\uib</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/uib</RepositoryExternalPath>
@@ -57,13 +57,13 @@
       </SVNExternalOptions>
     </external>
     <external Name="PascalScript" Kind="ekVendorBranch">
-      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\PascalScript</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/PascalScript</RepositoryExternalPath>
       <DefaultSubfolder>/pascalscript</DefaultSubfolder>
       <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>svn://svn.remobjects.com</BaseURL>
+        <BaseURL>http://code.remobjects.com/svn</BaseURL>
         <VendorPath>/vendors/pascalscript</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -75,7 +75,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="GrizzlyPack" Kind="ekVendorBranch">
-      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\GrizzlyPack</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/GrizzlyPack</RepositoryExternalPath>
@@ -93,7 +93,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="ICS V7" Kind="ekVendorBranch">
-      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\ics</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/ics</RepositoryExternalPath>
@@ -110,15 +110,15 @@
         <PropertyCommitComment/>
       </SVNExternalOptions>
     </external>
-    <external Name="ICS V6" Kind="ekVendorBranch">
-      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+    <external Name="Alcinoe" Kind="ekVendorBranch">
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
-      <ExternalWorkingCopySubfolder>\ics</ExternalWorkingCopySubfolder>
-      <RepositoryExternalPath>/composants/ics</RepositoryExternalPath>
+      <ExternalWorkingCopySubfolder>\alcinoe</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/alcinoe</RepositoryExternalPath>
       <DefaultSubfolder>/trunk</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>http://svn.overbyte.be:8443/svn/ics</BaseURL>
-        <VendorPath>/vendors/ics</VendorPath>
+      <VendorBranchOptions SourceKind="eskFolder">
+        <BaseURL>https://uib.svn.sourceforge.net/svnroot/uib</BaseURL>
+        <VendorPath>/vendors/alcinoe</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
       </VendorBranchOptions>
@@ -128,15 +128,51 @@
         <PropertyCommitComment/>
       </SVNExternalOptions>
     </external>
-    <external Name="Alcinoe" Kind="ekVendorBranch">
-      <BaseURL>http://thierry:280776@dev.tetram.org/svn</BaseURL>
+    <external Name="SubVersionTools by OBones" Kind="ekVendorBranch">
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Outils\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\SubVersion by OBones</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/outils/SubVersion by OBones</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk/sources</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://svnwintools.tigris.org/svn/svnwintools</BaseURL>
+        <VendorPath>/vendors/svnwintools</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="Delphi On Rails" Kind="ekVendorBranch">
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
-      <ExternalWorkingCopySubfolder>\alcinoe</ExternalWorkingCopySubfolder>
-      <RepositoryExternalPath>/composants/alcinoe</RepositoryExternalPath>
+      <ExternalWorkingCopySubfolder>\delphionrails</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/delphionrails</RepositoryExternalPath>
       <DefaultSubfolder>/trunk</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskFolder">
-        <BaseURL>https://uib.svn.sourceforge.net/svnroot/uib</BaseURL>
-        <VendorPath>/vendors/alcinoe</VendorPath>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://delphionrails.googlecode.com/svn</BaseURL>
+        <VendorPath>/vendors/delphionrails</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="SuperObject" Kind="ekVendorBranch">
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\superobject</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/superobject</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://superobject.googlecode.com/svn</BaseURL>
+        <VendorPath>/vendors/superobject</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
       </VendorBranchOptions>
