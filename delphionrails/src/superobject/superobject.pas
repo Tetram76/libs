@@ -86,12 +86,19 @@
   {$DEFINE HAVE_INLINE}
 {$ifend}
 
+{$if defined(VER210) or defined(VER220)}
+  {$define HAVE_RTTI}
+{$ifend}
+
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+
 unit superobject;
 
 interface
 uses
   Classes
-{$IFDEF VER210}
+{$IFDEF HAVE_RTTI}
   ,Generics.Collections, RTTI, TypInfo
 {$ENDIF}
   ;
@@ -222,6 +229,7 @@ type
 
     function GetValues: ISuperObject;
     function GetNames: ISuperObject;
+    function Find(const k: SOString; var value: ISuperObject): Boolean;
   end;
 
   TSuperAvlIterator = class
@@ -736,7 +744,7 @@ type
     property Processing: boolean read GetProcessing;
   end;
 
-{$IFDEF VER210}
+{$IFDEF HAVE_RTTI}
   TSuperRttiContext = class;
 
   TSerialFromJson = function(ctx: TSuperRttiContext; const obj: ISuperObject; var Value: TValue): Boolean;
@@ -802,9 +810,11 @@ function JavaToDelphiDateTime(const dt: int64): TDateTime;
 function DelphiToJavaDateTime(const dt: TDateTime): int64;
 function TryObjectToDate(const obj: ISuperObject; var dt: TDateTime): Boolean;
 function ISO8601DateToJavaDateTime(const str: SOString; var ms: Int64): Boolean;
+function ISO8601DateToDelphiDateTime(const str: SOString; var dt: TDateTime): Boolean;
+function DelphiDateTimeToISO8601Date(dt: TDateTime): SOString;
 
 
-{$IFDEF VER210}
+{$IFDEF HAVE_RTTI}
 
 type
   TSuperInvokeResult = (
@@ -989,8 +999,9 @@ var
   tzi : TTimeZoneInformation;
 begin
   case GetTimeZoneInformation(tzi) of
-    TIME_ZONE_ID_STANDARD: Result := tzi.Bias;
-    TIME_ZONE_ID_DAYLIGHT: Result := tzi.DaylightBias;
+    TIME_ZONE_ID_UNKNOWN : Result := tzi.Bias;
+    TIME_ZONE_ID_STANDARD: Result := tzi.Bias + tzi.StandardBias;
+    TIME_ZONE_ID_DAYLIGHT: Result := tzi.Bias + tzi.DaylightBias;
   else
     Result := 0;
   end;
@@ -1072,7 +1083,7 @@ begin
     First := (6 + compareDate^.wDayOfWeek - date^.wDayOfWeek + date^.wDay) mod 7 + 1;
     limit_day := First + 7 * (weekofmonth - 1);
     (* check needed for the 5th weekday of the month *)
-    if (limit_day > MonthDays[(date^.wMonth=2) and IsLeapYear(date^.wYear)][date^.wMonth - 1]) then
+    if (limit_day > MonthDays[(date^.wMonth=2) and IsLeapYear(date^.wYear)][date^.wMonth]) then
       dec(limit_day, 7);
   end
   else
@@ -1314,7 +1325,7 @@ var
   state: TState;
   pos, v: Word;
   sep: TPerhaps;
-  inctz, havedate: Boolean;
+  inctz, havetz, havedate: Boolean;
   st: TDateTimeInfo;
   DayTable: PDayTable;
 
@@ -1338,6 +1349,7 @@ begin
   FillChar(st, SizeOf(st), 0);
   havedate := True;
   inctz := False;
+  havetz := False;
 
   while true do
   case state of
@@ -1781,56 +1793,81 @@ begin
           st.ms := st.ms * 10 + ord(p^) - ord('0');
           inc(p);
         end;
-        'Z', 'z': state := stUTC;
+        '+':
+          if havedate then
+          begin
+            state := stGMTH;
+            pos := 0;
+            v := 0;
+            inc(p);
+          end else
+            goto error;
+        '-':
+          if havedate then
+          begin
+            state := stGMTH;
+            pos := 0;
+            v := 0;
+            inc(p);
+            inctz := True;
+          end else
+            goto error;
+        'Z', 'z':
+             if havedate then
+               state := stUTC else
+               goto error;
         #0: state := stEnd;
       else
         goto error;
       end;
     stUTC: // = GMT 0
       begin
-        //SystemTimeToTzSpecificLocalTime(nil, @st, @st);
+        havetz := True;
         inc(p);
         if p^ = #0 then
           Break else
           goto error;
       end;
     stGMTH:
-      case pos of
-        0..1: if get(v, p^) then
-              begin
-                inc(p);
-                inc(pos);
-              end else
+      begin
+        havetz := True;
+        case pos of
+          0..1: if get(v, p^) then
+                begin
+                  inc(p);
+                  inc(pos);
+                end else
+                  goto error;
+          2:
+            begin
+              st.bias := v * 60;
+              case p^ of
+                ':': if sep in [yes, perhaps] then
+                     begin
+                       state := stGMTM;
+                       inc(p);
+                       pos := 0;
+                       v := 0;
+                       sep := yes;
+                     end else
+                       goto error;
+                '0'..'9':
+                     if sep in [no, perhaps] then
+                     begin
+                       state := stGMTM;
+                       pos := 1;
+                       sep := no;
+                       inc(p);
+                       v := ord(p^) - ord('0');
+                     end else
+                       goto error;
+                #0: state := stGMTend;
+              else
                 goto error;
-        2:
-          begin
-            st.bias := v * 60;
-            case p^ of
-              ':': if sep in [yes, perhaps] then
-                   begin
-                     state := stGMTM;
-                     inc(p);
-                     pos := 0;
-                     v := 0;
-                     sep := yes;
-                   end else
-                     goto error;
-              '0'..'9':
-                   if sep in [no, perhaps] then
-                   begin
-                     state := stGMTM;
-                     pos := 1;
-                     sep := no;
-                     inc(p);
-                     v := ord(p^) - ord('0');
-                   end else
-                     goto error;
-              #0: state := stGMTend;
-            else
-              goto error;
-            end;
+              end;
 
-          end;
+            end;
+        end;
       end;
     stGMTM:
       case pos of
@@ -1865,6 +1902,10 @@ begin
 
   if (st.hour >= 24) or (st.minute >= 60) or (st.second >= 60) or (st.ms >= 1000) or (st.week > 53)
     then goto error;
+
+  if not havetz then
+    st.bias := GetTimeBias;
+
   ms := st.ms + st.second * 1000 + (st.minute + st.bias) * 60000 + st.hour * 3600000;
   if havedate then
   begin
@@ -1886,6 +1927,35 @@ begin
  Exit;
 error:
   Result := False;
+end;
+
+function ISO8601DateToDelphiDateTime(const str: SOString; var dt: TDateTime): Boolean;
+var
+  ms: Int64;
+begin
+  Result := ISO8601DateToJavaDateTime(str, ms);
+  if Result then
+    dt := JavaToDelphiDateTime(ms)
+end;
+
+function DelphiDateTimeToISO8601Date(dt: TDateTime): SOString;
+var
+  year, month, day, hour, min, sec, msec: Word;
+  tzh: SmallInt;
+  tzm: Word;
+  sign: SOChar;
+  bias: Integer;
+begin
+  DecodeDate(dt, year, month, day);
+  DecodeTime(dt, hour, min, sec, msec);
+  bias := GetTimeBias;
+  tzh := Abs(bias) div 60;
+  tzm := Abs(bias) - tzh * 60;
+  if Bias > 0 then
+    sign := '-' else
+    sign := '+';
+  Result := Format('%.4d-%.2d-%.2dT%.2d:%.2d:%.2d,%d%s%.2d:%.2d',
+    [year, month, day, hour, min, sec, msec, sign, tzh, tzm]);
 end;
 
 function TryObjectToDate(const obj: ISuperObject; var dt: TDateTime): Boolean;
@@ -2069,7 +2139,7 @@ begin
   F.val := nil;
 end;
 
-{$IFDEF VER210}
+{$IFDEF HAVE_RTTI}
 
 function serialtoboolean(ctx: TSuperRttiContext; var value: TValue; const index: ISuperObject): ISuperObject;
 begin
@@ -4274,7 +4344,10 @@ begin
             prop1.Merge(ite.val) else
             if reference then
               PutO(ite.key, ite.val) else
-              PutO(ite.key, ite.val.Clone);
+              if ite.val <> nil then
+                PutO(ite.key, ite.val.Clone) else
+                PutO(ite.key, nil)
+
         until not ObjectFindNext(ite);
         ObjectFindClose(ite);
       end;
@@ -4290,7 +4363,9 @@ begin
             prop1.Merge(prop2) else
             if reference then
               PutO(j, prop2) else
-              PutO(j, prop2.Clone);
+              if prop2 <> nil then
+                PutO(j, prop2.Clone) else
+                PutO(j, nil);
         end;
       end;
   end;
@@ -6422,7 +6497,6 @@ begin
   Result := ISuperObject(FPtr)
 end;
 
-{$OVERFLOWCHECKS OFF}
 class function TSuperAvlEntry.Hash(const k: SOString): Cardinal;
 var
   h: cardinal;
@@ -6433,7 +6507,6 @@ begin
     h := h*129 + ord(k[i]) + $9e370001;
   Result := h;
 end;
-{$OVERFLOWCHECKS ON}
 
 procedure TSuperAvlEntry.SetValue(const val: ISuperObject);
 begin
@@ -6492,6 +6565,19 @@ begin
     Entry.Value := nil;
   end;
   inherited;
+end;
+
+function TSuperTableString.Find(const k: SOString; var value: ISuperObject): Boolean;
+var
+  e: TSuperAvlEntry;
+begin
+  e := Search(k);
+  if e <> nil then
+  begin
+    value := e.Value;
+    Result := True;
+  end else
+    Result := False;
 end;
 
 function TSuperTableString.GetO(const k: SOString): ISuperObject;
@@ -6625,7 +6711,7 @@ begin
 end;
 
 
-{$IFDEF VER210}
+{$IFDEF HAVE_RTTI}
 
 { TSuperAttribute }
 
@@ -6691,7 +6777,7 @@ function TSuperRttiContext.AsJson<T>(const obj: T; const index: ISuperObject = n
 var
   v: TValue;
 begin
-  TValue.MakeWithoutCopy(@obj, TypeInfo(T), v);
+  TValue.Make(@obj, TypeInfo(T), v);
   if index <> nil then
     Result := ToJson(v, index) else
     Result := ToJson(v, so);
@@ -6757,7 +6843,9 @@ function TSuperRttiContext.FromJson(TypeInfo: PTypeInfo; const obj: ISuperObject
       begin
         i := obj.AsInteger;
         TypeData := GetTypeData(TypeInfo);
-        Result := (i >= TypeData.MinValue) and (i <= TypeData.MaxValue);
+        if TypeData.MaxValue > TypeData.MinValue then
+          Result := (i >= TypeData.MinValue) and (i <= TypeData.MaxValue) else
+          Result := (i >= TypeData.MinValue) and (i <= Int64(PCardinal(@TypeData.MaxValue)^));
         if Result then
           TValue.Make(@i, TypeInfo, Value);
       end;
@@ -6888,7 +6976,11 @@ function TSuperRttiContext.FromJson(TypeInfo: PTypeInfo; const obj: ISuperObject
     begin
       if ObjectIsType(obj, stObject) and (f.FieldType <> nil) then
       begin
+{$IFDEF VER210}
         p := IValueData(TValueData(Value).FHeapData).GetReferenceToRawData;
+{$ELSE}
+        p := TValueData(Value).FValueData.GetReferenceToRawData;
+{$ENDIF}
         Result := FromJson(f.FieldType.Handle, GetFieldDefault(f, obj.AsObject[GetFieldName(f)]), v);
         if Result then
           f.SetValue(p, v) else
@@ -7202,7 +7294,11 @@ function TSuperRttiContext.ToJson(var value: TValue; const index: ISuperObject):
     Result := TSuperObject.Create(stObject);
     for f in Context.GetType(Value.TypeInfo).GetFields do
     begin
+{$IFDEF VER210}
       v := f.GetValue(IValueData(TValueData(Value).FHeapData).GetReferenceToRawData);
+{$ELSE}
+      v := f.GetValue(TValueData(Value).FValueData.GetReferenceToRawData);
+{$ENDIF}
       Result.AsObject[GetFieldName(f)] := ToJson(v, index);
     end;
   end;
@@ -7276,10 +7372,25 @@ function TSuperRttiContext.ToJson(var value: TValue; const index: ISuperObject):
   end;
 
   procedure ToInterface;
+{$IFNDEF VER210}
+  var
+    intf: IInterface;
+{$ENDIF}
   begin
+{$IFDEF VER210}
     if TValueData(Value).FHeapData <> nil then
       TValueData(Value).FHeapData.QueryInterface(ISuperObject, Result) else
       Result := nil;
+{$ELSE}
+    if TValueData(Value).FValueData <> nil then
+    begin
+      intf := IInterface(PPointer(TValueData(Value).FValueData.GetReferenceToRawData)^);
+      if intf <> nil then
+        intf.QueryInterface(ISuperObject, Result) else
+        Result := nil;
+    end else
+      Result := nil;
+{$ENDIF}
   end;
 
 var
