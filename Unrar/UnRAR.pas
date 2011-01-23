@@ -15,6 +15,7 @@
 
 unit UnRAR;
 {$D-}
+{$J+}
 interface
 
 uses Windows;
