@@ -1322,6 +1322,9 @@ const
 {$IFDEF IB75}
   isc_dpb_Max_Value = 71;
 {$ELSE}
+{$IFDEF FB30}
+  isc_dpb_Max_Value = 78;
+{$ELSE}
 {$IFDEF FB25}
   isc_dpb_Max_Value = 78;
 {$ELSE}
@@ -1343,6 +1346,7 @@ const
 {$ENDIF FB20}
 {$ENDIF FB21}
 {$ENDIF FB25}
+{$ENDIF FB30}
 {$ENDIF IB75}
 {$ENDIF IB71}
 {$ENDIF IB7}
@@ -2876,6 +2880,10 @@ const
   SQL_TYPE_DATE = 570;
   SQL_INT64 = 580;
 
+{$IFDEF FB30_UP}
+  SQL_BOOLEAN = 32764;
+{$ENDIF}
+
 {$IFDEF FB25_UP}
   SQL_NULL = 32766;
 {$ENDIF}
@@ -4088,7 +4096,7 @@ begin
         and assigned(fb_shutdown_callback)
         and assigned(fb_cancel_operation)
         and assigned(fb_sqlstate)
-//        and assigned(fb_disconnect_transaction)
+        and assigned(fb_disconnect_transaction)
       {$ENDIF}
 
       ;

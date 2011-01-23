@@ -250,8 +250,6 @@ end;
 
 function TUIBCustomDataSet.InternalGetFieldData(FieldNo: Integer;
   Buffer: Pointer; Native: Boolean): Boolean;
-const
-  UTF8BOM: array[0..2] of Byte = ($EF, $BB, $BF);
 var
   aFieldType: TUIBFieldType;
 {$IFDEF UNICODE}
@@ -287,7 +285,7 @@ begin
               {$IFDEF COMPILER6_UP}
                 if (sqlScale >= -4) and not Native then
                   Currency(Buffer^) := PSmallint(sqldata)^ / scaledivisor[sqlscale] else
-                  TBCD(Buffer^) := strToBcd(FloatToStr(PSmallint(sqldata)^ / scaledivisor[sqlscale]));
+                  TBCD(Buffer^) := strToBcd(FormatFloat(ScaleFormat[sqlscale], PSmallint(sqldata)^ / scaledivisor[sqlscale]));
               {$ELSE}
                 {$IFDEF COMPILER5_UP}
                   if (sqlScale >= -4) then
@@ -311,7 +309,7 @@ begin
               {$IFDEF COMPILER6_UP}
                 if (sqlScale >= -4) and not Native then
                   Currency(Buffer^) := PInteger(sqldata)^ / scaledivisor[sqlscale] else
-                  TBCD(Buffer^) := strToBcd(FloatToStr(PInteger(sqldata)^ / scaledivisor[sqlscale]));
+                  TBCD(Buffer^) := strToBcd(FormatFloat(ScaleFormat[sqlscale], PInteger(sqldata)^ / scaledivisor[sqlscale]));
               {$ELSE}
                 {$IFDEF COMPILER5_UP}
                   if (sqlScale >= -4) then
@@ -338,7 +336,7 @@ begin
                   PInt64(Buffer)^ := PInt64(sqldata)^ else
                   if (sqlscale > -4) and not Native then
                     PInt64(Buffer)^ := PInt64(sqldata)^ * CurrencyDivisor[sqlscale] else
-                    TBCD(Buffer^) := strToBcd(FloatToStr(PInt64(sqldata)^ / scaledivisor[sqlscale]));
+                    TBCD(Buffer^) := strToBcd(FormatFloat(ScaleFormat[sqlscale], PInt64(sqldata)^ / scaledivisor[sqlscale]));
               {$ELSE}
                 {$IFDEF COMPILER5_UP}
                 if (sqlscale = -4) then
