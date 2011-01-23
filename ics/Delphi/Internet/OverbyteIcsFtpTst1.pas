@@ -9,7 +9,7 @@ Object:       Demo for TFtpClient object (RFC 959 implementation)
 EMail:        http://www.overbyte.be        francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2007 by François PIETTE
+Legal issues: Copyright (C) 1997-2010 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
               <francois.piette@overbyte.be>
 
@@ -109,7 +109,7 @@ uses
 
 const
   FTPTstVersion      = 707;
-  CopyRight : String = ' FtpTst (c) 1997-2009 F. Piette V7.07 ';
+  CopyRight : String = ' FtpTst (c) 1997-2010 F. Piette V7.07 ';
 
 type
   TSyncCmd   = function : Boolean  of object;
@@ -513,9 +513,19 @@ var
 begin
     DisplayMemo.Lines.BeginUpdate;
     try
-        if DisplayMemo.Lines.Count > 2000 then begin
-            for I := 1 to 200 do
-                DisplayMemo.Lines.Delete(0);
+        if DisplayMemo.Lines.Count > 200 then begin
+            { This is much faster than deleting line by line of the memo }
+            { however still slow enough to throttle ICS speed!           }
+            with TStringList.Create do
+            try
+                BeginUpdate;
+                Assign(DisplayMemo.Lines);
+                for I := 1 to 50 do
+                    Delete(0);
+                DisplayMemo.Lines.Text := Text;
+            finally
+                Free;
+            end;
         end;
         DisplayMemo.Lines.Add(Msg);
     finally
