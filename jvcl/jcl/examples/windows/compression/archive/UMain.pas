@@ -7,7 +7,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, ActnList, ComCtrls, ImgList, JclCompression;
+  Dialogs, StdCtrls, ExtCtrls, ActnList, ComCtrls, ImgList, Contnrs,
+  JclCompression;
 
 type
   TFormMain = class(TForm)
@@ -52,6 +53,10 @@ type
     ActionProperties: TAction;
     ButtonPropertiesWO: TButton;
     ButtonPropertiesRW: TButton;
+    ButtonDescend: TButton;
+    ActionDescendRO: TAction;
+    ActionLevelUpRO: TAction;
+    ButtonLevelUp: TButton;
     procedure ActionAlwaysEnabled(Sender: TObject);
     procedure ActionExtractSelectedROUpdate(Sender: TObject);
     procedure ActionExtractAllROUpdate(Sender: TObject);
@@ -74,11 +79,20 @@ type
     procedure FormCreate(Sender: TObject);
     procedure ActionPropertiesUpdate(Sender: TObject);
     procedure ActionPropertiesExecute(Sender: TObject);
+    procedure ActionDescendROUpdate(Sender: TObject);
+    procedure ActionLevelUpROUpdate(Sender: TObject);
+    procedure ActionDescendROExecute(Sender: TObject);
+    procedure ActionLevelUpROExecute(Sender: TObject);
   private
+    FArchiveStack: TObjectList;
     FArchive: TJclCompressionArchive;
-    procedure CloseArchive;
-    procedure ArchiveProgress(Sender: TObject; const Value, MaxValue: Int64);
+    FProgressValue: Byte;
+    FProgressMax: Byte;
+    procedure SyncArchiveProgress;
   public
+    procedure CloseArchive;
+    procedure CloseAllArchive;
+    procedure ArchiveProgress(Sender: TObject; const Value, MaxValue: Int64);
   end;
 
 var
@@ -89,7 +103,8 @@ implementation
 {$R *.dfm}
 
 uses
-  JclAnsiStrings, Sevenzip, FileCtrl,
+  Sevenzip, FileCtrl,
+  JclAnsiStrings,
   UProperties;
 
 function FileTimeToString(const FileTime: TFileTime): string;
@@ -167,6 +182,40 @@ begin
   (Sender as TAction).Enabled := (FArchive is TJclUpdateArchive) and (ListView1.SelCount = 1);
 end;
 
+procedure TFormMain.ActionDescendROExecute(Sender: TObject);
+var
+  ArchiveItem: TJclCompressionItem;
+  ArchiveFileName: WideString;
+  AFormat: TJclDecompressArchiveClass;
+begin
+  ArchiveItem := FArchive.Items[ListView1.ItemIndex];
+  ArchiveFileName := ArchiveItem.NestedArchiveName;
+  AFormat := GetArchiveFormats.FindDecompressFormat(ArchiveFileName);
+  if AFormat <> nil then
+  begin
+    ListView1.Items.Clear;
+    FArchiveStack.Add(FArchive);
+
+    FArchive := AFormat.Create(ArchiveItem.NestedArchiveStream, 0, True);
+    (FArchive as TJclDecompressArchive).ListFiles;
+
+    ListView1.Items.BeginUpdate;
+    try
+      while ListView1.Items.Count < FArchive.ItemCount do
+        ListView1.Items.Add;
+    finally
+      ListView1.Items.EndUpdate;
+    end;
+  end
+  else
+    ShowMessage('not a supported format');
+end;
+
+procedure TFormMain.ActionDescendROUpdate(Sender: TObject);
+begin
+  (Sender as TAction).Enabled := Assigned(FArchive) and (FArchive.SupportsNestedArchive) and (ListView1.SelCount = 1);
+end;
+
 procedure TFormMain.ActionExtractAllROExecute(Sender: TObject);
 var
   Directory: string;
@@ -210,6 +259,16 @@ begin
     and (ListView1.SelCount > 0);
 end;
 
+procedure TFormMain.ActionLevelUpROExecute(Sender: TObject);
+begin
+  CloseArchive;
+end;
+
+procedure TFormMain.ActionLevelUpROUpdate(Sender: TObject);
+begin
+  (Sender as TAction).Enabled := FArchiveStack.Count > 0;
+end;
+
 procedure TFormMain.ActionNewWOExecute(Sender: TObject);
 var
   ArchiveFileName, VolumeSizeStr, Password: string;
@@ -219,7 +278,7 @@ var
 begin
   if SaveDialogArchiveWO.Execute then
   begin
-    CloseArchive;
+    CloseAllArchive;
 
     ArchiveFileName := SaveDialogArchiveWO.FileName;
 
@@ -261,7 +320,7 @@ var
 begin
   if SaveDialogArchiveRW.Execute then
   begin
-    CloseArchive;
+    CloseAllArchive;
 
     ArchiveFileName := SaveDialogArchiveRW.FileName;
 
@@ -297,46 +356,56 @@ end;
 procedure TFormMain.ActionOpenROExecute(Sender: TObject);
 var
   ArchiveFileName, Password: string;
-  AFormat: TJclDecompressArchiveClass;
+  AFormats: TJclDecompressArchiveClassArray;
   SplitArchive: Boolean;
+  Index: Integer;
 begin
   if OpenDialogArchiveRO.Execute then
   begin
-    CloseArchive;
+    CloseAllArchive;
 
     ArchiveFileName := OpenDialogArchiveRO.FileName;
     SplitArchive := AnsiSameText(ExtractFileExt(ArchiveFileName), '.001');
     if SplitArchive then
       ArchiveFileName := ChangeFileExt(ArchiveFileName, '');
 
-    AFormat := GetArchiveFormats.FindDecompressFormat(ArchiveFileName);
+    AFormats := GetArchiveFormats.FindDecompressFormats(ArchiveFileName);
 
-    if AFormat <> nil then
+    if Length(AFormats) > 0 then
     begin
       if SplitArchive then
         ArchiveFileName := ArchiveFileName + '.%.3d';
 
       InputQuery('Archive password', 'Value', Password);
+    end;
 
-      FArchive := AFormat.Create(ArchiveFileName, 0, SplitArchive);
-      FArchive.Password := Password;
-      FArchive.OnProgress := ArchiveProgress;
-
-      if FArchive is TJclDecompressArchive then
-        TJclDecompressArchive(FArchive).ListFiles
-      else
-      if FArchive is TJclUpdateArchive then
-        TJclUpdateArchive(FArchive).ListFiles;
-
-      ListView1.Items.BeginUpdate;
+    for Index := Low(AFormats) to High(AFormats) do
+    begin
+      FArchive := AFormats[Index].Create(ArchiveFileName, 0, SplitArchive);
       try
-        while ListView1.Items.Count < FArchive.ItemCount do
-          ListView1.Items.Add;
-      finally
-        ListView1.Items.EndUpdate;
+        FArchive.Password := Password;
+        FArchive.OnProgress := ArchiveProgress;
+
+        if FArchive is TJclDecompressArchive then
+          TJclDecompressArchive(FArchive).ListFiles
+        else
+        if FArchive is TJclUpdateArchive then
+          TJclUpdateArchive(FArchive).ListFiles;
+
+        ListView1.Items.BeginUpdate;
+        try
+          while ListView1.Items.Count < FArchive.ItemCount do
+            ListView1.Items.Add;
+        finally
+          ListView1.Items.EndUpdate;
+        end;
+        Break;
+      except
+        CloseAllArchive;
       end;
-    end
-    else
+    end;
+
+    if not Assigned(FArchive) then
       ShowMessage('not a supported format');
   end;
 end;
@@ -344,46 +413,55 @@ end;
 procedure TFormMain.ActionOpenRWExecute(Sender: TObject);
 var
   ArchiveFileName, Password: string;
-  AFormat: TJclUpdateArchiveClass;
+  AFormats: TJclUpdateArchiveClassArray;
   SplitArchive: Boolean;
+  Index: Integer;
 begin
   if OpenDialogArchiveRW.Execute then
   begin
-    CloseArchive;
+    CloseAllArchive;
 
     ArchiveFileName := OpenDialogArchiveRW.FileName;
     SplitArchive := AnsiSameText(ExtractFileExt(ArchiveFileName), '.001');
     if SplitArchive then
       ArchiveFileName := ChangeFileExt(ArchiveFileName, '');
 
-    AFormat := GetArchiveFormats.FindUpdateFormat(ArchiveFileName);
+    AFormats := GetArchiveFormats.FindUpdateFormats(ArchiveFileName);
 
-    if AFormat <> nil then
+    if Length(AFormats) > 0 then
     begin
       if SplitArchive then
         ArchiveFileName := ArchiveFileName + '.%.3d';
 
       InputQuery('Archive password', 'Value', Password);
+    end;
 
-      FArchive := AFormat.Create(ArchiveFileName, 0, SplitArchive);
-      FArchive.Password := Password;
-      FArchive.OnProgress := ArchiveProgress;
-
-      if FArchive is TJclDecompressArchive then
-        TJclDecompressArchive(FArchive).ListFiles
-      else
-      if FArchive is TJclUpdateArchive then
-        TJclUpdateArchive(FArchive).ListFiles;
-
-      ListView1.Items.BeginUpdate;
+    for Index := Low(AFormats) to High(AFormats) do
+    begin
+      FArchive := AFormats[Index].Create(ArchiveFileName, 0, SplitArchive);
       try
-        while ListView1.Items.Count < FArchive.ItemCount do
-          ListView1.Items.Add;
-      finally
-        ListView1.Items.EndUpdate;
+        FArchive.Password := Password;
+        FArchive.OnProgress := ArchiveProgress;
+
+        if FArchive is TJclDecompressArchive then
+          TJclDecompressArchive(FArchive).ListFiles
+        else
+        if FArchive is TJclUpdateArchive then
+          TJclUpdateArchive(FArchive).ListFiles;
+
+        ListView1.Items.BeginUpdate;
+        try
+          while ListView1.Items.Count < FArchive.ItemCount do
+            ListView1.Items.Add;
+        finally
+          ListView1.Items.EndUpdate;
+        end;
+        Break;
+      except
+        CloseAllArchive;
       end;
-    end
-    else
+    end;
+    if not Assigned(FArchive) then
       ShowMessage('not a supported format');
   end;
 end;
@@ -401,7 +479,7 @@ end;
 procedure TFormMain.ActionSaveExecute(Sender: TObject);
 begin
   (FArchive as TJclCompressArchive).Compress;
-  CloseArchive;
+  CloseAllArchive;
 end;
 
 procedure TFormMain.ActionSaveUpdate(Sender: TObject);
@@ -416,19 +494,42 @@ begin
   MyValue := Value;
   MyMaxValue := MaxValue;
 
-  while MyMaxValue > High(Word) do
+  while MyMaxValue > High(Byte) do
   begin
     MyMaxValue := MyMaxValue shr 8;
     MyValue := MyValue shr 8;
   end;
-  ProgressBar1.Max := MyMaxValue;
-  ProgressBar1.Position := MyValue;
+
+  FProgressMax := MyMaxValue;
+  FProgressValue := MyValue;
+  TThread.Synchronize(nil, SyncArchiveProgress);
+end;
+
+procedure TFormMain.CloseAllArchive;
+begin
+  while Assigned(FArchive) do
+    CloseArchive;
 end;
 
 procedure TFormMain.CloseArchive;
 begin
-  FreeAndNil(FArchive);
   ListView1.Items.Clear;
+  FreeAndNil(FArchive);
+  if FArchiveStack.Count > 0 then
+  begin
+    FArchive := FArchiveStack.Items[FArchiveStack.Count - 1] as TJclCompressionArchive;
+    FArchiveStack.Count := FArchiveStack.Count - 1;
+  end;
+  if Assigned(FArchive) then
+  begin
+    ListView1.Items.BeginUpdate;
+    try
+      while ListView1.Items.Count < FArchive.ItemCount do
+        ListView1.Items.Add;
+    finally
+      ListView1.Items.EndUpdate;
+    end;
+  end;
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
@@ -459,6 +560,8 @@ var
   AFormats: TJclCompressionArchiveFormats;
   Index: Integer;
 begin
+  FArchiveStack := TObjectList.Create(False);
+
   AFormats := GetArchiveFormats;
 
   AFilter := '';
@@ -488,7 +591,8 @@ end;
 
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
-  CloseArchive;
+  CloseAllArchive;
+  FArchiveStack.Free;
 end;
 
 procedure TFormMain.ListView1Data(Sender: TObject; Item: TListItem);
@@ -557,6 +661,12 @@ begin
     Item.SubItems.Add(IntToHex(CompressionItem.CRC, 8))
   else
     Item.SubItems.Add('');
+end;
+
+procedure TFormMain.SyncArchiveProgress;
+begin
+  ProgressBar1.Max := FProgressMax;
+  ProgressBar1.Position := FProgressValue;
 end;
 
 initialization

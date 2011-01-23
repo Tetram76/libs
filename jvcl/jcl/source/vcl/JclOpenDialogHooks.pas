@@ -21,7 +21,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-03 12:13:30 +0200 (sam. 03 oct. 2009)                           $ }
+{ Last modified: $Date:: 2009-10-03 12:13:30 +0200 (sam., 03 oct. 2009)                          $ }
 { Revision:      $Rev:: 3035                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -94,7 +94,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclOpenDialogHooks.pas $';
     Revision: '$Revision: 3035 $';
-    Date: '$Date: 2009-10-03 12:13:30 +0200 (sam. 03 oct. 2009) $';
+    Date: '$Date: 2009-10-03 12:13:30 +0200 (sam., 03 oct. 2009) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

@@ -17,7 +17,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-03-04 22:17:07 +0100 (jeu. 04 mars 2010)                           $ }
+{ Last modified: $Date:: 2010-03-04 22:17:07 +0100 (jeu., 04 mars 2010)                          $ }
 { Revision:      $Rev:: 3206                                                                     $ }
 { Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
@@ -60,7 +60,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeResult.pas $';
     Revision: '$Revision: 3206 $';
-    Date: '$Date: 2010-03-04 22:17:07 +0100 (jeu. 04 mars 2010) $';
+    Date: '$Date: 2010-03-04 22:17:07 +0100 (jeu., 04 mars 2010) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil

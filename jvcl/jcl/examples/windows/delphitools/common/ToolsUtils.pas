@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date: 2008-09-09 21:32:17 +0200 (mar. 09 sept. 2008) $                                                      } 
+{ Last modified: $Date: 2010-10-26 17:35:58 +0200 (mar., 26 oct. 2010) $                                                      } 
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -78,6 +78,9 @@ procedure D4FixCoolBarResizePaint(CoolBar: TObject);
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
   About, CommCtrl, JclPeImage, JclWin32;
 
 resourcestring

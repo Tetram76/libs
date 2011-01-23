@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009)                          $ }
-{ Revision:      $Rev:: 2892                                                                     $ }
+{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3425                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -68,8 +68,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/threadnames/ThreadExpertSharedNames.pas $';
-    Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009) $';
+    Revision: '$Revision: 3425 $';
+    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
     LogPath: 'JCL\experts\debug\threadnames';
     Extra: '';
     Data: nil
@@ -184,7 +184,7 @@ begin
       wrSignaled:
         Result := True;
       wrTimeout:
-        raise Exception.Create(RsEnterMutexTimeout);
+        raise EJclError.Create(RsEnterMutexTimeout);
     else
       Result := False;
     end;

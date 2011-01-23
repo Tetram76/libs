@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-25 20:22:46 +0200 (mar. 25 août 2009)                          $ }
-{ Revision:      $Rev:: 2969                                                                     $ }
+{ Last modified: $Date:: 2010-10-05 15:24:05 +0200 (mar., 05 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3362                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -38,7 +38,7 @@
 {$WRITEABLECONST OFF} // Read-only typed constants
 {$TYPEDADDRESS OFF}   // Type checked pointers off
 
-{$I jedi.inc} // Pull in the JCL/J-VCL shared directives
+{$I jedi\jedi.inc} // Pull in the JCL/J-VCL shared directives
 
 {$IFNDEF JEDI_INC}
 ALERT_jedi_inc_incompatible
@@ -134,6 +134,11 @@ ALERT_jedi_inc_incompatible
       {$I jcld14.inc}
       {$DEFINE JCL_CONFIGURED}
     {$ENDIF BDS7}
+    {----------------------------}
+    {$IFDEF BDS8}
+      {$I jcld15.inc}
+      {$DEFINE JCL_CONFIGURED}
+    {$ENDIF BDS8}
     {----------------------------}
     {$IFDEF FPC}
       {$I jclfpc.inc}
@@ -266,6 +271,10 @@ ALERT_jedi_inc_incompatible
   {$DEFINE ZLIB_EXPORT_CDECL}
 {$ENDIF ZLIB_LINKONREQUEST}
 // calling convention for static link is fastcall
+
+{$IFNDEF HAS_UNIT_CHARACTER}
+  {$UNDEF UNICODE_RTL_DATABASE}
+{$ENDIF ~HAS_UNIT_CHARACTER}
 
 {$IFDEF UNICODE_RAW_DATA}
   {$UNDEF UNICODE_ZLIB_DATA}

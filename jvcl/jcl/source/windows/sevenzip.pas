@@ -45,8 +45,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010)                          $ }
-{ Revision:      $Rev:: 3266                                                                     $ }
+{ Last modified: $Date:: 2010-11-11 12:20:26 +0100 (jeu., 11 nov. 2010)                          $ }
+{ Revision:      $Rev:: 3416                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -56,6 +56,7 @@ unit sevenzip;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 uses
   Windows,
@@ -64,6 +65,8 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JclBase;
+
+//DOM-IGNORE-BEGIN
 
 // Guid.txt  
 const
@@ -608,21 +611,32 @@ const
 {$IFDEF 7ZIP_LINKONREQUEST}
 type
   TCreateObjectFunc = function (ClsID: PGUID; IID: PGUID; out Obj): HRESULT; stdcall;
+  TGetHandlerProperty2 = function (FormatIndex: Cardinal; PropID: TPropID; out Value: TPropVariant): HRESULT; stdcall;
+  TGetHandlerProperty = function (PropID: TPropID; out Value: TPropVariant): HRESULT; stdcall;
+  TGetMethodProperty = function (CodecIndex: Cardinal; PropID: TPropID; out Value: TPropVariant): HRESULT; stdcall;
   TGetNumberOfFormatsFunc = function (NumFormats: PCardinal): HRESULT; stdcall;
   TGetNumberOfMethodsFunc = function (NumMethods: PCardinal): HRESULT; stdcall;
   TSetLargePageMode = function: HRESULT; stdcall;
 
 var
   CreateObject: TCreateObjectFunc = nil;
+  GetHandlerProperty2: TGetHandlerProperty2 = nil;
+  GetHandlerProperty: TGetHandlerProperty = nil;
+  GetMethodProperty: TGetMethodProperty = nil;
   GetNumberOfFormats: TGetNumberOfFormatsFunc = nil;
   GetNumberOfMethods: TGetNumberOfMethodsFunc = nil;
   SetLargePageMode: TSetLargePageMode = nil;
 {$ELSE ~7ZIP_LINKONREQUEST}
 function CreateObject(ClsID: PGUID; IID: PGUID; out Obj): HRESULT; stdcall;
+function GetHandlerProperty2(FormatIndex: Cardinal; PropID: TPropID; out Value: TPropVariant): HRESULT; stdcall;
+function GetHandlerProperty(PropID: TPropID; out Value: TPropVariant): HRESULT; stdcall;
+function GetMethodProperty(CodecIndex: Cardinal; PropID: TPropID; out Value: TPropVariant): HRESULT; stdcall;
 function GetNumberOfFormats(NumFormats: PCardinal): HRESULT; stdcall;
 function GetNumberOfMethods(NumMethods: PCardinal): HRESULT; stdcall;
 function SetLargePageMode: HRESULT; stdcall;
 {$ENDIF ~7ZIP_LINKONREQUEST}
+
+//DOM-IGNORE-END
 
 function Load7Zip: Boolean;
 function Is7ZipLoaded: Boolean;
@@ -632,8 +646,8 @@ procedure Unload7Zip;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/sevenzip.pas $';
-    Revision: '$Revision: 3266 $';
-    Date: '$Date: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010) $';
+    Revision: '$Revision: 3416 $';
+    Date: '$Date: 2010-11-11 12:20:26 +0100 (jeu., 11 nov. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -653,6 +667,9 @@ type
 const
   sz7Zip = '7z.dll';
   CreateObjectExportName = 'CreateObject';
+  GetHandlerProperty2ExportName = 'GetHandlerProperty2';
+  GetHandlerPropertyExportName = 'GetHandlerProperty';
+  GetMethodPropertyExportName = 'GetMethodProperty';
   GetNumberOfFormatsExportName = 'GetNumberOfFormats';
   GetNumberOfMethodsExportName = 'GetNumberOfMethods';
   SetLargePageModeExportName = 'SetLargePageMode';
@@ -660,6 +677,9 @@ const
 
 {$IFDEF 7ZIP_LINKDLL}
 function CreateObject; external sz7Zip name CreateObjectExportName;
+function GetHandlerProperty2; external sz7Zip name GetHandlerProperty2ExportName;
+function GetHandlerProperty; external sz7Zip name GetHandlerPropertyExportName;
+function GetMethodProperty; external sz7Zip name GetMethodPropertyExportName;
 function GetNumberOfFormats; external sz7Zip name GetNumberOfFormatsExportName;
 function GetNumberOfMethods; external sz7Zip name GetNumberOfMethodsExportName;
 function SetLargePageMode; external sz7Zip name SetLargePageModeExportName;
@@ -695,11 +715,16 @@ begin
     if Result then
     begin
       @CreateObject := GetSymbol(CreateObjectExportName);
+      @GetHandlerProperty2 := GetSymbol(GetHandlerProperty2ExportName);
+      @GetHandlerProperty := GetSymbol(GetHandlerPropertyExportName);
+      @GetMethodProperty := GetSymbol(GetMethodPropertyExportName);
       @GetNumberOfFormats := GetSymbol(GetNumberOfFormatsExportName);
       @GetNumberOfMethods := GetSymbol(GetNumberOfMethodsExportName);
       @SetLargePageMode := GetSymbol(SetLargePageModeExportName);
-      Result := Assigned(@CreateObject) and Assigned(@GetNumberOfFormats) and
-        Assigned(@GetNumberOfMethods) and Assigned(@SetLargePageMode);
+      Result := Assigned(@CreateObject) and Assigned(@GetHandlerProperty2) and
+        Assigned(@GetHandlerProperty) and Assigned(@GetMethodProperty) and
+        Assigned(@GetNumberOfFormats) and Assigned(@GetNumberOfMethods) and
+        Assigned(@SetLargePageMode);
     end;
   end;
 end;
@@ -722,6 +747,9 @@ procedure Unload7Zip;
 begin
   {$IFDEF 7ZIP_LINKONREQUEST}
   @CreateObject := nil;
+  @GetHandlerProperty2 := nil;
+  @GetHandlerProperty := nil;
+  @GetMethodProperty := nil;
   @GetNumberOfFormats := nil;
   @GetNumberOfMethods := nil;
   @SetLargePageMode := nil;

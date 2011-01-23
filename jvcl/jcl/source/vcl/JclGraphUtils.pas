@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-11 12:59:59 +0100 (jeu. 11 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3187                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -276,8 +276,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclGraphUtils.pas $';
-    Revision: '$Revision: 3187 $';
-    Date: '$Date: 2010-02-11 12:59:59 +0100 (jeu. 11 févr. 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -978,6 +978,7 @@ var
 begin
   X := GetSystemMetrics(SM_CXSCREEN);
   Y := GetSystemMetrics(SM_CYSCREEN);
+
   with R do
   begin
     if Right > X then

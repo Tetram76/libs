@@ -21,7 +21,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009)                          $ }
+{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer., 23 sept. 2009)                         $ }
 { Revision:      $Rev:: 3020                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -73,7 +73,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclOpenDialogFavorites.pas $';
     Revision: '$Revision: 3020 $';
-    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009) $';
+    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer., 23 sept. 2009) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-08 13:47:54 +0200 (dim. 08 août 2010)                          $ }
-{ Revision:      $Rev:: 3285                                                                     $ }
+{ Last modified: $Date:: 2011-01-09 22:08:14 +0100 (dim., 09 janv. 2011)                         $ }
+{ Revision:      $Rev:: 3467                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,6 +42,11 @@ resourcestring
   RsCaptionBPLPath    = '&BPL path:';
   RsCaptionDCPPath    = '&DCP path:';
   RsCaptionBPIPath    = 'BP&I path:';
+
+  // License
+  RsCaptionLicense          = 'MPL 1.1 License';
+  RsCaptionLicenseAgreement = 'I agree with the terms of the MPL 1.1 license';
+  RsMissingLicenseAgreement = 'Please agree to the terms of the MPL 1.1 license first';
 
   // Products
   RsCaptionLibrary = 'JEDI Code Library';
@@ -65,9 +70,6 @@ resourcestring
   RsCaptionDefDebugNoMap        = 'No debug source from Map files';
   RsCaptionDefDebugNoExports    = 'No debug source from function export table for libraries';
   RsCaptionDefDebugNoSymbols    = 'No debug source from Microsoft debug symbols';
-  // EDI options
-  RsCaptionDefEDI                 = 'EDI options';
-  RsCaptionDefEDIWeakPackageUnits = 'EDI weak package units';
   // PCRE options
   RsCaptionDefPCRE              = 'PCRE options';
   RsCaptionDefPCREStaticLink    = 'Static link to PCRE code';
@@ -85,6 +87,7 @@ resourcestring
   RsCaptionDefZLibLinkOnRequest = 'Late bind to zlib1.dll';
   // Unicode options
   RsCaptionDefUnicode              = 'Unicode options';
+  RsCaptionDefUnicodeRTLDatabase   = 'Prefer RTL database';
   RsCaptionDefUnicodeSilentFailure = 'Silent failure';
   RsCaptionDefUnicodeRawData       = 'Uncompressed Unicode data';
   RsCaptionDefUnicodeZLibData      = 'Compressed data using zlib';
@@ -177,9 +180,6 @@ resourcestring
   RsHintDefDebugNoTD32       = 'Disable support for TD32 informations';
   RsHintDefDebugNoExports    = 'Disable support for export names of libraries';
   RsHintDefDebugNoSymbols    = 'Disable support for Microsoft debug symbols (PDB and DBG files)';
-  // EDI options
-  RsHintDefEDI                 = 'EDI specific options (JclEDI*.pas)';
-  RsHintDefEDIWeakPackageUnits = 'Mark EDI units as weak package units (check if you use the original EDI package)';
   // PCRE options
   RsHintDefPCRE              = 'PCRE specific options (pcre.pas and JclPCRE.pas)';
   RsHintDefPCREStaticLink    = 'Code from PCRE is linked into JCL binaries';
@@ -197,6 +197,7 @@ resourcestring
   RsHintDefZLibLinkOnRequest = 'JCL binaries require zlib1.dll when calling ZLib functions';
   // Unicode options
   RsHintDefUnicode              = 'Unicode specific option (JclUnicode.pas)';
+  RsHintDefUnicodeRTLDatabase   = 'Prefer RTL Character Database over JCL one, less accurate but reduce executable sizes';
   RsHintDefUnicodeSilentFailure = 'Insert a replacement character if sequence is corrupted rather than raising an exception';
   RsHintDefUnicodeRawData       = 'Link resource containing uncompressed Unicode data (bigger executable size)';
   RsHintDefUnicodeZLibData      = 'Link resource containing Unicode data compressed with ZLib';
@@ -318,6 +319,10 @@ resourcestring
   RsLogFailedAddDebugDCUPath = 'Failed to add debug DCU path';
   RsLogDelDebugDCUPath = 'Removed "%s" from debug DCU Path.';
   RsLogFailedDelDebugDCUPath = 'Failed to remove debug DCU Path.';
+  RsLogAddIdeTools = 'Added %s to %s IDE Tools';
+  RsLogFailedAddIdeTools = 'Failed to add help file to IDE Tools';
+  RsLogDelIdeTools = 'Removing %s from %s IDE Tools';
+  RsLogFailedDelIdeTools = 'Failed to remove help file from IDE Tools';
   RsLogAddOpenHelp = 'Added %s to %s Open Help';
   RsLogFailedAddOpenHelp = 'Failed to add help file to Open Help';
   RsLogDelOpenHelp = 'Removing %s from %s Open Help';
@@ -343,6 +348,7 @@ resourcestring
   RsLogNoPersonalityExtension = 'No personality supports the extension %s';
   RsLogInvalidBplPath = 'Invalid BPL path "%s"';
   RsLogInvalidDcpPath = 'Invalid DCP path "%s"';
+  RsLogInvalidHppPath = 'Invalid HPP path "%s"';
   RsLogLibDescriptor = '%s library %sunits for %s';
 
 implementation

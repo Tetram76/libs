@@ -23,11 +23,11 @@ home page, located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmCompile.pas 3014 2009-09-18 13:53:34Z outchy $
+// $Id: FrmCompile.pas 3349 2010-09-22 08:39:48Z outchy $
 
 unit FrmCompile;
 
-{$I jedi.inc}
+{$I jcl.inc}
 
 interface
 

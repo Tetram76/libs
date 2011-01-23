@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
-{ Revision:      $Rev:: 3044                                                                     $ }
+{ Last modified: $Date:: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3322                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -50,8 +50,29 @@ uses
   JclOtaUtils, JclStackTraceViewerConfigFrame, JclStackTraceViewerOptions;
 
 type
+  {$IFDEF BDS8_UP}
+  TStackTraceViewerAddinOptions = class(TInterfacedObject, INTAAddinOptions)
+  private
+    FFrame: TJclStackTraceViewerConfigFrame;
+    FOptions: TExceptionViewerOption;
+  public
+    constructor Create(AOptions: TExceptionViewerOption);
+    procedure DialogClosed(Accepted: Boolean);
+    procedure FrameCreated(AFrame: TCustomFrame);
+    function GetArea: string;
+    function GetCaption: string;
+    function GetFrameClass: TCustomFrameClass;
+    function ValidateContents: Boolean;
+    function GetHelpContext: Integer;
+    function IncludeInIDEInsight: Boolean;
+  end;
+  {$ENDIF BDS8_UP}
+
   TJclStackTraceViewerExpert = class(TJclOTAExpert)
   private
+    {$IFDEF BDS8_UP}
+    FAddinOptions: TStackTraceViewerAddinOptions;
+    {$ENDIF BDS8_UP}
     FIcon: TIcon;
     FOptions: TExceptionViewerOption;
     FOptionsFrame: TJclStackTraceViewerConfigFrame;
@@ -88,8 +109,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerImpl.pas $';
-    Revision: '$Revision: 3044 $';
-    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
+    Revision: '$Revision: 3322 $';
+    Date: '$Date: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -101,6 +122,9 @@ implementation
 {$R JclStackTraceViewerIcon.res}
 
 uses
+  {$IFDEF BDS8_UP}
+  JclOtaAddinOptions,
+  {$ENDIF BDS8_UP}
   JclDebug, JclFileUtils,
   JclOtaConsts, JclOtaResources;
 
@@ -162,16 +186,76 @@ begin
   end;
 end;
 
+//=== { TStackTraceViewerAddinOptions } ======================================
+
+{$IFDEF BDS8_UP}
+constructor TStackTraceViewerAddinOptions.Create(AOptions: TExceptionViewerOption);
+begin
+  inherited Create;
+  FOptions := AOptions;
+end;
+
+procedure TStackTraceViewerAddinOptions.DialogClosed(Accepted: Boolean);
+begin
+  if Accepted then
+    FOptions.Assign(FFrame.Options);
+end;
+
+procedure TStackTraceViewerAddinOptions.FrameCreated(AFrame: TCustomFrame);
+begin
+  FFrame := TJclStackTraceViewerConfigFrame(AFrame);
+  FFrame.Options := FOptions;
+end;
+
+function TStackTraceViewerAddinOptions.GetArea: string;
+begin
+  Result := '';
+end;
+
+function TStackTraceViewerAddinOptions.GetCaption: string;
+begin
+  Result := JclGetAddinOptionsCaption(RsStackTraceViewerOptionsPageName);
+end;
+
+function TStackTraceViewerAddinOptions.GetFrameClass: TCustomFrameClass;
+begin
+  Result := TJclStackTraceViewerConfigFrame;
+end;
+
+function TStackTraceViewerAddinOptions.GetHelpContext: Integer;
+begin
+  Result := 0;
+end;
+
+function TStackTraceViewerAddinOptions.IncludeInIDEInsight: Boolean;
+begin
+  Result := True;
+end;
+
+function TStackTraceViewerAddinOptions.ValidateContents: Boolean;
+begin
+  Result := True;
+end;
+{$ENDIF BDS8_UP}
+
 //=== { TJclStackTraceViewerExpert } =========================================
 
 constructor TJclStackTraceViewerExpert.Create;
 begin
   inherited Create(JclStackTraceViewerExpertName);
   FOptions := TExceptionViewerOption.Create;
+  {$IFDEF BDS8_UP}
+  FAddinOptions := TStackTraceViewerAddinOptions.Create(FOptions);
+  (BorlandIDEServices as INTAEnvironmentOptionsServices).RegisterAddInOptions(FAddinOptions);
+  {$ENDIF BDS8_UP}
 end;
 
 destructor TJclStackTraceViewerExpert.Destroy;
 begin
+  {$IFDEF BDS8_UP}
+  (BorlandIDEServices as INTAEnvironmentOptionsServices).UnregisterAddInOptions(FAddinOptions);
+  FAddinOptions := nil;
+  {$ENDIF BDS8_UP}
   FOptions.Free;
   FreeAndNil(frmStackView);
   inherited Destroy;

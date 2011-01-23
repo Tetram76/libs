@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-10 20:10:24 +0200 (lun. 10 août 2009)                          $ }
-{ Revision:      $Rev:: 2942                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3391                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -29,6 +29,7 @@
 unit JclDebugXMLSerializer;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 interface
 
@@ -49,8 +50,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebugXMLSerializer.pas $';
-    Revision: '$Revision: 2942 $';
-    Date: '$Date: 2009-08-10 20:10:24 +0200 (lun. 10 août 2009) $';
+    Revision: '$Revision: 3391 $';
+    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

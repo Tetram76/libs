@@ -43,8 +43,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-02 21:27:59 +0200 (lun. 02 août 2010)                          $ }
-{ Revision:      $Rev:: 3276                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,10 +52,10 @@
 unit JclWin32;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 {$MINENUMSIZE 4}
 {$ALIGN ON}
-{$WARNINGS OFF}
 
 interface
 
@@ -109,6 +109,8 @@ type
     property LastError: DWORD read FLastError;
     property LastErrorMsg: string read FLastErrorMsg;
   end;
+
+//DOM-IGNORE-BEGIN
 
 {$IFNDEF FPC}
 
@@ -2973,7 +2975,6 @@ function GlobalMemoryStatusEx(out lpBuffer: TMemoryStatusEx): BOOL; stdcall;
 // line 3189
   
 
-
 function BackupSeek(hFile: THandle; dwLowBytesToSeek, dwHighBytesToSeek: DWORD;
   out lpdwLowByteSeeked, lpdwHighByteSeeked: DWORD;
   var lpContext: Pointer): BOOL; stdcall;
@@ -3097,18 +3098,14 @@ procedure SetExtendedFeaturesMask(ContextEx: PCONTEXT_EX; const FeatureMask: Int
 {$EXTERNALSYM SetExtendedFeaturesMask}
 
 
-
 // From JwaAclApi
 
 // line 185
-
 
 function SetNamedSecurityInfoW(pObjectName: LPWSTR; ObjectType: SE_OBJECT_TYPE;
   SecurityInfo: SECURITY_INFORMATION; psidOwner, psidGroup: PSID;
   pDacl, pSacl: PACL): DWORD; stdcall;
 {$EXTERNALSYM SetNamedSecurityInfoW}
-
-
 const
   IMAGE_SEPARATION = (64*1024);
   {$EXTERNALSYM IMAGE_SEPARATION}
@@ -3137,7 +3134,6 @@ type
   PLoadedImage = PLOADED_IMAGE;
 
 // line 152
-
 
 
 function ReBaseImage(CurrentImageName: PAnsiChar; SymbolPath: PAnsiChar; fReBase: BOOL;
@@ -3192,7 +3188,6 @@ function ImageRvaToSection(NtHeaders: PImageNtHeaders; Base: Pointer; Rva: ULONG
 function ImageRvaToVa(NtHeaders: PImageNtHeaders; Base: Pointer; Rva: ULONG;
   LastRvaSection: PPImageSectionHeader): Pointer; stdcall;
 {$EXTERNALSYM ImageRvaToVa}
-
 
 
 // line 461
@@ -3404,7 +3399,6 @@ const
 
   SYMOPT_DEBUG                  = $80000000;
   {$EXTERNALSYM SYMOPT_DEBUG}
-
 
 const
   NERR_Success = 0; // Success
@@ -5624,7 +5618,6 @@ const
   UDIRTYUI = (SHTDN_REASON_FLAG_DIRTY_UI);
   {$EXTERNALSYM UDIRTYUI}
 
-
 const
   CSIDL_LOCAL_APPDATA        = $001C; { <user name>\Local Settings\Application Data (non roaming) }
   CSIDL_COMMON_APPDATA       = $0023; { All Users\Application Data }
@@ -7540,6 +7533,8 @@ function NtQueryInformationThread(ThreadHandle: THandle; ThreadInformationClass:
 
 
 
+//DOM-IGNORE-END
+
 
 const
   RtdlSetNamedSecurityInfoW: function(pObjectName: LPWSTR; ObjectType: SE_OBJECT_TYPE;
@@ -7609,8 +7604,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWin32.pas $';
-    Revision: '$Revision: 3276 $';
-    Date: '$Date: 2010-08-02 21:27:59 +0200 (lun. 02 août 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -8941,8 +8936,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-
-{$WARNINGS ON}
 
 end.
 

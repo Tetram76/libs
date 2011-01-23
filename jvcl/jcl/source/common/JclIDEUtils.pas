@@ -47,9 +47,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-03-03 23:55:01 +0100 (mer. 03 mars 2010)                           $ }
-{ Revision:      $Rev:: 3205                                                                     $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2010-10-29 19:44:23 +0200 (ven., 29 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3402                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -79,9 +79,9 @@ type
   TJclBorRADToolPath = string;
 
 const
-  SupportedDelphiVersions = [5, 6, 7, 8, 9, 10, 11, 12, 14];
-  SupportedBCBVersions    = [5, 6, 10, 11, 12, 14];
-  SupportedBDSVersions    = [1, 2, 3, 4, 5, 6, 7];
+  SupportedDelphiVersions = [5, 6, 7, 8, 9, 10, 11, 12, 14, 15];
+  SupportedBCBVersions    = [5, 6, 10, 11, 12, 14, 15];
+  SupportedBDSVersions    = [1, 2, 3, 4, 5, 6, 7, 8];
 
   // Object Repository
   BorRADToolRepositoryPagesSection    = 'Repository Pages';
@@ -675,8 +675,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclIDEUtils.pas $';
-    Revision: '$Revision: 3205 $';
-    Date: '$Date: 2010-03-03 23:55:01 +0100 (mer. 03 mars 2010) $';
+    Revision: '$Revision: 3402 $';
+    Date: '$Date: 2010-10-29 19:44:23 +0200 (ven., 29 oct. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -719,11 +719,12 @@ const
   BCBKeyName          = '\SOFTWARE\Borland\C++Builder';
   BDSKeyName          = '\SOFTWARE\Borland\BDS';
   CDSKeyName          = '\SOFTWARE\CodeGear\BDS';
+  EDSKeyName          = '\SOFTWARE\Embarcadero\BDS';
   DelphiKeyName       = '\SOFTWARE\Borland\Delphi';
 
   RADStudioDirName = 'RAD Studio';
 
-  BDSVersions: array [1..7] of TBDSVersionInfo = (
+  BDSVersions: array [1..8] of TBDSVersionInfo = (
     (
       Name: @RsCSharpName;
       VersionStr: '1.0';
@@ -765,6 +766,12 @@ const
       VersionStr: '2010';
       Version: 14;
       CoreIdeVersion: '140';
+      Supported: True),
+    (
+      Name: @RsRSName;
+      VersionStr: 'XE';
+      Version: 15;
+      CoreIdeVersion: '150';
       Supported: True)
   );
   {$ENDIF MSWINDOWS}
@@ -833,6 +840,12 @@ const
   MsBuildWin32BrowsingPathNodeName = 'Win32BrowsingPath';
   MsBuildWin32DebugDCUPathNodeName = 'Win32DebugDCUPath';
   MsBuildWin32DLLOutputPathNodeName = 'Win32DLLOutputPath';
+  MsBuildDelphiDCPOutputNodeName = 'DelphiDCPOutput';
+  MsBuildDelphiLibraryPathNodeName = 'DelphiLibraryPath';
+  MsBuildDelphiBrowsingPathNodeName = 'DelphiBrowsingPath';
+  MsBuildDelphiDebugDCUPathNodeName = 'DelphiDebugDCUPath';
+  MsBuildDelphiDLLOutputPathNodeName = 'DelphiDLLOutputPath';
+  MsBuildDelphiHPPOutputPathNodeName = 'DelphiHPPOutputPath';
   MsBuildCBuilderBPLOutputPathNodeName = 'CBuilderBPLOutputPath';
   MsBuildCBuilderBrowsingPathNodeName = 'CBuilderBrowsingPath';
   MsBuildCBuilderLibraryPathNodeName = 'CBuilderLibraryPath';
@@ -2258,12 +2271,18 @@ end;
 
 function TJclBorRADToolInstallation.LibDebugFolderName: string;
 begin
-  Result := LibFolderName + PathAddSeparator('debug');
+  if (RadToolKind = brBorlandDevStudio) and (VersionNumber >= 8) then
+    Result := PathAddSeparator(RootDir) + PathAddSeparator('lib\win32\debug')
+  else
+    Result := LibFolderName + PathAddSeparator('debug');
 end;
 
 function TJclBorRADToolInstallation.LibFolderName: string;
 begin
-  Result := PathAddSeparator(RootDir) + PathAddSeparator('lib');
+  if (RadToolKind = brBorlandDevStudio) and (VersionNumber >= 8) then
+    Result := PathAddSeparator(RootDir) + PathAddSeparator('lib\win32\release')
+  else
+    Result := PathAddSeparator(RootDir) + PathAddSeparator('lib');
 end;
 
 function TJclBorRADToolInstallation.ObjFolderName: string;
@@ -3274,12 +3293,23 @@ begin
       Result := inherited GetBPLOutputPath;
     5:
       begin
+        // C++Builder 2007 specific code
         Result := SubstitutePath(GetMsBuildEnvOption(MsBuildCBuilderBPLOutputPathNodeName));
         if Result = '' then
           Result := SubstitutePath(GetMsBuildEnvOption(MsBuildWin32DLLOutputPathNodeName));
       end;
-  else
-    Result := SubstitutePath(GetMsBuildEnvOption(MsBuildWin32DLLOutputPathNodeName));
+    6, 7:
+      begin
+        Result := SubstitutePath(GetMsBuildEnvOption(MsBuildCBuilderBPLOutputPathNodeName));
+        if Result = '' then
+          Result := SubstitutePath(GetMsBuildEnvOption(MsBuildWin32DLLOutputPathNodeName));
+      end;
+    8:
+      begin
+        Result := SubstitutePath(GetMsBuildEnvOption(MsBuildCBuilderBPLOutputPathNodeName));
+        if Result = '' then
+          Result := SubstitutePath(GetMsBuildEnvOption(MsBuildDelphiDLLOutputPathNodeName));
+      end;
   end;
 end;
 
@@ -3372,15 +3402,21 @@ begin
     3, 4:
       // use registry
       Result := inherited GetDCPOutputPath;
-    //5:
+    5, 6, 7:
+      // use EnvOptions.proj
+      Result := SubstitutePath(GetMsBuildEnvOption(MsBuildWin32DCPOutputNodeName));
   else
     // use EnvOptions.proj
-    Result := SubstitutePath(GetMsBuildEnvOption(MsBuildWin32DCPOutputNodeName));
+    Result := SubstitutePath(GetMsBuildEnvOption(MsBuildDelphiDCPOutputNodeName));
   end;
 end;
 
 function TJclBDSInstallation.GetDebugDCUPath: TJclBorRADToolPath;
 begin
+  if IDEVersionNumber >= 8 then
+    // use EnvOptions.proj
+    Result := GetMsBuildEnvOption(MsBuildDelphiDebugDCUPathNodeName)
+  else
   if IDEVersionNumber >= 5 then
     // use EnvOptions.proj
     Result := GetMsBuildEnvOption(MsBuildWin32DebugDCUPathNodeName)
@@ -3444,6 +3480,10 @@ end;
 
 function TJclBDSInstallation.GetLibraryBrowsingPath: TJclBorRADToolPath;
 begin
+  if IDEVersionNumber >= 8 then
+    // use EnvOptions.proj
+    Result := GetMsBuildEnvOption(MsBuildDelphiBrowsingPathNodeName)
+  else
   if IDEVersionNumber >= 5 then
     // use EnvOptions.proj
     Result := GetMsBuildEnvOption(MsBuildWin32BrowsingPathNodeName)
@@ -3454,6 +3494,10 @@ end;
 
 function TJclBDSInstallation.GetLibrarySearchPath: TJclBorRADToolPath;
 begin
+  if IDEVersionNumber >= 8 then
+    // use EnvOptions.proj
+    Result := GetMsBuildEnvOption(MsBuildDelphiLibraryPathNodeName)
+  else
   if IDEVersionNumber >= 5 then
     // use EnvOptions.proj
     Result := GetMsBuildEnvOption(MsBuildWin32LibraryPathNodeName)
@@ -3511,6 +3555,10 @@ begin
     else
       AppdataFolder := RegReadString(RootKey, 'Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders', 'AppData');
 
+    if IDEVersionNumber >= 8 then
+      Result := Format('%sEmbarcadero\BDS\%d.0\EnvOptions.proj',
+        [PathAddSeparator(AppdataFolder), IDEVersionNumber])
+    else
     if IDEVersionNumber >= 6 then
       Result := Format('%sCodeGear\BDS\%d.0\EnvOptions.proj',
         [PathAddSeparator(AppdataFolder), IDEVersionNumber])
@@ -3526,7 +3574,14 @@ function TJclBDSInstallation.GetVclIncludeDir: string;
 begin
   if not (bpBCBuilder32 in Personalities) then
     raise EJclBorRadException.CreateResFmt(@RsEDualPackageNotSupported, [Name]);
-  Result := inherited GetVclIncludeDir;
+  if (RadToolKind = brBorlandDevStudio) and (IDEVersionNumber >= 8) then
+  begin
+    Result := SubstitutePath(GetMsBuildEnvOption(MsBuildDelphiHPPOutputPathNodeName));
+    if Result = '' then
+      Result := SubstitutePath('$(BDSCOMMONDIR)\hpp');
+  end
+  else
+    Result := inherited GetVclIncludeDir;
 end;
 
 class function TJclBDSInstallation.PackageSourceFileExtension: string;
@@ -3667,6 +3722,9 @@ begin
   // update registry
   ConfigData.WriteString(LibraryKeyName, BDSDebugDCUPathValueName, Value);
   // update EnvOptions.dproj
+  if IDEVersionNumber >= 8 then
+    SetMsBuildEnvOption(MsBuildDelphiDebugDCUPathNodeName, Value)
+  else
   if IDEVersionNumber >= 5 then
     SetMsBuildEnvOption(MsBuildWin32DebugDCUPathNodeName, Value);
 end;
@@ -3683,6 +3741,9 @@ begin
   // update registry
   inherited SetLibraryBrowsingPath(Value);
   // update EnvOptions.dproj
+  if IDEVersionNumber >= 8 then
+    SetMsBuildEnvOption(MsBuildDelphiBrowsingPathNodeName, Value)
+  else
   if IDEVersionNumber >= 5 then
     SetMsBuildEnvOption(MsBuildWin32BrowsingPathNodeName, Value);
 end;
@@ -3692,6 +3753,9 @@ begin
   // update registry
   inherited SetLibrarySearchPath(Value);
   // update EnvOptions.dproj
+  if IDEVersionNumber >= 8 then
+    SetMsBuildEnvOption(MsBuildDelphiLibraryPathNodeName, Value)
+  else
   if IDEVersionNumber >= 5 then
     SetMsBuildEnvOption(MsBuildWin32LibraryPathNodeName, Value);
 end;
@@ -3951,6 +4015,7 @@ begin
     EnumVersions(BCBKeyName, [], TJclBCBInstallation);
     EnumVersions(BDSKeyName, ['Delphi.Win32', 'BCB', 'Delphi8', 'C#Builder'], TJclBDSInstallation);
     EnumVersions(CDSKeyName, ['Delphi.Win32', 'BCB', 'Delphi8', 'C#Builder'], TJclBDSInstallation);
+    EnumVersions(EDSKeyName, ['Delphi.Win32', 'BCB', 'Delphi8', 'C#Builder'], TJclBDSInstallation);
   finally
     VersionNumbers.Free;
   end;

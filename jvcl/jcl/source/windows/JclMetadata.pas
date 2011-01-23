@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3139                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3391                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -35,6 +35,7 @@
 unit JclMetadata;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 interface
 
@@ -1622,8 +1623,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclMetadata.pas $';
-    Revision: '$Revision: 3139 $';
-    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
+    Revision: '$Revision: 3391 $';
+    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1634,6 +1635,9 @@ implementation
 
 uses
   Math,
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
   JclCIL, JclResources, JclStrings;
 
 const

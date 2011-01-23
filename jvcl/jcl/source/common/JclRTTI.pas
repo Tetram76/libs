@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-18 22:40:40 +0100 (jeu. 18 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3193                                                                     $ }
+{ Last modified: $Date:: 2010-09-15 18:49:04 +0200 (mer., 15 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3339                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -590,15 +590,15 @@ procedure RemoveTypeInfo(TypeInfo: PTypeInfo);
 function JclIsClass(const AnObj: TObject; const AClass: TClass): Boolean;
 function JclIsClassByName(const AnObj: TObject; const AClass: TClass): Boolean;
 
-// returns all properties of type string (kind = tkString or kind = tkUString when Unicode is enabled)
+// returns all properties of type string (kind = tkLString or kind = tkUString when Unicode is enabled)
 function GetStringPropList(TypeInfo: PTypeInfo; out PropList: PPropList): Integer;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclRTTI.pas $';
-    Revision: '$Revision: 3193 $';
-    Date: '$Date: 2010-02-18 22:40:40 +0100 (jeu. 18 févr. 2010) $';
+    Revision: '$Revision: 3339 $';
+    Date: '$Date: 2010-09-15 18:49:04 +0200 (mer., 15 sept. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2494,11 +2494,11 @@ begin
     Result := GetPropList(TypeInfo, [tkUString], PropList);
   end;
   {$ELSE ~SUPPORTS_UNICODE_STRING}
-  Result := GetPropList(TypeInfo, [tkString], PropList);
+  Result := GetPropList(TypeInfo, [tkLString], PropList);
   if Result > 0 then
   begin
     GetMem(PropList, Result * SizeOf(PropList[0]));
-    Result := GetPropList(TypeInfo, [tkString], PropList);
+    Result := GetPropList(TypeInfo, [tkLString], PropList);
   end;
   {$ENDIF ~SUPPORTS_UNICODE_STRING}
 end;

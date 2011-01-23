@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-07-29 16:32:39 +0200 (jeu. 29 juil. 2010)                          $ }
-{ Revision:      $Rev:: 3268                                                                     $ }
+{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3445                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -176,8 +176,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaRepositoryUtils.pas $';
-    Revision: '$Revision: 3268 $';
-    Date: '$Date: 2010-07-29 16:32:39 +0200 (jeu. 29 juil. 2010) $';
+    Revision: '$Revision: 3445 $';
+    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -188,7 +188,7 @@ implementation
 
 uses
   Classes, ActiveX,
-  JclDateTime, JclFileUtils, JclOtaResources, JclTemplates;
+  JclDateTime, JclFileUtils, JclOtaResources, JclPreProcessorTemplates;
 
 //=== { TJclOTARepositoryExpertBase } ========================================
 
@@ -554,7 +554,7 @@ begin
   if FFileName <> '' then
   begin
     try
-      AFileStream := TFileStream.Create(FFileName, fmOpenRead);
+      AFileStream := TFileStream.Create(FFileName, fmOpenRead or fmShareDenyWrite);
       try
         if GetFileTime(AFileStream.Handle, nil, nil, @AFileTime) then
           Result := FileTimeToDateTime(AFileTime)

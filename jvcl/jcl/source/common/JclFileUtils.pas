@@ -51,9 +51,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-07-18 20:04:25 +0200 (dim. 18 juil. 2010)                          $ }
-{ Revision:      $Rev:: 3261                                                                     $ }
-{ Author:        $Author:: sfarrow                                                               $ }
+{ Last modified: $Date:: 2010-12-13 11:20:20 +0100 (lun., 13 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3428                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -671,6 +671,7 @@ type
     function GetCustomFieldValue(const FieldName: string): string;
     class function VersionLanguageId(const LangIdRec: TLangIdRec): string;
     class function VersionLanguageName(const LangId: Word): string;
+    class function FileHasVersionInfo(const FileName: string): boolean;
     function TranslationMatchesLanguages(Exact: Boolean = True): Boolean;
     property BinFileVersion: string read GetBinFileVersion;
     property BinProductVersion: string read GetBinProductVersion;
@@ -1042,8 +1043,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 3261 $';
-    Date: '$Date: 2010-07-18 20:04:25 +0200 (dim. 18 juil. 2010) $';
+    Revision: '$Revision: 3428 $';
+    Date: '$Date: 2010-12-13 11:20:20 +0100 (lun., 13 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1053,6 +1054,10 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
+  Math,
   {$IFDEF MSWINDOWS}
   ShellApi, ActiveX, ComObj, ShlObj,
   JclShell, JclSysInfo, JclSecurity,
@@ -3762,10 +3767,17 @@ begin
     Exit;
   ExtractPath := ExtractFilePath(Name);
   {$ENDIF UNIX}
-  if ExtractPath = '' then
-    Result := CreateDir(Name)
-  else
-    Result := ForceDirectories(ExtractPath) and CreateDir(Name);
+  Result := (ExtractPath = '') or ForceDirectories(ExtractPath);
+  if Result then
+  begin
+    {$IFDEF MSWINDOWS}
+    SetLastError(ERROR_SUCCESS);
+    {$ENDIF MSWINDOWS}
+    Result := Result and CreateDir(Name);
+    {$IFDEF MSWINDOWS}
+    Result := Result or (GetLastError = ERROR_ALREADY_EXISTS);
+    {$ENDIF MSWINDOWS}
+  end;
 end;
 
 function GetDirectorySize(const Path: string): Int64;
@@ -4905,6 +4917,13 @@ begin
   inherited Destroy;
 end;
 
+class function TJclFileVersionInfo.FileHasVersionInfo(const FileName: string): boolean;
+var
+  Dummy: DWord;
+begin
+  Result := GetFileVersionInfoSize(PChar(FileName), Dummy) <> 0;
+end;
+
 procedure TJclFileVersionInfo.CheckLanguageIndex(Value: Integer);
 begin
   if (Value < 0) or (Value >= LanguageCount) then
@@ -4940,11 +4959,19 @@ var
     P: PAnsiChar;
     TempKey: PWideChar;
   begin
+    Key := '';
     P := Data;
     Len := PWord(P)^;
     if Len = 0 then
     begin
-      Error := True;
+      // do not raise error in the case of resources padded with 0
+      while P < EndOfData do
+      begin
+        Error := P^ <> #0;
+        if Error then
+          Break;
+        Inc(P);
+      end;
       Exit;
     end;
     Inc(P, SizeOf(Word));
@@ -6196,8 +6223,13 @@ type
     FRequiredAttr: Integer;
     FFileSizeMin: Int64;
     FFileSizeMax: Int64;
+    {$IFDEF RTL220_UP}
+    FFileTimeMin: TDateTime;
+    FFileTimeMax: TDateTime;
+    {$ELSE ~RTL220_UP}
     FFileTimeMin: Integer;
     FFileTimeMax: Integer;
+    {$ENDIF ~RTL220_UP}
     FSynchronizationMode: TFileEnumeratorSyncMode;
     FIncludeSubDirectories: Boolean;
     FIncludeHiddenSubDirectories: Boolean;
@@ -6226,6 +6258,13 @@ type
     property FileMasks: TStrings read GetFileMasks write SetFileMasks;
     property FileSizeMin: Int64 read FFileSizeMin write FFileSizeMin;
     property FileSizeMax: Int64 read FFileSizeMax write FFileSizeMax;
+    {$IFDEF RTL220_UP}
+    property FileTimeMin: TDateTime read FFileTimeMin write FFileTimeMin;
+    property FileTimeMax: TDateTime read FFileTimeMax write FFileTimeMax;
+    {$ELSE ~RTL220_UP}
+    property FileTimeMin: Integer read FFileTimeMin write FFileTimeMin;
+    property FileTimeMax: Integer read FFileTimeMax write FFileTimeMax;
+    {$ENDIF ~RTL220_UP}
     property Directories: TStrings read GetDirectories write SetDirectories;
     property IncludeSubDirectories: Boolean
       read FIncludeSubDirectories write FIncludeSubDirectories;
@@ -6249,8 +6288,13 @@ begin
   inherited Create(True);
   FDirectories := TStringList.Create;
   FFileMasks := TStringList.Create;
+  {$IFDEF RTL220_UP}
+  FFileTimeMin := -MaxDouble;
+  FFileTimeMax := MaxDouble;
+  {$ELSE ~RTL220_UP}
   FFileTimeMin := Low(FFileInfo.Time);
   FFileTimeMax := High(FFileInfo.Time);
+  {$ENDIF ~RTL220_UP}
   FFileSizeMax := High(FFileSizeMax);
   {$IFDEF MSWINDOWS}
   Priority := tpIdle;
@@ -6342,7 +6386,11 @@ function TEnumFileThread.FileMatch: Boolean;
 var
   FileSize: Int64;
 begin
+  {$IFDEF RTL220_UP}
+  Result := FileNameMatchesMask and (FFileInfo.TimeStamp >= FFileTimeMin) and (FFileInfo.TimeStamp <= FFileTimeMax);
+  {$ELSE ~RTL220_UP}
   Result := FileNameMatchesMask and (FFileInfo.Time >= FFileTimeMin) and (FFileInfo.Time <= FFileTimeMax);
+  {$ENDIF ~RTL220_UP}
   if Result then
   begin
     FileSize := GetSizeOfFile(FFileInfo);

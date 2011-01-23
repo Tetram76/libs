@@ -18,8 +18,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3425                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -58,8 +58,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionCtrlCVSImpl.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3425 $';
+    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -124,9 +124,9 @@ function TJclVersionControlCVS.ExecuteAction(const FileName: TFileName;
     startupInfo.wShowWindow := SW_SHOW;
 
     if FileName = '' then
-      raise Exception.Create(RsEEmptyFileName);
+      raise EJclVersionControlError.Create(RsEEmptyFileName);
     if not Enabled then
-      raise Exception.Create(RsENoTortoiseCVS);
+      raise EJclVersionControlError.Create(RsENoTortoiseCVS);
 
     if FileName[Length(FileName)] = DirDelimiter then
       CurrentDir := FileName
@@ -208,7 +208,7 @@ begin
   Result := inherited GetFileActions(FileName);
 
   CvsDirectory := PathAddSeparator(ExtractFilePath(FileName)) + JclVersionCtrlCVSDirectory;
-  FileNameLine := Format('/%s/', [ExtractFileName(AnsiUpperCaseFileName(FileName))]);
+  FileNameLine := Format('/%s/', [ExtractFileName(AnsiUpperCase(FileName))]);
 
   if DirectoryExists(CvsDirectory) and Enabled then
   begin

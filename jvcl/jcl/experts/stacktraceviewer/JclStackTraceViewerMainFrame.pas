@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3012                                                                     $ }
+{ Last modified: $Date:: 2010-09-21 13:35:35 +0200 (mar., 21 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3345                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -102,8 +102,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerMainFrame.pas $';
-    Revision: '$Revision: 3012 $';
-    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
+    Revision: '$Revision: 3345 $';
+    Date: '$Date: 2010-09-21 13:35:35 +0200 (mar., 21 sept. 2010) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -113,6 +113,9 @@ const
 implementation
 
 uses
+  {$IFDEF BDS8_UP}
+  JclOtaAddinOptions,
+  {$ENDIF BDS8_UP}
   JclOtaConsts, JclOtaResources,
   JclStackTraceViewerImpl;
 
@@ -586,7 +589,7 @@ begin
       {$IFDEF COMPILER12_UP}
       SS.LoadFromFile(OpenDialog1.FileName);
       {$ELSE ~COMPILER12_UP}
-      FS := TFileStream.Create(OpenDialog1.FileName, fmOpenRead);
+      FS := TFileStream.Create(OpenDialog1.FileName, fmOpenRead or fmShareDenyWrite);
       try
         SS.CopyFrom(FS, 0);
       finally
@@ -663,7 +666,11 @@ end;
 procedure TfrmMain.acOptionsExecute(Sender: TObject);
 begin
   inherited;
+  {$IFDEF BDS8_UP}
+  (BorlandIDEServices as IOTAServices).GetEnvironmentOptions.EditOptions('', JclGetAddinOptionsCaption(RsStackTraceViewerOptionsPageName));
+  {$ELSE ~BDS8_UP}
   TJclOTAExpertBase.ConfigurationDialog(LoadResString(@RsStackTraceViewerOptionsPageName));
+  {$ENDIF ~BDS8_UP}
 end;
 
 procedure TfrmMain.acUpdateLocalInfoExecute(Sender: TObject);

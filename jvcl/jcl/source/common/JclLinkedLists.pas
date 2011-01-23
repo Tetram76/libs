@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010)                        $ }
-{ Revision:      $Rev:: 3273                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -53,7 +53,6 @@ uses
 
 type
   TItrStart = (isFirst, isLast);
-
 
   TJclIntfLinkedListItem = class
   public
@@ -1129,7 +1128,10 @@ type
     {$ENDIF SUPPORTS_FOR_IN}
   end;
 
+
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
+
   TJclLinkedListItem<T> = class
   public
     Value: T;
@@ -1257,14 +1259,16 @@ type
     { IJclEqualityComparer<T> }
     function ItemsEqual(const A, B: T): Boolean; override;
   end;
+
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclLinkedLists.pas $';
-    Revision: '$Revision: 3273 $';
-    Date: '$Date: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1275,7 +1279,6 @@ implementation
 
 uses
   SysUtils;
-
 
 //=== { TJclIntfLinkedList } ==================================================
 
@@ -16342,7 +16345,9 @@ begin
   {$ENDIF THREADSAFE}
 end;
 
+
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
 
 //=== { TJclLinkedList<T> } ==================================================
 
@@ -17657,6 +17662,7 @@ begin
     Result := A.Equals(B);
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}

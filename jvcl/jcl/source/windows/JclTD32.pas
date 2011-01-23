@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3160                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3391                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -39,6 +39,7 @@ unit JclTD32;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 uses
   {$IFDEF UNITVERSIONING}
@@ -854,8 +855,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclTD32.pas $';
-    Revision: '$Revision: 3160 $';
-    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
+    Revision: '$Revision: 3391 $';
+    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

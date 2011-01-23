@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-10-20 21:02:31 +0200 (mer., 20 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3379                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -98,7 +98,7 @@ type
     function GetDirectoryCount: Integer;
     function GetDirectory(Index: Integer): string;
     procedure SetDirectory(Index: Integer; const Value: string);
-    function AddDirectory(Caption: string): Integer;
+    function AddDirectory(const Caption: string): Integer;
     function GetProgress: Integer;
     procedure SetProgress(Value: Integer);
     procedure BeginInstall;
@@ -183,7 +183,7 @@ var
   AEdit: TEdit;
 begin
   AEdit := Sender as TEdit;
-  if DirectoryExists(AEdit.Text) then
+  if {$IFDEF RTL220_UP}SysUtils.{$ENDIF RTL220_UP}DirectoryExists(AEdit.Text) then
     AEdit.Font.Color := clWindowText
   else
     AEdit.Font.Color := clRed;
@@ -558,7 +558,7 @@ begin
   PDirectoryRec(FDirectories.Items[Index])^.Edit.Text := Value;
 end;
 
-function TInstallFrame.AddDirectory(Caption: string): Integer;
+function TInstallFrame.AddDirectory(const Caption: string): Integer;
 var
   ADirectoryRec: PDirectoryRec;
   ALabel: TLabel;

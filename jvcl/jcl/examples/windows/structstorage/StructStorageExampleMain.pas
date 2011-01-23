@@ -16,7 +16,7 @@ All Rights Reserved.
 
 Contributor(s):
 
-Last Modified: $Date: 2008-09-09 21:32:17 +0200 (mar. 09 sept. 2008) $
+Last Modified: $Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $
 
 You may retrieve the latest version of this file at the Project JEDI's Code Library home page,
 located at http://jcl.sourceforge.net

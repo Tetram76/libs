@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-10 18:13:22 +0200 (mar. 10 août 2010)                         $ }
-{ Revision:      $Rev:: 3296                                                                     $ }
+{ Last modified: $Date:: 2010-09-20 21:18:26 +0200 (lun., 20 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3344                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -54,9 +54,9 @@ uses
 // Version
 const
   JclVersionMajor   = 2;    // 0=pre-release|beta/1, 2, ...=final
-  JclVersionMinor   = 2;    // Fifth minor release since JCL 1.90
+  JclVersionMinor   = 3;    // Fifth minor release since JCL 1.90
   JclVersionRelease = 0;    // 0: pre-release|beta/ 1: release
-  JclVersionBuild   = 3537; // build number, days since march 1, 2000
+  JclVersionBuild   = 3847; // build number, days since march 1, 2000
   JclVersion = (JclVersionMajor shl 24) or (JclVersionMinor shl 16) or
     (JclVersionRelease shl 15) or (JclVersionBuild shl 0);
 
@@ -322,6 +322,8 @@ function Addr64ToAddr32(const Value: TJclAddr64): TJclAddr32;
 function Addr32ToAddr64(const Value: TJclAddr32): TJclAddr64;
 
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
+
 type
   TCompare<T> = function(const Obj1, Obj2: T): Integer;
   TEqualityCompare<T> = function(const Obj1, Obj2: T): Boolean;
@@ -343,6 +345,8 @@ type
     function GetHashCode2(Obj: T): Integer;
     function IEqualityComparer<T>.GetHashCode = GetHashCode2;
   end;
+
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 const
@@ -362,8 +366,8 @@ procedure GetMem(out P; Size: Longint);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBase.pas $';
-    Revision: '$Revision: 3296 $';
-    Date: '$Date: 2010-08-10 18:13:22 +0200 (mar. 10 août 2010) $';
+    Revision: '$Revision: 3344 $';
+    Date: '$Date: 2010-09-20 21:18:26 +0200 (lun., 20 sept. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -509,6 +513,8 @@ end;
 {$ENDIF OVERFLOWCHECKS_ON}
 
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
+
 //=== { TEquatable<T> } ======================================================
 
 function TEquatable<T>.TestEquals(Other: T): Boolean;
@@ -538,6 +544,7 @@ begin
     Result := Obj.GetHashCode;
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 procedure LoadAnsiReplacementCharacter;

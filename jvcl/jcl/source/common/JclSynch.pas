@@ -31,7 +31,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-02 13:56:05 +0200 (mer. 02 sept. 2009)                          $ }
+{ Last modified: $Date:: 2009-09-02 13:56:05 +0200 (mer., 02 sept. 2009)                         $ }
 { Revision:      $Rev:: 2984                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -336,7 +336,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSynch.pas $';
     Revision: '$Revision: 2984 $';
-    Date: '$Date: 2009-09-02 13:56:05 +0200 (mer. 02 sept. 2009) $';
+    Date: '$Date: 2009-09-02 13:56:05 +0200 (mer., 02 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

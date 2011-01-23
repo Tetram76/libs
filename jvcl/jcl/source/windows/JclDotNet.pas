@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3139                                                                     $ }
+{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3425                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -49,6 +49,7 @@ unit JclDotNet;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 uses
   {$IFDEF UNITVERSIONING}
@@ -80,7 +81,7 @@ type
   TJclClrHostLoaderFlags = set of TJclClrHostLoaderFlag;
 
 type
-  EJclClrException = class(SysUtils.Exception);
+  EJclClrException = class(EJclError);
   
   TJclClrAppDomain = class;
   TJclClrAppDomainSetup = class;
@@ -321,9 +322,9 @@ type
   {$EXTERNALSYM CLSID_RESOLUTION_FLAGS}
 
 const
-  CLSID_RESOLUTION_DEFAULT	  = $0;
+  CLSID_RESOLUTION_DEFAULT    = $0;
   {$EXTERNALSYM CLSID_RESOLUTION_DEFAULT}
-	CLSID_RESOLUTION_REGISTERED	= $1;
+  CLSID_RESOLUTION_REGISTERED = $1;
   {$EXTERNALSYM CLSID_RESOLUTION_REGISTERED}
 
 function GetRequestedRuntimeVersionForCLSID(rclsid: TGuid; pVersion: PWideChar;
@@ -338,8 +339,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDotNet.pas $';
-    Revision: '$Revision: 3139 $';
-    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
+    Revision: '$Revision: 3425 $';
+    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -447,8 +448,6 @@ begin
       raise EJclError.CreateResFmt(@RsEFunctionNotFound, [ModuleName, ProcName]);
   end;
 end;
-
-{$WARNINGS OFF}
 
 type
   TGetCORSystemDirectory = function (pbuffer: PWideChar; const cchBuffer: DWORD;
@@ -728,8 +727,6 @@ begin
   GetProcedureAddress(Pointer(@_GetRequestedRuntimeVersionForCLSID), mscoree_dll, 'GetRequestedRuntimeVersionForCLSID');
   Result := _GetRequestedRuntimeVersionForCLSID(rclsid, pVersion, cchBuffer, dwLength, dwResolutionFlags);
 end;
-
-{$WARNINGS ON}
 
 //=== { TJclClrHost } ========================================================
 

@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3147                                                                     $ }
+{ Last modified: $Date:: 2010-09-20 21:18:26 +0200 (lun., 20 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3344                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -54,6 +54,7 @@ uses
 
 type
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
   TRefUnique = class;
   TRefUnique = class(TInterfacedObject, IEquatable<TRefUnique>, IJclEqualityComparer<TRefUnique>)
   public
@@ -65,6 +66,7 @@ type
     function ItemsEqual(const A, B: TRefUnique): Boolean;
     property EqualityCompare: TEqualityCompare<TRefUnique> read GetEqualityCompare write SetEqualityCompare;
   end;
+  //DOM-IGNORE-END
   {$ELSE ~SUPPORTS_GENERICS}
   TRefUnique = TInterfacedObject;
   {$ENDIF ~SUPPORTS_GENERICS}
@@ -839,6 +841,7 @@ type
   end;
 
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
 
   TJclHashSet<T> = class(TJclAbstractContainer<T>, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
     IJclIntfCloneable, IJclCloneable, IJclPackable, IJclContainer, IJclItemOwner<T>, IJclEqualityComparer<T>,
@@ -945,14 +948,16 @@ type
     { IJclEqualityComparer<T> }
     function ItemsEqual(const A, B: T): Boolean; override;
   end;
+
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclHashSets.pas $';
-    Revision: '$Revision: 3147 $';
-    Date: '$Date: 2010-01-27 13:08:09 +0100 (mer. 27 janv. 2010) $';
+    Revision: '$Revision: 3344 $';
+    Date: '$Date: 2010-09-20 21:18:26 +0200 (lun., 20 sept. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -982,6 +987,7 @@ begin
 end;
 
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
 
 //=== { TRefUnique } ==========================================================
 
@@ -1004,6 +1010,8 @@ function TRefUnique.Equals(Other: TRefUnique): Boolean;
 begin
   Result := Self = Other;
 end;
+
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 //=== { TJclIntfHashSet } =====================================================
@@ -5408,6 +5416,7 @@ begin
 end;
 
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
 
 //=== { TJclHashSet<T> } =====================================================
 
@@ -5865,6 +5874,7 @@ begin
     Result := A.Equals(B);
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 initialization

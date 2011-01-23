@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010)                          $ }
-{ Revision:      $Rev:: 3266                                                                     $ }
+{ Last modified: $Date:: 2011-01-05 20:29:18 +0100 (mer., 05 janv. 2011)                         $ }
+{ Revision:      $Rev:: 3460                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1001,6 +1001,7 @@ resourcestring
   RsCompressionUnsupportedMethod     = 'Unsupported method';
   RsCompressionDataError             = 'Data error';
   RsCompressionCRCError              = 'CRC error';
+  RsCompressionNoNestedArchive       = 'Nested archive is not supported';
   RsCompressionUnknownError          = 'Unknown error';
   RsCompression7zLoadError           = 'Sevenzip: Failed to load 7z.dll';
   RsCompression7zReturnError         = 'Sevenzip: Error result (%.8x) "%s"';
@@ -1011,21 +1012,39 @@ resourcestring
   RsCompression7zWindows             = 'Windows';
   RsCompression7zUnix                = 'Unix';
   RsCompressionZipName               = 'Zip archive';
-  RsCompressionZipExtensions         = '*.zip;*.jar;*.xpi';
+  RsCompressionZipExtensions         = '*.zip;' +   // Basic ZIP file
+                                       '*.jar;*.ear;*.war;' +  // JAVA files
+                                       '*.cbz;' + //Comic reader files - ZIP version
+                                       '*.apk;' + // Android application package
+                                       '*.wsz;*.wal;' + // Winamp Skins
+                                       '*.xpi;*.crx;' + // Firefox, Chrome extensions
+                                       '*.dfsz;' + // ???
+                                       '*.pcv;' + // MozBackup file
+                                       '*.bsz;' + // BSplayer skin
+                                       '*.mskin;' + // Maxthon skin
+                                       '*.wmz;' + // Windows Media Player skin
+                                       '*.ipa;' + // iPhone/iPad application
+                                       '*.docx;*.xlsx;*.pptx;' + // MsOffice
+                                       '*.sxw;*.sxi;*.sxt;*.sxd;*.sxc;*.sxm;*.sxg;*.stw;*.sti;*.std;*.stc;' + // OpenOffice.org 1.x documents and templates
+                                       '*.odh;*.odd;*.odt;*.odm;*.ods;*.ots;*.odg;*.otg;*.odp;*.otp;*.odf;*.odb'; // OpenOffice.org 2.x/3.x docs and templates
   RsCompressionBZip2Name             = 'BZip2 archive';
   RsCompressionBZip2Extensions       = '*.bz2;*.bzip2;*.tbz2;*.tbz';
+  RsCompressionBZip2SubExtensions    = '.tbz2=.tar;.tbz=.tar';
   RsCompressionRarName               = 'Rar archive';
-  RsCompressionRarExtensions         = '*.rar;*.r00';
+  RsCompressionRarExtensions         = '*.rar;*.r00;'+
+                                       '*.cbr'; // Comic reader file - RAR version
   RsCompressionArjName               = 'Arj archive';
   RsCompressionArjExtensions         = '*.arj';
   RsCompressionZName                 = 'Z archive';
   RsCompressionZExtensions           = '*.z;*.taz';
+  RsCompressionZSubExtensions        = '.taz=.tar';
   RsCompressionLzhName               = 'Lzh archive';
   RsCompressionLzhExtensions         = '*.lzh;*.lha';
   RsCompression7zName                = '7z archive';
   RsCompression7zExtensions          = '*.7z';
   RsCompressionCabName               = 'Cab archive';
-  RsCompressionCabExtensions         = '*.cab';
+  RsCompressionCabExtensions         = '*.cab;'+
+                                       '*.fwp'; // FrontPage Web Package
   RsCompressionNsisName              = 'Nsis archive';
   RsCompressionNsisExtensions        = '*.nsis';
   RsCompressionLzmaName              = 'Lzma archive';
@@ -1041,9 +1060,10 @@ resourcestring
   // TODO: extension might be *.*, but then TJclCompressionStreamFormats.FindDecompressFormat can fail
   RsCompressionMachoExtensions       = '*.';
   RsCompressionUdfName               = 'Udf archive';
-  RsCompressionUdfExtensions         = '*.iso';
+  RsCompressionUdfExtensions         = '*.iso;*.img';
   RsCompressionXarName               = 'Xar archive';
-  RsCompressionXarExtensions         = '*.xar';
+  RsCompressionXarExtensions         = '*.xar;'+
+                                       '*.safariextz'; // Safari extensions
   RsCompressionMubName               = 'Mub archive';
   // TODO: extension might be *.*, but then TJclCompressionStreamFormats.FindDecompressFormat can fail
   RsCompressionMubExtensions         = '*.';
@@ -1056,7 +1076,7 @@ resourcestring
   RsCompressionWimName               = 'Wim archive';
   RsCompressionWimExtensions         = '*.wim;*.swm';
   RsCompressionIsoName               = 'Iso archive';
-  RsCompressionIsoExtensions         = '*.iso';
+  RsCompressionIsoExtensions         = '*.iso;*.img';
   RsCompressionChmName               = 'Chm archive';
   RsCompressionChmExtensions         = '*.chm;*.chi;*.chq;*.chw;*.hxs;*.hxi;*.hxr;*.hxq;*.hxw;*.lit';
   RsCompressionSplitName             = 'Split archive';
@@ -1071,8 +1091,10 @@ resourcestring
   RsCompressionTarExtensions         = '*.tar';
   RsCompressionGZipName              = 'GZip archive';
   RsCompressionGZipExtensions        = '*.gz;*.gzip;*.tgz;*.tpz';
+  RsCompressionGZipSubExtensions     = '.tgz=.tar;.tpz=.tar';
   RsCompressionXzName                = 'Xz archive';
   RsCompressionXzExtensions          = '*.xz;*.txz';
+  RsCompressionXzSubExtensions       = '.txz=.tar';
   RsCompressionNtfsName              = 'Ntfs archive';
   RsCompressionNtfsExtensions        = '*.ntfs;*.img';
   RsCompressionFatName               = 'Fat archive';
@@ -1080,7 +1102,8 @@ resourcestring
   RsCompressionMbrName               = 'Mbr archive';
   RsCompressionMbrExtensions         = '*.mbr';
   RsCompressionVhdName               = 'Vhd archive';
-  RsCompressionVhdExtensions         = '*.vhd;*.mbr';
+  RsCompressionVhdExtensions         = '*.vhd';
+  RsCompressionVhdSubExtensions      = '.vhd=.mbr';
   RsCompressionFlvName               = 'Flv archive';
   RsCompressionFlvExtensions         = '*.flv';
   RsCompressionMsLZName              = 'MsLZ archive';
@@ -1820,6 +1843,7 @@ resourcestring
   RsIntelCacheDescr71 = 'Trace cache: 16 K-Ops, 8-way set associative';
   RsIntelCacheDescr72 = 'Trace cache: 32 K-Ops, 8-way set associative';
   RsIntelCacheDescr73 = 'Trace cache: 64 K-Ops, 8-way set associative';
+  RsIntelCacheDescr76 = 'Instruction TLB: 2M/4M pages, fully associative, 8 entries';
   RsIntelCacheDescr78 = '2nd-level cache: 1 MBytes, 4-way set associative, 64 bytes line size';
   RsIntelCacheDescr79 = '2nd-level cache: 128 KBytes, 8-way set associative, 64 bytes line size, 2 lines per sector';
   RsIntelCacheDescr7A = '2nd-level cache: 256 KBytes, 8-way set associative, 64 bytes line size, 2 lines per sector';
@@ -1991,8 +2015,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3266 $';
-    Date: '$Date: 2010-07-25 13:44:27 +0200 (dim. 25 juil. 2010) $';
+    Revision: '$Revision: 3460 $';
+    Date: '$Date: 2011-01-05 20:29:18 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

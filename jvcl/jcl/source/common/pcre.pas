@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-06-15 20:16:00 +0200 (mar. 15 juin 2010)                           $ }
-{ Revision:      $Rev:: 3259                                                                     $ }
+{ Last modified: $Date:: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3343                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -49,6 +49,8 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JclBase;
+
+//DOM-IGNORE-BEGIN
 
 (*************************************************
 *       Perl-Compatible Regular Expressions      *
@@ -579,6 +581,8 @@ var
 
 {$ENDIF PCRE_LINKONREQUEST}
 
+//DOM-IGNORE-END
+
 function IsPCRELoaded: Boolean;
 function LoadPCRE: Boolean;
 procedure UnloadPCRE;
@@ -587,8 +591,8 @@ procedure UnloadPCRE;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/pcre.pas $';
-    Revision: '$Revision: 3259 $';
-    Date: '$Date: 2010-06-15 20:16:00 +0200 (mar. 15 juin 2010) $';
+    Revision: '$Revision: 3343 $';
+    Date: '$Date: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

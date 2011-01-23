@@ -33,6 +33,7 @@
 {   Michael Winter                                                                                 }
 {   Nick Hodges                                                                                    }
 {   Olivier Sannier (obones)                                                                       }
+{   Patrick Kolla                                                                                  }
 {   Pelle F. S. Liljendal                                                                          }
 {   Petr Vones (pvones)                                                                            }
 {   Robert Lee                                                                                     }
@@ -46,8 +47,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3160                                                                     $ }
+{ Last modified: $Date:: 2011-01-15 11:08:45 +0100 (sam., 15 janv. 2011)                         $ }
+{ Revision:      $Rev:: 3476                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -85,11 +86,16 @@ type
   private
     FDelimiter: AnsiChar;
     FNameValueSeparator: AnsiChar;
-
+    FStrictDelimiter: Boolean;
+    FQuoteChar: AnsiChar;
     function GetText: AnsiString;
     procedure SetText(const Value: AnsiString);
-    function GetDelimitedText: AnsiString;
-    procedure SetDelimitedText(const Value: AnsiString);
+    function GetCommaText: AnsiString; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+    procedure SetCommaText(const Value: AnsiString); {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+    function GetDelimitedText: AnsiString; overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+    function GetDelimitedText(const ADelimiter: AnsiString; AQuoteChar: AnsiChar): AnsiString; overload;
+    procedure SetDelimitedText(const Value: AnsiString); overload; {$IFDEF SUPPORTS_INLINE}inline;{$ENDIF}
+    procedure SetDelimitedText(const Value, ADelimiter: AnsiString; AQuoteChar: AnsiChar); overload;
     function ExtractName(const S: AnsiString): AnsiString;
     function GetName(Index: Integer): AnsiString;
     function GetValue(const Name: AnsiString): AnsiString;
@@ -136,6 +142,9 @@ type
 
     property Delimiter: AnsiChar read FDelimiter write FDelimiter;
     property DelimitedText: AnsiString read GetDelimitedText write SetDelimitedText;
+    property CommaText: AnsiString read GetCommaText write SetCommaText;
+    property StrictDelimiter: Boolean read FStrictDelimiter write FStrictDelimiter;
+    property QuoteChar: AnsiChar read FQuoteChar write FQuoteChar;
 
     property Strings[Index: Integer]: AnsiString read GetString write SetString; default;
     property Objects[Index: Integer]: TObject read GetObject write SetObject;
@@ -349,7 +358,8 @@ function StrTrimCharLeft(const S: AnsiString; C: AnsiChar): AnsiString;
 function StrTrimCharsLeft(const S: AnsiString; const Chars: TSysCharSet): AnsiString;
 function StrTrimCharRight(const S: AnsiString; C: AnsiChar): AnsiString;
 function StrTrimCharsRight(const S: AnsiString; const Chars: TSysCharSet): AnsiString;
-function StrTrimQuotes(const S: AnsiString): AnsiString;
+function StrTrimQuotes(const S: AnsiString): AnsiString; overload;
+function StrTrimQuotes(const S: AnsiString; QuoteChar: AnsiChar): AnsiString; overload;
 function StrUpper(const S: AnsiString): AnsiString;
 procedure StrUpperInPlace(var S: AnsiString);
 procedure StrUpperBuff(S: PAnsiChar);
@@ -376,10 +386,15 @@ function StrCompareRange(const S1, S2: AnsiString; Index, Count: SizeInt; CaseSe
 function StrRepeatChar(C: AnsiChar; Count: SizeInt): AnsiString;
 function StrFind(const Substr, S: AnsiString; const Index: SizeInt = 1): SizeInt;
 function StrHasPrefix(const S: AnsiString; const Prefixes: array of AnsiString): Boolean;
-function StrIndex(const S: AnsiString; const List: array of AnsiString): SizeInt;
+function StrHasSuffix(const S: AnsiString; const Suffixes: array of AnsiString): Boolean;
+function StrIHasPrefix(const S: AnsiString; const Prefixes: array of AnsiString): Boolean;
+function StrIHasSuffix(const S: AnsiString; const Suffixes: array of AnsiString): Boolean;
+function StrIndex(const S: AnsiString; const List: array of AnsiString; CaseSensitive: Boolean = False): SizeInt;
 function StrILastPos(const SubStr, S: AnsiString): SizeInt;
 function StrIPos(const SubStr, S: AnsiString): SizeInt;
+function StrIPrefixIndex(const S: AnsiString; const Prefixes: array of AnsiString): SizeInt;
 function StrIsOneOf(const S: AnsiString; const List: array of AnsiString): Boolean;
+function StrISuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
 function StrLastPos(const SubStr, S: AnsiString): SizeInt;
 function StrMatch(const Substr, S: AnsiString; Index: SizeInt = 1): SizeInt;
 function StrMatches(const Substr, S: AnsiString; const Index: SizeInt = 1): Boolean;
@@ -387,6 +402,7 @@ function StrNIPos(const S, SubStr: AnsiString; N: SizeInt): SizeInt;
 function StrNPos(const S, SubStr: AnsiString; N: SizeInt): SizeInt;
 function StrPrefixIndex(const S: AnsiString; const Prefixes: array of AnsiString): SizeInt;
 function StrSearch(const Substr, S: AnsiString; const Index: SizeInt = 1): SizeInt;
+function StrSuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
 
 // String Extraction
 function StrAfter(const SubStr, S: AnsiString): AnsiString;
@@ -500,8 +516,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAnsiStrings.pas $';
-    Revision: '$Revision: 3160 $';
-    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
+    Revision: '$Revision: 3476 $';
+    Date: '$Date: 2011-01-15 11:08:45 +0100 (sam., 15 janv. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -517,7 +533,7 @@ uses
   {$IFDEF SUPPORTS_UNICODE}
   RtlConsts,
   {$ENDIF SUPPORTS_UNICODE}
-  JclLogic, JclResources, JclStreams, JclSynch;
+  JclLogic, JclResources, JclStreams, JclSynch, JclSysUtils;
 
 //=== Internal ===============================================================
 
@@ -656,6 +672,8 @@ begin
 
   FDelimiter := ',';
   FNameValueSeparator := '=';
+  FQuoteChar := '"';
+  FStrictDelimiter := False;
 end;
 
 procedure TJclAnsiStrings.Assign(Source: TPersistent);
@@ -797,15 +815,36 @@ begin
   end;
 end;
 
+function TJclAnsiStrings.GetCommaText: AnsiString;
+begin
+  Result := GetDelimitedText(AnsiComma, AnsiDoubleQuote);
+end;
+
 function TJclAnsiStrings.GetDelimitedText: AnsiString;
+begin
+  Result := GetDelimitedText(Delimiter, QuoteChar);
+end;
+
+function TJclAnsiStrings.GetDelimitedText(const ADelimiter: AnsiString; AQuoteChar: AnsiChar): AnsiString;
+
+  function Quoted(Item: AnsiString): AnsiString;
+  begin
+    if (not StrictDelimiter) and ((Pos(AnsiSpace, Item) > 0) or (Pos(FQuoteChar, Item) > 0)) then
+    begin
+      Result := AnsiQuotedStr(Item, AQuoteChar);
+    end
+    else
+      Result := Item;
+  end;
+
 var
   I: Integer;
 begin
   Result := '';
   for I := 0 to Count - 2 do
-    Result := Result + Strings[I] + Delimiter;
+    Result := Result + Quoted(Strings[I]) + ADelimiter;
   if Count > 0 then
-    Result := Result + Strings[Count - 1];
+    Result := Result + Quoted(Strings[Count - 1]);
 end;
 
 procedure TJclAnsiStrings.Insert(Index: Integer; const S: AnsiString);
@@ -813,19 +852,54 @@ begin
   InsertObject(Index, S, nil);
 end;
 
+procedure TJclAnsiStrings.SetCommaText(const Value: AnsiString);
+begin
+  SetDelimitedText(Value, AnsiComma, AnsiDoubleQuote);
+end;
+
 procedure TJclAnsiStrings.SetDelimitedText(const Value: AnsiString);
+begin
+  SetDelimitedText(Value, Delimiter, QuoteChar);
+end;
+
+procedure TJclAnsiStrings.SetDelimitedText(const Value, ADelimiter: AnsiString; AQuoteChar: AnsiChar);
+
+  procedure InternalAdd(Item: AnsiString);
+  begin
+    Item := StrTrimQuotes(Item, AQuoteChar);
+    StrReplace(Item, AQuoteChar + AQuoteChar, AQuoteChar, [rfReplaceAll]);
+    Add(Item);
+  end;
+
 var
-  LastStart: Integer;
-  Index: Integer;
+  ValueLength, LastStart, Index, QuoteCharCount: Integer;
+  ValueChar: AnsiChar;
 begin
   Clear;
   LastStart := 1;
-  for Index := 1 to Length(Value) do
+  QuoteCharCount := 0;
+  ValueLength := Length(Value);
+  for Index := 1 to ValueLength do
   begin
-    if Value[Index] = Delimiter then
+    ValueChar := Value[Index];
+    if ValueChar = AQuoteChar then
+      Inc(QuoteCharCount);
+    if ((ValueChar = ADelimiter) or ((ValueChar = ' ') and (not StrictDelimiter)))
+    and ((not Odd(QuoteCharCount) or (QuoteCharCount = 0))) then
     begin
-      Add(Copy(Value, LastStart, Index - LastStart));
+      if StrictDelimiter then
+        Add(Copy(Value, LastStart, Index - LastStart))
+      else
+        InternalAdd(Copy(Value, LastStart, Index - LastStart));
+      QuoteCharCount := 0;
       LastStart := Index + 1;
+    end;
+    if (Index = ValueLength) and (LastStart < ValueLength) then
+    begin
+      if StrictDelimiter then
+        Add(Copy(Value, LastStart, ValueLength - LastStart + 1))
+      else
+        InternalAdd(Copy(Value, LastStart, Index - LastStart + 1));
     end;
   end;
 end;
@@ -836,9 +910,9 @@ var
 begin
   Result := '';
   for I := 0 to Count - 2 do
-    Result := Result + Strings[I] + sLineBreak;
+    Result := Result + Strings[I] + AnsiLineBreak;
   if Count > 0 then
-    Result := Result + Strings[Count - 1];
+    Result := Result + Strings[Count - 1] + AnsiLineBreak;
 end;
 
 procedure TJclAnsiStrings.SetText(const Value: AnsiString);
@@ -1140,7 +1214,7 @@ begin
   if Count = Capacity then
     Grow;
 
-  for I := Index to Count - 1 do
+  for I := Count - 1 downto Index do
     FStrings[I + 1] := FStrings[I];
 
   FStrings[Index].Str := S;
@@ -2189,6 +2263,25 @@ begin
     Result := S;
 end;
 
+function StrTrimQuotes(const S: AnsiString; QuoteChar: AnsiChar): AnsiString;
+var
+  First, Last: AnsiChar;
+  L: SizeInt;
+begin
+  L := Length(S);
+  if L > 1 then
+  begin
+    First := S[1];
+    Last := S[L];
+    if (First = Last) and (First = QuoteChar) then
+      Result := Copy(S, 2, L - 2)
+    else
+      Result := S;
+  end
+  else
+    Result := S;
+end;
+
 function StrUpper(const S: AnsiString): AnsiString;
 begin
   Result := S;
@@ -2481,14 +2574,29 @@ begin
   Result := StrPrefixIndex(S, Prefixes) > -1;
 end;
 
-function StrIndex(const S: AnsiString; const List: array of AnsiString): SizeInt;
+function StrHasSuffix(const S: AnsiString; const Suffixes: array of AnsiString): Boolean;
+begin
+  Result := StrSuffixIndex(S, Suffixes) > -1;
+end;
+
+function StrIHasPrefix(const S: AnsiString; const Prefixes: array of AnsiString): Boolean;
+begin
+  Result := StrIPrefixIndex(S, Prefixes) > -1;
+end;
+
+function StrIHasSuffix(const S: AnsiString; const Suffixes: array of AnsiString): Boolean;
+begin
+  Result := StrISuffixIndex(S, Suffixes) > -1;
+end;
+
+function StrIndex(const S: AnsiString; const List: array of AnsiString; CaseSensitive: Boolean): SizeInt;
 var
   I: SizeInt;
 begin
   Result := -1;
   for I := Low(List) to High(List) do
   begin
-    if StrSame(S, List[I]) then
+    if StrCompare(S, List[I], CaseSensitive) = 0 then
     begin
       Result := I;
       Break;
@@ -2506,9 +2614,43 @@ begin
   Result := Pos(StrUpper(SubStr), StrUpper(S));
 end;
 
+function StrIPrefixIndex(const S: AnsiString; const Prefixes: array of AnsiString): SizeInt;
+var
+  I: SizeInt;
+  Test: AnsiString;
+begin
+  Result := -1;
+  for I := Low(Prefixes) to High(Prefixes) do
+  begin
+    Test := StrLeft(S, Length(Prefixes[I]));
+    if CompareText(Test, Prefixes[I]) = 0 then
+    begin
+      Result := I;
+      Break;
+    end;
+  end;
+end;
+
 function StrIsOneOf(const S: AnsiString; const List: array of AnsiString): Boolean;
 begin
   Result := StrIndex(S, List) > -1;
+end;
+
+function StrISuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
+var
+  I: SizeInt;
+  Test: AnsiString;
+begin
+  Result := -1;
+  for I := Low(Suffixes) to High(Suffixes) do
+  begin
+    Test := StrRight(S, Length(Suffixes[I]));
+    if CompareText(Test, Suffixes[I]) = 0 then
+    begin
+      Result := I;
+      Break;
+    end;
+  end;
 end;
 
 function StrLastPos(const SubStr, S: AnsiString): SizeInt;
@@ -2745,7 +2887,7 @@ begin
   for I := Low(Prefixes) to High(Prefixes) do
   begin
     Test := StrLeft(S, Length(Prefixes[I]));
-    if StrSame(Test, Prefixes[I]) then
+    if CompareStr(Test, Prefixes[I]) = 0 then
     begin
       Result := I;
       Break;
@@ -2774,6 +2916,23 @@ begin
   end
   else
     Result := 0;
+end;
+
+function StrSuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
+var
+  I: SizeInt;
+  Test: AnsiString;
+begin
+  Result := -1;
+  for I := Low(Suffixes) to High(Suffixes) do
+  begin
+    Test := StrRight(S, Length(Suffixes[I]));
+    if CompareStr(Test, Suffixes[I]) = 0 then
+    begin
+      Result := I;
+      Break;
+    end;
+  end;
 end;
 
 //=== String Extraction ======================================================
@@ -2907,13 +3066,13 @@ end;
 
 function CharIsNumberChar(const C: AnsiChar): Boolean;
 begin
-  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or
-    (C = AnsiSignMinus) or (C = AnsiSignPlus) or (Char(C) = DecimalSeparator);
+  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (C = AnsiSignMinus) or (C = AnsiSignPlus) or
+    (Char(C) = JclFormatSettings.DecimalSeparator);
 end;
 
 function CharIsNumber(const C: AnsiChar): Boolean;
 begin
-  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (Char(C) = DecimalSeparator);
+  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (Char(C) = JclFormatSettings.DecimalSeparator);
 end;
 
 function CharIsPrintable(const C: AnsiChar): Boolean;
@@ -3653,8 +3812,8 @@ var
   DecSep: AnsiChar;
   ThouSep: AnsiChar;
 begin
-  DecSep := AnsiChar(DecimalSeparator);
-  ThouSep := AnsiChar(ThousandSeparator);
+  DecSep := AnsiChar(JclFormatSettings.DecimalSeparator);
+  ThouSep := AnsiChar(JclFormatSettings.ThousandSeparator);
   Temp := S;
   SwapSeparators := False;
 

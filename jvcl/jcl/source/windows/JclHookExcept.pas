@@ -26,9 +26,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009)                           $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-10-31 22:33:36 +0100 (dim., 31 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3405                                                                     $ }
+{ Author:        $Author:: sfarrow                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -37,6 +37,7 @@ unit JclHookExcept;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 uses
   {$IFDEF UNITVERSIONING}
@@ -68,7 +69,7 @@ function JclUnhookExceptions: Boolean;
 function JclExceptionsHooked: Boolean;
 
 function JclHookExceptionsInModule(Module: HMODULE): Boolean;
-function JclUnkookExceptionsInModule(Module: HMODULE): Boolean;
+function JclUnhookExceptionsInModule(Module: HMODULE): Boolean;
 
 // Exceptions hooking in libraries
 type
@@ -84,8 +85,8 @@ function JclBelongsHookedCode(Address: Pointer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclHookExcept.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 3405 $';
+    Date: '$Date: 2010-10-31 22:33:36 +0100 (dim., 31 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -277,10 +278,15 @@ procedure HookedRaiseException(ExceptionCode, ExceptionFlags, NumberOfArguments:
   Arguments: PExceptionArguments); stdcall;
 const
   cDelphiException = $0EEDFADE;
-  cNonContinuable = 1;
+  cNonContinuable = 1;                  // Delphi exceptions
+  cNonContinuableException = $C0000025; // C++Builder exceptions (sounds like a bug)
+  DelphiNumberOfArguments = 7;
+  CBuilderNumberOfArguments = 8;
 begin
-  if (ExceptionFlags = cNonContinuable) and (ExceptionCode = cDelphiException) and
-    (NumberOfArguments = 7) and (TJclAddr(Arguments) = TJclAddr(@Arguments) + SizeOf(Pointer)) then
+  if ((ExceptionFlags = cNonContinuable) or (ExceptionFlags = cNonContinuableException)) and
+    (ExceptionCode = cDelphiException) and
+    (NumberOfArguments in [DelphiNumberOfArguments,CBuilderNumberOfArguments]) and
+    (TJclAddr(Arguments) = TJclAddr(@Arguments) + SizeOf(Pointer)) then
   begin
     DoExceptNotify(Arguments.ExceptObj, Arguments.ExceptAddr, False, GetFramePointer);
   end;
@@ -503,7 +509,7 @@ begin
     TJclPeMapImgHooks.ReplaceImport(Pointer(Module), kernel32, RaiseExceptionAddress, @HookedRaiseException);
 end;
 
-function JclUnkookExceptionsInModule(Module: HMODULE): Boolean;
+function JclUnhookExceptionsInModule(Module: HMODULE): Boolean;
 begin
   Result := ExceptionsHooked and
     TJclPeMapImgHooks.ReplaceImport(Pointer(Module), kernel32, @HookedRaiseException, @Kernel32_RaiseException);

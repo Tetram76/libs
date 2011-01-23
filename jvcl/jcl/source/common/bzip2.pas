@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                         $ }
-{ Revision:      $Rev:: 3139                                                                     $ }
+{ Last modified: $Date:: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010)                        $ }
+{ Revision:      $Rev:: 3343                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -43,6 +43,8 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JclBase; // PByte, PCardinal for Delphi 5 and C++Builder 5...
+
+//DOM-IGNORE-BEGIN
 
 {
 /*-------------------------------------------------------------*/
@@ -303,6 +305,8 @@ var
 var
   bz2_internal_error_event: procedure(errcode: Integer) of object = nil;
 
+//DOM-IGNORE-END
+
 function LoadBZip2: Boolean;
 function IsBZip2Loaded: Boolean;
 procedure UnloadBZip2;
@@ -311,8 +315,8 @@ procedure UnloadBZip2;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/bzip2.pas $';
-    Revision: '$Revision: 3139 $';
-    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
+    Revision: '$Revision: 3343 $';
+    Date: '$Date: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

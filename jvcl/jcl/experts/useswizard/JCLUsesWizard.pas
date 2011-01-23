@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-05 12:57:29 +0100 (ven. 05 févr. 2010)                         $ }
+{ Last modified: $Date:: 2010-02-05 12:57:29 +0100 (ven., 05 févr. 2010)                        $ }
 { Revision:      $Rev:: 3178                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -114,7 +114,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/useswizard/JCLUsesWizard.pas $';
     Revision: '$Revision: 3178 $';
-    Date: '$Date: 2010-02-05 12:57:29 +0100 (ven. 05 févr. 2010) $';
+    Date: '$Date: 2010-02-05 12:57:29 +0100 (ven., 05 févr. 2010) $';
     LogPath: 'JCL\experts\useswizard';
     Extra: '';
     Data: nil

@@ -22,7 +22,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009)                           $ }
+{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven., 16 oct. 2009)                          $ }
 { Revision:      $Rev:: 3044                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -131,7 +131,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/simdview/JclSIMDView.pas $';
     Revision: '$Revision: 3044 $';
-    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven. 16 oct. 2009) $';
+    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven., 16 oct. 2009) $';
     LogPath: 'JCL\experts\debug\simdview';
     Extra: '';
     Data: nil

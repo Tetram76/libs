@@ -33,7 +33,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009)                          $ }
+{ Last modified: $Date:: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009)                         $ }
 { Revision:      $Rev:: 2892                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -238,7 +238,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnitConv.pas $';
     Revision: '$Revision: 2892 $';
-    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu. 30 juil. 2009) $';
+    Date: '$Date: 2009-07-30 12:08:05 +0200 (jeu., 30 juil. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

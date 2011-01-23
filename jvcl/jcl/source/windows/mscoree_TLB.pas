@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-22 11:08:20 +0100 (lun. 22 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3196                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                         $ }
+{ Revision:      $Rev:: 3391                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -19,7 +19,7 @@ unit mscoree_TLB;
 // manual modifications will be lost.                                         
 // ************************************************************************ //
 
-// PASTLWTR : $Revision: 3196 $
+// PASTLWTR : $Revision: 3391 $
 // File generated on 14.12.2003 01:39:55 from Type Library described below.
 
 // ************************************************************************  //
@@ -34,11 +34,9 @@ unit mscoree_TLB;
 //   Hint: Member 'type' of 'tagSTATSTG' changed to 'type_'
 // ************************************************************************ //
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers. 
-{ $WARN SYMBOL_PLATFORM OFF}
-{ $WRITEABLECONST ON}
-{ $VARPROPSETTER ON}
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 {$IFDEF SUPPORTS_WEAKPACKAGEUNIT}
   {$IFDEF UNITVERSIONING}
@@ -56,6 +54,8 @@ uses
   {$ENDIF UNITVERSIONING}
   ActiveX,
   Classes;
+
+//DOM-IGNORE-BEGIN
 
 {$HPPEMIT '#include <winnt.h>'}
 
@@ -437,12 +437,14 @@ type
     class function CreateRemote(const MachineName: string): ICorRuntimeHost;
   end;
 
+//DOM-IGNORE-END
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/mscoree_TLB.pas $';
-    Revision: '$Revision: 3196 $';
-    Date: '$Date: 2010-02-22 11:08:20 +0100 (lun. 22 févr. 2010) $';
+    Revision: '$Revision: 3391 $';
+    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

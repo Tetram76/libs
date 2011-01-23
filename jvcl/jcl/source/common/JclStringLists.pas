@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3139                                                                     $ }
+{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3425                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -55,6 +55,8 @@ uses
 {$ENDIF FPC}
 
 type
+  EJclStringListError = class(EJclError);
+
   IJclStringList = interface;
 
   TJclStringListObjectsMode = (omNone, omObjects, omVariants, omInterfaces);
@@ -377,8 +379,8 @@ function JclStringList(const AText: string): IJclStringList; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStringLists.pas $';
-    Revision: '$Revision: 3139 $';
-    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
+    Revision: '$Revision: 3425 $';
+    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -938,7 +940,7 @@ begin
   begin
     if FObjectsMode <> omNone then
     begin
-      raise Exception.CreateFmt('Objects cannot be used as "%s" because it has been used as "%s".',
+      raise EJclStringListError.CreateFmt('Objects cannot be used as "%s" because it has been used as "%s".',
         [GetEnumName(TypeInfo(TJclStringListObjectsMode), Ord(AMode)),
         GetEnumName(TypeInfo(TJclStringListObjectsMode), Ord(FObjectsMode))]);
     end;

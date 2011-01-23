@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-18 15:53:34 +0200 (ven. 18 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3014                                                                     $ }
+{ Last modified: $Date:: 2010-10-20 21:02:31 +0200 (mer., 20 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3379                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -66,12 +66,18 @@ type
     property Caption: string read GetCaption write SetCaption;
   end;
 
-  IJediReadmePage = interface(IJediPage)
+  IJediTextPage = interface(IJediPage)
     ['{5DA5C5C9-649F-47CF-B64A-55E983CA88EC}']
-    procedure SetReadmeFileName(const Value: string);
-    function GetReadmeFileName: string;
+    procedure SetTextFileName(const Value: string);
+    function GetTextFileName: string;
+    function AddOption(const Caption: string): Integer;
+    function GetOptionCount: Integer;
+    function GetOption(Index: Integer): Boolean;
+    procedure SetOption(Index: Integer; Value: Boolean);
 
-    property ReadmeFileName: string read GetReadmeFileName write SetReadmeFileName;
+    property TextFileName: string read GetTextFileName write SetTextFileName;
+    property OptionCount: Integer read GetOptionCount;
+    property Options[Index: Integer]: Boolean read GetOption write SetOption;
   end;
 
   IJediInstallPage = interface(IJediPage)
@@ -84,7 +90,7 @@ type
     function GetDirectoryCount: Integer;
     function GetDirectory(Index: Integer): string;
     procedure SetDirectory(Index: Integer; const Value: string);
-    function AddDirectory(Caption: string): Integer;
+    function AddDirectory(const Caption: string): Integer;
     function GetProgress: Integer;
     procedure SetProgress(Value: Integer);
     procedure BeginInstall;
@@ -165,7 +171,7 @@ type
     ['{3471A535-51D7-4FBB-B6AE-20D136E38E34}']
     function Dialog(const Text: string; DialogType: TDialogType = dtInformation;
       Options: TDialogResponses = [drOK]): TDialogResponse;
-    function CreateReadmePage: IJediReadmePage;
+    function CreateTextPage: IJediTextPage;
     function CreateInstallPage: IJediInstallPage;
     function CreateProfilesPage: IJediProfilesPage;
     function GetPageCount: Integer;
@@ -429,7 +435,8 @@ begin
   else
     Result := True;
 
-  for Index := FProducts.Size - 1 downto 0 do
+  if Result then
+    for Index := FProducts.Size - 1 downto 0 do
   begin
     Result := (FProducts.GetObject(Index) as IJediProduct).Install;
     if not Result then

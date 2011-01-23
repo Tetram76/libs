@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009)                          $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2010-12-29 12:17:39 +0100 (mer., 29 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3449                                                                     $ }
+{ Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -957,8 +957,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclExprEval.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 3449 $';
+    Date: '$Date: 2010-12-29 12:17:39 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1636,7 +1636,7 @@ begin
           Inc(cp);
 
         { check for and read in fraction part of mantissa }
-        if (cp^ = '.') or (cp^ = DecimalSeparator) then
+        if (cp^ = '.') or (cp^ = JclFormatSettings.DecimalSeparator) then
         begin
           Inc(cp);
           while CharIsDigit(cp^) do

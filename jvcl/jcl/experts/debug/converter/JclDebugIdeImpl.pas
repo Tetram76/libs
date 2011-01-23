@@ -17,9 +17,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-09 17:25:10 +0200 (dim. 09 mai 2010)                            $ }
-{ Revision:      $Rev:: 3249                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3322                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -50,8 +50,31 @@ type
   TDebugExpertAction = (deGenerateJdbg, deInsertJdbg, deDeleteMapFile);
   TDebugExpertActions = set of TDebugExpertAction;
 
+  {$IFDEF BDS8_UP}
+  TJclDebugExtension = class;
+
+  TJclDebugAddinOptions = class(TInterfacedObject, INTAAddinOptions)
+  private
+    FConfigFrame: TJclDebugIdeConfigFrame;
+    FDebugExtension: TJclDebugExtension;
+  public
+    constructor Create(ADebugExtension: TJclDebugExtension);
+    procedure DialogClosed(Accepted: Boolean);
+    procedure FrameCreated(AFrame: TCustomFrame);
+    function GetArea: string;
+    function GetCaption: string;
+    function GetFrameClass: TCustomFrameClass;
+    function ValidateContents: Boolean;
+    function GetHelpContext: Integer;
+    function IncludeInIDEInsight: Boolean;
+  end;
+  {$ENDIF BDS8_UP}
+
   TJclDebugExtension = class(TJclOTAExpert)
   private
+    {$IFDEF BDS8_UP}
+    FAddinOptions: TJclDebugAddinOptions;
+    {$ENDIF BDS8_UP}
     FResultInfo: array of TJclDebugDataInfo;
     FStoreResults: Boolean;
     FBuildError: Boolean;
@@ -118,6 +141,7 @@ type
     procedure UpdateMenuCheckState(Sender: TMenuItem; DebugExpertAction: TDebugExpertAction);
   public
     constructor Create; reintroduce;
+    destructor Destroy; override;
     procedure AfterCompile(const Project: IOTAProject; Succeeded: Boolean);
     procedure BeforeCompile(const Project: IOTAProject; var Cancel: Boolean);
     procedure RegisterCommands; override;
@@ -223,8 +247,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeImpl.pas $';
-    Revision: '$Revision: 3249 $';
-    Date: '$Date: 2010-05-09 17:25:10 +0200 (dim. 09 mai 2010) $';
+    Revision: '$Revision: 3322 $';
+    Date: '$Date: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil
@@ -238,6 +262,9 @@ implementation
 uses
   TypInfo,
   Variants,
+  {$IFDEF BDS8_UP}
+  JclOtaAddinOptions,
+  {$ENDIF BDS8_UP}
   JclBase, JclIDEUtils, JclDebug, JclDebugIdeResult,
   JclOtaResources;
 
@@ -283,6 +310,64 @@ begin
   end;
 end;
 
+//=== { TJclDebugAddinOptions } ==============================================
+
+{$IFDEF BDS8_UP}
+constructor TJclDebugAddinOptions.Create(ADebugExtension: TJclDebugExtension);
+begin
+  inherited Create;
+  FDebugExtension := ADebugExtension;
+end;
+
+procedure TJclDebugAddinOptions.DialogClosed(Accepted: Boolean);
+begin
+  if Accepted then
+  begin
+    FDebugExtension.GlobalStates[deGenerateJdbg] := FConfigFrame.GenerateJdbgState;
+    FDebugExtension.GlobalStates[deInsertJdbg] := FConfigFrame.InsertJdbgState;
+    FDebugExtension.GlobalStates[deDeleteMapFile] := FConfigFrame.DeleteMapFileState;
+  end;
+end;
+
+procedure TJclDebugAddinOptions.FrameCreated(AFrame: TCustomFrame);
+begin
+  FConfigFrame := TJclDebugIdeConfigFrame(AFrame);
+  FConfigFrame.GenerateJdbgState := FDebugExtension.GlobalStates[deGenerateJdbg];
+  FConfigFrame.InsertJdbgState := FDebugExtension.GlobalStates[deInsertJdbg];
+  FConfigFrame.DeleteMapFileState := FDebugExtension.GlobalStates[deDeleteMapFile];
+end;
+
+function TJclDebugAddinOptions.GetArea: string;
+begin
+  Result := '';
+end;
+
+function TJclDebugAddinOptions.GetCaption: string;
+begin
+  Result := JclGetAddinOptionsCaption(RsDebugConfigPageCaption);
+end;
+
+function TJclDebugAddinOptions.GetFrameClass: TCustomFrameClass;
+begin
+  Result := TJclDebugIdeConfigFrame;
+end;
+
+function TJclDebugAddinOptions.GetHelpContext: Integer;
+begin
+  Result := 0;
+end;
+
+function TJclDebugAddinOptions.IncludeInIDEInsight: Boolean;
+begin
+  Result := True;
+end;
+
+function TJclDebugAddinOptions.ValidateContents: Boolean;
+begin
+  Result := True;
+end;
+{$ENDIF BDS8_UP}
+
 //=== { TJclDebugExtension } =================================================
 
 procedure TJclDebugExtension.ConfigurationClosed(AControl: TControl; SaveChanges: Boolean);
@@ -305,6 +390,19 @@ end;
 constructor TJclDebugExtension.Create;
 begin
   inherited Create(JclDebugExpertRegKey);
+  {$IFDEF BDS8_UP}
+  FAddinOptions := TJclDebugAddinOptions.Create(Self);
+  (BorlandIDEServices as INTAEnvironmentOptionsServices).RegisterAddInOptions(FAddinOptions);
+  {$ENDIF BDS8_UP}
+end;
+
+destructor TJclDebugExtension.Destroy;
+begin
+  {$IFDEF BDS8_UP}
+  (BorlandIDEServices as INTAEnvironmentOptionsServices).UnregisterAddInOptions(FAddinOptions);
+  FAddinOptions := nil;
+  {$ENDIF BDS8_UP}
+  inherited Destroy;
 end;
 
 procedure TJclDebugExtension.AddConfigurationPages(AddPageFunc: TJclOTAAddPageFunc);
