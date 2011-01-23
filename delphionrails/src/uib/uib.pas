@@ -51,6 +51,7 @@ unit uib;
 interface
 uses
   {$IFDEF MSWINDOWS} Windows, {$ENDIF}
+  {$IFDEF DELPHI14_UP} Rtti, {$ENDIF}
   SyncObjs, Classes, Contnrs, SysUtils, uiblib, uibase,
   uibsqlparser, uibconst;
 
@@ -171,10 +172,6 @@ type
     FOnInfoLimbo: TOnInfoIntegerCount;
     FOnInfoUserNames: TOnInfoStringCount;
 
-    function ReadParamString(Param: String; Default: String = ''): String;
-    procedure WriteParamString(Param: String; Value: String);
-    function ReadParamInteger(Param: String; Default: Integer): Integer;
-    procedure WriteParamInteger(Param: String; Value: Integer);
     procedure SetParams(const Value: TStrings);
     procedure SetDatabaseName(const Value: TFileName);
     procedure SetConnected(const Value: boolean);
@@ -227,9 +224,13 @@ type
     function CanConnect : Boolean; virtual;
     procedure DoOnConnectionLost(Lib: TUIBLibrary); virtual;
     procedure DoOnGetDBExceptionClass(Number: Integer; out Excep: EUIBExceptionClass); virtual;
+    function ReadParamString(Param: String; Default: String = ''): String;
+    procedure WriteParamString(Param: String; Value: String);
+    function ReadParamInteger(Param: String; Default: Integer): Integer;
+    procedure WriteParamInteger(Param: String; Value: Integer);
   public
     { Constructor method. }
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
     { Destructor method. }
     destructor Destroy; override;
     { Execute a SQL statement without the need to have the database connected,
@@ -262,6 +263,24 @@ type
     procedure RecompileAllProcedures;
     { Recompile all triggers, usefull when indices are modified }
     procedure RecompileAllTriggers;
+
+{$IFDEF FB25_UP}
+    { re-enables delivery of a cancel execution that was previously disabled.
+      The 'cancel' state is effective by default, being initialized when the attachment is created.}
+    function CancelEnable: Boolean;
+    { disables execution of CancelRaise requests.
+      It can be useful when your program is executing critical operations,
+      such as cleanup, for example.}
+    function CancelDisable: Boolean;
+    { forcibly close client side of connection. Useful if you need to close a connection urgently.
+      All active transactions will be rolled back by the server. 'Success' is always returned to the application.
+      Use with care !}
+    function CancelAbort: Boolean;
+    { Usually fb_cancel_raise is called when you need to stop a long-running request.
+      It is called from a separate thread, not from the signal handler,
+      because it is not async signal safe.}
+    function CancelRaise: Boolean;
+{$ENDIF}
 
     { The DbHandle can be used to share the current connection with other Interbase components like IBX. }
     property DbHandle: IscDbHandle read FDbHandle write SetDbHandle;
@@ -530,7 +549,7 @@ type
     procedure SetDataBase(const ADatabase: TUIBDataBase); virtual;
   public
     { Constructor method. }
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
     { Destructor method.}
     destructor Destroy; override;
     { Add a database to the transaction. }
@@ -601,6 +620,46 @@ type
   {$ENDIF}
   end;
 
+{$IFDEF DELPHI14_UP}
+  IUIBEnumerator<T> = interface
+    function GetCurrent: T;
+    function MoveNext: Boolean;
+    property Current: T read GetCurrent;
+  end;
+
+  IUIBEnumerable<T> = interface
+    function GetEnumerator: IUIBEnumerator<T>;
+  end;
+
+  TUIBMethodFilter<T> = reference to function(const item: T): Boolean;
+
+  TUIBEnumerable<T> = class(TInterfacedObject, IUIBEnumerable<T>)
+  private
+    FQuery: TUIBStatement;
+    FFilter: TUIBMethodFilter<T>;
+  protected
+    function GetEnumerator: IUIBEnumerator<T>;
+  public
+    constructor Create(AQuery: TUIBStatement; AFilter: TUIBMethodFilter<T>);
+  end;
+
+  TUIBEnumerator<T> = class(TInterfacedObject, IUIBEnumerator<T>)
+  private
+    FQuery: TUIBStatement;
+    FFilter: TUIBMethodFilter<T>;
+    FCtx: TRttiContext;
+    FCurrent: T;
+    FCursor: Integer;
+  protected
+    function GetCurrent: T;
+    function MoveNext: Boolean;
+    property Current: T read GetCurrent;
+  public
+    constructor Create(AQuery: TUIBStatement; AFilter: TUIBMethodFilter<T>);
+    destructor Destroy; override;
+  end;
+{$ENDIF}
+
   { Simple query component. }
   TUIBStatement = class(TUIBComponent)
   private
@@ -649,7 +708,7 @@ type
     procedure EndStatement(const ETM: TEndTransMode; Auto, Drop: boolean); virtual;
     procedure EndPrepare(const ETM: TEndTransMode; Auto, Drop: boolean); virtual;
     procedure EndExecute(const ETM: TEndTransMode; Auto, Drop: boolean); virtual;
-    procedure EndExecImme(const ETM: TEndTransMode; Auto: boolean); virtual;
+    procedure EndExecImme(const ETM: TEndTransMode; Auto, Drop: boolean); virtual;
 
     procedure InternalNext; virtual;
     procedure InternalPrior; virtual;
@@ -672,7 +731,7 @@ type
 
   public
     { Constructor method. }
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
     { Destructor method. }
     destructor Destroy; override;
     { Close the statement. You can commit or rollback the transaction when closing. }
@@ -760,6 +819,14 @@ type
     { Get the blob size of the corresonding parametter. }
     function ParamBlobSize(const Index: Word): Cardinal;
 
+{$IFDEF DELPHI14_UP}
+    function All<T>: IUIBEnumerable<T>;
+    function Select<T>(const AFilter: TUIBMethodFilter<T>): IUIBEnumerable<T>;
+{$ENDIF}
+
+    { Return the rows affected by this statement }
+    procedure AffectedRows(out SelectedRows, InsertedRows, UpdatedRows, DeletedRows: Cardinal);
+
     { The internal statement handle. }
     property StHandle: IscStmtHandle read FStHandle;
     { Use fields to read the current record. }
@@ -810,6 +877,8 @@ type
     property BufferChunks: Cardinal read FBufferChunks write FBufferChunks default 1000;
     { OnClose event. }
     property OnClose: TNotifyEvent read FOnClose write FOnClose;
+    // processed SQL statement without named parametters.
+    property ParsedSQL: string read FParsedSQL;
   end;
 
   {Oo.......................................................................oO
@@ -852,7 +921,7 @@ type
     function GetDatabase: TUIBDataBase;
     procedure SetDatabase(const Value: TUIBDataBase);
   public
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
     destructor Destroy; override;
     procedure ExecuteScript;
   published
@@ -889,7 +958,7 @@ type
     function CreateParam(code: AnsiChar; const Value: RawByteString): RawByteString; overload;
     function CreateParam(code: AnsiChar; Value: Integer): RawByteString; overload;
   public
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
     destructor Destroy; override;
   published
     property UserName: string read FUserName write FUserName;
@@ -911,7 +980,7 @@ type
     procedure SetBackupFiles(const Value: TStrings);
     function CreateStartSPB: RawByteString; virtual; abstract;
   public
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
     destructor Destroy; override;
     procedure Run;
   published
@@ -946,7 +1015,7 @@ type
     FPageSize: Cardinal;
     function CreateStartSPB: RawByteString; override;
   public
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
   published
     property Options: TRestoreOptions read FOptions write FOptions default [roCreateNewDB];
     property PageSize: Cardinal read FPageSize write FPageSize default 0;
@@ -987,7 +1056,7 @@ type
     procedure SetStringParam(aParam: Integer; const aValue: string);
     procedure RunAction(aAction: TSecurityAction);
   public
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
     destructor Destroy; override;
     { tell the server to add the user specified to the security database }
     procedure AddUser;
@@ -1040,7 +1109,7 @@ type
     function CreateStartSPB: RawByteString; virtual;
   public
     procedure Run;
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
   published
     property Options: TRepairOptions read FOptions write FOptions;
     property Database: string read FDatabase write FDatabase;
@@ -1075,7 +1144,7 @@ type
       Operation: TOperation); override;
   {$ENDIF}
   public
-    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent){$ENDIF}; override;
+    constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
     destructor Destroy; override;
   published
     property AutoRegister: boolean read FAutoRegister write SetAutoRegister;
@@ -1370,7 +1439,15 @@ begin
         if Assigned(BeforeConnect) then BeforeConnect(Self);
         FLibrary.Load(FLiBraryName);
         if not FHandleShared then
-          AttachDatabase(AnsiString(FDatabaseName), FDbHandle, AnsiString(FParams.Text), BreakLine);
+        begin
+{$IFDEF FB25_UP}
+{$IFDEF UNICODE}
+          if FParams.IndexOf('utf8_filename') >= 0 then
+            AttachDatabase(MBUEncode(FDatabaseName, CP_UTF8), FDbHandle, AnsiString(FParams.Text), BreakLine) else
+{$ENDIF}
+{$ENDIF}
+            AttachDatabase(AnsiString(FDatabaseName), FDbHandle, AnsiString(FParams.Text), BreakLine);
+        end;
         RegisterEvents;
         if Assigned(AfterConnect) then AfterConnect(Self);
       end;
@@ -1964,6 +2041,36 @@ begin
   end;
 end;
 
+{$IFDEF FB25_UP}
+function TUIBDataBase.CancelEnable: Boolean;
+begin
+  if FDbHandle <> nil then
+    Result := FLibrary.DatabaseCancelOperation(FDbHandle, fb_cancel_enable) else
+    Result := False;
+end;
+
+function TUIBDataBase.CancelDisable: Boolean;
+begin
+  if FDbHandle <> nil then
+    Result := FLibrary.DatabaseCancelOperation(FDbHandle, fb_cancel_disable) else
+    Result := False;
+end;
+
+function TUIBDataBase.CancelAbort: Boolean;
+begin
+  if FDbHandle <> nil then
+    Result := FLibrary.DatabaseCancelOperation(FDbHandle, fb_cancel_abort) else
+    Result := False;
+end;
+
+function TUIBDataBase.CancelRaise: Boolean;
+begin
+  if FDbHandle <> nil then
+    Result := FLibrary.DatabaseCancelOperation(FDbHandle, fb_cancel_raise) else
+    Result := False;
+end;
+{$ENDIF}
+
 function TUIBDataBase.GetRole: string;
 begin
   Result := ReadParamString('sql_role_name');
@@ -2278,6 +2385,13 @@ begin
   EndPrepare(ETM, Auto, Drop);
 end;
 
+procedure TUIBStatement.AffectedRows(out SelectedRows, InsertedRows, UpdatedRows,
+  DeletedRows: Cardinal);
+begin
+  with FindDataBase, FLibrary do
+    DSQLInfoRowsAffected2(FStHandle, SelectedRows, InsertedRows, UpdatedRows, DeletedRows);
+end;
+
 procedure TUIBStatement.BeginExecImme;
 var
   I: Integer;
@@ -2295,7 +2409,7 @@ var
 {$ENDIF}
     except
       if (FOnError <> etmStayIn) then
-        EndExecImme(FOnError, False);
+        EndExecImme(FOnError, False, False);
       raise;
     end;
   end;
@@ -2312,8 +2426,14 @@ begin
   FCurrentState := qsExecImme;
 end;
 
-procedure TUIBStatement.EndExecImme(const ETM: TEndTransMode; Auto: boolean);
+procedure TUIBStatement.EndExecImme(const ETM: TEndTransMode; Auto, Drop: boolean);
 begin
+{$IFDEF FB25_UP}
+  if (FStHandle <> nil) then
+    EndStatement(ETM, Auto, Drop);
+
+{$ENDIF}
+
   FCurrentState := qsTransaction;
   if (ETM <> etmStayIn) then
     EndTransaction(ETM, Auto);
@@ -2706,7 +2826,7 @@ procedure TUIBStatement.InternalClose(const Mode: TEndTransMode;
 begin
   case FCurrentState of
     qsStatement : EndStatement(Mode, Auto, Drop);
-    qsExecImme  : EndExecImme(Mode, Auto);
+    qsExecImme  : EndExecImme(Mode, Auto, Drop);
     qsPrepare   : EndPrepare(Mode, Auto, Drop);
     qsExecute   : EndExecute(Mode, Auto, Drop);
   end;
@@ -2859,7 +2979,7 @@ begin
   begin
     try
       FSQLResult.ClearRecords;
-      if FUseCursor and (FStatementType in [stSelect, stSelectForUpdate]) then
+      if {FUseCursor and} (FStatementType in [stSelect, stSelectForUpdate]) then
         with FindDataBase.FLibrary do
           DSQLFreeStatement(FStHandle, DSQL_close);
     except
@@ -2869,6 +2989,20 @@ begin
     FCurrentState := qsPrepare;
   end;
 end;
+
+{$IFDEF DELPHI14_UP}
+function TUIBStatement.Select<T>(const AFilter: TUIBMethodFilter<T>): IUIBEnumerable<T>;
+begin
+  Result := TUIBEnumerable<T>.Create(Self, AFilter);
+end;
+{$ENDIF}
+
+{$IFDEF DELPHI14_UP}
+function TUIBStatement.All<T>: IUIBEnumerable<T>;
+begin
+  Result := TUIBEnumerable<T>.Create(Self, nil);
+end;
+{$ENDIF}
 
 { TUIBQuery }
 
@@ -4652,6 +4786,67 @@ begin
     end;
   end;
 end;
+
+{$IFDEF DELPHI14_UP}
+{ TUIBEnumerable<T> }
+
+constructor TUIBEnumerable<T>.Create(AQuery: TUIBStatement; AFilter: TUIBMethodFilter<T>);
+begin
+  FQuery := AQuery;
+  FFilter := AFilter;
+end;
+
+function TUIBEnumerable<T>.GetEnumerator: IUIBEnumerator<T>;
+begin
+  Result := TUIBEnumerator<T>.Create(FQuery, FFilter);
+end;
+
+{ TUIBEnumerator<T> }
+
+constructor TUIBEnumerator<T>.Create(AQuery: TUIBStatement; AFilter: TUIBMethodFilter<T>);
+begin
+  FQuery := AQuery;
+  FFilter := AFilter;
+  FCtx := TRttiContext.Create;
+  FCursor := -1;
+  if (FQuery.CurrentState < qsExecute) or not FQuery.CachedFetch then
+    FQuery.Open(True) else
+    FQuery.First;
+end;
+
+destructor TUIBEnumerator<T>.Destroy;
+begin
+  FCtx.Free;
+  inherited;
+end;
+
+function TUIBEnumerator<T>.GetCurrent: T;
+begin
+  Result := FCurrent;
+end;
+
+function TUIBEnumerator<T>.MoveNext: Boolean;
+begin
+  if FQuery.Eof then Exit(False);
+
+  if FCursor <> -1 then
+    FQuery.Next;
+  if FQuery.Eof then Exit(False);
+  Inc(FCursor);
+  FCurrent := FQuery.Fields.GetAsType<T>(FCtx);
+  if Assigned(FFilter) then
+    while not FQuery.Eof do
+    begin
+      if FFilter(FCurrent) then
+        Break;
+      FQuery.Next;
+      if FQuery.Eof then Exit(False);
+      Inc(FCursor);
+      FCurrent := FQuery.Fields.GetAsType<T>(FCtx);
+    end;
+  Result := not FQuery.Eof;
+end;
+{$ENDIF}
 
 {$IFNDEF FPC}
 initialization

@@ -24,7 +24,7 @@ uses
 {$ifdef madExcept}
   madExcept,
 {$endif}
-  dorService, SysUtils, rtti, typinfo;
+  Windows, dorService, SysUtils, rtti, typinfo;
 
 { TDorObserver }
 
@@ -96,7 +96,10 @@ begin
         HandleException(etNormal);
 {$endif}
     end;
-    sleep(1);
+{$IFDEF SWITCHTOTHREAD}
+    if not SwitchToThread then
+{$ENDIF}
+      sleep(1);
   end;
   Result := 0;
 end;

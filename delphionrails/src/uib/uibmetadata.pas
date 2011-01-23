@@ -913,7 +913,8 @@ const
   FieldTypes: array [TUIBFieldType] of string =
    ('', 'NUMERIC', 'CHAR', 'VARCHAR', 'CSTRING', 'SMALLINT', 'INTEGER', 'QUAD',
     'FLOAT', 'DOUBLE PRECISION', 'TIMESTAMP', 'BLOB', 'BLOBID', 'DATE', 'TIME',
-    'BIGINT' , 'ARRAY'{$IFDEF IB7_UP}, 'BOOLEAN' {$ENDIF});
+    'BIGINT' , 'ARRAY'{$IFDEF IB7_UP}, 'BOOLEAN' {$ENDIF}
+    {$IFDEF FB25_UP}, 'NULL'{$ENDIF});
 
   QRYDefaultCharset =
     'select ' +
@@ -969,6 +970,7 @@ const
     ', RFR.RDB$DEFAULT_SOURCE' +     // DEFAULT
     ', RFR.RDB$FIELD_NAME' +
     ', FLD.RDB$SEGMENT_LENGTH' +
+    ', FLD.RDB$SYSTEM_FLAG'+
     ', RFR.RDB$NULL_FLAG' +          // NULLABLE
     ', FLD.RDB$VALIDATION_SOURCE' +  // CHECK
     ', FLD.RDB$DIMENSIONS'+
@@ -1121,6 +1123,7 @@ const
     ', FLD.RDB$DEFAULT_SOURCE' +    // DEFAULT
     ', FLD.RDB$FIELD_NAME' +
     ', FLD.RDB$SEGMENT_LENGTH' +
+    ', FLD.RDB$SYSTEM_FLAG' +
     ', FLD.RDB$NULL_FLAG' +         // NULLABLE
     ', FLD.RDB$VALIDATION_SOURCE' + // CHECK
     ', FLD.RDB$DIMENSIONS ' +
@@ -1136,13 +1139,14 @@ const
     ', RDB$FIELD_SCALE' +
     ', RDB$FIELD_LENGTH' +
     ', RDB$FIELD_PRECISION' +
-    ', RDB$CHARACTER_SET_ID' +      // CHARACTER SET
+    ', FLD.RDB$CHARACTER_SET_ID' +      // CHARACTER SET
     ', FLD.RDB$COLLATION_ID' +
     ', COL.RDB$COLLATION_NAME' +    // COLLATE
     ', RDB$FIELD_SUB_TYPE' +
     ', RDB$DEFAULT_SOURCE' +        // DEFAULT
     ', RDB$FIELD_NAME' +
     ', RDB$SEGMENT_LENGTH' +
+    ', FLD.RDB$SYSTEM_FLAG'+
     ', RDB$NULL_FLAG' +             // NULLABLE
     ', RDB$VALIDATION_SOURCE' +     // CHECK
     ', RDB$DIMENSIONS ' +
@@ -1172,6 +1176,7 @@ const
     ', FLD.RDB$DEFAULT_SOURCE ' +    // DEFAULT
     ', PPA.RDB$PARAMETER_NAME ' +
     ', FLD.RDB$SEGMENT_LENGTH  ' +
+    ', FLD.RDB$SYSTEM_FLAG ' +
     'from  ' +
     '  RDB$PROCEDURES PRO ' +
     'join RDB$PROCEDURE_PARAMETERS PPA on (PPA.RDB$PROCEDURE_NAME = PRO.RDB$PROCEDURE_NAME) ' +
@@ -1218,6 +1223,7 @@ const
     ', NULL' +
     ', RDB$ARGUMENT_POSITION' +
     ', RDB$MECHANISM ' +
+    ', NULL '+
     'from ' +
     '  RDB$FUNCTION_ARGUMENTS ' +
     'where ' +
@@ -2301,7 +2307,9 @@ procedure TMetaBaseField.LoadFromQuery(QField, QCharset, QArrayDim: TUIBStatemen
       if QCharset.Fields.AsSmallint[0] = Id then
       begin
         Charset := Trim(QCharset.Fields.AsString[1]);
-        Count := QCharset.Fields.AsSmallint[2];
+        if not ((id = 3) and (QField.Fields.AsSmallint[11] = 1)) then
+          Count := QCharset.Fields.AsSmallint[2] else
+          Count := 1;
         Exit;
       end;
       Charset := '';
@@ -4493,28 +4501,28 @@ procedure TMetaTableField.LoadFromQuery(Q, C, A: TUIBStatement; DefaultCharset: 
 var i: Integer;
 begin
   inherited LoadFromQuery(Q, C, A, DefaultCharset);
-  FNotNull := (Q.Fields.AsSmallint[11] = 1);
+  FNotNull := (Q.Fields.AsSmallint[12] = 1);
 
   FDomain := -1;
   if not (Self is TMetaDomain) then
   begin
     if OIDDomain in TMetaDataBase(FOwner.FOwner).FOIDDatabases then
-      if not (Q.Fields.IsNull[14] or (Copy(Q.Fields.AsString[14], 1, 4) = 'RDB$')) then
+      if not (Q.Fields.IsNull[15] or (Copy(Q.Fields.AsString[15], 1, 4) = 'RDB$')) then
         FDomain :=
-          TMetaDataBase(FOwner.FOwner).FindDomainIndex(MetaQuote(Trim(Q.Fields.AsString[14])));
-    Q.ReadBlob(15, FComputedSource);
+          TMetaDataBase(FOwner.FOwner).FindDomainIndex(MetaQuote(Trim(Q.Fields.AsString[15])));
+    Q.ReadBlob(16, FComputedSource);
   end;
 
   if (FDomain < 0) or (Domain.ValidationSource = '') then
-    Q.ReadBlob(12, FValidationSource);
+    Q.ReadBlob(13, FValidationSource);
 
   // Array
-  if Q.Fields.AsSmallint[13] > 0 then
+  if Q.Fields.AsSmallint[14] > 0 then
   begin
-    SetLength(FArrayBounds, Q.Fields.AsSmallint[13]);
+    SetLength(FArrayBounds, Q.Fields.AsSmallint[14]);
     if (Self is TMetaDomain) then
       A.Params.AsString[0] := FName else
-      A.Params.AsString[0] := Q.Fields.AsString[14];
+      A.Params.AsString[0] := Q.Fields.AsString[15];
     A.Open;
     i := 0;
     while not A.Eof do
@@ -4587,11 +4595,11 @@ begin
     Stream.WriteString(' DEFAULT ' + FDefaultValue);
   if FNotNull then
     Stream.WriteString(' NOT NULL');
+  if (FValidationSource <> '') then
+    Stream.WriteString(' ' + FValidationSource);
   if (FDomain < 0) and (FComputedSource = '') and
      (FFieldType in [uftChar..uftCstring]) and (FCollation <> '') then
     Stream.WriteString(' COLLATE ' + FCollation);
-  if (FValidationSource <> '') then
-    Stream.WriteString(' ' + FValidationSource);
 end;
 
 procedure TMetaTableField.SaveToStream(Stream: TStream);

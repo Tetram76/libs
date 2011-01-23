@@ -14,14 +14,10 @@
 *)
 
 unit dorHTTPStub;
-{$IFDEF FPC}
-  {$MODE OBJFPC}{$H+}
-{$ENDIF}
+
 interface
 uses
-  dorSocketStub,
-  {$IFDEF FPC}sockets,{$ELSE}Winsock,{$ENDIF}
-  dorUtils, classes, superobject;
+  dorSocketStub, dorUtils, classes, superobject;
 
 type
   THTTPMessage = class(TSuperObject)
@@ -50,7 +46,7 @@ type
   end;
 {$ENDIF}
 
-  THTTPStub = class(TSocketStub)
+  THTTPStub = class(TClientStub)
   private
     FRequest: THTTPMessage;
     FResponse: THTTPMessage;
@@ -85,7 +81,7 @@ type
     function WebSocket: Cardinal; virtual;
     function GetPassPhrase: AnsiString; virtual;
   public
-    constructor CreateStub(AOwner: TSocketServer; ASocket: longint; AAddress: TSockAddr); override;
+    constructor CreateStub(AOwner: TSocketServer; const ASocket: IReadWrite); override;
     destructor Destroy; override;
     procedure Render(const obj: ISuperObject; format: boolean = false); overload;
     procedure Render(const str: string); overload;
@@ -108,7 +104,7 @@ uses
  windows,
 {$ENDIF}
   SysUtils, StrUtils, superxmlparser, dorOpenSSL, dorLua,
-  dorActionController, dorActionView, dorActionWebsocket, Rtti
+  dorActionController, dorActionView, dorActionWebsocket, dorHTTP, Rtti
   {$ifdef madExcept}, madexcept {$endif}
 {$IFDEF UNICODE}, AnsiStrings{$ENDIF}
 {$IFDEF UNIX}, baseunix{$ENDIF}
@@ -185,73 +181,6 @@ begin
 end;
 {$ENDIF}
 
-function HttpResponseStrings(code: integer): RawByteString;
-begin
-  case code of
-    100: Result := '100 Continue';
-    101: Result := '101 Switching Protocols';
-    102: Result := 'Processing'; // WebDAV
-
-    200: Result := 'HTTP/1.1 200 OK';
-    201: Result := 'HTTP/1.1 201 Created';
-    202: Result := 'HTTP/1.1 202 Accepted';
-    203: Result := 'HTTP/1.1 203 Non-Authoritative Information';
-    204: Result := 'HTTP/1.1 204 No Content';
-    205: Result := 'HTTP/1.1 205 Reset Content';
-    206: Result := 'HTTP/1.1 206 Partial Content';
-    207: Result := 'HTTP/1.1 207 Multi-Status'; // WebDAV
-
-    300: Result := 'HTTP/1.1 300 Multiple Choices';
-    301: Result := 'HTTP/1.1 301 Moved Permanently';
-    302: Result := 'HTTP/1.1 302 Found';
-    303: Result := 'HTTP/1.1 303 See Other';
-    304: Result := 'HTTP/1.1 304 Not Modified';
-    305: Result := 'HTTP/1.1 305 Use Proxy';
-    306: Result := 'HTTP/1.1 306 unused';
-    307: Result := 'HTTP/1.1 307 Temporary Redirect';
-
-    400: Result := 'HTTP/1.1 400 Bad Request';
-    401: Result := 'HTTP/1.1 401 Authorization Required';
-    402: Result := 'HTTP/1.1 402 Payment Required';
-    403: Result := 'HTTP/1.1 403 Forbidden';
-    404: Result := 'HTTP/1.1 404 Not Found';
-    405: Result := 'HTTP/1.1 405 Method Not Allowed';
-    406: Result := 'HTTP/1.1 406 Not Acceptable';
-    407: Result := 'HTTP/1.1 407 Proxy Authentication Required';
-    408: Result := 'HTTP/1.1 408 Request Time-out';
-    409: Result := 'HTTP/1.1 409 Conflict';
-    410: Result := 'HTTP/1.1 410 Gone';
-    411: Result := 'HTTP/1.1 411 Length Required';
-    412: Result := 'HTTP/1.1 412 Precondition Failed';
-    413: Result := 'HTTP/1.1 413 Request Entity Too Large';
-    414: Result := 'HTTP/1.1 414 Request-URI Too Large';
-    415: Result := 'HTTP/1.1 415 Unsupported Media Type';
-    416: Result := 'HTTP/1.1 416 Requested Range Not Satisfiable';
-    417: Result := 'HTTP/1.1 417 Expectation Failed';
-    418: Result := 'HTTP/1.1 418 I''m a teapot';
-    422: Result := 'HTTP/1.1 422 Unprocessable Entity'; // WebDAV
-    423: Result := 'HTTP/1.1 417 Locked'; // WebDAV
-    424: Result := 'HTTP/1.1 424 Failed Dependency'; // WebDAV
-    425: Result := 'HTTP/1.1 425 Unordered Collection'; // WebDAV
-    426: Result := 'HTTP/1.1 426 Upgrade Required';
-    449: Result := 'HTTP/1.1 449 Retry With';
-    450: Result := 'HTTP/1.1 450 Blocked by Windows Parental Controls';
-
-    500: Result := 'HTTP/1.1 500 Internal Server Error';
-    501: Result := 'HTTP/1.1 501 Method Not Implemented';
-    502: Result := 'HTTP/1.1 502 Bad Gateway';
-    503: Result := 'HTTP/1.1 503 Service Temporarily Unavailable';
-    504: Result := 'HTTP/1.1 504 Gateway Time-out';
-    505: Result := 'HTTP/1.1 505 HTTP Version Not Supported';
-    506: Result := 'HTTP/1.1 506 Variant Also Negotiates';
-    507: Result := 'HTTP/1.1 507 Insufficient Storage'; // WebDAV
-    509: Result := 'HTTP/1.1 509 Bandwidth Limit Exceeded';
-    510: Result := 'HTTP/1.1 510 Not Extended';
-  else
-    Result := 'HTTP/1.1 ' + RawByteString(inttostr(code));
-  end;
-end;
-
 function DecodeValue(const p: PChar): ISuperObject; inline;
 begin
   Result := TSuperObject.ParseString(p, False, False);
@@ -264,46 +193,6 @@ function MBUDecode(const str: RawByteString; cp: Word): UnicodeString;
 begin
   SetLength(Result, MultiByteToWideChar(cp, 0, PAnsiChar(str), length(str), nil, 0));
   MultiByteToWideChar(cp, 0, PAnsiChar(str), length(str), PWideChar(Result), Length(Result));
-end;
-
-function HTTPDecode(const AStr: string; codepage: Integer = 0): String;
-var
-  Sp, Rp, Cp: PAnsiChar;
-  src, dst: RawByteString;
-begin
-  src := RawByteString(AStr);
-  SetLength(dst, Length(src));
-  Sp := PAnsiChar(src);
-  Rp := PAnsiChar(dst);
-  while Sp^ <> #0 do
-  begin
-    case Sp^ of
-      '+': Rp^ := ' ';
-      '%': begin
-             Inc(Sp);
-             if Sp^ = '%' then
-               Rp^ := '%'
-             else
-             begin
-               Cp := Sp;
-               Inc(Sp);
-               if (Cp^ <> #0) and (Sp^ <> #0) then
-                 Rp^ := AnsiChar(StrToInt('$' + Char(Cp^) + Char(Sp^)))
-               else
-               begin
-                 dst := '';
-                 Exit;
-               end;
-             end;
-           end;
-    else
-      Rp^ := Sp^;
-    end;
-    Inc(Rp);
-    Inc(Sp);
-  end;
-  SetLength(dst, Rp - PAnsiChar(dst));
-  Result := MBUDecode(dst, codepage)
 end;
 
 function HTTPInterprete(src: PSOChar; named: boolean = false; sep: SOChar = ';'; StrictSep: boolean = false; codepage: Integer = 0): ISuperObject;
@@ -327,7 +216,7 @@ begin
         Inc(src);
       SetString(S, P1, src - P1);
       if codepage > 0 then
-        S := HTTPDecode(S, codepage);
+        S := MBUDecode(HTTPDecode(S), codepage);
       if named then
       begin
         i := pos('=', S);
@@ -498,12 +387,20 @@ end;
 function THTTPStub.DecodeContent: boolean;
 var
   ContentLength: integer;
+  len: Integer;
+  b: Byte;
 begin
   ContentLength := Request.I['env.content-length'];
   if ContentLength > 0 then
+  with Request.FContent do
   begin
-    Request.FContent.Size := ContentLength;
-    Request.FContent.LoadFromSocket(SocketHandle, false);
+    Size := ContentLength;
+    Seek(0, soFromBeginning);
+    for len := 1 to ContentLength do
+    begin
+      Source.Read(b, 1, ReadTimeOut);
+      Write(b, 1);
+    end;
   end;
   Result := True;
 end;
@@ -583,7 +480,7 @@ begin
                if (param <> '') and (str > marker) then
                begin
                  if not DecodeURI(marker, str - marker, value) then exit;
-                 Request['params.'+HTTPDecode(param)] := DecodeValue(PChar(HTTPDecode(value)));
+                 Request['params.'+string(HTTPDecode(param))] := DecodeValue(PChar(string(HTTPDecode(value))));
                end;
                if {$IFDEF UNICODE}(str^ < #256) and {$ENDIF}(AnsiChar(str^) in [SP, NL]) then
                  Break;
@@ -608,9 +505,11 @@ begin
 
   // SP expected
   if (str^ <> SP) then exit;
+  repeat
+    inc(str);
+  until str^ <> SP;
 
   // HTTP/
-  inc(str);
   if not ((str[0] = 'H') and (str[1] = 'T') and (str[2] = 'T') and
      (str[3] = 'P') and (str[4] = SL)) then
     exit;
@@ -845,7 +744,7 @@ begin
       if Stopped then exit;
     until r > 0;
 {$ENDIF}
-    if receive(SocketHandle, c, 1, 0) <> 1 then exit;
+    if Source.Read(c, 1, ReadTimeOut) <> 1 then exit;
     case c of
     CR: dec(cursor){->LF};
     LF: begin
@@ -908,8 +807,7 @@ begin
   end;
 end;
 
-constructor THTTPStub.CreateStub(AOwner: TSocketServer; ASocket: longint;
-  AAddress: TSockAddr);
+constructor THTTPStub.CreateStub(AOwner: TSocketServer; const ASocket: IReadWrite);
 begin
   inherited;
   FRequest := THTTPMessage.Create;
@@ -944,13 +842,6 @@ begin
     S['svg.content'] := 'image/svg+xml';
     B['svg.istext'] := True;
   end;
-
-  // connexion timout
-{$IFDEF FPC}
-  fpsetsockopt(Socket, SOL_SOCKET, SO_RCVTIMEO, @ReadTimeOut, SizeOf(ReadTimeOut));
-{$ELSE}
-  setsockopt(ASocket, SOL_SOCKET, SO_RCVTIMEO, @ReadTimeOut, SizeOf(ReadTimeOut));
-{$ENDIF}
 end;
 
 destructor THTTPStub.Destroy;
@@ -1120,7 +1011,9 @@ begin
   end;
 
 {$IFDEF CONSOLEAPP}
-  //Writeln(FRequest.AsJSon(True, False));
+{$IFDEF DEBUG}
+  Writeln(FParams.AsString);
+{$ENDIF}
 {$ENDIF}
 end;
 
@@ -1279,7 +1172,7 @@ begin
   stream := TPooledMemoryStream.Create;
   try
     while not Stopped do
-      if recv(SocketHandle, b, 1, 0) = 1 then
+      if Source.Read(b, 1, 0) = 1 then
       begin
         case state of
           False:
@@ -1306,18 +1199,13 @@ begin
       Exit;
   finally
     stream.Free;
-    //inst.Free;
   end;
 end;
 
 procedure THTTPStub.WriteLine(str: RawByteString);
 begin
   str := str + CRLF;
-{$IFDEF FPC}
-  fpsend(SocketHandle, PChar(str), length(str), 0);
-{$ELSE}
-  send(SocketHandle, PAnsiChar(str)^, length(str), 0);
-{$ENDIF}
+  Source.Write(PAnsiChar(str)^, length(str), 0);
 end;
 
 procedure THTTPStub.SendStream(Stream: TStream);
@@ -1326,17 +1214,11 @@ procedure THTTPStub.SendStream(Stream: TStream);
     size: Integer;
     buffer: array[0..1023] of byte;
   begin
-    //WriteLine(format('Content-Length: %d', [s.size]));
     WriteLine('');
-    //s.Seek(0, soFromBeginning);
     size := s.Read(buffer, sizeof(buffer));
     while size > 0 do
     begin
-{$IFDEF FPC}
-      fpsend(SocketHandle, @buffer, size, 0);
-{$ELSE}
-      send(SocketHandle, buffer, size, 0);
-{$ENDIF}
+      Source.Write(buffer, size, 0);
       size := s.Read(buffer, sizeof(buffer));
     end;
   end;
@@ -1407,8 +1289,10 @@ function THTTPStub.Upgrade: Cardinal;
     if not ObjectIsType(key1, stString) then Exit;
     key2 := Request['env.sec-websocket-key2'];
     if not ObjectIsType(key2, stString) then Exit;
-    if receive(SocketHandle, challenge.key3, SizeOf(challenge.key3), 0) <> SizeOf(challenge.key3) then Exit;
-    location := RawByteString('ws://' + Request.s['env.host'] + Request.S['uri']);
+    if Source.Read(challenge.key3, SizeOf(challenge.key3), 0) <> SizeOf(challenge.key3) then Exit;
+    if Copy(origin.AsString, 1, 8) = 'https://' then
+      location := RawByteString('wss://' + Request.s['env.host'] + Request.S['uri']) else
+      location := RawByteString('ws://' + Request.s['env.host'] + Request.S['uri']);
     keyNumber1 := getKeyNumber(key1.AsString, space1);
     keyNumber2 := getKeyNumber(key2.AsString, space2);
     if (space1 = 0) or (space2 = 0) then Exit;
@@ -1425,14 +1309,11 @@ function THTTPStub.Upgrade: Cardinal;
     if ObjectIsType(protocol, stString) then
       WriteLine('Sec-WebSocket-Protocol: ' + RawByteString(protocol.asstring));
     WriteLine('');
-    send(SocketHandle, response, SizeOf(response), 0);
+    Source.Write(response, SizeOf(response), 0);
     Result := WebSocket;
   end;
-const
-  zerotimeout: Integer = 0;
 begin
   Result := 0;
-  setsockopt(SocketHandle, SOL_SOCKET, SO_RCVTIMEO, @zerotimeout, SizeOf(zerotimeout));
   if Request.S['env.upgrade'] = 'WebSocket' then
     Result := doWebSocket;
 end;
