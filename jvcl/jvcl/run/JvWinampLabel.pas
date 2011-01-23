@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWinampLabel.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvWinampLabel.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvWinampLabel;
 
@@ -128,8 +128,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWinampLabel.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -157,6 +157,7 @@ end;
 
 procedure TJvWinampThread.Execute;
 begin
+  NameThread(ThreadName);
   // (rom) secure thread against exceptions
   try
     while not Terminated do

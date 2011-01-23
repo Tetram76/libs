@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVSNetStyle.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDockVSNetStyle.pas 12856 2010-10-08 13:48:34Z obones $
 
 unit JvDockVSNetStyle;
 
@@ -536,8 +536,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVSNetStyle.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12856 $';
+    Date: '$Date: 2010-10-08 15:48:34 +0200 (ven., 08 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2534,7 +2534,7 @@ procedure TJvDockVSNetStyle.Timer(Sender: TObject);
     end;
   end;
 
-  function PointIsOnPopup(P: TPoint; GlobalCheck: Boolean): Boolean;
+  function PointIsOnPopup(P: TPoint; GlobalCheck: Boolean; Recurse: Boolean): Boolean;
   const
     GW_ENABLEDPOPUP = 6;
   var
@@ -2561,17 +2561,17 @@ procedure TJvDockVSNetStyle.Timer(Sender: TObject);
         end;
       end;
 
-      if ActivePopupWindow then
+      if Recurse and ActivePopupWindow then
       begin
         GetWindowRect(Handle, Rect);
         // Search for a control one pixel to the left;
         Dec(Rect.Left);
-        Result := PointIsOnPopup(Rect.TopLeft, False);
+        Result := PointIsOnPopup(Rect.TopLeft, False, False);
         if not Result then
         begin
           // Search for a control one pixel to the Right;
           Inc(Rect.Right);
-          Result := PointIsOnPopup(Point(Rect.Right, Rect.Top), False);
+          Result := PointIsOnPopup(Point(Rect.Right, Rect.Top), False, False);
         end;
       end;
     end;
@@ -2587,7 +2587,7 @@ begin
     Exit;
 
   GetCursorPos(P);
-  if PointIsOnPopup(P, True) then
+  if PointIsOnPopup(P, True, True) then
   begin
     { Reset timer }
     FCurrentTimer := ChannelOption.HideHoldTime;

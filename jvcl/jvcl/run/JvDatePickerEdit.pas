@@ -54,7 +54,7 @@ Known issues / not (yet) implemented features:
   - it really is a control for date entry only.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDatePickerEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDatePickerEdit.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvDatePickerEdit;
 
@@ -153,7 +153,7 @@ type
     procedure SetCalAppearance(const AValue: TJvMonthCalAppearance);
     function GetDate: TDateTime;
     procedure SetDate(const AValue: TDateTime);
-    procedure SetDateFormat(const AValue: string);
+    procedure SetDateFormat(AValue: string);
     function GetDropped: Boolean;
     procedure SetNoDateText(const AValue: string);
     procedure SetNoDateValue(const AValue: TDateTime);
@@ -331,14 +331,18 @@ type
     property OnStartDrag;
 
     property OnGetValidDateString;
+    property OnPopupShown;
+    property OnPopupHidden;
+    property OnPopupChange;
+    property OnPopupValueAccepted;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDatePickerEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -348,7 +352,7 @@ implementation
 uses
   Variants, SysUtils, Menus,
   JclStrings,
-  JvConsts, JvTypes, JvResources;
+  JvConsts, JvTypes, JvResources, JclSysUtils;
 
 const
   DateMaskSuffix = '!;1;_';
@@ -377,17 +381,17 @@ begin
   // date when it is not.
   if VarIsType(Value, varDate) then
   begin
-    OldFormat := ShortDateFormat;
-    OldSeparator := SysUtils.DateSeparator;
+    OldFormat := JclFormatSettings.ShortDateFormat;
+    OldSeparator := JclFormatSettings.DateSeparator;
     try
-      ShortDateFormat := FInternalDateFormat;
-      SysUtils.DateSeparator := FDateSeparator;
+      JclFormatSettings.ShortDateFormat := FInternalDateFormat;
+      JclFormatSettings.DateSeparator := FDateSeparator;
       TmpDate := Value;
       TmpValue := DateToStr(TmpDate);
       inherited AcceptValue(TmpValue);
     finally
-      ShortDateFormat := OldFormat;
-      SysUtils.DateSeparator := OldSeparator;
+      JclFormatSettings.ShortDateFormat := OldFormat;
+      JclFormatSettings.DateSeparator := OldSeparator;
     end;
   end
   else
@@ -437,11 +441,11 @@ begin
   begin
     Result := True;
     OldDate := ADate;
-    OldFormat := ShortDateFormat;
-    OldSeparator := SysUtils.DateSeparator;
+    OldFormat := JclFormatSettings.ShortDateFormat;
+    OldSeparator := JclFormatSettings.DateSeparator;
     try
-      SysUtils.DateSeparator := FDateSeparator;
-      ShortDateFormat := FInternalDateFormat;
+      JclFormatSettings.DateSeparator := FDateSeparator;
+      JclFormatSettings.ShortDateFormat := FInternalDateFormat;
       if AllowNoDate and ((Text = NoDateText) or IsEmptyMaskText(AText)) then
         ADate := NoDateValue
       else
@@ -461,8 +465,8 @@ begin
         end;
       end;
     finally
-      SysUtils.DateSeparator := OldSeparator;
-      ShortDateFormat := OldFormat;
+      JclFormatSettings.DateSeparator := OldSeparator;
+      JclFormatSettings.ShortDateFormat := OldFormat;
     end;
   end
   else
@@ -669,8 +673,8 @@ end;
 function TJvCustomDatePickerEdit.DateFormatToEditMask(
   var ADateFormat: string): string;
 begin
-  StrReplace(ADateFormat, 'dddddd', LongDateFormat, []);
-  StrReplace(ADateFormat, 'ddddd', ShortDateFormat, []);
+  StrReplace(ADateFormat, 'dddddd', JclFormatSettings.LongDateFormat, []);
+  StrReplace(ADateFormat, 'ddddd', JclFormatSettings.ShortDateFormat, []);
   StrReplace(ADateFormat, 'dddd', '', []); // unsupported: DoW as full name
   StrReplace(ADateFormat, 'ddd', '', []); // unsupported: DoW as abbrev
   StrReplace(ADateFormat, 'MMMM', 'MM', []);
@@ -690,13 +694,13 @@ function TJvCustomDatePickerEdit.DateToText(const ADate: TDateTime): string;
 var
   OldSep: Char;
 begin
-  OldSep := SysUtils.DateSeparator;
+  OldSep := JclFormatSettings.DateSeparator;
   // without this a slash would always be converted to SysUtils.DateSeparator
-  SysUtils.DateSeparator := Self.DateSeparator;
+  JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
     Result := FormatDateTime(FInternalDateFormat, ADate);
   finally
-    SysUtils.DateSeparator := OldSep;
+    JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
 
@@ -717,7 +721,7 @@ begin
   if AFormat <> '' then
     Result := AFormat[1]
   else
-    Result := SysUtils.DateSeparator;
+    Result := JclFormatSettings.DateSeparator;
 end;
 
 procedure TJvCustomDatePickerEdit.DoCtl3DChanged;
@@ -862,12 +866,12 @@ function TJvCustomDatePickerEdit.GetText: TCaption;
 var
   OldSep: Char;
 begin
-  OldSep := SysUtils.DateSeparator;
-  SysUtils.DateSeparator := Self.DateSeparator;
+  OldSep := JclFormatSettings.DateSeparator;
+  JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
     Result := inherited Text;
   finally
-    SysUtils.DateSeparator := OldSep;
+    JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
 
@@ -988,12 +992,12 @@ begin
   { EditCanModify could have triggered a ClearMask. }
   RestoreMaskForKeyPress;
 
-  OldSep := SysUtils.DateSeparator;
-  SysUtils.DateSeparator := Self.DateSeparator;
+  OldSep := JclFormatSettings.DateSeparator;
+  JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
     inherited KeyPress(Key);
   finally
-    SysUtils.DateSeparator := OldSep;
+    JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
 
@@ -1134,19 +1138,26 @@ begin
   UpdateDisplay;
 end;
 
-procedure TJvCustomDatePickerEdit.SetDateFormat(const AValue: string);
+procedure TJvCustomDatePickerEdit.SetDateFormat(AValue: string);
 begin
-  FDateFormat := AValue;
-  if FDateFormat = '' then
-    FDateFormat := ShortDateFormat;
-  DateSeparator := DetermineDateSeparator(FDateFormat); //calls ResetDateFormat implicitly
-  StoreDateFormat := FDateFormat <> ShortDateFormat;
+  if AValue = '' then
+    AValue := JclFormatSettings.ShortDateFormat;
+  if AValue <> FDateFormat then
+  begin
+    FDateFormat := AValue;
+    FDateSeparator := DetermineDateSeparator(FDateFormat);
+    StoreDateFormat := FDateFormat <> JclFormatSettings.ShortDateFormat;
+    ResetDateFormat;
+  end;
 end;
 
 procedure TJvCustomDatePickerEdit.SetDateSeparator(const AValue: Char);
 begin
-  FDateSeparator := AValue;
-  ResetDateFormat;
+  if AValue <> FDateSeparator then
+  begin
+    FDateSeparator := AValue;
+    ResetDateFormat;
+  end;
 end;
 
 { The only purpose of the following overrides is to overcome a known issue in
@@ -1163,12 +1174,12 @@ begin
 {  if csDesigning in ComponentState then
     Exit;}
 
-  OldSep := SysUtils.DateSeparator;
-  SysUtils.DateSeparator := Self.DateSeparator;
+  OldSep := JclFormatSettings.DateSeparator;
+  JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
     inherited EditMask := AValue;
   finally
-    SysUtils.DateSeparator := OldSep;
+    JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
 
@@ -1222,12 +1233,12 @@ procedure TJvCustomDatePickerEdit.SetText(const AValue: TCaption);
 var
   OldSep: Char;
 begin
-  OldSep := SysUtils.DateSeparator;
-  SysUtils.DateSeparator := Self.DateSeparator;
+  OldSep := JclFormatSettings.DateSeparator;
+  JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
     inherited Text := AValue;
   finally
-    SysUtils.DateSeparator := OldSep;
+    JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
 
@@ -1297,12 +1308,12 @@ begin
   if csDesigning in ComponentState then
     Exit;
 
-  OldSep := SysUtils.DateSeparator;
-  SysUtils.DateSeparator := Self.DateSeparator;
+  OldSep := JclFormatSettings.DateSeparator;
+  JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
     inherited;
   finally
-    SysUtils.DateSeparator := OldSep;
+    JclFormatSettings.DateSeparator := OldSep;
   end;
 end;
 

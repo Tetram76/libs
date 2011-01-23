@@ -34,7 +34,7 @@ History:
     * Rewritten almost everything.
 
 -----------------------------------------------------------------------------}
-// $Id: JvThreadTimer.pas 12779 2010-05-18 17:07:33Z ahuser $
+// $Id: JvThreadTimer.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvThreadTimer;
 
@@ -87,8 +87,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadTimer.pas $';
-    Revision: '$Revision: 12779 $';
-    Date: '$Date: 2010-05-18 19:07:33 +0200 (mar. 18 mai 2010) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -100,13 +100,14 @@ uses
   JvJCLUtils;
 
 type
-  TJvTimerThread = class(TThread)
+  TJvTimerThread = class(TJvCustomThread)
   private
     FEvent: THandle;
     FHasBeenSuspended: Boolean;
     FInterval: Cardinal;
     FTimer: TJvThreadTimer;
     FPriority: TThreadPriority;
+    FSynchronizing: Boolean;
   protected
     procedure DoSuspend;
     procedure Execute; override;
@@ -116,6 +117,7 @@ type
     procedure Stop;
     property Interval: Cardinal read FInterval;
     property Timer: TJvThreadTimer read FTimer;
+    property Synchronizing: Boolean read FSynchronizing;
   end;
 
 function SubtractMin0(const Big, Small: Cardinal): Cardinal;
@@ -139,6 +141,7 @@ begin
   FInterval := ATimer.FInterval;
   FTimer := ATimer;
   FPriority := ATimer.Priority; // setting the priority is deferred to Execute()
+  ThreadName := Format('%s: %s',[ClassName, ATimer.Name]);
 end;
 
 destructor TJvTimerThread.Destroy;
@@ -159,6 +162,7 @@ procedure TJvTimerThread.Execute;
 var
   Offset, TickCount: Cardinal;
 begin
+  NameThread(ThreadName);
   Priority := FPriority;
   if WaitForSingleObject(FEvent, Interval) <> WAIT_TIMEOUT then
     Exit;
@@ -169,7 +173,14 @@ begin
 
     TickCount := GetTickCount;
     if not Terminated then
-      Synchronize(FTimer.DoOnTimer);
+    begin
+      FSynchronizing := True;
+      try
+        Synchronize(FTimer.DoOnTimer);
+      finally
+        FSynchronizing := False;
+      end;
+    end;
 
     // Determine how much time it took to execute OnTimer event handler. Take a care
     // of wrapping the value returned by GetTickCount API around zero if Windows is
@@ -187,7 +198,7 @@ begin
 
     // Make sure Offset is less than or equal to FInterval.
     // (rb) Ensure it's atomic, because of KeepAlive
-    if WaitForSingleObject(FEvent, SubtractMin0(Interval, Offset)) <> WAIT_TIMEOUT then
+    if Terminated or (WaitForSingleObject(FEvent, SubtractMin0(Interval, Offset)) <> WAIT_TIMEOUT) then
       Exit;
   end;
 end;
@@ -290,7 +301,15 @@ begin
   if FThread <> nil then
   begin
     TJvTimerThread(FThread).Stop;
-    FreeAndNil(FThread);
+    if not TJvTimerThread(FThread).Synchronizing then
+      FreeAndNil(FThread)
+    else
+    begin
+      // We can't destroy the thread because it called us through Synchronize()
+      // and is waiting for our return. But we need to destroy it after it returned.
+      TJvTimerThread(FThread).FreeOnTerminate := True;
+      FThread := nil
+    end;
   end;
 end;
 

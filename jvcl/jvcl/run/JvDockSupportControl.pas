@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportControl.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvDockSupportControl.pas 12934 2010-11-28 14:26:00Z ahuser $
 
 unit JvDockSupportControl;
 
@@ -39,7 +39,7 @@ uses
   JvDockTree;
 
 type
-  TJvAlphaBlendedForm = class(TJvForm)
+  TJvAlphaBlendedForm = class(TForm)
   protected
     procedure CreateParams(var Params: TCreateParams); override;
   end;
@@ -519,8 +519,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportControl.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12934 $';
+    Date: '$Date: 2010-11-28 15:26:00 +0100 (dim., 28 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2326,6 +2326,7 @@ var
     begin
       WasVisible := Control.Visible;
       try
+        DragObject.AlphaBlendedForm.Hide;
         Control.Dock(nil, DragObject.DockRect);
         if (Control.Left <> DragObject.DockRect.Left) or (Control.Top <> DragObject.DockRect.Top) then
         begin
@@ -2956,8 +2957,8 @@ procedure TJvDockPageControl.CMUnDockClient(var Msg: TCMUnDockClient);
 var
   Page: TJvDockTabSheet;
 begin
-{$ifdef VER210}
-  if (csDestroying in Self.ComponentState) then exit; // rather ugly workaround for Delphi2010 crash at shutdown.
+{$ifdef RTL210_UP}
+  if (csDestroying in Self.ComponentState) then exit; // rather ugly workaround for Delphi 2010+ crash at shutdown.
 {$endif}
 
   Msg.Result := 0;

@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCheckBox.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvgCheckBox.pas 12864 2010-10-11 08:19:42Z obones $
 
 unit JvgCheckBox;
 
@@ -37,7 +37,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls,
-  JvComponent,
+  JvComponent, JvJVCLUtils,
   JvgTypes, JvgCommClasses, JvgUtils;
 
 type
@@ -158,8 +158,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCheckBox.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12864 $';
+    Date: '$Date: 2010-10-11 10:19:42 +0200 (lun., 11 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -168,7 +168,7 @@ implementation
 
 uses
   Math,
-  JvThemes, JvJVCLUtils;
+  JvThemes;
 
 {$R JvgCheckBox.res}
 

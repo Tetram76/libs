@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTMTimeLine.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvTMTimeLine.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvTMTimeLine;
 
@@ -325,8 +325,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTMTimeLine.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -335,7 +335,7 @@ implementation
 
 uses
   Consts,
-  JvJCLUtils, JvJVCLUtils, JvThemes;
+  JvJCLUtils, JvJVCLUtils, JvThemes, JclSysUtils;
 
 {$R JvTMTimeLine.res}
 
@@ -714,7 +714,7 @@ begin
         if MonthDays[IsLeapYear(Y), M] = D then
         begin
           // draw text for end of this month:
-          S := ShortMonthNames[M];
+          S := JclFormatSettings.ShortMonthNames[M];
           Size := ACanvas.TextExtent(S);
           R := Rect(I * FDayWidth + FDayWidth - Size.cx - 8,
             Height - Size.cy - 4, I * FDayWidth + FDayWidth, Height - 4);
@@ -727,7 +727,7 @@ begin
         if D = 1 then
         begin
           // draw text for start of this month and the year:
-          S := Format('%s %d', [ShortMonthNames[M], Y]);
+          S := Format('%s %d', [JclFormatSettings.ShortMonthNames[M], Y]);
           Size := ACanvas.TextExtent(S);
           R := Rect(I * FDayWidth + 4, Height - Size.cy - 4, I * FDayWidth + Size.cx + 4, Height - 4);
           OffsetRect(R, FirstOffset, 0);

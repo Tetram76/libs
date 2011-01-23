@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   Doesn't work with Paegasus Mail because it has no MAPI support at all.
 -----------------------------------------------------------------------------}
-// $Id: JvMail.pas 12493 2009-09-07 18:35:38Z remkobonte $
+// $Id: JvMail.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvMail;
 
@@ -180,8 +180,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMail.pas $';
-    Revision: '$Revision: 12493 $';
-    Date: '$Date: 2009-09-07 20:35:38 +0200 (lun. 07 sept. 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -189,7 +189,7 @@ const
 implementation
 
 uses
-  JvConsts, JvResources;
+  JvConsts, JvResources, JclSysUtils;
 
 //=== { TJvMailRecipient } ===================================================
 
@@ -667,15 +667,15 @@ begin
     FSubject := string(lpszSubject);
     Body.Text := string(lpszNoteText);
     //    FDateReceived := StrToDateTime(lpszDateReceived);
-    SOldDateFormat := ShortDateFormat;
-    OldDateSeparator := DateSeparator;
+    SOldDateFormat := JclFormatSettings.ShortDateFormat;
+    OldDateSeparator := JclFormatSettings.DateSeparator;
     try
-      ShortDateFormat := 'yyyy/M/d';
-      DateSeparator := '/';
+      JclFormatSettings.ShortDateFormat := 'yyyy/M/d';
+      JclFormatSettings.DateSeparator := '/';
       FReadedMail.DateReceived := StrToDateTime(string(lpszDateReceived));
     finally
-      ShortDateFormat := SOldDateFormat;
-      DateSeparator := OldDateSeparator;
+      JclFormatSettings.ShortDateFormat := SOldDateFormat;
+      JclFormatSettings.DateSeparator := OldDateSeparator;
     end;
     FReadedMail.ConversationID := string(lpszConversationID);
     DecodeAttachments(lpFiles, nFileCount);

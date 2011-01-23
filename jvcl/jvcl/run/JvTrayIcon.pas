@@ -36,7 +36,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTrayIcon.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvTrayIcon.pas 12858 2010-10-08 14:20:15Z obones $
 
 unit JvTrayIcon;
 
@@ -240,8 +240,8 @@ procedure RefreshTray;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTrayIcon.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12858 $';
+    Date: '$Date: 2010-10-08 16:20:15 +0200 (ven., 08 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -467,7 +467,7 @@ function FindToolbar(Window: THandle; var ToolbarHandle: THandle): BOOL; stdcall
 var
   Buf: array [Byte] of Char;
 begin
-  GetClassName(Window, Buf, SizeOf(Buf));
+  GetClassName(Window, Buf, Length(Buf) - 1);
   // Set result to false when we have found a toolbar
   Result := StrIComp(Buf, TOOLBARCLASSNAME) <> 0;
   if not Result then
@@ -608,9 +608,9 @@ begin
       HideBalloon;
 
     with FIconData do
-      StrPLCopy(szInfoTitle, Title, SizeOf(szInfoTitle) - 1);
+      StrPLCopy(szInfoTitle, Title, Length(szInfoTitle) - 1);
     with FIconData do
-      StrPLCopy(szInfo, Value, SizeOf(szInfo) - 1);
+      StrPLCopy(szInfo, Value, Length(szInfo) - 1);
 
     FIconData.uTimeOut := ADelay;
     FIconData.dwInfoFlags := cInfoFlagValues[BalloonType];

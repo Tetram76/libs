@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvClock.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvClock.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvClock;
 
@@ -194,8 +194,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvClock.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -208,7 +208,7 @@ uses
   SysConst,
   {$ENDIF COMPILER7_UP}
   SysUtils, Forms, ExtCtrls, Consts,
-  JvThemes;
+  JvThemes, JclSysUtils;
 
 var
   Registered: Boolean = False;
@@ -277,8 +277,8 @@ procedure InvalidTime(Hour, Min, Sec: Word);
 var
   sTime: string;
 begin
-  sTime := IntToStr(Hour) + TimeSeparator + IntToStr(Min) +
-    TimeSeparator + IntToStr(Sec);
+  sTime := IntToStr(Hour) + JclFormatSettings.TimeSeparator + IntToStr(Min) +
+    JclFormatSettings.TimeSeparator + IntToStr(Sec);
   raise EConvertError.CreateResFmt(@SInvalidTime, [sTime]);
 end;
 
@@ -399,7 +399,7 @@ begin
   FShowSeconds := True;
   FLeadingZero := True;
   FShowDate := False;
-  FDateFormat := ShortDateFormat;
+  FDateFormat := JclFormatSettings.ShortDateFormat;
   GetTime(FDisplayTime);
   if FDisplayTime.Hour >= 12 then
     Dec(FDisplayTime.Hour, 12);
@@ -562,10 +562,10 @@ begin
       TimeStr := TimeStr + '888';
     if FTwelveHour then
     begin
-      if Canvas.TextWidth(TimeAMString) > Canvas.TextWidth(TimePMString) then
-        TimeStr := TimeStr + ' ' + TimeAMString
+      if Canvas.TextWidth(JclFormatSettings.TimeAMString) > Canvas.TextWidth(JclFormatSettings.TimePMString) then
+        TimeStr := TimeStr + ' ' + JclFormatSettings.TimeAMString
       else
-        TimeStr := TimeStr + ' ' + TimePMString;
+        TimeStr := TimeStr + ' ' + JclFormatSettings.TimePMString;
     end;
     SetNewFontSize(Canvas, TimeStr, H, W);
     Font := Canvas.Font;

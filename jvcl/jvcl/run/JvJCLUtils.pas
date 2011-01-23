@@ -26,7 +26,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvJCLUtils.pas 12585 2009-10-29 20:27:56Z ahuser $
+// $Id: JvJCLUtils.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvJCLUtils;
 
@@ -1079,8 +1079,8 @@ procedure CollectionSort(Collection: Classes.TCollection; SortProc: TCollectionS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJCLUtils.pas $';
-    Revision: '$Revision: 12585 $';
-    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu. 29 oct. 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1092,9 +1092,12 @@ uses
   {$IFDEF MSWINDOWS}
   ComObj, ShellAPI, MMSystem, Registry,
   {$ENDIF MSWINDOWS}
+  {$IFDEF UNICODE}
+  Character, // needed for JclStrings inlined functions
+  {$ENDIF UNICODE}
   Consts,
   JclStrings, JclSysInfo, JclFileUtils,
-  Math;
+  Math, JclSysUtils;
 
 const
   Separators: TSysCharSet = [#00, ' ', '-', #13, #10, '.', ',', '/', '\', '#', '"', '''',
@@ -2265,7 +2268,7 @@ end;
 
 function CurrencyToStr(const Cur: Currency): string;
 begin
-  Result := CurrToStrF(Cur, ffCurrency, CurrencyDecimals)
+  Result := CurrToStrF(Cur, ffCurrency, JclFormatSettings.CurrencyDecimals)
 end;
 
 function HasChar(const Ch: Char; const S: string): Boolean;
@@ -4584,12 +4587,12 @@ begin
   M := 0;
   D := 0;
   DateOrder := GetDateOrder(DateFormat);
-  if ShortDateFormat[1] = 'g' then { skip over prefix text }
+  if JclFormatSettings.ShortDateFormat[1] = 'g' then { skip over prefix text }
     ScanToNumber(S, Position);
-  if not (ScanNumber(S, MaxInt, Position, N1) and ScanChar(S, Position, DateSeparator) and
+  if not (ScanNumber(S, MaxInt, Position, N1) and ScanChar(S, Position, JclFormatSettings.DateSeparator) and
     ScanNumber(S, MaxInt, Position, N2)) then
     Exit;
-  if ScanChar(S, Position, DateSeparator) then
+  if ScanChar(S, Position, JclFormatSettings.DateSeparator) then
   begin
     if not ScanNumber(S, MaxInt, Position, N3) then
       Exit;
@@ -4629,11 +4632,11 @@ begin
       D := N2;
     end;
   end;
-  ScanChar(S, Position, DateSeparator);
+  ScanChar(S, Position, JclFormatSettings.DateSeparator);
   ScanBlanks(S, Position);
-  if SysLocale.FarEast and (Pos('ddd', ShortDateFormat) <> 0) then
+  if SysLocale.FarEast and (Pos('ddd', JclFormatSettings.ShortDateFormat) <> 0) then
   begin { ignore trailing text }
-    if CharInSet(ShortTimeFormat[1], ['0'..'9']) then { stop at time digit }
+    if CharInSet(JclFormatSettings.ShortTimeFormat[1], ['0'..'9']) then { stop at time digit }
       ScanToNumber(S, Position)
     else { stop at time prefix }
       repeat
@@ -4641,8 +4644,8 @@ begin
           Inc(Position);
         ScanBlanks(S, Position);
       until (Position > Length(S)) or
-        AnsiSameText(TimeAMString, Copy(S, Position, Length(TimeAMString))) or
-        AnsiSameText(TimePMString, Copy(S, Position, Length(TimePMString)));
+        AnsiSameText(JclFormatSettings.TimeAMString, Copy(S, Position, Length(JclFormatSettings.TimeAMString))) or
+        AnsiSameText(JclFormatSettings.TimePMString, Copy(S, Position, Length(JclFormatSettings.TimePMString)));
   end;
   Result := IsValidDate(Y, M, D) and (Position > Length(S));
 end;
@@ -4652,8 +4655,8 @@ begin
   if Length(S) > 0 then
     for Result := 1 to 12 do
     begin
-      if (Length(LongMonthNames[Result]) > 0) and
-         AnsiSameText(Copy(S, 1, MaxLen), Copy(LongMonthNames[Result], 1, MaxLen)) then
+      if (Length(JclFormatSettings.LongMonthNames[Result]) > 0) and
+         AnsiSameText(Copy(S, 1, MaxLen), Copy(JclFormatSettings.LongMonthNames[Result], 1, MaxLen)) then
         Exit;
     end;
   Result := 0;
@@ -4746,7 +4749,7 @@ end;
 
 function StrToDateDef(const S: string; Default: TDateTime): TDateTime;
 begin
-  if not InternalStrToDate(ShortDateFormat, S, Result) then
+  if not InternalStrToDate(JclFormatSettings.ShortDateFormat, S, Result) then
     Result := Trunc(Default);
 end;
 
@@ -4760,7 +4763,7 @@ function DefDateFormat(AFourDigitYear: Boolean): string;
 begin
   if AFourDigitYear then
   begin
-    case GetDateOrder(ShortDateFormat) of
+    case GetDateOrder(JclFormatSettings.ShortDateFormat) of
       doMDY:
         Result := 'MM/DD/YYYY';
       doDMY:
@@ -4771,7 +4774,7 @@ begin
   end
   else
   begin
-    case GetDateOrder(ShortDateFormat) of
+    case GetDateOrder(JclFormatSettings.ShortDateFormat) of
       doMDY:
         Result := 'MM/DD/YY';
       doDMY:
@@ -4786,7 +4789,7 @@ function DefDateMask(BlanksChar: Char; AFourDigitYear: Boolean): string;
 begin
   if AFourDigitYear then
   begin
-    case GetDateOrder(ShortDateFormat) of
+    case GetDateOrder(JclFormatSettings.ShortDateFormat) of
       doMDY, doDMY:
         Result := '!99/99/9999;1;';
       doYMD:
@@ -4795,7 +4798,7 @@ begin
   end
   else
   begin
-    case GetDateOrder(ShortDateFormat) of
+    case GetDateOrder(JclFormatSettings.ShortDateFormat) of
       doMDY, doDMY:
         Result := '!99/99/99;1;';
       doYMD:
@@ -4839,7 +4842,7 @@ end;
 
 function IsFourDigitYear: Boolean;
 begin
-  Result := Pos('YYYY', AnsiUpperCase(ShortDateFormat)) > 0;
+  Result := Pos('YYYY', AnsiUpperCase(JclFormatSettings.ShortDateFormat)) > 0;
 end;
 { end JvDateUtil }
 
@@ -6935,7 +6938,7 @@ end;
 function CharIsMoney(const Ch: Char): Boolean;
 begin
   Result := CharIsDigit(Ch) or (Ch = NativeSpace) or (Ch = '$') or (Ch = '-') or
-    (Pos(Ch, CurrencyString) > 0);
+    (Pos(Ch, JclFormatSettings.CurrencyString) > 0);
 end;
 
 function StrToCurrDef(const Str: string; Def: Currency): Currency;
@@ -6950,7 +6953,7 @@ begin
   begin
     LStr := TJclStringBuilder.Create(Length(Str));
     try
-      CharSet := ['0'..'9', '-', '+', AnsiChar(DecimalSeparator)];
+      CharSet := ['0'..'9', '-', '+', AnsiChar(JclFormatSettings.DecimalSeparator)];
       for I := 1 to Length(Str) do
         if CharInSet(Str[I], CharSet) then
           LStr.Append(Str[I]);
@@ -7003,7 +7006,7 @@ var
   LStr: TJclStringBuilder;
   I: Integer;
   CharSet: TSysCharSet;
-  FormatSettings: TFormatSettings;
+  LocalFormatSettings: TFormatSettings;
 begin
   Result := false;
   if Str = '' then
@@ -7011,15 +7014,15 @@ begin
 
   { Locale Handling logic October 2008 supercedes former StrToFloatUS functionality. }
   {$IFDEF RTL150_UP}
-  FormatSettings.ThousandSeparator := GetLocaleChar(LOCALE_SYSTEM_DEFAULT, LOCALE_STHOUSAND, '.');
-  FormatSettings.DecimalSeparator := GetLocaleChar(LOCALE_SYSTEM_DEFAULT, LOCALE_SDECIMAL, '.');
+  LocalFormatSettings.ThousandSeparator := GetLocaleChar(LOCALE_SYSTEM_DEFAULT, LOCALE_STHOUSAND, '.');
+  LocalFormatSettings.DecimalSeparator := GetLocaleChar(LOCALE_SYSTEM_DEFAULT, LOCALE_SDECIMAL, '.');
   {$ELSE}
-  FormatSettings.DecimalSeparator := DecimalSeparator;
+  LocalFormatSettings.DecimalSeparator := DecimalSeparator;
   {$ENDIF RTL150_UP}
   if aDecimalSeparator = ' ' then {magic mode}
-    aDecimalSeparator := FormatSettings.DecimalSeparator { default case! use system defaults! }
+    aDecimalSeparator := LocalFormatSettings.DecimalSeparator { default case! use system defaults! }
   else
-    FormatSettings.DecimalSeparator := aDecimalSeparator; { custom format specified! }
+    LocalFormatSettings.DecimalSeparator := aDecimalSeparator; { custom format specified! }
 
   { Cross-codepage safety feature:  Handed '1.2', a string without a comma,
     but which is obviously a floating point number, convert it properly also.
@@ -7028,7 +7031,7 @@ begin
   if (Pos(USDecimalSeparator, Str) > 0) and (Pos(aDecimalSeparator, Str) = 0) then
   begin
     aDecimalSeparator := USDecimalSeparator; { automatically works when US decimal values are encountered }
-    FormatSettings.DecimalSeparator := aDecimalSeparator; { custom format specified! }
+    LocalFormatSettings.DecimalSeparator := aDecimalSeparator; { custom format specified! }
   end;
 
   LStr := TJclStringBuilder.Create(Length(Str));
@@ -7054,9 +7057,9 @@ begin
         LStr.Append('0');
 
       {$IFDEF RTL150_UP}
-      if not TextToFloat(PChar(LStr.ToString), OutValue, fvExtended, FormatSettings) then
+      if not TextToFloat(PChar(LStr.ToString), OutValue, fvExtended, LocalFormatSettings) then
       {$ELSE}
-      if not TextToFloatD5D6(PChar(LStr.ToString), OutValue, fvExtended, FormatSettings) then
+      if not TextToFloatD5D6(PChar(LStr.ToString), OutValue, fvExtended, LocalFormatSettings) then
       {$ENDIF RTL150_UP}
         Result := False
       else
@@ -7173,7 +7176,7 @@ begin
   for I := 1 to Length(S) do
   begin
     Ch := Char(S[I]);
-    if not CharIsNumberChar(Ch) or (Ch = DecimalSeparator) then //Az
+    if not CharIsNumberChar(Ch) or (Ch = JclFormatSettings.DecimalSeparator) then //Az
     begin
       Result := False;
       Exit;
@@ -7194,7 +7197,7 @@ begin
     { allow digits, space, Currency symbol and one decimal dot }
     Ch := Ps[I];
 
-    if Ch = DecimalSeparator then
+    if Ch = JclFormatSettings.DecimalSeparator then
     begin
       Inc(liDots);
       if liDots > 1 then
@@ -7292,12 +7295,12 @@ begin
   { use the StrReplace in stringfunctions -
   the one in JclStrings is badly broken and brings down the app }
 
-  for I := Low(LongMonthNames) to High(LongMonthNames) do
-    Ps := LStrReplace(Ps, LongMonthNames[I], IntToStr(I), False);
+  for I := JclFormatSettings.MonthNamesLowIndex to JclFormatSettings.MonthNamesHighIndex do
+    Ps := LStrReplace(Ps, JclFormatSettings.LongMonthNames[I], IntToStr(I), False);
 
   { now that 'January' is gone, catch 'Jan' }
-  for I := Low(ShortMonthNames) to High(ShortMonthNames) do
-    Ps := LStrReplace(Ps, ShortMonthNames[I], IntToStr(I), False);
+  for I := JclFormatSettings.MonthNamesLowIndex to JclFormatSettings.MonthNamesHighIndex do
+    Ps := LStrReplace(Ps, JclFormatSettings.ShortMonthNames[I], IntToStr(I), False);
 
   { remove redundant spaces }
   Ps := LStrReplace(Ps, NativeSpace + NativeSpace, NativeSpace, False);
@@ -7822,102 +7825,56 @@ end;
 
 { String routines }
 
-{ function GetParamStr copied from SYSTEM.PAS unit of Delphi 2.0 }
+procedure SplitCommandLine(const CmdLine: string; var ExeName, Params: string);
 
-function GetParamStr(P: PChar; var Param: string): PChar;
-var
-  Len: Integer;
-  Buffer: array [Byte] of Char;
-begin
-  while True do
+  function SkipString(P: PChar): PChar;
   begin
-    while (P[0] <> #0) and (P[0] <= ' ') do
-      Inc(P);
-    if (P[0] = '"') and (P[1] = '"') then
-      Inc(P, 2)
-    else
-      Break;
-  end;
-  Len := 0;
-  while P[0] > ' ' do
-    if P[0] = '"' then
+    if P^ = '"' then
     begin
       Inc(P);
-      while (P[0] <> #0) and (P[0] <> '"') do
-      begin
-        Buffer[Len] := P[0];
-        Inc(Len);
+      while (P^ <> #0) and (P^ <> '"') do
         Inc(P);
-      end;
-      if P[0] <> #0 then
+      if P^ <> #0 then
         Inc(P);
     end
     else
-    begin
-      Buffer[Len] := P[0];
-      Inc(Len);
-      Inc(P);
-    end;
-  SetString(Param, Buffer, Len);
-  Result := P;
-end;
-
-function ParamCountFromCommandLine(CmdLine: PChar): Integer;
-var
-  S: string;
-  P: PChar;
-begin
-  P := CmdLine;
-  Result := 0;
-  while True do
-  begin
-    P := GetParamStr(P, S);
-    if S = '' then
-      Break;
-    Inc(Result);
+      while P^ > ' ' do
+      begin
+        if P^ = '"' then
+        begin
+          Inc(P);
+          while (P^ <> #0) and (P^ <> '"') do
+            Inc(P);
+          if P^ = #0 then
+            Break;
+        end;
+        Inc(P);
+      end;
+    Result := P;
   end;
-end;
 
-function ParamStrFromCommandLine(CmdLine: PChar; Index: Integer): string;
-var
-  P: PChar;
-begin
-  P := CmdLine;
-  while True do
+  function SkipWhiteChars(P: PChar): PChar;
   begin
-    P := GetParamStr(P, Result);
-    if (Index = 0) or (Result = '') then
-      Break;
-    Dec(Index);
+    Result := P;
+    while (Result^ <> #0) and (Result^ <= ' ') do
+      Inc(Result);
   end;
-end;
 
-procedure SplitCommandLine(const CmdLine: string; var ExeName, Params: string);
 var
-  Buffer: PChar;
-  Cnt, I: Integer;
-  S: string;
+  F, P: PChar;
 begin
   ExeName := '';
   Params := '';
-  Buffer := StrPAlloc(CmdLine);
-  try
-    Cnt := ParamCountFromCommandLine(Buffer);
-    if Cnt > 0 then
-    begin
-      ExeName := ParamStrFromCommandLine(Buffer, 0);
-      for I := 1 to Cnt - 1 do
-      begin
-        S := ParamStrFromCommandLine(Buffer, I);
-        if Pos(' ', S) > 0 then
-          S := '"' + S + '"';
-        Params := Params + S;
-        if I < Cnt - 1 then
-          Params := Params + ' ';
-      end;
-    end;
-  finally
-    StrDispose(Buffer);
+  if CmdLine <> '' then
+  begin
+    F := PChar(CmdLine);
+    P := SkipString(F);
+    if F^ = '"' then
+      SetString(ExeName, F + 1, P - F - 2)
+    else
+      SetString(ExeName, F, P - F);
+    P := SkipWhiteChars(P);
+    SetString(Params, P, StrLen(P));
   end;
 end;
 
@@ -8389,18 +8346,18 @@ var
   CharSet: TSysCharSet;
 begin
   Result := DelRSpace(AValue);
-  if DecimalSeparator <> ThousandSeparator then
-    Result := DelChars(Result, ThousandSeparator);
+  if JclFormatSettings.DecimalSeparator <> JclFormatSettings.ThousandSeparator then
+    Result := DelChars(Result, JclFormatSettings.ThousandSeparator);
 
-  if (DecimalSeparator <> '.') and (ThousandSeparator <> '.') then
-    Result := ReplaceStr(Result, '.', DecimalSeparator);
-  if (DecimalSeparator <> ',') and (ThousandSeparator <> ',') then
-    Result := ReplaceStr(Result, ',', DecimalSeparator);
+  if (JclFormatSettings.DecimalSeparator <> '.') and (JclFormatSettings.ThousandSeparator <> '.') then
+    Result := ReplaceStr(Result, '.', JclFormatSettings.DecimalSeparator);
+  if (JclFormatSettings.DecimalSeparator <> ',') and (JclFormatSettings.ThousandSeparator <> ',') then
+    Result := ReplaceStr(Result, ',', JclFormatSettings.DecimalSeparator);
 
   J := 1;
   CharSet := ['0'..'9', '-', '+',
-        AnsiChar(DecimalSeparator),
-        AnsiChar(ThousandSeparator)];
+        AnsiChar(JclFormatSettings.DecimalSeparator),
+        AnsiChar(JclFormatSettings.ThousandSeparator)];
   for I := 1 to Length(Result) do
     if CharInSet(Result[I], CharSet) then
     begin

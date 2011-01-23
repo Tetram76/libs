@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBLogonDialog.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBaseDBLogonDialog.pas 12884 2010-10-31 20:25:46Z jfudickar $
 
 unit JvBaseDBLogonDialog;
 
@@ -392,8 +392,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBLogonDialog.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12884 $';
+    Date: '$Date: 2010-10-31 21:25:46 +0100 (dim., 31 oct. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -928,7 +928,18 @@ begin
     Connection := ConnectionList.Connection[i];
     GroupList := TStringList.Create;
     try
-      GroupList.CommaText := Connection.Group;
+      {$IFDEF DELPHI2009_UP}    
+      GroupList.StrictDelimiter:=true;
+      {$ENDIF DELPHI2009_UP}
+      GroupList.Duplicates := dupIgnore;
+      GroupList.Sorted := True;
+      if (Pos(';',Connection.Group) >= 1) and (Pos(',',Connection.Group) < 1)then
+        GroupList.Delimiter := ';'
+      else
+        GroupList.Delimiter := ',';
+      GroupList.DelimitedText := Connection.Group;
+      GroupList.Delimiter := ',';
+      Connection.Group := GroupList.CommaText;
       if GroupList.CommaText = '' then
         GroupList.CommaText := RsGroupNameUndefined;
 

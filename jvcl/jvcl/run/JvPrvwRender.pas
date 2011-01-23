@@ -253,7 +253,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPrvwRender.pas $';
     Revision: '$Revision: 12768 $';
-    Date: '$Date: 2010-05-14 20:00:53 +0200 (ven. 14 mai 2010) $';
+    Date: '$Date: 2010-05-14 20:00:53 +0200 (ven., 14 mai 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

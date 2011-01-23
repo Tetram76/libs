@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidators.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvValidators.pas 12892 2010-11-09 14:11:59Z obones $
 
 unit JvValidators;
 
@@ -273,8 +273,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidators.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12892 $';
+    Date: '$Date: 2010-11-09 15:11:59 +0100 (mar., 09 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -686,10 +686,13 @@ begin
   if ReplaceComponentReference(Self, Value, TComponent(FCompareToControl)) then
     if FCompareToControl <> nil then
     begin
-      if Supports(FCompareToControl, IJvValidationProperty, Obj) then
-        CompareToProperty := Obj.GetValidationPropertyName
-      else
-        CompareToProperty := '';
+      if not (csLoading in ComponentState) then
+      begin
+        if Supports(FCompareToControl, IJvValidationProperty, Obj) then
+          CompareToProperty := Obj.GetValidationPropertyName
+        else
+          CompareToProperty := '';
+      end;
     end;
 end;
 

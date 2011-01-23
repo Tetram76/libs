@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataProvider.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDataProvider.pas 12915 2010-11-27 22:00:35Z ahuser $
 
 unit JvDataProvider;
 
@@ -42,6 +42,25 @@ uses
   Classes, Contnrs, Graphics, Controls, ImgList,
   JclBase,
   JvComponentBase, JvDataProviderIntf;
+
+{$IFDEF COMPILER15_UP}
+  // C++Builder XE now overloads GetInterface() with a generic version. But the Delphi compiler
+  // only emits the old version if you use "const GUID: TGUID" as a parameter. This causes the
+  // GetInterface() reintroduction, that this unit makes in TExtensibleInterfacedPersistent, to
+  // generate compile errors in the C++ code.
+  // With the new "HPPEMIT END" we can work around this by disabling the new
+  // MANAGED_INTERFACE_OPERATORS define for this HPP file.
+
+  {$HPPEMIT '#ifdef MANAGED_INTERFACE_OPERATORS'}
+  {$HPPEMIT '  #undef MANAGED_INTERFACE_OPERATORS'}
+  {$HPPEMIT '  #define JvDataProviderHpp_MANAGED_INTERFACE_OPERATORS'}
+  {$HPPEMIT '#endif'}
+
+  {$HPPEMIT END '#ifdef JvDataProvider_MANAGED_INTERFACE_OPERATORS'}
+  {$HPPEMIT END '  #define MANAGED_INTERFACE_OPERATORS'}
+  {$HPPEMIT END '  #undef JvDataProviderHpp_MANAGED_INTERFACE_OPERATORS'}
+  {$HPPEMIT END '#endif'}
+{$ENDIF COMPILER15_UP}
 
 type
   // Forwards
@@ -1198,8 +1217,8 @@ procedure DisabledTextRect(ACanvas: TCanvas; var ARect: TRect; Left, Top: Intege
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDataProvider.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12915 $';
+    Date: '$Date: 2010-11-27 23:00:35 +0100 (sam., 27 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

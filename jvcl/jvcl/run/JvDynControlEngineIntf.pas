@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineIntf.pas 12696 2010-02-15 21:14:37Z jfudickar $
+// $Id: JvDynControlEngineIntf.pas 12886 2010-11-06 23:25:16Z jfudickar $
 
 unit JvDynControlEngineIntf;
 
@@ -290,6 +290,7 @@ type
 
   IJvDynControlProgressbar = interface
     ['{BAC5B6CD-3B65-4EBA-910A-49D152671B06}']
+    procedure ControlSetMarquee(Value: Boolean);
     procedure ControlSetMax(Value: Integer);
     procedure ControlSetMin(Value: Integer);
     procedure ControlSetOrientation(Value: TProgressBarOrientation);
@@ -409,8 +410,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineIntf.pas $';
-    Revision: '$Revision: 12696 $';
-    Date: '$Date: 2010-02-15 22:14:37 +0100 (lun. 15 févr. 2010) $';
+    Revision: '$Revision: 12886 $';
+    Date: '$Date: 2010-11-07 00:25:16 +0100 (dim., 07 nov. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

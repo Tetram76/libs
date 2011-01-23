@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Compile.pas 12792 2010-06-07 09:14:20Z ahuser $
+// $Id: Compile.pas 12967 2011-01-13 16:35:51Z outchy $
 
 unit Compile;
 
@@ -213,7 +213,7 @@ const
 
 const
   CommonDependencyFiles: array[0..5] of string = (
-    'jvcl.inc', 'jvclbase.inc', 'jvcl%t.inc', 'jedi.inc', 'linuxonly.inc', 'windowsonly.inc'
+    'jvcl.inc', 'jvclbase.inc', 'jvcl%t.inc', 'jedi\jedi.inc', 'linuxonly.inc', 'windowsonly.inc'
   );
 
 type
@@ -951,10 +951,7 @@ begin
 
     // add additional .lib files
     if TargetConfig.Target.Version = 6 then
-      LibFiles.AddStrings(Project.Info.XmlInfo.C6Libs)
-    else
-    if TargetConfig.Target.Version = 10 then // not used
-      LibFiles.AddStrings(Project.Info.XmlInfo.C10Libs);
+      LibFiles.AddStrings(Project.Info.XmlInfo.C6Libs);
 
     AgeIndex := ObjFiles.Count;
     // add .pas.obj files
@@ -1282,7 +1279,7 @@ begin
   end;
   CaptureLine(Format('JVCL %d.%d.%d.%d',
     [JVCLVersionMajor, JVCLVersionMinor, JVCLVersionRelease, JVCLVersionBuild]),
-	FAborted);
+    FAborted);
   CaptureLine('', FAborted);
 
   AbortReason := '';

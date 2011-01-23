@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRecentMenuButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvRecentMenuButton.pas 12833 2010-09-05 13:25:12Z obones $
 
 unit JvRecentMenuButton;
 
@@ -65,8 +65,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRecentMenuButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12833 $';
+    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -75,6 +75,7 @@ implementation
 
 uses
   ShlObj, ActiveX, Math,
+  JclDateTime,
   JvResources;
 
 const
@@ -220,7 +221,7 @@ begin
         begin
           Tmp := ShellLinkResolve(Path + Sr.FindData.cFileName);
           if (Tmp <> '') and (ExtractFileExt(Tmp) <> '') then
-            Strings.AddObject(Tmp, TObject(Sr.Time));
+            Strings.AddObject(Tmp, TObject(FileTimeToDosDateTime(Sr.FindData.ftLastWriteTime)));
         end;
         H := FindNext(Sr);
       end;

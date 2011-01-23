@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgHint.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgHint.pas 12845 2010-09-16 20:22:55Z jfudickar $
 
 unit JvgHint;
 
@@ -82,8 +82,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgHint.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12845 $';
+    Date: '$Date: 2010-09-16 22:22:55 +0200 (jeu., 16 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -150,6 +150,7 @@ end;
 
 procedure TJvgHint.Notification(Component: TComponent; Operation: TOperation);
 begin
+  inherited Notification(Component, Operation);
   if (Component <> Self) and (Operation = opInsert) and (Component is TJvgHint) then
     raise Exception.CreateRes(@RsEOnlyOneInstanceOfTJvgHint);
 end;

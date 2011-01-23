@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 12799 2010-06-07 17:12:09Z ahuser $
+// $Id: JvJVCLUtils.pas 12869 2010-10-19 19:37:22Z jfudickar $
 
 unit JvJVCLUtils;
 
@@ -895,8 +895,8 @@ function ReplaceComponentReference(This, NewReference: TComponent; var VarRefere
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 12799 $';
-    Date: '$Date: 2010-06-07 19:12:09 +0200 (lun. 07 juin 2010) $';
+    Revision: '$Revision: 12869 $';
+    Date: '$Date: 2010-10-19 21:37:22 +0200 (mar., 19 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3912,8 +3912,12 @@ type
 
 function CrtResString: string;
 begin
-  Result := Format('(%dx%d)', [GetSystemMetrics(SM_CXSCREEN),
-    GetSystemMetrics(SM_CYSCREEN)]);
+//  Result := Format('(%dx%d)', [GetSystemMetrics(SM_CXSCREEN),
+//    GetSystemMetrics(SM_CYSCREEN)]);
+
+//! New Resolution Identifier, because old method did not work
+//    properly for Multi-screen systems (returned only width/height of current screen)
+  Result := Format('(%dx%d)', [Screen.DesktopWidth, Screen.DesktopHeight]);
 end;
 
 function ReadPosStr(AppStorage: TJvCustomAppStorage; const Path: string): string;
@@ -4034,6 +4038,17 @@ var
     end;
   end;
 
+  function IsOnAnyMonitor(ARect: TRect) : Boolean;
+  var
+    BottomRight : TPoint;
+  begin
+    BottomRight := ARect.BottomRight;
+    Dec(BottomRight.X);
+    Dec(BottomRight.Y);
+    Result := (Screen.MonitorFromPoint(ARect.TopLeft, mdNull) <> Nil) and
+        (Screen.MonitorFromPoint(BottomRight, mdNull) <> Nil);
+  end;
+
 begin
   if Options = [fpActiveControl] then
     Exit;
@@ -4094,7 +4109,8 @@ begin
       AppStorage.ConcatPaths([StorePath, siPixels]), Screen.PixelsPerInch));
     if DataFound then
     begin
-      if Placement.rcNormalPosition.Right > Placement.rcNormalPosition.Left then
+      if (Placement.rcNormalPosition.Right > Placement.rcNormalPosition.Left) and
+         IsOnAnyMonitor(Placement.rcNormalPosition) then
       begin
         if not (csDesigning in Form.ComponentState) then
         begin

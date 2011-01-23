@@ -89,7 +89,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLinkedControls.pas $';
     Revision: '$Revision: 12556 $';
-    Date: '$Date: 2009-10-13 20:34:42 +0200 (mar. 13 oct. 2009) $';
+    Date: '$Date: 2009-10-13 20:34:42 +0200 (mar., 13 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -8,7 +8,7 @@ Software distributed under the License is distributed on an "AS IS" basis,
 WITHOUT WARRANTY OF ANY KIND, either expressed or implied. See the License for
 the specific language governing rights and limitations under the License.
 
-The Original Code is: JvDBActionsEngineControlCxGrid.Pas, released on 2004-12-30.
+The Original Code is: JvDBActionsEngineControlcxTreeList.Pas, released on 2004-12-30.
 
 The Initial Developer of the Original Code is Jens Fudickar [jens dott fudicker  att oratool dott de]
 Portions created by Jens Fudickar are Copyright (C) 2002 Jens Fudickar.
@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxTreeList.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvControlActionsEngineCxTreeList.pas 12836 2010-09-05 17:05:10Z jfudickar $
 
 unit JvControlActionsEngineCxTreeList;
 
@@ -41,7 +41,7 @@ uses
 
 {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXTREELIST}
 type
-  TJvControlActioncxGridEngine = class(TJvControlActionEngine)
+  TJvControlActioncxTreeListEngine = class(TJvControlActionEngine)
   private
   protected
     function GetSupportedOperations: TJvControlActionOperations; override;
@@ -58,8 +58,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxTreeList.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12836 $';
+    Date: '$Date: 2010-09-05 19:05:10 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -71,11 +71,11 @@ uses
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXTREELIST}
   Variants, SysUtils, Grids;
 
-//=== { TJvDatabaseActionDevExpCxGridControlEngine } =========================
+//=== { TJvDatabaseActionDevExpcxTreeListControlEngine } =========================
 
 {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXTREELIST}
 
-function TJvControlActioncxGridEngine.ExecuteOperation(const aOperation:
+function TJvControlActioncxTreeListEngine.ExecuteOperation(const aOperation:
     TJvControlActionOperation; const aActionControl: TControl): Boolean;
 begin
   Result := false;
@@ -87,13 +87,13 @@ begin
     End;
 end;
 
-function TJvControlActioncxGridEngine.GetSupportedOperations:
+function TJvControlActioncxTreeListEngine.GetSupportedOperations:
     TJvControlActionOperations;
 begin
   Result := [caoCollapse, caoExpand, caoOptimizeColumns];
 end;
 
-function TJvControlActioncxGridEngine.GetTreeList(AActionComponent:
+function TJvControlActioncxTreeListEngine.GetTreeList(AActionComponent:
     TComponent): TcxCustomTreeList;
 begin
   if Assigned(AActionComponent) then
@@ -105,7 +105,7 @@ begin
     Result := nil;
 end;
 
-function TJvControlActioncxGridEngine.SupportsComponent(aActionComponent:
+function TJvControlActioncxTreeListEngine.SupportsComponent(aActionComponent:
     TComponent): Boolean;
 begin
   Result := Assigned(GetTreeList(AActionComponent));
@@ -116,7 +116,7 @@ end;
 procedure InitActionEngineList;
 begin
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXTREELIST}
-  RegisterControlActionEngine(TJvControlActioncxGridEngine);
+  RegisterControlActionEngine(TJvControlActioncxTreeListEngine);
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXTREELIST}
 end;
 

@@ -106,7 +106,7 @@ if (!MyUltimGrid->SearchNext(ResultCol, ResultField, false, false, true)) ...
 -----------------------------------------------------------------------------
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUltimGrid.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBUltimGrid.pas 12946 2010-11-30 20:50:46Z ahuser $
 
 unit JvDBUltimGrid;
 
@@ -221,8 +221,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUltimGrid.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12946 $';
+    Date: '$Date: 2010-11-30 21:50:46 +0100 (mar., 30 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -679,10 +679,10 @@ begin
   begin
     FValueToSearch := ValueToSearch;
     Result := PrivateSearch(ResultCol, ResultField, CaseSensitive, WholeFieldOnly, False);
-    if Result and Focus then
+    if Result then
     begin
       Self.Col := ResultCol;
-      if Self.Visible and Self.CanFocus then
+      if Focus and Self.Visible and Self.CanFocus then
         Self.SetFocus;
     end
     else
@@ -697,10 +697,10 @@ begin
   if (SearchFields.Count > 0) and (FValueToSearch <> Null) and (FValueToSearch <> '') then
   begin
     Result := PrivateSearch(ResultCol, ResultField, CaseSensitive, WholeFieldOnly, True);
-    if Result and Focus then
+    if Result then
     begin
       Self.Col := ResultCol;
-      if Self.Visible then
+      if Focus and Self.Visible and Self.CanFocus then
         Self.SetFocus;
     end
     else

@@ -32,7 +32,7 @@ Description:
   To set the error, use the Error property: an empty error string, removes the error image
 
 -----------------------------------------------------------------------------}
-// $Id: JvErrorIndicator.pas 12769 2010-05-15 15:18:30Z ahuser $
+// $Id: JvErrorIndicator.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvErrorIndicator;
 
@@ -207,8 +207,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvErrorIndicator.pas $';
-    Revision: '$Revision: 12769 $';
-    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -228,7 +228,7 @@ const
 type
   TJvBlinkThreadEvent = procedure(Sender: TObject; Erase: Boolean) of object;
 
-  TJvBlinkThread = class(TThread)
+  TJvBlinkThread = class(TJvCustomThread)
   private
     FBlinkRate: Integer;
     FErase: Boolean;
@@ -761,6 +761,7 @@ end;
 
 procedure TJvBlinkThread.Execute;
 begin
+  NameThread(ThreadName);
   FErase := False;
   while not Terminated and not Suspended do
   begin

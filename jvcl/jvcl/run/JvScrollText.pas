@@ -127,7 +127,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScrollText.pas $';
     Revision: '$Revision: 12623 $';
-    Date: '$Date: 2009-12-24 12:21:14 +0100 (jeu. 24 déc. 2009) $';
+    Date: '$Date: 2009-12-24 12:21:14 +0100 (jeu., 24 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

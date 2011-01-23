@@ -35,7 +35,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSimLogic.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvSimLogic.pas 12845 2010-09-16 20:22:55Z jfudickar $
 
 unit JvSimLogic;
 
@@ -295,7 +295,6 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Paint; override;
-  published
   end;
 
   TJvSimLogicBox = class(TGraphicControl)
@@ -327,15 +326,14 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure Paint; override;
-  published
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimLogic.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12845 $';
+    Date: '$Date: 2010-09-16 22:22:55 +0200 (jeu., 16 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -706,11 +704,12 @@ end;
 procedure TJvSIMConnector.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
+  inherited Notification(AComponent, Operation);
   if (Operation = opRemove) then
-  if (AComponent = FromLogic) then
-    FromLogic := nil
-  else if (AComponent = ToLogic) then
-    ToLogic := nil;
+    if (AComponent = FromLogic) then
+      FromLogic := nil
+    else if (AComponent = ToLogic) then
+      ToLogic := nil;
 end;
 
 procedure TJvSIMConnector.Paint;

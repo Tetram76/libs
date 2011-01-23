@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacement.pas 12581 2009-10-27 21:14:42Z ahuser $
+// $Id: JvFormPlacement.pas 12844 2010-09-16 18:30:22Z jfudickar $
 
 unit JvFormPlacement;
                                               
@@ -280,8 +280,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacement.pas $';
-    Revision: '$Revision: 12581 $';
-    Date: '$Date: 2009-10-27 22:14:42 +0100 (mar. 27 oct. 2009) $';
+    Revision: '$Revision: 12844 $';
+    Date: '$Date: 2010-09-16 20:30:22 +0200 (jeu., 16 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -513,25 +513,22 @@ begin
     MinMax := TWMGetMinMaxInfo(Msg).MinMaxInfo;
     if CheckMinMaxInfo then
     begin
-      with MinMax^ do
-      begin
-        if FWinMinMaxInfo.MinTrackWidth <> 0 then
-          ptMinTrackSize.X := FWinMinMaxInfo.MinTrackWidth;
-        if FWinMinMaxInfo.MinTrackHeight <> 0 then
-          ptMinTrackSize.Y := FWinMinMaxInfo.MinTrackHeight;
-        if FWinMinMaxInfo.MaxTrackWidth <> 0 then
-          ptMaxTrackSize.X := FWinMinMaxInfo.MaxTrackWidth;
-        if FWinMinMaxInfo.MaxTrackHeight <> 0 then
-          ptMaxTrackSize.Y := FWinMinMaxInfo.MaxTrackHeight;
-        if FWinMinMaxInfo.MaxSizeWidth <> 0 then
-          ptMaxSize.X := FWinMinMaxInfo.MaxSizeWidth;
-        if FWinMinMaxInfo.MaxSizeHeight <> 0 then
-          ptMaxSize.Y := FWinMinMaxInfo.MaxSizeHeight;
-        if FWinMinMaxInfo.MaxPosLeft <> 0 then
-          ptMaxPosition.X := FWinMinMaxInfo.MaxPosLeft;
-        if FWinMinMaxInfo.MaxPosTop <> 0 then
-          ptMaxPosition.Y := FWinMinMaxInfo.MaxPosTop;
-      end;
+      if FWinMinMaxInfo.MinTrackWidth <> 0 then
+        MinMax^.ptMinTrackSize.X := FWinMinMaxInfo.MinTrackWidth;
+      if FWinMinMaxInfo.MinTrackHeight <> 0 then
+        MinMax^.ptMinTrackSize.Y := FWinMinMaxInfo.MinTrackHeight;
+      if FWinMinMaxInfo.MaxTrackWidth <> 0 then
+        MinMax^.ptMaxTrackSize.X := FWinMinMaxInfo.MaxTrackWidth;
+      if FWinMinMaxInfo.MaxTrackHeight <> 0 then
+        MinMax^.ptMaxTrackSize.Y := FWinMinMaxInfo.MaxTrackHeight;
+      if FWinMinMaxInfo.MaxSizeWidth <> 0 then
+        MinMax^.ptMaxSize.X := FWinMinMaxInfo.MaxSizeWidth;
+      if FWinMinMaxInfo.MaxSizeHeight <> 0 then
+        MinMax^.ptMaxSize.Y := FWinMinMaxInfo.MaxSizeHeight;
+      if FWinMinMaxInfo.MaxPosLeft <> 0 then
+        MinMax^.ptMaxPosition.X := FWinMinMaxInfo.MaxPosLeft;
+      if FWinMinMaxInfo.MaxPosTop <> 0 then
+        MinMax^.ptMaxPosition.Y := FWinMinMaxInfo.MaxPosTop;
     end
     else
     begin

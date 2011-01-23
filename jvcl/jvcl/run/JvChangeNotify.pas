@@ -34,7 +34,7 @@ Changes:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvChangeNotify.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvChangeNotify.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvChangeNotify;
 
@@ -110,7 +110,7 @@ type
   { WARNING: Do not call Thread.Terminate from user code. This will leave a
     dangling TJvChangeNotify.FThread reference which will cause an access
     violation at the next TJvChangeNotify.SetActive call. }
-  TJvChangeThread = class(TThread)
+  TJvChangeThread = class(TJvCustomThread)
   private
     FNotifyArray: TJvNotifyArray;
     FCount: Integer;
@@ -163,8 +163,8 @@ function ActionsToString(Actions: TJvChangeActions): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChangeNotify.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer. 26 août 2009) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -518,6 +518,7 @@ procedure TJvChangeThread.Execute;
 var
   I: Integer;
 begin
+  NameThread(ThreadName);
   // (rom) secure thread against exceptions (Delphi 5 needs it)
   try
     while not Terminated do

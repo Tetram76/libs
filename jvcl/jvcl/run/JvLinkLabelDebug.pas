@@ -54,7 +54,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLinkLabelDebug.pas $';
     Revision: '$Revision: 12538 $';
-    Date: '$Date: 2009-10-03 14:18:34 +0200 (sam. 03 oct. 2009) $';
+    Date: '$Date: 2009-10-03 14:18:34 +0200 (sam., 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

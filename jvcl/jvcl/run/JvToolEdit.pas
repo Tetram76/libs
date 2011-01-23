@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 12777 2010-05-16 20:08:50Z ahuser $
+// $Id: JvToolEdit.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvToolEdit;
 
@@ -228,6 +228,10 @@ type
     FAutoCompleteItems: TStrings;
     FAutoCompleteOptions: TJvAutoCompleteOptions;
     FTextChanged: Boolean;
+    FInCMExit: Integer;
+    FCheckOnExit: Boolean;
+    FOnPopupChange: TNotifyEvent;
+    FOnPopupValueAccepted: TNotifyEvent;
     procedure SetAutoCompleteItems(Strings: TStrings);
     procedure SetAutoCompleteOptions(const Value: TJvAutoCompleteOptions);
     procedure SetAlignment(Value: TAlignment);
@@ -267,7 +271,6 @@ type
     procedure SetShowButton(const Value: Boolean);
     procedure SetDataConnector(const Value: TJvCustomComboEditDataConnector);
     procedure UpdateBtnBounds(var NewLeft, NewTop, NewWidth, NewHeight: Integer);
-    { (rb) renamed from UpdateEdit }
     procedure UpdateGroup;
     procedure CMWantSpecialKey(var Msg: TCMWantSpecialKey); message CM_WANTSPECIALKEY;
     procedure CMBiDiModeChanged(var Msg: TMessage); message CM_BIDIMODECHANGED;
@@ -352,12 +355,12 @@ type
     procedure SetReadOnly(Value: Boolean); virtual;
     procedure SetShowCaret;
     procedure UpdatePopupVisible;
+    procedure CMExit(var Message: TCMExit); message CM_EXIT;
     property Alignment: TAlignment read FAlignment write SetAlignment default taLeftJustify;
     property AlwaysEnableButton: Boolean read FAlwaysEnableButton write FAlwaysEnableButton default False;
     property AlwaysShowPopup: Boolean read FAlwaysShowPopup write FAlwaysShowPopup default False;
     property AutoCompleteItems: TStrings read FAutoCompleteItems write SetAutoCompleteItems;
-    property AutoCompleteOptions: TJvAutoCompleteOptions read FAutoCompleteOptions
-      write SetAutoCompleteOptions default [];
+    property AutoCompleteOptions: TJvAutoCompleteOptions read FAutoCompleteOptions write SetAutoCompleteOptions default [];
     property Button: TJvEditButton read FButton;
     property ButtonFlat: Boolean read GetButtonFlat write SetButtonFlat default False;
     property ButtonHint: string read GetButtonHint write SetButtonHint;
@@ -381,14 +384,24 @@ type
     property ReadOnly: Boolean read GetReadOnly write SetReadOnly default False;
     property SettingCursor: Boolean read GetSettingCursor;
     property ShowButton: Boolean read GetShowButton write SetShowButton default True;
+      // CheckOnExit disables the ValidateEdit call that TCustomMaskEdit executes when
+      // it receives a CM_EXIT message. If you set it to False, you should call ValidateEdit
+      // yourself when you want to validate the value (like in the OK button of a dialog).
+    property CheckOnExit: Boolean read FCheckOnExit write FCheckOnExit default True;
     property OnEnabledChanged: TNotifyEvent read FOnEnabledChanged write FOnEnabledChanged;
     property OnPopupShown: TNotifyEvent read FOnPopupShown write FOnPopupShown;
     property OnPopupHidden: TNotifyEvent read FOnPopupHidden write FOnPopupHidden;
+      // OnPopupChange is triggered when the edit text is changed while the popup is visible.
+    property OnPopupChange: TNotifyEvent read FOnPopupChange write FOnPopupChange;
+      // OnPopupValueAccepted is triggered when the value from the popup is accepted and written to
+      // the edit's text property. It is not triggered if the new value is the same as the old value.
+    property OnPopupValueAccepted: TNotifyEvent read FOnPopupValueAccepted write FOnPopupValueAccepted;
 
     property DataConnector: TJvCustomComboEditDataConnector read FDataConnector write SetDataConnector;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure ValidateEdit; override;
     class function DefaultImageIndex: TImageIndex; virtual;
     class function DefaultImages: TCustomImageList; virtual;
     procedure DoClick;
@@ -482,6 +495,10 @@ type
     property OnStartDrag;
 
     property DataConnector;
+    property OnPopupShown;
+    property OnPopupHidden;
+    property OnPopupChange;
+    property OnPopupValueAccepted;
   end;
 
   { TJvFileDirEdit }
@@ -841,7 +858,6 @@ type
     FOnInvalidDate: TJvInvalidDateEvent;
     FDefaultToday: Boolean;
     FPopupColor: TColor;
-    FCheckOnExit: Boolean;
     FBlanksChar: Char;
     FCalendarHints: TStringList;
     FStartOfWeek: TDayOfWeekName;
@@ -907,7 +923,7 @@ type
 
     property BlanksChar: Char read FBlanksChar write SetBlanksChar default ' ';
     property CalendarHints: TStrings read GetCalendarHints write SetCalendarHints;
-    property CheckOnExit: Boolean read FCheckOnExit write FCheckOnExit default False;
+    property CheckOnExit default False;
     property DefaultToday: Boolean read FDefaultToday write FDefaultToday default False;
     property DialogTitle: string read GetDialogTitle write SetDialogTitle stored IsCustomTitle;
     property EditMask stored False;
@@ -1071,8 +1087,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 12777 $';
-    Date: '$Date: 2010-05-16 22:08:50 +0200 (dim. 16 mai 2010) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1084,7 +1100,7 @@ uses
   MultiMon,
   JclFileUtils, JclStrings,
   JvPickDate, JvJCLUtils, JvJVCLUtils,
-  JvThemes, JvResources;
+  JvThemes, JvResources, JclSysUtils;
 
 {$R JvToolEdit.res}
 
@@ -1211,6 +1227,7 @@ var
   GDirImageIndexXP: TImageIndex = -1;
   GFileImageIndexXP: TImageIndex = -1;
   {$ENDIF JVCLThemesEnabled}
+  GCoInitialized: Integer = 0;
 
 //=== Local procedures =======================================================
 
@@ -1644,7 +1661,16 @@ begin
   FNumGlyphs := 1;
   FAutoCompleteItems := TStringList.Create;
   FAutoCompleteOptions := [];
-  CoInitialize(nil);
+  FCheckOnExit := True;
+
+  // Move to class contructor when Delphi 2010 is the minimum version
+  if GCoInitialized >= 0 then
+  begin
+    Inc(GCoInitialized);
+    if GCoInitialized = 1 then
+      if not Succeeded(CoInitialize(nil)) then
+        GCoInitialized := -1;
+  end;
   inherited OnKeyDown := LocalKeyDown;
 end;
 
@@ -1656,8 +1682,16 @@ begin
   FAutoCompleteItems.Free;
   FDataConnector.Free;
   inherited Destroy;
+
   // call after WM_DESTROY
-  CoUninitialize;
+
+  // Move to class destructor when Delphi 2010 is the minimum version
+  if GCoInitialized > 0 then
+  begin
+    Dec(GCoInitialized);
+    if GCoInitialized = 0 then
+      CoUninitialize;
+  end;
 end;
 
 function TJvCustomComboEdit.AcceptPopup(var Value: Variant): Boolean;
@@ -1674,6 +1708,8 @@ begin
     UpdatePopupVisible;
     //DoChange; (ahuser) "Text := Value" triggers Change;
   end;
+  if Assigned(FOnPopupValueAccepted) then
+    FOnPopupValueAccepted(Self);
 end;
 
 procedure TJvCustomComboEdit.ActionChange(Sender: TObject;
@@ -1708,17 +1744,25 @@ var
   I: Integer;
   SysMetrics, Metrics: TTextMetric;
 begin
+  // Get text height
   DC := GetDC(HWND_DESKTOP);
   GetTextMetrics(DC, SysMetrics);
   SaveFont := SelectObject(DC, Font.Handle);
   GetTextMetrics(DC, Metrics);
   SelectObject(DC, SaveFont);
   ReleaseDC(HWND_DESKTOP, DC);
-  if not Flat then
-    I := 8
-  else
-    I := 6;
-  I := GetSystemMetrics(SM_CYBORDER) * I;
+
+  // If necessary reserve space for border
+  I := 0;
+  if BorderStyle <> bsNone then
+  begin
+    if not Flat then
+      I := 8
+    else
+      I := 6;
+    I := GetSystemMetrics(SM_CYBORDER) * I;
+  end;
+
   if Height < Metrics.tmHeight + I then
     Height := Metrics.tmHeight + I;
 end;
@@ -1803,6 +1847,16 @@ procedure TJvCustomComboEdit.CMCtl3DChanged(var Msg: TMessage);
 begin
   inherited;
   DoCtl3DChanged;
+end;
+
+procedure TJvCustomComboEdit.CMExit(var Message: TCMExit);
+begin
+  Inc(FInCMExit); // used for FCheckOnExit
+  try
+    inherited;
+  finally
+    Dec(FInCMExit);
+  end;
 end;
 
 procedure TJvCustomComboEdit.CMPopupCloseup(var Msg: TMessage);
@@ -2335,6 +2389,8 @@ end;
 
 procedure TJvCustomComboEdit.PopupChange;
 begin
+  if Assigned(FOnPopupChange) then
+    FOnPopupChange(Self);
 end;
 
 procedure TJvCustomComboEdit.PopupCloseUp(Sender: TObject; Accept: Boolean);
@@ -3003,6 +3059,12 @@ begin
   FPopupVisible := (FPopup <> nil) and FPopup.Visible;
 end;
 
+procedure TJvCustomComboEdit.ValidateEdit;
+begin
+  if CheckOnExit or (FInCMExit = 0) then
+    inherited ValidateEdit;
+end;
+
 {$IFDEF JVCLThemesEnabled}
 procedure TJvCustomComboEdit.WMNCCalcSize(var Msg: TWMNCCalcSize);
 begin
@@ -3230,6 +3292,7 @@ begin
   FMinDate := NullDate;
   FMaxDate := NullDate;
 
+  FCheckOnExit := False;
   FBlanksChar := ' ';
   FTitle := RsDateDlgCaption;
   FPopupColor := clMenu;
@@ -3310,6 +3373,8 @@ begin
   UpdatePopupVisible;
   if Modified then
     inherited Change;
+  if Assigned(FOnPopupValueAccepted) then
+    FOnPopupValueAccepted(Self);
 end;
 
 procedure TJvCustomDateEdit.ApplyDate(Value: TDateTime);
@@ -3801,7 +3866,7 @@ end;
 
 function TJvCustomDateEdit.TextStored: Boolean;
 begin
-  Result := not IsEmptyStr(Text, [#0, ' ', DateSeparator, FBlanksChar]);
+  Result := not IsEmptyStr(Text, [#0, ' ', JclFormatSettings.DateSeparator, FBlanksChar]);
 end;
 
 procedure TJvCustomDateEdit.UpdateFormat;

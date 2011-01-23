@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHidControllerClass.pas 12769 2010-05-15 15:18:30Z ahuser $
+// $Id: JvHidControllerClass.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvHidControllerClass;
 
@@ -38,7 +38,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, SysUtils,
   JvComponentBase,
-  DBT, SetupApi, HID;
+  DBT, SetupApi, HID, JvTypes;
 
 const
   // a version string for the component
@@ -147,17 +147,18 @@ type
 
   // a thread helper class to implement TJvHidDevice.OnData
 
-  TJvHidDeviceReadThread = class(TThread)
+  TJvHidDeviceReadThread = class(TJvCustomThread)
   private
     FErr: DWORD;
     procedure DoData;
     procedure DoDataError;
     constructor CtlCreate(const Dev: TJvHidDevice);
+  protected
+    procedure Execute; override;
   public
     Device: TJvHidDevice;
     NumBytesRead: Cardinal;
     Report: array of Byte;
-    procedure Execute; override;
     constructor Create(CreateSuspended: Boolean);
   end;
 
@@ -438,8 +439,8 @@ function HidErrorString(const RetVal: NTSTATUS): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHidControllerClass.pas $';
-    Revision: '$Revision: 12769 $';
-    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -447,7 +448,7 @@ const
 implementation
 
 uses
-  JvResources, JvTypes;
+  JvResources;
 
 type
   EControllerError = class(EJVCLException);
@@ -497,6 +498,7 @@ procedure TJvHidDeviceReadThread.Execute;
 var
   SleepRet: DWORD;
 begin
+  NameThread(ThreadName);
   SleepRet := WAIT_IO_COMPLETION;
   while not Terminated do
   begin

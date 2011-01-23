@@ -218,7 +218,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStrings.pas $';
     Revision: '$Revision: 12815 $';
-    Date: '$Date: 2010-06-26 16:12:46 +0200 (sam. 26 juin 2010) $';
+    Date: '$Date: 2010-06-26 16:12:46 +0200 (sam., 26 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

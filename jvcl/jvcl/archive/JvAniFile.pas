@@ -104,7 +104,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/JvAniFile.pas $';
     Revision: '$Revision: 12304 $';
-    Date: '$Date: 2009-05-05 22:10:29 +0200 (mar. 05 mai 2009) $';
+    Date: '$Date: 2009-05-05 22:10:29 +0200 (mar., 05 mai 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

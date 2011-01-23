@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTSync.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvMTSync.pas 12833 2010-09-05 13:25:12Z obones $
 
 unit JvMTSync;
 
@@ -57,7 +57,7 @@ type
     procedure Release; override;
     procedure Signal;
     procedure Wait;
-    function WaitFor(Timeout: LongWord): Boolean; virtual;
+    function WaitFor(Timeout: LongWord): Boolean; {$IFDEF RTL220_UP}reintroduce;{$ENDIF RTL220_UP} virtual;
     property Handle: THandle read FHandle;
     property LastError: Integer read FLastError;
     property Name: string read FName;
@@ -103,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTSync.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu. 11 juin 2009) $';
+    Revision: '$Revision: 12833 $';
+    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

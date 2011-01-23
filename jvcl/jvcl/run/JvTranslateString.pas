@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTranslateString.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTranslateString.pas 12876 2010-10-30 16:42:00Z jfudickar $
 
 unit JvTranslateString;
 
@@ -69,6 +69,8 @@ type
     FProductVersionHandled: Boolean;
     FProductVersion: string;
     FDateFormat: string;
+    FDateSeparator: Char;
+    FTimeSeparator: Char;
     FDateTimeFormat: string;
     FLeftDelimiter: string;
     FRightDelimiter: string;
@@ -81,17 +83,21 @@ type
     function GetVersionInfoProductVersion: string;
     function GetVersionInfoCompanyName: string;
     function ProcessCommand(const Command: string; var CommandResult: string): Boolean;
+    procedure SetDateFormat(const Value: string);
     procedure SetDateTimeFormat(const Value: string);
+    procedure SetTimeFormat(const Value: string);
   public
     constructor Create(AOwner: TComponent); override;
     function TranslateString(InString: string; var Changed: Boolean): string; overload;
     function TranslateString(InString: string): string; overload;
   published
-    property DateFormat: string read FDateFormat write FDateFormat;
+    property DateFormat: string read FDateFormat write SetDateFormat;
+    property DateSeparator: Char read FDateSeparator write FDateSeparator;
     property DateTimeFormat: string read FDateTimeFormat write SetDateTimeFormat;
     property LeftDelimiter: string read FLeftDelimiter write FLeftDelimiter;
     property RightDelimiter: string read FRightDelimiter write FRightDelimiter;
-    property TimeFormat: string read FTimeFormat write FTimeFormat;
+    property TimeFormat: string read FTimeFormat write SetTimeFormat;
+    property TimeSeparator: Char read FTimeSeparator write FTimeSeparator;
     property OnProcessCommand: TProcessCommandEvent read FOnProcessCommand write FOnProcessCommand;
   end;
 
@@ -99,8 +105,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTranslateString.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12876 $';
+    Date: '$Date: 2010-10-30 18:42:00 +0200 (sam., 30 oct. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -110,6 +116,7 @@ implementation
 uses
   SysUtils, Types, ExtCtrls, ComCtrls, StdCtrls, Forms, Dialogs,
   JclFileUtils,
+  JvJCLUtils,
   JvJVCLUtils;
 
 const
@@ -142,6 +149,8 @@ begin
   FDateFormat := 'dd_mm_yyyy';
   FTimeFormat := 'hh_nn_ss';
   FDateTimeFormat := 'dd_mm_yyyy hh_nn_ss';
+  FDateSeparator := chr(255);
+  FTimeSeparator := chr(255);
   FProductVersionHandled := False;
   FFileVersionHandled := False;
 end;
@@ -357,9 +366,35 @@ begin
     FOnProcessCommand(Self, UpperCommand, CommandResult, Result);
 end;
 
+procedure TJvTranslateString.SetDateFormat(const Value: string);
+var i : Integer;
+begin
+  FDateFormat := Value;
+  if DateSeparator = chr(255) then
+    for i := 1 to Length(Value) do
+      if not CharInSet(Value[i],['0'..'9']) then
+      begin
+        DateSeparator:= Value[i];
+        Exit;
+      end;
+end;
+
 procedure TJvTranslateString.SetDateTimeFormat(const Value: string);
 begin
   FDateTimeFormat := Value;
+end;
+
+procedure TJvTranslateString.SetTimeFormat(const Value: string);
+var i : Integer;
+begin
+  FTimeFormat := Value;
+  if TimeSeparator = chr(255) then
+    for i := 1 to Length(Value) do
+      if not CharInSet(Value[i],['0'..'9']) then
+      begin
+        TimeSeparator:= Value[i];
+        Exit;
+      end;
 end;
 
 function TJvTranslateString.TranslateString(InString: string): string;

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPickDate.pas 12806 2010-06-12 17:27:30Z uschuster $
+// $Id: JvPickDate.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvPickDate;
 
@@ -142,8 +142,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPickDate.pas $';
-    Revision: '$Revision: 12806 $';
-    Date: '$Date: 2010-06-12 19:27:30 +0200 (sam. 12 juin 2010) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -153,7 +153,7 @@ implementation
 uses
   Math, Consts, MultiMon,
   JvThemes, JvConsts, JvResources, JvJCLUtils, JvToolEdit, JvSpeedButton,
-  JvComponent, JvJVCLUtils;
+  JvComponent, JvJVCLUtils, JclSysUtils;
 
 procedure FontSetDefault(AFont: TFont);
 
@@ -370,7 +370,7 @@ var
   DayNum: Integer;
 begin
   if ARow = 0 then { day names at tops of columns }
-    Result := ShortDayNames[(Ord(StartOfWeek) + ACol) mod 7 + 1]
+    Result := JclFormatSettings.ShortDayNames[(Ord(StartOfWeek) + ACol) mod 7 + 1]
   else
   begin
     DayNum := FMonthOffset + ACol + (ARow - 1) * 7;
@@ -1217,7 +1217,7 @@ begin
   if not (csDesigning in ComponentState) then
   begin
     try
-      if (Trim(ReplaceStr(VarToStr(Value), DateSeparator, '')) = '') or
+      if (Trim(ReplaceStr(VarToStr(Value), JclFormatSettings.DateSeparator, '')) = '') or
         VarIsNull(Value) or VarIsEmpty(Value) then
         FCalendar.CalendarDate := VarToDateTime(SysUtils.Date)
       else
@@ -1703,7 +1703,7 @@ begin
   if StrDate <> '' then
   begin
     try
-      DateValue := StrToDateFmt(ShortDateFormat, StrDate);
+      DateValue := StrToDateFmt(JclFormatSettings.ShortDateFormat, StrDate);
     except
       DateValue := Date;
     end;
@@ -1713,7 +1713,7 @@ begin
   Result := SelectDate(Sender, DateValue, DlgCaption, AStartOfWeek, AWeekends,
     AWeekendColor, BtnHints, MinDate, MaxDate); // Polaris
   if Result then
-    StrDate := FormatDateTime(ShortDateFormat, DateValue);
+    StrDate := FormatDateTime(JclFormatSettings.ShortDateFormat, DateValue);
 end;
 
 {$IFDEF UNITVERSIONING}

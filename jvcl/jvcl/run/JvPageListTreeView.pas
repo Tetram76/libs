@@ -382,7 +382,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageListTreeView.pas $';
     Revision: '$Revision: 12628 $';
-    Date: '$Date: 2009-12-28 11:22:09 +0100 (lun. 28 déc. 2009) $';
+    Date: '$Date: 2009-12-28 11:22:09 +0100 (lun., 28 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

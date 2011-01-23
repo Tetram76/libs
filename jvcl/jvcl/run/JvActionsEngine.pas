@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvActionsEngine.pas 12838 2010-09-05 17:08:26Z jfudickar $
 
 unit JvActionsEngine;
 
@@ -75,7 +75,7 @@ type
   private
     FActionComponent: TComponent;
     FControlEngine: TJvActionBaseEngine;
-    FLastTarget: TObject;
+    FLastTarget: TComponent;
     FOnChangeActionComponent: TJvChangeActionComponent;
   protected
     function DetectControlEngine(aActionComponent: TComponent): Boolean; virtual;
@@ -93,7 +93,7 @@ type
     property EngineList: TJvActionEngineList read GetEngineList;
     property ActionComponent: TComponent read FActionComponent write
         SetActionComponent;
-    property LastTarget: TObject read FLastTarget;
+    property LastTarget: TComponent read FLastTarget;
     //1 Use this event to check the Enabled Flag depending on properties of the ActionComponent
     property OnChangeActionComponent: TJvChangeActionComponent read
         FOnChangeActionComponent write FOnChangeActionComponent;
@@ -107,8 +107,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12838 $';
+    Date: '$Date: 2010-09-05 19:08:26 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -242,8 +242,6 @@ end;
 procedure TJvActionEngineBaseAction.ChangeActionComponent(const
     AActionComponent: TComponent);
 begin
-  if AActionComponent <> nil then
-    AActionComponent.FreeNotification(Self);
   if Assigned(OnChangeActionComponent) then
     OnChangeActionComponent(AActionComponent);
 end;

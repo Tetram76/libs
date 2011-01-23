@@ -21,7 +21,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignImp.pas 12534 2009-10-02 09:20:57Z ahuser $
+// $Id: JvDesignImp.pas 12931 2010-11-28 13:36:50Z ahuser $
 
 unit JvDesignImp;
 
@@ -276,8 +276,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignImp.pas $';
-    Revision: '$Revision: 12534 $';
-    Date: '$Date: 2009-10-02 11:20:57 +0200 (ven. 02 oct. 2009) $';
+    Revision: '$Revision: 12931 $';
+    Date: '$Date: 2010-11-28 14:36:50 +0100 (dim., 28 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1000,6 +1000,10 @@ begin
     ReleaseMouse;
     EnableAlign;
     FinishMouseTool;
+    // We have to call UpdateDesigner for GraphicControls because they don't get
+    // WM_WINDOWPOSCHANGED messages that update the designer handles.
+    if FClicked is TGraphicControl then
+      Surface.UpdateDesigner;
     FClicked := nil;
   end;
   Result := True;

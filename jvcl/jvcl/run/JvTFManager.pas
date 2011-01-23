@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFManager.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvTFManager.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvTFManager;
 
@@ -1036,8 +1036,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFManager.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1046,7 +1046,7 @@ implementation
 
 uses
   JvConsts, JvResources,
-  Dialogs, Forms, JvJVCLUtils;
+  Dialogs, Forms, JvJVCLUtils, JclSysUtils;
 
 function AdjustEndTime(ATime: TTime): TTime;
 begin
@@ -5179,9 +5179,9 @@ function TJvTFDWNames.GetDWName(DWIndex: Integer): string;
 begin
   case Source of
     dwnsSysLong:
-      Result := SysUtils.LongDayNames[DWIndex];
+      Result := JclFormatSettings.LongDayNames[DWIndex];
     dwnsSysShort:
-      Result := SysUtils.ShortDayNames[DWIndex];
+      Result := JclFormatSettings.ShortDayNames[DWIndex];
   else // dwnsCustom
     Result := GetDWN(DWIndex);
   end;

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCombobox.pas 12823 2010-08-13 11:11:53Z ahuser $
+// $Id: JvCombobox.pas 12849 2010-10-05 12:39:06Z ahuser $
 
 unit JvCombobox;
 
@@ -389,8 +389,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCombobox.pas $';
-    Revision: '$Revision: 12823 $';
-    Date: '$Date: 2010-08-13 13:11:53 +0200 (ven. 13 août 2010) $';
+    Revision: '$Revision: 12849 $';
+    Date: '$Date: 2010-10-05 14:39:06 +0200 (mar., 05 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -681,7 +681,7 @@ begin
     Font := Self.Font;
     Width := Self.Width;
     // use the current "DisplayDropDownLines" to determine height of window
-    Height := (DisplayDropDownLines * FListBox.itemHeight + 4 { FEdit.Height });
+    Height := (DisplayDropDownLines * FListBox.ItemHeight + 4 { FEdit.Height });
   end;
 end;
 

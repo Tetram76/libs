@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFooter.pas 12722 2010-03-16 21:21:25Z ahuser $
+// $Id: JvFooter.pas 12949 2010-12-01 17:51:36Z ahuser $
 
 unit JvFooter;
 
@@ -133,8 +133,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFooter.pas $';
-    Revision: '$Revision: 12722 $';
-    Date: '$Date: 2010-03-16 22:21:25 +0100 (mar. 16 mars 2010) $';
+    Revision: '$Revision: 12949 $';
+    Date: '$Date: 2010-12-01 18:51:36 +0100 (mer., 01 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -275,7 +275,8 @@ var
   procedure DoTheCount(Idx: Integer);
   begin
     if (Controls[Idx] is TJvFooterBtn) and
-      (TJvFooterBtn(Controls[Idx]).Alignment = AAlignment) then
+      (TJvFooterBtn(Controls[Idx]).Alignment = AAlignment) and
+      (TJvFooterBtn(Controls[Idx]).Visible or (csDesigning in ComponentState)) then
     begin
       Inc(BtnCount);
       Inc(BtnTotalSpc, TJvFooterBtn(Controls[Idx]).SpaceInterval);

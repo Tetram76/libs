@@ -31,7 +31,7 @@ Description: This unit defines a component that you can drop on any form or
 
 Known Issues: none known
 -----------------------------------------------------------------------------}
-// $Id: JvAVICapture.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvAVICapture.pas 12936 2010-11-28 15:15:34Z ahuser $
 
 unit JvAVICapture;
 
@@ -552,8 +552,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAVICapture.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12936 $';
+    Date: '$Date: 2010-11-28 16:15:34 +0100 (dim., 28 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -809,7 +809,7 @@ begin
       if FExtra <> nil then
         FreeMem(FExtra);
       GetMem(FExtra, ExtraSize);
-      CopyMemory(FExtra, (PChar(@Info)) + SizeOf(tWAVEFORMATEX), FExtraSize);
+      CopyMemory(FExtra, PAnsiChar(@Info) + SizeOf(tWAVEFORMATEX), FExtraSize);
     end;
   end;
 end;
@@ -854,7 +854,7 @@ begin
     wfex^.cbSize := FExtraSize;
 
       // copy Extra to the end of the structure
-    CopyMemory((PChar(@wfex)) + SizeOf(tWAVEFORMATEX), FExtra, FExtraSize);
+    CopyMemory(PAnsiChar(@wfex) + SizeOf(tWAVEFORMATEX), FExtra, FExtraSize);
   end;
 end;
 
@@ -1456,7 +1456,6 @@ begin
       FCaptureSettings.Update;
       FAudioFormat.Update;
       UpdateCaptureStatus;
-
     end
     else
       // if not, trigger an exception

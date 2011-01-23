@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvConverter.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvConverter.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvConverter;
 
@@ -148,8 +148,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvConverter.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -160,7 +160,7 @@ uses
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
-  JvConsts, JvResources;
+  JvConsts, JvResources, JclSysUtils;
 
 //=== { TJvDateTimeFormat } ==================================================
 
@@ -172,10 +172,10 @@ end;
 
 procedure TJvDateTimeFormat.ResetDefault;
 begin
-  FAMString := TimeAMString;
-  FPMString := TimePMString;
-  FTimeSeparator := SysUtils.TimeSeparator;
-  FDateSeparator := SysUtils.DateSeparator;
+  FAMString := JclFormatSettings.TimeAMString;
+  FPMString := JclFormatSettings.TimePMString;
+  FTimeSeparator := JclFormatSettings.TimeSeparator;
+  FDateSeparator := JclFormatSettings.DateSeparator;
   FDateOrder := doDMY;
   FTimeFormat := tfHHMMSS;
   FLongDate := False;
@@ -209,7 +209,7 @@ end;
 procedure TJvDateTimeFormat.SetAMString(const Value: string);
 begin
   if Value = '' then
-    FAMString := TimeAMString
+    FAMString := JclFormatSettings.TimeAMString
   else
     FAMString := Value;
 end;
@@ -222,7 +222,7 @@ end;
 procedure TJvDateTimeFormat.SetPMString(const Value: string);
 begin
   if Value = '' then
-    FPMString := TimePMString
+    FPMString := JclFormatSettings.TimePMString
   else
     FPMString := Value;
 end;
@@ -413,7 +413,7 @@ begin
     dtInteger:
       Result := CharInSet(Ch, DigitSymbols + SignSymbols);
     dtFloat:
-      Result := CharInSet(Ch, DigitSymbols + SignSymbols + [DecimalSeparator, 'E', 'e']);
+      Result := CharInSet(Ch, DigitSymbols + SignSymbols + [JclFormatSettings.DecimalSeparator, 'E', 'e']);
     dtDateTime, dtDate, dtTime:
       Result := True;
     dtBoolean:
@@ -456,10 +456,10 @@ begin
   for I := 1 to Length(S) do
   begin
     if CharInSet(S[I], DateS) then
-      S[I] := DateSeparator
+      S[I] := JclFormatSettings.DateSeparator
     else
     if CharInSet(S[I], TimeS) then
-      S[I] := TimeSeparator;
+      S[I] := JclFormatSettings.TimeSeparator;
   end;
   Result := StrToDateTime(S);
 end;

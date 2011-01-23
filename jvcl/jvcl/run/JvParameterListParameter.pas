@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 12778 2010-05-16 21:22:20Z jfudickar $
+// $Id: JvParameterListParameter.pas 12833 2010-09-05 13:25:12Z obones $
 
 unit JvParameterListParameter;
 
@@ -652,8 +652,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 12778 $';
-    Date: '$Date: 2010-05-16 23:22:20 +0200 (dim. 16 mai 2010) $';
+    Revision: '$Revision: 12833 $';
+    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -2327,7 +2327,7 @@ begin
       end
     else if (ofPathMustExist in DialogOptions) and
             (ExtractFilePath(Data) <> '') and
-            not DirectoryExists(ExtractFilePath(Data)) then
+            not {$IFDEF RTL220_UP}SysUtils.{$ENDIF RTL220_UP}DirectoryExists(ExtractFilePath(Data)) then
       begin
         vMsg := Format(RsErrParameterDirectoryNotExist, [Caption, ExtractFilePath(Data)]);
         Result:= False;
@@ -2399,7 +2399,7 @@ begin
   Data := Trim(AData);
   Result := Inherited IsDataValid(Data, vMsg);
   if Result then
-    if not DirectoryExists(AData) and not (sdAllowCreate in DialogOptions) then
+    if not {$IFDEF RTL220_UP}SysUtils.{$ENDIF RTL220_UP}DirectoryExists(AData) and not (sdAllowCreate in DialogOptions) then
       begin
         vMsg := Format(RsErrParameterDirectoryNotExist, [Caption, AData]);
         Result := False;

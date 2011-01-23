@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditor.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvPropertyStoreEditor.pas 12965 2011-01-10 18:20:14Z ahuser $
 unit JvPropertyStoreEditor;
 
 {$I jvcl.inc}
@@ -39,9 +39,8 @@ uses
   JvInspector, StdCtrls, JvExStdCtrls, JvListBox, JvPropertyStore,
   JvPropertyStoreEditorIntf, JvDynControlEngineIntf, ActnList, Menus;
 
-
 type
-  TJvPropertyStoreEditorControl = class(TCustomControl)
+  TJvPropertyStoreEditorControl = class(TJvCustomControl)
     procedure JvInspectorAfterItemCreate(Sender: TObject; Item:
         TJvCustomInspectorItem);
     procedure JvInspectorBeforeItemCreate(Sender: TObject; Data:
@@ -202,8 +201,8 @@ function EditPropertyStore(PropertyStore: TJvCustomPropertyStore): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditor.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12965 $';
+    Date: '$Date: 2011-01-10 19:20:14 +0100 (lun., 10 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

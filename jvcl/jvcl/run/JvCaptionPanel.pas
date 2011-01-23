@@ -193,7 +193,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCaptionPanel.pas $';
     Revision: '$Revision: 12725 $';
-    Date: '$Date: 2010-03-16 23:12:27 +0100 (mar. 16 mars 2010) $';
+    Date: '$Date: 2010-03-16 23:12:27 +0100 (mar., 16 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

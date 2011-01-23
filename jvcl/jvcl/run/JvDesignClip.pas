@@ -64,7 +64,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignClip.pas $';
     Revision: '$Revision: 12515 $';
-    Date: '$Date: 2009-09-23 09:51:16 +0200 (mer. 23 sept. 2009) $';
+    Date: '$Date: 2009-09-23 09:51:16 +0200 (mer., 23 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

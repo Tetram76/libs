@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScrollBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvScrollBox.pas 12891 2010-11-09 14:09:15Z obones $
 
 unit JvScrollBox;
 
@@ -52,6 +52,8 @@ type
     FOnEraseBackground: TEraseBackgroundEvent;
     FBackground: TJvPicture;
     FBackgroundFillMode: TJvScrollBoxFillMode;
+    FLockRefreshCount : Integer;
+
     procedure SetHotTrack(const Value: Boolean);
     procedure WMHScroll(var Msg: TWMHScroll); message WM_HSCROLL;
     procedure WMVScroll(var Msg: TWMVScroll); message WM_VSCROLL;
@@ -72,6 +74,10 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    procedure BeginUpdate;
+    procedure EndUpdate;
+
     property Canvas: TCanvas read FCanvas;
   published
     property Background: TPicture read GetBackground write SetBackground;
@@ -95,8 +101,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScrollBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12891 $';
+    Date: '$Date: 2010-11-09 15:09:15 +0100 (mar., 09 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -119,6 +125,8 @@ begin
   // where background was a TBitmap.
   FBackground := TJvPicture.Create;
   FBackgroundFillMode := sfmTile;
+
+  FLockRefreshCount := 0;
 end;
 
 destructor TJvScrollBox.Destroy;
@@ -337,6 +345,24 @@ begin
           Canvas.Draw(0, 0, Background.Graphic);
         end;
     end;
+  end;
+end;
+
+procedure TJvScrollBox.BeginUpdate;
+begin
+  if FLockRefreshCount = 0 then
+    SendMessage(Handle, WM_SETREDRAW, Ord(False), 0);
+
+  Inc(FLockRefreshCount);
+end;
+
+procedure TJvScrollBox.EndUpdate;
+begin
+  Dec(FLockRefreshCount);
+  if FLockRefreshCount = 0 then
+  begin
+    SendMessage(Handle, WM_SETREDRAW, Ord(True), 0);
+    RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
   end;
 end;
 

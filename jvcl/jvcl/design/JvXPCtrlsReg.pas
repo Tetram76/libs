@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPCtrlsReg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvXPCtrlsReg.pas 12942 2010-11-28 22:46:54Z ahuser $
 
 unit JvXPCtrlsReg;
 
@@ -41,7 +41,7 @@ uses
   DesignIntf, DesignEditors, VCLEditors,
   JvDsgnConsts, JvXPProgressBar,
   JvXPCore, JvXPPropertyEditors, JvXPBar, JvXPContainer,
-  JvXPButtons, JvXPCheckCtrls;
+  JvXPButtons, JvXPCheckCtrls, JvExplorerBar;
 
 procedure Register;
 begin
@@ -51,6 +51,9 @@ begin
   RegisterPropertyEditor(TypeInfo(TImageIndex), TJvXPBarItem, 'ImageIndex',
     TJvXPItemImageIndexProperty);
   RegisterComponentEditor(TJvXPBar, TJvXPBarItemEditor);
+
+  // ExplorerBar
+  RegisterComponents(RsPaletteXPControls, [TJvExplorerBar]);
 end;
 
 end.

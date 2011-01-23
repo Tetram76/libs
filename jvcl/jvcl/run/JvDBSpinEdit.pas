@@ -91,7 +91,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSpinEdit.pas $';
     Revision: '$Revision: 12544 $';
-    Date: '$Date: 2009-10-03 17:51:41 +0200 (sam. 03 oct. 2009) $';
+    Date: '$Date: 2009-10-03 17:51:41 +0200 (sam., 03 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

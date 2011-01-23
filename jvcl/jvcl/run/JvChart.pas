@@ -88,7 +88,7 @@ You may retrieve the latest version of this file at the Project JEDI's JVCL home
 located at http://jvcl.delphi-jedi.org
 
 -----------------------------------------------------------------------------}
-// $Id: JvChart.pas 12489 2009-09-04 16:42:54Z wpostma $
+// $Id: JvChart.pas 12880 2010-10-30 17:42:44Z jfudickar $
 
 unit JvChart;
 
@@ -939,8 +939,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChart.pas $';
-    Revision: '$Revision: 12489 $';
-    Date: '$Date: 2009-09-04 18:42:54 +0200 (ven. 04 sept. 2009) $';
+    Revision: '$Revision: 12880 $';
+    Date: '$Date: 2010-10-30 19:42:44 +0200 (sam., 30 oct. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -4471,7 +4471,7 @@ begin
     FDragFloatingMarker.FRawYPosition := Y;
 
     Self.Invalidate; // Repaint control LATER ! .. like a PostMessage(WM_PAINT)
-   	//Self.Repaint; // much more CPU intensive, but smoother.
+    //Self.Repaint; // much more CPU intensive, but smoother.
   end;
 
 end;

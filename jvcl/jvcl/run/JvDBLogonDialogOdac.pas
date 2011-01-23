@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLogonDialogOdac.pas 12682 2010-01-28 23:20:13Z jfudickar $
+// $Id: JvDBLogonDialogOdac.pas 12841 2010-09-05 17:33:11Z jfudickar $
 
 unit JvDBLogonDialogOdac;
 
@@ -33,10 +33,14 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF USE_3RDPARTY_CORELAB_ODAC}
   Classes, Forms, Controls, DBAccess, Ora,
   JvBaseDlg, JvAppStorage, JvBaseDBLogonDialog,
-  JvDynControlEngine, JvBaseDBPasswordDialog, JvDynControlEngineIntf;
+  JvDynControlEngine, JvBaseDBPasswordDialog, 
+  {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
+  JvDynControlEngineIntf;
 
+{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
 type
 
   TJvOdacOracleConnectionInfo = class(TJvBaseOracleConnectionInfo)
@@ -172,19 +176,21 @@ type
     property OnSessionConnect: TJvLogonDialogBaseSessionEvent read
         GetOnSessionConnect write SetOnSessionConnect;
   end;
+{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLogonDialogOdac.pas $';
-    Revision: '$Revision: 12682 $';
-    Date: '$Date: 2010-01-29 00:20:13 +0100 (ven. 29 janv. 2010) $';
+    Revision: '$Revision: 12841 $';
+    Date: '$Date: 2010-09-05 19:33:11 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
 uses
   SysUtils, StdCtrls, Dialogs,
   OraClasses, OraError, OraCall, OraServices,
@@ -622,6 +628,7 @@ begin
   if Net then
     Result := Result + ' - '+RsNetOptionConnectionList;
 end;
+{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
 
 {$IFDEF UNITVERSIONING}
 initialization

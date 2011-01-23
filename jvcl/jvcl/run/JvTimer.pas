@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTimer.pas 12502 2009-09-16 17:35:10Z ahuser $
+// $Id: JvTimer.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvTimer;
 
@@ -76,8 +76,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimer.pas $';
-    Revision: '$Revision: 12502 $';
-    Date: '$Date: 2009-09-16 19:35:10 +0200 (mer. 16 sept. 2009) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -86,12 +86,12 @@ implementation
 
 uses
   Forms, Consts, SyncObjs,
-  JvJVCLUtils, JvResources;
+  JvJVCLUtils, JvResources, JvTypes;
 
 //=== { TJvTimerThread } =====================================================
 
 type
-  TJvTimerThread = class(TThread)
+  TJvTimerThread = class(TJvCustomThread)
   private
     FOwner: TJvTimer;
     FInterval: Cardinal;
@@ -120,6 +120,7 @@ begin
   inherited Create(not Enabled);
   FInterval := 1000;
   FreeOnTerminate := False;
+  ThreadName := Format('%s: %s',[ClassName, Timer.Name]);
 end;
 
 procedure TJvTimerThread.HandleException;
@@ -161,6 +162,7 @@ var
   end;
 
 begin
+  NameThread(ThreadName);
   repeat
     EventTime := FOwner.EventTime;
 

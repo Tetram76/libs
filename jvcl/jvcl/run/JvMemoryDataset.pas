@@ -64,7 +64,7 @@ Revisions : 1st = 2004/09/19
             7th = 2007/03/25
             8th = 2007/06/20
 -----------------------------------------------------------------------------}
-// $Id: JvMemoryDataset.pas 12795 2010-06-07 15:16:51Z ahuser $
+// $Id: JvMemoryDataset.pas 12921 2010-11-28 00:35:08Z ahuser $
 
 unit JvMemoryDataset;
 
@@ -346,8 +346,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemoryDataset.pas $';
-    Revision: '$Revision: 12795 $';
-    Date: '$Date: 2010-06-07 17:16:51 +0200 (lun. 07 juin 2010) $';
+    Revision: '$Revision: 12921 $';
+    Date: '$Date: 2010-11-28 01:35:08 +0100 (dim., 28 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -359,7 +359,7 @@ uses
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
-  FMTBcd,
+  FMTBcd, SqlTimSt,
   {$IFNDEF UNICODE}
   JvJCLUtils,
   {$ENDIF ~UNICODE}
@@ -371,6 +371,7 @@ const
     ftDBaseOle, ftTypedBinary, ftOraBlob, ftOraClob
     {$IFDEF COMPILER10_UP}, ftWideMemo{$ENDIF COMPILER10_UP}];
 
+  // If you add a new supported type you _must_ also update CalcFieldLen()
   ftSupported = [ftString, ftSmallint, ftInteger, ftWord, ftBoolean,
     ftFloat, ftCurrency, ftDate, ftTime, ftDateTime, ftAutoInc, ftBCD,
     ftFMTBCD, ftTimestamp,
@@ -456,18 +457,36 @@ begin
         Result := SizeOf(Double);
       ftCurrency:
         Result := SizeOf(Double);
-      ftFMTBCD, ftBCD:
-        Result := SizeOf(TBcd);
       ftDate, ftTime:
         Result := SizeOf(Longint);
       ftDateTime:
         Result := SizeOf(TDateTime);
+      ftAutoInc:
+        Result := SizeOf(Longint);
+      ftBCD, ftFMTBCD:
+        Result := SizeOf(TBcd);
+      ftTimeStamp:
+        Result := SizeOf(TSQLTimeStamp);
+      {$IFDEF COMPILER10_UP}
+      ftOraTimestamp:
+        Result := SizeOf(TSQLTimeStamp);
+      ftFixedWideChar:
+        Result := (Result + 1) * SizeOf(WideChar);
+      {$ENDIF COMPILER10_UP}
+      {$IFDEF COMPILER12_UP}
+      ftLongWord:
+        Result := SizeOf(LongWord);
+      ftShortint:
+        Result := SizeOf(Shortint);
+      ftByte:
+        Result := SizeOf(Byte);
+      ftExtended:
+        Result := SizeOf(Extended);
+      {$ENDIF COMPILER12_UP}
       ftBytes:
         Result := Size;
       ftVarBytes:
         Result := Size + 2;
-      ftAutoInc:
-        Result := SizeOf(Longint);
       ftADT:
         Result := 0;
       ftFixedChar:
@@ -2344,12 +2363,17 @@ begin
   DisableControls;
   FSaveLoadState := slsLoading;
   try
-    SetLength(OriginalFields, Len);
-    SetLength(FCopyFromDataSetFieldDefs, Len);
-    for I := 0 to Len - 1 do
+    SetLength(OriginalFields, Fields.Count);
+    SetLength(FCopyFromDataSetFieldDefs, Fields.Count);
+    for I := 0 to Fields.Count - 1 do
     begin
-      OriginalFields[I] := FDataSet.FindField(Fields[I].FieldName);
-      FCopyFromDataSetFieldDefs[I] := FieldDefList.IndexOf(Fields[I].FullName);
+      if Fields[I].FieldKind <> fkCalculated then
+      begin
+        OriginalFields[I] := FDataSet.FindField(Fields[I].FieldName);
+        FCopyFromDataSetFieldDefs[I] := FieldDefList.IndexOf(Fields[I].FullName);
+      end
+      else
+        FCopyFromDataSetFieldDefs[I] := -1;
     end;
     StatusField := nil;
     if FApplyMode <> amNone then
@@ -2371,19 +2395,22 @@ begin
     while not FDataSet.EOF do
     begin
       Append;
-      for I := 0 to Len - 1 do
+      for I := 0 to Fields.Count - 1 do
       begin
-        Original := OriginalFields[I];
-        if Original <> nil then
+        if Fields[I].FieldKind <> fkCalculated then
         begin
-          FieldReadOnly := Fields[I].ReadOnly;
-          if FieldReadOnly then
-            Fields[I].ReadOnly := False;
-          try
-            CopyFieldValue(Fields[I], Original);
-          finally
+          Original := OriginalFields[I];
+          if Original <> nil then
+          begin
+            FieldReadOnly := Fields[I].ReadOnly;
             if FieldReadOnly then
-              Fields[I].ReadOnly := True;
+              Fields[I].ReadOnly := False;
+            try
+              CopyFieldValue(Fields[I], Original);
+            finally
+              if FieldReadOnly then
+                Fields[I].ReadOnly := True;
+            end;
           end;
         end;
       end;

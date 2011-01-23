@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_SysUtils.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvInterpreter_SysUtils.pas 12833 2010-09-05 13:25:12Z obones $
 
 unit JvInterpreter_SysUtils;
 
@@ -48,8 +48,8 @@ function Var2SearchRec(const SearchRec: Variant): TSearchRec;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_SysUtils.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12833 $';
+    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1383,14 +1383,14 @@ end;
 
 procedure JvInterpreter_AnsiLowerCaseFileName(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := AnsiLowerCaseFileName(Args.Values[0]);
+  Value := AnsiLowerCase(Args.Values[0]);
 end;
 
 { function AnsiUpperCaseFileName(const S: string): string; }
 
 procedure JvInterpreter_AnsiUpperCaseFileName(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := AnsiUpperCaseFileName(Args.Values[0]);
+  Value := AnsiUpperCase(Args.Values[0]);
 end;
 
 { function AnsiPos(const Substr, S: string): Integer; }

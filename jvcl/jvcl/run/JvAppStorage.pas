@@ -74,7 +74,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorage.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvAppStorage.pas 12958 2010-12-30 18:43:03Z obones $
 
 unit JvAppStorage;
 
@@ -611,8 +611,7 @@ type
     procedure WriteWideStringList(const Path: string; const SL: TWideStrings; const ItemName: string = cItem);
     {$ENDIF}
     { Retrieves an enumeration. If the value is not found, the Default will be returned. }
-    procedure ReadEnumeration(const Path: string; TypeInfo: PTypeInfo;
-      const Default; out Value);
+    procedure ReadEnumeration(const Path: string; TypeInfo: PTypeInfo; const Default; out Value);
     { Stores an enumeration }
     procedure WriteEnumeration(const Path: string; TypeInfo: PTypeInfo;
       const Value);
@@ -630,8 +629,7 @@ type
     procedure ReadProperty(const Path: string; const PersObj: TPersistent;
       const PropName: string; const Recursive, ClearFirst: Boolean);
     { Stores an Property }
-    procedure WriteProperty(const Path: string; const PersObj: TPersistent;
-      const PropName: string; const Recursive: Boolean);
+    procedure WriteProperty(const Path: string; const PersObj: TPersistent; const PropName: string; const Recursive: Boolean);
     { Retrieves a set. If the value is not found, the Default will be returned. }
     { Retrieves a TPersistent-Object with all of its published properties }
     procedure ReadPersistent(const Path: string; const PersObj: TPersistent;
@@ -648,8 +646,7 @@ type
       interpreted as a storage name to be translated to a real property name. If Reading is False,
       AName is interpreted as a property name to be translated to a storage name. Will invoke the
       OnTranslatePropertyName event if one is assigned, or return AName if no handler is assigned. }
-    function TranslatePropertyName(Instance: TPersistent; const AName: string;
-      const Reading: Boolean): string;
+    function TranslatePropertyName(Instance: TPersistent; const AName: string; const Reading: Boolean): string;
     { Enumerate a list of stored values and/or folder below the specified path, optionally scanning
       sub folders as well. The associated object is an integer specifying what the string
       represents: 1: Folder; 2: Value; 3: Both }
@@ -661,11 +658,11 @@ type
     procedure DisablePropertyValueCrypt;
     { Returns the current state if Property-Value Cryption is enabled }
     function IsPropertyValueCryptEnabled: Boolean;
-    function ItemNameIndexPath(const ItemName: string; const Index: Integer):
-        string; virtual;
-    function ReadWideString(const Path: string; const Default: WideString = ''):
-        WideString;
+    function ItemNameIndexPath(const ItemName: string; const Index: Integer): string; virtual;
+    function ReadWideString(const Path: string; const Default: WideString = ''): WideString;
     procedure WriteWideString(const Path: string; const Value: WideString);
+    //1 The current Translateengine which should be used for all operations. It's the internal translateengine, or the assigned property TranslateStringEngine
+    property ActiveTranslateStringEngine: TJvTranslateString read GetActiveTranslateStringEngine;
     { Root of any values to be read/written. This value is combined with the path given in one of
       the Read*/Write* methods to determine the actual key used. It's always relative to the value
       of Root (which is an absolute path) }
@@ -680,18 +677,12 @@ type
       to keep backward compatibility }
     property FlushOnDestroy: Boolean read FFlushOnDestroy write SetFlushOnDestroy default True;
   published
-    //1 The current Translateengine which should be used for all operations. It's the internal translateengine, or the assigned property TranslateStringEngine
-    property ActiveTranslateStringEngine: TJvTranslateString read
-        GetActiveTranslateStringEngine;
     property StorageOptions: TJvCustomAppStorageOptions read FStorageOptions write SetStorageOptions;
     //1 This engine gives you the possibility to translate Strings with %-Replacements
     property TranslateStringEngine: TJvTranslateString read FTranslateStringEngine write SetTranslateStringEngine;
-    property OnTranslatePropertyName: TJvAppStoragePropTranslateEvent read FOnTranslatePropertyName
-      write FOnTranslatePropertyName;
-    property OnEncryptPropertyValue: TJvAppStorageCryptEvent read FOnEncryptPropertyValue
-      write FOnEncryptPropertyValue;
-    property OnDecryptPropertyValue: TJvAppStorageCryptEvent read FOnDecryptPropertyValue
-      write FOnDecryptPropertyValue;
+    property OnTranslatePropertyName: TJvAppStoragePropTranslateEvent read FOnTranslatePropertyName write FOnTranslatePropertyName;
+    property OnEncryptPropertyValue: TJvAppStorageCryptEvent read FOnEncryptPropertyValue write FOnEncryptPropertyValue;
+    property OnDecryptPropertyValue: TJvAppStorageCryptEvent read FOnDecryptPropertyValue write FOnDecryptPropertyValue;
 
     // called when an error occured in one of the methods.
     property OnError: TJvAppStorageErrorEvent read FOnError write FOnError;
@@ -960,8 +951,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorage.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12958 $';
+    Date: '$Date: 2010-12-30 19:43:03 +0100 (jeu., 30 déc. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1768,7 +1759,7 @@ function TJvCustomAppStorage.DoReadWideString(const Path: string;
   const Default: Widestring): Widestring;
 begin
   {$IFDEF COMPILER12_UP}
-  Result := UTF8ToWideString(RawByteString(ReadString(Path, string(UTF8Encode(Default)))));
+  Result := ReadString(Path, string(Default));
   {$ELSE}
   Result := UTF8Decode(ReadString(Path, UTF8Encode(Default)));
   {$ENDIF COMPILER12_UP}
@@ -1782,7 +1773,11 @@ end;
 procedure TJvCustomAppStorage.DoWriteWideString(const Path: string;
   const Value: Widestring);
 begin
+  {$IFDEF COMPILER12_UP}
+  DoWriteString(Path,string(Value));
+  {$ELSE}
   DoWriteString(Path,string(UTF8Encode(Value)));
+  {$ENDIF COMPILER12_UP}
 end;
 
 procedure TJvCustomAppStorage.DoError(const msg: string);
@@ -2502,8 +2497,7 @@ begin
             raise EJVCLAppStorageError.CreateRes(@RsEInvalidType);
 end;
 
-procedure TJvCustomAppStorage.ReadEnumeration(const Path: string;
-  TypeInfo: PTypeInfo; const Default; out Value);
+procedure TJvCustomAppStorage.ReadEnumeration(const Path: string; TypeInfo: PTypeInfo; const Default; out Value);
 var
   TargetStore: TJvCustomAppStorage;
   TargetPath: string;
@@ -2710,8 +2704,8 @@ begin
   end;
 end;
 
-procedure TJvCustomAppStorage.WriteProperty(const Path: string;
-  const PersObj: TPersistent; const PropName: string; const Recursive: Boolean);
+procedure TJvCustomAppStorage.WriteProperty(const Path: string; const PersObj: TPersistent; const PropName: string;
+    const Recursive: Boolean);
 var
   TmpValue: Integer;
   SubObj: TObject;
@@ -2943,8 +2937,8 @@ begin
   Result := Value;
 end;
 
-function TJvCustomAppStorage.TranslatePropertyName(Instance: TPersistent;
-  const AName: string; const Reading: Boolean): string;
+function TJvCustomAppStorage.TranslatePropertyName(Instance: TPersistent; const AName: string; const Reading: Boolean):
+    string;
 begin
   Result := AName;
   if Instance is TJvCustomPropertyStore then
@@ -3026,8 +3020,7 @@ begin
   Result := (FCryptEnabledStatus > 0);
 end;
 
-function TJvCustomAppStorage.ItemNameIndexPath(const ItemName: string; const
-    Index: Integer): string;
+function TJvCustomAppStorage.ItemNameIndexPath(const ItemName: string; const Index: Integer): string;
 begin
   if StorageOptions.UseOldItemNameFormat then
     Result := ItemName + IntToStr(Index)
@@ -3122,23 +3115,34 @@ begin
 end;
 
 function TJvCustomAppStorage.GetFormatSettings: TFormatSettings;
+{$IFDEF COMPILER7_UP}
+var 
+  Atse: TJvTranslateString;
+{$ENDIF COMPILER7_UP}
 begin
   {$IFDEF COMPILER7_UP}
   if Not IsUpdating then
   begin
+    {$IFDEF RTL220_UP}
+    CachedFormatSettings := TFormatSettings.Create;
+    {$ELSE ~RTL220_UP}
     GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT, CachedFormatSettings);
-    if Assigned(ActiveTranslateStringEngine) then
+    {$ENDIF ~RTL220_UP}
+    atse := ActiveTranslateStringEngine;
+    if Assigned(atse) then
     begin
-      if (ActiveTranslateStringEngine.DateFormat <> '') then
+      if (atse.DateFormat <> '') then
       begin
-        CachedFormatSettings.ShortDateFormat := Self.ActiveTranslateStringEngine.DateFormat;
-        CachedFormatSettings.LongDateFormat := Self.ActiveTranslateStringEngine.DateFormat;
+        CachedFormatSettings.ShortDateFormat := atse.DateFormat;
+        CachedFormatSettings.LongDateFormat := atse.DateFormat;
       end;
-      if (ActiveTranslateStringEngine.TimeFormat <> '') then
+      CachedFormatSettings.DateSeparator := atse.DateSeparator;
+      if (atse.TimeFormat <> '') then
       begin
-        CachedFormatSettings.ShortTimeFormat := Self.ActiveTranslateStringEngine.TimeFormat;
-        CachedFormatSettings.LongTimeFormat := Self.ActiveTranslateStringEngine.TimeFormat;
+        CachedFormatSettings.ShortTimeFormat := atse.TimeFormat;
+        CachedFormatSettings.LongTimeFormat := atse.TimeFormat;
       end;
+      CachedFormatSettings.TimeSeparator := atse.TimeSeparator;
     end;
   end;
   {$ENDIF COMPILER7_UP}
@@ -3191,8 +3195,7 @@ begin
   ReplaceComponentReference(Self, Value, TComponent(FTranslateStringEngine));
 end;
 
-function TJvCustomAppStorage.ReadWideString(const Path: string;
-  const Default: WideString = ''): WideString;
+function TJvCustomAppStorage.ReadWideString(const Path: string; const Default: WideString = ''): WideString;
 begin
   Result := DoReadWideString(Path,Default);
 end;

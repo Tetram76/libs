@@ -181,7 +181,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAnimatedImage.pas $';
     Revision: '$Revision: 12620 $';
-    Date: '$Date: 2009-12-19 16:53:00 +0100 (sam. 19 déc. 2009) $';
+    Date: '$Date: 2009-12-19 16:53:00 +0100 (sam., 19 déc. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

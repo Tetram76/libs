@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvUrlListGrabber.pas 12719 2010-03-11 22:38:01Z jfudickar $
+// $Id: JvUrlListGrabber.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvUrlListGrabber;
 
@@ -486,7 +486,7 @@ type
   // this is the ancestor of all the grabber threads, and there
   // should be as many descendants as there are TJvCustomUrlGrabber
   // descendants.
-  TJvCustomUrlGrabberThread = class(TThread)
+  TJvCustomUrlGrabberThread = class(TJvCustomThread)
   private
     FErrorText: string; // the error string received from the server
     FStatus: DWORD;
@@ -561,8 +561,8 @@ function JvUrlGrabberClassList: TJvUrlGrabberClassList;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUrlListGrabber.pas $';
-    Revision: '$Revision: 12719 $';
-    Date: '$Date: 2010-03-11 23:38:01 +0100 (jeu. 11 mars 2010) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1202,6 +1202,7 @@ begin
   inherited Create(True);
   FContinue := True;
   FGrabber := Grabber;
+  ThreadName := Format('%s: %s',[ClassName, Grabber.Name]);
 end;
 
 procedure TJvCustomUrlGrabberThread.DoProgress;
@@ -1227,6 +1228,7 @@ end;
 
 procedure TJvCustomUrlGrabberThread.Execute;
 begin
+  NameThread(ThreadName);
   SetGrabberStatus(gsStopped);
   FGrabber.Stream := nil;
   try

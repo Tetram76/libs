@@ -72,7 +72,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgXMLSerializer.pas 12781 2010-05-23 23:30:10Z ahuser $
+// $Id: JvgXMLSerializer.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvgXMLSerializer;
 
@@ -156,8 +156,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgXMLSerializer.pas $';
-    Revision: '$Revision: 12781 $';
-    Date: '$Date: 2010-05-24 01:30:10 +0200 (lun. 24 mai 2010) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 dГ©c. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -165,7 +165,7 @@ const
 implementation
 
 uses
-  JvResources, JvgUtils;
+  JvResources, JvgUtils, JclSysUtils;
 
 const
   ORDINAL_TYPES = [tkInteger, tkChar, tkEnumeration, tkSet];
@@ -679,10 +679,10 @@ begin
         //{ Замена разделителя на системный }
         { Changing delimiter to system-wide  [translated] }
         if PropTypeInf^.Kind = tkFloat then
-          if DecimalSeparator = ',' then
-            SValue := StringReplace(SValue, '.', DecimalSeparator, [rfReplaceAll])
+          if JclFormatSettings.DecimalSeparator = ',' then
+            SValue := StringReplace(SValue, '.', JclFormatSettings.DecimalSeparator, [rfReplaceAll])
           else
-            SValue := StringReplace(SValue, ',', DecimalSeparator, [rfReplaceAll]);
+            SValue := StringReplace(SValue, ',', JclFormatSettings.DecimalSeparator, [rfReplaceAll]);
 
         //{ Для корректного преобразования парсером tkSet нужны угловые скобки }
         { tkSet parser needs "<" and ">" for correct transformation  [translated] }

@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesktopAlert.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvDesktopAlert.pas 12906 2010-11-27 13:40:09Z ahuser $
 
 unit JvDesktopAlert;
 
@@ -338,8 +338,6 @@ type
     FDisplayDuration: Cardinal;
     FCurrentStep: Cardinal;
     FStatus: TJvStyleHandlerStatus;
-    procedure SetDisplayDuration(const Value: Cardinal);
-    procedure SetOwnerForm(const Value: TJvCustomFormDesktopAlert);
     function GetActive: Boolean;
   protected
     procedure SetEndInterval(const Value: Cardinal); virtual;
@@ -400,7 +398,7 @@ type
     procedure AbortAnimation; virtual;
     // The owner form, the form to which the style is associated.
     // This value MUST NOT be nil when any of the DoXXXX function is called
-    property OwnerForm: TJvCustomFormDesktopAlert read FOwnerForm write SetOwnerForm;
+    property OwnerForm: TJvCustomFormDesktopAlert read FOwnerForm write FOwnerForm;
     // The current step in the animation (starts at 0, use Active to know
     // if an animation or wait is in progress).
     property CurrentStep: Cardinal read FCurrentStep;
@@ -419,7 +417,7 @@ type
     property EndSteps: Cardinal read FEndSteps write SetEndSteps;
     // The duration of the middle wait (between the end of the start
     // animation and the beginning of the end animation)
-    property DisplayDuration: Cardinal read FDisplayDuration write SetDisplayDuration;
+    property DisplayDuration: Cardinal read FDisplayDuration write FDisplayDuration;
   end;
 
   // This style will make the form fade in and fade out.
@@ -490,8 +488,8 @@ function CreateHandlerForStyle(Style: TJvAlertStyle; OwnerForm: TJvCustomFormDes
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesktopAlert.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12906 $';
+    Date: '$Date: 2010-11-27 14:40:09 +0100 (sam., 27 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1263,20 +1261,7 @@ begin
     FEndSteps := 1;
 end;
 
-procedure TJvCustomDesktopAlertStyleHandler.SetDisplayDuration(
-  const Value: Cardinal);
-begin
-  FDisplayDuration := Value;
-end;
-
-procedure TJvCustomDesktopAlertStyleHandler.SetOwnerForm(
-  const Value: TJvCustomFormDesktopAlert);
-begin
-  FOwnerForm := Value;
-end;
-
-procedure TJvCustomDesktopAlertStyleHandler.SetStartInterval(
-  const Value: Cardinal);
+procedure TJvCustomDesktopAlertStyleHandler.SetStartInterval(const Value: Cardinal);
 begin
   FStartInterval := Value;
 end;

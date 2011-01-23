@@ -243,7 +243,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStringGrid.pas $';
     Revision: '$Revision: 12719 $';
-    Date: '$Date: 2010-03-11 23:38:01 +0100 (jeu. 11 mars 2010) $';
+    Date: '$Date: 2010-03-11 23:38:01 +0100 (jeu., 11 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

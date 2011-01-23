@@ -28,7 +28,7 @@ Known Issues:
                (report for instance). As a workaround, always change the item's
                properties, never the canvas' directly.
 -----------------------------------------------------------------------------}
-// $Id: JvListView.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvListView.pas 12873 2010-10-22 06:34:08Z ahuser $
 
 unit JvListView;
 
@@ -55,7 +55,9 @@ const
 
 type
   TJvListView = class;
+  {$IFNDEF RTL200_UP}
   TJvListViewGroup = class;
+  {$ENDIF !RTL200_UP}
   EJvListViewError = EJVCLException;
 
   // Mantis 980: new type for Groups
@@ -74,7 +76,9 @@ type
 
   //  TJvSortMethod = (smAutomatic, smAlphabetic, smNonCaseSensitive, smNumeric, smDate, smTime, smDateTime, smCurrency);
   TJvOnProgress = procedure(Sender: TObject; Progression, Total: Integer) of object;
+  {$IFNDEF RTL200_UP}
   TJvListViewCompareGroupEvent = procedure(Sender: TObject; Group1, Group2: TJvListViewGroup; var Compare: Integer) of object;
+  {$ENDIF !RTL200_UP}
 
   TJvListItems = class(TListItems, IJvAppStorageHandler, IJvAppStoragePublishedProps)
   private
@@ -172,6 +176,7 @@ type
     property Items[Index: Integer] : TJvListExtendedColumn read GetItem write SetItem; default;
   end;
 
+  {$IFNDEF RTL200_UP}
   TJvListViewGroup = class(TCollectionItem)
   private
     FHeader: WideString;
@@ -281,6 +286,7 @@ type
     // Note that BorderColor is currently ignored by the Win32 API
     property BorderColor: TJvGroupsPropertiesBorderColors read FBorderColor write SetBorderColor;
   end;
+  {$ENDIF !RTL200_UP}
 
   TJvViewStyles = set of TJvViewStyle;
 
@@ -337,11 +343,14 @@ type
     FPicture: TPicture;
     FExtendedColumns: TJvListExtendedColumns;
     FSavedExtendedColumns: TJvListExtendedColumns;
+    FSavedColumnOrder: string;
     FViewStylesItemBrush: TJvViewStyles;  // use for Create/DestroyWnd process
+    {$IFNDEF RTL200_UP}
     FGroupView: Boolean;
     FGroups: TJvListViewGroups;
     FGroupsProperties: TJvGroupsProperties;
     FOnCompareGroups: TJvListViewCompareGroupEvent;
+    {$ENDIF !RTL200_UP}
     FViewStyle: TJvViewStyle;
     FTileViewProperties: TJvTileViewProperties;
     FInsertMarkColor: TColor;
@@ -349,9 +358,11 @@ type
     FSettingHeaderImagePosition: Boolean;
     procedure DoPictureChange(Sender: TObject);
     procedure SetPicture(const Value: TPicture);
+    {$IFNDEF RTL200_UP}
     procedure SetGroupView(const Value: Boolean);
     procedure SetGroups(const Value: TJvListViewGroups);
     procedure SetGroupsProperties(const Value: TJvGroupsProperties);
+    {$ENDIF !RTL200_UP}
     procedure SetTileViewProperties(const Value: TJvTileViewProperties);
     procedure SetInsertMarkColor(const Value: TColor);
     procedure SetHeaderImagePosition(const Value: TJvHeaderImagePosition);
@@ -360,11 +371,13 @@ type
     procedure WMAutoSelect(var Msg: TMessage); message WM_AUTOSELECT;
     procedure SetExtendedColumns(const Value: TJvListExtendedColumns);
     procedure SetViewStylesItemBrush(const Value: TJvViewStyles);
+    {$IFNDEF RTL200_UP}
     function DoCompareGroups(Group1, Group2: TJvListViewGroup): Integer;
-    procedure TileViewPropertiesChange(Sender: TObject);
     procedure GroupsPropertiesChange(Sender: TObject);
-    procedure LoadTileViewProperties;
     procedure LoadGroupsProperties;
+    {$ENDIF !RTL200_UP}
+    procedure TileViewPropertiesChange(Sender: TObject);
+    procedure LoadTileViewProperties;
   protected
     function CreateListItem: TListItem; override;
     function CreateListItems: TListItems; override;
@@ -435,9 +448,11 @@ type
     property SortOnClick: Boolean read FSortOnClick write FSortOnClick default True;
     property SmallImages write SetSmallImages;
     property AutoClipboardCopy: Boolean read FAutoClipboardCopy write FAutoClipboardCopy default True;
+    {$IFNDEF RTL200_UP}
     property GroupView: Boolean read FGroupView write SetGroupView default False;
     property Groups: TJvListViewGroups read FGroups write SetGroups;
     property GroupsProperties: TJvGroupsProperties read FGroupsProperties write SetGroupsProperties;
+    {$ENDIF !RTL200_UP}
     property TileViewProperties: TJvTileViewProperties read FTileViewProperties write SetTileViewProperties;
     property InsertMarkColor: TColor read FInsertMarkColor write SetInsertMarkColor default clBlack;
 
@@ -449,7 +464,9 @@ type
     property OnLoadProgress: TJvOnProgress read FOnLoadProgress write FOnLoadProgress;
     property OnSaveProgress: TJvOnProgress read FOnSaveProgress write FOnSaveProgress;
     property OnVerticalScroll: TNotifyEvent read FOnVerticalScroll write FOnVerticalScroll;
+    {$IFNDEF RTL200_UP}
     property OnCompareGroups: TJvListViewCompareGroupEvent read FOnCompareGroups write FOnCompareGroups;
+    {$ENDIF !RTL200_UP}
     property OnMouseEnter;
     property OnMouseLeave;
     property OnParentColorChange;
@@ -470,8 +487,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListView.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12873 $';
+    Date: '$Date: 2010-10-22 08:34:08 +0200 (ven., 22 oct. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -630,9 +647,6 @@ const
   AlignmentToLVGA: array[TAlignment] of Integer = (LVGA_HEADER_LEFT, LVGA_HEADER_RIGHT, LVGA_HEADER_CENTER);
   TileSizeKindToLVTVIF: array[TJvTileSizeKind] of Integer = (LVTVIF_AUTOSIZE, LVTVIF_FIXEDWIDTH, LVTVIF_FIXEDHEIGHT, LVTVIF_FIXEDSIZE);
   InsertMarkPositionToLVIM: array[TJvInsertMarkPosition] of Integer = (0, LVIM_AFTER);
-
-  // (rom) increased from 100
-  cColumnsHandled = 1024;
 
 //=== { TJvListItem } ========================================================
 
@@ -966,19 +980,25 @@ begin
   FViewStylesItemBrush := ALL_VIEW_STYLES;
   FExtendedColumns := TJvListExtendedColumns.Create(Self);
   FSavedExtendedColumns := TJvListExtendedColumns.Create(Self);
+  {$IFNDEF RTL200_UP}
   FGroups := TJvListViewGroups.Create(Self);
   FGroupsProperties := TJvGroupsProperties.Create;
+  {$ENDIF !RTL200_UP}
   FTileViewProperties := TJvTileViewProperties.Create;
 
   FTileViewProperties.OnChange := TileViewPropertiesChange;
+  {$IFNDEF RTL200_UP}
   FGroupsProperties.OnChange := GroupsPropertiesChange;
+  {$ENDIF !RTL200_UP}
 end;
 
 destructor TJvListView.Destroy;
 begin
+  {$IFNDEF RTL200_UP}
   FGroupsProperties.Free;
-  FTileViewProperties.Free;
   FGroups.Free;
+  {$ENDIF !RTL200_UP}
+  FTileViewProperties.Free;
   FExtendedColumns.Free;
   FSavedExtendedColumns.Free;
 
@@ -1674,48 +1694,64 @@ end;
 
 function TJvListView.GetColumnsOrder: string;
 var
-  Res: array [0..cColumnsHandled - 1] of Integer;
+  Res: array of Integer;
   I: Integer;
 begin
-  ListView_GetColumnOrderArray(Columns.Owner.Handle, Columns.Count, @Res[0]);
-  Result := '';
-  if Columns.Count > cColumnsHandled then
-    raise EJvListViewError.CreateRes(@RsETooManyColumns);
-  for I := 0 to Columns.Count - 1 do
+  if Columns.Count > 0 then
   begin
-    if Result <> '' then
-      Result := Result + ',';
-    Result := Result + IntToStr(Res[I]) + '=' + IntToStr(Columns[I].Width);
-  end;
+    if not Columns.Owner.HandleAllocated then
+      Result := FSavedColumnOrder
+    else
+    begin
+      SetLength(Res, Columns.Count);
+      ListView_GetColumnOrderArray(Columns.Owner.Handle, Columns.Count, @Res[0]);
+      Result := '';
+      for I := 0 to Columns.Count - 1 do
+      begin
+        if Result <> '' then
+          Result := Result + ',';
+        Result := Result + IntToStr(Res[I]) + '=' + IntToStr(Columns[I].Width);
+      end;
+    end;
+  end
+  else
+    Result := '';
 end;
 
 procedure TJvListView.SetColumnsOrder(const Order: string);
 var
-  Res: array [0..cColumnsHandled - 1] of Integer;
+  Res: array of Integer;
   I, J: Integer;
-  st: string;
+  S: string;
+  SL: TStrings;
 begin
-  FillChar(Res, SizeOf(Res), #0);
-  with TStringList.Create do
-  try
-    CommaText := Order;
-    I := 0;
-    while Count > 0 do
+  if not Columns.Owner.HandleAllocated then
+    FSavedColumnOrder := Order
+  else
+  begin
+    if Columns.Count > 0 then
     begin
-      st := Strings[0];
-      J := Pos('=', st);
-      if (J <> 0) and (I < Columns.Count) then
-      begin
-        Columns[I].Width := StrToIntDef(Copy(st, J + 1, Length(st)), Columns[I].Width);
-        st := Copy(st, 1, J - 1);
+      SetLength(Res, Columns.Count);
+      FillChar(Res[0], Length(Res) * SizeOf(Integer), 0);
+      SL := TStringList.Create;
+      try
+        SL.CommaText := Order;
+        for I := 0 to SL.Count - 1 do
+        begin
+          S := SL[I];
+          J := Pos('=', S);
+          if (J <> 0) and (I < Columns.Count) then
+          begin
+            Columns[I].Width := StrToIntDef(Copy(S, J + 1, Length(S)), Columns[I].Width);
+            S := Copy(S, 1, J - 1);
+          end;
+          Res[I] := StrToIntDef(S, 0);
+        end;
+      finally
+        SL.Free;
       end;
-      Res[I] := StrToIntDef(st, 0);
-      Delete(0);
-      Inc(I);
+      ListView_SetColumnOrderArray(Columns.Owner.Handle, Columns.Count, @Res[0]);
     end;
-    ListView_SetColumnOrderArray(Columns.Owner.Handle, Columns.Count, @Res[0]);
-  finally
-    Free;
   end;
 end;
 
@@ -1756,12 +1792,21 @@ begin
 
   // Get the values from the newly created list view
   LoadTileViewProperties;
+  {$IFNDEF RTL200_UP}
   LoadGroupsProperties;
+  {$ENDIF !RTL200_UP}
   FInsertMarkColor := SendMessage(Handle, LVM_GETINSERTMARKCOLOR, 0, 0);
 
+  {$IFNDEF RTL200_UP}
   // Force a change from True to False so that InsertMarks work correctly.
   SendMessage(Handle, LVM_ENABLEGROUPVIEW, Integer(not FGroupView), 0);
   SendMessage(Handle, LVM_ENABLEGROUPVIEW, Integer(FGroupView), 0);
+  {$ENDIF !RTL200_UP}
+  if FSavedColumnOrder <> '' then
+  begin
+    ColumnsOrder := FSavedColumnOrder;
+    FSavedColumnOrder := '';
+  end;
 end;
 
 procedure TJvListView.UpdateHeaderImages(HeaderHandle: Integer);
@@ -2151,6 +2196,7 @@ begin
   FPicture.Assign(Value);
 end;
 
+{$IFNDEF RTL200_UP}
 procedure TJvListView.SetGroupView(const Value: Boolean);
 begin
   if FGroupView <> Value then
@@ -2169,6 +2215,7 @@ procedure TJvListView.SetGroupsProperties(const Value: TJvGroupsProperties);
 begin
   FGroupsProperties.Assign(Value);
 end;
+{$ENDIF !RTL200_UP}
 
 procedure TJvListView.SetTileViewProperties(const Value: TJvTileViewProperties);
 begin
@@ -2249,7 +2296,11 @@ end;
 
 procedure TJvListView.DestroyWnd;
 begin
-  FSavedExtendedColumns.Assign(FExtendedColumns);
+  if not (csDestroying in ComponentState) then
+  begin
+    FSavedColumnOrder := ColumnsOrder;
+    FSavedExtendedColumns.Assign(FExtendedColumns);
+  end;
   inherited DestroyWnd;
 end;
 
@@ -2294,6 +2345,7 @@ begin
   end;
 end;
 
+{$IFNDEF RTL200_UP}
 function TJvListView.DoCompareGroups(Group1, Group2: TJvListViewGroup): Integer;
 begin
   if Assigned(OnCompareGroups) then
@@ -2301,6 +2353,7 @@ begin
   else
     Result := Group2.GroupId - Group1.GroupId;
 end;
+{$ENDIF !RTL200_UP}
 
 procedure TJvListView.TileViewPropertiesChange(Sender: TObject);
 var
@@ -2319,6 +2372,7 @@ begin
   end;
 end;
 
+{$IFNDEF RTL200_UP}
 procedure TJvListView.GroupsPropertiesChange(Sender: TObject);
 var
   Infos: TLVGROUPMETRICS;
@@ -2342,17 +2396,21 @@ begin
     SendMessage(Handle, LVM_SETGROUPMETRICS, 0, LPARAM(@Infos));
   end;
 end;
+{$ENDIF !RTL200_UP}
 
 procedure TJvListView.LoadTileViewProperties;
 begin
   TileViewProperties.LoadFromList(Self);
 end;
 
+{$IFNDEF RTL200_UP}
 procedure TJvListView.LoadGroupsProperties;
 begin
   GroupsProperties.LoadFromList(Self);
 end;
+{$ENDIF !RTL200_UP}
 
+{$IFNDEF RTL200_UP}
   { TJvListViewGroup }
 
 procedure TJvListViewGroup.Assign(AValue: TPersistent);
@@ -2577,6 +2635,7 @@ begin
     SendMessage(List.Handle, LVM_SORTGROUPS, WPARAM(@LVGroupCompare), LPARAM(Self));
   end;
 end;
+{$ENDIF !RTL200_UP}
 
   { TJvTileViewProperties }
 
@@ -2672,6 +2731,7 @@ begin
   DoChange;
 end;
 
+{$IFNDEF RTL200_UP}
   { TJvGroupProperties }
 
 procedure TJvGroupsProperties.BorderColorChange(Sender: TObject);
@@ -2838,6 +2898,7 @@ begin
     DoChange;
   end;
 end;
+{$ENDIF !RTL200_UP}
 
 {$IFDEF UNITVERSIONING}
 initialization

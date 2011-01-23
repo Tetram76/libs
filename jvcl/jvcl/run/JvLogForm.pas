@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLogForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvLogForm.pas 12863 2010-10-11 08:10:36Z obones $
 
 unit JvLogForm;
 
@@ -34,7 +34,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Controls, Forms, Dialogs, ComCtrls, ActnList, ImgList, ToolWin,
-  SysUtils, Classes, JvComponent;
+  SysUtils, Classes, JvComponent, JvLogClasses, Menus;
 
 type
   TFoLog = class(TJvForm)
@@ -47,18 +47,35 @@ type
     Print: TAction;
     ListView1: TListView;
     SaveDialog1: TSaveDialog;
+    ToolButton3: TToolButton;
+    ToolButton4: TToolButton;
+    PopupMenu1: TPopupMenu;
+    mnuInformation: TMenuItem;
+    mnuWarning: TMenuItem;
+    mnuError: TMenuItem;
     procedure SaveExecute(Sender: TObject);
     procedure PrintExecute(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure mnuInformationClick(Sender: TObject);
+    procedure mnuWarningClick(Sender: TObject);
+    procedure mnuErrorClick(Sender: TObject);
   private
+    FLogRecordList : TJvLogRecordList;
+    FSeverity : TJvLogEventSeverity;
+
     procedure MakeLogLines(S: TStrings);
+  public
+    property LogRecordList : TJvLogRecordList read FLogRecordList write FLogRecordList;
+
+    procedure FillList;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLogForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12863 $';
+    Date: '$Date: 2010-10-11 10:10:36 +0200 (lun., 11 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -86,15 +103,72 @@ begin
   end;
 end;
 
+procedure TFoLog.FillList;
+var
+  I: Integer;
+begin
+  with ListView1 do
+  begin
+    Items.Clear;
+
+    Items.BeginUpdate;
+    for I := 0 to FLogRecordList.Count - 1 do
+      with FLogRecordList[I] do
+      begin
+        if Severity > FSeverity  then
+          continue;
+
+        with Items.Add do
+        begin
+          Caption := Time;
+          SubItems.Add(GetSeverityString( Severity));
+          SubItems.Add(Title);
+          SubItems.Add(Description);
+        end;
+      end;
+    Items.EndUpdate;
+  end;
+end;
+
+procedure TFoLog.FormCreate(Sender: TObject);
+begin
+  FSeverity := lesInformation;
+  mnuInformation.Checked := true;
+end;
+
 procedure TFoLog.MakeLogLines(S: TStrings);
 var
   I: Integer;
 begin
   for I := 0 to ListView1.Items.Count-1 do
     // (rom) Format parameters were missing
-    S.Add(Format('[%s] %s > %s',
+    S.Add(Format('[%s] %s > %s > %s',
       [ListView1.Items[I].Caption, ListView1.Items[I].SubItems[0],
-       ListView1.Items[I].SubItems[1]]));
+       ListView1.Items[I].SubItems[1], ListView1.Items[I].SubItems[2]]));
+end;
+
+procedure TFoLog.mnuErrorClick(Sender: TObject);
+begin
+  FSeverity := lesError;
+  ToolButton4.Caption := 'E';
+  ToolButton4.ImageIndex := 4;
+  FillList;
+end;
+
+procedure TFoLog.mnuInformationClick(Sender: TObject);
+begin
+  FSeverity := lesInformation;
+  ToolButton4.Caption := 'I';
+  ToolButton4.ImageIndex := 2;
+  FillList;
+end;
+
+procedure TFoLog.mnuWarningClick(Sender: TObject);
+begin
+  FSeverity := lesWarning;
+  ToolButton4.Caption := 'W';
+  ToolButton4.ImageIndex := 3;
+  FillList;
 end;
 
 procedure TFoLog.PrintExecute(Sender: TObject);

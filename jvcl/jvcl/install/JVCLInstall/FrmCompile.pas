@@ -22,11 +22,11 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmCompile.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: FrmCompile.pas 12848 2010-09-22 11:01:49Z outchy $
 
 unit FrmCompile;
 
-{$I jedi.inc}
+{$I jvcl.inc}
 
 interface
 
