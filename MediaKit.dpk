@@ -66,6 +66,7 @@ contains
   CRFurtif in 'VDTButton\CRFurtif.pas',
   EditLabeled in 'Labeled\EditLabeled.pas',
   LinkControls in 'Labeled\LinkControls.pas',
-  EditLabeled_register in 'Labeled\EditLabeled_register.pas';
+  EditLabeled_register in 'Labeled\EditLabeled_register.pas',
+  LabeledCheckBox in 'Labeled\LabeledCheckBox.pas';
 
 end.

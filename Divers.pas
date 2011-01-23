@@ -100,7 +100,19 @@ function IsDownKey(nVirtKey: Integer): Boolean;
 
 type
   TFileVersion = record
+  private
+    type TArrayOfInteger = array of Integer;
+
+    class procedure DecodeVer(const Ver: string; var AVer: TArrayOfInteger; Sep: Char); static;
+    function GetIndexVersion(const Index: Integer): Integer;
+  public
     Value: string;
+
+    property MajorVersion: Integer index 0 read GetIndexVersion;
+    property MinorVersion: Integer index 1 read GetIndexVersion;
+    property Release: Integer index 2 read GetIndexVersion;
+    property Build: Integer index 3 read GetIndexVersion;
+
     class operator Subtract(a, b: TFileVersion): Integer;
     class operator Equal(a, b: TFileVersion): Boolean;
     class operator NotEqual(a, b: TFileVersion): Boolean;
@@ -132,6 +144,7 @@ const
 
 constructor TMesurePerf.Create(const Texte: string);
 begin
+  inherited Create;
   FStart := Now;
   FLabel := Texte;
 end;
@@ -796,18 +809,21 @@ end;
 
 procedure ChangeCurseur(Index: TCursor; Nom, Rubrique: PChar);
 var
-  FileName: string;
   lpFileName: array[0..MAX_PATH] of Char;
+  buffer: array [0..MAX_PATH] of Char;
 begin
-  GetTempFileName(PChar(ExtractFilePath(Application.ExeName)), 'CSR', 0, lpFileName);
-  FileName := StrPas(lpFileName);
+  ZeroMemory(@buffer, Length(buffer) * SizeOf(Char));
+  ZeroMemory(@lpFileName, Length(lpFileName) * SizeOf(Char));
+
+  GetTempPath(Length(buffer), buffer);
+  GetTempFileName(buffer, 'CSR', 0, lpFileName);
   with TResourceStream.Create(HInstance, Nom, Rubrique) do
   begin
     try
-      SaveToFile(FileName);
+      SaveToFile(lpFileName);
       DestroyCursor(Screen.Cursors[Index]);
-      Screen.Cursors[Index] := LoadCursorFromFile(PChar(FileName));
-      DeleteFile(PChar(FileName));
+      Screen.Cursors[Index] := LoadCursorFromFile(lpFileName);
+      DeleteFile(lpFileName);
     finally
       Free;
     end;
@@ -1068,6 +1084,29 @@ begin
   Result := CompareVersionNum(a.Value, b.Value);
 end;
 
+class procedure TFileVersion.DecodeVer(const Ver: string; var AVer: TArrayOfInteger; Sep: Char);
+var
+  Index: Integer;
+  s: string;
+begin
+  Index := 1;
+  while (Index <= Length(Ver)) do
+  begin
+    s := '';
+    while (Index <= Length(Ver)) and (Ver[Index] <> Sep) do
+    begin
+      if CharInSet(Ver[Index], ['0'..'9']) then
+        s := s + Ver[Index]
+      else
+        raise Exception.Create('"' + Ver + '" n''est pas un numéro de version valide');
+      Inc(Index);
+    end;
+    SetLength(AVer, Length(AVer) + 1);
+    AVer[Length(AVer) - 1] := StrToIntDef(s, 0);
+    Inc(Index);
+  end;
+end;
+
 class operator TFileVersion.Equal(a, b: TFileVersion): Boolean;
 begin
   Result := CompareVersionNum(a.Value, b.Value) = 0;
@@ -1076,6 +1115,17 @@ end;
 class operator TFileVersion.NotEqual(a, b: TFileVersion): Boolean;
 begin
   Result := not (a = b);
+end;
+
+function TFileVersion.GetIndexVersion(const Index: Integer): Integer;
+var
+  AVer: TArrayOfInteger;
+begin
+  DecodeVer(Value, AVer, '.');
+  if (Index >= 0) and (Index < Length(AVer)) then
+    Result := AVer[Index]
+  else
+    Result := 0;
 end;
 
 class operator TFileVersion.GreaterThan(a, b: TFileVersion): Boolean;
@@ -1108,34 +1158,9 @@ begin
   Result.Value := a;
 end;
 
-class function TFileVersion.CompareVersionNum(Ver1, Ver2: string; Sep: Char = '.'): Integer;
-type
-  TArrayOfByte = array of Byte;
+class function TFileVersion.CompareVersionNum(Ver1, Ver2: string; Sep: Char): Integer;
 
-  procedure DecodeVer(Ver: string; var AVer: TArrayOfByte);
-  var
-    Index: Integer;
-    s: string;
-  begin
-    Index := 1;
-    while (Index <= Length(Ver)) do
-    begin
-      s := '';
-      while (Index <= Length(Ver)) and (Ver[Index] <> Sep) do
-      begin
-        if CharInSet(Ver[Index], ['0'..'9']) then
-          s := s + Ver[Index]
-        else
-          raise Exception.Create('"' + Ver + '" n''est pas un numéro de version valide');
-        Inc(Index);
-      end;
-      SetLength(AVer, Length(AVer) + 1);
-      AVer[Length(AVer) - 1] := StrToIntDef(s, 0);
-      Inc(Index);
-    end;
-  end;
-
-  procedure AjusteArray(var A1: TArrayOfByte; const A2: TArrayOfByte);
+  procedure AjusteArray(var A1: TArrayOfInteger; const A2: TArrayOfInteger);
   begin
     while Length(A1) < Length(A2) do
     begin
@@ -1145,12 +1170,12 @@ type
   end;
 
 var
-  AVer1, AVer2: TArrayOfByte;
+  AVer1, AVer2: TArrayOfInteger;
   Index: Integer;
 begin
   Result := 0;
-  DecodeVer(Ver1, AVer1);
-  DecodeVer(Ver2, AVer2);
+  DecodeVer(Ver1, AVer1, Sep);
+  DecodeVer(Ver2, AVer2, Sep);
   AjusteArray(AVer1, AVer2);
   AjusteArray(AVer2, AVer1);
   Index := 0;

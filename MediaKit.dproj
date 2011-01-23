@@ -25,7 +25,7 @@
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DesignOnlyPackage>false</DesignOnlyPackage>
 			<DCC_WriteableConstants>true</DCC_WriteableConstants>
-			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Documents\RAD Studio\6.0\Bpl\MediaKit.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\7.0\Bpl\MediaKit.bpl</DCC_DependencyCheckOutputName>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<GenDll>true</GenDll>
 			<DCC_SymbolReferenceInfo>1</DCC_SymbolReferenceInfo>
@@ -99,15 +99,7 @@
 			<DCCReference Include="Labeled\EditLabeled.pas"/>
 			<DCCReference Include="Labeled\LinkControls.pas"/>
 			<DCCReference Include="Labeled\EditLabeled_register.pas"/>
-			<DCCReference Include="HarmFade\HARMFADE.dcr"/>
-			<DCCReference Include="Memory Table\Memorytable.dcr"/>
-			<DCCReference Include="PrintObject\PrintObject.dcr"/>
-			<DCCReference Include="VersLabP\VerslabP.dcr"/>
-			<DCCReference Include="ShellNotification\kbShellNotify.dcr"/>
-			<DCCReference Include="browsedirectory\Browss.dcr"/>
-			<DCCReference Include="thandle\HANDLES.dcr"/>
-			<DCCReference Include="ComboCheck\ComboCheck.dcr"/>
-			<DCCReference Include="idrunner\idISAPIRunner.dcr"/>
+			<DCCReference Include="Labeled\LabeledCheckBox.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -162,7 +154,8 @@
 						<Source Name="MainSource">MediaKit.dpk</Source>
 					</Source>
 					<Excluded_Packages>
-						<Excluded_Packages Name="C:\Program Files (x86)\RemObjects Software\Everwood\Bin\RemObjects_Everwood_D11.bpl">RemObjects Everwood for Delphi</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k120.bpl">Composants Microsoft Office 2000 Sample Automation Server Wrapper</Excluded_Packages>
+						<Excluded_Packages Name="$(BDS)\bin\dclofficexp120.bpl">Composants Microsoft Office XP Sample Automation Server Wrapper</Excluded_Packages>
 					</Excluded_Packages>
 				</Delphi.Personality>
 			</BorlandProject>
