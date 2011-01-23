@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010)                          $ }
-{ Revision:      $Rev:: 3273                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -50,20 +50,25 @@ uses
 {$I containers\JclTrees.int}
 type
   TItrStart = (isFirst, isLast, isRoot);
+
 (*$JPPLOOP ALLTYPEINDEX ALLTYPECOUNT
   {$JPPEXPANDMACRO JCLTREETYPESINT(,,,,)}
 
   {$JPPEXPANDMACRO JCLTREEINT(,,,,,,,,,,,,,,,)}
 
   {$JPPEXPANDMACRO JCLTREEITRINT(,,,,,,,,,,,,,)}
+
 *)
-{$IFDEF SUPPORTS_GENERICS}
+  {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
+
   {$JPPEXPANDMACRO JCLTREETYPESINT(TJclTreeNode<T>,IJclEqualityComparer<T>,const ,AItem,T)}
 
   TJclPreOrderTreeIterator<T> = class;
   TJclPostOrderTreeIterator<T> = class;
 
   {$JPPEXPANDMACRO JCLTREEINT(TTreeNode,TJclTree<T>,TJclAbstractContainer<T>,IJclEqualityComparer<T>,IJclCollection<T>,IJclTree<T>,IJclIterator<T>,IJclTreeIterator<T>, IJclItemOwner<T>\,,
+
 protected
   type
     TTreeNode = TJclTreeNode<T>;
@@ -108,14 +113,16 @@ protected
     { IJclEqualityComparer<T> }
     function ItemsEqual(const A, B: T): Boolean; override;
   end;
-{$ENDIF SUPPORTS_GENERICS}
+
+  //DOM-IGNORE-END
+  {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclTrees.pas $';
-    Revision: '$Revision: 3273 $';
-    Date: '$Date: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -133,8 +140,11 @@ uses
 {$JPPEXPANDMACRO JCLTREEIMP(,,,,,,,,,,,,,,)}
 
 {$JPPEXPANDMACRO JCLTREEITRIMP(,,,,,,,,,,,,,,)}
+
 *)
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
+
 {$JPPEXPANDMACRO JCLTREETYPESIMP(TJclTreeNode<T>,IJclEqualityComparer<T>,const ,AItem,T)}
 
 {$JPPEXPANDMACRO JCLTREEIMP(TTreeNode,TJclTree<T>,TPreOrderTreeIterator,TPostOrderTreeIterator,IJclCollection<T>,IJclIterator<T>,IJclTreeIterator<T>,IJclEqualityComparer<T>,AOwnsItems: Boolean,AOwnsItems,const ,AItem,T,Default(T),FreeItem)}
@@ -200,6 +210,7 @@ begin
     Result := A.Equals(B);
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}

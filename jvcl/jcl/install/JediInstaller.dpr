@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-10-20 21:02:31 +0200 (mer., 20 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3379                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -20,7 +20,7 @@ uses
   JediRegInfo in 'JediRegInfo.pas',
   JclDotNet in '..\source\windows\JclDotNet.pas',
   FrmCompile in 'VclGui\FrmCompile.pas' {FormCompile},
-  JediGUIReadme in 'VclGui\JediGUIReadme.pas' {ReadmeFrame: TFrame},
+  JediGUIText in 'VclGui\JediGUIText.pas' {TextFrame: TFrame},
   JediGUIInstall in 'VclGui\JediGUIInstall.pas' {InstallFrame: TFrame},
   JediGUIMain in 'VclGui\JediGUIMain.pas' {MainForm},
   JediGUIProfiles in 'VclGui\JediGUIProfiles.pas' {ProfilesFrame: TFrame},

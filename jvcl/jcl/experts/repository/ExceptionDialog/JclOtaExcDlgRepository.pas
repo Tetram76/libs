@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010)                          $ }
-{ Revision:      $Rev:: 3269                                                                     $ }
+{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3445                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,7 +52,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JclIDEUtils,
-  JclOtaUtils, JclOtaRepositoryUtils, JclExcDlgTemplates;
+  JclOtaUtils, JclOtaRepositoryUtils, JclPreProcessorExcDlgTemplates;
 
 type
   TJclExcDlgExpert = class(TJclOtaRepositoryExpert)
@@ -80,8 +80,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgRepository.pas $';
-    Revision: '$Revision: 3269 $';
-    Date: '$Date: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010) $';
+    Revision: '$Revision: 3445 $';
+    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
     LogPath: 'JCL\experts\repository\ExceptionDialog';
     Extra: '';
     Data: nil
@@ -94,7 +94,7 @@ uses
   Windows,
   JclStrings, JclFileUtils, JclRegistry,
   JclOtaResources, JclOtaConsts,
-  JclTemplates, JclOtaRepositoryReg, JclOtaExcDlgWizard;
+  JclPreProcessorTemplates, JclOtaRepositoryReg, JclOtaExcDlgWizard;
 
 {$R JclOtaExcDlgIcons.res}
 

@@ -31,7 +31,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
+{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar., 02 févr. 2010)                        $ }
 { Revision:      $Rev:: 3160                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -177,7 +177,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclPrint.pas $';
     Revision: '$Revision: 3160 $';
-    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
+    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar., 02 févr. 2010) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

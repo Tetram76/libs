@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-08 12:01:19 +0200 (dim. 08 août 2010)                          $ }
-{ Revision:      $Rev:: 3282                                                                     $ }
+{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3445                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -58,8 +58,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/JclOtaRepositoryReg.pas $';
-    Revision: '$Revision: 3282 $';
-    Date: '$Date: 2010-08-08 12:01:19 +0200 (dim. 08 août 2010) $';
+    Revision: '$Revision: 3445 $';
+    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
     LogPath: 'JCL\experts\repository';
     Extra: '';
     Data: nil
@@ -71,7 +71,7 @@ implementation
 uses
   Windows,
   JclStrings, JclFileUtils, JclRegistry,
-  JclOtaResources, JclOtaConsts, JclTemplates;
+  JclOtaResources, JclOtaConsts, JclPreProcessorTemplates;
 
 type
   TExpertRecord = record

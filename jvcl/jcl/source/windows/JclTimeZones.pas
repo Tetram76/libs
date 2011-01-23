@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-13 11:57:20 +0200 (dim. 13 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3009                                                                     $ }
+{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3425                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -60,7 +60,8 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, SysUtils, Contnrs, Classes;
+  Windows, SysUtils, Contnrs, Classes,
+  JclBase;
 
 type
   // Contents of the TZI value in the Time Zones section of the registry
@@ -147,8 +148,8 @@ type
   end;
 
 type
-  EDaylightSavingsNotSupported = class(Exception);
-  EAutoAdjustNotEnabled = class(Exception);
+  EDaylightSavingsNotSupported = class(EJclError);
+  EAutoAdjustNotEnabled = class(EJclError);
 
 // Enumerate all time zones from the registry
 function EnumTimeZones(CallBackFunc: TJclTimeZoneCallBackFunc): Boolean;
@@ -171,8 +172,8 @@ function UTCNow: TDateTime;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclTimeZones.pas $';
-    Revision: '$Revision: 3009 $';
-    Date: '$Date: 2009-09-13 11:57:20 +0200 (dim. 13 sept. 2009) $';
+    Revision: '$Revision: 3425 $';
+    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

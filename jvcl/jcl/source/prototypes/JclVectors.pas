@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-10 18:13:22 +0200 (mar. 10 août 2010)                          $ }
-{ Revision:      $Rev:: 3296                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -56,11 +56,15 @@ type
   {$JPPEXPANDMACRO JCLVECTORINT(,,,,,,,,,,,,,,,)}
 
   {$JPPEXPANDMACRO JCLVECTORITRINT(,,,,,,,)}
+
 *)
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
+
   TJclVectorIterator<T> = class;
 
   (*$JPPEXPANDMACRO JCLVECTORINT(TJclVector<T>,TJclAbstractContainer<T>,IJclCollection<T>,IJclList<T>,IJclArray<T>,IJclIterator<T>, IJclItemOwner<T>\, IJclEqualityComparer<T>\,,
+
 protected
   type
     TDynArray = array of T;
@@ -105,14 +109,16 @@ protected
     { IJclEqualityComparer<T> }
     function ItemsEqual(const A, B: T): Boolean; override;
   end;
+
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclVectors.pas $';
-    Revision: '$Revision: 3296 $';
-    Date: '$Date: 2010-08-10 18:13:22 +0200 (mar. 10 août 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -128,8 +134,11 @@ uses
 {$JPPEXPANDMACRO JCLVECTORIMP(,,,,,,,,,,,,,)}
 
 {$JPPEXPANDMACRO JCLVECTORITRIMP(,,,,,,,)}
+
 *)
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
+
 (*$JPPEXPANDMACRO JCLVECTORIMP(TJclVector<T>,IJclCollection<T>,IJclList<T>,IJclIterator<T>,TVectorIterator,; AOwnsItems: Boolean,AOwnsItems,const ,AItem,T,Default(T),GetItem,SetItem,FreeItem)*)
 
 (*$JPPEXPANDMACRO JCLVECTORITRIMP(TJclVectorIterator<T>,IJclIterator<T>,IJclList<T>,const ,AItem,T,GetItem,SetItem)*)
@@ -232,6 +241,7 @@ begin
     Result := A.Equals(B);
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}

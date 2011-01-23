@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-10 18:13:22 +0200 (mar. 10 août 2010)                          $ }
-{ Revision:      $Rev:: 3296                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -51,7 +51,6 @@ uses
 
 type
   TItrStart = (isFirst, isLast);
-
 
   TJclIntfArrayList = class(TJclIntfAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
      IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclContainer, IJclIntfEqualityComparer,
@@ -1069,7 +1068,10 @@ type
     {$ENDIF SUPPORTS_FOR_IN}
   end;
 
+
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
+
   TJclArrayIterator<T> = class;
 
   TJclArrayList<T> = class(TJclAbstractContainer<T>, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
@@ -1196,14 +1198,15 @@ type
     function ItemsEqual(const A, B: T): Boolean; override;
   end;
 
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclArrayLists.pas $';
-    Revision: '$Revision: 3296 $';
-    Date: '$Date: 2010-08-10 18:13:22 +0200 (mar. 10 août 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1214,7 +1217,6 @@ implementation
 
 uses
   SysUtils;
-
 
 //=== { TJclIntfArrayList } ======================================================
 
@@ -1463,7 +1465,9 @@ begin
       if ItemsEqual(FElementData[I], AInterface) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := nil;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -1517,7 +1521,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := nil;
       Dec(FSize);
       AutoPack;
     end
@@ -2281,7 +2287,9 @@ begin
       if ItemsEqual(FElementData[I], AString) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := '';
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -2335,7 +2343,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := '';
       Dec(FSize);
       AutoPack;
     end
@@ -3099,7 +3109,9 @@ begin
       if ItemsEqual(FElementData[I], AString) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := '';
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -3153,7 +3165,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := '';
       Dec(FSize);
       AutoPack;
     end
@@ -3918,7 +3932,9 @@ begin
       if ItemsEqual(FElementData[I], AString) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := '';
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -3972,7 +3988,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := '';
       Dec(FSize);
       AutoPack;
     end
@@ -4740,7 +4758,9 @@ begin
       if ItemsEqual(FElementData[I], AValue) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := 0.0;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -4794,7 +4814,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := 0.0;
       Dec(FSize);
       AutoPack;
     end
@@ -5558,7 +5580,9 @@ begin
       if ItemsEqual(FElementData[I], AValue) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := 0.0;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -5612,7 +5636,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := 0.0;
       Dec(FSize);
       AutoPack;
     end
@@ -6376,7 +6402,9 @@ begin
       if ItemsEqual(FElementData[I], AValue) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := 0.0;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -6430,7 +6458,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := 0.0;
       Dec(FSize);
       AutoPack;
     end
@@ -7194,7 +7224,9 @@ begin
       if ItemsEqual(FElementData[I], AValue) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := 0;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -7248,7 +7280,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := 0;
       Dec(FSize);
       AutoPack;
     end
@@ -8012,7 +8046,9 @@ begin
       if ItemsEqual(FElementData[I], AValue) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := 0;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -8066,7 +8102,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := 0;
       Dec(FSize);
       AutoPack;
     end
@@ -8830,7 +8868,9 @@ begin
       if ItemsEqual(FElementData[I], AValue) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := 0;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -8884,7 +8924,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := 0;
       Dec(FSize);
       AutoPack;
     end
@@ -9648,7 +9690,9 @@ begin
       if ItemsEqual(FElementData[I], APtr) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := nil;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -9702,7 +9746,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := nil;
       Dec(FSize);
       AutoPack;
     end
@@ -10466,7 +10512,9 @@ begin
       if ItemsEqual(FElementData[I], AObject) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := nil;
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -10520,7 +10568,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := nil;
       Dec(FSize);
       AutoPack;
     end
@@ -11037,7 +11087,9 @@ begin
   FOwnList.SetObject(FCursor, AObject);
 end;
 
+
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
 
 //=== { TJclArrayList<T> } ======================================================
 
@@ -11286,7 +11338,9 @@ begin
       if ItemsEqual(FElementData[I], AItem) then
       begin
         if I < (FSize - 1) then
-          MoveArray(FElementData, I + 1, I, FSize - 1 - I);
+          MoveArray(FElementData, I + 1, I, FSize - 1 - I)
+        else
+          FElementData[I] := Default(T);
         Dec(FSize);
         Result := True;
         if FRemoveSingleElement then
@@ -11340,7 +11394,9 @@ begin
     begin
       Result := FElementData[Index];
       if Index < (FSize - 1) then
-        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index);
+        MoveArray(FElementData, Index + 1, Index, FSize - 1 - Index)
+      else
+        FElementData[Index] := Default(T);
       Dec(FSize);
       AutoPack;
     end
@@ -11963,6 +12019,7 @@ begin
     Result := A.Equals(B);
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}

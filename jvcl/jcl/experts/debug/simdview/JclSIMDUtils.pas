@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3012                                                                     $ }
+{ Last modified: $Date:: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3322                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -239,8 +239,8 @@ function SetThreadJclContext(AThread: IOTAThread; const JclContext: TJclContext)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/simdview/JclSIMDUtils.pas $';
-    Revision: '$Revision: 3012 $';
-    Date: '$Date: 2009-09-14 18:00:50 +0200 (lun. 14 sept. 2009) $';
+    Revision: '$Revision: 3322 $';
+    Date: '$Date: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010) $';
     LogPath: 'JCL\experts\debug\simdview';
     Extra: '';
     Data: nil
@@ -546,8 +546,8 @@ var
   TestValue: Extended;
   ErrorCode: Integer;
 begin
-  if DecimalSeparator <> '.' then
-    StringValue := StringReplace(StringValue, DecimalSeparator, '.', [rfReplaceAll, rfIgnoreCase]);
+  if {$IFDEF RTL220_UP}FormatSettings.{$ENDIF}DecimalSeparator <> '.' then
+    StringValue := StringReplace(StringValue, {$IFDEF RTL220_UP}FormatSettings.{$ENDIF}DecimalSeparator, '.', [rfReplaceAll, rfIgnoreCase]);
   Val(StringValue, TestValue, ErrorCode);
   Result := ErrorCode = 0;
   if Result then
@@ -734,8 +734,8 @@ begin
     else
       Exit;
     ValueStr := Trim(FormatValue(AValue, sfSigned));
-    if DecimalSeparator <> '.' then
-      ValueStr := StringReplace(ValueStr, DecimalSeparator, '.', [rfReplaceAll, rfIgnoreCase]);
+    if {$IFDEF RTL220_UP}FormatSettings.{$ENDIF}DecimalSeparator <> '.' then
+      ValueStr := StringReplace(ValueStr, {$IFDEF RTL220_UP}FormatSettings.{$ENDIF}DecimalSeparator, '.', [rfReplaceAll, rfIgnoreCase]);
     if Length(ValueStr) >= Index - RegisterPosition then
     begin
       OldLength := Length(Expression);
@@ -831,8 +831,8 @@ begin
     else
       Exit;
     ValueStr := Trim(FormatValue(AValue, sfSigned));
-    if DecimalSeparator <> '.' then
-      ValueStr := StringReplace(ValueStr, DecimalSeparator, '.', [rfReplaceAll, rfIgnoreCase]);
+    if {$IFDEF RTL220_UP}FormatSettings.{$ENDIF}DecimalSeparator <> '.' then
+      ValueStr := StringReplace(ValueStr, {$IFDEF RTL220_UP}FormatSettings.{$ENDIF}DecimalSeparator, '.', [rfReplaceAll, rfIgnoreCase]);
     if Length(ValueStr) >= Index - RegisterPosition then
     begin
       OldLength := Length(Expression);

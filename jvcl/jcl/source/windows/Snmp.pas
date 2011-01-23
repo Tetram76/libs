@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3188                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3391                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,6 +41,7 @@ unit Snmp;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 {$DEFINE SNMP_DYNAMIC_LINK}
 {$DEFINE SNMP_DYNAMIC_LINK_EXPLICIT}
@@ -48,6 +49,7 @@ interface
 
 {$ALIGN ON}
 {$MINENUMSIZE 4}
+
 {$IFNDEF SNMP_DYNAMIC_LINK}
 {$IFDEF SUPPORTS_WEAKPACKAGEUNIT}
   {$WEAKPACKAGEUNIT ON}
@@ -63,6 +65,8 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, SysUtils;
+
+//DOM-IGNORE-BEGIN
 
 (*$HPPEMIT '#include <snmp.h>'*)
 
@@ -654,6 +658,8 @@ var
   SnmpExtensionClose: TSnmpExtensionClose;
   {$EXTERNALSYM SnmpExtensionClose}
 
+//DOM-IGNORE-END
+
 function SnmpExtensionLoaded: Boolean;
 function LoadSnmpExtension(const LibName: string): Boolean;
 function UnloadSnmpExtension: Boolean;
@@ -670,8 +676,8 @@ function UnloadSnmp: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/Snmp.pas $';
-    Revision: '$Revision: 3188 $';
-    Date: '$Date: 2010-02-11 13:14:06 +0100 (jeu. 11 févr. 2010) $';
+    Revision: '$Revision: 3391 $';
+    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

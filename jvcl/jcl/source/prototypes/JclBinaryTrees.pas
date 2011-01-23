@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010)                          $ }
-{ Revision:      $Rev:: 3273                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,8 +42,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Classes,
-  {$IFDEF SUPPORTS_GENERICS}
-  {$ENDIF SUPPORTS_GENERICS}
   JclBase, JclAbstractContainers, JclAlgorithms, JclContainerIntf, JclSynch;
 {$I containers\JclContainerCommon.imp}
 {$I containers\JclBinaryTrees.imp}
@@ -57,8 +55,11 @@ type
   {$JPPEXPANDMACRO JCLBINARYTREEINT(,,,,,,,,,,,,,,)}
 
   {$JPPEXPANDMACRO JCLBINARYTREEITRINT(,,,,,,,,,,,,,,)}
+
 *)
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
+
   (*$JPPEXPANDMACRO JCLBINARYTREETYPESINT(TJclBinaryNode<T>,T)*)
 
   TJclBinaryTreeIterator<T> = class;
@@ -67,6 +68,7 @@ type
   TJclPostOrderBinaryTreeIterator<T> = class;
 
   (*$JPPEXPANDMACRO JCLBINARYTREEINT(TBinaryNode,TJclBinaryTree<T>,TJclAbstractContainer<T>,IJclCollection<T>,IJclTree<T>,IJclIterator<T>,IJclTreeIterator<T>, IJclItemOwner<T>\, IJclEqualityComparer<T>\, IJclComparer<T>\,,
+
 protected
   type
     TBinaryNode = TJclBinaryNode<T>;
@@ -116,6 +118,8 @@ protected
     { IJclEqualityComparer<T> }
     function ItemsEqual(const A, B: T): Boolean; override;
   end;
+
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
 
@@ -123,8 +127,8 @@ protected
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclBinaryTrees.pas $';
-    Revision: '$Revision: 3273 $';
-    Date: '$Date: 2010-08-02 21:09:40 +0200 (lun. 02 août 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -140,9 +144,12 @@ uses
 {$JPPEXPANDMACRO JCLBINARYTREEIMP(,,,,,,,,,,,,,,,,)}
 
 {$JPPEXPANDMACRO JCLBINARYTREEITRIMP(,,,,,,,,,,,,,,)}
+
 *)
 
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
+
 (*$JPPEXPANDMACRO JCLBINARYTREEIMP(TJclBinaryTree<T>,TJclBinaryNode<T>,TPreOrderBinaryTreeIterator,TInOrderBinaryTreeIterator,TPostOrderBinaryTreeIterator,IJclCollection<T>,IJclIterator<T>,IJclTreeIterator<T>,,,AOwnsItems: Boolean,AOwnsItems,const ,AItem,T,Default(T),FreeItem)*)
 
 {$JPPEXPANDMACRO JCLBINARYTREEITRIMP(TJclBinaryTreeIterator<T>,TJclPreOrderBinaryTreeIterator<T>,TJclInOrderBinaryTreeIterator<T>,TJclPostOrderBinaryTreeIterator<T>,IJclIterator<T>,IJclCollection<T>,IJclEqualityComparer<T>,TJclBinaryNode<T>,const ,AItem,T,Default(T),GetItem,SetItem,FreeItem)}
@@ -225,6 +232,7 @@ begin
     Result := A.CompareTo(B) = 0;
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}

@@ -26,7 +26,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 15:18:12 +0200 (sam. 12 sept. 2009)                          $ }
+{ Last modified: $Date:: 2009-09-12 15:18:12 +0200 (sam., 12 sept. 2009)                         $ }
 { Revision:      $Rev:: 2998                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -183,7 +183,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSchedule.pas $';
     Revision: '$Revision: 2998 $';
-    Date: '$Date: 2009-09-12 15:18:12 +0200 (sam. 12 sept. 2009) $';
+    Date: '$Date: 2009-09-12 15:18:12 +0200 (sam., 12 sept. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

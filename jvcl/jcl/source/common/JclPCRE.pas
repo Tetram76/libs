@@ -26,7 +26,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-18 21:49:29 +0100 (mer. 18 nov. 2009)                           $ }
+{ Last modified: $Date:: 2009-11-18 21:49:29 +0100 (mer., 18 nov. 2009)                          $ }
 { Revision:      $Rev:: 3083                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -174,7 +174,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPCRE.pas $';
     Revision: '$Revision: 3083 $';
-    Date: '$Date: 2009-11-18 21:49:29 +0100 (mer. 18 nov. 2009) $';
+    Date: '$Date: 2009-11-18 21:49:29 +0100 (mer., 18 nov. 2009) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

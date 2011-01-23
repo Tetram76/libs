@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-09 17:10:10 +0200 (lun. 09 août 2010)                          $ }
-{ Revision:      $Rev:: 3291                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -57,11 +57,15 @@ type
   {$JPPEXPANDMACRO JCLHASHMAPTYPESINT(,,,)}
 
   {$JPPEXPANDMACRO JCLHASHMAPINT(,,,,,,,,,,,,,)}
+
 *)
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
+
   (*$JPPEXPANDMACRO JCLHASHMAPTYPESINT(TJclHashEntry<TKey\,TValue>,TJclBucket<TKey\,TValue>,TKey,TValue)*)
 
   (*$JPPEXPANDMACRO JCLHASHMAPINT(TBucket,TJclHashMap<TKey\,TValue>,TJclAbstractContainerBase,IJclMap<TKey\,TValue>,IJclSet<TKey>,IJclCollection<TValue>, IJclPairOwner<TKey\, TValue>\,,
+
 protected
   type
     TBucket = TJclBucket<TKey\,TValue>;
@@ -165,6 +169,8 @@ public
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
     function CreateEmptyArraySet(ACapacity: Integer; AOwnsObjects: Boolean): IJclSet<TKey>; override;
   end;
+
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
 function HashMul(Key, Range: Integer): Integer;
@@ -173,8 +179,8 @@ function HashMul(Key, Range: Integer): Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclHashMaps.pas $';
-    Revision: '$Revision: 3291 $';
-    Date: '$Date: 2010-08-09 17:10:10 +0200 (lun. 09 août 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -199,11 +205,15 @@ end;
 {$JPPEXPANDMACRO JCLHASHMAPTYPESIMP(,,)}
 
 {$JPPEXPANDMACRO JCLHASHMAPIMP(,,,,,,,,,,,,,,,,)}
+
 *)
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
+
 {$JPPEXPANDMACRO JCLHASHMAPTYPESIMP(TJclBucket<TKey\, TValue>,Default(TKey),Default(TValue))}
 
 {$JPPEXPANDMACRO JCLHASHMAPIMP(TJclHashMap<TKey\, TValue>,TBucket,IJclMap<TKey\, TValue>,IJclSet<TKey>,IJclIterator<TKey>,IJclCollection<TValue>,; AOwnsKeys: Boolean,; AOwnsValues: Boolean,
+
   FOwnsKeys := AOwnsKeys;
   FOwnsValues := AOwnsValues;,const ,TKey,Default(TKey),const ,TValue,Default(TValue),CreateEmptyArraySet(FSize, False),CreateEmptyArrayList(FSize, False))}
 
@@ -410,6 +420,7 @@ begin
   Result := A.Equals(B);
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}

@@ -39,8 +39,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3007                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3391                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -48,10 +48,10 @@
 unit JclWin32;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 {$MINENUMSIZE 4}
 {$ALIGN ON}
-{$WARNINGS OFF}
 
 interface
 
@@ -108,6 +108,8 @@ type
   end;
 {$ENDIF MSWINDOWS}
 
+//DOM-IGNORE-BEGIN
+
 {$I win32api\WinDef.int}
 {$I win32api\WinNT.int}
 {$I win32api\WinBase.int}
@@ -136,6 +138,8 @@ type
 {$I win32api\NtSecApi.int}
 {$I win32api\TlHelp32.int}
 {$I win32api\Winternl.int}
+
+//DOM-IGNORE-END
 
 {$IFDEF MSWINDOWS}
 
@@ -208,8 +212,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclWin32.pas $';
-    Revision: '$Revision: 3007 $';
-    Date: '$Date: 2009-09-12 22:52:07 +0200 (sam. 12 sept. 2009) $';
+    Revision: '$Revision: 3391 $';
+    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -294,8 +298,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-
-{$WARNINGS ON}
 
 end.
 

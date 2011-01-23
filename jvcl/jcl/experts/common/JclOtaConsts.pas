@@ -21,7 +21,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010)                            $ }
+{ Last modified: $Date:: 2010-05-09 17:14:36 +0200 (dim., 09 mai 2010)                           $ }
 { Revision:      $Rev:: 3248                                                                     $ }
 { Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
@@ -162,7 +162,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConsts.pas $';
     Revision: '$Revision: 3248 $';
-    Date: '$Date: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010) $';
+    Date: '$Date: 2010-05-09 17:14:36 +0200 (dim., 09 mai 2010) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

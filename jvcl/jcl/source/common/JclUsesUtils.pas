@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 22:53:34 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3175                                                                     $ }
+{ Last modified: $Date:: 2010-10-05 15:24:05 +0200 (mar., 05 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3362                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -112,8 +112,8 @@ function CreateGoal(Text: PChar): TCustomGoal;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUsesUtils.pas $';
-    Revision: '$Revision: 3175 $';
-    Date: '$Date: 2010-02-03 22:53:34 +0100 (mer. 03 févr. 2010) $';
+    Revision: '$Revision: 3362 $';
+    Date: '$Date: 2010-10-05 15:24:05 +0200 (mar., 05 oct. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -124,6 +124,9 @@ implementation
 
 uses
   RtlConsts,
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
   JclStrings,
   JclDevToolsResources;
 

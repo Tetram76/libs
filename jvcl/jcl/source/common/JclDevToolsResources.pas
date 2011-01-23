@@ -38,7 +38,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-05 17:38:51 +0100 (ven. 05 févr. 2010)                         $ }
+{ Last modified: $Date:: 2010-02-05 17:38:51 +0100 (ven., 05 févr. 2010)                        $ }
 { Revision:      $Rev:: 3181                                                                     $ }
 { Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
@@ -145,7 +145,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclDevToolsResources.pas $';
     Revision: '$Revision: 3181 $';
-    Date: '$Date: 2010-02-05 17:38:51 +0100 (ven. 05 févr. 2010) $';
+    Date: '$Date: 2010-02-05 17:38:51 +0100 (ven., 05 févr. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

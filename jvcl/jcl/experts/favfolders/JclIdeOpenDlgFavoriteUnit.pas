@@ -17,7 +17,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-07 11:24:29 +0200 (sam. 07 août 2010)                          $ }
+{ Last modified: $Date:: 2010-08-07 11:24:29 +0200 (sam., 07 août 2010)                         $ }
 { Revision:      $Rev:: 3278                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -62,7 +62,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/favfolders/JclIdeOpenDlgFavoriteUnit.pas $';
     Revision: '$Revision: 3278 $';
-    Date: '$Date: 2010-08-07 11:24:29 +0200 (sam. 07 août 2010) $';
+    Date: '$Date: 2010-08-07 11:24:29 +0200 (sam., 07 août 2010) $';
     LogPath: 'JCL\experts\favfolders';
     Extra: '';
     Data: nil

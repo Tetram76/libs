@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 22:17:17 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3172                                                                     $ }
+{ Last modified: $Date:: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3322                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -113,8 +113,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclHelpUtils.pas $';
-    Revision: '$Revision: 3172 $';
-    Date: '$Date: 2010-02-03 22:17:17 +0100 (mer. 03 févr. 2010) $';
+    Revision: '$Revision: 3322 $';
+    Date: '$Date: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -305,6 +305,9 @@ begin
   FHxPlugin := nil;
   if IDEVersionNumber > 0 then
   begin
+    if (IDEVersionNumber = 8) then
+      FIdeNameSpace := 'embarcadero.rs_xe'
+    else
     if (IDEVersionNumber = 7) then
       FIdeNameSpace := 'embarcadero.rs2010'
     else

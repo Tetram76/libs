@@ -38,16 +38,14 @@
 {                                                                              }
 { **************************************************************************** }
 
-// Last modified: $Date: 2010-07-29 20:20:41 +0200 (jeu. 29 juil. 2010) $
+// Last modified: $Date: 2010-12-30 18:34:45 +0100 (jeu., 30 déc. 2010) $
 
 {$APPTYPE CONSOLE}
 program jpp;
 
 uses
   SysUtils,
-  JppState in 'JppState.pas',
-  JppParser in 'JppParser.pas',
-  JppLexer in 'JppLexer.pas',
+  JclPreProcessorParser,
   JppMain in 'JppMain.pas';
 
 var

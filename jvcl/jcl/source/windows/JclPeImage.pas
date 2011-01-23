@@ -33,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3160                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 16:46:18 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3394                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1066,8 +1066,8 @@ function PeUnmangleName(const Name: string; out Unmangled: string): TJclPeUmResu
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclPeImage.pas $';
-    Revision: '$Revision: 3160 $';
-    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar. 02 févr. 2010) $';
+    Revision: '$Revision: 3394 $';
+    Date: '$Date: 2010-10-25 16:46:18 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1077,6 +1077,9 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
   JclLogic, JclResources, JclSysUtils, JclStrings, JclStringConversions;
 
 const
@@ -2259,7 +2262,7 @@ end;
 procedure TJclPeExportFuncList.CreateList;
 var
   Functions: Pointer;
-  Address: DWORD;
+  Address, NameCount: DWORD;
   NameOrdinals: PWORD;
   Names: PDWORD;
   I: Integer;
@@ -2285,10 +2288,12 @@ begin
       Functions := RvaToVa(FExportDir^.AddressOfFunctions);
       NameOrdinals := RvaToVa(FExportDir^.AddressOfNameOrdinals);
       Names := RvaToVa(FExportDir^.AddressOfNames);
-      Count := FExportDir^.NumberOfNames;
-      for I := 0 to FExportDir^.NumberOfNames - 1 do
+      NameCount := FExportDir^.NumberOfNames;
+      Count := FExportDir^.NumberOfFunctions;
+
+      for I := 0 to Count - 1 do
       begin
-        Address := PDWORD(TJclAddr(Functions) + NameOrdinals^ * SizeOf(DWORD))^;
+        Address := PDWORD(TJclAddr(Functions) + TJclAddr(I) * SizeOf(DWORD))^;
         if (Address >= ExportVABegin) and (Address <= ExportVAEnd) then
         begin
           FAnyForwards := True;
@@ -2299,13 +2304,23 @@ begin
         else
           ForwardedName := '';
 
+        ExportItem := TJclPeExportFuncItem.Create(Self, '',
+          ForwardedName, Address, $FFFF, TJclAddr(I) + FBase, icNotChecked);
+
+        List^[I] := ExportItem;
+      end;
+
+      for I := 0 to NameCount - 1 do
+      begin
+          // named function
         UTF8Name := PAnsiChar(RvaToVa(Names^));
         if not TryUTF8ToString(UTF8Name, ExportName) then
           ExportName := string(UTF8Name);
-        ExportItem := TJclPeExportFuncItem.Create(Self, ExportName,
-          ForwardedName, Address, I, DWORD(NameOrdinals^) + FBase, icNotChecked);
 
-        List^[I] := ExportItem;
+        ExportItem := TJclPeExportFuncItem(List^[NameOrdinals^]);
+        ExportItem.FName := ExportName;
+        ExportItem.FHint := I;
+
         Inc(NameOrdinals);
         Inc(Names);
       end;

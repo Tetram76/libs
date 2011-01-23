@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-07-01 16:56:19 +0200 (jeu. 01 juil. 2010)                          $ }
-{ Revision:      $Rev:: 3260                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3391                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -44,6 +44,7 @@
 unit JclLANMan;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 interface
 
@@ -94,8 +95,8 @@ function IsLocalAccount(const AccountName: string): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclLANMan.pas $';
-    Revision: '$Revision: 3260 $';
-    Date: '$Date: 2010-07-01 16:56:19 +0200 (jeu. 01 juil. 2010) $';
+    Revision: '$Revision: 3391 $';
+    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

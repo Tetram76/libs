@@ -24,6 +24,7 @@
 {   Robert Rossmair (rrossmair)                                                                    }
 {   ZENsan                                                                                         }
 {   Florent Ouchet (outchy)                                                                        }
+{   Kiriakos Vlahos                                                                                }
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
@@ -32,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010)                          $ }
-{ Revision:      $Rev:: 3139                                                                     $ }
+{ Last modified: $Date:: 2010-10-05 15:24:05 +0200 (mar., 05 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3362                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -338,8 +339,8 @@ function MultiSzDup(const Source: PWideMultiSz): PWideMultiSz;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclWideStrings.pas $';
-    Revision: '$Revision: 3139 $';
-    Date: '$Date: 2010-01-25 13:19:13 +0100 (lun. 25 janv. 2010) $';
+    Revision: '$Revision: 3362 $';
+    Date: '$Date: 2010-10-05 15:24:05 +0200 (mar., 05 oct. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -356,7 +357,10 @@ uses
   Windows,
   {$ENDIF MSWINDOWS}
   Math,
-  JclResources, JclUnicode;
+  {$IFNDEF UNICODE_RTL_DATABASE}
+  JclUnicode,
+  {$ENDIF ~UNICODE_RTL_DATABASE}
+  JclResources;
 
 procedure SwapWordByteOrder(P: PWideChar; Len: SizeInt);
 begin
@@ -516,6 +520,11 @@ function StrICompW(const Str1, Str2: PWideChar): SizeInt;
 // Compares Str1 to Str2 without case sensitivity.
 // See also comments in StrCompW, but keep in mind that case folding might result in
 // one-to-many mappings which must be considered here.
+{$IFDEF UNICODE_RTL_DATABASE}
+begin
+   Result := AnsiStrIComp(Str1, Str2)
+end;
+{$ELSE ~UNICODE_RTL_DATABASE}
 var
   C1, C2: Word;
   S1, S2: PWideChar;
@@ -561,10 +570,16 @@ begin
   if Result = 0 then
     Result := (Run1 - PWideChar(Folded1)) - (Run2 - PWideChar(Folded2));
 end;
+{$ENDIF ~UNICODE_RTL_DATABASE}
 
 function StrLICompW(const Str1, Str2: PWideChar; MaxLen: SizeInt): SizeInt;
 // compares strings up to MaxLen code points
 // see also StrICompW
+{$IFDEF UNICODE_RTL_DATABASE}
+begin
+   Result := AnsiStrIComp(Str1, Str2)
+end;
+{$ELSE UNICODE_RTL_DATABASE}
 var
   S1, S2: PWideChar;
   C1, C2: Word;
@@ -613,6 +628,7 @@ begin
   else
     Result := 0;
 end;
+{$ENDIF UNICODE_RTL_DATABASE}
 
 function StrLICompW2(const Str1, Str2: PWideChar; MaxLen: SizeInt): SizeInt;
 var

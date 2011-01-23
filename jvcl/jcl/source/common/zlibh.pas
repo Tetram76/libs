@@ -29,11 +29,15 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-07-24 03:17:28 +0200 (sam. 24 juil. 2010)                          $ }
-{ Revision:      $Rev:: 3265                                                                     $ }
-{ Author:        $Author:: wpostma                                                               $ }
+{ Last modified: $Date:: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010)                         $ }
+{ Revision:      $Rev:: 3343                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
+
+unit zlibh;
+
+{$I jcl.inc}
 
 {$IFDEF ZLIB_LINKDLL}
 {$HPPEMIT '#define ZLIB_DLL'}
@@ -48,11 +52,11 @@
 {$HPPEMIT '#define ZEXPORTVA __cdecl'}
 
 {$HPPEMIT '#define __MACTYPES__'}
-{$HPPEMIT '#include <zutil.h>'}
-
-unit zlibh;
-
-{$I jcl.inc}
+{$IFDEF COMPILER10_UP}
+{$HPPEMIT '#include <ZLib.hpp>'}
+{$ELSE ~COMPILER10_UP}
+{$HPPEMIT '#include <zlib.h>'}
+{$ENDIF ~COMPILER10_UP}
 
 interface
 
@@ -67,6 +71,8 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JclBase;
+
+//DOM-IGNORE-BEGIN
 
 {$IFNDEF FPC}
 type
@@ -228,13 +234,17 @@ type
   {$EXTERNALSYM free_func}
   free_func = procedure(opaque:voidpf; address:voidpf);
     {$IFDEF ZLIB_EXPORT_CDECL} cdecl; {$ENDIF ZLIB_EXPORT_CDECL}
+  {$EXTERNALSYM TFNAllocFunc}
   TFNAllocFunc = alloc_func;
+  {$EXTERNALSYM TFNFreeFunc}
   TFNFreeFunc = free_func;
 
 type
   {$EXTERNALSYM internal_state}
   internal_state = packed record end;
+  {$EXTERNALSYM TInternalState}
   TInternalState = internal_state; // backward compatibility
+  {$EXTERNALSYM PInternalState}
   PInternalState = ^internal_state; // backward compatibility
 
 type
@@ -259,13 +269,20 @@ type
       adler:    uLong;       // adler32 value of the uncompressed data 
       reserved: uLong;       // reserved for future use 
   end;
+  {$IFDEF COMPILER10_UP}
+  (*$HPPEMIT 'namespace Zlibh {'*)
+  (*$HPPEMIT 'typedef Zlib::TZStreamRec z_stream_s;'*)
+  (*$HPPEMIT '}'*)
+  {$ENDIF COMPILER10_UP}
 
   {$EXTERNALSYM z_stream}
   z_stream = z_stream_s;
   {$EXTERNALSYM z_streamp}
   z_streamp = ^z_stream_s;
 
+  {$EXTERNALSYM TZStreamRec}
   TZStreamRec = z_stream_s;
+  {$EXTERNALSYM PZStreamRec}
   PZStreamRec = ^z_stream_s;
 
 {*
@@ -1334,7 +1351,9 @@ type
   in_func = function(p1: Pointer; p2: PByte):UnsignedInt;
   {$EXTERNALSYM out_func}
   out_func = function (p1: Pointer; p2: PByte; p3:UnsignedInt): Longint;
+  {$EXTERNALSYM TFNInFunc}
   TFNInFunc = in_func;
+  {$EXTERNALSYM TFNOutFunc}
   TFNOutFunc = out_func;
 
 {$IFDEF ZLIB_LINKONREQUEST}
@@ -2001,6 +2020,8 @@ const
   DEF_MEM_LEVEL = 8;
   {$EXTERNALSYM DEF_MEM_LEVEL}
 
+//DOM-IGNORE-END
+
 function IsZLibLoaded: Boolean;
 function LoadZLib: Boolean;
 procedure UnloadZLib;
@@ -2009,8 +2030,8 @@ procedure UnloadZLib;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/zlibh.pas $';
-    Revision: '$Revision: 3265 $';
-    Date: '$Date: 2010-07-24 03:17:28 +0200 (sam. 24 juil. 2010) $';
+    Revision: '$Revision: 3343 $';
+    Date: '$Date: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

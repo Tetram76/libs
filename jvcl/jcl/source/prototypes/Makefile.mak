@@ -1,7 +1,7 @@
 #
 # Generates platform dependent units from common code base
 #
-# $Id: Makefile.mak 3273 2010-08-02 19:09:40Z outchy $
+# $Id: Makefile.mak 3435 2010-12-14 06:49:32Z outchy $
 #
 
 jpp		= ..\..\devtools\jpp.exe
@@ -10,7 +10,7 @@ touch		= $(MAKEDIR)\touch.exe
 
 Options			= -c -dJCL -dSUPPORTS_DEFAULTPARAMS -dSUPPORTS_INT64
 # CommonOptions		= $(Options) -f..\common\\
-VclOptions		= $(Options) -dVCL -dMSWINDOWS -uUnix -dBitmap32 -x1:..\vcl\Jcl
+VclOptions		= $(Options) -dVCL -dMSWINDOWS -uUnix -dBitmap32 -f..\vcl\\
 WinOptions		= $(Options) -dMSWINDOWS -uUNIX -uHAS_UNIT_LIBC -f..\windows\\
 Win32Options		= $(Options) -uHAS_UNIT_LIBC -f..\windows\\
 ContainerOptions	= $(Options) -m -ijcl.inc -f..\Common\\
@@ -52,17 +52,9 @@ Containers:	..\Common\JclAlgorithms.pas \
                 ..\Common\JclTrees.pas \
 		..\Common\JclVectors.pas
 
-..\vcl\JclGraphics.pas: \
-		_Graphics.pas
-	$(jpp) $(VclOptions) $?
-
-..\vcl\JclGraphUtils.pas: \
-		_GraphUtils.pas
-	$(jpp) $(VclOptions) $?
-
 ..\windows\JclWin32.pas: \
                 JclWin32.pas
-        $(jpp) -ijcl.inc $(WinOptions) $?
+        $(jpp) -ijcl.inc -iwindowsonly.inc $(WinOptions) $?
 
 JclAlgorithms.pas: \
 		containers\JclAlgorithms.int containers\JclAlgorithms.imp
@@ -124,3 +116,7 @@ JclVectors.pas: \
 
 {.}.pas{..\unix}.pas:
 	$(jpp) $(UnixOptions) $<
+
+{.}.pas{..\vcl}.pas:
+	$(jpp) $(VclOptions) $<
+

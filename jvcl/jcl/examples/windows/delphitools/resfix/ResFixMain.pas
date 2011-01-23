@@ -19,16 +19,14 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date: 2006-05-30 00:02:45 +0200 (mar. 30 mai 2006) $                                                      }
+{ Last modified: $Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $                                                      }
 {                                                                                                  }
 {**************************************************************************************************}
 
 unit ResFixMain;
 
 {$I jcl.inc}
-{$IFDEF SUPPORTS_PLATFORM_WARNINGS}
-  {$WARN SYMBOL_PLATFORM OFF}
-{$ENDIF SUPPORTS_PLATFORM_WARNINGS}
+{$I windowsonly.inc}
 
 interface
 

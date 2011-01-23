@@ -21,9 +21,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010)                            $ }
-{ Revision:      $Rev:: 3248                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2010-10-24 14:21:45 +0200 (dim., 24 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3387                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -309,8 +309,9 @@ resourcestring
   RsSSE2 = 'SSE Version 2';
   RsSSE3 = 'SSE Version 3';
   RsSSE3Ext = 'SSE Version 3 Ext.';
-  RsSSE4A = 'SSE Version 4 A';
-  RsSSE4B = 'SSE Version 4 B';
+  RsSSE41 = 'SSE Version 4.1';
+  RsSSE42 = 'SSE Version 4.2';
+  RsSSE4A = 'SSE Version 4 AMD Ext.';
   RsSSE5 = 'SSE Version 5';
   RsAVX = 'AVX';
   RsClose = 'Close';
@@ -497,12 +498,22 @@ resourcestring
 resourcestring
   RsEInvalidAction = 'Internal error: invalid action';
 
+//=== JclOtaAddinOptions.pas =================================================
+resourcestring
+  RsProjectJEDIAddinOptionsCaptionPrefix = 'Project JEDI.JCL.';
+  RsProjectJEDIAddinOptionsCaption = 'Project JEDI';
+  RsProjectJEDIAddinOptionsTitle = 'Project JEDI Options';
+  RsProjectJEDIJclAddinOptionsCaption = 'Project JEDI.JCL';
+  RsProjectJEDIJclAddinOptionsTitle = 'JCL Options';
+  RsProjectJEDIJclCommonAddinOptionsCaption = 'Project JEDI.JCL.Common';
+  RsProjectJEDIJclCommonAddinOptionsTitle = 'JCL Common Options';
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaResources.pas $';
-    Revision: '$Revision: 3248 $';
-    Date: '$Date: 2010-05-09 17:14:36 +0200 (dim. 09 mai 2010) $';
+    Revision: '$Revision: 3387 $';
+    Date: '$Date: 2010-10-24 14:21:45 +0200 (dim., 24 oct. 2010) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

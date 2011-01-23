@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-21 23:25:05 +0200 (lun. 21 sept. 2009)                          $ }
+{ Last modified: $Date:: 2009-09-21 23:25:05 +0200 (lun., 21 sept. 2009)                         $ }
 { Revision:      $Rev:: 3017                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -61,7 +61,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/useswizard/JclUsesDialog.pas $';
     Revision: '$Revision: 3017 $';
-    Date: '$Date: 2009-09-21 23:25:05 +0200 (lun. 21 sept. 2009) $';
+    Date: '$Date: 2009-09-21 23:25:05 +0200 (lun., 21 sept. 2009) $';
     LogPath: 'JCL\experts\useswizard';
     Extra: '';
     Data: nil

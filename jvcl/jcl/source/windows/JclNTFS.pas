@@ -33,8 +33,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009)                          $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2011-01-05 19:03:07 +0100 (mer., 05 janv. 2011)                         $ }
+{ Revision:      $Rev:: 3459                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -562,8 +562,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclNTFS.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim. 09 août 2009) $';
+    Revision: '$Revision: 3459 $';
+    Date: '$Date: 2011-01-05 19:03:07 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1201,6 +1201,8 @@ var
   Handle: THandle;
   ReparseData: TReparseDataBufferOverlay;
   BytesReturned: DWORD;
+  SubstituteName: WideString;
+  SubstituteNameAddr: PWideChar;
 begin
   Result := False;
   if NtfsFileHasReparsePoint(Source) then
@@ -1217,8 +1219,12 @@ begin
       begin
         if BytesReturned >= DWORD(ReparseData.Reparse.SubstituteNameLength + SizeOf(WideChar)) then
         begin
-          SetLength(Destination, (ReparseData.Reparse.SubstituteNameLength div SizeOf(WideChar)) + 1);
-          Move(ReparseData.Reparse.PathBuffer[0], Destination[1], ReparseData.Reparse.SubstituteNameLength);
+          SetLength(Destination, ReparseData.Reparse.SubstituteNameLength div SizeOf(WideChar));
+          SubstituteNameAddr := @ReparseData.Reparse.PathBuffer;
+          Inc(SubstituteNameAddr, ReparseData.Reparse.SubstituteNameOffset div SizeOf(WideChar));
+          SetString(SubstituteName, SubstituteNameAddr, Length(Destination));
+          Destination := string(SubstituteName);
+
           Result := True;
         end;
       end;

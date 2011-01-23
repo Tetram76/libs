@@ -20,7 +20,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009)                          $ }
+{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam., 12 sept. 2009)                         $ }
 { Revision:      $Rev:: 2993                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -88,7 +88,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerThreadFrame.pas $';
     Revision: '$Revision: 2993 $';
-    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam. 12 sept. 2009) $';
+    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam., 12 sept. 2009) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil

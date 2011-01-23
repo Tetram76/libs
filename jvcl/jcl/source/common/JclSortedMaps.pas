@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-09 17:10:10 +0200 (lun. 09 août 2010)                          $ }
-{ Revision:      $Rev:: 3291                                                                     $ }
+{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3437                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -50,7 +50,6 @@ uses
   JclAbstractContainers, JclContainerIntf, JclArrayLists, JclArraySets;
 
 type
-
   TJclIntfIntfSortedEntry = record
     Key: IInterface;
     Value: IInterface;
@@ -2367,7 +2366,10 @@ type
     function TailMap(FromKey: TObject): IJclSortedMap;
   end;
 
+
   {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
+
   TJclSortedEntry<TKey,TValue> = record
     Key: TKey;
     Value: TValue;
@@ -2499,14 +2501,16 @@ type
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
     function CreateEmptyArraySet(ACapacity: Integer; AOwnsObjects: Boolean): IJclSet<TKey>; override;
   end;
+
+  //DOM-IGNORE-END
   {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSortedMaps.pas $';
-    Revision: '$Revision: 3291 $';
-    Date: '$Date: 2010-08-09 17:10:10 +0200 (lun. 09 août 2010) $';
+    Revision: '$Revision: 3437 $';
+    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2517,7 +2521,6 @@ implementation
 
 uses
   SysUtils;
-
 
 //=== { TJclIntfIntfSortedMap } ==============================================
 
@@ -29546,7 +29549,9 @@ begin
 end;
 
 
+
 {$IFDEF SUPPORTS_GENERICS}
+//DOM-IGNORE-BEGIN
 
 //=== { TJclSortedMap<TKey,TValue> } ==============================================
 
@@ -30330,6 +30335,7 @@ begin
   Result := A.CompareTo(B);
 end;
 
+//DOM-IGNORE-END
 {$ENDIF SUPPORTS_GENERICS}
 
 {$IFDEF UNITVERSIONING}

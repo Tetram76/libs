@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009)                          $ }
-{ Revision:      $Rev:: 3020                                                                     $ }
+{ Last modified: $Date:: 2010-11-02 13:36:54 +0100 (mar., 02 nov. 2010)                          $ }
+{ Revision:      $Rev:: 3409                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -72,6 +72,9 @@ resourcestring
   RsRegionCouldNotCreated     = 'Region could not be created';
   RsInvalidHandleForRegion    = 'Invalid handle for region';
   RsInvalidRegionInfo         = 'Invalid RegionInfo';
+  RsInvalidControlType        = '%s is not descended from TWinControl';
+  RsComponentDoesNotExist     = '%s does not exist on form %s';
+  RsInvalidFormOrComponent    = 'A %s with a nil reference has been pass to the routine';
 
   RsBitmapExtension           = '.bmp';
   RsJpegExtension             = '.jpg';
@@ -196,8 +199,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVclResources.pas $';
-    Revision: '$Revision: 3020 $';
-    Date: '$Date: 2009-09-23 00:01:46 +0200 (mer. 23 sept. 2009) $';
+    Revision: '$Revision: 3409 $';
+    Date: '$Date: 2010-11-02 13:36:54 +0100 (mar., 02 nov. 2010) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

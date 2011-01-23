@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-22 11:08:20 +0100 (lun. 22 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3196                                                                     $ }
+{ Last modified: $Date:: 2010-11-15 10:47:16 +0100 (lun., 15 nov. 2010)                          $ }
+{ Revision:      $Rev:: 3418                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -33,12 +33,8 @@
 
 unit MSTask;
 
-{$ALIGN ON}
-{$MINENUMSIZE 4}
-
-interface
-
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 {$IFDEF SUPPORTS_WEAKPACKAGEUNIT}
   {$IFDEF UNITVERSIONING}
@@ -48,6 +44,11 @@ interface
   {$ENDIF ~UNITVERSIONING}
 {$ENDIF SUPPORTS_WEAKPACKAGEUNIT}
 
+{$ALIGN ON}
+{$MINENUMSIZE 4}
+
+interface
+
 uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
@@ -55,6 +56,7 @@ uses
   ActiveX,
   Windows;
 
+//DOM-IGNORE-BEGIN
 
 (*$HPPEMIT '#include <MSTask.h>' *)
 
@@ -340,6 +342,7 @@ type
 
   end;
 {$EXTERNALSYM TASK_TRIGGER}
+
   TASK_TRIGGER = _TASK_TRIGGER;
   TTaskTrigger = _TASK_TRIGGER;
 
@@ -665,12 +668,14 @@ const
 {$EXTERNALSYM CLSID_CSchedulingAgent}
   CLSID_CSchedulingAgent: TCLSID = (D1: $148BD52A; D2: $A2AB; D3: $11CE; D4: ($B1, $1F, $00, $AA, $00, $53, $05, $03));
 
+//DOM-IGNORE-END
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/MSTask.pas $';
-    Revision: '$Revision: 3196 $';
-    Date: '$Date: 2010-02-22 11:08:20 +0100 (lun. 22 févr. 2010) $';
+    Revision: '$Revision: 3418 $';
+    Date: '$Date: 2010-11-15 10:47:16 +0100 (lun., 15 nov. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010)                          $ }
-{ Revision:      $Rev:: 3269                                                                     $ }
+{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
+{ Revision:      $Rev:: 3445                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -38,7 +38,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclIDEUtils, JclExcDlgTemplates, JclOtaWizardForm;
+  JclIDEUtils, JclPreProcessorExcDlgTemplates, JclOtaWizardForm;
 
 type
   TJclOtaExcDlgForm = class(TJclWizardForm)
@@ -57,8 +57,8 @@ function ExcDlgWizard(var AParams: TJclExcDlgParams): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgWizard.pas $';
-    Revision: '$Revision: 3269 $';
-    Date: '$Date: 2010-07-29 16:58:43 +0200 (jeu. 29 juil. 2010) $';
+    Revision: '$Revision: 3445 $';
+    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
     LogPath: 'JCL\experts\repository\ExceptionDialog';
     Extra: '';
     Data: nil

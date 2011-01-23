@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-03 20:21:40 +0100 (mer. 03 févr. 2010)                         $ }
-{ Revision:      $Rev:: 3163                                                                     $ }
+{ Last modified: $Date:: 2010-10-20 21:02:31 +0200 (mer., 20 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3379                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -83,7 +83,7 @@ type
     // IJediInstallGUI
     function Dialog(const Text: string; DialogType: TDialogType = dtInformation;
       Options: TDialogResponses = [drOK]): TDialogResponse;
-    function CreateReadmePage: IJediReadmePage;
+    function CreateTextPage: IJediTextPage;
     function CreateInstallPage: IJediInstallPage;
     function CreateProfilesPage: IJediProfilesPage;
     function GetPageCount: Integer;
@@ -116,7 +116,7 @@ uses
   JclDebug, JclShell, JediGUIProfiles,
   JclBase, JclFileUtils, JclStrings, JclSysInfo, JclSysUtils, JclArrayLists,
   JediInstallResources,
-  JediGUIReadme, JediGUIInstall;
+  JediGUIText, JediGUIInstall;
 
 const
   DelphiJediURL     = 'http://www.delphi-jedi.org/';
@@ -326,16 +326,16 @@ begin
   end;
 end;
 
-function TMainForm.CreateReadmePage: IJediReadmePage;
+function TMainForm.CreateTextPage: IJediTextPage;
 var
-  AReadmeFrame: TReadmeFrame;
+  AReadmeFrame: TTextFrame;
   ATabSheet: TTabSheet;
 begin
   ATabSheet := TTabSheet.Create(Self);
   ATabSheet.PageControl := ProductsPageControl;
   ATabSheet.ImageIndex := -1;
 
-  AReadmeFrame := TReadmeFrame.Create(Self);
+  AReadmeFrame := TTextFrame.Create(Self);
   AReadmeFrame.Parent := ATabSheet;
   AReadmeFrame.Align := alClient;
   AReadmeFrame.Name := '';

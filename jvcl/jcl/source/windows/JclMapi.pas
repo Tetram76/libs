@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-28 13:13:12 +0200 (ven. 28 mai 2010)                            $ }
-{ Revision:      $Rev:: 3255                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3391                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -37,6 +37,7 @@
 unit JclMapi;
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 interface
 
@@ -285,8 +286,8 @@ function MapiErrorMessage(const ErrorCode: DWORD): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclMapi.pas $';
-    Revision: '$Revision: 3255 $';
-    Date: '$Date: 2010-05-28 13:13:12 +0200 (ven. 28 mai 2010) $';
+    Revision: '$Revision: 3391 $';
+    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

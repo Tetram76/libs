@@ -24,7 +24,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-08 12:54:21 +0200 (dim. 08 août 2010)                          $ }
+{ Last modified: $Date:: 2010-08-08 12:54:21 +0200 (dim., 08 août 2010)                         $ }
 { Revision:      $Rev:: 3283                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
@@ -206,7 +206,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompilerUtils.pas $';
     Revision: '$Revision: 3283 $';
-    Date: '$Date: 2010-08-08 12:54:21 +0200 (dim. 08 août 2010) $';
+    Date: '$Date: 2010-08-08 12:54:21 +0200 (dim., 08 août 2010) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

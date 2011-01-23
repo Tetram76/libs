@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-12 14:32:25 +0200 (jeu. 12 août 2010)                          $ }
-{ Revision:      $Rev:: 3308                                                                     $ }
+{ Last modified: $Date:: 2010-10-25 17:55:53 +0200 (lun., 25 oct. 2010)                          $ }
+{ Revision:      $Rev:: 3395                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -45,6 +45,7 @@ unit JclDebug;
 interface
 
 {$I jcl.inc}
+{$I windowsonly.inc}
 
 uses
   {$IFDEF UNITVERSIONING}
@@ -177,6 +178,11 @@ type
     property OnLineNumbers: TJclMapLineNumbersEvent read FOnLineNumbers write FOnLineNumbers;
   end;
 
+  TJclMapStringCache = record
+    CachedValue: string;
+    RawValue: PJclMapString;
+  end;
+
   // MAP file scanner
   PJclMapSegmentClass = ^TJclMapSegmentClass;
   TJclMapSegmentClass = record
@@ -185,8 +191,8 @@ type
     Addr: DWORD;   // start as in process memory
     VA: DWORD;     // position relative to module base adress
     Len: DWORD;    // segment length
-    SectionName: PJclMapString;
-    GroupName: PJclMapString;
+    SectionName: TJclMapStringCache;
+    GroupName: TJclMapStringCache;
   end;
 
   PJclMapSegment = ^TJclMapSegment;
@@ -194,14 +200,14 @@ type
     Segment: Word;
     StartVA: DWORD; // VA relative to (module base address + $10000)
     EndVA: DWORD;
-    UnitName: PJclMapString;
+    UnitName: TJclMapStringCache;
   end;
 
   PJclMapProcName = ^TJclMapProcName;
   TJclMapProcName = record
     Segment: Word;
     VA: DWORD; // VA relative to (module base address + $10000)
-    ProcName: PJclMapString;
+    ProcName: TJclMapStringCache;
   end;
 
   PJclMapLineNumber = ^TJclMapLineNumber;
@@ -234,6 +240,11 @@ type
     procedure Scan;
   public
     constructor Create(const MapFileName: TFileName; Module: HMODULE); override;
+
+    class function MapStringCacheToFileName(var MapString: TJclMapStringCache): string;
+    class function MapStringCacheToModuleName(var MapString: TJclMapStringCache): string;
+    class function MapStringCacheToStr(var MapString: TJclMapStringCache; IgnoreSpaces: Boolean = False): string;
+
     // Addr are virtual addresses relative to (module base address + $10000)
     function LineNumberFromAddr(Addr: DWORD): Integer; overload;
     function LineNumberFromAddr(Addr: DWORD; out Offset: Integer): Integer; overload;
@@ -1002,8 +1013,8 @@ procedure AddModule(const ModuleName: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 3308 $';
-    Date: '$Date: 2010-08-12 14:32:25 +0200 (jeu. 12 août 2010) $';
+    Revision: '$Revision: 3395 $';
+    Date: '$Date: 2010-10-25 17:55:53 +0200 (lun., 25 oct. 2010) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1013,6 +1024,9 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
   {$IFDEF MSWINDOWS}
   JclRegistry,
   {$ENDIF MSWINDOWS}
@@ -1363,22 +1377,22 @@ var
   L: Integer;
   P1, P2: PJclMapString;
 
+  function Eof: Boolean;
+  begin
+    Result := (CurrPos >= EndPos);
+  end;
+
   procedure SkipWhiteSpace;
   begin
-    while CharIsWhiteSpace(Char(CurrPos^)) do
+    while not Eof and CharIsWhiteSpace(Char(CurrPos^)) do
       Inc(CurrPos);
   end;
 
   procedure SkipEndLine;
   begin
-    while not CharIsReturn(Char(CurrPos^)) do
+    while not Eof and not CharIsReturn(Char(CurrPos^)) do
       Inc(CurrPos);
     SkipWhiteSpace;
-  end;
-
-  function Eof: Boolean;
-  begin
-    Result := (CurrPos >= EndPos);
   end;
 
   function IsDecDigit: Boolean;
@@ -1561,7 +1575,7 @@ begin
         PublicsByNameItem(A, P1);
       end;
     if SyncToHeader(PublicsByValueHeader) then
-      while IsDecDigit do
+      while not Eof and IsDecDigit do
       begin
         A := ReadAddress;
         P1 := ReadString;
@@ -1664,6 +1678,39 @@ begin
     Result := Addr;
 end;
 
+class function TJclMapScanner.MapStringCacheToFileName(
+  var MapString: TJclMapStringCache): string;
+begin
+  Result := MapString.CachedValue;
+  if Result = '' then
+  begin
+    Result := MapStringToFileName(MapString.RawValue);
+    MapString.CachedValue := Result;
+  end;
+end;
+
+class function TJclMapScanner.MapStringCacheToModuleName(
+  var MapString: TJclMapStringCache): string;
+begin
+  Result := MapString.CachedValue;
+  if Result = '' then
+  begin
+    Result := MapStringToModuleName(MapString.RawValue);
+    MapString.CachedValue := Result;
+  end;
+end;
+
+class function TJclMapScanner.MapStringCacheToStr(var MapString: TJclMapStringCache;
+  IgnoreSpaces: Boolean): string;
+begin
+  Result := MapString.CachedValue;
+  if Result = '' then
+  begin
+    Result := MapStringToStr(MapString.RawValue, IgnoreSpaces);
+    MapString.CachedValue := Result;
+  end;
+end;
+
 procedure TJclMapScanner.ClassTableItem(const Address: TJclMapAddress; Len: Integer;
   SectionName, GroupName: PJclMapString);
 var
@@ -1681,8 +1728,8 @@ begin
   else
     FSegmentClasses[C].VA := MAPAddrToVA(FSegmentClasses[C].Start);
   FSegmentClasses[C].Len := Len;
-  FSegmentClasses[C].SectionName := SectionName;
-  FSegmentClasses[C].GroupName := GroupName;
+  FSegmentClasses[C].SectionName.RawValue := SectionName;
+  FSegmentClasses[C].GroupName.RawValue := GroupName;
 
   if FModule <> 0 then
   begin
@@ -1739,7 +1786,7 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    if StrLIComp(FSegmentClasses[SegIndex].GroupName, 'TLS', 3) = 0 then
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName.RawValue, 'TLS', 3) = 0 then
       Va := Address.Offset
     else
       VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
@@ -1763,7 +1810,7 @@ begin
       SetLength(FSourceNames, C + 1);
       FSourceNames[C].Segment := FSegmentClasses[SegIndex].Segment;
       FSourceNames[C].VA := VA;
-      FSourceNames[C].ProcName := FNewUnitFileName;
+      FSourceNames[C].ProcName.RawValue := FNewUnitFileName;
       FNewUnitFileName := nil;
     end;
     Break;
@@ -1785,7 +1832,7 @@ begin
   for I := Length(FSegments) - 1 downto 0 do
     if (FSegments[I].StartVA <= Addr) and (Addr < FSegments[I].EndVA) then
     begin
-      Result := MapStringToModuleName(FSegments[I].UnitName);
+      Result := MapStringCacheToModuleName(FSegments[I].UnitName);
       Break;
     end;
 end;
@@ -1826,7 +1873,7 @@ begin
   I := SearchDynArray(FProcNames, SizeOf(FProcNames[0]), Search_MapProcName, @Addr, True);
   if (I <> -1) and (FProcNames[I].VA >= ModuleStartAddr) then
   begin
-    Result := MapStringToStr(FProcNames[I].ProcName, True);
+    Result := MapStringCacheToStr(FProcNames[I].ProcName, True);
     Offset := Addr - FProcNames[I].VA;
   end;
 end;
@@ -1847,11 +1894,11 @@ begin
     if FProcNamesCnt mod 256 = 0 then
       SetLength(FProcNames, FProcNamesCnt + 256);
     FProcNames[FProcNamesCnt].Segment := FSegmentClasses[SegIndex].Segment;
-    if StrLIComp(FSegmentClasses[SegIndex].GroupName, 'TLS', 3) = 0 then
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName.RawValue, 'TLS', 3) = 0 then
       FProcNames[FProcNamesCnt].VA := Address.Offset
     else
       FProcNames[FProcNamesCnt].VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
-    FProcNames[FProcNamesCnt].ProcName := Name;
+    FProcNames[FProcNamesCnt].ProcName.RawValue := Name;
     Inc(FProcNamesCnt);
     Break;
   end;
@@ -1897,7 +1944,7 @@ begin
     if (FSegmentClasses[SegIndex].Segment = Address.Segment)
       and (DWORD(Address.Offset) < FSegmentClasses[SegIndex].Len) then
   begin
-    if StrLIComp(FSegmentClasses[SegIndex].GroupName, 'TLS', 3) = 0 then
+    if StrLIComp(FSegmentClasses[SegIndex].GroupName.RawValue, 'TLS', 3) = 0 then
       VA := Address.Offset
     else
       VA := MAPAddrToVA(Address.Offset + FSegmentClasses[SegIndex].Start);
@@ -1906,7 +1953,7 @@ begin
     FSegments[FSegmentCnt].Segment := FSegmentClasses[SegIndex].Segment;
     FSegments[FSegmentCnt].StartVA := VA;
     FSegments[FSegmentCnt].EndVA := VA + DWORD(Len);
-    FSegments[FSegmentCnt].UnitName := UnitName;
+    FSegments[FSegmentCnt].UnitName.RawValue := UnitName;
     Inc(FSegmentCnt);
     Break;
   end;
@@ -1922,14 +1969,14 @@ begin
   Result := '';
   I := SearchDynArray(FSourceNames, SizeOf(FSourceNames[0]), Search_MapProcName, @Addr, True);
   if (I <> -1) and (FSourceNames[I].VA >= ModuleStartVA) then
-    Result := MapStringToStr(FSourceNames[I].ProcName);
+    Result := MapStringCacheToStr(FSourceNames[I].ProcName);
   if Result = '' then
   begin
     // try with module names (C++Builder compliance)
     for I := Length(FSegments) - 1 downto 0 do
       if (FSegments[I].StartVA <= Addr) and (Addr < FSegments[I].EndVA) then
     begin
-      Result := MapStringToFileName(FSegments[I].UnitName);
+      Result := MapStringCacheToFileName(FSegments[I].UnitName);
       Break;
     end;
   end;
@@ -2399,7 +2446,7 @@ var
         if FSegmentClasses[SegIndex].Segment = SegID then
       begin
         LastSegmentID := FSegmentClasses[SegIndex].Segment;
-        GroupName := MapStringToStr(FSegmentClasses[SegIndex].GroupName);
+        GroupName := MapStringCacheToStr(FSegmentClasses[SegIndex].GroupName);
         LastSegmentStored := (GroupName = 'CODE') or (GroupName = 'ICODE');
         Break;
       end;
@@ -2435,7 +2482,7 @@ begin
       if IsSegmentStored(FSegments[I].Segment) then
     begin
       WriteValueOfs(FSegments[I].StartVA, L1);
-      WriteValueOfs(AddWord(MapStringToModuleName(FSegments[I].UnitName)), L2);
+      WriteValueOfs(AddWord(MapStringCacheToModuleName(FSegments[I].UnitName)), L2);
     end;
     WriteValue(MaxInt);
 
@@ -2446,7 +2493,7 @@ begin
       if IsSegmentStored(FSourceNames[I].Segment) then
     begin
       WriteValueOfs(FSourceNames[I].VA, L1);
-      WriteValueOfs(AddWord(MapStringToStr(FSourceNames[I].ProcName)), L2);
+      WriteValueOfs(AddWord(MapStringCacheToStr(FSourceNames[I].ProcName)), L2);
     end;
     WriteValue(MaxInt);
 
@@ -2459,7 +2506,7 @@ begin
     begin
       WriteValueOfs(FProcNames[I].VA, L1);
       // MAP files generated by C++Builder have spaces in their names
-      S := MapStringToStr(FProcNames[I].ProcName, True);
+      S := MapStringCacheToStr(FProcNames[I].ProcName, True);
       D := Pos('.', S);
       if D = 1 then
       begin

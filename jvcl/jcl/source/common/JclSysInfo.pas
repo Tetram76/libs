@@ -50,8 +50,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-03-22 19:46:17 +0100 (lun. 22 mars 2010)                           $ }
-{ Revision:      $Rev:: 3213                                                                     $ }
+{ Last modified: $Date:: 2011-01-05 20:30:51 +0100 (mer., 05 janv. 2011)                         $ }
+{ Revision:      $Rev:: 3461                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -329,6 +329,7 @@ type
     ExFeatures: Cardinal;
     Ex64Features: Cardinal;
     Ex64Features2: Cardinal;
+    PowerManagementFeatures: Cardinal;
     PhysicalAddressBits: Byte;
     VirtualAddressBits: Byte;
   end;
@@ -426,11 +427,12 @@ const
   CPU_TYPE_VIA       = 5;
 
 type
-  TSSESupport = (sse, sse2, sse3, ssse3, sse4A, sse4B, sse5, avx);
+  TSSESupport = (sse, sse2, sse3, ssse3, sse41, sse42, sse4A, sse5, avx);
   TSSESupports = set of TSSESupport;
 
   TCpuInfo = record
     HasInstruction: Boolean;
+    AES: Boolean;
     MMX: Boolean;
     ExMMX: Boolean;
     _3DNow: Boolean;
@@ -468,6 +470,7 @@ type
     LogicalCore: Byte;
     PhysicalCore: Byte;
     HyperThreadingTechnology: Boolean;
+    HardwareHyperThreadingTechnology: Boolean;
     // todo: TLB
     case CpuType: Byte of
       CPU_TYPE_INTEL: (IntelSpecific: TIntelSpecific;);
@@ -612,14 +615,14 @@ const
   EINTEL_XTPR      = BIT_14; // Send Task Priority messages
   EINTEL_PDCM      = BIT_15; // Perf/Debug Capability MSR
   EINTEL_BIT_16    = BIT_16; // Reserved, do not count on value
-  EINTEL_BIT_17    = BIT_17; // Reserved, do not count on value
+  EINTEL_PCID      = BIT_17; // Process-context Identifiers
   EINTEL_DCA       = BIT_18; // Direct Cache Access
   EINTEL_SSE4_1    = BIT_19; // Streaming SIMD Extensions 4.1
   EINTEL_SSE4_2    = BIT_20; // Streaming SIMD Extensions 4.2
   EINTEL_X2APIC    = BIT_21; // x2APIC feature
   EINTEL_MOVBE     = BIT_22; // MOVBE instruction
   EINTEL_POPCNT    = BIT_23; // A value of 1 indicates the processor supports the POPCNT instruction.
-  EINTEL_BIT_24    = BIT_24; // Reserved, do not count on value
+  EINTEL_TSC_DL    = BIT_24; // TSC-Deadline
   EINTEL_AES       = BIT_25; // the processor supports the AES instruction extensions
   EINTEL_XSAVE     = BIT_26; // XSAVE/XRSTOR processor extended states feature, XSETBV/XGETBV instructions and XFEATURE_ENABLED_MASK (XCR0) register
   EINTEL_OSXSAVE   = BIT_27; // OS has enabled features present in EINTEL_XSAVE
@@ -655,7 +658,7 @@ const
   EINTEL64_BIT_23 = BIT_23; // Reserved, do not count on value
   EINTEL64_BIT_24 = BIT_24; // Reserved, do not count on value
   EINTEL64_BIT_25 = BIT_25; // Reserved, do not count on value
-  EINTEL64_BIT_26 = BIT_26; // Reserved, do not count on value
+  EINTEL64_1GBYTE = BIT_26; // 1G-Byte pages are available
   EINTEL64_RDTSCP = BIT_27; // RDTSCP and IA32_TSC_AUX are available
   EINTEL64_BIT_28 = BIT_28; // Reserved, do not count on value
   EINTEL64_EM64T  = BIT_29; // Intel Extended Memory 64 Technology
@@ -696,6 +699,40 @@ const
   EINTEL64_2_BIT_30 = BIT_30; // Reserved, do not count on value
   EINTEL64_2_BIT_31 = BIT_31; // Reserved, do not count on value
 
+  { INTEL Power Management Flags }
+  PINTEL_TEMPSENSOR = BIT_0;  // Digital temperature sensor
+  PINTEL_TURBOBOOST = BIT_1;  // Intel Turbo Boost Technology Available
+  PINTEL_ARAT       = BIT_2;  // APIC-Timer-always-running feature
+  PINTEL_BIT_3      = BIT_3;  // Reverved, do not count on value
+  PINTEL_PLN        = BIT_4;  // Power Limit Notification constrols
+  PINTEL_ECMD       = BIT_5;  // Clock Modulation duty cycle extension
+  PINTEL_PTM        = BIT_6;  // Package Thermal Management
+  PINTEL_BIT_7      = BIT_7;  // Reserved, do not count on value
+  PINTEL_BIT_8      = BIT_8;  // Reserved, do not count on value
+  PINTEL_BIT_9      = BIT_9;  // Reserved, do not count on value
+  PINTEL_BIT_10     = BIT_10; // Reserved, do not count on value
+  PINTEL_BIT_11     = BIT_11; // Reserved, do not count on value
+  PINTEL_BIT_12     = BIT_12; // Reserved, do not count on value
+  PINTEL_BIT_13     = BIT_13; // Reserved, do not count on value
+  PINTEL_BIT_14     = BIT_14; // Reserved, do not count on value
+  PINTEL_BIT_15     = BIT_15; // Reserved, do not count on value
+  PINTEL_BIT_16     = BIT_16; // Reserved, do not count on value
+  PINTEL_BIT_17     = BIT_17; // Reserved, do not count on value
+  PINTEL_BIT_18     = BIT_18; // Reserved, do not count on value
+  PINTEL_BIT_19     = BIT_19; // Reserved, do not count on value
+  PINTEL_BIT_20     = BIT_20; // Reserved, do not count on value
+  PINTEL_BIT_21     = BIT_21; // Reserved, do not count on value
+  PINTEL_BIT_22     = BIT_22; // Reserved, do not count on value
+  PINTEL_BIT_23     = BIT_23; // Reserved, do not count on value
+  PINTEL_BIT_24     = BIT_24; // Reserved, do not count on value
+  PINTEL_BIT_25     = BIT_25; // Reserved, do not count on value
+  PINTEL_BIT_26     = BIT_26; // Reserved, do not count on value
+  PINTEL_BIT_27     = BIT_27; // Reserved, do not count on value
+  PINTEL_BIT_28     = BIT_28; // Reserved, do not count on value
+  PINTEL_BIT_29     = BIT_29; // Reserved, do not count on value
+  PINTEL_BIT_30     = BIT_30; // Reserved, do not count on value
+  PINTEL_BIT_31     = BIT_31; // Reserved, do not count on value
+
   { AMD Standard Feature Flags }
   AMD_FPU     = BIT_0;  // Floating-Point unit on chip
   AMD_VME     = BIT_1;  // Virtual Mode Extention
@@ -714,7 +751,7 @@ const
   AMD_MCA     = BIT_14; // Machine Check Architecture
   AMD_CMOV    = BIT_15; // Conditional Move Instruction
   AMD_PAT     = BIT_16; // Page Attribute Table
-  AMD_PSE32   = BIT_17; // Page Size Extensions
+  AMD_PSE36   = BIT_17; // Page Size Extensions
   AMD_BIT_18  = BIT_18; // Reserved, do not count on value
   AMD_CLFLSH  = BIT_19; // CLFLUSH instruction
   AMD_BIT_20  = BIT_20; // Reserved, do not count on value
@@ -732,7 +769,7 @@ const
 
   { AMD Standard Feature Flags continued }
   AMD2_SSE3       = BIT_0;  // SSE3 extensions
-  AMD2_BIT_1      = BIT_1;  // Reserved, do not count on value
+  AMD2_PCLMULQDQ  = BIT_1;  // PCLMULQDQ instruction support
   AMD2_BIT_2      = BIT_2;  // Reserved, do not count on value
   AMD2_MONITOR    = BIT_3;  // MONITOR/MWAIT instructions. See "MONITOR" and "MWAIT" in APM3.
   AMD2_BIT_4      = BIT_4;  // Reserved, do not count on value
@@ -743,7 +780,7 @@ const
   AMD2_SSSE3      = BIT_9;  // supplemental SSE3 extensions
   AMD2_BIT_10     = BIT_10; // Reserved, do not count on value
   AMD2_BIT_11     = BIT_11; // Reserved, do not count on value
-  AMD2_BIT_12     = BIT_12; // Reserved, do not count on value
+  AMD2_FMA        = BIT_12; // FMA instruction support
   AMD2_CMPXCHG16B = BIT_13; // CMPXCHG16B available
   AMD2_BIT_14     = BIT_14; // Reserved, do not count on value
   AMD2_BIT_15     = BIT_15; // Reserved, do not count on value
@@ -751,18 +788,18 @@ const
   AMD2_BIT_17     = BIT_17; // Reserved, do not count on value
   AMD2_BIT_18     = BIT_18; // Reserved, do not count on value
   AMD2_SSE41      = BIT_19; // SSE4.1 instruction support
-  AMD2_BIT_20     = BIT_20; // Reserved, do not count on value
+  AMD2_SSE42      = BIT_20; // SSE4.2 instruction support
   AMD2_BIT_21     = BIT_21; // Reserved, do not count on value
   AMD2_BIT_22     = BIT_22; // Reserved, do not count on value
   AMD2_POPCNT     = BIT_23; // POPCNT instruction. See "POPCNT" in APM3.
   AMD2_BIT_24     = BIT_24; // Reserved, do not count on value
-  AMD2_BIT_25     = BIT_25; // Reserved, do not count on value
-  AMD2_BIT_26     = BIT_26; // Reserved, do not count on value
-  AMD2_BIT_27     = BIT_27; // Reserved, do not count on value
-  AMD2_BIT_28     = BIT_28; // Reserved, do not count on value
-  AMD2_BIT_29     = BIT_29; // Reserved, do not count on value
+  AMD2_AES        = BIT_25; // AES instruction support
+  AMD2_XSAVE      = BIT_26; // XSAVE (and related) instructions are supported by hardware
+  AMD2_OSXSAVE    = BIT_27; // XSAVE (and related) instructions are enabled
+  AMD2_AVX        = BIT_28; // AVX instruction support
+  AMD2_F16C       = BIT_29; // half-precision convert instruction support
   AMD2_BIT_30     = BIT_30; // Reserved, do not count on value
-  AMD2_RAZ        = BIT_31; // RAZ
+  AMD2_RAZ        = BIT_31; // Reserved for use by hypervisor to indicate guest status
 
   { AMD Enhanced Feature Flags }
   EAMD_FPU     = BIT_0;  // Floating-Point unit on chip
@@ -810,18 +847,18 @@ const
   EAMD2_3DNOWPREFETCH = BIT_8;  // PREFETCH and PREFETCHW instruction support.
   EAMD2_OSVW          = BIT_9;  // OS visible workaround.
   EAMD2_IBS           = BIT_10; // Instruction based sampling
-  EAMD2_SSE5          = BIT_11; // Streaming SIMD Extensions 5
+  EAMD2_XOP           = BIT_11; // extended operation support
   EAMD2_SKINIT        = BIT_12; // SKINIT, STGI, and DEV support.
   EAMD2_WDT           = BIT_13; // Watchdog timer support.
   EAMD2_BIT_14        = BIT_14; // Reserved, do not count on value
-  EAMD2_BIT_15        = BIT_15; // Reserved, do not count on value
-  EAMD2_BIT_16        = BIT_16; // Reserved, do not count on value
+  EAMD2_LWP           = BIT_15; // lightweight profiling support
+  EAMD2_FMA4          = BIT_16; // 4-operand FMA instruction support.
   EAMD2_BIT_17        = BIT_17; // Reserved, do not count on value
   EAMD2_BIT_18        = BIT_18; // Reserved, do not count on value
-  EAMD2_BIT_19        = BIT_19; // Reserved, do not count on value
+  EAMD2_NODEID        = BIT_19; // Support for MSRC001_100C[NodeId, NodesPerProcessor]
   EAMD2_BIT_20        = BIT_20; // Reserved, do not count on value
-  EAMD2_BIT_21        = BIT_21; // Reserved, do not count on value
-  EAMD2_BIT_22        = BIT_22; // Reserved, do not count on value
+  EAMD2_TBM           = BIT_21; // trailing bit manipulation instruction support
+  EAMD2_TOPOLOGYEXT   = BIT_22; // topology extensions support
   EAMD2_BIT_23        = BIT_23; // Reserved, do not count on value
   EAMD2_BIT_24        = BIT_24; // Reserved, do not count on value
   EAMD2_BIT_25        = BIT_25; // Reserved, do not count on value
@@ -838,12 +875,12 @@ const
   PAMD_VOLTAGEID        = BIT_2;  // Voltage ID Control
   PAMD_THERMALTRIP      = BIT_3;  // Thermal Trip
   PAMD_THERMALMONITOR   = BIT_4;  // Thermal Monitoring
-  PAMD_SOFTTHERMCONTROL = BIT_5;  // Software Thermal Control
+  PAMD_BIT_5            = BIT_5;  // Reserved, do not count on value
   PAMD_100MHZSTEP       = BIT_6;  // 100 Mhz multiplier control.
   PAMD_HWPSTATE         = BIT_7;  // Hardware P-State control.
   PAMD_TSC_INVARIANT    = BIT_8;  // TSC rate is invariant
-  PAMD_BIT_9            = BIT_9;  // Reserved, do not count on value
-  PAMD_BIT_10           = BIT_10; // Reserved, do not count on value
+  PAMD_CPB              = BIT_9;  // core performance boost
+  PAMD_EFFFREQRO        = BIT_10; // read-only effective frequency interface
   PAMD_BIT_11           = BIT_11; // Reserved, do not count on value
   PAMD_BIT_12           = BIT_12; // Reserved, do not count on value
   PAMD_BIT_13           = BIT_13; // Reserved, do not count on value
@@ -879,7 +916,14 @@ const
   AMD_L2_ASSOC_4WAY     = 4;
   AMD_L2_ASSOC_8WAY     = 6;
   AMD_L2_ASSOC_16WAY    = 8;
+  AMD_L2_ASSOC_32WAY    = 10;
+  AMD_L2_ASSOC_48WAY    = 11;
+  AMD_L2_ASSOC_64WAY    = 12;
+  AMD_L2_ASSOC_96WAY    = 13;
+  AMD_L2_ASSOC_128WAY   = 14;
   AMD_L2_ASSOC_FULLY    = 15;
+
+  // TODO AMD SVM and LWP bits
 
   { VIA Standard Feature Flags }
   VIA_FPU           = BIT_0;  // FPU present
@@ -1139,7 +1183,7 @@ const
   MXCSR_FZ  = BIT_15;                 // Flush to Zero
 
 const
-  IntelCacheDescription: array [0..101] of TCacheInfo = (
+  IntelCacheDescription: array [0..102] of TCacheInfo = (
     (D: $00; Family: cfOther;              Size: 0;     WaysOfAssoc: 0;  LineSize: 0;  LinePerSector: 0; Entries: 0;   I: @RsIntelCacheDescr00),
     (D: $01; Family: cfInstructionTLB;     Size: 4;     WaysOfAssoc: 4;  LineSize: 0;  LinePerSector: 0; Entries: 32;  I: @RsIntelCacheDescr01),
     (D: $02; Family: cfInstructionTLB;     Size: 4096;  WaysOfAssoc: 4;  LineSize: 0;  LinePerSector: 0; Entries: 2;   I: @RsIntelCacheDescr02),
@@ -1202,6 +1246,7 @@ const
     (D: $71; Family: cfTrace;              Size: 16;    WaysOfAssoc: 8;  LineSize: 0;  LinePerSector: 0; Entries: 0;   I: @RsIntelCacheDescr71),
     (D: $72; Family: cfTrace;              Size: 32;    WaysOfAssoc: 8;  LineSize: 0;  LinePerSector: 0; Entries: 0;   I: @RsIntelCacheDescr72),
     (D: $73; Family: cfTrace;              Size: 64;    WaysOfAssoc: 8;  LineSize: 0;  LinePerSector: 0; Entries: 0;   I: @RsIntelCacheDescr73),
+    (D: $76; Family: cfInstructionTLB;     Size: 2048;  WaysOfAssoc: 0;  LineSize: 0;  LinePerSector: 0; Entries: 8;   I: @RsIntelCacheDescr76),
     (D: $78; Family: cfL2Cache;            Size: 1024;  WaysOfAssoc: 4;  LineSize: 64; LinePerSector: 0; Entries: 0;   I: @RsIntelCacheDescr78),
     (D: $79; Family: cfL2Cache;            Size: 128;   WaysOfAssoc: 8;  LineSize: 64; LinePerSector: 2; Entries: 0;   I: @RsIntelCacheDescr79),
     (D: $7A; Family: cfL2Cache;            Size: 256;   WaysOfAssoc: 8;  LineSize: 64; LinePerSector: 2; Entries: 0;   I: @RsIntelCacheDescr7A),
@@ -1327,8 +1372,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 3213 $';
-    Date: '$Date: 2010-03-22 19:46:17 +0100 (lun. 22 mars 2010) $';
+    Revision: '$Revision: 3461 $';
+    Date: '$Date: 2011-01-05 20:30:51 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -4363,6 +4408,9 @@ function CPUID: TCpuInfo;
       CPUInfo.PhysicalCore := ((CoreInfo and $FC000000) shr 26) + 1;
     end;
 
+    if HiVal >= 6 then
+      CallCPUID(6, 0, CPUInfo.IntelSpecific.PowerManagementFeatures, Unused, Unused, Unused);
+
     // check Intel extended
     CallCPUID($80000000, 0, ExHiVal, Unused, Unused, Unused);
     if ExHiVal >= $80000001 then
@@ -4527,6 +4575,8 @@ function CPUID: TCpuInfo;
       end;
     end;
 
+    CPUInfo.HardwareHyperThreadingTechnology := CPUInfo.LogicalCore <> CPUInfo.PhysicalCore;
+    CPUInfo.AES := (CPUInfo.IntelSpecific.ExFeatures and EINTEL_AES) <> 0;
     CPUInfo.MMX := (CPUInfo.Features and MMX_FLAG) <> 0;
     CPUInfo.SSE := [];
     if (CPUInfo.Features and SSE_FLAG) <> 0 then
@@ -4538,9 +4588,9 @@ function CPUID: TCpuInfo;
     if (CPUInfo.IntelSpecific.ExFeatures and EINTEL_SSSE3) <> 0 then
       Include(CPUInfo.SSE, ssse3);
     if (CPUInfo.IntelSpecific.ExFeatures and EINTEL_SSE4_1) <> 0 then
-      Include(CPUInfo.SSE, sse4A);
+      Include(CPUInfo.SSE, sse41);
     if (CPUInfo.IntelSpecific.ExFeatures and EINTEL_SSE4_2) <> 0 then
-      Include(CPUInfo.SSE, sse4B);
+      Include(CPUInfo.SSE, sse42);
     if (CPUInfo.IntelSpecific.ExFeatures and EINTEL_AVX) <> 0 then
       Include(CPUInfo.SSE, avx);
     CPUInfo.Is64Bits := CPUInfo.HasExtendedInfo and ((CPUInfo.IntelSpecific.Ex64Features and EINTEL64_EM64T)<>0);
@@ -4682,6 +4732,8 @@ function CPUID: TCpuInfo;
       end;
     end;
 
+    CPUInfo.HardwareHyperThreadingTechnology := CPUInfo.LogicalCore <> CPUInfo.PhysicalCore;
+    CPUInfo.AES := (CPUInfo.AMDSpecific.Features2 and AMD2_AES) <> 0;
     CPUInfo.MMX := (CPUInfo.Features and AMD_MMX) <> 0;
     CPUInfo.ExMMX := CPUInfo.HasExtendedInfo and ((CPUInfo.AMDSpecific.ExFeatures and EAMD_EXMMX) <> 0);
     CPUInfo._3DNow := CPUInfo.HasExtendedInfo and ((CPUInfo.AMDSpecific.ExFeatures and EAMD_3DNOW) <> 0);
@@ -4697,8 +4749,10 @@ function CPUID: TCpuInfo;
     begin
       if (CPUInfo.AMDSpecific.ExFeatures2 and EAMD2_SSE4A) <> 0 then
         Include(CPUInfo.SSE, sse4A);
-      if (CPUInfo.AMDSpecific.ExFeatures2 and EAMD2_SSE5) <> 0 then
-        Include(CPUInfo.SSE, sse5);
+      if (CPUInfo.AMDSpecific.Features2 and AMD2_SSE41) <> 0 then
+        Include(CPUInfo.SSE, sse41);
+      if (CPUInfo.AMDSpecific.Features2 and AMD2_SSE42) <> 0 then
+        Include(CPUInfo.SSE, sse42);
     end;
     CPUInfo.Is64Bits := CPUInfo.HasExtendedInfo and ((CPUInfo.AMDSpecific.ExFeatures and EAMD_LONG) <> 0);
     CPUInfo.DEPCapable := CPUInfo.HasExtendedInfo and ((CPUInfo.AMDSpecific.ExFeatures and EAMD_NX) <> 0);
