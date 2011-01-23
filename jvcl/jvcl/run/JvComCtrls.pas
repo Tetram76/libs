@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 12744 2010-04-02 11:40:59Z ahuser $
+// $Id: JvComCtrls.pas 12945 2010-11-30 20:30:11Z ahuser $
 
 unit JvComCtrls;
 
@@ -518,6 +518,7 @@ type
     FReinitializeTreeNode: Boolean;
     FOnNodeCheckedChange: TJvTreeViewNodeCheckedChange;
     FCheckEventsDisabled: Boolean;
+    FRecreateCheckedState: array of Boolean;
 
     procedure InternalCustomDrawItem(Sender: TCustomTreeView;
       Node: TTreeNode; State: TCustomDrawState; var DefaultDraw: Boolean);
@@ -635,8 +636,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 12744 $';
-    Date: '$Date: 2010-04-02 13:40:59 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12945 $';
+    Date: '$Date: 2010-11-30 21:30:11 +0100 (mar., 30 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1281,7 +1282,6 @@ begin
     SetBkColor(DC, ColorToRGB(Brush.Color));
     SetTextColor(Msg.ChildDC, ColorToRGB(Font.Color));
     SetBkColor(Msg.ChildDC, ColorToRGB(Brush.Color));
-    SetBkMode(Msg.ChildDC, TRANSPARENT);
   finally
     ReleaseDC(Handle, DC);
   end;
@@ -2395,7 +2395,7 @@ procedure TJvTreeNode.SetChecked(Value: Boolean);
 var
   Item: TTVItem;
 begin
-  if Value <> FChecked then
+  if Value <> GetChecked then
   begin
     FChecked := Value;
     FillChar(Item, SizeOf(Item), 0);
@@ -2493,6 +2493,8 @@ begin
 end;
 
 procedure TJvTreeView.CreateWnd;
+var
+  I: Integer;
 begin
   FReinitializeTreeNode := True;
   inherited CreateWnd;
@@ -2501,7 +2503,20 @@ begin
   // scroll bar that has nothing to do here. Setting the GWL_STYLE window
   // long shows the checkboxes and does not trigger this bug.
   if FCheckBoxes then
+  begin
     SetWindowLong(Handle, GWL_STYLE, GetWindowLong(Handle, GWL_STYLE) or TVS_CHECKBOXES);
+    // After a recreate we must set our saved checked state
+    if FRecreateCheckedState <> nil then
+    begin
+      for I := 0 to Min(Length(FRecreateCheckedState), Items.Count) - 1 do
+        TJvTreeNode(Items[I]).FChecked := FRecreateCheckedState[I];
+      FRecreateCheckedState := nil;
+    end;
+    // Mantis #4715. We must set the StateImages image list after changing TVS_CHECKBOXES
+    // because changing TVS_CHECKBOXES disables the TVSIL_STATE imagelist.
+    if (StateImages <> nil) and StateImages.HandleAllocated then
+      TreeView_SetImageList(Handle, StateImages.Handle, TVSIL_STATE);
+  end;
 end;
 
 procedure TJvTreeView.DestroyWnd;
@@ -2509,8 +2524,15 @@ var
   I: Integer;
 begin
   // update the FChecked field with the current data
-  for I := 0 to Items.Count - 1 do
-    TJvTreeNode(Items[I]).FChecked := TJvTreeNode(Items[I]).Checked;
+  if not (csDestroying in ComponentState) then
+  begin
+    SetLength(FRecreateCheckedState, Items.Count);
+    for I := 0 to Items.Count - 1 do
+    begin
+      TJvTreeNode(Items[I]).FChecked := TJvTreeNode(Items[I]).Checked;
+      FRecreateCheckedState[I] := TJvTreeNode(Items[I]).FChecked;
+    end;
+  end;
   inherited DestroyWnd;
 end;
 

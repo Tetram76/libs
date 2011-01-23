@@ -269,7 +269,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvButtons.pas $';
     Revision: '$Revision: 12799 $';
-    Date: '$Date: 2010-06-07 19:12:09 +0200 (lun. 07 juin 2010) $';
+    Date: '$Date: 2010-06-07 19:12:09 +0200 (lun., 07 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

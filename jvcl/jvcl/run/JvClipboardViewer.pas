@@ -107,7 +107,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvClipboardViewer.pas $';
     Revision: '$Revision: 12519 $';
-    Date: '$Date: 2009-09-23 16:48:34 +0200 (mer. 23 sept. 2009) $';
+    Date: '$Date: 2009-09-23 16:48:34 +0200 (mer., 23 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEQuery.pas 12769 2010-05-15 15:18:30Z ahuser $
+// $Id: JvBDEQuery.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvBDEQuery;
 
@@ -33,7 +33,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, DB, DBTables, Bde,
-  JvComponentBase, JVCLVer;
+  JvComponentBase, JVCLVer, JvTypes;
 
 const
   DefaultMacroChar = '%';
@@ -97,7 +97,7 @@ type
 
   TRunQueryMode = (rqOpen, rqExecute, rqExecDirect, rqOpenOrExec);
 
-  TJvQueryThread = class(TThread)
+  TJvQueryThread = class(TJvCustomThread)
   private
     FData: TBDEDataSet;
     FMode: TRunQueryMode;
@@ -184,8 +184,8 @@ procedure CreateQueryParams(List: TParams; const Value: PChar; Macro: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEQuery.pas $';
-    Revision: '$Revision: 12769 $';
-    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -666,6 +666,7 @@ begin
   FPrepare := Prepare;
   FreeOnTerminate := True;
   FData.DisableControls;
+  ThreadName := Format('%s: %s',[ClassName, Data.Name]);
 end;
 
 procedure TJvQueryThread.DoTerminate;
@@ -698,6 +699,7 @@ end;
 
 procedure TJvQueryThread.Execute;
 begin
+  NameThread(ThreadName);
   try
     if FPrepare and not (FMode in [rqExecDirect]) then
     begin

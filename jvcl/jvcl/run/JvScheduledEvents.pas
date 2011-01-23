@@ -23,7 +23,7 @@
  You may retrieve the latest version of this file at the Project JEDI home
  page, located at http://www.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvScheduledEvents.pas 12772 2010-05-16 12:57:30Z ahuser $
+// $Id: JvScheduledEvents.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvScheduledEvents;
 
@@ -264,8 +264,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScheduledEvents.pas $';
-    Revision: '$Revision: 12772 $';
-    Date: '$Date: 2010-05-16 14:57:30 +0200 (dim. 16 mai 2010) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -283,7 +283,7 @@ const
 //=== { TScheduleThread } ====================================================
 
 type
-  TScheduleThread = class(TThread)
+  TScheduleThread = class(TJvCustomThread)
   private
     FCritSect: TCriticalSection;
     FEnded: Boolean;
@@ -322,6 +322,7 @@ var
   SysTime: TSystemTime;
   NowStamp: TTimeStamp;
 begin
+  NameThread(ThreadName);
   try
     FEnded := False;
     while not Terminated do
@@ -1034,7 +1035,8 @@ end;
 
 function TJvEventCollectionItem.GetNextFire: TTimeStamp;
 begin
-  if IsNullTimeStamp(FSnoozeFire) or (CompareTimeStamps(FSnoozeFire, FScheduleFire) > 0) then
+  if IsNullTimeStamp(FSnoozeFire) or
+     (not IsNullTimeStamp(FScheduleFire) and (CompareTimeStamps(FSnoozeFire, FScheduleFire) > 0)) then
     Result := FScheduleFire
   else
     Result := FSnoozeFire;
@@ -1047,8 +1049,8 @@ begin
   if State <> sesTriggered then
     Exit; // Ignore this message, something is wrong.
   FActualTriggerTime := DateTimeToTimeStamp(Now);
-  IsSnoozeFire := CompareTimeStamps(FActualTriggerTime, FSnoozeFire) >= 0;
-  if IsSnoozeFire and (CompareTimeStamps(FActualTriggerTime, FScheduleFire) >= 0) then
+  IsSnoozeFire := not IsNullTimeStamp(FSnoozeFire) and (CompareTimeStamps(FActualTriggerTime, FSnoozeFire) >= 0);
+  if IsSnoozeFire and not IsNullTimeStamp(FScheduleFire) and (CompareTimeStamps(FActualTriggerTime, FScheduleFire) >= 0) then
   begin
     { We can't have both, the schedule will win (other possibility: generate two succesive events
       from this method, one as a snooze, the other as a schedule) }

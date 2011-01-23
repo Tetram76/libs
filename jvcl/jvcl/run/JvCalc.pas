@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCalc.pas 12806 2010-06-12 17:27:30Z uschuster $
+// $Id: JvCalc.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvCalc;
 
@@ -117,8 +117,8 @@ procedure SetupPopupCalculator(PopupCalc: TWinControl; APrecision: Byte;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCalc.pas $';
-    Revision: '$Revision: 12806 $';
-    Date: '$Date: 2010-06-12 19:27:30 +0200 (sam. 12 juin 2010) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -128,7 +128,7 @@ implementation
 uses
   Variants, SysUtils, Math, Graphics, Buttons, Clipbrd,
   JvToolEdit, JvSpeedButton, JvExExtCtrls,
-  JvJVCLUtils, JvJCLUtils, JvConsts, JvResources;
+  JvJVCLUtils, JvJCLUtils, JvConsts, JvResources, JclSysUtils;
 
 {$R JvCalc.Res} // (ahuser) the filename should be fixed
 
@@ -312,7 +312,7 @@ begin
       Caption := IntToStr(Tag)
     else
     if Kind = cbDcm then
-      Caption := DecimalSeparator
+      Caption := JclFormatSettings.DecimalSeparator
     else
     if Kind in [cbSgn..cbMC] then
       Caption := BtnCaptions[Kind];
@@ -791,7 +791,7 @@ begin
     cbSgn:
       CalcKey('_');
     cbDcm:
-      CalcKey(DecimalSeparator);
+      CalcKey(JclFormatSettings.DecimalSeparator);
     cbDiv:
       CalcKey('/');
     cbMul:
@@ -865,11 +865,11 @@ begin
     Key := #0;
   if Assigned(FOnCalcKey) then
     FOnCalcKey(Self, Key);
-  if CharInSet(Key, [DecimalSeparator, '.', ',']) then
+  if CharInSet(Key, [JclFormatSettings.DecimalSeparator, '.', ',']) then
   begin
     CheckFirst;
-    if Pos(DecimalSeparator, Text) = 0 then
-      SetText(Text + DecimalSeparator);
+    if Pos(JclFormatSettings.DecimalSeparator, Text) = 0 then
+      SetText(Text + JclFormatSettings.DecimalSeparator);
     Exit;
   end;
   case Key of
@@ -1025,7 +1025,7 @@ var
   I: Integer;
   BtnTag: Longint;
 begin
-  if CharInSet(Key, [DecimalSeparator, '.', ',']) then
+  if CharInSet(Key, [JclFormatSettings.DecimalSeparator, '.', ',']) then
     Key := '.'
   else
   if Key = Cr then
@@ -1059,8 +1059,7 @@ procedure TJvCalculatorPanel.Paste;
 begin
   if Clipboard.HasFormat(CF_TEXT) then
   try
-    SetDisplay(StrToFloat(Trim(ReplaceStr(Clipboard.AsText,
-      CurrencyString, ''))));
+    SetDisplay(StrToFloat(Trim(ReplaceStr(Clipboard.AsText, JclFormatSettings.CurrencyString, ''))));
   except
     SetText('0');
   end;

@@ -172,7 +172,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBandObject.pas $';
     Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar. 09 sept. 2008) $';
+    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

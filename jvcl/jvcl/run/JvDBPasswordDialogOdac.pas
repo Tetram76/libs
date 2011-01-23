@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBPasswordDialogOdac.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBPasswordDialogOdac.pas 12841 2010-09-05 17:33:11Z jfudickar $
 
 unit JvDBPasswordDialogOdac;
 
@@ -32,10 +32,13 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF USE_3RDPARTY_CORELAB_ODAC}
   Classes, Menus,
   Ora, dbaccess,
+  {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
   JvBaseDBPasswordDialog;
 
+{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
 type
   TJvDBOdacPasswordDialog = class(TJvBaseDBPasswordDialog)
   private
@@ -48,19 +51,21 @@ type
   published
     property Session: TCustomDAConnection read GetSession write SetSession;
   end;
+{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBPasswordDialogOdac.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12841 $';
+    Date: '$Date: 2010-09-05 19:33:11 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
 uses
   SysUtils, ExtCtrls, ComCtrls, StdCtrls, Types;
 
@@ -95,6 +100,7 @@ procedure TJvDBOdacPasswordDialog.SetSession(const Value: TCustomDAConnection);
 begin
   inherited SetSession(Value);
 end;
+{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
 
 {$IFDEF UNITVERSIONING}
 initialization

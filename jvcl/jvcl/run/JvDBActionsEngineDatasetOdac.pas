@@ -54,7 +54,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActionsEngineDatasetOdac.pas $';
     Revision: '$Revision: 12669 $';
-    Date: '$Date: 2010-01-08 00:17:07 +0100 (ven. 08 janv. 2010) $';
+    Date: '$Date: 2010-01-08 00:17:07 +0100 (ven., 08 janv. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBCombobox.pas 12796 2010-06-07 15:41:44Z ahuser $
+// $Id: JvDBCombobox.pas 12850 2010-10-08 12:05:51Z obones $
 
 unit JvDBCombobox;
 
@@ -229,6 +229,7 @@ type
     property ListSettings; { should be published after Items and Values }
     property OnChange;
     property OnClick;
+    property OnCloseUp;
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
@@ -251,8 +252,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBCombobox.pas $';
-    Revision: '$Revision: 12796 $';
-    Date: '$Date: 2010-06-07 17:41:44 +0200 (lun. 07 juin 2010) $';
+    Revision: '$Revision: 12850 $';
+    Date: '$Date: 2010-10-08 14:05:51 +0200 (ven., 08 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

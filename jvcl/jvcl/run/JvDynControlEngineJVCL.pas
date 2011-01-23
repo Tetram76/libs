@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineJVCL.pas 12696 2010-02-15 21:14:37Z jfudickar $
+// $Id: JvDynControlEngineJVCL.pas 12894 2010-11-17 23:10:13Z jfudickar $
 
 unit JvDynControlEngineJVCL;
 
@@ -755,6 +755,7 @@ type
     procedure ControlSetDefaultProperties;
     procedure ControlSetHint(const Value: string);
     //IJvDynControlProgressBar
+    procedure ControlSetMarquee(Value: Boolean);
     procedure ControlSetMax(Value: Integer);
     procedure ControlSetMin(Value: Integer);
     procedure ControlSetOnClick(Value: TNotifyEvent);
@@ -854,8 +855,8 @@ procedure SetDynControlEngineJVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineJVCL.pas $';
-    Revision: '$Revision: 12696 $';
-    Date: '$Date: 2010-02-15 22:14:37 +0100 (lun. 15 févr. 2010) $';
+    Revision: '$Revision: 12894 $';
+    Date: '$Date: 2010-11-18 00:10:13 +0100 (jeu., 18 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3211,6 +3212,16 @@ end;
 procedure TJvDynControlJVCLProgressbar.ControlSetAnchors(Value: TAnchors);
 begin
   Anchors := Value;
+end;
+
+procedure TJvDynControlJVCLProgressBar.ControlSetMarquee(Value: Boolean);
+begin
+  {$IFDEF DELPHI2009_UP}
+  if Value then
+    Style := pbstMarquee
+  else
+    Style := pbstNormal;
+  {$ENDIF DELPHI2009_UP}
 end;
 
 procedure TJvDynControlJVCLProgressbar.ControlSetMax(Value: Integer);

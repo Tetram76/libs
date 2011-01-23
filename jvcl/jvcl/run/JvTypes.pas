@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTypes.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTypes.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvTypes;
 
@@ -634,12 +634,42 @@ type
      );
   end;
 
+type
+  TJvCustomThread = class(TThread)
+  private
+    FThreadName: String;
+    function GetThreadName: String; virtual;
+    procedure SetThreadName(const Value: String); virtual;
+  public
+    {$IFNDEF DELPHI2010_UP}
+    procedure NameThreadForDebugging(AThreadName: AnsiString; AThreadID: LongWord = $FFFFFFFF);
+    {$ENDIF}
+    procedure NameThread(AThreadName: AnsiString; AThreadID: LongWord = $FFFFFFFF); virtual;
+    property ThreadName: String read GetThreadName write SetThreadName;
+  end;
+
+// Using this variable you can enhance the NameThread Procedure system wide by inserting a procedure
+// which executes for example a MadExcept TraceOut to enhance the MadExcept call stack results.
+// The procedure for MadExcept could look like:
+//
+//      procedure NameThreadMadExcept(AThreadName: AnsiString; AThreadID: LongWord);
+//      begin
+//        MadExcept.NameThread(AThreadID, AThreadName);
+//      end;
+//
+// And the initialization of the unit should look like:
+//
+//     initialization
+//       JvTypes.JvCustomThreadNamingProc := NameThreadMadExcept;
+//
+var JvCustomThreadNamingProc : procedure (AThreadName: AnsiString; AThreadID: LongWord);
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTypes.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -736,6 +766,55 @@ begin
     Changing
   else
     Changed;
+end;
+
+{$IFNDEF DELPHI2010_UP}
+procedure TJvCustomThread.NameThreadForDebugging(AThreadName: AnsiString; AThreadID: LongWord = $FFFFFFFF);
+type
+  TThreadNameInfo = record
+    FType: LongWord;     // must be 0x1000
+    FName: PAnsiChar;    // pointer to name (in user address space)
+    FThreadID: LongWord; // thread ID (-1 indicates caller thread)
+    FFlags: LongWord;    // reserved for future use, must be zero
+  end;
+var
+  ThreadNameInfo: TThreadNameInfo;
+begin
+  //if IsDebuggerPresent then
+  begin
+    ThreadNameInfo.FType := $1000;
+    ThreadNameInfo.FName := PAnsiChar(AThreadName);
+    ThreadNameInfo.FThreadID := AThreadID;
+    ThreadNameInfo.FFlags := 0;
+
+    try
+      RaiseException($406D1388, 0, sizeof(ThreadNameInfo) div sizeof(LongWord), @ThreadNameInfo);
+    except
+    end;
+  end;
+end;
+{$ENDIF DELPHI2010_UP}
+
+function TJvCustomThread.GetThreadName: String;
+begin
+  if FThreadName = '' then
+    Result := ClassName
+  else
+    Result := FThreadName+' {'+ClassName+'}';
+end;
+
+procedure TJvCustomThread.NameThread(AThreadName: AnsiString; AThreadID: LongWord = $FFFFFFFF);
+begin
+  if AThreadID = $FFFFFFFF then
+    AThreadID := ThreadID;
+  NameThreadForDebugging(aThreadName, AThreadID);
+  if Assigned(JvCustomThreadNamingProc) then
+    JvCustomThreadNamingProc(aThreadName, AThreadID);
+end;
+
+procedure TJvCustomThread.SetThreadName(const Value: String);
+begin
+  FThreadName := Value;
 end;
 
 {$IFDEF UNITVERSIONING}

@@ -67,7 +67,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEnterTab.pas $';
     Revision: '$Revision: 12608 $';
-    Date: '$Date: 2009-11-22 14:51:51 +0100 (dim. 22 nov. 2009) $';
+    Date: '$Date: 2009-11-22 14:51:51 +0100 (dim., 22 nov. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

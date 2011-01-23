@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWavePlayer.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvWavePlayer.pas 12944 2010-11-30 19:53:56Z ahuser $
 
 unit JvWavePlayer;
 
@@ -53,6 +53,7 @@ type
     destructor Destroy; override;
     function Play: Boolean;
     procedure Stop;
+    procedure Silence;
     property WavePointer: Pointer read FWavePointer write FWavePointer;
   published
     property Asynchronous: Boolean read FAsynchronous write SetAsynchronous default True;
@@ -67,8 +68,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWavePlayer.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12944 $';
+    Date: '$Date: 2010-11-30 20:53:56 +0100 (mar., 30 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -146,6 +147,12 @@ begin
   if Assigned(FAfterPlaying) and (Loop or Asynchronous) and
     not (csDestroying in ComponentState) then
     FAfterPlaying(Self);
+end;
+
+procedure TJvWavePlayer.Silence;
+begin
+  // Immediately stops the WAV from playing and purges any remaining WAV audio from the queue.
+  PlaySound(nil, 0, SND_PURGE);
 end;
 
 {$IFDEF UNITVERSIONING}

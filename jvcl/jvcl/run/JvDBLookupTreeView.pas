@@ -38,7 +38,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupTreeView.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvDBLookupTreeView.pas 12825 2010-08-17 13:22:07Z ahuser $
 
 unit JvDBLookupTreeView;
 
@@ -214,6 +214,7 @@ type
     procedure CloseUp(Accept: Boolean);
     procedure DropDown;
     procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
+    function CanFocusEx: Boolean;
     property KeyValue;
     property ListVisible: Boolean read FListVisible;
     property Text: string read FText;
@@ -445,8 +446,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupTreeView.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12825 $';
+    Date: '$Date: 2010-08-17 15:22:07 +0200 (mar., 17 août 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -997,18 +998,25 @@ begin
     FAlignment := taLeftJustify;
   end;
   Invalidate;
-
-
-
-
-
-
 end;
 
 procedure TJvDBLookupTreeViewCombo.ListLinkActiveChanged;
 begin
   inherited ListLinkActiveChanged;
   KeyValueChanged;
+end;
+
+function TJvDBLookupTreeViewCombo.CanFocusEx: Boolean;
+var
+  P: TWinControl;
+begin
+  P := Parent;
+  Result := Visible and Enabled;
+  while Result and (P <> nil) do
+  begin
+    Result := P.Visible and P.Enabled;
+    P := P.Parent;
+  end;
 end;
 
 procedure TJvDBLookupTreeViewCombo.CloseUp(Accept: Boolean);
@@ -1020,7 +1028,8 @@ begin
     if GetCapture <> 0 then
       SendMessage(GetCapture, WM_CANCELMODE, 0, 0);
     ListValue := FDataList.GetValue;
-    SetFocus;
+    if CanFocusEx then
+      SetFocus;
     FDataList.Hide;
 {    SetWindowPos(FDataList.Handle, 0, 0, 0, 0, 0, SWP_NOZORDER or
       SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_HIDEWINDOW); }
@@ -1320,7 +1329,6 @@ begin
   FTree.BorderStyle := bsNone;
   FTree.HideSelection := False;
   FTree.TabStop := False;
-//  FTree.OnDblClick := OnDblClick2;
 end;
 
 destructor TJvTreePopupDataList.Destroy;
@@ -1724,7 +1732,6 @@ begin
 
   inherited FocusKilled(NextWnd);
 end;
-
 
 {added by zelen}
 {$IFDEF JVCLThemesEnabled}

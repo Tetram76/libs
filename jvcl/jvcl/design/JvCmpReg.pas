@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCmpReg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCmpReg.pas 12882 2010-10-30 17:47:19Z jfudickar $
 
 unit JvCmpReg;
 
@@ -62,7 +62,7 @@ begin
     TJvEnterAsTab, TJvMergeManager, TJvPageManager, TJvPatchFile, TJvProfiler,
     TJvStrHolder, TJvMultiStringHolder, TJvTimeLimit, TJvTranslator, TJvTranslatorStrings,
     TJvPrint, TJvEasterEgg, TJvMouseGesture, TJvMouseGestureHook, TJvLogFile,
-	TJvSpellChecker, TJvSpeller]);
+    TJvSpellChecker, TJvSpeller]);
   RegisterComponents(RsPaletteNonVisual, [TJvCreateProcess, TJvWinHelp]);
 
   RegisterPropertyEditor(TypeInfo(string), TJvCreateProcess,

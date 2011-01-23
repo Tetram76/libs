@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JCLData.pas 12601 2009-11-05 21:39:03Z obones $
+// $Id: JCLData.pas 12843 2010-09-12 20:16:09Z obones $
 
 unit JCLData;
 
@@ -35,8 +35,8 @@ const
     requires the user to install or compile the JCL. Changing this constant
     will only change the displayed string but not the JCL version testing
     code. }
-  JCLMinVersion = '2.1.1.3536';
-  JCLVersion = '2.1';
+  JCLMinVersion = '2.2.1.3845';
+  JCLVersion = '2.2';
 
   { JCLDcpFiles specifies the .dcp files that must exist in the JCLDcpDir in
     order to mark the JCL installation as valid. }

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngine.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvControlActionsEngine.pas 12839 2010-09-05 17:09:07Z jfudickar $
 
 unit JvControlActionsEngine;
 
@@ -42,26 +42,20 @@ uses
   Forms, Controls, Classes, JvActionsEngine;
 
 type
-  TJvControlActionOperation = (caoCollapse, caoExpand,
-       caoExport, caoOptimizeColumns, caoCustomize, caoPrint,
+  TJvControlActionOperation = (caoCollapse, caoExpand, caoExport, caoOptimizeColumns, caoCustomize, caoPrint,
        caoCustomizeColumns);
   TJvControlActionOperations = set of TJvControlActionOperation;
   TJvControlActionEngine = class(TJvActionBaseEngine)
-  private
-    FOnChangeActionComponent: TJvChangeActionComponent;
   protected
     function GetEngineList: TJvActionEngineList; virtual; abstract;
     function GetSupportedOperations: TJvControlActionOperations; virtual; abstract;
     property EngineList: TJvActionEngineList read GetEngineList;
   public
     constructor Create(AOwner: TComponent); override;
-    function ExecuteOperation(const aOperation: TJvControlActionOperation; const
-        aActionControl: TControl): Boolean; virtual;
+    function ExecuteOperation(const aOperation: TJvControlActionOperation; const aActionControl: TControl): Boolean;
+        virtual;
     function SupportsAction(AAction: TJvActionEngineBaseAction): Boolean; override;
-    property SupportedOperations: TJvControlActionOperations read
-        GetSupportedOperations;
-    property OnChangeActionComponent: TJvChangeActionComponent read
-        FOnChangeActionComponent write FOnChangeActionComponent;
+    property SupportedOperations: TJvControlActionOperations read GetSupportedOperations;
   end;
 
   TJvControlActionEngineClass = class of TJvControlActionEngine;
@@ -78,8 +72,8 @@ function RegisteredControlActionEngineList: TJvControlActionEngineList;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngine.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12839 $';
+    Date: '$Date: 2010-09-05 19:09:07 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -120,8 +114,6 @@ end;
 procedure InitActionEngineList;
 begin
   CreateActionEngineList;
-//  RegisterActionEngine(TJvDatabaseActionBaseControlEngine);
-//  RegisterActionEngine(TJvDatabaseActionDBGridControlEngine);
 end;
 
 constructor TJvControlActionEngine.Create(AOwner: TComponent);
@@ -129,14 +121,13 @@ begin
   inherited Create(AOwner);
 end;
 
-function TJvControlActionEngine.ExecuteOperation(const aOperation:
-    TJvControlActionOperation; const aActionControl: TControl): Boolean;
+function TJvControlActionEngine.ExecuteOperation(const aOperation: TJvControlActionOperation; const aActionControl:
+    TControl): Boolean;
 begin
   Result := False;
 end;
 
-function TJvControlActionEngine.SupportsAction(AAction:
-    TJvActionEngineBaseAction): Boolean;
+function TJvControlActionEngine.SupportsAction(AAction: TJvActionEngineBaseAction): Boolean;
 begin
   Result := (AAction is TJvControlBaseAction) and
     (TJvControlBaseAction(AAction).ControlOperation in SupportedOperations);

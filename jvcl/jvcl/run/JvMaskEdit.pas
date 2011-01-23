@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMaskEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvMaskEdit.pas 12947 2010-11-30 21:21:05Z ahuser $
 
 unit JvMaskEdit;
 
@@ -54,12 +54,10 @@ type
     FOnKillFocus: TJvFocusChangeEvent;
     FWordWrap: Boolean;
     FMultiLine: Boolean;
-    FAlignment: TAlignment;
     FOnAfterPaint: TNotifyEvent;
     FScrollBars: TScrollStyle;
     FCanvas: TControlCanvas;
     procedure SetHotTrack(Value: Boolean);
-    procedure SetAlignment(const Value: TAlignment);
     procedure SetMultiLine(const Value: Boolean);
     procedure SetScrollBars(const Value: TScrollStyle);
     procedure SetWordWrap(const Value: Boolean);
@@ -100,8 +98,6 @@ type
     property OnSetFocus: TJvFocusChangeEvent read FOnSetFocus write FOnSetFocus;
     property OnKillFocus: TJvFocusChangeEvent read FOnKillFocus write FOnKillFocus;
 
-    // From Globus
-    property Alignment: TAlignment read FAlignment write SetAlignment default taLeftJustify;
     property ScrollBars: TScrollStyle read FScrollBars write SetScrollBars default ssNone;
     property MultiLine: Boolean read FMultiLine write SetMultiLine default False;
     property WordWrap: Boolean read FWordWrap write SetWordWrap default False;
@@ -118,6 +114,7 @@ type
     property BevelOuter;
     property Alignment;
     property Caret;
+    property CheckOnExit;
     property ClipboardCommands;
     property DisabledTextColor;
     property DisabledColor;
@@ -186,8 +183,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMaskEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12947 $';
+    Date: '$Date: 2010-11-30 22:21:05 +0100 (mar., 30 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -208,7 +205,6 @@ begin
   FLeaving := False;
 
   FScrollBars := ssNone;
-  FAlignment := taLeftJustify;
   FMultiLine := False;
   FWordWrap := False;
 
@@ -370,15 +366,6 @@ begin
   inherited Text := Value;
 end;
 
-procedure TJvCustomMaskEdit.SetAlignment(const Value: TAlignment);
-begin
-  if FAlignment <> Value then
-  begin
-    FAlignment := Value;
-    RecreateWnd;
-  end;
-end;
-
 procedure TJvCustomMaskEdit.SetMultiLine(const Value: Boolean);
 begin
   if FMultiLine <> Value then
@@ -419,15 +406,6 @@ begin
 
   if FMultiline then
     Params.Style := Params.Style or ES_MULTILINE;
-
-  case FAlignment of
-    taLeftJustify:
-      Params.Style := Params.Style or ES_LEFT;
-    taRightJustify:
-      Params.Style := Params.Style or ES_RIGHT;
-    taCenter:
-      Params.Style := Params.Style or ES_CENTER;
-  end;
 
   case FScrollBars of
     ssHorizontal:

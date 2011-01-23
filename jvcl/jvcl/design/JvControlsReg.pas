@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlsReg.pas 12643 2010-01-07 12:23:59Z obones $
+// $Id: JvControlsReg.pas 12835 2010-09-05 17:00:20Z jfudickar $
 
 unit JvControlsReg;
 
@@ -105,7 +105,7 @@ begin
   RegisterClass(TJvScrollMaxBand);
   RegisterClass(TJvFooterBtn);
   RegisterActions(RsJVCLActionsCategory, [TJvRollOutAction], nil);
-  RegisterActions(RsJVCLControlActionsCategory, [TJvControlCollapseAction, TJvControlExpandAction, TJvControlExportAction,
+  RegisterActions(RsJVCLControlActionsCategory, [TJvControlCommonAction, TJvControlCollapseAction, TJvControlExpandAction, TJvControlExportAction,
     TJvControlOptimizeColumnsAction, TJvControlCustomizeColumnsAction, TJvControlPrintAction, TJvControlCustomizeAction],
     TJvControlActionsDM);
     

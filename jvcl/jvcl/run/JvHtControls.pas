@@ -407,7 +407,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHtControls.pas $';
     Revision: '$Revision: 12800 $';
-    Date: '$Date: 2010-06-07 19:29:08 +0200 (lun. 07 juin 2010) $';
+    Date: '$Date: 2010-06-07 19:29:08 +0200 (lun., 07 juin 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

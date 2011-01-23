@@ -39,7 +39,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPBar.pas 12769 2010-05-15 15:18:30Z ahuser $
+// $Id: JvXPBar.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvXPBar;
 
@@ -63,7 +63,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Classes, SysUtils,
   Graphics, Controls, Forms, ExtCtrls, ImgList, ActnList, Messages,
-  JvConsts, JvXPCore, JvXPCoreUtils, JvJVCLUtils;
+  JvConsts, JvXPCore, JvXPCoreUtils, JvJVCLUtils, JvTypes;
 
 type
   TJvXPBarRollDirection = (rdExpand, rdCollapse);
@@ -259,7 +259,7 @@ type
     property Items[Index: Integer]: TJvXPBarItem read GetItem; default;
   end;
 
-  TJvXPFadeThread = class(TThread)
+  TJvXPFadeThread = class(TJvCustomThread)
   private
     FWinXPBar: TJvXPCustomWinXPBar;
     FRollDirection: TJvXPBarRollDirection;
@@ -267,9 +267,9 @@ type
   protected
     procedure DoWinXPBarSetRollOffset;
     procedure DoWinXPBarInternalRedraw;
+    procedure Execute; override;
   public
     constructor Create(WinXPBar: TJvXPCustomWinXPBar; RollDirection: TJvXPBarRollDirection);
-    procedure Execute; override;
   end;
 
   TJvXPBarColors = class(TPersistent)
@@ -551,8 +551,8 @@ procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPBar.pas $';
-    Revision: '$Revision: 12769 $';
-    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1258,6 +1258,7 @@ begin
   FWinXPBar := WinXPBar;
   FRollDirection := RollDirection;
   FreeOnTerminate := True;
+  ThreadName := Format('%s: %s',[ClassName, WinXPBar.Name]);
 end;
 
 procedure TJvXPFadeThread.DoWinXPBarInternalRedraw;
@@ -1274,6 +1275,7 @@ procedure TJvXPFadeThread.Execute;
 var
   NewOffset: Integer;
 begin
+  NameThread(ThreadName);
   while not Terminated do
   try
     FWinXPBar.FRolling := True;

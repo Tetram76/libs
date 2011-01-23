@@ -49,7 +49,7 @@ Scrolling rules:
       and scroll Rows pages on each click (i.e if Rows = 4 -> scroll 4 pages)
     * if scaling would make pages too small, show as many pages as possible
 -----------------------------------------------------------------------------}
-// $Id: JvPrvwDoc.pas 12769 2010-05-15 15:18:30Z ahuser $
+// $Id: JvPrvwDoc.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvPrvwDoc;
 
@@ -436,8 +436,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPrvwDoc.pas $';
-    Revision: '$Revision: 12769 $';
-    Date: '$Date: 2010-05-15 17:18:30 +0200 (sam. 15 mai 2010) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -446,7 +446,7 @@ implementation
 
 uses
   Math,
-  JvThemes;
+  JvThemes, JvTypes;
 
 var
   HintWindow: THintWindow = nil;
@@ -462,7 +462,7 @@ begin
 end;
 
 type
-  TDeactiveHintThread = class(TThread)
+  TDeactiveHintThread = class(TJvCustomThread)
   private
     FHintWindow: THintWindow;
     FDelay: Integer;
@@ -1916,6 +1916,7 @@ end;
 
 procedure TDeactiveHintThread.Execute;
 begin
+  NameThread(ThreadName);
   Sleep(FDelay);
   if FHintWindow <> nil then
   begin

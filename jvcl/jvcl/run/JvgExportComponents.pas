@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgExportComponents.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgExportComponents.pas 12833 2010-09-05 13:25:12Z obones $
 
 unit JvgExportComponents;
 
@@ -200,8 +200,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgExportComponents.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12833 $';
+    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -236,7 +236,7 @@ begin
     raise EJvgExportException.CreateRes(@RsEDataSetIsUnassigned);
   DataSet.Active := True;
   if SaveToFileName <> '' then
-    ForceDirectories(ExtractFilePath(SaveToFileName));
+    {$IFDEF RTL220_UP}SysUtils.{$ENDIF RTL220_UP}ForceDirectories(ExtractFilePath(SaveToFileName));
 end;
 
 procedure TJvgCommonExport.SetCaptions(const Value: TJvExportCaptions);

@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 12821 2010-07-07 05:18:03Z ahuser $
+// $Id: JvDBLookup.pas 12924 2010-11-28 09:52:23Z ahuser $
 
 unit JvDBLookup;
 
@@ -662,8 +662,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 12821 $';
-    Date: '$Date: 2010-07-07 07:18:03 +0200 (mer. 07 juil. 2010) $';
+    Revision: '$Revision: 12924 $';
+    Date: '$Date: 2010-11-28 10:52:23 +0100 (dim., 28 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3317,7 +3317,7 @@ begin
   {$IFDEF JVCLThemesEnabled}
   if ThemeServices.ThemesEnabled then
   begin
-    if (not FListActive) or (not Enabled) or ReadOnly then
+    if not FListActive or not Enabled or ReadOnly then
       State := tcDropDownButtonDisabled
     else
     if FPressed then

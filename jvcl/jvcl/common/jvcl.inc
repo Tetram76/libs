@@ -23,7 +23,7 @@ Known Issues:
  {$D-}
 {$ENDIF JVCL_NO_DEBUGINFO}
 
-{$I jedi.inc}
+{$I jedi\jedi.inc}
 
 {$IFNDEF JEDI_INC}
 ALERT_jedi_inc_incompatible
@@ -89,6 +89,11 @@ ALERT_jedi_inc_incompatible
  {$DEFINE JVCL_CONFIGURED}
 {$ENDIF DELPHI14}
 {-----------------------------------------------------------------------------}
+{$IFDEF DELPHI15}
+ {$I jvcld15.inc}
+ {$DEFINE JVCL_CONFIGURED}
+{$ENDIF DELPHI15}
+{-----------------------------------------------------------------------------}
 { C++Builder                                                                  }
 {-----------------------------------------------------------------------------}
 {$IFDEF BCB6}
@@ -115,6 +120,11 @@ ALERT_jedi_inc_incompatible
  {$I jvcld14.inc}   // same include file for BDS based C++
  {$DEFINE JVCL_CONFIGURED}
 {$ENDIF BCB14}
+{-----------------------------------------------------------------------------}
+{$IFDEF BCB15}
+ {$I jvcld15.inc}   // same include file for BDS based C++
+ {$DEFINE JVCL_CONFIGURED}
+{$ENDIF BCB15}
 
 {$ENDIF DEFAULT_JVCL_INC}
 {-----------------------------------------------------------------------------}

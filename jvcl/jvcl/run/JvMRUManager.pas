@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 * Using a divider as RecentMenu when MenuLocation = mruChild doesn't work
 -----------------------------------------------------------------------------}
-// $Id: JvMRUManager.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvMRUManager.pas 12880 2010-10-30 17:42:44Z jfudickar $
 
 unit JvMRUManager;
 
@@ -198,8 +198,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMRUManager.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12880 $';
+    Date: '$Date: 2010-10-30 19:42:44 +0200 (sam., 30 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -475,7 +475,7 @@ begin
           C := ' ';
         Item.Caption := C + AccelDelimChars[FAccelDelimiter] + DoMinimizeName(S);
       end
- 	  	else
+    else
       begin
         Item.Caption := DoMinimizeName(S);
       end;

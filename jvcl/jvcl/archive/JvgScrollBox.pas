@@ -75,7 +75,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/JvgScrollBox.pas $';
     Revision: '$Revision: 10859 $';
-    Date: '$Date: 2006-08-02 10:11:46 +0200 (mer. 02 août 2006) $';
+    Date: '$Date: 2006-08-02 10:11:46 +0200 (mer., 02 août 2006) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

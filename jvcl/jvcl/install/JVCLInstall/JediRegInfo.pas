@@ -22,13 +22,13 @@ home page, located at http://jcl.sourceforge.net / http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JediRegInfo.pas 12441 2009-08-09 17:36:46Z outchy $
+// $Id: JediRegInfo.pas 12881 2010-10-30 17:44:33Z jfudickar $
 
 {$A+,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
 
 unit JediRegInfo;
 
-{$I jedi.inc}
+{$I jedi\jedi.inc}
 
 interface
 
@@ -84,7 +84,7 @@ begin
     try
       Reg.RootKey := HKEY_CURRENT_USER;
       if Reg.OpenKey(IdeRegKey + '\Jedi', True) then // do not localize
-	    Reg.CloseKey;
+        Reg.CloseKey;
       if Reg.OpenKey(IdeRegKey + '\Jedi\' + ProjectName, True) then // do not localize
       begin
         Reg.WriteString('Version', Version); // do not localize

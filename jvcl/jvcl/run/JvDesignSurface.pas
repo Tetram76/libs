@@ -28,7 +28,7 @@ Known Issues:
                on the form being designed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDesignSurface.pas 12790 2010-06-07 08:34:28Z obones $
+// $Id: JvDesignSurface.pas 12931 2010-11-28 13:36:50Z ahuser $
 
 unit JvDesignSurface;
 
@@ -265,8 +265,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignSurface.pas $';
-    Revision: '$Revision: 12790 $';
-    Date: '$Date: 2010-06-07 10:34:28 +0200 (lun. 07 juin 2010) $';
+    Revision: '$Revision: 12931 $';
+    Date: '$Date: 2010-11-28 14:36:50 +0100 (dim., 28 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -873,7 +873,7 @@ begin
             // then we must update the designer. This allows to programatically
             // change the location of a control while making the designer handles
             // follow it around (Mantis 4693).
-            // For this to work properly, we MUST udpate the bounds of the
+            // For this to work properly, we MUST update the bounds of the
             // control before calling UpdateDesigner because the VCL has not yet
             // processed the WM_WINDOWPOSCHANGED message when this code executes.
             // If we did not, the designer would use the previous position of the

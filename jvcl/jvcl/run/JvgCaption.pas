@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCaption.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgCaption.pas 12864 2010-10-11 08:19:42Z obones $
 
 unit JvgCaption;
 
@@ -36,7 +36,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   StdCtrls, ExtCtrls,
-  JvComponentBase,
+  JvComponentBase, JvJVCLUtils,
   JvgTypes, JvgUtils, JvgCommClasses;
 
 type
@@ -127,8 +127,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCaption.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12864 $';
+    Date: '$Date: 2010-10-11 10:19:42 +0200 (lun., 11 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -137,8 +137,7 @@ implementation
 
 uses
   Math,
-  JvResources, JvJVCLUtils;
-
+  JvResources;
 {$R JvgCaption.res}
 
 constructor TJvgCaption.Create(AOwner: TComponent);
@@ -204,6 +203,7 @@ end;
 procedure TJvgCaption.Notification(Component: TComponent;
   Operation: TOperation);
 begin
+  inherited Notification(Component, Operation);
   if (Component <> Self) and (Operation = opInsert) and (Component is TJvgCaption) then
     raise Exception.CreateRes(@RsEOnlyOneInstanceOfTJvgCaption);
 end;

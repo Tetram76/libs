@@ -429,7 +429,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBThreadedDataset.pas $';
     Revision: '$Revision: 12819 $';
-    Date: '$Date: 2010-07-03 00:17:59 +0200 (sam. 03 juil. 2010) $';
+    Date: '$Date: 2010-07-03 00:17:59 +0200 (sam., 03 juil. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

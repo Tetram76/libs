@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvxSlider.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvxSlider.pas 12890 2010-11-09 13:29:00Z obones $
 
 unit JvxSlider;
 
@@ -109,8 +109,6 @@ type
     procedure InternalDrawPoints(ACanvas: TCanvas; PointsStep, PointsHeight,
       ExtremePointsHeight: Longint);
     procedure DrawThumb(Canvas: TCanvas; Origin: TPoint; Highlight: Boolean);
-    function GetValueByOffset(Offset: Integer): Longint;
-    function GetOffsetByValue(Value: Longint): Integer;
     function GetRulerLength: Integer;
     procedure WMPaint(var Msg: TWMPaint); message WM_PAINT;
     procedure WMSetCursor(var Msg: TWMSetCursor); message WM_SETCURSOR;
@@ -171,6 +169,8 @@ type
     destructor Destroy; override;
     procedure DefaultDrawPoints(PointsStep, PointsHeight,
       ExtremePointsHeight: Longint); virtual;
+    function GetValueByOffset(Offset: Integer): Longint;
+    function GetOffsetByValue(Value: Longint): Integer;
     property Canvas;
     property RulerLength: Integer read GetRulerLength;
     property Increment: Longint read FIncrement write SetIncrement default 10;
@@ -278,8 +278,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvxSlider.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12890 $';
+    Date: '$Date: 2010-11-09 14:29:00 +0100 (mar., 09 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

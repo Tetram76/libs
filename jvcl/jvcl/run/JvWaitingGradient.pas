@@ -115,7 +115,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWaitingGradient.pas $';
     Revision: '$Revision: 12708 $';
-    Date: '$Date: 2010-03-09 10:57:37 +0100 (mar. 09 mars 2010) $';
+    Date: '$Date: 2010-03-09 10:57:37 +0100 (mar., 09 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

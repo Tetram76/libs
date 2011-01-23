@@ -36,7 +36,7 @@ Known Issues:
     * PosAtDate is slightly better
     * FirstVisibleDate always start at day 1 of month
 -----------------------------------------------------------------------------}
-// $Id: JvTimeLine.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvTimeLine.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvTimeLine;
 
@@ -495,8 +495,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimeLine.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -505,7 +505,7 @@ implementation
 
 uses
   Math, DateUtils,
-  JvJCLUtils, JvJVCLUtils, JvThemes;
+  JvJCLUtils, JvJVCLUtils, JvThemes, JclSysUtils;
 
 {$R JvTimeLine.res}
 
@@ -1700,9 +1700,9 @@ begin
   if csDestroying in ComponentState then
     Exit;
   if FMonthWidth > 120 then
-    AName := LongMonthNames[Month]
+    AName := JclFormatSettings.LongMonthNames[Month]
   else
-    AName := ShortMonthNames[Month];
+    AName := JclFormatSettings.ShortMonthNames[Month];
 
   with ACanvas do
   begin

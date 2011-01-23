@@ -40,7 +40,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvColorBox.pas 12895 2010-11-25 08:16:57Z ahuser $
 
 unit JvColorBox;
 
@@ -160,8 +160,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12895 $';
+    Date: '$Date: 2010-11-25 09:16:57 +0100 (jeu., 25 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -435,7 +435,7 @@ begin
   { Draw vertical 'bar' }
   Canvas.Pen.Color := clBtnShadow;
   DrawLine(Canvas, Rec.Left, Rec.Top + 4, Rec.Left, Rec.Bottom - 4);
-  Canvas.Pen.Color := clBtnHighLight;
+  Canvas.Pen.Color := clBtnHighlight;
   DrawLine(Canvas, Rec.Left + 1, Rec.Top + 4, Rec.Left + 1, Rec.Bottom - 4);
 
   { Draw arrow }

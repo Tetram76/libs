@@ -29,7 +29,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEdit.pas 12612 2009-12-04 14:21:07Z obones $
+// $Id: JvRichEdit.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvRichEdit;
 
@@ -49,7 +49,7 @@ uses
   Windows, ActiveX, ComObj, CommCtrl, Messages, SysUtils, Classes, Controls,
   OleCtnrs,
   Forms, Graphics, StdCtrls, Dialogs, RichEdit, Menus, ComCtrls, SyncObjs,
-  JVCLVer, JvExStdCtrls;
+  JVCLVer, JvExStdCtrls, JvTypes;
 
 type
   TJvCustomRichEdit = class;
@@ -849,7 +849,7 @@ type
     property WordWrap;
     property Zoom; // added by J.G. Boerema
     property OnChange;
-	property OnClick;
+    property OnClick;
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
@@ -927,8 +927,8 @@ function BitmapToRTF2(ABitmap: TBitmap; AStream: TStream): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEdit.pas $';
-    Revision: '$Revision: 12612 $';
-    Date: '$Date: 2009-12-04 15:21:07 +0100 (ven. 04 déc. 2009) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -940,7 +940,7 @@ uses
   {$IFDEF RTL200_UP}
   CommDlg,
   {$ENDIF RTL200_UP}
-  JvThemes, JvConsts, JvResources, JvFixedEditPopUp, JvTypes;
+  JvThemes, JvConsts, JvResources, JvFixedEditPopUp;
 
 type
   PENLink = ^TENLink;
@@ -1155,7 +1155,7 @@ type
     property Mode: TRichStreamModes read FMode write FMode;
   end;
 
-  TMSTextConversionThread = class(TThread)
+  TMSTextConversionThread = class(TJvCustomThread)
   protected
     procedure Execute; override;
   public
@@ -2191,7 +2191,7 @@ var
   Ext: string;
   I: Integer;
 begin
-  Ext := AnsiLowerCaseFileName(ExtractFileExt(AFileName));
+  Ext := AnsiLowerCase(ExtractFileExt(AFileName));
   System.Delete(Ext, 1, 1);
 
   for I := 0 to Count - 1 do
@@ -4949,7 +4949,7 @@ begin
 
   LoadConverter;
   if not Assigned(FInitConverter32) or
-    not FInitConverter32(ParentWindow, PAnsiChar(AnsiString(AnsiUpperCaseFileName(Application.ExeName)))) then
+    not FInitConverter32(ParentWindow, PAnsiChar(AnsiString(AnsiUpperCase(Application.ExeName)))) then
 
     raise EMSTextConversionError.CreateRes(@RsECouldNotInitConverter);
 end;
@@ -7150,6 +7150,7 @@ end;
 
 procedure TMSTextConversionThread.Execute;
 begin
+  NameThread(ThreadName);
   if GCurrentConverter <> nil then
     GCurrentConverter.DoConversion;
 end;

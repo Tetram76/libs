@@ -168,7 +168,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvZlibMultiple.pas $';
     Revision: '$Revision: 12505 $';
-    Date: '$Date: 2009-09-16 20:42:08 +0200 (mer. 16 sept. 2009) $';
+    Date: '$Date: 2009-09-16 20:42:08 +0200 (mer., 16 sept. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

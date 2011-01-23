@@ -198,7 +198,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvExMask.pas $';
     Revision: '$Revision: 12645 $';
-    Date: '$Date: 2010-01-07 16:15:13 +0100 (jeu. 07 janv. 2010) $';
+    Date: '$Date: 2010-01-07 16:15:13 +0100 (jeu., 07 janv. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgPage.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvgPage.pas 12864 2010-10-11 08:19:42Z obones $
 
 unit JvgPage;
 
@@ -133,8 +133,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgPage.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun. 26 oct. 2009) $';
+    Revision: '$Revision: 12864 $';
+    Date: '$Date: 2010-10-11 10:19:42 +0200 (lun., 11 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -142,8 +142,8 @@ const
 implementation
 
 uses
-  Math,
-  JvgUtils, JvJVCLUtils;
+  Math, JvJVCLUtils,
+  JvgUtils;
 
 const
   FontDirs: array [TglSide] of TglLabelDir =

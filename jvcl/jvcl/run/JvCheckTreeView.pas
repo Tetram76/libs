@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckTreeView.pas 12547 2009-10-03 17:11:04Z ahuser $
+// $Id: JvCheckTreeView.pas 12855 2010-10-08 13:28:53Z obones $
 
 unit JvCheckTreeView;
 
@@ -156,8 +156,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckTreeView.pas $';
-    Revision: '$Revision: 12547 $';
-    Date: '$Date: 2009-10-03 19:11:04 +0200 (sam. 03 oct. 2009) $';
+    Revision: '$Revision: 12855 $';
+    Date: '$Date: 2010-10-08 15:28:53 +0200 (ven., 08 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -334,7 +334,7 @@ var
   ItemHandle: HTREEITEM;
   ItemRect: TRect;
 begin
-  if CheckBoxOptions.Style = cbsJVCL then
+  if (CheckBoxOptions.Style = cbsJVCL) and (csClicked in ControlState) then
   begin
     GetCursorPos(P);
     P := ScreenToClient(P);

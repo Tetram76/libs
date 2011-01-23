@@ -26,7 +26,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckListBox.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCheckListBox.pas 12849 2010-10-05 12:39:06Z ahuser $
 
 unit JvCheckListBox;
 
@@ -148,8 +148,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckListBox.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12849 $';
+    Date: '$Date: 2010-10-05 14:39:06 +0200 (mar., 05 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -396,6 +396,9 @@ begin
   FHotTrack := False;
   FMaxWidth := 0;
   FScroll := True;
+  {$IFDEF COMPILER14_UP}
+  ParentDoubleBuffered := False;
+  {$ENDIF COMPILER14_UP}
   // ControlStyle := ControlStyle + [csAcceptsControls];
 end;
 
@@ -459,7 +462,7 @@ begin
     if FScroll then
       Style := Style or WS_HSCROLL
     else
-      Style := Style xor WS_HSCROLL;
+      Style := Style and not WS_HSCROLL;
 end;
 
 function TJvCheckListBox.DeleteExactString(Value: string; All: Boolean;

@@ -51,7 +51,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgQPrintSetupForm.pas $';
     Revision: '$Revision: 12553 $';
-    Date: '$Date: 2009-10-05 15:22:42 +0200 (lun. 05 oct. 2009) $';
+    Date: '$Date: 2009-10-05 15:22:42 +0200 (lun., 05 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

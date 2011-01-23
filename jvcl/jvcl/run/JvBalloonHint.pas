@@ -25,7 +25,7 @@ Known Issues:
   * Only dropdown shadow for windows xp systems.
   * Only custom animation for windows xp systems, because of use of window region.
 -----------------------------------------------------------------------------}
-// $Id: JvBalloonHint.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvBalloonHint.pas 12857 2010-10-08 14:14:28Z obones $
 
 unit JvBalloonHint;
 
@@ -286,8 +286,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBalloonHint.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12857 $';
+    Date: '$Date: 2010-10-08 16:14:28 +0200 (ven., 08 oct. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -409,6 +409,11 @@ end;
 function IsWinVista_UP: Boolean;
 begin
   Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion >= 6);
+end;
+
+function IsWinSeven_UP: Boolean;
+begin
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion >= 6) and (Win32MinorVersion >= 1);
 end;
 
 function InternalClientToParent(AControl: TControl; const Point: TPoint;
@@ -966,7 +971,7 @@ begin
     begin
       WindowClass.Style := WindowClass.Style or CS_DROPSHADOW;
       {$IFDEF JVCLThemesEnabled}
-      if IsWinVista_UP and ThemeServices.ThemesEnabled then
+      if not IsWinSeven_UP and IsWinVista_UP and ThemeServices.ThemesEnabled then
         ExStyle := ExStyle or WS_EX_LAYERED;
       {$ENDIF JVCLThemesEnabled}
     end

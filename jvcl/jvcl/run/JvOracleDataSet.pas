@@ -147,7 +147,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOracleDataSet.pas $';
     Revision: '$Revision: 12683 $';
-    Date: '$Date: 2010-01-29 23:50:54 +0100 (ven. 29 janv. 2010) $';
+    Date: '$Date: 2010-01-29 23:50:54 +0100 (ven., 29 janv. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

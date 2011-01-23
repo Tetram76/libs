@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCreateProcess.pas 12611 2009-12-03 14:46:50Z obones $
+// $Id: JvCreateProcess.pas 12962 2011-01-04 23:58:03Z jfudickar $
 
 unit JvCreateProcess;
 
@@ -229,8 +229,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCreateProcess.pas $';
-    Revision: '$Revision: 12611 $';
-    Date: '$Date: 2009-12-03 15:46:50 +0100 (jeu. 03 déc. 2009) $';
+    Revision: '$Revision: 12962 $';
+    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -253,7 +253,7 @@ const
 type
   { Threads which monitor the created process }
 
-  TJvWaitForProcessThread = class(TThread)
+  TJvWaitForProcessThread = class(TJvCustomThread)
   private
     FExitCode: DWORD;
     FCloseEvent: THandle;
@@ -725,6 +725,7 @@ procedure TJvWaitForProcessThread.Execute;
 var
   WaitHandles: array [0..1] of THandle;
 begin
+  NameThread(ThreadName);
   WaitHandles[0] := FCloseEvent;
   WaitHandles[1] := FProcessHandle;
   WaitForInputIdle(FProcessHandle, INFINITE);

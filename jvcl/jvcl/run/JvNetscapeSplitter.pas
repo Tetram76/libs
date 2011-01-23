@@ -206,7 +206,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvNetscapeSplitter.pas $';
     Revision: '$Revision: 12709 $';
-    Date: '$Date: 2010-03-09 11:21:05 +0100 (mar. 09 mars 2010) $';
+    Date: '$Date: 2010-03-09 11:21:05 +0100 (mar., 09 mars 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

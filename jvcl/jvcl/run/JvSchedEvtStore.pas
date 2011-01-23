@@ -157,7 +157,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSchedEvtStore.pas $';
     Revision: '$Revision: 12252 $';
-    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam. 21 mars 2009) $';
+    Date: '$Date: 2009-03-21 23:18:25 +0100 (sam., 21 mars 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

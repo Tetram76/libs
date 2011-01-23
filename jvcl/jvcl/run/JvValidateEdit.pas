@@ -27,7 +27,7 @@ negative number format, negative currency format and positive currency format.
 This could be rectified by a custom-written formatting routine.
 
 -----------------------------------------------------------------------------}
-// $Id: JvValidateEdit.pas 12521 2009-09-24 10:18:07Z obones $
+// $Id: JvValidateEdit.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvValidateEdit;
 
@@ -338,8 +338,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidateEdit.pas $';
-    Revision: '$Revision: 12521 $';
-    Date: '$Date: 2009-09-24 12:18:07 +0200 (jeu. 24 sept. 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -349,7 +349,7 @@ implementation
 uses
   Math,
   VarUtils, Variants,
-  JclStrings, JvJCLUtils, JvResources;
+  JclStrings, JvJCLUtils, JvResources, JclSysUtils;
 
 function IsGreater(Value, MaxValue: Double; MaxValueIncluded: Boolean): Boolean;
 begin
@@ -463,7 +463,7 @@ begin
 
   MappedDecimal := MapVirtualKey(VK_DECIMAL, MAPVK_VK_TO_CHAR);
   if MappedDecimal <> 0 then
-    FForceDecimalSeparatorInput := Char(MappedDecimal) <> DecimalSeparator;
+    FForceDecimalSeparatorInput := Char(MappedDecimal) <> JclFormatSettings.DecimalSeparator;
 end;
 
 destructor TJvCustomValidateEdit.Destroy;
@@ -602,7 +602,7 @@ begin
             Alignment := taRightJustify;
           if not (csLoading in ComponentState) then
             if FDecimalPlaces = 0 then
-              FDecimalPlaces := CurrencyDecimals;
+              FDecimalPlaces := JclFormatSettings.CurrencyDecimals;
         end;
       dfBinary, dfFloat, dfFloatGeneral, dfPercent, dfDecimal, dfHex,
       dfInteger, dfOctal, dfScientific, dfFloatFixed:
@@ -901,7 +901,7 @@ begin
         FCheckChars := '';
     dfCurrency,
     dfFloat, dfFloatGeneral, dfPercent, dfDecimal, dfFloatFixed:
-      FCheckChars := Numbers + DecimalSeparator;
+      FCheckChars := Numbers + JclFormatSettings.DecimalSeparator;
     dfHex:
       FCheckChars := Numbers + 'ABCDEFabcdef';
     dfInteger, dfYear:
@@ -909,7 +909,7 @@ begin
     dfOctal:
       FCheckChars := '01234567';
     dfScientific:
-      FCheckChars := Numbers + 'Ee' + DecimalSeparator;
+      FCheckChars := Numbers + 'Ee' + JclFormatSettings.DecimalSeparator;
   end;
 end;
 
@@ -921,7 +921,7 @@ var
   ExpectedNegChar: Char;
 begin
   if (FLastDownKey = VK_DECIMAL) and ForceDecimalSeparatorInput then
-    Key := DecimalSeparator;
+    Key := JclFormatSettings.DecimalSeparator;
 
   case FDisplayFormat of
     dfBinary, dfCheckChars, dfHex, dfOctal, dfYear:
@@ -938,7 +938,7 @@ begin
         ((Key = '-') and (Posn = 1) and ((Pos('-', S) = 0) or (SelLength > 0)));
     dfFloat, dfFloatGeneral, dfDecimal, dfPercent, dfFloatFixed:
       Result := ((Pos(Key, FCheckChars) > 0) and 
-        (((Key = DecimalSeparator) and (Pos(DecimalSeparator, S) = 0)) or (Key <> DecimalSeparator))) or
+        (((Key = JclFormatSettings.DecimalSeparator) and (Pos(JclFormatSettings.DecimalSeparator, S) = 0)) or (Key <> JclFormatSettings.DecimalSeparator))) or
         ((Key = '+') and (Posn = 1) and ((Pos('+', S) = 0) or (SelLength > 0))) or
         ((Key = '-') and (Posn = 1) and ((Pos('-', S) = 0) or (SelLength > 0)));
     dfCurrency:
@@ -955,7 +955,7 @@ begin
         // of the control.
         ExpectedNegChar := '-';
         ExpectedNegPos := 1;
-        case NegCurrFormat of
+        case JclFormatSettings.NegCurrFormat of
           0, 4, 14, 15:
             begin
               ExpectedNegPos := 1;
@@ -975,11 +975,11 @@ begin
             ExpectedNegPos := Length(S) - 2;
         end;
 
-        if (Key = '(') and (Posn = 1) and (NegCurrFormat in [0, 4, 14, 15]) then
+        if (Key = '(') and (Posn = 1) and (JclFormatSettings.NegCurrFormat in [0, 4, 14, 15]) then
           Key := '-';
 
         Result := ((Pos(Key, FCheckChars) > 0) and 
-          (((Key = DecimalSeparator) and (Pos(DecimalSeparator, S) = 0)) or (Key <> DecimalSeparator))) or
+          (((Key = JclFormatSettings.DecimalSeparator) and (Pos(JclFormatSettings.DecimalSeparator, S) = 0)) or (Key <> JclFormatSettings.DecimalSeparator))) or
           ((Key = '+') and (Posn = 1) and ((Pos('+', S) = 0) or (SelLength > 0))) or
           ((Key = '-') and (Posn = ExpectedNegPos) and ((Pos(ExpectedNegChar, S) = 0) or (SelLength > 0)));
       end;
@@ -993,12 +993,12 @@ begin
         if Result then
         begin
           iPosE := Pos('e', LowerCase(S));
-          if Key = DecimalSeparator then
+          if Key = JclFormatSettings.DecimalSeparator then
           begin
             if iPosE = 0 then
-              Result := (Pos(DecimalSeparator, S) = 0)
+              Result := (Pos(JclFormatSettings.DecimalSeparator, S) = 0)
             else
-              Result := ((Posn <= iPosE) and (Pos(DecimalSeparator, Copy(S, 1, iPosE - 1)) = 0));
+              Result := ((Posn <= iPosE) and (Pos(JclFormatSettings.DecimalSeparator, Copy(S, 1, iPosE - 1)) = 0));
                //or ((Posn > iPosE) and (Pos(DecimalSeparator, Copy(S, iPosE + 1, Length(S))) = 0));
                // (outchy) XXXeY,YY are not valid scientific numbers, Y must be an integer value
           end
@@ -1086,16 +1086,16 @@ function TJvCustomValidateEdit.GetUnprefixedUnsuffixedText(
   const Value: string): string;
 begin
   Result := StrEnsureNoPrefix(DisplayPrefix, StrEnsureNoSuffix(DisplaySuffix, Value));
-  Result := StrEnsureNoPrefix(CurrencyString, StrEnsureNoSuffix(CurrencyString, Result));
+  Result := StrEnsureNoPrefix(JclFormatSettings.CurrencyString, StrEnsureNoSuffix(JclFormatSettings.CurrencyString, Result));
 end;
 
 procedure TJvCustomValidateEdit.SetEditText(const NewValue: string);
 begin
   FEditText := MakeValid(GetUnprefixedUnsuffixedText(NewValue));
   if (FDisplayFormat = dfYear) and ((not FHasMaxValue) or
-    (FHasMaxValue and (FMaxValue > 2000 + TwoDigitYearCenturyWindow))) and
+    (FHasMaxValue and (FMaxValue > 2000 + JclFormatSettings.TwoDigitYearCenturyWindow))) and
     ((MaxLength = 0) or (MaxLength > 3)) then
-    FEditText := IntToStr(MakeYear4Digit(StrToIntDef(FEditText, 0), TwoDigitYearCenturyWindow));
+    FEditText := IntToStr(MakeYear4Digit(StrToIntDef(FEditText, 0), JclFormatSettings.TwoDigitYearCenturyWindow));
   if (FDisplayFormat in [dfBinary, dfCurrency, dfFloat, dfFloatGeneral, dfDecimal, dfHex, dfInteger,
     dfOctal, dfPercent, dfScientific, dfYear, dfFloatFixed]) then
   begin
@@ -1146,7 +1146,7 @@ begin
         Exponent := '';
         I := Length(NewValue);
       end;
-      Ps := Pos(DecimalSeparator, NewValue);
+      Ps := Pos(JclFormatSettings.DecimalSeparator, NewValue);
       if Ps > 0 then
       begin
         while (I > Ps) and (NewValue[I] = '0') do

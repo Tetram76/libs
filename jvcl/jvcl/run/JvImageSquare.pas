@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageSquare.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvImageSquare.pas 12845 2010-09-16 20:22:55Z jfudickar $
 
 unit JvImageSquare;
 
@@ -103,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageSquare.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12845 $';
+    Date: '$Date: 2010-09-16 22:22:55 +0200 (jeu., 16 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -147,6 +147,7 @@ end;
 
 procedure TJvImageSquare.Notification(AComponent: TComponent; Operation: TOperation);
 begin
+  inherited Notification(AComponent, Operation);
   if (AComponent = FImageList) and (Operation = opRemove) then
     FImageList := nil;
 end;
@@ -192,12 +193,9 @@ begin
   end;
 
   { fill in the rest }
-  with Canvas do
-  begin
-    Brush.Color := FTmpColor;
-    Brush.Style := bsSolid;
-    FillRect(R);
-  end;
+  Canvas.Brush.Color := FTmpColor;
+  Canvas.Brush.Style := bsSolid;
+  Canvas.FillRect(R);
 
   if Assigned(FImageList) then
   begin

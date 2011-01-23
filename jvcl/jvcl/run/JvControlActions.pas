@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActions.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvControlActions.pas 12837 2010-09-05 17:05:41Z jfudickar $
 
 unit JvControlActions;
 
@@ -142,8 +142,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActions.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12837 $';
+    Date: '$Date: 2010-09-05 19:05:41 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -181,7 +181,7 @@ begin
   else
     if Assigned(ControlEngine) then
       ControlEngine.ExecuteOperation(ControlOperation, ActionControl)
-    else                                                  
+    else
       inherited ExecuteTarget(Target);
 end;
 
@@ -202,11 +202,8 @@ end;
 
 function TJvControlBaseAction.HandlesTarget(Target: TObject): Boolean;
 begin
-  if Target is TWinControl then
-    if TwinControl(Target).Focused then
-      Result := inherited HandlesTarget(Target)
-    else
-      Result := False
+  if (Target is TWinControl) and TWinControl(Target).Focused then
+    Result := inherited HandlesTarget(Target)
   else
     Result := False;
 end;

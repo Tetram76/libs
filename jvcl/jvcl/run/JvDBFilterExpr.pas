@@ -21,11 +21,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBFilterExpr.pas 12795 2010-06-07 15:16:51Z ahuser $
+// $Id: JvDBFilterExpr.pas 12847 2010-09-22 09:34:48Z outchy $
 
 unit JvDBFilterExpr;
 
-{$I jedi.inc}
+{$I jvcl.inc}
 
 interface
 

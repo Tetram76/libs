@@ -31,7 +31,7 @@ description : JVCL Interpreter version 2
 Known Issues:
    String fields in records binded from Delphi don't work
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter.pas 12585 2009-10-29 20:27:56Z ahuser $
+// $Id: JvInterpreter.pas 12925 2010-11-28 09:54:00Z ahuser $
 
 { history (JVCL Library versions):
   1.10:
@@ -1250,8 +1250,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter.pas $';
-    Revision: '$Revision: 12585 $';
-    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu. 29 oct. 2009) $';
+    Revision: '$Revision: 12925 $';
+    Date: '$Date: 2010-11-28 10:54:00 +0100 (dim., 28 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -5045,7 +5045,11 @@ end;
 
 procedure TJvInterpreterExpression.ParseToken;
 var
+  {$IFDEF DELPHI7_UP}
+  FS: TFormatSettings;
+  {$ELSE}
   OldDecimalSeparator: Char;
+  {$ENDIF DELPHI7_UP}
   Dob: Extended;
   Int: Integer;
   Stub: Integer;
@@ -5060,6 +5064,12 @@ begin
       end;
     ttDouble:
       begin
+        {$IFDEF DELPHI7_UP}
+        FS.ThousandSeparator := ',';
+        FS.DecimalSeparator := '.';
+        if not TextToFloat(PChar(FTokenStr), Dob, fvExtended, FS) then
+          JvInterpreterError(ieInternal, -1);
+        {$ELSE}
         OldDecimalSeparator := DecimalSeparator;
         DecimalSeparator := '.';
         if not TextToFloat(PChar(FTokenStr), Dob, fvExtended) then
@@ -5069,6 +5079,7 @@ begin
         end
         else
           DecimalSeparator := OldDecimalSeparator;
+        {$ENDIF DELPHI7_UP}
         FToken := Dob;
       end;
     ttString:
@@ -5140,7 +5151,7 @@ var
     while True do
     begin
       case TTyp of
-        ttInteger, ttDouble, ttString, ttFalse, ttTrue, ttIdentifier:
+        ttInteger, ttDouble, ttFalse, ttTrue, ttIdentifier:
           begin
             Result := Token;
             if TTyp = ttIdentifier then
@@ -5152,6 +5163,18 @@ var
             if TTyp in [ttInteger, ttDouble, ttString,
               ttFalse, ttTrue, ttIdentifier] then
               JvInterpreterError(ieMissingOperator, PosEnd {!!});
+            if Prior(TTyp) < Prior(OpTyp) then
+              Exit;
+          end;
+        ttString:
+          begin
+            Result := '';
+            repeat
+              Result := Result + Token;
+              NextToken;
+              if TTyp in [ttInteger, ttDouble, ttFalse, ttTrue, ttIdentifier] then
+                JvInterpreterError(ieMissingOperator, PosEnd {!!});
+            until TTyp <> ttString;
             if Prior(TTyp) < Prior(OpTyp) then
               Exit;
           end;

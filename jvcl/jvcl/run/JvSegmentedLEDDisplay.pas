@@ -25,7 +25,7 @@ Known Issues:
   * Automatic unlit color calculation is not working properly. Maybe a function in JclGraphUtil
     can help out there.
 -----------------------------------------------------------------------------}
-// $Id: JvSegmentedLEDDisplay.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSegmentedLEDDisplay.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvSegmentedLEDDisplay;
 
@@ -428,8 +428,8 @@ procedure UnregisterModuleSegmentedLEDDigitClasses(Module: HMODULE);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSegmentedLEDDisplay.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -442,7 +442,7 @@ uses
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
-  JvThemes, JvConsts, JvResources;
+  JvThemes, JvConsts, JvResources, JclSysUtils;
 
 {$R JvSegmentedLEDDisplay.res}
 
@@ -1562,11 +1562,11 @@ begin
   if HdrInfo.Flags and 16 <> 0 then
   begin
     // Swap . for DecimalSeparator and , for ThousandSeparator
-    if DecimalSeparator <> '.' then
+    if JclFormatSettings.DecimalSeparator <> '.' then
     begin
-      OldMapping := FActiveMapping[DecimalSeparator];
-      FActiveMapping[DecimalSeparator] := FActiveMapping['.'];
-      FActiveMapping[ThousandSeparator] := OldMapping;
+      OldMapping := FActiveMapping[JclFormatSettings.DecimalSeparator];
+      FActiveMapping[JclFormatSettings.DecimalSeparator] := FActiveMapping['.'];
+      FActiveMapping[JclFormatSettings.ThousandSeparator] := OldMapping;
     end;
   end;
 end;
@@ -1590,8 +1590,8 @@ begin
   if (CurDigit is TJvBaseSegmentedLEDDigit) and TJvBaseSegmentedLEDDigit(CurDigit).UseDP then
   begin
     if UpdateStates(Segments, 1 shl CurDigit.GetSegmentIndex('DP')) then
-      TextForDigit := TextForDigit + DecimalSeparator;
-    while Text[0] = DecimalSeparator do
+      TextForDigit := TextForDigit + JclFormatSettings.DecimalSeparator;
+    while Text[0] = JclFormatSettings.DecimalSeparator do
       Inc(Text);
   end;
 end;
@@ -1667,7 +1667,7 @@ begin
     Inc(Text);
     TextForDigit := TextForDigit + ']';
   end;
-  if Text[0] = DecimalSeparator then
+  if Text[0] = JclFormatSettings.DecimalSeparator then
     HandleDecimalSeparator(Text, Segments);
 end;
 
@@ -1676,7 +1676,7 @@ begin
   if CharToSegments(Text^, Segments) then
     TextForDigit := TextForDigit + Text^;
   Inc(Text);
-  if Text[0] = DecimalSeparator then
+  if Text[0] = JclFormatSettings.DecimalSeparator then
     HandleDecimalSeparator(Text, Segments);
 end;
 
@@ -1836,7 +1836,7 @@ begin
   Hdr.MappedChars := [];
   TmpDot := FActiveMapping['.'];
   TmpComma := FActiveMapping[','];
-  if DecimalSeparator <> '.' then
+  if JclFormatSettings.DecimalSeparator <> '.' then
   begin
     FActiveMapping['.'] := TmpComma;
     FActiveMapping[','] := TmpDot;
@@ -1850,7 +1850,7 @@ begin
       if FActiveMapping[Chr] <> 0 then
         Stream.WriteBuffer(FActiveMapping[Chr], MapSize);
   finally
-    if DecimalSeparator <> '.' then
+    if JclFormatSettings.DecimalSeparator <> '.' then
     begin
       FActiveMapping['.'] := TmpDot;
       FActiveMapping[','] := TmpComma;

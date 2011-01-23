@@ -27,7 +27,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMouseTimer.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvMouseTimer.pas 12845 2010-09-16 20:22:55Z jfudickar $
 
 unit JvMouseTimer;
 
@@ -56,8 +56,8 @@ function IsValidMouseTimer: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMouseTimer.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12845 $';
+    Date: '$Date: 2010-09-16 22:22:55 +0200 (jeu., 16 sept. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -107,6 +107,7 @@ end;
 
 procedure TJvMouseTimerNotify.Notification(AComponent: TComponent; Operation: TOperation);
 begin
+  inherited Notification(AComponent, Operation);
   if IsValidMouseTimer and (Operation = opRemove) and (AComponent is TControl) then
     MouseTimer.Detach(TControl(AComponent));
 end;

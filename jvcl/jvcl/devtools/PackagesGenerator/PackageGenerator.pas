@@ -92,6 +92,9 @@ implementation
 
 uses
   Windows, SysUtils, FileUtils,
+  {$IFDEF UNICODE}
+  Character, // needed for JclStrings inlined functions
+  {$ENDIF UNICODE}
   JclStrings, JclFileUtils, JclDateTime, JclSysUtils,
   GenerateUtils;
 
@@ -503,6 +506,7 @@ begin
      'UNITNAME%', unitname,
      'Unitname%', punitname,
      'INDEX%', IntToStr(Index),
+     'INDEX0%', IntToStr(Index - 1),
      'FORMNAME%', formName,
      'FORMTYPE%', formType,
      'FORMNAMEANDTYPE%', formNameAndType,
@@ -571,6 +575,12 @@ end;
 function TPackageGenerator.ApplyTemplateAndSave(const path, target, package, extension: string;
   template : TStrings; xml : TPackageXmlInfo;
   const templateName, xmlName : string): string;
+  procedure AddProperty(Properties: TStrings; const Name, Value: string);
+  begin
+    Properties.Values[Name] := Value;
+    if Value = '' then
+      Properties.Add(Name + '=');
+  end;
 type
   TProjectConditional = record
     StartLine: string;
@@ -594,7 +604,6 @@ var
   tmpLines, repeatLines : TStrings;
   I : Integer;
   j : Integer;
-  ImageBaseInt: string;
   tmpStr : string;
   bcbId : string;
   bcblibsList : TStrings;
@@ -606,9 +615,9 @@ var
   IgnoreNextSemicolon: Boolean;
   UnitFileName, UnitFilePath, UnitFileExtension, NoLinkPackageList: string;
   PathPAS, PathCPP, PathRC, PathASM, PathLIB: string;
-  VersionMajorNumber, VersionMinorNumber, ReleaseNumber, BuildNumber: string;
-  CompilerDefines: TStrings;
   ItemIndex: Integer;
+  CompilerDefines, Properties: TStringList;
+  Replacements: array of string;
 begin
   Result := '';
 
@@ -618,6 +627,7 @@ begin
 
   repeatLines := TStringList.Create;
   tmpLines := TStringList.Create;
+  Properties := TStringList.Create;
   CompilerDefines := TStringList.Create;
   try
     // generate list of pathes
@@ -689,22 +699,7 @@ begin
                    ExpandPackageName(OutFileName, target)+
                    Extension;
 
-    ImageBaseInt := IntToStr(StrToInt('$' + xml.ImageBase));
-
     // project-wide properties if not redefined in xml
-    VersionMajorNumber := xml.VersionMajorNumber;
-    if VersionMajorNumber = '' then
-      VersionMajorNumber := FProjectProperties.Values['VersionMajorNumber'];
-    VersionMinorNumber := xml.VersionMinorNumber;
-    if VersionMinorNumber = '' then
-      VersionMinorNumber := FProjectProperties.Values['VersionMinorNumber'];
-    ReleaseNumber := xml.ReleaseNumber;
-    if ReleaseNumber = '' then
-      ReleaseNumber := FProjectProperties.Values['ReleaseNumber'];
-    BuildNumber := xml.BuildNumber;
-    if BuildNumber = '' then
-      BuildNumber := FProjectProperties.Values['BuildNumber'];
-
     CompilerDefines.Assign(FTargetList[GetNonPersoTarget(Target)].Defines);
     CompilerDefines.AddStrings(xml.CompilerDefines);
     DefineCount := CompilerDefines.Count;
@@ -719,6 +714,52 @@ begin
       LibCount := bcblibsList.Count
     else
       LibCount := 0;
+
+    // prefetch replacements
+    Properties.CaseSensitive := True;
+    for i := 0 to FProjectProperties.Count - 1 do
+      AddProperty(Properties,UpperCase(FProjectProperties.Names[i]), FProjectProperties.ValueFromIndex[i]);
+    for i := 0 to xml.Properties.Count - 1 do
+      AddProperty(Properties, UpperCase(xml.Properties.Names[i]), xml.Properties.ValueFromIndex[i]);
+    // add custom properties (with backward compatibility)
+    AddProperty(Properties, 'NAME', PathExtractFileNameNoExt(OutFileName));
+    AddProperty(Properties, 'XMLNAME', ExtractFileName(xmlName));
+    AddProperty(Properties, 'DESCRIPTION', GetDescription(xml, target));
+    AddProperty(Properties, 'C6PFLAGS', FDefinesConditionParser.EnsurePFlagsCondition(Properties.Values['C6PFLAGS']));
+    AddProperty(Properties, 'GUID', xml.GUID);
+    AddProperty(Properties, 'IMAGE_BASE', Properties.Values[UpperCase(ImageBaseKnownPackageProperty)]);
+    AddProperty(Properties, 'IMAGE_BASE_INT', IntToStr(StrToInt('$' + Properties.Values[UpperCase(ImageBaseKnownPackageProperty)])));
+    AddProperty(Properties, 'VERSION_MAJOR_NUMBER', Properties.Values[UpperCase(VersionMajorNumberKnownPackageProperty)]);
+    AddProperty(Properties, 'VERSION_MINOR_NUMBER', Properties.Values[UpperCase(VersionMinorNumberKnownPackageProperty)]);
+    AddProperty(Properties, 'RELEASE_NUMBER', Properties.Values[UpperCase(ReleaseNumberKnownPackageProperty)]);
+    AddProperty(Properties, 'BUILD_NUMBER', Properties.Values[UpperCase(BuildNumberKnownPackageProperty)]);
+    AddProperty(Properties, 'TYPE', Iff(ProjectTypeIsDesign(xml.ProjectType), 'DESIGN', 'RUN'));
+    AddProperty(Properties, 'DATETIME', FormatDateTime('dd-mm-yyyy  hh:nn:ss', NowUTC) + ' UTC');
+    AddProperty(Properties, 'type', OneLetterType);
+    AddProperty(Properties, 'PATHPAS', PathPAS);
+    AddProperty(Properties, 'PATHCPP', PathCPP);
+    AddProperty(Properties, 'PATHASM', PathASM);
+    AddProperty(Properties, 'PATHRC', PathRC);
+    AddProperty(Properties, 'PATHLIB', PathLIB);
+    AddProperty(Properties, 'PROJECT', ProjectTypeToProjectName(xml.ProjectType));
+    AddProperty(Properties, 'BINEXTENSION', ProjectTypeToBinaryExtension(xml.ProjectType));
+    AddProperty(Properties, 'ISDLL', Iff(ProjectTypeIsDLL(xml.ProjectType), 'True', 'False'));
+    AddProperty(Properties, 'ISPACKAGE', Iff(ProjectTypeIsPackage(xml.ProjectType), 'True', 'False'));
+    AddProperty(Properties, 'SOURCEEXTENSION', ProjectTypeToSourceExtension(xml.ProjectType));
+    AddProperty(Properties, 'NOLINKPACKAGELIST', NoLinkPackageList);
+    AddProperty(Properties, 'DEFINES', StringsToStr(CompilerDefines, ';', False));
+    AddProperty(Properties, 'COMPILERDEFINES', Iff(DefineCount > 0, '-D' + StringsToStr(CompilerDefines, ';', False), ''));
+    AddProperty(Properties, 'REQUIRECOUNT', IntToStr(RequireCount));
+    AddProperty(Properties, 'CONTAINCOUNT', IntToStr(ContainCount));
+    AddProperty(Properties, 'FORMCOUNT', IntToStr(FormCount));
+    AddProperty(Properties, 'LIBCOUNT', IntToStr(LibCount));
+    AddProperty(Properties, 'DEFINECOUNT', IntToStr(DefineCount));
+    SetLength(Replacements, Properties.Count * 2);
+    for i := 0 to Properties.Count - 1 do
+    begin
+      Replacements[2*i] := Properties.Names[i] + '%';
+      Replacements[2*i+1] := Properties.ValueFromIndex[i];
+    end;
 
     // The time stamp hasn't been found yet
     TimeStampLine := -1;
@@ -755,8 +796,10 @@ begin
               Inc(ItemIndex);
               tmpLines.Assign(repeatLines);
               reqPackName := BuildPackageName(xml.Requires[j], target);
-              StrReplaceLines(tmpLines, '%NAME%', reqPackName);
-              StrReplaceLines(tmpLines, '%INDEX%', IntToStr(ItemIndex));
+              MacroReplaceLines(tmpLines, '%',
+                ['NAME%', reqPackName,
+                 'INDEX%', IntToStr(ItemIndex),
+                 'INDEX0%', IntToStr(ItemIndex - 1)]);
               // We do not say that the package contains something because
               // a package is only interesting if it contains files for
               // the given target
@@ -901,6 +944,7 @@ begin
               MacroReplaceLines(tmpLines, '%',
                 ['FILENAME%', bcblibsList[j],
                  'INDEX%', IntToStr(ItemIndex),
+                 'INDEX0%', IntToStr(ItemIndex - 1),
                  'UNITNAME%', GetUnitName(bcblibsList[j])]);
               outFile.AddStrings(tmpLines);
             end;
@@ -923,7 +967,8 @@ begin
             tmpLines.Assign(repeatLines);
             MacroReplaceLines(tmpLines, '%',
               ['COMPILERDEFINE%', CompilerDefines[j],
-               'INDEX%', IntToStr(ItemIndex)]);
+               'INDEX%', IntToStr(ItemIndex),
+               'INDEX0%', IntToStr(ItemIndex - 1)]);
             outFile.AddStrings(tmpLines);
           end;
         end
@@ -946,40 +991,7 @@ begin
         begin
           tmpStr := curLine;
           StringsToStr(xml.C6Libs, ' ', False);
-          if MacroReplace(curLine, '%',
-            ['NAME%', PathExtractFileNameNoExt(OutFileName),
-             'XMLNAME%', ExtractFileName(xmlName),
-             'DESCRIPTION%', GetDescription(xml, target),
-             'C6PFLAGS%', FDefinesConditionParser.EnsurePFlagsCondition(xml.C6PFlags),
-             'C6LIBS%', StringsToStr(xml.C6Libs, ' ', False),
-             'GUID%', xml.GUID,
-             'IMAGE_BASE%', xml.ImageBase,
-             'IMAGE_BASE_INT%', ImageBaseInt,
-             'VERSION_MAJOR_NUMBER%', VersionMajorNumber,
-             'VERSION_MINOR_NUMBER%', VersionMinorNumber,
-             'RELEASE_NUMBER%', ReleaseNumber,
-             'BUILD_NUMBER%', BuildNumber,
-             'TYPE%', Iff(ProjectTypeIsDesign(xml.ProjectType), 'DESIGN', 'RUN'),
-             'DATETIME%', FormatDateTime('dd-mm-yyyy  hh:nn:ss', NowUTC) + ' UTC',
-             'type%', OneLetterType,
-             'PATHPAS%', PathPAS,
-             'PATHCPP%', PathCPP,
-             'PATHASM%', PathASM,
-             'PATHRC%', PathRC,
-             'PATHLIB%', PathLIB,
-             'PROJECT%', ProjectTypeToProjectName(xml.ProjectType),
-             'BINEXTENSION%', ProjectTypeToBinaryExtension(xml.ProjectType),
-             'ISDLL%', Iff(ProjectTypeIsDLL(xml.ProjectType), 'True', 'False'),
-             'ISPACKAGE%', Iff(ProjectTypeIsPackage(xml.ProjectType), 'True', 'False'),
-             'SOURCEEXTENSION%', ProjectTypeToSourceExtension(xml.ProjectType),
-             'NOLINKPACKAGELIST%', NoLinkPackageList,
-             'DEFINES%', StringsToStr(CompilerDefines, ';', False),
-             'COMPILERDEFINES%', Iff(CompilerDefines.Count > 0, '-D' + StringsToStr(CompilerDefines, ';', False), ''),
-             'REQUIRECOUNT%', IntToStr(RequireCount),
-             'CONTAINCOUNT%', IntToStr(ContainCount),
-             'FORMCOUNT%', IntToStr(FormCount),
-             'LIBCOUNT%', IntToStr(LibCount),
-             'DEFINECOUNT%', IntToStr(DefineCount)]) then
+          if MacroReplace(curLine, '%', Replacements) then
            begin
              if Pos('%DATETIME%', tmpStr) > 0 then
                TimeStampLine := I;
@@ -1195,10 +1207,6 @@ begin
 
   if incFileName = '' then
     incFileName := FIncFileName;
-  GenericIncFile := LoadDefines('', ExtractFilePath(incFileName) + 'jedi%t.inc') and
-                    LoadDefines('', incFileName);
-  FDefinesConditionParser.Defines.RemoveDefine('JEDI_INC');
-  FDefinesConditionParser.Defines.RemoveDefine('UNKNOWN_COMPILER_VERSION');
 
   FCallBack := CallBack;
 
@@ -1220,6 +1228,14 @@ begin
   // for all targets
   for i := 0 to targets.Count - 1 do
   begin
+    if Assigned(FDefinesConditionParser) then
+      FDefinesConditionParser.Defines.Clear;
+
+    GenericIncFile := LoadDefines('', ExtractFilePath(incFileName) + 'jedi%t.inc') and
+                      LoadDefines('', incFileName);
+    FDefinesConditionParser.Defines.RemoveDefine('JEDI_INC');
+    FDefinesConditionParser.Defines.RemoveDefine('UNKNOWN_COMPILER_VERSION');
+
     target := targets[i];
     if GenericIncFile then
       LoadDefines(target, incFileName);

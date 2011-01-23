@@ -223,7 +223,7 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvClipbrd.pas $';
     Revision: '$Revision: 12567 $';
-    Date: '$Date: 2009-10-22 10:50:56 +0200 (jeu. 22 oct. 2009) $';
+    Date: '$Date: 2009-10-22 10:50:56 +0200 (jeu., 22 oct. 2009) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

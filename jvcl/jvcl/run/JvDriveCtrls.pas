@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDriveCtrls.pas 12770 2010-05-16 12:43:57Z ahuser $
+// $Id: JvDriveCtrls.pas 12904 2010-11-27 12:28:53Z ahuser $
 
 unit JvDriveCtrls;
 
@@ -38,8 +38,8 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Messages, Classes, Graphics, Controls,
-  FileCtrl, StdCtrls,
+  Windows, Messages, Classes, Graphics, Controls, StdCtrls,
+  FileCtrl,
   JvComboBox, JvListBox, JvSearchFiles, JvTypes, JVCLVer;
 
 type
@@ -241,6 +241,7 @@ type
     FForceFileExtensions: Boolean;
     FSearchFiles: TJvSearchFiles;
     procedure SetForceFileExtensions(const Value: Boolean);
+    procedure SetDirectory(const Value: string);
   protected
     procedure DrawItem(Index: Integer; Rect: TRect; State: TOwnerDrawState); override;
     procedure CNDrawItem(var Msg: TWMDrawItem); message CN_DRAWITEM;
@@ -251,7 +252,7 @@ type
     procedure ApplyFilePath(const EditText: string); override;
   published
     property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-    property Directory stored False;
+    property Directory write SetDirectory stored False;
     property FileName stored False;
     // set this property to True to force the display of filename extensions for all files even if
     // the user has activated the Explorer option "Don't show extensions for known file types"
@@ -386,8 +387,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDriveCtrls.pas $';
-    Revision: '$Revision: 12770 $';
-    Date: '$Date: 2010-05-16 14:43:57 +0200 (dim. 16 mai 2010) $';
+    Revision: '$Revision: 12904 $';
+    Date: '$Date: 2010-11-27 13:28:53 +0100 (sam., 27 nov. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -398,9 +399,6 @@ uses
   ShellAPI, SysUtils, Math, Forms, ImgList,
   DBT,
   JvJCLUtils, JvJVCLUtils, JvConsts;
-
-const
-  cDirPrefix = #32;
 
 function GetItemHeight(Font: TFont): Integer;
 var
@@ -1543,6 +1541,12 @@ begin
   { No filter on drives }
   FSearchFiles.DirParams.SearchTypes := [];
   FSearchFiles.ErrorResponse := erIgnore;
+
+  // We sort the directory and file list ourself. This is necessary to fix Mantis #5295.
+  // The control inserted a space character in front of all directory names to get them
+  // sorted above all files. But this space character couldn't be removed before handling
+  // the item's text to the user.
+  inherited Sorted := False;
 end;
 
 destructor TJvFileListBox.Destroy;
@@ -1599,6 +1603,8 @@ begin
         Flags := Flags or SHGFI_OVERLAYINDEX;
 
       { First add directories.. }
+      if FSearchFiles.Directories is TStringList then
+        TStringList(FSearchFiles.Directories).Sort;
       with FSearchFiles.Directories do
         for J := 0 to Count - 1 do
         begin
@@ -1606,15 +1612,17 @@ begin
           FillChar(shinf, SizeOf(shinf), 0);
           SHGetFileInfo(PChar(Strings[J]), 0, shinf, SizeOf(shinf), Flags);
           if FForceFileExtensions then
-            I := Items.Add(cDirPrefix + Strings[J])
+            I := Items.Add(Strings[J])
           else
-            I := Items.Add(cDirPrefix + string(shinf.szDisplayName));
+            I := Items.Add(string(shinf.szDisplayName));
           Items.Objects[I] := TObject(shinf.iIcon);
           if I = 100 then
             Screen.Cursor := crHourGlass;
         end;
 
       { ..then add files }
+      if FSearchFiles.Files is TStringList then
+        TStringList(FSearchFiles.Files).Sort;
       with FSearchFiles.Files do
         for J := 0 to Count - 1 do
         begin
@@ -1632,6 +1640,18 @@ begin
       Screen.Cursor := SaveCursor;
     end;
     Change;
+  end;
+end;
+
+procedure TJvFileListBox.SetDirectory(const Value: string);
+begin
+  // Mantis #5301. We split the Directory and FileName setter to handle them slightly different.
+  // For FileName we must only change the directory if the file path changed.
+  if (Value <> '') and
+     (AnsiCompareFileName(ExcludeTrailingPathDelimiter(FileName), ExcludeTrailingPathDelimiter(Directory)) <> 0) then
+  begin
+    inherited ApplyFilePath(Value);
+    ReadFileNames;
   end;
 end;
 
@@ -1704,12 +1724,10 @@ begin
       Offset := FImages.Width + 6;
     end;
 
-    // Use Trim because directories have a space as prefix, so that
-    // the directory names appear above the files.
     tmpR.Left := tmpR.Left + Offset - 2;
-    tmpR.Right := tmpR.Left + TextWidth(Trim(Items[Index])) + 4;
+    tmpR.Right := tmpR.Left + TextWidth(Items[Index]) + 4;
     FillRect(tmpR);
-    TextOut(Rect.Left + Offset, Rect.Top, Trim(Items[Index]));
+    TextOut(Rect.Left + Offset, Rect.Top, Items[Index]);
 
     if odFocused in State then
       DrawFocusRect(tmpR);

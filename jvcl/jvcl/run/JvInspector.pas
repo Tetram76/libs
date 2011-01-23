@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvInspector.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvInspector;
 
@@ -365,6 +365,7 @@ type
     FStyle: TJvInspectorStyle;
     FStylePainter: TJvInspectorPainter;
     FSettingStyle: Boolean;
+    FMouseWheelRecursion: Boolean;
     procedure SetInspectObject(const Value: TObject);
     procedure SetStyle(const Value: TJvInspectorStyle);
     function GetActivePainter: TJvInspectorPainter;
@@ -2072,8 +2073,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven. 02 avr. 2010) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2083,7 +2084,7 @@ implementation
 uses
   RTLConsts, Types, StrUtils, Variants, Consts, Dialogs, Forms, Buttons,
   JclRTTI, JclLogic, JclStrings,
-  JvJCLUtils, JvThemes, JvResources;
+  JvJCLUtils, JvThemes, JvResources, JclSysUtils;
 
 // BCB Type Info support
 var
@@ -4132,8 +4133,17 @@ var
 begin
   if (Selected <> nil) and Selected.DroppedDown then
   begin
-    LbPos := Selected.ListBox.ScreenToClient(ClientToScreen(MousePos));
-    Selected.ListBox.Perform(WM_MOUSEWHEEL, WheelDelta shl 16, MakeLong(LbPos.X, LbPos.Y));
+    // If Selected.ListBox gets the WM_MOUSEWHEEL we would run into an infinite recursion
+    if not FMouseWheelRecursion then
+    begin
+      FMouseWheelRecursion := True;
+      try
+        LbPos := Selected.ListBox.ScreenToClient(ClientToScreen(MousePos));
+        Selected.ListBox.Perform(WM_MOUSEWHEEL, WheelDelta shl 16, MakeLong(LbPos.X, LbPos.Y));
+      finally
+        FMouseWheelRecursion := False;
+      end;
+    end;
   end
   else
   begin
@@ -8979,7 +8989,7 @@ constructor TJvInspectorDateItem.Create(const AParent: TJvCustomInspectorItem;
   const AData: TJvCustomInspectorData);
 begin
   inherited Create(AParent, AData);
-  FFormat := ShortDateFormat;
+  FFormat := JclFormatSettings.ShortDateFormat;
 end;
 
 function TJvInspectorDateItem.GetDisplayValue: string;
@@ -9015,7 +9025,7 @@ begin
     case Value[I] of
       'd':
         begin
-          if (DCount = 0) and (I > 1) and (Value[I - 1] <> DateSeparator) then
+          if (DCount = 0) and (I > 1) and (Value[I - 1] <> JclFormatSettings.DateSeparator) then
             raise EJvInspectorData.CreateRes(@RsESpecifierBeforeSeparator);
           if (DCount = 1) and (Value[I - 1] <> 'd') then
             raise EJvInspectorData.CreateRes(@RsEDOrDDOnlyOnce);
@@ -9025,7 +9035,7 @@ begin
         end;
       'm':
         begin
-          if (MCount = 0) and (I > 1) and (Value[I - 1] <> DateSeparator) then
+          if (MCount = 0) and (I > 1) and (Value[I - 1] <> JclFormatSettings.DateSeparator) then
             raise EJvInspectorData.CreateRes(@RsESpecifierBeforeSeparator);
           if (MCount = 1) and (Value[I - 1] <> 'm') then
             raise EJvInspectorData.CreateRes(@RsEMOrMMOnlyOnce);
@@ -9035,7 +9045,7 @@ begin
         end;
       'y':
         begin
-          if (MCount = 0) and (I > 1) and (Value[I - 1] <> DateSeparator) then
+          if (MCount = 0) and (I > 1) and (Value[I - 1] <> JclFormatSettings.DateSeparator) then
             raise EJvInspectorData.CreateRes(@RsESpecifierBeforeSeparator);
           if (YCount > 1) and (YCount < 4) and (Value[I - 1] <> 'y') then
             raise EJvInspectorData.CreateRes(@RsEYYOrYYYYOnlyOnce);
@@ -9044,17 +9054,17 @@ begin
           Inc(YCount);
         end;
     else
-      if Value[I] = DateSeparator then
+      if Value[I] = JclFormatSettings.DateSeparator then
       begin
         if ((SepCount = 0) and (I = 1)) or
-          ((SepCount = 1) and ((Value[I - 1]) = DateSeparator) or (I = Length(Value))) then
+          ((SepCount = 1) and ((Value[I - 1]) = JclFormatSettings.DateSeparator) or (I = Length(Value))) then
           raise EJvInspectorData.CreateRes(@RsESpecifierBeforeSeparator);
         if SepCount = 2 then
           raise EJvInspectorData.CreateRes(@RsEOnlyTwoSeparators);
         Inc(SepCount);
       end
       else
-        raise EJvInspectorData.CreateResFmt(@RsEOnlyDMYSAllowed, [DateSeparator]);
+        raise EJvInspectorData.CreateResFmt(@RsEOnlyDMYSAllowed, [JclFormatSettings.DateSeparator]);
     end;
     Inc(I);
   end;
@@ -11467,7 +11477,7 @@ function TJvInspectorCustomConfData.GetAsFloat: Extended;
 begin
   CheckReadAccess;
   if TypeInfo.Kind = tkFloat then
-    Result := StrToFloat(Trim(StringReplace(ReadValue, ThousandSeparator, DecimalSeparator,
+    Result := StrToFloat(Trim(StringReplace(ReadValue, JclFormatSettings.ThousandSeparator, JclFormatSettings.DecimalSeparator,
       [rfReplaceAll, rfIgnoreCase])))
   else
     raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs, [cJvInspectorFloat]);

@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOdacSmartQuery.pas 12683 2010-01-29 22:50:54Z jfudickar $
+// $Id: JvOdacSmartQuery.pas 12841 2010-09-05 17:33:11Z jfudickar $
 
 unit JvOdacSmartQuery;
 
@@ -35,12 +35,15 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF USE_3RDPARTY_CORELAB_ODAC}
   SysUtils, Classes, StdCtrls, ExtCtrls, Forms, Controls,
   DB,
   OraSmart, Ora, DBaccess,
   JvThread, JvThreadDialog, JvDynControlEngine,
+  {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
   JvBaseDBThreadedDataset;
 
+{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
 type
   TJvOdacThreadedDatasetAllowedContinueRecordFetchOptions =
     class(TJvBaseThreadedDatasetAllowedContinueRecordFetchOptions)
@@ -298,19 +301,21 @@ type
     property OnThreadException: TJvThreadedDatasetThreadExceptionEvent read
         GetOnThreadException write SetOnThreadException;
   end;
+{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOdacSmartQuery.pas $';
-    Revision: '$Revision: 12683 $';
-    Date: '$Date: 2010-01-29 23:50:54 +0100 (ven. 29 janv. 2010) $';
+    Revision: '$Revision: 12841 $';
+    Date: '$Date: 2010-09-05 19:33:11 +0200 (dim., 05 sept. 2010) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
 uses Variants, MemData;
 
 //=== { TJvOdacSmartQuery } ==================================================
@@ -1360,6 +1365,7 @@ begin
   else
     Result := False;
 end;
+{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
 
 
 {$IFDEF UNITVERSIONING}

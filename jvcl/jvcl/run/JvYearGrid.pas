@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvYearGrid.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvYearGrid.pas 12955 2010-12-29 12:27:53Z jfudickar $
 
 unit JvYearGrid;
 
@@ -272,8 +272,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvYearGrid.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven. 14 août 2009) $';
+    Revision: '$Revision: 12955 $';
+    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -282,7 +282,7 @@ implementation
 
 uses
   JvConsts, JvResources,
-  JvYearGridEditForm;
+  JvYearGridEditForm, JclSysUtils;
 
 const
   TodayFontColor = clWhite;
@@ -426,7 +426,7 @@ begin
         ADate := EncodeDate(Year, Month, Day);
         DS := FormatDateTime('d-mmm-yyyy', ADate);
         W := DayOfWeek(ADate);
-        DS := ShortDayNames[W] + ' ' + DS;
+        DS := JclFormatSettings.ShortDayNames[W] + ' ' + DS;
         AList.Append('<tr>');
         AList.Append('<td width=20%>' + DS + '</td>');
         Infs := FYearData[ACol, ARow].InfoText;
@@ -578,7 +578,7 @@ begin
         Inc(DayOfWeekIndex, Integer(FFirstDayOfWeek)+1);
         If DayOfWeekIndex > 7 then
           DayOfWeekIndex := DayOfWeekIndex - 7;
-        D := ShortDayNames[DayOfWeekIndex][1];
+        D := JclFormatSettings.ShortDayNames[DayOfWeekIndex][1];
       end;
 
       // By default, there is no day in the current cell
@@ -589,7 +589,7 @@ begin
       if (MonthIndex = 0) and (DayIndex > 0) then
         S := D;
       if (MonthIndex <> 0) and (DayIndex = 0) then
-        S := LongMonthNames[MonthIndex];
+        S := JclFormatSettings.LongMonthNames[MonthIndex];
       if (MonthIndex <> 0) and (DayIndex > 0) then
       begin
         if (DayIndex >= StartDays[MonthIndex]) and (DayIndex < StartDays[MonthIndex] + DaysInMonth[MonthIndex]) then

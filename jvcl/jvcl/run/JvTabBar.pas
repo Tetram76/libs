@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTabBar.pas 12754 2010-04-21 19:41:55Z ahuser $
+// $Id: JvTabBar.pas 12952 2010-12-07 15:16:52Z ahuser $
 
 unit JvTabBar;
 
@@ -480,8 +480,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTabBar.pas $';
-    Revision: '$Revision: 12754 $';
-    Date: '$Date: 2010-04-21 21:41:55 +0200 (mer. 21 avr. 2010) $';
+    Revision: '$Revision: 12952 $';
+    Date: '$Date: 2010-12-07 16:16:52 +0100 (mar., 07 déc. 2010) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2193,7 +2193,7 @@ begin
       else
         Brush.Color := CloseColor;
 
-      CloseR := GetCloseRect(Canvas, Tab, Tab.DisplayRect);
+      CloseR := GetCloseRect(Canvas, Tab, R);
       Pen.Color := CloseRectColor;
       if not Tab.Enabled then
         Pen.Color := CloseRectColorDisabled;
