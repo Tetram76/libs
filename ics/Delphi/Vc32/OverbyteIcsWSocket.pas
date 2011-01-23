@@ -3,7 +3,7 @@
 Author:       François PIETTE
 Description:  TWSocket class encapsulate the Windows Socket paradigm
 Creation:     April 1996
-Version:      7.39
+Version:      7.42
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -744,13 +744,24 @@ Dec 20, 2009 V7.35 Arno added support for SSL Server Name Indication (SNI).
                    browers don't send both "localhost" and IP addresses as
                    server names, this is specified in RFC.
 Dec 24, 2009 V7.36 SSL SNI - Do not switch context if not initialized.
-Dec 26, 2009 V7.37 Arno fixed TCustomSyncWSocket.ReadLine for Unicode. It 
+Dec 26, 2009 V7.37 Arno fixed TCustomSyncWSocket.ReadLine for Unicode. It
                    now takes an AnsiString buffer. Since this method is highly
                    deprecated it's also marked as "deprecated". Do not use it
                    in new applications.
 May 08, 2010 V7.38 Arno Garrels added support for OpenSSL 0.9.8n. Read comments
                    in OverbyteIcsLIBEAY.pas for details.
 May 16, 2010 V7.39 Arno Garrels reenabled check for nil in WMAsyncGetHostByName.
+Jun 10, 2010 V7.40 Arno Garrels added experimental timeout and throttle feature
+                   to TWSocket. Currently both features have to be enabled
+                   explicitly with conditional defines EXPERIMENTAL_TIMEOUT
+                   and/or EXPERIMENTAL_THROTTLE (see OverbyteIcsDefs.inc )
+Aug 02, 2010 V7.41 Arno removed an option to send plain UTF-16 strings with
+                   SendStr() and SendLine() by passing 1200 (CP_UTF16) in the
+                   codepage parameter. Changed SendLine() to return correct
+                   number of bytes written.
+Aug 08, 2010 V7.42 FPiette prevented socket close in TCustomWSocket.Destroy when
+                   socket state is wsInvalidState (this happend when an
+                   exception is raise early in the constructor).
 
 
 }
@@ -853,14 +864,17 @@ uses
 {$IFNDEF NO_DEBUG_LOG}
   OverbyteIcsLogger,
 {$ENDIF}
+{$IFDEF EXPERIMENTAL_TIMER}
+  OverbyteIcsThreadTimer,
+{$ENDIF}
   OverbyteIcsUtils,
   OverbyteIcsTypes,      OverbyteIcsLibrary,
   OverbyteIcsWndControl, OverbyteIcsWSockBuf,
   OverbyteIcsWinsock;
 
 const
-  WSocketVersion            = 739;
-  CopyRight    : String     = ' TWSocket (c) 1996-2010 Francois Piette V7.39 ';
+  WSocketVersion            = 741;
+  CopyRight    : String     = ' TWSocket (c) 1996-2010 Francois Piette V7.41 ';
   WSA_WSOCKET_TIMEOUT       = 12001;
 {$IFNDEF BCB}
   { Manifest constants for Shutdown }
@@ -1206,11 +1220,11 @@ type  { <== Required to make D7 code explorer happy, AG 05/24/2007 }
     procedure   Pause; virtual;
     procedure   Resume; virtual;
     procedure   PutDataInSendBuffer(Data : TWSocketData; Len : Integer); virtual;
-    procedure   PutStringInSendBuffer(const Str : RawByteString); {$IFDEF COMPILER12_UP} overload; {$ENDIF}
+    function    PutStringInSendBuffer(const Str : RawByteString): Integer; {$IFDEF COMPILER12_UP} overload; {$ENDIF}
 {$IFDEF COMPILER12_UP}
-    procedure   PutStringInSendBuffer(const Str : UnicodeString; ACodePage: LongWord); overload;
-    procedure   PutStringInSendBuffer(const Str : UnicodeString); overload;
-{$ENDIF}    
+    function    PutStringInSendBuffer(const Str : UnicodeString; ACodePage: LongWord): Integer; overload;
+    function    PutStringInSendBuffer(const Str : UnicodeString): Integer; overload;
+{$ENDIF}
     procedure   DeleteBufferedData;
 {$IFDEF COMPILER2_UP}
     procedure   ThreadAttach; override;
@@ -1532,7 +1546,7 @@ Nov 08, 2007 A. Garrels added property PublicKey to TX509Base.
 const
      SslWSocketVersion            = 100;
      SslWSocketDate               = 'Jan 18, 2006';
-     SslWSocketCopyRight : String = ' TSslWSocket (c) 2003-2006 Francois Piette V1.00.5e ';
+     SslWSocketCopyRight : String = ' TSslWSocket (c) 2003-2010 Francois Piette V1.00.5e ';
 
 const
      
@@ -2334,7 +2348,11 @@ type
   public
       constructor Create{$IFDEF VCL}(AOwner : TComponent){$ENDIF}; override;
       destructor  Destroy; override;
-      function    SendLine(const Str : String) : Integer; virtual;
+      function    SendLine(const Str : RawByteString) : Integer; {$IFDEF COMPILER12_UP} overload; {$ENDIF} virtual;
+{$IFDEF COMPILER12_UP}
+      function    SendLine(const Str : UnicodeString; ACodePage: LongWord) : Integer; overload; virtual;
+      function    SendLine(const Str : UnicodeString) : Integer; overload; virtual;
+{$ENDIF}
       property    LineLength : Integer      read  FLineLength;
       property    RcvdPtr    : TWSocketData read  FRcvdPtr;
       property    RcvdCnt    : LongInt      read  FRcvdCnt;
@@ -2373,10 +2391,109 @@ type
           {$IFDEF COMPILER12_UP}'Do not use in new applications'{$ENDIF};
   end;
 
+{$IFDEF EXPERIMENTAL_TIMER}
+  TIcsTimerHandle = Pointer;
+  TIcsTimerItem = record
+     Interval : LongWord;
+     LastTick : LongWord;
+     Event    : TNotifyEvent;
+  end;
+  PIcsTimerItem = ^TIcsTimerItem;
+
+  TCustomTimerWSocket = class(TCustomSyncWSocket)
+  private
+      FTimer              : TIcsThreadTimer;
+      FTimerList          : TList;
+      FNextMinInterval    : LongWord;
+      FOldTimerEnabled    : Boolean;
+      procedure HandleBaseTimer(Sender: TObject);
+  protected
+      function   RegisterTimer: TIcsTimerHandle;
+      procedure  UnregisterTimer(HTimer: TIcsTimerHandle);
+      function   SetTimer(HTimer: TIcsTimerHandle; Interval: LongWord;
+                          OnTimer: TNotifyEvent): Boolean;
+  public
+      destructor Destroy; override;
+      procedure  ThreadAttach; override;
+      procedure  ThreadDetach; override;
+  end;
+{$ENDIF}
+
+{$IFDEF EXPERIMENTAL_TIMEOUT}
+  TTimeoutReason = (torConnect, torIdle);
+  TTimeoutEvent = procedure (Sender: TObject; Reason: TTimeoutReason) of object;
+  TCustomTimeoutWSocket = class(TCustomTimerWSocket)
+  private
+      FConnectTimeout         : LongWord;
+      FIdleTimeout            : LongWord;
+      FTimeoutSampleInterval  : LongWord;
+      FOnTimeout              : TTimeoutEvent;
+      FToTimer                : TIcsTimerHandle;
+      FConnectStartTick       : LongWord;
+      procedure SetTimeout(Value: LongWord);
+      procedure HandleTimeoutTimer(Sender: TObject);
+  protected
+      procedure TriggerTimeout(Reason: TTimeoutReason); virtual;
+      procedure TriggerSessionConnectedSpecial(Error: Word); override;
+      procedure TriggerSessionClosed(Error: Word); override;
+      procedure DupConnected; override;
+  public
+      constructor Create(AOwner: TComponent); override;
+      procedure Connect; override;
+  //published
+      property TimeoutSampleInterval: LongWord     read  FTimeoutSampleInterval
+                                                   write FTimeoutSampleInterval;
+      property ConnectTimeout: LongWord            read  FConnectTimeout
+                                                   write FConnectTimeout;
+      property IdleTimeout: LongWord read FIdleTimeout write FIdleTimeout;
+      property OnTimeout: TTimeoutEvent read FOnTimeout write FOnTimeout;
+  end;
+{$ENDIF}
+
+{$IFDEF EXPERIMENTAL_THROTTLE}
+  {$IFDEF EXPERIMENTAL_TIMEOUT}
+  TCustomThrottledWSocket = class(TCustomTimeoutWSocket)
+  {$ELSE}
+  TCustomThrottledWSocket = class(TCustomTimerWSocket)
+  {$ENDIF}
+  private
+      FBandwidthLimit       : LongWord;  // Bytes per second, null = disabled
+      FBandwidthSampling    : LongWord;  // Msec sampling interval
+      FBandwidthCount       : LongWord;  // Byte counter
+      FBandwidthMaxCount    : LongWord;  // Bytes during sampling period
+      FBandwidthTimer       : TIcsTimerHandle;//TIcsThreadTimer;
+      FBandwidthPaused      : Boolean;
+      FBandwidthEnabled     : Boolean;
+      procedure HandleThrottleTimer(Sender: TObject);
+      procedure SetBandwidthControl;
+  protected
+      procedure DupConnected; override;
+      function  RealSend(var Data: TWSocketData; Len : Integer) : Integer; override;
+      procedure TriggerSessionConnectedSpecial(Error: Word); override;
+      procedure TriggerSessionClosed(Error: Word); override;
+  public
+      constructor Create(AOwner: TComponent); override;
+      function Receive(Buffer: TWSocketData; BufferSize: Integer) : Integer; override;
+  //published
+      property BandwidthLimit       : LongWord     read  FBandwidthLimit
+                                                   write FBandwidthLimit;
+      property BandwidthSampling    : LongWord     read  FBandwidthSampling
+                                                   write FBandwidthSampling;
+  end;
+{$ENDIF}
+
 {$IFDEF CLR}
 //  [DesignTimeVisibleAttribute(TRUE)]
 {$ENDIF}
+{$IFDEF EXPERIMENTAL_THROTTLE}
+  TWSocket = class(TCustomThrottledWSocket)
+{$ELSE}
+  {$IFDEF EXPERIMENTAL_TIMEOUT}
+  TWSocket = class(TCustomTimeoutWSocket)
+  {$ELSE}
   TWSocket = class(TCustomSyncWSocket)
+  {$ENDIF}
+{$ENDIF}
   public
     property PortNum;
     property Handle;
@@ -5331,23 +5448,27 @@ begin
         { Ignore any exception here }
     end;
 
-    if FState <> wsClosed then       { Close the socket if not yet closed }
-        Close;
+    if FState <> wsInvalidState then begin              { FPiette V7.42 }
+        { wsInvalidState happend when an exception is raised early in the constructor }
+        { Close the socket if not yet closed }
+        if FState <> wsClosed then
+            Close;
 
 {$IFDEF COMPILER2_UP}
-    _EnterCriticalSection(GWSockCritSect);
-    try
+        _EnterCriticalSection(GWSockCritSect);
+        try
 {$ENDIF}
-        Dec(WSocketGCount);
-        if WSocketGCount <= 0 then begin
-            WSocketUnloadWinsock;
-{           WSocketGCount := 0;  // it is set to 0 in WSocketUnloadWinsock }
-        end;
+            Dec(WSocketGCount);
+            if WSocketGCount <= 0 then begin
+                WSocketUnloadWinsock;
+    {           WSocketGCount := 0;  // it is set to 0 in WSocketUnloadWinsock }
+            end;
 {$IFDEF COMPILER2_UP}
-    finally
-        _LeaveCriticalSection(GWSockCritSect);
-    end;
+        finally
+            _LeaveCriticalSection(GWSockCritSect);
+        end;
 {$ENDIF}
+    end;
 
     if Assigned(FBufHandler) then begin
         FBufHandler.Free;
@@ -5855,7 +5976,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure TCustomWSocket.PutStringInSendBuffer(const Str : RawByteString);
+function TCustomWSocket.PutStringInSendBuffer(const Str : RawByteString): Integer;
 {$IFDEF CLR}
 var
     Data : TBytes;
@@ -5868,29 +5989,28 @@ begin
 {$ENDIF}
 {$IFDEF WIN32}
 begin
-    if Length(Str) > 0 then
-        PutDataInSendBuffer(@Str[1], Length(Str));
+    Result := Length(Str);
+    if Result > 0 then
+        PutDataInSendBuffer(Pointer(Str), Result);
 {$ENDIF}
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFDEF COMPILER12_UP}                                              
-procedure TCustomWSocket.PutStringInSendBuffer(const Str : UnicodeString; ACodePage: LongWord);
+function TCustomWSocket.PutStringInSendBuffer(const Str : UnicodeString; ACodePage : LongWord): Integer;
 begin
-    if ACodePage = 1200 then // UTF-16Le, default UnicodeString => send as is
-        PutDataInSendBuffer(Pointer(Str), Length(Str) * 2)
-    else
-        PutStringInSendBuffer(UnicodeToAnsi(Str, ACodePage));  // Explicit cast
+    Result := PutStringInSendBuffer(UnicodeToAnsi(Str, ACodePage));  // Explicit cast
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure TCustomWSocket.PutStringInSendBuffer(const Str : UnicodeString);
+function TCustomWSocket.PutStringInSendBuffer(const Str : UnicodeString): Integer;
 begin
-    PutStringInSendBuffer(AnsiString(Str));  // Explicit cast
+    Result := PutStringInSendBuffer(AnsiString(Str));  // Explicit cast
 end;
 {$ENDIF}
+
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomWSocket.PutDataInSendBuffer(
@@ -5977,15 +6097,7 @@ end;
 {$IFDEF COMPILER12_UP}
 function TCustomWSocket.SendStr(const Str : UnicodeString; ACodePage : LongWord) : Integer;
 begin
-    if Length(Str) > 0 then
-    begin
-        if ACodePage = 1200 then // UTF-16Le, default UnicodeString => send as is
-            Result := Send( Pointer(Str), Length(Str) * 2)
-        else
-           Result := SendStr(UnicodeToAnsi(Str, ACodePage));
-   end
-   else
-        Result := 0;
+    Result := SendStr(UnicodeToAnsi(Str, ACodePage));
 end;
 
 
@@ -6002,16 +6114,15 @@ end;
 { Return -1 if error, else return number of byte written                    }
 function TCustomWSocket.SendStr(const Str : RawByteString) : Integer;
 begin
-    if Length(Str) > 0 then
+    Result := Length(Str);
+    if Result > 0 then
         Result := Send({$IFDEF CLR}
                        System.Text.Encoding.Default.GetBytes(Str),
                        {$ENDIF}
                        {$IFDEF WIN32}
                        PAnsiChar(Str),
                        {$ENDIF}
-                       Length(Str))
-    else
-        Result := 0;
+                       Result);
 end;
 
 
@@ -9372,14 +9483,51 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{ Return -1 if error, else return number of byte written                    }
-function TCustomLineWSocket.SendLine(const Str : String) : Integer;
+{$IFDEF COMPILER12_UP}
+{ Returns -1 on error only if event OnError is assigned, otherwise an       }
+{ ESocketException may be raised. Returns the number of bytes written on    }
+{ success. LineEnd is treated as a raw sequence of bytes, hence it's not    }
+{ converted but sent as is.                                                 }
+function TCustomLineWSocket.SendLine(
+    const Str : UnicodeString;
+    ACodePage : LongWord) : Integer;
 begin
-    Result := Length(Str);
+    Result := PutStringInSendBuffer(Str, ACodePage);
     if Result > 0 then begin
-        PutStringInSendBuffer(Str);
-        SendStr(LineEnd);
-        Inc(Result, Length(LineEnd));
+        if SendStr(LineEnd) > -1 then
+            Inc(Result, Length(LineEnd))
+        else
+            Result := -1;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomLineWSocket.SendLine(const Str : UnicodeString) : Integer;
+begin
+    Result := PutStringInSendBuffer(Str);
+    if Result > 0 then begin
+        if SendStr(LineEnd) > -1 then
+            Inc(Result, Length(LineEnd))
+        else
+            Result := -1;
+    end;
+end;
+{$ENDIF}
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ Returns -1 on error only if event OnError is assigned, otherwise an       }
+{ ESocketException may be raised. Returns the number of bytes written on    }
+{ success.                                                                  }
+function TCustomLineWSocket.SendLine(const Str : RawByteString) : Integer;
+begin
+    Result := PutStringInSendBuffer(Str);
+    if Result > 0 then begin
+        if SendStr(LineEnd) > -1 then
+            Inc(Result, Length(LineEnd))
+        else
+            Result := -1;
     end;
 end;
 
@@ -10113,6 +10261,352 @@ begin
         FLineMode        := OldLineMode;
     end;
 end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFDEF EXPERIMENTAL_TIMER}
+
+{ TCustomTimerWSocket }
+
+destructor TCustomTimerWSocket.Destroy;
+var
+    I : Integer;
+begin
+    _FreeAndNil(FTimer);
+    if Assigned(FTimerList) then begin
+        for I := 0 to FTimerList.Count -1 do
+            FreeMem(FTimerList[I]);
+        _FreeAndNil(FTimerList);
+    end;
+    inherited Destroy;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomTimerWSocket.RegisterTimer: TIcsTimerHandle;
+begin
+    if not Assigned(FTimerList) then
+        FTimerList := TList.Create;
+    GetMem(Result, SizeOf(TIcsTimerItem));
+    FillChar(Result^, SizeOf(TIcsTimerItem), 0);
+    FTimerList.Add(Result);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimerWSocket.UnregisterTimer(HTimer: TIcsTimerHandle);
+var
+    I : Integer;
+begin
+    if Assigned(FTimerList) and Assigned(HTimer) then
+    begin
+        I := FTimerList.IndexOf(HTimer);
+        if I >= 0 then begin
+            FreeMem(FTimerList[I]);
+            FTimerList.Delete(I);
+            if (FTimerList.Count = 0) and Assigned(FTimer) then begin
+                FTimer.Enabled   := FALSE;
+                FTimer.Interval  := 5000;
+                FNextMinInterval := FTimer.Interval;
+            end;
+        end;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomTimerWSocket.SetTimer(HTimer: TIcsTimerHandle;
+  Interval: LongWord; OnTimer: TNotifyEvent): Boolean;
+begin
+    if Assigned(FTimerList) and (FTimerList.IndexOf(HTimer) >= 0) then begin
+        PIcsTimerItem(HTimer)^.Interval := Interval;
+        PIcsTimerItem(HTimer)^.Event    := OnTimer;
+        if Interval > 0 then begin
+            PIcsTimerItem(HTimer)^.LastTick := _GetTickCount;
+            if not Assigned(FTimer) then begin
+                FTimer := TIcsThreadTimer.Create(Self);
+                FTimer.Enabled := FALSE;
+                FTimer.Interval := 5000;
+                FTimer.OnTimer := HandleBaseTimer;
+            end;
+            if Interval < FTimer.Interval then begin
+                FNextMinInterval := FTimer.Interval;
+                FTimer.Interval := Interval;
+            end;
+            if not FTimer.Enabled then
+                FTimer.Enabled := TRUE;
+        end
+        else if Assigned(FTimer) and (FTimer.Interval < FNextMinInterval) then
+            FTimer.Interval := FNextMinInterval;
+        Result := TRUE;
+    end
+    else
+        Result := FALSE;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimerWSocket.ThreadAttach;
+begin
+    inherited ThreadAttach;
+    if Assigned(FTimer) then
+        FTimer.Enabled := FOldTimerEnabled;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimerWSocket.ThreadDetach;
+begin
+    if Assigned(FTimer) then begin
+        FOldTimerEnabled := FTimer.Enabled;
+        if FOldTimerEnabled then
+            FTimer.Enabled := FALSE;
+    end
+    else
+        FOldTimerEnabled := FALSE;
+    inherited ThreadDetach;     
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimerWSocket.HandleBaseTimer(Sender: TObject);
+var
+    I  : Integer;
+    T1 : LongWord;
+    Item : PIcsTimerItem;
+begin
+    T1 := _GetTickCount;
+    for I := 0 to FTimerList.Count -1 do begin
+        Item := PIcsTimerItem(FTimerList[I]);
+        if (Item^.Interval > 0) and Assigned(Item^.Event) and
+           (IcsCalcTickDiff(Item^.LastTick, T1) >= Item^.Interval) then begin
+           Item^.LastTick := T1;
+           Item^.Event(Self);
+        end;
+    end;
+end;
+{$ENDIF}
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFDEF EXPERIMENTAL_TIMEOUT}
+
+{ TCustomTimeoutWSocket }
+
+constructor TCustomTimeoutWSocket.Create(AOwner: TComponent);
+begin
+    inherited;
+    FTimeoutSampleInterval := 5000;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimeoutWSocket.HandleTimeoutTimer(Sender: TObject);
+begin
+    if FState <> wsConnected then begin
+        if IcsCalcTickDiff(FConnectStartTick,
+                           _GetTickCount) > FConnectTimeout then begin
+            SetTimeout(0);
+            TriggerTimeout(torConnect);
+        end;
+    end
+    else begin
+        if IcsCalcTickDiff(FCounter.GetLastAliveTick,
+                           _GetTickCount) > FIdleTimeout then begin
+            SetTimeout(0);
+            TriggerTimeout(torIdle);
+        end;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimeoutWSocket.Connect;
+begin
+    if FConnectTimeout > 0 then begin
+        SetTimeout(FConnectTimeout);
+        FConnectStartTick := _GetTickCount;
+    end    
+    else if FIdleTimeout > 0 then
+        SetTimeout(FIdleTimeout);
+    inherited Connect;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimeoutWSocket.SetTimeout(Value: LongWord);
+begin
+    if Value = 0 then begin
+        if Assigned(FToTimer) then begin
+            UnregisterTimer(FToTimer);
+            FToTimer := nil;
+        end;
+    end
+    else begin
+        if not Assigned(FToTimer) then
+            FToTimer := RegisterTimer;
+        if not Assigned(FCounter) then
+            CreateCounter;
+        SetTimer(FToTimer, FTimeoutSampleInterval, HandleTimeoutTimer);
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimeoutWSocket.DupConnected;
+begin
+    SetTimeout(FIdleTimeout);
+    inherited DupConnected;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimeoutWSocket.TriggerSessionClosed(Error: Word);
+begin
+    SetTimeout(0);
+    inherited TriggerSessionClosed(Error);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimeoutWSocket.TriggerSessionConnectedSpecial(
+  Error: Word);
+begin
+    if Error = 0 then
+        SetTimeout(FIdleTimeout)
+    else
+        SetTimeout(0);
+    inherited TriggerSessionConnectedSpecial(Error);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomTimeoutWSocket.TriggerTimeout(Reason: TTimeoutReason);
+begin
+    if Assigned(FOnTimeout) then
+        FOnTimeout(Self, Reason);
+end;
+{$ENDIF}
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFDEF EXPERIMENTAL_THROTTLE}
+
+{ TCustomThrottledWSocket }
+
+constructor TCustomThrottledWSocket.Create(AOwner: TComponent);
+begin
+    inherited Create(AOwner);
+    FBandwidthSampling := 1000; { Msec sampling interval, less is not possible }
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomThrottledWSocket.DupConnected;
+begin
+    inherited DupConnected;
+    SetBandwidthControl;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomThrottledWSocket.SetBandwidthControl;
+var
+    I : Int64;
+begin
+    FBandwidthCount := 0;
+    if FBandwidthLimit > 0 then
+    begin
+        if not Assigned(FBandwidthTimer) then
+            FBandwidthTimer := RegisterTimer;
+        SetTimer(FBandwidthTimer, FBandwidthSampling, HandleThrottleTimer);
+        // Number of bytes we allow during a sampling period, max integer max.
+        I := Int64(FBandwidthLimit) * FBandwidthSampling div 1000;
+        if I < MaxInt then
+            FBandwidthMaxCount := I
+        else
+            FBandwidthMaxCount := MaxInt;
+        FBandwidthPaused   := FALSE;
+        Include(FComponentOptions, wsoNoReceiveLoop);
+        FBandwidthEnabled := TRUE
+    end
+    else begin
+        if Assigned(FBandwidthTimer) then begin
+            UnregisterTimer(FBandwidthTimer);
+            FBandwidthTimer := nil;
+        end;
+        FBandwidthEnabled := FALSE;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomThrottledWSocket.RealSend(var Data: TWSocketData;
+  Len: Integer): Integer;
+begin
+    Result := inherited RealSend(Data, Len);
+
+    if FBandwidthEnabled and (Result > 0) then begin
+        Inc(FBandwidthCount, Result);
+        if (FBandwidthCount > FBandwidthMaxCount) and
+           (not FBandwidthPaused) then begin
+            FBandwidthPaused := TRUE;
+            Pause;
+        end;
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomThrottledWSocket.Receive(Buffer: TWSocketData;
+  BufferSize: Integer): Integer;
+begin
+    Result := inherited Receive(Buffer, BufferSize);
+    
+    if FBandwidthEnabled and (Result > 0) then begin
+        Inc(FBandwidthCount, Result);
+        if (FBandwidthCount > FBandwidthMaxCount) and
+            (not FBandwidthPaused) then begin
+            FBandwidthPaused := TRUE;
+            Pause;
+        end;    
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomThrottledWSocket.HandleThrottleTimer(Sender: TObject);
+begin
+    if FBandwidthPaused then begin
+        FBandwidthPaused := FALSE;
+        Dec(FBandwidthCount, FBandwidthMaxCount);
+        Resume;
+    end
+    else
+        FBandwidthCount := 0;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomThrottledWSocket.TriggerSessionClosed(Error: Word);
+begin
+    if Assigned(FBandwidthTimer) then
+    begin
+        UnregisterTimer(FBandwidthTimer);
+        FBandwidthTimer := nil;
+    end;
+    inherited TriggerSessionClosed(Error);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomThrottledWSocket.TriggerSessionConnectedSpecial(Error: Word);
+begin
+    inherited TriggerSessionConnectedSpecial(Error);
+    if Error = 0 then
+        SetBandwidthControl;
+end;
+{$ENDIF}
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
