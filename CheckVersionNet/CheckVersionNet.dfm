@@ -89,14 +89,13 @@ object frmVerifUpgrade: TfrmVerifUpgrade
     object Label4: TLabel
       Left = 0
       Top = 46
-      Width = 303
+      Width = 290
       Height = 26
       Align = alBottom
       Caption = 
         'Cliquez sur "Fermer" pour fermer l'#39'application et proc'#233'der '#224' la ' +
         'mise '#224' jour manuelle.'
       WordWrap = True
-      ExplicitWidth = 290
     end
     object Button2: TButton
       Left = 62
