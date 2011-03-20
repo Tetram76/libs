@@ -30,7 +30,7 @@ type
     FHomePage, FUpgrade, FProgramme, FVersion: string;
   end;
 
-function CheckVersion(const Titre, Code: string; CurrentVersion: TFileVersion; ForceMessage, CanContinue: Boolean): Integer;
+function CheckVersion(const Titre, Code: string; CurrentVersion: TVersionNumber; ForceMessage, CanContinue: Boolean): Integer;
 
 implementation
 
@@ -57,7 +57,7 @@ begin
   raise EOSError.Create(PChar(@Buffer));
 end;
 
-function CheckVersion(const Titre, Code: string; CurrentVersion: TFileVersion; ForceMessage, CanContinue: Boolean): Integer;
+function CheckVersion(const Titre, Code: string; CurrentVersion: TVersionNumber; ForceMessage, CanContinue: Boolean): Integer;
 // Valeurs de retour:
 // -1: erreur durant l'interrogation du site
 // 0: pas de mise à jour
