@@ -99,7 +99,7 @@ function IsToogleKey(nVirtKey: Integer): Boolean;
 function IsDownKey(nVirtKey: Integer): Boolean;
 
 type
-  TFileVersion = record
+  TVersionNumber = record
   private
     type TArrayOfInteger = array of Integer;
 
@@ -113,20 +113,20 @@ type
     property Release: Integer index 2 read GetIndexVersion;
     property Build: Integer index 3 read GetIndexVersion;
 
-    class operator Subtract(a, b: TFileVersion): Integer;
-    class operator Equal(a, b: TFileVersion): Boolean;
-    class operator NotEqual(a, b: TFileVersion): Boolean;
-    class operator GreaterThan(a, b: TFileVersion): Boolean;
-    class operator GreaterThanOrEqual(a, b: TFileVersion): Boolean;
-    class operator LessThan(a, b: TFileVersion): Boolean;
-    class operator LessThanOrEqual(a, b: TFileVersion): Boolean;
-    class operator Implicit(a: string): TFileVersion;
-    class operator Implicit(a: TFileVersion): string;
+    class operator Subtract(a, b: TVersionNumber): Integer;
+    class operator Equal(a, b: TVersionNumber): Boolean;
+    class operator NotEqual(a, b: TVersionNumber): Boolean;
+    class operator GreaterThan(a, b: TVersionNumber): Boolean;
+    class operator GreaterThanOrEqual(a, b: TVersionNumber): Boolean;
+    class operator LessThan(a, b: TVersionNumber): Boolean;
+    class operator LessThanOrEqual(a, b: TVersionNumber): Boolean;
+    class operator Implicit(a: string): TVersionNumber;
+    class operator Implicit(a: TVersionNumber): string;
 
     class function CompareVersionNum(Ver1, Ver2: String; Sep: Char = '.'): Integer; static;
   end;
 
-function GetFichierVersion(const Fichier: string): TFileVersion;
+function GetFichierVersion(const Fichier: string): TVersionNumber;
 function MulDiv(Number, Numerator, Denominator: Integer; Default: Real = 0): Real;
 procedure ClearList(List: TList);
 function IsRemoteSession: Boolean;
@@ -993,7 +993,7 @@ begin
       Result := Result + FileName[i];
 end;
 
-function GetFichierVersion(const Fichier: string): TFileVersion;
+function GetFichierVersion(const Fichier: string): TVersionNumber;
 var
   dump, size: Cardinal;
   buffer: array of Char;
@@ -1079,12 +1079,12 @@ end;
 
 { TFileVersion }
 
-class operator TFileVersion.Subtract(a, b: TFileVersion): Integer;
+class operator TVersionNumber.Subtract(a, b: TVersionNumber): Integer;
 begin
   Result := CompareVersionNum(a.Value, b.Value);
 end;
 
-class procedure TFileVersion.DecodeVer(const Ver: string; var AVer: TArrayOfInteger; Sep: Char);
+class procedure TVersionNumber.DecodeVer(const Ver: string; var AVer: TArrayOfInteger; Sep: Char);
 var
   Index: Integer;
   s: string;
@@ -1107,17 +1107,17 @@ begin
   end;
 end;
 
-class operator TFileVersion.Equal(a, b: TFileVersion): Boolean;
+class operator TVersionNumber.Equal(a, b: TVersionNumber): Boolean;
 begin
   Result := CompareVersionNum(a.Value, b.Value) = 0;
 end;
 
-class operator TFileVersion.NotEqual(a, b: TFileVersion): Boolean;
+class operator TVersionNumber.NotEqual(a, b: TVersionNumber): Boolean;
 begin
   Result := not (a = b);
 end;
 
-function TFileVersion.GetIndexVersion(const Index: Integer): Integer;
+function TVersionNumber.GetIndexVersion(const Index: Integer): Integer;
 var
   AVer: TArrayOfInteger;
 begin
@@ -1128,37 +1128,37 @@ begin
     Result := 0;
 end;
 
-class operator TFileVersion.GreaterThan(a, b: TFileVersion): Boolean;
+class operator TVersionNumber.GreaterThan(a, b: TVersionNumber): Boolean;
 begin
   Result := CompareVersionNum(a.Value, b.Value) > 0;
 end;
 
-class operator TFileVersion.GreaterThanOrEqual(a, b: TFileVersion): Boolean;
+class operator TVersionNumber.GreaterThanOrEqual(a, b: TVersionNumber): Boolean;
 begin
   Result := CompareVersionNum(a.Value, b.Value) >= 0;
 end;
 
-class operator TFileVersion.LessThan(a, b: TFileVersion): Boolean;
+class operator TVersionNumber.LessThan(a, b: TVersionNumber): Boolean;
 begin
   Result := CompareVersionNum(a.Value, b.Value) < 0;
 end;
 
-class operator TFileVersion.LessThanOrEqual(a, b: TFileVersion): Boolean;
+class operator TVersionNumber.LessThanOrEqual(a, b: TVersionNumber): Boolean;
 begin
   Result := CompareVersionNum(a.Value, b.Value) <= 0;
 end;
 
-class operator TFileVersion.Implicit(a: TFileVersion): string;
+class operator TVersionNumber.Implicit(a: TVersionNumber): string;
 begin
   Result := a.Value;
 end;
 
-class operator TFileVersion.Implicit(a: string): TFileVersion;
+class operator TVersionNumber.Implicit(a: string): TVersionNumber;
 begin
   Result.Value := a;
 end;
 
-class function TFileVersion.CompareVersionNum(Ver1, Ver2: string; Sep: Char): Integer;
+class function TVersionNumber.CompareVersionNum(Ver1, Ver2: string; Sep: Char): Integer;
 
   procedure AjusteArray(var A1: TArrayOfInteger; const A2: TArrayOfInteger);
   begin
