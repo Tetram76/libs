@@ -47,8 +47,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-01-15 11:08:45 +0100 (sam., 15 janv. 2011)                         $ }
-{ Revision:      $Rev:: 3476                                                                     $ }
+{ Last modified: $Date:: 2011-03-14 21:30:11 +0100 (lun., 14 mars 2011)                          $ }
+{ Revision:      $Rev:: 3510                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -516,8 +516,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAnsiStrings.pas $';
-    Revision: '$Revision: 3476 $';
-    Date: '$Date: 2011-01-15 11:08:45 +0100 (sam., 15 janv. 2011) $';
+    Revision: '$Revision: 3510 $';
+    Date: '$Date: 2011-03-14 21:30:11 +0100 (lun., 14 mars 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -3064,15 +3064,19 @@ begin
   Result := (AnsiCharTypes[C] and C1_LOWER) <> 0;
 end;
 
+// JclSysUtils.TJclFormatSettings.GetDecimalSeparator is manually inlined in the 2 following functions
+// this fixes compiler warnings about functions not being inlined
+ 
 function CharIsNumberChar(const C: AnsiChar): Boolean;
 begin
   Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (C = AnsiSignMinus) or (C = AnsiSignPlus) or
-    (Char(C) = JclFormatSettings.DecimalSeparator);
+    (Char(C) = {$IFDEF RTL220_UP}FormatSettings.DecimalSeparator{$ELSE}SysUtils.DecimalSeparator{$ENDIF});
 end;
 
 function CharIsNumber(const C: AnsiChar): Boolean;
 begin
-  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or (Char(C) = JclFormatSettings.DecimalSeparator);
+  Result := ((AnsiCharTypes[C] and C1_DIGIT) <> 0) or
+    (Char(C) = {$IFDEF RTL220_UP}FormatSettings.DecimalSeparator{$ELSE}SysUtils.DecimalSeparator{$ENDIF});
 end;
 
 function CharIsPrintable(const C: AnsiChar): Boolean;

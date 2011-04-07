@@ -25,15 +25,18 @@ ContentFile=JclDeveloperToolscontents.html
 IndexFile=JclDeveloperToolsidx.html
 
 [Project Database Files]
-Count=2
-File0=Jcl.doxdb
-File1=JclContainers.doxdb
+Count=4
+File0=..\..\..\help\VCL.doxdb
+File1=..\..\..\help\JEDI.doxdb
+File2=Jcl.doxdb
+File3=JclContainers.doxdb
 
 [Source Files]
-Count=29
-File1=..\..\source\common\JclCompilerUtils.pas
-File2=..\..\source\common\JclDevToolsResources.pas
-File3=..\..\source\common\JclIDEUtils.pas
+Count=30
+File0=..\..\source\common\JclCompilerUtils.pas
+File1=..\..\source\common\JclDevToolsResources.pas
+File2=..\..\source\common\JclIDEUtils.pas
+File3=..\..\source\common\JclMsBuild.pas
 File4=..\..\source\common\JclPreProcessorAlgorithmsTemplates.pas
 File5=..\..\source\common\JclPreProcessorArrayListsTemplates.pas
 File6=..\..\source\common\JclPreProcessorArraySetsTemplates.pas
@@ -60,3 +63,11 @@ File26=..\..\source\common\JclUsesUtils.pas
 File27=..\..\source\windows\JclHelpUtils.pas
 File28=..\..\source\windows\MSHelpServices_TLB.pas
 File29=..\..\..\help\JclDeveloperTools.dtx
+
+[General]
+Copyright=Copyright (C) 1999, 2011 Project JEDI
+Summary=Documentation of the JEDI Code Library Developer Tools package
+Title=JEDI Code Library Developer Tools package
+VersionBuild=3847
+VersionMajor=2
+VersionMinor=3

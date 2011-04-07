@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-01-05 20:29:18 +0100 (mer., 05 janv. 2011)                         $ }
-{ Revision:      $Rev:: 3460                                                                     $ }
+{ Last modified: $Date:: 2011-02-10 17:39:20 +0100 (jeu., 10 févr. 2011)                        $ }
+{ Revision:      $Rev:: 3492                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1626,6 +1626,7 @@ resourcestring
   RsRTTIValueOutOfRange   = 'Value out of range (%s).';
   RsRTTIUnknownIdentifier = 'Unknown identifier ''%s''.';
   RsRTTIInvalidBaseType   = 'Invalid base type (%s is of type %s).';
+  RsRTTINoStringValue     = 'The property %s of type %s has no string value'; 
 
   RsRTTIVar           = 'var ';
   RsRTTIConst         = 'const ';
@@ -2015,8 +2016,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3460 $';
-    Date: '$Date: 2011-01-05 20:29:18 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 3492 $';
+    Date: '$Date: 2011-02-10 17:39:20 +0100 (jeu., 10 févr. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

@@ -27,9 +27,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-01-19 21:50:10 +0100 (mer., 19 janv. 2011)                         $ }
-{ Revision:      $Rev:: 3484                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-04-01 22:21:53 +0200 (ven., 01 avr. 2011)                          $ }
+{ Revision:      $Rev:: 3516                                                                     $ }
+{ Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -598,8 +598,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 3484 $';
-    Date: '$Date: 2011-01-19 21:50:10 +0100 (mer., 19 janv. 2011) $';
+    Revision: '$Revision: 3516 $';
+    Date: '$Date: 2011-04-01 22:21:53 +0200 (ven., 01 avr. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1200,9 +1200,9 @@ procedure TJclSimpleXML.LoadFromString(const Value: string);
 var
   Stream: TStringStream;
 begin
-  Stream := TStringStream.Create(Value);
+  Stream := TStringStream.Create(Value {$IFDEF SUPPORTS_UNICODE}, CP_UTF16LE{$ENDIF});
   try
-    LoadFromStream(Stream);
+    LoadFromStream(Stream {$IFDEF SUPPORTS_UNICODE}, seUTF16, CP_UTF16LE{$ENDIF});
   finally
     Stream.Free;
   end;
@@ -1325,7 +1325,7 @@ function TJclSimpleXML.SaveToString: string;
 var
   Stream: TStringStream;
 begin
-  Stream := TStringStream.Create('');
+  Stream := TStringStream.Create('' {$IFDEF SUPPORTS_UNICODE}, CP_UTF16LE{$ENDIF});
   try
     SaveToStream(Stream);
     Result := Stream.DataString;
@@ -3238,25 +3238,31 @@ end;
 
 procedure TJclSimpleXMLElemText.LoadFromStringStream(StringStream: TJclStringStream; AParent: TJclSimpleXML);
 var
-  Ch: Char;
+  Ch: UCS4;
+  USt: TUCS4Array;
   St, TrimValue: string;
 begin
+  SetLength(USt, 0);
   St := '';
 
   if AParent <> nil then
     AParent.DoLoadProgress(StringStream.Stream.Position, StringStream.Stream.Size);
 
-  while StringStream.PeekChar(Ch) do
+  while StringStream.PeekUCS4(Ch) do
+  begin
     case Ch of
-      '<':
+      Ord('<'):
         //Quit text
         Break;
     else
       begin
-        StringStream.ReadChar(Ch);
-        St := St + Ch;
+        StringStream.ReadUCS4(Ch);
+        UCS4ArrayConcat(USt, Ch);
       end;
+    end;
   end;
+
+  St := UCS4ToString(USt);
 
   if Assigned(SimpleXML) then
   begin
@@ -3308,6 +3314,7 @@ var
   Ch: UCS4;
 begin
   SetLength(St, 0);
+  SetLength(lName, 0);
   SetLength(lNameSpace, 0);
   lPos := rsWaitingOpeningTag;
   lOk := False;
@@ -3492,7 +3499,8 @@ begin
   if Assigned(Prop) then
     Prop.Value := Value
   else
-    Properties.Add('version', Value);
+    // Various XML parsers (including MSIE, Firefox) require the "version" to be the first
+    Properties.Insert(0, 'version', Value);
 end;
 
 //=== { TJclSimpleXMLElemDocType } ===========================================
@@ -3649,29 +3657,29 @@ procedure TJclSimpleXMLElemsProlog.LoadFromStringStream(StringStream: TJclString
 }
 var
   lPos: Integer;
-  St: string;
+  St: TUCS4Array;
   lEnd: Boolean;
   lElem: TJclSimpleXMLElem;
-  Ch: Char;
+  Ch: UCS4;
 begin
-  St := '';
+  SetLength(St, 0);
   lPos := 0;
 
   if AParent <> nil then
     AParent.DoLoadProgress(StringStream.Stream.Position, StringStream.Stream.Size);
 
-  while StringStream.PeekChar(Ch) do
+  while StringStream.PeekUCS4(Ch) do
   begin
     case lPos of
       0: //We are waiting for a tag and thus avoiding spaces and any BOM
         begin
-          if CharIsWhiteSpace(Ch) then
+          if UnicodeIsWhiteSpace(Ch) then
             // still waiting
           else
-          if Ch = '<' then
+          if Ch = Ord('<') then
           begin
             lPos := 1;
-            St := Ch;
+            St := UCS4Array(Ch);
           end
           else
             FmtError(LoadResString(@RsEInvalidDocumentUnexpectedTextInFile), [StringStream.PeekPosition]);
@@ -3681,30 +3689,30 @@ begin
           lElem := nil;
           lEnd := False;
 
-          if (St <> '<![CDATA') or not CharIsWhiteSpace(Ch) then
-            St := St + Ch;
-          if St = '<![CDATA[' then
+          if not UCS4ArrayEquals(St, '<![CDATA') or not UnicodeIsWhiteSpace(Ch) then
+            UCS4ArrayConcat(St, Ch);
+          if UCS4ArrayEquals(St, '<![CDATA[') then
             lEnd := True
           else
-          if St = '<!--' then
+          if UCS4ArrayEquals(St, '<!--') then
             lElem := TJclSimpleXMLElemComment.Create(nil)
           else
-          if St = '<?xml-stylesheet' then
+          if UCS4ArrayEquals(St, '<?xml-stylesheet') then
             lElem := TJclSimpleXMLElemSheet.Create(nil)
           else
-          if St = '<?xml ' then
+          if UCS4ArrayEquals(St, '<?xml ') then
             lElem := TJclSimpleXMLElemHeader.Create(nil)
           else
-          if St = '<!DOCTYPE' then
+          if UCS4ArrayEquals(St, '<!DOCTYPE') then
             lElem := TJclSimpleXMLElemDocType.Create(nil)
           else
-          if St = '<?mso-application' then
+          if UCS4ArrayEquals(St, '<?mso-application') then
             lElem := TJclSimpleXMLElemMSOApplication.Create(nil)
           else
-          if (Length(St) > 3) and (St[2] = '?') and CharIsWhiteSpace(St[Length(St)]) then
+          if (Length(St) > 3) and (St[1] = Ord('?')) and UnicodeIsWhiteSpace(St[High(St)]) then
             lElem := TJclSimpleXMLElemProcessingInstruction.Create(nil)
           else
-          if (Length(St) > 1) and (St[2] <> '!') and (St[2] <> '?') then
+          if (Length(St) > 1) and (St[1] <> Ord('!')) and (St[1] <> Ord('?')) then
             lEnd := True;
 
           if lEnd then
@@ -3714,7 +3722,7 @@ begin
           begin
             lElem.LoadFromStringStream(StringStream, AParent);
             FElems.AddObject(lElem.Name, lElem);
-            St := '';
+            SetLength(St, 0);
             lPos := 0;
           end;
         end;

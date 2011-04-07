@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-02 21:05:46 +0100 (mar., 02 févr. 2010)                        $ }
-{ Revision:      $Rev:: 3160                                                                     $ }
+{ Last modified: $Date:: 2011-03-23 22:33:58 +0100 (mer., 23 mars 2011)                          $ }
+{ Revision:      $Rev:: 3513                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -161,7 +161,10 @@ type
     property DpiY: Integer read FiDpiY write FiDpiY;
   end;
 
-procedure DirectPrint(const Printer, Data: string; const DocumentName: string = '');
+  TPrinterData = {$IFDEF SUPPORTS_UNICODE_STRING}RawByteString{$ELSE}AnsiString{$ENDIF};
+
+procedure DirectPrint(const Printer: string; const Data: TPrinterData;
+  const DocumentName: string = '');
 procedure SetPrinterPixelsPerInch;
 function GetPrinterResolution: TPoint;
 function CharFitsWithinDots(const Text: string; const Dots: Integer): Integer;
@@ -176,8 +179,8 @@ function DPSetDefaultPrinter(const PrinterName: string): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclPrint.pas $';
-    Revision: '$Revision: 3160 $';
-    Date: '$Date: 2010-02-02 21:05:46 +0100 (mar., 02 févr. 2010) $';
+    Revision: '$Revision: 3513 $';
+    Date: '$Date: 2011-03-23 22:33:58 +0100 (mer., 23 mars 2011) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -211,7 +214,7 @@ const
   cPrintSpool = 'winspool.drv';
 
 // Misc. functions
-procedure DirectPrint(const Printer, Data, DocumentName: string);
+procedure DirectPrint(const Printer: string; const Data: TPrinterData; const DocumentName: string);
 const
   cRaw = 'RAW';
 type
@@ -253,7 +256,7 @@ begin
         EJclPrinterError.CreateRes(@RsNAStartPage);
       try
         // Send the data to the printer
-        if not WritePrinter(PrinterHandle, PChar(Data), Count, BytesWritten) then
+        if not WritePrinter(PrinterHandle, PAnsiChar(Data), Count * SizeOf(AnsiChar), BytesWritten) then
           EJclPrinterError.CreateRes(@RsNASendData);
       finally
         // End the page
@@ -270,7 +273,7 @@ begin
     ClosePrinter(PrinterHandle);
   end;
   // Check to see if correct number of bytes written
-  if BytesWritten <> Count then
+  if BytesWritten <> Count * SizeOf(AnsiChar) then
     EJclPrinterError.CreateRes(@RsNATransmission);
 end;
 

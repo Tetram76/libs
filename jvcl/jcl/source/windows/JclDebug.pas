@@ -34,8 +34,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 17:55:53 +0200 (lun., 25 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3395                                                                     $ }
+{ Last modified: $Date:: 2011-02-22 20:54:06 +0100 (mar., 22 févr. 2011)                        $ }
+{ Revision:      $Rev:: 3501                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1013,8 +1013,8 @@ procedure AddModule(const ModuleName: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 3395 $';
-    Date: '$Date: 2010-10-25 17:55:53 +0200 (lun., 25 oct. 2010) $';
+    Revision: '$Revision: 3501 $';
+    Date: '$Date: 2011-02-22 20:54:06 +0100 (mar., 22 févr. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -4933,6 +4933,9 @@ begin
         StackInfo.CallerAddr := StackFrameCallerAddr - CallInstructionSize
       else
         StackInfo.CallerAddr := StackFrameCallerAddr;
+      // the stack may be messed up in big projects, avoid overflow in arithmetics
+      if StackFrameCallerFrame < TJclAddr(StackFrame) then
+        Break;
       StackInfo.DumpSize := StackFrameCallerFrame - TJclAddr(StackFrame);
       StackInfo.ParamSize := (StackInfo.DumpSize - SizeOf(TStackFrame)) div 4;
       if PStackFrame(StackFrame^.CallerFrame) = StackFrame then

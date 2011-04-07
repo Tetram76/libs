@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011)                          $ }
+{ Revision:      $Rev:: 3511                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -311,7 +311,7 @@ const
   MapAttributeInfos: array [TMapAttributeID] of TTypeAttributeInfo =
     ( {MapInterfaceName} (IsGUID: False; DefaultValue: 'TJcl%s%sMap'),
       {MapInterfaceGUID} (IsGUID: True; DefaultValue: ''),
-      {MapInterfaceAncestorName} (IsGUID: False; DefaultValue: 'IJclContainer'),
+      {MapInterfaceAncestorName} (IsGUID: False; DefaultValue: 'IJclBaseContainer'),
       {SortedMapInterfaceName} (IsGUID: False; DefaultValue: 'TJcl%s%sSortedMap'),
       {SortedMapInterfaceGUID} (IsGUID: True; DefaultValue: ''),
       {MapAncestorClassName} (IsGUID: False; DefaultValue: 'TJclContainer'),
@@ -372,8 +372,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorContainerTypes.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3511 $';
+    Date: '$Date: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

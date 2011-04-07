@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011)                          $ }
+{ Revision:      $Rev:: 3511                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -383,8 +383,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorContainerIntfTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3511 $';
+    Date: '$Date: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -432,7 +432,7 @@ begin
   if Result = '' then
     Result := TypeInfo.TypeAttributes[taContainerInterfaceName];
   if Result = '' then
-    Result := 'IJclContainer';
+    Result := 'IJclBaseContainer';
 end;
 
 function TJclContainerIntfAncestorParams.IsAncestorNameStored: Boolean;
@@ -464,7 +464,7 @@ begin
   if Result = '' then
     Result := TypeInfo.TypeAttributes[taContainerInterfaceName];
   if Result = '' then
-    Result := 'IJclContainer';
+    Result := 'IJclBaseContainer';
 end;
 
 //=== { TJclIterProcedureParams } ============================================

@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-09-20 21:18:26 +0200 (lun., 20 sept. 2010)                         $ }
-{ Revision:      $Rev:: 3344                                                                     $ }
+{ Last modified: $Date:: 2011-02-22 20:48:10 +0100 (mar., 22 févr. 2011)                        $ }
+{ Revision:      $Rev:: 3500                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -321,7 +321,13 @@ type
 function Addr64ToAddr32(const Value: TJclAddr64): TJclAddr32;
 function Addr32ToAddr64(const Value: TJclAddr32): TJclAddr64;
 
-{$IFDEF SUPPORTS_GENERICS}
+{$IFDEF FPC}
+type
+  HWND = type Windows.HWND;
+  HMODULE = type Windows.HMODULE;
+{$ENDIF FPC}
+
+ {$IFDEF SUPPORTS_GENERICS}
 //DOM-IGNORE-BEGIN
 
 type
@@ -366,8 +372,8 @@ procedure GetMem(out P; Size: Longint);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBase.pas $';
-    Revision: '$Revision: 3344 $';
-    Date: '$Date: 2010-09-20 21:18:26 +0200 (lun., 20 sept. 2010) $';
+    Revision: '$Revision: 3500 $';
+    Date: '$Date: 2011-02-22 20:48:10 +0100 (mar., 22 févr. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
