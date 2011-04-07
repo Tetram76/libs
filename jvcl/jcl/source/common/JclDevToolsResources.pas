@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-05 17:38:51 +0100 (ven., 05 févr. 2010)                        $ }
-{ Revision:      $Rev:: 3181                                                                     $ }
-{ Author:        $Author:: jfudickar                                                             $ }
+{ Last modified: $Date:: 2011-03-27 22:36:21 +0200 (dim., 27 mars 2011)                          $ }
+{ Revision:      $Rev:: 3514                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -132,6 +132,13 @@ resourcestring
   RsENoOpenHelp                 = 'open help not present in Borland Developer Studio';
   {$ENDIF MSWINDOWS}
 
+//=== JclMsBuild.pas =========================================================
+resourcestring
+  RsEEndOfString = 'Invalid condition: end of string';
+  RsEMissingParenthesis = 'Invalid condition: missing parenthesis';
+  RsEEmptyIdentifier = 'Invalid condition: empty identifier';
+  RsEUnknownOperator = 'Invalid condition: unknown operator';
+
 //=== JclUsesUtils.pas =======================================================
 resourcestring
   RsEDuplicateUnit = 'Duplicate unit ''%s''';
@@ -144,8 +151,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclDevToolsResources.pas $';
-    Revision: '$Revision: 3181 $';
-    Date: '$Date: 2010-02-05 17:38:51 +0100 (ven., 05 févr. 2010) $';
+    Revision: '$Revision: 3514 $';
+    Date: '$Date: 2011-03-27 22:36:21 +0200 (dim., 27 mars 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
