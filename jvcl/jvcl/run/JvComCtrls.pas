@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 12945 2010-11-30 20:30:11Z ahuser $
+// $Id: JvComCtrls.pas 12985 2011-02-16 17:38:50Z ahuser $
 
 unit JvComCtrls;
 
@@ -636,8 +636,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 12945 $';
-    Date: '$Date: 2010-11-30 21:30:11 +0100 (mar., 30 nov. 2010) $';
+    Revision: '$Revision: 12985 $';
+    Date: '$Date: 2011-02-16 18:38:50 +0100 (mer., 16 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2629,8 +2629,13 @@ procedure TJvTreeView.InternalCustomDrawItem(Sender: TCustomTreeView;
 begin
   if (State = []) or (State = [cdsDefault]) or (State = [cdsSelected]) then
   begin
-    Canvas.Font := TJvTreeNode(Node).Font;
-    Canvas.Brush := TJvTreeNode(Node).Brush;
+    // Mantis #5450: If HideSelection is false the node is painted as it wouldn't be
+    // selected because State = [].
+    if not (not HideSelection and Node.Selected and not Focused) then
+    begin
+      Canvas.Font := TJvTreeNode(Node).Font;
+      Canvas.Brush := TJvTreeNode(Node).Brush;
+    end;
   end;
   if Assigned(FOnCustomDrawItem) then
     FOnCustomDrawItem(Self, Node, State, DefaultDraw);

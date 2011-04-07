@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 12833 2010-09-05 13:25:12Z obones $
+// $Id: JvParameterListParameter.pas 13003 2011-03-16 20:51:04Z jfudickar $
 
 unit JvParameterListParameter;
 
@@ -652,8 +652,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 12833 $';
-    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
+    Revision: '$Revision: 13003 $';
+    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -661,7 +661,7 @@ const
 implementation
 
 uses
-  JvResources, JvJVCLUtils;
+  JvResources, JvJVCLUtils, JclSysUtils;
 
 function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; const Buttons: TMsgDlgButtons;
   const HelpCtx: Longint; const Center: TDlgCenterKind = dckScreen; const Timeout: Integer = 0;
@@ -1465,7 +1465,7 @@ end;
 
 procedure TJvListParameter.SetAsVariant(Value: Variant);
 begin
-  if VarIsNull(Value) then
+  if VarIsNullEmpty(Value) then
     ItemIndex := -1
   else if VariantAsItemIndex then
     if VarType(Value) in [varSmallInt, varInteger, varByte, varShortInt, varWord, varLongWord] then

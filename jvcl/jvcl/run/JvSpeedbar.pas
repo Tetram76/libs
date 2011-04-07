@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbar.pas 12805 2010-06-10 14:11:07Z obones $
+// $Id: JvSpeedbar.pas 13006 2011-03-31 12:20:17Z jfudickar $
 
 unit JvSpeedbar;
 
@@ -498,8 +498,8 @@ function NewSpeedItem(AOwner: TComponent; ASpeedBar: TJvSpeedBar; Section: Integ
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedbar.pas $';
-    Revision: '$Revision: 12805 $';
-    Date: '$Date: 2010-06-10 16:11:07 +0200 (jeu., 10 juin 2010) $';
+    Revision: '$Revision: 13006 $';
+    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2907,58 +2907,63 @@ var
   S: string;
 begin
   FPrevAlign := Align;
-  if AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sVer]), FVersion) < FVersion then
-    // (marcelb) shouldn't we raise an exception "Invalid version" here?
-    Exit;
-  if sbAllowDrag in Options then
+  AppStorage.BeginUpdate;
   try
-    Align := TAlign(AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sPosition]), Integer(Align)));
-  except
-    Align := alTop;
-  end;
-  if Owner is TCustomForm then
-    I := TForm(Owner).PixelsPerInch
-  else
-    I := 0;
-  if Screen.PixelsPerInch <> AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sPixelsPerInch]), I) then
-  begin
+    if AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sVer]), FVersion) < FVersion then
+      // (marcelb) shouldn't we raise an exception "Invalid version" here?
+      Exit;
+    if sbAllowDrag in Options then
+    try
+      Align := TAlign(AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sPosition]), Integer(Align)));
+    except
+      Align := alTop;
+    end;
+    if Owner is TCustomForm then
+      I := TForm(Owner).PixelsPerInch
+    else
+      I := 0;
+    if Screen.PixelsPerInch <> AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sPixelsPerInch]), I) then
+    begin
+      if FPrevAlign <> Align then
+        PosChanged;
+      Exit;
+    end;
+    if sbAllowResize in Options then
+    begin
+      if Align in [alTop, alBottom] then
+        Height := AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sBarWidth]), Height)
+      else
+      if Align in [alLeft, alRight] then
+        Width := AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sBarWidth]), Width);
+    end;
     if FPrevAlign <> Align then
       PosChanged;
-    Exit;
-  end;
-  if sbAllowResize in Options then
-  begin
-    if Align in [alTop, alBottom] then
-      Height := AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sBarWidth]), Height)
-    else
-    if Align in [alLeft, alRight] then
-      Width := AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sBarWidth]), Width);
-  end;
-  if FPrevAlign <> Align then
-    PosChanged;
-  {if (AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sBtnWidth]), FButtonSize.X) >
-    FButtonSize.X) or (AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sBtnHeight]),
-    FButtonSize.Y) > FButtonSize.Y) then Exit;}
-  Count := AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sCount]), 0);
-  if Count > 0 then
-  begin
-    ForEachItem(HideItem, 0);
-    for I := 1 to Count do
+    {if (AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sBtnWidth]), FButtonSize.X) >
+      FButtonSize.X) or (AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sBtnHeight]),
+      FButtonSize.Y) > FButtonSize.Y) then Exit;}
+    Count := AppStorage.ReadInteger(AppStorage.ConcatPaths([Path, sCount]), 0);
+    if Count > 0 then
     begin
-      S := AppStorage.ReadString(AppStorage.ConcatPaths([Path, sBtn + IntToStr(I)]), '');
-      if S <> '' then
+      ForEachItem(HideItem, 0);
+      for I := 1 to Count do
       begin
-        Item := SearchItem(ExtractWord(1, S, Delims));
-        if Item <> nil then
+        S := AppStorage.ReadString(AppStorage.ConcatPaths([Path, sBtn + IntToStr(I)]), '');
+        if S <> '' then
         begin
-          Item.Left := Max(StrToIntDef(ExtractWord(2, S, Delims), Item.Left),
-            FOffset.X);
-          Item.Top := Max(StrToIntDef(ExtractWord(3, S, Delims), Item.Top),
-            FOffset.Y);
-          Item.Visible := True;
+          Item := SearchItem(ExtractWord(1, S, Delims));
+          if Item <> nil then
+          begin
+            Item.Left := Max(StrToIntDef(ExtractWord(2, S, Delims), Item.Left),
+              FOffset.X);
+            Item.Top := Max(StrToIntDef(ExtractWord(3, S, Delims), Item.Top),
+              FOffset.Y);
+            Item.Visible := True;
+          end;
         end;
       end;
     end;
+  finally
+    AppStorage.EndUpdate;
   end;
   Repaint;
 end;
@@ -2967,22 +2972,27 @@ procedure TJvSpeedBar.SaveToAppStorage(const AppStorage: TJvCustomAppStorage; co
 var
   Data: TIniData;
 begin
-  Data.AppStorage := AppStorage;
-  Data.Path := Path;
-  Data.I := 0;
-  AppStorage.DeleteSubTree(Path);
-  AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sPosition]), Integer(Align));
-  if Align in [alTop, alBottom] then
-    AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sBarWidth]), Height)
-  else
-  if Align in [alLeft, alRight] then
-    AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sBarWidth]), Width);
-  AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sVer]), FVersion);
-  AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sPixelsPerInch]), Screen.PixelsPerInch);
-  AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sBtnWidth]), FButtonSize.X);
-  AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sBtnHeight]), FButtonSize.Y);
-  ForEachItem(WriteItemLayout, SizeInt(@Data));
-  AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sCount]), Data.I);
+  AppStorage.BeginUpdate;
+  try
+    Data.AppStorage := AppStorage;
+    Data.Path := Path;
+    Data.I := 0;
+    AppStorage.DeleteSubTree(Path);
+    AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sPosition]), Integer(Align));
+    if Align in [alTop, alBottom] then
+      AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sBarWidth]), Height)
+    else
+    if Align in [alLeft, alRight] then
+      AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sBarWidth]), Width);
+    AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sVer]), FVersion);
+    AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sPixelsPerInch]), Screen.PixelsPerInch);
+    AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sBtnWidth]), FButtonSize.X);
+    AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sBtnHeight]), FButtonSize.Y);
+    ForEachItem(WriteItemLayout, SizeInt(@Data));
+    AppStorage.WriteInteger(AppStorage.ConcatPaths([Path, sCount]), Data.I);
+  finally
+    AppStorage.EndUpdate;
+  end;
 end;
 
 procedure TJvSpeedBar.Load;

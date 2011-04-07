@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActions.pas 12750 2010-04-04 13:58:22Z jfudickar $
+// $Id: JvDBActions.pas 13011 2011-04-03 14:00:03Z jfudickar $
 
 unit JvDBActions;
 
@@ -49,8 +49,7 @@ uses
 
 type
 
-  TJvChangeDataComponent = procedure(DataComponent: TComponent) of object;
-  TJvDatabaseActionList = class(TActionList)
+  TJvDatabaseActionList = class(TJvActionBaseActionList)
   //The idea of the Action Classes is to work with any databased enabled control.
   //But not all of this controls already have a dataset or datasource control.
   //
@@ -73,16 +72,13 @@ type
   //   gets the datacomponent assigned also.
   //2. Using the active control, like the normal action handling.
   private
-    FDataComponent: TComponent;
-    FOnChangeDataComponent: TJvChangeDataComponent;
-  protected
+    function GetDataComponent: TComponent;
+    function GetOnChangeDataComponent: TJvChangeActionComponent;
+    procedure SetOnChangeDataComponent(const Value: TJvChangeActionComponent);
     procedure SetDataComponent(Value: TComponent);
-  public
-    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
-    property DataComponent: TComponent read FDataComponent write SetDataComponent;
-    property OnChangeDataComponent: TJvChangeDataComponent read
-      FOnChangeDataComponent write FOnChangeDataComponent;
+    property DataComponent: TComponent read GetDataComponent write SetDataComponent;
+    property OnChangeDataComponent: TJvChangeActionComponent read GetOnChangeDataComponent write SetOnChangeDataComponent;
   end;
 
   TJvDatabaseActionBaseEngineClass = class of TJvDatabaseActionBaseControlEngine;
@@ -106,8 +102,9 @@ type
     fAfterExecute: TJvDatabaseExecuteEvent;
     FBeforeExecute: TJvDatabaseBeforeExecuteEvent;
     FDatasetEngine: TJvDatabaseActionBaseDatasetEngine;
-    FOnChangeDataComponent: TJvChangeDataComponent;
     FOnCheckEnabled: TJvDatabaseActionCheckEnabledEvent;
+    function GetOnChangeDataComponent: TJvChangeActionComponent;
+    procedure SetOnChangeDataComponent(const Value: TJvChangeActionComponent);
   protected
     //1 This Procedure is called when the ActionComponent is changed
     procedure ChangeActionComponent(const AActionComponent: TComponent); override;
@@ -133,8 +130,7 @@ type
     function EngineEditModeActive: Boolean;
     function EngineSelectedRowsCount: Integer;
     function GetEngineList: TJvActionEngineList; override;
-    property DatabaseControlEngine: TJvDatabaseActionBaseControlEngine read
-        FDatabaseControlEngine;
+    property DatabaseControlEngine: TJvDatabaseActionBaseControlEngine read FDatabaseControlEngine;
     property DatasetEngine: TJvDatabaseActionBaseDatasetEngine read FDatasetEngine;
   public
     constructor Create(AOwner: TComponent); override;
@@ -145,16 +141,12 @@ type
     property DataSource: TDataSource read GetDataSource;
     property DataSet: TDataSet read GetDataSet;
   published
-    property OnChangeDataComponent: TJvChangeDataComponent read
-        FOnChangeDataComponent write FOnChangeDataComponent;
-    property OnCheckEnabled: TJvDatabaseActionCheckEnabledEvent read
-        FOnCheckEnabled write FOnCheckEnabled;
+    property OnChangeDataComponent: TJvChangeActionComponent read GetOnChangeDataComponent write SetOnChangeDataComponent;
+    property OnCheckEnabled: TJvDatabaseActionCheckEnabledEvent read FOnCheckEnabled write FOnCheckEnabled;
     property OnExecute: TJvDatabaseExecuteEvent read FOnExecute write FOnExecute;
     property AfterExecute: TJvDatabaseExecuteEvent read FAfterExecute write FAfterExecute;
-    property BeforeExecute: TJvDatabaseBeforeExecuteEvent read FBeforeExecute write
-        FBeforeExecute;
-    property OnExecuteDataSource: TJvDatabaseExecuteDataSourceEvent
-      read FOnExecuteDataSource write FOnExecuteDataSource;
+    property BeforeExecute: TJvDatabaseBeforeExecuteEvent read FBeforeExecute write FBeforeExecute;
+    property OnExecuteDataSource: TJvDatabaseExecuteDataSourceEvent read FOnExecuteDataSource write FOnExecuteDataSource;
     property DataComponent: TComponent read GetDataComponent write SetDataComponent;
   end;
 
@@ -275,10 +267,8 @@ type
     procedure UpdateTarget(Target: TObject); override;
     procedure ExecuteTarget(Target: TObject); override;
   published
-    property MinCountSelectedRows: Integer read FMinCountSelectedRows write
-        FMinCountSelectedRows default 2;
-    property ShowSelectedRows: Boolean read FShowSelectedRows write
-      FShowSelectedRows default True;
+    property MinCountSelectedRows: Integer read FMinCountSelectedRows write FMinCountSelectedRows default 2;
+    property ShowSelectedRows: Boolean read FShowSelectedRows write FShowSelectedRows default True;
   end;
 
   TJvDatabaseInsertType = ( itInsert, itAppend);
@@ -289,10 +279,8 @@ type
   private
     FInsertType: TJvDatabaseInsertType;
     FSingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction;
-    procedure SetSingleRecordWindowAction(const Value:
-        TJvDatabaseSingleRecordWindowAction);
-    procedure SingleRecordOnFormShowEvent(ADatacomponent : TComponent;
-        ADynControlEngineDB: TJvDynControlEngineDB);
+    procedure SetSingleRecordWindowAction(const Value: TJvDatabaseSingleRecordWindowAction);
+    procedure SingleRecordOnFormShowEvent(ADatacomponent : TComponent; ADynControlEngineDB: TJvDynControlEngineDB);
   public
     constructor Create(AOwner: TComponent); override;
     procedure UpdateTarget(Target: TObject); override;
@@ -318,8 +306,7 @@ type
     FInsertType: TJvDatabaseInsertType;
     FOnCopyRecord: TJvDatabaseOnCopyRecord;
     FSingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction;
-    procedure SetSingleRecordWindowAction(const Value:
-        TJvDatabaseSingleRecordWindowAction);
+    procedure SetSingleRecordWindowAction(const Value: TJvDatabaseSingleRecordWindowAction);
     procedure SingleRecordOnFormShowEvent(ADatacomponent : TComponent;
         ADynControlEngineDB: TJvDynControlEngineDB);
   public
@@ -330,11 +317,10 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
     //1 The property defines that the new record is created via the insert or the append method
-    property InsertType: TJvDatabaseInsertType read FInsertType write FInsertType
-        default itInsert;
+    property InsertType: TJvDatabaseInsertType read FInsertType write FInsertType default itInsert;
     //1 Use this property to show a single record window after inserting a new record
-    property SingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction read
-        FSingleRecordWindowAction write SetSingleRecordWindowAction;
+    property SingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction read FSingleRecordWindowAction write
+        SetSingleRecordWindowAction;
     property BeforeCopyRecord: TJvDatabaseBeforeCopyRecord read FBeforeCopyRecord write FBeforeCopyRecord;
     property AfterCopyRecord: TJvDatabaseAfterCopyRecord read FAfterCopyRecord write FAfterCopyRecord;
     property OnCopyRecord: TJvDatabaseOnCopyRecord read FOnCopyRecord write FOnCopyRecord;
@@ -343,18 +329,16 @@ type
   TJvDatabaseEditAction = class(TJvDatabaseBaseEditAction)
   private
     FSingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction;
-    procedure SetSingleRecordWindowAction(const Value:
-        TJvDatabaseSingleRecordWindowAction);
-    procedure SingleRecordOnFormShowEvent(ADatacomponent : TComponent;
-        ADynControlEngineDB: TJvDynControlEngineDB);
+    procedure SetSingleRecordWindowAction(const Value: TJvDatabaseSingleRecordWindowAction);
+    procedure SingleRecordOnFormShowEvent(ADatacomponent : TComponent; ADynControlEngineDB: TJvDynControlEngineDB);
   public
     procedure UpdateTarget(Target: TObject); override;
     procedure ExecuteTarget(Target: TObject); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
     //1 Use this property to show a single record window after inserting a new record
-    property SingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction read
-        FSingleRecordWindowAction write SetSingleRecordWindowAction;
+    property SingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction read FSingleRecordWindowAction write
+        SetSingleRecordWindowAction;
   end;
 
   TJvDatabaseDeleteAction = class(TJvDatabaseBaseEditAction)
@@ -386,8 +370,7 @@ type
     destructor Destroy; override;
     procedure ExecuteTarget(Target: TObject); override;
     procedure ShowSingleRecordWindow;
-    property OnFormShow: TJvDataSourceEditDialogOnFormShowEvent read FOnFormShow
-        write FOnFormShow;
+    property OnFormShow: TJvDataSourceEditDialogOnFormShowEvent read FOnFormShow write FOnFormShow;
   published
     property OnCreateDataControlsEvent:
         TJvDataSourceEditDialogCreateDataControlsEvent read
@@ -419,6 +402,7 @@ type
     FDefaultOptionsDirectory: string;
     FKeyGenerator: string;
     FOptions: TSMOptions;
+    procedure SetDefaultOptionsDirectory(const Value: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -429,7 +413,7 @@ type
     property HelpContext: THelpContext read FHelpContext write FHelpContext;
     property Formats: TExportFormatTypes read FFormats write FFormats;
     property Title: TCaption read FTitle write FTitle;
-    property DefaultOptionsDirectory: string read FDefaultOptionsDirectory write FDefaultOptionsDirectory;
+    property DefaultOptionsDirectory: string read FDefaultOptionsDirectory write SetDefaultOptionsDirectory;
     property KeyGenerator: string read FKeyGenerator write FKeyGenerator;
     property Options: TSMOptions read FOptions write FOptions;
     property OnAfterExecuteExport: TNotifyEvent read FOnAfterExecuteExport write FOnAfterExecuteExport;
@@ -460,13 +444,14 @@ type
     FDefaultOptionsDirectory: string;
     FOptions: TSMIOptions;
     FWizardStyle: TSMIWizardStyle;
+    procedure SetDefaultOptionsDirectory(const Value: string);
   public
     constructor Create;
   published
     property HelpContext: THelpContext read FHelpContext write FHelpContext;
     property Formats: TImportFormatTypes read FFormats write FFormats;
     property Title: TCaption read FTitle write FTitle;
-    property DefaultOptionsDirectory: string read FDefaultOptionsDirectory write FDefaultOptionsDirectory;
+    property DefaultOptionsDirectory: string read FDefaultOptionsDirectory write SetDefaultOptionsDirectory;
     property Options: TSMIOptions read FOptions write FOptions;
     property WizardStyle: TSMIWizardStyle read FWizardStyle write FWizardStyle;
   end;
@@ -494,8 +479,8 @@ type
     procedure ModifyAll;
     procedure UpdateTarget(Target: TObject); override;
   published
-    property EnabledOnlyIfSelectedRows: Boolean read FEnabledOnlyIfSelectedRows
-      write FEnabledOnlyIfSelectedRows default True;
+    property EnabledOnlyIfSelectedRows: Boolean read FEnabledOnlyIfSelectedRows write FEnabledOnlyIfSelectedRows default
+        True;
   end;
 
   TJvDatabaseShowSQLStatementAction = class(TJvDatabaseBaseActiveAction)
@@ -528,8 +513,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActions.pas $';
-    Revision: '$Revision: 12750 $';
-    Date: '$Date: 2010-04-04 15:58:22 +0200 (dim., 04 avr. 2010) $';
+    Revision: '$Revision: 13011 $';
+    Date: '$Date: 2011-04-03 16:00:03 +0200 (dim., 03 avr. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -552,30 +537,28 @@ uses
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
   JvResources, JvParameterList,
   JvDSADialogs,
-  Variants, Dialogs, StdCtrls, Clipbrd, JvJVCLUtils;
+  Variants, Dialogs, StdCtrls, Clipbrd, JvJVCLUtils, JclFileUtils;
+
+function TJvDatabaseActionList.GetDataComponent: TComponent;
+begin
+  Result := ActionComponent;
+end;
+
+function TJvDatabaseActionList.GetOnChangeDataComponent: TJvChangeActionComponent;
+begin
+  Result := OnChangeActionComponent;
+end;
 
 //=== { TJvDatabaseActionList } ==============================================
 
 procedure TJvDatabaseActionList.SetDataComponent(Value: TComponent);
-var
-  I: Integer;
 begin
-  if ReplaceComponentReference(Self, Value, FDataComponent) then
-  begin
-    for I := 0 to ActionCount - 1 do
-      if Actions[I] is TJvDatabaseBaseAction then
-        TJvDatabaseBaseAction(Actions[I]).DataComponent := Value;
-    if Assigned(OnChangeDataComponent) then
-      OnChangeDataComponent(Value);
-  end;
+  ActionComponent := Value;
 end;
 
-procedure TJvDatabaseActionList.Notification(AComponent: TComponent; Operation: TOperation);
+procedure TJvDatabaseActionList.SetOnChangeDataComponent(const Value: TJvChangeActionComponent);
 begin
-  inherited Notification(AComponent, Operation);
-  if Operation = opRemove then
-    if AComponent = FDataComponent then
-      DataComponent := nil;
+  OnChangeActionComponent := Value;
 end;
 
 //=== { TJvDatabaseBaseAction } ==============================================
@@ -816,6 +799,16 @@ begin
   Result := RegisteredDatabaseActionEngineList;
 end;
 
+function TJvDatabaseBaseAction.GetOnChangeDataComponent: TJvChangeActionComponent;
+begin
+  Result := OnChangeActionComponent;
+end;
+
+procedure TJvDatabaseBaseAction.SetOnChangeDataComponent(const Value: TJvChangeActionComponent);
+begin
+  OnChangeActionComponent := Value;
+end;
+
 //=== { TJvDatabaseSimpleAction } ============================================
 
 constructor TJvDatabaseSimpleAction.Create(AOwner: TComponent);
@@ -1051,6 +1044,9 @@ procedure TJvDatabasePositionAction.UpdateTarget(Target: TObject);
 const
   cFormat = ' %3d / %3d ';
   cFormatSelected = ' %3d / %3d (%d)';
+var
+  RecCount : Integer;
+  SelCount : Integer;
 begin
   SetEnabled(Assigned(DataSet) and not EngineControlsDisabled and
     EngineIsActive and EngineHasData and EngineCanNavigate);
@@ -1058,13 +1054,19 @@ begin
     if not EngineIsActive then
       SetCaption(Format(cFormat, [0, 0]))
     else
-      if EngineRecordCount = 0 then
+    begin
+      RecCount := EngineRecordCount;
+      if RecCount = 0 then
         SetCaption(Format(cFormat, [0, 0]))
       else
-        if ShowSelectedRows and (EngineSelectedRowsCount >= MinCountSelectedRows) then
-          SetCaption(Format(cFormatSelected, [EngineRecNo, EngineRecordCount, EngineSelectedRowsCount]))
+      begin
+        SelCount := EngineSelectedRowsCount;
+        if ShowSelectedRows and (SelCount >= MinCountSelectedRows) then
+          SetCaption(Format(cFormatSelected, [EngineRecNo, RecCount, SelCount]))
         else
-          SetCaption(Format(cFormat, [EngineRecNo, EngineRecordCount]));
+          SetCaption(Format(cFormat, [EngineRecNo, RecCount]));
+      end;
+    end;
   except
     SetCaption(Format(cFormat, [0, 0]));
   end;
@@ -1199,14 +1201,13 @@ begin
       SingleRecordWindowAction := nil;
 end;
 
-procedure TJvDatabaseInsertAction.SetSingleRecordWindowAction(const Value:
-    TJvDatabaseSingleRecordWindowAction);
+procedure TJvDatabaseInsertAction.SetSingleRecordWindowAction(const Value: TJvDatabaseSingleRecordWindowAction);
 begin
   ReplaceComponentReference(Self, Value, TComponent(FSingleRecordWindowAction));
 end;
 
-procedure TJvDatabaseInsertAction.SingleRecordOnFormShowEvent(ADatacomponent :
-    TComponent; ADynControlEngineDB: TJvDynControlEngineDB);
+procedure TJvDatabaseInsertAction.SingleRecordOnFormShowEvent(ADatacomponent : TComponent; ADynControlEngineDB:
+    TJvDynControlEngineDB);
 begin
   if InsertType = itAppend then
     DataSet.Append
@@ -1293,8 +1294,7 @@ begin
       SingleRecordWindowAction := nil;
 end;
 
-procedure TJvDatabaseCopyAction.SetSingleRecordWindowAction(const Value:
-    TJvDatabaseSingleRecordWindowAction);
+procedure TJvDatabaseCopyAction.SetSingleRecordWindowAction(const Value: TJvDatabaseSingleRecordWindowAction);
 begin
   ReplaceComponentReference(Self, Value, TComponent(FSingleRecordWindowAction));
 end;
@@ -1329,8 +1329,7 @@ begin
     SingleRecordOnFormShowEvent(nil, nil);
 end;
 
-procedure TJvDatabaseEditAction.Notification(AComponent: TComponent; Operation:
-    TOperation);
+procedure TJvDatabaseEditAction.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
   if Operation = opRemove then
@@ -1338,14 +1337,13 @@ begin
       SingleRecordWindowAction := nil;
 end;
 
-procedure TJvDatabaseEditAction.SetSingleRecordWindowAction(const Value:
-    TJvDatabaseSingleRecordWindowAction);
+procedure TJvDatabaseEditAction.SetSingleRecordWindowAction(const Value: TJvDatabaseSingleRecordWindowAction);
 begin
   ReplaceComponentReference(Self, Value, TComponent(FSingleRecordWindowAction));
 end;
 
-procedure TJvDatabaseEditAction.SingleRecordOnFormShowEvent(ADatacomponent :
-    TComponent; ADynControlEngineDB: TJvDynControlEngineDB);
+procedure TJvDatabaseEditAction.SingleRecordOnFormShowEvent(ADatacomponent : TComponent; ADynControlEngineDB:
+    TJvDynControlEngineDB);
 begin
   DataSet.Edit;
 end;
@@ -1466,7 +1464,14 @@ begin
   inherited Destroy;
 end;
 
-procedure TJvDatabaseSMExportOptions.SMEWizardDlgGetCellParams(Sender: TObject; Field: TField; var Text: string; AFont:
+procedure TJvDatabaseSMExportOptions.SetDefaultOptionsDirectory(const Value: string);
+begin
+  FDefaultOptionsDirectory := trim(Value);
+  if (FDefaultOptionsDirectory <> '') then
+    FDefaultOptionsDirectory := PathAddSeparator(FDefaultOptionsDirectory);
+end;
+
+procedure TJvDatabaseSMExportOptions.SMEWizardDlgGetCellParams(Sender: TObject; Field: TField; var Text: String; AFont:
     TFont; var Alignment: TAlignment; var Background: TColor; var CellType: TCellType);
 const
   SToDateFormatLong = 'TO_DATE(''%s'', ''DD.MM.YYYY HH24:MI:SS'')';
@@ -1649,6 +1654,13 @@ begin
   FOptions := [];
   for Option := Low(Option) to High(Option) do
     FOptions := FOptions + [Option];
+end;
+
+procedure TJvDatabaseSMImportOptions.SetDefaultOptionsDirectory(const Value: string);
+begin
+  FDefaultOptionsDirectory := trim(Value);
+  if (FDefaultOptionsDirectory <> '') then
+    FDefaultOptionsDirectory := PathAddSeparator(FDefaultOptionsDirectory);
 end;
 
 //=== { TJvDatabaseSMImportAction } ==========================================

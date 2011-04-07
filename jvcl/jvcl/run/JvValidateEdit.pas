@@ -27,7 +27,7 @@ negative number format, negative currency format and positive currency format.
 This could be rectified by a custom-written formatting routine.
 
 -----------------------------------------------------------------------------}
-// $Id: JvValidateEdit.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvValidateEdit.pas 12986 2011-02-16 17:52:55Z ahuser $
 
 unit JvValidateEdit;
 
@@ -129,7 +129,7 @@ type
     FOnCustomValidate: TJvCustomTextValidateEvent;
     FOnValueChanged: TNotifyEvent;
     FZeroEmpty: Boolean;
-    EnterText: string;
+    FEnterText: string;
     FDisplayPrefix: string;
     FDisplaySuffix: string;
     FCriticalPoints: TJvValidateEditCriticalPoints;
@@ -338,8 +338,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidateEdit.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 12986 $';
+    Date: '$Date: 2011-02-16 18:52:55 +0100 (mer., 16 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -450,7 +450,7 @@ begin
   FCheckChars := '01234567890';
   Alignment := taRightJustify;
   FEditText := '';
-  Text := '';
+  Text := ''; // doesn't trigger OnChange because FEnterText = ''. That's what we want.
   AutoSize := True;
   FMinValue := 0;
   FMaxValue := 0;
@@ -495,7 +495,6 @@ end;
 
 procedure TJvCustomValidateEdit.Loaded;
 begin
-  inherited Loaded;
   // (obones) Why is this necessary? It overrides DecimalPlaces set to 0 by the user
 {  if DisplayFormat = dfCurrency then
     if FDecimalPlaces = 0 then
@@ -506,6 +505,7 @@ begin
   finally
     DataConnector.Active := True;
   end;
+  inherited Loaded;
 end;
 
 function TJvCustomValidateEdit.CreateDataConnector: TJvFieldDataConnector;
@@ -1040,7 +1040,7 @@ begin
   if Key = VK_ESCAPE then
   begin
     Key := 0;
-    EditText := EnterText;
+    EditText := FEnterText;
     SelStart := 0;
     SelLength := Length(FEditText);
   end;
@@ -1257,10 +1257,10 @@ end;
 procedure TJvCustomValidateEdit.DoValueChanged;
 begin
   try
-    if Assigned(FOnValueChanged) and (EnterText <> FEditText) then
+    if Assigned(FOnValueChanged) and not (csLoading in ComponentState) and (FEnterText <> FEditText) then
       FOnValueChanged(Self);
   finally
-    EnterText := FEditText;
+    FEnterText := FEditText;
   end;
 end;
 

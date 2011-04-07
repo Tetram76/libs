@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 12924 2010-11-28 09:52:23Z ahuser $
+// $Id: JvDBLookup.pas 13003 2011-03-16 20:51:04Z jfudickar $
 
 unit JvDBLookup;
 
@@ -662,8 +662,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 12924 $';
-    Date: '$Date: 2010-11-28 10:52:23 +0100 (dim., 28 nov. 2010) $';
+    Revision: '$Revision: 13003 $';
+    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -672,7 +672,7 @@ implementation
 
 uses
   VDBConsts, StrUtils, DBConsts, SysUtils, Math, MultiMon,
-  JvJCLUtils, JvJVCLUtils, JvThemes, JvTypes, JvConsts, JvResources;
+  JvJCLUtils, JvJVCLUtils, JvThemes, JvTypes, JvConsts, JvResources, JclSysUtils;
 
 procedure CheckLookupFormat(const AFormat: string);
   { AFormat is passed to a Format function, but the only allowed
@@ -898,7 +898,7 @@ end;
 
 procedure TJvLookupControl.SetKeyValue(const Value: Variant);
 begin
-  if VarIsNull(Value) then
+  if VarIsNullEmpty(Value) then
     Self.Value := FEmptyValue
   else
     Self.Value := Value;
@@ -3846,7 +3846,7 @@ end;
 
 procedure TJvDBLookupEdit.SetPopupValue(const Value: Variant);
 begin
-  if VarIsNull(Value) or VarIsEmpty(Value) then
+  if VarIsNullEmpty(Value) then
     TJvPopupDataWindow(FPopup).Value := TJvPopupDataWindow(FPopup).EmptyValue
   else
     TJvPopupDataWindow(FPopup).DisplayValue := Value;

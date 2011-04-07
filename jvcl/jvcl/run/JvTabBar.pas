@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTabBar.pas 12952 2010-12-07 15:16:52Z ahuser $
+// $Id: JvTabBar.pas 12970 2011-01-31 08:28:12Z ahuser $
 
 unit JvTabBar;
 
@@ -379,6 +379,7 @@ type
     function TabAt(X, Y: Integer): TJvTabBarItem;
     function MakeVisible(Tab: TJvTabBarItem): Boolean;
     function FindData(Data: TObject): TJvTabBarItem;
+    function CloseTab(ATab: TJvTabBarItem): Boolean;
 
     procedure DragDrop(Source: TObject; X: Integer; Y: Integer); override;
 
@@ -480,8 +481,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTabBar.pas $';
-    Revision: '$Revision: 12952 $';
-    Date: '$Date: 2010-12-07 16:16:52 +0100 (mar., 07 déc. 2010) $';
+    Revision: '$Revision: 12970 $';
+    Date: '$Date: 2011-01-31 09:28:12 +0100 (lun., 31 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1244,6 +1245,22 @@ begin
     FHotTab := Tab;
     if poPaintsHotTab in CurrentPainter.Options then
       Paint;
+  end;
+end;
+
+function TJvCustomTabBar.CloseTab(ATab: TJvTabBarItem): Boolean;
+begin
+  Result := False;
+  if ATab <> nil then
+  begin
+     FClosingTab := ATab;
+    try
+      Result := TabCloseQuery(FClosingTab);
+      if Result then
+        TabClosed(FClosingTab);
+    finally
+      FClosingTab := nil;
+    end;
   end;
 end;
 

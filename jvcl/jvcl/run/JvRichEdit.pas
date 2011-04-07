@@ -29,7 +29,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEdit.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvRichEdit.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 unit JvRichEdit;
 
@@ -927,8 +927,8 @@ function BitmapToRTF2(ABitmap: TBitmap; AStream: TStream): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEdit.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -4540,7 +4540,7 @@ procedure TJvCustomRichEdit.WMRButtonUp(var Msg: TMessage);
 begin
   { RichEd20 does not pass the WM_RBUTTONUP message to defwndproc, }
   { so we get no WM_CONTEXTMENU message. Simulate message here.    }
-  if ((RichEditVersion <> 1) or (Win32MajorVersion < 5)) and AllowObjects then
+  if ((RichEditVersion <> 1) or not CheckWin32Version(5, 0)) and AllowObjects then
     Perform(WM_CONTEXTMENU, Handle, LPARAM(PointToSmallPoint(
       ClientToScreen(SmallPointToPoint(TWMMouse(Msg).Pos)))));
   inherited;

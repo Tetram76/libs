@@ -24,7 +24,7 @@ Description:
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvOfficeColorButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvOfficeColorButton.pas 13001 2011-03-09 21:11:42Z uschuster $
 
 unit JvOfficeColorButton;
 
@@ -169,7 +169,7 @@ type
     procedure CMPopupCloseUp(var Msg: TMessage); message CM_POPUPCLOSEUP;
     procedure CMCancelMode(var Msg: TCMCancelMode); message CM_CANCELMODE;
     procedure PopupCloseUp; virtual;
-    procedure FocusKilled(NextWnd: Cardinal); override;
+    procedure FocusKilled(NextWnd: THandle); override;
 
     procedure AdjustColorForm(X: Integer = 0; Y: Integer = 0); //Screen position
     procedure ShowColorForm(X: Integer = 0; Y: Integer = 0); virtual; //Screen position
@@ -314,8 +314,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOfficeColorButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13001 $';
+    Date: '$Date: 2011-03-09 22:11:42 +0100 (mer., 09 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -896,7 +896,7 @@ begin
   end;
 end;}
 
-procedure TJvCustomOfficeColorButton.FocusKilled(NextWnd: Cardinal);
+procedure TJvCustomOfficeColorButton.FocusKilled(NextWnd: THandle);
 var
   Sender: TWinControl;
   Focused: Boolean;

@@ -64,7 +64,7 @@ Revisions : 1st = 2004/09/19
             7th = 2007/03/25
             8th = 2007/06/20
 -----------------------------------------------------------------------------}
-// $Id: JvMemoryDataset.pas 12921 2010-11-28 00:35:08Z ahuser $
+// $Id: JvMemoryDataset.pas 13003 2011-03-16 20:51:04Z jfudickar $
 
 unit JvMemoryDataset;
 
@@ -346,8 +346,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemoryDataset.pas $';
-    Revision: '$Revision: 12921 $';
-    Date: '$Date: 2010-11-28 01:35:08 +0100 (dim., 28 nov. 2010) $';
+    Revision: '$Revision: 13003 $';
+    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -364,7 +364,7 @@ uses
   JvJCLUtils,
   {$ENDIF ~UNICODE}
   JvJVCLUtils,
-  JvResources;
+  JvResources, JclSysUtils;
 
 const
   ftBlobTypes = [ftBlob, ftMemo, ftGraphic, ftFmtMemo, ftParadoxOle,
@@ -1086,7 +1086,7 @@ begin
               VarData := PVariant(Buffer)^
             else
               VarData := EmptyParam;
-            Data^ := Ord((Buffer <> nil) and not (VarIsNull(VarData) or VarIsEmpty(VarData)));
+            Data^ := Ord((Buffer <> nil) and not (VarIsNullEmpty(VarData)));
             if Data^ <> 0 then
             begin
               Inc(Data);
@@ -2269,6 +2269,19 @@ begin
 end;
 
 procedure TJvMemoryData.CreateIndexList(const FieldNames: WideString);
+type
+  TFieldTypeSet = set of TFieldType;
+
+  function GetSetFieldNames(const FieldTypeSet: TFieldTypeSet): string;
+  var
+    FieldType: TFieldType;
+  begin
+    for FieldType := Low(TFieldType) to High(TFieldType) do
+      if FieldType in FieldTypeSet then
+        Result := Result + FieldTypeNames[FieldType] + ', ';
+    Result := Copy(Result, 1, Length(Result) - 2);
+  end;
+
 var
   Pos: Integer;
   F: TField;
@@ -2284,7 +2297,8 @@ begin
     if {(F.FieldKind = fkData) and }(F.DataType in ftSupported - ftBlobTypes) then
       FIndexList.Add(F)
     else
-      ErrorFmt(SFieldTypeMismatch, [F.DisplayName]);
+      ErrorFmt(SFieldTypeMismatch, [F.DisplayName, GetSetFieldNames(ftSupported - ftBlobTypes),
+        FieldTypeNames[F.DataType]]);
   end;
 end;
 

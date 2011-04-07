@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxPivotGrid.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvControlActionsEngineCxPivotGrid.pas 13011 2011-04-03 14:00:03Z jfudickar $
 
 unit JvControlActionsEngineCxPivotGrid;
 
@@ -37,7 +37,7 @@ uses
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
   cxCustomPivotGrid,
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
-  JvControlActionsEngine;
+  JvControlActionsEngine, JvActionsEngine;
 
 {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
 type
@@ -48,9 +48,9 @@ type
     function GetPivotGrid(AActionComponent: TComponent): TcxCustomPivotGrid;
     function GetSupportedOperations: TJvControlActionOperations; override;
   public
-    function ExecuteOperation(const aOperation: TJvControlActionOperation; const
-        aActionControl: TControl): Boolean; override;
+    function ExecuteOperation(const aOperation: TJvControlActionOperation; const aActionControl: TControl): Boolean; override;
     function SupportsComponent(aActionComponent: TComponent): Boolean; override;
+    procedure UpdateAction(AAction: TJvActionEngineBaseAction; AComponent: TComponent); override;
   end;
 
 {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
@@ -59,8 +59,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxPivotGrid.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13011 $';
+    Date: '$Date: 2011-04-03 16:00:03 +0200 (dim., 03 avr. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -71,14 +71,14 @@ uses
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
   cxExportPivotGridLink,
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
-  Variants, SysUtils, Dialogs;
+  Variants, SysUtils, Dialogs, JvControlActions;
 
 //=== { TJvDatabaseActionDevExpCxGridControlEngine } =========================
 
 {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}
 
-function TJvControlActioncxPivotGridEngine.ExecuteOperation(const aOperation:
-    TJvControlActionOperation; const aActionControl: TControl): Boolean;
+function TJvControlActioncxPivotGridEngine.ExecuteOperation(const aOperation: TJvControlActionOperation; const
+    aActionControl: TControl): Boolean;
 
 var
   PivotGrid : TcxCustomPivotGrid;
@@ -94,15 +94,13 @@ begin
       caoExpand :
         for I := 0 to PivotGrid.Groups.Count - 1 do
           PivotGrid.Groups[i].FullExpand;
-      caoOptimizeColumns :
-        PivotGrid.ApplyBestFit;
-      caoExport :
-        ExportGrid (PivotGrid);
+      caoOptimizeColumns : PivotGrid.ApplyBestFit;
+      caoExport : ExportGrid (PivotGrid);
+      caoCustomizeColumns : PivotGrid.Customization.Visible := not PivotGrid.Customization.Visible;
     End;
 end;
 
-procedure TJvControlActioncxPivotGridEngine.ExportGrid(aGrid:
-    TcxCustomPivotGrid);
+procedure TJvControlActioncxPivotGridEngine.ExportGrid(aGrid: TcxCustomPivotGrid);
 var
   SaveDialog: TSaveDialog;
 begin
@@ -132,8 +130,7 @@ begin
   end;
 end;
 
-function TJvControlActioncxPivotGridEngine.GetPivotGrid(AActionComponent:
-    TComponent): TcxCustomPivotGrid;
+function TJvControlActioncxPivotGridEngine.GetPivotGrid(AActionComponent: TComponent): TcxCustomPivotGrid;
 begin
   if Assigned(AActionComponent) then
     if AActionComponent is TcxCustomPivotGrid then
@@ -144,16 +141,22 @@ begin
     Result := nil;
 end;
 
-function TJvControlActioncxPivotGridEngine.GetSupportedOperations:
-    TJvControlActionOperations;
+function TJvControlActioncxPivotGridEngine.GetSupportedOperations: TJvControlActionOperations;
 begin
-  Result := [{caoCollapse, caoExpand, }caoOptimizeColumns, caoExport];
+  Result := [{caoCollapse, caoExpand,} caoOptimizeColumns, caoExport, caoCustomizeColumns];
 end;
 
-function TJvControlActioncxPivotGridEngine.SupportsComponent(aActionComponent:
-    TComponent): Boolean;
+function TJvControlActioncxPivotGridEngine.SupportsComponent(aActionComponent: TComponent): Boolean;
 begin
   Result := Assigned(GetPivotGrid(AActionComponent));
+end;
+
+procedure TJvControlActioncxPivotGridEngine.UpdateAction(AAction: TJvActionEngineBaseAction; AComponent: TComponent);
+begin
+  if Assigned(GetPivotGrid(AComponent)) and Assigned(AAction) and
+    (AAction is TJvControlBaseAction) and (TJvControlBaseAction(Aaction).ControlOperation = caoCustomizeColumns) then
+    TJvControlBaseAction(Aaction).SetChecked(GetPivotGrid(AComponent).Customization.Visible);
+
 end;
 
 {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXPIVOTGRID}

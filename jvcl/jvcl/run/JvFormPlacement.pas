@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacement.pas 12844 2010-09-16 18:30:22Z jfudickar $
+// $Id: JvFormPlacement.pas 13006 2011-03-31 12:20:17Z jfudickar $
 
 unit JvFormPlacement;
                                               
@@ -147,16 +147,12 @@ type
     property PreventResize: Boolean read FPreventResize write SetPreventResize default False;
     property Version: Integer read FVersion write FVersion default 0;
     property VersionCheck: TJvFormPlacementVersionCheck read FVersionCheck write FVersionCheck default fpvcCheckGreaterEqual;
-    property BeforeSavePlacement: TNotifyEvent read FBeforeSavePlacement
-      write FBeforeSavePlacement;
+    property BeforeSavePlacement: TNotifyEvent read FBeforeSavePlacement write FBeforeSavePlacement;
     property OnSavePlacement: TNotifyEvent read FOnSavePlacement write FOnSavePlacement;
-    property AfterSavePlacement: TNotifyEvent read FAfterSavePlacement
-      write FAfterSavePlacement;
-    property BeforeRestorePlacement: TNotifyEvent read FBeforeRestorePlacement
-      write FBeforeRestorePlacement;
+    property AfterSavePlacement: TNotifyEvent read FAfterSavePlacement write FAfterSavePlacement;
+    property BeforeRestorePlacement: TNotifyEvent read FBeforeRestorePlacement write FBeforeRestorePlacement;
     property OnRestorePlacement: TNotifyEvent read FOnRestorePlacement write FOnRestorePlacement;
-    property AfterRestorePlacement: TNotifyEvent read FAfterRestorePlacement
-      write FAfterRestorePlacement;
+    property AfterRestorePlacement: TNotifyEvent read FAfterRestorePlacement write FAfterRestorePlacement;
   end;
 
   TJvStoredValues = class;
@@ -280,8 +276,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacement.pas $';
-    Revision: '$Revision: 12844 $';
-    Date: '$Date: 2010-09-16 20:30:22 +0200 (jeu., 16 sept. 2010) $';
+    Revision: '$Revision: 13006 $';
+    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -767,17 +763,22 @@ procedure TJvFormPlacement.SaveFormPlacement;
 begin
   if Assigned(AppStorage) then
   begin
-    ResolveAppStoragePath; //need to resolve if not resolved yet (for Frames)
+    AppStorage.BeginUpdate;
+    try
+      ResolveAppStoragePath; //need to resolve if not resolved yet (for Frames)
 
-    if Assigned(FBeforeSavePlacement) then
-      FBeforeSavePlacement(Self);
-    if VersionCheck <> fpvcNocheck then
-      WriteInteger(siVersion, FVersion);
-    Save;
-    SavePlacement;
-    if Assigned(FAfterSavePlacement) then
-      FAfterSavePlacement(Self);
-    FSaved := True;
+      if Assigned(FBeforeSavePlacement) then
+        FBeforeSavePlacement(Self);
+      if VersionCheck <> fpvcNocheck then
+        WriteInteger(siVersion, FVersion);
+      Save;
+      SavePlacement;
+      if Assigned(FAfterSavePlacement) then
+        FAfterSavePlacement(Self);
+      FSaved := True;
+    finally
+      AppStorage.EndUpdate;
+    end;
   end;
 end;
 
@@ -791,36 +792,41 @@ begin
   begin
     ResolveAppStoragePath; //need to resolve if not resolved yet (for Frames)
 
-    FSaved := False;
-    ReadVersion := ReadInteger(siVersion, 0);
-    case VersionCheck of
-      fpvcNocheck:
-        ContinueRestore := True;
-      fpvcCheckGreaterEqual:
-        ContinueRestore := ReadVersion >= FVersion;
-      fpvcCheckEqual:
-        ContinueRestore := ReadVersion = FVersion;
-    else
-      ContinueRestore := False;
-    end;
-    if ContinueRestore then
-    begin
-      if Assigned(FBeforeRestorePlacement) then
-        FBeforeRestorePlacement(Self);
-      RestorePlacement;
-      FRestored := True;
-      Restore;
-      if (fpActiveControl in Options) and (Owner is TCustomForm) then
-      begin
-        ActiveCtl := Form.FindComponent(AppStorage.ReadString(AppStorage.ConcatPaths([AppStoragePath, siActiveCtrl]), ''));
-        if (ActiveCtl <> nil) and (ActiveCtl is TWinControl) and
-          TWinControl(ActiveCtl).CanFocus then
-          Form.ActiveControl := TWinControl(ActiveCtl);
+    AppStorage.BeginUpdate;
+    try
+      FSaved := False;
+      ReadVersion := ReadInteger(siVersion, 0);
+      case VersionCheck of
+        fpvcNocheck:
+          ContinueRestore := True;
+        fpvcCheckGreaterEqual:
+          ContinueRestore := ReadVersion >= FVersion;
+        fpvcCheckEqual:
+          ContinueRestore := ReadVersion = FVersion;
+      else
+        ContinueRestore := False;
       end;
-      if Assigned(FAfterRestorePlacement) then
-        FAfterRestorePlacement(Self);
+      if ContinueRestore then
+      begin
+        if Assigned(FBeforeRestorePlacement) then
+          FBeforeRestorePlacement(Self);
+        RestorePlacement;
+        FRestored := True;
+        Restore;
+        if (fpActiveControl in Options) and (Owner is TCustomForm) then
+        begin
+          ActiveCtl := Form.FindComponent(AppStorage.ReadString(AppStorage.ConcatPaths([AppStoragePath, siActiveCtrl]), ''));
+          if (ActiveCtl <> nil) and (ActiveCtl is TWinControl) and
+            TWinControl(ActiveCtl).CanFocus then
+            Form.ActiveControl := TWinControl(ActiveCtl);
+        end;
+        if Assigned(FAfterRestorePlacement) then
+          FAfterRestorePlacement(Self);
+      end;
+      FRestored := True;
+    finally
+      AppStorage.EndUpdate;
     end;
-    FRestored := True;
   end;
   UpdatePlacement;
 end;

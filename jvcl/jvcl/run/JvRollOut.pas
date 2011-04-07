@@ -42,7 +42,7 @@ Changes 2003-03-23:
      - ImageOffset: change to ImageOptions.Offset // peter3
 
 -----------------------------------------------------------------------------}
-// $Id: JvRollOut.pas 12893 2010-11-09 14:38:32Z obones $
+// $Id: JvRollOut.pas 12977 2011-02-14 08:51:41Z ahuser $
 
 unit JvRollOut;
 
@@ -216,6 +216,7 @@ type
     procedure Click; override;
     procedure DoImageOptionsChange(Sender: TObject);
     procedure DoColorsChange(Sender: TObject);
+    procedure DoButtonFontChange(Sender: TObject);
     property ButtonFont: TFont read FButtonFont write SetButtonFont stored IsButtonFontStored;
     property ButtonHeight: Integer read FButtonHeight write SetButtonHeight default 20;
     property ChildOffset: Integer read FChildOffset write SetChildOffset default 0;
@@ -313,8 +314,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRollOut.pas $';
-    Revision: '$Revision: 12893 $';
-    Date: '$Date: 2010-11-09 15:38:32 +0100 (mar., 09 nov. 2010) $';
+    Revision: '$Revision: 12977 $';
+    Date: '$Date: 2011-02-14 09:51:41 +0100 (lun., 14 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -559,6 +560,7 @@ begin
   FButtonFont.Size := 7;
   FButtonFont.Style := [fsBold];
   FButtonFont.Color := clWhite;
+  FButtonFont.OnChange := DoButtonFontChange;
 
   // SmartExpand / SmartShow
   FSmartExpand := True;
@@ -579,7 +581,7 @@ end;
 
 destructor TJvCustomRollOut.Destroy;
 begin
-  FButtonFont.Free;
+  FreeAndNil(FButtonFont);
   FreeAndNil(FImageOptions);
   FreeAndNil(FChildControlVisibility);
   FreeAndNil(FColors);
@@ -647,13 +649,9 @@ end;
 procedure TJvCustomRollOut.RedrawControl(DrawAll: Boolean);
 begin
   if DrawAll then
-  begin
-    Invalidate;
-  end
+    Invalidate
   else
-  begin
     DrawButtonFrame;
-  end;
 end;
 
 procedure TJvCustomRollOut.SetGroupIndex(Value: Integer);
@@ -1006,8 +1004,8 @@ end;
 
 procedure TJvCustomRollOut.SetButtonFont(const Value: TFont);
 begin
-  FButtonFont.Assign(Value);
-  Invalidate;
+  if Value <> FButtonFont then
+    FButtonFont.Assign(Value);
 end;
 
 // Only store button font if not default value
@@ -1236,6 +1234,11 @@ end;
 procedure TJvCustomRollOut.DoImageOptionsChange(Sender: TObject);
 begin
   RedrawControl(True);
+end;
+
+procedure TJvCustomRollOut.DoButtonFontChange(Sender: TObject);
+begin
+  Invalidate;
 end;
 
 procedure TJvCustomRollOut.Notification(AComponent: TComponent;

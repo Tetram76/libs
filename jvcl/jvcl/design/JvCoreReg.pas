@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCoreReg.pas 12661 2010-01-07 18:58:43Z ahuser $
+// $Id: JvCoreReg.pas 13001 2011-03-09 21:11:42Z uschuster $
 
 unit JvCoreReg;
 
@@ -94,7 +94,7 @@ begin
   Result := nil;
 end;
 
-function ModuleEnumProc(HInstance: Integer; Data: Pointer): Boolean;
+function ModuleEnumProc(HInstance: HINST; Data: Pointer): Boolean;
 var
   StandardActionsClass: TComponentClass;
 begin

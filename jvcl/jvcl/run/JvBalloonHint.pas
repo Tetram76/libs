@@ -25,7 +25,7 @@ Known Issues:
   * Only dropdown shadow for windows xp systems.
   * Only custom animation for windows xp systems, because of use of window region.
 -----------------------------------------------------------------------------}
-// $Id: JvBalloonHint.pas 12857 2010-10-08 14:14:28Z obones $
+// $Id: JvBalloonHint.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 unit JvBalloonHint;
 
@@ -286,8 +286,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBalloonHint.pas $';
-    Revision: '$Revision: 12857 $';
-    Date: '$Date: 2010-10-08 16:14:28 +0200 (ven., 08 oct. 2010) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -401,19 +401,17 @@ end;
 
 function IsWinXP_UP: Boolean;
 begin
-  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and
-    ((Win32MajorVersion > 5) or
-    (Win32MajorVersion = 5) and (Win32MinorVersion >= 1));
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(5, 1);
 end;
 
 function IsWinVista_UP: Boolean;
 begin
-  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion >= 6);
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(6, 0);
 end;
 
 function IsWinSeven_UP: Boolean;
 begin
-  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion >= 6) and (Win32MinorVersion >= 1);
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(6, 1);
 end;
 
 function InternalClientToParent(AControl: TControl; const Point: TPoint;

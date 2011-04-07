@@ -26,7 +26,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvArrowButton.pas 12895 2010-11-25 08:16:57Z ahuser $
+// $Id: JvArrowButton.pas 12989 2011-02-23 15:06:27Z ahuser $
 
 unit JvArrowButton;
 
@@ -149,8 +149,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvArrowButton.pas $';
-    Revision: '$Revision: 12895 $';
-    Date: '$Date: 2010-11-25 09:16:57 +0100 (jeu., 25 nov. 2010) $';
+    Revision: '$Revision: 12989 $';
+    Date: '$Date: 2011-02-23 16:06:27 +0100 (mer., 23 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1009,7 +1009,7 @@ begin
 
   OffsetRect(PaintRect, Offset.X, Offset.Y);
 
-  if not SplittedButton then
+  if not SplittedButton and (not Flat or (FMouseInControl and Enabled)) then
   begin
     { Draw vertical 'bar' }
     Canvas.Pen.Color := clBtnShadow;

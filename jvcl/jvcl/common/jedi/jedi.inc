@@ -39,9 +39,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 10:39:52 +0200 (lun., 25 oct. 2010)                          $ }
-{ Revision:      $Rev:: 74                                                                       $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-03-10 12:48:21 +0100 (jeu., 10 mars 2011)                          $ }
+{ Revision:      $Rev:: 123                                                                      $ }
+{ Author:        $Author:: uschuster                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -826,7 +826,7 @@
 { BCBX_UP from BCBX_UP mappings                                                }
 {------------------------------------------------------------------------------}
 
-{$IFDEF BCB15_UP} {$DEFINE BCB15_UP} {$ENDIF}
+{$IFDEF BCB15_UP} {$DEFINE BCB14_UP} {$ENDIF}
 {$IFDEF BCB14_UP} {$DEFINE BCB12_UP} {$ENDIF}
 {$IFDEF BCB12_UP} {$DEFINE BCB11_UP} {$ENDIF}
 {$IFDEF BCB11_UP} {$DEFINE BCB10_UP} {$ENDIF}

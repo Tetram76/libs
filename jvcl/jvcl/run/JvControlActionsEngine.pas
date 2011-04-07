@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngine.pas 12839 2010-09-05 17:09:07Z jfudickar $
+// $Id: JvControlActionsEngine.pas 13011 2011-04-03 14:00:03Z jfudickar $
 
 unit JvControlActionsEngine;
 
@@ -52,8 +52,7 @@ type
     property EngineList: TJvActionEngineList read GetEngineList;
   public
     constructor Create(AOwner: TComponent); override;
-    function ExecuteOperation(const aOperation: TJvControlActionOperation; const aActionControl: TControl): Boolean;
-        virtual;
+    function ExecuteOperation(const aOperation: TJvControlActionOperation; const aActionControl: TControl): Boolean; virtual;
     function SupportsAction(AAction: TJvActionEngineBaseAction): Boolean; override;
     property SupportedOperations: TJvControlActionOperations read GetSupportedOperations;
   end;
@@ -72,8 +71,8 @@ function RegisteredControlActionEngineList: TJvControlActionEngineList;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngine.pas $';
-    Revision: '$Revision: 12839 $';
-    Date: '$Date: 2010-09-05 19:09:07 +0200 (dim., 05 sept. 2010) $';
+    Revision: '$Revision: 13011 $';
+    Date: '$Date: 2011-04-03 16:00:03 +0200 (dim., 03 avr. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

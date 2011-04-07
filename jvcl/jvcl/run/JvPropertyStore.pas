@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStore.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvPropertyStore.pas 12996 2011-03-05 17:08:40Z jfudickar $
 
 unit JvPropertyStore;
 
@@ -87,8 +87,7 @@ type
     function GetPropertyCount: Integer;
     function GetPropertyName(Index: Integer): string;
     //1 Returns the given property as TJvCustomPropertyStore or returns nil
-    function GetPropertyJvCustomPropertyStore(PropName: string):
-        TJvCustomPropertyStore;
+    function GetPropertyJvCustomPropertyStore(PropName: string): TJvCustomPropertyStore;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -232,8 +231,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStore.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 12996 $';
+    Date: '$Date: 2011-03-05 18:08:40 +0100 (sam., 05 mars 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -416,9 +415,15 @@ begin
   FDeleteBeforeStore := False;
   FAutoLoad := False;
   FIntIgnoreProperties := TStringList.Create;
+  FIntIgnoreProperties.Sorted := True;
+  FIntIgnoreProperties.Duplicates := dupIgnore;
   FIgnoreProperties := TJvIgnorePropertiesStringList.Create;
+  FIgnoreProperties.Sorted := True;
+  FIgnoreProperties.Duplicates := dupIgnore;
   FIgnoreLastLoadTime := False;
   FCombinedIgnoreProperties := TCombinedStrings.Create;
+  FCombinedIgnoreProperties.Sorted := True;
+  FCombinedIgnoreProperties.Duplicates := dupIgnore;
   for I := Low(IgnorePropertyList) to High(IgnorePropertyList) do
     FIntIgnoreProperties.Add(IgnorePropertyList[I]);
   FSynchronizeStoreProperties := False;
@@ -698,15 +703,17 @@ begin
     for Index := 0 to GetPropCount(Self) - 1 do
     begin
       PropName := GetPropName(Self, Index);
-      PropertyStore := GetPropertyJvCustomPropertyStore (PropName);
-      if Assigned(PropertyStore) and not IgnoreProperty(PropName) then
+      if not IgnoreProperty(PropName) then
       begin
-        VisPropName := AppStorage.TranslatePropertyName(Self, PropName, False);
-        if (PropertyStore.AppStoragePath = AppStorage.ConcatPaths([OldPath,
-          VisPropName])) or
-          (PropertyStore.AppStoragePath = '') then
-          PropertyStore.AppStoragePath :=
-            AppStorage.ConcatPaths([AppStoragePath, VisPropName]);
+        PropertyStore := GetPropertyJvCustomPropertyStore (PropName);
+        if Assigned(PropertyStore) then
+        begin
+          VisPropName := AppStorage.TranslatePropertyName(Self, PropName, False);
+          if (PropertyStore.AppStoragePath = AppStorage.ConcatPaths([OldPath,
+            VisPropName])) or (PropertyStore.AppStoragePath = '') then
+            PropertyStore.AppStoragePath :=
+              AppStorage.ConcatPaths([AppStoragePath, VisPropName]);
+        end;
       end;
     end;
   end;
@@ -778,8 +785,7 @@ begin
   Result := GetPropCount(self);
 end;
 
-function TJvCustomPropertyStore.GetPropertyJvCustomPropertyStore(PropName:
-    string): TJvCustomPropertyStore;
+function TJvCustomPropertyStore.GetPropertyJvCustomPropertyStore(PropName: string): TJvCustomPropertyStore;
 begin
   if (PropType(Self, PropName) = tkClass) and
      (TPersistent(GetObjectProp(Self, PropName)) is TJvCustomPropertyStore) then
@@ -796,8 +802,8 @@ end;
 function TJvCustomPropertyStore.IgnoreProperty(const PropertyName: string):
   Boolean;
 begin
-  Result := (IgnoreProperties.IndexOf(PropertyName) >= 0) or
-    (FIntIgnoreProperties.IndexOf(PropertyName) >= 0);
+  Result := (FIntIgnoreProperties.IndexOf(PropertyName) >= 0) or
+    (IgnoreProperties.IndexOf(PropertyName) >= 0);
 end;
 
 procedure TJvCustomPropertyStore.LoadProperties;
@@ -956,8 +962,8 @@ begin
     if not IgnoreProperty(PropName) then
     begin
       PropertyStore := GetPropertyJvCustomPropertyStore(PropName);
-      if Assigned(PropertyStore) and (PropertyStore is TJvCustomPropertyStore) then
-        Result := Result and TJvCustomPropertyStore(PropertyStore).ValidateData;
+      if Assigned(PropertyStore) then
+        Result := Result and PropertyStore.ValidateData;
     end;
   end;
 end;

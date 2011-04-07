@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTypes.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvTypes.pas 12969 2011-01-28 00:14:55Z jfudickar $
 
 unit JvTypes;
 
@@ -644,7 +644,10 @@ type
     {$IFNDEF DELPHI2010_UP}
     procedure NameThreadForDebugging(AThreadName: AnsiString; AThreadID: LongWord = $FFFFFFFF);
     {$ENDIF}
-    procedure NameThread(AThreadName: AnsiString; AThreadID: LongWord = $FFFFFFFF); virtual;
+    procedure NameThread(AThreadName: AnsiString; AThreadID: LongWord = $FFFFFFFF); {$IFDEF SUPPORTS_UNICODE_STRING} overload; {$ENDIF} virtual;
+    {$IFDEF SUPPORTS_UNICODE_STRING}
+    procedure NameThread(AThreadName: String; AThreadID: LongWord = $FFFFFFFF); overload;
+    {$ENDIF}
     property ThreadName: String read GetThreadName write SetThreadName;
   end;
 
@@ -668,8 +671,8 @@ var JvCustomThreadNamingProc : procedure (AThreadName: AnsiString; AThreadID: Lo
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTypes.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 12969 $';
+    Date: '$Date: 2011-01-28 01:14:55 +0100 (ven., 28 janv. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -811,6 +814,13 @@ begin
   if Assigned(JvCustomThreadNamingProc) then
     JvCustomThreadNamingProc(aThreadName, AThreadID);
 end;
+
+{$IFDEF SUPPORTS_UNICODE_STRING}
+procedure TJvCustomThread.NameThread(AThreadName: String; AThreadID: LongWord = $FFFFFFFF);
+begin
+  NameThread(AnsiString(AThreadName), AThreadId);
+end;
+{$ENDIF}
 
 procedure TJvCustomThread.SetThreadName(const Value: String);
 begin

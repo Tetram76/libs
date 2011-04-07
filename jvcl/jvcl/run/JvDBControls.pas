@@ -32,7 +32,7 @@ Known Issues:
         You can use it as a generic editor control inside a control grid.
           -- Warren Postma (warrenpstma att hotmail dott com)
 -----------------------------------------------------------------------------}
-// $Id: JvDBControls.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvDBControls.pas 13003 2011-03-16 20:51:04Z jfudickar $
 
 unit JvDBControls;
 
@@ -698,8 +698,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBControls.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13003 $';
+    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1624,7 +1624,7 @@ end;
 
 procedure TJvDBDateEdit.AcceptValue(const Value: Variant);
 begin
-  if VarIsNull(Value) or VarIsEmpty(Value) then
+  if VarIsNullEmpty(Value) then
     FDataLink.Field.Clear
   else
     FDataLink.Field.AsDateTime :=
@@ -2086,7 +2086,7 @@ end;
 
 procedure TJvDBCalcEdit.AcceptValue(const Value: Variant);
 begin
-  if VarIsNull(Value) or VarIsEmpty(Value) then
+  if VarIsNullEmpty(Value) then
     FDataLink.Field.Clear
   else
     FDataLink.Field.Value := CheckValue(Value, False);

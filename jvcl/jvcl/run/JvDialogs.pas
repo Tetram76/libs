@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDialogs.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDialogs.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 unit JvDialogs;
 
@@ -135,8 +135,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDialogs.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -170,7 +170,7 @@ var
 
 function IsWin2kOrAbove: Boolean;
 begin
-  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and  (Win32MajorVersion >= 5);
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and  CheckWin32Version(5, 0);
 end;
 
 procedure UninstallW2kFix;

@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterList.pas 12875 2010-10-23 20:12:27Z jfudickar $
+// $Id: JvParameterList.pas 13006 2011-03-31 12:20:17Z jfudickar $
 
 unit JvParameterList;
 
@@ -482,8 +482,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterList.pas $';
-    Revision: '$Revision: 12875 $';
-    Date: '$Date: 2010-10-23 22:12:27 +0200 (sam., 23 oct. 2010) $';
+    Revision: '$Revision: 13006 $';
+    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -492,7 +492,7 @@ implementation
 
 uses
   JclStrings,
-  JvParameterListParameter, JvResources, JvJVCLUtils;
+  JvParameterListParameter, JvResources, JvJVCLUtils, JclSysUtils;
 
 const
   cFalse = 'FALSE';
@@ -815,7 +815,7 @@ end;
 
 function TJvBaseParameter.GetAsString: string;
 begin
-  if VarIsNull(AsVariant) then
+  if VarIsNullEmpty(AsVariant) then
     Result := ''
   else
     Result := AsVariant;
@@ -841,7 +841,7 @@ end;
 
 function TJvBaseParameter.GetAsInteger: Integer;
 begin
-  if VarIsNull(AsVariant) then
+  if VarIsNullEmpty(AsVariant) then
     Result := 0
   else
     Result := AsVariant;
@@ -859,7 +859,7 @@ function TJvBaseParameter.GetAsBoolean: Boolean;
 var
   S: string;
 begin
-  if VarIsNull(FValue) then
+  if VarIsNullEmpty(FValue) then
     Result := False
   else
   begin
@@ -875,7 +875,7 @@ end;
 
 function TJvBaseParameter.GetAsDate: TDateTime;
 begin
-  if VarIsNull(FValue) then
+  if VarIsNullEmpty(FValue) then
     Result := 0
   else
     Result := VarToDateTime(FValue);
@@ -1693,7 +1693,7 @@ begin
       Reason := TJvParameterListEnableDisableReason(AEnableReasons.Objects[J]);
       if not Assigned(Reason) then
         Continue;
-      if VarIsNull(Reason.AsVariant) then
+      if VarIsNullEmpty(Reason.AsVariant) then
         Continue;
       SearchParameter := ParameterByName(Reason.RemoteParameterName);
       if not Assigned(SearchParameter) then
@@ -1721,7 +1721,7 @@ begin
       Reason := TJvParameterListEnableDisableReason(ADisableReasons.Objects[J]);
       if not Assigned(Reason) then
         Continue;
-      if VarIsNull(Reason.AsVariant) then
+      if VarIsNullEmpty(Reason.AsVariant) then
         Continue;
       SearchParameter := ParameterByName(Reason.RemoteParameterName);
       if not Assigned(SearchParameter) then
@@ -1729,9 +1729,9 @@ begin
       if not Assigned(SearchParameter.WinControl) then
         Continue;
       Data := SearchParameter.GetWinControlData;
-      if (VarIsEmpty(Data) or (VarToStr(Data) = '')) and Reason.IsEmpty then
+      if VarIsNullEmptyBlank(Data) and Reason.IsEmpty then
         IEnable := -1;
-      if (not (VarIsEmpty(Data) or (VarToStr(Data) = ''))) and Reason.IsNotEmpty then
+      if not VarIsNullEmptyBlank(Data) and Reason.IsNotEmpty then
         IEnable := -1;
       try
         if VarCompareValue(Reason.AsVariant, Data) = vrEqual then
@@ -2105,25 +2105,32 @@ var
   I: Integer;
 begin
   if Assigned(AppStorage) And Assigned(ParameterList) then
-    for I := 0 to ParameterList.Count - 1 do
-      if not (ParameterList.Parameters[I] is TJvNoDataParameter) then
-        if ParameterList.Parameters[I].StoreValueToAppStorage then
-        begin
-          if ParameterList.Parameters[I].StoreValueCrypted then
-            AppStorage.EnablePropertyValueCrypt;
-          if (ParameterList.Parameters[I] is TJvListParameter)
-              and (TJvListParameter(ParameterList.Parameters[I]).VariantAsItemIndex) then
-            TJvListParameter(ParameterList.Parameters[I]).ItemIndex :=
-              AppStorage.ReadInteger(AppStorage.ConcatPaths([AppStoragePath,
-                  ParameterList.Parameters[I].SearchName]),
-                  TJvListParameter(ParameterList.Parameters[I]).ItemIndex)
-          else
-            ParameterList.Parameters[I].AsString := AppStorage.ReadString(AppStorage.ConcatPaths([AppStoragePath,
-              ParameterList.Parameters[I].SearchName]),
-              ParameterList.Parameters[I].AsString);
-          if ParameterList.Parameters[I].StoreValueCrypted then
-            AppStorage.DisablePropertyValueCrypt;
-        end;
+  begin
+    AppStorage.BeginUpdate;
+    try
+      for I := 0 to ParameterList.Count - 1 do
+        if not (ParameterList.Parameters[I] is TJvNoDataParameter) then
+          if ParameterList.Parameters[I].StoreValueToAppStorage then
+          begin
+            if ParameterList.Parameters[I].StoreValueCrypted then
+              AppStorage.EnablePropertyValueCrypt;
+            if (ParameterList.Parameters[I] is TJvListParameter)
+                and (TJvListParameter(ParameterList.Parameters[I]).VariantAsItemIndex) then
+              TJvListParameter(ParameterList.Parameters[I]).ItemIndex :=
+                AppStorage.ReadInteger(AppStorage.ConcatPaths([AppStoragePath,
+                    ParameterList.Parameters[I].SearchName]),
+                    TJvListParameter(ParameterList.Parameters[I]).ItemIndex)
+            else
+              ParameterList.Parameters[I].AsString := AppStorage.ReadString(AppStorage.ConcatPaths([AppStoragePath,
+                ParameterList.Parameters[I].SearchName]),
+                ParameterList.Parameters[I].AsString);
+            if ParameterList.Parameters[I].StoreValueCrypted then
+              AppStorage.DisablePropertyValueCrypt;
+          end;
+    finally
+      AppStorage.EndUpdate;
+    end;
+  end;
 end;
 
 procedure TJvParameterListPropertyStore.Notification(AComponent: TComponent; Operation: TOperation);
@@ -2142,23 +2149,30 @@ procedure TJvParameterListPropertyStore.StoreData;
 var
   I: Integer;
 begin
-  if Assigned(AppStorage) then
-    for I := 0 to ParameterList.Count - 1 do
-      if not (ParameterList.Parameters[I] is TJvNoDataParameter) then
-        if ParameterList.Parameters[I].StoreValueToAppStorage then
-        begin
-          if ParameterList.Parameters[I].StoreValueCrypted then
-            AppStorage.EnablePropertyValueCrypt;
-          if (ParameterList.Parameters[I] is TJvListParameter)
-             and (TJvListParameter(ParameterList.Parameters[I]).VariantAsItemIndex) then
-            AppStorage.WriteInteger(AppStorage.ConcatPaths([AppStoragePath, ParameterList.Parameters[I].SearchName]),
-              TJvListParameter(ParameterList.Parameters[I]).ItemIndex)
-          else
-            AppStorage.WriteString(AppStorage.ConcatPaths([AppStoragePath, ParameterList.Parameters[I].SearchName]),
-              ParameterList.Parameters[I].AsString);
-          if ParameterList.Parameters[I].StoreValueCrypted then
-            AppStorage.DisablePropertyValueCrypt;
-        end;
+  if Assigned(AppStorage) And Assigned(ParameterList) then
+  begin
+    AppStorage.BeginUpdate;
+    try
+      for I := 0 to ParameterList.Count - 1 do
+        if not (ParameterList.Parameters[I] is TJvNoDataParameter) then
+          if ParameterList.Parameters[I].StoreValueToAppStorage then
+          begin
+            if ParameterList.Parameters[I].StoreValueCrypted then
+              AppStorage.EnablePropertyValueCrypt;
+            if (ParameterList.Parameters[I] is TJvListParameter)
+               and (TJvListParameter(ParameterList.Parameters[I]).VariantAsItemIndex) then
+              AppStorage.WriteInteger(AppStorage.ConcatPaths([AppStoragePath, ParameterList.Parameters[I].SearchName]),
+                TJvListParameter(ParameterList.Parameters[I]).ItemIndex)
+            else
+              AppStorage.WriteString(AppStorage.ConcatPaths([AppStoragePath, ParameterList.Parameters[I].SearchName]),
+                ParameterList.Parameters[I].AsString);
+            if ParameterList.Parameters[I].StoreValueCrypted then
+              AppStorage.DisablePropertyValueCrypt;
+          end;
+    finally
+      AppStorage.EndUpdate;
+    end;
+  end;
 end;
 
 //=== { TJvParameterListSelectList } =========================================

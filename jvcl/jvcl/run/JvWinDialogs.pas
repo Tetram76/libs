@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWinDialogs.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvWinDialogs.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 unit JvWinDialogs;
 
@@ -639,8 +639,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWinDialogs.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1677,7 +1677,7 @@ end;
 
 function TJvOpenDialog2000.Execute: Boolean;
 begin
-  if (Win32MajorVersion >= 5) and (Win32Platform = VER_PLATFORM_WIN32_NT) then
+  if CheckWin32Version(5, 0) and (Win32Platform = VER_PLATFORM_WIN32_NT) then
     Result := DoExecute(@OpenInterceptor)
   else
     Result := inherited Execute;
@@ -1687,7 +1687,7 @@ end;
 
 function TJvSaveDialog2000.Execute: Boolean;
 begin
-  if (Win32MajorVersion >= 5) and (Win32Platform = VER_PLATFORM_WIN32_NT) then
+  if CheckWin32Version(5, 0) and (Win32Platform = VER_PLATFORM_WIN32_NT) then
     Result := DoExecute(@SaveInterceptor)
   else
     Result := inherited Execute;

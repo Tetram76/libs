@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockControlForm.pas 12797 2010-06-07 16:21:51Z ahuser $
+// $Id: JvDockControlForm.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 { Changes:
 
@@ -854,8 +854,8 @@ procedure InvalidateDockHostSiteOfControl(Control: TControl; FocusLost: Boolean)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockControlForm.pas $';
-    Revision: '$Revision: 12797 $';
-    Date: '$Date: 2010-06-07 18:21:51 +0200 (lun., 07 juin 2010) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -888,9 +888,7 @@ var
 
 function IsWinXP_UP: Boolean;
 begin
-  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and
-    ((Win32MajorVersion > 5) or
-    (Win32MajorVersion = 5) and (Win32MinorVersion >= 1));
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(5, 1);
 end;
 
 procedure ApplyShowingChanged;
