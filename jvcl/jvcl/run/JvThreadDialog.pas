@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThreadDialog.pas 12887 2010-11-06 23:27:46Z jfudickar $
+// $Id: JvThreadDialog.pas 13003 2011-03-16 20:51:04Z jfudickar $
 
 unit JvThreadDialog;
 
@@ -230,8 +230,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadDialog.pas $';
-    Revision: '$Revision: 12887 $';
-    Date: '$Date: 2010-11-07 00:27:46 +0100 (dim., 07 nov. 2010) $';
+    Revision: '$Revision: 13003 $';
+    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -305,8 +305,7 @@ var
 begin
   if DialogOptions.ShowDialog then
   begin
-    ThreadDialogForm := TJvThreadSimpleDialogForm.CreateNewFormStyle(ConnectedThread,
-      DialogOptions.FormStyle);
+    ThreadDialogForm := TJvThreadSimpleDialogForm.CreateNewFormStyle(ConnectedThread, DialogOptions.FormStyle);
     ThreadDialogForm.DialogOptions := DialogOptions;
     ThreadDialogForm.OnPressCancel := OnPressCancel;
     ThreadDialogForm.ChangeThreadDialogOptions := ChangeThreadDialogOptions;
@@ -761,8 +760,8 @@ procedure TJvThreadBaseDialogForm.SetFormInfoText;
 begin
   if (csDestroying in ComponentState) or not FormIsShown then
     Exit;
-  if Assigned(IInfoTextControlCaption) then
-    if IInfoTextControlCaption.ControlGetCaption<>DialogOptions.FInfoText then
+  if Assigned(IInfoTextControlCaption) and Assigned(DialogOptions) then
+    if IInfoTextControlCaption.ControlGetCaption<>DialogOptions.InfoText then
     begin
       IInfoTextControlCaption.ControlSetCaption(DialogOptions.FInfoText);
       if Assigned(IInfoTextControlAutoSize) then

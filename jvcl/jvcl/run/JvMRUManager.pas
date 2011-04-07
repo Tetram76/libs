@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 * Using a divider as RecentMenu when MenuLocation = mruChild doesn't work
 -----------------------------------------------------------------------------}
-// $Id: JvMRUManager.pas 12880 2010-10-30 17:42:44Z jfudickar $
+// $Id: JvMRUManager.pas 13006 2011-03-31 12:20:17Z jfudickar $
 
 unit JvMRUManager;
 
@@ -135,12 +135,11 @@ type
     function DoMinimizeName(const S: string): string;
     procedure Change; dynamic;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
-    procedure DoReadItem(AppStorage: TJvCustomAppStorage; const Path: string; Index: Integer;
-      var RecentName: string; var UserData: Longint); dynamic;
-    procedure DoWriteItem(AppStorage: TJvCustomAppStorage; const Path: string; Index: Integer;
-      const RecentName: string; UserData: Longint); dynamic;
-    procedure GetItemData(var Caption: string; var ShortCut: TShortCut;
-      UserData: Longint); dynamic;
+    procedure DoReadItem(AppStorage: TJvCustomAppStorage; const Path: string; Index: Integer; var RecentName: string; var
+        UserData: Longint); dynamic;
+    procedure DoWriteItem(AppStorage: TJvCustomAppStorage; const Path: string; Index: Integer; const RecentName: string;
+        UserData: Longint); dynamic;
+    procedure GetItemData(var Caption: string; var ShortCut: TShortCut; UserData: Longint); dynamic;
     procedure GetItemInfo(Item: TMenuItem); dynamic;
     procedure GetItemInfoEx(Item: TMenuItem; Index: Integer); dynamic;
     procedure DoClick(const RecentName, Caption: string; UserData: Longint); dynamic;
@@ -198,8 +197,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMRUManager.pas $';
-    Revision: '$Revision: 12880 $';
-    Date: '$Date: 2010-10-30 19:42:44 +0200 (sam., 30 oct. 2010) $';
+    Revision: '$Revision: 13006 $';
+    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -256,8 +255,7 @@ begin
   Result := FStrings;
 end;
 
-procedure TJvMRUManager.GetItemData(var Caption: string; var ShortCut: TShortCut;
-  UserData: Longint);
+procedure TJvMRUManager.GetItemData(var Caption: string; var ShortCut: TShortCut; UserData: Longint);
 begin
   if Assigned(FOnGetItem) then
     FOnGetItem(Self, Caption, ShortCut, UserData);
@@ -549,8 +547,8 @@ begin
     FOnChange(Self);
 end;
 
-procedure TJvMRUManager.DoReadItem(AppStorage: TJvCustomAppStorage; const Path: string;
-  Index: Integer; var RecentName: string; var UserData: Longint);
+procedure TJvMRUManager.DoReadItem(AppStorage: TJvCustomAppStorage; const Path: string; Index: Integer; var RecentName:
+    string; var UserData: Longint);
 begin
   if Assigned(FOnReadItem) then
     FOnReadItem(Self, AppStorage, Path, Index, RecentName, UserData)
@@ -563,8 +561,8 @@ begin
   end;
 end;
 
-procedure TJvMRUManager.DoWriteItem(AppStorage: TJvCustomAppStorage; const Path: string;
-  Index: Integer; const RecentName: string; UserData: Longint);
+procedure TJvMRUManager.DoWriteItem(AppStorage: TJvCustomAppStorage; const Path: string; Index: Integer; const
+    RecentName: string; UserData: Longint);
 begin
   if Assigned(FOnWriteItem) then
     FOnWriteItem(Self, AppStorage, Path, Index, RecentName, UserData)
@@ -584,15 +582,13 @@ end;
 procedure TJvMRUManager.InternalLoad(const Section: string);
 begin
   if Assigned(IniStorage) then
-    with IniStorage do
-      LoadFromAppStorage(AppStorage, AppStorage.ConcatPaths([AppStoragePath, Section]));
+    LoadFromAppStorage(IniStorage.AppStorage, IniStorage.AppStorage.ConcatPaths([IniStorage.AppStoragePath, Section]));
 end;
 
 procedure TJvMRUManager.InternalSave(const Section: string);
 begin
   if Assigned(IniStorage) then
-    with IniStorage do
-      SaveToAppStorage(AppStorage, AppStorage.ConcatPaths([AppStoragePath, Section]));
+    SaveToAppStorage(IniStorage.AppStorage, IniStorage.AppStorage.ConcatPaths([IniStorage.AppStoragePath, Section]));
 end;
 
 procedure TJvMRUManager.LoadFromAppStorage(const AppStorage: TJvCustomAppStorage; const Path: string);
@@ -604,6 +600,7 @@ var
 begin
   AMode := Mode;
   Strings.BeginUpdate;
+  AppStorage.BeginUpdate;
   try
     Strings.Clear;
     Mode := rmInsert;
@@ -617,6 +614,7 @@ begin
     end;
   finally
     Mode := AMode;
+    AppStorage.EndUpdate;
     Strings.EndUpdate;
   end;
 end;
@@ -625,9 +623,14 @@ procedure TJvMRUManager.SaveToAppStorage(const AppStorage: TJvCustomAppStorage; 
 var
   I: Integer;
 begin
-  AppStorage.DeleteSubTree(Path);
-  for I := 0 to Strings.Count - 1 do
-    DoWriteItem(AppStorage, Path, I, Strings[I], Longint(Strings.Objects[I]));
+  AppStorage.BeginUpdate;
+  try
+    AppStorage.DeleteSubTree(Path);
+    for I := 0 to Strings.Count - 1 do
+      DoWriteItem(AppStorage, Path, I, Strings[I], Longint(Strings.Objects[I]));
+  finally
+    AppStorage.EndUpdate;
+  end;
 end;
 
 procedure TJvMRUManager.Load;

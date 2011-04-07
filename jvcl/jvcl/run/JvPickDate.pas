@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPickDate.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvPickDate.pas 13003 2011-03-16 20:51:04Z jfudickar $
 
 unit JvPickDate;
 
@@ -142,8 +142,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPickDate.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13003 $';
+    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1218,7 +1218,7 @@ begin
   begin
     try
       if (Trim(ReplaceStr(VarToStr(Value), JclFormatSettings.DateSeparator, '')) = '') or
-        VarIsNull(Value) or VarIsEmpty(Value) then
+        VarIsNullEmpty(Value) then
         FCalendar.CalendarDate := VarToDateTime(SysUtils.Date)
       else
         FCalendar.CalendarDate := VarToDateTime(Value);

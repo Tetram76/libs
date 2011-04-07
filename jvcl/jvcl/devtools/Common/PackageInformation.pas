@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageInformation.pas 12967 2011-01-13 16:35:51Z outchy $
+// $Id: PackageInformation.pas 12990 2011-02-26 05:55:33Z outchy $
 
 unit PackageInformation;
 
@@ -1210,7 +1210,7 @@ var
 begin
   xml := TJclSimpleXML.Create;
   try
-    xml.LoadFromString(LoadUtf8File(Filename));
+    xml.LoadFromFile(Filename);
 
     for i := 0 to xml.Root.Items.Count - 1 do
     begin

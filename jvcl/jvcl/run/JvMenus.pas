@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMenus.pas 12805 2010-06-10 14:11:07Z obones $
+// $Id: JvMenus.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 unit JvMenus;
 
@@ -744,8 +744,8 @@ function StripHotkeyPrefix(const Text: string): string; // MBCS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMenus.pas $';
-    Revision: '$Revision: 12805 $';
-    Date: '$Date: 2010-06-10 16:11:07 +0200 (jeu., 10 juin 2010) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -822,9 +822,7 @@ end;
 
 function IsWinXP_UP: Boolean;
 begin
-  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and
-    ((Win32MajorVersion > 5) or
-    (Win32MajorVersion = 5) and (Win32MinorVersion >= 1));
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(5, 1);
 end;
 
 function UseFlatMenubars: Boolean;

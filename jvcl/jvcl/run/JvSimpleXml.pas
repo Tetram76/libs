@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues: This component does not parse the !DOCTYPE tags but preserves them
 -----------------------------------------------------------------------------}
-// $Id: JvSimpleXml.pas 12548 2009-10-03 17:30:21Z ahuser $
+// $Id: JvSimpleXml.pas 12997 2011-03-05 18:10:59Z jfudickar $
 
 unit JvSimpleXml;
 
@@ -130,8 +130,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure LoadFromString(const Value: string);
-    procedure LoadFromFile(const FileName: TFileName);
-    procedure LoadFromStream(Stream: TStream);
+    procedure LoadFromFile(const FileName: TFileName; Encoding: TJclStringEncoding = seAuto; CodePage: Word = CP_ACP);
+    procedure LoadFromStream(Stream: TStream; Encoding: TJclStringEncoding = seAuto; CodePage: Word = CP_ACP);
     procedure LoadFromResourceName(Instance: THandle; const ResName: string);
     procedure SaveToFile(FileName: TFileName; Encoding: TJclStringEncoding = seAuto; CodePage: Word = CP_ACP);
     procedure SaveToStream(Stream: TStream; Encoding: TJclStringEncoding = seAuto; CodePage: Word = CP_ACP);
@@ -186,8 +186,8 @@ function EntityDecode(const S: string): string; {$IFDEF SUPPORTS_DEPRECATED} dep
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimpleXml.pas $';
-    Revision: '$Revision: 12548 $';
-    Date: '$Date: 2009-10-03 19:30:21 +0200 (sam., 03 oct. 2009) $';
+    Revision: '$Revision: 12997 $';
+    Date: '$Date: 2011-03-05 19:10:59 +0100 (sam., 05 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -354,9 +354,10 @@ begin
   Result := FJclSimpleXML.Root;
 end;
 
-procedure TJvSimpleXML.LoadFromFile(const FileName: TFileName);
+procedure TJvSimpleXML.LoadFromFile(const FileName: TFileName; Encoding: TJclStringEncoding = seAuto; CodePage: Word =
+    CP_ACP);
 begin
-  FJclSimpleXML.LoadFromFile(FileName);
+  FJclSimpleXML.LoadFromFile(FileName, Encoding, CodePage);
 end;
 
 procedure TJvSimpleXML.LoadFromResourceName(Instance: THandle;
@@ -365,9 +366,9 @@ begin
   FJclSimpleXML.LoadFromResourceName(Instance, ResName);
 end;
 
-procedure TJvSimpleXML.LoadFromStream(Stream: TStream);
+procedure TJvSimpleXML.LoadFromStream(Stream: TStream; Encoding: TJclStringEncoding = seAuto; CodePage: Word = CP_ACP);
 begin
-  FJclSimpleXML.LoadFromStream(Stream);
+  FJclSimpleXML.LoadFromStream(Stream, Encoding, CodePage);
 end;
 
 procedure TJvSimpleXML.LoadFromString(const Value: string);

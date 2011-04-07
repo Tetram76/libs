@@ -16,7 +16,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorageSelectList.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvAppStorageSelectList.pas 13006 2011-03-31 12:20:17Z jfudickar $
 
 unit JvAppStorageSelectList;
 
@@ -95,8 +95,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorageSelectList.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13006 $';
+    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -359,11 +359,16 @@ var
 begin
   if Assigned(AppStorage) then
   begin
-    AppStorage.ReadStringList(GetStoragePath, FSelectList, True);
-    if CheckEntries then
-      for I := FSelectList.Count - 1 downto 0 do
-        if not AppStorage.PathExists(AppStorage.ConcatPaths ([GetStoragePath,FSelectList[I]])) then
-          FSelectList.Delete(I);
+    AppStorage.BeginUpdate;
+    try
+      AppStorage.ReadStringList(GetStoragePath, FSelectList, True);
+      if CheckEntries then
+        for I := FSelectList.Count - 1 downto 0 do
+          if not AppStorage.PathExists(AppStorage.ConcatPaths ([GetStoragePath,FSelectList[I]])) then
+            FSelectList.Delete(I);
+    finally
+      AppStorage.EndUpdate;
+    end;
   end;
 end;
 

@@ -22,7 +22,7 @@ Contributor(s):
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExplorerBar.pas 12869 2010-10-19 19:37:22Z ahuser $
+// $Id: JvExplorerBar.pas 12991 2011-02-26 08:25:34Z outchy $
 
 unit JvExplorerBar;
 

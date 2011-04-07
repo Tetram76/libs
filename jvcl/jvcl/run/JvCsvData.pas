@@ -58,7 +58,7 @@ Known Issues and Updates:
                 properly when attached to JvCsvDataset.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCsvData.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvCsvData.pas 13010 2011-04-01 19:04:09Z jfudickar $
 
 
 
@@ -445,6 +445,8 @@ type
     function GetBackslashCrLf: Boolean;
     procedure SetBackslashCrLf(const Value: Boolean);
     function GetDecimalSeparator: Char;
+    // ----------- THIS IS A DUMMY FUNCTION, DON'T USE IT!:
+    function LocateRecord(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean;
     procedure SetDecimalSeparator(const Value: Char);
 
     function _CsvFloatToStr(Value: Double): string;
@@ -649,10 +651,7 @@ type
 
     procedure CustomFilter(FilterCallback: TJvCustomCsvDataSetFilterFunction); {NEW:APRIL 2004-WP}
 
-    // ----------- THIS IS A DUMMY FUNCTION, DON'T USE IT!:
-    function Locate(const KeyFields: string; const KeyValues: Variant;
-      Options: TLocateOptions): Boolean; override;
-
+    function Locate(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions): Boolean; override;
     //------------
 
     /// procedure FilteredDeletion(Inverted: Boolean); /// XXX TODO?
@@ -729,13 +728,14 @@ type
     function GetColumnsAsString: string; virtual;
     { Row Append one string }
     procedure AppendRowString(const RowAsString: string);    // Along with GetRowAsString, easy way to copy a dataset to another dataset!
+    procedure CreateFields; override;
 
     function IsKeyUnique: Boolean; // Checks current row's key uniqueness. Note that FCsvKeyDef MUST be set!
     procedure SaveToFile(const FileName: string);
     procedure LoadFromFile(const FileName: string);
 
     procedure DeleteCsvColumn(const AFieldName: string); // must be done when not Active! [NEW 2007!]
-
+    function Lookup(const KeyFields: string; const KeyValues: Variant; const ResultFields: string): Variant;
      {These are made protected so that you can write another derived component which has access to various protected fields }
   protected
     property InternalData: TJvCsvRows read FData write FData;
@@ -934,8 +934,8 @@ function JvCsvNumCondition(FieldValue: Double; CompareOperator: TJvCsvFilterNumC
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCsvData.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13010 $';
+    Date: '$Date: 2011-04-01 21:04:09 +0200 (ven., 01 avr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2070,8 +2070,8 @@ end;
 
 
 // XXX TODO: REMOVE HARD CODED LIMIT OF 20 FIELDS SEARCHABLE!!!
-function TJvCustomCsvDataSet.Locate(const KeyFields: string; const KeyValues: Variant;
-  Options: TLocateOptions): Boolean; // override;
+function TJvCustomCsvDataSet.LocateRecord(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions):
+    Boolean;
   // Options is    [loCaseInsensitive]
   //              or [loPartialKey]
   //              or [loPartialKey,loCaseInsensitive]
@@ -2441,6 +2441,8 @@ begin
     if AnsiChar(PDestination[0]) <> #0 then
       Move(Buffer^, PDestination[1], Field.DataSize);
     //Result := True; {there is no return value, oops}
+    // Notify controls of a field change:
+    DataEvent(deFieldChange, Longint(Field));
     Exit;
   end;
 
@@ -3711,11 +3713,12 @@ begin
   else
     FOpenFileName := '';
 
-  InternalInitFieldDefs; // initialize FieldDef objects.
-
     // Create TField components when no persistent fields have been created
   if DefaultFields then
-    CreateFields;
+    CreateFields  // InternalInitFieldDefs is called inside
+  else
+    InternalInitFieldDefs; // initialize FieldDef objects.
+
   BindFields(True); // bind FieldDefs to actual Data
 
   if FCsvColumns.Count > 1 then
@@ -5606,6 +5609,12 @@ begin
   end;
 end;
 
+procedure TJvCustomCsvDataSet.CreateFields;
+begin
+  InternalInitFieldDefs;
+  inherited CreateFields;
+end;
+
 //-------------------------------------------------------------------------
 //DeleteCsvColumn
 //
@@ -5711,6 +5720,26 @@ begin
   finally
     FreeMem(PTempRow);
   end;
+end;
+
+function TJvCustomCsvDataSet.Locate(const KeyFields: string; const KeyValues: Variant; Options: TLocateOptions):
+    Boolean;
+begin
+  DoBeforeScroll;
+  Result := LocateRecord(KeyFields, KeyValues, Options);
+  if Result then
+  begin
+    Resync([rmExact, rmCenter]);
+    DoAfterScroll;
+  end;
+end;
+
+function TJvCustomCsvDataSet.Lookup(const KeyFields: string; const KeyValues: Variant; const ResultFields: string):
+    Variant;
+begin
+  Result := Null;
+  if LocateRecord(KeyFields, KeyValues, []) then
+      Result := FieldValues[ResultFields];
 end;
 
 {$IFDEF UNITVERSIONING}

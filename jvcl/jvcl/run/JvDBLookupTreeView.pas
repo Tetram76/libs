@@ -38,7 +38,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupTreeView.pas 12825 2010-08-17 13:22:07Z ahuser $
+// $Id: JvDBLookupTreeView.pas 13003 2011-03-16 20:51:04Z jfudickar $
 
 unit JvDBLookupTreeView;
 
@@ -446,8 +446,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupTreeView.pas $';
-    Revision: '$Revision: 12825 $';
-    Date: '$Date: 2010-08-17 15:22:07 +0200 (mar., 17 août 2010) $';
+    Revision: '$Revision: 13003 $';
+    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -460,7 +460,7 @@ uses
   Types,  // to allow inline expansion
   {$ENDIF COMPILER10_UP}
   CommCtrl, Graphics, DBConsts,
-  JvThemes;
+  JvThemes, JclSysUtils;
 
 //=== { TJvLookupDataSourceLink } ============================================
 
@@ -684,7 +684,7 @@ function TJvDBLookupControl.LocateKey: Boolean;
 begin
   Result := False;
   try
-    if not VarIsNull(FKeyValue) and
+    if not VarIsNullEmpty(FKeyValue) and
       FListLink.DataSet.Locate(FKeyFieldName, FKeyValue, []) then
       Result := True;
   except

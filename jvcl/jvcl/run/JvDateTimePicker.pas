@@ -36,7 +36,7 @@ Known Issues:
       DateAndTime := JvDateTimePicker1.NullDate;
 
 -----------------------------------------------------------------------------}
-// $Id: JvDateTimePicker.pas 12914 2010-11-27 21:22:09Z ahuser $
+// $Id: JvDateTimePicker.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 unit JvDateTimePicker;
 
@@ -99,8 +99,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDateTimePicker.pas $';
-    Revision: '$Revision: 12914 $';
-    Date: '$Date: 2010-11-27 22:22:09 +0100 (sam., 27 nov. 2010) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -249,7 +249,7 @@ end;
 
 function IsWinVista_UP: Boolean;
 begin
-  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion >= 6);
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(6, 0);
 end;
 
 procedure TJvDateTimePicker.UpdateCalendar(CalHandle: THandle);

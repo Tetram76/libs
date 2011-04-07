@@ -28,7 +28,7 @@ Known Issues:
                (report for instance). As a workaround, always change the item's
                properties, never the canvas' directly.
 -----------------------------------------------------------------------------}
-// $Id: JvListView.pas 12873 2010-10-22 06:34:08Z ahuser $
+// $Id: JvListView.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 unit JvListView;
 
@@ -487,8 +487,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListView.pas $';
-    Revision: '$Revision: 12873 $';
-    Date: '$Date: 2010-10-22 08:34:08 +0200 (ven., 22 oct. 2010) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -2133,7 +2133,7 @@ begin
     Canvas.Font := TJvListItem(Item).Font;
     if ViewStyle in ViewStylesItemBrush then
     begin
-      if Win32MajorVersion >= 6 then
+      if CheckWin32Version(6, 0) then
         SetBkMode(Canvas.Handle, TRANSPARENT);
       Canvas.Brush := TJvListItem(Item).Brush;
     end;

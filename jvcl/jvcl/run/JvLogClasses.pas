@@ -34,9 +34,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net:443/svnroot/jvcl/trunk/jvcl/run/JvLogClasses.pas $';
-    Revision: '$Revision: 24 $';
-    Date: '$Date: 2009-04-26 23:50:08 +0200 (dim., 26 avr. 2009) $';
+    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLogClasses.pas $';
+    Revision: '$Revision: 12991 $';
+    Date: '$Date: 2011-02-26 09:25:34 +0100 (sam., 26 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

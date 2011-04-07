@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvPageList.pas 12916 2010-11-27 22:30:28Z ahuser $
+// $Id: JvPageList.pas 12975 2011-02-10 08:22:26Z ahuser $
 
 unit JvPageList;
 
@@ -286,8 +286,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageList.pas $';
-    Revision: '$Revision: 12916 $';
-    Date: '$Date: 2010-11-27 23:30:28 +0100 (sam., 27 nov. 2010) $';
+    Revision: '$Revision: 12975 $';
+    Date: '$Date: 2011-02-10 09:22:26 +0100 (jeu., 10 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -772,14 +772,13 @@ begin
       end;
     end;
 
+    Page.BringToFront;
+    Page.Visible := True;
     {$IFDEF COMPILER9_UP}
     for I := 0 to PageCount - 1 do
       if Pages[i] <> Page then
-        Pages[i].Hide;
-    {$ELSE}
-    Page.BringToFront;
+        Pages[i].Visible := False;
     {$ENDIF COMPILER9_UP}
-    Page.Visible := True;
     if (ParentForm <> nil) and (FActivePage <> nil) and (ParentForm.ActiveControl = FActivePage) then
     begin
       if Page.CanFocus then

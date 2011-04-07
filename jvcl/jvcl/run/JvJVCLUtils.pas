@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 12869 2010-10-19 19:37:22Z jfudickar $
+// $Id: JvJVCLUtils.pas 13006 2011-03-31 12:20:17Z jfudickar $
 
 unit JvJVCLUtils;
 
@@ -895,8 +895,8 @@ function ReplaceComponentReference(This, NewReference: TComponent; var VarRefere
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 12869 $';
-    Date: '$Date: 2010-10-19 21:37:22 +0200 (mar., 19 oct. 2010) $';
+    Revision: '$Revision: 13006 $';
+    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3941,14 +3941,19 @@ var
 begin
   if (MainForm = nil) or (MainForm.FormStyle <> fsMDIForm) then
     raise EInvalidOperation.CreateRes(@SNoMDIForm);
-  AppStorage.DeleteSubTree(AppStorage.ConcatPaths([StorePath, siMDIChild]));
-  if MainForm.MDIChildCount > 0 then
-  begin
-    AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, siMDIChild,
-      siListCount]), MainForm.MDIChildCount);
-    for I := 0 to MainForm.MDIChildCount - 1 do
-      AppStorage.WriteString(AppStorage.ConcatPaths([StorePath, siMDIChild,
-        Format(siItem, [I])]), MainForm.MDIChildren[I].ClassName);
+  AppStorage.BeginUpdate;
+  try
+    AppStorage.DeleteSubTree(AppStorage.ConcatPaths([StorePath, siMDIChild]));
+    if MainForm.MDIChildCount > 0 then
+    begin
+      AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, siMDIChild,
+        siListCount]), MainForm.MDIChildCount);
+      for I := 0 to MainForm.MDIChildCount - 1 do
+        AppStorage.WriteString(AppStorage.ConcatPaths([StorePath, siMDIChild,
+          Format(siItem, [I])]), MainForm.MDIChildren[I].ClassName);
+    end;
+  finally
+    AppStorage.EndUpdate;
   end;
 end;
 
@@ -3961,23 +3966,28 @@ var
 begin
   if (MainForm = nil) or (MainForm.FormStyle <> fsMDIForm) then
     raise EInvalidOperation.CreateRes(@SNoMDIForm);
-  StartWait;
+  AppStorage.BeginUpdate;
   try
-    Count := AppStorage.ReadInteger(AppStorage.ConcatPaths([StorePath, siMDIChild,
-      siListCount]), 0);
-    if Count > 0 then
-    begin
-      for I := Count - 1 downto 0 do
+    StartWait;
+    try
+      Count := AppStorage.ReadInteger(AppStorage.ConcatPaths([StorePath, siMDIChild,
+        siListCount]), 0);
+      if Count > 0 then
       begin
-        FormClass :=
-          TFormClass(GetClass(AppStorage.ReadString(AppStorage.ConcatPaths([StorePath,
-          siMDIChild, Format(siItem, [I])]), '')));
-        if FormClass <> nil then
-          InternalFindShowForm(FormClass, '', False);
+        for I := Count - 1 downto 0 do
+        begin
+          FormClass :=
+            TFormClass(GetClass(AppStorage.ReadString(AppStorage.ConcatPaths([StorePath,
+            siMDIChild, Format(siItem, [I])]), '')));
+          if FormClass <> nil then
+            InternalFindShowForm(FormClass, '', False);
+        end;
       end;
+    finally
+      StopWait;
     end;
   finally
-    StopWait;
+    AppStorage.EndUpdate;
   end;
 end;
 
@@ -3998,23 +4008,28 @@ var
 begin
   if Options = [fpActiveControl] then
     Exit;
-  Placement.Length := SizeOf(TWindowPlacement);
-  GetWindowPlacement(Form.Handle, @Placement);
-  if (Form = Application.MainForm) and AppMinimized then
-    Placement.ShowCmd := SW_SHOWMINIMIZED;
-  if (Form.FormStyle = fsMDIChild) and (Form.WindowState = wsMinimized) then
-    Placement.Flags := Placement.Flags or WPF_SETMINPOSITION;
-  if fpState in Options then
-    AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, siShowCmd]), Placement.ShowCmd);
-  if [fpSize, fpLocation] * Options <> [] then
-  begin
-    AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, siFlags]), Placement.Flags);
-    AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, siPixels]), Screen.PixelsPerInch);
-    WritePosStr(AppStorage, AppStorage.ConcatPaths([StorePath, siMinMaxPos]), Format('%d,%d,%d,%d',
-      [Placement.ptMinPosition.X, Placement.ptMinPosition.Y, Placement.ptMaxPosition.X, Placement.ptMaxPosition.Y]));
-    WritePosStr(AppStorage, AppStorage.ConcatPaths([StorePath, siNormPos]), Format('%d,%d,%d,%d',
-      [Placement.rcNormalPosition.Left, Placement.rcNormalPosition.Top, Placement.rcNormalPosition.Right,
-       Placement.rcNormalPosition.Bottom]));
+  AppStorage.BeginUpdate;
+  try
+    Placement.Length := SizeOf(TWindowPlacement);
+    GetWindowPlacement(Form.Handle, @Placement);
+    if (Form = Application.MainForm) and AppMinimized then
+      Placement.ShowCmd := SW_SHOWMINIMIZED;
+    if (Form.FormStyle = fsMDIChild) and (Form.WindowState = wsMinimized) then
+      Placement.Flags := Placement.Flags or WPF_SETMINPOSITION;
+    if fpState in Options then
+      AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, siShowCmd]), Placement.ShowCmd);
+    if [fpSize, fpLocation] * Options <> [] then
+    begin
+      AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, siFlags]), Placement.Flags);
+      AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, siPixels]), Screen.PixelsPerInch);
+      WritePosStr(AppStorage, AppStorage.ConcatPaths([StorePath, siMinMaxPos]), Format('%d,%d,%d,%d',
+        [Placement.ptMinPosition.X, Placement.ptMinPosition.Y, Placement.ptMaxPosition.X, Placement.ptMaxPosition.Y]));
+      WritePosStr(AppStorage, AppStorage.ConcatPaths([StorePath, siNormPos]), Format('%d,%d,%d,%d',
+        [Placement.rcNormalPosition.Left, Placement.rcNormalPosition.Top, Placement.rcNormalPosition.Right,
+         Placement.rcNormalPosition.Bottom]));
+    end;
+  finally
+    AppStorage.EndUpdate;
   end;
 end;
 
@@ -4052,118 +4067,123 @@ var
 begin
   if Options = [fpActiveControl] then
     Exit;
-  Placement.Length := SizeOf(TWindowPlacement);
-  GetWindowPlacement(Form.Handle, @Placement);
-  if not IsWindowVisible(Form.Handle) then
-    Placement.ShowCmd := SW_HIDE;
-  if [fpSize, fpLocation] * Options <> [] then
-  begin
-    DataFound := False;
-    Placement.Flags := AppStorage.ReadInteger(AppStorage.ConcatPaths([StorePath, siFlags]), Placement.Flags);
-    PosStr := ReadPosStr(AppStorage, AppStorage.ConcatPaths([StorePath, siMinMaxPos]));
-    if PosStr <> '' then
+  AppStorage.BeginUpdate;
+  try
+    Placement.Length := SizeOf(TWindowPlacement);
+    GetWindowPlacement(Form.Handle, @Placement);
+    if not IsWindowVisible(Form.Handle) then
+      Placement.ShowCmd := SW_HIDE;
+    if [fpSize, fpLocation] * Options <> [] then
     begin
-      DataFound := True;
-      if fpLocation in Options then
+      DataFound := False;
+      Placement.Flags := AppStorage.ReadInteger(AppStorage.ConcatPaths([StorePath, siFlags]), Placement.Flags);
+      PosStr := ReadPosStr(AppStorage, AppStorage.ConcatPaths([StorePath, siMinMaxPos]));
+      if PosStr <> '' then
       begin
-        Placement.ptMinPosition.X := StrToIntDef(ExtractWord(1, PosStr, Delims), 0);
-        Placement.ptMinPosition.Y := StrToIntDef(ExtractWord(2, PosStr, Delims), 0);
-      end;
-      if fpSize in Options then
-      begin
-        Placement.ptMaxPosition.X := StrToIntDef(ExtractWord(3, PosStr, Delims), 0);
-        Placement.ptMaxPosition.Y := StrToIntDef(ExtractWord(4, PosStr, Delims), 0);
-      end;
-    end;
-    PosStr := ReadPosStr(AppStorage, AppStorage.ConcatPaths([StorePath, siNormPos]));
-    if PosStr <> '' then
-    begin
-      DataFound := True;
-      if fpLocation in Options then
-      begin
-        Placement.rcNormalPosition.Left := StrToIntDef(ExtractWord(1, PosStr, Delims), Form.Left);
-        Placement.rcNormalPosition.Top := StrToIntDef(ExtractWord(2, PosStr, Delims), Form.Top);
-      end
-      else
-      begin
-        Placement.rcNormalPosition.Left :=  Form.Left;
-        Placement.rcNormalPosition.Top :=  Form.Top;
-      end;
-      if fpSize in Options then
-      begin
-        Placement.rcNormalPosition.Right := Placement.rcNormalPosition.Left +
-            StrToIntDef(ExtractWord(3, PosStr, Delims), Form.Width)-
-            StrToIntDef(ExtractWord(1, PosStr, Delims), Form.Left);
-        Placement.rcNormalPosition.Bottom := Placement.rcNormalPosition.Top +
-            StrToIntDef(ExtractWord(4, PosStr, Delims), Form.Height)-
-            StrToIntDef(ExtractWord(2, PosStr, Delims), Form.Top);
-      end
-      else
+        DataFound := True;
         if fpLocation in Options then
         begin
-          Placement.rcNormalPosition.Right := Placement.rcNormalPosition.Left + Form.Width;
-          Placement.rcNormalPosition.Bottom := Placement.rcNormalPosition.Top + Form.Height;
+          Placement.ptMinPosition.X := StrToIntDef(ExtractWord(1, PosStr, Delims), 0);
+          Placement.ptMinPosition.Y := StrToIntDef(ExtractWord(2, PosStr, Delims), 0);
         end;
-    end;
-    DataFound := DataFound and (Screen.PixelsPerInch = AppStorage.ReadInteger(
-      AppStorage.ConcatPaths([StorePath, siPixels]), Screen.PixelsPerInch));
-    if DataFound then
-    begin
-      if (Placement.rcNormalPosition.Right > Placement.rcNormalPosition.Left) and
-         IsOnAnyMonitor(Placement.rcNormalPosition) then
-      begin
-        if not (csDesigning in Form.ComponentState) then
+        if fpSize in Options then
         begin
-          if (fpSize in Options) and (fpLocation in Options) then
-            ChangePosition(poDesigned)
-          else
-          if fpSize in Options then
-          begin
-            if Form.Position = poDefault then
-              ChangePosition(poDefaultPosOnly);
-          end
-          else
-          if fpLocation in Options then // obsolete but better to read
-            if Form.Position = poDefault then
-              ChangePosition(poDefaultSizeOnly)
-            else
-            if Form.Position <> poDesigned then
-              ChangePosition(poDesigned);
+          Placement.ptMaxPosition.X := StrToIntDef(ExtractWord(3, PosStr, Delims), 0);
+          Placement.ptMaxPosition.Y := StrToIntDef(ExtractWord(4, PosStr, Delims), 0);
         end;
-        SetWindowPlacement(Form.Handle, @Placement);
+      end;
+      PosStr := ReadPosStr(AppStorage, AppStorage.ConcatPaths([StorePath, siNormPos]));
+      if PosStr <> '' then
+      begin
+        DataFound := True;
+        if fpLocation in Options then
+        begin
+          Placement.rcNormalPosition.Left := StrToIntDef(ExtractWord(1, PosStr, Delims), Form.Left);
+          Placement.rcNormalPosition.Top := StrToIntDef(ExtractWord(2, PosStr, Delims), Form.Top);
+        end
+        else
+        begin
+          Placement.rcNormalPosition.Left :=  Form.Left;
+          Placement.rcNormalPosition.Top :=  Form.Top;
+        end;
+        if fpSize in Options then
+        begin
+          Placement.rcNormalPosition.Right := Placement.rcNormalPosition.Left +
+              StrToIntDef(ExtractWord(3, PosStr, Delims), Form.Width)-
+              StrToIntDef(ExtractWord(1, PosStr, Delims), Form.Left);
+          Placement.rcNormalPosition.Bottom := Placement.rcNormalPosition.Top +
+              StrToIntDef(ExtractWord(4, PosStr, Delims), Form.Height)-
+              StrToIntDef(ExtractWord(2, PosStr, Delims), Form.Top);
+        end
+        else
+          if fpLocation in Options then
+          begin
+            Placement.rcNormalPosition.Right := Placement.rcNormalPosition.Left + Form.Width;
+            Placement.rcNormalPosition.Bottom := Placement.rcNormalPosition.Top + Form.Height;
+          end;
+      end;
+      DataFound := DataFound and (Screen.PixelsPerInch = AppStorage.ReadInteger(
+        AppStorage.ConcatPaths([StorePath, siPixels]), Screen.PixelsPerInch));
+      if DataFound then
+      begin
+        if (Placement.rcNormalPosition.Right > Placement.rcNormalPosition.Left) and
+           IsOnAnyMonitor(Placement.rcNormalPosition) then
+        begin
+          if not (csDesigning in Form.ComponentState) then
+          begin
+            if (fpSize in Options) and (fpLocation in Options) then
+              ChangePosition(poDesigned)
+            else
+            if fpSize in Options then
+            begin
+              if Form.Position = poDefault then
+                ChangePosition(poDefaultPosOnly);
+            end
+            else
+            if fpLocation in Options then // obsolete but better to read
+              if Form.Position = poDefault then
+                ChangePosition(poDefaultSizeOnly)
+              else
+              if Form.Position <> poDesigned then
+                ChangePosition(poDesigned);
+          end;
+          SetWindowPlacement(Form.Handle, @Placement);
+        end;
       end;
     end;
-  end;
-  if fpState in Options then
-  begin
-    WinState := wsNormal;
-    { default maximize MDI main form }
-    if ((Application.MainForm = Form) or
-      (Application.MainForm = nil)) and ((Form.FormStyle = fsMDIForm) or
-      ((Form.FormStyle = fsNormal) and (Form.Position = poDefault))) then
-      WinState := wsMaximized;
-    Placement.ShowCmd := AppStorage.ReadInteger(AppStorage.ConcatPaths([StorePath, siShowCmd]), SW_HIDE);
-    case Placement.ShowCmd of
-      SW_SHOWNORMAL, SW_RESTORE, SW_SHOW:
-        WinState := wsNormal;
-      SW_MINIMIZE, SW_SHOWMINIMIZED, SW_SHOWMINNOACTIVE:
-        WinState := wsMinimized;
-      SW_MAXIMIZE:
-        WinState := wsMaximized;
-    end;
-    if (WinState = wsMinimized) and ((Form = Application.MainForm) or
-      (Application.MainForm = nil)) then
+    if fpState in Options then
     begin
-      TWindowState(Pointer(@Form.WindowState)^) := wsNormal;
-      PostMessage(Application.Handle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
-      Exit;
+      WinState := wsNormal;
+      { default maximize MDI main form }
+      if ((Application.MainForm = Form) or
+        (Application.MainForm = nil)) and ((Form.FormStyle = fsMDIForm) or
+        ((Form.FormStyle = fsNormal) and (Form.Position = poDefault))) then
+        WinState := wsMaximized;
+      Placement.ShowCmd := AppStorage.ReadInteger(AppStorage.ConcatPaths([StorePath, siShowCmd]), SW_HIDE);
+      case Placement.ShowCmd of
+        SW_SHOWNORMAL, SW_RESTORE, SW_SHOW:
+          WinState := wsNormal;
+        SW_MINIMIZE, SW_SHOWMINIMIZED, SW_SHOWMINNOACTIVE:
+          WinState := wsMinimized;
+        SW_MAXIMIZE:
+          WinState := wsMaximized;
+      end;
+      if (WinState = wsMinimized) and ((Form = Application.MainForm) or
+        (Application.MainForm = nil)) then
+      begin
+        TWindowState(Pointer(@Form.WindowState)^) := wsNormal;
+        PostMessage(Application.Handle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+        Exit;
+      end;
+      if Form.FormStyle in [fsMDIChild, fsMDIForm] then
+        TWindowState(Pointer(@Form.WindowState)^) := WinState
+      else
+        Form.WindowState := WinState;
     end;
-    if Form.FormStyle in [fsMDIChild, fsMDIForm] then
-      TWindowState(Pointer(@Form.WindowState)^) := WinState
-    else
-      Form.WindowState := WinState;
+    Form.Update;
+  finally
+    AppStorage.EndUpdate;
   end;
-  Form.Update;
 end;
 
 procedure InternalSaveGridLayout(Grid: TCustomGrid;
@@ -4171,9 +4191,14 @@ procedure InternalSaveGridLayout(Grid: TCustomGrid;
 var
   I: Longint;
 begin
-  for I := 0 to TDrawGrid(Grid).ColCount - 1 do
-    AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, Format(siItem, [I])]),
-      TDrawGrid(Grid).ColWidths[I]);
+  AppStorage.BeginUpdate;
+  try
+    for I := 0 to TDrawGrid(Grid).ColCount - 1 do
+      AppStorage.WriteInteger(AppStorage.ConcatPaths([StorePath, Format(siItem, [I])]),
+        TDrawGrid(Grid).ColWidths[I]);
+  finally
+    AppStorage.EndUpdate;
+  end;
 end;
 
 procedure InternalRestoreGridLayout(Grid: TCustomGrid;
@@ -4181,10 +4206,15 @@ procedure InternalRestoreGridLayout(Grid: TCustomGrid;
 var
   I: Longint;
 begin
-  for I := 0 to TDrawGrid(Grid).ColCount - 1 do
-    TDrawGrid(Grid).ColWidths[I] :=
-      AppStorage.ReadInteger(AppStorage.ConcatPaths([StorePath,
-        Format(siItem, [I])]), TDrawGrid(Grid).ColWidths[I]);
+  AppStorage.BeginUpdate;
+  try
+    for I := 0 to TDrawGrid(Grid).ColCount - 1 do
+      TDrawGrid(Grid).ColWidths[I] :=
+        AppStorage.ReadInteger(AppStorage.ConcatPaths([StorePath,
+          Format(siItem, [I])]), TDrawGrid(Grid).ColWidths[I]);
+  finally
+    AppStorage.EndUpdate;
+  end;
 end;
 
 procedure RestoreGridLayout(Grid: TCustomGrid; const AppStorage: TJvCustomAppStorage);

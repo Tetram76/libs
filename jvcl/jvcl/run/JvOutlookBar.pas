@@ -36,7 +36,7 @@ Known Issues:
                   Outlook bar buttons now have color properties (instead of
                   assuming we will use the clBtnFace type system colors)
 -----------------------------------------------------------------------------}
-// $Id: JvOutlookBar.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvOutlookBar.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 unit JvOutlookBar;
 
@@ -464,8 +464,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOutlookBar.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -484,10 +484,9 @@ const
   cInitRepeatPause = 400;
   cRepeatPause = 100;
 
-
 function IsVista:Boolean;
 begin
-  result := (Win32MajorVersion>=6);
+  Result := CheckWin32Version(6, 0);
 end;
 
 function MethodsEqual(const Method1, Method2: TMethod): Boolean;

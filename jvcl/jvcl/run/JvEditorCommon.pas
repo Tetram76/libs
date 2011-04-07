@@ -23,7 +23,7 @@ Remko Bonte
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvEditorCommon.pas 12829 2010-09-03 21:25:36Z ahuser $
+// $Id: JvEditorCommon.pas 12994 2011-02-28 11:04:37Z ahuser $
 
 { history
  (JVCL Library versions) :
@@ -1380,8 +1380,8 @@ function KeyPressed(VK: Integer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditorCommon.pas $';
-    Revision: '$Revision: 12829 $';
-    Date: '$Date: 2010-09-03 23:25:36 +0200 (ven., 03 sept. 2010) $';
+    Revision: '$Revision: 12994 $';
+    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3226,7 +3226,7 @@ begin
           @RUpdate // address of structure for update rectangle
           );
         // (ahuser) WinNT seams to have problems with ScrollDC in vertical direction. (Mantis #2528)
-        if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion < 5) then
+        if (Win32Platform = VER_PLATFORM_WIN32_NT) and not CheckWin32Version(5, 0) then
           Dec(RUpdate.Top, CellRect.Height);
         Inc(RUpdate.Bottom, CellRect.Height);
         Windows.InvalidateRect(Handle, @RUpdate, False);
