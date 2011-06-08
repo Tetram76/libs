@@ -11,6 +11,7 @@ type
   end;
 
 implementation
+uses dorOpenSSL, WinSock;
 
 { THTTPConnection }
 
@@ -31,8 +32,14 @@ begin
   end;
 end;
 
+function GetSLLHandler(socket: TSocket): IReadWrite;
+begin
+  Result := TSSLRWSocket.Create(socket, True,
+    SSL_VERIFY_PEER {or SSL_VERIFY_FAIL_IF_NO_PEER_CERT},
+    'delphionrails', 'server.crt', 'server.key', 'cacert.pem') as IReadWrite;
+end;
+
 initialization
-  TSocketServer.CreateServer(81, '0.0.0.0', THTTPConnection);
+  TSocketServer.CreateServer(80, '0.0.0.0', THTTPConnection);
+  TSocketServer.CreateServer(443, '0.0.0.0', THTTPConnection, GetSLLHandler);
 end.
-
-

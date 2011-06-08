@@ -28,7 +28,7 @@ uses Classes, SysUtils, superobject
 , paszlib
 {$ELSE}
 , WinSock
-, dorZLib
+, ZLib
 {$ENDIF}
 ;
 
@@ -42,8 +42,10 @@ const
 
 type
 {$IFNDEF FPC}
-  PtrInt = Longint;
-  TThreadID = LongWord;
+{$IFNDEF CPUX64}
+  IntPtr = LongInt;
+{$ENDIF}
+  TThreadID = DWORD;
 {$ENDIF}
 
 {$IFNDEF UNICODE}
@@ -99,10 +101,8 @@ type
   end;
 
 function CompressStream(inStream, outStream: TStream; level: Integer = Z_DEFAULT_COMPRESSION): boolean; overload;
-function DecompressStream(inStream, outStream: TStream): boolean; overload;
-
-function CompressStream(inStream: TStream; outSocket: longint; level: Integer = Z_DEFAULT_COMPRESSION): boolean; overload;
-function DecompressStream(inSocket: longint; outStream: TStream): boolean; overload;
+function DecompressStream(inStream, outStream: TStream; addflag: Boolean = False; maxin: Integer = 0): boolean; overload;
+function DecompressGZipStream(inStream, outStream: TStream): boolean;
 
 function receive(s: longint; var Buf; len, flags: Integer): Integer;
 
@@ -112,6 +112,8 @@ function Base64ToStr(const B64: string): string;
 
 procedure StreamToBase64(const StreamIn, StreamOut: TStream);
 procedure Base64ToStream(const data: string; stream: TStream);
+
+function BytesToBase64(bytes: PByte; len: Integer): string;
 
 function RbsToHex(const rb: RawByteString): string;
 function HexToRbs(const hex: string): RawByteString;
@@ -125,7 +127,7 @@ function GetTickCount: Cardinal;
 {$ENDIF}
 
 implementation
-uses uiblib, dorOpenSSL;
+uses uiblib;
 
 const
   Base64Code: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
@@ -332,6 +334,23 @@ begin
     stream.Position := stream.Position - PadCount;
 end;
 
+function BytesToBase64(bytes: PByte; len: Integer): string;
+var
+  s1, s2: TPooledMemoryStream;
+begin
+  s1 := TPooledMemoryStream.Create;
+  s2 := TPooledMemoryStream.Create;
+  try
+    s1.Write(bytes^, len);
+    StreamToBase64(s1, s2);
+    s2.Seek(0, soFromBeginning);
+    SetLength(Result, s2.Size div SizeOf(Char));
+    s2.Read(PChar(Result)^, s2.Size * SizeOf(Char));
+  finally
+    s1.Free;
+    s2.Free;
+  end;
+end;
 
 function RbsToHex(const rb: RawByteString): string;
 const
@@ -396,7 +415,7 @@ function InterlockedCompareExchange(var Destination: longint; Exchange: longint;
 {$ifend}
 
 const
-  bufferSize = 32768;
+  bufferSize = High(Word);
 
 function receive(s: longint; var Buf; len, flags: Integer): Integer;
 var
@@ -425,9 +444,14 @@ begin
   inc(Result, r);
 end;
 
+function DeflateInit(var stream: TZStreamRec; level: Integer): Integer;
+begin
+  result := DeflateInit_(stream, level, ZLIB_VERSION, SizeOf(TZStreamRec));
+end;
+
 function CompressStream(inStream, outStream: TStream; level: Integer): boolean;
 var
-  zstream: TZStream;
+  zstream: TZStreamRec;
   zresult: Integer;
   inBuffer: array[0..bufferSize - 1] of byte;
   outBuffer: array[0..bufferSize - 1] of byte;
@@ -436,7 +460,6 @@ var
 label
   error;
 begin
-  inStream.Seek(0, soFromBeginning);
   Result := False;
   FillChar(zstream, SizeOf(zstream), 0);
   if DeflateInit(zstream, level) < Z_OK then
@@ -471,23 +494,42 @@ begin
   deflateEnd(zstream);
 end;
 
-function DecompressStream(inStream, outStream: TStream): boolean;
+function InflateInit(var stream: TZStreamRec): Integer;
+begin
+  result := InflateInit_(stream, ZLIB_VERSION, SizeOf(TZStreamRec));
+end;
+
+function DecompressStream(inStream, outStream: TStream; addflag: Boolean = False; maxin: Integer = 0): boolean;
 var
-  zstream: TZStream;
+  zstream: TZStreamRec;
   zresult: Integer;
   inBuffer: array[0..bufferSize - 1] of byte;
   outBuffer: array[0..bufferSize - 1] of byte;
   inSize: Integer;
   outSize: Integer;
+  totalin: Integer;
 label
-  error;
+  finish;
 begin
   Result := False;
-  inStream.Seek(0, soFromBeginning);
   FillChar(zstream, SizeOf(zstream), 0);
   if InflateInit(zstream) < Z_OK then
     exit;
-  inSize := inStream.Read(inBuffer, bufferSize);
+  if addflag then
+  begin
+    inBuffer[0] := $78;
+    inBuffer[1] := $9C;
+    inSize := inStream.Read(inBuffer[2], bufferSize - 2) + 2;
+    totalin := inSize - 2;
+  end else
+  begin
+    inSize := inStream.Read(inBuffer, bufferSize);
+    totalin := inSize;
+  end;
+
+  if (maxin > 0) and (totalin > maxin) then
+    Dec(inSize, totalin - maxin);
+
   while inSize > 0 do
   begin
     zstream.next_in := @inBuffer;
@@ -496,162 +538,70 @@ begin
       zstream.next_out := @outBuffer;
       zstream.avail_out := bufferSize;
       if inflate(zstream, Z_NO_FLUSH) < Z_OK then
-        goto error;
+        goto finish;
       outSize := bufferSize - zstream.avail_out;
       outStream.Write(outBuffer, outSize);
     until (zstream.avail_in = 0) and (zstream.avail_out > 0);
     inSize := inStream.Read(inBuffer, bufferSize);
+    Inc(totalin, inSize);
+    if (maxin > 0) and (totalin > maxin) then
+      Dec(inSize, totalin - maxin);
   end;
   repeat
     zstream.next_out := @outBuffer;
     zstream.avail_out := bufferSize;
     zresult := inflate(zstream, Z_FINISH);
-    if zresult < Z_OK then
-      goto error;
+    if not((zresult >= Z_OK) or (zresult = Z_BUF_ERROR)) then
+      Break;
     outSize := bufferSize - zstream.avail_out;
     outStream.Write(outBuffer, outSize);
-  until (zresult = Z_STREAM_END) and (zstream.avail_out > 0);
+  until ((zresult = Z_STREAM_END) and (zstream.avail_out > 0)) or (zresult = Z_BUF_ERROR);
+finish:
   Result := inflateEnd(zstream) >= Z_OK;
-  exit;
-  error:
-  inflateEnd(zstream);
 end;
 
-function CompressStream(inStream: TStream; outSocket: longint; level: Integer): boolean;
-var
-  zstream: TZStream;
-  zresult: Integer;
-  inBuffer: array[0..bufferSize - 1] of byte;
-  outBuffer: array[0..bufferSize - 1] of byte;
-  inSize: Integer;
-  outSize: Integer;
-label
-  error;
-begin
-  inStream.Seek(0, soFromBeginning);
-  Result := False;
-  FillChar(zstream, SizeOf(zstream), 0);
-  if DeflateInit(zstream, level) < Z_OK then
-    Exit;
-  inSize := inStream.Read(inBuffer, bufferSize);
-  while inSize > 0 do
-  begin
-    zstream.next_in := @inBuffer;
-    zstream.avail_in := inSize;
-    repeat
-      zstream.next_out := @outBuffer;
-      zstream.avail_out := bufferSize;
-      if deflate(zstream, Z_NO_FLUSH) < Z_OK then
-        goto error;
-
-      outSize := bufferSize - zstream.avail_out;
-      if outSize > 0 then
-      begin
-{$IFDEF FPC}
-        if fpsend(outSocket, @outSize, sizeof(outSize), 0) <> sizeof(outSize) then
-          goto error;
-        if fpsend(outSocket, @outBuffer, outSize, 0) <> outSize then
-          goto error;
-{$ELSE}
-        if send(outSocket, outSize, sizeof(outSize), 0) <> sizeof(outSize) then
-          goto error;
-        if send(outSocket, outBuffer, outSize, 0) <> outSize then
-          goto error;
-{$ENDIF}
-      end;
-    until (zstream.avail_in = 0) and (zstream.avail_out > 0);
-    inSize := inStream.Read(inBuffer, bufferSize);
+function DecompressGZipStream(inStream, outStream: TStream): boolean;
+type
+  TGzFlag = (fText, fHcrc, fExtra, fName, fComment);
+  TGzFlags = set of TGzFlag;
+  TGzHeader = packed record
+    ID1: Byte;
+    ID2: Byte;
+    CM: Byte;
+    FLG: TGzFlags;
+    MTIME: array[0..3] of Byte;
+    XFL: Byte;
+    OS: Byte;
   end;
-  repeat
-    zstream.next_out := @outBuffer;
-    zstream.avail_out := bufferSize;
-    zresult := deflate(zstream, Z_FINISH);
-    if zresult < Z_OK then
-      goto error;
-    outSize := bufferSize - zstream.avail_out;
-    if outSize > 0 then
-    begin
-{$IFDEF FPC}
-      if fpsend(outSocket, @outSize, sizeof(outSize), 0) <> sizeof(outSize) then
-        goto error;
-      if fpsend(outSocket, @outBuffer, outSize, 0) <> outSize then
-        goto error;
-{$ELSE}
-      if send(outSocket, outSize, sizeof(outSize), 0) <> sizeof(outSize) then
-        goto error;
-      if send(outSocket, outBuffer, outSize, 0) <> outSize then
-        goto error;
-{$ENDIF}
-    end;
-  until (zresult = Z_STREAM_END) and (zstream.avail_out > 0);
-  outsize := 0;
-{$IFDEF FPC}
-  if fpsend(outSocket, @outSize, sizeof(outSize), 0) <> sizeof(outSize) then
-    goto error;
-{$ELSE}
-  if send(outSocket, outSize, sizeof(outSize), 0) <> sizeof(outSize) then
-    goto error;
-{$ENDIF}
-  Result := deflateEnd(zstream) >= Z_OK;
-  Exit;
-  error:
-  deflateEnd(zstream);
-end;
-
-function DecompressStream(inSocket: longint; outStream: TStream): boolean;
 var
-  zstream: TZStream;
-  zresult: Integer;
-  inBuffer: array[0..bufferSize - 1] of byte;
-  outBuffer: array[0..bufferSize - 1] of byte;
-  inSize: Integer;
-  outSize: Integer;
-label
-  error;
+  header: TGzHeader;
+  len: Word;
+  c: AnsiChar;
 begin
-  Result := False;
-  FillChar(zstream, SizeOf(zstream), 0);
-  if InflateInit(zstream) < Z_OK then
-    exit;
-  if receive(inSocket, insize, sizeof(insize), 0) <> sizeof(insize) then
-    goto error;
-  if insize > 0 then
-    if receive(inSocket, inBuffer, insize, 0) <> insize then
-      goto error;
-  while inSize > 0 do
+  if inStream.Read(header, SizeOf(header)) <> SizeOf(header) then Exit(False);
+  if (header.ID1 <> 31) or (header.ID2 <> 139) then Exit(False);
+  if header.CM <> 8 then Exit(False);
+
+  if fExtra in header.FLG then
   begin
-    zstream.next_in := @inBuffer;
-    zstream.avail_in := inSize;
-    repeat
-      zstream.next_out := @outBuffer;
-      zstream.avail_out := bufferSize;
-      if inflate(zstream, Z_NO_FLUSH) < Z_OK then
-        goto error;
-      outSize := bufferSize - zstream.avail_out;
-      if outSize > 0 then
-        outStream.Write(outBuffer, outSize);
-    until (zstream.avail_in = 0) and (zstream.avail_out > 0);
-    if receive(inSocket, insize, sizeof(insize), 0) <> sizeof(insize) then
-      goto error;
-    if insize > 0 then
-    begin
-      if receive(inSocket, inBuffer, insize, 0) <> insize then
-        goto error;
-    end;
+    inStream.Read(len, 2);
+    inStream.Seek(len, soFromCurrent);
   end;
+
+  if fName in header.FLG then
   repeat
-    zstream.next_out := @outBuffer;
-    zstream.avail_out := bufferSize;
-    zresult := inflate(zstream, Z_FINISH);
-    if zresult < Z_OK then
-      goto error;
-    outSize := bufferSize - zstream.avail_out;
-    outStream.Write(outBuffer, outSize);
-  until (zresult = Z_STREAM_END) and (zstream.avail_out > 0);
-  Result := inflateEnd(zstream) >= Z_OK;
-  exit;
-  error:
-  inflateEnd(zstream);
+    inStream.Read(c, 1);
+  until c = #0;
+
+  if fComment in header.FLG then
+  repeat
+    inStream.Read(c, 1);
+  until c = #0;
+
+  if fHcrc in header.FLG then
+    inStream.Seek(2, soFromCurrent);
+
+  Result := DecompressStream(inStream, outStream, True, inStream.Size - inStream.Position - 8);
 end;
 
 function StreamToStr(stream: TStream): string;
@@ -784,7 +734,7 @@ begin
         p := Pointer(PtrInt(FList[FPosition div FPageSize]) + (FPosition mod FPageSize));
         Move(p^, c^, n);
         dec(count, n);
-        inc(PtrInt(c), n);
+        inc(IntPtr(c), n);
         inc(FPosition, n);
         if count >= FPageSize then
           n := FPageSize else
@@ -929,7 +879,7 @@ begin
         p := Pointer(PtrInt(FList[FPosition div FPageSize]) + (FPosition mod FPageSize));
         Move(c^, p^, n);
         dec(count, n);
-        inc(PtrInt(c), n);
+        inc(IntPtr(c), n);
         inc(FPosition, n);
         if count >= FPageSize then
           n := FPageSize else
