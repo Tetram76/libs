@@ -679,6 +679,7 @@ type
     function LastExParam: tbtstring;
     function LastExProc: Integer;
     function LastExPos: Integer;
+    function LastExObject: TObject;
     procedure CMD_Err(EC: TPSError);
 
     procedure CMD_Err2(EC: TPSError; const Param: tbtstring);
@@ -3130,8 +3131,12 @@ end;
 
 function VNGetString(const Src: TPSVariantIFC): String;
 begin
-  {$IFDEF DELPHI2009UP}
-  Result := VNGetUnicodeString(Src);
+  {$IFNDEF PS_NOWIDESTRING}
+    {$IFDEF DELPHI2009UP}
+    Result := VNGetUnicodeString(Src);
+    {$ELSE}
+    Result := VNGetAnsiString(Src);
+    {$ENDIF}
   {$ELSE}
   Result := VNGetAnsiString(Src);
   {$ENDIF}
@@ -3139,8 +3144,12 @@ end;
 
 procedure VNSetString(const Src: TPSVariantIFC; const Val: String);
 begin
-  {$IFDEF DELPHI2009UP}
-  VNSetUnicodeString(Src, Val);
+  {$IFNDEF PS_NOWIDESTRING}
+    {$IFDEF DELPHI2009UP}
+    VNSetUnicodeString(Src, Val);
+    {$ELSE}
+    VNSetAnsiString(Src, Val);
+    {$ENDIF}
   {$ELSE}
   VNSetAnsiString(Src, Val);
   {$ENDIF}
@@ -3266,8 +3275,12 @@ end;
 
 function VGetString(const Src: PIFVariant): String;
 begin
-  {$IFDEF DELPHI2009UP}
-  Result := PSGetUnicodeString(@PPSVariantData(src).Data, src.FType);
+  {$IFNDEF PS_NOWIDESTRING}
+    {$IFDEF DELPHI2009UP}
+    Result := PSGetUnicodeString(@PPSVariantData(src).Data, src.FType);
+    {$ELSE}
+    Result := PSGetAnsiString(@PPSVariantData(src).Data, src.FType);
+    {$ENDIF}
   {$ELSE}
   Result := PSGetAnsiString(@PPSVariantData(src).Data, src.FType);
   {$ENDIF}
@@ -3277,8 +3290,12 @@ procedure VSetString(const Src: PIFVariant; const Val: string);
 var
   Dummy: Boolean;
 begin
-  {$IFDEF DELPHI2009UP}
-  PSSetUnicodeString(@PPSVariantData(src).Data, src.FType, Dummy, Val);
+  {$IFNDEF PS_NOWIDESTRING}
+    {$IFDEF DELPHI2009UP}
+    PSSetUnicodeString(@PPSVariantData(src).Data, src.FType, Dummy, Val);
+    {$ELSE}
+    PSSetAnsiString(@PPSVariantData(src).Data, src.FType, Dummy, Val);
+    {$ENDIF}
   {$ELSE}
   PSSetAnsiString(@PPSVariantData(src).Data, src.FType, Dummy, Val);
   {$ENDIF}
@@ -3813,8 +3830,12 @@ end;
 
 function PSGetString(Src: Pointer; aType: TPSTypeRec): string;
 begin
-  {$IFDEF DELPHI2009UP}
-  result := PSGetUnicodeString(Src, aType);
+  {$IFNDEF PS_NOWIDESTRING}
+    {$IFDEF DELPHI2009UP}
+    result := PSGetUnicodeString(Src, aType);
+    {$ELSE}
+    result := PSGetAnsiString(Src, aType);
+    {$ENDIF}
   {$ELSE}
   result := PSGetAnsiString(Src, aType);
   {$ENDIF}
@@ -3822,8 +3843,12 @@ end;
 
 procedure PSSetString(Src: Pointer; aType: TPSTypeRec; var Ok: Boolean; const Val: String);
 begin
-  {$IFDEF DELPHI2009UP}
-  PSSetUnicodeString(Src, aType, Ok, Val);
+  {$IFNDEF PS_NOWIDESTRING}
+    {$IFDEF DELPHI2009UP}
+    PSSetUnicodeString(Src, aType, Ok, Val);
+    {$ELSE}
+    PSSetAnsiString(Src, aType, Ok, Val);
+    {$ENDIF}
   {$ELSE}
   PSSetAnsiString(Src, aType, Ok, Val);
   {$ENDIF}
@@ -3859,7 +3884,8 @@ begin
   for i := 0 to VarArrayHighBound(src, 1) - VarArrayLowBound(src, 1) do begin
     v := src[i + VarArrayLowBound(src, 1)];
     if not Exec.SetVariantValue(r, @v, desttype, lVarType) then begin result := false; exit; end;
-    r := Pointer(IPointer(r) + Longint(DestType.RealSize));
+    //r := Pointer(IPointer(r) + Longint(DestType.RealSize));
+    r := Pointer(IPointer(r) + DestType.RealSize);
   end;
   Result := true;
 end;
@@ -4146,11 +4172,13 @@ begin
     arr := Pointer(IPointer(Arr)-PointerSize2);
     if NewLength <= 0 then
     begin
-      FreeMem(arr, NewLength * elsize + PointerSize2);
+      //FreeMem(arr, NewLength * elsize + PointerSize2);
+      FreeMem(arr, Longint(NewLength * elsize) + Longint(PointerSize2));
       arr := nil;
       exit;
     end;
-    ReallocMem(arr, NewLength * elSize + PointerSize2);
+    //ReallocMem(arr, NewLength * elSize + PointerSize2);
+    ReallocMem(arr, Longint(NewLength * elSize) + Longint(PointerSize2));
     arr := Pointer(IPointer(Arr)+PointerSize);
     Longint(Arr^) := NewLength {$IFDEF FPC} -1 {$ENDIF};
     arr := Pointer(IPointer(Arr)+PointerSize);
@@ -4163,13 +4191,15 @@ begin
     if NewLength = 0 then
     begin
       if Longint(Pointer(IPointer(Arr)-PointerSize2)^) = 1 then
-        FreeMem(Pointer(IPointer(Arr)-PointerSize2), OldLen * elSize + PointerSize2)
+        //FreeMem(Pointer(IPointer(Arr)-PointerSize2), OldLen * elSize + PointerSize2)
+        FreeMem(Pointer(IPointer(Arr)-PointerSize2), Longint(OldLen * elSize) + Longint(PointerSize2))
       else if Longint(Pointer(IPointer(Arr)-PointerSize2)^) > 0 then
         Dec(Longint(Pointer(IPointer(Arr)-PointerSize2)^));
       arr := nil;
       exit;
     end;
-    GetMem(p, NewLength * elSize + PointerSize2);
+    //GetMem(p, NewLength * elSize + PointerSize2);
+    GetMem(p, Longint(NewLength * elSize) + Longint(PointerSize2));
     Longint(p^) := 1;
     p:= Pointer(IPointer(p)+PointerSize);
     Longint(p^) := NewLength {$IFDEF FPC} -1 {$ENDIF};
@@ -8738,7 +8768,7 @@ begin
     7: // StrGet
       begin
         temp :=  NewTPSVariantIFC(Stack[Stack.Count -2], True);
-        if (temp.Dta = nil) or (temp.aType.BaseType <> btString) then
+        if (temp.Dta = nil) or not (temp.aType.BaseType in [btString, btUnicodeString]) then 
         begin
           Result := False;
           exit;
@@ -8755,7 +8785,7 @@ begin
     8: // StrSet
       begin
         temp := NewTPSVariantIFC(Stack[Stack.Count -3], True);
-        if (temp.Dta = nil) or (temp.aType.BaseType <> btString) then
+        if (temp.Dta = nil) or not (temp.aType.BaseType in [btString, btUnicodeString]) then 
         begin
           Result := False;
           exit;
@@ -9195,7 +9225,7 @@ begin
     else Result:=false;
   end;
 end;
-
+{$IFNDEF DELPHI6UP}
 function _VarArrayGet(var S : Variant; I : Integer) : Variant;
 begin
   result := VarArrayGet(S, [I]);
@@ -9205,7 +9235,7 @@ procedure _VarArraySet(const c : Variant; I : Integer; var s : Variant);
 begin
   VarArrayPut(s, c, [i]);
 end;
-
+{$ENDIF}
 
 procedure TPSExec.RegisterStandardProcs;
 begin
@@ -9282,10 +9312,12 @@ begin
   {$IFNDEF PS_NOWIDESTRING}
   RegisterFunctionName('WSTRGET', DefProc, Pointer(42), nil);
   RegisterFunctionName('WSTRSET', DefProc, Pointer(43), nil);
+
   {$ENDIF}
+  {$IFNDEF DELPHI6UP}
   RegisterDelphiFunction(@_VarArrayGet, 'VARARRAYGET', cdRegister);
   RegisterDelphiFunction(@_VarArraySet, 'VARARRAYSET', cdRegister);
-
+  {$ENDIF}
   RegisterInterfaceLibraryRuntime(Self);
 end;
 
@@ -9820,7 +9852,8 @@ begin
         begin // from GExperts code
           if (IPointer(p^[I]) > IPointer(p)) and ((IPointer(p^[I]) - IPointer(p))
             div
-            PointerSize < Ret.FEndOfVMT) then
+            //PointerSize < Ret.FEndOfVMT) then
+            PointerSize < Cardinal(Ret.FEndOfVMT)) then
           begin
             Ret.FEndOfVMT := (IPointer(p^[I]) - IPointer(p)) div SizeOf(Pointer);
           end;
@@ -10785,27 +10818,29 @@ begin
       Caller.CMD_Err(erNullPointerException);
       exit;
     end;
-    n2 := CreateHeapVariant(Caller.FindType2(btPchar));
+    (*n2 := CreateHeapVariant(Caller.FindType2(btPchar));
     if n2 = nil then
     begin
       Result := False;
       exit;
-    end;
+    end; *)
 
-    if (n.aType.BaseType = btProcPtr) and (cardinal(n.dta^) = 0) then
-      data := TMethod(Pointer(IPointer(n.dta^)+4)^)
-    else
-      data := MkMethod(Caller, cardinal(n.dta^));
+    //if (n.aType.BaseType = btProcPtr) and (cardinal(n.dta^) = 0) then
+    //  data := TMethod(Pointer(IPointer(n.dta^)+4)^)
+    //else
+    //  data := MkMethod(Caller, cardinal(n.dta^));
+
     Params := TPSList.Create;
-    Params.Add(NewPPSVariantIFC(n2, False));
+    Params.Add(@n);
 
-    for i := Stack.Count -2 downto Longint(Stack.Count) - ParamCount -1 do
-    begin
-      Params.Add(NewPPSVariantIFC(Stack[I], False));
-    end;
+ //   for i := Stack.Count -2 downto Longint(Stack.Count) - ParamCount -1 do
+ //   begin
+//      Params.Add(NewPPSVariantIFC(Stack[I], False));
+//    end;
     try
       Result := Caller.InnerfuseCall(FSelf, p.Ext2, cdregister, Params, nil);
     finally
+      Params.Clear;
       DestroyHeapVariant(n2);
       DisposePPSVariantIFCList(Params);
     end;
@@ -11165,6 +11200,18 @@ begin
   pp := fExceptionStack[fExceptionStack.Count-1];
   result := FProcs.IndexOf(pp.CurrProc);
 end;
+
+function TPSExec.LastExObject: TObject;
+var
+ pp: TPSExceptionHandler;
+begin
+ if FExceptionStack.Count = 0 then begin
+   result := ExObject;
+   exit;
+ end;
+ pp := fExceptionStack[fExceptionStack.Count-1];
+ result := pp.ExceptionObject;
+end; 
 
 { TPSRuntimeClass }
 
@@ -11700,7 +11747,8 @@ begin
 {$IFNDEF PS_NOINT64}
         if res^.FType.BaseType <> btS64 then
 {$ENDIF}
-          CopyArrayContents(Pointer(Longint(Stack)-PointerSize2), @PPSVariantData(res)^.Data, 1, Res^.FType);
+          //CopyArrayContents(Pointer(Longint(Stack)-PointerSize2), @PPSVariantData(res)^.Data, 1, Res^.FType);
+          CopyArrayContents(Pointer(Longint(Stack)-Longint(PointerSize2)), @PPSVariantData(res)^.Data, 1, Res^.FType);
       end;
     end;
     DestroyHeapVariant(res);
@@ -12112,7 +12160,7 @@ end;
 
 function TPSStack.GetString(ItemNo: Longint): string; // calls the native method
 begin
-  result := {$IFDEF DELPHI2009UP}GetUnicodeString(ItemNo){$ELSE}GetAnsiString(ItemNo){$ENDIF};
+  result := {$IFNDEF PS_NOWIDESTRING}{$IFDEF DELPHI2009UP}GetUnicodeString(ItemNo){$ELSE}GetAnsiString(ItemNo){$ENDIF}{$ELSE}GetAnsiString(ItemNo){$ENDIF};
 end;
 
 function TPSStack.GetUInt(ItemNo: Longint): Cardinal;
@@ -12171,8 +12219,10 @@ var
 begin
   o := FLength;
   FLength := (FLength + TotalSize);
-  if FLength mod PointerSize <> 0 then
-    FLength := FLength + (PointerSize - (FLength mod PointerSize));
+  //if FLength mod PointerSize <> 0 then
+  if FLength mod Longint(PointerSize) <> 0 then
+    //FLength := FLength + (PointerSize - (FLength mod PointerSize));
+    FLength := FLength + (Longint(PointerSize) - Longint((FLength mod Longint(PointerSize))));
   if FLength > FCapacity then AdjustLength;
   p := Pointer(IPointer(FDataPtr) + IPointer(o));
   Add(p);
@@ -12332,8 +12382,12 @@ end;
 
 procedure TPSStack.SetString(ItemNo: Longint; const Data: string);
 begin
-  {$IFDEF DELPHI2009UP}
-  SetUnicodeString(ItemNo, Data);
+  {$IFNDEF PS_NOWIDESTRING}
+    {$IFDEF DELPHI2009UP}
+    SetUnicodeString(ItemNo, Data);
+    {$ELSE}
+    SetAnsiString(ItemNo, Data);
+    {$ENDIF}
   {$ELSE}
   SetAnsiString(ItemNo, Data);
   {$ENDIF}

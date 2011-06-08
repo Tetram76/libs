@@ -47,6 +47,9 @@ begin
   with Cl.AddClassN(cl.FindClass('TPersistent'), 'TStrings') do
   begin
     IsAbstract := True;
+{$IFDEF DELPHI2005UP}
+    RegisterMethod('constructor Create;');
+{$ENDIF}
     RegisterMethod('function Add(S: string): Integer;');
     RegisterMethod('procedure Append(S: string);');
     RegisterMethod('procedure AddStrings(Strings: TStrings);');
@@ -92,6 +95,9 @@ procedure SIRegisterTSTRINGLIST(Cl: TPSPascalCompiler);
 begin
   with Cl.AddClassN(cl.FindClass('TStrings'), 'TStringList') do
   begin
+{$IFDEF DELPHI2005UP}
+    RegisterMethod('constructor Create;');
+{$ENDIF}
     RegisterMethod('function Find(S:String;var Index:Integer):Boolean');
     RegisterMethod('procedure Sort');
     RegisterProperty('Duplicates', 'TDuplicates', iptrw);
@@ -124,7 +130,9 @@ begin
     RegisterMethod('procedure ReadBuffer(Buffer:String;Count:LongInt)');
     RegisterMethod('procedure WriteBuffer(Buffer:String;Count:LongInt)');
     {$IFDEF DELPHI4UP}
+    {$IFNDEF PS_NOINT64}
     RegisterMethod('function CopyFrom(Source:TStream;Count:Int64):LongInt');
+    {$ENDIF}
     {$ELSE}
     RegisterMethod('function CopyFrom(Source:TStream;Count:Integer):LongInt');
     {$ENDIF}
