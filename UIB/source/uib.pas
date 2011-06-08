@@ -1013,12 +1013,20 @@ type
   private
     FOptions: TRestoreOptions;
     FPageSize: Cardinal;
-    function CreateStartSPB: RawByteString; override;
+ {$IFDEF FB25_UP}
+    FFixMetadataCharset: AnsiString;
+    FFixDataCharset: AnsiString;
+{$ENDIF}
+   function CreateStartSPB: RawByteString; override;
   public
     constructor Create{$IFNDEF UIB_NO_COMPONENT}(AOwner: TComponent); override{$ENDIF};
   published
     property Options: TRestoreOptions read FOptions write FOptions default [roCreateNewDB];
     property PageSize: Cardinal read FPageSize write FPageSize default 0;
+{$IFDEF FB25_UP}
+    property FixMetadataCharset: AnsiString read FFixMetadataCharset write FFixMetadataCharset;
+    property FixDataCharset: AnsiString read FFixDataCharset write FFixDataCharset;
+{$ENDIF}
   end;
 
   TSecurityAction = (saAddUser, saDeleteUser, saModifyUser, saDisplayUser, saDisplayUsers);
@@ -3696,6 +3704,23 @@ begin
   if FPageSize > 0 then
     Result := Result + isc_spb_res_page_size + PAnsiChar(@FPageSize)[0] +
       PAnsiChar(@FPageSize)[1] + PAnsiChar(@FPageSize)[2] + PAnsiChar(@FPageSize)[3];
+
+{$IFDEF FB25_UP}
+    if FFixDataCharset <> '' then
+    begin
+      Result := Result + isc_spb_res_fix_fss_data;
+      Len := Length(FFixDataCharset);
+      Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
+      Result := Result + FFixDataCharset;
+    end;
+    if FFixMetadataCharset <> '' then
+    begin
+      Result := Result + isc_spb_res_fix_fss_metadata;
+      Len := Length(FFixMetadataCharset);
+      Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
+      Result := Result + FFixMetadataCharset;
+    end;
+{$ENDIF}
 end;
 
 { TUIBSecurity }
