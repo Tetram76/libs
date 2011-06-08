@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageInformation.pas 12990 2011-02-26 05:55:33Z outchy $
+// $Id: PackageInformation.pas 13017 2011-04-18 20:13:01Z obones $
 
 unit PackageInformation;
 
@@ -582,7 +582,7 @@ begin
   if (Content[1] = #$EF) and (Content[2] = #$BB) and (Content[3] = #$BF) then
     Delete(Content, 1, 3);
     
-  Result := Utf8ToAnsi(Content);
+  Result := {$IFDEF SUPPORTS_UNICODE}Utf8ToString{$ELSE}Utf8ToAnsi{$ENDIF SUPPORTS_UNICODE}(Content);
 end;
 
 // (rom) copied from JclStrings.pas
@@ -1111,7 +1111,7 @@ var
 begin
   xml := TJclSimpleXML.Create;
   try
-    xml.LoadFromString(LoadUtf8File(Filename));
+    xml.LoadFromFile(Filename);
 
     for i := 0 to xml.Root.Items.Count - 1 do
     begin

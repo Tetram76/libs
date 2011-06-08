@@ -42,7 +42,7 @@ Changes 2003-03-23:
      - ImageOffset: change to ImageOptions.Offset // peter3
 
 -----------------------------------------------------------------------------}
-// $Id: JvRollOut.pas 12977 2011-02-14 08:51:41Z ahuser $
+// $Id: JvRollOut.pas 13026 2011-05-13 08:41:33Z ahuser $
 
 unit JvRollOut;
 
@@ -314,8 +314,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRollOut.pas $';
-    Revision: '$Revision: 12977 $';
-    Date: '$Date: 2011-02-14 09:51:41 +0100 (lun., 14 févr. 2011) $';
+    Revision: '$Revision: 13026 $';
+    Date: '$Date: 2011-05-13 10:41:33 +0200 (ven., 13 mai 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -559,7 +559,7 @@ begin
   FButtonFont.Name := 'Verdana';
   FButtonFont.Size := 7;
   FButtonFont.Style := [fsBold];
-  FButtonFont.Color := clWhite;
+  FButtonFont.Color := clWindowText;
   FButtonFont.OnChange := DoButtonFontChange;
 
   // SmartExpand / SmartShow
@@ -1014,7 +1014,7 @@ begin
   Result := (FButtonFont.Name <> 'Verdana') or
             (FButtonFont.Size <> 7) or
             (FButtonFont.Style <> [fsBold]) or
-            (FButtonFont.Color <> clWhite);
+            (FButtonFont.Color <> clWindowText);
 end;
 
 procedure TJvCustomRollOut.MouseEnter(Control: TControl);

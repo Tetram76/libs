@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCx.pas 12886 2010-11-06 23:25:16Z jfudickar $
+// $Id: JvDynControlEngineDevExpCx.pas 13020 2011-04-25 19:58:35Z jfudickar $
 
 unit JvDynControlEngineDevExpCx;
 
@@ -1059,8 +1059,8 @@ function DynControlEngineDevExpCx: TJvDynControlEngineDevExpCx;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCx.pas $';
-    Revision: '$Revision: 12886 $';
-    Date: '$Date: 2010-11-07 00:25:16 +0100 (dim., 07 nov. 2010) $';
+    Revision: '$Revision: 13020 $';
+    Date: '$Date: 2011-04-25 21:58:35 +0200 (lun., 25 avr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2134,7 +2134,7 @@ end;
 
 procedure TJvDynControlCxMemo.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlCxMemo.ControlGetValue: Variant;

@@ -31,7 +31,7 @@ Description: This unit defines a component that you can drop on any form or
 
 Known Issues: none known
 -----------------------------------------------------------------------------}
-// $Id: JvAVICapture.pas 12936 2010-11-28 15:15:34Z ahuser $
+// $Id: JvAVICapture.pas 13044 2011-06-08 13:37:23Z obones $
 
 unit JvAVICapture;
 
@@ -69,11 +69,13 @@ type
   public
     constructor Create; // Create the video format
     procedure Update;   // Update from the AVICap window
-    property Width: Cardinal read FWidth;
-    property Height: Cardinal read FHeight;
-    property BitDepth: Cardinal read FBitDepth;
+    function Apply: Boolean; // apply the format to the window, returns True if successfull
+
+    property Width: Cardinal read FWidth write FWidth;
+    property Height: Cardinal read FHeight write FHeight;
+    property BitDepth: Cardinal read FBitDepth write FBitDepth;
     property PixelFormat: TPixelFormat read FPixelFormat;
-    property Compression: Integer read FCompression;
+    property Compression: Integer read FCompression write FCompression;
   end;
 
   // The audio format used by the device
@@ -552,8 +554,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAVICapture.pas $';
-    Revision: '$Revision: 12936 $';
-    Date: '$Date: 2010-11-28 16:15:34 +0100 (dim., 28 nov. 2010) $';
+    Revision: '$Revision: 13044 $';
+    Date: '$Date: 2011-06-08 15:37:23 +0200 (mer., 08 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -732,6 +734,22 @@ begin
 end;
 
 //=== { TJvVideoFormat } =====================================================
+
+function TJvVideoFormat.Apply: Boolean;
+var
+  BmpInfo: BITMAPINFOHEADER;
+begin
+  Result := False;
+  if FHWnd <> 0 then
+  begin
+    BmpInfo.biWidth := FWidth;
+    BmpInfo.biHeight := FHeight;
+    BmpInfo.biBitCount := FBitDepth;
+    BmpInfo.biCompression := FCompression;
+
+    Result := capSetVideoFormat(FHWnd, @BmpInfo, SizeOf(BmpInfo));
+  end;
+end;
 
 constructor TJvVideoFormat.Create;
 begin
@@ -1423,6 +1441,7 @@ var
   DeviceVersion: array [0..MAX_PATH] of Char;
 begin
   // no more than 10 drivers in the system (cf Win32 API)
+  Drivers.Clear;
   for I := 0 to 9 do
     if capGetDriverDescription(I, DeviceName, SizeOf(DeviceName), DeviceVersion, SizeOf(DeviceVersion)) then
       Drivers.Add(DeviceName);

@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgTagParser.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgTagParser.pas 13033 2011-05-28 12:08:42Z ahuser $
 
 unit JvgTagParser;
 
@@ -36,8 +36,6 @@ uses
   {$ENDIF UNITVERSIONING}
   Classes, SysUtils,
   HTTPApp, HTTPProd;
-  HTTPApp;
-  {$ENDIF COMPILER6_UP}
 
 type
   TJvgTagParser = class(TObject)
@@ -56,9 +54,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgTagParser.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/JvgTagParser.pas $';
+    Revision: '$Revision: 13033 $';
+    Date: '$Date: 2011-05-28 14:08:42 +0200 (sam., 28 mai 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

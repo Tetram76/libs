@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCombobox.pas 12849 2010-10-05 12:39:06Z ahuser $
+// $Id: JvCombobox.pas 13043 2011-06-08 13:35:16Z obones $
 
 unit JvCombobox;
 
@@ -389,8 +389,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCombobox.pas $';
-    Revision: '$Revision: 12849 $';
-    Date: '$Date: 2010-10-05 14:39:06 +0200 (mar., 05 oct. 2010) $';
+    Revision: '$Revision: 13043 $';
+    Date: '$Date: 2011-06-08 15:35:16 +0200 (mer., 08 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -851,21 +851,27 @@ procedure TJvCustomCheckedComboBox.SetInvertAll(Sender: TObject);
 var
   I: Integer;
   S: string;
+  NewCheckedCount: Integer;
 begin
   S := '';
+  NewCheckedCount := 0;
   for I := 0 to FListBox.Items.Count - 1 do
   begin
     FListBox.Checked[I] := not FListBox.Checked[I];
 
-    if FListBox.Checked[I] then begin
-       if S = '' then         
-         S := FListBox.Items[I]
-       else
-         S := S + Delimiter + FListBox.Items[I];
+    if FListBox.Checked[I] then
+    begin
+      Inc(NewCheckedCount);
+
+      if S = '' then
+        S := FListBox.Items[I]
+      else
+        S := S + Delimiter + FListBox.Items[I];
     end;
   end;
   ChangeText(S);
-  FCheckedCount := FListBox.Items.Count;
+
+  FCheckedCount := NewCheckedCount;
   Repaint;
   Change;
 end;

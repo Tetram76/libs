@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThreadDialog.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvThreadDialog.pas 13030 2011-05-17 22:35:04Z ahuser $
 
 unit JvThreadDialog;
 
@@ -230,8 +230,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadDialog.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13030 $';
+    Date: '$Date: 2011-05-18 00:35:04 +0200 (mer., 18 mai 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -240,6 +240,9 @@ implementation
 
 uses
   Dialogs, Graphics,
+  {$IFDEF COMPILER11_UP} // Delphi 2007 introduced ShellAnimations
+  ShellAnimations,
+  {$ENDIF COMPILER11_UP}
   JvResources;
 
 function Max(a, b: Integer): Integer;

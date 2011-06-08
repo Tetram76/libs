@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBReg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBReg.pas 13018 2011-04-25 19:45:55Z jfudickar $
 
 unit JvDBReg;
 
@@ -50,6 +50,7 @@ uses
   JvDBLogonDialogOdac,
   JvOdacSmartQuery,
   {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
+  JvADOQuery,
   JvMemoryDataset, JvDBDatePickerEdit, JvDBDateTimePicker, JvDBLookupTreeView,
   JvDBProgressBar, JvDBRichEdit, JvDBSpinEdit, JvDBTreeView, JvDBLookup,
   JvCsvData, JvDBCombobox, JvDBControls, JvDBGrid, JvDBUltimGrid, JvDBGridFooter,
@@ -88,6 +89,7 @@ begin
     TJvDBOdacConnectDialog, TJvDBOdacPasswordDialog, TjvOdacSmartQuery,
     TjvOdacOraTable, TjvOdacOraQuery,
     {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
+    TJvADOQuery, TJvADODataSet,
     TJvDBGridWordExport, TJvDBGridExcelExport, TJvDBGridHTMLExport,
     TJvDBGridCSVExport, TJvDBGridXMLExport, TJvDatabaseActionList]);
   RegisterComponents(RsPaletteDBVisual, [TJvDBDatePickerEdit,

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidators.pas 12892 2010-11-09 14:11:59Z obones $
+// $Id: JvValidators.pas 13042 2011-06-08 13:17:39Z obones $
 
 unit JvValidators;
 
@@ -135,8 +135,12 @@ type
   end;
 
   TJvRequiredFieldValidator = class(TJvBaseValidator)
+  private
+    FAllowBlank: Boolean;
   protected
     procedure Validate; override;
+  published
+    property AllowBlank: Boolean read FAllowBlank write FAllowBlank default true;
   end;
 
   TJvValidateCompareOperator = (vcoLessThan, vcoLessOrEqual, vcoEqual, vcoGreaterOrEqual, vcoGreaterThan, vcoNotEqual);
@@ -273,8 +277,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidators.pas $';
-    Revision: '$Revision: 12892 $';
-    Date: '$Date: 2010-11-09 15:11:59 +0100 (mar., 09 nov. 2010) $';
+    Revision: '$Revision: 13042 $';
+    Date: '$Date: 2011-06-08 15:17:39 +0200 (mer., 08 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -544,7 +548,10 @@ begin
     varByte:
       ; // nothing to do because all values are valid
   else
-    Valid := VarCompareValue(R, '') <> vrEqual;
+    if FAllowBlank then
+      Valid := VarCompareValue(R, '') <> vrEqual
+    else
+      Valid := Trim(VarToStr(R)) <> '';
   end;
 end;
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFullColorSpacesEditors.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvFullColorSpacesEditors.pas 13029 2011-05-17 22:32:08Z ahuser $
 
 unit JvFullColorSpacesEditors;
 
@@ -144,9 +144,9 @@ type
     procedure FormApply(Sender: TObject);
   end;
 
-procedure RegisterFullColorSpaceEditor (AColorSpaceID: TJvFullColorSpaceID;
+procedure RegisterFullColorSpaceEditor(AColorSpaceID: TJvFullColorSpaceID;
   AEditorClass: TJvFullColorSpacePropertyClass);
-function FindFullColorSpaceEditor (AColorSpaceID: TJvFullColorSpaceID): TJvFullColorSpacePropertyClass;
+function FindFullColorSpaceEditor(AColorSpaceID: TJvFullColorSpaceID): TJvFullColorSpacePropertyClass;
 
 var
   DefaultFullColorSpacePropertyClass: TJvFullColorSpacePropertyClass = TJvFullColorSpaceProperty;
@@ -629,7 +629,7 @@ end;
 function TJvFullColorListEditor.AllEqual: Boolean;
 var
   IndexList, IndexColor: Integer;
-  FullColorList:TJvFullColorList;
+  FullColorList: TJvFullColorList;
 begin
   Result := False;
   if PropCount > 1 then
@@ -649,8 +649,8 @@ end;
 procedure TJvFullColorListEditor.Edit;
 var
   FullColorListForm: TJvFullColorListFrm;
-  FullColorList:TJvFullColorList;
-  IndexList, IndexColor:Integer;
+  FullColorList: TJvFullColorList;
+  IndexList, IndexColor: Integer;
 begin
   FullColorListForm := TJvFullColorListFrm.Create(Application);
   try
@@ -685,56 +685,57 @@ begin
 end;
 
 var
-  FullColorSpaceEditorList: TList = nil;
+  GFullColorSpaceEditorArray: array of TJvFullColorSpacePropertyClass;
 
 {procedure ModuleUnloadProc(HInstance: Integer);
 var
-  Index:Integer;
-  AEditorClass:TJvFullColorSpacePropertyClass;
+  Index: Integer;
+  AEditorClass: TJvFullColorSpacePropertyClass;
 begin
-  for Index:=FullColorSpaceEditorList.Count-1 downto 0 do
+  for Index := High(GFullColorSpaceEditorArray) downto 0 do
   begin
-    AEditorClass:=TJvFullColorSpacePropertyClass(FullColorSpaceEditorList.Items[Index]);
-    if   (AEditorClass<>nil) and (AEditorClass<>TJvFullColorSpaceProperty)
-      and(IsClassInModule(HInstance,AEditorClass))
-      then FullColorSpaceEditorList.Items[Index]:=nil;
+    AEditorClass := GFullColorSpaceEditorArray[Index];
+    if (AEditorClass <> nil) and (AEditorClass <> TJvFullColorSpaceProperty) and IsClassInModule(HInstance, AEditorClass) then
+      GFullColorSpaceEditorArray[Index] := nil;
   end;
-end; }
+end;}
 
-procedure InitFullColorSpaceEditorList;
+procedure InitFullColorSpaceEditorArray;
 var
-  ACount:Integer;
-  Index:Integer;
+  ACount: Integer;
+  Index: Integer;
 begin
   ACount := (High(TJvFullColorSpaceID) - Low(TJvFullColorSpaceID) + 1) shr 2;
-  FullColorSpaceEditorList.Count := ACount;
-  for Index := 0 to FullColorSpaceEditorList.Count - 1 do
-    FullColorSpaceEditorList.Items[Index] := nil;
+  SetLength(GFullColorSpaceEditorArray, ACount);
+  for Index := 0 to High(GFullColorSpaceEditorArray) do
+    GFullColorSpaceEditorArray[Index] := nil;
 end;
 
-procedure RegisterFullColorSpaceEditor (AColorSpaceID: TJvFullColorSpaceID;
+procedure RegisterFullColorSpaceEditor(AColorSpaceID: TJvFullColorSpaceID;
   AEditorClass: TJvFullColorSpacePropertyClass);
 begin
-  FullColorSpaceEditorList.Items[AColorSpaceID shr 2] := AEditorClass;
+  if GFullColorSpaceEditorArray = nil then
+  begin
+    InitFullColorSpaceEditorArray;
+    //RegisterFullColorSpaceEditor(csDEF, TJvDEFColorSpaceProperty);
+    GFullColorSpaceEditorArray[csDEF shr 2] := TJvDEFColorSpaceProperty;
+  end;
+
+  GFullColorSpaceEditorArray[AColorSpaceID shr 2] := AEditorClass;
   // todo (outchy) notification for changing
 end;
 
-function FindFullColorSpaceEditor (AColorSpaceID: TJvFullColorSpaceID): TJvFullColorSpacePropertyClass;
+function FindFullColorSpaceEditor(AColorSpaceID: TJvFullColorSpaceID): TJvFullColorSpacePropertyClass;
 begin
-  Result := TJvFullColorSpacePropertyClass(FullColorSpaceEditorList.Items[AColorSpaceID shr 2]);
+  Result := GFullColorSpaceEditorArray[AColorSpaceID shr 2];
   if Result = nil then
     Result := DefaultFullColorSpacePropertyClass;
 end;
 
-initialization
-  FullColorSpaceEditorList := TList.Create;
-  InitFullColorSpaceEditorList;
+//initialization
 //  AddModuleUnloadProc(ModuleUnloadProc);
 
-  RegisterFullColorSpaceEditor(csDEF, TJvDEFColorSpaceProperty);
-
-finalization
+//finalization
 //  RemoveModuleUnloadProc(ModuleUnloadProc);
-  FreeAndNil(FullColorSpaceEditorList);
 
 end.

@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvInspector.pas 13013 2011-04-08 07:17:22Z ahuser $
 
 unit JvInspector;
 
@@ -2073,8 +2073,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13013 $';
+    Date: '$Date: 2011-04-08 09:17:22 +0200 (ven., 08 avr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2470,7 +2470,7 @@ begin
     if Items[I] <> Instance then
       raise EJvInspectorData.CreateRes(@RsEInspectorInternalError);
     if I < High(FInstanceList) then
-      Move(FInstanceList[I + 1], FInstanceList[I], (Length(FInstanceList) - I) * SizeOf(TJvCustomInspectorData));
+      Move(FInstanceList[I + 1], FInstanceList[I], (High(FInstanceList) - I) * SizeOf(TJvCustomInspectorData));
     SetLength(FInstanceList, High(FInstanceList));
     if not FClearing then
     begin
@@ -10167,8 +10167,8 @@ begin
   end;
   if I >= 0 then
   begin
-    if I <> High(FItems) then
-      Move(FItems[I + 1], FItems[I], (Length(FItems) - I) * SizeOf(TJvCustomInspectorItem));
+    if I < High(FItems) then
+      Move(FItems[I + 1], FItems[I], (High(FItems) - I) * SizeOf(TJvCustomInspectorItem));
     SetLength(FItems, High(FItems));
   end;
   if Length(FItems) = 0 then

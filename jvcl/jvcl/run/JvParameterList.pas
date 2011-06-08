@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterList.pas 13006 2011-03-31 12:20:17Z jfudickar $
+// $Id: JvParameterList.pas 13023 2011-05-08 19:48:33Z jfudickar $
 
 unit JvParameterList;
 
@@ -449,20 +449,25 @@ type
     property OnExitParameter: TNotifyEvent read FOnExitParameter write FOnExitParameter;
   end;
 
-  TJvParameterListSelectList = class(TJvAppStorageSelectList)
+  TJvParameterListSelectList = class(TJvBaseAppStorageSelectList)
   private
     FParameterList: TJvParameterList;
   protected
-    function GetDynControlEngine: TJvDynControlEngine; override;
+    function CreateSelectListDialogInstance(AOwner: TComponent;AOperation: TJvAppStorageSelectListOperation; ACaption:
+        string = ''): TJvBaseAppStorageSelectListDialogInstance; override;
     procedure SetParameterList(Value: TJvParameterList); virtual;
     function GetAppStorage: TJvCustomAppStorage; override;
+    function GetStoragePath: string; override;
     procedure SetAppStorage(Value: TJvCustomAppStorage); override;
   public
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure RestoreParameterList(const ACaption: string = '');
     procedure SaveParameterList(const ACaption: string = '');
   published
+    property CheckEntries;
     property ParameterList: TJvParameterList read FParameterList write SetParameterList;
+    property SelectListDialog;
+    property SelectPath;
   end;
 
   TJvParameterListPropertyStore = class(TJvCustomPropertyStore)
@@ -482,8 +487,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterList.pas $';
-    Revision: '$Revision: 13006 $';
-    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
+    Revision: '$Revision: 13023 $';
+    Date: '$Date: 2011-05-08 21:48:33 +0200 (dim., 08 mai 2011) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -2175,11 +2180,12 @@ begin
   end;
 end;
 
-//=== { TJvParameterListSelectList } =========================================
-
-function TJvParameterListSelectList.GetDynControlEngine: TJvDynControlEngine;
+function TJvParameterListSelectList.CreateSelectListDialogInstance(AOwner: TComponent;AOperation:
+    TJvAppStorageSelectListOperation; ACaption: string = ''): TJvBaseAppStorageSelectListDialogInstance;
 begin
-  Result := FParameterList.DynControlEngine;
+  Result := inherited CreateSelectListDialogInstance(AOwner, AOperation, ACaption);
+  if not Assigned(SelectListDialog) then
+    Result.DynControlEngine := FParameterList.DynControlEngine;
 end;
 
 procedure TJvParameterListSelectList.SetParameterList(Value: TJvParameterList);
@@ -2193,6 +2199,14 @@ begin
     Result := FParameterList.AppStorage
   else
     Result := nil;
+end;
+
+function TJvParameterListSelectList.GetStoragePath: string;
+begin
+  if Assigned(AppStorage) then
+    Result := AppStorage.ConcatPaths([ParameterList.AppStoragePath, SelectPath])
+  else
+    Result := ParameterList.AppStoragePath + PathDelim + SelectPath;
 end;
 
 procedure TJvParameterListSelectList.SetAppStorage(Value: TJvCustomAppStorage);

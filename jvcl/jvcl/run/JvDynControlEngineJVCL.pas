@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineJVCL.pas 12894 2010-11-17 23:10:13Z jfudickar $
+// $Id: JvDynControlEngineJVCL.pas 13020 2011-04-25 19:58:35Z jfudickar $
 
 unit JvDynControlEngineJVCL;
 
@@ -855,8 +855,8 @@ procedure SetDynControlEngineJVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineJVCL.pas $';
-    Revision: '$Revision: 12894 $';
-    Date: '$Date: 2010-11-18 00:10:13 +0100 (jeu., 18 nov. 2010) $';
+    Revision: '$Revision: 13020 $';
+    Date: '$Date: 2011-04-25 21:58:35 +0200 (lun., 25 avr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -914,7 +914,7 @@ end;
 
 procedure TJvDynControlJVCLMaskEdit.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLMaskEdit.ControlGetValue: Variant;
@@ -1004,7 +1004,7 @@ end;
 
 procedure TJvDynControlJVCLButtonEdit.ControlSetValue(Value: Variant);
 begin
-  FEditControl.Text := Value;
+  FEditControl.Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLButtonEdit.ControlGetValue: Variant;
@@ -1106,7 +1106,7 @@ end;
 
 procedure TJvDynControlJVCLCalcEdit.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLCalcEdit.ControlGetValue: Variant;
@@ -1162,7 +1162,7 @@ end;
 
 procedure TJvDynControlJVCLSpinEdit.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLSpinEdit.ControlGetValue: Variant;
@@ -1248,7 +1248,7 @@ end;
 
 procedure TJvDynControlJVCLFileNameEdit.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLFileNameEdit.ControlGetValue: Variant;
@@ -1348,7 +1348,7 @@ end;
 
 procedure TJvDynControlJVCLDirectoryEdit.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLDirectoryEdit.ControlGetValue: Variant;
@@ -1762,7 +1762,7 @@ end;
 
 procedure TJvDynControlJVCLMemo.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLMemo.ControlGetValue: Variant;
@@ -1867,7 +1867,7 @@ end;
 
 procedure TJvDynControlJVCLRichEdit.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLRichEdit.ControlGetValue: Variant;
@@ -2341,7 +2341,7 @@ begin
   if (Style = csDropDownList) and VarIsInt(Value) then
     ItemIndex := Items.IndexOf(Value)
   else
-    Text := Value;
+    Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLComboBox.ControlGetValue: Variant;
@@ -3524,7 +3524,7 @@ end;
 
 procedure TJvDynControlJVCLCheckedComboBox.ControlSetValue(Value: Variant);
 begin
-  Text := Value;
+  Text := VarToStr(Value);
 end;
 
 function TJvDynControlJVCLCheckedComboBox.ControlGetValue: Variant;

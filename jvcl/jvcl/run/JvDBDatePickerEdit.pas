@@ -33,7 +33,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBDatePickerEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBDatePickerEdit.pas 13016 2011-04-11 08:10:22Z ahuser $
 
 unit JvDBDatePickerEdit;
 
@@ -65,6 +65,7 @@ type
     procedure CMGetDataLink(var Msg: TMessage); message CM_GETDATALINK;
     function GetInternalDate: TDateTime;
     procedure SetInternalDate(const Value: TDateTime);
+    function GetField: TField;
   protected
     procedure WMCut(var Msg: TMessage); message WM_CUT;
     procedure WMPaste(var Msg: TMessage); message WM_PASTE;
@@ -93,6 +94,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function IsEmpty: Boolean; override;
+    property Field: TField read GetField;
   end;
 
   TJvDBDatePickerEdit = class(TJvCustomDBDatePickerEdit)
@@ -204,8 +206,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBDatePickerEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13016 $';
+    Date: '$Date: 2011-04-11 10:10:22 +0200 (lun., 11 avr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -329,6 +331,11 @@ begin
    temporary disable it}
   if InternalChanging or Leaving then
     Result := Result and IsLinked and FDataLink.Editing;
+end;
+
+function TJvCustomDBDatePickerEdit.GetField: TField;
+begin
+  Result := FDataLink.Field;
 end;
 
 function TJvCustomDBDatePickerEdit.IsEmpty: Boolean;
