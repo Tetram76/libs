@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 12985 2011-02-16 17:38:50Z ahuser $
+// $Id: JvComCtrls.pas 13028 2011-05-17 13:15:29Z ahuser $
 
 unit JvComCtrls;
 
@@ -572,6 +572,10 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X: Integer; Y: Integer); override;
+    {$IFNDEF COMPILER15_UP} // Delphi XE fixed the OnAddition/OnDeletion bug
+    procedure Added(Node: TTreeNode); override;
+    procedure Delete(Node: TTreeNode); override;
+    {$ENDIF ~COMPILER15_UP}
     property ScrollDirection: Integer read FScrollDirection write SetScrollDirection;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure DblClick; override;
@@ -636,8 +640,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 12985 $';
-    Date: '$Date: 2011-02-16 18:38:50 +0100 (mer., 16 févr. 2011) $';
+    Revision: '$Revision: 13028 $';
+    Date: '$Date: 2011-05-17 15:15:29 +0200 (mar., 17 mai 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2976,6 +2980,50 @@ begin
   else
     Result := clDefault;
 end;
+
+{$IFNDEF COMPILER15_UP} // Delphi XE fixed the OnAddition/OnDeletion bug
+procedure TJvTreeView.Added(Node: TTreeNode);
+var
+  OrgOnAddition: TTVExpandedEvent;
+begin
+  OrgOnAddition := OnAddition;
+  if CreateWndRestores and
+    {$IFDEF COMPILER170_UP}
+    (csRecreating in ControlState)
+    {$ELSE}
+    not (csDestroying in ComponentState)
+    {$ENDIF}
+  then
+    OnAddition := nil;
+  try
+    inherited Added(Node);
+  finally
+    if Assigned(OrgOnAddition) then
+      OnAddition := OrgOnAddition;
+  end;
+end;
+
+procedure TJvTreeView.Delete(Node: TTreeNode);
+var
+  OrgOnDeletion: TTVExpandedEvent;
+begin
+  OrgOnDeletion := OnDeletion;
+  if CreateWndRestores and
+    {$IFDEF COMPILER10_UP}
+    (csRecreating in ControlState)
+    {$ELSE}
+    not (csDestroying in ComponentState)
+    {$ENDIF}
+  then
+    OnDeletion := nil;
+  try
+    inherited Delete(Node);
+  finally
+    if Assigned(OrgOnDeletion) then
+      OnDeletion := OrgOnDeletion;
+  end;
+end;
+{$ENDIF ~COMPILER15_UP}
 
 procedure TJvTreeView.Select(Node: TTreeNode; ShiftState: TShiftState);
 var

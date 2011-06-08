@@ -58,7 +58,7 @@ Known Issues and Updates:
                 properly when attached to JvCsvDataset.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCsvData.pas 13010 2011-04-01 19:04:09Z jfudickar $
+// $Id: JvCsvData.pas 13014 2011-04-10 17:00:47Z jfudickar $
 
 
 
@@ -735,7 +735,7 @@ type
     procedure LoadFromFile(const FileName: string);
 
     procedure DeleteCsvColumn(const AFieldName: string); // must be done when not Active! [NEW 2007!]
-    function Lookup(const KeyFields: string; const KeyValues: Variant; const ResultFields: string): Variant;
+    function Lookup(const KeyFields: string; const KeyValues: Variant; const ResultFields: string): Variant; override;
      {These are made protected so that you can write another derived component which has access to various protected fields }
   protected
     property InternalData: TJvCsvRows read FData write FData;
@@ -934,8 +934,8 @@ function JvCsvNumCondition(FieldValue: Double; CompareOperator: TJvCsvFilterNumC
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCsvData.pas $';
-    Revision: '$Revision: 13010 $';
-    Date: '$Date: 2011-04-01 21:04:09 +0200 (ven., 01 avr. 2011) $';
+    Revision: '$Revision: 13014 $';
+    Date: '$Date: 2011-04-10 19:00:47 +0200 (dim., 10 avr. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

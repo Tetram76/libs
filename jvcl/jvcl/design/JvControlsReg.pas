@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlsReg.pas 12835 2010-09-05 17:00:20Z jfudickar $
+// $Id: JvControlsReg.pas 13018 2011-04-25 19:45:55Z jfudickar $
 
 unit JvControlsReg;
 
@@ -81,7 +81,7 @@ begin
   RegisterComponents(RsPaletteSliderSplitter, [TJvSplitter, TJvxSplitter,
     TJvSyncSplitter, TJvNetscapeSplitter]);
   RegisterComponents(RsPaletteVisual, [TJvClock, TJvCharMap, TJvZoom, TJvDice]);
-  RegisterComponents(RsPaletteNonVisual, [TJvHint]);
+  RegisterComponents(RsPaletteNonVisual, [TJvHint, TJvControlActionList]);
 
   RegisterPropertyEditor(TypeInfo(TCaption), TJvHTLabel, 'Caption', TJvHintProperty);
   RegisterPropertyEditor(TypeInfo(TJvLabelBehaviorName), TJvBehaviorLabel, 'Behavior', TJvLabelBehaviorProperty);

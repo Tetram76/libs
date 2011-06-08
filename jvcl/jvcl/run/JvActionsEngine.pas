@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 13011 2011-04-03 14:00:03Z jfudickar $
+// $Id: JvActionsEngine.pas 13015 2011-04-10 17:19:12Z jfudickar $
 
 unit JvActionsEngine;
 
@@ -53,7 +53,6 @@ type
     constructor Create(AOwner: TComponent); override;
     function SupportsComponent(AComponent: TComponent): Boolean; virtual;
     function SupportsAction(AAction: TJvActionEngineBaseAction): Boolean; virtual;
-    procedure UpdateAction(AAction: TJvActionEngineBaseAction;AComponent: TComponent); virtual;
   published
   end;
 
@@ -136,8 +135,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 13011 $';
-    Date: '$Date: 2011-04-03 16:00:03 +0200 (dim., 03 avr. 2011) $';
+    Revision: '$Revision: 13015 $';
+    Date: '$Date: 2011-04-10 19:19:12 +0200 (dim., 10 avr. 2011) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -206,11 +205,6 @@ end;
 function TJvActionBaseEngine.SupportsAction(AAction: TJvActionEngineBaseAction): Boolean;
 begin
   Result := False;
-end;
-
-procedure TJvActionBaseEngine.UpdateAction(AAction: TJvActionEngineBaseAction;AComponent: TComponent);
-begin
-
 end;
 
 constructor TJvActionEngineBaseAction.Create(AOwner: TComponent);
@@ -320,7 +314,7 @@ end;
 procedure TJvActionEngineBaseAction.UpdateTarget(Target: TObject);
 begin
   if Assigned(ControlEngine) then
-    ControlEngine.UpdateAction(self, ActionComponent)
+    ControlEngine.UpdateAction(self)
   else
     inherited UpdateTarget(Target);
 end;

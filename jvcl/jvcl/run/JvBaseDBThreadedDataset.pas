@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBThreadedDataset.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvBaseDBThreadedDataset.pas 13018 2011-04-25 19:45:55Z jfudickar $
 
 unit JvBaseDBThreadedDataset;
 
@@ -171,10 +171,9 @@ type
   protected
     property Pause: Boolean read FPause write FPause default False;
     property Cancel: Boolean read FCancel write FCancel default False;
+    property All: Boolean read FAll write FAll default False;
   public
     constructor Create; virtual;
-  published
-    property All: Boolean read FAll write FAll default False;
   end;
 
   TJvBaseThreadedDatasetEnhancedOptions = class(TPersistent)
@@ -408,8 +407,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBThreadedDataset.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13018 $';
+    Date: '$Date: 2011-04-25 21:45:55 +0200 (lun., 25 avr. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

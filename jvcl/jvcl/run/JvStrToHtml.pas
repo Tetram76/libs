@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStrToHtml.pas 12912 2010-11-27 18:15:10Z ahuser $
+// $Id: JvStrToHtml.pas 13022 2011-05-06 19:35:27Z ahuser $
 
 unit JvStrToHtml;
 
@@ -61,8 +61,8 @@ function CharToHtml(Ch: Char): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStrToHtml.pas $';
-    Revision: '$Revision: 12912 $';
-    Date: '$Date: 2010-11-27 19:15:10 +0100 (sam., 27 nov. 2010) $';
+    Revision: '$Revision: 13022 $';
+    Date: '$Date: 2011-05-06 21:35:27 +0200 (ven., 06 mai 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -404,7 +404,7 @@ begin
     if Ch = ' ' then
     begin
       if (I > 1) and (Value[I - 1] = ' ') then
-        Inc(AddLen, 6 {Length(Nbsp)});
+        Inc(AddLen, 5 {Length(Nbsp) - 1});
     end
     else
     if (Ch >= #128) or not (AnsiChar(Ch) in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then

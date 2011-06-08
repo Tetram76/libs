@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxGrid.pas 13011 2011-04-03 14:00:03Z jfudickar $
+// $Id: JvControlActionsEngineCxGrid.pas 13015 2011-04-10 17:19:12Z jfudickar $
 
 unit JvControlActionsEngineCxGrid;
 
@@ -53,7 +53,7 @@ type
   public
     function ExecuteOperation(const aOperation: TJvControlActionOperation; const aActionControl: TControl): Boolean; override;
     function SupportsComponent(aActionComponent: TComponent): Boolean; override;
-    procedure UpdateAction(AAction: TJvActionEngineBaseAction; AComponent: TComponent); override;
+    function UpdateAction(Action: TBasicAction): boolean; override;
   end;
 
 {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
@@ -63,8 +63,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxGrid.pas $';
-    Revision: '$Revision: 13011 $';
-    Date: '$Date: 2011-04-03 16:00:03 +0200 (dim., 03 avr. 2011) $';
+    Revision: '$Revision: 13015 $';
+    Date: '$Date: 2011-04-10 19:19:12 +0200 (dim., 10 avr. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -249,12 +249,11 @@ begin
   Result := Assigned(GetGridView(AActionComponent));
 end;
 
-procedure TJvControlActioncxGridEngine.UpdateAction(AAction: TJvActionEngineBaseAction; AComponent: TComponent);
+function TJvControlActioncxGridEngine.UpdateAction(Action: TBasicAction): boolean;
 begin
-  if Assigned(GetGridView(AComponent)) and Assigned(AAction) and
-    (AAction is TJvControlBaseAction) and (TJvControlBaseAction(Aaction).ControlOperation = caoCustomizeColumns) then
-    TJvControlBaseAction(Aaction).SetChecked(GetGridView(AComponent).Controller.Customization);
-
+  if Assigned(Action) and (Action is TJvControlBaseAction) and
+    Assigned(GetGridView(TJvControlBaseAction(Action).ActionComponent)) and (TJvControlBaseAction(Action).ControlOperation = caoCustomizeColumns) then
+    TJvControlBaseAction(Action).SetChecked(GetGridView(TJvControlBaseAction(Action).ActionComponent).Controller.Customization);
 end;
 
 {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}

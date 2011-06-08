@@ -1,4 +1,4 @@
-{-----------------------------------------------------------------------------
+﻿{-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -31,7 +31,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLoginForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvLoginForm.pas 13040 2011-06-08 12:05:23Z obones $
 
 unit JvLoginForm;
 
@@ -185,6 +185,8 @@ type
     FOnFormShow: TNotifyEvent;
     FOnOkClick: TNotifyEvent;
     FOnGetPassword: TJvOnGetPassword;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
   public
     AttemptNumber: Integer;
     property Attempt: Integer read FAttempt;
@@ -202,8 +204,8 @@ function CreateLoginDialog(UnlockMode, ASelectDatabase: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLoginForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13040 $';
+    Date: '$Date: 2011-06-08 14:05:23 +0200 (mer., 08 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -576,6 +578,14 @@ begin
 end;
 
 //=== { TJvLoginForm } =======================================================
+
+procedure TJvLoginForm.CreateParams(var Params: TCreateParams);
+begin
+  inherited CreateParams(Params);
+
+  // required for latest versions of Delphi to cooperate nicely with latest versions of Windows
+  Params.ExStyle := Params.ExStyle or WS_EX_APPWINDOW;
+end;
 
 procedure TJvLoginForm.FormCreate(Sender: TObject);
 begin

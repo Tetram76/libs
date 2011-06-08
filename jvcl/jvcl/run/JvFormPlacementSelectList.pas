@@ -16,7 +16,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacementSelectList.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvFormPlacementSelectList.pas 13023 2011-05-08 19:48:33Z jfudickar $
 
 unit JvFormPlacementSelectList;
 
@@ -32,7 +32,7 @@ uses
   JvAppStorage, JvFormPlacement, JvAppStorageSelectList;
 
 type
-  TJvFormStorageSelectList = class (TJvAppStorageSelectList)
+  TJvFormStorageSelectList = class (TJvBaseAppStorageSelectList)
   private
     FFormStorage: TJvFormStorage;
   protected
@@ -45,15 +45,18 @@ type
     function RestoreFormStorage(const ACaption: string = ''): Boolean;
     function SaveFormStorage(const ACaption: string = ''): Boolean;
   published
+    property CheckEntries;
     property FormStorage: TJvFormStorage read FFormStorage write SetFormStorage;
+    property SelectListDialog;
+    property SelectPath;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacementSelectList.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13023 $';
+    Date: '$Date: 2011-05-08 21:48:33 +0200 (dim., 08 mai 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -104,11 +107,14 @@ begin
   if Assigned(FormStorage) then
   begin
     OldPath := FormStorage.AppStoragePath;
-    FormStorage.AppStoragePath := GetSelectListPath(sloLoad, ACaption);
-    Result := FormStorage.AppStoragePath <> '';
-    if Result then
-      FormStorage.RestoreFormPlacement;
-    FormStorage.AppStoragePath := OldPath;
+    try
+      FormStorage.AppStoragePath := GetSelectListPath(sloLoad, ACaption);
+      Result := FormStorage.AppStoragePath <> '';
+      if Result then
+        FormStorage.RestoreFormPlacement;
+    finally
+      FormStorage.AppStoragePath := OldPath;
+    end;
   end
   else
     Result := False;
@@ -121,11 +127,14 @@ begin
   if Assigned(FormStorage) then
   begin
     OldPath := FormStorage.AppStoragePath;
-    FormStorage.AppStoragePath := GetSelectListPath(sloStore, ACaption);
-    Result := FormStorage.AppStoragePath <> '';
-    if Result then
-      FormStorage.SaveFormPlacement;
-    FormStorage.AppStoragePath := OldPath;
+    try
+      FormStorage.AppStoragePath := GetSelectListPath(sloStore, ACaption);
+      Result := FormStorage.AppStoragePath <> '';
+      if Result then
+        FormStorage.SaveFormPlacement;
+    finally
+      FormStorage.AppStoragePath := OldPath;
+    end;
   end
   else
     Result := False;

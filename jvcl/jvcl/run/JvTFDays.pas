@@ -1,4 +1,4 @@
-{-----------------------------------------------------------------------------
+﻿{-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -48,7 +48,7 @@ These changes peform the following functions.
 5) Remove the focus rectangle when ShowFocus is false (the focus rect is not shown in Outlook).
 
 -----------------------------------------------------------------------------}
-// $Id: JvTFDays.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTFDays.pas 13039 2011-06-08 11:46:26Z obones $
 
 unit JvTFDays;
 
@@ -1744,8 +1744,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFDays.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13039 $';
+    Date: '$Date: 2011-06-08 13:46:26 +0200 (mer., 08 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -6792,17 +6792,17 @@ begin
       while (FirstHourRow < BottomRow) and (ExtractMins(RowToTime(FirstHourRow)) <> 0) do
         Inc(FirstHourRow);
       if RowTime = 0 then
-        Result := 'am'
+        Result := {$IFDEF RTL220_UP}FormatSettings.{$ENDIF RTL220_UP}TimeAMString
       else
       if RowTime = 0.50 then
-        Result := 'pm'
+        Result := {$IFDEF RTL220_UP}FormatSettings.{$ENDIF RTL220_UP}TimePMString
       else
       if (RowNum = FirstHourRow) and (ExtractMins(RowTime) = 0) then
       begin
         if RowTime < 0.50 then
-          Result := 'am'
+          Result := {$IFDEF RTL220_UP}FormatSettings.{$ENDIF RTL220_UP}TimeAMString
         else
-          Result := 'pm';
+          Result := {$IFDEF RTL220_UP}FormatSettings.{$ENDIF RTL220_UP}TimePMString;
       end
       else
         Result := FormatDateTime(TimeFmt, RowTime);

@@ -39,9 +39,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-03-10 12:48:21 +0100 (jeu., 10 mars 2011)                          $ }
-{ Revision:      $Rev:: 123                                                                      $ }
-{ Author:        $Author:: uschuster                                                             $ }
+{ Last modified: $Date:: 2011-04-25 11:56:25 +0200 (lun., 25 avr. 2011)                          $ }
+{ Revision:      $Rev:: 129                                                                      $ }
+{ Author:        $Author:: twm                                                                   $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -384,6 +384,7 @@
   SUPPORTS_NODEFINE              Compiler supports the $NODEFINE directive (D4+/BCB3+)
   SUPPORTS_LONGWORD              Compiler supports the LongWord type (unsigned 32 bit) (D4+/BCB4+)
   SUPPORTS_INT64                 Compiler supports the Int64 type (D4+/BCB4+)
+  SUPPORTS_UINT64                Compiler supports the UInt64 type (D XE+ ?)
   SUPPORTS_DYNAMICARRAYS         Compiler supports dynamic arrays (D4+/BCB4+)
   SUPPORTS_DEFAULTPARAMS         Compiler supports default parameters (D4+/BCB4+)
   SUPPORTS_OVERLOAD              Compiler supports overloading (D4+/BCB4+)
@@ -1239,6 +1240,10 @@
   {$DEFINE HAS_UNIT_PNGIMAGE}
   {$DEFINE HAS_UNIT_CHARACTER}
 {$ENDIF RTL200_UP}
+
+{$IFDEF RTL220_UP}
+  {$DEFINE SUPPORTS_UINT64}
+{$ENDIF RTL220_UP}
 
 {------------------------------------------------------------------------------}
 { Cross-platform related defines                                               }

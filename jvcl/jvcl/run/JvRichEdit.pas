@@ -29,7 +29,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEdit.pas 12994 2011-02-28 11:04:37Z ahuser $
+// $Id: JvRichEdit.pas 13041 2011-06-08 13:08:49Z obones $
 
 unit JvRichEdit;
 
@@ -641,6 +641,9 @@ type
     procedure CreateWnd; override;
     procedure DestroyWnd; override;
     function GetPopupMenu: TPopupMenu; override;
+    {$IFDEF RTL220_UP}
+    procedure DoContextPopup(MousePos: TPoint; var Handled: Boolean); override;
+    {$ENDIF RTL220_UP}
     procedure TextNotFound(Dialog: TFindDialog); virtual;
     procedure RequestSize(const Rect: TRect); virtual;
     procedure SelectionChange; dynamic;
@@ -927,8 +930,8 @@ function BitmapToRTF2(ABitmap: TBitmap; AStream: TStream): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEdit.pas $';
-    Revision: '$Revision: 12994 $';
-    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
+    Revision: '$Revision: 13041 $';
+    Date: '$Date: 2011-06-08 15:08:49 +0200 (mer., 08 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3257,6 +3260,18 @@ begin
   if (Result = nil) and UseFixedPopup then
     Result := FixedDefaultEditPopUp(Self);
 end;
+
+{$IFDEF RTL220_UP}
+procedure TJvCustomRichEdit.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
+begin
+  if not Assigned(PopupMenu) then
+  begin
+    MousePos := ClientToScreen(MousePos);
+    FixedDefaultEditPopUp(Self).Popup(MousePos.X, MousePos.Y);
+    Handled := True;
+  end;
+end;
+{$ENDIF RTL220_UP}
 
 function TJvCustomRichEdit.GetRedoName: TUndoName;
 begin

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCoreReg.pas 13001 2011-03-09 21:11:42Z uschuster $
+// $Id: JvCoreReg.pas 13023 2011-05-08 19:48:33Z jfudickar $
 
 unit JvCoreReg;
 
@@ -177,7 +177,7 @@ begin
   RegisterComponents(RsPaletteVisual, [TJvPoweredByJCL, TJvPoweredByJVCL]);
 
   RegisterComponents(RsPalettePersistence, [TJvAppStorage,
-    TJvAppIniFileStorage, TJvAppStorageSelectList]);
+    TJvAppIniFileStorage, TJvAppStorageSelectList, TJvAppStorageSelectListEasyDialog]);
   RegisterComponents(RsPalettePersistence, [TJvAppRegistryStorage]);
 
   RegisterComponents(RsPaletteNonVisual, [TJvLookupAutoComplete, TJvTranslateString]);
