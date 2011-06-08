@@ -1182,7 +1182,9 @@ type
 
     property UTF8Decode: Boolean read FUtf8Decode write FUtf8Decode;
 
+    {$WARNINGS OFF}
     property UnitName: tbtString read FUnitName;
+    {$WARNINGS ON}
   end;
   TIFPSPascalCompiler = TPSPascalCompiler;
 
@@ -1720,7 +1722,7 @@ procedure DisposeVariant(p: PIfRVariant);
 
 implementation
 
-uses Classes, typInfo;
+uses {$IFDEF DELPHI5}ComObj, {$ENDIF}Classes, typInfo;
 
 {$IFDEF DELPHI3UP}
 resourceString
@@ -1974,7 +1976,6 @@ begin
   if Result = nil then
   begin
     tt := Owner.AddTypeS(Name, Decl);
-    tt.ExportName := True;
     Result := tt;
   end;
 end;
@@ -3088,6 +3089,7 @@ begin
     ((p1.BaseType = btChar) and (p2.BaseType = btChar)) or
     ((p1.BaseType = btSet) and (p2.BaseType = btSet)) or
     {$IFNDEF PS_NOWIDESTRING}
+    ((p1.BaseType = btChar) and (p2.BaseType = btWideChar)) or 
     ((p1.BaseType = btWideChar) and (p2.BaseType = btChar)) or
     ((p1.BaseType = btWideChar) and (p2.BaseType = btWideChar)) or
     ((p1.BaseType = btWidestring) and (p2.BaseType = btChar)) or
@@ -12312,9 +12314,14 @@ begin
   AddType('UnicodeString', btUnicodeString);
   {$ENDIF}
   AddType('AnsiString', btString);
-  {$IFDEF DELPHI2009UP}
-  AddType('String', btUnicodeString);
-  ADdType('NativeString', btUnicodeString);
+  {$IFNDEF PS_NOWIDESTRING}
+    {$IFDEF DELPHI2009UP}
+    AddType('String', btUnicodeString);
+    AddType('NativeString', btUnicodeString);
+    {$ELSE}
+    AddType('String', btString);
+    AddType('NativeString', btString);
+    {$ENDIF}
   {$ELSE}
   AddType('String', btString);
   AddType('NativeString', btString);
@@ -13327,6 +13334,7 @@ begin
   Result := ReadType(Name, Parser);
   if Result<>nil then
   begin
+    Result.ExportName := True;
     Result.DeclarePos:=InvalidVal;
     {$IFDEF PS_USESSUPPORT}
     Result.DeclareUnit:=fModule;
@@ -13628,7 +13636,7 @@ end;
 function TPSPascalCompiler.IsInLocalUnitList(s: tbtstring): Boolean;
 begin
   s:=FastUpperCase(s);
-  if (s=FastUpperCase(fModule)) or (s='SYSTEM') then
+  if (s = '') or (s=FastUpperCase(fModule)) or (s='SYSTEM') then
   begin
     result:=true;
     exit;

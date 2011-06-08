@@ -1,7 +1,7 @@
-package PascalScript_Core_D5;
+package PascalScript_Core_D16;
 
 {$R *.res}
-{$ALIGN ON}
+{$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO ON}
@@ -11,7 +11,7 @@ package PascalScript_Core_D5;
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
+{$OPTIMIZATION OFF}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
 {$REFERENCEINFO ON}
@@ -25,10 +25,12 @@ package PascalScript_Core_D5;
 {$DESCRIPTION 'RemObjects Pascal Script - Core Package'}
 {$DESIGNONLY}
 {$IMPLICITBUILD OFF}
+{$DEFINE DEBUG}
 
 requires
-  vcl50,
-  vcldb50;
+  rtl,
+  vcl,
+  dbrtl;
 
 contains
   uPSC_extctrls in 'uPSC_extctrls.pas',

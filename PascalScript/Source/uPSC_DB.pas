@@ -216,7 +216,8 @@ With RegClassS(cl,'TCOMPONENT','TDATASET') do
   RegisterProperty('ONFILTERRECORD', 'TFILTERRECORDEVENT', iptrw);
   RegisterProperty('ONNEWRECORD', 'TDATASETNOTIFYEVENT', iptrw);
   RegisterProperty('ONPOSTERROR', 'TDATASETERROREVENT', iptrw);
-  end;
+  SetDefaultPropery('FieldValues');
+ end;
 end;
 
 procedure SIRegisterTPARAMS(CL: TPSPascalCompiler);
@@ -649,6 +650,7 @@ With RegClassS(cl,'TOBJECT','TFIELDS') do
   RegisterProperty('COUNT', 'INTEGER', iptr);
   RegisterProperty('DATASET', 'TDATASET', iptr);
   RegisterProperty('FIELDS', 'TFIELD INTEGER', iptrw);
+  SetDefaultPropery('FIELDS');
   end;
 end;
 
@@ -659,6 +661,7 @@ With RegClassS(cl,'TFLATLIST','TFIELDLIST') do
   RegisterMethod('Function FIELDBYNAME( const NAME : String) : TFIELD');
   RegisterMethod('Function FIND( const NAME : String) : TFIELD');
   RegisterProperty('FIELDS', 'TFIELD INTEGER', iptr);
+  SetDefaultPropery('FIELDS');
   end;
 end;
 
@@ -694,6 +697,7 @@ With RegClassS(cl,'TDEFCOLLECTION','TINDEXDEFS') do
   RegisterMethod('Function GETINDEXFORFIELDS( const FIELDS : String; CASEINSENSITIVE : BOOLEAN) : TINDEXDEF');
   RegisterMethod('Procedure ADD( const NAME, FIELDS : String; OPTIONS : TINDEXOPTIONS)');
   RegisterProperty('ITEMS', 'TINDEXDEF INTEGER', iptrw);
+  SetDefaultPropery('ITEMS');
   end;
 end;
 
@@ -725,6 +729,7 @@ With RegClassS(cl,'TDEFCOLLECTION','TFIELDDEFS') do
   RegisterProperty('HIDDENFIELDS', 'BOOLEAN', iptrw);
   RegisterProperty('ITEMS', 'TFIELDDEF INTEGER', iptrw);
   RegisterProperty('PARENTDEF', 'TFIELDDEF', iptr);
+  SetDefaultPropery('ITEMS');
   end;
 end;
 
