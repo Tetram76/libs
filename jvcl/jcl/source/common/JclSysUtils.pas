@@ -41,9 +41,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-04-04 10:49:05 +0200 (lun., 04 avr. 2011)                          $ }
-{ Revision:      $Rev:: 3517                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-04-09 14:54:32 +0200 (sam., 09 avr. 2011)                          $ }
+{ Revision:      $Rev:: 3518                                                                     $ }
+{ Author:        $Author:: sfarrow                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -765,8 +765,8 @@ function VarIsNullEmptyBlank(const V: Variant): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysUtils.pas $';
-    Revision: '$Revision: 3517 $';
-    Date: '$Date: 2011-04-04 10:49:05 +0200 (lun., 04 avr. 2011) $';
+    Revision: '$Revision: 3518 $';
+    Date: '$Date: 2011-04-09 14:54:32 +0200 (sam., 09 avr. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2737,7 +2737,11 @@ begin
       PipeInfo.PipeRead := 0;
     end
     else
+      {$IFDEF DELPHI11_UP}
       RaiseLastOSError(Res);
+      {$ELSE}
+      RaiseLastOSError;
+      {$ENDIF DELPHI11_UP}
   end;
 end;
 
@@ -2902,7 +2906,11 @@ begin
           // event on abort
           AbortPtr^ := True
         else
+          {$IFDEF DELPHI11_UP}
           RaiseLastOSError(Index);
+          {$ELSE}
+          RaiseLastOSError;
+          {$ENDIF DELPHI11_UP}
       end;
       if AbortPtr^ then
         TerminateProcess(ProcessEvent.Handle, Cardinal(ABORT_EXIT_CODE));

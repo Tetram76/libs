@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-02-10 17:39:20 +0100 (jeu., 10 févr. 2011)                        $ }
-{ Revision:      $Rev:: 3492                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-05-27 22:02:04 +0200 (ven., 27 mai 2011)                           $ }
+{ Revision:      $Rev:: 3521                                                                     $ }
+{ Author:        $Author:: mbeutel                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1152,6 +1152,10 @@ resourcestring
 resourcestring
   RsUnknownFunctionAt     = 'Unknown function at %s';
 
+//=== JclCppException ========================================================
+resourcestring
+  RsCppUnhandledExceptionMsg = 'Unhandled C++ exception of type ''%s'' occurred';
+
 //=== JclDotNet ==============================================================
 resourcestring
   RsEUnknownCLRVersion = '"%s" is not a known CLR version';
@@ -2016,8 +2020,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3492 $';
-    Date: '$Date: 2011-02-10 17:39:20 +0100 (jeu., 10 févr. 2011) $';
+    Revision: '$Revision: 3521 $';
+    Date: '$Date: 2011-05-27 22:02:04 +0200 (ven., 27 mai 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
