@@ -26,9 +26,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-31 22:33:36 +0100 (dim., 31 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3405                                                                     $ }
-{ Author:        $Author:: sfarrow                                                               $ }
+{ Last modified: $Date:: 2011-05-27 22:35:51 +0200 (ven., 27 mai 2011)                           $ }
+{ Revision:      $Rev:: 3523                                                                     $ }
+{ Author:        $Author:: mbeutel                                                               $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -47,16 +47,25 @@ uses
 
 type
   // Exception hooking notifiers routines
+{$IFDEF BORLAND}
+  TJclExceptFilterProc = function(ExceptRecord: PExceptionRecord): Exception;
+{$ENDIF BORLAND}
   TJclExceptNotifyProc = procedure(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean);
   TJclExceptNotifyProcEx = procedure(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean; StackPointer: Pointer);
   TJclExceptNotifyMethod = procedure(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean) of object;
 
   TJclExceptNotifyPriority = (npNormal, npFirstChain);
 
+{$IFDEF BORLAND}
+function JclAddExceptFilter(const FilterProc: TJclExceptFilterProc; Priority: TJclExceptNotifyPriority = npNormal): Boolean;
+{$ENDIF BORLAND}
 function JclAddExceptNotifier(const NotifyProc: TJclExceptNotifyProc; Priority: TJclExceptNotifyPriority = npNormal): Boolean; overload;
 function JclAddExceptNotifier(const NotifyProc: TJclExceptNotifyProcEx; Priority: TJclExceptNotifyPriority = npNormal): Boolean; overload;
 function JclAddExceptNotifier(const NotifyMethod: TJclExceptNotifyMethod; Priority: TJclExceptNotifyPriority = npNormal): Boolean; overload;
 
+{$IFDEF BORLAND}
+function JclRemoveExceptFilter(const FilterProc: TJclExceptFilterProc): Boolean;
+{$ENDIF BORLAND}
 function JclRemoveExceptNotifier(const NotifyProc: TJclExceptNotifyProc): Boolean; overload;
 function JclRemoveExceptNotifier(const NotifyProc: TJclExceptNotifyProcEx): Boolean; overload;
 function JclRemoveExceptNotifier(const NotifyMethod: TJclExceptNotifyMethod): Boolean;  overload;
@@ -85,8 +94,8 @@ function JclBelongsHookedCode(Address: Pointer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclHookExcept.pas $';
-    Revision: '$Revision: 3405 $';
-    Date: '$Date: 2010-10-31 22:33:36 +0100 (dim., 31 oct. 2010) $';
+    Revision: '$Revision: 3523 $';
+    Date: '$Date: 2011-05-27 22:35:51 +0200 (ven., 27 mai 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -106,6 +115,18 @@ type
     ExceptAddr: Pointer;
     ExceptObj: Exception;
   end;
+
+{$IFDEF BORLAND}
+  TFilterItem = class(TObject)
+  private
+    FExceptFilterProc: TJclExceptFilterProc;
+    FPriority: TJclExceptNotifyPriority;
+  public
+    constructor Create(const ExceptFilterProc: TJclExceptFilterProc; APriority: TJclExceptNotifyPriority);
+    function DoFilterException(ExceptRecord: PExceptionRecord; out ExceptObj: Exception): Boolean;
+    property Priority: TJclExceptNotifyPriority read FPriority;
+  end;
+{$ENDIF BORLAND}
 
   TNotifierItem = class(TObject)
   private
@@ -132,6 +153,9 @@ var
   SysUtils_ExceptProc: TExceptProc;
   {$ENDIF FPC}
   Notifiers: TThreadList;
+  {$IFDEF BORLAND}
+  Filters: TThreadList;
+  {$ENDIF BORLAND}
 
 {$IFDEF HOOK_DLL_EXCEPTIONS}
 const
@@ -176,19 +200,40 @@ begin
   Assert(Result <> nil);
 end;
 
-procedure FreeNotifiers;
+procedure FreeThreadObjList(var TheList: TThreadList);
 var
   I: Integer;
 begin
-  with Notifiers.LockList do
+  with TheList.LockList do
     try
       for I := 0 to Count - 1 do
         TObject(Items[I]).Free;
     finally
-      Notifiers.UnlockList;
+      TheList.UnlockList;
     end;
-  FreeAndNil(Notifiers);
+  FreeAndNil(TheList);
 end;
+
+//=== { TFilterItem } ========================================================
+
+{$IFDEF BORLAND}
+constructor TFilterItem.Create(const ExceptFilterProc: TJclExceptFilterProc; APriority: TJclExceptNotifyPriority);
+begin
+  FExceptFilterProc := ExceptFilterProc;
+  FPriority := APriority;
+end;
+
+function TFilterItem.DoFilterException(ExceptRecord: PExceptionRecord; out ExceptObj: Exception): Boolean;
+begin
+  if Assigned(FExceptFilterProc) then
+  begin
+    ExceptObj := FExceptFilterProc(ExceptRecord);
+    Result := ExceptObj <> nil;
+  end
+  else
+    Result := False;
+end;
+{$ENDIF BORLAND}
 
 //=== { TNotifierItem } ======================================================
 
@@ -237,6 +282,38 @@ asm
 end;
 
 {$STACKFRAMES ON}
+
+{$IFDEF BORLAND}
+function DoExceptFilter(ExceptRecord: PExceptionRecord): Exception;
+var
+  Priorities: TJclExceptNotifyPriority;
+  I: Integer;
+begin
+  if Recursive then
+    Exit;
+  if Assigned(Filters) then
+  begin
+    Recursive := True;
+    try
+      with Filters.LockList do
+      try
+        for Priorities := High(Priorities) downto Low(Priorities) do
+          for I := 0 to Count - 1 do
+            with TFilterItem(Items[I]) do
+              if Priority = Priorities then
+                if DoFilterException(ExceptRecord, Result) then
+                  Exit;
+      finally
+        Filters.UnlockList;
+      end;
+      // Nobody wanted to handle the external exception. Call the default handler.
+      Result := SysUtils_ExceptObjProc(ExceptRecord);
+    finally
+      Recursive := False;
+    end;
+  end;
+end;
+{$ENDIF BORLAND}
 
 procedure DoExceptNotify(ExceptObj: TObject; ExceptAddr: Pointer; OSException: Boolean; StackPointer: Pointer);
 var
@@ -298,7 +375,7 @@ function HookedExceptObjProc(P: PExceptionRecord): Exception;
 var
   NewResultExcCache: Exception; // TLS optimization
 begin
-  Result := SysUtils_ExceptObjProc(P);
+  Result := DoExceptFilter(P);
   DoExceptNotify(Result, P^.ExceptionAddress, True, GetFramePointer);
   NewResultExcCache := NewResultExc;
   if NewResultExcCache <> nil then
@@ -332,6 +409,20 @@ begin
     (TJclAddr(@HookedRaiseException) <= TJclAddr(Address)) and
     (TJclAddr(@JclBelongsHookedCode) > TJclAddr(Address));
 end;
+
+{$IFDEF BORLAND}
+function JclAddExceptFilter(const FilterProc: TJclExceptFilterProc; Priority: TJclExceptNotifyPriority = npNormal): Boolean;
+begin
+  Result := Assigned(FilterProc);
+  if Result then
+    with Filters.LockList do
+    try
+      Add(TFilterItem.Create(FilterProc, Priority));
+    finally
+      Filters.UnlockList;
+    end;
+end;
+{$ENDIF BORLAND}
 
 function JclAddExceptNotifier(const NotifyProc: TJclExceptNotifyProc; Priority: TJclExceptNotifyPriority): Boolean;
 begin
@@ -368,6 +459,32 @@ begin
       Notifiers.UnlockList;
     end;
 end;
+
+{$IFDEF BORLAND}
+function JclRemoveExceptFilter(const FilterProc: TJclExceptFilterProc): Boolean;
+var
+  O: TFilterItem;
+  I: Integer;
+begin
+  Result := Assigned(FilterProc);
+  if Result then
+    with Filters.LockList do
+    try
+      for I := 0 to Count - 1 do
+      begin
+        O := TFilterItem(Items[I]);
+        if @O.FExceptFilterProc = @FilterProc then
+        begin
+          O.Free;
+          Items[I] := nil;
+        end;
+      end;
+      Pack;
+    finally
+      Filters.UnlockList;
+    end;
+end;
+{$ENDIF BORLAND}
 
 function JclRemoveExceptNotifier(const NotifyProc: TJclExceptNotifyProc): Boolean;
 var
@@ -448,14 +565,29 @@ begin
   NewResultExc := NewExceptObj;
 end;
 
+function GetCppRtlBase: Pointer;
+begin
+  Result := Pointer (FindHInstance (System.pfnDliNotifyHook)); { hooked by C++ RTL upon startup }
+end;
+
+function HasCppRtl: Boolean;
+begin
+  Result := GetCppRtlBase <> TJclPeMapImgHooks.SystemBase;
+end;
+
 function JclHookExceptions: Boolean;
 var
   RaiseExceptionAddressCache: Pointer;
 begin
+  RaiseExceptionAddressCache := RaiseExceptionAddress;
+  { Detect C++Builder applications and C++ packages loaded into Delphi applications.
+    Hook the C++ RTL regardless of ExceptionsHooked so that users can call JclHookException() after
+    loading a C++ package which might pull in the C++ RTL DLL. }
+  if HasCppRtl then
+    TJclPeMapImgHooks.ReplaceImport (GetCppRtlBase, kernel32, RaiseExceptionAddressCache, @HookedRaiseException);
   if not ExceptionsHooked then
   begin
     Recursive := False;
-    RaiseExceptionAddressCache := RaiseExceptionAddress;
     with TJclPeMapImgHooks do
       Result := ReplaceImport(SystemBase, kernel32, RaiseExceptionAddressCache, @HookedRaiseException);
     if Result then
@@ -478,6 +610,8 @@ end;
 
 function JclUnhookExceptions: Boolean;
 begin
+  if HasCppRtl then
+    TJclPeMapImgHooks.ReplaceImport (GetCppRtlBase, kernel32, @HookedRaiseException, @Kernel32_RaiseException);
   if ExceptionsHooked then
   begin
     with TJclPeMapImgHooks do
@@ -667,6 +801,9 @@ end;
 
 initialization
   Notifiers := TThreadList.Create;
+  {$IFDEF BORLAND}
+  Filters := TThreadList.Create;
+  {$ENDIF BORLAND}
   {$IFDEF UNITVERSIONING}
   RegisterUnitVersion(HInstance, UnitVersioning);
   {$ENDIF UNITVERSIONING}
@@ -678,6 +815,9 @@ finalization
   {$IFDEF HOOK_DLL_EXCEPTIONS}
   FinalizeLibrariesHookExcept;
   {$ENDIF HOOK_DLL_EXCEPTIONS}
-  FreeNotifiers;
+  FreeThreadObjList(Notifiers);
+  {$IFDEF BORLAND}
+  FreeThreadObjList(Filters);
+  {$ENDIF BORLAND}
 
 end.
