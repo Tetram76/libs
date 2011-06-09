@@ -1005,7 +1005,8 @@ type
 
   TRestoreOption = (roDeactivateIndexes, roNoShadow, roNoValidityCheck,
     roOneRelationAtATime, roReplace, roCreateNewDB, roUseAllSpace
-    {$IFDEF IB71_UP},roValidate{$ENDIF});
+    {$IFDEF IB71_UP}, roValidate{$ENDIF}
+    {$IFDEF FB25_UP}, roFixMetadataCharset, roFixDataCharset{$ENDIF});
 
   TRestoreOptions = set of TRestoreOption;
 
@@ -1014,8 +1015,8 @@ type
     FOptions: TRestoreOptions;
     FPageSize: Cardinal;
  {$IFDEF FB25_UP}
-    FFixMetadataCharset: AnsiString;
-    FFixDataCharset: AnsiString;
+    FFixMetadataCharset: TCharacterSet;
+    FFixDataCharset: TCharacterSet;
 {$ENDIF}
    function CreateStartSPB: RawByteString; override;
   public
@@ -1024,8 +1025,8 @@ type
     property Options: TRestoreOptions read FOptions write FOptions default [roCreateNewDB];
     property PageSize: Cardinal read FPageSize write FPageSize default 0;
 {$IFDEF FB25_UP}
-    property FixMetadataCharset: AnsiString read FFixMetadataCharset write FFixMetadataCharset;
-    property FixDataCharset: AnsiString read FFixDataCharset write FFixDataCharset;
+    property FixMetadataCharset: TCharacterSet read FFixMetadataCharset write FFixMetadataCharset;
+    property FixDataCharset: TCharacterSet read FFixDataCharset write FFixMetadataCharset;
 {$ENDIF}
   end;
 
@@ -3660,6 +3661,10 @@ begin
   inherited;
   FOptions := [roCreateNewDB];
   FPageSize := 0;
+{$IFDEF FB25}
+  FFixMetadataCharset := csNONE;
+  FFixDataCharset := csNONE;
+{$ENDIF}
 end;
 
 function TUIBRestore.CreateStartSPB: RawByteString;
@@ -3667,7 +3672,11 @@ var
   Len: Word;
   i: Integer;
   FileName: AnsiString;
+  AOptions: TRestoreOptions;
   Opts: Cardinal;
+{$IFDEF FB25}
+  FixMeta, FixData: Boolean;
+{$ENDIF}
 begin
   // backup service   ibservices
   Result := isc_action_svc_restore;
@@ -3694,9 +3703,17 @@ begin
   if FVerbose then
     Result := Result + isc_spb_verbose;
 
-  if (FOptions <> []) then
+{$IFDEF FB25}
+  FixMeta := roFixMetadataCharset in FOptions;
+  FixData := roFixDataCharset in FOptions;
+  AOptions := FOptions - [roFixMetadataCharset, roFixDataCharset];
+{$ELSE}
+  AOptions := FOptions;
+{$ENDIF}
+
+  if (AOptions <> []) then
   begin
-    Opts := PByte(@FOptions)^ shl 8;
+    Opts := PByte(@AOptions)^ shl 8;
     Result := Result + isc_spb_options + PAnsiChar(@Opts)[0] +
       PAnsiChar(@Opts)[1] + PAnsiChar(@Opts)[2] + PAnsiChar(@Opts)[3];
   end;
@@ -3706,20 +3723,21 @@ begin
       PAnsiChar(@FPageSize)[1] + PAnsiChar(@FPageSize)[2] + PAnsiChar(@FPageSize)[3];
 
 {$IFDEF FB25_UP}
-    if FFixDataCharset <> '' then
-    begin
-      Result := Result + isc_spb_res_fix_fss_data;
-      Len := Length(FFixDataCharset);
-      Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
-      Result := Result + FFixDataCharset;
-    end;
-    if FFixMetadataCharset <> '' then
-    begin
-      Result := Result + isc_spb_res_fix_fss_metadata;
-      Len := Length(FFixMetadataCharset);
-      Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
-      Result := Result + FFixMetadataCharset;
-    end;
+  if FixData then
+  begin
+    Result := Result + isc_spb_res_fix_fss_data;
+    Len := Length(CharacterSetStr[FFixDataCharset]);
+    Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
+    Result := Result + CharacterSetStr[FFixDataCharset];
+  end;
+
+  if FixMeta then
+  begin
+    Result := Result + isc_spb_res_fix_fss_metadata;
+    Len := Length(CharacterSetStr[FFixMetadataCharset]);
+    Result := Result + PAnsiChar(@Len)[0] + PAnsiChar(@Len)[1];
+    Result := Result + CharacterSetStr[FFixMetadataCharset];
+  end;
 {$ENDIF}
 end;
 
