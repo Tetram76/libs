@@ -27,9 +27,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-04-01 22:21:53 +0200 (ven., 01 avr. 2011)                          $ }
-{ Revision:      $Rev:: 3516                                                                     $ }
-{ Author:        $Author:: jfudickar                                                             $ }
+{ Last modified: $Date:: 2011-06-09 22:56:20 +0200 (jeu., 09 juin 2011)                          $ }
+{ Revision:      $Rev:: 3527                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -214,6 +214,7 @@ type
   TJclSimpleXMLElemsProlog = class(TObject)
   private
     FElems: THashedStringList;
+    FSimpleXml: TJclSimpleXml;
     function GetCount: Integer;
     function GetItem(const Index: Integer): TJclSimpleXMLElem;
     function GetEncoding: string;
@@ -242,6 +243,7 @@ type
     property Item[const Index: Integer]: TJclSimpleXMLElem read GetItem; default;
     property Count: Integer read GetCount;
     property Encoding: string read GetEncoding write SetEncoding;
+    property SimpleXML: TJclSimpleXML read FSimpleXML;
     property StandAlone: Boolean read GetStandAlone write SetStandAlone;
     property Version: string read GetVersion write SetVersion;
   end;
@@ -598,8 +600,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 3516 $';
-    Date: '$Date: 2011-04-01 22:21:53 +0200 (ven., 01 avr. 2011) $';
+    Revision: '$Revision: 3527 $';
+    Date: '$Date: 2011-06-09 22:56:20 +0200 (jeu., 09 juin 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1025,6 +1027,7 @@ begin
   FRoot := TJclSimpleXMLElemClassic.Create(nil);
   FRoot.FSimpleXML := Self;
   FProlog := TJclSimpleXMLElemsProlog.Create;
+  FProlog.FSimpleXML := Self;
   FOptions := [sxoAutoIndent, sxoAutoEncodeValue, sxoAutoEncodeEntity];
   FIndentString := '  ';
 end;
@@ -1200,7 +1203,7 @@ procedure TJclSimpleXML.LoadFromString(const Value: string);
 var
   Stream: TStringStream;
 begin
-  Stream := TStringStream.Create(Value {$IFDEF SUPPORTS_UNICODE}, CP_UTF16LE{$ENDIF});
+  Stream := TStringStream.Create(Value {$IFDEF SUPPORTS_UNICODE}, TEncoding.Unicode{$ENDIF});
   try
     LoadFromStream(Stream {$IFDEF SUPPORTS_UNICODE}, seUTF16, CP_UTF16LE{$ENDIF});
   finally
@@ -1325,7 +1328,7 @@ function TJclSimpleXML.SaveToString: string;
 var
   Stream: TStringStream;
 begin
-  Stream := TStringStream.Create('' {$IFDEF SUPPORTS_UNICODE}, CP_UTF16LE{$ENDIF});
+  Stream := TStringStream.Create('' {$IFDEF SUPPORTS_UNICODE}, TEncoding.Unicode{$ENDIF});
   try
     SaveToStream(Stream);
     Result := Stream.DataString;
@@ -3416,8 +3419,24 @@ end;
 //=== { TJclSimpleXMLElemHeader } ============================================
 
 function TJclSimpleXMLElemHeader.GetEncoding: string;
+var
+  ASimpleXml: TJclSimpleXml;
+  DefaultCodePage: Word;
 begin
-  Result := Properties.Value('encoding', 'iso-8859-1');
+  ASimpleXml := SimpleXml;
+  if Assigned(ASimpleXml) then
+    DefaultCodePage := ASimpleXml.FCodePage
+  else
+    {$IFDEF UNICODE}
+    DefaultCodePage := CP_UTF16LE;
+    {$ELSE ~UNICODE}
+    {$IFDEF MSWINDOWS}
+    DefaultCodePage := GetACP;
+    {$ELSE ~MSWINDOWS}
+    DefaultCodePage := 1252;
+    {$ENDIF ~MSWINDOWS}
+    {$ENDIF ~UNICODE}
+  Result := Properties.Value('encoding', CharsetNameFromCodePage(DefaultCodePage));
 end;
 
 function TJclSimpleXMLElemHeader.GetStandalone: Boolean;
@@ -4080,6 +4099,7 @@ begin
   // (p3) if we get here, an xml header was not found
   Result := TJclSimpleXMLElemHeader.Create(nil);
   Result.Name := 'xml';
+  Result.FSimpleXml := FSimpleXml;
   FElems.AddObject('', Result);
 end;
 
