@@ -26,9 +26,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-05-27 22:35:51 +0200 (ven., 27 mai 2011)                           $ }
-{ Revision:      $Rev:: 3523                                                                     $ }
-{ Author:        $Author:: mbeutel                                                               $ }
+{ Last modified: $Date:: 2011-06-11 00:28:21 +0200 (sam., 11 juin 2011)                          $ }
+{ Revision:      $Rev:: 3530                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -94,8 +94,8 @@ function JclBelongsHookedCode(Address: Pointer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclHookExcept.pas $';
-    Revision: '$Revision: 3523 $';
-    Date: '$Date: 2011-05-27 22:35:51 +0200 (ven., 27 mai 2011) $';
+    Revision: '$Revision: 3530 $';
+    Date: '$Date: 2011-06-11 00:28:21 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -567,7 +567,11 @@ end;
 
 function GetCppRtlBase: Pointer;
 begin
+  {$IFDEF SUPPORTS_DELAYED_LOADING}
   Result := Pointer (FindHInstance (System.pfnDliNotifyHook)); { hooked by C++ RTL upon startup }
+  {$ELSE}
+  Result := nil; // not supported
+  {$ENDIF SUPPORTS_DELAYED_LOADING}
 end;
 
 function HasCppRtl: Boolean;
