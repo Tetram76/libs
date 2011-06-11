@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-06-09 22:56:20 +0200 (jeu., 09 juin 2011)                          $ }
-{ Revision:      $Rev:: 3527                                                                     $ }
+{ Last modified: $Date:: 2011-06-10 21:12:56 +0200 (ven., 10 juin 2011)                          $ }
+{ Revision:      $Rev:: 3529                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -600,8 +600,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 3527 $';
-    Date: '$Date: 2011-06-09 22:56:20 +0200 (jeu., 09 juin 2011) $';
+    Revision: '$Revision: 3529 $';
+    Date: '$Date: 2011-06-10 21:12:56 +0200 (ven., 10 juin 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1279,9 +1279,15 @@ begin
 
     case Encoding of
       seUTF8:
-        AStringStream := TJclUTF8Stream.Create(AOutStream, False);
+        begin
+          AStringStream := TJclUTF8Stream.Create(AOutStream, False);
+          FCodePage := CP_UTF8;
+        end;
       seUTF16:
-        AStringStream := TJclUTF16Stream.Create(AOutStream, False);
+        begin
+          AStringStream := TJclUTF16Stream.Create(AOutStream, False);
+          FCodePage := CP_UTF16LE;
+        end
     else
       AStringStream := TJclAnsiStream.Create(AOutStream);
       TJclAnsiStream(AStringStream).CodePage := CodePage;
@@ -3425,7 +3431,13 @@ var
 begin
   ASimpleXml := SimpleXml;
   if Assigned(ASimpleXml) then
-    DefaultCodePage := ASimpleXml.FCodePage
+  begin
+    DefaultCodePage := ASimpleXml.FCodePage;
+    {$IFDEF MSWINDOWS}
+    if DefaultCodePage = CP_ACP then
+      DefaultCodePage := GetAcp;
+    {$ENDIF MSWINDOWS}
+  end
   else
     {$IFDEF UNICODE}
     DefaultCodePage := CP_UTF16LE;
