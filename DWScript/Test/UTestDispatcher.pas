@@ -23,7 +23,7 @@ Type
 
   TDispCallProxyFunc = Class(TInternalFunction)
 
-   Procedure Execute(info : TProgramInfo); Override;
+   Procedure Execute; Override;
 
   End;
 
@@ -167,9 +167,11 @@ End;
 { TDispCallProxyFunc }
 
 //
-Procedure TDispCallProxyFunc.Execute(info : TProgramInfo);
+Procedure TDispCallProxyFunc.Execute;
 Begin
+
  Info.ResultAsVariant := TDispItem.Create As IDispatch;
+
 End;
 //
 

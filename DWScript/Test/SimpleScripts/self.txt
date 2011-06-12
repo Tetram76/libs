@@ -1,6 +1,0 @@
-nil
-Object not instantiated [line: 34, column: 6]
-TBase
-1
-TChild
-200

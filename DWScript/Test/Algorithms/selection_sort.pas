@@ -64,8 +64,5 @@ var data : TData;
 ShuffleData(data);
 
 SelectionSort(data);
-Print('Swaps: ');
-if swaps>=75 then
-   PrintLn('>=75')
-else PrintLn('<75');
+PrintLn('Swaps: ' + IntToStr(swaps));
 ShowData(data);

@@ -1,4 +1,4 @@
-Swaps: >=100
+Swaps: 165
 Data:
 0
 1

@@ -3,7 +3,7 @@ unit UCOMConnectorTests;
 interface
 
 uses Windows, Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs,
-   dwsComConnector, Variants, ActiveX, ComObj, dwsXPlatform, dwsUtils;
+   dwsComConnector, Variants, ActiveX, ComObj, dwsXPlatform;
 
 type
 
@@ -106,7 +106,7 @@ procedure TCOMConnectorTests.Compilation;
 var
    source : TStringList;
    i : Integer;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
 begin
    source:=TStringList.Create;
    try
@@ -116,7 +116,11 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-         CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         finally
+            prog.Free;
+         end;
 
       end;
 
@@ -137,7 +141,7 @@ end;
 //
 procedure TCOMConnectorTests.CompilationWithMapAndSymbols;
 begin
-   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap];
    Compilation;
 end;
 
@@ -145,7 +149,7 @@ end;
 //
 procedure TCOMConnectorTests.ExecutionNonOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coAssertions];
+   FCompiler.Config.CompilerOptions:=[];
    Execution;
 end;
 
@@ -153,7 +157,7 @@ end;
 //
 procedure TCOMConnectorTests.ExecutionOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coOptimize, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coOptimize];
    Execution;
 end;
 
@@ -163,11 +167,11 @@ procedure TCOMConnectorTests.CompilationFailure;
 var
    source : TStringList;
    i : Integer;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
    expectedError : TStringList;
    expectedErrorsFileName : String;
 begin
-   FCompiler.Config.CompilerOptions:=[coOptimize, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coOptimize];
    source:=TStringList.Create;
    expectedError:=TStringList.Create;
    try
@@ -177,12 +181,15 @@ begin
          source.LoadFromFile(FFailures[i]);
 
          prog:=FCompiler.Compile(source.Text);
-
-         expectedErrorsFileName:=ChangeFileExt(FFailures[i], '.txt');
-         if FileExists(expectedErrorsFileName) then begin
-            expectedError.LoadFromFile(expectedErrorsFileName);
-            CheckEquals(expectedError.Text, prog.Msgs.AsInfo, FFailures[i]);
-         end else Check(prog.Msgs.AsInfo<>'', FFailures[i]+': undetected error');
+         try
+            expectedErrorsFileName:=ChangeFileExt(FFailures[i], '.txt');
+            if FileExists(expectedErrorsFileName) then begin
+               expectedError.LoadFromFile(expectedErrorsFileName);
+               CheckEquals(expectedError.Text, prog.Msgs.AsInfo, FFailures[i]);
+            end else Check(prog.Msgs.AsInfo<>'', FFailures[i]+': undetected error');
+         finally
+            prog.Free;
+         end;
 
       end;
 
@@ -198,8 +205,7 @@ procedure TCOMConnectorTests.Execution;
 var
    source, expectedResult : TStringList;
    i : Integer;
-   prog : IdwsProgram;
-   exec : IdwsProgramExecution;
+   prog : TdwsProgram;
    resultsFileName : String;
    output : String;
 begin
@@ -212,22 +218,25 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-
-         CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
-         exec:=prog.Execute;
-         if exec.Msgs.Count=0 then
-            output:=exec.Result.ToString
-         else begin
-            output:= 'Errors >>>>'#13#10
-                    +exec.Msgs.AsInfo
-                    +'Result >>>>'#13#10
-                    +exec.Result.ToString;
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+            prog.Execute;
+            if prog.Msgs.Count=0 then
+               output:=(prog.Result as TdwsDefaultResult).Text
+            else begin
+               output:= 'Errors >>>>'#13#10
+                       +prog.Msgs.AsInfo
+                       +'Result >>>>'#13#10
+                       +(prog.Result as TdwsDefaultResult).Text;
+            end;
+            resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+            if FileExists(resultsFileName) then begin
+               expectedResult.LoadFromFile(resultsFileName);
+               CheckEquals(expectedResult.Text, output, FTests[i]);
+            end else CheckEquals('', output, FTests[i]);
+         finally
+            prog.Free;
          end;
-         resultsFileName:=ChangeFileExt(FTests[i], '.txt');
-         if FileExists(resultsFileName) then begin
-            expectedResult.LoadFromFile(resultsFileName);
-            CheckEquals(expectedResult.Text, output, FTests[i]);
-         end else CheckEquals('', output, FTests[i]);
 
       end;
 

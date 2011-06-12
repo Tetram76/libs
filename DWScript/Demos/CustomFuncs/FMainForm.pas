@@ -52,15 +52,17 @@ end;
 
 procedure TMainForm.BURunClick(Sender: TObject);
 var
-   prog : IdwsProgram;
-   exec : IdwsProgramExecution;
+   prog : TdwsProgram;
 begin
    prog:=DelphiWebScript.Compile(MECode.Lines.Text);
-
-   if prog.Msgs.Count=0 then begin
-      exec:=prog.Execute;
-      MEResult.Lines.Text:=exec.Result.ToString;
-   end else MEResult.Lines.Text:=prog.Msgs.AsInfo;
+   try
+      if prog.Msgs.Count=0 then begin
+         prog.Execute;
+         MEResult.Lines.Text:=(prog.Result as TdwsDefaultResult).Text;
+      end else MEResult.Lines.Text:=prog.Msgs.AsInfo;
+   finally
+      prog.Free;
+   end;
 end;
 
 end.

@@ -4,13 +4,10 @@ Demonstrates that OOP really works in DWSII!
 
 type 
   TClassA = class
-  protected
+  private
     str: string;
-  public
     constructor Create; virtual;
     class procedure Test; virtual;
-
-	property strProp : String read str;
   end;
 
 type
@@ -48,6 +45,6 @@ var
 cls := TClassB;
 o := cls.Create;
 
-PrintLn(o.strProp);
+PrintLn(o.str);
 o.test;  // call static method
 TClassB(o).test;

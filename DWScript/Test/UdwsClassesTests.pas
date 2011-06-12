@@ -3,7 +3,7 @@ unit UdwsClassesTests;
 interface
 
 uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs,
-   dwsClassesLibModule, dwsXPlatform, dwsSymbols, dwsUtils;
+   dwsClassesLibModule, dwsXPlatform, dwsSymbols;
 
 type
 
@@ -28,8 +28,6 @@ type
          procedure ExecutionOptimized;
 
          procedure SymbolDescriptions;
-
-         procedure CallAfterExec;
    end;
 
 // ------------------------------------------------------------------
@@ -75,7 +73,7 @@ procedure TdwsClassesTests.Compilation;
 var
    source : TStringList;
    i : Integer;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
 begin
    source:=TStringList.Create;
    try
@@ -85,7 +83,11 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-         CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         finally
+            prog.Free;
+         end;
 
       end;
 
@@ -106,7 +108,7 @@ end;
 //
 procedure TdwsClassesTests.CompilationWithMapAndSymbols;
 begin
-   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap];
    Compilation;
 end;
 
@@ -114,7 +116,7 @@ end;
 //
 procedure TdwsClassesTests.ExecutionNonOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coAssertions];
+   FCompiler.Config.CompilerOptions:=[];
    Execution;
 end;
 
@@ -122,7 +124,7 @@ end;
 //
 procedure TdwsClassesTests.ExecutionOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coOptimize, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coOptimize];
    Execution;
 end;
 
@@ -130,13 +132,17 @@ end;
 //
 procedure TdwsClassesTests.SymbolDescriptions;
 var
-   prog : IdwsProgram;
+   prog : TdwsProgram;
    stringsSymbol : TClassSymbol;
 begin
    prog:=FCompiler.Compile('');
-   stringsSymbol:=prog.Table.FindSymbol('TStrings', cvMagic) as TClassSymbol;
-   CheckEquals('property Strings[x: Integer]: String read GetStrings write SetStrings; default;',
-               stringsSymbol.Members.FindSymbol('Strings', cvPublic).Description, 'Strings Description');
+   try
+      stringsSymbol:=prog.Table.FindSymbol('TStrings') as TClassSymbol;
+      CheckEquals('property Strings[x: Integer]: String read GetStrings write SetStrings; default;',
+                  stringsSymbol.Members.FindSymbol('Strings').Description, 'Strings Description');
+   finally
+      prog.Free;
+   end;
 end;
 
 // Execution
@@ -145,8 +151,7 @@ procedure TdwsClassesTests.Execution;
 var
    source, expectedResult : TStringList;
    i : Integer;
-   prog : IdwsProgram;
-   exec : IdwsProgramExecution;
+   prog : TdwsProgram;
    resultsFileName : String;
 begin
    source:=TStringList.Create;
@@ -158,54 +163,24 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-
-         CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
-         exec:=prog.Execute;
-         resultsFileName:=ChangeFileExt(FTests[i], '.txt');
-         if FileExists(resultsFileName) then begin
-            expectedResult.LoadFromFile(resultsFileName);
-            CheckEquals(expectedResult.Text, exec.Result.ToString, FTests[i]);
-         end else CheckEquals('', exec.Result.ToString, FTests[i]);
-         CheckEquals('', exec.Msgs.AsInfo, FTests[i]);
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+            prog.Execute;
+            resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+            if FileExists(resultsFileName) then begin
+               expectedResult.LoadFromFile(resultsFileName);
+               CheckEquals(expectedResult.Text, (prog.Result as TdwsDefaultResult).Text, FTests[i]);
+            end else CheckEquals('', (prog.Result as TdwsDefaultResult).Text, FTests[i]);
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         finally
+            prog.Free;
+         end;
 
       end;
 
    finally
       expectedResult.Free;
       source.Free;
-   end;
-end;
-
-// CallAfterExec
-//
-procedure TdwsClassesTests.CallAfterExec;
-var
-   prog : IdwsProgram;
-   exec : IdwsProgramExecution;
-   func : IInfo;
-begin
-   prog:=FCompiler.Compile( 'var s = TStrings.Create;'#13#10
-                           +'s.Add("Line 1");'#13#10
-                           +'s.Add("Line 2");'#13#10
-                           +'procedure MyProc;'#13#10
-                           +'begin'#13#10
-                           +'  Print(s.Count)'#13#10
-                           +'end;'#13#10
-                           +'Print(s.Text)');
-   CheckEquals('', prog.Msgs.AsInfo);
-
-   exec:=prog.BeginNewExecution;
-   try
-      exec.RunProgram(0);
-
-      CheckEquals('Line 1'#13#10'Line 2'#13#10, exec.Result.ToString);
-
-      func:=exec.Info.Func['MyProc'];
-      func.Call([]);
-
-      CheckEquals('Line 1'#13#10'Line 2'#13#10'2', exec.Result.ToString);
-   finally
-      exec.EndProgram;
    end;
 end;
 

@@ -10,7 +10,10 @@
 {    or implied. See the License for the specific language             }
 {    governing rights and limitations under the License.               }
 {                                                                      }
-{    Copyright Creative IT.                                            }
+{    The Initial Developer of the Original Code is Matthias            }
+{    Ackermann. For other initial contributors, see contributors.txt   }
+{    Subsequent portions Copyright Creative IT.                        }
+{                                                                      }
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
@@ -19,7 +22,7 @@ unit dwsUtils;
 
 interface
 
-uses Classes, SysUtils, Variants, SyncObjs, dwsXPlatform;
+uses Classes, SysUtils, Variants;
 
 type
 
@@ -56,13 +59,13 @@ type
       Make sure to Clear or Clean in the destructor of the Owner. }
    TTightList = record
       private
-         FList : PPointerList;
+         FList: PPointerList;
 
          procedure RaiseIndexOutOfBounds;
          function GetList : PPointerList; inline;
 
       public
-         FCount : Integer;     // exposed so it can be used for direct property access
+         FCount: Integer;     // exposed so it can be used for direct property access
 
          property List : PPointerList read GetList;
          property Count : Integer read FCount;
@@ -80,53 +83,10 @@ type
          procedure Exchange(index1, index2 : Integer);
    end;
 
-   // TTightStack
-   //
-   {: Embeddable stack functionality }
-   TTightStack = record
-      private
-         FList : PPointerList;
-         FCount : Integer;
-         FCapacity : Integer;
-
-         procedure Grow;
-
-      public
-         procedure Push(item : Pointer); inline;
-         function  Peek : Pointer; inline;
-         procedure Pop; inline;
-
-         procedure Clear; inline;
-         procedure Free;
-
-         property List : PPointerList read FList;
-         property Count : Integer read FCount;
-   end;
-
-   // TObjectList
-   //
-   {: A simple generic object list, owns objects }
-   TObjectList<T: class> = class
-      private
-         FItems : array of T;
-         FCount : Integer;
-      protected
-         function GetItem(index : Integer) : T;
-         procedure SetItem(index : Integer; const item : T);
-      public
-         destructor Destroy; override;
-         function Add(const anItem : T) : Integer;
-         function IndexOf(const anItem : T) : Integer;
-         procedure ExtractAll;
-         procedure Clear;
-         property Items[index : Integer] : T read GetItem write SetItem; default;
-         property Count : Integer read FCount;
-   end;
-
    // TSortedList
    //
-   {: List that maintains its elements sorted, subclasses must override Compare }
-   TSortedList<T: class> = class
+   {: List that maintains its elements sorted }
+   TSortedList<T> = class
       private
          FItems : array of T;
          FCount : Integer;
@@ -138,78 +98,31 @@ type
       public
          function Add(const anItem : T) : Integer;
          function AddOrFind(const anItem : T; var added : Boolean) : Integer;
-         function Extract(const anItem : T) : Integer;
          function IndexOf(const anItem : T) : Integer;
          procedure Clear;
-         procedure Clean;
          property Items[index : Integer] : T read GetItem; default;
          property Count : Integer read FCount;
    end;
 
    // TSimpleStack<T>
    //
-   {: A minimalistic generic stack.
-      Note that internal array items are NOT cleared on Pop, for refcounted types,
-      you need to clear yourself manually via Peek. }
+   {: A minimalistic generic stack }
    TSimpleStack<T> = class
       private
          FItems : array of T;
          FCount : Integer;
-         FCapacity : Integer;
       protected
-         procedure Grow;
-         function GetPeek : T; inline;
+         function GetPeek : T;
          procedure SetPeek(const item : T);
          function GetItems(const position : Integer) : T;
          procedure SetItems(const position : Integer; const value : T);
       public
          procedure Push(const item : T);
-         procedure Pop; inline;
+         function Pop : T;
          procedure Clear;
          property Peek : T read GetPeek write SetPeek;
          property Items[const position : Integer] : T read GetItems write SetItems;
          property Count : Integer read FCount;
-   end;
-
-   TSimpleHashBucket<T> = record
-      HashCode : Integer;
-      Value : T;
-   end;
-   TSimpleHashBucketArray<T> = array of TSimpleHashBucket<T>;
-
-   {: Minimalistic open-addressing hash, subclasses must override SameItem and GetItemHashCode.
-      HashCodes *MUST* be non zero }
-   TSimpleHash<T> = class
-      private
-         FBuckets : TSimpleHashBucketArray<T>;
-         FCount : Integer;
-         FGrowth : Integer;
-         FCapacity : Integer;
-
-      protected
-         procedure Grow;
-         function HashBucket(const hashCode : Integer) : Integer; inline;
-         function LinearFind(const item : T; var index : Integer) : Boolean;
-         function SameItem(const item1, item2 : T) : Boolean; virtual; abstract;
-         // hashCode must be non-null
-         function GetItemHashCode(const item1 : T) : Integer; virtual; abstract;
-
-      public
-         function Add(const anItem : T) : Boolean; // true if added
-         function Extract(const anItem : T) : Boolean; // true if extracted
-         function Contains(const anItem : T) : Boolean;
-         procedure Clear;
-
-         property Count : Integer read FCount;
-   end;
-
-   TSimpleObjectHash<T: Class> = class(TSimpleHash<T>)
-      protected
-         function SameItem(const item1, item2 : T) : Boolean; override;
-         function GetItemHashCode(const item1 : T) : Integer; override;
-
-      public
-         procedure Clean;
    end;
 
 const
@@ -242,9 +155,6 @@ type
          function Write(const buffer; count: Longint): Longint; override;
          // must be strictly an utf16 string
          procedure WriteString(const utf16String : String);
-         procedure WriteSubString(const utf16String : String; startPos : Integer); overload;
-         procedure WriteSubString(const utf16String : String; startPos, length : Integer); overload;
-         procedure WriteChar(utf16Char : Char);
          // assumes data is an utf16 string
          function ToString : String; override;
 
@@ -261,9 +171,6 @@ procedure ChangeObjectClass(ref : TObject; newClass : TClass);
 
 procedure UnifyAssignString(const fromStr : String; var toStr : String);
 procedure TidyStringsUnifier;
-
-function UnicodeCompareText(const s1, s2 : String) : Integer;
-function UnicodeSameText(const s1, s2 : String) : Boolean;
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -297,7 +204,6 @@ type
 
 var
    vCharStrings : array [0..127] of TStringList;
-   vUnifierLock : TCriticalSection;
 
 // CompareStrings
 //
@@ -319,12 +225,12 @@ begin
       i:=Ord(fromStr[1]);
       if i<=High(vCharStrings) then begin
          sl:=vCharStrings[i];
-         vUnifierLock.Enter;
+         System.MonitorEnter(sl);
          i:=sl.IndexOf(fromStr);
          if i<0 then
             i:=sl.Add(fromStr);
          toStr:=TStringListCracker(sl).FList[i].FString;
-         vUnifierLock.Leave;
+         System.MonitorExit(sl);
       end else toStr:=fromStr;
    end;
 end;
@@ -338,76 +244,10 @@ var
 begin
    for i:=Low(vCharStrings) to High(vCharStrings) do begin
       sl:=vCharStrings[i];
-      vUnifierLock.Enter;
+      System.MonitorEnter(sl);
       sl.Clear;
-      vUnifierLock.Leave;
+      System.MonitorExit(sl);
    end;
-end;
-
-// UnicodeCompareLen
-//
-function UnicodeCompareLen(p1, p2 : PChar; n : Integer) : Integer;
-var
-   i : Integer;
-   remaining : Integer;
-   c1, c2 : Integer;
-begin
-   for i:=1 to n do begin
-      c1:=Ord(p1^);
-      c2:=Ord(p2^);
-      if (c1<>c2) then begin
-         if (c1<=127) and (c2<=127) then begin
-            if c1 in [Ord('a')..Ord('z')] then
-               c1:=c1+Ord('A')-Ord('a');
-            if c2 in [Ord('a')..Ord('z')] then
-               c2:=c2+Ord('A')-Ord('a');
-            if c1<>c2 then begin
-               Result:=c1-c2;
-               Exit;
-            end;
-         end else begin
-            remaining:=n-i+1;
-            Result:=UnicodeComparePChars(p1, remaining, p2, remaining);
-            Exit;
-         end;
-      end;
-      Inc(p1);
-      Inc(p2);
-   end;
-   Result:=0;
-end;
-
-// UnicodeCompareText
-//
-function UnicodeCompareText(const s1, s2 : String) : Integer;
-var
-   n1, n2, dn : Integer;
-begin
-   if S1<>'' then begin
-      if S2<>'' then begin
-         n1:=Length(s1);
-         n2:=Length(s2);
-         dn:=n1-n2;
-         if dn<0 then begin
-            Result:=UnicodeCompareLen(PChar(NativeInt(s1)), PChar(NativeInt(s2)), n1);
-            if Result=0 then
-               Result:=-1;
-         end else begin
-            Result:=UnicodeCompareLen(PChar(NativeInt(S1)), PChar(NativeInt(s2)), n2);
-            if (Result=0) and (dn>0) then
-               Result:=1;
-         end;
-      end else Result:=1;
-   end else if S2<>'' then
-      Result:=-1
-   else Result:=0;
-end;
-
-// UnicodeSameText
-//
-function UnicodeSameText(const s1, s2 : String) : Boolean;
-begin
-   Result:=(UnicodeCompareText(s1, s2)=0);
 end;
 
 // InitializeStringsUnifier
@@ -416,7 +256,6 @@ procedure InitializeStringsUnifier;
 var
    i : Integer;
 begin
-   vUnifierLock:=TCriticalSection.Create;
    for i:=Low(vCharStrings) to High(vCharStrings) do begin
       vCharStrings[i]:=TFastCompareStringList.Create;
       vCharStrings[i].Sorted:=True;
@@ -431,7 +270,6 @@ var
 begin
    for i:=Low(vCharStrings) to High(vCharStrings) do
       FreeAndNil(vCharStrings[i]);
-   FreeAndNil(vUnifierLock);
 end;
 
 // ------------------
@@ -781,71 +619,6 @@ begin
 end;
 
 // ------------------
-// ------------------ TObjectList<T> ------------------
-// ------------------
-
-// Destroy
-//
-destructor TObjectList<T>.Destroy;
-begin
-   Clear;
-   inherited;
-end;
-
-// GetItem
-//
-function TObjectList<T>.GetItem(index : Integer) : T;
-begin
-   Result:=FItems[index];
-end;
-
-// SetItem
-//
-procedure TObjectList<T>.SetItem(index : Integer; const item : T);
-begin
-   FItems[index]:=item;
-end;
-
-// Add
-//
-function TObjectList<T>.Add(const anItem : T) : Integer;
-begin
-   if Count=Length(FItems) then
-      SetLength(FItems, Count+8+(Count shr 4));
-   FItems[FCount]:=anItem;
-   Inc(FCount);
-end;
-
-// IndexOf
-//
-function TObjectList<T>.IndexOf(const anItem : T) : Integer;
-var
-   i : Integer;
-begin
-   for i:=0 to Count-1 do
-      if FItems[i]=anItem then Exit(i);
-   Result:=-1;
-end;
-
-// ExtractAll
-//
-procedure TObjectList<T>.ExtractAll;
-begin
-   FCount:=0;
-end;
-
-// Clear
-//
-procedure TObjectList<T>.Clear;
-var
-   i : Integer;
-begin
-   for i:=FCount-1 downto 0 do
-      FItems[i].Free;
-   FCount:=0;
-end;
-
-// ------------------
 // ------------------ TSortedList<T> ------------------
 // ------------------
 
@@ -908,19 +681,6 @@ begin
       InsertItem(Result, anItem);
 end;
 
-// Extract
-//
-function TSortedList<T>.Extract(const anItem : T) : Integer;
-var
-   i : Integer;
-begin
-   if Find(anItem, Result) then begin
-      Move(FItems[Result+1], FItems[Result], (FCount-Result-1)*SizeOf(T));
-      SetLength(FItems, FCount-1);
-      Dec(FCount);
-   end else Result:=-1;
-end;
-
 // IndexOf
 //
 function TSortedList<T>.IndexOf(const anItem : T) : Integer;
@@ -937,41 +697,28 @@ begin
    FCount:=0;
 end;
 
-// Clean
-//
-procedure TSortedList<T>.Clean;
-var
-   i : Integer;
-begin
-   for i:=0 to FCount-1 do
-      FItems[i].Free;
-end;
-
 // ------------------
 // ------------------ TSimpleStack<T> ------------------
 // ------------------
 
-// Grow
-//
-procedure TSimpleStack<T>.Grow;
-begin
-   FCapacity:=FCapacity+8+(FCapacity shr 2);
-   SetLength(FItems, FCapacity);
-end;
-
 // Push
 //
 procedure TSimpleStack<T>.Push(const item : T);
+var
+   capacity : Integer;
 begin
-   if FCount=FCapacity then Grow;
+   capacity:=Length(FItems);
+   if FCount=capacity then
+      SetLength(FItems, capacity+8+(capacity shr 2));
    FItems[FCount]:=item;
    Inc(FCount);
 end;
 
 // Pop
 //
-procedure TSimpleStack<T>.Pop;
+function TSimpleStack<T>.Pop : T;
 begin
+   Result:=FItems[FCount-1];
    Dec(FCount);
 end;
 
@@ -1009,7 +756,6 @@ procedure TSimpleStack<T>.Clear;
 begin
    SetLength(FItems, 0);
    FCount:=0;
-   FCapacity:=0;
 end;
 
 // ------------------
@@ -1158,11 +904,8 @@ begin
          newBlock[0]:=FCurrentBlock;
          PInteger(@newBlock[1])^:=count;
          Move(source^, newBlock[2], count);
-         if FFirstBlock=nil then
-            FFirstBlock:=newBlock
-         else FCurrentBlock[0]:=newBlock;
-         FCurrentBlock:=newBlock;
-         AllocateCurrentBlock;
+         if FFirstBlock=FCurrentBlock then
+            FFirstBlock:=newBlock;
          Exit;
       end;
    end;
@@ -1184,13 +927,6 @@ begin
    end;
 end;
 
-// WriteChar
-//
-procedure TWriteOnlyBlockStream.WriteChar(utf16Char : Char);
-begin
-   Write(utf16Char, SizeOf(Char));
-end;
-
 // ToString
 //
 function TWriteOnlyBlockStream.ToString : String;
@@ -1209,217 +945,6 @@ end;
 function TWriteOnlyBlockStream.GetSize: Int64;
 begin
    Result:=FTotalSize;
-end;
-
-// WriteSubString
-//
-procedure TWriteOnlyBlockStream.WriteSubString(const utf16String : String; startPos : Integer);
-begin
-   WriteSubString(utf16String, startPos, Length(utf16String)-startPos+1);
-end;
-
-// WriteSubString
-//
-procedure TWriteOnlyBlockStream.WriteSubString(const utf16String : String; startPos, length : Integer);
-var
-   p, n : Integer;
-begin
-   Assert(startPos>=1);
-   if length<=0 then Exit;
-   n:=System.Length(utf16String);
-   if startPos>n then Exit;
-   p:=startPos+length-1;
-   if p>n then p:=n;
-   length:=p-startPos+1;
-   if length>0 then
-      Write(utf16String[startPos], length*SizeOf(Char));
-end;
-
-// ------------------
-// ------------------ TTightStack ------------------
-// ------------------
-
-// Grow
-//
-procedure TTightStack.Grow;
-begin
-   FCapacity:=FCapacity+8+FCapacity shr 1;
-   ReallocMem(FList, FCapacity*SizeOf(Pointer));
-end;
-
-// Push
-//
-procedure TTightStack.Push(item : Pointer);
-begin
-   if FCount=FCapacity then Grow;
-   FList[FCount]:=item;
-   Inc(FCount);
-end;
-
-// Peek
-//
-function TTightStack.Peek : Pointer;
-begin
-   Result:=FList[FCount-1];
-end;
-
-// Pop
-//
-procedure TTightStack.Pop;
-begin
-   Dec(FCount);
-end;
-
-// Clear
-//
-procedure TTightStack.Clear;
-begin
-   FCount:=0;
-end;
-
-// Free
-//
-procedure TTightStack.Free;
-begin
-   FCount:=0;
-   FCapacity:=0;
-   FreeMem(FList);
-   FList:=nil;
-end;
-
-// ------------------
-// ------------------ TSimpleHash<T> ------------------
-// ------------------
-
-// Grow
-//
-procedure TSimpleHash<T>.Grow;
-var
-   i, j, n : Integer;
-   hashCode : Integer;
-   oldBuckets : TSimpleHashBucketArray<T>;
-begin
-   if FCapacity=0 then
-      FCapacity:=16
-   else FCapacity:=FCapacity*2;
-   FGrowth:=(FCapacity*3) div 4;
-
-   oldBuckets:=FBuckets;
-   FBuckets:=nil;
-   SetLength(FBuckets, FCapacity);
-
-   n:=FCapacity-1;
-   for i:=0 to High(oldBuckets) do begin
-      if oldBuckets[i].HashCode=0 then continue;
-      j:=HashBucket(oldBuckets[i].HashCode);
-      while FBuckets[j].HashCode<>0 do
-         j:=(j+1) and n;
-      FBuckets[j]:=oldBuckets[i];
-   end;
-end;
-
-// HashBucket
-//
-function TSimpleHash<T>.HashBucket(const hashCode : Integer) : Integer;
-begin
-   Result:=hashCode and (FCapacity-1); // capacity is a power of two
-end;
-
-// LinearFind
-//
-function TSimpleHash<T>.LinearFind(const item : T; var index : Integer) : Boolean;
-begin
-   repeat
-      if     (FBuckets[index].HashCode<>0)
-         and (not SameItem(item, FBuckets[index].Value)) then Exit;
-      index:=(index+1) and (FCapacity-1);
-   until False;
-end;
-
-// Add
-//
-function TSimpleHash<T>.Add(const anItem : T) : Boolean;
-var
-   i : Integer;
-   hashCode : Integer;
-begin
-   if FCount>=FGrowth then Grow;
-
-   hashCode:=GetItemHashCode(anItem);
-   i:=HashBucket(hashCode);
-   if LinearFind(anItem, i) then Exit(False);
-   FBuckets[i].HashCode:=hashCode;
-   FBuckets[i].Value:=anItem;
-   Inc(FCount);
-end;
-
-// Extract
-//
-function TSimpleHash<T>.Extract(const anItem : T) : Boolean;
-var
-   i : Integer;
-   hashCode : Integer;
-begin
-   hashCode:=GetItemHashCode(anItem);
-   i:=HashBucket(hashCode);
-   Result:=LinearFind(anItem, i);
-   if Result then begin
-      FBuckets[i].HashCode:=0;
-      Dec(FCount);
-   end;
-end;
-
-// Contains
-//
-function TSimpleHash<T>.Contains(const anItem : T) : Boolean;
-var
-   i : Integer;
-begin
-   i:=HashBucket(GetItemHashCode(anItem));
-   Result:=LinearFind(anItem, i);
-end;
-
-// Clear
-//
-procedure TSimpleHash<T>.Clear;
-begin
-   FCount:=0;
-   FCapacity:=0;
-   FGrowth:=0;
-   SetLength(FBuckets, 0);
-end;
-
-// ------------------
-// ------------------ TSimpleObjectHash<T> ------------------
-// ------------------
-
-// SameItem
-//
-function TSimpleObjectHash<T>.SameItem(const item1, item2 : T) : Boolean;
-begin
-   Result:=(item1=item2);
-end;
-
-// GetItemHashCode
-//
-function TSimpleObjectHash<T>.GetItemHashCode(const item1 : T) : Integer;
-var
-   p : NativeInt;
-begin
-   p:=PNativeInt(@item1)^; // workaround compiler issue
-   Result:=(p shr 4)+1;
-end;
-
-// Clean
-//
-procedure TSimpleObjectHash<T>.Clean;
-var
-   i : Integer;
-begin
-   for i:=0 to FCapacity-1 do
-      if FBuckets[i].HashCode<>0 then
-         FBuckets[i].Value.Free;
-   Clear;
 end;
 
 // ------------------------------------------------------------------

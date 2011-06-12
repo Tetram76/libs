@@ -30,8 +30,7 @@ implementation
 
 uses
   Classes, Controls, dwsComp, dwsComConnector, dwsDebugger, dwsGlobalVarsFunctions,
-  dwsVCLGUIFunctions, dwsHtmlFilter, dwsClasses, dwsClassesLibModule,
-  dwsFileSystem, dwsSymbolsLibModule;
+  dwsVCLGUIFunctions, dwsHtmlFilter, dwsClasses, dwsClassesLibModule, dwsFileSystem;
 
 procedure Register;
 begin
@@ -42,7 +41,6 @@ begin
                      TDelphiWebScript,
                      TdwsComConnector,
                      TdwsSimpleDebugger,
-                     TdwsDebugger,
                      TdwsUnit,
                      TdwsHtmlFilter,
                      TdwsGlobalVarsFunctions,

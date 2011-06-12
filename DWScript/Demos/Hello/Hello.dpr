@@ -9,7 +9,7 @@ uses
 procedure DwsHello;
 var
    dws : TDelphiWebScript;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
 begin
    // create the compiler component
    // internal functions (like ShowMessage) register at a global level
@@ -20,22 +20,25 @@ begin
       // compiles the script into a program
       prog:=dws.Compile( 'var s : String = ''Hello World!'';'#13#10
                         +'ShowMessage(s);');
+      try
+         // if there were errors, hints or warnings, you'll find them in the Msgs
+         if prog.Msgs.Count=0 then begin
 
-      // if there were errors, hints or warnings, you'll find them in the Msgs
-      if prog.Msgs.Count=0 then begin
+            // no compilation problem, we can run the script
+            prog.Execute;
+            // in a more complex case, you may want to protect execution with
+            // a try-except, to catch script exception (done in the script with a raise)
+            // or you own exception (happening in Delphi code invoked from the script)
 
-         // no compilation problem, we can run the script
-         prog.Execute;
-         // in a more complex case, you may want to protect execution with
-         // a try-except, to catch script exception (done in the script with a raise)
-         // or your own exception (happening in Delphi code invoked from the script)
+         end else begin
 
-      end else begin
+            // display the compilation problems
+            // you'll have to introduce errors in the above script to get there ;)
+            ShowMessage(prog.Msgs.AsInfo);
 
-         // display the compilation problems
-         // you'll have to introduce errors in the above script to get there ;)
-         ShowMessage(prog.Msgs.AsInfo);
-
+         end;
+      finally
+         prog.Free;
       end;
    finally
       dws.Free;

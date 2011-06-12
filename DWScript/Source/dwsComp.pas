@@ -23,9 +23,9 @@ unit dwsComp;
 interface
 
 uses
-  Variants, Classes, SysUtils, TypInfo, dwsCompiler, dwsExprs, dwsSymbols,
-  dwsStack, dwsFunctions, dwsStrings, dwsFileSystem, dwsLanguageExtension,
-  dwsTokenizer, dwsUtils,
+  Variants, Classes, SysUtils, TypInfo, dwsCompiler, dwsDebugger,
+  dwsExprs, dwsSymbols, dwsStack, dwsFunctions, dwsStrings, dwsFileSystem,
+  dwsLanguageExtension, dwsTokenizer,
   // Built-In functions
 {$IFNDEF DWS_NO_BUILTIN_FUNCTIONS}
   dwsMathFunctions, dwsStringFunctions, dwsTimeFunctions, dwsVariantFunctions,
@@ -103,7 +103,7 @@ type
          constructor Create(AOwner: TComponent); override;
          destructor Destroy; override;
          procedure AddUnit(const Un: IUnit);
-         function Compile(const Text: string): IdwsProgram; virtual;
+         function Compile(const Text: string): TdwsProgram; virtual;
          function RemoveUnit(const Un: IUnit): Boolean;
 
       published
@@ -160,7 +160,6 @@ type
 
   TDataType = string;
   TdwsUnit = class;
-  TdwsGlobal = class;
 
   TdwsSymbol = class(TCollectionItem)
   private
@@ -194,7 +193,7 @@ type
     FSortedSymbols: TdwsSymbolArray;
     function GetSortedItem(Index: Integer): TdwsSymbol;
   protected
-    class function GetSymbolClass : TdwsSymbolClass; virtual; abstract;
+    class function GetSymbolClass : TdwsSymbolClass; virtual;
     function GetSymbols(const Name: String): TdwsSymbol;
     function GetItem(Index: Integer): TdwsSymbol;
     procedure SetItem(Index: Integer; Value: TdwsSymbol);
@@ -221,13 +220,11 @@ type
     property DataType: TDataType read FDataType write FDataType;
   end;
 
-   TdwsVariables = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-         function GetDisplayName: string;
-      public
-         function Add : TdwsGlobal;
-   end;
+  TdwsVariables = class(TdwsCollection)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
+    function GetDisplayName: string;
+  end;
 
   TdwsVariablesClass = class of TdwsVariables;
 
@@ -260,12 +257,10 @@ type
          property DefaultValue: Variant read FDefaultValue write SetDefaultValue;
   end;
 
-   TdwsParameters = class(TdwsVariables)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-      public
-         function Add : TdwsParameter;
-   end;
+  TdwsParameters = class(TdwsVariables)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
+  end;
 
   TdwsFunction = class;
 
@@ -287,7 +282,7 @@ type
     function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
   protected
     function GetDisplayName: string; override;
-    procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); virtual;
+    procedure Call(Caller: TdwsProgram; Func: TFuncSymbol); virtual;
     procedure SetParameters(const Value: TdwsParameters);
     function StoreParameters : Boolean;
   public
@@ -307,12 +302,10 @@ type
     property Deprecated : String read FDeprecated write FDeprecated;
   end;
 
-   TdwsFunctions = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-      public
-         function Add : TdwsFunction;
-   end;
+  TdwsFunctions = class(TdwsCollection)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
+  end;
 
   TdwsFunctionsClass = class of TdwsFunctions;
 
@@ -356,12 +349,9 @@ type
     property Value: Variant read FValue write FValue;
   end;
 
-   TdwsConstants = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-
-      public
-         function Add : TdwsConstant;
+  TdwsConstants = class(TdwsCollection)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
   end;
 
   TdwsConstantsClass = class of TdwsConstants;
@@ -381,25 +371,16 @@ type
 
   TdwsForwardsClass = class of TdwsForwards;
 
-   TdwsField = class(TdwsVariable)
-      private
-         FVisibility : TClassVisibility;
+  TdwsField = class(TdwsVariable)
+  public
+    function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol;
+      override;
+  end;
 
-      protected
-         function GetDisplayName: string; override;
-
-      public
-         constructor Create(Collection: TCollection); override;
-         function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol; override;
-         property Visibility : TClassVisibility read FVisibility write FVisibility default cvPublic;
-   end;
-
-   TdwsFields = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-      public
-         function Add : TdwsField;
-   end;
+  TdwsFields = class(TdwsCollection)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
+  end;
 
   TdwsProperty = class(TdwsSymbol)
   private
@@ -410,7 +391,6 @@ type
     FIsDefault: Boolean;
     FIndexType: TDataType;
     FIndexValue: Variant;
-    FVisibility : TClassVisibility;
   protected
     function GetDisplayName: string; override;
     function GetIsDefault: Boolean;
@@ -424,7 +404,6 @@ type
     function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol; override;
   published
     property DataType: TDataType read FDataType write FDataType;
-    property Visibility : TClassVisibility read FVisibility write FVisibility default cvPublic;
     property ReadAccess: string read FReadAccess write FReadAccess;
     property WriteAccess: string read FWriteAccess write FWriteAccess;
     property Parameters: TdwsParameters read FParameters write SetParameters stored StoreParameters;
@@ -433,12 +412,10 @@ type
     property IndexValue: Variant read FIndexValue write FIndexValue;
   end;
 
-   TdwsProperties = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-      public
-         function Add : TdwsProperty;
-   end;
+  TdwsProperties = class(TdwsCollection)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
+  end;
 
   TdwsClassOperator = class(TdwsSymbol)
   private
@@ -466,80 +443,51 @@ type
 
   TdwsMethod = class(TdwsFunction)
   private
-    FAttributes : TMethodAttributes;
-    FKind : TMethodKind;
-    FOnEval : TMethodEvalEvent;
-    FResultType : TDataType;
-    FVisibility : TClassVisibility;
+    FAttributes: TMethodAttributes;
+    FKind: TMethodKind;
+    FOnEval: TMethodEvalEvent;
+    FResultType: TDataType;
     procedure SetResultType(const Value: TDataType);
   protected
     function GetDisplayName: string; override;
-    procedure Call(Caller: TdwsProgramExecution; Func: TFuncSymbol); override;
+    procedure Call(Caller: TdwsProgram; Func: TFuncSymbol); override;
   public
-    constructor Create(Collection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
     function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol; override;
   published
     property Attributes: TMethodAttributes read FAttributes write FAttributes default [];
-    property Visibility : TClassVisibility read FVisibility write FVisibility default cvPublic;
     property Kind: TMethodKind read FKind write FKind;
     property OnEval: TMethodEvalEvent read FOnEval write FOnEval;
     property ResultType: TDataType read FResultType write SetResultType;
   end;
 
-   TdwsMethods = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-      public
-         function Add : TdwsMethod;
-   end;
+  TdwsMethods = class(TdwsCollection)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
+  end;
 
   TdwsConstructor = class(TdwsFunction)
   private
     FAttributes: TMethodAttributes;
     FOnAssignExternalObject: TAssignExternalObjectEvent;
-    FVisibility : TClassVisibility;
     function GetResultType: string;
   protected
     function GetDisplayName: string; override;
-    procedure Call(Caller: TdwsProgramExecution; Func: TFuncSymbol); override;
+    procedure Call(Caller: TdwsProgram; Func: TFuncSymbol); override;
   public
     constructor Create(Collection: TCollection); override;
     procedure Assign(Source: TPersistent); override;
-    function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol; override;
+    function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol;
+      override;
   published
-    property Visibility : TClassVisibility read FVisibility write FVisibility default cvPublic;
     property Attributes: TMethodAttributes read FAttributes write FAttributes default [];
     property OnEval: TAssignExternalObjectEvent read FOnAssignExternalObject write FOnAssignExternalObject;
     property ResultType: string read GetResultType;
   end;
 
-   TdwsConstructors = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-      public
-         function Add : TdwsConstructor;
-   end;
-
-   TdwsClassConstant = class(TdwsConstant)
-      private
-         FVisibility : TClassVisibility;
-      protected
-         function GetDisplayName: string; override;
-      public
-         constructor Create(Collection: TCollection); override;
-         procedure Assign(Source: TPersistent); override;
-         function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol; override;
-      published
-         property Visibility : TClassVisibility read FVisibility write FVisibility default cvPublic;
-   end;
-
-   TdwsClassConstants = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-
-      public
-         function Add : TdwsClassConstant;
+  TdwsConstructors = class(TdwsCollection)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
   end;
 
    // TdwsClass
@@ -553,11 +501,7 @@ type
          FOnObjectDestroy: TObjectDestroyEvent;
          FProperties: TdwsProperties;
          FOperators : TdwsClassOperators;
-         FConstants : TdwsClassConstants;
          FHelperObject : TObject;
-         FIsSealed : Boolean;
-         FIsAbstract : Boolean;
-         FIsStatic : Boolean;
 
       protected
          function GetDisplayName: string; override;
@@ -565,7 +509,6 @@ type
       public
          constructor Create(Collection: TCollection); override;
          destructor Destroy; override;
-
          procedure Assign(Source: TPersistent); override;
          function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol; override;
 
@@ -574,24 +517,18 @@ type
 
       published
          property Ancestor: string read FAncestor write FAncestor;
-         property IsSealed : Boolean read FIsSealed write FIsSealed;
-         property IsAbstract : Boolean read FIsAbstract write FIsAbstract;
-         property IsStatic : Boolean read FIsStatic write FIsStatic;
          property Constructors: TdwsConstructors read FConstructors write FConstructors;
          property Fields: TdwsFields read FFields write FFields;
          property Methods: TdwsMethods read FMethods write FMethods;
          property Operators : TdwsClassOperators read FOperators write FOperators;
-         property Constants : TdwsClassConstants read FConstants write FConstants;
          property Properties: TdwsProperties read FProperties write FProperties;
          property OnCleanUp: TObjectDestroyEvent read FOnObjectDestroy write FOnObjectDestroy;
    end;
 
-   TdwsClasses = class(TdwsCollection)
-      protected
-         class function GetSymbolClass : TdwsSymbolClass; override;
-      public
-         function Add : TdwsClass;
-   end;
+  TdwsClasses = class(TdwsCollection)
+  protected
+    class function GetSymbolClass : TdwsSymbolClass; override;
+  end;
 
   TdwsClassesClass = class of TdwsClasses;
 
@@ -637,7 +574,6 @@ type
   protected
     function GetDisplayName: string; override;
   public
-    procedure Assign(Source: TPersistent); override;
     function DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol; override;
   published
     property UserDefValue: Integer read FUserDefValue write SetUserDefValue;
@@ -670,11 +606,9 @@ type
 
   TdwsEnumerationsClass = class of TdwsEnumerations;
 
-  TdwsCustomInstance = class;
-
-  TReadVarEvent = procedure (info: TProgramInfo; var value : Variant) of object;
-  TWriteVarEvent = procedure (info: TProgramInfo; const value : Variant) of object;
-  TInstantiateEvent = procedure (info: TProgramInfo; var ExtObject: TObject) of object;
+  TReadVarEvent = procedure(var Value: Variant) of object;
+  TWriteVarEvent = procedure(Value: Variant) of object;
+  TInstantiateEvent = procedure(var ExtObject: TObject) of object;
 
   TdwsGlobal = class(TdwsVariable)
   private
@@ -704,7 +638,7 @@ type
     FOnInitExpr: TInitExprEvent;
   protected
     procedure DoDestroy(ExternalObject: TObject); virtual;
-    procedure DoInstantiate(info : TProgramInfo; var ExternalObject: TObject); virtual;
+    procedure DoInstantiate(var ExternalObject: TObject); virtual;
     procedure DoInitSymbol(Sender: TObject; Symbol: TSymbol); virtual;
     procedure DoInitExpr(Sender: TObject; Expr: TExprBase); virtual;
   public
@@ -845,7 +779,7 @@ type
     FExternalObject: TObject;
   public
     constructor Create(FuncSym: TFuncSymbol; AExternalObject: TObject); reintroduce; virtual;
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TInstantiateFunc = class(TCustomInstantiateFunc)
@@ -855,7 +789,7 @@ type
     FOnInitSymbol: TInitSymbolEvent;
     FOnInitExpr: TInitExprEvent;
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
     procedure InitSymbol(Symbol: TSymbol); override;
     procedure InitExpression(Expr: TExprBase); override;
     property OnInstantiate: TInstantiateEvent read FOnInstantiate write FOnInstantiate;
@@ -868,7 +802,7 @@ type
   private
     FOnReadVar: TReadVarEvent;
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
     property OnReadVar: TReadVarEvent read FOnReadVar write FOnReadVar;
   end;
 
@@ -876,17 +810,17 @@ type
   private
     FOnWriteVar: TWriteVarEvent;
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
     property OnWriteVar: TWriteVarEvent read FOnWriteVar write FOnWriteVar;
   end;
 
   TReadVarFunc = class(TAnonymousFunction)
   private
     FData: TData;
-    FTyp: TTypeSymbol;
+    FTyp: TSymbol;
   public
     constructor Create(FuncSym: TFuncSymbol);
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
     procedure SetValue(const Data: TData);
   end;
 
@@ -895,7 +829,7 @@ type
     FReadVarFunc: TReadVarFunc;
   public
     constructor Create(FuncSym: TFuncSymbol; ReadVarFunc: TReadVarFunc);
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
 // Return the external object for a variable name.
@@ -983,7 +917,7 @@ end;
 
 function TDelphiWebScript.GetVersion: string;
 begin
-  Result := '2.2';
+  Result := '2.1';
 end;
 
 procedure TDelphiWebScript.SetVersion(const Value: string);
@@ -994,7 +928,7 @@ end;
 
 // Compile
 //
-function TDelphiWebScript.Compile(const Text: string): IdwsProgram;
+function TDelphiWebScript.Compile(const Text: string): TdwsProgram;
 begin
    if FExtensions.Count>0 then begin
       FCompiler.OnReadInstr:=FExtensions.ReadInstr;
@@ -1111,10 +1045,15 @@ begin
   for x := 0 to Count - 1 do
   begin
     Result := Items[x];
-    if UnicodeSameText(Result.Name,Name) then
+    if SameText(Result.Name,Name) then
       Exit;
   end;
   Result := nil;
+end;
+
+class function TdwsCollection.GetSymbolClass: TdwsSymbolClass;
+begin
+  Result := TdwsSymbol;
 end;
 
 function TdwsCollection.GetSortedItems: TdwsSymbolArray;
@@ -1155,7 +1094,7 @@ var
 begin
   Result := -1;
   for x := 0 to Self.Count - 1 do
-    if UnicodeSameText(Name, Items[x].Name) then
+    if SameText(Name, Items[x].Name) then
     begin
       Result := x;
       Break;
@@ -1290,7 +1229,7 @@ function TdwsUnit.GetSymbol(Table: TSymbolTable; const Name: string): TSymbol;
   item: TdwsSymbol;
   coll: TdwsCollection; }
 begin
-   Result:=Table.FindSymbol(Name, cvMagic);
+   Result:=Table.FindSymbol(Name);
    if not Assigned(Result) then
       raise EHandledGenerationError.CreateFmt('Symbol not found: %s in %s', [Name, self.Name]);
 //      if FIs
@@ -1552,7 +1491,7 @@ procedure TdwsUnit.ExposeClassToUnit(AClass, AAncestor: TClass;  ASearchProgram:
       begin
         for x := 0 to ASearchProgram.Table.Count - 1 do
         begin
-          if ASearchProgram.Table.Symbols[x].ClassType=TUnitSymbol then
+          if ASearchProgram.Table.Symbols[x] is TUnitSymbol then
             // unit has the type declared
             if TUnitSymbol(ASearchProgram.Table.Symbols[x]).Table.FindLocal(ATypeName) <> nil then
             begin
@@ -1598,7 +1537,7 @@ begin
   if not Assigned(useClass) then
   begin
     // Create the class declaration
-    useClass := Classes.Add;
+    useClass := Classes.Add as TdwsClass;
     if ScriptAncestorType <> '' then
       useClass.Ancestor := ScriptAncestorType
     else
@@ -1674,7 +1613,7 @@ begin
           newMeth := (useClass.Methods.Add as TdwsMethod);
           newMeth.Name := setMethName;
           newMeth.OnEval := HandleDynamicProperty;
-          with newMeth.Parameters.Add do
+          with newMeth.Parameters.Add as TdwsParameter do
           begin
             Name := 'Value';
             DataType := PropertyType;
@@ -1699,7 +1638,7 @@ end;
 procedure TdwsUnit.ExposeInstanceToUnit(const AName, AClassType: string;
   AInstance: TObject);
 var
-  typSym: TTypeSymbol;
+  typSym: TSymbol;
   instFunc: TDynamicInstantiateFunc;
   externalVar: TExternalVarSymbol;
   funcSym: TFuncSymbol;
@@ -1710,7 +1649,7 @@ begin
   if Assigned(Table.FindLocal(AName)) then
     raise Exception.CreateFmt(UNT_NameAlreadyExists, [AName]);
 
-  typSym := Table.FindTypeLocal(AClassType);
+  typSym := Table.FindLocal(AClassType);
   // Get the type symbol of this variable
   if not (typSym is TTypeSymbol) then
     raise Exception.CreateFmt(UNT_DatatypeUnknown, [Name]);
@@ -1758,27 +1697,20 @@ begin
     FValue := TdwsConstant(Source).Value;
 end;
 
-// DoGenerate
-//
-function TdwsConstant.DoGenerate(Table: TSymbolTable; ParentSym: TSymbol): TSymbol;
+function TdwsConstant.DoGenerate(Table: TSymbolTable;
+  ParentSym: TSymbol): TSymbol;
 begin
-   FIsGenerating := True;
-   CheckName(Table, Name);
+  FIsGenerating := True;
+  CheckName(Table, Name);
 
-   Result:=TConstSymbol.Create(Name, GetDataType(Table, DataType), Value);
-   GetUnit.Table.AddSymbol(Result);
+  Result := TConstSymbol.Create(Name, GetDataType(Table, DataType), Value);
+
+  GetUnit.Table.AddSymbol(Result);
 end;
 
-// GetDisplayName
-//
 function TdwsConstant.GetDisplayName: string;
-var
-   valAsString : String;
 begin
-   valAsString:=VarToStr(Value);
-   if SameText(DataType, SYS_STRING) then  // just for show
-      valAsString:=''''+valAsString+'''';
-   Result := Format('const %s: %s = %s;', [Name, DataType, valAsString]);
+  Result := Format('const %s: %s = %s', [Name, DataType, VarToStr(Value)]);
 end;
 
 { TdwsVariable }
@@ -1809,13 +1741,6 @@ begin
   end
   else
     Result := '';
-end;
-
-// Add
-//
-function TdwsVariables.Add : TdwsGlobal;
-begin
-   Result:=TdwsGlobal(inherited Add);
 end;
 
 class function TdwsVariables.GetSymbolClass: TdwsSymbolClass;
@@ -1905,7 +1830,7 @@ end;
 
 { TInstantiateFunc }
 
-procedure TInstantiateFunc.Execute(info : TProgramInfo);
+procedure TInstantiateFunc.Execute;
 var
   scriptObj: TScriptObj;
   extObj: TObject;
@@ -1920,7 +1845,7 @@ begin
     scriptObj.OnObjectDestroy := FOnObjectDestroy;
     FScriptObj := scriptObj;
 
-    FOnInstantiate(info, extObj);
+    FOnInstantiate(extObj);
     FScriptObj.ExternalObject := extObj;
 
     Info.ResultAsVariant := FScriptObj;
@@ -1963,35 +1888,33 @@ begin
 end;
 
 function TdwsParameter.DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol;
-//var
-//   paramSym : TParamSymbol;
-//   paramType : TTypeSymbol;
-//   elemSym : TSymbol;
-//   elemValue : Integer;
+var
+   paramSym : TParamSymbol;
+   paramType : TTypeSymbol;
+   elemSym : TSymbol;
+   elemValue : Integer;
 begin
-   Result:=nil;
-   Assert(False);  // shouldn't be used anymore (not sure yet)
-//   FIsGenerating := True;
-//   paramType := GetDataType(Table, DataType);
-//   if IsLazy then
-//      paramSym:=TLazyParamSymbol.Create(Name, paramType)
-//   else if IsVarParam then begin
-//      if IsWritable then
-//         paramSym := TVarParamSymbol.Create(Name, paramType)
-//      else paramSym := TConstParamSymbol.Create(Name, paramType)
-//   end else if HasDefaultValue then begin
-//      paramSym := TParamSymbolWithDefaultValue.Create(Name, paramType);
-//      if paramType is TEnumerationSymbol then begin
-//         elemSym:=TEnumerationSymbol(paramType).Elements.FindLocal(DefaultValue);
-//         if elemSym=nil then
-//            elemValue:=DefaultValue
-//         else elemValue:=TElementSymbol(elemSym).UserDefValue;
-//         TParamSymbolWithDefaultValue(paramSym).SetDefaultValue(elemValue);
-//      end else TParamSymbolWithDefaultValue(paramSym).SetDefaultValue(DefaultValue);
-//   end else begin
-//      paramSym := TParamSymbol.Create(Name, paramType);
-//   end;
-//   Result := paramSym;
+   FIsGenerating := True;
+   paramType := GetDataType(Table, DataType);
+   if IsLazy then
+      paramSym:=TLazyParamSymbol.Create(Name, paramType)
+   else if IsVarParam then begin
+      if IsWritable then
+         paramSym := TVarParamSymbol.Create(Name, paramType)
+      else paramSym := TConstParamSymbol.Create(Name, paramType)
+   end else if HasDefaultValue then begin
+      paramSym := TParamSymbolWithDefaultValue.Create(Name, paramType);
+      if paramType is TEnumerationSymbol then begin
+         elemSym:=TEnumerationSymbol(paramType).Elements.FindLocal(DefaultValue);
+         if elemSym=nil then
+            elemValue:=DefaultValue
+         else elemValue:=TElementSymbol(elemSym).UserDefValue;
+         TParamSymbolWithDefaultValue(paramSym).SetDefaultValue(elemValue);
+      end else TParamSymbolWithDefaultValue(paramSym).SetDefaultValue(DefaultValue);
+   end else begin
+      paramSym := TParamSymbol.Create(Name, paramType);
+   end;
+   Result := paramSym;
 end;
 
 function TdwsParameter.GetDisplayName: string;
@@ -2061,16 +1984,16 @@ begin
   inherited;
 end;
 
-procedure TdwsFunction.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
+procedure TdwsFunction.Call(Caller: TdwsProgram; Func: TFuncSymbol);
 var
    info: TProgramInfo;
 begin
    if Assigned(FOnEval) then begin
-      info:=exec.AcquireProgramInfo(Func);
+      info:=Caller.AcquireProgramInfo(Func);
       try
          FOnEval(info);
       finally
-         exec.ReleaseProgramInfo(info);
+         Caller.ReleaseProgramInfo(info);
       end;
    end;
 end;
@@ -2125,45 +2048,41 @@ begin
   end;
 end;
 
-// GetParameters
-//
 function GetParameters(Symbol: TdwsSymbol; Parameters: TdwsParameters; Table: TSymbolTable): TParamArray;
 var
-   i, j, elemValue: Integer;
-   name: string;
-   paramSym, elemSym : TSymbol;
-   param : TdwsParameter;
+  x, y, elemValue: Integer;
+  name: string;
+  paramSym, elemSym : TSymbol;
 begin
-   SetLength(Result, Parameters.Count);
-   for i := 0 to Parameters.Count - 1 do begin
-      param:=TdwsParameter(Parameters.Items[i]);
-      name := param.Name;
+  SetLength(Result, Parameters.Count);
+  for x := 0 to Parameters.Count - 1 do begin
+    name := Parameters.Items[x].Name;
 
-      // Check wether parameter name is unique
-      for j := i - 1 downto 0 do begin
-         if UnicodeSameText(Result[j].ParamName, name) then
-            raise Exception.CreateFmt(UNT_ParameterNameAlreadyExists, [name]);
-      end;
+    // Check wether parameter name is unique
+    for y := x - 1 downto 0 do begin
+      if SameText(Result[y].ParamName, name) then
+        raise Exception.CreateFmt(UNT_ParameterNameAlreadyExists, [name]);
+    end;
 
-      Result[i].IsVarParam := param.IsVarParam and param.IsWritable;
-      Result[i].IsConstParam := param.IsVarParam and not param.IsWritable;
-      Result[i].ParamName := name;
-      Result[i].ParamType := param.DataType;
+    Result[x].IsVarParam := TdwsParameter(Parameters.Items[x]).IsVarParam and TdwsParameter(Parameters.Items[x]).IsWritable;
+    Result[x].IsConstParam := TdwsParameter(Parameters.Items[x]).IsVarParam and not TdwsParameter(Parameters.Items[x]).IsWritable;
+    Result[x].ParamName := name;
+    Result[x].ParamType := TdwsParameter(Parameters.Items[x]).DataType;
 
-      Result[i].HasDefaultValue := param.HasDefaultValue;
-      if Result[i].HasDefaultValue then begin
-         SetLength(Result[i].DefaultValue, 1);
-         paramSym:=Symbol.GetDataType(Table, Result[i].ParamType);
-         if paramSym is TEnumerationSymbol then begin
-            elemSym:=TEnumerationSymbol(paramSym).Elements.FindLocal(param.DefaultValue);
-            if elemSym=nil then
-               elemValue:=param.DefaultValue
-            else elemValue:=TElementSymbol(elemSym).UserDefValue;
-            Result[i].DefaultValue[0] := elemValue;
-         end else Result[i].DefaultValue[0] := param.DefaultValue;
-      end else Result[i].DefaultValue := nil;
+    Result[x].HasDefaultValue := TdwsParameter(Parameters.Items[x]).HasDefaultValue;
+    if Result[x].HasDefaultValue then begin
+       SetLength(Result[x].DefaultValue, 1);
+       paramSym:=Symbol.GetDataType(Table, Result[x].ParamType);
+       if paramSym is TEnumerationSymbol then begin
+          elemSym:=TEnumerationSymbol(paramSym).Elements.FindLocal(TdwsParameter(Parameters.Items[x]).DefaultValue);
+          if elemSym=nil then
+             elemValue:=TdwsParameter(Parameters.Items[x]).DefaultValue
+          else elemValue:=TElementSymbol(elemSym).UserDefValue;
+          Result[x].DefaultValue[0] := elemValue;
+       end else Result[x].DefaultValue[0] := TdwsParameter(Parameters.Items[x]).DefaultValue;
+    end else Result[x].DefaultValue := nil;
 
-      Symbol.GetUnit.GetSymbol(Table, Result[i].ParamType);
+    Symbol.GetUnit.GetSymbol(Table, Result[x].ParamType);
   end;
 end;
 
@@ -2211,27 +2130,12 @@ end;
 
 { TdwsField }
 
-// Create
-//
-constructor TdwsField.Create(Collection: TCollection);
-begin
-   inherited;
-   FVisibility:=cvPublic;
-end;
-
 function TdwsField.DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil):
   TSymbol;
 begin
   FIsGenerating := True;
   CheckName(TClassSymbol(ParentSym).Members, Name);
-  Result := TFieldSymbol.Create(Name, GetDataType(Table, DataType), Visibility);
-end;
-
-// GetDisplayName
-//
-function TdwsField.GetDisplayName: string;
-begin
-   Result:=TClassSymbol.VisibilityToString(Visibility)+' '+inherited GetDisplayName;
+  Result := TFieldSymbol.Create(Name, GetDataType(Table, DataType));
 end;
 
 { TdwsMethod }
@@ -2246,7 +2150,7 @@ begin
     GetUnit.GetSymbol(Table, ResultType);
 
   Result := TMethodSymbol.Generate(Table, Kind, Attributes, Name,
-    GetParameters(Table), ResultType, TClassSymbol(ParentSym), Visibility);
+    GetParameters(Table), ResultType, TClassSymbol(ParentSym));
   try
     TFuncSymbol(Result).Params.AddParent(Table);
     TFuncSymbol(Result).DeprecatedMessage:=Deprecated;
@@ -2284,8 +2188,7 @@ begin
       Assert(false); // if triggered, this func needs upgrade !
    end;
    if Deprecated<>'' then
-      Result:=Result+' deprecated;';
-   Result:=TClassSymbol.VisibilityToString(Visibility)+' '+Result;
+      Result:=Result+' deprecated;'
 end;
 
 procedure TdwsMethod.SetResultType(const Value: TDataType);
@@ -2307,7 +2210,7 @@ begin
     end;
 end;
 
-procedure TdwsMethod.Call(Caller: TdwsProgramExecution; Func: TFuncSymbol);
+procedure TdwsMethod.Call(Caller: TdwsProgram; Func: TFuncSymbol);
 var
   info : TProgramInfo;
   isClassMethod : Boolean;
@@ -2324,6 +2227,8 @@ begin
 
          if Assigned(info.ScriptObj) then  begin
             FOnEval(info, info.ScriptObj.ExternalObject);
+            if methodSymbol.Kind=fkDestructor then
+               info.ScriptObj.ExternalObject:=nil;
          end else if isClassMethod then
             FOnEval(info, nil)
          else raise Exception.Create('Object not instantiated');
@@ -2331,14 +2236,6 @@ begin
          Caller.ReleaseProgramInfo(info);
       end;
    end;
-end;
-
-// Create
-//
-constructor TdwsMethod.Create(Collection: TCollection);
-begin
-   inherited;
-   FVisibility:=cvPublic;
 end;
 
 procedure TdwsMethod.Assign(Source: TPersistent);
@@ -2349,7 +2246,6 @@ begin
     FAttributes := TdwsMethod(Source).Attributes;
     FKind := TdwsMethod(Source).Kind;
     FResultType := TdwsMethod(Source).ResultType;
-    FVisibility := TdwsMethod(Source).Visibility;
   end;
 end;
 
@@ -2358,13 +2254,11 @@ end;
 procedure TdwsConstructor.Assign(Source: TPersistent);
 begin
   inherited;
-  if Source is TdwsMethod then begin
+  if Source is TdwsMethod then
     FAttributes := TdwsMethod(Source).Attributes;
-    FVisibility := TdwsMethod(Source).Visibility;
-  end;
 end;
 
-procedure TdwsConstructor.Call(Caller: TdwsProgramExecution; Func: TFuncSymbol);
+procedure TdwsConstructor.Call(Caller: TdwsProgram; Func: TFuncSymbol);
 var
    info: TProgramInfo;
    extObj: TObject;
@@ -2391,7 +2285,6 @@ begin
   // Name the first constructor "Create" by default
   if Collection.Count = 1 then
     FName := 'Create';
-  FVisibility:=cvPublic;
 end;
 
 function TdwsConstructor.DoGenerate(Table: TSymbolTable;
@@ -2401,7 +2294,7 @@ begin
   CheckName(TClassSymbol(ParentSym).Members, Name);
 
   Result := TMethodSymbol.Generate(Table, mkConstructor, Attributes, Name,
-    GetParameters(Table), '', TClassSymbol(ParentSym), Visibility);
+    GetParameters(Table), '', TClassSymbol(ParentSym));
   try
     TFuncSymbol(Result).Params.AddParent(Table);
     TMethodSymbol(Result).Executable := ICallable(Self);
@@ -2418,7 +2311,7 @@ begin
   if Result <> '' then
     Result := '(' + Result + ')';
 
-  Result:=TClassSymbol.VisibilityToString(Visibility)+Format(' constructor %s%s;', [Name, Result]);
+  Result := Format('constructor %s%s;', [Name, Result]);
 end;
 
 function TdwsConstructor.GetResultType: string;
@@ -2427,69 +2320,20 @@ begin
   Result := '';
 end;
 
-// ------------------
-// ------------------ TdwsClassConstant ------------------
-// ------------------
+{ TdwsClass }
 
-// Create
-//
-constructor TdwsClassConstant.Create(Collection: TCollection);
+procedure TdwsClass.Assign(Source: TPersistent);
 begin
-   inherited;
-   FVisibility:=cvPublic;
+  inherited;
+  if Source is TdwsClass then
+  begin
+    FAncestor := TdwsClass(Source).Ancestor;
+    FFields.Assign(TdwsClass(Source).Fields);
+    FMethods.Assign(TdwsClass(Source).Methods);
+    FProperties.Assign(TdwsClass(Source).Properties);
+  end;
 end;
 
-// Assign
-//
-procedure TdwsClassConstant.Assign(Source: TPersistent);
-begin
-   inherited;
-   if Source is TdwsClassConstant then
-      FVisibility:=TdwsClassConstant(Source).Visibility;
-end;
-
-// DoGenerate
-//
-function TdwsClassConstant.DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol;
-begin
-   FIsGenerating := True;
-   CheckName(Table, Name);
-
-   Result:=TClassConstSymbol.Create(Name, GetDataType(Table, DataType), Value);
-   TClassConstSymbol(Result).Visibility:=Visibility;
-end;
-
-// GetDisplayName
-//
-function TdwsClassConstant.GetDisplayName: string;
-begin
-   Result:=TClassSymbol.VisibilityToString(Visibility)+' '+inherited GetDisplayName;
-end;
-
-// ------------------
-// ------------------ TdwsClassConstants ------------------
-// ------------------
-
-// GetSymbolClass
-//
-class function TdwsClassConstants.GetSymbolClass : TdwsSymbolClass;
-begin
-   Result:=TdwsClassConstant;
-end;
-
-// Add
-//
-function TdwsClassConstants.Add : TdwsClassConstant;
-begin
-   Result:=TdwsClassConstant(inherited Add);
-end;
-
-// ------------------
-// ------------------ TdwsClass ------------------
-// ------------------
-
-// Create
-//
 constructor TdwsClass.Create(Collection: TCollection);
 begin
    inherited;
@@ -2498,11 +2342,8 @@ begin
    FMethods := TdwsMethods.Create(Self);
    FProperties := TdwsProperties.Create(Self);
    FOperators := TdwsClassOperators.Create(Self);
-   FConstants := TdwsClassConstants.Create(Self);
 end;
 
-// Destroy
-//
 destructor TdwsClass.Destroy;
 begin
    FFields.Free;
@@ -2510,102 +2351,68 @@ begin
    FMethods.Free;
    FProperties.Free;
    FOperators.Free;
-   FConstants.Free;
    FHelperObject.Free;
    inherited;
-end;
-
-// Assign
-//
-procedure TdwsClass.Assign(Source: TPersistent);
-begin
-   inherited;
-   if Source is TdwsClass then begin
-      FAncestor := TdwsClass(Source).Ancestor;
-      FFields.Assign(TdwsClass(Source).Fields);
-      FMethods.Assign(TdwsClass(Source).Methods);
-      FProperties.Assign(TdwsClass(Source).Properties);
-      FOperators.Assign(TdwsClass(Source).Operators);
-      FConstants.Assign(TdwsClass(Source).Constants);
-   end;
 end;
 
 // DoGenerate
 //
 function TdwsClass.DoGenerate(Table: TSymbolTable; ParentSym: TSymbol = nil): TSymbol;
 var
-   x : Integer;
-   sym : TSymbol;
-   ancestorSym, classSym : TClassSymbol;
+   x: Integer;
+   ancestorSym: TClassSymbol;
 begin
    FIsGenerating := True;
 
-   classSym := nil;
-   sym := GetUnit.Table.FindSymbol(Name, cvMagic);
+   Result := GetUnit.Table.FindSymbol(Name);
 
-   if Assigned(sym) then begin
-      if sym is TClassSymbol then begin
-         classSym:=TClassSymbol(sym);
-         if not classSym.IsForwarded then
+   if Assigned(Result) then begin
+      if Result is TClassSymbol then begin
+         if not TClassSymbol(Result).IsForwarded then
             raise Exception.Create(UNT_ClassAlreadyDefined);
-      end else begin
-         raise Exception.CreateFmt(UNT_ClassNameAlreadyDefined,
-                                  [Name, sym.Caption]);
-      end;
+      end else raise Exception.CreateFmt(UNT_ClassNameAlreadyDefined,
+                                         [Name, Result.Caption]);
    end;
-
-   if not Assigned(classSym) then
-      classSym := TClassSymbol.Create(Name);
 
    try
 
-      classSym.OnObjectDestroy := FOnObjectDestroy;
+      if not Assigned(Result) then
+         Result := TClassSymbol.Create(Name);
+
+      TClassSymbol(Result).OnObjectDestroy := FOnObjectDestroy;
 
       if FAncestor = '' then
          FAncestor := SYS_TOBJECT;
-
-      classSym.IsStatic:=IsStatic;
 
       ancestorSym := TClassSymbol(GetUnit.GetSymbol(Table, FAncestor));
       if ancestorSym = nil then
          raise Exception.CreateFmt(UNT_SuperClassUnknwon, [FAncestor]);
 
-      if ancestorSym.IsSealed then
-         raise Exception.CreateFmt(CPE_ClassIsSealed, [FAncestor]);
-
-      classSym.InheritFrom(ancestorSym);
-
-      classSym.IsSealed:=IsSealed;
-      classSym.IsExplicitAbstract:=IsAbstract;
+      TClassSymbol(Result).InheritFrom(ancestorSym);
 
       for x := 0 to FFields.Count - 1 do
-         classSym.AddField(TFieldSymbol(TdwsField(FFields.Items[x]).Generate(Table, classSym)));
+         TClassSymbol(Result).AddField(TFieldSymbol(TdwsField(FFields.Items[x]).Generate(Table, Result)));
 
       for x := 0 to FConstructors.Count - 1 do
-         classSym.AddMethod(TMethodSymbol(TdwsConstructor(FConstructors.Items[x]).Generate(Table, classSym)));
+         TClassSymbol(Result).AddMethod(TMethodSymbol(TdwsConstructor(FConstructors.Items[x]).Generate(Table, Result)));
 
       for x := 0 to FMethods.Count - 1 do
-         classSym.AddMethod(TMethodSymbol(TdwsMethod(FMethods.Items[x]).Generate(Table, classSym)));
+         TClassSymbol(Result).AddMethod(TMethodSymbol(TdwsMethod(FMethods.Items[x]).Generate(Table, Result)));
 
       for x := 0 to FProperties.Count - 1 do
-         classSym.AddProperty(TPropertySymbol(TdwsProperty(FProperties.Items[x]).Generate(Table, classSym)));
+         TClassSymbol(Result).AddProperty(TPropertySymbol(TdwsProperty(FProperties.Items[x]).Generate(Table, Result)));
 
       for x := 0 to FOperators.Count - 1 do
-         classSym.AddOperator(TClassOperatorSymbol(TdwsClassOperator(FOperators.Items[x]).Generate(Table, classSym)));
-
-      for x := 0 to FConstants.Count - 1 do
-         classSym.AddConst(TClassConstSymbol(TdwsConstant(FConstants.Items[x]).Generate(Table, classSym)));
+         TClassSymbol(Result).AddOperator(TClassOperatorSymbol(TdwsClassOperator(FOperators.Items[x]).Generate(Table, Result)));
 
    except
-      if not classSym.IsForwarded then
-         classSym.Free;
+      if not TClassSymbol(Result).IsForwarded then
+         Result.Free;
       raise;
    end;
 
-   if classSym.IsForwarded then
-      classSym.ClearIsForwarded;
-
-   Result:=classSym;
+   if TClassSymbol(Result).IsForwarded then
+      TClassSymbol(Result).ClearIsForwarded;
 end;
 
 function TdwsClass.GetDisplayName: string;
@@ -2632,7 +2439,7 @@ procedure TdwsRecord.Assign(Source: TPersistent);
 begin
   inherited;
   if Source is TdwsRecord then
-    FMembers.Assign(TdwsRecord(Source).Members);
+    FMembers := TdwsRecord(Source).Members;
 end;
 
 constructor TdwsRecord.Create;
@@ -2741,7 +2548,6 @@ begin
     FWriteAccess := TdwsProperty(Source).WriteAccess;
     FParameters.Assign(TdwsProperty(Source).Parameters);
     FIsDefault := TdwsProperty(Source).IsDefault;
-    FVisibility:=TdwsProperty(Source).Visibility;
   end;
 end;
 
@@ -2749,7 +2555,6 @@ constructor TdwsProperty.Create(Collection: TCollection);
 begin
   inherited;
   FParameters := TdwsParameters.Create(Self);
-  FVisibility:=cvPublic;
 end;
 
 destructor TdwsProperty.Destroy;
@@ -2767,10 +2572,7 @@ var
 begin
   FIsGenerating := True;
 
-  if DataType='' then
-    raise Exception.CreateFmt(UNT_DatatypeNotSpecified, [Name, ParentSym.Name]);
-
-  propSym := TPropertySymbol.Create(Name, GetDataType(Table, DataType), Visibility);
+  propSym := TPropertySymbol.Create(Name, GetDataType(Table, DataType));
   Result := PropSym;
 
   propSym.GenerateParams(Table,GetParameters(Self, Parameters, Table));
@@ -2808,30 +2610,31 @@ begin
     TClassSymbol(ParentSym).DefaultProperty := propSym;
 end;
 
-// GetDisplayName
-//
 function TdwsProperty.GetDisplayName: string;
+var
+  Params: string;
+  Index : String;
 begin
-   Result:=TClassSymbol.VisibilityToString(Visibility)+' property '+Name;
-   if FParameters.Count>0 then
-      Result:=Result+'['+FParameters.GetDisplayName+']';
-   Result:=Result+': '+DataType;
-   if IndexType<>'' then
-      Result:=Result+' index '+ValueToString(IndexValue);
-   if ReadAccess<>'' then
-      Result:=Result+' read '+ReadAccess;
-   if WriteAccess<>'' then
-      Result:=Result+' write '+WriteAccess;
-   Result:=Result+';';
-   if IsDefault then
-      Result:=Result+' default;';
+  if FParameters.Count > 0 then
+    Params := '[' + FParameters.GetDisplayName + ']';
+  if IndexType <> '' then
+    Index := Format(' index %s',[ValueToString(IndexValue)]);
+  if (ReadAccess = '') and (WriteAccess = '') then
+    Result := Format('property %s%s: %s%s;', [Name, Params, DataType, Index])
+  else if (ReadAccess = '') and (WriteAccess <> '') then
+    Result := Format('property %s%s: %s%s write %s;', [Name, Params, DataType, Index, WriteAccess])
+  else if (ReadAccess <> '') and (WriteAccess = '') then
+    Result := Format('property %s%s: %s%s read %s;', [Name, Params, DataType, Index, ReadAccess])
+  else
+    Result := Format('property %s%s: %s%s read %s write %s;', [Name, Params, DataType, Index,
+      ReadAccess, WriteAccess]);
+  if IsDefault then
+    Result := Result + ' default;';
 end;
 
-// GetIsDefault
-//
 function TdwsProperty.GetIsDefault: Boolean;
 begin
-   Result:=FIsDefault and (Parameters.Count>0);
+  Result := FIsDefault and (Parameters.Count > 0);
 end;
 
 procedure TdwsProperty.SetIsDefault(Value: Boolean);
@@ -2998,22 +2801,22 @@ end;
 
 { TReadVarEventFunc }
 
-procedure TReadVarEventFunc.Execute(info : TProgramInfo);
+procedure TReadVarEventFunc.Execute;
 var
   Value: Variant;
 begin
   VarClear(Value);
   if Assigned(FOnReadVar) then
-    FOnReadVar(info, Value);
+    FOnReadVar(Value);
   Info.ResultAsVariant := Value;
 end;
 
 { TWriteVarEventFunc }
 
-procedure TWriteVarEventFunc.Execute(info : TProgramInfo);
+procedure TWriteVarEventFunc.Execute;
 begin
   if Assigned(FOnWriteVar) then
-    FOnWriteVar(Info, Info.ValueAsVariant['Value']);
+    FOnWriteVar(Info.ValueAsVariant['Value']);
 end;
 
 { TReadVarFunc }
@@ -3026,14 +2829,14 @@ begin
   FTyp.InitData(FData, 0);
 end;
 
-procedure TReadVarFunc.Execute(info : TProgramInfo);
+procedure TReadVarFunc.Execute;
 begin
   Info.Data[SYS_RESULT] := FData;
 end;
 
 procedure TReadVarFunc.SetValue(const Data: TData);
 begin
-  DWSCopyData(Data, 0, FData, 0, FTyp.Size);
+  CopyData(Data, 0, FData, 0, FTyp.Size);
 end;
 
 { TWriteVarFunc }
@@ -3044,7 +2847,7 @@ begin
   FReadVarFunc := ReadVarFunc;
 end;
 
-procedure TWriteVarFunc.Execute(info : TProgramInfo);
+procedure TWriteVarFunc.Execute;
 begin
   FReadVarFunc.SetValue(Info.Data['Value']);
 end;
@@ -3107,7 +2910,7 @@ end;
 procedure TdwsAbstractUnit.SetUnitName(const Value: string);
 begin
   if not (csDesigning in ComponentState) and Assigned(FScript)
-     and not UnicodeSameText(Value, FUnitName) then
+     and not SameText(Value,FUnitName) then
     raise Exception.Create(UNT_CantChangeUnitName)
   else
     FUnitName := Value;
@@ -3147,7 +2950,7 @@ begin
     // insert links to units this unit depends of
     for x := 0 to FDependencies.Count - 1 do
     begin
-      sym := UnitSyms.FindSymbol(FDependencies[x], cvMagic);
+      sym := UnitSyms.FindSymbol(FDependencies[x]);
       Result.AddParent(TUnitSymbol(sym).Table);
       Result.AddSymbol(TUnitSymbol.Create(TUnitSymbol(sym).Name,
         TUnitSymbol(sym).Table));
@@ -3201,7 +3004,7 @@ procedure TdwsEnumeration.Assign(Source: TPersistent);
 begin
   inherited;
   if Source is TdwsEnumeration then
-    FElements.Assign(TdwsEnumeration(Source).Elements);
+    FElements := TdwsEnumeration(Source).Elements;
 end;
 
 constructor TdwsEnumeration.Create(Collection: TCollection);
@@ -3223,7 +3026,7 @@ begin
   FIsGenerating := True;
   CheckName(Table, Name);
 
-  Result := TEnumerationSymbol.Create(Name, Table.FindSymbol(SYS_INTEGER, cvMagic) as TTypeSymbol);
+  Result := TEnumerationSymbol.Create(Name, Table.FindSymbol(SYS_INTEGER) as TTypeSymbol);
   try
     for x := 0 to FElements.Count - 1 do
       TEnumerationSymbol(Result).AddElement(
@@ -3235,19 +3038,18 @@ begin
   end;
 end;
 
-// GetDisplayName
-//
 function TdwsEnumeration.GetDisplayName: string;
 var
-   i : Integer;
+  x: Integer;
 begin
-   Result:=Name+' = (';
-   for i:=0 to FElements.Count-1 do begin
-      if i<>0 then
-         Result:=Result + ', ';
-      Result:=Result+TdwsElement(FElements.Items[i]).GetDisplayName;
-   end;
-   Result:=Result+');';
+  Result := Name + ' = (';
+  for x := 0 to FElements.Count - 1 do
+  begin
+    if x <> 0 then
+      Result := Result + ', ';
+    Result := Result + FElements.Items[x].Name;
+  end;
+  Result := Result + ')';
 end;
 
 { TdwsElement }
@@ -3280,15 +3082,6 @@ begin
     Result := Name + ' = ' + IntToStr(FUserDefValue)
   else
     Result := Name;
-end;
-
-procedure TdwsElement.Assign(Source: TPersistent);
-begin
-  inherited;
-  if Source is TdwsElement then begin
-    FIsUserDef := TdwsElement(Source).IsUserDef;
-    FUserDefValue := TdwsElement(Source).UserDefValue;
-  end;
 end;
 
 procedure TdwsElement.SetIsUserDef(const Value: Boolean);
@@ -3334,7 +3127,7 @@ end;
 function TdwsCustomInstance.DoGenerate(Table: TSymbolTable;
   ParentSym: TSymbol): TSymbol;
 var
-  typSym: TTypeSymbol;
+  typSym: TSymbol;
   instFunc: TInstantiateFunc;
   funcSym: TFuncSymbol;
 begin
@@ -3379,24 +3172,17 @@ begin
     FOnInitExpr(Self,Expr)
 end;
 
-procedure TdwsCustomInstance.DoInstantiate(info : TProgramInfo; var ExternalObject: TObject);
+procedure TdwsCustomInstance.DoInstantiate(var ExternalObject: TObject);
 begin
   if Assigned(FOnInstantiate) then
-    FOnInstantiate(info, ExternalObject);
+    FOnInstantiate(ExternalObject);
 end;
 
 { TdwsFunctions }
 
 class function TdwsFunctions.GetSymbolClass: TdwsSymbolClass;
 begin
-   Result := TdwsFunction;
-end;
-
-// Add
-//
-function TdwsFunctions.Add : TdwsFunction;
-begin
-   Result:=TdwsFunction(inherited Add);
+  Result := TdwsFunction;
 end;
 
 { TdwsForwards }
@@ -3420,25 +3206,11 @@ begin
   Result := TdwsConstant;
 end;
 
-// Add
-//
-function TdwsConstants.Add : TdwsConstant;
-begin
-   Result:=TdwsConstant(inherited Add);
-end;
-
 { TdwsClasses }
 
 class function TdwsClasses.GetSymbolClass: TdwsSymbolClass;
 begin
   Result := TdwsClass;
-end;
-
-// Add
-//
-function TdwsClasses.Add : TdwsClass;
-begin
-   Result:=TdwsClass(inherited Add);
 end;
 
 { TdwsArrays }
@@ -3462,13 +3234,6 @@ begin
   Result := TdwsParameter;
 end;
 
-// Add
-//
-function TdwsParameters.Add : TdwsParameter;
-begin
-   Result:=TdwsParameter(inherited Add);
-end;
-
 { TdwsInstances }
 
 class function TdwsInstances.GetSymbolClass: TdwsSymbolClass;
@@ -3483,25 +3248,11 @@ begin
   Result := TdwsField;
 end;
 
-// Add
-//
-function TdwsFields.Add : TdwsField;
-begin
-   Result:=TdwsField(inherited Add);
-end;
-
 { TdwsConstructors }
 
 class function TdwsConstructors.GetSymbolClass: TdwsSymbolClass;
 begin
   Result := TdwsConstructor;
-end;
-
-// Add
-//
-function TdwsConstructors.Add : TdwsConstructor;
-begin
-   Result:=TdwsConstructor(inherited Add);
 end;
 
 { TdwsMethods }
@@ -3511,25 +3262,11 @@ begin
   Result := TdwsMethod;
 end;
 
-// Add
-//
-function TdwsMethods.Add : TdwsMethod;
-begin
-   Result:=TdwsMethod(inherited Add);
-end;
-
 { TdwsProperties }
 
 class function TdwsProperties.GetSymbolClass: TdwsSymbolClass;
 begin
   Result := TdwsProperty;
-end;
-
-// Add
-//
-function TdwsProperties.Add : TdwsProperty;
-begin
-   Result:=TdwsProperty(inherited Add);
 end;
 
 { TdwsClassOperators }
@@ -3653,7 +3390,7 @@ begin
 
   for x := 0 to FDependencies.Count - 1 do
   begin
-    sym := UnitSyms.FindSymbol(FDependencies[x], cvMagic);
+    sym := UnitSyms.FindSymbol(FDependencies[x]);
     try
       UnitTable.AddParent(TUnitSymbol(sym).Table);
     except
@@ -3702,7 +3439,7 @@ begin
   FExternalObject := AExternalObject;
 end;
 
-procedure TDynamicInstantiateFunc.Execute(info : TProgramInfo);
+procedure TDynamicInstantiateFunc.Execute;
 begin
   if Assigned(FScriptObj) then
     // Instance was already created

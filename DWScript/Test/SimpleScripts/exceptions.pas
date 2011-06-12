@@ -52,11 +52,9 @@ else
   PrintLn('Invisible');
 end;
 
-var t := True;
 try
   try
-    if t then
-       raise Exception.Create('exception message 3');
+    raise Exception.Create('exception message 3');
     PrintLn('Invisible');
   finally
     PrintLn('Finally');

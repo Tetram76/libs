@@ -45,7 +45,6 @@ type
     procedure SetStr(const Str: string);
     function ReadLn: string;
     function ReadChar: string;
-    function ToString : String; override;
     property Str: string read GetStr;
   end;
 
@@ -82,32 +81,32 @@ uses
 type
   TWriteFunction = class(TInternalFunction)
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TWriteLnFunction = class(TInternalFunction)
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TWriteAllFunction = class(TInternalFunction)
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TReadCharFunction = class(TInternalFunction)
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TReadLnFunction = class(TInternalFunction)
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TReadAllFunction = class(TInternalFunction)
   public
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
 { TdwsStringResult }
@@ -159,13 +158,6 @@ begin
     Result := '';
 end;
 
-// ToString
-//
-function TdwsStringResult.ToString : String;
-begin
-   Result:=GetStr;
-end;
-
 // GetStr
 //
 function TdwsStringResult.GetStr : String;
@@ -187,9 +179,7 @@ var
   emptyArg: array of string;
 begin
   TWriteFunction.Create(SymbolTable, 'WriteStr', ['Str', SYS_VARIANT], '', False);
-  TWriteFunction.Create(SymbolTable, 'Print', ['Str', SYS_VARIANT], '', False);
   TWriteLnFunction.Create(SymbolTable, 'WriteLn', ['Str', SYS_VARIANT], '', False);
-  TWriteLnFunction.Create(SymbolTable, 'PrintLn', ['Str', SYS_VARIANT], '', False);
   TWriteAllFunction.Create(SymbolTable, 'WriteAll', ['Str', SYS_VARIANT], '', False);
 
   SetLength(emptyArg, 0);
@@ -206,44 +196,44 @@ end;
 
 { TWriteFunction }
 
-procedure TWriteFunction.Execute(info : TProgramInfo);
+procedure TWriteFunction.Execute;
 begin
-  Info.Execution.Result.AddString(Info.ValueAsString['Str']);
+  Info.Caller.Result.AddString(Info.ValueAsString['Str']);
 end;
 
 { TWriteLnFunction }
 
-procedure TWriteLnFunction.Execute(info : TProgramInfo);
+procedure TWriteLnFunction.Execute;
 begin
-  Info.Execution.Result.AddString(Info.ValueAsString['Str'] + #13#10);
+  Info.Caller.Result.AddString(Info.ValueAsString['Str'] + #13#10);
 end;
 
 { TWriteAllFunction }
 
-procedure TWriteAllFunction.Execute(info : TProgramInfo);
+procedure TWriteAllFunction.Execute;
 begin
-  (Info.Execution.Result as TdwsStringResult).SetStr(VarToStr(Info.ValueAsVariant['Str']));
+  (Info.Caller.Result as TdwsStringResult).SetStr(VarToStr(Info.ValueAsVariant['Str']));
 end;
 
 { TReadCharFunction }
 
-procedure TReadCharFunction.Execute(info : TProgramInfo);
+procedure TReadCharFunction.Execute;
 begin
-   Info.ResultAsString := TdwsStringResult(Info.Execution.Result).ReadChar;
+  Info.ResultAsString := TdwsStringResult(Info.Caller.Result).ReadChar;
 end;
 
 { TReadLnFunction }
 
-procedure TReadLnFunction.Execute(info : TProgramInfo);
+procedure TReadLnFunction.Execute;
 begin
-   Info.ResultAsString := TdwsStringResult(Info.Execution.Result).ReadLn;
+  Info.ResultAsString := TdwsStringResult(Info.Caller.Result).ReadLn;
 end;
 
 { TReadAllFunction }
 
-procedure TReadAllFunction.Execute(info : TProgramInfo);
+procedure TReadAllFunction.Execute;
 begin
-   Info.ResultAsString := TdwsStringResult(Info.Execution.Result).Str;
+  Info.ResultAsString := TdwsStringResult(Info.Caller.Result).Str;
 end;
 
 end.
