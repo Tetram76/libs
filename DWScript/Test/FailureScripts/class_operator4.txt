@@ -1,1 +1,0 @@
-Syntax Error: Type "uses" not found [line: 4, column: 22]

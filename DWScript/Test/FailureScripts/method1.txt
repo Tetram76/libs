@@ -1,1 +1,0 @@
-Syntax Error: Class name expected [line: 1, column: 8]
