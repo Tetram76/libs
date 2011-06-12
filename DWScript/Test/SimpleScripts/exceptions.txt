@@ -1,6 +1,0 @@
-MyException: exception message
-OtherException: exception message
-Else
-MyException: exception message 2
-Finally
-Except

@@ -1,8 +1,0 @@
-﻿<html>
-<body>
-<table>
-test 中文
-中文測試:戊
-</table>
-</body>
-</html>

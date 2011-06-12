@@ -1,6 +1,0 @@
-Stuffed '
-	string
-stuffed'string goes
-	there'
-
-Other ' Text

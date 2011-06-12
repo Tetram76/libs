@@ -1,3 +1,0 @@
-Errors >>>>
-Runtime Error: Lower bound exceeded! Index 0 [line: 2, column: 10]
-Result >>>>

@@ -1,3 +1,0 @@
-method Stuff;
-begin
-end;

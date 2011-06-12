@@ -1,1 +1,0 @@
-Syntax Error: More arguments expected! [line: 9, column: 7]
