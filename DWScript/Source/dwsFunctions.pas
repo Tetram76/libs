@@ -26,102 +26,97 @@ uses
   Classes, SysUtils, dwsExprs, dwsSymbols, dwsStack, dwsStrings;
 
 type
+  TEmptyFunc = class(TInterfacedObject, ICallable)
+    procedure Call(Caller: TdwsProgram; Func: TFuncSymbol);
+    procedure InitSymbol(Symbol: TSymbol);
+    procedure InitExpression(Expr: TExprBase);
+  end;
 
-   TEmptyFunc = class(TInterfacedObject, ICallable)
-      public
-         procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol);
-         procedure InitSymbol(Symbol: TSymbol);
-         procedure InitExpression(Expr: TExprBase);
-   end;
+  TFunctionPrototype = class(TInterfacedObject)
+  protected
+    FInfo: TProgramInfo;
+  public
+    destructor Destroy; override;
+    procedure InitSymbol(Symbol: TSymbol); virtual;
+    procedure InitExpression(Expr: TExprBase); virtual;
+    property Info: TProgramInfo read FInfo;
+  end;
 
-   TFunctionPrototype = class(TInterfacedObject)
-      private
-         FFuncSymbol : TFuncSymbol;
-      public
-         procedure InitSymbol(Symbol: TSymbol); virtual;
-         procedure InitExpression(Expr: TExprBase); virtual;
-         procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); virtual; abstract;
-         property FuncSymbol : TFuncSymbol read FFuncSymbol;
-   end;
+  TAnonymousFunction = class(TFunctionPrototype, IUnknown, ICallable)
+    constructor Create(FuncSym: TFuncSymbol);
+    procedure Call(Caller: TdwsProgram; Func: TFuncSymbol);
+    procedure Execute; virtual; abstract;
+  end;
 
-   TAnonymousFunction = class(TFunctionPrototype, IUnknown, ICallable)
-      public
-         constructor Create(FuncSym: TFuncSymbol);
-         procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); override;
-         procedure Execute(info : TProgramInfo); virtual; abstract;
-   end;
+  TInternalFunction = class(TFunctionPrototype, IUnknown, ICallable)
+  public
+    constructor Create(Table: TSymbolTable; const FuncName: string;
+                       const FuncParams: array of string; const FuncType: string;
+                       const isStateLess : Boolean = False); virtual;
+    procedure Call(Caller: TdwsProgram; Func: TFuncSymbol);
+    procedure Execute; virtual; abstract;
+  end;
+  TInternalFunctionClass = class of TInternalFunction;
 
-   TInternalFunction = class(TFunctionPrototype, IUnknown, ICallable)
-      public
-         constructor Create(Table: TSymbolTable; const FuncName: string;
-                            const FuncParams: array of string; const FuncType: string;
-                            const isStateLess : Boolean = False); virtual;
-         procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); override;
-         procedure Execute(info : TProgramInfo); virtual; abstract;
-   end;
-   TInternalFunctionClass = class of TInternalFunction;
+  TInternalMagicFunction = class(TInternalFunction)
+  public
+    constructor Create(Table: TSymbolTable; const FuncName: string;
+                       const FuncParams: array of string; const FuncType: string;
+                       const isStateLess : Boolean = False); override;
+    procedure Execute; override;
+    function DoEval(args : TExprBaseList) : Variant; virtual; abstract;
+  end;
 
-   TInternalMagicFunction = class(TInternalFunction)
-      public
-         constructor Create(Table: TSymbolTable; const FuncName: string;
-                            const FuncParams: array of string; const FuncType: string;
-                            const isStateLess : Boolean = False); override;
-         function DoEval(args : TExprBaseList) : Variant; virtual; abstract;
-   end;
+  TInternalMagicProcedure = class(TInternalMagicFunction)
+  public
+    function DoEval(args : TExprBaseList) : Variant; override;
+    procedure DoEvalProc(args : TExprBaseList); virtual; abstract;
+  end;
 
-   TInternalMagicProcedure = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         procedure DoEvalProc(args : TExprBaseList); virtual; abstract;
-   end;
+  TInternalMagicIntFunction = class(TInternalMagicFunction)
+  public
+    function DoEval(args : TExprBaseList) : Variant; override;
+    function DoEvalAsInteger(args : TExprBaseList) : Int64; virtual; abstract;
+  end;
+  TInternalMagicIntFunctionClass = class of TInternalMagicIntFunction;
 
-   TInternalMagicIntFunction = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         function DoEvalAsInteger(args : TExprBaseList) : Int64; virtual; abstract;
-   end;
-   TInternalMagicIntFunctionClass = class of TInternalMagicIntFunction;
+  TInternalMagicBoolFunction = class(TInternalMagicFunction)
+  public
+    function DoEval(args : TExprBaseList) : Variant; override;
+    function DoEvalAsBoolean(args : TExprBaseList) : Boolean; virtual; abstract;
+  end;
+  TInternalMagicBoolFunctionClass = class of TInternalMagicBoolFunction;
 
-   TInternalMagicBoolFunction = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         function DoEvalAsBoolean(args : TExprBaseList) : Boolean; virtual; abstract;
-   end;
-   TInternalMagicBoolFunctionClass = class of TInternalMagicBoolFunction;
+  TInternalMagicFloatFunction = class(TInternalMagicFunction)
+  public
+    function DoEval(args : TExprBaseList) : Variant; override;
+    procedure DoEvalAsFloat(args : TExprBaseList; var Result : Double); virtual; abstract;
+  end;
+  TInternalMagicFloatFunctionClass = class of TInternalMagicFloatFunction;
 
-   TInternalMagicFloatFunction = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         procedure DoEvalAsFloat(args : TExprBaseList; var Result : Double); virtual; abstract;
-   end;
-   TInternalMagicFloatFunctionClass = class of TInternalMagicFloatFunction;
+  TInternalMagicStringFunction = class(TInternalMagicFunction)
+  public
+    function DoEval(args : TExprBaseList) : Variant; override;
+    procedure DoEvalAsString(args : TExprBaseList; var Result : String); virtual; abstract;
+  end;
+  TInternalMagicStringFunctionClass = class of TInternalMagicStringFunction;
 
-   TInternalMagicStringFunction = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         procedure DoEvalAsString(args : TExprBaseList; var Result : String); virtual; abstract;
-   end;
-   TInternalMagicStringFunctionClass = class of TInternalMagicStringFunction;
+  TAnonymousMethod = class(TFunctionPrototype, IUnknown, ICallable)
+    constructor Create(MethSym: TMethodSymbol);
+    procedure Call(Caller: TdwsProgram; Func: TFuncSymbol);
+    procedure Execute(var ExternalObject: TObject); virtual; abstract;
+  end;
 
-   TAnonymousMethod = class(TFunctionPrototype, IUnknown, ICallable)
-      public
-         constructor Create(MethSym: TMethodSymbol);
-         procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); override;
-         procedure Execute(info : TProgramInfo; var ExternalObject: TObject); virtual; abstract;
-   end;
+  TInternalMethod = class(TFunctionPrototype, IUnknown, ICallable)
+  public
+    constructor Create(MethKind: TMethodKind; Attributes: TMethodAttributes;
+      bugFix: Integer; const methName: string; const MethParams: array of string;
+      const MethType: string; Cls: TClassSymbol; Table: TSymbolTable);
+    procedure Call(Caller: TdwsProgram; Func: TFuncSymbol);
+    procedure Execute(var ExternalObject: TObject); virtual; abstract;
+  end;
 
-   TInternalMethod = class(TFunctionPrototype, IUnknown, ICallable)
-      public
-         constructor Create(MethKind: TMethodKind; Attributes: TMethodAttributes;
-                            const methName: string; const MethParams: array of string;
-                            const MethType: string; Cls: TClassSymbol;
-                            aVisibility : TClassVisibility;
-                            Table: TSymbolTable);
-         procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); override;
-         procedure Execute(info : TProgramInfo; var ExternalObject: TObject); virtual; abstract;
-   end;
-
-   TInternalInitProc = procedure (SystemTable, UnitSyms, UnitTable: TSymbolTable);
+  TInternalInitProc = procedure (SystemTable, UnitSyms, UnitTable: TSymbolTable);
 
   TInternalUnit = class(TObject, IUnknown, IUnit)
   private
@@ -322,7 +317,7 @@ end;
 
 { TEmptyFunc }
 
-procedure TEmptyFunc.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
+procedure TEmptyFunc.Call(Caller: TdwsProgram; Func: TFuncSymbol);
 begin
 end;
 
@@ -335,6 +330,12 @@ begin
 end;
 
 { TFunctionPrototype }
+
+destructor TFunctionPrototype.Destroy;
+begin
+  FInfo.Free;
+  inherited;
+end;
 
 procedure TFunctionPrototype.InitSymbol(Symbol: TSymbol);
 begin
@@ -350,31 +351,26 @@ constructor TInternalFunction.Create(Table: TSymbolTable;
   const FuncName: string; const FuncParams: array of string; const FuncType: string;
   const isStateLess : Boolean = False);
 var
-   sym: TFuncSymbol;
-   params: TParamArray;
+  sym: TFuncSymbol;
+  Params: TParamArray;
 begin
-   ConvertFuncParams(Params, FuncParams);
+  ConvertFuncParams(Params, FuncParams);
 
-   sym := TFuncSymbol.Generate(Table, FuncName, Params, FuncType);
-   sym.Params.AddParent(Table);
-   sym.Executable := ICallable(Self);
-   sym.IsStateless:=isStateLess;
-   FFuncSymbol:=sym;
-   Table.AddSymbol(sym);
+  sym := TFuncSymbol.Generate(Table, FuncName, Params, FuncType);
+  sym.Params.AddParent(Table);
+  sym.Executable := ICallable(Self);
+  sym.IsStateless:=isStateLess;
+  Table.AddSymbol(sym);
+
+  FInfo := TProgramInfo.Create;
+  FInfo.Table := sym.Params;
+  FInfo.FuncSym := sym;
 end;
 
-// Call
-//
-procedure TInternalFunction.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
-var
-   info : TProgramInfo;
+procedure TInternalFunction.Call(Caller: TdwsProgram; Func: TFuncSymbol);
 begin
-   info:=exec.AcquireProgramInfo(func);
-   try
-      Execute(info);
-   finally
-      exec.ReleaseProgramInfo(info);
-   end;
+  FInfo.Caller := Caller;
+  Execute;
 end;
 
 // ------------------
@@ -397,6 +393,13 @@ begin
   sym.InternalFunction:=Self;
   sym.IsStateless:=isStateLess;
   Table.AddSymbol(sym);
+end;
+
+// Execute
+//
+procedure TInternalMagicFunction.Execute;
+begin
+   Assert(False);
 end;
 
 // ------------------
@@ -462,11 +465,7 @@ end;
 
 { TInternalMethod }
 
-constructor TInternalMethod.Create(MethKind: TMethodKind; Attributes: TMethodAttributes;
-                   const methName: string; const MethParams: array of string;
-                   const MethType: string; Cls: TClassSymbol;
-                   aVisibility : TClassVisibility;
-                   Table: TSymbolTable);
+constructor TInternalMethod.Create;
 var
   sym: TMethodSymbol;
   Params: TParamArray;
@@ -474,97 +473,95 @@ begin
   ConvertFuncParams(Params, MethParams);
 
   sym := TMethodSymbol.Generate(Table, MethKind, Attributes, methName, Params,
-                                MethType, Cls, aVisibility);
+    MethType, Cls);
   sym.Params.AddParent(Table);
   sym.Executable := ICallable(Self);
 
   // Add method to its class
   Cls.AddMethod(sym);
+
+  FInfo := TProgramInfo.Create;
+  FInfo.Table := sym.Params;
+  FInfo.FuncSym := sym;
 end;
 
-procedure TInternalMethod.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
+procedure TInternalMethod.Call(Caller: TdwsProgram; Func: TFuncSymbol);
 var
-   scriptObj: IScriptObj;
-   extObj: TObject;
-   info : TProgramInfo;
+  scriptObj: IScriptObj;
+  extObj: TObject;
 begin
-   info:=exec.AcquireProgramInfo(func);
-   try
-      scriptObj := Info.Vars[SYS_SELF].ScriptObj;
+  FInfo.Caller := Caller;
+  scriptObj := Info.Vars['Self'].ScriptObj;
 
-      if Assigned(scriptObj) then begin
-         info.ScriptObj := scriptObj;
-         extObj := scriptObj.ExternalObject;
-         try
-            Execute(info, extObj);
-         finally
-            scriptObj.ExternalObject := extObj;
-            info.ScriptObj := nil;
-         end;
-      end else begin
-         // Class methods or method calls on nil-object-references
-         extObj := nil;
-         Execute(info, extObj);
-      end;
-   finally
-      exec.ReleaseProgramInfo(info);
-   end;
+  if Assigned(scriptObj) then
+  begin
+    FInfo.ScriptObj := scriptObj;
+    extObj := scriptObj.ExternalObject;
+    try
+      Execute(extObj);
+    finally
+      scriptObj.ExternalObject := extObj;
+      FInfo.ScriptObj := nil;
+    end;
+  end
+  else
+  begin
+    // Class methods or method calls on nil-object-references
+    extObj := nil;
+    Execute(extObj);
+  end;
 end;
 
-{ TAnonymousFunction }
+{ TSimpleFunction }
 
-constructor TAnonymousFunction.Create(FuncSym: TFuncSymbol);
+constructor TAnonymousFunction.Create;
 begin
-   FuncSym.Executable := ICallable(Self);
+  FInfo := TProgramInfo.Create;
+  FInfo.Table := FuncSym.Params;
+  FInfo.FuncSym := FuncSym;
+  FuncSym.Executable := ICallable(Self);
 end;
 
-// Call
-//
-procedure TAnonymousFunction.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
-var
-   info : TProgramInfo;
+procedure TAnonymousFunction.Call(Caller: TdwsProgram; Func: TFuncSymbol);
 begin
-   info:=exec.AcquireProgramInfo(func);
-   try
-      Execute(info);
-   finally
-      exec.ReleaseProgramInfo(info);
-   end;
+  FInfo.Caller := Caller;
+  Execute;
 end;
 
 { TAnonymousMethod }
 
-constructor TAnonymousMethod.Create(MethSym: TMethodSymbol);
+procedure TAnonymousMethod.Call(Caller: TdwsProgram; Func: TFuncSymbol);
+var
+  scriptObj: IScriptObj;
+  extObj: TObject;
 begin
-   MethSym.Executable := ICallable(Self);
+  FInfo.Caller := Caller;
+  scriptObj := Info.Vars['Self'].ScriptObj;
+
+  if Assigned(scriptObj) then
+  begin
+    FInfo.ScriptObj := scriptObj;
+    extObj := scriptObj.ExternalObject;
+    try
+      Execute(extObj);
+    finally
+      scriptObj.ExternalObject := extObj;
+    end;
+  end
+  else
+  begin
+    // Class methods or method calls on nil-object-references
+    extObj := nil;
+    Execute(extObj);
+  end;
 end;
 
-procedure TAnonymousMethod.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
-var
-   info : TProgramInfo;
-   scriptObj : IScriptObj;
-   extObj : TObject;
+constructor TAnonymousMethod.Create(MethSym: TMethodSymbol);
 begin
-   info:=exec.AcquireProgramInfo(func);
-   try
-      scriptObj:=info.Vars[SYS_SELF].ScriptObj;
-
-      if Assigned(scriptObj) then begin
-         info.ScriptObj := scriptObj;
-         extObj := scriptObj.ExternalObject;
-         try
-            Execute(info, extObj);
-         finally
-            scriptObj.ExternalObject := extObj;
-         end;
-      end else begin
-         // Class methods or method calls on nil-object-references
-         extObj := nil;
-         Execute(info, extObj);
-      end;
-   finally
-      exec.ReleaseProgramInfo(info);
-   end;
+  FInfo := TProgramInfo.Create;
+  FInfo.Table := MethSym.Params;
+  FInfo.FuncSym := MethSym;
+  MethSym.Executable := ICallable(Self);
 end;
 
 { TInternalUnit }

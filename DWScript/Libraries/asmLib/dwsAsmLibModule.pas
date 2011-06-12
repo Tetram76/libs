@@ -40,7 +40,7 @@ type
    TdwsAsmLanguageExtension = class (TdwsLanguageExtension)
       protected
          function SymbolDefines(const symbolName : String; compiler : TdwsCompiler) : String;
-         function AssembleViaNASM(const code : TStrings; const basePos : TScriptPos; msgs : TdwsCompileMessageList) : TBytes;
+         function AssembleViaNASM(const code : TStrings; const basePos : TScriptPos; msgs : TdwsMessageList) : TBytes;
       public
          function ReadInstr(compiler : TdwsCompiler) : TNoResultExpr; override;
    end;
@@ -54,7 +54,7 @@ type
       public
          constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; const binary : TBytes);
          destructor Destroy; override;
-         procedure EvalNoResult(exec : TdwsExecution); override;
+         procedure EvalNoResult(var status : TExecutionStatusResult); override;
    end;
 
 // ------------------------------------------------------------------
@@ -130,7 +130,7 @@ begin
                SetString(curInstr, startPos, (NativeUInt(curPos)-NativeUInt(startPos)) div SizeOf(Char)-1);
                curInstr:=Trim(curInstr);
                if LastDelimiter(#13#10, curInstr)>0 then
-                  compiler.CurrentProg.CompileMsgs.AddCompilerStop(tok.HotPos, CPE_SemiExpected);
+                  compiler.CurrentProg.Msgs.AddCompilerStop(tok.HotPos, CPE_SemiExpected);
 
                case token of
                   ttSEMI : begin
@@ -152,7 +152,7 @@ begin
                SetString(curInstr, startPos, (NativeUInt(tok.PosPtr)-NativeUInt(startPos)) div SizeOf(Char)-1);
                curInstr:=Trim(curInstr);
                if LastDelimiter(#13#10, curInstr)>0 then
-                  compiler.CurrentProg.CompileMsgs.AddCompilerStop(asmPos, CPE_SemiExpected);
+                  compiler.CurrentProg.Msgs.AddCompilerStop(asmPos, CPE_SemiExpected);
                tok.KillToken;
                Break;
             end;
@@ -165,8 +165,10 @@ begin
       outputAsm.Add('pop ebp');
       outputAsm.Add('ret');
 
-      if not tok.HasTokens then
-         raise EScriptError.CreatePosFmt(tok.HotPos, 'Incomplete asm block%s', [tok.HotPos.AsInfo]);
+      if not tok.HasTokens then begin
+         compiler.CurrentProg.Msgs.AddErrorStop('Incomplete asm block');
+         Exit;
+      end;
 
       // generate defines for encountered symbols
 
@@ -179,7 +181,7 @@ begin
       // assemble via NASM
 
       Result:=TdwsASMBlockExpr.Create(compiler.CurrentProg, hotPos,
-                                      AssembleViaNASM(outputAsm, hotPos, compiler.CurrentProg.CompileMsgs));
+                                      AssembleViaNASM(outputAsm, hotPos, compiler.CurrentProg.Msgs));
 
    finally
       nameSymbols.Free;
@@ -191,7 +193,7 @@ end;
 // AssembleViaNASM
 //
 function TdwsAsmLanguageExtension.AssembleViaNASM(const code : TStrings;
-      const basePos : TScriptPos; msgs : TdwsCompileMessageList) : TBytes;
+      const basePos : TScriptPos; msgs : TdwsMessageList) : TBytes;
 var
    i, p, k : Integer;
    tempFileNameAsm, tempFileNameBin, tempFileNameErr : String;
@@ -223,7 +225,7 @@ begin
             // timeout is in milliseconds or INFINITE if you want to wait forever
             waitResult:=WaitForSingleObject(ProcessInfo.hProcess, 5000);
             if waitResult<>WAIT_OBJECT_0 then
-               raise EScriptError.Create('NASM call timed out');
+               msgs.AddErrorStop('NASM call timed out');
 
             errors:=TStringList.Create;
             try
@@ -239,7 +241,7 @@ begin
                      msgs.AddCompilerError(TScriptPos.Create(basePos.SourceFile,
                                                              Integer(code.Objects[k-1]), 1),
                                            'asm '+errorLine);
-                  end else msgs.AddCompilerError(basePos, errorLine);
+                  end else msgs.AddError(errorLine);
                end;
                if errors.Count>0 then
                   Exit;
@@ -254,7 +256,7 @@ begin
             CloseHandle(ProcessInfo.hProcess);
          end;
       end else begin
-         raise EScriptError.CreateFmt('NASM call failed with error %d', [GetLastError]);
+         msgs.AddErrorStop('NASM call failed out '+IntToStr(GetLastError));
       end;
 
    finally
@@ -273,14 +275,15 @@ var
    dataSym : TDataSymbol;
    size, sign : String;
 begin
-   sym:=compiler.CurrentProg.Table.FindSymbol(symbolName, cvMagic);
+   sym:=compiler.CurrentProg.Table.FindSymbol(symbolName);
    if not Assigned(sym) then Exit('');
 
-   if sym.IsIntegerValue or sym.IsFloatValue or sym.IsStringValue then
-      size:='QWORD'
-   else if sym.IsBooleanValue then
-      size:='WORD'
-   else Exit('');
+   case sym.BaseTypeID of
+      typIntegerID, typFloatID, typStringID : size:='QWORD';
+      typBooleanID : size:='WORD';
+   else
+      Exit('');
+   end;
 
    if sym is TConstSymbol then begin
 
@@ -295,7 +298,7 @@ begin
       dataSym:=TDataSymbol(sym);
       if dataSym.Level<>compiler.CurrentProg.Level then Exit('');
 
-      offset:=dataSym.StackAddr*SizeOf(Variant)+$8;
+      offset:=(dataSym.StackAddr-compiler.CurrentProg.Stack.BasePointer)*SizeOf(Variant)+$8;
       if offset>0 then
          sign:='+'
       else sign:='';
@@ -332,11 +335,14 @@ end;
 
 // EvalNoResult
 //
-procedure TdwsASMBlockExpr.EvalNoResult(exec : TdwsExecution);
+procedure TdwsASMBlockExpr.EvalNoResult(var status : TExecutionStatusResult);
 type
    TJumpFunc = procedure(stack : Pointer);
+var
+   stack : TStack;
 begin
-   TJumpFunc(FCodePtr)(@exec.Stack.Data[exec.Stack.BasePointer]);
+   stack:=Prog.Stack;
+   TJumpFunc(FCodePtr)(@stack.Data[stack.BasePointer]);
 end;
 
 end.

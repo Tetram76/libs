@@ -37,6 +37,5 @@
       // <<.CreateResFmt(@SNoMethod, [Names]);>>
 
 {.$DEFINE PUREPASCAL}
-{.$DEFINE UNICODE_IDENTIFIERS}
 
 

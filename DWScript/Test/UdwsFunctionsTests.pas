@@ -3,8 +3,8 @@ unit UdwsFunctionsTests;
 interface
 
 uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs,
-   dwsTokenizer, dwsSymbols, dwsXPlatform, dwsUtils,
-   dwsMathFunctions, dwsTimeFunctions, dwsGlobalVarsFunctions, dwsVariantFunctions;
+   dwsTokenizer, dwsSymbols, dwsMathFunctions, dwsTimeFunctions,
+   dwsVariantFunctions, dwsXPlatform;
 
 type
 
@@ -49,11 +49,6 @@ type
          procedure SetUp; override;
    end;
 
-   TdwsFuncFunctionsTestsGlobalVars = class (TdwsFunctionsTestsBase)
-      public
-         procedure SetUp; override;
-   end;
-
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -91,7 +86,7 @@ procedure TdwsFunctionsTestsBase.Compilation;
 var
    source : TStringList;
    i : Integer;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
 begin
    source:=TStringList.Create;
    try
@@ -101,7 +96,11 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-         CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         finally
+            prog.Free;
+         end;
 
       end;
 
@@ -116,8 +115,7 @@ procedure TdwsFunctionsTestsBase.Execution;
 var
    source, expectedResult : TStringList;
    i : Integer;
-   prog : IdwsProgram;
-   exec : IdwsProgramExecution;
+   prog : TdwsProgram;
    resultsFileName : String;
 begin
    source:=TStringList.Create;
@@ -129,14 +127,19 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-         CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
-         exec:=prog.Execute;
-         CheckEquals('', exec.Msgs.AsInfo, FTests[i]);
-         resultsFileName:=ChangeFileExt(FTests[i], '.txt');
-         if FileExists(resultsFileName) then begin
-            expectedResult.LoadFromFile(resultsFileName);
-            CheckEquals(expectedResult.Text, exec.Result.ToString, FTests[i]);
-         end else CheckEquals('', exec.Result.ToString, FTests[i]);
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+            prog.Execute;
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+            resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+            if FileExists(resultsFileName) then begin
+               expectedResult.LoadFromFile(resultsFileName);
+               CheckEquals(expectedResult.Text, (prog.Result as TdwsDefaultResult).Text, FTests[i]);
+            end else CheckEquals('', (prog.Result as TdwsDefaultResult).Text, FTests[i]);
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         finally
+            prog.Free;
+         end;
 
       end;
 
@@ -158,7 +161,7 @@ end;
 //
 procedure TdwsFunctionsTestsBase.CompilationWithMapAndSymbols;
 begin
-   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap];
    Compilation;
 end;
 
@@ -166,7 +169,7 @@ end;
 //
 procedure TdwsFunctionsTestsBase.ExecutionNonOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coAssertions];
+   FCompiler.Config.CompilerOptions:=[];
    Execution;
 end;
 
@@ -174,7 +177,7 @@ end;
 //
 procedure TdwsFunctionsTestsBase.ExecutionOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coOptimize, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coOptimize];
    Execution;
 end;
 
@@ -226,18 +229,6 @@ begin
    inherited;
 end;
 
-// ------------------
-// ------------------ TdwsFuncFunctionsTestsGlobalVars ------------------
-// ------------------
-
-// SetUp
-//
-procedure TdwsFuncFunctionsTestsGlobalVars.SetUp;
-begin
-   FFolder:='FunctionsGlobalVars';
-   inherited;
-end;
-
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -250,6 +241,5 @@ initialization
    TestFramework.RegisterTest('FunctionsTime', TdwsFuncFunctionsTestsTime.Suite);
    TestFramework.RegisterTest('FunctionsString', TdwsFuncFunctionsTestsString.Suite);
    TestFramework.RegisterTest('FunctionsVariant', TdwsFuncFunctionsTestsVariant.Suite);
-   TestFramework.RegisterTest('FunctionsGlobalVars', TdwsFuncFunctionsTestsGlobalVars.Suite);
 
 end.

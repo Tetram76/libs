@@ -1,7 +1,0 @@
-True
-False
-True
-True
-Ok
-Ookie
-Ok

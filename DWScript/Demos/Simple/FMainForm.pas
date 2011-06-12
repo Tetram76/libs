@@ -59,23 +59,25 @@ end;
 
 procedure TMainForm.MIRunClick(Sender: TObject);
 var
-   prog : IdwsProgram;
-   exec : IdwsProgramExecution;
+   prog : TdwsProgram;
 begin
    prog:=DelphiWebScript.Compile(MESourceCode.Lines.Text);
-
-   if prog.Msgs.Count>0 then
-      MEResult.Lines.Text:=prog.Msgs.AsInfo
-   else begin
-      MEResult.Clear;
-      try
-         exec:=prog.Execute;
-         MEResult.Lines.Text:=exec.Result.ToString;
-      except
-         on E: Exception do begin
-            MEResult.Lines.Text:=E.ClassName+': '+E.Message;
+   try
+      if prog.Msgs.Count>0 then
+         MEResult.Lines.Text:=prog.Msgs.AsInfo
+      else begin
+         MEResult.Clear;
+         try
+            prog.Execute;
+            MEResult.Lines.Text:=(prog.Result as TdwsDefaultResult).Text;
+         except
+            on E: Exception do begin
+               MEResult.Lines.Text:=E.ClassName+': '+E.Message;
+            end;
          end;
       end;
+   finally
+      prog.Free;
    end;
 end;
 

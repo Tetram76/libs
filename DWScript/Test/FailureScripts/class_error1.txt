@@ -1,1 +1,0 @@
-Syntax Error: PROCEDURE or FUNCTION expected [line: 2, column: 10]

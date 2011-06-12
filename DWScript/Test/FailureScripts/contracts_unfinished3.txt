@@ -1,2 +1,0 @@
-Warning: Constant condition [line: 4, column: 4]
-Syntax Error: Expression expected [line: 4, column: 8]

@@ -88,8 +88,8 @@ var
 begin
    FBitmap:=TBitmap.Create;
    FBitmap.PixelFormat:=pf32bit;
-   FBitmap.Width:=500;
-   FBitmap.Height:=500;
+   FBitmap.Width:=400;
+   FBitmap.Height:=400;
 
    SetLength(FScanLines, FBitmap.Height);
    for i:=0 to FBitmap.Height-1 do
@@ -111,16 +111,14 @@ end;
 // PaintBitmapDelphi
 //
 procedure TMainForm.PaintBitmapDelphi;
-const
-   cSize = 500;
 var
    i, j, newColor : Integer;
    u, v, x, y, z : Double;
 begin
-   for i := 0 to cSize-2 do begin
-      for j := 0 to cSize-2 do begin
-         x := -0.8 + 3 * i / cSize;
-         y := -1.4 + 2.8 * j / cSize;
+   for i := 0 to 400-2 do begin
+      for j := 0 to 400-2 do begin
+         x := -0.8 + 3 * i / 400;
+         y := -1.4 + 2.8 * j / 400;
          newColor := 0;
          u := 0;
          v := 0;
@@ -140,14 +138,13 @@ end;
 procedure TMainForm.PaintBitmapDWSscript;
 const
    cSource = ''
-      +'const cSize = 500;'#13#10
       +'var i, j, newColor : Integer;'#13#10
       +'var u, v, x, y, z : Float;'#13#10
       +#13#10
-      +'for i := 0 to cSize-2 do begin'#13#10
-      +'   for j := 0 to cSize-2 do begin'#13#10
-      +'      x := -0.8 + 3 * i / cSize;'#13#10
-      +'      y := -1.4 + 2.8 * j / cSize;'#13#10
+      +'for i := 0 to 400-2 do begin'#13#10
+      +'   for j := 0 to 400-2 do begin'#13#10
+      +'      x := -0.8 + 3 * i / 400;'#13#10
+      +'      y := -1.4 + 2.8 * j / 400;'#13#10
       +'      newColor := 0;'#13#10
       +'      u := 0;'#13#10
       +'      v := 0;'#13#10
@@ -162,13 +159,16 @@ const
       +'end;';
 
 var
-   prog : IdwsProgram;
+   prog : TdwsProgram;
 begin
    prog:=DelphiWebScript.Compile(cSource);
-
-   if prog.Msgs.Count=0 then
-      prog.Execute
-   else ShowMessage(prog.Msgs.AsInfo);
+   try
+      if prog.Msgs.Count=0 then
+         prog.Execute
+      else ShowMessage(prog.Msgs.AsInfo);
+   finally
+      prog.Free;
+   end;
 end;
 
 end.

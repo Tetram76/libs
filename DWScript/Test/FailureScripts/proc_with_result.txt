@@ -1,3 +1,0 @@
-Syntax Error: No result type expected [line: 1, column: 16]
-Syntax Error: No result type expected [line: 8, column: 22]
-Syntax Error: No result type expected [line: 11, column: 25]

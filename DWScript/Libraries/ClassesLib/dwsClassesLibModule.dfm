@@ -122,17 +122,6 @@ object dwsClassesLib: TdwsClassesLib
               end>
             OnEval = dwsUnitClassesTListMethodsSetItemsEval
             Kind = mkProcedure
-          end
-          item
-            Name = 'Contains'
-            Parameters = <
-              item
-                Name = 'obj'
-                DataType = 'TObject'
-              end>
-            ResultType = 'Boolean'
-            OnEval = dwsUnitClassesTListMethodsContainsEval
-            Kind = mkFunction
           end>
         Operators = <
           item
@@ -144,11 +133,6 @@ object dwsClassesLib: TdwsClassesLib
             DataType = 'TObject'
             Operator = ttMINUS_ASSIGN
             UsesAccess = 'Remove'
-          end
-          item
-            DataType = 'TObject'
-            Operator = ttIN
-            UsesAccess = 'Contains'
           end>
         Properties = <
           item
@@ -520,17 +504,6 @@ object dwsClassesLib: TdwsClassesLib
               end>
             OnEval = dwsUnitClassesTStringsMethodsRemoveEval
             Kind = mkProcedure
-          end
-          item
-            Name = 'Contains'
-            Parameters = <
-              item
-                Name = 'str'
-                DataType = 'String'
-              end>
-            ResultType = 'Boolean'
-            OnEval = dwsUnitClassesTStringsMethodsContainsEval
-            Kind = mkFunction
           end>
         Operators = <
           item
@@ -542,11 +515,6 @@ object dwsClassesLib: TdwsClassesLib
             DataType = 'String'
             Operator = ttMINUS_ASSIGN
             UsesAccess = 'Remove'
-          end
-          item
-            DataType = 'String'
-            Operator = ttIN
-            UsesAccess = 'Contains'
           end>
         Properties = <
           item
@@ -816,12 +784,7 @@ object dwsClassesLib: TdwsClassesLib
             OnEval = dwsUnitClassesTIntegerHashtableMethodsRemoveKeyEval
             Kind = mkFunction
           end>
-        Operators = <
-          item
-            DataType = 'Integer'
-            Operator = ttIN
-            UsesAccess = 'HasKey'
-          end>
+        Operators = <>
         Properties = <>
       end
       item
@@ -892,12 +855,7 @@ object dwsClassesLib: TdwsClassesLib
             OnEval = dwsUnitClassesTStringHashtableMethodsRemoveKeyEval
             Kind = mkFunction
           end>
-        Operators = <
-          item
-            DataType = 'String'
-            Operator = ttIN
-            UsesAccess = 'HasKey'
-          end>
+        Operators = <>
         Properties = <>
       end
       item

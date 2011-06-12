@@ -2,7 +2,7 @@ unit UdwsUtilsTests;
 
 interface
 
-uses Windows, Classes, SysUtils, TestFrameWork, dwsUtils, dwsJSON;
+uses Windows, Classes, SysUtils, TestFrameWork, dwsUtils;
 
 type
 
@@ -17,11 +17,6 @@ type
          procedure StackIntegerTest;
          procedure WriteOnlyBlockStreamTest;
          procedure TightListTest;
-
-         procedure JSONTest;
-         procedure ParseJSON;
-
-         procedure UnicodeCompareTextTest;
    end;
 
 // ------------------------------------------------------------------
@@ -56,13 +51,11 @@ begin
    CheckEquals(2, stack.Count);
    CheckEquals(456, stack.Peek);
 
-   CheckEquals(456, stack.Peek);
-   stack.Pop;
+   CheckEquals(456, stack.Pop);
 
    CheckEquals(1, stack.Count);
 
-   CheckEquals(123, stack.Peek);
-   stack.Pop;
+   CheckEquals(123, stack.Pop);
 
    CheckEquals(0, stack.Count);
 
@@ -98,7 +91,7 @@ begin
 
    buffer.Free;
 
-   CheckEquals(AnsiString('123456789'), bs);
+   CheckEquals('123456789', bs);
 end;
 
 // TightListTest
@@ -137,104 +130,6 @@ begin
    CheckEquals(1, FTightList.IndexOf(Self), 'three search Self');
 
    FTightList.Clear
-end;
-
-// JSONTest
-//
-procedure TdwsUtilsTests.JSONTest;
-var
-   json : TdwsJSONObject;
-begin
-   json:=TdwsJSONObject.Create;
-
-   CheckEquals('{}', json.ToString);
-   CheckEquals('{ }', json.ToBeautifiedString(0, 3));
-
-   json.AddValue('hello').AsString:='world';
-
-   CheckEquals('{"hello":"world"}', json.ToString);
-   CheckEquals('{'#13#10#9'"hello" : "world"'#13#10'}', json.ToBeautifiedString(0, 1));
-
-   with json.AddArray('items') do begin
-      AddValue;
-      AddValue.AsNumber:=12.3;
-      AddValue.AsBoolean:=True;
-      AddValue.AsBoolean:=False;
-      AddValue.IsNull:=True;
-   end;
-
-   CheckEquals('{"hello":"world","items":[null,12.3,true,false,null]}', json.ToString);
-   CheckEquals( '{'#13#10
-                  +#9'"hello" : "world",'#13#10
-                  +#9'"items" : ['#13#10
-                     +#9#9'null,'#13#10
-                     +#9#9'12.3,'#13#10
-                     +#9#9'true,'#13#10
-                     +#9#9'false,'#13#10
-                     +#9#9'null'#13#10
-                  +#9']'#13#10
-               +'}', json.ToBeautifiedString(0, 1));
-
-   json.Free;
-end;
-
-// ParseJSON
-//
-procedure TdwsUtilsTests.ParseJSON;
-var
-   json : TdwsJSONValue;
-   sl : TStringList;
-begin
-   json:=TdwsJSONValue.ParseString('"hello"');
-   CheckEquals(TdwsJSONImmediate.ClassName, json.ClassName, '"hello"');
-   CheckEquals('"hello"', json.ToString, '"hello"');
-   json.Free;
-
-   json:=TdwsJSONValue.ParseString('{"hello":"world","abc":123}');
-   CheckEquals(TdwsJSONObject.ClassName, json.ClassName, '"hello"');
-   CheckEquals('{"hello":"world","abc":123}', json.ToString, '"hello"');
-   json.Free;
-
-   sl:=TStringList.Create;
-   try
-      sl.LoadFromFile(ExtractFilePath(ParamStr(0))+'\Data\json.txt');
-      json:=TdwsJSONValue.ParseString(sl.Text);
-      CheckEquals(TdwsJSONObject.ClassName, json.ClassName, 'json.txt');
-      CheckEquals(1, json.ElementCount, 'json.txt');
-      CheckEquals(3, json.Elements[0].ElementCount, 'json.txt');
-      CheckEquals('"templates"', json[0]['servlet'][0]['init-param']['templatePath'].ToString, 'json.txt');
-      CheckEquals('', json['doh'][5]['bug'].ToString, 'json.txt');
-      json.Free;
-   finally
-      sl.Free;
-   end;
-end;
-
-// UnicodeCompareTextTest
-//
-procedure TdwsUtilsTests.UnicodeCompareTextTest;
-begin
-   CheckTrue(UnicodeCompareText('', '')=0, 'both empty');
-
-   CheckTrue(UnicodeCompareText('a', '')>0, 'a, empty');
-   CheckTrue(UnicodeCompareText('', 'a')<0, 'empty, a');
-   CheckTrue(UnicodeCompareText('é', '')>0, 'é, empty');
-   CheckTrue(UnicodeCompareText('', 'é')<0, 'empty, é');
-
-   CheckTrue(UnicodeCompareText('abc', 'abc')=0, 'abc, abc');
-   CheckTrue(UnicodeCompareText('abcd', 'abc')>0, 'abcd, abc');
-   CheckTrue(UnicodeCompareText('abc', 'abcd')<0, 'abc, abcd');
-   CheckTrue(UnicodeCompareText('abc', 'abd')<0, 'abc, abd');
-   CheckTrue(UnicodeCompareText('abd', 'abc')>0, 'abc, abd');
-
-   CheckTrue(UnicodeCompareText('abe', 'abé')<0, 'abe, abé');
-   CheckTrue(UnicodeCompareText('abé', 'abe')>0, 'abé, abe');
-   CheckTrue(UnicodeCompareText('abéa', 'abéz')<0, 'abéa, abéz');
-   CheckTrue(UnicodeCompareText('abéz', 'abéa')>0, 'abéz, abéa');
-
-   CheckTrue(UnicodeCompareText('abé', 'abÉ')=0, 'abé, abÉ');
-   CheckTrue(UnicodeCompareText('abéaa', 'abÉz')<0, 'abéaa, abÉz');
-   CheckTrue(UnicodeCompareText('abéz', 'abÉaa')>0, 'abéz, abÉaa');
 end;
 
 // ------------------------------------------------------------------

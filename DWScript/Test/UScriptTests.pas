@@ -2,8 +2,7 @@ unit UScriptTests;
 
 interface
 
-uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs, dwsUtils,
-   dwsXPlatform;
+uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs, dwsXPlatform;
 
 type
 
@@ -22,7 +21,6 @@ type
 
          procedure Compilation;
          procedure Execution;
-         procedure CompilationFailure;
 
       published
 
@@ -30,8 +28,7 @@ type
          procedure CompilationWithMapAndSymbols;
          procedure ExecutionNonOptimized;
          procedure ExecutionOptimized;
-         procedure FailuresNonOptimized;
-         procedure FailuresOptimized;
+         procedure CompilationFailure;
    end;
 
 // ------------------------------------------------------------------
@@ -96,7 +93,7 @@ procedure TScriptTests.Compilation;
 var
    source : TStringList;
    i : Integer;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
 begin
    source:=TStringList.Create;
    try
@@ -106,8 +103,11 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-
-         CheckEquals(False, prog.Msgs.HasErrors, FTests[i]+#13#10+prog.Msgs.AsInfo);
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         finally
+            prog.Free;
+         end;
 
       end;
 
@@ -122,10 +122,9 @@ procedure TScriptTests.Execution;
 var
    source, expectedResult : TStringList;
    i : Integer;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
    resultsFileName : String;
    output : String;
-   exec : IdwsProgramExecution;
 begin
    source:=TStringList.Create;
    expectedResult:=TStringList.Create;
@@ -136,29 +135,25 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-
-         CheckEquals(False, prog.Msgs.HasErrors, FTests[i]+#13#10+prog.Msgs.AsInfo);
          try
-            exec:=prog.Execute;
-         except
-            on E: Exception do begin
-               CheckEquals('', E.Message, FTests[i]);
+            CheckEquals(False, prog.Msgs.HasErrors, FTests[i]);
+            prog.Execute;
+            if prog.Msgs.Count=0 then
+               output:=(prog.Result as TdwsDefaultResult).Text
+            else begin
+               output:= 'Errors >>>>'#13#10
+                       +prog.Msgs.AsInfo
+                       +'Result >>>>'#13#10
+                       +(prog.Result as TdwsDefaultResult).Text;
             end;
+            resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+            if FileExists(resultsFileName) then begin
+               expectedResult.LoadFromFile(resultsFileName);
+               CheckEquals(expectedResult.Text, output, FTests[i]);
+            end else CheckEquals('', output, FTests[i]);
+         finally
+            prog.Free;
          end;
-         if prog.Msgs.Count+exec.Msgs.Count=0 then
-            output:=exec.Result.ToString
-         else begin
-            output:= 'Errors >>>>'#13#10
-                    +prog.Msgs.AsInfo
-                    +exec.Msgs.AsInfo
-                    +'Result >>>>'#13#10
-                    +exec.Result.ToString;
-         end;
-         resultsFileName:=ChangeFileExt(FTests[i], '.txt');
-         if FileExists(resultsFileName) then begin
-            expectedResult.LoadFromFile(resultsFileName);
-            CheckEquals(expectedResult.Text, output, FTests[i]);
-         end else CheckEquals('', output, FTests[i]);
 
       end;
 
@@ -180,7 +175,7 @@ end;
 //
 procedure TScriptTests.CompilationWithMapAndSymbols;
 begin
-   FCompiler.Config.CompilerOptions:=cDefaultCompilerOptions+[coSymbolDictionary, coContextMap];
+   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap];
    Compilation;
 end;
 
@@ -188,7 +183,7 @@ end;
 //
 procedure TScriptTests.ExecutionNonOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=cDefaultCompilerOptions-[coOptimize];
+   FCompiler.Config.CompilerOptions:=[];
    Execution;
 end;
 
@@ -196,24 +191,8 @@ end;
 //
 procedure TScriptTests.ExecutionOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=cDefaultCompilerOptions+[coOptimize];
+   FCompiler.Config.CompilerOptions:=[coOptimize];
    Execution;
-end;
-
-// FailuresNonOptimized
-//
-procedure TScriptTests.FailuresNonOptimized;
-begin
-   FCompiler.Config.CompilerOptions:=cDefaultCompilerOptions-[coOptimize]+[coSymbolDictionary, coContextMap];
-   CompilationFailure;
-end;
-
-// FailuresOptimized
-//
-procedure TScriptTests.FailuresOptimized;
-begin
-   FCompiler.Config.CompilerOptions:=cDefaultCompilerOptions+[coOptimize]-[coAssertions];
-   CompilationFailure;
 end;
 
 // CompilationFailure
@@ -222,10 +201,11 @@ procedure TScriptTests.CompilationFailure;
 var
    source : TStringList;
    i : Integer;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
    expectedError : TStringList;
    expectedErrorsFileName : String;
 begin
+   FCompiler.Config.CompilerOptions:=[coOptimize];
    source:=TStringList.Create;
    expectedError:=TStringList.Create;
    try
@@ -235,17 +215,15 @@ begin
          source.LoadFromFile(FFailures[i]);
 
          prog:=FCompiler.Compile(source.Text);
-
-         if coOptimize in FCompiler.Config.CompilerOptions then begin
-            expectedErrorsFileName:=ChangeFileExt(FFailures[i], '.optimized.txt');
-            if not FileExists(expectedErrorsFileName) then
-               expectedErrorsFileName:=ChangeFileExt(FFailures[i], '.txt');
-         end else expectedErrorsFileName:=ChangeFileExt(FFailures[i], '.txt');
-
-         if FileExists(expectedErrorsFileName) then begin
-            expectedError.LoadFromFile(expectedErrorsFileName);
-            CheckEquals(expectedError.Text, prog.Msgs.AsInfo, FFailures[i]);
-         end else Check(prog.Msgs.AsInfo<>'', FFailures[i]+': undetected error');
+         try
+            expectedErrorsFileName:=ChangeFileExt(FFailures[i], '.txt');
+            if FileExists(expectedErrorsFileName) then begin
+               expectedError.LoadFromFile(expectedErrorsFileName);
+               CheckEquals(expectedError.Text, prog.Msgs.AsInfo, FFailures[i]);
+            end else Check(prog.Msgs.AsInfo<>'', FFailures[i]+': undetected error');
+         finally
+            prog.Free;
+         end;
 
       end;
 

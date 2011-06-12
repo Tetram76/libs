@@ -21,8 +21,8 @@
 unit dwsXPlatform;
 
 //
-// This unit should concentrate all non-UI cross-platform aspects,
-// cross-Delphi versions, ifdefs and other conditionals
+// This unit should concentrate all cross-platform aspects, croos-Delphi versions,
+// ifdefs and other conditionals
 //
 // no ifdefs in the main code.
 
@@ -47,15 +47,6 @@ function GetDecimalSeparator : Char;
 procedure CollectFiles(const directory, fileMask : String; list : TStrings);
 
 type
-   {$IF CompilerVersion<22.0}
-   // NativeUInt broken in D2009, and PNativeInt is missing in D2010
-   // http://qc.embarcadero.com/wc/qcmain.aspx?d=71292
-   NativeInt = Integer;
-   PNativeInt = ^NativeInt;
-   NativeUInt = Cardinal;
-   PNativeUInt = ^NativeUInt;
-   {$IFEND}
-
    TPath = class
       class function GetTempFileName : String; static;
    end;
@@ -64,19 +55,6 @@ type
       class function ReadAllBytes(const filename : String) : TBytes; static;
    end;
 
-   TdwsThread = class (TThread)
-      {$IFDEF VER200}
-      procedure Start;
-      {$ENDIF}
-   end;
-
-function GetSystemMilliseconds : Cardinal;
-function UTCDateTime : TDateTime;
-
-function AnsiCompareText(const S1, S2 : String) : Integer;
-function AnsiCompareStr(const S1, S2 : String) : Integer;
-function UnicodeComparePChars(p1 : PChar; n1 : Integer; p2 : PChar; n2 : Integer) : Integer;
-
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -84,46 +62,6 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
-
-// GetSystemMilliseconds
-//
-function GetSystemMilliseconds : Cardinal;
-begin
-   Result:=GetTickCount;
-end;
-
-// UTCDateTime
-//
-function UTCDateTime : TDateTime;
-var
-   systemTime : TSystemTime;
-begin
-   GetSystemTime(systemTime);
-   with systemTime do
-      Result:= EncodeDate(wYear, wMonth, wDay)
-              +EncodeTime(wHour, wMinute, wSecond, wMilliseconds);
-end;
-
-// AnsiCompareText
-//
-function AnsiCompareText(const S1, S2: string) : Integer;
-begin
-   Result:=SysUtils.AnsiCompareText(S1, S2);
-end;
-
-// AnsiCompareStr
-//
-function AnsiCompareStr(const S1, S2: string) : Integer;
-begin
-   Result:=SysUtils.AnsiCompareStr(S1, S2);
-end;
-
-// UnicodeComparePChars
-//
-function UnicodeComparePChars(p1 : PChar; n1 : Integer; p2 : PChar; n2 : Integer) : Integer;
-begin
-   Result:=CompareString(LOCALE_USER_DEFAULT, NORM_IGNORECASE, p1, n1, p2, n2)-CSTR_EQUAL;
-end;
 
 // SetDecimalSeparator
 //
@@ -213,20 +151,5 @@ begin
    Result:=IOUTils.TFile.ReadAllBytes(filename);
 {$ENDIF}
 end;
-
-// ------------------
-// ------------------ TdwsThread ------------------
-// ------------------
-
-{$IFDEF VER200}
-
-// Start
-//
-procedure TdwsThread.Start;
-begin
-   Resume;
-end;
-
-{$ENDIF}
 
 end.

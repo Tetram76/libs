@@ -22,7 +22,7 @@ unit dwsTimeFunctions;
 
 interface
 
-uses Classes, SysUtils, dwsFunctions, dwsExprs, dwsSymbols, dwsXPlatform;
+uses Classes, SysUtils, dwsFunctions, dwsExprs, dwsSymbols;
 
 type
 
@@ -35,10 +35,6 @@ type
   end;
 
   TTimeFunc = class(TInternalMagicFloatFunction)
-    procedure DoEvalAsFloat(args : TExprBaseList; var Result : Double); override;
-  end;
-
-  TUTCDateTimeFunc = class(TInternalMagicFloatFunction)
     procedure DoEvalAsFloat(args : TExprBaseList; var Result : Double); override;
   end;
 
@@ -95,11 +91,11 @@ type
   end;
 
   TIncMonthFunc = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TDecodeDateFunc = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TEncodeDateFunc = class(TInternalMagicFloatFunction)
@@ -107,7 +103,7 @@ type
   end;
 
   TDecodeTimeFunc = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
+    procedure Execute; override;
   end;
 
   TEncodeTimeFunc = class(TInternalMagicFloatFunction)
@@ -169,7 +165,7 @@ const // type constants
   cDateTime = 'Float';
   cBoolean = 'Boolean';
 
-{ TNowFunc }
+  { TNowFunc }
 
 procedure TNowFunc.DoEvalAsFloat(args : TExprBaseList; var Result : Double);
 begin
@@ -188,13 +184,6 @@ end;
 procedure TTimeFunc.DoEvalAsFloat(args : TExprBaseList; var Result : Double);
 begin
    Result:=Time;
-end;
-
-{ TUTCDateTimeFunc }
-
-procedure TUTCDateTimeFunc.DoEvalAsFloat(args : TExprBaseList; var Result : Double);
-begin
-   Result:=UTCDateTime;
 end;
 
 { TDateTimeToStrFunc }
@@ -298,14 +287,14 @@ end;
 
 { TIncMonthFunc }
 
-procedure TIncMonthFunc.Execute(info : TProgramInfo);
+procedure TIncMonthFunc.Execute;
 begin
   Info.ResultAsFloat := IncMonth(Info.ValueAsFloat['dt'], Info.ValueAsInteger['nb']);
 end;
 
 { TDecodeDateFunc }
 
-procedure TDecodeDateFunc.Execute(info : TProgramInfo);
+procedure TDecodeDateFunc.Execute;
 var
   y, m, d: word;
 begin
@@ -324,7 +313,7 @@ end;
 
 { TDecodeTimeFunc }
 
-procedure TDecodeTimeFunc.Execute(info : TProgramInfo);
+procedure TDecodeTimeFunc.Execute;
 var
   h, m, s, ms: word;
 begin
@@ -541,8 +530,6 @@ initialization
    RegisterInternalFloatFunction(TNowFunc, 'Now', []);
    RegisterInternalFloatFunction(TDateFunc, 'Date', []);
    RegisterInternalFloatFunction(TTimeFunc, 'Time', []);
-
-   RegisterInternalFloatFunction(TUTCDateTimeFunc, 'UTCDateTime', []);
 
    RegisterInternalStringFunction(TDateTimeToStrFunc, 'DateTimeToStr', ['dt', cDateTime]);
    RegisterInternalFloatFunction(TStrToDateTimeFunc, 'StrToDateTime', ['str', cString]);

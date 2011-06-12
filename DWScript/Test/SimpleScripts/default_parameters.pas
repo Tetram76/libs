@@ -59,7 +59,7 @@ end;
 
 procedure TTest.PrintOut;
 begin
-   PrintLn(IntToStr(FInteger)+','+FString+','+FloatToStr(FFloat)+','+BoolToStr(FBoolean));
+   PrintLn(IntToStr(FInteger)+','+FString+','+FloatToStr(FFloat)+','+VarToStr(FBoolean));
 end;
 
 procedure PrintInt(i : Integer = 789);
@@ -79,7 +79,7 @@ end;
 
 procedure PrintBoolean(b : Boolean = True);
 begin
-   PrintLn(BoolToStr(b));
+   PrintLn(VarToStr(b));
 end;
 
 var t : TTest;

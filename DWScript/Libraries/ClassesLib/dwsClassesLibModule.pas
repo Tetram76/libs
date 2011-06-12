@@ -172,10 +172,6 @@ type
       Info: TProgramInfo; ExtObject: TObject);
     procedure dwsUnitClassesTStringListMethodsSetCaseSensitiveEval(
       Info: TProgramInfo; ExtObject: TObject);
-    procedure dwsUnitClassesTStringsMethodsContainsEval(Info: TProgramInfo;
-      ExtObject: TObject);
-    procedure dwsUnitClassesTListMethodsContainsEval(Info: TProgramInfo;
-      ExtObject: TObject);
   private
     FScript: TDelphiWebScript;
     procedure SetScript(const Value: TDelphiWebScript);
@@ -243,12 +239,6 @@ procedure TdwsClassesLib.dwsUnitClassesTListMethodsClearEval(
   Info: TProgramInfo; ExtObject: TObject);
 begin
   TInterfaceList(ExtObject).Clear;
-end;
-
-procedure TdwsClassesLib.dwsUnitClassesTListMethodsContainsEval(
-  Info: TProgramInfo; ExtObject: TObject);
-begin
-  Info.ResultAsBoolean:=(TInterfaceList(ExtObject).IndexOf(Info.ValueAsVariant['Obj'])>=0);
 end;
 
 procedure TdwsClassesLib.dwsUnitClassesTListMethodsCountEval(
@@ -336,12 +326,6 @@ procedure TdwsClassesLib.dwsUnitClassesTStringsMethodsClearEval(
   Info: TProgramInfo; ExtObject: TObject);
 begin
   TdwsStrings(ExtObject).Clear;
-end;
-
-procedure TdwsClassesLib.dwsUnitClassesTStringsMethodsContainsEval(
-  Info: TProgramInfo; ExtObject: TObject);
-begin
-  Info.ResultAsBoolean:=(TdwsStrings(ExtObject).IndexOf(Info.ValueAsString['Str'])>=0);
 end;
 
 procedure TdwsClassesLib.dwsUnitClassesTStringsMethodsDeleteEval(
@@ -446,7 +430,7 @@ var
    stream : TStream;
    fileSystem : IdwsFileSystem;
 begin
-   fileSystem:=Info.Execution.FileSystem;
+   fileSystem:=Info.Caller.Root.FileSystem;
    stream:=fileSystem.OpenFileStream(Info.ValueAsString['FileName'], fomReadOnly);
    try
       TdwsStrings(ExtObject).LoadFromStream(stream);
@@ -467,7 +451,7 @@ var
    stream : TStream;
    fileSystem : IdwsFileSystem;
 begin
-   fileSystem:=Info.Execution.FileSystem;
+   fileSystem:=Info.Caller.Root.FileSystem;
    stream:=fileSystem.OpenFileStream(Info.ValueAsString['FileName'], fomCreate);
    try
       TdwsStrings(ExtObject).SaveToStream(stream);

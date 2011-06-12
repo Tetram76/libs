@@ -2,8 +2,7 @@ unit UAlgorithmsTests;
 
 interface
 
-uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs,
-   dwsXPlatform, dwsUtils;
+uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs, dwsXPlatform;
 
 type
 
@@ -25,8 +24,6 @@ type
          procedure CompilationWithMapAndSymbols;
          procedure ExecutionNonOptimized;
          procedure ExecutionOptimized;
-
-         procedure ExecutionThreaded;
    end;
 
 // ------------------------------------------------------------------
@@ -36,40 +33,6 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
-
-type
-
-   TThreadedRunner = class(TdwsThread)
-      Script : String;
-      Exec : IdwsProgramExecution;
-      Count : Integer;
-      ExpectedResult : String;
-      ActualResult : String;
-
-      procedure Execute; override;
-   end;
-
-// Execute
-//
-procedure TThreadedRunner.Execute;
-begin
-   while Count>0 do begin
-      try
-         Exec.Execute;
-      except
-         on E: Exception do begin
-            ActualResult:=E.ClassName+': '+E.Message;
-            Break;
-         end;
-      end;
-      ActualResult:=Exec.Result.ToString;
-      if Copy(ActualResult, 1, 5)='Swaps' then
-         ActualResult:=Copy(ActualResult, Pos(#13#10, ActualResult)+2, MaxInt);
-      if ActualResult<>ExpectedResult then
-         Break;
-      Dec(Count);
-   end;
-end;
 
 // ------------------
 // ------------------ TAlgorithmsTests ------------------
@@ -101,7 +64,7 @@ procedure TAlgorithmsTests.Compilation;
 var
    source : TStringList;
    i : Integer;
-   prog : IdwsProgram;
+   prog : TdwsProgram;
 begin
    source:=TStringList.Create;
    try
@@ -111,8 +74,11 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-
-         CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         finally
+            prog.Free;
+         end;
 
       end;
 
@@ -133,7 +99,7 @@ end;
 //
 procedure TAlgorithmsTests.CompilationWithMapAndSymbols;
 begin
-   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap];
    Compilation;
 end;
 
@@ -141,7 +107,7 @@ end;
 //
 procedure TAlgorithmsTests.ExecutionNonOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coAssertions];
+   FCompiler.Config.CompilerOptions:=[];
    Execution;
 end;
 
@@ -149,71 +115,8 @@ end;
 //
 procedure TAlgorithmsTests.ExecutionOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coOptimize, coAssertions];
+   FCompiler.Config.CompilerOptions:=[coOptimize];
    Execution;
-end;
-
-// ExecutionThreaded
-//
-procedure TAlgorithmsTests.ExecutionThreaded;
-const
-   cRunsPerThread = 15;
-   cThreadsPerScript = 3;
-var
-   source, expectedResult : TStringList;
-   i, j : Integer;
-   prog : IdwsProgram;
-   threads : array of TThreadedRunner;
-   runner : TThreadedRunner;
-begin
-   FCompiler.Config.CompilerOptions:=[coOptimize, coAssertions];
-
-   source:=TStringList.Create;
-   expectedResult:=TStringList.Create;
-   try
-
-      SetLength(threads, FTests.Count*cThreadsPerScript);
-      for i:=0 to FTests.Count-1 do begin
-         source.LoadFromFile(FTests[i]);
-         prog:=FCompiler.Compile(source.Text);
-
-         expectedResult.LoadFromFile(ChangeFileExt(FTests[i], '.txt'));
-         if Copy(expectedResult[0], 1, 5)='Swaps' then
-            expectedResult.Delete(0); // variable part because of randomization
-
-         // prepare threads
-         for j:=0 to cThreadsPerScript-1 do begin
-            runner:=TThreadedRunner.Create(True);
-            runner.FreeOnTerminate:=False;
-            runner.Count:=cRunsPerThread;
-            runner.Script:=Format('%s [%d]', [ExtractFileName(FTests[i]), j]);
-            runner.Exec:=prog.CreateNewExecution;
-            runner.ExpectedResult:=expectedResult.Text;
-            threads[i*cThreadsPerScript+j]:=runner;
-         end;
-
-         // unleash threads
-         for j:=0 to cThreadsPerScript-1 do
-            threads[i*cThreadsPerScript+j].Start;
-
-      end;
-
-   finally
-      source.Free;
-      expectedResult.Free;
-   end;
-
-   // wait for completion and check for failures
-   try
-      for i:=0 to High(threads) do begin
-         runner:=threads[i];
-         runner.WaitFor;
-         CheckEquals(runner.ExpectedResult, runner.ActualResult, 'Thread failure for '+runner.Script);
-      end;
-   finally
-      for i:=0 to High(threads) do
-         threads[i].Free;
-   end;
 end;
 
 // Execution
@@ -222,8 +125,7 @@ procedure TAlgorithmsTests.Execution;
 var
    source, expectedResult : TStringList;
    i : Integer;
-   prog : IdwsProgram;
-   exec : IdwsProgramExecution;
+   prog : TdwsProgram;
    resultsFileName : String;
 begin
    source:=TStringList.Create;
@@ -235,15 +137,18 @@ begin
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
-
-         CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
-         exec:=prog.Execute;
-         resultsFileName:=ChangeFileExt(FTests[i], '.txt');
-         if FileExists(resultsFileName) then begin
-            expectedResult.LoadFromFile(resultsFileName);
-            CheckEquals(expectedResult.Text, exec.Result.ToString, FTests[i]);
-         end else CheckEquals('', exec.Result.ToString, FTests[i]);
-         CheckEquals('', exec.Msgs.AsInfo, FTests[i]);
+         try
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+            prog.Execute;
+            resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+            if FileExists(resultsFileName) then begin
+               expectedResult.LoadFromFile(resultsFileName);
+               CheckEquals(expectedResult.Text, (prog.Result as TdwsDefaultResult).Text, FTests[i]);
+            end else CheckEquals('', (prog.Result as TdwsDefaultResult).Text, FTests[i]);
+            CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
+         finally
+            prog.Free;
+         end;
 
       end;
 

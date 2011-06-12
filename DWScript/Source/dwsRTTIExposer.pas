@@ -289,25 +289,14 @@ end;
 //
 class function TdwsRTTIExposer.TypeKindToScriptType(const aType : TTypeKind) : String;
 begin
-   case aType of
-      tkInteger, tkInt64 :
-         Result:='Integer';
-      tkChar, tkString, tkUString, tkWChar, tkLString, tkWString :
-         Result:='String';
-      tkFloat :
-         Result:='Float';
-      tkVariant :
-         Result:='Variant';
-      tkSet, tkProcedure, tkPointer, tkDynArray, tkInterface, tkRecord, tkArray,
-         tkEnumeration, tkClassRef, tkClass, tkMethod : begin
-          Result:='Variant'; // todo, someday maybe...
-      end;
-      tkUnknown : begin
-          Result:='Variant'; // unsupported
-          Assert(False);
-      end;
+   case TypeKindToScriptBaseType(aType) of
+      typIntegerID : Result:='Integer';
+      typFloatID :   Result:='Float';
+      typStringID :  Result:='String';
+      typBooleanID : Result:='Boolean';
+      typVariantID : Result:='Variant';
    else
-      Result:='Variant';
+      Result:='';
       Assert(False);
    end;
 end;
@@ -353,7 +342,7 @@ var
    helper : TdwsRTTIHelper;
    scriptConstructor : TdwsConstructor;
 begin
-   Result:=Classes.Add;
+   Result:=(Classes.Add as TdwsClass);
    Result.Name:=dwsPublished.NameOf(cls);
    Result.OnCleanUp:=DoStandardCleanUp;
 
@@ -467,7 +456,7 @@ begin
       setterMethod:=(scriptClass.Methods.Add as TdwsMethod);
       setterMethod.Name:='Set'+prop.Name;
       Result.WriteAccess:=setterMethod.Name;
-      setterParam:=setterMethod.Parameters.Add;
+      setterParam:=(setterMethod.Parameters.Add as TdwsParameter);
       setterParam.Name:='v';
       setterParam.DataType:=RTTITypeToScriptType(prop.PropertyType);
       setterMethod.OnEval:=setterInvoker.Invoke;
@@ -479,7 +468,7 @@ end;
 function TdwsRTTIExposer.ExposeRTTIParameter(param : TRttiParameter; scriptParameters : TdwsParameters;
                                              const options : TdwsRTTIExposerOptions) : TdwsParameter;
 begin
-   Result:=scriptParameters.Add;
+   Result:=(scriptParameters.Add as TdwsParameter);
    Result.Name:=dwsPublished.NameOf(param);
    Result.DataType:=RTTITypeToScriptType(param.ParamType);
 end;
