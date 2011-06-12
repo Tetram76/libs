@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
 <config>
   <TempFolder>.\temp</TempFolder>
+  <SVNExePath/>
+  <LogFolder/>
   <externals>
     <external Name="JCL" Kind="ekVendorBranch">
       <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
@@ -173,6 +175,42 @@
       <VendorBranchOptions SourceKind="eskSVN">
         <BaseURL>http://superobject.googlecode.com/svn</BaseURL>
         <VendorPath>/vendors/superobject</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="DWScript" Kind="ekVendorBranch">
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\DWScript</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/DWScript</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://dwscript.googlecode.com/svn</BaseURL>
+        <VendorPath>/vendors/dwscript</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="SynEdit" Kind="ekVendorBranch">
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\SynEdit</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/SynEdit</RepositoryExternalPath>
+      <DefaultSubfolder>/SynEdit</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://synedit.svn.sourceforge.net/svnroot/synedit</BaseURL>
+        <VendorPath>/vendors/synedit</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
       </VendorBranchOptions>
