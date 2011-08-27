@@ -28,8 +28,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3391                                                                     $ }
+{ Last modified: $Date:: 2011-06-11 19:49:38 +0200 (sam., 11 juin 2011)                          $ }
+{ Revision:      $Rev:: 3531                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -855,8 +855,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclTD32.pas $';
-    Revision: '$Revision: 3391 $';
-    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
+    Revision: '$Revision: 3531 $';
+    Date: '$Date: 2011-06-11 19:49:38 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1182,8 +1182,14 @@ begin
       Inc(pszName);
       // Get the name
       FNames.Add(pszName);
-      // skip the length of name and a NULL at the end
-      Inc(pszName, Len + 1);
+      // first, skip the length of name
+      Inc(pszName, Len);
+      // the length is only correct modulo 256 because it is stored on a single byte,
+      // so we have to iterate until we find the real end of the string
+      while PszName^ <> #0 do
+        Inc(pszName, 256);
+      // then, skip a NULL at the end
+      Inc(pszName, 1);
     end;
   end;
 end;

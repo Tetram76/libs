@@ -22,9 +22,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3425                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-06-19 19:04:06 +0200 (dim., 19 juin 2011)                          $ }
+{ Revision:      $Rev:: 3546                                                                     $ }
+{ Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -117,10 +117,8 @@ type
     // returns false and all parent directories names if no sandbox is present
     function GetSandboxNames(const FileName: TFileName; SdBxNames: TStrings): Boolean; virtual;
     // execute the action of a file or on a sandbox
-    function ExecuteAction(const FileName: TFileName;
-      const Action: TJclVersionControlActionType): Boolean; virtual;
-    property SupportedActionTypes: TJclVersionControlActionTypes read
-        GetSupportedActionTypes;
+    function ExecuteAction(const FileName: TFileName; const Action: TJclVersionControlActionType): Boolean; virtual;
+    property SupportedActionTypes: TJclVersionControlActionTypes read GetSupportedActionTypes;
     property FileActions[const FileName: TFileName]: TJclVersionControlActionTypes read GetFileActions;
     property SandboxActions[const SdBxName: TFileName]: TJclVersionControlActionTypes read GetSandboxActions;
     property Enabled: Boolean read GetEnabled;
@@ -163,8 +161,7 @@ type
     function GetName: string; override;
   public
     function GetSandboxNames(const FileName: TFileName; SdBxNames: TStrings): Boolean; override;
-    function ExecuteAction(const FileName: TFileName;
-      const Action: TJclVersionControlActionType): Boolean; override;
+    function ExecuteAction(const FileName: TFileName; const Action: TJclVersionControlActionType): Boolean; override;
   end;
 
   TJclVersionControlPluginList = class (TObject)
@@ -177,8 +174,7 @@ type
     constructor Create;
     destructor Destroy; override;
     function Count: Integer;
-    function GetFileCache(const FileName: TFileName;
-      const Plugin: TJclVersionControlPlugin): TJclVersionControlCache;
+    function GetFileCache(const FileName: TFileName; const Plugin: TJclVersionControlPlugin): TJclVersionControlCache;
     //1 Returns the number of enabled plugin classes, which implicit shows if there is any versioncontrol system installed
     function NumberOfEnabledPlugins: Integer;
     procedure RegisterPluginClass(const APluginClass: TJclVersionControlPluginClass);
@@ -191,25 +187,22 @@ type
     FSandbox: string;
     FActionTypes: TJclVersionControlActionTypes;
   public
-    constructor Create(ASandbox: string; AActionTypes:
-        TJclVersionControlActionTypes);
+    constructor Create(ASandbox: string; AActionTypes: TJclVersionControlActionTypes);
     property Sandbox: string read FSandbox;
     property ActionTypes: TJclVersionControlActionTypes read FActionTypes;
   end;
 
 function VersionControlPluginList: TJclVersionControlPluginList;
 procedure RegisterVersionControlPluginClass(const APluginClass: TJclVersionControlPluginClass);
-procedure UnRegisterVersionControlPluginClass(const APluginClass:
-    TJclVersionControlPluginClass);
-function VersionControlActionInfo(ActionType : TJclVersionControlActionType):
-    TJclVersionControlActionInfo;
+procedure UnRegisterVersionControlPluginClass(const APluginClass: TJclVersionControlPluginClass);
+function VersionControlActionInfo(ActionType : TJclVersionControlActionType): TJclVersionControlActionInfo;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionControl.pas $';
-    Revision: '$Revision: 3425 $';
-    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
+    Revision: '$Revision: 3546 $';
+    Date: '$Date: 2011-06-19 19:04:06 +0200 (dim., 19 juin 2011) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -508,14 +501,12 @@ begin
   VersionControlPluginList.RegisterPluginClass(APluginClass);
 end;
 
-procedure UnRegisterVersionControlPluginClass(const
-    APluginClass: TJclVersionControlPluginClass);
+procedure UnRegisterVersionControlPluginClass(const APluginClass: TJclVersionControlPluginClass);
 begin
   VersionControlPluginList.UnregisterPluginClass(APluginClass);
 end;
 
-function VersionControlActionInfo(
-  ActionType: TJclVersionControlActionType): TJclVersionControlActionInfo;
+function VersionControlActionInfo(ActionType : TJclVersionControlActionType): TJclVersionControlActionInfo;
 begin
   Result := VersionControlActionInfos[ActionType];
 end;
@@ -532,8 +523,8 @@ begin
   inherited Destroy;
 end;
 
-function TJclVersionControlPlugin.ExecuteAction(const FileName: TFileName;
-  const Action: TJclVersionControlActionType): Boolean;
+function TJclVersionControlPlugin.ExecuteAction(const FileName: TFileName; const Action: TJclVersionControlActionType):
+    Boolean;
 begin
   Result := False;
 end;
@@ -549,8 +540,7 @@ begin
   Result := [];
 end;
 
-function TJclVersionControlPlugin.GetSupportedActionTypes:
-    TJclVersionControlActionTypes;
+function TJclVersionControlPlugin.GetSupportedActionTypes: TJclVersionControlActionTypes;
 begin
   Result := [];
 end;
@@ -566,8 +556,7 @@ begin
   Result := [];
 end;
 
-function TJclVersionControlPlugin.GetSandboxNames(const FileName: TFileName;
-  SdBxNames: TStrings): Boolean;
+function TJclVersionControlPlugin.GetSandboxNames(const FileName: TFileName; SdBxNames: TStrings): Boolean;
 var
   Index: Integer;
 begin
@@ -578,9 +567,7 @@ begin
     SdBxNames.Clear;
     for Index := Length(FileName) downto 1 do
       if FileName[Index] = DirDelimiter then
-    begin
-      SdBxNames.Add(Copy(FileName, 1, Index));
-    end;
+        SdBxNames.Add(Copy(FileName, 1, Index));
   finally
     SdBxNames.EndUpdate;
   end;
@@ -588,8 +575,7 @@ end;
 
 //=== TJclVersionControlCache ================================================
 
-constructor TJclVersionControlCache.Create(APlugin: TJclVersionControlPlugin;
-  const AFileName: TFileName);
+constructor TJclVersionControlCache.Create(APlugin: TJclVersionControlPlugin; const AFileName: TFileName);
 var
   Index: Integer;
   SandboxNames: TStrings;
@@ -648,8 +634,8 @@ end;
 
 //=== TJclVersionControlSystemPlugin =========================================
 
-function TJclVersionControlSystemPlugin.ExecuteAction(const FileName: TFileName;
-  const Action: TJclVersionControlActionType): Boolean;
+function TJclVersionControlSystemPlugin.ExecuteAction(const FileName: TFileName; const Action:
+    TJclVersionControlActionType): Boolean;
 begin
   case Action of
     vcaContextMenu:
@@ -699,8 +685,7 @@ begin
   Result := [vcaContextMenu, vcaExplore, vcaExploreSandbox, vcaProperties, vcaPropertiesSandbox];
 end;
 
-constructor TJclVersionControlActionsCache.Create(ASandbox: string;
-    AActionTypes: TJclVersionControlActionTypes);
+constructor TJclVersionControlActionsCache.Create(ASandbox: string; AActionTypes: TJclVersionControlActionTypes);
 begin
   inherited Create;
   FSandbox := ASandbox;
@@ -736,8 +721,8 @@ begin
   Result := FPluginList.Count;
 end;
 
-function TJclVersionControlPluginList.GetFileCache(const FileName: TFileName;
-    const Plugin: TJclVersionControlPlugin): TJclVersionControlCache;
+function TJclVersionControlPluginList.GetFileCache(const FileName: TFileName; const Plugin: TJclVersionControlPlugin):
+    TJclVersionControlCache;
 var
   Index: Integer;
   AFileCache: TJclVersionControlCache;

@@ -27,9 +27,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-02-22 20:38:36 +0100 (mar., 22 févr. 2011)                        $ }
-{ Revision:      $Rev:: 3499                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-08-14 10:56:32 +0200 (dim., 14 août 2011)                        $ }
+{ Revision:      $Rev:: 3582                                                                     $ }
+{ Author:        $Author:: obones                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -578,8 +578,8 @@ function CompareFiles(const FileA, FileB: TFileName; BufferSize: Longint = Strea
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStreams.pas $';
-    Revision: '$Revision: 3499 $';
-    Date: '$Date: 2011-02-22 20:38:36 +0100 (mar., 22 févr. 2011) $';
+    Revision: '$Revision: 3582 $';
+    Date: '$Date: 2011-08-14 10:56:32 +0200 (dim., 14 août 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2436,7 +2436,7 @@ begin
     Inc(FStrBufferPosition, FStrBufferCurrentSize);
     FStrBufferStart := FStrBufferNext;
     FStream.Seek(FStrBufferStart, soBeginning);
-    FStrBufferCurrentSize := InternalGetNextBuffer(FStream, FStrBuffer, 0, Length(FStrBuffer));
+    FStrBufferCurrentSize := InternalGetNextBuffer(FStream, FStrBuffer, 0, FBufferSize);
     FStrBufferNext := FStream.Seek(0, soCurrent);
     // reset the peek buffer
     FStrPeekBufferPosition := FStrBufferPosition + FStrBufferCurrentSize;
@@ -2462,7 +2462,7 @@ begin
   FStrPeekBufferStart := FStrPeekBufferNext;
   Inc(FStrPeekBufferPosition, FStrPeekBufferCurrentSize);
   FStream.Seek(FStrPeekBufferStart, soBeginning);
-  FStrPeekBufferCurrentSize := InternalGetNextBuffer(FStream, FStrPeekBuffer, 0, Length(FStrPeekBuffer));
+  FStrPeekBufferCurrentSize := InternalGetNextBuffer(FStream, FStrPeekBuffer, 0, FBufferSize);
   FStrPeekBufferNext := FStream.Seek(0, soCurrent);
   Result := (FStrPeekPosition >= FStrPeekBufferPosition) and (FStrPeekPosition < (FStrPeekBufferPosition + FStrPeekBufferCurrentSize));
 end;

@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2011-07-30 08:50:39 +0200 (sam., 30 juil. 2011)                         $ }
+{ Revision:      $Rev:: 3560                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -71,7 +71,7 @@ type
     property SetterName: string index taSetterName read GetTypeAttribute write SetTypeAttribute stored False;
   end;
 
-  (* JCLARRAYLISTITRINT(SELFCLASSNAME, ITRINTERFACENAME, LISTINTERFACENAME, CONSTKEYWORD, PARAMETERNAME,
+  (* JCLARRAYLISTITRINT(SELFCLASSNAME, ITRINTERFACENAME, LISTCLASSNAME, CONSTKEYWORD, PARAMETERNAME,
                         TYPENAME, GETTERNAME, SETTERNAME) *)
   TJclArrayListItrIntParams = class(TJclContainerInterfaceParams)
   protected
@@ -81,7 +81,7 @@ type
   published
     property SelfClassName: string index taArrayIteratorClassName read GetTypeAttribute write SetTypeAttribute stored IsTypeAttributeStored;
     property ItrInterfaceName: string index taIteratorInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
-    property ListInterfaceName: string index taListInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
+    property ListClassName: string index taArrayListClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property ConstKeyword: string index taConstKeyword read GetTypeAttribute write SetTypeAttribute stored False;
     property ParameterName: string index taParameterName read GetTypeAttribute write SetTypeAttribute stored False;
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
@@ -116,7 +116,7 @@ type
     property MacroFooter;
   end;
 
-  (* JCLARRAYLISTITRIMP(SELFCLASSNAME, ITRINTERFACENAME, LISTINTERFACENAME,
+  (* JCLARRAYLISTITRIMP(SELFCLASSNAME, ITRINTERFACENAME, LISTCLASSNAME,
                         CONSTKEYWORD, PARAMETERNAME, TYPENAME, GETTERNAME, SETTERNAME) *)
   TJclArrayListItrImpParams = class(TJclContainerImplementationParams)
   protected
@@ -124,7 +124,7 @@ type
   published
     property SelfClassName: string index taArrayIteratorClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property ItrInterfaceName: string index taIteratorInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
-    property ListInterfaceName: string index taListInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
+    property ListClassName: string index taArrayListClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property ConstKeyword: string index taConstKeyword read GetTypeAttribute write SetTypeAttribute stored False;
     property ParameterName: string index taParameterName read GetTypeAttribute write SetTypeAttribute stored False;
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
@@ -136,8 +136,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorArrayListsTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3560 $';
+    Date: '$Date: 2011-07-30 08:50:39 +0200 (sam., 30 juil. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

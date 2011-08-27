@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3425                                                                     $ }
+{ Last modified: $Date:: 2011-06-11 20:55:56 +0200 (sam., 11 juin 2011)                          $ }
+{ Revision:      $Rev:: 3534                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -302,8 +302,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaUtils.pas $';
-    Revision: '$Revision: 3425 $';
-    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
+    Revision: '$Revision: 3534 $';
+    Date: '$Date: 2011-06-11 20:55:56 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil
@@ -406,11 +406,14 @@ var
   InsideLineComment, InsideComment, InsideBrace: Boolean;
   procedure LoadNextBuffer;
   begin
+    Line := Line + Copy(Buffer, LineStart - BufferStart + 1, Position - LineStart);
     BufferStart := Position;
+    LineStart := BufferStart;
     BufferCount := AReader.GetText(BufferStart, PAnsiChar(Buffer), BufferSize);
     BufferPosition := Position - BufferStart;
   end;
 begin
+  Line := '';
   BufferStart := 0;
   BufferCount := 0;
   LineStart := 0;
@@ -441,13 +444,14 @@ begin
             InsideLineComment := False;
             if (LineStart - BufferStart) < 0 then
               raise EJclExpertException.CreateRes(@RsELineTooLong);
-            Line := Copy(Buffer, LineStart - BufferStart + 1, Position - LineStart);
+            Line := Line + Copy(Buffer, LineStart - BufferStart + 1, Position - LineStart);
             for PropIndex := 0 to PropCount - 1 do
               if Pos(PropIDs[PropIndex], Line) = 4 then
             begin
               Result[PropIndex] := LineStart + Length(PropIDs[PropIndex]) + 4;
               Inc(PropMatches);
             end;
+            Line := '';
           end;
           LineStart := Position + 1;
         end;

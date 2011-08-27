@@ -21,9 +21,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010)                         $ }
-{ Revision:      $Rev:: 3322                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-06-13 23:52:33 +0200 (lun., 13 juin 2011)                          $ }
+{ Revision:      $Rev:: 3538                                                                     $ }
+{ Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -143,8 +143,8 @@ function CharIsAmpersand(const C: Char): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/versioncontrol/JclVersionControlImpl.pas $';
-    Revision: '$Revision: 3322 $';
-    Date: '$Date: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010) $';
+    Revision: '$Revision: 3538 $';
+    Date: '$Date: 2011-06-13 23:52:33 +0200 (lun., 13 juin 2011) $';
     LogPath: 'JCL\experts\versioncontrol';
     Extra: '';
     Data: nil
@@ -160,6 +160,7 @@ uses
   {$ENDIF BDS8_UP}
   JclDebug, JclFileUtils, JclRegistry, JclShell, JclStrings,
   JclOtaConsts, JclOtaResources,
+  JclVersionCtrlGITImpl,
   JclVersionCtrlSVNImpl,
   JclVersionCtrlCVSImpl;
 

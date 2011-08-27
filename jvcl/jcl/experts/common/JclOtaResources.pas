@@ -21,8 +21,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-24 14:21:45 +0200 (dim., 24 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3387                                                                     $ }
+{ Last modified: $Date:: 2011-07-30 10:32:12 +0200 (sam., 30 juil. 2011)                         $ }
+{ Revision:      $Rev:: 3561                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -268,6 +268,7 @@ resourcestring
   RsDeletedMapFile = 'Deleted %s file "%s"';
   RsEFailedToDeleteMapFile = 'Failed to delete %s file "%s"';
   RsEMapConversion = 'Failed to convert MAP file "%s"';
+  RsEMapInsertion = 'Failed to insert MAP file "%s"';
   RsENoActiveProject = 'No active project';
   RsENoProjectMenuItem = 'Project menu item not found';
   RsEInsertDataMenuItemNotInserted = 'Can''t insert the insert data menu item';
@@ -512,8 +513,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaResources.pas $';
-    Revision: '$Revision: 3387 $';
-    Date: '$Date: 2010-10-24 14:21:45 +0200 (dim., 24 oct. 2010) $';
+    Revision: '$Revision: 3561 $';
+    Date: '$Date: 2011-07-30 10:32:12 +0200 (sam., 30 juil. 2011) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

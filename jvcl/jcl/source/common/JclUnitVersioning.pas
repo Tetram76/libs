@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-26 17:34:33 +0200 (mar., 26 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3398                                                                     $ }
+{ Last modified: $Date:: 2011-07-29 11:02:58 +0200 (ven., 29 juil. 2011)                         $ }
+{ Revision:      $Rev:: 3552                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -69,6 +69,7 @@ type
     function LogPath: string;
     function Data: Pointer;
     function DateTime: TDateTime;
+    function Summary: string;
   end;
 
   TUnitVersioningModule = class(TObject)
@@ -143,11 +144,13 @@ procedure UnregisterUnitVersion(Instance: THandle);
 
 function GetUnitVersioning: TUnitVersioning;
 
+procedure ExportUnitVersioningToFile(iFileName : string);
+
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnitVersioning.pas $';
-    Revision: '$Revision: 3398 $';
-    Date: '$Date: 2010-10-26 17:34:33 +0200 (mar., 26 oct. 2010) $';
+    Revision: '$Revision: 3552 $';
+    Date: '$Date: 2011-07-29 11:02:58 +0200 (ven., 29 juil. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -328,6 +331,13 @@ begin
   Val(Copy(S, 1, Ps - 1), Second, Error);
 
   Result := EncodeDate(Year, Month, Day) + EncodeTime(Hour, Minute, Second, 0);
+end;
+
+function TUnitVersion.Summary: string;
+begin
+  Result := LogPath + #9 + RCSFile + #9 + Revision + #9 + Date;
+  if Extra <> '' then
+    Result := Result + #9 + Extra;
 end;
 
 //=== { TUnitVersioningModule } ==============================================
@@ -698,10 +708,31 @@ begin
     UnitVersioning.UnregisterModule(Instance);
 end;
 
+procedure ExportUnitVersioningToFile(iFileName : string);
+var
+  I: Integer;
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    for I := 0 to GetUnitVersioning.Count - 1 do
+      sl.Add(GetUnitVersioning.Items[I].Summary);
+    sl.Sort;
+    sl.SaveToFile(iFileName);
+  finally
+    sl.Free;
+  end;
+end;
+
 initialization
+{$IFDEF UNITVERSIONING}
   RegisterUnitVersion(HInstance, UnitVersioning);
+{$ENDIF UNITVERSIONING}
 
 finalization
+{$IFDEF UNITVERSIONING}
+  UnregisterUnitVersion(HInstance);
+{$ENDIF UNITVERSIONING}
   FinalizeUnitVersioning;
 
 end.

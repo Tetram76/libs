@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010)                         $ }
-{ Revision:      $Rev:: 3322                                                                     $ }
+{ Last modified: $Date:: 2011-07-30 10:32:12 +0200 (sam., 30 juil. 2011)                         $ }
+{ Revision:      $Rev:: 3561                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -247,8 +247,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/converter/JclDebugIdeImpl.pas $';
-    Revision: '$Revision: 3322 $';
-    Date: '$Date: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010) $';
+    Revision: '$Revision: 3561 $';
+    Date: '$Date: 2011-07-30 10:32:12 +0200 (sam., 30 juil. 2011) $';
     LogPath: 'JCL\experts\debug\converter';
     Extra: '';
     Data: nil
@@ -486,7 +486,7 @@ begin
                 OutputToolMessage(Format(LoadResString(@RsInsertedJdbg), [MapFileName, MapFileSize, JclDebugDataSize]));
             end
             else
-              OutputToolMessage(Format(LoadResString(@RsEMapConversion), [MapFileName]));
+              OutputToolMessage(Format(LoadResString(@RsEMapInsertion), [MapFileName]));
           end
           else
             OutputToolMessage(Format(LoadResString(@RsEExecutableNotFound), [ProjectFileName]));

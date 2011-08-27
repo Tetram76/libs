@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-03-27 22:36:21 +0200 (dim., 27 mars 2011)                          $ }
-{ Revision:      $Rev:: 3514                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-08-14 10:54:24 +0200 (dim., 14 août 2011)                        $ }
+{ Revision:      $Rev:: 3581                                                                     $ }
+{ Author:        $Author:: obones                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -127,17 +127,34 @@ resourcestring
   RsENotABcbProject             = '%s not a C++Builder project source file';
   RsENoSupportedPersonality     = 'No personalities supported';
   RsEDualPackageNotSupported    = 'This installation of %s doesn''t support dual packages';
-  RsEx64PlatformNotValid        = 'This installation cannot generate x64 binaries';
+  RsEx64PlatformNotValid        = 'This installation cannot generate binaries for Win64';
+  RsEPlatformNotValid           = 'This installation cannot generate binaries for unknown target';
   {$IFDEF MSWINDOWS}
   RsENoOpenHelp                 = 'open help not present in Borland Developer Studio';
   {$ENDIF MSWINDOWS}
 
 //=== JclMsBuild.pas =========================================================
 resourcestring
-  RsEEndOfString = 'Invalid condition: end of string';
-  RsEMissingParenthesis = 'Invalid condition: missing parenthesis';
-  RsEEmptyIdentifier = 'Invalid condition: empty identifier';
-  RsEUnknownOperator = 'Invalid condition: unknown operator';
+  RsEEndOfString = 'Invalid condition: end of string in condition "%s"';
+  RsEMissingParenthesis = 'Invalid condition: missing parenthesis in condition "%s"';
+  RsEUnknownOperator = 'Invalid condition: unknown operator in condition "%s"';
+  RsEReservedProperty = 'Attempt to override or to delete a reserved MsBuild property';
+  RsENoProjectElem = 'Project element expected, got "%s"';
+  RsEUnknownSchema = 'Unknown schema "%s"';
+  RsEUnknownProperty = 'Unknown property "%s"';
+  RsEUnknownElement = 'Unknown element "%s"';
+  RsEMultipleProjectExtensions = 'Multiple project extensions';
+  RsEMultipleOtherwise = 'Multiple otherwise';
+  RsEConditionNotUnique = 'Condition is not unique';
+  RsEMissingTargetName = 'Missing target name';
+  RsEMissingTaskName = 'Missing task name';
+  RsEMissingAssembly = 'Missing assembly';
+  RsEMissingTaskParameter = 'Missing task parameter';
+  RsEMissingOutputName = 'Missing output name';
+  RsEMSBuildPath = 'Unable to locate MSBuild.exe';
+  RsEFunctionProperty = 'Unable to evaluate function property "%s"';
+  RsERegistryProperty = 'Unable to evaluate registry property root="%s" path="%s" name="%s"';
+  RsELocateXmlElem = 'Unable to locate the XML element for MSBuild property "%s"';
 
 //=== JclUsesUtils.pas =======================================================
 resourcestring
@@ -151,8 +168,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclDevToolsResources.pas $';
-    Revision: '$Revision: 3514 $';
-    Date: '$Date: 2011-03-27 22:36:21 +0200 (dim., 27 mars 2011) $';
+    Revision: '$Revision: 3581 $';
+    Date: '$Date: 2011-08-14 10:54:24 +0200 (dim., 14 août 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
