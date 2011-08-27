@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineTreeView.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvControlActionsEngineCxEditors.pas 13082 2011-07-06 22:34:01Z jfudickar $
 
 unit JvControlActionsEngineCxEditors;
 
@@ -55,9 +55,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net:443/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineTreeView.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (Fr, 14 Aug 2009) $';
+    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxEditors.pas $';
+    Revision: '$Revision: 13082 $';
+    Date: '$Date: 2011-07-07 00:34:01 +0200 (jeu., 07 juil. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

@@ -25,7 +25,7 @@ Description:
 // DB Component to find record with Edit
 // Free modified and corrected component TDBSearchEdit from Alexander Burlakov
 -----------------------------------------------------------------------------}
-// $Id: JvDBSearchEdit.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBSearchEdit.pas 13051 2011-06-09 20:13:33Z jfudickar $
 
 unit JvDBSearchEdit;
 
@@ -49,6 +49,7 @@ type
     FSearchOptions: TLocateOptions;
     FClearOnEnter: Boolean;
     FDataResult: string;
+    FRaiseLocateException: Boolean;
     procedure DataChange(Sender: TObject);
     function GetDataSource: TDataSource;
     function GetDataField: string;
@@ -73,6 +74,8 @@ type
     property DataField: string read GetDataField write SetDataField;
     property TabStop default True;
     property ClearOnEnter: Boolean read FClearOnEnter write FClearOnEnter default True;
+    //1 Property to raise/hide any exception inside the Dataset.Locate call
+    property RaiseLocateException: Boolean read FRaiseLocateException write FRaiseLocateException default true;
   end;
 
   TJvDBSearchEdit = class(TJvDBCustomSearchEdit)
@@ -136,8 +139,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSearchEdit.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13051 $';
+    Date: '$Date: 2011-06-09 22:13:33 +0200 (jeu., 09 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -150,7 +153,7 @@ uses
 
 //=== { TJvDBCustomSearchEdit } ==============================================
 
-constructor TJvDBCustomSearchEdit.Create;
+constructor TJvDBCustomSearchEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FDataLink := TFieldDataLink.Create;
@@ -159,6 +162,7 @@ begin
   FSearchOptions := [loCaseInsensitive, loPartialKey];
   FClearOnEnter := True;
   Text := '';
+  FRaiseLocateException := True;
 end;
 
 destructor TJvDBCustomSearchEdit.Destroy;
@@ -204,17 +208,19 @@ begin
   if (not ((csDesigning in ComponentState) and
     (csLoading in ComponentState))) and
     Assigned(FDataLink.DataSet) then
-    with FDataLink do
-    begin
-      if (Screen.ActiveControl = Self) and Active then
-        if DataSet.Locate(FieldName, Text, FSearchOptions) then
+    if (Screen.ActiveControl = Self) and FDataLink.Active then
+      try
+        if FDataLink.DataSet.Locate(FDataLink.FieldName, Text, FSearchOptions) then
         begin
           LText := Text;
-          Text := DataSet.FieldByName(DataField).AsString;
+          Text := FDataLink.DataSet.FieldByName(DataField).AsString;
           SelStart := Length(LText);
           SelLength := Length(Text) - SelStart;
         end;
-    end;
+      except
+        if RaiseLocateException then
+          raise;
+      end;
 end;
 
 procedure TJvDBCustomSearchEdit.KeyPress(var Key: Char);
@@ -258,7 +264,7 @@ end;
 function TJvDBCustomSearchEdit.GetResult: Variant;
 begin
   Result := Null;
-  if Assigned(FDataLink.DataSet) and (DataResult <> '') then
+  if Assigned(FDataLink.DataSet) and FDataLink.DataSet.Active and (DataResult <> '') then
     Result := FDataLink.DataSet.Lookup(DataField, Text, DataResult);
 end;
 
@@ -273,7 +279,7 @@ procedure TJvDBCustomSearchEdit.DoExit;
 begin
   inherited DoExit;
   // On replace le texte sur l'enregistrement en cours
-  if Assigned(FDataLink.DataSet) then
+  if Assigned(FDataLink.DataSet) and FDataLink.DataSet.Active then
     Text := FDataLink.DataSet.FieldByName(DataField).AsString;
 end;
 

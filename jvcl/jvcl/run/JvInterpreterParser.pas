@@ -23,7 +23,7 @@ Description : Parser for JVCL Interpreter version 2
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreterParser.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvInterpreterParser.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 { history (JVCL Library versions):
 
@@ -267,7 +267,7 @@ uses
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
-  JvInterpreter, JvInterpreterConst, JvConsts, windows;
+  JvInterpreter, JvInterpreterConst, JvConsts, Windows;
 
 const
   K = '''';

@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_DbGrids.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvInterpreter_DbGrids.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvInterpreter_DbGrids;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_DbGrids.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -52,7 +52,7 @@ const
 implementation
 
 uses
-  Classes, Graphics, Menus, Grids, Db, DbGrids,
+  Classes, Graphics, Menus, Grids, DB, DBGrids,
   JvInterpreter_Windows;
 
 { TColumnTitle }

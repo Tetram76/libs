@@ -32,7 +32,7 @@ HOW TO USE THIS COMPONENT:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridFooter.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBGridFooter.pas 13086 2011-07-10 10:34:43Z ahuser $
 
 unit JvDBGridFooter;
 
@@ -47,7 +47,7 @@ uses
   {$IFDEF MSWINDOWS}
   Windows, // inline
   {$ENDIF MSWINDOWS}
-  Variants, Sysutils, Classes, ComCtrls,
+  Variants, SysUtils, Classes, ComCtrls,
   DB, DBGrids, Grids, JvDBGrid;
 
 type
@@ -143,6 +143,7 @@ type
     procedure JvDBGridLayoutChanged(Grid: TJvDBGrid; Kind: TJvDBGridLayoutChangeKind); dynamic;
 
     procedure DrawPanels; dynamic;
+    procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -166,14 +167,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGridFooter.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13086 $';
+    Date: '$Date: 2011-07-10 12:34:43 +0200 (dim., 10 juil. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+uses
+  JvJVCLUtils;
 
 { TFooterColumn }
 
@@ -370,17 +373,11 @@ begin
 
   FColumns := TFooterColumns.Create(Self);
   FDataLink := TFooterDataLink.Create(Self);
-  FDBGrid := nil;
-  FIgnoreHorzScrolling := False;
-  FIgnoreResizing := False;
-  SizeGrip := False;
 end;
 
 destructor TJvDBGridFooter.Destroy;
 begin
-  if Assigned(FDBGrid) then
-    FDBGrid.UnregisterLayoutChangeLink(FJvDBGridLayoutChangeLink);
-
+  SetDBGrid(nil);
   FJvDBGridLayoutChangeLink.Free;
 
   FDataLink.Free;
@@ -404,23 +401,17 @@ begin
   if Assigned(DBGrid) then
     if Value <> DBGrid.DataSource then
       Value := DBGrid.DataSource;
-  if FDataLink.DataSource <> nil then
-    FDataLink.DataSource.RemoveFreeNotification(Self);
   FDataLink.DataSource := Value;
-  if Value <> nil then
-    Value.FreeNotification(Self);
 end;
 
 procedure TJvDBGridFooter.SetDBGrid(Value: TJvDBGrid);
 begin
   if FDBGrid <> Value then
   begin
-    if Assigned(FDBGrid) then
+    if FDBGrid <> nil then
       FDBGrid.UnregisterLayoutChangeLink(FJvDBGridLayoutChangeLink);
-
-    FDBGrid := Value;
-
-    if Assigned(FDBGrid) then
+    ReplaceComponentReference(Self, Value, TComponent(FDBGrid));
+    if FDBGrid <> nil then
     begin
       DataSource := FDBGrid.DataSource;
       FDBGrid.RegisterLayoutChangeLink(FJvDBGridLayoutChangeLink);
@@ -456,6 +447,13 @@ begin
     lcTopLeftChanged:
       DrawPanels;
   end;
+end;
+
+procedure TJvDBGridFooter.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+  inherited Notification(AComponent, Operation);
+  if (Operation = opRemove) and (AComponent = FDBGrid) then
+    SetDBGrid(nil);
 end;
 
 procedure TJvDBGridFooter.ReCalc;

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFullColorCtrls.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvFullColorCtrls.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvFullColorCtrls;
 
@@ -35,7 +35,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Controls, Graphics,
   ComCtrls, StdCtrls, ExtCtrls, Types,
-  JvJCLUtils, JvTypes, JvComboBox, JvFullColorSpaces, JvFullColorRotate;
+  JvJCLUtils, JvTypes, JvCombobox, JvFullColorSpaces, JvFullColorRotate;
 
 type
   TJvFullColorAxisConfig = (acXYZ, acXZY, acYXZ, acYZX, acZXY, acZYX);
@@ -710,8 +710,8 @@ function AxisConfigToString(AxisConfig: TJvFullColorAxisConfig;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFullColorCtrls.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

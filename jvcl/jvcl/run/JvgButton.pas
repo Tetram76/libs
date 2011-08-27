@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgButton.pas 12537 2009-10-03 09:55:35Z ahuser $
+// $Id: JvgButton.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvgButton;
 
@@ -35,7 +35,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Graphics,
-  Controls, Forms, Dialogs, ExtCtrls, Imglist,
+  Controls, Forms, Dialogs, ExtCtrls, ImgList,
   JvComponent,
   JvgTypes, JvgUtils, JvgCommClasses;
 
@@ -208,8 +208,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgButton.pas $';
-    Revision: '$Revision: 12537 $';
-    Date: '$Date: 2009-10-03 11:55:35 +0200 (sam., 03 oct. 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

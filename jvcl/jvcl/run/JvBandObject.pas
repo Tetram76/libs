@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandObject.pas 11893 2008-09-09 20:45:14Z obones $
+// $Id: JvBandObject.pas 13094 2011-08-11 11:21:03Z outchy $
 
 unit JvBandObject;
 
@@ -92,7 +92,6 @@ type
     function GetImplCatID: TGUID; override;
   end;
 
-  {$M+}
   TzCustomBandObject = class(TComObject, IDeskBand, IObjectWithSite, IPersist, IPersistStream, IInputObject)
   private
     FBandForm: TJvBandForm;
@@ -102,7 +101,6 @@ type
     FOleCommandTarget: IOleCommandTarget;
     FSavedWndProc: TWndMethod;
     FHasFocus: Boolean;
-    FHook: HHook;
   protected
     function CreateBandForm(const ParentWnd: THandle): TJvBandForm; virtual; abstract;
     procedure BandWndProc(var Msg: TMessage);
@@ -140,10 +138,7 @@ type
     function UIActivateIO(Activate: BOOL; var Msg: TMsg): HRESULT; virtual; stdcall;
     function HasFocusIO: HRESULT; virtual; stdcall;
     function TranslateAcceleratorIO(var Msg: TMsg): HRESULT; virtual; stdcall;
-  published
-    function MsgHookProc(nCode, wParam, lParam: Integer): Integer; stdcall;
   end;
-  {$M-}
 
   TzToolBandObject = class(TzCustomBandObject)
   end;
@@ -171,8 +166,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBandObject.pas $';
-    Revision: '$Revision: 11893 $';
-    Date: '$Date: 2008-09-09 22:45:14 +0200 (mar., 09 sept. 2008) $';
+    Revision: '$Revision: 13094 $';
+    Date: '$Date: 2011-08-11 13:21:03 +0200 (jeu., 11 août 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -217,58 +212,26 @@ end;
 
 //=== { TzToolBandObjectFactory } ============================================
 
-function MethodToProcedure(Self: TObject; MethodAddr: Pointer): Pointer;
-type
-  TMethodToProc = packed record
-    PopEAX: Byte;        // $58      pop EAX
-    PushSelf: record     //          push Self
-      Opcode: Byte;      // $B8
-      Self: Pointer;     // Self
-    end;
-    PushEAX: Byte;       // $50      push EAX
-    Jump: record         //          jmp [Target]
-      Opcode: Byte;      // $FF
-      ModRm: Byte;       // $25
-      PTarget: ^Pointer; // @Target
-      Target: Pointer;   //          @MethodAddr
-    end;
-  end;
-var
-  Mtp: ^TMethodToProc;
-begin
-  New(Mtp);
-  Result := Mtp;
-  with Mtp^ do
-  begin
-    PopEAX          := $58;
-    PushSelf.Opcode := $68;
-    PushSelf.Self   := Self;
-    PushEAX         := $50;
-    Jump.Opcode     := $FF;
-    Jump.ModRm      := $25;
-    Jump.PTarget    := @Jump.Target;
-    Jump.Target     := MethodAddr;
-  end;
-end;
-
 procedure TzToolBandObjectFactory.UpdateRegistry(Reg: Boolean);
+var
+  ARegistry: TRegistry;
 begin
   if Reg then
     inherited;
-  with TRegistry.Create do
+  ARegistry := TRegistry.Create;
   try
-    RootKey := HKEY_LOCAL_MACHINE;
-    if OpenKey(cIERegistryBase + 'Toolbar', True) then
+    ARegistry.RootKey := HKEY_LOCAL_MACHINE;
+    if ARegistry.OpenKey(cIERegistryBase + 'Toolbar', True) then
     try
       if Reg then
-        WriteString(ClassIDString, Description)
+        ARegistry.WriteString(ClassIDString, Description)
       else
-        DeleteValue(ClassIDString);
+        ARegistry.DeleteValue(ClassIDString);
     finally
-      CloseKey;
+      ARegistry.CloseKey;
     end;
   finally
-    Free;
+    ARegistry.Free;
   end;
   if not Reg then
     inherited UpdateRegistry(Reg);
@@ -334,6 +297,8 @@ begin
 end;
 
 procedure TzExplorerBarObjectFactory.UpdateRegistry(Reg: Boolean);
+var
+  ARegistry: TRegistry;
 begin
   if Reg then
   begin
@@ -345,34 +310,34 @@ begin
     end;
     if (GetBarWidth <> 0) or (GetBarHeight <> 0) then
     begin
-      with TRegistry.Create do
+      ARegistry := TRegistry.Create;
       try
-        RootKey := HKEY_CURRENT_USER;
-        if OpenKey(cIERegistryBase + cExplorerBars + ClassIDString, True) then
+        ARegistry.RootKey := HKEY_CURRENT_USER;
+        if ARegistry.OpenKey(cIERegistryBase + cExplorerBars + ClassIDString, True) then
         try
-          WriteString(cBarSize, BarSize)
+          ARegistry.WriteString(cBarSize, BarSize)
         finally
-          CloseKey;
+          ARegistry.CloseKey;
         end;
       finally
-        Free;
+        ARegistry.Free;
       end;
     end;
   end
   else
   begin
-    with TRegistry.Create do
+    ARegistry := TRegistry.Create;
     try
-      RootKey := HKEY_CURRENT_USER;
-      if OpenKey(cIERegistryBase + cExplorerBars + ClassIDString, True) then
+      ARegistry.RootKey := HKEY_CURRENT_USER;
+      if ARegistry.OpenKey(cIERegistryBase + cExplorerBars + ClassIDString, True) then
       try
-        DeleteValue(cBarSize);
+        ARegistry.DeleteValue(cBarSize);
       finally
-        CloseKey;
+        ARegistry.CloseKey;
       end;
-      DeleteKey(cIERegistryBase + cExplorerBars + ClassIDString);
+      ARegistry.DeleteKey(cIERegistryBase + cExplorerBars + ClassIDString);
     finally
-      Free;
+      ARegistry.Free;
     end;
     DeleteRegKey(cCLSID + ClassIDString + cInstanceInitPropertyBagUrl);
     DeleteRegKey(cCLSID + ClassIDString + cInstanceInitPropertyBag);
@@ -535,63 +500,61 @@ begin
     Result := E_UNEXPECTED;
     Exit;
   end;
-  with Dbi, FBandForm do
+
+  if (Dbi.dwMask and DBIM_MINSIZE) <> 0 then
   begin
-    if (dwMask and DBIM_MINSIZE) <> 0 then
-    begin
-      ptMinSize := BandMinSize;
-      {$IFDEF DEBUGINFO_ON}
-      zTraceLog('  Dbi.ptMinSize=' + Format('(%d,%d)', [ptMinSize.x, ptMinSize.y]));
-      {$ENDIF DEBUGINFO_ON}
-    end;
-    if (dwMask and DBIM_MAXSIZE) <> 0 then
-    begin
-      ptMaxSize := BandMaxSize;
-      {$IFDEF DEBUGINFO_ON}
-      zTraceLog('  Dbi.ptMaxSize=' + Format('(%d,%d)', [ptMaxSize.x, ptMaxSize.y]));
-      {$ENDIF DEBUGINFO_ON}
-    end;
-    if (dwMask and DBIM_INTEGRAL) <> 0 then
-    begin
-      ptIntegral := BandIntegral;
-      {$IFDEF DEBUGINFO_ON}
-      zTraceLog('  Dbi.ptIntegral=' + Format('(%d,%d)', [ptIntegral.x, ptIntegral.y]));
-      {$ENDIF DEBUGINFO_ON}
-    end;
-    if (dwMask and DBIM_ACTUAL) <> 0 then
-    begin
-      ptActual := BandActualSize;
-      {$IFDEF DEBUGINFO_ON}
-      zTraceLog('  Dbi.ptActual=' + Format('(%d,%d)', [ptActual.x, ptActual.y]));
-      {$ENDIF DEBUGINFO_ON}
-    end;
-    if (dwMask and DBIM_TITLE) <> 0 then
-    begin
-      StringToWideChar(Caption, @wszTitle[0], Length(wszTitle));
-      {$IFDEF DEBUGINFO_ON}
-      zTraceLog('  Dbi.wszTitle=' + Format('%s', [Caption]));
-      {$ENDIF DEBUGINFO_ON}
-    end;
-    if (dwMask and DBIM_MODEFLAGS) <> 0 then
-    begin
-      dwModeFlags := DBIMF_NORMAL;
-      if bmfVariableHeight in BandModeFlags then
-        dwModeFlags := dwModeFlags or DBIMF_VARIABLEHEIGHT;
-      if bmfDebossed in BandModeFlags then
-        dwModeFlags := dwModeFlags or DBIMF_DEBOSSED;
-      if bmfBkColor in BandModeFlags then
-        dwModeFlags := dwModeFlags or DBIMF_BKCOLOR;
-      {$IFDEF DEBUGINFO_ON}
-      zTraceLog('  Dbi.dwModeFlags=' + Format('0x%x', [dwModeFlags]));
-      {$ENDIF DEBUGINFO_ON}
-    end;
-    if (dwMask and DBIM_BKCOLOR) <> 0 then
-    begin
-      crBkgnd := Color;
-      {$IFDEF DEBUGINFO_ON}
-      zTraceLog('  Dbi.crBkgnd=' + Format('0x%x', [crBkgnd]));
-      {$ENDIF DEBUGINFO_ON}
-    end;
+    Dbi.ptMinSize := FBandForm.BandMinSize;
+    {$IFDEF DEBUGINFO_ON}
+    zTraceLog('  Dbi.ptMinSize=' + Format('(%d,%d)', [Dbi.ptMinSize.x, Dbi.ptMinSize.y]));
+    {$ENDIF DEBUGINFO_ON}
+  end;
+  if (Dbi.dwMask and DBIM_MAXSIZE) <> 0 then
+  begin
+    Dbi.ptMaxSize := FBandForm.BandMaxSize;
+    {$IFDEF DEBUGINFO_ON}
+    zTraceLog('  Dbi.ptMaxSize=' + Format('(%d,%d)', [Dbi.ptMaxSize.x, Dbi.ptMaxSize.y]));
+    {$ENDIF DEBUGINFO_ON}
+  end;
+  if (Dbi.dwMask and DBIM_INTEGRAL) <> 0 then
+  begin
+    Dbi.ptIntegral := FBandForm.BandIntegral;
+    {$IFDEF DEBUGINFO_ON}
+    zTraceLog('  Dbi.ptIntegral=' + Format('(%d,%d)', [Dbi.ptIntegral.x, Dbi.ptIntegral.y]));
+    {$ENDIF DEBUGINFO_ON}
+  end;
+  if (Dbi.dwMask and DBIM_ACTUAL) <> 0 then
+  begin
+    Dbi.ptActual := FBandForm.BandActualSize;
+    {$IFDEF DEBUGINFO_ON}
+    zTraceLog('  Dbi.ptActual=' + Format('(%d,%d)', [Dbi.ptActual.x, Dbi.ptActual.y]));
+    {$ENDIF DEBUGINFO_ON}
+  end;
+  if (Dbi.dwMask and DBIM_TITLE) <> 0 then
+  begin
+    StringToWideChar(FBandForm.Caption, @Dbi.wszTitle[0], Length(Dbi.wszTitle));
+    {$IFDEF DEBUGINFO_ON}
+    zTraceLog('  Dbi.wszTitle=' + Format('%s', [FBandForm.Caption]));
+    {$ENDIF DEBUGINFO_ON}
+  end;
+  if (Dbi.dwMask and DBIM_MODEFLAGS) <> 0 then
+  begin
+    Dbi.dwModeFlags := DBIMF_NORMAL;
+    if bmfVariableHeight in FBandForm.BandModeFlags then
+      Dbi.dwModeFlags := Dbi.dwModeFlags or DBIMF_VARIABLEHEIGHT;
+    if bmfDebossed in FBandForm.BandModeFlags then
+      Dbi.dwModeFlags := Dbi.dwModeFlags or DBIMF_DEBOSSED;
+    if bmfBkColor in FBandForm.BandModeFlags then
+      Dbi.dwModeFlags := Dbi.dwModeFlags or DBIMF_BKCOLOR;
+    {$IFDEF DEBUGINFO_ON}
+    zTraceLog('  Dbi.dwModeFlags=' + Format('0x%x', [Dbi.dwModeFlags]));
+    {$ENDIF DEBUGINFO_ON}
+  end;
+  if (Dbi.dwMask and DBIM_BKCOLOR) <> 0 then
+  begin
+    Dbi.crBkgnd := FBandForm.Color;
+    {$IFDEF DEBUGINFO_ON}
+    zTraceLog('  Dbi.crBkgnd=' + Format('0x%x', [Dbi.crBkgnd]));
+    {$ENDIF DEBUGINFO_ON}
   end;
   Result := NOERROR;
 end;
@@ -611,14 +574,13 @@ begin
   if not Assigned(FBandForm) then
     Exit;
   FHasFocus := AShow;
-  with FBandForm do
-    if AShow then
-    begin
-      Show;
-      FocusChange(AShow);
-    end
-    else
-      Hide;
+  if AShow then
+  begin
+    FBandForm.Show;
+    FocusChange(AShow);
+  end
+  else
+    FBandForm.Hide;
   {$IFDEF DEBUGINFO_ON}
   zTraceLog(ClassName + '.ShowDW() End');
   {$ENDIF DEBUGINFO_ON}
@@ -636,11 +598,6 @@ begin
         Exit;
       ShowDW(False);
       FBandForm.Free;
-      if FHook <> 0 then
-      begin
-        UnhookWindowsHookEx(FHook);
-        FHook := 0;
-      end;
     finally
       FBandForm := nil;
     end;
@@ -727,9 +684,6 @@ begin
 
       FSavedWndProc := FBandForm.WindowProc;
       FBandForm.WindowProc := BandWndProc;
-
-      FHook := SetWindowsHookEx(WH_GETMESSAGE,
-        MethodToProcedure(Self, Self.MethodAddress('MsgHookProc')), HInstance, GetCurrentThreadID);
     end;
     if Site.QueryInterface(IInputObjectSite, FSite) <> S_OK then // implicit FSite.AddRef;
     begin
@@ -875,32 +829,6 @@ begin
     if Supports(FBandForm, IUnknown, Obj) then
       Site.OnFocusChangeIS(Obj, HasFocus);
   end;
-end;
-
-function TzCustomBandObject.MsgHookProc(nCode, wParam, lParam: Integer): Integer;
-var
-  lOk: Boolean;
-begin
-  try
-    if FBandForm <> nil then
-    begin
-      lOk := False;
-      with PMsg(Pointer(lParam))^ do
-      begin
-        if (((message = WM_KEYDOWN) or (message = WM_KEYUP)) and
-          ((wParam = VK_BACK))) then
-          lOk := True
-        else
-        if message = WM_MOUSEMOVE then //Enable Flat effects!
-          Application.HandleMessage;
-      end;
-      if lOk then
-        if IsDialogMessage(FBandForm.Handle, PMsg(Pointer(lParam))^) then
-          PMsg(lParam)^.message := WM_NULL;
-    end;
-  except
-  end;
-  Result := CallNextHookEx(FHook, nCode, wParam, lParam);
 end;
 
 //=== { TzContextMenuBandObject } ============================================
@@ -1059,14 +987,10 @@ begin
   Result := MakeHResult(SEVERITY_SUCCESS, 0, 1);
   if not Assigned(FBandForm) then
     Exit;
-  with FBandForm do
-  begin
-    if not Assigned(BandContextMenu) then
-      Exit;
-    //idCmd := idCmdFirst;
-    with BandContextMenu do
-      InsertContextMenuItems(AMenu, @BandContextMenu.Items, IndexMenu);
-  end;
+  if not Assigned(FBandForm.BandContextMenu) then
+    Exit;
+  //idCmd := idCmdFirst;
+  InsertContextMenuItems(AMenu, @FBandForm.BandContextMenu.Items, IndexMenu);
   Result := MakeResult(SEVERITY_SUCCESS, FACILITY_NULL, FMenuItemLink.Count);
 end;
 
@@ -1101,14 +1025,11 @@ begin
   Result := E_INVALIDARG;
   if not Assigned(FBandForm) then
     Exit;
-  with FBandForm do
-  begin
-    if not Assigned(BandContextMenu) then
-      Exit;
-    FindItem(BandContextMenu.Items, idCmd, ci);
-    //if BandContextMenu.DispatchCommand(idCmd) then
-    //   Result := NOERROR;
-  end;
+  if not Assigned(FBandForm.BandContextMenu) then
+    Exit;
+  FindItem(FBandForm.BandContextMenu.Items, idCmd, ci);
+  //if BandContextMenu.DispatchCommand(idCmd) then
+  //   Result := NOERROR;
 end;
 
 function TzContextMenuBandObject.GetCommandString(idCmd, uType: UINT;
@@ -1124,28 +1045,25 @@ begin
   Result := E_INVALIDARG;
   if not Assigned(FBandForm) then
     Exit;
-  with FBandForm do
-  begin
-    if not Assigned(BandContextMenu) then
-      Exit;
-    case uType of
-      GCS_HELPTEXT:
-        begin
-          MenuItem := BandContextMenu.FindItem(idCmd, fkCommand);
-          if MenuItem = nil then
-            Exit;
-          StrCopy(pszName, PAnsiChar(AnsiString(MenuItem.Hint)));  // text lost here, unicode version should be considered
-        end;
-      GCS_VERB:
-        begin
-          MenuItem := BandContextMenu.FindItem(idCmd, fkCommand);
-          if MenuItem = nil then
-            Exit;
-          StrCopy(pszName, PAnsiChar(AnsiString(GetContextMenuCaption(MenuItem))));    // text lost here, unicode version should be considered
-        end;
-      GCS_VALIDATE:
-        Result := NOERROR;
-    end;
+  if not Assigned(FBandForm.BandContextMenu) then
+    Exit;
+  case uType of
+    GCS_HELPTEXT:
+      begin
+        MenuItem := FBandForm.BandContextMenu.FindItem(idCmd, fkCommand);
+        if MenuItem = nil then
+          Exit;
+        StrCopy(pszName, PAnsiChar(AnsiString(MenuItem.Hint)));  // text lost here, unicode version should be considered
+      end;
+    GCS_VERB:
+      begin
+        MenuItem := FBandForm.BandContextMenu.FindItem(idCmd, fkCommand);
+        if MenuItem = nil then
+          Exit;
+        StrCopy(pszName, PAnsiChar(AnsiString(GetContextMenuCaption(MenuItem))));    // text lost here, unicode version should be considered
+      end;
+    GCS_VALIDATE:
+      Result := NOERROR;
   end;
 end;
 

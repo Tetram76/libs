@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCxDB.pas 12563 2009-10-19 23:55:49Z jfudickar $
+// $Id: JvDynControlEngineDevExpCxDB.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvDynControlEngineDevExpCxDB;
 
@@ -31,7 +31,7 @@ interface
 
 {$IFDEF UNITVERSIONING}
 uses
-  JclUnitVersioning, JvDynControlEngineDevExpcx, JvDynControlEngineIntf;
+  JclUnitVersioning, JvDynControlEngineDevExpCx, JvDynControlEngineIntf;
 {$ENDIF UNITVERSIONING}
 
 {$ELSE}
@@ -594,8 +594,8 @@ procedure SetDefaultDynControlEngineDBDevExp;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCxDB.pas $';
-    Revision: '$Revision: 12563 $';
-    Date: '$Date: 2009-10-20 01:55:49 +0200 (mar., 20 oct. 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

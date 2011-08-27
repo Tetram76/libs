@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBDialog.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvBaseDBDialog.pas 13086 2011-07-10 10:34:43Z ahuser $
 
 unit JvBaseDBDialog;
 
@@ -69,8 +69,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBDialog.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13086 $';
+    Date: '$Date: 2011-07-10 12:34:43 +0200 (dim., 10 juil. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -78,7 +78,7 @@ const
 implementation
 
 uses 
-  Sysutils, Types, ExtCtrls, ComCtrls, StdCtrls, 
+  SysUtils, Types, ExtCtrls, ComCtrls, StdCtrls, 
   JvJVCLUtils;
 
 function TJvBaseDBDialog.CreateForm: TForm;
@@ -137,7 +137,7 @@ end;
 
 procedure TJvBaseDBDialog.SetAppStorage(Value: TJvCustomAppStorage);
 begin
-  ReplaceComponentReference(self, Value, TComponent(FAppStorage));
+  ReplaceComponentReference(Self, Value, TComponent(FAppStorage));
 end;
 
 procedure TJvBaseDBDialog.SetAppStoragePath(Value: string);
@@ -148,7 +148,7 @@ end;
 
 procedure TJvBaseDBDialog.SetSession(const Value: TComponent);
 begin
-  ReplaceComponentReference(self, Value, FSession);
+  ReplaceComponentReference(Self, Value, FSession);
 end;
 
 {$IFDEF UNITVERSIONING}

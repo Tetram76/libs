@@ -23,9 +23,9 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvId3v2Types.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvId3v2Types.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
-unit JvID3v2Types;
+unit JvId3v2Types;
 
 {$I jvcl.inc}
 
@@ -253,8 +253,8 @@ procedure ISO_639_2Names(Strings: TStrings);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvId3v2Types.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

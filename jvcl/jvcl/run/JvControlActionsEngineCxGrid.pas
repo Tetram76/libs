@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxGrid.pas 13015 2011-04-10 17:19:12Z jfudickar $
+// $Id: JvControlActionsEngineCxGrid.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvControlActionsEngineCxGrid;
 
@@ -63,8 +63,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxGrid.pas $';
-    Revision: '$Revision: 13015 $';
-    Date: '$Date: 2011-04-10 19:19:12 +0200 (dim., 10 avr. 2011) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -76,7 +76,7 @@ uses
   cxGridDBDataDefinitions, cxControls,
   cxCustomData, cxGridExportLink,
   {$IFDEF DELPHI12_UP}
-  PngImage, Jpeg,
+  pngimage, jpeg,
   {$ENDIf}
 {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
   Graphics, Variants, SysUtils, Dialogs, JvControlActions;

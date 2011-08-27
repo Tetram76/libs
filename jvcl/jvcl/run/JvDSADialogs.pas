@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDSADialogs.pas 12976 2011-02-11 21:41:55Z jfudickar $
+// $Id: JvDSADialogs.pas 13068 2011-06-16 18:54:00Z jfudickar $
 
 unit JvDSADialogs;
 
@@ -467,8 +467,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDSADialogs.pas $';
-    Revision: '$Revision: 12976 $';
-    Date: '$Date: 2011-02-11 22:41:55 +0100 (ven., 11 févr. 2011) $';
+    Revision: '$Revision: 13068 $';
+    Date: '$Date: 2011-06-16 20:54:00 +0200 (jeu., 16 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -882,8 +882,8 @@ begin
     ButtonHeight := MulDiv(mcButtonHeight, DialogUnits.Y, 8);
     ButtonSpacing := MulDiv(mcButtonSpacing, DialogUnits.X, 4);
 
-    if (Screen.Width div 2) > (CenterParWidth + (2 * CenterParLeft - Screen.DesktopLeft)) then
-      SetRect(TextRect, 0, 0, CenterParWidth + (2 * CenterParLeft - Screen.DesktopLeft), 0)
+    if (Screen.Width div 2) > (CenterParWidth + (2 * (CenterParLeft - Screen.DesktopLeft))) then
+      SetRect(TextRect, 0, 0, CenterParWidth + (2 * (CenterParLeft - Screen.DesktopLeft)), 0)
     else
       SetRect(TextRect, 0, 0, Screen.Width div 2, 0);
 

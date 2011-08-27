@@ -88,7 +88,7 @@ You may retrieve the latest version of this file at the Project JEDI's JVCL home
 located at http://jvcl.delphi-jedi.org
 
 -----------------------------------------------------------------------------}
-// $Id: JvChart.pas 12880 2010-10-30 17:42:44Z jfudickar $
+// $Id: JvChart.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvChart;
 
@@ -939,8 +939,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChart.pas $';
-    Revision: '$Revision: 12880 $';
-    Date: '$Date: 2010-10-30 19:42:44 +0200 (sam., 30 oct. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -993,7 +993,7 @@ const
 procedure GradHorizontal(Canvas: TCanvas; Rect: TRect; FromColor, ToColor: TColor); // NEW 2007
 var
   X: Integer;
-  dr, dg, db: Extended;
+  dr, dg, DB: Extended;
   C1, C2: TColor;
   r1, r2, g1, g2, b1, b2: Byte;
   R, G, B: Byte;
@@ -1016,14 +1016,14 @@ begin
 
   dr := (R2 - R1) / XDelta;
   dg := (G2 - G1) / XDelta;
-  db := (B2 - B1) / XDelta;
+  DB := (B2 - B1) / XDelta;
 
   Cnt := 0;
   for X := Rect.Left to Rect.Right - 1 do
   begin
     R := R1 + Ceil(dr * Cnt); // uses Math.
     G := G1 + Ceil(dg * Cnt);
-    B := B1 + Ceil(db * Cnt);
+    B := B1 + Ceil(DB * Cnt);
 
     Canvas.Pen.Color := RGB(R, G, B);
     Canvas.MoveTo(X, Rect.Top);
@@ -1035,7 +1035,7 @@ end;
 procedure GradVertical(Canvas: TCanvas; Rect: TRect; FromColor, ToColor: TColor); // NEW 2007
 var
   Y: Integer;
-  dr, dg, db: Extended;
+  dr, dg, DB: Extended;
   C1, C2: TColor;
   r1, r2, g1, g2, b1, b2: Byte;
   R, G, B: Byte;
@@ -1057,14 +1057,14 @@ begin
     Exit;
   dr := (R2 - R1) / YDelta;
   dg := (G2 - G1) / YDelta;
-  db := (B2 - B1) / YDelta;
+  DB := (B2 - B1) / YDelta;
 
   Cnt := 0;
   for Y := Rect.Top to Rect.Bottom - 1 do
   begin
     R := R1 + Ceil(dr * Cnt);
     G := G1 + Ceil(dg * Cnt);
-    B := B1 + Ceil(db * Cnt);
+    B := B1 + Ceil(DB * Cnt);
 
     Canvas.Pen.Color := RGB(R, G, B);
     Canvas.MoveTo(Rect.Left, Y);

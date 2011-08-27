@@ -113,7 +113,7 @@
                    an exception will not occur.
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDebugHandler.pas 12591 2009-11-02 18:01:51Z ahuser $
+// $Id: JvDebugHandler.pas 13054 2011-06-10 14:03:35Z obones $
 
 unit JvDebugHandler;
 
@@ -167,8 +167,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDebugHandler.pas $';
-    Revision: '$Revision: 12591 $';
-    Date: '$Date: 2009-11-02 19:01:51 +0100 (lun., 02 nov. 2009) $';
+    Revision: '$Revision: 13054 $';
+    Date: '$Date: 2011-06-10 16:03:35 +0200 (ven., 10 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -250,7 +250,7 @@ begin
   UnitName := '';
   ProcedureName := '';
   Loc := '';
-  if FExceptionLogging then
+  if FExceptionLogging and not (csDesigning in ComponentState) then
   begin
     ExceptionStringList := TStringList.Create;
     try
@@ -271,9 +271,6 @@ begin
         if JclLastExceptStackList <> nil Then
           JclLastExceptStackList.AddToStrings(ExceptionStringList);
       end;
-
-      if Assigned(FOnOtherDestination) Then
-        FOnOtherDestination(Self);
 
       if FLogToFile Then
       begin
@@ -301,6 +298,11 @@ begin
           end;
         end;
       end;
+
+      if Assigned(FOnOtherDestination) Then
+        FOnOtherDestination(Self)
+      else
+        Application.ShowException(Exception(ExceptObj));
     finally
       ExceptionStringList.Free;
     end;

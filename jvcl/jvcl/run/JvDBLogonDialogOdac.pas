@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLogonDialogOdac.pas 12841 2010-09-05 17:33:11Z jfudickar $
+// $Id: JvDBLogonDialogOdac.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvDBLogonDialogOdac;
 
@@ -182,8 +182,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLogonDialogOdac.pas $';
-    Revision: '$Revision: 12841 $';
-    Date: '$Date: 2010-09-05 19:33:11 +0200 (dim., 05 sept. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -386,7 +386,7 @@ begin
       if (E.ErrorCode = 28001) or (E.ErrorCode = 28002) or (E.ErrorCode = 28011) then
         HandleExpiredPassword(E.Message)
       else
-        JVDsaDialogs.MessageDlg(E.Message, mtError, [mbok], 0, dckScreen,
+        JvDSADialogs.MessageDlg(E.Message, mtError, [mbok], 0, dckScreen,
           0, mbDefault, mbDefault, mbDefault, DynControlEngine);
     end;
   end;
@@ -489,7 +489,7 @@ end;
 
 procedure TJvDBOdacLogonDialog.HandleExpiredPassword(const ErrorMessage: string);
 begin
-  if JVDsaDialogs.MessageDlg(ErrorMessage + #13#10 + RsDoYouWantToChangePassword,
+  if JvDSADialogs.MessageDlg(ErrorMessage + #13#10 + RsDoYouWantToChangePassword,
     mtInformation, [mbYes, mbNo], 0, dckScreen,
     0, mbDefault, mbDefault, mbDefault, DynControlEngine) = mrYes then
     if ChangePassword then

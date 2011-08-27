@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgTab.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvgTab.pas 13079 2011-07-06 07:42:10Z ahuser $
 
 unit JvgTab;
 
@@ -128,8 +128,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgTab.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13079 $';
+    Date: '$Date: 2011-07-06 09:42:10 +0200 (mer., 06 juil. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

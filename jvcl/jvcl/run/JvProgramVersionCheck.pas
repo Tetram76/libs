@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProgramVersionCheck.pas 12961 2011-01-04 00:07:18Z jfudickar $
+// $Id: JvProgramVersionCheck.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvProgramVersionCheck;
 
@@ -33,7 +33,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Classes,
   {$IFDEF USE_3RDPARTY_INDY}
-  IdHTTP, IdFtp,
+  IdHTTP, IdFTP,
   {$ENDIF USE_3RDPARTY_INDY}
   {$IFDEF USE_3RDPARTY_ICS}
   HttpProt, FtpCli,
@@ -544,8 +544,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgramVersionCheck.pas $';
-    Revision: '$Revision: 12961 $';
-    Date: '$Date: 2011-01-04 01:07:18 +0100 (mar., 04 janv. 2011) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -991,14 +991,14 @@ begin
     LocalFileName := ALocalFileName;
   TemporaryLocalFileName := LocalFileName + RsPVTempFileNameExtension;
   if FileExists(PathAppend(ALocalPath, TemporaryLocalFileName)) then
-    Sysutils.DeleteFile(PathAppend(ALocalPath, TemporaryLocalFileName));
+    SysUtils.DeleteFile(PathAppend(ALocalPath, TemporaryLocalFileName));
   Result := LoadFileFromRemoteInt(ARemotePath, ARemoteFileName,
     ALocalPath, TemporaryLocalFileName, ABaseThread);
   if FileExists(Result) then // if we successfully copied the remote file to <local>.temp
   begin
     if FileExists(PathAppend(ALocalPath, LocalFileName)) then
     begin // if <local> exists
-      if Sysutils.DeleteFile(PathAppend(ALocalPath, LocalFileName)) then
+      if SysUtils.DeleteFile(PathAppend(ALocalPath, LocalFileName)) then
       begin // if we deleted <local>
         if RenameFile(Result, PathAppend(ALocalPath, LocalFileName)) then // if we renamed <local>.temp to <local>
           Result := PathAppend(ALocalPath, LocalFileName) // we can return <local>
@@ -1009,7 +1009,7 @@ begin
       begin // so, we failed delete <local>  try renaming <local>
         TemporaryLocalFileName2 := LocalFileName + RsPVTempFileNameExtension + '.bak'; // <local>.temp.bak
         if FileExists(PathAppend(ALocalPath, TemporaryLocalFileName2)) then // if <local>.temp.bak exists
-          Sysutils.DeleteFile(PathAppend(ALocalPath, TemporaryLocalFileName2)); // get rid of it
+          SysUtils.DeleteFile(PathAppend(ALocalPath, TemporaryLocalFileName2)); // get rid of it
 
         // rename <local> to <local>.temp.bak  (you can't delete live file, but CAN rename in recent Win OS)
         if RenameFile(PathAppend(ALocalPath, LocalFileName), PathAppend(ALocalPath, TemporaryLocalFileName2)) then
@@ -1022,7 +1022,7 @@ begin
             // delete <local>.temp.bak  if possible - we don't care if fails -
             // leaving a backup of live exe is a "feature" anyway <g>
             if FileExists(PathAppend(ALocalPath, TemporaryLocalFileName2)) then
-              Sysutils.DeleteFile(PathAppend(ALocalPath, TemporaryLocalFileName2));
+              SysUtils.DeleteFile(PathAppend(ALocalPath, TemporaryLocalFileName2));
           end // rename <local>.temp to <local>
           else
             Result := ''; // rename of <local>.temp to <local> failed, return blank

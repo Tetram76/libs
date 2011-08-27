@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHidControllerClass.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvHidControllerClass.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvHidControllerClass;
 
@@ -38,7 +38,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, SysUtils,
   JvComponentBase,
-  DBT, SetupApi, HID, JvTypes;
+  DBT, SetupApi, Hid, JvTypes;
 
 const
   // a version string for the component
@@ -229,6 +229,10 @@ type
     procedure StartThread;
     procedure StopThread;
     // Constructor is hidden! Only a TJvHidDeviceController can create a TJvHidDevice object.
+    // APnPInfo becomes the property of this class, do not try to free it yourself,
+    // even if this call raises an exception.
+    // The destructor of this class will take care of the cleanup even when an exception
+    // is raised (as specified by the Delphi language)
     constructor CtlCreate(const APnPInfo: TJvHidPnPInfo;
       const Controller: TJvHidDeviceController);
   protected
@@ -439,8 +443,8 @@ function HidErrorString(const RetVal: NTSTATUS): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHidControllerClass.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1695,13 +1699,8 @@ var
             // fill in PnPInfo of device
             PnPInfo := TJvHidPnPInfo.Create(PnPHandle, DevData, PChar(@FunctionClassDeviceData.DevicePath));
             // create HID device object and add it to the device list
-            try
-              HidDev := TJvHidDevice.CtlCreate(PnPInfo, Self);
-              NewList.Add(HidDev);
-            except
-              // ignore device if unreadable but still free used memory
-              PnPInfo.Free;
-            end;
+            HidDev := TJvHidDevice.CtlCreate(PnPInfo, Self);
+            NewList.Add(HidDev);
             Inc(Devn);
           end;
           FreeMem(FunctionClassDeviceData);

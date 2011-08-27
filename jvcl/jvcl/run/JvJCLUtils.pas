@@ -26,7 +26,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvJCLUtils.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvJCLUtils.pas 13079 2011-07-06 07:42:10Z ahuser $
 
 unit JvJCLUtils;
 
@@ -1079,8 +1079,8 @@ procedure CollectionSort(Collection: Classes.TCollection; SortProc: TCollectionS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJCLUtils.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13079 $';
+    Date: '$Date: 2011-07-06 09:42:10 +0200 (mer., 06 juil. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1336,11 +1336,11 @@ end;
 
 procedure GetXYByPos(const S: string; const Pos: Integer; var X, Y: Integer);
 var
-  I, iB: Integer;
+  I, IB: Integer;
 begin
   X := -1;
   Y := -1;
-  iB := 0;
+  IB := 0;
   if (Length(S) >= Pos) and (Pos >= 0) then
   begin
     I := 1;
@@ -1350,21 +1350,21 @@ begin
       if S[I] = #10 then
       begin
         Inc(Y);
-        iB := I + 1;
+        IB := I + 1;
       end;
       Inc(I);
     end;
-    X := Pos - iB;
+    X := Pos - IB;
   end;
 end;
 
 procedure GetXYByPosW(const S: WideString; const Pos: Integer; var X, Y: Integer);
 var
-  I, iB: Integer;
+  I, IB: Integer;
 begin
   X := -1;
   Y := -1;
-  iB := 0;
+  IB := 0;
   if (Length(S) >= Pos) and (Pos >= 0) then
   begin
     I := 1;
@@ -1374,11 +1374,11 @@ begin
       if S[I] = #10 then
       begin
         Inc(Y);
-        iB := I + 1;
+        IB := I + 1;
       end;
       Inc(I);
     end;
-    X := Pos - iB;
+    X := Pos - IB;
   end;
 end;
 
@@ -1669,12 +1669,12 @@ begin
     if StartIndex > LenS then
       Exit;
   end;
-  I := PosIdx(Separator, S, StartIndex + 1);
+  I := PosIdx(Separator, S, StartIndex);
   if I = 0 then
     I := LenS + 1;
   Result := Copy(S, StartIndex, I - StartIndex);
-  if CompareText(Result, Separator) = 0 then
-    Result := '';
+  //if CompareText(Result, Separator) = 0 then
+  //  Result := '';
 end;
 
 function SubStrBySeparatorW(const S: WideString; const Index: Integer; const Separator: WideString; StartIndex: Integer): WideString;
@@ -1701,12 +1701,12 @@ begin
     if StartIndex > LenS then
       Exit;
   end;
-  I := PosIdx(Separator, S, StartIndex + 1);
+  I := PosIdx(Separator, S, StartIndex);
   if I = 0 then
     I := LenS + 1;
   Result := Copy(S, StartIndex, I - StartIndex);
-  if WideCompareText(Result, Separator) = 0 then
-    Result := '';
+  //if WideCompareText(Result, Separator) = 0 then
+  //  Result := '';
 end;
 
 function SubWord(P: PChar; var P2: PChar): string;

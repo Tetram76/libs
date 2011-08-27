@@ -21,9 +21,9 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvId3v2.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvId3v2.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
-unit JvID3v2;
+unit JvId3v2;
 
 {$I jvcl.inc}
 
@@ -37,7 +37,7 @@ uses
   {$IFNDEF COMPILER12_UP}
   JclUnicode,
   {$ENDIF ~COMPILER12_UP}
-  JvID3v2Types, JvID3v2Base;
+  JvId3v2Types, JvID3v2Base;
 
 type
   TJvID3Persistent = class(TPersistent)
@@ -342,8 +342,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvId3v2.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -770,7 +770,7 @@ end;
 
 function TJvID3Text.GetBPM: Cardinal;
 begin
-  Result := Trunc(StrToFloat(StringReplace(BPMStr, '.', JclFormatSettings.DecimalSeparator, [])));
+  Result := Trunc(StrToFloatDef(StringReplace(BPMStr, '.', JclFormatSettings.DecimalSeparator, []), 0));
 end;
 
 procedure TJvID3Text.SetBPM(const Value: Cardinal);

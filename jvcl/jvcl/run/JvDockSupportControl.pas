@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportControl.pas 12934 2010-11-28 14:26:00Z ahuser $
+// $Id: JvDockSupportControl.pas 13079 2011-07-06 07:42:10Z ahuser $
 
 unit JvDockSupportControl;
 
@@ -519,8 +519,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportControl.pas $';
-    Revision: '$Revision: 12934 $';
-    Date: '$Date: 2010-11-28 15:26:00 +0100 (dim., 28 nov. 2010) $';
+    Revision: '$Revision: 13079 $';
+    Date: '$Date: 2011-07-06 09:42:10 +0200 (mer., 06 juil. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -35,7 +35,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSimLogic.pas 12845 2010-09-16 20:22:55Z jfudickar $
+// $Id: JvSimLogic.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvSimLogic;
 
@@ -47,7 +47,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Messages, Graphics, Controls, Forms, Dialogs, Extctrls,
+  Windows, Messages, Graphics, Controls, Forms, Dialogs, ExtCtrls,
   SysUtils, Classes,
   JvTypes;
 
@@ -332,8 +332,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimLogic.pas $';
-    Revision: '$Revision: 12845 $';
-    Date: '$Date: 2010-09-16 22:22:55 +0200 (jeu., 16 sept. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

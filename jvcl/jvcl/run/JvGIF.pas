@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   GIF support is native for VisualCLX so this file is VCL only
 -----------------------------------------------------------------------------}
-// $Id: JvGIF.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvGIF.pas 13064 2011-06-11 13:23:05Z ahuser $
 
 unit JvGIF;
 
@@ -249,8 +249,8 @@ procedure JvGif_Dummy;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGIF.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13064 $';
+    Date: '$Date: 2011-06-11 15:23:05 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3063,6 +3063,8 @@ begin
   TPicture.RegisterFileFormat('', '', TJvGIFImage); // register for loading but do not show in FileDialog
   {$ENDIF USE_JV_GIF}
   TPicture.RegisterClipboardFormat(CF_JVGIF, TJvGIFImage);
+
+  RegisterGraphicSignature('GIF', 0, TJvGIFImage);
 end;
 
 initialization
