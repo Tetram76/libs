@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThumbViews.pas 12775 2010-05-16 13:59:21Z ahuser $
+// $Id: JvThumbViews.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvThumbViews;
 
@@ -36,7 +36,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Classes, Controls, Forms, ExtCtrls,
   FileCtrl, StdCtrls, SysUtils, Messages, Graphics,
-  JvThumbNails, JvBaseThumbnail, JvExControls;
+  JvThumbnails, JvBaseThumbnail, JvExControls;
 
 type
   // (rom) already in JvBaseThumbnail
@@ -201,8 +201,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThumbViews.pas $';
-    Revision: '$Revision: 12775 $';
-    Date: '$Date: 2010-05-16 15:59:21 +0200 (dim., 16 mai 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

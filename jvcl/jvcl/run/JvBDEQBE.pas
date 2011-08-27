@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEQBE.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBDEQBE.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvBDEQBE;
 
@@ -35,7 +35,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes, DB, DBTables, Bde;
+  Classes, DB, DBTables, BDE;
 
 const
   DefQBEStartParam = '#';
@@ -122,8 +122,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEQBE.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -131,7 +131,7 @@ const
 implementation
 
 uses
-  SysUtils, DBConsts, BDEConst,
+  SysUtils, DBConsts, bdeconst,
   JvDBUtils;
 
 constructor TJvQBEQuery.Create(AOwner: TComponent);

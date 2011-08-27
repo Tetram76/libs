@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   ImageKind ikMappedResourceBitmap is not support so far
 -----------------------------------------------------------------------------}
-// $Id: JvImageList.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvImageList.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvImageList;
 
@@ -235,8 +235,8 @@ function LoadImageListFromBitmap(ImgList: TCustomImageList; const Bitmap: TBitma
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageList.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -247,7 +247,7 @@ uses
   Consts, TypInfo,
   ActiveX,
   JclSysUtils,
-  JvJclUtils, // SameFileName() for Delphi 5
+  JvJCLUtils, // SameFileName() for Delphi 5
   JvJVCLUtils, JvResources;
 
 resourcestring

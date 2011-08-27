@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMenus.pas 12994 2011-02-28 11:04:37Z ahuser $
+// $Id: JvMenus.pas 13061 2011-06-11 10:03:55Z jfudickar $
 
 unit JvMenus;
 
@@ -744,8 +744,8 @@ function StripHotkeyPrefix(const Text: string): string; // MBCS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMenus.pas $';
-    Revision: '$Revision: 12994 $';
-    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
+    Revision: '$Revision: 13061 $';
+    Date: '$Date: 2011-06-11 12:03:55 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3202,6 +3202,13 @@ var
   ShowingItemsParent: TMenuItem;
   LocalWRect: TRect;
 begin
+  // Sometimes, for reasons yet to be understood, the Handle is not allocated and
+  // allocating it would trigger an exception telling us the canvas is not ready.
+  // So we simply ignore the issue and hope that another message will ask for
+  // redrawing later on.
+  if not ACanvas.HandleAllocated then
+    Exit;
+
   // Local value, just in case FItem is nil, which could theoretically happen
   // as DrawBorder is called from the replacement window procedure.
   RightToLeft := Menu.BiDiMode <> bdLeftToRight;

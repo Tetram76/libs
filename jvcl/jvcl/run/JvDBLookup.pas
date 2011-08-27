@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvDBLookup.pas 13063 2011-06-11 11:04:31Z ahuser $
 
 unit JvDBLookup;
 
@@ -662,8 +662,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13063 $';
+    Date: '$Date: 2011-06-11 13:04:31 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2773,6 +2773,7 @@ procedure TJvDBLookupCombo.KeyDown(var Key: Word; Shift: TShiftState);
 var
   Delta: Integer;
 begin
+  inherited KeyDown(Key, Shift); // Let the user override the behavior
   if FListActive and ((Key = VK_UP) or (Key = VK_DOWN)) then
   begin
     if ssAlt in Shift then
@@ -2812,11 +2813,11 @@ begin
 
   if (Key <> 0) and FListVisible then
     FDataList.KeyDown(Key, Shift);
-  inherited KeyDown(Key, Shift);
 end;
 
 procedure TJvDBLookupCombo.KeyPress(var Key: Char);
 begin
+  inherited KeyPress(Key);
   if FListVisible then
   begin
     if TabSelects and IsDropDown and (Key = Tab) then
@@ -2849,7 +2850,6 @@ begin
       end;
     end;
   end;
-  inherited KeyPress(Key);
   if CharInSet(Key, [Cr, Esc]) then
     GetParentForm(Self).Perform(CM_DIALOGKEY, Byte(Key), 0);
 end;

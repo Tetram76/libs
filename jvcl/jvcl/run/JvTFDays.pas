@@ -1,4 +1,4 @@
-﻿{-----------------------------------------------------------------------------
+{-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -48,7 +48,7 @@ These changes peform the following functions.
 5) Remove the focus rectangle when ShowFocus is false (the focus rect is not shown in Outlook).
 
 -----------------------------------------------------------------------------}
-// $Id: JvTFDays.pas 13039 2011-06-08 11:46:26Z obones $
+// $Id: JvTFDays.pas 13064 2011-06-11 13:23:05Z ahuser $
 
 unit JvTFDays;
 
@@ -1744,8 +1744,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFDays.pas $';
-    Revision: '$Revision: 13039 $';
-    Date: '$Date: 2011-06-08 13:46:26 +0200 (mer., 08 juin 2011) $';
+    Revision: '$Revision: 13064 $';
+    Date: '$Date: 2011-06-11 15:23:05 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

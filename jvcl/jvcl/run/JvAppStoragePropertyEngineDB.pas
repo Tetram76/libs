@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStoragePropertyEngineDB.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvAppStoragePropertyEngineDB.pas 13088 2011-07-10 12:10:33Z jfudickar $
 
 unit JvAppStoragePropertyEngineDB;
 
@@ -43,8 +43,8 @@ procedure RegisterAppStoragePropertyEngines;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStoragePropertyEngineDB.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13088 $';
+    Date: '$Date: 2011-07-10 14:10:33 +0200 (dim., 10 juil. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -59,10 +59,10 @@ type
   TJvAppStoragePropertyDBGridColumnsEngine = class(TJvAppStoragePropertyBaseEngine)
   public
     function Supports(AObject: TObject; AProperty: TObject): Boolean; override;
-    procedure ReadProperty(AStorage: TJvCustomAppStorage; const APath: string;
-      AObject: TObject; AProperty: TObject; const Recursive, ClearFirst: Boolean); override;
-    procedure WriteProperty(AStorage: TJvCustomAppStorage; const APath: string;
-      AObject: TObject; AProperty: TObject; const Recursive: Boolean); override;
+    procedure ReadProperty(AStorage: TJvCustomAppStorage; const APath: string; AObject: TObject; AProperty: TObject; const Recursive,
+      ClearFirst: Boolean; const IgnoreProperties: TStrings = nil); override;
+    procedure WriteProperty(AStorage: TJvCustomAppStorage; const APath: string; AObject: TObject; AProperty: TObject; const
+      Recursive: Boolean; const IgnoreProperties: TStrings = nil); override;
   end;
 
 //=== { TJvAppStoragePropertyDBGridColumnsEngine } ===========================
@@ -75,8 +75,8 @@ end;
 type
   TAccessCustomDBGrid = class(TCustomDBGrid);
 
-procedure TJvAppStoragePropertyDBGridColumnsEngine.ReadProperty(AStorage: TJvCustomAppStorage;
-  const APath: string; AObject: TObject; AProperty: TObject; const Recursive, ClearFirst: Boolean);
+procedure TJvAppStoragePropertyDBGridColumnsEngine.ReadProperty(AStorage: TJvCustomAppStorage; const APath: string; AObject:
+  TObject; AProperty: TObject; const Recursive, ClearFirst: Boolean; const IgnoreProperties: TStrings = nil);
 begin
   if Assigned(AObject) and (AObject is TCustomDBGrid) then
     TAccessCustomDBGrid(AObject).BeginLayout;
@@ -89,8 +89,8 @@ begin
   end;
 end;
 
-procedure TJvAppStoragePropertyDBGridColumnsEngine.WriteProperty(AStorage: TJvCustomAppStorage;
-  const APath: string; AObject: TObject; AProperty: TObject; const Recursive: Boolean);
+procedure TJvAppStoragePropertyDBGridColumnsEngine.WriteProperty(AStorage: TJvCustomAppStorage; const APath: string; AObject:
+  TObject; AProperty: TObject; const Recursive: Boolean; const IgnoreProperties: TStrings = nil);
 begin
   if Assigned(AProperty) and (AProperty is TDBGridColumns) then
     AStorage.WriteCollection(APath, TCollection(AProperty));

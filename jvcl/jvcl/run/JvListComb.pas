@@ -30,7 +30,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvListComb.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvListComb.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvListComb;
 
@@ -44,7 +44,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
   SysUtils, Classes, Graphics, Controls, ExtCtrls, StdCtrls, ImgList,
-  JvJCLUtils, JvComboBox,
+  JvJCLUtils, JvCombobox,
   JvComponent, JvExControls, JvExStdCtrls;
 
 type
@@ -391,8 +391,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListComb.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

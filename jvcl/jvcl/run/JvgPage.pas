@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgPage.pas 12864 2010-10-11 08:19:42Z obones $
+// $Id: JvgPage.pas 13079 2011-07-06 07:42:10Z ahuser $
 
 unit JvgPage;
 
@@ -133,8 +133,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgPage.pas $';
-    Revision: '$Revision: 12864 $';
-    Date: '$Date: 2010-10-11 10:19:42 +0200 (lun., 11 oct. 2010) $';
+    Revision: '$Revision: 13079 $';
+    Date: '$Date: 2011-07-06 09:42:10 +0200 (mer., 06 juil. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

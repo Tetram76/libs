@@ -36,7 +36,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEdit.pas 12701 2010-03-08 14:30:19Z obones $
+// $Id: JvEdit.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvEdit;
 
@@ -265,8 +265,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEdit.pas $';
-    Revision: '$Revision: 12701 $';
-    Date: '$Date: 2010-03-08 15:30:19 +0100 (lun., 08 mars 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -275,7 +275,7 @@ implementation
 
 uses
   SysUtils, Math, Forms,
-  JvFixedEditPopup, JvToolEdit;
+  JvFixedEditPopUp, JvToolEdit;
 
 //=== Local procedures =======================================================
 

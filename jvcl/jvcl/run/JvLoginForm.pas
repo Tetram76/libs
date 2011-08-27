@@ -1,4 +1,4 @@
-﻿{-----------------------------------------------------------------------------
+{-----------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -31,7 +31,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLoginForm.pas 13040 2011-06-08 12:05:23Z obones $
+// $Id: JvLoginForm.pas 13061 2011-06-11 10:03:55Z jfudickar $
 
 unit JvLoginForm;
 
@@ -204,8 +204,8 @@ function CreateLoginDialog(UnlockMode, ASelectDatabase: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLoginForm.pas $';
-    Revision: '$Revision: 13040 $';
-    Date: '$Date: 2011-06-08 14:05:23 +0200 (mer., 08 juin 2011) $';
+    Revision: '$Revision: 13061 $';
+    Date: '$Date: 2011-06-11 12:03:55 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbarSetupForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSpeedbarSetupForm.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvSpeedbarSetupForm;
 
@@ -35,7 +35,7 @@ uses
   SysUtils,  Classes,
   Windows, Messages,
   Graphics, Controls, Forms, StdCtrls, Grids, ExtCtrls,
-  JvConsts, JvSpeedBar, JvSpeedButton, JvComponent;
+  JvConsts, JvSpeedbar, JvSpeedButton, JvComponent;
 
 type
   TJvSpeedbarSetupWindow = class(TJvForm)
@@ -93,8 +93,8 @@ procedure ShowSpeedbarSetupWindow(Speedbar: TJvSpeedBar; HelpCtx: THelpContext);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedbarSetupForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

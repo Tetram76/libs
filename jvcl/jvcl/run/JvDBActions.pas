@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActions.pas 13011 2011-04-03 14:00:03Z jfudickar $
+// $Id: JvDBActions.pas 13069 2011-06-19 17:18:06Z jfudickar $
 
 unit JvDBActions;
 
@@ -83,16 +83,14 @@ type
 
   TJvDatabaseActionBaseEngineClass = class of TJvDatabaseActionBaseControlEngine;
 
-  TJvDatabaseBeforeExecuteEvent = procedure(Sender: TObject; ControlEngine:
-      TJvDatabaseActionBaseControlEngine; DataComponent: TComponent; var
-      ContinueExecute: Boolean) of object;
+  TJvDatabaseBeforeExecuteEvent = procedure(Sender: TObject; ControlEngine: TJvDatabaseActionBaseControlEngine;
+      DataComponent: TComponent; var ContinueExecute: Boolean) of object;
   TJvDatabaseExecuteEvent = procedure(Sender: TObject; ControlEngine: TJvDatabaseActionBaseControlEngine;
     DataComponent: TComponent) of object;
   TJvDatabaseExecuteDataSourceEvent = procedure(Sender: TObject; DataSource: TDataSource) of object;
 
-  TJvDatabaseActionCheckEnabledEvent = procedure(aDataset : TDataset;aDataComponent : TComponent;
-      aDatabaseControlEngine: TJvDatabaseActionBaseControlEngine; var aEnabled : Boolean)
-      of object;
+  TJvDatabaseActionCheckEnabledEvent = procedure(aDataset : TDataset;aDataComponent : TComponent; aDatabaseControlEngine:
+      TJvDatabaseActionBaseControlEngine; var aEnabled : Boolean) of object;
 
   TJvDatabaseBaseAction = class(TJvActionEngineBaseAction)
   private
@@ -288,11 +286,10 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   published
     //1 The property defines that the new record is created via the insert or the append method
-    property InsertType: TJvDatabaseInsertType read FInsertType write FInsertType
-        default itInsert;
+    property InsertType: TJvDatabaseInsertType read FInsertType write FInsertType default itInsert;
     //1 Use this property to show a single record window after inserting a new record
-    property SingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction read
-        FSingleRecordWindowAction write SetSingleRecordWindowAction;
+    property SingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction read FSingleRecordWindowAction write
+        SetSingleRecordWindowAction;
   end;
 
   TJvDatabaseOnCopyRecord = procedure(Field: TField; OldValue: Variant) of object;
@@ -307,8 +304,7 @@ type
     FOnCopyRecord: TJvDatabaseOnCopyRecord;
     FSingleRecordWindowAction: TJvDatabaseSingleRecordWindowAction;
     procedure SetSingleRecordWindowAction(const Value: TJvDatabaseSingleRecordWindowAction);
-    procedure SingleRecordOnFormShowEvent(ADatacomponent : TComponent;
-        ADynControlEngineDB: TJvDynControlEngineDB);
+    procedure SingleRecordOnFormShowEvent(ADatacomponent : TComponent; ADynControlEngineDB: TJvDynControlEngineDB);
   public
     constructor Create(AOwner: TComponent); override;
     procedure CopyRecord;
@@ -372,9 +368,8 @@ type
     procedure ShowSingleRecordWindow;
     property OnFormShow: TJvDataSourceEditDialogOnFormShowEvent read FOnFormShow write FOnFormShow;
   published
-    property OnCreateDataControlsEvent:
-        TJvDataSourceEditDialogCreateDataControlsEvent read
-        FOnCreateDataControlsEvent write FOnCreateDataControlsEvent;
+    property OnCreateDataControlsEvent: TJvDataSourceEditDialogCreateDataControlsEvent read FOnCreateDataControlsEvent
+        write FOnCreateDataControlsEvent;
     property Options: TJvShowSingleRecordWindowOptions read FOptions write FOptions;
   end;
 
@@ -513,8 +508,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActions.pas $';
-    Revision: '$Revision: 13011 $';
-    Date: '$Date: 2011-04-03 16:00:03 +0200 (dim., 03 avr. 2011) $';
+    Revision: '$Revision: 13069 $';
+    Date: '$Date: 2011-06-19 19:18:06 +0200 (dim., 19 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -566,15 +561,12 @@ end;
 constructor TJvDatabaseBaseAction.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  if Assigned(AOwner) and (AOwner is TJvDatabaseActionList) then
-    DataComponent := TJvDatabaseActionList(AOwner).DataComponent;
   FDatabaseControlEngine := Nil;
 end;
 
 //=== { TJvActionEngineBaseAction } ========================================
 
-procedure TJvDatabaseBaseAction.ChangeActionComponent(const AActionComponent:
-    TComponent);
+procedure TJvDatabaseBaseAction.ChangeActionComponent(const AActionComponent: TComponent);
 begin
   inherited ChangeActionComponent(AActionComponent);
   if Assigned(ControlEngine) and (ControlEngine is TJvDatabaseActionBaseControlEngine) then
@@ -1299,8 +1291,8 @@ begin
   ReplaceComponentReference(Self, Value, TComponent(FSingleRecordWindowAction));
 end;
 
-procedure TJvDatabaseCopyAction.SingleRecordOnFormShowEvent(ADatacomponent :
-    TComponent; ADynControlEngineDB: TJvDynControlEngineDB);
+procedure TJvDatabaseCopyAction.SingleRecordOnFormShowEvent(ADatacomponent : TComponent; ADynControlEngineDB:
+    TJvDynControlEngineDB);
 begin
   CopyRecord;
 end;

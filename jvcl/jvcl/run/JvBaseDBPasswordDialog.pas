@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBPasswordDialog.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBaseDBPasswordDialog.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvBaseDBPasswordDialog;
 
@@ -106,8 +106,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBPasswordDialog.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -115,7 +115,7 @@ const
 implementation
 
 uses 
-  Sysutils, Types, ExtCtrls, ComCtrls, StdCtrls, JvResources, JvdsADialogs,
+  SysUtils, Types, ExtCtrls, ComCtrls, StdCtrls, JvResources, JvDSADialogs,
   Dialogs;
 
 
@@ -159,27 +159,27 @@ begin
         AfterTransferPasswordFromSession(SessionPassword);
       if not (OldPassword = SessionPassword) then
       begin
-        JVDsaDialogs.MessageDlg(RsOldPasswordsMismatch, mtError, [mbok], 0, dckScreen,
+        JvDSADialogs.MessageDlg(RsOldPasswordsMismatch, mtError, [mbok], 0, dckScreen,
           0, mbDefault, mbDefault, mbDefault, DynControlEngine);
         exit;
       end;
     end;
     if not (NewPassword = NewPasswordRetype) then
     begin
-      JVDsaDialogs.MessageDlg(RsPasswordsMismatch, mtError, [mbok], 0, dckScreen,
+      JvDSADialogs.MessageDlg(RsPasswordsMismatch, mtError, [mbok], 0, dckScreen,
         0, mbDefault, mbDefault, mbDefault, DynControlEngine);
       Exit;
     end;
     if (Length(NewPassword) < Options.MinPasswordLength) then
     begin
-      JVDsaDialogs.MessageDlg(Format(RsPasswordLengthToShort, [Options.MinPasswordLength]), mtError, [mbok], 0,
+      JvDSADialogs.MessageDlg(Format(RsPasswordLengthToShort, [Options.MinPasswordLength]), mtError, [mbok], 0,
         dckScreen,
         0, mbDefault, mbDefault, mbDefault, DynControlEngine);
       exit;
     end;
     if not CheckAllowedCharacters(NewPassword) then
     begin
-      JVDsaDialogs.MessageDlg(Format(RsPasswordNotAllowedCharacters, [Options.MinPasswordLength]), mtError, [mbok], 0,
+      JvDSADialogs.MessageDlg(Format(RsPasswordNotAllowedCharacters, [Options.MinPasswordLength]), mtError, [mbok], 0,
         dckScreen,
         0, mbDefault, mbDefault, mbDefault, DynControlEngine);
       exit;
@@ -189,14 +189,14 @@ begin
       BeforeTransferPasswordToSession(SessionPassword);
     Result := ChangePasswordInSession(NewPassword);
     if Result then
-      JVDsaDialogs.MessageDlg(RsPasswordChanged, mtInformation, [mbOK], 0, dckScreen,
+      JvDSADialogs.MessageDlg(RsPasswordChanged, mtInformation, [mbOK], 0, dckScreen,
         0, mbDefault, mbDefault, mbDefault, DynControlEngine)
     else
-      JVDsaDialogs.MessageDlg(RsPasswordNotChanged, mtInformation, [mbOK], 0, dckScreen,
+      JvDSADialogs.MessageDlg(RsPasswordNotChanged, mtInformation, [mbOK], 0, dckScreen,
         0, mbDefault, mbDefault, mbDefault, DynControlEngine);
   except
     on E: Exception do
-      JVDsaDialogs.MessageDlg(E.Message, mtError, [mbOK], 0, dckScreen,
+      JvDSADialogs.MessageDlg(E.Message, mtError, [mbOK], 0, dckScreen,
         0, mbDefault, mbDefault, mbDefault, DynControlEngine);
   end;
 end;

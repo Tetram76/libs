@@ -21,9 +21,9 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCabFile.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvCabFile.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
-unit JvCABFile;
+unit JvCabFile;
 
 {$I jvcl.inc}
 {$I windowsonly.inc}
@@ -87,8 +87,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCabFile.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -96,7 +96,7 @@ const
 implementation
 
 uses
-  SetupApi, WinConvTypes,
+  SetupApi, WinConvTypes, StrUtils,
   JvConsts, JvResources;
 
 constructor TJvCABFile.Create(AOwner: TComponent);
@@ -211,7 +211,7 @@ begin
       else
       begin
         // Extract specific file
-        if UpperCase(ExtractFileName(Sender.FDestPath)) = UpperCase(StrPas(CAB^.NameInCabinet)) then
+        if AnsiEndsText(StrPas(CAB^.NameInCabinet), Sender.FDestPath) then
         begin
           Path := Sender.FDestPath;
           for I := 1 to Length(Path) do

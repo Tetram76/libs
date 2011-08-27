@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBdeUtils.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBdeUtils.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvBdeUtils;
 
@@ -35,7 +35,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Bde, Classes, DB, DBTables,
+  Windows, BDE, Classes, DB, DBTables,
   JvDBUtils;
 
 type
@@ -225,8 +225,8 @@ procedure GetXYByPos(const S: string; const Pos: Integer; var X, Y: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBdeUtils.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -235,7 +235,7 @@ implementation
 
 uses
   SysUtils, Registry, Forms, Controls, Dialogs, Consts, Math,
-  IniFiles, DBConsts, BDEConst, DBCommon, Variants, RTLConsts,
+  IniFiles, DBConsts, bdeconst, DBCommon, Variants, RTLConsts,
   JvConsts, JvJVCLUtils, JvJCLUtils, JvTypes, JvResources;
 
 { Utility routines }
@@ -2201,11 +2201,11 @@ end;
 
 procedure GetXYByPos(const S: string; const Pos: Integer; var X, Y: Integer);
 var
-  I, iB: Integer;
+  I, IB: Integer;
 begin
   X := -1;
   Y := -1;
-  iB := 0;
+  IB := 0;
   if (Length(S) >= Pos) and (Pos >= 0) then
   begin
     I := 1;
@@ -2215,11 +2215,11 @@ begin
       if S[I] = Cr then
       begin
         Inc(Y);
-        iB := I + 1
+        IB := I + 1
       end;
       Inc(I);
     end;
-    X := Pos - iB;
+    X := Pos - IB;
   end;
 end;
 {####################### from JvStrUtil unit #######################}

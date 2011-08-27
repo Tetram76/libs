@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 13028 2011-05-17 13:15:29Z ahuser $
+// $Id: JvComCtrls.pas 13079 2011-07-06 07:42:10Z ahuser $
 
 unit JvComCtrls;
 
@@ -640,8 +640,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 13028 $';
-    Date: '$Date: 2011-05-17 15:15:29 +0200 (mar., 17 mai 2011) $';
+    Revision: '$Revision: 13079 $';
+    Date: '$Date: 2011-07-06 09:42:10 +0200 (mer., 06 juil. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBCombobox.pas 12850 2010-10-08 12:05:51Z obones $
+// $Id: JvDBCombobox.pas 13057 2011-06-10 23:43:37Z ahuser $
 
 unit JvDBCombobox;
 
@@ -252,8 +252,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBCombobox.pas $';
-    Revision: '$Revision: 12850 $';
-    Date: '$Date: 2010-10-08 14:05:51 +0200 (ven., 08 oct. 2010) $';
+    Revision: '$Revision: 13057 $';
+    Date: '$Date: 2011-06-11 01:43:37 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -495,7 +495,7 @@ begin
     Esc:
       begin
         FDataLink.Reset;
-        if UpdateFieldImmediatelly and (FDataLink.Field <> nil) then
+        if UpdateFieldImmediatelly and (FDataLink.Field <> nil) and FDataLink.Editing then
           FDataLink.Field.Value := FDataLink.Field.OldValue;
         SelectAll;
       end;

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 13015 2011-04-10 17:19:12Z jfudickar $
+// $Id: JvActionsEngine.pas 13069 2011-06-19 17:18:06Z jfudickar $
 
 unit JvActionsEngine;
 
@@ -96,6 +96,7 @@ type
     procedure SetChecked(Value: Boolean);
     procedure SetEnabled(Value: Boolean);
     procedure SetImageIndex(Value: Integer);
+    procedure SetParentComponent(AParent: TComponent); override;
     procedure SetVisible(Value: Boolean);
     procedure UpdateTarget(Target: TObject); override;
     property ActionComponent: TComponent read FActionComponent write SetActionComponent;
@@ -135,8 +136,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 13015 $';
-    Date: '$Date: 2011-04-10 19:19:12 +0200 (dim., 10 avr. 2011) $';
+    Revision: '$Revision: 13069 $';
+    Date: '$Date: 2011-06-19 19:18:06 +0200 (dim., 19 juin 2011) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -212,7 +213,10 @@ begin
   inherited Create(AOwner);
   FLastTarget := nil;
   FControlEngine := nil;
-  FActionComponent := nil;
+  if Assigned(AOwner) and (AOwner is TJvActionBaseActionList) then
+    ActionComponent := TJvActionBaseActionList(AOwner).ActionComponent
+  else
+    FActionComponent := nil;
 end;
 
 procedure TJvActionEngineBaseAction.ChangeActionComponent(const
@@ -302,6 +306,13 @@ procedure TJvActionEngineBaseAction.SetImageIndex(Value: Integer);
 begin
   if ImageIndex <> Value then
     ImageIndex := Value;
+end;
+
+procedure TJvActionEngineBaseAction.SetParentComponent(AParent: TComponent);
+begin
+  Inherited SetParentComponent(AParent);
+  if AParent is TJvActionBaseActionList then
+    ActionComponent := TJvActionBaseActionList(AParent).ActionComponent;
 end;
 
 procedure TJvActionEngineBaseAction.SetVisible(Value: Boolean);

@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBLogonDialog.pas 12884 2010-10-31 20:25:46Z jfudickar $
+// $Id: JvBaseDBLogonDialog.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvBaseDBLogonDialog;
 
@@ -392,8 +392,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBLogonDialog.pas $';
-    Revision: '$Revision: 12884 $';
-    Date: '$Date: 2010-10-31 21:25:46 +0100 (dim., 31 oct. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1528,7 +1528,7 @@ begin
       TmpConnectionList.LoadProperties;
       if TmpConnectionList.Count <= 0 then
       begin
-        JVDsaDialogs.MessageDlg(RsNoConnectionEntriesFound, mtError, [mbok], 0, dckScreen,
+        JvDSADialogs.MessageDlg(RsNoConnectionEntriesFound, mtError, [mbok], 0, dckScreen,
           0, mbDefault, mbDefault, mbDefault, DynControlEngine);
         exit;
       end;
@@ -1541,7 +1541,7 @@ begin
         Results[0] := Integer(mrYes);
         Results[1] := Integer(mrNo);
         Results[2] := Integer(mrCancel);
-        case JVDsaDialogs.MessageDlgEx(RsConnectionListImportAppendOverwriteExistingEntries,
+        case JvDSADialogs.MessageDlgEx(RsConnectionListImportAppendOverwriteExistingEntries,
           mtConfirmation, Buttons, Results, 0, dckScreen, 0,
           0, 2, -1, DynControlEngine) of
           mrYes:

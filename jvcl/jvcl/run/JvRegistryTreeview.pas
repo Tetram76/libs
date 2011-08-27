@@ -24,9 +24,9 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRegistryTreeview.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvRegistryTreeview.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
-unit JvRegistryTreeView;
+unit JvRegistryTreeview;
 
 {$I jvcl.inc}
 
@@ -144,8 +144,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRegistryTreeview.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

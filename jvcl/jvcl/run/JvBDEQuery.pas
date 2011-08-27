@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEQuery.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvBDEQuery.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvBDEQuery;
 
@@ -32,7 +32,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, DB, DBTables, Bde,
+  SysUtils, Classes, DB, DBTables, BDE,
   JvComponentBase, JVCLVer, JvTypes;
 
 const
@@ -184,8 +184,8 @@ procedure CreateQueryParams(List: TParams; const Value: PChar; Macro: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEQuery.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -193,7 +193,7 @@ const
 implementation
 
 uses
-  RTLConsts, Forms, Consts, BDEConst,
+  RTLConsts, Forms, Consts, bdeconst,
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}

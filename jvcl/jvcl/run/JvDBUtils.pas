@@ -23,7 +23,7 @@ tia
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUtils.pas 13006 2011-03-31 12:20:17Z jfudickar $
+// $Id: JvDBUtils.pas 13085 2011-07-10 09:59:28Z ahuser $
 
 unit JvDBUtils;
 
@@ -133,6 +133,7 @@ function ConfirmDelete: Boolean;
 procedure ConfirmDataSetCancel(DataSet: TDataSet);
 procedure CheckRequiredField(Field: TField);
 procedure CheckRequiredFields(const Fields: array of TField);
+procedure GotoBookmarkEx(DataSet: TDataSet; const Bookmark: TBookmark; Mode: TResyncMode = [rmExact, rmCenter]; ForceScrollEvents: Boolean = False);
 
 { SQL expressions }
 
@@ -183,8 +184,8 @@ procedure _DBError(const Msg: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUtils.pas $';
-    Revision: '$Revision: 13006 $';
-    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
+    Revision: '$Revision: 13085 $';
+    Date: '$Date: 2011-07-10 11:59:28 +0200 (dim., 10 juil. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -910,6 +911,24 @@ var
 begin
   for I := Low(Fields) to High(Fields) do
     CheckRequiredField(Fields[I]);
+end;
+
+type
+  TDataSetAccess = class(TDataSet);
+
+procedure GotoBookmarkEx(DataSet: TDataSet; const Bookmark: TBookmark; Mode: TResyncMode; ForceScrollEvents: Boolean);
+var
+  DS: TDataSetAccess;
+begin
+	if (DataSet <> nil) and (Bookmark <> nil) then
+	begin
+    DS := TDataSetAccess(DataSet);
+		DS.CheckBrowseMode;
+		if ForceScrollEvents or (rmCenter in Mode) then DS.DoBeforeScroll;
+		DS.InternalGotoBookmark(Pointer(Bookmark));
+		DS.Resync(Mode);
+		if ForceScrollEvents or (rmCenter in Mode) then DS.DoAfterScroll;
+	end;
 end;
 
 procedure AssignRecord(Source, Dest: TDataSet; ByName: Boolean);

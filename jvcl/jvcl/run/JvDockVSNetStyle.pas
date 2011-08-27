@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVSNetStyle.pas 12856 2010-10-08 13:48:34Z obones $
+// $Id: JvDockVSNetStyle.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvDockVSNetStyle;
 
@@ -35,7 +35,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls, Forms, ExtCtrls,
   JvDockControlForm, JvDockSupportControl, JvDockTree, JvDockVIDStyle,
-  JvDockGlobals, ContNrs;
+  JvDockGlobals, Contnrs;
 
 type
   TJvDockVSNETConjoinServerOption = class(TJvDockVIDConjoinServerOption)
@@ -536,8 +536,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVSNetStyle.pas $';
-    Revision: '$Revision: 12856 $';
-    Date: '$Date: 2010-10-08 15:48:34 +0200 (ven., 08 oct. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

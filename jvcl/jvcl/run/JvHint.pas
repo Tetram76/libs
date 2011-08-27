@@ -24,7 +24,7 @@ description : Custom activated hint
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHint.pas 12742 2010-04-02 10:57:17Z ahuser $
+// $Id: JvHint.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvHint;
 
@@ -38,7 +38,7 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Controls, Forms, ExtCtrls,
-  JvHTControls, JvTypes;
+  JvHtControls, JvTypes;
 
 type
   TJvHintWindow = class(THintWindow)
@@ -89,8 +89,8 @@ procedure RegisterHtHints;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHint.pas $';
-    Revision: '$Revision: 12742 $';
-    Date: '$Date: 2010-04-02 12:57:17 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

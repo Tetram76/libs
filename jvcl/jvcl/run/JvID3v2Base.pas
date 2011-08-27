@@ -25,7 +25,7 @@ Known Issues:
   * Some tags are not supported, see var DefaultFrameClasses. Values nil in that
     list indicate not supported frames.
 -----------------------------------------------------------------------------}
-// $Id: JvID3v2Base.pas 12785 2010-06-06 17:57:35Z cycocrew $
+// $Id: JvID3v2Base.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvID3v2Base;
 
@@ -42,7 +42,7 @@ uses
   {$ENDIF MSWINDOWS}
   Classes, SysUtils,
   JclUnicode,
-  JvComponentBase, JvID3v2Types, JvID3v1;
+  JvComponentBase, JvId3v2Types, JvId3v1;
 
 const
   { Only v2.2, v2.3 and v2.4 are supported }
@@ -1181,8 +1181,8 @@ function NiceGenreToGenre(const ANiceGenre: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvID3v2Base.pas $';
-    Revision: '$Revision: 12785 $';
-    Date: '$Date: 2010-06-06 19:57:35 +0200 (dim., 06 juin 2010) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1194,7 +1194,7 @@ uses
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
-  JvJclUtils,
+  JvJCLUtils,
   JclBase, JclFileUtils, JclLogic, JclDateTime,
   JclStringConversions, JclWideStrings,
   JvConsts, JvResources;

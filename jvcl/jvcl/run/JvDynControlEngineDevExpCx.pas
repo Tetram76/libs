@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCx.pas 13020 2011-04-25 19:58:35Z jfudickar $
+// $Id: JvDynControlEngineDevExpCx.pas 13075 2011-06-27 22:56:21Z jfudickar $
 
 unit JvDynControlEngineDevExpCx;
 
@@ -1059,8 +1059,8 @@ function DynControlEngineDevExpCx: TJvDynControlEngineDevExpCx;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCx.pas $';
-    Revision: '$Revision: 13020 $';
-    Date: '$Date: 2011-04-25 21:58:35 +0200 (lun., 25 avr. 2011) $';
+    Revision: '$Revision: 13075 $';
+    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1076,7 +1076,7 @@ uses
   {$ENDIF}
   cxTextEdit, cxControls,
   JvDynControlEngineVCL,
-  JvJclUtils, JvBrowseFolder, JvDynControlEngineTools,
+  JvJCLUtils, JvBrowseFolder, JvDynControlEngineTools,
   cxLookAndFeelPainters, TypInfo;
 
 var

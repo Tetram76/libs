@@ -8,6 +8,7 @@
   <Requires>
     <Package Name="JvCore-R" Targets="all" Condition=""/>
     <Package Name="Jcl" Targets="all" Condition=""/>
+    <Package Name="JclDeveloperTools" Targets="all" Condition=""/>
     <Package Name="JEDI" Targets="help" Condition=""/>
     <Package Name="vcl" Targets="C,D,help" Condition=""/>
     <Package Name="vclx" Targets="C,D" Condition=""/>
@@ -16,6 +17,7 @@
   <Contains>
     <File Name="..\..\run\JvBandForms.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\run\JvBandObject.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\..\help\Common.dtx" Targets="help" Formname="" Condition=""/>
     <File Name="..\..\..\help\JvBandForms.dtx" Targets="help" Formname="" Condition=""/>
     <File Name="..\..\..\help\JvBandObject.dtx" Targets="help" Formname="" Condition=""/>
   </Contains>

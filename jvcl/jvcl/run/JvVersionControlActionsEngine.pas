@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActionsEngine.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvVersionControlActionsEngine.pas 13069 2011-06-19 17:18:06Z jfudickar $
 
 unit JvVersionControlActionsEngine;
 
@@ -46,15 +46,13 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     function GetFilename(aActionComponent: TComponent): string; virtual;
-    function SaveFile(aActionComponent: TComponent;const aFilename: string):
-        Boolean; virtual;
+    function SaveFile(aActionComponent: TComponent;const aFilename: string): Boolean; virtual;
     function NeedsSaveFile(aActionComponent: TComponent): Boolean; virtual;
     function SupportsAction(AAction: TJvActionEngineBaseAction): Boolean; override;
     function SupportsGetFileName(aActionComponent: TComponent): Boolean; virtual;
     function SupportsSaveFile(aActionComponent: TComponent): Boolean; virtual;
     function SupportsNeedsSaveFile(aActionComponent: TComponent): Boolean; virtual;
-    property OnChangeActionComponent: TJvChangeActionComponent read
-        FOnChangeActionComponent write FOnChangeActionComponent;
+    property OnChangeActionComponent: TJvChangeActionComponent read FOnChangeActionComponent write FOnChangeActionComponent;
   end;
 
   TjvVersionControlActionEngineClass = class of TjvVersionControlActionEngine;
@@ -63,18 +61,16 @@ type
     procedure RegisterEngine(AEngineClass: TjvVersionControlActionEngineClass);
   end;
 
-procedure RegisterVersionControlActionEngine(AEngineClass:
-    TjvVersionControlActionEngineClass);
+procedure RegisterVersionControlActionEngine(AEngineClass: TjvVersionControlActionEngineClass);
 
-function RegisteredVersionControlActionEngineList:
-    TjvVersionControlActionEngineList;
+function RegisteredVersionControlActionEngineList: TjvVersionControlActionEngineList;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActionsEngine.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13069 $';
+    Date: '$Date: 2011-06-19 19:18:06 +0200 (dim., 19 juin 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -90,15 +86,13 @@ uses
 var
   IntRegisteredActionEngineList: TjvVersionControlActionEngineList;
 
-procedure RegisterVersionControlActionEngine(AEngineClass:
-    TjvVersionControlActionEngineClass);
+procedure RegisterVersionControlActionEngine(AEngineClass: TjvVersionControlActionEngineClass);
 begin
   if Assigned(IntRegisteredActionEngineList) then
     IntRegisteredActionEngineList.RegisterEngine(AEngineClass);
 end;
 
-function RegisteredVersionControlActionEngineList:
-    TjvVersionControlActionEngineList;
+function RegisteredVersionControlActionEngineList: TjvVersionControlActionEngineList;
 begin
   Result := IntRegisteredActionEngineList;
 end;
@@ -130,38 +124,32 @@ begin
   Result := '';
 end;
 
-function TjvVersionControlActionEngine.SaveFile(aActionComponent: TComponent;
-    const aFilename: string): Boolean;
+function TjvVersionControlActionEngine.SaveFile(aActionComponent: TComponent;const aFilename: string): Boolean;
 begin
   Result := True;
 end;
 
-function TjvVersionControlActionEngine.NeedsSaveFile(aActionComponent:
-    TComponent): Boolean;
+function TjvVersionControlActionEngine.NeedsSaveFile(aActionComponent: TComponent): Boolean;
 begin
   Result := False;
 end;
 
-function TjvVersionControlActionEngine.SupportsAction(AAction:
-    TJvActionEngineBaseAction): Boolean;
+function TjvVersionControlActionEngine.SupportsAction(AAction: TJvActionEngineBaseAction): Boolean;
 begin
-  Result := (AAction is TJvVersionCOntrolBaseAction) ;
+  Result := (AAction is TJvVersionControlBaseAction) ;
 end;
 
-function TjvVersionControlActionEngine.SupportsGetFileName(aActionComponent:
-    TComponent): Boolean;
+function TjvVersionControlActionEngine.SupportsGetFileName(aActionComponent: TComponent): Boolean;
 begin
   Result := False;
 end;
 
-function TjvVersionControlActionEngine.SupportsSaveFile(aActionComponent:
-    TComponent): Boolean;
+function TjvVersionControlActionEngine.SupportsSaveFile(aActionComponent: TComponent): Boolean;
 begin
   Result := False;
 end;
 
-function TjvVersionControlActionEngine.SupportsNeedsSaveFile(aActionComponent:
-    TComponent): Boolean;
+function TjvVersionControlActionEngine.SupportsNeedsSaveFile(aActionComponent: TComponent): Boolean;
 begin
   Result := False;
 end;
