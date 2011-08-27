@@ -1,1 +1,0 @@
-Syntax Error: ";" expected. [line: 3, column: 6]

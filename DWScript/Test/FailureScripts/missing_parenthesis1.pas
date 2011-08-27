@@ -1,1 +1,0 @@
-PrintLn('dummy ('+IntToStr(12+')');

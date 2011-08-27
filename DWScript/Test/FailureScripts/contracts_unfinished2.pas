@@ -1,3 +1,0 @@
-procedure Test;
-begin
-ensure

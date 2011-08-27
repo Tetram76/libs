@@ -1,4 +1,0 @@
-before
-Hello beta
-Hello Alpha
-after
