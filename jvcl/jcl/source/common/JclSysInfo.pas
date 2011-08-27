@@ -50,8 +50,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-01-05 20:30:51 +0100 (mer., 05 janv. 2011)                         $ }
-{ Revision:      $Rev:: 3461                                                                     $ }
+{ Last modified: $Date:: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011)                         $ }
+{ Revision:      $Rev:: 3587                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -190,6 +190,7 @@ function GetLocalComputerName: string;
 function GetLocalUserName: string;
 {$IFDEF MSWINDOWS}
 function GetUserDomainName(const CurUser: string): string;
+function GetWorkGroupName: WideString;
 {$ENDIF MSWINDOWS}
 function GetDomainName: string;
 {$IFDEF MSWINDOWS}
@@ -1359,6 +1360,7 @@ function IsOutlookInstalled: Boolean;
 function IsInternetExplorerInstalled: Boolean;
 function IsMSProjectInstalled: Boolean;
 function IsOpenOfficeInstalled: Boolean;
+function IsLibreOfficeInstalled: Boolean;
 
 {$ENDIF MSWINDOWS}
 
@@ -1372,8 +1374,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 3461 $';
-    Date: '$Date: 2011-01-05 20:30:51 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 3587 $';
+    Date: '$Date: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2276,6 +2278,18 @@ begin
   finally
     FreeMem(Sd);
   end;
+end;
+
+function GetWorkGroupName: WideString;
+var
+  WkstaInfo: PByte;
+  WkstaInfo100: PWKSTA_INFO_100;
+begin
+  if NetWkstaGetInfo(nil, 100, WkstaInfo) <> NERR_Success then
+    raise EJclWin32Error.CreateRes(@RsENetWkstaGetInfo);
+  WkstaInfo100 := PWKSTA_INFO_100(WkstaInfo);
+  Result := WideString(PWideChar(WkstaInfo100^.wki100_langroup));
+  NetApiBufferFree(Pointer(WkstaInfo));
 end;
 
 {$ENDIF MSWINDOWS}
@@ -5544,6 +5558,11 @@ end;
 function IsOpenOfficeInstalled: Boolean;
 begin
   Result := ProgIDExists('com.sun.star.ServiceManager');
+end;
+
+function IsLibreOfficeInstalled: Boolean;
+begin
+  Result := ProgIDExists('com.sun.star.ServiceManager.1');
 end;
 
 //=== Initialization/Finalization ============================================

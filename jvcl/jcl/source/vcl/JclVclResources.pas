@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-11-02 13:36:54 +0100 (mar., 02 nov. 2010)                          $ }
-{ Revision:      $Rev:: 3409                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-06-13 23:52:33 +0200 (lun., 13 juin 2011)                          $ }
+{ Revision:      $Rev:: 3538                                                                     $ }
+{ Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -195,12 +195,17 @@ resourcestring
   RsVersionCtrlSVNName = 'subversion';
   RSENoTortoiseSVN = 'TortoiseSVN is not detected on the system';
 
+  //=== JclVersionCtrlGITImpl ==================================================
+resourcestring
+  RsVersionCtrlGITName = 'git';
+  RSENoTortoiseGIT = 'TortoiseGIT is not detected on the system';
+
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVclResources.pas $';
-    Revision: '$Revision: 3409 $';
-    Date: '$Date: 2010-11-02 13:36:54 +0100 (mar., 02 nov. 2010) $';
+    Revision: '$Revision: 3538 $';
+    Date: '$Date: 2011-06-13 23:52:33 +0200 (lun., 13 juin 2011) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

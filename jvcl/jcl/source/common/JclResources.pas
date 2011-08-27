@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-05-27 22:02:04 +0200 (ven., 27 mai 2011)                           $ }
-{ Revision:      $Rev:: 3521                                                                     $ }
-{ Author:        $Author:: mbeutel                                                               $ }
+{ Last modified: $Date:: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011)                         $ }
+{ Revision:      $Rev:: 3587                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1117,6 +1117,16 @@ resourcestring
   RsCompressionApmExtensions         = '*.';
   RsCompressionPpmdName              = 'PPMD archive';
   RsCompressionPpmdExtensions        = '*.pmd';
+  RsCompressionTEName                = 'Terse Executable';
+  RsCompressionTEExtensions          = '*.te';
+  RsCompressionUEFIcName             = 'UEFIc archive';
+  RsCompressionUEFIcExtensions       = '*.scap';
+  RsCompressionUEFIsName             = 'UEFIs archive';
+  RsCompressionUEFIsExtensions       = '*.';
+  RsCompressionSquashFSName          = 'SquashFS archive';
+  RsCompressionSquashFSExtensions    = '*.squashfs';
+  RsCompressionCramFSName            = 'CramFS archive';
+  RsCompressionCramFSExtensions      = '*.cramfs';
   RsCompressionDuplicate             = 'The file %s already exists in the archive';
   RsCompressionReplaceError          = 'At least one compression volumes could not be replaced after an archive out-of-place update';
 
@@ -1945,6 +1955,7 @@ resourcestring
   RsProductTypeWebEdition       = 'Web Edition';
 
   RsEOpenGLInfo = 'GetOpenGLVersion: %s failed';
+  RsENetWkstaGetInfo = 'NetWkstaGetInfo failed';
 
   {$IFDEF MSWINDOWS}
   RsSPInfo = 'SP%u';
@@ -2020,8 +2031,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3521 $';
-    Date: '$Date: 2011-05-27 22:02:04 +0200 (ven., 27 mai 2011) $';
+    Revision: '$Revision: 3587 $';
+    Date: '$Date: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2011-07-30 08:50:39 +0200 (sam., 30 juil. 2011)                         $ }
+{ Revision:      $Rev:: 3560                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -79,7 +79,7 @@ type
     property SetterName: string index taSetterName read GetTypeAttribute write SetTypeAttribute stored False;
   end;
 
-  (* JCLLINKEDLISTITRINT(SELFCLASSNAME, ITRINTERFACENAME, LISTINTERFACENAME, EQUALITYCOMPARERINTERFACENAME,
+  (* JCLLINKEDLISTITRINT(SELFCLASSNAME, ITRINTERFACENAME, LISTCLASSNAME, EQUALITYCOMPARERINTERFACENAME,
                          ITEMCLASSNAME, CONSTKEYWORD, PARAMETERNAME, TYPENAME, DEFAULTVALUE,
                          GETTERNAME, SETTERNAME) *)
   TJclLinkedListItrIntParams = class(TJclContainerInterfaceParams)
@@ -90,7 +90,7 @@ type
   published
     property SelfClassName: string index taLinkedListIteratorClassName read GetTypeAttribute write SetTypeAttribute stored IsTypeAttributeStored;
     property ItrInterfaceName: string index taIteratorInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
-    property ListInterfaceName: string index taListInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
+    property ListClassName: string index taLinkedListClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property EqualityComparerInterfaceName: string index taEqualityComparerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property ItemClassName: string index taLinkedListItemClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property ConstKeyword: string index taConstKeyword read GetTypeAttribute write SetTypeAttribute stored False;
@@ -130,7 +130,7 @@ type
     property MacroFooter;
   end;
 
-  (* JCLLINKEDLISTITRIMP(SELFCLASSNAME, ITRINTERFACENAME, LISTINTERFACENAME, EQUALITYCOMPARERINTERFACENAME,
+  (* JCLLINKEDLISTITRIMP(SELFCLASSNAME, ITRINTERFACENAME, LISTCLASSNAME, EQUALITYCOMPARERINTERFACENAME,
                          ITEMCLASSNAME, CONSTKEYWORD, PARAMETERNAME, TYPENAME, DEFAULTVALUE,
                          GETTERNAME, SETTERNAME, RELEASERCALL) *)
   TJclLinkedListItrImpParams = class(TJclContainerImplementationParams)
@@ -144,7 +144,7 @@ type
   published
     property SelfClassName: string index taLinkedListIteratorClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property ItrInterfaceName: string index taIteratorInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
-    property ListInterfaceName: string index taListInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
+    property ListClassName: string index taLinkedListClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property EqualityComparerInterfaceName: string index taEqualityComparerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property ItemClassName: string index taLinkedListItemClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property ConstKeyword: string index taConstKeyword read GetTypeAttribute write SetTypeAttribute stored False;
@@ -160,8 +160,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorLinkedListsTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3560 $';
+    Date: '$Date: 2011-07-30 08:50:39 +0200 (sam., 30 juil. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

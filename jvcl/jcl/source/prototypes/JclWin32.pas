@@ -39,8 +39,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3391                                                                     $ }
+{ Last modified: $Date:: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011)                         $ }
+{ Revision:      $Rev:: 3587                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -119,6 +119,7 @@ type
 {$I win32api\LmCons.int}
 {$I win32api\LmAccess.int}
 {$I win32api\LmApiBuf.int}
+{$I win32api\Lmwksta.int}
 {$I win32api\Nb30.int}
 {$I win32api\RasDlg.int}
 {$I win32api\Reason.int}
@@ -130,11 +131,11 @@ type
 {$I win32api\WinUser.int}
 {$I win32api\PowrProf.int}
 {$I win32api\DelayImp.int}
-{$I win32api\PropIdl.int}
 {$I win32api\MsiDefs.int}
 {$I win32api\ShlGuid.int}
 {$I win32api\imgguids.int}
 {$I win32api\ObjBase.int}
+{$I win32api\PropIdl.int}
 {$I win32api\NtSecApi.int}
 {$I win32api\TlHelp32.int}
 {$I win32api\Winternl.int}
@@ -212,8 +213,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclWin32.pas $';
-    Revision: '$Revision: 3391 $';
-    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
+    Revision: '$Revision: 3587 $';
+    Date: '$Date: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011) $';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}
@@ -280,6 +281,7 @@ end;
 {$I win32api\ImageHlp.imp}
 {$I win32api\LmAccess.imp}
 {$I win32api\LmApiBuf.imp}
+{$I win32api\Lmwksta.imp}
 {$I win32api\Nb30.imp}
 {$I win32api\WinBase.imp}
 {$I win32api\WinNLS.imp}
@@ -287,6 +289,7 @@ end;
 {$I win32api\WinNT.imp}
 {$I win32api\PowrProf.imp}
 {$I win32api\ObjBase.imp}
+{$I win32api\PropIdl.imp}
 {$I win32api\NtSecApi.imp}
 {$I win32api\TlHelp32.imp}
 {$I win32api\Winternl.imp}

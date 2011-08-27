@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-06-10 21:12:56 +0200 (ven., 10 juin 2011)                          $ }
-{ Revision:      $Rev:: 3529                                                                     $ }
+{ Last modified: $Date:: 2011-08-13 14:12:31 +0200 (sam., 13 août 2011)                         $ }
+{ Revision:      $Rev:: 3575                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -491,7 +491,7 @@ type
 
   TJclSimpleXMLOptions = set of (sxoAutoCreate, sxoAutoIndent, sxoAutoEncodeValue,
     sxoAutoEncodeEntity, sxoDoNotSaveProlog, sxoTrimPrecedingTextWhitespace,
-    sxoTrimFollowingTextWhitespace, sxoKeepWhitespace);
+    sxoTrimFollowingTextWhitespace, sxoKeepWhitespace, sxoDoNotSaveBOM);
   TJclSimpleXMLEncodeEvent = procedure(Sender: TObject; var Value: string) of object;
   TJclSimpleXMLEncodeStreamEvent = procedure(Sender: TObject; InStream, OutStream: TStream) of object;
 
@@ -600,8 +600,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 3529 $';
-    Date: '$Date: 2011-06-10 21:12:56 +0200 (ven., 10 juin 2011) $';
+    Revision: '$Revision: 3575 $';
+    Date: '$Date: 2011-08-13 14:12:31 +0200 (sam., 13 août 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1293,7 +1293,8 @@ begin
       TJclAnsiStream(AStringStream).CodePage := CodePage;
     end;
     try
-      AStringStream.WriteBOM;
+      if not (sxoDoNotSaveBOM in Options) then
+        AStringStream.WriteBOM;
       SaveToStringStream(AStringStream);
       AStringStream.Flush;
     finally
@@ -2716,7 +2717,7 @@ begin
           if UnicodeIsWhiteSpace(Ch) then
             StringStream.ReadUCS4(Ch)
           else
-          if UnicodeIsIdentifierStart(Ch) or (Ch = Ord('-')) or (Ch = Ord('.')) then
+          if UnicodeIsIdentifierStart(Ch) or (Ch = Ord('-')) or (Ch = Ord('.')) or (Ch = Ord('_')) then
           begin
             StringStream.ReadUCS4(Ch);
             lName := UCS4Array(Ch);

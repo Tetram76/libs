@@ -45,8 +45,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-11-11 12:20:26 +0100 (jeu., 11 nov. 2010)                          $ }
-{ Revision:      $Rev:: 3416                                                                     $ }
+{ Last modified: $Date:: 2011-08-01 16:13:46 +0200 (lun., 01 août 2011)                         $ }
+{ Revision:      $Rev:: 3564                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -106,6 +106,11 @@ const
   CLSID_CFormatLzma86   : TGUID = '{23170F69-40C1-278A-1000-0001100B0000}';
   CLSID_CFormatXz       : TGUID = '{23170F69-40C1-278A-1000-0001100C0000}';
   CLSID_CFormatPpmd     : TGUID = '{23170F69-40C1-278A-1000-0001100D0000}';
+  CLSID_CFormatTE       : TGUID = '{23170F69-40C1-278A-1000-000110CF0000}';
+  CLSID_CFormatUEFIc    : TGUID = '{23170F69-40C1-278A-1000-000110D00000}';
+  CLSID_CFormatUEFIs    : TGUID = '{23170F69-40C1-278A-1000-000110D10000}';
+  CLSID_CFormatSquashFS : TGUID = '{23170F69-40C1-278A-1000-000110D20000}';
+  CLSID_CFormatCramFS   : TGUID = '{23170F69-40C1-278A-1000-000110D30000}';
   CLSID_CFormatAPM      : TGUID = '{23170F69-40C1-278A-1000-000110D40000}';
   CLSID_CFormatMslz     : TGUID = '{23170F69-40C1-278A-1000-000110D50000}';
   CLSID_CFormatFlv      : TGUID = '{23170F69-40C1-278A-1000-000110D60000}';
@@ -646,8 +651,8 @@ procedure Unload7Zip;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/sevenzip.pas $';
-    Revision: '$Revision: 3416 $';
-    Date: '$Date: 2010-11-11 12:20:26 +0100 (jeu., 11 nov. 2010) $';
+    Revision: '$Revision: 3564 $';
+    Date: '$Date: 2011-08-01 16:13:46 +0200 (lun., 01 août 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

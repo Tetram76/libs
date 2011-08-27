@@ -19,9 +19,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3425                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2011-06-19 19:04:06 +0200 (dim., 19 juin 2011)                          $ }
+{ Revision:      $Rev:: 3546                                                                     $ }
+{ Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -60,8 +60,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionCtrlSVNImpl.pas $';
-    Revision: '$Revision: 3425 $';
-    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
+    Revision: '$Revision: 3546 $';
+    Date: '$Date: 2011-06-19 19:04:06 +0200 (dim., 19 juin 2011) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -121,6 +121,8 @@ begin
     finally
       RegSetWOW64AccessMode(SaveAcc);
     end;
+    if FTortoiseSVNProc = '' then // when the 64bit Version is not found try to find the 32bit version
+      FTortoiseSVNProc := RegReadStringDef(HKLM, JclVersionCtrlRegKeyName, JclVersionCtrlRegValueName, '');
   end
   else
     FTortoiseSVNProc := RegReadStringDef(HKLM, JclVersionCtrlRegKeyName, JclVersionCtrlRegValueName, '');
@@ -283,9 +285,9 @@ begin
         finally
           Entries.Free;
         end;
+        Result := Result + [vcaAdd];
       end;
     end;
-    Result := Result + [vcaAdd];
   end;
 end;
 

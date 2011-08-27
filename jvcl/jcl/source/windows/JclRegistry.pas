@@ -37,8 +37,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3391                                                                     $ }
+{ Last modified: $Date:: 2011-08-13 11:58:58 +0200 (sam., 13 août 2011)                         $ }
+{ Revision:      $Rev:: 3574                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -85,6 +85,9 @@ const
   HKCC = DelphiHKEY(HKEY_CURRENT_CONFIG);
   HKDD = DelphiHKEY(HKEY_DYN_DATA);
 {$ENDIF FPC}
+
+function RootKeyName(const RootKey: THandle): string;
+function RootKeyValue(const Name: string): THandle;
 
 const
   RegKeyDelimiter = '\';
@@ -357,8 +360,8 @@ procedure RegSetWOW64AccessMode(Access: TJclRegWOW64Access);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclRegistry.pas $';
-    Revision: '$Revision: 3391 $';
-    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
+    Revision: '$Revision: 3574 $';
+    Date: '$Date: 2011-08-13 11:58:58 +0200 (sam., 13 août 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -445,6 +448,19 @@ begin
     Result := Format('0x%.8x', [RootKey]);
     {$ENDIF BCB}
   end;
+end;
+
+function RootKeyValue(const Name: string): THandle;
+var
+  Index: Integer;
+begin
+  for Index := Low(RootKeys) to High(RootKeys) do
+    if string(RootKeys[Index].AnsiName) = Name then
+  begin
+    Result := RootKeys[Index].Key;
+    Exit;
+  end;
+  raise EJclRegistryError.CreateResFmt(@RsInconsistentPath, [Name]);
 end;
 
 procedure ReadError(const RootKey: THandle; const Key: string);

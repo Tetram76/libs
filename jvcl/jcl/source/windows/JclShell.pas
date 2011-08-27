@@ -37,9 +37,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-06 03:09:19 +0100 (lun., 06 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3424                                                                     $ }
-{ Author:        $Author:: rrossmair                                                             $ }
+{ Last modified: $Date:: 2011-06-11 20:07:39 +0200 (sam., 11 juin 2011)                          $ }
+{ Revision:      $Rev:: 3532                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -205,8 +205,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclShell.pas $';
-    Revision: '$Revision: 3424 $';
-    Date: '$Date: 2010-12-06 03:09:19 +0100 (lun., 06 déc. 2010) $';
+    Revision: '$Revision: 3532 $';
+    Date: '$Date: 2011-06-11 20:07:39 +0200 (sam., 11 juin 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -436,7 +436,7 @@ begin
     begin
       IconIndex := 0;
       ExtractIcon.GetIconLocation(0, @IconFile, MAX_PATH, IconIndex, Flags);
-      if (IconIndex < 0) and ((Flags and GIL_NOTFILENAME) = GIL_NOTFILENAME) then
+      if (IconIndex < 0) or ((Flags and GIL_NOTFILENAME) = 0) then
         ExtractIconEx(@IconFile, IconIndex, F.IconLarge, F.IconSmall, 1)
       else
         ExtractIcon.Extract(@IconFile, IconIndex, F.IconLarge, F.IconSmall,
