@@ -1,1 +1,0 @@
-Syntax Error: There is already a forward declaration of this function! [line: 2, column: 18]

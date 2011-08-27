@@ -1,5 +1,0 @@
-before
-Hello include!
-after
-Hello include!
-done

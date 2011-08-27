@@ -1,6 +1,0 @@
-Stuffed '
-	string
-<?pas SendLn('stuffed''string'
-	+' goes'#13#10
-+'	there''');?>
-Other ' Text

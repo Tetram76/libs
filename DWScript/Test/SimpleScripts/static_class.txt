@@ -1,5 +1,0 @@
-const = hello
-world
-hello world
-world
-hello world

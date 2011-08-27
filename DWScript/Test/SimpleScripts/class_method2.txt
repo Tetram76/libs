@@ -1,4 +1,0 @@
-TClassB ClassProc
-TClassB ClassProc
-TClassB ClassProc
-TClassB ClassProc

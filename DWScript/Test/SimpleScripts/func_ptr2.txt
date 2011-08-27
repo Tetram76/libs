@@ -1,8 +1,0 @@
-Hello World
-15
-Hello Run
-23
-Bye bye World
-5
-Bye bye Run
-17

@@ -1,2 +1,0 @@
-{$ifdef test}
-PrintLn('hello');
