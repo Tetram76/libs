@@ -1,0 +1,4 @@
+Couldn't cast variant from "Dispatch" to "Integer" (EVariantTypeCastError)
+Couldn't cast variant from "Dispatch" to "String" (EVariantTypeCastError)
+Couldn't cast variant from "Dispatch" to "Float" (EVariantTypeCastError)
+Couldn't cast variant from "Dispatch" to "Boolean" (EVariantTypeCastError)
