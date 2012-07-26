@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010)                         $ }
-{ Revision:      $Rev:: 3322                                                                     $ }
+{ Last modified: $Date:: 2011-12-27 21:27:46 +0100 (mar., 27 déc. 2011)                         $ }
+{ Revision:      $Rev:: 3652                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,7 +42,11 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   MSHelpServices_TLB,
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes, System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   Classes, SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclSysUtils;
 
 // Various definitions
@@ -113,8 +117,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclHelpUtils.pas $';
-    Revision: '$Revision: 3322 $';
-    Date: '$Date: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010) $';
+    Revision: '$Revision: 3652 $';
+    Date: '$Date: 2011-12-27 21:27:46 +0100 (mar., 27 déc. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -124,7 +128,12 @@ const
 implementation
 
 uses
-  Windows, JclRegistry,
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows,
+  {$ELSE ~HAS_UNITSCOPE}
+  Windows,
+  {$ENDIF ~HAS_UNITSCOPE}
+  JclRegistry,
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
@@ -142,11 +151,11 @@ type
 const
   MSHelpSystemKeyName = '\SOFTWARE\Microsoft\Windows\Help';
 
-  HelpContentFileName        = '%s\Help\%s%d.ohc';
-  HelpIndexFileName          = '%s\Help\%s%d.ohi';
-  HelpLinkFileName           = '%s\Help\%s%d.ohl';
-  HelpProjectFileName        = '%s\Help\%s%d.ohp';
-  HelpGidFileName            = '%s\Help\%s%d.gid';
+  HelpContentFileName        = '%s\Help\%s.ohc';
+  HelpIndexFileName          = '%s\Help\%s.ohi';
+  HelpLinkFileName           = '%s\Help\%s.ohl';
+  HelpProjectFileName        = '%s\Help\%s.ohp';
+  HelpGidFileName            = '%s\Help\%s.gid';
 
 //=== { TJclBorlandOpenHelp } ================================================
 
@@ -305,6 +314,9 @@ begin
   FHxPlugin := nil;
   if IDEVersionNumber > 0 then
   begin
+    if (IDEVersionNumber = 9) then
+      FIdeNameSpace := 'embarcadero.rs_xe2'
+    else
     if (IDEVersionNumber = 8) then
       FIdeNameSpace := 'embarcadero.rs_xe'
     else

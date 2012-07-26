@@ -26,9 +26,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-06-12 03:48:54 +0200 (dim., 12 juin 2011)                          $ }
-{ Revision:      $Rev:: 3535                                                                     $ }
-{ Author:        $Author:: mbeutel                                                               $ }
+{ Last modified: $Date:: 2012-03-04 19:12:39 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3757                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -43,7 +43,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.SysUtils, System.Classes;
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, SysUtils, Classes;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 type
   // Exception hooking notifiers routines
@@ -94,8 +98,8 @@ function JclBelongsHookedCode(Address: Pointer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclHookExcept.pas $';
-    Revision: '$Revision: 3535 $';
-    Date: '$Date: 2011-06-12 03:48:54 +0200 (dim., 12 juin 2011) $';
+    Revision: '$Revision: 3757 $';
+    Date: '$Date: 2012-03-04 19:12:39 +0100 (dim., 04 mars 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -362,8 +366,13 @@ const
 begin
   if ((ExceptionFlags = cNonContinuable) or (ExceptionFlags = cNonContinuableException)) and
     (ExceptionCode = cDelphiException) and
-    (NumberOfArguments in [DelphiNumberOfArguments,CBuilderNumberOfArguments]) and
-    (TJclAddr(Arguments) = TJclAddr(@Arguments) + SizeOf(Pointer)) then
+    (NumberOfArguments in [DelphiNumberOfArguments,CBuilderNumberOfArguments])
+    //TODO: The difference for Win64 is bigger than 100 Byte and the comment of JVCS revision 0.3 of
+    //  JclDebug.pas, where HookedRaiseException has been added by Petr, isn't very informative
+    {$IFDEF CPU32}
+    and (TJclAddr(Arguments) = TJclAddr(@Arguments) + SizeOf(Pointer))
+    {$ENDIF CPU32}
+    then
   begin
     DoExceptNotify(Arguments.ExceptObj, Arguments.ExceptAddr, False, GetFramePointer);
   end;
@@ -565,6 +574,7 @@ begin
   NewResultExc := NewExceptObj;
 end;
 
+{$IFDEF BORLAND}
 function GetCppRtlBase: Pointer;
 const
   {$IFDEF COMPILER6} { Delphi/C++Builder 6 }
@@ -591,6 +601,7 @@ function HasCppRtl: Boolean;
 begin
   Result := GetCppRtlBase <> TJclPeMapImgHooks.SystemBase;
 end;
+{$ENDIF BORLAND}
 
 function JclHookExceptions: Boolean;
 var
@@ -600,8 +611,10 @@ begin
   { Detect C++Builder applications and C++ packages loaded into Delphi applications.
     Hook the C++ RTL regardless of ExceptionsHooked so that users can call JclHookException() after
     loading a C++ package which might pull in the C++ RTL DLL. }
+  {$IFDEF BORLAND}
   if HasCppRtl then
-    TJclPeMapImgHooks.ReplaceImport (GetCppRtlBase, kernel32, RaiseExceptionAddressCache, @HookedRaiseException);
+    TJclPeMapImgHooks.ReplaceImport(GetCppRtlBase, kernel32, RaiseExceptionAddressCache, @HookedRaiseException);
+  {$ENDIF BORLAND}
   if not ExceptionsHooked then
   begin
     Recursive := False;
@@ -627,8 +640,10 @@ end;
 
 function JclUnhookExceptions: Boolean;
 begin
+  {$IFDEF BORLAND}
   if HasCppRtl then
     TJclPeMapImgHooks.ReplaceImport (GetCppRtlBase, kernel32, @HookedRaiseException, @Kernel32_RaiseException);
+  {$ENDIF BORLAND}
   if ExceptionsHooked then
   begin
     with TJclPeMapImgHooks do

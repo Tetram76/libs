@@ -22,9 +22,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-06-19 19:04:06 +0200 (dim., 19 juin 2011)                          $ }
-{ Revision:      $Rev:: 3546                                                                     $ }
-{ Author:        $Author:: jfudickar                                                             $ }
+{ Last modified: $Date:: 2012-03-04 22:21:40 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3761                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -39,8 +39,11 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JclBase,
-  SysUtils, Classes, Contnrs,
-  Graphics, Controls, ActnList, ImgList;
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils, System.Classes, System.Contnrs, Vcl.Graphics, Vcl.Controls, Vcl.ActnList, Vcl.ImgList;
+  {$ELSE ~HAS_UNITSCOPE}
+  SysUtils, Classes, Contnrs, Graphics, Controls, ActnList, ImgList;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 type
   EJclVersionControlError = class(EJclError);
@@ -201,8 +204,8 @@ function VersionControlActionInfo(ActionType : TJclVersionControlActionType): TJ
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionControl.pas $';
-    Revision: '$Revision: 3546 $';
-    Date: '$Date: 2011-06-19 19:04:06 +0200 (dim., 19 juin 2011) $';
+    Revision: '$Revision: 3761 $';
+    Date: '$Date: 2012-03-04 22:21:40 +0100 (dim., 04 mars 2012) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -212,7 +215,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, Vcl.Forms, System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, Forms, TypInfo,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclVclResources, JclFileUtils, JclRegistry, JclShell, JclStrings;
 
 //=== JclVersionControl.pas ===================================================
@@ -636,17 +643,21 @@ end;
 
 function TJclVersionControlSystemPlugin.ExecuteAction(const FileName: TFileName; const Action:
     TJclVersionControlActionType): Boolean;
+var
+  AppHandle: THandle;
 begin
+  AppHandle := {$IFDEF BORLAND}Application.Handle{$ELSE}0{$ENDIF};
+
   case Action of
     vcaContextMenu:
       Result := DisplayContextMenu(0, FileName, Mouse.CursorPos);
     vcaExplore:
-      Result := OpenFolder(PathExtractFileDirFixed(FileName), Application.Handle, True);
+      Result := OpenFolder(PathExtractFileDirFixed(FileName), AppHandle, True);
     vcaExploreSandbox:
-      Result := OpenFolder(FileName, Application.Handle, True);
+      Result := OpenFolder(FileName, AppHandle, True);
     vcaProperties,
     vcaPropertiesSandbox:
-      Result := DisplayPropDialog(Application.Handle, FileName);
+      Result := DisplayPropDialog(AppHandle, FileName);
     else
       Result := inherited ExecuteAction(FileName, Action);
   end;

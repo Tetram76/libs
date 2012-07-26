@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                         $ }
-{ Revision:      $Rev:: 3391                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                        $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -19,7 +19,7 @@ unit mscoree_TLB;
 // manual modifications will be lost.                                         
 // ************************************************************************ //
 
-// PASTLWTR : $Revision: 3391 $
+// PASTLWTR : $Revision: 3599 $
 // File generated on 14.12.2003 01:39:55 from Type Library described below.
 
 // ************************************************************************  //
@@ -52,8 +52,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  ActiveX,
-  Classes;
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.ActiveX, System.Classes;
+  {$ELSE ~HAS_UNITSCOPE}
+  ActiveX, Classes;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 //DOM-IGNORE-BEGIN
 
@@ -443,8 +446,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/mscoree_TLB.pas $';
-    Revision: '$Revision: 3391 $';
-    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -453,7 +456,12 @@ const
 
 implementation
 
-uses ComObj;
+uses 
+  {$IFDEF HAS_UNITSCOPE}
+  System.Win.ComObj;
+  {$ELSE ~HAS_UNITSCOPE}
+  ComObj;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 class function CoComCallUnmarshal.Create: IMarshal;
 begin

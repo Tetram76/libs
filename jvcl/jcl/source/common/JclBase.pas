@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-02-22 20:48:10 +0100 (mar., 22 févr. 2011)                        $ }
-{ Revision:      $Rev:: 3500                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2012-05-16 21:09:59 +0200 (mer., 16 mai 2012)                           $ }
+{ Revision:      $Rev:: 3795                                                                     $ }
+{ Author:        $Author:: ahuser                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -46,17 +46,24 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.SysUtils;
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
   SysUtils;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 // Version
 const
   JclVersionMajor   = 2;    // 0=pre-release|beta/1, 2, ...=final
-  JclVersionMinor   = 3;    // Fifth minor release since JCL 1.90
+  JclVersionMinor   = 4;    // Fifth minor release since JCL 1.90
   JclVersionRelease = 0;    // 0: pre-release|beta/ 1: release
-  JclVersionBuild   = 3847; // build number, days since march 1, 2000
+  JclVersionBuild   = 4198; // build number, days since march 1, 2000
   JclVersion = (JclVersionMajor shl 24) or (JclVersionMinor shl 16) or
     (JclVersionRelease shl 15) or (JclVersionBuild shl 0);
 
@@ -90,7 +97,7 @@ type
   SizeInt = Integer;
   {$ENDIF CPU32}
   {$IFDEF CPU64}
-  SizeInt = Int64;
+  SizeInt = NativeInt;
   {$ENDIF CPU64}
   PSizeInt = ^SizeInt;
   PPointer = ^Pointer;
@@ -198,12 +205,23 @@ const
 
   HexPrefixPascal = string('$');
   HexPrefixC      = string('0x');
+  HexDigitFmt32   = string('%.8x');
+  HexDigitFmt64   = string('%.16x');
 
   {$IFDEF BCB}
   HexPrefix = HexPrefixC;
   {$ELSE ~BCB}
   HexPrefix = HexPrefixPascal;
   {$ENDIF ~BCB}
+
+  {$IFDEF CPU32}
+  HexDigitFmt = HexDigitFmt32;
+  {$ENDIF CPU32}
+  {$IFDEF CPU64}
+  HexDigitFmt = HexDigitFmt64;
+  {$ENDIF CPU64}
+
+  HexFmt = HexPrefix + HexDigitFmt;
 
 const
   BOM_UTF16_LSB: array [0..1] of Byte = ($FF,$FE);
@@ -239,8 +257,13 @@ type
 
   // string types
   TUTF8String = AnsiString;
+  {$IFDEF SUPPORTS_UNICODE_STRING}
+  TUTF16String = UnicodeString;
+  TUCS2String = UnicodeString;
+  {$ELSE}
   TUTF16String = WideString;
   TUCS2String = WideString;
+  {$ENDIF SUPPORTS_UNICODE_STRING}
 
 var
   AnsiReplacementCharacter: AnsiChar;
@@ -263,6 +286,10 @@ type
 {$IFNDEF XPLATFORM_RTL}
 procedure RaiseLastOSError;
 {$ENDIF ~XPLATFORM_RTL}
+
+{$IFNDEF RTL230_UP}
+procedure CheckOSError(ErrorCode: Cardinal);
+{$ENDIF RTL230_UP}
 
 procedure MoveChar(const Source: string; FromIndex: SizeInt;
   var Dest: string; ToIndex, Count: SizeInt); overload; // Index: 0..n-1
@@ -312,7 +339,12 @@ type
   {$ENDIF FPC}
   {$IFDEF BORLAND}
   TJclAddr64 = Int64;
+  {$IFDEF CPU64}
+  TJclAddr = TJclAddr64;
+  {$ENDIF CPU64}
+  {$IFDEF CPU32}
   TJclAddr = TJclAddr32;
+  {$ENDIF CPU32}
   {$ENDIF BORLAND}
   PJclAddr = ^TJclAddr;
 
@@ -324,7 +356,6 @@ function Addr32ToAddr64(const Value: TJclAddr32): TJclAddr64;
 {$IFDEF FPC}
 type
   HWND = type Windows.HWND;
-  HMODULE = type Windows.HMODULE;
 {$ENDIF FPC}
 
  {$IFDEF SUPPORTS_GENERICS}
@@ -372,8 +403,8 @@ procedure GetMem(out P; Size: Longint);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBase.pas $';
-    Revision: '$Revision: 3500 $';
-    Date: '$Date: 2011-02-22 20:48:10 +0100 (mar., 22 févr. 2011) $';
+    Revision: '$Revision: 3795 $';
+    Date: '$Date: 2012-05-16 21:09:59 +0200 (mer., 16 mai 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -498,6 +529,18 @@ begin
   RaiseLastWin32Error;
 end;
 {$ENDIF ~XPLATFORM_RTL}
+
+{$IFNDEF RTL230_UP}
+procedure CheckOSError(ErrorCode: Cardinal);
+begin
+  if ErrorCode <> ERROR_SUCCESS then
+    {$IFDEF RTL170_UP}
+    RaiseLastOSError(ErrorCode);
+    {$ELSE ~RTL170_UP}
+    RaiseLastOSError;
+    {$ENDIF ~RTL170_UP}
+end;
+{$ENDIF RTL230_UP}
 
 {$OVERFLOWCHECKS OFF}
 

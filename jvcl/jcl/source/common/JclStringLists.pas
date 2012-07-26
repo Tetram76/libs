@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3425                                                                     $ }
+{ Last modified: $Date:: 2012-03-04 19:21:29 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3758                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,11 +41,19 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.Variants,
+  System.Classes, System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
   Variants,
   Classes, SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase,
   JclPCRE;
 
@@ -74,7 +82,11 @@ type
     function GetObjects(Index: Integer): TObject;
     function GetTextStr: string;
     function GetValue(const Name: string): string;
+    {$IFDEF FPC}
+    function Find(const S: string; out Index: Integer): Boolean;
+    {$ELSE ~FPC}
     function Find(const S: string; var Index: Integer): Boolean;
+    {$ENDIF ~FPC}
     function IndexOf(const S: string): Integer;
     function GetCaseSensitive: Boolean;
     function GetDuplicates: TDuplicates;
@@ -200,18 +212,30 @@ type
   end;
 
 type
-  TJclUpdateControl = class(TObject, IInterface)
+  TJclUpdateControl = class(TInterfacedObject, IInterface)
   private
     FStrings: TStrings;
   public
     constructor Create(AStrings: TStrings);
     { IInterface }
-    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
+    // function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
   end;
 
-  TJclStringList = class(TStringList, IJclStringList)
+  TJclInterfacedStringList = class(TStringList, IInterface)
+   private
+    FOwnerInterface: IInterface;
+  public
+    { IInterface }
+     function _AddRef: Integer; stdcall;
+     function _Release: Integer; stdcall;
+     function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult;  stdcall;
+     procedure AfterConstruction; override;
+  end;
+
+
+  TJclStringList = class(TJclInterfacedStringList, IInterface, IJclStringList)
   private
     FObjectsMode: TJclStringListObjectsMode;
     FSelfAsInterface: IJclStringList;
@@ -232,7 +256,7 @@ type
     constructor Create;
     destructor Destroy; override;
     { IInterface }
-    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
+    // function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
     { IJclStringList }
@@ -379,8 +403,8 @@ function JclStringList(const AText: string): IJclStringList; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStringLists.pas $';
-    Revision: '$Revision: 3425 $';
-    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
+    Revision: '$Revision: 3758 $';
+    Date: '$Date: 2012-03-04 19:21:29 +0100 (dim., 04 mars 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -390,7 +414,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   TypInfo,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclFileUtils,
   JclStrings;
 
@@ -430,6 +458,45 @@ end;
 function JclStringList(const A: array of const): IJclStringList;
 begin
   Result := JclStringList.Add(A);
+end;
+
+//=== { TJclInterfacedStringList } ==============================================
+
+procedure TJclInterfacedStringList.AfterConstruction;
+Var
+  MyOwner : TPersistent;
+begin
+  inherited;
+  MyOwner := GetOwner;
+  if Assigned(MyOwner) then
+    MyOwner.GetInterface(IUnknown,FOwnerInterface);
+end;
+
+
+function TJclInterfacedStringList._AddRef: Integer;stdcall;
+begin
+  if assigned(FOwnerInterface) then
+    Result := FOwnerInterface._AddRef
+  else
+    Result := -1;
+end;
+
+
+function TJclInterfacedStringList._Release: Integer;stdcall;
+begin
+  if assigned(FOwnerInterface) then
+    Result := FOwnerInterface._Release
+  else
+    Result := -1;
+end;
+
+
+function TJclInterfacedStringList.QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult;stdcall;
+begin
+  if GetInterface(IID, Obj) then
+    Result := 0
+  else
+    Result := E_NOINTERFACE;
 end;
 
 //=== { TJclStringList } =====================================================
@@ -589,16 +656,8 @@ var
 begin
   AutoUpdateControl;
   for I := 0 to LastIndex do
-    Strings[I] := SysUtils.Trim(Strings[I]);
+    Strings[I] := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.Trim(Strings[I]);
   Result := FSelfAsInterface;
-end;
-
-function TJclStringList.QueryInterface(const IID: TGUID; out Obj): HRESULT;
-begin
-  if GetInterface(IID, Obj) then
-    Result := 0
-  else
-    Result := E_NOINTERFACE;
 end;
 
 function TJclStringList._AddRef: Integer;
@@ -1228,7 +1287,7 @@ var
 begin
   AutoUpdateControl;
   for I := LastIndex downto 0 do
-    if SysUtils.Trim(Strings[I]) = '' then
+    if {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.Trim(Strings[I]) = '' then
       Delete(I);
   Result := FSelfAsInterface;
 end;
@@ -1343,14 +1402,6 @@ function TJclUpdateControl._Release: Integer;
 begin
   FStrings.EndUpdate;
   Result := 0;
-end;
-
-function TJclUpdateControl.QueryInterface(const IID: TGUID; out Obj): HRESULT;
-begin
-  if GetInterface(IID, Obj) then
-    Result := S_OK
-  else
-    Result := E_NOINTERFACE;
 end;
 
 {$IFDEF UNITVERSIONING}

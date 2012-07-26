@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2012-02-24 12:27:42 +0100 (ven., 24 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3747                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,17 +41,18 @@ uses
   JclPreProcessorContainer2DTemplates;
 
 type
-  (* JCLSORTEDMAPTYPESINT(ENTRYTYPENAME, KEYTYPENAME, VALUETYPENAME) *)
+  (* JCLSORTEDMAPTYPESINT(ENTRYTYPENAME, ENTRYARRAYTYPENAME, KEYTYPENAME, VALUETYPENAME) *)
   TJclSortedMapTypeIntParams = class(TJclMapInterfaceParams)
   public
     function AliasAttributeIDs: TAllTypeAttributeIDs; override;
   published
     property EntryTypeName: string index maSortedMapEntryTypeName read GetMapAttribute write SetMapAttribute stored IsMapAttributeStored;
+    property EntryArrayTypeName: string index maSortedMapEntryArrayTypeName read GetMapAttribute write SetMapAttribute stored IsMapAttributeStored;
     property KeyTypeName: string index kaKeyTypeName read GetKeyAttribute write SetKeyAttribute stored False;
     property ValueTypeName: string index vaValueTypeName read GetValueAttribute write SetValueAttribute stored False;
   end;
 
-  (* JCLSORTEDMAPINT(ENTRYTYPENAME, SELFCLASSNAME, ANCESTORNAME,
+  (* JCLSORTEDMAPINT(ENTRYTYPENAME, ENTRYARRAYTYPENAME, SELFCLASSNAME, ANCESTORNAME,
                      STDMAPINTERFACENAME, SORTEDMAPINTERFACENAME,
                      KEYSETINTERFACENAME, VALUECOLLECTIONINTERFACENAME,
                      INTERFACEADDITIONAL, SECTIONADDITIONAL, KEYOWNERSHIPDECLARATION,
@@ -66,6 +67,7 @@ type
     function GetComparisonSectionAdditional: string; override;
   published
     property EntryTypeName: string index maSortedMapEntryTypeName read GetMapAttribute write SetMapAttribute stored False;
+    property EntryArrayTypeName: string index maSortedMapEntryArrayTypeName read GetMapAttribute write SetMapAttribute stored False;
     property SelfClassName: string index maSortedMapClassName read GetMapAttribute write SetMapAttribute stored IsMapAttributeStored;
     property AncestorName: string index maMapAncestorClassName read GetMapAttribute write SetMapAttribute stored False;
     property StdMapInterfaceName: string index maMapInterfaceName read GetMapAttribute write SetMapAttribute stored False;
@@ -82,7 +84,7 @@ type
     property ValueTypeName;
   end;
 
-  (* JCLSORTEDMAPIMP(SELFCLASSNAME,
+  (* JCLSORTEDMAPIMP(ENTRYTYPENAME, ENTRYARRAYTYPENAME, SELFCLASSNAME,
                      STDMAPINTERFACENAME, SORTEDMAPINTERFACENAME,
                      KEYSETINTERFACENAME, KEYITRINTERFACENAME,
                      VALUECOLLECTIONINTERFACENAME,
@@ -98,6 +100,8 @@ type
     function GetMacroFooter: string; override;
     function GetSelfClassName: string; override;
   published
+    property EntryTypeName: string index maSortedMapEntryTypeName read GetMapAttribute write SetMapAttribute stored False;
+    property EntryArrayTypeName: string index maSortedMapEntryArrayTypeName read GetMapAttribute write SetMapAttribute stored False;
     property SelfClassName: string index maSortedMapClassName read GetMapAttribute write SetMapAttribute stored False;
     property AncestorClassName: string index maMapAncestorClassName read GetMapAttribute write SetMapAttribute stored False;
     property StdMapInterfaceName: string index maMapInterfaceName read GetMapAttribute write SetMapAttribute stored False;
@@ -127,8 +131,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorSortedMapsTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3747 $';
+    Date: '$Date: 2012-02-24 12:27:42 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -138,7 +142,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclStrings;
 
 procedure RegisterJclContainers;

@@ -113,7 +113,7 @@
       <Linker Name="GenerateDRC">False</Linker>
       <Linker Name="MinStackSize">16384</Linker>
       <Linker Name="MaxStackSize">1048576</Linker>
-      <Linker Name="ImageBase">$48380000</Linker>
+      <Linker Name="ImageBase">$48800000</Linker>
       <Linker Name="ExeDescription">JEDI Code Library Developer Tools package</Linker>
     </Linker>
     <Directories>
@@ -122,7 +122,7 @@
       <Directories Name="PackageDLLOutputDir"></Directories>
       <Directories Name="PackageDCPOutputDir">..\..\lib\d9</Directories>
       <Directories Name="SearchPath">..\..\lib\d9;..\..\source\include</Directories>
-      <Directories Name="Packages">rtl;vcl;Jcl;JclContainers</Directories>
+      <Directories Name="Packages">rtl;Jcl;JclContainers</Directories>
       <Directories Name="Conditionals">WIN32;CONDITIONALEXPRESSIONS;VER170;RELEASE</Directories>
       <Directories Name="DebugSourceDirs"></Directories>
       <Directories Name="UsePackages">True</Directories>
@@ -148,9 +148,9 @@
       <VersionInfo Name="IncludeVerInfo">True</VersionInfo>
       <VersionInfo Name="AutoIncBuild">False</VersionInfo>
       <VersionInfo Name="MajorVer">2</VersionInfo>
-      <VersionInfo Name="MinorVer">3</VersionInfo>
+      <VersionInfo Name="MinorVer">4</VersionInfo>
       <VersionInfo Name="Release">0</VersionInfo>
-      <VersionInfo Name="Build">3847</VersionInfo>
+      <VersionInfo Name="Build">4198</VersionInfo>
       <VersionInfo Name="Debug">False</VersionInfo>
       <VersionInfo Name="PreRelease">False</VersionInfo>
       <VersionInfo Name="Special">False</VersionInfo>
@@ -162,13 +162,13 @@
     <VersionInfoKeys>
       <VersionInfoKeys Name="CompanyName">Project JEDI</VersionInfoKeys>
       <VersionInfoKeys Name="FileDescription">JEDI Code Library Developer Tools package</VersionInfoKeys>
-      <VersionInfoKeys Name="FileVersion">2.3.0.3847</VersionInfoKeys>
+      <VersionInfoKeys Name="FileVersion">2.4.0.4198</VersionInfoKeys>
       <VersionInfoKeys Name="InternalName">JclDeveloperTools</VersionInfoKeys>
       <VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2011 Project JEDI</VersionInfoKeys>
       <VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
       <VersionInfoKeys Name="OriginalFilename">JclDeveloperTools90.bpl</VersionInfoKeys>
       <VersionInfoKeys Name="ProductName">JEDI Code Library</VersionInfoKeys>
-      <VersionInfoKeys Name="ProductVersion">2.3 Build 3847</VersionInfoKeys>
+      <VersionInfoKeys Name="ProductVersion">2.4 Build 4198</VersionInfoKeys>
     </VersionInfoKeys>
   </Delphi.Personality>
 </BorlandProject>

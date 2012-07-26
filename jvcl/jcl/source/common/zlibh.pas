@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010)                         $ }
-{ Revision:      $Rev:: 3343                                                                     $ }
+{ Last modified: $Date:: 2012-04-19 20:13:33 +0200 (jeu., 19 avr. 2012)                          $ }
+{ Revision:      $Rev:: 3779                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -70,9 +70,12 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclBase;
+  JclBase,
+  JclSysUtils;
 
 //DOM-IGNORE-BEGIN
+
+{$IFNDEF ZLIB_RTL}
 
 {$IFNDEF FPC}
 type
@@ -249,25 +252,25 @@ type
 
 type
   {$EXTERNALSYM z_stream_s}
-  z_stream_s = packed record
+  z_stream_s = record
       next_in: PBytef;       // next input byte
-      avail_in: uInt;        // number of bytes available at next_in 
-      total_in: uLong;       // total nb of input bytes read so far 
+      avail_in: uInt;        // number of bytes available at next_in
+      total_in: uLong;       // total nb of input bytes read so far
 
-      next_out: PBytef;      // next output byte should be put there 
+      next_out: PBytef;      // next output byte should be put there
       avail_out:uInt;        // remaining free space at next_out
       total_out:uLong;       // total nb of bytes output so far
 
       msg:     PAnsiChar;    // last error message, NULL if no error
-      state:PInternalState;  // not visible by applications 
+      state:PInternalState;  // not visible by applications
 
-      zalloc:   TFNAllocFunc;// used to allocate the internal state 
-      zfree:    TFNFreeFunc; // used to free the internal state 
-      opaque:   voidpf;      // private data object passed to zalloc and zfree 
+      zalloc:   TFNAllocFunc;// used to allocate the internal state
+      zfree:    TFNFreeFunc; // used to free the internal state
+      opaque:   voidpf;      // private data object passed to zalloc and zfree
 
-      data_type: Integer;     // best guess about the data type: ascii or binary 
-      adler:    uLong;       // adler32 value of the uncompressed data 
-      reserved: uLong;       // reserved for future use 
+      data_type: Integer;     // best guess about the data type: ascii or binary
+      adler:    uLong;       // adler32 value of the uncompressed data
+      reserved: uLong;       // reserved for future use
   end;
   {$IFDEF COMPILER10_UP}
   (*$HPPEMIT 'namespace Zlibh {'*)
@@ -2021,6 +2024,86 @@ const
   {$EXTERNALSYM DEF_MEM_LEVEL}
 
 //DOM-IGNORE-END
+{$ENDIF ~ZLIB_RTL}
+
+const
+  {$IFDEF MSWINDOWS}
+  ZLibDefaultLibraryName = 'zlib1.dll';
+  {$ENDIF MSWINDOWS}
+  {$IFDEF UNIX}
+  ZLibDefaultLibraryName = 'libz.so';
+  {$ENDIF UNIX}
+  ZLibzlibVersionDefaultExportName = 'zlibVersion';
+  ZLibdeflateInit_DefaultExportName = 'deflateInit_';
+  ZLibdeflateDefaultExportName = 'deflate';
+  ZLibdeflateEndDefaultExportName = 'deflateEnd';
+  ZLibinflateInit_DefaultExportName = 'inflateInit_';
+  ZLibinflateDefaultExportName = 'inflate';
+  ZLibinflateEndDefaultExportName = 'inflateEnd';
+  ZLibdeflateInit2_DefaultExportName = 'deflateInit2_';
+  ZLibdeflateSetDictionaryDefaultExportName = 'deflateSetDictionary';
+  ZLibdeflateCopyDefaultExportName = 'deflateCopy';
+  ZLibdeflateResetDefaultExportName = 'deflateReset';
+  ZLibdeflateParamsDefaultExportName = 'deflateParams';
+  ZLibdeflateBoundDefaultExportName = 'deflateBound';
+  ZLibdeflatePrimeDefaultExportName = 'deflatePrime';
+  ZLibinflateInit2_DefaultExportName = 'inflateInit2_';
+  ZLibinflateSetDictionaryDefaultExportName = 'inflateSetDictionary';
+  ZLibinflateSyncDefaultExportName = 'inflateSync';
+  ZLibinflateCopyDefaultExportName = 'inflateCopy';
+  ZLibinflateResetDefaultExportName = 'inflateReset';
+  ZLibinflateBackInit_DefaultExportName = 'inflateBackInit_';
+  ZLibinflateBackDefaultExportName = 'inflateBack';
+  ZLibinflateBackEndDefaultExportName = 'inflateBackEnd';
+  ZLibzlibCompileFlagsDefaultExportName = 'zlibCompileFlags';
+  ZLibcompressDefaultExportName = 'compress';
+  ZLibcompress2DefaultExportName = 'compress2';
+  ZLibcompressBoundDefaultExportName = 'compressBound';
+  ZLibuncompressDefaultExportName = 'uncompress';
+  ZLibadler32DefaultExportName = 'adler32';
+  ZLibcrc32DefaultExportName = 'crc32';
+  ZLibzErrorDefaultExportName = 'zError';
+  ZLibinflateSyncPointDefaultExportName = 'inflateSyncPoint';
+  ZLibget_crc_tableDefaultExportName = 'get_crc_table';
+{$IFDEF ZLIB_LINKONREQUEST}
+var
+  ZLibLibraryName: string = ZLibDefaultLibraryName;
+  ZLibzlibVersionExportName: string = ZLibzlibVersionDefaultExportName;
+  ZLibdeflateInit_ExportName: string = ZLibdeflateInit_DefaultExportName;
+  ZLibdeflateExportName: string = ZLibdeflateDefaultExportName;
+  ZLibdeflateEndExportName: string = ZLibdeflateEndDefaultExportName;
+  ZLibinflateInit_ExportName: string = ZLibinflateInit_DefaultExportName;
+  ZLibinflateExportName: string = ZLibinflateDefaultExportName;
+  ZLibinflateEndExportName: string = ZLibinflateEndDefaultExportName;
+  ZLibdeflateInit2_ExportName: string = ZLibdeflateInit2_DefaultExportName;
+  ZLibdeflateSetDictionaryExportName: string = ZLibdeflateSetDictionaryDefaultExportName;
+  ZLibdeflateCopyExportName: string = ZLibdeflateCopyDefaultExportName;
+  ZLibdeflateResetExportName: string = ZLibdeflateResetDefaultExportName;
+  ZLibdeflateParamsExportName: string = ZLibdeflateParamsDefaultExportName;
+  ZLibdeflateBoundExportName: string = ZLibdeflateBoundDefaultExportName;
+  ZLibdeflatePrimeExportName: string = ZLibdeflatePrimeDefaultExportName;
+  ZLibinflateInit2_ExportName: string = ZLibinflateInit2_DefaultExportName;
+  ZLibinflateSetDictionaryExportName: string = ZLibinflateSetDictionaryDefaultExportName;
+  ZLibinflateSyncExportName: string = ZLibinflateSyncDefaultExportName;
+  ZLibinflateCopyExportName: string = ZLibinflateCopyDefaultExportName;
+  ZLibinflateResetExportName: string = ZLibinflateResetDefaultExportName;
+  ZLibinflateBackInit_ExportName: string = ZLibinflateBackInit_DefaultExportName;
+  ZLibinflateBackExportName: string = ZLibinflateBackDefaultExportName;
+  ZLibinflateBackEndExportName: string = ZLibinflateBackEndDefaultExportName;
+  ZLibzlibCompileFlagsExportName: string = ZLibzlibCompileFlagsDefaultExportName;
+  ZLibcompressExportName: string = ZLibcompressDefaultExportName;
+  ZLibcompress2ExportName: string = ZLibcompress2DefaultExportName;
+  ZLibcompressBoundExportName: string = ZLibcompressBoundDefaultExportName;
+  ZLibuncompressExportName: string = ZLibuncompressDefaultExportName;
+  ZLibadler32ExportName: string = ZLibadler32DefaultExportName;
+  ZLibcrc32ExportName: string = ZLibcrc32DefaultExportName;
+  ZLibzErrorExportName: string = ZLibzErrorDefaultExportName;
+  ZLibinflateSyncPointExportName: string = ZLibinflateSyncPointDefaultExportName;
+  ZLibget_crc_tableExportName: string = ZLibget_crc_tableDefaultExportName;
+{$ENDIF ZLIB_LINKONREQUEST}
+
+var
+  ZLibModuleHandle: TModuleHandle = INVALID_MODULEHANDLE_VALUE;
 
 function IsZLibLoaded: Boolean;
 function LoadZLib: Boolean;
@@ -2030,8 +2113,8 @@ procedure UnloadZLib;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/zlibh.pas $';
-    Revision: '$Revision: 3343 $';
-    Date: '$Date: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010) $';
+    Revision: '$Revision: 3779 $';
+    Date: '$Date: 2012-04-19 20:13:33 +0200 (jeu., 19 avr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2040,8 +2123,14 @@ const
 
 implementation
 
+{$IFNDEF ZLIB_RTL}
+
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils;
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 //-----------------------------------------------------------------------------
 //
@@ -2077,17 +2166,32 @@ end;
 
 {$IFDEF ZLIB_STATICLINK}
 
-{$LINK ..\windows\obj\zlib\adler32.obj} // OS: CHECKTHIS - Unix version may need forward slashes?
-{$LINK ..\windows\obj\zlib\compress.obj}
-{$LINK ..\windows\obj\zlib\crc32.obj}
-{$LINK ..\windows\obj\zlib\deflate.obj}
-{$LINK ..\windows\obj\zlib\infback.obj}
-{$LINK ..\windows\obj\zlib\inffast.obj}
-{$LINK ..\windows\obj\zlib\inflate.obj}
-{$LINK ..\windows\obj\zlib\inftrees.obj}
-{$LINK ..\windows\obj\zlib\trees.obj}
-{$LINK ..\windows\obj\zlib\uncompr.obj}
-{$LINK ..\windows\obj\zlib\zutil.obj}
+{$IFDEF CPU32}
+{$LINK ..\windows\obj\zlib\win32\adler32.obj} // OS: CHECKTHIS - Unix version may need forward slashes?
+{$LINK ..\windows\obj\zlib\win32\compress.obj}
+{$LINK ..\windows\obj\zlib\win32\crc32.obj}
+{$LINK ..\windows\obj\zlib\win32\deflate.obj}
+{$LINK ..\windows\obj\zlib\win32\infback.obj}
+{$LINK ..\windows\obj\zlib\win32\inffast.obj}
+{$LINK ..\windows\obj\zlib\win32\inflate.obj}
+{$LINK ..\windows\obj\zlib\win32\inftrees.obj}
+{$LINK ..\windows\obj\zlib\win32\trees.obj}
+{$LINK ..\windows\obj\zlib\win32\uncompr.obj}
+{$LINK ..\windows\obj\zlib\win32\zutil.obj}
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+{$LINK ..\windows\obj\zlib\win64\adler32.obj}
+{$LINK ..\windows\obj\zlib\win64\compress.obj}
+{$LINK ..\windows\obj\zlib\win64\crc32.obj}
+{$LINK ..\windows\obj\zlib\win64\deflate.obj}
+{$LINK ..\windows\obj\zlib\win64\infback.obj}
+{$LINK ..\windows\obj\zlib\win64\inffast.obj}
+{$LINK ..\windows\obj\zlib\win64\inflate.obj}
+{$LINK ..\windows\obj\zlib\win64\inftrees.obj}
+{$LINK ..\windows\obj\zlib\win64\trees.obj}
+{$LINK ..\windows\obj\zlib\win64\uncompr.obj}
+{$LINK ..\windows\obj\zlib\win64\zutil.obj}
+{$ENDIF CPU64}
 
 // Core functions
 function zlibVersion;          external;
@@ -2187,85 +2291,51 @@ procedure _clearerr(stream: Pointer); cdecl; external szMSVCRT name 'clearerr';
 
 {$ELSE ~LINK_TO_MSVCRT}
 
+{$IFDEF CPU32}
 function _memcpy(dest, src: Pointer; count: size_t): Pointer; cdecl;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+function memcpy(dest, src: Pointer; count: size_t): Pointer;
+{$ENDIF CPU64}
 begin
   Move(src^, dest^, count);
   Result := dest;
 end;
 
+{$IFDEF CPU32}
 function _memset(dest: Pointer; val: Integer; count: size_t): Pointer; cdecl;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+function memset(dest: Pointer; val: Integer; count: size_t): Pointer;
+{$ENDIF CPU64}
 begin
   FillChar(dest^, count, val);
   Result := dest;
 end;
 
+{$IFDEF CPU32}
 function _malloc(size: size_t): Pointer; cdecl;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+function malloc(size: size_t): Pointer;
+{$ENDIF CPU64}
 begin
   GetMem(Result, size);
 end;
 
+{$IFDEF CPU32}
 procedure _free(pBlock: Pointer); cdecl;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+procedure free(pBlock: Pointer);
+{$ENDIF CPU64}
 begin
   FreeMem(pBlock);
 end;
 
 {$ENDIF ~LINK_TO_MSVCRT}
-{$ELSE ~ZLIB_STATICLINK}
-
-{$IFDEF MSWINDOWS}
-type
-  TModuleHandle = HINST;
-{$ENDIF MSWINDOWS}
-{$IFDEF LINUX}
-type
-  TModuleHandle = Pointer;
-{$ENDIF LINUX}
-
-const
-  {$IFDEF MSWINDOWS}
-  szZLIB = 'zlib1.dll';
-  {$ENDIF MSWINDOWS}
-  {$IFDEF UNIX}
-  szZLIB = 'libz.so';
-  {$ENDIF UNIX}
-  INVALID_MODULEHANDLE_VALUE = TModuleHandle(0);
-
-  ZLIBzlibVersionExportName = 'zlibVersion';
-  ZLIBdeflateInit_ExportName = 'deflateInit_';
-  ZLIBdeflateExportName = 'deflate';
-  ZLIBdeflateEndExportName = 'deflateEnd';
-  ZLIBinflateInit_ExportName = 'inflateInit_';
-  ZLIBinflateExportName = 'inflate';
-  ZLIBinflateEndExportName = 'inflateEnd';
-  ZLIBdeflateInit2_ExportName = 'deflateInit2_';
-  ZLIBdeflateSetDictionaryExportName = 'deflateSetDictionary';
-  ZLIBdeflateCopyExportName = 'deflateCopy';
-  ZLIBdeflateResetExportName = 'deflateReset';
-  ZLIBdeflateParamsExportName = 'deflateParams';
-  ZLIBdeflateBoundExportName = 'deflateBound';
-  ZLIBdeflatePrimeExportName = 'deflatePrime';
-  ZLIBinflateInit2_ExportName = 'inflateInit2_';
-  ZLIBinflateSetDictionaryExportName = 'inflateSetDictionary';
-  ZLIBinflateSyncExportName = 'inflateSync';
-  ZLIBinflateCopyExportName = 'inflateCopy';
-  ZLIBinflateResetExportName = 'inflateReset';
-  ZLIBinflateBackInit_ExportName = 'inflateBackInit_';
-  ZLIBinflateBackExportName = 'inflateBack';
-  ZLIBinflateBackEndExportName = 'inflateBackEnd';
-  ZLIBzlibCompileFlagsExportName = 'zlibCompileFlags';
-  ZLIBcompressExportName = 'compress';
-  ZLIBcompress2ExportName = 'compress2';
-  ZLIBcompressBoundExportName = 'compressBound';
-  ZLIBuncompressExportName = 'uncompress';
-  ZLIBadler32ExportName = 'adler32';
-  ZLIBcrc32ExportName = 'crc32';
-  ZLIBzErrorExportName = 'zError';
-  ZLIBinflateSyncPointExportName = 'inflateSyncPoint';
-  ZLIBget_crc_tableExportName = 'get_crc_table';
-
-var
-  ZLibModuleHandle: TModuleHandle = INVALID_MODULEHANDLE_VALUE;
-{$ENDIF ~ZLIB_STATICLINK}
+{$ENDIF ZLIB_STATICLINK}
+{$ENDIF ~ZLIB_RTL}
 
 function IsZLibLoaded: Boolean;
 begin
@@ -2278,62 +2348,46 @@ end;
 
 function LoadZLib: Boolean;
 {$IFDEF ZLIB_LINKONREQUEST}
-  function GetSymbol(SymbolName: PAnsiChar): Pointer;
-  begin
-    {$IFDEF MSWINDOWS}
-    Result := GetProcAddress(ZLibModuleHandle, SymbolName);
-    {$ENDIF MSWINDOWS}
-    {$IFDEF UNIX}
-    Result := dlsym(ZLibModuleHandle, SymbolName);
-    {$ENDIF UNIX}
-  end;
 begin
   Result := ZLibModuleHandle <> INVALID_MODULEHANDLE_VALUE;
   if Result then
     Exit;
 
-  if ZLibModuleHandle = INVALID_MODULEHANDLE_VALUE then
-    {$IFDEF MSWINDOWS}
-    ZLibModuleHandle := SafeLoadLibrary(szZLIB);
-    {$ENDIF MSWINDOWS}
-    {$IFDEF UNIX}
-    ZLibModuleHandle := dlopen(PAnsiChar(szZLIB), RTLD_NOW);
-    {$ENDIF UNIX}
-  Result := ZLibModuleHandle <> INVALID_MODULEHANDLE_VALUE;
+  Result := JclSysUtils.LoadModule(ZLibModuleHandle, ZLibLibraryName);
   if Result then
   begin
-    @zlibVersion := GetSymbol(ZLIBzlibVersionExportName);
-    @deflateInit_ := GetSymbol(ZLIBdeflateInit_ExportName);
-    @deflate := GetSymbol(ZLIBdeflateExportName);
-    @deflateEnd := GetSymbol(ZLIBdeflateEndExportName);
-    @inflateInit_ := GetSymbol(ZLIBinflateInit_ExportName);
-    @inflate := GetSymbol(ZLIBinflateExportName);
-    @inflateEnd := GetSymbol(ZLIBinflateEndExportName);
-    @deflateInit2_ := GetSymbol(ZLIBdeflateInit2_ExportName);
-    @deflateSetDictionary := GetSymbol(ZLIBdeflateSetDictionaryExportName);
-    @deflateCopy := GetSymbol(ZLIBdeflateCopyExportName);
-    @deflateReset := GetSymbol(ZLIBdeflateResetExportName);
-    @deflateParams := GetSymbol(ZLIBdeflateParamsExportName);
-    @deflateBound := GetSymbol(ZLIBdeflateBoundExportName);
-    @deflatePrime := GetSymbol(ZLIBdeflatePrimeExportName);
-    @inflateInit2_ := GetSymbol(ZLIBinflateInit2_ExportName);
-    @inflateSetDictionary := GetSymbol(ZLIBinflateSetDictionaryExportName);
-    @inflateSync := GetSymbol(ZLIBinflateSyncExportName);
-    @inflateCopy := GetSymbol(ZLIBinflateCopyExportName);
-    @inflateReset := GetSymbol(ZLIBinflateResetExportName);
-    @inflateBackInit_ := GetSymbol(ZLIBinflateBackInit_ExportName);
-    @inflateBack := GetSymbol(ZLIBinflateBackExportName);
-    @inflateBackEnd := GetSymbol(ZLIBinflateBackEndExportName);
-    @zlibCompileFlags := GetSymbol(ZLIBzlibCompileFlagsExportName);
-    @compress := GetSymbol(ZLIBcompressExportName);
-    @compress2 := GetSymbol(ZLIBcompress2ExportName);
-    @compressBound := GetSymbol(ZLIBcompressBoundExportName);
-    @uncompress := GetSymbol(ZLIBuncompressExportName);
-    @adler32 := GetSymbol(ZLIBadler32ExportName);
-    @crc32 := GetSymbol(ZLIBcrc32ExportName);
-    @zError := GetSymbol(ZLIBzErrorExportName);
-    @inflateSyncPoint := GetSymbol(ZLIBinflateSyncPointExportName);
-    @get_crc_table := GetSymbol(ZLIBget_crc_tableExportName);
+    @zlibVersion := GetModuleSymbol(ZLibModuleHandle, ZLIBzlibVersionExportName);
+    @deflateInit_ := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateInit_ExportName);
+    @deflate := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateExportName);
+    @deflateEnd := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateEndExportName);
+    @inflateInit_ := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateInit_ExportName);
+    @inflate := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateExportName);
+    @inflateEnd := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateEndExportName);
+    @deflateInit2_ := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateInit2_ExportName);
+    @deflateSetDictionary := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateSetDictionaryExportName);
+    @deflateCopy := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateCopyExportName);
+    @deflateReset := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateResetExportName);
+    @deflateParams := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateParamsExportName);
+    @deflateBound := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflateBoundExportName);
+    @deflatePrime := GetModuleSymbol(ZLibModuleHandle, ZLIBdeflatePrimeExportName);
+    @inflateInit2_ := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateInit2_ExportName);
+    @inflateSetDictionary := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateSetDictionaryExportName);
+    @inflateSync := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateSyncExportName);
+    @inflateCopy := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateCopyExportName);
+    @inflateReset := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateResetExportName);
+    @inflateBackInit_ := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateBackInit_ExportName);
+    @inflateBack := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateBackExportName);
+    @inflateBackEnd := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateBackEndExportName);
+    @zlibCompileFlags := GetModuleSymbol(ZLibModuleHandle, ZLIBzlibCompileFlagsExportName);
+    @compress := GetModuleSymbol(ZLibModuleHandle, ZLIBcompressExportName);
+    @compress2 := GetModuleSymbol(ZLibModuleHandle, ZLIBcompress2ExportName);
+    @compressBound := GetModuleSymbol(ZLibModuleHandle, ZLIBcompressBoundExportName);
+    @uncompress := GetModuleSymbol(ZLibModuleHandle, ZLIBuncompressExportName);
+    @adler32 := GetModuleSymbol(ZLibModuleHandle, ZLIBadler32ExportName);
+    @crc32 := GetModuleSymbol(ZLibModuleHandle, ZLIBcrc32ExportName);
+    @zError := GetModuleSymbol(ZLibModuleHandle, ZLIBzErrorExportName);
+    @inflateSyncPoint := GetModuleSymbol(ZLibModuleHandle, ZLIBinflateSyncPointExportName);
+    @get_crc_table := GetModuleSymbol(ZLibModuleHandle, ZLIBget_crc_tableExportName);
   end;
 end;
 {$ELSE ~ZLIB_LINKONREQUEST}
@@ -2345,56 +2399,52 @@ end;
 procedure UnloadZLib;
 begin
   {$IFDEF ZLIB_LINKONREQUEST}
-  if ZLibModuleHandle <> INVALID_MODULEHANDLE_VALUE then
-    {$IFDEF MSWINDOWS}
-    FreeLibrary(ZLibModuleHandle);
-    {$ENDIF MSWINDOWS}
-    {$IFDEF UNIX}
-    dlclose(Pointer(ZLibModuleHandle));
-    {$ENDIF UNIX}
-  ZLibModuleHandle := INVALID_MODULEHANDLE_VALUE;
+  JclSysUtils.UnloadModule(ZLibModuleHandle);
   {$ENDIF ZLIB_LINKONREQUEST}
 end;
 
+{$IFNDEF ZLIB_RTL}
 {$IFDEF ZLIB_LINKDLL}
 // Core functions
-function zlibVersion;          external szZLIB name ZLIBzlibVersionExportName;
-function deflateInit_;         external szZLIB name ZLIBdeflateInit_ExportName;
-function deflate;              external szZLIB name ZLIBdeflateExportName;
-function deflateEnd;           external szZLIB name ZLIBdeflateEndExportName;
-function inflateInit_;         external szZLIB name ZLIBinflateInit_ExportName;
-function inflate;              external szZLIB name ZLIBinflateExportName;
-function inflateEnd;           external szZLIB name ZLIBinflateEndExportName;
-function deflateInit2_;        external szZLIB name ZLIBdeflateInit2_ExportName;
-function deflateSetDictionary; external szZLIB name ZLIBdeflateSetDictionaryExportName;
-function deflateCopy;          external szZLIB name ZLIBdeflateCopyExportName;
-function deflateReset;         external szZLIB name ZLIBdeflateResetExportName;
-function deflateParams;        external szZLIB name ZLIBdeflateParamsExportName;
-function deflateBound;         external szZLIB name ZLIBdeflateBoundExportName;
-function deflatePrime;         external szZLIB name ZLIBdeflatePrimeExportName;
-function inflateInit2_;        external szZLIB name ZLIBinflateInit2_ExportName;
-function inflateSetDictionary; external szZLIB name ZLIBinflateSetDictionaryExportName;
-function inflateSync;          external szZLIB name ZLIBinflateSyncExportName;
-function inflateCopy;          external szZLIB name ZLIBinflateCopyExportName;
-function inflateReset;         external szZLIB name ZLIBinflateResetExportName;
+function zlibVersion;          external ZLibDefaultLibraryName name ZLibzlibVersionDefaultExportName;
+function deflateInit_;         external ZLibDefaultLibraryName name ZLibdeflateInit_DefaultExportName;
+function deflate;              external ZLibDefaultLibraryName name ZLibdeflateDefaultExportName;
+function deflateEnd;           external ZLibDefaultLibraryName name ZLibdeflateEndDefaultExportName;
+function inflateInit_;         external ZLibDefaultLibraryName name ZLibinflateInit_DefaultExportName;
+function inflate;              external ZLibDefaultLibraryName name ZLibinflateDefaultExportName;
+function inflateEnd;           external ZLibDefaultLibraryName name ZLibinflateEndDefaultExportName;
+function deflateInit2_;        external ZLibDefaultLibraryName name ZLibdeflateInit2_DefaultExportName;
+function deflateSetDictionary; external ZLibDefaultLibraryName name ZLibdeflateSetDictionaryDefaultExportName;
+function deflateCopy;          external ZLibDefaultLibraryName name ZLibdeflateCopyDefaultExportName;
+function deflateReset;         external ZLibDefaultLibraryName name ZLibdeflateResetDefaultExportName;
+function deflateParams;        external ZLibDefaultLibraryName name ZLibdeflateParamsDefaultExportName;
+function deflateBound;         external ZLibDefaultLibraryName name ZLibdeflateBoundDefaultExportName;
+function deflatePrime;         external ZLibDefaultLibraryName name ZLibdeflatePrimeDefaultExportName;
+function inflateInit2_;        external ZLibDefaultLibraryName name ZLibinflateInit2_DefaultExportName;
+function inflateSetDictionary; external ZLibDefaultLibraryName name ZLibinflateSetDictionaryDefaultExportName;
+function inflateSync;          external ZLibDefaultLibraryName name ZLibinflateSyncDefaultExportName;
+function inflateCopy;          external ZLibDefaultLibraryName name ZLibinflateCopyDefaultExportName;
+function inflateReset;         external ZLibDefaultLibraryName name ZLibinflateResetDefaultExportName;
 
-function inflateBackInit_;     external szZLIB name ZLIBinflateBackInit_ExportName;
-function inflateBack;          external szZLIB name ZLIBinflateBackExportName;
-function inflateBackEnd;       external szZLIB name ZLIBinflateBackEndExportName;
-function zlibCompileFlags;     external szZLIB name ZLIBzlibCompileFlagsExportName;
-function compress;             external szZLIB name ZLIBcompressExportName;
-function compress2;            external szZLIB name ZLIBcompress2ExportName;
-function compressBound;        external szZLIB name ZLIBcompressBoundExportName;
-function uncompress;           external szZLIB name ZLIBuncompressExportName;
+function inflateBackInit_;     external ZLibDefaultLibraryName name ZLibinflateBackInit_DefaultExportName;
+function inflateBack;          external ZLibDefaultLibraryName name ZLibinflateBackDefaultExportName;
+function inflateBackEnd;       external ZLibDefaultLibraryName name ZLibinflateBackEndDefaultExportName;
+function zlibCompileFlags;     external ZLibDefaultLibraryName name ZLibzlibCompileFlagsDefaultExportName;
+function compress;             external ZLibDefaultLibraryName name ZLibcompressDefaultExportName;
+function compress2;            external ZLibDefaultLibraryName name ZLibcompress2DefaultExportName;
+function compressBound;        external ZLibDefaultLibraryName name ZLibcompressBoundDefaultExportName;
+function uncompress;           external ZLibDefaultLibraryName name ZLibuncompressDefaultExportName;
 
 // Checksums
-function adler32;              external szZLIB name ZLIBadler32ExportName;
-function crc32;                external szZLIB name ZLIBcrc32ExportName;
+function adler32;              external ZLibDefaultLibraryName name ZLibadler32DefaultExportName;
+function crc32;                external ZLibDefaultLibraryName name ZLibcrc32DefaultExportName;
 
-function zError;               external szZLIB name ZLIBzErrorExportName;
-function inflateSyncPoint;     external szZLIB name ZLIBinflateSyncPointExportName;
-function get_crc_table;        external szZLIB name ZLIBget_crc_tableExportName;
+function zError;               external ZLibDefaultLibraryName name ZLibzErrorDefaultExportName;
+function inflateSyncPoint;     external ZLibDefaultLibraryName name ZLibinflateSyncPointDefaultExportName;
+function get_crc_table;        external ZLibDefaultLibraryName name ZLibget_crc_tableDefaultExportName;
 {$ENDIF ZLIB_LINKDLL}
+
+{$ENDIF ~ZLIB_RTL}
 
 {$IFDEF UNITVERSIONING}
 initialization

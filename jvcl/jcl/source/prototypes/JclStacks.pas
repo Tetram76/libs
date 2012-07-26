@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011)                          $ }
-{ Revision:      $Rev:: 3511                                                                     $ }
+{ Last modified: $Date:: 2012-02-21 18:37:18 +0100 (mar., 21 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3739                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,31 +41,37 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF SUPPORTS_GENERICS}
+  System.Generics.Collections,
+  JclAlgorithms,
+  {$ENDIF SUPPORTS_GENERICS}
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF SUPPORTS_GENERICS}
   Generics.Collections,
   JclAlgorithms,
   {$ENDIF SUPPORTS_GENERICS}
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclAbstractContainers, JclContainerIntf, JclSynch;
 {$I containers\JclContainerCommon.imp}
 {$I containers\JclStacks.imp}
 {$I containers\JclStacks.int}
 type
 (*$JPPLOOP ALLTYPEINDEX ALLTYPECOUNT
-  {$JPPEXPANDMACRO JCLSTACKINT(,,,,,,,,,)}
+  {$JPPEXPANDMACRO JCLSTACKINT(,,,,,,,,,,,)}
 
 *)
   {$IFDEF SUPPORTS_GENERICS}
   //DOM-IGNORE-BEGIN
 
-  (*$JPPEXPANDMACRO JCLSTACKINT(TJclStack<T>,IJclStack<T>,TJclAbstractContainer<T>,TDynArray, IJclEqualityComparer<T>\, IJclItemOwner<T>\,,
-
+  (*$JPPEXPANDMACRO JCLSTACKINT(TJclStack<T>,IJclContainer<T>,IJclStack<T>,TJclAbstractContainer<T>,TDynArray,IJclEqualityComparer<T>, IJclItemOwner<T>\,,
 protected
   type
     TDynArray = array of T;,; AOwnsItems: Boolean,const ,AItem,T)*)
 
   // E = external helper to compare items for equality
   TJclStackE<T> = class(TJclStack<T>, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer,
+    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclContainer<T>,
     IJclStack<T>, IJclItemOwner<T>)
   private
     FEqualityComparer: IEqualityComparer<T>;
@@ -81,7 +87,7 @@ protected
 
   // F = Function to compare items for equality
   TJclStackF<T> = class(TJclStack<T>, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer,
+    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclContainer<T>,
     IJclStack<T>, IJclItemOwner<T>)
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
@@ -91,7 +97,7 @@ protected
 
   // I = items can compare themselves to an other for equality
   TJclStackI<T: IEquatable<T>> = class(TJclStack<T>, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer,
+    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclContainer<T>,
     IJclStack<T>, IJclItemOwner<T>)
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
@@ -107,8 +113,8 @@ protected
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclStacks.pas $';
-    Revision: '$Revision: 3511 $';
-    Date: '$Date: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011) $';
+    Revision: '$Revision: 3739 $';
+    Date: '$Date: 2012-02-21 18:37:18 +0100 (mar., 21 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

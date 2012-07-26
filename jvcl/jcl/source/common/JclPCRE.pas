@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-11-18 21:49:29 +0100 (mer., 18 nov. 2009)                          $ }
-{ Revision:      $Rev:: 3083                                                                     $ }
+{ Last modified: $Date:: 2012-01-21 18:22:58 +0100 (sam., 21 janv. 2012)                         $ }
+{ Revision:      $Rev:: 3696                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -48,7 +48,17 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes, System.SysUtils,
+  {$IFDEF PCRE_RTL}
+  System.RegularExpressionsAPI,
+  {$ENDIF PCRE_RTL}
+  {$ELSE ~HAS_UNITSCOPE}
   Classes, SysUtils,
+  {$IFDEF PCRE_RTL}
+  RegularExpressionsAPI,
+  {$ENDIF PCRE_RTL}
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclStringConversions;
 
 const
@@ -75,10 +85,10 @@ type
   TJclRegExOption = (roIgnoreCase, roMultiLine, roDotAll, roExtended,
     roAnchored, roDollarEndOnly, roExtra, roNotBOL, roNotEOL, roUnGreedy,
     roNotEmpty, roUTF8, roNoAutoCapture, roNoUTF8Check, roAutoCallout,
-    roPartial, roDfaShortest, roDfaRestart, roDfaFirstLine, roDupNames,
+    roPartial, roDfaShortest, roDfaRestart, roFirstLine, roDupNames,
     roNewLineCR, roNewLineLF, roNewLineCRLF, roNewLineAny, roBSRAnyCRLF,
     roBSRUnicode, roJavascriptCompat, roNoStartOptimize, roPartialHard,
-    roNotEmptyAtStart);
+    roNotEmptyAtStart, roUCP);
   TJclRegExOptions = set of TJclRegExOption;
   TJclCaptureRange = record
     FirstPos: Integer;
@@ -121,7 +131,7 @@ type
     procedure SetNamedCapture(const Name, Value: string);
     function GetCaptureNameCount: Integer;
     function GetCaptureName(Index: Integer): string;
-    function GetAPIOptions(RunTime: Boolean): Integer;
+    function GetAPIOptions(RunTime, DFA: Boolean): Integer;
     function CalloutHandler(var CalloutBlock: pcre_callout_block): Integer;
 
   public
@@ -129,7 +139,7 @@ type
 
     property Options: TJclRegExOptions read FOptions write FOptions;
     function Compile(const Pattern: string; Study: Boolean;
-      UserLocale: Boolean = False): Boolean;
+      UserLocale: Boolean = False; JITCompile: Boolean = False): Boolean;
     property Pattern: string read FPattern;
     property DfaMode: Boolean read FDfaMode write FDfaMode;
     function Match(const Subject: string; StartOffset: Cardinal = 1): Boolean;
@@ -173,8 +183,8 @@ function StrReplaceRegEx(const Subject, Pattern: string; Args: array of const): 
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPCRE.pas $';
-    Revision: '$Revision: 3083 $';
-    Date: '$Date: 2009-11-18 21:49:29 +0100 (mer., 18 nov. 2009) $';
+    Revision: '$Revision: 3696 $';
+    Date: '$Date: 2012-01-21 18:22:58 +0100 (sam., 21 janv. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -184,7 +194,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysConst,
+  {$ELSE ~HAS_UNITSCOPE}
   SysConst,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclResources;
 
 function EncodeString(const S: string; ToUTF8: Boolean): AnsiString; {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF SUPPORTS_INLINE}
@@ -236,7 +250,13 @@ end;
 var
   GTables: PAnsiChar;
 
-function JclPCREGetMem(Size: SizeInt): Pointer; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+{$IFDEF RTL230_UP}
+  {$IFDEF PCRE_RTL}
+    {$DEFINE PCRE_EXPORT_CDECL}
+  {$ENDIF PCRE_RTL}
+{$ENDIF RTL230_UP}
+
+function JclPCREGetMem(Size: {$IFDEF PCRE_RTL}Integer{$ELSE}SizeInt{$ENDIF}): Pointer; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 begin
   GetMem(Result, Size);
 end;
@@ -305,6 +325,16 @@ begin
       PErr := @RsErrNullWsLimit;
     PCRE_ERROR_BADNEWLINE:
       PErr := @RsErrBadNewLine;
+    {$IFNDEF PCRE_RTL}
+    PCRE_ERROR_BADOFFSET:
+      PErr := @RsErrBadOffset;
+    PCRE_ERROR_SHORTUTF8:
+      PErr := @RsErrShortUTF8;
+    PCRE_ERROR_RECURSELOOP:
+      PErr := @RsErrRecurseLoop;
+    PCRE_ERROR_JITSTACKLIMIT:
+      PErr := @RsErrJITStackLimit;
+    {$ENDIF ~PCRE_RTL}
     JCL_PCRE_ERROR_STUDYFAILED:
       PErr := @RsErrStudyFailed;
     JCL_PCRE_ERROR_CALLOUTERROR:
@@ -323,7 +353,11 @@ begin
   if Assigned(FCode) then
     CallPCREFree(FCode);
   if Assigned(FExtra) then
+    {$IFDEF PCRE_RTL}
     CallPCREFree(FExtra);
+    {$ELSE ~PCRE_RTL}
+    pcre_free_study(FExtra);
+    {$ENDIF ~PCRE_RTL}
   if Assigned(FVector) then
     FreeMem(FVector);
   if Assigned(FChangedCaptures) then
@@ -332,11 +366,14 @@ begin
   inherited Destroy;
 end;
 
-function TJclRegEx.Compile(const Pattern: string; Study: Boolean;
-  UserLocale: Boolean = False): Boolean;
+function TJclRegEx.Compile(const Pattern: string; Study, UserLocale, JITCompile: Boolean): Boolean;
 var
   ErrMsgPtr: PAnsiChar;
   Tables: PAnsiChar;
+  StudyOptions: Integer;
+  {$IFNDEF PCRE_RTL}
+  ConfigJIT: Integer;
+  {$ENDIF ~PCRE_RTL}
 begin
   if UserLocale then
   begin
@@ -355,7 +392,7 @@ begin
     CallPCREFree(FCode);
     FCode := nil;
   end;
-  FCode := pcre_compile2(PAnsiChar(EncodeString(FPattern, roUTF8 in Options)), GetAPIOptions(False),
+  FCode := pcre_compile2(PAnsiChar(EncodeString(FPattern, roUTF8 in Options)), GetAPIOptions(False, DfaMode),
     @FErrorCode, @ErrMsgPtr, @FErrorOffset, Tables);
   Inc(FErrorOffset);
   FErrorMessage := string(AnsiString(ErrMsgPtr));
@@ -364,8 +401,26 @@ begin
   begin
     if Study then
     begin
-      if Assigned(FExtra) then CallPCREFree(FExtra);
-      FExtra := pcre_study(FCode, 0, @ErrMsgPtr);
+      {$IFDEF PCRE_RTL}
+      if Assigned(FExtra) then
+        CallPCREFree(FExtra);
+      if JITCompile then
+        raise EPCREError.CreateRes(@RsErrNoJITSupport, 0);
+      StudyOptions := 0;
+      {$ELSE ~PCRE_RTL}
+      if Assigned(FExtra) then
+        pcre_free_study(FExtra);
+      if JITCompile then
+      begin
+        PCRECheck(pcre_config(PCRE_CONFIG_JIT, @ConfigJIT));
+        if ConfigJIT = 0 then
+          raise EPCREError.CreateRes(@RsErrNoJITSupport, 0);
+        StudyOptions := PCRE_STUDY_JIT_COMPILE;
+      end
+      else
+        StudyOptions := 0;
+      {$ENDIF ~PCRE_RTL}
+      FExtra := pcre_study(FCode, StudyOptions, @ErrMsgPtr);
       Result := Assigned(FExtra) or (not Assigned(ErrMsgPtr));
       if not Result then
       begin
@@ -385,38 +440,57 @@ begin
   end;
 end;
 
-function TJclRegEx.GetAPIOptions(RunTime: Boolean): Integer;
+function TJclRegEx.GetAPIOptions(RunTime, DFA: Boolean): Integer;
 const
+  {$IFDEF PCRE_RTL}
+  PCRE_PARTIAL_HARD     = $08000000;
+  PCRE_NOTEMPTY_ATSTART = $10000000;
+  PCRE_UCP              = $20000000;
+  {$ENDIF PCRE_RTL}
   { roIgnoreCase, roMultiLine, roDotAll, roExtended,
     roAnchored, roDollarEndOnly, roExtra, roNotBOL, roNotEOL, roUnGreedy,
     roNotEmpty, roUTF8, roNoAutoCapture, roNoUTF8Check, roAutoCallout,
-    roPartial, roDfaShortest, roDfaRestart, roDfaFirstLine, roDupNames,
+    roPartial, roDfaShortest, roDfaRestart, roFirstLine, roDupNames,
     roNewLineCR, roNewLineLF, roNewLineCRLF, roNewLineAny, roBSRAnyCRLF,
     roBSRUnicode, roJavascriptCompat, roNoStartOptimize, roPartialHard,
-    roNotEmptyAtStart }
+    roNotEmptyAtStart, roUCP }
   cDesignOptions: array [TJclRegExOption] of Integer =
    (PCRE_CASELESS, PCRE_MULTILINE, PCRE_DOTALL, PCRE_EXTENDED, PCRE_ANCHORED,
     PCRE_DOLLAR_ENDONLY, PCRE_EXTRA, 0, 0, PCRE_UNGREEDY, 0, PCRE_UTF8,
-    PCRE_NO_AUTO_CAPTURE, PCRE_NO_UTF8_CHECK, PCRE_AUTO_CALLOUT, 0, 0, 0, 0,
-    PCRE_DUPNAMES, PCRE_NEWLINE_CR, PCRE_NEWLINE_LF, PCRE_NEWLINE_CRLF,
+    PCRE_NO_AUTO_CAPTURE, PCRE_NO_UTF8_CHECK, PCRE_AUTO_CALLOUT, 0, 0, 0,
+    PCRE_FIRSTLINE, PCRE_DUPNAMES, PCRE_NEWLINE_CR, PCRE_NEWLINE_LF,
+    PCRE_NEWLINE_CRLF, PCRE_NEWLINE_ANY, PCRE_BSR_ANYCRLF, PCRE_BSR_UNICODE,
+    PCRE_JAVASCRIPT_COMPAT, PCRE_NO_START_OPTIMIZE, 0, 0, PCRE_UCP);
+  cRunOptions: array [TJclRegExOption] of Integer =
+   (0, 0, 0, 0, PCRE_ANCHORED, PCRE_DOLLAR_ENDONLY, 0, PCRE_NOTBOL, PCRE_NOTEOL,
+    0, PCRE_NOTEMPTY, PCRE_UTF8, 0, PCRE_NO_UTF8_CHECK, 0, PCRE_PARTIAL, 0, 0,
+    PCRE_FIRSTLINE, 0, PCRE_NEWLINE_CR, PCRE_NEWLINE_LF, PCRE_NEWLINE_CRLF,
     PCRE_NEWLINE_ANY, PCRE_BSR_ANYCRLF, PCRE_BSR_UNICODE,
     PCRE_JAVASCRIPT_COMPAT, PCRE_NO_START_OPTIMIZE, PCRE_PARTIAL_HARD,
-    PCRE_NOTEMPTY_ATSTART);
-  cRunOptions: array [TJclRegExOption] of Integer =
-   (0, 0, 0, 0, 0, 0, 0, PCRE_NOTBOL, PCRE_NOTEOL, 0, PCRE_NOTEMPTY, 0, 0,
-   PCRE_NO_UTF8_CHECK, 0, PCRE_PARTIAL, 0, 0, 0, 0, PCRE_NEWLINE_CR,
-   PCRE_NEWLINE_LF, PCRE_NEWLINE_CRLF, PCRE_NEWLINE_ANY, PCRE_BSR_ANYCRLF,
-   PCRE_BSR_UNICODE, PCRE_JAVASCRIPT_COMPAT, PCRE_NO_START_OPTIMIZE,
-   PCRE_PARTIAL_HARD, PCRE_NOTEMPTY_ATSTART);
+    PCRE_NOTEMPTY_ATSTART, PCRE_UCP);
+  cDFARunOptions: array [TJclRegExOption] of Integer =
+   (0, 0, 0, 0, PCRE_ANCHORED, PCRE_DOLLAR_ENDONLY, 0, PCRE_NOTBOL, PCRE_NOTEOL,
+    0, PCRE_NOTEMPTY, PCRE_UTF8, 0, PCRE_NO_UTF8_CHECK, 0, PCRE_PARTIAL,
+    PCRE_DFA_SHORTEST, PCRE_DFA_RESTART, PCRE_FIRSTLINE, 0, PCRE_NEWLINE_CR,
+    PCRE_NEWLINE_LF, PCRE_NEWLINE_CRLF, PCRE_NEWLINE_ANY, PCRE_BSR_ANYCRLF,
+    PCRE_BSR_UNICODE, 0, PCRE_NO_START_OPTIMIZE, PCRE_PARTIAL_HARD,
+    PCRE_NOTEMPTY_ATSTART, PCRE_UCP);
 var
   I: TJclRegExOption;
-  SUPPORT_UTF8: Integer;
+  ConfigUTF8: Integer;
 begin
-  PCRECheck(pcre_config(PCRE_CONFIG_UTF8, @SUPPORT_UTF8));
-  if (roUTF8 in Options) and (SUPPORT_UTF8 = 0) then
+  PCRECheck(pcre_config(PCRE_CONFIG_UTF8, @ConfigUTF8));
+  if (roUTF8 in Options) and (ConfigUTF8 = 0) then
     raise EPCREError.CreateRes(@RsErrNoUTF8Support, 0);
 
   Result := 0;
+  if RunTime and DFA then
+  begin
+    for I := Low(TJclRegExOption) to High(TJclRegExOption) do
+      if I in Options then
+        Result := Result or cDFARunOptions[I];
+  end
+  else
   if RunTime then
   begin
     for I := Low(TJclRegExOption) to High(TJclRegExOption) do
@@ -612,12 +686,12 @@ begin
   if FDfaMode then
   begin
     ExecRslt := pcre_dfa_exec(FCode, Extra, PAnsiChar(EncodedSubject), Length(EncodedSubject),
-      StartOffset - 1, GetAPIOptions(True), PInteger(FVector), FVectorSize, @Workspace, 20);
+      StartOffset - 1, GetAPIOptions(True, DfaMode), PInteger(FVector), FVectorSize, @Workspace, 20);
   end
   else
   begin
     ExecRslt := pcre_exec(FCode, Extra, PAnsiChar(EncodedSubject), Length(EncodedSubject),
-      StartOffset - 1, GetAPIOptions(True), PInteger(FVector), FVectorSize);
+      StartOffset - 1, GetAPIOptions(True, DfaMode), PInteger(FVector), FVectorSize);
   end;
   Result := ExecRslt >= 0;
   if Result then
@@ -736,7 +810,9 @@ begin
 end;
 
 initialization
+  {$IFNDEF PCRE_RTL}
   pcre.LibNotLoadedHandler := LibNotLoadedHandler;
+  {$ENDIF ~PCRE_RTL}
   if LoadPCRE then
   begin
     SetPCREMallocCallback(JclPCREGetMem);

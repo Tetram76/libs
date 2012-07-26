@@ -27,9 +27,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 12:57:33 +0200 (sam., 12 sept. 2009)                         $ }
-{ Revision:      $Rev:: 2993                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2012-02-12 23:30:08 +0100 (dim., 12 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3724                                                                     $ }
+{ Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -51,8 +51,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows,
-  Classes, SysUtils, Contnrs,
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.Classes, System.SysUtils, System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
+  Windows, Classes, SysUtils, Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 // Console
@@ -392,8 +395,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclConsole.pas $';
-    Revision: '$Revision: 2993 $';
-    Date: '$Date: 2009-09-12 12:57:33 +0200 (sam., 12 sept. 2009) $';
+    Revision: '$Revision: 3724 $';
+    Date: '$Date: 2012-02-12 23:30:08 +0100 (dim., 12 févr. 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -406,7 +409,11 @@ uses
   {$IFDEF FPC}
   JwaWinNT,
   {$ENDIF FPC}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Math, System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   Math, TypInfo,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclFileUtils, JclResources, JclSysUtils;
 
 {$IFDEF FPC}
@@ -481,6 +488,39 @@ const
 var
   g_DefaultConsole: TJclConsole = nil;
 
+// Due to changes in Vista and onwards Windows will terminate
+// console immidiately after executing CtrlHandler. We need put some wait in it.
+// These subprograms may only work if main application is console and it creates its own message pump.
+// On GUI one these should work always.
+
+function ProcessMessage(var Msg: TMsg): Boolean;
+begin
+  Result := False;
+  if {$IFDEF HAS_UNITSCOPE}WinApi.{$ENDIF}Windows.PeekMessage(Msg, 0, 0, 0, PM_REMOVE) then
+  begin
+    Result := True;
+    {$IFDEF HAS_UNITSCOPE}WinApi.{$ENDIF}Windows.TranslateMessage(Msg);
+    {$IFDEF HAS_UNITSCOPE}WinApi.{$ENDIF}Windows.DispatchMessage(Msg);
+  end;
+end;
+
+procedure ProcessMessages;
+var
+  Msg: {$IFDEF HAS_UNITSCOPE}WinApi.{$ENDIF}Windows.TMsg;
+begin
+  while ProcessMessage(Msg) do;
+end;
+
+procedure Wait(N: LongWord);
+var
+  TickCount: LongWord;
+begin
+  SleepEx(N, False);
+  TickCount := GetTickCount + N;
+  while GetTickCount < TickCount do
+    ProcessMessages;
+end;
+
 function CtrlHandler(CtrlType: DWORD): BOOL; stdcall;
 var
   Console: TJclConsole;
@@ -513,6 +553,7 @@ begin
     // (rom) dubious. An exception implies that an event has been handled.
     Result := False;
   end;
+  Wait(200);
 end;
 
 //=== { TJclConsole } ========================================================

@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-06-13 23:52:33 +0200 (lun., 13 juin 2011)                          $ }
-{ Revision:      $Rev:: 3538                                                                     $ }
-{ Author:        $Author:: jfudickar                                                             $ }
+{ Last modified: $Date:: 2012-01-05 23:59:27 +0100 (jeu., 05 janv. 2012)                         $ }
+{ Revision:      $Rev:: 3675                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -87,9 +87,11 @@ resourcestring
 
 //=== JclOpenDialogFavorites.pas =============================================
 resourcestring
-  RsOpenDialogAdd          = '<- Add';
-  RsOpenDialogDelete       = '&Delete';
-  RsOpenDialogFavorites    = '&Favorites';
+  RsOpenDialogList         = ' --> Favorites';
+  RsOpenDialogAdd          = ' --> Add to this list';
+  RsOpenDialogDelete       = ' --> Delete from this list';
+  RsOpenDialogVirtual      = ' --> Virtual directories cannot be added to the favorites';
+  RsOpenDialogFavorites    = '&Favorites:';
   RsOpenDialogConfirmation = 'Confirmation';
   RsOpenDialogDelConfirm   = 'Are you sure to delete "%s" from favorite folders?';
 
@@ -204,8 +206,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVclResources.pas $';
-    Revision: '$Revision: 3538 $';
-    Date: '$Date: 2011-06-13 23:52:33 +0200 (lun., 13 juin 2011) $';
+    Revision: '$Revision: 3675 $';
+    Date: '$Date: 2012-01-05 23:59:27 +0100 (jeu., 05 janv. 2012) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

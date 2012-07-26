@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3391                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,7 +46,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, Winapi.ActiveX, System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, ActiveX, Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 // Various definitions
@@ -126,8 +130,8 @@ procedure VariantArrayToStream(VarArray: OleVariant; var Stream: IStream); overl
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclCOM.pas $';
-    Revision: '$Revision: 3391 $';
-    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -140,8 +144,11 @@ uses
   {$IFDEF FPC}
   Types,
   {$ENDIF FPC}
-  SysUtils,
-  Variants,
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils, System.Variants,
+  {$ELSE ~HAS_UNITSCOPE}
+  SysUtils, Variants,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclFileUtils, JclRegistry, JclResources, JclSysInfo, JclWin32;
 
 {implementation Constants - may be reused by more than one routine }

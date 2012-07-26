@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 15:18:12 +0200 (sam., 12 sept. 2009)                         $ }
-{ Revision:      $Rev:: 2998                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,7 +42,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 type
@@ -182,8 +186,8 @@ function CreateSchedule: IJclSchedule;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSchedule.pas $';
-    Revision: '$Revision: 2998 $';
-    Date: '$Date: 2009-09-12 15:18:12 +0200 (sam., 12 sept. 2009) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

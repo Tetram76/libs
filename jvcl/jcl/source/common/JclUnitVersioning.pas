@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-07-29 11:02:58 +0200 (ven., 29 juil. 2011)                         $ }
-{ Revision:      $Rev:: 3552                                                                     $ }
+{ Last modified: $Date:: 2011-12-27 22:47:24 +0100 (mar., 27 déc. 2011)                         $ }
+{ Revision:      $Rev:: 3653                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -38,13 +38,20 @@ unit JclUnitVersioning;
 interface
 
 uses
-  {$IFDEF MSWINDOWS}
-  Windows,
-  {$ENDIF MSWINDOWS}
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.SysUtils, System.Contnrs;
+  {$ELSE ~HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Windows,
+  {$ENDIF MSWINDOWS}
   SysUtils, Contnrs;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 type
   PUnitVersionInfo = ^TUnitVersionInfo;
@@ -149,8 +156,8 @@ procedure ExportUnitVersioningToFile(iFileName : string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnitVersioning.pas $';
-    Revision: '$Revision: 3552 $';
-    Date: '$Date: 2011-07-29 11:02:58 +0200 (ven., 29 juil. 2011) $';
+    Revision: '$Revision: 3653 $';
+    Date: '$Date: 2011-12-27 22:47:24 +0100 (mar., 27 déc. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -160,7 +167,11 @@ implementation
 
 uses
   // make TObjectList functions inlined
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclSysUtils, JclSynch;
 
 // Delphi 5 does not know this function //(usc) D6/7 Per does have StartsWith
@@ -672,18 +683,11 @@ begin
   UnitVersioningFinalized := True;
   try
     if UnitVersioningNPA <> nil then
-    begin
-      UnitVersioningMutex.WaitFor(INFINITE);
-      try
-        UnitVersioningNPA^ := nil;
-        SharedCloseMem(UnitVersioningNPA);
-      finally
-        UnitVersioningMutex.Release;
-      end;
-    end;
+      SharedCloseMem(UnitVersioningNPA);
     if (GlobalUnitVersioning <> nil) and UnitVersioningOwner then
-      GlobalUnitVersioning.Free;
-    GlobalUnitVersioning := nil;
+      FreeAndNil(GlobalUnitVersioning)
+    else
+      GlobalUnitVersioning := nil;
   except
     // ignore - should never happen
   end;

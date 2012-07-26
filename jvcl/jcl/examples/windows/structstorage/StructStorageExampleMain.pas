@@ -16,7 +16,7 @@ All Rights Reserved.
 
 Contributor(s):
 
-Last Modified: $Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $
+Last Modified: $Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $
 
 You may retrieve the latest version of this file at the Project JEDI's Code Library home page,
 located at http://jcl.sourceforge.net
@@ -558,8 +558,11 @@ begin
   acProperties.Enabled := (tvDocInfo.Selected <> nil);
 end;
 
+{$IFDEF RTL230_UP}
+function TreeSort(lParam1, lParam2, lParamSort: LPARAM): Integer; stdcall;
+{$ELSE ~RTL230_UP}
 function TreeSort(lParam1, lParam2, lParamSort: Longint): Integer; stdcall;
-
+{$ENDIF ~RTL230_UP}
 begin
   if IsFolder(TTreeNode(lParam1)) = IsFolder(TTreeNode(lParam2)) then
     Result := AnsiCompareText(TTreeNode(lParam1).Text, TTreeNode(lParam2).Text)

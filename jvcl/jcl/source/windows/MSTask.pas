@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-11-15 10:47:16 +0100 (lun., 15 nov. 2010)                          $ }
-{ Revision:      $Rev:: 3418                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -53,8 +53,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  ActiveX,
-  Windows;
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.ActiveX, Winapi.Windows;
+  {$ELSE ~HAS_UNITSCOPE}
+  ActiveX, Windows;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 //DOM-IGNORE-BEGIN
 
@@ -674,8 +677,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/MSTask.pas $';
-    Revision: '$Revision: 3418 $';
-    Date: '$Date: 2010-11-15 10:47:16 +0100 (lun., 15 nov. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

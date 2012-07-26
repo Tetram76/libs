@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-09-21 13:35:35 +0200 (mar., 21 sept. 2010)                         $ }
-{ Revision:      $Rev:: 3345                                                                     $ }
+{ Last modified: $Date:: 2012-03-04 19:21:29 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3758                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -102,8 +102,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/stacktraceviewer/JclStackTraceViewerMainFrame.pas $';
-    Revision: '$Revision: 3345 $';
-    Date: '$Date: 2010-09-21 13:35:35 +0200 (mar., 21 sept. 2010) $';
+    Revision: '$Revision: 3758 $';
+    Date: '$Date: 2012-03-04 19:21:29 +0100 (dim., 04 mars 2012) $';
     LogPath: 'JCL\experts\stacktraceviewer';
     Extra: '';
     Data: nil
@@ -122,7 +122,7 @@ uses
 {$R *.dfm}
 
 type
-  TCustomTreeViewLink = class(TObject, IJclStackTraceViewerTreeViewLink)
+  TCustomTreeViewLink = class(TInterfacedObject, IInterface, IJclStackTraceViewerTreeViewLink)
   private
     function GetInternalItems(AIndex: Integer): TCustomTreeViewLink;
   protected
@@ -138,7 +138,7 @@ type
     property OwnsData: Boolean read FOwnsData write FOwnsData;
     property Parent: TCustomTreeViewLink read FParent;
     { IInterface }
-    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
+    // function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
     { IJclStackTraceViewerTreeViewLink }
@@ -237,14 +237,6 @@ end;
 function TCustomTreeViewLink.GetText: string;
 begin
   Result := '';
-end;
-
-function TCustomTreeViewLink.QueryInterface(const IID: TGUID; out Obj): HRESULT;
-begin
-  if GetInterface(IID, Obj) then
-    Result := S_OK
-  else
-    Result := E_NOINTERFACE;
 end;
 
 procedure TCustomTreeViewLink.Show(AFrame: TCustomFrame);
@@ -667,7 +659,7 @@ procedure TfrmMain.acOptionsExecute(Sender: TObject);
 begin
   inherited;
   {$IFDEF BDS8_UP}
-  (BorlandIDEServices as IOTAServices).GetEnvironmentOptions.EditOptions('', JclGetAddinOptionsCaption(RsStackTraceViewerOptionsPageName));
+  (BorlandIDEServices as IOTAServices).GetEnvironmentOptions.EditOptions('', StackTraceViewerExpert.GetCaption);
   {$ELSE ~BDS8_UP}
   TJclOTAExpertBase.ConfigurationDialog(LoadResString(@RsStackTraceViewerOptionsPageName));
   {$ENDIF ~BDS8_UP}

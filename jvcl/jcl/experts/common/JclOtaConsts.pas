@@ -21,9 +21,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-05-09 17:14:36 +0200 (dim., 09 mai 2010)                           $ }
-{ Revision:      $Rev:: 3248                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2012-01-22 22:54:47 +0100 (dim., 22 janv. 2012)                         $ }
+{ Revision:      $Rev:: 3701                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -68,6 +68,9 @@ const
   JclPanelTreeWidth      = 'PanelTreeWidth';
   JclConfigureActionName = 'JCLConfigureCommand';
   JclConfigureMenuName   = 'JCLConfigureMenu';
+
+  //=== Unit Versioning Expert ===============================================
+  JclUnitVersioningExpertName   = 'JclUnitVersioningExpert';
 
   //=== Debug Expert =========================================================
   JclDebugExpertRegKey          = 'JclDebugExpert';
@@ -161,8 +164,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/common/JclOtaConsts.pas $';
-    Revision: '$Revision: 3248 $';
-    Date: '$Date: 2010-05-09 17:14:36 +0200 (dim., 09 mai 2010) $';
+    Revision: '$Revision: 3701 $';
+    Date: '$Date: 2012-01-22 22:54:47 +0100 (dim., 22 janv. 2012) $';
     LogPath: 'JCL\experts\common';
     Extra: '';
     Data: nil

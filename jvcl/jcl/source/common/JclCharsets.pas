@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-06-09 22:54:52 +0200 (jeu., 09 juin 2011)                          $ }
-{ Revision:      $Rev:: 3526                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -492,8 +492,8 @@ function CharsetNameFromCodePage(CodePage: Word): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCharsets.pas $';
-    Revision: '$Revision: 3526 $';
-    Date: '$Date: 2011-06-09 22:54:52 +0200 (jeu., 09 juin 2011) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -503,7 +503,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclResources;
 
 function FamilyCodePageFromCharsetName(const CharsetName: string): Word;

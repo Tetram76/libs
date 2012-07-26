@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3391                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,7 +52,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.SysUtils, System.Classes;
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, SysUtils, Classes;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 // User Management
 type
@@ -95,8 +99,8 @@ function IsLocalAccount(const AccountName: string): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclLANMan.pas $';
-    Revision: '$Revision: 3391 $';
-    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -380,7 +384,7 @@ end;
 
 function LookupGroupName(const Server: string; const RID: TNetWellKnownRID): string;
 var
-  sia: Windows.SID_IDENTIFIER_AUTHORITY;
+  sia: {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.SID_IDENTIFIER_AUTHORITY;
   rd1, rd2: DWORD;
   ridCount: Integer;
   sd: PSID;

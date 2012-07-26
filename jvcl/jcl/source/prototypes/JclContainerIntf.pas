@@ -1,4 +1,4 @@
-﻿{**************************************************************************************************}
+{**************************************************************************************************}
 {                                                                                                  }
 { Project JEDI Code Library (JCL)                                                                  }
 {                                                                                                  }
@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011)                          $ }
-{ Revision:      $Rev:: 3511                                                                     $ }
+{ Last modified: $Date:: 2012-02-21 18:37:18 +0100 (mar., 21 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3739                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -37,13 +37,18 @@ unit JclContainerIntf;
 
 {$I jcl.inc}
 {$I containers\JclContainerIntf.int}
+
 interface
 
 uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase,
   JclAnsiStrings,
   JclWideStrings;
@@ -154,7 +159,11 @@ type
     property ThreadSafe: Boolean read GetThreadSafe write SetThreadSafe;
   end;
 
-  IJclStrContainer = interface(IJclBaseContainer)
+  (*$JPPEXPANDMACRO CONTAINER(IJclIntfContainer,{44F10075-9702-4DCA-9731-D8990F234A74})*)
+
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclIntfFlatContainer,{15116007-6BB8-4D9D-8249-C2F49D4AB3EA},IJclIntfContainer)*)
+
+  IJclStrBaseContainer = interface(IJclBaseContainer)
     ['{9753E1D7-F093-4D5C-8B32-40403F6F700E}']
     function GetCaseSensitive: Boolean;
     procedure SetCaseSensitive(Value: Boolean);
@@ -163,7 +172,7 @@ type
 
   TJclAnsiStrEncoding = (seISO, seUTF8);
 
-  IJclAnsiStrContainer = interface(IJclStrContainer)
+  IJclAnsiStrContainer = interface(IJclStrBaseContainer)
     ['{F8239357-B96F-46F1-A48E-B5DF25B5F1FA}']
     function GetEncoding: TJclAnsiStrEncoding;
     procedure SetEncoding(Value: TJclAnsiStrEncoding);
@@ -184,7 +193,7 @@ type
 
   TJclWideStrEncoding = (seUTF16);
 
-  IJclWideStrContainer = interface(IJclStrContainer)
+  IJclWideStrContainer = interface(IJclStrBaseContainer)
     ['{875E1AC4-CA22-46BC-8999-048E5B9BF11D}']
     function GetEncoding: TJclWideStrEncoding;
     procedure SetEncoding(Value: TJclWideStrEncoding);
@@ -204,7 +213,7 @@ type
   end;
 
   {$IFDEF SUPPORTS_UNICODE_STRING}
-  IJclUnicodeStrContainer = interface(IJclStrContainer)
+  IJclUnicodeStrContainer = interface(IJclStrBaseContainer)
     ['{619BA29F-5E05-464D-B472-1C8453DBC707}']
   end;
 
@@ -221,12 +230,27 @@ type
   end;
   {$ENDIF SUPPORTS_UNICODE_STRING}
 
+  {$IFDEF CONTAINER_ANSISTR}
+  IJclStrContainer = IJclAnsiStrContainer;
+  IJclStrFlatContainer = IJclAnsiStrFlatContainer;
+  {$ENDIF CONTAINER_ANSISTR}
+  {$IFDEF CONTAINER_WIDESTR}
+  IJclStrContainer = IJclWideStrContainer;
+  IJclStrFlatContainer = IJclWideStrFlatContainer;
+  {$ENDIF CONTAINER_WIDESTR}
+  {$IFDEF CONTAINER_UNICODESTR}
+  IJclStrContainer = IJclUnicodeStrContainer;
+  IJclStrFlatContainer = IJclUnicodeStrFlatContainer;
+  {$ENDIF CONTAINER_UNICODESTR}
+
   IJclSingleContainer = interface(IJclBaseContainer)
     ['{22BE88BD-87D1-4B4D-9FAB-F1B6D555C6A9}']
     function GetPrecision: Single;
     procedure SetPrecision(const Value: Single);
     property Precision: Single read GetPrecision write SetPrecision;
   end;
+
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclSingleFlatContainer,{F16955E8-94D2-4201-809B-CC2EA39B5FDD},IJclSingleContainer)*)
 
   IJclDoubleContainer = interface(IJclBaseContainer)
     ['{372B9354-DF6D-4CAA-A5A9-C50E1FEE5525}']
@@ -235,6 +259,8 @@ type
     property Precision: Double read GetPrecision write SetPrecision;
   end;
 
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclDoubleFlatContainer,{2F0252CE-7471-45CA-8C8D-FD3925507C00},IJclDoubleContainer)*)
+
   IJclExtendedContainer = interface(IJclBaseContainer)
     ['{431A6482-FD5C-45A7-BE53-339A3CF75AC9}']
     function GetPrecision: Extended;
@@ -242,15 +268,49 @@ type
     property Precision: Extended read GetPrecision write SetPrecision;
   end;
 
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclExtendedFlatContainer,{1D3F48A2-001E-48F7-8A54-B9F4CE837523},IJclExtendedContainer)*)
+
   {$IFDEF MATH_EXTENDED_PRECISION}
   IJclFloatContainer = IJclExtendedContainer;
+  IJclFloatFlatContainer = IJclExtendedFlatContainer;
   {$ENDIF MATH_EXTENDED_PRECISION}
   {$IFDEF MATH_DOUBLE_PRECISION}
   IJclFloatContainer = IJclDoubleContainer;
+  IJclFloatFlatContainer = IJclDoubleFlatContainer;
   {$ENDIF MATH_DOUBLE_PRECISION}
   {$IFDEF MATH_SINGLE_PRECISION}
   IJclFloatContainer = IJclSingleContainer;
+  IJclFloatFlatContainer = IJclSingleFlatContainer;
   {$ENDIF MATH_SINGLE_PRECISION}
+
+  (*$JPPEXPANDMACRO CONTAINER(IJclIntegerContainer,{3BAF5447-9835-43A4-9FF3-E5EA7D43A7D1})*)
+
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclIntegerFlatContainer,{EF4EFCD9-60CB-4525-9D20-18E55291F7CF},IJclIntegerContainer)*)
+
+  (*$JPPEXPANDMACRO CONTAINER(IJclCardinalContainer,{01DF05CF-62E9-46B3-8BC1-2830EEF43644})*)
+
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclCardinalFlatContainer,{79E48B80-3215-47D0-A1B5-D74C495AC9D1},IJclCardinalContainer)*)
+
+  (*$JPPEXPANDMACRO CONTAINER(IJclInt64Container,{B560B2B6-F8C7-45F0-A5E5-920AA61C1540})*)
+
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclInt64FlatContainer,{E740B9EF-7342-4CEF-B7FB-96C5267F5738},IJclInt64Container)*)
+
+  (*$JPPEXPANDMACRO CONTAINER(IJclPtrContainer,{E8DD2A85-1E12-4605-B517-7E3121C5624F})*)
+
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclPtrFlatContainer,{43C41789-DE71-4DA5-B4AC-3F53EB9459CD},IJclPtrContainer)*)
+
+  (*$JPPEXPANDMACRO CONTAINER(IJclContainer,{A9EBED03-4993-426A-8449-30D98DC2AC90})*)
+
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclFlatContainer,{0A070B6F-54A1-4B3D-A4E4-CFFAE2C7C57B},IJclContainer)*)
+
+  {$IFDEF SUPPORTS_GENERICS}
+  //DOM-IGNORE-BEGIN
+  (*$JPPEXPANDMACRO CONTAINER(IJclContainer<T>,{19599A90-F392-430D-878D-A73E096C04AF})*)
+
+  (*$JPPEXPANDMACRO FLATCONTAINER(IJclFlatContainer<T>,{F562ECFB-98DC-4A82-A806-ED978B9D1667},IJclContainer<T>)*)
+
+  //DOM-IGNORE-END
+  {$ENDIF SUPPORTS_GENERICS}
 
 (*$JPPLOOP ALLTYPEINDEX ALLTYPECOUNT
   {$JPPEXPANDMACRO EQUALITYCOMPARER(,,,,)}
@@ -618,8 +678,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclContainerIntf.pas $';
-    Revision: '$Revision: 3511 $';
-    Date: '$Date: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011) $';
+    Revision: '$Revision: 3739 $';
+    Date: '$Date: 2012-02-21 18:37:18 +0100 (mar., 21 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -629,7 +689,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclResources;
 
 //=== { EJclOutOfBoundsError } ===============================================

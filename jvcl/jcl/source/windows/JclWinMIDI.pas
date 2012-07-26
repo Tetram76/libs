@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 13:56:34 +0200 (sam., 12 sept. 2009)                         $ }
-{ Revision:      $Rev:: 2994                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,7 +41,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils, System.Classes, Winapi.Windows, Winapi.MMSystem,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils, Classes, Windows, MMSystem,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclMIDI;
 
 type
@@ -97,8 +101,8 @@ procedure MidiInCheck(Code: MMResult);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclWinMIDI.pas $';
-    Revision: '$Revision: 2994 $';
-    Date: '$Date: 2009-09-12 13:56:34 +0200 (sam., 12 sept. 2009) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

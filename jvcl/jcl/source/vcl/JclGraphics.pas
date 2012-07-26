@@ -40,8 +40,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                        $ }
-{ Revision:      $Rev:: 3437                                                                     $ }
+{ Last modified: $Date:: 2012-03-04 22:21:40 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3761                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -53,13 +53,15 @@ unit JclGraphics;
 interface
 
 uses
-  Windows,
-  Classes, SysUtils,
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.Classes, System.SysUtils, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  {$ELSE ~HAS_UNITSCOPE}
+  Windows, Classes, SysUtils, Graphics, Controls, Forms,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Graphics, JclGraphUtils, Controls, Forms,
-  JclBase;
+  JclGraphUtils, JclBase;
 
 type
   EJclGraphicsError = class(EJclError);
@@ -154,6 +156,12 @@ type
     property Count: Integer read GetCount;
   end;
 
+  {$IFDEF RTL200_UP}
+    {$DEFINE HAS_EQUALS}
+  {$ENDIF RTL200_UP}
+  {$IFDEF FPC}
+    {$DEFINE HAS_EQUALS}
+  {$ENDIF FPC}
   TJclRegion = class(TObject)
   private
     FHandle: HRGN;
@@ -176,7 +184,9 @@ type
     constructor CreateRect(const Top, Left, Bottom, Right: Integer; DummyForBCB: Byte = 0); overload;
     constructor CreateRoundRect(const ARect: TRect; CornerWidth, CornerHeight: Integer); overload;
     constructor CreateRoundRect(const Top, Left, Bottom, Right, CornerWidth, CornerHeight: Integer); overload;
+    {$IFDEF BORLAND}
     constructor CreateBitmap(Bitmap: TBitmap; RegionColor: TColor; RegionBitmapMode: TJclRegionBitmapMode);
+    {$ENDIF BORLAND}
     constructor CreatePath(Canvas: TCanvas);
     constructor CreateRegionInfo(RegionInfo: TJclRegionInfo);
     constructor CreateMapWindow(InitialRegion: TJclRegion; hWndFrom, hWndTo: THandle); overload;
@@ -186,7 +196,7 @@ type
     procedure Combine(DestRegion, SrcRegion: TJclRegion; CombineOp: TJclRegionCombineOperator); overload;
     procedure Combine(SrcRegion: TJclRegion; CombineOp: TJclRegionCombineOperator); overload;
     function Copy: TJclRegion;
-    function Equals(CompareRegion: TJclRegion): Boolean; {$IFDEF RTL200_UP} reintroduce; {$ENDIF RTL200_UP}
+    function Equals(CompareRegion: TJclRegion): Boolean; {$IFDEF HAS_EQUALS} reintroduce; {$ENDIF HAS_EQUALS}
     procedure Fill(Canvas: TCanvas);
     procedure FillGradient(Canvas: TCanvas; ColorCount: Integer; StartColor, EndColor: TColor; ADirection: TGradientDirection);
     procedure Frame(Canvas: TCanvas; FrameWidth, FrameHeight: Integer);
@@ -462,12 +472,14 @@ type
   end;
 
 // Bitmap Functions
+{$IFDEF BORLAND}
 procedure Stretch(NewWidth, NewHeight: Cardinal; Filter: TResamplingFilter;
   Radius: Single; Source: TGraphic; Target: TBitmap); overload;
 procedure Stretch(NewWidth, NewHeight: Cardinal; Filter: TResamplingFilter;
   Radius: Single; Bitmap: TBitmap); overload;
 
 procedure DrawBitmap(DC: HDC; Bitmap: HBITMAP; X, Y, Width, Height: Integer);
+{$ENDIF BORLAND}
 
 function ExtractIconCount(const FileName: string): Integer;
 function BitmapToIcon(Bitmap: HBITMAP; cx, cy: Integer): HICON; overload;
@@ -487,6 +499,7 @@ procedure BitmapToPng(const FileName: string);
 procedure PngToBitmap(const FileName: string);
 {$ENDIF HAS_UNIT_PNGIMAGE}
 
+{$IFDEF BORLAND}
 procedure SaveIconToFile(Icon: HICON; const FileName: string);
 procedure WriteIcon(Stream: TStream; ColorBitmap, MaskBitmap: HBITMAP;
   WriteLength: Boolean = False); overload;
@@ -494,6 +507,7 @@ procedure WriteIcon(Stream: TStream; Icon: HICON; WriteLength: Boolean = False);
 procedure GetIconFromBitmap(Icon: TIcon; Bitmap: TBitmap);
 
 function GetAntialiasedBitmap(const Bitmap: TBitmap): TBitmap;
+{$ENDIF BORLAND}
 
 procedure BlockTransfer(Dst: TJclBitmap32; DstX: Integer; DstY: Integer; Src: TJclBitmap32;
   SrcRect: TRect; CombineOp: TDrawMode);
@@ -507,8 +521,10 @@ procedure SetBorderTransparent(ABitmap: TJclBitmap32; ARect: TRect);
 function FillGradient(DC: HDC; ARect: TRect; ColorCount: Integer;
   StartColor, EndColor: TColor; ADirection: TGradientDirection): Boolean; overload;
 
+{$IFDEF BORLAND}
 function CreateRegionFromBitmap(Bitmap: TBitmap; RegionColor: TColor;
   RegionBitmapMode: TJclRegionBitmapMode; UseAlphaChannel: Boolean = False): HRGN;
+{$ENDIF BORLAND}
 procedure ScreenShot(bm: TBitmap; Left, Top, Width, Height: Integer; Window: THandle = HWND_DESKTOP); overload;
 procedure ScreenShot(bm: TBitmap; IncludeTaskBar: Boolean = True); overload;
 procedure ScreenShot(bm: TBitmap; ControlToPrint: TWinControl); overload;
@@ -547,8 +563,8 @@ procedure SetGamma(Gamma: Single = 0.7);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclGraphics.pas $';
-    Revision: '$Revision: 3437 $';
-    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
+    Revision: '$Revision: 3761 $';
+    Date: '$Date: 2012-03-04 22:21:40 +0100 (dim., 04 mars 2012) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -558,6 +574,17 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.Math,
+  Winapi.CommCtrl, Winapi.ShellApi,
+  {$IFDEF HAS_UNIT_GIFIMG}
+  Vcl.Imaging.GifImg,
+  {$ENDIF HAS_UNIT_GIFIMG}
+  {$IFDEF HAS_UNIT_PNGIMAGE}
+  Vcl.Imaging.PngImage,
+  {$ENDIF HAS_UNIT_PNGIMAGE}
+  Vcl.ClipBrd, Vcl.Imaging.JPeg, System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   Math,
   CommCtrl, ShellApi,
   {$IFDEF HAS_UNIT_GIFIMG}
@@ -566,7 +593,11 @@ uses
   {$IFDEF HAS_UNIT_PNGIMAGE}
   PngImage,
   {$ENDIF HAS_UNIT_PNGIMAGE}
-  ClipBrd, JPeg, TypInfo,
+  ClipBrd, TypInfo,
+  {$IFDEF BORLAND}
+  JPeg,
+  {$ENDIF BORLAND}
+  {$ENDIF ~HAS_UNITSCOPE}
   JclVclResources,
   JclSysUtils,
   JclLogic;
@@ -627,7 +658,7 @@ threadvar
 
 function IntToByte(Value: Integer): Byte;
 begin
-  Result := Math.Max(0, Math.Min(255, Value));
+  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Max(0, {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Min(255, Value));
 end;
 
 procedure CheckBitmaps(Dst, Src: TJclBitmap32);
@@ -900,6 +931,8 @@ begin
   end;
 end;
 
+{$IFDEF BORLAND}
+
 // This is the actual scaling routine. Target must be allocated already with
 // sufficient size. Source must contain valid data, Radius must not be 0 and
 // Filter must not be nil.
@@ -951,8 +984,8 @@ begin
       begin
         ContributorList[I].N := 0;
         Center := I / ScaleX;
-        Left := Math.Floor(Center - Width);
-        Right := Math.Ceil(Center + Width);
+        Left := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Floor(Center - Width);
+        Right := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Ceil(Center + Width);
         SetLength(ContributorList[I].Contributors, Right - Left + 1);
         for J := Left to Right do
         begin
@@ -982,8 +1015,8 @@ begin
       begin
         ContributorList[I].N := 0;
         Center := I / ScaleX;
-        Left := Math.Floor(Center - Radius);
-        Right := Math.Ceil(Center + Radius);
+        Left := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Floor(Center - Radius);
+        Right := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Ceil(Center + Radius);
         SetLength(ContributorList[I].Contributors, Right - Left + 1);
         for J := Left to Right do
         begin
@@ -1042,8 +1075,8 @@ begin
       begin
         ContributorList[I].N := 0;
         Center := I / ScaleY;
-        Left := Math.Floor(Center - Width);
-        Right := Math.Ceil(Center + Width);
+        Left := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Floor(Center - Width);
+        Right := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Ceil(Center + Width);
         SetLength(ContributorList[I].Contributors, Right - Left + 1);
         for J := Left to Right do
         begin
@@ -1073,8 +1106,8 @@ begin
       begin
         ContributorList[I].N := 0;
         Center := I / ScaleY;
-        Left := Math.Floor(Center - Radius);
-        Right := Math.Ceil(Center + Radius);
+        Left := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Floor(Center - Radius);
+        Right := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}Math.Ceil(Center + Radius);
         SetLength(ContributorList[I].Contributors, Right - Left + 1);
         for J := Left to Right do
         begin
@@ -1114,7 +1147,7 @@ begin
         with ContributorList[I] do
         begin
           DestPixel^ := ApplyContributors(N, ContributorList[I].Contributors);
-          Inc(Integer(DestPixel), DestDelta);
+          Inc(INT_PTR(DestPixel), DestDelta);
         end;
       Inc(SourceLine);
       Inc(DestLine);
@@ -1134,6 +1167,8 @@ begin
     Target.Modified := True;
   end;
 end;
+
+{$ENDIF BORLAND}
 
 // Filter functions for TJclBitmap32
 type
@@ -1270,6 +1305,8 @@ begin
   end;
 end;
 
+{$IFDEF BORLAND}
+
 // Bitmap Functions
 // Scales the source graphic to the given size (NewWidth, NewHeight) and stores the Result in Target.
 // Filter describes the filter function to be applied and Radius the size of the filter area.
@@ -1313,6 +1350,8 @@ procedure Stretch(NewWidth, NewHeight: Cardinal; Filter: TResamplingFilter;
 begin
   Stretch(NewWidth, NewHeight, Filter, Radius, Bitmap, Bitmap);
 end;
+
+{$ENDIF BORLAND}
 
 procedure StretchNearest(Dst: TJclBitmap32; DstRect: TRect;
   Src: TJclBitmap32; SrcRect: TRect; CombineOp: TDrawMode);
@@ -1585,6 +1624,8 @@ begin
   DeleteObject(MemDC);
 end;
 
+{$IFDEF BORLAND}
+
 { TODO : remove VCL-dependency by replacing pf24bit by pf32bit }
 
 function GetAntialiasedBitmap(const Bitmap: TBitmap): TBitmap;
@@ -1620,6 +1661,8 @@ begin
   end;
   Result := Antialias;
 end;
+
+{$ENDIF BORLAND}
 
 procedure ImgToBitmap(const FileName: string; GraphicClass: TGraphicClass);
 var
@@ -1756,6 +1799,8 @@ begin
   end;
 end;
 
+{$IFDEF BORLAND}
+
 const
   rc3_Icon = 1;
 
@@ -1864,6 +1909,8 @@ begin
     Stream.Free;
   end;
 end;
+
+{$ENDIF BORLAND}
 
 procedure Transform(Dst, Src: TJclBitmap32; SrcRect: TRect;
   Transformation: TJclTransformation);
@@ -1991,6 +2038,8 @@ begin
   end;
 end;
 
+{$IFDEF BORLAND}
+
 function CreateRegionFromBitmap(Bitmap: TBitmap; RegionColor: TColor;
   RegionBitmapMode: TJclRegionBitmapMode; UseAlphaChannel: Boolean): HRGN;
 var
@@ -2092,6 +2141,8 @@ begin
     LBitmap.Free;
   end;
 end;
+
+{$ENDIF BORLAND}
 
 procedure ScreenShot(bm: TBitmap; Left, Top, Width, Height: Integer; Window: THandle); overload;
 var
@@ -2332,11 +2383,13 @@ begin
   GetBox;
 end;
 
+{$IFDEF BORLAND}
 constructor TJclRegion.CreateBitmap(Bitmap: TBitmap; RegionColor: TColor;
   RegionBitmapMode: TJclRegionBitmapMode);
 begin
   Create(CreateRegionFromBitmap(Bitmap, RegionColor, RegionBitmapMode), True);
 end;
+{$ENDIF BORLAND}
 
 constructor TJclRegion.CreateElliptic(const ARect: TRect);
 begin
@@ -2724,7 +2777,9 @@ begin
   FOuterColor := $00000000;  // by default as full transparency black
   FFont := TFont.Create;
   FFont.OnChange := FontChanged;
+  {$IFDEF BORLAND}
   FFont.OwnerCriticalSection := @FLock;
+  {$ENDIF BORLAND}
   FMasterAlpha := $FF;
   FPenColor := clWhite32;
   FStippleStep := 1;
@@ -4347,7 +4402,7 @@ begin
   begin
     SelectObject(Handle, Font.Handle);
     SetTextColor(Handle, ColorToRGB(Font.Color));
-    SetBkMode(Handle, Windows.TRANSPARENT);
+    SetBkMode(Handle, {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.TRANSPARENT);
   end;
 end;
 
@@ -4386,7 +4441,7 @@ begin
   UpdateFont;
   Result.cX := 0;
   Result.cY := 0;
-  Windows.GetTextExtentPoint32(Handle, PChar(Text), Length(Text), Result);
+  {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetTextExtentPoint32(Handle, PChar(Text), Length(Text), Result);
 end;
 
 procedure TJclBitmap32.TextOut(X, Y: Integer; const Text: string);

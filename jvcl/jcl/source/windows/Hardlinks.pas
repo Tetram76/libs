@@ -38,8 +38,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3437                                                                     $ }
+{ Last modified: $Date:: 2012-02-03 19:14:26 +0100 (ven., 03 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3711                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -79,7 +79,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows;
+  {$ELSE ~HAS_UNITSCOPE}
   Windows;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 
 {$EXTERNALSYM CreateHardLinkW}
@@ -105,8 +109,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/Hardlinks.pas $';
-    Revision: '$Revision: 3437 $';
-    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
+    Revision: '$Revision: 3711 $';
+    Date: '$Date: 2012-02-03 19:14:26 +0100 (ven., 03 févr. 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

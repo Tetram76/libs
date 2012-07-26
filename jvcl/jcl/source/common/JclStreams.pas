@@ -27,9 +27,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-08-14 10:56:32 +0200 (dim., 14 août 2011)                        $ }
-{ Revision:      $Rev:: 3582                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2012-04-08 18:49:18 +0200 (dim., 08 avr. 2012)                          $ }
+{ Revision:      $Rev:: 3773                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -43,14 +43,22 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.SysUtils, System.Classes,
+  System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
+  SysUtils, Classes,
+  Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
-  SysUtils, Classes,
-  Contnrs,
   JclBase, JclStringConversions;
 
 const
@@ -467,9 +475,9 @@ type
     function LoadBuffer: Boolean;
     function LoadPeekBuffer: Boolean;
     function InternalGetNextChar(S: TStream; out Ch: UCS4): Boolean; virtual; abstract;
-    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: Longint): Longint; virtual;
+    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: SizeInt): Longint; virtual;
     function InternalSetNextChar(S: TStream; Ch: UCS4): Boolean; virtual; abstract;
-    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: Longint): Longint; virtual;
+    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: SizeInt): Longint; virtual;
     procedure InvalidateBuffers;
   public
     constructor Create(AStream: TStream; AOwnsStream: Boolean = False); virtual;
@@ -513,9 +521,9 @@ type
     FCodePage: Word;
   protected
     function InternalGetNextChar(S: TStream; out Ch: UCS4): Boolean; override;
-    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: Longint): Longint; override;
+    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
     function InternalSetNextChar(S: TStream; Ch: UCS4): Boolean; override;
-    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: Longint): Longint; override;
+    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
   public
     constructor Create(AStream: TStream; AOwnsStream: Boolean = False); override;
     property CodePage: Word read FCodePage write FCodePage;
@@ -524,9 +532,9 @@ type
   TJclUTF8Stream = class(TJclStringStream)
   protected
     function InternalGetNextChar(S: TStream; out Ch: UCS4): Boolean; override;
-    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: Longint): Longint; override;
+    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
     function InternalSetNextChar(S: TStream; Ch: UCS4): Boolean; override;
-    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: Longint): Longint; override;
+    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
   public
     constructor Create(AStream: TStream; AOwnsStream: Boolean = False); override;
   end;
@@ -534,9 +542,9 @@ type
   TJclUTF16Stream = class(TJclStringStream)
   protected
     function InternalGetNextChar(S: TStream; out Ch: UCS4): Boolean; override;
-    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: Longint): Longint; override;
+    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
     function InternalSetNextChar(S: TStream; Ch: UCS4): Boolean; override;
-    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: Longint): Longint; override;
+    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
   public
     constructor Create(AStream: TStream; AOwnsStream: Boolean = False); override;
   end;
@@ -547,15 +555,16 @@ type
   private
     FCodePage: Word;
     FEncoding: TJclStringEncoding;
+    procedure SetCodePage(Value: Word);
   protected
     function InternalGetNextChar(S: TStream; out Ch: UCS4): Boolean; override;
-    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: Longint): Longint; override;
+    function InternalGetNextBuffer(S: TStream; var Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
     function InternalSetNextChar(S: TStream; Ch: UCS4): Boolean; override;
-    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: Longint): Longint; override;
+    function InternalSetNextBuffer(S: TStream; const Buffer: TUCS4Array; Start, Count: SizeInt): Longint; override;
   public
     constructor Create(AStream: TStream; AOwnsStream: Boolean = False); override;
     function SkipBOM: LongInt; override;
-    property CodePage: Word read FCodePage write FCodePage;
+    property CodePage: Word read FCodePage write SetCodePage;
     property Encoding: TJclStringEncoding read FEncoding;
   end;
 
@@ -578,8 +587,8 @@ function CompareFiles(const FileA, FileB: TFileName; BufferSize: Longint = Strea
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStreams.pas $';
-    Revision: '$Revision: 3582 $';
-    Date: '$Date: 2011-08-14 10:56:32 +0200 (dim., 14 août 2011) $';
+    Revision: '$Revision: 3773 $';
+    Date: '$Date: 2012-04-08 18:49:18 +0200 (dim., 08 avr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1536,11 +1545,10 @@ begin
   CurrPos := Position;
   repeat
   until ReadAnsiChar = #0;
-  StrSize := Position - CurrPos - 1;
-  SetLength(Result, StrSize);
-  Position := CurrPos;
-  ReadBuffer(Result[1], StrSize * SizeOf(Result[1]));
-  Position := Position + 1;
+  StrSize := Position - CurrPos;                       // Get number of bytes
+  SetLength(Result, StrSize div SizeOf(AnsiChar) - 1); // Set number of chars without #0
+  Position := CurrPos;                                 // Seek to start read
+  ReadBuffer(Result[1], StrSize);                      // Read ansi data and #0
 end;
 
 function TJclEasyStream.ReadCWideString: WideString;
@@ -1551,11 +1559,10 @@ begin
   CurrPos := Position;
   repeat
   until ReadWideChar = #0;
-  StrSize := Position - CurrPos - 1;
-  SetLength(Result, StrSize);
-  Position := CurrPos;
-  ReadBuffer(Result[1], StrSize * SizeOf(Result[1]));
-  Position := Position + 1;
+  StrSize := Position - CurrPos;                       // Get number of bytes
+  SetLength(Result, StrSize div SizeOf(WideChar) - 1); // Set number of chars without #0
+  Position := CurrPos;                                 // Seek to start read
+  ReadBuffer(Result[1], StrSize);                      // Read wide data and #0
 end;
 
 function TJclEasyStream.ReadShortString: string;
@@ -2362,7 +2369,7 @@ begin
 end;
 
 function TJclStringStream.InternalGetNextBuffer(S: TStream;
-  var Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  var Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 var
   Ch: UCS4;
 begin
@@ -2383,7 +2390,7 @@ begin
 end;
 
 function TJclStringStream.InternalSetNextBuffer(S: TStream;
-  const Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  const Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   // override to optimize
   Result := 0;
@@ -2848,7 +2855,7 @@ begin
 end;
 
 function TJclAnsiStream.InternalGetNextBuffer(S: TStream;
-  var Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  var Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   if FCodePage = CP_ACP then
     Result := AnsiGetNextBufferFromStream(S, Buffer, Start, Count)
@@ -2865,7 +2872,7 @@ begin
 end;
 
 function TJclAnsiStream.InternalSetNextBuffer(S: TStream;
-  const Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  const Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   if FCodePage = CP_ACP then
     Result := AnsiSetNextBufferToStream(S, Buffer, Start, Count)
@@ -2894,7 +2901,7 @@ begin
 end;
 
 function TJclUTF8Stream.InternalGetNextBuffer(S: TStream;
-  var Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  var Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   Result := UTF8GetNextBufferFromStream(S, Buffer, Start, Count);
 end;
@@ -2905,7 +2912,7 @@ begin
 end;
 
 function TJclUTF8Stream.InternalSetNextBuffer(S: TStream;
-  const Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  const Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   Result := UTF8SetNextBufferToStream(S, Buffer, Start, Count);
 end;
@@ -2928,7 +2935,7 @@ begin
 end;
 
 function TJclUTF16Stream.InternalGetNextBuffer(S: TStream;
-  var Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  var Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   Result := UTF16GetNextBufferFromStream(S, Buffer, Start, Count);
 end;
@@ -2939,7 +2946,7 @@ begin
 end;
 
 function TJclUTF16Stream.InternalSetNextBuffer(S: TStream;
-  const Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  const Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   Result := UTF16SetNextBufferToStream(S, Buffer, Start, Count);
 end;
@@ -3021,7 +3028,7 @@ begin
 end;
 
 function TJclAutoStream.InternalGetNextBuffer(S: TStream;
-  var Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  var Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   case FCodePage of
     CP_UTF8:
@@ -3050,7 +3057,7 @@ begin
 end;
 
 function TJclAutoStream.InternalSetNextBuffer(S: TStream;
-  const Buffer: TUCS4Array; Start, Count: Integer): Longint;
+  const Buffer: TUCS4Array; Start, Count: SizeInt): Longint;
 begin
   case FCodePage of
     CP_UTF8:
@@ -3076,6 +3083,21 @@ begin
   else
     Result := AnsiSetNextCharToStream(S, CodePage, Ch);
   end;
+end;
+
+procedure TJclAutoStream.SetCodePage(Value: Word);
+begin
+  if Value = CP_UTF8 then
+    FEncoding := seUTF8
+  else
+  if Value = CP_UTF16LE then
+    FEncoding := seUTF16
+  else
+  if Value = CP_ACP then
+    FEncoding := seAnsi
+  else
+    FEncoding := seAuto;
+  FCodePage := Value;
 end;
 
 function TJclAutoStream.SkipBOM: LongInt;

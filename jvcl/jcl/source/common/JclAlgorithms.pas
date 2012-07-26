@@ -29,8 +29,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3437                                                                     $ }
+{ Last modified: $Date:: 2012-02-24 12:23:03 +0100 (ven., 24 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3746                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -123,26 +123,126 @@ function WideStrSimpleHashConvertI(const AString: WideString): Integer;
 function UnicodeStrSimpleHashConvertI(const AString: UnicodeString): Integer;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
+type
+  // Hash Function
+  // Result must be in 0..Range-1
+  TJclHashToRangeFunction = function(Key, Range: Integer): Integer;
+
+function JclSimpleHashToRange(Key, Range: Integer): Integer;
+
 // move array algorithms
+procedure FinalizeArrayBeforeMove(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArray(var List: TDynIInterfaceArray; FromIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArrayAfterMove(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+
 procedure MoveArray(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure FinalizeArrayBeforeMove(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArray(var List: TDynAnsiStringArray; FromIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArrayAfterMove(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+
 procedure MoveArray(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure FinalizeArrayBeforeMove(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArray(var List: TDynWideStringArray; FromIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArrayAfterMove(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+
 procedure MoveArray(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
 {$IFDEF SUPPORTS_UNICODE_STRING}
+
+procedure FinalizeArrayBeforeMove(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArray(var List: TDynUnicodeStringArray; FromIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArrayAfterMove(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+
 procedure MoveArray(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
 {$ENDIF SUPPORTS_UNICODE_STRING}
+procedure InitializeArrayAfterMove(var List: TDynSingleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 procedure MoveArray(var List: TDynSingleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure InitializeArrayAfterMove(var List: TDynDoubleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 procedure MoveArray(var List: TDynDoubleArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure InitializeArrayAfterMove(var List: TDynExtendedArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 procedure MoveArray(var List: TDynExtendedArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure InitializeArrayAfterMove(var List: TDynIntegerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 procedure MoveArray(var List: TDynIntegerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure InitializeArrayAfterMove(var List: TDynCardinalArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 procedure MoveArray(var List: TDynCardinalArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure InitializeArrayAfterMove(var List: TDynInt64Array; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 procedure MoveArray(var List: TDynInt64Array; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure InitializeArrayAfterMove(var List: TDynPointerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 procedure MoveArray(var List: TDynPointerArray; FromIndex, ToIndex, Count: SizeInt); overload;
+procedure InitializeArrayAfterMove(var List: TDynObjectArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 procedure MoveArray(var List: TDynObjectArray; FromIndex, ToIndex, Count: SizeInt); overload;
 
+{$IFDEF GENERIC}
 procedure MoveArray(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$ELSE ~GENERIC}
+{$IFDEF REFCOUNTED}
+procedure FinalizeArrayBeforeMove(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArray(var List: TDynSizeIntArray; FromIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArrayAfterMove(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$ELSE ~REFCOUNTED}
+{$IFDEF ZEROINIT}
+procedure InitializeArrayAfterMove(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$ENDIF ZEROINIT}
+{$ENDIF ~REFCOUNTED}
+procedure MoveArray(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;{$ENDIF ~GENERIC}
 {$IFNDEF FPC}
+{$IFDEF GENERIC}
 procedure MoveArray(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$ELSE ~GENERIC}
+{$IFDEF REFCOUNTED}
+procedure FinalizeArrayBeforeMove(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArray(var List: TDynStringArray; FromIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArrayAfterMove(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$ELSE ~REFCOUNTED}
+{$IFDEF ZEROINIT}
+procedure InitializeArrayAfterMove(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$ENDIF ZEROINIT}
+{$ENDIF ~REFCOUNTED}
+procedure MoveArray(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;{$ENDIF ~GENERIC}
+{$IFDEF GENERIC}
 procedure MoveArray(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;
+{$ELSE ~GENERIC}
+{$IFDEF REFCOUNTED}
+procedure FinalizeArrayBeforeMove(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArray(var List: TDynFloatArray; FromIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+procedure InitializeArrayAfterMove(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$ELSE ~REFCOUNTED}
+{$IFDEF ZEROINIT}
+procedure InitializeArrayAfterMove(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;
+  {$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
+{$ENDIF ZEROINIT}
+{$ENDIF ~REFCOUNTED}
+procedure MoveArray(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;{$ENDIF ~GENERIC}
 {$ENDIF ~FPC}
 
 // Iterate algorithms
@@ -474,8 +574,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAlgorithms.pas $';
-    Revision: '$Revision: 3437 $';
-    Date: '$Date: 2010-12-14 13:11:49 +0100 (mar., 14 déc. 2010) $';
+    Revision: '$Revision: 3746 $';
+    Date: '$Date: 2012-02-24 12:23:03 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -485,18 +585,37 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF COMPILER11_UP}
+  Winapi.Windows,
+  {$ENDIF COMPILER11_UP}
+  {$IFDEF HAS_UNIT_ANSISTRINGS}
+  System.AnsiStrings,
+  {$ENDIF HAS_UNIT_ANSISTRINGS}
+  {$IFDEF UNICODE_RTL_DATABASE}
+  System.Character,
+  {$ENDIF UNICODE_RTL_DATABASE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
+  {$IFDEF COMPILER11_UP}
+  Windows,
+  {$ENDIF COMPILER11_UP}
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
-  JclAnsiStrings, JclStringConversions, JclUnicode,
-  SysUtils;
+  {$IFDEF UNICODE_RTL_DATABASE}
+  Character,
+  {$ENDIF UNICODE_RTL_DATABASE}
+  SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
+  JclAnsiStrings, JclStringConversions, JclUnicode;
 
 function IntfSimpleCompare(const Obj1, Obj2: IInterface): Integer;
 begin
-  if Integer(Obj1) < Integer(Obj2) then
+  if SizeInt(Obj1) < SizeInt(Obj2) then
     Result := -1
   else
-  if Integer(Obj1) > Integer(Obj2) then
+  if SizeInt(Obj1) > SizeInt(Obj2) then
     Result := 1
   else
     Result := 0;
@@ -523,7 +642,7 @@ end;
 // case-insensitive
 function WideStrSimpleCompareI(const Obj1, Obj2: WideString): Integer;
 begin
-  Result := WideCompareText(Obj1, Obj2);
+  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.WideCompareText(Obj1, Obj2);
 end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
@@ -635,10 +754,10 @@ end;
 
 function PtrSimpleCompare(Obj1, Obj2: Pointer): Integer;
 begin
-  if Integer(Obj1) < Integer(Obj2) then
+  if SizeInt(Obj1) < SizeInt(Obj2) then
     Result := -1
   else
-  if Integer(Obj1) > Integer(Obj2) then
+  if SizeInt(Obj1) > SizeInt(Obj2) then
     Result := 1
   else
     Result := 0;
@@ -646,10 +765,10 @@ end;
 
 function SimpleCompare(Obj1, Obj2: TObject): Integer;
 begin
-  if Integer(Obj1) < Integer(Obj2) then
+  if SizeInt(Obj1) < SizeInt(Obj2) then
     Result := -1
   else
-  if Integer(Obj1) > Integer(Obj2) then
+  if SizeInt(Obj1) > SizeInt(Obj2) then
     Result := 1
   else
     Result := 0;
@@ -657,10 +776,10 @@ end;
 
 function IntegerCompare(Obj1, Obj2: TObject): Integer;
 begin
-  if Integer(Obj1) < Integer(Obj2) then
+  if SizeInt(Obj1) < SizeInt(Obj2) then
     Result := -1
   else
-  if Integer(Obj1) > Integer(Obj2) then
+  if SizeInt(Obj1) > SizeInt(Obj2) then
     Result := 1
   else
     Result := 0;
@@ -668,7 +787,7 @@ end;
 
 function IntfSimpleEqualityCompare(const Obj1, Obj2: IInterface): Boolean;
 begin
-  Result := Integer(Obj1) = Integer(Obj2);
+  Result := SizeInt(Obj1) = SizeInt(Obj2);
 end;
 
 // default is case-sensitive
@@ -692,7 +811,7 @@ end;
 // case-insensitive
 function WideStrSimpleEqualityCompareI(const Obj1, Obj2: WideString): Boolean;
 begin
-  Result := WideCompareText(Obj1, Obj2) = 0;
+  Result := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.WideCompareText(Obj1, Obj2) = 0;
 end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
@@ -758,17 +877,21 @@ end;
 
 function PtrSimpleEqualityCompare(Obj1, Obj2: Pointer): Boolean;
 begin
-  Result := Integer(Obj1) = Integer(Obj2);
+  Result := SizeInt(Obj1) = SizeInt(Obj2);
 end;
 
 function SimpleEqualityCompare(Obj1, Obj2: TObject): Boolean;
 begin
-  Result := Integer(Obj1) = Integer(Obj2);
+  Result := SizeInt(Obj1) = SizeInt(Obj2);
 end;
 
 function IntfSimpleHashConvert(const AInterface: IInterface): Integer;
 begin
-  Result := Integer(AInterface) and MaxInt;
+  {$IFDEF CPU32}
+  Result := SizeInt(AInterface) and MaxInt;
+  {$ELSE ~CPU32}
+  Result := (SizeInt(AInterface) xor (SizeInt(AInterface) shr 32)) and MaxInt;
+  {$ENDIF ~CPU32}
 end;
 
 // from "Fast Hashing of Variable-Length Text Strings", Peter K. Pearson, 1990
@@ -828,7 +951,7 @@ end;
 // case-sensitive and UTF8-encoded
 function AnsiStrSimpleHashConvertU(const AString: AnsiString): Integer;
 var
-  I: Integer;
+  I: SizeInt;
   C, IntegerHash: TIntegerHash;
 begin
   IntegerHash.H1 := 0;
@@ -852,7 +975,8 @@ end;
 // case-insensitive and UTF8-encoded
 function AnsiStrSimpleHashConvertUI(const AString: AnsiString): Integer;
 var
-  I, J: Integer;
+  I: SizeInt;
+  J: Integer;
   C, IntegerHash: TIntegerHash;
   CA: TUCS4Array;
 begin
@@ -861,11 +985,19 @@ begin
   IntegerHash.H3 := 2;
   IntegerHash.H4 := 3;
   I := 1;
+  {$IFDEF UNICODE_RTL_DATABASE}
+  SetLength(CA, 1);
+  {$ELSE ~UNICODE_RTL_DATABASE}
   SetLength(CA, 0);
+  {$ENDIF ~UNICODE_RTL_DATABASE}
   while I < Length(AString) do
   begin
     C.C := UTF8GetNextChar(AString, I);
+    {$IFDEF UNICODE_RTL_DATABASE}
+    CA[0] := Ord(TCharacter.ToLower(Chr(C.C)));
+    {$ELSE ~UNICODE_RTL_DATABASE}
     CA := UnicodeCaseFold(C.C);
+    {$ENDIF ~UNICODE_RTL_DATABASE}
     for J := Low(CA) to High(CA) do
     begin
       C.C := CA[J];
@@ -883,7 +1015,7 @@ end;
 // default is case-sensitive
 function WideStrSimpleHashConvert(const AString: WideString): Integer;
 var
-  I: Integer;
+  I: SizeInt;
   C, IntegerHash: TIntegerHash;
 begin
   IntegerHash.H1 := 0;
@@ -907,7 +1039,8 @@ end;
 // case-insensitive
 function WideStrSimpleHashConvertI(const AString: WideString): Integer;
 var
-  I, J: Integer;
+  I: SizeInt;
+  J: Integer;
   C, IntegerHash: TIntegerHash;
   CA: TUCS4Array;
 begin
@@ -915,12 +1048,20 @@ begin
   IntegerHash.H2 := 1;
   IntegerHash.H3 := 2;
   IntegerHash.H4 := 3;
+  {$IFDEF UNICODE_RTL_DATABASE}
+  SetLength(CA, 1);
+  {$ELSE ~UNICODE_RTL_DATABASE}
   SetLength(CA, 0);
+  {$ENDIF ~UNICODE_RTL_DATABASE}
   I := 1;
   while I < Length(AString) do
   begin
     C.C := UTF16GetNextChar(AString, I);
+    {$IFDEF UNICODE_RTL_DATABASE}
+    CA[0] := Ord(TCharacter.ToLower(Chr(C.C)));
+    {$ELSE ~UNICODE_RTL_DATABASE}
     CA := UnicodeCaseFold(C.C);
+    {$ENDIF ~UNICODE_RTL_DATABASE}
     for J := Low(CA) to High(CA) do
     begin
       C.C := CA[J];
@@ -939,7 +1080,7 @@ end;
 // default is case-sensitive
 function UnicodeStrSimpleHashConvert(const AString: UnicodeString): Integer;
 var
-  I: Integer;
+  I: SizeInt;
   C, IntegerHash: TIntegerHash;
 begin
   IntegerHash.H1 := 0;
@@ -963,7 +1104,8 @@ end;
 // case-insensitive
 function UnicodeStrSimpleHashConvertI(const AString: UnicodeString): Integer;
 var
-  I, J: Integer;
+  I: SizeInt;
+  J: Integer;
   C, IntegerHash: TIntegerHash;
   CA: TUCS4Array;
 begin
@@ -971,12 +1113,20 @@ begin
   IntegerHash.H2 := 1;
   IntegerHash.H3 := 2;
   IntegerHash.H4 := 3;
+  {$IFDEF UNICODE_RTL_DATABASE}
+  SetLength(CA, 1);
+  {$ELSE ~UNICODE_RTL_DATABASE}
   SetLength(CA, 0);
+  {$ENDIF ~UNICODE_RTL_DATABASE}
   I := 1;
   while I < Length(AString) do
   begin
     C.C := UTF16GetNextChar(AString, I);
+    {$IFDEF UNICODE_RTL_DATABASE}
+    CA[0] := Ord(TCharacter.ToLower(Chr(C.C)));
+    {$ELSE ~UNICODE_RTL_DATABASE}
     CA := UnicodeCaseFold(C.C);
+    {$ENDIF ~UNICODE_RTL_DATABASE}
     for J := Low(CA) to High(CA) do
     begin
       C.C := CA[J];
@@ -1045,21 +1195,28 @@ end;
 
 function Int64SimpleHashConvert(const AValue: Int64): Integer;
 begin
-  Result := AValue and MaxInt;
+  Result := (AValue xor (AValue shr 32)) and MaxInt;
 end;
 
 function PtrSimpleHashConvert(APtr: Pointer): Integer;
 begin
-  Result := Integer(APtr) and MaxInt;
+  Result := SizeInt(APtr) and MaxInt;
 end;
 
 function SimpleHashConvert(AObject: TObject): Integer;
 begin
-  Result := Integer(AObject) and MaxInt;
+  Result := SizeInt(AObject) and MaxInt;
+end;
+
+function JclSimpleHashToRange(Key, Range: Integer): Integer;
+// return a value between 0 and (Range-1) based on integer-hash Key
+const
+  A = 0.6180339887; // (sqrt(5) - 1) / 2
+begin
+  Result := Trunc(Range * (Frac(Abs(Key * A))));
 end;
 
 procedure FinalizeArrayBeforeMove(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   Assert(Count > 0);
   if FromIndex < ToIndex then
@@ -1079,7 +1236,6 @@ begin
 end;
 
 procedure InitializeArray(var List: TDynIInterfaceArray; FromIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   {$IFDEF FPC}
   while Count > 0 do
@@ -1094,7 +1250,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynIInterfaceArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Keep reference counting working }
   if FromIndex < ToIndex then
@@ -1124,7 +1279,6 @@ begin
 end;
 
 procedure FinalizeArrayBeforeMove(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   Assert(Count > 0);
   if FromIndex < ToIndex then
@@ -1144,7 +1298,6 @@ begin
 end;
 
 procedure InitializeArray(var List: TDynAnsiStringArray; FromIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   {$IFDEF FPC}
   while Count > 0 do
@@ -1159,7 +1312,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynAnsiStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Keep reference counting working }
   if FromIndex < ToIndex then
@@ -1189,7 +1341,6 @@ begin
 end;
 
 procedure FinalizeArrayBeforeMove(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   Assert(Count > 0);
   if FromIndex < ToIndex then
@@ -1209,7 +1360,6 @@ begin
 end;
 
 procedure InitializeArray(var List: TDynWideStringArray; FromIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   {$IFDEF FPC}
   while Count > 0 do
@@ -1224,7 +1374,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynWideStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Keep reference counting working }
   if FromIndex < ToIndex then
@@ -1254,8 +1403,8 @@ begin
 end;
 
 {$IFDEF SUPPORTS_UNICODE_STRING}
+
 procedure FinalizeArrayBeforeMove(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   Assert(Count > 0);
   if FromIndex < ToIndex then
@@ -1275,7 +1424,6 @@ begin
 end;
 
 procedure InitializeArray(var List: TDynUnicodeStringArray; FromIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   {$IFDEF FPC}
   while Count > 0 do
@@ -1290,7 +1438,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynUnicodeStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Keep reference counting working }
   if FromIndex < ToIndex then
@@ -1321,7 +1468,6 @@ end;
 {$ENDIF SUPPORTS_UNICODE_STRING}
 
 procedure InitializeArrayAfterMove(var List: TDynSingleArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1336,7 +1482,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1350,7 +1496,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynDoubleArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1365,7 +1510,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1379,7 +1524,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynExtendedArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1394,7 +1538,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1408,7 +1552,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynIntegerArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1423,7 +1566,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1437,7 +1580,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynCardinalArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1452,7 +1594,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1466,7 +1608,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynInt64Array; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1481,7 +1622,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1495,7 +1636,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynPointerArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1510,7 +1650,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1524,7 +1664,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynObjectArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1539,7 +1678,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1554,7 +1693,6 @@ end;
 
 
 procedure InitializeArrayAfterMove(var List: TDynSizeIntArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1569,7 +1707,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 
@@ -1584,7 +1722,6 @@ end;
 
 {$IFNDEF FPC}
 procedure FinalizeArrayBeforeMove(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   Assert(Count > 0);
   if FromIndex < ToIndex then
@@ -1604,14 +1741,12 @@ begin
 end;
 
 procedure InitializeArray(var List: TDynStringArray; FromIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
 
   Initialize(List[FromIndex], Count);
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynStringArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Keep reference counting working }
   if FromIndex < ToIndex then
@@ -1641,7 +1776,6 @@ begin
 end;
 
 procedure InitializeArrayAfterMove(var List: TDynFloatArray; FromIndex, ToIndex, Count: SizeInt); overload;
-{$IFDEF SUPPORTS_INLINE} inline; {$ENDIF}
 begin
   { Clean array }
   if FromIndex < ToIndex then
@@ -1656,7 +1790,7 @@ begin
     if (FromIndex - ToIndex) < Count then
       FillChar(List[ToIndex + Count], (FromIndex - ToIndex) * SizeOf(List[0]), 0)
     else
-      FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
+     FillChar(List[FromIndex], Count * SizeOf(List[0]), 0);
   end;
 end;
 

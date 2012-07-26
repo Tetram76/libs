@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2012-02-20 19:48:39 +0100 (lun., 20 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3737                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,18 +41,21 @@ uses
   JclPreProcessorContainer1DTemplates;
 
 type
-  (* JCLARRAYSETINT(SELFCLASSNAME, ANCESTORCLASSNAME, COLLECTIONINTERFACENAME, LISTINTERFACENAME,
-                    ARRAYINTERFACENAME, SETINTERFACENAME, INTERFACEADDITIONAL, SECTIONADDITIONAL,
+  (* JCLARRAYSETINT(SELFCLASSNAME, ANCESTORCLASSNAME, BASECONTAINERINTERFACENAME,
+                    FLATCONTAINERINTERFACENAME, COLLECTIONINTERFACENAME, LISTINTERFACENAME,
+                    ARRAYINTERFACENAME, SETINTERFACENAME, EQUALITYCOMPARERINTERFACENAME,
+                    COMPARERINTERFACENAME, INTERFACEADDITIONAL, SECTIONADDITIONAL,
                     COLLECTIONFLAGS, CONSTKEYWORD, PARAMETERNAME, TYPENAME) *)
   TJclArraySetIntParams = class(TJclCollectionInterfaceParams)
   protected
     // function CodeUnit: string; override;
-    function GetInterfaceAdditional: string; override;
   public
     function AliasAttributeIDs: TAllTypeAttributeIDs; override;
   published
     property SelfClassName: string index taArraySetClassName read GetTypeAttribute write SetTypeAttribute stored IsTypeAttributeStored;
     property AncestorClassName: string index taArrayListClassName read GetTypeAttribute write SetTypeAttribute stored False;
+    property BaseContainerInterfaceName: string index taContainerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
+    property FlatContainerInterfaceName: string index taFlatContainerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property CollectionInterfaceName: string index taCollectionInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property EqualityComparerInterfaceName: string index taEqualityComparerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property ComparerInterfaceName: string index taComparerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
@@ -68,7 +71,7 @@ type
   end;
 
  (* JCLARRAYSETIMP(SELFCLASSNAME, COLLECTIONINTERFACENAME, ITRINTERFACENAME, CONSTKEYWORD,
-                   PARAMETERNAME, TYPENAME, DEFAULTVALUE, GETTERNAME) *)
+                   PARAMETERNAME, TYPENAME, DEFAULTVALUE, GETTERFUNCTIONNAME) *)
   TJclArraySetImpParams = class(TJclCollectionImplementationParams)
   protected
     // function CodeUnit: string; override;
@@ -83,7 +86,7 @@ type
     property ParameterName: string index taParameterName read GetTypeAttribute write SetTypeAttribute stored False;
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
     property DefaultValue: string index taDefaultValue read GetTypeAttribute write SetTypeAttribute stored False;
-    property GetterName: string index taGetterName read GetTypeAttribute write SetTypeAttribute stored False;
+    property GetterFunctionName: string index taGetterFunctionName read GetTypeAttribute write SetTypeAttribute stored False;
     property MacroFooter;
   end;
 
@@ -91,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorArraySetsTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3737 $';
+    Date: '$Date: 2012-02-20 19:48:39 +0100 (lun., 20 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -102,7 +105,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclStrings;
 
 procedure RegisterJclContainers;
@@ -116,13 +123,6 @@ end;
 function TJclArraySetIntParams.AliasAttributeIDs: TAllTypeAttributeIDs;
 begin
   Result := [taArraySetClassName];
-end;
-
-function TJclArraySetIntParams.GetInterfaceAdditional: string;
-begin
-  Result := FInterfaceAdditional;
-  if Result = '' then
-    Result := Format('%s %s, %s,', [inherited GetInterfaceAdditional, EqualityComparerInterfaceName, ComparerInterfaceName]);
 end;
 
 //=== { TJclArraySetImpParams } ==============================================

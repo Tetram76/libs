@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2011-10-23 22:35:42 +0200 (dim., 23 oct. 2011)                          $ }
+{ Revision:      $Rev:: 3617                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -68,8 +68,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgLogFrame.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3617 $';
+    Date: '$Date: 2011-10-23 22:35:42 +0200 (dim., 23 oct. 2011) $';
     LogPath: 'JCL\experts\repository\ExceptionDialog';
     Extra: '';
     Data: nil
@@ -98,7 +98,7 @@ begin
 
   Caption := LoadResString(@RsExcDlgLogOptions);
   CheckBoxLogFile.Caption := LoadResString(@RsLogTrace);
-  LabelLogFileName.Caption := LoadResString(@RsFileName);
+  LabelLogFileName.Caption := LoadResString(@RsLogFileName);
   CheckBoxLogInWorkingDirectory.Caption := LoadResString(@RsLogInWorkingDirectory);
   CheckBoxLogInApplicationDirectory.Caption := LoadResString(@RsLogInApplicationDirectory);
   CheckBoxLogInDesktopDirectory.Caption := LoadResString(@RsLogInDesktopDirectory);

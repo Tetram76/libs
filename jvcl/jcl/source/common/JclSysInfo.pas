@@ -50,8 +50,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011)                         $ }
-{ Revision:      $Rev:: 3587                                                                     $ }
+{ Last modified: $Date:: 2012-03-04 19:39:47 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3759                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -73,11 +73,17 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
+  {$IFDEF HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
-  Windows, ActiveX,
-  ShlObj,
+  Winapi.Windows, WinApi.ActiveX, Winapi.ShlObj,
+  {$ENDIF MSWINDOWS}
+  System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Windows, ActiveX, ShlObj,
   {$ENDIF MSWINDOWS}
   Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclResources;
 
 // Environment Variables
@@ -226,7 +232,7 @@ function TerminateApp(ProcessID: DWORD; Timeout: Integer): TJclTerminateAppResul
 
 {$IFDEF MSWINDOWS}
 {.$IFNDEF FPC}
-function GetPidFromProcessName(const ProcessName: string): DWORD;
+function GetPidFromProcessName(const ProcessName: string): THandle;
 function GetProcessNameFromWnd(Wnd: THandle): string;
 function GetProcessNameFromPid(PID: DWORD): string;
 function GetMainAppWndFromPid(PID: DWORD): THandle;
@@ -629,7 +635,7 @@ const
   EINTEL_OSXSAVE   = BIT_27; // OS has enabled features present in EINTEL_XSAVE
   EINTEL_AVX       = BIT_28; // Advanced Vector Extensions
   EINTEL_BIT_29    = BIT_29; // Reserved, do not count on value
-  EINTEL_BIT_30    = BIT_30; // Reserved, do not count on value
+  EINTEL_RDRAND    = BIT_30; // the processor supports the RDRAND instruction.
   EINTEL_BIT_31    = BIT_31; // Always return 0
 
   { Extended Intel 64 Bits Feature Flags }
@@ -1374,8 +1380,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 3587 $';
-    Date: '$Date: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011) $';
+    Revision: '$Revision: 3759 $';
+    Date: '$Date: 2012-03-04 19:39:47 +0100 (dim., 04 mars 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1385,6 +1391,19 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils, System.Math,
+  {$IFDEF MSWINDOWS}
+  Winapi.Messages, Winapi.Winsock, Snmp,
+  {$IFDEF FPC}
+  JwaTlHelp32, JwaPsApi,
+  {$ELSE ~FPC}
+  Winapi.TLHelp32, Winapi.PsApi,
+  JclShell,
+  {$ENDIF ~FPC}
+  JclRegistry, JclWin32,
+  {$ENDIF MSWINDOWS}
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
   Math,
   {$IFDEF MSWINDOWS}
@@ -1397,6 +1416,7 @@ uses
   {$ENDIF ~FPC}
   JclRegistry, JclWin32,
   {$ENDIF MSWINDOWS}
+  {$ENDIF ~HAS_UNITSCOPE}
   Jcl8087, JclIniFiles,
   JclSysUtils, JclFileUtils, JclStrings;
 
@@ -1498,9 +1518,9 @@ function GetEnvironmentVar(const Name: string; out Value: string; Expand: Boolea
 var
   R: DWORD;
 begin
-  R := Windows.GetEnvironmentVariable(PChar(Name), nil, 0);
+  R := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetEnvironmentVariable(PChar(Name), nil, 0);
   SetLength(Value, R);
-  R := Windows.GetEnvironmentVariable(PChar(Name), PChar(Value), R);
+  R := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetEnvironmentVariable(PChar(Name), PChar(Value), R);
   Result := R <> 0;
   if not Result then
     Value := ''
@@ -2847,7 +2867,7 @@ var
   Res: DWORD;
 begin
   Res := 0;
-  Result := SendMessageTimeout(Wnd, WM_NULL, 0, 0, SMTO_ABORTIFHUNG, Timeout, Res) <> 0;
+  Result := SendMessageTimeout(Wnd, WM_NULL, 0, 0, SMTO_ABORTIFHUNG, Timeout, {$IFDEF RTL230_UP}@{$ENDIF}Res) <> 0;
 end;
 
 function GetWindowIcon(Wnd: THandle; LargeIcon: Boolean): HICON;
@@ -2883,6 +2903,8 @@ var
   Size: Integer;
 begin
   Size := GetWindowTextLength(Wnd);
+  if Size = 0 then
+    Size := 1;     // always allocate at least one byte, otherwise PChar(Buffer) returns nil
   SetLength(Buffer, Size);
   // strings always have an additional null character
   Size := GetWindowText(Wnd, PChar(Buffer), Size + 1);
@@ -2937,7 +2959,7 @@ end;
 function GetProcessNameFromWnd(Wnd: THandle): string;
 var
   List: TStringList;
-  PID: DWORD;
+  PID: THandle;
   I: Integer;
 begin
   Result := '';
@@ -2959,7 +2981,7 @@ begin
   end;
 end;
 
-function GetPidFromProcessName(const ProcessName: string): DWORD;
+function GetPidFromProcessName(const ProcessName: string): THandle;
 var
   List: TStringList;
   I: Integer;
@@ -4282,7 +4304,9 @@ function CPUID: TCpuInfo;
   function HasCPUIDInstruction: Boolean;
   const
     ID_FLAG = $200000;
+  {$IFNDEF DELPHI64_TEMPORARY}
   begin
+  {$ENDIF ~DELPHI64_TEMPORARY}
     asm
       {$IFDEF CPU32}
       PUSHFD
@@ -4299,26 +4323,46 @@ function CPUID: TCpuInfo;
       SETNZ   Result
       {$ENDIF CPU32}
       {$IFDEF CPU64}
-      // PUSHFQ
+      {$IFDEF FPC}
+        {$DEFINE DELPHI64_TEMPORARY}
+      {$ENDIF FPC}
+      {$IFDEF DELPHI64_TEMPORARY}
+      PUSHFQ
+      {$ELSE ~DELPHI64_TEMPORARY}
       PUSHFD
+      {$ENDIF ~DELPHI64_TEMPORARY}
       POP     RAX
       MOV     RCX, RAX
       XOR     RAX, ID_FLAG
       AND     RCX, ID_FLAG
       PUSH    RAX
-      // POPFQ
+      {$IFDEF DELPHI64_TEMPORARY}
+      POPFQ
+      {$ELSE ~DELPHI64_TEMPORARY}
       POPFD
-      // PUSHFQ
+      {$ENDIF ~DELPHI64_TEMPORARY}
+      {$IFDEF DELPHI64_TEMPORARY}
+      PUSHFQ
+      {$ELSE ~DELPHI64_TEMPORARY}
       PUSHFD
+      {$ENDIF ~DELPHI64_TEMPORARY}
       POP     RAX
       AND     RAX, ID_FLAG
       XOR     RAX, RCX
       SETNZ   Result
+      {$IFDEF FPC}
+        {$UNDEF DELPHI64_TEMPORARY}
+      {$ENDIF FPC}
       {$ENDIF CPU64}
     end;
+  {$IFNDEF DELPHI64_TEMPORARY}
   end;
+  {$ENDIF ~DELPHI64_TEMPORARY}
+
   procedure CallCPUID(ValueEAX, ValueECX: Cardinal; out ReturnedEAX, ReturnedEBX, ReturnedECX, ReturnedEDX);
+  {$IFNDEF DELPHI64_TEMPORARY}
   begin
+  {$ENDIF ~DELPHI64_TEMPORARY}
     asm
       {$IFDEF CPU32}
       // save context
@@ -4364,7 +4408,9 @@ function CPUID: TCpuInfo;
       POP     RBX
       {$ENDIF CPU64}
     end;
+  {$IFNDEF DELPHI64_TEMPORARY}
   end;
+  {$ENDIF ~DELPHI64_TEMPORARY}
 
   procedure ProcessStandard(var CPUInfo: TCpuInfo; HiVal: Cardinal);
   var

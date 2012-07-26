@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2012-02-23 22:12:12 +0100 (jeu., 23 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3741                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -33,7 +33,11 @@ interface
 {$I jcl.inc}
 
 uses
-  Classes, Forms,
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
+  Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -159,8 +163,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorExcDlgTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3741 $';
+    Date: '$Date: 2012-02-23 22:12:12 +0100 (jeu., 23 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -184,7 +188,7 @@ begin
   FModuleOffset := False;
   FDelayedTrace := True;
   FFormName := 'ExceptionDialog';
-  FFormAncestor := TForm.ClassName;
+  FFormAncestor := 'TForm';
   FLogFile := False;
   FLogFileName := 'ExtractFileName(Application.ExeName) + ''-exception-'' + FormatDateTime(''yyyy-mm-dd'', Date) + ''.log''';
   FAutoSaveWorkingDirectory := False;

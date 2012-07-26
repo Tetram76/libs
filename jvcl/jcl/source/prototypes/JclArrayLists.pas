@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011)                          $ }
-{ Revision:      $Rev:: 3511                                                                     $ }
+{ Last modified: $Date:: 2012-02-24 12:23:03 +0100 (ven., 24 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3746                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -38,7 +38,11 @@ unit JclArrayLists;
 interface
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -47,11 +51,13 @@ uses
 {$I containers\JclContainerCommon.imp}
 {$I containers\JclArrayLists.int}
 {$I containers\JclArrayLists.imp}
+{$I containers\JclAlgorithms.int}
+{$I containers\JclAlgorithms.imp}
 type
   TItrStart = (isFirst, isLast);
 
 (*$JPPLOOP ALLTYPEINDEX ALLTYPECOUNT
-  {$JPPEXPANDMACRO JCLARRAYLISTINT(,,,,,,,,,,,,,,,)}
+  {$JPPEXPANDMACRO JCLARRAYLISTINT(,,,,,,,,,,,,,,,,,,)}
 
   {$JPPEXPANDMACRO JCLARRAYLISTITRINT(,,,,,,,)}
 
@@ -61,20 +67,19 @@ type
 
   TJclArrayIterator<T> = class;
 
-  {$JPPEXPANDMACRO JCLARRAYLISTINT(TJclArrayList<T>,TJclAbstractContainer<T>,IJclCollection<T>,IJclList<T>,IJclArray<T>,IJclIterator<T>,TDynArray, IJclItemOwner<T>\, IJclEqualityComparer<T>\,,
-
+  (*$JPPEXPANDMACRO JCLARRAYLISTINT(TJclArrayList<T>,TJclAbstractContainer<T>,IJclContainer<T>,IJclFlatContainer<T>,IJclCollection<T>,IJclList<T>,IJclArray<T>,IJclIterator<T>,TDynArray,IJclEqualityComparer<T>, IJclItemOwner<T>\,,
 protected
   type
     TDynArray = array of T;
     TArrayIterator = TJclArrayIterator<T>;
-  procedure MoveArray(var List: TDynArray; FromIndex, ToIndex, Count: Integer);,,; AOwnsItems: Boolean,const ,AItem,T,GetItem,SetItem)}
+  {$JPPDEFINE GENERIC}{$JPPEXPANDMACRO MOVEARRAYINT(MoveArray,TDynArray,)},,; AOwnsItems: Boolean,const ,AItem,T,GetItem,SetItem)*)
 
   {$JPPEXPANDMACRO JCLARRAYLISTITRINT(TJclArrayIterator<T>,IJclIterator<T>,IJclList<T>,const ,AItem,T,GetItem,SetItem)}
 
   // E = External helper to compare items for equality
   // GetHashCode is not used
   TJclArrayListE<T> = class(TJclArrayList<T>, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclItemOwner<T>, IJclEqualityComparer<T>,
+    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclContainer<T>, IJclItemOwner<T>, IJclEqualityComparer<T>,
     IJclCollection<T>, IJclList<T>, IJclArray<T>)
   private
     FEqualityComparer: IJclEqualityComparer<T>;
@@ -91,7 +96,7 @@ protected
 
   // F = Function to compare items for equality
   TJclArrayListF<T> = class(TJclArrayList<T>, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclItemOwner<T>, IJclEqualityComparer<T>,
+    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclContainer<T>, IJclItemOwner<T>, IJclEqualityComparer<T>,
     IJclCollection<T>, IJclList<T>, IJclArray<T>)
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
@@ -102,7 +107,7 @@ protected
 
   // I = Items can compare themselves to others
   TJclArrayListI<T: IEquatable<T>> = class(TJclArrayList<T>, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclItemOwner<T>, IJclEqualityComparer<T>,
+    IJclIntfCloneable, IJclCloneable, IJclPackable, IJclGrowable, IJclBaseContainer, IJclContainer<T>, IJclItemOwner<T>, IJclEqualityComparer<T>,
     IJclCollection<T>, IJclList<T>, IJclArray<T>)
   protected
     function CreateEmptyContainer: TJclAbstractContainerBase; override;
@@ -118,8 +123,8 @@ protected
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclArrayLists.pas $';
-    Revision: '$Revision: 3511 $';
-    Date: '$Date: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011) $';
+    Revision: '$Revision: 3746 $';
+    Date: '$Date: 2012-02-24 12:23:03 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -129,10 +134,14 @@ const
 implementation
 
 uses
+  {$IFDEF SUPPORTNAMESPACES}
+  System.SysUtils;
+  {$ELSE}
   SysUtils;
+  {$ENDIF}
 
 (*$JPPLOOP TRUETYPEINDEX TRUETYPECOUNT
-{$JPPEXPANDMACRO JCLARRAYLISTIMP(,,,,,,,,,,,,,)}
+{$JPPEXPANDMACRO JCLARRAYLISTIMP(,,,,,,,,,,,,,,)}
 
 {$JPPEXPANDMACRO JCLARRAYLISTITRIMP(,,,,,,,)}
 
@@ -140,43 +149,11 @@ uses
 {$IFDEF SUPPORTS_GENERICS}
 //DOM-IGNORE-BEGIN
 
-{$JPPEXPANDMACRO JCLARRAYLISTIMP(TJclArrayList<T>,; AOwnsItems: Boolean,AOwnsItems,IJclCollection<T>,IJclIterator<T>,TArrayIterator,IJclList<T>,const ,AItem,GetItem,SetItem,FreeItem,T,Default(T))}
+{$JPPEXPANDMACRO JCLARRAYLISTIMP(TJclArrayList<T>,; AOwnsItems: Boolean,AOwnsItems,IJclCollection<T>,IJclIterator<T>,TArrayIterator,IJclList<T>,MoveArray,const ,AItem,GetItem,SetItem,FreeItem,T,Default(T))}
+
+{$JPPDEFINE GENERIC}{$JPPEXPANDMACRO MOVEARRAYIMP(MoveArray,TDynArray,Default(T),TJclArrayList<T>.,)}
 
 {$JPPEXPANDMACRO JCLARRAYLISTITRIMP(TJclArrayIterator<T>,IJclIterator<T>,IJclList<T>,const ,AItem,T,GetItem,SetItem)}
-
-procedure TJclArrayList<T>.MoveArray(var List: TDynArray; FromIndex, ToIndex, Count: Integer);
-var
-  I: Integer;
-begin
-  if FromIndex < ToIndex then
-  begin
-    for I := Count - 1 downto 0 do
-      List[ToIndex + I] := List[FromIndex + I];
-
-    if (ToIndex - FromIndex) < Count then
-      // overlapped source and target
-      for I := 0 to ToIndex - FromIndex - 1 do
-        List[FromIndex + I] := Default(T)
-    else
-      // independant
-      for I := 0 to Count - 1 do
-        List[FromIndex + I] := Default(T);
-  end
-  else
-  begin
-    for I := 0 to Count - 1 do
-      List[ToIndex + I] := List[FromIndex + I];
-
-    if (FromIndex - ToIndex) < Count then
-      // overlapped source and target
-      for I := Count - FromIndex + ToIndex to Count - 1 do
-        List[FromIndex + I] := Default(T)
-    else
-      // independant
-      for I := 0 to Count - 1 do
-        List[FromIndex + I] := Default(T);
-  end; 
-end;
 
 //=== { TJclArrayListE<T> } ==================================================
 

@@ -1,7 +1,7 @@
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-20 21:02:31 +0200 (mer., 20 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3379                                                                     $ }
+{ Last modified: $Date:: 2012-04-09 20:15:40 +0200 (lun., 09 avr. 2012)                          $ }
+{ Revision:      $Rev:: 3775                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -11,7 +11,6 @@ program JediInstaller;
 {$I jcl.inc}
 
 uses
-  Forms,
   JclInstall in 'JclInstall.pas',
   JediInstall in 'JediInstall.pas',
   JediInstallConfigIni in 'JediInstallConfigIni.pas',
@@ -32,7 +31,5 @@ uses
 {$R ..\source\windows\JclCommCtrlAsInvoker.res}
 
 begin
-  Application.Initialize;
-  Application.Title := 'JEDI Installer';
   InstallCore.Execute;
 end.

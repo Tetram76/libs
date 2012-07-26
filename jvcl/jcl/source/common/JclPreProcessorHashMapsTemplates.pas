@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2012-02-24 12:27:42 +0100 (ven., 24 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3747                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,12 +41,13 @@ uses
   JclPreProcessorContainer2DTemplates;
 
 type
-  (* JCLHASHMAPTYPESINT(ENTRYTYPENAME, BUCKETTYPENAME, KEYTYPENAME, VALUETYPENAME) *)
+  (* JCLHASHMAPTYPESINT(ENTRYTYPENAME, ENTRYARRAYTYPENAME, BUCKETTYPENAME, KEYTYPENAME, VALUETYPENAME) *)
   TJclHashMapTypeIntParams = class(TJclMapInterfaceParams)
   public
     function AliasAttributeIDs: TAllTypeAttributeIDs; override;
   published
     property EntryTypeName: string index maHashMapEntryTypeName read GetMapAttribute write SetMapAttribute stored IsMapAttributeStored;
+    property EntryArrayTypeName: string index maHashMapEntryArrayTypeName read GetMapAttribute write SetMapAttribute stored IsMapAttributeStored;
     property BucketTypeName: string index maHashMapBucketTypeName read GetMapAttribute write SetMapAttribute stored IsMapAttributeStored;
     property KeyTypeName: string index kaKeyTypeName read GetKeyAttribute write SetKeyAttribute stored False;
     property ValueTypeName: string index vaValueTypeName read GetValueAttribute write SetValueAttribute stored False;
@@ -79,9 +80,10 @@ type
     property ValueTypeName;
   end;
 
-  (* JCLHASHMAPTYPESIMP(BUCKETTYPENAME, KEYDEFAULT, VALUEDEFAULT) *)
+  (* JCLHASHMAPTYPESIMP(ENTRYARRAYTYPENAME, BUCKETTYPENAME, KEYDEFAULT, VALUEDEFAULT) *)
   TJclHashMapTypeImpParams = class(TJclMapImplementationParams)
   published
+    property EntryArrayTypeName: string index maHashMapEntryArrayTypeName read GetMapAttribute write SetMapAttribute stored False;
     property BucketTypeName: string index maHashMapBucketTypeName read GetMapAttribute write SetMapAttribute stored False;
     property KeyDefault: string index kaKeyDefaultValue read GetKeyAttribute write SetKeyAttribute stored False;
     property ValueDefault: string index vaValueDefaultValue read GetValueAttribute write SetValueAttribute stored False;
@@ -133,8 +135,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorHashMapsTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3747 $';
+    Date: '$Date: 2012-02-24 12:27:42 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -144,7 +146,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclStrings;
 
 procedure RegisterJclContainers;
@@ -172,7 +178,7 @@ end;
 function TJclHashMapIntParams.GetComparisonSectionAdditional: string;
 begin
   Result := '';
-  if AncestorName <> MapInfo.KeyTypeInfo.TypeAttributes[taBaseContainer] then
+  if AncestorName <> MapInfo.KeyTypeInfo.TypeAttributes[taBaseContainerClassName] then
   begin
     Result := Format('%s  function Hash(%s%s: %s): Integer;',
                      [Result, MapInfo.KeyTypeInfo.TypeAttributes[taConstKeyword],

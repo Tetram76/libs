@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011)                          $ }
-{ Revision:      $Rev:: 3511                                                                     $ }
+{ Last modified: $Date:: 2012-02-24 12:27:42 +0100 (ven., 24 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3747                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -52,26 +52,29 @@ type
     taAliasCondition,
     taDefaultValue,
     taConstKeyword,
-    taOwnershipParameter,
+    taOwnershipParameterName,
     taOwnershipInterfaceName,
     taOwnershipInterfaceGUID,
-    taReleaserName,
+    taReleaserFunctionName,
     taReleaseEventName,
     taReleaseEventTypeName,
-    taGetterName,
-    taSetterName,
+    taGetterFunctionName,
+    taSetterProcedureName,
     taParameterName,
     taDynArrayTypeName,
-    taArrayName,
-    taBaseContainer,
-    taBaseCollection,
+    taMoveArrayProcedureName,
+    taArrayPropertyName,
+    taBaseContainerClassName,
+    taBaseCollectionClassName,
+    taIterateProcedureTypeName,
     taIterateProcedureName,
-    taApplyFunctionName,
-    taCompareFunctionName,
+    taApplyFunctionTypeName,
+    taApplyProcedureName,
+    taCompareFunctionTypeName,
     taSimpleCompareFunctionName,
-    taEqualityCompareFunctionName,
+    taEqualityCompareFunctionTypeName,
     taSimpleEqualityCompareFunctionName,
-    taHashConvertFunctionName,
+    taHashConvertFunctionTypeName,
     taSimpleHashConvertFunctionName,
     taContainerInterfaceName,
     taContainerInterfaceGUID,
@@ -97,7 +100,15 @@ type
     taCollectionInterfaceGUID,
     taListInterfaceName,
     taListInterfaceGUID,
+    taSortProcedureTypeName,
     taSortProcedureName,
+    taQuickSortProcedureName,
+    taFindFunctionName,
+    taCountObjectFunctionName,
+    taCopyProcedureName,
+    taGenerateProcedureName,
+    taFillProcedureName,
+    taReverseProcedureName,
     taArrayInterfaceName,
     taArrayInterfaceGUID,
     taArrayListClassName,
@@ -110,6 +121,9 @@ type
     taSetInterfaceName,
     taSetInterfaceGUID,
     taArraySetClassName,
+    taHashSetBucketTypeName,
+    taHashSetClassName,
+    taHashSetIteratorClassName,
     taTreeIteratorInterfaceName,
     taTreeIteratorInterfaceGUID,
     taTreeInterfaceName,
@@ -129,7 +143,7 @@ type
     taStackClassName,
     // attributes for 2-D containers (maps)
     kaKeyTypeName,
-    kaKeyOwnershipParameter,
+    kaKeyOwnershipParameterName,
     kaKeyConstKeyword,
     kaKeyParameterName,
     kaKeyDefaultValue,
@@ -141,7 +155,7 @@ type
     kaKeySetInterfaceName,
     kaKeyArraySetClassName,
     vaValueTypeName,
-    vaValueOwnershipParameter,
+    vaValueOwnershipParameterName,
     vaValueConstKeyword,
     vaValueDefaultValue,
     vaValueSimpleCompareFunctionName,
@@ -156,9 +170,11 @@ type
     maSortedMapInterfaceGUID,
     maMapAncestorClassName,
     maHashMapEntryTypeName,
+    maHashMapEntryArrayTypeName,
     maHashMapBucketTypeName,
     maHashMapClassName,
     maSortedMapEntryTypeName,
+    maSortedMapEntryArrayTypeName,
     maSortedMapClassName);
   TAllTypeAttributeIDs = set of TAllTypeAttributeID;
 
@@ -207,26 +223,29 @@ const
       {AliasCondition} (IsGUID: False; DefaultValue: ''),
       {DefaultValue} (IsGUID: False; DefaultValue: ''),
       {ConstKeyword} (IsGUID: False; DefaultValue: ''),
-      {OwnershipParameter} (IsGUID: False; DefaultValue: ''),
+      {OwnershipParameterName} (IsGUID: False; DefaultValue: ''),
       {OwnershipInterfaceName} (IsGUID: False; DefaultValue: 'IJcl%sOwner'),
       {OwnershipInterfaceGUID} (IsGUID: True; DefaultValue: ''),
-      {ReleaserName} (IsGUID: False; DefaultValue: 'Free%s'),
+      {ReleaserFunctionName} (IsGUID: False; DefaultValue: 'Free%s'),
       {ReleaseEventName} (IsGUID: False; DefaultValue: 'OnFree%s'),
       {ReleaseEventTypeName} (IsGUID: False; DefaultValue: 'TFree%sEvent'),
-      {GetterName} (IsGUID: False; DefaultValue: 'Get%s'),
-      {SetterName} (IsGUID: False; DefaultValue: 'Set%s'),
+      {GetterFunctionName} (IsGUID: False; DefaultValue: 'Get%s'),
+      {SetterProcedureName} (IsGUID: False; DefaultValue: 'Set%s'),
       {ParameterName} (IsGUID: False; DefaultValue: 'A%s'),
       {DynArrayTypeName} (IsGUID: False; DefaultValue: 'TDyn%sArray'),
-      {ArrayName} (IsGUID: False; DefaultValue: '%ss'),
-      {BaseContainer} (IsGUID: False; DefaultValue: ''),
-      {BaseCollection} (IsGUID: False; DefaultValue: ''),
-      {IterateProcedureName} (IsGUID: False; DefaultValue: 'T%sIterateFunction'),
-      {ApplyFunctionName} (IsGUID: False; DefaultValue: 'T%sApplyFunction'),
-      {CompareFunctionName} (IsGUID: False; DefaultValue: 'T%sCompareFunction'),
+      {MoveArrayProcedureName} (IsGUID: False; DefaultValue: 'MoveArray'),
+      {ArrayParameterName} (IsGUID: False; DefaultValue: '%ss'),
+      {BaseContainerClassName} (IsGUID: False; DefaultValue: ''),
+      {BaseCollectionClassName} (IsGUID: False; DefaultValue: ''),
+      {IterateProcedureTypeName} (IsGUID: False; DefaultValue: 'T%sIterateFunction'),
+      {IterateProcedureName} (IsGUID: False; DefaultValue: 'Iterate'),
+      {ApplyFunctionTypeName} (IsGUID: False; DefaultValue: 'T%sApplyFunction'),
+      {ApplyProcedureName} (IsGUID: False; DefaultValue: 'Apply'),
+      {CompareFunctionTypeName} (IsGUID: False; DefaultValue: 'T%sCompareFunction'),
       {SimpleCompareFunctionName} (IsGUID: False; DefaultValue: '%sSimpleCompare'),
-      {EqualityCompareFunctionName} (IsGUID: False; DefaultValue: 'T%sEqualityCompare'),
+      {EqualityCompareFunctionTypeName} (IsGUID: False; DefaultValue: 'T%sEqualityCompare'),
       {SimpleEqualityCompareFunctionName} (IsGUID: False; DefaultValue: '%sSimpleCompare'),
-      {HashConvertFunctionName} (IsGUID: False; DefaultValue: 'T%sHashConvert'),
+      {HashConvertFunctionTypeName} (IsGUID: False; DefaultValue: 'T%sHashConvert'),
       {SimpleHashConvertFunctionName} (IsGUID: False; DefaultValue: '%sSimpleHashConvert'),
       {ContainerInterfaceName} (IsGUID: False; DefaultValue: ''),
       {ContainerInterfaceGUID} (IsGUID: True; DefaultValue: ''),
@@ -252,12 +271,19 @@ const
       {CollectionInterfaceGUID} (IsGUID: True; DefaultValue: ''),
       {ListInterfaceName} (IsGUID: False; DefaultValue: 'IJcl%sList'),
       {ListInterfaceGUID} (IsGUID: True; DefaultValue: ''),
-      {SortProcedureName} (IsGUID: False; DefaultValue: 'T%sSortProc'),
+      {SortProcedureTypeName} (IsGUID: False; DefaultValue: 'T%sSortProc'),
+      {SortProcedureName} (IsGUID: False; DefaultValue: 'Sort'),
+      {QuickSortProcedureName} (IsGUID: False; DefaultValue: 'QuickSort'),
+      {FindFunctionName} (IsGUID: False; DefaultValue: 'Find'),
+      {CountObjectFunctionName} (IsGUID: False; DefaultValue: 'CountObject'),
+      {CopyProcedureName} (IsGUID: False; DefaultValue: 'Copy'),
+      {GenerateProcedureName} (IsGUID: False; DefaultValue: 'Generate'),
+      {FillProcedureName} (IsGUID: False; DefaultValue: 'Fill'),
+      {ReverseProcedureName} (IsGUID: False; DefaultValue: 'Reverse'),
       {ArrayInterfaceName} (IsGUID: False; DefaultValue: 'IJcl%sArray'),
       {ArrayInterfaceGUID} (IsGUID: True; DefaultValue: ''),
       {ArrayListClassName} (IsGUID: False; DefaultValue: 'TJcl%sArrayList'),
       {ArrayIteratorClassName} (IsGUID: False; DefaultValue: 'TJcl%sArrayIterator'),
-      {ArrayListClassName} (IsGUID: False; DefaultValue: 'TJcl%sArraySet'),
       {LinkedListItemTypeName} (IsGUID: False; DefaultValue: 'TJcl%sLinkedListItem'),
       {LinkedListClassName} (IsGUID: False; DefaultValue: 'TJcl%sLinkedList'),
       {LinkedListIteratorClassName} (IsGUID: False; DefaultValue: 'TJcl%sLinkedListIterator'),
@@ -265,6 +291,10 @@ const
       {VectorIteratorClassName} (IsGUID: False; DefaultValue: 'TJcl%sVectorIterator'),
       {SetInterfaceName} (IsGUID: False; DefaultValue: 'IJcl%sSet'),
       {SetInterfaceGUID} (IsGUID: True; DefaultValue: ''),
+      {ArraySetClassName} (IsGUID: False; DefaultValue: 'TJcl%sArraySet'),
+      {HashSetBucketTypeName} (IsGUID: False; DefaultValue: 'TJcl%sHashSetBucket'),
+      {HashSetClassName} (IsGUID: False; DefaultValue: 'TJcl%sHashSet'),
+      {HashSetIteratorClassName} (IsGUID: False; DefaultValue: 'TJcl%sHashSetIterator'),
       {TreeIteratorInterfaceName} (IsGUID: False; DefaultValue: 'IJcl%sTreeIterator'),
       {TreeIteratorInterfaceGUID} (IsGUID: True; DefaultValue: ''),
       {TreeInterfaceName} (IsGUID: False; DefaultValue: 'IJcl%sTree'),
@@ -285,26 +315,26 @@ const
 
   KeyAttributeInfos: array [TKeyAttributeID] of TTypeAttributeID =
     ( {KeyTypeName} taTypeName,
-      {KeyOwnershipParameter} taOwnershipParameter,
+      {KeyOwnershipParameterName} taOwnershipParameterName,
       {KeyConstKeyword} taConstKeyword,
       {KeyParameterName} taParameterName,
       {KeyDefaultValue} taDefaultValue,
       {KeySimpleCompareFunctionName} taSimpleCompareFunctionName,
       {KeySimpleEqualityCompareFunctionName} taSimpleEqualityCompareFunctionName,
       {KeySimpleHashConvertFunctionName} taSimpleHashConvertFunctionName,
-      {KeyBaseContainerClassName} taBaseContainer,
+      {KeyBaseContainerClassName} taBaseContainerClassName,
       {KeyIteratorInterfaceName} taIteratorInterfaceName,
       {KeySetInterfaceName} taSetInterfaceName,
       {KeyArraySetClassName} taArraySetClassName);
 
   ValueAttributeInfos: array [TValueAttributeID] of TTypeAttributeID =
     ( {ValueTypeName} taTypeName,
-      {ValueOwnershipParameter} taOwnershipParameter,
+      {ValueOwnershipParameterName} taOwnershipParameterName,
       {ValueConstKeyword} taConstKeyword,
       {ValueDefaultValue} taDefaultValue,
       {ValueSimpleCompareFunctionName} taSimpleCompareFunctionName,
       {ValueSimpleEqualityCompareFunctionName} taSimpleEqualityCompareFunctionName,
-      {ValueBaseContainerClassName} taBaseContainer,
+      {ValueBaseContainerClassName} taBaseContainerClassName,
       {ValueCollectionInterfaceName} taCollectionInterfaceName,
       {ValueArrayListClassName} taArrayListClassName);
 
@@ -316,9 +346,11 @@ const
       {SortedMapInterfaceGUID} (IsGUID: True; DefaultValue: ''),
       {MapAncestorClassName} (IsGUID: False; DefaultValue: 'TJclContainer'),
       {HashMapEntryTypeName} (IsGUID: False; DefaultValue: 'TJcl%s%sHashEntry'),
+      {HashMapEntryArrayTypeName} (IsGUID: False; DefaultValue: 'TJcl%s%sHashEntryArray'),
       {HashMapBucketTypeName} (IsGUID: False; DefaultValue: 'TJcl%s%sHashBucket'),
       {HashMapClassName} (IsGUID: False; DefaultValue: 'TJcl%s%sHashMap'),
       {SortedMapEntryTypeName} (IsGUID: False; DefaultValue: 'TJcl%s%sSortedEntry'),
+      {SortedMapEntryArrayTypeName} (IsGUID: False; DefaultValue: 'TJcl%s%sSortedEntryArray'),
       {SortedMapClassName} (IsGUID: False; DefaultValue: 'TJcl%s%sSortedMap') );
 
 type
@@ -372,8 +404,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorContainerTypes.pas $';
-    Revision: '$Revision: 3511 $';
-    Date: '$Date: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011) $';
+    Revision: '$Revision: 3747 $';
+    Date: '$Date: 2012-02-24 12:27:42 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

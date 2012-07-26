@@ -20,9 +20,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-30 18:34:45 +0100 (jeu., 30 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3453                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -33,7 +33,11 @@ interface
 {$I jcl.inc}
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -63,8 +67,8 @@ function ApplyTemplate(const Template: string; const Params: TJclTemplateParams)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorTemplates.pas $';
-    Revision: '$Revision: 3453 $';
-    Date: '$Date: 2010-12-30 18:34:45 +0100 (jeu., 30 déc. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -74,8 +78,13 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
   TypInfo,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclStrings, JclSysUtils;
 
 //=== { TJclTemplateParams } =================================================

@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2012-02-23 21:46:07 +0100 (jeu., 23 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3740                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,16 +42,16 @@ uses
 
 type
   (* JCLQUEUEINT(SELFCLASSNAME, QUEUEINTERFACENAME, ANCESTORCLASSNAME, DYNARRAYTYPENAME,
-                 INTERFACEADDITIONAL, SECTIONADDITIONAL, OWNERSHIPDECLARATION,
-                 CONSTKEYWORD, PARAMETERNAME, TYPENAME) *)
+                 EQUALITYCOMPARERINTERFACENAME, INTERFACEADDITIONAL, SECTIONADDITIONAL,
+                 OWNERSHIPDECLARATION, CONSTKEYWORD, PARAMETERNAME, TYPENAME) *)
   TJclQueueIntParams = class(TJclClassInterfaceParams)
   protected
     // function CodeUnit: string; override;
-    function GetInterfaceAdditional: string; override;
   public
     function AliasAttributeIDs: TAllTypeAttributeIDs; override;
   published
     property SelfClassName: string index taQueueClassName read GetTypeAttribute write SetTypeAttribute stored IsTypeAttributeStored;
+    property BaseContainerInterfaceName: string index taContainerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property QueueInterfaceName: string index taQueueInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property AncestorClassName;
     property DynArrayTypeName: string index taDynArrayTypeName read GetTypeAttribute write SetTypeAttribute stored False;
@@ -64,8 +64,8 @@ type
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
   end;
 
-  (* JCLQUEUEIMP(SELFCLASSNAME, OWNERSHIPDECLARATION, OWNERSHIPPARAMETER,
-                 CONSTKEYWORD, PARAMETERNAME, TYPENAME, DEFAULTVALUE, RELEASERNAME) *)
+  (* JCLQUEUEIMP(SELFCLASSNAME, OWNERSHIPDECLARATION, OWNERSHIPPARAMETERNAME, MOVEARRAYPROCEDURENAME,
+                 CONSTKEYWORD, PARAMETERNAME, TYPENAME, DEFAULTVALUE, RELEASERFUNCTIONNAME) *)
   TJclQueueImpParams = class(TJclClassImplementationParams)
   protected
     // function CodeUnit: string; override;
@@ -75,12 +75,13 @@ type
   published
     property SelfClassName: string index taQueueClassName read GetTypeAttribute write SetTypeAttribute stored False;
     property OwnershipDeclaration;
-    property OwnershipParameter: string index taOwnershipParameter read GetTypeAttribute write SetTypeAttribute stored False;
+    property OwnershipParameterName: string index taOwnershipParameterName read GetTypeAttribute write SetTypeAttribute stored False;
+    property MoveArrayProcedureName: string index taMoveArrayProcedureName read GetTypeAttribute write SetTypeAttribute stored False;
     property ConstKeyword: string index taConstKeyword read GetTypeAttribute write SetTypeAttribute stored False;
     property ParameterName: string index taParameterName read GetTypeAttribute write SetTypeAttribute stored False;
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
     property DefaultValue: string index taDefaultValue read GetTypeAttribute write SetTypeAttribute stored False;
-    property ReleaserName: string index taReleaserName read GetTypeAttribute write SetTypeAttribute stored False;
+    property ReleaserFunctionName: string index taReleaserFunctionName read GetTypeAttribute write SetTypeAttribute stored False;
     property MacroFooter;
   end;
 
@@ -88,8 +89,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorQueuesTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3740 $';
+    Date: '$Date: 2012-02-23 21:46:07 +0100 (jeu., 23 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -99,7 +100,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclStrings;
 
 procedure RegisterJclContainers;
@@ -113,13 +118,6 @@ end;
 function TJclQueueIntParams.AliasAttributeIDs: TAllTypeAttributeIDs;
 begin
   Result := [taQueueClassName];
-end;
-
-function TJclQueueIntParams.GetInterfaceAdditional: string;
-begin
-  Result := FInterfaceAdditional;
-  if Result = '' then
-    Result := Format('%s %s,', [inherited GetInterfaceAdditional, EqualityComparerInterfaceName]);
 end;
 
 //=== { TJclQueueImpParams } =================================================

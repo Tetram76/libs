@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-08-14 10:54:24 +0200 (dim., 14 août 2011)                        $ }
-{ Revision:      $Rev:: 3581                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2012-03-02 07:30:10 +0100 (ven., 02 mars 2012)                          $ }
+{ Revision:      $Rev:: 3754                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -127,11 +127,13 @@ resourcestring
   RsENotABcbProject             = '%s not a C++Builder project source file';
   RsENoSupportedPersonality     = 'No personalities supported';
   RsEDualPackageNotSupported    = 'This installation of %s doesn''t support dual packages';
-  RsEx64PlatformNotValid        = 'This installation cannot generate binaries for Win64';
-  RsEPlatformNotValid           = 'This installation cannot generate binaries for unknown target';
+  RsEWin64PlatformNotValid      = 'This installation cannot generate binaries for Win64';
+  RsEOSXPlatformNotValid        = 'This installation cannot generate binaries for OSX';
+  RsEPlatformNotValid           = 'This installation cannot generate binaries for an unknown platform';
   {$IFDEF MSWINDOWS}
   RsENoOpenHelp                 = 'open help not present in Borland Developer Studio';
   {$ENDIF MSWINDOWS}
+  RsERsVars                     = 'Query of RsVars for %s %d reported the following error "%s"';
 
 //=== JclMsBuild.pas =========================================================
 resourcestring
@@ -168,8 +170,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclDevToolsResources.pas $';
-    Revision: '$Revision: 3581 $';
-    Date: '$Date: 2011-08-14 10:54:24 +0200 (dim., 14 août 2011) $';
+    Revision: '$Revision: 3754 $';
+    Date: '$Date: 2012-03-02 07:30:10 +0100 (ven., 02 mars 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

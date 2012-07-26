@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-08-07 11:44:18 +0200 (sam., 07 août 2010)                         $ }
-{ Revision:      $Rev:: 3279                                                                     $ }
+{ Last modified: $Date:: 2012-01-22 23:54:36 +0100 (dim., 22 janv. 2012)                         $ }
+{ Revision:      $Rev:: 3702                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -34,7 +34,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclOtaUtils, JclProjectAnalyzerFrm;
+  JclOtaUtils, JclOtaActions, JclProjectAnalyzerFrm;
 
 type
   TJclProjectAnalyzerExpert = class(TJclOTAExpert)
@@ -95,8 +95,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/projectanalyzer/JclProjectAnalyzerImpl.pas $';
-    Revision: '$Revision: 3279 $';
-    Date: '$Date: 2010-08-07 11:44:18 +0200 (sam., 07 août 2010) $';
+    Revision: '$Revision: 3702 $';
+    Date: '$Date: 2012-01-22 23:54:36 +0100 (dim., 22 janv. 2012) $';
     LogPath: 'JCL\experts\projectanalyser';
     Extra: '';
     Data: nil
@@ -378,7 +378,7 @@ begin
         if Assigned(Items[I].Action) then
           FBuildAction.Category := TContainedAction(Items[I].Action).Category;
         FBuildAction.ActionList := IDEActionList;
-        RegisterAction(FBuildAction);
+        TJclOTAActionExpert.RegisterAction(FBuildAction);
         FBuildMenuItem := TMenuItem.Create(nil);
         FBuildMenuItem.Name := JclProjectAnalyzeMenuName;
         FBuildMenuItem.Action := FBuildAction;
@@ -407,7 +407,7 @@ begin
   {$ENDIF BDS4_UP}
   {$ENDIF ~BDS7_UP}
 
-  UnregisterAction(FBuildAction);
+  TJclOTAActionExpert.UnregisterAction(FBuildAction);
   FreeAndNil(FBuildMenuItem);
   FreeAndNil(FBuildAction);
 end;
