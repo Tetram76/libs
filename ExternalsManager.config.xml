@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
 <config>
   <TempFolder>.\temp</TempFolder>
-  <SVNExePath/>
+  <SVNExePath>C:\Program Files\TortoiseSVN\bin</SVNExePath>
   <LogFolder/>
   <externals>
     <external Name="JCL" Kind="ekVendorBranch">
@@ -211,6 +211,24 @@
       <VendorBranchOptions SourceKind="eskSVN">
         <BaseURL>http://synedit.svn.sourceforge.net/svnroot/synedit</BaseURL>
         <VendorPath>/vendors/synedit</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="VirtualTreeView" Kind="ekVendorBranch">
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\virtual-treeview</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/virtual-treeview</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://virtual-treeview.googlecode.com/svn</BaseURL>
+        <VendorPath>/vendors/virtual-treeview</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
       </VendorBranchOptions>
