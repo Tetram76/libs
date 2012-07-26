@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvParameterListParameter.pas 13297 2012-05-10 19:21:47Z jfudickar $
 
 unit JvParameterListParameter;
 
@@ -34,7 +34,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Classes, SysUtils, StdCtrls, ExtCtrls, Graphics, Forms,
   Controls, FileCtrl, Dialogs, ComCtrls, Buttons, Variants,
-  JvPanel, JvPropertyStore, JvParameterList, JvDynControlEngine, JvDSADialogs,
+  JvPanel, JvParameterList, JvDynControlEngine, JvDSADialogs,
   JvDynControlEngineIntf, ActnList;
 
 type
@@ -140,12 +140,10 @@ type
   published
     /// The searchname of the afterparameter.
     /// The afterparameter will positioned behind the edit control.
-    property AfterParameterName: string read FAfterParameterName write
-      FAfterParameterName;
+    property AfterParameterName: string read FAfterParameterName write FAfterParameterName;
     /// The searchname of the beforeparameter.
     /// The beforeparameter will positioned before the edit control.
-    property BeforeParameterName: string read FBeforeParameterName write
-      FBeforeParameterName;
+    property BeforeParameterName: string read FBeforeParameterName write FBeforeParameterName;
     /// Width of the edit control
     property EditWidth: Integer read FEditWidth write FEditWidth;
     /// Mode how the label and the edit control will be arranged :
@@ -203,7 +201,6 @@ type
   end;
 
   TJvGroupBoxParameter = class(TJvArrangeParameter)
-  private
   protected
     function GetParameterNameExt: string; override;
     procedure ReArrangeGroupbox(Sender: TObject; nLeft, nTop, nWidth, nHeight: Integer);
@@ -444,14 +441,12 @@ type
   end;
 
   TJvListBoxParameter = class(TJvListParameter)
-  private
   protected
     function GetParameterNameExt: string; override;
     procedure CreateWinControl(AParameterParent: TWinControl); override;
     procedure SetWinControlProperties; override;
   public
     procedure Assign(Source: TPersistent); override;
-  published
   end;
 
   TJvCheckListItemDataWrapper = class(TObject)
@@ -652,8 +647,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13297 $';
+    Date: '$Date: 2012-05-10 21:21:47 +0200 (jeu., 10 mai 2012) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1009,8 +1004,7 @@ begin
     FAfterParameterControl := nil;
 end;
 
-procedure TJvBasePanelEditParameter.CreateBeforeParameterControl(
-  AParameterParent: TWinControl);
+procedure TJvBasePanelEditParameter.CreateBeforeParameterControl(AParameterParent: TWinControl);
 var
   BeforeParameter: TJvBaseParameter;
 begin
@@ -1672,9 +1666,7 @@ end;
 procedure TJvComboBoxParameter.GetData;
 begin
   if Assigned(WinControl) then
-    Value := WinControlData
-  else
-    Value := Null;
+    Value := WinControlData;
 end;
 
 procedure TJvComboBoxParameter.SetData;
@@ -2744,9 +2736,7 @@ end;
 procedure TJvCheckComboBoxParameter.GetData;
 begin
   if Assigned(WinControl) then
-    Value := WinControlData
-  else
-    Value := Null;
+    Value := WinControlData;
 end;
 
 procedure TJvCheckComboBoxParameter.SetData;

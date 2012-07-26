@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFGlance.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvTFGlance.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvTFGlance;
 
@@ -758,8 +758,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFGlance.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -767,7 +767,7 @@ const
 implementation
 
 uses
-  JvConsts, JvResources, JclStrings, JvJVCLUtils;
+  JvResources, JclStrings, JvJVCLUtils;
 
 //=== { TJvTFGlanceCell } ====================================================
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageSquare.pas 12845 2010-09-16 20:22:55Z jfudickar $
+// $Id: JvImageSquare.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvImageSquare;
 
@@ -37,6 +37,9 @@ uses
   JvComponent;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvImageSquare = class(TJvGraphicControl)
   private
     FHiColor: TColor;
@@ -103,8 +106,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageSquare.pas $';
-    Revision: '$Revision: 12845 $';
-    Date: '$Date: 2010-09-16 22:22:55 +0200 (jeu., 16 sept. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -165,7 +168,7 @@ begin
   end
   else
   {$IFDEF JVCLThemesEnabled}
-  if (FBorderStyle = bsSingle) and ThemeServices.ThemesEnabled then
+  if (FBorderStyle = bsSingle) and ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     DrawThemedBorder(Self)
   else
   {$ENDIF JVCLThemesEnabled}

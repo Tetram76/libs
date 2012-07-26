@@ -42,12 +42,11 @@ Notes (2003-05-21) // Remko Bonte
   of flickering, best avoid it or set ScrollBars to ssNone.
 * Updated drag image to use with MultiLine.
 -----------------------------------------------------------------------------}
-// $Id: JvListBox.pas 12585 2009-10-29 20:27:56Z ahuser $
+// $Id: JvListBox.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvListBox;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -220,7 +219,7 @@ type
     procedure DoStartDrag(var DragObject: TDragObject); override;
     procedure DragOver(Source: TObject; X, Y: Integer; State: TDragState;
       var Accept: Boolean); override;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     procedure MouseEnter(Control: TControl); override;
     procedure MouseLeave(Control: TControl); override;
     procedure SelectCancel(var Msg: TMessage); message LBN_SELCANCEL;
@@ -304,6 +303,9 @@ type
     property ParentFlat: Boolean read GetParentFlat write SetParentFlat default True;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvListBox = class(TJvCustomListBox)
   public
     property Count;
@@ -390,8 +392,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListBox.pas $';
-    Revision: '$Revision: 12585 $';
-    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu., 29 oct. 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -404,8 +406,7 @@ uses
   Types,
   {$ENDIF COMPILER10_UP}
   RTLConsts,
-  JclBase,
-  JvJCLUtils, JvJVCLUtils, JvConsts, JvCtrls, JvResources;
+  JvJCLUtils, JvJVCLUtils, JvConsts, JvResources;
 
 const
   AlignFlags: array [TAlignment] of DWORD = (DT_LEFT, DT_RIGHT, DT_CENTER);
@@ -473,7 +474,7 @@ begin
   else
   begin
     Result := TObject(ListBox.GetItemData(Index));
-    if Longint(Result) = LB_ERR then
+    if LPARAM(Result) = LPARAM(LB_ERR) then
       Error(SListIndexError, Index);
   end;
 end;
@@ -508,7 +509,7 @@ begin
     if (Index <> -1) and not (ListBox.Style in [lbVirtual, lbVirtualOwnerDraw]) then
     begin
       ListBox.DeselectProvider;
-      ListBox.SetItemData(Index, Longint(AObject));
+      ListBox.SetItemData(Index, LPARAM(AObject));
     end;
   end;
 end;
@@ -893,6 +894,8 @@ begin
   else
     Size := Canvas.TextExtent(S);
   Inc(Size.cx, CLeftMargin);
+  if Size.cy = 0 then // 0 is an invalid size for a ImageList
+    Size.cy := 1;
 
   FDragImage.Width := Size.cx;
   FDragImage.Height := Size.cy;
@@ -1415,7 +1418,7 @@ procedure TJvCustomListBox.LBGetText(var Msg: TMessage);
 begin
   if IsProviderSelected then
   begin
-    if (Msg.WParam >= 0) and (Msg.WParam < ConsumerStrings.Count) then
+    if (LPARAM(Msg.WParam) >= 0) and (Msg.WParam < WPARAM(ConsumerStrings.Count)) then
     begin
       StrCopy(PChar(Msg.LParam), PChar(ConsumerStrings[Msg.WParam]));
       Msg.Result := StrLen(PChar(Msg.LParam));
@@ -1431,7 +1434,7 @@ procedure TJvCustomListBox.LBGetTextLen(var Msg: TMessage);
 begin
   if IsProviderSelected then
   begin
-    if (Msg.WParam >= 0) and (Msg.WParam < ConsumerStrings.Count) then
+    if (LPARAM(Msg.WParam) >= 0) and (Msg.WParam < WPARAM(ConsumerStrings.Count)) then
       Msg.Result := Length(ConsumerStrings[Msg.WParam])
     else
       Msg.Result := LB_ERR;
@@ -1504,7 +1507,7 @@ begin
   InheritedCalled := False;
   if not LimitToClientWidth then
   begin
-    if Msg.WParam < ItemsShowing.Count then
+    if Msg.WParam < WPARAM(ItemsShowing.Count) then
       MeasureString(ItemsShowing[Msg.WParam], 0, LSize)
     else
       LSize.cx := FMaxWidth;
@@ -1515,7 +1518,7 @@ begin
       RemeasureAll;
     end;
   end;
-  if (Msg.WParam < ItemsShowing.Count) and Assigned(FOnDeleteString) then
+  if (Msg.WParam < WPARAM(ItemsShowing.Count)) and Assigned(FOnDeleteString) then
     FOnDeleteString(Self, ItemsShowing.Strings[Msg.WParam]);
   if not InheritedCalled then
     inherited;
@@ -2001,7 +2004,7 @@ begin
   end;
 end;
 
-function TJvCustomListBox.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvCustomListBox.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   if not Background.DoDraw then
     Result := inherited DoEraseBackground(Canvas, Param)
@@ -2119,7 +2122,7 @@ begin
       end;
     LB_DELETESTRING:
       begin
-        if Msg.WParam < ItemsShowing.Count then
+        if Msg.WParam < WPARAM(ItemsShowing.Count) then
           ItemWidth := Canvas.TextWidth(ItemsShowing[Msg.WParam] + ' ')
         else
           ItemWidth := FMaxWidth;

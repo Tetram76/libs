@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCipher.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCipher.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvCipher;
 
@@ -69,18 +69,27 @@ type
     property IsStored: Boolean read GetIsStored write FIsStored default True;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvCaesarCipher = class(TJvCustomCipher)
   public
     procedure Decode(const Key: AnsiString; Buf: PAnsiChar; Size: Cardinal); override;
     procedure Encode(const Key: AnsiString; Buf: PAnsiChar; Size: Cardinal); override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvXORCipher = class(TJvCustomCipher)
   public
     procedure Decode(const Key: AnsiString; Buf: PAnsiChar; Size: Cardinal); override;
     procedure Encode(const Key: AnsiString; Buf: PAnsiChar; Size: Cardinal); override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvVigenereCipher = class(TJvCustomCipher)
   private
     function Trans(Ch: AnsiChar; K: Byte): AnsiChar;
@@ -93,8 +102,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCipher.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

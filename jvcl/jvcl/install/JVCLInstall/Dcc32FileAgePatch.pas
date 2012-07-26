@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Dcc32FileAgePatch.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: Dcc32FileAgePatch.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit Dcc32FileAgePatch;
 
@@ -146,7 +146,7 @@ var
   CFileAge: PCFileAgeRec;
   Count: Integer;
   P, Buffer, EndAddr: PByte;
-  ReadBytes: Cardinal;
+  ReadBytes: {$IFDEF RTL230_UP}NativeUInt{$ELSE}Cardinal{$ENDIF};
   LastBufferSize: Cardinal;
   Base: Cardinal;
 begin

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxGrid.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvControlActionsEngineCxGrid.pas 13099 2011-09-02 21:51:31Z jfudickar $
 
 unit JvControlActionsEngineCxGrid;
 
@@ -63,8 +63,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxGrid.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13099 $';
+    Date: '$Date: 2011-09-02 23:51:31 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -251,6 +251,7 @@ end;
 
 function TJvControlActioncxGridEngine.UpdateAction(Action: TBasicAction): boolean;
 begin
+  Result := Inherited UpdateAction(Action);
   if Assigned(Action) and (Action is TJvControlBaseAction) and
     Assigned(GetGridView(TJvControlBaseAction(Action).ActionComponent)) and (TJvControlBaseAction(Action).ControlOperation = caoCustomizeColumns) then
     TJvControlBaseAction(Action).SetChecked(GetGridView(TJvControlBaseAction(Action).ActionComponent).Controller.Customization);

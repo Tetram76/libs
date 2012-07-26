@@ -38,7 +38,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupTreeView.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvDBLookupTreeView.pas 13272 2012-03-12 15:51:28Z ahuser $
 
 unit JvDBLookupTreeView;
 
@@ -150,6 +150,9 @@ type
 
   TDropDownAlign = (daLeft, daRight, daCenter);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBLookupTreeViewCombo = class(TJvDBLookupControl)
   private
     FDataList: TJvTreePopupDataList;
@@ -316,6 +319,9 @@ type
     function GetPopupText: string; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBLookupTreeView = class(TJvDBLookupControl)
   private
     FTree: TJvDBTreeView;
@@ -446,8 +452,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupTreeView.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13272 $';
+    Date: '$Date: 2012-03-12 16:51:28 +0100 (lun., 12 mars 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -529,6 +535,10 @@ end;
 
 destructor TJvDBLookupControl.Destroy;
 begin
+  // Deregister FreeNotifications
+  DataSource := nil;
+  ListSource := nil;
+
   FListFields.Free;
   FListLink.FDBLookupControl := nil;
   FListLink.Free;
@@ -695,7 +705,7 @@ procedure TJvDBLookupControl.Notification(AComponent: TComponent;
   Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if Operation = opRemove then
+  if (Operation = opRemove) and not (csDestroying in ComponentState) then
   begin
     if (FDataLink <> nil) and (AComponent = DataSource) then
       DataSource := nil;
@@ -851,7 +861,7 @@ end;
 
 procedure TJvDBLookupControl.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Integer(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 //=== { TJvDBLookupTreeViewCombo } ===========================================
@@ -939,7 +949,7 @@ begin
   SetRect(R, W, 0, ClientWidth, ClientHeight);
   {added by zelen}
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if (not FListActive) or (not Enabled) or ReadOnly then
       State := tcDropDownButtonDisabled
@@ -1218,7 +1228,7 @@ begin
       begin
         StopTracking;
         MousePos := PointToSmallPoint(ListPos);
-        SendMessage(FDataList.FTree.Handle, WM_LBUTTONDOWN, 0, LPARAM(MousePos));
+        SendMessage(FDataList.FTree.Handle, WM_LBUTTONDOWN, 0, {$IFDEF RTL230_UP}PointToLParam{$ELSE}LPARAM{$ENDIF RTL230_UP}(MousePos));
         Exit;
       end;
     end;
@@ -1272,7 +1282,7 @@ end;
 
 procedure TJvDBLookupTreeViewCombo.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Integer(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 procedure TJvDBLookupTreeViewCombo.WMCancelMode(var Msg: TMessage);
@@ -1359,7 +1369,6 @@ end;
 
 //=== { TJvPopupTree } =======================================================
 
-{******* from ComCtl98 unit}
   // Jean-Luc Mattei
   // jlucm dott club-internet att fr
 const
@@ -1372,16 +1381,15 @@ const
 
 type
   PNMCustomDrawInfo = ^TNMCustomDrawInfo;
-  TNMCustomDrawInfo = packed record
+  TNMCustomDrawInfo = record
     hdr: TNMHdr;
-    dwDrawStage: Longint;
+    dwDrawStage: DWORD;
     hdc: HDC;
     rc: TRect;
-    dwItemSpec: Longint; // this is control specific, but it's how to specify an item.  valid only with CDDS_ITEM bit set
-    uItemState: Cardinal;
-    lItemlParam: Longint;
+    dwItemSpec: {$IFDEF RTL230_UP}DWORD_PTR{$ELSE}Longint{$ENDIF TRL230_UP}; // this is control specific, but it's how to specify an item.  valid only with CDDS_ITEM bit set
+    uItemState: UINT;
+    lItemlParam: LPARAM;
   end;
-{####### from ComCtl98 unit}
 
 procedure TJvPopupTree.CNNotify(var Msg: TWMNotify);
 begin
@@ -1742,7 +1750,7 @@ begin
     Exit;
   inherited MouseEnter(Control);
   {Windows XP themes use hot track states, hence we have to update the drop down button.}
-  if ThemeServices.ThemesEnabled and not MouseOver and not (csDesigning in ComponentState) then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and not MouseOver and not (csDesigning in ComponentState) then
     Invalidate;
 end;
 
@@ -1750,7 +1758,7 @@ procedure TJvDBLookupTreeViewCombo.MouseLeave(Control: TControl);
 begin
   if csDesigning in ComponentState then
     Exit;
-  if ThemeServices.ThemesEnabled and MouseOver then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and MouseOver then
     Invalidate;
   inherited MouseLeave(Control);
 end;

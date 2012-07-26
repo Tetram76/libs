@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: InstallerConsts.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: InstallerConsts.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit InstallerConsts;
 
@@ -159,7 +159,7 @@ resourcestring
   RsReadReadmeForXPThemingInfo = 'Please read the readme.htm for details about XP theming with Delphi/C++Builder 5 and 6.'#10 +
               'Do you want to open readme.htm ?';
   RsErrorOpeningReadmeHTM = 'Cannot open file readme.htm';
-  RsEditJvclInc = 'Edit jvcl%s%d.inc';
+  RsEditJvclInc = 'Edit %s';
   RsEditJvclIncAll = 'Edit jvcl.inc';
   RsEditJvclIncAllError = 'Options can only be set for a single target, please select a target from the drop down list first.';
   RsJVCLConfigurationError = 'The jvcl.inc files are corrupted.';

@@ -58,7 +58,7 @@ Known Issues and Updates:
                 properly when attached to JvCsvDataset.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCsvData.pas 13014 2011-04-10 17:00:47Z jfudickar $
+// $Id: JvCsvData.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 
 
@@ -819,6 +819,9 @@ type
   end;
 
   // TJvCsvDataSet is just a TJvCustomCsvDataSet with all properties and events exposed:
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvCsvDataSet = class(TJvCustomCsvDataSet)
   public
     property TableName;
@@ -934,8 +937,8 @@ function JvCsvNumCondition(FieldValue: Double; CompareOperator: TJvCsvFilterNumC
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCsvData.pas $';
-    Revision: '$Revision: 13014 $';
-    Date: '$Date: 2011-04-10 19:00:47 +0200 (dim., 10 avr. 2011) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -947,7 +950,7 @@ implementation
 
 uses
   Variants, Controls, Forms,
-  JvJVCLUtils, JvCsvParse, JvConsts, JvResources, JvTypes, JclSysUtils;
+  JvCsvParse, JvConsts, JvResources, JclSysUtils;
 
 const
   // These characters cannot be used for separator for various reasons:
@@ -2442,7 +2445,7 @@ begin
       Move(Buffer^, PDestination[1], Field.DataSize);
     //Result := True; {there is no return value, oops}
     // Notify controls of a field change:
-    DataEvent(deFieldChange, Longint(Field));
+    DataEvent(deFieldChange, NativeInt(Field));
     Exit;
   end;
 
@@ -2598,7 +2601,7 @@ begin
   FFileDirty := True;
 
   // Notify controls of a field change:
-  DataEvent(deFieldChange, Longint(Field));
+  DataEvent(deFieldChange, NativeInt(Field));
 end;
 
 // Removes first and last character of the string (assumes they are quotes,
@@ -2831,7 +2834,7 @@ begin
       SetCsvRowItem(RowPtr, PhysicalLocation, UserString);
       TempString := UserString;
       // Notify controls of a field change:
-      //DataEvent(deFieldChange, LongInt(Field));
+      //DataEvent(deFieldChange, NativeInt(Field));
       // XXX Doesn't do what I needed. left here commented out
       // in case I ever go back and try to get something like this
       // working again.
@@ -4061,7 +4064,7 @@ procedure TJvCustomCsvDataSet.QuickSort(AList: TList; const SortColumns: TArrayO
   ACount: Integer; const SortAscending: array of Boolean);
 begin
   if (AList <> nil) and (AList.Count > 1) then
-    InternalQuickSort(AList.List, 0, AList.Count - 1, SortColumns, ACount, SortAscending);
+    InternalQuickSort({$IFDEF RTL230_UP}@{$ENDIF RTL230_UP}AList.List, 0, AList.Count - 1, SortColumns, ACount, SortAscending);
 end;
 
 procedure TJvCustomCsvDataSet.Sort(const SortFields: string; Ascending: Boolean);
@@ -4327,7 +4330,7 @@ var
 begin
   if (RowIndex >= 0) and (RowIndex < Count) then
   begin
-    if PCsvRow(List^[RowIndex]).Filtered then
+    if PCsvRow(List{$IFNDEF RTL230_UP}^{$ENDIF !RTL230_UP}[RowIndex]).Filtered then
       Dec(FFilteredCount);
     P := Items[RowIndex];
     if P <> nil then
@@ -5734,12 +5737,12 @@ begin
   end;
 end;
 
-function TJvCustomCsvDataSet.Lookup(const KeyFields: string; const KeyValues: Variant; const ResultFields: string):
-    Variant;
+function TJvCustomCsvDataSet.Lookup(const KeyFields: string; const KeyValues: Variant;
+  const ResultFields: string): Variant;
 begin
   Result := Null;
   if LocateRecord(KeyFields, KeyValues, []) then
-      Result := FieldValues[ResultFields];
+    Result := FieldValues[ResultFields];
 end;
 
 {$IFDEF UNITVERSIONING}

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActions.pas 13069 2011-06-19 17:18:06Z jfudickar $
+// $Id: JvDBActions.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvDBActions;
 
@@ -33,10 +33,10 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, ActnList, ImgList, Graphics,
+  Windows, ActnList, Graphics,
   Forms, Controls, Classes, DB,
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXGRID}
-  cxGridCustomTableView, cxDBData,
+  cxGridCustomTableView,
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
   {$IFDEF USE_3RDPARTY_SMEXPORT}
   SMEWIZ, ExportDS, SMEEngine,
@@ -49,6 +49,9 @@ uses
 
 type
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDatabaseActionList = class(TJvActionBaseActionList)
   //The idea of the Action Classes is to work with any databased enabled control.
   //But not all of this controls already have a dataset or datasource control.
@@ -401,7 +404,7 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure SMEWizardDlgGetCellParams(Sender: TObject; Field: TField; var Text: string; AFont: TFont; var Alignment:
+    procedure SMEWizardDlgGetCellParams(Sender: TObject; Field: TField; var Text: TSMEString; AFont: TFont; var Alignment:
         TAlignment; var Background: TColor; var CellType: TCellType);
     procedure SMEWizardDlgOnBeforeExecute(Sender: TObject);
   published
@@ -508,8 +511,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActions.pas $';
-    Revision: '$Revision: 13069 $';
-    Date: '$Date: 2011-06-19 19:18:06 +0200 (dim., 19 juin 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -517,21 +520,17 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo, StrUtils,
+  SysUtils, StrUtils,
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXGRID}
-  cxGrid, cxGridDBDataDefinitions,
+  cxGrid,
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
   {$IFDEF USE_3RDPARTY_SMEXPORT}
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXGRID}
   SMEEngCx,
   {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
-  sme2sql, IniFiles,
+  sme2sql,
   {$ENDIF USE_3RDPARTY_SMEXPORT}
-  {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXGRID}
-  cxCustomData,
-  {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXGRID}
-  JvResources, JvParameterList,
-  JvDSADialogs,
+  JvResources, JvParameterList, JvDSADialogs,
   Variants, Dialogs, StdCtrls, Clipbrd, JvJVCLUtils, JclFileUtils;
 
 function TJvDatabaseActionList.GetDataComponent: TComponent;
@@ -1463,8 +1462,8 @@ begin
     FDefaultOptionsDirectory := PathAddSeparator(FDefaultOptionsDirectory);
 end;
 
-procedure TJvDatabaseSMExportOptions.SMEWizardDlgGetCellParams(Sender: TObject; Field: TField; var Text: String; AFont:
-    TFont; var Alignment: TAlignment; var Background: TColor; var CellType: TCellType);
+procedure TJvDatabaseSMExportOptions.SMEWizardDlgGetCellParams(Sender: TObject; Field: TField; var Text: TSMEString;
+    AFont: TFont; var Alignment: TAlignment; var Background: TColor; var CellType: TCellType);
 const
   SToDateFormatLong = 'TO_DATE(''%s'', ''DD.MM.YYYY HH24:MI:SS'')';
   SToDateFormatShort = 'TO_DATE(''%s'', ''DD.MM.YYYY'')';

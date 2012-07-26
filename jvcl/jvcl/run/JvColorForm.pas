@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvColorForm.pas 13350 2012-06-13 14:54:41Z obones $
 
 unit JvColorForm;
 
@@ -38,8 +38,8 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
   Classes, Graphics, Controls, Forms, Buttons, Dialogs,
-  JvConsts, // missing color constants for D5
-  JvColorBox, JvComponent, JvToolEdit;
+  JvConsts,
+  JvColorBox, JvComponent;
 
 const
   cButtonWidth = 22;
@@ -89,8 +89,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13350 $';
+    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

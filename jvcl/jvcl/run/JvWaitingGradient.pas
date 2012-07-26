@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWaitingGradient.pas 12708 2010-03-09 09:57:37Z obones $
+// $Id: JvWaitingGradient.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvWaitingGradient;
 
@@ -38,6 +38,9 @@ uses
   JvImageDrawThread, JvComponent;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvWaitingGradient = class(TJvGraphicControl)
   private
     FFromLeftToRight: Boolean; { Indicates direction }
@@ -114,8 +117,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWaitingGradient.pas $';
-    Revision: '$Revision: 12708 $';
-    Date: '$Date: 2010-03-09 10:57:37 +0100 (mar., 09 mars 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

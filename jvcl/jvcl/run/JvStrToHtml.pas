@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStrToHtml.pas 13022 2011-05-06 19:35:27Z ahuser $
+// $Id: JvStrToHtml.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvStrToHtml;
 
@@ -38,6 +38,9 @@ uses
   JvComponentBase;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvStrToHtml = class(TJvComponent)
   private
     FHtml: string;
@@ -61,8 +64,8 @@ function CharToHtml(Ch: Char): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStrToHtml.pas $';
-    Revision: '$Revision: 13022 $';
-    Date: '$Date: 2011-05-06 21:35:27 +0200 (ven., 06 mai 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

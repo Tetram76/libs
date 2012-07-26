@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCreateProcess.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvCreateProcess.pas 13336 2012-06-12 15:57:56Z obones $
 
 unit JvCreateProcess;
 
@@ -48,7 +48,7 @@ const
 type
   EJvProcessError = EJVCLException;
 
-  TJvProcessPriority = (ppIdle, ppNormal, ppHigh, ppRealTime);
+  TJvProcessPriority = (ppIdle, ppNormal, ppHigh, ppRealTime, ppBelowNormal, ppAboveNormal);
 
   TJvConsoleOption = (coOwnerData, coRedirect, coSeparateError);
   TJvConsoleOptions = set of TJvConsoleOption;
@@ -141,6 +141,9 @@ type
   end;
   {$M-}
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvCreateProcess = class(TJvComponent)
   private
     FApplicationName: string;
@@ -201,6 +204,7 @@ type
     procedure Run;
     procedure StopWaiting;
     procedure Terminate;
+    procedure TerminateTree;
     function Write(const S: AnsiString): Boolean;
     function WriteLn(const S: AnsiString): Boolean;
     property ProcessInfo: TProcessInformation read FProcessInfo;
@@ -229,8 +233,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCreateProcess.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 13336 $';
+    Date: '$Date: 2012-06-12 17:57:56 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -240,15 +244,19 @@ implementation
 uses
   Math,
   JclStrings,
-  JvJCLUtils, JvJVCLUtils, JvConsts, JvResources;
+  JvJCLUtils, JvJVCLUtils, JvConsts, JvResources, TlHelp32;
 
 const
   CM_READ = WM_USER + 1;
   CM_THREADTERMINATED = WM_USER + 2;
 
+  BELOW_NORMAL_PRIORITY_CLASS = $00004000;
+  ABOVE_NORMAL_PRIORITY_CLASS = $00008000;
+
   //MaxProcessCount = 4096;
   ProcessPriorities: array [TJvProcessPriority] of DWORD =
-    (IDLE_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, REALTIME_PRIORITY_CLASS);
+    (IDLE_PRIORITY_CLASS, NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, REALTIME_PRIORITY_CLASS,
+     BELOW_NORMAL_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS);
 
 type
   { Threads which monitor the created process }
@@ -353,10 +361,9 @@ end;
 
 function IsConsoleWindow(AHandle: THandle): Boolean;
 begin
-  Result := LongWord(GetWindowLong(AHandle, GWL_HINSTANCE)) = WinSrvHandle;
+  Result := THandle(GetWindowLongPtr(AHandle, GWL_HINSTANCE)) = WinSrvHandle;
 end;
 
-function InternalCloseApp(ProcessID: DWORD; UseQuit: Boolean): Boolean;
 type
   PEnumWinRec = ^TEnumWinRec;
   TEnumWinRec = record
@@ -364,26 +371,27 @@ type
     PostQuit: Boolean;
     FoundWin: Boolean;
   end;
+
+function EnumWinProc(Wnd: HWND; Param: PEnumWinRec): BOOL; stdcall;
+var
+  PID, TID: DWORD;
+begin
+  TID := GetWindowThreadProcessId(Wnd, @PID);
+  if PID = Param.ProcessID then
+  begin
+    if Param.PostQuit then
+      PostThreadMessage(TID, WM_QUIT, 0, 0)
+    else
+    if IsWindowVisible(Wnd) or IsConsoleWindow(Wnd) then
+      PostMessage(Wnd, WM_CLOSE, 0, 0);
+    Param.FoundWin := True;
+  end;
+  Result := True;
+end;
+
+function InternalCloseApp(ProcessID: DWORD; UseQuit: Boolean): Boolean;
 var
   EnumWinRec: TEnumWinRec;
-
-  function EnumWinProc(Wnd: HWND; Param: PEnumWinRec): BOOL; stdcall;
-  var
-    PID, TID: DWORD;
-  begin
-    TID := GetWindowThreadProcessId(Wnd, @PID);
-    if PID = Param.ProcessID then
-    begin
-      if Param.PostQuit then
-        PostThreadMessage(TID, WM_QUIT, 0, 0)
-      else
-      if IsWindowVisible(Wnd) or IsConsoleWindow(Wnd) then
-        PostMessage(Wnd, WM_CLOSE, 0, 0);
-      Param.FoundWin := True;
-    end;
-    Result := True;
-  end;
-
 begin
   EnumWinRec.ProcessID := ProcessID;
   EnumWinRec.PostQuit := UseQuit;
@@ -400,6 +408,53 @@ begin
   OSCheck(ProcessHandle <> 0);
   Result := TerminateProcess(ProcessHandle, 0);
   CloseHandle(ProcessHandle);
+end;
+
+type
+ TProcessArray = array of DWORD;
+
+function InternalTerminateProcessTree(ProcessID: DWORD): Boolean;
+
+  function GetChildrenProcesses(const Process: DWORD; const IncludeParent: Boolean): TProcessArray;
+  var
+    Snapshot: Cardinal;
+    ProcessList: PROCESSENTRY32;
+    Current: Integer;
+  begin
+    Current := 0;
+    SetLength(Result, 1);
+    Result[0] := Process;
+    repeat
+      ProcessList.dwSize := SizeOf(PROCESSENTRY32);
+      Snapshot := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+      if (Snapshot = INVALID_HANDLE_VALUE) or not Process32First(Snapshot, ProcessList) then
+        Continue;
+      repeat
+        if ProcessList.th32ParentProcessID = Result[Current] then
+        begin
+          SetLength(Result, Length(Result) + 1);
+          Result[Length(Result) - 1] := ProcessList.th32ProcessID;
+        end;
+      until Process32Next(Snapshot, ProcessList) = False;
+      Inc(Current);
+    until Current >= Length(Result);
+    if not IncludeParent then
+      Result := Copy(Result, 2, Length(Result));
+  end;
+
+var
+  Handle: THandle;
+  List: TProcessArray;
+  I: Integer;
+begin
+  Result := True;
+  List := GetChildrenProcesses(ProcessID, True);
+  for I := Length(List) - 1 downto 0 do
+    if Result then
+    begin
+      Handle := OpenProcess(PROCESS_TERMINATE, false, List[I]);
+      Result := (Handle <> 0) and TerminateProcess(Handle, 0) and CloseHandle(Handle);
+    end;
 end;
 
 function SafeCloseHandle(var H: THandle): Boolean;
@@ -583,6 +638,10 @@ begin
           Result := ppHigh;
         REALTIME_PRIORITY_CLASS:
           Result := ppRealTime;
+        BELOW_NORMAL_PRIORITY_CLASS:
+          Result := ppBelowNormal;
+        ABOVE_NORMAL_PRIORITY_CLASS:
+          Result := ppAboveNormal;
       else
         Result := ppNormal;
       end;
@@ -613,6 +672,10 @@ begin
       Result := RsHigh;
     ppRealTime:
       Result := RsRealTime;
+    ppBelowNormal:
+      Result := RsBelowNormal;
+    ppAboveNormal:
+      Result := RsAboveNormal;
   end;
 end;
 
@@ -1347,6 +1410,12 @@ procedure TJvCreateProcess.Terminate;
 begin
   CheckRunning;
   InternalTerminateProcess(FProcessInfo.dwProcessId);
+end;
+
+procedure TJvCreateProcess.TerminateTree;
+begin
+  CheckRunning;
+  InternalTerminateProcessTree(FProcessInfo.dwProcessId);
 end;
 
 procedure TJvCreateProcess.TerminateWaitThread;

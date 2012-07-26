@@ -35,7 +35,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSimLogic.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvSimLogic.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvSimLogic;
 
@@ -80,6 +80,9 @@ type
   TJvConPos = (jcpTL, jcpTR, jcpBR, jcpBL);
   TJvConShape = (jcsTLBR, jcsTRBL);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSIMConnector = class(TGraphicControl)
   private
     FMdp: TPoint;
@@ -137,6 +140,9 @@ type
 
   TJvLogicGates = array [0..5] of TJvGate;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvLogic = class(TGraphicControl)
   private
     FDoMove: Boolean;
@@ -189,6 +195,9 @@ type
 
   TJvSimReverseGates = array [0..3] of TJvGate;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSimReverse = class(TGraphicControl)
   private
     FDoMove: Boolean;
@@ -228,6 +237,9 @@ type
     property Output3: Boolean read FOutput3 write SetOutput3;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSimButton = class(TGraphicControl)
   private
     FDoMove: Boolean;
@@ -255,6 +267,9 @@ type
     property Down: Boolean read FDown write SetDown;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSimLight = class(TGraphicControl)
   private
     FDoMove: Boolean;
@@ -297,6 +312,9 @@ type
     procedure Paint; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSimLogicBox = class(TGraphicControl)
   private
     FCpu: TTimer;
@@ -332,8 +350,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimLogic.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

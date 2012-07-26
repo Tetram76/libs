@@ -23,12 +23,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvToolBar.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvToolBar.pas 13155 2011-11-06 12:31:20Z ahuser $
 
 unit JvToolBar;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -38,10 +37,12 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, CommCtrl, SysUtils, Classes, Graphics, Controls,
   Forms, ComCtrls, Menus,
-  JclBase,
-  JvTypes, JvMenus, JvExComCtrls;
+  JvMenus, JvExComCtrls;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvToolBar = class(TJvExToolBar)
   private
     FChangeLink: TJvMenuChangeLink;
@@ -75,16 +76,13 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolBar.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13155 $';
+    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
-
-uses
-  JvJVCLUtils;
 
 constructor TJvToolBar.Create(AOwner: TComponent);
 begin

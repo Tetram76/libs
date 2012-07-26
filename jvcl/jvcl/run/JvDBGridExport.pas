@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridExport.pas 12548 2009-10-03 17:30:21Z ahuser $
+// $Id: JvDBGridExport.pas 13230 2012-02-24 16:30:12Z obones $
 
 unit JvDBGridExport;
 
@@ -121,6 +121,9 @@ type
     function GetFieldValue(const Field: TField): Variant; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBGridWordExport = class(TJvCustomDBGridOleExport)
   private
     FWord: OleVariant;
@@ -147,6 +150,9 @@ type
     property Orientation: TWordOrientation read FOrientation write FOrientation default woPortrait;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBGridExcelExport = class(TJvCustomDBGridOleExport)
   private
     FExcel: OleVariant;
@@ -185,6 +191,9 @@ type
     {$ENDIF UNICODE}
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBGridHTMLExport = class(TJvCustomDBGridTextExport)
   private
     FDocument: TStrings;
@@ -215,6 +224,9 @@ type
     property DocTitle: string read FDocTitle write FDocTitle;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBGridCSVExport = class(TJvCustomDBGridTextExport)
   private
     FDocument: TStrings;
@@ -247,6 +259,9 @@ type
     property QuoteEveryTime: Boolean read FQuoteEveryTime write FQuoteEveryTime default True;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBGridXMLExport = class(TJvCustomDBGridTextExport)
   private
     FXML: TJvSimpleXML;
@@ -258,6 +273,9 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    // accessible so that people can set options prior export (prolog in particular)
+    property XML: TJvSimpleXML read FXML;
   published
     property FileName;
     property Caption;
@@ -273,8 +291,8 @@ procedure GetWordGridFormatValues(Proc: TGetStrProc);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGridExport.pas $';
-    Revision: '$Revision: 12548 $';
-    Date: '$Date: 2009-10-03 19:30:21 +0200 (sam., 03 oct. 2009) $';
+    Revision: '$Revision: 13230 $';
+    Date: '$Date: 2012-02-24 17:30:12 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -835,7 +853,7 @@ var
      ('SOFTWARE\Microsoft\Windows\CurrentVersion\FontSubstitutes',
       'SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes');
   begin
-    Result := RegReadStringDef(HKEY_LOCAL_MACHINE,
+    Result := RegReadStringDef(HKLM,
       cFontKey[Win32Platform = VER_PLATFORM_WIN32_NT], Name, Name);
   end;
 

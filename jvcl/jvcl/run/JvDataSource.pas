@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataSource.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDataSource.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvDataSource;
 
@@ -34,6 +34,9 @@ uses
   SysUtils, Classes, JvDataSourceIntf, DB, DBConsts;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDataSource = class(TDataSource, IJvDataSource, IJvDataSourceConnectorHandler)
   private
     FDataLink: TDataLink;

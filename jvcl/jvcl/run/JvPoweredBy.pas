@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPoweredBy.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPoweredBy.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvPoweredBy;
 
@@ -61,6 +61,9 @@ type
   // In a sense this component is silly :-). By using it the JVCL gets used.
   // Therefore it gets an exception from the MPL rule of mentioning the JVCL if using a JVCL component.
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvPoweredByJCL = class(TJvPoweredBy)
   public
     constructor Create(AOwner: TComponent); override;
@@ -95,6 +98,9 @@ type
     property OnStartDrag;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvPoweredByJVCL = class(TJvPoweredBy)
   public
     constructor Create(AOwner: TComponent); override;
@@ -133,8 +139,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPoweredBy.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

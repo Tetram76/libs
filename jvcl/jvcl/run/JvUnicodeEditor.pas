@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvUnicodeEditor.pas 12829 2010-09-03 21:25:36Z ahuser $
+// $Id: JvUnicodeEditor.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvUnicodeEditor;
 
@@ -163,6 +163,9 @@ type
     property OnCompletionApply: TOnCompletionApplyW read FOnCompletionApply write FOnCompletionApply;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvWideEditor = class(TJvCustomWideEditor)
   published
     property BeepOnError;
@@ -276,8 +279,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUnicodeEditor.pas $';
-    Revision: '$Revision: 12829 $';
-    Date: '$Date: 2010-09-03 23:25:36 +0200 (ven., 03 sept. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -285,8 +288,8 @@ const
 implementation
 
 uses
-  Consts, RTLConsts, SysUtils, Math, Graphics, Clipbrd,
-  JvUnicodeCanvas, JvJCLUtils, JvThemes, JvConsts, JvResources;
+  SysUtils, Math, Graphics, Clipbrd,
+  JvUnicodeCanvas, JvJCLUtils, JvConsts, JvResources;
 
 type
   TJvInsertUndo = class(TJvCaretUndo)
@@ -2246,7 +2249,7 @@ procedure TJvOverwriteUndo.Undo;
 var
   OldText, NewText: WideString;
   EndX, EndY: Integer;
-  du: TJvOverwriteUndo;
+  OverwriteUndo: TJvOverwriteUndo;
 begin
   OldText := '';
   NewText := '';
@@ -2261,11 +2264,11 @@ begin
         Break;
     end;
     Inc(FPtr);
-    du := TJvOverwriteUndo(Items[FPtr]);
+    OverwriteUndo := TJvOverwriteUndo(Items[FPtr]);
   end;
-  with du do
+  with OverwriteUndo do
   begin
-    GetEndPosCaretW(NewText, du.CaretX, du.CaretY, EndX, EndY); // get end caret position
+    GetEndPosCaretW(NewText, CaretX, CaretY, EndX, EndY); // get end caret position
     GetEditor.FLines.DeleteText(CaretX, CaretY, EndX, EndY);
     GetEditor.FLines.InsertText(CaretX, CaretY, OldText);
     GetEditor.TextModified(CaretX, CaretY, maReplace, OldText);

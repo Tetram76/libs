@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionInfo.pas 13083 2011-07-06 22:34:37Z jfudickar $
+// $Id: JvVersionInfo.pas 13303 2012-06-02 20:25:06Z jfudickar $
 
 unit JvVersionInfo;
 
@@ -143,7 +143,7 @@ const
 implementation
 
 uses
-  JvJCLUtils;
+  JclFileUtils, JvJCLUtils;
 
 constructor TJvVersionInfo.Create(const AFileName: string);
 begin

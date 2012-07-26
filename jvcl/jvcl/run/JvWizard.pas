@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizard.pas 12919 2010-11-27 23:25:41Z ahuser $
+// $Id: JvWizard.pas 13139 2011-10-28 19:59:40Z jfudickar $
 
 {+---------------------------------------------------------------------------+
  | CONTRIBUTORS:                                                             |
@@ -757,6 +757,9 @@ type
   end;
 
   { JvWizard Control }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvWizard = class(TJvCustomControl)
   private
     FPages: TJvWizardPageList;
@@ -876,8 +879,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizard.pas $';
-    Revision: '$Revision: 12919 $';
-    Date: '$Date: 2010-11-28 00:25:41 +0100 (dim., 28 nov. 2010) $';
+    Revision: '$Revision: 13139 $';
+    Date: '$Date: 2011-10-28 21:59:40 +0200 (ven., 28 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

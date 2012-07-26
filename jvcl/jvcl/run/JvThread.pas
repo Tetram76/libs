@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThread.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvThread.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvThread;
 
@@ -37,6 +37,9 @@ uses
   JvTypes, JvComponentBase, JvComponent;
 
 type
+  // TThreadPriority has been marked platform and we don't want the warning
+  {$IFDEF RTL230_UP}{$IFDEF MSWINDOWS}{$WARNINGS OFF}TThreadPriority = Classes.TThreadPriority;{$WARNINGS ON}{$ENDIF RTL230_UP}{$ENDIF MSWINDOWS}
+
   TJvCustomThreadDialog = class;
   TJvCustomThreadDialogForm = class;
   TJvThread = class;
@@ -214,6 +217,9 @@ type
     property OnException: TJvThreadExceptionEvent read FOnException write FOnException;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvThread = class(TJvComponent)
   private
     FAfterCreateDialogForm: TJvCustomThreadDialogFormEvent;
@@ -234,7 +240,9 @@ type
     FOnCancelExecute: TJvThreadCancelEvent;
     FOnShowMessageDlgEvent: TJvThreadShowMessageDlgEvent;
     FOnException: TJvThreadExceptionEvent;
+    {$IFDEF MSWINDOWS}
     FPriority: TThreadPriority;
+    {$ENDIF MSWINDOWS}
     FThreadDialog: TJvCustomThreadDialog;
     FThreadDialogAllowed: Boolean;
     FThreadDialogForm: TJvCustomThreadDialogForm;
@@ -292,7 +300,9 @@ type
     procedure EnableDialogShowDelay;
     // Is the delayed showing of the thread dialog disabled
     function IsDialogShowDelayDisabled: Boolean;
+    {$IFDEF MSWINDOWS}
     procedure SetPriority(NewPriority: TThreadPriority); // in context of thread in list - for itself; in other contexts - for all threads in list
+    {$ENDIF MSWINDOWS}
     procedure Resume(BaseThread: TJvBaseThread); overload;
     procedure Resume; overload; // resumes all threads including deferred (RunOnCreate=false)
     procedure Suspend;          // in context of thread in list - for itself; in other contexts - for all threads in list
@@ -307,7 +317,9 @@ type
     property MaxCount: Integer read FMaxCount write FMaxCount;
     property RunOnCreate: Boolean read FRunOnCreate write FRunOnCreate;
     property FreeOnTerminate: Boolean read FFreeOnTerminate write FFreeOnTerminate;
+    {$IFDEF MSWINDOWS}
     property Priority: TThreadPriority read FPriority write FPriority default tpNormal;
+    {$ENDIF MSWINDOWS}
     property ThreadDialog: TJvCustomThreadDialog read FThreadDialog write SetThreadDialog;
     property ThreadName: String read FThreadName write SetThreadName;
     property AfterCreateDialogForm: TJvCustomThreadDialogFormEvent read FAfterCreateDialogForm write FAfterCreateDialogForm;
@@ -325,8 +337,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThread.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -594,7 +606,9 @@ begin
   FFreeOnTerminate := True;
   FThreads := TThreadList.Create;
   FListLocker := TCriticalSection.Create;
+  {$IFDEF MSWINDOWS}
   FPriority := tpNormal;
+  {$ENDIF MSWINDOWS}
   FThreadDialogAllowed := True;
   FDisalbeDialogShowDelayCounter := 0;
 end;
@@ -652,7 +666,9 @@ begin
       BaseThread.FreeOnTerminate := FFreeOnTerminate;
       BaseThread.OnShowMessageDlgEvent := OnShowMessageDlgEvent;
       BaseThread.OnException := OnException;
+      {$IFDEF MSWINDOWS}
       BaseThread.Priority := Priority;
+      {$ENDIF MSWINDOWS}
       BaseThread.OnTerminate := DoTerminate;
       BaseThread.ThreadName := CalcThreadName(Count);
       FThreads.Add(BaseThread);
@@ -1043,6 +1059,7 @@ begin
   end;
 end;
 
+{$IFDEF MSWINDOWS}
 procedure TJvThread.SetPriority(NewPriority: TThreadPriority);
 var
   List: TList;
@@ -1064,6 +1081,7 @@ begin
     FThreads.UnlockList;
   end;
 end;
+{$ENDIF MSWINDOWS}
 
 procedure TJvThread.CreateThreadDialogForm;
 begin

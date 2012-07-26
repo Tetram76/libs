@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHtmlParserEditor.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvHtmlParserEditor.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvHtmlParserEditor;
 
@@ -81,7 +81,7 @@ begin
     if (Dlg.ShowModal = mrOK) or (Dlg.Tag = 0) then
     begin
       Dlg.SaveToStr(Res);
-//      SetOrdValue(Integer(Res));
+//      SetOrdValue(NativeInt(Res));
     end;
   finally
     Dlg.Free;

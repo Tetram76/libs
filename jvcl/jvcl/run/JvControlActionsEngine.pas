@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngine.pas 13011 2011-04-03 14:00:03Z jfudickar $
+// $Id: JvControlActionsEngine.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvControlActionsEngine;
 
@@ -34,7 +34,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF MSWINDOWS}
-  Windows, ActnList, ImgList, Graphics,
+  Windows, Graphics,
   {$ENDIF MSWINDOWS}
   {$IFDEF UNIX}
   QActnList, QWindows, QImgList, QGraphics,
@@ -71,8 +71,8 @@ function RegisteredControlActionEngineList: TJvControlActionEngineList;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngine.pas $';
-    Revision: '$Revision: 13011 $';
-    Date: '$Date: 2011-04-03 16:00:03 +0200 (dim., 03 avr. 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -80,8 +80,8 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo, StrUtils, Variants,
-  Dialogs, StdCtrls, Clipbrd,
+  SysUtils, Variants,
+  Dialogs,
   JvControlActions;
 
 

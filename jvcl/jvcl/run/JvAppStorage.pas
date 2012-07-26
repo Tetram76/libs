@@ -74,7 +74,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorage.pas 13087 2011-07-10 12:05:07Z jfudickar $
+// $Id: JvAppStorage.pas 13306 2012-06-03 20:21:44Z jfudickar $
 
 unit JvAppStorage;
 
@@ -101,7 +101,9 @@ uses
 const
   // (rom) this name is shared in several units and should be made global
   cItem = 'Item';
+  {$NODEFINE cItem}
   cVersionCheckName = 'Version';
+  {$NODEFINE cVersionCheckName}
 
 type
   TJvCustomAppStorage = class;
@@ -701,6 +703,9 @@ type
 
     In the above scheme, both 'HKCU\<path>' as well as 'HKEY_CURRENT_USER'<path>' will link to
     asRegStoreHKCU, ie. HKCU and HKEY_CURRENT_USER are aliases of each other. }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvAppStorage = class(TJvCustomAppStorage)
   protected
     function IsFolderInt(const Path: string; ListIsValue: Boolean = True): Boolean; override;
@@ -860,6 +865,35 @@ type
     property AppStorage: TJvCustomAppStorage read FAppStorage write SetAppStorage;
   end;
 
+
+  TJvAppFileStorageBackupType = (afsbtNone, afsbtCreateBefore, afsbtRenameAfter);
+  TJvAppFileStorageBackupHistoryType = (afsbhtNone, afsbhtAllways, afsbht1Minute, afsbht15Minute, afsbht1Hour, afsbht4Hour,
+        afsbht12Hour, afsbht1Day, afsbht3Day, afsbht1Week, afsbht1Month);
+
+  TJvAppFileStorageOptions = class(TJvCustomAppStorageOptions)
+  private
+    FBackupHistoryCount: Integer;
+    FBackupHistoryType: TJvAppFileStorageBackupHistoryType;
+    FBackupType: TJvAppFileStorageBackupType;
+    FBackupKeepFileAfterFlush: Boolean;
+  public
+    constructor Create; override;
+    procedure Assign(Source: TPersistent); override;
+    //1 Property to define the number of history files which should be preserved
+    property BackupHistoryCount: Integer read FBackupHistoryCount write FBackupHistoryCount default 0;
+    //1 Property to define how often a history file of the backup file should be created
+    property BackupHistoryType: TJvAppFileStorageBackupHistoryType read FBackupHistoryType write FBackupHistoryType default
+        afsbhtNone;
+    //1 Property to define that the backup file should be preserved after the flush has been finished or not
+    property BackupKeepFileAfterFlush: Boolean read FBackupKeepFileAfterFlush write FBackupKeepFileAfterFlush default false;
+    /// Property to define if and how a backup file should be created.
+    /// - None = No Backup
+    /// - CreateBefore = Copy the old file as backup before writing the new file
+    /// - AfterReplace = Write the new file into a tmp file and after writing rename
+    /// the old file as backup and the new as save file
+    property BackupType: TJvAppFileStorageBackupType read FBackupType write FBackupType default afsbtNone;
+  end;
+
   // Base class for all in memory file storage classes.
   // All descendents implement a file storage, but all changes
   // are left in memory until the Flush method is called.
@@ -873,12 +907,21 @@ type
   TJvCustomAppMemoryFileStorage = class(TJvCustomAppStorage)
   private
     FFullFileName: TFileName;
+    function CalculateFullFileName: string;
+    function GetStorageOptions: TJvAppFileStorageOptions;
+    procedure SetFileNameInternal(const Value: TFileName);
+    procedure SetStorageOptions(const Value: TJvAppFileStorageOptions);
   protected
     FFileName: TFileName;
     FLocation: TFileLocation;
     FOnGetFileName: TJvAppStorageGetFileNameEvent;
     FPhysicalReadOnly: Boolean;
     FFileLoaded: Boolean;
+    {$IFDEF DELPHI2005_UP}
+    FFileAge: TDateTime;
+    {$ELSE}
+    FFileAge: Integer;
+    {$ENDIF}
 
     function GetAsString: string; virtual; abstract;
     procedure SetAsString(const Value: string); virtual; abstract;
@@ -896,8 +939,17 @@ type
 
     function GetPhysicalReadOnly: Boolean; override;
     procedure RecalculateFullFileName;
+
+    procedure ClearInternal; virtual; abstract;
+    procedure FlushInternal; virtual; abstract;
+    procedure FlushToFile;
+    { Retrieve the class that holds the storage options and format settings. }
+    class function GetStorageOptionsClass: TJvAppStorageOptionsClass; override;
+    procedure ReloadInternal; virtual; abstract;
+
   public
     constructor Create(AOwner: TComponent); override;
+    procedure Flush; override;
 
     procedure Reload; override;
     function ReloadNeeded: Boolean; override;
@@ -907,6 +959,7 @@ type
     property Location: TFileLocation read FLocation write SetLocation default flExeFile;
   published
     property ReadOnly;
+    property StorageOptions: TJvAppFileStorageOptions read GetStorageOptions write SetStorageOptions;
   end;
 
   { This Engine implements the possibility to implement special property handlers
@@ -939,8 +992,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorage.pas $';
-    Revision: '$Revision: 13087 $';
-    Date: '$Date: 2011-07-10 14:05:07 +0200 (dim., 10 juil. 2011) $';
+    Revision: '$Revision: 13306 $';
+    Date: '$Date: 2012-06-03 22:21:44 +0200 (dim., 03 juin 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -3533,9 +3586,10 @@ begin
   FLocation := flExeFile;
   FPhysicalReadOnly := False;
   FFileLoaded := False;
+  FFileAge := -1;
 end;
 
-procedure TJvCustomAppMemoryFileStorage.RecalculateFullFileName;
+function TJvCustomAppMemoryFileStorage.CalculateFullFileName: string;
 var
   NameOnly: string;
   RelPathName: string;
@@ -3543,7 +3597,7 @@ var
 begin
   if (FileName = '') and (Location <> flCustom) then
   begin
-    FFullFileName := '';
+    Result := '';
   end
   else
   begin
@@ -3555,38 +3609,46 @@ begin
       RelPathName := TransFileName;
     case Location of
       flCustom:
-        FFullFileName := DoGetFileName;
+        Result := DoGetFileName;
       flExeFile:
-        FFullFileName := PathAddSeparator(ExtractFilePath(ParamStr(0))) + NameOnly;
+        Result := PathAddSeparator(ExtractFilePath(ParamStr(0))) + NameOnly;
       {$IFDEF MSWINDOWS}
       flTemp:
-        FFullFileName := PathAddSeparator(GetWindowsTempFolder) + NameOnly;
+        Result := PathAddSeparator(GetWindowsTempFolder) + NameOnly;
       flWindows:
-        FFullFileName := PathAddSeparator(GetWindowsFolder) + NameOnly;
+        Result := PathAddSeparator(GetWindowsFolder) + NameOnly;
       flUserFolder:
-        FFullFileName := PathAddSeparator(GetAppdataFolder) + RelPathName;
+        Result := PathAddSeparator(GetAppdataFolder) + RelPathName;
       {$ENDIF MSWINDOWS}
       {$IFDEF UNIX}
       flTemp:
-        FFullFileName := PathAddSeparator(PathGetTempPath) + NameOnly;
+        Result := PathAddSeparator(PathGetTempPath) + NameOnly;
       flUserFolder:
-        FFullFileName := PathAddSeparator(GetEnvironmentVariable('HOME')) + RelPathName;
+        Result := PathAddSeparator(GetEnvironmentVariable('HOME')) + RelPathName;
       {$ENDIF UNIX}
     end;
   end;
-  FPhysicalReadOnly := FileExists(FullFileName) and FileIsReadOnly(FullFileName);
 end;
 
-procedure TJvCustomAppMemoryFileStorage.Reload;
+procedure TJvCustomAppMemoryFileStorage.RecalculateFullFileName;
 begin
-  FFileLoaded := True;
+  FFullFileName := CalculateFullFileName;
   FPhysicalReadOnly := FileExists(FullFileName) and FileIsReadOnly(FullFileName);
-  inherited Reload;
 end;
 
 function TJvCustomAppMemoryFileStorage.ReloadNeeded: Boolean;
+{$IFDEF DELPHI2005_UP}
+var t : TDateTime;
+{$ENDIF}
 begin
   Result := (not FFileLoaded or AutoReload) and not IsUpdating;
+  {$IFDEF DELPHI2005_UP}
+  if Result and FileAge(FullFileName, t) then
+    Result := FFileAge <> t;
+  {$ELSE}
+  if Result then
+    Result := FFileAge <> FileAge(FullFileName);;
+  {$ENDIF}
 end;
 
 function TJvCustomAppMemoryFileStorage.GetPhysicalReadOnly: Boolean;
@@ -3601,24 +3663,26 @@ begin
     FOnGetFileName(Self, Result);
 end;
 
+procedure TJvCustomAppMemoryFileStorage.SetFileNameInternal(const Value: TFileName);
+begin
+  // Mantis 3680: only add an extension if there is not already one.
+  if (Length(ExtractFileExt(Value)) = 0) then
+    FFileName := PathAddExtension(Value, DefaultExtension)
+  else
+    FFileName := Value;
+  RecalculateFullFileName;
+end;
+
 procedure TJvCustomAppMemoryFileStorage.SetFileName(const Value: TFileName);
 begin
   if Value <> FileName then
   begin
     if not (csLoading in ComponentState) and not IsUpdating then
-      Flush;
+      if FullFileName <> CalculateFullFileName then
+        Flush;
 
-    // Mantis 3680: only add an extension if there is not already one.
-    if (Length(ExtractFileExt(Value)) = 0) then
-    begin
-      FFileName := PathAddExtension(Value, DefaultExtension);
-    end
-    else
-    begin
-      FFileName := Value;
-    end;
+    SetFileNameInternal(Value);
 
-    RecalculateFullFileName;
     if not (csLoading in ComponentState) and not IsUpdating then
       Reload;
   end;
@@ -3639,7 +3703,8 @@ begin
   if FLocation <> Value then
   begin
     if not (csLoading in ComponentState) and not IsUpdating then
-      Flush;
+      if FullFileName <> CalculateFullFileName then
+        Flush;
     FLocation := Value;
     RecalculateFullFileName;
     if not (csLoading in ComponentState) and not IsUpdating then
@@ -3650,6 +3715,110 @@ end;
 function TJvCustomAppMemoryFileStorage.DefaultExtension: string;
 begin
   Result := '';
+end;
+
+//=== { TJvCustomAppMemoryFileStorage } ===============================================
+
+procedure TJvCustomAppMemoryFileStorage.Flush;
+begin
+  if (FullFileName <> '') and not ReadOnly and not (csDesigning in ComponentState) then
+    if SynchronizeFlushReload then
+      Synchronize(FlushToFile, FullFileName)
+    else
+      FlushToFile;
+end;
+
+procedure TJvCustomAppMemoryFileStorage.FlushToFile;
+var
+  Path: string;
+  BackupFileName : string;
+  SaveFullFileName : string;
+  SaveFileName : string;
+begin
+  if (FullFileName <> '') and not ReadOnly and not (csDesigning in ComponentState) then
+  begin
+    try
+      Path := ExtractFilePath(FullFileName);
+      if Path <> '' then
+        ForceDirectories(Path);
+      BackupFileName := GetBackupFileName(FullFileName);
+      if (StorageOptions.BackupType = afsbtCreateBefore) and FileExists(FullFileName)then
+        FileMove(FullFileName, BackupFileName, True);
+      if (StorageOptions.BackupType = afsbtRenameAfter) then
+      begin
+        SaveFileName := FileName;
+        SaveFullFileName := FullFileName;
+        SetFileNameInternal(FileName+'.tmp');
+      end;
+
+      FlushInternal;
+
+      if (StorageOptions.BackupType = afsbtRenameAfter) then
+      begin
+        FileMove(SaveFullFileName, BackupFileName, True);
+        FileMove(FullFileName, SaveFullFileName, True);
+        SetFileNameInternal(SaveFileName)
+      end;
+      if (StorageOptions.BackupHistoryCount > 0) and (StorageOptions.BackupHistoryType <> afsbhtNone) then
+        case StorageOptions.BackupHistoryType of
+          //afsbhtNone,
+          afsbhtAllways  : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now);
+          afsbht1Minute  : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-(1/24/60));
+          afsbht15Minute : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-(1/24/4));
+          afsbht1Hour    : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-(1/24));
+          afsbht4Hour    : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-(1/8));
+          afsbht12Hour   : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-(1/2));
+          afsbht1Day     : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-1);
+          afsbht3Day     : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-3);
+          afsbht1Week    : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-7);
+          afsbht1Month   : FileHistory(FullFileName, Path, StorageOptions.BackupHistoryCount, Now-30);
+        end;
+
+      if (StorageOptions.BackupType <> afsbtNone) and not StorageOptions.BackupKeepFileAfterFlush then
+        DeleteFile(BackupFileName);
+    except
+      on E: Exception do
+        DoError(E.Message);
+    end;
+  end;
+end;
+
+function TJvCustomAppMemoryFileStorage.GetStorageOptions: TJvAppFileStorageOptions;
+begin
+  Result := TJvAppFileStorageOptions(inherited StorageOptions);
+end;
+
+class function TJvCustomAppMemoryFileStorage.GetStorageOptionsClass: TJvAppStorageOptionsClass;
+begin
+  Result := TJvAppFileStorageOptions;
+end;
+
+procedure TJvCustomAppMemoryFileStorage.Reload;
+begin
+  if not IsUpdating and not (csDesigning in ComponentState) then
+  begin
+    FFileLoaded := True;
+    FPhysicalReadOnly := FileExists(FullFileName) and FileIsReadOnly(FullFileName);
+    {$IFDEF DELPHI2005_UP}
+    FileAge(FullFileName, FFileAge);
+    {$ELSE}
+    FFileAge:= FileAge(FullFileName);
+    {$ENDIF}
+
+    inherited Reload;
+    if FileExists(FullFileName) then
+      if SynchronizeFlushReload then
+        Synchronize(ReloadInternal, FullFileName)
+      else
+        ReloadInternal
+    else // file may have disappeared. If so, clear the internal data
+      ClearInternal;
+  end;
+end;
+
+procedure TJvCustomAppMemoryFileStorage.SetStorageOptions(const Value: TJvAppFileStorageOptions);
+begin
+  (Inherited StorageOptions).Assign(Value);
 end;
 
 //=== { TJvAppStoragePropertyBaseEngine } ====================================
@@ -3747,6 +3916,27 @@ begin
   Result := Assigned(Engine);
   if Result then
     Engine.WriteProperty(AStorage, APath, AObject, AProperty, Recursive, IgnoreProperties);
+end;
+
+constructor TJvAppFileStorageOptions.Create;
+begin
+  inherited Create;
+  FBackupKeepFileAfterFlush := false;
+  FBackupType := afsbtNone;
+  FBackupHistoryType := afsbhtNone;
+  FBackupHistoryCount := 0;
+end;
+
+procedure TJvAppFileStorageOptions.Assign(Source: TPersistent);
+begin
+  if (Source = Self) then
+    Exit;
+  if Source is TJvAppFileStorageOptions then
+  begin
+    BackupType := TJvAppFileStorageOptions(Source).BackupType;
+    BackupKeepFileAfterFlush := TJvAppFileStorageOptions(Source).BackupKeepFileAfterFlush;
+  end;
+  inherited assign(Source);
 end;
 
 initialization

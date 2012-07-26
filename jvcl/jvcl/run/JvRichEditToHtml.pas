@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRichEditToHtml.pas 12466 2009-08-23 12:02:33Z ahuser $
+// $Id: JvRichEditToHtml.pas 13211 2012-02-23 11:26:29Z obones $
 
 unit JvRichEditToHtml;
 
@@ -36,6 +36,12 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character, // inline
+  {$ENDIF HAS_UNIT_CHARACTER}
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   SysUtils, Classes, Graphics, Forms, ComCtrls,
   JvRgbToHtml, JvStrToHtml, JvRichEdit, JvComponentBase, JclStrings;
 
@@ -72,6 +78,9 @@ type
     property Name: TFontDataName read FFontData.Name write FFontData.Name;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvRichEditToHtml = class(TJvComponent)
   private
     FCToH: TJvRgbToHtml;
@@ -108,8 +117,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRichEditToHtml.pas $';
-    Revision: '$Revision: 12466 $';
-    Date: '$Date: 2009-08-23 14:02:33 +0200 (dim., 23 août 2009) $';
+    Revision: '$Revision: 13211 $';
+    Date: '$Date: 2012-02-23 12:26:29 +0100 (jeu., 23 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -339,6 +348,7 @@ var
   LOnSelectionChange: TNotifyEvent;
   Text: string;
   Len: Integer;
+  PreviousChar: Char;
 begin
   LOnChange := Value.OnChange;
   LOnSelectionChange := Value.OnSelectionChange;
@@ -392,6 +402,7 @@ begin
         end;
 
         J := I;
+        PreviousChar := #0;
         while (J <= Len) and not CharInSet(Text[J], [#$A, #$B, #$D]) do { RICHEDIT uses #$B also for line breaking }
         begin
           Att.Assign(Value.SelAttributes);
@@ -404,10 +415,11 @@ begin
           end
           else
           begin
-            if CharIsAlphaNum(Text[J]) then
-              St.Append(Text[J])
+            if (Text[J] = ' ') and (PreviousChar = ' ') then
+              St.Append('&nbsp;')
             else
               St.Append(CharToHtml(Text[J]));
+            PreviousChar := Text[J];
             Inc(J);
             Value.SelStart := J;
           end;
@@ -449,6 +461,7 @@ var
   LOnSelectionChange: TNotifyEvent;
   Text: string;
   Len: Integer;
+  PreviousChar: Char;
 begin
   LOnChange := Value.OnChange;
   LOnSelectionChange := Value.OnSelectionChange;
@@ -502,6 +515,7 @@ begin
         end;
 
         J := I;
+        PreviousChar := #0;
         while (J <= Len) and not CharInSet(Text[J], [#$A, #$B, #$D]) do { RICHEDIT uses #$B also for line breaking }
         begin
           Att.Assign(Value.SelAttributes);
@@ -514,10 +528,11 @@ begin
           end
           else
           begin
-            if CharIsAlphaNum(Text[J]) then
-              St.Append(Text[J])
+            if (Text[J] = ' ') and (PreviousChar = ' ') then
+              St.Append('&nbsp;')
             else
               St.Append(CharToHtml(Text[J]));
+            PreviousChar := Text[J];
             Inc(J);
             Value.SelStart := J;
           end;

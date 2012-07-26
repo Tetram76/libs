@@ -47,7 +47,7 @@ xx) why keep UnicodeAvailable in every component? I wish Delphi could map
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMRUList.pas 12585 2009-10-29 20:27:56Z ahuser $
+// $Id: JvMRUList.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvMRUList;
 
@@ -81,6 +81,9 @@ type
   PJvMruReturnData = ^TJvMruReturnData;
   TMruCount = 0..29;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMruList = class(TJvComponent)
   private
     FUnicodeAvailable: Boolean;
@@ -180,8 +183,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMRUList.pas $';
-    Revision: '$Revision: 12585 $';
-    Date: '$Date: 2009-10-29 21:27:56 +0100 (jeu., 29 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -204,7 +207,7 @@ type
   MruCompareStringW = function(lpszString1, lpszString2: PWideChar): Integer;
 
   PMruRec = ^TMruRec;
-  TMruRec = packed record
+  TMruRec = record
     cbSize: DWORD;
     nMaxItems: DWORD;
     dwFlags: DWORD;

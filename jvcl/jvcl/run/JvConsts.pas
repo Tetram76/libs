@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvConsts.pas 12833 2010-09-05 13:25:12Z obones $
+// $Id: JvConsts.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvConsts;
 
@@ -80,6 +80,9 @@ const
   {$IFDEF DELPHI15}
   SDelphiKey = 'Software\Embarcadero\BDS\8.0';
   {$ENDIF DELPHI15}
+  {$IFDEF DELPHI16}
+  SDelphiKey = 'Software\Embarcadero\BDS\9.0';
+  {$ENDIF DELPHI16}
   { JvDataProvider constants }
   { Consumer attributes }
   DPA_RenderDisabledAsGrayed = 1;
@@ -221,8 +224,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvConsts.pas $';
-    Revision: '$Revision: 12833 $';
-    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

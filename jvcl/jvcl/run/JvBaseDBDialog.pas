@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBDialog.pas 13086 2011-07-10 10:34:43Z ahuser $
+// $Id: JvBaseDBDialog.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvBaseDBDialog;
 
@@ -33,8 +33,7 @@ uses
   JclUnitVersioning,
 {$ENDIF UNITVERSIONING}
   JvDynControlEngine,
-  Classes, JvBaseDlg, JvAppStorage, Forms, Controls, JvDynControlEngineIntf,
-  JvPropertyStore, Menus;
+  Windows, Classes, JvBaseDlg, JvAppStorage, Forms, Controls;
 
 type
   TJvBaseDBDialog = class(TJvCommonDialog)
@@ -56,7 +55,7 @@ type
     property AppStorage: TJvCustomAppStorage read FAppStorage write SetAppStorage;
     property AppStoragePath: string read FAppStoragePath write SetAppStoragePath;
   public
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
     function SessionIsConnected: Boolean; virtual;
     property DBDialog: TForm read FDBDialog ;
     property Session: TComponent read FSession write SetSession;
@@ -69,16 +68,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBDialog.pas $';
-    Revision: '$Revision: 13086 $';
-    Date: '$Date: 2011-07-10 12:34:43 +0200 (dim., 10 juil. 2011) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
-uses 
-  SysUtils, Types, ExtCtrls, ComCtrls, StdCtrls, 
+uses
+  SysUtils, Types,
   JvJVCLUtils;
 
 function TJvBaseDBDialog.CreateForm: TForm;
@@ -95,7 +94,7 @@ procedure TJvBaseDBDialog.AfterCreateFormControls(aForm: TForm);
 begin
 end;
 
-function TJvBaseDBDialog.Execute: Boolean;
+function TJvBaseDBDialog.Execute(ParentWnd: HWND): Boolean;
 begin
   if not Assigned(Session) then
     Abort;
@@ -103,6 +102,7 @@ begin
   try
     AfterCreateFormControls(FDBDialog);
     FDBDialog.ShowModal;
+    FDBDialog.ParentWindow := ParentWnd;
     Result := FDBDialog.ModalResult = mrOk;
   finally
     FreeAndNil(FDBDialog);

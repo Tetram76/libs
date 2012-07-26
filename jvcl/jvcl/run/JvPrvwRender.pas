@@ -24,7 +24,7 @@ Known Issues:
 * the TStrings previewer has a *very* simple word-wrap feature - use the RTF variant if possible
 
 -----------------------------------------------------------------------------}
-// $Id: JvPrvwRender.pas 12768 2010-05-14 18:00:53Z ahuser $
+// $Id: JvPrvwRender.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvPrvwRender;
 
@@ -59,6 +59,9 @@ type
     function CreatePreview(Append: Boolean): Boolean; virtual;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPreviewRenderRichEdit = class(TJvCustomPreviewRenderer)
   private
     FFinished: Boolean;
@@ -76,6 +79,9 @@ type
     property RichEdit: TCustomRichEdit read FRichEdit write SetRichEdit;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPreviewRenderJvRichEdit = class(TJvCustomPreviewRenderer)
   private
     FFinished: Boolean;
@@ -93,6 +99,9 @@ type
     property RichEdit: TJvCustomRichEdit read FRichEdit write SetRichEdit;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPreviewRenderStrings = class(TJvCustomPreviewRenderer)
   private
     FFinished: Boolean;
@@ -147,6 +156,9 @@ type
     property Items[Index: Integer]: TJvPreviewGraphicItem read GetItems write SetItems; default;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPreviewRenderGraphics = class(TJvCustomPreviewRenderer)
   private
     FImages: TJvPreviewGraphicItems;
@@ -166,6 +178,9 @@ type
   end;
 
   // preview a TControl descendant
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPreviewRenderControl = class(TJvCustomPreviewRenderer)
   private
     FControl: TControl;
@@ -193,6 +208,9 @@ type
   TJvNewPageEvent = procedure(Sender: TObject; PageIndex: Integer) of object;
 
   // a class that implements the IJvPrinter interface
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPreviewPrinter = class(TJvComponent, IUnknown, IJvPrinter)
   private
     FPrinter: TPrinter;
@@ -252,8 +270,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPrvwRender.pas $';
-    Revision: '$Revision: 12768 $';
-    Date: '$Date: 2010-05-14 20:00:53 +0200 (ven., 14 mai 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -321,14 +339,7 @@ begin
     end;
   end;
 
-  with Result do
-  begin
-    Left := 0;
-    Top := 0;
-    Right := w;
-    Bottom := h;
-  end;
-
+  Result := Rect(0, 0, w, h);
   if Center then
     OffsetRect(Result, (cw - w) div 2, (ch - h) div 2);
   OffsetRect(Result, DstRect.Left, DstRect.Top);

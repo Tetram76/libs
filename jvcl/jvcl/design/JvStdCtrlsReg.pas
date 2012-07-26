@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStdCtrlsReg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvStdCtrlsReg.pas 13223 2012-02-24 14:51:13Z obones $
 
 unit JvStdCtrlsReg;
 
@@ -53,7 +53,8 @@ uses
   JvCheckListBox, JvControlBar, JvCtrls, JvGroupBox, JvHeaderControl,
   JvImage, JvLabel, JvRadioButton, JvRadioGroup, JvScrollBar, JvShape,
   JvStaticText, JvStatusBar, JvGrids, JvStringGrid, JvBitBtn, JvPanel, JvImageList,
-  JvCheckedItemsForm, JvProgressEditor, JvDsgnEditors, JvCheckedMaskEdit;
+  JvCheckedItemsForm, JvProgressEditor, JvDsgnEditors, JvCheckedMaskEdit,
+  JvIPAddressEditor;
 
 {$R JvStdCtrlsReg.dcr}
 
@@ -108,6 +109,7 @@ begin
   RegisterPropertyEditor(TypeInfo(TJvImgBtnKind), TJvImgBtn, 'Kind', TJvNosortEnumProperty);
   RegisterPropertyEditor(TypeInfo(TCaption), TJvSpeedButton, 'Caption', TJvHintProperty);
   RegisterPropertyEditor(TypeInfo(TImageIndex), TJvCustomLabel, 'ImageIndex',TJvDefaultImageIndexProperty);
+  RegisterPropertyEditor(TypeInfo(LongWord), TJvIPAddress, 'Address', TJvIPAddressProperty);
 end;
 
 end.

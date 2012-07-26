@@ -18,7 +18,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOwnerDrawViewer.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvOwnerDrawViewer.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvOwnerDrawViewer;
 
@@ -30,7 +30,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes, Graphics, ComCtrls,
+  Classes, Graphics,
   JvCustomItemViewer;
 
 type
@@ -55,6 +55,9 @@ type
     property Width;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOwnerDrawViewer = class(TJvCustomItemViewer)
   private
     function GetOptions: TJvOwnerDrawViewerOptions;
@@ -121,8 +124,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOwnerDrawViewer.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

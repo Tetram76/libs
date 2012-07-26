@@ -54,7 +54,7 @@ Known issues / not (yet) implemented features:
   - it really is a control for date entry only.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDatePickerEdit.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvDatePickerEdit.pas 13320 2012-06-12 12:47:17Z obones $
 
 unit JvDatePickerEdit;
 
@@ -230,6 +230,9 @@ type
     property Text: TCaption read GetText write SetText;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDatePickerEdit = class(TJvCustomDatePickerEdit)
   public
     property Dropped;
@@ -341,8 +344,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDatePickerEdit.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13320 $';
+    Date: '$Date: 2012-06-12 14:47:17 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -351,6 +354,9 @@ implementation
 
 uses
   Variants, SysUtils, Menus,
+  {$IFDEF HAS_UNIT_CHARACTER}
+  Character, // for inline
+  {$ENDIF HAS_UNIT_CHARACTER}
   JclStrings,
   JvConsts, JvTypes, JvResources, JclSysUtils;
 
@@ -1170,6 +1176,7 @@ end;
 procedure TJvCustomDatePickerEdit.SetEditMask(const AValue: string);
 var
   OldSep: Char;
+  Designing: Boolean;
 begin
 {  if csDesigning in ComponentState then
     Exit;}
@@ -1177,7 +1184,22 @@ begin
   OldSep := JclFormatSettings.DateSeparator;
   JclFormatSettings.DateSeparator := Self.DateSeparator;
   try
-    inherited EditMask := AValue;
+    Designing := False;
+    if csDesigning in ComponentState then
+    begin
+      // If SetEditMask is called from CreateWnd via SetDateFormat, the TMaskEdit.SetCursor emulates
+      // a Shift+Left/Right key press. The form designer catches the key press and the
+      // IDE's Designer Guidelines code throws an access violation.
+      // With this we disable the form designer until "inherted EditMask" was executed.
+      Designing := True;
+      SetDesigning(False, False);
+    end;
+    try
+      inherited EditMask := AValue;
+    finally
+      if Designing then
+        SetDesigning(True, False);
+    end;
   finally
     JclFormatSettings.DateSeparator := OldSep;
   end;
@@ -1245,7 +1267,15 @@ end;
 procedure TJvCustomDatePickerEdit.ShowPopup(Origin: TPoint);
 begin
   if FPopup is TJvDropCalendar then
+  begin
     TJvDropCalendar(FPopup).Show;
+    if Assigned(OnPopupShown) then
+      OnPopupShown(Self);
+  end
+  else
+  begin
+    inherited ShowPopup(Origin);
+  end;
 end;
 
 procedure TJvCustomDatePickerEdit.UpdateDisplay;

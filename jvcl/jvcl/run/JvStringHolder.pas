@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStringHolder.pas 12781 2010-05-23 23:30:10Z ahuser $
+// $Id: JvStringHolder.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvStringHolder;
 
@@ -88,6 +88,9 @@ type
     property MacroValues[const MacroName: string]: Variant read GetMacroValue write SetMacroValue;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvStrHolder = class(TComponent)
   private
     FStrings: TStringList;
@@ -176,6 +179,9 @@ type
     function Insert(Index: Integer): TJvMultiStringHolderCollectionItem;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvMultiStringHolder = class(TComponent)
   private
     FMultipleStrings: TJvMultiStringHolderCollection;
@@ -195,8 +201,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStringHolder.pas $';
-    Revision: '$Revision: 12781 $';
-    Date: '$Date: 2010-05-24 01:30:10 +0200 (lun., 24 mai 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

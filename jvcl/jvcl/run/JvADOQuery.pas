@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvADOQuery.pas 13082 2011-07-06 22:34:01Z jfudickar $
+// $Id: JvADOQuery.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvADOQuery;
 
@@ -35,13 +35,14 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, StdCtrls, ExtCtrls, Forms, Controls,
-  DB,
-  ADODB,
-  JvThread, JvThreadDialog, JvDynControlEngine,
+  SysUtils, Classes, Forms, Controls,
+  DB, ADODB,
   JvBaseDBThreadedDataset;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvADOQuery = class(TADOQuery, IJvThreadedDatasetInterface)
     procedure BreakExecution;
     procedure BringThreadDialogToFront;
@@ -108,7 +109,9 @@ type
     property OnThreadException: TJvThreadedDatasetThreadExceptionEvent read GetOnThreadException write SetOnThreadException;
   end;
 
-type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvADODataSet = class(TADODataSet, IJvThreadedDatasetInterface)
     procedure BreakExecution;
     procedure BringThreadDialogToFront;
@@ -175,20 +178,20 @@ type
     property OnThreadException: TJvThreadedDatasetThreadExceptionEvent read GetOnThreadException write SetOnThreadException;
   end;
 
-
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvADOQuery.pas $';
-    Revision: '$Revision: 13082 $';
-    Date: '$Date: 2011-07-07 00:34:01 +0200 (jeu., 07 juil. 2011) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
-uses Variants;
+uses
+  Variants;
 
 //=== { TJvADOSmartQuery } ==================================================
 

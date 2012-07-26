@@ -35,6 +35,7 @@
 unit WinConvTypes;
 
 {$I windowsversion.inc}
+{$I jvcl.inc}
 
 interface
 
@@ -47,37 +48,40 @@ type
   PHICON = ^HICON;
 
   {$IFDEF UNICODE}
-  LPCTSTR = PWideChar;
-  LPTSTR  = PWideChar;
   PCTSTR  = PWideChar;
   PTSTR   = PWideChar;
   TCHAR   = WideChar;
   {$ELSE}
-  LPCTSTR = PAnsiChar;
-  LPTSTR  = PAnsiChar;
   PCTSTR  = PAnsiChar;
   PTSTR   = PAnsiChar;
   TCHAR   = Char;
   {$ENDIF UNICODE}
-  {$EXTERNALSYM LPCTSTR}
-  {$EXTERNALSYM LPTSTR}
   {$EXTERNALSYM PCTSTR}
+  {$EXTERNALSYM PTSTR}
+  {$EXTERNALSYM TCHAR}
   PPWSTR = ^PWideChar;
   PPASTR = ^PAnsiChar;
   PPSTR  = ^PTSTR;
-  {$EXTERNALSYM PTSTR}
 
+{$IFNDEF RTL185_UP}
 type
+  // WARNING: Those types are defined as DWORD for simplicity under old versions
+  // of Delphi but they really should be defined as pointers to their base types
   ULONG_PTR = DWORD;
   {$EXTERNALSYM ULONG_PTR}
   DWORD_PTR = DWORD;
   {$EXTERNALSYM DWORD_PTR}
   UINT_PTR  = DWORD;
   {$EXTERNALSYM UINT_PTR}
+{$ENDIF ~RTL185_UP}
+
+{$IFNDEF RTL220_UP}
+type
   ULONG32 = ULONG;
   {$EXTERNALSYM ULONG32}
   ULONG64 = Int64;   // (rom) no unsigned Int64 available in Delphi
   {$EXTERNALSYM ULONG64}
+{$ENDIF ~RTL220_UP}
 
 implementation
 

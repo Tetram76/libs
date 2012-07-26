@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVSNetStyle.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvDockVSNetStyle.pas 13278 2012-03-21 08:51:44Z obones $
 
 unit JvDockVSNetStyle;
 
@@ -269,6 +269,9 @@ type
 
   TJvDockVSChannelClass = class of TJvDockVSChannel;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDockVSNetStyle = class(TJvDockVIDStyle)
   private
     FTimer: TTimer;
@@ -536,8 +539,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVSNetStyle.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13278 $';
+    Date: '$Date: 2012-03-21 09:51:44 +0100 (mer., 21 mars 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -545,7 +548,7 @@ const
 implementation
 
 uses
-  SysUtils, Math, {AppEvnts,} JvJVCLUtils,
+  SysUtils, Math, ImgList, {AppEvnts,} JvJVCLUtils,
   JvDockSupportProc;
 
 type
@@ -745,6 +748,9 @@ begin
   FVSChannel := AOwner;
   FVSPanes := TObjectList.Create;
   FImageList := TImageList.CreateSize(16, 16);
+  {$IFDEF RTL200_UP}
+  FImageList.ColorDepth := cd32Bit;
+  {$ENDIF RTL200_UP}
   FInactiveBlockWidth := 24;
   FActiveBlockWidth := 24;
 end;
@@ -1468,7 +1474,7 @@ var
       Canvas.FrameRect(DrawRect);
 
       AdjustImagePos;
-      Block.FImageList.Draw(Canvas, DrawRect.Left, DrawRect.Top, I);
+      Block.FImageList.Draw(Canvas, DrawRect.Left, DrawRect.Top, I, dsTransparent, itImage);
 
       if Block.ActivePane = Block.VSPane[I] then
       begin
@@ -3369,16 +3375,16 @@ end;
 
 procedure TJvDockVSPopupPanelSplitter.DrawLine;
 var
-  P: TPoint;
+  X, Y: Integer;
 begin
   FLineVisible := not FLineVisible;
-  P := Point(Left, Top);
+  X := Left;
+  Y := Top;
   if VSChannelAlign in [alLeft, alRight] then
-    P.X := Left + FSplit
+    X := Left + FSplit
   else
-    P.Y := Top + FSplit;
-  with P do
-    PatBlt(FLineDC, X, Y, Width, Height, PATINVERT);
+    Y := Top + FSplit;
+  PatBlt(FLineDC, X, Y, Width, Height, PATINVERT);
 end;
 
 function TJvDockVSPopupPanelSplitter.FindControl: TControl;

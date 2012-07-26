@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProgramVersionCheck.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvProgramVersionCheck.pas 13240 2012-02-27 11:05:59Z obones $
 
 unit JvProgramVersionCheck;
 
@@ -36,10 +36,14 @@ uses
   IdHTTP, IdFTP,
   {$ENDIF USE_3RDPARTY_INDY}
   {$IFDEF USE_3RDPARTY_ICS}
+  {$IFDEF DELPHI7_UP}
+  OverbyteIcsHttpProt, OverbyteIcsFtpCli,
+  {$ELSE}
   HttpProt, FtpCli,
+  {$ENDIF DELPHI7_UP}
   {$ENDIF USE_3RDPARTY_ICS}
-  JvPropertyStore, JvAppStorage, JvAppIniStorage, JvAppXMLStorage, JvComponent,
-  JvParameterList, JvThread, JvUrlListGrabber, JvUrlGrabbers, JvThreadDialog, SysUtils;
+  JvPropertyStore, JvAppStorage, JvAppIniStorage, JvAppXMLStorage,
+  JvParameterList, JvThread, JvThreadDialog, SysUtils;
 
 type
   { Type of release of a Program Version }
@@ -200,6 +204,9 @@ type
   end;
 
   { Location Class for Local Network Location }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvProgramVersionNetworkLocation = class(TJvCustomProgramVersionFileBasedLocation)
   protected
     function LoadFileFromRemoteInt(const ARemotePath, ARemoteFileName, ALocalPath, ALocalFileName: string;
@@ -250,6 +257,9 @@ type
 
   { Simple HTTP location class with no http logic.
   The logic must be implemented manually in the OnLoadFileFromRemote event }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvProgramVersionHTTPLocation = class(TJvCustomProgramVersionInternetLocation)
   private
     FOnLoadFileFromRemote: TJvLoadFileFromRemoteHTTPEvent;
@@ -268,6 +278,9 @@ type
   end;
 
   {$IFDEF USE_3RDPARTY_INDY}
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvProgramVersionHTTPLocationIndy = class(TJvProgramVersionHTTPLocation)
   private
     FIdHttp: TIdHttp;
@@ -291,6 +304,9 @@ type
   {$ENDIF USE_3RDPARTY_INDY}
 
   {$IFDEF USE_3RDPARTY_ICS}
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvProgramVersionHTTPLocationICS = class(TJvProgramVersionHTTPLocation)
   private
     FHttpCli: THttpCli;
@@ -319,6 +335,9 @@ type
 
   { Simple FTP location class with no http logic.
   The logic must be implemented manually in the OnLoadFileFromRemote event }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvProgramVersionFTPLocation = class(TJvCustomProgramVersionInternetLocation)
   private
     FOnLoadFileFromRemote: TJvLoadFileFromRemoteFTPEvent;
@@ -383,6 +402,9 @@ type
   { Simple Database location class with no http logic.
     The logic must be implemented manually in the OnLoadFileFromRemote event }
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvProgramVersionDatabaseLocation = class(TJvCustomProgramVersionLocation)
   private
     FServerName: string;
@@ -437,6 +459,9 @@ type
     property XMLOptions: TJvAppXMLStorageOptions read FXMLOptions write SetXMLOptions;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvProgramVersionCheck = class(TJvCustomPropertyStore)
   private
     FAllowedReleaseType: TJvProgramReleaseType;
@@ -544,8 +569,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgramVersionCheck.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13240 $';
+    Date: '$Date: 2012-02-27 12:05:59 +0100 (lun., 27 févr. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -624,19 +649,18 @@ end;
 
 //=== { TJvProgramVersionsStringList } =======================================
 
-procedure TJvProgramVersionsStringList.Sort;
-
-  function VersionNumberSortCompare(List: TStringList; Index1, Index2: Integer): Integer;
-  var
-    S1, S2: string;
-  begin
-    S1 := TJvProgramVersionInfo(List.Objects[Index1]).ProgramVersion;
-    S2 := TJvProgramVersionInfo(List.Objects[Index2]).ProgramVersion;
-    Result := CompareVersionNumbers(S1, S2);
-  end;
-
+function VersionNumberSortCompare(List: TStringList; Index1, Index2: Integer): Integer;
+var
+  Info1, Info2: TJvProgramVersionInfo;
 begin
-  CustomSort(@VersionNumberSortCompare);
+  Info1 := TJvProgramVersionInfo(List.Objects[Index1]);
+  Info2 := TJvProgramVersionInfo(List.Objects[Index2]);
+  Result := CompareVersionNumbers(Info1.ProgramVersion, Info2.ProgramVersion);
+end;
+
+procedure TJvProgramVersionsStringList.Sort;
+begin
+  CustomSort(VersionNumberSortCompare);
 end;
 
 function TJvProgramVersionCheck.CreateVersionHistoryAppstorage(aFileFormat: TjvProgramVersionHistoryFileFormat):

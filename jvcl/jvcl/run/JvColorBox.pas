@@ -40,7 +40,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorBox.pas 12895 2010-11-25 08:16:57Z ahuser $
+// $Id: JvColorBox.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvColorBox;
 
@@ -160,8 +160,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorBox.pas $';
-    Revision: '$Revision: 12895 $';
-    Date: '$Date: 2010-11-25 09:16:57 +0100 (jeu., 25 nov. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -404,7 +404,7 @@ procedure TJvCustomDropButton.MouseEnter(Control: TControl);
 begin
   inherited MouseEnter(Control);
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled and Enabled and not (csDesigning in ComponentState) then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and Enabled and not (csDesigning in ComponentState) then
     Invalidate;
   {$ENDIF JVCLThemesEnabled}
 end;
@@ -413,7 +413,7 @@ procedure TJvCustomDropButton.MouseLeave(Control: TControl);
 begin
   inherited MouseLeave(Control);
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled and Enabled and not (csDesigning in ComponentState) then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and Enabled and not (csDesigning in ComponentState) then
     Invalidate;
   {$ENDIF JVCLThemesEnabled}
 end;

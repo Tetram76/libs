@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxEditors.pas 13082 2011-07-06 22:34:01Z jfudickar $
+// $Id: JvControlActionsEngineCxEditors.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvControlActionsEngineCxEditors;
 
@@ -39,11 +39,9 @@ uses
   {$ENDIF}
   JvControlActionsEngine;
 
-type
-
 {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
+type
   TJvControlActioncxTreeViewEngine = class(TJvControlActionEngine)
-  private
   protected
     function GetSupportedOperations: TJvControlActionOperations; override;
   public
@@ -56,8 +54,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxEditors.pas $';
-    Revision: '$Revision: 13082 $';
-    Date: '$Date: 2011-07-07 00:34:01 +0200 (jeu., 07 juil. 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -66,7 +64,6 @@ implementation
 
 uses
   SysUtils, Grids, TypInfo, StrUtils, Variants, Dialogs, StdCtrls, Clipbrd;
-
 
 {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
 procedure InitActionEngineList;
@@ -102,17 +99,17 @@ begin
 end;
 {$ENDIF}
 
+{$IFDEF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
 initialization
   {$IFDEF UNITVERSIONING}
   RegisterUnitVersion(HInstance, UnitVersioning);
   {$ENDIF UNITVERSIONING}
-  {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
   InitActionEngineList;
-  {$ENDIF}
 
 finalization
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}
+{$ENDIF}
 
 end.

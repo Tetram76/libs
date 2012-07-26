@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBSearchComboBox.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvDBSearchComboBox.pas 13168 2011-11-13 10:02:20Z ahuser $
 
 unit JvDBSearchComboBox;
 
@@ -124,6 +124,9 @@ type
     property DataSource: TDataSource read GetDataSource write SetDataSource;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBSearchComboBox = class(TJvDBCustomSearchComboBox)
   published
     property Align;
@@ -184,8 +187,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSearchComboBox.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13168 $';
+    Date: '$Date: 2011-11-13 11:02:20 +0100 (dim., 13 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -379,34 +382,39 @@ procedure TJvDBCustomSearchComboBox.ReadList;
 var
   Bmrk: {$IFDEF RTL200_UP}TBookmark{$ELSE}TBookmarkStr{$ENDIF RTL200_UP};
   N, CurIndex: Integer;
+  DataSet: TDataSet;
+  Field: TField;
 begin
-  if (FDataLink.DataField = nil) or (FDataLink.DataSet = nil) or
-     (not FDataLink.DataSet.Active) then
+  if (FDataLink.DataField = nil) or (FDataLink.DataSet = nil) or not FDataLink.DataSet.Active then
     Exit;
-  ClearList;
-  CurIndex := -1;
-  with FDataLink.DataSet do
-  begin
-    Bmrk := Bookmark;
-    DisableControls;
+  Items.BeginUpdate;
+  try
+    DataSet := FDataLink.DataSet;
+    ClearList;
+    CurIndex := -1;
+    Bmrk := DataSet.Bookmark;
+    DataSet.DisableControls;
     N := 0;
     try
-      First;
-      while not EOF do
+      Field := DataSet.FieldByName(FDataLink.FDataFieldName);
+      DataSet.First;
+      while not DataSet.Eof do
       begin
-        FBookmarks.Add(GetBookmark);
-        Items.AddObject(FieldByName(FDataLink.FDataFieldName).DisplayText, TObject(FBookmarks[N]));
-        if {$IFDEF RTL200_UP}CompareBookmarks(Bookmark, Bmrk) = 0{$ELSE}Bookmark = Bmrk{$ENDIF RTL200} then
+        FBookmarks.Add(DataSet.GetBookmark);
+        Items.AddObject(Field.DisplayText, TObject(FBookmarks[N]));
+        if {$IFDEF RTL200_UP}DataSet.CompareBookmarks(DataSet.Bookmark, Bmrk) = 0{$ELSE}DataSet.Bookmark = Bmrk{$ENDIF RTL200} then
           CurIndex := N;
         Inc(N);
-        Next;
+        DataSet.Next;
       end;
-      Bookmark := Bmrk;
+      DataSet.Bookmark := Bmrk;
     finally
-      EnableControls;
+      DataSet.EnableControls;
     end;
-    ItemIndex := CurIndex;
+  finally
+    Items.EndUpdate;
   end;
+  ItemIndex := CurIndex;
 end;
 
 procedure TJvDBCustomSearchComboBox.ClearList;

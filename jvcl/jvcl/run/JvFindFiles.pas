@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFindFiles.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvFindFiles.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvFindFiles;
 
@@ -38,7 +38,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, ShlObj, ShellAPI, ActiveX,
+  Windows, SysUtils, Classes, ShlObj, ShellAPI, ActiveX,
   JvBaseDlg;
 
 type
@@ -47,14 +47,17 @@ type
      sfMyComputer, sfFonts, sfNetHood, sfNetwork, sfPersonal, sfPrinters,
      sfPrograms, sfRecent, sfSendTo, sfStartMenu, stStartUp, sfTemplates);
 
-  TJvFindFilesDialog = class(TJvCommonDialogF)
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
+  TJvFindFilesDialog = class(TJvCommonDialog)
   private
     FUseSpecialFolder: Boolean;
     FDirectory: string;
     FSpecial: TJvSpecialFolder;
   public
     constructor Create(AOwner: TComponent); override;
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
   published
     // the directory to start the search in
     property Directory: string read FDirectory write FDirectory;
@@ -64,14 +67,14 @@ type
     property UseSpecialFolder: Boolean read FUseSpecialFolder write FUseSpecialFolder;
   end;
 
-function FindFilesDlg(const StartIn: string; SpecialFolder: TJvSpecialFolder; UseFolder: Boolean): Boolean;
+function FindFilesDlg(ParentWnd: HWND; const StartIn: string; SpecialFolder: TJvSpecialFolder; UseFolder: Boolean): Boolean;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFindFiles.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -93,12 +96,12 @@ begin
   FSpecial := sfMyComputer;
 end;
 
-function TJvFindFilesDialog.Execute: Boolean;
+function TJvFindFilesDialog.Execute(ParentWnd: HWND): Boolean;
 begin
-  Result := FindFilesDlg(FDirectory, FSpecial, FUseSpecialFolder);
+  Result := FindFilesDlg(ParentWnd, FDirectory, FSpecial, FUseSpecialFolder);
 end;
 
-function FindFilesDlg(const StartIn: string; SpecialFolder: TJvSpecialFolder; UseFolder: Boolean): Boolean;
+function FindFilesDlg(ParentWnd: HWND; const StartIn: string; SpecialFolder: TJvSpecialFolder; UseFolder: Boolean): Boolean;
 var
   Pidl: PITEMIDLIST;
   PMalloc: IMalloc;
@@ -120,6 +123,7 @@ begin
     end
     else
       Sei.lpFile := PChar(StartIn);
+    Sei.Wnd := ParentWnd;
     Result := ShellExecuteEx(@Sei);
   finally
     PMalloc._Release;

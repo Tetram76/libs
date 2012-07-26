@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBitmapButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBitmapButton.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvBitmapButton;
 
@@ -41,6 +41,9 @@ type
 
   TPixelTransform = procedure(Dest, Source: PJvRGBTriple);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvBitmapButton = class(TJvGraphicControl)
   private
     FBitmap: TBitmap;
@@ -112,8 +115,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBitmapButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

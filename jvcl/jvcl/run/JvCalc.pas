@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCalc.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvCalc.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvCalc;
 
@@ -45,7 +45,10 @@ type
   TJvCalcState = (csFirst, csValid, csError);
   TJvCalculatorForm = class;
 
-  TJvCalculator = class(TJvCommonDialogF)
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
+  TJvCalculator = class(TJvCommonDialog)
   private
     FValue: Double;
     FMemory: Double;
@@ -71,7 +74,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
 
     property CalcDisplay: Double read GetDisplay;
     property Memory: Double read FMemory;
@@ -117,8 +120,8 @@ procedure SetupPopupCalculator(PopupCalc: TWinControl; APrecision: Byte;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCalc.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -281,12 +284,11 @@ begin
   if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, NonClientMetrics.cbSize, @NonClientMetrics, 0) then
     AFont.Handle := CreateFontIndirect(NonClientMetrics.lfMessageFont)
   else
-    with AFont do
-    begin
-      Color := clWindowText;
-      Name := 'MS Sans Serif';
-      Size := 8;
-    end;
+  begin
+    AFont.Color := clWindowText;
+    AFont.Name := 'MS Sans Serif';
+    AFont.Size := 8;
+  end;
   AFont.Style := [fsBold];
   {
   if Layout = clDialog then
@@ -478,7 +480,7 @@ begin
     FOnDisplayChange(Self);
 end;
 
-function TJvCalculator.Execute: Boolean;
+function TJvCalculator.Execute(ParentWnd: HWND): Boolean;
 begin
   if csDesigning in ComponentState then
     FCalc := CreateCalculatorForm(Application, HelpContext)
@@ -488,6 +490,7 @@ begin
   try
     Ctl3D := not FFlat;
     Caption := Self.Title;
+    ParentWindow := ParentWnd;
     TJvCalculatorPanel(FCalcPanel).FMemory := Self.FMemory;
     TJvCalculatorPanel(FCalcPanel).UpdateMemoryLabel;
     TJvCalculatorPanel(FCalcPanel).FPrecision := Max(2, Self.Precision);

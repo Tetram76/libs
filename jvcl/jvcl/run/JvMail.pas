@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   Doesn't work with Paegasus Mail because it has no MAPI support at all.
 -----------------------------------------------------------------------------}
-// $Id: JvMail.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvMail.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvMail;
 
@@ -39,7 +39,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, SysUtils, Classes, Controls, Forms,
   Mapi,
-  JclBase, JclMapi,
+  JclMapi,
   JvComponentBase;
 
 type
@@ -96,6 +96,9 @@ type
 
   TJvMailErrorEvent = procedure(Sender: TJvMail; ErrorCode: ULONG) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMail = class(TJvComponent)
   private
     FAttachment: TStrings;
@@ -180,8 +183,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMail.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -189,7 +192,7 @@ const
 implementation
 
 uses
-  JvConsts, JvResources, JclSysUtils;
+  JvResources, JclSysUtils;
 
 //=== { TJvMailRecipient } ===================================================
 

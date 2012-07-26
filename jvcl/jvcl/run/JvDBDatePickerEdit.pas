@@ -33,7 +33,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBDatePickerEdit.pas 13016 2011-04-11 08:10:22Z ahuser $
+// $Id: JvDBDatePickerEdit.pas 13329 2012-06-12 14:28:33Z obones $
 
 unit JvDBDatePickerEdit;
 
@@ -45,7 +45,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Messages, Classes, Controls, DB, DBCtrls,
+  Windows, Messages, Classes, Controls, DB, DBCtrls,
   JvDatePickerEdit;
 
 type
@@ -97,6 +97,9 @@ type
     property Field: TField read GetField;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBDatePickerEdit = class(TJvCustomDBDatePickerEdit)
   public
     property Checked;
@@ -198,6 +201,8 @@ type
     property OnParentColorChange;
     property OnSetFocus;
     property OnStartDrag;
+    property OnPopupHidden;
+    property OnPopupShown;
 
     property OnGetValidDateString;
   end;
@@ -206,8 +211,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBDatePickerEdit.pas $';
-    Revision: '$Revision: 13016 $';
-    Date: '$Date: 2011-04-11 10:10:22 +0200 (lun., 11 avr. 2011) $';
+    Revision: '$Revision: 13329 $';
+    Date: '$Date: 2012-06-12 16:28:33 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -216,6 +221,11 @@ implementation
 
 uses
   Variants, SysUtils;
+
+function IsNullOrEmptyStringField(Field: TField): Boolean;
+begin
+  Result := Field.IsNull or ((Field is TStringField) and (Trim(Field.AsString) = ''));
+end;
 
 //=== { TJvCustomDBDatePickerEdit } ==========================================
 
@@ -228,7 +238,7 @@ end;
 
 procedure TJvCustomDBDatePickerEdit.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Integer(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 constructor TJvCustomDBDatePickerEdit.Create(AOwner: TComponent);
@@ -257,7 +267,7 @@ procedure TJvCustomDBDatePickerEdit.DataChange(Sender: TObject);
 begin
   if IsLinked and FDataLink.Active then
   begin
-    if AllowNoDate and FDataLink.Field.IsNull then
+    if AllowNoDate and IsNullOrEmptyStringField(FDataLink.Field) then
       InternalDate := NoDateValue
     else
       InternalDate := FDataLink.Field.AsDateTime;

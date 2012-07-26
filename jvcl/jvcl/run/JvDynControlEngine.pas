@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngine.pas 12696 2010-02-15 21:14:37Z jfudickar $
+// $Id: JvDynControlEngine.pas 13339 2012-06-13 08:26:12Z obones $
 
 unit JvDynControlEngine;
 
@@ -31,7 +31,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, Controls, Forms, StdCtrls, Graphics, Buttons,
+  SysUtils, Classes, Controls, Forms, StdCtrls, Graphics,
   Variants,
   JvDynControlEngineIntf;
 
@@ -227,8 +227,8 @@ function DefaultDynControlEngine: TJvDynControlEngine;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngine.pas $';
-    Revision: '$Revision: 12696 $';
-    Date: '$Date: 2010-02-15 22:14:37 +0100 (lun., 15 févr. 2010) $';
+    Revision: '$Revision: 13339 $';
+    Date: '$Date: 2012-06-13 10:26:12 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -237,7 +237,7 @@ implementation
 
 uses
   TypInfo,
-  JvResources, JvTypes, JvDynControlEngineVCL, JvComponent,
+  JvResources, JvTypes, JvComponent,
   JvJVCLUtils;
 
 var
@@ -970,6 +970,7 @@ end;
 
 function DefaultDynControlEngine: TJvDynControlEngine;
 begin
+  Assert(Assigned(GlobalDefaultDynControlEngine),'JvDynControlEngine: DefaultDynControlEngine not defined');
   Result := GlobalDefaultDynControlEngine;
 end;
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActionsEngine.pas 13069 2011-06-19 17:18:06Z jfudickar $
+// $Id: JvVersionControlActionsEngine.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvVersionControlActionsEngine;
 
@@ -33,8 +33,8 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, ActnList, ImgList, Graphics,
-  Forms, Controls, Classes, JvActionsEngine, JclVersionControl;
+  Windows, Graphics,
+  Forms, Controls, Classes, JvActionsEngine;
 
 type
   TjvVersionControlActionEngine = class(TJvActionBaseEngine)
@@ -69,8 +69,8 @@ function RegisteredVersionControlActionEngineList: TjvVersionControlActionEngine
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActionsEngine.pas $';
-    Revision: '$Revision: 13069 $';
-    Date: '$Date: 2011-06-19 19:18:06 +0200 (dim., 19 juin 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -78,8 +78,8 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo, StrUtils,
-  Variants, Dialogs, StdCtrls, Clipbrd,
+  SysUtils,
+  Variants, Dialogs,
   JvVersionControlActions;
 
 

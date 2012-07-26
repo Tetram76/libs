@@ -36,7 +36,7 @@ Known Issues:
     * PosAtDate is slightly better
     * FirstVisibleDate always start at day 1 of month
 -----------------------------------------------------------------------------}
-// $Id: JvTimeLine.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvTimeLine.pas 13180 2011-11-22 12:45:23Z obones $
 
 unit JvTimeLine;
 
@@ -416,6 +416,9 @@ type
     procedure BeginDrag(Immediate: Boolean; Threshold: Integer = -1);
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvTimeLine = class(TJvCustomTimeLine)
   public
     property Selected;
@@ -495,8 +498,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimeLine.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13180 $';
+    Date: '$Date: 2011-11-22 13:45:23 +0100 (mar., 22 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -504,7 +507,7 @@ const
 implementation
 
 uses
-  Math, DateUtils,
+  Math, Types,
   JvJCLUtils, JvJVCLUtils, JvThemes, JclSysUtils;
 
 {$R JvTimeLine.res}
@@ -816,7 +819,7 @@ end;
 
 procedure TJvTLScrollBtn.MouseEnter(Control: TControl);
 begin
-  if ThemeServices.ThemesEnabled and not (FMouseInControl) and not (csDesigning in ComponentState) then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and not (FMouseInControl) and not (csDesigning in ComponentState) then
   begin
     FMouseInControl := True;
     Invalidate;
@@ -827,7 +830,7 @@ end;
 procedure TJvTLScrollBtn.MouseLeave(Control: TControl);
 begin
   inherited MouseLeave(Control);
-  if ThemeServices.ThemesEnabled and FMouseInControl then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and FMouseInControl then
   begin
     FMouseInControl := False;
     Invalidate;
@@ -854,7 +857,7 @@ begin
     Exit;
 
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if FPushed then
       Button := tsArrowBtnLeftPressed
@@ -2406,13 +2409,13 @@ begin
     { Draw borders in non-client area }
     OffsetRect(RW, -RW.Left, -RW.Top);
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.ThemesEnabled then
+    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     begin
       if FBorderStyle = bsSingle then
       begin
         Details := ThemeServices.GetElementDetails(teEditTextNormal);
         ThemeServices.DrawElement(ACanvas.Handle, Details, RW);
-        RW := ThemeServices.ContentRect(ACanvas.Handle, Details, RW);
+        ThemeServices.GetElementContentRect(ACanvas.Handle, Details, RW, RW);
       end;
     end
     else
@@ -2490,22 +2493,24 @@ begin
             // Really finish it (See TBaseVirtualTree.DragFinished;)
             GetCursorPos(P);
             P := ScreenToClient(P);
-            Perform(WM_LBUTTONUP, 0, LPARAM(PointToSmallPoint(P)));
+            Perform(WM_LBUTTONUP, 0, {$IFDEF RTL230_UP}PointToLParam{$ELSE}LPARAM{$ENDIF RTL230_UP}(PointToSmallPoint(P)));
           end;
 
           if Msg.DragMessage = dmDragMove then
-            with ScreenToClient(Pos) do
-              DoDragOver(Source, X, Y, Msg.Result <> 0);
+          begin
+            P := ScreenToClient(Pos);
+            DoDragOver(Source, P.X, P.Y, Msg.Result <> 0);
+          end;
         end;
       dmDragDrop:
         if Assigned(FDragItem) then
-          with ScreenToClient(Pos) do
-          begin
-//            FDragItem.Date := DateAtPos(X);
-//            FDragItem.Level := LevelAtPos(Y);
-            FDragItem := nil;
-            Invalidate;
-          end;
+        begin
+//          P := ScreenToClient(Pos);
+//          FDragItem.Date := DateAtPos(Pt.X);
+//          FDragItem.Level := LevelAtPos(Pt.Y);
+          FDragItem := nil;
+          Invalidate;
+        end;
       dmFindTarget:
         begin
           // Maybe perform an MouseDown event?
@@ -2513,8 +2518,8 @@ begin
           if not (tlDragging in FStates) and not Assigned(FDragItem) then
           begin
             // Did the user click on an item?
-            with ScreenToClient(Pos) do
-              FDragItem := ItemAtPos(X, Y);
+            P := ScreenToClient(Pos);
+            FDragItem := ItemAtPos(P.X, P.Y);
 
             // Set the dragitem as selected; don't care about shift/ctrl :)
             ClearSelection;
@@ -2525,7 +2530,7 @@ begin
             // The user did not click on an item.
             Msg.Result := 0
           else
-            Msg.Result := Integer(Self);
+            Msg.Result := LRESULT(Self);
 
           // This is a reliable place to check whether VCL drag has
           // really begun.
@@ -2854,16 +2859,14 @@ begin
     try
       Bmp.PixelFormat := pf24bit;
       MeasureItem(FSelectedItem, H);
-      with FSelectedItem.FRect do
-        Bmp.Width := Right - Left;
+      Bmp.Width := FSelectedItem.FRect.Right - FSelectedItem.FRect.Left;
       Bmp.Height := H;
       FDragImages := TImageList.CreateSize(Bmp.Width, H);
       R := Rect(0, 0, Bmp.Width, H);
       DrawItem(FSelectedItem, Bmp.Canvas, R);
       FDragImages.AddMasked(Bmp, Bmp.TransparentColor);
       FDragImages.DragCursor := DragCursor;
-      with FSelectedItem.FRect do
-        FDragImages.SetDragImage(0, 10, 10); // P.X-Left, P.Y-Top);
+      FDragImages.SetDragImage(0, 10, 10); // P.X-FSelectedItem.FRect.Left, P.Y-FSelectedItem.FRect.Top);
     finally
       Bmp.Free;
     end;

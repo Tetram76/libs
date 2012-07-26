@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExceptionForm.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvExceptionForm.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvExceptionForm;
 
@@ -36,7 +36,7 @@ uses
   Windows,
   Messages, ComObj,
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
-  JvLabel, JvComponent, JvExControls;
+  JvLabel, JvComponent;
 
 type
   TJvErrorEvent = procedure(Error: Exception; var Msg: string) of object;
@@ -86,8 +86,8 @@ procedure JvErrorIntercept;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvExceptionForm.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -96,7 +96,6 @@ implementation
 
 uses
   Consts,
-  JvTypes,
   JvJCLUtils, JvConsts, JvResources;
 
 {$R *.dfm}
@@ -148,6 +147,10 @@ asm
 end;
 
 {$IFDEF MSWINDOWS}
+{$IFNDEF RTL230_UP}
+type
+  INT_PTR = Integer;
+{$ENDIF ~RTL230_UP}
 procedure TJvErrorDialog.ErrorInfo(var LogicalAddress: Pointer; var ModuleName: string);
 var
   Info: TMemoryBasicInformation;
@@ -161,7 +164,7 @@ begin
     LogicalAddress := ConvertAddr(LogicalAddress);
   end
   else
-    Cardinal(LogicalAddress) := Cardinal(LogicalAddress) - Cardinal(Info.AllocationBase);
+    INT_PTR(LogicalAddress) := INT_PTR(LogicalAddress) - INT_PTR(Info.AllocationBase);
   StrLCopy(ModName, AnsiStrRScan(Temp, PathDelim) + 1, SizeOf(ModName) - 1);
   ModuleName := StrPas(ModName);
 end;

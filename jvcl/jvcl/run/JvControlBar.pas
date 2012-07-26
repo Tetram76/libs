@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlBar.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvControlBar.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvControlBar;
 
@@ -39,6 +39,9 @@ uses
 type
   TPopupNames = (pnHint, pnName);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvControlBar = class(TJvExControlBar, IJvDenySubClassing,
     IJvAppStorageHandler, IJvAppStoragePublishedProps)
   private
@@ -49,7 +52,7 @@ type
   protected
     procedure ReadFromAppStorage(AppStorage: TJvCustomAppStorage; const BasePath: string); virtual;
     procedure WriteToAppStorage(AppStorage: TJvCustomAppStorage; const BasePath: string); virtual;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     procedure DoAddDockClient(Client: TControl; const ARect: TRect); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure PopupMenuClick(Sender: TObject);
@@ -75,8 +78,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlBar.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -109,7 +112,7 @@ begin
   inherited Destroy;
 end;
 
-function TJvControlBar.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvControlBar.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   if Picture.Graphic <> nil then
     Result := inherited DoEraseBackground(Canvas, Param)
@@ -120,10 +123,7 @@ begin
   end;
 end;
 
-procedure TJvControlBar.MouseUp(Button: TMouseButton; Shift: TShiftState;
-  X, Y: Integer);
-var
-  I: Integer;
+procedure TJvControlBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
   procedure DoAddControl(const AControl: TControl; const Index: Integer);
   var
@@ -141,6 +141,9 @@ var
     FPopup.Items.Add(It);
   end;
 
+var
+  I: Integer;
+  Pt: TPoint;
 begin
   inherited MouseUp(Button, Shift, X, Y);
   if PopupControl and (Button = mbRight) then
@@ -151,8 +154,8 @@ begin
       FPopup := TPopupMenu.Create(Self);
     for I := 0 to FList.Count - 1 do
       DoAddControl(TControl(FList[I]), I);
-    with ClientToScreen(Point(X, Y)) do
-      FPopup.Popup(X, Y);
+    Pt := ClientToScreen(Point(X, Y));
+    FPopup.Popup(Pt.X, Pt.Y);
   end;
 end;
 

@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTComponents.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvMTComponents.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvMTComponents;
 
@@ -46,6 +46,9 @@ type
   TJvMTThreadEvent = procedure (Sender: TJvMTThread;
     MTThread: TJvMTSingleThread) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMTManager = class(TJvMTComponent)
   private
     FManager: TMTManager;
@@ -75,6 +78,9 @@ type
     property Manager: TJvMTManager read FManager write SetManager;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMTThread = class(TJvMTManagedComponent)
   private
     FOnExecute: TJvMTThreadEvent;
@@ -135,6 +141,9 @@ type
     property Active: Boolean read GetActive;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMTSection = class(TJvMTSectionBase)
   private
     FAllowRecursion: Boolean;
@@ -152,6 +161,9 @@ type
       default False;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMTCountingSection = class(TJvMTSectionBase)
   private
     FInitCount: Integer;
@@ -187,6 +199,9 @@ type
       default MTDefaultBufferSize;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMTThreadToVCL = class(TJvMTAsyncBufferBase)
   private
     FOnCanRead: TNotifyEvent;
@@ -197,6 +212,9 @@ type
     property OnCanRead: TNotifyEvent read FOnCanRead write FOnCanRead;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMTVCLToThread = class(TJvMTAsyncBufferBase)
   private
     FOnCanWrite: TNotifyEvent;
@@ -208,6 +226,9 @@ type
     property OnCanWrite: TNotifyEvent read FOnCanWrite write FOnCanWrite;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMTThreadToThread = class(TJvMTComponent)
   private
     FHooking: TCriticalSection;
@@ -225,6 +246,9 @@ type
       default MTDefaultBufferSize;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMTMonitorSection = class(TJvMTComponent)
   private
     FMonitor: TMTMonitor;
@@ -241,8 +265,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTComponents.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -28,7 +28,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgPage.pas 13079 2011-07-06 07:42:10Z ahuser $
+// $Id: JvgPage.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvgPage;
 
@@ -133,8 +133,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgPage.pas $';
-    Revision: '$Revision: 13079 $';
-    Date: '$Date: 2011-07-06 09:42:10 +0200 (mer., 06 juil. 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -277,7 +277,7 @@ begin
           if FSingleGlyph then
             GlyphID := 0
           else
-          if WParam < FGlyphs.Count then
+          if WParam < Windows.WPARAM(FGlyphs.Count) then
             GlyphID := WParam;
           if GlyphID = -1 then
             Exit;

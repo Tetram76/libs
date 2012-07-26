@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGradientHeaderPanel.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvGradientHeaderPanel.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvGradientHeaderPanel;
 
@@ -38,6 +38,9 @@ uses
   JvGradient, JvTypes, JvComponent;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvGradientHeaderPanel = class(TJvCustomControl)
   private
     FGradient: TJvGradient;
@@ -77,7 +80,7 @@ type
     procedure AdjustLabelWidth;
     procedure WMSize(var Msg: TWMSize); message WM_SIZE;
   protected
-//    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+//    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     procedure DoLabelFontChange(Sender: TObject);
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -153,8 +156,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGradientHeaderPanel.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -420,7 +423,7 @@ begin
 end;
 
 (*
-function TJvGradientHeaderPanel.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvGradientHeaderPanel.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   { Reduce flickering FGradient completely fills the TJvGradientHeaderPanel }
   Result := True;

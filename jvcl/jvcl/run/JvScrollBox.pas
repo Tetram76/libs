@@ -21,12 +21,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScrollBox.pas 12891 2010-11-09 14:09:15Z obones $
+// $Id: JvScrollBox.pas 13155 2011-11-06 12:31:20Z ahuser $
 
 unit JvScrollBox;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -42,6 +41,9 @@ type
 
   TJvScrollBoxFillMode = (sfmTile, sfmStretch, sfmNone);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvScrollBox = class(TJvExScrollBox)
   private
     FHotTrack: Boolean;
@@ -69,7 +71,7 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure PaintWindow(DC: HDC); override;
     procedure Paint; virtual;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     procedure PaintBackground;
   public
     constructor Create(AOwner: TComponent); override;
@@ -101,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScrollBox.pas $';
-    Revision: '$Revision: 12891 $';
-    Date: '$Date: 2010-11-09 15:09:15 +0100 (mar., 09 nov. 2010) $';
+    Revision: '$Revision: 13155 $';
+    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -273,7 +275,7 @@ begin
   ControlState := ControlState - [csCustomPaint];
 end;
 
-function TJvScrollBox.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvScrollBox.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   Result := False;
   if Assigned(FOnEraseBackground) then

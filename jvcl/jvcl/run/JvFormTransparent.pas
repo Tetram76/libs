@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormTransparent.pas 12780 2010-05-21 09:12:38Z ahuser $
+// $Id: JvFormTransparent.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvFormTransparent;
 
@@ -44,6 +44,9 @@ type
     tfmLayeredWindow             // Use Mask (32bit with alpha channel) for the layered window (Windows 2000 or newer)
   );
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvTransparentForm = class(TJvComponent)
   private
     FMask: TBitmap;
@@ -102,8 +105,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormTransparent.pas $';
-    Revision: '$Revision: 12780 $';
-    Date: '$Date: 2010-05-21 11:12:38 +0200 (ven., 21 mai 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -20,7 +20,7 @@ You may retrieve the latest version of this file at the Project JEDI's JVCL home
 located at http://jvcl.delphi-jedi.org
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLogFile.pas 12863 2010-10-11 08:10:36Z obones $
+// $Id: JvLogFile.pas 13268 2012-03-02 14:49:25Z obones $
 
 unit JvLogFile;
 
@@ -36,6 +36,9 @@ uses
   JvComponentBase, JvLogClasses;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvLogFile = class(TJvComponent)
   private
     FList: TJvLogRecordList;
@@ -89,8 +92,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLogFile.pas $';
-    Revision: '$Revision: 12863 $';
-    Date: '$Date: 2010-10-11 10:10:36 +0200 (lun., 11 oct. 2010) $';
+    Revision: '$Revision: 13268 $';
+    Date: '$Date: 2012-03-02 15:49:25 +0100 (ven., 02 mars 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -150,7 +153,7 @@ end;
 
 procedure TJvLogFile.Add(const Time, Title, Description: string);
 begin
-  Add(DateTimeToStr(Now), Title, FDefaultSeverity, Description);
+  Add(Time, Title, FDefaultSeverity, Description);
 end;
 
 procedure TJvLogFile.Add(const Title, Description: string);

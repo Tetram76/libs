@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacement.pas 13006 2011-03-31 12:20:17Z jfudickar $
+// $Id: JvFormPlacement.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvFormPlacement;
                                               
@@ -36,7 +36,7 @@ uses
   Variants, Types, RTLConsts,
   SysUtils, Classes, Windows, Messages, Controls, Forms,
   JvWndProcHook,
-  JvAppStorage, JvComponentBase, JvJVCLUtils, JvTypes, JvConsts;
+  JvAppStorage, JvComponentBase, JvJVCLUtils, JvTypes;
 
 type
   TJvIniLink = class;
@@ -137,6 +137,7 @@ type
     procedure WriteInteger(const Ident: string; AValue: Longint);
     function ReadDateTime(const Ident: string; Default: TDateTime = 0): TDateTime;
     procedure WriteDateTime(const Ident: string; AValue: TDateTime);
+    procedure DeleteValue(const Ident: string);
     procedure EraseSections;
   published
     property Active: Boolean read FActive write FActive default True;
@@ -159,6 +160,9 @@ type
   TJvStoredValue = class;
   TJvFormStorageStringList = class;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvFormStorage = class(TJvFormPlacement)
   private
     FStoredProps: TJvFormStorageStringList;
@@ -276,8 +280,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacement.pas $';
-    Revision: '$Revision: 13006 $';
-    Date: '$Date: 2011-03-31 14:20:17 +0200 (jeu., 31 mars 2011) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -285,7 +289,6 @@ const
 implementation
 
 uses
-  Consts,
   JclStrings,
   JvJCLUtils, JvPropertyStorage;
 
@@ -747,6 +750,13 @@ procedure TJvFormPlacement.WriteDateTime(const Ident: string; AValue: TDateTime)
 begin
   if Assigned(AppStorage) and (Ident <> '') then
     AppStorage.WriteDateTime(AppStorage.ConcatPaths([AppStoragePath, AppStorage.TranslatePropertyName(Self, Ident, False)]), AValue);
+end;
+
+procedure TJvFormPlacement.DeleteValue(const Ident: string);
+begin
+  // RH: added 2011-09-12
+  if Assigned(AppStorage) and (Ident <> '') then
+    AppStorage.DeleteValue(AppStorage.ConcatPaths([AppStoragePath, AppStorage.TranslatePropertyName(Self, Ident, False)]) );
 end;
 
 procedure TJvFormPlacement.EraseSections;

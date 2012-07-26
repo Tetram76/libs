@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOfficeColorPanel.pas 12980 2011-02-15 17:45:02Z ahuser $
+// $Id: JvOfficeColorPanel.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvOfficeColorPanel;
 
@@ -372,6 +372,9 @@ type
     property OnGetAddInControlSiteInfo: TJvGetAddInControlSiteInfoEvent read FOnGetAddInControlSiteInfo write FOnGetAddInControlSiteInfo;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOfficeColorPanel = class(TJvCustomOfficeColorPanel)
   private
     FFilerTag: string;
@@ -460,8 +463,8 @@ procedure JvReaderReadStrings(Reader: TReader;Strings:TStrings);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOfficeColorPanel.pas $';
-    Revision: '$Revision: 12980 $';
-    Date: '$Date: 2011-02-15 18:45:02 +0100 (mar., 15 févr. 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

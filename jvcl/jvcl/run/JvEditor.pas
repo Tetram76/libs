@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvEditor.pas 12829 2010-09-03 21:25:36Z ahuser $
+// $Id: JvEditor.pas 13375 2012-06-27 14:14:06Z ahuser $
 
 unit JvEditor;
 
@@ -154,6 +154,9 @@ type
     property OnCompletionApply: TOnCompletionApply read FOnCompletionApply write FOnCompletionApply;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvEditor = class(TJvCustomEditor)
   published
     property BeepOnError;
@@ -378,8 +381,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditor.pas $';
-    Revision: '$Revision: 12829 $';
-    Date: '$Date: 2010-09-03 23:25:36 +0200 (ven., 03 sept. 2010) $';
+    Revision: '$Revision: 13375 $';
+    Date: '$Date: 2012-06-27 16:14:06 +0200 (mer., 27 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -387,8 +390,11 @@ const
 implementation
 
 uses
-  Consts, RTLConsts, SysUtils, Math, Graphics, Clipbrd,
-  JvUnicodeCanvas, JvJCLUtils, JvThemes, JvConsts, JvResources;
+  SysUtils, Math, Graphics, Clipbrd,
+  {$IFDEF UNICODE}
+  Character,
+  {$ENDIF UNICODE}
+  JvUnicodeCanvas, JvJCLUtils, JvConsts, JvResources;
 
 type
   TJvUndoBufferAccessProtected = class(TJvUndoBuffer);
@@ -943,7 +949,11 @@ var
 begin
   Key := Char(Value);
   WasSelected := (FSelection.IsSelected) and (not PersistentBlocks);
+  {$IFDEF UNICODE}
+  if (Key >= #32) and ((Key <= #$FF) or not TCharacter.IsControl(Char(Value))) then
+  {$ELSE}
   if CharInSet(Key, [#32..#255]) then
+  {$ENDIF UNICODE}
   begin
     if not HasChar(Key, JvEditorCompletionChars) then
       Completion.DoKeyPress(Key);

@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLData.pas 12923 2010-11-28 01:36:12Z ahuser $
+// $Id: JVCLData.pas 13295 2012-05-07 15:01:25Z obones $
 
 unit JVCLData;
 
@@ -84,6 +84,8 @@ type
     FJVCLConfig: TJVCLConfig;
     FJVCLRegistryConfig: TJVCLRegistryConfig;
 
+    FInstallSuccess: Boolean;
+
     procedure SetInstallMode(Value: TInstallMode);
     function GetFrameworkCount: Integer;
     function GetDxgettextDir: string;
@@ -103,6 +105,7 @@ type
     function GetJVCLPackagesDir: string;
 
     function GetTargetSymbol: string;
+    function GetMainTargetSymbol: string;
     function GetAutoDependencies: Boolean;
     function GetBuild: Boolean;
     function GetUnitOutDir: string;
@@ -122,18 +125,21 @@ type
     function GetDebugHppDir: string;
     function GetDebugBplDir: string;
     function GetDebugDcpDir: string;
+    function GetLogFileName: string;
   protected
     procedure Init; virtual;
     procedure DoCleanPalette(Reg: TRegistry; const Name: string;
       RemoveEmptyPalettes: Boolean);
     procedure ClearPackageCache(const Key: string; const AStartsWith: string);
-    function RegisterProjectGroupToIDE(ProjectGroup: TProjectGroup): Boolean;
+    procedure RegisterProjectGroupToIDE(ProjectGroup: TProjectGroup);
 
     procedure UpdateOptions;
     procedure EnableOption(const Name: string; Enable: Boolean; ForceEnable: Boolean = False);
   public
     property Target: TCompileTarget read GetTarget;
     property Owner: TJVCLData read FOwner;
+
+    procedure _SetBuildSuccess(Value: Boolean);
   public
     constructor Create(AOwner: TJVCLData; ATarget: TCompileTarget); reintroduce;
     destructor Destroy; override;
@@ -144,7 +150,8 @@ type
     procedure GetPackageBinariesForDeletion(List: TStrings);
     procedure DeinstallJVCL(Progress: TDeinstallProgressEvent;
       DeleteFiles: TDeleteFilesEvent; RealUninstall: Boolean);
-    function RegisterToIDE: Boolean;
+    procedure AddPathsToIDE;
+    procedure RegisterDesigntimePackages;
     procedure RegisterJVCLVersionInfo;
 
     function GetOutputDirs(DebugUnits: Boolean): TOutputDirs;
@@ -199,6 +206,9 @@ type
     property TargetSymbol: string read GetTargetSymbol;
       // TargetSymbol returns the symbol that is used in the xml files for this
       // target.
+    property MainTargetSymbol: string read GetMainTargetSymbol;
+      // MainTargetSymbol returns the symbol that is used in the xml files for this
+      // target's main version. It does not include the personal/standard flag
 
     property UnitOutDir: string read GetUnitOutDir;
       // UnitOutDir specifies the JVCL directory where the .dcu should go.
@@ -309,6 +319,10 @@ type
 
     property JclBplDir: string read GetJclBplDir;
       // JclBplDir returns the directory where the JclXx.bpl/JclVclXX.bpl files are.
+
+    property InstallSuccess: Boolean read FInstallSuccess;
+
+    property LogFileName: string read GetLogFileName;
   end;
 
   TJclLinkMapFile = function(ExecutableFileName, MapFileName: PChar;
@@ -384,6 +398,7 @@ type
 implementation
 
 uses
+  JclFileUtils,
   Utils, CmdLineUtils, PackageInformation, JediRegInfo;
 
 resourcestring
@@ -685,8 +700,9 @@ begin
   FDeveloperInstall := False;
   FAutoDependencies := True;
   FGenerateMapFiles := True;
-  FLinkMapFiles := True;
+  FLinkMapFiles := Target.Platform = ctpWin32;  // linking map files into anything but x86 binaries is not yet supported
   FDeleteMapFiles := True;
+  FCompileOnly := Target.Platform <> ctpWin32;  // by default, only install under Win32
 
   FBplDir := Target.BplDir;
   // DcpDir matches the DCU output directory.
@@ -741,13 +757,13 @@ begin
   FJclBplDir := '';
   FJclDcpDir := '';
 
-  JclRegInfo := ReadJediRegInformation(Target.RegistryKey, 'JCL'); // do not localize
+  JclRegInfo := ReadJediRegInformation(Target.RegistryKey, 'JCL', Target.PlatformName); // do not localize
   FJclDir := FixBackslashBackslash(ExcludeTrailingPathDelimiter(Target.ExpandDirMacros(JclRegInfo.RootDir)));
   FJclDcpDir := FixBackslashBackslash(ExcludeTrailingPathDelimiter(Target.ExpandDirMacros(JclRegInfo.DcpDir)));
   FJclBplDir := FixBackslashBackslash(ExcludeTrailingPathDelimiter(Target.ExpandDirMacros(JclRegInfo.BplDir)));
   FJclVersion := JclRegInfo.Version;
 
-  FJVCLVersion := ReadJediRegInformation(Target.RegistryKey, 'JVCL').Version;
+  FJVCLVersion := ReadJediRegInformation(Target.RegistryKey, 'JVCL', Target.PlatformName).Version;
   if (FInstalledJVCLVersion = 0) and (FJVCLVersion <> '') then
     FInstalledJVCLVersion := ParseVersionNumber(FJVCLVersion) shr 24
   else
@@ -785,6 +801,60 @@ end;
 function TTargetConfig.GetJVCLRegistryConfig: TJVCLRegistryConfig;
 begin
   Result := FJVCLRegistryConfig;
+end;
+
+procedure TTargetConfig.AddPathsToIDE;
+begin
+  if InstalledJVCLVersion < 3 then
+    DeinstallJVCL(nil, nil, True);
+
+  RegisterJVCLVersionInfo;
+
+  if AddBplDirToPath then
+  begin
+    if not Target.IsInEnvPath(BplDir) then
+      Target.EnvPath := Target.EnvPath + ';' + BplDir;
+  end;
+
+  // remove old paths
+  AddPaths(Target.BrowsingPaths, False, Owner.JVCLDir,
+    ['common', 'run', 'Resources', 'qcommon', 'qrun']); // do not localize
+  AddPaths(Target.SearchPaths, False, Owner.JVCLDir,
+    ['common', 'run', 'Resources', 'qcommon', 'qrun']); // do not localize
+  AddPaths(Target.DebugDcuPaths, {Add:=}False, Owner.JVCLDir,
+    [Target.InsertDirMacros(DebugUnitOutDir), DebugUnitOutDir]); // do not localize
+  if Target.SupportsPersonalities([persBCB]) then
+    AddPaths(Target.GlobalCppBrowsingPaths, {Add:=}False, Owner.JVCLDir,
+      ['Resources', Target.InsertDirMacros(UnitOutDir)]); // do not localize, clean up because we had browsing and library path wrong
+
+  // update paths
+  AddPaths(Target.BrowsingPaths, True, Owner.JVCLDir, // Resources directory must not be in browse-paths
+    ['common']); // do not localize
+  AddPaths(Target.SearchPaths, True, Owner.JVCLDir,
+    [Target.InsertDirMacros(UnitOutDir), 'common', 'Resources']); // do not localize
+  if DebugUnits and not DeveloperInstall then
+    AddPaths(Target.DebugDcuPaths, True, Owner.JVCLDir,
+      [Target.InsertDirMacros(DebugUnitOutDir)]); // do not localize
+  if Target.SupportsPersonalities([persBCB]) then
+  begin
+    AddPaths(Target.GlobalIncludePaths, True, Owner.JVCLDir,
+     [Target.InsertDirMacros(HppDir)]);
+    AddPaths(Target.GlobalCppBrowsingPaths, True, Owner.JVCLDir,
+      ['run', 'common']); // do not localize
+    AddPaths(Target.GlobalCppLibraryPaths, True, Owner.JVCLDir,
+      ['Resources', Target.InsertDirMacros(UnitOutDir)]); // do not localize
+  end;
+
+  // add
+  if pkVCL in InstallMode then
+  begin
+    AddPaths(Target.BrowsingPaths, True, Owner.JVCLDir,
+      ['run']); // do not localize
+    AddPaths(Target.SearchPaths, {Add:=}DeveloperInstall, Owner.JVCLDir,
+      ['run']); // do not localize
+  end;
+
+  Target.SavePaths;
 end;
 
 function TTargetConfig.CanInstallJVCL: Boolean;
@@ -837,29 +907,41 @@ end;
 /// </summary>
 function TTargetConfig.GetBpgFilename(Personal: Boolean; Kind: TPackageGroupKind): string;
 var
-  Pers: string;
+  Suffix: string;
 begin
+  Suffix := '';
   if Personal then
   begin
     if Target.Version <= 5 then
-      Pers := 'Std'  // do not localize
+      Suffix := 'Std'  // do not localize
     else
-      Pers := 'Per'; // do not localize
+      Suffix := 'Per'; // do not localize
   end;
+
+  // Use a specific project group for x64
+  if (Target.Version >= 16) then
+    case Target.Platform of
+      ctpWin32:
+        ;  // no suffix needed
+      ctpWin64:
+        Suffix := Suffix + '_x64';
+      else
+        raise Exception.Create('JVCLData.TTargetConfig.GetBpgFilename: Unsupported platform');
+    end;
 
   if Target.IsBDS then
   begin
     if Target.Version >= 11 then  // Delphi 2007 and upper use groupproj files
       Result := Owner.JVCLPackagesDir + Format('\%s%d%s Packages.groupproj', // do not localize
-        [Target.TargetType, Target.Version, Pers])
+        [Target.TargetType, Target.Version, Suffix])
     else
       Result := Owner.JVCLPackagesDir + Format('\%s%d%s Packages.bdsgroup', // do not localize
-        [Target.TargetType, Target.Version, Pers]);
+        [Target.TargetType, Target.Version, Suffix]);
   end
   else
   begin
     Result := Owner.JVCLPackagesDir + Format('\%s%d%s Packages.bpg', // do not localize
-      [Target.TargetType, Target.Version, Pers]);
+      [Target.TargetType, Target.Version, Suffix]);
   end;
 end;
 
@@ -890,6 +972,11 @@ begin
     Result := Copy(Name, 1, Length(Name) - 2) + '.dcp'
   else
     Result := Name;
+end;
+
+procedure TTargetConfig._SetBuildSuccess(Value: Boolean);
+begin
+  FInstallSuccess := Value;
 end;
 
 function TTargetConfig.VersionedJVCLXmlBpl(const Name: string): string;
@@ -924,7 +1011,7 @@ end;
 
 procedure TTargetConfig.RegisterJVCLVersionInfo;
 begin
-  InstallJediRegInformation(Target.RegistryKey, 'JVCL',
+  InstallJediRegInformation(Target.RegistryKey, 'JVCL', Target.PlatformName,
     Format('%d.%d.%d.%d', [JVCLVersionMajor, JVCLVersionMinor, JVCLVersionRelease, JVCLVersionBuild]),
     DcpDir, BplDir, GetJVCLDir);
 end;
@@ -971,7 +1058,7 @@ begin
         ProjectGroup.Packages[i].Compile := Ini.ReadBool(ProjectGroup.BpgName, ProjectGroup.Packages[i].Info.Name, True)
       else
       begin
-        if Ini.ReadBool(ProjectGroup.BpgName + ' Designtime', ProjectGroup.Packages[i].Info.Name, False) then
+        if Ini.ReadBool(ProjectGroup.BpgName + ' Designtime', ProjectGroup.Packages[i].Info.Name, False) then // do not localize
           ProjectGroup.Packages[i].Install := True;
       end;
   finally
@@ -1022,12 +1109,31 @@ begin
     else
       Pers := 'p'; // do not localize
   end;
-  Result := Format('%s%d%s', [Target.TargetType, Target.Version, Pers]); // do not localize
+  Result := Format('%s%s', [MainTargetSymbol, Pers]); // do not localize
+end;
+
+function TTargetConfig.GetMainTargetSymbol: string;
+var
+  PlatformPostfix: string;
+begin
+  PlatformPostfix := '';
+  case Target.Platform of
+    ctpWin32:
+      PlatformPostfix := '';
+    ctpWin64:
+      PlatformPostfix := '_x64'; // do not localize
+  end;
+  Result := Format('%s%d%s', [Target.TargetType, Target.Version, PlatformPostfix]); // do not localize
 end;
 
 function TTargetConfig.GetUnitOutDir: string;
+var
+  PlatformStr: string;
 begin
-  Result := GetJVCLDir + Format('\lib\%s%d', [Target.TargetType, Target.Version]); // do not localize
+  PlatformStr := AnsiLowerCase(Target.PlatformName);
+  if PlatformStr <> '' then
+    PlatformStr := '\' + PlatformStr;
+  Result := GetJVCLDir + Format('\lib\%s%d%s', [Target.TargetType, Target.Version, PlatformStr]); // do not localize
 end;
 
 procedure TTargetConfig.SetInstallMode(Value: TInstallMode);
@@ -1077,12 +1183,17 @@ begin
 end;
 
 function TTargetConfig.GetJclDcuDir: string;
+var
+  PlatformStr: string;
 begin
   { TODO : Keep in sync with JCL naming schema }
   // Note: if the JCL changes its naming convention, a table of equivalences
   // would need to be built. Right now (2006/02/09), this is not necessary
   // as the format is always %type%version.
-  Result := JclDir + Format('\lib\%s%d', [Target.TargetType, Target.Version]);
+  PlatformStr := AnsiLowerCase(Target.PlatformName);
+  if PlatformStr <> '' then
+    PlatformStr := '\' + PlatformStr;
+  Result := JclDir + Format('\lib\%s%d%s', [Target.TargetType, Target.Version, PlatformStr]);
 end;
 
 function TTargetConfig.GetJclBplDir: string;
@@ -1171,6 +1282,11 @@ end;
 function TTargetConfig.GetLinkMapFiles: Boolean;
 begin
   Result := FLinkMapFiles;
+end;
+
+function TTargetConfig.GetLogFileName: string;
+begin
+  Result := PathAddSeparator(ExtractFilePath(ParamStr(0))) + 'jvcl_install_' + LowerCase(GetMainTargetSymbol) + '.log'; 
 end;
 
 function TTargetConfig.GetCreateJdbgFiles: Boolean;
@@ -1319,8 +1435,15 @@ begin
         Version := Target.IDEVersion + 6  // BDS 3 is Delphi 9
       else
         Version := Target.IDEVersion + 7; // BDS 7 is Delphi 14
-      Filename := GetJVCLDir + '\common\' + Format('jvcl%s%d.inc', // do not localize
-          [LowerCase(Target.TargetType), Version]);
+      if Target.PlatForm = ctpWin32 then
+        Filename := GetJVCLDir + '\common\' + Format('jvcl%s%d%s.inc', // do not localize
+            [LowerCase(Target.TargetType), Version, ''])
+      else if Target.PlatForm = ctpWin64 then
+        Filename := GetJVCLDir + '\common\' + Format('jvcl%s%d%s.inc', // do not localize
+            [LowerCase(Target.TargetType), Version, '_x64'])
+      else
+        Filename := GetJVCLDir + '\common\' + Format('jvcl%s%d%s.inc', // do not localize
+            [LowerCase(Target.TargetType), Version, AnsiLowerCase(Target.PlatformName)]);
     end
     else
       Filename := GetJVCLDir + '\common\' + Format('jvcl%s%d.inc', // do not localize
@@ -1383,7 +1506,7 @@ begin
   end;
 end;
 
-function TTargetConfig.RegisterProjectGroupToIDE(ProjectGroup: TProjectGroup): Boolean;
+procedure TTargetConfig.RegisterProjectGroupToIDE(ProjectGroup: TProjectGroup);
 var
   PackageIndex, i: Integer;
   KnownPackages, DisabledPackages: TDelphiPackageList;
@@ -1418,66 +1541,15 @@ begin
     end;
   end;
 
-  ProjectGroup.Target.SavePaths;
   ProjectGroup.Target.SavePackagesLists;
-  Result := True;
 end;
 
-function TTargetConfig.RegisterToIDE: Boolean;
+procedure TTargetConfig.RegisterDesigntimePackages;
 var
   Kind: TPackageGroupKind;
   i: Integer;
   AllPackages, PackageGroup: TProjectGroup;
 begin
-  if InstalledJVCLVersion < 3 then
-    DeinstallJVCL(nil, nil, True);
-
-  RegisterJVCLVersionInfo;
-
-  if AddBplDirToPath then
-  begin
-    if not Target.IsInEnvPath(BplDir) then
-      Target.EnvPath := Target.EnvPath + ';' + BplDir;
-  end;
-
-  // remove old paths
-  AddPaths(Target.BrowsingPaths, False, Owner.JVCLDir,
-    ['common', 'run', 'Resources', 'qcommon', 'qrun']); // do not localize
-  AddPaths(Target.SearchPaths, False, Owner.JVCLDir,
-    ['common', 'run', 'Resources', 'qcommon', 'qrun']); // do not localize
-  AddPaths(Target.DebugDcuPaths, {Add:=}False, Owner.JVCLDir,
-    [Target.InsertDirMacros(DebugUnitOutDir), DebugUnitOutDir]); // do not localize
-  if Target.SupportsPersonalities([persBCB]) then
-    AddPaths(Target.GlobalCppBrowsingPaths, {Add:=}False, Owner.JVCLDir,
-      ['Resources', Target.InsertDirMacros(UnitOutDir)]); // do not localize, clean up because we had browsing and library path wrong
-
-  // update paths
-  AddPaths(Target.BrowsingPaths, True, Owner.JVCLDir, // Resources directory must not be in browse-paths
-    ['common']); // do not localize
-  AddPaths(Target.SearchPaths, True, Owner.JVCLDir,
-    [Target.InsertDirMacros(UnitOutDir), 'common', 'Resources']); // do not localize
-  if DebugUnits and not DeveloperInstall then
-    AddPaths(Target.DebugDcuPaths, True, Owner.JVCLDir,
-      [Target.InsertDirMacros(DebugUnitOutDir)]); // do not localize
-  if Target.SupportsPersonalities([persBCB]) then
-  begin
-    AddPaths(Target.GlobalIncludePaths, True, Owner.JVCLDir,
-     [Target.InsertDirMacros(HppDir)]);
-    AddPaths(Target.GlobalCppBrowsingPaths, True, Owner.JVCLDir,
-      ['run', 'common']); // do not localize
-    AddPaths(Target.GlobalCppLibraryPaths, True, Owner.JVCLDir,
-      ['Resources', Target.InsertDirMacros(UnitOutDir)]); // do not localize
-  end;
-
-  // add
-  if pkVCL in InstallMode then
-  begin
-    AddPaths(Target.BrowsingPaths, True, Owner.JVCLDir,
-      ['run']); // do not localize
-    AddPaths(Target.SearchPaths, {Add:=}DeveloperInstall, Owner.JVCLDir,
-      ['run']); // do not localize
-  end;
-
   AllPackages := TProjectGroup.Create(Self, '');
   try
     for Kind := pkFirst to pkLast do
@@ -1493,7 +1565,7 @@ begin
         end;
       end;
     end;
-    Result := RegisterProjectGroupToIDE(AllPackages);
+    RegisterProjectGroupToIDE(AllPackages);
   finally
     AllPackages.Free;
   end;
@@ -1651,7 +1723,7 @@ begin
 
   if RealUninstall then
   begin
-    RemoveJediRegInformation(Target.RegistryKey, 'JVCL');
+    RemoveJediRegInformation(Target.RegistryKey, 'JVCL', Target.PlatformName);
 
     // clean ini file
 {    Ini := TMemIniFile.Create(ChangeFileExt(ParamStr(0), '.ini')); // do not localize

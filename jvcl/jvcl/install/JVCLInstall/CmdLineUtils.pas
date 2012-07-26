@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: CmdLineUtils.pas 12792 2010-06-07 09:14:20Z ahuser $
+// $Id: CmdLineUtils.pas 13374 2012-06-27 13:09:29Z obones $
 
 unit CmdLineUtils;
 
@@ -46,12 +46,18 @@ type
     FAutoUpdate: Boolean;
     FAutoInstall: Boolean;
     FAutoCloseAfterSuccess: Boolean;
+    FAutoCloseAfterError: Boolean;
+    FContinueOnError: Boolean;
+    FDeletePreviousLogFiles: Boolean;
+    FXMLResultFileName: string;
+    FIncludeLogFilesInXML: Boolean;
     FRebuildPackages: Boolean;
     FRegistryKeyDelphi: string;
     FRegistryKeyBCB: string;
     FRegistryKeyBDS: string;
 
     FItemList: TObjectList;
+    FForceInstall: Boolean;
     procedure ShowHelp;
   protected
     procedure AddBool(const Name, Help: string; var Value: Boolean);
@@ -70,7 +76,13 @@ type
     property KeepFiles: Boolean read FKeepFiles write FKeepFiles;
     property AutoUpdate: Boolean read FAutoUpdate write FAutoUpdate;
     property AutoInstall: Boolean read FAutoInstall write FAutoInstall;
+    property ForceInstall: Boolean read FForceInstall write FForceInstall;
     property AutoCloseAfterSuccess: Boolean read FAutoCloseAfterSuccess write FAutoCloseAfterSuccess;
+    property AutoCloseAfterError: Boolean read FAutoCloseAfterError write FAutoCloseAfterError;
+    property ContinueOnError: Boolean read FContinueOnError write FContinueOnError;
+    property DeletePreviousLogFiles: Boolean read FDeletePreviousLogFiles write FDeletePreviousLogFiles;
+    property XMLResultFileName: string read FXMLResultFileName write FXMLResultFileName;
+    property IncludeLogFilesInXML: Boolean read FIncludeLogFilesInXML write FIncludeLogFilesInXML;
     property RebuildPackages: Boolean read FRebuildPackages write FRebuildPackages;
     property RegistryKeyDelphi: string read FRegistryKeyDelphi write FRegistryKeyDelphi;
     property RegistryKeyBCB: string read FRegistryKeyBCB write FRegistryKeyBCB;
@@ -98,8 +110,14 @@ begin
   AddBool('--keep-files', 'Do not call "clean".', FKeepFiles);
   AddBool('--autoupdate', 'Updates all IDEs where JVCL 3 is installed.', FAutoUpdate);
   AddBool('--autoinstall', 'Installs JVCL 3 for all installed IDEs.', FAutoInstall);
+  AddBool('--forceinstall', 'Force installing JVCL 3 for all installed IDEs.', FForceInstall);
   AddBool('--build', 'Rebuilds the packages by default', FRebuildPackages);
   AddBool('--autoclose', 'Automatically close the installer after a successfull installation', FAutoCloseAfterSuccess);
+  AddBool('--autoclose-error', 'Automatically close the installer after a failed installation', FAutoCloseAfterError);
+  AddBool('--continue-on-error', 'Automatically continue compilation of other targets should the current one fail', FContinueOnError);
+  AddBool('--delete-previous-log-files', 'Delete log files from previous installations before starting this one', FDeletePreviousLogFiles);
+  AddString('--XMLResult=', 'Write the compilation status in the given XML file', FXMLResultFileName);
+  AddBool('--include-log-files-in-XML', 'Include the log files content in the result XML', FIncludeLogFilesInXML);
   AddSpace;
   AddString('-rDelphi=', 'Sets the Registry sub-key for the Delphi IDEs.', FRegistryKeyDelphi);
   AddString('-rBCB=', 'Sets the Registry sub-key for the BCB IDEs.', FRegistryKeyBCB);

@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStorage.pas 13036 2011-06-08 10:25:13Z obones $
+// $Id: JvPropertyStorage.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvPropertyStorage;
 
@@ -100,19 +100,18 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStorage.pas $';
-    Revision: '$Revision: 13036 $';
-    Date: '$Date: 2011-06-08 12:25:13 +0200 (mer., 08 juin 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+{$IFDEF RTL200_UP}
 uses
-  {$IFDEF RTL200_UP}
-  AnsiStrings,
-  {$ENDIF RTL200_UP}
-  JvJCLUtils;
+  AnsiStrings;
+{$ENDIF RTL200_UP}
 
 //=== { TJvPropInfoList } ====================================================
 

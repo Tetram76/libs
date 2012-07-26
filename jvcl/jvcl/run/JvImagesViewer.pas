@@ -18,7 +18,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImagesViewer.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvImagesViewer.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvImagesViewer;
 
@@ -107,6 +107,9 @@ type
   TJvImageViewerLoadProgress = procedure(Sender: TObject; Item: TJvPictureItem; Stage: TProgressStage;
     PercentDone: Byte; RedrawNow: Boolean; const R: TRect; const Msg: string) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvImagesViewer = class(TJvCustomItemViewer)
   private
     FFileMask: WideString;
@@ -204,8 +207,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImagesViewer.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -213,7 +216,6 @@ const
 implementation
 
 uses
-  StrUtils,
   JvJCLUtils;
 
 //=== { TJvImageViewerOptions } ==============================================
@@ -520,8 +522,9 @@ begin
     if (RectWidth(ImageRect) > 0) and (RectHeight(ImageRect) > 0) then
       if AItem.Picture.Graphic is TIcon then
         //        and (RectWidth(ImageRect) < RectWidth(R)) and (RectHeight(ImageRect) < RectHeight(R))  then
-        with ImageRect do // TIcon doesn't scale it's content
-          DrawIconEx(Canvas.Handle, Left, Top, AItem.Picture.Icon.Handle, Right - Left, Bottom - Top, 0, 0, DI_NORMAL)
+        // TIcon doesn't scale it's content
+        DrawIconEx(Canvas.Handle, ImageRect.Left, ImageRect.Top, AItem.Picture.Icon.Handle,
+          ImageRect.Right - ImageRect.Left, ImageRect.Bottom - ImageRect.Top, 0, 0, DI_NORMAL)
       else
         Canvas.StretchDraw(ImageRect, AItem.Picture.Graphic);
   end;

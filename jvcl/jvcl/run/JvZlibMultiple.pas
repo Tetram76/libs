@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
     2004-07-27 - Read the 'ALL USERS READ THIS' section below.
 -----------------------------------------------------------------------------}
-// $Id: JvZlibMultiple.pas 12505 2009-09-16 18:42:08Z wpostma $
+// $Id: JvZlibMultiple.pas 13104 2011-09-07 06:50:43Z obones $
 
 {$I jvcl.inc}
 
@@ -88,6 +88,9 @@ type
   TFileEvent = procedure(Sender: TObject; const FileName: string) of object;
   TProgressEvent = procedure(Sender: TObject; Position, Total: Integer) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvZlibMultiple = class(TJvComponent)
   private
     FStorePaths: Boolean;
@@ -167,8 +170,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvZlibMultiple.pas $';
-    Revision: '$Revision: 12505 $';
-    Date: '$Date: 2009-09-16 20:42:08 +0200 (mer., 16 sept. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

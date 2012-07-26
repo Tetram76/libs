@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTimer.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvTimer.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvTimer;
 
@@ -35,8 +35,14 @@ uses
   Windows, Messages, SysUtils, ExtCtrls, Classes;
 
 type
+  // TThreadPriority has been marked platform and we don't want the warning
+  {$IFDEF RTL230_UP}{$IFDEF MSWINDOWS}{$WARNINGS OFF}TThreadPriority = Classes.TThreadPriority;{$WARNINGS ON}{$ENDIF RTL230_UP}{$ENDIF MSWINDOWS}
+
   TJvTimerEventTime = (tetPre, tetPost);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvTimer = class(TComponent)
   private
     FEnabled: Boolean;
@@ -47,9 +53,13 @@ type
     FTimerThread: TThread;
     FTimer: TTimer;
     FEventTime: TJvTimerEventTime;
+    {$IFDEF MSWINDOWS}
     FThreadPriority: TThreadPriority;
+    {$ENDIF MSWINDOWS}
     FInTimerEvent: Boolean;
+    {$IFDEF MSWINDOWS}
     procedure SetThreadPriority(Value: TThreadPriority);
+    {$ENDIF MSWINDOWS}
     procedure SetThreaded(Value: Boolean);
     procedure SetEnabled(Value: Boolean);
     procedure SetInterval(Value: Cardinal);
@@ -68,7 +78,9 @@ type
     property Interval: Cardinal read FInterval write SetInterval default 1000;
     property SyncEvent: Boolean read FSyncEvent write FSyncEvent default True;
     property Threaded: Boolean read FThreaded write SetThreaded default True;
+    {$IFDEF MSWINDOWS}
     property ThreadPriority: TThreadPriority read FThreadPriority write SetThreadPriority default tpNormal;
+    {$ENDIF MSWINDOWS}
     property OnTimer: TNotifyEvent read FOnTimer write SetOnTimer;
   end;
 
@@ -76,8 +88,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimer.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -85,8 +97,8 @@ const
 implementation
 
 uses
-  Forms, Consts, SyncObjs,
-  JvJVCLUtils, JvResources, JvTypes;
+  Forms, SyncObjs,
+  JvResources, JvTypes;
 
 //=== { TJvTimerThread } =====================================================
 
@@ -234,7 +246,9 @@ begin
   FInterval := 1000;
   FSyncEvent := True;
   FThreaded := True;
+  {$IFDEF MSWINDOWS}
   FThreadPriority := tpNormal;
+  {$ENDIF MSWINDOWS}
   FTimerThread := nil;
   FTimer := nil;
 end;
@@ -274,7 +288,9 @@ begin
       TJvTimerThread(FTimerThread).FCurrentDuration := 0;
       TJvTimerThread(FTimerThread).FInterval := FInterval;
 
+      {$IFDEF MSWINDOWS}
       FTimerThread.Priority := FThreadPriority;
+      {$ENDIF MSWINDOWS}
 
       TJvTimerThread(FTimerThread).Paused := False;
     end
@@ -335,6 +351,7 @@ begin
   end;
 end;
 
+{$IFDEF MSWINDOWS}
 procedure TJvTimer.SetThreadPriority(Value: TThreadPriority);
 begin
   if Value <> FThreadPriority then
@@ -344,6 +361,7 @@ begin
       UpdateTimer;
   end;
 end;
+{$ENDIF MSWINDOWS}
 
 procedure TJvTimer.Synchronize(Method: TThreadMethod);
 begin

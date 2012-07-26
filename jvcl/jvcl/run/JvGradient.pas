@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGradient.pas 12926 2010-11-28 11:00:15Z ahuser $
+// $Id: JvGradient.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvGradient;
 
@@ -40,6 +40,9 @@ uses
 type
   TJvGradientPaintEvent = procedure(Sender: TObject; Canvas: TCanvas) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvGradient = class(TJvGraphicControl)
   private
     FStyle: TJvGradientStyle;
@@ -114,8 +117,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGradient.pas $';
-    Revision: '$Revision: 12926 $';
-    Date: '$Date: 2010-11-28 12:00:15 +0100 (dim., 28 nov. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

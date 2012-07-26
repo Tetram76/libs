@@ -51,7 +51,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppRegistryStorage.pas 12747 2010-04-02 12:27:37Z ahuser $
+// $Id: JvAppRegistryStorage.pas 13218 2012-02-24 10:21:00Z obones $
 
 unit JvAppRegistryStorage;
 
@@ -65,8 +65,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Classes, Forms,
-  JclBase,
-  JvAppStorage, JvTypes, JvJVCLUtils;
+  JvAppStorage, JvTypes;
 
 type
   TJvAppRegistryStorageOptions = class(TJvAppStorageOptions)
@@ -77,6 +76,9 @@ type
     property StoreStringListAsSingleString;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvAppRegistryStorage = class(TJvCustomAppStorage)
   private
     FRegHKEY: HKEY;
@@ -139,8 +141,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppRegistryStorage.pas $';
-    Revision: '$Revision: 12747 $';
-    Date: '$Date: 2010-04-02 14:27:37 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13218 $';
+    Date: '$Date: 2012-02-24 11:21:00 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -149,7 +151,7 @@ implementation
 
 uses
   SysUtils, Dialogs,
-  JclRegistry, JclResources, JclStrings, JclFileUtils,
+  JclRegistry, JclResources,
   JvConsts, JvResources;
 
 const
@@ -460,12 +462,27 @@ var
   SubKey: string;
   ValueName: string;
   DataType: Cardinal;
+  {$IFDEF CPUX64}
+  Ext80Value: Extended80;
+  {$ENDIF CPUX64}
 begin
   SplitKeyPath(Path, SubKey, ValueName);
   Result := Default;
   try
     if not RegGetDataType(FRegHKEY, SubKey, ValueName, DataType) or (DataType = REG_BINARY) then
-      RegReadBinary(FRegHKEY, SubKey, ValueName, Result, SizeOf(Result))
+    begin
+      {$IFDEF CPUX64}
+      // Keep backward compatiblity to x86 Extended type
+      RegReadBinary(FRegHKEY, SubKey, ValueName, Ext80Value, SizeOf(Ext80Value));
+      try
+        Result := Ext80Value
+      except
+        Result := Default;
+      end;
+      {$ELSE}
+      RegReadBinary(FRegHKEY, SubKey, ValueName, Result, SizeOf(Result));
+      {$ENDIF CPUX64}
+    end
     else
       raise EJclRegistryError.CreateResFmt(@RsWrongDataType, ['', SubKey, ValueName]);
   except
@@ -481,10 +498,19 @@ procedure TJvAppRegistryStorage.DoWriteFloat(const Path: string; Value: Extended
 var
   SubKey: string;
   ValueName: string;
+  {$IFDEF CPUX64}
+  Ext80Value: Extended80;
+  {$ENDIF CPUX64}
 begin
   SplitKeyPath(Path, SubKey, ValueName);
   CreateKey(SubKey);
+  {$IFDEF CPUX64}
+  // Keep backward compatiblity to x86 Extended type
+  Ext80Value := Value;
+  RegWriteBinary(FRegHKEY, SubKey, ValueName, Ext80Value, SizeOf(Ext80Value));
+  {$ELSE}
   RegWriteBinary(FRegHKEY, SubKey, ValueName, Value, SizeOf(Value));
+  {$ENDIF CPUX64}
 end;
 
 function TJvAppRegistryStorage.DoReadString(const Path: string; const Default: string): string;

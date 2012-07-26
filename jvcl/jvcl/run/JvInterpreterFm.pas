@@ -24,7 +24,7 @@ Component   : form runner for JvInterpreter
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreterFm.pas 12781 2010-05-23 23:30:10Z ahuser $
+// $Id: JvInterpreterFm.pas 13104 2011-09-07 06:50:43Z obones $
 
 { history (JVCL Library versions):
   1.10:
@@ -93,6 +93,9 @@ type
     property JvInterpreterFm: TJvInterpreterFm read FJvInterpreterFm write FJvInterpreterFm;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvInterpreterFm = class(TJvInterpreterProgram)
   private
     FForm: TJvInterpreterForm;
@@ -147,8 +150,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreterFm.pas $';
-    Revision: '$Revision: 12781 $';
-    Date: '$Date: 2010-05-24 01:30:10 +0200 (lun., 24 mai 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

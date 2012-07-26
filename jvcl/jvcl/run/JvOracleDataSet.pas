@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOracleDataSet.pas 12683 2010-01-29 22:50:54Z jfudickar $
+// $Id: JvOracleDataSet.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvOracleDataSet;
 
@@ -71,6 +71,9 @@ type
     property EnhancedOptions: TJvDoaThreadedDatasetEnhancedOptions read GetEnhancedOptions write SetEnhancedOptions;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOracleDataset = class(TOracleDataset, IJvThreadedDatasetInterface)
     procedure BreakExecution;
     procedure BringThreadDialogToFront;
@@ -146,8 +149,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOracleDataSet.pas $';
-    Revision: '$Revision: 12683 $';
-    Date: '$Date: 2010-01-29 23:50:54 +0100 (ven., 29 janv. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

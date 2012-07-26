@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCheckBox.pas 12864 2010-10-11 08:19:42Z obones $
+// $Id: JvgCheckBox.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvgCheckBox;
 
@@ -158,8 +158,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCheckBox.pas $';
-    Revision: '$Revision: 12864 $';
-    Date: '$Date: 2010-10-11 10:19:42 +0200 (lun., 11 oct. 2010) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -168,6 +168,9 @@ implementation
 
 uses
   Math,
+  {$IFNDEF COMPILER12_UP}
+  JvJCLUtils, // SetWindowLongPtr
+  {$ENDIF ~COMPILER12_UP}
   JvThemes;
 
 {$R JvgCheckBox.res}
@@ -534,12 +537,12 @@ procedure TJvgCheckBox.HookFocusControlWndProc;
 var
   P: Pointer;
 begin
-  P := Pointer(GetWindowLong(FocusControl.Handle, GWL_WNDPROC));
+  P := Pointer(GetWindowLongPtr(FocusControl.Handle, GWL_WNDPROC));
   if (P <> FNewWndProc) then
   begin
     FPrevWndProc := P;
     FNewWndProc := JvMakeObjectInstance(FocusControlWndHookProc);
-    SetWindowLong(FocusControl.Handle, GWL_WNDPROC, Longint(FNewWndProc));
+    SetWindowLongPtr(FocusControl.Handle, GWL_WNDPROC, LONG_PTR(FNewWndProc));
   end;
 end;
 
@@ -547,9 +550,9 @@ procedure TJvgCheckBox.UnhookFocusControlWndProc;
 begin
   //  if not(csDesigning in ComponentState) then Exit;
   if (FNewWndProc <> nil) and (FPrevWndProc <> nil) and
-    (Pointer(GetWindowLong(FocusControl.Handle, GWL_WNDPROC)) = FNewWndProc) then
+    (Pointer(GetWindowLongPtr(FocusControl.Handle, GWL_WNDPROC)) = FNewWndProc) then
   begin
-    SetWindowLong(FocusControl.Handle, GWL_WNDPROC, Longint(FPrevWndProc));
+    SetWindowLongPtr(FocusControl.Handle, GWL_WNDPROC, LONG_PTR(FPrevWndProc));
     // (rom) JvFreeObjectInstance call added
     JvFreeObjectInstance(FNewWndProc);
     FNewWndProc := nil;

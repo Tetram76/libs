@@ -31,7 +31,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppEvent.pas 12607 2009-11-17 21:33:43Z ahuser $
+// $Id: JvAppEvent.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvAppEvent;
 
@@ -54,6 +54,9 @@ const
   DefHintHidePause = DefHintPause * 5;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvAppEvents = class(TJvComponent)
   private
     FChained: Boolean;
@@ -175,8 +178,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppEvent.pas $';
-    Revision: '$Revision: 12607 $';
-    Date: '$Date: 2009-11-17 22:33:43 +0100 (mar., 17 nov. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -217,7 +220,7 @@ type
     procedure DoHint(Sender: TObject);
     procedure DoMinimize(Sender: TObject);
     procedure DoRestore(Sender: TObject);
-    function DoHelp(Command: Word; Data: Longint; var CallHelp: Boolean): Boolean;
+    function DoHelp(Command: Word; Data: {$IFDEF RTL230_UP}THelpEventData{$ELSE}Longint{$ENDIF}; var CallHelp: Boolean): Boolean;
     procedure DoMessage(var Msg: TMsg; var Handled: Boolean);
     procedure DoShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure DoShowHint(var HintStr: THintString; var CanShow: Boolean; var HintInfo: THintInfo);
@@ -391,7 +394,7 @@ begin
   end;
 end;
 
-function TJvAppEventList.DoHelp(Command: Word; Data: Longint; var CallHelp: Boolean): Boolean;
+function TJvAppEventList.DoHelp(Command: Word; Data: {$IFDEF RTL230_UP}THelpEventData{$ELSE}Longint{$ENDIF}; var CallHelp: Boolean): Boolean;
 var
   I: Integer;
 begin

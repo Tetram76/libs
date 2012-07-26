@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRadioGroup.pas 12645 2010-01-07 15:15:13Z ahuser $
+// $Id: JvRadioGroup.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvRadioGroup;
 
@@ -41,6 +41,9 @@ type
   TJvRadioGroupHintEvent = procedure(Sender: TObject; Index: Integer;
     var AHint: TCaption) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvRadioGroup = class(TJvExRadioGroup, IJvDenySubClassing)
   private
     FReadOnly: Boolean;
@@ -80,8 +83,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRadioGroup.pas $';
-    Revision: '$Revision: 12645 $';
-    Date: '$Date: 2010-01-07 16:15:13 +0100 (jeu., 07 janv. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -121,7 +124,7 @@ var
   {$ENDIF JVCLThemesEnabled}
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if Enabled then
       Details := ThemeServices.GetElementDetails(tbGroupBoxNormal)
@@ -164,7 +167,11 @@ begin
       Canvas.Font.Assign(Font);
       Canvas.Refresh;
 
+      {$IFDEF COMPILER16_UP}
+      ThemeServices.DrawText(Canvas.Handle, Details, Caption, CaptionRect, [tfLeft]);
+      {$ELSE}
       ThemeServices.DrawText(Canvas.Handle, Details, Caption, CaptionRect, DT_LEFT, 0);
+      {$ENDIF COMPILER16_UP}
     end;
     Exit;
   end;

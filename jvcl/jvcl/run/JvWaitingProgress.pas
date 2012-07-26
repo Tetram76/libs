@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWaitingProgress.pas 12550 2009-10-05 11:58:39Z obones $
+// $Id: JvWaitingProgress.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvWaitingProgress;
 
@@ -42,6 +42,9 @@ const
   WM_DELAYED_DO_ENDED = WM_APP + 246;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvWaitingProgress = class(TJvWinControl)
   private
     FActive: Boolean;
@@ -90,8 +93,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWaitingProgress.pas $';
-    Revision: '$Revision: 12550 $';
-    Date: '$Date: 2009-10-05 13:58:39 +0200 (lun., 05 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

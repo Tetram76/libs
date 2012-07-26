@@ -27,7 +27,7 @@ Known Issues:
   with [translated]
 
 -----------------------------------------------------------------------------}
-// $Id: JvHLParser.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvHLParser.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 {history:
 3.0:
@@ -48,7 +48,7 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, Dialogs,
   JclWideStrings,
-  JvTypes, JvJCLUtils;
+  JvJCLUtils;
 
 const
   ieBadRemark = 1;
@@ -158,8 +158,8 @@ procedure ParseStringW(const S: WideString; Ss: TWStrings);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHLParser.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

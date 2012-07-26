@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDriveCtrls.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvDriveCtrls.pas 13362 2012-06-18 12:23:29Z obones $
 
 unit JvDriveCtrls;
 
@@ -53,6 +53,9 @@ const
 type
   TJvDirectoryListBox = class;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDriveCombo = class(TJvCustomComboBox)
   private
     FDrives: TStringList;
@@ -139,6 +142,9 @@ type
     property OnStartDock;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDriveList = class(TJvCustomListBox)
   private
     FDrives: TStringList;
@@ -234,6 +240,9 @@ type
     property OnStartDock;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvFileListBox = class(TFileListBox)
   private
     FAboutJVCL: TJVCLAboutInfo;
@@ -272,6 +281,9 @@ type
 
   TJvDriveChangeError = procedure(Sender: TObject; var NewDrive: Char) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDirectoryListBox = class(TJvCustomListBox)
   private
     FFileList: TJvFileListBox;
@@ -387,8 +399,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDriveCtrls.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13362 $';
+    Date: '$Date: 2012-06-18 14:23:29 +0200 (lun., 18 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1137,7 +1149,7 @@ begin
   begin
     if NewDrive <> #0 then
     begin
-      if not SetCurrentDir(NewDrive + ':') then
+      if not SetCurrentDir(NewDrive + DriveDelim + PathDelim) then
       begin
         TmpDrive := NewDrive;
         if DoDriveChangeError(NewDrive) and (NewDrive <> TmpDrive) then

@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPerfMon95.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPerfMon95.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvPerfMon95;
 
@@ -112,6 +112,9 @@ type
     property Items[Index: Integer]: TJvPerfStatItem read GetItem write SetItem; default;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPerfStat95 = class(TJvComponent)
   private
     FCategories: array of TJvPerfStatCategory;
@@ -149,8 +152,8 @@ function JvGetPerfStatItems(List: TStrings): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPerfMon95.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -158,8 +161,8 @@ const
 implementation
 
 uses
-  Consts, RTLConsts,
-  JvJCLUtils, JvJVCLUtils, JvResources;
+  RTLConsts,
+  JvJCLUtils, JvResources;
 
 const
   PerfEnumKey = 'System\CurrentControlSet\Control\PerfStats\Enum';

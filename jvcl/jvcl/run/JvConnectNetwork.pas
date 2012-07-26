@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvConnectNetwork.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvConnectNetwork.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvConnectNetwork;
 
@@ -34,34 +34,40 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows,
+  Windows, Classes,
   JvBaseDlg;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvConnectNetwork = class(TJvCommonDialog)
-  published
-    function Execute: Boolean; override;
+  public
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDisconnectNetwork = class(TJvCommonDialog)
-  published
-    function Execute: Boolean; override;
+  public
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
   end;
 
   TJvNetworkConnect = class(TJvCommonDialog)
   private
     FConnect: Boolean;
-  published
+  public
     property Connect: Boolean read FConnect write FConnect;
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvConnectNetwork.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -69,22 +75,22 @@ const
 implementation
 
 
-function TJvConnectNetwork.Execute: Boolean;
+function TJvConnectNetwork.Execute(ParentWnd: HWND): Boolean;
 begin
-  Result := WNetConnectionDialog(GetForegroundWindow, RESOURCETYPE_DISK) = NO_ERROR;
+  Result := WNetConnectionDialog(ParentWnd, RESOURCETYPE_DISK) = NO_ERROR;
 end;
 
-function TJvDisconnectNetwork.Execute: Boolean;
+function TJvDisconnectNetwork.Execute(ParentWnd: HWND): Boolean;
 begin
-  Result := WNetDisconnectDialog(GetForegroundWindow, RESOURCETYPE_DISK) = NO_ERROR;
+  Result := WNetDisconnectDialog(ParentWnd, RESOURCETYPE_DISK) = NO_ERROR;
 end;
 
-function TJvNetworkConnect.Execute: Boolean;
+function TJvNetworkConnect.Execute(ParentWnd: HWND): Boolean;
 begin
   if FConnect then
-    Result := WNetConnectionDialog(GetForegroundWindow, RESOURCETYPE_DISK) = NO_ERROR
+    Result := WNetConnectionDialog(ParentWnd, RESOURCETYPE_DISK) = NO_ERROR
   else
-    Result := WNetDisconnectDialog(GetForegroundWindow, RESOURCETYPE_DISK) = NO_ERROR;
+    Result := WNetDisconnectDialog(ParentWnd, RESOURCETYPE_DISK) = NO_ERROR;
 end;
 
 {$IFDEF UNITVERSIONING}

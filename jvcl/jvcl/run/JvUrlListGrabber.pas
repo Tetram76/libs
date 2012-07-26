@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvUrlListGrabber.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvUrlListGrabber.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvUrlListGrabber;
 
@@ -79,6 +79,9 @@ type
   // grabbed and then start grabbing. All the grab operations will be done
   // in parallel in the background, leaving the user's application free
   // to continue its operations
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvUrlListGrabber = class(TJvComponent)
   private
     FOnDoneFile: TJvGrabberDoneFileEvent;
@@ -561,8 +564,8 @@ function JvUrlGrabberClassList: TJvUrlGrabberClassList;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUrlListGrabber.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

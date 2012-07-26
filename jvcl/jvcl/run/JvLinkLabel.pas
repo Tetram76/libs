@@ -31,7 +31,7 @@ Description:
   Note: Documentation for this unit can be found in Doc\Source.txt and
         Doc\Readme.txt!
 -----------------------------------------------------------------------------}
-// $Id: JvLinkLabel.pas 12538 2009-10-03 12:18:34Z ahuser $
+// $Id: JvLinkLabel.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvLinkLabel;
 
@@ -137,6 +137,9 @@ type
     function GetDynamicTagContents(Number: Integer): string;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvLinkLabel = class(TJvCustomLinkLabel)
   published
     property Caption;
@@ -189,8 +192,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLinkLabel.pas $';
-    Revision: '$Revision: 12538 $';
-    Date: '$Date: 2009-10-03 14:18:34 +0200 (sam., 03 oct. 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -198,7 +201,7 @@ const
 implementation
 
 uses
-  JvThemes, JvResources, JvJVCLUtils;
+  JvThemes, JvResources;
 
 const
   crNewLinkHand = 1;

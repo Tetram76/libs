@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppInst.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvAppInst.pas 13189 2012-01-12 18:19:24Z ahuser $
 
 unit JvAppInst;
 
@@ -53,6 +53,9 @@ type
     initialization section of a unit or before the forms are created (OnCreate
     is too late).
     This class is not thread safe. }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvAppInstances = class(TComponent)
   private
     FHandle: THandle;
@@ -107,8 +110,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppInst.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13189 $';
+    Date: '$Date: 2012-01-12 19:19:24 +0100 (jeu., 12 janv. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -308,28 +311,26 @@ begin
     Size, Handle);
 end;
 
-
-function TJvAppInstances.GetIsRemoteInstanceActive: Boolean;
 type
-  PData = ^TData;
-  TData = record
+  PEnumWinData = ^TEnumWinData;
+  TEnumWinData = record
     Instance: TJvAppInstances;
     Message: TMessage;
   end;
 
+function EnumWinProc(Wnd: HWND; Data: PEnumWinData): BOOL; stdcall;
+begin
+  with Data^.Message do
+    SendMessage(Wnd, Msg, WParam, LParam);
+  Result := Data^.Instance.Active;
+end;
+
+function TJvAppInstances.GetIsRemoteInstanceActive: Boolean;
 var
   I: Integer;
   Wnd: HWND;
   TID: DWORD;
-  Data: TData;
-
-  function EnumWinProc(Wnd: HWND; Data: PData): BOOL; stdcall;
-  begin
-    with Data^.Message do
-      SendMessage(Wnd, Msg, WParam, LParam);
-    Result := Data^.Instance.Active;
-  end;
-
+  Data: TEnumWinData;
 begin
   for I := 0 to AppInstances.InstanceCount - 1 do
   begin

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockDelphiStyle.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDockDelphiStyle.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvDockDelphiStyle;
 
@@ -37,6 +37,9 @@ uses
   JvDockControlForm, JvDockSupportControl, JvDockTree;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDockDelphiStyle = class(TJvDockBasicStyle)
   protected
     procedure FormDockDrop(DockClient: TJvDockClient;
@@ -69,8 +72,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockDelphiStyle.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -79,7 +82,7 @@ implementation
 
 uses
   SysUtils, Forms,
-  JvDockSupportProc, JvDockGlobals;
+  JvDockSupportProc;
 
 constructor TJvDockDelphiStyle.Create(AOwner: TComponent);
 begin

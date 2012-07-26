@@ -30,7 +30,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvListComb.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvListComb.pas 13350 2012-06-13 14:54:41Z obones $
 
 unit JvListComb;
 
@@ -45,7 +45,7 @@ uses
   Windows, Messages,
   SysUtils, Classes, Graphics, Controls, ExtCtrls, StdCtrls, ImgList,
   JvJCLUtils, JvCombobox,
-  JvComponent, JvExControls, JvExStdCtrls;
+  JvExStdCtrls;
 
 type
   TJvButtonColors = (fsLighter, fsLight, fsMedium, fsDark, fsDarker);
@@ -157,6 +157,9 @@ type
     property Objects[Index: Integer]: TObject read GetObjects write SetObjects;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvImageComboBox = class(TJvCustomComboBox, IUnknown, IJvResetItemHeight)
   private
     FItems: TJvImageItems;
@@ -297,6 +300,9 @@ type
     property Items: TJvImageItems read FItems write SetItems; // must be declared after OnMeasureItem
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvImageListBox = class(TJvExCustomListBox, IUnknown, IJvResetItemHeight)
   private
     FImageList: TCustomImageList;
@@ -391,8 +397,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListComb.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13350 $';
+    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -562,7 +568,6 @@ begin
       try
         FOwner := nil;
         S.Delete(Index);
-        // Use FOwner.GetOwner to keep D5/C5 compatibility
         if (SavedOwner.GetOwner is TJvImageListBox) and (TJvImageListBox(SavedOwner.GetOwner).Sorted) then
           S.AddObject(Value, Self)
         else

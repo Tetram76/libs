@@ -23,7 +23,7 @@ description : routines for design-time
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignerUtils.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDesignerUtils.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvDesignerUtils;
 
@@ -40,7 +40,7 @@ uses
 
 procedure DrawDesignFrame(Canvas: TCanvas; Rect: TRect);
 begin
-  if Integer(Canvas.Handle) <> 0 then
+  if Canvas.Handle <> HDC(0) then
   begin
     Canvas.Brush.Style := bsClear;
     Canvas.Pen.Color := clGray;

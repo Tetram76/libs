@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHidControllerClass.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvHidControllerClass.pas 13347 2012-06-13 13:57:11Z obones $
 
 unit JvHidControllerClass;
 
@@ -38,7 +38,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, SysUtils,
   JvComponentBase,
-  DBT, SetupApi, Hid, JvTypes;
+  DBT, JvSetupApi, Hid, JvTypes;
 
 const
   // a version string for the component
@@ -349,6 +349,9 @@ type
 
   // controller class to manage all HID devices
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvHidDeviceController = class(TJvComponent)
   private
     // internal properties part
@@ -443,8 +446,8 @@ function HidErrorString(const RetVal: NTSTATUS): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHidControllerClass.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13347 $';
+    Date: '$Date: 2012-06-13 15:57:11 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -504,39 +507,43 @@ var
 begin
   NameThread(ThreadName);
   SleepRet := WAIT_IO_COMPLETION;
-  while not Terminated do
-  begin
-    // read data
-    SleepRet := WAIT_IO_COMPLETION;
-    FillChar(Report[0], Device.Caps.InputReportByteLength, #0);
-    if Device.ReadFileEx(Report[0], Device.Caps.InputReportByteLength, @DummyReadCompletion) then
+  try
+    while not Terminated do
     begin
-      // wait for read to complete
-      repeat
-        SleepRet := SleepEx(Device.ThreadSleepTime, True);
-      until Terminated or (SleepRet = WAIT_IO_COMPLETION);
-      // show data read
-      if not Terminated then
+      // read data
+      SleepRet := WAIT_IO_COMPLETION;
+      FillChar(Report[0], Device.Caps.InputReportByteLength, #0);
+      if Device.ReadFileEx(Report[0], Device.Caps.InputReportByteLength, @DummyReadCompletion) then
       begin
-        NumBytesRead := Device.HidOverlappedReadResult;
-        if NumBytesRead > 0 then
-          // synchronizing only works if the component is not instanciated in a DLL
-          if IsLibrary then
-            DoData
-          else
-            Synchronize(DoData);
+        // wait for read to complete
+        repeat
+          SleepRet := SleepEx(Device.ThreadSleepTime, True);
+        until Terminated or (SleepRet = WAIT_IO_COMPLETION);
+        // show data read
+        if not Terminated then
+        begin
+          NumBytesRead := Device.HidOverlappedReadResult;
+          if NumBytesRead > 0 then
+            // synchronizing only works if the component is not instanciated in a DLL
+            if IsLibrary then
+              DoData
+            else
+              Synchronize(DoData);
+        end;
+      end
+      else
+      begin
+        FErr := GetLastError;
+        Synchronize(DoDataError);
+        SleepEx(Device.ThreadSleepTime, True);  // avoid 100% CPU usage (Mantis 5749)
       end;
-    end
-    else
-    begin
-      FErr := GetLastError;
-      Synchronize(DoDataError);
     end;
+  finally
+    // cancel ReadFileEx call or the callback will
+    // crash your program
+    if SleepRet <> WAIT_IO_COMPLETION then
+      Device.CancelIO(omhRead);
   end;
-  // cancel ReadFileEx call or the callback will
-  // crash your program
-  if SleepRet <> WAIT_IO_COMPLETION then
-    Device.CancelIO(omhRead);
 end;
 
 //=== { TJvHidPnPInfo } ======================================================
@@ -1692,18 +1699,21 @@ var
         if (BytesReturned <> 0) and (GetLastError = ERROR_INSUFFICIENT_BUFFER) then
         begin
           FunctionClassDeviceData := AllocMem(BytesReturned);
-          FunctionClassDeviceData^.cbSize := SizeOf(TSPDeviceInterfaceDetailData);
-          if SetupDiGetDeviceInterfaceDetail(PnPHandle, @DeviceInterfaceData,
-            FunctionClassDeviceData, BytesReturned, BytesReturned, @DevData) then
-          begin
-            // fill in PnPInfo of device
-            PnPInfo := TJvHidPnPInfo.Create(PnPHandle, DevData, PChar(@FunctionClassDeviceData.DevicePath));
-            // create HID device object and add it to the device list
-            HidDev := TJvHidDevice.CtlCreate(PnPInfo, Self);
-            NewList.Add(HidDev);
-            Inc(Devn);
+          try
+            FunctionClassDeviceData^.cbSize := SizeOf(TSPDeviceInterfaceDetailData);
+            if SetupDiGetDeviceInterfaceDetail(PnPHandle, @DeviceInterfaceData,
+              FunctionClassDeviceData, BytesReturned, BytesReturned, @DevData) then
+            begin
+              // fill in PnPInfo of device
+              PnPInfo := TJvHidPnPInfo.Create(PnPHandle, DevData, PChar(@FunctionClassDeviceData.DevicePath));
+              // create HID device object and add it to the device list
+              HidDev := TJvHidDevice.CtlCreate(PnPInfo, Self);
+              NewList.Add(HidDev);
+              Inc(Devn);
+            end;
+          finally
+            FreeMem(FunctionClassDeviceData);
           end;
-          FreeMem(FunctionClassDeviceData);
         end;
       end;
     until not Success;
@@ -1792,7 +1802,7 @@ begin
   if Size > 0 then
   begin
     SetLength(Buf, Size);
-    GetFileVersionInfo(HidModuleName, INVALID_HANDLE_VALUE, Size, @Buf[0]);
+    GetFileVersionInfo(HidModuleName, DWORD(INVALID_HANDLE_VALUE), Size, @Buf[0]);
     if VerQueryValue(@Buf[0], 'StringFileInfo\040904E4\FileVersion', Pointer(Value), Size) then
       Result := Value;
   end;

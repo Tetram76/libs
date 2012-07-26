@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSplitter.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSplitter.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvSplitter;
 
@@ -38,6 +38,9 @@ uses
   JvExExtCtrls;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSplitter = class(TJvExSplitter)
   {$IFDEF JVCLThemesEnabled}
   protected
@@ -57,8 +60,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSplitter.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -80,7 +83,7 @@ var
   Bmp: TBitmap;
   DC: THandle;
 begin
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
 //    DrawThemedBackground(Self, Canvas, ClientRect, Parent.Brush.Color);
     DC := Canvas.Handle;

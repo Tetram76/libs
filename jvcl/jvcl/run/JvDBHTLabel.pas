@@ -25,7 +25,7 @@ Known Issues:
   <b>Name:</b><i><FIELD="contact"></i>, <b>Company:</b><i><FIELD="Company"></i>
 - The fieldname *must* be double-quoted!
 -----------------------------------------------------------------------------}
-// $Id: JvDBHTLabel.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvDBHTLabel.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvDBHTLabel;
 
@@ -37,11 +37,14 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes, DB, DBCtrls, Messages, Controls,
+  Windows, Messages, Classes, DB, DBCtrls, Controls,
   VDBConsts,
   JvHtControls;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBHTLabel = class(TJvCustomHTLabel)
   private
     FDataLink: TFieldDataLink;
@@ -103,8 +106,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBHTLabel.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -185,7 +188,7 @@ end;
 
 procedure TJvDBHTLabel.CMGetDataLink(var Message: TMessage);
 begin
-  Message.Result := Integer(FDataLink);
+  Message.Result := LRESULT(FDataLink);
 end;
 
 constructor TJvDBHTLabel.Create(AOwner: TComponent);

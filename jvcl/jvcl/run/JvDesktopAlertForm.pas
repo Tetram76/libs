@@ -26,7 +26,7 @@ Known Issues:
 * This form is used by the TJvDesktopAlert component
 
 -----------------------------------------------------------------------------}
-// $Id: JvDesktopAlertForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDesktopAlertForm.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvDesktopAlertForm;
 
@@ -40,7 +40,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls, Forms, StdCtrls, ExtCtrls,
   ImgList, ActnList,
-  JvButton, JvLabel, JvComponent, JvConsts, JvExForms;
+  JvButton, JvLabel, JvExForms;
 
 const
   cDefaultAlertFormWidth = 329;
@@ -181,8 +181,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesktopAlertForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -793,8 +793,7 @@ procedure TJvCustomFormDesktopAlert.WMNCHitTest(var Msg: TWMNCHitTest);
 var
   P: TPoint;
 begin
-  with Msg do
-    P := ScreenToClient(Point(XPos, YPos));
+  P := ScreenToClient(Point(Msg.XPos, Msg.YPos));
   if ((P.Y <= cCaptionHeight) and Moveable) or (MoveAnywhere and (ControlAtPos(P, False) = nil)) then
   begin
     TJvCustomDesktopAlert(Owner).StyleHandler.AbortAnimation;

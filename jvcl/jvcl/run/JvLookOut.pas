@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLookOut.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvLookOut.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvLookOut;
 
@@ -143,8 +143,7 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
-    function WantKey(Key: Integer; Shift: TShiftState;
-      const KeyText: WideString): Boolean; override;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; override;
     procedure VisibleChanged; override;
 
     property FillColor: TColor read FFillColor write SetFillColor default clNone;
@@ -172,6 +171,9 @@ type
     procedure EditCaption;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvLookOutButton = class(TJvCustomLookOutButton)
   public
     property Data;
@@ -217,6 +219,9 @@ type
     property OnStartDrag;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvExpressButton = class(TJvCustomLookOutButton)
   public
     constructor Create(AOwner: TComponent); override;
@@ -309,8 +314,7 @@ type
     procedure CMTextChanged(var Msg:TMessage); message CM_TEXTCHANGED;
     procedure TileBitmap;
   protected
-    function WantKey(Key: Integer; Shift: TShiftState;
-      const KeyText: WideString): Boolean; override;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; override;
     procedure MouseLeave(Control: TControl); override;
     procedure EnabledChanged; override;
     procedure DoOnEdited(var Caption: string); virtual;
@@ -383,6 +387,9 @@ type
     property OnStartDrag;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvLookOut = class(TJvCustomControl)
   private
     FAutoSize: Boolean;
@@ -447,6 +454,9 @@ type
     property OnStartDrag;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvExpress = class(TJvLookOutPage, IJvDenySubClassing)
   private
     FBorderStyle: TBorderStyle;
@@ -475,8 +485,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLookOut.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -669,7 +679,7 @@ begin
   if not MouseOver then
   begin
     inherited MouseEnter(Control);
-    if FFlat {$IFDEF JVCLThemesEnabled} or ThemeServices.ThemesEnabled {$ENDIF} then
+    if FFlat {$IFDEF JVCLThemesEnabled} or ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} {$ENDIF} then
       Invalidate;
   end;
 end;
@@ -680,7 +690,7 @@ begin
   begin
     inherited MouseLeave(Control);
     //  FDown := False;
-    if FFlat {$IFDEF JVCLThemesEnabled} or ThemeServices.ThemesEnabled {$ENDIF} then
+    if FFlat {$IFDEF JVCLThemesEnabled} or ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} {$ENDIF} then
       Invalidate;
   end;
 end;
@@ -1053,15 +1063,14 @@ begin
     inherited Assign(Source);
 end;
 
-function TJvCustomLookOutButton.WantKey(Key: Integer; Shift: TShiftState;
-  const KeyText: WideString): Boolean;
+function TJvCustomLookOutButton.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := IsAccel(Key, Caption) and Enabled and
     Visible and ParentVisible and (ssAlt in Shift);
   if Result then
     Click
   else
-    Result := inherited WantKey(Key, Shift, KeyText);
+    Result := inherited WantKey(Key, Shift);
 end;
 
 function TJvCustomLookOutButton.ParentVisible: Boolean;
@@ -1389,7 +1398,7 @@ procedure TJvCustomLookOutButton.CMParentImageSizeChanged(var Msg: TMessage);
 var
   FTmp: Boolean;
 begin
-  if (Msg.LParam <> Longint(Self)) and FParentImageSize then
+  if (Msg.LParam <> LPARAM(Self)) and FParentImageSize then
   begin
     FTmp := FParentImageSize;
     SetImageSize(TJvImageSize(Msg.WParam));
@@ -1497,7 +1506,7 @@ begin
       { notify others }
       Msg.Msg := CM_LEAVEBUTTON;
       Msg.WParam := 0;
-      Msg.LParam := Longint(Self);
+      Msg.LParam := LPARAM(Self);
       Msg.Result := 0;
       Invalidate;
       Parent.Broadcast(Msg);
@@ -1528,7 +1537,7 @@ end;
 
 procedure TJvCustomLookOutButton.CMLeaveButton(var Msg: TMessage);
 begin
-  if (Msg.LParam <> Longint(Self)) and MouseOver and not FStayDown then
+  if (Msg.LParam <> LPARAM(Self)) and MouseOver and not FStayDown then
   begin
     MouseOver := False;
     //    FDown := False;
@@ -1812,14 +1821,13 @@ begin
     Caption := ACaption;
 end;
 
-function TJvLookOutPage.WantKey(Key: Integer; Shift: TShiftState;
-  const KeyText: WideString): Boolean;
+function TJvLookOutPage.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := IsAccel(Key, Caption) and Enabled and (ssAlt in Shift);
   if Result then
     Click
   else
-    Result := inherited WantKey(Key, Shift, KeyText);
+    Result := inherited WantKey(Key, Shift);
 end;
 
 procedure TJvLookOutPage.SetActiveButton(Value: TJvCustomLookOutButton);
@@ -2124,8 +2132,8 @@ begin
       SetParentImageSize(False);
     { notify children }
     Msg.Msg := CM_IMAGESIZECHANGED;
-    Msg.WParam := Longint(Ord(FImageSize));
-    Msg.LParam := Longint(Self);
+    Msg.WParam := WPARAM(Ord(FImageSize));
+    Msg.LParam := LPARAM(Self);
     Msg.Result := 0;
     if Parent <> nil then
       Parent.Broadcast(Msg);
@@ -2144,7 +2152,7 @@ procedure TJvLookOutPage.CMParentImageSizeChanged(var Msg: TMessage);
 var
   Tmp: Boolean;
 begin
-  if (Msg.LParam <> Longint(Self)) and FParentImageSize then
+  if (Msg.LParam <> LPARAM(Self)) and FParentImageSize then
   begin
     Tmp := FParentImageSize;
     SetImageSize(TJvImageSize(Msg.WParam));
@@ -2540,8 +2548,8 @@ begin
     FImageSize := Value;
     { notify children }
     Msg.Msg := CM_IMAGESIZECHANGED;
-    Msg.WParam := Longint(Ord(FImageSize));
-    Msg.LParam := Longint(Self);
+    Msg.WParam := WPARAM(Ord(FImageSize));
+    Msg.LParam := LPARAM(Self);
     Msg.Result := 0;
     Broadcast(Msg);
   end;
@@ -2708,7 +2716,7 @@ begin
     if FBorderStyle = bsSingle then
     begin
       {$IFDEF JVCLThemesEnabled}
-      if ThemeServices.ThemesEnabled then
+      if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
         DrawThemedBorder(Self)
       else
       {$ENDIF JVCLThemesEnabled}
@@ -2914,7 +2922,7 @@ begin
     if FBorderStyle = bsSingle then
     begin
       {$IFDEF JVCLThemesEnabled}
-      if ThemeServices.ThemesEnabled then
+      if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
         DrawThemedBorder(Self)
       else
       {$ENDIF JVCLThemesEnabled}

@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTMTimeLine.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvTMTimeLine.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvTMTimeLine;
 
@@ -225,6 +225,9 @@ type
     property Objects[ADate: TDate]: TObject read GetObjects write SetObjects;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvTMTimeline = class(TJvCustomTMTimeline)
   public
     property RightButton;
@@ -325,8 +328,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTMTimeLine.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

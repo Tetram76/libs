@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgShade.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgShade.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvgShade;
 
@@ -67,13 +67,18 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgShade.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+{$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+uses
+  System.UITypes;
+{$ENDIF HAS_UNIT_SYSTEM_UITYPES}
 
 constructor TJvgShade.Create(AOwner: TComponent);
 begin
@@ -100,11 +105,12 @@ end;
 
 procedure TJvgShade.Paint;
 var
-  I, J, N: Integer;
+  I, J: Integer;
+//  N: Integer;
 const
   cShiftColor = TColor($003939);
 begin
-  N := 0;
+//  N := 0;
   if FNeedRebuildImage then
   begin
     Image.Width := Width;
@@ -119,7 +125,7 @@ begin
       for I := 0 to Width-1 do
         // if Image.Canvas.Pixels[I, J] > cShiftColor then
       begin
-        if N <> Image.Canvas.Pixels[I, J] then
+//        if N <> Image.Canvas.Pixels[I, J] then
         begin
           //N := Image.Canvas.Pixels[I, J];
           //Form1.Memo1.Lines.Add(Format('%x', [N]));

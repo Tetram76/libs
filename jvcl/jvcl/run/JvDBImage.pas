@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBImage.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDBImage.pas 13314 2012-06-12 10:24:34Z obones $
 
 {
 Documentation:
@@ -52,10 +52,13 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls,
-  Clipbrd, DB, DBCtrls, Forms, Contnrs,
+  Clipbrd, DB, DBCtrls, Forms,
   JvJVCLUtils;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBImage = class(TDBImage)
   private
     FAutoDisplay: Boolean;
@@ -65,12 +68,14 @@ type
     FProportional: Boolean;
     FOnGetGraphicClass: TJvGetGraphicClassEvent;
     FTransparent: Boolean;
+    FShowNameIfEmpty: Boolean;
     procedure SetAutoDisplay(Value: Boolean);
     procedure SetProportional(Value: Boolean);
     procedure DataChange(Sender: TObject);
     procedure PictureChanged(Sender: TObject);
     procedure UpdateData(Sender: TObject);
     procedure SetTransparent(const Value: Boolean);
+    procedure SetShowNameIfEmpty(const Value: Boolean);
   protected
     procedure CreateHandle; override;
     procedure CheckFieldType;
@@ -93,6 +98,7 @@ type
     property BevelKind default bkNone;
     property BevelOuter;
     property Proportional: Boolean read FProportional write SetProportional default False;
+    property ShowNameIfEmpty: Boolean read FShowNameIfEmpty write SetShowNameIfEmpty default True;
     property Transparent: Boolean read FTransparent write SetTransparent default False;
     property OnGetGraphicClass: TJvGetGraphicClassEvent read FOnGetGraphicClass write FOnGetGraphicClass;
   end;
@@ -101,8 +107,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBImage.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13314 $';
+    Date: '$Date: 2012-06-12 12:24:34 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -124,6 +130,7 @@ begin
   FAutoDisplay := True;
   FOldPictureChange := Picture.OnChange;
   Picture.OnChange := PictureChanged;
+  FShowNameIfEmpty := True;
 end;
 
 procedure TJvDBImage.SetProportional(Value: Boolean);
@@ -131,6 +138,15 @@ begin
   if FProportional <> Value then
   begin
     FProportional := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TJvDBImage.SetShowNameIfEmpty(const Value: Boolean);
+begin
+  if FShowNameIfEmpty <> Value then
+  begin
+    FShowNameIfEmpty := Value;
     Invalidate;
   end;
 end;
@@ -263,14 +279,7 @@ begin
     end;
   end;
 
-  with Result do
-  begin
-    Left := 0;
-    Top := 0;
-    Right := W;
-    Bottom := H;
-  end;
-
+  Result := Rect(0, 0, W, H);
   if Center then
     OffsetRect(Result, (CW - W) div 2, (CH - H) div 2);
 end;
@@ -327,7 +336,7 @@ begin
         DrawPict.Free;
       end;
     end
-    else
+    else if ShowNameIfEmpty then
     begin
       Font := Self.Font;
       if (FDataLink <> nil) and (FDataLink.Field <> nil) then

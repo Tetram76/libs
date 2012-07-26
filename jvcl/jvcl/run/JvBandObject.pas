@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandObject.pas 13094 2011-08-11 11:21:03Z outchy $
+// $Id: JvBandObject.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvBandObject;
 
@@ -149,8 +149,13 @@ type
     function QueryContextMenu(AMenu: HMENU;
       IndexMenu, idCmdFirst, idCmdLast, uFlags: UINT): HRESULT; virtual; stdcall;
     function InvokeCommand(var Ici: TCMInvokeCommandInfo): HRESULT; virtual; stdcall;
+    {$IFDEF RTL230_UP}
+    function GetCommandString(idCmd: UINT_PTR; uFlags: UINT; pwReserved: PUINT;
+      pszName: LPSTR; cchMax: UINT): HRESULT; virtual; stdcall;
+    {$ELSE ~RTL230_UP}
     function GetCommandString(idCmd, uType: UINT; pwReserved: PUINT;
       pszName: LPSTR; cchMax: UINT): HRESULT; virtual; stdcall;
+    {$ENDIF ~RTL230_UP}
   end;
 
   TzDeskBandObject = class(TzContextMenuBandObject)
@@ -166,8 +171,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBandObject.pas $';
-    Revision: '$Revision: 13094 $';
-    Date: '$Date: 2011-08-11 13:21:03 +0200 (jeu., 11 août 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1032,22 +1037,31 @@ begin
   //   Result := NOERROR;
 end;
 
+{$IFDEF RTL230_UP}
+function TzContextMenuBandObject.GetCommandString(idCmd: UINT_PTR; uFlags: UINT;
+  pwReserved: PUINT; pszName: LPSTR; cchMax: UINT): HRESULT;
+{$ELSE ~RTL230_UP}
 function TzContextMenuBandObject.GetCommandString(idCmd, uType: UINT;
   pwReserved: PUINT; pszName: LPSTR; cchMax: UINT): HRESULT;
+{$ENDIF ~RTL230_UP}
 var
   MenuItem: TMenuItem;
 begin
   {$IFDEF DEBUGINFO_ON}
   zTraceLog(ClassName + '.GetCommandString()');
   zTraceLog('  idCmd=' + IntToStr(idCmd));
+  {$IFDEF RTL230_UP}
+  zTraceLog('  uFlags=' + Format('0x%x', [uFlags]));
+  {$ELSE ~RTL230_UP}
   zTraceLog('  uType=' + Format('0x%x', [uType]));
+  {$ENDIF ~RTL230_UP}
   {$ENDIF DEBUGINFO_ON}
   Result := E_INVALIDARG;
   if not Assigned(FBandForm) then
     Exit;
   if not Assigned(FBandForm.BandContextMenu) then
     Exit;
-  case uType of
+  case {$IFDEF RTL230_UP}uFlags{$ELSE ~RTL230_UP}uType{$ENDIF ~RTL230_UP} of
     GCS_HELPTEXT:
       begin
         MenuItem := FBandForm.BandContextMenu.FindItem(idCmd, fkCommand);

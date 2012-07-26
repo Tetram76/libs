@@ -29,12 +29,11 @@ Known Issues:
   custom color selected, not the last added as it should be thus AutoComplete is
   set to default to False. (p3)
 -----------------------------------------------------------------------------}
-// $Id: JvColorCombo.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvColorCombo.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvColorCombo;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -54,6 +53,9 @@ type
   TJvColorComboOption = (coText, coHex, coRGB, coStdColors, coSysColors, coCustomColors);
   TJvColorComboOptions = set of TJvColorComboOption;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvColorComboBox = class(TJvCustomComboBox)
   private
     FColorValue: TColor;
@@ -195,6 +197,9 @@ type
   TJvDrawPreviewEvent = procedure(Sender: TObject; const AFontName: string;
     var APreviewText: string; ATextWidth: Integer; var DrawPreview: Boolean) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvFontComboBox = class(TJvCustomComboBox)
   private
     FTrueTypeBmp: TBitmap;
@@ -317,8 +322,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorCombo.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -1427,7 +1432,7 @@ begin
     DC := GetDC(HWND_DESKTOP);
     try
       FPixelsPerInch := GetDeviceCaps(DC, LOGPIXELSY);
-      EnumFontFamilies(DC, PChar(FontName), @GetFontSizesEnum, Integer(SizeList));
+      EnumFontFamilies(DC, PChar(FontName), @GetFontSizesEnum, LPARAM(SizeList));
       SizeList.Sort(SizeSort);
     finally
       ReleaseDC(HWND_DESKTOP, DC);

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScrollText.pas 12623 2009-12-24 11:21:14Z remkobonte $
+// $Id: JvScrollText.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvScrollText;
 
@@ -36,10 +36,13 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, Windows, Messages, Graphics, Controls, Forms, StdCtrls,
-  JvStaticText, JvTypes, JvImageDrawThread, JvComponent;
+  JvStaticText, JvImageDrawThread, JvComponent;
 
 type
   TJvScrollTextDirection = (drFromLeft, drFromRight, drFromTop, drFromBottom); // also in JvMoveableBevel, JvAppearingLabel
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvScrollText = class(TJvCustomControl)
   private
     FText: TJvStaticText;
@@ -126,8 +129,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScrollText.pas $';
-    Revision: '$Revision: 12623 $';
-    Date: '$Date: 2009-12-24 12:21:14 +0100 (jeu., 24 déc. 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -135,7 +138,7 @@ const
 implementation
 
 uses
-  JvJVCLUtils, JvThemes, JvResources;
+  JvJVCLUtils, JvThemes;
 
 constructor TJvScrollText.Create(AOwner: TComponent);
 begin

@@ -28,7 +28,7 @@ Known Issues:
                on the form being designed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDesignSurface.pas 12931 2010-11-28 13:36:50Z ahuser $
+// $Id: JvDesignSurface.pas 13350 2012-06-13 14:54:41Z obones $
 
 unit JvDesignSurface;
 
@@ -41,7 +41,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Controls, Graphics,
-  Forms, ExtCtrls, Contnrs;
+  Forms, ExtCtrls;
 
 type
   TJvDesignSurface = class;
@@ -138,6 +138,9 @@ type
     ARect: TRect) of object;
 }
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDesignSurface = class(TComponent)
   private
     FActive: Boolean;
@@ -223,11 +226,17 @@ type
     property OnSelectionChange: TNotifyEvent read FOnSelectionChange write FOnSelectionChange;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDesignScrollBox = class(TScrollBox)
   protected
     procedure AutoScrollInView(AControl: TControl); override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDesignPanel = class(TPanel)
   private
     FSurface: TJvDesignSurface;
@@ -265,8 +274,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignSurface.pas $';
-    Revision: '$Revision: 12931 $';
-    Date: '$Date: 2010-11-28 14:36:50 +0100 (dim., 28 nov. 2010) $';
+    Revision: '$Revision: 13350 $';
+    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -274,7 +283,6 @@ const
 implementation
 
 uses
-  Clipbrd,
   JvDesignUtils, JvDesignClip, JvDesignImp, JvResources, JvTypes;
 
 //=== { TJvDesignCustomMessenger } ===========================================
@@ -372,14 +380,8 @@ begin
 end;
 
 function TJvDesignCustomController.GetShift: TShiftState;
-// obones: For C5/D5 compatibility, we must use a local variable
-// as KeyboardStateToShiftState with no parameters was introduced
-// in D6/C6
-var
-  KeyState: TKeyBoardState;
 begin
-  GetKeyboardState(KeyState);
-  Result := KeyboardStateToShiftState(KeyState);
+  Result := KeyboardStateToShiftState;
 end;
 
 //=== { TJvDesignCustomSelector } ============================================
@@ -608,10 +610,10 @@ end;
 
 function TJvDesignSurface.GetAddBounds: TRect;
 begin
-  with Result, Controller do
+  with Controller do
   begin
-    TopLeft := ContainerToSelectedContainer(DragRect.TopLeft);
-    BottomRight := ContainerToSelectedContainer(DragRect.BottomRight);
+    Result.TopLeft := ContainerToSelectedContainer(DragRect.TopLeft);
+    Result.BottomRight := ContainerToSelectedContainer(DragRect.BottomRight);
   end;
 end;
 
@@ -730,13 +732,10 @@ var
 
   procedure KeepInParent;
   begin
-    with P do
-    begin
-      if CO.Left > ClientWidth then
-        CO.Left := ClientWidth - CO.Width;
-      if CO.Top > ClientHeight then
-        CO.Top := ClientHeight - CO.Height;
-    end;
+    if CO.Left > P.ClientWidth then
+      CO.Left := P.ClientWidth - CO.Width;
+    if CO.Top > P.ClientHeight then
+      CO.Top := P.ClientHeight - CO.Height;
   end;
 
   procedure PasteComponent;

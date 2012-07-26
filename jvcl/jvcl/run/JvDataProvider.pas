@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDataProvider.pas 12915 2010-11-27 22:00:35Z ahuser $
+// $Id: JvDataProvider.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvDataProvider;
 
@@ -1217,8 +1217,8 @@ procedure DisabledTextRect(ACanvas: TCanvas; var ARect: TRect; Left, Top: Intege
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDataProvider.pas $';
-    Revision: '$Revision: 12915 $';
-    Date: '$Date: 2010-11-27 23:00:35 +0100 (sam., 27 nov. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1229,7 +1229,7 @@ uses
   {$IFDEF MSWINDOWS}
   ActiveX,
   {$ENDIF MSWINDOWS}
-  SysUtils, Consts, TypInfo, RTLConsts,
+  SysUtils, TypInfo, RTLConsts,
   JclStrings,
   JvTypes, JvConsts, JvResources, JvJCLUtils;
 

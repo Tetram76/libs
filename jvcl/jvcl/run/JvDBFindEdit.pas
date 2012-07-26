@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBFindEdit.pas 12793 2010-06-07 14:18:27Z ahuser $
+// $Id: JvDBFindEdit.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvDBFindEdit;
 
@@ -42,6 +42,9 @@ type
   TJvEditFindStyle = (fsNavigate, fsFilter);
   TJvEditFindMode = (fmFirstPos, fmAnyPos);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBFindEdit = class(TJvMaskEdit)
   private
     FTimer: TTimer;
@@ -132,8 +135,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBFindEdit.pas $';
-    Revision: '$Revision: 12793 $';
-    Date: '$Date: 2010-06-07 16:18:27 +0200 (lun., 07 juin 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

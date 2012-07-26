@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCalendar.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvCalendar.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvCalendar;
 
@@ -222,6 +222,9 @@ type
     property Leaving: Boolean read FLeaving;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMonthCalendar2 = class(TJvCustomMonthCalendar)
   public
     property MinSize;
@@ -289,8 +292,8 @@ function DayStatesToString(Days: TMonthDayState): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCalendar.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -324,8 +327,7 @@ end;
 
 function IsBlankDate(ST: TSystemTime): Boolean;
 begin
-  with ST do
-    Result := (wMonth = 0) and (wDay = 0);
+  Result := (ST.wMonth = 0) and (ST.wDay = 0);
 end;
 
 function StringToDayStates(const S: string): TMonthDayState;
@@ -354,7 +356,7 @@ end;
 
 type
   // (p3) from ShLwAPI
-  TDLLVersionInfo = packed record
+  TDLLVersionInfo = record
     cbSize: DWORD;
     dwMajorVersion: DWORD;
     dwMinorVersion: DWORD;
@@ -1207,11 +1209,8 @@ begin
   if HandleAllocated then
   begin
     MonthCal_GetMinReqRect(Handle, R);
-    with R do
-    begin
-      CtlMinHeight := Bottom - Top;
-      CtlMinWidth := Right - Left;
-    end;
+    CtlMinHeight := R.Bottom - R.Top;
+    CtlMinWidth := R.Right - R.Left;
     if MinHeight < CtlMinHeight then
       MinHeight := CtlMinHeight;
     if MinWidth < CtlMinWidth then
@@ -1228,11 +1227,8 @@ begin
   begin
     Result := True;
     R := MinSize;
-    with R do
-    begin
-      NewWidth := Right - Left + Ord(BorderStyle = bsSingle) * 2;
-      NewHeight := Bottom - Top + Ord(BorderStyle = bsSingle) * 2;
-    end;
+    NewWidth := R.Right - R.Left + Ord(BorderStyle = bsSingle) * 2;
+    NewHeight := R.Bottom - R.Top + Ord(BorderStyle = bsSingle) * 2;
   end
   else
     Result := False;

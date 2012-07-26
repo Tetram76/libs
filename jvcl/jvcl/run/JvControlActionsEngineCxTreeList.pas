@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxTreeList.pas 13015 2011-04-10 17:19:12Z jfudickar $
+// $Id: JvControlActionsEngineCxTreeList.pas 13099 2011-09-02 21:51:31Z jfudickar $
 
 unit JvControlActionsEngineCxTreeList;
 
@@ -59,8 +59,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxTreeList.pas $';
-    Revision: '$Revision: 13015 $';
-    Date: '$Date: 2011-04-10 19:19:12 +0200 (dim., 10 avr. 2011) $';
+    Revision: '$Revision: 13099 $';
+    Date: '$Date: 2011-09-02 23:51:31 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -141,10 +141,10 @@ end;
 
 function TJvControlActioncxTreeListEngine.UpdateAction(Action: TBasicAction): boolean;
 begin
+  Result := Inherited UpdateAction(Action);
   if Assigned(Action) and (Action is TJvControlBaseAction) and
     Assigned(GetTreeList(TJvControlBaseAction(Action).ActionComponent)) and (TJvControlBaseAction(Action).ControlOperation = caoCustomizeColumns) then
     TJvControlBaseAction(Action).SetChecked(GetTreeList(TJvControlBaseAction(Action).ActionComponent).Customizing.Visible);
-
 end;
 
 {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXTREELIST}

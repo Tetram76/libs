@@ -31,7 +31,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLoginForm.pas 13061 2011-06-11 10:03:55Z jfudickar $
+// $Id: JvLoginForm.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvLoginForm;
 
@@ -64,7 +64,7 @@ type
 
   TJvLoginForm = class;
 
-  TJvCustomLogin = class(TJvCommonDialogF)
+  TJvCustomLogin = class(TJvCommonDialog)
   private
     FActive: Boolean;
     FAttemptNumber: Integer;
@@ -123,7 +123,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function Login: Boolean; virtual;
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
     procedure TerminateApplication;
     procedure Lock;
     property LoggedUser: string read GetLoggedUser write SetLoggedUser;
@@ -131,6 +131,9 @@ type
     property Caption: string read FCaption write FCaption;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvLoginDialog = class(TJvCustomLogin)
   private
     FOnCheckUser: TJvLoginEvent;
@@ -204,8 +207,8 @@ function CreateLoginDialog(UnlockMode, ASelectDatabase: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLoginForm.pas $';
-    Revision: '$Revision: 13061 $';
-    Date: '$Date: 2011-06-11 12:03:55 +0200 (sam., 11 juin 2011) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -214,8 +217,7 @@ implementation
 
 uses
   Consts,
-  IniFiles,
-  JvJCLUtils, JvJVCLUtils, JvResources, JvConsts;
+  JvJCLUtils, JvResources, JvConsts;
 
 {$R *.dfm}
 
@@ -652,7 +654,7 @@ begin
   FAttempt := 0;
 end;
 
-function TJvCustomLogin.Execute: Boolean;
+function TJvCustomLogin.Execute(ParentWnd: HWND): Boolean;
 begin
   Result := Login;
 end;

@@ -26,7 +26,7 @@ Known Issues:
  * drag'n'drop edge scrolling - DONE (almost, needs some tweaks to look good as well)
  * icons don't scale, should be handled differently - DONE (explicitly calls DrawIconEx)
 -----------------------------------------------------------------------------}
-// $Id: JvCustomItemViewer.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvCustomItemViewer.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvCustomItemViewer;
 
@@ -352,8 +352,8 @@ function CenterRect(InnerRect, OuterRect: TRect): TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCustomItemViewer.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -939,7 +939,7 @@ procedure TJvCustomItemViewer.CMUnselectItem(var Msg: TMessage);
 var
   I: Integer;
 begin
-  if Msg.WParam = Integer(Self) then
+  if Msg.WParam = WPARAM(Self) then
   begin
     BeginUpdate;
     try
@@ -1398,15 +1398,13 @@ begin
       Position := Position + Rect.Right - ClientWidth;
   end;
   if Rect.Top < 0 then
-    with VertScrollBar do
-      Position := Position + Rect.Top
+    VertScrollBar.Position := VertScrollBar.Position + Rect.Top
   else
   if Rect.Bottom > ClientHeight then
   begin
     if Rect.Bottom - Rect.Top > ClientHeight then
       Rect.Bottom := Rect.Top + ClientHeight;
-    with VertScrollBar do
-      Position := Position + Rect.Bottom - ClientHeight;
+    VertScrollBar.Position := VertScrollBar.Position + Rect.Bottom - ClientHeight;
   end;
   UpdateAll;
   Invalidate;
@@ -1917,7 +1915,7 @@ procedure TJvCustomItemViewer.WMNCPaint(var Messages: TWMNCPaint);
 begin
   inherited;
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     ThemeServices.PaintBorder(TWinControl(Self), False)
   {$ENDIF JVCLThemesEnabled}
 end;
@@ -1926,8 +1924,7 @@ function TJvCustomItemViewer.HintShow(var HintInfo: {$IFDEF RTL200_UP}Controls.{
 var
   I: Integer;
 begin
-  with HintInfo.CursorPos do
-    I := ItemAtPos(X,Y, True);
+  I := ItemAtPos(HintInfo.CursorPos.X, HintInfo.CursorPos.Y, True);
   if I >= 0 then
   begin
     HintInfo.HintStr := Items[I].Hint;

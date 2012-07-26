@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVCStyle.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDockVCStyle.pas 13180 2011-11-22 12:45:23Z obones $
 
 unit JvDockVCStyle;
 
@@ -50,6 +50,9 @@ type
 
   TJvDockVCTabServerOption = class(TJvDockBasicTabServerOption);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDockVCStyle = class(TJvDockAdvStyle)
   private
     FOldEachOtherDock: Boolean;
@@ -195,8 +198,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVCStyle.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13180 $';
+    Date: '$Date: 2011-11-22 13:45:23 +0100 (mar., 22 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -204,10 +207,11 @@ const
 implementation
 
 uses
+  Types,
   {$IFDEF JVCLThemesEnabled}
   JvThemes,
   {$ENDIF JVCLThemesEnabled}
-  Consts, SysUtils, ExtCtrls,
+  SysUtils, ExtCtrls,
   JvDockSupportProc, JvDockGlobals;
 
 type
@@ -944,18 +948,18 @@ var
       if (ADockClient <> nil) and not ADockClient.EnableCloseButton then
         Exit;
       {$IFDEF JVCLThemesEnabled}
-      if ThemeServices.ThemesAvailable and ThemeServices.ThemesEnabled then
+      if ThemeServices.{$IFDEF RTL230_UP}Available{$ELSE}ThemesAvailable{$ENDIF RTL230_UP} and ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
       begin
         CurrentThemeTypeBtn := twSmallCloseButtonNormal;
         if VCDockZone.CloseBtnDown then
           CurrentThemeTypeBtn := twSmallCloseButtonPushed;
         Details := ThemeServices.GetElementDetails(CurrentThemeTypeBtn);
-        ThemeServices.DrawElement(Canvas.Handle, Details, Rect(Left, Top,
+        ThemeServices.DrawElement(Canvas.Handle, Details, Classes.Rect(Left, Top,
           Left + ButtonWidth, Top + ButtonHeight));
       end
       else
       {$ENDIF JVCLThemesEnabled}
-        DrawFrameControl(Canvas.Handle, Rect(Left, Top, Left + ButtonWidth,
+        DrawFrameControl(Canvas.Handle, Classes.Rect(Left, Top, Left + ButtonWidth,
           Top + ButtonHeight), DFC_CAPTION, DFCS_CAPTIONCLOSE or Ord(VCDockZone.CloseBtnDown) * DFCS_PUSHED);
     end;
   end;
@@ -981,7 +985,7 @@ var
         (VCDockZone.ParentZone.VisibleChildCount >= 2));
       IsMaximum := VCDockZone.ZoneSizeStyle in [zssMaximum];
       {$IFDEF JVCLThemesEnabled}
-      if ThemeServices.ThemesAvailable and ThemeServices.ThemesEnabled then
+      if ThemeServices.{$IFDEF RTL230_UP}Available{$ELSE}ThemesAvailable{$ENDIF RTL230_UP} and ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
       begin
         CurrentThemeTypeSB := ArrowOrientTheme[CurrArrow[IsMaximum, DockSiteOrientation]];
         if VCDockZone.ExpandButtonDown then
@@ -989,11 +993,11 @@ var
         if InActive then
           CurrentThemeTypeSB := TThemedScrollBar(Ord(CurrentThemeTypeSB) + 3);
         Details := ThemeServices.GetElementDetails(CurrentThemeTypeSB);
-        ThemeServices.DrawElement(Canvas.Handle, Details, Rect(Left, Top, Left + ButtonWidth, Top + ButtonHeight));
+        ThemeServices.DrawElement(Canvas.Handle, Details, Classes.Rect(Left, Top, Left + ButtonWidth, Top + ButtonHeight));
       end
       else
       {$ENDIF JVCLThemesEnabled}
-        DrawFrameControl(Canvas.Handle, Rect(Left, Top, Left + ButtonWidth,
+        DrawFrameControl(Canvas.Handle, Classes.Rect(Left, Top, Left + ButtonWidth,
           Top + ButtonHeight), DFC_SCROLL,
           ArrowOrient[CurrArrow[IsMaximum, DockSiteOrientation]] +
             Cardinal(Ord(InActive)) * DFCS_INACTIVE +
@@ -1005,16 +1009,13 @@ var
   begin
     if (Left >= Right) or (Top >= Bottom) then
       Exit;
-    with Canvas do
-    begin
-      Pen.Color := clBtnHighlight;
-      MoveTo(Right, Top);
-      LineTo(Left, Top);
-      LineTo(Left, Bottom);
-      Pen.Color := clBtnShadow;
-      LineTo(Right, Bottom);
-      LineTo(Right, Top - 1);
-    end;
+    Canvas.Pen.Color := clBtnHighlight;
+    Canvas.MoveTo(Right, Top);
+    Canvas.LineTo(Left, Top);
+    Canvas.LineTo(Left, Bottom);
+    Canvas.Pen.Color := clBtnShadow;
+    Canvas.LineTo(Right, Bottom);
+    Canvas.LineTo(Right, Top - 1);
   end;
 
 begin
@@ -1022,39 +1023,38 @@ begin
   DrawRect := ARect;
   Canvas.Brush.Color := TWinControlAccessProtected(DockSite).Color;
   Canvas.FillRect(DrawRect);
-  with ARect do
-    case GrabbersPosition of
-      gpLeft:
-        begin
-          DrawExpendBotton(Left + BorderWidth + LeftOffset,
-            Top + TopOffset + ButtonHeight + ButtonSplitter + BorderWidth);
-          DrawCloseButton(Left + BorderWidth + LeftOffset, Top + TopOffset + BorderWidth);
-          DrawGrabberLine(Left + BorderWidth + LeftOffset + 3,
-            Top + 2 * ButtonHeight + TopOffset + ButtonSplitter + BottomOffset + BorderWidth + 3,
-            Left + BorderWidth + LeftOffset + 5, Bottom - BorderWidth - 2);
-          DrawGrabberLine(Left + BorderWidth + LeftOffset + 7,
-            Top + 2 * ButtonHeight + TopOffset + ButtonSplitter + BottomOffset + BorderWidth + 3,
-            Left + BorderWidth + LeftOffset + 9, Bottom - BorderWidth - 2);
-        end;
-      gpTop:
-        begin
-          DrawExpendBotton(Right - LeftOffset - 2 * ButtonWidth - ButtonSplitter - BorderWidth,
-            Top + TopOffset + BorderWidth);
-          DrawCloseButton(Right - LeftOffset - ButtonWidth - BorderWidth, Top + TopOffset + BorderWidth);
-          DrawGrabberLine(Left + BorderWidth, Top + BorderWidth + TopOffset + 3,
-            Right - 2 * ButtonWidth - RightOffset - ButtonSplitter - LeftOffset - BorderWidth - 3,
-            Top + BorderWidth + TopOffset + 5);
-          DrawGrabberLine(Left + BorderWidth, Top + BorderWidth + TopOffset + 7,
-            Right - 2 * ButtonWidth - RightOffset - ButtonSplitter - LeftOffset - BorderWidth - 3,
-            Top + BorderWidth + TopOffset + 9);
-        end;
-      gpBottom:
-        begin
-        end;
-      gpRight:
-        begin
-        end;
-    end;
+  case GrabbersPosition of
+    gpLeft:
+      begin
+        DrawExpendBotton(ARect.Left + BorderWidth + LeftOffset,
+          ARect.Top + TopOffset + ButtonHeight + ButtonSplitter + BorderWidth);
+        DrawCloseButton(ARect.Left + BorderWidth + LeftOffset, ARect.Top + TopOffset + BorderWidth);
+        DrawGrabberLine(ARect.Left + BorderWidth + LeftOffset + 3,
+          ARect.Top + 2 * ButtonHeight + TopOffset + ButtonSplitter + BottomOffset + BorderWidth + 3,
+          ARect.Left + BorderWidth + LeftOffset + 5, ARect.Bottom - BorderWidth - 2);
+        DrawGrabberLine(ARect.Left + BorderWidth + LeftOffset + 7,
+          ARect.Top + 2 * ButtonHeight + TopOffset + ButtonSplitter + BottomOffset + BorderWidth + 3,
+          ARect.Left + BorderWidth + LeftOffset + 9, ARect.Bottom - BorderWidth - 2);
+      end;
+    gpTop:
+      begin
+        DrawExpendBotton(ARect.Right - LeftOffset - 2 * ButtonWidth - ButtonSplitter - BorderWidth,
+          ARect.Top + TopOffset + BorderWidth);
+        DrawCloseButton(ARect.Right - LeftOffset - ButtonWidth - BorderWidth, ARect.Top + TopOffset + BorderWidth);
+        DrawGrabberLine(ARect.Left + BorderWidth, ARect.Top + BorderWidth + TopOffset + 3,
+          ARect.Right - 2 * ButtonWidth - RightOffset - ButtonSplitter - LeftOffset - BorderWidth - 3,
+          ARect.Top + BorderWidth + TopOffset + 5);
+        DrawGrabberLine(ARect.Left + BorderWidth, ARect.Top + BorderWidth + TopOffset + 7,
+          ARect.Right - 2 * ButtonWidth - RightOffset - ButtonSplitter - LeftOffset - BorderWidth - 3,
+          ARect.Top + BorderWidth + TopOffset + 9);
+      end;
+    gpBottom:
+      begin
+      end;
+    gpRight:
+      begin
+      end;
+  end;
 end;
 
 procedure TJvDockVCTree.DrawDockSiteRect;
@@ -1285,14 +1285,14 @@ begin
     Result := Zone;
     with Zone.ChildControl do
     begin
-      if PtInRect(Rect(
+      if PtInRect(Classes.Rect(
         Left - GrabberSize + LeftOffset,
         Top + TopOffset,
         Left - GrabberSize + LeftOffset + ButtonWidth,
         Top + TopOffset + ButtonHeight), MousePos) then
         HTFlag := HTCLOSE
       else
-      if PtInRect(Rect(
+      if PtInRect(Classes.Rect(
         Left - GrabberSize + LeftOffset,
         Top + ButtonHeight + TopOffset + ButtonSplitter,
         Left - GrabberSize + LeftOffset + ButtonWidth,
@@ -1315,14 +1315,14 @@ begin
     Result := Zone;
     with Zone.ChildControl do
     begin
-      if PtInRect(Rect(
+      if PtInRect(Classes.Rect(
         Left + Width - ButtonWidth - RightOffset,
         Top - GrabberSize + TopOffset,
         Left + Width - RightOffset,
         Top - GrabberSize + TopOffset + ButtonHeight), MousePos) then
         HTFlag := HTCLOSE
       else
-      if PtInRect(Rect(
+      if PtInRect(Classes.Rect(
         Left + Width - 2 * ButtonWidth - RightOffset - ButtonSplitter,
         Top - GrabberSize + TopOffset,
         Left + Width - ButtonWidth - RightOffset - ButtonSplitter,

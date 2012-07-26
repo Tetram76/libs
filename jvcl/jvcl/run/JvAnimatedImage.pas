@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAnimatedImage.pas 12620 2009-12-19 15:53:00Z remkobonte $
+// $Id: JvAnimatedImage.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvAnimatedImage;
 
@@ -71,6 +71,9 @@ type
 
   TGlyphOrientation = (goHorizontal, goVertical);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvAnimatedImage = class(TJvImageControl)
   private
     FActive: Boolean;
@@ -180,8 +183,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAnimatedImage.pas $';
-    Revision: '$Revision: 12620 $';
-    Date: '$Date: 2009-12-19 16:53:00 +0100 (sam., 19 déc. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -653,9 +656,8 @@ begin
         (ClientHeight - FImageHeight) div 2, FImageWidth, FImageHeight)
     else
       DstRect := Rect(0, 0, FImageWidth, FImageHeight);
-    with DstRect do
-      StretchBitmapRectTransparent(Canvas, Left, Top, Right - Left,
-        Bottom - Top, SrcRect, FGlyph, FTransparentColor);
+    StretchBitmapRectTransparent(Canvas, DstRect.Left, DstRect.Top, DstRect.Right - DstRect.Left,
+      DstRect.Bottom - DstRect.Top, SrcRect, FGlyph, FTransparentColor);
   end;
 end;
 

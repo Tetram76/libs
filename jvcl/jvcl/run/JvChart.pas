@@ -88,7 +88,7 @@ You may retrieve the latest version of this file at the Project JEDI's JVCL home
 located at http://jvcl.delphi-jedi.org
 
 -----------------------------------------------------------------------------}
-// $Id: JvChart.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvChart.pas 13216 2012-02-24 10:09:08Z obones $
 
 unit JvChart;
 
@@ -640,6 +640,9 @@ type
     property CursorStyle: TPenStyle read FCursorStyle write FCursorStyle;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvChart = class(TJvGraphicControl)
   private
     FUpdating: Boolean; // PREVENT ENDLESS EVENT LOOPING.
@@ -939,8 +942,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChart.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13216 $';
+    Date: '$Date: 2012-02-24 11:09:08 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -950,9 +953,8 @@ implementation
 uses
   SysUtils, Forms, Dialogs, Printers, Clipbrd,
   Math, // uses Ceil routine, also defines IsNaN on Delphi 6 and up.
-  JclMath, // function IsNaN for Delphi 5  (ahuser)
   JvJCLUtils, // StrToFloatDef
-  JvJVCLUtils, JvConsts, JvResources;
+  JvJVCLUtils, JvResources;
 
 const
   {$IFDEF TJVCHART_ARRAY_OF_ARRAY}
@@ -1480,7 +1482,7 @@ begin
     SetLength(FData, FDataAlloc);
 
     // new: If we set FClearToValue to NaN, special handling in growing arrays:
-    if JclMath.IsNaN(FClearToValue) then
+    if IsNaN(FClearToValue) then
       for I := OldLength to FDataAlloc - 1 do
         for J := 0 to Length(FData[I]) - 1 do
           FData[I][J] := FClearToValue; // XXX Debug me!
@@ -1490,7 +1492,7 @@ begin
   begin
     OldLength := Length(FData[ValueIndex]);
     SetLength(FData[ValueIndex], Pen + 1);
-    if JclMath.IsNaN(FClearToValue) then
+    if IsNaN(FClearToValue) then
     begin
       for I := OldLength to FDataAlloc - 1 do
       begin
@@ -1519,6 +1521,7 @@ begin
     for N := OldLen to Idx do
       FData[N] := FClearToValue;
   end;
+  FDataAlloc := Length(FData);
 end;
 {$ENDIF TJVCHART_ARRAY_OF_ARRAY}
 
@@ -1536,7 +1539,7 @@ begin
   for I := 0 to FPenCount - 1 do
   begin
     LValue := GetValue(I, ValueIndex);
-    if JclMath.IsNaN(LValue) then
+    if IsNaN(LValue) then
       S := S + '-'
     else
       S := S + Format('%5.2f', [LValue]);
@@ -1688,7 +1691,7 @@ end;
 
 procedure TJvChartYAxisOptions.SetYMin(NewYMin: Double);
 begin
-  if JclMath.IsNaN(NewYMin) then
+  if IsNaN(NewYMin) then
     Exit;
 
   try
@@ -1724,7 +1727,7 @@ end;
 
 procedure TJvChartYAxisOptions.SetYMax(NewYMax: Double);
 begin
-  if JclMath.IsNaN(NewYMax) then
+  if IsNaN(NewYMax) then
     Exit;
 
   if NewYMax = FYMax then
@@ -2331,14 +2334,11 @@ end;
 {Paint helper}
 
 function TJvChart.DestRect: TRect;
-    begin
-  with Result do
-  begin
-    Left := 0;
-    Top := 0;
-    Right := GetChartCanvasWidth;
-    Bottom := GetChartCanvasHeight;
-  end;
+begin
+  Result.Left := 0;
+  Result.Top := 0;
+  Result.Right := GetChartCanvasWidth;
+  Result.Bottom := GetChartCanvasHeight;
 end;
 
 procedure TJvChart.Loaded;
@@ -2574,7 +2574,7 @@ begin
 
         V := FData.Value[J, I];
 
-        if JclMath.IsNaN(V) then
+        if IsNaN(V) then
           Continue;
         if NYMin > V then
           NYMin := V;
@@ -3091,7 +3091,7 @@ var
       for J := 0 to Options.XValueCount - 1 do
       begin
         V := FData.Value[I, J];
-        if JclMath.IsNaN(V) then
+        if IsNaN(V) then
           Continue;
         //MaxFlag := False;
         //MinFlag := False;
@@ -3138,7 +3138,7 @@ var
       for J := 0 to Options.XValueCount - 1 do
       begin
         V := FData.Value[I, J];
-        if JclMath.IsNaN(V) then
+        if IsNaN(V) then
           Continue;
         // Calculate Marker position:
         X := Round(XOrigin + J * LineXPixelGap);
@@ -3267,7 +3267,7 @@ var
         //Dec(X2,4);
         //Inc(X2, 2*J);
         V := FData.Value[I, J];
-        if JclMath.IsNaN(V) then
+        if IsNaN(V) then
           Continue;
         Y2 := Round(YOrigin - ((V / Options.PenAxis[I].YGap) * Options.PrimaryYAxis.YPixelGap));
         //Assert(Y2 < aHeight);
@@ -3318,7 +3318,7 @@ var
   begin
     V := FData.Value[Pen, Sample];
     PenAxisOpt := Options.PenAxis[Pen];
-    if JclMath.IsNaN(V) then
+    if IsNaN(V) then
     begin
       Result := NaN; // blank placeholder value in chart!
       Exit;
@@ -3362,7 +3362,7 @@ var
       SetLineColor(ACanvas, I);
       J := 0;
       V := GraphConstrainedLineY(I, J);
-      NanFlag := JclMath.IsNaN(V);
+      NanFlag := IsNaN(V);
       if not NanFlag then
       begin
         Y := Round(V);
@@ -3372,7 +3372,7 @@ var
       for J := 1 to Options.XValueCount - 1 do
       begin
         V := GraphConstrainedLineY(I, J);
-        if JclMath.IsNaN(V) then
+        if IsNaN(V) then
         begin
           NanFlag := True; // skip.
           ACanvas.MoveTo(Round(XOrigin + J * LineXPixelGap), 200); //DEBUG!
@@ -3395,7 +3395,7 @@ var
               for I2 := 0 to I - 1 do
               begin
                 V := GraphConstrainedLineY(I2, J);
-                if JclMath.IsNaN(V) then
+                if IsNaN(V) then
                   Continue;
                 Y1 := Round(V);
                 if Y1 = Y then
@@ -4687,7 +4687,7 @@ begin
     if Length(Str) = 0 then
       Str := IntToStr(I + 1);
     Str := Str + ' : ';
-    if JclMath.IsNaN(Val) then
+    if IsNaN(Val) then
       Str := Str + RsNA
     else
     begin
@@ -5732,7 +5732,7 @@ begin
     with FOptions.PrimaryYAxis do
       if (YGap <> 0) then
       begin
-        if JclMath.IsNaN(HB.FYTop) then
+        if IsNaN(HB.FYTop) then
           RawRect.Top := FOptions.YStartOffset
         else
         begin
@@ -5741,7 +5741,7 @@ begin
             RawRect.Top := FOptions.YStartOffset;
         end;
 
-        if JclMath.IsNaN(HB.FYBottom) then
+        if IsNaN(HB.FYBottom) then
           RawRect.Bottom := Trunc(YOrigin)
         else
         begin

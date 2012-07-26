@@ -16,7 +16,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorageSelectList.pas 13023 2011-05-08 19:48:33Z jfudickar $
+// $Id: JvAppStorageSelectList.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvAppStorageSelectList;
 
@@ -72,6 +72,9 @@ type
     property DynControlEngine: TJvDynControlEngine read GetDynControlEngine write FDynControlEngine;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvAppStorageSelectListEasyDialog = class(TJvBaseAppStorageSelectListDialog)
   protected
     function DialogInstanceClass: TJvBaseAppStorageSelectListDialogInstanceClass; override;
@@ -132,6 +135,9 @@ type
     property SelectPath: string read FSelectPath write SetSelectPath;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvAppStorageSelectList = class(TJvBaseAppStorageSelectList)
   published
     property AppStorage;
@@ -146,8 +152,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorageSelectList.pas $';
-    Revision: '$Revision: 13023 $';
-    Date: '$Date: 2011-05-08 21:48:33 +0200 (dim., 08 mai 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -156,7 +162,7 @@ implementation
 
 uses
   SysUtils,
-  JvConsts, JvResources, JvJVCLUtils;
+  JvResources, JvJVCLUtils;
 
 function TJvAppStorageSelectListEasyDialogInstance.CreateControls(AOperation: TJvAppStorageSelectListOperation;
     ACaption: string = ''): TForm;

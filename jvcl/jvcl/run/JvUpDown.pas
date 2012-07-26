@@ -28,12 +28,11 @@ Description:
 Known Issues:
 - Can't set Position of TJvDomainUpDown at design-time. SOLVED 2003-05-30
 -----------------------------------------------------------------------------}
-// $Id: JvUpDown.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvUpDown.pas 13155 2011-11-06 12:31:20Z ahuser $
 
 unit JvUpDown;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -114,6 +113,9 @@ type
     destructor Destroy; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvUpDown = class(TJvCustomUpDown)
   protected
     procedure UpdateAssociate; override;
@@ -157,6 +159,9 @@ type
     property OnMouseUp;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDomainUpDown = class(TJvCustomDomainUpDown)
   published
     property Associate;
@@ -196,8 +201,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUpDown.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13155 $';
+    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

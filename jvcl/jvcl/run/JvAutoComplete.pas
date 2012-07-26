@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAutoComplete.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvAutoComplete.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvAutoComplete;
 
@@ -182,6 +182,9 @@ type
 
   TJvLookupAutoCompleteKind = (akListBox, akStrings);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvLookupAutoComplete = class(TComponent)
   private
     FAutoComplete: TJvEditListAutoComplete;
@@ -235,8 +238,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAutoComplete.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

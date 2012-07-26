@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStatusBar.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvStatusBar.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvStatusBar;
 
@@ -35,7 +35,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
   CommCtrl,
-  SysUtils, Classes, Contnrs, Graphics, Controls, Forms, ComCtrls, StdActns,
+  SysUtils, Classes, Graphics, Controls, Forms, ComCtrls, StdActns,
   JVCLVer, JvExComCtrls;
 
 type
@@ -59,6 +59,9 @@ type
     property MarginTop: Integer read FMarginTop write SetMarginTop default 3;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvStatusBar = class(TJvExStatusBar)
   private
     FAutoHintShown: Boolean;
@@ -88,8 +91,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStatusBar.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -97,7 +100,6 @@ const
 implementation
 
 uses
-  Math,
   JvThemes, JvResources, JvTypes, JvJVCLUtils;
 
 //=== { TJvStatusBar } =======================================================
@@ -121,7 +123,7 @@ procedure TJvStatusBar.CreateParams(var Params: TCreateParams);
 begin
   inherited CreateParams(Params);
   {$IFDEF JVCLThemesEnabled}
-  if not ThemeServices.ThemesEnabled then
+  if not ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   {$ENDIF JVCLThemesEnabled}
     with Params do
       WindowClass.Style := WindowClass.Style and not CS_HREDRAW;

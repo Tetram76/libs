@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgProgress.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgProgress.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvgProgress;
 
@@ -116,8 +116,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgProgress.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -342,7 +342,7 @@ begin
   Canvas.Draw(0, 0, FImage);
   {$IFDEF JVCLThemesEnabled}
   if BevelBold and ((BevelInner <> bvNone) or (BevelOuter <> bvNone)) and
-    ThemeServices.ThemesEnabled then
+    ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     DrawThemedBorder(Self);
   {$ENDIF JVCLThemesEnabled}
 end;

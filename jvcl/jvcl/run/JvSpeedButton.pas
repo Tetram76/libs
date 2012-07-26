@@ -34,7 +34,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 13038 2011-06-08 11:39:01Z obones $
+// $Id: JvSpeedButton.pas 13332 2012-06-12 15:22:24Z obones $
 
 unit JvSpeedButton;
 
@@ -48,7 +48,7 @@ uses
   {$ENDIF UNITVERSIONING}
   CommCtrl, Types, SysUtils, Classes, Windows, Messages,
   Controls, Graphics, Forms, ExtCtrls, Buttons, Menus, ImgList, ActnList,
-  JvExControls, JvComponent, JvButton, JvConsts, JvTypes, JvHotTrackPersistent,
+  JvExControls, JvComponent, JvConsts, JvTypes, JvHotTrackPersistent,
   JvThemes;
 
 type
@@ -132,8 +132,7 @@ type
     procedure WMRButtonUp(var Msg: TWMRButtonUp); message WM_RBUTTONUP;
   protected
     FState: TJvButtonState;
-    function WantKey(Key: Integer; Shift: TShiftState;
-      const KeyText: WideString): Boolean; override;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; override;
     procedure EnabledChanged; override;
     procedure FontChanged; override;
     procedure TextChanged; override;
@@ -308,9 +307,13 @@ type
     property OnStartDrag;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSpeedButton = class(TJvCustomSpeedButton)
   private
     FHotTrackGlyph: TJvxButtonGlyph;
+    FGlyphFromAction: Boolean;
     function GetGlyph: TBitmap;
     function GetHotTrackGlyph: TBitmap;
     function GetNumGlyphs: TJvNumGlyphs;
@@ -319,6 +322,7 @@ type
     procedure SetGlyph(Value: TBitmap);
     procedure SetHotTrackGlyph(const Value: TBitmap);
     procedure SetNumGlyphs(Value: TJvNumGlyphs);
+    function IsGlyphStored: Boolean;
   protected
     procedure ActionChange(Sender: TObject; CheckDefaults: Boolean); override;
 
@@ -354,7 +358,7 @@ type
     property Enabled;
     property Flat;
     property Font;
-    property Glyph: TBitmap read GetGlyph write SetGlyph;
+    property Glyph: TBitmap read GetGlyph write SetGlyph stored IsGlyphStored;
     property GrayedInactive;
     property GrayNewStyle;
     property HintColor;
@@ -451,7 +455,7 @@ type
     function CreateButtonGlyph(State: TJvButtonState): Integer;
     function CreateImageGlyph(State: TJvButtonState; Images: TCustomImageList;
       Index: Integer): Integer;
-    procedure CalcButtonLayout(Canvas: TCanvas; const Client: TRect; const Offset: TPoint;
+    procedure CalcButtonLayout(Canvas: TCanvas; const Client: TRect; const AOffset: TPoint;
       var Caption: string; Layout: TButtonLayout; Margin, Spacing: Integer;
       PopupMark: Boolean; var GlyphPos: TPoint; var TextBounds: TRect;
       Flags: Word; Images: TCustomImageList; ImageIndex: Integer);
@@ -491,8 +495,8 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 13038 $';
-    Date: '$Date: 2011-06-08 13:39:01 +0200 (mer., 08 juin 2011) $';
+    Revision: '$Revision: 13332 $';
+    Date: '$Date: 2012-06-12 17:22:24 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -838,6 +842,7 @@ function TJvCustomSpeedButton.CheckMenuDropDown(const Pos: TSmallPoint;
   Manual: Boolean): Boolean;
 var
   Form: TCustomForm;
+  Pt: TPoint;
 begin
   Result := False;
   if csDesigning in ComponentState then
@@ -848,8 +853,8 @@ begin
     if Form <> nil then
       Form.SendCancelMode(nil);
     DropDownMenu.PopupComponent := Self;
-    with ClientToScreen(SmallPointToPoint(Pos)) do
-      DropDownMenu.Popup(X, Y);
+    Pt := ClientToScreen(SmallPointToPoint(Pos));
+    DropDownMenu.Popup(Pt.X, Pt.Y);
     Result := True;
   end;
 end;
@@ -885,14 +890,13 @@ begin
   end;
 end;
 
-function TJvCustomSpeedButton.WantKey(Key: Integer; Shift: TShiftState;
-  const KeyText: WideString): Boolean;
+function TJvCustomSpeedButton.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := IsAccel(Key, Caption) and Enabled and (ssAlt in Shift);
   if Result then
     Click
   else
-    inherited WantKey(Key, Shift, KeyText);
+    inherited WantKey(Key, Shift);
 end;
 
 procedure TJvCustomSpeedButton.EnabledChanged;
@@ -933,7 +937,7 @@ begin
       be used as a dock client. }
     NeedRepaint :=
       {$IFDEF JVCLThemesEnabled}
-      ThemeServices.ThemesEnabled or
+      ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} or
       {$ENDIF JVCLThemesEnabled}
       FHotTrack or (FFlat and Enabled and (DragMode <> dmAutomatic) and (GetCapture = NullHandle));
 
@@ -955,7 +959,7 @@ begin
     NeedRepaint :=
       {$IFDEF JVCLThemesEnabled}
       { Windows XP introduced hot states also for non-flat buttons. }
-      ThemeServices.ThemesEnabled or
+      ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} or
       {$ENDIF JVCLThemesEnabled}
       HotTrack or (FFlat and Enabled and not FDragging and (GetCapture = NullHandle));
 
@@ -1221,7 +1225,7 @@ begin
   PaintRect := Rect(0, 0, Width, Height);
 
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if ControlInGlassPaint(Self) then
       FillRect(Canvas.Handle, ClientRect, GetStockObject(BLACK_BRUSH))
@@ -1273,13 +1277,13 @@ begin
     begin
       Details := ThemeServices.GetElementDetails(Button);
       ThemeServices.DrawElement(Canvas.Handle, Details, PaintRect);
-      PaintRect := ThemeServices.ContentRect(Canvas.Handle, Details, PaintRect);
+      ThemeServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
     end
     else
     begin
       Details := ThemeServices.GetElementDetails(ToolButton);
       ThemeServices.DrawElement(Canvas.Handle, Details, PaintRect);
-      PaintRect := ThemeServices.ContentRect(Canvas.Handle, Details, PaintRect);
+      ThemeServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
     end;
 
     if (Button = tbPushButtonPressed) and Flat then
@@ -1954,6 +1958,7 @@ procedure TJvSpeedButton.ActionChange(Sender: TObject; CheckDefaults: Boolean);
       Canvas.FillRect(Rect(0, 0, Width, Height));
       ImageList.Draw(Canvas, 0, 0, Index);
       TransparentColor := clFuchsia;
+      FGlyphFromAction := True;
     end;
   end;
 
@@ -1965,7 +1970,7 @@ begin
       if CheckDefaults or (Self.GroupIndex = 0) then
         Self.GroupIndex := GroupIndex;
       { Copy image from action's imagelist }
-      if (Glyph.Empty) and (ActionList <> nil) and (ActionList.Images <> nil) and
+      if (FGlyphFromAction or (Glyph.Empty)) and (ActionList <> nil) and (ActionList.Images <> nil) and
         (ImageIndex >= 0) and (ImageIndex < ActionList.Images.Count) then
         CopyImage(TCustomImageList(ActionList.Images), ImageIndex);
     end;
@@ -2020,6 +2025,11 @@ begin
   Invalidate;
 end;
 
+function TJvSpeedButton.IsGlyphStored: Boolean;
+begin
+  Result := not FGlyphFromAction;
+end;
+
 procedure TJvSpeedButton.PaintImage(Canvas: TCanvas; ARect: TRect; const Offset: TPoint;
   AState: TJvButtonState; DrawMark, PaintOnGlass: Boolean);
 begin
@@ -2039,6 +2049,7 @@ end;
 procedure TJvSpeedButton.SetGlyph(Value: TBitmap);
 begin
   FGlyph.Glyph := Value;
+  FGlyphFromAction := False;
   Invalidate;
 end;
 
@@ -2112,7 +2123,7 @@ end;
 
 //=== { TJvxButtonGlyph } ====================================================
 
-procedure TJvxButtonGlyph.CalcButtonLayout(Canvas: TCanvas; const Client: TRect; const Offset: TPoint;
+procedure TJvxButtonGlyph.CalcButtonLayout(Canvas: TCanvas; const Client: TRect; const AOffset: TPoint;
   var Caption: string; Layout: TButtonLayout; Margin, Spacing: Integer;
   PopupMark: Boolean; var GlyphPos: TPoint; var TextBounds: TRect;
   Flags: Word; Images: TCustomImageList; ImageIndex: Integer);
@@ -2279,13 +2290,10 @@ begin
   end;
 
   { fixup the result variables }
-  with GlyphPos do
-  begin
-    Inc(X, Client.Left + Offset.X);
-    Inc(Y, Client.Top + Offset.Y);
-  end;
+  Inc(GlyphPos.X, Client.Left + AOffset.X);
+  Inc(GlyphPos.Y, Client.Top + AOffset.Y);
 
-  OffsetRect(TextBounds, TextPos.X + Client.Left + Offset.X, TextPos.Y + Client.Top + Offset.Y);
+  OffsetRect(TextBounds, TextPos.X + Client.Left + AOffset.X, TextPos.Y + Client.Top + AOffset.Y);
 end;
 
 constructor TJvxButtonGlyph.Create;

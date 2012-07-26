@@ -21,7 +21,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignClip.pas 12515 2009-09-23 07:51:16Z obones $
+// $Id: JvDesignClip.pas 13138 2011-10-26 23:17:50Z jfudickar $
 unit JvDesignClip;
 
 {$I jvcl.inc}
@@ -63,8 +63,8 @@ procedure DesignCopyStreamToClipboard(InFmt: Cardinal; InS: TStream);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignClip.pas $';
-    Revision: '$Revision: 12515 $';
-    Date: '$Date: 2009-09-23 09:51:16 +0200 (mer., 23 sept. 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -72,8 +72,7 @@ const
 implementation
 
 uses
-  SysUtils, Clipbrd,
-  JvDesignUtils;
+  SysUtils, Clipbrd;
 
 var
   CF_COMPONENTSTREAM: UINT;

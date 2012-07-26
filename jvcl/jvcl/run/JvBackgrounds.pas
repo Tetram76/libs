@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBackgrounds.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvBackgrounds.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvBackgrounds;
 
@@ -214,6 +214,9 @@ type
     property Clients[Index: Integer]: TWinControl read GetClient; default;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvBackground = class(TComponent)
   private
     FClients: TJvBackgroundClients;
@@ -241,8 +244,8 @@ procedure GetMappedGrays(var Shades: array of TColor; StartIntensity: Byte);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBackgrounds.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -523,7 +526,7 @@ begin
   if Result then
   begin
     if not IsIconic(AClient.Handle) then
-      if not TWinControlAccessProtected(AClient).FDoubleBuffered or (Msg.wParam = Msg.lParam) then
+      if not TWinControlAccessProtected(AClient).FDoubleBuffered or (Msg.wParam = WPARAM(Msg.lParam)) then
         DoEraseBackground(AClient,
           TWMEraseBkgnd(Msg).DC);
     Msg.Result := 1;
@@ -569,23 +572,22 @@ var
   FirstVisibleRow, S, OddShift: Integer;
   Left, Top, Width, Height: Integer;
   HorzOffset, VertOffset: Integer;
+  R: TRect;
 begin
-  with GetClientRect(AClient) do
-  begin
-    Width := Right;
-    Height := Bottom;
-  end;
+  R := GetClientRect(AClient);
+  Width := R.Right;
+  Height := R.Bottom;
   if IsMDIForm(AClient) then
   begin
     HorzOffset := FHorzOffset;
     VertOffset := FVertOffset;
   end
   else
-    with GetVirtualClientRect(AClient) do
-    begin
-      HorzOffset := Left;
-      VertOffset := Top;
-    end;
+  begin
+    R := GetVirtualClientRect(AClient);
+    HorzOffset := R.Left;
+    VertOffset := R.Top;
+  end;
   if FShiftMode = smRows then
   begin
     FirstVisibleRow := -VertOffset div FTileHeight;
@@ -1498,7 +1500,7 @@ begin
     if not ((csLoading in FClient.ComponentState) or ((FClient is TCustomForm) and (csDesigning in FClient.ComponentState))) then
     begin
       FClient.HandleNeeded;
-      FPrevWndProc := Pointer(SetWindowLong(ClientHandle, GWL_WNDPROC, Longint(FNewWndProc)));
+      FPrevWndProc := Pointer(SetWindowLongPtr(ClientHandle, GWL_WNDPROC, LONG_PTR(FNewWndProc)));
       FBackground.FImage.UpdateWorkingBmp;
     end;
 end;
@@ -1512,8 +1514,7 @@ begin
     begin
       if FClient.HandleAllocated then
       begin
-        if (Longint(FNewWndProc) <>
-          SetWindowLong(ClientHandle, GWL_WNDPROC, Longint(FPrevWndProc))) and
+        if (FNewWndProc <> Pointer(SetWindowLongPtr(ClientHandle, GWL_WNDPROC, LONG_PTR(FPrevWndProc)))) and
           not (csDestroying in FClient.ComponentState) then
           MessageDlg(Format(SChainError, [FBackground.Owner.Name, FBackground.Name, FClient.Name,
             WorkaroundStr[csDesigning in FBackground.ComponentState]]),

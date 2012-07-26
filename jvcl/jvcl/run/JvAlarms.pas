@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAlarms.pas 12852 2010-10-08 12:59:49Z obones $
+// $Id: JvAlarms.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvAlarms;
 
@@ -73,6 +73,9 @@ type
     property Items[Index: Integer]: TJvAlarmItem read GetItems write SetItems; default;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvAlarms = class(TJvComponent)
   private
     FActive: Boolean;
@@ -105,8 +108,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAlarms.pas $';
-    Revision: '$Revision: 12852 $';
-    Date: '$Date: 2010-10-08 14:59:49 +0200 (ven., 08 oct. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

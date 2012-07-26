@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBReg.pas 13018 2011-04-25 19:45:55Z jfudickar $
+// $Id: JvDBReg.pas 13385 2012-07-19 21:47:00Z jfudickar $
 
 unit JvDBReg;
 
@@ -45,11 +45,15 @@ uses
   JvDBPasswordDialogDoa,
   JvDBLogonDialogDoa,
   {$ENDIF USE_3RDPARTY_DOA}
-  {$IFDEF USE_3RDPARTY_CORELAB_ODAC} 
+  {$IFDEF USE_3RDPARTY_DEVART_ODAC} 
   JvDBPasswordDialogOdac,
   JvDBLogonDialogOdac,
   JvOdacSmartQuery,
-  {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
+  {$ENDIF USE_3RDPARTY_DEVART_ODAC}
+  {$IFDEF USE_3RDPARTY_DEVART_UNIDAC} 
+  JvDBLogonDialogUniDac,
+  JvUniDacQuery,
+  {$ENDIF USE_3RDPARTY_DEVART_UNIDAC}
   JvADOQuery,
   JvMemoryDataset, JvDBDatePickerEdit, JvDBDateTimePicker, JvDBLookupTreeView,
   JvDBProgressBar, JvDBRichEdit, JvDBSpinEdit, JvDBTreeView, JvDBLookup,
@@ -58,7 +62,9 @@ uses
   JvDBSearchComboBox, JvAppDBStorage, JvDBFindEdit, JvDBImage, JvDBEditors,
   JvDBMemDatasetEditor, JvDBGridExportEditors, JvDBGridEditors, JvCsvDataEditor,
   JvDBActionsEngine, JvDBActions, JvDBCheckBox,
-  JvDBActnResForm, JvDataSource, JvDataSourceIntf;
+  JvDBActnResForm, JvDataSource, JvDataSourceIntf, 
+  JvDynControlEngineVCL // This prevents runtime error messages about not initialized JvDynControlEngine
+  ;
 
 {$R JvDBReg.dcr}
 
@@ -85,10 +91,14 @@ begin
     {$IFDEF USE_3RDPARTY_DOA} 
     TJvOracleDataset, TJvDBDoaLogonDialog, TJvDBDoaPasswordDialog,
     {$ENDIF USE_3RDPARTY_DOA}
-    {$IFDEF USE_3RDPARTY_CORELAB_ODAC} 
+    {$IFDEF USE_3RDPARTY_DEVART_ODAC} 
     TJvDBOdacConnectDialog, TJvDBOdacPasswordDialog, TjvOdacSmartQuery,
     TjvOdacOraTable, TjvOdacOraQuery,
-    {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
+    {$ENDIF USE_3RDPARTY_DEVART_ODAC}
+    {$IFDEF USE_3RDPARTY_DEVART_UNIDAC} 
+    TJvDBUniDacConnectDialog, 
+    TjvUniDacUniTable, TjvUniDacUniQuery,
+    {$ENDIF USE_3RDPARTY_DEVART_UNIDAC}
     TJvADOQuery, TJvADODataSet,
     TJvDBGridWordExport, TJvDBGridExcelExport, TJvDBGridHTMLExport,
     TJvDBGridCSVExport, TJvDBGridXMLExport, TJvDatabaseActionList]);
@@ -136,6 +146,9 @@ begin
   RegisterPropertyEditor(TypeInfo(TStatusPanels), TJvDBGridFooter, cPanels, nil);
 
   RegisterComponentEditor(TJvMemoryData, TJvMemDataSetEditor);
+
+  RegisterComponentEditor(TJvCsvDataSet, TJvCSVDataSetComponentEditor);
+
 
   RegisterActions(RsJVCLDBActionsCategory, [TJvDatabaseFirstAction,
     TJvDatabaseLastAction, TJvDatabaseNextAction, TJvDatabasePriorAction,

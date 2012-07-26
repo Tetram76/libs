@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvClipboardViewer.pas 12519 2009-09-23 14:48:34Z obones $
+// $Id: JvClipboardViewer.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvClipboardViewer;
 
@@ -81,6 +81,9 @@ type
     property ClipboardFormatNames[Index: Integer]: string read GetClipboardFormatNames;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvClipboardViewer = class(TJvCustomClipboardViewer)
   published
     property Anchors;
@@ -106,8 +109,8 @@ function ClipboardFormatToView(Value: Word): TClipboardViewFormat;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvClipboardViewer.pas $';
-    Revision: '$Revision: 12519 $';
-    Date: '$Date: 2009-09-23 16:48:34 +0200 (mer., 23 sept. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -382,8 +385,7 @@ var
   SavePal: HPALETTE;
 begin
   Canvas.Pen.Color := clBtnFace;
-  with CellRect do
-    Canvas.Rectangle(Left, Top, Right, Bottom);
+  Canvas.Rectangle(CellRect.Left, CellRect.Top, CellRect.Right, CellRect.Bottom);
   InflateRect(CellRect, -1, -1);
   Frame3D(Canvas, CellRect, clBtnShadow, clBtnHighlight, 2);
   SavePal := 0;
@@ -395,8 +397,7 @@ begin
   try
     Canvas.Brush.Color := CellColor;
     Canvas.Pen.Color := CellColor;
-    with CellRect do
-      Canvas.Rectangle(Left, Top, Right, Bottom);
+    Canvas.Rectangle(CellRect.Left, CellRect.Top, CellRect.Right, CellRect.Bottom);
   finally
     if FPalette <> 0 then
       SelectPalette(Canvas.Handle, SavePal, True);

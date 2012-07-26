@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvYearGrid.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvYearGrid.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvYearGrid;
 
@@ -70,6 +70,9 @@ type
   TDays = array [1..12] of Integer;
   TYearDatas = array [0..37, 0..12] of TYearData;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   {$IFDEF USECUSTOMGRID}
   TJvYearGrid = class(TCustomDrawGrid)
   {$ELSE}
@@ -272,8 +275,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvYearGrid.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

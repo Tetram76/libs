@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDlgsReg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDlgsReg.pas 13351 2012-06-13 15:16:00Z obones $
 
 unit JvDlgsReg;
 
@@ -41,9 +41,9 @@ uses
   JvDsgnConfig,
   JvDialogActnResForm, JvDialogs, JvPageSetupTitled, JvPageSetup,
   JvAppletEditor,
-  JvWinDialogs, JvAddPrinter, JvCommonDialogD, JvConnectNetwork, JvCopyError,
+  JvWinDialogs, JvAddPrinter, JvCustomFileMessageDialog, JvConnectNetwork, JvCopyError,
   JvDeleteError, JvRenameError, JvDiskPrompt, JvFindFiles,
-  JvObjectPickerDialog, JvCommonDialogDEditor,
+  JvObjectPickerDialog, JvCustomFileMessageDialogEditor,
   JvBaseDlg, JvFindReplace, JvDSADialogs, JvTipOfDay, JvCommonExecDlg,
   JvDesktopAlert, JvDesktopAlertEditors, JvProgressComponent, JvSelectDirectory,
   JvImageDlg, JvLoginForm, JvDualList, JvProgressDialog, JvBaseDlgEditor,
@@ -85,9 +85,7 @@ begin
   RegisterComponentEditor(TJvOpenDialog, TJvBaseDlgEditor);
   RegisterComponentEditor(TJvSaveDialog, TJvBaseDlgEditor);
 
-  RegisterComponentEditor(TJvCommonDialogP, TJvBaseDlgEditor);
-  RegisterComponentEditor(TJvCommonDialogF, TJvBaseDlgEditor);
-  RegisterComponentEditor(TJvCommonDialogD, TJvCommonDialogDEditor);
+  RegisterComponentEditor(TJvCustomFileMessageDialog, TJvCustomFileMessageDialogEditor);
   RegisterComponentEditor(TJvTipOfDay, TJvTipOfDayEditor);
   RegisterActions(RsJVCLActionsCategory, [TJvBrowseForFolderAction,
     TJvSelectDirectoryAction, TJvConnectNetworkAction, TJvFloppyFormatAction,

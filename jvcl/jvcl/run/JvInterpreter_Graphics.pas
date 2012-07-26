@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Graphics.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvInterpreter_Graphics.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvInterpreter_Graphics;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Graphics.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -76,7 +76,7 @@ end;
 
 procedure TFont_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TFont(Args.Obj).Handle);
+  Value := NativeInt(TFont(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HFont) }
@@ -218,7 +218,7 @@ end;
 
 procedure TPen_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TPen(Args.Obj).Handle);
+  Value := NativeInt(TPen(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HPen) }
@@ -318,7 +318,7 @@ end;
 
 procedure TBrush_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TBrush(Args.Obj).Handle);
+  Value := NativeInt(TBrush(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HBrush) }
@@ -583,7 +583,7 @@ end;
 
 procedure TCanvas_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TCanvas(Args.Obj).Handle);
+  Value := NativeInt(TCanvas(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HDC) }
@@ -713,9 +713,16 @@ end;
 { procedure SaveToClipboardFormat(var AFormat: Word; var AData: THandle; var APalette: HPALETTE); }
 
 procedure TGraphic_SaveToClipboardFormat(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  AFormat: Word;
+  AData: THandle;
+  APalette: HPALETTE;
 begin
-  TGraphic(Args.Obj).SaveToClipboardFormat(Word(TVarData(Args.Values[0]).VSmallInt),
-    THandle(TVarData(Args.Values[1]).VInteger), HPALETTE(TVarData(Args.Values[2]).VInteger));
+  AFormat := Word(TVarData(Args.Values[0]).VSmallInt);
+  AData := THandle(TVarData(Args.Values[1]).VInteger);
+  APalette := HPALETTE(TVarData(Args.Values[2]).VInteger);
+
+  TGraphic(Args.Obj).SaveToClipboardFormat(AFormat, AData, APalette);
 end;
 
 
@@ -852,9 +859,16 @@ end;
 { procedure SaveToClipboardFormat(var AFormat: Word; var AData: THandle; var APalette: HPALETTE); }
 
 procedure TPicture_SaveToClipboardFormat(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  AFormat: Word;
+  AData: THandle;
+  APalette: HPALETTE;
 begin
-  TPicture(Args.Obj).SaveToClipboardFormat(Word(TVarData(Args.Values[0]).VSmallInt),
-    THandle(TVarData(Args.Values[1]).VInteger), HPALETTE(TVarData(Args.Values[2]).VInteger));
+  AFormat := Word(TVarData(Args.Values[0]).VSmallInt);
+  AData := THandle(TVarData(Args.Values[1]).VInteger);
+  APalette := HPALETTE(TVarData(Args.Values[2]).VInteger);
+
+  TPicture(Args.Obj).SaveToClipboardFormat(AFormat, AData, APalette);
 end;
 
 { function SupportsClipboardFormat(AFormat: Word): Boolean; }
@@ -1016,9 +1030,16 @@ end;
 { procedure SaveToClipboardFormat(var AFormat: Word; var AData: THandle; var APalette: HPALETTE); }
 
 procedure TMetafile_SaveToClipboardFormat(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  AFormat: Word;
+  AData: THandle;
+  APalette: HPALETTE;
 begin
-  TMetafile(Args.Obj).SaveToClipboardFormat(Word(TVarData(Args.Values[0]).VSmallInt),
-    THandle(TVarData(Args.Values[1]).VInteger), HPALETTE(TVarData(Args.Values[2]).VInteger));
+  AFormat := Word(TVarData(Args.Values[0]).VSmallInt);
+  AData := THandle(TVarData(Args.Values[1]).VInteger);
+  APalette := HPALETTE(TVarData(Args.Values[2]).VInteger);
+
+  TMetafile(Args.Obj).SaveToClipboardFormat(AFormat, AData, APalette);
 end;
 
 { procedure Assign(Source: TPersistent); }
@@ -1032,7 +1053,7 @@ end;
 
 procedure TMetafile_ReleaseHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TMetafile(Args.Obj).ReleaseHandle);
+  Value := NativeInt(TMetafile(Args.Obj).ReleaseHandle);
 end;
 
 
@@ -1068,7 +1089,7 @@ end;
 
 procedure TMetafile_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TMetafile(Args.Obj).Handle);
+  Value := NativeInt(TMetafile(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HENHMETAFILE) }
@@ -1198,14 +1219,14 @@ end;
 
 procedure TBitmap_ReleaseHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TBitmap(Args.Obj).ReleaseHandle);
+  Value := NativeInt(TBitmap(Args.Obj).ReleaseHandle);
 end;
 
 { function ReleaseMaskHandle: HBITMAP; }
 
 procedure TBitmap_ReleaseMaskHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TBitmap(Args.Obj).ReleaseMaskHandle);
+  Value := NativeInt(TBitmap(Args.Obj).ReleaseMaskHandle);
 end;
 
 
@@ -1213,15 +1234,22 @@ end;
 
 procedure TBitmap_ReleasePalette(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TBitmap(Args.Obj).ReleasePalette);
+  Value := NativeInt(TBitmap(Args.Obj).ReleasePalette);
 end;
 
 { procedure SaveToClipboardFormat(var Format: Word; var Data: THandle; var APalette: HPALETTE); }
 
 procedure TBitmap_SaveToClipboardFormat(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  AFormat: Word;
+  AData: THandle;
+  APalette: HPALETTE;
 begin
-  TBitmap(Args.Obj).SaveToClipboardFormat(Word(TVarData(Args.Values[0]).VSmallInt),
-    THandle(TVarData(Args.Values[1]).VInteger), HPALETTE(TVarData(Args.Values[2]).VInteger));
+  AFormat := Word(TVarData(Args.Values[0]).VSmallInt);
+  AData := THandle(TVarData(Args.Values[1]).VInteger);
+  APalette := HPALETTE(TVarData(Args.Values[2]).VInteger);
+
+  TBitmap(Args.Obj).SaveToClipboardFormat(AFormat, AData, APalette);
 end;
 
 
@@ -1244,7 +1272,7 @@ end;
 
 procedure TBitmap_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TBitmap(Args.Obj).Handle);
+  Value := NativeInt(TBitmap(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HBITMAP) }
@@ -1291,7 +1319,7 @@ end;
 
 procedure TBitmap_Read_MaskHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TBitmap(Args.Obj).MaskHandle);
+  Value := NativeInt(TBitmap(Args.Obj).MaskHandle);
 end;
 
 
@@ -1396,7 +1424,7 @@ end;
 
 procedure TIcon_ReleaseHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TIcon(Args.Obj).ReleaseHandle);
+  Value := NativeInt(TIcon(Args.Obj).ReleaseHandle);
 end;
 
 
@@ -1411,7 +1439,7 @@ end;
 
 procedure TIcon_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TIcon(Args.Obj).Handle);
+  Value := NativeInt(TIcon(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HICON) }

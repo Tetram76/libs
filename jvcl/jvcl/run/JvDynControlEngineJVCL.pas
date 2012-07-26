@@ -19,12 +19,16 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineJVCL.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvDynControlEngineJVCL.pas 13376 2012-07-07 20:48:29Z jfudickar $
 
 unit JvDynControlEngineJVCL;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
+
+{$IFDEF SUPPORTS_PLATFORM_WARNINGS}
+  {$WARN UNIT_PLATFORM OFF}
+  {$WARN SYMBOL_PLATFORM OFF}
+{$ENDIF SUPPORTS_PLATFORM_WARNINGS}
 
 interface
 
@@ -855,8 +859,8 @@ procedure SetDynControlEngineJVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineJVCL.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13376 $';
+    Date: '$Date: 2012-07-07 22:48:29 +0200 (sam., 07 juil. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2338,8 +2342,11 @@ end;
 
 procedure TJvDynControlJVCLComboBox.ControlSetValue(Value: Variant);
 begin
-  if (Style = csDropDownList) and VarIsInt(Value) then
-    ItemIndex := Items.IndexOf(Value)
+  if (Style = csDropDownList) then
+    if VarIsInt(Value) then
+      ItemIndex := VarToInt(Value)
+    else
+      ItemIndex := Items.IndexOf(VarToStr(Value))
   else
     Text := VarToStr(Value);
 end;
@@ -3303,9 +3310,7 @@ begin
   RegisterControlType(jctProgressbar, TJvDynControlJVCLProgressbar);
   RegisterControlType(jctTabControl, TJvDynControlJVCLTabControl);
   RegisterControlType(jctPageControl, TJvDynControlJVCLPageControl);
-  {$IFDEF DELPHI6_UP}
   RegisterControlType(jctColorComboBox, TJvDynControlVCLColorComboBox);
-  {$ENDIF DELPHI6_UP}
 end;
 
 procedure TJvDynControlJVCLTabControl.ControlCreateTab(const AName: string);

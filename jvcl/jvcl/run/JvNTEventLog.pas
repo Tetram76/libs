@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNTEventLog.pas 12962 2011-01-04 23:58:03Z jfudickar $
+// $Id: JvNTEventLog.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvNTEventLog;
 
@@ -44,6 +44,9 @@ type
   TNotifyChangeEventLog = class;
   TJvNTEventLogRecord = class;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvNTEventLog = class(TJvComponent)
   private
     FLogHandle: THandle;
@@ -131,8 +134,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvNTEventLog.pas $';
-    Revision: '$Revision: 12962 $';
-    Date: '$Date: 2011-01-05 00:58:03 +0100 (mer., 05 janv. 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -153,7 +156,7 @@ const
 
 type
   PEventLogRecord = ^TEventLogRecord;
-  TEventLogRecord = packed record
+  TEventLogRecord = record
     Length: DWORD; // Length of full record
     Reserved: DWORD; // Used by the service
     RecordNumber: DWORD; // Absolute record number
