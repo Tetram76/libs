@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-29 12:17:39 +0100 (mer., 29 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3449                                                                     $ }
-{ Author:        $Author:: jfudickar                                                             $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -60,7 +60,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils, System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils, Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclSysUtils, JclStrHashMap, JclResources;
 
 const
@@ -957,8 +961,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclExprEval.pas $';
-    Revision: '$Revision: 3449 $';
-    Date: '$Date: 2010-12-29 12:17:39 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -969,7 +973,11 @@ implementation
 
 uses
   {$IFDEF SUPPORTS_INLINE}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, // inline of AnsiSameText
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, // inline of AnsiSameText
+  {$ENDIF ~HAS_UNITSCOPE}
   {$ENDIF SUPPORTS_INLINE}
   JclStrings;
 
@@ -2690,7 +2698,7 @@ begin
     for I := 0 to FCodeList.Count - 1 do
       TExprVirtMachOp(FCodeList[I]).Execute; }
     I := FCodeList.Count;
-    pop := @FCodeList.List^[0];
+    pop := @FCodeList.List{$IFNDEF RTL230_UP}^{$ENDIF !RTL230_UP}[0];
     while I > 0 do
     begin
       pop^.Execute;

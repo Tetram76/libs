@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-10-16 19:11:39 +0200 (ven., 16 oct. 2009)                          $ }
-{ Revision:      $Rev:: 3044                                                                     $ }
+{ Last modified: $Date:: 2012-01-22 23:54:36 +0100 (dim., 22 janv. 2012)                         $ }
+{ Revision:      $Rev:: 3702                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -41,7 +41,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JclSysInfo,
-  JclOtaUtils, JclSIMDViewForm;
+  JclOtaUtils, JclOtaActions, JclSIMDViewForm;
 
 {$R 'JclSIMDIcon.dcr'}
 
@@ -130,8 +130,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/simdview/JclSIMDView.pas $';
-    Revision: '$Revision: 3044 $';
-    Date: '$Date: 2009-10-16 19:11:39 +0200 (ven., 16 oct. 2009) $';
+    Revision: '$Revision: 3702 $';
+    Date: '$Date: 2012-01-22 23:54:36 +0100 (dim., 22 janv. 2012) $';
     LogPath: 'JCL\experts\debug\simdview';
     Extra: '';
     Data: nil
@@ -342,7 +342,7 @@ begin
 
   FViewDebugMenu.Add(FSIMDMenuItem);
 
-  RegisterAction(FSIMDAction);
+  TJclOTAActionExpert.RegisterAction(FSIMDAction);
 
   FDebuggerNotifier := TJclDebuggerNotifier.Create(Self);
   FIndex := DebuggerServices.AddNotifier(FDebuggerNotifier);
@@ -352,7 +352,7 @@ procedure TJclSIMDWizard.UnregisterCommands;
 begin
   inherited UnregisterCommands;
 
-  UnregisterAction(FSIMDAction);
+  TJclOTAActionExpert.UnregisterAction(FSIMDAction);
   FreeAndNil(FIcon);
   FreeAndNil(FSIMDMenuItem);
   FreeAndNil(FSIMDAction);

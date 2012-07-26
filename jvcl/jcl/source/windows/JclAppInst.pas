@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-08-19 16:07:02 +0200 (ven., 19 août 2011)                         $ }
-{ Revision:      $Rev:: 3588                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2012-03-04 19:39:47 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3759                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -47,7 +47,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.Classes, Winapi.Messages,
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, Classes, Messages,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclFileUtils, JclSynch, JclWin32;
 
 // Message constants and types
@@ -167,8 +171,8 @@ function SendString(const Wnd, OriginatorWnd: HWND;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclAppInst.pas $';
-    Revision: '$Revision: 3588 $';
-    Date: '$Date: 2011-08-19 16:07:02 +0200 (ven., 19 août 2011) $';
+    Revision: '$Revision: 3759 $';
+    Date: '$Date: 2012-03-04 19:39:47 +0100 (dim., 04 mars 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -178,7 +182,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclSecurity,
   JclStrings;
 
@@ -670,7 +678,7 @@ end;
 procedure TJclAppInstances.SecurityGetAllUsers(out UserInfo: PTokenUser; out SID: PSID; out ACL: PACL;
   out SecurityDescriptor: PSecurityDescriptor; out SecurityAttributes: PSecurityAttributes);
 var
-  WorldAuth: Windows.SID_IDENTIFIER_AUTHORITY;
+  WorldAuth: {$IFDEF HAS_UNITSCOPE}WinApi.{$ENDIF HAS_UNITSCOPE}Windows.SID_IDENTIFIER_AUTHORITY;
 begin
   UserInfo := nil;
   ACL := nil;
@@ -726,7 +734,7 @@ begin
 end;
 
 procedure TJclAppInstances.SecurityGetSecurityAttributes(OwnerSID, AccessSID: PSID; out ACL: PACL;
- out SecurityDescriptor: PSecurityDescriptor; out SecurityAttributes: PSecurityAttributes);
+  out SecurityDescriptor: PSecurityDescriptor; out SecurityAttributes: PSecurityAttributes);
 var
   ACLSize: SizeInt;
 begin
@@ -734,8 +742,8 @@ begin
   ACLSize := SizeOf(TACL) + SizeOf(ACCESS_ALLOWED_ACE) + SizeOf(DWORD) + GetLengthSid(AccessSID);
   ACL := AllocMem(ACLSize);
   Win32Check(InitializeAcl(ACL^, ACLSize, ACL_REVISION));
-  Win32Check(AddAccessAllowedAce(ACL^, ACL_REVISION, FILE_MAP_ALL_ACCESS, AccessSID));
-  Assert(IsValidAcl(ACL^));
+  Win32Check(AddAccessAllowedAce(ACL{$IFDEF BORLAND}^{$ENDIF}, ACL_REVISION, FILE_MAP_ALL_ACCESS, AccessSID));
+  Assert(IsValidAcl(ACL{$IFNDEF RTL230_UP}^{$ENDIF})); // QC #102231
 
   // create the security descriptor
   SecurityDescriptor := AllocMem(SECURITY_DESCRIPTOR_MIN_LENGTH);

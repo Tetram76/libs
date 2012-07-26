@@ -51,8 +51,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-06-19 19:14:02 +0200 (dim., 19 juin 2011)                          $ }
-{ Revision:      $Rev:: 3547                                                                     $ }
+{ Last modified: $Date:: 2012-06-02 22:23:56 +0200 (sam., 02 juin 2012)                          $ }
+{ Revision:      $Rev:: 3799                                                                     $ }
 { Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -71,10 +71,17 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows, JclWin32,
+  {$ENDIF MSWINDOWS}
+  System.Classes, System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows, JclWin32,
   {$ENDIF MSWINDOWS}
   Classes, SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclSysUtils;
 
 // Path Manipulation
@@ -209,8 +216,26 @@ function DirectoryExists(const Name: string {$IFDEF UNIX}; ResolveSymLinks: Bool
 function FileCreateTemp(var Prefix: string): THandle;
 function FileBackup(const FileName: string; Move: Boolean = False): Boolean;
 function FileCopy(const ExistingFileName, NewFileName: string; ReplaceExisting: Boolean = False): Boolean;
+function FileDateTime(const FileName: string): TDateTime;
 function FileDelete(const FileName: string; MoveToRecycleBin: Boolean = False): Boolean;
 function FileExists(const FileName: string): Boolean;
+/// <summary>procedure FileHistory Creates a list of history files of a specified
+/// source file. Each version of the file get's an extention .~<Nr>~ The file with
+/// the lowest number is the youngest file.
+/// </summary>
+/// <param name="FileName"> (string) Name of the source file</param>
+/// <param name="HistoryPath"> (string) Folder where the history files should be
+/// created. If no folder is defined the folder of the source file is used.</param>
+/// <param name="MaxHistoryCount"> (Integer) Max number of files</param>
+/// <param name="MinFileDate"> (TDateTime) Timestamp how old the file has to be to
+/// create a new history version. For example: NOW-1/24 => Only once per hour a new
+/// history file is created. Default 0 means allways
+/// <param name="ReplaceExtention"> (boolean) Flag to define that the history file
+/// extention should replace the current extention or should be added at the
+/// end</param>
+/// </param>
+procedure FileHistory(const FileName: string; HistoryPath: string = ''; MaxHistoryCount: Integer = 100; MinFileDate:
+    TDateTime = 0; ReplaceExtention: Boolean = true);
 function FileMove(const ExistingFileName, NewFileName: string; ReplaceExisting: Boolean = False): Boolean;
 function FileRestore(const FileName: string): Boolean;
 function GetBackupFileName(const FileName: string): string;
@@ -271,9 +296,9 @@ function IsRootDirectory(const CanonicFileName: string): Boolean;
 {$IFDEF MSWINDOWS}
 function LockVolume(const Volume: string; var Handle: THandle): Boolean;
 function OpenVolume(const Drive: Char): THandle;
-function SetDirLastWrite(const DirName: string; const DateTime: TDateTime): Boolean;
-function SetDirLastAccess(const DirName: string; const DateTime: TDateTime): Boolean;
-function SetDirCreation(const DirName: string; const DateTime: TDateTime): Boolean;
+function SetDirLastWrite(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
+function SetDirLastAccess(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
+function SetDirCreation(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
 {$ENDIF MSWINDOWS}
 function SetFileLastWrite(const FileName: string; const DateTime: TDateTime): Boolean;
 function SetFileLastAccess(const FileName: string; const DateTime: TDateTime): Boolean;
@@ -1044,8 +1069,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 3547 $';
-    Date: '$Date: 2011-06-19 19:14:02 +0200 (dim., 19 juin 2011) $';
+    Revision: '$Revision: 3799 $';
+    Date: '$Date: 2012-06-02 22:23:56 +0200 (sam., 02 juin 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1055,6 +1080,16 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF HAS_UNIT_CHARACTER}
+  System.Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
+  System.Math,
+  {$IFDEF MSWINDOWS}
+  Winapi.ShellApi, Winapi.ActiveX, System.Win.ComObj, Winapi.ShlObj,
+  JclShell, JclSysInfo, JclSecurity,
+  {$ENDIF MSWINDOWS}
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF HAS_UNIT_CHARACTER}
   Character,
   {$ENDIF HAS_UNIT_CHARACTER}
@@ -1063,6 +1098,7 @@ uses
   ShellApi, ActiveX, ComObj, ShlObj,
   JclShell, JclSysInfo, JclSecurity,
   {$ENDIF MSWINDOWS}
+  {$ENDIF ~HAS_UNITSCOPE}
   JclDateTime, JclResources,
   JclStrings;
 
@@ -2660,10 +2696,10 @@ function PathGetTempPath: string;
 var
   BufSize: Cardinal;
 begin
-  BufSize := Windows.GetTempPath(0, nil);
+  BufSize := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetTempPath(0, nil);
   SetLength(Result, BufSize);
   { TODO : Check length (-1 or not) }
-  Windows.GetTempPath(BufSize, PChar(Result));
+  {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetTempPath(BufSize, PChar(Result));
   StrResetLength(Result);
 end;
 {$ENDIF MSWINDOWS}
@@ -3191,7 +3227,7 @@ begin
         end;
       end;
     finally
-      SysUtils.FindClose(SearchRec);
+      {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.FindClose(SearchRec);
       List.EndUpdate;
     end;
   finally
@@ -3468,13 +3504,34 @@ begin
   {$ENDIF UNIX}
 end;
 
+function FileDateTime(const FileName: string): TDateTime;
+{$IFNDEF COMPILER10_UP}
+var
+  Age: Longint;
+{$ENDIF !COMPILER10_UP}
+begin
+  {$IFDEF COMPILER10_UP}
+  if not FileAge(Filename, Result) then
+    Result := 0;
+  {$ELSE}
+  Age := FileAge(FileName);
+  {$IFDEF MSWINDOWS}
+  // [roko] -1 is valid FileAge value on Linux
+  if Age = -1 then
+    Result := 0
+  else
+  {$ENDIF MSWINDOWS}
+    Result := FileDateToDateTime(Age);
+  {$ENDIF COMPILER10_UP}
+end;
+
 function FileDelete(const FileName: string; MoveToRecycleBin: Boolean = False): Boolean;
 {$IFDEF MSWINDOWS}
 begin
   if MoveToRecycleBin then
     Result := SHDeleteFiles(0, FileName, [doSilent, doAllowUndo, doFilesOnly])
   else
-    Result := Windows.DeleteFile(PChar(FileName));
+    Result := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.DeleteFile(PChar(FileName));
 end;
 {$ENDIF MSWINDOWS}
 {$IFDEF UNIX}
@@ -3504,6 +3561,55 @@ begin
   else
     Result := False;
 end;
+
+procedure FileHistory(const FileName: string; HistoryPath: string = ''; MaxHistoryCount: Integer = 100; MinFileDate:
+    TDateTime = 0; ReplaceExtention: Boolean = true);
+
+  Function Extention (Number : Integer) : String;
+  begin
+    Result := inttostr(Number);
+    while Length(Result) < 3 do
+      Result := '0' + Result;
+    Result := '.~'+Result+'~';
+  end;
+
+  procedure RenameToNumber(const RenameFileName: string; Number: Integer);
+  var
+    f1: string;
+    f2: string;
+  begin
+    f1 := ChangeFileExt(RenameFileName,Extention(Number-1));
+    f2 := ChangeFileExt(RenameFileName,Extention(Number));
+    if FileExists(f2) then
+      if Number >= MaxHistoryCount then
+        if not FileDelete(f2) then
+          Exception.Create('Unable to delete file "' + f2 + '".')
+        else
+      else
+        RenameToNumber(RenameFileName, Number + 1);
+    if FileExists(f1) then
+      if not FileMove(f1, f2, true) then
+        Exception.Create('Unable to rename file "' + f1 + '" to "' + f2 + '".')
+  end;
+
+Var FirstFile : string;
+begin
+  // TODO -cMM: FileHistory default body inserted
+  if not FileExists(FileName) or (MaxHistoryCount <= 0) then
+    Exit;
+  if HistoryPath = '' then
+    HistoryPath := ExtractFilePath(FileName);
+  FirstFile := PathAppend(HistoryPath, ExtractFileName(FileName));
+  if ReplaceExtention then
+    FirstFile := ChangeFileExt(FirstFile, Extention(1))
+  else
+    FirstFile := FirstFile+Extention(1);
+  if (FileDateTime(FirstFile) > MinFileDate) and (MinFileDate <> 0) then
+    Exit;
+  RenameToNumber(FirstFile, 2);
+  FileCopy(FileName, FirstFile, True);
+end;
+
 
 function FileMove(const ExistingFileName, NewFileName: string; ReplaceExisting: Boolean = False): Boolean;
 {$IFDEF MSWINDOWS}
@@ -3817,7 +3923,7 @@ function GetDirectorySize(const Path: string): Int64;
     {$ENDIF MSWINDOWS}
   begin
     Result := 0;
-    R := SysUtils.FindFirst(Path + '*.*', faAnyFile, F);
+    R := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.FindFirst(Path + '*.*', faAnyFile, F);
     if R = 0 then
     try
       while R = 0 do
@@ -3839,12 +3945,12 @@ function GetDirectorySize(const Path: string): Int64;
             Inc(Result, Int64(F.Size));
           {$ENDIF UNIX}
         end;
-        R := SysUtils.FindNext(F);
+        R := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.FindNext(F);
       end;
       if R <> ERROR_NO_MORE_FILES then
         Abort;
     finally
-      SysUtils.FindClose(F);
+      {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.FindClose(F);
     end;
   end;
 
@@ -3973,7 +4079,7 @@ function GetFileInformation(const FileName: string; out FileInfo: TSearchRec): B
 begin
   Result := FindFirst(FileName, faAnyFile, FileInfo) = 0;
   if Result then
-    SysUtils.FindClose(FileInfo);
+    {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.FindClose(FileInfo);
 end;
 
 function GetFileInformation(const FileName: string): TSearchRec;
@@ -4154,7 +4260,7 @@ begin
   L := MAX_PATH + 1;
   SetLength(Result, L);
   {$IFDEF MSWINDOWS}
-  L := Windows.GetModuleFileName(Module, Pointer(Result), L);
+  L := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetModuleFileName(Module, Pointer(Result), L);
   {$ENDIF MSWINDOWS}
   {$IFDEF UNIX}
   {$IFDEF FPC}
@@ -4356,10 +4462,10 @@ begin
   if Handle <> INVALID_HANDLE_VALUE then
   try
     //SysUtils.DateTimeToSystemTime(DateTimeToLocalDateTime(DateTime), SystemTime);
-    SysUtils.DateTimeToSystemTime(DateTime, SystemTime);
+    {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.DateTimeToSystemTime(DateTime, SystemTime);
     FileTime.dwLowDateTime := 0;
     FileTime.dwHighDateTime := 0;
-    if Windows.SystemTimeToFileTime(SystemTime, FileTime) then
+    if {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.SystemTimeToFileTime(SystemTime, FileTime) then
     begin
       case Times of
         ftLastAccess:
@@ -4425,23 +4531,23 @@ begin
 end;
 
 function SetDirTimesHelper(const DirName: string; const DateTime: TDateTime;
-  Times: TFileTimes): Boolean;
+  Times: TFileTimes; RequireBackupRestorePrivileges: Boolean): Boolean;
 var
   Handle: THandle;
   FileTime: TFileTime;
   SystemTime: TSystemTime;
 begin
   Result := False;
-  if IsDirectory(DirName) and BackupPrivilegesEnabled then
+  if IsDirectory(DirName) and (not RequireBackupRestorePrivileges or BackupPrivilegesEnabled) then
   begin
     Handle := CreateFile(PChar(DirName), GENERIC_WRITE, FILE_SHARE_READ, nil,
       OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
     if Handle <> INVALID_HANDLE_VALUE then
     try
-      SysUtils.DateTimeToSystemTime(DateTime, SystemTime);
+      {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.DateTimeToSystemTime(DateTime, SystemTime);
       FileTime.dwLowDateTime := 0;
       FileTime.dwHighDateTime := 0;
-      Windows.SystemTimeToFileTime(SystemTime, FileTime);
+      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.SystemTimeToFileTime(SystemTime, FileTime);
       case Times of
         ftLastAccess:
           Result := SetFileTime(Handle, nil, @FileTime, nil);
@@ -4456,19 +4562,19 @@ begin
   end;
 end;
 
-function SetDirLastWrite(const DirName: string; const DateTime: TDateTime): Boolean;
+function SetDirLastWrite(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
 begin
-  Result := SetDirTimesHelper(DirName, DateTime, ftLastWrite);
+  Result := SetDirTimesHelper(DirName, DateTime, ftLastWrite, RequireBackupRestorePrivileges);
 end;
 
-function SetDirLastAccess(const DirName: string; const DateTime: TDateTime): Boolean;
+function SetDirLastAccess(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
 begin
-  Result := SetDirTimesHelper(DirName, DateTime, ftLastAccess);
+  Result := SetDirTimesHelper(DirName, DateTime, ftLastAccess, RequireBackupRestorePrivileges);
 end;
 
-function SetDirCreation(const DirName: string; const DateTime: TDateTime): Boolean;
+function SetDirCreation(const DirName: string; const DateTime: TDateTime; RequireBackupRestorePrivileges: Boolean = True): Boolean;
 begin
-  Result := SetDirTimesHelper(DirName, DateTime, ftCreation);
+  Result := SetDirTimesHelper(DirName, DateTime, ftCreation, RequireBackupRestorePrivileges);
 end;
 
 procedure FillByteArray(var Bytes: array of Byte; Count: Cardinal; B: Byte);
@@ -4743,8 +4849,8 @@ begin
   Result := '';
   if Window <> 0 then
   begin
-    Windows.GetWindowThreadProcessId(Window, @ProcessID);
-    hProcess := Windows.OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, false, ProcessID);
+    {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetWindowThreadProcessId(Window, @ProcessID);
+    hProcess := {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, false, ProcessID);
     if hProcess <> 0 then
     begin
       if GetWindowsVersion() < WVWin2000 then
@@ -5753,7 +5859,7 @@ begin
 
   Attr := faAnyFile and not RejectedAttributes;
 
-  Found := SysUtils.FindFirst(Path, Attr, FileInfo) = 0;
+  Found := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.FindFirst(Path, Attr, FileInfo) = 0;
   try
     while Found do
     begin
@@ -5783,7 +5889,7 @@ begin
 
   Attr := faAnyFile and not RejectedAttributes;
 
-  Found := SysUtils.FindFirst(Path, Attr, FileInfo) = 0;
+  Found := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.FindFirst(Path, Attr, FileInfo) = 0;
   try
     while Found do
     begin
@@ -5815,7 +5921,7 @@ var
   begin
     HandleDirectory(Directory);
 
-    Found := SysUtils.FindFirst(Directory + '*', Attr, DirInfo) = 0;
+    Found := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}SysUtils.FindFirst(Directory + '*', Attr, DirInfo) = 0;
     try
       while Found do
       begin
@@ -6539,9 +6645,9 @@ begin
   if fsMaxSize in Options then
     Task.FileSizeMax := FileSizeMax;
   if fsLastChangeAfter in Options then
-    Task.FFileTimeMin := DateTimeToFileDate(LastChangeAfter);
+    Task.FFileTimeMin := {$IFDEF RTL220_UP}LastChangeAfter{$ELSE}DateTimeToFileDate(LastChangeAfter){$ENDIF};
   if fsLastChangeBefore in Options then
-    Task.FFileTimeMax := DateTimeToFileDate(LastChangeBefore);
+    Task.FFileTimeMax := {$IFDEF RTL220_UP}LastChangeBefore{$ELSE}DateTimeToFileDate(LastChangeBefore){$ENDIF};
   Task.SynchronizationMode := SynchronizationMode;
   Task.FOnEnterDirectory := OnEnterDirectory;
   Task.OnTerminate := TaskTerminated;

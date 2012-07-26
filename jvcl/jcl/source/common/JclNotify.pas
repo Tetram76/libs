@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-02-18 22:16:35 +0100 (jeu., 18 févr. 2010)                       $ }
-{ Revision:      $Rev:: 3192                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                        $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -44,7 +44,11 @@ uses
   {$IFDEF THREADSAFE}
   JclSynch,
   {$ENDIF THREADSAFE}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes;
+  {$ELSE ~HAS_UNITSCOPE}
   Classes;
+  {$ENDIF ~HAS_UNITSCOPE}
 
   { The following interfaces provide a basic notifier/listener setup. Whenever code issues a notification through the
     IJclNotifier.Notify method, all listeners registered with the notifier will receive the message (through the
@@ -171,8 +175,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclNotify.pas $';
-    Revision: '$Revision: 3192 $';
-    Date: '$Date: 2010-02-18 22:16:35 +0100 (jeu., 18 févr. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -182,7 +186,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils;
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils;
+  {$ENDIF ~HAS_UNITSCOPE}
 
 //=== { TJclBaseNotifier } ===================================================
 

@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011)                          $ }
-{ Revision:      $Rev:: 3511                                                                     $ }
+{ Last modified: $Date:: 2012-02-19 22:43:22 +0100 (dim., 19 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3735                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -46,7 +46,11 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclContainerIntf, JclSynch, JclSysUtils,
   JclWideStrings,
   JclAnsiStrings;
@@ -166,7 +170,8 @@ type
   end;
 
   TJclIntfAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclIntfOwner, IJclIntfEqualityComparer, IJclIntfComparer, IJclIntfHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclIntfContainer,
+    IJclIntfOwner, IJclIntfEqualityComparer, IJclIntfComparer, IJclIntfHashConverter)
   protected
     FEqualityCompare: TIntfEqualityCompare;
     FCompare: TIntfCompare;
@@ -197,20 +202,20 @@ type
   end;
 
   TJclStrAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclStrContainer)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclStrBaseContainer)
   protected
     FCaseSensitive: Boolean;
     procedure AssignPropertiesTo(Dest: TJclAbstractContainerBase); override;
   public
-    { IJclStrContainer }
+    { IJclStrBaseContainer }
     function GetCaseSensitive: Boolean; virtual;
     procedure SetCaseSensitive(Value: Boolean); virtual;
     property CaseSensitive: Boolean read GetCaseSensitive write SetCaseSensitive;
   end;
 
   TJclAnsiStrAbstractContainer = class(TJclStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclAnsiStrOwner, IJclStrContainer, IJclAnsiStrContainer,
-    IJclAnsiStrEqualityComparer, IJclAnsiStrComparer, IJclAnsiStrHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclStrBaseContainer, IJclAnsiStrContainer,
+    IJclAnsiStrOwner, IJclAnsiStrEqualityComparer, IJclAnsiStrComparer, IJclAnsiStrHashConverter)
   protected
     FEncoding: TJclAnsiStrEncoding;
     FEqualityCompare: TAnsiStrEqualityCompare;
@@ -246,8 +251,8 @@ type
   end;
 
   TJclWideStrAbstractContainer = class(TJclStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclWideStrOwner, IJclStrContainer, IJclWideStrContainer,
-    IJclWideStrEqualityComparer, IJclWideStrComparer, IJclWideStrHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclStrBaseContainer, IJclWideStrContainer,
+    IJclWideStrOwner, IJclWideStrEqualityComparer, IJclWideStrComparer, IJclWideStrHashConverter)
   protected
     FEncoding: TJclWideStrEncoding;
     FEqualityCompare: TWideStrEqualityCompare;
@@ -284,8 +289,8 @@ type
 
   {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrAbstractContainer = class(TJclStrAbstractContainer, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclUnicodeStrOwner, IJclStrContainer, IJclUnicodeStrContainer,
-    IJclUnicodeStrEqualityComparer, IJclUnicodeStrComparer, IJclUnicodeStrHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclStrBaseContainer, IJclUnicodeStrContainer,
+    IJclUnicodeStrOwner, IJclUnicodeStrEqualityComparer, IJclUnicodeStrComparer, IJclUnicodeStrHashConverter)
   protected
     FEqualityCompare: TUnicodeStrEqualityCompare;
     FCompare: TUnicodeStrCompare;
@@ -317,8 +322,8 @@ type
   {$ENDIF SUPPORTS_UNICODE_STRING}
 
   TJclSingleAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclSingleOwner, IJclSingleContainer, IJclSingleEqualityComparer,
-    IJclSingleComparer, IJclSingleHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclSingleContainer,
+    IJclSingleOwner, IJclSingleEqualityComparer, IJclSingleComparer, IJclSingleHashConverter)
   protected
     FPrecision: Single;
     FEqualityCompare: TSingleEqualityCompare;
@@ -354,8 +359,8 @@ type
   end;
 
   TJclDoubleAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclDoubleOwner, IJclDoubleContainer, IJclDoubleEqualityComparer,
-    IJclDoubleComparer, IJclDoubleHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclDoubleContainer,
+    IJclDoubleOwner, IJclDoubleEqualityComparer, IJclDoubleComparer, IJclDoubleHashConverter)
   protected
     FPrecision: Double;
     FEqualityCompare: TDoubleEqualityCompare;
@@ -391,8 +396,8 @@ type
   end;
 
   TJclExtendedAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclExtendedOwner, IJclExtendedContainer, IJclExtendedEqualityComparer,
-    IJclExtendedComparer, IJclExtendedHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclExtendedContainer,
+    IJclExtendedOwner, IJclExtendedEqualityComparer, IJclExtendedComparer, IJclExtendedHashConverter)
   protected
     FPrecision: Extended;
     FEqualityCompare: TExtendedEqualityCompare;
@@ -428,8 +433,8 @@ type
   end;
 
   TJclIntegerAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclIntegerOwner, IJclIntegerEqualityComparer, IJclIntegerComparer,
-    IJclIntegerHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclIntegerContainer,
+    IJclIntegerOwner, IJclIntegerEqualityComparer, IJclIntegerComparer, IJclIntegerHashConverter)
   protected
     FEqualityCompare: TIntegerEqualityCompare;
     FCompare: TIntegerCompare;
@@ -460,8 +465,8 @@ type
   end;
 
   TJclCardinalAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclCardinalOwner, IJclCardinalEqualityComparer, IJclCardinalComparer,
-    IJclCardinalHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclCardinalContainer,
+    IJclCardinalOwner, IJclCardinalEqualityComparer, IJclCardinalComparer, IJclCardinalHashConverter)
   protected
     FEqualityCompare: TCardinalEqualityCompare;
     FCompare: TCardinalCompare;
@@ -492,8 +497,8 @@ type
   end;
 
   TJclInt64AbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclInt64Owner, IJclInt64EqualityComparer, IJclInt64Comparer,
-    IJclInt64HashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclInt64Container,
+    IJclInt64Owner, IJclInt64EqualityComparer, IJclInt64Comparer, IJclInt64HashConverter)
   protected
     FEqualityCompare: TInt64EqualityCompare;
     FCompare: TInt64Compare;
@@ -524,7 +529,8 @@ type
   end;
 
   TJclPtrAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclPtrOwner, IJclPtrEqualityComparer, IJclPtrComparer, IJclPtrHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclPtrContainer,
+    IJclPtrOwner, IJclPtrEqualityComparer, IJclPtrComparer, IJclPtrHashConverter)
   protected
     FEqualityCompare: TPtrEqualityCompare;
     FCompare: TPtrCompare;
@@ -555,8 +561,8 @@ type
   end;
 
   TJclAbstractContainer = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclObjectOwner, IJclEqualityComparer, IJclComparer,
-    IJclHashConverter)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclContainer,
+    IJclObjectOwner, IJclEqualityComparer, IJclComparer, IJclHashConverter)
   protected
     FOwnsObjects: Boolean;
     FEqualityCompare: TEqualityCompare;
@@ -594,8 +600,8 @@ type
   //DOM-IGNORE-BEGIN
 
   TJclAbstractContainer<T> = class(TJclAbstractContainerBase, {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE}
-    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclItemOwner<T>, IJclEqualityComparer<T>, IJclComparer<T>,
-    IJclHashConverter<T>)
+    IJclCloneable, IJclIntfCloneable, IJclBaseContainer, IJclContainer<T>,
+    IJclItemOwner<T>, IJclEqualityComparer<T>, IJclComparer<T>, IJclHashConverter<T>)
   protected
     FOwnsItems: Boolean;
     FEqualityCompare: TEqualityCompare<T>;
@@ -634,7 +640,7 @@ type
 
   TJclAnsiStrAbstractCollection = class(TJclAnsiStrAbstractContainer,
     {$IFDEF THREADSAFE} IJclLockable, {$ENDIF THREADSAFE} IJclCloneable, IJclIntfCloneable, IJclBaseContainer,
-    IJclStrContainer, IJclAnsiStrContainer, IJclAnsiStrFlatContainer, IJclAnsiStrCollection,
+    IJclStrBaseContainer, IJclAnsiStrContainer, IJclAnsiStrFlatContainer, IJclAnsiStrCollection,
     IJclAnsiStrEqualityComparer, IJclAnsiStrComparer)
   public
     { IJclAnsiStrCollection }
@@ -669,7 +675,7 @@ type
 
   TJclWideStrAbstractCollection = class(TJclWideStrAbstractContainer,
     {$IFDEF THREADSAFE}IJclLockable,{$ENDIF THREADSAFE} IJclCloneable, IJclIntfCloneable, IJclBaseContainer,
-    IJclStrContainer, IJclWideStrContainer, IJclWideStrFlatContainer, IJclWideStrCollection,
+    IJclStrBaseContainer, IJclWideStrContainer, IJclWideStrFlatContainer, IJclWideStrCollection,
     IJclWideStrEqualityComparer, IJclWideStrComparer)
   public
     { IJclWideStrCollection }
@@ -705,7 +711,7 @@ type
   {$IFDEF SUPPORTS_UNICODE_STRING}
   TJclUnicodeStrAbstractCollection = class(TJclUnicodeStrAbstractContainer,
     {$IFDEF THREADSAFE}IJclLockable,{$ENDIF THREADSAFE} IJclCloneable, IJclIntfCloneable, IJclBaseContainer,
-    IJclStrContainer, IJclUnicodeStrContainer, IJclUnicodeStrFlatContainer, IJclUnicodeStrCollection,
+    IJclStrBaseContainer, IJclUnicodeStrContainer, IJclUnicodeStrFlatContainer, IJclUnicodeStrCollection,
     IJclUnicodeStrEqualityComparer, IJclUnicodeStrComparer)
   public
     { IJclUnicodeStrCollection }
@@ -763,8 +769,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAbstractContainers.pas $';
-    Revision: '$Revision: 3511 $';
-    Date: '$Date: 2011-03-15 16:07:53 +0100 (mar., 15 mars 2011) $';
+    Revision: '$Revision: 3735 $';
+    Date: '$Date: 2012-02-19 22:43:22 +0100 (dim., 19 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -774,12 +780,18 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF HAS_UNIT_ANSISTRINGS}
+  System.AnsiStrings,
+  {$ENDIF HAS_UNIT_ANSISTRINGS}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
-  JclStringConversions, JclUnicode,
-  JclAlgorithms,
-  SysUtils;
+  SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
+  JclStringConversions, JclUnicode, JclAlgorithms;
 
 //=== { TJclAbstractLockable } ===============================================
 

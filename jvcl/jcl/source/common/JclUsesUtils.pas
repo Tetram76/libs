@@ -19,8 +19,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-05 15:24:05 +0200 (mar., 05 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3362                                                                     $ }
+{ Last modified: $Date:: 2012-04-19 21:17:36 +0200 (jeu., 19 avr. 2012)                          $ }
+{ Revision:      $Rev:: 3781                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -32,11 +32,14 @@ unit JclUsesUtils;
 interface
 
 uses
-  Classes, SysUtils,
+  {$IFDEF HAS_UNITSCOPE}
+  System.Classes, System.SysUtils, Winapi.Windows,
+  {$ELSE ~HAS_UNITSCOPE}
+  Classes, SysUtils, Windows,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows,
   JclBase;
 
 type
@@ -112,8 +115,8 @@ function CreateGoal(Text: PChar): TCustomGoal;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUsesUtils.pas $';
-    Revision: '$Revision: 3362 $';
-    Date: '$Date: 2010-10-05 15:24:05 +0200 (mar., 05 oct. 2010) $';
+    Revision: '$Revision: 3781 $';
+    Date: '$Date: 2012-04-19 21:17:36 +0200 (jeu., 19 avr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -123,10 +126,17 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.RtlConsts,
+  {$IFDEF HAS_UNIT_CHARACTER}
+  System.Character,
+  {$ENDIF HAS_UNIT_CHARACTER}
+  {$ELSE ~HAS_UNITSCOPE}
   RtlConsts,
   {$IFDEF HAS_UNIT_CHARACTER}
   Character,
   {$ENDIF HAS_UNIT_CHARACTER}
+  {$ENDIF ~HAS_UNITSCOPE}
   JclStrings,
   JclDevToolsResources;
 
@@ -153,7 +163,7 @@ begin
   if Result then
   begin
     Inc(P);
-    while CharIsValidIdentifierLetter(P^) do
+    while CharIsValidIdentifierLetter(P^) or (P^ = '.') do
       Inc(P);
   end;
 end;
@@ -216,7 +226,7 @@ begin
     PStart := P;
 
     Inc(P);
-    while CharIsValidIdentifierLetter(P^) do
+    while CharIsValidIdentifierLetter(P^) or (P^ = '.') do
       Inc(P);
 
     SetString(Result, PStart, P - PStart);
@@ -395,7 +405,7 @@ begin
     Inc(I);
     if I = Index then
     begin
-      while CharIsValidIdentifierLetter(PIdentifier^) do
+      while CharIsValidIdentifierLetter(PIdentifier^) or (P^ = '.') do
       begin
         Result := Result + PIdentifier^;
         Inc(PIdentifier);

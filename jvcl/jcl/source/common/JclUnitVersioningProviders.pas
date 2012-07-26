@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-26 17:34:33 +0200 (mar., 26 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3398                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -39,14 +39,22 @@ unit JclUnitVersioningProviders;
 interface
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  JclPeImage,
+  {$ENDIF MSWINDOWS}
+  System.SysUtils, System.Classes, System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   JclPeImage,
   {$ENDIF MSWINDOWS}
+  SysUtils, Classes, Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF LINUX}
   Types,
   {$ENDIF LINUX}
-  SysUtils, Classes, Contnrs,
   JclUnitVersioning;
 
 type
@@ -103,8 +111,8 @@ function InsertUnitVersioningSection(const ExecutableFileName: TFileName;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnitVersioningProviders.pas $';
-    Revision: '$Revision: 3398 $';
-    Date: '$Date: 2010-10-26 17:34:33 +0200 (mar., 26 oct. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

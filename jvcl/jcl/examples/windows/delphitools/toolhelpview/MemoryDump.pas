@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $                                                      }
+{ Last modified: $Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $                                                      }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -361,7 +361,7 @@ procedure TMemoryDumpForm.DumpListViewData(Sender: TObject; Item: TListItem);
 var
   Address: Pointer;
   LineData: packed array[0..63] of Byte;
-  NR: DWORD;
+  NR: {$IFDEF RTL230_UP}NativeUInt{$ELSE}DWORD{$ENDIF};
   Hex, Ascii, S: string;
   I: Integer;
   W: PWideChar;
@@ -493,7 +493,7 @@ end;
 procedure TMemoryDumpForm.SaveData1Execute(Sender: TObject);
 var
   MS: TMemoryStream;
-  NR: DWORD;
+  NR: {$IFDEF RTL230_UP}NativeUInt{$ELSE}DWORD{$ENDIF};
 begin
   with SaveDataDialog, FMemoryInfo[PagesListView.Selected.Index].MemInfo do
   begin

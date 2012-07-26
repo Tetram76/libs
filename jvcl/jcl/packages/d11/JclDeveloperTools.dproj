@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-    <DCC_UsePackage>rtl;vcl;Jcl;JclContainers</DCC_UsePackage>
+    <DCC_UsePackage>rtl;Jcl;JclContainers</DCC_UsePackage>
     <DCC_Define>BCB;WIN32;CONDITIONALEXPRESSIONS;VER180;VER185;RELEASE</DCC_Define>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -48,9 +48,9 @@
            <VersionInfo Name="IncludeVerInfo">True</VersionInfo>
            <VersionInfo Name="AutoIncBuild">False</VersionInfo>
            <VersionInfo Name="MajorVer">2</VersionInfo>
-           <VersionInfo Name="MinorVer">3</VersionInfo>
+           <VersionInfo Name="MinorVer">4</VersionInfo>
            <VersionInfo Name="Release">0</VersionInfo>
-           <VersionInfo Name="Build">3847</VersionInfo>
+           <VersionInfo Name="Build">4198</VersionInfo>
            <VersionInfo Name="Debug">False</VersionInfo>
            <VersionInfo Name="PreRelease">False</VersionInfo>
            <VersionInfo Name="Special">False</VersionInfo>
@@ -62,13 +62,13 @@
          <VersionInfoKeys>
           <VersionInfoKeys Name="CompanyName">Project JEDI</VersionInfoKeys>
           <VersionInfoKeys Name="FileDescription">JEDI Code Library Developer Tools package</VersionInfoKeys>
-          <VersionInfoKeys Name="FileVersion">2.3.0.3847</VersionInfoKeys>
+          <VersionInfoKeys Name="FileVersion">2.4.0.4198</VersionInfoKeys>
           <VersionInfoKeys Name="InternalName">JclDeveloperTools</VersionInfoKeys>
           <VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2011 Project JEDI</VersionInfoKeys>
           <VersionInfoKeys Name="LegalTrademarks"/>
           <VersionInfoKeys Name="OriginalFilename">JclDeveloperTools110.bpl</VersionInfoKeys>
           <VersionInfoKeys Name="ProductName">JEDI Code Library</VersionInfoKeys>
-          <VersionInfoKeys Name="ProductVersion">2.3 Build 3847</VersionInfoKeys>
+          <VersionInfoKeys Name="ProductVersion">2.4 Build 4198</VersionInfoKeys>
          </VersionInfoKeys>
          <Source>
            <Source Name="MainSource">JclDeveloperTools.dpk</Source>
@@ -86,7 +86,6 @@
       <MainSource>MainSource</MainSource>
     </DelphiCompile>
     <DCCReference Include="rtl.dcp"/>
-    <DCCReference Include="vcl.dcp"/>
     <DCCReference Include="Jcl.dcp"/>
     <DCCReference Include="JclContainers.dcp"/>
     <DCCReference Include="..\..\source\common\JclCompilerUtils.pas"/>
@@ -105,6 +104,7 @@
     <DCCReference Include="..\..\source\common\JclPreProcessorContainerTypes.pas"/>
     <DCCReference Include="..\..\source\common\JclPreProcessorExcDlgTemplates.pas"/>
     <DCCReference Include="..\..\source\common\JclPreProcessorHashMapsTemplates.pas"/>
+    <DCCReference Include="..\..\source\common\JclPreProcessorHashSetsTemplates.pas"/>
     <DCCReference Include="..\..\source\common\JclPreProcessorLexer.pas"/>
     <DCCReference Include="..\..\source\common\JclPreProcessorLinkedListsTemplates.pas"/>
     <DCCReference Include="..\..\source\common\JclPreProcessorParser.pas"/>

@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3391                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -47,7 +47,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.Classes, Winapi.MMSystem, System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, Classes, MMSystem, Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclSynch, JclStrings;
 
 type
@@ -313,8 +317,8 @@ function GetCDAudioTrackList(TrackList: TStrings; IncludeTrackType: Boolean = Fa
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclMultimedia.pas $';
-    Revision: '$Revision: 3391 $';
-    Date: '$Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -324,7 +328,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclResources, JclSysUtils;
 
 //=== { TJclMultimediaTimer } ================================================
@@ -1154,7 +1162,7 @@ end;
 
 function GetMciErrorMessage(const MciErrNo: MCIERROR): string;
 var
-  Buffer: array [0..MMSystem.MAXERRORLENGTH - 1] of Char;
+  Buffer: array [0..{$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}MMSystem.MAXERRORLENGTH - 1] of Char;
 begin
   if mciGetErrorString(MciErrNo, Buffer, SizeOf(Buffer)) then
     Result := Buffer

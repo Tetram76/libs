@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-02-22 19:39:08 +0100 (mar., 22 févr. 2011)                        $ }
-{ Revision:      $Rev:: 3496                                                                     $ }
+{ Last modified: $Date:: 2012-03-04 19:39:47 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3759                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -47,11 +47,19 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Types,
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.Classes, System.SysUtils, System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   Types,
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
   Classes, SysUtils, TypInfo,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 type
@@ -702,8 +710,8 @@ function GetObjectProperties(AnObj: TObject; Recurse: Boolean = False): IJclObjP
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclRTTI.pas $';
-    Revision: '$Revision: 3496 $';
-    Date: '$Date: 2011-02-22 19:39:08 +0100 (mar., 22 févr. 2011) $';
+    Revision: '$Revision: 3759 $';
+    Date: '$Date: 2012-03-04 19:39:47 +0100 (dim., 04 mars 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -713,7 +721,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysConst,
+  {$ELSE ~HAS_UNITSCOPE}
   SysConst,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclLogic, JclResources, JclStrings, JclSysUtils;
 
 //=== { TJclInfoWriter } =====================================================
@@ -842,7 +854,7 @@ constructor TJclTypeInfo.Create(ATypeInfo: PTypeInfo);
 begin
   inherited Create;
   FTypeInfo := ATypeInfo;
-  FTypeData := TypInfo.GetTypeData(ATypeInfo);
+  FTypeData := {$IFDEF HAS_UNITSCOPE}System.{$ENDIF}TypInfo.GetTypeData(ATypeInfo);
 end;
 
 function TJclTypeInfo.GetName: string;
@@ -1878,7 +1890,7 @@ begin
       AInstance := GetObjectProp(FInstance, PropInfo);
       if AInstance <> nil then
       begin
-        SubClassTypeInfo := TJclObjClassTypeInfo.Create(PropInfo.PropType^, Prefix, AInstance);
+        SubClassTypeInfo := TJclObjClassTypeInfo.Create(PropInfo.PropType{$IFDEF BORLAND}^{$ENDIF}, Prefix, AInstance);
         Result := SubClassTypeInfo.ObjPropNames[Suffix];
       end
       else
@@ -2945,7 +2957,7 @@ function GetObjectProperties(AnObj: TObject; Recurse: Boolean): IJclObjPropInfoA
   end;
 
 var
-  PropCount: Integer;
+  PropCount: SizeInt;
 begin
   PropCount := 0;
   SetLength(Result, 16);

@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2012-02-20 19:48:39 +0100 (lun., 20 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3737                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -164,8 +164,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorContainer2DTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3737 $';
+    Date: '$Date: 2012-02-20 19:48:39 +0100 (lun., 20 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -175,10 +175,17 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.TypInfo,
+  System.SysUtils,
+  Winapi.ActiveX,
+  System.Win.ComObj,
+  {$ELSE ~HAS_UNITSCOPE}
   TypInfo,
   SysUtils,
   ActiveX,
   ComObj,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclRTTI,
   JclSysUtils,
   JclContainerIntf,
@@ -229,7 +236,7 @@ end;
 
 function TJclContainerMapInfo.GetKeyOwnershipDeclaration: string;
 begin
-  Result := GetKeyAttribute(kaKeyOwnershipParameter);
+  Result := GetKeyAttribute(kaKeyOwnershipParameterName);
   if Result <> '' then
     Result := 'AOwnsKeys: Boolean';
 end;
@@ -285,7 +292,7 @@ end;
 
 function TJclContainerMapInfo.GetValueOwnershipDeclaration: string;
 begin
-  Result := GetValueAttribute(vaValueOwnershipParameter);
+  Result := GetValueAttribute(vaValueOwnershipParameterName);
   if Result <> '' then
     Result := 'AOwnsValues: Boolean';
 end;
@@ -452,11 +459,10 @@ begin
   if Result = '' then
   begin
     if MapInfo.KeyTypeInfo.StringType or MapInfo.ValueTypeInfo.StringType then
-      Result := ' IJclStrContainer,';
+      Result := ' IJclStrBaseContainer,';
     if MapInfo.KeyTypeInfo.TypeAttributes[taContainerInterfaceName] <> '' then
-      Result := Format('%s %s,', [Result, MapInfo.KeyTypeInfo.TypeAttributes[taContainerInterfaceName]])
-    else
-    if MapInfo.ValueTypeInfo.TypeAttributes[taContainerInterfaceName] <> '' then
+      Result := Format('%s %s,', [Result, MapInfo.KeyTypeInfo.TypeAttributes[taContainerInterfaceName]]);
+    if (MapInfo.KeyTypeInfo.TypeName <> MapInfo.ValueTypeInfo.TypeName) and (MapInfo.ValueTypeInfo.TypeAttributes[taContainerInterfaceName] <> '') then
       Result := Format('%s %s,', [Result, MapInfo.ValueTypeInfo.TypeAttributes[taContainerInterfaceName]]);
     if MapInfo.KeyTypeInfo.TObjectType then
       Result := Result + ' IJclKeyOwner,';
@@ -568,7 +574,7 @@ begin
   Result := FCreateKeySet;
   if Result = '' then
   begin
-    if MapInfo.KeyTypeInfo.TypeAttributes[taOwnershipParameter] <> '' then
+    if MapInfo.KeyTypeInfo.TypeAttributes[taOwnershipParameterName] <> '' then
       Ownership := ', False'
     else
       Ownership := '';
@@ -583,7 +589,7 @@ begin
   Result := FCreateValueCollection;
   if Result = '' then
   begin
-    if MapInfo.ValueTypeInfo.TypeAttributes[taOwnershipParameter] <> '' then
+    if MapInfo.ValueTypeInfo.TypeAttributes[taOwnershipParameterName] <> '' then
       Ownership := ', False'
     else
       Ownership := '';
@@ -600,16 +606,16 @@ begin
 
   if (Result = '') and MapInfo.KnownMap then
   begin
-    if GetKeyAttribute(kaKeyOwnershipParameter) <> '' then
+    if GetKeyAttribute(kaKeyOwnershipParameterName) <> '' then
     begin
-      if GetValueAttribute(vaValueOwnershipParameter) <> '' then
+      if GetValueAttribute(vaValueOwnershipParameterName) <> '' then
         Ownership := 'False, False'
       else
         Ownership := 'False';
     end
     else
     begin
-      if GetValueAttribute(vaValueOwnershipParameter) <> '' then
+      if GetValueAttribute(vaValueOwnershipParameterName) <> '' then
         Ownership := 'False'
       else
         Ownership := '';

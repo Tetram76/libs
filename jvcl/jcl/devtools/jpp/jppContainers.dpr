@@ -38,7 +38,7 @@
 {                                                                              }
 { **************************************************************************** }
 
-// Last modified: $Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $
+// Last modified: $Date: 2012-02-19 18:53:42 +0100 (dim., 19 févr. 2012) $
 
 {$APPTYPE CONSOLE}
 program jppContainers;
@@ -63,6 +63,7 @@ uses
   JclPreProcessorContainer2DTemplates,
   JclPreProcessorContainerKnownMaps,
   JclPreProcessorHashMapsTemplates,
+  JclPreProcessorHashSetsTemplates,
   JclPreProcessorSortedMapsTemplates,
   JppMain in 'JppMain.pas';
 

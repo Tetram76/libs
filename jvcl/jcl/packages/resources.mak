@@ -14,7 +14,7 @@ RESFILES = c6\Jcl.res                               \
            c6\JclRepositoryExpertDLL.res            \
            c6\JclSIMDViewExpert.res                 \
            c6\JclSIMDViewExpertDLL.res              \
-           c6\JclDeveloperTools.res                    \
+           c6\JclDeveloperTools.res                 \
            c6\JclStackTraceViewerExpert.res         \
            c6\JclStackTraceViewerExpertDLL.res      \
            c6\JclThreadNameExpert.res               \
@@ -28,8 +28,9 @@ RESFILES = c6\Jcl.res                               \
            cs1\JclBaseExpert.res                    \
            cs1\JclContainers.res                    \
            cs1\JclFavoriteFoldersExpertDLL.res      \
-           cs1\JclDeveloperTools.res                   \
+           cs1\JclDeveloperTools.res                \
            cs1\JclVersionControlExpertDLL.res       \
+           cs1\JclVcl.res                           \
            d10\Jcl.res                              \
            d10\JclBaseExpert.res                    \
            d10\JclContainers.res                    \
@@ -43,7 +44,7 @@ RESFILES = c6\Jcl.res                               \
            d10\JclRepositoryExpertDLL.res           \
            d10\JclSIMDViewExpert.res                \
            d10\JclSIMDViewExpertDLL.res             \
-           d10\JclDeveloperTools.res                   \
+           d10\JclDeveloperTools.res                \
            d10\JclStackTraceViewerExpert.res        \
            d10\JclStackTraceViewerExpertDLL.res     \
            d10\JclVcl.res                           \
@@ -62,7 +63,7 @@ RESFILES = c6\Jcl.res                               \
            d11\JclRepositoryExpertDLL.res           \
            d11\JclSIMDViewExpert.res                \
            d11\JclSIMDViewExpertDLL.res             \
-           d11\JclDeveloperTools.res                   \
+           d11\JclDeveloperTools.res                \
            d11\JclStackTraceViewerExpert.res        \
            d11\JclStackTraceViewerExpertDLL.res     \
            d11\JclVcl.res                           \
@@ -81,7 +82,7 @@ RESFILES = c6\Jcl.res                               \
            d12\JclRepositoryExpertDLL.res           \
            d12\JclSIMDViewExpert.res                \
            d12\JclSIMDViewExpertDLL.res             \
-           d12\JclDeveloperTools.res                   \
+           d12\JclDeveloperTools.res                \
            d12\JclStackTraceViewerExpert.res        \
            d12\JclStackTraceViewerExpertDLL.res     \
            d12\JclVcl.res                           \
@@ -100,7 +101,7 @@ RESFILES = c6\Jcl.res                               \
            d14\JclRepositoryExpertDLL.res           \
            d14\JclSIMDViewExpert.res                \
            d14\JclSIMDViewExpertDLL.res             \
-           d14\JclDeveloperTools.res                   \
+           d14\JclDeveloperTools.res                \
            d14\JclStackTraceViewerExpert.res        \
            d14\JclStackTraceViewerExpertDLL.res     \
            d14\JclVcl.res                           \
@@ -119,12 +120,31 @@ RESFILES = c6\Jcl.res                               \
            d15\JclRepositoryExpertDLL.res           \
            d15\JclSIMDViewExpert.res                \
            d15\JclSIMDViewExpertDLL.res             \
-           d15\JclDeveloperTools.res                   \
+           d15\JclDeveloperTools.res                \
            d15\JclStackTraceViewerExpert.res        \
            d15\JclStackTraceViewerExpertDLL.res     \
            d15\JclVcl.res                           \
            d15\JclVersionControlExpert.res          \
            d15\JclVersionControlExpertDLL.res       \
+           d16\Jcl.res                              \
+           d16\JclBaseExpert.res                    \
+           d16\JclContainers.res                    \
+           d16\JclDebugExpert.res                   \
+           d16\JclDebugExpertDLL.res                \
+           d16\JclFavoriteFoldersExpert.res         \
+           d16\JclFavoriteFoldersExpertDLL.res      \
+           d16\JclProjectAnalysisExpert.res         \
+           d16\JclProjectAnalysisExpertDLL.res      \
+           d16\JclRepositoryExpert.res              \
+           d16\JclRepositoryExpertDLL.res           \
+           d16\JclSIMDViewExpert.res                \
+           d16\JclSIMDViewExpertDLL.res             \
+           d16\JclDeveloperTools.res                \
+           d16\JclStackTraceViewerExpert.res        \
+           d16\JclStackTraceViewerExpertDLL.res     \
+           d16\JclVcl.res                           \
+           d16\JclVersionControlExpert.res          \
+           d16\JclVersionControlExpertDLL.res       \
            d6\Jcl.res                               \
            d6\JclBaseExpert.res                     \
            d6\JclContainers.res                     \
@@ -138,7 +158,7 @@ RESFILES = c6\Jcl.res                               \
            d6\JclRepositoryExpertDLL.res            \
            d6\JclSIMDViewExpert.res                 \
            d6\JclSIMDViewExpertDLL.res              \
-           d6\JclDeveloperTools.res                    \
+           d6\JclDeveloperTools.res                 \
            d6\JclStackTraceViewerExpert.res         \
            d6\JclStackTraceViewerExpertDLL.res      \
            d6\JclThreadNameExpert.res               \
@@ -161,7 +181,7 @@ RESFILES = c6\Jcl.res                               \
            d7\JclRepositoryExpertDLL.res            \
            d7\JclSIMDViewExpert.res                 \
            d7\JclSIMDViewExpertDLL.res              \
-           d7\JclDeveloperTools.res                    \
+           d7\JclDeveloperTools.res                 \
            d7\JclStackTraceViewerExpert.res         \
            d7\JclStackTraceViewerExpertDLL.res      \
            d7\JclUsesExpert.res                     \
@@ -173,8 +193,9 @@ RESFILES = c6\Jcl.res                               \
            d8\JclBaseExpert.res                     \
            d8\JclContainers.res                     \
            d8\JclFavoriteFoldersExpertDLL.res       \
-           d8\JclDeveloperTools.res                    \
+           d8\JclDeveloperTools.res                 \
            d8\JclVersionControlExpertDLL.res        \
+           d8\JclVcl.res                            \
            d9\Jcl.res                               \
            d9\JclBaseExpert.res                     \
            d9\JclContainers.res                     \
@@ -188,7 +209,7 @@ RESFILES = c6\Jcl.res                               \
            d9\JclRepositoryExpertDLL.res            \
            d9\JclSIMDViewExpert.res                 \
            d9\JclSIMDViewExpertDLL.res              \
-           d9\JclDeveloperTools.res                    \
+           d9\JclDeveloperTools.res                 \
            d9\JclStackTraceViewerExpert.res         \
            d9\JclStackTraceViewerExpertDLL.res      \
            d9\JclVcl.res                            \

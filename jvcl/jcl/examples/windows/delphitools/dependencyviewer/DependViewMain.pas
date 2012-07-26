@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008) $                                                      }
+{ Last modified: $Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $                                                      }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -143,7 +143,7 @@ var
   S: string;
 begin
   S := PeStripFunctionAW(Name);
-  WinHelp(Application.Handle, PChar(FWin32Help), HELP_KEY, DWORD(S));
+  WinHelp(Application.Handle, PChar(FWin32Help), HELP_KEY, {$IFDEF RTL230_UP}NativeUInt(S){$ELSE}DWORD(S){$ENDIF});
 end;
 
 procedure TMainForm.OpenFile(const FileName: TFileName; CheckIfOpen: Boolean);

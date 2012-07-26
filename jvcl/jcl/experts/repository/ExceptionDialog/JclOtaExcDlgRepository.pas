@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2011-10-23 22:35:42 +0200 (dim., 23 oct. 2011)                          $ }
+{ Revision:      $Rev:: 3617                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -80,8 +80,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/repository/ExceptionDialog/JclOtaExcDlgRepository.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3617 $';
+    Date: '$Date: 2011-10-23 22:35:42 +0200 (dim., 23 oct. 2011) $';
     LogPath: 'JCL\experts\repository\ExceptionDialog';
     Extra: '';
     Data: nil
@@ -121,6 +121,33 @@ procedure TJclExcDlgExpert.CreateExceptionDialog(
       end;
     end;
     Result := string(AnsiResult);
+  end;
+
+  function PathGetAbsolutePath(const P: string): string;
+  var
+    ActiveEditBuffer: IOTAEditBuffer;
+    ActiveProject: IOTAProject;
+    CurrentDirectory: string;
+  begin
+    if not PathIsAbsolute(P) then
+    begin
+      CurrentDirectory := '';
+      ActiveEditBuffer := GetActiveEditBuffer;
+      if Assigned(ActiveEditBuffer) then
+        CurrentDirectory := ExtractFileDir(ActiveEditBuffer.FileName);
+      if CurrentDirectory = '' then
+      begin
+        ActiveProject := GetActiveProject;
+        if Assigned(ActiveProject) then
+          CurrentDirectory := ExtractFileDir(ActiveProject.FileName);
+      end;
+      if CurrentDirectory <> '' then
+        Result := PathGetRelativePath(PathAddSeparator(CurrentDirectory), P)
+      else
+        Result := P;
+    end
+    else
+      Result := P;
   end;
 const
   TemplateSubDir = 'experts\repository\ExceptionDialog\Templates\';
@@ -173,9 +200,9 @@ begin
 
   if Params.FileName <> '' then
   begin
-    FormFileName := ChangeFileExt(Params.FileName, FormExtension);
-    HeaderFileName := ChangeFileExt(Params.FileName, HeaderExtension);
-    SourceFileName := ChangeFileExt(Params.FileName, SourceExtension);
+    FormFileName := PathGetAbsolutePath(ChangeFileExt(Params.FileName, FormExtension));
+    HeaderFileName := PathGetAbsolutePath(ChangeFileExt(Params.FileName, HeaderExtension));
+    SourceFileName := PathGetAbsolutePath(ChangeFileExt(Params.FileName, SourceExtension));
   end
   else
   begin

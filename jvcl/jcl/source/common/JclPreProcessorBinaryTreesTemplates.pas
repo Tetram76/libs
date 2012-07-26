@@ -20,8 +20,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3445                                                                     $ }
+{ Last modified: $Date:: 2012-02-20 19:48:39 +0100 (lun., 20 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3737                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -50,8 +50,10 @@ type
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
   end;
 
-  (* JCLBINARYTREEINT(NODETYPENAME, SELFCLASSNAME, ANCESTORCLASSNAME, COLLECTIONINTERFACENAME,
-                      TREEINTERFACENAME, STDITRINTERFACENAME, TREEITRINTERFACENAME, INTERFACEADDITIONAL,
+  (* JCLBINARYTREEINT(NODETYPENAME, SELFCLASSNAME, ANCESTORCLASSNAME, BASECONTAINERINTERFACENAME,
+                      FLATCONTAINERINTERFACENAME, COLLECTIONINTERFACENAME,
+                      TREEINTERFACENAME, STDITRINTERFACENAME, TREEITRINTERFACENAME,
+                      EQUALITYCOMPARERINTERFACENAME, COMPARERINTERFACENAME, INTERFACEADDITIONAL,
                       SECTIONADDITIONAL, CONSTRUCTORPARAMETERS, COLLECTIONFLAGS, CONSTKEYWORD,
                       PARAMETERNAME, TYPENAME) *)
   TJclBinaryTreeIntParams = class(TJclCollectionInterfaceParams)
@@ -60,7 +62,6 @@ type
   protected
     // function CodeUnit: string; override;
     function GetConstructorDeclarations: string;
-    function GetInterfaceAdditional: string; override;
   public
     function AliasAttributeIDs: TAllTypeAttributeIDs; override;
     procedure ResetDefault(Value: Boolean); override;
@@ -68,8 +69,10 @@ type
     property NodeTypeName: string index taBinaryTreeNodeTypeName read GetTypeAttribute write SetTypeAttribute stored False;
     property SelfClassName: string index taBinaryTreeClassName read GetTypeAttribute write SetTypeAttribute stored IsTypeAttributeStored;
     property AncestorClassName;
+    property BaseContainerInterfaceName: string index taContainerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
+    property FlatContainerInterfaceName: string index taFlatContainerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property CollectionInterfaceName: string index taCollectionInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
-    property CompareFunctionName: string index taCompareFunctionName read GetTypeAttribute write SetTypeAttribute stored False;
+    property CompareFunctionTypeName: string index taCompareFunctionTypeName read GetTypeAttribute write SetTypeAttribute stored False;
     property EqualityComparerInterfaceName: string index taEqualityComparerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property ComparerInterfaceName: string index taComparerInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property TreeInterfaceName: string index taTreeInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
@@ -88,7 +91,7 @@ type
   (* JCLBINARYTREEITRINT(BASEITRCLASSNAME, PREORDERITRCLASSNAME, INORDERITRCLASSNAME, POSTORDERITRCLASSNAME,
                          STDITRINTERFACENAME, STDTREEITRINTERFACENAME, BINTREEITRINTERFACENAME,
                          COLLECTIONINTERFACENAME, EQUALITYCOMPARERINTERFACENAME, NODETYPENAME,
-                         CONSTKEYWORD, PARAMETERNAME, TYPENAME, GETTERNAME, SETTERNAME) *)
+                         CONSTKEYWORD, PARAMETERNAME, TYPENAME, GETTERFUNCTIONNAME, SETTERPROCEDURENAME) *)
   TJclBinaryTreeItrIntParams = class(TJclContainerInterfaceParams)
   protected
     // function CodeUnit: string; override;
@@ -108,15 +111,15 @@ type
     property ConstKeyword: string index taConstKeyword read GetTypeAttribute write SetTypeAttribute stored False;
     property ParameterName: string index taParameterName read GetTypeAttribute write SetTypeAttribute stored False;
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
-    property GetterName: string index taGetterName read GetTypeAttribute write SetTypeAttribute stored False;
-    property SetterName: string index taSetterName read GetTypeAttribute write SetTypeAttribute stored False;
+    property GetterFunctionName: string index taGetterFunctionName read GetTypeAttribute write SetTypeAttribute stored False;
+    property SetterProcedureName: string index taSetterProcedureName read GetTypeAttribute write SetTypeAttribute stored False;
   end;
 
   (* JCLBINARYTREEIMP(SELFCLASSNAME, NODETYPENAME, PREORDERITRCLASSNAME, INORDERITRCLASSNAME,
                       POSTORDERITRCLASSNAME, COLLECTIONINTERFACENAME, STDITRINTERFACENAME,
                       TREEITRINTERFACENAME, CONSTRUCTORPARAMETERS, CONSTRUCTORASSIGNMENTS,
-                      OWNERSHIPPARAMETER, CONSTKEYWORD, PARAMETERNAME, TYPENAME, DEFAULTVALUE,
-                      RELEASERNAME) *)
+                      OWNERSHIPPARAMETERNAME, CONSTKEYWORD, PARAMETERNAME, TYPENAME, DEFAULTVALUE,
+                      RELEASERFUNCTIONNAME) *)
   TJclBinaryTreeImpParams = class(TJclCollectionImplementationParams)
   private
     FConstructorAssignments: string;
@@ -140,12 +143,12 @@ type
     property TreeItrInterfaceName: string index taTreeIteratorInterfaceName read GetTypeAttribute write SetTypeAttribute stored False;
     property ConstructorDeclarations: string read GetConstructorDeclarations write FConstructorDeclarations;
     property ConstructorAssignments: string read GetConstructorAssignments write FConstructorAssignments;
-    property CompareFunctionName: string index taCompareFunctionName read GetTypeAttribute write SetTypeAttribute stored False;
+    property CompareFunctionTypeName: string index taCompareFunctionTypeName read GetTypeAttribute write SetTypeAttribute stored False;
     property OwnershipDeclaration;
-    property OwnershipParameter: string index taOwnershipParameter read GetTypeAttribute write SetTypeAttribute stored False;
+    property OwnershipParameterName: string index taOwnershipParameterName read GetTypeAttribute write SetTypeAttribute stored False;
     property ConstKeyword: string index taConstKeyword read GetTypeAttribute write SetTypeAttribute stored False;
     property ParameterName: string index taParameterName read GetTypeAttribute write SetTypeAttribute stored False;
-    property ReleaserName: string index taReleaserName read GetTypeAttribute write SetTypeAttribute stored False;
+    property ReleaserFunctionName: string index taReleaserFunctionName read GetTypeAttribute write SetTypeAttribute stored False;
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
     property DefaultValue: string index taDefaultValue read GetTypeAttribute write SetTypeAttribute stored False;
     property MacroFooter;
@@ -154,7 +157,7 @@ type
   (* JCLBINARYTREEITRIMP(BASEITRCLASSNAME, PREORDERITRCLASSNAME, INORDERITRCLASSNAME, POSTORDERITRCLASSNAME,
                          STDITRINTERFACENAME, COLLECTIONINTERFACENAME, EQUALITYCOMPARERINTERFACENAME,
                          NODETYPENAME, CONSTKEYWORD, PARAMETERNAME, TYPENAME, DEFAULTVALUE,
-                         GETTERNAME, SETTERNAME, RELEASERNAME) *)
+                         GETTERFUNCTIONNAME, SETTERPROCEDURENAME, RELEASERFUNCTIONNAME) *)
   TJclBinaryTreeItrImpParams = class(TJclContainerImplementationParams)
   protected
     // function CodeUnit: string; override;
@@ -171,17 +174,17 @@ type
     property ParameterName: string index taParameterName read GetTypeAttribute write SetTypeAttribute stored False;
     property TypeName: string index taTypeName read GetTypeAttribute write SetTypeAttribute stored False;
     property DefaultValue: string index taDefaultValue read GetTypeAttribute write SetTypeAttribute stored False;
-    property GetterName: string index taGetterName read GetTypeAttribute write SetTypeAttribute stored False;
-    property SetterName: string index taSetterName read GetTypeAttribute write SetTypeAttribute stored False;
-    property ReleaserName: string index taReleaserName read GetTypeAttribute write SetTypeAttribute stored False;
+    property GetterFunctionName: string index taGetterFunctionName read GetTypeAttribute write SetTypeAttribute stored False;
+    property SetterProcedureName: string index taSetterProcedureName read GetTypeAttribute write SetTypeAttribute stored False;
+    property ReleaserFunctionName: string index taReleaserFunctionName read GetTypeAttribute write SetTypeAttribute stored False;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorBinaryTreesTemplates.pas $';
-    Revision: '$Revision: 3445 $';
-    Date: '$Date: 2010-12-23 13:19:17 +0100 (jeu., 23 déc. 2010) $';
+    Revision: '$Revision: 3737 $';
+    Date: '$Date: 2012-02-20 19:48:39 +0100 (lun., 20 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -191,7 +194,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclStrings;
 
 procedure RegisterJclContainers;
@@ -221,14 +228,7 @@ function TJclBinaryTreeIntParams.GetConstructorDeclarations: string;
 begin
   Result := FConstructorDeclarations;
   if (Result = '') and TypeInfo.KnownType then
-    Result := 'ACompare: ' + CompareFunctionName;
-end;
-
-function TJclBinaryTreeIntParams.GetInterfaceAdditional: string;
-begin
-  Result := FInterfaceAdditional;
-  if (Result = '') and TypeInfo.KnownType then
-    Result := Format('%s %s, %s,', [inherited GetInterfaceAdditional, EqualityComparerInterfaceName, ComparerInterfaceName]);
+    Result := 'ACompare: ' + CompareFunctionTypeName;
 end;
 
 procedure TJclBinaryTreeIntParams.ResetDefault(Value: Boolean);
@@ -260,7 +260,7 @@ function TJclBinaryTreeImpParams.GetConstructorDeclarations: string;
 begin
   Result := FConstructorDeclarations;
   if (Result = '') and TypeInfo.KnownType then
-    Result := 'ACompare: ' + CompareFunctionName;
+    Result := 'ACompare: ' + CompareFunctionTypeName;
 end;
 
 function TJclBinaryTreeImpParams.GetConstructorParameters: string;

@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date: 2008-08-11 14:23:08 +0200 (lun., 11 août 2008) $                                                      }
+{ Last modified: $Date: 2011-12-27 18:50:45 +0100 (mar., 27 déc. 2011) $                                                      }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -30,9 +30,10 @@ unit PeResView;
 interface
 
 uses
+  SHDocVw_TLB,
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   JclPeImage, PeResource, JclLogic, JclGraphUtils, ComCtrls, StdCtrls,
-  ExtCtrls, Grids, ToolWin, ActnList, OleCtrls, Menus, SHDocVw_TLB;
+  ExtCtrls, Grids, ToolWin, ActnList, OleCtrls, Menus;
 
 type
   TPeResViewChild = class(TForm)

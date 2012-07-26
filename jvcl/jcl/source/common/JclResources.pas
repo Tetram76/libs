@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011)                         $ }
-{ Revision:      $Rev:: 3587                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2012-02-12 08:43:23 +0100 (dim., 12 févr. 2012)                        $ }
+{ Revision:      $Rev:: 3717                                                                     $ }
+{ Author:        $Author:: jgsoft                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1128,7 +1128,7 @@ resourcestring
   RsCompressionCramFSName            = 'CramFS archive';
   RsCompressionCramFSExtensions      = '*.cramfs';
   RsCompressionDuplicate             = 'The file %s already exists in the archive';
-  RsCompressionReplaceError          = 'At least one compression volumes could not be replaced after an archive out-of-place update';
+  RsCompressionReplaceError          = 'At least one compression volume could not be replaced after an archive out-of-place update';
 
 //=== JclConsole =============================================================
 resourcestring
@@ -1464,12 +1464,17 @@ resourcestring
   RsErrRecursionLimit = 'Recursion limit';
   RsErrNullWsLimit   = 'Null WS limit';
   RsErrBadNewLine    = 'Bad new line';
+  RsErrBadOffset     = 'Bad offset';
+  RsErrShortUTF8     = 'Short UTF8';
+  RsErrRecurseLoop   = 'Recurse loop';
+  RsErrJITStackLimit = 'JIT stack limit';
   RsErrLibNotLoaded  = 'PCRE library not loaded';
   RsErrMemFuncNotSet = 'PCRE memory management functions not set';
-  RsErrStudyFailed   = 'Study failed'; 
+  RsErrStudyFailed   = 'Study failed';
   RsErrCalloutError  = 'Unhandled exception in callout';
   RsErrUnknownError  = 'Unknown error';
   RsErrNoUTF8Support = 'No UTF8 support in this version of PCRE';
+  RsErrNoJITSupport  = 'No JIT support in this version of PCRE';
 
 //=== JclPeImage =============================================================
 resourcestring
@@ -2031,8 +2036,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3587 $';
-    Date: '$Date: 2011-08-18 07:42:53 +0200 (jeu., 18 août 2011) $';
+    Revision: '$Revision: 3717 $';
+    Date: '$Date: 2012-02-12 08:43:23 +0100 (dim., 12 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

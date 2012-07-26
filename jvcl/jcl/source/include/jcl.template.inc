@@ -36,7 +36,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 
-// $Id: jcl.template.inc 3362 2010-10-05 13:24:05Z outchy $
+// $Id: jcl.template.inc 3696 2012-01-21 17:22:58Z outchy $
 
 // Math precision selection, mutually exclusive
 // FPC does not support EXTENDED when targetting x86_64, MATH_DOUBLE_PRECISION is the default in this situation
@@ -81,10 +81,12 @@
 //   static link: PCRE_STATICLINK
 //   static dll import: PCRE_LINKDLL
 //   dynamic dll import: PCRE_LINKONREQUEST
+//   RTL's RegularExpressionsAPI: PCRE_RTL
 
 {.$DEFINE PCRE_STATICLINK}
 {.$DEFINE PCRE_LINKDLL}
 {.$DEFINE PCRE_LINKONREQUEST} // default
+{.$DEFINE PCRE_RTL} // DXE and newer
 
 
 // BZIP2 options, mutually exclusive
@@ -99,6 +101,7 @@
 {.$DEFINE ZLIB_STATICLINK} // default
 {.$DEFINE ZLIB_LINKDLL}
 {.$DEFINE ZLIB_LINKONREQUEST}
+{.$DEFINE ZLIB_RTL} // DXE2 and newer only
 
 
 // Unicode options

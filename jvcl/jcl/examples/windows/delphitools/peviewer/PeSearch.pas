@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date: 2010-10-25 11:37:19 +0200 (lun., 25 oct. 2010) $                                                      }
+{ Last modified: $Date: 2011-12-27 18:50:45 +0100 (mar., 27 déc. 2011) $                                                      }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -136,7 +136,11 @@ begin
   FSearchThread.OnProcessFile := SearchProcessFile;
   UpdateButtons;
   ClearResults;
+  {$IFDEF RTL230_UP}
+  FSearchThread.Start;
+  {$ELSE ~RTL230_UP}
   FSearchThread.Resume;
+  {$ENDIF ~RTL230_UP}
 end;
 
 procedure TPeSearchChild.StopSearch;

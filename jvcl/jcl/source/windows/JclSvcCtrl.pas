@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009)                          $ }
-{ Revision:      $Rev:: 2921                                                                     $ }
+{ Last modified: $Date:: 2011-12-30 00:12:19 +0100 (ven., 30 déc. 2011)                          $ }
+{ Revision:      $Rev:: 3662                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -48,11 +48,19 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.Windows, System.Classes, System.SysUtils, System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
   Windows, Classes, SysUtils, Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF FPC}
   JwaWinNT, JwaWinSvc,
   {$ELSE ~FPC}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.WinSvc,
+  {$ELSE ~HAS_UNITSCOPE}
   WinSvc,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$ENDIF ~FPC}
   JclBase, JclSysUtils;
 
@@ -359,8 +367,8 @@ function StartServiceByName(const AServer,AServiceName: String):Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclSvcCtrl.pas $';
-    Revision: '$Revision: 2921 $';
-    Date: '$Date: 2009-08-09 15:08:29 +0200 (dim., 09 août 2009) $';
+    Revision: '$Revision: 3662 $';
+    Date: '$Date: 2011-12-30 00:12:19 +0100 (ven., 30 déc. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -373,9 +381,17 @@ uses
   {$IFDEF FPC}
   JwaRegStr,
   {$ELSE ~FPC}
+  {$IFDEF HAS_UNITSCOPE}
+  Winapi.RegStr,
+  {$ELSE ~HAS_UNITSCOPE}
   RegStr,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$ENDIF ~FPC}
+  {$IFDEF HAS_UNITSCOPE}
+  System.Math,
+  {$ELSE ~HAS_UNITSCOPE}
   Math,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclRegistry, JclStrings, JclSysInfo;
 
 const
@@ -644,7 +660,7 @@ procedure TJclNtService.Refresh;
 var
   Ret: BOOL;
   BytesNeeded: DWORD;
-  PQrySvcCnfg: PQueryServiceConfig;
+  PQrySvcCnfg: {$IFDEF RTL230_UP}LPQUERY_SERVICE_CONFIG{$ELSE}PQueryServiceConfig{$ENDIF RTL230_UP};
 begin
   Open(SERVICE_QUERY_STATUS or SERVICE_QUERY_CONFIG);
   try
@@ -673,7 +689,7 @@ procedure TJclNtService.Commit;
 var
   Ret: BOOL;
   BytesNeeded: DWORD;
-  PQrySvcCnfg: PQueryServiceConfig;
+  PQrySvcCnfg: {$IFDEF RTL230_UP}LPQUERY_SERVICE_CONFIG{$ELSE}PQueryServiceConfig{$ENDIF RTL230_UP};
 begin
  if not FCommitNeeded then
    Exit;
@@ -1313,7 +1329,7 @@ begin
     RaiseLastOsError;
   CloseServiceHandle(Svc);
 
-  if (Description <> '') and (IsWin2K or IsWinXP) then
+  if (Description <> '') and (GetWindowsVersion >= wvWin2000) then
     RegWriteString(HKEY_LOCAL_MACHINE, '\' + REGSTR_PATH_SERVICES + '\' + ServiceName,
       'Description', Description);
 

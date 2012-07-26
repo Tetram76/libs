@@ -38,8 +38,8 @@
 {                                                                              }
 { **************************************************************************** }
 {                                                                              }
-{ Last modified: $Date:: 2011-01-03 11:26:39 +0100 (lun., 03 janv. 2011)     $ }
-{ Revision:      $Rev:: 3454                                                 $ }
+{ Last modified: $Date:: 2012-02-24 12:09:51 +0100 (ven., 24 févr. 2012)    $ }
+{ Revision:      $Rev:: 3744                                                 $ }
 { Author:        $Author:: outchy                                            $ }
 {                                                                              }
 { **************************************************************************** }
@@ -51,7 +51,11 @@ unit JclPreProcessorParser;
 interface
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.SysUtils, System.Classes,
+  {$ELSE ~HAS_UNITSCOPE}
   SysUtils, Classes,
+  {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -208,8 +212,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclPreProcessorParser.pas $';
-    Revision: '$Revision: 3454 $';
-    Date: '$Date: 2011-01-03 11:26:39 +0100 (lun., 03 janv. 2011) $';
+    Revision: '$Revision: 3744 $';
+    Date: '$Date: 2012-02-24 12:09:51 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -219,7 +223,11 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   TypInfo,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclStrings, JclStreams, JclSysUtils, JclArrayLists, JclHashMaps, JclStacks;
   
 function AllWhiteSpace(P: PChar; KeepTabAndSpaces: Boolean): Boolean;
@@ -252,6 +260,7 @@ var
   Comment: Boolean;
   ParenthesisCount: Integer;
   MacroTextLen: Integer;
+  MacroParenthesis, MacroBracket: Boolean;
 begin
   MacroTextLen := Length(MacroText);
   I := 1;
@@ -267,7 +276,9 @@ begin
   if J <= MacroTextLen then
   begin
     SetLength(ParamNames, 0);
-    if MacroText[J] = '(' then
+    MacroParenthesis := MacroText[J] = '(';
+    MacroBracket := MacroText[J] = '[';
+    if MacroParenthesis or MacroBracket then
     begin
       Inc(J);
       if ParamDeclaration then
@@ -283,15 +294,26 @@ begin
           while (I <= MacroTextLen) and CharIsSpace(MacroText[I]) do
             Inc(I);
           if (I <= MacroTextLen) then
-            case MacroText[I] of
-              ',':
-                Inc(I);
-              ')': ;
-            else
-              raise EPppParserError.CreateFmt('invalid parameter declaration in macro "%s"', [MacroText]);
-            end;
+          begin
+            if MacroParenthesis then
+              case MacroText[I] of
+                ',':
+                  Inc(I);
+                ')': ;
+              else
+                raise EPppParserError.CreateFmt('invalid parameter declaration in macro "%s"', [MacroText]);
+              end;
+            if MacroBracket then
+              case MacroText[I] of
+                '|':
+                  Inc(I);
+                ']': ;
+              else
+                raise EPppParserError.CreateFmt('invalid parameter declaration in macro "%s"', [MacroText]);
+              end;
+          end;
           J := I;
-        until (J > MacroTextLen) or (MacroText[J] = ')');
+        until (J > MacroTextLen) or (MacroParenthesis and (MacroText[J] = ')')) or (MacroBracket and (MacroText[J] = ']'));
       end
       else
       begin
@@ -310,16 +332,22 @@ begin
                   Inc(ParenthesisCount);
               ')':
                 begin
-                  if (not Comment) and (ParenthesisCount = 0) then
+                  if MacroParenthesis and (not Comment) and (ParenthesisCount = 0) then
                     Break;
                   if not Comment then
                     Dec(ParenthesisCount);
                 end;
+              ']':
+                if MacroBracket and (not Comment) and (ParenthesisCount = 0) then
+                  Break;
               NativeBackslash:
                 if (not Comment) and (ParenthesisCount = 0) and (I < MacroTextLen) and (MacroText[i + 1] = NativeComma) then
                   Inc(I);
               NativeComma:
-                if (not Comment) and (ParenthesisCount = 0) then
+                if MacroParenthesis and (not Comment) and (ParenthesisCount = 0) then
+                  Break;
+              '|':
+                if MacroBracket and (not Comment) and (ParenthesisCount = 0) then
                   Break;
             end;
             Inc(I);
@@ -327,20 +355,36 @@ begin
           SetLength(ParamNames, Length(ParamNames) + 1);
           ParamNames[High(ParamNames)] := Copy(MacroText, J, I - J);
           StrReplace(ParamNames[High(ParamNames)], '\,', ',', [rfReplaceAll]);
-          if (I < MacroTextLen) and (MacroText[I] = ')') then
+          if MacroParenthesis then
           begin
-            J := I;
-            Break;
+            if (I < MacroTextLen) and (MacroText[I] = ')') then
+            begin
+              J := I;
+              Break;
+            end;
+            if (I < MacroTextLen) and (MacroText[I] = ',') then
+              Inc(I);
           end;
-          if (I < MacroTextLen) and (MacroText[I] = ',') then
-            Inc(I);
+          if MacroBracket then
+          begin
+            if (I < MacroTextLen) and (MacroText[I] = ']') then
+            begin
+              J := I;
+              Break;
+            end;
+            if (I < MacroTextLen) and (MacroText[I] = '|') then
+              Inc(I);
+          end;
           J := I;
         until J > MacroTextLen;
       end;
       if J <= MacroTextLen then
       begin
-        if MacroText[J] = ')' then
+        if MacroParenthesis and (MacroText[J] = ')') then
           Inc(J) // skip )
+        else
+        if MacroBracket and (MacroText[J] = ']') then
+          Inc(J) // skip ]
         else
           raise EPppParserError.CreateFmt('Unterminated list of arguments for macro "%s"', [MacroText]);
       end;

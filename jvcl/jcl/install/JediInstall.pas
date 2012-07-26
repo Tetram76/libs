@@ -20,9 +20,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-10-20 21:02:31 +0200 (mer., 20 oct. 2010)                          $ }
-{ Revision:      $Rev:: 3379                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2012-06-27 15:09:53 +0200 (mer., 27 juin 2012)                          $ }
+{ Revision:      $Rev:: 3805                                                                     $ }
+{ Author:        $Author:: obones                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -184,6 +184,8 @@ type
     procedure SetProgress(Value: Integer);
     function GetAutoAcceptDialogs: TDialogTypes;
     procedure SetAutoAcceptDialogs(Value: TDialogTypes);
+    function GetAutoAcceptMPL: Boolean;
+    procedure SetAutoAcceptMPL(Value: Boolean);
     function GetAutoCloseOnFailure: Boolean;
     procedure SetAutoCloseOnFailure(Value: Boolean);
     function GetAutoCloseOnSuccess: Boolean;
@@ -192,13 +194,26 @@ type
     procedure SetAutoInstall(Value: Boolean);
     function GetAutoUninstall: Boolean;
     procedure SetAutoUninstall(Value: Boolean);
+    function GetContinueOnTargetError: Boolean;
+    procedure SetContinueOnTargetError(Value: Boolean);
+    function GetXMLResultFileName: string;
+    procedure SetXMLResultFileName(const Value: string);
+    function GetDeletePreviousLogFiles: Boolean;
+    procedure SetDeletePreviousLogFiles(Value: Boolean);
+    function GetIncludeLogFilesInXML: Boolean;
+    procedure SetIncludeLogFilesInXML(Value: Boolean);
     procedure Execute;
 
     property AutoAcceptDialogs: TDialogTypes read GetAutoAcceptDialogs write SetAutoAcceptDialogs;
+    property AutoAcceptMPL: Boolean read GetAutoAcceptMPL write SetAutoAcceptMPL;
     property AutoCloseOnFailure: Boolean read GetAutoCloseOnFailure write SetAutoCloseOnFailure;
     property AutoCloseOnSuccess: Boolean read GetAutoCloseOnSuccess write SetAutoCloseOnSuccess;
     property AutoInstall: Boolean read GetAutoInstall write SetAutoInstall;
     property AutoUninstall: Boolean read GetAutoUninstall write SetAutoUninstall;
+    property ContinueOnTargetError: Boolean read GetContinueOnTargetError write SetContinueOnTargetError;
+    property XMLResultFileName: string read GetXMLResultFileName write SetXMLResultFileName;  
+    property DeletePreviousLogFiles: Boolean read GetDeletePreviousLogFiles write SetDeletePreviousLogFiles;
+    property IncludeLogFilesInXML: Boolean read GetIncludeLogFilesInXML write SetIncludeLogFilesInXML;
     property PageCount: Integer read GetPageCount;
     property Pages[Index: Integer]: IJediPage read GetPage;
     property Status: string read GetStatus write SetStatus;
@@ -396,10 +411,15 @@ begin
     if ParamPos('AcceptErrors') >= 1 then
       Include(AutoAcceptDialogs, dtError);
     FInstallGUI.AutoAcceptDialogs := AutoAcceptDialogs;
+    FInstallGUI.AutoAcceptMPL := ParamPos('AutoAcceptMPL') >= 1; 
     FInstallGUI.AutoCloseOnFailure := ParamPos('CloseOnFailure') >= 1;
     FInstallGUI.AutoCloseOnSuccess := ParamPos('CloseOnSuccess') >= 1;
     FInstallGUI.AutoInstall := ParamPos('Install') >= 1;
     FInstallGUI.AutoUninstall := ParamPos('Uninstall') >= 1;
+    FInstallGUI.DeletePreviousLogFiles := ParamPos('DeletePreviousLogFiles') >= 1;
+    FInstallGUI.ContinueOnTargetError := ParamPos('ContinueOnTargetError') >= 1;
+    FInstallGUI.XMLResultFileName := ParamValue('XMLResult');
+    FInstallGUI.IncludeLogFilesInXML := ParamPos('IncludeLogFilesInXML') >= 1;
   end;
   Result := FInstallGUI;
 end;

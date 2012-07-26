@@ -36,9 +36,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-08-14 10:56:32 +0200 (dim., 14 août 2011)                        $ }
-{ Revision:      $Rev:: 3582                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2012-04-30 09:54:26 +0200 (lun., 30 avr. 2012)                          $ }
+{ Revision:      $Rev:: 3785                                                                     $ }
+{ Author:        $Author:: jgsoft                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -53,17 +53,34 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNIT_LIBC}
+  Libc,
+  {$ENDIF HAS_UNIT_LIBC}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows, Sevenzip, Winapi.ActiveX,
+  {$ENDIF MSWINDOWS}
+  System.Types,
+  System.SysUtils, System.Classes, System.Contnrs,
+  {$IFDEF ZLIB_RTL}
+  System.ZLib,
+  {$ENDIF ZLIB_RTL}
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows, Sevenzip, ActiveX,
   {$ENDIF MSWINDOWS}
   Types,
-  {$IFDEF HAS_UNIT_LIBC}
-  Libc,
-  {$ENDIF HAS_UNIT_LIBC}
-  JclWideStrings,
   SysUtils, Classes, Contnrs,
-  zlibh, bzip2,
-  JclBase, JclStreams;
+  {$IFDEF ZLIB_RTL}
+  ZLib,
+  {$ENDIF ZLIB_RTL}
+  {$ENDIF ~HAS_UNITSCOPE}
+  zlibh, bzip2, JclWideStrings, JclBase, JclStreams;
+
+{$IFDEF RTL230_UP}
+{$HPPEMIT '// To avoid ambiguity with System::Zlib::z_stream_s we force using ours'}
+{$HPPEMIT '#define z_stream_s Zlibh::z_stream_s'}
+{$ENDIF RTL230_UP}
 
 {**************************************************************************************************
   Class hierarchy
@@ -275,6 +292,19 @@ type
     property CompressionLevel: Integer read FCompressionLevel write SetCompressionLevel;
   end;
 
+{$IFDEF ZLIB_RTL}
+const
+  DEF_WBITS = 15;
+  {$EXTERNALSYM DEF_WBITS}
+  DEF_MEM_LEVEL = 8;
+  {$EXTERNALSYM DEF_MEM_LEVEL}
+
+type
+  PBytef = PByte;
+  {$EXTERNALSYM PBytef}
+{$ENDIF ZLIB_RTL}
+
+type
   TJclZLibDecompressStream = class(TJclDecompressStream)
   private
     FWindowBits: Integer;
@@ -734,7 +764,7 @@ type
   TJclStreamAccess = (saCreate, saReadOnly, saReadOnlyDenyNone, saWriteOnly, saReadWrite);
 
   { TJclCompressionArchive is not ref-counted }
-  TJclCompressionArchive = class(TObject, IInterface)
+  TJclCompressionArchive = class(TInterfacedObject, IInterface)
   private
     FOnProgress: TJclCompressionProgressEvent;
     FOnRatio: TJclCompressionRatioEvent;
@@ -747,6 +777,7 @@ type
     FVolumeFileNameMask: TFileName;
     FProgressMax: Int64;
     FCancelCurrentOperation: Boolean;
+    FCurrentItemIndex: Integer;
     function GetItemCount: Integer;
     function GetItem(Index: Integer): TJclCompressionItem;
     function GetVolumeCount: Integer;
@@ -769,13 +800,13 @@ type
     function GetSupportsNestedArchive: Boolean; virtual;
   public
     { IInterface }
-    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
+    // function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
     function _AddRef: Integer; stdcall;
     function _Release: Integer; stdcall;
   public
     class function MultipleItemContainer: Boolean; virtual;
     class function VolumeAccess: TJclStreamAccess; virtual;
-    class function ItemAccess: TJclStreamAccess; virtual;
+    function ItemAccess: TJclStreamAccess; virtual;
     class function ArchiveExtensions: string; virtual;
     class function ArchiveName: string; virtual;
     class function ArchiveSubExtensions: string; virtual;
@@ -816,6 +847,7 @@ type
     property VolumeFileNameMask: TFileName read FVolumeFileNameMask;
     property VolumeIndexOffset: Integer read FVolumeIndexOffset write FVolumeIndexOffset;
 
+    property CurrentItemIndex: Integer read FCurrentItemIndex; // valid during OnProgress
     property OnProgress: TJclCompressionProgressEvent read FOnProgress write FOnProgress;
     property OnRatio: TJclCompressionRatioEvent read FOnRatio write FOnRatio;
 
@@ -973,7 +1005,7 @@ type
     function AddFileCheckDuplicate(NewItem: TJclCompressionItem): Integer;
   public
     class function VolumeAccess: TJclStreamAccess; override;
-    class function ItemAccess: TJclStreamAccess; override;
+    function ItemAccess: TJclStreamAccess; override;
 
     destructor Destroy; override;
     
@@ -1022,7 +1054,7 @@ type
       var AOwnsStream: Boolean): Boolean; virtual;
   public
     class function VolumeAccess: TJclStreamAccess; override;
-    class function ItemAccess: TJclStreamAccess; override;
+    function ItemAccess: TJclStreamAccess; override;
 
     procedure ListFiles; virtual; abstract;
     procedure ExtractSelected(const ADestinationDir: string = '';
@@ -1064,7 +1096,7 @@ type
       var AOwnsStream: Boolean): Boolean; virtual;
   public
     class function VolumeAccess: TJclStreamAccess; override;
-    class function ItemAccess: TJclStreamAccess; override;
+    function ItemAccess: TJclStreamAccess; override;
 
     procedure ListFiles; virtual; abstract;
     procedure ExtractSelected(const ADestinationDir: string = '';
@@ -1085,7 +1117,7 @@ type
 
   // called when tmp volumes will replace volumes after out-of-place update
   TJclCompressionReplaceEvent = function (Sender: TObject; const SrcFileName, DestFileName: TFileName;
-    var SrcStream, DestStream: TStream; var OwnsSrcStream, OwnsDestStream: Boolean): Boolean;
+    var SrcStream, DestStream: TStream; var OwnsSrcStream, OwnsDestStream: Boolean): Boolean of object;
 
   // ancestor class for all archives that update files out-of-place (by creating a copy of the volumes)
   TJclOutOfPlaceUpdateArchive = class(TJclUpdateArchive, IInterface)
@@ -2163,8 +2195,8 @@ function Create7zFile(const SourceFile, DestinationFile: TFileName; VolumeSize: 
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompression.pas $';
-    Revision: '$Revision: 3582 $';
-    Date: '$Date: 2011-08-14 10:56:32 +0200 (dim., 14 août 2011) $';
+    Revision: '$Revision: 3785 $';
+    Date: '$Date: 2012-04-30 09:54:26 +0200 (lun., 30 avr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2614,7 +2646,7 @@ destructor TJclZLibDecompressStream.Destroy;
 begin
   if FInflateInitialized then
   begin
-    FStream.Seek(-ZLibRecord.avail_in, soFromCurrent);
+    FStream.Seek(-ZLibRecord.avail_in, soCurrent);
     ZLibCheck(inflateEnd(ZLibRecord));
   end;
 
@@ -3061,7 +3093,7 @@ begin
   begin
     StartPos := FStream.Position;
     try
-      FStream.Seek(-SizeOf(AFooter), soFromEnd);
+      FStream.Seek(-SizeOf(AFooter), soEnd);
       AFooter.DataCRC32 := 0;
       AFooter.DataSize := 0;
       FStream.ReadBuffer(AFooter, SizeOf(AFooter));
@@ -3086,7 +3118,7 @@ begin
   begin
     StartPos := FStream.Position;
     try
-      FStream.Seek(-SizeOf(AFooter), soFromEnd);
+      FStream.Seek(-SizeOf(AFooter), soEnd);
       AFooter.DataSize := 0;
       AFooter.DataCRC32 := 0;
       FStream.ReadBuffer(AFooter, SizeOf(AFooter));
@@ -3368,7 +3400,7 @@ destructor TJclBZIP2DecompressionStream.Destroy;
 begin
   if FInflateInitialized then
   begin
-    FStream.Seek(-BZLibRecord.avail_in, soFromCurrent);
+    FStream.Seek(-BZLibRecord.avail_in, soCurrent);
     BZIP2LibCheck(BZ2_bzDecompressEnd(BZLibRecord));
   end;
 
@@ -4143,8 +4175,14 @@ begin
   CheckSetProperty(ipStream);
   ReleaseStream;
   FStream := Value;
-  Include(FModifiedProperties, ipStream);
-  Include(FValidProperties, ipStream);
+  if Value <> nil then begin
+    Include(FModifiedProperties, ipStream);
+    Include(FValidProperties, ipStream);
+  end
+  else begin
+    Exclude(FModifiedProperties, ipStream);
+    Exclude(FValidProperties, ipStream);
+  end;
 end;
 
 procedure TJclCompressionItem.SetUser(const Value: WideString);
@@ -4856,7 +4894,7 @@ begin
   Result := OpenFileStream(FileName, VolumeAccess);
 end;
 
-class function TJclCompressionArchive.ItemAccess: TJclStreamAccess;
+function TJclCompressionArchive.ItemAccess: TJclStreamAccess;
 begin
   Result := saReadOnly;
 end;
@@ -5010,14 +5048,6 @@ end;
 function TJclCompressionArchive._Release: Integer;
 begin
   Result := -1;
-end;
-
-function TJclCompressionArchive.QueryInterface(const IID: TGUID; out Obj): HRESULT;
-begin
-  if GetInterface(IID, Obj) then
-    Result := 0
-  else
-    Result := E_NOINTERFACE;
 end;
 
 //=== { TJclCompressItem } ===================================================
@@ -5237,7 +5267,7 @@ begin
   AddFileCheckDuplicate(AItem);
 end;
 
-class function TJclCompressArchive.ItemAccess: TJclStreamAccess;
+function TJclCompressArchive.ItemAccess: TJclStreamAccess;
 begin
   Result := saReadOnly;
 end;
@@ -5295,7 +5325,7 @@ begin
 //  ReleaseVolumes;
 end;
 
-class function TJclDecompressArchive.ItemAccess: TJclStreamAccess;
+function TJclDecompressArchive.ItemAccess: TJclStreamAccess;
 begin
   Result := saCreate;
 end;
@@ -5394,9 +5424,10 @@ begin
   FDuplicateCheck := dcExisting;
 end;
 
-class function TJclUpdateArchive.ItemAccess: TJclStreamAccess;
+function TJclUpdateArchive.ItemAccess: TJclStreamAccess;
 begin
-  Result := saReadWrite;
+  if FDecompressing then Result := saCreate
+    else Result := saReadOnly;
 end;
 
 function TJclUpdateArchive.ValidateExtraction(Index: Integer;
@@ -5412,7 +5443,7 @@ begin
 
   AItem := Items[Index];
 
-  if FileName = '' then
+  if (FileName = '') and not Assigned(AStream) then
   begin
     PackedName := AItem.PackedName;
 
@@ -5494,6 +5525,7 @@ begin
           CopiedSize := StreamCopy(SrcStream, DestStream);
           // reset size
           DestStream.Size := CopiedSize;
+          Handled := True;
         end;
         // identity
         // else
@@ -5540,14 +5572,15 @@ begin
   begin
     AOwnsStream := VolumeFileNameMask <> '';
     AVolume := nil;
-    AFileName := FindUnusedFileName(Format(VolumeFileNameMask, [Index + VolumeIndexOffset]), '.tmp');
+    if VolumeFileNameMask = '' then AFileName := ''
+      else AFileName := FindUnusedFileName(Format(VolumeFileNameMask, [Index + VolumeIndexOffset]), '.tmp');
     if (Index >= 0) and (Index < FVolumes.Count) then
     begin
       AVolume := TJclCompressionVolume(FVolumes.Items[Index]);
       Result := AVolume.TmpStream;
       AOwnsStream := AVolume.OwnsTmpStream;
       AFileName := AVolume.TmpFileName;
-      if AFileName = '' then
+      if (AFileName = '') and (AVolume.FileName <> '') then
         AFileName := FindUnusedFileName(AVolume.FileName, '.tmp');
     end;
 
@@ -5636,8 +5669,12 @@ end;
 
 procedure TJclSevenzipOutStream.NeedStream;
 begin
-  if Assigned(FArchive) and not Assigned(FStream) then
-    FStream := FArchive.Items[FItemIndex].Stream;
+  if Assigned(FArchive) then
+  begin
+    FArchive.FCurrentItemIndex := FItemIndex;
+    if not Assigned(FStream) then
+      FStream := FArchive.Items[FItemIndex].Stream;
+  end;
 end;
 
 procedure TJclSevenzipOutStream.ReleaseStream;
@@ -5663,9 +5700,9 @@ begin
   if Assigned(FStream) then
   begin
     Result := S_OK;
-    // STREAM_SEEK_SET = 0 = soFromBeginning
-    // STREAM_SEEK_CUR = 1 = soFromCurrent
-    // STREAM_SEEK_END = 2 = soFromEnd
+    // STREAM_SEEK_SET = 0 = soBeginning
+    // STREAM_SEEK_CUR = 1 = soCurrent
+    // STREAM_SEEK_END = 2 = soEnd
     NewPos := FStream.Seek(Offset, TSeekOrigin(SeekOrigin));
     if Assigned(NewPosition) then
       NewPosition^ := NewPos;
@@ -5788,8 +5825,12 @@ end;
 
 procedure TJclSevenzipInStream.NeedStream;
 begin
-  if Assigned(FArchive) and not Assigned(FStream) then
-    FStream := FArchive.Items[FItemIndex].Stream;
+  if Assigned(FArchive) then
+  begin
+    FArchive.FCurrentItemIndex := FItemIndex;
+    if not Assigned(FStream) then
+      FStream := FArchive.Items[FItemIndex].Stream;
+  end;
 end;
 
 function TJclSevenzipInStream.Read(Data: Pointer; Size: Cardinal;
@@ -5828,9 +5869,9 @@ begin
 
   if Assigned(FStream) then
   begin
-    // STREAM_SEEK_SET = 0 = soFromBeginning
-    // STREAM_SEEK_CUR = 1 = soFromCurrent
-    // STREAM_SEEK_END = 2 = soFromEnd
+    // STREAM_SEEK_SET = 0 = soBeginning
+    // STREAM_SEEK_CUR = 1 = soCurrent
+    // STREAM_SEEK_END = 2 = soEnd
     NewPos := FStream.Seek(Offset, TSeekOrigin(SeekOrigin));
     if Assigned(NewPosition) then
       NewPosition^ := NewPos;
@@ -7599,6 +7640,7 @@ begin
     FDestinationDir := '';
     FDecompressing := False;
     FExtractingAllIndex := -1;
+    FCurrentItemIndex := -1;
     AExtractCallback := nil;
     // release volumes and other finalizations
     inherited ExtractAll(ADestinationDir, AAutoCreateSubDir);
@@ -7646,6 +7688,7 @@ begin
     FDestinationDir := '';
     FDecompressing := False;
     AExtractCallback := nil;
+    FCurrentItemIndex := -1;
     // release volumes and other finalizations
     inherited ExtractSelected(ADestinationDir, AAutoCreateSubDir);
   end;
@@ -8855,6 +8898,7 @@ begin
     FDestinationDir := '';
     FDecompressing := False;
     FExtractingAllIndex := -1;
+    FCurrentItemIndex := -1;
     AExtractCallback := nil;
     // release volumes and other finalizations
     inherited ExtractAll(ADestinationDir, AAutoCreateSubDir);
@@ -8903,6 +8947,7 @@ begin
     FDestinationDir := '';
     FDecompressing := False;
     AExtractCallback := nil;
+    FCurrentItemIndex := -1;
     // release volumes and other finalizations
     inherited ExtractSelected(ADestinationDir, AAutoCreateSubDir);
   end;

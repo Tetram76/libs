@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2009-09-12 22:04:37 +0200 (sam., 12 sept. 2009)                         $ }
-{ Revision:      $Rev:: 3004                                                                     $ }
+{ Last modified: $Date:: 2012-03-04 22:21:40 +0100 (dim., 04 mars 2012)                          $ }
+{ Revision:      $Rev:: 3761                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,7 +42,11 @@ procedure SetObjectFontToSystemFont(const AObject: TObject; const FontType: TFon
 implementation
 
 uses
+  {$IFDEF HAS_UNITSCOPE}
+  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Graphics, System.TypInfo,
+  {$ELSE ~HAS_UNITSCOPE}
   StdCtrls, ComCtrls, Graphics, TypInfo,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclSysUtils, JclSysInfo;
 
 procedure SetCaptionFont(const AObjectFont: TFont);
@@ -99,7 +103,7 @@ begin
 
   if (FontType = ftAuto) then
   begin
-    if (AObject.ClassType = TMemo) or (AObject.ClassType = TRichEdit) then
+    if (AObject.ClassType = TMemo) {$IFDEF BORLAND}or (AObject.ClassType = TRichEdit){$ENDIF} then
       AFontType := ftContent
     else
       AFontType := ftCaption;

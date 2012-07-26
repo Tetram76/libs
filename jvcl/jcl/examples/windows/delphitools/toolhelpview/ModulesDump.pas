@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date: 2006-05-30 00:02:45 +0200 (mar., 30 mai 2006) $                                                      }
+{ Last modified: $Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $                                                      }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -100,6 +100,10 @@ type
   TProcessData = packed record
     UsageCnt: Word;
     RelocateCnt: Word;
+    {$IFDEF CPU64}
+    //Padding byte to workaround typecast error
+    Padding: DWORD;
+    {$ENDIF CPU64}
   end;
 var
   ML: TStringList;

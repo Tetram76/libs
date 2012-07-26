@@ -19,7 +19,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date: 2006-05-30 00:02:45 +0200 (mar., 30 mai 2006) $                                                      }
+{ Last modified: $Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $                                                      }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -254,7 +254,7 @@ end;
 
 procedure THeapDumpForm.ReadHeapEntry(Item: TListItem);
 var
-  BlockSize, BytesRead: DWORD;
+  BlockSize, BytesRead: {$IFDEF RTL230_UP}NativeUInt{$ELSE}DWORD{$ENDIF};
   Buffer, BufferEnd, P: PChar;
 begin
   with HeapEntryMemo do {if DWORD(Item.SubItems.Objects[2]) <> LF32_FREE then}

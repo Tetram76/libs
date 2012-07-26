@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010)                         $ }
-{ Revision:      $Rev:: 3425                                                                     $ }
+{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
+{ Revision:      $Rev:: 3599                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -55,10 +55,17 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows, Winapi.ActiveX,
+  {$ENDIF MSWINDOWS}
+  System.Classes, System.SysUtils, System.Contnrs,
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows, ActiveX,
   {$ENDIF MSWINDOWS}
   Classes, SysUtils, Contnrs,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase, JclWideStrings,
   mscoree_TLB, mscorlib_TLB;
 
@@ -339,8 +346,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDotNet.pas $';
-    Revision: '$Revision: 3425 $';
-    Date: '$Date: 2010-12-07 17:40:12 +0100 (mar., 07 déc. 2010) $';
+    Revision: '$Revision: 3599 $';
+    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -350,8 +357,11 @@ const
 implementation
 
 uses
-  ComObj,
-  Variants,
+  {$IFDEF HAS_UNITSCOPE}
+  System.Win.ComObj, System.Variants,
+  {$ELSE ~HAS_UNITSCOPE}
+  ComObj, Variants,
+  {$ENDIF ~HAS_UNITSCOPE}
   JclSysUtils, JclResources, JclStrings;
 
 function CompareCLRVersions(const LeftVersion, RightVersion: string): Integer;
@@ -905,7 +915,7 @@ begin
         end;
       until not FindNextFileW(SearchHandle, FindData);
     finally
-      Windows.FindClose(SearchHandle);
+      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.FindClose(SearchHandle);
     end;
   end;
 end;

@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010)                         $ }
-{ Revision:      $Rev:: 3343                                                                     $ }
+{ Last modified: $Date:: 2012-04-19 20:13:33 +0200 (jeu., 19 avr. 2012)                          $ }
+{ Revision:      $Rev:: 3779                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -48,9 +48,12 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  JclBase;
+  JclBase,
+  JclSysUtils;
 
 //DOM-IGNORE-BEGIN
+
+{$IFNDEF PCRE_RTL}
 
 (*************************************************
 *       Perl-Compatible Regular Expressions      *
@@ -150,6 +153,8 @@ const
   {$EXTERNALSYM PCRE_PARTIAL_HARD}
   PCRE_NOTEMPTY_ATSTART = $10000000;
   {$EXTERNALSYM PCRE_NOTEMPTY_ATSTART}
+  PCRE_UCP = $20000000;
+  {$EXTERNALSYM PCRE_UCP}
 
   (* Exec-time and get-time error codes *)
 
@@ -199,6 +204,39 @@ const
   {$EXTERNALSYM PCRE_ERROR_NULLWSLIMIT}
   PCRE_ERROR_BADNEWLINE = -23;
   {$EXTERNALSYM PCRE_ERROR_BADNEWLINE}
+  PCRE_ERROR_BADOFFSET = -24;
+  {$EXTERNALSYM PCRE_ERROR_BADOFFSET}
+  PCRE_ERROR_SHORTUTF8 = -25;
+  {$EXTERNALSYM PCRE_ERROR_SHORTUTF8}
+  PCRE_ERROR_RECURSELOOP = -26;
+  {$EXTERNALSYM PCRE_ERROR_RECURSELOOP}
+  PCRE_ERROR_JITSTACKLIMIT = -27;
+  {$EXTERNALSYM PCRE_ERROR_JITSTACKLIMIT}
+
+  (* Specific error codes for UTF-8 validity checks *)
+
+  PCRE_UTF8_ERR0   =  0;
+  PCRE_UTF8_ERR1   =  1;
+  PCRE_UTF8_ERR2   =  2;
+  PCRE_UTF8_ERR3   =  3;
+  PCRE_UTF8_ERR4   =  4;
+  PCRE_UTF8_ERR5   =  5;
+  PCRE_UTF8_ERR6   =  6;
+  PCRE_UTF8_ERR7   =  7;
+  PCRE_UTF8_ERR8   =  8;
+  PCRE_UTF8_ERR9   =  9;
+  PCRE_UTF8_ERR10  = 10;
+  PCRE_UTF8_ERR11  = 11;
+  PCRE_UTF8_ERR12  = 12;
+  PCRE_UTF8_ERR13  = 13;
+  PCRE_UTF8_ERR14  = 14;
+  PCRE_UTF8_ERR15  = 15;
+  PCRE_UTF8_ERR16  = 16;
+  PCRE_UTF8_ERR17  = 17;
+  PCRE_UTF8_ERR18  = 18;
+  PCRE_UTF8_ERR19  = 19;
+  PCRE_UTF8_ERR20  = 20;
+  PCRE_UTF8_ERR21  = 21;
 
   (* Request types for pcre_fullinfo() *)
 
@@ -234,6 +272,10 @@ const
   {$EXTERNALSYM PCRE_INFO_HASCRORLF}
   PCRE_INFO_MINLENGTH = 15;
   {$EXTERNALSYM PCRE_INFO_MINLENGTH}
+  PCRE_INFO_JIT = 16;
+  {$EXTERNALSYM PCRE_INFO_JIT}
+  PCRE_INFO_JITSIZE = 17;
+  {$EXTERNALSYM PCRE_INFO_JITSIZE}
 
   (* Request types for pcre_config() *)
   PCRE_CONFIG_UTF8 = 0;
@@ -254,6 +296,12 @@ const
   {$EXTERNALSYM PCRE_CONFIG_MATCH_LIMIT_RECURSION}
   PCRE_CONFIG_BSR = 8;
   {$EXTERNALSYM PCRE_CONFIG_BSR}
+  PCRE_CONFIG_JIT = 9;
+  {$EXTERNALSYM PCRE_CONFIG_JIT}
+
+  (* Request types for pcre_study() *)
+
+  PCRE_STUDY_JIT_COMPILE = $0001;
 
   (* Bit flags for the pcre_extra structure *)
 
@@ -267,6 +315,10 @@ const
   {$EXTERNALSYM PCRE_EXTRA_TABLES}
   PCRE_EXTRA_MATCH_LIMIT_RECURSION = $0010;
   {$EXTERNALSYM PCRE_EXTRA_MATCH_LIMIT_RECURSION}
+  PCRE_EXTRA_MARK = $0020;
+  {$EXTERNALSYM PCRE_EXTRA_MARK}
+  PCRE_EXTRA_EXECUTABLE_JIT = $0040;
+  {$EXTERNALSYM PCRE_EXTRA_EXECUTABLE_JIT}
 
 type
   real_pcre = packed record
@@ -283,15 +335,20 @@ type
   TPCRE = real_pcre;
   PPCRE = ^TPCRE;
 
+  real_pcre_jit_stack = packed record
+  end;
+  TPCREJITStack = real_pcre_jit_stack;
+  PPCREJITStack = ^TPCREJITStack;
+
   real_pcre_extra = packed record
-    {options: PAnsiChar;
-    start_bits: array [0..31] of AnsiChar;}
     flags: Cardinal;        (* Bits for which fields are set *)
     study_data: Pointer;    (* Opaque data from pcre_study() *)
     match_limit: Cardinal;  (* Maximum number of calls to match() *)
     callout_data: Pointer;  (* Data passed back in callouts *)
     tables: PAnsiChar;      (* Pointer to character tables *)
     match_limit_recursion: Cardinal; (* Max recursive calls to match() *)
+    mark: PPAnsiChar;       (* For passing back a mark pointer *)
+    executable_jit: Pointer; (* Contains a pointer to a compiled jit code *)
   end;
   TPCREExtra = real_pcre_extra;
   PPCREExtra = ^TPCREExtra;
@@ -311,6 +368,8 @@ type
   (* ------------------- Added for Version 1 -------------------------- *)
     pattern_position: Integer;  (* Offset to next item in the pattern *)
     next_item_length: Integer;  (* Length of next item in the pattern *)
+  (* ------------------- Added for Version 2 -------------------------- *)
+    Mark: PCardinal;            (* Pointer to current mark or NULL *)
   (* ------------------------------------------------------------------ *)
   end;
 
@@ -324,6 +383,8 @@ type
   {$EXTERNALSYM pcre_stack_free_callback}
   pcre_callout_callback = function(var callout_block: pcre_callout_block): Integer; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
   {$EXTERNALSYM pcre_callout_callback}
+  pcre_jit_callback = function (P: Pointer): PPCREJITStack; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+  {$EXTERNALSYM pcre_jit_callback}
 
 var
   // renamed from "pcre_X" to "pcre_X_func" to allow functions with name "pcre_X" to be
@@ -459,8 +520,17 @@ function pcre_refcount(argument_re: PPCRE; adjust: Integer): Integer;
 function pcre_study(const code: PPCRE; options: Integer; const errptr: PPAnsiChar): PPCREExtra;
   {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 {$EXTERNALSYM pcre_study}
+procedure pcre_free_study(const extra: PPCREExtra);
+  {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+{$EXTERNALSYM pcre_free_study}
 function pcre_version: PAnsiChar; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 {$EXTERNALSYM pcre_version}
+function pcre_jit_stack_alloc(startsize, maxsize: Integer): PPCREJITStack; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+{$EXTERNALSYM pcre_jit_stack_alloc}
+procedure pcre_jit_stack_free(stack: PPCREJITStack); {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+{$EXTERNALSYM pcre_jit_stack_free}
+procedure pcre_assign_jit_stack(extra: PPCREExtra; callback: pcre_jit_callback; userdata: Pointer); {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+{$EXTERNALSYM pcre_assign_jit_stack}
 
 {$ELSE PCRE_LINKONREQUEST}
 
@@ -534,8 +604,20 @@ type
   pcre_study_func = function(const code: PPCRE; options: Integer; const errptr: PPAnsiChar): PPCREExtra;
   {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
   {$EXTERNALSYM pcre_study_func}
+  pcre_free_study_func = procedure (const extra: PPCREExtra);
+  {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+  {$EXTERNALSYM pcre_free_study_func}
   pcre_version_func = function: PAnsiChar; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
   {$EXTERNALSYM pcre_version_func}
+  pcre_jit_stack_alloc_func = function (startsize, maxsize: Integer): PPCREJITStack;
+  {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+  {$EXTERNALSYM pcre_jit_stack_alloc_func}
+  pcre_jit_stack_free_func = procedure (stack: PPCREJITStack);
+  {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+  {$EXTERNALSYM pcre_jit_stack_free_func}
+  pcre_assign_jit_stack_func = procedure (extra: PPCREExtra; callback: pcre_jit_callback; userdata: Pointer);
+  {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
+  {$EXTERNALSYM pcre_assign_jit_stack_func}
 
 var
   pcre_compile: pcre_compile_func = nil;
@@ -576,12 +658,95 @@ var
   {$EXTERNALSYM pcre_refcount}
   pcre_study: pcre_study_func = nil;
   {$EXTERNALSYM pcre_study}
+  pcre_free_study: pcre_free_study_func = nil;
+  {$EXTERNALSYM pcre_free_study}
   pcre_version: pcre_version_func = nil;
   {$EXTERNALSYM pcre_version}
+  pcre_jit_stack_alloc: pcre_jit_stack_alloc_func = nil;
+  {$EXTERNALSYM pcre_jit_stack_alloc}
+  pcre_jit_stack_free: pcre_jit_stack_free_func = nil;
+  {$EXTERNALSYM pcre_jit_stack_free}
+  pcre_assign_jit_stack: pcre_assign_jit_stack_func = nil;
+  {$EXTERNALSYM pcre_assign_jit_stack}
 
 {$ENDIF PCRE_LINKONREQUEST}
 
+{$ENDIF ~PCRE_RTL}
 //DOM-IGNORE-END
+
+const
+  {$IFDEF MSWINDOWS}
+  PCREDefaultLibraryName = 'pcre3.dll';
+  {$ENDIF MSWINDOWS}
+  {$IFDEF UNIX}
+  PCREDefaultLibraryName = 'libpcre.so.0';
+  {$ENDIF UNIX}
+  PCRECompileDefaultExportName = 'pcre_compile';
+  PCRECompile2DefaultExportName = 'pcre_compile2';
+  PCREConfigDefaultExportName = 'pcre_config';
+  PCRECopyNamedSubstringDefaultExportName = 'pcre_copy_named_substring';
+  PCRECopySubStringDefaultExportName = 'pcre_copy_substring';
+  PCREDfaExecDefaultExportName = 'pcre_dfa_exec';
+  PCREExecDefaultExportName = 'pcre_exec';
+  PCREFreeSubStringDefaultExportName = 'pcre_free_substring';
+  PCREFreeSubStringListDefaultExportName = 'pcre_free_substring_list';
+  PCREFullInfoDefaultExportName = 'pcre_fullinfo';
+  PCREGetNamedSubstringDefaultExportName = 'pcre_get_named_substring';
+  PCREGetStringNumberDefaultExportName = 'pcre_get_stringnumber';
+  PCREGetStringTableEntriesDefaultExportName = 'pcre_get_stringtable_entries';
+  PCREGetSubStringDefaultExportName = 'pcre_get_substring';
+  PCREGetSubStringListDefaultExportName = 'pcre_get_substring_list';
+  PCREInfoDefaultExportName = 'pcre_info';
+  PCREMakeTablesDefaultExportName = 'pcre_maketables';
+  PCRERefCountDefaultExportName = 'pcre_refcount';
+  PCREStudyDefaultExportName = 'pcre_study';
+  PCREFreeStudyDefaultExportName = 'pcre_free_study';
+  PCREVersionDefaultExportName = 'pcre_version';
+  PCREJITStackAllocDefaultExportName = 'pcre_jit_stack_alloc';
+  PCREJITStackFreeDefaultExportName = 'pcre_jit_stack_free';
+  PCREAssignJITStackDefaultExportName = 'pcre_assign_jit_stack';
+  PCREMallocDefaultExportName = 'pcre_malloc';
+  PCREFreeDefaultExportName = 'pcre_free';
+  PCREStackMallocDefaultExportName = 'pcre_stack_malloc';
+  PCREStackFreeDefaultExportName = 'pcre_stack_free';
+  PCRECalloutDefaultExportName = 'pcre_callout';
+
+{$IFDEF PCRE_LINKONREQUEST}
+var
+  PCRELibraryName: string = PCREDefaultLibraryName;
+  PCRECompileExportName: string = PCRECompileDefaultExportName;
+  PCRECompile2ExportName: string = PCRECompile2DefaultExportName;
+  PCREConfigExportName: string = PCREConfigDefaultExportName;
+  PCRECopyNamedSubstringExportName: string = PCRECopyNamedSubstringDefaultExportName;
+  PCRECopySubStringExportName: string = PCRECopySubStringDefaultExportName;
+  PCREDfaExecExportName: string = PCREDfaExecDefaultExportName;
+  PCREExecExportName: string = PCREExecDefaultExportName;
+  PCREFreeSubStringExportName: string = PCREFreeSubStringDefaultExportName;
+  PCREFreeSubStringListExportName: string = PCREFreeSubStringListDefaultExportName;
+  PCREFullInfoExportName: string = PCREFullInfoDefaultExportName;
+  PCREGetNamedSubstringExportName: string = PCREGetNamedSubstringDefaultExportName;
+  PCREGetStringNumberExportName: string = PCREGetStringNumberDefaultExportName;
+  PCREGetStringTableEntriesExportName: string = PCREGetStringTableEntriesDefaultExportName;
+  PCREGetSubStringExportName: string = PCREGetSubStringDefaultExportName;
+  PCREGetSubStringListExportName: string = PCREGetSubStringListDefaultExportName;
+  PCREInfoExportName: string = PCREInfoDefaultExportName;
+  PCREMakeTablesExportName: string = PCREMakeTablesDefaultExportName;
+  PCRERefCountExportName: string = PCRERefCountDefaultExportName;
+  PCREStudyExportName: string = PCREStudyDefaultExportName;
+  PCREFreeStudyExportName: string = PCREFreeStudyDefaultExportName;
+  PCREVersionExportName: string = PCREVersionDefaultExportName;
+  PCREJITStackAllocExportName: string = PCREJITStackAllocDefaultExportName;
+  PCREJITStackFreeExportName: string = PCREJITStackFreeDefaultExportName;
+  PCREAssignJITStackExportName: string = PCREAssignJITStackDefaultExportName;
+  PCREMallocExportName: string = PCREMallocDefaultExportName;
+  PCREFreeExportName: string = PCREFreeDefaultExportName;
+  PCREStackMallocExportName: string = PCREStackMallocDefaultExportName;
+  PCREStackFreeExportName: string = PCREStackFreeDefaultExportName;
+  PCRECalloutExportName: string = PCRECalloutDefaultExportName;
+{$ENDIF PCRE_LINKONREQUEST}
+
+var
+  PCRELib: TModuleHandle = INVALID_MODULEHANDLE_VALUE;
 
 function IsPCRELoaded: Boolean;
 function LoadPCRE: Boolean;
@@ -591,8 +756,8 @@ procedure UnloadPCRE;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/pcre.pas $';
-    Revision: '$Revision: 3343 $';
-    Date: '$Date: 2010-09-20 12:22:39 +0200 (lun., 20 sept. 2010) $';
+    Revision: '$Revision: 3779 $';
+    Date: '$Date: 2012-04-19 20:13:33 +0200 (jeu., 19 avr. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -602,40 +767,74 @@ const
 implementation
 
 uses
-  {$IFDEF MSWINDOWS}
-  Windows,
-  {$ENDIF MSWINDOWS}
-  Types,
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
-  SysUtils;
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.Types, System.SysUtils;
+  {$ELSE ~HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Windows,
+  {$ENDIF MSWINDOWS}
+  Types, SysUtils;
+  {$ENDIF ~HAS_UNITSCOPE}
 
+{$IFNDEF PCRE_RTL}
 {$IFDEF PCRE_STATICLINK}
 
 // make the linker happy with PCRE 8.00
 procedure _pcre_find_bracket; external;
+// make the linker happy with PCRE 8.21
+procedure _pcre_jit_compile; external;
+procedure _pcre_jit_free; external;
 
-{$LINK ..\windows\obj\pcre\pcre_compile.obj}
-{$LINK ..\windows\obj\pcre\pcre_config.obj}
-{$LINK ..\windows\obj\pcre\pcre_dfa_exec.obj}
-{$LINK ..\windows\obj\pcre\pcre_exec.obj}
-{$LINK ..\windows\obj\pcre\pcre_fullinfo.obj}
-{$LINK ..\windows\obj\pcre\pcre_get.obj}
-{$LINK ..\windows\obj\pcre\pcre_globals.obj}
-{$LINK ..\windows\obj\pcre\pcre_info.obj}
-{$LINK ..\windows\obj\pcre\pcre_maketables.obj}
-{$LINK ..\windows\obj\pcre\pcre_newline.obj}
-{$LINK ..\windows\obj\pcre\pcre_ord2utf8.obj}
-{$LINK ..\windows\obj\pcre\pcre_refcount.obj}
-{$LINK ..\windows\obj\pcre\pcre_study.obj}
-{$LINK ..\windows\obj\pcre\pcre_tables.obj}
-{$LINK ..\windows\obj\pcre\pcre_try_flipped.obj}
-{$LINK ..\windows\obj\pcre\pcre_ucd.obj}
-{$LINK ..\windows\obj\pcre\pcre_valid_utf8.obj}
-{$LINK ..\windows\obj\pcre\pcre_version.obj}
-{$LINK ..\windows\obj\pcre\pcre_xclass.obj}
-{$LINK ..\windows\obj\pcre\pcre_default_tables.obj}
+{$IFDEF CPU32}
+{$LINK ..\windows\obj\pcre\win32\pcre_compile.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_config.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_dfa_exec.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_exec.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_fullinfo.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_get.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_info.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_jit_compile.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_maketables.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_newline.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_ord2utf8.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_refcount.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_study.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_tables.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_try_flipped.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_ucd.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_valid_utf8.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_version.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_xclass.obj}
+{$LINK ..\windows\obj\pcre\win32\pcre_default_tables.obj}
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+{$LINK ..\windows\obj\pcre\win64\pcre_compile.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_config.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_dfa_exec.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_exec.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_fullinfo.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_get.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_info.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_jit_compile.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_maketables.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_newline.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_ord2utf8.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_refcount.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_study.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_tables.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_try_flipped.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_ucd.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_valid_utf8.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_version.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_xclass.obj}
+{$LINK ..\windows\obj\pcre\win64\pcre_default_tables.obj}
+{$ENDIF CPU64}
 
 // user's defined callbacks
 var
@@ -664,7 +863,11 @@ function pcre_info; external;
 function pcre_maketables; external;
 function pcre_refcount; external;
 function pcre_study; external;
+procedure pcre_free_study; external;
 function pcre_version; external;
+function pcre_jit_stack_alloc; external;
+procedure pcre_jit_stack_free; external;
+procedure pcre_assign_jit_stack; external;
 
 procedure __llmul;
 asm
@@ -677,6 +880,9 @@ type
 const
   szMSVCRT = 'MSVCRT.DLL';
 
+function malloc(size: size_t): Pointer; cdecl; external szMSVCRT name 'malloc';
+
+{$IFDEF CPU32}
 function _memcpy(dest, src: Pointer; count: size_t): Pointer; cdecl; external szMSVCRT name 'memcpy';
 function _memmove(dest, src: Pointer; count: size_t): Pointer; cdecl; external szMSVCRT name 'memmove';
 function _memset(dest: Pointer; val: Integer; count: size_t): Pointer; cdecl; external szMSVCRT name 'memset';
@@ -698,9 +904,41 @@ function _isupper(__ch: Integer): Integer; cdecl; external szMSVCRT name 'isuppe
 function _isxdigit(__ch: Integer): Integer; cdecl; external szMSVCRT name 'isxdigit';
 function _strchr(__s: PAnsiChar; __c: Integer): PAnsiChar; cdecl; external szMSVCRT name 'strchr';
 
-function malloc(size: size_t): Pointer; cdecl; external szMSVCRT name 'malloc';
+function ___alloca_helper(size: size_t): Pointer; cdecl;
+begin
+  Result := malloc(size);
+end;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+function memcpy(dest, src: Pointer; count: size_t): Pointer; external szMSVCRT name 'memcpy';
+function memmove(dest, src: Pointer; count: size_t): Pointer; external szMSVCRT name 'memmove';
+function memset(dest: Pointer; val: Integer; count: size_t): Pointer; external szMSVCRT name 'memset';
+function strncmp(s1: PAnsiChar; s2: PAnsiChar; n: size_t): Integer; external szMSVCRT name 'strncmp';
+function strcmp(s1: PAnsiChar; s2: PAnsiChar; n: size_t): Integer; external szMSVCRT name 'strcmp';
+function memcmp(s1: Pointer; s2: Pointer; n: size_t): Integer; external szMSVCRT name 'memcmp';
+function strlen(s: PAnsiChar): size_t; external szMSVCRT name 'strlen';
+function tolower(__ch: Integer): Integer; external szMSVCRT name 'tolower';
+function toupper(__ch: Integer): Integer; external szMSVCRT name 'toupper';
+function isalnum(__ch: Integer): Integer; external szMSVCRT name 'isalnum';
+function isalpha(__ch: Integer): Integer; external szMSVCRT name 'isalpha';
+function iscntrl(__ch: Integer): Integer; external szMSVCRT name 'iscntrl';
+function isdigit(__ch: Integer): Integer; external szMSVCRT name 'isdigit';
+function isgraph(__ch: Integer): Integer; external szMSVCRT name 'isgraph';
+function islower(__ch: Integer): Integer; external szMSVCRT name 'islower';
+function isprint(__ch: Integer): Integer; external szMSVCRT name 'isprint';
+function ispunct(__ch: Integer): Integer; external szMSVCRT name 'ispunct';
+function isspace(__ch: Integer): Integer; external szMSVCRT name 'isspace';
+function isupper(__ch: Integer): Integer; external szMSVCRT name 'isupper';
+function isxdigit(__ch: Integer): Integer; external szMSVCRT name 'isxdigit';
+function strchr(__s: PAnsiChar; __c: Integer): PAnsiChar; external szMSVCRT name 'strchr';
 
-function pcre_malloc(Size: SizeInt): Pointer;
+function __chkstk(size: size_t): Pointer;
+begin
+  Result := malloc(size);
+end;
+{$ENDIF CPU64}
+
+function pcre_malloc_jcl(Size: SizeInt): Pointer; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 begin
   if Assigned(pcre_malloc_user) then
     Result := pcre_malloc_user(Size)
@@ -708,7 +946,7 @@ begin
     Result := malloc(Size);
 end;
 
-function pcre_stack_malloc(Size: SizeInt): Pointer;
+function pcre_stack_malloc_jcl(Size: SizeInt): Pointer; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 begin
   if Assigned(pcre_stack_malloc_user) then
     Result := pcre_stack_malloc_user(Size)
@@ -718,12 +956,12 @@ end;
 
 function _malloc(size: size_t): Pointer;
 begin
-  Result := pcre_malloc(size);
+  Result := pcre_malloc_jcl(size);
 end;
 
 procedure free(pBlock: Pointer); cdecl; external szMSVCRT name 'free';
 
-procedure pcre_free(P: Pointer);
+procedure pcre_free_jcl(P: Pointer); {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 begin
   if Assigned(pcre_free_user) then
     pcre_free_user(P)
@@ -731,7 +969,7 @@ begin
     free(P);
 end;
 
-procedure pcre_stack_free(P: Pointer);
+procedure pcre_stack_free_jcl(P: Pointer); {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 begin
   if Assigned(pcre_stack_free_user) then
     pcre_stack_free_user(P)
@@ -741,10 +979,10 @@ end;
 
 procedure _free(pBlock: Pointer);
 begin
-  pcre_free(pBlock);
+  pcre_free_jcl(pBlock);
 end;
 
-function pcre_callout(var callout_block: pcre_callout_block): Integer; cdecl;
+function pcre_callout_jcl(var callout_block: pcre_callout_block): Integer; {$IFDEF PCRE_EXPORT_CDECL} cdecl; {$ENDIF PCRE_EXPORT_CDECL}
 begin
   if Assigned(pcre_callout_user) then
     Result := pcre_callout_user(callout_block)
@@ -752,53 +990,24 @@ begin
     Result := 0;
 end;
 
-{$ELSE ~PCRE_STATICLINK}
-
-type
-  {$IFDEF MSWINDOWS}
-  TModuleHandle = HINST;
-  {$ENDIF MSWINDOWS}
-  {$IFDEF LINUX}
-  TModuleHandle = Pointer;
-  {$ENDIF LINUX}
-
+{$IFDEF CPU32}
 const
-  {$IFDEF MSWINDOWS}
-  libpcremodulename = 'pcre3.dll';
-  {$ENDIF MSWINDOWS}
-  {$IFDEF UNIX}
-  libpcremodulename = 'libpcre.so.0';
-  {$ENDIF UNIX}
-  PCRECompileExportName = 'pcre_compile';
-  PCRECompile2ExportName = 'pcre_compile2';
-  PCREConfigExportName = 'pcre_config';
-  PCRECopyNamedSubstringExportName = 'pcre_copy_named_substring';
-  PCRECopySubStringExportName = 'pcre_copy_substring';
-  PCREDfaExecExportName = 'pcre_dfa_exec';
-  PCREExecExportName = 'pcre_exec';
-  PCREFreeSubStringExportName = 'pcre_free_substring';
-  PCREFreeSubStringListExportName = 'pcre_free_substring_list';
-  PCREFullInfoExportName = 'pcre_fullinfo';
-  PCREGetNamedSubstringExportName = 'pcre_get_named_substring';
-  PCREGetStringNumberExportName = 'pcre_get_stringnumber';
-  PCREGetStringTableEntriesExportName = 'pcre_get_stringtable_entries';
-  PCREGetSubStringExportName = 'pcre_get_substring';
-  PCREGetSubStringListExportName = 'pcre_get_substring_list';
-  PCREInfoExportName = 'pcre_info';
-  PCREMakeTablesExportName = 'pcre_maketables';
-  PCRERefCountExportName = 'pcre_refcount';
-  PCREStudyExportName = 'pcre_study';
-  PCREVersionExportName = 'pcre_version';
-  PCREMallocExportName = 'pcre_malloc';
-  PCREFreeExportName = 'pcre_free';
-  PCREStackMallocExportName = 'pcre_stack_malloc';
-  PCREStackFreeExportName = 'pcre_stack_free';
-  PCRECalloutExportName = 'pcre_callout';
-  INVALID_MODULEHANDLE_VALUE = TModuleHandle(0);
+  _pcre_malloc: pcre_malloc_callback = pcre_malloc_jcl;
+  _pcre_free: pcre_free_callback = pcre_free_jcl;
+  _pcre_stack_malloc: pcre_stack_malloc_callback = pcre_stack_malloc_jcl;
+  _pcre_stack_free: pcre_stack_free_callback = pcre_stack_free_jcl;
+  _pcre_callout: pcre_callout_callback = pcre_callout_jcl;
+{$ENDIF CPU32}
+{$IFDEF CPU64}
+const
+  pcre_malloc: pcre_malloc_callback = pcre_malloc_jcl;
+  pcre_free: pcre_free_callback = pcre_free_jcl;
+  pcre_stack_malloc: pcre_stack_malloc_callback = pcre_stack_malloc_jcl;
+  pcre_stack_free: pcre_stack_free_callback = pcre_stack_free_jcl;
+  pcre_callout: pcre_callout_callback = pcre_callout_jcl;
+{$ENDIF CPU64}
 
-var
-  PCRELib: TModuleHandle = INVALID_MODULEHANDLE_VALUE;
-{$ENDIF ~PCRE_STATICLINK}
+{$ENDIF PCRE_STATICLINK}
 
 procedure SetPCREMallocCallback(const Value: pcre_malloc_callback);
 begin
@@ -837,7 +1046,7 @@ end;
 function CallPCREMalloc(Size: SizeInt): Pointer;
 begin
   {$IFDEF PCRE_STATICLINK}
-  Result := pcre_malloc(Size);
+  Result := pcre_malloc_jcl(Size);
   {$ELSE ~PCRE_STATICLINK}
   Result := pcre_malloc_func^(Size);
   {$ENDIF ~PCRE_STATICLINK}
@@ -880,7 +1089,7 @@ end;
 procedure CallPCREFree(P: Pointer);
 begin
   {$IFDEF PCRE_STATICLINK}
-  pcre_free(P);
+  pcre_free_jcl(P);
   {$ELSE ~PCRE_STATICLINK}
   pcre_free_func^(P);
   {$ENDIF ~PCRE_STATICLINK}
@@ -923,7 +1132,7 @@ end;
 function CallPCREStackMalloc(Size: SizeInt): Pointer;
 begin
   {$IFDEF PCRE_STATICLINK}
-  Result := pcre_stack_malloc(Size);
+  Result := pcre_stack_malloc_jcl(Size);
   {$ELSE ~PCRE_STATICLINK}
   Result := pcre_stack_malloc_func^(Size);
   {$ENDIF ~PCRE_STATICLINK}
@@ -966,7 +1175,7 @@ end;
 procedure CallPCREStackFree(P: Pointer);
 begin
   {$IFDEF PCRE_STATICLINK}
-  pcre_stack_free(P);
+  pcre_stack_free_jcl(P);
   {$ELSE ~PCRE_STATICLINK}
   pcre_stack_free_func^(P);
   {$ENDIF ~PCRE_STATICLINK}
@@ -1009,7 +1218,7 @@ end;
 function CallPCRECallout(var callout_block: pcre_callout_block): Integer;
 begin
   {$IFDEF PCRE_STATICLINK}
-  Result := pcre_callout(callout_block);
+  Result := pcre_callout_jcl(callout_block);
   {$ELSE ~PCRE_STATICLINK}
   Result := pcre_callout_func^(callout_block);
   {$ENDIF ~PCRE_STATICLINK}
@@ -1038,7 +1247,11 @@ begin
   @pcre_maketables := Value;
   @pcre_refcount := Value;
   @pcre_study := Value;
+  @pcre_free_study := Value;
   @pcre_version := Value;
+  @pcre_jit_stack_alloc := Value;
+  @pcre_jit_stack_free := Value;
+  @pcre_assign_jit_stack := Value;
   {$ENDIF PCRE_LINKONREQUEST}
   pcre_malloc_func := nil;
   pcre_free_func := nil;
@@ -1047,116 +1260,123 @@ begin
   pcre_callout_func := nil;
 end;
 {$ENDIF ~PCRE_STATICLINK}
+{$ENDIF ~PCRE_RTL}
 
 function IsPCRELoaded: Boolean;
 begin
+  {$IFDEF PCRE_RTL}
+  Result := True;
+  {$ELSE ~PCRE_RTL}
   {$IFDEF PCRE_STATICLINK}
   Result := True;
   {$ELSE ~PCRE_STATICLINK}
   Result := PCRELib <> INVALID_MODULEHANDLE_VALUE;
   {$ENDIF ~PCRE_STATICLINK}
+  {$ENDIF ~PCRE_RTL}
 end;
 
 function LoadPCRE: Boolean;
+{$IFDEF PCRE_RTL}
+begin
+  Result := True;
+end;
+{$ELSE ~PCRE_RTL}
 {$IFDEF PCRE_STATICLINK}
 begin
   Result := True;
 end;
 {$ELSE ~PCRE_STATICLINK}
-  function GetSymbol(SymbolName: PAnsiChar): Pointer;
-  begin
-    {$IFDEF MSWINDOWS}
-    Result := GetProcAddress(PCRELib, SymbolName);
-    {$ENDIF MSWINDOWS}
-    {$IFDEF UNIX}
-    Result := dlsym(PCRELib, SymbolName);
-    {$ENDIF UNIX}
-  end;
-
 begin
   Result := PCRELib <> INVALID_MODULEHANDLE_VALUE;
   if Result then
     Exit;
 
-  if PCRELib = INVALID_MODULEHANDLE_VALUE then
-    {$IFDEF MSWINDOWS}
-    PCRELib := SafeLoadLibrary(libpcremodulename);
-    {$ENDIF MSWINDOWS}
-    {$IFDEF UNIX}
-    PCRELib := dlopen(PAnsiChar(libpcremodulename), RTLD_NOW);
-    {$ENDIF UNIX}
-  Result := PCRELib <> INVALID_MODULEHANDLE_VALUE;
+  {$IFDEF PCRE_LINKONREQUEST}
+  Result := JclSysUtils.LoadModule(PCRELib, PCRELibraryName);
+  {$ELSE ~PCRE_LINKONREQUEST}
+  Result := JclSysUtils.LoadModule(PCRELib, PCREDefaultLibraryName);
+  {$ENDIF ~PCRE_LINKONREQUEST}
   if Result then
   begin
     {$IFDEF PCRE_LINKONREQUEST}
-    @pcre_compile := GetSymbol(PCRECompileExportName);
-    @pcre_compile2 := GetSymbol(PCRECompile2ExportName);
-    @pcre_config := GetSymbol(PCREConfigExportName);
-    @pcre_copy_named_substring := GetSymbol(PCRECopyNamedSubstringExportName);
-    @pcre_copy_substring := GetSymbol(PCRECopySubStringExportName);
-    @pcre_dfa_exec := GetSymbol(PCREDfaExecExportName);
-    @pcre_exec := GetSymbol(PCREExecExportName);
-    @pcre_free_substring := GetSymbol(PCREFreeSubStringExportName);
-    @pcre_free_substring_list := GetSymbol(PCREFreeSubStringListExportName);
-    @pcre_fullinfo := GetSymbol(PCREFullInfoExportName);
-    @pcre_get_named_substring := GetSymbol(PCREGetNamedSubstringExportName);
-    @pcre_get_stringnumber := GetSymbol(PCREGetStringNumberExportName);
-    @pcre_get_stringtable_entries := GetSymbol(PCREGetStringTableEntriesExportName);
-    @pcre_get_substring := GetSymbol(PCREGetSubStringExportName);
-    @pcre_get_substring_list := GetSymbol(PCREGetSubStringListExportName);
-    @pcre_info := GetSymbol(PCREInfoExportName);
-    @pcre_maketables := GetSymbol(PCREMakeTablesExportName);
-    @pcre_refcount := GetSymbol(PCRERefCountExportName);
-    @pcre_study := GetSymbol(PCREStudyExportName);
-    @pcre_version := GetSymbol(PCREVersionExportName);
-    {$ENDIF PCRE_LINKONREQUEST}
-    pcre_malloc_func := GetSymbol(PCREMallocExportName);
-    pcre_free_func := GetSymbol(PCREFreeExportName);
-    pcre_stack_malloc_func := GetSymbol(PCREStackMallocExportName);
-    pcre_stack_free_func := GetSymbol(PCREStackFreeExportName);
-    pcre_callout_func := GetSymbol(PCRECalloutExportName);
+    @pcre_compile := GetModuleSymbol(PCRELib, PCRECompileExportName);
+    @pcre_compile2 := GetModuleSymbol(PCRELib, PCRECompile2ExportName);
+    @pcre_config := GetModuleSymbol(PCRELib, PCREConfigExportName);
+    @pcre_copy_named_substring := GetModuleSymbol(PCRELib, PCRECopyNamedSubstringExportName);
+    @pcre_copy_substring := GetModuleSymbol(PCRELib, PCRECopySubStringExportName);
+    @pcre_dfa_exec := GetModuleSymbol(PCRELib, PCREDfaExecExportName);
+    @pcre_exec := GetModuleSymbol(PCRELib, PCREExecExportName);
+    @pcre_free_substring := GetModuleSymbol(PCRELib, PCREFreeSubStringExportName);
+    @pcre_free_substring_list := GetModuleSymbol(PCRELib, PCREFreeSubStringListExportName);
+    @pcre_fullinfo := GetModuleSymbol(PCRELib, PCREFullInfoExportName);
+    @pcre_get_named_substring := GetModuleSymbol(PCRELib, PCREGetNamedSubstringExportName);
+    @pcre_get_stringnumber := GetModuleSymbol(PCRELib, PCREGetStringNumberExportName);
+    @pcre_get_stringtable_entries := GetModuleSymbol(PCRELib, PCREGetStringTableEntriesExportName);
+    @pcre_get_substring := GetModuleSymbol(PCRELib, PCREGetSubStringExportName);
+    @pcre_get_substring_list := GetModuleSymbol(PCRELib, PCREGetSubStringListExportName);
+    @pcre_info := GetModuleSymbol(PCRELib, PCREInfoExportName);
+    @pcre_maketables := GetModuleSymbol(PCRELib, PCREMakeTablesExportName);
+    @pcre_refcount := GetModuleSymbol(PCRELib, PCRERefCountExportName);
+    @pcre_study := GetModuleSymbol(PCRELib, PCREStudyExportName);
+    @pcre_free_study := GetModuleSymbol(PCRELib, PCREFreeStudyExportName);
+    @pcre_version := GetModuleSymbol(PCRELib, PCREVersionExportName);
+    @pcre_jit_stack_alloc := GetModuleSymbol(PCRELib, PCREJITStackAllocExportName);
+    @pcre_jit_stack_free := GetModuleSymbol(PCRELib, PCREJITStackFreeExportName);
+    @pcre_assign_jit_stack := GetModuleSymbol(PCRELib, PCREAssignJITStackExportName);
+    pcre_malloc_func := GetModuleSymbol(PCRELib, PCREMallocExportName);
+    pcre_free_func := GetModuleSymbol(PCRELib, PCREFreeExportName);
+    pcre_stack_malloc_func := GetModuleSymbol(PCRELib, PCREStackMallocExportName);
+    pcre_stack_free_func := GetModuleSymbol(PCRELib, PCREStackFreeExportName);
+    pcre_callout_func := GetModuleSymbol(PCRELib, PCRECalloutExportName);
+    {$ELSE ~PCRE_LINKONREQUEST}
+    pcre_malloc_func := GetModuleSymbol(PCRELib, PCREMallocDefaultExportName);
+    pcre_free_func := GetModuleSymbol(PCRELib, PCREFreeDefaultExportName);
+    pcre_stack_malloc_func := GetModuleSymbol(PCRELib, PCREStackMallocDefaultExportName);
+    pcre_stack_free_func := GetModuleSymbol(PCRELib, PCREStackFreeDefaultExportName);
+    pcre_callout_func := GetModuleSymbol(PCRELib, PCRECalloutDefaultExportName);
+    {$ENDIF ~PCRE_LINKONREQUEST}
   end
   else
     InitPCREFuncPtrs(@LibNotLoadedHandler);
 end;
 {$ENDIF ~PCRE_STATICLINK}
+{$ENDIF ~PCRE_RTL}
 
 procedure UnloadPCRE;
 begin
+  {$IFNDEF PCRE_RTL}
   {$IFNDEF PCRE_STATICLINK}
-  if PCRELib <> INVALID_MODULEHANDLE_VALUE then
-    {$IFDEF MSWINDOWS}
-    FreeLibrary(PCRELib);
-    {$ENDIF MSWINDOWS}
-    {$IFDEF UNIX}
-    dlclose(Pointer(PCRELib));
-    {$ENDIF UNIX}
-  PCRELib := INVALID_MODULEHANDLE_VALUE;
   InitPCREFuncPtrs(@LibNotLoadedHandler);
+  JclSysUtils.UnloadModule(PCRELib);
   {$ENDIF ~PCRE_STATICLINK}
+  {$ENDIF ~PCRE_RTL}
 end;
 
 {$IFDEF PCRE_LINKDLL}
-function pcre_compile; external libpcremodulename name PCRECompileExportName;
-function pcre_compile2; external libpcremodulename name PCRECompile2ExportName;
-function pcre_config; external libpcremodulename name PCREConfigExportName;
-function pcre_copy_named_substring; external libpcremodulename name PCRECopyNamedSubStringExportName;
-function pcre_copy_substring; external libpcremodulename name PCRECopySubStringExportName;
-function pcre_dfa_exec; external libpcremodulename name PCREDfaExecExportName;
-function pcre_exec; external libpcremodulename name PCREExecExportName;
-procedure pcre_free_substring; external libpcremodulename name PCREFreeSubStringExportName;
-procedure pcre_free_substring_list; external libpcremodulename name PCREFreeSubStringListExportName;
-function pcre_fullinfo; external libpcremodulename name PCREFullInfoExportName;
-function pcre_get_named_substring; external libpcremodulename name PCREGetNamedSubStringExportName;
-function pcre_get_stringnumber; external libpcremodulename name PCREGetStringNumberExportName;
-function pcre_get_stringtable_entries; external libpcremodulename name PCREGetStringTableEntriesExportName;
-function pcre_get_substring; external libpcremodulename name PCREGetSubStringExportName;
-function pcre_get_substring_list; external libpcremodulename name PCREGetSubStringListExportName;
-function pcre_info; external libpcremodulename name PCREInfoExportName;
-function pcre_maketables; external libpcremodulename name PCREMakeTablesExportName;
-function pcre_refcount; external libpcremodulename name PCRERefCountExportName;
-function pcre_study; external libpcremodulename name PCREStudyExportName;
-function pcre_version; external libpcremodulename name PCREVersionExportName;
+function pcre_compile; external PCREDefaultLibraryName name PCRECompileDefaultExportName;
+function pcre_compile2; external PCREDefaultLibraryName name PCRECompile2DefaultExportName;
+function pcre_config; external PCREDefaultLibraryName name PCREConfigDefaultExportName;
+function pcre_copy_named_substring; external PCREDefaultLibraryName name PCRECopyNamedSubStringDefaultExportName;
+function pcre_copy_substring; external PCREDefaultLibraryName name PCRECopySubStringDefaultExportName;
+function pcre_dfa_exec; external PCREDefaultLibraryName name PCREDfaExecDefaultExportName;
+function pcre_exec; external PCREDefaultLibraryName name PCREExecDefaultExportName;
+procedure pcre_free_substring; external PCREDefaultLibraryName name PCREFreeSubStringDefaultExportName;
+procedure pcre_free_substring_list; external PCREDefaultLibraryName name PCREFreeSubStringListDefaultExportName;
+function pcre_fullinfo; external PCREDefaultLibraryName name PCREFullInfoDefaultExportName;
+function pcre_get_named_substring; external PCREDefaultLibraryName name PCREGetNamedSubStringDefaultExportName;
+function pcre_get_stringnumber; external PCREDefaultLibraryName name PCREGetStringNumberDefaultExportName;
+function pcre_get_stringtable_entries; external PCREDefaultLibraryName name PCREGetStringTableEntriesDefaultExportName;
+function pcre_get_substring; external PCREDefaultLibraryName name PCREGetSubStringDefaultExportName;
+function pcre_get_substring_list; external PCREDefaultLibraryName name PCREGetSubStringListDefaultExportName;
+function pcre_info; external PCREDefaultLibraryName name PCREInfoDefaultExportName;
+function pcre_maketables; external PCREDefaultLibraryName name PCREMakeTablesDefaultExportName;
+function pcre_refcount; external PCREDefaultLibraryName name PCRERefCountDefaultExportName;
+function pcre_study; external PCREDefaultLibraryName name PCREStudyDefaultExportName;
+procedure pcre_free_study; external PCREDefaultLibraryName name PCREFreeStudyDefaultExportName;
+function pcre_version; external PCREDefaultLibraryName name PCREVersionDefaultExportName;
+function pcre_jit_stack_alloc; external PCREDefaultLibraryName name PCREJITStackAllocDefaultExportName;
+procedure pcre_jit_stack_free; external PCREDefaultLibraryName name PCREJITStackFreeDefaultExportName;
+procedure pcre_assign_jit_stack; external PCREDefaultLibraryName name PCREAssignJITStackDefaultExportName;
 {$ENDIF PCRE_LINKDLL}
 
 {$IFDEF UNITVERSIONING}

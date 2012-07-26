@@ -47,9 +47,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-03-14 21:30:11 +0100 (lun., 14 mars 2011)                          $ }
-{ Revision:      $Rev:: 3510                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2012-01-03 20:03:51 +0100 (mar., 03 janv. 2012)                         $ }
+{ Revision:      $Rev:: 3668                                                                     $ }
+{ Author:        $Author:: jfudickar                                                             $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -63,6 +63,15 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNITSCOPE}
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  {$ENDIF MSWINDOWS}
+  System.Classes, System.SysUtils,
+  {$IFDEF HAS_UNIT_ANSISTRINGS}
+  System.AnsiStrings,
+  {$ENDIF HAS_UNIT_ANSISTRINGS}
+  {$ELSE ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   Windows,
   {$ENDIF MSWINDOWS}
@@ -70,6 +79,7 @@ uses
   {$IFDEF HAS_UNIT_ANSISTRINGS}
   AnsiStrings,
   {$ENDIF HAS_UNIT_ANSISTRINGS}
+  {$ENDIF ~HAS_UNITSCOPE}
   JclBase;
 
 // Ansi types
@@ -405,13 +415,25 @@ function StrSearch(const Substr, S: AnsiString; const Index: SizeInt = 1): SizeI
 function StrSuffixIndex(const S: AnsiString; const Suffixes: array of AnsiString): SizeInt;
 
 // String Extraction
+// String Extraction
+// Returns the String before SubStr
 function StrAfter(const SubStr, S: AnsiString): AnsiString;
+/// Returns the AnsiString after SubStr
 function StrBefore(const SubStr, S: AnsiString): AnsiString;
+/// Splits a AnsiString at SubStr, returns true when SubStr is found, Left contains the
+/// AnsiString before the SubStr and Rigth the AnsiString behind SubStr
+function StrSplit(const SubStr, S: AnsiString;var Left, Right : AnsiString): boolean;
+/// Returns the AnsiString between Start and Stop
 function StrBetween(const S: AnsiString; const Start, Stop: AnsiChar): AnsiString;
+/// Returns the left N characters of the AnsiString
 function StrChopRight(const S: AnsiString; N: SizeInt): AnsiString;
+/// Returns the left Count characters of the AnsiString
 function StrLeft(const S: AnsiString; Count: SizeInt): AnsiString;
+/// Returns the AnsiString starting from position Start for the Count Characters
 function StrMid(const S: AnsiString; Start, Count: SizeInt): AnsiString;
+/// Returns the AnsiString starting from position N to the end
 function StrRestOf(const S: AnsiString; N: SizeInt): AnsiString;
+/// Returns the right Count characters of the AnsiString
 function StrRight(const S: AnsiString; Count: SizeInt): AnsiString;
 
 // Character Test Routines
@@ -516,8 +538,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclAnsiStrings.pas $';
-    Revision: '$Revision: 3510 $';
-    Date: '$Date: 2011-03-14 21:30:11 +0100 (lun., 14 mars 2011) $';
+    Revision: '$Revision: 3668 $';
+    Date: '$Date: 2012-01-03 20:03:51 +0100 (mar., 03 janv. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -599,8 +621,8 @@ begin
       {$IFDEF MSWINDOWS}
       LoCaseChar := CurrChar;
       UpCaseChar := CurrChar;
-      Windows.CharLowerBuffA(@LoCaseChar, 1);
-      Windows.CharUpperBuffA(@UpCaseChar, 1);
+      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.CharLowerBuffA(@LoCaseChar, 1);
+      {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.CharUpperBuffA(@UpCaseChar, 1);
       {$DEFINE CASE_MAP_INITIALIZED}
       {$ENDIF MSWINDOWS}
       {$IFDEF LINUX}
@@ -2959,6 +2981,23 @@ begin
     Result := StrLeft(S, P - 1);
 end;
 
+function StrSplit(const SubStr, S: AnsiString;var Left, Right : AnsiString): boolean;
+var
+  P: SizeInt;
+begin
+  P := StrFind(SubStr, S, 1);
+  Result:= p > 0;
+  if Result then
+  begin
+    Left := StrLeft(S, P - 1);
+    Right := StrRestOf(S, P + Length(SubStr));
+  end
+  else
+  begin
+    Left := '';
+    Right := '';
+  end;
+end;
 
 function StrBetween(const S: AnsiString; const Start, Stop: AnsiChar): AnsiString;
 var

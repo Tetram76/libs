@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-01-09 22:08:14 +0100 (dim., 09 janv. 2011)                         $ }
-{ Revision:      $Rev:: 3467                                                                     $ }
+{ Last modified: $Date:: 2012-01-21 18:22:58 +0100 (sam., 21 janv. 2012)                         $ }
+{ Revision:      $Rev:: 3696                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -70,11 +70,14 @@ resourcestring
   RsCaptionDefDebugNoMap        = 'No debug source from Map files';
   RsCaptionDefDebugNoExports    = 'No debug source from function export table for libraries';
   RsCaptionDefDebugNoSymbols    = 'No debug source from Microsoft debug symbols';
+  // Wrapper options
+  RsCaptionDefWrappers          = 'Wrapper options';
   // PCRE options
   RsCaptionDefPCRE              = 'PCRE options';
   RsCaptionDefPCREStaticLink    = 'Static link to PCRE code';
   RsCaptionDefPCRELinkDLL       = 'Static bind to pcre.dll';
   RsCaptionDefPCRELinkOnRequest = 'Late bind to pcre.dll';
+  RsCaptionDefPCRERTL           = 'Use RTL''s RegularExpressionAPI';
   // BZip2 options
   RsCaptionDefBZip2              = 'BZip2 options';
   RsCaptionDefBZip2StaticLink    = 'Static link to BZip2 code';
@@ -85,6 +88,7 @@ resourcestring
   RsCaptionDefZLibStaticLink    = 'Static link to ZLib code';
   RsCaptionDefZLibLinkDLL       = 'Static bind to zlib1.dll';
   RsCaptionDefZLibLinkOnRequest = 'Late bind to zlib1.dll';
+  RsCaptionDefZLibRTL           = 'Use RTL''s ZLib';
   // Unicode options
   RsCaptionDefUnicode              = 'Unicode options';
   RsCaptionDefUnicodeRTLDatabase   = 'Prefer RTL database';
@@ -180,11 +184,14 @@ resourcestring
   RsHintDefDebugNoTD32       = 'Disable support for TD32 informations';
   RsHintDefDebugNoExports    = 'Disable support for export names of libraries';
   RsHintDefDebugNoSymbols    = 'Disable support for Microsoft debug symbols (PDB and DBG files)';
+  // Wrapper options
+  RsHintDefWrappers          = 'Configure linking options for wrappers to thirdparty libraries';
   // PCRE options
   RsHintDefPCRE              = 'PCRE specific options (pcre.pas and JclPCRE.pas)';
   RsHintDefPCREStaticLink    = 'Code from PCRE is linked into JCL binaries';
   RsHintDefPCRELinkDLL       = 'JCL binaries require pcre.dll to be present';
   RsHintDefPCRELinkOnRequest = 'JCL binaries require pcre.dll when calling PCRE functions';
+  RsHintDefPCRERTL           = 'JCL relies on RTL''s RegularExpressionsAPI functions and declarations';
   // BZip2 options
   RsHintDefBZip2              = 'BZip2 specific options (bzip2.pas)';
   RsHintDefBZip2StaticLink    = 'Code from BZip2 is linked into JCL binaries';
@@ -195,6 +202,7 @@ resourcestring
   RsHintDefZLibStaticLink    = 'Code from ZLib is linked into JCL binaries';
   RsHintDefZLibLinkDLL       = 'JCL binaries require zlib1.dll to be present';
   RsHintDefZLibLinkOnRequest = 'JCL binaries require zlib1.dll when calling ZLib functions';
+  RsHintDefZLibRTL           = 'JCL relies on RTL''s ZLib functions and declarations';
   // Unicode options
   RsHintDefUnicode              = 'Unicode specific option (JclUnicode.pas)';
   RsHintDefUnicodeRTLDatabase   = 'Prefer RTL Character Database over JCL one, less accurate but reduce executable sizes';
