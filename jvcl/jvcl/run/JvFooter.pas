@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFooter.pas 12949 2010-12-01 17:51:36Z ahuser $
+// $Id: JvFooter.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvFooter;
 
@@ -60,6 +60,9 @@ type
     property SpaceInterval: Integer read FSpaceInterval write SetSpaceInterval;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvFooter = class(TJvCustomPanel)
   private
     FBevelStyle: TJvBevelStyle;
@@ -133,8 +136,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFooter.pas $';
-    Revision: '$Revision: 12949 $';
-    Date: '$Date: 2010-12-01 18:51:36 +0100 (mer., 01 déc. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -142,7 +145,7 @@ const
 implementation
 
 uses
-  JvConsts, JvResources;
+  JvResources;
 
 //=== { TJvFooterBtn } =======================================================
 

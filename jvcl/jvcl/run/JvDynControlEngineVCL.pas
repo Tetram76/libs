@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineVCL.pas 13020 2011-04-25 19:58:35Z jfudickar $
+// $Id: JvDynControlEngineVCL.pas 13376 2012-07-07 20:48:29Z jfudickar $
 
 unit JvDynControlEngineVCL;
 
@@ -802,7 +802,6 @@ type
     function ControlGetPage(const PageName: string): TWinControl;
   end;
 
-  {$IFDEF DELPHI6_UP}
   TJvDynControlVCLColorComboBox = class(TColorBox, IUnknown, IJvDynControl,
       IJvDynControlColorComboBoxControl)
   public
@@ -826,7 +825,6 @@ type
     function GetControlDefaultColor: TColor; stdcall;
     procedure SetControlDefaultColor(const Value: TColor); stdcall;
   end;
-  {$ENDIF DELPHI6_UP}
 
 function DynControlEngineVCL: TJvDynControlEngine;
 procedure SetDynControlEngineVCLDefault;
@@ -835,8 +833,8 @@ procedure SetDynControlEngineVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineVCL.pas $';
-    Revision: '$Revision: 13020 $';
-    Date: '$Date: 2011-04-25 21:58:35 +0200 (lun., 25 avr. 2011) $';
+    Revision: '$Revision: 13376 $';
+    Date: '$Date: 2012-07-07 22:48:29 +0200 (sam., 07 juil. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -845,7 +843,7 @@ implementation
 
 uses
   SysUtils,
-  JvDynControlEngineTools, JvConsts, JvJCLUtils;
+  JvDynControlEngineTools, JvJCLUtils;
 
 var
   IntDynControlEngineVCL: TJvDynControlEngine = nil;
@@ -2311,8 +2309,11 @@ end;
 
 procedure TJvDynControlVCLComboBox.ControlSetValue(Value: Variant);
 begin
-  if (Style = csDropDownList) and VarIsInt(Value) then
-    ItemIndex := Items.IndexOf(VarToStr(Value))
+  if (Style = csDropDownList) then
+    if VarIsInt(Value) then
+      ItemIndex := VarToInt(Value)
+    else
+      ItemIndex := Items.IndexOf(VarToStr(Value))
   else
     Text := VarToStr(Value);
 end;
@@ -3389,7 +3390,6 @@ begin
     Result := nil;
 end;
 
-{$IFDEF DELPHI6_UP}
 //=== { TJvDynControlVCLColorComboBox } ===========================================
 
 Type TAccessCustomColorBox = class(TCustomColorBox);
@@ -3474,7 +3474,6 @@ procedure TJvDynControlVCLColorComboBox.SetControlDefaultColor(const Value:
 begin
   DefaultColorColor := Value;
 end;
-{$ENDIF DELPHI6_UP}
 
 //=== { TJvDynControlEngineVCL } =============================================
 

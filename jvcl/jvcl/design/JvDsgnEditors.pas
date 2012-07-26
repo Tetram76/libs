@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDsgnEditors.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDsgnEditors.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvDsgnEditors;
 
@@ -199,6 +199,11 @@ uses
   Registry,
   Dlgs, JvDateTimeForm,
   JvTypes, JvStringsForm, JvDsgnConsts, JvConsts;
+
+{$IFNDEF COMPILER12_UP}
+type
+  NativeInt = Integer;
+{$ENDIF ~COMPILER12_UP}
 
 function ValueName(E: Extended): string;
 begin
@@ -905,7 +910,7 @@ begin
   begin
     if not (Form is GetTypeData(GetPropType)^.ClassType) then
       raise EPropertyError.CreateRes(@SInvalidPropertyValue);
-    SetOrdValue(Longint(Form));
+    SetOrdValue(NativeInt(Form));
   end
   else
     inherited SetValue(Value);

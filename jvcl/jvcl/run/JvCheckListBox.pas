@@ -26,7 +26,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckListBox.pas 12849 2010-10-05 12:39:06Z ahuser $
+// $Id: JvCheckListBox.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvCheckListBox;
 
@@ -76,6 +76,9 @@ type
     property ValueUnchecked: string read FValueUnchecked write SetValueUnchecked stored IsValueUncheckedStored;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvCheckListBox = class(TJvExCheckListBox)
   private
     FHotTrack: Boolean;
@@ -148,8 +151,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckListBox.pas $';
-    Revision: '$Revision: 12849 $';
-    Date: '$Date: 2010-10-05 14:39:06 +0200 (mar., 05 oct. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -234,7 +237,8 @@ procedure TJvCheckListBoxDataConnector.Popuplate;
 var
   IsChecked: TList;
   ListKeyName, KeyName: TDataFieldString;
-  I, Index: Integer;
+  I: Integer;
+  Index: {$IFDEF RTL230_UP}NativeInt{$ELSE}Integer{$ENDIF};
 begin
   FMap.Clear;
   FRecNumMap.Clear;
@@ -310,7 +314,7 @@ end;
 
 procedure TJvCheckListBoxDataConnector.RecordChanged;
 var
-  Index: Integer;
+  Index: {$IFDEF RTL230_UP}NativeInt{$ELSE}Integer{$ENDIF};
 begin
   if IsValid then
   begin

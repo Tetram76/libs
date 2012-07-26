@@ -27,7 +27,7 @@ Known Issues:
       TJvHookInfos               -> TJvHookItem, TJvHookInfo, TJvHook
       TJvHookInfo                -> TJvHookData
 -----------------------------------------------------------------------------}
-// $Id: JvWndProcHook.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvWndProcHook.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvWndProcHook;
 
@@ -49,6 +49,9 @@ type
 
   TJvHookOrder = (hoBeforeMsg, hoAfterMsg);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvWindowHook = class(TJvComponent)
   private
     FActive: Boolean;
@@ -94,13 +97,18 @@ procedure ReleaseObj(AObject: TObject);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWndProcHook.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+{$IFNDEF COMPILER12_UP}
+uses
+  JvJCLUtils; // SetWindowLongPtr
+{$ENDIF ~COMPILER12_UP}
 
 type
   PJvHookInfo = ^TJvHookInfo;
@@ -110,7 +118,7 @@ type
   end;
 
   PHookInfoList = ^THookInfoList;
-  THookInfoList = array [0..MaxInt div 4 - 1] of PJvHookInfo;
+  THookInfoList = array [0..MaxInt div SizeOf(Pointer) - 1] of PJvHookInfo;
 
   TJvWndProcHook = class;
 
@@ -612,8 +620,7 @@ begin
   else
   begin
     FOldWndProc := nil;
-    FOldWndProcHandle := TFarProc(GetWindowLong(FHandle, GWL_WNDPROC));
-    SetWindowLong(FHandle, GWL_WNDPROC, Integer(MakeObjectInstance(WindowProc)));
+    FOldWndProcHandle := TFarProc(SetWindowLongPtr(FHandle, GWL_WNDPROC, LONG_PTR(MakeObjectInstance(WindowProc))));
     FHooked := True;
   end;
 end;
@@ -657,8 +664,7 @@ begin
   end
   else
   begin
-    Ptr := TFarProc(GetWindowLong(FHandle, GWL_WNDPROC));
-    SetWindowLong(FHandle, GWL_WNDPROC, Integer(FOldWndProcHandle));
+    Ptr := TFarProc(SetWindowLongPtr(FHandle, GWL_WNDPROC, LONG_PTR(FOldWndProcHandle)));
     FreeObjectInstance(Ptr);
     FHooked := False;
   end;

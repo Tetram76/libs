@@ -25,7 +25,7 @@ Description:
 Known Issues:
   fofConfirmMouse does nothing
 -----------------------------------------------------------------------------}
-// $Id: JvSHFileOperation.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSHFileOperation.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvSHFileOperation;
 
@@ -55,6 +55,9 @@ type
     fofNoRecursion, fofNoConnectedElements, fofNoRecurseParse, fofWantNukeWarning);
   TJvSHFileOptions = set of TJvSHFileOption;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSHFileOperation = class(TJvCommonDialog)
   private
     FSourceFiles: TStringList;
@@ -69,12 +72,10 @@ type
     procedure SetSourceFiles(Value: TStrings);
     procedure SetDestFiles(Value: TStrings);
   protected
-    // returns a Handle to the window that owns this dialog
-    function GetWinHandle: THandle; virtual;
     procedure DoFileMapping(const OldFileName, NewFileName: string); virtual;
   public
     // performs the Operation and returns True if no errors occurred
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
@@ -101,8 +102,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSHFileOperation.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -110,12 +111,12 @@ const
 implementation
 
 uses
-  JvConsts, JvResources, JvTypes;
+  JvResources, JvTypes;
 
 type
   // helper object for file mappings
   PShHandleToMappings = ^TShHandleToMappings;
-  TShHandleToMappings = packed record
+  TShHandleToMappings = packed record // "hNameMappings points to an int followed by an array of Ansi/Unicode SHNAMEMAPPING structures"
     Count: UINT;
     PNameMappings: PSHNameMapping;
   end;
@@ -138,7 +139,7 @@ end;
 
 {** returns True if no error occurred and user didn't abort }
 
-function TJvSHFileOperation.Execute: Boolean;
+function TJvSHFileOperation.Execute(ParentWnd: HWND): Boolean;
 const
   AOperation: array [TJvSHFileOpType] of UINT =
     (FO_COPY, FO_DELETE, FO_MOVE, FO_RENAME);
@@ -184,7 +185,7 @@ begin
     pTo := PChar(ppTo);
 
     wFunc := AOperation[FOperation];
-    Wnd := GetWinHandle; // (Owner as TForm).Handle;
+    Wnd := ParentWnd; // (Owner as TForm).Handle;
   end;
   FLastErrorMsg := EmptyStr;
   Result := SHFileOperation(SFOS) = 0;
@@ -249,14 +250,6 @@ end;
 procedure TJvSHFileOperation.SetDestFiles(Value: TStrings);
 begin
   FDestFiles.Assign(Value);
-end;
-
-function TJvSHFileOperation.GetWinHandle: THandle;
-begin
-  if Owner is TWinControl then
-    Result := TWinControl(Owner).Handle
-  else
-    Result := GetForegroundWindow;
 end;
 
 procedure TJvSHFileOperation.DoFileMapping(const OldFileName, NewFileName: string);

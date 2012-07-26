@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTipOfDay.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvTipOfDay.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvTipOfDay;
 
@@ -36,8 +36,8 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes, Graphics, Controls, Messages, Forms, StdCtrls,
-  JvAppStorage, JvBaseDlg, JvButtonPersistent, JvSpeedButton, JvTypes, JvConsts;
+  Windows, Classes, Graphics, Controls, Messages, Forms, StdCtrls,
+  JvAppStorage, JvBaseDlg, JvButtonPersistent, JvSpeedButton;
 
 type
   TJvCanShowEvent = procedure(Sender: TObject; var CanShow: Boolean) of object;
@@ -48,7 +48,10 @@ type
 
   TJvTipOfDayButtonPersistent = TJvButtonPersistent;
   
-  TJvTipOfDay = class(TJvCommonDialogP)
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
+  TJvTipOfDay = class(TJvCommonDialog)
   private
     FAppStorage: TJvCustomAppStorage;
     FAppStoragePath: string;
@@ -131,7 +134,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure LoadFromFile(const AFileName: string);
     procedure SaveToFile(const AFileName: string);
@@ -159,8 +162,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTipOfDay.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -168,7 +171,7 @@ const
 implementation
 
 uses
-  SysUtils, Windows, ExtCtrls, Dialogs,
+  SysUtils, ExtCtrls, Dialogs,
   JvWndProcHook,
   JvButton, JvResources, JvComponent, JvJVCLUtils;
 
@@ -259,7 +262,7 @@ begin
     FOnAfterExecute(Self);
 end;
 
-function TJvTipOfDay.Execute: Boolean;
+function TJvTipOfDay.Execute(ParentWnd: HWND): Boolean;
 var
   LForm: TJvForm;
 begin

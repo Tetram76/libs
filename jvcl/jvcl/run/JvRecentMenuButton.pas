@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRecentMenuButton.pas 12833 2010-09-05 13:25:12Z obones $
+// $Id: JvRecentMenuButton.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvRecentMenuButton;
 
@@ -40,6 +40,9 @@ uses
 // (rom) best separate out a TJvRecentPopupMenu
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvRecentMenuButton = class(TJvCustomButton)
   private
     FPopup: TPopupMenu;
@@ -65,8 +68,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRecentMenuButton.pas $';
-    Revision: '$Revision: 12833 $';
-    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -83,21 +86,18 @@ const
 
 constructor TJvRecentMenuButton.Create(AOwner: TComponent);
 var
-  It: TMenuItem;
+  MenuItem: TMenuItem;
 begin
   inherited Create(AOwner);
   FDirs := TJvSystemFolders.Create;
 
   //Create Popup
   FPopup := TPopupMenu.Create(Self);
-  It := TMenuItem.Create(FPopup);
-  with It do
-  begin
-    Enabled := False;
-    Caption := RsEmptyItem;
-    Tag := 1;
-  end;
-  FPopup.Items.Add(It);
+  MenuItem := TMenuItem.Create(FPopup);
+  MenuItem.Enabled := False;
+  MenuItem.Caption := RsEmptyItem;
+  MenuItem.Tag := 1;
+  FPopup.Items.Add(MenuItem);
   FPopup.OnPopup := CreatePopup;
 end;
 
@@ -162,7 +162,7 @@ end;
 
 function SortByObject(List: TStringList; Index1, Index2: Integer): Integer;
 begin
-  // note: higher values sorted at the top
+  // note: higher values sorted at the top (Objects[] contains the DosDateTime
   Result := Integer(List.Objects[Index2]) - Integer(List.Objects[Index1]);
 end;
 

@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLConfiguration.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JVCLConfiguration.pas 13132 2011-10-16 20:29:19Z jfudickar $
 
 unit JVCLConfiguration;
 

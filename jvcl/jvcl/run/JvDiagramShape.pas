@@ -18,7 +18,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDiagramShape.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDiagramShape.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvDiagramShape;
 
@@ -332,8 +332,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDiagramShape.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1420,31 +1420,30 @@ begin
   Result.Y := 0;
   if Shape = nil then
     Exit;
-  with Result do
-    case Side of
-      csLeft:
-        begin
-          X := Shape.Left;
-          Y := Shape.Top + Offset;
-        end;
-      csRight:
-        begin
-          X := Shape.Left + Shape.Width - 1;
-          Y := Shape.Top + Offset;
-        end;
-      csTop:
-        begin
-          X := Shape.Left + Offset;
-          Y := Shape.Top;
-        end;
-      csBottom:
-        begin
-          X := Shape.Left + Offset;
-          Y := Shape.Top + Shape.Height - 1;
-        end;
-    else
-      X := 0;
-      Y := 0;
+  case Side of
+    csLeft:
+      begin
+        Result.X := Shape.Left;
+        Result.Y := Shape.Top + Self.Offset;
+      end;
+    csRight:
+      begin
+        Result.X := Shape.Left + Shape.Width - 1;
+        Result.Y := Shape.Top + Self.Offset;
+      end;
+    csTop:
+      begin
+        Result.X := Shape.Left + Self.Offset;
+        Result.Y := Shape.Top;
+      end;
+    csBottom:
+      begin
+        Result.X := Shape.Left + Self.Offset;
+        Result.Y := Shape.Top + Shape.Height - 1;
+      end;
+  else
+    Result.X := 0;
+    Result.Y := 0;
   end;
 end;
 
@@ -1914,13 +1913,10 @@ begin
     Exit;
   ConnPt := Convert(FStartConn.ConnPoint(StartTermRect));
   TermPt := Convert(FStartConn.TermPoint(StartTermRect));
-  with Canvas do
-  begin
-    // Draw a line connecting the Conn and Term points
-    Pen.Color := FLineColor;
-    PenPos := ConnPt;
-    LineTo(TermPt.X, TermPt.Y);
-  end;
+  // Draw a line connecting the Conn and Term points
+  Canvas.Pen.Color := FLineColor;
+  Canvas.PenPos := ConnPt;
+  Canvas.LineTo(TermPt.X, TermPt.Y);
 end;
 
 //=== { TJvBluntSingleHeadArrow } ============================================
@@ -1940,13 +1936,10 @@ begin
     Exit;
   ConnPt := Convert(FStartConn.ConnPoint(StartTermRect));
   TermPt := Convert(FStartConn.TermPoint(StartTermRect));
-  with Canvas do
-  begin
-    // Draw a line connecting the Conn and Term points
-    Pen.Color := FLineColor;
-    PenPos := ConnPt;
-    LineTo(TermPt.X, TermPt.Y);
-  end;
+  // Draw a line connecting the Conn and Term points
+  Canvas.Pen.Color := FLineColor;
+  Canvas.PenPos := ConnPt;
+  Canvas.LineTo(TermPt.X, TermPt.Y);
 end;
 
 //=== { TJvSubCaseArrow } ====================================================
@@ -2037,13 +2030,10 @@ begin
     Exit;
   ConnPt := Convert(FStartConn.ConnPoint(StartTermRect));
   TermPt := Convert(FStartConn.TermPoint(StartTermRect));
-  with Canvas do
-  begin
-    // Draw a line connecting the Conn and Term points
-    Pen.Color := FLineColor;
-    PenPos := ConnPt;
-    LineTo(TermPt.X, TermPt.Y);
-  end;
+  // Draw a line connecting the Conn and Term points
+  Canvas.Pen.Color := FLineColor;
+  Canvas.PenPos := ConnPt;
+  Canvas.LineTo(TermPt.X, TermPt.Y);
 end;
 
 //=== { TJvDoubleHeadArrow } =================================================

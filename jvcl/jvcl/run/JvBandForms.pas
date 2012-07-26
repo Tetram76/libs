@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandForms.pas 13098 2011-08-25 10:36:25Z obones $
+// $Id: JvBandForms.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvBandForms;
 
@@ -295,8 +295,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBandForms.pas $';
-    Revision: '$Revision: 13098 $';
-    Date: '$Date: 2011-08-25 12:36:25 +0200 (jeu., 25 août 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -415,7 +415,11 @@ begin
   end;
 end;
 
+{$IFDEF RTL230_UP}
+function MsgHookProc(nCode: Integer; wParam: WPARAM; lParam: LPARAM): LRESULT; stdcall;
+{$ELSE}
 function MsgHookProc(nCode, wParam, lParam: Integer): Integer; stdcall;
+{$ENDIF RTL230_UP}
 var
   lOk: Boolean;
   I: Integer;

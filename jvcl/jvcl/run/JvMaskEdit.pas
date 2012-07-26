@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMaskEdit.pas 12947 2010-11-30 21:21:05Z ahuser $
+// $Id: JvMaskEdit.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvMaskEdit;
 
@@ -38,7 +38,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
   SysUtils, Classes, Graphics, Controls, Mask, Forms, StdCtrls,
-  JvComponent, JvTypes, JvCaret, JvToolEdit, JvExMask;
+  JvTypes, JvCaret, JvToolEdit, JvExMask;
 
 type
   TJvCustomMaskEdit = class(TJvCustomComboEdit)
@@ -106,6 +106,9 @@ type
     property Canvas: TCanvas read GetCanvas;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMaskEdit = class(TJvCustomMaskEdit)
   published
     property BevelEdges;
@@ -183,8 +186,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMaskEdit.pas $';
-    Revision: '$Revision: 12947 $';
-    Date: '$Date: 2010-11-30 22:21:05 +0100 (mar., 30 nov. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

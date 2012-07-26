@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPicClip.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPicClip.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvPicClip;
 
@@ -38,6 +38,9 @@ uses
 type
   TJvCellRange = 1..MaxInt;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPicClip = class(TJvComponent)
   private
     FPicture: TPicture;
@@ -91,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPicClip.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

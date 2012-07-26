@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckedItemsForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCheckedItemsForm.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvCheckedItemsForm;
 
@@ -104,6 +104,11 @@ uses
 const
   cDefaultFontName = 'MS Sans Serif';
 
+{$IFNDEF COMPILER12_UP}
+type
+  NativeInt = Integer;
+{$ENDIF ~COMPILER12_UP}
+
 //=== { TJvCheckItemsProperty } ==============================================
 
 function TJvCheckItemsProperty.GetAttributes: TPropertyAttributes;
@@ -130,7 +135,7 @@ begin
     end;
     CheckList.Items := TStrings(GetOrdValue);
     if ShowModal = mrOk then
-      SetOrdValue(Longint(CheckList.Items));
+      SetOrdValue(NativeInt(CheckList.Items));
   finally
     Free;
   end;

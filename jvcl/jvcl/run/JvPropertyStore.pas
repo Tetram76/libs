@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStore.pas 13095 2011-08-15 23:52:43Z jfudickar $
+// $Id: JvPropertyStore.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvPropertyStore;
 
@@ -215,8 +215,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStore.pas $';
-    Revision: '$Revision: 13095 $';
-    Date: '$Date: 2011-08-16 01:52:43 +0200 (mar., 16 août 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -224,7 +224,7 @@ const
 implementation
 
 uses
-  RTLConsts, Consts, SysUtils, TypInfo,
+  RTLConsts, SysUtils, TypInfo,
   JclSynch,
   JvStrings, JvResources, JvJVCLUtils;
 

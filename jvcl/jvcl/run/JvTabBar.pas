@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTabBar.pas 12970 2011-01-31 08:28:12Z ahuser $
+// $Id: JvTabBar.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvTabBar;
 
@@ -176,6 +176,9 @@ type
     destructor Destroy; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvModernTabBarPainter = class(TJvTabBarPainter)
   private
     FFont: TFont;
@@ -423,6 +426,9 @@ type
     property OnLeftTabChange: TNotifyEvent read FOnLeftTabChange write FOnLeftTabChange;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvTabBar = class(TJvCustomTabBar)
   published
     property Align default alTop;
@@ -481,8 +487,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTabBar.pas $';
-    Revision: '$Revision: 12970 $';
-    Date: '$Date: 2011-01-31 09:28:12 +0100 (lun., 31 janv. 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2024,7 +2030,7 @@ const
 {$ENDIF JVCLThemesEnabled}
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     DrawThemedFrameControl(Canvas.Handle, R, DFC_SCROLL, ScrollTypes[Button] or States[State])
   else
   {$ENDIF JVCLThemesEnabled}

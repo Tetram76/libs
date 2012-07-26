@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxPivotGrid.pas 13015 2011-04-10 17:19:12Z jfudickar $
+// $Id: JvControlActionsEngineCxPivotGrid.pas 13099 2011-09-02 21:51:31Z jfudickar $
 
 unit JvControlActionsEngineCxPivotGrid;
 
@@ -59,8 +59,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxPivotGrid.pas $';
-    Revision: '$Revision: 13015 $';
-    Date: '$Date: 2011-04-10 19:19:12 +0200 (dim., 10 avr. 2011) $';
+    Revision: '$Revision: 13099 $';
+    Date: '$Date: 2011-09-02 23:51:31 +0200 (ven., 02 sept. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -153,6 +153,7 @@ end;
 
 function TJvControlActioncxPivotGridEngine.UpdateAction(Action: TBasicAction): boolean;
 begin
+  Result := Inherited UpdateAction(Action);
   if Assigned(Action) and (Action is TJvControlBaseAction) and
     Assigned(GetPivotGrid(TJvControlBaseAction(action).ActionComponent)) and (TJvControlBaseAction(action).ControlOperation = caoCustomizeColumns) then
     TJvControlBaseAction(action).SetChecked(GetPivotGrid(TJvControlBaseAction(action).ActionComponent).Customization.Visible);

@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmInstall.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: FrmInstall.pas 13186 2011-11-30 13:21:45Z obones $
 
 unit FrmInstall;
 
@@ -62,6 +62,8 @@ type
     FLastCapLine: string;
     procedure EvProgress(Sender: TObject; const Text: string;
       Position, Max: Integer; Kind: TProgressKind);
+    procedure EvTargetProgress(Sender: TObject; Current: TTargetConfig;
+      Position, Max: Integer);
     procedure EvCaptureLine(const Text: string; var AAborted: Boolean);
     procedure EvIdle(Sender: TObject);
     procedure Init;
@@ -147,6 +149,13 @@ begin
   end;
 
   Application.ProcessMessages;
+end;
+
+procedure TFrameInstall.EvTargetProgress(Sender: TObject;
+  Current: TTargetConfig; Position, Max: Integer);
+begin
+  if Assigned(Compiler) then
+    FormCompile.SetCurrentTarget(Current);
 end;
 
 procedure TFrameInstall.EvCaptureLine(const Text: string; var AAborted: Boolean);
@@ -354,6 +363,7 @@ begin
     Compiler := TCompiler.Create(Installer.Data);
     try
       Compiler.OnProgress := EvProgress;
+      Compiler.OnTargetProgress := EvTargetProgress;
       Compiler.OnCaptureLine := EvCaptureLine;
       Compiler.OnIdle := EvIdle;
       Success := Compiler.Compile;
@@ -396,15 +406,15 @@ begin
         begin
           if SelTargets[i].CleanPalettes then
             SelTargets[i].CleanJVCLPalette(False);
-          Success := SelTargets[i].RegisterToIDE;
-          if not Success then
-            Break;
+          SelTargets[i].RegisterDesigntimePackages;
         end;
   end;
 
   FFinished := True;
   if Success then
-    Installer.PackageInstaller.ForcedFinish; // this is the last page so we want the installer to show the finished state
+    Installer.PackageInstaller.ForcedFinish // this is the last page so we want the installer to show the finished state
+  else
+    Installer.PackageInstaller.ForcedFinishError;
 end;
 
 procedure TFrameInstall.BtnDetailsClick(Sender: TObject);

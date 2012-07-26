@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgCrossTable.pas 12864 2010-10-11 08:19:42Z obones $
+// $Id: JvgCrossTable.pas 13104 2011-09-07 06:50:43Z obones $
 
 //  Компонент позволяет печатать так называемые Cross Tables, разбивая крупные
 //  таблицы на несколько листов как по ширине, так и по высоте.
@@ -189,7 +189,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Controls, Graphics, Buttons, Dialogs,
-  StdCtrls, ExtCtrls, SysUtils, Forms, DB, DBCtrls, Menus, DBTables, Printers,
+  StdCtrls, ExtCtrls, SysUtils, Forms, DB, DBCtrls, Menus, Printers,
   JvComponentBase, JvJVCLUtils,
   JvgTypes, JvgCommClasses, JvgUtils;
 
@@ -400,8 +400,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgCrossTable.pas $';
-    Revision: '$Revision: 12864 $';
-    Date: '$Date: 2010-10-11 10:19:42 +0200 (lun., 11 oct. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

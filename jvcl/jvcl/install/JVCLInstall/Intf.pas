@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Intf.pas 12666 2010-01-07 21:30:04Z ahuser $
+// $Id: Intf.pas 13165 2011-11-08 22:00:27Z ahuser $
 
 unit Intf;
 
@@ -75,12 +75,14 @@ type
     function VersionedJVCLXmlBpl(const Name: string): string;
     procedure DeinstallJVCL(Progress: TDeinstallProgressEvent;
       DeleteFiles: TDeleteFilesEvent; RealUninstall: Boolean);
-    function RegisterToIDE: Boolean;
+    procedure AddPathsToIDE;
+    procedure RegisterDesigntimePackages;
     procedure GetPackageBinariesForDeletion(List: TStrings);
     procedure CleanJVCLPalette(RemoveEmptyPalettes: Boolean);
     procedure RegisterJVCLVersionInfo;
 
     function GetTargetSymbol: string;
+    function GetMainTargetSymbol: string;
     function GetAutoDependencies: Boolean;
     function GetDebugUnits: Boolean;
     function GetBuild: Boolean;
@@ -120,7 +122,8 @@ type
 
     function GetOutputDirs(DebugUnits: Boolean): TOutputDirs;
 
-    property TargetSymbol: string read GetTargetSymbol;
+    property TargetSymbol: string read GetTargetSymbol; // includes personal/standard flag
+    property MainTargetSymbol: string read GetMainTargetSymbol; // without personal/standard flag
     property Target: TCompileTarget read GetTarget;
     property AutoDependencies: Boolean read GetAutoDependencies;
     property DebugUnits: Boolean read GetDebugUnits;

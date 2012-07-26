@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEnterTab.pas 12608 2009-11-22 13:51:51Z ahuser $
+// $Id: JvEnterTab.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvEnterTab;
 
@@ -41,6 +41,9 @@ uses
 type
   TJvEnterAsTabEvent = procedure (Sender: TObject; AControl: TWinControl; var Handled: Boolean) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvEnterAsTab = class(TJvComponent)
   private
     FEnterAsTab: Boolean;
@@ -66,8 +69,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEnterTab.pas $';
-    Revision: '$Revision: 12608 $';
-    Date: '$Date: 2009-11-22 14:51:51 +0100 (dim., 22 nov. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

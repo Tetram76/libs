@@ -27,7 +27,7 @@ Known Issues:
        example DecimalPlaces/Decimal, CheckMinValue (name indicates action?
        maybe better: TJvValidateEdit's HasMinValue) etc.
 -----------------------------------------------------------------------------}
-// $Id: JvBaseEdits.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvBaseEdits.pas 13329 2012-06-12 14:28:33Z obones $
 
 unit JvBaseEdits;
 
@@ -212,6 +212,9 @@ type
     constructor Create(AOwner: TComponent); override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvCalcEdit = class(TJvCustomCalcEdit)
   published
     property BevelEdges;
@@ -298,14 +301,16 @@ type
     property OnMouseUp;
     property OnContextPopup;
     property OnStartDrag;
+    property OnPopupHidden;
+    property OnPopupShown;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseEdits.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13329 $';
+    Date: '$Date: 2012-06-12 16:28:33 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -313,7 +318,7 @@ const
 implementation
 
 uses
-  SysUtils, Math, Consts, Graphics,
+  SysUtils, Math, Graphics,
 //  JclLogic,
   JvJCLUtils, JvCalc, JvConsts, JvResources, JclSysUtils;
 
@@ -641,7 +646,7 @@ end;
 {WAP added GetEditFormat, this code used to be ininline inside DataChanged.}
 function TJvCustomNumEdit.GetEditFormat:String;
 begin
-  Result := '0';
+  Result := ',0';  // must put the thousands separator by default to allow direct edit of value (paste for example)
   if FDecimalPlaces > 0 then
     if FDecimalPlacesAlwaysShown then
        Result  := Result + '.' + MakeStr('0', FDecimalPlaces)

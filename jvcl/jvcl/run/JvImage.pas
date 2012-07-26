@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImage.pas 12715 2010-03-09 11:13:09Z obones $
+// $Id: JvImage.pas 13321 2012-06-12 12:52:12Z obones $
 
 unit JvImage;
 
@@ -66,6 +66,9 @@ type
     property PicDisabled:TPicture read FPicDisabled write SetPicDisabled;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvImage = class(TJvExImage)
   private
     FOnStateChanged: TNotifyEvent;
@@ -109,8 +112,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImage.pas $';
-    Revision: '$Revision: 12715 $';
-    Date: '$Date: 2010-03-09 12:13:09 +0100 (mar., 09 mars 2010) $';
+    Revision: '$Revision: 13321 $';
+    Date: '$Date: 2012-06-12 14:52:12 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -210,7 +213,7 @@ begin
     Exit;
   if not MouseOver then
   begin
-    if UsesPictures then
+    if UsesPictures and Enabled then
       State := stEntered;
     inherited MouseEnter(Control);
   end;
@@ -220,7 +223,7 @@ procedure TJvImage.MouseLeave(Control: TControl);
 begin
   if MouseOver then
   begin
-    if UsesPictures then
+    if UsesPictures and Enabled then
       ApplyClick;
     inherited MouseLeave(Control);
   end;

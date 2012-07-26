@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStringGrid.pas 12987 2011-02-16 19:39:57Z ahuser $
+// $Id: JvStringGrid.pas 13221 2012-02-24 14:12:04Z obones $
 
 unit JvStringGrid;
 
@@ -40,17 +40,26 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Grids, StdCtrls,
-  JvTypes, JvJCLUtils, JvExGrids;
+  JvJCLUtils, JvExGrids;
 
 const
   GM_ACTIVATECELL = WM_USER + 123;
 
 type
-  TGMActivateCell = packed record
+  TGMActivateCell = record
     Msg: Cardinal;
+    {$IFDEF COMPILER16_UP}
+	MsgFiller: TDWordFiller;
+    {$ENDIF COMPILER16_UP}
     Column: Integer;
+    {$IFDEF COMPILER16_UP}
+	WParamFiller: TDWordFiller;
+    {$ENDIF COMPILER16_UP}
     Row: Integer;
-    Result: Integer;
+    {$IFDEF COMPILER16_UP}
+	LParamFiller: TDWordFiller;
+    {$ENDIF COMPILER16_UP}
+    Result: LRESULT;
   end;
 
   TJvStringGrid = class;
@@ -66,6 +75,9 @@ type
 
   TJvOnGetEditStyleEvent = procedure(Sender: TJvStringGrid; AColumn, ARow: Integer; PickListStrings: TStrings; var EditStyle: TEditStyle) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvStringGrid = class(TJvExStringGrid)
   private
     FAlignment: TAlignment;
@@ -130,6 +142,7 @@ type
     procedure InvalidateRow(ARow: Integer);
     procedure MoveColumn(FromIndex, ToIndex: Integer);
     procedure MoveRow(FromIndex, ToIndex: Longint);
+    property GridState;
     property InplaceEditor;
 
     // Calculates and sets the width of a specific column or all columns if Index < 0
@@ -236,8 +249,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStringGrid.pas $';
-    Revision: '$Revision: 12987 $';
-    Date: '$Date: 2011-02-16 20:39:57 +0100 (mer., 16 févr. 2011) $';
+    Revision: '$Revision: 13221 $';
+    Date: '$Date: 2012-02-24 15:12:04 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

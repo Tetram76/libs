@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDragDrop.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvDragDrop.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvDragDrop;
 
@@ -51,6 +51,9 @@ type
   TJvDragLeaveEvent = procedure(Sender: TJvDropTarget) of object;
   TJvDragAcceptEvent = procedure(Sender: TJvDropTarget; var Accept: Boolean) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDropTarget = class(TJvComponent, IDropTarget)
   private
     FDataObject: IDataObject;
@@ -107,6 +110,9 @@ type
     property OnDragLeave: TJvDragLeaveEvent read FOnDragLeave write FOnDragLeave;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDragDrop = class(TJvComponent)
   private
     FAcceptDrag: Boolean;
@@ -145,8 +151,8 @@ function Malloc: IMalloc;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDragDrop.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -666,7 +672,7 @@ end;
 
 function TJvDropTarget.GetFilenames(List: TStrings): Integer;
 var
-  DragH: Integer;
+  DragH: HDROP;
   Medium: TStgMedium;
   Name: string;
   I, Count, Len: Integer;
@@ -675,7 +681,7 @@ begin
   if FDataObject.GetData(FileDropFormatEtc, Medium) = S_OK then
     try
       try
-        DragH := Integer(GlobalLock(Medium.hGlobal));
+        DragH := HDROP(GlobalLock(Medium.hGlobal));
         try
           Count := DragQueryFile(DragH, Cardinal(-1), nil, 0);
           if List <> nil then
@@ -704,7 +710,7 @@ end;
 
 function TJvDropTarget.GetFilenamesW(List: TWideStrings): Integer;
 var
-  DragH: Integer;
+  DragH: HDROP;
   Medium: TStgMedium;
   Name: widestring;
   I, Count, Len: Integer;
@@ -713,7 +719,7 @@ begin
   if FDataObject.GetData(FileDropFormatEtc, Medium) = S_OK then
     try
       try
-        DragH := Integer(GlobalLock(Medium.hGlobal));
+        DragH := HDROP(GlobalLock(Medium.hGlobal));
         try
           Count := DragQueryFileW(DragH, Cardinal(-1), nil, 0);
           if List <> nil then

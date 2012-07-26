@@ -113,7 +113,7 @@
                    an exception will not occur.
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDebugHandler.pas 13054 2011-06-10 14:03:35Z obones $
+// $Id: JvDebugHandler.pas 13264 2012-02-29 15:47:52Z obones $
 
 unit JvDebugHandler;
 
@@ -128,10 +128,14 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, Forms,
   JclDebug, JclHookExcept,
+  JvComponentBase,
   AppEvnts;
 
 type
-  TJvDebugHandler = class(TComponent)
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
+  TJvDebugHandler = class(TJvComponent)
   private
     FExceptionLogging: Boolean;
     FAppEvents: TApplicationEvents;
@@ -167,8 +171,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDebugHandler.pas $';
-    Revision: '$Revision: 13054 $';
-    Date: '$Date: 2011-06-10 16:03:35 +0200 (ven., 10 juin 2011) $';
+    Revision: '$Revision: 13264 $';
+    Date: '$Date: 2012-02-29 16:47:52 +0100 (mer., 29 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

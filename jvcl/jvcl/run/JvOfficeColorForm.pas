@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOfficeColorForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvOfficeColorForm.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvOfficeColorForm;
 
@@ -37,8 +37,8 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
-  Windows, Messages, Graphics, Controls, Forms, StdCtrls, ExtCtrls,
-  JvConsts, JvComponent, JvOfficeColorPanel, JvOfficeDragBarForm;
+  Windows, Messages, Graphics, Controls, Forms, ExtCtrls,
+  JvComponent, JvOfficeColorPanel, JvOfficeDragBarForm;
 
 {------------------------------------------------------------------------------}
 
@@ -55,8 +55,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOfficeColorForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOdacSmartQuery.pas 12841 2010-09-05 17:33:11Z jfudickar $
+// $Id: JvOdacSmartQuery.pas 13372 2012-06-24 21:56:00Z jfudickar $
 
 unit JvOdacSmartQuery;
 
@@ -31,19 +31,17 @@ unit JvOdacSmartQuery;
 
 interface
 
+{$IFDEF USE_3RDPARTY_DEVART_ODAC}
 uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF USE_3RDPARTY_CORELAB_ODAC}
-  SysUtils, Classes, StdCtrls, ExtCtrls, Forms, Controls,
-  DB,
+  SysUtils, Classes, Forms, Controls, DB,
   OraSmart, Ora, DBaccess,
-  JvThread, JvThreadDialog, JvDynControlEngine,
-  {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
   JvBaseDBThreadedDataset;
+{$ENDIF USE_3RDPARTY_DEVART_ODAC}
 
-{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
+{$IFDEF USE_3RDPARTY_DEVART_ODAC}
 type
   TJvOdacThreadedDatasetAllowedContinueRecordFetchOptions =
     class(TJvBaseThreadedDatasetAllowedContinueRecordFetchOptions)
@@ -85,6 +83,9 @@ type
     procedure SaveRefreshKeyFields;
   End;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOdacSmartQuery = class(TSmartQuery, IJvThreadedDatasetInterface)
     procedure BreakExecution;
     procedure BringThreadDialogToFront;
@@ -156,6 +157,9 @@ type
         GetOnThreadException write SetOnThreadException;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOdacOraQuery = class(TOraQuery, IJvThreadedDatasetInterface)
     procedure BreakExecution;
     procedure BringThreadDialogToFront;
@@ -231,6 +235,9 @@ type
   end;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOdacOraTable = class(TOraTable, IJvThreadedDatasetInterface)
     procedure BreakExecution;
     procedure BringThreadDialogToFront;
@@ -301,21 +308,21 @@ type
     property OnThreadException: TJvThreadedDatasetThreadExceptionEvent read
         GetOnThreadException write SetOnThreadException;
   end;
-{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOdacSmartQuery.pas $';
-    Revision: '$Revision: 12841 $';
-    Date: '$Date: 2010-09-05 19:33:11 +0200 (dim., 05 sept. 2010) $';
+    Revision: '$Revision: 13372 $';
+    Date: '$Date: 2012-06-24 23:56:00 +0200 (dim., 24 juin 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
+{$ENDIF USE_3RDPARTY_DEVART_ODAC}
 
 implementation
 
-{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
+{$IFDEF USE_3RDPARTY_DEVART_ODAC}
 uses Variants, MemData;
 
 //=== { TJvOdacSmartQuery } ==================================================
@@ -544,9 +551,11 @@ begin
 end;
 
 function TJvOdacSmartQuery.IsThreadAllowed: Boolean;
+var ThreadedDatasetInterface : IJvThreadedDatasetInterface;
 begin
-  if Assigned(MasterSource) and Assigned(MasterSource.Dataset) and (MasterSource.Dataset is TJvOdacSmartQuery) then
-    Result := not TJvOdacSmartQuery(MasterSource.Dataset).ThreadHandler.ThreadIsActive
+  if Assigned(MasterSource) and Assigned(MasterSource.Dataset)
+     and Supports(MasterSource.DataSet, IJvThreadedDatasetInterface, ThreadedDatasetInterface) then
+    Result := not ThreadedDatasetInterface.ThreadIsActive
   else
     Result := True;
 end;
@@ -967,9 +976,11 @@ begin
 end;
 
 function TJvOdacOraQuery.IsThreadAllowed: Boolean;
+var ThreadedDatasetInterface : IJvThreadedDatasetInterface;
 begin
-  if Assigned(MasterSource) and Assigned(MasterSource.Dataset) and (MasterSource.Dataset is TJvOdacSmartQuery) then
-    Result := not TJvOdacSmartQuery(MasterSource.Dataset).ThreadHandler.ThreadIsActive
+  if Assigned(MasterSource) and Assigned(MasterSource.Dataset)
+     and Supports(MasterSource.DataSet, IJvThreadedDatasetInterface, ThreadedDatasetInterface) then
+    Result := not ThreadedDatasetInterface.ThreadIsActive
   else
     Result := True;
 end;
@@ -1283,9 +1294,11 @@ begin
 end;
 
 function TJvOdacOraTable.IsThreadAllowed: Boolean;
+var ThreadedDatasetInterface : IJvThreadedDatasetInterface;
 begin
-  if Assigned(MasterSource) and Assigned(MasterSource.Dataset) and (MasterSource.Dataset is TJvOdacSmartQuery) then
-    Result := not TJvOdacSmartQuery(MasterSource.Dataset).ThreadHandler.ThreadIsActive
+  if Assigned(MasterSource) and Assigned(MasterSource.Dataset)
+     and Supports(MasterSource.DataSet, IJvThreadedDatasetInterface, ThreadedDatasetInterface) then
+    Result := not ThreadedDatasetInterface.ThreadIsActive
   else
     Result := True;
 end;
@@ -1365,7 +1378,6 @@ begin
   else
     Result := False;
 end;
-{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
 
 
 {$IFDEF UNITVERSIONING}
@@ -1375,5 +1387,6 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
+{$ENDIF USE_3RDPARTY_DEVART_ODAC}
 end.
 

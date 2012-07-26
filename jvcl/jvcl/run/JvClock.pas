@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvClock.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvClock.pas 13363 2012-06-18 12:28:20Z obones $
 
 unit JvClock;
 
@@ -51,6 +51,9 @@ type
   TJvGetTimeEvent = procedure(Sender: TObject; var ATime: TDateTime) of object;
   TJvGetDateEvent = TJvGetTimeEvent;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvClock = class(TJvCustomPanel, IJvDenySubClassing)
   private
     FTimer: TJvTimer;
@@ -194,8 +197,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvClock.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13363 $';
+    Date: '$Date: 2012-06-18 14:28:20 +0200 (lun., 18 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -207,7 +210,7 @@ uses
   {$IFDEF COMPILER7_UP}
   SysConst,
   {$ENDIF COMPILER7_UP}
-  SysUtils, Forms, ExtCtrls, Consts,
+  SysUtils, Forms, ExtCtrls,
   JvThemes, JclSysUtils;
 
 var
@@ -515,8 +518,7 @@ procedure TJvClock.GetTime(var T: TJvClockTime);
 var
   MSec: Word;
 begin
-  with T do
-    DecodeTime(GetSystemTime, Hour, Minute, Second, MSec);
+  DecodeTime(GetSystemTime, T.Hour, T.Minute, T.Second, MSec);
 end;
 
 procedure TJvClock.UpdateClock;
@@ -587,8 +589,7 @@ begin
   if BevelInner <> bvNone then
     Inc(InflateWidth, BevelWidth);
   InflateRect(FClockRect, -InflateWidth, -InflateWidth);
-  with FClockRect do
-    CircleClock(Right - Left, Bottom - Top);
+  CircleClock(FClockRect.Right - FClockRect.Left, FClockRect.Bottom - FClockRect.Top);
   if AutoSize then
     ResizeFont(Rect);
 end;
@@ -1146,7 +1147,7 @@ begin
   if FShowSeconds then
     TimeStr := TimeStr + ':ss';
   if FTwelveHour then
-    TimeStr := TimeStr + ' ampm';
+    TimeStr := TimeStr + ' am/pm';
   TimeStr := FormatDateTime(TimeStr, GetSystemTime);
   if (H >= 10) or FLeadingZero then
     L := 5
@@ -1163,13 +1164,10 @@ begin
     FullWidth := TextWidth(SAmPm) + (L * FontWidth);
     if ShowDate then
       FullWidth := FullWidth + (Length(DateFormat) + 1) * FontWidth;
-    with Rect do
-    begin
-      Left := ((Right + Left) - FullWidth) div 2;
-      Right := Left + FullWidth;
-      Top := ((Bottom + Top) - FontHeight) div 2;
-      Bottom := Top + FontHeight;
-    end;
+    Rect.Left := ((Rect.Right + Rect.Left) - FullWidth) div 2;
+    Rect.Right := Rect.Left + FullWidth;
+    Rect.Top := ((Rect.Bottom + Rect.Top) - FontHeight) div 2;
+    Rect.Bottom := Rect.Top + FontHeight;
     Brush.Color := Color;
     if ShowDate then
     begin
@@ -1187,7 +1185,7 @@ begin
     if FullTime or (NewTime.Hour <> FDisplayTime.Hour) then
     begin
       Rect.Right := Rect.Left + TextWidth(SAmPm);
-      DrawText(Canvas, @SAmPm[1], Length(SAmPm), Rect,    // DO NOT CHANGE @SAmPm[1], it is used to get a PChar to the string
+      DrawText(Canvas, PChar(SAmPm), Length(SAmPm), Rect,
         DT_EXPANDTABS or DT_VCENTER or DT_NOCLIP or DT_SINGLELINE);
     end;
   end;

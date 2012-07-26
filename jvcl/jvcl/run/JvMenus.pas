@@ -22,12 +22,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMenus.pas 13061 2011-06-11 10:03:55Z jfudickar $
+// $Id: JvMenus.pas 13334 2012-06-12 15:48:26Z obones $
 
 unit JvMenus;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -37,8 +36,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Contnrs, Graphics, Controls, Forms, Classes,
   ExtCtrls, ImgList, Menus,
-  JclBase,
-  JvTypes, JvWndProcHook, JVCLVer;
+  JvWndProcHook, JVCLVer;
 
 const
   // custom painter constants
@@ -180,6 +178,9 @@ type
     State: TMenuOwnerDrawState; var ImageIndex: Integer) of object;
 
   // the main menu class
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMainMenu = class(TMainMenu)
   private
     FAboutJVCL: TJVCLAboutInfo;
@@ -297,6 +298,9 @@ type
 
   // The Popup counterpart of TJvMainMenu
   // does basically the same thing, but in a popup menu
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPopupMenu = class(TPopupMenu)
   private
     FAboutJVCL: TJVCLAboutInfo;
@@ -378,7 +382,7 @@ type
     procedure Refresh;
     procedure Popup(X, Y: Integer); override;
     procedure DefaultDrawItem(Item: TMenuItem; Rect: TRect;
-      State: TMenuOwnerDrawState);
+      State: TMenuOwnerDrawState); deprecated {$IFDEF SUPPORTS_DEPRECATED_DETAILS}'DefaultDrawItem calls DrawItem that is also called by OnDrawItem. As such, it is useless and even dangerous if you call it from OnDrawItem handler.'{$ENDIF SUPPORTS_DEPRECATED_DETAILS};
     procedure Rebuild(ForceIfLoading: Boolean = False);
 
     property Canvas: TCanvas read GetCanvas;
@@ -614,6 +618,9 @@ type
   { TJvOfficeMenuItemPainter }
 
   // This painter draws an item using the office style
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOfficeMenuItemPainter = class(TJvCustomMenuItemPainter)
   private
     FCurrentItem: TMenuItem;
@@ -639,6 +646,9 @@ type
   end;
 
   // this painter draws an item as a lowered or raised button
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvBtnMenuItemPainter = class(TJvCustomMenuItemPainter)
   private
     FLowered: Boolean;
@@ -658,6 +668,9 @@ type
 
   // this painter is the standard one and as such doesn't do anything
   // more than the ancestor class except publishing properties
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvStandardMenuItemPainter = class(TJvCustomMenuItemPainter)
   protected
     procedure DrawCheckedImageBack(ARect: TRect); override;
@@ -672,6 +685,9 @@ type
   end;
 
   // this painter calls the user supplied events to render the item
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOwnerDrawMenuItemPainter = class(TJvCustomMenuItemPainter)
   public
     procedure Measure(Item: TMenuItem; var Width, Height: Integer); override;
@@ -680,6 +696,9 @@ type
 
   // this painter draws an item using the XP style (white menus,
   // shadows below images...)
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvXPMenuItemPainter = class(TJvCustomMenuItemPainter)
   private
     // property fields
@@ -744,8 +763,8 @@ function StripHotkeyPrefix(const Text: string): string; // MBCS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMenus.pas $';
-    Revision: '$Revision: 13061 $';
-    Date: '$Date: 2011-06-11 12:03:55 +0200 (sam., 11 juin 2011) $';
+    Revision: '$Revision: 13334 $';
+    Date: '$Date: 2012-06-12 17:48:26 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -753,11 +772,11 @@ const
 implementation
 
 uses
-  CommCtrl, Consts, Math, Types,
+  CommCtrl, Math, Types,
   {$IFNDEF COMPILER7_UP}
   JvWin32,
   {$ENDIF ~COMPILER7_UP}
-  JclGraphUtils, JclSysInfo, JvConsts, JvJCLUtils, JvJVCLUtils;
+  JclGraphUtils, JvConsts, JvJCLUtils, JvJVCLUtils;
 
 const
   Separator = '-';
@@ -846,7 +865,7 @@ begin
           if Item <> nil then
           begin
             Mesg := AMsg;
-            TWMMeasureItem(Mesg).MeasureItemStruct^.itemData := Longint(Item);
+            TWMMeasureItem(Mesg).MeasureItemStruct^.itemData := ULONG_PTR(Item);
             Menu.Dispatch(Mesg);
             Result := 1;
             Handled := True;
@@ -859,7 +878,7 @@ begin
           if Item <> nil then
           begin
             Mesg := AMsg;
-            TWMDrawItem(Mesg).DrawItemStruct^.itemData := Longint(Item);
+            TWMDrawItem(Mesg).DrawItemStruct^.itemData := ULONG_PTR(Item);
             Menu.Dispatch(Msg);
             Result := 1;
             Handled := True;
@@ -1241,8 +1260,7 @@ begin
             Canvas.Brush.Color := clHighlight;
             Canvas.Font.Color := clHighlightText;
           end;
-          with rcItem do
-            IntersectClipRect(Canvas.Handle, Left, Top, Right, Bottom);
+          IntersectClipRect(Canvas.Handle, rcItem.Left, rcItem.Top, rcItem.Right, rcItem.Bottom);
           DrawItem(Item, rcItem, State);
           Canvas.Handle := 0;
         finally
@@ -1748,11 +1766,7 @@ end;
 procedure TJvPopupMenu.DefaultDrawItem(Item: TMenuItem; Rect: TRect;
   State: TMenuOwnerDrawState);
 begin
-  if Canvas.Handle <> 0 then
-  begin
-    GetActiveItemPainter.Menu := Self;
-    GetActiveItemPainter.Paint(Item, Rect, State);
-  end;
+  DrawItem(Item, Rect, State)
 end;
 
 procedure TJvPopupMenu.DrawItem(Item: TMenuItem; Rect: TRect;
@@ -1825,8 +1839,7 @@ begin
             Canvas.Brush.Color := clHighlight;
             Canvas.Font.Color := clHighlightText;
           end;
-          with rcItem do
-            IntersectClipRect(Canvas.Handle, Left, Top, Right, Bottom);
+          IntersectClipRect(Canvas.Handle, rcItem.Left, rcItem.Top, rcItem.Right, rcItem.Bottom);
           DrawItem(Item, rcItem, State);
           Canvas.Handle := 0;
         finally
@@ -2893,19 +2906,16 @@ procedure TJvCustomMenuItemPainter.DefaultDrawLeftMargin(ARect: TRect;
 var
   R: Integer;
 begin
-  with ARect do
-  begin
-    R := Right - 3;
+  R := ARect.Right - 3;
 
-    // Draw the gradient
-    GradientFillRect(Canvas, Rect(Left, Top, R, Bottom), StartColor,
-      EndColor, fdTopToBottom, 32);
+  // Draw the gradient
+  GradientFillRect(Canvas, Rect(ARect.Left, ARect.Top, R, ARect.Bottom), StartColor,
+    EndColor, fdTopToBottom, 32);
 
-    // Draw the separating line
-    MenuLine(Canvas, clBtnFace, Right - 3, Top, Right - 3, Bottom);
-    MenuLine(Canvas, clBtnShadow, Right - 2, Top, Right - 2, Bottom);
-    MenuLine(Canvas, clBtnHighlight, Right - 1, Top, Right - 1, Bottom);
-  end;
+  // Draw the separating line
+  MenuLine(Canvas, clBtnFace, ARect.Right - 3, ARect.Top, ARect.Right - 3, ARect.Bottom);
+  MenuLine(Canvas, clBtnShadow, ARect.Right - 2, ARect.Top, ARect.Right - 2, ARect.Bottom);
+  MenuLine(Canvas, clBtnHighlight, ARect.Right - 1, ARect.Top, ARect.Right - 1, ARect.Bottom);
 end;
 
 procedure TJvCustomMenuItemPainter.DrawLeftMargin(ARect: TRect);
@@ -3458,6 +3468,12 @@ end;
 
 procedure TJvXPMenuItemPainter.DrawMenuBitmap(X, Y: Integer; Bitmap: TBitmap);
 begin
+  // to take the margin into account
+  if IsRightToLeft then
+    Inc(X, 3)
+  else
+    Dec(X, 3);
+
   if mdDisabled in FState then
     DrawDisabledBitmap(X, Y, Bitmap)
   else
@@ -3634,7 +3650,7 @@ begin
       begin
         GetWindowRect(CanvasWindow, WRect);
 
-        DefProc := Pointer(GetWindowLong(CanvasWindow, GWL_WNDPROC));
+        DefProc := Pointer(GetWindowLongPtr(CanvasWindow, GWL_WNDPROC));
         if (DefProc <> nil) and
            (DefProc <> @XPMenuItemPainterWndProc) and
            not (csDesigning in Menu.ComponentState) then
@@ -3969,8 +3985,7 @@ procedure TWindowList.AddHook(AHandle: THandle; OldProc, NewProc: Pointer);
 begin
   FWindowList.Add(Pointer(AHandle));
   FPrevProcList.Add(OldProc);
-
-  SetWindowLong(AHandle, GWL_WNDPROC, Integer(NewProc));
+  SetWindowLongPtr(AHandle, GWL_WNDPROC, LONG_PTR(NewProc));
 end;
 
 function TWindowList.CallPrevWindowProc(hwnd: THandle; uMsg: UINT;
@@ -4006,7 +4021,11 @@ begin
   Index := FWindowList.IndexOf(Pointer(AHandle));
   if Index >= 0 then
   begin
+    {$IFDEF RTL230_UP}
+    SetWindowLongPtr(AHandle, GWL_WNDPROC, LONG_PTR(FPrevProcList[Index]));
+    {$ELSE}
     SetWindowLong(AHandle, GWL_WNDPROC, Integer(FPrevProcList[Index]));
+    {$ENDIF RTL230_UP}
 
     FWindowList.Delete(Index);
     FPrevProcList.Delete(Index);

@@ -26,7 +26,7 @@ Known Issues:
     If the OtherCaption is set to an empty string, the default '&Other..' magically appears.
     Solution: Set OtherCaption to ' ' instead
 -----------------------------------------------------------------------------}
-// $Id: JvColorButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvColorButton.pas 13358 2012-06-18 09:33:44Z obones $
 
 unit JvColorButton;
 
@@ -43,6 +43,9 @@ uses
 
 type
   TJvColorButtonPaletteShowing = procedure(var CanShowPalette: Boolean) of object;
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvColorButton = class(TJvCustomDropButton)
   private
     FColorForm: TJvForm;
@@ -133,8 +136,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13358 $';
+    Date: '$Date: 2012-06-18 11:33:44 +0200 (lun., 18 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -148,7 +151,7 @@ uses
 constructor TJvColorButton.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  TabStop := False;
+  TabStop := True;
   FOptions := [];
   FCustomColors := TStringList.Create;
   Color := clBlack;

@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Dialogs.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvInterpreter_Dialogs.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvInterpreter_Dialogs;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Dialogs.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -64,7 +64,7 @@ uses
 
 procedure TCommonDialog_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TCommonDialog(Args.Obj).Handle);
+  Value := NativeInt(TCommonDialog(Args.Obj).Handle);
 end;
 
 

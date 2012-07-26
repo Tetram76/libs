@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionControlActions.pas 13069 2011-06-19 17:18:06Z jfudickar $
+// $Id: JvVersionControlActions.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvVersionControlActions;
 
@@ -33,7 +33,7 @@ Uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, ActnList, ImgList, Graphics, Classes, JvActionsEngine,
+  Windows, ActnList, Graphics, Classes, JvActionsEngine,
   JvVersionControlActionsEngine, JclVersionControl;
 
 type
@@ -42,6 +42,9 @@ type
       TjvVersionControlActionEngine; var aEnabled : Boolean) of object;
   TJvVersionControlActionExecuteEvent = procedure(Sender: TObject; ControlEngine: TjvVersionControlActionEngine;
     DataComponent: TComponent) of object;
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvVersionControlActionList = class(TActionList)
   private
     FDisableActions: Boolean;
@@ -344,8 +347,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvVersionControlActions.pas $';
-    Revision: '$Revision: 13069 $';
-    Date: '$Date: 2011-06-19 19:18:06 +0200 (dim., 19 juin 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

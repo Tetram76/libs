@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRegistryTreeview.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvRegistryTreeview.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvRegistryTreeview;
 
@@ -41,6 +41,9 @@ uses
   JvExtComponent, JvTypes;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvRegistryTreeView = class(TJvCustomTreeView)
   private
     FRegistryKeys: TJvRegKeys;
@@ -144,8 +147,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRegistryTreeview.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -153,6 +156,9 @@ const
 implementation
 
 uses
+  {$IFNDEF COMPILER12_UP}
+  JvJCLUtils, // NativeInt
+  {$ENDIF ~COMPILER12_UP}
   JvResources, JvJVCLUtils;
 
 {$R JvRegistryTreeView.res}
@@ -178,9 +184,9 @@ begin
     TmpNode := Node;
     while TmpNode <> nil do
     begin
-      if Longint(TmpNode.Data) < 0 then
+      if NativeInt(HKEY(TmpNode.Data)) < 0 then
       begin
-        Reg.RootKey := Longint(TmpNode.Data);
+        Reg.RootKey := HKEY(TmpNode.Data);
         Result := True;
         Break;
       end;

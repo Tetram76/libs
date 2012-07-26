@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckBox.pas 12556 2009-10-13 18:34:42Z ahuser $
+// $Id: JvCheckBox.pas 13327 2012-06-12 14:03:23Z obones $
 
 unit JvCheckBox;
 
@@ -67,6 +67,9 @@ type
     property ValueUnchecked: string read FValueUnchecked write SetValueUnchecked stored IsValueUncheckedStored;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvCheckBox = class(TJvExCheckBox)
   private
     FHotTrack: Boolean;
@@ -146,8 +149,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckBox.pas $';
-    Revision: '$Revision: 12556 $';
-    Date: '$Date: 2009-10-13 20:34:42 +0200 (mar., 13 oct. 2009) $';
+    Revision: '$Revision: 13327 $';
+    Date: '$Date: 2012-06-12 16:03:23 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -514,6 +517,9 @@ begin
     FDataConnector.Assign(Value);
 end;
 
+type
+  TWinControlAccess = class(TWinControl);
+
 procedure TJvCheckBox.SetFocus;
 var
   I: Integer;
@@ -521,17 +527,26 @@ var
 begin
   inherited SetFocus;
 
-  FocusLinkedControl := nil;
-  I := 0;
-  while (I < LinkedControls.Count) and not Assigned(FocusLinkedControl) do
+  // we want to skip our own focus, either to our children or to a sibling
+  // depending on the direction that the user asked for
+  if GetKeyState(VK_SHIFT) >= 0 then
   begin
-    if (loForceFocus in LinkedControls[I].Options) and (LinkedControls[I].Control is TWinControl) then
-      FocusLinkedControl := LinkedControls[I].Control;
+    FocusLinkedControl := nil;
+    I := 0;
+    while (I < LinkedControls.Count) and not Assigned(FocusLinkedControl) do
+    begin
+      if (loForceFocus in LinkedControls[I].Options) and (LinkedControls[I].Control is TWinControl) then
+        FocusLinkedControl := LinkedControls[I].Control;
 
-    Inc(I);
+      Inc(I);
+    end;
+    if Assigned(FocusLinkedControl) and TWinControl(FocusLinkedControl).CanFocus then
+      TWinControl(FocusLinkedControl).SetFocus;
+  end
+  else
+  begin
+    TWinControlAccess(Parent).SelectNext(Self, False, True);
   end;
-  if Assigned(FocusLinkedControl) then
-    TWinControl(FocusLinkedControl).SetFocus;
 end;
 
 procedure TJvCheckBox.DefineProperties(Filer: TFiler);

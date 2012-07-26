@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBPasswordDialogOdac.pas 12841 2010-09-05 17:33:11Z jfudickar $
+// $Id: JvDBPasswordDialogOdac.pas 13371 2012-06-23 15:46:57Z jfudickar $
 
 unit JvDBPasswordDialogOdac;
 
@@ -32,14 +32,17 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  {$IFDEF USE_3RDPARTY_CORELAB_ODAC}
-  Classes, Menus,
+  {$IFDEF USE_3RDPARTY_DEVART_ODAC}
+  Classes,
   Ora, dbaccess,
-  {$ENDIF USE_3RDPARTY_CORELAB_ODAC}
+  {$ENDIF USE_3RDPARTY_DEVART_ODAC}
   JvBaseDBPasswordDialog;
 
-{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
+{$IFDEF USE_3RDPARTY_DEVART_ODAC}
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBOdacPasswordDialog = class(TJvBaseDBPasswordDialog)
   private
     function GetSession: TCustomDAConnection;
@@ -51,23 +54,23 @@ type
   published
     property Session: TCustomDAConnection read GetSession write SetSession;
   end;
-{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
+{$ENDIF USE_3RDPARTY_DEVART_ODAC}
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBPasswordDialogOdac.pas $';
-    Revision: '$Revision: 12841 $';
-    Date: '$Date: 2010-09-05 19:33:11 +0200 (dim., 05 sept. 2010) $';
+    Revision: '$Revision: 13371 $';
+    Date: '$Date: 2012-06-23 17:46:57 +0200 (sam., 23 juin 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
-{$IFDEF USE_3RDPARTY_CORELAB_ODAC}
+{$IFDEF USE_3RDPARTY_DEVART_ODAC}
 uses
-  SysUtils, ExtCtrls, ComCtrls, StdCtrls, Types;
+  SysUtils, Types;
 
 function TJvDBOdacPasswordDialog.ChangePasswordInSession(NewPassword: string): Boolean;
 begin
@@ -100,7 +103,7 @@ procedure TJvDBOdacPasswordDialog.SetSession(const Value: TCustomDAConnection);
 begin
   inherited SetSession(Value);
 end;
-{$ENDIF USE_3RDPARTY_CORELAB_ODAC}
+{$ENDIF USE_3RDPARTY_DEVART_ODAC}
 
 {$IFDEF UNITVERSIONING}
 initialization

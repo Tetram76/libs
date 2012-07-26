@@ -35,7 +35,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvxCheckListBox.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvxCheckListBox.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvxCheckListBox;
 
@@ -163,6 +163,9 @@ type
   TCheckKind = (ckCheckBoxes, ckRadioButtons, ckCheckMarks);
   TChangeStateEvent = procedure(Sender: TObject; Index: Integer) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvxCheckListBox = class(TJvxCustomListBox)
   private
     FAllowGrayed: Boolean;
@@ -315,8 +318,8 @@ function CheckBitmap: TBitmap;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvxCheckListBox.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -327,6 +330,9 @@ implementation
 
 uses
   SysUtils, Consts, Math,
+  {$IFNDEF COMPILER12_UP}
+  JvJCLUtils, // ULONG_PTR
+  {$ENDIF ~COMPILER12_UP}
   JvConsts, JvJVCLUtils, JvThemes;
 
 //=== { TJvListBoxStrings } ==================================================
@@ -367,13 +373,13 @@ end;
 function TJvListBoxStrings.GetObject(Index: Integer): TObject;
 begin
   Result := TObject(ListBox.GetItemData(Index));
-  if Longint(Result) = LB_ERR then
+  if LPARAM(Result) = LPARAM(LB_ERR) then
     Error(SListIndexError, Index);
 end;
 
 procedure TJvListBoxStrings.PutObject(Index: Integer; AObject: TObject);
 begin
-  ListBox.SetItemData(Index, Longint(AObject));
+  ListBox.SetItemData(Index, LPARAM(AObject));
 end;
 
 function TJvListBoxStrings.Add(const S: string): Integer;
@@ -1013,7 +1019,7 @@ procedure TJvxCustomListBox.WMPaint(var Msg: TWMPaint);
     begin
       MeasureItemStruct.itemID := I;
       if I < Items.Count then
-        MeasureItemStruct.itemData := Longint(Items.Objects[I]);
+        MeasureItemStruct.itemData := ULONG_PTR(Items.Objects[I]);
       MeasureItemStruct.itemWidth := W;
       MeasureItemStruct.itemHeight := FItemHeight;
       DrawItemStruct.itemData := MeasureItemStruct.itemData;
@@ -1665,7 +1671,7 @@ begin
   DrawRect.Bottom := DrawRect.Top + FCheckHeight;
   SaveColor := FCanvas.Brush.Color;
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled and (CheckKind in [ckCheckBoxes, ckRadioButtons]) then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and (CheckKind in [ckCheckBoxes, ckRadioButtons]) then
   begin
     Flags := 0;
     if not Enabled then
@@ -1962,7 +1968,7 @@ end;
 function TJvxCheckListBox.CreateCheckObject(Index: Integer): TObject;
 begin
   Result := TJvCheckListBoxItem.Create;
-  inherited SetItemData(Index, Longint(Result));
+  inherited SetItemData(Index, LPARAM(Result));
 end;
 
 function TJvxCheckListBox.IsCheckObject(Index: Integer): Boolean;

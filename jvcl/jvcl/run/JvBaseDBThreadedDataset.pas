@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBThreadedDataset.pas 13018 2011-04-25 19:45:55Z jfudickar $
+// $Id: JvBaseDBThreadedDataset.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvBaseDBThreadedDataset;
 
@@ -35,7 +35,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, StdCtrls, ExtCtrls, Forms, Controls,
+  SysUtils, Classes, StdCtrls, Forms, Controls,
   DB,
   JvThread, JvThreadDialog, JvDynControlEngine;
 
@@ -407,8 +407,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBThreadedDataset.pas $';
-    Revision: '$Revision: 13018 $';
-    Date: '$Date: 2011-04-25 21:45:55 +0200 (lun., 25 avr. 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

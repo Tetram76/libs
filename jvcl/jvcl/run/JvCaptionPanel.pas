@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCaptionPanel.pas 12725 2010-03-16 22:12:27Z ahuser $
+// $Id: JvCaptionPanel.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvCaptionPanel;
 
@@ -83,6 +83,9 @@ type
     property Visible default False;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvCaptionPanel = class(TJvCustomPanel, IJvDenySubClassing)
   private
     FButtonArray: array [TJvCapBtnStyle] of TJvCapBtn;
@@ -192,8 +195,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCaptionPanel.pas $';
-    Revision: '$Revision: 12725 $';
-    Date: '$Date: 2010-03-16 23:12:27 +0100 (mar., 16 mars 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -534,12 +537,9 @@ var
   AdjustedCaptionHeight: Integer;
 begin
   R := ClientRect;
-  with Canvas do
-  begin
-    Brush.Color := Color;
-    FillRect(R);
-    Brush.Color := FCaptionColor;
-  end;
+  Canvas.Brush.Color := Color;
+  Canvas.FillRect(R);
+  Canvas.Brush.Color := FCaptionColor;
   FBevel := FCaptionOffsetSmall;
   Rotation := 0;
 
@@ -576,15 +576,14 @@ begin
   Canvas.FillRect(FCaptionRect);
   if not FIcon.Empty then
   begin
-    with FCaptionRect do
-      case FCaptionPosition of
+    case FCaptionPosition of
       dpRight:
-        Canvas.Draw( (Left + Right - FIcon.Width) div 2, Top + 1, FIcon);
+        Canvas.Draw((FCaptionRect.Left + FCaptionRect.Right - FIcon.Width) div 2, FCaptionRect.Top + 1, FIcon);
       dpLeft:
-        Canvas.Draw( (Left + Right - FIcon.Width) div 2, Bottom - 1 - FIcon.Height, FIcon);
+        Canvas.Draw((FCaptionRect.Left + FCaptionRect.Right - FIcon.Width) div 2, FCaptionRect.Bottom - 1 - FIcon.Height, FIcon);
       dpBottom, dpTop:
-        Canvas.Draw(Left + 1, (Top + Bottom - FIcon.Height) div 2 , FIcon );
-      end; //case
+        Canvas.Draw(FCaptionRect.Left + 1, (FCaptionRect.Top + FCaptionRect.Bottom - FIcon.Height) div 2 , FIcon);
+    end;
   end;
   DrawRotatedText(Rotation);
   DrawButtons;
@@ -629,8 +628,7 @@ begin
           begin
             if not FIcon.Empty then
               Dec(R.Bottom, FIcon.Height + 2);
-            with R do
-              R := Rect(Left, Bottom, Right, Top);
+            R := Rect(R.Left, R.Bottom, R.Right, R.Top);
             OffsetRect(R, tW, -FOffset);
           end;
         dpTop, dpBottom:
@@ -643,8 +641,7 @@ begin
           begin
             if not FIcon.Empty then
               Inc(R.Top, FIcon.Height + 2);
-            with R do
-              R := Rect(Right, Top, Left, Bottom);
+            R := Rect(R.Right, R.Top, R.Left, R.Bottom);
             OffsetRect(R, -tW, FOffset);
           end;
       end;

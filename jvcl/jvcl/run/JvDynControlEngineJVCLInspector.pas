@@ -19,12 +19,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineJVCLInspector.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDynControlEngineJVCLInspector.pas 13155 2011-11-06 12:31:20Z ahuser $
 
 unit JvDynControlEngineJVCLInspector;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -32,7 +31,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  ActnList, Graphics, ComCtrls, ImgList,
+  Graphics,
   Classes,
   Controls, JvInspector, JvDynControlEngineIntf, JvDynControlEngine;
 
@@ -95,8 +94,8 @@ procedure RegisterJvDynControlRTTIInspectorControl(iEngine :
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineJVCLInspector.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13155 $';
+    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -105,7 +104,7 @@ implementation
 
 uses
   SysUtils, Variants,
-  JvDynControlEngineTools, JvDynControlEngineVCL, JvJCLUtils;
+  JvJCLUtils;
 
 
 //=== { TJvDynControlRTTIInspectorControl } ========================================

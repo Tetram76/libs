@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvxSlider.pas 12890 2010-11-09 13:29:00Z obones $
+// $Id: JvxSlider.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvxSlider;
 
@@ -179,6 +179,9 @@ type
     property Value: Longint read FValue write SetValue default 0;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvxSlider = class(TJvCustomSlider)
   published
     property Align;
@@ -278,8 +281,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvxSlider.pas $';
-    Revision: '$Revision: 12890 $';
-    Date: '$Date: 2010-11-09 14:29:00 +0100 (mar., 09 nov. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

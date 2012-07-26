@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppDBStorage.pas 12572 2009-10-25 15:37:51Z ahuser $
+// $Id: JvAppDBStorage.pas 13191 2012-01-19 20:30:54Z ahuser $
 
 unit JvAppDBStorage;
 
@@ -34,7 +34,6 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, DB, Variants, DBCtrls,
-  JclBase,
   JvAppStorage, JvTypes;
 
 // DB table must contain 3 fields for the storage
@@ -105,6 +104,9 @@ type
     property OnWrite: TJvDBStorageWriteEvent read FOnWrite write FOnWrite;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvAppDBStorage = class(TJvCustomAppDBStorage)
   published
     property ReadOnly;
@@ -124,8 +126,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppDBStorage.pas $';
-    Revision: '$Revision: 12572 $';
-    Date: '$Date: 2009-10-25 16:37:51 +0100 (dim., 25 oct. 2009) $';
+    Revision: '$Revision: 13191 $';
+    Date: '$Date: 2012-01-19 21:30:54 +0100 (jeu., 19 janv. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -189,8 +191,7 @@ begin
   end;
 end;
 
-function TJvCustomAppDBStorage.DoReadBinary(const Path: string; Buf: TJvBytes;
-  BufSize: Integer): Integer;
+function TJvCustomAppDBStorage.DoReadBinary(const Path: string; Buf: TJvBytes; BufSize: Integer): Integer;
 var
   Value: AnsiString;
 begin
@@ -204,15 +205,13 @@ begin
     Move(Value[1], Buf, Result * SizeOf(AnsiChar));
 end;
 
-function TJvCustomAppDBStorage.DoReadFloat(const Path: string;
-  Default: Extended): Extended;
+function TJvCustomAppDBStorage.DoReadFloat(const Path: string; Default: Extended): Extended;
 begin
  // NOTE: StrToFloatDefIgnoreInvalidCharacters now called JvSafeStrToFloatDef:
   Result := JvSafeStrToFloatDef(DoReadString(Path, ''), Default);
 end;
 
-function TJvCustomAppDBStorage.DoReadInteger(const Path: string;
-  Default: Integer): Integer;
+function TJvCustomAppDBStorage.DoReadInteger(const Path: string; Default: Integer): Integer;
 begin
   Result := StrToIntDef(DoReadString(Path, ''), Default);
 end;
@@ -246,20 +245,17 @@ begin
   end;
 end;
 
-procedure TJvCustomAppDBStorage.DoWriteFloat(const Path: string;
-  Value: Extended);
+procedure TJvCustomAppDBStorage.DoWriteFloat(const Path: string; Value: Extended);
 begin
   WriteBinary(Path, @Value, SizeOf(Value));
 end;
 
-procedure TJvCustomAppDBStorage.DoWriteInteger(const Path: string;
-  Value: Integer);
+procedure TJvCustomAppDBStorage.DoWriteInteger(const Path: string;Value: Integer);
 begin
   DoWriteString(Path, IntToStr(Value));
 end;
 
-procedure TJvCustomAppDBStorage.DoWriteString(const Path: string;
-  const Value: string);
+procedure TJvCustomAppDBStorage.DoWriteString(const Path: string; const Value: string);
 var
   Section: string;
   Key: string;
@@ -268,14 +264,14 @@ begin
   WriteValue(Section, Key, Value);
 end;
 
-procedure TJvCustomAppDBStorage.EnumFolders(const Path: string;
-  const Strings: TStrings; const ReportListAsValue: Boolean);
+procedure TJvCustomAppDBStorage.EnumFolders(const Path: string; const Strings: TStrings;
+  const ReportListAsValue: Boolean);
 begin
   raise EJvAppDBStorageError.CreateRes(@RsENotSupported);
 end;
 
-procedure TJvCustomAppDBStorage.EnumValues(const Path: string;
-  const Strings: TStrings; const ReportListAsValue: Boolean);
+procedure TJvCustomAppDBStorage.EnumValues(const Path: string; const Strings: TStrings;
+  const ReportListAsValue: Boolean);
 begin
   raise EJvAppDBStorageError.CreateRes(@RsENotSupported);
 end;
@@ -307,8 +303,7 @@ begin
   Result := SectionExists(StrEnsureNoPrefix(PathDelim, Path), True);
 end;
 
-procedure TJvCustomAppDBStorage.Notification(AComponent: TComponent;
-  Operation: TOperation);
+procedure TJvCustomAppDBStorage.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
   if (Operation = opRemove) and not (csDestroying in ComponentState) then

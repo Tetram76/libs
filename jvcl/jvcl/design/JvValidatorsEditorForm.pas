@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidatorsEditorForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvValidatorsEditorForm.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvValidatorsEditorForm;
 
@@ -118,6 +118,11 @@ const
   ValidKinds: TTypeKinds =
     [tkInteger, tkChar, tkEnumeration, tkFloat, tkString, tkSet,
      tkWChar, tkLString, {$IFDEF UNICODE} tkUString, {$ENDIF} tkWString, tkVariant, tkInt64];
+
+{$IFNDEF COMPILER12_UP}
+type
+  NativeInt = Integer;
+{$ENDIF ~COMPILER12_UP}
 
 procedure ShowEditor(Designer: IDesigner; AValidator: TJvValidators);
 var
@@ -430,7 +435,7 @@ begin
     end;
     A := TAction.Create(Self);
     A.Caption := AName;
-    A.Tag := Integer(AClass);
+    A.Tag := NativeInt(AClass);
     A.ImageIndex := 0;
     if I - K < 9 then
       A.ShortCut := ShortCut(Ord('0') + I + 1 - K, [ssCtrl]);

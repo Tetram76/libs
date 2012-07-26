@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesktopAlert.pas 12906 2010-11-27 13:40:09Z ahuser $
+// $Id: JvDesktopAlert.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvDesktopAlert;
 
@@ -147,7 +147,7 @@ type
   TJvDesktopAlertOption = (daoCanClick, daoCanMove, daoCanMoveAnywhere, daoCanClose);
   TJvDesktopAlertOptions = set of TJvDesktopAlertOption;
 
-  TJvCustomDesktopAlert = class(TJvCommonDialogP)
+  TJvCustomDesktopAlert = class(TJvCommonDialog)
   private
     FStacker: TJvDesktopAlertStack;
     FColors: TJvDesktopAlertColors;
@@ -176,7 +176,7 @@ type
     destructor Destroy; override;
     function Showing: Boolean;
     procedure Close(Immediate: Boolean);
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
     property StyleHandler: TJvCustomDesktopAlertStyleHandler read FStyleHandler write SetStyleHandler;
   published
     property AlertStack: TJvDesktopAlertStack read GetAlertStack write SetAlertStack;
@@ -192,6 +192,9 @@ type
     property StyleOptions: TJvCustomDesktopAlertStyleHandler read FStyleHandler write SetStyleHandler;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDesktopAlert = class(TJvCustomDesktopAlert)
   private
     FImages: TCustomImageList;
@@ -244,7 +247,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
     property Form: TJvCustomFormDesktopAlert read FDesktopForm;
     property Data: TObject read FData write FData;
   published
@@ -290,7 +293,7 @@ type
   protected
   public
     property Form: TJvCustomFormDesktopAlert read FDesktopForm write SetForm;
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
   published
     property AlertStack;
     property AlertStyle;
@@ -304,6 +307,9 @@ type
     property StyleOptions;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDesktopAlertStack = class(TJvComponent)
   private
     FItems: TList;
@@ -488,8 +494,8 @@ function CreateHandlerForStyle(Style: TJvAlertStyle; OwnerForm: TJvCustomFormDes
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesktopAlert.pas $';
-    Revision: '$Revision: 12906 $';
-    Date: '$Date: 2010-11-27 14:40:09 +0100 (sam., 27 nov. 2010) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -734,12 +740,12 @@ begin
   inherited Destroy;
 end;
 
-function TJvDesktopAlert.Execute: Boolean;
+function TJvDesktopAlert.Execute(ParentWnd: HWND): Boolean;
 var
   I, X, Y: Integer;
   FActiveWindow, FActiveFocus: HWND;
 begin
-  inherited Execute;
+  inherited Execute(ParentWnd);
 
   DesktopForm.OnShowing := InternalOnShowing;
   DesktopForm.OnShow    := InternalOnShow;
@@ -789,7 +795,7 @@ begin
   if not AutoFocus then
   begin
     FActiveFocus := GetFocus;
-    FActiveWindow := GetActiveWindow;
+    FActiveWindow := ParentWnd;
   end
   else
   begin
@@ -1574,7 +1580,7 @@ begin
   end;
 end;
 
-function TJvCustomDesktopAlert.Execute: Boolean;
+function TJvCustomDesktopAlert.Execute(ParentWnd: HWND): Boolean;
 var
   ARect: TRect;
   Position: TJvDesktopAlertPosition;
@@ -1657,8 +1663,14 @@ begin
         if (Location.Position = dapMainFormCenter) and (Application <> nil) and (Application.MainForm <> nil) then
           CenterForm(FDesktopForm, Application.MainForm.BoundsRect)
         else
-        if (Location.Position = dapOwnerFormCenter) and (Owner is TCustomForm) then
-          CenterForm(FDesktopForm, TCustomForm(Owner).BoundsRect);
+        if (Location.Position = dapOwnerFormCenter) then
+          if (Owner is TCustomForm) then
+            CenterForm(FDesktopForm, TCustomForm(Owner).BoundsRect)
+          else
+          begin
+            GetWindowRect(ParentWnd, ARect);
+            CenterForm(FDesktopForm, ARect);
+          end;
       end;
   end;
 
@@ -1756,11 +1768,12 @@ end;
 
 { TJvDesktopAlertForm }
 
-function TJvDesktopAlertForm.Execute: Boolean;
+function TJvDesktopAlertForm.Execute(ParentWnd: HWND): Boolean;
 var
   FActiveWindow, FActiveFocus: HWND;
 begin
-  inherited Execute;
+  inherited Execute(ParentWnd);
+
   FDesktopForm.Closeable := (daoCanClose in Options);
   FDesktopForm.OnUserMove := InternalOnMove;
 
@@ -1768,7 +1781,7 @@ begin
   if not AutoFocus then
   begin
     FActiveFocus := GetFocus;
-    FActiveWindow := GetActiveWindow;
+    FActiveWindow := ParentWnd;
   end
   else
   begin

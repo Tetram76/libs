@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGradientCaption.pas 12805 2010-06-10 14:11:07Z obones $
+// $Id: JvGradientCaption.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvGradientCaption;
 
@@ -41,6 +41,9 @@ type
   TJvCaption = class;
   TJvCaptionList = class;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvGradientCaption = class(TComponent)
   private
     FActive: Boolean;
@@ -190,8 +193,8 @@ function GradientFormCaption(AForm: TCustomForm; AStartColor, AEndColor: TColor)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGradientCaption.pas $';
-    Revision: '$Revision: 12805 $';
-    Date: '$Date: 2010-06-10 16:11:07 +0200 (jeu., 10 juin 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -202,8 +205,7 @@ uses
   SysUtils,
   JvConsts, JvCaptionButton;
 
-function GradientFormCaption(AForm: TCustomForm; AStartColor, AEndColor: TColor):
-  TJvGradientCaption;
+function GradientFormCaption(AForm: TCustomForm; AStartColor, AEndColor: TColor): TJvGradientCaption;
 begin
   Result := TJvGradientCaption.Create(AForm);
   with Result do

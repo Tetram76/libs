@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 13069 2011-06-19 17:18:06Z jfudickar $
+// $Id: JvActionsEngine.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvActionsEngine;
 
@@ -34,11 +34,8 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF MSWINDOWS}
-  Windows, ActnList, ImgList, Graphics,
+  Windows, ActnList, Graphics,
   {$ENDIF MSWINDOWS}
-  {$IFDEF UNIX}
-  QWindows, QActnList, QImgList, QGraphics,
-  {$ENDIF UNIX}
   Controls, Classes;
 
 type
@@ -136,8 +133,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 13069 $';
-    Date: '$Date: 2011-06-19 19:18:06 +0200 (dim., 19 juin 2011) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -145,8 +142,8 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo, StrUtils, Variants,
-  JvResources, JvJVCLUtils;
+  SysUtils, Variants,
+  JvJVCLUtils;
 
 //=== { TJvActionEngineList } ========================================
 

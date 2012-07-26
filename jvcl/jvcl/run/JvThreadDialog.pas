@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThreadDialog.pas 13030 2011-05-17 22:35:04Z ahuser $
+// $Id: JvThreadDialog.pas 13172 2011-11-19 10:33:20Z jfudickar $
 
 unit JvThreadDialog;
 
@@ -32,14 +32,14 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, Forms, Buttons, StdCtrls,
+  SysUtils, Classes, Forms, StdCtrls,
   {$IFDEF MSWINDOWS}
-  Windows, Controls, ComCtrls, ExtCtrls,
+  Windows, Controls, ComCtrls,
   {$ENDIF MSWINDOWS}
   {$IFDEF UNIX}
   QWindows,
   {$ENDIF UNIX}
-  JvTypes, JvComponentBase, JvThread, JvDynControlEngine, JvDynControlEngineIntf;
+  JvThread, JvDynControlEngine, JvDynControlEngineIntf;
 
 type
   TJvThreadBaseDialogOptions = class;
@@ -93,6 +93,9 @@ type
     property ResName: string read FResName write FResName;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvThreadAnimateDialog = class(TJvThreadBaseDialog)
   private
     function GetDialogOptions: TJvThreadAnimateDialogOptions;
@@ -124,6 +127,9 @@ type
     property ShowProgressBar: Boolean read FShowProgressBar write FShowProgressBar default False;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvThreadSimpleDialog = class(TJvThreadBaseDialog)
   private
     function GetDialogOptions: TJvThreadSimpleDialogOptions;
@@ -230,8 +236,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThreadDialog.pas $';
-    Revision: '$Revision: 13030 $';
-    Date: '$Date: 2011-05-18 00:35:04 +0200 (mer., 18 mai 2011) $';
+    Revision: '$Revision: 13172 $';
+    Date: '$Date: 2011-11-19 11:33:20 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -748,8 +754,10 @@ begin
     Exit;
   w := CalculateFormWidth;
   W := Round(W/10)*10;
-  if (ClientWidth < W-50) or (ClientWidth > W+50)then // Reduces the resize flickering when the text is changed to often
-    ClientWidth := W;
+  if W < (ClientWidth -50) then // Reduces the resize flickering when the text is changed to often
+    ClientWidth := W
+  else if W > ClientWidth then
+    ClientWidth := W+20; // Reduces the resize flickering when the text is changed to often
   SetControlHeightWidth;
   h := CalculateFormHeight + FDefaultBorderWidth*2;
   h := Round(h/10)*10;

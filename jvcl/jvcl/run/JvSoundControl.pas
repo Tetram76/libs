@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSoundControl.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSoundControl.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvSoundControl;
 
@@ -35,7 +35,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, SysUtils, Classes, MMSystem,
-  JvTypes, JvComponentBase;
+  JvComponentBase;
 
 type
   TBalance = 0..100;
@@ -73,6 +73,9 @@ type
     property Balance: TBalance read GetBalance write SetBalance stored False;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSoundControl = class(TJvComponent)
   private
     FMidi: TJvSoundValue;
@@ -99,8 +102,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSoundControl.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

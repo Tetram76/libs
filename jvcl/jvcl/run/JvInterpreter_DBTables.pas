@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_DBTables.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvInterpreter_DBTables.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvInterpreter_DBTables;
 
@@ -46,8 +46,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_DBTables.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -320,7 +320,7 @@ end;
 
 procedure TSession_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TSession(Args.Obj).Handle);
+  Value := NativeInt(TSession(Args.Obj).Handle);
 end;
 
 { property Read Locale: TLocale }
@@ -547,14 +547,14 @@ end;
 
 procedure TDatabase_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Longint(TDatabase(Args.Obj).Handle);
+  Value := NativeInt(TDatabase(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HDBIDB) }
 
 procedure TDatabase_Write_Handle(const Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TDatabase(Args.Obj).Handle := HDBIDB(Longint(Value));
+  TDatabase(Args.Obj).Handle := HDBIDB(NativeInt(Value));
 end;
 
 { property Read IsSQLBased: Boolean }
@@ -941,7 +941,7 @@ end;
 
 procedure TBDEDataSet_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Longint(TBDEDataSet(Args.Obj).Handle);
+  Value := NativeInt(TBDEDataSet(Args.Obj).Handle);
 end;
 
 { property Read KeySize: Word }
@@ -1041,7 +1041,7 @@ end;
 
 procedure TDBDataSet_Read_DBHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Longint(TDBDataSet(Args.Obj).DBHandle);
+  Value := NativeInt(TDBDataSet(Args.Obj).DBHandle);
 end;
 
 { property Read DBLocale: TLocale }

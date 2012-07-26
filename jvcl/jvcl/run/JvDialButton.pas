@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDialButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDialButton.pas 13212 2012-02-23 12:47:24Z obones $
 
 unit JvDialButton;
 
@@ -43,10 +43,11 @@ uses
 type
   TJvDialPointerShape = (psLine, psTriangle, psDot, psOwnerDraw);
   TJvTickLength = (tlShort, tlMiddle, tlLong);
-  TJvDialAngle = 0..3600; // 0.0 - 360.0 deg
+  TJvDialAngle = 0..3600; // 0.0 - 360.0 deg    // in decidegrees (use 100 for 10 degrees)
   TJvRepeatValue = 10..1000; // mouse repeat values
   TJvCustomDialButton = class;
   TJvDialDrawEvent = procedure(Sender: TJvCustomDialButton; ARect: TRect) of object;
+  TJvDialComputeTicks = procedure(Sender: TJvCustomDialButton) of object;
 
   PTick = ^TTick;
   TTick = record
@@ -88,6 +89,7 @@ type
     FRepeatDelay: TJvRepeatValue;
     FOnChange: TNotifyEvent;
     FOnDrawPointer: TJvDialDrawEvent;
+    FOnComputeTicks: TJvDialComputeTicks;
     function CalcBounds(var AWidth, AHeight: Integer): Boolean;
     function GetAngle: TJvDialAngle;
     function GetCenter: TPoint;
@@ -112,6 +114,7 @@ type
     procedure SetTickStyle(Value: TTickStyle);
     procedure UpdateSize;
     procedure TimerExpired(Sender: TObject);
+    procedure ComputeTicks;
   protected
     function AngleToPos(AnAngle: TJvDialAngle): Integer;
     procedure BitmapNeeded; dynamic;
@@ -144,16 +147,16 @@ type
     procedure DecPos(Shift: TShiftState); dynamic;
     property Ticks: TList read FTicks write FTicks stored True;
     // to be published later:
-    property Angle: TJvDialAngle read GetAngle write SetAngle stored False;
+    property Angle: TJvDialAngle read GetAngle write SetAngle stored False;   // in decidegrees (use 100 for 10 degrees)
     property BorderStyle: TBorderStyle read FBorderStyle write SetBorderStyle default bsNone;
     property ButtonEdge: Integer read FButtonEdge write SetButtonEdge default 2;
     property DefaultPos: Integer read FDefaultPos write SetDefaultPos;
     property Frequency: Integer read FFrequency write SetFrequency default 10;
     property LargeChange: Integer read FLargeChange write SetLargeChange default 2;
     property Max: Integer read FMax write SetMax default 100;
-    property MaxAngle: TJvDialAngle read FMaxAngle write SetMaxAngle default 3300;
+    property MaxAngle: TJvDialAngle read FMaxAngle write SetMaxAngle default 3300;   // in decidegrees (use 100 for 10 degrees)
     property Min: Integer read FMin write SetMin default 0;
-    property MinAngle: TJvDialAngle read FMinAngle write SetMinAngle default 300;
+    property MinAngle: TJvDialAngle read FMinAngle write SetMinAngle default 300;   // in decidegrees (use 100 for 10 degrees)
     property PointerColorOn: TColor read FPointerColor write SetPointerColor default clBtnText;
     property PointerColorOff: TColor read FPointerColorOff write SetPointerColorOff default clGrayText;
     property PointerSize: Integer read FPointerSize write SetPointerSize default 33;
@@ -168,6 +171,7 @@ type
     property TabStop default True;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnDrawPointer: TJvDialDrawEvent read FOnDrawPointer write FOnDrawPointer;
+    property OnComputeTicks: TJvDialComputeTicks read FOnComputeTicks write FOnComputeTicks;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -182,6 +186,9 @@ type
     property Center: TPoint read GetCenter;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDialButton = class(TJvCustomDialButton)
   published
     // properties
@@ -222,6 +229,7 @@ type
     // events
     property OnChange;
     property OnClick;
+    property OnComputeTicks;
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
@@ -242,8 +250,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDialButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13212 $';
+    Date: '$Date: 2012-02-23 13:47:24 +0100 (jeu., 23 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -398,6 +406,7 @@ end;
 procedure TJvCustomDialButton.SetParams(APosition, AMin, AMax: Integer);
 var
   Invalid: Boolean;
+  InvalidTicks: Boolean;
   Changed: Boolean;
 begin
   Changed := False;
@@ -413,18 +422,25 @@ begin
     APosition := AMax;
 
   Invalid := False;
+  InvalidTicks := False;
 
   // Change Min if necessary and flag redrawing if so.
   if FMin <> AMin then
   begin
     FMin := AMin;
-    Invalid := True;
+    InvalidTicks := True;
   end;
 
   // Change Max if necessary and flag redrawing if so.
   if FMax <> AMax then
   begin
     FMax := AMax;
+    InvalidTicks := True;
+  end;
+
+  if InvalidTicks then
+  begin
+    ComputeTicks;
     Invalid := True;
   end;
 
@@ -454,6 +470,7 @@ end;
 procedure TJvCustomDialButton.SetAngleParams(AnAngle, AMin, AMax: TJvDialAngle);
 var
   Invalid: Boolean;
+  InvalidTicks: Boolean;
   Pos: Integer;
 begin
   // Error if AMax < AMin
@@ -466,18 +483,25 @@ begin
   if AnAngle > AMax then
     AnAngle := AMax;
   Invalid := False;
+  InvalidTicks := False;
 
   // Set MinAngle.
   if FMinAngle <> AMin then
   begin
     FMinAngle := AMin;
-    Invalid := True;
+    InvalidTicks := True;
   end;
 
   // Set MaxAngle.
   if FMaxAngle <> AMax then
   begin
     FMaxAngle := AMax;
+    InvalidTicks := True;
+  end;
+
+  if InvalidTicks then
+  begin
+    ComputeTicks;
     Invalid := True;
   end;
 
@@ -627,8 +651,7 @@ begin
   if FTickStyle <> Value then
   begin
     FTickStyle := Value;
-    ClearTicks;
-    SetTicks(Value);
+    ComputeTicks;
     FBitmapInvalid := True;
     Invalidate;
   end;
@@ -812,8 +835,7 @@ begin
           Inner.Y - DotRadius,
           Inner.X + DotRadius,
           Inner.Y + DotRadius);
-        with FPointerRect do
-          Canvas.Ellipse(Left, Top, Right, Bottom);
+        Canvas.Ellipse(FPointerRect.Left, FPointerRect.Top, FPointerRect.Right, FPointerRect.Bottom);
       end;
     psOwnerDraw:
       if Assigned(FOnDrawPointer) then
@@ -831,8 +853,8 @@ begin
 
         // Create a clipping region to protect the area outside the button
         // face.
-        with FPointerRect do
-          Region := CreateEllipticRgn(Left - 1, Top - 1, Right + 1, Bottom + 1);
+        Region := CreateEllipticRgn(FPointerRect.Left - 1, FPointerRect.Top - 1,
+            FPointerRect.Right + 1, FPointerRect.Bottom + 1);
         SelectClipRgn(Canvas.Handle, Region);
         try
           FOnDrawPointer(Self, FPointerRect);
@@ -854,7 +876,7 @@ begin
     FBitmapInvalid := True;
   end;
   {$IFDEF JVCLThemesEnabled}
-  if FBitmapInvalid or ThemeServices.ThemesEnabled then
+  if FBitmapInvalid or ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   {$ELSE}
   if FBitmapInvalid then
   {$ENDIF JVCLThemesEnabled}
@@ -867,7 +889,7 @@ begin
     end;
 
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.ThemesEnabled then
+    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
       FBitmap.Canvas.CopyRect(FBitmapRect, Canvas, FBitmapRect);
     {$ENDIF JVCLThemesEnabled}
 
@@ -909,7 +931,7 @@ begin
     Canvas.Brush.Color := Parent.Brush.Color;
     Canvas.Brush.Style := bsSolid;
     {$IFDEF JVCLThemesEnabled}
-    if not ThemeServices.ThemesEnabled then
+    if not ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     {$ENDIF JVCLThemesEnabled}
       Canvas.FillRect(FBitmapRect);
     SetViewportOrgEx(Canvas.Handle, FSize div 2 - FRadius, FSize div 2 - FRadius,
@@ -972,7 +994,7 @@ begin
   InflateRect(ARect, -1, -1);
   Canvas.Brush.Style := bsClear;
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     BitmapNeeded;
     Canvas.Pen.Color := FBitmap.Canvas.Pixels[0, 0]
@@ -1111,11 +1133,8 @@ end;
 
 function TJvCustomDialButton.GetCenter: TPoint;
 begin
-  with Result do
-  begin
-    X := FSize div 2;
-    Y := X;
-  end;
+  Result.X := FSize div 2;
+  Result.Y := Result.X;
 end;
 
 procedure TJvCustomDialButton.ClearTicks;
@@ -1268,9 +1287,27 @@ begin
   inherited ColorChanged;
 end;
 
+procedure TJvCustomDialButton.ComputeTicks;
+begin
+  if csLoading in ComponentState then
+    Exit;
+
+  ClearTicks;
+  case FTickStyle of
+    tsNone:
+      ;
+    tsAuto:
+      SetTicks(FTickStyle);
+    tsManual:
+      if Assigned(FOnComputeTicks) then
+        FOnComputeTicks(Self);
+  end;
+end;
+
 procedure TJvCustomDialButton.Loaded;
 begin
   inherited Loaded;
+  ComputeTicks;
   Change;
 end;
 

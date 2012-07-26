@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDlg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBaseDlg.pas 13365 2012-06-18 21:39:36Z jfudickar $
 
 unit JvBaseDlg;
 
@@ -33,40 +33,62 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Dialogs,
-  JVCLVer, JvComponentBase;
+  Windows, Dialogs,
+  JVCLVer;
 
 type
 
   TJvCommonDialog = class(TCommonDialog)
   private
     FAboutJVCL: TJVCLAboutInfo;
+  public
+    {$IFNDEF RTL180_UP}
+    function Execute: Boolean; overload; override;
+    function Execute(ParentWnd: HWND): Boolean; reintroduce; overload; virtual; abstract;
+    {$ENDIF ~RTL180_UP}
   published
     property AboutJVCL: TJVCLAboutInfo read FAboutJVCL write FAboutJVCL stored False;
-  end;
-
-  TJvCommonDialogP = class(TJvCommonDialog)
-  public
-//    procedure Execute; virtual; abstract;
-  end;
-
-  // (rom) alternative to TJvCommonDialogP
-  TJvCommonDialogF = class(TJvCommonDialog)
-  public
-//    function Execute: Boolean; virtual; abstract;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDlg.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13365 $';
+    Date: '$Date: 2012-06-18 23:39:36 +0200 (lun., 18 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
+
+uses
+  Controls, Forms;
+
+
+{ TJvCommonDialog }
+
+{$IFNDEF RTL180_UP}
+function TJvCommonDialog.Execute: Boolean;
+var
+  ParentWnd: HWND;
+  F: TCustomForm;
+begin
+  ParentWnd := 0;
+  if Owner is TControl then
+  begin
+    F := GetParentForm(TControl(Owner));
+    if F <> nil then
+      ParentWnd := F.Handle;
+  end;
+  if ParentWnd = 0 then
+    ParentWnd := GetForegroundWindow;
+  if ParentWnd = 0 then
+    ParentWnd := GetDesktopWindow;
+
+  Result := Execute(ParentWnd);
+end;
+{$ENDIF ~RTL180_UP}
 
 {$IFDEF UNITVERSIONING}
 initialization
@@ -75,5 +97,4 @@ initialization
 finalization
   UnregisterUnitVersion(HInstance);
 {$ENDIF UNITVERSIONING}
-
 end.

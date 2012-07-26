@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBdeUtils.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvBdeUtils.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvBdeUtils;
 
@@ -225,8 +225,8 @@ procedure GetXYByPos(const S: string; const Pos: Integer; var X, Y: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBdeUtils.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -234,9 +234,9 @@ const
 implementation
 
 uses
-  SysUtils, Registry, Forms, Controls, Dialogs, Consts, Math,
-  IniFiles, DBConsts, bdeconst, DBCommon, Variants, RTLConsts,
-  JvConsts, JvJVCLUtils, JvJCLUtils, JvTypes, JvResources;
+  SysUtils, Registry, Forms, Controls, Dialogs, Math,
+  IniFiles, DBConsts, bdeconst, Variants, RTLConsts,
+  JvConsts, JvJVCLUtils, JvJCLUtils, JvResources;
 
 { Utility routines }
 

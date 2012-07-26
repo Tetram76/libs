@@ -21,7 +21,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignUtils.pas 12535 2009-10-02 09:36:42Z ahuser $
+// $Id: JvDesignUtils.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvDesignUtils;
 
@@ -66,8 +66,8 @@ procedure DesignLoadComponentFromFile(AComp: TComponent;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignUtils.pas $';
-    Revision: '$Revision: 12535 $';
-    Date: '$Date: 2009-10-02 11:36:42 +0200 (ven., 02 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -113,28 +113,25 @@ end;
 
 function DesignValidateRect(const ARect: TRect): TRect;
 begin
-  with Result do
+  if ARect.Right < ARect.Left then
   begin
-    if ARect.Right < ARect.Left then
-    begin
-      Left := ARect.Right;
-      Right := ARect.Left;
-    end
-    else
-    begin
-      Left := ARect.Left;
-      Right := ARect.Right;
-    end;
-    if ARect.Bottom < ARect.Top then
-    begin
-      Top := ARect.Bottom;
-      Bottom := ARect.Top;
-    end
-    else
-    begin
-      Top := ARect.Top;
-      Bottom := ARect.Bottom;
-    end;
+    Result.Left := ARect.Right;
+    Result.Right := ARect.Left;
+  end
+  else
+  begin
+    Result.Left := ARect.Left;
+    Result.Right := ARect.Right;
+  end;
+  if ARect.Bottom < ARect.Top then
+  begin
+    Result.Top := ARect.Bottom;
+    Result.Bottom := ARect.Top;
+  end
+  else
+  begin
+    Result.Top := ARect.Top;
+    Result.Bottom := ARect.Bottom;
   end;
 end;
 
@@ -178,14 +175,13 @@ begin
   DC := GetDCEx(DesktopWindow, 0, DCX_CACHE or DCX_LOCKWINDOWUPDATE);
   try
     C := TCanvas.Create;
-    with C do
     try
-      Handle := DC;
-      Pen.Style := APenStyle;
-      Pen.Color := clWhite;
-      Pen.Mode := pmXor;
-      Brush.Style := bsClear;
-      Rectangle(ARect);
+      C.Handle := DC;
+      C.Pen.Style := APenStyle;
+      C.Pen.Color := clWhite;
+      C.Pen.Mode := pmXor;
+      C.Brush.Style := bsClear;
+      C.Rectangle(ARect);
     finally
       C.Free;
     end;

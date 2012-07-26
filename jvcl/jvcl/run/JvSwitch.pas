@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSwitch.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSwitch.pas 13338 2012-06-13 08:23:33Z obones $
 
 unit JvSwitch;
 
@@ -40,6 +40,9 @@ type
   TTextPos = (tpNone, tpLeft, tpRight, tpAbove, tpBelow);
   TSwitchBitmaps = set of Boolean;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSwitch = class(TJvCustomControl)
   private
     FActive: Boolean;
@@ -66,9 +69,8 @@ type
     procedure WriteBinaryData(Stream: TStream);
   protected
     procedure FocusChanged(Control: TWinControl); override;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
-    function WantKey(Key: Integer; Shift: TShiftState;
-      const KeyText: WideString): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; override;
     procedure TextChanged; override;
     procedure EnabledChanged; override;
     procedure DefineProperties(Filer: TFiler); override;
@@ -139,8 +141,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSwitch.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13338 $';
+    Date: '$Date: 2012-06-13 10:23:33 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -311,15 +313,14 @@ begin
   Invalidate;
 end;
 
-function TJvSwitch.WantKey(Key: Integer; Shift: TShiftState;
-  const KeyText: WideString): Boolean;
+function TJvSwitch.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := IsAccel(Key, Caption) and CanFocus and (ssAlt in Shift);
   if Result then
     SetFocus;
 end;
 
-function TJvSwitch.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvSwitch.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   Result := True; // the component paints the background in Paint
 end;
@@ -401,28 +402,21 @@ var
 
 begin
   ARect := GetClientRect;
-    with Canvas do
-    begin
-      Font := Self.Font;
-      Brush.Color := Self.Color;
-      DrawThemedBackground(Self, Canvas, ARect);
-      if not Enabled and (FDisableBitmaps[FStateOn] <> nil) then
-        DrawBitmap(FDisableBitmaps[FStateOn])
-      else
-        DrawBitmap(FBitmaps[FStateOn]);
-      if FTextPosition <> tpNone then
-      begin
-        FontHeight := TextHeight('W');
-        with ARect do
-        begin
-          Top := ((Bottom + Top) - FontHeight) shr 1;
-          Bottom := Top + FontHeight;
-        end;
-        Text := Caption;
-        DrawText(Canvas, Text, Length(Caption), ARect,
-          DT_EXPANDTABS or DT_VCENTER or DT_CENTER);
-      end;
-    end;
+  Canvas.Font := Font;
+  Canvas.Brush.Color := Color;
+  DrawThemedBackground(Self, Canvas, ARect);
+  if not Enabled and (FDisableBitmaps[FStateOn] <> nil) then
+    DrawBitmap(FDisableBitmaps[FStateOn])
+  else
+    DrawBitmap(FBitmaps[FStateOn]);
+  if FTextPosition <> tpNone then
+  begin
+    FontHeight := Canvas.TextHeight('W');
+    ARect.Top := ((ARect.Bottom + ARect.Top) - FontHeight) shr 1;
+    ARect.Bottom := ARect.Top + FontHeight;
+    Text := Caption;
+    DrawText(Canvas, Text, Length(Caption), ARect, DT_EXPANDTABS or DT_VCENTER or DT_CENTER);
+  end;
 end;
 
 procedure TJvSwitch.DoOn;

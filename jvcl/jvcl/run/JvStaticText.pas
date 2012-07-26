@@ -30,7 +30,7 @@ Changes 2002-10-22:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStaticText.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvStaticText.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvStaticText;
 
@@ -91,7 +91,7 @@ type
     procedure Loaded; override;
     procedure MouseEnter(Control: TControl); override;
     procedure MouseLeave(Control: TControl); override;
-    function WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean; override;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; override;
     procedure FontChanged; override;
     procedure TextChanged; override;
     procedure AdjustBounds; dynamic;
@@ -116,6 +116,9 @@ type
     destructor Destroy; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvStaticText = class(TJvCustomStaticText)
   published
     property Align;
@@ -175,8 +178,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStaticText.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -354,8 +357,7 @@ begin
   end;
 end;
 
-function TJvCustomStaticText.WantKey(Key: Integer; Shift: TShiftState;
-  const KeyText: WideString): Boolean;
+function TJvCustomStaticText.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := (FFocusControl <> nil) and Enabled and ShowAccelChar and
     IsAccel(Key, Caption) and (ssAlt in Shift);

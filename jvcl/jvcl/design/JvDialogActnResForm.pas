@@ -20,12 +20,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDialogActnResForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDialogActnResForm.pas 13155 2011-11-06 12:31:20Z ahuser $
 
 unit JvDialogActnResForm;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 

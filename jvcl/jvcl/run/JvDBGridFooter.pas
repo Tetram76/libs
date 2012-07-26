@@ -32,7 +32,7 @@ HOW TO USE THIS COMPONENT:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridFooter.pas 13086 2011-07-10 10:34:43Z ahuser $
+// $Id: JvDBGridFooter.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvDBGridFooter;
 
@@ -121,6 +121,9 @@ type
   TDisplayTextEvent = procedure(Sender: TJvDBGridFooter; Column: TFooterColumn;
     const Value: Variant; var Text: string) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBGridFooter = class(TStatusBar)
   private
     FColumns: TFooterColumns;
@@ -167,8 +170,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGridFooter.pas $';
-    Revision: '$Revision: 13086 $';
-    Date: '$Date: 2011-07-10 12:34:43 +0200 (dim., 10 juil. 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

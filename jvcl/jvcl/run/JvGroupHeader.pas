@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGroupHeader.pas 12784 2010-06-04 11:32:38Z ahuser $
+// $Id: JvGroupHeader.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvGroupHeader;
 
@@ -65,6 +65,9 @@ type
     property Style: TJvBevelStyle read FStyle write SetStyle default bsLowered;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvGroupHeader = class(TJvGraphicControl)
   private
     FAlignment: TAlignment;
@@ -138,8 +141,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGroupHeader.pas $';
-    Revision: '$Revision: 12784 $';
-    Date: '$Date: 2010-06-04 13:32:38 +0200 (ven., 04 juin 2010) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

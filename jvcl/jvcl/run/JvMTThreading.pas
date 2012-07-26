@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTThreading.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvMTThreading.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvMTThreading;
 
@@ -40,7 +40,7 @@ uses
   {$IFDEF HAS_UNIT_LIBC}
   Libc,
   {$ENDIF HAS_UNIT_LIBC}
-  JvMTConsts, JvMTSync;
+  JvMTConsts;
 
 type
   TMTManager = class;
@@ -134,8 +134,8 @@ function CurrentMTThread: TMTThread;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTThreading.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

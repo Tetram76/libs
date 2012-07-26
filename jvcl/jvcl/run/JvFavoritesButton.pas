@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFavoritesButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvFavoritesButton.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvFavoritesButton;
 
@@ -39,6 +39,9 @@ uses
   JvTypes, JvButton, JvComputerInfoEx, JvJVCLUtils;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvFavoritesButton = class(TJvCustomButton)
   private
     FPopup: TPopupMenu;
@@ -66,8 +69,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFavoritesButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -79,21 +82,18 @@ uses
 
 constructor TJvFavoritesButton.Create(AOwner: TComponent);
 var
-  It: TMenuItem;
+  MenuItem: TMenuItem;
 begin
   inherited Create(AOwner);
   FDirs := TJvSystemFolders.Create;
 
   //Create Popup
   FPopup := TPopupMenu.Create(Self);
-  It := TMenuItem.Create(FPopup);
-  with It do
-  begin
-    Enabled := False;
-    Caption := RsEmptyItem;
-    Tag := 1;
-  end;
-  FPopup.Items.Add(It);
+  MenuItem := TMenuItem.Create(FPopup);
+  MenuItem.Enabled := False;
+  MenuItem.Caption := RsEmptyItem;
+  MenuItem.Tag := 1;
+  FPopup.Items.Add(MenuItem);
   FPopup.OnPopup := PopupCreate;
 
   //Create Images

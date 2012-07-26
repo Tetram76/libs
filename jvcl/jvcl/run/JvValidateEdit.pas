@@ -27,7 +27,7 @@ negative number format, negative currency format and positive currency format.
 This could be rectified by a custom-written formatting routine.
 
 -----------------------------------------------------------------------------}
-// $Id: JvValidateEdit.pas 13021 2011-05-05 06:02:25Z ahuser $
+// $Id: JvValidateEdit.pas 13234 2012-02-25 11:13:03Z jfudickar $
 
 unit JvValidateEdit;
 
@@ -248,9 +248,13 @@ type
     property ForceDecimalSeparatorInput: Boolean read FForceDecimalSeparatorInput write FForceDecimalSeparatorInput;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvValidateEdit = class(TJvCustomValidateEdit)
   published
     property AllowEmpty default False;
+    property Align;
     property Alignment default taRightJustify;
     property Anchors;
     property AutoAlignment default True;
@@ -324,6 +328,8 @@ type
     property OnKeyPress;
     property OnKeyUp;
     property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
     property OnMouseMove;
     property OnMouseUp;
     property OnStartDrag;
@@ -338,8 +344,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidateEdit.pas $';
-    Revision: '$Revision: 13021 $';
-    Date: '$Date: 2011-05-05 08:02:25 +0200 (jeu., 05 mai 2011) $';
+    Revision: '$Revision: 13234 $';
+    Date: '$Date: 2012-02-25 12:13:03 +0100 (sam., 25 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

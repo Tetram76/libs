@@ -36,13 +36,16 @@ You may retrieve the latest version of this file at the Project JEDI's JVCL home
 located at http://jvcl.delphi-jedi.org
 
 Known Issues:
+  Under Vista and upper, the Transparent is working but causes flicker
+  This comes from ForceRefreshIfNeeded that recreates the window, but at the
+  time of writing, that was the only method that worked to get the control
+  to be refreshed. If you find a better way, please do the change.
 -----------------------------------------------------------------------------}
-// $Id: JvMemo.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvMemo.pas 13256 2012-02-28 08:18:58Z obones $
 
 unit JvMemo;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -51,7 +54,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, StdCtrls,
-  JvCaret, JvTypes, JvComponent, JvExStdCtrls;
+  JvCaret, JvTypes, JvExStdCtrls;
 
 type
   TJvCustomMemo = class(TJvExCustomMemo)
@@ -64,11 +67,18 @@ type
     FHideCaret: Boolean;
     FOrigLines: TStringList;
     FTransparent: Boolean;
+    FSelLengthButtonDown: Integer;
     procedure SetHotTrack(Value: Boolean);
     procedure SetCaret(const Value: TJvCaret);
     procedure WMHScroll(var Msg: TWMHScroll); message WM_HSCROLL;
     procedure WMVScroll(var Msg: TWMVScroll); message WM_VSCROLL;
     procedure WMPaint(var Msg: TWMPaint); message WM_PAINT;
+    procedure CNCtlColorEdit(var Message: TWMCtlColorEdit); message CN_CTLCOLOREDIT;
+    procedure CNCtlColorStatic(var Message: TWMCtlColorStatic); message CN_CTLCOLORSTATIC;
+    procedure WMNCPaint(var Message: TWMNCPaint); message WM_NCPAINT;
+    procedure WMKeyDown(var Message: TWMKeyDown); message WM_KEYDOWN;
+    procedure WMLButtonDown(var Message: TWMLButtonDown); message WM_LBUTTONDOWN;
+    procedure WMLButtonUp(var Message: TWMLButtonUp); message WM_LBUTTONUP;
     procedure SetMaxLines(const Value: Integer);
     function GetLines: TStrings;
     procedure SetLines(const Value: TStrings);
@@ -77,6 +87,7 @@ type
     function GetParentFlat: Boolean;
     procedure SetFlat(const Value: Boolean);
     procedure SetParentFlat(const Value: Boolean);
+    procedure ForceRefreshIfNeeded;
   protected
     procedure SetClipboardCommands(const Value: TJvClipboardCommands); override;
     procedure WMCut(var Msg: TMessage); message WM_CUT;
@@ -86,7 +97,7 @@ type
     procedure CaretChange(Sender: TObject); dynamic;
     procedure FocusKilled(NextWnd: THandle); override;
     procedure FocusSet(PrevWnd: THandle); override;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     procedure MouseEnter(Control: TControl); override;
     procedure MouseLeave(Control: TControl); override;
     procedure KeyPress(var Key: Char); override;
@@ -116,6 +127,9 @@ type
     property OnHorizontalScroll: TNotifyEvent read FOnHorizontalScroll write FOnHorizontalScroll;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMemo = class(TJvCustomMemo)
   published
     property AutoSize default False; // TCustomMemo.Create sets AutoSize:=False
@@ -196,8 +210,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemo.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13256 $';
+    Date: '$Date: 2012-02-28 09:18:58 +0100 (mar., 28 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -230,6 +244,40 @@ begin
   inherited;
   if Assigned(FOnHorizontalScroll) then
     FOnHorizontalScroll(Self);
+end;
+
+procedure TJvCustomMemo.WMKeyDown(var Message: TWMKeyDown);
+var
+  SelLengthBefore: Integer;
+begin
+  SelLengthBefore := SelLength;
+
+  inherited;
+  
+  if SelLength <> SelLengthBefore then
+    ForceRefreshIfNeeded;
+end;
+
+procedure TJvCustomMemo.WMLButtonDown(var Message: TWMLButtonDown);
+begin
+  FSelLengthButtonDown := SelLength;
+  
+  inherited;
+end;
+
+procedure TJvCustomMemo.WMLButtonUp(var Message: TWMLButtonUp);
+begin
+  inherited;
+
+  if SelLength <> FSelLengthButtonDown then
+    ForceRefreshIfNeeded;
+end;
+
+procedure TJvCustomMemo.WMNCPaint(var Message: TWMNCPaint);
+begin
+  // prevent drawing borders when transparent
+  if not Transparent then
+    inherited;
 end;
 
 procedure TJvCustomMemo.WMVScroll(var Msg: TWMVScroll);
@@ -276,15 +324,23 @@ begin
     while Lines.Count > MaxLines do
       Lines.Delete(Lines.Count - 1);
   inherited Change;
+  
+  ForceRefreshIfNeeded;
 end;
 
 procedure TJvCustomMemo.CreateParams(var Params: TCreateParams);
 begin
   inherited CreateParams(Params);
   if Transparent then
+  begin
+    ControlStyle := ControlStyle - [csOpaque];
     Params.ExStyle := Params.ExStyle or WS_EX_TRANSPARENT
+  end
   else
+  begin
+    ControlStyle := ControlStyle + [csOpaque];
     Params.ExStyle := Params.ExStyle and not WS_EX_TRANSPARENT;
+  end;
 end;
 
 function TJvCustomMemo.CharOfLine(iLine: Integer): Integer;
@@ -292,9 +348,45 @@ begin
   Result := Perform(EM_LINEINDEX, iLine, 0);
 end;
 
+procedure TJvCustomMemo.CNCtlColorEdit(var Message: TWMCtlColorEdit);
+var
+  NullBrush: HGDIOBJ;
+begin
+  inherited;
+  if Transparent then
+  begin
+    NullBrush := GetStockObject(NULL_BRUSH);
+    SelectObject(Message.ChildDC, NullBrush);
+    Message.Result := NullBrush;
+    SetBkMode(Message.ChildDC, Windows.TRANSPARENT);
+  end
+  else
+  begin
+    SetBkMode(Message.ChildDC, Windows.OPAQUE);
+  end;
+end;
+
+procedure TJvCustomMemo.CNCtlColorStatic(var Message: TWMCtlColorStatic);
+var
+  NullBrush: HGDIOBJ;
+begin
+  inherited;
+  if Transparent then
+  begin
+    NullBrush := GetStockObject(NULL_BRUSH);
+    SelectObject(Message.ChildDC, NullBrush);
+    Message.Result := NullBrush;
+    SetBkMode(Message.ChildDC, Windows.TRANSPARENT);
+  end
+  else
+  begin
+    SetBkMode(Message.ChildDC, Windows.OPAQUE);
+  end;
+end;
+
 function TJvCustomMemo.GetCurrentLine: Integer;
 begin
-  Result := Perform(EM_LINEFROMCHAR, -1, 0);
+  Result := Perform(EM_LINEFROMCHAR, WPARAM(-1), 0);
 end;
 
 function TJvCustomMemo.GetFlat: Boolean;
@@ -499,21 +591,30 @@ begin
     inherited DefaultHandler(Message);
 end;
 
+procedure TJvCustomMemo.ForceRefreshIfNeeded;
+begin
+  // Calling RecreateWnd is quite ugly but simply calling Repaint is not enough...
+  if Transparent then
+    RecreateWnd;
+end;
+
 procedure TJvCustomMemo.WMPaint(var Msg: TWMPaint);
 var
   DC: HDC;
 begin
-  // ahuser: Does this really work? Under Vista I can't see a transparent memo
   DC := GetDC(Handle);
-  if Transparent then
-    SetBkMode(DC, Windows.TRANSPARENT)
-  else
-    SetBkMode(DC, Windows.OPAQUE);
-  ReleaseDC(Handle, DC);
+  try
+    if Transparent then
+      SetBkMode(DC, Windows.TRANSPARENT)
+    else
+      SetBkMode(DC, Windows.OPAQUE);
+  finally
+    ReleaseDC(Handle, DC);
+  end;
   inherited;
 end;
 
-function TJvCustomMemo.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvCustomMemo.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   if not Transparent then
     Result := inherited DoEraseBackground(Canvas, Param)

@@ -24,7 +24,7 @@ Known Issues:
 Description:
 - This form is used by JvProgressDialog.pas
 -----------------------------------------------------------------------------}
-// $Id: JvProgressForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvProgressForm.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvProgressForm;
 
@@ -38,7 +38,7 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Graphics, Controls, Forms, StdCtrls, ExtCtrls, ComCtrls, ActnList,
-  JvComponent, JvConsts;
+  JvComponent;
 
 type
   TJvPrivateProgressUpdate = procedure(Sender: TObject;
@@ -99,8 +99,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgressForm.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvToolEdit.pas 13329 2012-06-12 14:28:33Z obones $
 
 unit JvToolEdit;
 
@@ -43,13 +43,13 @@ uses
   {$IFDEF MSWINDOWS}
   Windows, Messages, ShellAPI, ActiveX,
   {$ENDIF MSWINDOWS}
+  Types,
   ShlObj,
   Variants,
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Menus,
   Buttons, FileCtrl, Mask, ImgList, ActnList, ExtDlgs,
-  JclBase,
   JvConsts,
-  JvExControls, JvSpeedButton, JvTypes, JvExMask, JvExForms, JvButton,
+  JvExControls, JvSpeedButton, JvTypes, JvExMask,
   JvDataSourceIntf, JvBrowseFolder;
 
 const
@@ -306,7 +306,7 @@ type
     procedure DoEnter; override;
     procedure DoExit; override;
     procedure DoCtl3DChanged; virtual;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     { Repositions the child controls; checkbox }
     procedure UpdateControls; virtual;
     { Updates the margins of the edit box }
@@ -411,6 +411,9 @@ type
     property Ctl3D;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvComboEdit = class(TJvCustomComboEdit)
   public
     property Button;
@@ -556,6 +559,8 @@ type
     property LocalizedName: string read GetLocalizedName;
   published
     property AcceptFiles: Boolean read FAcceptFiles write SetAcceptFiles default True;
+    property AlwaysEnableButton default True;
+    property AlwaysShowPopup default True;
     property OnBeforeDialog: TExecOpenDialogEvent read FOnBeforeDialog write FOnBeforeDialog;
     property OnAfterDialog: TExecOpenDialogEvent read FOnAfterDialog write FOnAfterDialog;
     property OnDropFiles: TNotifyEvent read FOnDropFiles write FOnDropFiles;
@@ -572,6 +577,9 @@ type
 
   TFileDialogKind = (dkOpen, dkSave, dkOpenPicture, dkSavePicture);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvFilenameEdit = class(TJvFileDirEdit)
   private
     FDialog: TOpenDialog;
@@ -708,6 +716,9 @@ type
 
   TDirDialogKind = (dkVCL, dkWin32);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDirectoryEdit = class(TJvFileDirEdit)
   private
     FOptions: TSelectDirOpts;
@@ -869,6 +880,7 @@ type
     FDateFormat: string;
     FDateFormat2: string;
     FFormatting: Boolean;
+    FShowNullDate: Boolean;
     procedure SetMinDate(Value: TDateTime);
     procedure SetMaxDate(Value: TDateTime);
     function GetDate: TDateTime;
@@ -897,6 +909,7 @@ type
     function StoreMaxDate: Boolean;
     function FourDigitYear: Boolean;
     procedure WMContextMenu(var Msg: TWMContextMenu); message WM_CONTEXTMENU;
+    procedure SetShowNullDate(const Value: Boolean);
   protected
     FDateAutoBetween: Boolean;
     procedure SetDate(Value: TDateTime); virtual;
@@ -920,6 +933,7 @@ type
     function GetDefaultDateFormat: string; virtual;
     function GetDefaultDateFormatPreferred: TPreferredDateFormat; virtual;
     function CreateDataConnector: TJvCustomComboEditDataConnector; override;
+    function DisplayNullDateAsEmptyText: Boolean; virtual;
 
     property BlanksChar: Char read FBlanksChar write SetBlanksChar default ' ';
     property CalendarHints: TStrings read GetCalendarHints write SetCalendarHints;
@@ -944,6 +958,7 @@ type
     property MaxLength stored False;
     { Text is already stored via Date property }
     property Text stored False;
+    property ShowNullDate: Boolean read FShowNullDate write SetShowNullDate;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -961,6 +976,9 @@ type
     property MaxDate: TDateTime read FMaxDate write SetMaxDate stored StoreMaxDate;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDateEdit = class(TJvCustomDateEdit)
   protected
     procedure SetDate(Value: TDateTime); override;
@@ -1027,6 +1045,7 @@ type
     property ShowHint;
     property ShowButton;
     property CalendarStyle;
+    property ShowNullDate;
     property StartOfWeek;
     property Weekends;
     property WeekendColor;
@@ -1059,6 +1078,8 @@ type
     property DisabledTextColor;
     property DisabledColor;
     property OnKeyDown;
+    property OnPopupHidden;
+    property OnPopupShown;
 
     property DataConnector;
   end;
@@ -1087,8 +1108,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13329 $';
+    Date: '$Date: 2012-06-12 16:28:33 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1096,7 +1117,7 @@ const
 implementation
 
 uses
-  RTLConsts, Math, Consts, MaskUtils,
+  RTLConsts, Math, MaskUtils,
   MultiMon,
   JclFileUtils, JclStrings,
   JvPickDate, JvJCLUtils, JvJVCLUtils,
@@ -2054,7 +2075,7 @@ begin
   end;
 end;
 
-function TJvCustomComboEdit.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvCustomComboEdit.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   Result := True;
   if csDestroying in ComponentState then
@@ -2436,6 +2457,13 @@ begin
 end;
 
 procedure TJvCustomComboEdit.PopupDropDown(DisableEdit: Boolean);
+type
+  TJvSizeRect = record
+    Top: Integer;
+    Left: Integer;
+    Width: Integer;
+    Height: Integer;
+  end;
 var
   P: TPoint;
   Y: Integer;
@@ -2572,7 +2600,7 @@ begin
           can't use that default dropdown button (because we then use toolbar buttons,
           and there is no themed dropdown toolbar button) }
         FButton.FDrawThemedDropDownBtn :=
-          ThemeServices.ThemesEnabled and not ButtonFlat;
+          ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and not ButtonFlat;
         if FButton.FDrawThemedDropDownBtn then
         begin
           FButton.ButtonGlyph.Glyph := nil;
@@ -2641,7 +2669,7 @@ begin
     the glyph is the default themed dropdown button. When ButtonFlat = True, we
     can't use that default dropdown button, so we have to recreate the glyph
     in this special case }
-  if ThemeServices.ThemesEnabled and (ImageKind = ikDropDown) then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and (ImageKind = ikDropDown) then
     RecreateGlyph;
   {$ENDIF JVCLThemesEnabled}
 end;
@@ -2924,16 +2952,16 @@ var
   BtnRect: TRect;
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if BorderStyle = bsSingle then
     begin
       if Ctl3D then
-        BtnRect := Bounds(Width - FButton.Width - 2, 0,
-          FButton.Width, Height - 2)
+        BtnRect := Bounds(Width - FButton.Width - 2 - 1, 0 + 1,
+          FButton.Width, Height - 2 - 2)
       else
-        BtnRect := Bounds(Width - FButton.Width - 1, 1,
-          FButton.Width, Height - 2);
+        BtnRect := Bounds(Width - FButton.Width - 1 - 1, 1 + 1,
+          FButton.Width, Height - 2 - 2);
     end
     else
       BtnRect := Bounds(Width - FButton.Width, 0,
@@ -2945,7 +2973,7 @@ begin
     if BorderStyle = bsSingle then
     begin
       if not Flat then
-        BtnRect := Bounds(Width - FButton.Width - 4, 0,
+        BtnRect := Bounds(Width - FButton.Width - 4 + 1, 0 + 1,
           FButton.Width, Height - 4)
       else
         BtnRect := Bounds(Width - FButton.Width - 2, 2,
@@ -3020,7 +3048,7 @@ begin
   { If flat and themes are enabled, move the left edge of the edit rectangle
     to the right, otherwise the theme edge paints over the border }
   { (rb) This was for a specific font/language; check if this is still necessary }
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if BorderStyle = bsSingle then
     begin
@@ -3033,7 +3061,7 @@ begin
       end;
     end;
   end;
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
   if BorderStyle = bsSingle then
     if Ctl3D then
@@ -3068,7 +3096,7 @@ end;
 {$IFDEF JVCLThemesEnabled}
 procedure TJvCustomComboEdit.WMNCCalcSize(var Msg: TWMNCCalcSize);
 begin
-  if ThemeServices.ThemesEnabled and Ctl3D and (BorderStyle = bsSingle) then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and Ctl3D and (BorderStyle = bsSingle) then
   begin
     with Msg.CalcSize_Params^ do
       InflateRect(rgrc[0], 1, 1);
@@ -3098,15 +3126,14 @@ var
   DrawRect: TRect;
   Details: TThemedElementDetails;
 begin
-  if ThemeServices.ThemesEnabled and Ctl3D and (BorderStyle = bsSingle) and
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and Ctl3D and (BorderStyle = bsSingle) and
      not CheckWin32Version(6, 0) then // Vista draws the border animated and not with teEditTextNormal
   begin
     DC := GetWindowDC(Handle);
     try
       GetWindowRect(Handle, DrawRect);
       OffsetRect(DrawRect, -DrawRect.Left, -DrawRect.Top);
-      with DrawRect do
-        ExcludeClipRect(DC, Left + 1, Top + 1, Right - 1, Bottom - 1);
+      ExcludeClipRect(DC, DrawRect.Left + 1, DrawRect.Top + 1, DrawRect.Right - 1, DrawRect.Bottom - 1);
 
       Details := ThemeServices.GetElementDetails(teEditTextNormal);
       ThemeServices.DrawElement(DC, Details, DrawRect);
@@ -3336,6 +3363,11 @@ begin
   FCalendarHints.Free;
   FCalendarHints := nil;
   inherited Destroy;
+end;
+
+function TJvCustomDateEdit.DisplayNullDateAsEmptyText: Boolean;
+begin
+  Result := not ShowNullDate;
 end;
 
 function TJvCustomDateEdit.CreateDataConnector: TJvCustomComboEditDataConnector;
@@ -3681,7 +3713,7 @@ begin
   D := Self.Date;
   SavedModified := Modified;
   TestDateBetween(Value);
-  if Value = NullDate then
+  if (Value = NullDate) and DisplayNullDateAsEmptyText then
     Text := ''
   else
     Text := FormatDateTime(FDateFormat, Value);
@@ -3760,6 +3792,15 @@ end;
 procedure TJvCustomDateEdit.SetPopupValue(const Value: Variant);
 begin
   inherited SetPopupValue(StrToDateFmtDef(FDateFormat, VarToStr(Value), SysUtils.Date));
+end;
+
+procedure TJvCustomDateEdit.SetShowNullDate(const Value: Boolean);
+begin
+  if FShowNullDate <> Value then
+  begin
+    FShowNullDate := Value;
+    SetDate(Date);
+  end;
 end;
 
 procedure TJvCustomDateEdit.SetStartOfWeek(Value: TDayOfWeekName);
@@ -3973,7 +4014,7 @@ var
   Bmp: TBitmap;
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if GDirImageIndexXP < 0 then
     begin
@@ -4279,7 +4320,7 @@ var
 {$ENDIF JVCLThemesEnabled}
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if FDrawThemedDropDownBtn then
     begin
@@ -4364,6 +4405,8 @@ begin
   OEMConvert := True;
   {$ENDIF ~UNICODE}
   FAcceptFiles := True;
+  AlwaysEnableButton := True;
+  AlwaysShowPopup := True;
   FAutoCompleteOptions := [acoAutoSuggest];
   ControlState := ControlState + [csCreating];
   try
@@ -4642,7 +4685,7 @@ var
   Bmp: TBitmap;
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if GFileImageIndexXP < 0 then
     begin

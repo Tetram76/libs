@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvPageList.pas 12975 2011-02-10 08:22:26Z ahuser $
+// $Id: JvPageList.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvPageList;
 
@@ -75,7 +75,7 @@ type
     FData: TObject;
   protected
     procedure CreateParams(var Params: TCreateParams); override;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     procedure SetPageIndex(Value: Integer);virtual;
     function GetPageIndex: Integer;virtual;
     procedure SetPageList(Value: TJvCustomPageList);virtual;
@@ -224,6 +224,9 @@ type
     {$ENDIF JVCLThemesEnabled}
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPageList = class(TJvCustomPageList)
   protected
     function InternalGetPageClass: TJvCustomPageClass; override;
@@ -286,8 +289,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageList.pas $';
-    Revision: '$Revision: 12975 $';
-    Date: '$Date: 2011-02-10 09:22:26 +0100 (jeu., 10 févr. 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -295,8 +298,7 @@ const
 implementation
 
 uses
-  Forms,
-  JvResources;
+  Forms;
 
 function GetUniqueName(AOwner: TComponent; const AClassName: string): string;
 var
@@ -475,14 +477,14 @@ begin
   end;
 end;
 
-function TJvCustomPage.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvCustomPage.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   if DoubleBuffered then
     Result := inherited DoEraseBackground(Canvas, Param)
   else
   begin
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.ThemesEnabled then
+    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
       DrawThemedBackground(Self, Canvas, ClientRect, Color, ParentBackground);
     {$ENDIF JVCLThemesEnabled}
     Result := True;

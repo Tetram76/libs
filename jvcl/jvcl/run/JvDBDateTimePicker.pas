@@ -34,7 +34,7 @@ Known Issues:
 // Extending and add capability to integrate with database
 // www.geocities.com/ekosbg
 /////////////////////////////////////////////////////////////////////////
-// $Id: JvDBDateTimePicker.pas 12745 2010-04-02 11:57:12Z ahuser $
+// $Id: JvDBDateTimePicker.pas 13315 2012-06-12 11:33:51Z obones $
 
 unit JvDBDateTimePicker;
 
@@ -50,6 +50,9 @@ uses
   JvDateTimePicker;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBDateTimePicker = class(TJvDateTimePicker)
   private
     FDataLink: TFieldDataLink;
@@ -100,8 +103,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBDateTimePicker.pas $';
-    Revision: '$Revision: 12745 $';
-    Date: '$Date: 2010-04-02 13:57:12 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13315 $';
+    Date: '$Date: 2012-06-12 13:33:51 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -114,6 +117,11 @@ uses
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
   JvConsts;
+
+function IsNullOrEmptyStringField(Field: TField): Boolean;
+begin
+  Result := Field.IsNull or ((Field is TStringField) and (Trim(Field.AsString) = ''));
+end;
 
 //=== { TJvDBDateTimePicker } ================================================
 
@@ -211,7 +219,7 @@ end;
 
 procedure TJvDBDateTimePicker.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Integer(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 ///////////////////////////////////////////////////////////////////////////
@@ -229,7 +237,9 @@ procedure TJvDBDateTimePicker.DataChange(Sender: TObject);
 begin
   if Field <> nil then
   begin
-    if Kind = dtkDate then
+    if IsNullOrEmptyStringField(Field) then
+      DateTime := NullDate
+    else if Kind = dtkDate then
     begin
       if IsDateAndTimeField then
         DateTime := Field.AsDateTime
@@ -522,7 +532,9 @@ begin
     // DataLink field might be empty
     if Field <> nil then
     begin
-      if Kind = dtkDate then
+      if IsNullOrEmptyStringField(Field) then
+        D := 0
+      else if Kind = dtkDate then
       begin
         if IsDateAndTimeField then
           D := Field.AsDateTime
@@ -538,9 +550,7 @@ begin
       end;
     end
     else
-    begin
       D := Now;  // Default value for date time edits
-    end;
 
     DateTimeToSystemTime(D, ST);
     DateTime_SetSystemTime(FPaintControl.Handle, GDT_VALID, ST);
@@ -572,6 +582,11 @@ begin
       begin
         DateTimeToSystemTime(DateTime, st);
         MsgSetDateTime(st);
+        Exit;
+      end
+      else if (Kind = dtkTime) and Assigned(Field) then
+      begin
+        Field.Value := SystemTimeToDateTime(PNMDateTimeChange(Msg.NMHdr).st);
         Exit;
       end;
     end;

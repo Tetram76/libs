@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues: This component does not parse the !DOCTYPE tags but preserves them
 -----------------------------------------------------------------------------}
-// $Id: JvSimpleXml.pas 12997 2011-03-05 18:10:59Z jfudickar $
+// $Id: JvSimpleXml.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvSimpleXml;
 
@@ -90,6 +90,9 @@ type
   TJclHackSimpleXML = class(TJclSimpleXML)
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvSimpleXML = class(TComponent)
   private
     FJclSimpleXML: TJclHackSimpleXML;
@@ -186,8 +189,8 @@ function EntityDecode(const S: string): string; {$IFDEF SUPPORTS_DEPRECATED} dep
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSimpleXml.pas $';
-    Revision: '$Revision: 12997 $';
-    Date: '$Date: 2011-03-05 19:10:59 +0100 (sam., 05 mars 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

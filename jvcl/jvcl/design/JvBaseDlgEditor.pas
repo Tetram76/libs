@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDlgEditor.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvBaseDlgEditor.pas 13350 2012-06-13 14:54:41Z obones $
 
 unit JvBaseDlgEditor;
 
@@ -58,10 +58,6 @@ begin
   ExecuteVerb(0);
 end;
 
-type
-  // (p3) TCommonDialog.Execute is protected in D5...
-  TAccessProtectedCommonDialog = class(TCommonDialog);
-
 procedure TJvBaseDlgEditor.ExecuteVerb(Index: Integer);
 begin
   if Index <> 0 then
@@ -70,7 +66,7 @@ begin
   // TJvCommonDialog, TJvCommonDialogP and TJvCommonDialogF all
   // are also a TCommonDialog
   if Component is TCommonDialog then  
-    TAccessProtectedCommonDialog(Component).Execute
+    TCommonDialog(Component).Execute
   else
     Exit;
 

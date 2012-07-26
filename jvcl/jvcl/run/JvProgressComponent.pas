@@ -26,7 +26,7 @@ description : dialog components
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProgressComponent.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvProgressComponent.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvProgressComponent;
 
@@ -43,6 +43,9 @@ uses
   JvComponentBase;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvProgressComponent = class(TJvComponent)
   private
     FForm: TForm;
@@ -89,8 +92,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgressComponent.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -101,11 +104,14 @@ uses
   JvConsts, JvResources, JvJCLUtils, JvComponent;
 
 type
-  TCMShowEvent = packed record
-    Msg: Integer;
-    Unused: Integer;
+  TCMShowEvent = record
+    Msg: Cardinal;
+    {$IFDEF COMPILER16_UP}
+	MsgFiller: TDWordFiller;
+    {$ENDIF COMPILER16_UP}
+    Unused: WPARAM;
     Instance: TJvProgressComponent;
-    Result: Integer;
+    Result: LRESULT;
   end;
 
   TJvProgressForm = class(TJvForm)

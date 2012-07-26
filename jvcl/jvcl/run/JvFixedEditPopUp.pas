@@ -74,7 +74,7 @@ History:
     - introduced IFixedPopupIntf
     - speed optimation in THiddenPopupObject.GetPopupMenu
 -----------------------------------------------------------------------------}
-// $Id: JvFixedEditPopUp.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvFixedEditPopUp.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvFixedEditPopUp;
 
@@ -127,8 +127,8 @@ procedure FixedDefaultEditPopupUpdate(AEdit: TWinControl);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFixedEditPopUp.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -281,18 +281,24 @@ type
 function THiddenPopupObject.GetClipboardCommands: TJvClipboardCommands;
 const
   cClipboardCommands = 'ClipboardCommands';
+{$IFNDEF DELPHI64_TEMPORARY}
 var
   Value: TIntegerSet;
   I: Integer;
+{$ENDIF ~DELPHI64_TEMPORARY}
 begin
   if IsPublishedProp(Edit, cClipboardCommands) then
   begin
     Result := [];
+    {$IFDEF DELPHI64_TEMPORARY}
+    System.Error(rePlatformNotImplemented);
+    {$ELSE ~DELPHI64_TEMPORARY}
     // does it really have to be this complicated ?!
     Value := TIntegerSet(GetOrdProp(Edit, cClipboardCommands));
     for I := 0 to SizeOf(Integer) * 8 - 1 do
       if I in Value then
         Include(Result, TJvClipboardCommand(I));
+    {$ENDIF ~DELPHI64_TEMPORARY}
   end
   else
     Result := [caCopy, caCut, caPaste, caUndo];

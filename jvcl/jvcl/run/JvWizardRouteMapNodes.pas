@@ -33,7 +33,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardRouteMapNodes.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvWizardRouteMapNodes.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvWizardRouteMapNodes;
 
@@ -45,7 +45,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes, Windows, Messages, Graphics, StdCtrls,
+  Classes, Windows, Messages, Graphics,
   JvWizard;
 
 type
@@ -73,6 +73,9 @@ type
     property Disabled: TColor read FDisabled write SetDisabled default clBtnFace;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvWizardRouteMapNodes = class(TJvWizardRouteMapControl)
   private
     FItemHeight: Integer;
@@ -107,8 +110,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizardRouteMapNodes.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

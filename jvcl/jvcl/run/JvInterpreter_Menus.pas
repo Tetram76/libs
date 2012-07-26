@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Menus.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvInterpreter_Menus.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvInterpreter_Menus;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Menus.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -118,7 +118,7 @@ end;
 
 procedure TMenuItem_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TMenuItem(Args.Obj).Handle);
+  Value := NativeInt(TMenuItem(Args.Obj).Handle);
 end;
 
 { property Read Count: Integer }
@@ -352,14 +352,14 @@ end;
 
 procedure TMenu_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TMenu(Args.Obj).Handle);
+  Value := NativeInt(TMenu(Args.Obj).Handle);
 end;
 
 { property Read WindowHandle: HWND }
 
 procedure TMenu_Read_WindowHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TMenu(Args.Obj).WindowHandle);
+  Value := NativeInt(TMenu(Args.Obj).WindowHandle);
 end;
 
 { property Write WindowHandle(Value: HWND) }

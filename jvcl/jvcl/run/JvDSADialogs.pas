@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDSADialogs.pas 13068 2011-06-16 18:54:00Z jfudickar $
+// $Id: JvDSADialogs.pas 13340 2012-06-13 08:53:16Z obones $
 
 unit JvDSADialogs;
 
@@ -51,9 +51,9 @@ type
     FTimer: TTimer;
     FCountdown: IJvDynControlCaption;
     FMsg: string;
-    FDefaultButton : {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF};
+    FDefaultButton: {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF};
   protected
-    property DefaultButton : {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF} read FDefaultButton write FDefaultButton ;
+    property DefaultButton: {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF} read FDefaultButton write FDefaultButton ;
     procedure CustomKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure CustomMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure CustomShow(Sender: TObject);
@@ -68,7 +68,6 @@ type
     function IsDSAChecked: Boolean;
     property Msg: string read FMsg write FMsg;
     property Timeout: Integer read FTimeout write FTimeout;
-
   end;
 
 //----------------------------------------------------------------------------
@@ -376,6 +375,9 @@ type
   TJvDSADataEvent = procedure(Sender: TObject; const DSAInfo: TDSARegItem; const Storage: TDSAStorage) of object;
   TJvDSAAutoCloseEvent = procedure(Sender: TObject; var Handled: Boolean) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDSADialog = class(TJvComponent)
   private
     FCheckControl: TWinControl;
@@ -467,8 +469,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDSADialogs.pas $';
-    Revision: '$Revision: 13068 $';
-    Date: '$Date: 2011-06-16 20:54:00 +0200 (jeu., 16 juin 2011) $';
+    Revision: '$Revision: 13340 $';
+    Date: '$Date: 2012-06-13 10:53:16 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -543,10 +545,8 @@ end;
 //=== { TDSAMessageForm } ====================================================
 
 constructor TDSAMessageForm.CreateNew(AOwner: TComponent; Dummy: Integer);
-
 var
   NonClientMetrics: TNonClientMetrics;
-
 begin
   inherited CreateNew(AOwner, Dummy);
   {$IFDEF RTL210_UP}
@@ -570,8 +570,8 @@ begin
     WriteToClipboard(GetFormText);
   end;
   if Key = VK_RETURN then
-    if ActiveControl is {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF} then
-      {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF}(ActiveControl).Click
+    if ActiveControl is {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF} then
+      {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF}(ActiveControl).Click
     else if Assigned(DefaultButton) then
       DefaultButton.Click;
 end;
@@ -586,16 +586,16 @@ procedure TDSAMessageForm.CustomShow(Sender: TObject);
 var
   I: Integer;
   First : Boolean;
-  Btn : {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF};
+  Btn : {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF};
 begin
   if Timeout <> 0 then
     FTimer.Enabled := True;
   First := True;
   for I := 0 to ComponentCount - 1 do
   begin
-    if (Components[i] is {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF}) then
+    if (Components[i] is {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF}) then
     begin
-      Btn := (Components[i] as {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF});
+      Btn := (Components[i] as {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF});
       if First then
       begin
         First := False;
@@ -629,9 +629,9 @@ begin
       FTimer.Enabled := False;
       for I := 0 to ComponentCount - 1 do
       begin
-        if (Components[i] is {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF}) and (Components[i] as {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF}).Default then
+        if (Components[i] is {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF}) and (Components[i] as {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF}).Default then
         begin
-          (Components[i] as {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF}).Click;
+          (Components[i] as {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF}).Click;
           Exit;
         end;
       end;
@@ -685,7 +685,7 @@ var
 begin
   DividerLine := StringOfChar('-', 27) + CrLf;
   for I := 0 to ComponentCount - 1 do
-    if Components[i] is {$IFDEF DELPHI12}TCustomButton{$ELSE}TButton{$ENDIF} then
+    if Components[i] is {$IFDEF RTL200_UP}TCustomButton{$ELSE}TButton{$ENDIF} then
       ButtonCaptions := ButtonCaptions + TButton(Components[i]).Caption + StringOfChar(' ', 3);
   ButtonCaptions := StringReplace(ButtonCaptions, '&', '', [rfReplaceAll]);
   Result := Format('%s%s%s%s%s%s%s%s%s%s', [DividerLine, Caption, CrLf, DividerLine,
@@ -757,10 +757,9 @@ var
   ButtonHeight, ButtonSpacing, ButtonCount, ButtonGroupWidth: Integer;
   IconWidth, IconHeight,
   TextWidth, TextHeight,
-  X, ALeft: Integer;
+  X: Integer;
   ChkTextWidth: Integer;
   TimeoutTextWidth: Integer;
-  IconID: PChar;
   TempRect, TextRect: TRect;
   I: Integer;
   CenterParent: TComponent;
@@ -770,7 +769,6 @@ var
   Image: TWinControl;
   DynControlImage: IJvDynControlImage;
   DynControlLabel: IJvDynControlLabel;
-  DynControlAlign: IJvDynControlAlign;
   MessagePanel: TWinControl;
   BottomPanel: TWinControl;
   ResultForm : TDSAMessageForm;
@@ -781,11 +779,7 @@ var
   MainPanel : TWinControl;
   DynControlAutoSize: IJvDynControlAutoSize;
 
-  {$IFDEF COMPILER12_UP}
-  procedure CalcTextRect (iSingle : Boolean; lpString: PWideChar; nCount: Integer;var lpRect: TRect);
-  {$ELSE}
-  procedure CalcTextRect (iSingle : Boolean; lpString: PChar; nCount: Integer;var lpRect: TRect);
-  {$ENDIF}
+  procedure CalcTextRect(iSingle: Boolean; lpString: PChar; nCount: Integer; var lpRect: TRect);
   begin
     if iSingle then
       DrawText(ResultForm.Canvas.Handle, lpString, nCount, lpRect,
@@ -795,7 +789,7 @@ var
           DT_EXPANDTABS or DT_CALCRECT or DT_WORDBREAK or ResultForm.DrawTextBiDiModeFlagsReadingOnly);
   end;
 
-  Procedure ResizeResultForm;
+  procedure ResizeResultForm;
   begin
     ResultForm.ClientWidth := Max(TimeoutTextWidth,
                                   Max(17 + ChkTextWidth,
@@ -816,8 +810,6 @@ var
     ResultForm.Left := (CenterParWidth div 2) - (ResultForm.Width div 2) + CenterParLeft;
     ResultForm.Top := (CenterParHeight div 2) - (ResultForm.Height div 2) + CenterParTop;
   end;
-
-
 
 begin
   ResultForm := nil;
@@ -987,8 +979,10 @@ begin
       Button := DynControlEngine.CreateButton(ResultForm, BottomPanel, 'Button' + IntToStr(I), Buttons[I], '', nil, False, False);
       Button.ModalResult := Results[I];
       if I = DefaultButton then
+      begin
         ResultForm.DefaultButton := Button;
-//        Button.Default := True;
+        Button.Default := True;
+      end;
       if I = CancelButton then
         Button.Cancel := True;
       Button.TabStop := True;
@@ -2223,36 +2217,14 @@ end;
 
 { ShowModal patch }
 
-procedure CallShowModal(const Frm: TCustomForm); // Helper to get the VMT index of ShowModal
-begin
-  Frm.ShowModal;
+function GetShowModalVMTOffset: Integer;
+asm
+  MOV EAX, VMTOFFSET TCustomForm.ShowModal
 end;
 
-function FindShowModalVMT: Integer; //  Locate the VMT index of ShowModal
-var
-  Ptr: Pointer;
+function GetShowModalVMTIndex: Integer; //  Locate the VMT index of ShowModal
 begin
-  Ptr := @CallShowModal;
-  if Ptr = nil then
-  begin
-    Result := -1;
-    Exit;
-  end
-  else
-  begin
-    Inc(Integer(Ptr), 4);
-    Result := PInteger(Ptr)^ div 4;
-  end;
-end;
-
-// Set the virtual method pointer for an instance, nice addition for JCL?
-
-procedure SetVirtualMethodInstance(Instance: TObject; const VMTIdx: Integer;
-  const MethodPtr: Pointer);
-var
-  WrittenBytes: Cardinal;
-begin
-  WriteProtectedMemory(Pointer(PInteger(Instance)^ + VMTIdx * SizeOf(Pointer)), @MethodPtr, SizeOf(Pointer), WrittenBytes);
+  Result := GetShowModalVMTOffset div SizeOf(Pointer);
 end;
 
 //=== { TPatchedForm } =======================================================
@@ -2426,10 +2398,10 @@ procedure TJvDSADialog.FormPatch;
 var
   VMTIdx: Integer;
 begin
-  VMTIdx := FindShowModalVMT;
+  VMTIdx := GetShowModalVMTIndex;
   SetOrgShowModalPtr(GetVirtualMethod(Owner.ClassType, VMTIdx));
   SetOrgOwner(Owner);
-  SetVirtualMethodInstance(Owner, VMTIdx, @TPatchedForm.ShowModal);
+  SetVirtualMethod(Owner.ClassType, VMTIdx, @TPatchedForm.ShowModal);
 end;
 
 procedure TJvDSADialog.FormUnPatch;
@@ -2438,8 +2410,8 @@ var
 begin
   if GetOrgShowModalPtr <> nil then
   begin
-    VMTIdx := FindShowModalVMT;
-    SetVirtualMethodInstance(GetOrgOwner, VMTIdx, GetOrgShowModalPtr);
+    VMTIdx := GetShowModalVMTIndex;
+    SetVirtualMethod(GetOrgOwner.ClassType, VMTIdx, GetOrgShowModalPtr);
     SetOrgShowModalPtr(nil);
   end;
 end;

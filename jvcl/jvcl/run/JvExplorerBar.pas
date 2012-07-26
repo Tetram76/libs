@@ -22,7 +22,7 @@ Contributor(s):
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExplorerBar.pas 12991 2011-02-26 08:25:34Z outchy $
+// $Id: JvExplorerBar.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvExplorerBar;
 
@@ -392,6 +392,9 @@ type
   end;
 
   { a complete bar }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvExplorerBar = class(TScrollingWinControl)
   private
     FAnimStep: Integer;

@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvResources.pas 12750 2010-04-04 13:58:22Z jfudickar $
+// $Id: JvResources.pas 13379 2012-07-08 20:33:32Z jfudickar $
 
 unit JvResources;
 
@@ -32,11 +32,10 @@ unit JvResources;
 
 interface
 
-uses
   {$IFDEF UNITVERSIONING}
-  JclUnitVersioning,
+uses
+  JclUnitVersioning;
   {$ENDIF UNITVERSIONING}
-  JvConsts;
 
 //=== used in several files ==================================================
 resourcestring
@@ -236,11 +235,13 @@ resourcestring
   RsUsername = '&Username';
   RsPassword = '&Password';
   RsDatabase = '&Database';
+  RsAlias= 'Al&ias';
   RsShortcut = '&Shortcut';
+  RsConnectGroup = '&Connect Group';
   RsConnectAs = 'Connect-&As';
 
-  RSImportConnectionList = 'Import Connection List';
-  RSExportConnectionList = 'Export Connection List';
+  RsImportConnectionList = 'Import Connection List';
+  RsExportConnectionList = 'Export Connection List';
   RsConnectionListImportOverwrite = 'Overwrite';
   RsConnectionListImportAppend = 'Append';
   RsConnectionListImportAppendOverwriteExistingEntries = 'Append/Overwrite existing entries?';
@@ -268,6 +269,12 @@ resourcestring
       '    SID is system identifier that specifies Global Database Name.';
   RsNetOptionConnectionList = 'NET Option';
 
+//=== JvDBLogonDialogUnidac.pas  ===============================================
+resourcestring
+  RsServer= 'Ser&ver';
+  RsPort= 'Port';
+  RsProvider='&Provider';
+  RsDirectConnect='&Direct Connect';
 
 //=== JvBDEExceptionForm.pas =================================================
 resourcestring
@@ -449,6 +456,8 @@ resourcestring
   RsNormal = 'Normal';
   RsHigh = 'High';
   RsRealTime = 'RealTime';
+  RsBelowNormal = 'Below normal';
+  RsAboveNormal = 'Above normal';
 
   RsEProcessIsRunning = 'Cannot perform this operation when process is running';
   RsEProcessNotRunning = 'Process is not running';
@@ -642,11 +651,6 @@ resourcestring
   RsParamEditor = '%0:s%1:s%2:s Parameters';
 
   RsEInvalidParamFieldType = 'Must have a valid field type selected';
-
-//=== JvDBRemoteLogin.pas ====================================================
-resourcestring
-  RsKeyLoginSection = 'Remote Login';
-  RsKeyLastLoginUserName = 'Last User';
 
 //=== JvDBTreeView.pas =======================================================
 resourcestring
@@ -2360,8 +2364,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvResources.pas $';
-    Revision: '$Revision: 12750 $';
-    Date: '$Date: 2010-04-04 15:58:22 +0200 (dim., 04 avr. 2010) $';
+    Revision: '$Revision: 13379 $';
+    Date: '$Date: 2012-07-08 22:33:32 +0200 (dim., 08 juil. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

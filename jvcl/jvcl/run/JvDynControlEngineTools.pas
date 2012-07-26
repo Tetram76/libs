@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineTools.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDynControlEngineTools.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvDynControlEngineTools;
 
@@ -31,7 +31,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Variants, Classes, Controls, StdCtrls, Forms, ExtCtrls,
+  Variants, Classes, Controls, StdCtrls, Forms,
   JvDynControlEngine;
 
 function CreateDynControlDialog(const AFormCaption, AButton1Caption, AButton2Caption: string;
@@ -45,8 +45,8 @@ function JvDynControlVariantToBoolean(Value: Variant): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineTools.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -108,10 +108,12 @@ end;
 
 function JvDynControlVariantToBoolean(Value: Variant): Boolean;
 begin
-  if VarType(Value) = varBoolean then
+  if VarIsNull(Value) then
+    Result := False
+  else if VarType(Value) = varBoolean then
     Result := Value
   else
-    Result := UpperCase(Value) = 'TRUE';
+    Result := UpperCase(VarToStr(Value)) = 'TRUE';
 end;
 
 {$IFDEF UNITVERSIONING}

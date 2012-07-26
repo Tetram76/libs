@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_ComCtrls.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvInterpreter_ComCtrls.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvInterpreter_ComCtrls;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_ComCtrls.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -360,7 +360,7 @@ end;
 
 procedure TTreeNode_GetHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TTreeNode(Args.Obj).GetHandle);
+  Value := NativeInt(TTreeNode(Args.Obj).GetHandle);
 end;
 
 { function GetLastChild: TTreeNode; }
@@ -563,7 +563,7 @@ end;
 
 procedure TTreeNode_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TTreeNode(Args.Obj).Handle);
+  Value := NativeInt(TTreeNode(Args.Obj).Handle);
 end;
 
 { property Read HasChildren: Boolean }
@@ -856,7 +856,7 @@ end;
 
 procedure TTreeNodes_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TTreeNodes(Args.Obj).Handle);
+  Value := NativeInt(TTreeNodes(Args.Obj).Handle);
 end;
 
 { property Read Item[Integer]: TTreeNode }
@@ -1612,7 +1612,7 @@ end;
 
 procedure TListItem_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TListItem(Args.Obj).Handle);
+  Value := NativeInt(TListItem(Args.Obj).Handle);
 end;
 
 { property Read ImageIndex: Integer }
@@ -1810,7 +1810,7 @@ end;
 
 procedure TListItems_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TListItems(Args.Obj).Handle);
+  Value := NativeInt(TListItems(Args.Obj).Handle);
 end;
 
 { property Read Item[Integer]: TListItem }
@@ -2155,7 +2155,7 @@ end;
 
 procedure TAnimate_Read_ResHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TAnimate(Args.Obj).ResHandle);
+  Value := NativeInt(TAnimate(Args.Obj).ResHandle);
 end;
 
 { property Write ResHandle(Value: THandle) }

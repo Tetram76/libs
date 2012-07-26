@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSelectDirectory.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSelectDirectory.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvSelectDirectory;
 
@@ -34,12 +34,15 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes,
+  Windows, Classes,
   FileCtrl,
   JvBaseDlg;
 
 type
   { TODO -opeter3 : Rewrite to not depend on FileCtrl? }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSelectDirectory = class(TJvCommonDialog)
   private
     FDirectory: string;
@@ -50,7 +53,7 @@ type
     FTitle: string;
   public
     constructor Create(AOwner: TComponent); override;
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
   published
     property Directory: string read FDirectory;
     property HelpContext: Longint read FHelpContext write FHelpContext default 0;
@@ -64,8 +67,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSelectDirectory.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -84,7 +87,7 @@ begin
   FTitle := '';
 end;
 
-function TJvSelectDirectory.Execute: Boolean;
+function TJvSelectDirectory.Execute(ParentWnd: HWND): Boolean;
 begin
   FDirectory := InitialDir;
   DoShow;

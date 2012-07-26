@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSAL.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSAL.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvSAL;
 
@@ -78,6 +78,9 @@ type
   TBStack = array [0..StackLimit] of Boolean;
   TRStack = array [0..StackLimit] of Integer;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSAL = class(TJvComponent)
   private
     FStop: Boolean;
@@ -163,8 +166,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSAL.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

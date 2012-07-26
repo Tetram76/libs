@@ -16,7 +16,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacementSelectList.pas 13023 2011-05-08 19:48:33Z jfudickar $
+// $Id: JvFormPlacementSelectList.pas 13171 2011-11-19 10:32:36Z jfudickar $
 
 unit JvFormPlacementSelectList;
 
@@ -32,6 +32,9 @@ uses
   JvAppStorage, JvFormPlacement, JvAppStorageSelectList;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvFormStorageSelectList = class (TJvBaseAppStorageSelectList)
   private
     FFormStorage: TJvFormStorage;
@@ -45,6 +48,7 @@ type
     function RestoreFormStorage(const ACaption: string = ''): Boolean;
     function SaveFormStorage(const ACaption: string = ''): Boolean;
   published
+    property AppStorage;
     property CheckEntries;
     property FormStorage: TJvFormStorage read FFormStorage write SetFormStorage;
     property SelectListDialog;
@@ -55,8 +59,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacementSelectList.pas $';
-    Revision: '$Revision: 13023 $';
-    Date: '$Date: 2011-05-08 21:48:33 +0200 (dim., 08 mai 2011) $';
+    Revision: '$Revision: 13171 $';
+    Date: '$Date: 2011-11-19 11:32:36 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

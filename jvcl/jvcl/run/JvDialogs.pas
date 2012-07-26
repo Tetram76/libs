@@ -25,12 +25,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDialogs.pas 12994 2011-02-28 11:04:37Z ahuser $
+// $Id: JvDialogs.pas 13180 2011-11-22 12:45:23Z obones $
 
 unit JvDialogs;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -45,6 +44,9 @@ type
   TJvOpenDialogAC = (acEdit, acListView);
   TJvOpenDialogAS = (asSmallIcon, asReport);
   TDialogErrorEvent = procedure(Sender: TObject; ErrorCode:Cardinal) of object;
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOpenDialog = class(TOpenDialog)
   private
     FAboutJVCL: TJVCLAboutInfo;
@@ -102,12 +104,18 @@ type
     property OnShareViolation: TCloseQueryEvent read FOnShareViolation write FOnShareViolation;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSaveDialog = class(TJvOpenDialog)
     function TaskModalDialog(DialogFunc: Pointer; var DialogData): Bool; override;
   end;
 
   TJvCDQueryEvent = procedure(Sender: TObject; SelectedColor: TColor; var Accept: Boolean) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvColorDialog = class(TColorDialog)
   private
     FAboutJVCL: TJVCLAboutInfo;
@@ -135,8 +143,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDialogs.pas $';
-    Revision: '$Revision: 12994 $';
-    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
+    Revision: '$Revision: 13180 $';
+    Date: '$Date: 2011-11-22 13:45:23 +0100 (mar., 22 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -145,25 +153,16 @@ implementation
 
 uses
   CommDlg, CommCtrl, Dlgs,
-  SysUtils, Math,
+  Types, SysUtils, Math,
   JclSysInfo,
+  {$IFNDEF COMPILER12_UP}
+  JvJCLUtils, // SetWindowLongPtr
+  {$ENDIF ~COMPILER12_UP}
   JvJVCLUtils;
 
 const
   btnOk = 1;
   btnCancel = 2;
-
-type
-  POpenFileName2000 = ^TOpenFileName2000;
-  TOpenFileName2000 = packed record
-    OpenFileName: TOpenFileName;
-    pvReserved: Pointer;
-    dwReserved: DWORD;
-    FlagsEx: DWORD;
-  end;
-
-const
-  OFN_EX_NOPLACESBAR = 1;
 
 var
   W2kFixMsAcmLibrary: THandle = 0;
@@ -281,7 +280,7 @@ begin
       SWP_FRAMECHANGED or SWP_DRAWFRAME or SWP_NOCOPYBITS);
     SysMenu := GetSystemMenu(ParentWnd, False);
     InsertMenu(SysMenu, SC_CLOSE, MF_BYCOMMAND, SC_SIZE, PChar(GetLocalizedSizeCommand));
-    FOldParentWndInstance := Pointer(SetWindowLong(FParentWnd, GWL_WNDPROC, Longint(FParentWndInstance)));
+    FOldParentWndInstance := Pointer(SetWindowLongPtr(FParentWnd, GWL_WNDPROC, LONG_PTR(FParentWndInstance)));
     UpdateControlPos;
   end;
   UpdateCaptions;
@@ -594,7 +593,7 @@ var
   GlobalColorDialog: TJvColorDialog = nil;
   OldColorDialogHookProc: Pointer = nil;
 
-function ColorDialogHook(Wnd: HWND; Msg: UINT; WParam: WPARAM; LParam: LPARAM): UINT; stdcall;
+function ColorDialogHook(Wnd: HWND; Msg: UINT; WParam: WPARAM; LParam: LPARAM): {$IFDEF RTL230_UP}UINT_PTR{$ELSE}UINT{$ENDIF RTL230_UP}; stdcall;
 begin
   if Assigned(GlobalColorDialog) and (Msg = GlobalColorDialog.FColorOkMessage) then
     Result := Integer(not GlobalColorDialog.DoQueryColor(TColor(PChooseColor(LParam)^.rgbResult)))

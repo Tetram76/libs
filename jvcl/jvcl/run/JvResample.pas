@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvResample.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvResample.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 // -----------------------------------------------------------------------------
 // Project: bitmap resampler
@@ -106,7 +106,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Graphics, SysUtils, Classes;
+  Windows, Graphics, SysUtils, Classes;
 
 type
   // Type of a filter for use with Stretch()
@@ -154,8 +154,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvResample.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -358,7 +358,7 @@ var
   Rgb: TRGB;
   Color: TColorRGB;
   SourceLine, DestLine: PRGBList;
-  SourcePixel, DestPixel: PColorRGB;
+  (*SourcePixel, *)DestPixel: PColorRGB;
   Delta, DestDelta: Integer;
   SrcWidth, SrcHeight, DstWidth, DstHeight: Integer;
 
@@ -610,9 +610,9 @@ begin
     // Apply filter to sample vertically from Work to Dst
     // --------------------------------------------------
     SourceLine := Work.ScanLine[0];
-    Delta := Integer(Work.ScanLine[1]) - Integer(SourceLine);
+    Delta := PAnsiChar(Work.ScanLine[1]) - PAnsiChar(SourceLine);
     DestLine := Dst.ScanLine[0];
-    DestDelta := Integer(Dst.ScanLine[1]) - Integer(DestLine);
+    DestDelta := PAnsiChar(Dst.ScanLine[1]) - PAnsiChar(DestLine);
     for K := 0 to DstWidth - 1 do
     begin
       DestPixel := Pointer(DestLine);
@@ -624,7 +624,7 @@ begin
         // Weight := 0.0;
         for J := 0 to Contrib^[I].N - 1 do
         begin
-          Color := PColorRGB(Integer(SourceLine) + Contrib^[I].P^[J].Pixel * Delta)^;
+          Color := PColorRGB(PAnsiChar(SourceLine) + Contrib^[I].P^[J].Pixel * Delta)^;
           Weight := Contrib^[I].P^[J].Weight;
           if Weight = 0.0 then
             Continue;
@@ -654,7 +654,7 @@ begin
         else
           Color.B := Round(Rgb.B);
         DestPixel^ := Color;
-        Inc(Integer(DestPixel), DestDelta);
+        Inc(PAnsiChar(DestPixel), DestDelta);
       end;
       Inc(SourceLine, 1);
       Inc(DestLine, 1);

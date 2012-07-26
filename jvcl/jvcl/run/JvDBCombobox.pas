@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBCombobox.pas 13057 2011-06-10 23:43:37Z ahuser $
+// $Id: JvDBCombobox.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvDBCombobox;
 
@@ -49,7 +49,7 @@ type
   private
     FOnReload: TNotifyEvent;
   protected
-    procedure DataEvent(Event: TDataEvent; Info: Integer); override;
+    procedure DataEvent(Event: TDataEvent; Info: {$IFDEF RTL230_UP}NativeInt{$ELSE}Integer{$ENDIF}); override;
   public
     property OnReload: TNotifyEvent read FOnReload write FOnReload;
   end;
@@ -180,6 +180,9 @@ type
     property UpdateFieldImmediatelly: Boolean read FUpdateFieldImmediatelly write FUpdateFieldImmediatelly default False;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBComboBox = class(TJvCustomDBComboBox)
   private
     { The "AutoSize" property was published what it never should have been. TComboBox doesn't
@@ -252,8 +255,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBCombobox.pas $';
-    Revision: '$Revision: 13057 $';
-    Date: '$Date: 2011-06-11 01:43:37 +0200 (sam., 11 juin 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -590,7 +593,7 @@ end;
 
 procedure TJvCustomDBComboBox.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Longint(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 function TJvCustomDBComboBox.GetDataLink: TDataLink;
@@ -860,7 +863,7 @@ end;
 
 { TJvDBComboBoxListDataLink }
 
-procedure TJvDBComboBoxListDataLink.DataEvent(Event: TDataEvent; Info: Integer);
+procedure TJvDBComboBoxListDataLink.DataEvent(Event: TDataEvent; Info: {$IFDEF RTL230_UP}NativeInt{$ELSE}Integer{$ENDIF});
 begin
   inherited DataEvent(Event, Info);
   if Assigned(FOnReload) then

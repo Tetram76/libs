@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvArrayButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvArrayButton.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvArrayButton;
 
@@ -39,6 +39,9 @@ uses
 type
   TArrayButtonClicked = procedure(ACol, ARow: Integer) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvArrayButton = class(TJvGraphicControl)
   private
     FPtDown: TPoint;
@@ -148,8 +151,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvArrayButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -279,7 +282,7 @@ var
   procedure DrawUp;
   begin
     {$IFDEF JVCLThemesEnabled}
-    if Themed and ThemeServices.ThemesEnabled then
+    if Themed and ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     begin
       R := DrawThemedButtonFace(Self, Canvas, R, 0, bsAutoDetect, False, False, False,
         PtInRect(R, ScreenToClient(Mouse.CursorPos)));
@@ -298,7 +301,7 @@ var
   procedure DrawDown;
   begin
     {$IFDEF JVCLThemesEnabled}
-    if Themed and ThemeServices.ThemesEnabled then
+    if Themed and ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     begin
       R := DrawThemedButtonFace(Self, Canvas, R, 0, bsAutoDetect, False, True, False,
         PtInRect(R, ScreenToClient(Mouse.CursorPos)));

@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvDBSpinEdit.pas 12544 2009-10-03 15:51:41Z ahuser $
+// $Id: JvDBSpinEdit.pas 13343 2012-06-13 12:22:56Z obones $
 
 unit JvDBSpinEdit;
 
@@ -38,6 +38,9 @@ uses
   JvSpin, JvConsts;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBSpinEdit = class(TJvSpinEdit)
   private
     FDataLink: TFieldDataLink;
@@ -48,7 +51,6 @@ type
     procedure DataChange(Sender: TObject);
     procedure UpdateData(Sender: TObject);
     procedure EditingChange(Sender: TObject);
-    procedure ActiveChange(Sender: TObject);
     function GetDataField: string; { Returns data field name. }
     function GetDataSource: TDataSource; { Returns linked data source. }
     procedure SetDataField(const NewFieldName: string); { Assigns new field. }
@@ -90,8 +92,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSpinEdit.pas $';
-    Revision: '$Revision: 12544 $';
-    Date: '$Date: 2009-10-03 17:51:41 +0200 (sam., 03 oct. 2009) $';
+    Revision: '$Revision: 13343 $';
+    Date: '$Date: 2012-06-13 14:22:56 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -114,7 +116,6 @@ begin
   FDataLink.OnDataChange := DataChange;
   FDataLink.OnEditingChange := EditingChange;
   FDataLink.OnUpdateData := UpdateData;
-  FDataLink.OnActiveChange := ActiveChange;
 end;
 
 destructor TJvDBSpinEdit.Destroy;
@@ -122,12 +123,6 @@ begin
   FDataLink.Free;
   FDataLink := nil;
   inherited Destroy;
-end;
-
-procedure TJvDBSpinEdit.ActiveChange(Sender: TObject);
-begin
-  if not (csDesigning in ComponentState) then
-    Enabled := FDataLink.Active;
 end;
 
 procedure TJvDBSpinEdit.Change;
@@ -139,7 +134,7 @@ end;
 
 procedure TJvDBSpinEdit.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Longint(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 procedure TJvDBSpinEdit.DataChange(Sender: TObject);

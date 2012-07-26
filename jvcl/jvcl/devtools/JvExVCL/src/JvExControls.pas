@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExControls.pas 12582 2009-10-27 22:13:32Z ahuser $
+// $Id: JvExControls.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvExControls;
 
@@ -62,28 +62,25 @@ type
     ['{76942BC0-2A6E-4DC4-BFC9-8E110DB7F601}']
   end;
 
-  TStructPtrMessage = class(TObject)
-  private
-  public
-    Msg: TMessage;
-    constructor Create(Msg: Integer; WParam: Integer; var LParam);
-  end;
-
 procedure SetDotNetFrameColors(FocusedColor, UnfocusedColor: TColor);
 procedure DrawDotNetControl(Control: TWinControl; AColor: TColor; InControl: Boolean); overload;
 procedure DrawDotNetControl(DC: HDC; R: TRect; AColor: TColor; UseFocusedColor: Boolean); overload;
 procedure HandleDotNetHighlighting(Control: TWinControl; const Msg: TMessage;
   MouseOver: Boolean; Color: TColor);
 
-function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: Longint): TMessage; overload; {$IFDEF SUPPORTS_INLINE} inline {$ENDIF}
-function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: TControl): TMessage; overload; {$IFDEF SUPPORTS_INLINE} inline {$ENDIF}
+procedure CreateWMMessage(var Mesg: TMessage; Msg: Cardinal; WParam: WPARAM; LParam: LPARAM); overload; {$IFDEF SUPPORTS_INLINE} inline {$ENDIF}
 function SmallPointToLong(const Pt: TSmallPoint): Longint; {$IFDEF SUPPORTS_INLINE} inline {$ENDIF}
 function ShiftStateToKeyData(Shift: TShiftState): Longint;
 function GetFocusedControl(AControl: TControl): TWinControl;
-function DlgcToDlgCodes(Value: Longint): TDlgCodes;
-function DlgCodesToDlgc(Value: TDlgCodes): Longint;
+function DlgcToDlgCodes(Value: LPARAM): TDlgCodes;
+function DlgCodesToDlgc(const Value: TDlgCodes): LPARAM;
 procedure GetHintColor(var HintInfo: THintInfo; AControl: TControl; HintColor: TColor);
 function DispatchIsDesignMsg(Control: TControl; var Msg: TMessage): Boolean;
+
+type
+  TJvDoEraseBackgroundMethod = function(Canvas: TCanvas; Param: LPARAM): Boolean of object;
+
+function IsDefaultEraseBackground(Method: TJvDoEraseBackgroundMethod; MethodPtr: Pointer): Boolean;
 
 type
   CONTROL_DECL_DEFAULT(Control)
@@ -104,16 +101,13 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/devtools/JvExVCL/src/JvExControls.pas $';
-    Revision: '$Revision: 12582 $';
-    Date: '$Date: 2009-10-27 23:13:32 +0100 (mar., 27 oct. 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
-
-uses
-  TypInfo;
 
 var
   InternalFocusedColor: TColor = TColor($00733800);
@@ -192,27 +186,12 @@ begin
     end;
 end;
 
-function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: Longint): TMessage;
+procedure CreateWMMessage(var Mesg: TMessage; Msg: Cardinal; WParam: WPARAM; LParam: LPARAM);
 begin
-  Result.Msg := Msg;
-  Result.WParam := WParam;
-  Result.LParam := LParam;
-  Result.Result := 0;
-end;
-
-function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: TControl): TMessage;
-begin
-  Result := CreateWMMessage(Msg, WParam, Integer(LParam));
-end;
-
-{ TStructPtrMessage }
-constructor TStructPtrMessage.Create(Msg: Integer; WParam: Integer; var LParam);
-begin
-  inherited Create;
-  Self.Msg.Msg := Msg;
-  Self.Msg.WParam := WParam;
-  Self.Msg.LParam := Windows.LPARAM(@LParam);
-  Self.Msg.Result := 0;
+  Mesg.Msg := Msg;
+  Mesg.WParam := WParam;
+  Mesg.LParam := LParam;
+  Mesg.Result := 0;
 end;
 
 function SmallPointToLong(const Pt: TSmallPoint): Longint;
@@ -245,7 +224,7 @@ begin
     Result := Form.ActiveControl;
 end;
 
-function DlgcToDlgCodes(Value: Longint): TDlgCodes;
+function DlgcToDlgCodes(Value: LPARAM): TDlgCodes;
 begin
   Result := [];
   if (Value and DLGC_WANTARROWS) <> 0 then
@@ -262,7 +241,7 @@ begin
     Include(Result, dcHasSetSel);
 end;
 
-function DlgCodesToDlgc(Value: TDlgCodes): Longint;
+function DlgCodesToDlgc(const Value: TDlgCodes): LPARAM;
 begin
   Result := 0;
   if dcWantAllKeys in Value then
@@ -315,10 +294,14 @@ begin
   if (Control <> nil) and (csDesigning in Control.ComponentState) then
   begin
     Form := GetParentForm(Control);
-    if (Form <> nil) and (Form.Designer <> nil) and
-       Form.Designer.IsDesignMsg(Control, Msg) then
+    if (Form <> nil) and (Form.Designer <> nil) and Form.Designer.IsDesignMsg(Control, Msg) then
       Result := True;
   end;
+end;
+
+function IsDefaultEraseBackground(Method: TJvDoEraseBackgroundMethod; MethodPtr: Pointer): Boolean;
+begin
+  Result := TMethod(Method).Code = MethodPtr;
 end;
 
 CONTROL_IMPL_DEFAULT(Control)

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLAboutEditor.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvJVCLAboutEditor.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvJVCLAboutEditor;
 
@@ -47,8 +47,16 @@ uses
   JvJVCLAboutForm, JVCLVer, JvDsgnConsts;
 
 procedure TJVCLAboutDialogProperty.Edit;
+var
+  Component: TJvJVCLAboutComponent;
 begin
-  TJvJVCLAboutForm.Execute(False);
+  Component := TJvJVCLAboutComponent.Create(nil);
+  try
+    Component.StoreSettings := False;
+    Component.Execute;
+  finally
+    Component.Free;
+  end;
 end;
 
 function TJVCLAboutDialogProperty.GetAttributes: TPropertyAttributes;

@@ -32,7 +32,7 @@ Description:
 History:
   2004-07-23: Added TJvCheckedComboBox.
 -----------------------------------------------------------------------------}
-// $Id: JvComboListBox.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvComboListBox.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvComboListBox;
 
@@ -45,7 +45,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
-  Classes, Graphics, Controls, Forms, StdCtrls, Buttons,
+  Classes, Graphics, Controls, Forms, StdCtrls,
   JvListBox,
   Menus;
 
@@ -59,6 +59,9 @@ type
   TJvComboListDrawImageEvent = procedure(Sender: TObject; Index: Integer;
     const APicture: TPicture; R: TRect; var DefaultDraw: Boolean) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvComboListBox = class(TJvCustomListBox)
   private
     FMouseOver: Boolean;
@@ -172,8 +175,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComboListBox.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -275,13 +278,10 @@ begin
     end;
   end;
 
-  with Result do
-  begin
-    Left := 0;
-    Top := 0;
-    Right := W;
-    Bottom := H;
-  end;
+  Result.Left := 0;
+  Result.Top := 0;
+  Result.Right := W;
+  Result.Bottom := H;
 
   OffsetRect(Result, (CW - W) div 2, (CH - H) div 2);
 end;

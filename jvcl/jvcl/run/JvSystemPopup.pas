@@ -30,12 +30,11 @@ Modifications:
       with the popup menu (because GetSystemMenu( hWnd, True) does not work correctly
       inside a WM_INITMENU handler.
 -----------------------------------------------------------------------------}
-// $Id: JvSystemPopup.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvSystemPopup.pas 13155 2011-11-06 12:31:20Z ahuser $
 
 unit JvSystemPopup;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -49,6 +48,9 @@ uses
 type
   TJvPositionInMenu = (pmTop, pmBottom);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSystemPopup = class(TJvComponent)
   private
     FPopup: TPopupMenu;
@@ -82,8 +84,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSystemPopup.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13155 $';
+    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

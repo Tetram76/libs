@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRadioButton.pas 12556 2009-10-13 18:34:42Z ahuser $
+// $Id: JvRadioButton.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvRadioButton;
 
@@ -41,6 +41,9 @@ uses
   JvTypes, JvExStdCtrls, JvLinkedControls;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvRadioButton = class(TJvExRadioButton)
   private
     FHotTrack: Boolean;
@@ -111,8 +114,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRadioButton.pas $';
-    Revision: '$Revision: 12556 $';
-    Date: '$Date: 2009-10-13 20:34:42 +0200 (mar., 13 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

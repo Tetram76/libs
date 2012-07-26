@@ -25,7 +25,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardRouteMapSteps.pas 13048 2011-06-08 14:36:54Z obones $
+// $Id: JvWizardRouteMapSteps.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvWizardRouteMapSteps;
 
@@ -37,11 +37,13 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes,
-  Windows, Messages, Graphics, Controls, Forms,
+  Windows, Messages, Types, SysUtils, Classes, Graphics, Controls, Forms,
   JvWizard;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvWizardRouteMapSteps = class(TJvWizardRouteMapControl)
   private
     FIndent: Integer;
@@ -94,8 +96,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizardRouteMapSteps.pas $';
-    Revision: '$Revision: 13048 $';
-    Date: '$Date: 2011-06-08 16:36:54 +0200 (mer., 08 juin 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -103,7 +105,6 @@ const
 implementation
 
 uses
-  Types,
   JvResources;
 
 constructor TJvWizardRouteMapSteps.Create(AOwner: TComponent);

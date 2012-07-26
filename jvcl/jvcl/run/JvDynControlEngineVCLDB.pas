@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineVCLDB.pas 12563 2009-10-19 23:55:49Z jfudickar $
+// $Id: JvDynControlEngineVCLDB.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvDynControlEngineVCLDB;
 
@@ -470,8 +470,8 @@ function DynControlEngineVCLDB: TJvDynControlEngineDB;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineVCLDB.pas $';
-    Revision: '$Revision: 12563 $';
-    Date: '$Date: 2009-10-20 01:55:49 +0200 (mar., 20 oct. 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -480,7 +480,7 @@ implementation
 
 uses
   Variants, SysUtils,
-  JvDynControlEngineTools, JvDynControlEngineVCL, JvConsts, JvJCLUtils;
+  JvDynControlEngineTools, JvJCLUtils;
 
 var
   IntDynControlEngineVCLDB: TJvDynControlEngineDB = nil;

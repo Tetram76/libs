@@ -32,7 +32,7 @@ Known Issues:
         You can use it as a generic editor control inside a control grid.
           -- Warren Postma (warrenpstma att hotmail dott com)
 -----------------------------------------------------------------------------}
-// $Id: JvDBControls.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvDBControls.pas 13329 2012-06-12 14:28:33Z obones $
 
 unit JvDBControls;
 
@@ -55,6 +55,9 @@ type
     var NewValue: string; var Accept, Post: Boolean) of object;
 
   {NEW IN JVCL3.0 - Enhanced DBEdit/DBMaskEdit }
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBMaskEdit = class(TJvCustomMaskEdit) // same base as TJvMaskEdit, plus data aware.
   private
     {Standard data-aware crap}
@@ -180,6 +183,9 @@ type
     property OnAcceptNewValue: TJvDBAcceptValueEvent read FOnAcceptNewValue write FOnAcceptNewValue;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBComboEdit = class(TJvCustomComboEdit)
   private
     FDataLink: TFieldDataLink;
@@ -298,6 +304,9 @@ type
     (* -- RDB -- *)
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBDateEdit = class(TJvCustomDateEdit)
   private
     FInReset: Boolean; // Polaris
@@ -329,6 +338,7 @@ type
     procedure KeyPress(var Key: Char); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Reset; override;
+    function DisplayNullDateAsEmptyText: Boolean; override;
     // Polaris
     procedure SetDate(Value: TDateTime); override;
     function IsValidDate(Value: TDateTime): Boolean;
@@ -405,6 +415,7 @@ type
     property PopupMenu;
     property ShowHint;
     property CalendarStyle;
+    property ShowNullDate;
     property StartOfWeek;
     property Weekends;
     property WeekendColor;
@@ -432,8 +443,13 @@ type
     property DisabledTextColor; // RDB
     property DisabledColor; // RDB
     property OnKeyDown; // RDB
+    property OnPopupHidden;
+    property OnPopupShown;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBCalcEdit = class(TJvCalcEdit)
   private
     FDataLink: TFieldDataLink;
@@ -569,6 +585,8 @@ type
     property OnContextPopup;
     property OnEndDock;
     property OnStartDock;
+    property OnPopupHidden; // RH: Added - issue 5726
+    property OnPopupShown; // RH: Added - issue 5726
     (* ++ RDB ++ *)
     property ClipboardCommands;
     property DisabledTextColor;
@@ -583,6 +601,9 @@ type
   TDBStatusKind = dsInactive..dsCalcFields;
   TDBLabelOptions = (doCaption, doGlyph, doBoth);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBStatusLabel = class(TJvCustomLabel)
   private
     FDataSetName: string;
@@ -681,6 +702,9 @@ type
     property OnStartDock;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDBNavigator = class(TDBNavigator)
   private
     FTransparent: Boolean;
@@ -698,8 +722,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBControls.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13329 $';
+    Date: '$Date: 2012-06-12 16:28:33 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -713,7 +737,11 @@ uses
 
 {$R JvDBControls.res}
 
-//=== NEW IN JVCL 3.0 ==
+function IsNullOrEmptyStringField(Field: TField): Boolean;
+begin
+  Result := Field.IsNull or ((Field is TStringField) and (Trim(Field.AsString) = ''));
+end;
+
 //=== { TJvDBMaskEdit } ======================================================
 
 constructor TJvDBMaskEdit.Create(AOwner: TComponent);
@@ -1038,7 +1066,7 @@ end;
 
 procedure TJvDBMaskEdit.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Integer(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 function TJvDBMaskEdit.ExecuteAction(Action: TBasicAction): Boolean;
@@ -1323,7 +1351,7 @@ end;
 
 procedure TJvDBComboEdit.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Integer(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 function TJvDBComboEdit.UseRightToLeftAlignment: Boolean;
@@ -1371,6 +1399,15 @@ begin
   inherited Destroy;
   // (rom) destroy Canvas AFTER inherited Destroy
   FCanvas.Free;
+end;
+
+function TJvDBDateEdit.DisplayNullDateAsEmptyText: Boolean;
+begin
+  Result := inherited DisplayNullDateAsEmptyText;
+  
+  if FDataLink.Field <> nil then
+    if FDataLink.Field.IsNull then
+      Result := True;
 end;
 
 procedure TJvDBDateEdit.AfterPopup(Sender: TObject; var Date: TDateTime;
@@ -1547,11 +1584,10 @@ begin
   if FDataLink.Field <> nil then
   begin
     EditMask := GetDateMask;
-    // Polaris
-    inherited SetDate(FDataLink.Field.AsDateTime);
-    //    Self.Date := FDataLink.Field.AsDateTime;
-    //    SetDate(FDataLink.Field.AsDateTime);
-    // Polaris
+    if IsNullOrEmptyStringField(FDataLink.Field) then
+      inherited SetDate(NullDate)
+    else
+      inherited SetDate(FDataLink.Field.AsDateTime);
   end
   else
   begin
@@ -1575,7 +1611,7 @@ procedure TJvDBDateEdit.EditingChange(Sender: TObject);
 begin
   inherited ReadOnly := not FDataLink.Editing;
   if FDataLink.Editing and DefaultToday and (FDataLink.Field <> nil) and
-    (FDataLink.Field.AsDateTime = NullDate) then
+    (IsNullOrEmptyStringField(FDataLink.Field) or (FDataLink.Field.AsDateTime = NullDate)) then
     FDataLink.Field.AsDateTime := SysUtils.Now;
 end;
 
@@ -1586,9 +1622,9 @@ begin
   ValidateEdit;
   D := Self.Date;
   if D <> NullDate then
-  begin // Polaris
+  begin
     if Int(FDataLink.Field.AsDateTime) <> D then
-      FDataLink.Field.AsDateTime := D + Frac(FDataLink.Field.AsDateTime)
+      FDataLink.Field.AsDateTime := D + Frac(FDataLink.Field.AsDateTime);
   end
   else
     FDataLink.Field.Clear;
@@ -1596,7 +1632,7 @@ end;
 
 procedure TJvDBDateEdit.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Integer(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 procedure TJvDBDateEdit.WMPaint(var Msg: TWMPaint);
@@ -2081,7 +2117,7 @@ end;
 
 procedure TJvDBCalcEdit.CMGetDataLink(var Msg: TMessage);
 begin
-  Msg.Result := Integer(FDataLink);
+  Msg.Result := LRESULT(FDataLink);
 end;
 
 procedure TJvDBCalcEdit.AcceptValue(const Value: Variant);

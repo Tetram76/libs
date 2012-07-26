@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTData.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id: JvMTData.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvMTData;
 
@@ -33,13 +33,13 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  SysUtils, Classes, Contnrs, SyncObjs,
+  SysUtils, Classes, Contnrs,
   {$IFDEF MSWINDOWS}
   {$IFDEF DEBUGINFO_ON}
   Windows,   // for OutputDebugString
   {$ENDIF DEBUGINFO_ON}
   {$ENDIF MSWINDOWS}
-  JvMTSync, JvMTConsts, JvMTThreading;
+  JvMTSync, JvMTThreading;
 
 type
   TMTBoundedQueue = class(TObjectQueue)
@@ -111,8 +111,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTData.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

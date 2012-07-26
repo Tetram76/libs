@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvId3v1.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvId3v1.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvId3v1;
 
@@ -47,6 +47,9 @@ type
     Genre: Byte;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvID3v1 = class(TJvComponent)
   private
     FSongName: AnsiString;
@@ -103,8 +106,8 @@ function WriteID3v1Tag(const AFileName: string; const ATag: TID3v1Tag): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvId3v1.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

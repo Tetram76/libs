@@ -28,7 +28,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSecretPanel.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvSecretPanel.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvSecretPanel;
 
@@ -41,13 +41,16 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls, ExtCtrls, Forms,
-  JvTimer, JvExtComponent, JvTypes;
+  JvTimer, JvExtComponent;
 
 type
   TGlyphLayout = (glGlyphLeft, glGlyphRight, glGlyphTop, glGlyphBottom);
   TScrollDirection = (sdVertical, sdHorizontal);
   TPanelDrawEvent = procedure(Sender: TObject; Canvas: TCanvas; Rect: TRect) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSecretPanel = class(TJvPubCustomPanel)
   private
     FActive: Boolean;
@@ -157,8 +160,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSecretPanel.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -166,9 +169,8 @@ const
 implementation
 
 uses
-  CommCtrl,
-  Consts, SysUtils, Math, ActnList,
-  JvJCLUtils, JvJVCLUtils, JvThemes, JvConsts;
+  SysUtils, Math,
+  JvJCLUtils, JvJVCLUtils, JvConsts;
 
 const
   Alignments: array [TAlignment] of Word = (DT_LEFT, DT_RIGHT, DT_CENTER);
@@ -295,62 +297,59 @@ begin
   InflateRect(FPaintRect, -InflateWidth, -InflateWidth);
   Inc(InflateWidth, MinOffset);
   InflateRect(FTxtRect, -InflateWidth, -InflateWidth);
-  with FGlyphOrigin do
-  begin
-    case FGlyphLayout of
-      glGlyphLeft:
+  case FGlyphLayout of
+    glGlyphLeft:
+      begin
+        FGlyphOrigin.X := FTxtRect.Left;
+        FGlyphOrigin.Y := (FTxtRect.Bottom + FTxtRect.Top - Glyph.Height) div 2;
+        if FGlyphOrigin.Y < FTxtRect.Top then
+          FGlyphOrigin.Y := FTxtRect.Top;
+        if Glyph.Width > 0 then
         begin
-          X := FTxtRect.Left;
-          Y := (FTxtRect.Bottom + FTxtRect.Top - Glyph.Height) div 2;
-          if Y < FTxtRect.Top then
-            Y := FTxtRect.Top;
-          if Glyph.Width > 0 then
-          begin
-            Inc(X, MinOffset);
-            FTxtRect.Left := X + Glyph.Width + InflateWidth;
-          end;
+          Inc(FGlyphOrigin.X, MinOffset);
+          FTxtRect.Left := FGlyphOrigin.X + Glyph.Width + InflateWidth;
         end;
-      glGlyphRight:
+      end;
+    glGlyphRight:
+      begin
+        FGlyphOrigin.Y := (FTxtRect.Bottom + FTxtRect.Top - Glyph.Height) div 2;
+        if FGlyphOrigin.Y < FTxtRect.Top then
+          FGlyphOrigin.Y := FTxtRect.Top;
+        FGlyphOrigin.X := FTxtRect.Right - Glyph.Width;
+        if Glyph.Width > 0 then
         begin
-          Y := (FTxtRect.Bottom + FTxtRect.Top - Glyph.Height) div 2;
-          if Y < FTxtRect.Top then
-            Y := FTxtRect.Top;
-          X := FTxtRect.Right - Glyph.Width;
-          if Glyph.Width > 0 then
-          begin
-            Dec(X, MinOffset);
-            if X < FTxtRect.Left then
-              X := FTxtRect.Left;
-            FTxtRect.Right := X - InflateWidth;
-          end;
+          Dec(FGlyphOrigin.X, MinOffset);
+          if FGlyphOrigin.X < FTxtRect.Left then
+            FGlyphOrigin.X := FTxtRect.Left;
+          FTxtRect.Right := FGlyphOrigin.X - InflateWidth;
         end;
-      glGlyphTop:
+      end;
+    glGlyphTop:
+      begin
+        FGlyphOrigin.Y := FTxtRect.Top;
+        FGlyphOrigin.X := (FTxtRect.Right + FTxtRect.Left - Glyph.Width) div 2;
+        if FGlyphOrigin.X < FTxtRect.Left then
+          FGlyphOrigin.X := FTxtRect.Left;
+        if Glyph.Height > 0 then
         begin
-          Y := FTxtRect.Top;
-          X := (FTxtRect.Right + FTxtRect.Left - Glyph.Width) div 2;
-          if X < FTxtRect.Left then
-            X := FTxtRect.Left;
-          if Glyph.Height > 0 then
-          begin
-            Inc(Y, MinOffset);
-            FTxtRect.Top := Y + Glyph.Height + (InflateWidth + MinOffset);
-          end;
+          Inc(FGlyphOrigin.Y, MinOffset);
+          FTxtRect.Top := FGlyphOrigin.Y + Glyph.Height + (InflateWidth + MinOffset);
         end;
-      glGlyphBottom:
+      end;
+    glGlyphBottom:
+      begin
+        FGlyphOrigin.X := (FTxtRect.Right + FTxtRect.Left - Glyph.Width) div 2;
+        if FGlyphOrigin.X < FTxtRect.Left then
+          FGlyphOrigin.X := FTxtRect.Left;
+        FGlyphOrigin.Y := FTxtRect.Bottom - Glyph.Height;
+        if Glyph.Height > 0 then
         begin
-          X := (FTxtRect.Right + FTxtRect.Left - Glyph.Width) div 2;
-          if X < FTxtRect.Left then
-            X := FTxtRect.Left;
-          Y := FTxtRect.Bottom - Glyph.Height;
-          if Glyph.Height > 0 then
-          begin
-            Dec(Y, MinOffset);
-            if Y < FTxtRect.Top then
-              Y := FTxtRect.Top;
-            FTxtRect.Bottom := Y - (InflateWidth + MinOffset);
-          end;
+          Dec(FGlyphOrigin.Y, MinOffset);
+          if FGlyphOrigin.Y < FTxtRect.Top then
+            FGlyphOrigin.Y := FTxtRect.Top;
+          FTxtRect.Bottom := FGlyphOrigin.Y - (InflateWidth + MinOffset);
         end;
-    end;
+      end;
   end;
   if FDirection = sdHorizontal then
   begin
@@ -362,9 +361,8 @@ begin
     if InflateWidth > 0 then
       InflateRect(FTxtRect, 0, -InflateWidth div 2);
   end;
-  with FTxtRect do
-    if (Left >= Right) or (Top >= Bottom) then
-      FTxtRect := Rect(0, 0, 0, 0);
+  if (FTxtRect.Left >= FTxtRect.Right) or (FTxtRect.Top >= FTxtRect.Bottom) then
+    FTxtRect := Rect(0, 0, 0, 0);
 end;
 
 procedure TJvSecretPanel.PaintGlyph;
@@ -392,8 +390,7 @@ begin
     begin
       I := SaveDC(Handle);
       try
-        with FTxtRect do
-          MoveWindowOrg(Handle, -Left, -Top);
+        MoveWindowOrg(Handle, -FTxtRect.Left, -FTxtRect.Top);
         Brush.Color := Self.Color;
         PaintClient(FMemoryImage.Canvas, FPaintRect);
       finally
@@ -510,8 +507,7 @@ begin
   end;
   SaveIndex := SaveDC(Canvas.Handle);
   try
-    with Rect do
-      IntersectClipRect(Canvas.Handle, Left, Top, Right, Bottom);
+    IntersectClipRect(Canvas.Handle, Rect.Left, Rect.Top, Rect.Right, Rect.Bottom);
     Canvas.Brush.Color := Self.Color;
     PaintClient(Canvas, Rect);
   finally

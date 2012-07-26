@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorTrackbar.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvColorTrackbar.pas 13121 2011-09-21 12:31:58Z obones $
 
 unit JvColorTrackbar;
 
@@ -33,9 +33,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows,
-  Messages,
-  Classes, Controls, Graphics, Forms,
+  Windows, Messages, Types, Classes, Controls, Graphics, Forms,
   JvComponent, JvJVCLUtils;
 
 type
@@ -43,6 +41,9 @@ type
   TJvColorTrackBarIndicator = (tbiArrow, tbiLine);
   TJvColorTrackBarIndicators = set of TJvColorTrackBarIndicator;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvColorTrackBar = class(TJvGraphicControl)
   private
     //FShowValue: Boolean;
@@ -138,8 +139,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorTrackbar.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13121 $';
+    Date: '$Date: 2011-09-21 14:31:58 +0200 (mer., 21 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -208,6 +209,8 @@ begin
     else
       Position := WindowToPos(X);
   end;
+  if Assigned(OnMouseDown) then
+    OnMouseDown(Self, Button, Shift, X, Y);
 end;
 
 procedure TJvColorTrackBar.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -219,6 +222,8 @@ begin
     else
       Position := WindowToPos(X);
   end;
+  if Assigned(OnMouseMove) then
+    OnMouseMove(Self, Shift, X, Y);
 end;
 
 procedure TJvColorTrackBar.MouseUp(Button: TMouseButton; Shift: TShiftState;
@@ -232,6 +237,8 @@ begin
       Position := WindowToPos(X);
   end;
   FButtonDown := False;
+  if Assigned(OnMouseUp) then
+    OnMouseUp(Self, Button, Shift, X, Y);
 end;
 
 procedure TJvColorTrackBar.Paint;

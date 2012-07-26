@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCtrls.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvCtrls.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvCtrls;
 
@@ -165,6 +165,9 @@ type
     property MouseInControl: Boolean read FMouseInControl;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvImgBtn = class(TJvCustomImageButton)
   published
     property Alignment;
@@ -204,8 +207,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCtrls.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -428,7 +431,7 @@ begin
     FMouseInControl := True;
     inherited MouseEnter(Control);
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.ThemesEnabled then
+    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
       Repaint
     else
     {$ENDIF JVCLThemesEnabled}
@@ -446,7 +449,7 @@ begin
     FMouseInControl := False;
     inherited MouseLeave(Control);
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.ThemesEnabled then
+    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
       Repaint
     else
     {$ENDIF JVCLThemesEnabled}
@@ -516,7 +519,7 @@ begin
   end;
 
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     if not IsEnabled then
       Button := tbPushButtonDisabled
@@ -539,7 +542,7 @@ begin
     if FMustDrawButtonFrame then
       ThemeServices.DrawElement(DrawItemStruct.hDC, Details, DrawItemStruct.rcItem);
     // Return content rect
-    RectContent := ThemeServices.ContentRect(FCanvas.Handle, Details, DrawItemStruct.rcItem);
+    ThemeServices.GetElementContentRect(FCanvas.Handle, Details, DrawItemStruct.rcItem, RectContent);
   end
   else
   {$ENDIF JVCLThemesEnabled}
@@ -614,12 +617,11 @@ procedure TJvCustomImageButton.DrawButtonImage(ImageBounds: TRect);
 begin
   if not (csDestroying in ComponentState) then
   begin
-    with ImageBounds do
-      if IsImageVisible then
-        if Assigned(FImages) then
-          FImages.Draw(FCanvas, Left, Top, GetImageIndex, Enabled)
-        else
-          DefaultImgBtnImagesList.Draw(FCanvas, Left, Top, GetKindImageIndex, Enabled);
+    if IsImageVisible then
+      if Assigned(FImages) then
+        FImages.Draw(FCanvas, ImageBounds.Left, ImageBounds.Top, GetImageIndex, Enabled)
+      else
+        DefaultImgBtnImagesList.Draw(FCanvas, ImageBounds.Left, ImageBounds.Top, GetKindImageIndex, Enabled);
   end;
 end;
 
@@ -662,7 +664,7 @@ begin
   if not FDisableDrawDown and (DrawItemStruct.itemState and ODS_SELECTED <> 0) and Enabled then
   begin
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.ThemesEnabled then
+    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
       OffsetRect(R, 1, 0)
     else
     {$ENDIF JVCLThemesEnabled}
@@ -994,7 +996,7 @@ end;
 
 procedure TJvCustomImageButton.WMLButtonDblClk(var Msg: TWMLButtonDblClk);
 begin
-  Perform(WM_LBUTTONDOWN, Msg.Keys, LPARAM(Msg.Pos));
+  Perform(WM_LBUTTONDOWN, Msg.Keys, {$IFDEF RTL230_UP}PointToLParam{$ELSE}LPARAM{$ENDIF RTL230_UP}(Msg.Pos));
 end;
 
 procedure TJvCustomImageButton.WMTimer(var Msg: TWMTimer);

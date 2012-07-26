@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormWallpaper.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvFormWallpaper.pas 13222 2012-02-24 14:19:37Z obones $
 
 unit JvFormWallpaper;
 
@@ -39,6 +39,9 @@ uses
 type
   TJvOffsetMode = (omRows, omColumns);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvFormWallpaper = class(TJvGraphicControl)
   private
     FImage: TPicture;
@@ -65,14 +68,16 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormWallpaper.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13222 $';
+    Date: '$Date: 2012-02-24 15:19:37 +0100 (ven., 24 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+uses
+  Forms;
 
 constructor TJvFormWallpaper.Create(AOwner: TComponent);
 begin
@@ -160,7 +165,10 @@ end;
 
 procedure TJvFormWallpaper.FormPaint(Sender: TObject);
 begin
-  Invalidate;
+  if (Parent is TForm) and (TForm(Parent).FormStyle = fsMDIForm) then
+    RequestAlign // Invalidate DOES NOT work here (Mantis 5689)
+  else
+    Invalidate;
 end;
 
 {$IFDEF UNITVERSIONING}

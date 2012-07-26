@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGroupBox.pas 12645 2010-01-07 15:15:13Z ahuser $
+// $Id: JvGroupBox.pas 13139 2011-10-28 19:59:40Z jfudickar $
 
 unit JvGroupBox;
 
@@ -36,9 +36,12 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, Windows, Messages, Graphics, Controls, Forms, StdCtrls,
-  JvThemes, JvExControls, JvExStdCtrls, JvCheckBox, JvJCLUtils, JvComponent;
+  JvThemes, JvExControls, JvExStdCtrls, JvCheckBox, JvJCLUtils;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvGroupBox = class(TJvExGroupBox, IJvDenySubClassing)
   private
     FCheckBox: TJvCheckBox;
@@ -55,8 +58,7 @@ type
     function StoredCheckable: Boolean;
     procedure CheckBoxClick(Sender: TObject);
   protected
-    function WantKey(Key: Integer; Shift: TShiftState;
-      const KeyText: WideString): Boolean; override;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; override;
     procedure EnabledChanged; override;
     procedure DoHotKey; dynamic;
     procedure Paint; override;
@@ -83,8 +85,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGroupBox.pas $';
-    Revision: '$Revision: 12645 $';
-    Date: '$Date: 2010-01-07 16:15:13 +0100 (jeu., 07 janv. 2010) $';
+    Revision: '$Revision: 13139 $';
+    Date: '$Date: 2011-10-28 21:59:40 +0200 (ven., 28 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -117,7 +119,7 @@ var
   LastBkMode: Integer;
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     {$IFDEF COMPILER7_UP}
     inherited Paint;
@@ -189,9 +191,9 @@ begin
   end;
 end;
 
-function TJvGroupBox.WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean;
+function TJvGroupBox.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
-  Result := inherited WantKey(Key, Shift, KeyText);
+  Result := inherited WantKey(Key, Shift);
   if Result then
     DoHotKey;
 end;

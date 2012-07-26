@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Forms.pas 12481 2009-08-26 08:39:55Z obones $
+// $Id: JvInterpreter_Forms.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvInterpreter_Forms;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Forms.pas $';
-    Revision: '$Revision: 12481 $';
-    Date: '$Date: 2009-08-26 10:39:55 +0200 (mer., 26 août 2009) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -609,7 +609,7 @@ end;
 
 procedure TScreen_Read_Cursors(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TScreen(Args.Obj).Cursors[Args.Values[0]]);
+  Value := NativeInt(TScreen(Args.Obj).Cursors[Args.Values[0]]);
 end;
 
 { property Write Cursors[Integer]: HCURSOR }
@@ -691,7 +691,7 @@ end;
 
 procedure TScreen_Read_DefaultKbLayout(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TScreen(Args.Obj).DefaultKbLayout);
+  Value := NativeInt(TScreen(Args.Obj).DefaultKbLayout);
 end;
 
 
@@ -900,7 +900,7 @@ end;
 
 procedure TApplication_Read_DialogHandle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TApplication(Args.Obj).DialogHandle);
+  Value := NativeInt(TApplication(Args.Obj).DialogHandle);
 end;
 
 { property Write DialogHandle(Value: HWnd) }
@@ -923,7 +923,7 @@ end;
 
 procedure TApplication_Read_Handle(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Integer(TApplication(Args.Obj).Handle);
+  Value := NativeInt(TApplication(Args.Obj).Handle);
 end;
 
 { property Write Handle(Value: HWnd) }

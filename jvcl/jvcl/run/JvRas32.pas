@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvRas32.pas 12634 2009-12-31 10:43:17Z obones $
+// $Id: JvRas32.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvRas32;
 
@@ -41,6 +41,9 @@ uses
   JvComponentBase, JvTypes;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvRas32 = class(TJvComponent)
   private
     FPhoneBookPath: TFileName;
@@ -157,8 +160,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRas32.pas $';
-    Revision: '$Revision: 12634 $';
-    Date: '$Date: 2009-12-31 11:43:17 +0100 (jeu., 31 déc. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGrids.pas 12579 2009-10-26 19:59:53Z ahuser $
+// $Id: JvGrids.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvGrids;
 
@@ -59,6 +59,9 @@ type
   TEditStyleEvent = procedure(Sender: TObject; ACol, ARow: Longint;
     var Style: TInplaceEditStyle) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDrawGrid = class(TJvExDrawGrid)
   private
     FNoUpdateData: Boolean;
@@ -191,8 +194,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGrids.pas $';
-    Revision: '$Revision: 12579 $';
-    Date: '$Date: 2009-10-26 20:59:53 +0100 (lun., 26 oct. 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -204,7 +207,7 @@ uses
   JvJCLUtils, JvJVCLUtils;
 
 const
-  MaxCustomExtents = MaxListSize;
+  MaxCustomExtents = {$IFDEF RTL230_UP}Maxint div 16{$ELSE}MaxListSize{$ENDIF RTL230_UP};
   MaxShortInt = High(ShortInt);
 
 type
@@ -444,7 +447,7 @@ begin
       begin
         StopTracking;
         MousePos := PointToSmallPoint(ListPos);
-        SendMessage(FActiveList.Handle, WM_LBUTTONDOWN, 0, LPARAM(MousePos));
+        SendMessage(FActiveList.Handle, WM_LBUTTONDOWN, 0, {$IFDEF RTL230_UP}PointToLParam{$ELSE}LPARAM{$ENDIF RTL230_UP}(MousePos));
         Exit;
       end;
     end;

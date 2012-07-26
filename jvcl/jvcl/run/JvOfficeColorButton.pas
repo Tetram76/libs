@@ -24,7 +24,7 @@ Description:
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvOfficeColorButton.pas 13001 2011-03-09 21:11:42Z uschuster $
+// $Id: JvOfficeColorButton.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvOfficeColorButton;
 
@@ -236,6 +236,9 @@ type
     property OnShowOwnerColorDialog: TNotifyEvent read FOnShowOwnerColorDialog write FOnShowOwnerColorDialog;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvOfficeColorButton = class(TJvCustomOfficeColorButton)
   private
     FFilerTag: string;
@@ -314,8 +317,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOfficeColorButton.pas $';
-    Revision: '$Revision: 13001 $';
-    Date: '$Date: 2011-03-09 22:11:42 +0100 (mer., 09 mars 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -396,7 +399,7 @@ begin
   { calculate were to put arrow part }
   PaintRect := Rect(3, 0, Width - 3, Height);
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
     Dec(PaintRect.Left);
   {$ENDIF JVCLThemesEnabled}
 

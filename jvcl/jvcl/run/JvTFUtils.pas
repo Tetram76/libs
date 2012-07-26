@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFUtils.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTFUtils.pas 13174 2011-11-19 23:13:38Z ahuser $
 
 unit JvTFUtils;
 
@@ -36,13 +36,12 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Graphics, Controls, Classes, SysUtils;
 
+{$IFNDEF COMPILER12_UP} // Delphi 2009 knows System::TDate and System::TTime
 {$HPPEMIT '#ifndef TDate'}
-
 {$HPPEMIT '#define TDate Controls::TDate'}
 {$HPPEMIT '#define TTime Controls::TTime'}
-
-
 {$HPPEMIT '#endif'}
+{$ENDIF ~COMPILER12_UP}
 
 type
   TJvTFVisibleScrollBars = set of (vsbHorz, vsbVert);
@@ -116,8 +115,8 @@ function IsClassByName(Obj: TObject; ClassName: string): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFUtils.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13174 $';
+    Date: '$Date: 2011-11-20 00:13:38 +0100 (dim., 20 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

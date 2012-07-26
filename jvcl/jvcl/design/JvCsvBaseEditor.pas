@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCsvBaseEditor.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCsvBaseEditor.pas 13274 2012-03-12 18:34:04Z wpostma $
 
 unit JvCsvBaseEditor;
 
@@ -47,10 +47,11 @@ type
     procedure GetValues(Proc: TGetStrProc); override;
   end;
 
+
 implementation
 
 uses
-  Forms, Dialogs;
+  Windows, Forms, Dialogs;
 
 //=== { TJvCSVFileNameProperty } =============================================
 
@@ -114,5 +115,6 @@ begin
   except
   end;
 end;
+
 
 end.

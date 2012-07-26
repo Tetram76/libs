@@ -21,23 +21,25 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvHotKey.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvHotKey.pas 13155 2011-11-06 12:31:20Z ahuser $
 
 unit JvHotKey;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
 uses
-  Controls,
+  Controls, Classes,
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   JvExComCtrls;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvHotKey = class(TJvExHotKey)
   published
     property BevelEdges;
@@ -68,8 +70,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHotKey.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13155 $';
+    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

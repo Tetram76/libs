@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLAboutForm.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvJVCLAboutForm.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvJVCLAboutForm;
 
@@ -39,7 +39,7 @@ uses
   {$ENDIF MSWINDOWS}
   SysUtils, Classes, IniFiles, Messages, Controls, Forms, StdCtrls, ExtCtrls,
   Dialogs, Buttons,
-  jpeg,
+  jpeg, // this is required because the Picture contains a JPEG image
   JclSysInfo,
   JVCLVer, JvBaseDlg, JvComponent;
 
@@ -87,14 +87,17 @@ type
   public
     procedure LoadOptions;
     procedure SaveOptions;
-    class function Execute(StoreSettings: Boolean): Boolean;
+    class function Execute(ParentWnd: HWND; StoreSettings: Boolean): Boolean;
   end;
 
-  TJvJVCLAboutComponent = class(TJvCommonDialogP)
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
+  TJvJVCLAboutComponent = class(TJvCommonDialog)
   private
     FStoreSettings: Boolean;
   public
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
   published
     property StoreSettings: Boolean read FStoreSettings write FStoreSettings default False;
   end;
@@ -103,8 +106,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLAboutForm.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -112,7 +115,7 @@ const
 implementation
 
 uses
-  JvJVCLUtils, JvJCLUtils;
+  JvJCLUtils;
 
 {$R *.dfm}
 
@@ -241,12 +244,12 @@ begin
   Close;
 end;
 
-function TJvJVCLAboutComponent.Execute: Boolean;
+function TJvJVCLAboutComponent.Execute(ParentWnd: HWND): Boolean;
 begin
-  Result := TJvJVCLAboutForm.Execute(StoreSettings);
+  Result := TJvJVCLAboutForm.Execute(ParentWnd, StoreSettings);
 end;
 
-class function TJvJVCLAboutForm.Execute(StoreSettings: Boolean): Boolean;
+class function TJvJVCLAboutForm.Execute(ParentWnd: HWND; StoreSettings: Boolean): Boolean;
 begin
   with Self.Create(Application) do
   try
@@ -255,6 +258,7 @@ begin
     // (rom) used as component outside the IDE the buttons are not useful
     btnHelp.Visible := StoreSettings;
     btnOptions.Visible := StoreSettings;
+    ParentWindow := ParentWnd;
     Result := ShowModal = mrOk;
     if StoreSettings then
       SaveOptions;

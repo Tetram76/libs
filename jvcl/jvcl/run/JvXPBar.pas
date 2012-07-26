@@ -39,7 +39,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPBar.pas 13056 2011-06-10 22:57:50Z ahuser $
+// $Id: JvXPBar.pas 13207 2012-02-23 10:39:11Z obones $
 
 unit JvXPBar;
 
@@ -62,8 +62,8 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Classes, SysUtils,
-  Graphics, Controls, Forms, ExtCtrls, ImgList, ActnList, Messages,
-  JvConsts, JvXPCore, JvXPCoreUtils, JvJVCLUtils, JvTypes;
+  Graphics, Controls, Forms, ImgList, ActnList, Messages,
+  JvXPCore, JvXPCoreUtils, JvJVCLUtils, JvTypes;
 
 type
   TJvXPBarRollDirection = (rdExpand, rdCollapse);
@@ -461,6 +461,9 @@ type
     procedure InitiateAction; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvXPBar = class(TJvXPCustomWinXPBar)
   published
     property Caption;
@@ -554,8 +557,8 @@ procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPBar.pas $';
-    Revision: '$Revision: 13056 $';
-    Date: '$Date: 2011-06-11 00:57:50 +0200 (sam., 11 juin 2011) $';
+    Revision: '$Revision: 13207 $';
+    Date: '$Date: 2012-02-23 11:39:11 +0100 (jeu., 23 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1345,7 +1348,7 @@ begin
   FCheckedFrameColor := dxColor_CheckedFrameColorXP;
   FFocusedFrameColor := dxColor_FocusedFrameColorXP;
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.ThemesEnabled then
+  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
   begin
     Details := ThemeServices.GetElementDetails(tebHeaderBackgroundNormal);
     with Details do
@@ -1665,7 +1668,7 @@ procedure TJvXPCustomWinXPBar.SortVisibleItems(const Redraw: Boolean);
 begin
   if (csLoading in ComponentState) or (csDestroying in ComponentState) then
     Exit;
-  FVisibleItems.FItems.Sort(@SortByIndex);
+  FVisibleItems.FItems.Sort(SortByIndex);
   if Redraw then
     InternalRedraw;
 end;
@@ -2050,12 +2053,6 @@ begin
 end;
 
 procedure TJvXPCustomWinXPBar.Paint;
-var
-  ARect: TRect;
-  Bitmap: TBitmap;
-  Index, I: Integer;
-  OwnColor: TColor;
-
   // (rom) Do as prefix for a local function is not ideal
   procedure DoDrawBackground(ACanvas: TCanvas; var R: TRect);
   begin
@@ -2079,6 +2076,10 @@ var
   end;
 
   procedure DoDrawHeader(ACanvas: TCanvas; var R: TRect);
+  var
+    Index: Integer;
+    OwnColor: TColor;
+    Bitmap: TBitmap;
   begin
     Dec(R.Top, FHeaderHeight);
     R.Bottom := R.Top + FHeaderHeight;
@@ -2158,26 +2159,26 @@ var
           // Transparency fix not needed Here! -WPostma
           Bitmap.Transparent := True;
           if BiDiMode = bdRightToLeft then
-            ACanvas.Draw(R.Left + 5, R.Top + (HeaderHeight - GetRollHeight) div 2, Bitmap)
+          begin
+            ACanvas.Draw(R.Left + 5, R.Top + (HeaderHeight - GetRollHeight) div 2, Bitmap);
+            Inc(R.Left, Bitmap.Width + 7);
+          end
           else
-            ACanvas.Draw(R.Right - 24, R.Top + (HeaderHeight - GetRollHeight) div 2, Bitmap);
+          begin
+            ACanvas.Draw(R.Right - Bitmap.Width - 7, R.Top + (HeaderHeight - GetRollHeight) div 2, Bitmap);
+            Dec(R.Right, Bitmap.Width + 7);
+          end;
         finally
           Bitmap.Free;
         end;
-        Dec(R.Right, 25);
       end;
-      Inc(R.Left, 22);
       ACanvas.Pen.Color := FColors.SeparatorColor;
-      JvXPDrawLine(ACanvas, 1, ARect.Top + FHeaderHeight, Width - 1, ARect.Top + FHeaderHeight);
-      if BiDiMode = bdRightToLeft then
-        Inc(ARect.Right, 28)
-      else
-        Inc(R.Left, 16);
+      JvXPDrawLine(ACanvas, 1, R.Top + FHeaderHeight, Width - 1, R.Top + FHeaderHeight);
     end;
 
     { draw seperator line }
     ACanvas.Pen.Color := FColors.SeparatorColor;
-    JvXPDrawLine(ACanvas, 1, ARect.Top + FHeaderHeight, Width - 1, ARect.Top + FHeaderHeight);
+    JvXPDrawLine(ACanvas, 1, R.Top + FHeaderHeight, Width - 1, R.Top + FHeaderHeight);
 
     { draw icon }
 
@@ -2185,13 +2186,13 @@ var
     begin
       if BiDiMode = bdRightToLeft then
         begin
-          ACanvas.Draw(ARect.Right-FICon.Width-2, 0, FIcon);
-          Dec(ARect.Right, FIcon.Width+6);
+          ACanvas.Draw(R.Right-FICon.Width-2, 0, FIcon);
+          Dec(R.Right, FIcon.Width+6);
         end
       else
         begin
           ACanvas.Draw(2, 1, FIcon);
-          Inc(ARect.Right, FIcon.Width+6);
+          Inc(R.Left, FIcon.Width+6);
         end;
 
     end;
@@ -2199,14 +2200,18 @@ var
     ACanvas.Font.Assign(FHeaderFont);
     if FHotTrack and (dsHighlight in DrawState) and (FHitTest <> htNone) and (FHotTrackColor <> clNone) then
       ACanvas.Font.Color := FHotTrackColor;
-    ARect.Bottom := ARect.Top + FHeaderHeight;
+    R.Bottom := R.Top + FHeaderHeight;
     if BiDiMode = bdRightToLeft then
-      DrawText(ACanvas, Caption, -1, ARect,
+      DrawText(ACanvas, Caption, -1, R,
         DT_SINGLELINE or DT_RTLREADING or DT_RIGHT or DT_VCENTER or DT_END_ELLIPSIS or DT_NOPREFIX)
     else
-      DrawText(ACanvas, Caption, -1, ARect,
+      DrawText(ACanvas, Caption, -1, R,
         DT_SINGLELINE or DT_LEFT or DT_VCENTER or DT_END_ELLIPSIS or DT_NOPREFIX);
   end;
+
+var
+  ARect: TRect;
+  I: Integer;
 begin
   { get client rect }
   ARect := GetClientRect;
@@ -2394,24 +2399,21 @@ end;
 procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer);
 begin
   // Draw Frame with round edges
-  with Canvas, ARect do
-  begin
-    Pen.Color := AColor;
-    Dec(Right);
-    Dec(Bottom);
-    Polygon(
-     [Point(Left + R, Top),
-      Point(Right - R, Top),
-      Point(Right, Top + R),
-      Point(Right, Bottom - R),
-      Point(Right - R, Bottom),
-      Point(Left + R, Bottom),
-      Point(Left, Bottom - R),
-      Point(Left, Top + R),
-      Point(Left + R, Top)]);
-    Inc(Right);
-    Inc(Bottom);
-  end;
+  Canvas.Pen.Color := AColor;
+  Dec(ARect.Right);
+  Dec(ARect.Bottom);
+  Canvas.Polygon(
+   [Point(ARect.Left + R, ARect.Top),
+    Point(ARect.Right - R, ARect.Top),
+    Point(ARect.Right, ARect.Top + R),
+    Point(ARect.Right, ARect.Bottom - R),
+    Point(ARect.Right - R, ARect.Bottom),
+    Point(ARect.Left + R, ARect.Bottom),
+    Point(ARect.Left, ARect.Bottom - R),
+    Point(ARect.Left, ARect.Top + R),
+    Point(ARect.Left + R, ARect.Top)]);
+  Inc(ARect.Right);
+  Inc(ARect.Bottom);
 end;
 
 procedure TJvXPCustomWinXPBar.SetHeaderRounded(const Value: Boolean);

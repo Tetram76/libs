@@ -36,7 +36,7 @@ Known Issues:
       DateAndTime := JvDateTimePicker1.NullDate;
 
 -----------------------------------------------------------------------------}
-// $Id: JvDateTimePicker.pas 12994 2011-02-28 11:04:37Z ahuser $
+// $Id: JvDateTimePicker.pas 13315 2012-06-12 11:33:51Z obones $
 
 unit JvDateTimePicker;
 
@@ -52,6 +52,9 @@ uses
   JvExComCtrls;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvDateTimePicker = class(TJvExDateTimePicker)
   private
     FNullText: string;
@@ -99,8 +102,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDateTimePicker.pas $';
-    Revision: '$Revision: 12994 $';
-    Date: '$Date: 2011-02-28 12:04:37 +0100 (lun., 28 févr. 2011) $';
+    Revision: '$Revision: 13315 $';
+    Date: '$Date: 2012-06-12 13:33:51 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -108,12 +111,11 @@ const
 implementation
 
 uses
-  CommCtrl, JvThemes,
+  CommCtrl,
   {$IFDEF HAS_TYPES}
   Types,
   {$ENDIF HAS_TYPES}
-//  JvJCLUtils,
-  JvResources;
+  JvThemes;
 
 {$IFNDEF COMPILER7_UP}
 const
@@ -150,10 +152,8 @@ begin
 end;
 
 function TJvDateTimePicker.WithinDelta(Val1, Val2: TDateTime): Boolean;
-const
-  cOneSecond = 1 / 86400;
 begin
-  Result := Abs(Frac(Val1) - Frac(Val2)) <= cOneSecond;
+  Result := Abs(Frac(Val1) - Frac(Val2)) < EncodeTime(0, 0, 1, 0);
 end;
 
 function TJvDateTimePicker.CheckNullValue: Boolean;
@@ -278,7 +278,7 @@ begin
       SizeHandle := GetParent(CalHandle);
       // The dropdown window uses a 'border' of..
       {$IFDEF JVCLThemesEnabled}
-      if ThemeServices.ThemesEnabled then
+      if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
       begin
         // .. 3 pixels when themed
         Inc(MinWidth, 3*2);

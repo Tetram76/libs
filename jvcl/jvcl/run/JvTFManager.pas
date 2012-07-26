@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFManager.pas 12955 2010-12-29 12:27:53Z jfudickar $
+// $Id: JvTFManager.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvTFManager;
 
@@ -438,6 +438,9 @@ type
   TJvTFApptDescEvent = procedure(Sender: TObject; Appt: TJvTFAppt;
     var Description: string) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvTFScheduleManager = class(TComponent)
   private
     FAlwaysPost: Boolean;
@@ -958,6 +961,9 @@ type
     property Title: string read FTitle write SetTitle;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvTFUniversalPrinter = class(TJvTFPrinter)
   public
     procedure NewDoc; override;
@@ -1036,8 +1042,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFManager.pas $';
-    Revision: '$Revision: 12955 $';
-    Date: '$Date: 2010-12-29 13:27:53 +0100 (mer., 29 déc. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1045,7 +1051,7 @@ const
 implementation
 
 uses
-  JvConsts, JvResources,
+  JvResources,
   Dialogs, Forms, JvJVCLUtils, JclSysUtils;
 
 function AdjustEndTime(ATime: TTime): TTime;
@@ -1069,18 +1075,9 @@ begin
 end;
 
 function MoveRect(ARect: TRect; NewLeft, NewTop: Integer): TRect;
-var
-  XOffset, YOffset: Integer;
 begin
-  XOffset := NewLeft - ARect.Left;
-  YOffset := NewTop - ARect.Top;
-  with Result do
-  begin
-    Left := ARect.Left + XOffset;
-    Right := ARect.Right + XOffset;
-    Top := ARect.Top + YOffset;
-    Bottom := ARect.Bottom + YOffset;
-  end;
+  Result := ARect;
+  OffsetRect(Result, NewLeft - ARect.Left, NewTop - ARect.Top);
 end;
 
 function StripCRLF(const S: string): string;

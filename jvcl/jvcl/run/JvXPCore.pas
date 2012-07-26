@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPCore.pas 12741 2010-04-02 10:43:13Z ahuser $
+// $Id: JvXPCore.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvXPCore;
 
@@ -255,6 +255,9 @@ type
     property UseStyleManager: Boolean read FUseStyleManager write SetUseStyleManager default True;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvXPStyleManager = class(TJvXPCustomComponent)
   private
     FControls: TList;
@@ -325,8 +328,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPCore.pas $';
-    Revision: '$Revision: 12741 $';
-    Date: '$Date: 2010-04-02 12:43:13 +0200 (ven., 02 avr. 2010) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -334,7 +337,6 @@ const
 implementation
 
 uses
-  JvResources,
   JvXPCoreUtils, JvJVCLUtils;
 
 {$R JvXPCore.res}

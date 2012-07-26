@@ -36,7 +36,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTrayIcon.pas 12858 2010-10-08 14:20:15Z obones $
+// $Id: JvTrayIcon.pas 13350 2012-06-13 14:54:41Z obones $
 
 unit JvTrayIcon;
 
@@ -48,9 +48,9 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, ExtCtrls,
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Menus, ShellAPI, ImgList, DateUtils,
-  JvConsts, JvTypes, JvComponentBase;
+  JvComponentBase;
 
 type
   TBalloonType = (btNone, btError, btInfo, btWarning);
@@ -90,6 +90,9 @@ type
     tisWaitingForDoubleClick, tisAppHiddenButNotMinimized, tisClicked);
   TJvTrayIconStates = set of TJvTrayIconState;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvTrayIcon = class(TJvComponent)
   private
     FCurrentIcon: TIcon;
@@ -240,8 +243,8 @@ procedure RefreshTray;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTrayIcon.pas $';
-    Revision: '$Revision: 12858 $';
-    Date: '$Date: 2010-10-08 16:20:15 +0200 (ven., 08 oct. 2010) $';
+    Revision: '$Revision: 13350 $';
+    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -278,7 +281,7 @@ type
     destructor Destroy; override;
     function MoveNext: Boolean;
 
-    function ReadProcessMemory(const Address: Pointer; Count: DWORD; var Buffer): Boolean;
+    function ReadProcessMemory(const Address: Pointer; Count: {$IFDEF RTL230_UP}NativeUInt{$ELSE}DWORD{$ENDIF}; var Buffer): Boolean;
 
     property CurrentButton: TTBButton read FButton;
     property CurrentWnd: THandle read FExtraData.Wnd;
@@ -465,7 +468,7 @@ end;
 
 function FindToolbar(Window: THandle; var ToolbarHandle: THandle): BOOL; stdcall;
 var
-  Buf: array [Byte] of Char;
+  Buf: array[Byte] of Char;
 begin
   GetClassName(Window, Buf, Length(Buf) - 1);
   // Set result to false when we have found a toolbar
@@ -479,12 +482,9 @@ var
   TrayHandle: THandle;
 begin
   Result := 0;
-
   TrayHandle := GetTrayHandle;
-  if TrayHandle = 0 then
-    Exit;
-
-  EnumChildWindows(TrayHandle, @FindToolbar, LPARAM(@Result));
+  if TrayHandle <> 0 then
+    EnumChildWindows(TrayHandle, @FindToolbar, LPARAM(@Result));
 end;
 
 function GetIconRect(const AWnd: THandle; const AID: UINT; var IconRect: TRect): Boolean;
@@ -1575,9 +1575,8 @@ begin
   // data has no usefull meaning in a context of another
   // process (since Win95) - so we need
   // to allocate some memory inside Tray process.
-  // Use @ProcessId for C5/D5 compatibility
-
-  if GetWindowThreadProcessId(FToolbarHandle, @ProcessID) = 0 then
+  
+  if GetWindowThreadProcessId(FToolbarHandle, ProcessID) = 0 then
     Exit;
 
   FProcess := OpenProcess(PROCESS_ALL_ACCESS, False, ProcessID);
@@ -1619,9 +1618,9 @@ begin
 end;
 
 function TTrayIconEnumerator.ReadProcessMemory(const Address: Pointer;
-  Count: DWORD; var Buffer): Boolean;
+  Count: {$IFDEF RTL230_UP}NativeUInt{$ELSE}DWORD{$ENDIF}; var Buffer): Boolean;
 var
-  BytesRead: DWORD;
+  BytesRead: {$IFDEF RTL230_UP}NativeUInt{$ELSE}DWORD{$ENDIF};
 begin
   Result := Windows.ReadProcessMemory(FProcess, Address, @Buffer, Count, BytesRead) and
     (BytesRead = Count);

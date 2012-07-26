@@ -28,7 +28,7 @@ but driver is available for manual installation (search for 'NetBEUI' on
 www.microsoft.com). Delivery network messages longer then 1365 bytes can be
 problem too (if it's possible at all).
 -----------------------------------------------------------------------------}
-// $Id: JvMailSlots.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvMailSlots.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvMailSlots;
 
@@ -47,6 +47,9 @@ uses
 type
   TOnNewMessage = procedure(Sender: TObject; MessageText: string) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMailSlotServer = class(TJvComponent)
   private
     FMailSlotName: string;
@@ -77,6 +80,9 @@ type
     property OnError: TNotifyEvent read FOnError write FOnError;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMailSlotClient = class(TJvComponent)
   private
     FMailSlotName: string;
@@ -95,8 +101,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMailSlots.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -104,7 +110,7 @@ const
 implementation
 
 uses
-  JvResources, JvConsts;
+  JvResources;
 
 constructor TJvMailSlotServer.Create(AOwner: TComponent);
 begin

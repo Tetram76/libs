@@ -64,7 +64,7 @@ Revisions : 1st = 2004/09/19
             7th = 2007/03/25
             8th = 2007/06/20
 -----------------------------------------------------------------------------}
-// $Id: JvMemoryDataset.pas 13003 2011-03-16 20:51:04Z jfudickar $
+// $Id: JvMemoryDataset.pas 13275 2012-03-15 20:05:14Z ahuser $
 
 unit JvMemoryDataset;
 
@@ -100,6 +100,9 @@ type
   PJvMemBuffer = PAnsiChar;
   {$ENDIF UNICODE}
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvMemoryData = class(TDataSet)
   private
     FSaveLoadState: TSaveLoadState;
@@ -141,6 +144,7 @@ type
     FCopyFromDataSetFieldDefs: array of Integer; // only valid while CopyFromDataSet is executed
     FClearing: Boolean;
     FUseDataSetFilter: Boolean;
+    FTrimEmptyString: Boolean;
     function AddRecord: TJvMemoryRecord;
     function InsertRecord(Index: Integer): TJvMemoryRecord;
     function FindRecordID(ID: Integer): TJvMemoryRecord;
@@ -236,6 +240,7 @@ type
       const ResultFields: string): Variant; override;
     procedure SortOnFields(const FieldNames: string = '';
       CaseInsensitive: Boolean = True; Descending: Boolean = False);
+    procedure SwapRecords(Idx1: integer; Idx2: integer);
     procedure EmptyTable;
     procedure CopyStructure(Source: TDataSet; UseAutoIncAsInteger: Boolean = False);
     function LoadFromDataSet(Source: TDataSet; RecordCount: Integer;
@@ -273,6 +278,7 @@ type
     property ExactApply: Boolean read FExactApply write FExactApply default False;
     property AutoIncAsInteger: Boolean read FAutoIncAsInteger write FAutoIncAsInteger default False;
     property OneValueInArray: Boolean read FOneValueInArray write FOneValueInArray default True;
+    property TrimEmptyString: Boolean read FTrimEmptyString write FTrimEmptyString default True;
     property BeforeOpen;
     property AfterOpen;
     property BeforeClose;
@@ -346,8 +352,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemoryDataset.pas $';
-    Revision: '$Revision: 13003 $';
-    Date: '$Date: 2011-03-16 21:51:04 +0100 (mer., 16 mars 2011) $';
+    Revision: '$Revision: 13275 $';
+    Date: '$Date: 2012-03-15 21:05:14 +0100 (jeu., 15 mars 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -507,13 +513,10 @@ procedure CalcDataSize(FieldDef: TFieldDef; var DataSize: Integer);
 var
   I: Integer;
 begin
-  with FieldDef do
-  begin
-    if DataType in ftSupported - ftBlobTypes then
-      Inc(DataSize, CalcFieldLen(DataType, Size) + 1);
-    for I := 0 to ChildDefs.Count - 1 do
-      CalcDataSize(ChildDefs[I], DataSize);
-  end;
+  if FieldDef.DataType in ftSupported - ftBlobTypes then
+    Inc(DataSize, CalcFieldLen(FieldDef.DataType, FieldDef.Size) + 1);
+  for I := 0 to FieldDef.ChildDefs.Count - 1 do
+    CalcDataSize(FieldDef.ChildDefs[I], DataSize);
 end;
 
 procedure Error(const Msg: string);
@@ -618,6 +621,7 @@ begin
   FSaveLoadState := slsNone;
   FOneValueInArray := True;
   FDataSetClosed := False;
+  FTrimEmptyString := True;
 end;
 
 destructor TJvMemoryData.Destroy;
@@ -771,14 +775,15 @@ procedure TJvMemoryData.InitFieldDefsFromFields;
 var
   I: Integer;
   Offset: Word;
+  Field: TField;
 begin
   if FieldDefs.Count = 0 then
   begin
     for I := 0 to FieldCount - 1 do
     begin
-      with Fields[I] do
-        if (FieldKind in fkStoredFields) and not (DataType in ftSupported) then
-          ErrorFmt(SUnknownFieldType, [DisplayName]);
+      Field := Fields[I];
+      if (Field.FieldKind in fkStoredFields) and not (Field.DataType in ftSupported) then
+        ErrorFmt(SUnknownFieldType, [Field.DisplayName]);
     end;
     FreeIndexList;
   end;
@@ -789,9 +794,8 @@ begin
   for I := 0 to FieldDefList.Count - 1 do
   begin
     FOffsets[I] := Offset;
-    with FieldDefList[I] do
-      if DataType in ftSupported - ftBlobTypes then
-        Inc(Offset, CalcFieldLen(DataType, Size) + 1);
+    if FieldDefList[I].DataType in ftSupported - ftBlobTypes then
+      Inc(Offset, CalcFieldLen(FieldDefList[I].DataType, FieldDefList[I].Size) + 1);
   end;
 end;
 
@@ -1028,15 +1032,18 @@ begin
       else
         Result := Data^ <> 0;
       Inc(Data);
-      if Field.DataType in [ftString, ftFixedChar, ftGuid] then
-        Result := Result and (StrLen(PAnsiChar(Data)) > 0)
-      else
-      if Field.DataType = ftWideString then
-        {$IFDEF UNICODE}
-        Result := Result and (StrLen(PWideChar(Data)) > 0);
-        {$ELSE}
-        Result := Result and (StrLenW(PWideChar(Data)) > 0);
-        {$ENDIF UNICODE}
+      case Field.DataType of
+        ftGuid:
+          Result := Result and (StrLen(PAnsiChar(Data)) > 0);
+        ftString, ftFixedChar:
+          Result := Result and (not TrimEmptyString or (StrLen(PAnsiChar(Data)) > 0));
+        ftWideString:
+          {$IFDEF UNICODE}
+          Result := Result and (not TrimEmptyString or (StrLen(PWideChar(Data)) > 0));
+          {$ELSE}
+          Result := Result and (not TrimEmptyString or (StrLenW(PWideChar(Data)) > 0));
+          {$ENDIF UNICODE}
+      end;
       if Result and (Buffer <> nil) then
         if Field.DataType = ftVariant then
         begin
@@ -1066,57 +1073,54 @@ begin
   if not (State in dsWriteModes) then
     Error(SNotEditing);
   GetActiveRecBuf(RecBuf);
-  with Field do
+  if Field.FieldNo > 0 then
   begin
-    if FieldNo > 0 then
+    if State in [dsCalcFields, dsFilter] then
+      Error(SNotEditing);
+    if Field.ReadOnly and not (State in [dsSetKey, dsFilter]) then
+      ErrorFmt(SFieldReadOnly, [Field.DisplayName]);
+    Field.Validate(Buffer);
+    if Field.FieldKind <> fkInternalCalc then
     begin
-      if State in [dsCalcFields, dsFilter] then
-        Error(SNotEditing);
-      if ReadOnly and not (State in [dsSetKey, dsFilter]) then
-        ErrorFmt(SFieldReadOnly, [DisplayName]);
-      Validate(Buffer);
-      if FieldKind <> fkInternalCalc then
+      Data := FindFieldData(RecBuf, Field);
+      if Data <> nil then
       begin
-        Data := FindFieldData(RecBuf, Field);
-        if Data <> nil then
+        if Field.DataType = ftVariant then
         begin
-          if DataType = ftVariant then
+          if Buffer <> nil then
+            VarData := PVariant(Buffer)^
+          else
+            VarData := EmptyParam;
+          Data^ := Ord((Buffer <> nil) and not VarIsNullEmpty(VarData));
+          if Data^ <> 0 then
           begin
-            if Buffer <> nil then
-              VarData := PVariant(Buffer)^
-            else
-              VarData := EmptyParam;
-            Data^ := Ord((Buffer <> nil) and not (VarIsNullEmpty(VarData)));
-            if Data^ <> 0 then
-            begin
-              Inc(Data);
-              PVariant(Data)^ := VarData;
-            end
-            else
-              FillChar(Data^, CalcFieldLen(DataType, Size), 0);
+            Inc(Data);
+            PVariant(Data)^ := VarData;
           end
           else
-          begin
-            Data^ := Ord(Buffer <> nil);
-            Inc(Data);
-            if Buffer <> nil then
-              Move(Buffer^, Data^, CalcFieldLen(DataType, Size))
-            else
-              FillChar(Data^, CalcFieldLen(DataType, Size), 0);
-          end;
+            FillChar(Data^, CalcFieldLen(Field.DataType, Field.Size), 0);
+        end
+        else
+        begin
+          Data^ := Ord(Buffer <> nil);
+          Inc(Data);
+          if Buffer <> nil then
+            Move(Buffer^, Data^, CalcFieldLen(Field.DataType, Field.Size))
+          else
+            FillChar(Data^, CalcFieldLen(Field.DataType, Field.Size), 0);
         end;
       end;
-    end
-    else {fkCalculated, fkLookup}
-    begin
-      Inc(RecBuf, FRecordSize + Offset);
-      Byte(RecBuf[0]) := Ord(Buffer <> nil);
-      if Byte(RecBuf[0]) <> 0 then
-        Move(Buffer^, RecBuf[1], DataSize);
     end;
-    if not (State in [dsCalcFields, dsFilter, dsNewValue]) then
-      DataEvent(deFieldChange, Longint(Field));
+  end
+  else {fkCalculated, fkLookup}
+  begin
+    Inc(RecBuf, FRecordSize + Field.Offset);
+    Byte(RecBuf[0]) := Ord(Buffer <> nil);
+    if Byte(RecBuf[0]) <> 0 then
+      Move(Buffer^, RecBuf[1], Field.DataSize);
   end;
+  if not (State in [dsCalcFields, dsFilter, dsNewValue]) then
+    DataEvent(deFieldChange, NativeInt(Field));
 end;
 
 procedure TJvMemoryData.SetFiltered(Value: Boolean);
@@ -1700,7 +1704,6 @@ var
   FieldCount: Integer;
   Fields: TList;
   Fld: TField; //else BAD mem leak on 'Field.asString'
-  // Bookmark: TBookmarkStr;
   SaveState: TDataSetState;
   I: Integer;
   Matched: Boolean;
@@ -2130,6 +2133,12 @@ begin
     raise;
   end;
 end;
+
+procedure TJvMemoryData.SwapRecords(Idx1, Idx2: integer);
+begin
+  FRecords.Exchange(Idx1, Idx2);
+end;
+
 
 procedure TJvMemoryData.Sort;
 var
@@ -2711,7 +2720,7 @@ var
           // Mantis #3974 : "FDeletedValues" is a List of Pointers, and each item have two
           // possible values... PxKey (a Variant) or NIL. The list counter is incremented
           // with the ADD() method and decremented with the DELETE() method
-          if not (PxKey = nil) then // ONLY if FDeletedValues[I] have a value <> NIL
+          if PxKey <> nil then // ONLY if FDeletedValues[I] have a value <> NIL
           begin
             xKey := PxKey^;
             bFound := FDataSet.Locate(FKeyFieldNames, xKey, []);
@@ -2909,7 +2918,7 @@ begin
     FField.Modified := True;
   if FModified then
     try
-      FDataSet.DataEvent(deFieldChange, Longint(FField));
+      FDataSet.DataEvent(deFieldChange, NativeInt(FField));
     except
       AppHandleException(Self);
     end;

@@ -33,7 +33,7 @@ Change: (Lionel Reynaud, 2009-2011)
   - Add draw min, max values and introduce event property OnShowMinMaxValue
 
 -----------------------------------------------------------------------------}
-// $Id: JvTracker.pas 13064 2011-06-11 13:23:05Z ahuser $
+// $Id: JvTracker.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvTracker;
 
@@ -55,6 +55,9 @@ type
 
   TjtbOrientation = (jtbHorizontal, jtbVertical);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvTracker = class(TJvCustomControl)
   private
     FHitRect: TRect;
@@ -123,7 +126,7 @@ type
     procedure SetShowMinMax(const Value: Boolean);
     procedure ReadTrackColor(Reader: TReader);
   protected
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     procedure DoChangedValue(NewValue: Integer);
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     { Added By Steve Childs, 18/4/00 }
@@ -203,8 +206,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTracker.pas $';
-    Revision: '$Revision: 13064 $';
-    Date: '$Date: 2011-06-11 15:23:05 +0200 (sam., 11 juin 2011) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -730,7 +733,7 @@ begin
   Invalidate;
 end;
 
-function TJvTracker.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvTracker.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 { Added By Steve Childs 18/04/00
   This elimates the flickering background when the thumb is updated
 }

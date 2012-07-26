@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTransparentButton.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvTransparentButton.pas 13318 2012-06-12 12:14:25Z obones $
 
 unit JvTransparentButton;
 
@@ -38,7 +38,7 @@ uses
   Windows, Messages, Graphics, Controls,
   ExtCtrls, Menus, Forms, ImgList, ActnList, Buttons,
   CommCtrl, JvJCLUtils,
-  JvComponent, JvButton;
+  JvButton;
 
 type
   TJvFrameStyle =
@@ -110,6 +110,9 @@ type
     property HotIndex: TImageIndex read FHotIndex write SetHotIndex default -1;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvTransparentButton = class(TJvCustomGraphicButton)
   private
     FTextAlign: TJvTextAlign;
@@ -129,6 +132,7 @@ type
     FNumGlyphs: TNumGlyphs;
     FKeepMouseLeavePressed: Boolean;
     FImages: TJvTransparentButtonImages;
+    FGlyphStretched: Boolean;
     procedure SetGlyph(Bmp: TBitmap);
     procedure SetNumGlyphs(Value: TNumGlyphs);
     procedure CalcGlyphCount;
@@ -142,6 +146,7 @@ type
     procedure SetTransparent(Value: Boolean);
     procedure SetBorderWidth(Value: Cardinal);
     function GetUseImages: Boolean;
+    procedure SetGlyphStretched(const Value: Boolean);
   protected
     procedure PaintButton(Canvas: TCanvas); override;
     procedure PaintFrame(Canvas: TCanvas); override;
@@ -210,6 +215,7 @@ type
     property OnStartDrag;
 
     property Glyph: TBitmap read FGlyph write SetGlyph;
+    property GlyphStretched: Boolean read FGlyphStretched write SetGlyphStretched default False;
     property NumGlyphs: TNumGlyphs read FNumGlyphs write SetNumGlyphs default 1;
     property KeepMouseLeavePressed: Boolean read FKeepMouseLeavePressed write FKeepMouseLeavePressed default False;
     property Images: TJvTransparentButtonImages read FImages write SetImages;
@@ -228,8 +234,8 @@ function DrawDisabledText(DC: HDC; Caption: TCaption; nCount: Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTransparentButton.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13318 $';
+    Date: '$Date: 2012-06-12 14:14:25 +0200 (mar., 12 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -237,7 +243,7 @@ const
 implementation
 
 uses
-  JvConsts, JvJVCLUtils;
+  JvConsts;
 
 { create a grayed version of a color bitmap }
 { SLOW! don't use in realtime! }
@@ -1072,6 +1078,15 @@ begin
   Invalidate;
 end;
 
+procedure TJvTransparentButton.SetGlyphStretched(const Value: Boolean);
+begin
+  if FGlyphStretched <> Value then
+  begin
+    FGlyphStretched := Value;
+    Invalidate;
+  end;
+end;
+
 procedure TJvTransparentButton.SetNumGlyphs(Value: TNumGlyphs);
 begin
   if FNumGlyphs <> Value then
@@ -1090,6 +1105,7 @@ var
   Index: TImageIndex;
   HelpRect: TRect;
   Icon: TIcon;
+  Bitmap: TBitmap;
 begin
   if FImList.Count = 0 then
     Exit;
@@ -1170,13 +1186,26 @@ begin
     Self.Canvas.FillRect(HelpRect);
   end;
 
-  // Use a TIcon instead of FImList.Draw to avoid triggering Mantis 3851
-  Icon := TIcon.Create;
-  try
-    FImList.GetIcon(Index, Icon);
-    Canvas.Draw(ARect.Left, ARect.Top, Icon);
-  finally
-    Icon.Free;
+  if GlyphStretched then
+  begin
+    Bitmap := TBitmap.Create;
+    try
+      FImList.GetBitmap(Index, Bitmap);
+      Canvas.StretchDraw(ClientRect, Bitmap);
+    finally
+      Bitmap.Free;
+    end;
+  end
+  else
+  begin
+    // Use a TIcon instead of FImList.Draw to avoid triggering Mantis 3851
+    Icon := TIcon.Create;
+    try
+      FImList.GetIcon(Index, Icon);
+      Canvas.Draw(ARect.Left, ARect.Top, Icon);
+    finally
+      Icon.Free;
+    end;
   end;
 end;
 

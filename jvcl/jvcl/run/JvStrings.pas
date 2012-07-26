@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   Should be merged with JCL
 -----------------------------------------------------------------------------}
-// $Id: JvStrings.pas 12815 2010-06-26 14:12:46Z ahuser $
+// $Id: JvStrings.pas 13145 2011-11-02 21:15:19Z ahuser $
 
 unit JvStrings;
 
@@ -217,8 +217,8 @@ function ParseDate(const S: string): Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStrings.pas $';
-    Revision: '$Revision: 12815 $';
-    Date: '$Date: 2010-06-26 16:12:46 +0200 (sam., 26 juin 2010) $';
+    Revision: '$Revision: 13145 $';
+    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -226,7 +226,6 @@ const
 implementation
 
 uses
-  JclBase,
   {$IFDEF RTL200_UP}
   AnsiStrings,
   {$ENDIF RTL200_UP}

@@ -1,5 +1,8 @@
 @echo off
 
+SETLOCAL
+pushd "%~dp0"
+
 SET JCLVERSION=1.105
 
 SET DELPHIVERSION=%1
@@ -17,6 +20,9 @@ if EXIST JVCLCmdStarter.cfg  del JVCLCmdStarter.cfg
 ..\..\packages\bin\dcc32ex.exe -Q -B -E..\..\bin -n..\..\dcu JVCLCmdStarter.dpr >NUL
 ::if ERRORLEVEL 1 goto Failed
 cd ..\..
+
+:: delete the generated DCU files so that users don't get confused
+del /Q dcu\*.dcu >NUL
 
 :: create mo files, if possible (msgfmt must be in the PATH environment variable)
 echo.
@@ -42,14 +48,14 @@ cd ..
 :: start installer
 echo.
 echo [Starting installer...]
-echo bin\JVCLInstall.exe %2 %3 %4 %5 %6 %7 %8 %9
+echo bin\JVCLInstall.exe %*
 if not exist bin\JVCLCmdStarter.exe goto :FailStart
-bin\JVCLCmdStarter.exe bin\JVCLInstall.exe %2 %3 %4 %5 %6 %7 %8 %9
+bin\JVCLCmdStarter.exe bin\JVCLInstall.exe %*
 if ERRORLEVEL 1 goto FailStart
 goto Leave
 
 :FailStart
-bin\JVCLInstall.exe %2 %3 %4 %5 %6 %7 %8 %9
+bin\JVCLInstall.exe %*
 goto Leave
 
 :Failed
@@ -62,3 +68,6 @@ pause
 :Leave
 SET DELPHIVERSION=
 SET JCLVERSION=
+
+popd
+ENDLOCAL

@@ -19,12 +19,11 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageSetupTitled.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPageSetupTitled.pas 13155 2011-11-06 12:31:20Z ahuser $
 
 unit JvPageSetupTitled;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -36,6 +35,9 @@ uses
   JvPageSetup;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPageSetupTitledDialog = class(TJvPageSetupDialog)
   private
     FHeader: string;
@@ -61,8 +63,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageSetupTitled.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13155 $';
+    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -72,7 +74,7 @@ implementation
 {$R JvPageSetupTitled.res}
 
 uses
-  Windows, Forms, SysUtils, CommDlg;
+  Windows, Forms, SysUtils;
 
 const
   // dialog controls

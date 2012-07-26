@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidators.pas 13042 2011-06-08 13:17:39Z obones $
+// $Id: JvValidators.pas 13361 2012-06-18 12:15:20Z obones $
 
 unit JvValidators;
 
@@ -110,6 +110,7 @@ type
     // register a new base validator class. DisplayName is used by the design-time editor.
     // A class with an empty DisplayName will not sshow up in the editor
     class procedure RegisterBaseValidator(const DisplayName: string; AValidatorClass: TJvBaseValidatorClass);
+    class procedure UnregisterBaseValidator(AValidatorClass: TJvBaseValidatorClass);
 
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -217,6 +218,9 @@ type
 
   TJvValidateFailEvent = procedure(Sender: TObject; BaseValidator: TJvBaseValidator; var Continue: Boolean) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvValidators = class(TJvComponent)
   private
     FOnValidateFailed: TJvValidateFailEvent;
@@ -247,6 +251,9 @@ type
     property OnValidateFailed: TJvValidateFailEvent read FOnValidateFailed write FOnValidateFailed;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvValidationSummary = class(TJvComponent, IUnknown, IJvValidationSummary)
   private
     FUpdateCount: Integer;
@@ -277,8 +284,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidators.pas $';
-    Revision: '$Revision: 13042 $';
-    Date: '$Date: 2011-06-08 15:17:39 +0200 (mer., 08 juin 2011) $';
+    Revision: '$Revision: 13361 $';
+    Date: '$Date: 2012-06-18 14:15:20 +0200 (lun., 18 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -296,7 +303,6 @@ uses
   Variants,
   TypInfo,
 //  JclUnicode, // for reg exp support
-  JclWideStrings,
   JvTypes, JvResources, JvJVCLUtils;
 
 var
@@ -365,6 +371,18 @@ begin
   begin
     Classes.RegisterClass(TPersistentClass(AValidatorClass));
     ValidatorsList.AddObject(DisplayName, Pointer(AValidatorClass));
+  end;
+end;
+
+class procedure TJvBaseValidator.UnregisterBaseValidator(AValidatorClass: TJvBaseValidatorClass);
+var
+  ClassIndex: Integer;
+begin
+  ClassIndex := ValidatorsList.IndexOfObject(Pointer(AValidatorClass));
+  if ClassIndex >= 0 then
+  begin
+    Classes.UnregisterClass(TPersistentClass(AValidatorClass));
+    ValidatorsList.Delete(ClassIndex);
   end;
 end;
 
@@ -781,9 +799,14 @@ begin
       { Get all controls that should be validated }
       if FErrorIndicator <> nil then
         for I := 0 to Count - 1 do
-          if Items[I].Enabled and (Items[I].ControlToValidate <> nil) then
-            if Controls.IndexOf(Items[I].ControlToValidate) = -1 then
-              Controls.Add(Items[I].ControlToValidate);
+        begin
+          ErrCtrl := Items[i].ErrorControl;
+          if ErrCtrl = nil then
+            ErrCtrl := Items[i].ControlToValidate;
+          if ErrCtrl <> nil then
+            if Controls.IndexOf(ErrCtrl) = -1 then
+              Controls.Add(ErrCtrl);
+        end;
 
       for I := 0 to Count - 1 do
       begin
@@ -803,7 +826,7 @@ begin
               if ErrorIndicator <> nil then
                 FErrorIndicator.SetError(ErrCtrl, Items[I].ErrorMessage);
               if FErrorIndicator <> nil then
-                Controls.Remove(Items[I].ControlToValidate); { control is not valid }
+                Controls.Remove(ErrCtrl); { control is not valid }
             end;
             Result := False;
             if not DoValidateFailed(Items[I]) then

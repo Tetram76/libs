@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCabFile.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvCabFile.pas 13348 2012-06-13 14:09:21Z obones $
 
 unit JvCabFile;
 
@@ -53,6 +53,9 @@ type
   TOnNeedNewCabinet = procedure(Sender: TObject; var Cont: Boolean; CABInfo: TCABInfo;
     var NewPath: string) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvCABFile = class(TJvComponent)
   private
     FFileName: TFileName;
@@ -87,8 +90,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCabFile.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13348 $';
+    Date: '$Date: 2012-06-13 16:09:21 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -96,7 +99,7 @@ const
 implementation
 
 uses
-  SetupApi, WinConvTypes, StrUtils,
+  StrUtils, WinConvTypes, JvSetupAPI,
   JvConsts, JvResources;
 
 constructor TJvCABFile.Create(AOwner: TComponent);

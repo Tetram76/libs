@@ -21,12 +21,11 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvDialogActns.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDialogActns.pas 13351 2012-06-13 15:16:00Z obones $
 
 unit JvDialogActns;
 
 {$I jvcl.inc}
-{$I vclonly.inc}
 
 interface
 
@@ -40,8 +39,6 @@ uses
 
 type
   TJvCommonDialogClass = class of TJvCommonDialog;
-  TJvCommonDialogPClass = class of TJvCommonDialogP;
-  TJvCommonDialogFClass = class of TJvCommonDialogF;
 
   TJvCommonDialogAction = class(TCustomAction)
   private
@@ -49,6 +46,7 @@ type
     FOnAccept: TNotifyEvent;
     FOnCancel: TNotifyEvent;
     FBeforeExecute: TNotifyEvent;
+    FAfterExecute: TNotifyEvent;
   protected
     FDialog: TJvCommonDialog;
     function GetDialogClass: TJvCommonDialogClass; virtual;
@@ -57,7 +55,6 @@ type
     function HandlesTarget(Target: TObject): Boolean; override;
     procedure ExecuteTarget(Target: TObject); override;
     property ExecuteResult: Boolean read FExecuteResult;
-    property BeforeExecute: TNotifyEvent read FBeforeExecute write FBeforeExecute;
   published
     property Caption;
     property Enabled;
@@ -69,62 +66,16 @@ type
     property Visible;
     property OnAccept: TNotifyEvent read FOnAccept write FOnAccept;
     property OnCancel: TNotifyEvent read FOnCancel write FOnCancel;
-  end;
-
-  TJvCommonDialogPAction = class(TJvCommonDialogAction)
-  private
-    FBeforeExecute: TNotifyEvent;
-    FAfterExecute: TNotifyEvent;
-  protected
-    //FDialog: TJvCommonDialogP;
-    function GetDialogClass: TJvCommonDialogPClass; reintroduce; virtual;
-  public
-    constructor Create(AOwner: TComponent); override;
-    function HandlesTarget(Target: TObject): Boolean; override;
-  published
-    property Caption;
-    property Enabled;
-    property HelpContext;
-    property Hint;
-    property ImageIndex;
-    property ShortCut;
-    property SecondaryShortCuts;
-    property Visible;
-    property BeforeExecute: TNotifyEvent read FBeforeExecute write FBeforeExecute;
-    property AfterExecute: TNotifyEvent read FAfterExecute write FAfterExecute;
-  end;
-
-  // (obones): what's the point of this class, it's the exact same as
-  // TJvCommonDialogPAction?
-  TJvCommonDialogFAction = class(TJvCommonDialogAction)
-  private
-    FBeforeExecute: TNotifyEvent;
-    FAfterExecute: TNotifyEvent;
-  protected
-    //FDialog: TJvCommonDialogF;
-    function GetDialogClass: TJvCommonDialogFClass; reintroduce; virtual;
-  public
-    constructor Create(AOwner: TComponent); override;
-    function HandlesTarget(Target: TObject): Boolean; override;
-  published
-    property Caption;
-    property Enabled;
-    property HelpContext;
-    property Hint;
-    property ImageIndex;
-    property ShortCut;
-    property SecondaryShortCuts;
-    property Visible;
     property BeforeExecute: TNotifyEvent read FBeforeExecute write FBeforeExecute;
     property AfterExecute: TNotifyEvent read FAfterExecute write FAfterExecute;
   end;
 
   // (rom) renamed to match renamed TJvBrowseForFolder
-  TJvBrowseForFolderAction = class(TJvCommonDialogFAction)
+  TJvBrowseForFolderAction = class(TJvCommonDialogAction)
   private
     function GetDialog: TJvBrowseForFolderDialog;
   protected
-    function GetDialogClass: TJvCommonDialogFClass; override;
+    function GetDialogClass: TJvCommonDialogClass; override;
   published
     property Dialog: TJvBrowseForFolderDialog read GetDialog;
   end;
@@ -147,11 +98,11 @@ type
     property Dialog: TJvNetworkConnect read GetDialog;
   end;
 
-  TJvFloppyFormatAction = class(TJvCommonDialogFAction)
+  TJvFloppyFormatAction = class(TJvCommonDialogAction)
   private
     function GetDialog: TJvFormatDriveDialog;
   protected
-    function GetDialogClass: TJvCommonDialogFClass; override;
+    function GetDialogClass: TJvCommonDialogClass; override;
   published
     property Dialog: TJvFormatDriveDialog read GetDialog;
   end;
@@ -165,11 +116,11 @@ type
     property Dialog: TJvOrganizeFavoritesDialog read GetDialog;
   end;
 
-  TJvControlPanelAction = class(TJvCommonDialogFAction)
+  TJvControlPanelAction = class(TJvCommonDialogAction)
   private
     function GetDialog: TJvAppletDialog;
   protected
-    function GetDialogClass: TJvCommonDialogFClass; override;
+    function GetDialogClass: TJvCommonDialogClass; override;
   published
     property Dialog: TJvAppletDialog read GetDialog;
   end;
@@ -225,8 +176,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDialogActns.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13351 $';
+    Date: '$Date: 2012-06-13 17:16:00 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -260,6 +211,8 @@ begin
     if Assigned(FBeforeExecute) then
       FBeforeExecute(Self);
     FExecuteResult := FDialog.Execute;
+    if Assigned(FAfterExecute) then
+      FAfterExecute(Self);
     if FExecuteResult then
     begin
       if Assigned(FOnAccept) then
@@ -281,62 +234,6 @@ begin
   Result := True;
 end;
 
-//=== { TJvCommonDialogPAction } =============================================
-
-constructor TJvCommonDialogPAction.Create(AOwner: TComponent);
-var
-  DialogClass: TJvCommonDialogPClass;
-begin
-  inherited Create(AOwner);
-  DialogClass := GetDialogClass;
-  if Assigned(DialogClass) then
-  begin
-    FDialog := DialogClass.Create(Self);
-    FDialog.Name := Copy(DialogClass.ClassName, 2, Length(DialogClass.ClassName));
-    FDialog.SetSubComponent(True);
-  end;
-  DisableIfNoHandler := False;
-  Enabled := True;
-end;
-
-function TJvCommonDialogPAction.GetDialogClass: TJvCommonDialogPClass;
-begin
-  Result := nil;
-end;
-
-function TJvCommonDialogPAction.HandlesTarget(Target: TObject): Boolean;
-begin
-  Result := True;
-end;
-
-//=== { TJvCommonDialogFAction } =============================================
-
-constructor TJvCommonDialogFAction.Create(AOwner: TComponent);
-var
-  DialogClass: TJvCommonDialogFClass;
-begin
-  inherited Create(AOwner);
-  DialogClass := GetDialogClass;
-  if Assigned(DialogClass) then
-  begin
-    FDialog := DialogClass.Create(Self);
-    FDialog.Name := Copy(DialogClass.ClassName, 2, Length(DialogClass.ClassName));
-    FDialog.SetSubComponent(True);
-  end;
-  DisableIfNoHandler := False;
-  Enabled := True;
-end;
-
-function TJvCommonDialogFAction.GetDialogClass: TJvCommonDialogFClass;
-begin
-  Result := nil;
-end;
-
-function TJvCommonDialogFAction.HandlesTarget(Target: TObject): Boolean;
-begin
-  Result := True;
-end;
-
 //=== { TJvBrowseForFolderAction } ===========================================
 
 function TJvBrowseForFolderAction.GetDialog: TJvBrowseForFolderDialog;
@@ -344,7 +241,7 @@ begin
   Result := TJvBrowseForFolderDialog(FDialog);
 end;
 
-function TJvBrowseForFolderAction.GetDialogClass: TJvCommonDialogFClass;
+function TJvBrowseForFolderAction.GetDialogClass: TJvCommonDialogClass;
 begin
   Result := TJvBrowseForFolderDialog;
 end;
@@ -380,7 +277,7 @@ begin
   Result := TJvFormatDriveDialog(FDialog);
 end;
 
-function TJvFloppyFormatAction.GetDialogClass: TJvCommonDialogFClass;
+function TJvFloppyFormatAction.GetDialogClass: TJvCommonDialogClass;
 begin
   Result := TJvFormatDriveDialog;
 end;
@@ -404,7 +301,7 @@ begin
   Result := TJvAppletDialog(FDialog);
 end;
 
-function TJvControlPanelAction.GetDialogClass: TJvCommonDialogFClass;
+function TJvControlPanelAction.GetDialogClass: TJvCommonDialogClass;
 begin
   Result := TJvAppletDialog;
 end;

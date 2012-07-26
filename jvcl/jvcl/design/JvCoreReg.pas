@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCoreReg.pas 13023 2011-05-08 19:48:33Z jfudickar $
+// $Id: JvCoreReg.pas 13149 2011-11-06 09:56:20Z ahuser $
 
 unit JvCoreReg;
 
@@ -264,7 +264,7 @@ begin
   Supports(BorlandIDEServices,IOTAAboutBoxServices, AboutBoxServices);
   Assert(Assigned(AboutBoxServices), RsENoAboutServices);
   ProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'JVCLSPLASH');
-  AboutBoxIndex := AboutBoxServices.AddPluginInfo(RsAboutTitle, RsAboutDescription,
+  AboutBoxIndex := AboutBoxServices.AddPluginInfo(RsAboutTitle + ' ' + JVCL_VERSIONSTRING, RsAboutDescription,
     ProductImage, False, RsAboutLicenceStatus);
 end;
 
@@ -284,7 +284,7 @@ var
 begin
   Assert(Assigned(SplashScreenServices), RsENoSplashServices);
   ProductImage := LoadBitmap(FindResourceHInstance(HInstance), 'JVCLSPLASH');
-  SplashScreenServices.AddPluginBitmap(RsAboutDialogTitle, ProductImage,
+  SplashScreenServices.AddPluginBitmap(RsAboutDialogTitle + ' ' + JVCL_VERSIONSTRING, ProductImage,
     False, RsAboutLicenceStatus);
 end;
 

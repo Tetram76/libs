@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportClass.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDockSupportClass.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvDockSupportClass;
 
@@ -157,7 +157,7 @@ type
     procedure DoFormOnCreate(Sender: TObject); virtual;
     procedure DoFormOnDeactivate(Sender: TObject); virtual;
     procedure DoFormOnDestroy(Sender: TObject); virtual;
-    function DoFormOnHelp(Command: Word; Data: Longint; var CallHelp: Boolean): Boolean;
+    function DoFormOnHelp(Command: Word; Data: {$IFDEF RTL230_UP}THelpEventData{$ELSE}Longint{$ENDIF}; var CallHelp: Boolean): Boolean;
     procedure DoFormOnHide(Sender: TObject); virtual;
     procedure DoFormOnPaint(Sender: TObject); virtual;
     procedure DoFormOnShortCut(var Msg: TWMKey; var Handled: Boolean); virtual;
@@ -213,8 +213,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportClass.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -794,7 +794,7 @@ begin
 end;
 
 function TJvDockBaseGetFormEventComponent.DoFormOnHelp(Command: Word;
-  Data: Integer; var CallHelp: Boolean): Boolean;
+  Data: {$IFDEF RTL230_UP}THelpEventData{$ELSE}Longint{$ENDIF}; var CallHelp: Boolean): Boolean;
 begin
   Result := False;
   if Assigned(FOldOnHelp) then

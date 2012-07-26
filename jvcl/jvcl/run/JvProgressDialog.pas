@@ -79,7 +79,7 @@ NB!
  *current* values in the dialog (as changed in OnProgress). After execution, the
  properties are reset to their original ("start") values.
 -----------------------------------------------------------------------------}
-// $Id: JvProgressDialog.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvProgressDialog.pas 13352 2012-06-14 09:21:26Z obones $
 
 unit JvProgressDialog;
 
@@ -91,13 +91,16 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Classes, SysUtils, Graphics, Forms,
+  Windows, Classes, SysUtils, Graphics, Forms,
   JvBaseDlg;
 
 type
   TJvProgressDialogEvent = procedure(Sender: TObject; var AContinue: Boolean) of object;
 
-  TJvProgressDialog = class(TJvCommonDialogF)
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
+  TJvProgressDialog = class(TJvCommonDialog)
   private
     FIMin: Integer;
     FIMax: Integer;
@@ -146,7 +149,7 @@ type
     destructor Destroy; override;
     procedure InitValues(AMin, AMax, AInterval, APosition: Integer; const ACaption, AText: string);
 
-    function Execute: Boolean; override;
+    function Execute(ParentWnd: HWND): Boolean; overload; override;
     function ShowModal: Integer;
 
     // (p3) Show, Hide and Cancelled are used in non-modal mode)
@@ -177,8 +180,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgressDialog.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13352 $';
+    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -246,7 +249,7 @@ begin
   end;
 end;
 
-function TJvProgressDialog.Execute: Boolean;
+function TJvProgressDialog.Execute(ParentWnd: HWND): Boolean;
 begin
   Result := JvJVCLUtils.IsPositiveResult(ShowModal);
 end;

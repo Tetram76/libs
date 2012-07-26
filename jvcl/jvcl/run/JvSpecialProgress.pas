@@ -23,7 +23,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpecialProgress.pas 11400 2007-06-28 21:24:06Z ahuser $
+// $Id: JvSpecialProgress.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit JvSpecialProgress;
 
@@ -42,6 +42,9 @@ uses
 type
   TJvTextOption = (toCaption, toFormat, toNoText, toPercent);
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSpecialProgress = class(TJvGraphicControl)
   private
     FBorderStyle: TBorderStyle;
@@ -147,8 +150,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpecialProgress.pas $';
-    Revision: '$Revision: 11400 $';
-    Date: '$Date: 2007-06-28 23:24:06 +0200 (jeu., 28 juin 2007) $';
+    Revision: '$Revision: 13104 $';
+    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

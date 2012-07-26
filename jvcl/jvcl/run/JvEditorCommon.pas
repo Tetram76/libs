@@ -23,7 +23,7 @@ Remko Bonte
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvEditorCommon.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvEditorCommon.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 { history
  (JVCL Library versions) :
@@ -205,8 +205,8 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Messages, ShellAPI, SysUtils, Classes, Contnrs, Graphics, Controls,
-  Forms, StdCtrls, ExtCtrls, Menus, ActnList,
+  Windows, Messages, SysUtils, Classes, Contnrs, Graphics, Controls,
+  Forms, StdCtrls, ExtCtrls, Menus,
   JvConsts, JvFixedEditPopUp, JvStdEditActions, JvUnicodeCanvas, JvComponent,
   JvExControls;
 
@@ -852,7 +852,7 @@ type
     procedure DoCut; virtual;
     procedure CursorChanged; override;
     procedure FontChanged; override;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; override;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
 
     { IFixedPopupIntf method assignment }
     procedure IFixedPopupIntf.Cut = ClipboardCut;
@@ -1380,8 +1380,8 @@ function KeyPressed(VK: Integer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditorCommon.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3600,7 +3600,7 @@ begin
     UpdateEditorSize;
 end;
 
-function TJvCustomEditorBase.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvCustomEditorBase.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   Result := False; // no background erase
 end;

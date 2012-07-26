@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 13013 2011-04-08 07:17:22Z ahuser $
+// $Id: JvInspector.pas 13342 2012-06-13 12:19:21Z obones $
 
 unit JvInspector;
 
@@ -170,7 +170,7 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes, Contnrs, TypInfo, IniFiles,
   Windows, Messages, Graphics, Controls, StdCtrls, ExtCtrls,
-  JvExControls, JvExExtCtrls, JvAutoComplete, JvJVCLUtils,
+  JvExControls, JvAutoComplete, JvJVCLUtils,
   JvComponentBase, JvComponent, JvTypes, JvConsts;
 
 const
@@ -535,6 +535,9 @@ type
     property ActivePainter: TJvInspectorPainter read GetActivePainter;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvInspector = class(TJvCustomInspector)
   public
     property LockCount;
@@ -565,6 +568,7 @@ type
     property Font;
     property ItemHeight;
     property Painter;
+    property PopupMenu;
     property ReadOnly default False;
     property UseBands default False;
     property WantTabs default False;
@@ -581,6 +585,7 @@ type
     property OnItemValueError;
     property OnItemDoubleClicked;
     property OnItemEdit; // User clicks Ellipsis button.
+    property OnContextPopup;
     property BeforeEdit; // Low level hook for customizing TEdit/TMemo after objects are created, just before editing.
 
     // Standard control events
@@ -723,6 +728,9 @@ type
     property CategoryColor default clBtnFace;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvInspectorBorlandPainter = class(TJvInspectorBorlandNETBasePainter)
   private
     FDividerLightColor: TColor;
@@ -744,6 +752,9 @@ type
     property OnSetItemColors: TOnJvInspectorSetItemColors read FOnSetItemColors write FOnSetItemColors;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvInspectorDotNETPainter = class(TJvInspectorBorlandNETBasePainter)
   private
     FHideSelectColor: TColor;
@@ -1612,6 +1623,7 @@ type
     function GetAsMethod: TMethod; override;
     function GetAsOrdinal: Int64; override;
     function GetAsString: string; override;
+    function GetAsVariant: Variant; override;
     function GetInstance: TObject; virtual;
     function GetProp: PPropInfo; virtual;
     function IsEqualReference(const Ref: TJvCustomInspectorData): Boolean; override;
@@ -1621,6 +1633,7 @@ type
     procedure SetAsMethod(const Value: TMethod); override;
     procedure SetAsOrdinal(const Value: Int64); override;
     procedure SetAsString(const Value: string); override;
+    procedure SetAsVariant(const Value: Variant); override;
     procedure SetInstance(const Value: TObject); virtual;
     procedure SetProp(Value: PPropInfo); virtual;
     function SupportsMethodPointers: Boolean; override;
@@ -1956,6 +1969,9 @@ type
     FSingleProp: Single;
     FSmallintProp: Smallint;
     FTDateTimeProp: TDateTime;
+    {$IFDEF UNICODE}
+    FUnicodeString: UnicodeString;
+    {$ENDIF}
     FWideCharProp: WideChar;
     FWordProp: Word;
     FWordBoolProp: WordBool;
@@ -1979,6 +1995,9 @@ type
     property SingleProp: Single read FSingleProp;
     property SmallintProp: Smallint read FSmallintProp;
     property TDateTimeProp: TDateTime read FTDateTimeProp;
+    {$IFDEF UNICODE}
+    property UnicodeStringProp: UnicodeString read FUnicodeString;
+    {$ENDIF}
     property WideCharProp: WideChar read FWideCharProp;
     property WordProp: Word read FWordProp;
     property WordBoolProp: WordBool read FWordBoolProp;
@@ -2073,8 +2092,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 13013 $';
-    Date: '$Date: 2011-04-08 09:17:22 +0200 (ven., 08 avr. 2011) $';
+    Revision: '$Revision: 13342 $';
+    Date: '$Date: 2012-06-13 14:19:21 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2082,7 +2101,7 @@ const
 implementation
 
 uses
-  RTLConsts, Types, StrUtils, Variants, Consts, Dialogs, Forms, Buttons,
+  RTLConsts, Types, Variants, Consts, Dialogs, Forms, Buttons,
   JclRTTI, JclLogic, JclStrings,
   JvJCLUtils, JvThemes, JvResources, JclSysUtils;
 
@@ -4070,8 +4089,11 @@ procedure TJvCustomInspector.RefreshValues;
 begin
   if (Selected <> nil) and Selected.Editing then
   begin
-    Selected.DoneEdit(True);
-    Selected.InitEdit;
+    if (Selected.EditCtrl = nil) or (Selected.DisplayValue <> Selected.EditCtrl.Text) then
+    begin
+      Selected.DoneEdit(True);
+      Selected.InitEdit;
+    end;
   end;
   Invalidate;
 end;
@@ -6299,7 +6321,7 @@ begin
       begin
         StopTracking;
         MousePos := PointToSmallPoint(ListPos);
-        SendMessage(ListBox.Handle, WM_LBUTTONDOWN, 0, LPARAM(MousePos));
+        SendMessage(ListBox.Handle, WM_LBUTTONDOWN, 0, {$IFDEF RTL230_UP}PointToLParam{$ELSE}LPARAM{$ENDIF RTL230_UP}(MousePos));
         Exit;
       end;
     end;
@@ -6819,7 +6841,7 @@ begin
         if Pressed then
           BFlags := BF_FLAT;
         {$IFDEF JVCLThemesEnabled}
-        if ThemeServices.ThemesEnabled then
+        if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
           DrawThemedButtonFace(Inspector, ACanvas, R, 0, bsNew, False, Pressed, False, False)
         else
         {$ENDIF JVCLThemesEnabled}
@@ -8329,12 +8351,15 @@ end;
 
 function TJvInspectorVariantItem.GetDisplayValue: string;
 begin
-  Result := Data.AsVariant;
+  Result := VarToStr(Data.AsVariant);   // return empty string instead of triggering exception when Data is Null
 end;
 
 procedure TJvInspectorVariantItem.SetDisplayValue(const Value: string);
 begin
-  Data.AsVariant := Value;
+  if Value = '' then
+    Data.AsVariant := Unassigned
+  else
+    Data.AsVariant := Value;
 end;
 
 //=== { TJvInspectorClassItem } ==============================================
@@ -8933,8 +8958,7 @@ begin
     { Clip all outside of the item rectangle }
     IntersectRect(ClipRect, ARect, Rects[iprValue]);
     FCheckRect := ClipRect;
-    with ClipRect do
-      Rgn := CreateRectRgn(Left, Top, Right, Bottom);
+    Rgn := CreateRectRgn(ClipRect.Left, ClipRect.Top, ClipRect.Right, ClipRect.Bottom);
     SelectClipRgn(ACanvas.Handle, Rgn);
     DeleteObject(Rgn);
     try
@@ -10688,6 +10712,15 @@ begin
     raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs, [cJvInspectorString]);
 end;
 
+function TJvInspectorPropData.GetAsVariant: Variant;
+begin
+  CheckReadAccess;
+  if Prop.PropType^.Kind = tkVariant then
+    Result := GetVariantProp(Instance, Prop)
+  else
+    raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs, [cJvInspectorVariant]);
+end;
+
 function TJvInspectorPropData.GetInstance: TObject;
 begin
   Result := FInstance;
@@ -10779,6 +10812,19 @@ begin
     SetStrProp(Instance, Prop, Value)
   else
     raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs, [cJvInspectorString]);
+  InvalidateData;
+  Invalidate;
+end;
+
+procedure TJvInspectorPropData.SetAsVariant(const Value: Variant);
+begin
+  CheckWriteAccess;
+  if IsReadOnlyProperty then
+    Abort;
+  if TypeInfo.Kind = tkVariant then
+    SetVariantProp(Instance, Prop, Value)
+  else
+    raise EJvInspectorData.CreateResFmt(@RsEJvInspDataNoAccessAs, [cJvInspectorVariant]);
   InvalidateData;
   Invalidate;
 end;

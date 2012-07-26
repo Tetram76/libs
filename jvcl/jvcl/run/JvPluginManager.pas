@@ -67,7 +67,7 @@ Versionhistory:
  V 01 : renamed objects, files, ressources
         fixed several Memory-leaks, fixed unload-bug, minimized uses-list
 -----------------------------------------------------------------------------}
-// $Id: JvPluginManager.pas 12888 2010-11-09 13:22:52Z obones $
+// $Id: JvPluginManager.pas 13249 2012-02-27 15:47:36Z obones $
 
 unit JvPluginManager;
 
@@ -123,6 +123,9 @@ type
     PlugIn: TJvPlugIn;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPluginManager = class(TJvComponent)
   private
     FExtension: string;
@@ -134,7 +137,7 @@ type
     FOnBeforeUnload: TJvBeforeUnloadEvent;
     FOnAfterUnload: TJvAfterUnloadEvent;
     FOnNewCommand: TNewCommandEvent;
-
+    FPluginHostMessage: TPluginMessageObjEvent; // uses the the object version of TPluginMessageEvent
     FOnBeforeNewCommand: TJvBeforeCommandsEvent;
     FOnAfterNewCommand: TJvAfterCommandsEvent;
     FOnPlugInError: TJvPlgInErrorEvent;
@@ -147,6 +150,8 @@ type
     function GetPluginCount: Integer;
     function DoBeforeLoad(const FileName: string): Boolean; virtual;
     function DoAfterLoad(const FileName: string; LibHandle: THandle): Boolean; virtual;
+    procedure ReBroadcastMessages(Sender: TObject; PluginMessage: Longint; PluginParams: string);
+    procedure ReBroadcastMessagesObj(Sender: TObject; PluginMessage: Longint; PluginParams: string; AObj:TObject);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -172,14 +177,15 @@ type
     property OnBeforeNewCommand: TJvBeforeCommandsEvent read FOnBeforeNewCommand write FOnBeforeNewCommand;
     property OnAfterNewCommand: TJvAfterCommandsEvent read FOnAfterNewCommand write FOnAfterNewCommand;
     property OnPlugInError: TJvPlgInErrorEvent read FOnPlugInError write FOnPlugInError;
+    property OnPluginHostMessage: TPluginMessageObjEvent read FPluginHostMessage write FPluginHostMessage;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPluginManager.pas $';
-    Revision: '$Revision: 12888 $';
-    Date: '$Date: 2010-11-09 14:22:52 +0100 (mar., 09 nov. 2010) $';
+    Revision: '$Revision: 13249 $';
+    Date: '$Date: 2012-02-27 16:47:36 +0100 (lun., 27 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -193,13 +199,56 @@ const
   C_REGISTER_PLUGIN = 'RegisterPlugin';
   C_Extensions: array [plgDLL..plgCustom] of PChar = ('dll', 'bpl','xxx');
 
-procedure TJvPluginManager.BroadcastMessage(PluginMessage: Integer;
+
+// Originating from Host
+procedure TJvPluginManager.BroadcastMessage(PluginMessage: Integer; 
   PluginParams: string);
 var
   I: Integer;
 begin
   for I := 0 to FPluginInfos.Count - 1 do
-    Plugins[I].SendPluginMessage(PluginMessage, PluginParams);
+    Plugins[I].OnPluginMessage(Self, PluginMessage, PluginParams);
+end;
+
+
+// Originating from Plugins
+procedure TJvPluginManager.ReBroadcastMessages(Sender: TObject; PluginMessage: Integer; PluginParams: string);
+var
+  I: Integer;
+begin
+  // First trigger Host message event
+  if Assigned(FPluginHostMessage) then
+    FPluginHostMessage(Self, PluginMessage, PluginParams, Nil);
+
+  // Cant call orginal BroadcastMessage becasue we need to test for origonating sender plugin.
+  // Host never recieves messages it sends because bit of code above is missing in origonal BroadcastMessage.
+
+  // Next rebroadcast message to loaded plugins skipping plugin that sent message.
+  for I := 0 to FPluginInfos.Count - 1 do
+  begin
+    If (Plugins[I]<>Sender) then
+      Plugins[I].OnPluginMessage(Sender,PluginMessage,PluginParams);
+  end;
+end;
+
+// Originating from Plugins with object (overloaded above version)
+procedure TJvPluginManager.ReBroadcastMessagesObj(Sender: TObject; PluginMessage: Integer; PluginParams: string; AObj: TObject);
+var
+  I: Integer;
+begin
+  // First trigger Host message event
+  if Assigned(FPluginHostMessage) then
+    FPluginHostMessage(Self, PluginMessage, PluginParams, AObj);
+
+  // Cant call orginal BroadcastMessage becasue we need to test for origonating sender plugin.
+  // Host never recieves messages it sends because bit of code above is missing in origonal BroadcastMessage.
+
+  // Next rebroadcast message to loaded plugins skipping plugin that sent message.
+  for I := 0 to FPluginInfos.Count - 1 do
+  begin
+    If (Plugins[I]<>Sender) then
+      Plugins[I].OnPluginMessageWithObj(Sender,PluginMessage,PluginParams,AObj);
+  end;
 end;
 
 constructor TJvPluginManager.Create(AOwner: TComponent);
@@ -409,6 +458,9 @@ begin
         PlgInfo := FPluginInfos.Last;
         PlgInfo.PluginKind := PlgKind;
         PlgInfo.Handle := LibHandle;
+        // Assign (hook) our new Host's plugin compatible broadcasting method to our newly loaded plugin 's broadcast event.
+        PlgInfo.PlugIn.OnPluginBroadcast   :=ReBroadcastMessages;
+        PlgInfo.PlugIn.OnPluginBroadcastObj:=ReBroadcastMessagesObj;
       end;
 
       if not DoAfterLoad(FileName, LibHandle) then

@@ -26,7 +26,7 @@ Changes:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageListTreeView.pas 12628 2009-12-28 10:22:09Z ahuser $
+// $Id: JvPageListTreeView.pas 13350 2012-06-13 14:54:41Z obones $
 
 unit JvPageListTreeView;
 
@@ -40,7 +40,7 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls, ImgList, ComCtrls,
-  JvComponent, JvThemes, JvPageList, JvExComCtrls;
+  JvPageList, JvExComCtrls;
 
 type
   TJvCustomPageListTreeView = class;
@@ -77,8 +77,7 @@ type
     * PageDefault is the default PageIndex to assign to new nodes
     * PageLinks is the property used att design time to set up a Nodes PageIndex. At run-time, use
       TJvPageIndexNode(Node).PageIndex := Value;
-    * PageList is the IPageList implementor that is attached to this control. NOTE: for D5, PageList is
-      instead a TComponent: to get at the IPageList interface, use PageListIntf instead
+    * PageList is the IPageList implementor that is attached to this control
     * CanChange calls IPageList.CanChange method and Change calls IPageList.SetActivePageIndex
     * IPageList.getPageCaption is only used by the design-time editor for the PageLinks property
     }
@@ -195,6 +194,9 @@ type
     destructor Destroy; override;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvPageListTreeView = class(TJvCustomPageListTreeView)
   published
     property AutoExpand;
@@ -284,6 +286,9 @@ type
     property Items;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvSettingsTreeView = class(TJvCustomSettingsTreeView)
   published
     property AutoExpand;
@@ -381,8 +386,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageListTreeView.pas $';
-    Revision: '$Revision: 12628 $';
-    Date: '$Date: 2009-12-28 11:22:09 +0100 (lun., 28 déc. 2009) $';
+    Revision: '$Revision: 13350 $';
+    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -390,8 +395,7 @@ const
 implementation
 
 uses
-  JvResources,
-  Forms, JvJVCLUtils;
+  Forms;
 
 procedure ResetSiblingFolders(Node: TTreeNode; ImageIndex, SelectedIndex: Integer; Recurse: Boolean = False);
 var

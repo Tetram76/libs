@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExControls.pas 12645 2010-01-07 15:15:13Z ahuser $
+// $Id: JvExControls.pas 13173 2011-11-19 12:43:58Z ahuser $
 
 unit JvExControls;
 
@@ -68,28 +68,25 @@ type
     ['{76942BC0-2A6E-4DC4-BFC9-8E110DB7F601}']
   end;
 
-  TStructPtrMessage = class(TObject)
-  private
-  public
-    Msg: TMessage;
-    constructor Create(Msg: Integer; WParam: Integer; var LParam);
-  end;
-
 procedure SetDotNetFrameColors(FocusedColor, UnfocusedColor: TColor);
 procedure DrawDotNetControl(Control: TWinControl; AColor: TColor; InControl: Boolean); overload;
 procedure DrawDotNetControl(DC: HDC; R: TRect; AColor: TColor; UseFocusedColor: Boolean); overload;
 procedure HandleDotNetHighlighting(Control: TWinControl; const Msg: TMessage;
   MouseOver: Boolean; Color: TColor);
 
-function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: Longint): TMessage; overload; {$IFDEF SUPPORTS_INLINE} inline {$ENDIF}
-function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: TControl): TMessage; overload; {$IFDEF SUPPORTS_INLINE} inline {$ENDIF}
+procedure CreateWMMessage(var Mesg: TMessage; Msg: Cardinal; WParam: WPARAM; LParam: LPARAM); overload; {$IFDEF SUPPORTS_INLINE} inline {$ENDIF}
 function SmallPointToLong(const Pt: TSmallPoint): Longint; {$IFDEF SUPPORTS_INLINE} inline {$ENDIF}
 function ShiftStateToKeyData(Shift: TShiftState): Longint;
 function GetFocusedControl(AControl: TControl): TWinControl;
-function DlgcToDlgCodes(Value: Longint): TDlgCodes;
-function DlgCodesToDlgc(Value: TDlgCodes): Longint;
+function DlgcToDlgCodes(Value: LPARAM): TDlgCodes;
+function DlgCodesToDlgc(const Value: TDlgCodes): LPARAM;
 procedure GetHintColor(var HintInfo: THintInfo; AControl: TControl; HintColor: TColor);
 function DispatchIsDesignMsg(Control: TControl; var Msg: TMessage): Boolean;
+
+type
+  TJvDoEraseBackgroundMethod = function(Canvas: TCanvas; Param: LPARAM): Boolean of object;
+
+function IsDefaultEraseBackground(Method: TJvDoEraseBackgroundMethod; MethodPtr: Pointer): Boolean;
 
 type
   TJvExControl = class(TControl, IJvExControl)
@@ -101,9 +98,9 @@ type
     FOnMouseEnter: TNotifyEvent;
     FOnMouseLeave: TNotifyEvent;
     FOnParentColorChanged: TNotifyEvent;
-    function BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer; overload;
-    function BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer; overload;
-    function BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT; overload;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT; overload;
+    function BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
   protected
     procedure WndProc(var Msg: TMessage); override;
     procedure FocusChanged(AControl: TWinControl); dynamic;
@@ -115,7 +112,7 @@ type
     procedure ParentFontChanged; reintroduce; dynamic;
     procedure ParentColorChanged; reintroduce; dynamic;
     procedure ParentShowHintChanged; reintroduce; dynamic;
-    function WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean; reintroduce; virtual;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; virtual;
     function HintShow(var HintInfo: THintInfo): Boolean; reintroduce; dynamic;
     function HitTest(X, Y: Integer): Boolean; reintroduce; virtual;
     procedure MouseEnter(AControl: TControl); reintroduce; dynamic;
@@ -141,9 +138,9 @@ type
     FOnMouseEnter: TNotifyEvent;
     FOnMouseLeave: TNotifyEvent;
     FOnParentColorChanged: TNotifyEvent;
-    function BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer; overload;
-    function BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer; overload;
-    function BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT; overload;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT; overload;
+    function BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
   protected
     procedure WndProc(var Msg: TMessage); override;
     procedure FocusChanged(AControl: TWinControl); dynamic;
@@ -155,7 +152,7 @@ type
     procedure ParentFontChanged; reintroduce; dynamic;
     procedure ParentColorChanged; reintroduce; dynamic;
     procedure ParentShowHintChanged; reintroduce; dynamic;
-    function WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean; reintroduce; virtual;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; virtual;
     function HintShow(var HintInfo: THintInfo): Boolean; reintroduce; dynamic;
     function HitTest(X, Y: Integer): Boolean; reintroduce; virtual;
     procedure MouseEnter(AControl: TControl); reintroduce; dynamic;
@@ -182,7 +179,7 @@ type
     procedure GetDlgCode(var Code: TDlgCodes); virtual;
     procedure FocusSet(PrevWnd: THandle); virtual;
     procedure FocusKilled(NextWnd: THandle); virtual;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; virtual;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; virtual;
   {$IFDEF JVCLThemesEnabledD6}
   private
     function GetParentBackground: Boolean;
@@ -203,9 +200,9 @@ type
     FOnMouseEnter: TNotifyEvent;
     FOnMouseLeave: TNotifyEvent;
     FOnParentColorChanged: TNotifyEvent;
-    function BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer; overload;
-    function BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer; overload;
-    function BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT; overload;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT; overload;
+    function BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
   protected
     procedure WndProc(var Msg: TMessage); override;
     procedure FocusChanged(AControl: TWinControl); dynamic;
@@ -217,7 +214,7 @@ type
     procedure ParentFontChanged; reintroduce; dynamic;
     procedure ParentColorChanged; reintroduce; dynamic;
     procedure ParentShowHintChanged; reintroduce; dynamic;
-    function WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean; reintroduce; virtual;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; virtual;
     function HintShow(var HintInfo: THintInfo): Boolean; reintroduce; dynamic;
     function HitTest(X, Y: Integer): Boolean; reintroduce; virtual;
     procedure MouseEnter(AControl: TControl); reintroduce; dynamic;
@@ -244,7 +241,7 @@ type
     procedure GetDlgCode(var Code: TDlgCodes); virtual;
     procedure FocusSet(PrevWnd: THandle); virtual;
     procedure FocusKilled(NextWnd: THandle); virtual;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; virtual;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; virtual;
   {$IFDEF JVCLThemesEnabledD6}
   private
     function GetParentBackground: Boolean;
@@ -265,9 +262,9 @@ type
     FOnMouseEnter: TNotifyEvent;
     FOnMouseLeave: TNotifyEvent;
     FOnParentColorChanged: TNotifyEvent;
-    function BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer; overload;
-    function BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer; overload;
-    function BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT; overload;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT; overload;
+    function BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
   protected
     procedure WndProc(var Msg: TMessage); override;
     procedure FocusChanged(AControl: TWinControl); dynamic;
@@ -279,7 +276,7 @@ type
     procedure ParentFontChanged; reintroduce; dynamic;
     procedure ParentColorChanged; reintroduce; dynamic;
     procedure ParentShowHintChanged; reintroduce; dynamic;
-    function WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean; reintroduce; virtual;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; virtual;
     function HintShow(var HintInfo: THintInfo): Boolean; reintroduce; dynamic;
     function HitTest(X, Y: Integer): Boolean; reintroduce; virtual;
     procedure MouseEnter(AControl: TControl); reintroduce; dynamic;
@@ -305,9 +302,9 @@ type
     FOnMouseEnter: TNotifyEvent;
     FOnMouseLeave: TNotifyEvent;
     FOnParentColorChanged: TNotifyEvent;
-    function BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer; overload;
-    function BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer; overload;
-    function BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT; overload;
+    function BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT; overload;
+    function BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
   protected
     procedure WndProc(var Msg: TMessage); override;
     procedure FocusChanged(AControl: TWinControl); dynamic;
@@ -319,7 +316,7 @@ type
     procedure ParentFontChanged; reintroduce; dynamic;
     procedure ParentColorChanged; reintroduce; dynamic;
     procedure ParentShowHintChanged; reintroduce; dynamic;
-    function WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean; reintroduce; virtual;
+    function WantKey(Key: Integer; Shift: TShiftState): Boolean; virtual;
     function HintShow(var HintInfo: THintInfo): Boolean; reintroduce; dynamic;
     function HitTest(X, Y: Integer): Boolean; reintroduce; virtual;
     procedure MouseEnter(AControl: TControl); reintroduce; dynamic;
@@ -346,7 +343,7 @@ type
     procedure GetDlgCode(var Code: TDlgCodes); virtual;
     procedure FocusSet(PrevWnd: THandle); virtual;
     procedure FocusKilled(NextWnd: THandle); virtual;
-    function DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean; virtual;
+    function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; virtual;
   {$IFDEF JVCLThemesEnabledD6}
   private
     function GetParentBackground: Boolean;
@@ -373,16 +370,13 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvExControls.pas $';
-    Revision: '$Revision: 12645 $';
-    Date: '$Date: 2010-01-07 16:15:13 +0100 (jeu., 07 janv. 2010) $';
+    Revision: '$Revision: 13173 $';
+    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
-
-uses
-  TypInfo;
 
 var
   InternalFocusedColor: TColor = TColor($00733800);
@@ -461,27 +455,12 @@ begin
     end;
 end;
 
-function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: Longint): TMessage;
+procedure CreateWMMessage(var Mesg: TMessage; Msg: Cardinal; WParam: WPARAM; LParam: LPARAM);
 begin
-  Result.Msg := Msg;
-  Result.WParam := WParam;
-  Result.LParam := LParam;
-  Result.Result := 0;
-end;
-
-function CreateWMMessage(Msg: Integer; WParam: Integer; LParam: TControl): TMessage;
-begin
-  Result := CreateWMMessage(Msg, WParam, Integer(LParam));
-end;
-
-{ TStructPtrMessage }
-constructor TStructPtrMessage.Create(Msg: Integer; WParam: Integer; var LParam);
-begin
-  inherited Create;
-  Self.Msg.Msg := Msg;
-  Self.Msg.WParam := WParam;
-  Self.Msg.LParam := Windows.LPARAM(@LParam);
-  Self.Msg.Result := 0;
+  Mesg.Msg := Msg;
+  Mesg.WParam := WParam;
+  Mesg.LParam := LParam;
+  Mesg.Result := 0;
 end;
 
 function SmallPointToLong(const Pt: TSmallPoint): Longint;
@@ -514,7 +493,7 @@ begin
     Result := Form.ActiveControl;
 end;
 
-function DlgcToDlgCodes(Value: Longint): TDlgCodes;
+function DlgcToDlgCodes(Value: LPARAM): TDlgCodes;
 begin
   Result := [];
   if (Value and DLGC_WANTARROWS) <> 0 then
@@ -531,7 +510,7 @@ begin
     Include(Result, dcHasSetSel);
 end;
 
-function DlgCodesToDlgc(Value: TDlgCodes): Longint;
+function DlgCodesToDlgc(const Value: TDlgCodes): LPARAM;
 begin
   Result := 0;
   if dcWantAllKeys in Value then
@@ -584,10 +563,14 @@ begin
   if (Control <> nil) and (csDesigning in Control.ComponentState) then
   begin
     Form := GetParentForm(Control);
-    if (Form <> nil) and (Form.Designer <> nil) and
-       Form.Designer.IsDesignMsg(Control, Msg) then
+    if (Form <> nil) and (Form.Designer <> nil) and Form.Designer.IsDesignMsg(Control, Msg) then
       Result := True;
   end;
+end;
+
+function IsDefaultEraseBackground(Method: TJvDoEraseBackgroundMethod; MethodPtr: Pointer): Boolean;
+begin
+  Result := TMethod(Method).Code = MethodPtr;
 end;
 
 constructor TJvExControl.Create(AOwner: TComponent);
@@ -596,35 +579,23 @@ begin
   FHintColor := clDefault;
 end;
 
-function TJvExControl.BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer;
+function TJvExControl.BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT;
 var
   Mesg: TMessage;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
+  CreateWMMessage(Mesg, Msg, WParam, LParam);
   inherited WndProc(Mesg);
   Result := Mesg.Result;
 end;
 
-function TJvExControl.BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer;
-var
-  Mesg: TMessage;
+function TJvExControl.BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
-  inherited WndProc(Mesg);
-  Result := Mesg.Result;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(LParam));
 end;
 
-function TJvExControl.BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
-var
-  Mesg: TStructPtrMessage;
+function TJvExControl.BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
 begin
-  Mesg := TStructPtrMessage.Create(Msg, WParam, LParam);
-  try
-    inherited WndProc(Mesg.Msg);
-  finally
-    Result := Mesg.Msg.Result;
-    Mesg.Free;
-  end;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(@StructLParam));
 end;
 
 procedure TJvExControl.VisibleChanged;
@@ -669,7 +640,7 @@ begin
   BaseWndProc(CM_PARENTSHOWHINTCHANGED);
 end;
 
-function TJvExControl.WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean;
+function TJvExControl.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := BaseWndProc(CM_DIALOGCHAR, Word(Key), ShiftStateToKeyData(Shift)) <> 0;
 end;
@@ -711,18 +682,18 @@ end;
 procedure TJvExControl.WndProc(var Msg: TMessage);
 begin
   if not DispatchIsDesignMsg(Self, Msg) then
-  case Msg.Msg of
-    CM_DENYSUBCLASSING:
-      Msg.Result := Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil);
+    case Msg.Msg of
+      CM_DENYSUBCLASSING:
+      Msg.Result := LRESULT(Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil));
     CM_DIALOGCHAR:
       with TCMDialogChar{$IFDEF CLR}.Create{$ENDIF}(Msg) do
-        Result := Ord(WantKey(CharCode, KeyDataToShiftState(KeyData), WideChar(CharCode)));
+        Result := LRESULT(Ord(WantKey(CharCode, KeyDataToShiftState(KeyData))));
     CM_HINTSHOW:
       with TCMHintShow(Msg) do
-        Result := Integer(HintShow(HintInfo^));
+        Result := LRESULT(HintShow(HintInfo^));
     CM_HITTEST:
       with TCMHitTest(Msg) do
-        Result := Integer(HitTest(XPos, YPos));
+        Result := LRESULT(HitTest(XPos, YPos));
     CM_MOUSEENTER:
       MouseEnter(TControl(Msg.LParam));
     CM_MOUSELEAVE:
@@ -745,9 +716,9 @@ begin
       ParentColorChanged;
     CM_PARENTSHOWHINTCHANGED:
       ParentShowHintChanged;
-  else
-    inherited WndProc(Msg);
-  end;
+    else
+      inherited WndProc(Msg);
+    end;
 end;
 
 //============================================================================
@@ -758,35 +729,23 @@ begin
   FHintColor := clDefault;
 end;
 
-function TJvExWinControl.BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer;
+function TJvExWinControl.BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT;
 var
   Mesg: TMessage;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
+  CreateWMMessage(Mesg, Msg, WParam, LParam);
   inherited WndProc(Mesg);
   Result := Mesg.Result;
 end;
 
-function TJvExWinControl.BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer;
-var
-  Mesg: TMessage;
+function TJvExWinControl.BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
-  inherited WndProc(Mesg);
-  Result := Mesg.Result;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(LParam));
 end;
 
-function TJvExWinControl.BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
-var
-  Mesg: TStructPtrMessage;
+function TJvExWinControl.BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
 begin
-  Mesg := TStructPtrMessage.Create(Msg, WParam, LParam);
-  try
-    inherited WndProc(Mesg.Msg);
-  finally
-    Result := Mesg.Msg.Result;
-    Mesg.Free;
-  end;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(@StructLParam));
 end;
 
 procedure TJvExWinControl.VisibleChanged;
@@ -831,7 +790,7 @@ begin
   BaseWndProc(CM_PARENTSHOWHINTCHANGED);
 end;
 
-function TJvExWinControl.WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean;
+function TJvExWinControl.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := BaseWndProc(CM_DIALOGCHAR, Word(Key), ShiftStateToKeyData(Shift)) <> 0;
 end;
@@ -894,17 +853,17 @@ end;
 procedure TJvExWinControl.ControlsListChanging(Control: TControl; Inserting: Boolean);
 begin
   if Inserting then
-    BaseWndProc(CM_CONTROLLISTCHANGE, Integer(Control), Integer(Inserting))
+    BaseWndProc(CM_CONTROLLISTCHANGE, WPARAM(Control), LPARAM(Inserting))
   else
-    BaseWndProc(CM_CONTROLCHANGE, Integer(Control), Integer(Inserting));
+    BaseWndProc(CM_CONTROLCHANGE, WPARAM(Control), LPARAM(Inserting));
 end;
 
 procedure TJvExWinControl.ControlsListChanged(Control: TControl; Inserting: Boolean);
 begin
   if not Inserting then
-    BaseWndProc(CM_CONTROLLISTCHANGE, Integer(Control), Integer(Inserting))
+    BaseWndProc(CM_CONTROLLISTCHANGE, WPARAM(Control), LPARAM(Inserting))
   else
-    BaseWndProc(CM_CONTROLCHANGE, Integer(Control), Integer(Inserting));
+    BaseWndProc(CM_CONTROLCHANGE, WPARAM(Control), LPARAM(Inserting));
 end;
 
 procedure TJvExWinControl.GetDlgCode(var Code: TDlgCodes);
@@ -913,15 +872,15 @@ end;
 
 procedure TJvExWinControl.FocusSet(PrevWnd: THandle);
 begin
-  BaseWndProc(WM_SETFOCUS, Integer(PrevWnd), 0);
+  BaseWndProc(WM_SETFOCUS, WPARAM(PrevWnd), 0);
 end;
 
 procedure TJvExWinControl.FocusKilled(NextWnd: THandle);
 begin
-  BaseWndProc(WM_KILLFOCUS, Integer(NextWnd), 0);
+  BaseWndProc(WM_KILLFOCUS, WPARAM(NextWnd), 0);
 end;
 
-function TJvExWinControl.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvExWinControl.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   Result := BaseWndProc(WM_ERASEBKGND, Canvas.Handle, Param) <> 0;
 end;
@@ -948,16 +907,16 @@ begin
   begin
     case Msg.Msg of
       CM_DENYSUBCLASSING:
-      Msg.Result := Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil);
+      Msg.Result := LRESULT(Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil));
     CM_DIALOGCHAR:
       with TCMDialogChar{$IFDEF CLR}.Create{$ENDIF}(Msg) do
-        Result := Ord(WantKey(CharCode, KeyDataToShiftState(KeyData), WideChar(CharCode)));
+        Result := LRESULT(Ord(WantKey(CharCode, KeyDataToShiftState(KeyData))));
     CM_HINTSHOW:
       with TCMHintShow(Msg) do
-        Result := Integer(HintShow(HintInfo^));
+        Result := LRESULT(HintShow(HintInfo^));
     CM_HITTEST:
       with TCMHitTest(Msg) do
-        Result := Integer(HitTest(XPos, YPos));
+        Result := LRESULT(HitTest(XPos, YPos));
     CM_MOUSEENTER:
       MouseEnter(TControl(Msg.LParam));
     CM_MOUSELEAVE:
@@ -1006,7 +965,7 @@ begin
         BoundsChanged;
       end;
     WM_ERASEBKGND:
-      if Msg.WParam <> 0 then
+      if (Msg.WParam <> 0) and not IsDefaultEraseBackground(DoEraseBackground, @TJvExWinControl.DoEraseBackground) then
       begin
         IdSaveDC := SaveDC(HDC(Msg.WParam)); // protect DC against Stock-Objects from Canvas
         Canvas := TCanvas.Create;
@@ -1059,35 +1018,23 @@ begin
   FHintColor := clDefault;
 end;
 
-function TJvExGraphicControl.BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer;
+function TJvExGraphicControl.BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT;
 var
   Mesg: TMessage;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
+  CreateWMMessage(Mesg, Msg, WParam, LParam);
   inherited WndProc(Mesg);
   Result := Mesg.Result;
 end;
 
-function TJvExGraphicControl.BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer;
-var
-  Mesg: TMessage;
+function TJvExGraphicControl.BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
-  inherited WndProc(Mesg);
-  Result := Mesg.Result;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(LParam));
 end;
 
-function TJvExGraphicControl.BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
-var
-  Mesg: TStructPtrMessage;
+function TJvExGraphicControl.BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
 begin
-  Mesg := TStructPtrMessage.Create(Msg, WParam, LParam);
-  try
-    inherited WndProc(Mesg.Msg);
-  finally
-    Result := Mesg.Msg.Result;
-    Mesg.Free;
-  end;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(@StructLParam));
 end;
 
 procedure TJvExGraphicControl.VisibleChanged;
@@ -1132,7 +1079,7 @@ begin
   BaseWndProc(CM_PARENTSHOWHINTCHANGED);
 end;
 
-function TJvExGraphicControl.WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean;
+function TJvExGraphicControl.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := BaseWndProc(CM_DIALOGCHAR, Word(Key), ShiftStateToKeyData(Shift)) <> 0;
 end;
@@ -1174,18 +1121,18 @@ end;
 procedure TJvExGraphicControl.WndProc(var Msg: TMessage);
 begin
   if not DispatchIsDesignMsg(Self, Msg) then
-  case Msg.Msg of
-    CM_DENYSUBCLASSING:
-      Msg.Result := Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil);
+    case Msg.Msg of
+      CM_DENYSUBCLASSING:
+      Msg.Result := LRESULT(Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil));
     CM_DIALOGCHAR:
       with TCMDialogChar{$IFDEF CLR}.Create{$ENDIF}(Msg) do
-        Result := Ord(WantKey(CharCode, KeyDataToShiftState(KeyData), WideChar(CharCode)));
+        Result := LRESULT(Ord(WantKey(CharCode, KeyDataToShiftState(KeyData))));
     CM_HINTSHOW:
       with TCMHintShow(Msg) do
-        Result := Integer(HintShow(HintInfo^));
+        Result := LRESULT(HintShow(HintInfo^));
     CM_HITTEST:
       with TCMHitTest(Msg) do
-        Result := Integer(HitTest(XPos, YPos));
+        Result := LRESULT(HitTest(XPos, YPos));
     CM_MOUSEENTER:
       MouseEnter(TControl(Msg.LParam));
     CM_MOUSELEAVE:
@@ -1208,9 +1155,9 @@ begin
       ParentColorChanged;
     CM_PARENTSHOWHINTCHANGED:
       ParentShowHintChanged;
-  else
-    inherited WndProc(Msg);
-  end;
+    else
+      inherited WndProc(Msg);
+    end;
 end;
 
 //============================================================================
@@ -1221,35 +1168,23 @@ begin
   FHintColor := clDefault;
 end;
 
-function TJvExCustomControl.BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer;
+function TJvExCustomControl.BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT;
 var
   Mesg: TMessage;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
+  CreateWMMessage(Mesg, Msg, WParam, LParam);
   inherited WndProc(Mesg);
   Result := Mesg.Result;
 end;
 
-function TJvExCustomControl.BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer;
-var
-  Mesg: TMessage;
+function TJvExCustomControl.BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
-  inherited WndProc(Mesg);
-  Result := Mesg.Result;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(LParam));
 end;
 
-function TJvExCustomControl.BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
-var
-  Mesg: TStructPtrMessage;
+function TJvExCustomControl.BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
 begin
-  Mesg := TStructPtrMessage.Create(Msg, WParam, LParam);
-  try
-    inherited WndProc(Mesg.Msg);
-  finally
-    Result := Mesg.Msg.Result;
-    Mesg.Free;
-  end;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(@StructLParam));
 end;
 
 procedure TJvExCustomControl.VisibleChanged;
@@ -1294,7 +1229,7 @@ begin
   BaseWndProc(CM_PARENTSHOWHINTCHANGED);
 end;
 
-function TJvExCustomControl.WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean;
+function TJvExCustomControl.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := BaseWndProc(CM_DIALOGCHAR, Word(Key), ShiftStateToKeyData(Shift)) <> 0;
 end;
@@ -1357,17 +1292,17 @@ end;
 procedure TJvExCustomControl.ControlsListChanging(Control: TControl; Inserting: Boolean);
 begin
   if Inserting then
-    BaseWndProc(CM_CONTROLLISTCHANGE, Integer(Control), Integer(Inserting))
+    BaseWndProc(CM_CONTROLLISTCHANGE, WPARAM(Control), LPARAM(Inserting))
   else
-    BaseWndProc(CM_CONTROLCHANGE, Integer(Control), Integer(Inserting));
+    BaseWndProc(CM_CONTROLCHANGE, WPARAM(Control), LPARAM(Inserting));
 end;
 
 procedure TJvExCustomControl.ControlsListChanged(Control: TControl; Inserting: Boolean);
 begin
   if not Inserting then
-    BaseWndProc(CM_CONTROLLISTCHANGE, Integer(Control), Integer(Inserting))
+    BaseWndProc(CM_CONTROLLISTCHANGE, WPARAM(Control), LPARAM(Inserting))
   else
-    BaseWndProc(CM_CONTROLCHANGE, Integer(Control), Integer(Inserting));
+    BaseWndProc(CM_CONTROLCHANGE, WPARAM(Control), LPARAM(Inserting));
 end;
 
 procedure TJvExCustomControl.GetDlgCode(var Code: TDlgCodes);
@@ -1376,15 +1311,15 @@ end;
 
 procedure TJvExCustomControl.FocusSet(PrevWnd: THandle);
 begin
-  BaseWndProc(WM_SETFOCUS, Integer(PrevWnd), 0);
+  BaseWndProc(WM_SETFOCUS, WPARAM(PrevWnd), 0);
 end;
 
 procedure TJvExCustomControl.FocusKilled(NextWnd: THandle);
 begin
-  BaseWndProc(WM_KILLFOCUS, Integer(NextWnd), 0);
+  BaseWndProc(WM_KILLFOCUS, WPARAM(NextWnd), 0);
 end;
 
-function TJvExCustomControl.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvExCustomControl.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   Result := BaseWndProc(WM_ERASEBKGND, Canvas.Handle, Param) <> 0;
 end;
@@ -1411,16 +1346,16 @@ begin
   begin
     case Msg.Msg of
       CM_DENYSUBCLASSING:
-      Msg.Result := Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil);
+      Msg.Result := LRESULT(Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil));
     CM_DIALOGCHAR:
       with TCMDialogChar{$IFDEF CLR}.Create{$ENDIF}(Msg) do
-        Result := Ord(WantKey(CharCode, KeyDataToShiftState(KeyData), WideChar(CharCode)));
+        Result := LRESULT(Ord(WantKey(CharCode, KeyDataToShiftState(KeyData))));
     CM_HINTSHOW:
       with TCMHintShow(Msg) do
-        Result := Integer(HintShow(HintInfo^));
+        Result := LRESULT(HintShow(HintInfo^));
     CM_HITTEST:
       with TCMHitTest(Msg) do
-        Result := Integer(HitTest(XPos, YPos));
+        Result := LRESULT(HitTest(XPos, YPos));
     CM_MOUSEENTER:
       MouseEnter(TControl(Msg.LParam));
     CM_MOUSELEAVE:
@@ -1469,7 +1404,7 @@ begin
         BoundsChanged;
       end;
     WM_ERASEBKGND:
-      if Msg.WParam <> 0 then
+      if (Msg.WParam <> 0) and not IsDefaultEraseBackground(DoEraseBackground, @TJvExCustomControl.DoEraseBackground) then
       begin
         IdSaveDC := SaveDC(HDC(Msg.WParam)); // protect DC against Stock-Objects from Canvas
         Canvas := TCanvas.Create;
@@ -1522,35 +1457,23 @@ begin
   FHintColor := clDefault;
 end;
 
-function TJvExHintWindow.BaseWndProc(Msg: Integer; WParam: Integer = 0; LParam: Longint = 0): Integer;
+function TJvExHintWindow.BaseWndProc(Msg: Cardinal; WParam: WPARAM = 0; LParam: LPARAM = 0): LRESULT;
 var
   Mesg: TMessage;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
+  CreateWMMessage(Mesg, Msg, WParam, LParam);
   inherited WndProc(Mesg);
   Result := Mesg.Result;
 end;
 
-function TJvExHintWindow.BaseWndProc(Msg: Integer; WParam: Integer; LParam: TControl): Integer;
-var
-  Mesg: TMessage;
+function TJvExHintWindow.BaseWndProc(Msg: Cardinal; WParam: WPARAM; LParam: TObject): LRESULT;
 begin
-  Mesg := CreateWMMessage(Msg, WParam, LParam);
-  inherited WndProc(Mesg);
-  Result := Mesg.Result;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(LParam));
 end;
 
-function TJvExHintWindow.BaseWndProcEx(Msg: Integer; WParam: Integer; var LParam): Integer;
-var
-  Mesg: TStructPtrMessage;
+function TJvExHintWindow.BaseWndProcEx(Msg: Cardinal; WParam: WPARAM; var StructLParam): LRESULT;
 begin
-  Mesg := TStructPtrMessage.Create(Msg, WParam, LParam);
-  try
-    inherited WndProc(Mesg.Msg);
-  finally
-    Result := Mesg.Msg.Result;
-    Mesg.Free;
-  end;
+  Result := BaseWndProc(Msg, WParam, Windows.LPARAM(@StructLParam));
 end;
 
 procedure TJvExHintWindow.VisibleChanged;
@@ -1595,7 +1518,7 @@ begin
   BaseWndProc(CM_PARENTSHOWHINTCHANGED);
 end;
 
-function TJvExHintWindow.WantKey(Key: Integer; Shift: TShiftState; const KeyText: WideString): Boolean;
+function TJvExHintWindow.WantKey(Key: Integer; Shift: TShiftState): Boolean;
 begin
   Result := BaseWndProc(CM_DIALOGCHAR, Word(Key), ShiftStateToKeyData(Shift)) <> 0;
 end;
@@ -1658,17 +1581,17 @@ end;
 procedure TJvExHintWindow.ControlsListChanging(Control: TControl; Inserting: Boolean);
 begin
   if Inserting then
-    BaseWndProc(CM_CONTROLLISTCHANGE, Integer(Control), Integer(Inserting))
+    BaseWndProc(CM_CONTROLLISTCHANGE, WPARAM(Control), LPARAM(Inserting))
   else
-    BaseWndProc(CM_CONTROLCHANGE, Integer(Control), Integer(Inserting));
+    BaseWndProc(CM_CONTROLCHANGE, WPARAM(Control), LPARAM(Inserting));
 end;
 
 procedure TJvExHintWindow.ControlsListChanged(Control: TControl; Inserting: Boolean);
 begin
   if not Inserting then
-    BaseWndProc(CM_CONTROLLISTCHANGE, Integer(Control), Integer(Inserting))
+    BaseWndProc(CM_CONTROLLISTCHANGE, WPARAM(Control), LPARAM(Inserting))
   else
-    BaseWndProc(CM_CONTROLCHANGE, Integer(Control), Integer(Inserting));
+    BaseWndProc(CM_CONTROLCHANGE, WPARAM(Control), LPARAM(Inserting));
 end;
 
 procedure TJvExHintWindow.GetDlgCode(var Code: TDlgCodes);
@@ -1677,15 +1600,15 @@ end;
 
 procedure TJvExHintWindow.FocusSet(PrevWnd: THandle);
 begin
-  BaseWndProc(WM_SETFOCUS, Integer(PrevWnd), 0);
+  BaseWndProc(WM_SETFOCUS, WPARAM(PrevWnd), 0);
 end;
 
 procedure TJvExHintWindow.FocusKilled(NextWnd: THandle);
 begin
-  BaseWndProc(WM_KILLFOCUS, Integer(NextWnd), 0);
+  BaseWndProc(WM_KILLFOCUS, WPARAM(NextWnd), 0);
 end;
 
-function TJvExHintWindow.DoEraseBackground(Canvas: TCanvas; Param: Integer): Boolean;
+function TJvExHintWindow.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
 begin
   Result := BaseWndProc(WM_ERASEBKGND, Canvas.Handle, Param) <> 0;
 end;
@@ -1712,16 +1635,16 @@ begin
   begin
     case Msg.Msg of
       CM_DENYSUBCLASSING:
-      Msg.Result := Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil);
+      Msg.Result := LRESULT(Ord(GetInterfaceEntry(IJvDenySubClassing) <> nil));
     CM_DIALOGCHAR:
       with TCMDialogChar{$IFDEF CLR}.Create{$ENDIF}(Msg) do
-        Result := Ord(WantKey(CharCode, KeyDataToShiftState(KeyData), WideChar(CharCode)));
+        Result := LRESULT(Ord(WantKey(CharCode, KeyDataToShiftState(KeyData))));
     CM_HINTSHOW:
       with TCMHintShow(Msg) do
-        Result := Integer(HintShow(HintInfo^));
+        Result := LRESULT(HintShow(HintInfo^));
     CM_HITTEST:
       with TCMHitTest(Msg) do
-        Result := Integer(HitTest(XPos, YPos));
+        Result := LRESULT(HitTest(XPos, YPos));
     CM_MOUSEENTER:
       MouseEnter(TControl(Msg.LParam));
     CM_MOUSELEAVE:
@@ -1770,7 +1693,7 @@ begin
         BoundsChanged;
       end;
     WM_ERASEBKGND:
-      if Msg.WParam <> 0 then
+      if (Msg.WParam <> 0) and not IsDefaultEraseBackground(DoEraseBackground, @TJvExHintWindow.DoEraseBackground) then
       begin
         IdSaveDC := SaveDC(HDC(Msg.WParam)); // protect DC against Stock-Objects from Canvas
         Canvas := TCanvas.Create;

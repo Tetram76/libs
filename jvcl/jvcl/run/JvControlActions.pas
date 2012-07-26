@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActions.pas 13011 2011-04-03 14:00:03Z jfudickar $
+// $Id: JvControlActions.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvControlActions;
 
@@ -34,7 +34,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF MSWINDOWS}
-  Windows, ActnList, ImgList, Graphics,
+  Windows, ActnList, Graphics,
   {$ENDIF MSWINDOWS}
   {$IFDEF UNIX}
   QActnList, QWindows, QImgList, QGraphics,
@@ -133,6 +133,9 @@ type
   end;
 
 type
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvControlActionList = class(TJvActionBaseActionList)
   //The idea of the Action Classes is to work different type of controls.
   //
@@ -160,8 +163,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActions.pas $';
-    Revision: '$Revision: 13011 $';
-    Date: '$Date: 2011-04-03 16:00:03 +0200 (dim., 03 avr. 2011) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -169,7 +172,7 @@ const
 implementation
 
 uses
-  SysUtils, Grids, TypInfo, StrUtils, Variants, Dialogs, StdCtrls, Clipbrd;
+  SysUtils, Variants, Dialogs;
 
 //=== { TJvControlBaseAction } ==============================================
 

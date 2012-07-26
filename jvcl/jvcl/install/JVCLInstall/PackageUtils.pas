@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageUtils.pas 12640 2010-01-06 18:06:24Z outchy $
+// $Id: PackageUtils.pas 13104 2011-09-07 06:50:43Z obones $
 
 unit PackageUtils;
 
@@ -184,7 +184,8 @@ end;
 constructor TProjectGroup.Create(ATargetConfig: ITargetConfig; const AFilename: string);
 begin
   FTargetConfig := ATargetConfig;
-  inherited Create(AFilename, ATargetConfig.JVCLPackagesXmlDir, ATargetConfig.TargetSymbol);
+
+  inherited Create(AFilename, ATargetConfig.JVCLPackagesXmlDir, ATargetConfig.TargetSymbol, ATargetConfig.Target.Platform);
 end;
 
 procedure TProjectGroup.DoInstallChange;

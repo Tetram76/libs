@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTranslateString.pas 12876 2010-10-30 16:42:00Z jfudickar $
+// $Id: JvTranslateString.pas 13138 2011-10-26 23:17:50Z jfudickar $
 
 unit JvTranslateString;
 
@@ -58,6 +58,9 @@ type
   TProcessCommandEvent = procedure(Sender: TObject; const Command: string;
     var CommandResult: string; var Changed: Boolean) of object;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvTranslateString = class(TJvComponent)
   private
     FAppNameHandled: Boolean;
@@ -105,8 +108,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTranslateString.pas $';
-    Revision: '$Revision: 12876 $';
-    Date: '$Date: 2010-10-30 18:42:00 +0200 (sam., 30 oct. 2010) $';
+    Revision: '$Revision: 13138 $';
+    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -114,7 +117,7 @@ const
 implementation
 
 uses
-  SysUtils, Types, ExtCtrls, ComCtrls, StdCtrls, Forms, Dialogs,
+  SysUtils, Types, Forms, Dialogs,
   JclFileUtils,
   JvJCLUtils,
   JvJVCLUtils;

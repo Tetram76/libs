@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvUrlGrabbers.pas 12781 2010-05-23 23:30:10Z ahuser $
+// $Id: JvUrlGrabbers.pas 13201 2012-02-23 08:37:27Z obones $
 
 unit JvUrlGrabbers;
 
@@ -36,7 +36,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Windows, Contnrs, Classes, SysUtils,
+  Windows, Classes, SysUtils,
   JvUrlListGrabber, JvTypes;
 
 type
@@ -104,6 +104,9 @@ type
     property Mode: TJvFtpDownloadMode read FMode write FMode default hmBinary;
   end;
 
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvFtpUrlGrabber = class(TJvProxyingUrlGrabber)
   protected
     FPassive: Boolean;
@@ -160,6 +163,9 @@ type
   end;
 
   // A grabber for HTTP URLs
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64)]
+  {$ENDIF RTL230_UP}
   TJvHttpUrlGrabber = class(TJvProxyingUrlGrabber)
   private
     FReferer: string;
@@ -231,7 +237,6 @@ type
 
   TJvHttpUrlGrabberThread = class(TJvCustomUrlGrabberThread)
   protected
-    FContinue: Boolean;
     function GetGrabber: TJvHttpUrlGrabber;
     procedure Grab; override;
   public
@@ -253,6 +258,9 @@ type
   end;
 
   // A grabber for local and UNC files
+  {$IFDEF RTL230_UP}
+  [ComponentPlatformsAttribute(pidWin32 or pidWin64 or pidOSX32)]
+  {$ENDIF RTL230_UP}
   TJvLocalFileUrlGrabber = class(TJvCustomUrlGrabber)
   private
     FPreserveAttributes: Boolean;
@@ -319,8 +327,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUrlGrabbers.pas $';
-    Revision: '$Revision: 12781 $';
-    Date: '$Date: 2010-05-24 01:30:10 +0200 (lun., 24 mai 2010) $';
+    Revision: '$Revision: 13201 $';
+    Date: '$Date: 2012-02-23 09:37:27 +0100 (jeu., 23 févr. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -747,7 +755,7 @@ var
 begin
   Buffer := nil;
 
-  FContinue := True;
+  Continue := True;
   hSession := nil;
   hHostConnection := nil;
   hDownload := nil;
@@ -864,7 +872,7 @@ begin
       if HasSize then
       begin
         dwBytesRead := 1;
-        while (dwBytesRead > 0) and not Terminated and FContinue do
+        while (dwBytesRead > 0) and not Terminated and Continue do
         begin
           if not InternetReadFile(hDownload, @Buf, SizeOf(Buf), dwBytesRead) then
             dwBytesRead := 0
@@ -881,7 +889,7 @@ begin
         end;
 
         SetGrabberStatus(gsStopping);
-        if FContinue and not Terminated then
+        if Continue and not Terminated then
           Synchronize(Ended);
       end
       else
@@ -898,7 +906,7 @@ begin
         end;
 
         SetGrabberStatus(gsStopping);
-        if FContinue and not Terminated then
+        if Continue and not Terminated then
           Synchronize(Ended);
       end;
     except
