@@ -345,10 +345,6 @@ const
 {$ENDIF}
   );
 
-{$IFDEF DLLREGISTRY}
-  FBINSTANCES = 'SOFTWARE\Firebird Project\Firebird Server\Instances';
-{$ENDIF}
-
   function GetSystemCharacterset: TCharacterSet;
 
   function MBUEncode(const str: UnicodeString; cp: Word): RawByteString;
@@ -870,6 +866,7 @@ type
     function GetFieldName(const Index: Word): string; virtual;
     procedure AllocateDataBuffer(AInit: boolean = true); virtual;
     function GetMaxSqlLen(const Index: Word): SmallInt; virtual;
+    function GetMaxStrLen(const Index: Word): SmallInt; virtual;
 
     function AddFieldA(const name: AnsiString): Word; virtual;
     function AddFieldW(const name: UnicodeString): Word; virtual;
@@ -911,6 +908,7 @@ type
     property FieldName[const Index: Word]: string read GetFieldName;
     property ParamCount : Word read FParamCount;
     property MaxSqlLen[const Index: Word]: Smallint read GetMaxSqlLen;
+    property MaxStrLen[const Index: Word]: Smallint read GetMaxStrLen;
   end;
 
   TSQLParamsClass = class of TSQLParams;
@@ -945,9 +943,9 @@ type
     FSegmentSize: Word;
     function GetSegmentSize: Word;
     procedure SetSegmentSize(Value: Word);
-    procedure CheckUIBApiCall(const Status: ISCStatus);
   public
     constructor Create; override;
+    procedure CheckUIBApiCall(const Status: ISCStatus);
 
     property OnConnectionLost: TOnConnectionLost read FOnConnectionLost write FOnConnectionLost;
     property OnGetDBExceptionClass: TOnGetDBExceptionClass read FOnGetDBExceptionClass write FOnGetDBExceptionClass;
@@ -1008,9 +1006,9 @@ type
     function  DSQLInfoStatementType(var StmtHandle: IscStmtHandle): TUIBStatementType;
     function  DSQLInfoRowsAffected(var StmtHandle: IscStmtHandle; StatementType: TUIBStatementType): Cardinal;
     procedure DSQLInfoRowsAffected2(var StmtHandle: IscStmtHandle; out SelectedRows, InsertedRows, UpdatedRows, DeletedRows: Cardinal);
-
+{$IFNDEF FB30_UP}
     procedure DDLExecute(var DBHandle: IscDbHandle; var TraHandle: IscTrHandle; const ddl: AnsiString);
-
+{$ENDIF}
     function ArrayLookupBounds(var DBHandle: IscDbHandle; var TransHandle: IscTrHandle;
       const RelationName, FieldName: AnsiString): TArrayDesc;
     procedure ArrayGetSlice(var DBHandle: IscDbHandle; var TransHandle: IscTrHandle;
@@ -1498,7 +1496,7 @@ const
     Result := (code and CLASS_MASK) shr 30;
   end;
 
-  function GETCode(code: ISCStatus): Word;
+  function GetCode(code: ISCStatus): Word;
   begin
     Result := (code and CODE_MASK) shr 0;
   end;
@@ -1507,23 +1505,24 @@ const
   var
     Number: Integer;
     Excep: EUIBExceptionClass;
+
     procedure RaiseException(const Excep: EUIBExceptionClass);
-    var Exception: EUIBError;
+    var
+      Exception: EUIBError;
     begin
       Exception := Excep.Create(string(ErrInterprete));
       if Excep = EUIBException then
         EUIBException(Exception).FNumber := Number;
-      Exception.FSQLCode   := ErrSqlcode;
+      Exception.FSQLCode := ErrSqlcode;
       if Exception.FSQLCode <> 0 then
-        Exception.Message := Exception.Message + string(ErrSQLInterprete(Exception.FSQLCode)) + NewLine;
+        Exception.Message := Exception.Message + string(ErrSQLInterprete(Exception.FSQLCode));
       Exception.FGDSCode := Status;
-      Exception.FErrorCode := GETCode(Status);
-      Exception.Message := Exception.Message + NewLine +
-        'GDS Code: ' + IntToStr(Exception.FGDSCode);
+      Exception.FErrorCode := GetCode(Status);
 {$IFDEF FB25_UP}
       Exception.FSQLState := ErrSqlState;
 {$ENDIF}
-      Exception.Message := Exception.Message + 'Error Code: ' + IntToStr(Exception.FErrorCode);
+      Exception.Message := Exception.Message + NewLine +
+        Format('GDS Code: %d - SQL Code: %d - Error Code: %d', [Exception.FGDSCode, Exception.FSQLCode, Exception.FErrorCode]);
 
       if ((Status = isc_lost_db_connection) or (Status = isc_network_error)
         or (Status = isc_shutdown)) and Assigned(FOnConnectionLost) then
@@ -1572,15 +1571,19 @@ const
 
   function GetClientLibrary: string;
   {$IFDEF DLLREGISTRY}
+  const
+    FBINSTANCES = 'SOFTWARE\Firebird Project\Firebird Server\Instances';
   var
     Key: HKEY;
     Size: Cardinal;
     HR: Integer;
+    Path: string;
   {$ENDIF}
   begin
   {$IFDEF DLLREGISTRY}
     if FileExists(ExtractFilePath(ParamStr(0)) + GDS32DLL) then
-      Result := GDS32DLL else
+      Result := GDS32DLL
+    else
     begin
       HR := RegOpenKeyEx(HKEY_LOCAL_MACHINE, FBINSTANCES, 0, KEY_READ, Key);
       if (HR = ERROR_SUCCESS) then
@@ -1588,10 +1591,22 @@ const
         HR := RegQueryValueEx(Key, 'DefaultInstance', nil, nil, nil, @Size);
         if (HR = ERROR_SUCCESS) then
         begin
-          SetLength(Result, Size div sizeof(Char));
+          SetLength(Result, Size div SizeOf(Char));
           HR := RegQueryValueEx(Key, 'DefaultInstance', nil, nil, Pointer(Result), @Size);
           if (HR = ERROR_SUCCESS) then
-            Result := Trim(Result)+ 'bin\' + GDS32DLL;
+          begin
+            Path := Trim(Result);
+            if FileExists(Path + GDS32DLL) then
+              Result := Path + GDS32DLL
+            else
+            begin
+              Path := Path + 'bin\';
+              if FileExists(Path + GDS32DLL) then
+                Result := Path + GDS32DLL
+              else
+                Result := GDS32DLL;
+            end;
+          end;
         end;
         RegCloseKey(Key);
       end;
@@ -1601,7 +1616,7 @@ const
   {$ELSE}
     Result := GDS32DLL;
   {$ENDIF}
-  end;
+    end;
 
   function CreateDBParams(Params: AnsiString; Delimiter: AnsiChar = ';'): AnsiString;
   var
@@ -2366,12 +2381,14 @@ const
       end;
     end;
 
+{$IFNDEF FB30_UP}
   procedure TUIBLibrary.DDLExecute(var DBHandle: IscDbHandle;
     var TraHandle: IscTrHandle; const ddl: AnsiString);
   begin
       CheckUIBApiCall(isc_ddl(@FStatusVector, @DBHandle, @TraHandle,
         length(ddl), Pointer(ddl)));
     end;
+{$ENDIF}
 
 //******************************************************************************
 //  Array
@@ -2625,7 +2642,7 @@ type
   procedure TUIBLibrary.BlobSize(var BlobHandle: IscBlobHandle; out Size: Cardinal);
   var
     BlobInfo : packed record
-      Code: Char;
+      Code: AnsiChar;
       Length: Word;
       Value: Cardinal;
       reserved: Word; // alignement (8)
@@ -6485,13 +6502,17 @@ procedure TSQLParams.AddFieldType(const Name: string; FieldType: TUIBFieldType;
         if AInit then
           Include(Flags, pfNotInitialized) else
           Exclude(Flags, pfNotInitialized);
-        if SqlLen > 0 then
-          GetMem(sqldata, SqlLen) else
-          sqldata := nil;
+
+        if (SqlLen > 0) and (SqlData = nil) then
+          GetMem(sqldata, SqlLen);
+
         if ParamNameLength > 0 then
-          for j := 0 to GetAllocatedFields - 1 do
-            if (j <> i) and (ID = FXSQLDA.sqlvar[j].ID) then
+          for j := i + 1 to FXSQLDA.sqln - 1 do
+            if (ID = FXSQLDA.sqlvar[j].ID) then
+            begin
               Move(FXSQLDA.sqlvar[i], FXSQLDA.sqlvar[j], SizeOf(TUIBSQLVar)-MaxParamLength-2);
+              Break;
+            end;
       end;
   end;
 
@@ -6658,6 +6679,15 @@ procedure TSQLParams.AddFieldType(const Name: string; FieldType: TUIBFieldType;
     Result := FXSQLDA.sqlvar[Index].MaxSqlLen
   end;
 
+  function TSQLParams.GetMaxStrLen(const Index: Word): SmallInt;
+  begin
+    CheckRange(Index);
+    if (CharacterSet = csNone) or (FXSQLDA.sqlvar[Index].SqlSubType = 0) then
+      Result := FXSQLDA.sqlvar[Index].MaxSqlLen
+    else
+      Result := FXSQLDA.sqlvar[Index].MaxSqlLen div BytesPerCharacter[CharacterSet];
+  end;
+
   function TSQLParams.GetFieldIndex(const name: AnsiString): Word;
   begin
     if not TryGetFieldIndex(name, Result) then
@@ -6747,18 +6777,16 @@ procedure TSQLParams.AddFieldType(const Name: string; FieldType: TUIBFieldType;
     for i := 0 to FXSQLDA.sqln - 1 do
     begin
       if (FXSQLDA.sqlvar[i].sqlind <> nil) then
-      begin
-        freemem(FXSQLDA.sqlvar[i].sqlind);
-        if FXSQLDA.sqlvar[i].sqldata <> nil then
-          freemem(FXSQLDA.sqlvar[i].sqldata);
-        // don't free shared pointers
-        for j := i + 1 to FXSQLDA.sqln - 1 do
-          if (FXSQLDA.sqlvar[i].ID = FXSQLDA.sqlvar[j].ID) then
-            begin
-              FXSQLDA.sqlvar[j].sqldata := nil;
-              FXSQLDA.sqlvar[j].sqlind  := nil;
-            end;
-      end;
+        FreeMem(FXSQLDA.sqlvar[i].sqlind);
+      if FXSQLDA.sqlvar[i].sqldata <> nil then
+        FreeMem(FXSQLDA.sqlvar[i].sqldata);
+      // don't free shared pointers
+      for j := i + 1 to FXSQLDA.sqln - 1 do
+        if (FXSQLDA.sqlvar[i].ID = FXSQLDA.sqlvar[j].ID) then
+          begin
+            FXSQLDA.sqlvar[j].sqldata := nil;
+            FXSQLDA.sqlvar[j].sqlind  := nil;
+          end;
     end;
     FXSQLDA.sqln := 0;
     FXSQLDA.sqld := 0;
