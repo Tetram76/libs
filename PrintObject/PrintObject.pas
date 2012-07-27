@@ -1281,13 +1281,13 @@ var
   sp: string;
 begin
   if FDateFormat = dfShortDateFormat then
-    Df := ShortDateFormat
+    Df := FormatSettings.ShortDateFormat
   else
-    Df := LongDateFormat;
+    Df := FormatSettings.LongDateFormat;
   if FTimeFormat = tfShortTimeFormat then
-    Tf := ShortTimeFormat
+    Tf := FormatSettings.ShortTimeFormat
   else
-    Tf := LongTimeFormat;
+    Tf := FormatSettings.LongTimeFormat;
   sp := FSeparator;
   while Pos('''', sp) > 0 do
     sp := Copy(sp, 1, Pos('''', sp)) + '''' + Copy(sp, Pos('''', sp) + 1, Length(sp) - Pos('''', sp));
