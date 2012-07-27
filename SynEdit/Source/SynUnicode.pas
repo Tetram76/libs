@@ -296,6 +296,7 @@ function WStrNew(const Str: PWideChar): PWideChar;
 procedure WStrDispose(Str: PWideChar);
 {$ENDIF}
 
+
 {$IFNDEF SYN_COMPILER_6_UP}
 {$IFDEF SYN_WIN32} // Kylix should have that from version 1 on
 function UnicodeToUtf8(Dest: PAnsiChar; MaxDestBytes: Cardinal;
@@ -1542,6 +1543,10 @@ begin
 end;
 
 function WStrCopy(Dest: PWideChar; const Source: PWideChar): PWideChar;
+{$IFDEF SYN_COMPILER_16_UP}
+begin
+  Result := SysUtils.StrCopy(Dest, Source)
+{$ELSE}
 asm
         PUSH    EDI
         PUSH    ESI
@@ -1562,9 +1567,14 @@ asm
         REP     MOVSW
         POP     ESI
         POP     EDI
+{$ENDIF}
 end;
 
 function WStrLCopy(Dest: PWideChar; const Source: PWideChar; MaxLen: Cardinal): PWideChar;
+{$IFDEF SYN_COMPILER_16_UP}
+begin
+  Result := SysUtils.StrLCopy(Dest, Source, MaxLen)
+{$ELSE}
 asm
         PUSH    EDI
         PUSH    ESI
@@ -1593,6 +1603,7 @@ asm
         POP     EBX
         POP     ESI
         POP     EDI
+{$ENDIF}
 end;
 
 function WStrCat(Dest: PWideChar; const Source: PWideChar): PWideChar;
@@ -1665,14 +1676,14 @@ begin
       Inc(i);
       if c <= $7F then
       begin
-        Dest[count] := Char(c);
+        Dest[count] := AnsiChar(c);
         Inc(count);
       end
       else if c > $7FF then
       begin
         if count + 3 > MaxDestBytes then
           break;
-        Dest[count] := Char($E0 or (c shr 12));
+        Dest[count] := AnsiChar($E0 or (c shr 12));
         Dest[count+1] := Char($80 or ((c shr 6) and $3F));
         Dest[count+2] := Char($80 or (c and $3F));
         Inc(count,3);
@@ -2186,6 +2197,17 @@ end;
 // byte to go from LSB to MSB and vice versa.
 // EAX contains address of string
 procedure StrSwapByteOrder(Str: PWideChar);
+{$IFDEF SYN_COMPILER_16_UP}
+var
+  P: PWord;
+begin
+  P := PWord(Str);
+  while P^ <> 0 do 
+  begin
+    P^ := MakeWord(HiByte(P^), LoByte(P^));
+    Inc(P);
+  end;
+{$ELSE}
 asm
        PUSH    ESI
        PUSH    EDI
@@ -2204,6 +2226,7 @@ asm
 @@2:
        POP     EDI
        POP     ESI
+{$ENDIF}
 end;
 
 // works like QuotedStr from SysUtils.pas but can insert any quotation character
