@@ -1,0 +1,48 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{269A045A-69B1-4079-9845-27AAB8E34342}</ProjectGuid>
+		</PropertyGroup>
+		<ItemGroup>
+			<Projects Include="PngComponentsD12.dproj">
+				<Dependencies/>
+			</Projects>
+			<Projects Include="PngComponentsD12D.dproj">
+				<Dependencies/>
+			</Projects>
+		</ItemGroup>
+		<ProjectExtensions>
+			<Borland.Personality>Default.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Default.Personality/>
+			</BorlandProject>
+		</ProjectExtensions>
+		<Target Name="PngComponentsD12">
+			<MSBuild Projects="PngComponentsD12.dproj"/>
+		</Target>
+		<Target Name="PngComponentsD12:Clean">
+			<MSBuild Projects="PngComponentsD12.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="PngComponentsD12:Make">
+			<MSBuild Projects="PngComponentsD12.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="PngComponentsD12D">
+			<MSBuild Projects="PngComponentsD12D.dproj"/>
+		</Target>
+		<Target Name="PngComponentsD12D:Clean">
+			<MSBuild Projects="PngComponentsD12D.dproj" Targets="Clean"/>
+		</Target>
+		<Target Name="PngComponentsD12D:Make">
+			<MSBuild Projects="PngComponentsD12D.dproj" Targets="Make"/>
+		</Target>
+		<Target Name="Build">
+			<CallTarget Targets="PngComponentsD12;PngComponentsD12D"/>
+		</Target>
+		<Target Name="Clean">
+			<CallTarget Targets="PngComponentsD12:Clean;PngComponentsD12D:Clean"/>
+		</Target>
+		<Target Name="Make">
+			<CallTarget Targets="PngComponentsD12:Make;PngComponentsD12D:Make"/>
+		</Target>
+		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')" Project="$(BDS)\Bin\CodeGear.Group.Targets"/>
+	</Project>
