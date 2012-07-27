@@ -17,12 +17,14 @@
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsVariantFunctions;
+
+{$I dws.inc}
 
 interface
 
-uses Classes, Variants, SysUtils, dwsFunctions, dwsExprs, dwsSymbols, dwsUtils;
+uses Classes, Variants, SysUtils, dwsFunctions, dwsExprs, dwsSymbols, dwsUtils,
+   dwsMagicExprs, dwsUnitSymbols;
 
 type
   TVarClearFunc = class(TInternalFunction)
@@ -46,10 +48,12 @@ type
   end;
 
   TVarToStrFunc = class(TInternalMagicStringFunction)
-    procedure DoEvalAsString(args : TExprBaseList; var Result : String); override;
+    procedure DoEvalAsString(args : TExprBaseList; var Result : UnicodeString); override;
   end;
 
 implementation
+
+uses dwsOperators;
 
 const // type constants
   cFloat = 'Float';
@@ -106,7 +110,7 @@ end;
 
 // DoEvalAsString
 //
-procedure TVarToStrFunc.DoEvalAsString(args : TExprBaseList; var Result : String);
+procedure TVarToStrFunc.DoEvalAsString(args : TExprBaseList; var Result : UnicodeString);
 var
    v : Variant;
 begin
@@ -116,9 +120,10 @@ end;
 
 { InitVariants }
 
-procedure InitVariants(SystemTable, UnitSyms, UnitTable : TSymbolTable);
+procedure InitVariants(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                       unitTable : TSymbolTable);
 type
-   TVarTypeRec = packed record n : String; v : Word; end;
+   TVarTypeRec = packed record n : UnicodeString; v : Word; end;
 const
    cVarTypes : array [0..24] of TVarTypeRec = (
       (n:'Empty'; v:varEmpty),         (n:'Null'; v:varNull),
@@ -136,10 +141,9 @@ const
       (n:'ByRef'; v:varByRef) );
 var
    i : Integer;
-   T, E : TTypeSymbol;
+   E : TTypeSymbol;
 begin
-   T := SystemTable.FindSymbol('Integer', cvMagic) as TTypeSymbol;
-   E := TEnumerationSymbol.Create('TVarType', T);
+   E := TEnumerationSymbol.Create('TVarType', systemTable.TypInteger, enumClassic);
    UnitTable.AddSymbol(E);
    for i:=Low(cVarTypes) to High(cVarTypes) do
       UnitTable.AddSymbol(TElementSymbol.Create('var'+cVarTypes[i].n, E, cVarTypes[i].v, True));
@@ -147,7 +151,7 @@ end;
 
 initialization
 
-   RegisterInternalPreInitProc(@InitVariants);
+   RegisterInternalSymbolsProc(InitVariants);
 
    RegisterInternalFunction(TVarClearFunc, 'VarClear', ['@v', cVariant], '');
    RegisterInternalBoolFunction(TVarIsNullFunc, 'VarIsNull', ['v', cVariant]);

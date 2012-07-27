@@ -13,8 +13,9 @@
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsAsmLibModule;
+
+{$I dws.inc}
 
 interface
 
@@ -47,7 +48,7 @@ type
 
    // TdwsASMBlockExpr
    //
-   TdwsASMBlockExpr = class (TNoResultExpr)
+   TdwsASMBlockExpr = class (TNoResultPosExpr)
       private
          FCodePtr : Pointer;
          FCodeSize : Integer;

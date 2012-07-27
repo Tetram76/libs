@@ -14,8 +14,9 @@
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsSampling;
+
+{$I dws.inc}
 
 interface
 
@@ -24,16 +25,16 @@ uses Windows, Classes, dwsDebugger, dwsUtils, dwsErrors, dwsSymbols,
 
 type
 
-   TdwsSample = class
+   TdwsSample = class (TRefCountedObject)
       private
-         FSourceName : String;
-         FFuncName : String;
+         FSourceName : UnicodeString;
+         FFuncName : UnicodeString;
          FLine : Integer;
          FCount : Integer;
 
       public
-         property SourceName : String read FSourceName write FSourceName;
-         property FuncName : String read FFuncName write FFuncName;
+         property SourceName : UnicodeString read FSourceName write FSourceName;
+         property FuncName : UnicodeString read FFuncName write FFuncName;
          property Line : Integer read FLine write FLine;
          property Count : Integer read FCount write FCount;
    end;
@@ -55,7 +56,7 @@ type
          procedure Clear;
 
          procedure ToJSON(writer : TdwsJSONWriter);
-         function ToString : String; override;
+         function ToString : UnicodeString; override;
    end;
 
    // TdwsSamplingDebugger
@@ -181,7 +182,7 @@ end;
 //
 procedure TdwsSamplings.ToJSON(writer : TdwsJSONWriter);
 
-   procedure BeginFunc(const func : String);
+   procedure BeginFunc(const func : UnicodeString);
    begin
       writer.BeginObject;
       writer.WriteName('Func');
@@ -192,8 +193,8 @@ procedure TdwsSamplings.ToJSON(writer : TdwsJSONWriter);
 var
    i : Integer;
    sorter : TdwsSamplingsSorter;
-   sourceFile : String;
-   func : String;
+   sourceFile : UnicodeString;
+   func : UnicodeString;
    sample : TdwsSample;
 begin
    writer.BeginArray;
@@ -246,7 +247,7 @@ end;
 
 // ToString
 //
-function TdwsSamplings.ToString : String;
+function TdwsSamplings.ToString : UnicodeString;
 var
    wobs : TWriteOnlyBlockStream;
    wr : TdwsJSONWriter;
@@ -289,7 +290,7 @@ end;
 procedure TdwsSamplingDebugger.CollectSample;
 begin
    if FSuspended then Exit;
-   if FSamplingPos.LineCol=0 then Exit; // not started
+   if not FSamplingPos.Defined then Exit; // not started
    if FCollecting then Exit; // ignore sample if too busy
    FCollecting:=True;
    try
@@ -324,8 +325,12 @@ end;
 // DoDebug
 //
 procedure TdwsSamplingDebugger.DoDebug(exec : TdwsExecution; expr : TExprBase);
+var
+   sample : TScriptPos;
 begin
-   FSamplingPos:=expr.ScriptPos;
+   sample:=expr.ScriptPos;
+   if sample.Defined then
+      FSamplingPos:=sample;
    inherited;
 end;
 

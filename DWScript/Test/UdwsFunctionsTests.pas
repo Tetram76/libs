@@ -5,7 +5,7 @@ interface
 uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs,
    dwsTokenizer, dwsSymbols, dwsXPlatform, dwsUtils,
    dwsMathFunctions, dwsTimeFunctions, dwsGlobalVarsFunctions, dwsVariantFunctions,
-   dwsMathComplexFunctions;
+   dwsMathComplexFunctions, dwsMath3DFunctions;
 
 type
 
@@ -40,14 +40,29 @@ type
          procedure SetUp; override;
    end;
 
+   TdwsFuncFunctionsTestsMath3D = class (TdwsFunctionsTestsBase)
+      public
+         procedure SetUp; override;
+   end;
+
    TdwsFuncFunctionsTestsTime = class (TdwsFunctionsTestsBase)
       public
          procedure SetUp; override;
    end;
 
    TdwsFuncFunctionsTestsString = class (TdwsFunctionsTestsBase)
+      private
+         FLocalizer : TdwsCustomLocalizer;
+
+      protected
+         procedure DoOnLocalize(Sender : TObject; const aString : String; var result : String);
+
       public
          procedure SetUp; override;
+
+      published
+         procedure LocalizeTest;
+
    end;
 
    TdwsFuncFunctionsTestsVariant = class (TdwsFunctionsTestsBase)
@@ -76,7 +91,7 @@ implementation
 //
 procedure TdwsFunctionsTestsBase.SetUp;
 begin
-   FormatSettings.DecimalSeparator:='.';
+   SetDecimalSeparator('.');
 
    FCompiler:=TDelphiWebScript.Create(nil);
 
@@ -211,6 +226,18 @@ begin
 end;
 
 // ------------------
+// ------------------ TdwsFuncFunctionsTestsMath3D ------------------
+// ------------------
+
+// SetUp
+//
+procedure TdwsFuncFunctionsTestsMath3D.SetUp;
+begin
+   FFolder:='FunctionsMath3D';
+   inherited;
+end;
+
+// ------------------
 // ------------------ TdwsFuncFunctionsTestsTime ------------------
 // ------------------
 
@@ -232,6 +259,30 @@ procedure TdwsFuncFunctionsTestsString.SetUp;
 begin
    FFolder:='FunctionsString';
    inherited;
+
+   FLocalizer:=TdwsCustomLocalizer.Create(FCompiler);
+   FCompiler.Config.Localizer:=FLocalizer;
+   FLocalizer.OnLocalizeString:=DoOnLocalize;
+end;
+
+// DoOnLocalize
+//
+procedure TdwsFuncFunctionsTestsString.DoOnLocalize(Sender : TObject; const aString : String; var result : String);
+begin
+   Result:='['+aString+']';
+end;
+
+// LocalizeTest
+//
+procedure TdwsFuncFunctionsTestsString.LocalizeTest;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile('Print(_("Test"));');
+   exec:=prog.CreateNewExecution;
+   exec.Execute;
+   CheckEquals('[Test]', exec.Result.ToString);
 end;
 
 // ------------------
@@ -268,6 +319,7 @@ initialization
 
    TestFramework.RegisterTest('FunctionsMath', TdwsFuncFunctionsTestsMath.Suite);
    TestFramework.RegisterTest('FunctionsMathComplex', TdwsFuncFunctionsTestsMathComplex.Suite);
+   TestFramework.RegisterTest('FunctionsMath3D', TdwsFuncFunctionsTestsMath3D.Suite);
    TestFramework.RegisterTest('FunctionsTime', TdwsFuncFunctionsTestsTime.Suite);
    TestFramework.RegisterTest('FunctionsString', TdwsFuncFunctionsTestsString.Suite);
    TestFramework.RegisterTest('FunctionsVariant', TdwsFuncFunctionsTestsVariant.Suite);

@@ -17,14 +17,15 @@
 {    Current maintainer: Eric Grange                                   }
 {                                   }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsFunctions;
+
+{$I dws.inc}
 
 interface
 
 uses
   Classes, SysUtils, dwsExprs, dwsSymbols, dwsStack, dwsStrings, dwsTokenizer,
-  dwsOperators, dwsUtils;
+  dwsOperators, dwsUtils, dwsUnitSymbols;
 
 type
 
@@ -34,26 +35,27 @@ type
    // Interface for units
    IdwsUnit = interface
       ['{8D534D12-4C6B-11D5-8DCB-0000216D9E86}']
-      function GetUnitName : String;
-      function GetUnitTable(systemTable, unitSyms : TSymbolTable; operators : TOperators) : TUnitSymbolTable;
+      function GetUnitName : UnicodeString;
+      function GetUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                            operators : TOperators) : TUnitSymbolTable;
       function GetDependencies : TStrings;
       function GetUnitFlags : TIdwsUnitFlags;
    end;
 
    TIdwsUnitList = class(TSimpleList<IdwsUnit>)
-      function IndexOf(const unitName : String) : Integer; overload;
-      function IndexOf(const aUnit : IdwsUnit) : Integer; overload;
+      function IndexOfName(const unitName : UnicodeString) : Integer;
+      function IndexOf(const aUnit : IdwsUnit) : Integer;
       procedure AddUnits(list : TIdwsUnitList);
    end;
 
-   TEmptyFunc = class(TInterfacedObject, ICallable)
+   TEmptyFunc = class(TInterfacedSelfObject, ICallable)
       public
          procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol);
          procedure InitSymbol(Symbol: TSymbol);
          procedure InitExpression(Expr: TExprBase);
    end;
 
-   TFunctionPrototype = class(TInterfacedObject)
+   TFunctionPrototype = class(TInterfacedSelfObject)
       private
          FFuncSymbol : TFuncSymbol;
       public
@@ -70,57 +72,21 @@ type
          procedure Execute(info : TProgramInfo); virtual; abstract;
    end;
 
+   TInternalFunctionFlag = (iffStateLess, iffOverloaded, iffDeprecated);
+   TInternalFunctionFlags = set of TInternalFunctionFlag;
+
    TInternalFunction = class(TFunctionPrototype, IUnknown, ICallable)
       public
-         constructor Create(Table: TSymbolTable; const FuncName: string;
-                            const FuncParams: array of string; const FuncType: string;
-                            const isStateLess : Boolean = False); virtual;
-         procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); override;
+         constructor Create(table : TSymbolTable; const funcName : UnicodeString;
+                            const params : TParamArray; const funcType : UnicodeString;
+                            const flags : TInternalFunctionFlags = []); overload; virtual;
+         constructor Create(table : TSymbolTable; const funcName : UnicodeString;
+                            const params : array of UnicodeString; const funcType : UnicodeString;
+                            const flags : TInternalFunctionFlags = []); overload;
+         procedure Call(exec : TdwsProgramExecution; func : TFuncSymbol); override;
          procedure Execute(info : TProgramInfo); virtual; abstract;
    end;
    TInternalFunctionClass = class of TInternalFunction;
-
-   TInternalMagicFunction = class(TInternalFunction)
-      public
-         constructor Create(Table: TSymbolTable; const FuncName: string;
-                            const FuncParams: array of string; const FuncType: string;
-                            const isStateLess : Boolean = False); override;
-         function DoEval(args : TExprBaseList) : Variant; virtual; abstract;
-   end;
-
-   TInternalMagicProcedure = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         procedure DoEvalProc(args : TExprBaseList); virtual; abstract;
-   end;
-
-   TInternalMagicIntFunction = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         function DoEvalAsInteger(args : TExprBaseList) : Int64; virtual; abstract;
-   end;
-   TInternalMagicIntFunctionClass = class of TInternalMagicIntFunction;
-
-   TInternalMagicBoolFunction = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         function DoEvalAsBoolean(args : TExprBaseList) : Boolean; virtual; abstract;
-   end;
-   TInternalMagicBoolFunctionClass = class of TInternalMagicBoolFunction;
-
-   TInternalMagicFloatFunction = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         procedure DoEvalAsFloat(args : TExprBaseList; var Result : Double); virtual; abstract;
-   end;
-   TInternalMagicFloatFunctionClass = class of TInternalMagicFloatFunction;
-
-   TInternalMagicStringFunction = class(TInternalMagicFunction)
-      public
-         function DoEval(args : TExprBaseList) : Variant; override;
-         procedure DoEvalAsString(args : TExprBaseList; var Result : String); virtual; abstract;
-   end;
-   TInternalMagicStringFunctionClass = class of TInternalMagicStringFunction;
 
    TAnonymousMethod = class(TFunctionPrototype, IUnknown, ICallable)
       public
@@ -131,88 +97,101 @@ type
 
    TInternalMethod = class(TFunctionPrototype, IUnknown, ICallable)
       public
-         constructor Create(MethKind: TMethodKind; Attributes: TMethodAttributes;
-                            const methName: string; const MethParams: array of string;
-                            const MethType: string; Cls: TClassSymbol;
+         constructor Create(methKind : TMethodKind; attributes : TMethodAttributes;
+                            const methName : UnicodeString; const methParams : array of UnicodeString;
+                            const methType : UnicodeString; cls : TClassSymbol;
                             aVisibility : TdwsVisibility;
-                            Table: TSymbolTable);
-         procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); override;
-         procedure Execute(info : TProgramInfo; var ExternalObject: TObject); virtual; abstract;
+                            table : TSymbolTable);
+         procedure Call(exec : TdwsProgramExecution; func : TFuncSymbol); override;
+         procedure Execute(info : TProgramInfo; var externalObject : TObject); virtual; abstract;
    end;
 
-   TInternalInitProc = procedure (systemTable, unitSyms, unitTable : TSymbolTable;
-                                  operators : TOperators);
+   TInternalInitProc = procedure (systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                                  unitTable : TSymbolTable; operators : TOperators);
+   TSymbolsRegistrationProc = procedure (systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                                         unitTable : TSymbolTable);
+   TOperatorsRegistrationProc = procedure (systemTable : TSystemSymbolTable; unitTable : TSymbolTable;
+                                           operators : TOperators);
 
-   TInternalUnit = class(TObject, IUnknown, IdwsUnit)
+   TInternalAbsHandler = function (FProg : TdwsProgram; argExpr : TTypedExpr) : TTypedExpr;
+   TInternalSqrHandler = function (FProg : TdwsProgram; argExpr : TTypedExpr) : TTypedExpr;
+
+   TInternalUnit = class(TObject, IdwsUnit)
       private
          FDependencies : TStrings;
-         FPreInitProcs : array of TInternalInitProc;
-         FPostInitProcs : array of TInternalInitProc;
-         FRegisteredInternalFunctions: TList;
-         FStaticSymbols: Boolean;
-         FStaticTable: TStaticSymbolTable; // static symbols
+         FSymbolsRegistrationProcs : array of TSymbolsRegistrationProc;
+         FOperatorsRegistrationProcs : array of TOperatorsRegistrationProc;
+         FRegisteredInternalFunctions : TList;
+         FStaticSymbols : Boolean;
+         FStaticTable : IStaticSymbolTable; // static symbols
+         FStaticSystemTable : TSystemSymbolTable;
+         FAbsHandlers : array of TInternalAbsHandler;
 
       protected
          procedure SetStaticSymbols(const Value: Boolean);
-         function _AddRef: Integer; stdcall;
-         function _Release: Integer; stdcall;
+         function _AddRef : Integer; stdcall;
+         function _Release : Integer; stdcall;
          function QueryInterface(const IID: TGUID; out Obj): HResult; stdcall;
-         function GetDependencies: TStrings;
-         function GetUnitName: string;
-         procedure InitUnitTable(systemTable, unitSyms, unitTable : TSymbolTable; operators : TOperators);
-         function GetUnitTable(systemTable, unitSyms : TSymbolTable; operators : TOperators) : TUnitSymbolTable;
+         function GetDependencies : TStrings;
+         function GetUnitName : UnicodeString;
+
+         procedure InitUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                                 unitTable : TSymbolTable);
+         function GetUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                               operators : TOperators) : TUnitSymbolTable;
          function GetUnitFlags : TIdwsUnitFlags;
 
       public
          constructor Create;
          destructor Destroy; override;
 
-         procedure AddInternalFunction(rif : Pointer);
-         procedure AddPreInitProc(proc : TInternalInitProc);
-         procedure AddPostInitProc(proc : TInternalInitProc);
+         procedure Lock;
+         procedure UnLock;
 
-         function InitStaticSymbols(SystemTable, UnitSyms: TSymbolTable; operators : TOperators): Boolean;
+         procedure AddInternalFunction(rif : Pointer);
+         procedure AddSymbolsRegistrationProc(proc : TSymbolsRegistrationProc);
+         procedure AddOperatorsRegistrationProc(proc : TOperatorsRegistrationProc);
+
+         procedure AddAbsHandler(const handler : TInternalAbsHandler);
+         function HandleAbs(prog : TdwsProgram; argExpr : TTypedExpr) : TTypedExpr;
+
+         procedure InitStaticSymbols(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                                     operators : TOperators);
          procedure ReleaseStaticSymbols;
 
-         property StaticTable : TStaticSymbolTable read FStaticTable;
+         property StaticTable : IStaticSymbolTable read FStaticTable;
          property StaticSymbols : Boolean read FStaticSymbols write SetStaticSymbols;
    end;
 
    TSourceUnit = class(TInterfacedObject, IdwsUnit)
       private
          FDependencies : TStrings;
-         FSymbol : TUnitSymbol;
+         FSymbol : TUnitMainSymbol;
 
       protected
 
       public
-         constructor Create(const unitName : String; rootTable : TSymbolTable);
+         constructor Create(const unitName : UnicodeString; rootTable : TSymbolTable;
+                            unitSyms : TUnitMainSymbols);
          destructor Destroy; override;
 
-         function GetUnitName : String;
-         function GetUnitTable(systemTable, unitSyms : TSymbolTable; operators : TOperators) : TUnitSymbolTable;
+         function GetUnitName : UnicodeString;
+         function GetUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                               operators : TOperators) : TUnitSymbolTable;
          function GetDependencies : TStrings;
          function GetUnitFlags : TIdwsUnitFlags;
 
-         property Symbol : TUnitSymbol read FSymbol write FSymbol;
+         property Symbol : TUnitMainSymbol read FSymbol write FSymbol;
    end;
 
 procedure RegisterInternalFunction(InternalFunctionClass: TInternalFunctionClass;
-      const FuncName: string; const FuncParams: array of string;
-      const FuncType: string; const isStateLess : Boolean = False);
-procedure RegisterInternalIntFunction(InternalFunctionClass: TInternalMagicIntFunctionClass;
-      const FuncName: string; const FuncParams: array of string; const isStateLess : Boolean = False);
-procedure RegisterInternalBoolFunction(InternalFunctionClass: TInternalMagicBoolFunctionClass;
-      const FuncName: string; const FuncParams: array of string; const isStateLess : Boolean = False);
-procedure RegisterInternalFloatFunction(InternalFunctionClass: TInternalMagicFloatFunctionClass;
-      const FuncName: string; const FuncParams: array of string; const isStateLess : Boolean = False);
-procedure RegisterInternalStringFunction(InternalFunctionClass: TInternalMagicStringFunctionClass;
-      const FuncName: string; const FuncParams: array of string; const isStateLess : Boolean = False);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const FuncType: UnicodeString; const flags : TInternalFunctionFlags = []);
 procedure RegisterInternalProcedure(InternalFunctionClass: TInternalFunctionClass;
-      const FuncName: string; const FuncParams: array of string);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString);
 
-procedure RegisterInternalPreInitProc(Proc: TInternalInitProc);
-procedure RegisterInternalPostInitProc(Proc: TInternalInitProc);
+procedure RegisterInternalSymbolsProc(proc : TSymbolsRegistrationProc);
+procedure RegisterInternalOperatorsProc(proc : TOperatorsRegistrationProc);
 
 function dwsInternalUnit : TInternalUnit;
 
@@ -236,96 +215,25 @@ begin
    Result:=vInternalUnit;
 end;
 
-procedure RegisterInternalPreInitProc(Proc: TInternalInitProc);
-begin
-   dwsInternalUnit.AddPreInitProc(Proc);
-end;
-
-procedure RegisterInternalPostInitProc(Proc: TInternalInitProc);
-begin
-   dwsInternalUnit.AddPostInitProc(Proc);
-end;
-
-type
-   TRegisteredInternalFunction = record
-      InternalFunctionClass : TInternalFunctionClass;
-      FuncName : String;
-      FuncParams : array of String;
-      FuncType : String;
-      StateLess : Boolean;
-   end;
-   PRegisteredInternalFunction = ^TRegisteredInternalFunction;
-
-// RegisterInternalFunction
+// RegisterInternalSymbolsProc
 //
-procedure RegisterInternalFunction(InternalFunctionClass: TInternalFunctionClass;
-                                   const FuncName: string;
-                                   const FuncParams: array of string;
-                                   const FuncType: string;
-                                   const isStateLess : Boolean = False);
-var
-   i : Integer;
-   rif : PRegisteredInternalFunction;
+procedure RegisterInternalSymbolsProc(proc : TSymbolsRegistrationProc);
 begin
-   New(rif);
-   rif.InternalFunctionClass := InternalFunctionClass;
-   rif.FuncName := FuncName;
-   rif.StateLess:=isStateLess;
-
-   SetLength(rif.FuncParams, Length(FuncParams));
-
-   for i := 0 to Length(FuncParams) - 1 do
-      rif.FuncParams[i] := FuncParams[i];
-   rif.FuncType := FuncType;
-
-   dwsInternalUnit.AddInternalFunction(rif);
+   dwsInternalUnit.AddSymbolsRegistrationProc(proc);
 end;
 
-// RegisterInternalIntFunction
+// RegisterInternalOperatorsProc
 //
-procedure RegisterInternalIntFunction(InternalFunctionClass: TInternalMagicIntFunctionClass;
-      const FuncName: string; const FuncParams: array of string; const isStateLess : Boolean = False);
+procedure RegisterInternalOperatorsProc(proc : TOperatorsRegistrationProc);
 begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, 'Integer', isStateLess);
-end;
-
-// RegisterInternalBoolFunction
-//
-procedure RegisterInternalBoolFunction(InternalFunctionClass: TInternalMagicBoolFunctionClass;
-      const FuncName: string; const FuncParams: array of string; const isStateLess : Boolean = False);
-begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, 'Boolean', isStateLess);
-end;
-
-// RegisterInternalFloatFunction
-//
-procedure RegisterInternalFloatFunction(InternalFunctionClass: TInternalMagicFloatFunctionClass;
-      const FuncName: string; const FuncParams: array of string; const isStateLess : Boolean = False);
-begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, 'Float', isStateLess);
-end;
-
-// RegisterInternalStringFunction
-//
-procedure RegisterInternalStringFunction(InternalFunctionClass: TInternalMagicStringFunctionClass;
-      const FuncName: string; const FuncParams: array of string; const isStateLess : Boolean = False);
-begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, 'String', isStateLess);
-end;
-
-// RegisterInternalProcedure
-//
-procedure RegisterInternalProcedure(InternalFunctionClass: TInternalFunctionClass;
-      const FuncName: string; const FuncParams: array of string);
-begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, '', False);
+   dwsInternalUnit.AddOperatorsRegistrationProc(proc);
 end;
 
 // ConvertFuncParams
 //
-procedure ConvertFuncParams(var Params: TParamArray; const FuncParams: array of string);
+function ConvertFuncParams(const funcParams : array of UnicodeString) : TParamArray;
 
-   procedure ParamSpecifier(c : Char; paramRec : PParamRec);
+   procedure ParamSpecifier(c : WideChar; paramRec : PParamRec);
    begin
       paramRec.IsVarParam:=(c='@');
       paramRec.IsConstParam:=(c='&');
@@ -342,15 +250,15 @@ procedure ConvertFuncParams(var Params: TParamArray; const FuncParams: array of 
 
 var
    x, p : Integer;
-   c : Char;
+   c : WideChar;
    paramRec : PParamRec;
 begin
-   SetLength(Params, Length(FuncParams) div 2);
+   SetLength(Result, Length(funcParams) div 2);
    x:=0;
-   while x<Length(FuncParams)-1 do begin
-      paramRec:=@Params[x div 2];
+   while x<Length(funcParams)-1 do begin
+      paramRec:=@Result[x div 2];
 
-      paramRec.ParamName:=FuncParams[x];
+      paramRec.ParamName:=funcParams[x];
       c:=#0;
       if paramRec.ParamName<>'' then
          c:=paramRec.ParamName[1];
@@ -367,10 +275,48 @@ begin
       if p>0 then
          ParamDefaultValue(p, paramRec);
 
-      paramRec.ParamType:=FuncParams[x+1];
+      paramRec.ParamType:=funcParams[x+1];
 
       Inc(x, 2);
    end;
+end;
+
+type
+   TRegisteredInternalFunction = record
+      InternalFunctionClass : TInternalFunctionClass;
+      FuncName : UnicodeString;
+      FuncParams : TParamArray;
+      FuncType : UnicodeString;
+      Flags : TInternalFunctionFlags;
+   end;
+   PRegisteredInternalFunction = ^TRegisteredInternalFunction;
+
+// RegisterInternalFunction
+//
+procedure RegisterInternalFunction(InternalFunctionClass: TInternalFunctionClass;
+                                   const FuncName: UnicodeString;
+                                   const FuncParams: array of UnicodeString;
+                                   const FuncType: UnicodeString;
+                                   const flags : TInternalFunctionFlags = []);
+var
+   rif : PRegisteredInternalFunction;
+begin
+   New(rif);
+   rif.InternalFunctionClass:=InternalFunctionClass;
+   rif.FuncName:=FuncName;
+   rif.Flags:=flags;
+   rif.FuncParams:=ConvertFuncParams(FuncParams);
+   rif.FuncType:=FuncType;
+
+   dwsInternalUnit.AddInternalFunction(rif);
+end;
+
+// RegisterInternalProcedure
+//
+procedure RegisterInternalProcedure(InternalFunctionClass: TInternalFunctionClass;
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString);
+begin
+   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, '');
 end;
 
 { TEmptyFunc }
@@ -397,28 +343,39 @@ procedure TFunctionPrototype.InitExpression(Expr: TExprBase);
 begin
 end;
 
-{ TInternalFunction }
+// ------------------
+// ------------------ TInternalFunction ------------------
+// ------------------
 
-constructor TInternalFunction.Create(Table: TSymbolTable;
-  const FuncName: string; const FuncParams: array of string; const FuncType: string;
-  const isStateLess : Boolean = False);
+constructor TInternalFunction.Create(table : TSymbolTable; const funcName : UnicodeString;
+                                     const params : TParamArray; const funcType : UnicodeString;
+                                     const flags : TInternalFunctionFlags = []);
 var
    sym: TFuncSymbol;
-   params: TParamArray;
 begin
-   ConvertFuncParams(Params, FuncParams);
-
-   sym := TFuncSymbol.Generate(Table, FuncName, Params, FuncType);
-   sym.Params.AddParent(Table);
-   sym.Executable := ICallable(Self);
-   sym.IsStateless:=isStateLess;
+   sym:=TFuncSymbol.Generate(table, funcName, params, funcType);
+   sym.Params.AddParent(table);
+   sym.Executable:=ICallable(Self);
+   sym.IsStateless:=(iffStateLess in flags);
+   sym.IsOverloaded:=(iffOverloaded in flags);
+   if iffDeprecated in flags then
+      sym.DeprecatedMessage:=SYS_INTEGER;
    FFuncSymbol:=sym;
-   Table.AddSymbol(sym);
+   table.AddSymbol(sym);
+end;
+
+// Create
+//
+constructor TInternalFunction.Create(table: TSymbolTable; const funcName : UnicodeString;
+                                     const params : array of UnicodeString; const funcType : UnicodeString;
+                                     const flags : TInternalFunctionFlags = []);
+begin
+   Create(table, funcName, ConvertFuncParams(params), funcType, flags);
 end;
 
 // Call
 //
-procedure TInternalFunction.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
+procedure TInternalFunction.Call(exec : TdwsProgramExecution; func : TFuncSymbol);
 var
    info : TProgramInfo;
 begin
@@ -431,108 +388,29 @@ begin
 end;
 
 // ------------------
-// ------------------ TInternalMagicFunction ------------------
+// ------------------ TInternalMethod ------------------
 // ------------------
 
 // Create
 //
-constructor TInternalMagicFunction.Create(Table: TSymbolTable;
-  const FuncName: string; const FuncParams: array of string; const FuncType: string;
-  const isStateLess : Boolean = False);
+constructor TInternalMethod.Create(methKind: TMethodKind; attributes: TMethodAttributes;
+                                   const methName: UnicodeString; const methParams: array of UnicodeString;
+                                   const methType: UnicodeString; cls: TClassSymbol;
+                                   aVisibility : TdwsVisibility;
+                                   table: TSymbolTable);
 var
-  sym: TMagicFuncSymbol;
-  Params: TParamArray;
+   sym : TMethodSymbol;
+   params : TParamArray;
 begin
-  ConvertFuncParams(Params, FuncParams);
+   params:=ConvertFuncParams(methParams);
 
-  sym := TMagicFuncSymbol.Generate(Table, FuncName, Params, FuncType);
-  sym.Params.AddParent(Table);
-  sym.InternalFunction:=Self;
-  sym.IsStateless:=isStateLess;
-  Table.AddSymbol(sym);
-end;
+   sym:=TMethodSymbol.Generate(table, methKind, attributes, methName, Params,
+                                 methType, cls, aVisibility);
+   sym.Params.AddParent(table);
+   sym.Executable := ICallable(Self);
 
-// ------------------
-// ------------------ TInternalMagicProcedure ------------------
-// ------------------
-
-// DoEval
-//
-function TInternalMagicProcedure.DoEval(args : TExprBaseList) : Variant;
-begin
-   DoEvalProc(args);
-end;
-
-// ------------------
-// ------------------ TInternalMagicIntFunction ------------------
-// ------------------
-
-// DoEval
-//
-function TInternalMagicIntFunction.DoEval(args : TExprBaseList) : Variant;
-begin
-   Result:=DoEvalAsInteger(args);
-end;
-
-// ------------------
-// ------------------ TInternalMagicBoolFunction ------------------
-// ------------------
-
-// DoEval
-//
-function TInternalMagicBoolFunction.DoEval(args : TExprBaseList) : Variant;
-begin
-   Result:=DoEvalAsBoolean(args);
-end;
-
-// ------------------
-// ------------------ TInternalMagicFloatFunction ------------------
-// ------------------
-
-// DoEval
-//
-function TInternalMagicFloatFunction.DoEval(args : TExprBaseList) : Variant;
-var
-   buf : Double;
-begin
-   DoEvalAsFloat(args, buf);
-   Result:=buf;
-end;
-
-// ------------------
-// ------------------ TInternalMagicStringFunction ------------------
-// ------------------
-
-// DoEval
-//
-function TInternalMagicStringFunction.DoEval(args : TExprBaseList) : Variant;
-var
-   buf : String;
-begin
-   DoEvalAsString(args, buf);
-   Result:=buf;
-end;
-
-{ TInternalMethod }
-
-constructor TInternalMethod.Create(MethKind: TMethodKind; Attributes: TMethodAttributes;
-                   const methName: string; const MethParams: array of string;
-                   const MethType: string; Cls: TClassSymbol;
-                   aVisibility : TdwsVisibility;
-                   Table: TSymbolTable);
-var
-  sym: TMethodSymbol;
-  Params: TParamArray;
-begin
-  ConvertFuncParams(Params, MethParams);
-
-  sym := TMethodSymbol.Generate(Table, MethKind, Attributes, methName, Params,
-                                MethType, Cls, aVisibility);
-  sym.Params.AddParent(Table);
-  sym.Executable := ICallable(Self);
-
-  // Add method to its class
-  Cls.AddMethod(sym);
+   // Add method to its class
+   cls.AddMethod(sym);
 end;
 
 procedure TInternalMethod.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
@@ -624,121 +502,176 @@ end;
 // ------------------ TInternalUnit ------------------
 // ------------------
 
+// Create
+//
 constructor TInternalUnit.Create;
 begin
-   FDependencies := TStringList.Create;
-   FRegisteredInternalFunctions := TList.Create;
-   FStaticSymbols := False;
-   FStaticTable := nil;
+   FDependencies:=TStringList.Create;
+   FRegisteredInternalFunctions:=TList.Create;
+   FStaticSymbols:=True;
 end;
 
+// Destroy
+//
 destructor TInternalUnit.Destroy;
 var
-  i: Integer;
-  rif: PRegisteredInternalFunction;
+   i : Integer;
+   rif : PRegisteredInternalFunction;
 begin
    ReleaseStaticSymbols;
    FDependencies.Free;
-   for i := 0 to FRegisteredInternalFunctions.Count - 1 do begin
-      rif := PRegisteredInternalFunction(FRegisteredInternalFunctions[i]);
+   for i:=0 to FRegisteredInternalFunctions.Count - 1 do begin
+      rif:=PRegisteredInternalFunction(FRegisteredInternalFunctions[i]);
       Dispose(rif);
    end;
    FRegisteredInternalFunctions.Free;
    inherited;
 end;
 
-// AddPreInitProc
+// Lock
 //
-procedure TInternalUnit.AddPreInitProc(proc : TInternalInitProc);
+procedure TInternalUnit.Lock;
+begin
+   TMonitor.Enter(Self);
+end;
+
+// UnLock
+//
+procedure TInternalUnit.UnLock;
+begin
+   TMonitor.Exit(Self);
+end;
+
+// AddSymbolsRegistrationProc
+//
+procedure TInternalUnit.AddSymbolsRegistrationProc(proc : TSymbolsRegistrationProc);
 var
    n : Integer;
 begin
-   n:=Length(FPreInitProcs);
-   SetLength(FPreInitProcs, n+1);
-   FPreInitProcs[n]:=proc;
+   n:=Length(FSymbolsRegistrationProcs);
+   SetLength(FSymbolsRegistrationProcs, n+1);
+   FSymbolsRegistrationProcs[n]:=proc;
 end;
 
-// AddPostInitProc
+// AddOperatorsRegistrationProc
 //
-procedure TInternalUnit.AddPostInitProc(proc : TInternalInitProc);
+procedure TInternalUnit.AddOperatorsRegistrationProc(proc : TOperatorsRegistrationProc);
 var
    n : Integer;
 begin
-   n:=Length(FPostInitProcs);
-   SetLength(FPostInitProcs, n+1);
-   FPostInitProcs[n]:=proc;
+   n:=Length(FOperatorsRegistrationProcs);
+   SetLength(FOperatorsRegistrationProcs, n+1);
+   FOperatorsRegistrationProcs[n]:=proc;
 end;
 
+// AddAbsHandler
+//
+procedure TInternalUnit.AddAbsHandler(const handler : TInternalAbsHandler);
+var
+   n : Integer;
+begin
+   n:=Length(FAbsHandlers);
+   SetLength(FAbsHandlers, n+1);
+   FAbsHandlers[n]:=handler;
+end;
+
+// HandleAbs
+//
+function TInternalUnit.HandleAbs(prog : TdwsProgram; argExpr : TTypedExpr) : TTypedExpr;
+var
+   i : Integer;
+begin
+   Result:=nil;
+   for i:=0 to High(FAbsHandlers) do begin
+      Result:=FAbsHandlers[i](prog, argExpr);
+      if Result<>nil then Exit;
+   end;
+   argExpr.Free;
+end;
+
+// AddInternalFunction
+//
 procedure TInternalUnit.AddInternalFunction(rif: Pointer);
 begin
-  FRegisteredInternalFunctions.Add(rif);
+   FRegisteredInternalFunctions.Add(rif);
 end;
 
-function TInternalUnit._AddRef: Integer;
+// _AddRef
+//
+function TInternalUnit._AddRef : Integer;
 begin
-  Result := -1;
+   Result:=-1;
 end;
 
+// GetDependencies
+//
 function TInternalUnit.GetDependencies: TStrings;
 begin
-  Result := FDependencies;
+   Result:=FDependencies;
 end;
 
-function TInternalUnit.GetUnitName: string;
+// GetUnitName
+//
+function TInternalUnit.GetUnitName : UnicodeString;
 begin
-  Result := SYS_INTERNAL;
+   Result:=SYS_INTERNAL;
 end;
 
-function TInternalUnit.InitStaticSymbols(SystemTable, UnitSyms: TSymbolTable; operators : TOperators): Boolean;
+// InitStaticSymbols
+//
+procedure TInternalUnit.InitStaticSymbols(
+   systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols; operators : TOperators);
+begin
+   if FStaticTable=nil then begin
+      FStaticSystemTable:=systemTable;
+      FStaticTable:=TStaticSymbolTable.Create(systemTable);
+      try
+         InitUnitTable(systemTable, unitSyms, FStaticTable.SymbolTable);
+      except
+         ReleaseStaticSymbols;
+         raise;
+      end;
+   end;
+end;
+
+// ReleaseStaticSymbols
+//
+procedure TInternalUnit.ReleaseStaticSymbols;
+begin
+   FStaticSystemTable:=nil;
+   FStaticTable:=nil;
+end;
+
+// GetUnitTable
+//
+function TInternalUnit.GetUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                                    operators : TOperators) : TUnitSymbolTable;
 var
-   staticParent: TStaticSymbolTable;
+   i : Integer;
 begin
-   if not Assigned(FStaticTable) then begin
-      if SystemTable is TStaticSymbolTable then
-         staticParent := TStaticSymbolTable(SystemTable)
-      else if SystemTable is TLinkedSymbolTable then
-         staticParent := TLinkedSymbolTable(SystemTable).Parent
-      else staticParent := nil;
+   Lock;
+   try
+      if FStaticSystemTable<>systemTable then
+         ReleaseStaticSymbols;
 
-      if Assigned(staticParent) then begin
-         FStaticTable := TStaticSymbolTable.Create(staticParent);
+      if StaticSymbols then begin
+         InitStaticSymbols(systemTable, unitSyms, operators);
+         Result:=TLinkedSymbolTable.Create(FStaticTable.SymbolTable);
+      end else begin
+         Result:=TUnitSymbolTable.Create(SystemTable);
          try
-            InitUnitTable(SystemTable, UnitSyms, FStaticTable, operators);
+            InitUnitTable(systemTable, unitSyms, Result);
          except
-            ReleaseStaticSymbols;
+            Result.Free;
             raise;
          end;
       end;
+
+      for i:=0 to High(FOperatorsRegistrationProcs) do
+         FOperatorsRegistrationProcs[i](systemTable, Result, operators);
+   finally
+      UnLock;
    end;
-   Result := Assigned(FStaticTable);
-end;
-
-procedure TInternalUnit.ReleaseStaticSymbols;
-var
-  s: TStaticSymbolTable;
-begin
-  if Assigned(FStaticTable) then
-  begin
-    s := FStaticTable;
-    FStaticTable := nil;
-    s._Release;
-  end;
-end;
-
-function TInternalUnit.GetUnitTable(systemTable, unitSyms : TSymbolTable; operators : TOperators) : TUnitSymbolTable;
-begin
-  if StaticSymbols and InitStaticSymbols(SystemTable, UnitSyms, operators) then
-    Result := TLinkedSymbolTable.Create(FStaticTable)
-  else
-  begin
-    Result := TUnitSymbolTable.Create(SystemTable);
-    try
-      InitUnitTable(SystemTable, UnitSyms, Result, operators);
-    except
-      Result.Free;
-      raise;
-    end;
-  end;
 end;
 
 // GetUnitFlags
@@ -748,28 +681,28 @@ begin
    Result:=[ufImplicitUse];
 end;
 
-procedure TInternalUnit.InitUnitTable(systemTable, unitSyms, unitTable : TSymbolTable; operators : TOperators);
+// InitUnitTable
+//
+procedure TInternalUnit.InitUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                                      unitTable : TSymbolTable);
 var
    i : Integer;
    rif : PRegisteredInternalFunction;
 begin
-   for i := 0 to High(FPreInitProcs) do
-      FPreInitProcs[i](SystemTable, UnitSyms, UnitTable, operators);
+   for i := 0 to High(FSymbolsRegistrationProcs) do
+      FSymbolsRegistrationProcs[i](systemTable, unitSyms, unitTable);
 
    for i := 0 to FRegisteredInternalFunctions.Count - 1 do begin
       rif := PRegisteredInternalFunction(FRegisteredInternalFunctions[i]);
       try
-         rif.InternalFunctionClass.Create(UnitTable, rif.FuncName, rif.FuncParams,
-                                       rif.FuncType, rif.StateLess);
+         rif.InternalFunctionClass.Create(unitTable, rif.FuncName, rif.FuncParams,
+                                          rif.FuncType, rif.Flags);
       except
          on e: Exception do
             raise Exception.CreateFmt('AddInternalFunctions failed on %s'#13#10'%s',
                                       [rif.FuncName, e.Message]);
       end;
    end;
-
-   for i := 0 to High(FPostInitProcs) do
-      FPostInitProcs[i](SystemTable, UnitSyms, UnitTable, operators);
 end;
 
 function TInternalUnit.QueryInterface(const IID: TGUID; out Obj): HResult;
@@ -795,7 +728,7 @@ end;
 
 // IndexOf (name)
 //
-function TIdwsUnitList.IndexOf(const unitName : String) : Integer;
+function TIdwsUnitList.IndexOfName(const unitName : UnicodeString) : Integer;
 begin
    for Result:=0 to Count-1 do
       if SameText(Items[Result].GetUnitName, unitName) then
@@ -830,27 +763,27 @@ end;
 
 // Create
 //
-constructor TSourceUnit.Create(const unitName : String; rootTable : TSymbolTable);
-
-   procedure AddStandardUnit(const name : String);
-   var
-      stdUnit : TUnitSymbol;
-   begin
-      stdUnit:=TUnitSymbol(rootTable.FindSymbol(name, cvMagic, TUnitSymbol));
-      FSymbol.InterfaceTable.AddSymbol(TUnitSymbol.Create(name, stdUnit.Table, False));
-      FSymbol.InterfaceTable.AddParent(stdUnit.Table);
-   end;
-
+constructor TSourceUnit.Create(const unitName : UnicodeString; rootTable : TSymbolTable;
+                               unitSyms : TUnitMainSymbols);
+var
+   ums : TUnitMainSymbol;
+   ust : TUnitSymbolTable;
 begin
    inherited Create;
    FDependencies:=TStringList.Create;
-   FSymbol:=TUnitSymbol.Create(unitName, TUnitSymbolTable.Create, True);
-   rootTable.AddSymbol(FSymbol);
+   ust:=TUnitSymbolTable.Create(nil, rootTable.AddrGenerator);
+   FSymbol:=TUnitMainSymbol.Create(unitName, ust, unitSyms);
+//   FSymbol.ReferenceInSymbolTable(rootTable);
+   ust.UnitMainSymbol:=FSymbol;
 
    FSymbol.CreateInterfaceTable;
 
-   AddStandardUnit(SYS_INTERNAL);
-   AddStandardUnit(SYS_DEFAULT);
+   unitSyms.Find(SYS_SYSTEM).ReferenceInSymbolTable(FSymbol.InterfaceTable, True);
+   unitSyms.Find(SYS_INTERNAL).ReferenceInSymbolTable(FSymbol.InterfaceTable, True);
+
+   ums:=unitSyms.Find(SYS_DEFAULT);
+   if ums<>nil then
+      ums.ReferenceInSymbolTable(FSymbol.InterfaceTable, True);
 end;
 
 // Destroy
@@ -863,14 +796,15 @@ end;
 
 // GetUnitName
 //
-function TSourceUnit.GetUnitName : String;
+function TSourceUnit.GetUnitName : UnicodeString;
 begin
    Result:=Symbol.Name;
 end;
 
 // GetUnitTable
 //
-function TSourceUnit.GetUnitTable(systemTable, unitSyms : TSymbolTable; operators : TOperators) : TUnitSymbolTable;
+function TSourceUnit.GetUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
+                                  operators : TOperators) : TUnitSymbolTable;
 begin
    Result:=(Symbol.Table as TUnitSymbolTable);
 end;
@@ -899,6 +833,7 @@ initialization
 
 finalization
 
-   FreeAndNil(vInternalUnit);
+   vInternalUnit.Free;
+   vInternalUnit:=nil;
 
 end.

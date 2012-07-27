@@ -1,0 +1,6 @@
+Syntax Error: Only non-virtual class methods can be marked as static [line: 8, column: 24]
+Syntax Error: Only non-virtual class methods can be marked as static [line: 9, column: 24]
+Syntax Error: Only non-virtual class methods can be marked as static [line: 10, column: 24]
+Syntax Error: Only non-virtual class methods can be marked as static [line: 17, column: 22]
+Syntax Error: Object reference needed to read/write an object field [line: 22, column: 4]
+Syntax Error: Object reference needed to read/write an object field [line: 23, column: 4]

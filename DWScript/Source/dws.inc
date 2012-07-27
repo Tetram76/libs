@@ -32,11 +32,29 @@
 {$B-} // BoolEval off
 {$X+} // extended syntax
 {$H+} // long strings
+{$Q-} // overflow checks off
+{$J-} // assignable typed constants off
 
 {$T-} // typed addr off - otherwise you'll get problems with ComSupport
       // <<.CreateResFmt(@SNoMethod, [Names]);>>
 
+{$IFNDEF FPC}
+   {$IFNDEF VER200}  // D2009
+      {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
+   {$ENDIF}
+{$ELSE}
+   {$MODE DELPHI}
+{$ENDIF}
+
 {.$DEFINE PUREPASCAL}
 {.$DEFINE UNICODE_IDENTIFIERS}
+
+{$IFNDEF PUREPASCAL}
+   {$IF Defined(WIN32)}
+      {$DEFINE WIN32_ASM}
+   {$ELSEIF Defined(WIN64)}
+      {$DEFINE WIN64_ASM}
+   {$IFEND}
+{$ENDIF}
 
 

@@ -1,16 +1,9 @@
 unit UBuildTests;
 
-//  Todo
-//      Scope implementation to main
-//      Scope implementation unit to unit
-//      SymbolTable for unit implementation
-//      Conditional define locality
-//      JS CodeGen of units code
-
 interface
 
 uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs, dwsUtils,
-   dwsXPlatform, dwsSymbols, dwsFunctions;
+   dwsXPlatform, dwsSymbols, dwsFunctions, dwsJSON;
 
 type
 
@@ -112,7 +105,8 @@ var
    source, expectedResult : TStringList;
    i : Integer;
    prog : IdwsProgram;
-   output, resultsFileName : String;
+   output, resultsFileName, contextMapFileName : String;
+   json : TdwsJSONBeautifiedWriter;
 begin
    source:=TStringList.Create;
    expectedResult:=TStringList.Create;
@@ -135,6 +129,21 @@ begin
                CheckEquals(expectedResult.Text, output, FTests[i]);
             end else CheckEquals('', output, FTests[i]);
 
+            if coContextMap in FCompiler.Config.CompilerOptions then begin
+               json:=TdwsJSONBeautifiedWriter.Create(nil, 0, 1);
+               try
+                  prog.SourceContextMap.WriteToJSON(json);
+                  contextMapFileName:=ChangeFileExt(FTests[i], '.cmap');
+                  if FileExists(contextMapFileName) then begin
+                     expectedResult.LoadFromFile(contextMapFileName);
+                     CheckEquals(Trim(expectedResult.Text), json.Stream.ToString, FTests[i]);
+                  end else CheckEquals('', json.Stream.ToString, FTests[i]);
+
+               finally
+                  json.Free;
+               end;
+            end;
+
          end else begin
 
             CheckEquals(False, prog.Msgs.HasErrors, FTests[i]+#13#10+prog.Msgs.AsInfo);
@@ -143,6 +152,8 @@ begin
             (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(EmptyCallBack);
 
          end;
+
+         prog:=nil;
 
       end;
 

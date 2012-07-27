@@ -28,7 +28,7 @@ replace them with the notice and other provisions required by the GPL.
 If you do not delete the provisions above, a recipient may use your version
 of this file under either the MPL or the GPL.
 
-$Id: SynHighlighterDWS.pas,v 1.6 2011/08/18 14:14:27 Egg Exp $
+$Id: SynHighlighterDWS.pas,v 1.19 2012/06/18 11:55:34 Egg Exp $
 
 You may retrieve the latest version of this file at the SynEdit home page,
 located at http://SynEdit.SourceForge.net
@@ -59,10 +59,15 @@ type
     tkSpace, tkString, tkSymbol, tkUnknown, tkFloat, tkHex, tkDirec, tkChar);
 
   TRangeState = (rsANil, rsAnsi, rsAnsiAsm, rsAsm, rsBor, rsBorAsm, rsProperty,
-    rsExports, rsDirective, rsDirectiveAsm, rsUnKnown);
+    rsExports, rsDirective, rsDirectiveAsm, rsHereDocSingle, rsHereDocDouble, rsUnKnown);
 
   PIdentFuncTableFunc = ^TIdentFuncTableFunc;
   TIdentFuncTableFunc = function : TtkTokenKind of object;
+
+type
+   TAnsiStringList = class(TStringList)
+     function CompareStrings(const S1, S2: string): Integer; override;
+   end;
 
 type
   TSynDWSSyn = class(TSynCustomHighlighter)
@@ -71,8 +76,8 @@ type
     fRange: TRangeState;
     fCommentClose : Char;
     fIdentFuncTable: array[0..388] of TIdentFuncTableFunc;
-    fKeyWords : TStringList;
-    fKeyWords_PropertyScoped : TStringList;
+    fKeyWords : TAnsiStringList;
+    fKeyWords_PropertyScoped : TAnsiStringList;
     fTokenID: TtkTokenKind;
     fStringAttri: TSynHighlighterAttributes;
     fCharAttri: TSynHighlighterAttributes;
@@ -114,12 +119,14 @@ type
     procedure SlashProc;
     procedure SpaceProc;
     procedure StringAposProc;
+    procedure StringAposMultiProc;
     procedure StringQuoteProc;
     procedure SymbolProc;
     procedure UnknownProc;
   protected
     function GetSampleSource: UnicodeString; override;
     function IsFilterStored: Boolean; override;
+    function IsCurrentToken(const Token: UnicodeString): Boolean; override;
 
   public
     class function GetCapabilities: TSynHighlighterCapabilities; override;
@@ -172,43 +179,49 @@ uses
   SynEditStrConst;
 
 const
-  // if the language is case-insensitive keywords *must* be in lowercase
-  KeyWords: array[0..105] of UnicodeString = (
-    'absolute', 'abstract', 'and', 'array', 'as', 'asm', 'assembler',
-    'automated', 'begin', 'case', 'cdecl', 'class', 'const', 'constructor',
-    'contains', 'deprecated', 'destructor',
-    'div', 'do', 'downto', 'dynamic', 'else', 'end', 'except',
-    'export', 'exports', 'external', 'far', 'file', 'final', 'finalization',
-    'finally', 'for', 'forward', 'function', 'goto', 'helper', 'if',
-    'implementation', 'implements', 'implies', 'in', 'inherited',
-    'initialization', 'inline', 'interface', 'is', 'label', 'lazy', 'library',
-    'message', 'method', 'mod', 'name', 'new', 'nil', 'nodefault', 'not', 'object', 'of',
-    'on', 'operator', 'or', 'out', 'overload', 'override', 'package', 'packed',
-    'pascal', 'platform', 'private', 'procedure', 'program', 'property',
-    'protected', 'public', 'published', 'raise', 'record',
-    'register', 'reintroduce', 'repeat', 'requires', 'resourcestring',
-    'safecall', 'sealed', 'set', 'shl', 'shr', 'stdcall', 'step', 'string',
-    'stringresource', 'then', 'threadvar', 'to', 'try', 'type', 'unit', 'until',
-    'uses', 'var', 'virtual', 'while', 'with', 'xor'
+   // if the language is case-insensitive keywords *must* be in lowercase
+   cKeyWords: array[1..95] of UnicodeString = (
+      'abstract', 'and', 'array', 'as', 'asm',
+      'begin', 'break', 'case', 'cdecl', 'class', 'const', 'constructor',
+      'contains', 'continue', 'deprecated', 'destructor',
+      'div', 'do', 'downto', 'else', 'end', 'ensure', 'except', 'exit',
+      'export', 'exports', 'external', 'final', 'finalization',
+      'finally', 'for', 'forward', 'function', 'helper', 'if',
+      'implementation', 'implements', 'implies', 'in', 'inherited',
+      'initialization', 'inline', 'interface', 'is', 'lazy', 'library',
+      'message', 'method', 'mod', 'new', 'nil', 'not', 'object', 'of',
+      'old', 'on', 'operator', 'or', 'overload', 'override',
+      'pascal', 'partial', 'private', 'procedure', 'program', 'property',
+      'protected', 'public', 'published', 'raise', 'record',
+      'register', 'reintroduce', 'repeat', 'require', 'resourcestring',
+      'sealed', 'set', 'shl', 'shr', 'static', 'step', 'string',
+      'then', 'to', 'try', 'type', 'unit', 'until',
+      'uses', 'var', 'virtual', 'while', 'xor', 'if'
   );
-  KeyWords_PropertyScoped: array [0..4] of UnicodeString = (
-   'default', 'index', 'read', 'stored', 'write'
+  cKeyWords_PropertyScoped: array [0..4] of UnicodeString = (
+      'default', 'index', 'read', 'stored', 'write'
   );
 
-
-{$Q-}
-function TSynDWSSyn.HashKey(Str: PWideChar): Cardinal;
+function TAnsiStringList.CompareStrings(const S1, S2: string): Integer;
 begin
-  Result := 0;
-  while IsIdentChar(Str^) do
-  begin
-    Result := Result * 812 + Ord(Str^) * 76;
-    inc(Str);
-  end;
-  Result := Result mod 389;
-  fStringLen := Str - fToIdent;
+   Result:=CompareText(S1, S2);
 end;
-{$Q+}
+
+function TSynDWSSyn.HashKey(Str: PWideChar): Cardinal;
+var
+   c : Word;
+begin
+   Result := 0;
+   while IsIdentChar(Str^) do begin
+      c := Ord(Str^);
+      Result := Result * 812 + c * 76;
+      if c in [Ord('A')..Ord('Z')] then
+         Result := Result + (Ord('a') - Ord('A')) * 76;
+      inc(Str);
+   end;
+   Result := Result mod 389;
+   fStringLen := Str - fToIdent;
+end;
 
 function TSynDWSSyn.IdentKind(MayBe: PWideChar): TtkTokenKind;
 var
@@ -226,14 +239,14 @@ procedure TSynDWSSyn.InitIdent;
 var
   i: Integer;
 begin
-   for i:=0 to High(KeyWords) do begin
-      fIdentFuncTable[HashKey(@KeyWords[i][1])]:=KeyWordFunc;
-      fKeyWords.Add(KeyWords[i]);
+   for i:=Low(cKeyWords) to High(cKeyWords) do begin
+      fIdentFuncTable[HashKey(@cKeyWords[i][1])]:=KeyWordFunc;
+      fKeyWords.Add(cKeyWords[i]);
    end;
 
-   for i:=0 to High(KeyWords_PropertyScoped) do begin
-      fIdentFuncTable[HashKey(@KeyWords_PropertyScoped[i][1])]:=FuncPropertyScoped;
-      fKeyWords_PropertyScoped.Add(KeyWords_PropertyScoped[i]);
+   for i:=0 to High(cKeyWords_PropertyScoped) do begin
+      fIdentFuncTable[HashKey(@cKeyWords_PropertyScoped[i][1])]:=FuncPropertyScoped;
+      fKeyWords_PropertyScoped.Add(cKeyWords_PropertyScoped[i]);
    end;
 
    for i := Low(fIdentFuncTable) to High(fIdentFuncTable) do
@@ -246,7 +259,6 @@ begin
    fIdentFuncTable[HashKey('property')] := FuncProperty;
 
    fKeyWords.Sorted:=True;
-
 end;
 
 function TSynDWSSyn.AltFunc: TtkTokenKind;
@@ -304,44 +316,64 @@ end;
 constructor TSynDWSSyn.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  fCaseSensitive := False;
+  fCaseSensitive := True; // bypass automatic lowercase, we handle it here
 
   fAsmAttri := TSynHighlighterAttributes.Create(SYNS_AttrAssembler, SYNS_FriendlyAttrAssembler);
+  fAsmAttri.Foreground:=RGB(128, 0, 0);
   AddAttribute(fAsmAttri);
+
   fCommentAttri := TSynHighlighterAttributes.Create(SYNS_AttrComment, SYNS_FriendlyAttrComment);
+  fCommentAttri.Foreground:=clGreen;
   fCommentAttri.Style:= [fsItalic];
   AddAttribute(fCommentAttri);
+
   fDirecAttri := TSynHighlighterAttributes.Create(SYNS_AttrPreprocessor, SYNS_FriendlyAttrPreprocessor);
+  fDirecAttri.Foreground := TColor($808000);
   fDirecAttri.Style:= [fsItalic];
   AddAttribute(fDirecAttri);
+
   fIdentifierAttri := TSynHighlighterAttributes.Create(SYNS_AttrIdentifier, SYNS_FriendlyAttrIdentifier);
   AddAttribute(fIdentifierAttri);
+
   fKeyAttri := TSynHighlighterAttributes.Create(SYNS_AttrReservedWord, SYNS_FriendlyAttrReservedWord);
-  fKeyAttri.Style:= [fsBold];
+  fKeyAttri.Style := [fsBold];
   AddAttribute(fKeyAttri);
+
   fNumberAttri := TSynHighlighterAttributes.Create(SYNS_AttrNumber, SYNS_FriendlyAttrNumber);
+  fNumberAttri.Foreground := clBlue;
   AddAttribute(fNumberAttri);
+
   fFloatAttri := TSynHighlighterAttributes.Create(SYNS_AttrFloat, SYNS_FriendlyAttrFloat);
+  fFloatAttri.Foreground := clBlue;
   AddAttribute(fFloatAttri);
+
   fHexAttri := TSynHighlighterAttributes.Create(SYNS_AttrHexadecimal, SYNS_FriendlyAttrHexadecimal);
+  fHexAttri.Foreground := clBlue;
   AddAttribute(fHexAttri);
+
   fSpaceAttri := TSynHighlighterAttributes.Create(SYNS_AttrSpace, SYNS_FriendlyAttrSpace);
   AddAttribute(fSpaceAttri);
+
   fStringAttri := TSynHighlighterAttributes.Create(SYNS_AttrString, SYNS_FriendlyAttrString);
+  fStringAttri.Foreground := clBlue;
   AddAttribute(fStringAttri);
+
   fCharAttri := TSynHighlighterAttributes.Create(SYNS_AttrCharacter, SYNS_FriendlyAttrCharacter);
+  fCharAttri.Foreground := clBlue;
   AddAttribute(fCharAttri);
+
   fSymbolAttri := TSynHighlighterAttributes.Create(SYNS_AttrSymbol, SYNS_FriendlyAttrSymbol);
+  fSymbolAttri.Foreground := clNavy;
   AddAttribute(fSymbolAttri);
   SetAttributesOnChange(DefHighlightChange);
 
-  fKeyWords:=TStringList.Create;
-  fKeyWords_PropertyScoped:=TStringList.Create;
+  fKeyWords:=TAnsiStringList.Create;
+  fKeyWords_PropertyScoped:=TAnsiStringList.Create;
 
   InitIdent;
   fRange := rsUnknown;
   fAsmStart := False;
-  fDefaultFilter := SYNS_FilterPascal;
+  fDefaultFilter := SYNS_FilterDWS;
 end;
 
 // Destroy
@@ -375,8 +407,12 @@ procedure TSynDWSSyn.AsciiCharProc;
 begin
   fTokenID := tkChar;
   Inc(Run);
-  while IsAsciiChar do
-    Inc(Run);
+  if fLine[run]='''' then
+      StringAposMultiProc
+  else begin
+     while IsAsciiChar do
+       Inc(Run);
+  end;
 end;
 
 procedure TSynDWSSyn.BorProc;
@@ -637,15 +673,34 @@ begin
   end;
 end;
 
+procedure TSynDWSSyn.StringAposMultiProc;
+begin
+  fTokenID := tkString;
+  Inc(Run);
+  fRange := rsHereDocSingle;
+  while not IsLineEnd(Run) do
+  begin
+    if fLine[Run] = '''' then begin
+      Inc(Run);
+      if fLine[Run] <> '''' then
+        fRange := rsUnknown;
+        break;
+    end;
+    Inc(Run);
+  end;
+end;
+
 procedure TSynDWSSyn.StringQuoteProc;
 begin
   fTokenID := tkString;
   Inc(Run);
+  fRange := rsHereDocDouble;
   while not IsLineEnd(Run) do
   begin
     if fLine[Run] = '"' then begin
       Inc(Run);
       if fLine[Run] <> '"' then
+        fRange := rsUnknown;
         break;
     end;
     Inc(Run);
@@ -666,49 +721,52 @@ end;
 
 procedure TSynDWSSyn.Next;
 begin
-  fAsmStart := False;
-  fTokenPos := Run;
-  case fRange of
-    rsAnsi, rsAnsiAsm:
-      AnsiProc;
-    rsBor, rsBorAsm, rsDirective, rsDirectiveAsm:
-      BorProc;
-    else
+   fAsmStart := False;
+   fTokenPos := Run;
+   case fRange of
+      rsAnsi, rsAnsiAsm:
+         AnsiProc;
+      rsBor, rsBorAsm, rsDirective, rsDirectiveAsm:
+         BorProc;
+      rsHereDocSingle:
+         StringAposMultiProc;
+      rsHereDocDouble:
+         StringQuoteProc;
+   else
       case fLine[Run] of
-        #0: NullProc;
-        #10: LFProc;
-        #13: CRProc;
-        #1..#9, #11, #12, #14..#32: SpaceProc;
-        '#': AsciiCharProc;
-        '$': IntegerProc;
-        #39: StringAposProc;
-        '"': StringQuoteProc;
-        '0'..'9': NumberProc;
-        'A'..'Z', 'a'..'z', '_': IdentProc;
-        '{': BraceOpenProc;
-        '}', '!', '%', '&', '('..'/', ':'..'@', '['..'^', '`', '~':
-          begin
+         #0: NullProc;
+         #10: LFProc;
+         #13: CRProc;
+         #1..#9, #11, #12, #14..#32: SpaceProc;
+         '#': AsciiCharProc;
+         '$': IntegerProc;
+         #39: StringAposProc;
+         '"': StringQuoteProc;
+         '0'..'9': NumberProc;
+         'A'..'Z', 'a'..'z', '_': IdentProc;
+         '{': BraceOpenProc;
+         '}', '!', '%', '&', '('..'/', ':'..'@', '['..'^', '`', '~': begin
             case fLine[Run] of
-              '(': RoundOpenProc;
-              '.': PointProc;
-              ';': SemicolonProc;
-              '/': SlashProc;
-              ':', '>': ColonOrGreaterProc;
-              '<': LowerProc;
-              '@': AddressOpProc;
-              else
-                 SymbolProc;
+               '(': RoundOpenProc;
+               '.': PointProc;
+               ';': SemicolonProc;
+               '/': SlashProc;
+               ':', '>': ColonOrGreaterProc;
+               '<': LowerProc;
+               '@': AddressOpProc;
+            else
+               SymbolProc;
             end;
-          end;
+         end;
          #$0080..#$FFFF :
             if TCharacter.IsLetterOrDigit(fLine[Run]) then
                IdentProc
             else UnknownProc;
-        else
-          UnknownProc;
+      else
+         UnknownProc;
       end;
-  end;
-  inherited;
+   end;
+   inherited;
 end;
 
 function TSynDWSSyn.GetDefaultAttribute(Index: Integer):
@@ -823,18 +881,35 @@ begin
   Result := fDefaultFilter <> SYNS_FilterPascal;
 end;
 
+// IsCurrentToken
+//
+function TSynDWSSyn.IsCurrentToken(const Token: UnicodeString): Boolean;
+var
+   i : Integer;
+   temp : PWideChar;
+begin
+   temp := fToIdent;
+   if Length(Token) = fStringLen then begin
+      Result := True;
+      for i := 1 to fStringLen do begin
+         if     (temp^ <> Token[i])
+            and (   (temp^>'z')
+                 or (UpCase(temp^)<>UpCase(Token[i])))  then begin
+            Result := False;
+            break;
+         end;
+         inc(temp);
+      end;
+   end else Result := False;
+end;
+
 // IsIdentChar
 //
 function TSynDWSSyn.IsIdentChar(AChar: WideChar): Boolean;
 begin
-   case AChar of
-      '_', '0'..'9', 'A'..'Z', 'a'..'z' :
-         Result:=True;
-      #$0080..#$FFFF :
-         Result:=TCharacter.IsLetterOrDigit(AChar);
-   else
-      Result:=False;
-   end;
+   if Ord(AChar)<=$7F then
+      Result:=AnsiChar(AChar) in ['_', '0'..'9', 'A'..'Z', 'a'..'z']
+   else Result:=TCharacter.IsLetterOrDigit(AChar);
 end;
 
 class function TSynDWSSyn.GetFriendlyLanguageName: UnicodeString;

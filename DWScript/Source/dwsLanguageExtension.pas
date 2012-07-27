@@ -13,12 +13,13 @@
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsLanguageExtension;
+
+{$I dws.inc}
 
 interface
 
-uses Classes, dwsCompiler, dwsExprs, dwsErrors;
+uses Classes, dwsCompiler, dwsExprs, dwsErrors, dwsSymbols, dwsStrings, dwsUnitSymbols;
 
 type
 
@@ -29,10 +30,14 @@ type
       public
          constructor Create; virtual;
 
+         function CreateBaseVariantSymbol(table : TSystemSymbolTable) : TBaseVariantSymbol; virtual;
          function ReadInstr(compiler : TdwsCompiler) : TNoResultExpr; virtual;
+         function ReadInstrSwitch(compiler : TdwsCompiler) : Boolean; virtual;
+         function FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol; virtual;
          procedure SectionChanged(compiler : TdwsCompiler); virtual;
          procedure ReadScript(compiler : TdwsCompiler; sourceFile : TSourceFile;
                               scriptType : TScriptSourceType); virtual;
+         procedure GetDefaultEnvironment(var enviro : IdwsEnvironment); virtual;
    end;
 
    // TdwsLanguageExtensionAggregator
@@ -51,10 +56,15 @@ type
          function Count : Integer;
          procedure Clear;
 
+         function CreateBaseVariantSymbol(table : TSystemSymbolTable) : TBaseVariantSymbol; override;
          function ReadInstr(compiler : TdwsCompiler) : TNoResultExpr; override;
+         function ReadInstrSwitch(compiler : TdwsCompiler) : Boolean; override;
+         function FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol; override;
          procedure SectionChanged(compiler : TdwsCompiler); override;
          procedure ReadScript(compiler : TdwsCompiler; sourceFile : TSourceFile;
                               scriptType : TScriptSourceType); override;
+         procedure GetDefaultEnvironment(var enviro : IdwsEnvironment); override;
+         function DefaultEnvironment : IdwsEnvironment;
    end;
 
 // ------------------------------------------------------------------
@@ -76,9 +86,32 @@ begin
    inherited;
 end;
 
+// CreateBaseVariantSymbol
+//
+function TdwsLanguageExtension.CreateBaseVariantSymbol(table : TSystemSymbolTable) : TBaseVariantSymbol;
+begin
+   Result:=TBaseVariantSymbol.Create;
+   table.AddSymbol(Result);
+   table.TypVariant:=Result;
+end;
+
 // ReadInstr
 //
 function TdwsLanguageExtension.ReadInstr(compiler : TdwsCompiler) : TNoResultExpr;
+begin
+   Result:=nil;
+end;
+
+// ReadInstrSwitch
+//
+function TdwsLanguageExtension.ReadInstrSwitch(compiler : TdwsCompiler) : Boolean;
+begin
+   Result:=False;
+end;
+
+// FindUnknownName
+//
+function TdwsLanguageExtension.FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol;
 begin
    Result:=nil;
 end;
@@ -94,6 +127,13 @@ end;
 //
 procedure TdwsLanguageExtension.ReadScript(compiler : TdwsCompiler; sourceFile : TSourceFile;
                                            scriptType : TScriptSourceType);
+begin
+   // nothing
+end;
+
+// GetDefaultEnvironment
+//
+procedure TdwsLanguageExtension.GetDefaultEnvironment(var enviro : IdwsEnvironment);
 begin
    // nothing
 end;
@@ -146,6 +186,21 @@ begin
    FList.Clear;
 end;
 
+// CreateBaseVariantSymbol
+//
+function TdwsLanguageExtensionAggregator.CreateBaseVariantSymbol(table : TSystemSymbolTable) : TBaseVariantSymbol;
+var
+   i : Integer;
+   ext : TdwsLanguageExtension;
+begin
+   for i:=0 to FList.Count-1 do begin
+      ext:=TdwsLanguageExtension(FList.List[i]);
+      Result:=ext.CreateBaseVariantSymbol(table);
+      if Result<>nil then Exit;
+   end;
+   Result:=nil;
+end;
+
 // ReadInstr
 //
 function TdwsLanguageExtensionAggregator.ReadInstr(compiler : TdwsCompiler) : TNoResultExpr;
@@ -159,6 +214,37 @@ begin
       if Result<>nil then Exit;
    end;
    Result:=nil;
+end;
+
+// ReadInstrSwitch
+//
+function TdwsLanguageExtensionAggregator.ReadInstrSwitch(compiler : TdwsCompiler) : Boolean;
+var
+   i : Integer;
+   ext : TdwsLanguageExtension;
+begin
+   for i:=0 to FList.Count-1 do begin
+      ext:=TdwsLanguageExtension(FList.List[i]);
+      if ext.ReadInstrSwitch(compiler) then
+         Exit(True);
+   end;
+   Result:=False;
+end;
+
+// FindUnknownName
+//
+function TdwsLanguageExtensionAggregator.FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol;
+var
+   i : Integer;
+   ext : TdwsLanguageExtension;
+begin
+   for i:=0 to FList.Count-1 do begin
+      ext:=TdwsLanguageExtension(FList.List[i]);
+      Result:=ext.FindUnknownName(compiler, name);
+      if Result<>nil then Exit;
+   end;
+   Result:=nil;
+
 end;
 
 // SectionChanged
@@ -186,6 +272,27 @@ begin
       ext:=TdwsLanguageExtension(FList.List[i]);
       ext.ReadScript(compiler, sourceFile, scriptType);
    end;
+end;
+
+// GetDefaultEnvironment
+//
+procedure TdwsLanguageExtensionAggregator.GetDefaultEnvironment(var enviro : IdwsEnvironment);
+var
+   i : Integer;
+   ext : TdwsLanguageExtension;
+begin
+   for i:=0 to FList.Count-1 do begin
+      ext:=TdwsLanguageExtension(FList.List[i]);
+      ext.GetDefaultEnvironment(enviro);
+   end;
+end;
+
+// DefaultEnvironment
+//
+function TdwsLanguageExtensionAggregator.DefaultEnvironment : IdwsEnvironment;
+begin
+   Result:=nil;
+   GetDefaultEnvironment(Result);
 end;
 
 end.
