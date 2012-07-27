@@ -164,3 +164,15 @@ For further informations have a look at http://www.devart.com }
 
 
 
+
+{%missing%}
+{ JVCL DEVELOPER INFO: This option is missing, please update the jvclbase.inc file. }
+{.$DEFINE USE_3RDPARTY_CORELAB_ODAC}
+
+{%missing%}
+{ JVCL DEVELOPER INFO: This option is missing, please update the jvclbase.inc file. }
+{.$DEFINE USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
+
+{%missing%}
+{ JVCL DEVELOPER INFO: This option is missing, please update the jvclbase.inc file. }
+{.$DEFINE USE_3RDPARTY_DEVEXPRESS_CXGRID}
