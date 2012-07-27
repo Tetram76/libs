@@ -318,7 +318,10 @@ type
 {$IFDEF FPC}
   IPointer = PtrUInt;
 {$ELSE}
-  {$IFDEF CPU64} IPointer = LongWord;{$ELSE}  IPointer = Cardinal;{$ENDIF}
+  {$IFDEF CPUX64}
+  IPointer = IntPtr;
+  {$ELSE}
+  {$IFDEF CPU64} IPointer = LongWord;{$ELSE}  IPointer = Cardinal;{$ENDIF}{$ENDIF}
 {$ENDIF}
   TPSCallingConvention = (cdRegister, cdPascal, cdCdecl, cdStdCall, cdSafeCall);
 
@@ -403,7 +406,7 @@ type
 
     destructor Destroy; override;
   end;
-  TIFStringList = TPsStringList;
+  TIFStringList = TPSStringList;
 
   TPSUnitList = class;
 
