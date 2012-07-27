@@ -16,14 +16,13 @@ unit GeneralAbilitiesDemo;
 
 interface
 
-{$include Compilers.inc}
-
-{$ifdef COMPILER_7_UP}
-  // For some things to work we need code, which is classified as being unsafe for .NET.
-  {$warn UNSAFE_TYPE off}
-  {$warn UNSAFE_CAST off}
-  {$warn UNSAFE_CODE off}
-{$endif COMPILER_7_UP}
+// For some things to work we need code, which is classified as being unsafe for .NET.
+{$warn UNSAFE_TYPE off}
+{$warn UNSAFE_CAST off}
+{$warn UNSAFE_CODE off}
+{$if CompilerVersion >= 20}
+  {$WARN IMPLICIT_STRING_CAST OFF}
+{$ifend}
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
@@ -473,7 +472,7 @@ end;
 procedure TGeneralForm.SaveButtonClick(Sender: TObject);
 
 const
-  HTMLHead = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">'#13#10 +
+  HTMLHead : AnsiString = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">'#13#10 +
     '<html>'#13#10 +
     '  <head>'#13#10 +
     '    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">'#13#10 +
@@ -520,7 +519,7 @@ begin
         4: // Comma separated values ANSI text file
           begin
             TargetName := ChangeFileExt(TargetName, '.csv');
-            S := VST2.ContentToText(tstVisible, ListSeparator);
+            S := VST2.ContentToText(tstVisible, {$if CompilerVersion>=23}FormatSettings.{$ifend}ListSeparator);
             Data := PChar(S);
             DataSize := Length(S);
           end;
