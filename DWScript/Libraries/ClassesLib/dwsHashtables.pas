@@ -38,10 +38,13 @@ type
     property Size: Integer read FSize;
   end;
 
-  TStringHashItem = class(THashItem)
-    Key: string;
-    function HashCode: Integer; override;
-    function Equals(Item: THashItem): Boolean; override;
+   TStringHashItem = class(THashItem)
+      private
+         Key : string;
+
+      public
+         function HashCode : Integer; override;
+         function Equals(Item : THashItem): Boolean; override;
   end;
 
   TStringHashTable = class(THashTable)
@@ -56,10 +59,13 @@ type
     function RemoveKey(const Key: string): ValueType;
   end;
 
-  TIntegerHashItem = class(THashItem)
-    Key: Integer;
-    function HashCode: Integer; override;
-    function Equals(Item: THashItem): Boolean; override;
+   TIntegerHashItem = class(THashItem)
+      private
+         Key: Integer;
+
+      public
+         function HashCode: Integer; override;
+         function Equals(Item: THashItem): Boolean; override;
   end;
 
   TIntegerHashTable = class(THashTable)
@@ -78,7 +84,7 @@ implementation
 
 var
   HashTable: array[#0..#255] of Byte;
-  InsensitiveHashTable: array[#0..#255] of Byte;
+  InsensitiveHashTable: array[#0..#255] of Word;
 
 procedure InitTables;
 var
@@ -88,7 +94,7 @@ begin
   for I := #0 to #255 do
   begin
     HashTable[I] := Ord(I);
-    InsensitiveHashTable[I] := Ord(AnsiUpperCase(string(I))[1]);
+    InsensitiveHashTable[I] := Ord(AnsiUpperCase(Char(I))[1]);
   end;
   RandSeed := 111;
   for I := #1 to #255 do

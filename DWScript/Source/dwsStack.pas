@@ -17,8 +17,9 @@
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsStack;
+
+{$I dws.inc}
 
 interface
 
@@ -28,15 +29,33 @@ type
 
    TData = array of Variant;
    PData = ^TData;
-   TDataArray = array [0..0] of Variant;
+   TDataArray = array [0..MaxInt shr 5] of Variant;
    PDataArray = ^TDataArray;
+   TVarDataArray = array [0..MaxInt shr 5] of TVarData;
+   PVarDataArray = ^TVarDataArray;
    PIUnknown = ^IUnknown;
+
+   TDataPtr = record
+      private
+         FAddr : Integer;
+         FData : TData;
+
+         function GetData(addr : Integer) : Variant; inline;
+         procedure SetData(addr : Integer; const value : Variant); inline;
+
+      public
+         class function Create(const aData : TData; anAddr : Integer) : TDataPtr; static; inline;
+
+         property Data[addr : Integer] : Variant read GetData write SetData; default;
+         function AsPVarDataArray : PVarDataArray; inline;
+   end;
 
    TStackParameters = record
       MaxLevel : Integer;
       ChunkSize : Integer;
       MaxByteSize : Integer;
       MaxRecursionDepth : Integer;
+      MaxExceptionDepth : Integer;
    end;
 
    {$IFDEF VER200}
@@ -87,11 +106,11 @@ type
          procedure WriteIntValue_BaseRelative(DestAddr: Integer; const pValue: PInt64); overload; inline;
          procedure WriteFloatValue(DestAddr: Integer; const Value: Double); inline;
          procedure WriteFloatValue_BaseRelative(DestAddr: Integer; const Value: Double); inline;
-         procedure WriteStrValue(DestAddr: Integer; const Value: String); inline;
+         procedure WriteStrValue(DestAddr: Integer; const Value: UnicodeString); inline;
          procedure WriteBoolValue(DestAddr: Integer; const Value: Boolean); inline;
          procedure WriteInterfaceValue(DestAddr: Integer; const intf: IUnknown);
 
-         function  SetStrChar(DestAddr: Integer; index : Integer; c : Char) : Boolean;
+         function  SetStrChar(DestAddr: Integer; index : Integer; c : WideChar) : Boolean;
 
          procedure ReadValue(sourceAddr : Integer; var result : Variant); inline;
          function  ReadIntValue(SourceAddr: Integer): Int64; inline;
@@ -99,7 +118,7 @@ type
          function  ReadIntAsFloatValue_BaseRelative(SourceAddr: Integer) : Double; inline;
          function  ReadFloatValue(SourceAddr: Integer) : Double; inline;
          function  ReadFloatValue_BaseRelative(SourceAddr: Integer) : Double; inline;
-         procedure ReadStrValue(SourceAddr: Integer; var Result : String);
+         procedure ReadStrValue(SourceAddr: Integer; var Result : UnicodeString);
          function  ReadBoolValue(SourceAddr: Integer): Boolean;
          procedure ReadInterfaceValue(SourceAddr: Integer; var Result : IUnknown);
 
@@ -108,11 +127,13 @@ type
          function  PointerToInterfaceValue(addr : Integer) : PIUnknown;
 
          procedure IncIntValue_BaseRelative(destAddr : Integer; const value : Int64); inline;
-         procedure AppendStringValue_BaseRelative(destAddr : Integer; const value : String);
+         procedure AppendStringValue_BaseRelative(destAddr : Integer; const value : UnicodeString);
 
          procedure PushBp(Level, Bp: Integer); inline;
          function  GetSavedBp(Level: Integer): Integer; inline;
          procedure PopBp(Level : Integer); inline;
+
+         procedure FixBaseStack(newSize : Integer);
 
          function  SwitchFrame(level : Integer) : Integer; inline;
          procedure RestoreFrame(level, oldBasePointer: Integer); inline;
@@ -123,13 +144,17 @@ type
          property MaxSize: Integer read FMaxSize write FMaxSize;
          property StackPointer: Integer read FStackPointer;
          property MaxRecursionDepth : Integer read FParams.MaxRecursionDepth write FParams.MaxRecursionDepth;
+         property MaxExceptionDepth : Integer read FParams.MaxExceptionDepth write FParams.MaxExceptionDepth;
    end;
 
    EScriptStackException = class(Exception);
    EScriptStackOverflow = class(EScriptStackException);
+   EScriptExceptionOverflow = class(EScriptStackException);
 
-procedure DWSCopyData(const SourceData: TData; SourceAddr: Integer;
-                   DestData: TData; DestAddr: Integer; Size: Integer);
+procedure DWSCopyData(const sourceData : TData; sourceAddr : Integer;
+                      destData : TData; destAddr : Integer; size : Integer);
+function DWSSameData(const data1, data2 : TData; offset1, offset2, size : Integer) : Boolean;
+function DWSSameVariant(const v1, v2 : Variant) : Boolean;
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -139,17 +164,91 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
+{$R-}
+
 // DWSCopyData
 //
-procedure DWSCopyData(const SourceData: TData; SourceAddr: Integer;
-                      DestData: TData; DestAddr: Integer; Size: Integer);
+procedure DWSCopyData(const sourceData: TData; sourceAddr: Integer;
+                      destData: TData; destAddr: Integer; size: Integer);
 begin
-   while Size > 0 do begin
-      VarCopy(DestData[DestAddr], SourceData[SourceAddr]);
-      Inc(SourceAddr);
-      Inc(DestAddr);
-      Dec(Size);
+   while size > 0 do begin
+      VarCopy(destData[destAddr], sourceData[sourceAddr]);
+      Inc(sourceAddr);
+      Inc(destAddr);
+      Dec(size);
    end;
+end;
+
+// DWSSameData
+//
+function DWSSameData(const data1, data2 : TData; offset1, offset2, size : Integer) : Boolean;
+var
+   i : Integer;
+begin
+   for i:=0 to size-1 do
+      if not DWSSameVariant(data1[offset1+i], data2[offset2+i]) then
+         Exit(False);
+   Result:=True;
+end;
+
+// DWSSameVariant
+//
+function DWSSameVariant(const v1, v2 : Variant) : Boolean;
+var
+   vt : Integer;
+begin
+   vt:=TVarData(v1).VType;
+   if vt<>TVarData(v2).VType then
+      Result:=False
+   else begin
+      case vt of
+         varInt64 :
+            Result:=TVarData(v1).VInt64=TVarData(v2).VInt64;
+         varBoolean :
+            Result:=TVarData(v1).VBoolean=TVarData(v2).VBoolean;
+         varDouble :
+            Result:=TVarData(v1).VDouble=TVarData(v2).VDouble;
+         varUString :
+            Result:=UnicodeString(TVarData(v1).VUString)=UnicodeString(TVarData(v2).VUString);
+         varUnknown :
+            Result:=TVarData(v1).VUnknown=TVarData(v2).VUnknown;
+      else
+         Result:=(v1=v2);
+      end;
+   end;
+end;
+
+// ------------------
+// ------------------ TDataPtr ------------------
+// ------------------
+
+// Create
+//
+class function TDataPtr.Create(const aData : TData; anAddr : Integer) : TDataPtr;
+begin
+   Result.FData:=aData;
+   Result.FAddr:=anAddr;
+end;
+
+// GetData
+//
+function TDataPtr.GetData(addr : Integer) : Variant;
+begin
+   Result:=FData[FAddr+addr];
+end;
+
+// SetData
+//
+procedure TDataPtr.SetData(addr : Integer; const value : Variant);
+begin
+   FData[FAddr+addr]:=value;
+end;
+
+// AsPVarDataArray
+//
+function TDataPtr.AsPVarDataArray : PVarDataArray;
+begin
+   Result:=@FData[FAddr];
 end;
 
 // ------------------
@@ -211,6 +310,8 @@ begin
   Result := FStackPointer - FBasePointer;
 end;
 
+// Pop
+//
 procedure TStackMixIn.Pop(delta : Integer);
 var
    x, sp : Integer;
@@ -300,6 +401,16 @@ end;
 procedure TStackMixIn.PopBp(Level : Integer);
 begin
    FBpStore[Level].Pop;
+end;
+
+// FixBaseStack
+//
+procedure TStackMixIn.FixBaseStack(newSize : Integer);
+begin
+   Assert(BasePointer=0);
+   Assert(FBpStore[0].Count=2);
+   GrowTo(newSize);
+   FStackPointer:=newSize;
 end;
 
 // SwitchFrame
@@ -397,13 +508,13 @@ end;
 
 // ReadStrValue
 //
-procedure TStackMixIn.ReadStrValue(SourceAddr: Integer; var Result : String);
+procedure TStackMixIn.ReadStrValue(SourceAddr: Integer; var Result : UnicodeString);
 var
    varData : PVarData;
 begin
    varData:=@Data[SourceAddr];
    if varData.VType=varUString then
-      Result:=String(varData.VUString)
+      Result:=UnicodeString(varData.VUString)
    else Result:=PVariant(varData)^;
 end;
 
@@ -477,7 +588,7 @@ end;
 
 // AppendStringValue_BaseRelative
 //
-procedure TStackMixIn.AppendStringValue_BaseRelative(destAddr : Integer; const value : String);
+procedure TStackMixIn.AppendStringValue_BaseRelative(destAddr : Integer; const value : UnicodeString);
 
    procedure Fallback(varData : PVarData);
    begin
@@ -489,7 +600,7 @@ var
 begin
    varData:=@FBaseData[destAddr];
    if varData.VType=varUString then
-      String(varData.VUString):=String(varData.VUString)+value
+      UnicodeString(varData.VUString):=UnicodeString(varData.VUString)+value
    else Fallback(varData);
 end;
 
@@ -574,13 +685,13 @@ end;
 
 // WriteStrValue
 //
-procedure TStackMixIn.WriteStrValue(DestAddr: Integer; const Value: String);
+procedure TStackMixIn.WriteStrValue(DestAddr: Integer; const Value: UnicodeString);
 var
    varData : PVarData;
 begin
    varData:=@Data[DestAddr];
    if varData.VType=varUString then
-      String(varData.VUString):=Value
+      UnicodeString(varData.VUString):=Value
    else PVariant(varData)^:=Value;
 end;
 
@@ -610,15 +721,15 @@ end;
 
 // SetStrChar
 //
-function TStackMixIn.SetStrChar(DestAddr: Integer; index : Integer; c : Char) : Boolean;
+function TStackMixIn.SetStrChar(DestAddr: Integer; index : Integer; c : WideChar) : Boolean;
 var
    varData : PVarData;
 begin
    varData:=@Data[DestAddr];
    if varData.VType=varUString then
-      if index>Length(String(varData.VUString)) then
+      if index>Length(UnicodeString(varData.VUString)) then
          Exit(False)
-      else String(varData.VUString)[index]:=c
+      else UnicodeString(varData.VUString)[index]:=c
    else PVariant(varData)^[index]:=c;
    Result:=True;
 end;

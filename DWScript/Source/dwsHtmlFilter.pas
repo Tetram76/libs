@@ -24,10 +24,9 @@
 {    Contributor(s): Daniele Teti <d.teti@bittime.it>                  }
 {                                                                      }
 {**********************************************************************}
+unit dwsHtmlFilter;
 
 {$I dws.inc}
-
-unit dwsHtmlFilter;
 
 interface
 
@@ -41,21 +40,21 @@ type
    //
    TdwsHtmlFilter = class(TdwsFilter)
       private
-         FPatternOpen: string;
-         FPatternClose: string;
-         FPatternEval: string;
+         FPatternOpen: UnicodeString;
+         FPatternClose: UnicodeString;
+         FPatternEval: UnicodeString;
 
       public
          constructor Create(AOwner: TComponent); override;
 
          procedure CheckPatterns;
 
-         function Process(const Text: string; Msgs: TdwsMessageList): string; override;
+         function Process(const Text: UnicodeString; Msgs: TdwsMessageList): UnicodeString; override;
 
       published
-         property PatternClose: string read FPatternClose write FPatternClose;
-         property PatternEval: string read FPatternEval write FPatternEval;
-         property PatternOpen: string read FPatternOpen write FPatternOpen;
+         property PatternClose: UnicodeString read FPatternClose write FPatternClose;
+         property PatternEval: UnicodeString read FPatternEval write FPatternEval;
+         property PatternOpen: UnicodeString read FPatternOpen write FPatternOpen;
    end;
 
   TdwsHtmlUnit = class(TdwsUnitComponent)
@@ -99,9 +98,9 @@ end;
 
 // Process
 //
-function TdwsHtmlFilter.Process(const Text: String; Msgs: TdwsMessageList): String;
+function TdwsHtmlFilter.Process(const Text: UnicodeString; Msgs: TdwsMessageList): UnicodeString;
 
-   procedure StuffString(const str: String; start, stop : Integer;
+   procedure StuffString(const str: UnicodeString; start, stop : Integer;
                          dest : TWriteOnlyBlockStream);
    var
       isQuoted: Boolean;
@@ -163,7 +162,7 @@ function TdwsHtmlFilter.Process(const Text: String; Msgs: TdwsMessageList): Stri
 var
    p, start, stop : Integer;
    isEval : Boolean;
-   input : String;
+   input : UnicodeString;
    output : TWriteOnlyBlockStream;
 begin
    CheckPatterns;
@@ -237,10 +236,10 @@ end;
 
 procedure TdwsHtmlUnit.AddUnitSymbols(SymbolTable: TSymbolTable);
 begin
-  TSendFunction.Create(SymbolTable, 'Send', ['s', SYS_VARIANT], '', False);
-  TSendFunction.Create(SymbolTable, 'Print', ['s', SYS_VARIANT], '', False);
-  TSendLnFunction.Create(SymbolTable, 'SendLn', ['s', SYS_VARIANT], '', False);
-  TSendLnFunction.Create(SymbolTable, 'PrintLn', ['s', SYS_VARIANT], '', False);
+  TSendFunction.Create(SymbolTable, 'Send', ['s', SYS_VARIANT], '', []);
+  TSendFunction.Create(SymbolTable, 'Print', ['s', SYS_VARIANT], '', []);
+  TSendLnFunction.Create(SymbolTable, 'SendLn', ['s', SYS_VARIANT], '', []);
+  TSendLnFunction.Create(SymbolTable, 'PrintLn', ['s', SYS_VARIANT], '', []);
 end;
 
 constructor TdwsHtmlUnit.Create(AOwner: TComponent);

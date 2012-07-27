@@ -3,7 +3,7 @@ unit UdwsUnitTests;
 interface
 
 uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs,
-   dwsTokenizer, dwsSymbols, dwsUtils;
+   dwsTokenizer, dwsSymbols, dwsUtils, dwsStack;
 
 type
 
@@ -35,11 +35,16 @@ type
          procedure FuncVarEval(Info: TProgramInfo);
          procedure FuncFloatEval(Info: TProgramInfo);
          procedure FuncPointEval(Info: TProgramInfo);
+         procedure FuncPointVarParamEval(Info: TProgramInfo);
+         procedure FuncPointArrayEval(Info: TProgramInfo);
+         procedure FuncClassNameEval(Info: TProgramInfo);
+         procedure FuncOpenArrayEval(Info: TProgramInfo);
 
          procedure ClassConstructor(Info: TProgramInfo; var ExtObject: TObject);
          procedure ClassCleanup(ExternalObject: TObject);
          procedure ClassDestructor(Info: TProgramInfo; ExtObject: TObject);
          procedure MethodPrintEval(Info: TProgramInfo; ExtObject: TObject);
+         procedure MethodPrintExternalEval(Info: TProgramInfo; ExtObject: TObject);
          procedure MethodGetIntEval(Info: TProgramInfo; ExtObject: TObject);
          procedure MethodSetIntEval(Info: TProgramInfo; ExtObject: TObject);
          procedure MethodGetArrayIntEval(Info: TProgramInfo; ExtObject: TObject);
@@ -66,17 +71,25 @@ type
          procedure ListOrdAutoEnum;
          procedure CallFunc;
          procedure CallFuncVarParam;
+         procedure CallFuncPointVarParam;
+         procedure CallFuncPointArray;
          procedure PredefinedVar;
          procedure AssignTest;
          procedure PredefinedArray;
          procedure PredefinedRecord;
+         procedure DynamicArray;
          procedure ClassPropertyInfo;
          procedure DestructorAndExternalObject;
+         procedure ExternalObject;
          procedure CustomDestructor;
          procedure Delegates;
          procedure Operators;
+         procedure OpenArray;
+         procedure CallPrint;
+         procedure CreateExternally;
+         procedure DeprecatedProp;
 
-         procedure ExplclitUses;
+         procedure ExplicitUses;
    end;
 
    EDelphiException = class (Exception)
@@ -123,6 +136,9 @@ type
    end;
 
    TdwsEnumerationCracker = class (TdwsEnumeration)
+   end;
+
+   TdwsOperatorCracker = class (TdwsOperator)
    end;
 
 // ------------------
@@ -271,6 +287,41 @@ begin
    func.Name:='FuncPoint';
    func.ResultType:='TPoint';
    func.OnEval:=FuncPointEval;
+
+   func:=FUnit.Functions.Add;
+   func.Name:='FuncPointVarParam';
+   param:=func.Parameters.Add;
+   param.Name:='pIn';
+   param.DataType:='TPoint';
+   param:=func.Parameters.Add;
+   param.Name:='pOut';
+   param.DataType:='TPoint';
+   param.IsVarParam:=True;
+   func.OnEval:=FuncPointVarParamEval;
+
+   func:=FUnit.Functions.Add;
+   func.Name:='FuncPointArray';
+   param:=func.Parameters.Add;
+   param.Name:='a';
+   param.DataType:='TPoints';
+   func.OnEval:=FuncPointArrayEval;
+
+   func:=FUnit.Functions.Add;
+   func.Name:='FuncClassName';
+   func.ResultType:='String';
+   param:=func.Parameters.Add;
+   param.Name:='obj';
+   param.DataType:='TObject';
+   param.DefaultValue:=IUnknown(nil);
+   func.OnEval:=FuncClassNameEval;
+
+   func:=FUnit.Functions.Add;
+   func.Name:='FuncOpenArray';
+   func.ResultType:='String';
+   param:=func.Parameters.Add;
+   param.Name:='p';
+   param.DataType:='array of const';
+   func.OnEval:=FuncOpenArrayEval;
 end;
 
 // DeclareTestClasses
@@ -304,6 +355,10 @@ begin
    meth:=cls.Methods.Add;
    meth.Name:='Print';
    meth.OnEval:=MethodPrintEval;
+
+   meth:=cls.Methods.Add;
+   meth.Name:='PrintExternal';
+   meth.OnEval:=MethodPrintExternalEval;
 
    fld:=cls.Fields.Add;
    fld.Name:='FField';
@@ -353,6 +408,12 @@ begin
    param.DataType:='String';
    param.Name:='v';
 
+   prop:=cls.Properties.Add;
+   prop.Name:='DeprecatedProp';
+   prop.DataType:='Integer';
+   prop.ReadAccess:='FField';
+   prop.Deprecated:='Obsolete';
+
    constant:=cls.Constants.Add;
    constant.Name:='cTest';
    constant.DataType:='String';
@@ -383,11 +444,16 @@ procedure TdwsUnitTests.DeclareTestArrays;
 var
    a : TdwsArray;
 begin
-   a:=FUnit.Arrays.Add as TdwsArray;
+   a:=FUnit.Arrays.Add;
    a.Name:='array_5_10';
    a.DataType:='Integer';
    a.LowBound:=5;
    a.HighBound:=10;
+
+   a:=FUnit.Arrays.Add;
+   a.Name:='TPoints';
+   a.IsDynamic:=True;
+   a.DataType:='TPoint';
 end;
 
 // DeclareTestRecords
@@ -496,11 +562,73 @@ begin
    Info.Vars['Result'].Member['y'].Value:=24;
 end;
 
+// FuncPointVarParamEval
+//
+procedure TdwsUnitTests.FuncPointVarParamEval(Info: TProgramInfo);
+var
+   pIn, pOut : IInfo;
+begin
+   pIn:=Info.Vars['pIn'];
+   pOut:=Info.Vars['pOut'];
+   pOut.Member['x'].Value:=pIn.Member['x'].Value+1;
+   pOut.Member['y'].Value:=pIn.Member['y'].Value+2;
+end;
+
+// FuncPointArrayEval
+//
+procedure TdwsUnitTests.FuncPointArrayEval(Info: TProgramInfo);
+var
+   a : IInfo;
+   item : IInfo;
+begin
+   a:=Info.Vars['a'];
+
+   a.Member['length'].Value:=2;
+
+   item:=a.Element([0]);
+   item.Member['x'].Value:=1;
+   item.Member['y'].Value:=2;
+
+   item:=a.Element([1]);
+   item.Member['x'].Value:=3;
+   item.Member['y'].Value:=4;
+end;
+
+// FuncClassNameEval
+//
+procedure TdwsUnitTests.FuncClassNameEval(Info: TProgramInfo);
+var
+   o : IInfo;
+begin
+   o:=Info.Vars['obj'];
+   if o.ScriptObj=nil then
+      Info.ResultAsString:=''
+   else Info.ResultAsString:=o.ScriptObj.ClassSym.Name;
+end;
+
+// FuncOpenArrayEval
+//
+procedure TdwsUnitTests.FuncOpenArrayEval(Info: TProgramInfo);
+var
+   p : IInfo;
+   r : String;
+   i : Integer;
+begin
+   p:=Info.Vars['p'];
+   r:=IntToStr(p.Member['length'].ValueAsInteger)+':';
+   for i:=p.Member['low'].ValueAsInteger to p.Member['high'].ValueAsInteger do begin
+      if i>0 then r:=r+',';
+      r:=r+p.Element([i]).ValueAsString;
+   end;
+   Info.ResultAsString:=r;
+end;
+
 // ClassConstructor
 //
 procedure TdwsUnitTests.ClassConstructor(Info: TProgramInfo; var ExtObject: TObject);
 begin
    FMagicVar:=Info.ParamAsString[0];
+   ExtObject:=TObject.Create;
 end;
 
 // ClassCleanup
@@ -508,6 +636,7 @@ end;
 procedure TdwsUnitTests.ClassCleanup(ExternalObject: TObject);
 begin
    FMagicVar:='cleaned up';
+   ExternalObject.Free;
 end;
 
 // ClassDestructor
@@ -522,6 +651,13 @@ end;
 procedure TdwsUnitTests.MethodPrintEval(Info: TProgramInfo; ExtObject: TObject);
 begin
    Info.Execution.Result.AddString(FMagicVar+#13#10);
+end;
+
+// MethodPrintExternalEval
+//
+procedure TdwsUnitTests.MethodPrintExternalEval(Info: TProgramInfo; ExtObject: TObject);
+begin
+   Info.Execution.Result.AddString(ExtObject.ToString+#13#10);
 end;
 
 // MethodGetIntEval
@@ -658,6 +794,8 @@ begin
    CheckEquals('public property MyReadOnlyProp: Integer read GetMyProp;', PropertyByName(cls, 'MyReadOnlyProp').GetDisplayName);
    CheckEquals('public property MyWriteOnlyProp: Integer write SetMyProp;', PropertyByName(cls, 'MyWriteOnlyProp').GetDisplayName);
    CheckEquals('public const cTest: String = ''My class const'';', ConstByName(cls, 'cTest').GetDisplayName);
+
+   CheckEquals('operator ^ (Float, Float) : Float uses FuncFloat', TdwsOperatorCracker(FUnit.Operators.Items[0]).GetDisplayName);
 end;
 
 // CompiledDescriptions
@@ -672,6 +810,7 @@ begin
 
    sym:=prog.Table.FindSymbol('Func1', cvMagic);
    CheckEquals('function Func1(): Integer', sym.Description);
+   CheckEquals('function Func1: Integer', sym.Caption);
    sym:=prog.Table.FindSymbol('FuncOne', cvMagic);
    CheckEquals('function FuncOne(): String', sym.Description);
    sym:=prog.Table.FindSymbol('FuncOneDotFive', cvMagic);
@@ -682,8 +821,13 @@ begin
    CheckEquals('procedure FuncException()', sym.Description);
    sym:=prog.Table.FindSymbol('FuncInc', cvMagic);
    CheckEquals('function FuncInc(v: Integer): Integer', sym.Description);
+   CheckEquals('function FuncInc(Integer): Integer', sym.Caption);
    sym:=prog.Table.FindSymbol('FuncIncN', cvMagic);
    CheckEquals('function FuncIncN(v: Integer; n: Integer = 1): Integer', sym.Description);
+   CheckEquals('function FuncIncN(Integer, Integer): Integer', sym.Caption);
+   sym:=prog.Table.FindSymbol('FuncClassName', cvMagic);
+   CheckEquals('function FuncClassName(obj: TObject = nil): String', sym.Description);
+   CheckEquals('function FuncClassName(TObject): String', sym.Caption);
 
    sym:=prog.Table.FindSymbol('TAutoEnum', cvMagic);
    CheckEquals('(aeVal9, aeVal8, aeVal7, aeVal6, aeVal5, aeVal4, aeVal3, aeVal2, aeVal1)', sym.Description);
@@ -691,12 +835,14 @@ begin
    symClass:=prog.Table.FindSymbol('TTestClass', cvMagic) as TClassSymbol;
    sym:=symClass.Members.FindLocal('MyReadOnlyProp');
    CheckEquals('property MyReadOnlyProp: Integer read GetMyProp', sym.Description);
+   CheckEquals('property MyReadOnlyProp: Integer read GetMyProp', sym.Caption);
    sym:=symClass.Members.FindLocal('GetMyProp');
    CheckEquals('function GetMyProp(): Integer', sym.Description);
    sym:=symClass.Members.FindLocal('SetMyProp');
    CheckEquals('procedure SetMyProp(v: Integer)', sym.Description);
    sym:=symClass.Members.FindLocal('ArrayProp');
    CheckEquals('property ArrayProp[v: String]: Integer read GetArrayProp', sym.Description);
+   CheckEquals('property ArrayProp[v: String]: Integer read GetArrayProp', sym.Caption);
 end;
 
 // CompilationNormal
@@ -862,6 +1008,46 @@ begin
    end;
 end;
 
+// CallFuncPointVarParam
+//
+procedure TdwsUnitTests.CallFuncPointVarParam;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'var p1, p2 : TPoint;'
+                           +'p1.X:=10; p1.Y:=20;'
+                           +'FuncPointVarParam(p1, p2);'
+                           +'PrintLn(p2.X);'
+                           +'PrintLn(p2.Y);');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
+
+   exec:=prog.Execute;
+
+   CheckEquals('11'#13#10'22'#13#10, exec.Result.ToString);
+end;
+
+// CallFuncPointArray
+//
+procedure TdwsUnitTests.CallFuncPointArray;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'var a : TPoints;'
+                           +'FuncPointArray(a);'
+                           +'var i : Integer;'
+                           +'for i:=0 to a.High do'
+                           +'   PrintLn(IntToStr(a[i].x)+","+IntToStr(a[i].y));');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
+
+   exec:=prog.Execute;
+
+   CheckEquals('1,2'#13#10'3,4'#13#10, exec.Result.ToString);
+end;
+
 // PredefinedVar
 //
 procedure TdwsUnitTests.PredefinedVar;
@@ -981,6 +1167,56 @@ begin
    end;
 end;
 
+// DynamicArray
+//
+procedure TdwsUnitTests.DynamicArray;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+   astr : IInfo;
+   data : TData;
+   myData : TData;
+begin
+   prog:=FCompiler.Compile( 'var astr : array of String;'#13#10
+                           +'astr.Add("hello");'#13#10
+                           +'astr.Add("world");'#13#10
+                           +'procedure MyTest; begin Print(astr.Length); Print(astr[0]); end;'#13#10
+                           );
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
+
+   exec:=prog.BeginNewExecution;
+   try
+      exec.RunProgram(0);
+
+      astr:=exec.Info.Vars['astr'];
+
+      CheckEquals('array of String', astr.ValueAsString, 'as string');
+
+      CheckEquals(0, astr.Member['low'].ValueAsInteger, 'low');
+      CheckEquals(1, astr.Member['high'].ValueAsInteger, 'high');
+      CheckEquals(2, astr.Member['length'].ValueAsInteger, 'length');
+
+      CheckEquals('hello', astr.Element([0]).ValueAsString, 'item 0');
+      CheckEquals('world', astr.Element([1]).ValueAsString, 'item 1');
+
+      data:=astr.Data;
+      CheckEquals(2, Length(data), 'data length');
+      CheckEquals('hello', data[0], 'data 0');
+      CheckEquals('world', data[1], 'data 1');
+
+      SetLength(myData, 1);
+      myData[0]:='byebye';
+      astr.Data:=myData;
+
+      exec.Info.Func['MyTest'].Call;
+
+      CheckEquals('1byebye', exec.Result.ToString, 'after setdata');
+   finally
+      exec.EndProgram;
+   end;
+end;
+
 // ClassPropertyInfo
 //
 procedure TdwsUnitTests.ClassPropertyInfo;
@@ -995,18 +1231,31 @@ begin
 
    exec:=prog.BeginNewExecution;
    try
-      exec.RunProgram(0);
       p:=exec.Info.Vars['o'];
+      CheckEquals('(nil)', p.ValueAsString, 'ClassInfo before run');
+
+      exec.RunProgram(0);
+
+      p:=exec.Info.Vars['o'];
+      CheckEquals('TTestClass', p.ValueAsString, 'ClassInfo after init');
+
+      CheckTrue(p.ExternalObject=nil, 'External object');
+
       p.Member['MyReadWriteProp'].Value:=123;
       CheckEquals(123, p.Member['MyReadWriteProp'].Value, 'RW Prop');
       CheckEquals(1230, p.Member['MyReadOnlyProp'].Value, 'RO Prop');
+
       p.Member['MyWriteOnlyProp'].Value:=123;
       CheckEquals(12, p.Member['FField'].Value, 'direct field');
       CheckEquals('FField', p.FieldMemberNames.CommaText, 'MemberNames 1');
       CheckEquals('FField', p.FieldMemberNames.CommaText, 'MemberNames 2');
+
       p2:=p.Member['ArrayProp'];
       p2.Parameter['v'].Value:='12';
       CheckEquals(24, p2.ValueAsInteger, 'Array prop read');
+
+      p.Method['Free'].Call;
+      CheckEquals('destroyed TTestClass', p.ValueAsString, 'ClassInfo after destroy');
    finally
       exec.EndProgram;
    end;
@@ -1033,6 +1282,31 @@ begin
       CheckEquals( 'hello'#13#10'cleaned up'#13#10
                   +'Runtime Error: Object already destroyed [line: 1, column: 74]'#13#10,
                   exec.Result.ToString+exec.Msgs.AsInfo);
+   finally
+      exec.EndProgram;
+   end;
+end;
+
+// ExternalObject
+//
+procedure TdwsUnitTests.ExternalObject;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+   p : IInfo;
+begin
+   FMagicVar:='';
+   prog:=FCompiler.Compile( 'var o := TTestClass.MyCreate(''hello'');');
+
+   exec:=prog.BeginNewExecution;
+   try
+      exec.RunProgram(0);
+
+      p:=exec.Info.Vars['o'];
+      CheckEquals('TObject', p.ExternalObject.ClassName, 'External object');
+      p.ExternalObject.Free;
+      p.ExternalObject:=nil;
+      CheckTrue(p.ExternalObject=nil, 'External object cleared');
    finally
       exec.EndProgram;
    end;
@@ -1127,9 +1401,102 @@ begin
    end;
 end;
 
-// ExplclitUses
+// OpenArray
 //
-procedure TdwsUnitTests.ExplclitUses;
+procedure TdwsUnitTests.OpenArray;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   FMagicVar:='';
+   prog:=FCompiler.Compile( 'PrintLn(FuncOpenArray(["one","two"]));'#13#10
+                           +'PrintLn(FuncOpenArray([]));');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
+
+   exec:=prog.BeginNewExecution;
+   try
+      exec.RunProgram(0);
+
+      CheckEquals( '2:one,two'#13#10'0:'#13#10,
+                  exec.Result.ToString+exec.Msgs.AsInfo);
+   finally
+      exec.EndProgram;
+   end;
+end;
+
+// CallPrint
+//
+procedure TdwsUnitTests.CallPrint;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+   print : IInfo;
+begin
+   FMagicVar:='';
+   prog:=FCompiler.Compile( 'PrintLn("Hello");');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
+
+   exec:=prog.BeginNewExecution;
+   try
+      exec.RunProgram(0);
+      print:=exec.Info.Func['Print'];
+      print.Call(['world']);
+
+      CheckEquals( 'Hello'#13#10'world',
+                  exec.Result.ToString+exec.Msgs.AsInfo);
+   finally
+      exec.EndProgram;
+   end;
+end;
+
+// CreateExternally
+//
+procedure TdwsUnitTests.CreateExternally;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+   printit : IInfo;
+   v : IInfo;
+begin
+   FMagicVar:='';
+   prog:=FCompiler.Compile( 'procedure PrintIt(o : TTestClass);'#13#10
+                           +'begin o.PrintExternal end');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
+
+   exec:=prog.BeginNewExecution;
+   try
+      v:=exec.Info.Vars['TTestClass'].Method['Create'].Call();
+      v.ScriptObj.ExternalObject:=TObject.Create;
+
+      printit:=exec.Info.Func['PrintIt'];
+      printit.Call([v.Value]);
+
+      CheckEquals('TObject'#13#10,
+                  exec.Result.ToString+exec.Msgs.AsInfo);
+   finally
+      exec.EndProgram;
+   end;
+end;
+
+// DeprecatedProp
+//
+procedure TdwsUnitTests.DeprecatedProp;
+var
+   prog : IdwsProgram;
+begin
+   prog:=FCompiler.Compile( 'var t := new TTestClass;'#13#10
+                           +'var i := t.DeprecatedProp;');
+
+   CheckEquals('Warning: "DeprecatedProp" has been deprecated: Obsolete [line: 2, column: 12]'#13#10,
+               prog.Msgs.AsInfo, 'Compile');
+end;
+
+// ExplicitUses
+//
+procedure TdwsUnitTests.ExplicitUses;
 var
    prog : IdwsProgram;
    exec : IdwsProgramExecution;

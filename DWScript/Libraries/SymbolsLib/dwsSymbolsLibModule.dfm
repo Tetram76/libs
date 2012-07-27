@@ -2,15 +2,12 @@ object dwsSymbolsLib: TdwsSymbolsLib
   OldCreateOrder = False
   Left = 285
   Top = 161
-  Height = 198
-  Width = 193
+  Height = 164
+  Width = 177
   object dwsUnit1: TdwsUnit
     Classes = <
       item
         Name = 'TSymbols'
-        IsSealed = False
-        IsAbstract = False
-        IsStatic = False
         Constructors = <
           item
             Name = 'CreateMain'
@@ -34,7 +31,6 @@ object dwsSymbolsLib: TdwsSymbolsLib
               end>
             OnEval = dwsUnit1ClassesTSymbolsConstructorsCreateUidEval
           end>
-        Fields = <>
         Methods = <
           item
             Name = 'Destroy'
@@ -121,9 +117,6 @@ object dwsSymbolsLib: TdwsSymbolsLib
             OnEval = dwsUnit1ClassesTSymbolsMethodsLocateEval
             Kind = mkFunction
           end>
-        Operators = <>
-        Constants = <>
-        Properties = <>
       end>
     Dependencies.Strings = (
       'Classes')
@@ -167,39 +160,39 @@ object dwsSymbolsLib: TdwsSymbolsLib
             IsUserDef = True
           end
           item
-            Name = 'stMember'
+            Name = 'stParam'
             UserDefValue = 6
             IsUserDef = True
           end
           item
-            Name = 'stParam'
+            Name = 'stProperty'
             UserDefValue = 7
             IsUserDef = True
           end
           item
-            Name = 'stProperty'
+            Name = 'stRecord'
             UserDefValue = 8
             IsUserDef = True
           end
           item
-            Name = 'stRecord'
+            Name = 'stUnit'
             UserDefValue = 9
             IsUserDef = True
           end
           item
-            Name = 'stUnit'
+            Name = 'stVariable'
             UserDefValue = 10
             IsUserDef = True
           end
           item
-            Name = 'stVariable'
+            Name = 'stInterface'
             UserDefValue = 11
             IsUserDef = True
           end>
       end>
     UnitName = 'Symbols'
     StaticSymbols = False
-    Left = 60
-    Top = 40
+    Left = 52
+    Top = 24
   end
 end

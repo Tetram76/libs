@@ -4,7 +4,7 @@ interface
 
 uses Windows, Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs,
    dwsComConnector, Variants, ActiveX, ComObj, dwsXPlatform, dwsUtils,
-   dwsSymbols, dwsDebugger;
+   dwsSymbols, dwsDebugger, dwsStrings;
 
 type
 
@@ -32,6 +32,10 @@ type
          procedure EvaluateSimpleTest;
          procedure EvaluateOutsideOfExec;
          procedure EvaluateContextTest;
+
+         procedure ExecutableLines;
+
+         procedure AttachToScript;
    end;
 
 // ------------------------------------------------------------------
@@ -229,6 +233,101 @@ begin
       end;
    finally
       prog:=nil;
+   end;
+end;
+
+// ExecutableLines
+//
+procedure TDebuggerTests.ExecutableLines;
+var
+   prog : IdwsProgram;
+   breakpointables : TdwsBreakpointableLines;
+
+   function ReportBreakpointables : String;
+   var
+      i, j : Integer;
+      lines : TBits;
+   begin
+      Result:='';
+      for i:=0 to breakpointables.Count-1 do begin
+         if i>0 then
+            Result:=Result+#13#10;
+         Result:=Result+breakpointables.SourceName[i]+': ';
+         lines:=breakpointables.SourceLines[i];
+         for j:=0 to lines.Size-1 do
+            if lines[j] then
+               Result:=Result+IntToStr(j)+',';
+      end;
+   end;
+
+begin
+   prog:=FCompiler.Compile( 'var i := 1;'#13#10
+                           +'procedure Test;'#13#10
+                           +'var i := 2;'#13#10
+                           +'begin'#13#10
+                              +'PrintLn(i);'#13#10
+                           +'end;'#13#10
+                           +'Test;');
+   CheckEquals('2'#13#10, prog.Execute.Result.ToString, 'Result 1');
+
+   breakpointables:=TdwsBreakpointableLines.Create(prog);
+   CheckEquals('*MainModule*: 1,3,5,7,', ReportBreakpointables, 'Case 1');
+   breakpointables.Free;
+
+   prog:=FCompiler.Compile( 'var i := 1;'#13#10
+                           +'procedure Test;'#13#10
+                           +'var i := 2;'#13#10
+                           +'begin'#13#10
+                              +'PrintLn(i);'#13#10
+                           +'end;'#13#10
+                           +'i:=i+1;');
+   CheckEquals('', prog.Execute.Result.ToString, 'Result 2');
+
+   breakpointables:=TdwsBreakpointableLines.Create(prog);
+   CheckEquals('*MainModule*: 1,3,5,7,', ReportBreakpointables, 'Case 2');
+   breakpointables.Free;
+end;
+
+// AttachToScript
+//
+procedure TDebuggerTests.AttachToScript;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'var i : Integer;'#13#10
+                           +'procedure Test;'#13#10
+                           +'begin'#13#10
+                              +'Print(Inc(i));'#13#10
+                           +'end;'#13#10
+                           +'Test;');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compile');
+
+   exec:=prog.BeginNewExecution;
+
+   exec.RunProgram(0);
+   try
+      CheckEquals('1', exec.Result.ToString, 'run');
+
+      FDebugger.AttachDebug(exec);
+
+      CheckEquals('1', FDebugger.EvaluateAsString('i'), 'eval after attach');
+
+      exec.Info.Func['Test'].Call;
+
+      CheckEquals('2', FDebugger.EvaluateAsString('i'), 'eval after call');
+      CheckEquals('12', exec.Result.ToString, 'result after call');
+
+      FDebugger.DetachDebug;
+
+      CheckEquals(DBG_NotDebugging, FDebugger.EvaluateAsString('i'), 'eval after detach');
+
+      exec.Info.Func['Test'].Call;
+
+      CheckEquals('123', exec.Result.ToString, 'result after re-call');
+   finally
+      exec.EndProgram;
    end;
 end;
 

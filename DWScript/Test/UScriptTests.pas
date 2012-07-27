@@ -2,8 +2,8 @@ unit UScriptTests;
 
 interface
 
-uses Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs, dwsUtils,
-   dwsXPlatform, dwsSymbols;
+uses Classes, SysUtils, dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsUtils,
+   dwsXPlatform, dwsSymbols, dwsErrors;
 
 type
 
@@ -53,20 +53,31 @@ end;
 // SetUp
 //
 procedure TScriptTests.SetUp;
+const
+   cFilter = '*.pas';
+var
+   basePath : String;
 begin
    SetDecimalSeparator('.');
 
    FTests:=TStringList.Create;
    FFailures:=TStringList.Create;
 
-   CollectFiles(ExtractFilePath(ParamStr(0))+'SimpleScripts'+PathDelim, '*.pas', FTests);
-   CollectFiles(ExtractFilePath(ParamStr(0))+'InterfacesPass'+PathDelim, '*.pas', FTests);
+   basePath:=ExtractFilePath(ParamStr(0));
 
-   CollectFiles(ExtractFilePath(ParamStr(0))+'FailureScripts'+PathDelim, '*.pas', FFailures);
-   CollectFiles(ExtractFilePath(ParamStr(0))+'InterfacesFail'+PathDelim, '*.pas', FFailures);
+   CollectFiles(basePath+'SimpleScripts'+PathDelim, cFilter, FTests);
+   CollectFiles(basePath+'InterfacesPass'+PathDelim, cFilter, FTests);
+   CollectFiles(basePath+'OverloadsPass'+PathDelim, cFilter, FTests);
+   CollectFiles(basePath+'HelpersPass'+PathDelim, cFilter, FTests);
+
+   CollectFiles(basePath+'FailureScripts'+PathDelim, cFilter, FFailures);
+   CollectFiles(basePath+'InterfacesFail'+PathDelim, cFilter, FFailures);
+   CollectFiles(basePath+'OverloadsFail'+PathDelim, cFilter, FFailures);
+   CollectFiles(basePath+'HelpersFail'+PathDelim, cFilter, FFailures);
 
    FCompiler:=TDelphiWebScript.Create(nil);
    FCompiler.OnInclude:=DoInclude;
+   FCompiler.Config.HintsLevel:=hlPedantic;
 end;
 
 // TearDown
@@ -116,6 +127,8 @@ begin
          (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(EmptyCallBack);
          (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(EmptyCallBack);
 
+         prog:=nil;
+
       end;
 
    finally
@@ -161,7 +174,13 @@ begin
                     +'Result >>>>'#13#10
                     +exec.Result.ToString;
          end;
-         resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+
+         if coOptimize in FCompiler.Config.CompilerOptions then begin
+            resultsFileName:=ChangeFileExt(FTests[i], '.optimized.txt');
+            if not FileExists(resultsFileName) then
+               resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+         end else resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+
          if FileExists(resultsFileName) then begin
             expectedResult.LoadFromFile(resultsFileName);
             CheckEquals(expectedResult.Text, output, FTests[i]);
@@ -219,7 +238,7 @@ end;
 //
 procedure TScriptTests.FailuresOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=cDefaultCompilerOptions+[coOptimize]-[coAssertions];
+   FCompiler.Config.CompilerOptions:=cDefaultCompilerOptions+[coOptimize, coSymbolDictionary]-[coAssertions];
    CompilationFailure;
 end;
 
@@ -241,7 +260,13 @@ begin
 
          source.LoadFromFile(FFailures[i]);
 
-         prog:=FCompiler.Compile(source.Text);
+         try
+            prog:=FCompiler.Compile(source.Text);
+         except
+            on E : Exception do begin
+               Check(False, FFailures[i]+', during compile '+E.ClassName+': '+E.Message);
+            end;
+         end;
 
          if coOptimize in FCompiler.Config.CompilerOptions then begin
             expectedErrorsFileName:=ChangeFileExt(FFailures[i], '.optimized.txt');
@@ -251,11 +276,25 @@ begin
 
          if FileExists(expectedErrorsFileName) then begin
             expectedError.LoadFromFile(expectedErrorsFileName);
-            CheckEquals(expectedError.Text, prog.Msgs.AsInfo, FFailures[i]);
+            try
+               CheckEquals(expectedError.Text, prog.Msgs.AsInfo, FFailures[i]);
+            except
+               on E: Exception do begin
+                  Check(False, FFailures[i]+', '+E.ClassName+': '+E.Message);
+               end;
+            end;
          end else Check(prog.Msgs.AsInfo<>'', FFailures[i]+': undetected error');
 
          (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(EmptyCallBack);
          (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(EmptyCallBack);
+
+         try
+            prog:=nil;
+         except
+            on E : Exception do begin
+               Check(False, FFailures[i]+', during cleanup '+E.ClassName+': '+E.Message);
+            end;
+         end;
 
       end;
 
@@ -273,6 +312,6 @@ initialization
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-   TestFramework.RegisterTest('ScriptTests', TScriptTests.Suite);
+   RegisterTest('ScriptTests', TScriptTests);
 
 end.

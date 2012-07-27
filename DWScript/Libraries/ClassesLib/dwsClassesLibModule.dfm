@@ -13,7 +13,6 @@ object dwsClassesLib: TdwsClassesLib
             Name = 'Create'
             OnEval = dwsUnitClassesTListConstructorsCreateEval
           end>
-        Fields = <>
         Methods = <
           item
             Name = 'Destroy'
@@ -172,7 +171,6 @@ object dwsClassesLib: TdwsClassesLib
             Name = 'Create'
             OnEval = dwsUnitClassesTStringsConstructorsCreateEval
           end>
-        Fields = <>
         Methods = <
           item
             Name = 'Destroy'
@@ -624,8 +622,6 @@ object dwsClassesLib: TdwsClassesLib
       item
         Name = 'TStringList'
         Ancestor = 'TStrings'
-        Constructors = <>
-        Fields = <>
         Methods = <
           item
             Name = 'Sort'
@@ -699,7 +695,6 @@ object dwsClassesLib: TdwsClassesLib
             OnEval = dwsUnitClassesTStringListMethodsSetCaseSensitiveEval
             Kind = mkProcedure
           end>
-        Operators = <>
         Properties = <
           item
             Name = 'Duplicates'
@@ -725,8 +720,6 @@ object dwsClassesLib: TdwsClassesLib
       end
       item
         Name = 'THashtable'
-        Constructors = <>
-        Fields = <>
         Methods = <
           item
             Name = 'Size'
@@ -745,8 +738,6 @@ object dwsClassesLib: TdwsClassesLib
             OnEval = dwsUnitClassesTHashtableMethodsClearEval
             Kind = mkProcedure
           end>
-        Operators = <>
-        Properties = <>
       end
       item
         Name = 'TIntegerHashtable'
@@ -756,7 +747,6 @@ object dwsClassesLib: TdwsClassesLib
             Name = 'Create'
             OnEval = dwsUnitClassesTIntegerHashtableConstructorsCreateEval
           end>
-        Fields = <>
         Methods = <
           item
             Name = 'Destroy'
@@ -822,7 +812,6 @@ object dwsClassesLib: TdwsClassesLib
             Operator = ttIN
             UsesAccess = 'HasKey'
           end>
-        Properties = <>
       end
       item
         Name = 'TStringHashtable'
@@ -832,7 +821,6 @@ object dwsClassesLib: TdwsClassesLib
             Name = 'Create'
             OnEval = dwsUnitClassesTStringHashtableConstructorsCreateEval
           end>
-        Fields = <>
         Methods = <
           item
             Name = 'Destroy'
@@ -898,7 +886,6 @@ object dwsClassesLib: TdwsClassesLib
             Operator = ttIN
             UsesAccess = 'HasKey'
           end>
-        Properties = <>
       end
       item
         Name = 'TStack'
@@ -907,7 +894,6 @@ object dwsClassesLib: TdwsClassesLib
             Name = 'Create'
             OnEval = dwsUnitClassesTStackConstructorsCreateEval
           end>
-        Fields = <>
         Methods = <
           item
             Name = 'Destroy'
@@ -944,8 +930,6 @@ object dwsClassesLib: TdwsClassesLib
             OnEval = dwsUnitClassesTStackMethodsCountEval
             Kind = mkFunction
           end>
-        Operators = <>
-        Properties = <>
       end
       item
         Name = 'TQueue'
@@ -954,7 +938,6 @@ object dwsClassesLib: TdwsClassesLib
             Name = 'Create'
             OnEval = dwsUnitClassesTQueueConstructorsCreateEval
           end>
-        Fields = <>
         Methods = <
           item
             Name = 'Destroy'
@@ -991,8 +974,6 @@ object dwsClassesLib: TdwsClassesLib
             OnEval = dwsUnitClassesTQueueMethodsCountEval
             Kind = mkFunction
           end>
-        Operators = <>
-        Properties = <>
       end
       item
         Name = 'TStringBuilder'
@@ -1001,7 +982,6 @@ object dwsClassesLib: TdwsClassesLib
             Name = 'Create'
             OnEval = dwsUnitClassesTStringBuilderConstructorsCreateEval
           end>
-        Fields = <>
         Methods = <
           item
             Name = 'Append'
@@ -1037,7 +1017,6 @@ object dwsClassesLib: TdwsClassesLib
             Operator = ttPLUS_ASSIGN
             UsesAccess = 'Append'
           end>
-        Properties = <>
         OnCleanUp = dwsUnitClassesTStringBuilderCleanUp
       end>
     Constants = <
@@ -1058,7 +1037,7 @@ object dwsClassesLib: TdwsClassesLib
       end>
     UnitName = 'Classes'
     StaticSymbols = False
-    Left = 20
-    Top = 8
+    Left = 44
+    Top = 24
   end
 end

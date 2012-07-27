@@ -1,16 +1,20 @@
 program LanguageTests;
 
+{$SetPEFlags $0001}
+
 {$IFNDEF VER200}
 {.$WEAKLINKRTTI ON}
-{.$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
+{$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
 {$ENDIF}
 
 uses
   Classes,
   Forms,
+  Windows,
   TestFrameWork,
   GUITestRunner,
   SysUtils,
+  dwsXPlatform,
   UScriptTests in 'UScriptTests.pas',
   UAlgorithmsTests in 'UAlgorithmsTests.pas',
   UdwsUnitTests in 'UdwsUnitTests.pas',
@@ -19,7 +23,6 @@ uses
   UdwsClassesTests in 'UdwsClassesTests.pas',
   dwsClasses in '..\Libraries\ClassesLib\dwsClasses.pas',
   dwsClassesLibModule in '..\Libraries\ClassesLib\dwsClassesLibModule.pas' {dwsClassesLib: TDataModule},
-  dwsHashtables in '..\Libraries\ClassesLib\dwsHashtables.pas',
   UdwsFunctionsTests in 'UdwsFunctionsTests.pas',
   UCOMConnectorTests in 'UCOMConnectorTests.pas',
   UTestDispatcher in 'UTestDispatcher.pas',
@@ -27,14 +30,17 @@ uses
   UdwsUtilsTests in 'UdwsUtilsTests.pas',
   UMemoryTests in 'UMemoryTests.pas',
   dwsMathComplexFunctions in '..\Source\dwsMathComplexFunctions.pas',
-  dwsOperators in '..\Source\dwsOperators.pas',
+  dwsMath3DFunctions in '..\Source\dwsMath3DFunctions.pas',
   UBuildTests in 'UBuildTests.pas',
-  URTTIExposeTests in 'URTTIExposeTests.pas';
+  URTTIExposeTests in 'URTTIExposeTests.pas',
+  USourceUtilsTests in 'USourceUtilsTests.pas',
+  ULocalizerTests in 'ULocalizerTests.pas';
 
 {$R *.res}
 
 begin
-   FormatSettings.DecimalSeparator:='.';
+   SetProcessAffinityMask(GetCurrentProcessId, Cardinal(-1));
+   SetDecimalSeparator('.');
    ReportMemoryLeaksOnShutdown:=True;
    Application.Initialize;
    GUITestRunner.RunRegisteredTests;

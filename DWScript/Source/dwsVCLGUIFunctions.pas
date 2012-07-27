@@ -17,12 +17,13 @@
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsVCLGUIFunctions;
+
+{$I dws.inc}
 
 interface
 
-uses Windows, Forms, Dialogs, Classes, dwsFunctions, dwsExprs, dwsSymbols;
+uses Windows, Forms, Dialogs, Classes, dwsFunctions, dwsExprs, dwsSymbols, dwsMagicExprs;
 
 type
 

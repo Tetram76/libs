@@ -14,31 +14,23 @@
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsRTTIExposer;
+
+{$I dws.inc}
 
 interface
 
-uses SysUtils, RTTI, TypInfo, dwsComp, dwsSymbols, dwsExprs;
+uses Classes, SysUtils, RTTI, TypInfo, dwsComp, dwsSymbols, dwsExprs, dwsStrings, dwsStack;
 
 type
 
-   TBaseTypeID = (
-      typIntegerID,
-      typFloatID,
-      typStringID,
-      typBooleanID,
-      typVariantID,
-      typConnectorID,
-      typClassID,
-      typNoneID
-   );
-
    TdwsRTTIExposerOption = (
-      eoExposeVirtual, eoNoFreeOnCleanup
+      eoExposeVirtual, eoNoFreeOnCleanup, eoExposePublic
       );
 
    TdwsRTTIExposerOptions = set of TdwsRTTIExposerOption;
+
+   {$RTTI EXPLICIT METHODS([vcPublic, vcPublished]) PROPERTIES([vcPublic, vcPublished])}
 
    // TdwsPublished
    //
@@ -56,6 +48,8 @@ type
    //
    dwsNotPublished = class (TCustomAttribute)
    end;
+
+   {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
 
    // TdwsRTTIExposer
    //
@@ -78,15 +72,22 @@ type
          function ExposeRTTIEnumeration(enum : TRttiEnumerationType;
                                         const options : TdwsRTTIExposerOptions) : TdwsEnumeration;
 
+         function ExposeRTTIRecord(rec : TRttiRecordType;
+                                   const options : TdwsRTTIExposerOptions) : TdwsRecord;
+
+         function ExposeRTTIInterface(intf : TRttiInterfaceType;
+                                      const options : TdwsRTTIExposerOptions) : TdwsInterface;
+
+         function ExposeRTTIDynamicArray(intf : TRttiDynamicArrayType;
+                                      const options : TdwsRTTIExposerOptions) : TdwsArray;
+
          procedure DoStandardCleanUp(externalObject: TObject);
 
       public
          function ExposeRTTI(ATypeInfo : Pointer; const options : TdwsRTTIExposerOptions = []) : TdwsSymbol;
 
-         class function TypeKindToScriptBaseType(const aType : TTypeKind) : TBaseTypeId; static;
-         class function TypeKindToScriptType(const aType : TTypeKind) : String; static;
-         class function RTTITypeToScriptBaseType(const aType : TRTTIType) : TBaseTypeId; static;
          class function RTTITypeToScriptType(const aType : TRTTIType) : String; static;
+         class function RTTIVisibilityToVisibility(const aVisibility : TMemberVisibility) : TdwsVisibility; static;
    end;
 
    TdwsRTTIInvoker = class;
@@ -121,10 +122,15 @@ type
 
          property Helper : TdwsRTTIHelper read FHelper;
 
-         class procedure AssignResultFromValue(info : TProgramInfo; const value : TValue;
-                                               asType : TBaseTypeId); static;
-         class function ValueFromParam(info : TProgramInfo; const paramName : String;
-                                       asType : TBaseTypeId) : TValue; static;
+         class procedure AssignIInfoFromValue(const info : IInfo; const value : TValue;
+                                              asType : TRttiType); static;
+         class procedure AssignRecordFromValue(const recInfo : IInfo; const value : TValue;
+                                               asType : TRttiType); static;
+
+         class function ValueFromParam(progInfo : TProgramInfo; const paramName : String;
+                                       asType : TRttiType) : TValue; static;
+         class function ValueFromIInfo(asType : TRttiType; const info : IInfo) : TValue; static;
+         class function ValueFromRecord(asType : TRttiType; const recInfo : IInfo) : TValue; static;
    end;
 
    // TdwsRTTIMethodInvoker
@@ -133,9 +139,10 @@ type
    TdwsRTTIMethodInvoker = class (TdwsRTTIInvoker)
       private
          FMethod : TRttiMethod;  // referred, not owned
-         FTypParams : array of TBaseTypeId;
+         FTypParams : array of TRttiType;
          FNameParams : array of String;
-         FTypResult : TBaseTypeId;
+         FVarParams : array of Integer;
+         FTypResult : TRttiType;
 
       protected
          procedure Initialize(aMethod : TRttiMethod);
@@ -159,7 +166,7 @@ type
    TdwsRTTIPropertyInvoker = class (TdwsRTTIInvoker)
       protected
          FProperty : TRttiProperty; // referred, not owned
-         FTyp : TBaseTypeId;
+         FTyp : TRttiType;
 
          procedure Initialize(aProperty : TRttiProperty);
 
@@ -188,6 +195,12 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
+const
+  cTYPEKIND_NAMES: array[TTypeKind] of string = (
+    'Unknown', 'Integer', 'Char', 'Enumeration', 'Float',
+    'String', 'Set', 'Class', 'Method', 'WChar', 'LString', 'WString',
+    'Variant', 'Array', 'Record', 'Interface', 'Int64', 'DynArray', 'UString',
+    'ClassRef', 'Pointer', 'Procedure');
 
 // ------------------
 // ------------------ dwsPublished ------------------
@@ -283,90 +296,90 @@ begin
       Result:=ExposeRTTIClass(TRttiInstanceType(typ), options)
    else if typ is TRttiEnumerationType then
       Result:=ExposeRTTIEnumeration(TRttiEnumerationType(typ), options)
+   else if typ is TRttiRecordType then
+      Result:=ExposeRTTIRecord(TRttiRecordType(typ), options)
+   else if typ is TRttiInterfaceType then
+      Result:=ExposeRTTIInterface(TRttiInterfaceType(typ), options)
+   else if typ is TRttiDynamicArrayType then
+      Result := ExposeRTTIDynamicArray(TRttiDynamicArrayType(typ), options)
    else raise Exception.CreateFmt('Expose unsupported for %s', [typ.ClassName]);
-end;
-
-// TypeKindToScriptBaseType
-//
-class function TdwsRTTIExposer.TypeKindToScriptBaseType(const aType : TTypeKind) : TBaseTypeId;
-begin
-   case aType of
-      tkInteger, tkInt64 :
-         Result:=typIntegerID;
-      tkChar, tkString, tkUString, tkWChar, tkLString, tkWString :
-         Result:=typStringID;
-      tkFloat :
-         Result:=typFloatID;
-      tkVariant :
-         Result:=typVariantID;
-      tkSet, tkProcedure, tkPointer, tkDynArray, tkInterface, tkRecord, tkArray,
-         tkEnumeration, tkClassRef, tkClass, tkMethod : begin
-          Result:=typVariantID; // todo, someday maybe...
-      end;
-      tkUnknown : begin
-          Result:=typVariantID; // unsupported
-          Assert(False);
-      end;
-   else
-      Result:=typVariantID;
-      Assert(False);
-   end;
-end;
-
-// TypeKindToScriptType
-//
-class function TdwsRTTIExposer.TypeKindToScriptType(const aType : TTypeKind) : String;
-begin
-   case aType of
-      tkInteger, tkInt64 :
-         Result:='Integer';
-      tkChar, tkString, tkUString, tkWChar, tkLString, tkWString :
-         Result:='String';
-      tkFloat :
-         Result:='Float';
-      tkVariant :
-         Result:='Variant';
-      tkSet, tkProcedure, tkPointer, tkDynArray, tkInterface, tkRecord, tkArray,
-         tkEnumeration, tkClassRef, tkClass, tkMethod : begin
-          Result:='Variant'; // todo, someday maybe...
-      end;
-      tkUnknown : begin
-          Result:='Variant'; // unsupported
-          Assert(False);
-      end;
-   else
-      Result:='Variant';
-      Assert(False);
-   end;
-end;
-
-// RTTITypeToScriptBaseType
-//
-class function TdwsRTTIExposer.RTTITypeToScriptBaseType(const aType : TRTTIType) : TBaseTypeId;
-begin
-   if aType<>nil then
-      Result:=TypeKindToScriptBaseType(aType.TypeKind)
-   else Result:=typNoneID;
 end;
 
 // RTTITypeToScriptType
 //
 class function TdwsRTTIExposer.RTTITypeToScriptType(const aType : TRTTIType) : String;
+var
+  LDynType: string;
+  LTypeKind: TTypeKind;
 begin
-   if aType<>nil then
-      Result:=TypeKindToScriptType(aType.TypeKind)
-   else Result:='';
+   if aType<>nil then begin
+      case aType.TypeKind of
+         tkInteger, tkInt64 :
+            Result := SYS_INTEGER;
+         tkChar, tkString, tkUString, tkWChar, tkLString, tkWString :
+            Result := SYS_STRING;
+         tkFloat :
+            Result := SYS_FLOAT;
+         tkVariant :
+            Result := SYS_VARIANT;
+         tkRecord :
+            Result:=dwsPublished.NameOf(aType);
+         tkSet, tkProcedure, tkPointer, {tkDynArray, }tkInterface, tkArray,
+            tkEnumeration, tkClassRef, tkClass, tkMethod : begin
+             Result := SYS_VARIANT; // todo, someday maybe...
+         end;
+         tkUnknown : begin
+             Result := SYS_VARIANT; // unsupported
+             Assert(False);
+         end;
+         tkDynArray: begin
+          LTypeKind := TRttiDynamicArrayType( aType ).ElementType.TypeKind;
+            //  we want to raise exception if the tpe is not expected
+            case LTypeKind of
+              tkInteger, tkInt64:
+                LDynType := SYS_INTEGER;
+              tkChar, tkString, tkUString, tkWChar, tkLString, tkWString:
+                LDynType := SYS_STRING;
+              tkFloat:
+                LDynType := SYS_FLOAT;
+              tkVariant:
+                LDynType := SYS_VARIANT;
+              else
+                raise Exception.Create(
+                  'Cannot handle this dynamic array RTTI type, maybe you haven''t exposed type"' + atype.name + '" yet?');
+            end;
+            // set the type, we expect that the type is already exposed
+            Result := aType.Name;
+         end
+      else
+         Result := SYS_VARIANT;
+         Assert(False);
+      end;
+   end else Result:='';
+end;
+
+// RTTIVisibilityToVisibility
+//
+class function TdwsRTTIExposer.RTTIVisibilityToVisibility(const aVisibility : TMemberVisibility) : TdwsVisibility;
+const
+   cVisibilityMap : array [TMemberVisibility] of TdwsVisibility = (
+      cvPrivate, cvProtected, cvPublic, cvPublished
+      );
+begin
+   Result:=cVisibilityMap[aVisibility];
 end;
 
 // ExposeRTTIClass
 //
 function TdwsRTTIExposer.ExposeRTTIClass(cls : TRttiInstanceType; const options : TdwsRTTIExposerOptions) : TdwsClass;
+var
+   exposableVisibilities : set of TMemberVisibility;
 
    function ShouldExpose(item : TRttiMember) : Boolean;
    var
       attrib : TCustomAttribute;
    begin
-      Result:=(item.Visibility=mvPublished);
+      Result:=(item.Visibility in exposableVisibilities);
       for attrib in item.GetAttributes do begin
          if attrib.ClassType=dwsPublished then
             Result:=True
@@ -381,6 +394,10 @@ var
    helper : TdwsRTTIHelper;
    scriptConstructor : TdwsConstructor;
 begin
+   if eoExposePublic in options then
+      exposableVisibilities:=[mvPublic, mvPublished]
+   else exposableVisibilities:=[mvPublished];
+
    Result:=Classes.Add;
    Result.Name:=dwsPublished.NameOf(cls);
    if not (eoNoFreeOnCleanup in options) then
@@ -389,18 +406,22 @@ begin
    helper:=TdwsRTTIHelper.Create(cls);
    Result.HelperObject:=helper;
 
-   scriptConstructor:=(Result.Constructors.Add as TdwsConstructor);
-   scriptConstructor.OnEval:=helper.DoStandardCreate;
-
    for meth in cls.GetMethods do begin
+      if meth.Parent.Name='TObject' then continue;
+      if not meth.HasExtendedInfo then continue;
       if ShouldExpose(meth) then begin
          case meth.MethodKind of
-            TypInfo.mkProcedure, TypInfo.mkFunction :
+            TypInfo.mkProcedure, TypInfo.mkFunction, TypInfo.mkClassProcedure, TypInfo.mkClassFunction :
                ExposeRTTIMethod(meth, Result, options);
             TypInfo.mkConstructor :
                ExposeRTTIConstructor(meth, Result, options);
          end;
       end;
+   end;
+   if Result.Constructors.IndexOf('Create')<0 then begin
+      scriptConstructor:=(Result.Constructors.Add as TdwsConstructor);
+      scriptConstructor.OnEval:=helper.DoStandardCreate;
+      scriptConstructor.Name:='Create';
    end;
 
    for prop in cls.GetProperties do begin
@@ -436,6 +457,29 @@ begin
    Result.OnEval:=invoker.InvokeConstructor;
 end;
 
+function TdwsRTTIExposer.ExposeRTTIDynamicArray(intf: TRttiDynamicArrayType;
+  const options: TdwsRTTIExposerOptions): TdwsArray;
+var
+  LType: string;
+  LTypeKind: TTypeKind;
+begin
+  LTypeKind := intf.ElementType.TypeKind;
+  case LTypeKind of
+    tkInteger,
+    tkInt64: LType := SYS_INTEGER;
+    tkFloat: LType := SYS_FLOAT;
+    tkChar, tkString, tkUString, tkWChar, tkLString, tkWString:
+      LType := SYS_STRING;
+    tkVariant: LType := SYS_VARIANT;
+    else raise Exception.CreateFmt('Cannot expose dynamic array of type: %s', [
+      cTYPEKIND_NAMES[LTypeKind]]);
+  end; // case LTypeKind of
+  Result := Self.Arrays.Add;
+  Result.DataType := LType;
+  Result.IsDynamic := True;
+  Result.Name := intf.Name;
+end;
+
 // ExposeRTTIMethod
 //
 function TdwsRTTIExposer.ExposeRTTIMethod(meth : TRttiMethod; scriptClass : TdwsClass;
@@ -448,6 +492,13 @@ begin
    Result:=scriptClass.Methods.Add;
    Result.Name:=dwsPublished.NameOf(meth);
    Result.ResultType:=RTTITypeToScriptType(meth.ReturnType);
+
+   case meth.MethodKind of
+      TypInfo.mkClassProcedure :
+         Result.Kind:=TMethodKind.mkClassProcedure;
+      TypInfo.mkClassFunction :
+         Result.Kind:=TMethodKind.mkClassFunction;
+   end;
 
    if eoExposeVirtual in options then begin
       if meth.DispatchKind in [dkVtable, dkDynamic] then
@@ -511,6 +562,10 @@ begin
    Result:=scriptParameters.Add;
    Result.Name:=dwsPublished.NameOf(param);
    Result.DataType:=RTTITypeToScriptType(param.ParamType);
+   if pfVar in param.Flags then
+      Result.IsVarParam:=True;
+   if pfConst in param.Flags then
+      Result.IsWritable:=True;
 end;
 
 // ExposeRTTIEnumeration
@@ -527,10 +582,40 @@ begin
 
    for i:=enum.MinValue to enum.MaxValue do begin
       enumName:=GetEnumName(enum.Handle, i);
-      element:=(Result.Elements.Add as TdwsElement);
+      element:=Result.Elements.Add;
       element.Name:=enumName;
       element.UserDefValue:=i;
    end;
+end;
+
+// ExposeRTTIRecord
+//
+function TdwsRTTIExposer.ExposeRTTIRecord(rec : TRttiRecordType;
+                                          const options : TdwsRTTIExposerOptions) : TdwsRecord;
+var
+   field : TRttiField;
+   member : TdwsMember;
+begin
+   Result:=Records.Add;
+   Result.Name:=dwsPublished.NameOf(rec);
+
+   for field in rec.GetFields do begin
+      member:=Result.Members.Add;
+      member.Name:=field.Name;
+      member.DataType:=RTTITypeToScriptType(field.FieldType);
+      member.Visibility:=RTTIVisibilityToVisibility(field.Visibility);
+   end;
+end;
+
+// ExposeRTTIInterface
+//
+function TdwsRTTIExposer.ExposeRTTIInterface(intf : TRttiInterfaceType;
+                                      const options : TdwsRTTIExposerOptions) : TdwsInterface;
+begin
+   Result:=Interfaces.Add;
+   Result.Name:=dwsPublished.NameOf(intf);
+
+   // todo
 end;
 
 // DoStandardCleanUp
@@ -544,31 +629,101 @@ end;
 // ------------------ TdwsRTTIInvoker ------------------
 // ------------------
 
-// AssignResultFromValue
+// AssignIInfoFromValue
 //
-class procedure TdwsRTTIInvoker.AssignResultFromValue(info : TProgramInfo; const value : TValue;
-                                                      asType : TBaseTypeId);
+class procedure TdwsRTTIInvoker.AssignIInfoFromValue(const info : IInfo; const value : TValue;
+                                                     asType : TRttiType);
 begin
-   if asType<>typNoneID then begin
-      Info.ResultAsVariant:=value.AsVariant;
+   case asType.TypeKind of
+      tkInteger, tkInt64 :
+         info.Value:=value.AsInt64;
+      tkFloat :
+         info.Value:=value.AsType<Double>;
+      tkChar, tkString, tkUString, tkWChar, tkLString, tkWString :
+         info.Value:=value.AsString;
+      tkRecord :
+         AssignRecordFromValue(info, value, asType);
+      tkEnumeration :
+         if asType.Handle=TypeInfo(Boolean) then
+            info.Value:=value.AsBoolean
+         else info.Value:=value.AsInt64;
+   else
+      info.Value:=value.AsVariant;
    end;
+end;
+
+// AssignRecordFromValue
+//
+class procedure TdwsRTTIInvoker.AssignRecordFromValue(const recInfo : IInfo; const value : TValue;
+                                                      asType : TRttiType);
+var
+   field : TRttiField;
+   rawData : Pointer;
+begin
+   rawData:=value.GetReferenceToRawData;
+   for field in asType.AsRecord.GetFields do
+      AssignIInfoFromValue(recInfo.Member[field.Name],
+                           field.GetValue(rawData),
+                           field.FieldType);
 end;
 
 // ValueFromParam
 //
-class function TdwsRTTIInvoker.ValueFromParam(info : TProgramInfo; const paramName : String;
-                                              asType : TBaseTypeId) : TValue;
+class function TdwsRTTIInvoker.ValueFromParam(progInfo : TProgramInfo; const paramName : String;
+                                              asType : TRttiType) : TValue;
 begin
-   case asType of
-      typIntegerID : Result:=TValue.From<Int64>(info.ValueAsInteger[paramName]);
-      typFloatID : Result:=TValue.From<Double>(info.ValueAsFloat[paramName]);
-      typStringID : Result:=TValue.From<String>(info.ValueAsString[paramName]);
-      typBooleanID : Result:=TValue.From<Boolean>(info.ValueAsBoolean[paramName]);
-      typVariantID : Result:=TValue.From<Variant>(info.ValueAsVariant[paramName]);
+   Result:=ValueFromIInfo(asType, progInfo.Vars[paramName]);
+end;
+
+// ValueFromIInfo
+//
+class function TdwsRTTIInvoker.ValueFromIInfo(asType : TRttiType; const info : IInfo) : TValue;
+type
+  TValueArray = TArray<TValue>;
+var
+  LLen: Integer;
+  Index: Integer;
+begin
+   case asType.TypeKind of
+      tkInteger, tkInt64 :
+         Result:=TValue.From<Int64>(info.ValueAsInteger);
+      tkFloat :
+         Result:=TValue.From<Double>(info.ValueAsFloat);
+      tkChar, tkString, tkUString, tkWChar, tkLString, tkWString :
+         Result:=TValue.From<String>(info.ValueAsString);
+      tkVariant :
+         Result:=TValue.From<Variant>(info.Value);
+      tkRecord :
+         Result:=ValueFromRecord(asType, info);
+      tkEnumeration :
+         if asType.Handle=TypeInfo(Boolean) then
+            Result:=info.ValueAsBoolean
+         else Result:=info.ValueAsInteger;
+      tkDynArray: begin
+        LLen := Length(info.Data);
+        TValue.MakeWithoutCopy(NIL, asType.Handle, Result);
+        DynArraySetLength(PPointer(Result.GetReferenceToRawData)^, Result.TypeInfo, 1, @LLen);
+        for Index := Low(info.Data) to High(info.Data) do
+          Result.SetArrayElement(Index, TValue.FromVariant(info.Data[Index]));
+      end
    else
+      Result:=ValueFromIInfo(asType, info);
       Result:=TValue.Empty;
       Assert(False);
    end;
+end;
+
+// ValueFromRecord
+//
+class function TdwsRTTIInvoker.ValueFromRecord(asType : TRttiType; const recInfo : IInfo) : TValue;
+var
+   field : TRttiField;
+   rawData : Pointer;
+begin
+   TValue.Make(nil, asType.Handle, Result);
+   rawData:=Result.GetReferenceToRawData;
+   for field in asType.AsRecord.GetFields do
+      field.SetValue(rawData, ValueFromIInfo(field.FieldType, recInfo.Member[field.Name]));
 end;
 
 // ------------------
@@ -588,18 +743,26 @@ end;
 procedure TdwsRTTIMethodInvoker.Initialize(aMethod : TRttiMethod);
 var
    methParams : TArray<TRttiParameter>;
-   i, n : Integer;
+   param : TRttiParameter;
+   i, n, k : Integer;
 begin
    FMethod:=aMethod;
    methParams:=aMethod.GetParameters;
    n:=Length(methParams);
    SetLength(FTypParams, n);
    SetLength(FNameParams, n);
+   k:=0;
    for i:=0 to n-1 do begin
-      FTypParams[i]:=TdwsUnit.RTTITypeToScriptBaseType(methParams[i].ParamType);
-      FNameParams[i]:=methParams[i].Name;
+      param:=methParams[i];
+      FTypParams[i]:=param.ParamType;
+      FNameParams[i]:=param.Name;
+      if (pfVar in param.Flags) then begin
+         SetLength(FVarParams, k+1);
+         FVarParams[k]:=i;
+         Inc(k);
+      end;
    end;
-   FTypResult:=TdwsUnit.RTTITypeToScriptBaseType(aMethod.ReturnType);
+   FTypResult:=aMethod.ReturnType;
 end;
 
 // PrepareParams
@@ -614,17 +777,20 @@ begin
    end;
 end;
 
-
 // Invoke
 //
 procedure TdwsRTTIMethodInvoker.Invoke(info : TProgramInfo; externalObject : TObject);
 var
    params : TArray<TValue>;
    resultValue : TValue;
+   i : Integer;
 begin
    PrepareParams(info, params);
    resultValue:=FMethod.Invoke(externalObject, params);
-   AssignResultFromValue(info, resultValue, FTypResult);
+   if FTypResult<>nil then
+      AssignIInfoFromValue(info.ResultVars, resultValue, FTypResult);
+   for i in FVarParams do
+      AssignIInfoFromValue(info.Vars[FNameParams[i]], params[i], FTypParams[i]);
 end;
 
 // ------------------
@@ -658,7 +824,7 @@ end;
 procedure TdwsRTTIPropertyInvoker.Initialize(aProperty : TRttiProperty);
 begin
    FProperty:=aProperty;
-   FTyp:=TdwsUnit.RTTITypeToScriptBaseType(aProperty.PropertyType);
+   FTyp:=aProperty.PropertyType;
 end;
 
 // ------------------
@@ -686,7 +852,7 @@ var
    resultValue : TValue;
 begin
    resultValue:=FProperty.GetValue(externalObject);
-   AssignResultFromValue(info, resultValue, FTyp);
+   AssignIInfoFromValue(info.ResultVars, resultValue, FTyp);
 end;
 
 end.

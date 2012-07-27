@@ -17,8 +17,9 @@
 {    Current maintainer: Eric Grange                                   }
 {                                                                      }
 {**********************************************************************}
-{$I dws.inc}
 unit dwsRegister;
+
+{$I dws.inc}
 
 interface
 
@@ -31,24 +32,30 @@ implementation
 uses
   Classes, Controls, dwsComp, dwsComConnector, dwsDebugger, dwsGlobalVarsFunctions,
   dwsVCLGUIFunctions, dwsHtmlFilter, dwsClasses, dwsClassesLibModule,
-  dwsFileSystem, dwsSymbolsLibModule;
+  dwsFileSystem, dwsSymbolsLibModule, dwsJSFilter, dwsJSLibModule, dwsRTTIConnector;
 
 procedure Register;
 begin
   RegisterClass(TdwsComConnector);
 
-  RegisterComponents('dws',
+  RegisterComponents('DWScript',
                      [
                      TDelphiWebScript,
                      TdwsComConnector,
+                     TdwsRttiConnector,
                      TdwsSimpleDebugger,
                      TdwsDebugger,
                      TdwsUnit,
                      TdwsHtmlFilter,
+                     TdwsJSFilter,
+                     TdwsJSLibModule,
+                     TdwsSymbolsLib,
                      TdwsGlobalVarsFunctions,
                      TdwsGUIFunctions,
                      TdwsRestrictedFileSystem,
-                     TdwsNoFileSystem
+                     TdwsNoFileSystem,
+                     TdwsClassesLib,
+                     TdwsCustomLocalizer
                      ]);
 end;
 
