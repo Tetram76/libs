@@ -263,15 +263,15 @@ begin
       tdNumeric, tdNumericSigne, tdCurrency:
       begin
         if Key = '.' then
-          Key := DecimalSeparator;
-        ValidChars := ['-', '0'..'9', DecimalSeparator];
+          Key := FormatSettings.DecimalSeparator;
+        ValidChars := ['-', '0'..'9', FormatSettings.DecimalSeparator];
         if (FTypeDonnee = tdCurrency) then
           ValidChars := ValidChars + [' ', FCurrencyChar];
         if not CharInSet(Key, ValidChars) then
           Key := #0;
         if PressValid then
         begin
-          if (Key = DecimalSeparator) and Bool(Pos(DecimalSeparator, Text)) and (SelStart < Length(Text)) and (Text[SelStart + 1] <> DecimalSeparator) then
+          if (Key = FormatSettings.DecimalSeparator) and Bool(Pos(FormatSettings.DecimalSeparator, Text)) and (SelStart < Length(Text)) and (Text[SelStart + 1] <> FormatSettings.DecimalSeparator) then
             Key := #0;
           if (Key = '-') and ((FTypeDonnee = tdNumeric) or (SelStart <> 0)) then
             Key := #0;
@@ -285,12 +285,12 @@ begin
             if (Key = ' ') and Count(' ', Text) then
               Key := #0;
           end;
-          if (Key = DecimalSeparator) and Count(DecimalSeparator, Text) then
+          if (Key = FormatSettings.DecimalSeparator) and Count(FormatSettings.DecimalSeparator, Text) then
             Key := #0;
           if (Key = '-') and ((FTypeDonnee = tdNumeric) or Count('-', Text)) then
             Key := #0;
         end;
-        SameChar(['-', DecimalSeparator]);
+        SameChar(['-', FormatSettings.DecimalSeparator]);
       end;
       tdEntier, tdEntierSigne:
       begin
@@ -330,21 +330,21 @@ begin
       end;
       tdDate:
       begin
-        if not CharInSet(Key, [DateSeparator, '0'..'9']) then
+        if not CharInSet(Key, [FormatSettings.DateSeparator, '0'..'9']) then
           Key := #0;
-        SameChar([DateSeparator]);
+        SameChar([FormatSettings.DateSeparator]);
       end;
       tdHeure:
       begin
-        if not CharInSet(Key, [TimeSeparator, '0'..'9']) then
+        if not CharInSet(Key, [FormatSettings.TimeSeparator, '0'..'9']) then
           Key := #0;
-        SameChar([TimeSeparator]);
+        SameChar([FormatSettings.TimeSeparator]);
       end;
       tdDateHeure:
       begin
-        if not CharInSet(Key, [DateSeparator, TimeSeparator, ' ', '0'..'9']) then
+        if not CharInSet(Key, [FormatSettings.DateSeparator, FormatSettings.TimeSeparator, ' ', '0'..'9']) then
           Key := #0;
-        SameChar([DateSeparator, TimeSeparator, ' ']);
+        SameChar([FormatSettings.DateSeparator, FormatSettings.TimeSeparator, ' ']);
       end;
       tdNomFichier:
         if CharInSet(Key, ['<', '>', '*', '"', '|', '?']) then
