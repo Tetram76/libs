@@ -45,7 +45,9 @@ Aug 05, 2008 F. Piette added a cast to avoid warning for AnsiString to
              String implicit convertion
 Sep 21, 2008 Arno - Removed $EXTERNALSYM from some winsock2 symbols
              (CBuilder compat.)
-Jun 07, 2010 Arno fixed a late Unicode bug in WSocket2GetInterfaceList()	
+Jun 07, 2010 Arno fixed a late Unicode bug in WSocket2GetInterfaceList()
+Apr 10, 2011 Another Unicode bug in record sockaddr.
+May 06, 2011 Prepared for 64-bit.
 		 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -93,7 +95,7 @@ uses
   System.Runtime.InteropServices,
   //Borland.VCL.Classes,
 {$ENDIF}
-{$IFDEF WIN32}
+{$IFNDEF CLR}
   SysUtils,
 {$IFDEF BCB}
   Windows, Winsock,
@@ -124,10 +126,10 @@ type
     {$EXTERNALSYM sockaddr}
     sockaddr = record
         sa_family   : u_short;                // address family
-        sa_data     : array [0..13] of Char;  // up to 14 bytes of direct address
+        sa_data     : array [0..13] of u_char;  // up to 14 bytes of direct address
     end;
 
-    //{$EXTERNALSYM in6_addr}
+    {$IFDEF COMPILER16_UP} {$EXTERNALSYM in6_addr} {$ENDIF}
     in6_addr = record
     case Integer of
         0: (Byte     : array [0..15] of u_char);

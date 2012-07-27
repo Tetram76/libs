@@ -2,8 +2,8 @@
 Author:       Arno Garrels <arno.garrels@gmx.de>
 Description:  Server-side NTLM, validation of user credentials using Windows SSPI.
 Creation:     Sep 04, 2006
-Version:      1.03
-Legal issues: Copyright (C) 2005 by Arno Garrels, Berlin, Germany,
+Version:      1.07
+Legal issues: Copyright (C) 2005-2011 by Arno Garrels, Berlin, Germany,
               contact: <arno.garrels@gmx.de>
 
               This software is provided 'as-is', without any express or
@@ -41,6 +41,13 @@ Sep 11, 2006 V1.01 A. Garrels added func ValidateUserCredentials() which allows
 Apr 25, 2008 V1.02 A. Garrels, some changes to prepare code for Unicode.
 Apr 30, 2008 V1.03 A. Garrels moved the call to LoadSecPackage from
              initialization section to TNtlmAuthSession's constructor.
+Nov 15, 2010 V1.0.4 Fix in function UCS2ToString that is used by ANSI compilers.
+Jun 16, 2011 V1.05 PatchINT3 function adjusted since signature of
+             Windows.WriteProcessMemory has changed.
+Jul 22, 2011 V1.06 Arno - OEM NTLM changes.
+Feb 17, 2012 V1.07 Arno added NTLMv2 and NTLMv2 session security (basics),
+             to method ValidateUserCredintials read comment "HowTo NTLMv2" in
+             OverbyteIcsNtlmMsgs.pas.
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsNtlmSsp;
@@ -92,6 +99,7 @@ type
         FHost              : String;
         FNtlmMessage       : String;
         FAuthError         : Integer;
+        FLmCompatLevel     : LongWord;  { V1.07 }
         FOnBeforeValidate  : TNtlmSessionBeforeValidate;
    protected
         procedure   NtlmMsg3GetAttributes(const NtlmMsg3: AnsiString);
@@ -117,6 +125,7 @@ type
         property    HCread : TCredHandle read FHCred;
         property    HCtx  : TSecHandle  read  FHCtx;
         property    State : TNtlmState read FState;
+        property    LmCompatLevel : LongWord read FLmCompatLevel write FLmCompatLevel; { V1.07 }
         property    OnBeforeValidate: TNtlmSessionBeforeValidate read FOnBeforeValidate write FOnBeforeValidate;
     end;
 
@@ -141,7 +150,11 @@ procedure PatchINT3;
 var
     NOP          : Byte;
     NTDLL        : THandle;
+{$IFDEF COMPILER16_UP}
+    BytesWritten : NativeUint;
+{$ELSE}
     BytesWritten : DWORD;
+{$ENDIF}
     Address      : Pointer;
 begin
     if Win32Platform <> VER_PLATFORM_WIN32_NT then Exit;
@@ -252,12 +265,14 @@ function TNtlmAuthSession.ValidateUserCredentials(
 var
     NtlmMsg2Info : TNTLM_Msg2_Info;
 begin
-    Result := ProcessNtlmMsg(NtlmGetMessage1('', ADomain));
+    Result := ProcessNtlmMsg(NtlmGetMessage1('', ADomain, FLmCompatLevel)); { V1.07 }
     if not (FState in [lsDoneOk, lsDoneErr]) then begin
         NtlmMsg2Info := NtlmGetMessage2(FNtlmMessage);
-        Result := ProcessNtlmMsg(NtlmGetMessage3(ADomain, '', AUser,
-                                                 APassword,
-                                                 NtlmMsg2Info.Challenge));
+        Result := ProcessNtlmMsg(NtlmGetMessage3(ADomain, '',
+                                                 AUser, APassword,
+                                                 NtlmMsg2Info,     { V1.07 }
+                                                 CP_ACP,
+                                                 FLmCompatLevel)); { V1.07 }
         if CleanUpSession then
             CleanUpLogonSession;
     end;
@@ -285,20 +300,22 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function UCS2ToString(const S: UCS2String): AnsiString;
 var
-    Len : Integer;
+    Len   : Integer;
+    WcCnt : Integer;
 begin
     Result := '';
-    Len := Length(S);
-    if Len < 2 then
-        Exit;
-    Len := WideCharToMultiByte(CP_ACP, 0,
-                               Pointer(S), Len div SizeOf(WideChar),
-                               nil, 0,//Pointer(Result), Length(Result),
-                               nil, nil);
-    SetLength(Result, Len);
-    WideCharToMultiByte(CP_ACP, 0,
-                        Pointer(S), Len div SizeOf(WideChar),
-                        Pointer(Result), Len, nil, nil);
+    if S <> '' then
+    begin
+      WcCnt := Length(S) div SizeOf(WideChar);
+      if WcCnt > 0 then
+      begin
+          Len := WideCharToMultiByte(CP_ACP, 0, Pointer(S), WcCnt, nil, 0,
+                                     nil, nil);
+          SetLength(Result, Len);
+          WideCharToMultiByte(CP_ACP, 0, Pointer(S), WcCnt, Pointer(Result), Len,
+                              nil, nil);
+      end;
+    end;
 end;
 
 
@@ -598,7 +615,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TNtlmAuthSession.AuthErrorDesc: String;
 begin
-    Result := NtlmErrorDesc(FAuthError) + 'Error: 0x' + IntToHex(FAuthError, 8);
+    Result := NtlmErrorDesc(FAuthError) + ' Error: 0x' + IntToHex(FAuthError, 8);
 end;
 
 

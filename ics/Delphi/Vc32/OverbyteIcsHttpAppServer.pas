@@ -4,12 +4,12 @@ Author:       François PIETTE
 Description:  THttpAppSrv is a specialized THttpServer component to ease
               his use for writing application servers.
 Creation:     Dec 20, 2003
-Version:      7.07
+Version:      7.09
 EMail:        francois.piette@overbyte.be         http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 2003-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 2003-2011 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
 
               This software is provided 'as-is', without any express or
@@ -75,7 +75,12 @@ Feb 05, 2010 V7.06 F. Piette added overloaded AnswerPage to get template from
                    resource.
 Feb 08, 2010 V7.07 F. Piette fixed a bug introduced in 7.06 with ResType
                    (Need to be PChar instead of PAnsiChar).
-
+Jan 27, 2010 V7.08 Arno - TUrlHandler.AnswerPage and TUrlHandler.AnswerString
+                   take optional code page parameter (D2009+ only).
+Dec 18, 2011 V7.09 F. Piette fixed THttpAppSrv.GetDispatchVirtualDocument so
+                   that OnDestroying is correct initialized. This prevent
+                   crashing when defered answer is used and client is gone at
+                   the time the answer is sent.
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *_*}
 unit OverbyteIcsHttpAppServer;
@@ -202,7 +207,12 @@ type
             const Header   : String;   // Do not use Content-Length nor Content-Type
             const HtmlFile : String;
             UserData       : TObject;
-            Tags           : array of const); overload;
+            Tags           : array of const
+        {$IFDEF COMPILER12_UP};
+            FileCodepage   : LongWord = CP_ACP;
+            DstCodepage    : LongWord = CP_ACP
+        {$ENDIF}
+            ); overload;
         // Answer a page from a template resource
         procedure AnswerPage(
             const Status   : String;    // if empty, default to '200 OK'
@@ -210,14 +220,23 @@ type
             const ResName  : String;    // Resource name
             const ResType  : PChar;     // Resource type
             UserData       : TObject;
-            Tags           : array of const); overload;
+            Tags           : array of const
+        {$IFDEF COMPILER12_UP};
+            ResCodepage    : LongWord = CP_ACP;
+            DstCodepage    : LongWord = CP_ACP
+        {$ENDIF}
+            ); overload;
         procedure AnswerStream(const Status   : String;
                                const ContType : String;
                                const Header   : String);
         procedure AnswerString(const Status   : String;
                                const ContType : String;
                                const Header   : String;
-                               const Body     : String); virtual;
+                               const Body     : String
+                           {$IFDEF COMPILER12_UP};
+                               BodyCodepage   : LongWord = CP_ACP
+                           {$ENDIF}
+                               ); virtual;
         function  GetParams: String;
         procedure SetParams(const Value: String);
         property Client : THttpAppSrvConnection     read  FClient;
@@ -745,6 +764,7 @@ begin
                     SObj.FMsg_WM_FINISH := FMsg_WM_FINISH;
                     SObj.FWndHandle     := FHandle;
                     SObj.FMethod        := httpMethodGet;
+                    ClientCnx.OnDestroying := SObj.ClientDestroying;
                     ClientCnx.BeforeObjGetHandler(SObj, OK);
                     if OK then begin
                         SObj.Execute;
@@ -1548,10 +1568,19 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TUrlHandler.AnswerPage(
     const Status, Header, HtmlFile: String;
-    UserData: TObject; Tags: array of const);
+    UserData: TObject; Tags: array of const
+{$IFDEF COMPILER12_UP};
+    FileCodepage   : LongWord = CP_ACP;
+    DstCodepage    : LongWord = CP_ACP
+{$ENDIF}
+    );
 begin
     if Assigned(Client) then
-        Client.AnswerPage(FFlags, Status, Header, HtmlFile, UserData, Tags);
+        Client.AnswerPage(FFlags, Status, Header, HtmlFile, UserData, Tags
+                      {$IFDEF COMPILER12_UP},
+                          FileCodepage, DstCodepage
+                      {$ENDIF}
+                          );
 end;
 
 
@@ -1562,11 +1591,20 @@ procedure TUrlHandler.AnswerPage(
     const ResName  : String;    // Resource name
     const ResType  : PChar;     // Resource type
     UserData       : TObject;
-    Tags           : array of const);
+    Tags           : array of const
+{$IFDEF COMPILER12_UP};
+    ResCodepage    : LongWord = CP_ACP;
+    DstCodepage    : LongWord = CP_ACP
+{$ENDIF}
+    );
 begin
     if Assigned(Client) then
         Client.AnswerPage(FFlags, Status, Header,
-                          ResName, ResType, UserData, Tags);
+                          ResName, ResType, UserData, Tags
+                      {$IFDEF COMPILER12_UP},
+                          ResCodepage, DstCodepage
+                      {$ENDIF}
+                          );
 end;
 
 
@@ -1580,10 +1618,18 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TUrlHandler.AnswerString(
-    const Status, ContType, Header, Body: String);
+    const Status, ContType, Header, Body: String
+{$IFDEF COMPILER12_UP};
+    BodyCodepage : LongWord = CP_ACP
+{$ENDIF}
+    );
 begin
     if Assigned(Client) then
+    {$IFDEF COMPILER12_UP}
+        Client.AnswerStringEx(FFlags, Status, ContType, Header, Body, BodyCodepage);
+    {$ELSE}
         Client.AnswerString(FFlags, Status, ContType, Header, Body);
+    {$ENDIF}
 end;
 
 

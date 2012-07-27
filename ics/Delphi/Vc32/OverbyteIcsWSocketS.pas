@@ -4,12 +4,12 @@ Author:       François PIETTE
 Description:  A TWSocket that has server functions: it listen to connections
               an create other TWSocket to handle connection for each client.
 Creation:     Aug 29, 1999
-Version:      7.01
+Version:      7.04
 EMail:        francois.piette@overbyte.be     http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1999-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 1999-2011 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
               Berlin, Germany, contact: <arno.garrels@gmx.de>
@@ -86,6 +86,14 @@ Nov 6,  2008 V7.00 Angus added CliId property used to ensure correct client free
 Aug 8,  2010 V7.01 FPiette enhanced TriggerSessionAvailable so catch exception
                    in client class constructor and ClientCreate, and close the
                    remote socket in that case.
+Feb 4,  2011 V7.02 Angus added bandwidth throttling using TCustomThrottledWSocket.
+                   Client sockets inherit server settings for BandwidthLimit and
+                   BandwidthSampling, but these can be changed ideally in
+                   OnClientCreate event, but also in OnClientConnect but note a
+                   timer may have been started by then so better to default to
+                   BandwidthLimit=0 and set it, than to disable it.
+Apr 15, 2011 V7.03 Arno prepared for 64-bit.
+May 13, 2011 V7.04 Anton S. found a small issue with CliId.
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -128,7 +136,7 @@ uses
 {$IFDEF CLR}
     System.Runtime.InteropServices,
 {$ENDIF}
-{$IFDEF WIN32}
+{$IFDEF MSWINDOWS}
     Messages,
 {$IFDEF USEWINDOWS}
     Windows,
@@ -140,7 +148,7 @@ uses
 {$IFNDEF NO_DEBUG_LOG}
     OverbyteIcsLogger,
 {$ENDIF}
-{$IFDEF WIN32}
+{$IFDEF MSWINDOWS}
 {$IFDEF BCB}
     Winsock,
 {$ENDIF}
@@ -149,8 +157,8 @@ uses
     OverbyteIcsWSocket, OverbyteIcsWinsock;
 
 const
-    WSocketServerVersion     = 700;
-    CopyRight : String       = ' TWSocketServer (c) 1999-2010 F. Piette V7.00 ';
+    WSocketServerVersion     = 704;
+    CopyRight : String       = ' TWSocketServer (c) 1999-2011 F. Piette V7.04 ';
     DefaultBanner            = 'Welcome to OverByte ICS TcpSrv';
 
 type
@@ -222,7 +230,7 @@ type
         FOnClientConnect        : TWSocketClientConnectEvent;
         FOnClientDisconnect     : TWSocketClientConnectEvent;
         procedure WndProc(var MsgRec: TMessage); override;
-{$IFDEF WIN32}
+{$IFNDEF CLR}
         procedure Notification(AComponent: TComponent; operation: TOperation); override;
 {$ENDIF}
         procedure TriggerSessionAvailable(Error : Word); override;
@@ -238,8 +246,7 @@ type
     public
 {$IFDEF CLR}
     constructor Create; override;
-{$ENDIF}
-{$IFDEF WIN32}
+{$ELSE}
     constructor Create(AOwner: TComponent); override;
 {$ENDIF}
         destructor  Destroy; override;
@@ -355,9 +362,9 @@ implementation
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-constructor TCustomWSocketServer.Create{$IFDEF WIN32}(AOwner: TComponent){$ENDIF};
+constructor TCustomWSocketServer.Create{$IFNDEF CLR}(AOwner: TComponent){$ENDIF};
 begin
-    inherited Create{$IFDEF WIN32}(AOwner){$ENDIF};
+    inherited Create{$IFNDEF CLR}(AOwner){$ENDIF};
     FClientList      := TList.Create;
     FClientClass     := TWSocketClient;
     FBanner          := DefaultBanner;
@@ -438,7 +445,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { Called by destructor when child component (a clients) is create or        }
 { destroyed.                                                                }
-{$IFDEF WIN32}
+{$IFNDEF CLR}
 procedure TCustomWSocketServer.Notification(
     AComponent : TComponent;
     Operation  : TOperation);
@@ -472,16 +479,20 @@ begin
     if Error <> 0 then
         Exit;
 
-    if FClientNum >= $7FFFFF then
+    if Cardinal(FClientNum) >= Cardinal(MaxInt) then    { V7.04 }
         FClientNum := 0;                                { angus V7.00 }
     Inc(FClientNum);
     Client := nil;
     try                                                 { FPiette V7.01 }
-        Client                 := FClientClass.Create{$IFDEF WIN32}(Self){$ENDIF};
+        Client                 := FClientClass.Create{$IFNDEF CLR}(Self){$ENDIF};
         Client.FCliId          := FClientNum;           { angus V7.00 }
 {$IFDEF CLR}
         FClientList.Add(Client);
         Client.HandleGc := GcHandle.Alloc(Client);
+{$ENDIF}
+{$IFDEF BUILTIN_THROTTLE}
+        Client.BandwidthLimit    := Self.BandwidthLimit;     { angus V7.02 may be changed in event for different limit }
+        Client.BandwidthSampling := Self.BandwidthSampling;  { angus V7.02 }
 {$ENDIF}
         TriggerClientCreate(Client);
     except                                               { FPiette V7.01 }
@@ -592,8 +603,7 @@ begin
 {$IFDEF CLR}
     GCH := GCHandle(IntPtr(PIdRec^.PClient);
     Client := TWSocketClient(GCH.Target);
-{$ENDIF}
-{$IFDEF WIN32}
+{$ELSE}
     Client := TWSocketClient(PIdRec^.PClient);
 {$ENDIF}
     { angus V7.00 ensure client not freed already }
@@ -679,8 +689,7 @@ begin
             if NOT PostMessage(Server.Handle, Server.FMsg_WM_CLIENT_CLOSED, ErrCode,
                         {$IFDEF CLR}
                         Integer(IntPtr(Self.HandleGc)));
-                        {$ENDIF}
-                        {$IFDEF WIN32}
+                        {$ELSE}
                         LPARAM(PIdRec))
                         {$ENDIF}
             then

@@ -45,6 +45,8 @@ Oct 11, 1997 Added PortNum to specify which port we serve
 Jul 30, 1998 V1.24 Added some code to the dummy SMTP server
 Sep 26, 2000 V1.26 Replaced TEdit by TMemo for data to be sent to allow
              multi-line sending.
+Nov 13, 2010 V1.27 Fixed SendButtonClick and FormShow to use AnsiString
+             because clients are expecting ansi, not unicode.
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -114,7 +116,7 @@ uses
     OverbyteIcsUtils;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{$IFNDEF WIN32}
+{$IFNDEF MSWINDOWS}
 procedure SetLength(var Str : String; Len : Integer);
 begin
     Str[0] := chr(Len);
@@ -420,7 +422,7 @@ begin
     end;
 
     { Ordinary character, put in buffer in some place left }
-{$IFNDEF WIN32}
+{$IFNDEF MSWINDOWS}
     if Length(FCommand) = High(FCommand) then
         Ch := #7
     else
@@ -496,7 +498,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TClientForm.FormShow(Sender: TObject);
 var
-    Buf : String;
+    Buf : AnsiString;
 begin
     DataMemo.Text := '';
     ActiveControl := DataMemo;
@@ -518,9 +520,9 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TClientForm.SendButtonClick(Sender: TObject);
 var
-    Buf : String;
+    Buf : AnsiString;
 begin
-    Buf := DataMemo.Text + #13 + #10;
+    Buf := AnsiString(DataMemo.Text + #13 + #10);
     Socket.Send(@Buf[1], Length(Buf));
     DataMemo.Text := '';
     ActiveControl := DataMemo;

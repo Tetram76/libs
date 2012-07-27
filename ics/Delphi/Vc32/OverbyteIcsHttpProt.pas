@@ -2,7 +2,7 @@
 
 Author:       François PIETTE
 Creation:     November 23, 1997
-Version:      7.08
+Version:      7.25
 Description:  THttpCli is an implementation for the HTTP protocol
               RFC 1945 (V1.0), and some of RFC 2068 (V1.1)
 Credit:       This component was based on a freeware from by Andreas
@@ -11,8 +11,8 @@ Credit:       This component was based on a freeware from by Andreas
 EMail:        francois.piette@overbyte.be         http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 1997-2012 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
               Berlin, Germany, contact: <arno.garrels@gmx.de>
@@ -421,13 +421,58 @@ Dec 02, 2009 V7.05 Bjornar found a HTTPS POST bug with proxy basic
 Feb 15, 2010 V7.06 Yuri Semenov fixed a bug with content coding and chunked
              transfer encoding.
 Feb 25, 2010 V7.07 Fix by Bjørnar Nielsen: TSslHttpCli didn't work when used
-             against Websense-Content_Gateway (http://www.websense.com) and 
+             against Websense-Content_Gateway (http://www.websense.com) and
              some others. The problem was that this (and some other proxies too)
-             answer 200 OK to notify client that connection to remote server 
+             answer 200 OK to notify client that connection to remote server
              is established. Usually proxies use 200 OK and an error text when
              something is wrong. In that case Content-Length is not 0.
 May 24, 2010 V7.08 Angus ensure Ready when relocations exceed maximum to avoid timeout
-
+Oct 10, 2010 V7.09 Arno - MessagePump changes/fixes.
+Nov 05, 2010 V7.10 Arno fixed ERangeErrors after Abort.
+Nov 08, 2010 V7.11 Arno improved final exception handling, more details
+             in OverbyteIcsWndControl.pas (V1.14 comments).
+Nov 22, 2010 V7.12 Arno made CheckDelaySetReady virtual.
+Feb 4,  2011 V7.13 Angus - if conditional BUILTIN_THROTTLE is defined the
+             bandwidth control uses TWSocket's built-in throttle code rather
+             than THttpCli's.
+Feb 18, 2011 V7.14 Arno - Proxy authentication with relocations (hopefully) fixed.
+             SSL not tested yet. If it still doesn't work it's probably a buggy
+             proxy server i.e. 3Proxy. Parse NTLM user codes into domain and
+             username parts and pass them to NtlmGetMessage3 in method
+             GetNTLMMessage3.
+Feb 19, 2011 V7.15 Arno - Proxy authentication with relocations still did not
+             work properly :( It's not perfect but works better now:
+             Reset only NTLM AuthState in LocationSessionClosed and do not call
+             SetReady while FLocationFlag is set, also call StartRelocation in
+             GetHeaderLineNext if there's no body and the connection is not
+             expected to close, also the relocation counter was incremented
+             twice per relocation when the connection closed.
+             Fix in Digest authentication.
+Apr 15, 2011 V7.16 Arno prepared for 64-bit.
+Jul 22, 2011 V7.17 Arno - OEM NTLM changes.
+Sep 11, 2011 V7.18 Arno fixed a bug in chunked decoding, sponsored by Fastream
+             (www.fastream.com).
+Oct 6, 2011  V7.19 ensure content decompression triggered at end of document,
+             failed if Content-Length missing, thanks to Yuri Semenov for the fix
+Oct 09, 2011 V7.20 Arno - Clear FResponseVer after relocations when the connection
+             was closed. This ensures that ProxyConnection keep-alive is set on
+             proxy-reconnects after relocation with HTTPS as well. 
+             Made a change in GetHeaderLineNext to fix a bug with 401 and 407
+             responses when no content-length header was present (body was parsed
+             as header, thanks to Fastream for reporting). 
+Nov 20, 2011 V7.21 Jean DELAGOUTTE - Do not clear FContentRangeBegin and
+             FContentRangeEnd with method CONNECT.
+Jan 20, 2012 V7.22 RTT changed GetHeaderLineNext to support relocation URLs
+             starting with "//".
+Jan 23, 2012 V7.23 Arno added httperrNoStatusCode, passed to OnRequestDone and
+             raised in sync mode if connection closed prematurely. Always raise
+             EHttpException with the internal httperror code rather than the
+             HTTP status code if FRequestDoneError is set, this changed
+             EHttpException's ErrorCode property value of abort and timeout
+             exceptions.
+Feb 15, 2012 V7.24 Tobias Rapp added methods Del and DelAsync (HTTP method DELETE).
+Feb 17, 2012 V7.25 Arno added NTLMv2 and NTLMv2 session security (basics),
+             read comment "HowTo NTLMv2" in OverbyteIcsNtlmMsgs.pas.
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsHttpProt;
@@ -459,7 +504,11 @@ interface
 {$IFNDEF NO_ADVANCED_HTTP_CLIENT_FEATURES}
     {$DEFINE UseNTLMAuthentication}
     {$DEFINE UseDigestAuthentication}
-    {$DEFINE UseBandwidthControl}
+    {$IFNDEF BUILTIN_THROTTLE}   { V7.13 }
+        {$DEFINE UseBandwidthControl}
+    {$ELSE}
+        {$UNDEF UseBandwidthControl}
+    {$ENDIF}
     {$DEFINE UseContentCoding}
 {$ENDIF}
 {$IFDEF CLR}
@@ -504,27 +553,34 @@ uses
     OverbyteIcsWinSock, OverbyteIcsWndControl, OverbyteIcsWSocket;
 
 const
-    HttpCliVersion       = 708;
-    CopyRight : String   = ' THttpCli (c) 1997-2010 F. Piette V7.08 ';
+    HttpCliVersion       = 725;
+    CopyRight : String   = ' THttpCli (c) 1997-2012 F. Piette V7.25 ';
     DefaultProxyPort     = '80';
     HTTP_RCV_BUF_SIZE    = 8193;
     HTTP_SND_BUF_SIZE    = 8193;
     { EHttpException error code }
+    httperrBase                     = {$IFDEF MSWINDOWS} 1 {$ELSE} 1001 {$ENDIF}; { V7.23 }
     httperrNoError                  = 0;
-    httperrBusy                     = 1;
-    httperrNoData                   = 2;
-    httperrAborted                  = 3;
-    httperrOverflow                 = 4;
-    httperrVersion                  = 5;
-    httperrInvalidAuthState         = 6;
-    httperrSslHandShake             = 7;
-    httperrCustomTimeOut            = 8;  { V7.04 }
+    httperrBusy                     = httperrBase;
+    httperrNoData                   = httperrBusy + 1;
+    httperrAborted                  = httperrNoData + 1;
+    httperrOverflow                 = httperrAborted + 1;
+    httperrVersion                  = httperrOverflow + 1;
+    httperrInvalidAuthState         = httperrVersion + 1;
+    httperrSslHandShake             = httperrInvalidAuthState + 1;
+    httperrCustomTimeOut            = httperrSslHandShake + 1;
+    httperrNoStatusCode             = httperrCustomTimeOut + 1;
+    { Change next as well if new EHttpException error codes are added }
+    httperrMax                      = httperrNoStatusCode;
 
 type
     THttpBigInt = Int64;
 
     EHttpException = class(Exception)
-        ErrorCode : Word;
+    private
+        FErrorCode: Word;
+    public
+        property ErrorCode : Word read FErrorCode write FErrorCode;
         constructor Create(const Msg : String; ErrCode : Word);
     end;
 
@@ -532,7 +588,7 @@ type
 
     THttpEncoding    = (encUUEncode, encBase64, encMime);
     THttpRequest     = (httpABORT, httpGET, httpPOST, httpPUT,
-                        httpHEAD,  httpCLOSE);
+                        httpHEAD, httpDELETE, httpCLOSE);
     THttpState       = (httpReady,         httpNotConnected, httpConnected,
                         httpDnsLookup,     httpDnsLookupDone,
                         httpWaitingHeader, httpWaitingBody,  httpBodyReceived,
@@ -591,7 +647,6 @@ type
         FMsg_WM_HTTP_LOGIN        : UINT;
         FCtrlSocket           : TWSocket;
         //FWindowHandle         : HWND;
-        FMultiThreaded        : Boolean;
         FState                : THttpState;
         FLocalAddr            : String;
         FHostName             : String;
@@ -686,6 +741,7 @@ type
         FProxyNTLMMsg2Info    : TNTLM_Msg2_Info;
         FAuthNTLMState        : THttpNTLMState;
         FProxyAuthNTLMState   : THttpNTLMState;
+        FLmCompatLevel        : LongWord;  { V7.25 }
 {$ENDIF}
 {$IFDEF UseDigestAuthentication}
         FAuthDigestState      : THttpDigestState;
@@ -702,9 +758,11 @@ type
         //FProxyAuth            : String;
         FServerAuth           : THttpAuthType;
         FProxyAuth            : THttpAuthType;
-{$IFDEF UseBandwidthControl}
+{$IF DEFINED(UseBandwidthControl) or DEFINED(BUILTIN_THROTTLE)}
         FBandwidthLimit       : Integer;  // Bytes per second
         FBandwidthSampling    : Integer;  // mS sampling interval
+{$IFEND}
+{$IFDEF UseBandwidthControl}
         FBandwidthCount       : Int64;    // Byte counter
         FBandwidthMaxCount    : Int64;    // Bytes during sampling period
         FBandwidthTimer       : TIcsTimer;
@@ -743,10 +801,12 @@ type
         FOnBeforeHeaderSend   : TBeforeHeaderSendEvent;     { Wilfried 9 sep 02}
         FCloseReq             : Boolean;                    { SAE 01/06/04 }
         FTimeout              : UINT;  { V7.04 }            { Sync Timeout Seconds }
+        FWMLoginQueued        : Boolean;
+        procedure AbortComponent; override; { V7.11 }
         procedure AllocateMsgHandlers; override;
         procedure FreeMsgHandlers; override;
         function  MsgHandlersCount: Integer; override;
-        procedure CheckDelaySetReady;                       { 09/26/08 ML }
+        procedure CheckDelaySetReady; virtual;              { 09/26/08 ML }
 {$IFNDEF NO_DEBUG_LOG}
         function  GetIcsLogger: TIcsLogger;                 { V1.91 }
         procedure SetIcsLogger(const Value: TIcsLogger);    { V1.91 }
@@ -787,6 +847,7 @@ type
         procedure StartAuthDigest; virtual;
         procedure StartProxyAuthDigest; virtual;
 {$ENDIF}
+        procedure LoginDelayed; {$IFDEF USE_INLINE} inline; {$ENDIF}
         function GetBasicAuthorizationHeader(
             const HttpMethod: String; ProxyAuth: Boolean): String;
         procedure CleanupRcvdStream;
@@ -805,7 +866,10 @@ type
         procedure LocationSessionClosed(Sender: TObject; ErrCode: Word); virtual;
         procedure DoRequestAsync(Rq : THttpRequest); virtual;
         procedure DoRequestSync(Rq : THttpRequest); virtual;
-        procedure SetMultiThreaded(newValue : Boolean); virtual;
+        procedure SetMultiThreaded(const Value : Boolean); override;
+        procedure SetTerminated(const Value: Boolean); override;
+        procedure SetOnMessagePump(const Value: TNotifyEvent); override;
+        procedure SetOnBgException(const Value: TIcsBgExceptionEvent); override; { V7.11 }
         procedure StateChange(NewState : THttpState); virtual;
         procedure TriggerStateChange; virtual;
         procedure TriggerCookie(const Data : String;
@@ -863,12 +927,14 @@ type
         procedure   Post;       { Synchronous blocking Post        }
         procedure   Put;        { Synchronous blocking Put         }
         procedure   Head;       { Synchronous blocking Head        }
+        procedure   Del;        { Synchronous blocking Delete      }
         procedure   Close;      { Synchronous blocking Close       }
         procedure   Abort;      { Synchrounous blocking Abort      }
         procedure   GetASync;   { Asynchronous, non-blocking Get   }
         procedure   PostASync;  { Asynchronous, non-blocking Post  }
         procedure   PutASync;   { Asynchronous, non-blocking Put   }
         procedure   HeadASync;  { Asynchronous, non-blocking Head  }
+        procedure   DelASync;   { Asynchronous, non-blocking Delete}
         procedure   CloseAsync; { Asynchronous, non-blocking Close }
         procedure   ThreadAttach; override;
         procedure   ThreadDetach; override;
@@ -899,6 +965,10 @@ type
         property RcvdHeader           : TStrings     read  FRcvdHeader;
         property Hostname             : String       read  FHostname;
         property Protocol             : String       read  FProtocol;
+{$IFDEF UseNTLMAuthentication}
+        property LmCompatLevel        : LongWord     read  FLmCompatLevel  { V7.25 }
+                                                     write FLmCompatLevel; { V7.25 }
+{$ENDIF}
 {$IFDEF UseDigestAuthentication}
         property AuthDigestInfo       : TAuthDigestInfo
                                                      read  FAuthDigestInfo
@@ -953,8 +1023,7 @@ type
         property ContentRangeEnd  : String           read  FContentRangeEnd    {JMR!! Added this line!!!}
                                                      write FContentRangeEnd;   {JMR!! Added this line!!!}
         property AcceptRanges     : String           read  FAcceptRanges;
-        property MultiThreaded    : Boolean          read  FMultiThreaded
-                                                     write SetMultiThreaded;
+        property MultiThreaded;
         property RequestVer       : String           read  FRequestVer
                                                      write SetRequestVer;
         property FollowRelocation : Boolean          read  FFollowRelocation   {TED}
@@ -972,12 +1041,12 @@ type
                                                      write FServerAuth;
         property ProxyAuth        : THttpAuthType    read  FProxyAuth
                                                      write FProxyAuth;
-{$IFDEF UseBandwidthControl}
+{$IF DEFINED(UseBandwidthControl) or DEFINED(BUILTIN_THROTTLE)}
         property BandwidthLimit       : Integer      read  FBandwidthLimit
                                                      write FBandwidthLimit;
         property BandwidthSampling    : Integer      read  FBandwidthSampling
                                                      write FBandwidthSampling;
-{$ENDIF}
+{$IFEND}
 {$IFDEF UseContentCoding}
         property Options          : THttpCliOptions  read  GetOptions
                                                      write SetOptions;
@@ -1063,6 +1132,7 @@ type
         property OnBeforeAuth        : THttpBeforeAuthEvent
                                                      read  FOnBeforeAuth
                                                      write FOnBeforeAuth;
+        property OnBgException;                                             { V7.11 }
     end;
 
 { You must define USE_SSL so that SSL code is included in the component.   }
@@ -1081,9 +1151,6 @@ Description:  A component adding SSL support to THttpCli.
               warnings.
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{$IFDEF VER80}
-    Bomb('This unit require a 32 bit compiler !');
-{$ENDIF}
 {$B-}                                 { Enable partial boolean evaluation   }
 {$T-}                                 { Untyped pointers                    }
 {$X+}                                 { Enable extended syntax              }
@@ -1152,7 +1219,7 @@ function EncodeStr(Encoding : THttpEncoding; const Value : String) : String;
 {$ENDIF}
 function RFC1123_Date(aDate : TDateTime) : String;
 function RFC1123_StrToDate(aDate : String) : TDateTime;
-{$IFDEF WIN32}
+{$IFNDEF CLR}
 function EncodeLine(
     Encoding : THttpEncoding;
     SrcData  : PAnsiChar;
@@ -1169,7 +1236,7 @@ function EncodeStr(
 implementation
 
 const
-{$IFDEF WIN32}
+{$IFDEF MSWINDOWS}
     bin2uue  : AnsiString = '`!"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_';
     bin2b64  : AnsiString = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
     uue2bin  : AnsiString = ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_ ';
@@ -1204,7 +1271,7 @@ end;
 constructor EHttpException.Create(const Msg : String; ErrCode : Word);
 begin
     inherited Create(Msg);
-    ErrorCode := ErrCode;
+    FErrorCode := ErrCode;
 end;
 
 
@@ -1340,6 +1407,7 @@ begin
     GetOptions;
 {$ENDIF}
     CreateSocket;
+    FCtrlSocket.ExceptAbortProc    := AbortComponent; { V7.11 }
     FCtrlSocket.OnSessionClosed    := SocketSessionClosed;
     FCtrlSocket.OnDataAvailable    := SocketDataAvailable;
     FCtrlSocket.OnSessionConnected := SocketSessionConnected;
@@ -1348,10 +1416,10 @@ begin
     FCtrlSocket.OnSocksError       := DoSocksError;
     FCtrlSocket.OnSocksConnected   := DoSocksConnected;
     FCtrlSocket.OnError            := SocketErrorTransfer;
-{$IFDEF UseBandwidthControl}
+{$IF DEFINED(UseBandwidthControl) or DEFINED(BUILTIN_THROTTLE)}
     FBandwidthLimit                := 10000;  { Bytes per second     }
     FBandwidthSampling             := 1000;   { mS sampling interval }
-{$ENDIF}
+{$IFEND}
     FLocationChangeMaxCount        := 5;  {  V1.90 }
     FLocationChangeCurCount        := 0;  {  V1.90 }
     FTimeOut                       := 30;
@@ -1362,7 +1430,7 @@ end;
 destructor THttpCli.Destroy;
 begin
     FDoAuthor.Free;
-    FCtrlSocket.Free;
+    FreeAndNil(FCtrlSocket);
     FRcvdHeader.Free;
     FReqStream.Free;
     SetLength(FReceiveBuffer, 0);   {AG 03/18/07}
@@ -1381,22 +1449,27 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpCli.CreateSocket;
 begin
-    FCtrlSocket := TWSocket.Create(Self);
+    FCtrlSocket := TWSocket.Create(nil);
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpCli.WndProc(var MsgRec: TMessage);
 begin
-     with MsgRec do begin
-         if Msg = FMsg_WM_HTTP_REQUEST_DONE then
-             WMHttpRequestDone(MsgRec)
-         else if Msg = FMsg_WM_HTTP_SET_READY then
-             WMHttpSetReady(MsgRec)
-         else if Msg = FMsg_WM_HTTP_LOGIN     then
-             WMHttpLogin(MsgRec)
-         else
-             inherited WndProc(MsgRec);
+    try { V7.11 }
+        with MsgRec do begin
+            if Msg = FMsg_WM_HTTP_REQUEST_DONE then
+                WMHttpRequestDone(MsgRec)
+            else if Msg = FMsg_WM_HTTP_SET_READY then
+                WMHttpSetReady(MsgRec)
+            else if Msg = FMsg_WM_HTTP_LOGIN then
+                WMHttpLogin(MsgRec)
+            else
+                inherited WndProc(MsgRec);
+        end;
+    except { V7.11 }
+        on E: Exception do
+            HandleBackGroundException(E);
     end;
 end;
 
@@ -1439,10 +1512,38 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure THttpCli.SetMultiThreaded(newValue : Boolean);
+procedure THttpCli.SetMultiThreaded(const Value : Boolean);
 begin
-    FMultiThreaded            := newValue;
-    FCtrlSocket.MultiThreaded := newValue;
+    if Assigned(FCtrlSocket) then
+        FCtrlSocket.MultiThreaded := Value;
+    inherited SetMultiThreaded(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpCli.SetTerminated(const Value: Boolean);
+begin
+    if Assigned(FCtrlSocket) then
+        FCtrlSocket.Terminated := Value;
+    inherited SetTerminated(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpCli.SetOnBgException(const Value: TIcsBgExceptionEvent); { V7.11 }
+begin
+    if Assigned(FCtrlSocket) then
+        FCtrlSocket.OnBgException := Value;
+    inherited SetOnBgException(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpCli.SetOnMessagePump(const Value: TNotifyEvent);
+begin
+    if Assigned(FCtrlSocket) then
+        FCtrlSocket.OnMessagePump := Value;
+    inherited SetOnMessagePump(Value);
 end;
 
 
@@ -1488,10 +1589,10 @@ begin
         {$ENDIF}
     {$ENDIF}
                 if FStatusCode = 401 then begin
-                    { If the connection will be closed then check if we must
-                      repeat a proxy authentication, otherwise we must clear
-                      it }
-                    if FCloseReq then begin
+                    { If the connection will be closed or is already closed
+                      then check if we must repeat a proxy authentication,
+                      otherwise we must clear it }
+                    if FCloseReq or (FCtrlSocket.State = wsClosed) then begin
                     {$IFDEF UseNTLMAuthentication}
                         if FProxyAuthNTLMState = ntlmDone then
                             FProxyAuthNTLMState := ntlmMsg1
@@ -1531,7 +1632,7 @@ begin
                 end;
             end
             else
-            TriggerRequestDone;
+                TriggerRequestDone;
         end;
     end;
 end;
@@ -1602,7 +1703,19 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpCli.TriggerDocEnd;
 begin
-{$IFNDEF NO_DEBUG_LOG}
+{$IFDEF UseContentCoding} {V7.19}
+            FContentCodingHnd.Complete;
+        {$IFNDEF NO_DEBUG_LOG}
+            if CheckLogOptions(loProtSpecInfo) then begin
+                if Assigned(FRcvdStream) and (FContentEncoding <> '') then begin
+                    DebugLog(loProtSpecInfo, FContentEncoding +
+                             ' content uncompressed from ' +
+                             IntToStr(FContentLength) + ' bytes to ' +
+                             IntToStr(FRcvdStream.Size) + ' bytes');
+                end;
+            end;
+        {$ENDIF}
+{$ENDIF}{$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
         DebugLog(loProtSpecInfo, 'DocEnd');
 {$ENDIF}
@@ -1756,7 +1869,7 @@ begin
 {$IFNDEF NO_DEBUG_LOG}                                                  { V1.91 }
     //THttpNTLMState   = (ntlmNone, ntlmMsg1, ntlmMsg2, ntlmMsg3, ntlmDone);
     if CheckLogOptions(loProtSpecDump) then begin
-        DebugLog(loProtSpecDump, Format('PrepareNTLMAuth end, FStatusCode = %d ' +
+        DebugLog(loProtSpecDump, Format('PrepareNTLMAuth begin, FStatusCode = %d ' +
                                         'FProxyAuthNTLMState=%d FAuthNTLMState=%d',
                                         [FStatusCode, Ord(FProxyAuthNTLMState),
                                         Ord(FAuthNTLMState)]));
@@ -1916,7 +2029,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpCli.WMHttpRequestDone(var msg: TMessage);
 begin
-{$IFNDEF NO_DEBUG_LOG}                                                 
+{$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
             DebugLog(loProtSpecInfo, 'RequestDone');
 {$ENDIF}
@@ -1951,13 +2064,18 @@ var
     bFlag : Boolean;
     Msg   : TMessage;
 begin
+    FLocationFlag := FALSE;  { Do not follow relocations V7.10 }
+    { The following two lines prevent OnRequestDone from trigger twice V7.10 }
+    FRcvdCount    := 0;      { Clear the receive buffer V7.10 }
+    FReceiveLen   := 0;      { Clear the receive buffer V7.10 }
+
     if FState = httpReady then begin
         FState := httpAborting;
         if FCtrlSocket.State <> wsClosed then
             FCtrlSocket.Abort;
         FStatusCode       := 200;
         FReasonPhrase     := 'OK';
-        FRequestDoneError := 0;
+        FRequestDoneError := httperrNoError;
         FState            := httpReady;
         TriggerStateChange;
         WMHttpRequestDone(Msg);   { Synchronous operation ! }
@@ -1988,12 +2106,27 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpCli.AbortComponent; { V7.11 }
+begin
+    try
+        Abort;
+    except
+    end;
+    inherited;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpCli.Login;
 begin
 {$IFNDEF NO_DEBUG_LOG}
     if CheckLogOptions(loProtSpecInfo) then  { V1.91 } { replaces $IFDEF DEBUG_OUTPUT  }
             DebugLog(loProtSpecInfo, 'Login ' + FHostName);
 {$ENDIF}
+    FWMLoginQueued := FALSE;
+    FStatusCode    := 0;
+    FLocationFlag  := False;
+     
     FCtrlSocket.OnSessionClosed := SocketSessionClosed;
 
     if FCtrlSocket.State = wsConnected then begin
@@ -2030,6 +2163,15 @@ begin
     FCtrlSocket.SocksUsercode       := FSocksUsercode;
     FCtrlSocket.SocksPassword       := FSocksPassword;
     FCtrlSocket.SocksAuthentication := FSocksAuthentication;
+    FReceiveLen                     := 0; { Clear the receive buffer V7.10 }
+{$IFDEF BUILTIN_THROTTLE}
+    if httpoBandwidthControl in FOptions then begin
+        FCtrlSocket.BandwidthLimit     := FBandwidthLimit;
+        FCtrlSocket.BandwidthSampling  := FBandwidthSampling;
+    end
+    else
+        FCtrlSocket.BandwidthLimit := 0;
+{$ENDIF}
 end;
 
 
@@ -2201,6 +2343,10 @@ begin
                     SocketDataSent(FCtrlSocket, 0);
                 {$ENDIF}
                 end;
+            httpDELETE:
+                begin
+                    SendRequest('DELETE', FRequestVer);
+                end;
             httpHEAD:
                 begin
                     SendRequest('HEAD', FRequestVer);
@@ -2344,6 +2490,17 @@ begin
         if FModifiedSince <> 0 then
             Headers.Add('If-Modified-Since: ' +
                         RFC1123_Date(FModifiedSince) + ' GMT');
+
+        if not FProxyConnected then begin
+            { We did not call SetReady while in relocation, adjust }
+            { ProxyAuthNtlmState if we got disconnected from proxy }
+          {$IFDEF UseNTLMAuthentication}
+            if FProxyAuthNtlmState = ntlmDone then
+                FProxyAuthNtlmState := ntlmMsg1;
+          {$ENDIF}
+        end;
+        
+
 {$IFDEF UseNTLMAuthentication}
         if (FProxyAuthNTLMState <> ntlmMsg1) then begin
             if (FAuthNTLMState = ntlmMsg1) then
@@ -2394,8 +2551,11 @@ begin
             Headers.Add('Cookie: ' + FCookie);
         if (FContentRangeBegin <> '') or (FContentRangeEnd <> '') then begin            {JMR!! Added this line!!!}
             Headers.Add('Range: bytes=' + FContentRangeBegin + '-' + FContentRangeEnd); {JMR!! Added this line!!!}
-            FContentRangeBegin := '';                                                   {JMR!! Added this line!!!}
-            FContentRangeEnd   := '';                                                   {JMR!! Added this line!!!}
+            if (Method <> 'CONNECT') then { V7.21 }
+            begin
+                FContentRangeBegin := '';                                               {JMR!! Added this line!!!}
+                FContentRangeEnd   := '';                                               {JMR!! Added this line!!!}
+            end;
         end;                                                                            {JMR!! Added this line!!!}
         FAcceptRanges := '';
 
@@ -2499,7 +2659,10 @@ begin
                 while N > 0 do begin
 //                  if P^ = #10 then begin
                     if Ord(FReceiveBuffer[P]) = 10 then begin // FP 09/09/06
-                        FChunkState := httpChunkGetData;
+                        if FChunkLength = 0 then              // AG V7.18
+                            FChunkState := httpChunkDone      // AG V7.18
+                        else                                  // AG V7.18
+                            FChunkState := httpChunkGetData;
                         Inc(P);
                         Dec(N);
                         break;
@@ -2568,16 +2731,16 @@ begin
             then FBandwidthTimer.Enabled := FALSE;
 {$ENDIF}
 {$IFDEF UseContentCoding} {V7.06}
-            FContentCodingHnd.Complete;
+ {           FContentCodingHnd.Complete;  V7.19 moved to TriggerDocEnd }
         {$IFNDEF NO_DEBUG_LOG}
-            if CheckLogOptions(loProtSpecInfo) then begin
+ {           if CheckLogOptions(loProtSpecInfo) then begin
                 if Assigned(FRcvdStream) and (FContentEncoding <> '') then begin
                     DebugLog(loProtSpecInfo, FContentEncoding +
                              ' content uncompressed from ' +
                              IntToStr(FContentLength) + ' bytes to ' +
                              IntToStr(FRcvdStream.Size) + ' bytes');
                 end;
-            end;
+            end;   }
         {$ENDIF}
 {$ENDIF}
             TriggerDocEnd;
@@ -2623,15 +2786,15 @@ begin
                 FBandwidthTimer.Enabled := FALSE;
 {$ENDIF}
 {$IFDEF UseContentCoding}
-            FContentCodingHnd.Complete;
+ {           FContentCodingHnd.Complete;  V7.19 moved to TriggerDocEnd }
         {$IFNDEF NO_DEBUG_LOG}
-            if CheckLogOptions(loProtSpecInfo) then begin
+ {           if CheckLogOptions(loProtSpecInfo) then begin
                 if Assigned(FRcvdStream) and (FContentEncoding <> '') then begin
                     DebugLog(loProtSpecInfo, FContentEncoding + ' content uncompressed from ' +
                       IntToStr(FContentLength) + ' bytes to ' +
                                IntToStr(FRcvdStream.Size) + ' bytes');
                 end;
-            end;
+            end;  }
         {$ENDIF}
 {$ENDIF}
             TriggerDocEnd;
@@ -2640,7 +2803,7 @@ begin
                 { [rawbite 31.08.2004 Connection controll] }
                 (FCloseReq) then     { SAE 01/06/04 }
                 FCtrlSocket.CloseDelayed
-            else
+            else if not FLocationFlag then
                 CheckDelaySetReady;  { 09/26/08 ML }
         end;
     end;
@@ -2779,7 +2942,8 @@ begin
              (FStatusCode = 204) or              { Added 12/03/2004 }
              (FStatusCode = 301) or              { Added 06/10/2004 }
              (FStatusCode = 302) or              { Added 06/10/2004 }
-             (FStatusCode = 304) or              { Added 12/03/2004 }
+             (FStatusCode = 304)))               { Added 12/03/2004 }
+           (* or //                              { Removed again V7.20 }             
              { AFAIR, next two lines have been added since it might }
              { happen that a body is not sent with both responses.  }
              { Unfortunately we truncate body data in those cases   }
@@ -2788,6 +2952,7 @@ begin
              { SocketSessionClosed() a little bit later anyway. (AG)}
              (FStatusCode = 401) or              { Added 12/28/2005 } //AG 12/28/05
              (FStatusCode = 407)))               { Added 12/28/2005 } //AG 12/28/05
+            *) { V7.20 }
            or
             (FContentLength = 0)
            or
@@ -2817,6 +2982,8 @@ begin
                 FNext := nil;                                     //AG 05/27/08
                 SetReady;                                         //AG 05/27/08
             end                                                   //AG 05/27/08
+            else if FLocationFlag then
+                StartRelocation
             else
                 CheckDelaySetReady;  { 09/26/08 ML }
             Exit;
@@ -2903,6 +3070,8 @@ begin
               Inc(nSep);
         Data  := Copy(FLastResponse, nSep, Length(FLastResponse));
         if Field = 'location' then begin { Change the URL ! }
+            if Copy(Data, 1, 2) = '//' then         { V7.22 }
+                Data := FProtocol + ':' + Data;     { V7.22 }
             if FRequestType = httpPUT then begin
                  { Location just tell us where the document has been stored }
                  FLocation := Data;
@@ -3111,10 +3280,11 @@ end;
 procedure THttpCli.InternalClear;
 begin
     FRcvdHeader.Clear;
-    FRequestDoneError := 0;
+    FRequestDoneError := httperrNoError;
     FDocName          := '';
     FStatusCode       := 0;
     FRcvdCount        := 0;
+    FReceiveLen       := 0;   { V7.10 }
     FSentCount        := 0;
     FHeaderLineCount  := 0;
     FBodyLineCount    := 0;
@@ -3161,10 +3331,14 @@ begin
         FStatusCode   := 200;
         FReasonPhrase := 'OK';
         StateChange(httpClosing);
-        if FCtrlSocket.State = wsClosed then
-            SetReady
+        if FCtrlSocket.State = wsClosed then begin
+            FLocationFlag := False;    { 7.23 }
+            FRequestType := Rq;        { 7.23 }
+            InternalClear;             { 7.23 }
+            SetReady;
+        end
         else
-           FCtrlSocket.CloseDelayed;
+            FCtrlSocket.CloseDelayed;
         Exit;
     end;
 
@@ -3288,7 +3462,7 @@ begin
 {$ENDIF}
 {$IFDEF UseDigestAuthentication}
             if FProxyAuth = httpAuthDigest then
-                FProxyAuthDigestState := digestMsg1
+                FProxyAuthDigestState := digestDone
             else
 {$ENDIF}
             if FProxyAuth = httpAuthBasic then
@@ -3309,8 +3483,8 @@ begin
 {$ENDIF}
 {$IFDEF UseDigestAuthentication}
         if FServerAuth = httpAuthDigest then
-            FAuthDigestState := digestMsg1
-        else    
+            FAuthDigestState := digestDone
+        else
 {$ENDIF}
         if FServerAuth = httpAuthBasic then
             FAuthBasicState := basicMsg1;
@@ -3368,15 +3542,14 @@ begin
     DoRequestAsync(Rq);
     if not Assigned(FCtrlSocket.Counter) then
         FCtrlSocket.CreateCounter;
-    FCtrlSocket.Counter.SetConnected; // Reset counter
+    FCtrlSocket.Counter.LastSendTick := GetTickCount; // Reset counter
     DummyHandle := INVALID_HANDLE_VALUE;
     TimeOutMsec := FTimeOut * 1000;
     while FState <> httpReady do begin
         if MsgWaitForMultipleObjects(0, DummyHandle, FALSE, 1000,
                                      QS_ALLINPUT) = WAIT_OBJECT_0 then
-            FCtrlSocket.MessagePump;
-        if (FState <> httpReady) and (
-           {$IFNDEF NOFORMS} Application.Terminated or {$ENDIF} FTerminated or
+            MessagePump;
+        if (FState <> httpReady) and (Terminated or
            (IcsCalcTickDiff(FCtrlSocket.Counter.LastAliveTick,
                             GetTickCount) >= TimeOutMsec)) then begin
             bFlag := (FState = httpDnsLookup);
@@ -3389,8 +3562,7 @@ begin
                 { Ignore any exception }
             end;
             FStatusCode := 404;
-            if {$IFNDEF NOFORMS} Application.Terminated or {$ENDIF}
-               FTerminated then begin
+            if Terminated then begin
                 FReasonPhrase     := 'Request aborted';
                 FRequestDoneError := httperrAborted;
             end
@@ -3413,8 +3585,18 @@ begin
             is no more triggered for status 401 and 407.
 *}
     {* if FStatusCode > 401 then    Dec 14, 2004 *}
-    if (FStatusCode >= 400) and (FStatusCode <> 401) and (FStatusCode <> 407) then
+    if FRequestDoneError <> httperrNoError then                       { V7.23 }
+        raise EHttpException.Create(FReasonPhrase, FRequestDoneError) { V7.23 }
+    else if (FStatusCode >= 400) and (FStatusCode <> 401) and (FStatusCode <> 407) then
         raise EHttpException.Create(FReasonPhrase, FStatusCode);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpCli.LoginDelayed;
+begin
+    if not FWMLoginQueued then
+        FWMLoginQueued := PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
 end;
 
 
@@ -3426,12 +3608,38 @@ var
     I                                   : Integer;
     AllowMoreRelocations                : Boolean;
 begin
-    { Remove any bookmark from the URL }
+  { Remove any bookmark from the URL }
     I := Pos('#', FLocation);
     if I > 0 then
         RealLocation := Copy(FLocation, 1, I - 1)
     else
         RealLocation := FLocation;
+
+  {$IFDEF UseNTLMAuthentication}
+    if FProxyAuthNtlmState <> ntlmNone then
+        { Connection thru proxy with NTLM. Reset the AuthState. }
+        FProxyAuthNtlmState := ntlmMsg1; //ntlmDone;
+  {$ENDIF}
+
+    if FWMLoginQueued then begin
+    { StartRelocation already queued a new Login }
+        FConnected      := FALSE;
+        FProxyConnected := FALSE;
+        FLocationFlag   := FALSE;
+        { Clear header from previous operation }
+        FRcvdHeader.Clear;
+        { Clear status variables from previous operation }
+        FHeaderLineCount  := 0;
+        FBodyLineCount    := 0;
+        FContentLength    := -1;
+        FContentType      := '';
+        FTransferEncoding := ''; { 28/12/2003 }
+        FResponseVer      := ''; { V7.20 } 
+    {$IFDEF UseContentCoding}
+        FContentEncoding  := '';
+    {$ENDIF}
+        Exit; //***
+    end;
 
     { Parse the URL }
     ParseURL(RealLocation, Proto, User, Pass, Host, Port, Path);
@@ -3469,11 +3677,12 @@ begin
     FBodyLineCount    := 0;
     FContentLength    := -1;
     FContentType      := '';
-    FStatusCode       := 0;
+    //FStatusCode       := 0; // Moved to Login
     FTransferEncoding := ''; { 28/12/2003 }
 {$IFDEF UseContentCoding}
     FContentEncoding  := '';
 {$ENDIF}
+    FResponseVer      := ''; { V7.20 }
     { Adjust for proxy use  (Fixed: Nov 10, 2001) }
     if FProxy <> '' then
         FPort := ProxyPort;
@@ -3481,7 +3690,7 @@ begin
     CleanupRcvdStream; {11/11/04}
     CleanupSendStream;
     { Restart at login procedure }
-    PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+    LoginDelayed;
 end;
 
 
@@ -3527,8 +3736,14 @@ begin
         LocationSessionClosed(Self, 0)
     else begin
         TriggerSessionClosed;
-        if FState <> httpReady then
+        if FState <> httpReady then begin
+            if (FRequestDoneError = httperrNoError) and (FStatusCode = 0) then  { V7.23 }
+            begin
+                FRequestDoneError := httperrNoStatusCode;
+                FReasonPhrase     := 'HTTP no status code (connection closed prematurely)';
+            end;
             SetReady;
+        end;
     end;
 {$ELSE}
     TriggerSessionClosed;
@@ -3827,24 +4042,25 @@ begin
     FHeaderLineCount  := 0;
     FBodyLineCount    := 0;
 
-{  V1.90 25 Nov 2005 - restrict number of relocations to avoid continuous loops }
-    inc (FLocationChangeCurCount) ;
-    if FLocationChangeCurCount > FLocationChangeMaxCount then begin
-        AllowMoreRelocations := false;
-        if Assigned (FOnLocationChangeExceeded) then
-            FOnLocationChangeExceeded(Self, FLocationChangeCurCount,
-                                                     AllowMoreRelocations) ;
-        if not AllowMoreRelocations then begin
-            SetReady;
-            exit;
-        end ;
-    end ;
     if {(FResponseVer     = '1.1') and}
         { [rawbite 31.08.2004 Connection controll] }
        (FCurrentHost     = FHostName) and
        (FCurrentPort     = FPort) and
        (FCurrentProtocol = FProtocol) and
        (not FCloseReq) then begin      { SAE 01/06/04 }
+
+        Inc (FLocationChangeCurCount) ;
+        if FLocationChangeCurCount > FLocationChangeMaxCount then begin
+            AllowMoreRelocations := false;
+            if Assigned (FOnLocationChangeExceeded) then
+                FOnLocationChangeExceeded(Self, FLocationChangeCurCount,
+                                                         AllowMoreRelocations) ;
+            if not AllowMoreRelocations then begin
+                SetReady;
+                exit;
+            end ;
+        end;
+
         { No need to disconnect }
         { Trigger the location changed event  27/04/2003 }
         if Assigned(FOnLocationChange) then
@@ -3861,7 +4077,7 @@ begin
         { Must clear what we already received }
         CleanupRcvdStream; {11/11/04}
         CleanupSendStream;
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
     else begin
         FCtrlSocket.OnSessionClosed := LocationSessionClosed;
@@ -3940,7 +4156,7 @@ begin
            (FResponseVer = '') then                            // <== 12/29/05 AG
             FCurrConnection := 'Keep-alive';
 
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
     else if FAuthNTLMState = ntlmMsg1 then begin
         I := FDoAuthor.Count - 1;
@@ -3953,7 +4169,7 @@ begin
             Exit;
         FNTLMMsg2Info     := NtlmGetMessage2(Copy(FDoAuthor.Strings[I], 6, 1000));
         FAuthNTLMState    := ntlmMsg3;
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
     else if FAuthNTLMState = ntlmMsg3 then begin
         FDoAuthor.Clear;
@@ -3993,7 +4209,7 @@ begin
            (FResponseVer = '') then                            // <== 12/29/05 AG
             FCurrProxyConnection := 'Keep-alive';
 
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
     else if FProxyAuthNTLMState = ntlmMsg1 then begin
         I := FDoAuthor.Count - 1;
@@ -4006,7 +4222,7 @@ begin
             Exit;
         FProxyNTLMMsg2Info  := NtlmGetMessage2(Copy(FDoAuthor.Strings[I], 6, 1000));
         FProxyAuthNTLMState := ntlmMsg3;
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
     else if FProxyAuthNTLMState = ntlmMsg3 then begin
         FDoAuthor.Clear;
@@ -4037,7 +4253,7 @@ begin
 {$IFDEF UseDigestAuthentication}
         FAuthDigestState  := digestNone;
 {$ENDIF}
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
     else if FAuthBasicState = basicMsg1 then begin
         FDoAuthor.Clear;
@@ -4067,7 +4283,7 @@ begin
 {$IFDEF UseDigestAuthentication}
         FProxyAuthDigestState := digestNone;
 {$ENDIF}
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
     else if FProxyAuthBasicState = basicMsg1 then begin
         FDoAuthor.Clear;
@@ -4238,7 +4454,7 @@ begin
         FAuthNTLMState    := ntlmNone; { Other authentication must be cleared }
     {$ENDIF}
         FAuthBasicState   := basicNone;
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
     else if FAuthDigestState = digestMsg1 then begin
         FDoAuthor.Clear;
@@ -4266,9 +4482,9 @@ begin
         FProxyAuthNTLMState  := ntlmNone; { Other authentication must be cleared }
     {$ENDIF}
         FProxyAuthBasicState := basicNone;
-        PostMessage(Handle, FMsg_WM_HTTP_LOGIN, 0, 0);
+        LoginDelayed;
     end
-    else if FProxyAuthBasicState = basicMsg1 then begin
+    else if FProxyAuthDigestState = digestMsg1 then begin
         FDoAuthor.Clear;
         FProxyAuthDigestState := digestNone;
         { We come here when Digest has failed }
@@ -4346,6 +4562,10 @@ begin
                 SocketDataSent(FCtrlSocket, 0);
 {$ENDIF}
             end;
+        httpDELETE:
+            begin
+                SendRequest('DELETE', FRequestVer);
+            end;
         httpHEAD:
             begin
                 SendRequest('HEAD', FRequestVer);
@@ -4419,6 +4639,15 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ This will start the Delete process and wait until terminated (blocking)   }
+procedure THttpCli.Del;
+begin
+    FLocationChangeCurCount := 0 ;
+    DoRequestSync(httpDELETE);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { This will start the Post process and wait until terminated (blocking)     }
 procedure THttpCli.Post;
 begin
@@ -4459,6 +4688,15 @@ procedure THttpCli.HeadAsync;
 begin
     FLocationChangeCurCount := 0 ;  {  V1.90 }
     DoRequestASync(httpHEAD);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ This will start the delete process and returns immediately (non blocking) }
+procedure THttpCli.DelAsync;
+begin
+    FLocationChangeCurCount := 0 ; 
+    DoRequestASync(httpDELETE);
 end;
 
 
@@ -4517,7 +4755,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{$IFDEF WIN32}
+{$IFNDEF CLR}
 function EncodeLine(
     Encoding : THttpEncoding;
     SrcData  : PAnsiChar;
@@ -4706,9 +4944,11 @@ begin
     { it is very common not to send domain and workstation strings on }
     { the first message                                               }
     if ForProxy then
-        Result := 'Proxy-Authorization: NTLM ' + NtlmGetMessage1('', '')
+        Result := 'Proxy-Authorization: NTLM ' +
+                  NtlmGetMessage1('', '', FLmCompatLevel)  { V7.25 }
     else
-        Result := 'Authorization: NTLM ' + NtlmGetMessage1('', '');
+        Result := 'Authorization: NTLM ' +
+                  NtlmGetMessage1('', '', FLmCompatLevel); { V7.25 }
 end;
 
 
@@ -4717,6 +4957,7 @@ function THttpCli.GetNTLMMessage3(const HttpMethod: String;
   const ForProxy: Boolean): String;
 var
     Hostname : String;
+    LDomain, LUser: String;
 begin
     { get local hostname }
     try
@@ -4725,23 +4966,28 @@ begin
         Hostname := '';
     end;
 
-    { domain is not used             }
     { hostname is the local hostname }
-    if ForProxy then
+    if ForProxy then begin
+        NtlmParseUserCode(FProxyUsername, LDomain, LUser, FALSE);
         Result := 'Proxy-Authorization: NTLM ' +
-                  NtlmGetMessage3('',
+                  NtlmGetMessage3(LDomain,
                                   Hostname,
-                                  FProxyUsername,
+                                  LUser,
                                   FProxyPassword,
-                                  FProxyNTLMMsg2Info.Challenge)
-
-    else
+                                  FProxyNTLMMsg2Info, { V7.25 }
+                                  CP_ACP,
+                                  FLmCompatLevel);    { V7.25 }
+    end
+    else begin
+        NtlmParseUserCode(FCurrUsername, LDomain, LUser, FALSE);
         Result := 'Authorization: NTLM ' +
-                  NtlmGetMessage3('',
+                  NtlmGetMessage3(LDomain,
                                   Hostname,
-{                                 FNTLMUsercode, FNTLMPassword, }
-                                  FCurrUsername, FCurrPassword,
-                                  FNTLMMsg2Info.Challenge);
+                                  LUser, FCurrPassword,
+                                  FNTLMMsg2Info,   { V7.25 }
+                                  CP_ACP,
+                                  FLmCompatLevel); { V7.25 }
+    end;
 end;
 {$ENDIF}
 
@@ -4874,7 +5120,7 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslHttpCli.CreateSocket;
 begin
-    FCtrlSocket           := TSslWSocket.Create(Self);
+    FCtrlSocket           := TSslWSocket.Create(nil);
     FCtrlSocket.SslEnable := TRUE;
 end;
 

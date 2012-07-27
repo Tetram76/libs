@@ -4,12 +4,12 @@ Author:       Angus Robertson, Magenta Systems Ltd
 Description:  One Time Password support functions, see RFC2289/1938 (aka S/KEY)
 Creation:     12 November 2007
 Updated:      06 August 2008
-Version:      1.03
+Version:      1.06
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 1997-2012 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
 
               This software is provided 'as-is', without any express or
@@ -42,7 +42,10 @@ Updates:
 12 May 2008 - 1.01 Uses OverbyteIcsUtils.pas for atoi
 06 Aug 2008 - 1.02 Changed two strings to AnsiStrings so it works under Delphi 2009
 5 Nov 2008  - 1.03 added OtpGetMethod, OtpKeyNames public
-
+15 Apr 2011 - 1.04 Arno prepared for 64-bit, use functions from OverbyteIcsUtils.
+14 Aug 2011 - 1.05 Arno fixed a bug that showed up since Delphi XE only and made
+              two small optimizations.
+Feb 29, 2012  1.06 Arno - Use IcsRandomInt
 
 
 Background:
@@ -138,8 +141,8 @@ uses
     OverbyteIcsUtils;
 
 const
-    OneTimePwVersion = 103;
-    CopyRight : String = ' OneTimePw (c) 1997-2010 F. Piette V1.03 ';
+    OneTimePwVersion = 106;
+    CopyRight : String = ' OneTimePw (c) 1997-2012 F. Piette V1.06 ';
     OtpKeyNames: array [0..3] of string =
                 ('none', 'otp-md5', 'otp-md4', 'otp-sha1') ;
 
@@ -453,11 +456,13 @@ var
     I: Integer ;
     Maplen, Seedlen: integer ;
 begin
-    result := '' ;
-    Seedlen := Random (12) + 4 ;  { seed length 4 to 16 }
+    //result := '' ;
+    Seedlen := IcsRandomInt (12) + 4 ;  { seed length 4 to 16 }
     Maplen := Length (CharMap) - 1 ;
+    SetLength(Result, SeedLen);
     for I := 1 to Seedlen do
-        result := result + CharMap [Random (Maplen) + 1] ;
+        //result := result + CharMap [IcsRandomInt (Maplen) + 1] ;
+        Result[I] := CharMap [IcsRandomInt (Maplen) + 1];
 end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -485,16 +490,28 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function OtpLowNoSpace (const AString: string): string;
 var
-    I: integer;
+    I, J: integer;
 begin
-    result := '';
+    {result := '';
     for I := 1 to Length(AString) do begin
         if (AString[I] <> ' ') and (AString[I] <> #9) then
             result := result + LowerCase (AString [I]);
+    end;}
+    SetLength(Result, Length(AString));
+    J := 0;
+    for I := 1 to Length(AString) do begin
+        if (AString[I] <> ' ') and (AString[I] <> #9) then
+        begin
+            Inc(J);
+            Result[J] := AString[I];
+        end;
     end;
+    SetLength(Result, J);
+    Result := LowerCase(Result);
 end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+(*
 function RevEndian64(X: Int64): Int64;
 begin
     result :=          (X and $00000000000000FF) shl 56;
@@ -506,15 +523,16 @@ begin
     result := result + (X and $00FF000000000000) shr 40;
     result := result + (X and $FF00000000000000) shr 56;
 end;
-
+*)
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function KeyToHex(OtpKey: TOtp64bit): string;
-var
-    I: integer ;
+function KeyToHex(OtpKey: TOtp64bit): string; {$IFDEF USE_INLINE} inline; {$ENDIF}
+{var
+    I: integer ;}
 begin
-    result := '';
+    {result := '';
     for I := 0 to 7 do
-        result := result + IntToHex(OtpKey [I], 2);
+        result := result + IntToHex(OtpKey [I], 2);}
+    Result := IcsBufferToHex(OtpKey[0], SizeOf(OtpKey));
 end ;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -530,13 +548,15 @@ var
 
 begin
  { convert 8 bytes to int64 }
-    Key64 := RevEndian64 (TInt64Rec (OtpKey).Quad) ;
+    //Key64 := RevEndian64 (TInt64Rec (OtpKey).Quad) ;
+    //IcsSwap64Buf(@TInt64Rec(OtpKey).Quad, @Key64, 1);
+    Key64 := IcsSwap64(TInt64Rec(OtpKey).Quad); // New and faster
  { get 11-bits five times and get five words from dictionary }
     for I := 0 to 4 do
         Result := Result + SixWordsList [GetBits (I * 11, 11)] + ' ' ;
     parity := 0;
   { sixth word includes two parity bits }
-    for I := 0 to 32 do inc (parity, GetBits (I * 2, 2));
+    for I := 0 to 31 do inc (parity, GetBits (I * 2, 2));
     parity := parity and 3;
     result := result + SixWordsList [GetBits (55, 11) + parity];
 end;
@@ -575,6 +595,7 @@ begin
 end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+(*
 procedure SwapIntBuf(Source, Dest: Pointer; Count: Integer);
 asm
        TEST   ECX,ECX
@@ -590,6 +611,7 @@ asm
        POP    EBX
 @Exit:
 end;
+*)
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function GetSha1Half (Buffer: Pointer; BufSize: Integer): TOtp64bit;
@@ -607,7 +629,8 @@ begin
         Result [I] := Result [I] XOR Ord (Digest [I + 17]);
 
   { change endian order }
-    SwapIntBuf(@Result[0], @Result[0], 2);
+    //SwapIntBuf(@Result[0], @Result[0], 2);
+    IcsSwap32Buf(@Result[0], @Result[0], 2);
 end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -766,9 +789,5 @@ begin
 end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-initialization
-    randomize;
-finalization
 
 end.
-

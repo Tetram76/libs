@@ -1,9 +1,9 @@
 object WebServForm: TWebServForm
   Left = 253
   Top = 158
+  Width = 510
+  Height = 369
   Caption = 'ICS WebServer Demo - http://www.overbyte.be'
-  ClientHeight = 335
-  ClientWidth = 523
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,11 +20,10 @@ object WebServForm: TWebServForm
   object ToolsPanel: TPanel
     Left = 0
     Top = 0
-    Width = 523
-    Height = 125
+    Width = 502
+    Height = 129
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 515
     object Label1: TLabel
       Left = 40
       Top = 8
@@ -76,17 +75,25 @@ object WebServForm: TWebServForm
     end
     object Label7: TLabel
       Left = 357
-      Top = 77
+      Top = 83
       Width = 90
       Height = 13
       Caption = 'KeepAliveTimeSec'
     end
     object Label8: TLabel
-      Left = 334
-      Top = 101
-      Width = 113
+      Left = 328
+      Top = 105
+      Width = 119
       Height = 13
+      Alignment = taRightJustify
       Caption = 'MaxRequestsKeepAlive'
+    end
+    object Label9: TLabel
+      Left = 15
+      Top = 105
+      Width = 153
+      Height = 13
+      Caption = 'Maximum Bandwidth (bytes/sec)'
     end
     object DocDirEdit: TEdit
       Left = 80
@@ -197,7 +204,7 @@ object WebServForm: TWebServForm
     end
     object KeepAliveTimeSecEdit: TEdit
       Left = 453
-      Top = 74
+      Top = 79
       Width = 33
       Height = 21
       Hint = 'Idle timeout in seconds upon persistent connections (Keep-Alive)'
@@ -208,7 +215,7 @@ object WebServForm: TWebServForm
     end
     object MaxRequestsKeepAliveEdit: TEdit
       Left = 453
-      Top = 98
+      Top = 103
       Width = 33
       Height = 21
       Hint = 
@@ -219,12 +226,23 @@ object WebServForm: TWebServForm
       TabOrder = 13
       Text = 'MaxRequestsKeepAliveEdit'
     end
+    object BandwidthLimitEdit: TEdit
+      Left = 174
+      Top = 103
+      Width = 71
+      Height = 21
+      Hint = 'Bytes Per Second'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 14
+      Text = 'BandwidthLimitEdit'
+    end
   end
   object DisplayMemo: TMemo
     Left = 0
-    Top = 125
-    Width = 523
-    Height = 210
+    Top = 129
+    Width = 502
+    Height = 206
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -253,6 +271,10 @@ object WebServForm: TWebServForm
     MaxRequestsKeepAlive = 100
     SizeCompressMin = 5000
     SizeCompressMax = 5000000
+    MaxBlkSize = 8192
+    MimeTypesList = MimeTypesList1
+    BandwidthLimit = 0
+    BandwidthSampling = 1000
     OnServerStarted = HttpServer1ServerStarted
     OnServerStopped = HttpServer1ServerStopped
     OnClientConnect = HttpServer1ClientConnect
@@ -261,6 +283,7 @@ object WebServForm: TWebServForm
     OnHeadDocument = HttpServer1HeadDocument
     OnPostDocument = HttpServer1PostDocument
     OnPostedData = HttpServer1PostedData
+    OnHttpMimeContentType = HttpServer1HttpMimeContentType
     OnAuthGetPassword = HttpServer1AuthGetPassword
     OnAuthResult = HttpServer1AuthResult
     OnAuthGetType = HttpServer1AuthGetType
@@ -269,5 +292,40 @@ object WebServForm: TWebServForm
     AuthRealm = 'ics'
     Left = 18
     Top = 179
+  end
+  object MimeTypesList1: TMimeTypesList
+    LoadOSonDemand = True
+    MimeTypesFile = '/etc/mime.types'
+    DefaultTypes.Strings = (
+      '.htm=text/html'
+      '.html=text/html'
+      '.gif=image/gif'
+      '.bmp=image/bmp'
+      '.jpg=image/jpeg'
+      '.jpeg=image/jpeg'
+      '.tif=image/tiff'
+      '.tiff=image/tiff'
+      '.txt=text/plain'
+      '.css=text/css'
+      '.wav=audio/x-wav'
+      '.ico=image/x-icon'
+      '.wml=text/vnd.wap.wml'
+      '.wbmp=image/vnd.wap.wbmp'
+      '.wmlc=application/vnd.wap.wmlc'
+      '.wmlscript=text/vnd.wap.wmlscript'
+      '.wmlscriptc=application/vnd.wap.wmlscriptc'
+      '.pdf=application/pdf'
+      '.png=image/png'
+      '.xml=application/xml'
+      '.xhtml=application/xhtml+xml'
+      '.zip=application/zip'
+      '.exe=application/x-msdownload'
+      '.msi=application/x-msdownload'
+      '.bin=application/octet-stream'
+      '.iso=application/octet-stream')
+    MimeTypeSrc = MTypeList
+    UnknownType = 'application/octet-stream'
+    Left = 60
+    Top = 180
   end
 end

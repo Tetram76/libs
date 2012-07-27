@@ -2,21 +2,18 @@
   file   : IcsZLibObj.pas
   date   : 6 Dec 2005
   ICS version: Angus Robertson
-  Updates
-  Aug 05, 2008 F. Piette added some casts for unicode support
 
   Subject
   -------
   A Borland Delphi unit to interface zlib.dll functions
-  see also in zLib package (zlib 1.2.3) \contrib\delphi\
 
   Acknowledgements
   ----------------
   Thanks to Jean-loup Gailly and Mark Adler for zLib library
          and Gilles Vollant for zlibwapi.dll
 
-  zLib library version 1.2.3
-  Copyright (C) 1995-2005 Jean-loup Gailly and Mark Adler
+  zLib library version 1.2.5
+  Copyright (C) 1995-2010 Jean-loup Gailly and Mark Adler
   Informations at http://www.zlib.net (or http://www.zlib.org)
 
 
@@ -25,15 +22,26 @@
   Xavier Le Bris
   xavier.lebris@free.fr   (english or french)
 
+  ICS Updates
+  -----------
+
   27 Nov 2005 by Angus Robertson, Magenta Systems
   delphi@magsys.co.uk, http://www.magsys.co.uk/delphi/
   Added an alterative Zlib implementation using the ZLIB OBJ files linked into
   the program to avoid needing an external DLL, in IcsZLibObj
   Renamed the units for use with ICS from http://www.overbyte.be
   This OBJ files are from zlibpas by Gabriel Corneanu (gabrielcorneanu(AT)yahoo.com)
+
   02 May 2008 by A.Garrels <arno.garrels@gmx.de>
               Prepared code for Unicode, changed most types from String
               and PChar to AnsiString and PAnsiChar.
+
+  Aug 05, 2008 F. Piette added some casts for unicode support
+
+  Sep 10, 2010 Angus and Arno updated ZLIB to 1.2.5, subdirectory now lowercase
+
+  Apr 15, 2011 Arno prepared for 64-bit.
+  Aug 13, 2011 Arno fixed record allignment.
 
   This software is provided 'as-is', without any express or implied warranty.
   In no event will the author be held liable for any damages arising from the use of this software.
@@ -46,7 +54,7 @@ unit OverbyteIcsZLibObj;
 
 interface
 
-{$A-}             {no 32 bits alignment for records     }
+{$ALIGN ON}
 {$B-}             { Enable partial boolean evaluation   }
 {$T-}             { Untyped pointers                    }
 {$X+}             { Enable extended syntax              }
@@ -81,7 +89,7 @@ var
 
 {zLib constants}
 const
-   ZLIB_VERSION    = '1.2.3';
+   ZLIB_VERSION    = '1.2.5';
 
    { Allowed flush values; see deflate() below for details }
    Z_NO_FLUSH      = 0;
@@ -198,7 +206,7 @@ type
   for more details on the meanings of these fields.
 *)
   gz_headerp = ^gz_header;
-  gz_header = packed record
+  gz_header = record
     text       : integer;   //* true if compressed data believed to be text */
     time       : Cardinal;  //* modification time */
     xflags     : integer;   //* extra flags (not used when writing a gzip file) */
@@ -331,19 +339,42 @@ const
 type
    EZLibCheckError = class(Exception);
 
-{$L zobj123/adler32.obj}
-{$L zobj123/compress.obj}
-{$L zobj123/crc32.obj}
-{$L zobj123/deflate.obj}
-{ L zobj123/gzio.obj}
-{$L zobj123/infback.obj}
-{$L zobj123/inffast.obj}
-{$L zobj123/inflate.obj}
-{$L zobj123/inftrees.obj}
-{ L zobj123/minigzip.obj}
-{$L zobj123/trees.obj}
-{$L zobj123/uncompr.obj}
-{$L zobj123/zutil.obj}
+// currently not importing gzio, minigzip, gzclose, gzread, gzwrite
+{$IFDEF WIN64}
+    {$L zobj125/win64/adler32.obj}
+    {$L zobj125/win64/compress.obj}
+    {$L zobj125/win64/crc32.obj}
+    {$L zobj125/win64/deflate.obj}
+    { L zobj125/win64/gzclose.obj}
+    { L zobj125/win64/gzread.obj}
+    { L zobj125/win64/gzio.obj}
+    { L zobj125/win64/gzwrite.obj}
+    {$L zobj125/win64/infback.obj}
+    {$L zobj125/win64/inffast.obj}
+    {$L zobj125/win64/inflate.obj}
+    {$L zobj125/win64/inftrees.obj}
+    { L zobj125/win64/minigzip.obj}
+    {$L zobj125/win64/trees.obj}
+    {$L zobj125/win64/uncompr.obj}
+    {$L zobj125/win64/zutil.obj}
+{$ELSE}
+    {$L zobj125/adler32.obj}
+    {$L zobj125/compress.obj}
+    {$L zobj125/crc32.obj}
+    {$L zobj125/deflate.obj}
+    { L zobj125/gzclose.obj}
+    { L zobj125/gzread.obj}
+    { L zobj125/gzio.obj}
+    { L zobj125/gzwrite.obj}
+    {$L zobj125/infback.obj}
+    {$L zobj125/inffast.obj}
+    {$L zobj125/inflate.obj}
+    {$L zobj125/inftrees.obj}
+    { L zobj125/minigzip.obj}
+    {$L zobj125/trees.obj}
+    {$L zobj125/uncompr.obj}
+    {$L zobj125/zutil.obj}
+{$ENDIF}
 
 function adler32; external;
 function compress; external;
@@ -567,6 +598,28 @@ begin
   Result := inflateBackInit_(strm, windowBits, window,
                              ZLIB_VERSION, sizeof(z_stream));
 end;
+
+{$IFDEF WIN64}
+function malloc(Size: Integer): Pointer;
+begin
+  GetMem(Result, Size);
+end;
+
+procedure free(Block: Pointer);
+begin
+  FreeMem(Block);
+end;
+
+procedure memset(P: Pointer; B: Byte; count: Integer);
+begin
+  FillChar(P^, count, B);
+end;
+
+procedure memcpy(dest, source: Pointer; count: Integer);
+begin
+  Move(source^, dest^, count);
+end;
+{$ENDIF}
 
 function _malloc(Size: Integer): Pointer; cdecl;
 begin

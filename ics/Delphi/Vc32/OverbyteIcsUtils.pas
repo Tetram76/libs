@@ -3,12 +3,12 @@
 Author:       Arno Garrels <arno.garrels@gmx.de>
 Description:  A place for common utilities.
 Creation:     Apr 25, 2008
-Version:      7.36
+Version:      7.46
 EMail:        http://www.overbyte.be       francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 2002-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 2002-2012 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
 
               This software is provided 'as-is', without any express or
@@ -105,9 +105,24 @@ Mar 06, 2010 V7.33 Arno fixed IcsGetWideCharCount, MultiByteToWideChar() does
              IsUtf8LeadByte() and IcsUtf8Size().
 Apr 26, 2010 V7.34 Arno removed some Windows dependencies. Charset conversion
              functions optionally may use GNU iconv library (LGPL) by explicitly
-		    defining conditional "USE_ICONV".  			 
-May 07, 2010 V7.35 Arno added IcsIsSBCSCodepage.			 
+             defining conditional "USE_ICONV".
+May 07, 2010 V7.35 Arno added IcsIsSBCSCodepage.
 Aug 21, 2010 V7.36 Arno fixed a bug in the UTF-8 constructor of TIcsFileStreamW.
+Sep 05, 2010 V7.37 Arno added procedure IcsNameThreadForDebugging
+Apr 15, 2011 V7.38 Arno prepared for 64-bit.
+May 06, 2011 V7.39 Arno moved TThreadID to OverbyteIcsTypes.
+Jun 08, 2011 v7.40 Arno added x64 assembler routines, untested so far.
+Jun 14, 2011 v7.41 aguser added Unicode Normalization as IcsNormalizeString()
+             see http://www.unicode.org/reports/tr15/tr15-33.html.
+Aug 14, 2011 v7.42 Arno fixed IcsSwap64 BASM 32-bit (not yet used in ICS)
+Feb 08, 2012 v7.43 Arno - The IcsFileCreateW and IcsFileOpenW functions return a
+             THandle in XE2+ now. Same as SysUtils.FileCreate and SysUtils.FileOpen
+             in XE2+.
+Feb 29, 2012 V7.44 Arno added IcsRandomInt() and IcsCryptGenRandom(), see
+             comments at IcsRandomInt's implementation.
+Apr 27, 2012 V7.45 Arno added IcsFileUtcModified().
+Jul 07, 2012 V7.46 FPiette added IcsGetCurrentThreadID().
+
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsUtils;
@@ -140,23 +155,30 @@ interface
 {$IFDEF BCB3_UP}
     {$ObjExportAll On}
 {$ENDIF}
+{$IFDEF CPUX64}
+  {.$DEFINE PUREPASCAL}
+{$ENDIF}
 
 uses
 {$IFDEF MSWINDOWS}
     Windows,
+    OverbyteIcsWinnls,
   {$IFDEF USE_ICONV}
     OverbyteIcsIconv,
   {$ENDIF}
 {$ENDIF}
 {$IFDEF POSIX}
-    PosixSysTypes, PosixIconv, PosixErrno,
-    PosixUnistd, PosixStdio,
+    Posix.SysTypes, Posix.Iconv, Posix.Errno,
+    Posix.Unistd, Posix.Stdio,
+{$ENDIF}
+{$IFDEF MACOS}
+    Macapi.CoreFoundation,
 {$ENDIF}
     Classes,
     SysUtils,
     RtlConsts,
     SysConst,
-    OverbyteIcsTypes; // for TBytes
+    OverbyteIcsMD5, OverbyteIcsTypes; // for TBytes and TThreadID
 
 type
 {$IFNDEF COMPILER12_UP}
@@ -227,6 +249,13 @@ type
     EIcsStringConvertError = class(Exception);
     TCharsetDetectResult = (cdrAscii, cdrUtf8, cdrUnknown);
 
+    TIcsNormForm = (
+      icsNormalizationOther,
+      icsNormalizationC,
+      icsNormalizationD,
+      icsNormalizationKC = 5,
+      icsNormalizationKD);
+
 {$IFDEF COMPILER12_UP}
     TIcsSearchRecW = SysUtils.TSearchRec;
 {$ELSE}
@@ -256,7 +285,7 @@ type
     TIcsFileStreamW = class(THandleStream)
 {$ELSE}
     TIcsFileStreamW = class(TFileStream)
-{$ENDIF}    
+{$ENDIF}
     private
         FFileName: UnicodeString;
     public
@@ -272,6 +301,7 @@ const
     ICONV_UNICODE     = 'UTF-16LE';
     function IcsIconvNameFromCodePage(CodePage: LongWord): AnsiString;
 {$ENDIF}
+    function  IcsGetCurrentThreadID: TThreadID;
     function  IcsWcToMb(CodePage: LongWord; Flags: Cardinal;
                         WStr: PWideChar; WStrLen: Integer; MbStr: PAnsiChar;
                         MbStrLen: Integer; DefaultChar: PAnsiChar;
@@ -385,14 +415,20 @@ const
     procedure IcsSwap16Buf(Src, Dst: PWord; WordCount: Integer);
     function  IcsSwap32(Value: LongWord): LongWord;
     procedure IcsSwap32Buf(Src, Dst: PLongWord; LongWordCount: Integer);
+    function  IcsSwap64(Value: Int64): Int64;
     procedure IcsSwap64Buf(Src, Dst: PInt64; QuadWordCount: Integer);
+    procedure IcsNameThreadForDebugging(AThreadName: AnsiString; AThreadID: TThreadID = TThreadID(-1));
+    function  IcsNormalizeString(const S: UnicodeString; NormForm: TIcsNormForm): UnicodeString;
+    function IcsCryptGenRandom(var Buf; BufSize: Integer): Boolean;
+    function IcsRandomInt(const ARange: Integer): Integer;
+    function IcsFileUtcModified(const FileName: String) : TDateTime;
 { Wide library }
-    function IcsFileCreateW(const FileName: UnicodeString): Integer; overload;
-    function IcsFileCreateW(const Utf8FileName: UTF8String): Integer; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
-    function IcsFileCreateW(const FileName: UnicodeString; Rights: LongWord): Integer; overload;
-    function IcsFileCreateW(const Utf8FileName: UTF8String; Rights: LongWord): Integer; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
-    function IcsFileOpenW(const FileName: UnicodeString; Mode: LongWord): Integer; overload;
-    function IcsFileOpenW(const Utf8FileName: UTF8String; Mode: LongWord): Integer; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
+    function IcsFileCreateW(const FileName: UnicodeString): {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF}; overload;
+    function IcsFileCreateW(const Utf8FileName: UTF8String): {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF}; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
+    function IcsFileCreateW(const FileName: UnicodeString; Rights: LongWord): {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF}; overload;
+    function IcsFileCreateW(const Utf8FileName: UTF8String; Rights: LongWord): {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF}; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
+    function IcsFileOpenW(const FileName: UnicodeString; Mode: LongWord): {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF}; overload;
+    function IcsFileOpenW(const Utf8FileName: UTF8String; Mode: LongWord): {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF}; {$IFDEF USE_INLINE} inline; {$ENDIF} overload;
     function IcsStrScanW(const Str: PWideChar; Ch: WideChar): PWideChar;
     function IcsExtractFilePathW(const FileName: UnicodeString): UnicodeString;
     function IcsExtractFileDirW(const FileName: UnicodeString): UnicodeString;
@@ -444,6 +480,10 @@ const
     function IcsStrCompOrdinalW(Str1: PWideChar; Str1Length: Integer; Str2: PWideChar; Str2Length: Integer; IgnoreCase: Boolean): Integer;
     function  RtlCompareUnicodeString(String1 : PUNICODE_STRING;
         String2 : PUNICODE_STRING; CaseInsensitive : BOOLEAN): LongInt; stdcall;
+  {$IF CompilerVersion < 21}
+    function IsDebuggerPresent: BOOL; stdcall;
+    {$EXTERNALSYM IsDebuggerPresent}
+ {$IFEND}
 {$ENDIF}
 
 type
@@ -488,6 +528,9 @@ const
 var
     hNtDll : THandle = 0;
     _RtlCompareUnicodeString : Pointer = nil;
+  {$IF CompilerVersion < 21}
+    function IsDebuggerPresent; external kernel32 name 'IsDebuggerPresent';
+  {$IFEND}
 {$ENDIF}
 
 {$IFDEF USE_ICONV}
@@ -1352,7 +1395,7 @@ end;
 function UsAsciiToUnicode(const Str: RawByteString; FailCh: AnsiChar): UnicodeString;
 var
     I  : Integer;
-    P  : PByte;
+    P  : PSmallInt;
 begin
     SetLength(Result, Length(Str));
     P := Pointer(Result);
@@ -1361,8 +1404,6 @@ begin
             P^ := Byte(FailCh)
         else
             P^ := Byte(Str[I]);
-        Inc(P);
-        P^ := 0;
         Inc(P);
     end;
 end;
@@ -1382,6 +1423,9 @@ begin
     Result := (Value shr 8) or (Value shl 8);
 {$ELSE}
 asm
+{$IFDEF CPUX64}
+    MOV   AX, CX
+{$ENDIF}
     XCHG  AL, AH
 {$ENDIF}
 end;
@@ -1400,8 +1444,53 @@ begin
         Inc(Dst);
     end;
 {$ELSE}
-{ Thanks to Jens Dierks for this code }
 asm
+{$IFDEF CPUX64}
+{ Src in RCX
+  Dst in RDX
+  WordCount in R8D }
+
+       SUB    RCX, RDX
+       SUB    R8D, 4
+       JS     @@2
+@@1:
+       MOV    EAX, [RCX + RDX]
+       MOV    R9D, [RCX + RDX + 4]
+       BSWAP  EAX
+       BSWAP  R9D
+       MOV    WORD PTR [RDX + 2], AX
+       MOV    WORD PTR [RDX + 6], R9W
+       SHR    EAX, 16
+       SHR    R9D, 16
+       MOV    WORD PTR [RDX], AX
+       MOV    WORD PTR [RDX + 4], R9W
+       ADD    RDX, 8
+       SUB    R8D, 4
+       JNS    @@1
+@@2:
+       ADD    R8D, 2
+       JS     @@3
+       MOV    EAX, [RCX + RDX]
+       BSWAP  EAX
+       MOV    WORD PTR [RDX + 2], AX
+       SHR    EAX, 16
+       MOV    WORD PTR [EDX], AX
+       ADD    RDX, 4
+       SUB    R8D, 2
+@@3:
+       INC    R8D
+       JNZ    @@Exit
+       MOV    RAX, [RCX + RDX]
+       XCHG   AL, AH
+       MOV    WORD PTR [RDX], AX
+@@Exit:
+
+{$ELSE}
+{ Thanks to Jens Dierks for this code }
+{ Src in EAX
+  Dst in EDX
+  WordCount in ECX }
+
        PUSH   ESI
        PUSH   EBX
        SUB    EAX,EDX
@@ -1441,6 +1530,7 @@ asm
        POP    EBX
        POP    ESI
 {$ENDIF}
+{$ENDIF}
 end;
 
 
@@ -1452,6 +1542,9 @@ begin
               Word((Word(Value) shr 8) or (Word(Value) shl 8)) shl 16;
 {$ELSE}
 asm
+{$IFDEF CPUX64}
+    MOV    EAX, ECX
+{$ENDIF}
     BSWAP  EAX
 {$ENDIF}
 end;
@@ -1472,6 +1565,37 @@ begin
     end;
 {$ELSE}
 asm
+{$IFDEF CPUX64}
+{ Src in RCX
+  Dst in RDX
+  LongWordCount in R8D }
+
+       SUB    RCX, RDX
+       SUB    R8D, 2
+       JS     @@2
+@@1:
+       MOV    EAX, [RCX + RDX]
+       MOV    R9D, [RCX + RDX + 4]
+       BSWAP  EAX
+       BSWAP  R9D
+       MOV    DWORD PTR [RDX], EAX
+       MOV    DWORD PTR [RDX + 4], R9D
+       ADD    RDX, 8
+       SUB    R8D, 2
+       JNS    @@1
+@@2:
+       INC    R8D
+       JS     @Exit
+       MOV    EAX, [RCX + RDX]
+       BSWAP  EAX
+       MOV    DWORD PTR [RDX], EAX
+@Exit:
+
+{$ELSE}
+{ Src in EAX
+  Dst in EDX
+  LongWordCount in ECX }
+
        PUSH   ESI
        PUSH   EBX
        SUB    EAX, EDX
@@ -1497,6 +1621,35 @@ asm
        POP    EBX
        POP    ESI
 {$ENDIF}
+{$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function IcsSwap64(Value: Int64): Int64;
+{$IFDEF PUREPASCAL}
+var
+    H, L: LongWord;
+begin
+    H := LongWord(Value shr 32);
+    L := LongWord(Value);
+    H := Word(((H shr 16) shr 8) or ((H shr 16) shl 8)) or
+         Word((Word(H) shr 8) or (Word(H) shl 8)) shl 16;
+    L := Word(((L shr 16) shr 8) or ((L shr 16) shl 8)) or
+         Word((Word(L) shr 8) or (Word(L) shl 8)) shl 16;
+    Result := Int64(H) or Int64(L) shl 32;
+{$ELSE}
+asm
+{$IFDEF CPUX64}
+    MOV    RAX, RCX
+    BSWAP  RAX
+{$ELSE}
+    MOV   EDX,  [EBP + $08]
+    MOV   EAX,  [EBP + $0C]
+    BSWAP EAX
+    BSWAP EDX
+{$ENDIF}
+{$ENDIF}
 end;
 
 
@@ -1521,6 +1674,37 @@ begin
     end;
 {$ELSE}
 asm
+{$IFDEF CPUX64}
+{ Src in RCX
+  Dst in RDX
+  QuadWordCount in R8D }
+
+       SUB    RCX, RDX
+       SUB    R8D, 2
+       JS     @@2
+@@1:
+       MOV    RAX, [RCX + RDX]
+       MOV    R9,  [RCX + RDX + 8]
+       BSWAP  RAX
+       BSWAP  R9
+       MOV    [RDX], RAX
+       MOV    [RDX + 8], R9
+       ADD    RDX, 16
+       SUB    R8D, 2
+       JNS    @@1
+@@2:
+       INC    R8D
+       JS     @Exit
+       MOV    RAX, [RCX + RDX]
+       BSWAP  RAX
+       MOV    [RDX], RAX
+@Exit:
+
+{$ELSE}
+{ Src in EAX
+  Dst in EDX
+  QuadWordCount in ECX }
+
        PUSH   ESI
        PUSH   EBX
        SUB    EAX, EDX
@@ -1539,6 +1723,7 @@ asm
 @Exit:
        POP    EBX
        POP    ESI
+{$ENDIF}
 {$ENDIF}
 end;
 
@@ -2307,7 +2492,7 @@ begin
     while (PBuf <> PEndBuf) do
     begin
         Ch := PBuf^;
-        Inc(INT_PTR(PBuf));
+        Inc(PBuf);
         if Trailing <> 0 then
         begin
             if Ch and $C0 = $80 then // Does trailing byte follow UTF-8 format?
@@ -2745,6 +2930,268 @@ begin
     Result := PValue;
     while IsSpaceOrCRLF(Result^) do
         Inc(Result);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure IcsNameThreadForDebugging(AThreadName: AnsiString; AThreadID: TThreadID);
+{$IFNDEF COMPILER14_UP}
+type
+    TThreadNameInfo = record
+        FType: LongWord;     // must be 0x1000
+        FName: PAnsiChar;    // pointer to name (in user address space)
+        FThreadID: LongWord; // thread ID (-1 indicates caller thread)
+        FFlags: LongWord;    // reserved for future use, must be zero
+    end;
+var
+    ThreadNameInfo: TThreadNameInfo;
+begin
+    if IsDebuggerPresent then
+    begin
+        ThreadNameInfo.FType := $1000;
+        ThreadNameInfo.FName := PAnsiChar(AThreadName);
+        ThreadNameInfo.FThreadID := AThreadID;
+        ThreadNameInfo.FFlags := 0;
+        try
+            RaiseException($406D1388, 0,
+                  SizeOf(ThreadNameInfo) div SizeOf(LongWord), @ThreadNameInfo);
+        except
+        end;
+    end;
+{$ELSE}
+begin
+    TThread.NameThreadForDebugging(AThreadName, AThreadID);
+{$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function IcsNormalizeString(const S: UnicodeString;
+  NormForm: TIcsNormForm): UnicodeString;
+{$IFDEF MSWINDOWS}
+var
+    Cnt   : Integer;
+    Flags : DWORD;
+begin
+    Result := '';
+    if S = '' then
+        Exit;
+    if (Win32Platform = VER_PLATFORM_WIN32_NT) and (Win32MajorVersion < 6) then
+    begin
+        { Available since D7 in Windows.pas }
+        case NormForm of
+            icsNormalizationD  : Flags := MAP_COMPOSITE;
+            icsNormalizationC  : Flags := MAP_PRECOMPOSED;
+            icsNormalizationKD : Flags := MAP_FOLDCZONE;
+            icsNormalizationKC : Flags := MAP_FOLDCZONE or MAP_COMPOSITE;
+            else
+              Result := S;
+              Exit;
+        end;
+        Cnt := FoldStringW(Flags, PWideChar(S), Length(S), nil, 0);
+        if Cnt > 0 then
+        begin
+            SetLength(Result, Cnt);
+            Cnt := FoldStringW(Flags, PWideChar(S), Length(S),
+                               PWideChar(Result), Cnt);
+            SetLength(Result, Cnt);
+        end;
+    end
+    else begin
+        { Vista+, not yet available in Windows.pas }
+        if IsNormalizedString(TNormForm(NormForm), PWideChar(S), Length(S)) then
+            Result := S
+        else begin
+            Cnt := NormalizeString(TNormForm(NormForm), PWideChar(S),
+                                   Length(S), nil, 0);
+            if Cnt > 0 then
+            begin
+                SetLength(Result, Cnt);
+                Cnt := NormalizeString(TNormForm(NormForm), PWideChar(S),
+                                       Length(S), PWideChar(Result), Cnt);
+                SetLength(Result, Cnt);
+            end;
+        end;
+    end;
+{$ELSE MSWINDOWS}
+
+{$IFDEF MACOS}
+    function CFStringToStr(StringRef: CFStringRef): string;
+    var
+        Range: CFRange;
+    begin
+        if StringRef = nil then Exit('');
+        Range := CFRangeMake(0, CFStringGetLength(StringRef));
+        if Range.Length > 0 then
+        begin
+            SetLength(Result, Range.Length);
+            CFStringGetCharacters(StringRef, Range, @Result[1]);
+        end
+        else
+            Result := EmptyStr;
+    end;
+
+var
+    MutableStringRef        : CFMutableStringRef;
+    kCFStringNormalization  : Integer;
+begin
+    Result := '';
+    if S = '' then
+        Exit;
+    case NormForm of
+        icsNormalizationD  :
+            kCFStringNormalization := kCFStringNormalizationFormD;
+        icsNormalizationC  :
+            kCFStringNormalization := kCFStringNormalizationFormC;
+        icsNormalizationKD :
+            kCFStringNormalization := kCFStringNormalizationFormKD;
+        icsNormalizationKC :
+            kCFStringNormalization := kCFStringNormalizationFormKC;
+      else
+          Result := S;
+          Exit;
+    end;
+    MutableStringRef := CFStringCreateMutable(kCFAllocatorDefault, 0);
+    try
+        CFStringAppendCharacters(MutableStringRef, PWideChar(S), Length(S));
+        CFStringNormalize(MutableStringRef, kCFStringNormalization);
+        Result := CFStringToStr(CFStringRef(MutableStringRef));
+    finally
+        CFRelease(MutableStringRef);
+    end;
+{$ELSE MACOS}
+    raise Exception.Create('Not implemented');
+{$ENDIF}
+{$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function IcsCryptGenRandom(var Buf; BufSize: Integer): Boolean;
+{$IFDEF MSWINDOWS}
+var
+    F_Acquire  : function (var hProv: THandle; pszContainer: PWideChar;
+        pszProvider: PWideChar; dwProvType: DWORD; dwFlags: DWORD): BOOL; stdcall;
+    F_Gen      : function (hProv: THandle; dwLen: DWORD; pbBuffer: PByte): BOOL; stdcall;
+    F_Release  : function (hProv: THandle; dwFlags: ULONG_PTR): BOOL; stdcall;
+
+    hLib       : HMODULE;
+    hCryptProv : THandle;
+begin
+    Result := False;
+    hLib := LoadLibrary(advapi32);
+    if hLib <> 0 then
+    begin
+        @F_Acquire := GetProcAddress(hLib, 'CryptAcquireContextW');
+        @F_Gen     := GetProcAddress(hLib, 'CryptGenRandom');
+        @F_Release := GetProcAddress(hLib, 'CryptReleaseContext');
+        if (@F_Acquire <> nil) and (@F_Gen <> nil) and (@F_Release <> nil) then
+        begin
+            // PROV_RSA_FULL = 1; CRYPT_VERIFYCONTEXT  = DWORD($F0000000);
+            if F_Acquire(hCryptProv, nil, nil, 1, DWORD($F0000000)) then
+            begin
+                Result := F_Gen(hCryptProv, BufSize, @Buf);
+                F_Release(hCryptProv, 0);
+            end;
+        end;
+        FreeLibrary(hLib);
+    end;
+end;
+{$ENDIF MSWINDOWS}
+{$IFDEF MACOS}
+begin
+    Result := False; // ToDo
+end;
+{$ENDIF MACOS}
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function RandSeed32: LongWord;
+const
+    DEFAULT_SEED32 = 2463534242;
+var
+    I   : Integer;
+    Buf : Int64;
+    Md  : TMD5Digest;
+    Ctx : TMD5Context;
+begin
+    MD5DigestInit(Md);
+    MD5Init(Ctx);
+
+{$IFDEF MSWINDOWS}
+    if QueryPerformanceCounter(Buf) then
+        MD5Update(Ctx, Buf, SizeOf(Buf))
+    else begin
+        Buf := GetTickCount;
+        MD5Update(Ctx, Buf, SizeOf(Buf));
+    end;
+{$ENDIF MSWINDOWS}
+{$IFDEF MACOS}
+    Buf := AbsoluteToNanoseconds(UpTime);
+    MD5Update(Ctx, Buf, SizeOf(Buf));
+{$ENDIF MACOS}
+    { Add eight additional cryptographically random bytes }
+    if IcsCryptGenRandom(Buf, SizeOf(Buf)) then // So far Win only
+        MD5Update(Ctx, Buf, SizeOf(Buf));
+    MD5Final(Md, Ctx);
+    for I := Low(Md) to High(Md) - SizeOf(LongWord) do
+    begin
+        Result := PLongWord(@Md[I])^;
+        if Result <> 0 then
+            Exit;
+    end;
+    Result := DEFAULT_SEED32;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+var
+    GSeed32 : LongWord = 0;
+
+{ This makes us independent from System.Random() and we do no longer screw  }
+{ up RTL's global var RandSeed by various calls to Randomize.               }
+{ The PRNG below is a XorShift RNG by George Marsaglia.                     }
+{ It uses one of his favorite choices, [a, b, c] = [13, 17, 5], and will    }
+{ pass almost all tests of randomness, except the binary rank test in       }
+{ Diehard. It is much better than System.Random() however as thread-        }
+{ unsafe as System.Random() is. See also PrngTst.dpr in MiscDemos.    AG    }
+function IcsRandomInt(const ARange: Integer): Integer;
+var
+    x : LongWord;
+begin
+    if GSeed32 = 0 then
+        x := RandSeed32  // MUST be <> 0
+    else
+        x := GSeed32;
+    x := x xor (x shl 13);
+    x := x xor (x shr 17);
+    x := x xor (x shl 5);
+    GSeed32 := x;
+    Result := (UInt64(LongWord(ARange)) * UInt64(x)) shr 32;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function IcsFileUtcModified(const FileName : String) : TDateTime;
+var
+    SearchRec : TSearchRec;
+    Status    : Integer;
+    LInt64    : Int64;
+const
+    FileTimeBase = -109205.0;   // days between years 1601 and 1900
+    FileTimeStep: Extended = 24.0 * 60.0 * 60.0 * 1000.0 * 1000.0 * 10.0; // 100 nsec per Day
+begin
+    Status := FindFirst(FileName, faAnyFile, SearchRec);
+    try
+        if Status <> 0 then
+            Result := 0
+        else begin
+            Move(SearchRec.FindData.ftLastWriteTime, LInt64, SizeOf(LInt64));
+            Result := (LInt64 / FileTimeStep) + FileTimeBase;
+        end;
+    finally
+        FindClose(SearchRec);
+    end;
 end;
 
 
@@ -3371,7 +3818,8 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function IcsFileCreateW(const FileName: UnicodeString): Integer;
+function IcsFileCreateW(const FileName: UnicodeString):
+  {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF};
 begin
 {$IFDEF COMPILER12_UP}
     Result := SysUtils.FileCreate(FileName);
@@ -3384,7 +3832,8 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function IcsFileCreateW(const Utf8FileName: UTF8String): Integer;
+function IcsFileCreateW(const Utf8FileName: UTF8String):
+  {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF};
 begin
 {$IFDEF COMPILER12_UP}
     Result := SysUtils.FileCreate(Utf8FileName);
@@ -3395,7 +3844,8 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function IcsFileCreateW(const FileName: UnicodeString; Rights: LongWord): Integer;
+function IcsFileCreateW(const FileName: UnicodeString; Rights: LongWord):
+  {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF};
 begin
 {$IFDEF COMPILER12_UP}
     Result := SysUtils.FileCreate(FileName, Rights);
@@ -3406,7 +3856,8 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function IcsFileCreateW(const Utf8FileName: UTF8String; Rights: LongWord): Integer;
+function IcsFileCreateW(const Utf8FileName: UTF8String; Rights: LongWord):
+  {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF};
 begin
 {$IFDEF COMPILER12_UP}
     Result := SysUtils.FileCreate(Utf8FileName, Rights);
@@ -3417,7 +3868,8 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function IcsFileOpenW(const FileName: UnicodeString; Mode: LongWord): Integer;
+function IcsFileOpenW(const FileName: UnicodeString; Mode: LongWord):
+  {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF};
 {$IFDEF COMPILER12_UP}
 begin
     Result := SysUtils.FileOpen(FileName, Mode);
@@ -3447,7 +3899,8 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 
-function IcsFileOpenW(const Utf8FileName: UTF8String; Mode: LongWord): Integer;
+function IcsFileOpenW(const Utf8FileName: UTF8String; Mode: LongWord):
+  {$IFDEF COMPILER16_UP} THandle {$ELSE} Integer {$ENDIF};
 begin
 {$IFDEF COMPILER12_UP}
     Result := SysUtils.FileOpen(Utf8FileName, Mode);
@@ -3789,4 +4242,17 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function  IcsGetCurrentThreadID: TThreadID;
+begin
+  {$IFDEF MSWINDOWS}
+    Result := Windows.GetCurrentThreadID;
+  {$ENDIF}
+  {$IFDEF POSIX}
+    Result := Posix.PThread.GetCurrentThreadID;
+  {$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+
 end.
