@@ -7,12 +7,12 @@ Object:       TSmtpCli class implements the SMTP protocol (RFC-821)
               Support authentification (RFC-2104)
               Support HTML mail with embedded images.
 Creation:     09 october 1997
-Version:      7.30
+Version:      7.40
 EMail:        http://www.overbyte.be        francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 1997-2012 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
               Berlin, Germany, contact: <arno.garrels@gmx.de>
@@ -379,7 +379,22 @@ Jul 31, 2009 V7.28  Arno enlarged send buffer size to 2048 byte see const
 Aug 12, 2009 V7.29  Bjørnar Nielsen found a bug with conditional define NO_ADV_MT.
 Apr 26, 2010 V7.30  Arno fixed some errors with MIME inline encoding, added
                     support for UTF-7 and other stateful and MBCS. 
-
+Sep 03, 2010 V7.31  Arno - New property THtmlSmtpCli.HtmlImageCidSuffix which
+                    specifies a custom string to be appended to the default
+                    Content-ID "IMAGE<number>". Some webmailer did not like
+                    our default cid. Thanks to Fabrice Vendé for providing a
+                    fix.
+Sep 20, 2010 V7.32  Arno moved HMAC-MD5 code to OverbyteIcsMD5.pas.
+Oct 09, 2010 V7.33  Arno added TSyncSmtpCli.SentToFileSync.
+Oct 10, 2010 V7.34  Arno - MessagePump changes/fixes.
+Nov 08, 2010 V7.35  Arno improved final exception handling, more details
+                    in OverbyteIcsWndControl.pas (V1.14 comments).
+Feb 15, 2011 V7.36  Arno added proxy-support (SOCKS and HTTP) from TWSocket.
+Jun 18, 2011 V7.37  aguser removed one compiler hint.
+Jul 22, 2011 V7.38  Arno - OEM NTLM changes.
+Feb 17, 2012 V7.39  Arno added NTLMv2 and NTLMv2 session security (basics),
+                    read comment "HowTo NTLMv2" in OverbyteIcsNtlmMsgs.pas.
+Feb 29, 2012 V7.40  Arno - Use IcsRandomInt
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsSmtpProt;
@@ -444,8 +459,8 @@ uses
     OverbyteIcsMimeUtils;
 
 const
-  SmtpCliVersion     = 730;
-  CopyRight : String = ' SMTP component (c) 1997-2010 Francois Piette V7.30 ';
+  SmtpCliVersion     = 740;
+  CopyRight : String = ' SMTP component (c) 1997-2012 Francois Piette V7.40 ';
   smtpProtocolError  = 20600; {AG}
   SMTP_RCV_BUF_SIZE  = 4096;
   
@@ -550,6 +565,9 @@ type
                         ,smtpFctStartTls
                      {$ENDIF}
                         ,smtpFctCalcMsgSize ,smtpFctMailFromSIZE);
+    TSmtpProxyType
+                     = (smtpNoProxy,         smtpSocks4,        smtpSocks4A,
+                        smtpSocks5,          smtpHttpProxy);
 {End AG/SSL}
     TSmtpFctSet      = set of TSmtpFct;
     TSmtpContentType = (smtpHtml,            smtpPlainText);
@@ -734,6 +752,16 @@ type
         FOldSendMode         : TSmtpSendMode;
         FOldOnDisplay        : TSmtpDisplay;
         FXMailer             : String;
+        FProxyType           : TSmtpProxyType;
+        FProxyServer         : String;
+        FProxyPort           : String;
+        FProxyUserCode       : String;
+        FProxyPassword       : String;
+        FProxyHttpAuthType   : THttpTunnelAuthType;
+        FLmCompatLevel       : LongWord;  { V7.39 }
+        procedure   HandleHttpTunnelError(Sender: TObject; ErrCode: Word;
+            TunnelServerAuthTypes: THttpTunnelServerAuthTypes; const Msg: String);
+        procedure   HandleSocksError(Sender: TObject; ErrCode: Integer; Msg: String);
         function    GetXMailerValue: String;
         procedure   SetCharset(const Value: String);           {AG}
         procedure   SetConvertToCharset(const Value: Boolean); {AG}
@@ -792,8 +820,12 @@ type
         procedure   FreeMsgHandlers; override;
         function    MsgHandlersCount: Integer; override;
         procedure   WndProc(var MsgRec: TMessage); override;
-        procedure   HandleBackGroundException(E: Exception); override;
         procedure   WMSmtpRequestDone(var msg: TMessage); virtual;
+        procedure   SetMultiThreaded(const Value : Boolean); override;
+        procedure   SetTerminated(const Value: Boolean); override;
+        procedure   SetOnMessagePump(const Value: TNotifyEvent); override;
+        procedure   AbortComponent; override; { V7.35 }
+        procedure   SetOnBgException(const Value: TIcsBgExceptionEvent); override; { V7.35 }
     public
         constructor Create(AOwner : TComponent); override;
         destructor  Destroy;                     override;
@@ -851,6 +883,8 @@ type
                                                      write FPassword;
         property AuthType : TSmtpAuthType            read  FAuthType
                                                      write FAuthType;
+        property LmCompatLevel : LongWord            read  FLmCompatLevel  { V7.39 }
+                                                     write FLmCompatLevel; { V7.39 }
         property AuthTypesSupported : TStrings       read  FAuthTypesSupported;
         property FromName : String                   read  FFromName
                                                      write FFromName;
@@ -937,6 +971,19 @@ type
                                                      write SetWrapMsgMaxLineLen;
         property XMailer : String                    read  FXMailer
                                                      write FXMailer;
+        property ProxyType         : TSmtpProxyType  read  FProxyType
+                                                     write FProxyType;
+        property ProxyServer       : String          read  FProxyServer
+                                                     write FProxyServer;
+        property ProxyPort         : String          read  FProxyPort
+                                                     write FProxyPort;
+        property ProxyUserCode     : String          read  FProxyUserCode
+                                                     write FProxyUserCode;
+        property ProxyPassword     : String          read  FProxyPassword
+                                                     write FProxyPassword;
+        property ProxyHttpAuthType : THttpTunnelAuthType
+                                                     read  FProxyHttpAuthType
+                                                     write FProxyHttpAuthType;
     end;
 
     { Descending component adding MIME (file attach) support }
@@ -1031,7 +1078,15 @@ type
         property OnSessionConnected;
         property OnSessionClosed;
         property OnMessageDataSent;      {AG}
+        property OnBgException;          { V7.35 }
         property XMailer;
+        property ProxyType;
+        property ProxyServer;
+        property ProxyPort;
+        property ProxyUserCode;
+        property ProxyPassword;
+        property ProxyHttpAuthType;
+
         property EmailFiles : TStrings               read  FEmailFiles
                                                      write SetEmailFiles;
         property OnAttachContentType : TSmtpAttachmentContentType
@@ -1059,7 +1114,6 @@ type
     protected
         FTimeout       : Integer;                 { Given in seconds }
         FTimeStop      : LongInt;                 { Milli-seconds    }
-        FMultiThreaded : Boolean;
         function WaitUntilReady : Boolean; virtual;
         function Synchronize(Proc : TSmtpNextProc) : Boolean;
         procedure TriggerGetData(LineNum  : Integer;
@@ -1081,11 +1135,11 @@ type
         function    AbortSync    : Boolean; virtual;
         function    OpenSync     : Boolean; virtual;
         function    MailSync     : Boolean; virtual;
+        function    SendToFileSync(const FileName : String): Boolean; virtual;
     published
         property Timeout : Integer       read  FTimeout
                                          write FTimeout;
-        property MultiThreaded : Boolean read  FMultiThreaded
-                                         write FMultiThreaded;
+        property MultiThreaded;
     end;
 
 { You must define USE_SSL so that SSL code is included in the component.    }
@@ -1204,6 +1258,9 @@ type
         FHtmlCodePage           : LongWord;
         FHtmlConvertToCharset   : Boolean;
         FHtmlIsMultiByteCP      : Boolean;
+        { Image Content-ID suffix. Default ID, IMAGE<number> might not work }
+        { properly with Orange Webmail.                                     }
+        FHtmlImageCidSuffix     : String;
         FLineOffset             : Integer;
         FImageNumber            : Integer;
         FsContentType           : String;
@@ -1249,6 +1306,8 @@ type
         property HtmlConvertToCharset : Boolean
                                               read  FHtmlConvertToCharset
                                               write SetHtmlConvertToCharSet;
+        property HtmlImageCidSuffix : String  read  FHtmlImageCidSuffix
+                                              write FHtmlImageCidSuffix;
     end;
 
 { Function to convert a TDateTime to an RFC822 timestamp string }
@@ -1267,6 +1326,7 @@ function GenerateMessageID : String;                                  {AG}
 //function FixHostName(const S: String): String;                      {AG}
 { utility                                                                }
 function SmtpRqTypeToStr(RqType: TSmtpRequest): ShortString;          {AG}
+function SmtpCliErrorMsgFromErrorCode(ErrCode: Word): String;
 
 { List of separators accepted between email addresses }
 const
@@ -1306,7 +1366,16 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function SmtpCliErrorMsgFromErrorCode(ErrCode: Word): String;
+begin
+    if ErrCode = smtpProtocolError then
+        Result := 'SMTP Protocol Error'
+    else
+        Result := WSocketErrorMsgFromErrorCode(ErrCode);
+end;
 
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$I+}   { Activate I/O check (EInOutError exception generated) }
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -1628,6 +1697,42 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomSmtpClient.SetMultiThreaded(const Value : Boolean);
+begin
+    if Assigned(FWSocket) then
+        FWSocket.MultiThreaded := Value;
+    inherited SetMultiThreaded(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomSmtpClient.SetTerminated(const Value: Boolean);
+begin
+    if Assigned(FWSocket) then
+        FWSocket.Terminated := Value;
+    inherited SetTerminated(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomSmtpClient.SetOnBgException(const Value: TIcsBgExceptionEvent);
+begin                                                               { V7.35 }
+    if Assigned(FWSocket) then
+        FWSocket.OnBgException := Value;
+    inherited SetOnBgException(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomSmtpClient.SetOnMessagePump(const Value: TNotifyEvent);
+begin
+    if Assigned(FWSocket) then
+        FWSocket.OnMessagePump := Value;
+    inherited SetOnMessagePump(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomSmtpClient.SetShareMode(newValue: TSmtpShareMode);
 begin
 {$IFNDEF VER80}{$WARNINGS OFF}{$ENDIF}
@@ -1722,6 +1827,7 @@ begin
 {$ELSE}
     FWSocket.Name            := ClassName + '_Socket' + IntToStr(SafeWSocketGCount);
 {$ENDIF}
+    FWSocket.ExceptAbortProc := AbortComponent; { V7.35 }
     FWSocket.OnSessionClosed := WSocketSessionClosed;
     FState                   := smtpReady;
     FRcptName                := TStringList.Create;
@@ -1740,7 +1846,6 @@ begin
     FConvertToCharset        := TRUE;
 {$ENDIF}
     FWrapMsgMaxLineLen       := SmtpDefaultLineLength;
-    Randomize;                                                           {AG}
     XMailer                  := 'ICS SMTP Component V%VER%';
 end;
 
@@ -1775,6 +1880,27 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomSmtpClient.HandleHttpTunnelError(
+    Sender                : TObject;
+    ErrCode               : Word;
+    TunnelServerAuthTypes : THttpTunnelServerAuthTypes;
+    const Msg             : String);
+begin
+    FLastResponse := Msg;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomSmtpClient.HandleSocksError(
+    Sender  : TObject;
+    ErrCode : Integer;
+    Msg     : String);
+begin
+    FLastResponse := Msg;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TCustomSmtpClient.MsgHandlersCount : Integer;
 begin
     Result := 3 + inherited MsgHandlersCount;
@@ -1824,27 +1950,13 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{ All exceptions *MUST* be handled. If an exception is not handled, the     }
-{ application will be shut down !                                           }
-procedure TCustomSmtpClient.HandleBackGroundException(E: Exception);
-var
-    CanAbort : Boolean;
+procedure TCustomSmtpClient.AbortComponent; { V7.35 }
 begin
-    CanAbort := TRUE;
-    { First call the error event handler, if any }
-    if Assigned(FOnBgException) then begin
-        try
-            FOnBgException(Self, E, CanAbort);
-        except
-        end;
+    try
+        Abort;
+    except
     end;
-    { Then abort the component }
-    if CanAbort then begin
-        try
-            Abort;
-        except
-        end;
-    end;
+    inherited;
 end;
 
 
@@ -2068,8 +2180,14 @@ begin
     { Do not trigger the client SessionConnected from here. We must wait }
     { to have received the server banner.                                }
     if ErrorCode <> 0 then begin
-        FLastResponse := '500 ' + WSocketErrorDesc(ErrorCode) +
-                         ' (Winsock error #' + IntToStr(ErrorCode) + ')';
+        if WSocketIsProxyErrorCode(ErrorCode) then
+            { We stored proxy error message in LastResponse }
+            FLastResponse := '500 Connect error - ' + FLastResponse +
+                             ' (#' + IntToStr(ErrorCode) + ')'
+        else 
+            FLastResponse := '500 Connect error - ' +
+                             SmtpCliErrorMsgFromErrorCode(ErrorCode) +
+                             ' (#' + IntToStr(ErrorCode) + ')';
         FStatusCode   := 500;
         FConnected    := FALSE;
 { --Jake Traynham, 06/12/01  Bug - Need to set FRequestResult so High    }
@@ -2371,7 +2489,8 @@ begin
     smtpAuthCramSHA1: {HLX}
         ExecAsync(smtpAuth, 'AUTH CRAM-SHA1', [334], AuthNextCramSHA1);
     smtpAuthNtlm :                                              {AG}
-        ExecAsync(smtpAuth, 'AUTH NTLM ' + NtlmGetMessage1('', ''), [334], AuthNextNtlm);
+        ExecAsync(smtpAuth, 'AUTH NTLM ' + NtlmGetMessage1('', '', FLmCompatLevel),
+                  [334], AuthNextNtlm); { V7.39 }
     end;
 end;
 
@@ -2429,12 +2548,8 @@ procedure TCustomSmtpClient.AuthNextCramMD5;
 var
     Challenge  : AnsiString;
     Response   : String;
-    HexDigits  : AnsiString;
-    MD5Digest  : TMD5Digest;
-    MD5Context : TMD5Context;
-    Count      : Integer;
-    IPAD       : array[0..63] of Byte;
-    OPAD       : array[0..63] of Byte;
+    Digest     : TMD5Digest;  { V7.32 }
+    Pwd        : AnsiString;  { V7.32 }
 begin
     if FRequestResult <> 0 then begin
         if (FAuthType = smtpAuthAutoSelect) then begin
@@ -2458,44 +2573,17 @@ begin
     {   334 PDEyMzc5MTU3NTAtNjMwNTcxMzRAZm9vLmJhci5jb20+                  }
     { If it does not, then exit.                                          }
     if Length(FLastResponse) < 5 then begin
-        FLastResponse := '500 Malformed MD5 Challege: ' + FLastResponse;
+        FLastResponse := '500 Malformed MD5 Challenge: ' + FLastResponse;
         SetErrorMessage;
         TriggerRequestDone(500);
         Exit;
     end;
     Challenge := AnsiString(Copy(FLastResponse, 5, Length(FLastResponse) - 4));
     Challenge := Base64Decode(Challenge);
-
-    { See RFC2104 }
-    for Count := 0 to 63 do begin
-        if ((Count+1) <= Length(FPassword)) then begin
-            IPAD[Count] := Byte(FPassword[Count+1]) xor $36;
-            OPAD[Count] := Byte(FPassword[Count+1]) xor $5C;
-        end
-        else begin
-            IPAD[Count] := 0 xor $36;
-            OPAD[Count] := 0 xor $5C;
-        end;
-    end;
-
-    MD5Init(MD5Context);
-    MD5Update(MD5Context, IPAD, 64);
-    MD5UpdateBuffer(MD5Context, @Challenge[1], Length(Challenge));
-    MD5Final(MD5Digest, MD5Context);
-
-    MD5Init(MD5Context);
-    MD5Update(MD5Context, OPAD, 64);
-    MD5Update(MD5Context, MD5Digest, 16);
-    MD5Final(MD5Digest, MD5Context);
-
-    HexDigits := '0123456789abcdef';
-    Response := FUsername;
-    Response := Response + ' ';
-    for Count := 0 to 15 do begin
-        Response := Response + Char(HexDigits[((Byte(MD5Digest[Count]) and $F0) shr 4)+1]);
-        Response := Response + Char(HexDigits[(Byte(MD5Digest[Count]) and $0F)+1]);
-    end;
-
+    Pwd := AnsiString(FPassword);  { V7.32 }
+    HMAC_MD5(PAnsiChar(Challenge)^, Length(Challenge), PAnsiChar(Pwd)^,
+             Length(Pwd), Digest);  { V7.32 }
+    Response := FUserName + ' ' + MD5DigestToLowerHex(Digest);  { V7.32 }
     FState := smtpInternalReady;
     ExecAsync(smtpAuth, Base64Encode(Response), [235], nil);
 end;
@@ -2503,14 +2591,11 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomSmtpClient.AuthNextCramSHA1; {HLX}
-const
-    HexDigits : array[0..15] of Char = ('0','1','2','3','4','5','6','7',
-                                        '8', '9','a','b','c','d','e','f');
 var
     Challenge  : AnsiString;
     Response   : String;
     Digest     : SHA1Digest;
-    Count      : Integer;
+    Pwd        : AnsiString;  { V7.32 }
 begin
     if FRequestResult <> 0 then begin                                   {<= AG}
         if (FAuthType = smtpAuthAutoSelect) then begin
@@ -2534,20 +2619,17 @@ begin
         Exit;
     end;}
     if (Length(FLastResponse) < 5) then begin
-	      FLastResponse := '500 Malformed SHA1 Challege: ' + FLastResponse;
+	      FLastResponse := '500 Malformed SHA1 Challenge: ' + FLastResponse;
 	      SetErrorMessage;
 	      TriggerRequestDone(500);
 	      Exit;
     end;
     Challenge := AnsiString(Copy(FLastResponse, 5, Length(FLastResponse) - 4));
     Challenge := Base64Decode(Challenge);
-    HMAC_SHA1(Challenge[1], Length(Challenge), FPassword[1],
-              Length(FPassword), Digest);
-    Response := FUsername + ' ';
-    for Count := 0 to SHA1HashSize - 1 do begin
-        Response := Response + HexDigits[((Byte(Digest[Count]) and $F0) shr 4)];
-        Response := Response + HexDigits[(Byte(Digest[Count]) and $0F)];
-    end;
+    Pwd := AnsiString(FPassword);  { V7.32 }
+    HMAC_SHA1(PAnsiChar(Challenge)^, Length(Challenge), PAnsiChar(Pwd)^,
+              Length(Pwd), Digest);  { V7.32 }
+    Response := FUsername + ' ' + SHA1DigestToLowerHex(Digest);  { V7.32 }
     FState := smtpInternalReady;
     ExecAsync(smtpAuth, Base64Encode(Response), [235], nil);
 end;
@@ -2587,7 +2669,9 @@ begin
     NtlmMsg3 := NtlmGetMessage3('',
                                 '',  // the Host param seems to be ignored
                                 FUsername, FPassword,
-                                NtlmMsg2Info.Challenge);
+                                NtlmMsg2Info,     { V7.39 }
+                                CP_ACP,
+                                FLmCompatLevel);  { V7.39 }
     FState := smtpInternalReady;
     ExecAsync(smtpAuth, NtlmMsg3, [235], nil);
 end;
@@ -3223,6 +3307,37 @@ begin
     FESmtpSupported   := FALSE;
     FErrorMessage     := '';
     FLastResponse     := '';
+
+    if FProxyType <> smtpHttpProxy  then
+    { Disable connection thru HTTP proxy. It's not done in   }
+    { in the component because the last successful AuthType  }
+    { is cached to avoid slow detection. Changing property   }
+    { HttpTunnelServer clears the cache.                     }
+        FWSocket.HttpTunnelServer  := '';
+
+    FWSocket.SocksAuthentication := socksNoAuthentication;
+    case FProxyType of
+        smtpSocks4:  FWSocket.SocksLevel := '4';
+        smtpSocks4A: FWSocket.SocksLevel := '4A';
+        smtpSocks5:  FWSocket.SocksLevel := '5';
+    end;
+    if FProxyType in [smtpSocks4, smtpSocks4A, smtpSocks5] then begin
+        FWSocket.SocksAuthentication  := socksAuthenticateUsercode;
+        FWSocket.SocksServer          := FProxyServer;
+        FWSocket.SocksPort            := FProxyPort;
+        FWSocket.SocksUsercode        := FProxyUsercode;
+        FWSocket.SocksPassword        := FProxyPassword;
+        FWSocket.OnSocksError         := HandleSocksError;
+    end
+    else if FProxyType = smtpHttpProxy then begin { V7.18 }
+        FWSocket.HttpTunnelAuthType := FProxyHttpAuthType;
+        FWSocket.HttpTunnelServer   := FProxyServer;
+        FWSocket.HttpTunnelPort     := FProxyPort;
+        FWSocket.HttpTunnelUsercode := FProxyUsercode;
+        FWSocket.HttpTunnelPassword := FProxyPassword;
+        FWSocket.OnHttpTunnelError  := HandleHttpTunnelError;
+    end;
+
     StateChange(smtpDnsLookup);
     FWSocket.OnDataSent      := nil;
     FWSocket.OnDnsLookupDone := WSocketDnsLookupDone;
@@ -3596,8 +3711,8 @@ end;
 function GenerateMessageID : String;                                     {AG}
 begin
     Result := FormatDateTime('yyyymmddhhnnsszzz', Now + TimeZoneBiasDT) + '.' +
-              IntToHex(Random(32767), 4) + IntToHex(Random(32767), 4) +
-              IntToHex(Random(32767), 4) + IntToHex(Random(32767), 4) +
+              IntToHex(IcsRandomInt(MaxWord), 4) + IntToHex(IcsRandomInt(MaxWord), 4) +
+              IntToHex(IcsRandomInt(MaxWord), 4) + IntToHex(IcsRandomInt(MaxWord), 4) +
               '@' + String(LocalHostName);
 
 end;
@@ -3692,8 +3807,7 @@ begin
         raise Exception.Create('SendToFile requires SendMode smtpToStream');
     if Length(FileName) = 0 then
         raise Exception.Create('File name not specified');
-    if Assigned(FOutStream) then
-        FOutStream.Free;
+    FreeAndNil(FOutStream);
 {$IFDEF USE_BUFFERED_STREAM}
     FOutStream := TBufferedFileStream.Create(FileName, fmCreate, MAX_BUFSIZE);
 {$ELSE}
@@ -4183,14 +4297,7 @@ begin
         begin
             if MsgWaitForMultipleObjects(0, Dummy, False, 250, QS_ALLINPUT) = WAIT_FAILED then
                 raise SmtpException.Create('Wait failed in CalcMsgSizeSync');
-            if FMultiThreaded then
-                FWSocket.ProcessMessages
-            else
-            {$IFNDEF NOFORMS}
-                Application.ProcessMessages;
-            {$ELSE}
-                FWSocket.ProcessMessages;
-            {$ENDIF}
+            MessagePump;
         end;
     except
         FMsgSizeFlag  := FALSE;
@@ -4215,8 +4322,11 @@ function TSyncSmtpCli.WaitUntilReady : Boolean;
 var
     DummyHandle     : THandle;
 begin
-    Result    := TRUE;           { Assume success }
+{$IFNDEF WIN64}                  { V7.37 }
+    Result    := TRUE;           { Make dcc32 happy }
+{$ENDIF}
     FTimeStop := Integer(GetTickCount) + FTimeout * 1000;
+    DummyHandle := INVALID_HANDLE_VALUE;
     while TRUE do begin
         if FState = smtpReady then begin
             { Back to ready state, the command is finiched }
@@ -4224,7 +4334,7 @@ begin
             break;
         end;
 
-        if  {$IFNDEF NOFORMS} Application.Terminated or {$ENDIF}
+        if Terminated or
             ((FTimeout > 0) and (Integer(GetTickCount) > FTimeStop)) then begin
             { Application is terminated or timeout occured }
             inherited Abort;
@@ -4235,17 +4345,9 @@ begin
         end;
 
         { Do not use 100% CPU }
-        DummyHandle := INVALID_HANDLE_VALUE;                                           //FP
         MsgWaitForMultipleObjects(0, DummyHandle, FALSE, 1000, QS_ALLINPUT);           //FP
 
-        if FMultiThreaded then
-            FWSocket.ProcessMessages
-        else
-{$IFNDEF NOFORMS}
-            Application.ProcessMessages;
-{$ELSE}
-            FWSocket.ProcessMessages;
-{$ENDIF}
+        MessagePump;
     end;
 end;
 
@@ -4350,6 +4452,49 @@ end;
 function TSyncSmtpCli.AbortSync : Boolean;
 begin
     Result := Synchronize(Abort);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TSyncSmtpCli.SendToFileSync(
+    const FileName : String): Boolean;
+const
+    Msg = 'SendToFile';
+var
+    OldSendMode: TSmtpSendMode;
+begin
+    if FState <> smtpReady then
+        raise SmtpException.Create('SMTP component not ready');
+    if Length(FileName) = 0 then
+        raise SmtpException.Create('File name not specified');
+    FreeAndNil(FOutStream);
+{$IFDEF USE_BUFFERED_STREAM}
+    FOutStream := TBufferedFileStream.Create(FileName, fmCreate, MAX_BUFSIZE);
+{$ELSE}
+    FOutStream := TFileStream.Create(FileName, fmCreate);
+{$ENDIF}
+    try
+        OldSendMode := FSendMode;
+        try
+            FSendMode := smtpToStream;
+            FRequestType := smtpToFile;
+            FOkResponses[0] := 200;
+            FOkResponses[1] := 0;
+            FRequestDoneFlag := FALSE;
+            FLastResponse  := '';
+            FStatusCode    := 0;
+            FRequestResult := 0;
+            FMsgSizeFlag   := FALSE;
+            StateChange(smtpInternalBusy);
+            TriggerCommand(Msg);
+            TriggerDisplay('> ' + Msg);
+            Result := Synchronize(Data);
+        finally
+            FSendMode := OldSendMode;
+        end;
+    finally
+        FreeAndNil(FOutStream);
+    end;
 end;
 
 
@@ -4812,7 +4957,8 @@ begin
             5:  begin
                     if FImageNumber <= FEmailImages.Count then
                         StrPCopy(PAnsiChar(MsgLine), 'Content-ID: <IMAGE' +
-                                 IcsIntToStrA(FImageNumber) + '>')
+                                 IcsIntToStrA(FImageNumber) +
+                                 AnsiString(FHtmlImageCidSuffix) + '>')
                     else
                         { This line is just a place holder to avoid }
                         StrPCopy(PAnsiChar(MsgLine), 'X-File-ID: <FILE' +
@@ -4978,7 +5124,7 @@ var
     RandPart : AnsiString;
 begin
     TickPart := '----=_NextPart_000_' + IcsIntToHexA(LongInt(GetTickCount), 8);
-    RandPart := IcsIntToHexA(Random(High(Integer)), 8);
+    RandPart := IcsIntToHexA(IcsRandomInt(High(Integer)), 8);
     FOutsideBoundary := TickPart + '_0.' + RandPart;
     FInsideBoundary  := TickPart + '_1.' + RandPart;
     FInnerBoundary   := TickPart + '_2.' + RandPart;

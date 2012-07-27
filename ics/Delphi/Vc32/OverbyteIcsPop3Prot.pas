@@ -10,12 +10,12 @@ Author:       François PIETTE
 Object:       TPop3Cli class implements the POP3 protocol
               (RFC-1225, RFC-1939)
 Creation:     03 october 1997
-Version:      6.07
+Version:      6.13
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 1997-2011 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
               Berlin, Germany, contact: <arno.garrels@gmx.de>
@@ -178,7 +178,18 @@ Jul 04, 2010  V6.07 Arno - A better Unicode port of TPop3Cli.
               application. Useful in order to avoid too many string casts is to
               include AnsiStrings.pas in the uses clause as well as
               OverbyteIcsLibrary.pas (i.e. for IcsIntToStrA()) .
-
+Sep 20, 2010 V6.08 Arno - Moved HMAC-MD5 code to OverbyteIcsMD5.pas.
+             Ensure that var LastResponse is cleared before Connect.
+             Added a public read/write property LastError (as requested by Zvone),
+             it's more or less the last ErrCode as passed to event OnRequestDone
+             and reset on before each request.
+Oct 10, 2010 V6.09 Arno - MessagePump changes/fixes.
+Nov 08, 2010 V6.10 Arno improved final exception handling, more details
+             in OverbyteIcsWndControl.pas (V1.14 comments).
+Jun 18, 2011 V6.11 aguser removed one compiler hint.
+Jul 22, 2011 V6.12 Arno - OEM NTLM changes.
+Feb 17, 2012 V6.13 Arno added NTLMv2 and NTLMv2 session security (basics),
+             read comment "HowTo NTLMv2" in OverbyteIcsNtlmMsgs.pas.
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsPop3Prot;
@@ -230,8 +241,8 @@ uses
 (*$HPPEMIT '#pragma alias "@Overbyteicspop3prot@TCustomPop3Cli@GetUserNameW$qqrv"="@Overbyteicspop3prot@TCustomPop3Cli@GetUserName$qqrv"' *)	
 
 const
-    Pop3CliVersion     = 607;
-    CopyRight : String = ' POP3 component (c) 1997-2010 F. Piette V6.07 ';
+    Pop3CliVersion     = 613;
+    CopyRight : String = ' POP3 component (c) 1997-2010 F. Piette V6.13 ';
     POP3_RCV_BUF_SIZE  = 4096;
 
 type
@@ -304,6 +315,7 @@ type
         FAuthType           : TPop3AuthType;{HLX}
         FLastResponse       : AnsiString;
         FErrorMessage       : String;
+        FLastError          : Integer;   { V6.08 }
         FTimeStamp          : AnsiString;
         FMsgCount           : Integer;
         FMsgSize            : Integer;
@@ -325,6 +337,7 @@ type
         FHeaderReturnPath   : AnsiString;
         FHeaderCc           : AnsiString;
         FMsg_WM_POP3_REQUEST_DONE : UINT;
+        FLmCompatLevel      : LongWord;  { V6.13 }
 
         FOnDisplay          : TPop3Display;
         FOnMessageBegin     : TNotifyEvent;
@@ -374,7 +387,7 @@ type
         procedure   AllocateMsgHandlers; override;
         procedure   FreeMsgHandlers; override;
         function    MsgHandlersCount: Integer; override;
-        procedure   HandleBackGroundException(E: Exception); override;
+        procedure   AbortComponent; override; { V6.10 }
         procedure   WMPop3RequestDone(var msg: TMessage); virtual;
         procedure   WSocketDnsLookupDone(Sender: TObject; Error: Word);
         procedure   WSocketSessionConnected(Sender: TObject; Error: Word); virtual;
@@ -405,6 +418,10 @@ type
         procedure   AuthCramMd5;
         procedure   AuthNextNtlm;        {V6.06}
         procedure   AuthNextNtlmNext;    {V6.06}
+        procedure   SetMultiThreaded(const Value : Boolean); override;
+        procedure   SetTerminated(const Value: Boolean); override;
+        procedure   SetOnMessagePump(const Value: TNotifyEvent); override;
+        procedure   SetOnBgException(const Value: TIcsBgExceptionEvent); override; { V6.10 }
     public
         constructor Create(AOwner : TComponent); override;
         destructor  Destroy; override;
@@ -443,8 +460,12 @@ type
                                                      write SetPassWord;
         property AuthType      : TPop3AuthType       read  FAuthType
                                                      write FAuthType; {HLX}
+        property LmCompatLevel : LongWord            read  FLmCompatLevel   { V6.13 }
+                                                     write FLmCompatLevel;  { V6.13 }
         property ErrorMessage  : String              read  FErrorMessage;
         property LastResponse  : AnsiString          read  FLastResponse;
+        property LastError     : Integer             read  FLastError  { V6.08 }
+                                                     write FLastError;
         property State         : TPop3State          read  FState;
         property Connected     : Boolean             read  FConnected;
         property ProtocolState : TPop3ProtocolState  read  FProtocolState;
@@ -531,6 +552,7 @@ type
         property MsgNum;
         property MsgUidl;
         property Tag;
+        property OnBgException;             { V6.10 }
         property OnDisplay;
         property OnMessageBegin;
         property OnMessageEnd;
@@ -558,7 +580,6 @@ type
     protected
         FTimeout       : Integer;                 { Given in seconds }
         FTimeStop      : LongInt;                 { Milli-seconds    }
-        FMultiThreaded : Boolean;
         function WaitUntilReady : Boolean; virtual;
         function Synchronize(Proc : TPop3NextProc) : Boolean;
         procedure TriggerResponse(const Msg : AnsiString); override;   { Angus }
@@ -584,8 +605,7 @@ type
     published
         property Timeout : Integer       read  FTimeout
                                          write FTimeout;
-        property MultiThreaded : Boolean read  FMultiThreaded
-                                         write FMultiThreaded;
+        property MultiThreaded;
     end;
 
 { You must define USE_SSL so that SSL code is included in the component.    }
@@ -678,10 +698,6 @@ Updates:
 {$ENDIF} // USE_SSL
 
 implementation
-
-const
-    HexDigits : array [0..15] of AnsiChar = ('0','1','2','3','4','5','6','7','8',
-                                         '9','a','b','c','d','e','f');
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function CharPos(const Ch: AnsiChar; const S: AnsiString): Integer;
@@ -788,6 +804,7 @@ begin
     AllocateHWnd;
     //FWSocket                 := TWSocket.Create(nil);
     CreateCtrlSocket;
+    FWSocket.ExceptAbortProc := AbortComponent;  { V6.10 }
     FWSocket.OnSessionClosed := WSocketSessionClosed;
     FProtocolState           := pop3Disconnected;
     FState                   := pop3Ready;
@@ -850,27 +867,13 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{ All exceptions *MUST* be handled. If an exception is not handled, the     }
-{ application will be shut down !                                           }
-procedure TCustomPop3Cli.HandleBackGroundException(E: Exception);
-var
-    CanAbort : Boolean;
+procedure TCustomPop3Cli.AbortComponent; { V6.10 }
 begin
-    CanAbort := TRUE;
-    { First call the error event handler, if any }
-    if Assigned(FOnBgException) then begin
-        try
-            FOnBgException(Self, E, CanAbort);
-        except
-        end;
+    try
+        Abort;
+    except
     end;
-    { Then abort the component }
-    if CanAbort then begin
-        try
-            Abort;
-        except
-        end;
-    end;
+    inherited;
 end;
 
 
@@ -1103,6 +1106,7 @@ begin
         end
         else begin
             StateChange(pop3Ready);
+            FLastError := Error;  { V6.08 }
             { Restore the lastresponse saved before quit command }
             if FHighLevelFlag and (FStatusCodeSave >= 0) then begin
                  FLastResponse := FLastResponseSave;
@@ -1147,6 +1151,7 @@ begin
         {$IFDEF TRACE} TriggerDisplay('! Abort detected'); {$ENDIF}
         FFctSet := [];
         FHighLevelResult := 426;
+        FLastError       := FHighLevelResult;  { V6.08 }
         FErrorMessage    := '426 Operation aborted.';
     end;
 
@@ -1285,6 +1290,7 @@ begin
     FStatusCodeSave   := -1;
     FRequestType      := RqType;
     FRequestResult    := 0;
+    FLastError        := 0;  { V6.08 }
     FFctSet           := Fcts;
     FFctPrv           := pop3FctNone;
     FHighLevelResult  := 0;
@@ -1481,8 +1487,10 @@ begin
     if not FConnected then
         raise Pop3Exception.Create('POP3 component not connected');
 
-    if not FHighLevelFlag then
+    if not FHighLevelFlag then begin
         FRequestType := RqType;
+        FLastError   := 0;  { V6.08 }
+    end;
 
     FRequestDoneFlag   := FALSE;
     FNext              := NextExecAsync;
@@ -1506,6 +1514,7 @@ begin
     end;
 
     FRequestResult := 0;
+    FLastError     := 0;  { V6.08 }
     FProtocolState := FNextProtocolState;
 
     if Assigned(FDoneAsync) then
@@ -1547,7 +1556,6 @@ var
     Challenge  : AnsiString;
     Response   : AnsiString;
     Digest     : SHA1Digest;
-    count      : Integer;
 begin
     if FRequestResult <> 0 then begin
         TriggerRequestDone(FRequestResult);
@@ -1561,13 +1569,9 @@ begin
     end;
     Challenge := Copy(FLastResponse, 3, Length(FLastResponse) - 2);
     Challenge := Base64Decode(Challenge);
-    HMAC_SHA1(Challenge[1], Length(Challenge),
-              FPassword[1], Length(FPassword), Digest);
-    Response := FUsername + ' ';
-    for Count := 0 to SHA1HashSize - 1 do begin
-        Response := Response + HexDigits[((Byte(Digest[Count]) and $F0) shr 4)];
-        Response := Response + HexDigits[(Byte(Digest[Count]) and $0F)];
-    end;
+    HMAC_SHA1(PAnsiChar(Challenge)^, Length(Challenge),
+              PAnsiChar(FPassword)^, Length(FPassword), Digest);  { V6.08 }
+    Response := FUsername + ' ' + SHA1DigestToLowerHexA(Digest);  { V6.08 }
     FState := pop3InternalReady;
     ExecAsync(pop3Pass, Base64Encode(Response), pop3Transaction, nil);
 end;
@@ -1578,11 +1582,7 @@ procedure TCustomPop3Cli.AuthCramMd5; {HLX}
 var
     Challenge  : AnsiString;
     Response   : AnsiString;
-    MD5Digest  : TMD5Digest;
-    MD5Context : TMD5Context;
-    Count      : Integer;
-    IPAD       : array [0..63] of Byte;
-    OPAD       : array [0..63] of Byte;
+    Digest     : TMD5Digest;  { V6.08 }
 begin
     if FRequestResult <> 0 then begin
         TriggerRequestDone(FRequestResult);
@@ -1598,37 +1598,11 @@ begin
 
     Challenge := Copy(FLastResponse, 3, Length(FLastResponse) - 2);
     Challenge := Base64Decode(Challenge);
-
-    {See RFC2104 }
-    for Count := 0 to 63 do begin
-        if (Count + 1) <= Length(FPassword) then begin
-            IPAD[Count] := Byte(FPassword[Count+1]) xor $36;
-            OPAD[Count] := Byte(FPassword[Count+1]) xor $5C;
-        end
-        else begin
-            IPAD[Count] := 0 xor $36;
-            OPAD[Count] := 0 xor $5C;
-        end;
-    end;
-
-    MD5Init(MD5Context);
-    MD5Update(MD5Context, IPAD, 64);
-    MD5UpdateBuffer(MD5Context, @Challenge[1], Length(Challenge));
-    MD5Final(MD5Digest, MD5Context);
-    MD5Init(MD5Context);
-    MD5Update(MD5Context, OPAD, 64);
-    MD5Update(MD5Context, MD5Digest, 16);
-    MD5Final(MD5Digest, MD5Context);
-
-    Response := FUsername;
-    Response := Response + ' ';
-    for Count := 0 to 15 do begin
-        Response := Response + HexDigits[((MD5Digest[Count] and $F0) shr 4)];
-        Response := Response + HexDigits[(MD5Digest[Count] and $0F)];
-    end;
-
+    HMAC_MD5(PAnsiChar(Challenge)^, Length(Challenge), PAnsiChar(FPassword)^,
+                       Length(FPassword), Digest);  { V6.08 }
+    Response := FUsername + ' ' + MD5DigestToLowerHexA(Digest);  { V6.08 }
     FState := pop3InternalReady;
-    ExecAsync(pop3Pass, Base64encode(Response), pop3Transaction, nil);
+    ExecAsync(pop3Pass, Base64Encode(Response), pop3Transaction, nil);
 end;
 
 
@@ -1641,7 +1615,8 @@ begin
     end;
 
     FState := pop3InternalReady;
-    ExecAsync(pop3Auth, AnsiString(NtlmGetMessage1('', '')), pop3Transaction, AuthNextNtlmNext);
+    ExecAsync(pop3Auth, AnsiString(NtlmGetMessage1('', '', FLmCompatLevel)),
+              pop3Transaction, AuthNextNtlmNext); { V6.13 }
 end;
 
 
@@ -1667,7 +1642,9 @@ begin
     NtlmMsg3 := NtlmGetMessage3('',
                                 '',  // the Host param seems to be ignored
                                 Username, Password,
-                                NtlmMsg2Info.Challenge);
+                                NtlmMsg2Info,     { V6.13 }
+                                CP_ACP,
+                                FLmCompatLevel);  { V6.13 }
     FState := pop3InternalReady;
     ExecAsync(pop3Auth, AnsiString(NtlmMsg3), pop3Transaction, nil);
 end;
@@ -1725,6 +1702,9 @@ begin
     FReceiveLen       := 0;
     FRequestResult    := 0;
     FTimeStamp        := '';
+    FLastResponse     := '';  { V6.08 }
+    FLastResponseSave := '';  { V6.08 }
+    FLastError        := 0;   { V6.08 }
     ClearErrorMessage;
     FWSocket.OnDataSent      := nil;
     FWSocket.OnDnsLookupDone := WSocketDnsLookupDone;
@@ -1964,6 +1944,42 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomPop3Cli.SetMultiThreaded(const Value : Boolean);
+begin
+    if Assigned(FWSocket) then
+        FWSocket.MultiThreaded := Value;
+    inherited SetMultiThreaded(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomPop3Cli.SetTerminated(const Value: Boolean);
+begin
+    if Assigned(FWSocket) then
+        FWSocket.Terminated := Value;
+    inherited SetTerminated(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomPop3Cli.SetOnBgException(const Value: TIcsBgExceptionEvent);
+begin                                                               { V6.10 }
+    if Assigned(FWSocket) then
+        FWSocket.OnBgException := Value;
+    inherited SetOnBgException(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomPop3Cli.SetOnMessagePump(const Value: TNotifyEvent);
+begin
+    if Assigned(FWSocket) then
+        FWSocket.OnMessagePump := Value;
+    inherited SetOnMessagePump(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomPop3Cli.StartTransaction(
     OpCode      : AnsiString;
     Params      : AnsiString;
@@ -2167,8 +2183,11 @@ function TSyncPop3Cli.WaitUntilReady : Boolean;
 var
     DummyHandle     : THandle;
 begin
-    Result := TRUE;           { Suppose success }
+{$IFNDEF WIN64}               { V6.11 }
+    Result := TRUE;           { Make dcc32 happy }
+{$ENDIF}
     FTimeStop := Integer(GetTickCount) + FTimeout * 1000;
+    DummyHandle := INVALID_HANDLE_VALUE;
     while TRUE do begin
         if FState = pop3Ready then begin
             { Back to ready state, the command is finiched }
@@ -2176,28 +2195,20 @@ begin
             break;
         end;
 
-        if  {$IFNDEF NOFORMS}Application.Terminated or{$ENDIF}
+        if Terminated or
             ((FTimeout > 0) and (Integer(GetTickCount) > FTimeStop)) then begin
             { Application is terminated or timeout occured }
             inherited Abort;
             FErrorMessage := '426 Timeout';
             FStatusCode   := 426;
+            FLastError    := FStatusCode;  { V6.08 }
             Result        := FALSE; { Command failed }
             break;
         end;
+
         { Do not use 100% CPU }
-        DummyHandle := INVALID_HANDLE_VALUE;                                           //FP
-        MsgWaitForMultipleObjects(0, DummyHandle, FALSE, 1000,
-                                  QS_ALLINPUT + QS_ALLEVENTS +
-                                  QS_KEY + QS_MOUSE);
-{$IFDEF NOFORMS}
-        FWSocket.ProcessMessages;
-{$ELSE}
-        if FMultiThreaded then
-            FWSocket.ProcessMessages
-        else
-            Application.ProcessMessages;
-{$ENDIF}
+        MsgWaitForMultipleObjects(0, DummyHandle, FALSE, 1000, QS_ALLINPUT);
+        MessagePump;
     end;
 end;
 
@@ -2597,6 +2608,7 @@ begin
         {$IFDEF TRACE} TriggerDisplay('! Abort detected'); {$ENDIF}
         FFctSet := [];
         FHighLevelResult := 426;
+        FLastError       := FHighLevelResult;  { V6.08 }
         FErrorMessage    := '426 Operation aborted.';
     end;
 

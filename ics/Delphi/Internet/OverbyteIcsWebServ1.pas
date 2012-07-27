@@ -16,7 +16,7 @@ Description:  WebSrv1 show how to use THttpServer component to implement
               The code below allows to get all files on the computer running
               the demo. Add code in OnGetDocument, OnHeadDocument and
               OnPostDocument to check for authorized access to files.
-Version:      7.20
+Version:      7.23
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
@@ -96,7 +96,14 @@ Nov 05, 2008 V7.17 A. Garrels made the POST demo UTF-8 aware.
 Jan 03, 2009 V7.18 A. Garrels added some lines to force client browser's login
                    dialog when the nonce is stale with digest authentication.
 Oct 03, 2009 V7.19 F. Piette added file upload demo (REST & HTML Form)
-Jun 18, 2010 V7.20 Arno fixed a bug in CreateVirtualDocument_ViewFormUpload.                   
+Jun 18, 2010 V7.20 Arno fixed a bug in CreateVirtualDocument_ViewFormUpload.
+Feb 4,  2011 V7.21 Angus added bandwidth throttling using TCustomThrottledWSocket
+Oct 22, 2011 V7.22 Angus added delayed.html response page using a timer, can be used
+                   for long polling server push or to slow down hacker responses.
+                   Use onHttpMimeContentType event to report document file name
+                   and content type which can also be changed if incorrect.
+Feb 15, 2012 V7.23 Angus - using TMimeTypesList component to provide more MIME
+                   content types read from registry, a file or strings
 
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -129,16 +136,16 @@ uses
   Windows, Messages, SysUtils, Classes, Controls, Forms,
   OverbyteIcsIniFiles, StdCtrls, ExtCtrls, StrUtils,
   OverbyteIcsWinSock,  OverbyteIcsWSocket, OverbyteIcsWndControl,
-  OverbyteIcsHttpSrv, OverbyteIcsUtils, OverbyteIcsFormDataDecoder;
+  OverbyteIcsHttpSrv, OverbyteIcsUtils, OverbyteIcsFormDataDecoder, OverbyteIcsMimeUtils;
 
 const
-  WebServVersion     = 720;
-  CopyRight : String = 'WebServ (c) 1999-2010 F. Piette V7.20 ';
+  WebServVersion     = 723;
+  CopyRight : String = 'WebServ (c) 1999-2012 F. Piette V7.23 ';
   NO_CACHE           = 'Pragma: no-cache' + #13#10 + 'Expires: -1' + #13#10;
   WM_CLIENT_COUNT    = WM_USER + 1;
   FILE_UPLOAD_URL    = '/cgi-bin/FileUpload/';
   UPLOAD_DIR         = 'upload\';
-  MAX_UPLOAD_SIZE    = 1024 * 1024; // Accept max 1MB file
+  MAX_UPLOAD_SIZE    = 1024 * 1024 * 60; // Accept max 60MB file
 
 
 type
@@ -154,8 +161,10 @@ type
     FDataLen          : Integer;   { Keep track of received byte count.     }
     FDataFile         : TextFile;  { Used for datafile display              }
     FFileIsUtf8       : Boolean;
+    FRespTimer        : TTimer;    { V7.22 send a delayed response }
   public
     destructor  Destroy; override;
+    procedure TimerRespTimer(Sender: TObject);
   end;
 
   { This is the main form for our application. Any data here is global for  }
@@ -187,6 +196,9 @@ type
     Label7: TLabel;
     Label8: TLabel;
     MaxRequestsKeepAliveEdit: TEdit;
+    Label9: TLabel;
+    BandwidthLimitEdit: TEdit;
+    MimeTypesList1: TMimeTypesList;
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -217,6 +229,8 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure HttpServer1AuthNtlmBeforeValidate(Sender, Client: TObject;
       var Allow: Boolean);
+    procedure HttpServer1HttpMimeContentType(Sender, Client: TObject;
+      const FileName: string; var ContentType: string);
   private
     FIniFileName   : String;
     FInitialized   : Boolean;
@@ -315,6 +329,7 @@ const
     KeyRedirUrl        = 'RedirURL';
     KeyMaxRequests     = 'MaxRequestsKeepAlive';
     KeyKeepAliveSec    = 'KeepAliveTimeSec';
+    KeyBandwidthLimit  = 'BandwidthLimit';
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -392,6 +407,8 @@ begin
                                      KeyKeepAliveSec, '10');
         MaxRequestsKeepAliveEdit.Text := IniFile.ReadString(SectionData,
                                          KeyMaxRequests, '100');
+        BandwidthLimitEdit.Text := IniFile.ReadString(SectionData,
+                                         KeyBandwidthLimit, '1000000');
         DirListCheckBox.Checked :=
                 Boolean(IniFile.ReadInteger(SectionData, KeyDirList, 1));
         OutsideRootCheckBox.Checked :=
@@ -469,7 +486,9 @@ begin
                                         StrToIntDef(KeepAliveTimeSecEdit.Text, 10));
     IniFile.WriteInteger(SectionData,   KeyMaxRequests,
                                         StrToIntDef(MaxRequestsKeepAliveEdit.Text, 100));
-    
+    IniFile.WriteInteger(SectionData,   KeyBandwidthLimit,
+                                        StrToIntDef(BandwidthLimitEdit.Text, 1000000));
+
     IniFile.UpdateFile;
     IniFile.Free;
     CloseLogFile;
@@ -552,6 +571,9 @@ begin
     HttpServer1.Port                 := Trim(PortEdit.Text);
     HttpServer1.KeepAliveTimeSec     := StrToIntDef(KeepAliveTimeSecEdit.Text, 10);
     HttpServer1.MaxRequestsKeepAlive := StrToIntDef(MaxRequestsKeepAliveEdit.Text, 100);
+{$IFDEF BUILTIN_THROTTLE}
+    HttpServer1.BandwidthLimit       :=  StrToIntDef(BandwidthLimitEdit.Text, 1000000);
+{$ENDIF}
     HttpServer1.ClientClass          := TMyHttpConnection;
     try
         HttpServer1.Start;
@@ -606,7 +628,6 @@ begin
     StartButton.Enabled               := FALSE;
     StopButton.Enabled                := TRUE;
     Display('Server is waiting for connections on port ' + HttpServer1.Port);
-
     DemoUrl := 'http://' + LowerCase(LocalHostName);
     if (HttpServer1.Port <> '80') and (HttpServer1.Port <> 'http') then
         DemoUrl := DemoUrl + ':' + HttpServer1.Port;
@@ -707,7 +728,43 @@ begin
     else if CompareText(ClientCnx.Path, '/formupload.html') = 0 then
         CreateVirtualDocument_ViewFormupload{CreateVirtualDocument_formupload_htm}(Sender, ClientCnx, Flags)
     else if CompareText(ClientCnx.Path, '/template.html') = 0 then
-        CreateVirtualDocument_template(Sender, ClientCnx, Flags);
+        CreateVirtualDocument_template(Sender, ClientCnx, Flags)
+    { V7.22 Trap '/delayed.html' path to send a page once a timer expires. }
+    else if CompareText(ClientCnx.Path, '/delayed.html') = 0 then
+    begin
+        ClientCnx.FRespTimer := TTimer.Create (self) ;
+        ClientCnx.FRespTimer.OnTimer := ClientCnx.TimerRespTimer ;
+        ClientCnx.FRespTimer.Interval := 10000 ;     // 10 second delay
+        ClientCnx.FRespTimer.Enabled := true ;
+        Flags := hgWillSendMySelf;
+    end;
+end;
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ V7.22 This procedure is use to generate /delayed.html document when a timer expires }
+procedure TMyHttpConnection.TimerRespTimer(Sender: TObject);
+var
+    Flags: THttpGetFlag;
+begin
+    if NOT Assigned (FRespTimer) then exit ;
+    FRespTimer.Enabled := false ;
+    Flags := hgWillSendMySelf;
+    AnswerString(Flags,
+        '',                            { Default Status '200 OK'            }
+        '',                            { Default Content-Type: text/html    }
+        'Pragma: no-cache' + #13#10 +  { No client caching please           }
+        'Expires: -1'      + #13#10,   { I said: no caching !               }
+        '<HTML>' +
+          '<HEAD>' +
+            '<TITLE>ICS WebServer Demo</TITLE>' +
+          '</HEAD>' + #13#10 +
+          '<BODY>' +
+            '<H2>This page was deliberately returned slowly</H2>' + #13#10 +
+            '<H2>Time at server side:</H2>' + #13#10 +
+            '<P>' + DateTimeToStr(Now) +'</P>' + #13#10 +
+            '<A HREF="/demo.html">Demo menu</A>' + #13#10 +
+          '</BODY>' +
+        '</HTML>');
 end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -731,6 +788,20 @@ begin
             ': ' + ClientCnx.Version + ' HEAD ' + ClientCnx.Path);
 end;
 
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ This event handler is triggered when HTTP server component is about to    }
+{ send a document file, allowing the MIME content type to be changed        }
+
+procedure TWebServForm.HttpServer1HttpMimeContentType(Sender, Client: TObject;
+  const FileName: string; var ContentType: string);
+var
+    ClientCnx  : TMyHttpConnection;
+begin
+    ClientCnx := TMyHttpConnection(Client);
+    Display('[' + FormatDateTime('HH:NN:SS', Now) + ' ' +
+            ClientCnx.GetPeerAddr + '] ' +
+            ': Document: ' + FileName + ', Content-Type: ' + ContentType);
+end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { This event handler is triggered when HTTP server component receive a GET  }
@@ -769,6 +840,7 @@ begin
             '<A HREF="/upload">View uploaded files</A><BR>' +
             '<A HREF="/redir.html">Redirection</A><BR>' +
             '<A HREF="/myip.html">Show client IP</A><BR>' +
+            '<A HREF="/delayed.html">Delayed Slow Response</A><BR>' +   { V7.22 }
             '<A HREF="/DemoBasicAuth.html">Password protected page</A> ' +
                      '(Basic method, usercode=test, password=basic)<BR>' +
             '<A HREF="/DemoDigestAuth.html">Password protected page</A> ' +
@@ -1205,7 +1277,13 @@ procedure TWebServForm.HttpServer1PostDocument(
 var
     ClientCnx  : TMyHttpConnection;
 begin
-    { It's easyer to do the cast one time. Could use with clause... }
+    if Flags = hg401 then
+    { Not authenticated (yet), we might be still in an authentication       }
+    { session with ClientCnx.RequestContentLength = 0 which was valid,      }
+    { i.e. NTLM uses a challenge/response method, anyway just exit.         }
+        Exit;
+
+    { It's easier to do the cast one time. Could use with clause... }
     ClientCnx := TMyHttpConnection(Client);
 
     { Count request and display a message }
@@ -1217,12 +1295,12 @@ begin
 
     if (ClientCnx.RequestContentLength > MAX_UPLOAD_SIZE) or
        (ClientCnx.RequestContentLength <= 0) then begin
-        Display('Upload size exceeded limit (' +
-                IntToStr(MAX_UPLOAD_SIZE) + ')');
+        if (ClientCnx.RequestContentLength > MAX_UPLOAD_SIZE) then
+            Display('Upload size exceeded limit (' +
+                    IntToStr(MAX_UPLOAD_SIZE) + ')');
         Flags := hg403;
         Exit;
     end;
-
 
     { Check for request past. We accept data for '/cgi-bin/FormHandler'    }
     { and any name starting by /cgi-bin/FileUpload/' (End of URL will be   }
@@ -1276,6 +1354,7 @@ begin
             Junk[Len] := #0;
         Exit;
     end;
+
     { Receive as much data as we need to receive. But warning: we may       }
     { receive much less data. Data will be split into several packets we    }
     { have to assemble in our buffer.                                       }
@@ -1610,6 +1689,7 @@ begin
         FPostedRawData  := nil;
         FPostedDataSize := 0;
     end;
+    FreeAndNil (FRespTimer);  { V7.21 }
     inherited Destroy;
 end;
 

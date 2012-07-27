@@ -2,7 +2,7 @@ object HttpTestForm: THttpTestForm
   Left = 61
   Top = 411
   Caption = 'Http Test - http://www.overbyte.be'
-  ClientHeight = 521
+  ClientHeight = 533
   ClientWidth = 624
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object HttpTestForm: THttpTestForm
     Left = 0
     Top = 0
     Width = 624
-    Height = 113
+    Height = 121
     Align = alTop
     TabOrder = 0
     OnResize = Panel1Resize
@@ -87,8 +87,16 @@ object HttpTestForm: THttpTestForm
       Caption = 'Post / Put'
     end
     object Label10: TLabel
+      Left = 341
+      Top = 80
+      Width = 97
+      Height = 26
+      Caption = 'Maximum Bandwidth (bytes/sec)'
+      WordWrap = True
+    end
+    object Label11: TLabel
       Left = 374
-      Top = 65
+      Top = 66
       Width = 64
       Height = 13
       Caption = 'Content-Type'
@@ -130,7 +138,7 @@ object HttpTestForm: THttpTestForm
     end
     object DateTimeEdit: TEdit
       Left = 136
-      Top = 80
+      Top = 78
       Width = 97
       Height = 21
       TabOrder = 4
@@ -142,7 +150,8 @@ object HttpTestForm: THttpTestForm
       Width = 85
       Height = 21
       Style = csDropDownList
-      TabOrder = 5
+      ItemHeight = 13
+      TabOrder = 6
       Items.Strings = (
         'HTTP/1.0'
         'HTTP/1.1')
@@ -151,9 +160,9 @@ object HttpTestForm: THttpTestForm
       Left = 512
       Top = 1
       Width = 111
-      Height = 111
+      Height = 119
       Align = alRight
-      TabOrder = 6
+      TabOrder = 10
       object GetButton: TButton
         Left = 4
         Top = 8
@@ -229,7 +238,7 @@ object HttpTestForm: THttpTestForm
       end
     end
     object DisplayHeaderCheckBox: TCheckBox
-      Left = 272
+      Left = 238
       Top = 84
       Width = 97
       Height = 17
@@ -245,10 +254,28 @@ object HttpTestForm: THttpTestForm
       TabOrder = 8
       Text = 'PostContentTypeEdit'
     end
+    object BandwidthLimitEdit: TEdit
+      Left = 443
+      Top = 82
+      Width = 65
+      Height = 21
+      AutoSize = False
+      TabOrder = 9
+      Text = 'BandwidthLimitEdit'
+    end
+    object ContentEncodingCheckBox: TCheckBox
+      Left = 8
+      Top = 100
+      Width = 131
+      Height = 17
+      Alignment = taLeftJustify
+      Caption = 'Content Encoding Gzip'
+      TabOrder = 5
+    end
   end
   object DisplayMemo: TMemo
     Left = 0
-    Top = 113
+    Top = 121
     Width = 624
     Height = 148
     Align = alTop
@@ -265,9 +292,9 @@ object HttpTestForm: THttpTestForm
   end
   object DocumentMemo: TMemo
     Left = 0
-    Top = 261
+    Top = 269
     Width = 624
-    Height = 260
+    Height = 264
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -316,9 +343,14 @@ object HttpTestForm: THttpTestForm
     TimeStampFormatString = 'hh:nn:ss:zzz'
     TimeStampSeparator = ' '
     LogFileOption = lfoAppend
-    LogFileEncoding = lfeUtf8
     LogOptions = [loDestOutDebug, loProtSpecErr, loProtSpecInfo]
     Left = 136
     Top = 136
+  end
+  object IcsCookies: TIcsCookies
+    AutoSave = False
+    OnNewCookie = IcsCookiesNewCookie
+    Left = 225
+    Top = 135
   end
 end

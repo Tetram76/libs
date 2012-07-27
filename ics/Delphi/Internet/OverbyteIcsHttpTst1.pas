@@ -2,7 +2,7 @@
 
 Author:       François PIETTE
 Creation:     November 23, 1997
-Version:      1.08
+Version:      7.02
 Description:  Sample program to demonstrate some of the THttpCli features.
 EMail:        http://www.overbyte.be        francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
@@ -56,6 +56,10 @@ May 01, 2003  V1.06 Display Header checkbox added
 May 09, 2003  V1.07 Implemented PUT
 Jan 10, 2004  V1.08 Added code for HTTP 1.1 (Started months ago but forgot
               to add it in the history).
+Feb 4,  2011  V7.00 Angus added bandwidth throttling using TCustomThrottledWSocket
+Oct 6,  2011  V7.01 Angus added content encoding checkbox
+Mar 19, 2012  V7.02 Angus added persistent cookie support
+
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsHttpTst1;
@@ -83,12 +87,12 @@ uses
   System.ComponentModel,
  {$ENDIF}
   OverbyteIcsWinsock,  OverbyteIcsWSocket,
-  OverbyteIcsHttpProt, OverbyteIcsWndControl, 
-  OverbyteIcsLogger;
+  OverbyteIcsHttpProt, OverbyteIcsHttpCCodZLib, OverbyteIcsCookies,
+  OverbyteIcsWndControl, OverbyteIcsLogger;
 
 const
-  HttpTstVersion         = 108;
-  CopyRight : String     = 'HttpTst (c) 1997-2010 Francois Piette  V1.08 ';
+  HttpTstVersion         = 702;
+  CopyRight : String     = 'HttpTst (c) 1997-2012 Francois Piette  V7.02 ';
 
 type
   THttpTestForm = class(TForm)
@@ -124,6 +128,10 @@ type
     Label10: TLabel;
     PostContentTypeEdit: TEdit;
     IcsLogger1: TIcsLogger;
+    BandwidthLimitEdit: TEdit;
+    Label11: TLabel;
+    ContentEncodingCheckBox: TCheckBox;
+    IcsCookies: TIcsCookies;
     procedure GetButtonClick(Sender: TObject);
     procedure HttpCli1Command(Sender: TObject; var S: String);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -144,6 +152,7 @@ type
     procedure CloseButtonClick(Sender: TObject);
     procedure ClearButtonClick(Sender: TObject);
     procedure PutButtonClick(Sender: TObject);
+    procedure IcsCookiesNewCookie(Sender: TObject; ACookie: TCookie; var Save: Boolean);
   private
     Initialized  : Boolean;
     DocFileName  : String;
@@ -179,7 +188,8 @@ const
     KeyNTLMDomain   = 'NTLMDomain';
     KeyNTLMUsercode = 'NTLMUsercode';
     KeyNTLMPassword = 'NTLMPassword';
-
+    KeyBandwidthLimit = 'BandwidthLimit';
+    KeyContentEncoding = 'ContentEncoding' ;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpTestForm.FormShow(Sender: TObject);
@@ -211,6 +221,8 @@ begin
         PostContentTypeEdit.Text := IniFile.ReadString(SectionData, KeyPostType, 'text/plain');
         HttpVersionComboBox.ItemIndex := IniFile.ReadInteger(SectionData, KeyHttpVer, 0);
         DisplayHeaderCheckBox.Checked := Boolean(IniFile.ReadInteger(SectionData, KeyDisplayHdr, 0));
+        BandwidthLimitEdit.Text := IniFile.ReadString(SectionData, KeyBandwidthLimit, '1000000');
+        ContentEncodingCheckBox.Checked := Boolean(IniFile.ReadInteger(SectionData, KeyContentEncoding, 0));
 {$IFDEF UseNTLMAuthentication}
         HttpCli1.NTLMHost       := IniFile.ReadString(SectionData, KeyNTLMHost,     'PC');
         HttpCli1.NTLMDomain     := IniFile.ReadString(SectionData, KeyNTLMDomain,   'WORKGROUP');
@@ -219,6 +231,11 @@ begin
 {$ENDIF}
         IniFile.Free;
         Panel2.BevelOuter := bvNone;
+
+        { 7.02 load persisent cookies, they will be saved automatically during close down to save file name }
+        IcsCookies.LoadFromFile(ChangeFileExt(FIniFileName, '.cookies'));
+        IcsCookies.AutoSave := true;
+
         { Display version info for program and used components }
         wsi := WinsockInfo;
         DisplayMemo.Clear;
@@ -267,6 +284,8 @@ begin
     IniFile.WriteInteger(SectionData,   KeyHttpVer,   HttpVersionComboBox.ItemIndex);
     IniFile.WriteString(SectionData,    KeyPostType,  PostContentTypeEdit.Text);
     IniFile.WriteInteger(SectionData,   KeyDisplayHdr, Ord(DisplayHeaderCheckBox.Checked));
+    IniFile.WriteString(SectionData,    KeyBandwidthLimit,  BandwidthLimitEdit.Text);
+    IniFile.WriteInteger(SectionData,   KeyContentEncoding, Ord(ContentEncodingCheckBox.Checked));
 {$IFDEF UseNTLMAuthentication}
     IniFile.WriteString(SectionData, KeyNTLMHost,     HttpCli1.NTLMHost);
     IniFile.WriteString(SectionData, KeyNTLMDomain,   HttpCli1.NTLMDomain);
@@ -316,6 +335,15 @@ begin
         HttpCli1.Connection := 'Keep-Alive';
         HttpCli1.RequestVer := '1.' + IntToStr(HttpVersionComboBox.ItemIndex);
         HttpCli1.RcvdStream := nil;
+{$IFDEF BUILTIN_THROTTLE}
+        HttpCli1.BandwidthLimit := StrToIntDef(BandwidthLimitEdit.Text, 1000000);
+        if HttpCli1.BandwidthLimit > 0 then
+             HttpCli1.Options := HttpCli1.Options + [httpoBandwidthControl];
+{$ENDIF}
+        if ContentEncodingCheckBox.Checked then
+             HttpCli1.Options := HttpCli1.Options + [httpoEnableContentCoding]
+        else
+             HttpCli1.Options := HttpCli1.Options - [httpoEnableContentCoding];
         if DateTimeEdit.Text <> '' then
             HttpCli1.ModifiedSince := StrToDateTime(DateTimeEdit.Text)
         else
@@ -326,6 +354,8 @@ begin
                     HttpCli1.ProxyPort + '''')
         else
             Display('Not using proxy');
+
+        HttpCli1.Cookie := IcsCookies.GetCookies (HttpCli1.URL);  // 7.02 send cookies
 
         try
             HttpCli1.Head;
@@ -365,6 +395,15 @@ begin
         HttpCli1.Connection     := 'Keep-Alive';
         HttpCli1.RequestVer     := '1.' + IntToStr(HttpVersionComboBox.ItemIndex);
         HttpCli1.RcvdStream := nil;
+{$IFDEF BUILTIN_THROTTLE}
+        HttpCli1.BandwidthLimit := StrToIntDef(BandwidthLimitEdit.Text, 1000000);
+        if HttpCli1.BandwidthLimit > 0 then
+             HttpCli1.Options := HttpCli1.Options + [httpoBandwidthControl];
+{$ENDIF}
+        if ContentEncodingCheckBox.Checked then
+             HttpCli1.Options := HttpCli1.Options + [httpoEnableContentCoding]
+        else
+             HttpCli1.Options := HttpCli1.Options - [httpoEnableContentCoding];
         if DateTimeEdit.Text <> '' then
             HttpCli1.ModifiedSince := StrToDateTime(DateTimeEdit.Text)
         else
@@ -375,6 +414,8 @@ begin
                     HttpCli1.ProxyPort + '''')
         else
             Display('Not using proxy');
+
+        HttpCli1.Cookie := IcsCookies.GetCookies (HttpCli1.URL);  // 7.02 send cookies
 
         try
             HttpCli1.Get;
@@ -388,7 +429,7 @@ begin
 
         Display('StatusCode = ' + IntToStr(HttpCli1.StatusCode));
 
-        if DisplayHeaderCheckBox.Checked then 
+        if DisplayHeaderCheckBox.Checked then
             for I := 0 to HttpCli1.RcvdHeader.Count - 1 do
                 Display('hdr>' + HttpCli1.RcvdHeader.Strings[I]);
 
@@ -475,11 +516,22 @@ begin
         HttpCli1.RequestVer      := '1.' +
                                     IntToStr(HttpVersionComboBox.ItemIndex);
 
+{$IFDEF BUILTIN_THROTTLE}
+        HttpCli1.BandwidthLimit := StrToIntDef(BandwidthLimitEdit.Text, 1000000);
+        if HttpCli1.BandwidthLimit > 0 then
+             HttpCli1.Options := HttpCli1.Options + [httpoBandwidthControl];
+{$ENDIF}
+        if ContentEncodingCheckBox.Checked then
+             HttpCli1.Options := HttpCli1.Options + [httpoEnableContentCoding]
+        else
+             HttpCli1.Options := HttpCli1.Options - [httpoEnableContentCoding];
         if HttpCli1.Proxy <> '' then
             Display('Using proxy ''' + HttpCli1.Proxy + ':' +
                                   HttpCli1.ProxyPort + '''')
         else
             Display('Not using proxy');
+
+        HttpCli1.Cookie := IcsCookies.GetCookies (HttpCli1.URL);  // 7.02 send cookies
 
         try
             if Request = httpPOST then
@@ -600,7 +652,6 @@ begin
                 IntToStr(HttpCli1.StatusCode));
 end;
 
-
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpTestForm.AbortButtonClick(Sender: TObject);
 begin
@@ -648,14 +699,32 @@ procedure THttpTestForm.HttpCli1Cookie(
     const Data : String;
     var Accept : Boolean);
 begin
-    Display('Cookie: "' + Data + '"');
+    IcsCookies.SetCookie (Data, HttpCli1.Url);   // 7.02 save cookie
 end;
 
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpTestForm.IcsCookiesNewCookie(Sender: TObject; ACookie: TCookie; var Save: Boolean);
+var
+    S: string;
+begin
+    with ACookie do begin
+        S := 'NewCookie: ' + CName + '=' + CValue + ', Domain=' + CDomain + ', Path=' + CPath ;
+        if CPersist then
+            S := S + ', Expires=' + DateTimeToStr (CExpireDT)
+        else
+            S := S + ', Not Persisent';
+        if CSecureOnly then S := S + ', SecureOnly';
+        if CHttpOnly then S := S + ', HttpOnly';
+        Display (S);               // 7.02 tell user what cookie we found, could also reject it
+    end;
+end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpTestForm.HttpCli1LocationChange(Sender: TObject);
 begin
     Display('Location changed to "' + HttpCli1.Location + '"');
+ { cookies may have been sent during redirection, so update again now }
+    HttpCli1.Cookie := IcsCookies.GetCookies (HttpCli1.Location);   // 7.02 send cookies
 end;
 
 

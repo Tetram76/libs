@@ -9,12 +9,12 @@ Description:  THttpServer implement the HTTP server protocol, that is a
               check for '..\', '.\', drive designation and UNC.
               Do the check in OnGetDocument and similar event handlers.
 Creation:     Oct 10, 1999
-Version:      7.28
+Version:      7.51
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1999-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 1999-2012 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
               Berlin, Germany, contact: <arno.garrels@gmx.de>
@@ -267,7 +267,7 @@ Jun 12, 2009 V7.19 Angus made AuthBasicCheckPassword virtual
              Added OnAfterAnswer triggered after the answer is sent from
                 ConnectionDataSent so time taken to send reply can be logged
              Ensure ConnectionDataSent is always called even for non-stream replies
-Jun 15, 2009 V7.20 pdfe@sapo.pt and Angus added content encoding using zlib
+Jun 15, 2009 V7.20 RTT and Angus added content encoding using zlib
                compression if Options hoContentEncoding set, and content
                type is text/* and content size is between SizeCompressMin and
                SizeCompressMax. New event HttpContentEncode called so application
@@ -294,7 +294,64 @@ Feb 08, 2010 V7.26 F. Piette fixed a bug introduced in 7.25 with ResType
 Aug 07, 2010 V7.27 Bjørnar Nielsen suggested to add an overloaded UrlDecode()
                    that takes a RawByteString URL.
 Aug 08, 2010 V7.28 F. Piette: Published OnBgException from underlaying socket.
-
+Sep 10, 2010 V7.29 RTT: Added OnUnknownRequestMethod event, triggered when
+                   an unimplemented request method is being processed. Added
+                   CustomHeaders variable to the SendDocument procedure, to
+                   enable the possibility to send a custom header item(s) with
+                   the document. Added PersistentHeader property to define
+                   Header items that should be included in any response header.
+Nov 06, 2010 V7.30 A. Garrels - Fixed posted data handling in case of posted
+                   data is not accepted. Without this fix both posted data
+                   and a valid new request could be received on the same line.
+                   This also fixes NTLM authentication with POST requests.
+                   RequestContentLength field type change to Int64.
+Nov 08, 2010 V7.31 Arno improved final exception handling, more details
+                   in OverbyteIcsWndControl.pas (V1.14 comments).
+Jan 25, 2011 V7.32 FPiette fixed HtmlPageProducerToString for an unicode issue.
+                   Thanks to Busai Péter for his help.
+Jan 27, 2011 V7.33 Arno fixed a Unicode issue in VarRecToString, found by Péter
+                   Busai. Methods THttpConnection.AnswerPage,
+                   THttpConnection.HtmlPageProducerXy and helper functions take
+                   optional code page parameter (D2009+ only).
+Feb 4,  2011 V7.34 Angus added bandwidth throttling using TCustomThrottledWSocket
+                   Set BandwidthLimit property to maximum bytes server wide, for
+                   specific clients set BandwidthLimit in a client connect event
+                   (requires BUILTIN_THROTTLE to be defined in project options or
+                   enabled OverbyteIcsDefs.inc)
+Feb 17, 2011 V7.35 FPiette fixed ExtractURLEncodedValue which returned a nul
+                   byte when last character was a '%'. Now return a '%'.
+Jun 15, 2011 V7.36 Arno removed the check for empty password string in
+                   THttpConnection.AuthDigestCheckPassword.
+Jun 18, 2011 V7.37 aguser removed one compiler hint.
+Jul 01, 2011 V7.38 Lars Gehre found that HEAD could cause an infinite loop.
+Jul 09, 2011 V7.39 Lars Gehre fixed an issue with conditional define
+                   "NO_AUTHENTICATION_SUPPORT".
+Oct 18, 2011 V7.40 Angus GET performance improvements, use TBufferedFileStream,
+                   SndBlkSize default is 8192 and dynamically increased to new
+                   property MaxBlkSize if stream is larger than SndBlkSize.
+                   SocketSndBufSize also increased to SndBlkSize.
+Oct 22, 2011 V7.41 Angus added OnHttpMimeContentType to allow custom ContentTypes
+                   to be supported for unusual file extensions
+Jan 20, 2012 V7.42 RTT - Apply fix of V1.05 to GetCookieValue().
+Feb 04, 2012 V7.43 Tobias Rapp added method AnswerStreamAcceptRange which is
+                   similar to AnswerStream however doesn't ignore requested
+                   content range. Use this method only for OK responses.
+Feb 07, 2012 V7.44 Arno - The HEAD method *MUST NOT* return a message-body in
+                   the response. Do not skip compression on HEAD requests, we
+                   need to send the correct size. Method SendDocument
+                   simplified and added two overloads. AnswerStreamAcceptRange
+                   got an overload too.
+Feb 08, 2012 V7.45 Arno - If we receive an unknown method/request we have to
+                   close the connection, otherwise we may receive junk data we
+                   cannot handle properly.
+Feb 15, 2012 V7.46 Angus - attach TMimeTypesList component to provide more MIME
+                   content types read from registry, a file or strings, the
+                   existing DocumentToContentType function is used as a default
+Feb 18, 2012 V7.47 Arno - Attachment of MimeTypesList corrected.
+Feb 29, 2012 V7.48 Arno - Use IcsRandomInt
+Mar 26, 2012 V7.49 Angus - MakeCookie has optional domain parameter
+Mar 31, 2012 V7.50 Arno - Made TextToHtmlText work with WideString in Ansi Delphi
+Apr 27, 2012 V7.51 Arno - Fixed FileDate().
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsHttpSrv;
@@ -331,7 +388,7 @@ unit OverbyteIcsHttpSrv;
     {$UNDEF USE_NTLM_AUTH}
     {$DEFINE NO_DIGEST_AUTH}
 {$ENDIF}
-{$IFNDEF WIN32}
+{$IFNDEF MSWINDOWS}
     {$IFDEF USE_NTLM_AUTH}
         {$UNDEF USE_NTLM_AUTH}  {SSPI is Windows only}
     {$ENDIF}
@@ -365,6 +422,7 @@ uses
 {$IFNDEF NO_DEBUG_LOG}
     OverbyteIcsLogger,
 {$ENDIF}
+    OverbyteIcsStreams,   { V7.40 }
     OverbyteIcsMD5, OverbyteIcsMimeUtils,
     OverbyteIcsTypes, OverbyteIcsLibrary,
     OverbyteIcsUtils,
@@ -375,13 +433,15 @@ uses
 {$IFNDEF NO_DIGEST_AUTH}
     OverbyteIcsDigestAuth,
 {$ENDIF}
+    OverbyteIcsWSockBuf,
     OverbyteIcsWndControl, OverbyteIcsWSocket, OverbyteIcsWSocketS;
 
 const
-    THttpServerVersion = 728;
-    CopyRight : String = ' THttpServer (c) 1999-2010 F. Piette V7.28 ';
+    THttpServerVersion = 751;
+    CopyRight : String = ' THttpServer (c) 1999-2012 F. Piette V7.51 ';
     CompressMinSize = 5000;  { V7.20 only compress responses within a size range, these are defaults only }
     CompressMaxSize = 5000000;
+    MinSndBlkSize = 8192 ;  { V7.40 }
 
 type
     THttpServer          = class;
@@ -391,7 +451,7 @@ type
     TStringIndex         = class;
 
     THttpGetFlag         = (hgSendDoc, hgSendStream, hgWillSendMySelf,
-                            hg404, hg403, hg401, hgAcceptData,
+                            hg404, hg403, hg401, hg400, hgAcceptData,
                             hgSendDirList);
     THttpSendType        = (httpSendHead, httpSendDoc);
     THttpMethod          = (httpMethodGet, httpMethodPost, httpMethodHead);
@@ -433,6 +493,18 @@ type
                                     var Handled: Boolean) of object;
     THttpContEncodedEvent= procedure (Sender    : TObject;                 { V7.20 }
                                       Client    : TObject) of object;
+    THttpUnknownRequestMethodEvent= procedure (Sender : TObject;   { V7.29 }
+                                               Client : TObject;
+                                               var Handled : Boolean) of object;
+    TUnknownRequestMethodEvent= procedure (Sender : TObject;       { V7.29 }
+                                           var Handled : Boolean) of object;
+    THttpMimeContentTypeEvent= procedure (Sender    : TObject;     { V7.41 }
+                                          Client    : TObject;
+                                          const FileName: string;
+                                          var ContentType: string) of object;
+    TMimeContentTypeEvent= procedure (Sender    : TObject;         { V7.41 }
+                                      const FileName: string;
+                                      var ContentType: string) of object;
 
     THttpConnectionState = (hcRequest, hcHeader, hcPostedData);
     THttpOption          = (hoAllowDirList, hoAllowOutsideRoot, hoContentEncoding);   { V7.20 }
@@ -527,6 +599,7 @@ type
         property PartStreams[NIndex : Integer] : THttpPartStream
                                                    read  GetPartStreams;
     end;
+
     { THttpConnection is used to handle client connections }
 {$IFDEF USE_SSL}
     TBaseHttpConnection = class(TSslWSocketClient);
@@ -535,10 +608,13 @@ type
 {$ENDIF}
     THttpConnection = class(TBaseHttpConnection)
     protected
-        FHttpVerNum                : Integer;                         { V1.6 }
+        FHttpVerNum                   : Integer;                 { V1.6 }
+        FSendType                     : THttpSendType;           { V7.44 }
+        FPostRcvBuf                   : array [0..1023] of Byte; { V7.30 }{V7.39}
+        FPostCounter                  : Int64;                   { V7.30 }{V7.39}
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
     {$IFDEF USE_NTLM_AUTH}
-        FAuthNtlmSession           : TNtlmAuthSession;
+        FAuthNtlmSession              : TNtlmAuthSession;
     {$ENDIF}
         FAuthInit                     : Boolean;                        { V1.6 }
         FAuthUserName                 : String;
@@ -593,7 +669,8 @@ type
         FSndBlkSize            : Integer;       {AG 03/10/07}
         FLastModified          : TDateTime;
         FAnswerContentType     : String;
-        FRequestContentLength  : Integer;
+        FRequestContentLength  : Int64;         { V7.30 }
+        FRequestHasContentLength : Boolean;     { V7.30 }
         FRequestContentType    : String;
         FRequestAccept         : String;
         FRequestReferer        : String;
@@ -633,6 +710,8 @@ type
         FOnAfterAnswer         : TNotifyEvent;   { V7.19 }
         FOnContentEncode       : TContentEncodeEvent;  { V7.20 }
         FOnContEncoded         : TNotifyEvent;         { V7.20 }
+        FOnUnknownRequestMethod: TUnknownRequestMethodEvent; { V2.29 }
+        FOnMimeContentType     : TMimeContentTypeEvent;  { V7.41 }
         procedure SetSndBlkSize(const Value: Integer);
         procedure ConnectionDataAvailable(Sender: TObject; Error : Word); virtual;
         procedure ConnectionDataSent(Sender : TObject; Error : WORD); virtual;
@@ -645,6 +724,7 @@ type
         procedure Answer404; virtual;
         procedure Answer403; virtual;
         procedure Answer401; virtual;
+        procedure Answer400; virtual;   { V7.30 }
         procedure Answer501; virtual;
         procedure WndProc(var MsgRec: TMessage); override;
         procedure WMHttpDone(var msg: TMessage); virtual;
@@ -659,6 +739,8 @@ type
         procedure TriggerContentEncode (out ContentEncoding: string;
                                         var Handled: Boolean); virtual;  { V7.20 }
         procedure TriggerContEncoded; virtual;    { V7.20 }
+        procedure TriggerUnknownRequestMethod(var Handled : Boolean); virtual; { V7.29 }
+        procedure TriggerMimeContentType(const FileName: string; var ContentType: string); virtual; { V7.41 }
         function  CheckContentEncoding(const ContType : String): Boolean; virtual; { V7.21 are we allowed to compress content }
         function  DoContentEncoding: String; virtual; { V7.21 compress content returning Content-Encoding header }
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
@@ -681,10 +763,14 @@ type
         constructor Create(AOwner: TComponent); override;
         destructor  Destroy; override;
         procedure   SendStream; virtual;
-        procedure   SendDocument(SendType : THttpSendType); virtual;
+        procedure   SendDocument; overload; virtual;  { V7.44 }
+        procedure   SendDocument(const CustomHeaders: String); overload; virtual; { V7.44 }
+        procedure   SendDocument(SendType : THttpSendType); overload; virtual;
+        procedure   SendDocument(SendType : THttpSendType; const CustomHeaders: String); overload; virtual; { V7.29 }
         procedure   SendHeader(Header : String); virtual;
         procedure   PostedDataReceived; virtual;
         procedure   PrepareGraceFullShutDown; virtual;
+        function    Receive(Buffer : TWSocketData; BufferSize: Integer) : Integer; override; { V7.30 }
         function    GetKeepAliveHdrLines: String;
         { AnswerPage will take a HTML template and replace all tags in this
           template with data provided in the Tags argument.
@@ -721,18 +807,37 @@ type
                                const Header   : String;
                                const HtmlFile : String;  // Template file name
                                UserData       : TObject;
-                               Tags           : array of const); overload; virtual;
+                               Tags           : array of const
+                           {$IFDEF COMPILER12_UP};
+                               FileCodepage   : LongWord = CP_ACP;
+                               DstCodepage    : LongWord = CP_ACP
+                           {$ENDIF}
+                               ); overload; virtual;
         procedure   AnswerPage(var   Flags    : THttpGetFlag;
                                const Status   : String;
                                const Header   : String;
                                const ResName  : String;    // Template resource name
                                const ResType  : PChar;     // Template resource type
                                UserData       : TObject;
-                               Tags           : array of const); overload; virtual;
+                               Tags           : array of const
+                           {$IFDEF COMPILER12_UP};
+                               ResCodepage    : LongWord = CP_ACP;
+                               DstCodepage    : LongWord = CP_ACP
+                           {$ENDIF}
+                               ); overload; virtual;
         procedure   AnswerStream(var   Flags    : THttpGetFlag;
                                  const Status   : String;
                                  const ContType : String;
                                  const Header   : String); virtual;
+        procedure   AnswerStreamAcceptRange(
+                                 var Flags      : THttpGetFlag;
+                                 const ContType : String;
+                                 LastModified   : TDateTime = 0); overload; virtual;  { V7.44 }
+        procedure   AnswerStreamAcceptRange(
+                                 var Flags      : THttpGetFlag;
+                                 const ContType : String;
+                                 const Header   : String;
+                                 LastModified   : TDateTime = 0); overload; virtual;  { V7.43 }
         procedure   AnswerString(var   Flags    : THttpGetFlag;
                                  const Status   : String;
                                  const ContType : String;
@@ -755,17 +860,31 @@ type
           recursively use HtmlPageProducerToString to build complex pages. }
         function HtmlPageProducerToString(const HtmlFile: String;
                                           UserData: TObject;
-                                          Tags: array of const): String; virtual;
+                                          Tags: array of const
+                                      {$IFDEF COMPILER12_UP};
+                                          FileCodepage: LongWord = CP_ACP
+                                      {$ENDIF}
+                                          ): String; virtual;
         { Mostly like AnswerPage but the result is given into a stream }
         procedure HtmlPageProducerToStream(const HtmlFile: String;
                                            UserData: TObject;
                                            Tags: array of const;
-                                           DestStream: TStream); overload; virtual;
+                                           DestStream: TStream
+                                       {$IFDEF COMPILER12_UP};
+                                           FileCodepage: LongWord = CP_ACP;
+                                           DstCodepage: LongWord = CP_ACP
+                                       {$ENDIF}
+                                           ); overload; virtual;
         procedure HtmlPageProducerToStream(const ResName : String;
                                            const ResType : PChar;
                                            UserData: TObject;
                                            Tags: array of const;
-                                           DestStream: TStream); overload; virtual;
+                                           DestStream: TStream
+                                       {$IFDEF COMPILER12_UP};
+                                           ResCodepage: LongWord = CP_ACP;
+                                           DstCodepage: LongWord = CP_ACP
+                                       {$ENDIF}
+                                           ); overload; virtual;
         property SndBlkSize : Integer read FSndBlkSize write SetSndBlkSize;
         { Method contains GET/POST/HEAD as requested by client }
         property Method                    : String read  FMethod;
@@ -782,7 +901,7 @@ type
         property KeepAlive             : Boolean     read  FKeepAlive  {Bjornar}
                                                      write FKeepAlive; {Bjornar}
         { All RequestXXX are header fields from request header }
-        property RequestContentLength  : Integer     read  FRequestContentLength;
+        property RequestContentLength  : Int64       read  FRequestContentLength;{ V7.30 }
         property RequestContentType    : String      read  FRequestContentType;
         property RequestAccept         : String      read  FRequestAccept;
         property RequestReferer        : String      read  FRequestReferer;
@@ -871,6 +990,14 @@ type
         { Triggered after answer stream is compressed, so the stream may be cached V7.20 }
         property OnContEncoded : TNotifyEvent       read FOnContEncoded
                                                     write FOnContEncoded;
+        { Triggered when about to process an unimplemented request method V2.29 }
+        property OnUnknownRequestMethod   : TUnknownRequestMethodEvent
+                                                    read  FOnUnknownRequestMethod
+                                                    write FOnUnknownRequestMethod;
+        { Triggered from SendDocument to allow MIME content type to be changed    V7.41 }
+        property OnMimeContentType  : TMimeContentTypeEvent
+                                                    read FOnMimeContentType
+                                                    write FOnMimeContentType;
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
         { AuthType contains the actual authentication method selected by client }
         property AuthType          : TAuthenticationType
@@ -935,8 +1062,17 @@ type
         FOnAfterAnswer            : THttpAfterAnswerEvent;   { V7.19 }
         FOnHttpContentEncode      : THttpContentEncodeEvent;  { V7.20 }
         FOnHttpContEncoded        : THttpContEncodedEvent;    { V7.20 }
-        FSizeCompressMin          : integer;  { V7.20 }
-        FSizeCompressMax          : integer;  { V7.20 }
+        FOnHttpUnknownReqMethod   : THttpUnknownRequestMethodEvent; { V7.29 }
+        FSizeCompressMin          : Integer;  { V7.20 }
+        FSizeCompressMax          : Integer;  { V7.20 }
+        FPersistentHeader         : String;   { V7.29 }
+        FMaxBlkSize               : Integer;  { V7.40 }
+        FOnHttpMimeContentType    : THttpMimeContentTypeEvent;  { V7.41 }
+        FMimeTypesList            : TMimeTypesList;             { V7.46 }
+{$IFDEF BUILTIN_THROTTLE}
+        FBandwidthLimit           : LongWord;   { angus V7.34 Bytes per second, null = disabled }
+        FBandwidthSampling        : LongWord;   { angus V7.34 Msec sampling interval }
+{$ENDIF}
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
         FAuthTypes                : TAuthenticationTypes;
         FAuthRealm                : String;
@@ -973,8 +1109,7 @@ type
                                              Error  : Word);
         procedure WSocketServerChangeState(Sender : TObject;
                                            OldState, NewState : TSocketState);
-        procedure WSocketServerBgException(Sender: TObject; E: Exception;
-                                           var CanClose: Boolean);
+        procedure SetOnBgException(const Value: TIcsBgExceptionEvent); override; { V7.31 }
         procedure TriggerServerStarted; virtual;
         procedure TriggerServerStopped; virtual;
         procedure TriggerClientConnect(Client : TObject; Error  : Word); virtual;
@@ -998,6 +1133,8 @@ type
                                        out ContentEncoding: string;
                                        var Handled: Boolean);
         procedure TriggerContEncoded(Client : TObject);   { V7.20 }
+        procedure TriggerUnknownRequestMethod(Client : TObject; var Handled : Boolean); { V7.29 }
+        procedure TriggerMimeContentType(Client : TObject; const FileName: string; var ContentType: string); virtual; { V7.41 }
         procedure SetPortValue(const newValue : String);
         procedure SetAddr(const newValue : String);
         procedure SetDocDir(const Value: String);
@@ -1006,6 +1143,7 @@ type
         function  GetSrcVersion: String;
         procedure HeartBeatOnTimer(Sender: TObject); virtual;
         procedure SetKeepAliveTimeSec(const Value: Cardinal);
+        procedure SetMimeTypesList(const Value: TMimeTypesList); { V7.47 }
     public
         constructor Create(AOwner: TComponent); override;
         destructor  Destroy; override;
@@ -1070,6 +1208,23 @@ type
                                                  write FSizeCompressMin;
         property SizeCompressMax : integer       read  FSizeCompressMax
                                                  write FSizeCompressMax;
+        {Header items to always included in any response header} { V7.29 }
+        property PersistentHeader:string         read  FPersistentHeader
+                                                 write FPersistentHeader;
+        { maximum buffer block size to read/sent for large files }
+        property MaxBlkSize : Integer            read FMaxBlkSize   { V7.40 }
+                                                 write FMaxBlkSize ;
+        { class providing MIME Content Types for documents }
+        property MimeTypesList : TMimeTypesList  read  FMimeTypesList  { V7.46 }
+                                                 write SetMimeTypesList; { V7.47 }
+{$IFDEF BUILTIN_THROTTLE}
+        { BandwidthLimit slows down speeds, bytes per second, null = disabled }
+        property BandwidthLimit : LongWord       read  FBandwidthLimit
+                                                 write FBandwidthLimit;     { angus V7.34 }
+       { BandwidthSampling interval in msec }
+        property BandwidthSampling : LongWord    read  FBandwidthSampling
+                                                 write FBandwidthSampling;  { angus V7.34 }
+{$ENDIF}
         { OnServerStrated is triggered when server has started listening }
         property OnServerStarted    : TNotifyEvent
                                                  read  FOnServerStarted
@@ -1137,6 +1292,12 @@ type
         property OnHttpContEncoded : THttpContEncodedEvent      { V7.20 }
                                                  read FOnHttpContEncoded
                                                  write FOnHttpContEncoded;
+        property OnUnknownRequestMethod : THttpUnknownRequestMethodEvent { V2.29 }
+                                                 read FOnHttpUnknownReqMethod
+                                                 write FOnHttpUnknownReqMethod;
+        property OnHttpMimeContentType : THttpMimeContentTypeEvent         { V7.41 }
+                                                 read FOnHttpMimeContentType
+                                                 write FOnHttpMimeContentType;
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
         property OnAuthGetPassword  : TAuthGetPasswordEvent
                                                  read  FOnAuthGetPassword
@@ -1355,8 +1516,9 @@ function UrlDecode(const Url   : RawByteString;
 {$ENDIF}
 function FileDate(FileName : String) : TDateTime;
 function RFC1123_Date(aDate : TDateTime) : String;
-function DocumentToContentType(FileName : String) : String;
-function TextToHtmlText(const Src : String) : String;
+function DocumentToContentType(const FileName : String) : String;
+function TextToHtmlText(const Src : UnicodeString) : String; overload;
+function TextToHtmlText(const Src : RawByteString) : String; overload;
 function TranslateChar(const Str: String; FromChar, ToChar: Char): String;
 function UnixPathToDosPath(const Path: String): String;
 function DosPathToUnixPath(const Path: String): String;
@@ -1364,39 +1526,63 @@ function IsDirectory(const Path : String) : Boolean;
 function AbsolutisePath(const Path : String) : String;
 function MakeCookie(const Name, Value : String;
                     Expires           : TDateTime;
-                    const Path        : String) : String;
+                    const Path        : String;
+                    const Domain      : String = '') : String;
 function HtmlPageProducer(const FromStream   : TStream;
                           Tags               : array of const;
                           RowDataGetter      : PTableRowDataGetter;
                           UserData           : TObject;
-                          DestStream         : TStream) : Boolean; overload;
+                          DestStream         : TStream
+                      {$IFDEF COMPILER12_UP};
+                          FromCodepage       : LongWord = CP_ACP;
+                          DestCodePage       : LongWord = CP_ACP
+                      {$ENDIF}
+                          ) : Boolean; overload;
 function HtmlPageProducer(const HtmlFileName : String;
                           Tags               : array of const;
                           RowDataGetter      : PTableRowDataGetter;
                           UserData           : TObject;
-                          DestStream         : TStream) : Boolean; overload;
+                          DestStream         : TStream
+                      {$IFDEF COMPILER12_UP};
+                          FileCodepage       : LongWord = CP_ACP;
+                          DestCodePage       : LongWord = CP_ACP
+                      {$ENDIF}
+                          ) : Boolean; overload;
 function HtmlPageProducer(const ResName      : String;
                           const ResType      : PChar;
                           Tags               : array of const;
                           RowDataGetter      : PTableRowDataGetter;
                           UserData           : TObject;
-                          DestStream         : TStream) : Boolean; overload;
+                          DestStream         : TStream
+                      {$IFDEF COMPILER12_UP};                          
+                          ResCodepage        : LongWord = CP_ACP;
+                          DestCodePage       : LongWord = CP_ACP
+                      {$ENDIF}
+                          ) : Boolean; overload;
 function HtmlPageProducerFromMemory(
     Buf                : PChar;
     BufLen             : Integer;
     TagData            : TStringIndex;
     RowDataGetter      : PTableRowDataGetter;
     UserData           : TObject;
-    DestStream         : TStream) : Boolean;
+    DestStream         : TStream
+{$IFDEF COMPILER12_UP};
+    DestCodePage       : LongWord = CP_ACP
+{$ENDIF}
+    ) : Boolean;
 function HtmlPageProducerSetTagPrefix(const Value : String) : String;
 function RemoveHtmlSpecialChars(const S : String) : String;
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
 function AuthTypesToString(Types : TAuthenticationTypes) : String;
 {$ENDIF}
-function StreamWriteStrA(AStrm : TStream; const AStr: String): Integer;
-function StreamWriteLnA(AStrm : TStream; const AStr: String): Integer;
-function StreamReadStrA(AStrm : TStream; ByteCnt: Integer): String;
-function StreamWriteA(AStream : TStream; Buf: PChar; CharCnt: Integer): Integer;
+function StreamWriteStrA(AStrm : TStream; const AStr: String
+  {$IFDEF COMPILER12_UP}; DstCodePage: LongWord = CP_ACP {$ENDIF}): Integer;
+function StreamWriteLnA(AStrm : TStream; const AStr: String
+  {$IFDEF COMPILER12_UP}; DstCodePage: LongWord = CP_ACP {$ENDIF}): Integer;
+function StreamReadStrA(AStrm : TStream; ByteCnt: Integer
+  {$IFDEF COMPILER12_UP}; SrcCodePage: LongWord = CP_ACP {$ENDIF}): String;
+function StreamWriteA(AStream : TStream; Buf: PChar; CharCnt: Integer
+  {$IFDEF COMPILER12_UP}; DstCodePage: LongWord = CP_ACP {$ENDIF}): Integer;
 function VarRecToString(V : TVarRec) : String;
 
 const
@@ -1416,12 +1602,16 @@ const
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function StreamWriteStrA(AStrm : TStream; const AStr: String): Integer;
+function StreamWriteStrA(AStrm : TStream; const AStr: String
+{$IFDEF COMPILER12_UP};
+    DstCodePage: LongWord = CP_ACP
+{$ENDIF}
+    ): Integer;
 {$IFDEF COMPILER12_UP}
 var
     S : AnsiString;
 begin
-    S := UnicodeToAnsi(AStr);
+    S := UnicodeToAnsi(AStr, DstCodePage);
     Result := AStrm.Write(Pointer(S)^, Length(S));
 {$ELSE}
 begin
@@ -1431,28 +1621,37 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function StreamWriteLnA(AStrm : TStream; const AStr: String
+{$IFDEF COMPILER12_UP};
+    DstCodePage: LongWord = CP_ACP
+{$ENDIF}
+    ): Integer;
 const
-    CRLF : String = Char($0D) + Char($0A);
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function StreamWriteLnA(AStrm : TStream; const AStr: String): Integer;
+    AsciiLineBreak : array [0..1] of AnsiChar = (#13, #10);
 begin
     if Length(AStr) > 0 then
-        Result := StreamWriteStrA(AStrm, AStr)
+        Result := StreamWriteStrA(AStrm, AStr
+                              {$IFDEF COMPILER12_UP},
+                                  DstCodePage
+                              {$ENDIF}
+                                  )
     else
         Result := 0;
-    Result := Result + StreamWriteStrA(AStrm, CRLF);
+    Result := Result + AStrm.Write(AsciiLineBreak, SizeOf(AsciiLineBreak));
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function StreamReadStrA(AStrm : TStream; ByteCnt: Integer): String;
+function StreamReadStrA(AStrm : TStream; ByteCnt: Integer
+{$IFDEF COMPILER12_UP};
+    SrcCodePage: LongWord = CP_ACP
+{$ENDIF}
+    ): String;
 var
     Len : Integer;
 {$IFNDEF COMPILER12_UP}
 begin
-    if ByteCnt > 0 then
-    begin
+    if ByteCnt > 0 then begin
         SetLength(Result, ByteCnt);
         Len := AStrm.Read(Pointer(Result)^, ByteCnt);
         if Len <> ByteCnt then
@@ -1461,13 +1660,12 @@ begin
 {$ELSE}
     Str : AnsiString;
 begin
-    if ByteCnt > 0 then
-    begin
+    if ByteCnt > 0 then begin
         SetLength(Str, ByteCnt);
         Len := AStrm.Read(Pointer(Str)^, ByteCnt);
         if Len <> ByteCnt then
             SetLength(Str, Len);
-        Result := AnsiToUnicode(Str); // Cast to Unicode
+        Result := AnsiToUnicode(Str, SrcCodePage); // Cast to Unicode
     end
 {$ENDIF}
     else
@@ -1476,10 +1674,14 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function StreamWriteA(AStream : TStream; Buf: PChar; CharCnt: Integer): Integer;
+function StreamWriteA(AStream : TStream; Buf: PChar; CharCnt: Integer
+{$IFDEF COMPILER12_UP};
+    DstCodePage: LongWord = CP_ACP
+{$ENDIF}
+    ): Integer;
 begin
 {$IFDEF COMPILER12_UP}
-    Result:= StreamWriteString(AStream, Buf, CharCnt, CP_ACP);
+    Result := StreamWriteString(AStream, Buf, CharCnt, DstCodePage);
 {$ELSE}
     Result := AStream.Write(Buf^, CharCnt);
 {$ENDIF}
@@ -1522,6 +1724,11 @@ begin
     FHeartBeat.Enabled    := TRUE;
     SizeCompressMin       := CompressMinSize;  { V7.20 only compress responses within a size range }
     SizeCompressMax       := CompressMaxSize;
+    FMaxBlkSize           := MinSndBlkSize;    { V7.40 }
+{$IFDEF BUILTIN_THROTTLE}
+    FBandwidthLimit       := 0;       { angus V7.34 no bandwidth limit, yet, bytes per second }
+    FBandwidthSampling    := 1000;    { angus V7.34 Msec sampling interval, less is not possible }
+{$ENDIF}
 end;
 
 
@@ -1545,7 +1752,9 @@ begin
     inherited Notification(AComponent, Operation);
     if Operation = opRemove then begin
         if AComponent = FWSocketServer then
-            FWSocketServer := nil;
+            FWSocketServer := nil
+        else if AComponent = FMimeTypesList then  { 7.47 }
+            FMimeTypesList := nil;                { 7.47 }
     end;
 end;
 
@@ -1561,8 +1770,8 @@ end;
 function THttpServer.CreateServerSecret: TULargeInteger;
 begin
     { This is weak, however better than nothing }
-    Result.LowPart  := Random(MaxInt);
-    Result.HighPart := Random(MaxInt);
+    Result.LowPart  := IcsRandomInt(MaxInt);
+    Result.HighPart := IcsRandomInt(MaxInt);
 end;
 
 
@@ -1585,7 +1794,6 @@ begin
     FWSocketServer.OnClientDisconnect := WSocketServerClientDisconnect;
     FWSocketServer.OnSessionClosed    := WSocketServerSessionClosed;
     FWSocketServer.OnChangeState      := WSocketServerChangeState;
-    FWSocketServer.OnBgException      := WSocketServerBgException;  { F.Piette V7.27 }
     FWSocketServer.Banner             := '';
     FWSocketServer.Proto              := 'tcp';
     FWSocketServer.Port               := FPort;
@@ -1597,6 +1805,10 @@ begin
         'Content-type: text/plain' + #13#10 +
         'Content-length: ' + _IntToStr(Length(BusyText)) + #13#10#13#10 +
         BusyText;
+{$IFDEF BUILTIN_THROTTLE}
+    FWSocketServer.BandwidthLimit     := FBandwidthLimit;     { angus V7.34 slow down control connection }
+    FWSocketServer.BandwidthSampling  := FBandwidthSampling;  { angus V7.34 }
+{$ENDIF}
 {$IFNDEF NO_DIGEST_AUTH}
     FAuthDigestServerSecret           := CreateServerSecret;
 {$ENDIF}
@@ -1662,6 +1874,19 @@ begin
         FDocDir := AbsolutisePath(Copy(Value, 1, Length(Value) - 1))
     else
         FDocDir := AbsolutisePath(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpServer.SetMimeTypesList(const Value: TMimeTypesList);{ V7.47 }
+begin
+    if FMimeTypesList <> Value then begin
+        if Assigned(FMimeTypesList) then
+            FMimeTypesList.RemoveFreeNotification(Self);
+        FMimeTypesList := Value;
+        if Assigned(FMimeTypesList) then
+            FMimeTypesList.FreeNotification(Self);
+    end;
 end;
 
 
@@ -1754,13 +1979,11 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-procedure THttpServer.WSocketServerBgException(    { F.Piette V7.27 }
-    Sender       : TObject;
-    E            : Exception;
-    var CanClose : Boolean);
+procedure THttpServer.SetOnBgException(const Value: TIcsBgExceptionEvent); { V7.31 }
 begin
-    if Assigned(FOnBgException) then
-        FOnBgException(Self, E, CanClose);
+    if Assigned(FWSocketServer) then
+        FWSocketServer.OnBgException := Value;
+    inherited;
 end;
 
 
@@ -1813,6 +2036,8 @@ begin
     THttpConnection(Client).OnAfterAnswer     := TriggerAfterAnswer;   { V7.19 }
     THttpConnection(Client).OnContentEncode   := TriggerContentEncode; { V7.20 }
     THttpConnection(Client).OnContEncoded     := TriggerContEncoded;   { V7.20 }
+    THttpConnection(Client).OnUnknownRequestMethod  := TriggerUnknownRequestMethod; { V2.29 }
+    THttpConnection(Client).OnMimeContentType := TriggerMimeContentType; { V7.41 }
     TriggerClientConnect(Client, Error);
 end;
 
@@ -1970,6 +2195,25 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpServer.TriggerUnknownRequestMethod(
+    Client      : TObject;
+    var Handled : Boolean);                                         { V7.29 }
+begin
+    if Assigned(FOnHttpUnknownReqMethod) then
+        FOnHttpUnknownReqMethod(Self, Client, Handled);
+end;
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpServer.TriggerMimeContentType
+    (Client : TObject;
+     const FileName: string;
+     var ContentType: string);                                     { V7.41 }
+begin
+    if Assigned(FOnHttpMimeContentType) then
+        FOnHttpMimeContentType(Self, Client, FileName, ContentType);
+end;
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpServer.HeartBeatOnTimer(Sender: TObject);
 var
     CurTicks : Cardinal;
@@ -2031,11 +2275,12 @@ begin
     LineEdit              := FALSE;
     LineEnd               := AnsiChar(#10);
     FRequestHeader        := TStringList.Create;
+    FRequestHeader.NameValueSeparator := ':'; { V7.29 }
     FState                := hcRequest;
     OnDataAvailable       := ConnectionDataAvailable;
     FRequestRangeValues   := THttpRangeList.Create; {ANDREAS}
     ComponentOptions      := [wsoNoReceiveLoop];    { FP 15/05/2005 }
-    FSndBlkSize           :=  BufSize; // default value = 1460
+    FSndBlkSize           := MinSndBlkSize;  { V7.40 was  BufSize; // default value = 1460  }
 end;
 
 
@@ -2132,10 +2377,6 @@ var
     HEntity      : THashHex;
     NonceLifeTime: Cardinal;
 begin
-    if Password = '' then begin
-        Result := FALSE;
-        Exit;
-    end;
     AuthDigestCalcHA1(FAuthDigestAlg, AnsiString(FAuthUserName),
                       AnsiString(FAuthDigestRealm), AnsiString(Password),
                       AnsiString(FAuthDigestNonce), AnsiString(FAuthDigestCnonce),
@@ -2369,8 +2610,10 @@ begin
         if FAcceptPostedData and Assigned(FOnPostedData) then
             FOnPostedData(Self, Error)
         else
-            { No one is willing data, received it and throw it away }
-            FRcvdLine := ReceiveStr;
+            { Nobody wants data, we receive it and throw it away.   }
+            { We call our overridden method Receive which will care }
+            { about correct length and switch back to line mode.    }
+            Receive(@FPostRcvBuf, SizeOf(FPostRcvBuf));     { V7.30 }
         Exit;
     end;
     { We use line mode. We will receive complete lines }
@@ -2424,14 +2667,19 @@ begin
         OnDataSent             := ConnectionDataSent;  { V7.19 always need an event after header is sent }
         { The line we just received is HTTP command, parse it  }
         ParseRequest;
+        if FMethod = 'HEAD' then        { V7.44 }
+            FSendType := httpSendHead   { V7.44 }
+        else                            { V7.44 }
+            FSendType := httpSendDoc;   { V7.44 }
         { Next lines will be header lines }
         FState := hcHeader;
+        FRequestHasContentLength := FALSE;
         Exit;
     end;
     { We can comes here only in hcHeader state }
     if FRcvdLine = '' then begin
         { Last header line is an empty line. Then we enter data state }
-        if FRequestContentLength <> 0 then    { Only if we have data  }
+        if FRequestContentLength > 0 then     { Only if we have data  } { V7.30 }
              FState := hcPostedData
         { With a GET method, we _never_ have any document        10/02/2004 }
         else if FMethod <> 'POST' then                            {10/02/2004 Bjornar}
@@ -2452,10 +2700,11 @@ begin
             if _StrLIComp(@FRcvdLine[1], 'content-type:', 13) = 0 then
                 FRequestContentType := Copy(FRcvdLine, I, Length(FRcvdLine))
             else if _StrLIComp(@FRcvdLine[1], 'content-length:', 15) = 0 then begin            {Bjornar}
+                FRequestHasContentLength := TRUE; { V7.30 }
                 try                                                                           {Bjornar}
                     FRequestContentLength := _StrToInt(Copy(FRcvdLine, I, Length(FRcvdLine))); {Bjornar}
                 except                                                                        {Bjornar}
-                    FRequestContentLength := 0;                                               {Bjornar}
+                    FRequestContentLength := -1;  { V7.30 }                                            {Bjornar}
                 end;
             end                                                                               {Bjornar}
             else if _StrLIComp(@FRcvdLine[1], 'Accept:', 7) = 0 then
@@ -2662,8 +2911,159 @@ begin
         PutStringInSendBuffer(Header);
     if ContEncoderHdr <> '' then
         PutStringInSendBuffer (ContEncoderHdr);  { V7.21 }
+    if FServer.PersistentHeader <> '' then
+        PutStringInSendBuffer (FServer.PersistentHeader);  { V7.29 }
     PutStringInSendBuffer(#13#10);
-    SendStream;
+    if FSendType = httpSendHead then begin   { V7.44 }
+        FDataSent := 0;                      { V7.44 }
+        FDocSize  := 0;                      { V7.44 }
+        Send(nil, 0);                        { V7.44 }
+    end
+    else
+        SendStream;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ANDREAS Byte-range-separator (use the same as IIS) }
+const
+    ByteRangeSeparator = '[lka9uw3et5vxybtp87ghq23dpu7djv84nhls9p]';
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ANDREAS Helperfunction to create the HTTP-Header }
+function CreateHttpHeader(
+    Version           : String;
+    ProtoNumber       : Integer;
+    AnswerContentType : String;
+    RangeList         : THttpRangeList;
+    DocSize           : THttpRangeInt;
+    CompleteDocSize   : THttpRangeInt): String;
+begin
+    if ProtoNumber = 200 then
+        Result := Version + ' 200 OK' + #13#10 +
+                  'Content-Type: ' + AnswerContentType + #13#10 +
+                  'Content-Length: ' + _IntToStr(DocSize) + #13#10 +
+                  'Accept-Ranges: bytes' + #13#10
+    {else if ProtoNumber = 416 then
+        Result := Version + ' 416 Request range not satisfiable' + #13#10}
+    else if ProtoNumber = 206 then begin
+        if RangeList.Count = 1 then begin
+            Result := Version + ' 206 Partial Content' + #13#10 +
+                      'Content-Type: ' + AnswerContentType + #13#10 +
+                      'Content-Length: ' + _IntToStr(DocSize) + #13#10 +
+                      'Content-Range: bytes ' +
+                      RangeList.Items[0].GetContentRangeString(CompleteDocSize) +
+                      #13#10;
+        end
+        else begin
+            Result := Version + ' 206 Partial Content' + #13#10 +
+                      'Content-Type: multipart/byteranges; boundary=' +
+                      ByteRangeSeparator + #13#10 +
+                      'Content-Length: ' + _IntToStr(DocSize) + #13#10;
+        end;
+    end
+    else
+        raise Exception.Create('Unexpected ProtoNumber in CreateHttpHeader');
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ Only use this method for OK responses                                     }
+procedure THttpConnection.AnswerStreamAcceptRange(                  { V7.44 }
+    var   Flags     : THttpGetFlag;
+    const ContType  : String;      { if emtpy, defaults to text/html        }
+    LastModified    : TDateTime = 0); { zero => no Last-Modified header     }
+begin
+    AnswerStreamAcceptRange(Flags, ContType, '', LastModified);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ Only use this method for OK responses                                     }
+procedure THttpConnection.AnswerStreamAcceptRange(                  { V7.43 }
+    var   Flags     : THttpGetFlag;
+    const ContType  : String;      { if emtpy, defaults to text/html        }
+    const Header    : String;      { do not use Content-Length, Content-Range, Last-Modified }
+    LastModified    : TDateTime = 0); { zero => no Last-Modified header     }
+var
+    NewDocStream    : TStream;
+    ProtoNumber     : Integer;
+    CompleteDocSize : THttpRangeInt;
+    SyntaxError     : Boolean;
+    ContEncoderHdr  : String;
+    ContStatusHdr   : String;
+begin
+    Flags := hgWillSendMySelf;
+    ProtoNumber := 200;
+    ContEncoderHdr := '';
+    if ContType <> '' then
+        FAnswerContentType := ContType
+    else
+        FAnswerContentType := 'text/html';
+    FLastModified := LastModified;
+
+    CompleteDocSize := FDocStream.Size;
+    {ANDREAS Create the virtual 'byte-range-doc-stream', if we are ask for ranges}
+    if RequestRangeValues.Valid then begin
+        { NewDocStream will now be the owner of FDocStream -> don't free FDocStream }
+        NewDocStream := RequestRangeValues.CreateRangeStream(FDocStream,
+                             FAnswerContentType, CompleteDocSize, SyntaxError);
+        if Assigned(NewDocStream) then begin
+            FDocStream := NewDocStream;
+            FDocStream.Position := 0;
+            ProtoNumber := 206;
+        end
+        else begin
+            if SyntaxError then
+            { Ignore the content range header and send entire document in case }
+            { of syntactically invalid byte-range-set                          }
+                FDocStream.Position := 0
+            else begin
+            { Answer 416 Request range not satisfiable                      }
+                FDocStream.Free;
+                FDocStream := nil;
+                if not FKeepAlive then
+                    PrepareGraceFullShutDown;
+                Answer416;
+                Exit;
+            end;
+        end;
+    end;
+
+    FDataSent := 0;       { will be incremented after each send part of data }
+    FDocSize := FDocStream.Size;
+    OnDataSent := ConnectionDataSent;
+
+    { V7.21 are we allowed to compress content }
+    if CheckContentEncoding(FAnswerContentType) then begin
+        ContEncoderHdr := DoContentEncoding;   { V7.21 do it, returning new header }
+        FDocSize := FDocStream.Size;           { stream is now smaller, we hope }
+    end;
+
+    { Create Header }
+    {ANDREAS Create Header for the several protocols}
+    ContStatusHdr := CreateHttpHeader(FVersion, ProtoNumber, FAnswerContentType,
+                               RequestRangeValues, FDocSize, CompleteDocSize);
+    PutStringInSendBuffer(ContStatusHdr);
+    FAnswerStatus := ProtoNumber;   { V7.19 }
+
+    if FLastModified <> 0 then
+        PutStringInSendBuffer ('Last-Modified: ' + RFC1123_Date(FLastModified) + ' GMT' + #13#10);
+    if ContEncoderHdr <> '' then
+        PutStringInSendBuffer (ContEncoderHdr);  { V7.21 }
+    if Header <> '' then
+        PutStringInSendBuffer(Header);
+    if FServer.PersistentHeader <> '' then
+        PutStringInSendBuffer (FServer.PersistentHeader);  { V7.29 }
+    PutStringInSendBuffer(GetKeepAliveHdrLines);
+    PutStringInSendBuffer(#13#10);
+    if FSendType = httpSendHead then begin   { V7.44 }
+        FDocSize := 0;                       { V7.44 }
+        Send(nil, 0);                        { V7.44 }
+    end
+    else
+        SendStream;
 end;
 
 
@@ -2671,16 +3071,34 @@ end;
 function THttpConnection.HtmlPageProducerToString(
     const HtmlFile : String;
     UserData       : TObject;
-    Tags           : array of const) : String;
+    Tags           : array of const
+{$IFDEF COMPILER12_UP};
+    FileCodepage   : LongWord = CP_ACP
+{$ENDIF}
+    ) : String;
 var
     Stream : TMemoryStream;
+const
+    NulByte : Byte = 0;
 begin
     Stream := TMemoryStream.Create;
     try
-        HtmlPageProducerToStream(HtmlFile, UserData, Tags, Stream);
+        HtmlPageProducerToStream(HtmlFile, UserData, Tags, Stream
+                             {$IFDEF COMPILER12_UP},
+                                 FileCodepage
+                             {$ENDIF}
+                                 );
+{$IFDEf COMPILER12_UP}
+        // For unicode char compiler (D2009 and up)
+        // Add a nul byte at the end of string
+        Stream.Write(NulByte, 1);
+        Result := String(PAnsiChar(Stream.Memory));
+{$ELSE}
+        // For ansi char compiler
         SetLength(Result, Stream.Size);
         Stream.Seek(0, 0);
         Stream.Read(Result[1], Stream.Size);
+{$ENDIF}
     finally
         Stream.Free;
     end;
@@ -2692,7 +3110,12 @@ procedure THttpConnection.HtmlPageProducerToStream(
     const HtmlFile : String;
     UserData       : TObject;
     Tags           : array of const;
-    DestStream     : TStream);
+    DestStream     : TStream
+{$IFDEF COMPILER12_UP};
+    FileCodepage   : LongWord = CP_ACP;
+    DstCodepage    : LongWord = CP_ACP
+{$ENDIF}
+    );
 var
     UD : THttpSrvRowDataGetterUserData;
 begin
@@ -2702,10 +3125,18 @@ begin
         UD.Event    := Self.TriggerGetRowData;
         if FTemplateDir = '' then
             HtmlPageProducer(HtmlFile, Tags,
-                             @RowDataGetterProc, UD, DestStream)
+                             @RowDataGetterProc, UD, DestStream
+                         {$IFDEF COMPILER12_UP},
+                             FileCodepage, DstCodepage
+                         {$ENDIF}
+                             )
         else
             HtmlPageProducer(FTemplateDir + '\' + HtmlFile, Tags,
-                             @RowDataGetterProc, UD, DestStream);
+                             @RowDataGetterProc, UD, DestStream
+                         {$IFDEF COMPILER12_UP},
+                             FileCodepage, DstCodepage
+                         {$ENDIF}
+                             );
     finally
         UD.Free;
     end;
@@ -2718,7 +3149,12 @@ procedure THttpConnection.HtmlPageProducerToStream(
     const ResType : PChar;
     UserData      : TObject;
     Tags          : array of const;
-    DestStream    : TStream);
+    DestStream    : TStream
+{$IFDEF COMPILER12_UP};
+    ResCodepage   : LongWord = CP_ACP;
+    DstCodepage   : LongWord = CP_ACP
+{$ENDIF}
+    );
 var
     UD : THttpSrvRowDataGetterUserData;
 begin
@@ -2727,7 +3163,11 @@ begin
         UD.UserData := UserData;
         UD.Event    := Self.TriggerGetRowData;
         HtmlPageProducer(ResName, ResType, Tags,
-                         @RowDataGetterProc, UD, DestStream);
+                         @RowDataGetterProc, UD, DestStream
+                     {$IFDEF COMPILER12_UP},
+                         ResCodepage, DstCodepage
+                     {$ENDIF}
+                         );
     finally
         UD.Free;
     end;
@@ -2741,11 +3181,20 @@ procedure THttpConnection.AnswerPage(
     const Header   : String;   { Do not use Content-Length nor Content-Type }
     const HtmlFile : String;
     UserData       : TObject;
-    Tags           : array of const);
+    Tags           : array of const
+{$IFDEF COMPILER12_UP};
+    FileCodepage   : LongWord = CP_ACP;
+    DstCodepage    : LongWord = CP_ACP
+{$ENDIF}
+    );
 begin
     DocStream.Free;
     DocStream := TMemoryStream.Create;
-    HtmlPageProducerToStream(HtmlFile, UserData, Tags, DocStream);
+    HtmlPageProducerToStream(HtmlFile, UserData, Tags, DocStream
+                        {$IFDEF COMPILER12_UP},
+                             FileCodepage, DstCodepage
+                        {$ENDIF}
+                             );
     AnswerStream(Flags, Status, 'text/html', Header);
 end;
 
@@ -2758,11 +3207,20 @@ procedure THttpConnection.AnswerPage(
     const ResName  : String;
     const ResType  : PChar;
     UserData       : TObject;
-    Tags           : array of const);
+    Tags           : array of const
+{$IFDEF COMPILER12_UP};
+    ResCodepage    : LongWord = CP_ACP;
+    DstCodepage    : LongWord = CP_ACP
+{$ENDIF}
+    );
 begin
     DocStream.Free;
     DocStream := TMemoryStream.Create;
-    HtmlPageProducerToStream(ResName, ResType, UserData, Tags, DocStream);
+    HtmlPageProducerToStream(ResName, ResType, UserData, Tags, DocStream
+                        {$IFDEF COMPILER12_UP},
+                             ResCodepage, DstCodepage
+                        {$ENDIF}
+                             );
     AnswerStream(Flags, Status, 'text/html', Header);
 end;
 
@@ -2811,14 +3269,16 @@ var
 begin
     Body := '<HTML><HEAD><TITLE>416 Requested range not satisfiable</TITLE></HEAD>' +
             '<BODY><H1>416 Requested range not satisfiable</H1><P></BODY></HTML>' + #13#10;
-            SendHeader(FVersion + ' 416 Requested range not satisfiable' + #13#10 +
-            'Content-Type: text/html' + #13#10 +
-            'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
-            GetKeepAliveHdrLines +
-            #13#10);
-     FAnswerStatus := 416;  { V7.19 }
-    { Do not use AnswerString method because we don't want to use ranges }
-    SendStr(Body);
+    SendHeader(FVersion + ' 416 Requested range not satisfiable' + #13#10 +
+               'Content-Type: text/html' + #13#10 +
+               'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
+               GetKeepAliveHdrLines +
+               #13#10);
+    FAnswerStatus := 416;  { V7.19 }
+    if FSendType = httpSendHead then  { V7.44 }
+        Send(nil, 0)                  { V7.44 }
+    else                              { V7.44 }
+        SendStr(Body);
 end;
 
 
@@ -2831,14 +3291,38 @@ begin
             '<BODY><H1>404 Not Found</H1>The requested URL ' +
             TextToHtmlText(FPath) +
             ' was not found on this server.<P></BODY></HTML>' + #13#10;
-            SendHeader(FVersion + ' 404 Not Found' + #13#10 +
-            'Content-Type: text/html' + #13#10 +
-            'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
-            GetKeepAliveHdrLines +
-            #13#10);
+    SendHeader(FVersion + ' 404 Not Found' + #13#10 +
+               'Content-Type: text/html' + #13#10 +
+               'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
+               GetKeepAliveHdrLines +
+               #13#10);
     FAnswerStatus := 404;   { V7.19 }
-    { Do not use AnswerString method because we don't want to use ranges }
-    SendStr(Body);
+    if FSendType = httpSendHead then  { V7.44 }
+        Send(nil, 0)                  { V7.44 }
+    else                              { V7.44 }
+        SendStr(Body);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.Answer400;
+var
+    Body : String;
+begin
+    Body := '<HTML><HEAD><TITLE>400 Bad Request</TITLE></HEAD>' +
+            '<BODY><H1>400 Bad Request</H1>The request could ' +
+            'not be understood by the server due to malformed '+
+            'syntax.<P></BODY></HTML>' + #13#10;
+    SendHeader(FVersion + ' 400 Bad Request' + #13#10 +
+               'Content-Type: text/html' + #13#10 +
+               'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
+               GetKeepAliveHdrLines +
+               #13#10);
+    FAnswerStatus := 400;
+    if FSendType = httpSendHead then  { V7.44 }
+        Send(nil, 0)                  { V7.44 }
+    else                              { V7.44 }
+        SendStr(Body);
 end;
 
 
@@ -2871,14 +3355,16 @@ begin
             '<BODY><H1>403 Forbidden</H1>The requested URL ' +
             TextToHtmlText(FPath) +
             ' is Forbidden on this server.<P></BODY></HTML>' + #13#10;
-            SendHeader(FVersion + ' 403 Forbidden' + #13#10 +
-            'Content-Type: text/html' + #13#10 +
-            'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
-            GetKeepAliveHdrLines +
-            #13#10);
+    SendHeader(FVersion + ' 403 Forbidden' + #13#10 +
+               'Content-Type: text/html' + #13#10 +
+               'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
+               GetKeepAliveHdrLines +
+               #13#10);
     FAnswerStatus := 403;   { V7.19 }
-    { Do not use AnswerString method because we don't want to use ranges }
-    SendStr(Body);
+    if FSendType = httpSendHead then  { V7.44 }
+        Send(nil, 0)                  { V7.44 }
+    else                              { V7.44 }
+        SendStr(Body);
 end;
 
 
@@ -3009,9 +3495,11 @@ begin
     end;
     *)
     Header := Header + #13#10; // Mark the end of header
-    { Do not use AnswerString method because we don't want to use ranges }
     SendHeader(Header);
-    SendStr(Body);
+    if FSendType = httpSendHead then  { V7.44 }
+        Send(nil, 0)                  { V7.44 }
+    else                              { V7.44 }
+        SendStr(Body);
 end;
 
 
@@ -3027,8 +3515,10 @@ begin
                GetKeepAliveHdrLines + 
                #13#10);
     FAnswerStatus := 501;   { V7.19 }
-    { Do not use AnswerString method because we don't want to use ranges }
-    SendStr(Body);
+    if FSendType = httpSendHead then  { V7.44 }
+        Send(nil, 0)                  { V7.44 }
+    else                              { V7.44 }
+        SendStr(Body);
 end;
 
 
@@ -3037,6 +3527,7 @@ end;
 procedure THttpConnection.ProcessRequest;
 var
     Status : Integer;
+    Handled : Boolean;
 begin
     if FKeepAlive and (FKeepAliveTimeSec > 0) then
         FKeepAlive := FMaxRequestsKeepAlive > 0;
@@ -3079,11 +3570,37 @@ begin
     else if FMethod = 'HEAD' then
         ProcessHead
     else begin
-        if FKeepAlive = FALSE then {Bjornar}
-            PrepareGraceFullShutDown;
-        Answer501;   { 07/03/2005 was Answer404 }
+        TriggerUnknownRequestMethod(Handled); { V7.29 }
+        if not Handled then
+        begin
+            { If we receive an unknown method/request we have to   }
+            { close the connection, otherwise we may receive junk  }
+            { data we cannot handle properly.                V7.45 }
+            FKeepAlive := False;    { V7.45 }
+            Answer501;   { 07/03/2005 was Answer404 }
+            CloseDelayed;           { V7.45 }
+        end;
     end;
     TriggerBeforeAnswer;  { V7.19 }
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function THttpConnection.Receive(Buffer: TWSocketData;              { V7.30 }
+  BufferSize: Integer): Integer;
+begin
+    if FState = hcPostedData then begin
+        Result := inherited Receive(Buffer, Min(FPostCounter, BufferSize));
+        if Result > 0 then
+           Dec(FPostCounter, Result);
+        if FPostCounter <= 0 then begin
+           LineMode        := TRUE;
+           FState          := hcRequest;
+           FPostCounter    := 0;
+        end;
+    end
+    else
+        Result := inherited Receive(Buffer, BufferSize);
 end;
 
 
@@ -3154,6 +3671,21 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.TriggerUnknownRequestMethod(var Handled : Boolean); { V2.29 }
+begin
+    Handled := FALSE;
+    if Assigned(FOnUnknownRequestMethod) then
+        FOnUnknownRequestMethod(Self, Handled);
+end;
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.TriggerMimeContentType(const FileName: string; var ContentType: string); { V7.41 }
+begin
+    if Assigned(FOnMimeContentType) then
+        FOnMimeContentType(Self, FileName, ContentType);
+end;
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpConnection.TriggerContEncoded;  { V7.20 }
 begin
     if Assigned(FOnContEncoded) then
@@ -3166,6 +3698,35 @@ procedure THttpConnection.ProcessPost;
 var
     Flags : THttpGetFlag;
 begin
+    { POST and no content-length received, we treat this as "bad request"     }
+    { and don't pass it to the component user.                                }
+    if (not FRequestHasContentLength) or (FRequestContentLength < 0) then begin
+        { HTTP/1.0
+          A valid Content-Length is required on all HTTP/1.0 POST requests.
+          An HTTP/1.0 server should respond with a 400 (bad request) message
+          if it cannot determine the length of the request message's content.
+
+          HTTP/1.1
+          The presence of a message-body in a request is signaled by the
+          inclusion of a Content-Length or Transfer-Encoding header field in
+          the request's message-headers.
+          For compatibility with HTTP/1.0 applications, HTTP/1.1 requests
+          containing a message-body MUST include a valid Content-Length header
+          field unless the server is known to be HTTP/1.1 compliant. If a
+          request contains a message-body and a Content-Length is not given,
+          the server SHOULD respond with 400 (bad request) if it cannot
+          determine the length of the message, or with 411 (length required)
+          if it wishes to insist on receiving a valid Content-Length.
+
+          Currently we act as a HTTP/1.0 server. }
+        FKeepAlive := FALSE;
+        Answer400;
+        { We close the connection non-gracefully otherwise we might receive
+          data we cannot handle properly. }
+        CloseDelayed;
+        Exit;
+    end;
+
 {$IFNDEF NO_AUTHENTICATION_SUPPORT}
     if not FAuthenticated then
         Flags := hg401
@@ -3177,7 +3738,24 @@ begin
         Flags := hg404;
     FAcceptPostedData := FALSE;
     TriggerPostDocument(Flags);
+
+    if (not FAcceptPostedData) and (FRequestContentLength > 0) then begin { V7.30 }
+    { The component user doesn't handle posted data.               }
+    { Turn LineMode off if RequestContentLength > 0, we'll turn it }
+    { back on again in our overridden method Receive.              }
+        LineMode     := FALSE;
+        FPostCounter := FRequestContentLength;
+    end
+    else
+        FPostCounter := 0;
+
     case Flags of
+    hg400:
+        begin
+            FKeepAlive := FALSE;
+            Answer400;
+            CloseDelayed;
+        end;                                                              {/V7.30 }
     hg401:
         begin
             if FKeepAlive = FALSE then {Bjornar}
@@ -3296,6 +3874,12 @@ begin
 
     TriggerGetDocument(Flags);
     case Flags of
+    hg400:                             { V7.30 }
+        begin
+            if FKeepAlive = FALSE then
+                PrepareGraceFullShutDown;
+            Answer400;
+        end;
     hg401:
         begin
             if FKeepAlive = FALSE then {Bjornar}
@@ -3325,6 +3909,7 @@ begin
                     Answer404;
                 end
                 else begin
+                    { see if we have access to file, but don't read it yet }
                     TempStream := TFileStream.Create(FDocument, fmOpenRead + fmShareDenyWrite);
                     TempStream.Destroy;
                     OK := TRUE;
@@ -3351,7 +3936,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-function DocumentToContentType(FileName : String) : String;
+function DocumentToContentType(const FileName : String) : String;
 var
     Ext : String;
 begin
@@ -3428,63 +4013,8 @@ end;
 { Return document file date from document filename.                         }
 { Return 0 if file not found.                                               }
 function FileDate(FileName : String) : TDateTime;
-var
-    SearchRec : TSearchRec;
-    Status    : Integer;
 begin
-    Status := _FindFirst(FileName, faAnyFile, SearchRec);
-    try
-        if Status <> 0 then
-            Result := 0
-        else
-            Result := _FileDateToDateTime(SearchRec.Time);
-    finally
-        _FindClose(SearchRec);
-    end;
-end;
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{ANDREAS Byte-range-separator (use the same as IIS) }
-const
-    ByteRangeSeparator = '[lka9uw3et5vxybtp87ghq23dpu7djv84nhls9p]';
-
-
-{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{ANDREAS Helperfunction to create the HTTP-Header }
-function CreateHttpHeader(
-    Version           : String;
-    ProtoNumber       : Integer;
-    AnswerContentType : String;
-    RangeList         : THttpRangeList;
-    DocSize           : THttpRangeInt;
-    CompleteDocSize   : THttpRangeInt): String;
-begin
-    if ProtoNumber = 200 then
-        Result := Version + ' 200 OK' + #13#10 +
-                  'Content-Type: ' + AnswerContentType + #13#10 +
-                  'Content-Length: ' + _IntToStr(DocSize) + #13#10 +
-                  'Accept-Ranges: bytes' + #13#10
-    {else if ProtoNumber = 416 then
-        Result := Version + ' 416 Request range not satisfiable' + #13#10}
-    else if ProtoNumber = 206 then begin
-        if RangeList.Count = 1 then begin
-            Result := Version + ' 206 Partial Content' + #13#10 +
-                      'Content-Type: ' + AnswerContentType + #13#10 +
-                      'Content-Length: ' + _IntToStr(DocSize) + #13#10 +
-                      'Content-Range: bytes ' +
-                      RangeList.Items[0].GetContentRangeString(CompleteDocSize) +
-                      #13#10;
-        end
-        else begin
-            Result := Version + ' 206 Partial Content' + #13#10 +
-                      'Content-Type: multipart/byteranges; boundary=' +
-                      ByteRangeSeparator + #13#10 +
-                      'Content-Length: ' + _IntToStr(DocSize) + #13#10;
-        end;
-    end
-    else
-        raise Exception.Create('Unexpected ProtoNumber in CreateHttpHeader');
+    Result := IcsFileUtcModified(FileName);
 end;
 
 
@@ -3492,22 +4022,49 @@ end;
 { SendDocument will send FDocument file to remote client, build header and  }
 { sending data (if required)                                                }
 procedure THttpConnection.SendDocument(SendType : THttpSendType);
+begin
+   FSendType := SendType; // overwrites the default value for this request
+   SendDocument('');
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.SendDocument(
+    SendType            : THttpSendType;
+    const CustomHeaders : String);
+begin
+    FSendType := SendType; // overwrites the default value for this request
+    SendDocument(CustomHeaders);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.SendDocument;
+begin
+    SendDocument('');
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure THttpConnection.SendDocument(const CustomHeaders : String);
 var
     Header  : String;
     NewDocStream    : TStream;
     ProtoNumber     : Integer;
     CompleteDocSize : THttpRangeInt;
-    ErrorSend       : Boolean;
     SyntaxError     : Boolean;
     ContEncoderHdr  : String ;      { V7.20 }
 begin
-    ErrorSend          := FALSE;
     ProtoNumber        := 200;
-    FLastModified      := FileDate(FDocument);
-    FAnswerContentType := DocumentToContentType(FDocument);
+    FLastModified      := IcsFileUtcModified(FDocument);
+    if Assigned (FServer.MimeTypesList) then
+        FAnswerContentType := FServer.MimeTypesList.TypeFromFile(FDocument)  { V7.46 }
+    else
+        FAnswerContentType := DocumentToContentType(FDocument);
+    TriggerMimeContentType(FDocument, FAnswerContentType);  { V7.41 allow content type to be changed }
 
     FDocStream.Free;
-    FDocStream := TFileStream.Create(FDocument, fmOpenRead + fmShareDenyWrite);
+    FDocStream := TBufferedFileStream.Create(FDocument, fmOpenRead + fmShareDenyWrite, MAX_BUFSIZE); { V7.40 faster }
 
     CompleteDocSize := FDocStream.Size;
     {ANDREAS Create the virtual 'byte-range-doc-stream', if we are ask for ranges}
@@ -3542,44 +4099,41 @@ begin
     OnDataSent := ConnectionDataSent;
     ContEncoderHdr := '';  { V7.20 }
 
-    { Seek to end of document because HEAD will not send actual document }
-    if SendType = httpSendHead then
-        FDocStream.Seek(0, soFromEnd)
-    else begin
-        { V7.21 are we allowed to compress content }
-        if CheckContentEncoding(FAnswerContentType) then begin
-            ContEncoderHdr := DoContentEncoding;   { V7.21 do it, returning new header }
-            FDocSize := FDocStream.Size;           { stream is now smaller, we hope }
-        end;
+    { V7.44  Do not skip compression on HEAD requests, we need the correct size }
+
+    { V7.21 are we allowed to compress content }
+    if CheckContentEncoding(FAnswerContentType) then begin
+        ContEncoderHdr := DoContentEncoding;   { V7.21 do it, returning new header }
+        FDocSize := FDocStream.Size;           { stream is now smaller, we hope }
     end;
 
     { Create Header }
     {ANDREAS Create Header for the several protocols}
-    Header := CreateHttpHeader(FVersion, ProtoNumber, FAnswerContentType, RequestRangeValues, FDocSize, CompleteDocSize);
+    Header := CreateHttpHeader(FVersion, ProtoNumber, FAnswerContentType,
+                               RequestRangeValues, FDocSize, CompleteDocSize);
     FAnswerStatus := ProtoNumber;   { V7.19 }
     if FLastModified <> 0 then
         Header := Header +  'Last-Modified: ' + RFC1123_Date(FLastModified) + ' GMT' + #13#10;
     if ContEncoderHdr <> '' then
         Header := Header + ContEncoderHdr;  { V7.20 }
+    if CustomHeaders <> '' then
+        Header := Header + CustomHeaders;   { V7.29 }
     Header := Header + GetKeepAliveHdrLines + #13#10;
-
     SendHeader(Header);
-    if not ErrorSend then begin
-        if FDocSize <= 0 then
-            Send(nil, 0);
-        if SendType = httpSendDoc then
-            SendStream
-        else
-            Send(nil, 0); { Added 15/04/02 }
+    if FSendType = httpSendHead then begin   { V7.44 }
+        FDocSize := 0;                       { V7.44 }
+        Send(nil, 0);                        { V7.44 }
     end
     else
-        Send(nil, 0);
+        SendStream;
 end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure THttpConnection.SendHeader(Header : String);
 begin
+    if FServer.PersistentHeader <> '' then  { v7.29 }
+         Insert(FServer.PersistentHeader, Header, Length(Header) - 1);{ v7.29 }
     PutStringInSendBuffer(Header);
 end;
 
@@ -3598,11 +4152,25 @@ begin
 BufSize := 8192; { Only for testing }
 {$ENDIF}
 *)
-    if not Assigned(FDocBuf) then
-        GetMem(FDocBuf, FSndBlkSize);
     FDocSize   := FDocStream.Size;    { Should it take care of ranges ? }
     FDataSent  := 0;
     OnDataSent := ConnectionDataSent;
+
+    if FDocSize > 0 then begin  { 7.44 }
+        { V7.40 speed up larger files by increasing buffer sizes }
+        if (FDocSize > FSndBlkSize) and (FServer.MaxBlkSize > FSndBlkSize) then begin
+            if (FDocSize >= FServer.MaxBlkSize) then
+                SetSndBlkSize (FServer.MaxBlkSize)
+            else
+                SetSndBlkSize (FDocSize);  { don't need a max buffer }
+        end;
+        if SocketSndBufSize < FSndBlkSize then
+            SocketSndBufSize := FSndBlkSize; { socket TCP buffer }
+        if not Assigned(FDocBuf) then
+            GetMem(FDocBuf, FSndBlkSize);
+    end;
+
+{ event is called repeatedly until stream is all sent }
     ConnectionDataSent(Self, 0);
 end;
 
@@ -3824,6 +4392,7 @@ begin
               'Content-Type: text/html' + #13#10 +
               'Content-Length: ' + _IntToStr(Length(Body)) + #13#10 +
               'Pragma: no-cache' + #13#10 +
+              FServer.PersistentHeader + { V7.29 }
               #13#10;
     FAnswerStatus := 200;   { V7.19 }
     PutStringInSendBuffer(Header);
@@ -3929,7 +4498,8 @@ begin
             while (P^ <> #0) and (P^ <> '&') do begin
                 Ch := AnsiChar(Ord(P^)); // should contain nothing but < ord 128
                 if Ch = '%' then begin
-                    Ch := AnsiChar(htoi2(P + 1));
+                    if P[1] <> #0 then    // V1.35 Added test
+                        Ch := AnsiChar(htoi2(P + 1));
                     Inc(P, 2);
                 end
                 else if Ch = '+' then
@@ -4029,6 +4599,7 @@ function GetCookieValue(
     : Boolean;                     { Found or not found that's the question }
 var
     NameLen : Integer;
+    FoundLen : Integer; { V7.42 }
     Ch      : Char;
     P, Q    : PChar;
 begin
@@ -4046,9 +4617,11 @@ begin
         Q := P;
         while (P^ <> #0) and (P^ <> '=') do
             Inc(P);
+        FoundLen := P - Q; { V7.42 }
         if P^ = '=' then
             Inc(P);
-        if _StrLIComp(Q, @Name[1], NameLen) = 0 then begin
+        if (_StrLIComp(Q, @Name[1], NameLen) = 0) and
+           (NameLen = FoundLen) then begin  { V7.42 }
             while (P^ <> #0) and (P^ <> ';') do begin
                 Ch := P^;
                 if Ch = '%' then begin
@@ -4072,6 +4645,15 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TextToHtmlText(const Src: RawByteString) : String;
+begin
+    { Convert the ANSI string to Unicode, HTML entities represent           }
+    { iso-8859-1 (Latin1) and Unicode code points                           }
+    Result := TextToHtmlText(UnicodeString(Src));
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { Convert a string in Windows character set to HTML texte. That is replace  }
 { all character with code between 160 and 255 by special sequences.         }
 { For example, 'fête' is replaced by 'f&ecirc;te'                           }
@@ -4079,9 +4661,9 @@ end;
 { Replace multiple spaces by a single space followed by the required number }
 { of non-breaking-spaces (&nbsp;)                                           }
 { Replace TAB by a non-breaking-space.                                      }
-function TextToHtmlText(const Src : String) : String;
+function TextToHtmlText(const Src : UnicodeString) : String;
 const
-    HtmlSpecialChars : array [160..255] of String[6] = (
+    HtmlSpecialChars : array [160..255] of String = (
         'nbsp'   , { #160 no-break space = non-breaking space               }
         'iexcl'  , { #161 inverted exclamation mark                         }
         'cent'   , { #162 cent sign                                         }
@@ -4181,22 +4763,18 @@ const
 var
     I, J : Integer;
     Sub  : String;
-    Temp : UnicodeString;
 begin
     Result := '';
-    { Convert the ANSI string to Unicode with default code page in D7-D2007 !!  }
-    { HTML entities represent iso-8859-1 (Latin1) and Unicode character numbers }
-    Temp := Src;
     I := 1;
-    while I <= Length(Temp) do begin
+    while I <= Length(Src) do begin
         J   := I;
         Sub := '';
-        while (I <= Length(Temp)) and (Ord(Temp[I]) < Low(HtmlSpecialChars)) do begin
-            case Temp[I] of
+        while (I <= Length(Src)) and (Ord(Src[I]) < Low(HtmlSpecialChars)) do begin
+            case Src[I] of
             ' '  : begin
-                       if (I > 1) and (Temp[I - 1] = ' ') then begin
+                       if (I > 1) and (Src[I - 1] = ' ') then begin
                            { Replace multiple spaces by &nbsp; }
-                           while (I <= Length(Temp)) and (Temp[I] = ' ') do begin
+                           while (I <= Length(Src)) and (Src[I] = ' ') do begin
                                Sub := Sub + '&nbsp;';
                                Inc(I);
                            end;
@@ -4216,22 +4794,22 @@ begin
                 Inc(I);
             end;
             if Length(Sub) > 0 then begin
-                Result := Result + Copy(Temp, J, I - J) + Sub;
+                Result := Result + Copy(Src, J, I - J) + Sub;
                 Inc(I);
                 J      := I;
                 Sub    := '';
             end;
         end;
 
-        if I > Length(Temp) then begin
-            Result := Result + Copy(Temp, J, I - J);
+        if I > Length(Src) then begin
+            Result := Result + Copy(Src, J, I - J);
             Exit;
         end;
-        if Ord(Temp[I]) > 255 then
-            Result := Result + Copy(Temp, J, I - J) + '&#' + _IntToStr(Ord(Temp[I])) + ';'
+        if Ord(Src[I]) > 255 then
+            Result := Result + Copy(Src, J, I - J) + '&#' + _IntToStr(Ord(Src[I])) + ';'
         else
-            Result := Result + Copy(Temp, J, I - J) + '&' +
-                    String(HtmlSpecialChars[Ord(Temp[I])]) + ';';
+            Result := Result + Copy(Src, J, I - J) + '&' +
+                    HtmlSpecialChars[Ord(Src[I])] + ';';
         Inc(I);
     end;
 end;
@@ -4356,13 +4934,15 @@ end;
 function MakeCookie(
     const Name, Value : String;
     Expires           : TDateTime;
-    const Path        : String) : String;
+    const Path        : String;
+    const Domain      : String = '') : String;
 begin
     Result := 'Set-Cookie: ' + Name + '=' + UrlEncode(Value);
     if Length(Value) = 0 then
         Result := Result + '_NONE_; EXPIRES=' + RFC1123_Date(_Date - 7) { Last week }
     else if Expires <> 0 then
         Result := Result + '; EXPIRES=' + RFC1123_Date(Expires);
+    if Domain <> '' then Result := Result + '; DOMAIN=' + Domain;   { 7.49 }
     Result := Result + '; PATH=' + Path + #13#10;
 end;
 
@@ -4658,7 +5238,11 @@ procedure HandleTableRow(
     BufLen             : Integer;
     RowDataGetter      : PTableRowDataGetter;
     UserData           : TObject;
-    DestStream         : TStream);
+    DestStream         : TStream
+{$IFDEF COMPILER12_UP};
+    DestCodePage       : LongWord = CP_ACP
+{$ENDIF}
+    );
 var
     More    : Boolean;
     TagData : TStringIndex;
@@ -4678,7 +5262,11 @@ begin
                     break;
                 HtmlPageProducerFromMemory(Buf, BufLen, TagData,
                                            RowDataGetter, UserData,
-                                           DestStream);
+                                           DestStream
+                                       {$IFDEF COMPILER12_UP},
+                                           DestCodePage
+                                       {$ENDIF}
+                                           );
                 TagData.Clear;
             end;
         finally
@@ -4703,7 +5291,11 @@ function HtmlPageProducerFromMemory(
     TagData            : TStringIndex;
     RowDataGetter      : PTableRowDataGetter;
     UserData           : TObject;
-    DestStream         : TStream) : Boolean;
+    DestStream         : TStream
+{$IFDEF COMPILER12_UP};
+    DestCodePage       : LongWord = CP_ACP
+{$ENDIF}
+    ) : Boolean;
 const
     MAX_BUF  = 50;
 var
@@ -4735,14 +5327,22 @@ begin
         Dec(I);
         if P[I] <> '<' then begin
             { No starting tag found, write source to destination }
-            StreamWriteA(DestStream, P, Cnt);
+            StreamWriteA(DestStream, P, Cnt
+                     {$IFDEF COMPILER12_UP},
+                         DestCodePage
+                     {$ENDIF}
+                        );
             break;
         end;
 
         { Delimiter found
           Write from source to destination until start tag }
         if I > 0 then
-            StreamWriteA(DestStream, P, I);
+            StreamWriteA(DestStream, P, I
+                     {$IFDEF COMPILER12_UP},
+                         DestCodePage
+                     {$ENDIF}
+                         );
         { Search ending delimiter }
         J := I;
         while (J < Cnt) and (P[J] <> '>') and (P[J] <> ' ') and (P[J] <> #9) do
@@ -4765,7 +5365,11 @@ begin
                 Q := P + Cnt;
             //Feb 08, 2010 TRL the row to handle was 1 char too long
             HandleTableRow(TagParams, P + J + 1, Q - P - J - 1,
-                           RowDataGetter, UserData, DestStream);
+                           RowDataGetter, UserData, DestStream
+                       {$IFDEF COMPILER12_UP},
+                           DestCodePage
+                       {$ENDIF}
+                           );
             Cnt := P + Cnt - Q;
             P := Q;
             Continue;
@@ -4773,7 +5377,11 @@ begin
 
         if TagData.Find(TagName, TagValue) then begin
 //OutputDebugString(PChar('TagValue = ' + TagValue));
-            StreamWriteStrA(DestStream, TagValue);
+            StreamWriteStrA(DestStream, TagValue
+                        {$IFDEF COMPILER12_UP},
+                            DestCodePage
+                        {$ENDIF}
+                            );
         end;
         Inc(J);
         Inc(P, J);
@@ -4893,8 +5501,8 @@ begin
     vtPChar:          Result := String(_StrPas(V.VPChar));
     vtObject:         Result := 'Unsupported TVarRec.VType = vtObject';
     vtClass:          Result := 'Unsupported TVarRec.VType = vtClass';
-    vtWideChar:       Result := 'Unsupported TVarRec.VType = vtWideChar';
-    vtPWideChar:      Result := 'Unsupported TVarRec.VType = vtPWideChar';
+    vtWideChar:       Result := String(V.VWideChar);
+    vtPWideChar:      Result := String(V.VPWideChar);
     vtAnsiString:     Result := String(_StrPas(V.VPChar));
     vtCurrency:       Result := 'Unsupported TVarRec.VType = vtCurrency';
     vtVariant:        Result := 'Unsupported TVarRec.VType = vtVariant';
@@ -4918,7 +5526,12 @@ function HtmlPageProducer(
     Tags              : array of const;
     RowDataGetter     : PTableRowDataGetter;
     UserData          : TObject;
-    DestStream        : TStream) : Boolean;
+    DestStream        : TStream
+{$IFDEF COMPILER12_UP};
+    FromCodepage      : LongWord = CP_ACP;
+    DestCodePage      : LongWord = CP_ACP
+{$ENDIF}
+    ) : Boolean;
 var
     Str        : String;
     TagData    : TStringIndex;
@@ -4946,11 +5559,20 @@ begin
                         VarRecToString(Tags[TagIndex + 1]));
             Inc(TagIndex, 2);
         end;
-        Str    := StreamReadStrA(FromStream, FromStream.Size);
+        Str := StreamReadStrA(FromStream, FromStream.Size
+                          {$IFDEF COMPILER12_UP},
+                              FromCodepage
+                          {$ENDIF}
+                              );
+
         Result := HtmlPageProducerFromMemory(PChar(Str), Length(Str){ + 1},
                                              TagData,
                                              RowDataGetter, UserData,
-                                             DestStream);
+                                             DestStream
+                                         {$IFDEF COMPILER12_UP},
+                                             DestCodePage
+                                         {$ENDIF}
+                                             );
     finally
         TagData.Free;
     end;
@@ -4964,7 +5586,12 @@ function HtmlPageProducer(
     Tags               : array of const;
     RowDataGetter      : PTableRowDataGetter;
     UserData           : TObject;
-    DestStream         : TStream) : Boolean;
+    DestStream         : TStream
+{$IFDEF COMPILER12_UP};
+    ResCodepage        : LongWord = CP_ACP;
+    DestCodePage       : LongWord = CP_ACP
+{$ENDIF}
+    ) : Boolean;
 var
     FromStream : TResourceStream;
 begin
@@ -4983,7 +5610,12 @@ begin
     end;
     try
         Result := HtmlPageProducer(FromStream, Tags, RowDataGetter,
-                                   UserData, DestStream);
+                                   UserData, DestStream
+                               {$IFDEF COMPILER12_UP},
+                                   ResCodepage,
+                                   DestCodePage
+                               {$ENDIF}
+                                   );
     finally
         FromStream.Free;
     end;
@@ -4996,7 +5628,12 @@ function HtmlPageProducer(
     Tags               : array of const;
     RowDataGetter      : PTableRowDataGetter;
     UserData           : TObject;
-    DestStream         : TStream) : Boolean;
+    DestStream         : TStream
+{$IFDEF COMPILER12_UP};
+    FileCodepage       : LongWord = CP_ACP;
+    DestCodePage       : LongWord = CP_ACP
+{$ENDIF}
+    ) : Boolean;
 var
     FromStream : TFileStream;
 begin
@@ -5015,7 +5652,12 @@ begin
     end;
     try
         Result := HtmlPageProducer(FromStream, Tags, RowDataGetter,
-                                   UserData, DestStream);
+                                   UserData, DestStream
+                               {$IFDEF COMPILER12_UP},
+                                   FileCodepage,
+                                   DestCodePage
+                               {$ENDIF}
+                                   );
     finally
         FromStream.Free;
     end;
@@ -5568,7 +6210,9 @@ var
     SizeRead  : Integer;
     Rec       : THttpPartStream;
 begin
+{$IFNDEF WIN64}  { V7.37 }
     Rec := nil;  { Just to remove a compiler warning }
+{$ENDIF}
     if (FPosition >= 0) and (Count >= 0) then begin
         //Result := FSize - FPosition;
         //if Result > 0 then begin

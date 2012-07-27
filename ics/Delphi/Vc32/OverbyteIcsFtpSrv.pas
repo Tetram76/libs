@@ -4,12 +4,12 @@ Author:       François PIETTE
 Description:  TFtpServer class encapsulate the FTP protocol (server side)
               See RFC-959 for a complete protocol description.
 Creation:     April 21, 1998
-Version:      7.12
+Version:      7.19
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1998-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 1998-2011 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
               Berlin, Germany, contact: <arno.garrels@gmx.de>
@@ -386,16 +386,27 @@ June 04, 2009 V7.09 Angus called TriggerMd5Calculated when changing file date/ti
 Sept 03, 2009 V7.10 Arno exchanged TThread.Resume by TThread.Start for D2010 and later
 Dec  15, 2009 V7.11 Arno added type TFtpSrvCommandTable to make C++Builder happy.
 June 10, 2010 V7.12 Angus added bandwidth throttling using TCustomThrottledWSocket
-              Set BandwidthLimit property to maximum bytes server wide, for specific
-                clients set CBandwidthLimit in a client connect event
-              (requires EXPERIMENTAL_THROTTLE to be enabled in OverbyteIcsDefs.inc)
+              Set BandwidthLimit property to maximum bytes server wide, for
+              specific clients set CBandwidthLimit in a client connect event
+              (requires BUILTIN_THROTTLE to be defined in project options or
+              enabled OverbyteIcsDefs.inc)
+Sep 05, 2010 V7.13 Arno renamed conditional defines EXPERIMENTAL_THROTTLE and
+             EXPERIMENTAL_TIMEOUT to BUILTIN_THROTTLE and BUILTIN_TIMEOUT.
+Oct 12, 2010 V7.14 Arno published OnBgException from underlaying server socket.
+Nov 08, 2010 V7.15 Arno improved final exception handling, more details
+             in OverbyteIcsWndControl.pas (V1.14 comments).
+Feb 7,  2010 V7.16 Angus ensure control channel is correctly BandwidthLimited
+May 21, 2011 V7.17 Arno ensure CommandAUTH resets the SSL prot-level correctly.
+Jul 18, 2011 V7.18 Arno added Unicode normalization.
+Aug 8,  2011 V7.19 Angus added client SndBufSize and RcvBufSize to set data socket
+             buffers sizes for better performance, set to 32K to double speeds
+
 
 
 
 Angus pending -
 CRC on the fly
 MD5 on the fly for downloads if not cached already
-bandwidth restrictions
 test app - cache zlib files and CRCs and lock updates
 
 
@@ -451,7 +462,7 @@ uses
     OverByteIcsSSLEAY,
 {$ENDIF}
     SysUtils, Classes,
-{$IFDEF WIN32}
+{$IFDEF MSWINDOWS}
 {$IFDEF BCB}
     Winsock,
 {$ENDIF}
@@ -480,8 +491,8 @@ uses
 
 
 const
-    FtpServerVersion         = 712;
-    CopyRight : String       = ' TFtpServer (c) 1998-2010 F. Piette V7.12 ';
+    FtpServerVersion         = 719;
+    CopyRight : String       = ' TFtpServer (c) 1998-2011 F. Piette V7.19 ';
     UtcDateMaskPacked        = 'yyyymmddhhnnss';         { angus V1.38 }
     DefaultRcvSize           = 16384;    { V7.00 used for both xmit and recv, was 2048, too small }
 
@@ -665,6 +676,8 @@ type
         FOptions           : TFtpOptions;    { AG 7.02 }
         FCodePage          : LongWord;       { AG 7.02 }
         FCurrentCodePage   : LongWord;       { AG 7.02 }
+        FSndBufSize        : Integer;        { Angus V7.19}
+        FRcvBufSize        : Integer;        { Angus V7.19}
         procedure TriggerSessionConnected(Error : Word); override;
         function  TriggerDataAvailable(Error : Word) : boolean; override;
         procedure TriggerCommand(CmdBuf : PAnsiChar; CmdLen : Integer); virtual; { AG 7.02 }
@@ -673,6 +686,9 @@ type
         procedure SetOptions(const Opts : TFtpOptions); { AG 7.02 }
         procedure SetCodePage(const Value: LongWord);   { AG 7.02 }
         procedure SetCurrentCodePage(const Value: LongWord); { AG 7.02 }
+        procedure SetOnBgException(const Value: TIcsBgExceptionEvent); override; { V7.15 }
+        procedure SetRcvBufSize(newValue : Integer);   { Angus V7.19}
+        procedure SetSndBufSize(newValue : Integer);   { Angus V7.19}
     public
         FtpServer         : TFtpServer; { AG V7.02 }
         BinaryMode        : Boolean;
@@ -732,7 +748,7 @@ type
         AccountReadOnly   : Boolean;     { angus V7.00 client account read only file access, no uploads  }
         FailedAttempts    : Integer;     { angus V7.06 }
         DelayAnswerTick   : Longword;    { angus V7.06 tick when delayed answer should be sent }
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
         CBandwidthLimit    : LongWord;   { angus V7.12 Bytes per second, null = disabled }
         CBandwidthSampling : LongWord;   { angus V7.12 Msec sampling interval }
 {$ENDIF}
@@ -809,6 +825,10 @@ type
                                                  write FHost;
         property    Lang           : String      read  FHost
                                                  write FHost;
+        property    SndBufSize     : Integer     read FSndBufSize       { Angus V7.19}
+                                                 write SetSndBufSize;
+        property    RcvBufSize     : Integer     read FRcvBufSize       { Angus V7.19}
+                                                 write SetRcvBufSize;
         property    OnDisplay      : TDisplayEvent
                                                  read  FOnDisplay
                                                  write FOnDisplay;
@@ -979,7 +999,7 @@ type
         FCodePage               : LongWord;     { angus V7.01 for UTF8 support }
         FLanguage               : String;       { angus V7.01 for UTF8 support }
         FMaxAttempts            : Integer;      { angus V7.06 }
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
         FBandwidthLimit         : LongWord;     { angus V7.12 Bytes per second, null = disabled }
         FBandwidthSampling      : LongWord;     { angus V7.12 Msec sampling interval }
 {$ENDIF}
@@ -1041,6 +1061,7 @@ type
         FOnLang                 : TFtpSrvLangEvent;          { angus V7.01 }
         FSystemCodePage         : LongWord;                  { AG 7.02 }
         FOnAddVirtFiles         : TFtpSrvAddVirtFilesEvent;  { angus V7.08 }
+        procedure SetOnBgException(const Value: TIcsBgExceptionEvent); override; { V7.15 }
 {$IFNDEF NO_DEBUG_LOG}
         function  GetIcsLogger: TIcsLogger;                                      { V1.46 }
         procedure SetIcsLogger(const Value: TIcsLogger);                         { V1.46 }
@@ -1535,7 +1556,7 @@ type
                                                       write FLanguage;       { angus V7.01 }
         property  MaxAttempts            : Integer    read  FMaxAttempts
                                                       write FMaxAttempts ;   { angus V7.06 }
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
         property  BandwidthLimit         : LongWord   read  FBandwidthLimit
                                                       write FBandwidthLimit;     { angus V7.12 }
         property  BandwidthSampling      : LongWord   read  FBandwidthSampling
@@ -1697,7 +1718,7 @@ type
         property  OnAddVirtFiles         : TFtpSrvAddVirtFilesEvent          { angus V7.08 }
                                                       read  FOnAddVirtFiles
                                                       write FOnAddVirtFiles;
-
+        property  OnBgException;
     end;
 
 { You must define USE_SSL so that SSL code is included in the component.   }
@@ -2099,7 +2120,6 @@ begin
     FSocketServer.ClientClass         := FClientClass;
     FSocketServer.OnClientConnect     := ServerClientConnect;
     FSocketServer.OnClientDisconnect  := ServerClientDisconnect;
-//    FSocketServer.OnBgException       := SocketBgException ;
 {$IFNDEF NO_DEBUG_LOG}
     FSocketServer.IcsLogger           := GetIcsLogger ;
 {$ENDIF}
@@ -2133,7 +2153,7 @@ begin
     FLanguage           := 'EN*';   { angus V7.01 we only support ENglish }
     FSystemCodePage     := GetAcp;  { AG 7.02 }
     FMaxAttempts        := 12 ;     { angus V7.06 }
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
     FBandwidthLimit     := 0;       { angus V7.12 no bandwidth limit, yet, bytes per second }
     FBandwidthSampling  := 1000;    { angus V7.12 Msec sampling interval, less is not possible }
 {$ENDIF}
@@ -2366,6 +2386,8 @@ begin
     FSocketServer.BannerTooBusy     := msgTooMuchClients;
     FSocketServer.OnChangeState     := ServSocketStateChange;
     FSocketServer.ComponentOptions  := [wsoNoReceiveLoop];
+    FSocketServer.BandwidthLimit    := fBandwidthLimit;     { angus V7.16 in client connect }
+    FSocketServer.BandwidthSampling := fBandwidthSampling;  { angus V7.16 }
     FSocketServer.Listen;
     FEventTimer.Enabled := true;                  { angus V1.54 }
 {$IFNDEF NO_DEBUG_LOG}
@@ -2495,12 +2517,12 @@ begin
     MyClient.FFtpState       := ftpcWaitingUserCode;
     MyClient.FileModeRead    := SrvFileModeRead;     { angus V1.57 }
     MyClient.FileModeWrite   := SrvFileModeWrite;    { angus V1.57 }
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
     MyClient.CBandwidthLimit    := fBandwidthLimit;     { angus V7.12 may be changed in event for different limit }
     MyClient.CBandwidthSampling := fBandwidthSampling;  { angus V7.12 }
 {$ENDIF}
     TriggerClientConnect(MyClient, Error);
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
     MyClient.BandwidthLimit     := MyClient.CBandwidthLimit;     { angus V7.12 slow down control connection }
     MyClient.BandwidthSampling  := MyClient.CBandwidthSampling;  { angus V7.12 }
 {$ENDIF}
@@ -2579,13 +2601,17 @@ begin
       {$IFDEF COMPILER12_UP}
         { Convert buffer data to UnicodeString AG V7.02 }
         Params := AnsiToUnicode(RawParams, Client.CurrentCodePage);
+      {$IFNDEF NO_UNICODE_NORMALIZATION}                               { AG V7.18 }
+        if Client.CurrentCodePage = CP_UTF8 then                       { AG V7.18 }
+            Params := IcsNormalizeString(Params, icsNormalizationC);   { AG V7.18 }
+      {$ENDIF NO_UNICODE_NORMALIZATION}                                { AG V7.18 }
       {$ELSE}
         { Convert buffer data to AnsiString ( potential data loss! ) AG V7.02 }
         if (Client.CurrentCodePage = CP_UTF8) then
             Params := Utf8ToStringA(RawParams)
         else
             Params := RawParams;
-      {$ENDIF}
+      {$ENDIF COMPILER12_UP}
 
         { Extract keyword, ignoring leading spaces and tabs }
         I := 1; { angus V1.54 moved argument parsing code to FtpSrvT to avoid duplication }
@@ -3582,11 +3608,13 @@ begin
         Client.DataSocket.LocalPort           := 'ftp-data'; {20}
 {$ENDIF}
         Client.DataSocket.ComponentOptions    := [wsoNoReceiveLoop];
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
         Client.DataSocket.BandwidthLimit      := Client.CBandwidthLimit;     { angus V7.12 }
         Client.DataSocket.BandwidthSampling   := Client.CBandwidthSampling;  { angus V7.12 }
 {$ENDIF}
         Client.DataSocket.Connect;
+        if Client.DataSocket.SocketRcvBufSize <> Client.FRcvBufSize then     { angus  V7.18 }
+           Client.DataSocket.SocketRcvBufSize := Client.FRcvBufSize;         { angus  V7.18 }
     end;
 end;
 
@@ -4251,12 +4279,16 @@ begin
     end;
     Client.DataSocket.LingerOnOff             := wsLingerOff;
     Client.DataSocket.LingerTimeout           := 0;
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
     Client.DataSocket.BandwidthLimit          := Client.CBandwidthLimit;     { angus V7.12 }
     Client.DataSocket.BandwidthSampling       := Client.CBandwidthSampling;  { angus V7.12 }
 {$ENDIF}
     Client.DataSocket.HSocket                 := HSocket;
     Client.PassiveConnected                   := TRUE;
+    if Client.DataSocket.SocketRcvBufSize <> Client.FRcvBufSize then         { angus  V7.18 }
+        Client.DataSocket.SocketRcvBufSize    := Client.FRcvBufSize;         { angus  V7.18 }
+    if Client.DataSocket.SocketSndBufSize <> Client.FSndBufSize then         { angus  V7.18 }
+        Client.DataSocket.SocketSndBufSize    := Client.FSndBufSize;         { angus  V7.18 }
     if Client.PassiveStart then
         Client.DataSocket.OnSessionConnected(Client.DataSocket, 0);
 end;
@@ -4287,11 +4319,13 @@ begin
         Client.DataSocket.LocalPort           := 'ftp-data'; {20}
 {$ENDIF}
         Client.DataSocket.ComponentOptions    := [wsoNoReceiveLoop];
-{$IFDEF EXPERIMENTAL_THROTTLE}
+{$IFDEF BUILTIN_THROTTLE}
         Client.DataSocket.BandwidthLimit      := Client.CBandwidthLimit;     { angus V7.12 }
         Client.DataSocket.BandwidthSampling   := Client.CBandwidthSampling;  { angus V7.12 }
 {$ENDIF}
         Client.DataSocket.Connect;
+        if Client.DataSocket.SocketSndBufSize <> Client.FSndBufSize then     { angus  V7.18 }
+            Client.DataSocket.SocketSndBufSize := Client.FSndBufSize;        { angus  V7.18 }
     end;
 end;
 
@@ -6466,7 +6500,6 @@ begin
 end;
 
 
-
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TFTPServer.CheckLogOptions(const LogOption: TLogOption): Boolean; { V1.46 }
 begin
@@ -6481,6 +6514,15 @@ begin
         IcsLogger.DoDebugLog(Self, LogOption, Msg);
 end;
 {$ENDIF}
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TFtpServer.SetOnBgException(const Value: TIcsBgExceptionEvent); { V7.15 }
+begin
+    if Assigned(FSocketServer) then
+        FSocketServer.OnBgException := Value;
+    inherited;
+end;
+
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TFtpServer.ClientProcessingThreadTerminate(Sender: TObject); { AG V1.50 }
@@ -6711,6 +6753,8 @@ begin
     TotPutBytes      := 0;    { angus V1.54 how many bytes PUT during session, data and control }
     FailedAttempts   := 0;    { angus V7.06 count failed login attempts }
     DelayAnswerTick  := TriggerDisabled;  { angus V7.06 when to send a delayed failed login answer }
+    FSndBufSize      := DefaultRcvSize;   { Angus V7.19 datasocket buffer}
+    FRcvBufSize      := DefaultRcvSize;   { Angus V7.19 datasocket buffer}
 end;
 
 
@@ -6759,6 +6803,26 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TFtpCtrlSocket.SetRcvBufSize(newValue : Integer);   { Angus V7.19}
+begin
+    if newValue < 1024 then
+        FRcvBufSize := 1024
+    else
+        FRcvBufSize := newValue;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TFtpCtrlSocket.SetSndBufSize(newValue : Integer);   { Angus V7.19}
+begin
+    if newValue < 1024 then
+        FSndBufSize := 1024
+    else
+        FSndBufSize := newValue;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TFtpCtrlSocket.SetCodePage(const Value: LongWord);{ AG 7.02 }
 begin
     if Value = FtpServer.FSystemCodePage then
@@ -6782,6 +6846,15 @@ begin
         else
             FCurrentCodePage := CP_ACP;
     {$ENDIF}
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TFtpCtrlSocket.SetOnBgException(const Value: TIcsBgExceptionEvent); { V7.15 }
+begin
+    if Assigned(FDataSocket) then
+        FDataSocket.OnBgException := Value;
+    inherited;
 end;
 
 
@@ -7645,10 +7718,15 @@ begin
         else
             Answer := Format(msgAuthDenied, ['SSL/TLS']);
         Client.FtpState  := ftpcWaitingUserCode;     // Need to force re-login
-        if Client.CurFtpSslType <> curftpAuthTlsP then
-            Client.ProtP     := FALSE               // Need to reset prot-level as well
-        else
-            Client.ProtP     := TRUE;
+
+        { V7.17 }
+        if Client.CurFtpSslType = curftpAuthTlsP then // Need to reset prot-level as well
+            Client.ProtP := TRUE
+        else if Client.CurFtpSslType = curftpAuthTlsC then
+            Client.ProtP := FALSE;
+        { else as is }
+        { / V7.17 }
+
     except
         Client.CurFtpSslType            := curftpSslNone;
         Client.SslEnable                := False;

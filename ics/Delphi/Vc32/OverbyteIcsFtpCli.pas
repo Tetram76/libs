@@ -2,14 +2,14 @@
 
 Author:       François PIETTE
 Creation:     May 1996
-Version:      V7.09
+Version:      V7.28
 Object:       TFtpClient is a FTP client (RFC 959 implementation)
               Support FTPS (SSL) if ICS-SSL is used (RFC 2228 implementation)
 EMail:        http://www.overbyte.be        francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1996-2010 by François PIETTE
-              Rue de Grady 24, 4053 Embourg, Belgium. Fax: +32-4-365.74.56
+Legal issues: Copyright (C) 1996-2012 by François PIETTE
+              Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
               Berlin, Germany, contact: <arno.garrels@gmx.de>
@@ -994,6 +994,57 @@ Jan 4, 2010  V7.08 added TriggerResponse virtual and CreateSocket virtual
 			 Thanks to "Anton Sviridov" <ant_s@rambler.ru>
 Jun 9, 2010  V7.09 Angus - ConnectAsync and ConnectHostAsync methods no longer trigger FEAT command
              Added ConnectFeatAsync and ConnectFeatHostAsync methods which do trigger FEAT command
+Sep 8, 2010  V7.10 Arno - If conditional BUILTIN_THROTTLE is defined the
+             bandwidth control uses TWSocket's built-in throttle code rather
+             than TFtpClient's.
+Sep 19, 2010 V7.11 Arno - Do not call DataSocketPutDataSent twice! This fixes
+             a bug that showed up with experimental built-in throttle but could
+             also trigger without as well. For instance, if file size is smaller
+             or equal send buffer size a second call to DataSocketPutDataSent
+             turns on the shutdown timeout (loop) even though data is not yet
+             sent. DataSocketPutDataSent MUST only be called once to init
+             the send loop.
+Sep 20, 2010 V7.12 Angus - ensure FMultiThreaded in TIcsWndControl is set correctly and
+               not locally here
+Oct 10, 2010 V7.13 Arno - MessagePump changes/fixes.
+Oct 15, 2010 V7.14 Arno - Fake AUTHTLS request/response if renegotiation is
+             not available and the SSL is already established.
+Nov 08, 2010 V7.15 Arno improved final exception handling, more details
+             in OverbyteIcsWndControl.pas (V1.14 comments).
+Nov 11, 2010 V7.16 Arno re-enabled component notification for FDataSocket and
+             FControlSocket that was disabled accidentally in V7.13 rev. #610 in
+             method CreateSocket by creating the instances with a nil owner.
+Nov 17, 2010 V7.17 Arno published property ProxyPort.
+Feb 09, 2011 V7.18 Arno added HTTP v1.1 proxy-support and some conditional
+             defines to be able to build with smaller internal buffers.
+Feb 13, 2011 V7.19 Arno fixed a bug in TCustomFtpCli.ControlSocketSessionClosed
+             that caused RequestDone being triggered with error code null if
+             the server unexpectedly closed the connection without sending any
+             response. Error messages from proxy servers are now available.
+Feb 14, 2011 V7.20 Arno - Clear HTTP tunnel server name from data and ctrl
+             socket properly as well as properties LastResponse, ErrorMessage
+             and StatusCode in method OpenAsync.
+Feb 15, 2011 V7.21 Arno - HTTP tunnel server name now cleared correctly.
+             Use function WSocketIsProxyErrorCode from OverbyteIcsWSocket.pas.
+Mar 01, 2011 V7.22 Arno - **Warning, possibly a breaking change**. The component
+             does no longer enforce passive mode with native FTP-proxy
+             connections, it's an option now.
+Apr 15, 2011 V7.23 Arno prepared for 64-bit.
+May 21, 2011 V7.24 Arno - Call CloseDelayed rather than Close in
+             TCustomFtpCli.DoneQuitAsync in order to avoid error #10053 in
+             OnSessionClosed event with SSL.
+Jun 18, 2011 V7.25 aguser removed one compiler hint.
+Jul 24, 2011 V7.26 Arno added published property DataSocketSndBufSize
+             and public property DataSocketRcvBufSize. Increase DataSocketSndBufSize
+             in order to make uploads faster. Both values default to value 8192
+             which is the default winsock size. Removed useless call to
+             WSocket_getsockopt in TCustomFtpCli.DataSocketPutSessionAvailable.
+Oct 24, 2011 V7.27 Arno - Set state ftpInternalReady in DoneQuitAsync.
+             Check for component connected in PortAsync.
+Jan 20, 2012 V7.28 Arno - If the control connection closes with error code
+             after QUIT response has been received OK we may safely ignore this
+             error.
+
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsFtpCli;
@@ -1017,7 +1068,11 @@ unit OverbyteIcsFtpCli;
 {$WARN SYMBOL_PLATFORM   OFF}
 {$WARN SYMBOL_LIBRARY    OFF}
 {$WARN SYMBOL_DEPRECATED OFF}
-{$DEFINE UseBandwidthControl}   { V2.106 }
+{$IFNDEF BUILTIN_THROTTLE}
+    {$DEFINE UseBandwidthControl}   { V2.106 }
+{$ELSE}
+    {$UNDEF UseBandwidthControl}
+{$ENDIF}
 {$H+}         { Use long strings                    }
 {$J+}         { Allow typed constant to be modified }
 {$IFDEF BCB3_UP}
@@ -1061,14 +1116,30 @@ OverbyteIcsZlibHigh,     { V2.102 }
     OverbyteIcsWSocket, OverbyteIcsWndControl, OverByteIcsFtpSrvT;
 
 const
-  FtpCliVersion      = 709;
-  CopyRight : String = ' TFtpCli (c) 1996-2010 F. Piette V7.09 ';
-  FtpClientId : String = 'ICS FTP Client V7.09 ';   { V2.113 sent with CLNT command  }
+  FtpCliVersion      = 728;
+  CopyRight : String = ' TFtpCli (c) 1996-2012 F. Piette V7.28 ';
+  FtpClientId : String = 'ICS FTP Client V7.28 ';   { V2.113 sent with CLNT command  }
 
 const
 //  BLOCK_SIZE       = 1460; { 1514 - TCP header size }
-  FTP_SND_BUF_SIZE = 32768;  { angus V7.00 increased from 1460 }
-  FTP_RCV_BUF_SIZE = 32768;  { angus V7.00 increased from 4096 }
+
+{$IFDEF FTPCLI_BUFFER_OLD}
+  FTP_SND_BUF_SIZE = 1460;  { arno V7.18 }
+  FTP_RCV_BUF_SIZE = 4096;  { arno V7.18 }
+{$ELSE}
+  {$IFDEF FTPCLI_BUFFER_SMALL}
+    FTP_SND_BUF_SIZE = 8192;  { arno V7.18 }
+    FTP_RCV_BUF_SIZE = 8192;  { arno V7.18 }
+  {$ELSE}
+    {$IFDEF FTPCLI_BUFFER_MEDIUM}
+      FTP_SND_BUF_SIZE = 16384;  { arno V7.18 }
+      FTP_RCV_BUF_SIZE = 16384;  { arno V7.18 }
+    {$ELSE}
+      FTP_SND_BUF_SIZE = 32768;  { angus V7.00 increased from 1460 }
+      FTP_RCV_BUF_SIZE = 32768;  { angus V7.00 increased from 4096 }
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
 
 type
   { sslTypeAuthTls, sslTypeAuthSsl are known as explicit SSL }
@@ -1145,7 +1216,7 @@ type
                      ftpShareDenyWrite, ftpShareDenyRead,
                      ftpShareDenyNone);
   TFtpDisplayFileMode = (ftpLineByLine, ftpBinary);
-  TFtpConnectionType  = (ftpDirect, ftpProxy, ftpSocks4, ftpSocks4A, ftpSocks5);
+  TFtpConnectionType  = (ftpDirect, ftpProxy, ftpSocks4, ftpSocks4A, ftpSocks5, ftpHttpProxy);
   TFtpDisplay     = procedure(Sender    : TObject;
                               var Msg   : String) of object;
   TFtpProgress64  = procedure(Sender    : TObject;
@@ -1174,6 +1245,8 @@ type
     FDataPortRangeStart : DWORD;  {JT}
     FDataPortRangeEnd   : DWORD;  {JT}
     FLastDataPort       : DWORD;  {JT}
+    FDSocketSndBufSize  : Integer;{AG V7.26}
+    FDSocketRcvBufSize  : Integer;{AG V7.26}
     FLocalAddr          : String; {bb}
     FUserName           : String;
     FPassWord           : String;
@@ -1216,7 +1289,6 @@ type
     FOnStateChange      : TNotifyEvent;
     FOnRequestDone      : TFtpRequestDone;
     FOnReadyToTransmit  : TFtpReadyToTransmit;
-    FOnBgException      : TBgExceptionEvent;
     FLocalStream        : TStream;
     FRequestType        : TFtpRequest;
     FRequestDoneFlag    : Boolean;
@@ -1249,6 +1321,7 @@ type
     FStorAnswerRcvd     : Boolean;
     FPutSessionOpened   : Boolean;
     FStreamFlag         : Boolean;
+    FDataSocketSentFlag : Boolean;    { V7.11 }      
     FSupportedExtensions : TFtpExtensions; { V2.94  which features server supports }
     FMLSTFacts          : String;     { V2.90  specific new list stuff supported   }
     FRemFileDT          : TDateTime;  { V2.90  date/time for MdtmAsync and MdtmYYYYAsync and MfmtAsync }
@@ -1271,6 +1344,13 @@ type
     FSocksPort          : String;        { V7.00 }
     FSocksServer        : String;        { V7.00 }
     FSocksUserCode      : String;        { V7.00 }
+
+    FHttpTunnelAuthType : THttpTunnelAuthType;
+    FHttpTunnelPassword : String;        { V7.18 }
+    FHttpTunnelPort     : String;        { V7.18 }
+    FHttpTunnelServer   : String;        { V7.18 }
+    FHttpTunnelUserCode : String;        { V7.18 }
+
     FLanguage           : String;        { V7.01 language argment for LANG command }
     FLangSupport        : String;        { V7.01 list of languages server supports }
     FZStreamState       : TZStreamState; { V2.102 current Zlib stream state }
@@ -1279,9 +1359,11 @@ type
     FOnZlibProgress     : TZlibProgress; { V2.113 call back event during ZLIB processing }
     FZCompFileName      : String;        { V2.113 zlib file name of compressed file }
     FZlibWorkDir        : String;        { V2.113 zlib work directory }
-{$IFDEF UseBandwidthControl}              { V2.106 }
+{$IF DEFINED(UseBandwidthControl) or DEFINED(BUILTIN_THROTTLE)}
     FBandwidthLimit     : Integer;  // Bytes per second
     FBandwidthSampling  : Integer;  // mS sampling interval
+{$IFEND}
+{$IFDEF UseBandwidthControl}
     FBandwidthCount     : Int64;    // Byte counter
     FBandwidthMaxCount  : Int64;    // Bytes during sampling period
     FBandwidthTimer     : TIcsTimer;
@@ -1297,6 +1379,11 @@ type
     procedure DebugLog(LogOption: TLogOption; const Msg : string); virtual; { 2.104 }
     function  CheckLogOptions(const LogOption: TLogOption): Boolean; virtual; { 2.104 }
 {$ENDIF}
+    procedure   AbortComponent; override; { V7.15 }
+    procedure   SetMultiThreaded(const Value : Boolean); override;
+    procedure   SetOnBgException(const Value: TIcsBgExceptionEvent); override; { V7.15 }
+    procedure   SetTerminated(const Value: Boolean); override;
+    procedure   SetOnMessagePump(const Value: TNotifyEvent); override;
     procedure   SetErrorMessage;
     procedure   LocalStreamWrite(const Buffer; Count : Integer); virtual;
     procedure   LocalStreamWriteString(Str: PAnsiChar; Count: Integer); {$IFDEF COMPILER12_UP} overload;
@@ -1363,7 +1450,6 @@ type
     procedure   FreeMsgHandlers; override;
     function    MsgHandlersCount: Integer; override;
     procedure   WndProc(var MsgRec: TMessage); override;
-    procedure   HandleBackGroundException(E: Exception); override;
     procedure   WMFtpRequestDone(var msg: TMessage); virtual;
     procedure   WMFtpSendData(var msg: TMessage); virtual;
     procedure   WMFtpCloseDown(var msg: TMessage); virtual;
@@ -1376,6 +1462,11 @@ type
     function    OpenFileStream (const FileName: string; Mode: Word): TStream;  { V2.113 }
     procedure   CreateLocalFileStream;         { V2.113 }
     function    CreateSocket: TWSocket; virtual;   { V7.08 }
+    procedure   HandleHttpTunnelError(Sender: TObject; ErrCode: Word;
+        TunnelServerAuthTypes: THttpTunnelServerAuthTypes; const Msg: String);
+    procedure   HandleSocksError(Sender: TObject; ErrCode: Integer; Msg: String);
+    procedure   SetDSocketSndBufSize(const Value: Integer);{AG V7.26}
+    procedure   SetDSocketRcvBufSize(const Value: Integer);{AG V7.26}
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
@@ -1508,12 +1599,12 @@ type
                                                          write FPosEnd;         { V2.113 end pos for MD5/CRC }
     property    DurationMsecs     : Integer              read  FDurationMsecs;  { V2.113 last transfer duration in milliseconds for FByteCount }
     property    StartTick         : Integer              read  FStartTime;      { V2.113 when last transfer started, in case it failed }
-{$IFDEF UseBandwidthControl}
+{$IF DEFINED(UseBandwidthControl) or DEFINED(BUILTIN_THROTTLE)}
     property BandwidthLimit       : Integer              read  FBandwidthLimit    { V2.106 }
                                                          write FBandwidthLimit;
     property BandwidthSampling    : Integer              read  FBandwidthSampling { V2.106 }
                                                          write FBandwidthSampling;
-{$ENDIF}
+{$IFEND}
     property TransferMode         : TFtpTransMode        read  FTransferMode    { V2.102 }
                                                          write FTransferMode;
     property NewOpts              : string               read  FNewOpts         { V2.102 }
@@ -1559,6 +1650,19 @@ type
                                                          write FProxyServer;
     property ProxyPort            : String               read  FProxyPort
                                                          write FProxyPort;
+    property HttpTunnelAuthType   : THttpTunnelAuthType
+                                                         read  FHttpTunnelAuthType  { V7.18 }
+                                                         write FHttpTunnelAuthType
+                                                         default htatDetect;
+    property HttpTunnelPassword   : String               read  FHttpTunnelPassword  { V7.18 }
+                                                         write FHttpTunnelPassword;
+    property HttpTunnelPort       : String               read  FHttpTunnelPort      { V7.18 }
+                                                         write FHttpTunnelPort;
+    property HttpTunnelServer     : String               read  FHttpTunnelServer    { V7.18 }
+                                                         write FHttpTunnelServer;
+    property HttpTunnelUserCode   : String               read  FHttpTunnelUserCode  { V7.18 }
+                                                         write FHttpTunnelUserCode;
+
     property SocksPassword        : String               read  FSocksPassword
                                                          write FSocksPassword;      { V7.00 }
     property SocksPort            : String               read  FSocksPort
@@ -1574,6 +1678,10 @@ type
     property Language             : String               read  FLanguage
                                                          write FLanguage;           { V7.01 }
     property LangSupport          : String               read  FLangSupport;        { V7.01 }
+    property DataSocketSndBufSize : Integer              read  FDSocketSndBufSize   {AG V7.26}
+                                                         write SetDSocketSndBufSize default 8192;
+    property DataSocketRcvBufSize : Integer              read  FDSocketRcvBufSize   {AG V7.26}
+                                                         write SetDSocketRcvBufSize default 8192;
     property OnDisplay            : TFtpDisplay          read  FOnDisplay
                                                          write FOnDisplay;
     property OnDisplayFile        : TFtpDisplay          read  FOnDisplayFile
@@ -1598,17 +1706,13 @@ type
                                                          write FOnStateChange;
     property OnReadyToTransmit    : TFtpReadyToTransmit  read  FOnReadyToTransmit
                                                          write FOnReadyToTransmit;
-    property OnBgException        : TBgExceptionEvent    read  FOnBgException
-                                                         write FOnBgException;
+    property OnBgException;   { V7.15 }
   end;
 
   TFtpClient = class(TCustomFtpCli)
   protected
     FTimeout       : Integer;                 { Given in seconds }
     FTimeStop      : LongInt;                 { Milli-seconds    }
-    FMultiThreaded : Boolean;
-    FTerminated    : Boolean;
-    FOnMessagePump : TNotifyEvent;
     function    Progress : Boolean; override;
     function    Synchronize(Proc : TFtpNextProc) : Boolean; virtual;
     function    WaitUntilReady : Boolean; virtual;
@@ -1690,15 +1794,9 @@ type
     function    XDmlsd     : Boolean;    { V7.01   extended MLSD using data channel }
     function    ConnectFeat : Boolean;   { V7.09   same as connect but sends Feat  }
     function    ConnectFeatHost : Boolean;   { V7.09   same as connect but sends Feat and Host  }
-{$IFDEF NOFORMS}
-    property    Terminated         : Boolean        read  FTerminated
-                                                    write FTerminated;
-{$ENDIF}
-    property    OnMessagePump      : TNotifyEvent   read  FOnMessagePump
-                                                    write FOnMessagePump;
   published
     property Timeout       : Integer read FTimeout       write FTimeout;
-    property MultiThreaded : Boolean read FMultiThreaded write FMultiThreaded;
+    property MultiThreaded;
     property HostName;
     property Port;
     property CodePage;
@@ -1717,12 +1815,19 @@ type
     property Options;
     property ConnectionType;
     property ProxyServer;
+    property ProxyPort;   { V7.17 }
     property SocksPassword;
     property SocksPort;
     property SocksServer;
     property SocksUserCode;
+    property HttpTunnelAuthType;
+    property HttpTunnelPassword;
+    property HttpTunnelPort;
+    property HttpTunnelServer;
+    property HttpTunnelUserCode;
     property Account;
     property Language;
+    property DataSocketSndBufSize;                               {AG V7.26}
     property OnDisplay;
     property OnDisplayFile;
     property OnCommand;
@@ -1738,10 +1843,10 @@ type
 {$IFNDEF NO_DEBUG_LOG}
     property IcsLogger;                                             { 2.104 }
 {$ENDIF}
-{$IFDEF UseBandwidthControl}
+{$IF DEFINED(UseBandwidthControl) or DEFINED(BUILTIN_THROTTLE)}
     property BandwidthLimit;                                       { V2.106 }
     property BandwidthSampling;                                    { V2.106 }
-{$ENDIF}
+{$IFEND}
   end;
 
 { You must define USE_SSL so that SSL code is included in the component.   }
@@ -1861,12 +1966,14 @@ implementation
 
 uses WinSock;
 
+{$B-}  { Do not evaluate boolean expressions more than necessary }
+
+(*
 {$IFNDEF WIN32}
 const
     HFILE_ERROR = $FFFF;
 {$ENDIF}
 
-{$B-}  { Do not evaluate boolean expressions more than necessary }
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFNDEF WIN32}
@@ -1875,6 +1982,7 @@ begin
     Str[0] := chr(Len);
 end;
 {$ENDIF}
+*)
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function LookupFTPReq (const RqType: TFtpRequest): String;    { V2.113 angus }
@@ -2141,20 +2249,22 @@ begin
     FKeepAliveSecs      := 0; {V2.107 for control socket only }
     FClientIdStr        := ftpClientId; {V2.113 string sent for CLNT command }
     FControlSocket      := CreateSocket;   { V7.08 was  TWSocket.Create(Self); }
+    FControlSocket.ExceptAbortProc    := AbortComponent; { V7.15 }
     FControlSocket.OnSessionConnected := ControlSocketSessionConnected;
     FControlSocket.OnDataAvailable    := ControlSocketDataAvailable;
     FControlSocket.OnSessionClosed    := ControlSocketSessionClosed;
     FControlSocket.OnDnsLookupDone    := ControlSocketDnsLookupDone;
     FDataSocket         := CreateSocket;    { V7.08 was  TWSocket.Create(Self); }
+    FDataSocket.ExceptAbortProc       := AbortComponent; { V7.15 }
     FStreamFlag         := FALSE;
     SetLength(FZlibWorkDir, 1024);
     Len := GetTempPath(Length(FZlibWorkDir) - 1, PChar(FZlibWorkDir));{ AG V6.03 }
     SetLength(FZlibWorkDir, Len);                                 { AG V6.03 }
     FZlibWorkDir := IncludeTrailingPathDelimiter (FZlibWorkDir);  { V2.113 }
-{$IFDEF UseBandwidthControl}
+{$IF DEFINED(UseBandwidthControl) or DEFINED(BUILTIN_THROTTLE)}
     FBandwidthLimit     := 10000;  // Bytes per second
     FBandwidthSampling  := 1000;   // mS sampling interval
-{$ENDIF} 
+{$IFEND}
 {$IFNDEF NO_DEBUG_LOG}
     __DataSocket := FDataSocket;
 {$ENDIF}
@@ -2164,6 +2274,8 @@ begin
     FSystemCodePage := GetACP; { AG V7.02 }
     FCodePage := CP_ACP;
     FLanguage := 'EN';    { V7.01 or EN-uk, FR, etc, only for messages }
+    FDSocketSndBufSize := 8192;  {AG V7.26}
+    FDSocketRcvBufSize := 8192;  {AG V7.26}
 end;
 
 
@@ -2171,12 +2283,14 @@ end;
 destructor TCustomFtpCli.Destroy;
 begin
     DestroyLocalStream;
+    FDataSocket.Free;
+    FControlSocket.Free;
 {$IFDEF UseBandwidthControl}
     if Assigned(FBandwidthTimer) then begin
         FBandwidthTimer.Free;
         FBandwidthTimer := nil;
     end;
-{$ENDIF}    
+{$ENDIF}
     inherited Destroy;
 end;
 
@@ -2232,27 +2346,13 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{ All exceptions *MUST* be handled. If an exception is not handled, the     }
-{ application will be shut down !                                           }
-procedure TCustomFtpCli.HandleBackGroundException(E: Exception);
-var
-    CanAbort : Boolean;
+procedure TCustomFtpCli.AbortComponent; { V7.15 }
 begin
-    CanAbort := TRUE;
-    { First call the error event handler, if any }
-    if Assigned(FOnBgException) then begin
-        try
-            FOnBgException(Self, E, CanAbort);
-        except
-        end;
+    try
+        AbortAsync;
+    except
     end;
-    { Then abort the component }
-    if CanAbort then begin
-        try
-            AbortAsync;  { 06/12/2004: Abort replaced by AbortAsync }
-        except
-        end;
-    end;
+    inherited;
 end;
 
 
@@ -2274,6 +2374,26 @@ begin
         else if AComponent = FDataSocket then
             FDataSocket := nil;
     end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomFtpCli.SetDSocketSndBufSize(const Value: Integer);{AG V7.26}
+begin
+    if Value < 1024 then
+        FDSocketSndBufSize := 1024
+    else
+        FDSocketSndBufSize := Value;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomFtpCli.SetDSocketRcvBufSize(const Value: Integer);{AG V7.26}
+begin
+    if Value < 1024 then
+        FDSocketRcvBufSize := 1024
+    else
+        FDSocketRcvBufSize := Value;
 end;
 
 
@@ -2522,6 +2642,50 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomFtpCli.SetMultiThreaded(const Value : Boolean);
+begin
+    if Assigned(FDataSocket) then
+        FDataSocket.MultiThreaded := Value;
+    if Assigned(FControlSocket) then
+        FControlSocket.MultiThreaded := Value;
+    inherited SetMultiThreaded(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomFtpCli.SetTerminated(const Value: Boolean);
+begin
+    if Assigned(FDataSocket) then
+        FDataSocket.Terminated := Value;
+    if Assigned(FControlSocket) then
+        FControlSocket.Terminated := Value;
+    inherited SetTerminated(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomFtpCli.SetOnBgException(const Value: TIcsBgExceptionEvent); { V7.15 }
+begin
+    if Assigned(FDataSocket) then
+        FDataSocket.OnBgException := Value;
+    if Assigned(FControlSocket) then
+        FControlSocket.OnBgException := Value;
+    inherited SetOnBgException(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomFtpCli.SetOnMessagePump(const Value: TNotifyEvent);
+begin
+    if Assigned(FDataSocket) then
+        FDataSocket.OnMessagePump := Value;
+    if Assigned(FControlSocket) then
+        FControlSocket.OnMessagePump := Value;
+    inherited SetOnMessagePump(Value);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomFtpCli.StateChange(NewState : TFtpState);
 begin
     if FState <> NewState then begin
@@ -2650,14 +2814,37 @@ begin
     FMLSTFacts           := '';   { V2.90 supported MLST facts }
     FSupportedExtensions := [];   { V2.94 supported extensions }
     FLangSupport         := '';   { V7.01 supported languages }
+    FLastResponse        := '';
+    FErrorMessage        := '';
+    FStatusCode          := 0;
 
 { angus V7.00 always set proxy and SOCKS options before opening socket  }
     FControlSocket.SocksAuthentication := socksNoAuthentication;
+
+    if FConnectionType <> ftpHttpProxy then begin
+        { Disable connection thru HTTP proxy. It's not done in   }
+        { in the component because the last successful AuthType  }
+        { is cached to avoid slow detection. Changing property   }
+        { HttpTunnelServer clears the cache.                     }
+        FControlSocket.HttpTunnelServer := '';
+        FDataSocket.HttpTunnelServer    := '';
+    end;
+
     case FConnectionType of
-        ftpProxy:   FPassive := TRUE;
+       // ftpProxy:   FPassive := TRUE;     { V7.22 } 
         ftpSocks4:  FControlSocket.SocksLevel := '4';
         ftpSocks4A: FControlSocket.SocksLevel := '4A';
         ftpSocks5:  FControlSocket.SocksLevel := '5';
+        ftpHttpProxy : { V7.18 }
+            begin
+                FPassive := TRUE;
+                FControlSocket.HttpTunnelAuthType := HttpTunnelAuthType;
+                FControlSocket.HttpTunnelServer   := FHttpTunnelServer;
+                FControlSocket.HttpTunnelPort     := FHttpTunnelPort;
+                FControlSocket.HttpTunnelUsercode := FHttpTunnelUserCode;
+                FControlSocket.HttpTunnelPassword := FHttpTunnelPassword;
+                FControlSocket.OnHttpTunnelError  := HandleHttpTunnelError;
+            end;
     end;
     if FConnectionType in [ftpSocks4, ftpSocks4A, ftpSocks5] then begin
         FPassive := TRUE;
@@ -2666,10 +2853,11 @@ begin
         FControlSocket.SocksPort            := FSocksPort;
         FControlSocket.SocksUsercode        := FSocksUsercode;
         FControlSocket.SocksPassword        := FSocksPassword;
+        FControlSocket.OnSocksError         := HandleSocksError;
     end;
     StateChange(ftpDnsLookup);
     case FConnectionType of
-        ftpDirect, ftpSocks4, ftpSocks4A, ftpSocks5:
+        ftpDirect, ftpSocks4, ftpSocks4A, ftpSocks5, ftpHttpProxy: { V7.18 }
               FControlSocket.DnsLookup(FHostName);
         ftpProxy:
               FControlSocket.DnsLookup(FProxyServer);
@@ -2835,7 +3023,10 @@ begin
            (f_SSL_state(FControlSocket.Ssl) = SSL_ST_OK) then begin
             if (f_SSL_version(FControlSocket.Ssl) >= SSL3_VERSION) then begin
                 if not FControlSocket.SslStartRenegotiation then
-                    raise FtpException.Create('! SslStartRenegotiation failed');
+                begin
+                    HandleError('! SslStartRenegotiation failed');  { V7.14 }
+                    Exit;
+                end;
                 TSslFtpClient(Self).FRenegInitFlag := TRUE;
                 TriggerDisplay('! Re-negotiate SSL');
                 Exit;
@@ -2918,7 +3109,10 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomFtpCli.DoneQuitAsync;
 begin
-    FControlSocket.Close;
+   { It's IMO debatable whether or not the client has to call Close at all }
+   { since the server must close the connection after QUIT.                }
+   StateChange(ftpInternalReady); { V7.27 }
+   FControlSocket.CloseDelayed;  { V7.24 }
 end;
 
 
@@ -3379,7 +3573,7 @@ begin
     if Assigned(FControlSocket.OnSslShutDownComplete) then
         TSslFtpClient(Self).ControlSocketSslShutDownComplete(FControlSocket,
         TRUE, 426);
-{$ENDIF}                  
+{$ENDIF}
     DestroyLocalStream;
     FResumeAt := 0;        { V2.111 clear starting position }
 
@@ -4135,7 +4329,7 @@ begin
 
     if ErrCode <> 0 then begin
         FLastResponse := 'Unable to establish data connection - ' +
-                         GetWinsockErr(ErrCode);
+                         WSocketGetErrorMsgFromErrorCode(ErrCode);
         FStatusCode   := 550;
         SetErrorMessage;
         FDataSocket.Close;
@@ -4143,6 +4337,8 @@ begin
         TriggerRequestDone(FRequestResult);
     end
     else begin
+        if FDataSocket.SocketRcvBufSize <> FDSocketRcvBufSize then {AG V7.26}
+            FDataSocket.SocketRcvBufSize := FDSocketRcvBufSize;    {AG V7.26}
 {$IFDEF UseBandwidthControl}
         FBandwidthCount := 0; // Reset byte counter
         if ftpBandwidthControl in FOptions then begin
@@ -4185,7 +4381,7 @@ begin
 
     if ErrCode <> 0 then begin
         FLastResponse := 'Unable to establish data connection - ' +
-                         GetWinsockErr(ErrCode);
+                         WSocketGetErrorMsgFromErrorCode(ErrCode);
         FStatusCode   := 550;
         SetErrorMessage;
         FDataSocket.Close;
@@ -4193,6 +4389,8 @@ begin
         TriggerRequestDone(FRequestResult);
         Exit;
     end;
+    if FDataSocket.SocketSndBufSize <> FDSocketSndBufSize then {AG V7.26}
+        FDataSocket.SocketSndBufSize := FDSocketSndBufSize;    {AG V7.26}
 {$IFDEF UseBandwidthControl}
     FBandwidthCount := 0; // Reset byte counter
     if ftpBandwidthControl in FOptions then begin
@@ -4254,6 +4452,8 @@ begin
     FDataSocket.OnDataAvailable  := DataSocketGetDataAvailable;
     FDataSocket.OnDataSent       := nil;
     FDataSocket.HSocket          := aSocket;
+    if FDataSocket.SocketRcvBufSize <> FDSocketRcvBufSize then {AG V7.26}
+        FDataSocket.SocketRcvBufSize := FDSocketRcvBufSize;    {AG V7.26}
     FDataSocket.ComponentOptions := [wsoNoReceiveLoop];   { 26/10/02 } { 2.109 }
 {$IFDEF UseBandwidthControl}
     FBandwidthCount := 0; // Reset byte counter
@@ -4307,8 +4507,6 @@ procedure TCustomFtpCli.DataSocketPutSessionAvailable(
     ErrCode : word);
 var
     aSocket : TSocket;
-    SndBufSize : Integer;
-    OptLen     : Integer;
 begin
 {$IFNDEF NO_DEBUG_LOG}                                             { 2.105 }
     if CheckLogOptions(loProtSpecInfo) then
@@ -4340,15 +4538,9 @@ begin
     FDataSocket.OnDataSent       := DataSocketPutDataSent;
 {   FDataSocket.OnDisplay        := FOnDisplay; } { Debugging only }
     FDataSocket.HSocket          := aSocket;
+    if FDataSocket.SocketSndBufSize <> FDSocketSndBufSize then {AG V7.26}
+        FDataSocket.SocketSndBufSize := FDSocketSndBufSize;    {AG V7.26}
     FDataSocket.ComponentOptions := [wsoNoReceiveLoop];   { 26/10/02 }
-
-    OptLen := SizeOf(SndBufSize);
-    if WSocket_getsockopt(FDataSocket.HSocket, SOL_SOCKET,
-                          SO_SNDBUF,
-                          @SndBufSize, OptLen) = SOCKET_ERROR then begin
-        HandleError('winsock.getsockopt(SO_SNDBUF) failed');
-        Exit;
-    end;
 
     { Be sure to gracefully close the socket }
     FDataSocket.LingerOnOff   := wsLingerOff;
@@ -4388,7 +4580,8 @@ begin
     FDurationMsecs := 0;  { V2.113 }
 
     { Send first data block }
-    DataSocketPutDataSent(FDataSocket, 0);
+    if not FDataSocketSentFlag then     { V7.11 }    
+        DataSocketPutDataSent(FDataSocket, 0);
 end;
 
 
@@ -4428,6 +4621,9 @@ begin
     if FEofFlag or (not FStorAnswerRcvd) or (not FPutSessionOpened) then begin
         Exit;
     end;
+
+    if not FDataSocketSentFlag then    { V7.11 }    
+        FDataSocketSentFlag := TRUE;
 
     try
         if FZStreamState = ftpZStateSaveComp then
@@ -4787,11 +4983,13 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomFtpCli.SetPassive(NewValue: Boolean);
 begin
-    { Passive state must not be changed if Proxy or Socks connection        }
-    { type is selected                                                      }
+    { Passive mode must not be changed if HTTP-proxy or Socks connection    }
+    { type is selected. Most native FTP-proxies support both active and     }
+    { passive mode.                                                         }
     case FConnectionType of
-        ftpDirect: FPassive := NewValue;
-        ftpProxy, ftpSocks4, ftpSocks4A, ftpSocks5: FPassive := TRUE;
+        ftpDirect, ftpProxy     : FPassive := NewValue;             { V7.22 }
+        ftpSocks4, ftpSocks4A, 
+        ftpSocks5, ftpHttpProxy : FPassive := TRUE;                 { V7.22 }
     end;
 end;
 
@@ -4806,6 +5004,14 @@ begin
     FDataSocket.LingerOnOff        := wsLingerOff;
     FDataSocket.LingerTimeout      := 0;
     FDataSocket.ComponentOptions   := [wsoNoReceiveLoop];   { 26/10/02 } { 2.109 }
+{$IFDEF BUILTIN_THROTTLE}
+    if ftpBandwidthControl in FOptions then begin
+        FDataSocket.BandwidthLimit     := FBandwidthLimit;
+        FDataSocket.BandwidthSampling  := FBandwidthSampling;
+    end
+    else
+        FDataSocket.BandwidthLimit := 0;
+{$ENDIF}
 { angus V7.00 always set proxy and SOCKS options before opening socket  }
     FDataSocket.SocksAuthentication := socksNoAuthentication;
     case FConnectionType of
@@ -4819,6 +5025,13 @@ begin
         FDataSocket.SocksPort            := FSocksPort;
         FDataSocket.SocksUsercode        := FSocksUsercode;
         FDataSocket.SocksPassword        := FSocksPassword;
+    end
+    else if FConnectionType = ftpHttpProxy then begin { V7.18 }
+        FDataSocket.HttpTunnelAuthType := FControlSocket.HttpTunnelAuthType;
+        FDataSocket.HttpTunnelServer   := FHttpTunnelServer;
+        FDataSocket.HttpTunnelPort     := FHttpTunnelPort;
+        FDataSocket.HttpTunnelUsercode := FHttpTunnelUserCode;
+        FDataSocket.HttpTunnelPassword := FHttpTunnelPassword;
     end;
 end;
 
@@ -5100,6 +5313,15 @@ begin
     FDataSocket.LingerOnOff        := wsLingerOff;
     FDataSocket.LingerTimeout      := 0;
     FDataSocket.ComponentOptions   := [wsoNoReceiveLoop];   { 26/10/02 }
+    FDataSocketSentFlag            := FALSE;          { V7.11 }    
+{$IFDEF BUILTIN_THROTTLE}
+    if ftpBandwidthControl in FOptions then begin
+        FDataSocket.BandwidthLimit     := FBandwidthLimit;
+        FDataSocket.BandwidthSampling  := FBandwidthSampling;
+    end
+    else
+        FDataSocket.BandwidthLimit := 0;
+{$ENDIF}
 { angus V7.00 always set proxy and SOCKS options before opening socket  }
     FDataSocket.SocksAuthentication := socksNoAuthentication;
     case FConnectionType of
@@ -5113,6 +5335,13 @@ begin
         FDataSocket.SocksPort            := FSocksPort;
         FDataSocket.SocksUsercode        := FSocksUsercode;
         FDataSocket.SocksPassword        := FSocksPassword;
+    end
+    else if FConnectionType = ftpHttpProxy then begin { V7.18 }
+        FDataSocket.HttpTunnelAuthType := FControlSocket.HttpTunnelAuthType;
+        FDataSocket.HttpTunnelServer   := FHttpTunnelServer;
+        FDataSocket.HttpTunnelPort     := FHttpTunnelPort;
+        FDataSocket.HttpTunnelUsercode := FHttpTunnelUserCode;
+        FDataSocket.HttpTunnelPassword := FHttpTunnelPassword;
     end;
 end;
 
@@ -5382,6 +5611,10 @@ var
     IPAddr       : TInAddr;
     StartDataPort: DWORD;
 begin
+    if not FConnected then begin
+        HandleError('FTP component not connected');
+        Exit;
+    end;
     { Makes the data socket listening for data connection }
     FDataSocket.Proto              := 'tcp';
     FDataSocket.Addr               := '0.0.0.0';  { INADDR_ANY }
@@ -5389,6 +5622,15 @@ begin
     FDataSocket.OnSessionAvailable := nil;
     FDataSocket.OnSessionClosed    := nil;
     FDataSocket.OnDataAvailable    := nil;
+    FDataSocketSentFlag            := FALSE;     { V7.11 }
+{$IFDEF BUILTIN_THROTTLE}
+    if ftpBandwidthControl in FOptions then begin
+        FDataSocket.BandwidthLimit     := FBandwidthLimit;
+        FDataSocket.BandwidthSampling  := FBandwidthSampling;
+    end
+    else
+        FDataSocket.BandwidthLimit := 0;
+{$ENDIF}
 
     if FPassive then
         DataPort := 0    { Not needed, makes compiler happy }
@@ -5519,12 +5761,40 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomFtpCli.HandleHttpTunnelError(
+    Sender                : TObject;
+    ErrCode               : Word;
+    TunnelServerAuthTypes : THttpTunnelServerAuthTypes;
+    const Msg             : String);
+begin
+    FLastResponse := Msg;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomFtpCli.HandleSocksError(
+    Sender  : TObject;
+    ErrCode : Integer;
+    Msg     : String);
+begin
+    FLastResponse := Msg;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TCustomFtpCli.ControlSocketSessionConnected(Sender: TObject; ErrCode: Word);
 begin
     { Do not trigger the client SessionConnected from here. We must wait }
     { to have received the server banner.                                }
     if ErrCode <> 0 then begin
-        FLastResponse  := '500 Connect error - ' + GetWinsockErr(ErrCode) ;
+        if (ErrCode >= WSABASEERR) and (ErrCode < ICS_SOCKS_BASEERR) then
+            FLastResponse  := '500 Connect error - ' + GetWinsockErr(ErrCode)
+        else if WSocketIsProxyErrorCode(ErrCode) then
+            FLastResponse  := '500 Connect error - ' + FLastResponse +
+                              ' (#' + _IntToStr(ErrCode) + ')'
+        else
+            FLastResponse  := '500 Connect Unknown Error (#' +
+                              _IntToStr(ErrCode) + ')';
         FStatusCode    := 500;
         FRequestResult := FStatusCode;  { Heedong Lim, 05/14/1999 }
         SetErrorMessage; { Heedong Lim, 05/14/1999 }
@@ -5778,7 +6048,18 @@ end;
 procedure TCustomFtpCli.ControlSocketSessionClosed(
     Sender  : TObject;
     ErrCode : Word);
+var
+    LClosedState : TFtpState;
 begin
+    { Sometimes ErrCode equals ECONNRESET after QUIT response has been received
+      OK when server and client are on the same host. Seen on MacOS and was
+      reported in TWSocket list for Windows as well. In such a case we may
+      safely ignore an error here.                                             }
+    if (ErrCode <> 0) and (FState = ftpInternalReady) and              { V7.28 }
+       ((FRequestType = ftpQuitAsync) or (FFctPrv = ftpFctQuit)) then
+        ErrCode := 0;
+
+    LClosedState := FState;
     if FConnected then begin
         FConnected := FALSE;
         if FState <> ftpAbort then
@@ -5788,12 +6069,13 @@ begin
     end;
     if FState <> ftpAbort then
         StateChange(ftpInternalReady);
-    if not (FRequestType in [ftpRqAbort]) then begin
-        if ErrCode <> 0 then begin
+    if FRequestType <> ftpRqAbort then begin
+        if (ErrCode <> 0) or ((FRequestType <> ftpQuitAsync) and
+           (LClosedState in [ftpWaitingBanner, ftpWaitingResponse])) then begin
             FLastResponse  := '500 Control connection closed - ' +
-                              GetWinsockErr(ErrCode) ;
+                               WSocketGetErrorMsgFromErrorCode(ErrCode);
             FStatusCode    := 500;
-            FRequestResult :=  FStatusCode;    { 06 apr 2002 }
+            FRequestResult := FStatusCode;    { 06 apr 2002 }
             SetErrorMessage;
         end;
         TriggerRequestDone(FRequestResult);
@@ -6452,8 +6734,11 @@ function TFtpClient.WaitUntilReady : Boolean;
 var
     DummyHandle     : THandle;
 begin
-    Result    := TRUE;           { Assume success }
+{$IFNDEF WIN64}                  { V7.25 }
+    Result    := TRUE;           { Make dcc32 happy }
+{$ENDIF}
     FTimeStop := LongInt(GetTickCount) + LongInt(FTimeout) * 1000;
+    DummyHandle := INVALID_HANDLE_VALUE;
     while TRUE do begin
         if FState in [ftpReady, ftpInternalReady] then begin
             { Back to ready state, the command is finished }
@@ -6461,20 +6746,7 @@ begin
             break;
         end;
 
-        {$IFNDEF VER80}
-        { Do not use 100% CPU }
-        if ftpWaitUsingSleep in FOptions then
-            Sleep(0)
-        else begin
-            DummyHandle := INVALID_HANDLE_VALUE;
-            MsgWaitForMultipleObjects(0, {PChar(0)^}DummyHandle, FALSE, 1000,
-                                      QS_ALLINPUT {or QS_ALLPOSTMESSAGE});
-        end;
-
-        MessagePump;
-        if {$IFNDEF NOFORMS} Application.Terminated or
-           {$ELSE}           Terminated or
-           {$ENDIF}
+        if Terminated or
            ((FTimeout > 0) and (LongInt(GetTickCount) > FTimeStop)) then begin
             { Timeout occured }
             AbortAsync;
@@ -6483,7 +6755,13 @@ begin
             Result        := FALSE; { Command failed }
             break;
         end;
-        {$ENDIF}
+
+        { Do not use 100% CPU }
+        if ftpWaitUsingSleep in FOptions then
+            Sleep(0)
+        else
+            MsgWaitForMultipleObjects(0, DummyHandle, FALSE, 1000, QS_ALLINPUT);
+        MessagePump;
     end;
 end;
 
@@ -6538,6 +6816,34 @@ procedure TSslFtpClient.AuthAsync;
 var
     S : String;
 begin    
+    { Some SSL versions and some OpenSSL versions do not support renegotiation }
+    { In such a case we fake an OK response if the SSL is already established. }
+    if FConnected and Assigned(FControlSocket.Ssl) and                 { V7.14 }
+       (f_SSL_state(FControlSocket.Ssl) = SSL_ST_OK) then
+    begin
+        if (f_SSL_version(FControlSocket.Ssl) < SSL3_VERSION) or
+           IsSslRenegotiationDisallowed(FControlSocket) then
+        begin
+            if not CheckReady then
+                Exit;
+            if not FHighLevelFlag then
+                FRequestType := ftpAuthAsync;
+            FFctPrv := ftpFctAuth;
+            FOkResponses[0]     := 234;
+            FOkResponses[1]     := 0;
+            FStatusCode         := 234;
+            FLastMultiResponse  := '';
+            FLastResponse       := '234 OK Secure connection already established';
+            FRequestDoneFlag    := FALSE;
+            FNext               := NextExecAsync;
+            FDoneAsync          := nil;
+            FErrormessage       := '';
+            StateChange(ftpWaitingResponse);
+            TriggerRequestDone(0);
+            Exit;
+        end;
+    end;
+
     if FSslType = sslTypeAuthSsl then
         S := 'AUTH SSL'
     else
