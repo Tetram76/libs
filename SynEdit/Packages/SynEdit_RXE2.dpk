@@ -1,6 +1,7 @@
-package SynEdit_RXE;
+package SynEdit_RXE2;
 
 {$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -11,17 +12,19 @@ package SynEdit_RXE;
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
+{$OPTIMIZATION OFF}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
 {$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES OFF}
+{$STACKFRAMES ON}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST ON}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'SynEdit component suite runtime'}
 {$RUNONLY}
 {$IMPLICITBUILD OFF}
@@ -130,7 +133,7 @@ contains
   SynHighlighterDWS in '..\Source\SynHighlighterDWS.pas',
   SynHighlighterVrml97 in '..\Source\SynHighlighterVrml97.pas',
   SynHighlighterEiffel in '..\Source\SynHighlighterEiffel.pas',
-  SynUnicode in '..\Source\SynUnicode.pas',
-  SynUsp10 in '..\Source\SynUsp10.pas';
+  SynUnicode in '..\Source\SynUnicode.pas'
+{$IFNDEF CPUX64}, SynUsp10 in '..\Source\SynUsp10.pas'{$ENDIF};
 
 end.
