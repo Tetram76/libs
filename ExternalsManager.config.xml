@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1" standalone="no"?>
+<?xml version="1.0" encoding="Windows-1252" standalone="no"?>
 <config>
   <TempFolder>.\temp</TempFolder>
   <SVNExePath>C:\Program Files\TortoiseSVN\bin</SVNExePath>
