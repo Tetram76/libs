@@ -6,14 +6,10 @@ unit Main;
 
 interface
 
-{$include Compilers.inc}
-
-{$ifdef COMPILER_7_UP}
-  // For some things to work we need code, which is classified as being unsafe for .NET.
-  {$warn UNSAFE_TYPE off}
-  {$warn UNSAFE_CAST off}
-  {$warn UNSAFE_CODE off}
-{$endif COMPILER_7_UP}
+// For some things to work we need code, which is classified as being unsafe for .NET.
+{$warn UNSAFE_TYPE off}
+{$warn UNSAFE_CAST off}
+{$warn UNSAFE_CODE off}
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
@@ -108,7 +104,7 @@ begin
     for I := 0 to High(Strings) do
     begin
       Head := Tail;
-      while not (Tail^ in [WideChar(#0), WideChar(#13)]) do
+      while not (Ord(Tail^) in [0, 13]) do
         Inc(Tail);
       SetString(Strings[I], Head, Tail - Head);
       // Skip carriage return and linefeed.

@@ -13,17 +13,13 @@ unit DrawTreeDemo;
 
 {.$define GraphicEx}
 
-{$include Compilers.inc}
-
-{$ifdef COMPILER_7_UP}
-  // For some things to work we need code, which is classified as being unsafe for .NET.
-  // Additionally, there are a few platform warnings, which also have no meaning at all for this project.
-  {$warn UNSAFE_TYPE off}
-  {$warn UNSAFE_CAST off}
-  {$warn UNSAFE_CODE off}
-  {$warn SYMBOL_PLATFORM off}
-  {$warn UNIT_PLATFORM off}
-{$endif COMPILER_7_UP}
+// For some things to work we need code, which is classified as being unsafe for .NET.
+// Additionally, there are a few platform warnings, which also have no meaning at all for this project.
+{$warn UNSAFE_TYPE off}
+{$warn UNSAFE_CAST off}
+{$warn UNSAFE_CODE off}
+{$warn SYMBOL_PLATFORM off}
+{$warn UNIT_PLATFORM off}
 
 interface
 
@@ -460,7 +456,7 @@ begin
               if (NodeWidth - 2 * Margin) > (Right - Left) then
                 S := ShortenString(Canvas.Handle, S, Right - Left);
             end;
-            DrawTextW(Canvas.Handle, PWideChar(S), Length(S), R, DT_TOP or DT_LEFT or DT_VCENTER or DT_SINGLELINE, False);
+            DrawTextW(Canvas.Handle, PWideChar(S), Length(S), R, DT_TOP or DT_LEFT or DT_VCENTER or DT_SINGLELINE);
           end;
         end;
       1:
