@@ -1190,7 +1190,7 @@ end;
 
 function CanUseTaskDialog: Boolean;
 begin
-  Result := (Win32MajorVersion >= 6) and UseLatestCommonDialogs and ThemeServices.ThemesEnabled;
+  Result := (Win32MajorVersion >= 6) and UseLatestCommonDialogs and StyleServices.Enabled;
 end;
 
 function MAKELANGID(p, s: word): Word;
