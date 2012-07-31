@@ -867,7 +867,7 @@ procedure TCRFurtifLight.CMButtonPressed(var Message: TMessage);
 var
   Sender: TCRFurtifLight;
 begin
-  if Message.WParam = FGroupIndex then begin
+  if Message.WParam = WPARAM(FGroupIndex) then begin
     Sender := TCRFurtifLight(Message.LParam);
     if Sender <> Self then begin
       if Sender.Down and FDown then begin

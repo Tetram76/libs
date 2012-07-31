@@ -56,7 +56,7 @@
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<Icon_MainIcon>MediaKit_Icon.ico</Icon_MainIcon>
-			<DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+			<DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
 			<VerInfo_Locale>1033</VerInfo_Locale>
 			<DCC_UsePackage>vcl;vclimg;VclSmp;vcldb;bdertl;PngComponentsD12;$(DCC_UsePackage)</DCC_UsePackage>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -87,14 +87,14 @@
 			<DelphiCompile Include="$(MainSource)">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
-			<DCCReference Include="HarmFade\HARMFADE.dcr"/>
-			<DCCReference Include="Memory Table\Memorytable.dcr"/>
-			<DCCReference Include="PrintObject\PrintObject.dcr"/>
-			<DCCReference Include="VersLabP\VerslabP.dcr"/>
-			<DCCReference Include="ShellNotification\kbShellNotify.dcr"/>
-			<DCCReference Include="browsedirectory\Browss.dcr"/>
-			<DCCReference Include="thandle\HANDLES.dcr"/>
-			<DCCReference Include="ComboCheck\ComboCheck.dcr"/>
+			<DCCReference Include="HARMFADE.dcr"/>
+			<DCCReference Include="Memorytable.dcr"/>
+			<DCCReference Include="PrintObject.dcr"/>
+			<DCCReference Include="VerslabP.dcr"/>
+			<DCCReference Include="kbShellNotify.dcr"/>
+			<DCCReference Include="Browss.dcr"/>
+			<DCCReference Include="HANDLES.dcr"/>
+			<DCCReference Include="ComboCheck.dcr"/>
 			<DCCReference Include="idrunner\idISAPIRunner.dcr"/>
 			<DCCReference Include="vcl.dcp"/>
 			<DCCReference Include="rtl.dcp"/>
@@ -104,32 +104,32 @@
 			<DCCReference Include="bdertl.dcp"/>
 			<DCCReference Include="VclSmp.dcp"/>
 			<DCCReference Include="PngComponentsD12.dcp"/>
-			<DCCReference Include="HarmFade\HARMFADE.PAS"/>
-			<DCCReference Include="MyBarCode\MyBarCode.pas"/>
-			<DCCReference Include="PrintObject\PrintObject.pas"/>
-			<DCCReference Include="ProgressBar\ProgressBar.pas"/>
-			<DCCReference Include="ReadOnlycheckBox\ReadOnlyCheckBox.pas"/>
-			<DCCReference Include="ScanEdit\ScanEdit.pas"/>
-			<DCCReference Include="VDTButton\RoundButton.pas"/>
-			<DCCReference Include="VDTButton\VDTButton.pas"/>
-			<DCCReference Include="VersLabP\VerslabP.pas"/>
-			<DCCReference Include="Labeled\DBEditLabeled.pas"/>
-			<DCCReference Include="ShellNotification\kbShellNotify.pas"/>
-			<DCCReference Include="ShellNotification\kbsnPIDL.pas"/>
-			<DCCReference Include="BrowseDirectory\Browss.pas"/>
-			<DCCReference Include="D:\Common\Divers.pas"/>
-			<DCCReference Include="THandle\HANDLES.PAS"/>
-			<DCCReference Include="ComboCheck\ComboCheck.pas"/>
-			<DCCReference Include="PrintObject\FormPreviewPrintObject.pas">
+			<DCCReference Include="HARMFADE.PAS"/>
+			<DCCReference Include="MyBarCode.pas"/>
+			<DCCReference Include="PrintObject.pas"/>
+			<DCCReference Include="ProgressBar.pas"/>
+			<DCCReference Include="ReadOnlyCheckBox.pas"/>
+			<DCCReference Include="ScanEdit.pas"/>
+			<DCCReference Include="RoundButton.pas"/>
+			<DCCReference Include="VDTButton.pas"/>
+			<DCCReference Include="VerslabP.pas"/>
+			<DCCReference Include="DBEditLabeled.pas"/>
+			<DCCReference Include="kbShellNotify.pas"/>
+			<DCCReference Include="kbsnPIDL.pas"/>
+			<DCCReference Include="Browss.pas"/>
+			<DCCReference Include="Divers.pas"/>
+			<DCCReference Include="HANDLES.PAS"/>
+			<DCCReference Include="ComboCheck.pas"/>
+			<DCCReference Include="FormPreviewPrintObject.pas">
 				<Form>FormPreview</Form>
 			</DCCReference>
-			<DCCReference Include="Unrar\UnrarComp.pas"/>
-			<DCCReference Include="unrar\UnRAR.pas"/>
-			<DCCReference Include="VDTButton\CRFurtif.pas"/>
-			<DCCReference Include="Labeled\EditLabeled.pas"/>
-			<DCCReference Include="Labeled\LinkControls.pas"/>
-			<DCCReference Include="Labeled\EditLabeled_register.pas"/>
-			<DCCReference Include="Labeled\LabeledCheckBox.pas"/>
+			<DCCReference Include="UnrarComp.pas"/>
+			<DCCReference Include="UnRAR.pas"/>
+			<DCCReference Include="CRFurtif.pas"/>
+			<DCCReference Include="EditLabeled.pas"/>
+			<DCCReference Include="LinkControls.pas"/>
+			<DCCReference Include="EditLabeled_register.pas"/>
+			<DCCReference Include="LabeledCheckBox.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
