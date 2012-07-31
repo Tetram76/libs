@@ -1,2 +1,0 @@
-- Compiler le paquet SynEdit\packages\SynEdit_R7.dpk
-- Compiler puis Installer le paquet SynEdit\packages\SynEdit_D7.dpk
