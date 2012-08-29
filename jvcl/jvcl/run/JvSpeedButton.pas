@@ -34,7 +34,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 13332 2012-06-12 15:22:24Z obones $
+// $Id: JvSpeedButton.pas 13392 2012-08-11 23:20:08Z ahuser $
 
 unit JvSpeedButton;
 
@@ -495,8 +495,8 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 13332 $';
-    Date: '$Date: 2012-06-12 17:22:24 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13392 $';
+    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1225,7 +1225,7 @@ begin
   PaintRect := Rect(0, 0, Width, Height);
 
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if ThemeServices.Enabled then
   begin
     if ControlInGlassPaint(Self) then
       FillRect(Canvas.Handle, ClientRect, GetStockObject(BLACK_BRUSH))

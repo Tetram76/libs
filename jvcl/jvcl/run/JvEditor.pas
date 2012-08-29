@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvEditor.pas 13375 2012-06-27 14:14:06Z ahuser $
+// $Id: JvEditor.pas 13407 2012-08-28 19:29:35Z ahuser $
 
 unit JvEditor;
 
@@ -381,8 +381,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditor.pas $';
-    Revision: '$Revision: 13375 $';
-    Date: '$Date: 2012-06-27 16:14:06 +0200 (mer., 27 juin 2012) $';
+    Revision: '$Revision: 13407 $';
+    Date: '$Date: 2012-08-28 21:29:35 +0200 (mar., 28 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -631,7 +631,14 @@ begin
   if Len < X then
   begin
     SetLength(BegLine, X - 1);
-    FillChar(BegLine[Len + 1], X - Len - 1, ' ');
+    P := PChar(BegLine) + Len;
+    Len := X - Len - 1;
+    while Len > 0 do
+    begin
+      P^ := ' ';
+      Inc(P);
+      Dec(Len);
+    end;
   end;
 
   JvEditor.LockUpdate;

@@ -74,7 +74,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorage.pas 13306 2012-06-03 20:21:44Z jfudickar $
+// $Id: JvAppStorage.pas 13405 2012-08-20 21:33:08Z jfudickar $
 
 unit JvAppStorage;
 
@@ -992,8 +992,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorage.pas $';
-    Revision: '$Revision: 13306 $';
-    Date: '$Date: 2012-06-03 22:21:44 +0200 (dim., 03 juin 2012) $';
+    Revision: '$Revision: 13405 $';
+    Date: '$Date: 2012-08-20 23:33:08 +0200 (lun., 20 août 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -2818,9 +2818,9 @@ begin
   // Note: we do not add a call to IsDefaultPropertyValue here because it would
   // return True for any sub component which is not desirable as we want to
   // always store sub classes whether they are components or not.
-  if not StorageOptions.StoreDefaultValues and (
-    not Assigned(P.GetProc) or not Assigned(P.SetProc) or
-    not IsStoredProp(PersObj, P)) then
+  if not StorageOptions.StoreDefaultValues
+    and (not Assigned(P.GetProc) or not Assigned(P.SetProc) or not IsStoredProp(PersObj, P))
+    and (PropType(PersObj, PropName) <> tkClass) then // Classes can have data without having a stored property
     Exit;
 
   case PropType(PersObj, PropName) of
@@ -2891,7 +2891,8 @@ begin
         begin
           if SubObj is TStrings then
           begin
-            WriteStringList(Path, TStrings(SubObj))
+            if StorageOptions.StoreDefaultValues or (TStrings(SubObj).Count > 0) then
+              WriteStringList(Path, TStrings(SubObj))
           end
           else
           begin

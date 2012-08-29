@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacement.pas 13145 2011-11-02 21:15:19Z ahuser $
+// $Id: JvFormPlacement.pas 13404 2012-08-19 17:58:12Z ahuser $
 
 unit JvFormPlacement;
                                               
@@ -280,8 +280,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacement.pas $';
-    Revision: '$Revision: 13145 $';
-    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
+    Revision: '$Revision: 13404 $';
+    Date: '$Date: 2012-08-19 19:58:12 +0200 (dim., 19 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1174,7 +1174,7 @@ begin
   if KeyString <> '' then
   begin
     SaveStrValue := VarToStr(SaveValue);
-    SaveStrValue := XorEncode(KeyString, SaveStrValue);
+    SaveStrValue := XorEncodeString(KeyString, SaveStrValue);
     StoredValues.Storage.WriteString(PathName, SaveStrValue);
   end
   else
@@ -1203,9 +1203,9 @@ begin
   if KeyString <> '' then
   begin
     DefaultStrValue := VarToStr(Value);
-    DefaultStrValue := XorEncode(KeyString, DefaultStrValue);
+    DefaultStrValue := XorEncodeString(KeyString, DefaultStrValue);
     RestoreStrValue := StoredValues.Storage.ReadString(PathName, DefaultStrValue);
-    RestoreStrValue := XorDecode(KeyString, RestoreStrValue);
+    RestoreStrValue := XorDecodeString(KeyString, RestoreStrValue);
     RestoreValue := RestoreStrValue;
   end
   else

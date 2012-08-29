@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStringHolder.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvStringHolder.pas 13404 2012-08-19 17:58:12Z ahuser $
 
 unit JvStringHolder;
 
@@ -201,8 +201,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStringHolder.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13404 $';
+    Date: '$Date: 2012-08-19 19:58:12 +0200 (dim., 19 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -217,7 +217,8 @@ uses
   JvJCLUtils, JvResources, JvConsts, JvTypes;
 
 const
-  XorVersion = 1;
+  AnsiXorVersion = 1;
+  XorVersion = 2;
 
 function ExtractName(const Items: string; var Pos: Integer): string;
 var
@@ -785,8 +786,15 @@ begin
     while not Reader.EndOfList do
     begin
       Tmp := Reader.ReadString;
-      if FReserved >= XorVersion then
-        Strings.Add(XorDecode(KeyString, Tmp))
+      if FReserved >= AnsiXorVersion then
+      begin
+        if FReserved >= XorVersion then
+          Strings.Add(XorDecodeString(KeyString, Tmp))
+        else
+          {$WARNINGS OFF} // XorDecode is deprecated, but we need it for backward compatibility, so hide the warning
+          Strings.Add(XorDecode(KeyString, Tmp));
+          {$WARNINGS ON}
+      end
       else
         Strings.Add(string(XorString(ShortString(KeyString), ShortString(Tmp))));
     end;
@@ -837,7 +845,7 @@ begin
   Writer.WriteListBegin;
   Writer.WriteString(KeyString);
   for I := 0 to Strings.Count - 1 do
-    Writer.WriteString(XorEncode(KeyString, Strings[I]));
+    Writer.WriteString(XorEncodeString(KeyString, Strings[I]));
   Writer.WriteListEnd;
 end;
 

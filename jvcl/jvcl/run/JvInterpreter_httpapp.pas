@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_httpapp.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvInterpreter_httpapp.pas 13401 2012-08-19 08:35:09Z ahuser $
 
 unit JvInterpreter_httpapp;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_httpapp.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13401 $';
+    Date: '$Date: 2012-08-19 10:35:09 +0200 (dim., 19 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -52,8 +52,12 @@ const
 implementation
 
 uses
-  SysUtils, Classes,
-  HTTPApp;
+  {$IFDEF HAS_UNITSCOPE}
+  Web.HTTPApp,
+  {$ELSE}
+  HTTPApp,
+  {$ENDIF HAS_UNITSCOPE}
+  SysUtils, Classes;
 
 { function ReadClient(var Buffer; Count: Integer): Integer; }
 

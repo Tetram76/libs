@@ -27,7 +27,7 @@ Known Issues:
        example DecimalPlaces/Decimal, CheckMinValue (name indicates action?
        maybe better: TJvValidateEdit's HasMinValue) etc.
 -----------------------------------------------------------------------------}
-// $Id: JvBaseEdits.pas 13329 2012-06-12 14:28:33Z obones $
+// $Id: JvBaseEdits.pas 13392 2012-08-11 23:20:08Z ahuser $
 
 unit JvBaseEdits;
 
@@ -309,8 +309,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseEdits.pas $';
-    Revision: '$Revision: 13329 $';
-    Date: '$Date: 2012-06-12 16:28:33 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13392 $';
+    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -319,7 +319,6 @@ implementation
 
 uses
   SysUtils, Math, Graphics,
-//  JclLogic,
   JvJCLUtils, JvCalc, JvConsts, JvResources, JclSysUtils;
 
 {$R JvBaseEdits.Res}
@@ -932,7 +931,6 @@ begin
     Invalidate;
 end;
 
-
 procedure TJvCustomNumEdit.WMPaint(var Msg: TWMPaint);
 var
   S: string;
@@ -945,9 +943,6 @@ begin
     FFocused and not PopupVisible, FCanvas, Msg) then
     inherited;
 end;
-
-
-
 
 procedure TJvCustomNumEdit.FontChanged;
 begin
@@ -1029,7 +1024,6 @@ begin
   begin
     Bmp := TBitmap.Create;
     try
-      //Bmp.Handle := LoadBitmap(HInstance, sCalcBmp);
       Bmp.LoadFromResourceName(HInstance, sCalcBmp);
       GCalcImageIndex := DefaultImages.AddMasked(Bmp, clFuchsia);
     finally

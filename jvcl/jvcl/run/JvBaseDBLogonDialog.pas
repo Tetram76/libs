@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBLogonDialog.pas 13388 2012-07-25 21:03:51Z jfudickar $
+// $Id: JvBaseDBLogonDialog.pas 13406 2012-08-24 20:05:23Z jfudickar $
 
 unit JvBaseDBLogonDialog;
 
@@ -422,8 +422,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBLogonDialog.pas $';
-    Revision: '$Revision: 13388 $';
-    Date: '$Date: 2012-07-25 23:03:51 +0200 (mer., 25 juil. 2012) $';
+    Revision: '$Revision: 13406 $';
+    Date: '$Date: 2012-08-24 22:05:23 +0200 (ven., 24 août 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1056,6 +1056,7 @@ end;
 
 procedure TJvBaseDBLogonDialog.FillAllConnectionLists;
 begin
+  FillAllComoboBoxes;
   FillConnectionList;
   FillDatabaseTreeView;
   FillGroupTreeView;

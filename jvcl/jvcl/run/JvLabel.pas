@@ -55,7 +55,7 @@ Changes:
 Known Issues:
 * AutoSize calculations aren't correct when RoundedFrame and/or Shadow are active
 -----------------------------------------------------------------------------}
-// $Id: JvLabel.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvLabel.pas 13392 2012-08-11 23:20:08Z ahuser $
 
 unit JvLabel;
 
@@ -321,8 +321,8 @@ procedure CalculateAngleInfo(Canvas: TCanvas; Angle: Integer; Text: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLabel.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13392 $';
+    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -498,7 +498,7 @@ begin
   FChangeLink.OnChange := DoImagesChange;
   ControlStyle := ControlStyle + [csOpaque, csReplicatable];
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if ThemeServices.Enabled then
     ControlStyle := ControlStyle - [csOpaque];
   {$ENDIF JVCLThemesEnabled}
 
@@ -1065,7 +1065,7 @@ begin
   if Transparent <> Value then
   begin
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if ThemeServices.Enabled then
       Value := True; // themes aware Labels are always transparent
     {$ENDIF JVCLThemesEnabled}
     if Value then
@@ -1198,7 +1198,7 @@ begin
     NeedRepaint := not Transparent and
       (
       {$IFDEF JVCLThemesEnabled}
-      ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} or
+      ThemeServices.Enabled or
       {$ENDIF JVCLThemesEnabled}
       (FHotTrack and not (FDragging or OtherDragging)));
 
@@ -1225,7 +1225,7 @@ begin
     NeedRepaint := not Transparent and
       (
       {$IFDEF JVCLThemesEnabled}
-      ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} or
+      ThemeServices.Enabled or
       {$ENDIF JVCLThemesEnabled}
       (FHotTrack and (FDragging or not OtherDragging)));
 

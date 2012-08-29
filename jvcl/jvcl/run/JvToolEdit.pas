@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 13329 2012-06-12 14:28:33Z obones $
+// $Id: JvToolEdit.pas 13392 2012-08-11 23:20:08Z ahuser $
 
 unit JvToolEdit;
 
@@ -1108,8 +1108,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 13329 $';
-    Date: '$Date: 2012-06-12 16:28:33 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13392 $';
+    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1119,6 +1119,9 @@ implementation
 uses
   RTLConsts, Math, MaskUtils,
   MultiMon,
+  {$IFDEF COMPILER16_UP}
+  Vcl.Themes,
+  {$ENDIF COMPILER16_UP}
   JclFileUtils, JclStrings,
   JvPickDate, JvJCLUtils, JvJVCLUtils,
   JvThemes, JvResources, JclSysUtils;
@@ -1386,6 +1389,10 @@ const
   AlignStyle: array [Boolean, TAlignment] of DWORD =
     ((WS_EX_LEFT, WS_EX_RIGHT, WS_EX_LEFT),
     (WS_EX_RIGHT, WS_EX_LEFT, WS_EX_LEFT));
+  {$IFDEF COMPILER16_UP}
+  ColorStates: array[Boolean] of TStyleColor = (scEditDisabled, scEdit);
+  FontColorStates: array[Boolean] of TStyleFont = (sfEditBoxTextDisabled, sfEditBoxTextNormal);
+  {$ENDIF COMPILER16_UP}
 var
   LTextWidth, X: Integer;
   EditRect: TRect;
@@ -1401,16 +1408,14 @@ begin
     ChangeBiDiModeAlignment(AAlignment);
   if StandardPaint and not (csPaintCopy in TEd(Editor).ControlState) then
   begin
-    if SysLocale.MiddleEast and TEd(Editor).HandleAllocated and (TEd(Editor).IsRightToLeft) then
+    if SysLocale.MiddleEast and TEd(Editor).HandleAllocated and TEd(Editor).IsRightToLeft then
     begin { This keeps the right aligned text, right aligned }
-      ExStyle := DWORD(GetWindowLong(TEd(Editor).Handle, GWL_EXSTYLE)) and (not WS_EX_RIGHT) and
-        (not WS_EX_RTLREADING) and (not WS_EX_LEFTSCROLLBAR);
+      ExStyle := DWORD(GetWindowLong(TEd(Editor).Handle, GWL_EXSTYLE)) and not (WS_EX_RIGHT or WS_EX_RTLREADING or WS_EX_LEFTSCROLLBAR);
       if TEd(Editor).UseRightToLeftReading then
         ExStyle := ExStyle or WS_EX_RTLREADING;
       if TEd(Editor).UseRightToLeftScrollBar then
         ExStyle := ExStyle or WS_EX_LEFTSCROLLBAR;
-      ExStyle := ExStyle or
-        AlignStyle[TEd(Editor).UseRightToLeftAlignment, AAlignment];
+      ExStyle := ExStyle or AlignStyle[TEd(Editor).UseRightToLeftAlignment, AAlignment];
       if DWORD(GetWindowLong(TEd(Editor).Handle, GWL_EXSTYLE)) <> ExStyle then
         SetWindowLong(TEd(Editor).Handle, GWL_EXSTYLE, ExStyle);
     end;
@@ -1465,7 +1470,15 @@ begin
         SaveDC(ACanvas.Handle);
         try
           ACanvas.Brush.Style := bsClear;
-          ACanvas.Font.Color := DisabledTextColor;
+          {$IFDEF COMPILER16_UP}
+          if StyleServices.Enabled and not StyleServices.IsSystemStyle then
+          begin
+            ACanvas.Brush.Color := StyleServices.GetStyleColor(ColorStates[Editor.Enabled]);
+            ACanvas.Font.Color := StyleServices.GetStyleFontColor(FontColorStates[Editor.Enabled]);
+          end
+          else
+          {$ENDIF COMPILER16_UP}
+            ACanvas.Font.Color := DisabledTextColor;
           ACanvas.TextRect(EditRect, X, EditRect.Top, S);
         finally
           RestoreDC(ACanvas.Handle, -1);
@@ -1473,7 +1486,15 @@ begin
       end
       else
       begin
-        Brush.Color := TEd(Editor).Color;
+        {$IFDEF COMPILER16_UP}
+        if StyleServices.Enabled and not StyleServices.IsSystemStyle then
+        begin
+          ACanvas.Brush.Color := StyleServices.GetStyleColor(ColorStates[Editor.Enabled]);
+          ACanvas.Font.Color := StyleServices.GetStyleFontColor(FontColorStates[Editor.Enabled]);
+        end
+        else
+        {$ENDIF COMPILER16_UP}
+          Brush.Color := TEd(Editor).Color;
         ACanvas.TextRect(EditRect, X, EditRect.Top, S);
       end;
     end;
@@ -2085,9 +2106,19 @@ begin
     Result := inherited DoEraseBackground(Canvas, Param)
   else
   begin
-    Canvas.Brush.Color := FDisabledColor;
-    Canvas.Brush.Style := bsSolid;
-    Canvas.FillRect(ClientRect);
+    {$IFDEF COMPILER16_UP}
+    if StyleServices.Enabled and not StyleServices.IsSystemStyle then
+    begin
+      // Ignore FDisabldColor. The Style dictates the color
+      Result := inherited DoEraseBackground(Canvas, Param);
+    end
+    else
+    {$ENDIF COMPILER16_UP}
+    begin
+      Canvas.Brush.Color := FDisabledColor;
+      Canvas.Brush.Style := bsSolid;
+      Canvas.FillRect(ClientRect);
+    end;
   end;
 end;
 

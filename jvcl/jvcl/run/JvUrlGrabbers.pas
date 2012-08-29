@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvUrlGrabbers.pas 13201 2012-02-23 08:37:27Z obones $
+// $Id: JvUrlGrabbers.pas 13397 2012-08-16 17:23:19Z ahuser $
 
 unit JvUrlGrabbers;
 
@@ -327,8 +327,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUrlGrabbers.pas $';
-    Revision: '$Revision: 13201 $';
-    Date: '$Date: 2012-02-23 09:37:27 +0100 (jeu., 23 févr. 2012) $';
+    Revision: '$Revision: 13397 $';
+    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -337,6 +337,7 @@ implementation
 
 uses
   WinInet,
+  JclBase, // DWORD_PTR
   JvResources;
 
 const
@@ -802,7 +803,7 @@ begin
 
       // Connect to the host
       hHostConnection := InternetConnect(hSession, PChar(HostName), Port,
-        UserName, Password, INTERNET_SERVICE_HTTP, 0, DWORD(Self));
+        UserName, Password, INTERNET_SERVICE_HTTP, 0, DWORD_PTR(Self));
 
       if Terminated then
         Exit;
