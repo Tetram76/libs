@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-03-07 23:07:32 +0100 (mer., 07 mars 2012)                          $ }
-{ Revision:      $Rev:: 3764                                                                     $ }
+{ Last modified: $Date:: 2012-08-20 12:22:37 +0200 (lun., 20 août 2012)                         $ }
+{ Revision:      $Rev:: 3838                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -161,6 +161,12 @@ type
     function GetExeName: string; override;
   end;
 
+  TJclDCCOSX32 = class(TJclDCC32)
+  public
+    class function GetPlatform: string; override;
+    function GetExeName: string; override;
+  end;
+
   {$IFDEF MSWINDOWS}
   TJclDCCIL = class(TJclDCC32)
   private
@@ -191,6 +197,7 @@ const
   BCC32ExeName              = 'bcc32.exe';
   DCC32ExeName              = 'dcc32.exe';
   DCC64ExeName              = 'dcc64.exe';
+  DCCOSX32ExeName           = 'dccosx.exe';
   DCCILExeName              = 'dccil.exe';
   Bpr2MakExeName            = 'bpr2mak.exe';
   MakeExeName               = 'make.exe';
@@ -227,8 +234,8 @@ procedure GetBPKFileInfo(const BPKFileName: string; out RunOnly: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompilerUtils.pas $';
-    Revision: '$Revision: 3764 $';
-    Date: '$Date: 2012-03-07 23:07:32 +0100 (mer., 07 mars 2012) $';
+    Revision: '$Revision: 3838 $';
+    Date: '$Date: 2012-08-20 12:22:37 +0200 (lun., 20 août 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -763,7 +770,7 @@ function TJclBorlandCommandLineTool.InternalExecute(
 var
   LaunchCommand: string;
 begin
-  LaunchCommand := Format('%s %s', [FileName, CommandLine]);
+  LaunchCommand := Format('%s %s', [FileName, StrAnsiToOem(AnsiString(CommandLine))]);
   if Assigned(FOutputCallback) then
   begin
     FOutputCallback(LaunchCommand);
@@ -1198,6 +1205,18 @@ end;
 function TJclDCC64.GetExeName: string;
 begin
   Result := DCC64ExeName;
+end;
+
+//=== { TJclDCCOSX32 } =======================================================
+
+class function TJclDCCOSX32.GetPlatform: string;
+begin
+  Result := BDSPlatformOSX32;
+end;
+
+function TJclDCCOSX32.GetExeName: string;
+begin
+  Result := DCCOSX32ExeName;
 end;
 
 {$IFDEF MSWINDOWS}

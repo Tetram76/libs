@@ -145,7 +145,7 @@
       <VersionInfo Name="Special">False</VersionInfo>
       <VersionInfo Name="Private">False</VersionInfo>
       <VersionInfo Name="DLL">True</VersionInfo>
-      <VersionInfo Name="Locale">1053</VersionInfo>
+      <VersionInfo Name="Locale">1033</VersionInfo>
       <VersionInfo Name="CodePage">1252</VersionInfo>
     </VersionInfo>
     <VersionInfoKeys>
@@ -153,7 +153,7 @@
       <VersionInfoKeys Name="FileDescription">JCL Open and Save IDE dialogs with favorite folders</VersionInfoKeys>
       <VersionInfoKeys Name="FileVersion">2.4.0.4198</VersionInfoKeys>
       <VersionInfoKeys Name="InternalName">JclFavoriteFoldersExpertDLL</VersionInfoKeys>
-      <VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2011 Project JEDI</VersionInfoKeys>
+      <VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2012 Project JEDI</VersionInfoKeys>
       <VersionInfoKeys Name="LegalTrademarks"></VersionInfoKeys>
       <VersionInfoKeys Name="OriginalFilename">JclFavoriteFoldersExpertDLL100.dll</VersionInfoKeys>
       <VersionInfoKeys Name="ProductName">JEDI Code Library</VersionInfoKeys>

@@ -23,8 +23,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-06-04 22:02:24 +0200 (lun., 04 juin 2012)                          $ }
-{ Revision:      $Rev:: 3801                                                                     $ }
+{ Last modified: $Date:: 2012-08-20 11:57:42 +0200 (lun., 20 août 2012)                         $ }
+{ Revision:      $Rev:: 3833                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -370,8 +370,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclMsBuild.pas $';
-    Revision: '$Revision: 3801 $';
-    Date: '$Date: 2012-06-04 22:02:24 +0200 (lun., 04 juin 2012) $';
+    Revision: '$Revision: 3833 $';
+    Date: '$Date: 2012-08-20 11:57:42 +0200 (lun., 20 août 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1026,7 +1026,7 @@ begin
         StrReplace(Result,
                    Copy(Result, Start, Position - Start + 1), // $(PropertyName)
                    PropertyValue,
-                   [rfReplaceAll])
+                   [rfReplaceAll, rfIgnoreCase])
       end;
       if Start = 0 then
       begin
@@ -1040,11 +1040,11 @@ begin
           PropertyName := Copy(Result, Start + 2, Position - Start - 2);
 
           PropertyValue := EvaluateList(PropertyName);
-          
+
           StrReplace(Result,
                      Copy(Result, Start, Position - Start + 1), // @(PropertyName...)
                      PropertyValue,
-                     [rfReplaceAll])
+                     [rfReplaceAll, rfIgnoreCase])
         end;
       end;
     until Start = 0;
@@ -1088,7 +1088,7 @@ var
       EndIndex := StrSearch(')', Result, Index + 2);
       MetaDataName := Copy(Result, Index + 2, EndIndex - Index - 2);
       UserDefinedMetadataNames.Add(MetaDataName);
-      StrReplace(Result, '%(' + MetaDataName + ')', '%' + IntToStr(Num) + ':s', [rfReplaceAll]);
+      StrReplace(Result, '%(' + MetaDataName + ')', '%' + IntToStr(Num) + ':s', [rfReplaceAll, rfIgnoreCase]);
       Inc(Num);
       Index := StrSearch('%(', Result, Index);
     end;

@@ -22,9 +22,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-06-27 15:09:53 +0200 (mer., 27 juin 2012)                          $ }
-{ Revision:      $Rev:: 3805                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2012-08-28 21:39:21 +0200 (mar., 28 août 2012)                         $ }
+{ Revision:      $Rev:: 3852                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -69,6 +69,7 @@ type
         joJCLDefPCRELinkDLL,
         joJCLDefPCRELinkOnRequest,
         joJCLDefPCRERTL,
+        joJCLDefPCRE16,
         joJCLDefBZip2StaticLink,
         joJCLDefBZip2LinkDLL,
         joJCLDefBZip2LinkOnRequest,
@@ -92,6 +93,7 @@ type
         joJCLEnvLibPath,
         joJCLEnvBrowsingPath,
         joJCLEnvDebugDCUPath,
+        joJCLEnvIncludePath,
       joJCLMake,
         joJCLMakeRelease,
         joJCLMakeDebug,
@@ -132,8 +134,8 @@ const
       'MATH_SINGLE_PRECISION', 'MATH_DOUBLE_PRECISION', 'MATH_EXTENDED_PRECISION',
       'MATH_EXT_EXTREMEVALUES',  'HOOK_DLL_EXCEPTIONS',
       'DEBUG_NO_BINARY', 'DEBUG_NO_TD32', 'DEBUG_NO_MAP', 'DEBUG_NO_EXPORTS',
-      'DEBUG_NO_SYMBOLS', 'PCRE_STATICLINK',
-      'PCRE_LINKDLL', 'PCRE_LINKONREQUEST', 'PCRE_RTL', 'BZIP2_STATICLINK',
+      'DEBUG_NO_SYMBOLS', 'PCRE_STATICLINK', 'PCRE_LINKDLL',
+      'PCRE_LINKONREQUEST', 'PCRE_RTL', 'PCRE_16', 'BZIP2_STATICLINK',
       'BZIP2_LINKDLL', 'BZIP2_LINKONREQUEST', 'ZLIB_STATICLINK',
       'ZLIB_LINKDLL', 'ZLIB_LINKONREQUEST', 'ZLIB_RTL', 'UNICODE_RTL_DATABASE',
       'UNICODE_SILENT_FAILURE', 'UNICODE_RAW_DATA', 'UNICODE_ZLIB_DATA',
@@ -156,6 +158,7 @@ type
     FGUI: IJediInstallGUI;
     FGUIBPLPathIndex: Integer;
     FGUIDCPPathIndex: Integer;
+    FGUIHPPPathIndex: Integer;
     FLibDebugDir: string;
     FLibReleaseDir: string;
     FJclDcpPath: string;
@@ -175,6 +178,8 @@ type
     function GetEnabled: Boolean;
     function GetIsProfileEnabled(Index: Integer): Boolean;
     function GetProfilesTarget(Index: Integer): TJclBorRADToolInstallation;
+    function GetTargetSupportsCBuilder: Boolean;
+    function GetTargetSupportsDelphi: Boolean;
   protected
     constructor Create(JclDistribution: TJclDistribution;
       InstallTarget: TJclBorRADToolInstallation; ATargetPlatform: TJclBDSPlatform;
@@ -190,6 +195,7 @@ type
     
     function GetBplPath: string;
     function GetDcpPath: string;
+    function GetHppPath: string;
     function GetOptionChecked(Option: TInstallerOption): Boolean; overload;
     function GetOptionCheckedById(Id: Integer): Boolean; overload;
     function GetPlatformStr: string;
@@ -207,6 +213,8 @@ type
 
     property Distribution: TJclDistribution read FDistribution;
     property Target: TJclBorRADToolInstallation read FTarget;
+    property TargetSupportsDelphi: Boolean read GetTargetSupportsDelphi;
+    property TargetSupportsCBuilder: Boolean read GetTargetSupportsCBuilder;
     property TargetName: string read FTargetName;
     property IncludeFileName: string read FIncludeFileName;
     property GUIPage: IJediInstallPage read FGUIPage;
@@ -355,7 +363,6 @@ uses
   JclPeImage,
   JclRegistry,
   JclDebug,
-  JclDotNet,
   JclSecurity,
   JediRegInfo,
   JclShell,
@@ -407,6 +414,7 @@ var
       (Id: -1; Caption: @RsCaptionDefPCRELinkDLL;          Hint: @RsHintDefPCRELinkDLL), // joDefPCRELinkDLL
       (Id: -1; Caption: @RsCaptionDefPCRELinkOnRequest;    Hint: @RsHintDefPCRELinkOnRequest), // joDefPCRELinkOnRequest
       (Id: -1; Caption: @RsCaptionDefPCRERTL;              Hint: @RsHintDefPCRERTL), // joDefPCRERTL
+      (Id: -1; Caption: @RsCaptionDefPCRE16;               Hint: @RsHintDefPCRE16), // joDefPCRE16
       (Id: -1; Caption: @RsCaptionDefBZip2StaticLink;      Hint: @RsHintDefBZip2StaticLink), // joDefBZip2StaticLink
       (Id: -1; Caption: @RsCaptionDefBZip2LinkDLL;         Hint: @RsHintDefBZip2LinkDLL), // joDefBZip2LinkDLL
       (Id: -1; Caption: @RsCaptionDefBZip2LinkOnRequest;   Hint: @RsHintDefBZip2LinkOnRequest), // joDefBZip2LinkOnRequest
@@ -430,6 +438,7 @@ var
       (Id: -1; Caption: @RsCaptionEnvLibPath;              Hint: @RsHintEnvLibPath), // joEnvLibPath
       (Id: -1; Caption: @RsCaptionEnvBrowsingPath;         Hint: @RsHintEnvBrowsingPath), // joEnvBrowsingPath
       (Id: -1; Caption: @RsCaptionEnvDebugDCUPath;         Hint: @RsHintEnvDebugDCUPath), // joEnvDebugDCUPath
+      (Id: -1; Caption: @RsCaptionEnvIncludePath;          Hint: @RsHintEnvIncludePath),  // joEnvIncludePath
       (Id: -1; Caption: @RsCaptionMake;                    Hint: @RsHintMake), // joMake
       (Id: -1; Caption: @RsCaptionMakeRelease;             Hint: @RsHintMakeRelease), // joMakeRelease
       (Id: -1; Caption: @RsCaptionMakeDebug;               Hint: @RsHintMakeDebug), // joMakeDebug
@@ -470,6 +479,7 @@ const
   OptionNameBPLPath = 'BPL-Path';
   OptionNameDCPPath = 'DCP-Path';
   OptionNameBPIPath = 'BPI-Path';
+  OptionNameHPPPath = 'HPP-Path';
 
   VersionDir = '\%s';
   VersionDirExp = '\%%s';
@@ -658,7 +668,7 @@ begin
 
   // exclude C#Builder 1 and Delphi 8 targets
   FRunTimeInstallation := (Target.RadToolKind <> brBorlandDevStudio)
-    or ((Target.VersionNumber >= 3) and (bpDelphi32 in Target.Personalities));
+    or ((Target.VersionNumber >= 3) and TargetSupportsDelphi);
 
   if (Target.RadToolKind = brBorlandDevStudio) and (Target.VersionNumber >= 9) then
   begin
@@ -785,6 +795,17 @@ begin
 end;
 {$ENDIF LINUX}
 
+function TJclInstallation.GetTargetSupportsCBuilder: Boolean;
+begin
+  Result := (bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32);
+end;
+
+function TJclInstallation.GetTargetSupportsDelphi: Boolean;
+begin
+  Result := ((bpDelphi32 in Target.Personalities) and (TargetPlatform = bpWin32)) or
+            ((bpDelphi64 in Target.Personalities) and (TargetPlatform = bpWin64));
+end;
+
 procedure TJclInstallation.MarkOptionBegin(Id: Integer);
 begin
   if Assigned(GUIPage) then
@@ -902,6 +923,7 @@ procedure TJclInstallation.Init;
     if (Target.RadToolKind = brBorlandDevStudio) and (Target.VersionNumber >= 8) then
       // Delphi XE and newer have a licensed version of JCL's pcre.pas named RegularExpressionsAPI
       AddOption(joJCLDefPCRERTL, [goRadioButton], joJCLDefPCRE);
+    AddOption(joJCLDefPCRE16, [goChecked], joJCLDefPCRE);
     // BZip2 options
     AddOption(joJCLDefBZip2, [goChecked], Parent);
     AddOption(joJCLDefBZip2StaticLink, [goRadioButton, goChecked], joJCLDefBZip2);
@@ -939,17 +961,25 @@ procedure TJclInstallation.Init;
     AddOption(joJCLEnvBrowsingPath, [goChecked], Parent);
     if not Target.IsTurboExplorer then
       AddOption(joJCLEnvDebugDCUPath, [goChecked], Parent);
+    if (Target.RadToolKind = brBorlandDevStudio) and (Target.IDEVersionNumber >= 5) and TargetSupportsCBuilder then
+      AddOption(joJCLEnvIncludePath, [goChecked], Parent);
   end;
 
   procedure AddMakeOptions(Parent: TInstallerOption);
+  var
+    HppDirectory: string;
   begin
     AddOption(joJCLMakeRelease, [goStandAloneParent, goExpandable, goChecked], Parent);
     AddOption(joJCLMakeDebug, [goStandAloneParent, goExpandable, goChecked], Parent);
 
-    if (bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32) then
+    if TargetSupportsCBuilder then
     begin
+      if (Target.RadToolKind = brBorlandDevStudio) and (Target.IDEVersionNumber >= 5) then
+        HppDirectory := LoadResString(@RsCaptionHppDirectory)
+      else
+        HppDirectory := Target.VclIncludeDir[TargetPlatform];
       AddOption(joJCLCopyHppFiles, [goChecked], OptionData[joJCLMake].Id,
-        Format(LoadResString(OptionData[joJCLCopyHppFiles].Caption), [Target.VclIncludeDir[FTargetPlatform]]),
+        Format(LoadResString(OptionData[joJCLCopyHppFiles].Caption), [HppDirectory]),
         LoadResString(OptionData[joJCLCopyHppFiles].Hint));
       AddOption(joJCLCheckHppFiles, [goChecked], joJCLMake);
     end;
@@ -999,19 +1029,26 @@ procedure TJclInstallation.Init;
   end;
 
   procedure AddPackageOptions(Parent: TInstallerOption);
+  var
+    HppDirectory: string;
   begin
-    if (bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32) and RunTimeInstallation then
+    if RunTimeInstallation and TargetSupportsCBuilder then
     begin
+      if (Target.RadToolKind = brBorlandDevStudio) and (Target.IDEVersionNumber >= 5) then
+        HppDirectory := LoadResString(@RsCaptionHppDirectory)
+      else
+        HppDirectory := Target.VclIncludeDir[TargetPlatform];
+
       if (Target.RadToolKind = brBorlandDevStudio) and (Target.VersionNumber >= 4) then
       begin
         AddOption(joJCLDualPackages, [goStandAloneParent, goChecked], Parent);
         AddOption(joJCLCopyPackagesHppFiles, [goChecked], OptionData[joJCLDualPackages].Id,
-          Format(LoadResString(OptionData[joJCLCopyPackagesHppFiles].Caption), [Target.VclIncludeDir[FTargetPlatform]]),
+          Format(LoadResString(OptionData[joJCLCopyPackagesHppFiles].Caption), [HppDirectory]),
           LoadResString(OptionData[joJCLCopyPackagesHppFiles].Hint));
       end
       else
         AddOption(joJCLCopyPackagesHppFiles, [goChecked], OptionData[Parent].Id,
-          Format(LoadResString(OptionData[joJCLCopyPackagesHppFiles].Caption), [Target.VclIncludeDir[FTargetPlatform]]),
+          Format(LoadResString(OptionData[joJCLCopyPackagesHppFiles].Caption), [HppDirectory]),
           LoadResString(OptionData[joJCLCopyPackagesHppFiles].Hint));
     end;
 
@@ -1183,6 +1220,7 @@ procedure TJclInstallation.Init;
       if StoredValue = '' then
         StoredValue := Target.BPLOutputPath[FTargetPlatform];
       GUIPage.Directories[FGUIBPLPathIndex] := StoredValue;
+
       if Target.RadToolKind = brCppBuilder then
         StoredValue := AConfiguration.OptionAsStringByName[TargetName, OptionNameBPIPath]
       else
@@ -1190,6 +1228,14 @@ procedure TJclInstallation.Init;
       if StoredValue = '' then
         StoredValue := FJclDcpPath;
       GUIPage.Directories[FGUIDCPPathIndex] := StoredValue;
+
+      if FGUIHPPPathIndex >= 0 then
+      begin
+        StoredValue := AConfiguration.OptionAsStringByName[TargetName, OptionNameHPPPath];
+        if StoredValue = '' then
+          StoredValue := Target.VclIncludeDir[FTargetPlatform];
+        GUIPage.Directories[FGUIHPPPathIndex] := StoredValue;
+      end;
     end;
   end;
 
@@ -1245,10 +1291,16 @@ begin
   if not Target.IsTurboExplorer then
   begin
     FGUIBPLPathIndex := GUIPage.AddDirectory(LoadResString(@RsCaptionBPLPath));
+
     if Target.RadToolKind = brCppBuilder then
       FGUIDCPPathIndex := GUIPage.AddDirectory(LoadResString(@RsCaptionBPIPath))
     else
       FGUIDCPPathIndex := GUIPage.AddDirectory(LoadResString(@RsCaptionDCPPath));
+
+    if (Target.RadToolKind = brBorlandDevStudio) and (Target.IDEVersionNumber >= 5) and TargetSupportsCBuilder then
+      FGUIHPPPathIndex := GUIPage.AddDirectory(LoadResString(@RsCaptionHPPPath))
+    else
+      FGUIHPPPathIndex := -1;
   end;
 
   LoadValues;
@@ -1321,7 +1373,7 @@ var
       Result := CheckDirectory(GetBplPath, @RsLogInvalidBplPath)
         and CheckDirectory(GetDcpPath, @RsLogInvalidDcpPath);
       if OptionChecked[joJCLCopyHppFiles] or OptionChecked[joJCLCopyPackagesHppFiles] then
-        Result := Result and CheckDirectory(Target.VclIncludeDir[FTargetPlatform], @RsLogInvalidHppPath);
+        Result := Result and CheckDirectory(GetHppPath, @RsLogInvalidHppPath);
     end;
   end;
 
@@ -1474,8 +1526,7 @@ var
         begin
           WriteLog(Format(LoadResString(@RsLogAddLibrarySearchPath2), [FLibReleaseDir, Distribution.JclIncludeDir]));
           {$IFDEF MSWINDOWS}
-          if (ATarget.RadToolKind = brBorlandDevStudio) and (bpBCBuilder32 in ATarget.Personalities) and (TargetPlatform = bpWin32)
-            and OptionChecked[joJCLDualPackages] then
+          if (ATarget.RadToolKind = brBorlandDevStudio) and OptionChecked[joJCLDualPackages] and TargetSupportsCBuilder then
             with TJclBDSInstallation(ATarget) do
           begin
             Result := AddToCppSearchPath(FLibReleaseDir, FTargetPlatform) and AddToCppSearchPath(Distribution.JclIncludeDir, FTargetPlatform) and
@@ -1508,8 +1559,7 @@ var
         begin
           WriteLog(Format(LoadResString(@RsLogAddLibraryBrowsingPath), [Distribution.JclSourcePath]));
           {$IFDEF MSWINDOWS}
-          if (ATarget.RadToolKind = brBorlandDevStudio) and (bpBCBuilder32 in ATarget.Personalities) and (TargetPlatform = bpWin32)
-            and OptionChecked[joJCLDualPackages] then
+          if (ATarget.RadToolKind = brBorlandDevStudio) and TargetSupportsCBuilder and OptionChecked[joJCLDualPackages] then
             with TJclBDSInstallation(ATarget) do
           begin
             Result := AddToCppBrowsingPath(Distribution.JclSourcePath, FTargetPlatform);
@@ -1534,6 +1584,23 @@ var
         else
           WriteLog(LoadResString(@RsLogFailedAddDebugDCUPath));
         MarkOptionEnd(joJCLEnvDebugDCUPath, Result);
+      end;
+
+      if Result and OptionChecked[joJCLEnvIncludePath] then
+      begin
+        MarkOptionBegin(joJCLEnvIncludePath);
+        if (OptionChecked[joJCLCopyHppFiles] or OptionChecked[joJCLCopyPackagesHppFiles]) and
+           (GetHppPath <> ATarget.VclIncludeDir[TargetPlatform]) then
+        begin
+          Result := (ATarget as TJclBDSInstallation).AddToCppIncludePath(GetHppPath, TargetPlatform);
+          if Result then
+            WriteLog(Format(LoadResString(@RsLogAddIncludePath), [GetHppPath]))
+          else
+            WriteLog(LoadResString(@RsLogFailedAddIncludePath));
+        end
+        else
+          WriteLog(Format(LoadResString(@RsLogIgnoreAddIncludePath), [GetHppPath]));
+        MarkOptionEnd(joJCLEnvIncludePath, Result);
       end;
 
       MarkOptionEnd(joJCLEnvironment, Result);
@@ -1602,6 +1669,8 @@ var
       finally
         SetCurrentDir(SaveDir);
       end;
+      if (not Result) and Assigned(GUI) then
+        Result := GUI.Dialog(LoadResString(@RsHppCheckFailure), dtWarning, [drYes, drNo]) = drYes;
     end;
   var
     I: Integer;
@@ -1987,7 +2056,7 @@ begin
     Target.OutputCallback := WriteLog;
 
     if Assigned(GUI) then
-      GUI.Status := Format(LoadResString(@RsLogInstalling), [TargetName]);
+      GUI.Status := Format(LoadResString(@RsLogInstallingJCL), [TargetName]);
 
     if Assigned(GUIPage) then
     begin
@@ -2079,7 +2148,7 @@ function TJclInstallation.Uninstall(AUninstallHelp: Boolean): Boolean;
     else
       WriteLog(LoadResString(@RsLogFailedDelLibrarySearchPath));
     {$IFDEF MSWINDOWS}
-    if (ATarget.RadToolKind = brBorlandDevStudio) and (bpBCBuilder32 in ATarget.Personalities) and (TargetPlatform = bpWin32) then
+    if (ATarget.RadToolKind = brBorlandDevStudio) and TargetSupportsCBuilder then
       with TJclBDSInstallation(ATarget) do
     begin
       if RemoveFromCppSearchPath(FLibReleaseDir, FTargetPlatform) and
@@ -2101,7 +2170,7 @@ function TJclInstallation.Uninstall(AUninstallHelp: Boolean): Boolean;
     else
       WriteLog(LoadResString(@RsLogFailedDelLibraryBrowsingPath));
     {$IFDEF MSWINDOWS}
-    if (ATarget.RadToolKind = brBorlandDevStudio) and (bpBCBuilder32 in ATarget.Personalities) and (TargetPlatform = bpWin32) then
+    if (ATarget.RadToolKind = brBorlandDevStudio) and TargetSupportsCBuilder then
       with TJclBDSInstallation(ATarget) do
     begin
       if RemoveFromCppBrowsingPath(Distribution.JclSourcePath, FTargetPlatform) then
@@ -2125,6 +2194,20 @@ function TJclInstallation.Uninstall(AUninstallHelp: Boolean): Boolean;
       else
         WriteLog(LoadResString(@RsLogFailedDelDebugDCUPath));
     end;
+
+    //joJclEnvIncludePath
+    if (Target.RadToolKind = brBorlandDevStudio) and (Target.IDEVersionNumber >= 5) and TargetSupportsCBuilder then
+    begin
+      if (GetHppPath <> ATarget.VclIncludeDir[TargetPlatform]) then
+      begin
+        if (ATarget as TJclBDSInstallation).RemoveFromCppIncludePath(GetHppPath, TargetPlatform) then
+          WriteLog(Format(LoadResString(@RsLogDelIncludePath), [GetHppPath]))
+        else
+          WriteLog(LoadResString(@RsLogFailedDelIncludePath));
+      end
+      else
+        WriteLog(Format(LoadResString(@RsLogIgnoreDelIncludePath), [GetHppPath]));
+    end;
   end;
 
   procedure RemoveMake;
@@ -2145,7 +2228,7 @@ function TJclInstallation.Uninstall(AUninstallHelp: Boolean): Boolean;
   begin
     RemoveFileMask(FLibReleaseDir, '.dcu');
     RemoveFileMask(FLibDebugDir, '.dcu');
-    if (bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32) then
+    if TargetSupportsCBuilder then
     begin
       RemoveFileMask(FLibReleaseDir, '.obj'); // compatibility
       RemoveFileMask(FLibDebugDir, '.obj'); // compatibility
@@ -2354,7 +2437,7 @@ begin
   try
     Target.OutputCallback := WriteLog;
     if Assigned(GUI) then
-      GUI.Status := Format(LoadResString(@RsLogUninstalling), [TargetName]);
+      GUI.Status := Format(LoadResString(@RsLogUninstallingJCL), [TargetName]);
     if Assigned(GUIPage) then
       GUIPage.Show;
 
@@ -2459,6 +2542,27 @@ begin
   {$ENDIF MSWINDOWS}
 end;
 
+function TJclInstallation.GetHppPath: string;
+var
+  AConfiguration: IJediConfiguration;
+begin
+  if (Target.RadToolKind = brBorlandDevStudio) and (Target.IDEVersionNumber >= 5) and TargetSupportsCBuilder then
+  begin
+    if Assigned(GUIPage) then
+      Result := GUIPage.Directories[FGUIHPPPathIndex]
+    else
+    begin
+      AConfiguration := InstallCore.Configuration;
+      if Assigned(AConfiguration) then
+        Result := AConfiguration.OptionAsStringByName[TargetName, OptionNameHPPPath]
+      else
+        Result := Target.VclIncludeDir[TargetPlatform];
+    end;
+  end
+  else
+    Result := Target.VclIncludeDir[TargetPlatform];
+end;
+
 procedure TJclInstallation.Close;
   procedure SaveOptions;
   var
@@ -2498,6 +2602,8 @@ procedure TJclInstallation.Close;
         AConfiguration.OptionAsStringByName[TargetName, OptionNameBPIPath] := GUIPage.Directories[FGUIDCPPathIndex]
       else
         AConfiguration.OptionAsStringByName[TargetName, OptionNameDCPPath] := GUIPage.Directories[FGUIDCPPathIndex];
+      if FGUIHPPPathIndex >= 0 then
+        AConfiguration.OptionAsStringByName[TargetName, OptionNameHPPPath] := GUIPage.Directories[FGUIHPPPathIndex];
     end;
   end;
 begin
@@ -2538,15 +2644,16 @@ function TJclInstallation.CompileLibraryUnits(const SubDir: string; Debug: Boole
   function CopyHppFiles(UnitList: TStrings; const TargetDir: string): Boolean;
   var
     I: Integer;
-    FileName: string;
+    TargetDirectory, FileName: string;
   begin
     Result := True;
+    TargetDirectory := PathAddSeparator(TargetDir);
     for I := 0 to UnitList.Count - 1 do
     begin
       FileName := UnitList[I] + '.hpp';
       if FileExists(FileName) then
       begin
-        Result := Result and FileCopy(FileName, TargetDir + FileName, True);
+        Result := Result and FileCopy(FileName, TargetDirectory + FileName, True);
 
         // Always remove once copied because if they are left in place they
         // will clutter the source folder and might even prevent compilation
@@ -2556,8 +2663,8 @@ function TJclInstallation.CompileLibraryUnits(const SubDir: string; Debug: Boole
       end;
       if (CompareText(UnitList[I], 'zlibh') = 0) and (Target.RadToolKind = brCppBuilder) and (Target.VersionNumber = 6) then
       begin
-        Result := Result and FileCopy('zlib.h', TargetDir + 'zlib.h', True)
-          and FileCopy('zconf.h', TargetDir + 'zconf.h', True);
+        Result := Result and FileCopy('zlib.h', TargetDirectory + 'zlib.h', True)
+          and FileCopy('zconf.h', TargetDirectory + 'zconf.h', True);
       end;
     end;
   end;
@@ -2659,7 +2766,7 @@ begin
     else
       Compiler.AddPathOption('N', UnitOutputDir); // .dcu files
 
-    if (bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32) then
+    if TargetSupportsCBuilder then
     begin
       Compiler.Options.Add('-D_RTLDLL' + DirSeparator + 'NO_STRICT' + DirSeparator + 'USEPACKAGES'); // $(SYSDEFINES)
 
@@ -2668,7 +2775,7 @@ begin
         //Compiler.AddPathOption('NH', FIncludeDir);   // .hpp files
         Compiler.AddPathOption('NO', UnitOutputDir); // .obj files
         if TJclBDSInstallation(Target).DualPackageInstallation and OptionChecked[joJCLCopyPackagesHppFiles] then
-          Compiler.AddPathOption('N1',Target.VclIncludeDir[FTargetPlatform]);
+          Compiler.AddPathOption('N1', GetHppPath);
       end
       else
       begin
@@ -2702,7 +2809,7 @@ begin
       if OptionChecked[joJCLCopyHppFiles] then
       begin
         MarkOptionBegin(joJCLCopyHppFiles);
-        Result := Result and CopyHppFiles(UnitList, Target.VclIncludeDir[FTargetPlatform]);
+        Result := Result and CopyHppFiles(UnitList, GetHppPath);
         MarkOptionEnd(joJCLCopyHppFiles, Result);
       end;
     finally
@@ -2727,14 +2834,14 @@ begin
   if Assigned(GUIPage) then
     GUIPage.CompilationStart(ExtractFileName(Name));
 
-  if IsDelphiPackage(PackageFileName) and (bpDelphi32 in Target.Personalities) then
+  if IsDelphiPackage(PackageFileName) and TargetSupportsDelphi then
   begin
     if Target.RadToolKind = brBorlandDevStudio then
       (Target as TJclBDSInstallation).CleanPackageCache(BinaryFileName(GetBplPath, PackageFileName));
     Result := Target.CompilePackage(PackageFileName, GetBplPath, GetDcpPath);
   end
   else
-  if IsBCBPackage(PackageFileName) and (bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32) then
+  if IsBCBPackage(PackageFileName) and TargetSupportsCBuilder then
   begin
     ConfigureBpr2Mak(PackageFileName);
     if Target.RadToolKind = brBorlandDevStudio then
@@ -2838,7 +2945,7 @@ begin
     if OptionChecked[joJCLCopyPackagesHppFiles] then
     //begin
     //  MarkOptionBegin(joJCLCopyPackagesHppFiles);
-      Target.Make.AddPathOption('DHPPDIR=', Target.VclIncludeDir[FTargetPlatform]);
+      Target.Make.AddPathOption('DHPPDIR=', GetHppPath);
     //  MarkOptionEnd(joJCLCopyPackagesHppFiles, True);
     //end;
   end;
@@ -2865,10 +2972,10 @@ begin
   if Assigned(GUIPage) then
     GUIPage.CompilationStart(ExtractFileName(Name));
 
-  if IsDelphiProject(ProjectFileName) and (bpDelphi32 in Target.Personalities) then
+  if IsDelphiProject(ProjectFileName) and TargetSupportsDelphi then
     Result := Target.CompileProject(ProjectFileName, GetBplPath, GetDcpPath)
   else
-  if IsBCBProject(ProjectFileName) and (bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32) then
+  if IsBCBProject(ProjectFileName) and TargetSupportsCBuilder then
   begin
     ConfigureBpr2Mak(ProjectFileName);
     // the compilation is done in 2 steps:
@@ -3153,7 +3260,7 @@ function TJclDistribution.CreateInstall(Target: TJclBorRADToolInstallation): Boo
       else
         Result := False;
     end;
-    Result := Result and (Target.Personalities * [bpDelphi32, bpBCBuilder32, bpDelphiNet32, bpDelphiNet64] <> []);
+    Result := Result and (Target.Personalities * [bpDelphi32, bpBCBuilder32, bpDelphi64] <> []);
   end;
 var
   Inst: TJclInstallation;

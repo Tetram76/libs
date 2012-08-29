@@ -23,8 +23,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2008-09-09 21:32:17 +0200 (mar., 09 sept. 2008)                         $ }
-{ Revision:      $Rev:: 2461                                                                     $ }
+{ Last modified: $Date:: 2012-08-14 11:33:43 +0200 (mar., 14 août 2012)                         $ }
+{ Revision:      $Rev:: 3820                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -197,6 +197,7 @@ begin
       else
       begin
         NtUserFileName := PathAddSeparator(FProfiles[Index].LocalProfile) + 'NTUSER.DAT';
+        ExpandEnvironmentVar(NtUserFileName);
         if not RegKeyExists(HKUS, '\' + FProfiles[Index].SID) then
         begin
           EnableProcessPrivilege(True, SE_RESTORE_NAME);

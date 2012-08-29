@@ -38,9 +38,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-02-12 08:43:23 +0100 (dim., 12 févr. 2012)                        $ }
-{ Revision:      $Rev:: 3717                                                                     $ }
-{ Author:        $Author:: jgsoft                                                                $ }
+{ Last modified: $Date:: 2012-08-28 16:44:17 +0200 (mar., 28 août 2012)                         $ }
+{ Revision:      $Rev:: 3850                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1451,7 +1451,9 @@ resourcestring
   RsErrMatchLimit    = 'Match limit';
   RsErrCallout       = 'Callout';
   RsErrBadUTF8       = 'Bad UTF-8';
+  RsErrBadUTF16      = 'Bad UTF-16';
   RsErrBadUTF8Offset = 'Bad UTF-8 offset';
+  RsErrBadUTF16Offset = 'Bad UTF-16 offset';
   RsErrPartial       = 'Partial';
   RsErrBadPartial    = 'Bad partial';
   RsErrInternal      = 'Internal';
@@ -1465,7 +1467,8 @@ resourcestring
   RsErrNullWsLimit   = 'Null WS limit';
   RsErrBadNewLine    = 'Bad new line';
   RsErrBadOffset     = 'Bad offset';
-  RsErrShortUTF8     = 'Short UTF8';
+  RsErrShortUTF8     = 'Short UTF-8';
+  RsErrShortUTF16    = 'Short UTF-16';
   RsErrRecurseLoop   = 'Recurse loop';
   RsErrJITStackLimit = 'JIT stack limit';
   RsErrLibNotLoaded  = 'PCRE library not loaded';
@@ -1473,8 +1476,12 @@ resourcestring
   RsErrStudyFailed   = 'Study failed';
   RsErrCalloutError  = 'Unhandled exception in callout';
   RsErrUnknownError  = 'Unknown error';
-  RsErrNoUTF8Support = 'No UTF8 support in this version of PCRE';
+  RsErrNoUTF8Support = 'No UTF-8 support in this version of PCRE';
+  RsErrNoUTF16Support = 'No UTF-16 support in this version of PCRE';
   RsErrNoJITSupport  = 'No JIT support in this version of PCRE';
+  RsErrBadMode       = 'Bad Mode';
+  RsErrBadEndianness = 'Bad endianness';
+  RsErrBadRestart    = 'Bad Restart';
 
 //=== JclPeImage =============================================================
 resourcestring
@@ -1923,6 +1930,8 @@ resourcestring
   RsOSVersionWinServer2008      = 'Windows Server 2008';
   RsOSVersionWin7               = 'Windows 7';
   RsOSVersionWinServer2008R2    = 'Windows Server 2008 R2';
+  RsOSVersionWin8               = 'Windows 8';
+  RsOSVersionWinServer2012      = 'Windows Server 2012';
 
   RsEditionWinXPHome            = 'Home Edition';
   RsEditionWinXPPro             = 'Professional';
@@ -2036,8 +2045,8 @@ resourcestring
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclResources.pas $';
-    Revision: '$Revision: 3717 $';
-    Date: '$Date: 2012-02-12 08:43:23 +0100 (dim., 12 févr. 2012) $';
+    Revision: '$Revision: 3850 $';
+    Date: '$Date: 2012-08-28 16:44:17 +0200 (mar., 28 août 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

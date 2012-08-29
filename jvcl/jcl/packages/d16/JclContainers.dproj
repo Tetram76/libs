@@ -64,7 +64,7 @@
 			<VerInfo_Build>4198</VerInfo_Build>
 			<VerInfo_Release>0</VerInfo_Release>
 			<VerInfo_MinorVer>4</VerInfo_MinorVer>
-			<VerInfo_Keys>CompanyName=Project JEDI;FileDescription=JEDI Code Library Containers package;FileVersion=2.4.0.4198;InternalName=JclContainers;LegalCopyright=Copyright (C) 1999, 2011 Project JEDI;OriginalFilename=JclContainers160.bpl;ProductName=JEDI Code Library;ProductVersion=2.4.0.4198</VerInfo_Keys>
+			<VerInfo_Keys>CompanyName=Project JEDI;FileDescription=JEDI Code Library Containers package;FileVersion=2.4.0.4198;InternalName=JclContainers;LegalCopyright=Copyright (C) 1999, 2012 Project JEDI;OriginalFilename=JclContainers160.bpl;ProductName=JEDI Code Library;ProductVersion=2.4.0.4198</VerInfo_Keys>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<VerInfo_Locale>1033</VerInfo_Locale>
 			<DCC_Namespace>System;System.Win;WinApi;Vcl;Vcl.Imaging;$(DCC_Namespace)</DCC_Namespace>
@@ -85,13 +85,13 @@
 		<PropertyGroup Condition="'$(Base_Win64)'!=''">
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-			<VerInfo_Locale>1031</VerInfo_Locale>
+			<VerInfo_Locale>1033</VerInfo_Locale>
 			<Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base_Win32)'!=''">
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
 			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-			<VerInfo_Locale>1031</VerInfo_Locale>
+			<VerInfo_Locale>1033</VerInfo_Locale>
 			<Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1)'!=''">
@@ -109,7 +109,7 @@
 			<DCC_ObjPath>..\..\lib\d16\win64\debug;..\..\source\include;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\lib\d16\win64\debug;..\..\source\include;$(DCC_IncludePath)</DCC_IncludePath>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-			<VerInfo_Locale>1031</VerInfo_Locale>
+			<VerInfo_Locale>1033</VerInfo_Locale>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
 			<DCC_DcuOutput>..\..\lib\d16\win32\debug</DCC_DcuOutput>
@@ -121,7 +121,7 @@
 			<DCC_ObjPath>..\..\lib\d16\win32\debug;..\..\source\include;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\lib\d16\win32\debug;..\..\source\include;$(DCC_IncludePath)</DCC_IncludePath>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-			<VerInfo_Locale>1031</VerInfo_Locale>
+			<VerInfo_Locale>1033</VerInfo_Locale>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_AssertionsAtRuntime>false</DCC_AssertionsAtRuntime>
@@ -139,7 +139,7 @@
 			<DCC_ObjPath>..\..\lib\d16\win64;..\..\source\include;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\lib\d16\win64;..\..\source\include;$(DCC_IncludePath)</DCC_IncludePath>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-			<VerInfo_Locale>1031</VerInfo_Locale>
+			<VerInfo_Locale>1033</VerInfo_Locale>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
 			<DCC_DcuOutput>..\..\lib\d16\win32</DCC_DcuOutput>
@@ -151,7 +151,7 @@
 			<DCC_ObjPath>..\..\lib\d16\win32;..\..\source\include;$(DCC_ObjPath)</DCC_ObjPath>
 			<DCC_IncludePath>..\..\lib\d16\win32;..\..\source\include;$(DCC_IncludePath)</DCC_IncludePath>
 			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-			<VerInfo_Locale>1031</VerInfo_Locale>
+			<VerInfo_Locale>1033</VerInfo_Locale>
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="$(MainSource)">
@@ -171,6 +171,7 @@
 			<DCCReference Include="..\..\source\common\JclQueues.pas"/>
 			<DCCReference Include="..\..\source\common\JclSortedMaps.pas"/>
 			<DCCReference Include="..\..\source\common\JclStacks.pas"/>
+			<DCCReference Include="..\..\source\common\JclStrHashMap.pas"/>
 			<DCCReference Include="..\..\source\common\JclTrees.pas"/>
 			<DCCReference Include="..\..\source\common\JclVectors.pas"/>
 			<BuildConfiguration Include="Release">
@@ -203,7 +204,7 @@
 						<VersionInfo Name="Special">False</VersionInfo>
 						<VersionInfo Name="Private">False</VersionInfo>
 						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1031</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
 						<VersionInfo Name="CodePage">1252</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>
@@ -211,7 +212,7 @@
 						<VersionInfoKeys Name="FileDescription">JEDI Code Library Containers package</VersionInfoKeys>
 						<VersionInfoKeys Name="FileVersion">2.4.0.4198</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">JclContainers</VersionInfoKeys>
-						<VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2011 Project JEDI</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2012 Project JEDI</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">JclContainers160.bpl</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">JEDI Code Library</VersionInfoKeys>
