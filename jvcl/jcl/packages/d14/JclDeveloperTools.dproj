@@ -67,6 +67,7 @@
 			<DCCReference Include="JclContainers.dcp"/>
 			<DCCReference Include="..\..\source\common\JclCompilerUtils.pas"/>
 			<DCCReference Include="..\..\source\common\JclDevToolsResources.pas"/>
+			<DCCReference Include="..\..\source\common\JclExprEval.pas"/>
 			<DCCReference Include="..\..\source\common\JclIDEUtils.pas"/>
 			<DCCReference Include="..\..\source\common\JclPreProcessorAlgorithmsTemplates.pas"/>
 			<DCCReference Include="..\..\source\common\JclPreProcessorArrayListsTemplates.pas"/>
@@ -131,7 +132,7 @@
 						<VersionInfo Name="Special">False</VersionInfo>
 						<VersionInfo Name="Private">False</VersionInfo>
 						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1031</VersionInfo>
+						<VersionInfo Name="Locale">1033</VersionInfo>
 						<VersionInfo Name="CodePage">1252</VersionInfo>
 					</VersionInfo>
 					<VersionInfoKeys>
@@ -139,7 +140,7 @@
 						<VersionInfoKeys Name="FileDescription">JEDI Code Library Developer Tools package</VersionInfoKeys>
 						<VersionInfoKeys Name="FileVersion">2.4.0.4198</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName">JclDeveloperTools</VersionInfoKeys>
-						<VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2011 Project JEDI</VersionInfoKeys>
+						<VersionInfoKeys Name="LegalCopyright">Copyright (C) 1999, 2012 Project JEDI</VersionInfoKeys>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename">JclDeveloperTools140.bpl</VersionInfoKeys>
 						<VersionInfoKeys Name="ProductName">JEDI Code Library</VersionInfoKeys>

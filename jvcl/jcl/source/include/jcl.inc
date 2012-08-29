@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-01-21 18:22:58 +0100 (sam., 21 janv. 2012)                         $ }
-{ Revision:      $Rev:: 3696                                                                     $ }
+{ Last modified: $Date:: 2012-08-28 21:31:26 +0200 (mar., 28 août 2012)                         $ }
+{ Revision:      $Rev:: 3851                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -293,6 +293,10 @@ ALERT_jedi_inc_incompatible
   {$IFNDEF PCRE_RTL}
     {$DEFINE PCRE_EXPORT_CDECL}
   {$ENDIF ~PCRE_RTL}
+{$ENDIF ~PCRE_STATICLINK}
+
+{$IFNDEF PCRE_STATICLINK}
+  {$UNDEF PCRE_16}
 {$ENDIF ~PCRE_STATICLINK}
 
 // BZip2 options

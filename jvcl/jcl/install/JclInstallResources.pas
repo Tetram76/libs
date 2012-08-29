@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-01-21 18:22:58 +0100 (sam., 21 janv. 2012)                         $ }
-{ Revision:      $Rev:: 3696                                                                     $ }
+{ Last modified: $Date:: 2012-08-28 21:31:26 +0200 (mar., 28 août 2012)                         $ }
+{ Revision:      $Rev:: 3851                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -42,6 +42,7 @@ resourcestring
   RsCaptionBPLPath    = '&BPL path:';
   RsCaptionDCPPath    = '&DCP path:';
   RsCaptionBPIPath    = 'BP&I path:';
+  RsCaptionHPPPath    = '&HPP path:';
 
   // License
   RsCaptionLicense          = 'MPL 1.1 License';
@@ -78,6 +79,7 @@ resourcestring
   RsCaptionDefPCRELinkDLL       = 'Static bind to pcre.dll';
   RsCaptionDefPCRELinkOnRequest = 'Late bind to pcre.dll';
   RsCaptionDefPCRERTL           = 'Use RTL''s RegularExpressionAPI';
+  RsCaptionDefPCRE16            = 'Enable 16-bit PCRE';
   // BZip2 options
   RsCaptionDefBZip2              = 'BZip2 options';
   RsCaptionDefBZip2StaticLink    = 'Static link to BZip2 code';
@@ -119,12 +121,14 @@ resourcestring
   RsCaptionEnvLibPath      = 'Add JCL to IDE Library Path';
   RsCaptionEnvBrowsingPath = 'Add JCL to IDE Browsing Path';
   RsCaptionEnvDebugDCUPath = 'Add JCL to Debug DCU Path';
+  RsCaptionEnvIncludePath  = 'Add JCL to C++ Include Path';
 
   // make units
   RsCaptionMake          = 'Make library units';
   RsCaptionMakeRelease   = 'Release';
   RsCaptionMakeDebug     = 'Debug';
   RsCaptionCopyHppFiles  = 'Copy HPP files to %s';
+  RsCaptionHppDirectory  = 'configured HPP directory';
   RsCaptionCheckHppFiles = 'Check HPP files';
 
   // packages
@@ -192,6 +196,7 @@ resourcestring
   RsHintDefPCRELinkDLL       = 'JCL binaries require pcre.dll to be present';
   RsHintDefPCRELinkOnRequest = 'JCL binaries require pcre.dll when calling PCRE functions';
   RsHintDefPCRERTL           = 'JCL relies on RTL''s RegularExpressionsAPI functions and declarations';
+  RsHintDefPCRE16            = 'Unicode-enabled (UCS-2 and UTF-16) was introduced as of PCRE 8.30';
   // BZip2 options
   RsHintDefBZip2              = 'BZip2 specific options (bzip2.pas)';
   RsHintDefBZip2StaticLink    = 'Code from BZip2 is linked into JCL binaries';
@@ -234,6 +239,7 @@ resourcestring
   RsHintEnvBrowsingPath = 'Add JCL source directories to browsing path';
   RsHintEnvDebugDCUPath = 'This is a prerequisite for using the precompiled JCL debug units by means of the respective' + NativeLineBreak +
     'Project Options|Compiler switch. See "Make library units/Debug" option below.';
+  RsHintEnvIncludePath  = 'Add JCL include path to C++ include path';
 
   // make units
   RsHintMake            = 'Generate .dcu files.' + NativeLineBreak + 'Recommended.';
@@ -247,7 +253,7 @@ resourcestring
   RsHintPackages             = 'Build and eventually install JCL runtime packages and optional IDE experts.';
   RsHintDualPackages         = 'The same package introduce code for Delphi Win32 and C++Builder Win32';
   RsHintCopyPackagesHppFiles = 'Output .hpp files into C++Builder''s include path instead of ' +
-    'the source paths.';
+    'the JCL source paths.';
 
   // exception dialogs
   RsHintExceptDlg       = 'Add selected Exception dialogs to the Object Repository.';
@@ -282,7 +288,7 @@ resourcestring
   RsWarningPackageNodeNotSelected = 'The "Packages" node is not selected.' + sLineBreak +
     'Various libraries (including the JVCL) require JCL packages to be compiled' + sLineBreak +
     'Do you want to continue without compiling JCL packages?';
-  RsWarningCreatePath = 'The path where %s files will be created doesn''t exists.' + sLineBreak +
+  RsWarningCreatePath = 'The path where %s files will be created doesn''t exist.' + sLineBreak +
     'Do you want the JCL installer to create it?';
   RsErrorCantCreatePath = 'The path %s cannot be created';
   RsWarningAddPathToEnvironment = 'The path where BPL are created must be present in the PATH' + sLineBreak +
@@ -292,6 +298,7 @@ resourcestring
   RsHtmlHelp2Credentials = 'Registering HTML Help 2.0 files requires administrator privilege to be performed' + sLineBreak +
     'The RegHelper.exe utility will make this operation';
   RsKeepExpertSettings = 'Do you want to keep JCL expert settings?';
+  RsHppCheckFailure = 'The JCL HPP files fail to compile, continue anyway?';
 
   RsExceptDlgVclName    = 'Exception Dialog';
   RsExceptDlgVclSndName = 'Exception Dialog with Send';
@@ -327,6 +334,12 @@ resourcestring
   RsLogFailedAddDebugDCUPath = 'Failed to add debug DCU path';
   RsLogDelDebugDCUPath = 'Removed "%s" from debug DCU Path.';
   RsLogFailedDelDebugDCUPath = 'Failed to remove debug DCU Path.';
+  RsLogAddIncludePath = 'Added "%s" to C++ Include Path.';
+  RsLogFailedAddIncludePath = 'Failed to add C++ Include path';
+  RsLogIgnoreAddIncludePath = 'Not adding standard C++ Include Path "%s".';
+  RsLogDelIncludePath = 'Removed "%s" from C++ Include Path.';
+  RsLogFailedDelIncludePath = 'Failed to remove C++ Include Path.';
+  RsLogIgnoreDelIncludePath = 'Not removing standard C++ Include Path "%s".';
   RsLogAddIdeTools = 'Added %s to %s IDE Tools';
   RsLogFailedAddIdeTools = 'Failed to add help file to IDE Tools';
   RsLogDelIdeTools = 'Removing %s from %s IDE Tools';
@@ -339,6 +352,8 @@ resourcestring
   RsLogDelHelp2Files = 'Unregistering help 2.0 files...';
   RsLogInstalling = 'Installing %s...';
   RsLogUninstalling = 'Removing %s...';
+  RsLogInstallingJCL = 'Installing JCL for %s...';
+  RsLogUninstallingJCL = 'Removing JCL for %s...';
   RsLogBuilding = 'Building %s...';
   RsLogRegistering = 'Registering %s...';
   RsLogFirstCompilationOk = 'First compilation ok.';

@@ -32,8 +32,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-03-04 22:21:40 +0100 (dim., 04 mars 2012)                           $ }
-{ Revision:      $Rev:: 3761                                                                     $ }
+{ Last modified: $Date:: 2012-08-13 12:46:22 +0200 (lun., 13 août 2012)                         $ }
+{ Revision:      $Rev:: 3815                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -277,8 +277,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclGraphUtils.pas $';
-    Revision: '$Revision: 3761 $';
-    Date: '$Date: 2012-03-04 22:21:40 +0100 (dim., 04 mars 2012) $';
+    Revision: '$Revision: 3815 $';
+    Date: '$Date: 2012-08-13 12:46:22 +0200 (lun., 13 août 2012) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

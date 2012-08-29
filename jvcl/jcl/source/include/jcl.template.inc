@@ -36,7 +36,7 @@
 {                                                                                                  }
 {**************************************************************************************************}
 
-// $Id: jcl.template.inc 3696 2012-01-21 17:22:58Z outchy $
+// $Id: jcl.template.inc 3851 2012-08-28 19:31:26Z outchy $
 
 // Math precision selection, mutually exclusive
 // FPC does not support EXTENDED when targetting x86_64, MATH_DOUBLE_PRECISION is the default in this situation
@@ -88,6 +88,8 @@
 {.$DEFINE PCRE_LINKONREQUEST} // default
 {.$DEFINE PCRE_RTL} // DXE and newer
 
+// UCS2/UTF16 enabled PCRE
+{.$DEFINE PCRE_16} // only valid when PCRE_STATICLINK is enabled, the RTL does not support it and the DLL found over the internet are completly outdated.
 
 // BZIP2 options, mutually exclusive
 

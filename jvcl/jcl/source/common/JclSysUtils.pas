@@ -41,9 +41,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-07-20 15:42:11 +0200 (ven., 20 juil. 2012)                         $ }
-{ Revision:      $Rev:: 3808                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2012-08-14 10:48:19 +0200 (mar., 14 août 2012)                         $ }
+{ Revision:      $Rev:: 3818                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -597,9 +597,9 @@ function BooleanToStr(B: Boolean): string;
 function IntToBool(I: Integer): Boolean;
 function BoolToInt(B: Boolean): Integer;
 
-function TryStrToCardinal(const Value: string; out Res: Cardinal): boolean;
-function StrToCardinalDef(const Value: string; const Default: Cardinal): Cardinal;
-function StrToCardinal(const Value: string): Cardinal;
+function TryStrToUInt(const Value: string; out Res: Cardinal): Boolean;
+function StrToUIntDef(const Value: string; const Default: Cardinal): Cardinal;
+function StrToUInt(const Value: string): Cardinal;
 
 const
   {$IFDEF MSWINDOWS}
@@ -787,8 +787,8 @@ function VarIsNullEmptyBlank(const V: Variant): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysUtils.pas $';
-    Revision: '$Revision: 3808 $';
-    Date: '$Date: 2012-07-20 15:42:11 +0200 (ven., 20 juil. 2012) $';
+    Revision: '$Revision: 3818 $';
+    Date: '$Date: 2012-08-14 10:48:19 +0200 (mar., 14 août 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -3468,7 +3468,7 @@ begin
   Result := Ord(B);
 end;
 
-function TryStrToCardinal(const Value: string; out Res: Cardinal): boolean;
+function TryStrToUInt(const Value: string; out Res: Cardinal): Boolean;
 var i6: Int64;
 begin
   Result := false;
@@ -3479,15 +3479,15 @@ begin
   Res := i6;
 end;
 
-function StrToCardinalDef(const Value: string; const Default: Cardinal): Cardinal;
+function StrToUIntDef(const Value: string; const Default: Cardinal): Cardinal;
 begin
-  if not TryStrToCardinal(Value, Result)
+  if not TryStrToUInt(Value, Result)
      then Result := Default;
 end;
 
-function StrToCardinal(const Value: string): Cardinal;
+function StrToUInt(const Value: string): Cardinal;
 begin
-  if not TryStrToCardinal(Value, Result)
+  if not TryStrToUInt(Value, Result)
      then raise EConvertError.Create('"'+Value+'" is not within range of Cardinal data type');
 end;
 
@@ -3728,13 +3728,13 @@ end;
 function TJclIntfCriticalSection._AddRef: Integer;
 begin
   FCriticalSection.Acquire;
-  Result := 0;
+  Result := -1;
 end;
 
 function TJclIntfCriticalSection._Release: Integer;
 begin
   FCriticalSection.Release;
-  Result := 0;
+  Result := -1;
 end;
 
 //=== { TJclSimpleLog } ======================================================

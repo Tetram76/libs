@@ -23,6 +23,7 @@
   <Contains>
     <File Name="..\..\source\common\JclCompilerUtils.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclDevToolsResources.pas" Targets="all" Formname="" Condition=""/>
+    <File Name="..\..\source\common\JclExprEval.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclIDEUtils.pas" Targets="all" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclPreProcessorAlgorithmsTemplates.pas" Targets="runtimeIDE,help" Formname="" Condition=""/>
     <File Name="..\..\source\common\JclPreProcessorArrayListsTemplates.pas" Targets="runtimeIDE,help" Formname="" Condition=""/>
@@ -52,6 +53,7 @@
     <File Name="..\..\source\windows\JclMsBuild.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\source\windows\MSHelpServices_TLB.pas" Targets="Windows" Formname="" Condition=""/>
     <File Name="..\..\..\help\Common.dtx" Targets="help" Formname="" Condition=""/>
+    <File Name="..\..\..\help\ExprEval.dtx" Targets="help" Formname="" Condition=""/>
     <File Name="..\..\..\help\JclDeveloperTools.dtx" Targets="help" Formname="" Condition=""/>
   </Contains>
 </Package>

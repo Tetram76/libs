@@ -36,8 +36,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-12-30 21:05:41 +0100 (ven., 30 déc. 2011)                         $ }
-{ Revision:      $Rev:: 3664                                                                     $ }
+{ Last modified: $Date:: 2012-08-13 12:38:28 +0200 (lun., 13 août 2012)                         $ }
+{ Revision:      $Rev:: 3814                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -564,8 +564,8 @@ procedure SetGamma(Gamma: Single = 0.7);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclGraphics.pas $';
-    Revision: '$Revision: 3664 $';
-    Date: '$Date: 2011-12-30 21:05:41 +0100 (ven., 30 déc. 2011) $';
+    Revision: '$Revision: 3814 $';
+    Date: '$Date: 2012-08-13 12:38:28 +0200 (lun., 13 août 2012) $';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil
@@ -2361,11 +2361,12 @@ begin
 end;
 
 function TJclRegionInfo.GetRect(Index: Integer): TRect;
-var RectP: PRect;
+var
+  RectP: PRect;
 begin
   if (Index < 0) or (DWORD(Index) >= TRgnData(FData^).rdh.nCount) then
     raise EJclGraphicsError.CreateRes(@RsRegionDataOutOfBound);
-  RectP := PRect(PChar(@TRgnData(FData^).Buffer) + (SizeOf(TRect)*Index));
+  RectP := PRect(PAnsiChar(@TRgnData(FData^).Buffer) + (SizeOf(TRect)*Index));
   Result := RectAssign(RectP^.Left, RectP.Top, RectP^.Right, RectP^.Bottom);
 end;
 
