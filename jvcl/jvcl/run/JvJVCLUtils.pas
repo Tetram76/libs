@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 13364 2012-06-18 13:12:21Z obones $
+// $Id: JvJVCLUtils.pas 13397 2012-08-16 17:23:19Z ahuser $
 
 unit JvJVCLUtils;
 
@@ -271,9 +271,6 @@ function FindFormByClassName(const FormClassName: string): TForm;
 function AppMinimized: Boolean;
 function IsForegroundTask: Boolean;
 
-{ MessageBox is Application.MessageBox with string (not PChar) parameters.
-  if Caption parameter = '', it replaced with Application.Title }
-function MessageBox(const Msg, Caption: string; const Flags: Integer): Integer;
 function MsgBox(const Caption, Text: string; Flags: Integer): Integer; overload;
 function MsgBox(Handle: THandle; const Caption, Text: string; Flags: Integer): Integer; overload;
 function MsgDlg(const Msg: string; AType: TMsgDlgType; AButtons: TMsgDlgButtons; HelpCtx: Longint): Word;
@@ -869,8 +866,8 @@ function ReplaceComponentReference(This, NewReference: TComponent; var VarRefere
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 13364 $';
-    Date: '$Date: 2012-06-18 15:12:21 +0200 (lun., 18 juin 2012) $';
+    Revision: '$Revision: 13397 $';
+    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1536,13 +1533,8 @@ begin
   try
     if Module <> 0 then
     begin
-      {$IFDEF DELPHI64_TEMPORARY}
-      if INT_PTR(ResID) <= $FFFF then
+      if DWORD_PTR(ResID) <= $FFFF then
         Result.LoadFromResourceID(Module, INT_PTR(ResID))
-      {$ELSE ~DELPHI64_TEMPORARY}
-      if LongRec(ResID).Hi = 0 then
-        Result.LoadFromResourceID(Module, LongRec(ResID).Lo)
-      {$ENDIF ~DELPHI64_TEMPORARY}
       else
         Result.LoadFromResourceName(Module, StrPas(ResID));
     end
@@ -2923,14 +2915,6 @@ begin
   Result := Application.Active;
 end;
 {$ENDIF UNIX}
-
-function MessageBox(const Msg, Caption: string; const Flags: Integer): Integer;
-begin
-  if Caption <> '' then
-    Result := Application.MessageBox(PChar(Msg), PChar(Caption), Flags)
-  else
-    Result := Application.MessageBox(PChar(Msg), PChar(Application.Title), Flags);
-end;
 
 const
   NoHelp = 0; { for MsgDlg2 }

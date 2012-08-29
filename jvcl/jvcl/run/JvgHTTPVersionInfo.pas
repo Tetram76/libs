@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgHTTPVersionInfo.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvgHTTPVersionInfo.pas 13401 2012-08-19 08:35:09Z ahuser $
 
 unit JvgHTTPVersionInfo;
 
@@ -51,7 +51,7 @@ type
     function GetProgramURL: string;
     function GetComments: string;
     procedure OnLoadVersionInfo(Sender: TObject; const PDisp: IDispatch;
-      var URL: OleVariant);
+      {$IFDEF COMPILER16_UP}const{$ELSE}var{$ENDIF} URL: OleVariant);
   public
     property VersionInfo: TStrings read GetVersionInfoProperty;
     function GetVersionInfo(WinControl: TWinControl): Boolean;
@@ -69,8 +69,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgHTTPVersionInfo.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    Revision: '$Revision: 13401 $';
+    Date: '$Date: 2012-08-19 10:35:09 +0200 (dim., 19 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -142,7 +142,7 @@ begin
 end;
 
 procedure TJvgHTTPVersionInfo.OnLoadVersionInfo(Sender: TObject;
-  const PDisp: IDispatch; var URL: OleVariant);
+  const PDisp: IDispatch; {$IFDEF COMPILER16_UP}const{$ELSE}var{$ENDIF} URL: OleVariant);
 var
   Doc: Variant;
 begin

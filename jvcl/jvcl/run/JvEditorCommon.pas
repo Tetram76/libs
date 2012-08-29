@@ -23,7 +23,7 @@ Remko Bonte
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvEditorCommon.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id: JvEditorCommon.pas 13398 2012-08-16 17:33:38Z ahuser $
 
 { history
  (JVCL Library versions) :
@@ -1380,8 +1380,8 @@ function KeyPressed(VK: Integer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditorCommon.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    Revision: '$Revision: 13398 $';
+    Date: '$Date: 2012-08-16 19:33:38 +0200 (jeu., 16 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2793,7 +2793,7 @@ procedure TJvCustomEditorBase.WMGetText(var Msg: TWMGetText);
 var
   S: string;
 begin
-  if Msg.Text = nil then
+  if (Msg.Text = nil) or (csDestroying in ComponentState) then // stupid VCL wants to save the WindowText when the control is released
     Msg.Result := 0
   else
   begin
@@ -2806,7 +2806,10 @@ end;
 
 procedure TJvCustomEditorBase.WMGetTextLength(var Msg: TMessage);
 begin
-  Msg.Result := GetTextLen;
+  if csDestroying in ComponentState then // stupid VCL wants to save the WindowText when the control is released
+    Msg.Result := 0
+  else
+    Msg.Result := GetTextLen;
 end;
 
 procedure TJvCustomEditorBase.UpdateEditorSize;

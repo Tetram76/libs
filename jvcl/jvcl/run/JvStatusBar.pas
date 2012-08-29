@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStatusBar.pas 13145 2011-11-02 21:15:19Z ahuser $
+// $Id: JvStatusBar.pas 13392 2012-08-11 23:20:08Z ahuser $
 
 unit JvStatusBar;
 
@@ -74,6 +74,9 @@ type
     procedure MovePanelControls;
     function GetPanelClass: TStatusPanelClass;  override;
     procedure SBSetParts(var msg: TMessage); message SB_SETPARTS;
+    {$IFDEF COMPILER16_UP}
+    procedure WndProc(var Msg: TMessage); override;
+    {$ENDIF COMPILER16_UP}
   public
     constructor Create(AOwner: TComponent); override;
     function ExecuteAction(Action: TBasicAction): Boolean; override;
@@ -91,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStatusBar.pas $';
-    Revision: '$Revision: 13145 $';
-    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
+    Revision: '$Revision: 13392 $';
+    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -245,6 +248,61 @@ begin
   inherited;
   MovePanelControls;
 end;
+
+{$IFDEF COMPILER16_UP}
+procedure TJvStatusBar.WndProc(var Msg: TMessage);
+var
+  DC, PaintDC: HDC;
+  Buffer: TBitmap;
+  PS: TPaintStruct;
+begin
+  // TStatusBarStyleHook.Paint catches all WM_PAINT but doesn't call Control.PaintControls()
+  // what causes TGraphicControls to not be painted. With this code we call the PaintControls
+  // function in that case.
+  // TODO: When this bug gets fixed in a later Delphi version, the IFDEFs must be adjusted.
+  if (Msg.Msg = WM_PAINT) and StyleServices.Enabled and not StyleServices.IsSystemStyle then
+  begin
+    DC := HDC(Msg.WParam);
+    if DoubleBuffered and (DC = 0) then
+    begin
+      PaintDC := BeginPaint(Handle, PS);
+      try
+        Buffer := TBitmap.Create;
+        try
+          Buffer.SetSize(Width, Height);
+          Msg.WParam := WPARAM(Buffer.Canvas.Handle);
+          inherited WndProc(Msg);
+          Msg.WParam := WPARAM(DC);
+          PaintControls(Buffer.Canvas.Handle, nil);
+          BitBlt(PaintDC, 0, 0, Buffer.Width, Buffer.Height, Buffer.Canvas.Handle, 0, 0, SRCCOPY);
+        finally
+          Buffer.Free;
+        end;
+      finally
+        EndPaint(Handle, PS);
+      end;
+    end
+    else
+    begin
+      if DC <> 0 then
+        PaintDC := DC
+      else
+        PaintDC := BeginPaint(Handle, PS);
+      try
+        Msg.WParam := WPARAM(PaintDC);
+        inherited WndProc(Msg);
+        Msg.WParam := WPARAM(DC);
+        PaintControls(PaintDC, nil);
+      finally
+        if DC = 0 then
+          EndPaint(Handle, PS);
+      end;
+    end;
+  end
+  else
+    inherited WndProc(Msg);
+end;
+{$ENDIF COMPILER16_UP}
 
 //=== { TJvStatusPanel } =====================================================
 

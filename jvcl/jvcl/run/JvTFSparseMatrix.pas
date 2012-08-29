@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFSparseMatrix.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvTFSparseMatrix.pas 13397 2012-08-16 17:23:19Z ahuser $
 
 unit JvTFSparseMatrix;
 
@@ -74,8 +74,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFSparseMatrix.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13397 $';
+    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -214,9 +214,6 @@ var
   P, Prev, Curr: PSMQuantum;
   RowExists: Boolean;
 begin
-  {$IFDEF DELPHI64_TEMPORARY}
-  System.Error(rePlatformNotImplemented);
-  {$ENDIF DELPHI64_TEMPORARY}
   if FindQuantum(Row, Col, Prev, Curr, RowExists) then
     if Data <> NullValue then
       Curr^.Data := Data
@@ -234,9 +231,7 @@ begin
       P^.Index := Row;
       P^.Link := nil;
       P^.Data := Prev^.Data;
-      {$IFNDEF DELPHI64_TEMPORARY}
       PSMQuantum(Prev^.Data) := P;
-      {$ENDIF ~DELPHI64_TEMPORARY}
       Prev := P;
     end;
 

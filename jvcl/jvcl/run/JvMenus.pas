@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMenus.pas 13334 2012-06-12 15:48:26Z obones $
+// $Id: JvMenus.pas 13403 2012-08-19 17:56:34Z ahuser $
 
 unit JvMenus;
 
@@ -763,8 +763,8 @@ function StripHotkeyPrefix(const Text: string): string; // MBCS
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMenus.pas $';
-    Revision: '$Revision: 13334 $';
-    Date: '$Date: 2012-06-12 17:48:26 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13403 $';
+    Date: '$Date: 2012-08-19 19:56:34 +0200 (dim., 19 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1763,8 +1763,10 @@ begin
   end;
 end;
 
+{$WARNINGS OFF} // prevent compiler from showing the deprecated warning in Delphi 6
 procedure TJvPopupMenu.DefaultDrawItem(Item: TMenuItem; Rect: TRect;
   State: TMenuOwnerDrawState);
+{$WARNINGS ON}
 begin
   DrawItem(Item, Rect, State)
 end;
@@ -2570,7 +2572,7 @@ begin
   end
   else
   begin
-    MessageBox('!!! asked to draw nil item !!!'#13#10 +
+    JvMessageBox('!!! asked to draw nil item !!!'#13#10 +
       'Please report this to the JVCL team, ' +
       'detailing the precise conditions in ' +
       'which this error occured.'#13#10 +

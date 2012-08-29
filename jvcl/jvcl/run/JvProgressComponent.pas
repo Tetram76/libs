@@ -26,7 +26,7 @@ description : dialog components
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProgressComponent.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvProgressComponent.pas 13397 2012-08-16 17:23:19Z ahuser $
 
 unit JvProgressComponent;
 
@@ -92,8 +92,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgressComponent.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13397 $';
+    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -262,10 +262,7 @@ begin
 //      (Owner as TJvProgressComponent).FOnShow(Self);
     except
       on E: Exception do
-      begin
-        (Owner as TJvProgressComponent).FException := E;
-        ChangeTopException(nil);
-      end;
+        (Owner as TJvProgressComponent).FException := AcquireExceptionObject;
     end;
   finally
     ModalResult := mrOk;

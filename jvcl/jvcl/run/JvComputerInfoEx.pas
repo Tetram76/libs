@@ -32,7 +32,7 @@ Known Issues:
   * ResetSystemIcons only tested on W2k
 
 -----------------------------------------------------------------------------}
-// $Id: JvComputerInfoEx.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id: JvComputerInfoEx.pas 13397 2012-08-16 17:23:19Z ahuser $
 
 unit JvComputerInfoEx;
 
@@ -163,7 +163,10 @@ type
 
   TWMDeviceChange = record
     Msg: Cardinal;
-    Event: {$IFDEF DELPHI64_TEMPORARY}WPARAM{$ELSE}UINT{$ENDIF};
+    {$IFDEF COMPILER16_UP}
+    MsgFiller: TDWordFiller;
+    {$ENDIF COMPILER16_UP}
+    Event: WPARAM;
     dwData: Pointer;
     Result: LRESULT;
   end;
@@ -1455,8 +1458,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComputerInfoEx.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    Revision: '$Revision: 13397 $';
+    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

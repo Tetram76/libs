@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDECheckPasswordForm.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id: JvBDECheckPasswordForm.pas 13389 2012-08-11 20:27:20Z ahuser $
 
 unit JvBDECheckPasswordForm;
 
@@ -49,8 +49,8 @@ function ChangePasswordDialog(Database: TDatabase; AttemptNumber: Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDECheckPasswordForm.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    Revision: '$Revision: 13389 $';
+    Date: '$Date: 2012-08-11 22:27:20 +0200 (sam., 11 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -190,12 +190,12 @@ begin
             Ok := OnChangePassword(Table, OldPswd.Text, NewPswd.Text);
         end;
         if Ok then
-          MessageBox(RsPasswordChanged, '', MB_OK or MB_ICONINFORMATION)
+          JvMessageBox(RsPasswordChanged, MB_OK or MB_ICONINFORMATION)
         else
         if Error = peMismatch then
-          MessageBox(RsPasswordsMismatch, '', MB_OK or MB_ICONERROR)
+          JvMessageBox(RsPasswordsMismatch, MB_OK or MB_ICONERROR)
         else
-          MessageBox(RsPasswordNotChanged, '', MB_OK or MB_ICONERROR);
+          JvMessageBox(RsPasswordNotChanged, MB_OK or MB_ICONERROR);
       finally
         if Table <> nil then
           Table.Free;

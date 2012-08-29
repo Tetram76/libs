@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id: JvDBLookup.pas 13403 2012-08-19 17:56:34Z ahuser $
 
 unit JvDBLookup;
 
@@ -671,8 +671,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    Revision: '$Revision: 13403 $';
+    Date: '$Date: 2012-08-19 19:56:34 +0200 (dim., 19 août 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2381,6 +2381,10 @@ begin
 end;
 
 procedure TJvPopupDataList.CreateParams(var Params: TCreateParams);
+{$IFDEF COMPILER6}
+const
+  CS_DROPSHADOW = $20000;
+{$ENDIF COMPILER6}
 begin
   inherited CreateParams(Params);
   with Params do
@@ -2389,6 +2393,8 @@ begin
     ExStyle := WS_EX_TOOLWINDOW;
     AddBiDiModeExStyle(ExStyle);
     WindowClass.Style := CS_SAVEBITS;
+    if CheckWin32Version(5, 1) then // Windows XP+
+      WindowClass.Style := WindowClass.Style or CS_DROPSHADOW;
   end;
 end;
 
