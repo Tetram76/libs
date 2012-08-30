@@ -282,6 +282,37 @@ type
          property Current : TdwsSourceContext read FCurrentContext;
    end;
 
+   // Symbol attributes information
+   TdwsSymbolAttribute = class (TRefCountedObject)
+      private
+         FSymbol : TSymbol;
+         FScriptPos : TScriptPos;
+         FAttributeConstructor : TFuncExprBase;
+
+      protected
+
+      public
+         constructor Create(const aScriptPos : TScriptPos;
+                            aConstructor : TFuncExprBase);
+         destructor Destroy; override;
+
+         property Symbol : TSymbol read FSymbol write FSymbol;
+         property ScriptPos : TScriptPos read FScriptPos;
+         property AttributeConstructor : TFuncExprBase read FAttributeConstructor;
+   end;
+
+   TdwsSymbolAttributeArray = array of TdwsSymbolAttribute;
+
+   // Holds all symbol attributes
+   TdwsSymbolAttributes = class (TObjectList<TdwsSymbolAttribute>)
+      private
+
+      protected
+
+      public
+         function AttributesFor(aSymbol : TSymbol) : TdwsSymbolAttributeArray;
+   end;
+
    TProgramEvent = procedure (Prog: TdwsProgram) of object;
 
    TdwsResultType = class;
@@ -471,6 +502,7 @@ type
          FFileSystem : IdwsFileSystem;
          FEnvironment : IdwsEnvironment;
          FLocalizer : IdwsLocalizer;
+         FRTTIRawAttributes : IScriptObj;
 
          FMsgs : TdwsRuntimeMessageList;
 
@@ -534,6 +566,7 @@ type
          property FileSystem : IdwsFileSystem read FFileSystem;
          property Environment : IdwsEnvironment read GetEnvironment write SetEnvironment;
          property Localizer : IdwsLocalizer read FLocalizer write FLocalizer;
+         property RTTIRawAttributes : IScriptObj read FRTTIRawAttributes write FRTTIRawAttributes;
 
          property ObjectCount : Integer read FObjectCount;
    end;
@@ -630,6 +663,7 @@ type
 
          FSourceContextMap : TdwsSourceContextMap;
          FSymbolDictionary : TdwsSymbolDictionary;
+         FAttributes : TdwsSymbolAttributes;
 
          FSystemTable : ISystemSymbolTable;
          FOperators : TObject;
@@ -699,6 +733,7 @@ type
          property Compiler : TObject read FCompiler write FCompiler;
          property SourceContextMap : TdwsSourceContextMap read FSourceContextMap;
          property SymbolDictionary: TdwsSymbolDictionary read FSymbolDictionary;
+         property Attributes : TdwsSymbolAttributes read FAttributes;
          property SourceList : TScriptSourceList read FSourceList;
          property LineCount : Integer read FLineCount write FLineCount;
          property TimeStamp : TDateTime read FTimeStamp write FTimeStamp;
@@ -825,7 +860,7 @@ type
    TTypedExprClass = class of TTypedExpr;
 
    // hosts a type reference
-   TTypeReferenceExpr = class(TTypedExpr)
+   TTypeReferenceExpr = class sealed (TTypedExpr)
       private
          FPos : TScriptPos;
 
@@ -2310,7 +2345,10 @@ procedure TdwsProgramExecution.RunProgram(aTimeoutMilliSeconds : Integer);
 
    procedure Handle_EScriptAssertionFailed(e : EScriptAssertionFailed);
    begin
-      Msgs.AddRuntimeError(e.ScriptPos, Copy(e.Message, 1, LastDelimiter('[', e.Message)-2), e.ScriptCallStack);
+      Msgs.AddRuntimeError(e.ScriptPos,
+                            Copy(e.Message, 1, LastDelimiter('[', e.Message)-2)
+                           +Copy(e.Message, Pos(']', e.Message)+1, MaxInt),
+                           e.ScriptCallStack);
    end;
 
    procedure Handle_Exception(e : Exception);
@@ -2509,6 +2547,8 @@ var
    iter : TScriptObj;
    buffer : array of TScriptObj;
 begin
+   FRTTIRawAttributes:=nil;
+
    if FObjectCount=0 then Exit;
 
    // add refcount to keep all alive during cleanup
@@ -2931,6 +2971,8 @@ begin
 
    FSymbolDictionary:=TdwsSymbolDictionary.Create;
 
+   FAttributes:=TdwsSymbolAttributes.Create;
+
    sl:=TStringList.Create;
    sl.Sorted:=True;
    sl.CaseSensitive:=False;
@@ -2975,6 +3017,7 @@ begin
    FOperators.Free;
    FSourceContextMap.Free;
    FSymbolDictionary.Free;
+   FAttributes.Free;
    FUnifiedConstList.Free;
    FResourceStringList.Free;
    FSourceList.Free;
@@ -8435,6 +8478,50 @@ begin
          else if not Result.Typ.IsOfType(func.Params[n].Typ) then
             Exit(nil);
       end else Exit(nil);
+   end;
+end;
+
+// ------------------
+// ------------------ TdwsSymbolAttribute ------------------
+// ------------------
+
+// Create
+//
+constructor TdwsSymbolAttribute.Create(const aScriptPos : TScriptPos;
+                                       aConstructor : TFuncExprBase);
+begin
+   inherited Create;
+   FScriptPos:=aScriptPos;
+   FAttributeConstructor:=aConstructor;
+end;
+
+// Destroy
+//
+destructor TdwsSymbolAttribute.Destroy;
+begin
+   FAttributeConstructor.Free;
+   inherited;
+end;
+
+// ------------------
+// ------------------ TdwsSymbolAttributes ------------------
+// ------------------
+
+// AttributesFor
+//
+function TdwsSymbolAttributes.AttributesFor(aSymbol : TSymbol) : TdwsSymbolAttributeArray;
+var
+   i, n : Integer;
+begin
+   // slow and ugly, for testing until structure gets finalized
+   SetLength(Result, 0);
+   n:=0;
+   for i:=0 to Count-1 do begin
+      if Items[i].Symbol=aSymbol then begin
+         SetLength(Result, n+1);
+         Result[n]:=Items[i];
+         Inc(n);
+      end;
    end;
 end;
 

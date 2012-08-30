@@ -51,6 +51,7 @@ const
   SYS_EDELPHI = 'EDelphi';
   SYS_EDELPHI_EXCEPTIONCLASS = 'ExceptionClass';
   SYS_EDELPHI_EXCEPTIONCLASS_FIELD = 'FExceptionClass';
+  SYS_TCUSTOMATTRIBUTE = 'TCustomAttribute';
   SYS_IINTERFACE = 'IInterface';
 
   // Compiler switches
@@ -185,6 +186,7 @@ const
   CPE_ClassIsStatic = 'Class "%s" is static, instantiation not allowed!';
   CPE_ClassAncestorNotStatic = 'Class "%s" is not static, can''t inherit as static!';
   CPE_ClassAncestorDoesNotMatch = 'Class ancestor does not match with previous declaration!';
+  CPE_MustBeSubClassOf = 'Subclass of %s expected!';
   CPE_MethodOrPropertyExpected = 'Method or property declaration expected';
   CPE_OverloadableOperatorExpected = 'Overloadable operator expected';
   CPE_OverloadOnlyInGlobalScope = 'Overloads can only be declared in the global scope';
@@ -211,6 +213,9 @@ const
   CPE_NoProtectedVisibilityForRecords = 'Records do not supported "protected" visibility specifier';
   CPE_NoProtectedVisibilityForHelpers = 'Helpers do not supported "protected" visibility specifier';
   CPE_HelpersNotAllowedForDelegates = 'Helpers not allowed for delegates or function pointers';
+
+  CPE_AttributeConstructorExpected = 'Attribute constructor expected';
+  CPE_DanglingAttribute = 'Dangling attribute declaration';
 
   // Interface declaration
   CPE_InterfaceAlreadyDefined = 'Interface "%s" already defined';
@@ -459,6 +464,7 @@ const
   RTE_ArrayLowerBoundExceeded = 'Lower bound exceeded! Index %d';
   RTE_ArrayLengthIncorrect = 'Array length is incorrect (%d)';
   RTE_ArrayLengthIncorrectForDimension = 'Array length is incorrect (%d) for dimension %d';
+  RTE_ArrayInstanceExpected = 'Array instance expected';
   RTE_PositiveCountExpected = 'Positive count expected (got %d)';
   RTE_ForLoopStepShouldBeStrictlyPositive = 'FOR loop STEP should be strictly positive: %d';
   RTE_InvalidBreak = 'break without for/while/repeat or case';

@@ -284,6 +284,11 @@ type
       function CreateConstSymbol(const name : String; const namePos : TScriptPos; typ : TTypeSymbol;
                                  const data : TData; addr : Integer) : TConstSymbol;
       function ReadExpr(expecting : TTypeSymbol = nil) : TTypedExpr;
+      function ReadArrayConstantExpr(closingToken : TTokenType; expecting : TTypeSymbol) : TArrayConstantExpr;
+   end;
+
+   ISymbolAttributesBag = interface
+      function Attributes : TdwsSymbolAttributes;
    end;
 
    TdwsCompilerUnitContextStack = class(TSimpleStack<TdwsCompilerUnitContext>)
@@ -334,6 +339,7 @@ type
          FAnyFuncSymbol : TAnyFuncSymbol;
          FAnyTypeSymbol : TAnyTypeSymbol;
          FStandardDataSymbolFactory : IdwsDataSymbolFactory;
+         FPendingAttributes : TdwsSymbolAttributes;
 
          FDataSymbolExprReuse : TSimpleObjectObjectHash<TDataSymbol,TVarExpr>;
 
@@ -373,7 +379,7 @@ type
          function GetSelfParamExpr(selfSym : TDataSymbol) : TVarExpr;
                           function ReadAssign(token : TTokenType; var left : TDataExpr) : TNoResultExpr;
          function ReadArrayType(const typeName : UnicodeString; typeContext : TdwsReadTypeContext) : TTypeSymbol;
-         function ReadArrayConstant(expecting : TTypeSymbol = nil) : TArrayConstantExpr;
+         function ReadArrayConstant(closingToken : TTokenType; expecting : TTypeSymbol) : TArrayConstantExpr;
          function ReadArrayMethod(const name : UnicodeString; const namePos : TScriptPos;
                                   baseExpr : TTypedExpr) : TProgramExpr;
          function ReadCase : TCaseExpr;
@@ -410,9 +416,9 @@ type
          function ReadField(const scriptPos : TScriptPos; selfSym : TDataSymbol;
                          fieldSym : TFieldSymbol; var varExpr : TTypedExpr) : TDataExpr; overload;
 
-         function ReadFor : TForExpr;
+         function ReadFor : TNoResultExpr;
          function ReadForTo(const forPos : TScriptPos; loopVarExpr : TVarExpr) : TForExpr;
-         function ReadForIn(const forPos : TScriptPos; loopVarExpr : TVarExpr) : TForExpr;
+         function ReadForIn(const forPos : TScriptPos; loopVarExpr : TVarExpr) : TNoResultExpr;
          function ReadForStep(const forPos : TScriptPos; forExprClass : TForExprClass;
                               iterVarExpr : TIntVarExpr; fromExpr, toExpr : TTypedExpr;
                               loopFirstStatement : TNoResultExpr) : TForExpr;
@@ -492,7 +498,7 @@ type
          procedure ReadNameList(names : TStrings; var posArray : TScriptPosArray;
                                 const options : TdwsNameListOptions = []);
          procedure ReadExternalName(funcSym : TFuncSymbol);
-         function  ReadNew(isWrite : Boolean) : TProgramExpr;
+         function  ReadNew(restrictTo : TClassSymbol) : TProgramExpr;
          function  ReadNewArray(elementTyp : TTypeSymbol) : TNewArrayExpr;
          procedure ReadArrayParams(ArrayIndices: TSymbolTable);
          // Don't want to add param symbols to dictionary when a method implementation (they get thrown away)
@@ -503,6 +509,7 @@ type
                                isClassMethod : Boolean = False;
                                isType : Boolean = False; isAnonymous : Boolean = False) : TFuncSymbol;
          procedure ReadProcBody(funcSymbol : TFuncSymbol);
+         procedure ReadProcEmpty(funcSymbol : TFuncSymbol);
          procedure ReadConditions(funcSymbol : TFuncSymbol; conditions : TSourceConditions;
                                condsSymClass : TConditionSymbolClass);
          procedure ReadPostConditions(funcSymbol : TFuncSymbol; conditions : TSourcePostConditions;
@@ -561,6 +568,11 @@ type
          function ReadTypeExpr(const namePos : TScriptPos; typeSym : TTypeSymbol;
                                isWrite : Boolean; expecting : TTypeSymbol = nil) : TProgramExpr;
 
+         procedure ReadAttributes;
+         function  BagPendingAttributes : ISymbolAttributesBag;
+         procedure AttachBaggedAttributes(symbol : TSymbol; const bag : ISymbolAttributesBag);
+         procedure CheckNoPendingAttributes;
+
          function EnumerateHelpers(typeSym : TTypeSymbol) : THelperSymbols;
          function ReadTypeHelper(expr : TTypedExpr;
                                  const name : String; const namePos : TScriptPos;
@@ -592,8 +604,8 @@ type
          function CreateAssign(const scriptPos : TScriptPos; token : TTokenType;
                                left : TDataExpr; right : TTypedExpr) : TNoResultExpr;
 
-         function CreateArrayLow(baseExpr : TTypedExpr; typ : TArraySymbol; captureBase : Boolean) : TTypedExpr;
-         function CreateArrayHigh(baseExpr : TTypedExpr; typ : TArraySymbol; captureBase : Boolean) : TTypedExpr;
+         function CreateArrayLow(baseExpr : TProgramExpr; typ : TArraySymbol; captureBase : Boolean) : TTypedExpr;
+         function CreateArrayHigh(baseExpr : TProgramExpr; typ : TArraySymbol; captureBase : Boolean) : TTypedExpr;
          function CreateArrayLength(baseExpr : TTypedExpr; typ : TArraySymbol) : TTypedExpr;
          function CreateArrayExpr(const scriptPos : TScriptPos; baseExpr : TDataExpr; indexExpr : TTypedExpr) : TArrayExpr;
 
@@ -747,6 +759,7 @@ type
       function CreateConstSymbol(const name : String; const namePos : TScriptPos;
                                  typ : TTypeSymbol; const data : TData; addr : Integer) : TConstSymbol; virtual;
       function ReadExpr(expecting : TTypeSymbol = nil) : TTypedExpr; virtual;
+      function ReadArrayConstantExpr(closingToken : TTokenType; expecting : TTypeSymbol) : TArrayConstantExpr;
    end;
 
    TCompositeTypeSymbolFactory = class (TStandardSymbolFactory)
@@ -764,6 +777,12 @@ type
    // const expr created to "keep compiling"
    TBogusConstExpr = class sealed (TConstExpr);
 
+   TSymbolAttributesBag = class (TInterfacedSelfObject, ISymbolAttributesBag)
+      FAttributes : TdwsSymbolAttributes;
+      destructor Destroy; override;
+      function Attributes : TdwsSymbolAttributes;
+   end;
+
 // StringToSwitchInstruction
 //
 function StringToSwitchInstruction(const str : UnicodeString) : TSwitchInstruction;
@@ -774,6 +793,25 @@ begin
          Exit;
    end;
    Result:=siNone;
+end;
+
+// ------------------
+// ------------------ TSymbolAttributesBag ------------------
+// ------------------
+
+// Destroy
+//
+destructor TSymbolAttributesBag.Destroy;
+begin
+   FAttributes.Free;
+   inherited;
+end;
+
+// Attributes
+//
+function TSymbolAttributesBag.Attributes : TdwsSymbolAttributes;
+begin
+   Result:=FAttributes;
 end;
 
 // ------------------
@@ -821,6 +859,13 @@ end;
 function TStandardSymbolFactory.ReadExpr(expecting : TTypeSymbol = nil) : TTypedExpr;
 begin
    Result:=FCompiler.ReadExpr(expecting);
+end;
+
+// ReadArrayConstantExpr
+//
+function TStandardSymbolFactory.ReadArrayConstantExpr(closingToken : TTokenType; expecting : TTypeSymbol) : TArrayConstantExpr;
+begin
+   Result:=FCompiler.ReadArrayConstant(closingToken, expecting);
 end;
 
 // ------------------
@@ -913,6 +958,8 @@ begin
    FAnyFuncSymbol:=TAnyFuncSymbol.Create('', fkFunction, 0);
    FAnyTypeSymbol:=TAnyTypeSymbol.Create('', nil);
 
+   FPendingAttributes:=TdwsSymbolAttributes.Create;
+
    stackParams.MaxLevel:=1;
    stackParams.ChunkSize:=512;
    stackParams.MaxByteSize:=MaxInt;
@@ -926,6 +973,8 @@ end;
 //
 destructor TdwsCompiler.Destroy;
 begin
+   FPendingAttributes.Free;
+
    FAnyFuncSymbol.Free;
    FAnyTypeSymbol.Free;
 
@@ -1163,6 +1212,8 @@ end;
 //
 procedure TdwsCompiler.CleanupAfterCompile;
 begin
+   FPendingAttributes.Clear;
+
    FDataSymbolExprReuse.CleanValues;
    FDataSymbolExprReuse.Free;
    FDataSymbolExprReuse:=nil;
@@ -2219,7 +2270,14 @@ begin
       end else begin
 
          detachTyp:=False;
-         expr:=factory.ReadExpr(nil);
+         if typ is TArraySymbol then begin
+            case FTok.TestDeleteAny([ttALEFT, ttBLEFT]) of
+               ttALEFT : expr:=factory.ReadArrayConstantExpr(ttARIGHT, TArraySymbol(typ).Typ);
+               ttBLEFT : expr:=factory.ReadArrayConstantExpr(ttBRIGHT, TArraySymbol(typ).Typ);
+            else
+               expr:=factory.ReadExpr(nil);
+            end;
+         end else expr:=factory.ReadExpr(nil);
          try
             if Assigned(typ) then begin
                if not typ.IsCompatible(expr.typ) then
@@ -2321,8 +2379,14 @@ var
    typePos : TScriptPos;
    oldSymPos : TSymbolPosition; // Mark *where* the old declaration was
    typContext : TdwsSourceContext;
+   attributesBag : ISymbolAttributesBag;
 begin
    Result:=True;
+
+   ReadAttributes;
+
+   attributesBag:=BagPendingAttributes;
+
    if not FTok.TestDeleteNamePos(name, typePos) then
       FMsgs.AddCompilerStop(FTok.HotPos, CPE_NameExpected);
 
@@ -2350,13 +2414,15 @@ begin
       FSourceContextMap.OpenContext(typePos, nil, ttNAME);
       typContext:=FSourceContextMap.Current;
    end else typContext:=nil;
-
-   typNew := ReadType(name, tcDeclaration);
-
-   if typContext<>nil then
-      typContext.ParentSym:=typNew;
-
    try
+
+      typNew := ReadType(name, tcDeclaration);
+
+      if typContext<>nil then
+         typContext.ParentSym:=typNew;
+
+      AttachBaggedAttributes(typNew, attributesBag);
+
       if typNew.Name<>'' then begin
          // typOld = typNew if a forwarded class declaration was overwritten
          if typOld <> typNew then begin
@@ -2375,6 +2441,7 @@ begin
          // Add symbol position as being the type being declared (works for forwards too)
          RecordSymbolUse(typNew, typePos, [suDeclaration]);
       end;
+
    finally
       if coContextMap in FOptions then
          FSourceContextMap.CloseContext(FTok.CurrentPos);
@@ -2815,13 +2882,19 @@ begin
       ownerSym.AddMethod(funcResult);
    end;
 
-   bodyToken:=FTok.TestAny([ttBEGIN, ttREQUIRE]);
-   if bodyToken<>ttNone then begin
-      // inline declaration
-      if coContextMap in FOptions then
-         FSourceContextMap.OpenContext(FTok.HotPos, funcResult, bodyToken);
-      ReadProcBody(funcResult);
-      ReadSemiColon;
+   bodyToken:=FTok.TestAny([ttBEGIN, ttREQUIRE, ttEMPTY]);
+   case bodyToken of
+      ttBEGIN, ttREQUIRE : begin
+         // inline declaration
+         if coContextMap in FOptions then
+            FSourceContextMap.OpenContext(FTok.HotPos, funcResult, bodyToken);
+         ReadProcBody(funcResult);
+         ReadSemiColon;
+      end;
+      ttEMPTY : begin
+         // empty body
+         ReadProcEmpty(funcResult);
+      end;
    end;
 
    Result:=funcResult;
@@ -3095,6 +3168,24 @@ begin
          FSourceContextMap.CloseContext(FTok.CurrentPos);  // closed from declaration through implementation
       end;
    end;
+end;
+
+// ReadProcEmpty
+//
+procedure TdwsCompiler.ReadProcEmpty(funcSymbol : TFuncSymbol);
+var
+   proc : TdwsProcedure;
+begin
+   FTok.KillToken;
+
+   funcSymbol.SourcePosition:=FTok.HotPos;
+
+   proc:=TdwsProcedure.Create(FProg);
+   proc.SetBeginPos(funcSymbol.SourcePosition);
+   proc.AssignTo(funcSymbol);
+   proc.Expr:=TNullExpr.Create(proc, funcSymbol.SourcePosition);
+
+   ReadSemiColon;
 end;
 
 // ReadConditions
@@ -3662,8 +3753,11 @@ begin
    if (FSourcePostConditionsIndex<>0) and FTok.TestDelete(ttOLD) then
       Exit(ReadNameOld(isWrite));
 
-   if FTok.TestDelete(ttNEW) then
-      Exit(ReadNew(isWrite));
+   if FTok.TestDelete(ttNEW) then begin
+      Result:=ReadNew(nil);
+      Result:=ReadSymbol(Result, isWrite);
+      Exit;
+   end;
 
    if FTok.TestDelete(ttINHERITED) then
       Exit(ReadNameInherited(isWrite));
@@ -4540,7 +4634,7 @@ begin
    Result:=nil;
    try
 
-      if FTok.TestDeleteNamePos(name, namePos) then begin
+      if FTok.TestDeleteAnyNamePos(name, namePos) then begin
 
          baseType:=expr.BaseType;
 
@@ -4711,7 +4805,7 @@ end;
 
 // ReadFor
 //
-function TdwsCompiler.ReadFor : TForExpr;
+function TdwsCompiler.ReadFor : TNoResultExpr;
 var
    forPos : TScriptPos;
    expr : TProgramExpr;
@@ -4791,19 +4885,21 @@ end;
 
 // ReadForIn
 //
-function TdwsCompiler.ReadForIn(const forPos : TScriptPos; loopVarExpr : TVarExpr) : TForExpr;
+function TdwsCompiler.ReadForIn(const forPos : TScriptPos; loopVarExpr : TVarExpr) : TNoResultExpr;
 var
    iterVarExpr : TIntVarExpr;
    iterVarSym : TDataSymbol;
    initIterVarExpr : TAssignConstToIntegerVarExpr;
    inExpr : TProgramExpr;
-   inTypedExpr : TTypedExpr;
+   inExprVarSym : TDataSymbol;
    fromExpr, toExpr : TTypedExpr;
    forExprClass : TForExprClass;
    arraySymbol : TArraySymbol;
    enumSymbol : TTypeSymbol;
    inPos : TScriptPos;
-   readArrayItemExpr : TAssignExpr;
+   inExprAssignExpr, readArrayItemExpr : TAssignExpr;
+   inExprVarExpr : TVarExpr;
+   blockExpr : TBlockExprNoTable2;
 begin
    forExprClass:=TForUpwardExpr;
 
@@ -4812,14 +4908,42 @@ begin
    inExpr:=ReadName(False, FAnyTypeSymbol);
 
    readArrayItemExpr:=nil;
+   inExprAssignExpr:=nil;
 
-   if (inExpr is TTypedExpr) and not (inExpr is TTypeReferenceExpr) then begin
+   if (inExpr is TTypedExpr) and (inExpr.ClassType<>TTypeReferenceExpr) then begin
 
-      inTypedExpr:=TTypedExpr(inExpr);
+      if      inExpr.Typ.IsOfType(FProg.TypString)
+         and (   loopVarExpr.Typ.IsOfType(FProg.TypInteger)
+              or loopVarExpr.Typ.IsOfType(FProg.TypString)) then begin
 
-      if inTypedExpr.Typ is TArraySymbol then begin
+         if not FTok.TestDelete(ttDO) then begin
+            inExpr.Free;
+            loopVarExpr.Free;
+            FMsgs.AddCompilerStop(FTok.HotPos, CPE_DoExpected);
+         end;
+         if loopVarExpr.Typ.IsOfType(FProg.TypInteger) then begin
+            Result:=TForCharCodeInStrExpr.Create(FProg, forPos, loopVarExpr as TIntVarExpr,
+                                                 TTypedExpr(inExpr), ReadBlock)
+         end else begin
+            Result:=TForCharInStrExpr.Create(FProg, forPos, loopVarExpr as TStrVarExpr,
+                                             TTypedExpr(inExpr), ReadBlock);
+         end;
+         Exit;
+
+      end else if inExpr.Typ is TArraySymbol then begin
 
          arraySymbol:=TArraySymbol(inExpr.Typ);
+
+         // if inExpr is an expression, create a temporary variable
+         // so it is evaluated only once
+         if not ((inExpr is TVarExpr) or (inExpr is TConstExpr)) then begin
+            inExprVarSym:=TDataSymbol.Create('', arraySymbol);
+            FProg.Table.AddSymbol(inExprVarSym);
+            inExprVarExpr:=GetVarExpr(inExprVarSym);
+            inExprAssignExpr:=TAssignExpr.Create(FProg, FTok.HotPos, inExprVarExpr, TTypedExpr(inExpr));
+            inExpr:=inExprVarExpr;
+            inExpr.IncRefCount;
+         end;
 
          // create anonymous iter variables & it's initialization expression
          iterVarSym:=TDataSymbol.Create('', arraySymbol.IndexType);
@@ -4828,8 +4952,8 @@ begin
          initIterVarExpr:=TAssignConstToIntegerVarExpr.CreateVal(FProg, inPos, iterVarExpr, 0);
          FProg.InitExpr.AddStatement(initIterVarExpr);
 
-         fromExpr:=CreateArrayLow(inTypedExpr, arraySymbol, False);
-         toExpr:=CreateArrayHigh(inTypedExpr, arraySymbol, False);
+         fromExpr:=CreateArrayLow(inExpr, arraySymbol, False);
+         toExpr:=CreateArrayHigh(inExpr, arraySymbol, False);
 
          iterVarExpr:=GetVarExpr(iterVarSym) as TIntVarExpr;
          readArrayItemExpr:=TAssignExpr.Create(FProg, FTok.HotPos, loopVarExpr,
@@ -4883,6 +5007,13 @@ begin
 
    Result:=ReadForStep(forPos, forExprClass, iterVarExpr,
                        fromExpr, toExpr, readArrayItemExpr);
+
+   if inExprAssignExpr<>nil then begin
+      blockExpr:=TBlockExprNoTable2.Create(FProg, forPos);
+      blockExpr.AddStatement(inExprAssignExpr);
+      blockExpr.AddStatement(Result);
+      Result:=blockExpr;
+   end;
 end;
 
 // ReadForStep
@@ -5231,7 +5362,7 @@ begin
          Result:=GetMethodExpr(methodSym, nil, rkClassOfRef, FTok.HotPos, False);
       end else begin
          Result:=GetMethodExpr(methodSym,
-                               TVarExpr.CreateTyped(FProg, progMeth.SelfSym),
+                               GetVarExpr(progMeth.SelfSym),
                                rkObjRef, FTok.HotPos, False);
       end;
    end else begin
@@ -6032,17 +6163,18 @@ end;
 
 // ReadArrayConstant
 //
-function TdwsCompiler.ReadArrayConstant(expecting : TTypeSymbol = nil) : TArrayConstantExpr;
+function TdwsCompiler.ReadArrayConstant(closingToken : TTokenType;
+                                        expecting : TTypeSymbol) : TArrayConstantExpr;
 begin
    Result:=TArrayConstantExpr.Create(FProg, FTok.HotPos);
    try
-      if not FTok.TestDelete(ttARIGHT) then begin
+      if not FTok.TestDelete(closingToken) then begin
          // At least one argument was found
          repeat
             TArrayConstantExpr(Result).AddElementExpr(FProg, ReadExpr);
          until not FTok.TestDelete(ttCOMMA);
 
-         if not FTok.TestDelete(ttARIGHT) then
+         if not FTok.TestDelete(closingToken) then
             FMsgs.AddCompilerStop(FTok.HotPos, CPE_BrackRightExpected);
       end else begin
          // empty array
@@ -6072,10 +6204,17 @@ var
 //   delegateSym : TFuncSymbol;
    i : Integer;
 
+   procedure CheckNotTypeReference;
+   begin
+      if baseExpr.ClassType=TTypeReferenceExpr then
+         FMsgs.AddCompilerError(namePos, RTE_ArrayInstanceExpected);
+   end;
+
    procedure CheckRestricted;
    begin
       if arraySym.ClassType<>TDynamicArraySymbol then
-         FMsgs.AddCompilerErrorFmt(namePos, CPE_ArrayMethodRestrictedToDynamicArrays, [name]);
+         FMsgs.AddCompilerErrorFmt(namePos, CPE_ArrayMethodRestrictedToDynamicArrays, [name])
+      else CheckNotTypeReference;
    end;
 
    function CheckArguments(expectedMin, expectedMax : Integer) : Boolean;
@@ -6128,11 +6267,14 @@ begin
          end else if UnicodeSameText(name, 'high') then begin
 
             CheckArguments(0, 0);
+            if not (arraySym is TStaticArraySymbol) then
+               CheckNotTypeReference;
             Result:=CreateArrayHigh(baseExpr, arraySym, True);
 
          end else if UnicodeSameText(name, 'length') or UnicodeSameText(name, 'count') then begin
 
             CheckArguments(0, 0);
+            CheckNotTypeReference;
             Result:=CreateArrayLength(baseExpr, arraySym);
 
          end else if UnicodeSameText(name, 'add') or UnicodeSameText(name, 'push') then begin
@@ -6343,7 +6485,7 @@ end;
 
 // ReadNew
 //
-function TdwsCompiler.ReadNew(isWrite : Boolean) : TProgramExpr;
+function TdwsCompiler.ReadNew(restrictTo : TClassSymbol) : TProgramExpr;
 var
    sym : TSymbol;
    typSym : TTypeSymbol;
@@ -6425,6 +6567,8 @@ begin
 
    if classSym.IsStatic then
       FMsgs.AddCompilerErrorFmt(hotPos, CPE_ClassIsStatic, [classSym.Name]);
+   if (restrictTo<>nil) and not classSym.IsOfType(restrictTo) then
+      FMsgs.AddCompilerErrorFmt(hotPos, CPE_MustBeSubClassOf, [restrictTo.Name]);
 
    methSym:=classSym.FindDefaultConstructor(cvPrivate);
    if methSym.IsOverloaded then
@@ -6463,8 +6607,6 @@ begin
    finally
       overloads.Free;
    end;
-
-   Result:=ReadSymbol(Result, isWrite);
 end;
 
 // ReadNewArray
@@ -6789,6 +6931,8 @@ begin
 
             if not FTok.TestDelete(ttEND) then
                FMsgs.AddCompilerStop(FTok.HotPos, CPE_EndExpected);
+
+            CheckNoPendingAttributes;
          end;
 
          // resolve interface tables
@@ -6927,6 +7071,7 @@ begin
 
          if not FTok.TestDelete(ttEND) then
             FMsgs.AddCompilerStop(FTok.HotPos, CPE_EndExpected);
+         CheckNoPendingAttributes;
 
       finally
          // remove auto-forward
@@ -7286,6 +7431,7 @@ begin
          FMsgs.AddCompilerStop(FTok.HotPos, CPE_EndExpected);
       if Result.Size=0 then
          FMsgs.AddCompilerError(FTok.HotPos, RTE_NoRecordFields);
+      CheckNoPendingAttributes;
 
    except
       // Removed added record symbols. Destroying object
@@ -7503,6 +7649,7 @@ begin
 
       if not FTok.TestDelete(ttEND) then
          FMsgs.AddCompilerStop(FTok.HotPos, CPE_EndExpected);
+      CheckNoPendingAttributes;
 
    except
       // Removed added record symbols. Destroying object
@@ -8355,7 +8502,7 @@ begin
       ttMINUS :
          Result:=ReadNegation;
       ttALEFT :
-         Result:=ReadArrayConstant(expecting);
+         Result:=ReadArrayConstant(ttARIGHT, expecting);
       ttNOT :
          Result:=ReadNotTerm;
       ttBLEFT : begin
@@ -9381,10 +9528,18 @@ end;
 // CurrentStruct
 //
 function TdwsCompiler.CurrentStruct : TCompositeTypeSymbol;
+var
+   prog : TdwsProgram;
+   func : TFuncSymbol;
 begin
-   if (FProg is TdwsProcedure) and (TdwsProcedure(FProg).Func is TMethodSymbol) then
-      Result:=TMethodSymbol(TdwsProcedure(FProg).Func).StructSymbol
-   else Result:=nil;
+   prog:=FProg;
+   while prog is TdwsProcedure do begin
+      func:=TdwsProcedure(prog).Func;
+      if func is TMethodSymbol then
+         Exit(TMethodSymbol(func).StructSymbol)
+      else prog:=prog.Parent;
+   end;
+   Result:=nil;
 end;
 
 // FindStructMember
@@ -10004,7 +10159,7 @@ end;
 
 // CreateArrayLow
 //
-function TdwsCompiler.CreateArrayLow(baseExpr : TTypedExpr; typ : TArraySymbol; captureBase : Boolean) : TTypedExpr;
+function TdwsCompiler.CreateArrayLow(baseExpr : TProgramExpr; typ : TArraySymbol; captureBase : Boolean) : TTypedExpr;
 begin
    if typ is TStaticArraySymbol then
       Result:=TConstExpr.CreateIntegerValue(FProg, TStaticArraySymbol(typ).LowBound)
@@ -10017,7 +10172,7 @@ end;
 
 // CreateArrayHigh
 //
-function TdwsCompiler.CreateArrayHigh(baseExpr : TTypedExpr; typ : TArraySymbol; captureBase : Boolean) : TTypedExpr;
+function TdwsCompiler.CreateArrayHigh(baseExpr : TProgramExpr; typ : TArraySymbol; captureBase : Boolean) : TTypedExpr;
 begin
    if typ is TOpenArraySymbol then begin
       if baseExpr=nil then
@@ -10027,7 +10182,7 @@ begin
    end else if typ is TDynamicArraySymbol then begin
       if baseExpr=nil then
          FMsgs.AddCompilerStop(FTok.HotPos, CPE_InvalidOperands);
-      Result:=TArrayLengthExpr.Create(FProg, baseExpr, captureBase);
+      Result:=TArrayLengthExpr.Create(FProg, baseExpr as TTypedExpr, captureBase);
       TArrayLengthExpr(Result).Delta:=-1;
    end else begin
       if captureBase then
@@ -10628,6 +10783,83 @@ begin
    end;
 end;
 
+// ReadAttributes
+//
+procedure TdwsCompiler.ReadAttributes;
+var
+   expr : TProgramExpr;
+   customAttribute : TClassSymbol;
+   hotPos : TScriptPos;
+begin
+   if not FTok.Test(ttALEFT) then Exit;
+
+   customAttribute:=FProg.Root.SystemTable.SymbolTable.TypCustomAttribute;
+
+   while FTok.TestDelete(ttALEFT) do begin
+      hotPos:=FTok.HotPos;
+      expr:=ReadNew(customAttribute);
+      if not ((expr is TMethodExpr) and (TMethodExpr(expr).MethSym.Kind=fkConstructor)) then
+         FMsgs.AddCompilerError(hotPos, CPE_AttributeConstructorExpected);
+      FPendingAttributes.Add(TdwsSymbolAttribute.Create(hotPos, TMethodExpr(expr)));
+      if not FTok.TestDelete(ttARIGHT) then
+         FMsgs.AddCompilerStop(hotPos, CPE_ArrayBracketRightExpected);
+   end;
+end;
+
+// BagPendingAttributes
+//
+function TdwsCompiler.BagPendingAttributes : ISymbolAttributesBag;
+var
+   bag : TSymbolAttributesBag;
+begin
+   if FPendingAttributes.Count>0 then begin
+      bag:=TSymbolAttributesBag.Create;
+      bag.FAttributes:=FPendingAttributes;
+      FPendingAttributes:=TdwsSymbolAttributes.Create;
+      Result:=bag;
+   end else Result:=nil;
+end;
+
+// AttachBaggedAttributes
+//
+procedure TdwsCompiler.AttachBaggedAttributes(symbol : TSymbol; const bag : ISymbolAttributesBag);
+var
+   i : Integer;
+   attrs : TdwsSymbolAttributes;
+   attr : TdwsSymbolAttribute;
+begin
+   if bag=nil then Exit;
+
+   attrs:=bag.Attributes;
+   for i:=0 to attrs.Count-1 do begin
+      attr:=attrs[i];
+      attr.Symbol:=symbol;
+      FMainProg.Attributes.Add(attr);
+   end;
+   attrs.ExtractAll;
+end;
+
+// CheckNoPendingAttributes
+//
+procedure TdwsCompiler.CheckNoPendingAttributes;
+
+   procedure ErrorDanglingAttributes;
+   var
+      i : Integer;
+      attr : TdwsSymbolAttribute;
+   begin
+      for i:=0 to FPendingAttributes.Count-1 do begin
+         attr:=FPendingAttributes[i];
+         FMsgs.AddCompilerError(attr.ScriptPos, CPE_DanglingAttribute);
+      end;
+      FPendingAttributes.Clear;
+   end;
+
+begin
+   if FPendingAttributes.Count>0 then
+      ErrorDanglingAttributes;
+end;
+
 // EnumerateHelpers
 //
 function TdwsCompiler.EnumerateHelpers(typeSym : TTypeSymbol) : THelperSymbols;
@@ -10884,6 +11116,11 @@ begin
                                        ['Cls', SYS_STRING, 'Msg', SYS_STRING], '',
                                        clsDelphiException, cvPublic, sysTable);
    sysTable.AddSymbol(clsDelphiException);
+
+   // Create TCustomAttribute
+   sysTable.TypCustomAttribute := TClassSymbol.Create(SYS_TCUSTOMATTRIBUTE, nil);
+   sysTable.TypCustomAttribute.InheritFrom(sysTable.TypObject);
+   sysTable.AddSymbol(sysTable.TypCustomAttribute);
 
    // ExceptObj function
    TExceptObjFunc.Create(sysTable, 'ExceptObject', [], SYS_EXCEPTION, []);
