@@ -38,7 +38,7 @@ type
      ttCLASS, ttNIL, ttIS, ttAS, ttIMPLEMENTS, ttINDEX, ttOBJECT,
      ttVIRTUAL, ttOVERRIDE, ttREINTRODUCE, ttINHERITED, ttFINAL, ttNEW,
      ttABSTRACT, ttSEALED, ttSTATIC, ttPARTIAL, ttDEPRECATED, ttOVERLOAD,
-     ttEXTERNAL, ttFORWARD, ttIN,
+     ttEXTERNAL, ttFORWARD, ttEMPTY, ttIN,
      ttENSURE, ttREQUIRE, ttINVARIANTS, ttOLD,
      ttINTERFACE, ttIMPLEMENTATION, ttINITIALIZATION, ttFINALIZATION, ttHELPER,
      ttBEGIN, ttEND, ttBREAK, ttCONTINUE, ttEXIT,
@@ -47,7 +47,7 @@ type
      ttTRUE, ttFALSE,
      ttAND, ttOR, ttXOR, ttIMPLIES, ttDIV, ttMOD, ttNOT, ttSHL, ttSHR, ttSAR,
      ttPLUS, ttMINUS,
-     ttTIMES, ttDIVIDE, ttPERCENT, ttCARET, ttAT, ttDOLLAR, ttEXCLAMATION,
+     ttTIMES, ttDIVIDE, ttPERCENT, ttCARET, ttAT, ttDOLLAR, ttEXCLAMATION, ttQUESTION,
      ttEQ, ttNOTEQ, ttGTR, ttGTREQ, ttLESS, ttLESSEQ,
      ttLESSLESS, ttGTRGTR,
      ttSEMI, ttCOMMA, ttCOLON,
@@ -155,6 +155,8 @@ type
          FStates : TObjectList<TState>;
          FEOFTransition : TErrorTransition;
          FReservedNames : TTokenTypes;
+         FSymbolTokens : TTokenTypes;
+         FReservedTokens : TTokenTypes;
 
       protected
          function CreateState : TState;
@@ -169,6 +171,8 @@ type
          function CreateTokenizer(msgs : TdwsCompileMessageList) : TTokenizer;
 
          property ReservedNames : TTokenTypes read FReservedNames write FReservedNames;
+         property SymbolTokens : TTokenTypes read FSymbolTokens write FSymbolTokens;
+         property ReservedTokens : TTokenTypes read FReservedTokens;
    end;
 
    TTokenizerSourceInfo = record
@@ -236,8 +240,10 @@ type
          function TestDelete(t : TTokenType) : Boolean;
          function TestDeleteAny(const t : TTokenTypes) : TTokenType;
          function TestName : Boolean;
+         function TestAnyName : Boolean;
 
          function TestDeleteNamePos(var aName : UnicodeString; var aPos : TScriptPos) : Boolean; inline;
+         function TestDeleteAnyNamePos(var aName : UnicodeString; var aPos : TScriptPos) : Boolean; inline;
 
          procedure SimulateToken(t : TTokenType; const scriptPos : TScriptPos);
          procedure SimulateStringToken(const scriptPos : TScriptPos; const str : UnicodeString);
@@ -267,7 +273,7 @@ const
      'CLASS', 'NIL', 'IS', 'AS', 'IMPLEMENTS', 'INDEX', 'OBJECT',
      'VIRTUAL', 'OVERRIDE', 'REINTRODUCE', 'INHERITED', 'FINAL', 'NEW',
      'ABSTRACT', 'SEALED', 'STATIC', 'PARTIAL', 'DEPRECATED', 'OVERLOAD',
-     'EXTERNAL', 'FORWARD', 'IN',
+     'EXTERNAL', 'FORWARD', 'EMPTY', 'IN',
      'ENSURE', 'REQUIRE', 'INVARIANTS', 'OLD',
      'INTERFACE', 'IMPLEMENTATION', 'INITIALIZATION', 'FINALIZATION', 'HELPER',
      'BEGIN', 'END', 'BREAK', 'CONTINUE', 'EXIT',
@@ -276,7 +282,7 @@ const
      'TRUE', 'FALSE',
      'AND', 'OR', 'XOR', 'IMPLIES', 'DIV', 'MOD', 'NOT', 'SHL', 'SHR', 'SAR',
      '+', '-',
-     '*', '/', '%', '^', '@', '$', '!',
+     '*', '/', '%', '^', '@', '$', '!', '?',
      '=', '<>', '>', '>=', '<', '<=',
      '<<', '>>',
      ';', ',', ':',
@@ -582,6 +588,7 @@ begin
      '[': Result := ttALEFT;
      ']': Result := ttARIGHT;
      '!': Result := ttEXCLAMATION;
+     '?': Result := ttQUESTION;
      '=': Result := ttEQ;
      '<':
          if Len=1 then // '<'
@@ -625,7 +632,7 @@ const
       ttBEGIN, ttBREAK,
       ttCONST, ttCLASS, ttCONSTRUCTOR, ttCASE, ttCDECL, ttCONTINUE,
       ttDO, ttDOWNTO, ttDIV, ttDEFAULT, ttDESTRUCTOR, ttDEPRECATED,
-      ttELSE, ttEND, ttENSURE, ttENUM, ttEXCEPT, ttEXIT, ttEXTERNAL,
+      ttELSE, ttEMPTY, ttEND, ttENSURE, ttENUM, ttEXCEPT, ttEXIT, ttEXTERNAL,
       ttFALSE, ttFINAL, ttFINALIZATION, ttFINALLY, ttFLAGS, ttFOR,
       ttFORWARD, ttFUNCTION, ttHELPER,
       ttIF, ttIMPLIES, ttIMPLEMENTS, ttIN, ttINITIALIZATION, ttINVARIANTS,
@@ -1000,7 +1007,20 @@ begin
    if not Assigned(FToken) then
       ReadToken;
    if Assigned(FToken) then begin
-      Result:=(FToken.FString<>'') and not (FToken.FTyp in FRules.ReservedNames);
+      Result:=(FToken.FString<>'') and not (FToken.FTyp in FRules.ReservedTokens);
+      FSource.FHotPos.SetLineCol(FToken.FScriptPos);
+   end;
+end;
+
+// TestAnyName
+//
+function TTokenizer.TestAnyName : Boolean;
+begin
+   Result:=False;
+   if not Assigned(FToken) then
+      ReadToken;
+   if Assigned(FToken) then begin
+      Result:=(FToken.FString<>'') and not (FToken.FTyp in FRules.SymbolTokens);
       FSource.FHotPos.SetLineCol(FToken.FScriptPos);
    end;
 end;
@@ -1010,6 +1030,20 @@ end;
 function TTokenizer.TestDeleteNamePos(var aName : UnicodeString; var aPos : TScriptPos) : Boolean;
 begin
    if not TestName then
+      Result:=False
+   else begin
+      aName:=GetToken.FString;
+      aPos:=HotPos;
+      KillToken;
+      Result:=True;
+   end;
+end;
+
+// TestDeleteAnyNamePos
+//
+function TTokenizer.TestDeleteAnyNamePos(var aName : UnicodeString; var aPos : TScriptPos) : Boolean;
+begin
+   if not TestAnyName then
       Result:=False
    else begin
       aName:=GetToken.FString;
@@ -1065,13 +1099,23 @@ var
    tokenIntVal, n : Integer;
 begin
    tokenIntVal:=FTokenBuf.ToInt64;
-   if Cardinal(tokenIntVal)>Cardinal($FFFF) then
+   case tokenIntVal of
+      0..$FFFF : begin
+         n:=Length(result.FString)+1;
+         SetLength(result.FString, n);
+         result.FString[n]:=WideChar(tokenIntVal);
+         result.FTyp:=ttStrVal;
+      end;
+      $10000..$10FFFF : begin
+         n:=Length(result.FString)+2;
+         SetLength(result.FString, n);
+         tokenIntVal:=tokenIntVal-$10000;
+         result.FString[n-1]:=WideChar($D800+(tokenIntVal shr 10));
+         result.FString[n]:=WideChar($DC00+(tokenIntVal and $3FF));
+         result.FTyp:=ttStrVal;
+      end;
+   else
       AddCompilerStopFmtTokenBuffer(TOK_InvalidCharConstant)
-   else begin
-      n:=Length(result.FString)+1;
-      SetLength(result.FString, n);
-      result.FString[n]:=WideChar(tokenIntVal);
-      result.FTyp:=ttStrVal;
    end;
 end;
 
@@ -1365,6 +1409,8 @@ var
    i : Integer;
    state : TState;
 begin
+   FReservedTokens:=FSymbolTokens+FReservedNames;
+
    FEOFTransition:=TErrorTransition.Create('');
    for i:=0 to FStates.Count-1 do begin
       state:=FStates[i];
