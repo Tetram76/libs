@@ -20,6 +20,9 @@ type
   protected
     function GetConnection: IDBConnection;
     function GetSize: Integer;
+    procedure ClearPool;
+    procedure Lock;
+    procedure Unlock;
   public
     constructor Create(const Options: ISuperObject; max: Integer); reintroduce; overload;
     constructor Create(const Options: string; max: Integer); reintroduce; overload;
@@ -67,8 +70,18 @@ type
     destructor Destroy; override;
   end;
 
+  function GetUIBConnections: Integer;
+
 implementation
 uses sysutils, Generics.Collections;
+
+var
+  UIBConnections: Integer = 0;
+
+function GetUIBConnections: Integer;
+begin
+  Result := UIBConnections;
+end;
 
 { TDBUIBConnection }
 
@@ -78,6 +91,7 @@ var
   option: string;
 begin
   inherited Create(stObject);
+  InterlockedIncrement(UIBConnections);
   FDbHandle := nil;
 
   DataPtr := Self;
@@ -122,6 +136,7 @@ begin
   if FDbHandle <> nil then
     FLibrary.DetachDatabase(FDbHandle);
   FLibrary.Free;
+  InterlockedDecrement(UIBConnections);
   inherited;
 end;
 
@@ -666,6 +681,16 @@ begin
   FMax := max;
 end;
 
+procedure TDBUIBConnectionPool.ClearPool;
+begin
+  Lock;
+  try
+    AsObject['pool'].AsArray.Clear;
+  finally
+    Unlock;
+  end;
+end;
+
 constructor TDBUIBConnectionPool.Create(const Options: string; max: Integer);
 begin
   Create(SO(Options), max);
@@ -685,7 +710,7 @@ var
 begin
   Result := nil;
 
-  FCriticalSection.Enter;
+  Lock;
   try
     ar := AsObject['pool'].AsArray;
     while Result = nil do
@@ -711,21 +736,34 @@ begin
         ar.Add(Result as ISuperObject);
         Exit;
       end;
-      SwitchToThread;
+  {$IFDEF SWITCHTOTHREAD}
+      if not SwitchToThread then
+  {$ENDIF}
+        sleep(1);
     end;
   finally
-    FCriticalSection.Leave;
+    Unlock;
   end;
 end;
 
 function TDBUIBConnectionPool.GetSize: Integer;
 begin
-  FCriticalSection.Enter;
+  Lock;
   try
     Result := AsObject['pool'].AsArray.Length;
   finally
-    FCriticalSection.Leave;
+    Unlock;
   end;
+end;
+
+procedure TDBUIBConnectionPool.Lock;
+begin
+  FCriticalSection.Enter;
+end;
+
+procedure TDBUIBConnectionPool.Unlock;
+begin
+  FCriticalSection.Leave;
 end;
 
 end.
