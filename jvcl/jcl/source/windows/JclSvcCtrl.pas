@@ -31,8 +31,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-12-30 00:12:19 +0100 (ven., 30 déc. 2011)                          $ }
-{ Revision:      $Rev:: 3662                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -367,8 +367,8 @@ function StartServiceByName(const AServer,AServiceName: String):Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclSvcCtrl.pas $';
-    Revision: '$Revision: 3662 $';
-    Date: '$Date: 2011-12-30 00:12:19 +0100 (ven., 30 déc. 2011) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -383,6 +383,7 @@ uses
   {$ELSE ~FPC}
   {$IFDEF HAS_UNITSCOPE}
   Winapi.RegStr,
+  System.Types, // inlining of TList.Remove
   {$ELSE ~HAS_UNITSCOPE}
   RegStr,
   {$ENDIF ~HAS_UNITSCOPE}

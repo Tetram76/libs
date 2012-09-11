@@ -22,9 +22,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-11-30 11:06:34 +0100 (mer., 30 nov. 2011)                          $ }
-{ Revision:      $Rev:: 3640                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -123,6 +123,9 @@ implementation
 {$R *.dfm}
 
 uses
+  {$IFDEF HAS_UNIT_TYPES}
+  Types, // inlining of Point
+  {$ENDIF HAS_UNIT_TYPES}
   Windows, Messages,
   FileCtrl,
   JclStrings,

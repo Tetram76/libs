@@ -34,9 +34,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-05-16 21:09:59 +0200 (mer., 16 mai 2012)                           $ }
-{ Revision:      $Rev:: 3795                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1025,8 +1025,8 @@ procedure AddModule(const ModuleName: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDebug.pas $';
-    Revision: '$Revision: 3795 $';
-    Date: '$Date: 2012-05-16 21:09:59 +0200 (mer., 16 mai 2012) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -1038,20 +1038,21 @@ implementation
 uses
   {$IFDEF HAS_UNITSCOPE}
   System.RTLConsts,
-    {$IFDEF HAS_UNIT_CHARACTER}
+  System.Types, // for inlining TList.Remove
+  {$IFDEF HAS_UNIT_CHARACTER}
   System.Character,
-   {$ENDIF HAS_UNIT_CHARACTER}
-   {$IFDEF SUPPORTS_GENERICS}
+  {$ENDIF HAS_UNIT_CHARACTER}
+  {$IFDEF SUPPORTS_GENERICS}
   System.Generics.Collections,
-   {$ENDIF SUPPORTS_GENERICS}
+  {$ENDIF SUPPORTS_GENERICS}
   {$ELSE ~HAS_UNITSCOPE}
   RTLConsts,
-   {$IFDEF HAS_UNIT_CHARACTER}
+  {$IFDEF HAS_UNIT_CHARACTER}
   Character,
-   {$ENDIF HAS_UNIT_CHARACTER}
-   {$IFDEF SUPPORTS_GENERICS}
+  {$ENDIF HAS_UNIT_CHARACTER}
+  {$IFDEF SUPPORTS_GENERICS}
   Generics.Collections,
-   {$ENDIF SUPPORTS_GENERICS}
+  {$ENDIF SUPPORTS_GENERICS}
   {$ENDIF ~HAS_UNITSCOPE}
   {$IFDEF MSWINDOWS}
   JclRegistry,

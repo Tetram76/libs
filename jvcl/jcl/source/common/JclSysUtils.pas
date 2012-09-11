@@ -41,9 +41,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-08-14 10:48:19 +0200 (mar., 14 août 2012)                         $ }
-{ Revision:      $Rev:: 3818                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2012-09-03 16:52:06 +0200 (lun., 03 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3860                                                                     $ }
+{ Author:        $Author:: obones                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -787,8 +787,8 @@ function VarIsNullEmptyBlank(const V: Variant): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysUtils.pas $';
-    Revision: '$Revision: 3818 $';
-    Date: '$Date: 2012-08-14 10:48:19 +0200 (mar., 14 août 2012) $';
+    Revision: '$Revision: 3860 $';
+    Date: '$Date: 2012-09-03 16:52:06 +0200 (lun., 03 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2842,11 +2842,19 @@ begin
     nSize := 4096;
 
   InterlockedIncrement(AsyncPipeCounter);
-  PipeName := Format('\\.\Pipe\AsyncAnonPipe.%.8x.%.8x', [GetCurrentProcessId, AsyncPipeCounter]);
+  // In some (not so) rare instances there is a race condition
+  // where the counter is the same for two threads at the same 
+  // time. This makes the CreateNamedPipe call below fail 
+  // because of the limit set to 1 in the call.
+  // So, to be sure this call succeeds, we put both the process
+  // and thread id in the name of the pipe.
+  // This was found to happen while simply starting 7 instances
+  // of the same exe file in parallel.
+  PipeName := Format('\\.\Pipe\AsyncAnonPipe.%.8x.%.8x.%.8x', [GetCurrentProcessId, GetCurrentThreadId, AsyncPipeCounter]);
 
   PipeReadHandle := CreateNamedPipe(PChar(PipeName), PIPE_ACCESS_INBOUND or FILE_FLAG_OVERLAPPED,
       PIPE_TYPE_BYTE or PIPE_WAIT, 1, nSize, nSize, 120 * 1000, lpPipeAttributes);
-  if PipeReadHandle = 0 then
+  if PipeReadHandle = INVALID_HANDLE_VALUE then
     Exit;
 
   PipeWriteHandle := CreateFile(PChar(PipeName), GENERIC_WRITE, 0, lpPipeAttributes, OPEN_EXISTING,
@@ -2889,6 +2897,7 @@ var
   ProcessEvent: TJclDispatcherObject;
   WaitEvents: array of TJclDispatcherObject;
   InternalAbort: Boolean;
+  LastError: DWORD;
 begin
   // hack to pass a null reference to the parameter lpNumberOfBytesRead of ReadFile
   Result := $FFFFFFFF;
@@ -3046,23 +3055,28 @@ begin
       end;
     end;
   finally
-    if OutPipeInfo.PipeRead <> 0 then
-      CloseHandle(OutPipeInfo.PipeRead);
-    if OutPipeInfo.PipeWrite <> 0 then
-      CloseHandle(OutPipeInfo.PipeWrite);
-    if ErrorPipeInfo.PipeRead <> 0 then
-      CloseHandle(ErrorPipeInfo.PipeRead);
-    if ErrorPipeInfo.PipeWrite <> 0 then
-      CloseHandle(ErrorPipeInfo.PipeWrite);
-    if ProcessInfo.hThread <> 0 then
-      CloseHandle(ProcessInfo.hThread);
+    LastError := GetLastError;
+    try
+      if OutPipeInfo.PipeRead <> 0 then
+        CloseHandle(OutPipeInfo.PipeRead);
+      if OutPipeInfo.PipeWrite <> 0 then
+        CloseHandle(OutPipeInfo.PipeWrite);
+      if ErrorPipeInfo.PipeRead <> 0 then
+        CloseHandle(ErrorPipeInfo.PipeRead);
+      if ErrorPipeInfo.PipeWrite <> 0 then
+        CloseHandle(ErrorPipeInfo.PipeWrite);
+      if ProcessInfo.hThread <> 0 then
+        CloseHandle(ProcessInfo.hThread);
 
-    if Assigned(ProcessEvent) then
-      ProcessEvent.Free // this calls CloseHandle(ProcessInfo.hProcess)
-    else if ProcessInfo.hProcess <> 0 then
-      CloseHandle(ProcessInfo.hProcess);
-    OutPipeInfo.Event.Free;
-    ErrorPipeInfo.Event.Free;
+      if Assigned(ProcessEvent) then
+        ProcessEvent.Free // this calls CloseHandle(ProcessInfo.hProcess)
+      else if ProcessInfo.hProcess <> 0 then
+        CloseHandle(ProcessInfo.hProcess);
+      OutPipeInfo.Event.Free;
+      ErrorPipeInfo.Event.Free;
+    finally
+      SetLastError(LastError);
+    end;
   end;
 {$ENDIF MSWINDOWS}
 {$IFDEF UNIX}

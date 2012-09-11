@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-12-27 22:47:24 +0100 (mar., 27 déc. 2011)                         $ }
-{ Revision:      $Rev:: 3653                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -156,8 +156,8 @@ procedure ExportUnitVersioningToFile(iFileName : string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnitVersioning.pas $';
-    Revision: '$Revision: 3653 $';
-    Date: '$Date: 2011-12-27 22:47:24 +0100 (mar., 27 déc. 2011) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -168,6 +168,7 @@ implementation
 uses
   // make TObjectList functions inlined
   {$IFDEF HAS_UNITSCOPE}
+  System.Types, // inlining of TObjectList.Remove
   System.Classes,
   {$ELSE ~HAS_UNITSCOPE}
   Classes,

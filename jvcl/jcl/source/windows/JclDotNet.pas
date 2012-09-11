@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3599                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -346,8 +346,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclDotNet.pas $';
-    Revision: '$Revision: 3599 $';
-    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -358,11 +358,16 @@ implementation
 
 uses
   {$IFDEF HAS_UNITSCOPE}
-  System.Win.ComObj, System.Variants,
+  System.Win.ComObj,
+  System.Variants,
+  System.Types, // inline of TList.Remove
   {$ELSE ~HAS_UNITSCOPE}
-  ComObj, Variants,
+  ComObj,
+  Variants,
   {$ENDIF ~HAS_UNITSCOPE}
-  JclSysUtils, JclResources, JclStrings;
+  JclSysUtils,
+  JclResources,
+  JclStrings;
 
 function CompareCLRVersions(const LeftVersion, RightVersion: string): Integer;
 var

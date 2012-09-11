@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-04-08 18:49:18 +0200 (dim., 08 avr. 2012)                          $ }
-{ Revision:      $Rev:: 3773                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -587,8 +587,8 @@ function CompareFiles(const FileA, FileB: TFileName; BufferSize: Longint = Strea
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStreams.pas $';
-    Revision: '$Revision: 3773 $';
-    Date: '$Date: 2012-04-08 18:49:18 +0200 (dim., 08 avr. 2012) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -598,7 +598,13 @@ const
 implementation
 
 uses
-  JclResources, JclCharsets, JclMath, JclSysUtils;
+  {$IFDEF HAS_UNITSCOPE}
+  System.Types,
+  {$ENDIF HAS_UNITSCOPE}
+  JclResources,
+  JclCharsets,
+  JclMath,
+  JclSysUtils;
 
 function StreamCopy(Source: TStream; Dest: TStream; BufferSize: Longint): Int64;
 var
