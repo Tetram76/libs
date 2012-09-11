@@ -58,7 +58,7 @@ Known Issues and Updates:
                 properly when attached to JvCsvDataset.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCsvData.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvCsvData.pas 13419 2012-09-10 11:07:42Z obones $
 
 
 
@@ -207,11 +207,21 @@ type
 
   EJvCsvKeyError = class(EDatabaseError); // Key Uniqueness or Key Problem
 
-  {$IFDEF COMPILER12_UP}
-  TJvRecordBuffer = TRecordBuffer;  // Delphi 2009
+  {$IFDEF RTL240_UP}
+  PJvMemBuffer = PByte;
+  TJvRecordBuffer = TRecordBuffer;
+  TJvValueBuffer = TValueBuffer;
+  TJvBookmark = TBookmark;
   {$ELSE}
-  TJvRecordBuffer = PAnsiChar;
-  {$ENDIF COMPILER12_UP}
+  {$IFDEF UNICODE}
+  PJvMemBuffer = PByte;
+  {$ELSE}
+  PJvMemBuffer = PAnsiChar;
+  {$ENDIF UNICODE}
+  TJvRecordBuffer = Pointer;
+  TJvValueBuffer = Pointer;
+  TJvBookmark = Pointer;
+  {$ENDIF RTL240_UP}
 
   { Special Event Types }
   TJvCsvOnSpecialData = procedure(Sender: TObject; Index: Integer; NonCsvData: RawByteString) of object;
@@ -337,7 +347,7 @@ type
     constructor Create;
 
     procedure AddRow(Item: PCsvRow);
-    function AllocRecordBuffer: TJvRecordBuffer;  { was PChar, now in tiburon it is PByte }
+    function AllocRecordBuffer: PJvMemBuffer;  { was PChar, now in tiburon it is PByte }
 
     procedure InsertRow(const Position: Integer;  Item: PCsvRow);
     procedure AddRowStr(const Item: string); // convert string->TJvCsvRow
@@ -564,29 +574,29 @@ type
     procedure SetCsvFieldDef(const Value: string);
 
     { Mandatory VCL TDataSet Overrides - Pure Virtual Methods of Base Class }
-    function AllocRecordBuffer: TJvRecordBuffer; override;
-    procedure FreeRecordBuffer(var Buffer: TJvRecordBuffer); override;
-    procedure InternalInitRecord(Buffer: TJvRecordBuffer); override;
-    function GetRecord(Buffer: TJvRecordBuffer; GetMode: TGetMode;
+    function AllocRecordBuffer: PJvMemBuffer; override;
+    procedure FreeRecordBuffer(var Buffer: PJvMemBuffer); override;
+    procedure InternalInitRecord(Buffer: PJvMemBuffer); override;
+    function GetRecord(Buffer: PJvMemBuffer; GetMode: TGetMode;
       DoCheck: Boolean): TGetResult; override;
 
     function GetRecordSize: Word; override;
-    procedure SetFieldData(Field: TField; Buffer: Pointer); override;
-    procedure ClearCalcFields(Buffer: TJvRecordBuffer); override;
+    procedure SetFieldData(Field: TField; Buffer: TJvValueBuffer); override;
+    procedure ClearCalcFields(Buffer: PJvMemBuffer); override;
 
     // Bookmark methods:
-    procedure GetBookmarkData(Buffer: TJvRecordBuffer; Data: Pointer); override;
-    function GetBookmarkFlag(Buffer: TJvRecordBuffer): TBookmarkFlag; override;
-    procedure InternalGotoBookmark(Bookmark: Pointer); override;
-    procedure InternalSetToRecord(Buffer: TJvRecordBuffer); override; // on Insertion???
-    procedure SetBookmarkFlag(Buffer: TJvRecordBuffer; Value: TBookmarkFlag); override;
-    procedure SetBookmarkData(Buffer: TJvRecordBuffer; Data: Pointer); override;
+    procedure GetBookmarkData(Buffer: PJvMemBuffer; Data: TJvBookmark); override;
+    function GetBookmarkFlag(Buffer: PJvMemBuffer): TBookmarkFlag; override;
+    procedure InternalGotoBookmark(Bookmark: TJvBookmark); override;
+    procedure InternalSetToRecord(Buffer: PJvMemBuffer); override; // on Insertion???
+    procedure SetBookmarkFlag(Buffer: PJvMemBuffer; Value: TBookmarkFlag); override;
+    procedure SetBookmarkData(Buffer: PJvMemBuffer; Data: TJvBookmark); override;
 
     // Navigational methods:
     procedure InternalFirst; override;
     procedure InternalLast; override;
     // Editing methods:
-    procedure InternalAddRecord(Buffer: Pointer; Append: Boolean); override;
+    procedure InternalAddRecord(Buffer: TJvRecordBuffer; Append: Boolean); override;
     procedure InternalDelete; override;
     procedure InternalPost; override;
     { procedure InternalInsert; override; }{not needed.}
@@ -626,7 +636,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     function BookmarkValid(Bookmark: TBookmark): Boolean; override;
-    function GetFieldData(Field: TField; Buffer: Pointer): Boolean; override;
+    function GetFieldData(Field: TField; Buffer: TJvValueBuffer): Boolean; override;
 
 
     function _AllocateRow: PCsvRow; // Don't try to create your own CsvRow Objects outside JvCsvDataSet by just allocating a TJvCsvDataRow object. Call this instead.
@@ -937,8 +947,8 @@ function JvCsvNumCondition(FieldValue: Double; CompareOperator: TJvCsvFilterNumC
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCsvData.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13419 $';
+    Date: '$Date: 2012-09-10 13:07:42 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1823,7 +1833,7 @@ begin
 end;
 
 { You shouldn't create a "TJvCsvRow-memory-buffer-record-aggregate" anywhere else than here. }
-function TJvCustomCsvDataSet.AllocRecordBuffer: TJvRecordBuffer;
+function TJvCustomCsvDataSet.AllocRecordBuffer: PJvMemBuffer;
 begin
   Assert(Assigned(FData));
   Result := FData.AllocRecordBuffer;
@@ -1831,7 +1841,7 @@ end;
 
 { calc fields support }
 
-procedure TJvCustomCsvDataSet.ClearCalcFields(Buffer: TJvRecordBuffer);
+procedure TJvCustomCsvDataSet.ClearCalcFields(Buffer: PJvMemBuffer);
 begin
   // Assumes that our buffer is a TJvCsvRow followed by
   // a dynamically resized buffer used for calculated field
@@ -1891,7 +1901,7 @@ begin
   Result := FData.FEnquoteBackslash;
 end;
 
-procedure TJvCustomCsvDataSet.FreeRecordBuffer(var Buffer: TJvRecordBuffer);
+procedure TJvCustomCsvDataSet.FreeRecordBuffer(var Buffer: PJvMemBuffer);
 begin
   if Buffer <> nil then
     FreeMem(Buffer);
@@ -1899,7 +1909,7 @@ end;
 
 { called after the record is allocated }
 
-procedure TJvCustomCsvDataSet.InternalInitRecord(Buffer: TJvRecordBuffer);
+procedure TJvCustomCsvDataSet.InternalInitRecord(Buffer: PJvMemBuffer);
 var
   RowPtr: PCsvRow;
 begin
@@ -2227,7 +2237,7 @@ begin
   end;
 end;
 
-function TJvCustomCsvDataSet.GetRecord(Buffer: TJvRecordBuffer; GetMode: TGetMode;
+function TJvCustomCsvDataSet.GetRecord(Buffer: PJvMemBuffer; GetMode: TGetMode;
   DoCheck: Boolean): TGetResult;
 var
   RowPtr: PCsvRow;
@@ -2401,12 +2411,12 @@ begin
   Result := FData.RecordSize;
 end;
 
-procedure TJvCustomCsvDataSet.SetFieldData(Field: TField; Buffer: Pointer);
+procedure TJvCustomCsvDataSet.SetFieldData(Field: TField; Buffer: TJvValueBuffer);
 var
   RowPtr: PCsvRow;
   NewVal: string;
   CP, PhysicalLocation: Integer;
-  PDestination: TJvRecordBuffer;
+  PDestination: PJvMemBuffer;
   CsvColumnData: PCsvColumn;
   DT: TDateTime;
   ATimeStamp: TTimeStamp;
@@ -2439,10 +2449,10 @@ begin
       Exit;
     Inc(PDestination, GetCalcDataOffset(RowPtr) + Field.Offset);
 
-    Byte(PDestination[0]) := Ord(Buffer <> nil);
+    PDestination[0] := {$IFNDEF RTL200_UP}AnsiChar{$ENDIF RTL200_UP}(Ord(Buffer <> nil));
 
     if AnsiChar(PDestination[0]) <> #0 then
-      Move(Buffer^, PDestination[1], Field.DataSize);
+      Move({$IFDEF RTL240_UP}PByte(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^, PDestination[1], Field.DataSize);
     //Result := True; {there is no return value, oops}
     // Notify controls of a field change:
     DataEvent(deFieldChange, NativeInt(Field));
@@ -2535,7 +2545,7 @@ begin
         if (CsvColumnData^.FFlag = jcsvAsciiDate) then
         begin
           ATimeStamp.Time := 0;
-          ATimeStamp.Date := Integer(Buffer^);
+          ATimeStamp.Date := Integer({$IFDEF RTL240_UP}PInteger(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^);
           DT := TimeStampToDateTime(ATimeStamp);
           NewVal := JvDateIsoStr(DT);
         end
@@ -2544,7 +2554,7 @@ begin
       ftTime: // NEW: TTimeField support!
         if CsvColumnData^.FFlag = jcsvAsciiTime then
         begin
-          ATimeStamp.Time := LongInt(Buffer^);
+          ATimeStamp.Time := LongInt({$IFDEF RTL240_UP}PLongInt(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^);
           ATimeStamp.Date := DateDelta;
           DT := TimeStampToDateTime(ATimeStamp);
           NewVal := JvTimeIsoStr(DT);
@@ -2556,30 +2566,30 @@ begin
           // Localized date only (no time) in Ascii
           jcsvAsciiDate:
             begin
-              DT := TimeStampToDateTime(MSecsToTimeStamp(Double(Buffer^)));
+              DT := TimeStampToDateTime(MSecsToTimeStamp(Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^)));
               NewVal := JvDateIsoStr(DT);
             end;
           // Localized time only (no date) in Ascii
           jcsvAsciiTime:
             begin
-              DT := TimeStampToDateTime(MSecsToTimeStamp(Double(Buffer^)));
+              DT := TimeStampToDateTime(MSecsToTimeStamp(Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^)));
               NewVal := JvTimeIsoStr(DT);
             end;
           // Localized date+time in Ascii
           jcsvAsciiDateTime:
             begin
-              DT := TimeStampToDateTime(MSecsToTimeStamp(Double(Buffer^)));
+              DT := TimeStampToDateTime(MSecsToTimeStamp(Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^)));
               NewVal := JvDateTimeIsoStr(DT);
             end;
           // GMT Times are stored in HEX
           jcsvGMTDateTime:
             begin
-              DT := TimeStampToDateTime(MSecsToTimeStamp(Double(Buffer^)));
+              DT := TimeStampToDateTime(MSecsToTimeStamp(Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^)));
               NewVal := JvDateTimeToTimeTHex(DT, 0);
             end;
           jcsvTZDateTime: // Move a GMT time into a timezone:
             begin
-              DT := TimeStampToDateTime(MSecsToTimeStamp(Double(Buffer^)));
+              DT := TimeStampToDateTime(MSecsToTimeStamp(Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^)));
               NewVal := JvDateTimeToTimeTHex(DT, FTimeZoneCorrection);
             end;
         else
@@ -2689,10 +2699,10 @@ begin
   end;
 end;
 
-function TJvCustomCsvDataSet.GetFieldData(Field: TField; Buffer: Pointer): Boolean;
+function TJvCustomCsvDataSet.GetFieldData(Field: TField; Buffer: TJvValueBuffer): Boolean;
 var
   RowPtr: PCsvRow;
-  PSource: TJvRecordBuffer;
+  PSource: PJvMemBuffer;
   UserString, TempString: string;
   AnsiStr: AnsiString;
   PhysicalLocation: Integer;
@@ -2879,7 +2889,7 @@ begin
           if (length_n > Field.Size * SizeOf(WideChar)) then
             length_n := Field.Size * SizeOf(WideChar);
           MoveMemory({dest} Buffer, {src} PWideChar(GetUniValue), {count} length_n);
-          PWideChar(Buffer)[Length(GetUniValue)] := WideChar(0);  { wide terminal }
+          PWideChar({$IFDEF RTL240_UP}PByte(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP})[Length(GetUniValue)] := WideChar(0);  { wide terminal }
         end;
       {$ENDIF JVCSV_WIDESTRING}
 
@@ -2895,19 +2905,19 @@ begin
             length_n := Field.Size;
 
           MoveMemory({dest} Buffer, {src} PAnsiChar(AnsiStr), {count} length_n);
-          PAnsiChar(Buffer)[length_n] := #0;
+          PAnsiChar({$IFDEF RTL240_UP}PByte(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP})[length_n] := #0;
         end;
       // Standard Integer conversion:
       ftInteger:
-        PInteger(Buffer)^ := StrToInt(TempString);
+        PInteger({$IFDEF RTL240_UP}PInteger(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP})^ := StrToInt(TempString);
       // Standard Double-precision Float conversion:
       ftFloat:
-        PDouble(Buffer)^ := JvCsvStrToFloat(TempString, GetDecimalSeparator); // was StrToFloatUS
+        PDouble({$IFDEF RTL240_UP}PByte(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP})^ := JvCsvStrToFloat(TempString, GetDecimalSeparator); // was StrToFloatUS
       ftBoolean:
         if TempString = '' then
-          PInteger(Buffer)^ := 0
+          PInteger({$IFDEF RTL240_UP}PByte(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP})^ := 0
         else
-          PWordBool(Buffer)^ := StrToIntDef(TempString, 0) <> 0; // bugfix May 26, 2003 - WP
+          PWordBool({$IFDEF RTL240_UP}PByte(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP})^ := StrToIntDef(TempString, 0) <> 0; // bugfix May 26, 2003 - WP
 
       ftDate:
         if CsvColumnData^.FFlag = jcsvAsciiDate then
@@ -2921,7 +2931,7 @@ begin
           end;
           // XXX Delphi Weirdness Ahead.  Read docs before you try to
           // understand this. The data in Buffer^ is an Integer timestamp
-          Integer(Buffer^) := DateTimeToTimeStamp(ADateTime).Date;
+          Integer({$IFDEF RTL240_UP}PInteger(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^) := DateTimeToTimeStamp(ADateTime).Date;
         end else
           JvCsvDatabaseError(FTableName, RsETimeTConvError);
 
@@ -2935,7 +2945,7 @@ begin
             Exit;
           end;
           // The data in Buffer^ is an Integer timestamp
-          Integer(Buffer^) := DateTimeToTimeStamp(ADateTime).Time;
+          Integer({$IFDEF RTL240_UP}PInteger(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^) := DateTimeToTimeStamp(ADateTime).Time;
         end else
           JvCsvDatabaseError(FTableName, RsETimeTConvError);
 
@@ -2956,7 +2966,7 @@ begin
               // XXX Delphi Weirdness Ahead.  Read docs before you try to
               // understand this. We want to store 8 bytes at Buffer^, this
               // is how we do it.
-              Double(Buffer^) := TimeStampToMSecs(DateTimeToTimeStamp(ADateTime));
+              Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^) := TimeStampToMSecs(DateTimeToTimeStamp(ADateTime));
             end;
 
           // Ascii Time 08:23:15
@@ -2974,7 +2984,7 @@ begin
               // XXX Delphi Weirdness Ahead.  Read docs before you try to
               // understand this. We want to store 8 bytes at Buffer^, this
               // is how we do it.
-              Double(Buffer^) := TimeStampToMSecs(DateTimeToTimeStamp(ADateTime));
+              Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^) := TimeStampToMSecs(DateTimeToTimeStamp(ADateTime));
             end;
 
 
@@ -2993,15 +3003,15 @@ begin
               // XXX Delphi Weirdness Ahead.  Read docs before you try to
               // understand this. We want to store 8 bytes at Buffer^, this
               // is how we do it.
-              Double(Buffer^) := TimeStampToMSecs(DateTimeToTimeStamp(ADateTime));
+              Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^) := TimeStampToMSecs(DateTimeToTimeStamp(ADateTime));
             end;
 
           // GMT Times are Stored in HEX:
           jcsvGMTDateTime:
-            Double(Buffer^) := TimeStampToMSecs(DateTimeToTimeStamp(JvTimeTHexToDateTime(TempString, 0)));
+            Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^) := TimeStampToMSecs(DateTimeToTimeStamp(JvTimeTHexToDateTime(TempString, 0)));
           // Move GMT into a Timezone:
           jcsvTZDateTime:
-            Double(Buffer^) := TimeStampToMSecs(DateTimeToTimeStamp(JvTimeTHexToDateTime(TempString,
+            Double({$IFDEF RTL240_UP}PDouble(@Buffer[0]){$ELSE}Buffer{$ENDIF RTL240_UP}^) := TimeStampToMSecs(DateTimeToTimeStamp(JvTimeTHexToDateTime(TempString,
               FTimeZoneCorrection)));
         else
           JvCsvDatabaseError(FTableName, RsETimeTConvError);
@@ -3030,12 +3040,12 @@ begin
     Result := False;
 end;
 
-procedure TJvCustomCsvDataSet.GetBookmarkData(Buffer: TJvRecordBuffer; Data: Pointer);
+procedure TJvCustomCsvDataSet.GetBookmarkData(Buffer: PJvMemBuffer; Data: TJvBookmark);
 begin
   PInteger(Data)^ := PCsvRow(Buffer)^.Bookmark.Data;
 end;
 
-function TJvCustomCsvDataSet.GetBookmarkFlag(Buffer: TJvRecordBuffer): TBookmarkFlag;
+function TJvCustomCsvDataSet.GetBookmarkFlag(Buffer: PJvMemBuffer): TBookmarkFlag;
 begin
   Result := PCsvRow(Buffer)^.Bookmark.Flag;
 end;
@@ -3063,18 +3073,18 @@ begin
     Result := Bookmark_Gtr;
 end;
 
-procedure TJvCustomCsvDataSet.SetBookmarkFlag(Buffer: TJvRecordBuffer; Value: TBookmarkFlag);
+procedure TJvCustomCsvDataSet.SetBookmarkFlag(Buffer: PJvMemBuffer; Value: TBookmarkFlag);
 begin
   PCsvRow(Buffer)^.Bookmark.Flag := Value;
 end;
 
-procedure TJvCustomCsvDataSet.InternalGotoBookmark(Bookmark: Pointer);
+procedure TJvCustomCsvDataSet.InternalGotoBookmark(Bookmark: TJvBookmark);
 begin
   {Bookmark is just pointer to Integer}
   FRecordPos := PInteger(Bookmark)^;
 end;
 
-procedure TJvCustomCsvDataSet.InternalSetToRecord(Buffer: TJvRecordBuffer);
+procedure TJvCustomCsvDataSet.InternalSetToRecord(Buffer: PJvMemBuffer);
 begin
   FRecordPos := PCsvRow(Buffer)^.Bookmark.Data; // Look up index from the record.
 //  Resync([]);
@@ -3088,7 +3098,7 @@ begin
     FData.BackslashCrLf := Value;
 end;
 
-procedure TJvCustomCsvDataSet.SetBookmarkData(Buffer: TJvRecordBuffer; Data: Pointer);
+procedure TJvCustomCsvDataSet.SetBookmarkData(Buffer: PJvMemBuffer; Data: TJvBookmark);
 begin
   PCsvRow(Buffer)^.Bookmark.Data := PInteger(Data)^;
 end;
@@ -3492,7 +3502,7 @@ begin
   end;
 end;
 
-procedure TJvCustomCsvDataSet.InternalAddRecord(Buffer: Pointer; Append: Boolean);
+procedure TJvCustomCsvDataSet.InternalAddRecord(Buffer: TJvRecordBuffer; Append: Boolean);
 var
   RecPos: Integer;
   PAddRec: PCsvRow;
@@ -3888,7 +3898,7 @@ end;
 
 function TJvCustomCsvDataSet.GetRecNo: Integer; {RecNo := FRecordPos+1}
 var
-  BufPtr: TJvRecordBuffer;
+  BufPtr: PJvMemBuffer;
 begin
   CheckActive;
 
@@ -4261,7 +4271,7 @@ end;
 procedure TJvCsvRows.InternalInitRecord(Buffer: TJvRecordBuffer);
 var
   RowPtr: PCsvRow;
-  P: TJvRecordBuffer;
+  P: PByte;
 begin
   RowPtr := PCsvRow(Buffer);
   RowPtr.Magic := JvCsvRowMagic;
@@ -4293,7 +4303,7 @@ begin
   AddRow(PNewItem);
 end;
 
-function TJvCsvRows.AllocRecordBuffer: TJvRecordBuffer;
+function TJvCsvRows.AllocRecordBuffer: PJvMemBuffer;
 begin
   Assert(FTextBufferSize >= JvCsv_MINLINELENGTH);
   Result := AllocMem(GetRowAllocSize);  {was SizeOf(TJvCsvRow)}

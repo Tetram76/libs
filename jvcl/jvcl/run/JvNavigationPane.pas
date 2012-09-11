@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNavigationPane.pas 13145 2011-11-02 21:15:19Z ahuser $
+// $Id: JvNavigationPane.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvNavigationPane;
 
@@ -35,6 +35,9 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Messages, Controls, Graphics, Menus, ExtCtrls, ImgList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvConsts, JvTypes, JvButton, JvPageList, JvComponentBase, JvComponent, JvExExtCtrls;
 
 type
@@ -1159,8 +1162,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvNavigationPane.pas $';
-    Revision: '$Revision: 13145 $';
-    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1168,7 +1171,7 @@ const
 implementation
 
 uses
-  Forms, ActnList,
+  Types, Forms, ActnList,
   JvJVCLUtils, JvJCLUtils, JvResources;
 
 const

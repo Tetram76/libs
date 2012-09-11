@@ -27,7 +27,7 @@ negative number format, negative currency format and positive currency format.
 This could be rectified by a custom-written formatting routine.
 
 -----------------------------------------------------------------------------}
-// $Id: JvValidateEdit.pas 13234 2012-02-25 11:13:03Z jfudickar $
+// $Id: JvValidateEdit.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvValidateEdit;
 
@@ -344,8 +344,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidateEdit.pas $';
-    Revision: '$Revision: 13234 $';
-    Date: '$Date: 2012-02-25 12:13:03 +0100 (sam., 25 févr. 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -745,7 +745,8 @@ begin
         // parenthesis that indicate the amount is negative. Using StrToFloatDef
         // would not catch the negative part, hence the need to use a function
         // that knows how to do the conversion.
-        VarCyFromStr(FEditText, LOCALE_USER_DEFAULT, 0, Cur);
+
+        VarCyFromStr({$IFDEF RTL240_UP}PChar{$ENDIF RTL240_UP}(FEditText), LOCALE_USER_DEFAULT, 0, Cur);
         Result := Cur;
       end;
   else
@@ -793,7 +794,7 @@ begin
         // parenthesis that indicate the amount is negative. Using StrToFloatDef
         // would not catch the negative part, hence the need to use a function
         // that knows how to do the conversion.
-        VarCyFromStr(FEditText, LOCALE_USER_DEFAULT, 0, Cur);
+        VarCyFromStr({$IFDEF RTL240_UP}PChar{$ENDIF RTL240_UP}(FEditText), LOCALE_USER_DEFAULT, 0, Cur);
         Result := Cur;
       end;
     dfFloat, dfFloatGeneral, dfDecimal, dfPercent, dfScientific, dfFloatFixed:

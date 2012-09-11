@@ -23,7 +23,7 @@ tia
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUtils.pas 13326 2012-06-12 13:52:56Z obones $
+// $Id: JvDBUtils.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDBUtils;
 
@@ -185,8 +185,8 @@ procedure _DBError(const Msg: string);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUtils.pas $';
-    Revision: '$Revision: 13326 $';
-    Date: '$Date: 2012-06-12 15:52:56 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -195,6 +195,12 @@ implementation
 
 uses
   DBConsts, Math, Controls, Forms, Dialogs,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF}
+  {$IFDEF RTL240_UP}
+  System.Generics.Collections,
+  {$ENDIF RTL240_UP}
   JvJVCLUtils, JvJCLUtils, JvTypes, JvConsts, JvResources;
 
 { TJvDataLink }
@@ -467,7 +473,7 @@ function DataSetLocateThrough(DataSet: TDataSet; const KeyFields: string;
   const KeyValues: Variant; Options: TLocateOptions): Boolean;
 var
   FieldCount: Integer;
-  Fields: TList;
+  Fields: TList{$IFDEF RTL240_UP}<TField>{$ENDIF RTL240_UP};
   Bookmark: {$IFDEF RTL200_UP}TBookmark{$ELSE}TBookmarkStr{$ENDIF RTL200_UP};
 
   function CompareField(Field: TField; const Value: Variant): Boolean;
@@ -513,7 +519,7 @@ begin
   DataSet.CheckBrowseMode;
   if DataSet.IsEmpty then
     Exit;
-  Fields := TList.Create;
+  Fields := TList{$IFDEF RTL240_UP}<TField>{$ENDIF RTL240_UP}.Create;
   try
     DataSet.GetFieldList(Fields, KeyFields);
     FieldCount := Fields.Count;

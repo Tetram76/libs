@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBDialog.pas 13352 2012-06-14 09:21:26Z obones $
+// $Id: JvBaseDBDialog.pas 13413 2012-09-08 11:02:21Z ahuser $
 
 unit JvBaseDBDialog;
 
@@ -43,6 +43,7 @@ type
     FDBDialog: TForm;
     FDynControlEngine: TJvDynControlEngine;
     FSession: TComponent;
+    FParentWnd: HWND;
     function GetDynControlEngine: TJvDynControlEngine;
   protected
     function CreateForm: TForm; virtual;
@@ -68,8 +69,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBDialog.pas $';
-    Revision: '$Revision: 13352 $';
-    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
+    Revision: '$Revision: 13413 $';
+    Date: '$Date: 2012-09-08 13:02:21 +0200 (sam., 08 sept. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -78,12 +79,15 @@ implementation
 
 uses
   SysUtils, Types,
+  JvJCLUtils, // SetWindowLongPtr for older Delphi versions
   JvJVCLUtils;
 
 function TJvBaseDBDialog.CreateForm: TForm;
 begin
   Result := TForm(DynControlEngine.CreateForm('', ''));
   CreateFormControls(Result);
+  if FParentWnd <> 0 then
+    SetWindowLongPtr(Result.Handle, GWL_HWNDPARENT, LONG_PTR(FParentWnd));
 end;
 
 procedure TJvBaseDBDialog.CreateFormControls(aForm: TForm);
@@ -98,11 +102,11 @@ function TJvBaseDBDialog.Execute(ParentWnd: HWND): Boolean;
 begin
   if not Assigned(Session) then
     Abort;
+  FParentWnd := ParentWnd;
   FDBDialog := CreateForm;
   try
     AfterCreateFormControls(FDBDialog);
     FDBDialog.ShowModal;
-    FDBDialog.ParentWindow := ParentWnd;
     Result := FDBDialog.ModalResult = mrOk;
   finally
     FreeAndNil(FDBDialog);

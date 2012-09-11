@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineIntf.pas 12886 2010-11-06 23:25:16Z jfudickar $
+// $Id: JvDynControlEngineIntf.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDynControlEngineIntf;
 
@@ -34,6 +34,9 @@ uses
   {$ENDIF UNITVERSIONING}
   ActnList, Graphics, ComCtrls, ImgList,
   Classes, Controls, Forms, StdCtrls, ExtCtrls, Buttons, Dialogs,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   FileCtrl, SysUtils;
 
 type
@@ -410,8 +413,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineIntf.pas $';
-    Revision: '$Revision: 12886 $';
-    Date: '$Date: 2010-11-07 00:25:16 +0100 (dim., 07 nov. 2010) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

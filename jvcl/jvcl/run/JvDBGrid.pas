@@ -52,7 +52,7 @@ KNOWN ISSUES:
 -----------------------------------------------------------------------------
 2004/07/08 - WPostma merged changes by Frédéric Leneuf-Magaud and ahuser.}
 
-// $Id: JvDBGrid.pas 13316 2012-06-12 11:39:32Z obones $
+// $Id: JvDBGrid.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDBGrid;
 
@@ -67,6 +67,9 @@ uses
   Types,
   Windows, Messages, Classes, Graphics, Controls, Grids, Menus, DBGrids, DB,
   StdCtrls, Forms, Contnrs,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvTypes, {JvTypes contains Exception base class}
   JvAppStorage, JvFormPlacement, JvExDBGrids, JvDBUtils;
 
@@ -651,8 +654,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGrid.pas $';
-    Revision: '$Revision: 13316 $';
-    Date: '$Date: 2012-06-12 13:39:32 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDSADialogs.pas 13340 2012-06-13 08:53:16Z obones $
+// $Id: JvDSADialogs.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDSADialogs;
 
@@ -469,8 +469,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDSADialogs.pas $';
-    Revision: '$Revision: 13340 $';
-    Date: '$Date: 2012-06-13 10:53:16 +0200 (mer., 13 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -478,7 +478,7 @@ const
 implementation
 
 uses
-  Consts, Math, TypInfo,
+  Types, Consts, Math, TypInfo,
   {$IFDEF MSWINDOWS}
   JclRegistry,
   {$ENDIF MSWINDOWS}

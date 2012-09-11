@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterListParameter.pas 13297 2012-05-10 19:21:47Z jfudickar $
+// $Id: JvParameterListParameter.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvParameterListParameter;
 
@@ -34,6 +34,9 @@ uses
   {$ENDIF UNITVERSIONING}
   Classes, SysUtils, StdCtrls, ExtCtrls, Graphics, Forms,
   Controls, FileCtrl, Dialogs, ComCtrls, Buttons, Variants,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvPanel, JvParameterList, JvDynControlEngine, JvDSADialogs,
   JvDynControlEngineIntf, ActnList;
 
@@ -647,8 +650,8 @@ function DSADialogsMessageDlg(const Msg: string; const DlgType: TMsgDlgType; con
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterListParameter.pas $';
-    Revision: '$Revision: 13297 $';
-    Date: '$Date: 2012-05-10 21:21:47 +0200 (jeu., 10 mai 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}

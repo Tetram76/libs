@@ -26,7 +26,7 @@ Changes:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPageListTreeView.pas 13350 2012-06-13 14:54:41Z obones $
+// $Id: JvPageListTreeView.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvPageListTreeView;
 
@@ -40,6 +40,9 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls, ImgList, ComCtrls,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvPageList, JvExComCtrls;
 
 type
@@ -386,8 +389,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPageListTreeView.pas $';
-    Revision: '$Revision: 13350 $';
-    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

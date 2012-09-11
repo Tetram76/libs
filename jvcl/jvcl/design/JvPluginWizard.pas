@@ -39,7 +39,7 @@ Known Issues:
  V 05 : uses-list minimized
 
  -----------------------------------------------------------------------------}
-// $Id: JvPluginWizard.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvPluginWizard.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvPluginWizard;
 
@@ -491,6 +491,7 @@ begin
     {$ENDIF BCB}
     {$IFDEF DELPHI}
     Repository := Installations.DelphiInstallationFromVersion[
+      {$IFDEF DELPHI17} 17 {$ENDIF}
       {$IFDEF DELPHI16} 16 {$ENDIF}
       {$IFDEF DELPHI15} 15 {$ENDIF}
       {$IFDEF DELPHI14} 14 {$ENDIF}
@@ -812,6 +813,9 @@ begin
       {$IFDEF COMPILER16}
       Project.AddFile('JvCoreD16R.bpi', False)
       {$ENDIF COMPILER16}
+      {$IFDEF COMPILER17}
+      Project.AddFile('JvCoreD17R.bpi', False)
+      {$ENDIF COMPILER17}
     end
   end
   else
@@ -846,6 +850,9 @@ begin
       {$IFDEF COMPILER16}
       Project.AddFile('JvCoreD16R.dcp', False);
       {$ENDIF COMPILER16}
+      {$IFDEF COMPILER17}
+      Project.AddFile('JvCoreD17R.dcp', False);
+      {$ENDIF COMPILER17}
     end
   end;
 

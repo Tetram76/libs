@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThemes.pas 13397 2012-08-16 17:23:19Z ahuser $
+// $Id: JvThemes.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvThemes;
 
@@ -36,6 +36,9 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, CommCtrl, Types, SysUtils, Classes, Contnrs,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF}
   {$IFDEF JVCLThemesEnabled}
     {$IFDEF COMPILER7_UP}
   Themes, UxTheme,
@@ -816,8 +819,8 @@ procedure DrawGlassableImageList(ImageList: HIMAGELIST; Index: Integer; Dest: HD
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThemes.pas $';
-    Revision: '$Revision: 13397 $';
-    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

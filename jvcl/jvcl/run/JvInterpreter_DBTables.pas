@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_DBTables.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvInterpreter_DBTables.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvInterpreter_DBTables;
 
@@ -46,8 +46,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_DBTables.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -57,6 +57,13 @@ implementation
 uses
   BDE, Classes, DB, DBTables;
 
+type
+  {$IFDEF COMPILER12_UP}
+  TJvRecordBuffer = TRecordBuffer;  // Delphi 2009
+  {$ELSE}
+  TJvRecordBuffer = PAnsiChar;
+  {$ENDIF COMPILER12_UP}
+  
 { EDBEngineError }
 
 { constructor Create(ErrorCode: DBIResult) }
@@ -871,7 +878,7 @@ end;
 
 procedure TBDEDataSet_GetCurrentRecord(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := TBDEDataSet(Args.Obj).GetCurrentRecord({$IFDEF COMPILER12_UP}PByte{$ELSE}PAnsiChar{$ENDIF COMPILER12_UP}(AnsiString(Args.Values[0])));
+  Value := TBDEDataSet(Args.Obj).GetCurrentRecord(TJvRecordBuffer(AnsiString(Args.Values[0])));
 end;
 
 { procedure GetIndexInfo; }

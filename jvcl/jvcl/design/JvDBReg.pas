@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBReg.pas 13402 2012-08-19 09:19:08Z ahuser $
+// $Id: JvDBReg.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDBReg;
 
@@ -34,6 +34,9 @@ procedure Register;
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_ACTIONS}
+  System.Actions,
+  {$ENDIF HAS_UNIT_SYSTEM_ACTIONS}
   Classes, ComCtrls, ActnList,
   DesignEditors, DesignIntf,
   JvDsgnConsts,

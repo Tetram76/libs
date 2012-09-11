@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PgIDESelection.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: PgIDESelection.pas 13408 2012-09-03 21:23:26Z ahuser $
 
 unit PgIDESelection;
 
@@ -249,6 +249,7 @@ begin
   begin
     with TButton.Create(Client) do
     begin
+      Width := Width * Font.PixelsPerInch div 96;
       Left := Client.ClientWidth - Width - 8;
       Top := Client.ClientHeight - Height - 8;
       Anchors := [akRight, akBottom];

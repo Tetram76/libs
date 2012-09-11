@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVIDStyle.pas 13312 2012-06-12 08:42:47Z obones $
+// $Id: JvDockVIDStyle.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDockVIDStyle;
 
@@ -589,8 +589,8 @@ procedure PaintGradientBackground(Canvas: TCanvas; ARect: TRect; StartColor, End
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVIDStyle.pas $';
-    Revision: '$Revision: 13312 $';
-    Date: '$Date: 2012-06-12 10:42:47 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -598,6 +598,9 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   Types,
   {$IFDEF JVCLThemesEnabled}
   JvThemes,

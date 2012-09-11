@@ -48,7 +48,7 @@ Known Issues:
     ugly.
 
 -----------------------------------------------------------------------------}
-// $Id: JvCaptionButton.pas 13397 2012-08-16 17:23:19Z ahuser $
+// $Id: JvCaptionButton.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvCaptionButton;
 
@@ -63,6 +63,9 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Graphics, Controls, Forms, Types,
   ActnList, ImgList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvComponentBase, JvTypes;
 
 type
@@ -299,8 +302,8 @@ function AlphaBlend(hdcDest: HDC; nXOriginDest, nYOriginDest, nWidthDest,
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCaptionButton.pas $';
-    Revision: '$Revision: 13397 $';
-    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

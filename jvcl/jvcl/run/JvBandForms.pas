@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandForms.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvBandForms.pas 13411 2012-09-07 22:31:43Z ahuser $
 
 unit JvBandForms;
 
@@ -295,8 +295,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBandForms.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13411 $';
+    Date: '$Date: 2012-09-08 00:31:43 +0200 (sam., 08 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -310,17 +310,24 @@ var
   GlobalBandFormMessageHook: HHook;
   GlobalBandForms: TList;
 
+procedure InstallHook; forward;
+procedure UninstallHook; forward;
+
 //=== { TJvBandForm } ========================================================
 
 procedure TJvBandForm.AfterConstruction;
 begin
   inherited AfterConstruction;
   GlobalBandForms.Add(Self);
+  if (GlobalBandForms.Count = 1) and not (csDesigning in ComponentState) then
+    InstallHook;
 end;
 
 procedure TJvBandForm.BeforeDestruction;
 begin
   GlobalBandForms.Remove(Self);
+  if (GlobalBandForms.Count = 0) and not (csDesigning in ComponentState) then
+    UninstallHook;
   inherited BeforeDestruction;
 end;
 
@@ -425,26 +432,27 @@ var
   I: Integer;
   Msg: PMsg;
 begin
-  try
-    lOk := False;
-    Msg := PMsg(Pointer(lParam));
-    if (((Msg^.message = WM_KEYDOWN) or (Msg^.message = WM_KEYUP)) and
-      ((Msg^.wParam = VK_BACK))) then
-      lOk := True
-    else
-    if Msg^.message = WM_MOUSEMOVE then //Enable Flat effects!
-      Application.HandleMessage;
-    if lOk then
-    begin
-      for I := 0 to GlobalBandForms.Count - 1 do
-        if IsDialogMessage(TJvBandForm(GlobalBandForms.Items[I]).Handle, Msg^) then
-        begin
-          Msg^.message := WM_NULL;
-          Break;
-        end;
+  if nCode >= 0 then
+    try
+      lOk := False;
+      Msg := PMsg(Pointer(lParam));
+      if (((Msg^.message = WM_KEYDOWN) or (Msg^.message = WM_KEYUP)) and
+        ((Msg^.wParam = VK_BACK))) then
+        lOk := True
+      else
+      if Msg^.message = WM_MOUSEMOVE then //Enable Flat effects!
+        Application.HandleMessage;
+      if lOk then
+      begin
+        for I := 0 to GlobalBandForms.Count - 1 do
+          if IsDialogMessage(TJvBandForm(GlobalBandForms.Items[I]).Handle, Msg^) then
+          begin
+            Msg^.message := WM_NULL;
+            Break;
+          end;
+      end;
+    except
     end;
-  except
-  end;
   Result := CallNextHookEx(GlobalBandFormMessageHook, nCode, wParam, lParam);
 end;
 
@@ -487,10 +495,8 @@ initialization
   RegisterUnitVersion(HInstance, UnitVersioning);
   {$ENDIF UNITVERSIONING}
   GlobalBandForms := TList.Create;
-  InstallHook;
 
 finalization
-  UninstallHook;
   GlobalBandForms.Free;
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);

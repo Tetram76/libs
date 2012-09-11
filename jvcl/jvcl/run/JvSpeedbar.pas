@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbar.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id: JvSpeedbar.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvSpeedbar;
 
@@ -36,6 +36,9 @@ uses
   Windows, Messages, Menus, Buttons, Controls,
   Graphics, Forms, ImgList, ExtCtrls, Grids,
   RTLConsts,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JclBase,
   JvSpeedButton, JvAppStorage, JvConsts, JvTypes, JvFormPlacement,
   JvComponent, JvExtComponent, JvThemes, JvExControls;
@@ -501,8 +504,8 @@ function NewSpeedItem(AOwner: TComponent; ASpeedBar: TJvSpeedBar; Section: Integ
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedbar.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -510,7 +513,7 @@ const
 implementation
 
 uses
-  Math,
+  Types, Math,
   JvJVCLUtils, JvJCLUtils, JvSpeedbarSetupForm, JvResources;
 
 const

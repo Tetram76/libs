@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockVSNetStyle.pas 13278 2012-03-21 08:51:44Z obones $
+// $Id: JvDockVSNetStyle.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDockVSNetStyle;
 
@@ -539,8 +539,8 @@ var
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVSNetStyle.pas $';
-    Revision: '$Revision: 13278 $';
-    Date: '$Date: 2012-03-21 09:51:44 +0100 (mer., 21 mars 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -548,7 +548,7 @@ const
 implementation
 
 uses
-  SysUtils, Math, ImgList, {AppEvnts,} JvJVCLUtils,
+  Types, SysUtils, Math, ImgList, {AppEvnts,} JvJVCLUtils,
   JvDockSupportProc;
 
 type

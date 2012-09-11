@@ -35,7 +35,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvxCheckListBox.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvxCheckListBox.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvxCheckListBox;
 
@@ -318,8 +318,8 @@ function CheckBitmap: TBitmap;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvxCheckListBox.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -330,6 +330,9 @@ implementation
 
 uses
   SysUtils, Consts, Math,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils, // ULONG_PTR
   {$ENDIF ~COMPILER12_UP}

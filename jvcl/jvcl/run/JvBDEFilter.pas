@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEFilter.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvBDEFilter.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvBDEFilter;
 
@@ -142,8 +142,8 @@ procedure DropAllFilters(DataSet: TDataSet);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEFilter.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -174,6 +174,12 @@ const
 {$HINTS OFF}
 
 type
+  {$IFDEF COMPILER12_UP}
+  TJvRecordBuffer = TRecordBuffer;  // Delphi 2009
+  {$ELSE}
+  TJvRecordBuffer = PAnsiChar;
+  {$ENDIF COMPILER12_UP}
+  
   TDataSetAccessProtected = class(TDataSet);
 
 {*******************************************************}
@@ -522,7 +528,7 @@ begin
       DsSetRecordCount(DS, 1); { FActiveRecord + 1 }
       DsSetCanModify(DS, False);
       SetLength(BufPtr, 1);
-      BufPtr[0] := {$IFDEF COMPILER12_UP}PByte{$ELSE}PAnsiChar{$ENDIF COMPILER12_UP}(RecBuf);
+      BufPtr[0] := TJvRecordBuffer(RecBuf);
       DsSetBuffers(DS, BufPtr);
       { call user defined function }
       Result := Ord(FOnFiltering(Self, DS));

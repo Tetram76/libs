@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEMemTable.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvBDEMemTable.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvBDEMemTable;
 
@@ -36,6 +36,12 @@ uses
   BDE, DB, DBTables;
 
 type
+  {$IFDEF RTL240_UP}
+  TJvValueBuffer = TValueBuffer;
+  {$ELSE}
+  TJvValueBuffer = Pointer;
+  {$ENDIF RTL240_UP}
+  
   TJvBDEMemoryTable = class(TDBDataSet)
   private
     FTableName: TFileName;
@@ -68,7 +74,7 @@ type
     procedure DeleteTable;
     procedure EmptyTable;
     procedure GotoRecord(RecordNo: Longint);
-    function GetFieldData(Field: TField; Buffer: Pointer): Boolean; override;
+    function GetFieldData(Field: TField; Buffer: TJvValueBuffer): Boolean; override;
     function IsSequenced: Boolean; override;
     function Locate(const KeyFields: string; const KeyValues: Variant;
       Options: TLocateOptions): Boolean; override;
@@ -85,8 +91,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEMemTable.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -254,7 +260,7 @@ begin
 end;
 
 
-function TJvBDEMemoryTable.GetFieldData(Field: TField; Buffer: Pointer): Boolean;
+function TJvBDEMemoryTable.GetFieldData(Field: TField; Buffer: TJvValueBuffer): Boolean;
 var
   IsBlank: LongBool;
   RecBuf: {$IFDEF COMPILER12_UP}PByte{$ELSE}PAnsiChar{$ENDIF COMPILER12_UP};

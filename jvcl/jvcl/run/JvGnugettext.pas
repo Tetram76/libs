@@ -3,7 +3,7 @@
   All parts of the translation system are kept in this unit.
 
   @author Lars B. Dybdahl and others
-  @version $LastChangedRevision: 13335 $
+  @version $LastChangedRevision: 13415 $
   @see http://dybdahl.dk/dxgettext/
 -------------------------------------------------------------------------------}
 unit JvGnugettext;
@@ -99,6 +99,14 @@ interface
 {$endif}
 {$ifdef VER230}
   // Delphi 2012 with Unicode
+  {$DEFINE DELPHI2012OROLDER}
+{$endif}
+{$ifdef VER240}
+  // Delphi 2013 with Unicode
+  {$DEFINE DELPHI2013OROLDER}
+{$endif}
+
+{$ifdef DELPHI2013OROLDER}
   {$DEFINE DELPHI2012OROLDER}
 {$endif}
 
@@ -238,7 +246,7 @@ const
 
 const
   // Subversion source code version control version information
-  VCSVersion='$LastChangedRevision: 13335 $';
+  VCSVersion='$LastChangedRevision: 13415 $';
 
 type
   EGnuGettext=class(Exception);
@@ -1806,10 +1814,10 @@ begin
             tkString, tkLString :
               old := GetStrProp(AnObject, PropName);
             tkWString :
-              old := GetWideStrProp(AnObject, PropName);
+              old := {$IFDEF RTL240_UP}GetStrProp{$ELSE}GetWideStrProp{$ENDIF RTL240_UP}(AnObject, PropName);
             {$IFDEF UNICODE}
             tkUString :
-              old := GetUnicodeStrProp(AnObject, PropName);
+              old := {$IFDEF RTL240_UP}GetStrProp{$ELSE}GetUnicodeStrProp{$ENDIF RTL240_UP}(AnObject, PropName);
             {$ENDIF}
           else
             raise Exception.Create ('Internal error: Illegal property type. This problem needs to be solved by a programmer, try to find a workaround.');

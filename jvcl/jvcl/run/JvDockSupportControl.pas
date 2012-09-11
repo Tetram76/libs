@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportControl.pas 13311 2012-06-12 08:15:50Z obones $
+// $Id: JvDockSupportControl.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDockSupportControl;
 
@@ -33,8 +33,11 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
-  Messages, Windows, CommCtrl, Graphics, Controls, Forms, Classes, ExtCtrls,
-  ComCtrls, ImgList,
+  Messages, Windows, CommCtrl, Graphics, Controls, Forms, ImgList, Classes, ExtCtrls,
+  ComCtrls,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvComponent, JvAppStorage,
   JvDockTree;
 
@@ -519,8 +522,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportControl.pas $';
-    Revision: '$Revision: 13311 $';
-    Date: '$Date: 2012-06-12 10:15:50 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -528,7 +531,7 @@ const
 implementation
 
 uses
-  ComStrs, Consts, SysUtils,
+  Types, ComStrs, Consts, SysUtils,
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}

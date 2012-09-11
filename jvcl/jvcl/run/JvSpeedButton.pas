@@ -34,7 +34,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 13392 2012-08-11 23:20:08Z ahuser $
+// $Id: JvSpeedButton.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvSpeedButton;
 
@@ -48,6 +48,9 @@ uses
   {$ENDIF UNITVERSIONING}
   CommCtrl, Types, SysUtils, Classes, Windows, Messages,
   Controls, Graphics, Forms, ExtCtrls, Buttons, Menus, ImgList, ActnList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvExControls, JvComponent, JvConsts, JvTypes, JvHotTrackPersistent,
   JvThemes;
 
@@ -495,8 +498,8 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 13392 $';
-    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

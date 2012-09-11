@@ -33,7 +33,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPanel.pas 13257 2012-02-28 08:38:34Z obones $
+// $Id: JvPanel.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvPanel;
 
@@ -353,8 +353,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPanel.pas $';
-    Revision: '$Revision: 13257 $';
-    Date: '$Date: 2012-02-28 09:38:34 +0100 (mar., 28 févr. 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -362,6 +362,9 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF}
   Types, {$IFDEF COMPILER7_UP}Themes,{$ENDIF}
   JvJCLUtils, JvJVCLUtils, JvResources;
 

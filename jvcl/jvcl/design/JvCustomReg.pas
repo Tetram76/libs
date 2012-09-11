@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCustomReg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvCustomReg.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvCustomReg;
 
@@ -41,6 +41,9 @@ uses
   ExptIntf,
   {$ENDIF !COMPILER7_UP}
   ToolsAPI,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JclSchedule,
   JvDsgnConsts,
   JvTrayIcon, JvThumbImage, JvThumbnails, JvThumbViews, JvBalloonHint,

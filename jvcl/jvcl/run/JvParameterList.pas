@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvParameterList.pas 13271 2012-03-11 21:10:36Z jfudickar $
+// $Id: JvParameterList.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvParameterList;
 
@@ -503,8 +503,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvParameterList.pas $';
-    Revision: '$Revision: 13271 $';
-    Date: '$Date: 2012-03-11 22:10:36 +0100 (dim., 11 mars 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -512,6 +512,9 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF}
   JclStrings,
   JvParameterListParameter, JvResources, JvJVCLUtils, JclSysUtils;
 

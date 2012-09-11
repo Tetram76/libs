@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageDlg.pas 13352 2012-06-14 09:21:26Z obones $
+// $Id: JvImageDlg.pas 13413 2012-09-08 11:02:21Z ahuser $
 
 unit JvImageDlg;
 
@@ -60,8 +60,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageDlg.pas $';
-    Revision: '$Revision: 13352 $';
-    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
+    Revision: '$Revision: 13413 $';
+    Date: '$Date: 2012-09-08 13:02:21 +0200 (sam., 08 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -70,6 +70,34 @@ implementation
 
 uses
   JvResources;
+
+type
+  TJvImageDlgForm = class(TJvForm)
+  private
+    FParentWnd: HWND;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
+  public
+    constructor Create(AOwner: TComponent; AParentWnd: HWND); reintroduce;
+  end;
+
+//=== { TJvImageDlgForm } ====================================================
+
+constructor TJvImageDlgForm.Create(AOwner: TComponent; AParentWnd: HWND);
+begin
+  FParentWnd := AParentWnd;
+  CreateNew(AOwner, 0);
+end;
+
+procedure TJvImageDlgForm.CreateParams(var Params: TCreateParams);
+begin
+  inherited CreateParams(Params);
+  if FParentWnd <> 0 then
+    Params.WndParent := FParentWnd;
+end;
+
+
+//=== { TJvImageDialog } ====================================================
 
 constructor TJvImageDialog.Create(AOwner: TComponent);
 begin
@@ -86,13 +114,13 @@ end;
 
 function TJvImageDialog.Execute(ParentWnd: HWND): Boolean;
 var
-  Form: TJvForm;
+  Form: TJvImageDlgForm;
   Image1: TImage;
 begin
   Result := False;
   if (Picture.Height <> 0) and (Picture.Width <> 0) then
   begin
-    Form := TJvForm.CreateNew(Self);
+    Form := TJvImageDlgForm.Create(Self, ParentWnd);
     try
       Form.BorderStyle := bsDialog;
       Form.BorderIcons := [biSystemMenu];
@@ -105,7 +133,6 @@ begin
       Form.Caption := FTitle;
       Image1.SetBounds(0,0,Picture.Width,Picture.Height);
       Image1.Anchors := [akTop, akLeft, akRight, akBottom];
-      Form.ParentWindow := ParentWnd;
       Result := Form.ShowModal = mrOk;
     finally
       Form.Free;

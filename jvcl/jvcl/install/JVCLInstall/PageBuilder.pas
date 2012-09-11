@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PageBuilder.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: PageBuilder.pas 13408 2012-09-03 21:23:26Z ahuser $
 
 unit PageBuilder;
 
@@ -245,7 +245,7 @@ begin
              Width := tmpWidth;
         end;
       end;
-      Inc(Width, GetDefaultCheckBoxSize.cx*4 div 2);  // add checkbox size
+      Inc(Width, GetDefaultCheckBoxSize.cx*Canvas.Font.PixelsPerInch*4 div 2 div 96);  // add checkbox size
 
       if HorzOrientation = hoLeft then
         X := 8

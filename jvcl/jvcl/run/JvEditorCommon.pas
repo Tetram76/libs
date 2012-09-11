@@ -23,7 +23,7 @@ Remko Bonte
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvEditorCommon.pas 13398 2012-08-16 17:33:38Z ahuser $
+// $Id: JvEditorCommon.pas 13415 2012-09-10 09:51:54Z obones $
 
 { history
  (JVCL Library versions) :
@@ -207,6 +207,9 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Contnrs, Graphics, Controls,
   Forms, StdCtrls, ExtCtrls, Menus,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvConsts, JvFixedEditPopUp, JvStdEditActions, JvUnicodeCanvas, JvComponent,
   JvExControls;
 
@@ -1380,8 +1383,8 @@ function KeyPressed(VK: Integer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditorCommon.pas $';
-    Revision: '$Revision: 13398 $';
-    Date: '$Date: 2012-08-16 19:33:38 +0200 (jeu., 16 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

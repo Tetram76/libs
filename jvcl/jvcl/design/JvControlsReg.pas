@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlsReg.pas 13018 2011-04-25 19:45:55Z jfudickar $
+// $Id: JvControlsReg.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvControlsReg;
 
@@ -34,8 +34,14 @@ procedure Register;
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_ACTIONS}
+  System.Actions,
+  {$ENDIF HAS_UNIT_SYSTEM_ACTIONS}
   Classes,
   Controls, ImgList, ActnList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   DesignEditors, DesignIntf,
   JvDsgnConsts, JvDsgnIntf,
   JvCaptionButton, JvDriveCtrls, JvRegistryTreeView, JvPlaylist,
