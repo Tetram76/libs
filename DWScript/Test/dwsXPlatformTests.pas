@@ -30,11 +30,13 @@ type
 
    {$ifdef FPC}
    TTestCase = fpcunit.TTestCase;
+   ETestFailure = class (Exception);
    {$else}
    TTestCase = TestFrameWork.TTestCase;
+   ETestFailure = TestFrameWork.ETestFailure;
    {$endif}
 
-procedure RegisterTest(const testName : UnicodeString; aTest : TTestCaseClass);
+procedure RegisterTest(const testName : String; aTest : TTestCaseClass);
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -46,7 +48,7 @@ implementation
 
 // RegisterTest
 //
-procedure RegisterTest(const testName : UnicodeString; aTest : TTestCaseClass);
+procedure RegisterTest(const testName : String; aTest : TTestCaseClass);
 begin
    {$ifdef FPC}
    testregistry.RegisterTest(aTest);

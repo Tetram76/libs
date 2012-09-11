@@ -2,7 +2,7 @@ unit UdwsUtilsTests;
 
 interface
 
-uses Windows, Classes, SysUtils, TestFrameWork, dwsUtils, dwsJSON;
+uses Classes, SysUtils, dwsXPlatformTests, dwsUtils, dwsJSON;
 
 type
 
@@ -249,9 +249,9 @@ begin
    list.Add(nil);
    list.Add(nil);
    CheckEquals(2, list.Count);
-   list.Extract(0);
+   list.ExtractAt(0);
    CheckEquals(1, list.Count);
-   list.Extract(0);
+   list.ExtractAt(0);
    CheckEquals(0, list.Count);
    list.Free;
 end;
@@ -368,7 +368,11 @@ var
 begin
    json:=TdwsJSONValue.ParseString('"\u044F\u00aA"');
    CheckEquals(TdwsJSONImmediate.ClassName, json.ClassName, 'TdwsJSONImmediate');
-   CheckEquals(Chr($44f)+Chr($aa), TdwsJSONImmediate(json).AsString, 'unicode');
+   {$ifdef FPC}
+   CheckEquals(UTF8Encode(WideChar($44f)+WideChar($aa)), TdwsJSONImmediate(json).AsString, 'unicode');
+   {$else}
+   CheckEquals(WideChar($44f)+WideChar($aa), TdwsJSONImmediate(json).AsString, 'unicode');
+   {$endif}
    json.Free;
 end;
 
@@ -449,6 +453,6 @@ initialization
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-   TestFramework.RegisterTest('dwsUtilsTests', TdwsUtilsTests.Suite);
+   RegisterTest('dwsUtilsTests', TdwsUtilsTests);
 
 end.

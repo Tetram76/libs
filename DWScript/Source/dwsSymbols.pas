@@ -24,7 +24,8 @@ unit dwsSymbols;
 interface
 
 uses SysUtils, Variants, Classes, dwsStrings, dwsErrors, dwsUtils,
-   dwsTokenizer, dwsStack;
+   dwsTokenizer, dwsStack, dwsXPlatform
+   {$ifdef FPC},LazUTF8{$endif};
 
 type
 
@@ -45,14 +46,15 @@ type
    THelperSymbol = class;
    TOperatorSymbol = class;
    TPropertySymbol = class;
+   TSymbolTable = class;
    TdwsRuntimeMessageList = class;
 
    TdwsExprLocation = record
       Expr : TExprBase;
       Prog : TObject;
       function Line : Integer; inline;
-      function SourceName : UnicodeString; inline;
-      function Location : UnicodeString;
+      function SourceName : String; inline;
+      function Location : String;
    end;
    TdwsExprLocationArray = array of TdwsExprLocation;
 
@@ -95,7 +97,7 @@ type
          FCallStack : TdwsExprLocationArray;
 
       public
-         function AsInfo: UnicodeString; override;
+         function AsInfo: String; override;
 
          property CallStack : TdwsExprLocationArray read FCallStack;
    end;
@@ -104,17 +106,20 @@ type
    //
    TdwsRuntimeMessageList = class (TdwsMessageList)
       public
-         procedure AddRuntimeError(const Text: UnicodeString); overload;
+         procedure AddRuntimeError(const Text: String); overload;
          procedure AddRuntimeError(e : Exception); overload;
-         procedure AddRuntimeError(const scriptPos : TScriptPos; const Text: UnicodeString;
+         procedure AddRuntimeError(const scriptPos : TScriptPos; const Text: String;
                                    const callStack : TdwsExprLocationArray); overload;
    end;
 
    TExecutionStatusResult = (esrNone, esrExit, esrBreak, esrContinue);
 
-   TExprBaseEnumeratorProc = reference to procedure (parent, expr : TExprBase; var abort : Boolean);
+   TExprBaseEnumeratorProc = procedure (parent, expr : TExprBase; var abort : Boolean) of object;
 
    // Base class for all Exprs
+
+   { TExprBase }
+
    TExprBase = class (TRefCountedObject)
       protected
          function GetSubExpr(i : Integer) : TExprBase; virtual;
@@ -125,7 +130,10 @@ type
          function  EvalAsInteger(exec : TdwsExecution) : Int64; virtual; abstract;
          function  EvalAsBoolean(exec : TdwsExecution) : Boolean; virtual; abstract;
          function  EvalAsFloat(exec : TdwsExecution) : Double; virtual; abstract;
-         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); overload; virtual; abstract;
+         procedure EvalAsString(exec : TdwsExecution; var Result : String); overload; virtual; abstract;
+         {$ifdef FPC}
+         procedure EvalAsUnicodeString(exec : TdwsExecution; var Result : UnicodeString);
+         {$endif}
          procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); overload; virtual; abstract;
          procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); virtual; abstract;
 
@@ -133,18 +141,19 @@ type
          procedure AssignValueAsInteger(exec : TdwsExecution; const value : Int64); virtual; abstract;
          procedure AssignValueAsBoolean(exec : TdwsExecution; const value : Boolean); virtual; abstract;
          procedure AssignValueAsFloat(exec : TdwsExecution; const value : Double); virtual; abstract;
-         procedure AssignValueAsString(exec : TdwsExecution; const value : UnicodeString); virtual; abstract;
+         procedure AssignValueAsString(exec : TdwsExecution; const value : String); virtual; abstract;
          procedure AssignValueAsScriptObj(exec : TdwsExecution; const value : IScriptObj); virtual; abstract;
 
          property SubExpr[i : Integer] : TExprBase read GetSubExpr;
          property SubExprCount : Integer read GetSubExprCount;
 
          function ScriptPos : TScriptPos; virtual; abstract;
-         function ScriptLocation(prog : TObject) : UnicodeString; virtual; abstract;
+         function ScriptLocation(prog : TObject) : String; virtual; abstract;
 
-         class function CallStackToString(const callStack : TdwsExprLocationArray) : UnicodeString; static;
+         class function CallStackToString(const callStack : TdwsExprLocationArray) : String; static;
 
-         procedure RecursiveEnumerateSubExprs(const callback : TExprBaseEnumeratorProc);
+         // returns True if aborted
+         function RecursiveEnumerateSubExprs(const callback : TExprBaseEnumeratorProc) : Boolean;
          function IndexOfSubExpr(expr : TExprBase) : Integer;
    end;
 
@@ -191,8 +200,8 @@ type
          procedure SetAsBoolean(const x : Integer; const value : Boolean);
          function GetAsFloat(const x : Integer) : Double;
          procedure SetAsFloat(const x : Integer; const value : Double);
-         function GetAsString(const x : Integer) : UnicodeString;
-         procedure SetAsString(const x : Integer; const value : UnicodeString);
+         function GetAsString(const x : Integer) : String;
+         procedure SetAsString(const x : Integer; const value : String);
          function GetAsDataString(const x : Integer) : RawByteString;
 
       public
@@ -205,9 +214,11 @@ type
          property AsInteger[const x : Integer] : Int64 read GetAsInteger write SetAsInteger;
          property AsBoolean[const x : Integer] : Boolean read GetAsBoolean write SetAsBoolean;
          property AsFloat[const x : Integer] : Double read GetAsFloat write SetAsFloat;
-         property AsString[const x : Integer] : UnicodeString read GetAsString write SetAsString;
+         property AsString[const x : Integer] : String read GetAsString write SetAsString;
          property AsDataString[const x : Integer] : RawByteString read GetAsDataString;
    end;
+
+   TSortedExprBaseList = TSortedList<TExprBase>;
 
    // All functions callable from the script implement this interface
    IExecutable = interface (IGetSelf)
@@ -223,7 +234,7 @@ type
 
    IStringEvalable = interface (IExecutable)
       ['{6D0552ED-6FBD-4BC7-AADA-8D8F8DBDF29B}']
-      procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
+      procedure EvalAsString(exec : TdwsExecution; var Result : String);
    end;
 
    TAddrGeneratorSign = (agsPositive, agsNegative);
@@ -237,8 +248,8 @@ type
          FSign : TAddrGeneratorSign;
 
       public
-         constructor CreatePositive(aLevel : SmallInt; anInitialSize : Integer = 0);
-         constructor CreateNegative(aLevel : SmallInt);
+         class function CreatePositive(aLevel : SmallInt; anInitialSize : Integer = 0) : TAddrGeneratorRec; static;
+         class function CreateNegative(aLevel : SmallInt) : TAddrGeneratorRec; static;
 
          function GetStackAddr(size : Integer) : Integer;
 
@@ -255,33 +266,33 @@ type
    // Named item in the script
    TSymbol = class (TRefCountedObject)
       private
-         FName : UnicodeString;
+         FName : String;
 
       protected
          FTyp : TTypeSymbol;
          FSize : Integer;
 
-         function SafeGetCaption : UnicodeString;
-         function GetCaption : UnicodeString; virtual;
-         function GetDescription : UnicodeString; virtual;
+         function SafeGetCaption : String;
+         function GetCaption : String; virtual;
+         function GetDescription : String; virtual;
 
       public
-         constructor Create(const aName : UnicodeString; aType : TTypeSymbol);
+         constructor Create(const aName : String; aType : TTypeSymbol);
 
          procedure Initialize(const msgs : TdwsCompileMessageList); virtual;
          function  BaseType : TTypeSymbol; virtual;
-         procedure SetName(const newName : UnicodeString);
+         procedure SetName(const newName : String);
 
          class function IsBaseType : Boolean; virtual;
          function IsType : Boolean; virtual;
 
-         function QualifiedName : UnicodeString; virtual;
+         function QualifiedName : String; virtual;
 
          function IsVisibleFor(const aVisibility : TdwsVisibility) : Boolean; virtual;
 
-         property Caption : UnicodeString read SafeGetCaption;
-         property Description : UnicodeString read GetDescription;
-         property Name : UnicodeString read FName;
+         property Caption : String read SafeGetCaption;
+         property Description : String read GetDescription;
+         property Name : String read FName;
          property Typ : TTypeSymbol read FTyp write FTyp;
          property Size : Integer read FSize;
    end;
@@ -289,7 +300,7 @@ type
    TSymbolClass = class of TSymbol;
 
    // return True to abort
-   TSymbolEnumerationCallback = reference to function (symbol : TSymbol) : Boolean;
+   TSymbolEnumerationCallback = function (symbol : TSymbol) : Boolean of object;
 
    THelperSymbolEnumerationCallback = function (helper : THelperSymbol) : Boolean of object;
 
@@ -297,6 +308,8 @@ type
 
    TSymbolTableFlag = (stfSorted, stfHasHelpers, stfHasOperators);
    TSymbolTableFlags = set of TSymbolTableFlag;
+
+   TSimplePropertySymbolList = TSimpleList<TPropertySymbol>;
 
    // A table of symbols connected to other symboltables (property Parents)
    TSymbolTable = class (TRefCountedObject)
@@ -314,8 +327,8 @@ type
          function GetCount : Integer; inline;
 
          procedure SortSymbols(minIndex, maxIndex : Integer);
-         function FindLocalSorted(const name : UnicodeString) : TSymbol;
-         function FindLocalUnSorted(const name : UnicodeString) : TSymbol;
+         function FindLocalSorted(const name : String) : TSymbol;
+         function FindLocalUnSorted(const name : String) : TSymbol;
 
       public
          constructor Create(parent : TSymbolTable = nil; addrGenerator: TAddrGenerator = nil);
@@ -330,22 +343,26 @@ type
 
          function AddSymbol(sym : TSymbol): Integer;
          function AddSymbolDirect(sym : TSymbol) : Integer;
-         function FindLocal(const aName : UnicodeString; ofClass : TSymbolClass = nil) : TSymbol; virtual;
-         function FindTypeLocal(const aName : UnicodeString) : TTypeSymbol;
+         function FindLocal(const aName : String; ofClass : TSymbolClass = nil) : TSymbol; virtual;
+         function FindTypeLocal(const aName : String) : TTypeSymbol;
          function FindSymbolAtStackAddr(const stackAddr, level : Integer) : TDataSymbol;
          function Remove(sym : TSymbol): Integer;
          procedure Clear;
 
-         function FindSymbol(const aName : UnicodeString; minVisibility : TdwsVisibility;
+         function FindSymbol(const aName : String; minVisibility : TdwsVisibility;
                              ofClass : TSymbolClass = nil) : TSymbol; virtual;
-         function FindTypeSymbol(const aName : UnicodeString; minVisibility : TdwsVisibility) : TTypeSymbol;
+         function FindTypeSymbol(const aName : String; minVisibility : TdwsVisibility) : TTypeSymbol;
 
          // returns True if aborted
-         function EnumerateLocalSymbolsOfName(const aName : UnicodeString; const callback : TSymbolEnumerationCallback) : Boolean; virtual;
-         function EnumerateSymbolsOfNameInScope(const aName : UnicodeString; const callback : TSymbolEnumerationCallback) : Boolean; virtual;
+         function EnumerateLocalSymbolsOfName(const aName : String;
+                              const callback : TSymbolEnumerationCallback) : Boolean; virtual;
+         function EnumerateSymbolsOfNameInScope(const aName : String;
+                              const callback : TSymbolEnumerationCallback) : Boolean; virtual;
 
-         function EnumerateLocalHelpers(helpedType : TTypeSymbol; const callback : THelperSymbolEnumerationCallback) : Boolean; virtual;
-         function EnumerateHelpers(helpedType : TTypeSymbol; const callback : THelperSymbolEnumerationCallback) : Boolean; virtual;
+         function EnumerateLocalHelpers(helpedType : TTypeSymbol;
+                              const callback : THelperSymbolEnumerationCallback) : Boolean; virtual;
+         function EnumerateHelpers(helpedType : TTypeSymbol;
+                              const callback : THelperSymbolEnumerationCallback) : Boolean; virtual;
 
          function EnumerateLocalOperatorsFor(aToken : TTokenType; aLeftType, aRightType : TTypeSymbol;
                                              const callback : TOperatorSymbolEnumerationCallback) : Boolean; virtual;
@@ -353,8 +370,8 @@ type
                                         const callback : TOperatorSymbolEnumerationCallback) : Boolean; virtual;
          function HasSameLocalOperator(anOpSym : TOperatorSymbol) : Boolean; virtual;
 
-         procedure CollectPropertyAttributes(tableList : TSimpleObjectHash<TSymbolTable>;
-                                             propertyList : TSimpleList<TPropertySymbol>);
+         procedure CollectPropertyAttributes(tableList : TSimpleRefCountedObjectHash;
+                                             propertyList : TSimplePropertySymbolList);
 
          function HasClass(const aClass : TSymbolClass) : Boolean;
          function HasSymbol(sym : TSymbol) : Boolean;
@@ -385,7 +402,7 @@ type
    //
    TUnSortedSymbolTable = class (TSymbolTable)
       public
-         function FindLocal(const aName : UnicodeString; ofClass : TSymbolClass = nil) : TSymbol; override;
+         function FindLocal(const aName : String; ofClass : TSymbolClass = nil) : TSymbol; override;
    end;
 
    // TConditionsSymbolTable
@@ -405,17 +422,17 @@ type
    // A resource string (hybrid between a constant and a function)
    TResourceStringSymbol = class sealed (TSymbol)
       private
-         FValue : UnicodeString;
+         FValue : String;
          FIndex : Integer;
 
       protected
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
 
       public
-         constructor Create(const aName, aValue : UnicodeString);
+         constructor Create(const aName, aValue : String);
 
-         property Value : UnicodeString read FValue;
+         property Value : String read FValue;
          property Index : Integer read FIndex write FIndex;
    end;
 
@@ -427,11 +444,11 @@ type
    // All Symbols containing a value
    TValueSymbol = class (TSymbol)
       protected
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
 
       public
-         constructor Create(const aName : UnicodeString; aType : TTypeSymbol);
+         constructor Create(const aName : String; aType : TTypeSymbol);
    end;
 
    // named constant: const x = 123;
@@ -439,12 +456,12 @@ type
       protected
          FData : TData;
 
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
 
       public
-         constructor Create(const name : UnicodeString; typ : TTypeSymbol; const value : Variant); overload;
-         constructor Create(const name : UnicodeString; typ : TTypeSymbol; const data : TData; addr: Integer); overload;
+         constructor Create(const name : String; typ : TTypeSymbol; const value : Variant); overload;
+         constructor Create(const name : String; typ : TTypeSymbol; const data : TData; addr: Integer); overload;
 
          procedure Initialize(const msgs : TdwsCompileMessageList); override;
 
@@ -458,7 +475,7 @@ type
          FStackAddr : Integer;
          FLevel : SmallInt;
 
-         function GetDescription : UnicodeString; override;
+         function GetDescription : String; override;
 
       public
          procedure AllocateStackAddr(generator : TAddrGenerator);
@@ -481,10 +498,10 @@ type
          FDefaultValue : TData;
 
       protected
-         function GetDescription : UnicodeString; override;
+         function GetDescription : String; override;
 
       public
-         constructor Create(const aName : UnicodeString; aType : TTypeSymbol;
+         constructor Create(const aName : String; aType : TTypeSymbol;
                             const data : TData; addr : Integer);
 
          function SameParam(other : TParamSymbol) : Boolean; override;
@@ -495,25 +512,25 @@ type
    // const/var parameter: procedure P(const/var x: Integer)
    TByRefParamSymbol = class(TParamSymbol)
       public
-         constructor Create(const Name: UnicodeString; Typ: TTypeSymbol);
+         constructor Create(const Name: String; Typ: TTypeSymbol);
    end;
 
    // lazy parameter: procedure P(lazy x: Integer)
    TLazyParamSymbol = class sealed (TParamSymbol)
       protected
-         function GetDescription : UnicodeString; override;
+         function GetDescription : String; override;
    end;
 
    // const parameter: procedure P(const x: Integer)
    TConstParamSymbol = class sealed (TByRefParamSymbol)
       protected
-         function GetDescription : UnicodeString; override;
+         function GetDescription : String; override;
    end;
 
    // var parameter: procedure P(var x: Integer)
    TVarParamSymbol = class sealed (TByRefParamSymbol)
       protected
-         function GetDescription : UnicodeString; override;
+         function GetDescription : String; override;
    end;
 
    TTypeSymbolClass = class of TTypeSymbol;
@@ -538,13 +555,15 @@ type
          function  IsCompatible(typSym : TTypeSymbol) : Boolean; override;
    end;
 
-   TFuncKind = (fkFunction, fkProcedure, fkConstructor, fkDestructor, fkMethod);
+   TFuncKind = (fkFunction, fkProcedure,
+                fkConstructor, fkDestructor, fkMethod,
+                fkLambda);
 
    // Record used for TFuncSymbol.Generate
    PParamRec = ^TParamRec;
    TParamRec = record
-      ParamName : UnicodeString;
-      ParamType : UnicodeString;
+      ParamName : String;
+      ParamType : String;
       IsVarParam : Boolean;
       IsConstParam : Boolean;
       HasDefaultValue : Boolean;
@@ -609,7 +628,7 @@ type
          FAddrGenerator : TAddrGeneratorRec;
          FExecutable : IExecutable;
          FInternalParams : TSymbolTable;
-         FDeprecatedMessage : UnicodeString;
+         FDeprecatedMessage : String;
          FForwardPosition : PScriptPos;
          FParams : TParamsSymbolTable;
          FResult : TDataSymbol;
@@ -619,9 +638,9 @@ type
          FExternalName : String;
 
          procedure SetType(const Value: TTypeSymbol);
-         function GetCaption : UnicodeString; override;
+         function GetCaption : String; override;
          function GetIsForwarded : Boolean;
-         function GetDescription : UnicodeString; override;
+         function GetDescription : String; override;
          function GetLevel : SmallInt; inline;
          function GetParamSize : Integer; inline;
          function GetIsDeprecated : Boolean; inline;
@@ -644,11 +663,11 @@ type
          function  DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
       public
-         constructor Create(const name : UnicodeString; funcKind : TFuncKind; funcLevel : SmallInt);
+         constructor Create(const name : String; funcKind : TFuncKind; funcLevel : SmallInt);
          destructor Destroy; override;
 
-         constructor Generate(table : TSymbolTable; const funcName : UnicodeString;
-                              const funcParams : TParamArray; const funcType : UnicodeString);
+         constructor Generate(table : TSymbolTable; const funcName : String;
+                              const funcParams : TParamArray; const funcType : String);
          function  IsCompatible(typSym : TTypeSymbol) : Boolean; override;
          function  IsType : Boolean; override;
          procedure SetIsType;
@@ -663,13 +682,13 @@ type
          function  IsValidOverloadOf(other : TFuncSymbol) : Boolean;
          function  IsSameOverloadOf(other : TFuncSymbol) : Boolean; virtual;
 
-         function  ParamsDescription : UnicodeString;
+         function  ParamsDescription : String;
 
          procedure SetForwardedPos(const pos : TScriptPos);
          procedure ClearIsForwarded;
 
          property Executable : IExecutable read FExecutable write FExecutable;
-         property DeprecatedMessage : UnicodeString read FDeprecatedMessage write FDeprecatedMessage;
+         property DeprecatedMessage : String read FDeprecatedMessage write FDeprecatedMessage;
          property IsDeprecated : Boolean read GetIsDeprecated;
          property IsStateless : Boolean read GetIsStateless write SetIsStateless;
          property IsForwarded : Boolean read GetIsForwarded;
@@ -723,7 +742,7 @@ type
                         maStatic );
    TMethodAttributes = set of TMethodAttribute;
 
-   // A method of a script class: TMyClass = class procedure X(param: UnicodeString); end;
+   // A method of a script class: TMyClass = class procedure X(param: String); end;
    TMethodSymbol = class(TFuncSymbol)
       private
          FStructSymbol : TCompositeTypeSymbol;
@@ -751,18 +770,18 @@ type
          procedure SetIsDefault(const val : Boolean); inline;
          function GetIsStatic : Boolean; inline;
 
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
 
          function GetRootParentMeth : TMethodSymbol;
 
       public
-         constructor Create(const Name: UnicodeString; FuncKind: TFuncKind; aStructSymbol : TCompositeTypeSymbol;
+         constructor Create(const Name: String; FuncKind: TFuncKind; aStructSymbol : TCompositeTypeSymbol;
                             aVisibility : TdwsVisibility; isClassMethod : Boolean;
                             funcLevel : Integer = 1); virtual;
          constructor Generate(Table: TSymbolTable; MethKind: TMethodKind;
-                              const Attributes: TMethodAttributes; const MethName: UnicodeString;
-                              const MethParams: TParamArray; const MethType: UnicodeString;
+                              const Attributes: TMethodAttributes; const MethName: String;
+                              const MethParams: TParamArray; const MethType: String;
                               Cls: TCompositeTypeSymbol; aVisibility : TdwsVisibility);
 
          procedure SetOverride(meth: TMethodSymbol);
@@ -770,7 +789,7 @@ type
          procedure SetIsFinal;
          procedure SetIsStatic;
          procedure InitData(const data : TData; offset : Integer); override;
-         function QualifiedName : UnicodeString; override;
+         function QualifiedName : String; override;
          function HasConditions : Boolean;
          function IsVisibleFor(const aVisibility : TdwsVisibility) : Boolean; override;
          function IsSameOverloadOf(other : TFuncSymbol) : Boolean; override;
@@ -819,7 +838,7 @@ type
          FAssignExprClass : TExprBaseClass;
 
       protected
-         function GetCaption : UnicodeString; override;
+         function GetCaption : String; override;
 
       public
          constructor Create(const aTokenType : TTokenType);
@@ -846,10 +865,10 @@ type
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
    end;
 
-   // integer/UnicodeString/float/boolean/variant
+   // integer/String/float/boolean/variant
    TBaseSymbol = class(TTypeSymbol)
       public
-         constructor Create(const name : UnicodeString);
+         constructor Create(const name : String);
 
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
          class function IsBaseType : Boolean; override;
@@ -886,7 +905,7 @@ type
 
    TBaseVariantSymbol = class (TBaseSymbol)
       public
-         constructor Create(const name : UnicodeString = '');
+         constructor Create(const name : String = '');
 
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
          procedure InitData(const data : TData; offset : Integer); override;
@@ -896,9 +915,9 @@ type
 
    IConnector = interface
       ['{8D534D1A-4C6B-11D5-8DCB-0000216D9E86}']
-      function ConnectorCaption: UnicodeString;
-      function ConnectorName: UnicodeString;
-      function GetUnit(const UnitName: UnicodeString): IConnectorType;
+      function ConnectorCaption: String;
+      function ConnectorName: String;
+      function GetUnit(const UnitName: String): IConnectorType;
    end;
 
    TConnectorArgs = array of TData;
@@ -924,12 +943,12 @@ type
 
    IConnectorType = interface
      ['{8D534D1D-4C6B-11D5-8DCB-0000216D9E86}']
-     function ConnectorCaption: UnicodeString;
+     function ConnectorCaption: String;
      function AcceptsParams(const params: TConnectorParamArray) : Boolean;
-     function HasMethod(const MethodName: UnicodeString; const Params: TConnectorParamArray;
+     function HasMethod(const MethodName: String; const Params: TConnectorParamArray;
                         var TypSym: TTypeSymbol): IConnectorCall;
-     function HasMember(const MemberName: UnicodeString; var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorMember;
-     function HasIndex(const PropName: UnicodeString; const Params: TConnectorParamArray;
+     function HasMember(const MemberName: String; var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorMember;
+     function HasIndex(const PropName: String; const Params: TConnectorParamArray;
                        var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorCall;
    end;
 
@@ -941,9 +960,9 @@ type
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
       public
-         constructor Create(const name : UnicodeString; const connectorType : IConnectorType);
+         constructor Create(const name : String; const connectorType : IConnectorType);
 
-         function Specialize(table : TSymbolTable; const qualifier : UnicodeString) : TConnectorSymbol; virtual;
+         function Specialize(table : TSymbolTable; const qualifier : String) : TConnectorSymbol; virtual;
 
          property ConnectorType : IConnectorType read FConnectorType write FConnectorType;
    end;
@@ -956,7 +975,7 @@ type
          function ElementSize : Integer;
 
       public
-         constructor Create(const name : UnicodeString; elementType, indexType : TTypeSymbol);
+         constructor Create(const name : String; elementType, indexType : TTypeSymbol);
 
          property IndexType : TTypeSymbol read FIndexType write FIndexType;
    end;
@@ -964,11 +983,11 @@ type
    // array of FTyp
    TDynamicArraySymbol = class sealed (TArraySymbol)
       protected
-         function GetCaption : UnicodeString; override;
+         function GetCaption : String; override;
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
       public
-         constructor Create(const name : UnicodeString; elementType, indexType : TTypeSymbol);
+         constructor Create(const name : String; elementType, indexType : TTypeSymbol);
          procedure InitData(const Data: TData; Offset: Integer); override;
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
    end;
@@ -981,11 +1000,11 @@ type
          FElementCount : Integer;
 
       protected
-         function GetCaption : UnicodeString; override;
+         function GetCaption : String; override;
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
       public
-         constructor Create(const name : UnicodeString; elementType, indexType : TTypeSymbol;
+         constructor Create(const name : String; elementType, indexType : TTypeSymbol;
                             lowBound, highBound : Integer);
 
          procedure InitData(const Data: TData; Offset: Integer); override;
@@ -1000,10 +1019,10 @@ type
    // static array whose bounds are contextual
    TOpenArraySymbol = class (TStaticArraySymbol)
       protected
-         function GetCaption : UnicodeString; override;
+         function GetCaption : String; override;
 
       public
-         constructor Create(const name : UnicodeString; elementType, indexType : TTypeSymbol);
+         constructor Create(const name : String; elementType, indexType : TTypeSymbol);
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
    end;
 
@@ -1015,8 +1034,8 @@ type
 
       public
          procedure AddParent(parent : TMembersSymbolTable);
-         function FindSymbol(const aName : UnicodeString; minVisibility : TdwsVisibility; ofClass : TSymbolClass = nil) : TSymbol; override;
-         function FindSymbolFromScope(const aName : UnicodeString; scopeSym : TCompositeTypeSymbol) : TSymbol; reintroduce;
+         function FindSymbol(const aName : String; minVisibility : TdwsVisibility; ofClass : TSymbolClass = nil) : TSymbol; override;
+         function FindSymbolFromScope(const aName : String; scopeSym : TCompositeTypeSymbol) : TSymbol; reintroduce;
          function Visibilities : TdwsVisibilities;
 
          property Owner : TCompositeTypeSymbol read FOwner write FOwner;
@@ -1031,7 +1050,7 @@ type
          FVisibility : TdwsVisibility;
 
       public
-         function QualifiedName : UnicodeString; override;
+         function QualifiedName : String; override;
          function IsVisibleFor(const aVisibility : TdwsVisibility) : Boolean; override;
 
          property OwnerSymbol : TCompositeTypeSymbol read FOwnerSymbol write FOwnerSymbol;
@@ -1045,7 +1064,7 @@ type
          FVisibility : TdwsVisibility;
 
       public
-         function QualifiedName : UnicodeString; override;
+         function QualifiedName : String; override;
          function IsVisibleFor(const aVisibility : TdwsVisibility) : Boolean; override;
 
          property OwnerSymbol : TCompositeTypeSymbol read FOwnerSymbol write FOwnerSymbol;
@@ -1070,7 +1089,7 @@ type
          procedure CheckMethodsImplemented(const msgs : TdwsCompileMessageList);
 
       public
-         constructor Create(const name : UnicodeString; aUnit : TSymbol);
+         constructor Create(const name : String; aUnit : TSymbol);
          destructor Destroy; override;
 
          procedure AddConst(sym : TClassConstSymbol); overload;
@@ -1136,7 +1155,7 @@ type
    // class of, record of
    TStructuredTypeMetaSymbol = class(TTypeSymbol)
       public
-         constructor Create(const name : UnicodeString; typ : TStructuredTypeSymbol);
+         constructor Create(const name : String; typ : TStructuredTypeSymbol);
 
          procedure InitData(const Data: TData; Offset: Integer); override;
 
@@ -1156,11 +1175,11 @@ type
          function GetExternalName : String;
 
       public
-         constructor Create(const name : UnicodeString; typ : TTypeSymbol;
+         constructor Create(const name : String; typ : TTypeSymbol;
                             aVisibility : TdwsVisibility);
          destructor Destroy; override;
 
-         function QualifiedName : UnicodeString; override;
+         function QualifiedName : String; override;
          function IsVisibleFor(const aVisibility : TdwsVisibility) : Boolean; override;
 
          procedure InitData(const data : TData; structOffset : Integer);
@@ -1179,11 +1198,11 @@ type
          FIsDynamic : Boolean;
 
       protected
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
 
       public
-         constructor Create(const name : UnicodeString; aUnit : TSymbol);
+         constructor Create(const name : String; aUnit : TSymbol);
 
          procedure AddField(fieldSym : TFieldSymbol); override;
          procedure AddMethod(methSym : TMethodSymbol); override;
@@ -1203,12 +1222,12 @@ type
          FMethodCount : Integer;
 
       protected
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
          function  DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
       public
-         constructor Create(const name : UnicodeString; aUnit : TSymbol);
+         constructor Create(const name : String; aUnit : TSymbol);
 
          procedure InheritFrom(ancestor : TInterfaceSymbol);
 
@@ -1233,24 +1252,24 @@ type
          FIndexSym : TTypeSymbol;
          FIndexValue: TData;
          FVisibility : TdwsVisibility;
-         FDeprecatedMessage : UnicodeString;
+         FDeprecatedMessage : String;
 
       protected
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
          function GetIsDefault: Boolean;
          function GetArrayIndices : TSymbolTable;
          procedure AddParam(Param : TParamSymbol);
          function GetIsDeprecated : Boolean; inline;
 
       public
-         constructor Create(const name : UnicodeString; typ : TTypeSymbol; aVisibility : TdwsVisibility);
+         constructor Create(const name : String; typ : TTypeSymbol; aVisibility : TdwsVisibility);
          destructor Destroy; override;
 
          procedure GenerateParams(Table: TSymbolTable; const FuncParams: TParamArray);
          procedure SetIndex(const Data: TData; Addr: Integer; Sym: TTypeSymbol);
-         function GetArrayIndicesDescription: UnicodeString;
-         function QualifiedName : UnicodeString; override;
+         function GetArrayIndicesDescription: String;
+         function QualifiedName : String; override;
          function IsVisibleFor(const aVisibility : TdwsVisibility) : Boolean; override;
          function HasArrayIndices : Boolean;
 
@@ -1262,7 +1281,7 @@ type
          property IsDefault : Boolean read GetIsDefault;
          property IndexValue : TData read FIndexValue;
          property IndexSym : TTypeSymbol read FIndexSym;
-         property DeprecatedMessage : UnicodeString read FDeprecatedMessage write FDeprecatedMessage;
+         property DeprecatedMessage : String read FDeprecatedMessage write FDeprecatedMessage;
          property IsDeprecated : Boolean read GetIsDeprecated;
    end;
 
@@ -1274,12 +1293,12 @@ type
          FUsesSym : TMethodSymbol;
 
       protected
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
 
       public
          constructor Create(tokenType : TTokenType);
-         function QualifiedName : UnicodeString; override;
+         function QualifiedName : String; override;
 
          property ClassSymbol: TClassSymbol read FClassSymbol write FClassSymbol;
          property TokenType : TTokenType read FTokenType write FTokenType;
@@ -1289,11 +1308,11 @@ type
    // type X = class of TMyClass;
    TClassOfSymbol = class sealed (TStructuredTypeMetaSymbol)
       protected
-         function GetCaption : UnicodeString; override;
+         function GetCaption : String; override;
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
       public
-         constructor Create(const name : UnicodeString; typ : TClassSymbol);
+         constructor Create(const name : String; typ : TClassSymbol);
 
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
          function TypClassSymbol : TClassSymbol; inline;
@@ -1328,7 +1347,7 @@ type
          FInterfaces : TResolvedInterfaces;
 
       protected
-         function GetDescription : UnicodeString; override;
+         function GetDescription : String; override;
          function GetIsExplicitAbstract : Boolean; inline;
          procedure SetIsExplicitAbstract(const val : Boolean); inline;
          function GetIsAbstract : Boolean; inline;
@@ -1344,8 +1363,10 @@ type
 
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
+         procedure AddOverriddenInterfaceCallback(const item : TResolvedInterface);
+
       public
-         constructor Create(const name : UnicodeString; aUnit : TSymbol);
+         constructor Create(const name : String; aUnit : TSymbol);
          destructor Destroy; override;
 
          procedure AddField(fieldSym : TFieldSymbol); override;
@@ -1376,7 +1397,7 @@ type
          function AllowVirtualMembers : Boolean; override;
          function CreateSelfParameter(methSym : TMethodSymbol) : TDataSymbol; override;
 
-         class function VisibilityToString(visibility : TdwsVisibility) : UnicodeString; static;
+         class function VisibilityToString(visibility : TdwsVisibility) : String; static;
 
          function Parent : TClassSymbol; inline;
          property ScriptInstanceSize : Integer read FScriptInstanceSize;
@@ -1404,7 +1425,7 @@ type
       protected
 
       public
-         constructor Create(const name : UnicodeString; aUnit : TSymbol;
+         constructor Create(const name : String; aUnit : TSymbol;
                             aForType : TTypeSymbol; priority : Integer);
 
          function IsType : Boolean; override;
@@ -1427,7 +1448,7 @@ type
    // nil "class"
    TNilSymbol = class(TTypeSymbol)
       protected
-         function GetCaption : UnicodeString; override;
+         function GetCaption : String; override;
 
       public
          constructor Create;
@@ -1441,11 +1462,11 @@ type
          FIsUserDef : Boolean;
 
       protected
-         function GetDescription : UnicodeString; override;
+         function GetDescription : String; override;
          function GetValue : Int64; inline;
 
       public
-         constructor Create(const Name: UnicodeString; Typ: TTypeSymbol;
+         constructor Create(const Name: String; Typ: TTypeSymbol;
                             const aValue : Int64; isUserDef: Boolean);
          property IsUserDef : Boolean read FIsUserDef;
          property Value : Int64 read GetValue;
@@ -1461,12 +1482,12 @@ type
          FStyle : TEnumerationSymbolStyle;
 
       protected
-         function GetCaption : UnicodeString; override;
-         function GetDescription : UnicodeString; override;
+         function GetCaption : String; override;
+         function GetDescription : String; override;
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
       public
-         constructor Create(const name : UnicodeString; baseType : TTypeSymbol;
+         constructor Create(const name : String; baseType : TTypeSymbol;
                             aStyle : TEnumerationSymbolStyle);
          destructor Destroy; override;
 
@@ -1481,7 +1502,7 @@ type
          property Style : TEnumerationSymbolStyle read FStyle;
          property LowBound : Int64 read FLowBound write FLowBound;
          property HighBound : Int64 read FHighBound write FHighBound;
-         function ShortDescription : UnicodeString;
+         function ShortDescription : String;
    end;
 
    // variable with functions for read/write: var x: integer; extern 'type' in 'selector';
@@ -1563,8 +1584,8 @@ type
          function GetCallStack : TdwsExprLocationArray; virtual; abstract;
          function CallStackDepth : Integer; virtual; abstract;
 
-         procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : UnicodeString); virtual;
-         procedure LocalizeString(const aString : UnicodeString; var Result : UnicodeString); virtual;
+         procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : String); virtual;
+         procedure LocalizeString(const aString : String; var Result : String); virtual;
 
          function Random : Double;
 
@@ -1609,7 +1630,7 @@ type
       property Destroyed : Boolean read GetDestroyed write SetDestroyed;
 
       function DataOfAddr(addr : Integer) : Variant;
-      function DataOfAddrAsString(addr : Integer) : UnicodeString;
+      function DataOfAddrAsString(addr : Integer) : String;
       function DataOfAddrAsInteger(addr : Integer) : Int64;
       procedure DataOfAddrAsScriptObj(addr : Integer; var scriptObj : IScriptObj);
    end;
@@ -1619,14 +1640,14 @@ type
       private
          FScriptPos : TScriptPos;
          FScriptCallStack : TdwsExprLocationArray;
-         FRawClassName : UnicodeString;
+         FRawClassName : String;
 
       public
-         constructor CreatePosFmt(const pos : TScriptPos; const Msg: UnicodeString; const Args: array of const);
+         constructor CreatePosFmt(const pos : TScriptPos; const Msg: String; const Args: array of const);
 
          property ScriptPos : TScriptPos read FScriptPos write FScriptPos;
          property ScriptCallStack : TdwsExprLocationArray read FScriptCallStack write FScriptCallStack;
-         property RawClassName : UnicodeString read FRawClassName write FRawClassName;
+         property RawClassName : String read FRawClassName write FRawClassName;
    end;
    EScriptErrorClass = class of EScriptError;
 
@@ -1638,7 +1659,7 @@ type
          FScriptCallStack : TdwsExprLocationArray;
 
       public
-         constructor Create(const msgString : UnicodeString; const anExceptionObj : IScriptObj;
+         constructor Create(const msgString : String; const anExceptionObj : IScriptObj;
                             const aScriptPos: TScriptPos); overload;
 
          property ExceptionObj : IScriptObj read FExceptObj;
@@ -1651,8 +1672,8 @@ type
    end;
 
 const
-   cFuncKindToString : array [Low(TFuncKind)..High(TFuncKind)] of UnicodeString = (
-      'function', 'procedure', 'constructor', 'destructor', 'method' );
+   cFuncKindToString : array [Low(TFuncKind)..High(TFuncKind)] of String = (
+      'function', 'procedure', 'constructor', 'destructor', 'method', 'lambda' );
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -1680,14 +1701,14 @@ end;
 
 // SourceName
 //
-function TdwsExprLocation.SourceName : UnicodeString;
+function TdwsExprLocation.SourceName : String;
 begin
    Result:=Expr.ScriptPos.SourceFile.Name;
 end;
 
 // Location
 //
-function TdwsExprLocation.Location : UnicodeString;
+function TdwsExprLocation.Location : String;
 begin
    Result:=Expr.ScriptLocation(Prog);
 end;
@@ -1698,7 +1719,7 @@ end;
 
 // CallStackToString
 //
-class function TExprBase.CallStackToString(const callStack : TdwsExprLocationArray) : UnicodeString;
+class function TExprBase.CallStackToString(const callStack : TdwsExprLocationArray) : String;
 var
    i : Integer;
    buffer : TWriteOnlyBlockStream;
@@ -1718,14 +1739,14 @@ end;
 
 // RecursiveEnumerateSubExprs
 //
-procedure TExprBase.RecursiveEnumerateSubExprs(const callback : TExprBaseEnumeratorProc);
+function TExprBase.RecursiveEnumerateSubExprs(const callback : TExprBaseEnumeratorProc) : Boolean;
 var
    i : Integer;
    abort : Boolean;
    base, expr : TExprBase;
    stack : TSimpleStack<TExprBase>;
 begin
-   if Self=nil then Exit;
+   if Self=nil then Exit(False);
    stack:=TSimpleStack<TExprBase>.Create;
    try
       abort:=False;
@@ -1738,13 +1759,14 @@ begin
             if expr<>nil then begin
                stack.Push(expr);
                callback(base, expr, abort);
-               if abort then Exit;
+               if abort then Exit(True);
             end;
          end;
       until stack.Count=0;
    finally
       stack.Free;
    end;
+   Result:=False;
 end;
 
 // IndexOfSubExpr
@@ -1772,6 +1794,16 @@ function TExprBase.GetSubExprCount : Integer;
 begin
    Result:=0;
 end;
+
+{$ifdef FPC}
+procedure TExprBase.EvalAsUnicodeString(exec: TdwsExecution; var Result: UnicodeString);
+var
+   buf : String;
+begin
+   EvalAsString(exec, buf);
+   Result:=UTF8ToUTF16(buf);
+end;
+{$endif}
 
 // ------------------
 // ------------------ TExprBaseListRec ------------------
@@ -1902,14 +1934,14 @@ end;
 
 // GetAsString
 //
-function TExprBaseListExec.GetAsString(const x : Integer) : UnicodeString;
+function TExprBaseListExec.GetAsString(const x : Integer) : String;
 begin
    ExprBase[x].EvalAsString(Exec, Result);
 end;
 
 // SetAsString
 //
-procedure TExprBaseListExec.SetAsString(const x : Integer; const value : UnicodeString);
+procedure TExprBaseListExec.SetAsString(const x : Integer; const value : String);
 begin
    ExprBase[x].AssignValueAsString(Exec, value);
 end;
@@ -1917,20 +1949,8 @@ end;
 // GetAsDataString
 //
 function TExprBaseListExec.GetAsDataString(const x : Integer) : RawByteString;
-var
-   ustr : UnicodeString;
-   i, n : Integer;
-   pSrc : PWideChar;
-   pDest : PByteArray;
 begin
-   ustr:=GetAsString(x);
-   if ustr='' then Exit('');
-   n:=Length(ustr);
-   SetLength(Result, n);
-   pSrc:=PWideChar(Pointer(ustr));
-   pDest:=PByteArray(Pointer(Result));
-   for i:=0 to n-1 do
-      pDest[i]:=PByte(@pSrc[i])^;
+   Result:=ScriptStringToRawByteString(GetAsString(x));
 end;
 
 // ------------------
@@ -1939,7 +1959,7 @@ end;
 
 // Create
 //
-constructor TSymbol.Create(const aName : UnicodeString; aType : TTypeSymbol);
+constructor TSymbol.Create(const aName : String; aType : TTypeSymbol);
 begin
    FName:=aName;
    FTyp:=aType;
@@ -1950,14 +1970,14 @@ end;
 
 // GetCaption
 //
-function TSymbol.GetCaption : UnicodeString;
+function TSymbol.GetCaption : String;
 begin
    Result:=FName;
 end;
 
 // GetDescription
 //
-function TSymbol.GetDescription : UnicodeString;
+function TSymbol.GetDescription : String;
 begin
    Result:=Caption;
 end;
@@ -1984,7 +2004,7 @@ end;
 
 // QualifiedName
 //
-function TSymbol.QualifiedName : UnicodeString;
+function TSymbol.QualifiedName : String;
 begin
    Result:=Name;
 end;
@@ -2003,7 +2023,7 @@ end;
 
 // SetName
 //
-procedure TSymbol.SetName(const newName : UnicodeString);
+procedure TSymbol.SetName(const newName : String);
 begin
    Assert(FName='');
    FName:=newName;
@@ -2011,7 +2031,7 @@ end;
 
 // SafeGetCaption
 //
-function TSymbol.SafeGetCaption : UnicodeString;
+function TSymbol.SafeGetCaption : String;
 begin
    if Self=nil then
       Result:=SYS_VOID
@@ -2024,7 +2044,7 @@ end;
 
 // Create
 //
-constructor TCompositeTypeSymbol.Create(const name : UnicodeString; aUnit : TSymbol);
+constructor TCompositeTypeSymbol.Create(const name : String; aUnit : TSymbol);
 begin
    inherited Create(name, nil);
    FUnitSymbol:=aUnit;
@@ -2307,7 +2327,7 @@ end;
 
 // Create
 //
-constructor TStructuredTypeMetaSymbol.Create(const name : UnicodeString; typ : TStructuredTypeSymbol);
+constructor TStructuredTypeMetaSymbol.Create(const name : String; typ : TStructuredTypeSymbol);
 begin
    inherited Create(name, typ);
 end;
@@ -2332,7 +2352,7 @@ end;
 
 // Create
 //
-constructor TRecordSymbol.Create(const name : UnicodeString; aUnit : TSymbol);
+constructor TRecordSymbol.Create(const name : String; aUnit : TSymbol);
 begin
    inherited Create(name, aUnit);
    FMetaSymbol:=TStructuredTypeMetaSymbol.Create('meta of '+name, Self);
@@ -2403,14 +2423,14 @@ end;
 
 // GetCaption
 //
-function TRecordSymbol.GetCaption : UnicodeString;
+function TRecordSymbol.GetCaption : String;
 begin
    Result:='record '+Name;
 end;
 
 // GetDescription
 //
-function TRecordSymbol.GetDescription : UnicodeString;
+function TRecordSymbol.GetDescription : String;
 var
    member : TSymbol;
 begin
@@ -2428,7 +2448,7 @@ end;
 
 // Create
 //
-constructor TInterfaceSymbol.Create(const name : UnicodeString; aUnit : TSymbol);
+constructor TInterfaceSymbol.Create(const name : String; aUnit : TSymbol);
 begin
    inherited;
    FSize:=1;
@@ -2436,14 +2456,14 @@ end;
 
 // GetCaption
 //
-function TInterfaceSymbol.GetCaption : UnicodeString;
+function TInterfaceSymbol.GetCaption : String;
 begin
    Result:=Name;
 end;
 
 // GetDescription
 //
-function TInterfaceSymbol.GetDescription : UnicodeString;
+function TInterfaceSymbol.GetDescription : String;
 begin
    Result:=Name+' = interface';
    if Parent<>nil then
@@ -2529,7 +2549,7 @@ end;
 
 // Create
 //
-constructor TFieldSymbol.Create(const Name: UnicodeString; Typ: TTypeSymbol; aVisibility : TdwsVisibility);
+constructor TFieldSymbol.Create(const Name: String; Typ: TTypeSymbol; aVisibility : TdwsVisibility);
 begin
    inherited Create(Name, Typ);
    FVisibility:=aVisibility;
@@ -2545,7 +2565,7 @@ end;
 
 // QualifiedName
 //
-function TFieldSymbol.QualifiedName : UnicodeString;
+function TFieldSymbol.QualifiedName : String;
 begin
    Result:=StructSymbol.QualifiedName+'.'+Name;
 end;
@@ -2581,7 +2601,7 @@ end;
 
 // QualifiedName
 //
-function TClassConstSymbol.QualifiedName : UnicodeString;
+function TClassConstSymbol.QualifiedName : String;
 begin
    Result:=OwnerSymbol.QualifiedName+'.'+Name;
 end;
@@ -2599,7 +2619,7 @@ end;
 
 // QualifiedName
 //
-function TClassVarSymbol.QualifiedName : UnicodeString;
+function TClassVarSymbol.QualifiedName : String;
 begin
    Result:=OwnerSymbol.QualifiedName+'.'+Name;
 end;
@@ -2617,7 +2637,7 @@ end;
 
 // Create
 //
-constructor TFuncSymbol.Create(const name : UnicodeString; funcKind : TFuncKind;
+constructor TFuncSymbol.Create(const name : String; funcKind : TFuncKind;
                                funcLevel : SmallInt);
 begin
    inherited Create(name, nil);
@@ -2642,8 +2662,8 @@ end;
 
 // Generate
 //
-constructor TFuncSymbol.Generate(table : TSymbolTable; const funcName : UnicodeString;
-                                 const funcParams : TParamArray; const funcType : UnicodeString);
+constructor TFuncSymbol.Generate(table : TSymbolTable; const funcName : String;
+                                 const funcParams : TParamArray; const funcType : String);
 var
    typSym : TTypeSymbol;
 begin
@@ -2689,7 +2709,7 @@ end;
 
 // GenerateParams
 //
-procedure GenerateParams(const name : UnicodeString; table : TSymbolTable;
+procedure GenerateParams(const name : String; table : TSymbolTable;
                          const funcParams : TParamArray; const addProc : TAddParamSymbolMethod);
 var
    i : Integer;
@@ -2753,10 +2773,10 @@ end;
 
 // GetCaption
 //
-function TFuncSymbol.GetCaption : UnicodeString;
+function TFuncSymbol.GetCaption : String;
 var
    i : Integer;
-   nam : UnicodeString;
+   nam : String;
 begin
    nam:=cFuncKindToString[Kind]+' '+Name;
 
@@ -2783,7 +2803,7 @@ end;
 
 // GetDescription
 //
-function TFuncSymbol.GetDescription: UnicodeString;
+function TFuncSymbol.GetDescription: String;
 begin
    Result:=cFuncKindToString[Kind]+' '+Name+ParamsDescription;
    if Typ<>nil then
@@ -2935,12 +2955,13 @@ end;
 function TFuncSymbol.IsCompatible(typSym : TTypeSymbol) : Boolean;
 const
    cCompatibleKinds : array [TFuncKind, TFuncKind] of Boolean =
-      //  fkFunction, fkProcedure, fkConstructor, fkDestructor, fkMethod
-      ( (     True,      False,        False,         False,      True ),       // fkFunction
-        (     False,     True,         False,         False,      True ),       // fkProcedure
-        (     False,     False,        True,          False,      False),       // fkConstructor
-        (     False,     False,        False,         True,       False),       // fkDestructor
-        (     True,      True,         False,         False,      True )  );    // fkMethod
+      //  fkFunction, fkProcedure, fkConstructor, fkDestructor, fkMethod, fkLambda
+      ( (     True,      False,        False,         False,      True,     True),      // fkFunction
+        (     False,     True,         False,         False,      True,     True),      // fkProcedure
+        (     False,     False,        True,          False,      False,    False),     // fkConstructor
+        (     False,     False,        False,         True,       False,    False),     // fkDestructor
+        (     True,      True,         False,         False,      True,     True),      // fkMethod
+        (     True,      True,         False,         False,      True,     True) );    // fkLambda
 var
    funcSym : TFuncSymbol;
    i : Integer;
@@ -3081,7 +3102,7 @@ end;
 
 // ParamsDescription
 //
-function TFuncSymbol.ParamsDescription : UnicodeString;
+function TFuncSymbol.ParamsDescription : String;
 var
    i : Integer;
 begin
@@ -3134,7 +3155,7 @@ end;
 
 // Create
 //
-constructor TMethodSymbol.Create(const Name: UnicodeString; FuncKind: TFuncKind;
+constructor TMethodSymbol.Create(const Name: String; FuncKind: TFuncKind;
   aStructSymbol : TCompositeTypeSymbol; aVisibility : TdwsVisibility; isClassMethod : Boolean;
   funcLevel : Integer);
 begin
@@ -3152,8 +3173,8 @@ begin
 end;
 
 constructor TMethodSymbol.Generate(Table: TSymbolTable; MethKind: TMethodKind;
-  const Attributes: TMethodAttributes; const MethName: UnicodeString; const MethParams: TParamArray;
-  const MethType: UnicodeString; Cls: TCompositeTypeSymbol; aVisibility : TdwsVisibility);
+  const Attributes: TMethodAttributes; const MethName: String; const MethParams: TParamArray;
+  const MethType: String; Cls: TCompositeTypeSymbol; aVisibility : TdwsVisibility);
 var
    typSym : TTypeSymbol;
    meth : TSymbol;
@@ -3374,7 +3395,7 @@ end;
 
 // GetCaption
 //
-function TMethodSymbol.GetCaption : UnicodeString;
+function TMethodSymbol.GetCaption : String;
 begin
    Result:=inherited GetCaption;
    if IsClassMethod then
@@ -3383,7 +3404,7 @@ end;
 
 // GetDescription
 //
-function TMethodSymbol.GetDescription: UnicodeString;
+function TMethodSymbol.GetDescription: String;
 begin
    Result:=inherited GetDescription;
    if IsClassMethod then
@@ -3410,7 +3431,7 @@ end;
 
 // QualifiedName
 //
-function TMethodSymbol.QualifiedName : UnicodeString;
+function TMethodSymbol.QualifiedName : String;
 begin
    Result:=StructSymbol.QualifiedName+'.'+Name;
 end;
@@ -3491,7 +3512,7 @@ end;
 
 // Create
 //
-constructor TPropertySymbol.Create(const Name: UnicodeString; Typ: TTypeSymbol; aVisibility : TdwsVisibility);
+constructor TPropertySymbol.Create(const Name: String; Typ: TTypeSymbol; aVisibility : TdwsVisibility);
 begin
    inherited Create(Name, Typ);
    FIndexValue:=nil;
@@ -3532,12 +3553,12 @@ begin
    dwsSymbols.GenerateParams(Name, Table, FuncParams, AddParam);
 end;
 
-function TPropertySymbol.GetCaption: UnicodeString;
+function TPropertySymbol.GetCaption: String;
 begin
    Result := GetDescription;
 end;
 
-function TPropertySymbol.GetArrayIndicesDescription: UnicodeString;
+function TPropertySymbol.GetArrayIndicesDescription: String;
 var
    i, j : Integer;
    sym, nextSym : TSymbol;
@@ -3567,7 +3588,7 @@ end;
 
 // QualifiedName
 //
-function TPropertySymbol.QualifiedName : UnicodeString;
+function TPropertySymbol.QualifiedName : String;
 begin
    Result:=OwnerSymbol.QualifiedName+'.'+Name;
 end;
@@ -3588,7 +3609,7 @@ end;
 
 // GetDescription
 //
-function TPropertySymbol.GetDescription : UnicodeString;
+function TPropertySymbol.GetDescription : String;
 begin
    Result := Format('property %s%s: %s', [Name, GetArrayIndicesDescription, Typ.Name]);
 
@@ -3633,14 +3654,14 @@ end;
 
 // QualifiedName
 //
-function TClassOperatorSymbol.QualifiedName : UnicodeString;
+function TClassOperatorSymbol.QualifiedName : String;
 begin
    Result:=ClassSymbol.QualifiedName+'.'+Name;
 end;
 
 // GetCaption
 //
-function TClassOperatorSymbol.GetCaption: UnicodeString;
+function TClassOperatorSymbol.GetCaption: String;
 begin
    Result:='class operator '+cTokenStrings[TokenType]+' ';
    if (UsesSym<>nil) and (UsesSym.Params.Count>0) then
@@ -3651,7 +3672,7 @@ end;
 
 // GetDescription
 //
-function TClassOperatorSymbol.GetDescription: UnicodeString;
+function TClassOperatorSymbol.GetDescription: String;
 begin
    Result:=GetCaption;
 end;
@@ -3662,7 +3683,7 @@ end;
 
 // Create
 //
-constructor TClassSymbol.Create(const name : UnicodeString; aUnit : TSymbol);
+constructor TClassSymbol.Create(const name : String; aUnit : TSymbol);
 begin
    inherited;
    FSize:=1;
@@ -3790,6 +3811,7 @@ procedure TClassSymbol.AddOverriddenInterfaces;
 var
    iter : TClassSymbol;
    loopProtection : TList;
+   ri : TResolvedInterfaces;
 begin
    iter:=Parent;
    loopProtection:=TList.Create;
@@ -3797,18 +3819,22 @@ begin
       while iter<>nil do begin
          if loopProtection.IndexOf(iter)>0 then Break;
          loopProtection.Add(iter);
-         if iter.Interfaces<>nil then begin
-            iter.Interfaces.Enumerate(
-               procedure (const item : TResolvedInterface)
-               begin
-                  Self.AddOverriddenInterface(item);
-               end);
+         ri:=iter.Interfaces;
+         if ri<>nil then begin
+            ri.Enumerate(AddOverriddenInterfaceCallback);
          end;
          iter:=iter.Parent;
       end;
    finally
       loopProtection.Free;
    end;
+end;
+
+// AddOverriddenInterfaceCallback
+//
+procedure TClassSymbol.AddOverriddenInterfaceCallback(const item : TResolvedInterface);
+begin
+   AddOverriddenInterface(item);
 end;
 
 // ResolveInterface
@@ -3918,7 +3944,7 @@ begin
    Result:=Length(FVirtualMethodTable);
 end;
 
-function TClassSymbol.GetDescription: UnicodeString;
+function TClassSymbol.GetDescription: String;
 var
   i: Integer;
 begin
@@ -4117,9 +4143,9 @@ end;
 
 // VisibilityToString
 //
-class function TClassSymbol.VisibilityToString(visibility : TdwsVisibility) : UnicodeString;
+class function TClassSymbol.VisibilityToString(visibility : TdwsVisibility) : String;
 const
-   cVisibilityNames : array [TdwsVisibility] of UnicodeString = (
+   cVisibilityNames : array [TdwsVisibility] of String = (
       'magic', 'private', 'protected', 'public', 'published' );
 begin
    Result:=cVisibilityNames[visibility];
@@ -4142,7 +4168,7 @@ begin
   FSize := 1;
 end;
 
-function TNilSymbol.GetCaption: UnicodeString;
+function TNilSymbol.GetCaption: String;
 begin
   Result := 'nil';
 end;
@@ -4157,12 +4183,12 @@ end;
 // ------------------ TClassOfSymbol ------------------
 // ------------------
 
-constructor TClassOfSymbol.Create(const Name: UnicodeString; Typ: TClassSymbol);
+constructor TClassOfSymbol.Create(const Name: String; Typ: TClassSymbol);
 begin
   inherited Create(Name, Typ);
 end;
 
-function TClassOfSymbol.GetCaption: UnicodeString;
+function TClassOfSymbol.GetCaption: String;
 begin
   if Typ <> nil then
     Result := 'class of ' + Typ.Name
@@ -4199,7 +4225,7 @@ end;
 
 // Create
 //
-constructor TBaseSymbol.Create(const name : UnicodeString);
+constructor TBaseSymbol.Create(const name : String);
 begin
    inherited Create(name, nil);
    FSize:=1;
@@ -4313,7 +4339,7 @@ end;
 
 // Create
 //
-constructor TBaseVariantSymbol.Create(const name : UnicodeString = '');
+constructor TBaseVariantSymbol.Create(const name : String = '');
 begin
    if name='' then
       inherited Create(SYS_VARIANT)
@@ -4343,7 +4369,7 @@ end;
 
 // Create
 //
-constructor TConnectorSymbol.Create(const name : UnicodeString; const connectorType : IConnectorType);
+constructor TConnectorSymbol.Create(const name : String; const connectorType : IConnectorType);
 begin
    inherited Create(name);
    FConnectorType:=ConnectorType;
@@ -4359,7 +4385,7 @@ end;
 
 // Specialize
 //
-function TConnectorSymbol.Specialize(table : TSymbolTable; const qualifier : UnicodeString) : TConnectorSymbol;
+function TConnectorSymbol.Specialize(table : TSymbolTable; const qualifier : String) : TConnectorSymbol;
 begin
    Result:=Self;
 end;
@@ -4382,19 +4408,19 @@ end;
 
 // Create
 //
-constructor TValueSymbol.Create(const aName : UnicodeString; aType : TTypeSymbol);
+constructor TValueSymbol.Create(const aName : String; aType : TTypeSymbol);
 begin
    UnifyAssignString(aName, FName);
    FTyp:=aType;
    FSize:=aType.Size;
 end;
 
-function TValueSymbol.GetCaption: UnicodeString;
+function TValueSymbol.GetCaption: String;
 begin
   Result := Name + ': ' + Typ.Caption;
 end;
 
-function TValueSymbol.GetDescription: UnicodeString;
+function TValueSymbol.GetDescription: String;
 begin
   Result := Name + ': ' + Typ.Caption;
 end;
@@ -4403,14 +4429,14 @@ end;
 // ------------------ TConstSymbol ------------------
 // ------------------
 
-constructor TConstSymbol.Create(const Name: UnicodeString; Typ: TTypeSymbol; const Value: Variant);
+constructor TConstSymbol.Create(const Name: String; Typ: TTypeSymbol; const Value: Variant);
 begin
   inherited Create(Name, Typ);
   SetLength(FData, 1);
   VarCopy(FData[0], Value);
 end;
 
-constructor TConstSymbol.Create(const Name: UnicodeString; Typ: TTypeSymbol; const Data: TData;
+constructor TConstSymbol.Create(const Name: String; Typ: TTypeSymbol; const Data: TData;
   Addr: Integer);
 begin
   inherited Create(Name, Typ);
@@ -4418,12 +4444,12 @@ begin
   DWSCopyData(Data, Addr, FData, 0, Typ.Size);
 end;
 
-function TConstSymbol.GetCaption: UnicodeString;
+function TConstSymbol.GetCaption: String;
 begin
   Result := 'const ' + inherited GetCaption;
 end;
 
-function TConstSymbol.GetDescription: UnicodeString;
+function TConstSymbol.GetDescription: String;
 begin
   if VarType(FData[0]) = varError then
     Result := 'const ' + inherited GetDescription + ' = [varError]'
@@ -4439,7 +4465,7 @@ end;
 // ------------------ TDataSymbol ------------------
 // ------------------
 
-function TDataSymbol.GetDescription: UnicodeString;
+function TDataSymbol.GetDescription: String;
 begin
    if Assigned(Typ) then
       Result:=Name+': '+Typ.Name
@@ -4475,7 +4501,7 @@ end;
 
 // Create
 //
-constructor TParamSymbolWithDefaultValue.Create(const aName : UnicodeString; aType : TTypeSymbol;
+constructor TParamSymbolWithDefaultValue.Create(const aName : String; aType : TTypeSymbol;
                                                 const data : TData; addr : Integer);
 begin
    inherited Create(aName, aType);
@@ -4492,7 +4518,7 @@ begin
                            0, 0, Typ.Size);
 end;
 
-function TParamSymbolWithDefaultValue.GetDescription: UnicodeString;
+function TParamSymbolWithDefaultValue.GetDescription: String;
 begin
    Result := inherited GetDescription;
 
@@ -4510,7 +4536,7 @@ end;
 // ------------------ TByRefParamSymbol ------------------
 // ------------------
 
-constructor TByRefParamSymbol.Create(const Name: UnicodeString; Typ: TTypeSymbol);
+constructor TByRefParamSymbol.Create(const Name: String; Typ: TTypeSymbol);
 begin
   inherited Create(Name, Typ);
   FSize := 1;
@@ -4522,21 +4548,21 @@ end;
 
 // GetDescription
 //
-function TLazyParamSymbol.GetDescription: UnicodeString;
+function TLazyParamSymbol.GetDescription: String;
 begin
    Result:='lazy '+inherited GetDescription;
 end;
 
 { TConstParamSymbol }
 
-function TConstParamSymbol.GetDescription: UnicodeString;
+function TConstParamSymbol.GetDescription: String;
 begin
   Result := 'const ' + inherited GetDescription;
 end;
 
 { TVarParamSymbol }
 
-function TVarParamSymbol.GetDescription: UnicodeString;
+function TVarParamSymbol.GetDescription: String;
 begin
   Result := 'var ' + inherited GetDescription;
 end;
@@ -4569,7 +4595,7 @@ end;
 
 // FindLocal
 //
-function TSymbolTable.FindLocal(const aName : UnicodeString; ofClass : TSymbolClass = nil) : TSymbol;
+function TSymbolTable.FindLocal(const aName : String; ofClass : TSymbolClass = nil) : TSymbol;
 var
    n : Integer;
 begin
@@ -4589,7 +4615,7 @@ end;
 
 // FindTypeLocal
 //
-function TSymbolTable.FindTypeLocal(const aName : UnicodeString) : TTypeSymbol;
+function TSymbolTable.FindTypeLocal(const aName : String) : TTypeSymbol;
 begin
    Result:=TTypeSymbol(FindLocal(aName, TTypeSymbol));
 end;
@@ -4655,7 +4681,7 @@ end;
 
 // FindLocalSorted
 //
-function TSymbolTable.FindLocalSorted(const name : UnicodeString) : TSymbol;
+function TSymbolTable.FindLocalSorted(const name : String) : TSymbol;
 var
    lo, hi, mid, cmpResult: Integer;
    ptrList : PObjectTightList;
@@ -4679,7 +4705,7 @@ end;
 
 // FindLocalUnSorted
 //
-function TSymbolTable.FindLocalUnSorted(const name: UnicodeString) : TSymbol;
+function TSymbolTable.FindLocalUnSorted(const name: String) : TSymbol;
 var
    i : Integer;
    ptrList : PObjectTightList;
@@ -4694,7 +4720,7 @@ end;
 
 // FindSymbol
 //
-function TSymbolTable.FindSymbol(const aName : UnicodeString; minVisibility : TdwsVisibility;
+function TSymbolTable.FindSymbol(const aName : String; minVisibility : TdwsVisibility;
                                  ofClass : TSymbolClass = nil) : TSymbol;
 var
    i : Integer;
@@ -4716,14 +4742,14 @@ end;
 
 // FindTypeSymbol
 //
-function TSymbolTable.FindTypeSymbol(const aName : UnicodeString; minVisibility : TdwsVisibility) : TTypeSymbol;
+function TSymbolTable.FindTypeSymbol(const aName : String; minVisibility : TdwsVisibility) : TTypeSymbol;
 begin
    Result:=TTypeSymbol(FindSymbol(aName, minVisibility, TTypeSymbol));
 end;
 
 // EnumerateLocalSymbolsOfName
 //
-function TSymbolTable.EnumerateLocalSymbolsOfName(const aName : UnicodeString; const callback : TSymbolEnumerationCallback) : Boolean;
+function TSymbolTable.EnumerateLocalSymbolsOfName(const aName : String; const callback : TSymbolEnumerationCallback) : Boolean;
 var
    i : Integer;
    sym : TSymbol;
@@ -4740,7 +4766,8 @@ end;
 
 // EnumerateSymbolsOfNameInScope
 //
-function TSymbolTable.EnumerateSymbolsOfNameInScope(const aName : UnicodeString; const callback : TSymbolEnumerationCallback) : Boolean;
+function TSymbolTable.EnumerateSymbolsOfNameInScope(const aName : String;
+                        const callback : TSymbolEnumerationCallback) : Boolean;
 var
    i : Integer;
    visitedTables : TSimpleObjectHash<TSymbolTable>;
@@ -4884,7 +4911,7 @@ end;
 
 // CollectPropertyAttributes
 //
-procedure TSymbolTable.CollectPropertyAttributes(tableList : TSimpleObjectHash<TSymbolTable>;
+procedure TSymbolTable.CollectPropertyAttributes(tableList : TSimpleRefCountedObjectHash;
                                                  propertyList : TSimpleList<TPropertySymbol>);
 var
    i : Integer;
@@ -5099,7 +5126,7 @@ end;
 
 // FindSymbol
 //
-function TMembersSymbolTable.FindSymbol(const aName : UnicodeString; minVisibility : TdwsVisibility;
+function TMembersSymbolTable.FindSymbol(const aName : String; minVisibility : TdwsVisibility;
                                         ofClass : TSymbolClass = nil) : TSymbol;
 var
    i : Integer;
@@ -5122,7 +5149,7 @@ end;
 
 // FindSymbolFromScope
 //
-function TMembersSymbolTable.FindSymbolFromScope(const aName : UnicodeString; scopeSym : TCompositeTypeSymbol) : TSymbol;
+function TMembersSymbolTable.FindSymbolFromScope(const aName : String; scopeSym : TCompositeTypeSymbol) : TSymbol;
 begin
    if scopeSym=nil then
       Result:=FindSymbol(aName, cvPublic)
@@ -5158,7 +5185,7 @@ end;
 
 // FindLocal
 //
-function TUnSortedSymbolTable.FindLocal(const aName : UnicodeString; ofClass : TSymbolClass = nil) : TSymbol;
+function TUnSortedSymbolTable.FindLocal(const aName : String; ofClass : TSymbolClass = nil) : TSymbol;
 begin
    Result:=FindLocalUnSorted(aName);
    if (Result<>nil) and (ofClass<>nil) and (not (Result is ofClass)) then
@@ -5192,20 +5219,20 @@ end;
 
 // CreatePositive
 //
-constructor TAddrGeneratorRec.CreatePositive(aLevel : SmallInt; anInitialSize: Integer = 0);
+class function TAddrGeneratorRec.CreatePositive(aLevel : SmallInt; anInitialSize: Integer = 0) : TAddrGeneratorRec;
 begin
-   FDataSize:=anInitialSize;
-   FLevel:=aLevel;
-   FSign:=agsPositive;
+   Result.FDataSize:=anInitialSize;
+   Result.FLevel:=aLevel;
+   Result.FSign:=agsPositive;
 end;
 
 // CreateNegative
 //
-constructor TAddrGeneratorRec.CreateNegative(aLevel : SmallInt);
+class function TAddrGeneratorRec.CreateNegative(aLevel : SmallInt) : TAddrGeneratorRec;
 begin
-   FDataSize:=0;
-   FLevel:=aLevel;
-   FSign:=agsNegative;
+   Result.FDataSize:=0;
+   Result.FLevel:=aLevel;
+   Result.FSign:=agsNegative;
 end;
 
 // GetStackAddr
@@ -5227,7 +5254,7 @@ end;
 
 // Create
 //
-constructor TArraySymbol.Create(const name : UnicodeString; elementType, indexType : TTypeSymbol);
+constructor TArraySymbol.Create(const name : String; elementType, indexType : TTypeSymbol);
 begin
    inherited Create(name, elementType);
    FIndexType:=indexType;
@@ -5248,7 +5275,7 @@ end;
 
 // Create
 //
-constructor TDynamicArraySymbol.Create(const name : UnicodeString; elementType, indexType : TTypeSymbol);
+constructor TDynamicArraySymbol.Create(const name : String; elementType, indexType : TTypeSymbol);
 begin
   inherited;
   FSize:=1;
@@ -5256,7 +5283,7 @@ end;
 
 // GetCaption
 //
-function TDynamicArraySymbol.GetCaption: UnicodeString;
+function TDynamicArraySymbol.GetCaption: String;
 begin
    Result := 'array of '+Typ.Caption
 end;
@@ -5290,7 +5317,7 @@ end;
 
 // Create
 //
-constructor TStaticArraySymbol.Create(const name : UnicodeString; elementType, indexType : TTypeSymbol;
+constructor TStaticArraySymbol.Create(const name : String; elementType, indexType : TTypeSymbol;
                                       lowBound, highBound : Integer);
 begin
    inherited Create(name, elementType, indexType);
@@ -5357,7 +5384,7 @@ end;
 
 // Create
 //
-constructor TOpenArraySymbol.Create(const name : UnicodeString; elementType, indexType : TTypeSymbol);
+constructor TOpenArraySymbol.Create(const name : String; elementType, indexType : TTypeSymbol);
 begin
    inherited Create(name, elementType, indexType, 0, -1);
    FSize:=1;
@@ -5374,7 +5401,7 @@ end;
 
 // GetCaption
 //
-function TOpenArraySymbol.GetCaption : UnicodeString;
+function TOpenArraySymbol.GetCaption : String;
 begin
    Result:='array of const';
 end;
@@ -5385,7 +5412,7 @@ end;
 
 // Create
 //
-constructor TElementSymbol.Create(const Name: UnicodeString; Typ: TTypeSymbol;
+constructor TElementSymbol.Create(const Name: String; Typ: TTypeSymbol;
                                   const aValue : Int64; isUserDef: Boolean);
 begin
    inherited Create(Name, Typ, aValue);
@@ -5394,7 +5421,7 @@ end;
 
 // GetDescription
 //
-function TElementSymbol.GetDescription: UnicodeString;
+function TElementSymbol.GetDescription: String;
 begin
    if FIsUserDef then
       Result:=Name+' = '+IntToStr(Value)
@@ -5414,7 +5441,7 @@ end;
 
 // Create
 //
-constructor TEnumerationSymbol.Create(const Name: UnicodeString; BaseType: TTypeSymbol;
+constructor TEnumerationSymbol.Create(const Name: String; BaseType: TTypeSymbol;
                                       aStyle : TEnumerationSymbolStyle);
 begin
    inherited Create(Name, BaseType);
@@ -5491,14 +5518,14 @@ end;
 
 // GetCaption
 //
-function TEnumerationSymbol.GetCaption: UnicodeString;
+function TEnumerationSymbol.GetCaption: String;
 begin
    Result:=Name;
 end;
 
 // GetDescription
 //
-function TEnumerationSymbol.GetDescription: UnicodeString;
+function TEnumerationSymbol.GetDescription: String;
 var
    i : Integer;
 begin
@@ -5513,7 +5540,7 @@ end;
 
 // ShortDescription
 //
-function TEnumerationSymbol.ShortDescription : UnicodeString;
+function TEnumerationSymbol.ShortDescription : String;
 begin
    case FElements.Count of
       0 : Result:=' ';
@@ -5635,7 +5662,7 @@ end;
 
 // CreatePosFmt
 //
-constructor EScriptError.CreatePosFmt(const pos : TScriptPos; const Msg: UnicodeString; const Args: array of const);
+constructor EScriptError.CreatePosFmt(const pos : TScriptPos; const Msg: String; const Args: array of const);
 begin
    inherited CreateFmt(msg, args);
    FScriptPos:=pos;
@@ -5647,7 +5674,7 @@ end;
 
 // Create
 //
-constructor EScriptException.Create(const msgString : UnicodeString;
+constructor EScriptException.Create(const msgString : String;
       const anExceptionObj : IScriptObj; const aScriptPos: TScriptPos);
 begin
    inherited Create(msgString);
@@ -5825,14 +5852,14 @@ end;
 
 // LocalizeSymbol
 //
-procedure TdwsExecution.LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : UnicodeString);
+procedure TdwsExecution.LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : String);
 begin
    LocalizeString(aResSymbol.Value, Result);
 end;
 
 // LocalizeString
 //
-procedure TdwsExecution.LocalizeString(const aString : UnicodeString; var Result : UnicodeString);
+procedure TdwsExecution.LocalizeString(const aString : String; var Result : String);
 begin
    Result:=aString;
 end;
@@ -5857,7 +5884,7 @@ end;
 
 // AsInfo
 //
-function TRuntimeErrorMessage.AsInfo: UnicodeString;
+function TRuntimeErrorMessage.AsInfo: String;
 begin
    Result:=Text;
    if Length(FCallStack)>0 then
@@ -5876,7 +5903,7 @@ end;
 
 // AddRuntimeError
 //
-procedure TdwsRuntimeMessageList.AddRuntimeError(const Text: UnicodeString);
+procedure TdwsRuntimeMessageList.AddRuntimeError(const Text: String);
 begin
    AddRuntimeError(cNullPos, Text, nil);
 end;
@@ -5891,7 +5918,7 @@ end;
 // AddRuntimeError
 //
 procedure TdwsRuntimeMessageList.AddRuntimeError(const scriptPos : TScriptPos;
-                     const Text: UnicodeString; const callStack : TdwsExprLocationArray);
+                     const Text: String; const callStack : TdwsExprLocationArray);
 var
    msg : TRuntimeErrorMessage;
 begin
@@ -5933,7 +5960,7 @@ end;
 
 // GetCaption
 //
-function TOperatorSymbol.GetCaption : UnicodeString;
+function TOperatorSymbol.GetCaption : String;
 var
    i : Integer;
 begin
@@ -5981,7 +6008,7 @@ end;
 
 // Create
 //
-constructor TResourceStringSymbol.Create(const aName, aValue : UnicodeString);
+constructor TResourceStringSymbol.Create(const aName, aValue : String);
 begin
    inherited Create(aName, nil);
    FValue:=aValue;
@@ -5990,14 +6017,14 @@ end;
 
 // GetCaption
 //
-function TResourceStringSymbol.GetCaption : UnicodeString;
+function TResourceStringSymbol.GetCaption : String;
 begin
    Result:='resourcestring '+Name;
 end;
 
 // GetDescription
 //
-function TResourceStringSymbol.GetDescription : UnicodeString;
+function TResourceStringSymbol.GetDescription : String;
 begin
    Result:='resourcestring '+Name+' = '''+StringReplace(Value, '''', '''''', [rfReplaceAll])+'''';
 end;
@@ -6047,7 +6074,7 @@ end;
 
 // Create
 //
-constructor THelperSymbol.Create(const name : UnicodeString; aUnit : TSymbol;
+constructor THelperSymbol.Create(const name : String; aUnit : TSymbol;
                                  aForType : TTypeSymbol; priority : Integer);
 begin
    inherited Create(name, aUnit);
