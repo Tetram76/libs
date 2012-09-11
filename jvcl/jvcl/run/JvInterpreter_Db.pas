@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Db.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvInterpreter_Db.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvInterpreter_Db;
 
@@ -43,8 +43,8 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Db.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -52,8 +52,18 @@ const
 implementation
 
 uses
+  {$IFDEF RTL240_UP}
+  System.Generics.Collections,
+  {$ENDIF RTL240_UP}
   Classes, Variants, DB;
 
+type
+  {$IFDEF COMPILER12_UP}
+  TJvRecordBuffer = TRecordBuffer;  // Delphi 2009
+  {$ELSE}
+  TJvRecordBuffer = PAnsiChar;
+  {$ENDIF COMPILER12_UP}
+  
 { EDatabaseError }
 
 { TFieldDef }
@@ -2075,14 +2085,14 @@ end;
 
 procedure TDataSet_GetCurrentRecord(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := TDataSet(Args.Obj).GetCurrentRecord({$IFDEF COMPILER12_UP}PByte{$ELSE}PAnsiChar{$ENDIF COMPILER12_UP}(AnsiString(Args.Values[0])));
+  Value := TDataSet(Args.Obj).GetCurrentRecord(TJvRecordBuffer(AnsiString(Args.Values[0])));
 end;
 
 { procedure GetFieldList(List: TList; const FieldNames: string); }
 
 procedure TDataSet_GetFieldList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TDataSet(Args.Obj).GetFieldList(V2O(Args.Values[0]) as TList, Args.Values[1]);
+  TDataSet(Args.Obj).GetFieldList(V2O(Args.Values[0]) as TList{$IFDEF RTL240_UP}<TField>{$ENDIF RTL240_UP}, Args.Values[1]);
 end;
 
 { procedure GetFieldNames(List: TStrings); }

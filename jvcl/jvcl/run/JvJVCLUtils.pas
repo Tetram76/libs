@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 13397 2012-08-16 17:23:19Z ahuser $
+// $Id: JvJVCLUtils.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvJVCLUtils;
 
@@ -36,6 +36,10 @@ uses
   {$IFDEF MSWINDOWS}
   Windows, Messages, ShellAPI, Registry,
   {$ENDIF MSWINDOWS}
+  Types,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF}
   SysUtils,
   Forms, Graphics, Controls, StdCtrls, ExtCtrls, Menus,
   Dialogs, ComCtrls, ImgList, Grids, MultiMon,
@@ -866,8 +870,8 @@ function ReplaceComponentReference(This, NewReference: TComponent; var VarRefere
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 13397 $';
-    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

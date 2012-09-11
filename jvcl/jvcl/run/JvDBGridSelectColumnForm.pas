@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBGridSelectColumnForm.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvDBGridSelectColumnForm.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDBGridSelectColumnForm;
 
@@ -71,8 +71,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGridSelectColumnForm.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -80,6 +80,9 @@ const
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   SysUtils,
   JvJCLUtils, JvConsts;
 

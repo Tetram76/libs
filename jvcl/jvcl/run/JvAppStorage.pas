@@ -74,7 +74,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorage.pas 13405 2012-08-20 21:33:08Z jfudickar $
+// $Id: JvAppStorage.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvAppStorage;
 
@@ -992,8 +992,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorage.pas $';
-    Revision: '$Revision: 13405 $';
-    Date: '$Date: 2012-08-20 23:33:08 +0200 (lun., 20 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -2707,7 +2707,7 @@ begin
     tkLString, tkString:
       SetStrProp(PersObj, PropName, ReadString(Path, GetStrProp(PersObj, PropName)));
     tkWString:
-      SetWideStrProp(PersObj, PropName, ReadWideString(Path, GetWideStrProp(PersObj, PropName)));
+      {$IFDEF RTL240_UP}SetStrProp{$ELSE}SetWideStrProp{$ENDIF RTL240_UP}(PersObj, PropName, ReadWideString(Path, {$IFDEF RTL240_UP}GetStrProp{$ELSE}GetWideStrProp{$ENDIF RTL240_UP}(PersObj, PropName)));
     tkEnumeration:
       begin
         TmpValue := GetOrdProp(PersObj, PropName);
@@ -2830,7 +2830,7 @@ begin
         WriteString(Path, GetStrProp(PersObj, PropName));
     tkWString:
       if StorageOptions.StoreDefaultValues or not IsDefaultStrProp(P) then
-        WriteWideString(Path, GetWideStrProp(PersObj, PropName));
+        WriteWideString(Path, {$IFDEF RTL240_UP}GetStrProp{$ELSE}GetWideStrProp{$ENDIF RTL240_UP}(PersObj, PropName));
     tkVariant:
       if StorageOptions.StoreDefaultValues or not IsDefaultStrProp(P) then
         WriteString(Path, VarToStr(GetVariantProp(PersObj, PropName)));

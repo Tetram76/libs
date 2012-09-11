@@ -31,7 +31,7 @@ description : JVCL Interpreter version 2
 Known Issues:
    String fields in records binded from Delphi don't work
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter.pas 13190 2012-01-19 19:53:44Z ahuser $
+// $Id: JvInterpreter.pas 13415 2012-09-10 09:51:54Z obones $
 
 { history (JVCL Library versions):
   1.10:
@@ -1258,8 +1258,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter.pas $';
-    Revision: '$Revision: 13190 $';
-    Date: '$Date: 2012-01-19 20:53:44 +0100 (jeu., 19 janv. 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1267,6 +1267,7 @@ const
 implementation
 
 uses
+  Types,
   TypInfo,
   {$IFDEF CPUX64}
   System.Rtti,

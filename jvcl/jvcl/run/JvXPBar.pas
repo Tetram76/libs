@@ -39,7 +39,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPBar.pas 13207 2012-02-23 10:39:11Z obones $
+// $Id: JvXPBar.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvXPBar;
 
@@ -63,6 +63,9 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Classes, SysUtils,
   Graphics, Controls, Forms, ImgList, ActnList, Messages,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvXPCore, JvXPCoreUtils, JvJVCLUtils, JvTypes;
 
 type
@@ -557,8 +560,8 @@ procedure RoundedFrame(Canvas: TCanvas; ARect: TRect; AColor: TColor; R: Integer
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXPBar.pas $';
-    Revision: '$Revision: 13207 $';
-    Date: '$Date: 2012-02-23 11:39:11 +0100 (jeu., 23 févr. 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -566,6 +569,7 @@ const
 implementation
 
 uses
+  Types,
   {$IFDEF JVCLThemesEnabled}
   UxTheme,
   {$IFNDEF COMPILER7_UP}

@@ -25,7 +25,7 @@ Known Issues:
   * Some tags are not supported, see var DefaultFrameClasses. Values nil in that
     list indicate not supported frames.
 -----------------------------------------------------------------------------}
-// $Id: JvID3v2Base.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id: JvID3v2Base.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvID3v2Base;
 
@@ -1181,8 +1181,8 @@ function NiceGenreToGenre(const ANiceGenre: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvID3v2Base.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2478,9 +2478,8 @@ begin
 
     Read(FPreviewLength, 2);
     FPreviewLength := ReverseBytes(FPreviewLength);
-
-    ReadData(BytesTillEndOfFrame);
   end;
+  ReadData(Stream.BytesTillEndOfFrame);
 end;
 
 function TJvID3AudioEncryptionFrame.SameUniqueIDAs(
@@ -2543,9 +2542,8 @@ begin
 
     TempWord := ReverseBytes(PreviewLength);
     Write(TempWord, 2);
-
-    WriteData;
   end;
+  WriteData;
 end;
 
 //=== { TJvID3Base } =========================================================
@@ -6058,8 +6056,8 @@ begin
     ReadStringA(FMIMEType);
     ReadStringEnc(FFileName);
     ReadStringEnc(FContentDescription);
-    ReadData(BytesTillEndOfFrame);
   end;
+  ReadData(Stream.BytesTillEndOfFrame);
 end;
 
 function TJvID3GeneralObjFrame.SameUniqueIDAs(const Frame: TJvID3Frame): Boolean;
@@ -6119,8 +6117,8 @@ begin
     WriteTerminatorEnc;
     WriteStringEnc(ContentDescription);
     WriteTerminatorEnc;
-    WriteData;
   end;
+  WriteData;
 end;
 
 //=== { TJvID3Header } =======================================================
@@ -6806,7 +6804,7 @@ begin
       }
       ReadStringA(FURL)
     else
-      ReadData(BytesTillEndOfFrame);
+      Self.ReadData(BytesTillEndOfFrame);
   end;
 end;
 
@@ -6883,7 +6881,7 @@ begin
     if HasOnlyURL then
       WriteStringA(URL)
     else
-      WriteData;
+      Self.WriteData;
   end;
 end;
 

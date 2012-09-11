@@ -38,7 +38,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupTreeView.pas 13272 2012-03-12 15:51:28Z ahuser $
+// $Id: JvDBLookupTreeView.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDBLookupTreeView;
 
@@ -51,6 +51,9 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
+  {$IFDEF RTL240_UP}
+  System.Generics.Collections,
+  {$ENDIF RTL240_UP}
   Classes, Controls, Forms, ComCtrls, DB,
   JvDBTreeView, JvToolEdit, JvComponent, JvExControls;
 
@@ -89,7 +92,7 @@ type
     FMasterField: TField;
     FKeyField: TField;
     FListField: TField;
-    FListFields: TList;
+    FListFields: TList{$IFDEF RTL240_UP}<TField>{$ENDIF RTL240_UP};
     FKeyValue: Variant;
     FUseFilter: Boolean;
     FSearchText: string;
@@ -452,8 +455,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupTreeView.pas $';
-    Revision: '$Revision: 13272 $';
-    Date: '$Date: 2012-03-12 16:51:28 +0100 (lun., 12 mars 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -528,7 +531,7 @@ begin
   FDataLink.FDBLookupControl := Self;
   FListLink := TJvLookupListSourceLink.Create;
   FListLink.FDBLookupControl := Self;
-  FListFields := TList.Create;
+  FListFields := TList{$IFDEF RTL240_UP}<TField>{$ENDIF RTL240_UP}.Create;
   FKeyValue := Null;
   FSearchTickCount := 0;
 end;

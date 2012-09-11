@@ -28,7 +28,7 @@ Known Issues:
                (report for instance). As a workaround, always change the item's
                properties, never the canvas' directly.
 -----------------------------------------------------------------------------}
-// $Id: JvListView.pas 13247 2012-02-27 14:29:05Z obones $
+// $Id: JvListView.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvListView;
 
@@ -523,8 +523,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListView.pas $';
-    Revision: '$Revision: 13247 $';
-    Date: '$Date: 2012-02-27 15:29:05 +0100 (lun., 27 févr. 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1137,8 +1137,8 @@ var
             smNumeric:
               begin
                 try
-                  VarR8FromStr(First, LOCALE_USER_DEFAULT, 0, I);
-                  VarR8FromStr(Second, LOCALE_USER_DEFAULT, 0, J);
+                  VarR8FromStr({$IFDEF RTL240_UP}PChar{$ENDIF RTL240_UP}(First), LOCALE_USER_DEFAULT, 0, I);
+                  VarR8FromStr({$IFDEF RTL240_UP}PChar{$ENDIF RTL240_UP}(Second), LOCALE_USER_DEFAULT, 0, J);
                   Result := I > J;
                 except
                   try
@@ -1174,8 +1174,8 @@ var
               end;
             smCurrency:
               begin
-                VarCyFromStr(First, LOCALE_USER_DEFAULT, 0, a);
-                VarCyFromStr(Second, LOCALE_USER_DEFAULT, 0, b);
+                VarCyFromStr({$IFDEF RTL240_UP}PChar{$ENDIF RTL240_UP}(First), LOCALE_USER_DEFAULT, 0, a);
+                VarCyFromStr({$IFDEF RTL240_UP}PChar{$ENDIF RTL240_UP}(Second), LOCALE_USER_DEFAULT, 0, b);
                 Result := a > b;
               end;
             smAutomatic:

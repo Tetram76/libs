@@ -55,7 +55,7 @@ Changes:
 Known Issues:
 * AutoSize calculations aren't correct when RoundedFrame and/or Shadow are active
 -----------------------------------------------------------------------------}
-// $Id: JvLabel.pas 13392 2012-08-11 23:20:08Z ahuser $
+// $Id: JvLabel.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvLabel;
 
@@ -68,6 +68,9 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Types, Classes, Graphics, Controls, StdCtrls, ImgList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvTypes, JvComponent, JvDataProvider, JvExControls, JvHotTrackPersistent;
 
 type
@@ -321,8 +324,8 @@ procedure CalculateAngleInfo(Canvas: TCanvas; Angle: Integer; Text: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLabel.pas $';
-    Revision: '$Revision: 13392 $';
-    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 13403 2012-08-19 17:56:34Z ahuser $
+// $Id: JvDBLookup.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDBLookup;
 
@@ -40,6 +40,9 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
+  {$IFDEF RTL240_UP}
+  System.Generics.Collections,
+  {$ENDIF RTL240_UP}
   Types, Variants, Classes, Graphics, Controls, Forms, DB, DBCtrls,
   JvDBUtils, JvToolEdit, JvComponent, JvExControls;
 
@@ -89,7 +92,7 @@ type
     FMasterField: TField;
     FKeyField: TField;
     FDisplayField: TField;
-    FListFields: TList;
+    FListFields: TList{$IFDEF RTL240_UP}<TField>{$ENDIF RTL240_UP};
     FValue: string;
     FDisplayValue: string;
     FDisplayEmpty: string;
@@ -671,8 +674,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 13403 $';
-    Date: '$Date: 2012-08-19 19:56:34 +0200 (dim., 19 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -802,7 +805,7 @@ begin
   FDataLink.FDataControl := Self;
   FLookupLink := TLookupSourceLink.Create;
   FLookupLink.FDataControl := Self;
-  FListFields := TList.Create;
+  FListFields := TList{$IFDEF RTL240_UP}<TField>{$ENDIF RTL240_UP}.Create;
   FEmptyValue := '';
   FEmptyStrIsNull := True;
   FEmptyItemColor := clWindow;

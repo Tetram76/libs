@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLAboutForm.pas 13352 2012-06-14 09:21:26Z obones $
+// $Id: JvJVCLAboutForm.pas 13412 2012-09-08 10:19:55Z ahuser $
 
 unit JvJVCLAboutForm;
 
@@ -75,19 +75,21 @@ type
     lblMemory: TLabel;
     procedure btnOKClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure Panel1MouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    procedure Panel1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure btnHelpClick(Sender: TObject);
     procedure btnOptionsClick(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
     procedure OpenURLClick(Sender: TObject);
   private
     FHelpFile: string;
     FHelpDirectory: string;
+    FParentWnd: HWND;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
   public
+    constructor Create(AOwner: TComponent; AParentWnd: HWND); reintroduce; overload;
     procedure LoadOptions;
     procedure SaveOptions;
-    class function Execute(ParentWnd: HWND; StoreSettings: Boolean): Boolean;
+    class function Execute(AParentWnd: HWND; AStoreSettings: Boolean): Boolean;
   end;
 
   {$IFDEF RTL230_UP}
@@ -97,7 +99,7 @@ type
   private
     FStoreSettings: Boolean;
   public
-    function Execute(ParentWnd: HWND): Boolean; overload; override;
+    function Execute(AParentWnd: HWND): Boolean; overload; override;
   published
     property StoreSettings: Boolean read FStoreSettings write FStoreSettings default False;
   end;
@@ -106,8 +108,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLAboutForm.pas $';
-    Revision: '$Revision: 13352 $';
-    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
+    Revision: '$Revision: 13412 $';
+    Date: '$Date: 2012-09-08 12:19:55 +0200 (sam., 08 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -184,6 +186,19 @@ begin
   end;
 end;
 
+constructor TJvJVCLAboutForm.Create(AOwner: TComponent; AParentWnd: HWND);
+begin
+  FParentWnd := AParentWnd;
+  Create(AOwner);
+end;
+
+procedure TJvJVCLAboutForm.CreateParams(var Params: TCreateParams);
+begin
+  inherited CreateParams(Params);
+  if FParentWnd <> 0 then
+    Params.WndParent := FParentWnd;
+end;
+
 procedure TJvJVCLAboutForm.LoadOptions;
 var
   L, T: Integer;
@@ -234,33 +249,27 @@ begin
   end;
 end;
 
-procedure TJvJVCLAboutForm.FormDestroy(Sender: TObject);
-begin
-//  SaveOptions;
-end;
-
 procedure TJvJVCLAboutForm.btnOKClick(Sender: TObject);
 begin
   Close;
 end;
 
-function TJvJVCLAboutComponent.Execute(ParentWnd: HWND): Boolean;
+function TJvJVCLAboutComponent.Execute(AParentWnd: HWND): Boolean;
 begin
-  Result := TJvJVCLAboutForm.Execute(ParentWnd, StoreSettings);
+  Result := TJvJVCLAboutForm.Execute(AParentWnd, StoreSettings);
 end;
 
-class function TJvJVCLAboutForm.Execute(ParentWnd: HWND; StoreSettings: Boolean): Boolean;
+class function TJvJVCLAboutForm.Execute(AParentWnd: HWND; AStoreSettings: Boolean): Boolean;
 begin
-  with Self.Create(Application) do
+  with Self.Create(nil, AParentWnd) do
   try
-    if StoreSettings then
+    if AStoreSettings then
       LoadOptions;
     // (rom) used as component outside the IDE the buttons are not useful
-    btnHelp.Visible := StoreSettings;
-    btnOptions.Visible := StoreSettings;
-    ParentWindow := ParentWnd;
+    btnHelp.Visible := AStoreSettings;
+    btnOptions.Visible := AStoreSettings;
     Result := ShowModal = mrOk;
-    if StoreSettings then
+    if AStoreSettings then
       SaveOptions;
   finally
     Free;

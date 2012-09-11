@@ -54,7 +54,7 @@ Known issues / not (yet) implemented features:
   - it really is a control for date entry only.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDatePickerEdit.pas 13320 2012-06-12 12:47:17Z obones $
+// $Id: JvDatePickerEdit.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDatePickerEdit;
 
@@ -67,6 +67,9 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, Classes, Controls, ImgList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvCalendar, JvDropDownForm, JvCheckedMaskEdit, JvToolEdit;
 
 type
@@ -344,8 +347,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDatePickerEdit.pas $';
-    Revision: '$Revision: 13320 $';
-    Date: '$Date: 2012-06-12 14:47:17 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

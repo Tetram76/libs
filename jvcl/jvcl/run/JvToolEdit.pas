@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 13392 2012-08-11 23:20:08Z ahuser $
+// $Id: JvToolEdit.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvToolEdit;
 
@@ -48,6 +48,9 @@ uses
   Variants,
   SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Menus,
   Buttons, FileCtrl, Mask, ImgList, ActnList, ExtDlgs,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvConsts,
   JvExControls, JvSpeedButton, JvTypes, JvExMask,
   JvDataSourceIntf, JvBrowseFolder;
@@ -1108,8 +1111,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 13392 $';
-    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1478,7 +1481,7 @@ begin
           end
           else
           {$ENDIF COMPILER16_UP}
-            ACanvas.Font.Color := DisabledTextColor;
+          ACanvas.Font.Color := DisabledTextColor;
           ACanvas.TextRect(EditRect, X, EditRect.Top, S);
         finally
           RestoreDC(ACanvas.Handle, -1);
@@ -1494,7 +1497,7 @@ begin
         end
         else
         {$ENDIF COMPILER16_UP}
-          Brush.Color := TEd(Editor).Color;
+        Brush.Color := TEd(Editor).Color;
         ACanvas.TextRect(EditRect, X, EditRect.Top, S);
       end;
     end;
@@ -2115,11 +2118,11 @@ begin
     else
     {$ENDIF COMPILER16_UP}
     begin
-      Canvas.Brush.Color := FDisabledColor;
-      Canvas.Brush.Style := bsSolid;
-      Canvas.FillRect(ClientRect);
-    end;
+    Canvas.Brush.Color := FDisabledColor;
+    Canvas.Brush.Style := bsSolid;
+    Canvas.FillRect(ClientRect);
   end;
+end;
 end;
 
 procedure TJvCustomComboEdit.FocusSet(PrevWnd: THandle);
@@ -2366,7 +2369,11 @@ begin
     else
     begin
       { must catch and remove this, since is actually multi-line }
-      GetParentForm(Self).Perform(CM_DIALOGKEY, Byte(Key), 0);
+      if (Form <> nil) and (Form.Perform(CM_DIALOGKEY, Byte(Key), 0) <> 0) then
+      begin
+        Key := #0;
+        Exit;
+      end;
       if Key = Cr then
       begin
         inherited KeyPress(Key);

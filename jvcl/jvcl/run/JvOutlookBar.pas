@@ -36,7 +36,7 @@ Known Issues:
                   Outlook bar buttons now have color properties (instead of
                   assuming we will use the clBtnFace type system colors)
 -----------------------------------------------------------------------------}
-// $Id: JvOutlookBar.pas 13319 2012-06-12 12:21:55Z obones $
+// $Id: JvOutlookBar.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvOutlookBar;
 
@@ -56,7 +56,9 @@ uses
   TmSchema,
   {$ENDIF !COMPILER7_UP}
   {$ENDIF JVCLThemesEnabled}
-
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvJCLUtils, JvThemes, JvComponent, JvExButtons;
 
 const
@@ -471,8 +473,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOutlookBar.pas $';
-    Revision: '$Revision: 13319 $';
-    Date: '$Date: 2012-06-12 14:21:55 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -480,7 +482,7 @@ const
 implementation
 
 uses
-  Math,
+  Types, Math,
   JvConsts, JvJVCLUtils;
 
 {$R JvOutlookBar.res}

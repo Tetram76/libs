@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvXPCtrlsReg.pas 12942 2010-11-28 22:46:54Z ahuser $
+// $Id: JvXPCtrlsReg.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvXPCtrlsReg;
 
@@ -38,6 +38,9 @@ implementation
 
 uses
   Classes, ImgList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   DesignIntf, DesignEditors, VCLEditors,
   JvDsgnConsts, JvXPProgressBar,
   JvXPCore, JvXPPropertyEditors, JvXPBar, JvXPContainer,

@@ -21,7 +21,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignImp.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id: JvDesignImp.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDesignImp;
 
@@ -212,6 +212,10 @@ type
     function GetIsControl: Boolean;
     procedure SetIsControl(Value: Boolean);
     function IsDesignMsg(Sender: TControl; var Msg: TMessage): Boolean;
+    {$IFDEF RTL240_UP}
+    procedure DrawSelectionMarks(AControl: TControl);
+    function IsSelected(AControl: TControl): Boolean;
+    {$ENDIF RTL240_UP}
     procedure PaintGrid;
     procedure ValidateRename(AComponent: TComponent; const CurName, NewName: string); reintroduce;
     function UniqueName(const BaseName: string): string;
@@ -270,8 +274,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDesignImp.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -279,6 +283,7 @@ const
 implementation
 
 uses
+  Types,
   JvDesignUtils, JvResources, JvTypes;
 
 var
@@ -1233,6 +1238,19 @@ function TJvDesignDesigner.IsDesignMsg(Sender: TControl; var Msg: TMessage): Boo
 begin
   Result := Messenger.IsDesignMessage(Sender, Msg);
 end;
+
+{$IFDEF RTL240_UP}
+procedure TJvDesignDesigner.DrawSelectionMarks(AControl: TControl);
+begin
+  {$MESSAGE WARN 'Check and implement TJvDesignDesigner.DrawSelectionMarks if necessary'}
+end;
+
+function TJvDesignDesigner.IsSelected(AControl: TControl): Boolean;
+begin
+  {$MESSAGE WARN 'Check and implement TJvDesignDesigner.IsSelected if necessary'}
+  Result := False;
+end;
+{$ENDIF RTL240_UP}
 
 procedure TJvDesignDesigner.Modified;
 begin

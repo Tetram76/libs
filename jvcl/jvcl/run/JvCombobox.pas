@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCombobox.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvCombobox.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvCombobox;
 
@@ -402,8 +402,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCombobox.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -411,7 +411,7 @@ const
 implementation
 
 uses
-  SysUtils, Consts, RTLConsts, Variants,
+  Types, SysUtils, Consts, RTLConsts, Variants,
   JvDataProviderIntf, JvItemsSearchs, JvConsts, JvResources;
 
 const

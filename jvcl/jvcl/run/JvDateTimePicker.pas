@@ -36,7 +36,7 @@ Known Issues:
       DateAndTime := JvDateTimePicker1.NullDate;
 
 -----------------------------------------------------------------------------}
-// $Id: JvDateTimePicker.pas 13315 2012-06-12 11:33:51Z obones $
+// $Id: JvDateTimePicker.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDateTimePicker;
 
@@ -102,8 +102,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDateTimePicker.pas $';
-    Revision: '$Revision: 13315 $';
-    Date: '$Date: 2012-06-12 13:33:51 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -112,9 +112,7 @@ implementation
 
 uses
   CommCtrl,
-  {$IFDEF HAS_TYPES}
   Types,
-  {$ENDIF HAS_TYPES}
   JvThemes;
 
 {$IFNDEF COMPILER7_UP}

@@ -42,7 +42,7 @@ Notes (2003-05-21) // Remko Bonte
   of flickering, best avoid it or set ScrollBars to ssNone.
 * Updated drag image to use with MultiLine.
 -----------------------------------------------------------------------------}
-// $Id: JvListBox.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvListBox.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvListBox;
 
@@ -55,6 +55,9 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, Messages, SysUtils, Classes, Graphics, StdCtrls, Controls, Forms,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvItemsSearchs, JvDataProvider, JvDataProviderIntf, JvExStdCtrls;
 
 type
@@ -392,8 +395,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListBox.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

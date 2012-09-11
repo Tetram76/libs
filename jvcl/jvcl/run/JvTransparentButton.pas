@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTransparentButton.pas 13318 2012-06-12 12:14:25Z obones $
+// $Id: JvTransparentButton.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvTransparentButton;
 
@@ -37,8 +37,11 @@ uses
   SysUtils, Classes,
   Windows, Messages, Graphics, Controls,
   ExtCtrls, Menus, Forms, ImgList, ActnList, Buttons,
-  CommCtrl, JvJCLUtils,
-  JvButton;
+  CommCtrl,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
+  JvJCLUtils, JvButton;
 
 type
   TJvFrameStyle =
@@ -234,8 +237,8 @@ function DrawDisabledText(DC: HDC; Caption: TCaption; nCount: Integer;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTransparentButton.pas $';
-    Revision: '$Revision: 13318 $';
-    Date: '$Date: 2012-06-12 14:14:25 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1252,10 +1255,10 @@ begin
         Glyph.Width := 0;
         Glyph.Height := 0;
 
-        if not CheckDefaults or ((Images <> nil) and (Images.ActiveIndex = -1)) then
+        if not CheckDefaults or ((Images <> nil) and (Self.Images.ActiveIndex = -1)) then
         begin
-          Images.ActiveImage := ActionList.Images;
-          Images.ActiveIndex := ImageIndex;
+          Self.Images.ActiveImage := ActionList.Images;
+          Self.Images.ActiveIndex := ImageIndex;
         end;
       {end
       else

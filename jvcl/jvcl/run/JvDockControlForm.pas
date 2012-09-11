@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockControlForm.pas 13280 2012-03-22 18:14:51Z wpostma $
+// $Id: JvDockControlForm.pas 13415 2012-09-10 09:51:54Z obones $
 
 { Changes:
 
@@ -867,8 +867,8 @@ procedure InvalidateDockHostSiteOfControl(Control: TControl; FocusLost: Boolean)
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockControlForm.pas $';
-    Revision: '$Revision: 13280 $';
-    Date: '$Date: 2012-03-22 19:14:51 +0100 (jeu., 22 mars 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -876,7 +876,7 @@ const
 implementation
 
 uses
-  SysUtils,
+  Types, SysUtils,
   JvAppRegistryStorage, JvAppIniStorage, JvTypes,
   JvDockSupportProc, JvDockGlobals, JvDockInfo, JvDockVSNetStyle, JvJVCLUtils;
 

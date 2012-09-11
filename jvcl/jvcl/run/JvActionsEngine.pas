@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 13145 2011-11-02 21:15:19Z ahuser $
+// $Id: JvActionsEngine.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvActionsEngine;
 
@@ -34,8 +34,11 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   {$IFDEF MSWINDOWS}
-  Windows, ActnList, Graphics,
+  Windows, ActnList, Graphics, ImgList,
   {$ENDIF MSWINDOWS}
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   Controls, Classes;
 
 type
@@ -90,11 +93,11 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     function HandlesTarget(Target: TObject): Boolean; override;
-    procedure SetChecked(Value: Boolean);
-    procedure SetEnabled(Value: Boolean);
-    procedure SetImageIndex(Value: Integer);
+    procedure SetChecked(Value: Boolean); {$IFDEF RTL240_UP}override;{$ENDIF RTL240_UP}
+    procedure SetEnabled(Value: Boolean); {$IFDEF RTL240_UP}override;{$ENDIF RTL240_UP}
+    procedure SetImageIndex(Value: TImageIndex); {$IFDEF RTL240_UP}override;{$ENDIF RTL240_UP}
     procedure SetParentComponent(AParent: TComponent); override;
-    procedure SetVisible(Value: Boolean);
+    procedure SetVisible(Value: Boolean); {$IFDEF RTL240_UP}override;{$ENDIF RTL240_UP}
     procedure UpdateTarget(Target: TObject); override;
     property ActionComponent: TComponent read FActionComponent write SetActionComponent;
   end;
@@ -133,8 +136,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 13145 $';
-    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -299,7 +302,7 @@ begin
     Enabled := Value;
 end;
 
-procedure TJvActionEngineBaseAction.SetImageIndex(Value: Integer);
+procedure TJvActionEngineBaseAction.SetImageIndex(Value: TImageIndex);
 begin
   if ImageIndex <> Value then
     ImageIndex := Value;

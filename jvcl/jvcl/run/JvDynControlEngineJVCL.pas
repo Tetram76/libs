@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineJVCL.pas 13376 2012-07-07 20:48:29Z jfudickar $
+// $Id: JvDynControlEngineJVCL.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvDynControlEngineJVCL;
 
@@ -40,6 +40,9 @@ uses
   Classes,
   Controls, StdCtrls, ExtCtrls, Mask, Forms,
   Buttons, Dialogs, FileCtrl,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvMaskEdit, JvDateTimePicker, JvBitBtn, JvCheckBox, JvBaseEdits,
   JvLabel, JvListBox, JvMemo, JvRichEdit, JvPanel, JvRadioGroup, JvToolEdit,
   JvScrollBox, JvStaticText, JvCombobox, JvImage, JvSpin, JvCheckListBox,
@@ -859,8 +862,8 @@ procedure SetDynControlEngineJVCLDefault;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineJVCL.pas $';
-    Revision: '$Revision: 13376 $';
-    Date: '$Date: 2012-07-07 22:48:29 +0200 (sam., 07 juil. 2012) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

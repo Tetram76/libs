@@ -42,7 +42,7 @@ Changes 2003-03-23:
      - ImageOffset: change to ImageOptions.Offset // peter3
 
 -----------------------------------------------------------------------------}
-// $Id: JvRollOut.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvRollOut.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvRollOut;
 
@@ -56,6 +56,9 @@ uses
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
   Windows, Forms, Messages, Controls, Graphics, ImgList, ExtCtrls, ActnList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvExtComponent, JvThemes;
 
 const
@@ -317,8 +320,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvRollOut.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13415 $';
+    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -326,6 +329,7 @@ const
 implementation
 
 uses
+  Types,
   JvJVCLUtils; // for IsAccel()
 
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStdCtrlsReg.pas 13223 2012-02-24 14:51:13Z obones $
+// $Id: JvStdCtrlsReg.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvStdCtrlsReg;
 
@@ -37,6 +37,9 @@ uses
   Classes, Controls,
   FiltEdit,
   ImgList,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   DesignEditors, DesignIntf,
   JvDsgnConsts, JvTypes,
   JvRichEdit,

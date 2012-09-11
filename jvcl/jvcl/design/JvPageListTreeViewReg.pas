@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvPageListTreeViewReg.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvPageListTreeViewReg.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvPageListTreeViewReg;
 
@@ -39,6 +39,9 @@ implementation
 uses
   Classes, ImgList, ComCtrls,
   VCLEditors, DesignEditors, DesignIntf, DesignMenus,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvDsgnConsts,
   JvNavigationPane, JvPageList, JvPageListTreeView, JvPageListEditors,
   JvNavPaneEditors, JvTreeItemsEditorForm, JvPageLinkEditorForm, JvPageListEditorForm;

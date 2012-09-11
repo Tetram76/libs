@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCoreReg.pas 13149 2011-11-06 09:56:20Z ahuser $
+// $Id: JvCoreReg.pas 13415 2012-09-10 09:51:54Z obones $
 
 unit JvCoreReg;
 
@@ -36,6 +36,9 @@ procedure Register;
 implementation
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_ACTIONS}
+  System.Actions,
+  {$ENDIF HAS_UNIT_SYSTEM_ACTIONS}
   Windows, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
   ActnList, ImgList,
   ToolsAPI,
