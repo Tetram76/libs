@@ -35,8 +35,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-04-08 18:32:43 +0200 (dim., 08 avr. 2012)                          $ }
-{ Revision:      $Rev:: 3772                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -1589,8 +1589,8 @@ function UCS4ArrayEquals(const Left: TUCS4Array; Right: AnsiChar): Boolean; over
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclUnicode.pas $';
-    Revision: '$Revision: 3772 $';
-    Date: '$Date: 2012-04-08 18:32:43 +0200 (dim., 08 avr. 2012) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -5689,7 +5689,7 @@ begin
     vaLString, vaString:
       SetText(Reader.ReadString);
   else
-    SetText(Reader.ReadWideString);
+    SetText(Reader.{$IFDEF RTL240_UP}ReadString{$ELSE}ReadWideString{$ENDIF});
   end;
 end;
 
@@ -5900,7 +5900,7 @@ end;
 
 procedure TWideStrings.WriteData(Writer: TWriter);
 begin
-  Writer.WriteWideString(GetTextStr);
+  Writer.{$IFDEF RTL240_UP}WriteString{$ELSE}WriteWideString{$ENDIF}(GetTextStr);
 end;
 
 //=== { TWideStringList } ====================================================

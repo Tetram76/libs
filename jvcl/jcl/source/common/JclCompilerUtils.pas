@@ -24,8 +24,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-08-20 12:22:37 +0200 (lun., 20 août 2012)                         $ }
-{ Revision:      $Rev:: 3838                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -104,6 +104,13 @@ type
 
   TJclBCC32 = class(TJclBorlandCommandLineTool)
   public
+    class function GetPlatform: string; virtual;
+    function GetExeName: string; override;
+  end;
+
+  TJclBCC64 = class(TJclBCC32)
+  public
+    class function GetPlatform: string; override;
     function GetExeName: string; override;
   end;
 
@@ -195,6 +202,7 @@ type
 const
   AsmExeName                = 'tasm32.exe';
   BCC32ExeName              = 'bcc32.exe';
+  BCC64ExeName              = 'bcc64.exe';
   DCC32ExeName              = 'dcc32.exe';
   DCC64ExeName              = 'dcc64.exe';
   DCCOSX32ExeName           = 'dccosx.exe';
@@ -234,8 +242,8 @@ procedure GetBPKFileInfo(const BPKFileName: string; out RunOnly: Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclCompilerUtils.pas $';
-    Revision: '$Revision: 3838 $';
-    Date: '$Date: 2012-08-20 12:22:37 +0200 (lun., 20 août 2012) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -818,6 +826,23 @@ end;
 function TJclBCC32.GetExeName: string;
 begin
   Result := BCC32ExeName;
+end;
+
+class function TJclBCC32.GetPlatform: string;
+begin
+  Result := BDSPlatformWin32;
+end;
+
+//=== { TJclBCC64 } ============================================================
+
+function TJclBCC64.GetExeName: string;
+begin
+  Result := BCC64ExeName;
+end;
+
+class function TJclBCC64.GetPlatform: string;
+begin
+  Result := BDSPlatformWin64;
 end;
 
 //=== { TJclDCC32 } ============================================================

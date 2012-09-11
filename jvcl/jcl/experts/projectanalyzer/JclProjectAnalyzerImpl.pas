@@ -17,8 +17,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-01-22 23:54:36 +0100 (dim., 22 janv. 2012)                         $ }
-{ Revision:      $Rev:: 3702                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -95,8 +95,8 @@ function JCLWizardInit(const BorlandIDEServices: IBorlandIDEServices;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/projectanalyzer/JclProjectAnalyzerImpl.pas $';
-    Revision: '$Revision: 3702 $';
-    Date: '$Date: 2012-01-22 23:54:36 +0100 (dim., 22 janv. 2012) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\experts\projectanalyser';
     Extra: '';
     Data: nil
@@ -108,6 +108,9 @@ implementation
 {$R JclProjectAnalyzerIcon.res}
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_ACTIONS}
+  System.Actions,
+  {$ENDIF HAS_UNIT_SYSTEM_ACTIONS}
   Variants,
   JclDebug, JclFileUtils, JclOtaConsts, 
   JclOtaResources;

@@ -30,8 +30,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011)                         $ }
-{ Revision:      $Rev:: 3599                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -961,8 +961,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclExprEval.pas $';
-    Revision: '$Revision: 3599 $';
-    Date: '$Date: 2011-09-03 00:07:50 +0200 (sam., 03 sept. 2011) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -975,6 +975,7 @@ uses
   {$IFDEF SUPPORTS_INLINE}
   {$IFDEF HAS_UNITSCOPE}
   Winapi.Windows, // inline of AnsiSameText
+  System.Types, // inline TObjectList.Remove
   {$ELSE ~HAS_UNITSCOPE}
   Windows, // inline of AnsiSameText
   {$ENDIF ~HAS_UNITSCOPE}

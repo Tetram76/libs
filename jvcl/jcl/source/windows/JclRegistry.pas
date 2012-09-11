@@ -37,8 +37,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2011-12-29 01:21:39 +0100 (jeu., 29 déc. 2011)                        $ }
-{ Revision:      $Rev:: 3660                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -88,6 +88,24 @@ const
   HKPD = DelphiHKEY(HKEY_PERFORMANCE_DATA);
   HKCC = DelphiHKEY(HKEY_CURRENT_CONFIG);
   HKDD = DelphiHKEY(HKEY_DYN_DATA);
+{$IFDEF CPU64}
+{$NODEFINE DelphiHKEY}
+{$NODEFINE HKCR}
+{$NODEFINE HKCU}
+{$NODEFINE HKLM}
+{$NODEFINE HKUS}
+{$NODEFINE HKPD}
+{$NODEFINE HKCC}
+{$NODEFINE HKDD}
+{$HPPEMIT 'typedef HKEY DelphiHKEY;'}
+{$HPPEMIT 'static const DelphiHKEY HKCR = HKEY_CLASSES_ROOT;'}
+{$HPPEMIT 'static const DelphiHKEY HKCU = HKEY_CURRENT_USER;'}
+{$HPPEMIT 'static const DelphiHKEY HKLM = HKEY_LOCAL_MACHINE;'}
+{$HPPEMIT 'static const DelphiHKEY HKUS = HKEY_USERS;'}
+{$HPPEMIT 'static const DelphiHKEY HKPD = HKEY_PERFORMANCE_DATA;'}
+{$HPPEMIT 'static const DelphiHKEY HKCC = HKEY_CURRENT_CONFIG;'}
+{$HPPEMIT 'static const DelphiHKEY HKDD = HKEY_DYN_DATA;'}
+{$ENDIF CPU64}
 {$ENDIF FPC}
 
 function RootKeyName(const RootKey: THandle): string;
@@ -364,8 +382,8 @@ procedure RegSetWOW64AccessMode(Access: TJclRegWOW64Access);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclRegistry.pas $';
-    Revision: '$Revision: 3660 $';
-    Date: '$Date: 2011-12-29 01:21:39 +0100 (jeu., 29 déc. 2011) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil

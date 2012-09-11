@@ -27,8 +27,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-08-28 21:31:26 +0200 (mar., 28 août 2012)                         $ }
-{ Revision:      $Rev:: 3851                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -206,6 +206,24 @@ ALERT_jedi_inc_incompatible
       {$ENDIF MSWINDOWS}
     {$ENDIF BDS9}
     {----------------------------}
+    {$IFDEF BDS10}
+      {$IFDEF MSWINDOWS}
+      {$IFDEF CPUX86}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld17win32.inc}
+      {$ENDIF CPUX86}
+      {$IFDEF CPUX64}
+      // This file should be located in directory jcl/source/include
+      // It is automatically created by the JCL installer
+      // For manual installations, copy and adjust jcl/source/include/jcl.template.inc
+      {$I jcld17win64.inc}
+      {$ENDIF CPUX64}
+      {$DEFINE JCL_CONFIGURED}
+      {$ENDIF MSWINDOWS}
+    {$ENDIF BDS10}
+    {----------------------------}
     {$IFDEF FPC}
       // This file should be located in directory jcl/source/include
       // It is automatically created by the JCL installer
@@ -298,6 +316,39 @@ ALERT_jedi_inc_incompatible
 {$IFNDEF PCRE_STATICLINK}
   {$UNDEF PCRE_16}
 {$ENDIF ~PCRE_STATICLINK}
+
+{$IFNDEF PCRE_8}
+  {$IFNDEF PCRE_16}
+    {$DEFINE PCRE_RTL}
+    {$UNDEF PCRE_STATICLINK}
+    {$UNDEF PCRE_LINKDLL}
+    {$UNDEF PCRE_LINKONREQUEST}
+  {$ENDIF ~PCRE_16}
+{$ENDIF ~PCRE_8}
+
+{$IFDEF PCRE_8}
+  {$IFDEF PCRE_16}
+    {$IFDEF PCRE_PREFER_16}
+      {$DEFINE JCL_PCRE_16}
+    {$ELSE ~PCRE_PREFER_16}
+      {$DEFINE JCL_PCRE_8}
+    {$ENDIF ~PCRE_PREFER_16}
+  {$ELSE ~PCRE_16}
+    {$DEFINE JCL_PCRE_8}
+  {$ENDIF ~PCRE_16}
+{$ELSE ~PCRE_8}
+  {$IFDEF PCRE_16}
+    {$DEFINE JCL_PCRE_16}
+  {$ENDIF PCRE_16}
+{$ENDIF ~PCRE_8}
+
+{$IFDEF JCL_PCRE_8}
+  {$DEFINE JCL_PCRE}
+{$ENDIF JCL_PCRE_8}
+
+{$IFDEF JCL_PCRE_16}
+  {$DEFINE JCL_PCRE}
+{$ENDIF JCL_PCRE_16}
 
 // BZip2 options
 {$IFDEF BZIP2_STATICLINK}

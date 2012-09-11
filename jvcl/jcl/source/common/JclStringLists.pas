@@ -25,8 +25,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-08-14 10:48:19 +0200 (mar., 14 août 2012)                         $ }
-{ Revision:      $Rev:: 3818                                                                     $ }
+{ Last modified: $Date:: 2012-09-03 00:25:26 +0200 (lun., 03 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3855                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -179,10 +179,12 @@ type
     function First: string;
     function LastIndex: Integer;
     function Clear: IJclStringList;
+    {$IFDEF JCL_PCRE}
     function DeleteRegEx(const APattern: string): IJclStringList;
     function KeepRegEx(const APattern: string): IJclStringList;
     function Files(const APattern: string = '*'; ARecursive: Boolean = False; const ARegExPattern: string = ''): IJclStringList;
     function Directories(const APattern: string = '*'; ARecursive: Boolean = False; const ARegExPattern: string = ''): IJclStringList;
+    {$ENDIF JCL_PCRE}
     function GetStringsRef: TStrings;
     function ConfigAsSet: IJclStringList;
     function Delimit(const ADelimiter: string): IJclStringList;
@@ -228,11 +230,15 @@ type
   private
     FObjectsMode: TJclStringListObjectsMode;
     FSelfAsInterface: IJclStringList;
+    {$IFDEF JCL_PCRE}
     FLastRegExPattern: string;
-    FRegEx: TJclAnsiRegEx;
+    FRegEx: TJclRegEx;
+    {$ENDIF JCL_PCRE}
     FCompareFunction: TJclStringListSortCompare;
     function CanFreeObjects: Boolean;
+    {$IFDEF JCL_PCRE}
     function MatchRegEx(const S, APattern: string): Boolean;
+    {$ENDIF JCL_PCRE}
     procedure EnsureObjectsMode(AMode: TJclStringListObjectsMode);
   protected
     FRefCount: Integer;
@@ -348,10 +354,12 @@ type
     function First: string;
     function LastIndex: Integer;
     function Clear: IJclStringList; reintroduce;
+    {$IFDEF JCL_PCRE}
     function DeleteRegEx(const APattern: string): IJclStringList;
     function KeepRegEx(const APattern: string): IJclStringList;
     function Files(const APattern: string = '*'; ARecursive: Boolean = False; const ARegExPattern: string = ''): IJclStringList;
     function Directories(const APattern: string = '*'; ARecursive: Boolean = False; const ARegExPattern: string = ''): IJclStringList;
+    {$ENDIF JCL_PCRE}
     function GetStringsRef: TStrings;
     function ConfigAsSet: IJclStringList;
     function Delimit(const ADelimiter: string): IJclStringList;
@@ -390,8 +398,8 @@ function JclStringList(const AText: string): IJclStringList; overload;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclStringLists.pas $';
-    Revision: '$Revision: 3818 $';
-    Date: '$Date: 2012-08-14 10:48:19 +0200 (mar., 14 août 2012) $';
+    Revision: '$Revision: 3855 $';
+    Date: '$Date: 2012-09-03 00:25:26 +0200 (lun., 03 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -678,6 +686,7 @@ begin
     Destroy;
 end;
 
+{$IFDEF JCL_PCRE}
 function TJclStringList.DeleteRegEx(const APattern: string): IJclStringList;
 var
   I: Integer;
@@ -709,7 +718,7 @@ end;
 function TJclStringList.MatchRegEx(const S, APattern: string): Boolean;
 begin
   if FRegEx = nil then
-    FRegEx := TJclAnsiRegEx.Create;
+    FRegEx := TJclRegEx.Create;
   if FLastRegExPattern <> APattern then
   begin
     if CaseSensitive then
@@ -721,15 +730,19 @@ begin
   end;
   Result := FRegEx.Match(S);
 end;
+{$ENDIF JCL_PCRE}
 
 destructor TJclStringList.Destroy;
 begin
   if CanFreeObjects then
     FreeObjects(False);
+  {$IFDEF JCL_PCRE}
   FreeAndNil(FRegEx);
+  {$ENDIF JCL_PCRE}
   inherited Destroy;
 end;
 
+{$IFDEF JCL_PCRE}
 function TJclStringList.Directories(const APattern: string = '*';
   ARecursive: Boolean = False; const ARegExPattern: string = ''): IJclStringList;
 
@@ -815,6 +828,7 @@ begin
     Result := EndUpdate;
   end;
 end;
+{$ENDIF JCL_PCRE}
 
 function TJclStringList.LastIndex: Integer;
 begin

@@ -26,8 +26,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-03-04 19:12:39 +0100 (dim., 04 mars 2012)                          $ }
-{ Revision:      $Rev:: 3757                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -98,8 +98,8 @@ function JclBelongsHookedCode(Address: Pointer): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/windows/JclHookExcept.pas $';
-    Revision: '$Revision: 3757 $';
-    Date: '$Date: 2012-03-04 19:12:39 +0100 (dim., 04 mars 2012) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
@@ -580,15 +580,15 @@ const
   {$IFDEF COMPILER6} { Delphi/C++Builder 6 }
   CppRtlVersion = 60;
   {$ELSE ~COMPILER6}
-  {$IF (RtlVersion > 18.0) and (RtlVersion < 19.0)} { Delphi/C++Builder 2007 were aiming for
-                                                      binary compatibility with BDS2006, which
-                                                      complicates things a bit }
+  {$IFDEF RTL185} { Delphi/C++Builder 2007 were aiming for
+                    binary compatibility with BDS2006, which
+                    complicates things a bit }
   CppRtlVersion = 80;
-  {$ELSE}
+  {$ELSE ~RTL185}
   { Successive RTLDLL version numbers in the remaining cases: CB2006 has cc3270mt.dll,
     CB2009 (= CB2006 + 2 releases) has cc3290mt.dll, CB2010 has cc32100mt.dll etc. }
   CppRtlVersion = 70 + Trunc(RtlVersion - 18.0) * 10;
-  {$IFEND}
+  {$ENDIF ~RTL185}
   {$ENDIF ~COMPILER6}
 begin
   Result := Pointer(GetModuleHandle(PChar(Format('cc32%dmt.dll', [CppRtlVersion]))));

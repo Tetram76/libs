@@ -22,9 +22,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-06-27 15:09:53 +0200 (mer., 27 juin 2012)                          $ }
-{ Revision:      $Rev:: 3805                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -128,6 +128,9 @@ implementation
 {$R *.dfm}
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   FileCtrl,
   JclDebug, JclShell, JediGUIProfiles,
   JclBase, JclFileUtils, JclStrings, JclSysInfo, JclSysUtils, JclArrayLists,

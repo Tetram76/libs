@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-05-16 21:09:59 +0200 (mer., 16 mai 2012)                           $ }
-{ Revision:      $Rev:: 3795                                                                     $ }
-{ Author:        $Author:: ahuser                                                                $ }
+{ Last modified: $Date:: 2012-09-05 19:42:13 +0200 (mer., 05 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3864                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -61,9 +61,9 @@ uses
 // Version
 const
   JclVersionMajor   = 2;    // 0=pre-release|beta/1, 2, ...=final
-  JclVersionMinor   = 4;    // Fifth minor release since JCL 1.90
+  JclVersionMinor   = 5;    // Fifth minor release since JCL 1.90
   JclVersionRelease = 0;    // 0: pre-release|beta/ 1: release
-  JclVersionBuild   = 4198; // build number, days since march 1, 2000
+  JclVersionBuild   = 4572; // build number, days since march 1, 2000
   JclVersion = (JclVersionMajor shl 24) or (JclVersionMinor shl 16) or
     (JclVersionRelease shl 15) or (JclVersionBuild shl 0);
 
@@ -403,8 +403,8 @@ procedure GetMem(out P; Size: Longint);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBase.pas $';
-    Revision: '$Revision: 3795 $';
-    Date: '$Date: 2012-05-16 21:09:59 +0200 (mer., 16 mai 2012) $';
+    Revision: '$Revision: 3864 $';
+    Date: '$Date: 2012-09-05 19:42:13 +0200 (mer., 05 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

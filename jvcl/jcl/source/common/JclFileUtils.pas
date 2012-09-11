@@ -51,9 +51,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-06-02 22:23:56 +0200 (sam., 02 juin 2012)                          $ }
-{ Revision:      $Rev:: 3799                                                                     $ }
-{ Author:        $Author:: jfudickar                                                             $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
+{ Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -1069,8 +1069,8 @@ function ParamPos (const SearchName : string; const Separator : string = '=';
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclFileUtils.pas $';
-    Revision: '$Revision: 3799 $';
-    Date: '$Date: 2012-06-02 22:23:56 +0200 (sam., 02 juin 2012) $';
+    Revision: '$Revision: 3861 $';
+    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1081,6 +1081,7 @@ implementation
 
 uses
   {$IFDEF HAS_UNITSCOPE}
+  System.Types, // inlining of TList.Remove
   {$IFDEF HAS_UNIT_CHARACTER}
   System.Character,
   {$ENDIF HAS_UNIT_CHARACTER}

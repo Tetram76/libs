@@ -22,8 +22,8 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-08-28 21:39:21 +0200 (mar., 28 août 2012)                         $ }
-{ Revision:      $Rev:: 3852                                                                     $ }
+{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3861                                                                     $ }
 { Author:        $Author:: outchy                                                                $ }
 {                                                                                                  }
 {**************************************************************************************************}
@@ -69,7 +69,9 @@ type
         joJCLDefPCRELinkDLL,
         joJCLDefPCRELinkOnRequest,
         joJCLDefPCRERTL,
+        joJCLDefPCRE8,
         joJCLDefPCRE16,
+        joJCLDefPCREPrefer16,
         joJCLDefBZip2StaticLink,
         joJCLDefBZip2LinkDLL,
         joJCLDefBZip2LinkOnRequest,
@@ -135,8 +137,8 @@ const
       'MATH_EXT_EXTREMEVALUES',  'HOOK_DLL_EXCEPTIONS',
       'DEBUG_NO_BINARY', 'DEBUG_NO_TD32', 'DEBUG_NO_MAP', 'DEBUG_NO_EXPORTS',
       'DEBUG_NO_SYMBOLS', 'PCRE_STATICLINK', 'PCRE_LINKDLL',
-      'PCRE_LINKONREQUEST', 'PCRE_RTL', 'PCRE_16', 'BZIP2_STATICLINK',
-      'BZIP2_LINKDLL', 'BZIP2_LINKONREQUEST', 'ZLIB_STATICLINK',
+      'PCRE_LINKONREQUEST', 'PCRE_RTL', 'PCRE_8', 'PCRE_16', 'PCRE_PREFER_16',
+      'BZIP2_STATICLINK', 'BZIP2_LINKDLL', 'BZIP2_LINKONREQUEST', 'ZLIB_STATICLINK',
       'ZLIB_LINKDLL', 'ZLIB_LINKONREQUEST', 'ZLIB_RTL', 'UNICODE_RTL_DATABASE',
       'UNICODE_SILENT_FAILURE', 'UNICODE_RAW_DATA', 'UNICODE_ZLIB_DATA',
       'UNICODE_BZIP2_DATA', 'CONTAINER_ANSISTR', 'CONTAINER_WIDESTR',
@@ -414,7 +416,9 @@ var
       (Id: -1; Caption: @RsCaptionDefPCRELinkDLL;          Hint: @RsHintDefPCRELinkDLL), // joDefPCRELinkDLL
       (Id: -1; Caption: @RsCaptionDefPCRELinkOnRequest;    Hint: @RsHintDefPCRELinkOnRequest), // joDefPCRELinkOnRequest
       (Id: -1; Caption: @RsCaptionDefPCRERTL;              Hint: @RsHintDefPCRERTL), // joDefPCRERTL
+      (Id: -1; Caption: @RsCaptionDefPCRE8;                Hint: @RsHintDefPCRE8), // joDefPCRE8
       (Id: -1; Caption: @RsCaptionDefPCRE16;               Hint: @RsHintDefPCRE16), // joDefPCRE16
+      (Id: -1; Caption: @RsCaptionDefPCREPrefer16;         Hint: @RsHintDefPCREPrefer16), // joDefPCREPrefer16
       (Id: -1; Caption: @RsCaptionDefBZip2StaticLink;      Hint: @RsHintDefBZip2StaticLink), // joDefBZip2StaticLink
       (Id: -1; Caption: @RsCaptionDefBZip2LinkDLL;         Hint: @RsHintDefBZip2LinkDLL), // joDefBZip2LinkDLL
       (Id: -1; Caption: @RsCaptionDefBZip2LinkOnRequest;   Hint: @RsHintDefBZip2LinkOnRequest), // joDefBZip2LinkOnRequest
@@ -797,7 +801,8 @@ end;
 
 function TJclInstallation.GetTargetSupportsCBuilder: Boolean;
 begin
-  Result := (bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32);
+  Result := ((bpBCBuilder32 in Target.Personalities) and (TargetPlatform = bpWin32)) or
+            ((bpBCBuilder64 in Target.Personalities) and (TargetPlatform = bpWin64));
 end;
 
 function TJclInstallation.GetTargetSupportsDelphi: Boolean;
@@ -923,7 +928,9 @@ procedure TJclInstallation.Init;
     if (Target.RadToolKind = brBorlandDevStudio) and (Target.VersionNumber >= 8) then
       // Delphi XE and newer have a licensed version of JCL's pcre.pas named RegularExpressionsAPI
       AddOption(joJCLDefPCRERTL, [goRadioButton], joJCLDefPCRE);
-    AddOption(joJCLDefPCRE16, [goChecked], joJCLDefPCRE);
+    AddOption(joJCLDefPCRE8, [goChecked], joJCLDefPCRE);
+    AddOption(joJCLDefPCRE16, [goStandaloneParent], joJCLDefPCRE);
+    AddOption(joJCLDefPCREPrefer16, [], joJCLDefPCRE16);
     // BZip2 options
     AddOption(joJCLDefBZip2, [goChecked], Parent);
     AddOption(joJCLDefBZip2StaticLink, [goRadioButton, goChecked], joJCLDefBZip2);
@@ -3256,11 +3263,11 @@ function TJclDistribution.CreateInstall(Target: TJclBorRADToolInstallation): Boo
         Result := Target.VersionNumber in [6];
       brBorlandDevStudio :
         Result := ((Target.VersionNumber in [1, 2]) and (bpDelphi32 in Target.Personalities))
-          or (Target.VersionNumber in [3, 4, 5, 6, 7, 8, 9]);
+          or (Target.VersionNumber in [3, 4, 5, 6, 7, 8, 9, 10]);
       else
         Result := False;
     end;
-    Result := Result and (Target.Personalities * [bpDelphi32, bpBCBuilder32, bpDelphi64] <> []);
+    Result := Result and (Target.Personalities * [bpDelphi32, bpDelphi64, bpBCBuilder32, bpBCBuilder64] <> []);
   end;
 var
   Inst: TJclInstallation;
