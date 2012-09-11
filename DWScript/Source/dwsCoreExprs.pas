@@ -23,8 +23,9 @@ unit dwsCoreExprs;
 
 interface
 
-uses Windows, Classes, Variants, SysUtils, dwsSymbols, dwsErrors, dwsStrings,
-   dwsStack, dwsExprs, dwsUtils, dwsTokenizer, dwsRelExprs, dwsUnitSymbols;
+uses Classes, Variants, SysUtils, dwsSymbols, dwsErrors, dwsStrings,
+   dwsStack, dwsExprs, dwsUtils, dwsTokenizer, dwsUnitSymbols
+   {$ifdef FPC},LazUTF8{$endif};
 
 type
 
@@ -58,7 +59,7 @@ type
          procedure AssignValueAsInteger(exec : TdwsExecution; const value : Int64); override;
          procedure AssignValueAsBoolean(exec : TdwsExecution; const value : Boolean); override;
          procedure AssignValueAsFloat(exec : TdwsExecution; const value : Double); override;
-         procedure AssignValueAsString(exec : TdwsExecution; const value : UnicodeString); override;
+         procedure AssignValueAsString(exec : TdwsExecution; const value : String); override;
          procedure AssignValueAsScriptObj(exec : TdwsExecution; const value : IScriptObj); override;
 
          function Eval(exec : TdwsExecution) : Variant; override;
@@ -96,10 +97,10 @@ type
       public
          procedure AssignExpr(exec : TdwsExecution; Expr: TTypedExpr); override;
          procedure AssignValue(exec : TdwsExecution; const Value: Variant); override;
-         procedure AssignValueAsString(exec : TdwsExecution; const Value: UnicodeString); override;
+         procedure AssignValueAsString(exec : TdwsExecution; const Value: String); override;
          function  SetChar(exec : TdwsExecution; index : Integer; c : WideChar) : Boolean;
-         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
-         procedure Append(exec : TdwsExecution; const value : UnicodeString);
+         procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
+         procedure Append(exec : TdwsExecution; const value : String);
    end;
 
    TBoolVarExpr = class (TVarExpr)
@@ -167,7 +168,7 @@ type
          procedure AssignValueAsInteger(exec : TdwsExecution; const value : Int64); override;
          procedure AssignValueAsBoolean(exec : TdwsExecution; const value : Boolean); override;
          procedure AssignValueAsFloat(exec : TdwsExecution; const value : Double); override;
-         procedure AssignValueAsString(exec : TdwsExecution; const value : UnicodeString); override;
+         procedure AssignValueAsString(exec : TdwsExecution; const value : String); override;
          procedure AssignValueAsScriptObj(exec : TdwsExecution; const value : IScriptObj); override;
 
          function  Eval(exec : TdwsExecution) : Variant; override;
@@ -279,18 +280,18 @@ type
    //
    TConstStringExpr = class(TUnifiedConstExpr)
       private
-         FValue : UnicodeString;
+         FValue : String;
       public
          constructor Create(Prog: TdwsProgram; Typ: TTypeSymbol; const Value: Variant); override;
-         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
-         property Value : UnicodeString read FValue write FValue;
+         procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
+         property Value : String read FValue write FValue;
    end;
 
    TStandardIntegersConstIntExprArray = array [-1..2] of TUnifiedConstExpr;
 
    // TUnifiedConstList
    //
-   TUnifiedConstList = class (TSortedList<TExprBase>)
+   TUnifiedConstList = class (TSortedExprBaseList)
       private
          FEmptyString : TUnifiedConstExpr;
          FIntegers : TStandardIntegersConstIntExprArray;
@@ -323,7 +324,7 @@ type
          function ScriptPos : TScriptPos; override;
 
          function  Eval(exec : TdwsExecution) : Variant; override;
-         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
+         procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
 
          property ResSymbol : TResourceStringSymbol read FResSymbol;
    end;
@@ -543,7 +544,7 @@ type
          destructor Destroy; override;
 
          function Eval(exec : TdwsExecution) : Variant; override;
-         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
+         procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
          function EvalAsInteger(exec : TdwsExecution) : Int64; override;
          procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); override;
 
@@ -583,7 +584,7 @@ type
 
       public
          constructor CreatePos(Prog: TdwsProgram; const Pos: TScriptPos; Left, Right: TTypedExpr);
-         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
+         procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
          function ScriptPos : TScriptPos; override;
    end;
 
@@ -1002,7 +1003,7 @@ type
       procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
    TAddStrExpr = class(TStringBinOpExpr)
-      procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
+      procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
    end;
    TAddIntExpr = class sealed (TIntegerBinOpExpr)
       function EvalAsInteger(exec : TdwsExecution) : Int64; override;
@@ -1146,9 +1147,9 @@ type
      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
    end;
 
-   // UnicodeString(x)
+   // String(x)
    TConvStringExpr = class (TUnaryOpStringExpr)
-     procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
+     procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
    end;
 
    // Boolean(x)
@@ -1290,14 +1291,14 @@ type
          property Right : Boolean read FRight write FRight;
    end;
 
-   // left := const UnicodeString;
+   // left := const String;
    TAssignConstToStringVarExpr = class(TAssignConstExpr)
       protected
-         FRight : UnicodeString;
+         FRight : String;
       public
-         constructor CreateVal(Prog: TdwsProgram; const Pos: TScriptPos; Left : TDataExpr; const rightValue : UnicodeString);
+         constructor CreateVal(Prog: TdwsProgram; const Pos: TScriptPos; Left : TDataExpr; const rightValue : String);
          procedure EvalNoResult(exec : TdwsExecution); override;
-         property Right : UnicodeString read FRight write FRight;
+         property Right : String read FRight write FRight;
    end;
 
    // left := nil (instance)
@@ -1331,7 +1332,7 @@ type
    TPlusAssignFloatExpr = class(TPlusAssignExpr)
      procedure EvalNoResult(exec : TdwsExecution); override;
    end;
-   // a += b (UnicodeString)
+   // a += b (String)
    TPlusAssignStrExpr = class(TPlusAssignExpr)
      procedure EvalNoResult(exec : TdwsExecution); override;
      function  Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
@@ -1391,19 +1392,19 @@ type
       procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
-   // a += b (UnicodeString var)
+   // a += b (String var)
    TAppendStringVarExpr = class(TAssignExpr)
      procedure EvalNoResult(exec : TdwsExecution); override;
    end;
 
-   // (UnicodeString var) += (UnicodeString const)
+   // (String var) += (String const)
    TAppendConstStringVarExpr = class(TAssignExpr)
       private
-         FAppendString : UnicodeString;
+         FAppendString : String;
       public
          constructor Create(prog : TdwsProgram; const pos : TScriptPos; left : TDataExpr; right : TTypedExpr); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
-         property AppendString : UnicodeString read FAppendString;
+         property AppendString : String read FAppendString;
    end;
 
    // val in [case conditions list]
@@ -1811,7 +1812,7 @@ type
          FHandlerExpr : TNoResultExpr;
 
       protected
-         function CreateEDelphiObj(exec : TdwsExecution; const ClassName, Message: UnicodeString): IScriptObj;
+         function CreateEDelphiObj(exec : TdwsExecution; const ClassName, Message: String): IScriptObj;
 
          procedure EnterExceptionBlock(exec : TdwsExecution; var exceptObj : IScriptObj);
          procedure LeaveExceptionBlock(exec : TdwsExecution);
@@ -1920,7 +1921,7 @@ type
    TDeclaredExpr = class(TSpecialUnaryBoolExpr)
       public
          function EvalAsBoolean(exec : TdwsExecution) : Boolean; override;
-         class function FindSymbol(symbolTable : TSymbolTable; const name : UnicodeString) : TSymbol; static;
+         class function FindSymbol(symbolTable : TSymbolTable; const name : String) : TSymbol; static;
    end;
 
    TSwapExpr = class(TNoResultPosExpr)
@@ -2073,7 +2074,7 @@ end;
 
 // AssignValueAsString
 //
-procedure TVarExpr.AssignValueAsString(exec : TdwsExecution; const Value: UnicodeString);
+procedure TVarExpr.AssignValueAsString(exec : TdwsExecution; const Value: String);
 begin
    exec.Stack.WriteStrValue(Addr[exec], Value);
 end;
@@ -2172,8 +2173,10 @@ end;
 
 // EvalAsFloat
 //
+{$if Defined(WIN32_ASM)}
 type
    TdwsExecutionCracker = class(TdwsExecution);
+{$ifend}
 function TFloatVarExpr.EvalAsFloat(exec : TdwsExecution) : Double;
 {$if Defined(WIN32_ASM)}
 asm
@@ -2196,7 +2199,7 @@ end;
 //
 procedure TStrVarExpr.AssignExpr(exec : TdwsExecution; Expr: TTypedExpr);
 var
-   buf : UnicodeString;
+   buf : String;
 begin
    Expr.EvalAsString(exec, buf);
    exec.Stack.WriteStrValue(exec.Stack.BasePointer + FStackAddr, buf);
@@ -2211,7 +2214,7 @@ end;
 
 // AssignValueAsString
 //
-procedure TStrVarExpr.AssignValueAsString(exec : TdwsExecution; const value: UnicodeString);
+procedure TStrVarExpr.AssignValueAsString(exec : TdwsExecution; const value: String);
 begin
    exec.Stack.WriteStrValue(exec.Stack.BasePointer + FStackAddr, value);
 end;
@@ -2225,14 +2228,14 @@ end;
 
 // EvalAsString
 //
-procedure TStrVarExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
+procedure TStrVarExpr.EvalAsString(exec : TdwsExecution; var Result : String);
 begin
    exec.Stack.ReadStrValue(exec.Stack.BasePointer + FStackAddr, Result);
 end;
 
 // Append
 //
-procedure TStrVarExpr.Append(exec : TdwsExecution; const value : UnicodeString);
+procedure TStrVarExpr.Append(exec : TdwsExecution; const value : String);
 begin
    exec.Stack.AppendStringValue_BaseRelative(FStackAddr, value);
 end;
@@ -2406,7 +2409,7 @@ end;
 
 // AssignValueAsString
 //
-procedure TByRefParamExpr.AssignValueAsString(exec : TdwsExecution; const value : UnicodeString);
+procedure TByRefParamExpr.AssignValueAsString(exec : TdwsExecution; const value : String);
 begin
    Data[exec][Addr[exec]]:=value;
 end;
@@ -2514,7 +2517,7 @@ end;
 //
 procedure TUnifiedConstList.Precharge(prog : TdwsMainProgram; systemTable : TSystemSymbolTable);
 const
-   cEmptyString : UnicodeString = '';
+   cEmptyString : String = '';
    cZeroFloat : Double = 0;
 var
    i : Integer;
@@ -2543,7 +2546,11 @@ begin
          rawResult:=Integer(vd1.VType)-Integer(vd2.VType);
          if rawResult=0 then begin
             case vd1.VType of
-               varUString : rawResult:=CompareStr(UnicodeString(vd1.VUString), UnicodeString(vd2.VUString));
+               {$ifdef FPC}
+               varString : rawResult:=CompareStr(String(vd1.VString), String(vd2.VString));
+               {$else}
+               varUString : rawResult:=CompareStr(String(vd1.VUString), String(vd2.VUString));
+               {$endif}
                varInt64 : rawResult:=vd1.VInt64-vd2.VInt64;
                varBoolean : rawResult:=Integer(vd1.VBoolean)-Integer(vd2.VBoolean);
             else
@@ -2818,7 +2825,7 @@ end;
 
 // EvalAsString
 //
-procedure TConstStringExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
+procedure TConstStringExpr.EvalAsString(exec : TdwsExecution; var Result : String);
 begin
    Result:=FValue;
 end;
@@ -3819,7 +3826,7 @@ end;
 
 // EvalAsString
 //
-procedure TFieldExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
+procedure TFieldExpr.EvalAsString(exec : TdwsExecution; var Result : String);
 var
    obj : IScriptObj;
 begin
@@ -3952,18 +3959,32 @@ end;
 
 // EvalAsString
 //
-procedure TStringArrayOpExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
+procedure TStringArrayOpExpr.EvalAsString(exec : TdwsExecution; var Result : String);
 var
    i : Integer;
+   {$ifdef FPC}
+   n : Integer;
+   {$endif}
    buf : UnicodeString;
 begin
+   {$ifdef FPC}
+   FLeft.EvalAsUnicodeString(exec, buf);
+   {$else}
    FLeft.EvalAsString(exec, buf);
+   {$endif}
    i:=FRight.EvalAsInteger(exec);
    if i>Length(buf) then
       RaiseUpperExceeded(exec, i)
    else if i<1 then
       RaiseLowerExceeded(exec, i);
+   {$ifdef FPC}
+   n:=Ord(buf[i]);
+   if (n>=$D800) and (n<=$E000) then
+      n:=n+$10000;
+   Result:=UnicodeToUTF8(n);
+   {$else}
    Result:=buf[i];
+   {$endif}
 end;
 
 // ScriptPos
@@ -3983,7 +4004,11 @@ function TStringLengthExpr.EvalAsInteger(exec : TdwsExecution) : Int64;
 var
    buf : UnicodeString;
 begin
+   {$ifdef FPC}
+   FExpr.EvalAsUnicodeString(exec, buf);
+   {$else}
    FExpr.EvalAsString(exec, buf);
+   {$endif}
    Result:=Length(buf);
 end;
 
@@ -4268,7 +4293,7 @@ class function TConvExpr.WrapWithConvCast(prog : TdwsProgram; const scriptPos : 
 
    procedure ReportIncompatibleTypes;
    var
-      cleft, cright: UnicodeString;
+      cleft, cright: String;
    begin
       if not reportError then Exit;
       if toTyp = nil then
@@ -4357,7 +4382,7 @@ end;
 
 // EvalAsString
 //
-procedure TConvStringExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
+procedure TConvStringExpr.EvalAsString(exec : TdwsExecution; var Result : String);
 begin
    FExpr.EvalAsString(exec, Result);
 end;
@@ -4451,7 +4476,7 @@ procedure TAssertExpr.EvalNoResult(exec : TdwsExecution);
 
    procedure Triggered;
    var
-      msg : UnicodeString;
+      msg : String;
    begin
       if FMessage<>nil then begin
          FMessage.EvalAsString(exec, msg);
@@ -4554,7 +4579,11 @@ begin
       varSingle, varDouble, varCurrency :
          Result:=Round(v);
       varString, varUString, varOleStr : begin
+         {$ifdef FPC}
+         s:=UTF8Decode(String(v));
+         {$else}
          s:=v;
+         {$endif}
          if s<>'' then
             Result:=Ord(s[1]);
       end;
@@ -4589,7 +4618,11 @@ function TOrdStrExpr.EvalAsInteger(exec : TdwsExecution) : Int64;
 var
    s : UnicodeString;
 begin
+   {$ifdef FPC}
+   FExpr.EvalAsUnicodeString(exec, s);
+   {$else}
    FExpr.EvalAsString(exec, s);
+   {$endif}
    if s<>'' then
       Result:=Ord(s[1])
    else Result:=0;
@@ -4695,9 +4728,9 @@ end;
 
 // EvalAsString
 //
-procedure TAddStrExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
+procedure TAddStrExpr.EvalAsString(exec : TdwsExecution; var Result : String);
 var
-   buf : UnicodeString;
+   buf : String;
 begin
    FLeft.EvalAsString(exec, Result);
    FRight.EvalAsString(exec, buf);
@@ -5161,7 +5194,7 @@ end;
 //
 function TAssignExpr.OptimizeConstAssignment(prog : TdwsProgram; exec : TdwsExecution) : TNoResultExpr;
 var
-   stringBuf : UnicodeString;
+   stringBuf : String;
 begin
    Result:=Self;
    if FRight.IsOfType(prog.TypInteger) then begin
@@ -5419,7 +5452,7 @@ end;
 
 // Create
 //
-constructor TAssignConstToStringVarExpr.CreateVal(Prog: TdwsProgram; const Pos: TScriptPos; Left : TDataExpr; const rightValue : UnicodeString);
+constructor TAssignConstToStringVarExpr.CreateVal(Prog: TdwsProgram; const Pos: TScriptPos; Left : TDataExpr; const rightValue : String);
 begin
    inherited Create(Prog, Pos, Left, nil);
    FRight:=rightValue;
@@ -5530,7 +5563,7 @@ end;
 //
 procedure TPlusAssignStrExpr.EvalNoResult(exec : TdwsExecution);
 var
-   v1, v2 : UnicodeString;
+   v1, v2 : String;
 begin
    FLeft.EvalAsString(exec, v1);
    FRight.EvalAsString(exec, v2);
@@ -5713,7 +5746,7 @@ end;
 //
 procedure TAppendStringVarExpr.EvalNoResult(exec : TdwsExecution);
 var
-   buf : UnicodeString;
+   buf : String;
 begin
    FRight.EvalAsString(exec, buf);
    TStrVarExpr(FLeft).Append(exec, buf);
@@ -6708,7 +6741,7 @@ end;
 
 // CreateEDelphiObj
 //
-function TExceptionExpr.CreateEDelphiObj(exec : TdwsExecution; const ClassName, Message: UnicodeString): IScriptObj;
+function TExceptionExpr.CreateEDelphiObj(exec : TdwsExecution; const ClassName, Message: String): IScriptObj;
 var
    info: TProgramInfo;
 begin
@@ -6724,12 +6757,16 @@ procedure TExceptionExpr.EnterExceptionBlock(exec : TdwsExecution; var exceptObj
 var
    mainException : Exception;
    err : EScriptError;
-   msg : UnicodeString;
+   msg : String;
 begin
    if exec.ExceptionObjectStack.Count>exec.Stack.MaxExceptionDepth then
       raise EScriptExceptionOverflow.CreateFmt(RTE_MaximalExceptionDepthExceeded, [exec.ExceptionObjectStack.Count]);
 
+   {$ifdef FPC}
+   mainException:=SysUtils.ExceptObject as Exception;
+   {$else}
    mainException:=System.ExceptObject as Exception;
+   {$endif}
 
    if mainException is EScriptException then begin
       // a raise-statement created an Exception object
@@ -6801,7 +6838,11 @@ begin
       exec.DoStep(FTryExpr);
       FTryExpr.EvalNoResult(exec);
    except
+      {$ifdef FPC}
+      systemExceptObject:=SysUtils.ExceptObject;
+      {$else}
       systemExceptObject:=System.ExceptObject;
+      {$endif}
       if    (systemExceptObject.ClassType=EScriptStopped)
          or not (systemExceptObject is Exception) then raise;
 
@@ -6923,7 +6964,11 @@ begin
       oldStatus:=exec.Status;
       try
          exec.Status:=esrNone;
+         {$ifdef FPC}
+         systemExceptObj:=SysUtils.ExceptObject;
+         {$else}
          systemExceptObj:=System.ExceptObject;
+         {$endif}
          if (systemExceptObj=nil) or (systemExceptObj.ClassType<>EScriptStopped) then begin
             if systemExceptObj is Exception then begin
                EnterExceptionBlock(exec, exceptObj);
@@ -6969,7 +7014,7 @@ end;
 procedure TRaiseExpr.EvalNoResult(exec : TdwsExecution);
 var
    exceptObj : IScriptObj;
-   exceptMessage : UnicodeString;
+   exceptMessage : String;
 begin
    FExceptionExpr.EvalAsScriptObj(exec, exceptObj);
    CheckScriptObject(exec, exceptObj);
@@ -7078,17 +7123,29 @@ var
    i : Integer;
    s, buf : UnicodeString;
 begin
+   {$ifdef FPC}
+   FStringExpr.EvalAsUnicodeString(exec, s);
+   {$else}
    FStringExpr.EvalAsString(exec, s);
+   {$endif}
    i:=FIndexExpr.EvalAsInteger(exec);
    if i>Length(s) then
       RaiseUpperExceeded(exec, i)
    else if i<1 then
       RaiseLowerExceeded(exec, i);
+   {$ifdef FPC}
+   FValueExpr.EvalAsUnicodeString(exec, buf);
+   {$else}
    FValueExpr.EvalAsString(exec, buf);
+   {$endif}
    if Length(buf)<>1 then
       RaiseScriptError(exec, EScriptError.CreateFmt(RTE_InvalidInputDataSize, [Length(buf), 1]));
    s[i]:=buf[1];
+   {$ifdef FPC}
+   FStringExpr.AssignValue(exec, UTF8Encode(s));
+   {$else}
    FStringExpr.AssignValue(exec, s);
+   {$endif}
 end;
 
 // GetSubExpr
@@ -7120,7 +7177,7 @@ procedure TVarStringArraySetExpr.EvalNoResult(exec : TdwsExecution);
 var
    i : Integer;
    c : WideChar;
-   buf : UnicodeString;
+   buf : String;
 begin
    i:=FIndexExpr.EvalAsInteger(exec);
    if i<1 then
@@ -7154,7 +7211,7 @@ end;
 //
 function TConditionalDefinedExpr.EvalAsBoolean(exec : TdwsExecution) : Boolean;
 var
-   name : UnicodeString;
+   name : String;
 begin
    Expr.EvalAsString(exec, name);
    Result:=((exec as TdwsProgramExecution).Prog.ConditionalDefines.Value.IndexOf(name)>=0);
@@ -7182,7 +7239,7 @@ end;
 //
 function TDeclaredExpr.EvalAsBoolean(exec : TdwsExecution) : Boolean;
 var
-   name : UnicodeString;
+   name : String;
 begin
    Expr.EvalAsString(exec, name);
    Result:=(FindSymbol((exec as TdwsProgramExecution).Prog.Table, name)<>nil);
@@ -7190,10 +7247,10 @@ end;
 
 // FindSymbol
 //
-class function TDeclaredExpr.FindSymbol(symbolTable : TSymbolTable; const name : UnicodeString) : TSymbol;
+class function TDeclaredExpr.FindSymbol(symbolTable : TSymbolTable; const name : String) : TSymbol;
 var
    p, i : Integer;
-   identifier : UnicodeString;
+   identifier : String;
    helpers : THelperSymbols;
    sym : TSymbol;
 begin
@@ -8090,7 +8147,7 @@ end;
 
 // EvalAsString
 //
-procedure TResourceStringExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
+procedure TResourceStringExpr.EvalAsString(exec : TdwsExecution; var Result : String);
 begin
    exec.LocalizeSymbol(FResSymbol, Result);
 end;
@@ -8221,14 +8278,18 @@ procedure TForCharCodeInStrExpr.EvalNoResult(exec : TdwsExecution);
 var
    code, i : Integer;
    v : PInt64;
-   p : PChar;
-   s : String;
+   p : PWideChar;
+   s : UnicodeString;
 begin
+   {$ifdef FPC}
+   FInExpr.EvalAsUnicodeString(exec, s);
+   {$else}
    FInExpr.EvalAsString(exec, s);
+   {$endif}
 
    v:=TIntVarExpr(FVarExpr).EvalAsPInteger(exec);
 
-   p:=PChar(s);
+   p:=PWideChar(s);
    for i:=1 to Length(s) do begin
       code:=Ord(p^);
       Inc(p);
@@ -8274,22 +8335,36 @@ end;
 procedure TForCharInStrExpr.EvalNoResult(exec : TdwsExecution);
 var
    code, i : Integer;
-   p : PChar;
-   s : String;
+   p : PWideChar;
+   s : UnicodeString;
 begin
+   {$ifdef FPC}
+   FInExpr.EvalAsUnicodeString(exec, s);
+   {$else}
    FInExpr.EvalAsString(exec, s);
+   {$endif}
 
-   p:=PChar(s);
+   p:=PWideChar(s);
    for i:=1 to Length(s) do begin
       code:=Ord(p^);
       Inc(p);
       case code of
          $D800..$DBFF : // high surrogate
-            FVarExpr.AssignValueAsString(exec, Char(code)+p^);
+            {$ifdef FPC}
+            FVarExpr.AssignValueAsString(exec, UTF8Encode(WideChar(code)+p^));
+            {$else}
+            FVarExpr.AssignValueAsString(exec, WideChar(code)+p^);
+            {$endif}
          $DC00..$DFFF : //low surrogate
             continue;
       else
-         FVarExpr.AssignValueAsString(exec, Char(code));
+         {$ifdef FPC}
+         if code<128 then
+            FVarExpr.AssignValueAsString(exec, Char(code))
+         else FVarExpr.AssignValueAsString(exec, UTF8Encode(WideChar(code)));
+         {$else}
+         FVarExpr.AssignValueAsString(exec, WideChar(code));
+         {$endif}
       end;
 
       exec.DoStep(FDoExpr);

@@ -41,7 +41,12 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-procedure EmptyCallBack(parent, expr : TExprBase; var abort : Boolean);
+type
+   TEnumeratorEmptyCallBack = class
+      procedure EmptyCallBack(parent, expr : TExprBase; var abort : Boolean);
+   end;
+
+procedure TEnumeratorEmptyCallBack.EmptyCallBack(parent, expr : TExprBase; var abort : Boolean);
 begin
    // just used for detecting crashes in subexpr tree navigation
 end;
@@ -75,6 +80,7 @@ begin
    CollectFiles(basePath+'OverloadsFail'+PathDelim, cFilter, FFailures);
    CollectFiles(basePath+'HelpersFail'+PathDelim, cFilter, FFailures);
    CollectFiles(basePath+'AttributesFail'+PathDelim, cFilter, FFailures);
+   CollectFiles(basePath+'LambdaFail'+PathDelim, cFilter, FFailures);
 
    FCompiler:=TDelphiWebScript.Create(nil);
    FCompiler.OnInclude:=DoInclude;
@@ -119,14 +125,19 @@ begin
 
       for i:=0 to FTests.Count-1 do begin
 
+         {$ifdef FPC}
+         // triggers a GDB bug which crashes Lazarus
+         if Copy(ExtractFileName(FTests[i]), 1, 11)='div_by_zero' then continue;
+         {$endif}
+
          source.LoadFromFile(FTests[i]);
 
          prog:=FCompiler.Compile(source.Text);
 
          CheckEquals(False, prog.Msgs.HasErrors, FTests[i]+#13#10+prog.Msgs.AsInfo);
 
-         (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(EmptyCallBack);
-         (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(EmptyCallBack);
+         (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+         (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
 
          prog:=nil;
 
@@ -153,6 +164,15 @@ begin
    try
 
       for i:=0 to FTests.Count-1 do begin
+
+         {$ifdef FPC}
+         // triggers a GDB bug which crashes Lazarus
+         if Copy(ExtractFileName(FTests[i]), 1, 11)='div_by_zero' then continue;
+         // need FPC Unicode fixes
+         if Copy(ExtractFileName(FTests[i]), 1, 10)='for_in_str' then continue;
+         if Copy(ExtractFileName(FTests[i]), 1, 13)='unicode_const' then continue;
+         if Copy(ExtractFileName(FTests[i]), 1, 19)='unicode_identifiers' then continue;
+         {$endif}
 
          source.LoadFromFile(FTests[i]);
 
@@ -181,9 +201,18 @@ begin
             if not FileExists(resultsFileName) then
                resultsFileName:=ChangeFileExt(FTests[i], '.txt');
          end else resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+         {$ifdef FPC}
+         if FileExists(ChangeFileExt(resultsFileName, '.fpctxt')) then
+            resultsFileName:=ChangeFileExt(resultsFileName, '.fpctxt');
+         {$endif}
 
          if FileExists(resultsFileName) then begin
             expectedResult.LoadFromFile(resultsFileName);
+            {$ifdef FPC}
+            if expectedResult.Count>0 then
+               if Copy(expectedResult[0], 1, 3)=#$EF#$BB#$BF then
+                  expectedResult[0]:=Copy(expectedResult[0], 4, MaxInt);
+            {$endif}
             CheckEquals(expectedResult.Text, output, FTests[i]);
          end else CheckEquals('', output, FTests[i]);
 
@@ -286,8 +315,8 @@ begin
             end;
          end else Check(prog.Msgs.AsInfo<>'', FFailures[i]+': undetected error');
 
-         (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(EmptyCallBack);
-         (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(EmptyCallBack);
+         (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+         (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
 
          try
             prog:=nil;

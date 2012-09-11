@@ -55,14 +55,14 @@ type
    TdwsCompiler = class;
    TdwsFilter = class;
 
-   TIncludeEvent = procedure(const scriptName: UnicodeString; var scriptSource: UnicodeString) of object;
-   TdwsOnNeedUnitEvent = function(const unitName : UnicodeString; var unitSource : UnicodeString) : IdwsUnit of object;
-   TdwsResourceEvent = procedure(compiler : TdwsCompiler; const resourceName : UnicodeString) of object;
+   TIncludeEvent = procedure(const scriptName: String; var scriptSource: String) of object;
+   TdwsOnNeedUnitEvent = function(const unitName : String; var unitSource : String) : IdwsUnit of object;
+   TdwsResourceEvent = procedure(compiler : TdwsCompiler; const resourceName : String) of object;
 
    TCompilerCreateBaseVariantSymbol = function (table : TSystemSymbolTable) : TBaseVariantSymbol of object;
    TCompilerReadInstrEvent = function (compiler : TdwsCompiler) : TNoResultExpr of object;
    TCompilerReadInstrSwitchEvent = function (compiler : TdwsCompiler) : Boolean of object;
-   TCompilerFindUnknownNameEvent = function (compiler : TdwsCompiler; const name : UnicodeString) : TSymbol of object;
+   TCompilerFindUnknownNameEvent = function (compiler : TdwsCompiler; const name : String) : TSymbol of object;
    TCompilerSectionChangedEvent = procedure (compiler : TdwsCompiler) of object;
    TCompilerReadScriptEvent = procedure (compiler : TdwsCompiler; sourceFile : TSourceFile; scriptType : TScriptSourceType) of object;
    TCompilerGetDefaultEnvironmentEvent = function : IdwsEnvironment of object;
@@ -164,7 +164,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    function Process(const Text: UnicodeString; Msgs: TdwsMessageList): UnicodeString; virtual;
+    function Process(const Text: String; Msgs: TdwsMessageList): String; virtual;
     property Dependencies: TStrings read GetDependencies;
   published
     property SubFilter: TdwsFilter read FSubFilter write SetSubFilter;
@@ -268,6 +268,9 @@ type
                           tcParameter, tcResult, tcOperand, tcExceptionClass,
                           tcProperty, tcHelper);
 
+   TdwsReadProcDeclOption = (pdoClassMethod, pdoType, pdoAnonymous, pdoLambda);
+   TdwsReadProcDeclOptions = set of TdwsReadProcDeclOption;
+
    TdwsUnitSection = (secMixed, secHeader, secInterface, secImplementation,
                       secInitialization, secFinalization, secEnd);
    TdwsStatementAction = (saNone, saNoSemiColon, saInterface, saImplementation, saEnd);
@@ -334,7 +337,7 @@ type
          FSourcePostConditionsIndex : Integer;
          FUnitSection : TdwsUnitSection;
          FUnitContextStack : TdwsCompilerUnitContextStack;
-         FUnitsFromStack : TSimpleStack<UnicodeString>;
+         FUnitsFromStack : TSimpleStack<String>;
          FCurrentUnitSymbol : TUnitMainSymbol;
          FAnyFuncSymbol : TAnyFuncSymbol;
          FAnyTypeSymbol : TAnyTypeSymbol;
@@ -356,14 +359,14 @@ type
 
          function CheckPropertyFuncParams(paramsA : TSymbolTable; methSym : TMethodSymbol;
                                           indexSym : TSymbol = nil; typSym : TTypeSymbol = nil) : Boolean;
-         procedure CheckName(const name : UnicodeString; const namePos : TScriptPos);
-         function IdentifySpecialName(const name : UnicodeString) : TSpecialKeywordKind;
-         procedure CheckSpecialName(const name : UnicodeString);
+         procedure CheckName(const name : String; const namePos : TScriptPos);
+         function IdentifySpecialName(const name : String) : TSpecialKeywordKind;
+         procedure CheckSpecialName(const name : String);
          function CheckParams(A, B: TSymbolTable; CheckNames: Boolean; skipB : Integer = 0): Boolean;
          procedure CompareFuncKinds(a, b : TFuncKind);
          procedure CompareFuncSymbolParams(a, b : TFuncSymbol);
          function  CurrentStruct : TCompositeTypeSymbol;
-         function  FindStructMember(typ : TStructuredTypeSymbol; const name : UnicodeString) : TSymbol;
+         function  FindStructMember(typ : TStructuredTypeSymbol; const name : String) : TSymbol;
 
          procedure HintUnusedSymbols;
          procedure HintUnusedPrivateSymbols;
@@ -377,23 +380,23 @@ type
          function GetConstParamExpr(dataSym : TConstParamSymbol) : TByRefParamExpr;
 
          function GetSelfParamExpr(selfSym : TDataSymbol) : TVarExpr;
-                          function ReadAssign(token : TTokenType; var left : TDataExpr) : TNoResultExpr;
-         function ReadArrayType(const typeName : UnicodeString; typeContext : TdwsReadTypeContext) : TTypeSymbol;
+         function ReadAssign(token : TTokenType; var left : TDataExpr) : TNoResultExpr;
+         function ReadArrayType(const typeName : String; typeContext : TdwsReadTypeContext) : TTypeSymbol;
          function ReadArrayConstant(closingToken : TTokenType; expecting : TTypeSymbol) : TArrayConstantExpr;
-         function ReadArrayMethod(const name : UnicodeString; const namePos : TScriptPos;
+         function ReadArrayMethod(const name : String; const namePos : TScriptPos;
                                   baseExpr : TTypedExpr) : TProgramExpr;
          function ReadCase : TCaseExpr;
          function ReadCaseConditions(condList : TCaseConditions; valueExpr : TTypedExpr) : Integer;
          function ReadNameSymbol(var namePos : TScriptPos) : TSymbol;
          function ReadClassName : TClassSymbol;
-         function ReadClassOf(const typeName : UnicodeString) : TClassOfSymbol;
-         function ReadClass(const typeName : UnicodeString; const flags : TClassSymbolFlags) : TClassSymbol;
+         function ReadClassOf(const typeName : String) : TClassOfSymbol;
+         function ReadClass(const typeName : String; const flags : TClassSymbolFlags) : TClassSymbol;
          procedure ReadClassVars(const ownerSymbol : TCompositeTypeSymbol; aVisibility : TdwsVisibility);
          procedure ReadClassConst(const ownerSymbol : TCompositeTypeSymbol; aVisibility : TdwsVisibility);
-         function ReadInterface(const typeName : UnicodeString) : TInterfaceSymbol;
-         function ReadConnectorSym(const name : UnicodeString; baseExpr : TTypedExpr;
+         function ReadInterface(const typeName : String) : TInterfaceSymbol;
+         function ReadConnectorSym(const name : String; baseExpr : TTypedExpr;
                                    const connectorType : IConnectorType; isWrite: Boolean) : TProgramExpr;
-         function ReadConnectorArray(const name : UnicodeString; baseExpr : TTypedExpr;
+         function ReadConnectorArray(const name : String; baseExpr : TTypedExpr;
                                      const connectorType : IConnectorType; isWrite: Boolean) : TConnectorCallExpr;
          procedure ReadConstDecl(const factory : IdwsDataSymbolFactory);
          procedure ReadConstDeclBlock(var action : TdwsStatementAction);
@@ -401,7 +404,7 @@ type
          function ReadConstRecord(symbol : TRecordSymbol) : TData;
          function ReadBlock : TNoResultExpr;
          function ReadBlocks(const endTokens : TTokenTypes; var finalToken : TTokenType) : TNoResultExpr;
-         function ReadEnumeration(const typeName : UnicodeString; aStyle : TEnumerationSymbolStyle) : TEnumerationSymbol;
+         function ReadEnumeration(const typeName : String; aStyle : TEnumerationSymbolStyle) : TEnumerationSymbol;
          function ReadExit : TNoResultExpr;
          function ReadClassExpr(ownerSymbol : TCompositeTypeSymbol; expecting : TTypeSymbol = nil) : TTypedExpr;
          function ReadExpr(expecting : TTypeSymbol = nil) : TTypedExpr;
@@ -504,10 +507,11 @@ type
          // Don't want to add param symbols to dictionary when a method implementation (they get thrown away)
          procedure ReadParams(const hasParamMeth : THasParamSymbolMethod;
                               const addParamMeth : TAddParamSymbolMethod;
-                              forwardedParams : TParamsSymbolTable);
+                              forwardedParams : TParamsSymbolTable;
+                              expectedLambdaParams : TParamsSymbolTable);
          function ReadProcDecl(funcToken : TTokenType; const hotPos : TScriptPos;
-                               isClassMethod : Boolean = False;
-                               isType : Boolean = False; isAnonymous : Boolean = False) : TFuncSymbol;
+                               declOptions : TdwsReadProcDeclOptions = [];
+                               expectedLambdaParams : TParamsSymbolTable = nil) : TFuncSymbol;
          procedure ReadProcBody(funcSymbol : TFuncSymbol);
          procedure ReadProcEmpty(funcSymbol : TFuncSymbol);
          procedure ReadConditions(funcSymbol : TFuncSymbol; conditions : TSourceConditions;
@@ -525,11 +529,11 @@ type
                                             typedExprList : TTypedExprList;
                                             const scriptPos : TScriptPos; isWrite : Boolean) : TFuncExpr;
 
-         function ReadRecordDecl(const typeName : UnicodeString; allowNonConstExpressions : Boolean) : TRecordSymbol;
+         function ReadRecordDecl(const typeName : String; allowNonConstExpressions : Boolean) : TRecordSymbol;
          procedure ReadFieldsDecl(struct : TStructuredTypeSymbol; visibility : TdwsVisibility;
                                   allowNonConstExpressions : Boolean);
 
-         function ReadHelperDecl(const typeName : UnicodeString; qualifierToken : TTokenType) : THelperSymbol;
+         function ReadHelperDecl(const typeName : String; qualifierToken : TTokenType) : THelperSymbol;
 
          function ReadRaise : TRaiseBaseExpr;
          function ReadRepeat : TNoResultExpr;
@@ -545,8 +549,8 @@ type
          procedure ReadResourceStringDeclBlock(var action : TdwsStatementAction);
          function ReadStringArray(expr : TDataExpr; isWrite : Boolean) : TProgramExpr;
 
-         function ReadSwitch(const switchName : UnicodeString) : Boolean;
-         function ReadInstrSwitch(const switchName : UnicodeString) : Boolean;
+         function ReadSwitch(const switchName : String) : Boolean;
+         function ReadInstrSwitch(const switchName : String) : Boolean;
          function ReadExprSwitch(const switchPos : TScriptPos) : Boolean;
          procedure SkipUntilCurlyRight;
 
@@ -563,7 +567,7 @@ type
          function ReadFinally(tryExpr : TNoResultExpr) : TFinallyExpr;
          function ReadExcept(tryExpr : TNoResultExpr; var finalToken : TTokenType) : TExceptExpr;
 
-         function ReadType(const typeName : UnicodeString; typeContext : TdwsReadTypeContext) : TTypeSymbol;
+         function ReadType(const typeName : String; typeContext : TdwsReadTypeContext) : TTypeSymbol;
          function ReadTypeCast(const namePos : TScriptPos; typeSym : TTypeSymbol) : TTypedExpr;
          function ReadTypeExpr(const namePos : TScriptPos; typeSym : TTypeSymbol;
                                isWrite : Boolean; expecting : TTypeSymbol = nil) : TProgramExpr;
@@ -596,7 +600,7 @@ type
                                 const scriptPos: TScriptPos; ForceStatic : Boolean): TFuncExpr;
 
          procedure MemberSymbolWithNameAlreadyExists(sym : TSymbol; const hotPos : TScriptPos);
-         procedure IncompatibleTypes(const scriptPos : TScriptPos; const fmt : UnicodeString; typ1, typ2 : TTypeSymbol);
+         procedure IncompatibleTypes(const scriptPos : TScriptPos; const fmt : String; typ1, typ2 : TTypeSymbol);
 
          function CreateProgram(const systemTable : ISystemSymbolTable;
                                 resultType : TdwsResultType;
@@ -620,7 +624,7 @@ type
          property  CurrentUnitSymbol : TUnitMainSymbol read FCurrentUnitSymbol;
          procedure EnterUnit(unitSymbol : TUnitMainSymbol; var oldUnitSymbol : TUnitMainSymbol);
          procedure LeaveUnit(oldUnitSymbol : TUnitMainSymbol);
-         procedure SwitchTokenizerToUnit(srcUnit : TSourceUnit; const sourceCode : UnicodeString);
+         procedure SwitchTokenizerToUnit(srcUnit : TSourceUnit; const sourceCode : String);
 
          procedure SetupCompileOptions(conf : TdwsConfiguration);
          procedure SetupMsgsOptions(conf : TdwsConfiguration);
@@ -628,7 +632,7 @@ type
 
          procedure CheckFilterDependencies(confUnits : TIdwsUnitList);
          procedure HandleUnitDependencies;
-         function  HandleExplicitDependency(const unitName : UnicodeString) : TUnitSymbol;
+         function  HandleExplicitDependency(const unitName : String) : TUnitSymbol;
 
          procedure SetupInitializationFinalization;
 
@@ -636,10 +640,10 @@ type
          constructor Create;
          destructor Destroy; override;
 
-         function Compile(const aCodeText : UnicodeString; aConf : TdwsConfiguration) : IdwsProgram;
-         procedure RecompileInContext(const context : IdwsProgram; const aCodeText : UnicodeString; aConf : TdwsConfiguration);
+         function Compile(const aCodeText : String; aConf : TdwsConfiguration) : IdwsProgram;
+         procedure RecompileInContext(const context : IdwsProgram; const aCodeText : String; aConf : TdwsConfiguration);
 
-         class function Evaluate(exec : IdwsProgramExecution; const anExpression : UnicodeString;
+         class function Evaluate(exec : IdwsProgramExecution; const anExpression : String;
                               options : TdwsEvaluateOptions = []) : IdwsEvaluateExpr;
 
          procedure WarnForVarUsage(varExpr : TVarExpr; const scriptPos : TScriptPos);
@@ -649,9 +653,9 @@ type
          procedure RecordSymbolUseImplicitReference(sym : TSymbol; const scriptPos : TScriptPos; isWrite : Boolean);
          procedure ReplaceSymbolUse(oldSym, newSym : TSymbol; const scriptPos : TScriptPos);
 
-         function OpenStreamForFile(const fileName : UnicodeString) : TStream;
-         function GetScriptSource(const scriptName : UnicodeString) : UnicodeString;
-         function GetIncludeScriptSource(const scriptName : UnicodeString) : UnicodeString;
+         function OpenStreamForFile(const fileName : String) : TStream;
+         function GetScriptSource(const scriptName : String) : String;
+         function GetIncludeScriptSource(const scriptName : String) : String;
 
          property CurrentProg : TdwsProgram read FProg write FProg;
          property Msgs : TdwsCompileMessageList read FMsgs;
@@ -682,7 +686,7 @@ implementation
 // ------------------------------------------------------------------
 
 const
-   cSwitchInstructions : array [TSwitchInstruction] of UnicodeString = (
+   cSwitchInstructions : array [TSwitchInstruction] of String = (
       '',
       SWI_INCLUDE_LONG, SWI_INCLUDE_SHORT, SWI_INCLUDE_ONCE,
       SWI_FILTER_LONG, SWI_FILTER_SHORT,
@@ -697,8 +701,8 @@ const
 
    cTokenToVisibility : array [ttPRIVATE..ttPUBLISHED] of TdwsVisibility = (
       cvPrivate, cvProtected, cvPublic, cvPublished );
-   cTokenToFuncKind : array [ttFUNCTION..ttMETHOD] of TFuncKind = (
-      fkFunction, fkProcedure, fkConstructor, fkDestructor, fkMethod );
+   cTokenToFuncKind : array [ttFUNCTION..ttLAMBDA] of TFuncKind = (
+      fkFunction, fkProcedure, fkConstructor, fkDestructor, fkMethod, fkLambda );
 
 type
    TReachStatus = (rsReachable, rsUnReachable, rsUnReachableWarned);
@@ -789,9 +793,9 @@ type
 
 // StringToSwitchInstruction
 //
-function StringToSwitchInstruction(const str : UnicodeString) : TSwitchInstruction;
+function StringToSwitchInstruction(const str : String) : TSwitchInstruction;
 begin
-   // This procedure is called by the tokenizer if it finds {$xx in the UnicodeString
+   // This procedure is called by the tokenizer if it finds {$xx in the String
    for Result:=Low(TSwitchInstruction) to High(TSwitchInstruction) do begin
       if str=cSwitchInstructions[Result] then
          Exit;
@@ -956,7 +960,7 @@ begin
    FLoopExprs:=TSimpleStack<TNoResultExpr>.Create;
    FLoopExitable:=TSimpleStack<TLoopExitable>.Create;
    FFinallyExprs:=TSimpleStack<Boolean>.Create;
-   FUnitsFromStack:=TSimpleStack<UnicodeString>.Create;
+   FUnitsFromStack:=TSimpleStack<String>.Create;
    FUnitContextStack:=TdwsCompilerUnitContextStack.Create;
 
    FAnyFuncSymbol:=TAnyFuncSymbol.Create('', fkFunction, 0);
@@ -999,7 +1003,7 @@ var
    deps: TStrings;
    refCount : array of Integer;
    changed : Boolean;
-   unitName: UnicodeString;
+   unitName: String;
    curUnit : IdwsUnit;
 begin
    // initialize reference count vector
@@ -1149,7 +1153,7 @@ end;
 //
 procedure TdwsCompiler.MemberSymbolWithNameAlreadyExists(sym : TSymbol; const hotPos : TScriptPos);
 var
-   msgFmt : UnicodeString;
+   msgFmt : String;
 begin
    if sym is TFieldSymbol then
       msgFmt:=CPE_FieldRedefined
@@ -1169,7 +1173,7 @@ end;
 // IncompatibleTypes
 //
 procedure TdwsCompiler.IncompatibleTypes(const scriptPos : TScriptPos;
-                                         const fmt : UnicodeString; typ1, typ2 : TTypeSymbol);
+                                         const fmt : String; typ1, typ2 : TTypeSymbol);
 begin
    FMsgs.AddCompilerErrorFmt(scriptPos, fmt, [typ1.Caption, typ2.Caption]);
 end;
@@ -1249,10 +1253,10 @@ end;
 
 // Compile
 //
-function TdwsCompiler.Compile(const aCodeText : UnicodeString; aConf : TdwsConfiguration) : IdwsProgram;
+function TdwsCompiler.Compile(const aCodeText : String; aConf : TdwsConfiguration) : IdwsProgram;
 var
    stackParams : TStackParameters;
-   codeText : UnicodeString;
+   codeText : String;
    sourceFile : TSourceFile;
    compileStartTime : TDateTime;
 begin
@@ -1348,7 +1352,7 @@ end;
 procedure TdwsCompiler.CheckFilterDependencies(confUnits : TIdwsUnitList);
 var
    f : TdwsFilter;
-   dep : UnicodeString;
+   dep : String;
 begin
    // Check for missing units
    f:=FFilter;
@@ -1386,14 +1390,14 @@ end;
 
 // HandleExplicitDependency
 //
-function TdwsCompiler.HandleExplicitDependency(const unitName : UnicodeString) : TUnitSymbol;
+function TdwsCompiler.HandleExplicitDependency(const unitName : String) : TUnitSymbol;
 var
    i : Integer;
    unitResolved : IdwsUnit;
    unitTable : TUnitSymbolTable;
    unitMain : TUnitMainSymbol;
    dependencies : TStrings;
-   unitSource : UnicodeString;
+   unitSource : String;
    srcUnit : TSourceUnit;
    oldContext : TdwsSourceContext;
 begin
@@ -1533,9 +1537,9 @@ end;
 // RecompileInContext
 //
 procedure TdwsCompiler.RecompileInContext(const context : IdwsProgram;
-               const aCodeText : UnicodeString; aConf : TdwsConfiguration);
+               const aCodeText : String; aConf : TdwsConfiguration);
 var
-   codeText : UnicodeString;
+   codeText : String;
    sourceFile : TSourceFile;
 begin
    SetupCompileOptions(aConf);
@@ -1689,7 +1693,7 @@ begin
       FTok.SwitchProcessor:=ReadInstrSwitch;
       if scriptType=stMain then
          FTok.ConditionalDefines:=FMainProg.ConditionalDefines
-      else FTok.ConditionalDefines:=TAutoStore<TStrings>.Create(TStringList.Create);
+      else FTok.ConditionalDefines:=TAutoStrings.Create(TStringList.Create);
 
 //!!!!      FMainProg.SourceList.Add(sourceFile.Name, sourceFile, scriptType);
 
@@ -1881,7 +1885,7 @@ begin
          token:=FTok.TestDeleteAny([ttPROCEDURE, ttFUNCTION, ttMETHOD]);
          case token of
             ttPROCEDURE, ttFUNCTION, ttMETHOD :
-               ReadProcBody(ReadProcDecl(token, hotPos, True));
+               ReadProcBody(ReadProcDecl(token, hotPos, [pdoClassMethod]));
          else
             FMsgs.AddCompilerStop(FTok.HotPos, CPE_ProcOrFuncExpected);
          end;
@@ -2005,7 +2009,7 @@ end;
 // Evaluate
 //
 class function TdwsCompiler.Evaluate(exec : IdwsProgramExecution;
-                                     const anExpression : UnicodeString;
+                                     const anExpression : String;
                                      options : TdwsEvaluateOptions = []) : IdwsEvaluateExpr;
 var
    oldProgMsgs : TdwsCompileMessageList;
@@ -2237,7 +2241,7 @@ end;
 //
 procedure TdwsCompiler.ReadConstDecl(const factory : IdwsDataSymbolFactory);
 var
-   name : UnicodeString;
+   name : String;
    expr : TTypedExpr;
    dataExpr : TDataExpr;
    typ : TTypeSymbol;
@@ -2378,7 +2382,7 @@ end;
 //
 function TdwsCompiler.ReadTypeDecl(firstInBlock : Boolean) : Boolean;
 var
-   name : UnicodeString;
+   name : String;
    typNew, typOld : TTypeSymbol;
    typePos : TScriptPos;
    oldSymPos : TSymbolPosition; // Mark *where* the old declaration was
@@ -2455,11 +2459,11 @@ end;
 // ReadProcDecl
 //
 function TdwsCompiler.ReadProcDecl(funcToken : TTokenType; const hotPos : TScriptPos;
-              isClassMethod : Boolean = False; isType : Boolean = False;
-              isAnonymous : Boolean = False) : TFuncSymbol;
+                                   declOptions : TdwsReadProcDeclOptions = [];
+                                   expectedLambdaParams : TParamsSymbolTable = nil) : TFuncSymbol;
 var
    funcKind : TFuncKind;
-   name : UnicodeString;
+   name : String;
    sym : TSymbol;
    funcPos : TScriptPos;
    overloadFuncSym, existingFuncSym, forwardedSym : TFuncSymbol;
@@ -2470,10 +2474,12 @@ begin
 
    funcKind:=cTokenToFuncKind[funcToken];
    funcPos:=hotPos;
+   if funcToken=ttLAMBDA then
+      Include(declOptions, pdoLambda);
 
-   if not isType then begin
+   if not (pdoType in declOptions) then begin
       // Find existing symbol for function name (if any)
-      if isAnonymous then begin
+      if pdoAnonymous in declOptions then begin
          name:='';
       end else begin
          if not FTok.TestDeleteNamePos(name, funcPos) then begin
@@ -2498,12 +2504,12 @@ begin
 
       // Store reference to class in dictionary
       RecordSymbolUse(sym, funcPos, [suReference]);
-      Result:=ReadMethodImpl(TCompositeTypeSymbol(sym), funcKind, isClassMethod);
+      Result:=ReadMethodImpl(TCompositeTypeSymbol(sym), funcKind, pdoClassMethod in declOptions);
 
    end else begin
 
       // Read normal procedure/function declaration
-      if isClassMethod or (funcKind in [fkConstructor, fkDestructor, fkMethod]) then
+      if (pdoClassMethod in declOptions) or (funcKind in [fkConstructor, fkDestructor, fkMethod]) then
          FMsgs.AddCompilerStop(FTok.HotPos, CPE_ImplClassNameExpected);
 
       forwardedSym:=nil;
@@ -2522,20 +2528,21 @@ begin
       if (forwardedSym=nil) and (overloadFuncSym=nil) then
          CheckName(name, funcPos);
 
-      if isType then
+      if pdoType in declOptions then
          Result := TSourceFuncSymbol.Create('', funcKind, -1)
       else Result := TSourceFuncSymbol.Create(name, funcKind, FMainProg.NextStackLevel(FProg.Level));
       try
          // Don't add params to dictionary when function is forwarded. It is already declared.
          if forwardedSym<>nil then
-            ReadParams(Result.HasParam, Result.AddParam, forwardedSym.Params)
-         else ReadParams(Result.HasParam, Result.AddParam, nil);
+            ReadParams(Result.HasParam, Result.AddParam, forwardedSym.Params, nil)
+         else ReadParams(Result.HasParam, Result.AddParam, nil, expectedLambdaParams);
 
-         Result.Typ:=ReadFuncResultType(funcKind);
+         if (funcToken<>ttLAMBDA) or FTok.Test(ttCOLON) then
+            Result.Typ:=ReadFuncResultType(funcKind);
 
-         if not isAnonymous then begin
+         if not (pdoAnonymous in declOptions) then begin
                 
-            if isType then begin
+            if pdoType in declOptions then begin
 
                if FTok.TestDelete(ttOF) then begin
                   if FTok.TestDelete(ttOBJECT) then
@@ -2644,7 +2651,7 @@ end;
 //
 function TdwsCompiler.ReadIntfMethodDecl(intfSym : TInterfaceSymbol; funcKind : TFuncKind) : TSourceMethodSymbol;
 var
-   name : UnicodeString;
+   name : String;
    sym : TSymbol;
    methPos : TScriptPos;
 begin
@@ -2664,7 +2671,7 @@ begin
    Result.DeclarationPos:=methPos;
 
    try
-      ReadParams(Result.HasParam, Result.AddParam, nil);
+      ReadParams(Result.HasParam, Result.AddParam, nil, nil);
 
       Result.Typ:=ReadFuncResultType(funcKind);
       ReadSemiColon;
@@ -2700,7 +2707,7 @@ function TdwsCompiler.ReadMethodDecl(const hotPos : TScriptPos; ownerSym : TComp
    end;
 
 var
-   name : UnicodeString;
+   name : String;
    sym : TSymbol;
    meth, defaultConstructor, match : TMethodSymbol;
    isReintroduced : Boolean;
@@ -2735,7 +2742,7 @@ begin
    funcResult:=TSourceMethodSymbol.Create(name, funcKind, ownerSym, aVisibility, isClassMethod);
    funcResult.DeclarationPos:=methPos;
    try
-      ReadParams(funcResult.HasParam, funcResult.AddParam, nil);
+      ReadParams(funcResult.HasParam, funcResult.AddParam, nil, nil);
 
       funcResult.Typ:=ReadFuncResultType(funcKind);
       ReadSemiColon;
@@ -2909,7 +2916,7 @@ end;
 function TdwsCompiler.ReadMethodImpl(ownerSym : TCompositeTypeSymbol;
                funcKind : TFuncKind; isClassMethod : Boolean) : TMethodSymbol;
 var
-   methName : UnicodeString;
+   methName : String;
    sym : TSymbol;
    tmpMeth, overloadedMeth : TMethodSymbol;
    methPos : TScriptPos;
@@ -2941,7 +2948,7 @@ begin
       try
          // Don't store these params to Dictionary. They will become invalid when the method is freed.
          if not FTok.TestDelete(ttSEMI) then begin
-            ReadParams(tmpMeth.HasParam, tmpMeth.AddParam, Result.Params);
+            ReadParams(tmpMeth.HasParam, tmpMeth.AddParam, Result.Params, nil);
             tmpMeth.Typ:=ReadFuncResultType(funcKind);
             ReadSemiColon;
          end;
@@ -2958,7 +2965,7 @@ begin
    end else begin
       // keep compiling a method that wasn't declared in class
       if not FTok.TestDelete(ttSEMI) then begin
-         ReadParams(Result.HasParam, Result.AddParam, nil);
+         ReadParams(Result.HasParam, Result.AddParam, nil, nil);
          Result.Typ:=ReadFuncResultType(funcKind);
          ReadSemiColon;
       end;
@@ -3124,10 +3131,12 @@ begin
             FSourceContextMap.OpenContext(FTok.CurrentPos, nil, ttBEGIN);
          try
             // Read procedure body
-            if not FTok.TestDelete(ttBEGIN) then begin
-               if FTok.Test(ttFORWARD) then
-                  FMsgs.AddCompilerStop(FTok.HotPos, CPE_FuncForwardAlreadyExists)
-               else FMsgs.AddCompilerStop(FTok.HotPos, CPE_BeginExpected);
+            if funcSymbol.Kind<>fkLambda then begin
+               if not FTok.TestDelete(ttBEGIN) then begin
+                  if FTok.Test(ttFORWARD) then
+                     FMsgs.AddCompilerStop(FTok.HotPos, CPE_FuncForwardAlreadyExists)
+                  else FMsgs.AddCompilerStop(FTok.HotPos, CPE_BeginExpected);
+               end;
             end;
 
             proc.SetBeginPos(FTok.HotPos);
@@ -3199,9 +3208,9 @@ procedure TdwsCompiler.ReadConditions(funcSymbol : TFuncSymbol; conditions : TSo
 var
    hotPos : TScriptPos;
    testExpr, msgExpr : TTypedExpr;
-   testStart : PWideChar;
+   testStart : PChar;
    testLength : Integer;
-   msg : UnicodeString;
+   msg : String;
    srcCond : TSourceCondition;
    endToken : TTokenType;
 begin
@@ -3221,7 +3230,7 @@ begin
          if testExpr.IsConstant then
             FMsgs.AddCompilerWarning(hotPos, CPW_ConstantCondition);
 
-         testLength:=(NativeUInt(FTok.PosPtr)-NativeUInt(testStart)) div 2;
+         testLength:=(NativeUInt(FTok.PosPtr)-NativeUInt(testStart)) div SizeOf(Char);
          if FTok.TestDelete(ttCOLON) then begin
             msgExpr:=ReadExpr;
             if not msgExpr.IsOfType(FProg.TypString) then
@@ -3266,39 +3275,53 @@ begin
    end;
 end;
 
+type
+   TFindOverloadedFunc = class
+      OpSymbol : TOperatorSymbol;
+      CapturableUsesSym : TFuncSymbol;
+      function Callback(symbol : TSymbol) : Boolean;
+   end;
+
+function TFindOverloadedFunc.Callback(symbol : TSymbol) : Boolean;
+var
+   funcSym : TFuncSymbol;
+begin
+   Result:=False;
+   if (symbol is TFuncSymbol) and (not symbol.IsType) then begin
+      funcSym:=TFuncSymbol(symbol);
+      if     (funcSym.Params.Count=2) and (funcSym.Typ<>nil)
+         and funcSym.Typ.IsOfType(opSymbol.Typ)
+         and funcSym.Params[0].Typ.IsOfType(opSymbol.Params[0])
+         and funcSym.Params[1].Typ.IsOfType(opSymbol.Params[1]) then begin
+         CapturableUsesSym:=funcSym;
+         Result:=True;
+      end;
+   end;
+end;
+
 // ReadOperatorDecl
 //
 function TdwsCompiler.ReadOperatorDecl : TOperatorSymbol;
 
-   procedure FindOverloadedFunc(var usesSym : TFuncSymbol; const usesName : UnicodeString;
+   procedure FindOverloadedFunc(var usesSym : TFuncSymbol; const usesName : String;
                                 fromTable : TSymbolTable; opSymbol : TOperatorSymbol);
    var
-      capturableUsesSym : TFuncSymbol;
+      finder : TFindOverloadedFunc;
    begin
-      capturableUsesSym:=usesSym;
-      fromTable.EnumerateSymbolsOfNameInScope(usesName,
-         function (symbol : TSymbol) : Boolean
-         var
-            funcSym : TFuncSymbol;
-         begin
-            Result:=False;
-            if (symbol is TFuncSymbol) and (not symbol.IsType) then begin
-               funcSym:=TFuncSymbol(symbol);
-               if     (funcSym.Params.Count=2) and (funcSym.Typ<>nil)
-                  and funcSym.Typ.IsOfType(opSymbol.Typ)
-                  and funcSym.Params[0].Typ.IsOfType(opSymbol.Params[0])
-                  and funcSym.Params[1].Typ.IsOfType(opSymbol.Params[1]) then begin
-                  capturableUsesSym:=funcSym;
-                  Result:=True;
-               end;
-            end;
-         end);
-      usesSym:=capturableUsesSym;
+      finder:=TFindOverloadedFunc.Create;
+      try
+         finder.CapturableUsesSym:=usesSym;
+         finder.OpSymbol:=opSymbol;
+         fromTable.EnumerateSymbolsOfNameInScope(usesName, finder.Callback);
+         usesSym:=finder.CapturableUsesSym;
+      finally
+         finder.Free;
+      end;
    end;
 
 var
    tt : TTokenType;
-   usesName : UnicodeString;
+   usesName : String;
    opPos, usesPos : TScriptPos;
    sym : TTypeSymbol;
    usesSym : TFuncSymbol;
@@ -3634,7 +3657,7 @@ end;
 //
 function TdwsCompiler.ReadInherited(isWrite : Boolean) : TProgramExpr;
 var
-   name : UnicodeString;
+   name : String;
    namePos : TScriptPos;
    sym : TSymbol;
    methSym : TMethodSymbol;
@@ -3965,7 +3988,7 @@ end;
 function TdwsCompiler.ReadEnumerationSymbolName(const enumPos : TScriptPos; enumSym : TEnumerationSymbol;
                                                 acceptTypeRef : Boolean) : TProgramExpr;
 var
-   name : UnicodeString;
+   name : String;
    elemPos : TScriptPos;
    elem : TSymbol;
    elemValue : Int64;
@@ -4626,7 +4649,7 @@ end;
 function TdwsCompiler.ReadSymbolMemberExpr(var expr : TProgramExpr;
                                            isWrite : Boolean; expecting : TTypeSymbol) : TProgramExpr;
 var
-   name : UnicodeString;
+   name : String;
    namePos : TScriptPos;
    helperExpr : TProgramExpr;
    member : TSymbol;
@@ -5415,27 +5438,35 @@ begin
    Result:=WrapUpFunctionRead(funcExpr, expecting, overloads);
 end;
 
+type
+   TFuncAtLevelSymbolList = class(TFuncSymbolList)
+      Level : Integer;
+      function Callback(sym : TSymbol) : Boolean;
+   end;
+
+function TFuncAtLevelSymbolList.Callback(sym : TSymbol) : Boolean;
+var
+   locFuncSym : TFuncSymbol;
+begin
+   if sym is TFuncSymbol then begin
+      locFuncSym:=TFuncSymbol(sym);
+      if locFuncSym.Level=Level then
+         Add(locFuncSym);
+   end;
+   Result:=False;
+end;
+
 // ReadFuncOverloaded
 //
 function TdwsCompiler.ReadFuncOverloaded(funcSym : TFuncSymbol; fromTable : TSymbolTable;
       codeExpr : TDataExpr = nil; expecting : TTypeSymbol = nil) : TTypedExpr;
 var
-   overloads : TFuncSymbolList;
+   overloads : TFuncAtLevelSymbolList;
 begin
-   overloads:=TFuncSymbolList.Create;
+   overloads:=TFuncAtLevelSymbolList.Create;
    try
-      fromTable.EnumerateSymbolsOfNameInScope(funcSym.Name,
-         function (sym : TSymbol) : Boolean
-         var
-            locFuncSym : TFuncSymbol;
-         begin
-            if sym is TFuncSymbol then begin
-               locFuncSym:=TFuncSymbol(sym);
-               if locFuncSym.Level=funcSym.Level then
-                  overloads.Add(locFuncSym);
-            end;
-            Result:=False;
-         end);
+      overloads.Level:=funcSym.Level;
+      fromTable.EnumerateSymbolsOfNameInScope(funcSym.Name, overloads.Callback);
       Result:=ReadFunc(funcSym, codeExpr, expecting, overloads);
    finally
       overloads.Free;
@@ -5671,23 +5702,39 @@ begin
    end;
 end;
 
+type
+   TFuncConflictEnumerator = class
+      ForwardedSym, FuncSym : TFuncSymbol;
+      function Callback(sym : TSymbol) : Boolean;
+   end;
+
+function TFuncConflictEnumerator.Callback(sym : TSymbol) : Boolean;
+var
+   locSym : TFuncSymbol;
+begin
+   if (sym<>ForwardedSym) and (sym is TFuncSymbol) then begin
+      locSym:=TFuncSymbol(sym);
+      if locSym.Level=FuncSym.Level then
+         if not FuncSym.IsValidOverloadOf(locSym) then
+            Exit(True);
+   end;
+   Result:=False;
+end;
+
 // FuncHasConflictingOverload
 //
 function TdwsCompiler.FuncHasConflictingOverload(funcSym, forwardedSym : TFuncSymbol) : Boolean;
+var
+   enumerator : TFuncConflictEnumerator;
 begin
-   Result:=FProg.Table.EnumerateSymbolsOfNameInScope(funcSym.Name,
-      function (sym : TSymbol) : Boolean
-      var
-         locSym : TFuncSymbol;
-      begin
-         if (sym<>forwardedSym) and (sym is TFuncSymbol) then begin
-            locSym:=TFuncSymbol(sym);
-            if locSym.Level=funcSym.Level then
-               if not funcSym.IsValidOverloadOf(locSym) then
-                  Exit(True);
-         end;
-         Result:=False;
-      end);
+   enumerator:=TFuncConflictEnumerator.Create;
+   try
+      enumerator.ForwardedSym:=forwardedSym;
+      enumerator.FuncSym:=funcSym;
+      Result:=FProg.Table.EnumerateSymbolsOfNameInScope(funcSym.Name, enumerator.Callback);
+   finally
+      enumerator.Free;
+   end;
 end;
 
 // MethHasConflictingOverload
@@ -5707,29 +5754,41 @@ begin
    Result:=False;
 end;
 
+type
+   TPerfectMatchEnumerator = class
+      FuncSym, Match : TFuncSymbol;
+      function Callback(sym : TSymbol) : Boolean;
+   end;
+
+function TPerfectMatchEnumerator.Callback(sym : TSymbol) : Boolean;
+var
+   locSym : TFuncSymbol;
+begin
+   if sym is TFuncSymbol then begin
+      locSym:=TFuncSymbol(sym);
+      if locSym.Level=FuncSym.Level then
+         if FuncSym.IsSameOverloadOf(locSym) then begin
+            Match:=locSym;
+            Exit(True);
+         end;
+   end;
+   Result:=False;
+end;
+
 // FuncPerfectMatchOverload
 //
 function TdwsCompiler.FuncPerfectMatchOverload(funcSym : TFuncSymbol) : TFuncSymbol;
 var
-   match : TFuncSymbol;
+   enumerator : TPerfectMatchEnumerator;
 begin
-   match:=nil;
-   FProg.Table.EnumerateSymbolsOfNameInScope(funcSym.Name,
-      function (sym : TSymbol) : Boolean
-      var
-         locSym : TFuncSymbol;
-      begin
-         if sym is TFuncSymbol then begin
-            locSym:=TFuncSymbol(sym);
-            if locSym.Level=funcSym.Level then
-               if funcSym.IsSameOverloadOf(locSym) then begin
-                  match:=locSym;
-                  Exit(True);
-               end;
-         end;
-         Result:=False;
-      end);
-   Result:=match;
+   enumerator:=TPerfectMatchEnumerator.Create;
+   try
+      enumerator.FuncSym:=funcSym;
+      FProg.Table.EnumerateSymbolsOfNameInScope(funcSym.Name, enumerator.Callback);
+      Result:=enumerator.Match;
+   finally
+      enumerator.Free;
+   end;
 end;
 
 // MethPerfectMatchOverload
@@ -5819,7 +5878,7 @@ function TdwsCompiler.ReadFuncResultType(funcKind : TFuncKind) : TTypeSymbol;
 begin
    Result:=nil;
    if FTok.TestDelete(ttCOLON) then begin
-      if not (funcKind in [fkFunction, fkMethod]) then
+      if not (funcKind in [fkFunction, fkMethod, fkLambda]) then
          FMsgs.AddCompilerError(FTok.HotPos, CPE_NoResultTypeExpected);
       Result:=ReadType('', tcResult);
    end else if funcKind=fkFunction then begin
@@ -6019,7 +6078,7 @@ end;
 
 // ReadArrayType
 //
-function TdwsCompiler.ReadArrayType(const TypeName: UnicodeString; typeContext : TdwsReadTypeContext): TTypeSymbol;
+function TdwsCompiler.ReadArrayType(const TypeName: String; typeContext : TdwsReadTypeContext): TTypeSymbol;
 var
    hotPos : TScriptPos;
 
@@ -6198,7 +6257,7 @@ end;
 
 // ReadArrayMethod
 //
-function TdwsCompiler.ReadArrayMethod(const name : UnicodeString; const namePos : TScriptPos;
+function TdwsCompiler.ReadArrayMethod(const name : String; const namePos : TScriptPos;
                                       baseExpr : TTypedExpr) : TProgramExpr;
 var
    arraySym : TArraySymbol;
@@ -6645,7 +6704,7 @@ end;
 //
 function TdwsCompiler.ReadNameSymbol(var namePos : TScriptPos) : TSymbol;
 var
-   name : UnicodeString;
+   name : String;
    unitSym : TUnitSymbol;
 begin
    // Declaration of a class reference
@@ -6701,7 +6760,7 @@ end;
 
 // ReadClassOf
 //
-function TdwsCompiler.ReadClassOf(const typeName : UnicodeString) : TClassOfSymbol;
+function TdwsCompiler.ReadClassOf(const typeName : String) : TClassOfSymbol;
 var
    classTyp : TClassSymbol;
 begin
@@ -6715,7 +6774,7 @@ end;
 
 // ReadClass
 //
-function TdwsCompiler.ReadClass(const typeName : UnicodeString; const flags : TClassSymbolFlags) : TClassSymbol;
+function TdwsCompiler.ReadClass(const typeName : String; const flags : TClassSymbolFlags) : TClassSymbol;
 var
    namePos, hotPos : TScriptPos;
    sym, typ : TSymbol;
@@ -6986,7 +7045,7 @@ end;
 
 // ReadInterface
 //
-function TdwsCompiler.ReadInterface(const typeName : UnicodeString) : TInterfaceSymbol;
+function TdwsCompiler.ReadInterface(const typeName : String) : TInterfaceSymbol;
 var
    sym : TSymbol;
    ancestor : TInterfaceSymbol;
@@ -7130,7 +7189,7 @@ end;
 function TdwsCompiler.ReadClassOperatorDecl(ClassSym: TClassSymbol) : TClassOperatorSymbol;
 var
    tt : TTokenType;
-   usesName : UnicodeString;
+   usesName : String;
    usesPos : TScriptPos;
    sym : TTypeSymbol;
 begin
@@ -7188,7 +7247,7 @@ end;
 function TdwsCompiler.ReadPropertyDecl(ownerSym : TCompositeTypeSymbol; aVisibility : TdwsVisibility) : TPropertySymbol;
 var
    x : Integer;
-   name : UnicodeString;
+   name : String;
    sym : TSymbol;
    typ : TTypeSymbol;
    arrayIndices : TSymbolTable;
@@ -7358,7 +7417,7 @@ end;
 
 // ReadRecordDecl
 //
-function TdwsCompiler.ReadRecordDecl(const typeName : UnicodeString;
+function TdwsCompiler.ReadRecordDecl(const typeName : String;
                                      allowNonConstExpressions : Boolean) : TRecordSymbol;
 var
    names : TStringList;
@@ -7580,7 +7639,7 @@ end;
 
 // ReadHelperDecl
 //
-function TdwsCompiler.ReadHelperDecl(const typeName : UnicodeString; qualifierToken : TTokenType) : THelperSymbol;
+function TdwsCompiler.ReadHelperDecl(const typeName : String; qualifierToken : TTokenType) : THelperSymbol;
 var
    propSym : TPropertySymbol;
    hotPos : TScriptPos;
@@ -7715,7 +7774,7 @@ end;
 function TdwsCompiler.ReadExcept(tryExpr : TNoResultExpr; var finalToken : TTokenType) : TExceptExpr;
 var
    doExpr : TExceptDoExpr;
-   varName : UnicodeString;
+   varName : String;
    classSym : TTypeSymbol;
 begin
    Result:=TExceptExpr.Create(FProg, TryExpr.ScriptPos);
@@ -7856,7 +7915,7 @@ end;
 
 // ReadType
 //
-function TdwsCompiler.ReadType(const typeName : UnicodeString; typeContext : TdwsReadTypeContext) : TTypeSymbol;
+function TdwsCompiler.ReadType(const typeName : String; typeContext : TdwsReadTypeContext) : TTypeSymbol;
 
    function ReadClassFlags(token : TTokenType) : TTypeSymbol;
    var
@@ -7878,7 +7937,7 @@ function TdwsCompiler.ReadType(const typeName : UnicodeString; typeContext : Tdw
 
    function ReadProcType(token : TTokenType; const hotPos : TScriptPos) : TTypeSymbol;
    begin
-      Result:=ReadProcDecl(token, hotPos, False, True);
+      Result:=ReadProcDecl(token, hotPos, [pdoType]);
       Result.SetName(typeName);
       (Result as TFuncSymbol).SetIsType;
       // close declaration context
@@ -7889,7 +7948,7 @@ function TdwsCompiler.ReadType(const typeName : UnicodeString; typeContext : Tdw
 
 var
    tt : TTokenType;
-   name, connectorQualifier : UnicodeString;
+   name, connectorQualifier : String;
    hotPos, namePos : TScriptPos;
    sym : TSymbol;
 begin
@@ -8416,9 +8475,59 @@ const
    var
       funcSym : TFuncSymbol;
    begin
-      funcSym:=ReadProcDecl(funcType, hotPos, False, False, True);
+      funcSym:=ReadProcDecl(funcType, hotPos, [pdoAnonymous]);
       FProg.Table.AddSymbol(funcSym);
       ReadProcBody(funcSym);
+      Result:=TAnonymousFuncRefExpr.Create(FProg, GetFuncExpr(funcSym, nil));
+   end;
+
+   function ReadLambda(funcType : TTokenType; const hotPos : TScriptPos) : TAnonymousFuncRefExpr;
+   var
+      funcSym : TFuncSymbol;
+      expectingParams : TParamsSymbolTable;
+      resultExpr : TTypedExpr;
+      resultVar : TVarExpr;
+      proc : TdwsProcedure;
+      procPos : TScriptPos;
+      oldProg : TdwsProgram;
+   begin
+      if expecting is TFuncSymbol then
+         expectingParams:=TFuncSymbol(expecting).Params
+      else expectingParams:=nil;
+
+      funcSym:=ReadProcDecl(funcType, hotPos, [pdoAnonymous], expectingParams);
+      FProg.Table.AddSymbol(funcSym);
+
+      if (funcSym.Typ=nil) and (expecting is TFuncSymbol) then
+         funcSym.Typ:=TFuncSymbol(expecting).Typ;
+
+      if FTok.TestDelete(ttEQGTR) then begin
+
+         FTok.TestName;
+         procPos:=FTok.HotPos;
+
+         proc:=TdwsProcedure.Create(FProg);
+         proc.SetBeginPos(procPos);
+         proc.AssignTo(funcSym);
+
+         oldProg:=FProg;
+         FProg:=proc;
+         try
+            resultExpr:=ReadExpr(funcSym.Typ);
+         finally
+            FProg:=oldProg;
+         end;
+         if funcSym.Typ=nil then
+            funcSym.Typ:=resultExpr.Typ;
+
+         resultVar:=TVarExpr.CreateTyped(FProg, proc.Func.Result);
+         proc.Expr:=CreateAssign(procPos, ttASSIGN, resultVar, resultExpr);
+
+      end else begin
+
+         ReadProcBody(funcSym);
+
+      end;
       Result:=TAnonymousFuncRefExpr.Create(FProg, GetFuncExpr(funcSym, nil));
    end;
 
@@ -8489,7 +8598,7 @@ var
    hotPos : TScriptPos;
 begin
    tt:=FTok.TestAny([ttPLUS, ttMINUS, ttALEFT, ttNOT, ttBLEFT, ttAT,
-                     ttTRUE, ttFALSE, ttNIL, ttFUNCTION, ttPROCEDURE,
+                     ttTRUE, ttFALSE, ttNIL, ttFUNCTION, ttPROCEDURE, ttLAMBDA,
                      ttRECORD]);
    if tt<>ttNone then
       FTok.KillToken;
@@ -8531,6 +8640,11 @@ begin
          if not (coAllowClosures in Options) then
             FMsgs.AddCompilerError(FTok.HotPos, CPE_LocalFunctionAsDelegate);
          Result:=ReadAnonymousMethod(tt, FTok.HotPos);
+      end;
+      ttLAMBDA : begin
+         if not (coAllowClosures in Options) then
+            FMsgs.AddCompilerError(FTok.HotPos, CPE_LocalFunctionAsDelegate);
+         Result:=ReadLambda(tt, FTok.HotPos);
       end;
       ttRECORD :
          Result:=ReadAnonymousRecord;
@@ -8739,24 +8853,73 @@ end;
 //
 procedure TdwsCompiler.ReadParams(const hasParamMeth : THasParamSymbolMethod;
                                   const addParamMeth : TAddParamSymbolMethod;
-                                  forwardedParams : TParamsSymbolTable);
+                                  forwardedParams : TParamsSymbolTable;
+                                  expectedLambdaParams : TParamsSymbolTable);
 var
-   i : Integer;
+   lazyParam, varParam, constParam : Boolean;
+
+   procedure GenerateParam(const curName : String; const scriptPos : TScriptPos;
+                           paramType : TTypeSymbol; const typScriptPos : TScriptPos;
+                           var defaultExpr : TTypedExpr);
+   var
+      paramSym : TParamSymbol;
+   begin
+      if lazyParam then begin
+         paramSym := TLazyParamSymbol.Create(curName, paramType)
+      end else if varParam then begin
+         paramSym := TVarParamSymbol.Create(curName, paramType)
+      end else if constParam then begin
+         paramSym := TConstParamSymbol.Create(curName, paramType)
+      end else begin
+         if Assigned(defaultExpr) then begin
+            paramSym := TParamSymbolWithDefaultValue.Create(curName, paramType,
+                     (defaultExpr as TConstExpr).Data[FExec],
+                     (defaultExpr as TConstExpr).Addr[FExec]);
+         end else begin
+            paramSym := TParamSymbol.Create(curName, paramType);
+         end;
+      end;
+
+      if hasParamMeth(paramSym) then
+         FMsgs.AddCompilerErrorFmt(scriptPos, CPE_NameAlreadyExists, [curName]);
+      addParamMeth(paramSym);
+
+      // Enter Field symbol in dictionary
+      if coSymbolDictionary in FOptions then begin
+         // add parameter symbol
+         if forwardedParams=nil then begin
+            // no forward, our param symbol is the actual one
+            RecordSymbolUse(paramSym, scriptPos, [suDeclaration])
+         end else begin
+            // find the original param symbol and register it
+            // in case of mismatch, RecordSymbolUse will discard
+            // a nil automatically, so we don't have to check here
+            RecordSymbolUse(forwardedParams.FindLocal(curName),
+                            scriptPos, [suReference]);
+         end;
+         // record field's type symbol
+         if typScriptPos.Defined then
+            RecordSymbolUse(paramType, typScriptPos, [suReference])
+         else RecordSymbolUse(paramType, scriptPos, [suReference, suImplicit])
+      end;
+   end;
+
+var
+   i, paramIdx : Integer;
    names : TStringList;
    typ : TTypeSymbol;
-   lazyParam, varParam, constParam : Boolean;
    onlyDefaultParamsNow : Boolean;
    posArray : TScriptPosArray;
    typScriptPos, exprPos : TScriptPos;
-   paramSym : TParamSymbol;
    defaultExpr : TTypedExpr;
-   curName : String;
+   expectedParam : TParamSymbol;
 begin
    if FTok.TestDelete(ttBLEFT) then begin
       if not FTok.TestDelete(ttBRIGHT) then begin
          // At least one argument was found
          names:=TStringList.Create;
          try
+            paramIdx:=0;
             onlyDefaultParamsNow:=False;
             repeat
                lazyParam:=FTok.TestDelete(ttLAZY);
@@ -8770,15 +8933,32 @@ begin
 
                ReadNameList(names, posArray);
 
-               if not FTok.TestDelete(ttCOLON) then
+               if not FTok.TestDelete(ttCOLON) then begin
 
-                  FMsgs.AddCompilerStop(FTok.HotPos, CPE_ColonExpected)
+                  if (expectedLambdaParams<>nil) and (paramIdx+names.Count-1<expectedLambdaParams.Count) then begin
 
-               else begin
+                     defaultExpr:=nil;
+                     for i:=0 to names.Count-1 do begin
+                        expectedParam:=expectedLambdaParams[paramIdx+i];
+                        if not (lazyParam or varParam or constParam) then begin
+                           lazyParam:=(expectedParam.ClassType=TLazyParamSymbol);
+                           varParam:=(expectedParam.ClassType=TVarParamSymbol);
+                           constParam:=(expectedParam.ClassType=TConstParamSymbol);
+                        end;
+                        GenerateParam(names[i], posArray[i], expectedParam.Typ, cNullPos, defaultExpr);
+                     end;
 
-                  defaultExpr:=nil;
+                  end else begin
+
+                     FMsgs.AddCompilerStop(FTok.HotPos, CPE_ColonExpected)
+
+                  end;
+
+               end else begin
 
                   typ:=ReadType('', tcParameter);
+
+                  defaultExpr:=nil;
                   try
                      typScriptPos:=FTok.HotPos;
 
@@ -8819,51 +8999,17 @@ begin
                      if (defaultExpr<>nil) and not (defaultExpr is TConstExpr) then
                         defaultExpr:=defaultExpr.OptimizeToTypedExpr(Fprog, FExec, exprPos);
 
-                     for i:=0 to names.Count-1 do begin
-                        curName:=names[i];
-
-                        if lazyParam then begin
-                           paramSym := TLazyParamSymbol.Create(curName, Typ)
-                        end else if varParam then begin
-                           paramSym := TVarParamSymbol.Create(curName, Typ)
-                        end else if constParam then begin
-                           paramSym := TConstParamSymbol.Create(curName, Typ)
-                        end else begin
-                           if Assigned(defaultExpr) then begin
-                              paramSym := TParamSymbolWithDefaultValue.Create(curName, Typ,
-                                       (defaultExpr as TConstExpr).Data[FExec],
-                                       (defaultExpr as TConstExpr).Addr[FExec]);
-                           end else begin
-                              paramSym := TParamSymbol.Create(curName, Typ);
-                           end;
-                        end;
-
-                        if hasParamMeth(paramSym) then
-                           FMsgs.AddCompilerErrorFmt(posArray[i], CPE_NameAlreadyExists, [curName]);
-                        addParamMeth(paramSym);
-
-                        // Enter Field symbol in dictionary
-                        if coSymbolDictionary in FOptions then begin
-                           // add parameter symbol
-                           if forwardedParams=nil then begin
-                              // no forward, our param symbol is the actual one
-                              RecordSymbolUse(paramSym, posArray[i], [suDeclaration])
-                           end else begin
-                              // find the original param symbol and register it
-                              // in case of mismatch, RecordSymbolUse will discard
-                              // a nil automatically, so we don't have to check here
-                              RecordSymbolUse(forwardedParams.FindLocal(curName),
-                                              posArray[i], [suReference]);
-                           end;
-                           // record field's type symbol
-                           RecordSymbolUse(typ, typScriptPos, [suReference]);
-                        end;
-                     end;
+                     for i:=0 to names.Count-1 do
+                        GenerateParam(names[i], posArray[i], typ, typScriptPos, defaultExpr);
 
                   finally
                      defaultExpr.Free;
                   end;
+
                end;
+
+               Inc(paramIdx, names.Count);
+
             until not FTok.TestDelete(ttSEMI);
 
          finally
@@ -8873,12 +9019,26 @@ begin
          if not FTok.TestDelete(ttBRIGHT) then
             FMsgs.AddCompilerStop(FTok.HotPos, CPE_BrackRightExpected);
       end;
+
+   end else if (expectedLambdaParams<>nil) and (expectedLambdaParams.Count>0) then begin
+
+      // implicit anonmous lambda params
+      defaultExpr:=nil;
+      for i:=0 to expectedLambdaParams.Count-1 do begin
+         expectedParam:=expectedLambdaParams[i];
+         lazyParam:=(expectedParam.ClassType=TLazyParamSymbol);
+         varParam:=(expectedParam.ClassType=TVarParamSymbol);
+         constParam:=(expectedParam.ClassType=TConstParamSymbol);
+         GenerateParam('_implicit_'+expectedParam.Name, cNullPos,
+                       expectedParam.Typ, cNullPos, defaultExpr);
+      end;
+
    end;
 end;
 
 // ReadSwitch
 //
-function TdwsCompiler.ReadSwitch(const SwitchName: UnicodeString) : Boolean;
+function TdwsCompiler.ReadSwitch(const SwitchName: String) : Boolean;
 var
    sw : TSwitchInstruction;
 begin
@@ -8896,10 +9056,10 @@ end;
 
 // ReadInstrSwitch
 //
-function TdwsCompiler.ReadInstrSwitch(const switchName : UnicodeString) : Boolean;
+function TdwsCompiler.ReadInstrSwitch(const switchName : String) : Boolean;
 var
    switch : TSwitchInstruction;
-   name, scriptSource : UnicodeString;
+   name, scriptSource : String;
    i : Integer;
    conditionalTrue : Boolean;
    switchPos, condPos, fileNamePos : TScriptPos;
@@ -9149,7 +9309,7 @@ end;
 //
 function TdwsCompiler.ReadExprSwitch(const switchPos : TScriptPos) : Boolean;
 var
-   name, value : UnicodeString;
+   name, value : String;
    hotPos : TScriptPos;
    funcSym : TFuncSymbol;
 begin
@@ -9278,7 +9438,7 @@ end;
 
 // Checks if a name already exists in the Symboltable
 
-procedure TdwsCompiler.CheckName(const name : UnicodeString; const namePos : TScriptPos);
+procedure TdwsCompiler.CheckName(const name : String; const namePos : TScriptPos);
 var
    sym : TSymbol;
    i : Integer;
@@ -9308,7 +9468,7 @@ end;
 
 // IdentifySpecialName
 //
-function TdwsCompiler.IdentifySpecialName(const name : UnicodeString) : TSpecialKeywordKind;
+function TdwsCompiler.IdentifySpecialName(const name : String) : TSpecialKeywordKind;
 var
    n : Integer;
 begin
@@ -9349,7 +9509,7 @@ end;
 
 // CheckSpecialName
 //
-procedure TdwsCompiler.CheckSpecialName(const name : UnicodeString);
+procedure TdwsCompiler.CheckSpecialName(const name : String);
 begin
    if IdentifySpecialName(name)<>skNone then
       FMsgs.AddCompilerErrorFmt(FTok.HotPos, CPE_NameIsReserved, [Name]);
@@ -9357,24 +9517,24 @@ end;
 
 // OpenStreamForFile
 //
-function TdwsCompiler.OpenStreamForFile(const fileName : UnicodeString) : TStream;
+function TdwsCompiler.OpenStreamForFile(const fileName : String) : TStream;
 var
    i : Integer;
-   fname : UnicodeString;
+   fname : String;
 begin
    for i:=0 to FScriptPaths.Count-1 do begin
       if FScriptPaths[i]<>'' then
          fname:=IncludeTrailingPathDelimiter(FScriptPaths[i])+fileName
       else fname:=fileName;
       if FCompileFileSystem.FileExists(fname) then
-         Exit(FCompileFileSystem.OpenFileStream(fname, fomReadOnly);
+         Exit(FCompileFileSystem.OpenFileStream(fname, fomReadOnly));
    end;
    Result:=nil;
 end;
 
 // GetScriptSource
 //
-function TdwsCompiler.GetScriptSource(const scriptName : UnicodeString) : UnicodeString;
+function TdwsCompiler.GetScriptSource(const scriptName : String) : String;
 var
    stream : TStream;
    sl : TStringList;
@@ -9398,7 +9558,7 @@ end;
 
 // GetIncludeScriptSource
 //
-function TdwsCompiler.GetIncludeScriptSource(const scriptName : UnicodeString) : UnicodeString;
+function TdwsCompiler.GetIncludeScriptSource(const scriptName : String) : String;
 begin
    Result:='';
 
@@ -9509,7 +9669,7 @@ begin
          fkProcedure : FMsgs.AddCompilerError(FTok.HotPos, CPE_ProcedureExpected);
          fkConstructor : FMsgs.AddCompilerError(FTok.HotPos, CPE_ConstructorExpected);
          fkDestructor : FMsgs.AddCompilerError(FTok.HotPos, CPE_DestructorExpected);
-         fkMethod : FMsgs.AddCompilerError(FTok.HotPos, CPE_MethodExpected);
+         fkMethod, fkLambda : FMsgs.AddCompilerError(FTok.HotPos, CPE_MethodExpected);
       else
          Assert(False);
       end;
@@ -9548,7 +9708,7 @@ end;
 
 // FindStructMember
 //
-function TdwsCompiler.FindStructMember(typ : TStructuredTypeSymbol; const name : UnicodeString) : TSymbol;
+function TdwsCompiler.FindStructMember(typ : TStructuredTypeSymbol; const name : String) : TSymbol;
 begin
    Result:=typ.Members.FindSymbolFromScope(name, CurrentStruct);
    if Result=nil then begin
@@ -9692,7 +9852,7 @@ end;
 
 // ReadConnectorSym
 //
-function TdwsCompiler.ReadConnectorSym(const name : UnicodeString; baseExpr : TTypedExpr;
+function TdwsCompiler.ReadConnectorSym(const name : String; baseExpr : TTypedExpr;
             const connectorType : IConnectorType; isWrite : Boolean): TProgramExpr;
 
    function TryConnectorCall : TConnectorCallExpr;
@@ -9772,7 +9932,7 @@ end;
 
 // ReadConnectorArray
 //
-function TdwsCompiler.ReadConnectorArray(const Name: UnicodeString; BaseExpr: TTypedExpr;
+function TdwsCompiler.ReadConnectorArray(const Name: String; BaseExpr: TTypedExpr;
             const ConnectorType: IConnectorType; IsWrite: Boolean): TConnectorCallExpr;
 var
    argPosArray : TScriptPosArray;
@@ -9839,10 +9999,10 @@ end;
 
 // ReadEnumeration
 //
-function TdwsCompiler.ReadEnumeration(const typeName : UnicodeString;
+function TdwsCompiler.ReadEnumeration(const typeName : String;
                                       aStyle : TEnumerationSymbolStyle) : TEnumerationSymbol;
 var
-   name : UnicodeString;
+   name : String;
    elemSym : TElementSymbol;
    constExpr : TTypedExpr;
    enumInt, enumIntPrev : Int64;
@@ -10006,7 +10166,7 @@ end;
 //
 procedure TdwsCompiler.ReadUnitHeader;
 var
-   name, part : UnicodeString;
+   name, part : String;
    namePos, partPos : TScriptPos;
    contextFix : TdwsSourceContext;
    srcUnit : TSourceUnit;
@@ -10362,7 +10522,7 @@ end;
 
 // SwitchTokenizerToUnit
 //
-procedure TdwsCompiler.SwitchTokenizerToUnit(srcUnit : TSourceUnit; const sourceCode : UnicodeString);
+procedure TdwsCompiler.SwitchTokenizerToUnit(srcUnit : TSourceUnit; const sourceCode : String);
 var
    sourceFile : TSourceFile;
    oldUnit : TUnitMainSymbol;
@@ -10387,7 +10547,7 @@ function TdwsCompiler.ReadSpecialFunction(const namePos : TScriptPos; specialKin
 
    function EvaluateDefined(argExpr : TTypedExpr) : Boolean;
    var
-      name : UnicodeString;
+      name : String;
    begin
       argExpr.EvalAsString(FExec, name);
       Result:=(FTok.ConditionalDefines.Value.IndexOf(name)>=0);
@@ -10395,7 +10555,7 @@ function TdwsCompiler.ReadSpecialFunction(const namePos : TScriptPos; specialKin
 
    function EvaluateDeclared(argExpr : TTypedExpr) : Boolean;
    var
-      name : UnicodeString;
+      name : String;
    begin
       argExpr.EvalAsString(FExec, name);
       Result:=(TDeclaredExpr.FindSymbol(FProg.Root.Table, name)<>nil);
@@ -10720,7 +10880,7 @@ begin
 
       end else if typeSym = FProg.TypString then begin
 
-         // Cast UnicodeString(...)
+         // Cast String(...)
          Result := TConvStringExpr.Create(FProg, argExpr);
          if not (argExpr.IsOfType(FProg.TypString) or argExpr.IsOfType(FProg.TypVariant)) then
             FMsgs.AddCompilerError(hotPos, CPE_StringExpected);
@@ -11463,7 +11623,7 @@ begin
     SetSubFilter(nil);
 end;
 
-function TdwsFilter.Process(const Text: UnicodeString; Msgs: TdwsMessageList): UnicodeString;
+function TdwsFilter.Process(const Text: String; Msgs: TdwsMessageList): String;
 begin
   if Assigned(FSubFilter) then
     Result := FSubFilter.Process(Text, Msgs)

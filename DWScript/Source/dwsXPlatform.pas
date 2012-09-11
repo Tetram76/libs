@@ -46,10 +46,10 @@ const
    cLineTerminator  = #13#10;
 {$ENDIF}
 
-procedure SetDecimalSeparator(c : WideChar);
-function GetDecimalSeparator : WideChar;
+procedure SetDecimalSeparator(c : Char);
+function GetDecimalSeparator : Char;
 
-procedure CollectFiles(const directory, fileMask : UnicodeString; list : TStrings);
+procedure CollectFiles(const directory, fileMask : String; list : TStrings);
 
 type
    {$IFNDEF FPC}
@@ -67,14 +67,17 @@ type
    TBytes = array of Byte;
 
    RawByteString = String;
+
+   PNativeInt = ^NativeInt;
+   PUInt64 = ^UInt64;
    {$ENDIF}
 
    TPath = class
-      class function GetTempFileName : UnicodeString; static;
+      class function GetTempFileName : String; static;
    end;
 
    TFile = class
-      class function ReadAllBytes(const filename : UnicodeString) : TBytes; static;
+      class function ReadAllBytes(const filename : String) : TBytes; static;
    end;
 
    TdwsThread = class (TThread)
@@ -88,14 +91,21 @@ type
 function GetSystemMilliseconds : Cardinal;
 function UTCDateTime : TDateTime;
 
-function AnsiCompareText(const S1, S2 : UnicodeString) : Integer;
-function AnsiCompareStr(const S1, S2 : UnicodeString) : Integer;
-function UnicodeComparePChars(p1 : PWideChar; n1 : Integer; p2 : PWideChar; n2 : Integer) : Integer;
+function AnsiCompareText(const S1, S2 : String) : Integer;
+function AnsiCompareStr(const S1, S2 : String) : Integer;
+function UnicodeComparePChars(p1 : PChar; n1 : Integer; p2 : PChar; n2 : Integer) : Integer;
 
 function InterlockedIncrement(var val : Integer) : Integer;
 function InterlockedDecrement(var val : Integer) : Integer;
 
 procedure SetThreadName(const threadName : PAnsiChar; threadID : Cardinal = Cardinal(-1));
+
+function TryTextToFloat(const s : PChar; var value : Extended;
+                        const formatSettings : TFormatSettings) : Boolean; {$ifndef FPC} inline; {$endif}
+
+{$ifdef FPC}
+procedure VarCopy(out dest : Variant; const src : Variant); inline;
+{$endif}
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -118,6 +128,7 @@ function UTCDateTime : TDateTime;
 var
    systemTime : TSystemTime;
 begin
+   FillChar(systemTime, SizeOf(systemTime), 0);
    GetSystemTime(systemTime);
    with systemTime do
       Result:= EncodeDate(wYear, wMonth, wDay)
@@ -126,25 +137,29 @@ end;
 
 // AnsiCompareText
 //
-function AnsiCompareText(const S1, S2: UnicodeString) : Integer;
+function AnsiCompareText(const S1, S2: String) : Integer;
 begin
    Result:=SysUtils.AnsiCompareText(S1, S2);
 end;
 
 // AnsiCompareStr
 //
-function AnsiCompareStr(const S1, S2: UnicodeString) : Integer;
+function AnsiCompareStr(const S1, S2: String) : Integer;
 begin
    Result:=SysUtils.AnsiCompareStr(S1, S2);
 end;
 
 // UnicodeComparePChars
 //
-function UnicodeComparePChars(p1 : PWideChar; n1 : Integer; p2 : PWideChar; n2 : Integer) : Integer;
+function UnicodeComparePChars(p1 : PChar; n1 : Integer; p2 : PChar; n2 : Integer) : Integer;
 const
    CSTR_EQUAL = 2;
 begin
-   Result:=CompareString(LOCALE_USER_DEFAULT, NORM_IGNORECASE, p1, n1, p2, n2)-CSTR_EQUAL;
+   {$ifdef FPC}
+   Result:=CompareStringA(LOCALE_USER_DEFAULT, NORM_IGNORECASE, p1, n1, p2, n2)-CSTR_EQUAL;
+   {$else}
+   Result:=CompareStringW(LOCALE_USER_DEFAULT, NORM_IGNORECASE, p1, n1, p2, n2)-CSTR_EQUAL;
+   {$endif}
 end;
 
 // InterlockedIncrement
@@ -163,6 +178,7 @@ end;
 
 // SetThreadName
 //
+function IsDebuggerPresent : BOOL; stdcall; external kernel32 name 'IsDebuggerPresent';
 procedure SetThreadName(const threadName : PAnsiChar; threadID : Cardinal = Cardinal(-1));
 // http://www.codeproject.com/Articles/8549/Name-your-threads-in-the-VC-debugger-thread-list
 type
@@ -181,15 +197,17 @@ begin
    info.szName:=threadName;
    info.dwThreadID:=threadID;
    info.dwFlags:=0;
+   {$ifndef FPC}
    try
       RaiseException($406D1388, 0, SizeOf(info) div SizeOf(Cardinal), @info);
    except
    end;
+   {$endif}
 end;
 
 // SetDecimalSeparator
 //
-procedure SetDecimalSeparator(c : WideChar);
+procedure SetDecimalSeparator(c : Char);
 begin
    {$IFDEF FPC}
       FormatSettings.DecimalSeparator:=c;
@@ -204,7 +222,7 @@ end;
 
 // GetDecimalSeparator
 //
-function GetDecimalSeparator : WideChar;
+function GetDecimalSeparator : Char;
 begin
    {$IFDEF FPC}
       Result:=FormatSettings.DecimalSeparator;
@@ -219,7 +237,7 @@ end;
 
 // CollectFiles
 //
-procedure CollectFiles(const directory, fileMask : UnicodeString; list : TStrings);
+procedure CollectFiles(const directory, fileMask : String; list : TStrings);
 var
    searchRec : TSearchRec;
    found : Integer;
@@ -234,20 +252,52 @@ begin
    FindClose(searchRec);
 end;
 
+{$ifdef FPC}
+// VarCopy
+//
+procedure VarCopy(out dest : Variant; const src : Variant);
+begin
+   dest:=src;
+end;
+{$endif}
+
+// TryTextToFloat
+//
+function TryTextToFloat(const s : PChar; var value : Extended; const formatSettings : TFormatSettings) : Boolean;
+{$ifdef FPC}
+var
+   cw : Word;
+begin
+   cw:=Get8087CW;;
+   Set8087CW($133F);
+   if TryStrToFloat(s, value, formatSettings) then
+      Result:=(value>-1.7e308) and (value<1.7e308);
+   if not Result then
+      value:=0;
+   asm fclex end;
+   Set8087CW(cw);
+{$else}
+begin
+   Result:=TextToFloat(s, value, fvExtended, formatSettings)
+{$endif}
+end;
+
 // ------------------
 // ------------------ TPath ------------------
 // ------------------
 
 // GetTempFileName
 //
-class function TPath.GetTempFileName : UnicodeString;
+class function TPath.GetTempFileName : String;
 {$IFDEF VER200} // Delphi 2009
 var
    tempPath, tempFileName : array [0..MAX_PATH] of WideChar; // Buf sizes are MAX_PATH+1
 begin
-   if Windows.GetTempPath(MAX_PATH, @tempPath[0])=0 then
-      tempPath:='.'; // Current directory
-   if Windows.GetTempFileName(@tempPath[0], 'DWS', 0, tempFileName)=0 then
+   if Windows.GetTempPath(MAX_PATH, @tempPath[0])=0 then begin
+      tempPath[1]:='.'; // Current directory
+      tempPath[2]:=#0;
+   end;
+   if Windows.GetTempFileNameW(@tempPath[0], 'DWS', 0, tempFileName)=0 then
       RaiseLastOSError; // should never happen
    Result:=tempFileName;
 {$ELSE}
@@ -262,7 +312,7 @@ end;
 
 // ReadAllBytes
 //
-class function TFile.ReadAllBytes(const filename : UnicodeString) : TBytes;
+class function TFile.ReadAllBytes(const filename : String) : TBytes;
 {$IFDEF VER200} // Delphi 2009
 var
    fileStream : TFileStream;
