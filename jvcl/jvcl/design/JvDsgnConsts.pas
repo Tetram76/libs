@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDsgnConsts.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id: JvDsgnConsts.pas 13455 2012-10-04 21:19:53Z jfudickar $
 
 unit JvDsgnConsts;
 
@@ -50,8 +50,8 @@ resourcestring
   RsPreviousPage = 'Previous Page';
   RsJVCLActionsCategory = 'JVCL';
   RsJVCLEditActionsCategory = 'JVCL Edit';
-  RsJVCLControlActionsCategory = 'JVCL-Control';
-  RsJVCLDBActionsCategory = 'JVCL-DB';
+  RsJVCLControlActionsCategory = 'JVCL Control';
+  RsJVCLDBActionsCategory = 'JVCL DB';
   RsPropertyEditors = '\Property Editors';
   RsJvEditorString = 'Click to edit...';
   RsSystemColors = 'System colors';

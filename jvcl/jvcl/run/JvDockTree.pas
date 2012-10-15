@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockTree.pas 13180 2011-11-22 12:45:23Z obones $
+// $Id: JvDockTree.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvDockTree;
 
@@ -591,8 +591,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockTree.pas $';
-    Revision: '$Revision: 13180 $';
-    Date: '$Date: 2011-11-22 13:45:23 +0100 (mar., 22 nov. 2011) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3921,14 +3921,14 @@ procedure TJvDockTree.DrawDockGrabber(Control: TWinControl;
       Exit;
     // MF
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Available{$ELSE}ThemesAvailable{$ENDIF RTL230_UP} and ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if StyleServices.Available and StyleServices.Enabled then
     begin
       if GrabberSize < 14 then
         CurrentThemeType := twSmallCloseButtonNormal
       else
         CurrentThemeType := twCloseButtonNormal;
-      Details := ThemeServices.GetElementDetails(CurrentThemeType);
-      ThemeServices.DrawElement(Canvas.Handle, Details, Rect(Left, Top,
+      Details := StyleServices.GetElementDetails(CurrentThemeType);
+      StyleServices.DrawElement(Canvas.Handle, Details, Rect(Left, Top,
         Left + GrabberSize - 2, Top + GrabberSize - 2));
     end
     else

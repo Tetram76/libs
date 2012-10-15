@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbar.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvSpeedbar.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvSpeedbar;
 
@@ -504,8 +504,8 @@ function NewSpeedItem(AOwner: TComponent; ASpeedBar: TJvSpeedBar; Section: Integ
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedbar.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2044,7 +2044,7 @@ begin
     inherited Paint;
     Canvas.Brush.Color := Color;
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and ParentBackground then
+    if StyleServices.Enabled and ParentBackground then
     begin
       Canvas.Brush.Color := Parent.Brush.Color;
       DrawThemedBackground(Self, Canvas, Rect);

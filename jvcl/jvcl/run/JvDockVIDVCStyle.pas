@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-//  $Id: JvDockVIDVCStyle.pas 13278 2012-03-21 08:51:44Z obones $
+//  $Id: JvDockVIDVCStyle.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvDockVIDVCStyle;
 
@@ -564,8 +564,8 @@ procedure PaintGradientBackground(Canvas: TCanvas; ARect: TRect; StartColor, End
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockVIDVCStyle.pas $';
-    Revision: '$Revision: 13278 $';
-    Date: '$Date: 2012-03-21 09:51:44 +0100 (mer., 21 mars 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2301,7 +2301,7 @@ begin
     if (ADockClient <> nil) and not ADockClient.EnableCloseButton then
       Exit;
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Available{$ELSE}ThemesAvailable{$ENDIF RTL230_UP} and ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if StyleServices.Available and StyleServices.Enabled then
     begin
       if GrabberSize < 14 then
       begin
@@ -2315,8 +2315,8 @@ begin
         if AZone.CloseBtnDown then
           CurrentThemeType := twCloseButtonPushed;
       end;
-      Details := ThemeServices.GetElementDetails(CurrentThemeType);
-      ThemeServices.DrawElement(Canvas.Handle, Details, Classes.Rect(Left, Top, Left + ButtonWidth, Top + ButtonHeight));
+      Details := StyleServices.GetElementDetails(CurrentThemeType);
+      StyleServices.DrawElement(Canvas.Handle, Details, Classes.Rect(Left, Top, Left + ButtonWidth, Top + ButtonHeight));
     end
     else
       {$ENDIF JVCLThemesEnabled}

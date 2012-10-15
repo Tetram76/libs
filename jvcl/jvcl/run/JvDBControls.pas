@@ -32,7 +32,7 @@ Known Issues:
         You can use it as a generic editor control inside a control grid.
           -- Warren Postma (warrenpstma att hotmail dott com)
 -----------------------------------------------------------------------------}
-// $Id: JvDBControls.pas 13329 2012-06-12 14:28:33Z obones $
+// $Id: JvDBControls.pas 13438 2012-09-24 11:54:30Z ahuser $
 
 unit JvDBControls;
 
@@ -148,6 +148,7 @@ type
     property PasswordChar;
     property PopupMenu;
     property ReadOnly: Boolean read GetReadOnly write SetReadOnly default False;
+    property ShowButton;
     property ShowHint;
     property TabOrder;
     property TabStop;
@@ -297,11 +298,14 @@ type
     property OnContextPopup;
     property OnEndDock;
     property OnStartDock;
-    (* ++ RDB ++ *)
     property ClipboardCommands;
     property DisabledTextColor;
     property DisabledColor;
-    (* -- RDB -- *)
+
+    {$IFDEF COMPILER14_UP}
+    property Touch;
+    {$ENDIF COMPILER14_UP}
+    property TextHint;
   end;
 
   {$IFDEF RTL230_UP}
@@ -722,8 +726,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBControls.pas $';
-    Revision: '$Revision: 13329 $';
-    Date: '$Date: 2012-06-12 16:28:33 +0200 (mar., 12 juin 2012) $';
+    Revision: '$Revision: 13438 $';
+    Date: '$Date: 2012-09-24 13:54:30 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

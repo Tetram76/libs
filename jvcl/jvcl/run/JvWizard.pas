@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizard.pas 13139 2011-10-28 19:59:40Z jfudickar $
+// $Id: JvWizard.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 {+---------------------------------------------------------------------------+
  | CONTRIBUTORS:                                                             |
@@ -879,8 +879,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvWizard.pas $';
-    Revision: '$Revision: 13139 $';
-    Date: '$Date: 2011-10-28 21:59:40 +0200 (ven., 28 oct. 2011) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2327,7 +2327,7 @@ end;
 procedure TJvWizardCustomPage.WMEraseBkgnd(var Msg: TWMEraseBkgnd);
 begin
   {$IFDEF JVCLThemesEnabledD6}
-  if ThemeServices.ThemesEnabled then
+  if StyleServices.Enabled then
     inherited;
   {$ENDIF JVCLThemesEnabledD6}
   {$IFDEF COMPILER9_UP}
@@ -2853,7 +2853,7 @@ end;
 procedure TJvWizard.WMEraseBkgnd(var Msg: TWMEraseBkgnd);
 begin
   {$IFDEF JVCLThemesEnabledD6}
-  if ThemeServices.ThemesEnabled then
+  if StyleServices.Enabled then
     inherited;
   {$ENDIF JVCLThemesEnabledD6}
   Msg.Result := 1;

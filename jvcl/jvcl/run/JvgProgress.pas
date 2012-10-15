@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgProgress.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvgProgress.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvgProgress;
 
@@ -116,8 +116,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgProgress.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -218,7 +218,7 @@ begin
   if (fpoTransparent in Options) and FNeedRebuildBackground then
   begin
     (*{$IFDEF JVCLThemesEnabled}
-    if ThemeServices.ThemesEnabled then
+    if StyleServices.Enabled then
       PerformEraseBackground(Self, FBackImage.Canvas.Handle)
     else
     {$ENDIF JVCLThemesEnabled}
@@ -342,7 +342,7 @@ begin
   Canvas.Draw(0, 0, FImage);
   {$IFDEF JVCLThemesEnabled}
   if BevelBold and ((BevelInner <> bvNone) or (BevelOuter <> bvNone)) and
-    ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    StyleServices.Enabled then
     DrawThemedBorder(Self);
   {$ENDIF JVCLThemesEnabled}
 end;

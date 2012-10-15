@@ -58,7 +58,7 @@ Maciej Kaczkowski:
   [*] procedure ItemHtDrawEx - rewrited
   [*] function ItemHtPlain - optimized
 -----------------------------------------------------------------------------}
-// $Id: JvButtons.pas 13260 2012-02-28 15:37:13Z obones $
+// $Id: JvButtons.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvButtons;
 
@@ -282,8 +282,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvButtons.pas $';
-    Revision: '$Revision: 13260 $';
-    Date: '$Date: 2012-02-28 16:37:13 +0100 (mar., 28 févr. 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1543,7 +1543,7 @@ begin
     Flags := Flags or DFCS_INACTIVE;
 
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     if IsFocused or IsDefault then
       Flags := Flags or DFCS_MONO; // mis-used
@@ -1601,7 +1601,7 @@ begin
     Spacing, State, False {True});
 
   {$IFDEF JVCLThemesEnabled}
-  if not ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if not StyleServices.Enabled then
   {$ENDIF JVCLThemesEnabled}
     if IsFocused and IsDefault then
     begin

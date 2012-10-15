@@ -88,7 +88,7 @@ You may retrieve the latest version of this file at the Project JEDI's JVCL home
 located at http://jvcl.delphi-jedi.org
 
 -----------------------------------------------------------------------------}
-// $Id: JvChart.pas 13216 2012-02-24 10:09:08Z obones $
+// $Id: JvChart.pas 13458 2012-10-08 18:50:00Z wpostma $
 
 unit JvChart;
 
@@ -807,7 +807,7 @@ type
     function GetChartCanvasHeight: Integer; //WP  NEW 2007
 
     function DestRect: TRect; // from TImage
-    procedure DesignModePaint; // Invoked by Paint method when we're in design mode.
+    procedure DesignModePaint; virtual; // Invoked by Paint method when we're in design mode.
     procedure Paint; override; // from TImage
     procedure Resize; override; // from TControl
     procedure Loaded; override;
@@ -942,8 +942,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChart.pas $';
-    Revision: '$Revision: 13216 $';
-    Date: '$Date: 2012-02-24 11:09:08 +0100 (ven., 24 févr. 2012) $';
+    Revision: '$Revision: 13458 $';
+    Date: '$Date: 2012-10-08 20:50:00 +0200 (lun., 08 oct. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -3256,12 +3256,12 @@ var
         //Dec(X,4);
         //Inc(X, 2*J);
         Y := YTempOrigin;
-        Assert(Y < aHeight);
+//        Assert(Y < aHeight);
         Assert(Y > 0);
         Assert(X > 0);
         //if (X>=aWidth) then
         //    OutputDebugString('foo!');
-        Assert(X < aWidth);
+//        Assert(X < aWidth);
         X2 := BarXPosition(N + 1) - 3;
         // Make a space between groups, 4 pixels per XValue Index:
         //Dec(X2,4);

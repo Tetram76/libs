@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvImageSquare.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvImageSquare.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvImageSquare;
 
@@ -106,8 +106,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvImageSquare.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -168,7 +168,7 @@ begin
   end
   else
   {$IFDEF JVCLThemesEnabled}
-  if (FBorderStyle = bsSingle) and ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if (FBorderStyle = bsSingle) and StyleServices.Enabled then
     DrawThemedBorder(Self)
   else
   {$ENDIF JVCLThemesEnabled}

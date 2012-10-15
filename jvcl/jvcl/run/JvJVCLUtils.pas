@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLUtils.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvJVCLUtils.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvJVCLUtils;
 
@@ -870,8 +870,8 @@ function ReplaceComponentReference(This, NewReference: TComponent; var VarRefere
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLUtils.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -4144,7 +4144,7 @@ type
   TQColorArray = array [0..MAX_COLORS - 1] of TQColor;
 
   PQColorList = ^TQColorList;
-  TQColorList = array [0..{$IFDEF RTL230_UP}Maxint div 16{$ELSE}MaxListSize{$ENDIF RTL230_UP} - 1] of PQColor;
+  TQColorList = array [0..{$IFDEF RTL230_UP}MaxInt div 16{$ELSE}MaxListSize{$ENDIF RTL230_UP} - 1] of PQColor;
 
   PNewColor = ^TNewColor;
   TNewColor = record

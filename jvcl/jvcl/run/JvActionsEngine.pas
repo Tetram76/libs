@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvActionsEngine.pas 13454 2012-10-04 21:02:30Z jfudickar $
 
 unit JvActionsEngine;
 
@@ -136,8 +136,8 @@ const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
       '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13454 $';
+    Date: '$Date: 2012-10-04 23:02:30 +0200 (jeu., 04 oct. 2012) $';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -292,20 +292,32 @@ procedure TJvActionEngineBaseAction.SetChecked(Value: Boolean);
 begin
   CheckChecked (Value);
   if Checked <> Value then
+  {$IFDEF RTL240_UP}
+    inherited SetChecked (Value);
+  {$ELSE}
     Checked := Value;
+  {$ENDIF RTL240_UP}
 end;
 
 procedure TJvActionEngineBaseAction.SetEnabled(Value: Boolean);
 begin
   CheckEnabled (Value);
   if Enabled <> Value then
+  {$IFDEF RTL240_UP}
+    inherited SetEnabled (Value);
+  {$ELSE}
     Enabled := Value;
+  {$ENDIF RTL240_UP}
 end;
 
 procedure TJvActionEngineBaseAction.SetImageIndex(Value: TImageIndex);
 begin
   if ImageIndex <> Value then
+  {$IFDEF RTL240_UP}
+    inherited SetImageIndex (Value);
+  {$ELSE}
     ImageIndex := Value;
+  {$ENDIF RTL240_UP}
 end;
 
 procedure TJvActionEngineBaseAction.SetParentComponent(AParent: TComponent);
@@ -319,7 +331,11 @@ procedure TJvActionEngineBaseAction.SetVisible(Value: Boolean);
 begin
   CheckVisible(Value);
   if Visible <> Value then
+  {$IFDEF RTL240_UP}
+    inherited SetVisible (Value);
+  {$ELSE}
     Visible := Value;
+  {$ENDIF RTL240_UP}
 end;
 
 procedure TJvActionEngineBaseAction.UpdateTarget(Target: TObject);

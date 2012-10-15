@@ -34,7 +34,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvSpeedButton.pas 13456 2012-10-06 09:14:10Z ahuser $
 
 unit JvSpeedButton;
 
@@ -498,8 +498,8 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13456 $';
+    Date: '$Date: 2012-10-06 11:14:10 +0200 (sam., 06 oct. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -940,7 +940,7 @@ begin
       be used as a dock client. }
     NeedRepaint :=
       {$IFDEF JVCLThemesEnabled}
-      ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} or
+      StyleServices.Enabled or
       {$ENDIF JVCLThemesEnabled}
       FHotTrack or (FFlat and Enabled and (DragMode <> dmAutomatic) and (GetCapture = NullHandle));
 
@@ -962,7 +962,7 @@ begin
     NeedRepaint :=
       {$IFDEF JVCLThemesEnabled}
       { Windows XP introduced hot states also for non-flat buttons. }
-      ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} or
+      StyleServices.Enabled or
       {$ENDIF JVCLThemesEnabled}
       HotTrack or (FFlat and Enabled and not FDragging and (GetCapture = NullHandle));
 
@@ -1228,7 +1228,7 @@ begin
   PaintRect := Rect(0, 0, Width, Height);
 
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.Enabled then
+  if StyleServices.Enabled then
   begin
     if ControlInGlassPaint(Self) then
       FillRect(Canvas.Handle, ClientRect, GetStockObject(BLACK_BRUSH))
@@ -1278,15 +1278,15 @@ begin
 
     if ToolButton = ttbToolbarDontCare then
     begin
-      Details := ThemeServices.GetElementDetails(Button);
-      ThemeServices.DrawElement(Canvas.Handle, Details, PaintRect);
-      ThemeServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
+      Details := StyleServices.GetElementDetails(Button);
+      StyleServices.DrawElement(Canvas.Handle, Details, PaintRect);
+      StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
     end
     else
     begin
-      Details := ThemeServices.GetElementDetails(ToolButton);
-      ThemeServices.DrawElement(Canvas.Handle, Details, PaintRect);
-      ThemeServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
+      Details := StyleServices.GetElementDetails(ToolButton);
+      StyleServices.DrawElement(Canvas.Handle, Details, PaintRect);
+      StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
     end;
 
     if (Button = tbPushButtonPressed) and Flat then
@@ -1672,7 +1672,6 @@ var
   MemBitmap: HBitmap;
   SaveBitmap: HBitmap;
   MemDC: HDC;
-  Index: Integer;
   DC: HDC;
 begin
   if not DoubleBuffered or ControlInGlassPaint(Self) then
@@ -1685,14 +1684,9 @@ begin
     SaveBitmap := SelectObject(MemDC, MemBitmap);
     try
       DC := Msg.DC;
-      Index := SaveDC(DC);
-      try
-        Msg.DC := MemDC;
-        inherited;
-        Msg.DC := DC;
-      finally
-        RestoreDC(Msg.DC, Index);
-      end;
+      Msg.DC := MemDC;
+      inherited;
+      Msg.DC := DC;
       BitBlt(Msg.DC, 0, 0, Width, Height, MemDC, 0, 0, SRCCOPY);
     finally
       SelectObject(MemDC, SaveBitmap);

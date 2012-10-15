@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCtrls.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvCtrls.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvCtrls;
 
@@ -210,8 +210,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCtrls.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -434,7 +434,7 @@ begin
     FMouseInControl := True;
     inherited MouseEnter(Control);
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if StyleServices.Enabled then
       Repaint
     else
     {$ENDIF JVCLThemesEnabled}
@@ -452,7 +452,7 @@ begin
     FMouseInControl := False;
     inherited MouseLeave(Control);
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if StyleServices.Enabled then
       Repaint
     else
     {$ENDIF JVCLThemesEnabled}
@@ -522,7 +522,7 @@ begin
   end;
 
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     if not IsEnabled then
       Button := tbPushButtonDisabled
@@ -538,14 +538,14 @@ begin
     else
       Button := tbPushButtonNormal;
 
-    Details := ThemeServices.GetElementDetails(Button);
+    Details := StyleServices.GetElementDetails(Button);
     // Parent background.
-    ThemeServices.DrawParentBackground(Handle, DrawItemStruct.hDC, @Details, True);
+    StyleServices.DrawParentBackground(Handle, DrawItemStruct.hDC, @Details, True);
     // Button shape.
     if FMustDrawButtonFrame then
-      ThemeServices.DrawElement(DrawItemStruct.hDC, Details, DrawItemStruct.rcItem);
+      StyleServices.DrawElement(DrawItemStruct.hDC, Details, DrawItemStruct.rcItem);
     // Return content rect
-    ThemeServices.GetElementContentRect(FCanvas.Handle, Details, DrawItemStruct.rcItem, RectContent);
+    StyleServices.GetElementContentRect(FCanvas.Handle, Details, DrawItemStruct.rcItem, RectContent);
   end
   else
   {$ENDIF JVCLThemesEnabled}
@@ -667,7 +667,7 @@ begin
   if not FDisableDrawDown and (DrawItemStruct.itemState and ODS_SELECTED <> 0) and Enabled then
   begin
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if StyleServices.Enabled then
       OffsetRect(R, 1, 0)
     else
     {$ENDIF JVCLThemesEnabled}

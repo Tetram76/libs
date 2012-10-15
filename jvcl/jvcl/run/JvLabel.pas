@@ -55,7 +55,7 @@ Changes:
 Known Issues:
 * AutoSize calculations aren't correct when RoundedFrame and/or Shadow are active
 -----------------------------------------------------------------------------}
-// $Id: JvLabel.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvLabel.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvLabel;
 
@@ -324,8 +324,8 @@ procedure CalculateAngleInfo(Canvas: TCanvas; Angle: Integer; Text: string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLabel.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -501,7 +501,7 @@ begin
   FChangeLink.OnChange := DoImagesChange;
   ControlStyle := ControlStyle + [csOpaque, csReplicatable];
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.Enabled then
+  if StyleServices.Enabled then
     ControlStyle := ControlStyle - [csOpaque];
   {$ENDIF JVCLThemesEnabled}
 
@@ -1068,7 +1068,7 @@ begin
   if Transparent <> Value then
   begin
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.Enabled then
+    if StyleServices.Enabled then
       Value := True; // themes aware Labels are always transparent
     {$ENDIF JVCLThemesEnabled}
     if Value then
@@ -1201,7 +1201,7 @@ begin
     NeedRepaint := not Transparent and
       (
       {$IFDEF JVCLThemesEnabled}
-      ThemeServices.Enabled or
+      StyleServices.Enabled or
       {$ENDIF JVCLThemesEnabled}
       (FHotTrack and not (FDragging or OtherDragging)));
 
@@ -1228,7 +1228,7 @@ begin
     NeedRepaint := not Transparent and
       (
       {$IFDEF JVCLThemesEnabled}
-      ThemeServices.Enabled or
+      StyleServices.Enabled or
       {$ENDIF JVCLThemesEnabled}
       (FHotTrack and (FDragging or not OtherDragging)));
 

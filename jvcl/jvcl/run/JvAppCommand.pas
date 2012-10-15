@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppCommand.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvAppCommand.pas 13439 2012-09-24 12:24:22Z ahuser $
 
 unit JvAppCommand;
 
@@ -135,8 +135,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppCommand.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13439 $';
+    Date: '$Date: 2012-09-24 14:24:22 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -149,7 +149,7 @@ function GET_KEYSTATE_LPARAM(lParam: LPARAM): WORD;
 implementation
 
 uses
-  JvWndProcHook;
+  JvWndProcHook, JvResources;
 
 const
   // from JwaWinUser.pas
@@ -178,7 +178,11 @@ end;
 constructor TJvAppCommand.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FForm := GetParentForm(TControl(AOwner));
+  FForm := nil;
+  if AOwner is TControl then
+    FForm := GetParentForm(AOwner as TControl);
+  if FForm = nil then
+    raise Exception.CreateResFmt(@RsEOwnerMustBeForm, [ClassName]);
   Active := True;
 end;
 

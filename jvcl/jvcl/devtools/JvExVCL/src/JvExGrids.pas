@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExGrids.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvExGrids.pas 13437 2012-09-24 11:46:58Z ahuser $
 
 unit JvExGrids;
 
@@ -59,14 +59,16 @@ type
 
   TJvExStringGrid = class(TStringGrid, IJvExControl)
   WINCONTROL_DECL
+  protected
+    property GridState: TGridState read FGridState;  
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/devtools/JvExVCL/src/JvExGrids.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13437 $';
+    Date: '$Date: 2012-09-24 13:46:58 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

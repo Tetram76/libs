@@ -36,7 +36,7 @@ Known Issues:
       DateAndTime := JvDateTimePicker1.NullDate;
 
 -----------------------------------------------------------------------------}
-// $Id: JvDateTimePicker.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvDateTimePicker.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvDateTimePicker;
 
@@ -102,8 +102,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDateTimePicker.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -276,7 +276,7 @@ begin
       SizeHandle := GetParent(CalHandle);
       // The dropdown window uses a 'border' of..
       {$IFDEF JVCLThemesEnabled}
-      if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+      if StyleServices.Enabled then
       begin
         // .. 3 pixels when themed
         Inc(MinWidth, 3*2);

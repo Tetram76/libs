@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDialButton.pas 13212 2012-02-23 12:47:24Z obones $
+// $Id: JvDialButton.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvDialButton;
 
@@ -250,8 +250,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDialButton.pas $';
-    Revision: '$Revision: 13212 $';
-    Date: '$Date: 2012-02-23 13:47:24 +0100 (jeu., 23 févr. 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -876,7 +876,7 @@ begin
     FBitmapInvalid := True;
   end;
   {$IFDEF JVCLThemesEnabled}
-  if FBitmapInvalid or ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if FBitmapInvalid or StyleServices.Enabled then
   {$ELSE}
   if FBitmapInvalid then
   {$ENDIF JVCLThemesEnabled}
@@ -889,7 +889,7 @@ begin
     end;
 
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if StyleServices.Enabled then
       FBitmap.Canvas.CopyRect(FBitmapRect, Canvas, FBitmapRect);
     {$ENDIF JVCLThemesEnabled}
 
@@ -931,7 +931,7 @@ begin
     Canvas.Brush.Color := Parent.Brush.Color;
     Canvas.Brush.Style := bsSolid;
     {$IFDEF JVCLThemesEnabled}
-    if not ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if not StyleServices.Enabled then
     {$ENDIF JVCLThemesEnabled}
       Canvas.FillRect(FBitmapRect);
     SetViewportOrgEx(Canvas.Handle, FSize div 2 - FRadius, FSize div 2 - FRadius,
@@ -994,7 +994,7 @@ begin
   InflateRect(ARect, -1, -1);
   Canvas.Brush.Style := bsClear;
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     BitmapNeeded;
     Canvas.Pen.Color := FBitmap.Canvas.Pixels[0, 0]
