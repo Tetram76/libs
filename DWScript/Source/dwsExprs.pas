@@ -577,6 +577,7 @@ type
       FTypInteger : TTypeSymbol;
       FTypNil : TNilSymbol;
       FTypObject : TClassSymbol;
+      FTypTObject : TClassSymbol;
       FTypString : TTypeSymbol;
       FTypVariant : TTypeSymbol;
       FTypException : TClassSymbol;
@@ -636,6 +637,7 @@ type
          property TypInteger: TTypeSymbol read FBaseTypes.FTypInteger;
          property TypNil: TNilSymbol read FBaseTypes.FTypNil;
          property TypObject: TClassSymbol read FBaseTypes.FTypObject;
+         property TypTObject: TClassSymbol read FBaseTypes.FTypTObject;
          property TypString: TTypeSymbol read FBaseTypes.FTypString;
          property TypVariant: TTypeSymbol read FBaseTypes.FTypVariant;
          property TypException: TClassSymbol read FBaseTypes.FTypException;
@@ -716,7 +718,7 @@ type
 
          procedure DropMapAndDictionary;
 
-         function CollectAllPropertyAttributes : TSimplePropertySymbolList;
+         function CollectAllPublishedSymbols : TSimpleSymbolList;
 
          property FinalExpr : TBlockFinalExpr read FFinalExpr write FFinalExpr;
 
@@ -1625,9 +1627,10 @@ type
 
       property Data: TData read GetData write SetData;
       property ExternalObject: TObject read GetExternalObject write SetExternalObject;
-      property Member[const s: String]: IInfo read GetMember;
+      property Member[const s : String]: IInfo read GetMember;
       property FieldMemberNames : TStrings read GetFieldMemberNames;
-      property Method[const s: String]: IInfo read GetMethod;
+      property Method[const s : String]: IInfo read GetMethod;
+
       property ScriptObj: IScriptObj read GetScriptObj;
       property Parameter[const s: String]: IInfo read GetParameter;
       property TypeSym: TSymbol read GetTypeSym;
@@ -2807,6 +2810,7 @@ begin
    FBaseTypes.FTypVariant := sysTable.TypVariant;
    FBaseTypes.FTypNil := TNilSymbol.Create;
    FBaseTypes.FTypObject := sysTable.TypObject;
+   FBaseTypes.FTypTObject := sysTable.TypTObject;
    FBaseTypes.FTypException := sysTable.TypException;
    FBaseTypes.FTypInterface := sysTable.TypInterface;
 end;
@@ -3183,16 +3187,16 @@ begin
    FSourceContextMap:=nil;
 end;
 
-// CollectAllPropertyAttributes
+// CollectAllPublishedSymbols
 //
-function TdwsMainProgram.CollectAllPropertyAttributes : TSimplePropertySymbolList;
+function TdwsMainProgram.CollectAllPublishedSymbols : TSimpleSymbolList;
 var
    tableList : TSimpleRefCountedObjectHash;
 begin
-   Result:=TSimplePropertySymbolList.Create;
+   Result:=TSimpleSymbolList.Create;
    tableList:=TSimpleRefCountedObjectHash.Create;
    try
-      RootTable.CollectPropertyAttributes(tableList, Result);
+      RootTable.CollectPublishedSymbols(tableList, Result);
    finally
       tableList.Free;
    end;

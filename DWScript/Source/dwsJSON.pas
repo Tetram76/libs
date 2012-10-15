@@ -21,7 +21,7 @@ uses Classes, SysUtils, Variants, dwsUtils, dwsXPlatform;
 
 type
 
-   TdwsJSONValueType = (jvtNull, jvtObject, jvtArray, jvtString, jvtNumber, jvtBoolean);
+   TdwsJSONValueType = (jvtUndefined, jvtNull, jvtObject, jvtArray, jvtString, jvtNumber, jvtBoolean);
 
    TdwsJSONValue = class;
    TdwsJSONArray = class;
@@ -124,9 +124,15 @@ type
          procedure Clear;
 
          procedure Add(const aName : String; aValue : TdwsJSONValue);
+
          function AddObject(const name : String) : TdwsJSONObject;
+
          function AddArray(const name : String) : TdwsJSONArray;
-         function AddValue(const name : String) : TdwsJSONImmediate;
+
+         function AddValue(const name : String) : TdwsJSONImmediate; overload;
+         function AddValue(const name, value : String) : TdwsJSONImmediate; overload;
+         function AddValue(const name : String; const value : Double) : TdwsJSONImmediate; overload;
+         function AddValue(const name : String; const value : Boolean) : TdwsJSONImmediate; overload;
    end;
 
    PdwsJSONValueArray = ^TdwsJSONValueArray;
@@ -328,9 +334,9 @@ begin
                            '0'..'9' :
                               hexBuf:=(hexBuf shl 4)+Ord(c)-Ord('0');
                            'a'..'f' :
-                              hexBuf:=(hexBuf shl 4)+Ord(c)-Ord('a')+10;
+                              hexBuf:=(hexBuf shl 4)+Ord(c)-(Ord('a')-10);
                            'A'..'F' :
-                              hexBuf:=(hexBuf shl 4)+Ord(c)-Ord('A')+10;
+                              hexBuf:=(hexBuf shl 4)+Ord(c)-(Ord('A')-10);
                         else
                            TdwsJSONValue.RaiseJSONParseError('Invalid unicode hex character "%s"', c);
                         end;
@@ -351,7 +357,7 @@ begin
             localBufferPtr:=@localBuffer[0];
          end else Inc(localBufferPtr);
       until False;
-      n:=(NativeInt(localBufferPtr)-NativeInt(@localBuffer[0])) div SizeOf(WideChar);
+      n:=(NativeInt(localBufferPtr)-NativeInt(@localBuffer[0])) shr (SizeOf(WideChar)-1);
       if wobs<>nil then begin
          nw:=(wobs.Size div SizeOf(WideChar));
          SetLength(Result, n+nw);
@@ -426,28 +432,57 @@ end;
 // WriteJavaScriptString
 //
 procedure WriteJavaScriptString(destStream : TWriteOnlyBlockStream; const str : String);
+
+   procedure WriteUTF16(destStream : TWriteOnlyBlockStream; c : Integer);
+   const
+      cIntToHex : array [0..15] of Char = (
+         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F');
+   var
+      hex : array [0..5] of Char;
+   begin
+      hex[0]:='\';
+      hex[1]:='u';
+      hex[2]:=cIntToHex[c shr 12];
+      hex[3]:=cIntToHex[(c shr 8) and $F];
+      hex[4]:=cIntToHex[(c shr 4) and $F];
+      hex[5]:=cIntToHex[c and $F];
+      destStream.Write(hex[0], 6*SizeOf(Char));
+   end;
+
+const
+   cQUOTE : Char = '"';
 var
    c : Char;
+   p : PChar;
 begin
-   destStream.WriteString('"');
-   for c in str do begin
+   destStream.Write(cQUOTE, SizeOf(Char));
+   p:=PChar(Pointer(str));
+   if p<>nil then while True do begin
+      c:=p^;
       case c of
-         {$ifdef FPC}
-         #0..#7, #9, #11, #12, #14..#31 :
-         {$else}
-         #0..#7, #9, #11, #12, #14..#31, #255..#65535 :
+         #0..#31 :
+            case c of
+               #0 : Break;
+               #8 : destStream.WriteString('\b');
+               #9 : destStream.WriteString('\t');
+               #10 : destStream.WriteString('\n');
+               #12 : destStream.WriteString('\f');
+               #13 : destStream.WriteString('\r');
+            else
+               WriteUTF16(destStream, Ord(c));
+            end;
+         '"' :
+            destStream.WriteString('\"');
+         {$ifndef FPC}
+         #255..#65535 :
+            WriteUTF16(destStream, Ord(c));
          {$endif}
-            destStream.WriteString(Format('\u%.04x', [Ord(c)]));
-         #8 : destStream.WriteString('\t');
-         #10 : destStream.WriteString('\n');
-         #13 : destStream.WriteString('\r');
-         '"' : destStream.WriteString('\"');
-         '\' : destStream.WriteString('\\');
       else
-         destStream.WriteChar(c);
+         destStream.Write(p^, SizeOf(Char));
       end;
+      Inc(p);
    end;
-   destStream.WriteChar('"');
+   destStream.Write(cQUOTE, SizeOf(Char));
 end;
 
 // ------------------
@@ -661,7 +696,7 @@ function TdwsJSONValue.GetValueType : TdwsJSONValueType;
 begin
    if Assigned(Self) then
       Result:=FValueType
-   else Result:=jvtNull;
+   else Result:=jvtUndefined;
 end;
 
 // GetName
@@ -832,6 +867,30 @@ begin
    Add(name, Result);
 end;
 
+// AddValue (string)
+//
+function TdwsJSONObject.AddValue(const name, value : String) : TdwsJSONImmediate;
+begin
+   Result:=AddValue(name);
+   Result.AsString:=value;
+end;
+
+// AddValue (number)
+//
+function TdwsJSONObject.AddValue(const name : String; const value : Double) : TdwsJSONImmediate;
+begin
+   Result:=AddValue(name);
+   Result.AsNumber:=value;
+end;
+
+// AddValue (bool)
+//
+function TdwsJSONObject.AddValue(const name : String; const value : Boolean) : TdwsJSONImmediate;
+begin
+   Result:=AddValue(name);
+   Result.AsBoolean:=value;
+end;
+
 // DetachChild
 //
 procedure TdwsJSONObject.DetachChild(child : TdwsJSONValue);
@@ -889,8 +948,10 @@ begin
    Assert(initialChar='{');
    repeat
       c:=SkipBlanks(needChar(), needChar);
-      if c<>'"' then
-         RaiseJSONParseError('Invalid object pair name start character "%s"', c);
+      if c<>'"' then begin
+         if FCount=0 then Break;
+         RaiseJSONParseError('Invalid object pair name start character "%s"', c)
+      end;
       {$ifdef FPC}
       name:=UTF8Encode(ParseJSONString(c, needChar));
       {$else}
@@ -1220,11 +1281,17 @@ begin
       varEmpty :
          writer.WriteNull;
       varBoolean :
-         writer.WriteBoolean(FValue);
+         writer.WriteBoolean(TVarData(FValue).VBoolean);
       varDouble :
-         writer.WriteNumber(FValue);
+         writer.WriteNumber(TVarData(FValue).VDouble);
+      varUString :
+         {$ifdef FPC}
+         writer.WriteString(String(TVarData(FValue).VString));
+         {$else}
+         writer.WriteString(String(TVarData(FValue).VUString));
+         {$endif}
    else
-      writer.WriteString(FValue);
+      Assert(False, 'Unsupported type');
    end;
 end;
 
@@ -1297,7 +1364,7 @@ end;
 //
 procedure TdwsJSONWriter.BeginArray;
 begin
-   Assert(FState in [wsNone, wsObjectValue, wsArray]);
+   Assert(FState in [wsNone, wsObjectValue, wsArray, wsArrayValue]);
    FStateStack.Push(TRefCountedObject(FState));
    BeforeWriteImmediate;
    FState:=wsArray;

@@ -309,7 +309,7 @@ type
    TSymbolTableFlag = (stfSorted, stfHasHelpers, stfHasOperators);
    TSymbolTableFlags = set of TSymbolTableFlag;
 
-   TSimplePropertySymbolList = TSimpleList<TPropertySymbol>;
+   TSimpleSymbolList = TSimpleList<TSymbol>;
 
    // A table of symbols connected to other symboltables (property Parents)
    TSymbolTable = class (TRefCountedObject)
@@ -370,11 +370,12 @@ type
                                         const callback : TOperatorSymbolEnumerationCallback) : Boolean; virtual;
          function HasSameLocalOperator(anOpSym : TOperatorSymbol) : Boolean; virtual;
 
-         procedure CollectPropertyAttributes(tableList : TSimpleRefCountedObjectHash;
-                                             propertyList : TSimplePropertySymbolList);
+         procedure CollectPublishedSymbols(tableList : TSimpleRefCountedObjectHash;
+                                           symbolList : TSimpleSymbolList);
 
          function HasClass(const aClass : TSymbolClass) : Boolean;
          function HasSymbol(sym : TSymbol) : Boolean;
+         function HasMethods : Boolean;
          class function IsUnitTable : Boolean; virtual;
 
          procedure Initialize(const msgs : TdwsCompileMessageList); virtual;
@@ -1107,6 +1108,8 @@ type
 
          function CreateSelfParameter(methSym : TMethodSymbol) : TDataSymbol; virtual; abstract;
 
+         function ExternalRoot : TCompositeTypeSymbol;
+
          property UnitSymbol : TSymbol read FUnitSymbol;
          property Parent : TCompositeTypeSymbol read FParent;
          property Members : TMembersSymbolTable read FMembers;
@@ -1192,14 +1195,22 @@ type
          property ExternalName : String read GetExternalName write FExternalName;
    end;
 
+   TRecordSymbolFlag = (rsfDynamic, rsfFullyDefined);
+   TRecordSymbolFlags = set of TRecordSymbolFlag;
+
    // record member1: Integer; member2: Integer end;
    TRecordSymbol = class sealed (TStructuredTypeSymbol)
       private
-         FIsDynamic : Boolean;
+         FFlags : TRecordSymbolFlags;
 
       protected
          function GetCaption : String; override;
          function GetDescription : String; override;
+
+         function GetIsDynamic : Boolean; inline;
+         procedure SetIsDynamic(const val : Boolean);
+         function GetIsFullyDefined : Boolean; inline;
+         procedure SetIsFullyDefined(const val : Boolean);
 
       public
          constructor Create(const name : String; aUnit : TSymbol);
@@ -1213,7 +1224,8 @@ type
          procedure InitData(const data : TData; offset : Integer); override;
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
 
-         property IsDynamic : Boolean read FIsDynamic write FIsDynamic;
+         property IsDynamic : Boolean read GetIsDynamic write SetIsDynamic;
+         property IsFullyDefined : Boolean read GetIsFullyDefined write SetIsFullyDefined;
    end;
 
    // interface
@@ -1333,7 +1345,7 @@ type
    TObjectDestroyEvent = procedure (ExternalObject: TObject) of object;
 
    TClassSymbolFlag = (csfAbstract, csfExplicitAbstract, csfSealed,
-                       csfStatic, csfExternal, csfPartial);
+                       csfStatic, csfExternal, csfPartial, csfNoVirtualMembers);
    TClassSymbolFlags = set of TClassSymbolFlag;
 
    // type X = class ... end;
@@ -1380,6 +1392,7 @@ type
          function  ResolveInterface(intfSym : TInterfaceSymbol; var resolved : TResolvedInterface) : Boolean;
          function  ImplementsInterface(intfSym : TInterfaceSymbol) : Boolean;
          procedure SetIsPartial; inline;
+         procedure SetNoVirtualMembers; inline;
 
          function  FieldAtOffset(offset : Integer) : TFieldSymbol; override;
          procedure InheritFrom(ancestorClassSym : TClassSymbol);
@@ -2182,6 +2195,15 @@ begin
    end;
 end;
 
+// ExternalRoot
+//
+function TCompositeTypeSymbol.ExternalRoot : TCompositeTypeSymbol;
+begin
+   Result:=Self;
+   while (Result<>nil) and not Result.IsExternal do
+      Result:=Result.Parent;
+end;
+
 // ------------------
 // ------------------ TStructuredTypeSymbol ------------------
 // ------------------
@@ -2366,7 +2388,7 @@ begin
    fieldSym.FOffset:=FSize;
    FSize:=FSize+fieldSym.Typ.Size;
    if fieldSym.DefaultExpr<>nil then
-      FIsDynamic:=True;
+      IsDynamic:=True;
 end;
 
 // AddMethod
@@ -2440,6 +2462,38 @@ begin
          Result:=Result+'   '+member.Name+' : '+member.Typ.Name+';'#13#10;
    end;
    Result:=Result+'end;';
+end;
+
+// GetIsDynamic
+//
+function TRecordSymbol.GetIsDynamic : Boolean;
+begin
+   Result:=(rsfDynamic in FFlags);
+end;
+
+// SetIsDynamic
+//
+procedure TRecordSymbol.SetIsDynamic(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, rsfDynamic)
+   else Exclude(FFlags, rsfDynamic);
+end;
+
+// GetIsFullyDefined
+//
+function TRecordSymbol.GetIsFullyDefined : Boolean;
+begin
+   Result:=(rsfFullyDefined in FFlags);
+end;
+
+// SetIsFullyDefined
+//
+procedure TRecordSymbol.SetIsFullyDefined(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, rsfFullyDefined)
+   else Exclude(FFlags, rsfFullyDefined);
 end;
 
 // ------------------
@@ -3904,6 +3958,9 @@ begin
    FVirtualMethodTable:=ancestorClassSym.FVirtualMethodTable;
 
    IsStatic:=IsStatic or ancestorClassSym.IsStatic;
+
+   if csfNoVirtualMembers in ancestorClassSym.FFlags then
+      SetNoVirtualMembers;
 end;
 
 // IsCompatible
@@ -4044,6 +4101,13 @@ begin
    Include(FFlags, csfPartial);
 end;
 
+// SetNoVirtualMembers
+//
+procedure TClassSymbol.SetNoVirtualMembers;
+begin
+   Include(FFlags, csfNoVirtualMembers);
+end;
+
 // AllocateVMTindex
 //
 function TClassSymbol.AllocateVMTindex : Integer;
@@ -4128,7 +4192,7 @@ end;
 //
 function TClassSymbol.AllowVirtualMembers : Boolean;
 begin
-   Result:=True;
+   Result:=not (csfNoVirtualMembers in FFlags);
 end;
 
 // CreateSelfParameter
@@ -4909,10 +4973,10 @@ begin
    end;
 end;
 
-// CollectPropertyAttributes
+// CollectPublishedSymbols
 //
-procedure TSymbolTable.CollectPropertyAttributes(tableList : TSimpleRefCountedObjectHash;
-                                                 propertyList : TSimpleList<TPropertySymbol>);
+procedure TSymbolTable.CollectPublishedSymbols(tableList : TSimpleRefCountedObjectHash;
+                                               symbolList : TSimpleSymbolList);
 var
    i : Integer;
    parent : TSymbolTable;
@@ -4922,14 +4986,17 @@ begin
    for i:=0 to ParentCount-1 do begin
       parent:=Parents[i];
       if not tableList.Contains(parent) then
-         parent.CollectPropertyAttributes(tableList, propertyList);
+         parent.CollectPublishedSymbols(tableList, symbolList);
    end;
    for sym in Self do begin
       if sym.ClassType=TClassSymbol then begin
          for member in TClassSymbol(sym).Members do begin
             if member.ClassType=TPropertySymbol then begin
                if TPropertySymbol(member).Visibility=cvPublished then
-                  propertyList.Add(TPropertySymbol(member));
+                  symbolList.Add(member);
+            end else if member.ClassType=TFieldSymbol then begin
+               if TFieldSymbol(member).Visibility=cvPublished then
+                  symbolList.Add(member);
             end;
          end;
       end;
@@ -4956,6 +5023,21 @@ end;
 function TSymbolTable.HasSymbol(sym : TSymbol) : Boolean;
 begin
    Result:=Assigned(Self) and (FSymbols.IndexOf(sym)>=0);
+end;
+
+// HasMethods
+//
+function TSymbolTable.HasMethods : Boolean;
+var
+   i : Integer;
+   ptrList : PObjectTightList;
+begin
+   ptrList:=FSymbols.List;
+   for i:=FSymbols.Count-1 downto 0 do begin
+      if TSymbol(ptrList[i]) is TFuncSymbol then
+         Exit(True);
+   end;
+   Result:=False;
 end;
 
 // IsUnitTable
