@@ -392,7 +392,7 @@ type
     FDecoder: TLZ77Decoder;
     FIDATSize: Integer;        // remaining bytes in the current IDAT chunk
     FRawBuffer,                // buffer to load raw chunk data and to check CRC
-    FCurrentSource: Pointer;   // points into FRawBuffer for current position of decoding
+    FCurrentSource: PByte;   // points into FRawBuffer for current position of decoding
     FHeader: TPNGChunkHeader;  // header of the current chunk
     FCurrentCRC: Cardinal;     // running CRC for the current chunk
     FSourceBPP: Integer;       // bits per pixel used in the file
@@ -489,7 +489,7 @@ var
 implementation
 
 uses
-  Consts, Math, MZLib;
+  Consts, Math, ZLibEx, ZLibExApi, AnsiStrings;
 
 type
   // resampling support types
@@ -4401,7 +4401,7 @@ begin
   if (Ch = #13) and (CurrentChar = #10) then GetChar;
 
   // delete comments
-  I := Pos('#', Result);
+  I := AnsiPos(AnsiString('#'), Result);
   if I > 0 then Delete(Result, I, MaxInt);
 end;
 
@@ -4434,7 +4434,7 @@ begin
       with Stream do
       begin
         Buffer := ReadLine;
-        case StrToInt(Buffer[2]) of
+        case StrToInt(string(Buffer[2])) of
           1: // PBM ASCII format (black & white)
             begin
               PixelFormat := pf1Bit;
@@ -4616,7 +4616,7 @@ begin
 
     if Buffer[1] = 'P' then
     begin
-      case StrToInt(Buffer[2]) of
+      case StrToInt(string(Buffer[2])) of
         1: // PBM ASCII format (black & white)
           begin
             Width := GetNumber;
@@ -5226,7 +5226,7 @@ begin
     ReadBuffer(Header, SizeOf(Header));
     if UpperCase(Header.Signature) = 'GIF' then
     begin
-      Version := StrToInt(Copy(Header.Version, 1, 2));
+      Version := StrToInt(string(Copy(Header.Version, 1, 2)));
       ColorScheme := csIndexed;
       SamplesPerPixel := 1;
       // might be overwritten
@@ -5508,7 +5508,7 @@ begin
       if LowerCase(Header.Chan) = 'xyz' then Exit;
 
     try
-      FileGamma := StrToFloat(Header.Gamma);
+      FileGamma := StrToFloat(string(Header.Gamma));
     except
     end;
 
@@ -7172,7 +7172,7 @@ procedure TPNGGraphic.LoadBackgroundColor(const Description);
 // loads the data from the current chunk (must be a bKGD chunk) and fills the bitmpap with that color
 
 var
-  Run: PWord;
+  Run: PByte;
   R, G, B: Byte;
 
 begin
@@ -7356,7 +7356,7 @@ procedure TPNGGraphic.LoadTransparency(const Description);
 // reads the data of the current transparency chunk
 
 var
-  Run: PWord;
+  Run: PByte;
   R, G, B: Byte;
   
 begin
@@ -7462,7 +7462,7 @@ begin
     end;
 
     // this decode call will advance Source and Target accordingly
-    FDecoder.Decode(FCurrentSource,
+    FDecoder.Decode(Pointer(FCurrentSource),
                     LocalBuffer,
                     FIDATSize - (Integer(FCurrentSource) - Integer(FRawBuffer)),
                     PendingOutput);
