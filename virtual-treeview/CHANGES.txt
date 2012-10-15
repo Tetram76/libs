@@ -1,8 +1,32 @@
+October 04, 2012
+ - Fixed issue regarding activating explorer theme
+
+September 14, 2012
+ - Fixed issue #222: FDottedBrush is never released in the tree is never shown
+
+September 11, 2012
+ - Fixed issue #52: Misalignement of CheckBox and TreeLine/Buttons
+ - Fixed issue #43: VT stop repaint after Windows visual style change
+
+September 10, 2012
+ - Fixed issue #66: column auto-resize makes not aware of StaticText
+ - Fixed issue #53: Misalignment Images Columns > 0
+ - Fixed issue #176: Multiline Aligment Problem
+ - Fixed issue #283: VTV no longer allows to drop above or below when using Full row selection
+ - Fixed issue #173: Two suggestions about class member visibilities
+ - Fixed issue #192: Fixed column painting bug when OffsetX > 0
+
+V5.0.1 (06 Sep 2012):
+ - Added Support for RAD Studio XE3
+ - Fixed definition of event OnAfterHeaderExport, it used the same member variable as OnBeforeHeaderExport.
  - Fixed problem with Delphi 2007 package
+ - Delphi 2009 and 2010 packages are also implicit build packages now, like those for XE and XE2 (issue #279)
  - Fixed #251: Added supoort for C++ Builder XE2
  - Fixed #274: Wrong stop condition in TBaseVirtualTree.GetLastVisible
  - Fixed runtime package of Delphi 7
  - Fixed issue #273: Incremental search for international symbols not working in Delphi 2009-XE2
+ - A few minor bug fixes have been incorporated
+
 July 03, 2012
  - Release of V5.0.0 final
 June 11-30, 2012
