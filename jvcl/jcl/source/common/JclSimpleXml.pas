@@ -27,9 +27,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012)                         $ }
-{ Revision:      $Rev:: 3861                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date:: 2012-09-28 14:17:26 +0200 (ven., 28 sept. 2012)                         $ }
+{ Revision:      $Rev:: 3875                                                                     $ }
+{ Author:        $Author:: arioch_bdv                                                            $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -660,8 +660,8 @@ function EntityDecode(const S: string): string;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSimpleXml.pas $';
-    Revision: '$Revision: 3861 $';
-    Date: '$Date: 2012-09-04 16:08:04 +0200 (mar., 04 sept. 2012) $';
+    Revision: '$Revision: 3875 $';
+    Date: '$Date: 2012-09-28 14:17:26 +0200 (ven., 28 sept. 2012) $';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2224,7 +2224,6 @@ begin
         TJclSimpleXMLNamedElems(FNamedElems.SimpleItems[NamedIndex]).FItems.Remove(Elem);
     end;
     FElems.Delete(Index);
-    FreeAndNil(Elem);
   end;
 end;
 
@@ -2508,8 +2507,12 @@ end;
 
 function TJclSimpleXMLElems.Remove(Value: TJclSimpleXMLElem): Integer;
 begin
-  Result := FElems.IndexOfSimpleItem(Value);
-  Notify(Value, opRemove);
+  if FElems = nil
+     then Result := -1 // like TList.IndexOf(alien)
+     else begin
+        Result := FElems.IndexOfSimpleItem(Value);
+        Notify(Value, opRemove);
+     end;
 end;
 
 procedure TJclSimpleXMLElems.SaveToStringStream(StringStream: TJclStringStream;
@@ -2602,7 +2605,6 @@ procedure QuickSort(Elems: TJclSimpleXMLElems; List: TList; L, R: Integer;
   AFunction: TJclSimpleXMLElemCompare);
 var
   I, J, M: Integer;
-  T: Pointer;
 begin
   repeat
     I := L;
@@ -2615,9 +2617,7 @@ begin
         Dec(J);
       if I <= J then
       begin
-        T := List[I];
-        List[I] := List[J];
-        List[J] := T;
+        List.Exchange(I, J);
         Inc(I);
         Dec(J);
       end;
