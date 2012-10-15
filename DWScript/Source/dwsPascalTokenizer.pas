@@ -92,7 +92,8 @@ const
    cANYCHAR = [#0..#255];
    cNAM = ['A'..'Z', 'a'..'z', '_', #127];
    cINT = ['0'..'9'];
-   cHEX = cINT + ['A'..'F', 'a'..'f'];
+   cHEX = cINT + ['A'..'F', 'a'..'f', '_'];
+   cBIN = ['0', '1', '_'];
    cStart = ['''', '"', '#', ':', '$', '.'] + cNAM + cINT + cOPS;
 
 // ------------------
@@ -284,10 +285,10 @@ begin
    sHexF.AddTransition(cSTOP, TCheckTransition.Create(sStart, [toFinal], caHex));
    sHexF.SetElse(TErrorTransition.Create(TOK_HexDigitExpected));
 
-   sBin.AddTransition(['0', '1'], TConsumeTransition.Create(sBinF, [], caNone));
+   sBin.AddTransition(cBIN, TConsumeTransition.Create(sBinF, [], caNone));
    sBin.SetElse(TErrorTransition.Create(TOK_BinDigitExpected));
 
-   sBinF.AddTransition(['0', '1'], TConsumeTransition.Create(sBinF, [], caNone));
+   sBinF.AddTransition(cBIN, TConsumeTransition.Create(sBinF, [], caNone));
    sBinF.AddTransition(cSTOP, TCheckTransition.Create(sStart, [toFinal], caBin));
    sBinF.SetElse(TErrorTransition.Create(TOK_BinDigitExpected));
 

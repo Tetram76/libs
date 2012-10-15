@@ -36,6 +36,7 @@ const
   SYS_INTERNAL = 'Internal';
   SYS_SYSTEM = 'System';
   SYS_DEFAULT = 'Default';
+  SYS_OBJECT = 'Object';
   SYS_TCLASS = 'TClass';
   SYS_TOBJECT = 'TObject';
   SYS_TOBJECT_CREATE = 'Create';
@@ -181,12 +182,12 @@ const
   CPE_ClassPartialModifiersNotMatched = 'Modifiers do not match previous "partial" declaration of class';
   CPE_FuncForwardAlreadyExists = 'There is already a forward declaration of this function!';
   CPE_ForwardNotImplemented = 'The function "%s" was forward declared but not implemented!';
-  CPE_AnonymousRecordMethodsMustBeInline = 'Anonymous record methods must be inline!';
   CPE_CantImplementAFunctionType = 'Can''t implement a function type';
   CPE_ClassIsSealed = 'Class "%s" is sealed, inheriting is not allowed!';
   CPE_ClassIsStatic = 'Class "%s" is static, instantiation not allowed!';
   CPE_ClassAncestorNotStatic = 'Class "%s" is not static, can''t inherit as static!';
   CPE_ClassAncestorDoesNotMatch = 'Class ancestor does not match with previous declaration!';
+  CPE_ClassExternalAncestorMustBeExternalOrObject = 'External classes must inherit from an external class or Object';
   CPE_MustBeSubClassOf = 'Subclass of %s expected!';
   CPE_MethodOrPropertyExpected = 'Method or property declaration expected';
   CPE_OverloadableOperatorExpected = 'Overloadable operator expected';
@@ -211,12 +212,16 @@ const
   CPE_MultipleDefaultProperties = '"%s" already has "%s" as default property';
   CPE_NoDefaultPropertyAllowed = 'No default property is allowed here';
   CPE_ParamsExpected = 'Parameters expected';
-  CPE_NoProtectedVisibilityForRecords = 'Records do not supported "protected" visibility specifier';
   CPE_NoProtectedVisibilityForHelpers = 'Helpers do not supported "protected" visibility specifier';
   CPE_HelpersNotAllowedForDelegates = 'Helpers not allowed for delegates or function pointers';
 
   CPE_AttributeConstructorExpected = 'Attribute constructor expected';
   CPE_DanglingAttribute = 'Dangling attribute declaration';
+
+  // Record declaration
+  CPE_AnonymousRecordMethodsMustBeInline = 'Anonymous record methods must be inline!';
+  CPE_NoProtectedVisibilityForRecords = 'Records do not supported "protected" visibility specifier';
+  CPE_RecordFieldsMustBeBeforeMethods = 'Record fields must be declared before record methods';
 
   // Interface declaration
   CPE_InterfaceAlreadyDefined = 'Interface "%s" already defined';
@@ -287,6 +292,7 @@ const
   CPE_MatchingOverload = 'Overload of "%s" will be ambiguous with a previously declared version';
   CPE_ClassMethodExpected = 'Class method expected';
   CPE_RecordTypeExpected = 'Record type expected';
+  CPE_RecordTypeNotFullyDefined = 'Record type "%s" is not fully defined';
 
   CPE_InvalidOperands = 'Invalid Operands';
   CPE_IncompatibleOperands = 'Incompatible operands';
@@ -522,6 +528,7 @@ const
   RTE_MethodNotFoundInClass = 'Method "%s" not found in class "%s"';
   RTE_FieldNotFoundInClass = 'Field "%s" not found in class "%s"';
   RTE_NoMemberOfArray = '"%s" isn''t a member of array "%s"';
+  RTE_UnsupportedMemberOfClass = '"%s" isn''t supported as class member';
 
   RTE_CanNotReadComplexType = 'To read a value of complex type "%s" use .Data!';
   RTE_CanNotSetValueForType = 'To write values of type "%s" use .Data!';
