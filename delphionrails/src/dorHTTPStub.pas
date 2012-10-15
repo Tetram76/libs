@@ -184,7 +184,11 @@ end;
 
 function DecodeValue(const p: PChar): ISuperObject; inline;
 begin
-  Result := TSuperObject.ParseString(p, False, False);
+  try
+    Result := TSuperObject.ParseString(p, False, False);
+  except
+    Result := nil;
+  end;
   if Result = nil then
     Result := TSuperObject.Create(p);
 end;
@@ -772,6 +776,8 @@ begin
                     begin
                       FErrorCode := 500;
                       Response.Content.WriteString(E.Message, false);
+                      Response.Content.WriteString(CRLF, False);
+                      Response.Content.WriteString(E.StackTrace, false);
                     {$ifdef madExcept}
                       HandleException(etNormal, E);
                     {$endif}
