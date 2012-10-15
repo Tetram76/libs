@@ -1,4 +1,4 @@
-package SynEdit_RXE2;
+package SynEdit_RXE3;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
