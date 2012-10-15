@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActions.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvDBActions.pas 13454 2012-10-04 21:02:30Z jfudickar $
 
 unit JvDBActions;
 
@@ -511,8 +511,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActions.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13454 $';
+    Date: '$Date: 2012-10-04 23:02:30 +0200 (jeu., 04 oct. 2012) $';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -1072,7 +1072,11 @@ end;
 procedure TJvDatabasePositionAction.SetCaption(Value: string);
 begin
   if Value <> Caption then
+  {$IFDEF RTL240_UP}
+    inherited SetCaption (Value);
+  {$ELSE}
     Caption := Value;
+  {$ENDIF RTL240_UP}
 end;
 
 procedure TJvDatabasePositionAction.ShowPositionDialog;

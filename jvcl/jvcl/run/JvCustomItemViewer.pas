@@ -26,7 +26,7 @@ Known Issues:
  * drag'n'drop edge scrolling - DONE (almost, needs some tweaks to look good as well)
  * icons don't scale, should be handled differently - DONE (explicitly calls DrawIconEx)
 -----------------------------------------------------------------------------}
-// $Id: JvCustomItemViewer.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvCustomItemViewer.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvCustomItemViewer;
 
@@ -352,8 +352,8 @@ function CenterRect(InnerRect, OuterRect: TRect): TRect;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCustomItemViewer.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1915,8 +1915,8 @@ procedure TJvCustomItemViewer.WMNCPaint(var Messages: TWMNCPaint);
 begin
   inherited;
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
-    ThemeServices.PaintBorder(TWinControl(Self), False)
+  if StyleServices.Enabled then
+    StyleServices.PaintBorder(TWinControl(Self), False)
   {$ENDIF JVCLThemesEnabled}
 end;
 

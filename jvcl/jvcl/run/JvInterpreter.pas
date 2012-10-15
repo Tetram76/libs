@@ -31,7 +31,7 @@ description : JVCL Interpreter version 2
 Known Issues:
    String fields in records binded from Delphi don't work
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvInterpreter.pas 13448 2012-09-25 08:05:34Z ahuser $
 
 { history (JVCL Library versions):
   1.10:
@@ -1258,8 +1258,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13448 $';
+    Date: '$Date: 2012-09-25 10:05:34 +0200 (mar., 25 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -5149,6 +5149,7 @@ var
   {$ENDIF DELPHI7_UP}
   Dob: Extended;
   Int: Integer;
+  ValueInt64: Int64;
   Stub: Integer;
 begin
   FTokenStr := FParser.Token;
@@ -5157,7 +5158,15 @@ begin
     ttInteger:
       begin
         Val(FTokenStr, Int, Stub);
-        FToken := Int;
+        if Stub <> 0 then
+        begin
+          Val(FTokenStr, ValueInt64, Stub);
+          FToken := ValueInt64;
+          if Stub <> 0 then
+            JvInterpreterError(ieIntegerRequired, FParser.Pos);
+        end
+        else
+          FToken := Int;
       end;
     ttDouble:
       begin

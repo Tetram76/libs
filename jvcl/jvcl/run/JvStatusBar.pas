@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStatusBar.pas 13392 2012-08-11 23:20:08Z ahuser $
+// $Id: JvStatusBar.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvStatusBar;
 
@@ -74,9 +74,9 @@ type
     procedure MovePanelControls;
     function GetPanelClass: TStatusPanelClass;  override;
     procedure SBSetParts(var msg: TMessage); message SB_SETPARTS;
-    {$IFDEF COMPILER16_UP}
+    {$IFDEF COMPILER16}
     procedure WndProc(var Msg: TMessage); override;
-    {$ENDIF COMPILER16_UP}
+    {$ENDIF COMPILER16}
   public
     constructor Create(AOwner: TComponent); override;
     function ExecuteAction(Action: TBasicAction): Boolean; override;
@@ -94,8 +94,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStatusBar.pas $';
-    Revision: '$Revision: 13392 $';
-    Date: '$Date: 2012-08-12 01:20:08 +0200 (dim., 12 août 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -126,7 +126,7 @@ procedure TJvStatusBar.CreateParams(var Params: TCreateParams);
 begin
   inherited CreateParams(Params);
   {$IFDEF JVCLThemesEnabled}
-  if not ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if not StyleServices.Enabled then
   {$ENDIF JVCLThemesEnabled}
     with Params do
       WindowClass.Style := WindowClass.Style and not CS_HREDRAW;
@@ -249,7 +249,7 @@ begin
   MovePanelControls;
 end;
 
-{$IFDEF COMPILER16_UP}
+{$IFDEF COMPILER16}
 procedure TJvStatusBar.WndProc(var Msg: TMessage);
 var
   DC, PaintDC: HDC;
@@ -259,7 +259,7 @@ begin
   // TStatusBarStyleHook.Paint catches all WM_PAINT but doesn't call Control.PaintControls()
   // what causes TGraphicControls to not be painted. With this code we call the PaintControls
   // function in that case.
-  // TODO: When this bug gets fixed in a later Delphi version, the IFDEFs must be adjusted.
+  // This bug was fixed with XE3
   if (Msg.Msg = WM_PAINT) and StyleServices.Enabled and not StyleServices.IsSystemStyle then
   begin
     DC := HDC(Msg.WParam);
@@ -302,7 +302,7 @@ begin
   else
     inherited WndProc(Msg);
 end;
-{$ENDIF COMPILER16_UP}
+{$ENDIF COMPILER16}
 
 //=== { TJvStatusPanel } =====================================================
 

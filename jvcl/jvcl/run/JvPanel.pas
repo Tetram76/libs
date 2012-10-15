@@ -33,7 +33,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPanel.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvPanel.pas 13456 2012-10-06 09:14:10Z ahuser $
 
 unit JvPanel;
 
@@ -47,7 +47,7 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
   SysUtils, Classes, Graphics, Controls, Forms, ExtCtrls,
-  JvTypes, JvThemes, JvExtComponent, JvExControls,
+  JvTypes, JvExtComponent, JvExControls,
   JvHotTrackPersistent;
 
 type
@@ -156,8 +156,7 @@ type
     FHotTrackFontOptions: TJvTrackFontOptions;
     FHotTrackOptions: TJvHotTrackOptions;
     FLastScreenCursor: TCursor;
-    FPainting: Boolean;
-    FRedrawingChildren: Boolean;
+    FPainting: Integer;
     function GetArrangeSettings: TJvArrangeSettings;
     function GetHeight: Integer;
     procedure SetHeight(Value: Integer);
@@ -353,8 +352,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPanel.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13456 $';
+    Date: '$Date: 2012-10-06 11:14:10 +0200 (sam., 06 oct. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -364,8 +363,8 @@ implementation
 uses
   {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
   System.UITypes,
-  {$ENDIF}
-  Types, {$IFDEF COMPILER7_UP}Themes,{$ENDIF}
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
+  Types, JvThemes,
   JvJCLUtils, JvJVCLUtils, JvResources;
 
 const
@@ -681,29 +680,25 @@ begin
     Exit;
   end;
 
-  // must force child controls to redraw completely, even their non client areas (Mantis 4406)
-  if Transparent and not FPainting and not FRedrawingChildren then
-  begin
-    FRedrawingChildren := True;
-    try
+  Inc(FPainting);
+  try
+    // must force child controls to redraw completely, even their non client areas (Mantis 4406)
+    if Transparent and (FPainting = 1) then
+    begin
       for ControlIndex := 0 to ControlCount - 1 do
       begin
         CurControl := Controls[ControlIndex];
-        CurControl.Invalidate;
         if CurControl is TWinControl then
+        begin
+          CurControl.Invalidate;
           RedrawWindow(TWinControl(CurControl).Handle, nil, 0, RDW_FRAME or RDW_INVALIDATE);
-
-        // Must update here so that the invalidate message is processed immediately
-        // If not, there is a very strong risk of creating a refresh loop
-        CurControl.Update;
+          // Must update here so that the invalidate message is processed immediately
+          // If not, there is a very strong risk of creating a refresh loop
+          CurControl.Update;
+        end;
       end;
-    finally
-      FRedrawingChildren := False;
     end;
-  end;
 
-  FPainting := True;
-  try
     if MouseOver and HotTrack then
     begin
       Canvas.Font := Self.HotTrackFont;
@@ -770,8 +765,8 @@ begin
     if Sizeable then
     begin
       {$IFDEF JVCLThemesEnabled}
-      if {$IFDEF RTL230_UP}StyleServices{$ELSE}ThemeServices{$ENDIF RTL230_UP}.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
-        {$IFDEF RTL230_UP}StyleServices{$ELSE}ThemeServices{$ENDIF RTL230_UP}.DrawElement(Canvas.Handle, {$IFDEF RTL230_UP}StyleServices{$ELSE}ThemeServices{$ENDIF RTL230_UP}.GetElementDetails(tsGripper),
+      if StyleServices.Enabled then
+        StyleServices.DrawElement(Canvas.Handle, StyleServices.GetElementDetails(tsGripper),
           Rect(ClientWidth - GetSystemMetrics(SM_CXVSCROLL) - BevelWidth - 2,
             ClientHeight - GetSystemMetrics(SM_CYHSCROLL) - BevelWidth - 2,
             ClientWidth - BevelWidth - 2, ClientHeight - BevelWidth - 2))
@@ -795,7 +790,7 @@ begin
       end;
     end;
   finally
-    FPainting := False;
+    Dec(FPainting);
   end;
 end;
 
@@ -1015,6 +1010,8 @@ procedure TJvCustomArrangePanel.SetSizeable(const Value: Boolean);
 begin
   if FSizeable <> Value then
   begin
+    if FDragging and FSizeable then
+      MouseCapture := False;
     FSizeable := Value;
     Invalidate;
   end;

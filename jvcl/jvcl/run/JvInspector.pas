@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvInspector.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvInspector;
 
@@ -2092,8 +2092,8 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -6844,7 +6844,7 @@ begin
         if Pressed then
           BFlags := BF_FLAT;
         {$IFDEF JVCLThemesEnabled}
-        if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+        if StyleServices.Enabled then
           DrawThemedButtonFace(Inspector, ACanvas, R, 0, bsNew, False, Pressed, False, False)
         else
         {$ENDIF JVCLThemesEnabled}

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStringGrid.pas 13221 2012-02-24 14:12:04Z obones $
+// $Id: JvStringGrid.pas 13437 2012-09-24 11:46:58Z ahuser $
 
 unit JvStringGrid;
 
@@ -142,7 +142,8 @@ type
     procedure InvalidateRow(ARow: Integer);
     procedure MoveColumn(FromIndex, ToIndex: Integer);
     procedure MoveRow(FromIndex, ToIndex: Longint);
-    property GridState;
+
+    property GridState: TGridState read FGridState;
     property InplaceEditor;
 
     // Calculates and sets the width of a specific column or all columns if Index < 0
@@ -249,8 +250,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStringGrid.pas $';
-    Revision: '$Revision: 13221 $';
-    Date: '$Date: 2012-02-24 15:12:04 +0100 (ven., 24 févr. 2012) $';
+    Revision: '$Revision: 13437 $';
+    Date: '$Date: 2012-09-24 13:46:58 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

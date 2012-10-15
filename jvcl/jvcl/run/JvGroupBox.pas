@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGroupBox.pas 13139 2011-10-28 19:59:40Z jfudickar $
+// $Id: JvGroupBox.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvGroupBox;
 
@@ -85,8 +85,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGroupBox.pas $';
-    Revision: '$Revision: 13139 $';
-    Date: '$Date: 2011-10-28 21:59:40 +0200 (ven., 28 oct. 2011) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -119,25 +119,25 @@ var
   LastBkMode: Integer;
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     {$IFDEF COMPILER7_UP}
     inherited Paint;
     {$ELSE}
     if Enabled then
-      Details := ThemeServices.GetElementDetails(tbGroupBoxNormal)
+      Details := StyleServices.GetElementDetails(tbGroupBoxNormal)
     else
-      Details := ThemeServices.GetElementDetails(tbGroupBoxDisabled);
+      Details := StyleServices.GetElementDetails(tbGroupBoxDisabled);
     R := ClientRect;
     Inc(R.Top, Canvas.TextHeight('0') div 2);
-    ThemeServices.DrawElement(Canvas.Handle, Details, R);
+    StyleServices.DrawElement(Canvas.Handle, Details, R);
 
     CaptionRect := Rect(8, 0, Min(Canvas.TextWidth(Caption) + 8, ClientWidth - 8),
       Canvas.TextHeight(Caption));
 
     Canvas.Brush.Color := Self.Color;
     DrawThemedBackground(Self, Canvas, CaptionRect);
-    ThemeServices.DrawText(Canvas.Handle, Details, Caption, CaptionRect, DT_LEFT, 0);
+    StyleServices.DrawText(Canvas.Handle, Details, Caption, CaptionRect, DT_LEFT, 0);
     {$ENDIF COMPILER7_UP}
     Exit;
   end;

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExMask.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id: JvExMask.pas 13444 2012-09-24 19:10:40Z ahuser $
 
 unit JvExMask;
 
@@ -45,19 +45,52 @@ type
   EDITCONTROL_DECL
   private
     FBeepOnError: Boolean;
+    {$IFNDEF COMPILER12_UP}
+    FTextHint: string;
+    procedure SetTextHint(const Value: string);
+    {$ENDIF ~COMPILER12_UP}
+    function UserTextHint: Boolean;
   protected
     procedure DoBeepOnError; dynamic;
     procedure SetBeepOnError(Value: Boolean); virtual;
     property BeepOnError: Boolean read FBeepOnError write SetBeepOnError default True;
+
+    procedure DoSetTextHint(const Value: string); {$IFDEF COMPILER12_UP}override;{$ELSE}virtual;{$ENDIF}
+    procedure PaintWindow(DC: HDC); override;
+    procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
+    procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
+
+    {$IFNDEF COMPILER12_UP}
+    procedure CreateWnd; override;
+    property TextHint: string read FTextHint write SetTextHint;
+    {$ENDIF ~COMPILER12_UP}
   end;
 
   TJvExMaskEdit = class(TMaskEdit, IJvExControl)
   EDITCONTROL_DECL
   private
     FBeepOnError: Boolean;
+    {$IFNDEF COMPILER12_UP}
+    FTextHint: string;
+    procedure SetTextHint(const Value: string);
+    {$ENDIF ~COMPILER12_UP}
+    function UserTextHint: Boolean;
   protected
     procedure DoBeepOnError; dynamic;
     procedure SetBeepOnError(Value: Boolean); virtual;
+
+    procedure DoSetTextHint(const Value: string); {$IFDEF COMPILER12_UP}override;{$ELSE}virtual;{$ENDIF}
+    procedure PaintWindow(DC: HDC); override;
+    procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
+    procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
+
+    {$IFNDEF COMPILER12_UP}
+    procedure CreateWnd; override;
+    {$ENDIF ~COMPILER12_UP}
+  published
+    {$IFNDEF COMPILER12_UP}
+    property TextHint: string read FTextHint write SetTextHint;
+    {$ENDIF ~COMPILER12_UP}
     property BeepOnError: Boolean read FBeepOnError write SetBeepOnError default True;
   end;
 
@@ -65,16 +98,30 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/devtools/JvExVCL/src/JvExMask.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    Revision: '$Revision: 13444 $';
+    Date: '$Date: 2012-09-24 21:10:40 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
 
 implementation
 
+{$IFNDEF COMPILER12_UP}
+const
+  ECM_FIRST       = $1500;
+  EM_SETCUEBANNER = ECM_FIRST + 1;   // Set the cue banner with the lParam = LPCWSTR
+
+  CBM_FIRST       = $1700;
+  CB_SETCUEBANNER = CBM_FIRST + 3;
+
+type
+  UnicodeString = WideString;
+{$ENDIF ~COMPILER12_UP}
+
 BEGIN_EDITCONTROL_CONSTRUCTOR(CustomMaskEdit)
   FBeepOnError := True;
+  if UserTextHint then
+    ControlState := ControlState + [csCustomPaint]; // needed for PaintWindow
 END_CONSTRUCTOR
 
 EDITCONTROL_IMPL(CustomMaskEdit)
@@ -92,8 +139,88 @@ begin
   FBeepOnError := Value;
 end;
 
+{$IFNDEF COMPILER12_UP}
+procedure TJvExCustomMaskEdit.SetTextHint(const Value: string);
+begin
+  if FTextHint <> Value then
+  begin
+    FTextHint := Value;
+    if not (csLoading in ComponentState) then
+      DoSetTextHint(FTextHint);
+  end;
+end;
+
+procedure TJvExCustomMaskEdit.CreateWnd;
+begin
+  inherited CreateWnd;
+  DoSetTextHint(FTextHint);
+end;
+{$ENDIF ~COMPILER12_UP}
+
+function TJvExCustomMaskEdit.UserTextHint: Boolean;
+begin
+  {$IFDEF JVCLThemesEnabled}
+  Result := not (CheckWin32Version(5, 1) and StyleServices.Enabled);
+  {$ELSE}
+  Result := True;
+  {$ENDIF JVCLThemesEnabled}
+end;
+
+procedure TJvExCustomMaskEdit.DoSetTextHint(const Value: string);
+begin
+  {$IFDEF COMPILER12_UP}
+  inherited DoSetTextHint(Value);
+  {$ELSE}
+  {$IFDEF JVCLThemesEnabled}
+  if CheckWin32Version(5, 1) and StyleServices.Enabled and HandleAllocated then
+    SendMessage(Handle, EM_SETCUEBANNER, WPARAM(0), LPARAM(PWideChar(UnicodeString(Value))));
+  {$ENDIF JVCLThemesEnabled}
+  {$ENDIF COMPILER12_UP}
+  if UserTextHint and HandleAllocated and
+     not Focused and Enabled and not ReadOnly and (Text = '') then
+    Invalidate;
+end;
+
+procedure TJvExCustomMaskEdit.PaintWindow(DC: HDC);
+var
+  R: TRect;
+  OldFont: HFONT;
+  OldTextColor: TColorRef;
+begin
+  inherited PaintWindow(DC);
+
+  if UserTextHint and (TextHint <> '') and
+     Enabled and not ReadOnly and not Focused and (Text = '') then
+  begin
+    SendMessage(Handle, EM_GETRECT, 0, LPARAM(@R));
+
+    OldFont := SelectObject(DC, Font.Handle);
+    OldTextColor := SetTextColor(DC, ColorToRGB(clGrayText));
+    DrawText(DC, PChar(TextHint), Length(TextHint), R, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+
+    SetTextColor(DC, OldTextColor);
+    SelectObject(DC, OldFont);
+  end;
+end;
+
+procedure TJvExCustomMaskEdit.WMKillFocus(var Msg: TWMKillFocus);
+begin
+  inherited;
+  if UserTextHint and (TextHint <> '') then
+    Invalidate;
+end;
+
+procedure TJvExCustomMaskEdit.WMSetFocus(var Msg: TWMSetFocus);
+begin
+  if UserTextHint and (TextHint <> '') then
+    Invalidate;
+  inherited;
+end;
+
 BEGIN_EDITCONTROL_CONSTRUCTOR(MaskEdit)
   FBeepOnError := True;
+  if UserTextHint then
+    ControlState := ControlState + [csCustomPaint]; // needed for PaintWindow
 END_CONSTRUCTOR
 
 EDITCONTROL_IMPL(MaskEdit)
@@ -109,6 +236,84 @@ end;
 procedure TJvExMaskEdit.SetBeepOnError(Value: Boolean);
 begin
   FBeepOnError := Value;
+end;
+
+{$IFNDEF COMPILER12_UP}
+procedure TJvExMaskEdit.SetTextHint(const Value: string);
+begin
+  if FTextHint <> Value then
+  begin
+    FTextHint := Value;
+    if not (csLoading in ComponentState) then
+      DoSetTextHint(FTextHint);
+  end;
+end;
+
+procedure TJvExMaskEdit.CreateWnd;
+begin
+  inherited CreateWnd;
+  DoSetTextHint(FTextHint);
+end;
+{$ENDIF ~COMPILER12_UP}
+
+function TJvExMaskEdit.UserTextHint: Boolean;
+begin
+  {$IFDEF JVCLThemesEnabled}
+  Result := not (CheckWin32Version(5, 1) and StyleServices.Enabled);
+  {$ELSE}
+  Result := True;
+  {$ENDIF JVCLThemesEnabled}
+end;
+
+procedure TJvExMaskEdit.DoSetTextHint(const Value: string);
+begin
+  {$IFDEF COMPILER12_UP}
+  inherited DoSetTextHint(Value);
+  {$ELSE}
+  {$IFDEF JVCLThemesEnabled}
+  if CheckWin32Version(5, 1) and StyleServices.Enabled and HandleAllocated then
+    SendMessage(Handle, EM_SETCUEBANNER, WPARAM(0), LPARAM(PWideChar(UnicodeString(Value))));
+  {$ENDIF JVCLThemesEnabled}
+  {$ENDIF COMPILER12_UP}
+  if UserTextHint and HandleAllocated and
+     not Focused and Enabled and not ReadOnly and (Text = '') then
+    Invalidate;
+end;
+
+procedure TJvExMaskEdit.PaintWindow(DC: HDC);
+var
+  R: TRect;
+  OldFont: HFONT;
+  OldTextColor: TColorRef;
+begin
+  inherited PaintWindow(DC);
+
+  if UserTextHint and (TextHint <> '') and
+     Enabled and not ReadOnly and not Focused and (Text = '') then
+  begin
+    SendMessage(Handle, EM_GETRECT, 0, LPARAM(@R));
+
+    OldFont := SelectObject(DC, Font.Handle);
+    OldTextColor := SetTextColor(DC, ColorToRGB(clGrayText));
+    DrawText(DC, PChar(TextHint), Length(TextHint), R, DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+
+    SetTextColor(DC, OldTextColor);
+    SelectObject(DC, OldFont);
+  end;
+end;
+
+procedure TJvExMaskEdit.WMKillFocus(var Msg: TWMKillFocus);
+begin
+  inherited;
+  if UserTextHint and (TextHint <> '') then
+    Invalidate;
+end;
+
+procedure TJvExMaskEdit.WMSetFocus(var Msg: TWMSetFocus);
+begin
+  if UserTextHint and (TextHint <> '') then
+    Invalidate;
+  inherited;
 end;
 
 {$IFDEF UNITVERSIONING}

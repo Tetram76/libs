@@ -36,7 +36,7 @@ Known Issues:
     * PosAtDate is slightly better
     * FirstVisibleDate always start at day 1 of month
 -----------------------------------------------------------------------------}
-// $Id: JvTimeLine.pas 13180 2011-11-22 12:45:23Z obones $
+// $Id: JvTimeLine.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvTimeLine;
 
@@ -498,8 +498,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTimeLine.pas $';
-    Revision: '$Revision: 13180 $';
-    Date: '$Date: 2011-11-22 13:45:23 +0100 (mar., 22 nov. 2011) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -819,7 +819,7 @@ end;
 
 procedure TJvTLScrollBtn.MouseEnter(Control: TControl);
 begin
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and not (FMouseInControl) and not (csDesigning in ComponentState) then
+  if StyleServices.Enabled and not (FMouseInControl) and not (csDesigning in ComponentState) then
   begin
     FMouseInControl := True;
     Invalidate;
@@ -830,7 +830,7 @@ end;
 procedure TJvTLScrollBtn.MouseLeave(Control: TControl);
 begin
   inherited MouseLeave(Control);
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and FMouseInControl then
+  if StyleServices.Enabled and FMouseInControl then
   begin
     FMouseInControl := False;
     Invalidate;
@@ -857,7 +857,7 @@ begin
     Exit;
 
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     if FPushed then
       Button := tsArrowBtnLeftPressed
@@ -875,8 +875,8 @@ begin
       scrollDown:
         Button := TThemedScrollBar(Ord(tsArrowBtnDownNormal) + Ord(Button) - Ord(tsArrowBtnLeftNormal));
     end;
-    Details := ThemeServices.GetElementDetails(Button);
-    ThemeServices.DrawElement(Canvas.Handle, Details, Rect(0, 0, Width, Height));
+    Details := StyleServices.GetElementDetails(Button);
+    StyleServices.DrawElement(Canvas.Handle, Details, Rect(0, 0, Width, Height));
   end
   else
   {$ENDIF JVCLThemesEnabled}
@@ -2409,13 +2409,13 @@ begin
     { Draw borders in non-client area }
     OffsetRect(RW, -RW.Left, -RW.Top);
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if StyleServices.Enabled then
     begin
       if FBorderStyle = bsSingle then
       begin
-        Details := ThemeServices.GetElementDetails(teEditTextNormal);
-        ThemeServices.DrawElement(ACanvas.Handle, Details, RW);
-        ThemeServices.GetElementContentRect(ACanvas.Handle, Details, RW, RW);
+        Details := StyleServices.GetElementDetails(teEditTextNormal);
+        StyleServices.DrawElement(ACanvas.Handle, Details, RW);
+        StyleServices.GetElementContentRect(ACanvas.Handle, Details, RW, RW);
       end;
     end
     else

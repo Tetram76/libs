@@ -25,7 +25,7 @@ Description:
 // DB Component to find record with Edit
 // Free modified and corrected component TDBSearchEdit from Alexander Burlakov
 -----------------------------------------------------------------------------}
-// $Id: JvDBSearchEdit.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvDBSearchEdit.pas 13437 2012-09-24 11:46:58Z ahuser $
 
 unit JvDBSearchEdit;
 
@@ -136,14 +136,19 @@ type
     property OnMouseEnter;
     property OnMouseLeave;
     property OnParentColorChange;
+
+    {$IFDEF COMPILER12_UP}
+    property NumbersOnly;
+    {$ENDIF}
+    property TextHint;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSearchEdit.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13437 $';
+    Date: '$Date: 2012-09-24 13:46:58 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

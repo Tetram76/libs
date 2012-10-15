@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvToolEdit.pas 13459 2012-10-08 18:59:55Z wpostma $
 
 unit JvToolEdit;
 
@@ -505,6 +505,14 @@ type
     property OnPopupHidden;
     property OnPopupChange;
     property OnPopupValueAccepted;
+
+    {$IFDEF COMPILER12_UP}
+    property NumbersOnly;
+    {$ENDIF}
+    {$IFDEF COMPILER14_UP}
+    property Touch;
+    {$ENDIF COMPILER14_UP}
+    property TextHint;
   end;
 
   { TJvFileDirEdit }
@@ -576,6 +584,11 @@ type
     {$ELSE}
     property OEMConvert default True; // Mantis 3621
     {$ENDIF UNICODE}
+
+    {$IFDEF COMPILER14_UP}
+    property Touch;
+    {$ENDIF COMPILER14_UP}
+    property TextHint;
   end;
 
   TFileDialogKind = (dkOpen, dkSave, dkOpenPicture, dkSavePicture);
@@ -1085,6 +1098,11 @@ type
     property OnPopupShown;
 
     property DataConnector;
+
+    {$IFDEF COMPILER14_UP}
+    property Touch;
+    {$ENDIF COMPILER14_UP}
+    property TextHint;
   end;
 
   EComboEditError = class(EJVCLException);
@@ -1111,8 +1129,8 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13459 $';
+    Date: '$Date: 2012-10-08 20:59:55 +0200 (lun., 08 oct. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1122,7 +1140,7 @@ implementation
 uses
   RTLConsts, Math, MaskUtils,
   MultiMon,
-  {$IFDEF COMPILER16_UP}
+  {$IFDEF COMPILER16_UP} // VCL-Styles support
   Vcl.Themes,
   {$ENDIF COMPILER16_UP}
   JclFileUtils, JclStrings,
@@ -1132,9 +1150,11 @@ uses
 {$R JvToolEdit.res}
 
 type
-  {$HINTS OFF}
   TCustomMaskEditAccessPrivate = class(TCustomEdit)
-  private
+  protected
+    {$IFDEF COMPILER18_UP}
+      {$MESSAGE WARNING 'Check if Vcl.Mask.TCustomMaskEdit still has the exact same fields and adjust the IFDEF'}
+    {$ENDIF}
     // Do not remove these fields, although they are not used.
     FEditMask: TEditMask;
     FMaskBlank: Char;
@@ -1144,9 +1164,8 @@ type
     FCaretPos: Integer;
     FBtnDownX: Integer;
     FOldValue: string;
-    FSettingCursor: Boolean;
+    FSettingCursor: Boolean; // << this field can't be read
   end;
-  {$HINTS ON}
 
   TCustomEditAccessProtected = class(TCustomEdit);
   TCustomFormAccessProtected = class(TCustomForm);
@@ -1689,7 +1708,7 @@ begin
   FBtnControl.Visible := True;
   FBtnControl.Parent := Self;
   FBtnControl.Align := alCustom;
-  FButton := TJvEditButton.Create(Self);
+  FButton := TJvEditButton.Create(Self); // this happens too late in some cases, causing a crash.
   FButton.SetBounds(0, 0, FBtnControl.Width, FBtnControl.Height);
   FButton.Visible := True;
   FButton.Align := alClient;
@@ -2638,7 +2657,7 @@ begin
           can't use that default dropdown button (because we then use toolbar buttons,
           and there is no themed dropdown toolbar button) }
         FButton.FDrawThemedDropDownBtn :=
-          ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and not ButtonFlat;
+          StyleServices.Enabled and not ButtonFlat;
         if FButton.FDrawThemedDropDownBtn then
         begin
           FButton.ButtonGlyph.Glyph := nil;
@@ -2703,11 +2722,11 @@ procedure TJvCustomComboEdit.SetButtonFlat(const Value: Boolean);
 begin
   FButton.Flat := Value;
   {$IFDEF JVCLThemesEnabled}
-  { When XP Themes are enabled, ButtonFlat = False, GlyphKind = gkDropDown then
+  { If XP Themes are enabled, ButtonFlat = False, GlyphKind = gkDropDown then
     the glyph is the default themed dropdown button. When ButtonFlat = True, we
     can't use that default dropdown button, so we have to recreate the glyph
     in this special case }
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and (ImageKind = ikDropDown) then
+  if StyleServices.Enabled and (ImageKind = ikDropDown) then
     RecreateGlyph;
   {$ENDIF JVCLThemesEnabled}
 end;
@@ -2988,22 +3007,30 @@ end;
 procedure TJvCustomComboEdit.UpdateBtnBounds(var NewLeft, NewTop, NewWidth, NewHeight: Integer);
 var
   BtnRect: TRect;
-begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  StyleExtraBorder: Integer;
+  {$ENDIF JVCLThemesEnabled}
+begin
+  if not Assigned(FButton) then
+    exit;
+
+  {$IFDEF JVCLThemesEnabled}
+  if StyleServices.Enabled then
   begin
     if BorderStyle = bsSingle then
     begin
+       // Work around the VCL Style engine bug where edit controls are painted smaller than they are (see also WMNCCalcSize)
+      StyleExtraBorder := 0;
+      if not StyleServices.IsSystemStyle and Ctl3D then
+        StyleExtraBorder := 2;
+
       if Ctl3D then
-        BtnRect := Bounds(Width - FButton.Width - 2 - 1, 0 + 1,
-          FButton.Width, Height - 2 - 2)
+        BtnRect := Bounds(Width - FButton.Width - 2 - 1 - StyleExtraBorder, 0 + 1, FButton.Width, Height - 2 - 2 - StyleExtraBorder)
       else
-        BtnRect := Bounds(Width - FButton.Width - 1 - 1, 1 + 1,
-          FButton.Width, Height - 2 - 2);
+        BtnRect := Bounds(Width - FButton.Width - 1 - 1 - StyleExtraBorder, 1 + 1, FButton.Width, Height - 2 - 2 - StyleExtraBorder);
     end
     else
-      BtnRect := Bounds(Width - FButton.Width, 0,
-        FButton.Width, Height);
+      BtnRect := Bounds(Width - FButton.Width, 0, FButton.Width, Height);
   end
   else
   {$ENDIF JVCLThemesEnabled}
@@ -3011,15 +3038,12 @@ begin
     if BorderStyle = bsSingle then
     begin
       if not Flat then
-        BtnRect := Bounds(Width - FButton.Width - 4 + 1, 0 + 1,
-          FButton.Width, Height - 4)
+        BtnRect := Bounds(Width - FButton.Width - 4 + 1, 0 + 1, FButton.Width, Height - 4)
       else
-        BtnRect := Bounds(Width - FButton.Width - 2, 2,
-          FButton.Width, Height - 4)
+        BtnRect := Bounds(Width - FButton.Width - 2, 2, FButton.Width, Height - 4)
     end
     else
-      BtnRect := Bounds(Width - FButton.Width, 0,
-        FButton.Width, Height);
+      BtnRect := Bounds(Width - FButton.Width, 0, FButton.Width, Height);
   end;
 
   // Mantis 4754: Bevels must be taken into account
@@ -3086,7 +3110,7 @@ begin
   { If flat and themes are enabled, move the left edge of the edit rectangle
     to the right, otherwise the theme edge paints over the border }
   { (rb) This was for a specific font/language; check if this is still necessary }
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     if BorderStyle = bsSingle then
     begin
@@ -3099,13 +3123,13 @@ begin
       end;
     end;
   end;
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
-  if BorderStyle = bsSingle then
-    if Ctl3D then
-      LRight := 1
-    else
-      LRight := -1;
+    if BorderStyle = bsSingle then
+      if Ctl3D then
+        LRight := 1
+      else
+        LRight := -1;
   end
   else
   {$ENDIF JVCLThemesEnabled}
@@ -3134,7 +3158,8 @@ end;
 {$IFDEF JVCLThemesEnabled}
 procedure TJvCustomComboEdit.WMNCCalcSize(var Msg: TWMNCCalcSize);
 begin
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and Ctl3D and (BorderStyle = bsSingle) then
+  if StyleServices.Enabled and Ctl3D and (BorderStyle = bsSingle) and
+     StyleServices.IsSystemStyle then // Work around the VCL Style engine bug where edit controls are painted smaller than they are (see also UpdateBtnBounds)
   begin
     with Msg.CalcSize_Params^ do
       InflateRect(rgrc[0], 1, 1);
@@ -3164,7 +3189,7 @@ var
   DrawRect: TRect;
   Details: TThemedElementDetails;
 begin
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} and Ctl3D and (BorderStyle = bsSingle) and
+  if StyleServices.Enabled and Ctl3D and (BorderStyle = bsSingle) and
      not CheckWin32Version(6, 0) then // Vista draws the border animated and not with teEditTextNormal
   begin
     DC := GetWindowDC(Handle);
@@ -3173,8 +3198,8 @@ begin
       OffsetRect(DrawRect, -DrawRect.Left, -DrawRect.Top);
       ExcludeClipRect(DC, DrawRect.Left + 1, DrawRect.Top + 1, DrawRect.Right - 1, DrawRect.Bottom - 1);
 
-      Details := ThemeServices.GetElementDetails(teEditTextNormal);
-      ThemeServices.DrawElement(DC, Details, DrawRect);
+      Details := StyleServices.GetElementDetails(teEditTextNormal);
+      StyleServices.DrawElement(DC, Details, DrawRect);
     finally
       ReleaseDC(Handle, DC);
     end;
@@ -4052,7 +4077,7 @@ var
   Bmp: TBitmap;
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     if GDirImageIndexXP < 0 then
     begin
@@ -4358,7 +4383,7 @@ var
 {$ENDIF JVCLThemesEnabled}
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     if FDrawThemedDropDownBtn then
     begin
@@ -4373,8 +4398,8 @@ begin
       else
         ThemedState := tcDropDownButtonNormal;
       R := ClientRect;
-      Details := ThemeServices.GetElementDetails(ThemedState);
-      ThemeServices.DrawElement(Canvas.Handle, Details, R);
+      Details := StyleServices.GetElementDetails(ThemedState);
+      StyleServices.DrawElement(Canvas.Handle, Details, R);
     end
     else
       inherited Paint;
@@ -4723,7 +4748,7 @@ var
   Bmp: TBitmap;
 begin
   {$IFDEF JVCLThemesEnabled}
-  if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+  if StyleServices.Enabled then
   begin
     if GFileImageIndexXP < 0 then
     begin

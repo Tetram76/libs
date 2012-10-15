@@ -27,7 +27,7 @@ Known Issues:
        example DecimalPlaces/Decimal, CheckMinValue (name indicates action?
        maybe better: TJvValidateEdit's HasMinValue) etc.
 -----------------------------------------------------------------------------}
-// $Id: JvBaseEdits.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id: JvBaseEdits.pas 13437 2012-09-24 11:46:58Z ahuser $
 
 unit JvBaseEdits;
 
@@ -203,6 +203,11 @@ type
     property OnMouseMove;
     property OnMouseUp;
     property OnStartDrag;
+
+    {$IFDEF COMPILER14_UP}
+    property Touch;
+    {$ENDIF COMPILER14_UP}
+    property TextHint;
   end;
 
   TJvCustomCalcEdit = class(TJvCustomNumEdit)
@@ -281,12 +286,10 @@ type
     property Value;
     property Visible;
     property ZeroEmpty;
-    (* ++ RDB ++ *)
     property ClipboardCommands;
     property DisabledTextColor;
     property DisabledColor;
-    (* -- RDB -- *)
-    property DecimalPlacesAlwaysShown; {WAP Added.}
+    property DecimalPlacesAlwaysShown;
     property OnButtonClick;
     property OnChange;
     property OnClick;
@@ -306,14 +309,19 @@ type
     property OnStartDrag;
     property OnPopupHidden;
     property OnPopupShown;
+
+    {$IFDEF COMPILER14_UP}
+    property Touch;
+    {$ENDIF COMPILER14_UP}
+    property TextHint;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseEdits.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    Revision: '$Revision: 13437 $';
+    Date: '$Date: 2012-09-24 13:46:58 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

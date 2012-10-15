@@ -26,7 +26,7 @@ Description:
 Known Issues:
  - BiDi support (checkbox should probably be on the right for RTL)
 -----------------------------------------------------------------------------}
-// $Id: JvCheckedMaskEdit.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id: JvCheckedMaskEdit.pas 13441 2012-09-24 13:05:24Z ahuser $
 
 unit JvCheckedMaskEdit;
 
@@ -139,8 +139,9 @@ type
     property ParentShowHint;
     property PopupMenu;
     property ReadOnly;
-    property ShowHint;
+    property ShowButton;
     property ShowCheckBox;
+    property ShowHint;
     property Text;
     property TabOrder;
     {property TabStop;} { (rb) Why disabled?}
@@ -173,8 +174,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckedMaskEdit.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    Revision: '$Revision: 13441 $';
+    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -286,7 +287,7 @@ begin
     ALeft := FCheck.Left + FCheck.Width;
     // ensure the text starts 2 points from the checkbox edge
     {$IFDEF JVCLThemesEnabled}
-    if ThemeServices.{$IFDEF RTL230_UP}Enabled{$ELSE}ThemesEnabled{$ENDIF RTL230_UP} then
+    if StyleServices.Enabled then
       ALeft := ALeft + 1;
     {$ENDIF JVCLThemesEnabled}
     if BorderStyle = bsNone then
