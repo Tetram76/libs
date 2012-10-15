@@ -1,6 +1,6 @@
 unit VirtualTrees;
 
-// Version 5.0.0
+// Version 5.0.1
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in compliance
@@ -60,6 +60,10 @@ interface
 {$WARN UNSAFE_CAST OFF}
 {$WARN UNSAFE_CODE OFF}
 
+{$IF CompilerVersion >= 24}
+  {$LEGACYIFEND ON}
+{$IFEND}
+
 {$if CompilerVersion >= 20}
   {$WARN IMPLICIT_STRING_CAST       OFF}
   {$WARN IMPLICIT_STRING_CAST_LOSS  OFF}
@@ -75,7 +79,7 @@ uses
   {$if CompilerVersion >= 18}
     oleacc,   // MSAA support in Delphi 2006 or higher
   {$ifend}
-  Messages, SysUtils, Classes, Graphics, Controls, Forms, ImgList, ActiveX, StdCtrls, Menus, Printers,
+  Messages, SysUtils, Graphics, Controls, Forms, ImgList, ActiveX, StdCtrls, Classes, Menus, Printers,
   CommCtrl,   // image lists, common controls tree structures
   Themes, UxTheme
   {$ifdef TntSupport}
@@ -121,7 +125,7 @@ type
 {$ifend}
 
 const
-  VTVersion = '5.0.0';
+  VTVersion = '5.0.1';
   VTTreeStreamVersion = 2;
   VTHeaderStreamVersion = 6;    // The header needs an own stream version to indicate changes only relevant to the header.
 
@@ -174,6 +178,9 @@ const
   ChangeTimer = 5;
   StructureChangeTimer = 6;
   SearchTimer = 7;
+  ThemeChangedTimer = 8;
+
+  ThemeChangedTimerDelay = 500;
 
   // Need to use this message to release the edit link interface asynchronously.
   WM_CHANGESTATE = WM_APP + 32;
@@ -2110,6 +2117,7 @@ type
     FLastClickPos: TPoint;                       // Used for retained drag start and wheel mouse scrolling.
     FOperationCount: Cardinal;                   // Counts how many nested long-running operations are in progress.
     FOperationCanceled: Boolean;                 // Used to indicate that a long-running operation should be canceled.
+    FChangingTheme: Boolean;                     // Used to indicate that a theme change is goi ng on
 
     // MSAA support
     FAccessible: IAccessible;                    // The IAccessible interface to the window itself.
@@ -2379,6 +2387,7 @@ type
     procedure SetVisiblePath(Node: PVirtualNode; Value: Boolean);
     procedure StaticBackground(Source: TBitmap; Target: TCanvas; OffsetPosition: TPoint; R: TRect);
     procedure StopTimer(ID: Integer);
+    procedure SetWindowTheme(Theme: String);
     procedure TileBackground(Source: TBitmap; Target: TCanvas; Offset: TPoint; R: TRect);
     function ToggleCallback(Step, StepSize: Integer; Data: Pointer): Boolean;
 
@@ -2526,6 +2535,7 @@ type
     procedure DoGetLineStyle(var Bits: Pointer); virtual;
     function DoGetNodeHint(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): UnicodeString; virtual;
     function DoGetNodeTooltip(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): UnicodeString; virtual;
+    function DoGetNodeExtraWidth(Node: PVirtualNode; Column: TColumnIndex; Canvas: TCanvas = nil): Integer; virtual;
     function DoGetNodeWidth(Node: PVirtualNode; Column: TColumnIndex; Canvas: TCanvas = nil): Integer; virtual;
     function DoGetPopupMenu(Node: PVirtualNode; Column: TColumnIndex; Position: TPoint): TPopupMenu; virtual;
     procedure DoGetUserClipboardFormats(var Formats: TFormatEtcArray); virtual;
@@ -2747,7 +2757,7 @@ type
     property OnAfterColumnExport : TVTColumnExportEvent read FOnAfterColumnExport write FOnAfterColumnExport;
     property OnAfterColumnWidthTracking: TVTAfterColumnWidthTrackingEvent read FOnAfterColumnWidthTracking write FOnAfterColumnWidthTracking;
     property OnAfterGetMaxColumnWidth: TVTAfterGetMaxColumnWidthEvent read FOnAfterGetMaxColumnWidth write FOnAfterGetMaxColumnWidth;
-    property OnAfterHeaderExport: TVTTreeExportEvent read FOnBeforeHeaderExport write FOnBeforeHeaderExport;
+    property OnAfterHeaderExport: TVTTreeExportEvent read FOnAfterHeaderExport write FOnAfterHeaderExport;
     property OnAfterHeaderHeightTracking: TVTAfterHeaderHeightTrackingEvent read FOnAfterHeaderHeightTracking
       write FOnAfterHeaderHeightTracking;
     property OnAfterItemErase: TVTAfterItemEraseEvent read FOnAfterItemErase write FOnAfterItemErase;
@@ -3051,7 +3061,7 @@ type
     property CutCopyCount: Integer read GetCutCopyCount;
     property DragImage: TVTDragImage read FDragImage;
     property DragManager: IVTDragManager read GetDragManager;
-    property DropTargetNode: PVirtualNode read FDropTargetNode;
+    property DropTargetNode: PVirtualNode read FDropTargetNode write FDropTargetNode;
     property EditLink: IVTEditLink read FEditLink;
     property EmptyListMessage: UnicodeString read FEmptyListMessage write SetEmptyListMessage;
     property Expanded[Node: PVirtualNode]: Boolean read GetExpanded write SetExpanded;
@@ -3247,6 +3257,7 @@ type
     procedure GetRenderStartValues(Source: TVSTTextSourceType; var Node: PVirtualNode;
       var NextNodeProc: TGetNextNodeProc);
     function GetOptions: TCustomStringTreeOptions;
+    function GetStaticText(Node: PVirtualNode; Column: TColumnIndex): UnicodeString;
     function GetText(Node: PVirtualNode; Column: TColumnIndex): UnicodeString;
     procedure InitializeTextProperties(var PaintInfo: TVTPaintInfo);
     procedure PaintNormalText(var PaintInfo: TVTPaintInfo; TextOutFlags: Integer; Text: UnicodeString);
@@ -3262,12 +3273,14 @@ type
   protected
     procedure AdjustPaintCellRect(var PaintInfo: TVTPaintInfo; var NextNonEmpty: TColumnIndex); override;
     function CanExportNode(Node: PVirtualNode): Boolean;
+    function CalculateStaticTextWidth(Canvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; Text: UnicodeString): Integer; virtual;
     function CalculateTextWidth(Canvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; Text: UnicodeString): Integer; virtual;
     function ColumnIsEmpty(Node: PVirtualNode; Column: TColumnIndex): Boolean; override;
     procedure DefineProperties(Filer: TFiler); override;
     function DoCreateEditor(Node: PVirtualNode; Column: TColumnIndex): IVTEditLink; override;
     function DoGetNodeHint(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): UnicodeString; override;
     function DoGetNodeTooltip(Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle): UnicodeString; override;
+    function DoGetNodeExtraWidth(Node: PVirtualNode; Column: TColumnIndex; Canvas: TCanvas = nil): Integer; override;
     function DoGetNodeWidth(Node: PVirtualNode; Column: TColumnIndex; Canvas: TCanvas = nil): Integer; override;
     procedure DoGetText(Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var Text: UnicodeString); virtual;
@@ -3321,6 +3334,7 @@ type
 
     function SaveToCSVFile(const FileNameWithPath : TFileName; const IncludeHeading : Boolean) : Boolean;
     property ImageText[Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex]: UnicodeString read GetImageText;
+    property StaticText[Node: PVirtualNode; Column: TColumnIndex]: UnicodeString read GetStaticText;
     property Text[Node: PVirtualNode; Column: TColumnIndex]: UnicodeString read GetText write SetText;
   end;
 
@@ -3842,7 +3856,7 @@ implementation
 {$R VirtualTrees.res}
 
 uses
-  Consts, Math,
+  Consts, Math, Types,
   AxCtrls,                 // TOLEStream
   MMSystem,                // for animation timer (does not include further resources)
   TypInfo,                 // for migration stuff
@@ -3851,6 +3865,9 @@ uses
   {$ifdef UNICODE}
   AnsiStrings,
   {$endif UNICODE}
+  {$IF CompilerVersion >= 24}
+  UITypes,
+  {$IFEND}
   StrUtils,
   VTAccessibilityFactory;  // accessibility helper class
 
@@ -6516,13 +6533,13 @@ begin
            (toUseExplorerTheme in (ToBeSet + ToBeCleared)) then
           if toUseExplorerTheme in ToBeSet then
           begin
-            SetWindowTheme(Handle, 'explorer', nil);
+            SetWindowTheme('explorer');
             DoStateChange([tsUseExplorerTheme]);
           end
           else
             if toUseExplorerTheme in ToBeCleared then
             begin
-              SetWindowTheme(Handle, '', nil);
+              SetWindowTheme('');
               DoStateChange([], [tsUseExplorerTheme]);
             end;
 
@@ -9181,7 +9198,7 @@ begin
       // If the text is taller than the given height, perform no vertical centration as this
       // would make the text even less readable.
       //Using Max() fixes badly positioned text if Extra Large fonts have been activated in the Windows display options
-        TextPos.Y := Max(-5,(ClientSize.Y - TextSize.cy) div 2);
+      TextPos.Y := Max(-5, (ClientSize.Y - TextSize.cy) div 2);
     end
     else
     begin
@@ -9372,7 +9389,11 @@ begin
     if Layout = blGlyphLeft then
       MinLeft := HeaderGlyphPos.X + HeaderGlyphSize.X + FSpacing;
     if FCheckBox and (Owner.Header.MainColumn = Self.Index) then
-      Dec(HeaderGlyphPos.X, 2 + 2 * Integer(toShowRoot in Owner.FHeader.Treeview.TreeOptions.FPaintOptions));
+      Dec(HeaderGlyphPos.X, 2 + 2 * Integer(toShowRoot in Owner.FHeader.Treeview.TreeOptions.FPaintOptions))
+    else
+      if Owner.Header.MainColumn <> Self.Index then
+        Dec(HeaderGlyphPos.X, 2);
+
     // Finally transform header glyph to its actual position.
     Inc(HeaderGlyphPos.X, Client.Left);
     Inc(HeaderGlyphPos.Y, Client.Top);
@@ -9463,7 +9484,7 @@ begin
     vaLString, vaString:
       SetText(Reader.ReadString);
   else
-    SetText(Reader.ReadWideString);
+    SetText(Reader.{$if CompilerVersion >= 23}ReadString{$else}ReadWideString{$ifend});
   end;
 end;
 
@@ -9476,7 +9497,7 @@ begin
     vaLString, vaString:
       FHint := Reader.ReadString;
   else
-    FHint := Reader.ReadWideString;
+    FHint := Reader.{$if CompilerVersion >= 23}ReadString{$else}ReadWideString{$ifend};
   end;
 end;
 
@@ -9485,7 +9506,7 @@ end;
 procedure TVirtualTreeColumn.WriteHint(Writer: TWriter);
 
 begin
-  Writer.WriteWideString(FHint);
+  Writer.{$IF CompilerVersion >= 20}WriteString{$else}WriteWideString{$ifend}(FHint);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -9493,7 +9514,7 @@ end;
 procedure TVirtualTreeColumn.WriteText(Writer: TWriter);
 
 begin
-  Writer.WriteWideString(FText);
+  Writer.{$IF CompilerVersion >= 20}WriteString{$else}WriteWideString{$ifend}(FText);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -13865,6 +13886,12 @@ begin
   // The window handle must be destroyed before the header is freed because it is needed in WM_NCDESTROY.
   if HandleAllocated then
     DestroyWindowHandle;
+
+  // Release FDottedBrush in case WM_NCDESTROY hasn't been triggered.
+  if FDottedBrush <> 0 then
+    DeleteObject(FDottedBrush);
+  FDottedBrush := 0;
+
   FOptions.Free; // WM_NCDESTROY accesses FOptions
   FHeader.Free;
   FHeader := nil;
@@ -14017,7 +14044,7 @@ begin
         VAlign := MulDiv(Integer(Node.NodeHeight), Node.Align, 100);
   end;
 
-  VButtonAlign := VAlign - FPlusBM.Height div 2;
+  VButtonAlign := VAlign - FPlusBM.Height div 2 - (FPlusBM.Height and 1);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -16913,6 +16940,15 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
+procedure TBaseVirtualTree.SetWindowTheme(Theme: String);
+
+begin
+  FChangingTheme := True;
+  UxTheme.SetWindowTheme(Handle, PWideChar(Theme), nil);
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
 procedure TBaseVirtualTree.TileBackground(Source: TBitmap; Target: TCanvas; Offset: TPoint; R: TRect);
 
 // Draws the given source graphic so that it tiles into the given rectangle which is relative to the target bitmap.
@@ -16923,7 +16959,6 @@ var
   SourceX,
   SourceY,
   TargetX,
-
   DeltaY: Integer;
 
 begin
@@ -17787,6 +17822,7 @@ begin
   StopTimer(HeaderTimer);
   StopTimer(ScrollTimer);
   StopTimer(SearchTimer);
+  StopTimer(ThemeChangedTimer);
   FSearchBuffer := '';
   FLastSearchNode := nil;
 
@@ -19188,7 +19224,12 @@ begin
     DoStateChange([tsUseThemes])
   else
     DoStateChange([], [tsUseThemes]);
-  RedrawWindow(Handle, nil, 0, RDW_INVALIDATE or RDW_VALIDATE or RDW_FRAME);
+
+  // Updating the visuals here will not work correctly. Therefore we postpone
+  // the update by using a timer.
+  if not FChangingTheme then
+    SetTimer(Handle, ThemeChangedTimer, ThemeChangedTimerDelay, nil);
+  FChangingTheme := False;
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -19228,6 +19269,11 @@ begin
           StopTimer(SearchTimer);
           FSearchBuffer := '';
           FLastSearchNode := nil;
+        end;
+      ThemeChangedTimer:
+        begin
+          StopTimer(ThemeChangedTimer);
+          RecreateWnd;
         end;
     end;
   end;
@@ -19957,7 +20003,7 @@ begin
     if (toUseExplorerTheme in FOptions.FPaintOptions) and IsWinVistaOrAbove then
     begin
       DoStateChange([tsUseExplorerTheme]);
-      SetWindowTheme(Handle, 'explorer', nil);
+      SetWindowTheme('explorer');
     end
     else
       DoStateChange([], [tsUseExplorerTheme]);
@@ -20028,8 +20074,9 @@ var
 begin
   ImageHit := HitInfo.HitPositions * [hiOnNormalIcon, hiOnStateIcon] <> [];
   LabelHit := hiOnItemLabel in HitInfo.HitPositions;
-  ItemHit := ((hiOnItem in HitInfo.HitPositions) and ((toFullRowDrag in FOptions.FMiscOptions) or
-             (toFullRowSelect in FOptions.FSelectionOptions)));
+  ItemHit := ((hiOnItem in HitInfo.HitPositions) and
+             ((toFullRowDrag in FOptions.FMiscOptions) or (toFullRowSelect in FOptions.FSelectionOptions)));
+
   // In report mode only direct hits of the node captions/images in the main column are accepted as hits.
   if (toReportMode in FOptions.FMiscOptions) and not (ItemHit or ((LabelHit or ImageHit) and
     (HitInfo.HitColumn = FHeader.MainColumn))) then
@@ -20037,7 +20084,7 @@ begin
 
   if Assigned(HitInfo.HitNode) then
   begin
-    if ItemHit or LabelHit or ImageHit or not (toShowDropmark in FOptions.FPaintOptions) then
+    if LabelHit or ImageHit or not (toShowDropmark in FOptions.FPaintOptions) then
       Result := dmOnNode
     else
       if ((NodeRect.Top + NodeRect.Bottom) div 2) > P.Y then
@@ -20131,7 +20178,7 @@ begin
     end;
   end;
 
-  if Offset < (Indent + Margin{See issue #259}) then
+  if (MainColumnHit and (Offset < (Indent + Margin{See issue #259}))) then
   begin
     // Position is to the left of calculated indentation which can only happen for the main column.
     // Check whether it corresponds to a button/checkbox.
@@ -21441,7 +21488,19 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
+function TBaseVirtualTree.DoGetNodeExtraWidth(Node: PVirtualNode; Column: TColumnIndex; Canvas: TCanvas = nil): Integer;
+
+// Returns the pixel width of extra space occupied by node contents (for example, static text).
+
+begin
+  Result := 0;
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
 function TBaseVirtualTree.DoGetNodeWidth(Node: PVirtualNode; Column: TColumnIndex; Canvas: TCanvas = nil): Integer;
+
+// Returns the pixel width of a node.
 
 begin
   Result := 0;
@@ -25148,7 +25207,7 @@ begin
           for I := 0 to IndentSize - 1 do
           begin
             DoBeforeDrawLineImage(PaintInfo.Node, I + Ord(not (toShowRoot in TreeOptions.PaintOptions)), XPos);
-            DrawLineImage(PaintInfo, XPos, CellRect.Top, NodeHeight[Node] - 1, VAlignment, NewStyles[I],
+            DrawLineImage(PaintInfo, XPos, CellRect.Top, NodeHeight[Node] - 1, VAlignment - 1, NewStyles[I],
               BidiMode <> bdLeftToRight);
             Inc(XPos, Offset);
           end;
@@ -25158,7 +25217,7 @@ begin
       for I := 0 to IndentSize - 1 do
       begin
         DoBeforeDrawLineImage(PaintInfo.Node, I + Ord(not (toShowRoot in TreeOptions.PaintOptions)), XPos);
-        DrawLineImage(PaintInfo, XPos, CellRect.Top, NodeHeight[Node], VAlignment, LineImage[I],
+        DrawLineImage(PaintInfo, XPos, CellRect.Top, NodeHeight[Node], VAlignment - 1, LineImage[I],
           BidiMode <> bdLeftToRight);
         Inc(XPos, Offset);
       end;
@@ -28782,6 +28841,7 @@ begin
         Inc(TextLeft, StateImageOffset);
 
       CurrentWidth := DoGetNodeWidth(Run, Column);
+      Inc(CurrentWidth, DoGetNodeExtraWidth(Run, Column));
       Inc(CurrentWidth, DoGetCellContentMargin(Run, Column).X);
 
       if Result < (TextLeft + CurrentWidth) then
@@ -31119,6 +31179,10 @@ var
   SelectLevel: Integer;        // > 0 if current node is selected or child/grandchild etc. of a selected node
   FirstColumn: TColumnIndex;   // index of first column which is at least partially visible in the given window
 
+  MaxRight,
+  ColLeft,
+  ColRight: Integer;
+
   SavedTargetDC: Integer;
   PaintWidth: Integer;
   CurrentNodeHeight: Integer;
@@ -31219,7 +31283,7 @@ begin
 
         if Assigned(PaintInfo.Node) then
         begin
-          ButtonX := Round((Integer(FIndent) - FPlusBM.Width) / 2);
+          ButtonX := Round((Integer(FIndent) - FPlusBM.Width) / 2) + 1;
 
           // ----- main node paint loop
           while Assigned(PaintInfo.Node) do
@@ -31228,7 +31292,7 @@ begin
             SelectLevel := DetermineLineImageAndSelectLevel(PaintInfo.Node, LineImage);
             IndentSize := Length(LineImage);
             if not (toFixedIndent in FOptions.FPaintOptions) then
-              ButtonX := (IndentSize - 1) * Integer(FIndent) + Round((Integer(FIndent) - FPlusBM.Width) / 2);
+              ButtonX := (IndentSize - 1) * Integer(FIndent) + Round((Integer(FIndent) - FPlusBM.Width) / 2) + 1;
 
             // Initialize node if not already done.
             if not (vsInitialized in PaintInfo.Node.States) then
@@ -31603,30 +31667,40 @@ begin
                     R.Right := R.Left +  Items[FirstColumn].FWidth;
                   end;
 
+                  // Initialize MaxRight.
+                  MaxRight := Target.X - 1;
+
                   PaintInfo.Canvas.Font.Color := FColors.GridLineColor;
-                  while (FirstColumn <> InvalidColumn) and (R.Left < TargetRect.Right + Target.X) do
+                  while (FirstColumn <> InvalidColumn) and (MaxRight < TargetRect.Right + Target.X) do
                   begin
-                    if (poGridLines in PaintOptions) and
-                       (toFullVertGridLines in FOptions.FPaintOptions) and
-                       (toShowVertGridLines in FOptions.FPaintOptions) and
-                       (not (hoAutoResize in FHeader.FOptions) or (Cardinal(FirstColumn) < TColumnPosition(Count - 1))) then
+                    // Determine left and right coordinate of the current column
+                    ColLeft := Items[FirstColumn].Left;
+                    ColRight := (ColLeft + Items[FirstColumn].FWidth);
+
+                    // Check wether this column needs to be painted at all.
+                    if (ColRight >= MaxRight) then
                     begin
-                      DrawDottedVLine(PaintInfo, R.Top, R.Bottom, R.Right - 1);
-                      Dec(R.Right);
+                      R.Left := MaxRight;     // Continue where we left off
+                      R.Right := ColRight;    // Paint to the right of the column
+                      MaxRight := ColRight;   // And record were to start the next column.
+
+                      if (poGridLines in PaintOptions) and
+                         (toFullVertGridLines in FOptions.FPaintOptions) and
+                         (toShowVertGridLines in FOptions.FPaintOptions) and
+                         (not (hoAutoResize in FHeader.FOptions) or (Cardinal(FirstColumn) < TColumnPosition(Count - 1))) then
+                      begin
+                        DrawDottedVLine(PaintInfo, R.Top, R.Bottom, R.Right - 1);
+                        Dec(R.Right);
+                      end;
+
+                      if not (coParentColor in Items[FirstColumn].FOptions) then
+                        PaintInfo.Canvas.Brush.Color := Items[FirstColumn].FColor
+                      else
+                        PaintInfo.Canvas.Brush.Color := Color;
+
+                      PaintInfo.Canvas.FillRect(R);
                     end;
-
-                    if not (coParentColor in Items[FirstColumn].FOptions) then
-                      PaintInfo.Canvas.Brush.Color := Items[FirstColumn].FColor
-                    else
-                      PaintInfo.Canvas.Brush.Color := Color;
-
-                    PaintInfo.Canvas.FillRect(R);
                     FirstColumn := GetNextVisibleColumn(FirstColumn);
-                    if FirstColumn <> InvalidColumn then
-                    begin
-                      R.Left := Items[FirstColumn].Left;
-                      R.Right := R.Left + Items[FirstColumn].FWidth;
-                    end;
                   end;
 
                   // Erase also the part of the tree not covert by a column.
@@ -32701,13 +32775,13 @@ procedure TBaseVirtualTree.SortTree(Column: TColumnIndex; Direction: TSortDirect
 
   begin
     Sort(Node, Column, Direction, DoInit);
-
+    // Recurse to next level
     Run := Node.FirstChild;
     while Assigned(Run) and not FOperationCanceled do
     begin
       if DoInit and not (vsInitialized in Run.States) then
         InitNode(Run);
-      if vsInitialized in Run.States then
+      if (vsInitialized in Run.States) and Expanded[Node] then // There is no need to sort collapsed branches
         DoSort(Run);
       Run := Run.NextSibling;
     end;
@@ -34046,6 +34120,21 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
+function TCustomVirtualStringTree.GetStaticText(Node: PVirtualNode; Column: TColumnIndex): UnicodeString;
+
+begin
+  Assert(Assigned(Node), 'Node must not be nil.');
+
+  if not (vsInitialized in Node.States) then
+    InitNode(Node);
+  Result := '';
+
+  DoGetText(Node, Column, ttStatic, Result);
+end;
+
+
+//----------------------------------------------------------------------------------------------------------------------
+
 function TCustomVirtualStringTree.GetText(Node: PVirtualNode; Column: TColumnIndex): UnicodeString;
 
 begin
@@ -34117,6 +34206,7 @@ var
   R: TRect;
   DrawFormat: Cardinal;
   Size: TSize;
+  Height: Integer;
 
 begin
   InitializeTextProperties(PaintInfo);
@@ -34124,6 +34214,7 @@ begin
   begin
     R := ContentRect;
     Canvas.TextFlags := 0;
+    InflateRect(R, -FTextMargin, 0);
 
     // Multiline nodes don't need special font handling or text manipulation.
     // Note: multiline support requires the Unicode version of DrawText, which is able to do word breaking.
@@ -34132,7 +34223,7 @@ begin
     //       for 9x/Me.
     if vsMultiline in Node.States then
     begin
-      InflateRect(R, -FTextMargin, 0);
+      Height := ComputeNodeHeight(Canvas, Node, Column);
       DoPaintText(Node, Canvas, Column, ttNormal);
       // Disabled node color overrides all other variants.
       if (vsDisabled in Node.States) or not Enabled then
@@ -34143,10 +34234,13 @@ begin
       DrawFormat := DT_NOPREFIX or DT_WORDBREAK or DT_END_ELLIPSIS or DT_EDITCONTROL or AlignmentToDrawFlag[Alignment];
       if BidiMode <> bdLeftToRight then
         DrawFormat := DrawFormat or DT_RTLREADING;
+
+      // Center the text vertically if it fits entirely into the content rect.
+      if R.Bottom - R.Top > Height then
+        InflateRect(R, 0, (Height - R.Bottom - R.Top) div 2);
     end
     else
     begin
-      InflateRect(R, -FTextMargin, 0);
       FFontChanged := False;
       TripleWidth := FEllipsisWidth;
       DoPaintText(Node, Canvas, Column, ttNormal);
@@ -34253,7 +34347,7 @@ begin
     vaLString, vaString:
       SetDefaultText(Reader.ReadString);
   else
-    SetDefaultText(Reader.ReadWideString);
+    SetDefaultText(Reader.{$if CompilerVersion >= 23}ReadString{$else}ReadWideString{$ifend});
   end;
 end;
 
@@ -34312,7 +34406,7 @@ end;
 procedure TCustomVirtualStringTree.WriteText(Writer: TWriter);
 
 begin
-  Writer.WriteWideString(FDefaultText);
+  Writer.{$IF CompilerVersion >= 20}WriteString{$else}WriteWideString{$ifend}(FDefaultText);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -34382,6 +34476,23 @@ begin
     end
     else
       inherited;
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+function TCustomVirtualStringTree.CalculateStaticTextWidth(Canvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  Text: UnicodeString): Integer;
+
+begin
+  Result := 0;
+  if (Length(Text) > 0) and (Alignment <> taCenter) and not
+     (vsMultiline in Node.States) and (toShowStaticText in TreeOptions.FStringOptions) then
+  begin
+    DoPaintText(Node, Canvas, Column, ttStatic);
+
+    Inc(Result, DoTextMeasuring(Canvas, Node, Column, Text).cx);
+    Inc(Result, FTextMargin);
+  end;
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -34462,6 +34573,17 @@ begin
     FOnGetHint(Self, Node, Column, LineBreakStyle, Result)
   else
     Result := Text[Node, Column];
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+function TCustomVirtualStringTree.DoGetNodeExtraWidth(Node: PVirtualNode; Column: TColumnIndex;
+  Canvas: TCanvas = nil): Integer;
+
+begin
+    if Canvas = nil then
+      Canvas := Self.Canvas;
+    Result := CalculateStaticTextWidth(Canvas, Node, Column, StaticText[Node, Column]);
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
