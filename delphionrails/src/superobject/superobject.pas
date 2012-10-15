@@ -235,6 +235,7 @@ type
     function GetValues: ISuperObject;
     function GetNames: ISuperObject;
     function Find(const k: SOString; var value: ISuperObject): Boolean;
+    function Exists(const k: SOString): Boolean;
   end;
 
   TSuperAvlIterator = class
@@ -581,6 +582,7 @@ type
     function call(const path: SOString; const param: ISuperObject = nil): ISuperObject; overload;
     function call(const path, param: SOString): ISuperObject; overload;
 {$ENDIF}
+
     // clone a node
     function Clone: ISuperObject;
     function Delete(const path: SOString): ISuperObject;
@@ -722,7 +724,7 @@ type
 {$ENDIF}
     property A[const path: SOString]: TSuperArray read GetA;
 
-{$IFDEF SUPER_METHOD}
+    {$IFDEF SUPER_METHOD}
     function call(const path: SOString; const param: ISuperObject = nil): ISuperObject; overload; virtual;
     function call(const path, param: SOString): ISuperObject; overload; virtual;
 {$ENDIF}
@@ -6601,6 +6603,11 @@ begin
     Result := False;
 end;
 
+function TSuperTableString.Exists(const k: SOString): Boolean;
+begin
+  Result := Search(k) <> nil;
+end;
+
 function TSuperTableString.GetO(const k: SOString): ISuperObject;
 var
   e: TSuperAvlEntry;
@@ -7007,7 +7014,7 @@ function TSuperRttiContext.FromJson(TypeInfo: PTypeInfo; const obj: ISuperObject
         if Result then
           f.SetValue(p, v) else
           begin
-            Writeln(f.Name);
+            //Writeln(f.Name);
             Exit;
           end;
       end else
@@ -7214,6 +7221,7 @@ function TSuperRttiContext.FromJson(TypeInfo: PTypeInfo; const obj: ISuperObject
 var
   Serial: TSerialFromJson;
 begin
+
   if TypeInfo <> nil then
   begin
     if not SerialFromJson.TryGetValue(TypeInfo, Serial) then
