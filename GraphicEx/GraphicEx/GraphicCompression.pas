@@ -49,11 +49,12 @@ interface
 
 {$I GraphicConfiguration.inc}
 
-uses                                                
-  Windows, Classes, SysUtils, Graphics,  
+uses
+  Windows, Classes, SysUtils, Graphics,
   JPG,   // JPEG compression support
-  MZLib;  // general inflate/deflate and LZ77 compression support
-     
+  ZLibh;  // general inflate/deflate and LZ77 compression support
+//  ZLibEx, ZLibExApi;  // general inflate/deflate and LZ77 compression support
+
 type
   // abstract decoder class to define the base functionality of an encoder/decoder
   TDecoder = class
@@ -196,7 +197,7 @@ type
 
   TLZ77Decoder = class(TDecoder)
   private
-    FStream: TZState;
+    FStream: z_stream_s;
     FZLibResult,         // contains the return code of the last ZLib operation
     FFlushMode: Integer; // one of flush constants declard in ZLib.pas
                          // this is usually Z_FINISH for PSP and Z_PARTIAL_FLUSH for PNG
@@ -219,7 +220,7 @@ type
   end;
 
   TTIFFJPEGDecoder = class;
-        
+
   TJPEGGeneral = packed record
     case byte of
       0: (common: jpeg_common_struct);
@@ -301,7 +302,7 @@ type
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure CompressionError(ErrorString: String); overload;
+procedure CompressionError(ErrorString: string); overload;
 
 begin
   raise EGraphicCompression.Create(ErrorString);
@@ -1700,7 +1701,7 @@ procedure TCCITTDecoder.MakeStates;
 
   procedure AddCode(var Target: TStateArray; Bits: Cardinal; BitLen, RL: Integer);
 
-  // interprets the given string as a sequence of bits and makes a state chain from it
+  // interprets the given AnsiString as a sequence of bits and makes a state chain from it
 
   var
     State,
@@ -1714,7 +1715,7 @@ procedure TCCITTDecoder.MakeStates;
     Bits := Bits shl (32 - BitLen);
     while BitLen > 0 do
     begin
-      // determine next state according to the bit string
+      // determine next state according to the bit AnsiString
       asm
         SHL [Bits], 1
         SETC [Bit]
@@ -1983,17 +1984,17 @@ end;
 procedure TLZ77Decoder.Decode(var Source, Dest: Pointer; PackedSize, UnpackedSize: Integer);
 
 begin
-  FStream.NextInput := Source;
-  FStream.AvailableInput := PackedSize;
+  FStream.next_in := Source;
+  FStream.avail_in := PackedSize;
   if FAutoReset then FZLibResult := InflateReset(FStream);
   if FZLibResult = Z_OK then
   begin
-    FStream.NextOutput := Dest;
-    FStream.AvailableOutput := UnpackedSize;
+    FStream.next_out := Dest;
+    FStream.avail_out := UnpackedSize;
     FZLibResult := Inflate(FStream, FFlushMode);
     // advance pointers so used input can be calculated
-    Source := FStream.NextInput;
-    Dest := FStream.NextOutput;
+    Source := FStream.next_in;
+    Dest := FStream.next_out;
   end;
 end;
 
@@ -2026,7 +2027,7 @@ end;
 function TLZ77Decoder.GetAvailableInput: Integer;
 
 begin
-  Result := FStream.AvailableInput;
+  Result := FStream.avail_in;
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -2034,7 +2035,7 @@ end;
 function TLZ77Decoder.GetAvailableOutput: Integer;
 
 begin
-  Result := FStream.AvailableOutput;
+  Result := FStream.avail_out;
 end;
 
 //----------------- TTIFFJPEGDecoder ---------------------------------------------------------------------------------------
@@ -2055,7 +2056,7 @@ var
 begin
   State := Pointer(cinfo);
 	State.Error.format_message(@State.General.common, Buffer);
-  Msg := Copy(PAnsiChar(@Buffer), 1, JMSG_LENGTH_MAX);
+  Msg := string(Copy(PAnsiChar(@Buffer), 1, JMSG_LENGTH_MAX));
   MessageBox(0, PChar(Msg), PChar(gesWarning), MB_OK or MB_ICONWARNING);
 end;
 
