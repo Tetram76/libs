@@ -65,7 +65,10 @@ interface
 
 uses
   Windows, Classes, ExtCtrls, Graphics, SysUtils, JPEG,
-  GraphicCompression, GraphicStrings, GraphicColor;
+  GraphicCompression, GraphicStrings, GraphicColor
+  , ZLibh
+// , ZLibEx, ZLibExApi
+  ;
 
 type
   TCardinalArray = array of Cardinal;
@@ -392,7 +395,7 @@ type
     FDecoder: TLZ77Decoder;
     FIDATSize: Integer;        // remaining bytes in the current IDAT chunk
     FRawBuffer,                // buffer to load raw chunk data and to check CRC
-    FCurrentSource: PByte;   // points into FRawBuffer for current position of decoding
+    FCurrentSource: PBytef;   // points into FRawBuffer for current position of decoding
     FHeader: TPNGChunkHeader;  // header of the current chunk
     FCurrentCRC: Cardinal;     // running CRC for the current chunk
     FSourceBPP: Integer;       // bits per pixel used in the file
@@ -489,7 +492,7 @@ var
 implementation
 
 uses
-  Consts, Math, ZLibEx, ZLibExApi, AnsiStrings;
+  Consts, Math, AnsiStrings;
 
 type
   // resampling support types
@@ -3019,10 +3022,12 @@ begin
           Compression := ctFaxRLEW;
         COMPRESSION_CCITTFAX3:
           Compression := ctFax3;
+{$ifdef use_jpeg}
         COMPRESSION_OJPEG:
           Compression := ctOJPEG;
         COMPRESSION_JPEG:
           Compression := ctJPEG;
+{$endif def use_jpeg}
         COMPRESSION_CCITTFAX4:
           Compression := ctFax4;
         COMPRESSION_NEXT:
@@ -7172,7 +7177,7 @@ procedure TPNGGraphic.LoadBackgroundColor(const Description);
 // loads the data from the current chunk (must be a bKGD chunk) and fills the bitmpap with that color
 
 var
-  Run: PByte;
+  Run: PBytef;
   R, G, B: Byte;
 
 begin
@@ -7356,7 +7361,7 @@ procedure TPNGGraphic.LoadTransparency(const Description);
 // reads the data of the current transparency chunk
 
 var
-  Run: PByte;
+  Run: PBytef;
   R, G, B: Byte;
   
 begin
