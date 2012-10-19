@@ -238,5 +238,23 @@
         <PropertyCommitComment/>
       </SVNExternalOptions>
     </external>
+    <external Name="Graphics32" Kind="ekVendorBranch">
+      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>Graphics32</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/Graphics32</RepositoryExternalPath>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>https://graphics32.svn.sourceforge.net/svnroot/graphics32</BaseURL>
+        <VendorPath>/vendors/graphics32</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
   </externals>
 </config>
