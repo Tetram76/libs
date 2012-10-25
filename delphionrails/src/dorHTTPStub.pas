@@ -88,6 +88,7 @@ type
     procedure Render(const str: string); overload;
     procedure Redirect(const location: string); overload;
     procedure Redirect(const controler, action: string; const id: string = ''); overload;
+    property FileToSend: string read FSendFile write FSendFile;
     property Return: ISuperObject read FReturn;
     property Request: THTTPMessage read FRequest;
     property Response: THTTPMessage read FResponse;
@@ -1056,8 +1057,7 @@ end;
 
 procedure THTTPStub.ProcessRequest;
 var
-  str: string;
-  path: string;
+  str, path, ext: string;
   rec: TSearchRec;
   clazz: TRttiType;
   inst: TObject;
@@ -1086,21 +1086,43 @@ begin
         end;
       end;
 
-      if (FErrorCode >= 300) or (FErrorCode = 204) then Exit;
+      if (FErrorCode >= 300) or (FErrorCode = 204) then
+        Exit;
 
       if (Request.AsObject.S['method'] <> 'GET') and (Request.AsObject.S['method'] <> 'POST') then
         Exit;
+
+      // file ?
+      if (FSendFile <> '') then
+      begin
+        ext := LowerCase(ExtractFileExt(FSendFile));
+        System.Delete(ext, 1, 1);
+        FResponse.AsObject.S['Content-Type'] := FFormats.S[ext + '.content'];
+        if FResponse.AsObject.S['Content-Type'] = '' then
+          FResponse.AsObject.S['Content-Type'] := 'application/binary';
+        Compress := FFormats.B[ext + '.istext'];
+
+        if FileExists(FSendFile) then
+        begin
+          FErrorCode := 200;
+          FResponse.AsObject.S['Content-Disposition'] := 'attachment; filename=' + ExtractFileName(FSendFile);
+          FResponse.AsObject.S['Content-Transfer-Encoding'] := 'binary';
+        end
+        else
+          FErrorCode := 404;
+        Exit;
+      end;
 
       // view ?
       RenderInternal;
       if not (FErrorCode in [200..207]) then
         RenderScript;
       if FErrorCode in [200..207] then
-        begin
-          FResponse.AsObject.S['Cache-Control'] := 'private, max-age=0';
-          Compress := FFormats.B[Params.AsObject.S['format'] + '.istext'];
-          Exit;
-        end;
+      begin
+        FResponse.AsObject.S['Cache-Control'] := 'private, max-age=0';
+        Compress := FFormats.B[Params.AsObject.S['format'] + '.istext'];
+        Exit;
+      end;
     end;
 
   // static ?
@@ -1111,6 +1133,11 @@ begin
     str := str + 'index.' + FParams.AsObject.S['format'];
   if FindFirst(path + str, faAnyFile, rec) = 0 then
   begin
+    { Although the rec.Time is platform bounded and deprecated (on Windows) in
+      favor of the new TimeStamp property, all we need here is an integer
+      timestamp that changes with the resource }
+  {$WARN SYMBOL_PLATFORM OFF}
+  {$WARN SYMBOL_DEPRECATED OFF}
     FIsStatic := True;
     if Request.B['env.if-none-match'] and
       (Request.S['env.if-none-match'] = IntToStr(rec.Time) + '-' + IntToStr(rec.Size)) then
@@ -1126,6 +1153,8 @@ begin
     Compress := FFormats.B[Params.AsObject.S['format'] + '.istext'];
     FindClose(rec);
     FErrorCode := 200;
+  {$WARN SYMBOL_DEPRECATED ON}
+  {$WARN SYMBOL_PLATFORM ON}
   end else
     FErrorCode :=  404;
 end;
@@ -1470,7 +1499,7 @@ function THTTPStub.Upgrade: Cardinal;
     Result := WebSocket;
   end;
 
-  function doWebSocket07: Cardinal;
+  function doWebSocketNew: Cardinal;
   var
     key, origin: ISuperObject;
     ret: RawByteString;
@@ -1478,7 +1507,12 @@ function THTTPStub.Upgrade: Cardinal;
   begin
     Result := 0;
     origin := Request['env.sec-websocket-origin'];
-    if not ObjectIsType(origin, stString) then Exit;
+    if not ObjectIsType(origin, stString) then
+    begin
+      origin := Request['env.origin'];
+      if not ObjectIsType(origin, stString) then
+        Exit;
+    end;
 
     key := Request['env.sec-websocket-key'];
     if not ObjectIsType(key, stString) then Exit;
@@ -1502,8 +1536,8 @@ begin
     case FWebSocketVersion of
       0: Result := doWebSocket04;
     else
-      // 4 > 7
-      Result := doWebSocket07;
+      // 4 > 13
+      Result := doWebSocketNew;
     end;
   end;
 end;

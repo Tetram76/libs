@@ -33,6 +33,7 @@ type
     FName: string;
     FDisplayName: string;
 {$IFNDEF CONSOLEAPP}
+    FDescription: string;
     FDependencies: string;
     FServiceType: Cardinal;
     FStartType: Cardinal;
@@ -54,6 +55,7 @@ type
     property Name: string read FName write FName;
     property DisplayName: string read FDisplayName write FDisplayName;
 {$IFNDEF CONSOLEAPP}
+    property Description: string read FDescription write FDescription;
     property Dependencies: string read FDependencies write FDependencies;
     property ServiceType: Cardinal read FServiceType write FServiceType;
     property StartType: Cardinal read FStartType write FStartType;
@@ -105,6 +107,9 @@ begin
   begin
     FApplication.Free;
     FApplication := nil;
+
+    while TDORThread.ThreadCount > 0 do
+      Sleep(10);
   end;
 end;
 
@@ -138,6 +143,8 @@ begin
     SERVICE_CONTROL_STOP:
       begin
         // Do whatever it takes to stop here.
+        Terminate;
+
         ServiceStatus.dwWin32ExitCode := 0;
         ServiceStatus.dwCurrentState  := SERVICE_STOPPED;
         ServiceStatus.dwCheckPoint    := 0;
@@ -145,7 +152,7 @@ begin
 
         if (not SetServiceStatus(ServiceStatusHandle, ServiceStatus)) then
           RaiseLastOSError;
-        Terminate;
+
         Exit;
       end;
 
@@ -168,6 +175,7 @@ end;
 procedure ServiceMain(argc: LongWord; argv: PChar); stdcall;
 var
   status: LongWord;
+  oldthreadid: LongWord;
 begin
   ServiceStatus.dwServiceType        := Application.FServiceType;
   ServiceStatus.dwCurrentState       := SERVICE_START_PENDING;
@@ -203,11 +211,17 @@ begin
     ServiceStatus.dwWin32ExitCode := GetLastError;
     SetServiceStatus(ServiceStatusHandle, ServiceStatus);
   end;
-   while Application <> nil do
-   begin
-     CheckSynchronize;
-     Sleep(1);
-   end;
+  oldthreadid := MainThreadID;
+  MainThreadID := GetCurrentThreadId;
+  try
+    while FApplication <> nil do
+    begin
+      CheckSynchronize;
+      Sleep(10);
+    end;
+  finally
+    MainThreadID := oldthreadid;
+  end;
 end;
 {$ENDIF}
 
@@ -227,12 +241,22 @@ end;
 { TDORService }
 
 {$IFNDEF CONSOLEAPP}
+
+{$if defined(VER210)}
+{ Required to set the service description. Not defined in WinSvc before XE2 }
+const
+  SERVICE_CONFIG_DESCRIPTION = 1;
+
+function ChangeServiceConfig2(hService: THandle; dwInfoLevel: DWORD;
+    lpInfo: Pointer): BOOL; stdcall; external advapi32 name 'ChangeServiceConfig2W';
+{$ifend}
+
 procedure TDORService.InstallService;
 var
   Service: THandle;
   SCManager: THandle;
   Path: array[0..511] of Char;
-  Depend: PChar;
+  data: PChar;
 begin
    if (GetModuleFileName(0, Path, 512) = 0) then
    begin
@@ -244,11 +268,18 @@ begin
    if (SCManager <> 0) then
    begin
       if FDependencies <> '' then
-        Depend := @FDependencies[1] else
-        Depend := nil;
+        data := @FDependencies[1] else
+        data := nil;
       Service := CreateService(SCManager, @FName[1], @FDisplayName[1],
-        SERVICE_QUERY_STATUS, FServiceType, FStartType,
-        SERVICE_ERROR_NORMAL, Path, nil, nil, depend, nil, nil);
+        SERVICE_QUERY_STATUS or SERVICE_CHANGE_CONFIG, FServiceType, FStartType,
+        SERVICE_ERROR_NORMAL, Path, nil, nil, data, nil, nil);
+
+      if FDescription <> '' then
+      begin
+        data := PChar(FDescription);
+        ChangeServiceConfig2(Service, SERVICE_CONFIG_DESCRIPTION, @data);
+      end;
+
       if (Service <> 0) then
         CloseServiceHandle(Service) else
         raise Exception.CreateFmt('CreateService failed - %s', [SysErrorMessage(GetLastError)]);

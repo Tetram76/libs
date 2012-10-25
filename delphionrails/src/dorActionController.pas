@@ -34,6 +34,7 @@ type
     class function Context: TSuperRttiContext; virtual;
     class procedure Redirect(const location: string); overload;
     class procedure Redirect(const controler, action: string; const id: string = ''); overload;
+    class procedure SendFile(const path: string);
     class function HaveSLL: Boolean; virtual;
     class function HavePeerCertificate: Boolean; virtual;
     class function SSLSubject(const key: AnsiString): AnsiString; virtual;
@@ -86,6 +87,8 @@ begin
     for ite in Params.AsObject do
       if (ite.Value <> nil) and (ite.Value.DataPtr = nil) then
         Return.AsObject[ite.Name] := ite.Value;
+    if (obj <> nil) then
+      Return.AsObject['result'] := obj;
     if ErrorCode = 0 then
       SetErrorCode(200);
   end;
@@ -109,6 +112,11 @@ end;
 class function TActionController.Return: ISuperObject;
 begin
   Result := (CurrentDorThread as THTTPStub).Return;
+end;
+
+class procedure TActionController.SendFile(const path: string);
+begin
+  (CurrentDorThread as THTTPStub).FileToSend := path;
 end;
 
 class function TActionController.Session: ISuperObject;
