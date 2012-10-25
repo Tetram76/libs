@@ -24,6 +24,7 @@ type
   IDBConnection = interface
   ['{843E105A-B8E0-42A9-AFA0-CF5AA843DB8B}']
     function newContext(const Options: ISuperObject = nil): IDBContext; overload;
+    function newContext(const OtherConnections: array of IDBConnection; const Options: ISuperObject = nil): IDBContext; overload;
     function newCommand(const Options: ISuperObject = nil): IDBCommand; overload;
     function newContext(const Options: SOString): IDBContext; overload;
     function newCommand(const Options: SOString): IDBCommand; overload;
@@ -34,17 +35,17 @@ type
 
   IDBContext = interface
   ['{51992399-2D1A-47EF-9DB1-C5654325F41B}']
-    function newCommand(const Options: ISuperObject = nil): IDBCommand; overload;
-    function newCommand(const Options: SOString): IDBCommand; overload;
-    function newSelect(const sql: SOString; firstone: boolean = False; asArray: Boolean = False): IDBCommand;
-    function newFunction(const sql: SOString): IDBCommand;
+    function newCommand(const Options: ISuperObject = nil; const Connection: IDBConnection = nil): IDBCommand; overload;
+    function newCommand(const Options: SOString; const Connection: IDBConnection = nil): IDBCommand; overload;
+    function newSelect(const sql: SOString; firstone: boolean = False; asArray: Boolean = False; const Connection: IDBConnection = nil): IDBCommand;
+    function newFunction(const sql: SOString; const Connection: IDBConnection = nil): IDBCommand;
     procedure ExecuteImmediate(const Options: SOString); overload;
     function Execute(const Command: IDBCommand; const params: ISuperObject = nil): ISuperObject; overload;
     function Execute(const Command: IDBCommand; const params: array of const): ISuperObject; overload;
     function Execute(const Command: IDBCommand; const params: SOString): ISuperObject; overload;
     function Execute(const Command: IDBCommand; const params: Variant): ISuperObject; overload;
-    procedure OnCommit(const proc: TProc<IDBContext>);
-    procedure OnRollback(const proc: TProc<IDBContext>);
+    procedure OnCommit(const proc: TProc);
+    procedure OnRollback(const proc: TProc);
   end;
 
   IDBCommand = interface
@@ -73,6 +74,7 @@ type
   protected
     procedure ExecuteImmediate(const Options: SOString); virtual;
     function newContext(const Options: ISuperObject = nil): IDBContext; overload; virtual; abstract;
+    function newContext(const OtherConnections: array of IDBConnection; const Options: ISuperObject = nil): IDBContext; overload; virtual; abstract;
     function newContext(const Options: SOString): IDBContext; overload; virtual;
     function newCommand(const Options: ISuperObject = nil): IDBCommand; overload; virtual;
     function newCommand(const Options: SOString): IDBCommand; overload; virtual;
@@ -82,22 +84,22 @@ type
 
   TDBContext = class(TSuperObject, IDBContext)
   private
-    FCommitEvent: TList<TProc<IDBContext>>;
-    FRollbackEvent: TList<TProc<IDBContext>>;
+    FCommitEvent: TList<TProc>;
+    FRollbackEvent: TList<TProc>;
   protected
     procedure TriggerCommitEvent;
     procedure TriggerRollbackEvent;
     procedure ExecuteImmediate(const Options: SOString); virtual; abstract;
-    function newCommand(const Options: ISuperObject = nil): IDBCommand; overload; virtual; abstract;
-    function newCommand(const Options: SOString): IDBCommand; overload; virtual;
-    function newSelect(const sql: SOString; firstone: boolean = False; asArray: Boolean = False): IDBCommand; virtual;
-    function newFunction(const sql: SOString): IDBCommand; virtual;
+    function newCommand(const Options: ISuperObject = nil; const Connection: IDBConnection = nil): IDBCommand; overload; virtual; abstract;
+    function newCommand(const Options: SOString; const Connection: IDBConnection = nil): IDBCommand; overload; virtual;
+    function newSelect(const sql: SOString; firstone: boolean = False; asArray: Boolean = False; const Connection: IDBConnection = nil): IDBCommand; virtual;
+    function newFunction(const sql: SOString; const Connection: IDBConnection = nil): IDBCommand; virtual;
     function Execute(const Command: IDBCommand; const params: ISuperObject = nil): ISuperObject; overload; virtual;
     function Execute(const Command: IDBCommand; const params: array of const): ISuperObject; overload; virtual;
     function Execute(const Command: IDBCommand; const params: SOString): ISuperObject; overload; virtual;
     function Execute(const Command: IDBCommand; const params: Variant): ISuperObject; overload; virtual;
-    procedure OnCommit(const proc: TProc<IDBContext>);
-    procedure OnRollback(const proc: TProc<IDBContext>);
+    procedure OnCommit(const proc: TProc);
+    procedure OnRollback(const proc: TProc);
   public
     constructor Create(jt: TSuperType = stObject); override;
     destructor Destroy; override;
@@ -120,6 +122,7 @@ type
     constructor Create(stream: TStream = nil); reintroduce; overload;
     constructor Create(const filename: string); reintroduce; overload;
     constructor Create(buffer: Pointer; len: Integer); reintroduce; overload;
+    constructor CreateFromBase64(const base64: string);
     destructor Destroy; override;
     function Clone: ISuperObject; override;
     function Write(writer: TSuperWriter; format: boolean; escape: boolean; level: integer): Integer; override;
@@ -196,12 +199,12 @@ end;
 
 { TDBContext }
 
-procedure TDBContext.OnCommit(const proc: TProc<IDBContext>);
+procedure TDBContext.OnCommit(const proc: TProc);
 begin
   FCommitEvent.Add(proc);
 end;
 
-procedure TDBContext.OnRollback(const proc: TProc<IDBContext>);
+procedure TDBContext.OnRollback(const proc: TProc);
 begin
   FRollbackEvent.Add(proc);
 end;
@@ -209,8 +212,8 @@ end;
 constructor TDBContext.Create(jt: TSuperType);
 begin
   inherited;
-  FCommitEvent := TList<TProc<IDBContext>>.Create;
-  FRollbackEvent := TList<TProc<IDBContext>>.Create;
+  FCommitEvent := TList<TProc>.Create;
+  FRollbackEvent := TList<TProc>.Create;
 end;
 
 destructor TDBContext.Destroy;
@@ -226,33 +229,33 @@ begin
   Result := Command.Execute(so(params), Self);
 end;
 
-function TDBContext.newCommand(const Options: SOString): IDBCommand;
+function TDBContext.newCommand(const Options: SOString; const Connection: IDBConnection): IDBCommand;
 begin
-  Result := newCommand(SO(Options));
+  Result := newCommand(SO(Options), Connection);
 end;
 
-function TDBContext.newFunction(const sql: SOString): IDBCommand;
+function TDBContext.newFunction(const sql: SOString; const Connection: IDBConnection): IDBCommand;
 begin
-  Result := newCommand(SO(['sql', sql, 'function', true]));
+  Result := newCommand(SO(['sql', sql, 'function', true]), Connection);
 end;
 
-function TDBContext.newSelect(const sql: SOString; firstone: boolean; asArray: Boolean): IDBCommand;
+function TDBContext.newSelect(const sql: SOString; firstone: boolean; asArray: Boolean; const Connection: IDBConnection): IDBCommand;
 begin
-  Result := newCommand(SO(['sql', sql, 'firstone', firstone, 'array', asArray]));
+  Result := newCommand(SO(['sql', sql, 'firstone', firstone, 'array', asArray]), Connection);
 end;
 
 procedure TDBContext.TriggerCommitEvent;
 var
-  p: TProc<IDBContext>;
+  p: TProc;
 begin
-  for p in FCommitEvent do p(self);
+  for p in FCommitEvent do p();
 end;
 
 procedure TDBContext.TriggerRollbackEvent;
 var
-  p: TProc<IDBContext>;
+  p: TProc;
 begin
-  for p in FRollbackEvent do p(self);
+  for p in FRollbackEvent do p();
 end;
 
 function TDBContext.Execute(const Command: IDBCommand;
@@ -336,6 +339,13 @@ begin
   FStream := TPooledMemoryStream.Create;
   if (buffer <> nil) and (len > 0) then
     FStream.Write(buffer^, len);
+end;
+
+constructor TDBBinary.CreateFromBase64(const base64: string);
+begin
+  inherited Create('[BINARY]');
+  FStream := TPooledMemoryStream.Create;
+  Base64ToStream(base64, FStream);
 end;
 
 destructor TDBBinary.Destroy;
