@@ -47,8 +47,14 @@ function MeasureTextDC(DC: HDC; const ARect: TFloatRect; const Text: WideString;
 function MeasureText(Font: HFONT; const ARect: TFloatRect; const Text: WideString;
   Flags: Cardinal): TFloatRect;
 
-var
-  UseHinting: Boolean = {$IFDEF NOHINTING}False{$ELSE}True{$ENDIF};
+type
+  TTextHinting = (thNone, thNoHorz, thHinting);
+
+  TKerningPairArray = array [0..0] of TKerningPair;
+  PKerningPairArray = ^TKerningPairArray;
+
+procedure SetHinting(Value: TTextHinting);
+function GetHinting: TTextHinting;
 
 const
   DT_LEFT       = 0;   //See also Window's DrawText() flags ...
@@ -61,10 +67,19 @@ const
   DT_JUSTIFY         = 3;  //Graphics32 additions ...
   DT_HORZ_ALIGN_MASK = 3;
 
+function GetKerningPairs(DC: HDC; Count: DWORD; P: PKerningPair): DWORD; stdcall;
+
 implementation
 
 uses
-  GR32_LowLevel;
+  SysUtils, GR32_LowLevel;
+
+var
+  UseHinting: Boolean;
+  HorzStretch: Integer; // stretching factor when calling GetGlyphOutline()
+  HorzStretch_Inv: single;
+
+  VertFlip_mat2: tmat2;
 
 const
   GGO_UNHINTED = $0100;
@@ -74,19 +89,9 @@ const
 
   MaxSingle   =  3.4e+38;
 
-{$IFDEF NOHORIZONTALHINTING}
-// stretching factor when calling GetGlyphOutline()
-  HORZSTRETCH = 16;
-{$ENDIF}
+function GetKerningPairs; external gdi32 name 'GetKerningPairs';
 
-  VertFlip_mat2: tmat2 = (
-    eM11: (fract: 0; Value: {$IFNDEF NOHORIZONTALHINTING}1{$ELSE}HORZSTRETCH{$ENDIF});
-    eM12: (fract: 0; Value: 0);
-    eM21: (fract: 0; Value: 0);
-    eM22: (fract: 0; Value: -1);
-  );
-
-function PointFXtoPointF(const Point: tagPointFX): TFloatPoint;
+function PointFXtoPointF(const Point: tagPointFX): TFloatPoint; {$IFDEF UseInlining} inline; {$ENDIF}
 begin
   Result.X := Point.X.Value + Point.X.Fract * FixedToFloat;
   Result.Y := Point.Y.Value + Point.Y.Fract * FixedToFloat;
@@ -211,7 +216,7 @@ end;
 {$ENDIF}
 
 
-procedure InternalTextToPath(DC: HDC; Path: TCustomPath; var ARect: TFloatRect;
+procedure InternalTextToPath(DC: HDC; Path: TCustomPath; const ARect: TFloatRect;
   const Text: WideString; Flags: Cardinal);
 const
   CHAR_CR = 10;
@@ -225,19 +230,25 @@ var
   CharOffsets: TArrayOfInteger;
   X, Y, XMax, YMax, MaxRight: Single;
   S: WideString;
+  UseTempPath: Boolean;
   TmpPath: TFlattenedPath;
+{$IFDEF USEKERNING}
+  LastCharValue: Integer;
+  KerningPairs: PKerningPairArray;
+  KerningPairCount: Integer;
+{$ENDIF}
 
   procedure AlignTextCenter(CurrentI: Integer);
   var
     M, N, PathStart, PathEnd: Integer;
     Delta: TFloat;
   begin
-    Delta := (ARect.Right - X - 1)/ 2;
+    Delta := (ARect.Right * HorzStretch - X - 1) * 0.5;
     PathStart := CharOffsets[LineStart];
     PathEnd := CharOffsets[CurrentI];
     for M := PathStart to PathEnd - 1 do
       for N := 0 to High(TmpPath.Path[M]) do
-        TmpPath.Path[M][N].X := TmpPath.Path[M][N].X + Delta;
+        TmpPath.Path[M, N].X := TmpPath.Path[M, N].X + Delta;
   end;
 
   procedure AlignTextRight(CurrentI: Integer);
@@ -245,12 +256,12 @@ var
     M, N, PathStart, PathEnd: Integer;
     Delta: TFloat;
   begin
-    Delta := (ARect.Right - X - 1);
+    Delta := (ARect.Right * HorzStretch - X - 1);
     PathStart := CharOffsets[LineStart];
     PathEnd := CharOffsets[CurrentI];
     for M := PathStart to PathEnd - 1 do
       for N := 0 to High(TmpPath.Path[M]) do
-        TmpPath.Path[M][N].X := TmpPath.Path[M][N].X + Delta;
+        TmpPath.Path[M, N].X := TmpPath.Path[M, N].X + Delta;
   end;
 
   procedure AlignTextJustify(CurrentI: Integer);
@@ -260,12 +271,13 @@ var
   begin
     if (SpcCount < 1) or (Ord(Text[CurrentI]) = CHAR_CR) then
       Exit;
-    SpcDelta := (ARect.Right - X - 1)/ SpcCount;
+    SpcDelta := (ARect.Right * HorzStretch - X - 1) / SpcCount;
     SpcDeltaInc := SpcDelta;
     L := LineStart;
-    //Trim leading spaces ...
+
+    // Trim leading spaces ...
     while (L < CurrentI) and (Ord(Text[L]) = CHAR_SP) do Inc(L);
-    //Now find first space char in line ...
+    // Now find first space char in line ...
     while (L < CurrentI) and (Ord(Text[L]) <> CHAR_SP) do Inc(L);
     PathStart := CharOffsets[L - 1];
     repeat
@@ -275,7 +287,7 @@ var
       L := M;
       for M := PathStart to PathEnd - 1 do
         for N := 0 to High(TmpPath.Path[M]) do
-          TmpPath.Path[M][N].X := TmpPath.Path[M][N].X + SpcDeltaInc;
+          TmpPath.Path[M, N].X := TmpPath.Path[M, N].X + SpcDeltaInc;
       SpcDeltaInc := SpcDeltaInc + SpcDelta;
       PathStart := PathEnd;
     until L >= CurrentI;
@@ -284,13 +296,13 @@ var
   procedure NewLine(CurrentI: Integer);
   begin
     if (Flags and DT_SINGLELINE <> 0) then Exit;
-    if assigned(TmpPath) then
+    if Assigned(TmpPath) then
       case (Flags and DT_HORZ_ALIGN_MASK) of
         DT_CENTER : AlignTextCenter(CurrentI);
         DT_RIGHT  : AlignTextRight(CurrentI);
         DT_JUSTIFY: AlignTextJustify(CurrentI);
       end;
-    X := ARect.Left{$IFDEF NOHORIZONTALHINTING} * HORZSTRETCH{$ENDIF};
+    X := ARect.Left * HorzStretch;
     Y := Y + TextMetric.tmHeight;
     LineStart := CurrentI;
     SpcCount := 0;
@@ -310,9 +322,9 @@ var
     end;
   end;
 
-  function NeedsNewLine(X: Single): boolean;
+  function NeedsNewLine(X: Single): Boolean;
   begin
-    Result := X > ARect.Right{$IFDEF NOHORIZONTALHINTING} * HORZSTRETCH{$ENDIF};
+    Result := X > ARect.Right * HorzStretch;
   end;
 
   procedure AddSpace;
@@ -322,32 +334,61 @@ var
   end;
 
 begin
+{$IFDEF USEKERNING}
+  KerningPairs := nil;
+  KerningPairCount := GetKerningPairs(DC, 0, nil);
+  if GetLastError <> 0 then
+    RaiseLastOSError;
+  if KerningPairCount > 0 then
+  begin
+    GetMem(KerningPairs, KerningPairCount * SizeOf(TKerningPair));
+    GetKerningPairs(DC, KerningPairCount, PKerningPair(KerningPairs));
+  end;
+  LastCharValue := 0;
+{$ENDIF}
+
   SpcCount := 0;
   LineStart := 0;
+  UseTempPath := False;
   if Assigned(Path) then
-    TmpPath := TFlattenedPath.Create
+    if (Path is TFlattenedPath) then
+    begin
+      TmpPath := TFlattenedPath(Path);
+      TmpPath.Clear;
+      TmpPath.BeginPath;
+    end
+    else
+    begin
+      UseTempPath := True;
+      TmpPath := TFlattenedPath.Create
+    end
   else
     TmpPath := nil;
 
   GetTextMetrics(DC, TextMetric);
   TextLen := Length(Text);
-  X := ARect.Left {$IFDEF NOHORIZONTALHINTING} * HORZSTRETCH{$ENDIF};
+  X := ARect.Left * HorzStretch;
   Y := ARect.Top + TextMetric.tmAscent;
   XMax := X;
-  MaxRight := ARect.Right;
-  SetLength(CharOffsets, TextLen +1);
+
+  if not Assigned(Path) or (ARect.Right = ARect.Left) then
+    MaxRight := MaxSingle //either measuring text or unbounded text
+  else
+    MaxRight := ARect.Right * HorzStretch;
+  SetLength(CharOffsets, TextLen + 1);
   CharOffsets[0] := 0;
 
-  GetGlyphOutlineW(DC, CHAR_SP, GGODefaultFlags[UseHinting],
-    GlyphMetrics, 0, nil, VertFlip_mat2);
+  GetGlyphOutlineW(DC, CHAR_SP, GGODefaultFlags[UseHinting], GlyphMetrics,
+    0, nil, VertFlip_mat2);
   SpcX := GlyphMetrics.gmCellIncX;
 
   if (Flags and DT_SINGLELINE <> 0) then
   begin
-    //ignore justify when forcing singleline ...
+    // ignore justify when forcing singleline ...
     if (Flags and DT_JUSTIFY = DT_JUSTIFY) then
       Flags := Flags and not DT_JUSTIFY;
-    //ignore wordbreak when forcing singleline ...
+
+    // ignore wordbreak when forcing singleline ...
     if (Flags and DT_WORDBREAK = DT_WORDBREAK) then
       Flags := Flags and not DT_WORDBREAK;
     MaxRight := MaxSingle;
@@ -390,28 +431,38 @@ begin
     end
     else
     begin
-      if GlyphOutlineToPath(DC, TmpPath,
-        X, MaxRight, Y, CharValue, GlyphMetrics) then
+      if GlyphOutlineToPath(DC, TmpPath, X, MaxRight, Y, CharValue,
+        GlyphMetrics) then
       begin
         if Assigned(TmpPath) then
           CharOffsets[I] := Length(TmpPath.Path);
       end else
       begin
-        if Ord(Text[I -1]) = CHAR_SP then
+        if Ord(Text[I - 1]) = CHAR_SP then
         begin
-          //this only happens without DT_WORDBREAK
+          // this only happens without DT_WORDBREAK
           X := X - SpcX;
           Dec(SpcCount);
         end;
-        //the current glyph doesn't fit so a word must be split since
-        //it fills more than a whole line ...
+        // the current glyph doesn't fit so a word must be split since
+        // it fills more than a whole line ...
         NewLine(I - 1);
-        if not GlyphOutlineToPath(DC, TmpPath,
-            X, MaxRight, Y, CharValue, GlyphMetrics) then Break;
+        if not GlyphOutlineToPath(DC, TmpPath, X, MaxRight, Y, CharValue,
+          GlyphMetrics) then Break;
         if Assigned(TmpPath) then
           CharOffsets[I] := Length(TmpPath.Path);
       end;
+
       X := X + GlyphMetrics.gmCellIncX;
+      {$IFDEF USEKERNING}
+      for J := 0 to KerningPairCount - 1 do
+      begin
+        if (KerningPairs^[J].wFirst = LastCharValue) and
+          (KerningPairs^[J].wSecond = CharValue) then
+          X := X + KerningPairs^[J].iKernAmount;
+      end;
+      LastCharValue := CharValue;
+      {$ENDIF}
       if X > XMax then XMax := X;
     end;
   end;
@@ -419,33 +470,37 @@ begin
     NewLine(TextLen);
 
   YMax := Y + TextMetric.tmHeight - TextMetric.tmAscent;
-{$IFDEF NOHORIZONTALHINTING}
-  XMax := XMax / HORZSTRETCH;
-{$ENDIF}
+  // reverse HorzStretch (if any) ...
+  if (HorzStretch <> 1) and assigned(TmpPath) then
+    for I := 0 to High(TmpPath.Path) do
+      for J := 0 to High(TmpPath.Path[I]) do
+        TmpPath.Path[I, J].X := TmpPath.Path[I, J].X * HorzStretch_Inv;
+  XMax := XMax * HorzStretch_Inv;
+
   X := ARect.Right - XMax;
   Y := ARect.Bottom - YMax;
-  case (Flags and DT_HORZ_ALIGN_MASK) of
-    DT_LEFT   : ARect := FloatRect(ARect.Left, ARect.Top, XMax, YMax);
-    DT_CENTER : ARect := FloatRect(ARect.Left + X * 0.5, ARect.Top, XMax + X * 0.5, YMax);
-    DT_RIGHT  : ARect := FloatRect(ARect.Left + X, ARect.Top, ARect.Right, YMax);
-    DT_JUSTIFY: ARect := FloatRect(ARect.Left, ARect.Top, ARect.Right, YMax);
-  end;
   if Flags and (DT_VCENTER or DT_BOTTOM) <> 0 then
   begin
     if Flags and DT_VCENTER <> 0 then
       Y := Y * 0.5;
-    if assigned(TmpPath) then
+    if Assigned(TmpPath) then
       for I := 0 to High(TmpPath.Path) do
         for J := 0 to High(TmpPath.Path[I]) do
-          TmpPath.Path[I][J].Y := TmpPath.Path[I][J].Y + Y;
-    OffsetRect(ARect, 0, Y);
+          TmpPath.Path[I, J].Y := TmpPath.Path[I, J].Y + Y;
   end;
 
-  if Assigned(TmpPath) then
+{$IFDEF USEKERNING}
+  if Assigned(KerningPairs) then
+    FreeMem(KerningPairs);
+{$ENDIF}
+
+  if UseTempPath then
   begin
     Path.Assign(TmpPath);
     TmpPath.Free;
-  end;
+  end
+  else if Assigned(Path) then
+    Path.EndPath;
 end;
 
 procedure TextToPath(Font: HFONT; Path: TCustomPath; const ARect: TFloatRect;
@@ -453,13 +508,11 @@ procedure TextToPath(Font: HFONT; Path: TCustomPath; const ARect: TFloatRect;
 var
   DC: HDC;
   SavedFont: HFONT;
-  R: TFloatRect;
 begin
   DC := GetDC(0);
   try
     SavedFont := SelectObject(DC, Font);
-    R := ARect;
-    InternalTextToPath(DC, Path, R, Text, Flags);
+    InternalTextToPath(DC, Path, ARect, Text, Flags);
     SelectObject(DC, SavedFont);
   finally
     ReleaseDC(0, DC);
@@ -492,5 +545,40 @@ begin
     ReleaseDC(0, DC);
   end;
 end;
+
+procedure SetHinting(Value: TTextHinting);
+begin
+  UseHinting := Value <> thNone;
+  if (Value = thNoHorz) then
+    HorzStretch := 16 else
+    HorzStretch := 1;
+  HorzStretch_Inv := 1 / HorzStretch;
+  FillChar(VertFlip_mat2, SizeOf(VertFlip_mat2), 0);
+  VertFlip_mat2.eM11.value := HorzStretch;
+  VertFlip_mat2.eM22.value := -1; //reversed Y axis
+end;
+
+function GetHinting: TTextHinting;
+begin
+  if HorzStretch <> 1 then Result := thNoHorz
+  else if UseHinting then Result := thHinting
+  else Result := thNone;
+end;
+
+procedure InitHinting;
+begin
+{$IFDEF NOHORIZONTALHINTING}
+  SetHinting(thNoHorz);
+{$ELSE}
+{$IFDEF NOHINTING}
+  SetHinting(thNone);
+{$ELSE}
+  SetHinting(thHinting);
+{$ENDIF}
+{$ENDIF}
+end;
+
+initialization
+  InitHinting;
 
 end.

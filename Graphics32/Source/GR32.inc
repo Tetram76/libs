@@ -46,7 +46,7 @@
 
 *)
 
-  {-$DEFINE PUREPASCAL}
+  {$DEFINE PUREPASCAL}
 
 
 
@@ -183,7 +183,6 @@
   {-$DEFINE OMIT_SSE2}
 
 
-
 (*
   Symbol: USEGR32GAMMA
   --------------------
@@ -193,7 +192,7 @@
   Disable for a slight performance increase.
 *)
 
-{-$DEFINE USEGR32GAMMA}
+{$DEFINE USEGR32GAMMA}
 
 
 
@@ -227,7 +226,14 @@
 
 {-$DEFINE USESTACKALLOC}
 
+(*
+  Symbol: RGBA_FORMAT
+  -------------------
 
+     Assume RGBA pixel format instead of BGRA (used by e.g. OpenGL.)
+*)
+
+{-$DEFINE RGBA_FORMAT}
 
 (*
   Symbol: NOHINTING
@@ -244,7 +250,6 @@
 {$DEFINE NOHINTING}
 
 
-
 (*
   Symbol: NOHORIZONTALHINTING
   ---------------------------
@@ -257,6 +262,21 @@
 *)
 
 {-$DEFINE NOHORIZONTALHINTING}
+
+
+(*
+  Symbol: USEKERNING
+  -----------------
+
+    Enables font kerning when using TextToPath() method.
+
+  Kerning is the process of adjusting the spacing between characters in a
+  proportional font, usually to achieve a visually pleasing result. However,
+  parsing for kerning pairs is quite expensive in terms of CPU usage while the
+  effect is often very little. Thus kerning is not enabled by default.
+*)
+
+{-$DEFINE USEKERNING}
 
 
 {-$DEFINE TEST_BLENDMEMRGB128SSE4}
