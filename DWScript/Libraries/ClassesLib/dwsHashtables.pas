@@ -2,7 +2,7 @@ unit dwsHashtables;
 
 interface
 
-uses SysUtils;
+uses SysUtils, dwsXPlatform, dwsUtils;
 
 type
   ValueType = IUnknown;
@@ -40,7 +40,7 @@ type
 
    TStringHashItem = class(THashItem)
       private
-         Key : string;
+         Key : UnicodeString;
 
       public
          function HashCode : Integer; override;
@@ -53,10 +53,10 @@ type
   public
     constructor Create(InitCapacity: Integer = 256; LoadFactor: Integer = 75);
     destructor Destroy; override;
-    function Get(const Key: string): ValueType;
-    procedure Put(const Key: string; Value: ValueType);
-    function HasKey(const Key: string): Boolean;
-    function RemoveKey(const Key: string): ValueType;
+    function Get(const Key: UnicodeString): ValueType;
+    procedure Put(const Key: UnicodeString; Value: ValueType);
+    function HasKey(const Key: UnicodeString): Boolean;
+    function RemoveKey(const Key: UnicodeString): ValueType;
   end;
 
    TIntegerHashItem = class(THashItem)
@@ -270,7 +270,7 @@ end;
 
 function TStringHashItem.Equals(Item: THashItem): Boolean;
 begin
-  Result := SameText(Key, TStringHashItem(Item).Key);
+  Result := UnicodeSameText(Key, TStringHashItem(Item).Key);
 end;
 
 function TStringHashItem.HashCode: Integer;
@@ -301,19 +301,19 @@ begin
   FTestItem.Free;
 end;
 
-function TStringHashTable.Get(const Key: string): ValueType;
+function TStringHashTable.Get(const Key: UnicodeString): ValueType;
 begin
   FTestItem.Key := Key;
   Result := InternalGet(FTestItem);
 end;
 
-function TStringHashTable.HasKey(const Key: string): Boolean;
+function TStringHashTable.HasKey(const Key: UnicodeString): Boolean;
 begin
   FTestItem.Key := Key;
   Result := InternalHasKey(FTestItem);
 end;
 
-procedure TStringHashTable.Put(const Key: string; Value: ValueType);
+procedure TStringHashTable.Put(const Key: UnicodeString; Value: ValueType);
 var
   item: TStringHashItem;
 begin
@@ -323,7 +323,7 @@ begin
   InternalPut(item);
 end;
 
-function TStringHashTable.RemoveKey(const Key: string): ValueType;
+function TStringHashTable.RemoveKey(const Key: UnicodeString): ValueType;
 begin
   FTestItem.Key := Key;
   Result := InternalRemoveKey(FTestItem);

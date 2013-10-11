@@ -6,7 +6,7 @@
 <h2>Request Info</h2>
 <table border="1">
 <tr><th>Name</th><th>Value</th></tr>
-<%
+<?pas
 procedure WriteValue(name, value : String);
 begin
    Print('<tr><td>');
@@ -18,12 +18,15 @@ begin
    PrintLn('</td></tr>');
 end;
 
-WriteValue('RemoteIP', Request.RemoteIP);
-WriteValue('Method', Request.Method);
-WriteValue('PathInfo', Request.PathInfo);
-WriteValue('QueryFields', Request.QueryFields.CommaText);
-WriteValue('CookieFields', Request.CookieFields.CommaText);
-%>
+WriteValue('RemoteIP', WebRequest.RemoteIP);
+WriteValue('Security', if WebRequest.Security<>'' then WebRequest.Security else 'none');
+WriteValue('URL', WebRequest.URL);
+WriteValue('Method', WebRequest.Method);
+WriteValue('PathInfo', WebRequest.PathInfo);
+WriteValue('QueryString', WebRequest.QueryString);
+WriteValue('Cookies', WebRequest.Cookies);
+WriteValue('QueryFields', WebRequest.QueryFields);
+?>
 </table>
 </body>
 </html>

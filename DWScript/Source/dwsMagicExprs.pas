@@ -23,37 +23,43 @@ unit dwsMagicExprs;
 
 interface
 
-uses Classes, SysUtils, dwsExprs, dwsSymbols, dwsStack, dwsErrors, dwsFunctions,
-   dwsUtils;
+uses
+   Classes, SysUtils,
+   dwsUtils, dwsErrors, dwsStrings,
+   dwsSymbols, dwsExprList, dwsStack, dwsDataContext,
+   dwsExprs, dwsFunctions;
 
 type
 
    TMagicFuncExpr = class;
    TMagicFuncExprClass = class of TMagicFuncExpr;
 
-   TMagicFuncDoEvalEvent = function(args : TExprBaseList) : Variant of object;
-   TMagicProcedureDoEvalEvent = procedure(args : TExprBaseList) of object;
-   TMagicFuncDoEvalDataEvent = procedure(args : TExprBaseList; var result : TDataPtr) of object;
-   TMagicFuncDoEvalAsIntegerEvent = function(args : TExprBaseList) : Int64 of object;
-   TMagicFuncDoEvalAsBooleanEvent = function(args : TExprBaseList) : Boolean of object;
-   TMagicFuncDoEvalAsFloatEvent = procedure(args : TExprBaseList; var Result : Double) of object;
-   TMagicFuncDoEvalAsStringEvent = procedure(args : TExprBaseList; var Result : String) of object;
+   TMagicFuncDoEvalEvent = function(const args : TExprBaseListExec) : Variant of object;
+   TMagicProcedureDoEvalEvent = procedure(const args : TExprBaseListExec) of object;
+   TMagicFuncDoEvalDataEvent = procedure(const args : TExprBaseListExec; var result : IDataContext) of object;
+   TMagicFuncDoEvalAsIntegerEvent = function(const args : TExprBaseListExec) : Int64 of object;
+   TMagicFuncDoEvalAsBooleanEvent = function(const args : TExprBaseListExec) : Boolean of object;
+   TMagicFuncDoEvalAsFloatEvent = procedure(const args : TExprBaseListExec; var Result : Double) of object;
+   TMagicFuncDoEvalAsStringEvent = procedure(const args : TExprBaseListExec; var Result : UnicodeString) of object;
 
    // TInternalMagicFunction
    //
    TInternalMagicFunction = class(TInternalFunction)
       public
-         constructor Create(table: TSymbolTable; const funcName: String;
-                            const params : TParamArray; const funcType: String;
-                            const flags : TInternalFunctionFlags = []); override;
+         constructor Create(table: TSymbolTable; const funcName: UnicodeString;
+                            const params : TParamArray; const funcType: UnicodeString;
+                            const flags : TInternalFunctionFlags;
+                            compositeSymbol : TCompositeTypeSymbol;
+                            const helperName : UnicodeString); override;
          function MagicFuncExprClass : TMagicFuncExprClass; virtual; abstract;
+         procedure Execute(info : TProgramInfo); override;
    end;
 
    // TInternalMagicProcedure
    //
    TInternalMagicProcedure = class(TInternalMagicFunction)
       public
-         procedure DoEvalProc(args : TExprBaseList); virtual; abstract;
+         procedure DoEvalProc(const args : TExprBaseListExec); virtual; abstract;
          function MagicFuncExprClass : TMagicFuncExprClass; override;
    end;
 
@@ -61,7 +67,7 @@ type
    //
    TInternalMagicDataFunction = class(TInternalMagicFunction)
       public
-         procedure DoEval(args : TExprBaseList; var result : TDataPtr); virtual; abstract;
+         procedure DoEval(const args : TExprBaseListExec; var result : IDataContext); virtual; abstract;
          function MagicFuncExprClass : TMagicFuncExprClass; override;
    end;
    TInternalMagicDataFunctionClass = class of TInternalMagicDataFunction;
@@ -70,7 +76,7 @@ type
    //
    TInternalMagicVariantFunction = class(TInternalMagicFunction)
       public
-         function DoEvalAsVariant(args : TExprBaseList) : Variant; virtual; abstract;
+         function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; virtual; abstract;
          function MagicFuncExprClass : TMagicFuncExprClass; override;
    end;
    TInternalMagicVariantFunctionClass = class of TInternalMagicVariantFunction;
@@ -79,7 +85,7 @@ type
    //
    TInternalMagicIntFunction = class(TInternalMagicFunction)
       public
-         function DoEvalAsInteger(args : TExprBaseList) : Int64; virtual; abstract;
+         function DoEvalAsInteger(const args : TExprBaseListExec) : Int64; virtual; abstract;
          function MagicFuncExprClass : TMagicFuncExprClass; override;
    end;
    TInternalMagicIntFunctionClass = class of TInternalMagicIntFunction;
@@ -88,7 +94,7 @@ type
    //
    TInternalMagicBoolFunction = class(TInternalMagicFunction)
       public
-         function DoEvalAsBoolean(args : TExprBaseList) : Boolean; virtual; abstract;
+         function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; virtual; abstract;
          function MagicFuncExprClass : TMagicFuncExprClass; override;
    end;
    TInternalMagicBoolFunctionClass = class of TInternalMagicBoolFunction;
@@ -97,7 +103,7 @@ type
    //
    TInternalMagicFloatFunction = class(TInternalMagicFunction)
       public
-         procedure DoEvalAsFloat(args : TExprBaseList; var Result : Double); virtual; abstract;
+         procedure DoEvalAsFloat(const args : TExprBaseListExec; var Result : Double); virtual; abstract;
          function MagicFuncExprClass : TMagicFuncExprClass; override;
    end;
    TInternalMagicFloatFunctionClass = class of TInternalMagicFloatFunction;
@@ -106,14 +112,14 @@ type
    //
    TInternalMagicStringFunction = class(TInternalMagicFunction)
       public
-         procedure DoEvalAsString(args : TExprBaseList; var Result : String); virtual; abstract;
+         procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); virtual; abstract;
          function MagicFuncExprClass : TMagicFuncExprClass; override;
    end;
    TInternalMagicStringFunctionClass = class of TInternalMagicStringFunction;
 
    // TMagicFuncSymbol
    //
-   TMagicFuncSymbol = class(TFuncSymbol)
+   TMagicFuncSymbol = class sealed (TFuncSymbol)
       private
          FInternalFunction : TInternalMagicFunction;
 
@@ -141,22 +147,32 @@ type
          property InternalFunction : TInternalFunction read FInternalFunction write FInternalFunction;
    end;
 
+   // TMagicStaticMethodSymbol
+   //
+   TMagicStaticMethodSymbol = class(TMagicMethodSymbol)
+      protected
+         function GetInternalFunction : TInternalMagicFunction;
+         procedure SetInternalFunction(const val : TInternalMagicFunction);
+
+      public
+         property InternalFunction : TInternalMagicFunction read GetInternalFunction write SetInternalFunction;
+   end;
+
    // TMagicFuncExpr
    //
    TMagicFuncExpr = class(TFuncExprBase)
-      protected
-         function GetData(exec : TdwsExecution) : TData; override;
-         function GetAddr(exec : TdwsExecution) : Integer; override;
-
       public
          class function CreateMagicFuncExpr(prog : TdwsProgram;
-                           const pos : TScriptPos; magicFuncSym : TMagicFuncSymbol) : TMagicFuncExpr;
+                           const scriptPos : TScriptPos; magicFuncSym : TMagicFuncSymbol) : TMagicFuncExpr;
 
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol); virtual;
+         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                            func : TFuncSymbol; internalFunc : TInternalMagicFunction); virtual;
 
          function ExpectedArg : TParamSymbol; override;
 
          function IsWritable : Boolean; override;
+
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
    end;
 
    // TMagicVariantFuncExpr
@@ -165,7 +181,8 @@ type
       private
          FOnEval : TMagicFuncDoEvalEvent;
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol); override;
+         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                            func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          function Eval(exec : TdwsExecution) : Variant; override;
    end;
 
@@ -174,8 +191,11 @@ type
    TMagicProcedureExpr = class(TMagicFuncExpr)
       private
          FOnEval : TMagicProcedureDoEvalEvent;
+
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol); override;
+         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                            func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
+
          procedure EvalNoResult(exec : TdwsExecution); override;
          function Eval(exec : TdwsExecution) : Variant; override;
    end;
@@ -186,13 +206,14 @@ type
       private
          FOnEval : TMagicFuncDoEvalDataEvent;
 
-      protected
-         function GetData(exec : TdwsExecution) : TData; override;
-
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol); override;
+         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                            func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
+
          function Eval(exec : TdwsExecution) : Variant; override;
+
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
    end;
 
    // TMagicIntFuncExpr
@@ -201,7 +222,8 @@ type
       private
          FOnEval : TMagicFuncDoEvalAsIntegerEvent;
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol); override;
+         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                            func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
          function Eval(exec : TdwsExecution) : Variant; override;
          function EvalAsInteger(exec : TdwsExecution) : Int64; override;
@@ -213,10 +235,11 @@ type
       private
          FOnEval : TMagicFuncDoEvalAsStringEvent;
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol); override;
+         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                            func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
          function Eval(exec : TdwsExecution) : Variant; override;
-         procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
+         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
    end;
 
    // TMagicFloatFuncExpr
@@ -225,7 +248,8 @@ type
       private
          FOnEval : TMagicFuncDoEvalAsFloatEvent;
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol); override;
+         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                            func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
          function Eval(exec : TdwsExecution) : Variant; override;
          function EvalAsFloat(exec : TdwsExecution) : Double; override;
@@ -237,7 +261,8 @@ type
       private
          FOnEval : TMagicFuncDoEvalAsBooleanEvent;
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol); override;
+         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                            func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
          function Eval(exec : TdwsExecution) : Variant; override;
          function EvalAsBoolean(exec : TdwsExecution) : Boolean; override;
@@ -246,7 +271,7 @@ type
    // Inc/Dec/Succ/Pred
    TMagicIteratorFuncExpr = class(TMagicFuncExpr)
       public
-         constructor Create(prog : TdwsProgram; const pos : TScriptPos;
+         constructor Create(prog : TdwsProgram; const aScriptPos : TScriptPos;
                             left, right : TTypedExpr); reintroduce;
          procedure EvalNoResult(exec : TdwsExecution); override;
          function Eval(exec : TdwsExecution) : Variant; override;
@@ -280,13 +305,17 @@ type
    end;
 
 procedure RegisterInternalIntFunction(InternalFunctionClass: TInternalMagicIntFunctionClass;
-      const FuncName: String; const FuncParams: array of String; const flags : TInternalFunctionFlags = []);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const flags : TInternalFunctionFlags = []; const helperName : UnicodeString = '');
 procedure RegisterInternalBoolFunction(InternalFunctionClass: TInternalMagicBoolFunctionClass;
-      const FuncName: String; const FuncParams: array of String; const flags : TInternalFunctionFlags = []);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const flags : TInternalFunctionFlags = []; const helperName : UnicodeString = '');
 procedure RegisterInternalFloatFunction(InternalFunctionClass: TInternalMagicFloatFunctionClass;
-      const FuncName: String; const FuncParams: array of String; const flags : TInternalFunctionFlags = []);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const flags : TInternalFunctionFlags = []; const helperName : UnicodeString = '');
 procedure RegisterInternalStringFunction(InternalFunctionClass: TInternalMagicStringFunctionClass;
-      const FuncName: String; const FuncParams: array of String; const flags : TInternalFunctionFlags = []);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const flags : TInternalFunctionFlags = []; const helperName : UnicodeString = '');
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -296,36 +325,42 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
+uses dwsCompilerUtils;
+
 // RegisterInternalIntFunction
 //
 procedure RegisterInternalIntFunction(InternalFunctionClass: TInternalMagicIntFunctionClass;
-      const FuncName: String; const FuncParams: array of String; const flags : TInternalFunctionFlags = []);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const flags : TInternalFunctionFlags = []; const helperName : UnicodeString = '');
 begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, 'Integer', flags);
+   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, SYS_INTEGER, flags, helperName);
 end;
 
 // RegisterInternalBoolFunction
 //
 procedure RegisterInternalBoolFunction(InternalFunctionClass: TInternalMagicBoolFunctionClass;
-      const FuncName: String; const FuncParams: array of String; const flags : TInternalFunctionFlags = []);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const flags : TInternalFunctionFlags = []; const helperName : UnicodeString = '');
 begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, 'Boolean', flags);
+   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, SYS_BOOLEAN, flags, helperName);
 end;
 
 // RegisterInternalFloatFunction
 //
 procedure RegisterInternalFloatFunction(InternalFunctionClass: TInternalMagicFloatFunctionClass;
-      const FuncName: String; const FuncParams: array of String; const flags : TInternalFunctionFlags = []);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const flags : TInternalFunctionFlags = []; const helperName : UnicodeString = '');
 begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, 'Float', flags);
+   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, SYS_FLOAT, flags, helperName);
 end;
 
 // RegisterInternalStringFunction
 //
 procedure RegisterInternalStringFunction(InternalFunctionClass: TInternalMagicStringFunctionClass;
-      const FuncName: String; const FuncParams: array of String; const flags : TInternalFunctionFlags = []);
+      const FuncName: UnicodeString; const FuncParams: array of UnicodeString;
+      const flags : TInternalFunctionFlags = []; const helperName : UnicodeString = '');
 begin
-   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, 'String', flags);
+   RegisterInternalFunction(InternalFunctionClass, FuncName, FuncParams, SYS_STRING, flags, helperName);
 end;
 
 // ------------------
@@ -357,6 +392,8 @@ end;
 // ------------------ TMagicMethodSymbol ------------------
 // ------------------
 
+// Initialize
+//
 procedure TMagicMethodSymbol.Initialize(const msgs : TdwsCompileMessageList);
 begin
    FInternalParams.Initialize(msgs);
@@ -385,17 +422,41 @@ end;
 // Create
 //
 constructor TInternalMagicFunction.Create(table : TSymbolTable;
-      const funcName : String; const params : TParamArray; const funcType : String;
-      const flags : TInternalFunctionFlags = []);
+      const funcName : UnicodeString; const params : TParamArray; const funcType : UnicodeString;
+      const flags : TInternalFunctionFlags;
+      compositeSymbol : TCompositeTypeSymbol;
+      const helperName : UnicodeString);
 var
-  sym : TMagicFuncSymbol;
+   sym : TMagicFuncSymbol;
+   ssym : TMagicStaticMethodSymbol;
 begin
-  sym:=TMagicFuncSymbol.Generate(table, funcName, params, funcType);
-  sym.params.AddParent(table);
-  sym.InternalFunction:=Self;
-  sym.IsStateless:=(iffStateLess in flags);
-  sym.IsOverloaded:=(iffOverloaded in flags);
-  table.AddSymbol(sym);
+   if iffStaticMethod in flags then begin
+      ssym:=TMagicStaticMethodSymbol.Generate(table, mkClassMethod, [maStatic],
+                                              funcName, params, funcType,
+                                              compositeSymbol,
+                                              cvPublic, (iffOverloaded in flags));
+      ssym.InternalFunction:=Self;
+      ssym.IsStateless:=(iffStateLess in flags);
+      ssym.IsExternal:=True;
+      compositeSymbol.AddMethod(ssym);
+      Assert(helperName=''); // unsupported
+   end else begin
+      sym:=TMagicFuncSymbol.Generate(table, funcName, params, funcType);
+      sym.params.AddParent(table);
+      sym.InternalFunction:=Self;
+      sym.IsStateless:=(iffStateLess in flags);
+      sym.IsOverloaded:=(iffOverloaded in flags);
+      table.AddSymbol(sym);
+      if helperName<>'' then
+         TdwsCompilerUtils.AddProcHelper(helperName, table, sym, nil);
+   end;
+end;
+
+// Execute
+//
+procedure TInternalMagicFunction.Execute(info : TProgramInfo);
+begin
+   Assert(False);
 end;
 
 // ------------------
@@ -405,14 +466,18 @@ end;
 // CreateMagicFuncExpr
 //
 class function TMagicFuncExpr.CreateMagicFuncExpr(prog : TdwsProgram;
-         const pos : TScriptPos; magicFuncSym : TMagicFuncSymbol) : TMagicFuncExpr;
+         const scriptPos : TScriptPos; magicFuncSym : TMagicFuncSymbol) : TMagicFuncExpr;
+var
+   internalFunc : TInternalMagicFunction;
 begin
-   Result:=magicFuncSym.InternalFunction.MagicFuncExprClass.Create(prog, pos, magicFuncSym);
+   internalFunc:=magicFuncSym.InternalFunction;
+   Result:=internalFunc.MagicFuncExprClass.Create(prog, scriptPos, magicFuncSym, internalFunc);
 end;
 
 // Create
 //
-constructor TMagicFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol);
+constructor TMagicFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                  func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
    inherited Create(prog, scriptPos, func);
 end;
@@ -433,18 +498,11 @@ begin
    Result:=False;
 end;
 
-// GetData
+// GetDataPtr
 //
-function TMagicFuncExpr.GetData(exec : TdwsExecution) : TData;
+procedure TMagicFuncExpr.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
 begin
-   Result:=exec.Stack.Data;
-end;
-
-// GetAddr
-//
-function TMagicFuncExpr.GetAddr(exec : TdwsExecution) : Integer;
-begin
-   Result:=exec.Stack.BasePointer+FResultAddr;
+   exec.DataContext_CreateBase(FResultAddr, Result);
 end;
 
 // ------------------
@@ -453,10 +511,11 @@ end;
 
 // Create
 //
-constructor TMagicVariantFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol);
+constructor TMagicVariantFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                         func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
-   inherited Create(prog, scriptPos, func);
-   FOnEval:=TInternalMagicVariantFunction(func.InternalFunction).DoEvalAsVariant;
+   inherited Create(prog, scriptPos, func, internalFunc);
+   FOnEval:=(internalFunc as TInternalMagicVariantFunction).DoEvalAsVariant;
 end;
 
 // Eval
@@ -468,7 +527,7 @@ begin
    execRec.List:=@FArgs;
    execRec.Exec:=exec;
    try
-      Result:=FOnEval(@execRec);
+      Result:=FOnEval(execRec);
    except
       RaiseScriptError(exec);
    end;
@@ -480,42 +539,47 @@ end;
 
 // Create
 //
-constructor TMagicDataFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol);
+constructor TMagicDataFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                      func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
-   inherited Create(prog, scriptPos, func);
-   FOnEval:=TInternalMagicDataFunction(Func.InternalFunction).DoEval;
+   inherited Create(prog, scriptPos, func, internalFunc);
+   FOnEval:=(internalFunc as TInternalMagicDataFunction).DoEval;
    SetResultAddr(prog, nil);
 end;
 
 // EvalNoResult
 //
 procedure TMagicDataFuncExpr.EvalNoResult(exec : TdwsExecution);
+var
+   buf : IDataContext;
 begin
-   GetData(exec);
+   GetDataPtr(exec, buf);
 end;
 
 // Eval
 //
 function TMagicDataFuncExpr.Eval(exec : TdwsExecution) : Variant;
+var
+   buf : IDataContext;
 begin
-   Result:=Data[exec][Addr[exec]];
+   GetDataPtr(exec, buf);
+   buf.EvalAsVariant(0, Result);
 end;
 
-// GetData
+// GetDataPtr
 //
-function TMagicDataFuncExpr.GetData(exec : TdwsExecution) : TData;
+procedure TMagicDataFuncExpr.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
 var
    execRec : TExprBaseListExec;
-   dataPtr : TDataPtr;
 begin
    execRec.List:=@FArgs;
    execRec.Exec:=exec;
    try
-      Result:=exec.Stack.Data;
-      dataPtr:=TDataPtr.Create(exec.Stack.Data, exec.Stack.BasePointer+FResultAddr);
-      FOnEval(@execRec, dataPtr);
+      exec.DataContext_CreateBase(FResultAddr, Result);
+      FOnEval(execRec, Result);
    except
       RaiseScriptError(exec);
+      raise;
    end;
 end;
 
@@ -525,10 +589,11 @@ end;
 
 // Create
 //
-constructor TMagicIntFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol);
+constructor TMagicIntFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                     func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
-   inherited Create(prog, scriptPos, func);
-   FOnEval:=TInternalMagicIntFunction(Func.InternalFunction).DoEvalAsInteger;
+   inherited Create(prog, scriptPos, func, internalFunc);
+   FOnEval:=(internalFunc as TInternalMagicIntFunction).DoEvalAsInteger;
 end;
 
 // EvalNoResult
@@ -554,8 +619,11 @@ begin
    execRec.List:=@FArgs;
    execRec.Exec:=exec;
    try
-      Result:=FOnEval(@execRec);
+      Result:=FOnEval(execRec);
    except
+      on E: EScriptException do
+         raise
+   else
       Result:=0;
       RaiseScriptError(exec);
    end;
@@ -567,17 +635,18 @@ end;
 
 // Create
 //
-constructor TMagicStringFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol);
+constructor TMagicStringFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                        func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
-   inherited Create(prog, scriptPos, func);
-   FOnEval:=TInternalMagicStringFunction(Func.InternalFunction).DoEvalAsString;
+   inherited Create(prog, scriptPos, func, internalFunc);
+   FOnEval:=(internalFunc as TInternalMagicStringFunction).DoEvalAsString;
 end;
 
 // EvalNoResult
 //
 procedure TMagicStringFuncExpr.EvalNoResult(exec : TdwsExecution);
 var
-   buf : String;
+   buf : UnicodeString;
 begin
    EvalAsString(exec, buf);
 end;
@@ -586,7 +655,7 @@ end;
 //
 function TMagicStringFuncExpr.Eval(exec : TdwsExecution) : Variant;
 var
-   buf : String;
+   buf : UnicodeString;
 begin
    EvalAsString(exec, buf);
    Result:=buf;
@@ -594,14 +663,14 @@ end;
 
 // EvalAsString
 //
-procedure TMagicStringFuncExpr.EvalAsString(exec : TdwsExecution; var Result : String);
+procedure TMagicStringFuncExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
 var
    execRec : TExprBaseListExec;
 begin
    execRec.List:=@FArgs;
    execRec.Exec:=exec;
    try
-      FOnEval(@execRec, Result);
+      FOnEval(execRec, Result);
    except
       RaiseScriptError(exec);
    end;
@@ -613,10 +682,11 @@ end;
 
 // Create
 //
-constructor TMagicFloatFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol);
+constructor TMagicFloatFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                       func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
-   inherited Create(prog, scriptPos, func);
-   FOnEval:=TInternalMagicFloatFunction(Func.InternalFunction).DoEvalAsFloat;
+   inherited Create(prog, scriptPos, func, internalFunc);
+   FOnEval:=(internalFunc as TInternalMagicFloatFunction).DoEvalAsFloat;
 end;
 
 // EvalNoResult
@@ -642,7 +712,7 @@ begin
    execRec.List:=@FArgs;
    execRec.Exec:=exec;
    try
-      FOnEval(@execRec, Result);
+      FOnEval(execRec, Result);
    except
       RaiseScriptError(exec);
    end;
@@ -654,10 +724,11 @@ end;
 
 // Create
 //
-constructor TMagicBoolFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol);
+constructor TMagicBoolFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                      func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
-   inherited Create(prog, scriptPos, func);
-   FOnEval:=TInternalMagicBoolFunction(Func.InternalFunction).DoEvalAsBoolean;
+   inherited Create(prog, scriptPos, func, internalFunc);
+   FOnEval:=(internalFunc as TInternalMagicBoolFunction).DoEvalAsBoolean;
 end;
 
 // EvalNoResult
@@ -683,7 +754,7 @@ begin
    execRec.List:=@FArgs;
    execRec.Exec:=exec;
    try
-      Result:=FOnEval(@execRec);
+      Result:=FOnEval(execRec);
    except
       Result:=False;
       RaiseScriptError(exec);
@@ -696,10 +767,11 @@ end;
 
 // Create
 //
-constructor TMagicProcedureExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TMagicFuncSymbol);
+constructor TMagicProcedureExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                       func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
-   inherited Create(prog, scriptPos, func);
-   FOnEval:=TInternalMagicProcedure(Func.InternalFunction).DoEvalProc;
+   inherited Create(prog, scriptPos, func, internalFunc);
+   FOnEval:=(internalFunc as TInternalMagicProcedure).DoEvalProc;
 end;
 
 // EvalNoResult
@@ -711,9 +783,11 @@ begin
    execRec.List:=@FArgs;
    execRec.Exec:=exec;
    try
-      FOnEval(@execRec);
+      FOnEval(execRec);
    except
-      RaiseScriptError(exec);
+      on E : EScriptError do
+         raise
+      else RaiseScriptError(exec);
    end;
 end;
 
@@ -730,10 +804,10 @@ end;
 
 // Create
 //
-constructor TMagicIteratorFuncExpr.Create(prog : TdwsProgram; const pos : TScriptPos;
+constructor TMagicIteratorFuncExpr.Create(prog : TdwsProgram; const aScriptPos : TScriptPos;
                                           left, right : TTypedExpr);
 begin
-   inherited Create(prog, pos, nil);
+   inherited Create(prog, aScriptPos, nil, nil);
    FTyp:=left.Typ;
    AddArg(left);
    AddArg(right);
@@ -764,7 +838,7 @@ var
    left : TDataExpr;
 begin
    left:=TDataExpr(FArgs.ExprBase[0]);
-   Result:=@left.Data[exec][left.Addr[exec]];
+   Result:=@left.DataPtr[exec].AsPVarDataArray^[0];
    Assert(Result.VType=varInt64);
    Inc(Result.VInt64, FArgs.ExprBase[1].EvalAsInteger(exec));
 end;
@@ -794,7 +868,7 @@ var
    left : TDataExpr;
 begin
    left:=TDataExpr(FArgs.ExprBase[0]);
-   Result:=@left.Data[exec][left.Addr[exec]];
+   Result:=@left.DataPtr[exec].AsPVarDataArray^[0];
    Assert(Result.VType=varInt64);
    Dec(Result.VInt64, FArgs.ExprBase[1].EvalAsInteger(exec));
 end;
@@ -910,6 +984,24 @@ end;
 function TInternalMagicStringFunction.MagicFuncExprClass : TMagicFuncExprClass;
 begin
    Result:=TMagicStringFuncExpr;
+end;
+
+// ------------------
+// ------------------ TMagicStaticMethodSymbol ------------------
+// ------------------
+
+// GetInternalFunction
+//
+function TMagicStaticMethodSymbol.GetInternalFunction : TInternalMagicFunction;
+begin
+   Result:=(inherited InternalFunction) as TInternalMagicFunction;
+end;
+
+// SetInternalFunction
+//
+procedure TMagicStaticMethodSymbol.SetInternalFunction(const val : TInternalMagicFunction);
+begin
+   inherited InternalFunction:=val;
 end;
 
 end.

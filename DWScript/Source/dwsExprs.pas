@@ -23,7 +23,9 @@ unit dwsExprs;
 
 interface
 
-uses Classes, Variants, SysUtils, TypInfo, dwsSymbols, dwsErrors, dwsUtils,
+uses
+   Classes, Variants, SysUtils, TypInfo, Math,
+   dwsSymbols, dwsErrors, dwsUtils, dwsDataContext, dwsExprList,
    dwsStrings, dwsStack, SyncObjs, dwsFileSystem, dwsTokenizer, dwsUnitSymbols,
    dwsJSON, dwsXPlatform;
 
@@ -41,6 +43,7 @@ type
    TdwsMainProgram = class;
    IdwsProgram = interface;
    TdwsProgramExecution = class;
+   TdwsProgramExecutionClass = class of TdwsProgramExecution;
    IdwsProgramExecution = interface;
    TSymbolPositionList = class;
    TFuncExprBase = class;
@@ -49,27 +52,31 @@ type
    TSourcePreConditions = class;
    TSourcePostConditions = class;
    TBlockExprBase = class;
+   TProgramExpr = class;
 
    TVariantDynArray = array of Variant;
+   TStringDynArray = array of UnicodeString;
 
-   TNoResultExprList = array[0..MaxInt shr 4] of TNoResultExpr;
-   PNoResultExprList = ^TNoResultExprList;
-   PNoResultExpr = ^TNoResultExpr;
+   TProgramExprList = array[0..MaxInt shr 4] of TProgramExpr;
+   PProgramExprList = ^TProgramExprList;
+   PProgramExpr = ^TProgramExpr;
 
-   TScriptSourceType = (stMain, stUnit, stInclude, stRecompile);
+   TdwsExecutionEvent = procedure (exec : TdwsProgramExecution) of object;
+
+   TScriptSourceType = (stMain, stUnit, stUnitNamespace, stInclude, stRecompile);
 
    // A specific ScriptSource entry. The text of the script contained in that unit.
    TScriptSourceItem = class (TRefCountedObject)
       private
-         FNameReference : String;
+         FNameReference : UnicodeString;
          FSourceFile : TSourceFile;
          FSourceType : TScriptSourceType;
 
       public
-         constructor Create(const ANameReference: String; ASourceFile: TSourceFile; ASourceType: TScriptSourceType);
+         constructor Create(const ANameReference: UnicodeString; ASourceFile: TSourceFile; ASourceType: TScriptSourceType);
          destructor Destroy; override;
 
-         property NameReference : String read FNameReference write FNameReference;
+         property NameReference : UnicodeString read FNameReference write FNameReference;
          property SourceFile : TSourceFile read FSourceFile;
          property SourceType : TScriptSourceType read FSourceType;
    end;
@@ -88,11 +95,11 @@ type
          destructor Destroy; override;
 
          procedure Clear;
-         function Add(const nameReference, code: String; sourceType: TScriptSourceType) : TSourceFile;
+         function Add(const nameReference, code: UnicodeString; sourceType: TScriptSourceType) : TSourceFile;
 
-         function FindScriptSourceItem(const SourceFileName: String): TScriptSourceItem; overload;
+         function FindScriptSourceItem(const SourceFileName: UnicodeString): TScriptSourceItem; overload;
 
-         function IndexOf(const SourceFileName: String): Integer; overload;
+         function IndexOf(const SourceFileName: UnicodeString): Integer; overload;
 
          property Count : Integer read FSourceList.FCount;
 
@@ -102,9 +109,10 @@ type
 
    { Describe how the symbol at the position is being used. suReference would be
      a typical usage of the symbol.
-     suImplicit indicates that the symbol was only implicitly present }
+     suImplicit indicates that the symbol was only implicitly present
+     suRTTI indicates explicit RTTI access of the symbol }
    TSymbolUsage = (suForward, suDeclaration, suImplementation, suReference,
-                   suRead, suWrite, suImplicit);
+                   suRead, suWrite, suImplicit, suRTTI );
    TSymbolUsages = set of TSymbolUsage;
 
    // Records a symbol's position in source and usage at that position
@@ -123,14 +131,15 @@ type
    {Re-list every symbol (pointer to it) and every position it is in in the script }
    TSymbolPositionList = class (TRefCountedObject)
       private
-         FSymbol : TSymbol;                           // pointer to the symbol
+         FSymbol : TSymbol;                        // pointer to the symbol
          FPosList : TSimpleList<TSymbolPosition>;  // list of positions where symbol is declared and used
+         FSourceFile : TSourceFile; // not nil only if all positions are in that file
 
       protected
          function GetPosition(index : Integer) : TSymbolPosition; inline;
 
          // Used by TSymbolDictionary. Not meaningful to make public (symbol is known).
-         function FindSymbolAtPosition(aCol, aLine : Integer; const sourceFile : String) : TSymbol; overload;
+         function FindSymbolAtPosition(aCol, aLine : Integer; const sourceFile : UnicodeString) : TSymbol; overload;
 
       public
          constructor Create(ASymbol: TSymbol);
@@ -141,6 +150,7 @@ type
          procedure Clear;
 
          function FindUsage(const symbolUse : TSymbolUsage) : TSymbolPosition;
+         function FindAnyUsage(const symbolUses : TSymbolUsages) : TSymbolPosition;
          function IndexOfPosition(const scriptPos : TScriptPos) : Integer;
          procedure RemoveInRange(const startPos, endPos : TScriptPos);
 
@@ -181,13 +191,13 @@ type
          procedure ReplaceSymbolAt(oldSym, newSym : TSymbol; const scriptPos : TScriptPos);
          procedure ChangeUsageAt(const scriptPos : TScriptPos; const addUsages, removeUsages : TSymbolUsages);
 
-         function FindSymbolAtPosition(aCol, aLine: Integer; const sourceFile : String): TSymbol; overload;
+         function FindSymbolAtPosition(aCol, aLine: Integer; const sourceFile : UnicodeString): TSymbol; overload;
          function FindSymbolPosList(sym: TSymbol): TSymbolPositionList; overload;  // return list of symbol
-         function FindSymbolPosList(const symName: String): TSymbolPositionList; overload;  // return list of symbol
-         function FindSymbolPosListOfType(const symName: String; symbolType: TSymbolClass): TSymbolPositionList; // return list of symbol given the desired type
+         function FindSymbolPosList(const symName: UnicodeString): TSymbolPositionList; overload;  // return list of symbol
+         function FindSymbolPosListOfType(const symName: UnicodeString; symbolType: TSymbolClass): TSymbolPositionList; // return list of symbol given the desired type
          function FindSymbolUsage(symbol: TSymbol; symbolUse: TSymbolUsage): TSymbolPosition; overload;
-         function FindSymbolUsage(const symName: String; symbolUse: TSymbolUsage): TSymbolPosition; overload;
-         function FindSymbolUsageOfType(const symName: String; symbolType: TSymbolClass; symbolUse: TSymbolUsage): TSymbolPosition;
+         function FindSymbolUsage(const symName: UnicodeString; symbolUse: TSymbolUsage): TSymbolPosition; overload;
+         function FindSymbolUsageOfType(const symName: UnicodeString; symbolType: TSymbolClass; symbolUse: TSymbolUsage): TSymbolPosition;
          function FindSymbolByUsageAtLine(const scriptPos : TScriptPos; symbolUse: TSymbolUsage) : TSymbol;
 
          function Count : Integer; inline;
@@ -218,7 +228,8 @@ type
                             aParentSymbol : TSymbol; aToken : TTokenType);
          destructor Destroy; override;
 
-         function IsPositionInContext(aCol, aLine : Integer; const sourceName : String) : Boolean;
+         function IsPositionInContext(const aPos : TScriptPos) : Boolean; overload;
+         function IsPositionInContext(aCol, aLine : Integer; const sourceName : UnicodeString) : Boolean; overload;
          function HasParentSymbolOfClass(SymbolType: TSymbolClass; SearchParents: Boolean): Boolean;
 
          function FindContext(parentSymbol : TSymbol) : TdwsSourceContext;
@@ -269,7 +280,7 @@ type
          // return the first context group based on its parent
          function FindContext(AParentSymbol : TSymbol) : TdwsSourceContext; overload;
          function FindContext(aCol, aLine : Integer; sourceFile : TSourceFile) : TdwsSourceContext; overload;
-         function FindContext(aCol, aLine : Integer; const sourceName : String) : TdwsSourceContext; overload;
+         function FindContext(aCol, aLine : Integer; const sourceName : UnicodeString) : TdwsSourceContext; overload;
          function FindContext(const ScriptPos : TScriptPos) : TdwsSourceContext; overload;
          function FindContextByToken(aToken : TTokenType) : TdwsSourceContext;
          procedure EnumerateContextsOfSymbol(aParentSymbol : TSymbol; const callBack : TdwsSourceContextCallBack);
@@ -327,24 +338,32 @@ type
       public
          constructor Create(resultType : TdwsResultType); virtual;
 
-         procedure AddString(const str : String); virtual; abstract;
+         procedure AddString(const str : UnicodeString); overload; virtual; abstract;
+         procedure AddString(const i : Int64); overload; virtual;
+         procedure AddCRLF; virtual;
          procedure Clear; virtual; abstract;
+
+         function ToUTF8String : UTF8String; virtual;
+         function ToDataString : RawByteString; virtual;
    end;
 
    TdwsDefaultResult = class(TdwsResult)
       private
          FTextBuilder : TWriteOnlyBlockStream;
-         function GetText : String; inline;
+         function GetText : UnicodeString; inline;
 
       public
          constructor Create(resultType : TdwsResultType); override;
          destructor Destroy; override;
 
-         procedure AddString(const str : String); override;
+         procedure AddString(const str : UnicodeString); override;
+         procedure AddString(const i : Int64); override;
+         procedure AddCRLF; override;
          procedure Clear; override;
          function ToString : String; override;
+         function ToDataString : RawByteString; override;
 
-         property Text: String read GetText;
+         property Text : UnicodeString read GetText;
    end;
 
    TdwsResultType = class(TComponent)
@@ -368,33 +387,33 @@ type
    end;
 
    TdwsGuardedExecution = class (TRefCountedObject)
-      Exec : IdwsProgramExecution;
-      TimeOutAt : TDateTime;
-   end;
-
-   TdwsGuardedExecutionList = class(TSortedList<TdwsGuardedExecution>)
-      protected
-         function Compare(const item1, item2 : TdwsGuardedExecution) : Integer; override;
+      public
+         Exec : IdwsProgramExecution;
+         TimeOutAt : Int64;
+         Next : TdwsGuardedExecution;
+         procedure FreeAll;
    end;
 
    // TdwsGuardianThread
    //
    // Stops the script after given time (Timeout)
-   TdwsGuardianThread = class(TThread)
+   TdwsGuardianThread = class(TdwsThread)
       private
          FEvent : TEvent;
-         FExecutions : TdwsGuardedExecutionList;
+         FExecutions : TdwsGuardedExecution;
          FExecutionsLock : TFixedCriticalSection;
 
       protected
          procedure Execute; override;
 
-         class var vThreadLock : Integer;
          class var vThread : TdwsGuardianThread;
+         class var vExecutionsPool : TdwsGuardedExecution;
 
       public
          constructor Create;
          destructor Destroy; override;
+
+         const PulseIntervalMilliSeconds : Integer = 2500;
 
          class procedure Initialize; static;
          class procedure Finalize; static;
@@ -410,8 +429,8 @@ type
 
    IdwsLocalizer = interface (IGetSelf)
       ['{2AFDC297-FF85-43F5-9913-45DE5C1330AB}']
-      procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : String);
-      procedure LocalizeString(const aString : String; var Result : String);
+      procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : UnicodeString);
+      procedure LocalizeString(const aString : UnicodeString; var Result : UnicodeString);
    end;
 
    TProgramInfo = class;
@@ -426,12 +445,13 @@ type
       procedure SetEnvironment(const env : IdwsEnvironment);
       function GetLocalizer : IdwsLocalizer;
       procedure SetLocalizer(const loc : IdwsLocalizer);
+      function GetLastScriptErrorExpr : TExprBase;
 
       procedure Execute(aTimeoutMilliSeconds : Integer = 0); overload;
       procedure ExecuteParam(const params : TVariantDynArray; aTimeoutMilliSeconds : Integer = 0); overload;
       procedure ExecuteParam(const params : OleVariant; aTimeoutMilliSeconds : Integer = 0); overload;
 
-      procedure BeginProgram;
+      function  BeginProgram : Boolean;
       procedure RunProgram(aTimeoutMilliSeconds : Integer);
       procedure Stop;
       procedure EndProgram;
@@ -444,7 +464,7 @@ type
       property Localizer : IdwsLocalizer read GetLocalizer write SetLocalizer;
    end;
 
-   IdwsProgram = interface
+   IdwsProgram = interface(IGetSelf)
       ['{AD513983-F033-44AF-9F2B-9CFFF94B9BB3}']
       function GetMsgs : TdwsMessageList;
       function GetConditionalDefines : IAutoStrings;
@@ -461,6 +481,7 @@ type
       function GetSourceList : TScriptSourceList;
       function GetUnitMains : TUnitMainSymbols;
       function GetProgramObject : TdwsMainProgram;
+      procedure SetExecutionsClass(aClass : TdwsProgramExecutionClass);
 
       function CreateNewExecution : IdwsProgramExecution;
       function BeginNewExecution : IdwsProgramExecution;
@@ -484,6 +505,7 @@ type
       property LineCount : Integer read GetLineCount;
       property TimeStamp : TDateTime read GetTimeStamp;
       property CompileDuration : TDateTime read GetCompileDuration;
+      property ExecutionsClass : TdwsProgramExecutionClass write SetExecutionsClass;
    end;
 
    // holds execution context for a script
@@ -494,17 +516,23 @@ type
 
          FFirstObject, FLastObject : TScriptObj;
          FObjectCount : Integer;
+
          FProgramInfo : TProgramInfo;
          FProgInfoPool : TProgramInfo;
 
-         FParameters : TData;
          FResult : TdwsResult;
+         FParameters : TData;
          FFileSystem : IdwsFileSystem;
          FEnvironment : IdwsEnvironment;
          FLocalizer : IdwsLocalizer;
          FRTTIRawAttributes : IScriptObj;
 
-         FMsgs : TdwsRuntimeMessageList;
+         FOnExecutionStarted : TdwsExecutionEvent;
+         FOnExecutionEnded : TdwsExecutionEvent;
+
+         FRuntimeMsgs : TdwsRuntimeMessageList;
+
+         FDebuggerFieldAddr : Integer;
 
       protected
          procedure ReleaseObjects;
@@ -524,38 +552,48 @@ type
          function GetObjectCount : Integer;
          function GetLocalizer : IdwsLocalizer;
          procedure SetLocalizer(const val : IdwsLocalizer);
+         function GetLastScriptErrorExpr : TExprBase;
 
-         procedure EnterRecursion(caller : TExprBase);
-         procedure LeaveRecursion;
          procedure RaiseMaxRecursionReached;
          procedure SetCurrentProg(const val : TdwsProgram); inline;
 
       public
-         constructor Create(aProgram : TdwsMainProgram; const stackParams : TStackParameters);
+         constructor Create(aProgram : TdwsMainProgram; const stackParams : TStackParameters); virtual;
          destructor Destroy; override;
 
          procedure Execute(aTimeoutMilliSeconds : Integer = 0); overload;
          procedure ExecuteParam(const Params : TVariantDynArray; aTimeoutMilliSeconds : Integer = 0); overload;
          procedure ExecuteParam(const Params : OleVariant; aTimeoutMilliSeconds : Integer = 0); overload;
 
-         procedure BeginProgram;
+         function  BeginProgram : Boolean; virtual;
          procedure RunProgram(aTimeoutMilliSeconds : Integer);
          procedure Stop;
-         procedure EndProgram;
+         procedure EndProgram; virtual;
+
+         procedure EnterRecursion(caller : TExprBase);
+         procedure LeaveRecursion;
 
          function CallStackDepth : Integer; override;
          function GetCallStack : TdwsExprLocationArray; override;
          function CallStackLastExpr : TExprBase;
 
-         class function CallStackToString(const callStack : TdwsExprLocationArray) : String; static;
-         procedure RaiseAssertionFailed(const msg : String; const scriptPos : TScriptPos);
-         procedure RaiseAssertionFailedFmt(const fmt : String; const args : array of const; const scriptPos : TScriptPos);
+         function  DebuggerFieldAddr : Integer;
+         procedure DebuggerNotifyException(const exceptObj : IScriptObj); override;
+
+         class function CallStackToString(const callStack : TdwsExprLocationArray) : UnicodeString; static;
+         procedure RaiseAssertionFailed(fromExpr : TExprBase; const msg : UnicodeString; const scriptPos : TScriptPos);
+         procedure RaiseAssertionFailedFmt(fromExpr : TExprBase; const fmt : UnicodeString; const args : array of const; const scriptPos : TScriptPos);
+
+         function CreateEDelphiObj(const ClassName : String;
+                                   const Message : UnicodeString) : IScriptObj;
+
+         procedure EnterExceptionBlock(var exceptObj : IScriptObj); override;
 
          function AcquireProgramInfo(funcSym : TFuncSymbol) : TProgramInfo;
          procedure ReleaseProgramInfo(info : TProgramInfo);
 
-         procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : String); override;
-         procedure LocalizeString(const aString : String; var Result : String); override;
+         procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : UnicodeString); override;
+         procedure LocalizeString(const aString : UnicodeString; var Result : UnicodeString); override;
 
          property Prog : TdwsMainProgram read FProg;
          property CurrentProg : TdwsProgram read FCurrentProg write SetCurrentProg;
@@ -569,6 +607,9 @@ type
          property RTTIRawAttributes : IScriptObj read FRTTIRawAttributes write FRTTIRawAttributes;
 
          property ObjectCount : Integer read FObjectCount;
+
+         property OnExecutionStarted : TdwsExecutionEvent read FOnExecutionStarted write FOnExecutionStarted;
+         property OnExecutionEnded : TdwsExecutionEvent read FOnExecutionEnded write FOnExecutionEnded;
    end;
 
    TdwsProgramBaseTypes = record
@@ -582,12 +623,13 @@ type
       FTypVariant : TTypeSymbol;
       FTypException : TClassSymbol;
       FTypInterface : TInterfaceSymbol;
+      FTypAnyType : TAnyTypeSymbol;
    end;
 
    // A script executable program
    TdwsProgram = class (TInterfacedSelfObject)
       private
-         FExpr : TNoResultExpr;
+         FExpr : TProgramExpr;
          FInitExpr : TBlockInitExpr;
          FAddrGenerator : TAddrGeneratorRec;
          FCompileMsgs : TdwsCompileMessageList;
@@ -603,6 +645,8 @@ type
          function GetLevel : Integer; inline;
          function GetUnitMains : TUnitMainSymbols;
          function GetAddrGeneratorDataSize : Integer; inline;
+         function SubExpr(i : Integer) : TExprBase;
+         function SubExprCount : Integer;
 
       public
          constructor Create(const systemTable : ISystemSymbolTable);
@@ -620,7 +664,7 @@ type
 
          function ContextMethodSymbol : TMethodSymbol;
 
-         property Expr : TNoResultExpr read FExpr write FExpr;
+         property Expr : TProgramExpr read FExpr write FExpr;
          property InitExpr : TBlockInitExpr read FInitExpr;
          property Level : Integer read GetLevel;
          property CompileMsgs : TdwsCompileMessageList read FCompileMsgs write FCompileMsgs;
@@ -642,6 +686,7 @@ type
          property TypVariant: TTypeSymbol read FBaseTypes.FTypVariant;
          property TypException: TClassSymbol read FBaseTypes.FTypException;
          property TypInterface : TInterfaceSymbol read FBaseTypes.FTypInterface;
+         property TypAnyType: TAnyTypeSymbol read FBaseTypes.FTypAnyType;
    end;
 
    // A script main executable program
@@ -675,9 +720,17 @@ type
          FTimeStamp : TDateTime;
          FCompileDuration : TDateTime;
          FCompiler : TObject;
+         FOrphanedObjects : TObjectList<TRefCountedObject>;
+
+         FTypDefaultConstructor : TMethodSymbol;
+         FTypDefaultDestructor : TMethodSymbol;
 
          FDefaultEnvironment : IdwsEnvironment;
          FDefaultLocalizer : IdwsLocalizer;
+         FOnExecutionStarted : TdwsExecutionEvent;
+         FOnExecutionEnded : TdwsExecutionEvent;
+
+         FExecutionsClass : TdwsProgramExecutionClass;
 
       protected
          function GetConditionalDefines : IAutoStrings;
@@ -699,6 +752,7 @@ type
          function GetSymbolDictionary : TdwsSymbolDictionary;
          function GetSourceContextMap : TdwsSourceContextMap;
          function GetProgramObject : TdwsMainProgram;
+         procedure SetExecutionsClass(aClass : TdwsProgramExecutionClass);
 
       public
          constructor Create(const systemTable : ISystemSymbolTable;
@@ -712,13 +766,15 @@ type
          function ExecuteParam(const params : TVariantDynArray; aTimeoutMilliSeconds : Integer = 0) : IdwsProgramExecution; overload;
          function ExecuteParam(const params : OleVariant; aTimeoutMilliSeconds : Integer = 0) : IdwsProgramExecution; overload;
 
-         function GetSourceFile(const aSourceFile : String) : TSourceFile;
+         function GetSourceFile(const aSourceFile : UnicodeString) : TSourceFile;
 
          function NextStackLevel(level : Integer) : Integer;
 
          procedure DropMapAndDictionary;
 
          function CollectAllPublishedSymbols : TSimpleSymbolList;
+
+         procedure OrphanObject(obj : TRefCountedObject);
 
          property FinalExpr : TBlockFinalExpr read FFinalExpr write FFinalExpr;
 
@@ -743,9 +799,15 @@ type
          property TimeStamp : TDateTime read FTimeStamp write FTimeStamp;
          property CompileDuration : TDateTime read FCompileDuration write FCompileDuration;
 
+         property TypDefaultConstructor : TMethodSymbol read FTypDefaultConstructor;
+         property TypDefaultDestructor : TMethodSymbol read FTypDefaultDestructor;
+
          property DefaultEnvironment : IdwsEnvironment read FDefaultEnvironment write FDefaultEnvironment;
          property DefaultLocalizer : IdwsLocalizer read FDefaultLocalizer write FDefaultLocalizer;
          property DefaultUserObject : TObject read FDefaultUserObject write FDefaultUserObject;
+
+         property OnExecutionStarted : TdwsExecutionEvent read FOnExecutionStarted write FOnExecutionStarted;
+         property OnExecutionEnded : TdwsExecutionEvent read FOnExecutionEnded write FOnExecutionEnded;
    end;
 
    // Functions callable from a script program implement this interfaces
@@ -755,7 +817,7 @@ type
    end;
 
    // A script procedure
-   TdwsProcedure = class (TdwsProgram, IUnknown, ICallable)
+   TdwsProcedure = class sealed (TdwsProgram, IUnknown, ICallable)
       private
          FFunc : TFuncSymbol;
          FPreConditions : TSourcePreConditions;
@@ -767,7 +829,7 @@ type
 
          procedure AssignTo(sym: TFuncSymbol);
          procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol);
-         procedure InitSymbol(Symbol: TSymbol);
+         procedure InitSymbol(Symbol: TSymbol; const msgs : TdwsCompileMessageList);
          procedure InitExpression(Expr: TExprBase);
 
          procedure OptimizeConstAssignments(blockExpr : TBlockExprBase);
@@ -799,14 +861,12 @@ type
          function GetBaseType : TTypeSymbol; virtual;
 
       public
-         function  IsConstant : Boolean; virtual;
          function  Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; virtual;
 
-         procedure EvalNoResult(exec : TdwsExecution); virtual;
          function  EvalAsInteger(exec : TdwsExecution) : Int64; override;
          function  EvalAsBoolean(exec : TdwsExecution) : Boolean; override;
          function  EvalAsFloat(exec : TdwsExecution) : Double; override;
-         procedure EvalAsString(exec : TdwsExecution; var Result : String); override;
+         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
          procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
          procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); override;
 
@@ -814,24 +874,15 @@ type
          procedure AssignValueAsInteger(exec : TdwsExecution; const value : Int64); override;
          procedure AssignValueAsBoolean(exec : TdwsExecution; const value : Boolean); override;
          procedure AssignValueAsFloat(exec : TdwsExecution; const value : Double); override;
-         procedure AssignValueAsString(exec : TdwsExecution; const value: String); override;
+         procedure AssignValueAsString(exec : TdwsExecution; const value: UnicodeString); override;
          procedure AssignValueAsScriptObj(exec : TdwsExecution; const value : IScriptObj); override;
-
-         procedure RaiseScriptError(exec : TdwsExecution; e : EScriptError); overload;
-         procedure RaiseScriptError(exec : TdwsExecution); overload;
-         procedure RaiseScriptError(exec : TdwsExecution; const msg : String); overload;
-         procedure RaiseScriptError(exec : TdwsExecution; exceptClass : EScriptErrorClass; const msg : String); overload;
-         procedure RaiseScriptError(exec : TdwsExecution; exceptClass : EScriptErrorClass; const msg : String;
-                                    const args : array of const); overload;
 
          procedure RaiseUpperExceeded(exec : TdwsExecution; index : Integer);
          procedure RaiseLowerExceeded(exec : TdwsExecution; index : Integer);
 
-         procedure CheckScriptObject(exec : TdwsExecution; const scriptObj : IScriptObj); inline;
-         procedure RaiseObjectNotInstantiated(exec : TdwsExecution);
-         procedure RaiseObjectAlreadyDestroyed(exec : TdwsExecution);
+         function ScriptLocation(prog : TObject) : UnicodeString; override;
 
-         function ScriptLocation(prog : TObject) : String; override;
+         function InterruptsFlow : Boolean; virtual;
 
          property Typ : TTypeSymbol read GetType;
          property BaseType : TTypeSymbol read GetBaseType;
@@ -858,6 +909,8 @@ type
 
          function IsOfType(typSym : TTypeSymbol) : Boolean;
 
+         function SameDataExpr(expr : TTypedExpr) : Boolean; virtual;
+
          property Typ : TTypeSymbol read FTyp write FTyp;
    end;
 
@@ -866,10 +919,10 @@ type
    // hosts a type reference
    TTypeReferenceExpr = class sealed (TTypedExpr)
       private
-         FPos : TScriptPos;
+         FScriptPos : TScriptPos;
 
       public
-         constructor Create(aTyp : TTypeSymbol; const scriptPos : TScriptPos);
+         constructor Create(aTyp : TTypeSymbol; const aScriptPos : TScriptPos);
 
          function Eval(exec : TdwsExecution) : Variant; override;
          function ScriptPos : TScriptPos; override;
@@ -877,36 +930,32 @@ type
 
    // base class of expressions that return no result
    TNoResultExpr = class(TProgramExpr)
-      public
-         function Eval(exec : TdwsExecution) : Variant; override;
-         procedure EvalNoResult(exec : TdwsExecution); override;
-
-         function OptimizeToNoResultExpr(prog : TdwsProgram; exec : TdwsExecution) : TNoResultExpr;
-
-         function InterruptsFlow : Boolean; virtual;
-   end;
-
-   // base class of expressions that return no result
-   TNoResultPosExpr = class(TNoResultExpr)
       protected
          FScriptPos : TScriptPos;
 
       public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos);
+         constructor Create(const aPos: TScriptPos);
+
+         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalNoResult(exec : TdwsExecution); override;
 
          function ScriptPos : TScriptPos; override;
          procedure SetScriptPos(const aPos : TScriptPos);
    end;
 
    // Does nothing! E. g.: "for x := 1 to 10 do {TNullExpr};"
-   TNullExpr = class(TNoResultPosExpr)
+   TNullExpr = class (TNoResultExpr)
       procedure EvalNoResult(exec : TdwsExecution); override;
    end;
 
+   // invalid expression
+   TErrorExpr = class (TNullExpr)
+   end;
+
    // statement; statement; statement;
-   TBlockExprBase = class(TNoResultPosExpr)
+   TBlockExprBase = class(TNoResultExpr)
       protected
-         FStatements : PNoResultExprList;
+         FStatements : PProgramExprList;
          FCount : Integer;
 
          function GetSubExpr(i : Integer) : TExprBase; override;
@@ -915,9 +964,11 @@ type
       public
          destructor Destroy; override;
 
-         procedure AddStatement(expr : TNoResultExpr);
-         procedure ReplaceStatement(index : Integer; expr : TNoResultExpr);
-         function ExtractStatement(index : Integer) : TNoResultExpr;
+         procedure AddStatement(expr : TProgramExpr);
+         procedure ReplaceStatement(index : Integer; expr : TProgramExpr);
+         function ExtractStatement(index : Integer) : TProgramExpr;
+
+         property StatementCount : Integer read FCount;
    end;
 
    // statement; statement; statement;
@@ -934,55 +985,47 @@ type
    TBlockFinalExpr = class(TBlockRawExpr)
    end;
 
-  // Encapsulates data
+   // Encapsulates data
    TDataExpr = class(TTypedExpr)
       protected
-         function GetAddr(exec : TdwsExecution) : Integer; virtual;
-         function GetData(exec : TdwsExecution) : TData; virtual; abstract;
-         function GetDataPtr(exec : TdwsExecution) : TDataPtr; virtual;
+         function GetDataPtrFunc(exec : TdwsExecution) : IDataContext; inline;
 
       public
          constructor Create(Prog: TdwsProgram; Typ: TTypeSymbol);
 
-         procedure AssignData(exec : TdwsExecution; const SourceData: TData; SourceAddr: Integer); virtual;
+         procedure AssignData(exec : TdwsExecution; const source : IDataContext); virtual;
          procedure AssignDataExpr(exec : TdwsExecution; DataExpr: TDataExpr); virtual;
          procedure AssignExpr(exec : TdwsExecution; Expr: TTypedExpr); virtual;
          procedure AssignValue(exec : TdwsExecution; const Value: Variant); override;
-         procedure AssignValueAsInteger(exec : TdwsExecution; const value : Int64); override;
-         procedure AssignValueAsBoolean(exec : TdwsExecution; const value : Boolean); override;
-         procedure AssignValueAsFloat(exec : TdwsExecution; const value : Double); override;
-         procedure AssignValueAsString(exec : TdwsExecution; const value: String); override;
-         procedure AssignValueAsScriptObj(exec : TdwsExecution; const value : IScriptObj); override;
 
          function Eval(exec : TdwsExecution) : Variant; override;
          function IsWritable: Boolean; virtual;
 
-         property Addr[exec : TdwsExecution] : Integer read GetAddr;
-         property Data[exec : TdwsExecution] : TData read GetData;
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); virtual; abstract;
 
-         property DataPtr[exec : TdwsExecution] : TDataPtr read GetDataPtr;
+         property DataPtr[exec : TdwsExecution] : IDataContext read GetDataPtrFunc;
    end;
 
    // Encapsulates data
    TPosDataExpr = class(TDataExpr)
       protected
-         FPos : TScriptPos;
+         FScriptPos : TScriptPos;
 
       public
          constructor Create(Prog: TdwsProgram; const scriptPos : TScriptPos; Typ: TTypeSymbol);
 
          function ScriptPos : TScriptPos; override;
-
-         property Pos : TScriptPos read FPos;
    end;
 
    // TExternalFuncHandler
    //
    TExternalFuncHandler = class(TInterfacedSelfObject, IUnknown, ICallable, IExecutable)
       public
-         procedure InitSymbol(symbol: TSymbol);
+         procedure InitSymbol(symbol: TSymbol; const msgs : TdwsCompileMessageList);
          procedure InitExpression(Expr: TExprBase);
          procedure Call(exec : TdwsProgramExecution; func : TFuncSymbol);
+         function SubExpr(i : Integer) : TExprBase;
+         function SubExprCount : Integer;
    end;
 
    EdwsExternalFuncHandler = class (Exception);
@@ -992,6 +1035,7 @@ type
    TFuncExprBase = class(TPosDataExpr)
       private
          FFunc : TFuncSymbol;
+         FParamSize : Integer;
 
       protected
          FArgs : TExprBaseListRec;
@@ -1000,8 +1044,12 @@ type
          function GetSubExpr(i : Integer) : TExprBase; override;
          function GetSubExprCount : Integer; override;
 
+         function GetIsConstant : Boolean; override;
+
+         property ParamSize : Integer read FParamSize;
+
       public
-         constructor Create(prog : TdwsProgram; const pos : TScriptPos; aFunc : TFuncSymbol);
+         constructor Create(prog : TdwsProgram; const aScriptPos : TScriptPos; aFunc : TFuncSymbol);
          destructor Destroy; override;
 
          procedure AddArg(arg : TTypedExpr);
@@ -1009,16 +1057,18 @@ type
          function ExpectedArg : TParamSymbol; virtual; abstract;
          function GetArgType(idx : Integer) : TTypeSymbol;
          function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
-         function IsConstant : Boolean; override;
 
          procedure Initialize(prog : TdwsProgram); virtual;
 
          procedure SetResultAddr(prog : TdwsProgram; exec : TdwsExecution; ResultAddr: Integer = -1);
+         property ResultAddr : Integer read FResultAddr;
 
          function ChangeFuncSymbol(aProg: TdwsProgram; newFuncSym : TFuncSymbol) : TFuncExprBase; virtual;
 
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
+
          property FuncSym : TFuncSymbol read FFunc;
-         property Args : TExprBaseListRec read FArgs;
+         property Args : TExprBaseListRec read FArgs write FArgs;
    end;
 
    TFuncExprOverloadsHelper = class
@@ -1032,11 +1082,12 @@ type
    end;
 
    TPushOperatorType = (potUnknown,
-                        potAddr, potPassAddr, potTempAddr, potTempArrayAddr, potTempArray,
+                        potAddr, potPassAddr, potTempAddr, potTempData, potTempArrayAddr, potTempArray,
                         potResult,
                         potResultInteger, potResultFloat, potResultBoolean,
                         potResultString, potResultConstString,
-                        potData, potLazy, potInitResult);
+                        potData, potConstData,
+                        potLazy, potInitResult);
    PPushOperator = ^TPushOperator;
    TPushOperator = packed record
       FStackAddr : Integer;
@@ -1057,6 +1108,7 @@ type
       procedure ExecuteAddr(exec : TdwsExecution);
       procedure ExecutePassAddr(exec : TdwsExecution);
       procedure ExecuteTempAddr(exec : TdwsExecution);
+      procedure ExecuteTempData(exec : TdwsExecution);
       procedure ExecuteTempArrayAddr(exec : TdwsExecution);
       procedure ExecuteTempArray(exec : TdwsExecution);
       procedure ExecuteResult(exec : TdwsExecution);
@@ -1066,6 +1118,7 @@ type
       procedure ExecuteResultString(exec : TdwsExecution);
       procedure ExecuteResultConstString(exec : TdwsExecution);
       procedure ExecuteData(exec : TdwsExecution);
+      procedure ExecuteConstData(exec : TdwsExecution);
       procedure ExecuteInitResult(exec : TdwsExecution);
       procedure ExecuteLazy(exec : TdwsExecution);
    end;
@@ -1081,10 +1134,13 @@ type
          FLevel : SmallInt;
 
       protected
-         function PreCall(exec : TdwsExecution) : TFuncSymbol; virtual;
-         function PostCall(exec : TdwsExecution) : Variant; virtual;
+         procedure StaticPostCall(exec : TdwsExecution; var Result : Variant);
+         procedure StaticPostCallInteger(exec : TdwsExecution; var Result : Int64);
+         procedure StaticPostCallFloat(exec : TdwsExecution; var Result : Double);
 
          procedure EvalPushExprs(exec : TdwsExecution); inline;
+
+         procedure DoEvalCall(exec : TdwsExecution; func : TFuncSymbol);
 
       public
          constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TFuncSymbol);
@@ -1095,23 +1151,44 @@ type
          procedure AddPushExprs(prog : TdwsProgram);
 
          function Eval(exec : TdwsExecution) : Variant; override;
-         function GetData(exec : TdwsExecution) : TData; override;
-         function GetAddr(exec : TdwsExecution) : Integer; override;
+
          procedure Initialize(prog : TdwsProgram); override;
          function IsWritable : Boolean; override;
 
+         function FuncSymQualifiedName : UnicodeString; override;
+
          property CallerID : TFuncExpr read FCallerID write FCallerID;
+         property Level : SmallInt read FLevel write FLevel;
+   end;
+
+   // A simple function/procedure (not a method, not a function pointer);
+   TFuncSimpleExpr = class(TFuncExpr)
+      public
+         procedure EvalNoResult(exec : TdwsExecution); override;
+         function  EvalAsInteger(exec : TdwsExecution) : Int64; override;
+         function  EvalAsFloat(exec : TdwsExecution) : Double; override;
    end;
 
    IFuncPointer = interface
       function GetFuncExpr : TFuncExprBase;
       function SameFunc(const v : Variant) : Boolean;
+      procedure EvalAsVariant(exec : TdwsExecution; caller : TFuncExpr; var result : Variant);
+      function EvalAsInteger(exec : TdwsExecution; caller : TFuncExpr) : Int64;
+      function EvalDataPtr(exec : TdwsExecution; caller : TFuncExpr) : IDataContext;
    end;
+
+   TFuncPointerEvalAsVariant = procedure (exec : TdwsExecution; caller : TFuncExpr; var result : Variant) of object;
+   TFuncPointerEvalAsInteger = procedure (exec : TdwsExecution; caller : TFuncExpr; var result : Int64) of object;
 
    // Encapsulates a function or method pointer
    TFuncPointer = class(TInterfacedObject, IUnknown, IFuncPointer)
       private
          FFuncExpr : TFuncExprBase;
+         FDoEvalAsVariant : TFuncPointerEvalAsVariant;
+
+      protected
+         procedure EvalMagicAsVariant(exec : TdwsExecution; caller : TFuncExpr; var result : Variant);
+         procedure EvalFuncAsVariant(exec : TdwsExecution; caller : TFuncExpr; var result : Variant);
 
       public
          constructor Create(exec : TdwsExecution; funcExpr : TFuncExprBase);
@@ -1119,6 +1196,10 @@ type
 
          function GetFuncExpr : TFuncExprBase;
          function SameFunc(const v : Variant) : Boolean;
+
+         procedure EvalAsVariant(exec : TdwsExecution; caller : TFuncExpr; var result : Variant);
+         function EvalAsInteger(exec : TdwsExecution; caller : TFuncExpr) : Int64;
+         function EvalDataPtr(exec : TdwsExecution; caller : TFuncExpr) : IDataContext;
    end;
 
    // returns an IFuncPointer to the FuncExpr
@@ -1130,15 +1211,16 @@ type
          function GetSubExpr(i : Integer) : TExprBase; override;
          function GetSubExprCount : Integer; override;
 
-         function GetData(exec : TdwsExecution) : TData; override;
-
       public
          constructor Create(prog : TdwsProgram; funcExpr : TFuncExprBase);
          destructor Destroy; override;
 
          function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
 
          function Extract : TFuncExprBase; // also a destructor
+
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
 
          property FuncExpr : TFuncExprBase read FFuncExpr write FFuncExpr;
    end;
@@ -1148,22 +1230,26 @@ type
 
    TFuncPtrExpr = class sealed (TFuncExpr)
       private
-         FCodeExpr : TDataExpr;
+         FCodeExpr : TTypedExpr;
 
       protected
          function GetSubExpr(i : Integer) : TExprBase; override;
          function GetSubExprCount : Integer; override;
 
+         function GetIsConstant : Boolean; override;
+
       public
-         constructor Create(prog : TdwsProgram; const pos : TScriptPos; codeExpr : TDataExpr);
+         constructor Create(prog : TdwsProgram; const aScriptPos : TScriptPos; codeExpr : TTypedExpr);
          destructor Destroy; override;
 
+         procedure EvalAsFuncPointer(exec : TdwsExecution; var result : IFuncPointer); inline;
+
          function Eval(exec : TdwsExecution) : Variant; override;
-         function IsConstant : Boolean; override;
+         procedure EvalNoResult(exec : TdwsExecution); override;
 
-         function Extract : TDataExpr; // also a destructor
+         function Extract : TTypedExpr; // also a destructor
 
-         property CodeExpr : TDataExpr read FCodeExpr write FCodeExpr;
+         property CodeExpr : TTypedExpr read FCodeExpr write FCodeExpr;
    end;
 
    TMethodObjExpr = class(TPosDataExpr)
@@ -1171,28 +1257,29 @@ type
          FBaseExpr : TDataExpr;
 
       public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; BaseExpr: TDataExpr);
-         function GetData(exec : TdwsExecution) : TData; override;
-         function GetAddr(exec : TdwsExecution) : Integer; override;
+         constructor Create(Prog: TdwsProgram; const aScriptPos: TScriptPos; BaseExpr: TDataExpr);
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
    end;
 
    TSourceCondition = class (TInterfacedSelfObject, IBooleanEvalable, IStringEvalable)
       private
-         FPos : TScriptPos;
+         FScriptPos : TScriptPos;
          FTest : TTypedExpr;
          FMsg : TTypedExpr;
 
       public
-         constructor Create(const pos : TScriptPos; aTest, aMsg : TTypedExpr);
+         constructor Create(const aScriptPos: TScriptPos; aTest, aMsg : TTypedExpr);
          destructor Destroy; override;
 
-         procedure InitSymbol(symbol: TSymbol);
+         procedure InitSymbol(symbol: TSymbol; const msgs : TdwsCompileMessageList);
          procedure InitExpression(Expr: TExprBase);
+         function SubExpr(i : Integer) : TExprBase;
+         function SubExprCount : Integer;
 
          function EvalAsBoolean(exec : TdwsExecution) : Boolean;
-         procedure EvalAsString(exec : TdwsExecution; var Result : String);
+         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
 
-         property Pos : TScriptPos read FPos write FPos;
+         property ScriptPos : TScriptPos read FScriptPos write FScriptPos;
          property Test : TTypedExpr read FTest;
          property Msg : TTypedExpr read FMsg write FMsg;
    end;
@@ -1246,209 +1333,6 @@ type
          procedure EvalNoResult(exec : TdwsExecution); override;
    end;
 
-   TConnectorCallExpr = class(TPosDataExpr)
-      private
-         FArgs: TTightList;
-         FBaseExpr: TTypedExpr;
-         FConnectorArgs: TConnectorArgs;
-         FConnectorCall: IConnectorCall;
-         FConnectorParams: TConnectorParamArray;
-         FIsInstruction: Boolean;
-         FIsWritable: Boolean;
-         FIsIndex: Boolean;
-         FName: String;
-         FResultData: TData;
-
-      protected
-         function GetData(exec : TdwsExecution) : TData; override;
-         function GetSubExpr(i : Integer) : TExprBase; override;
-         function GetSubExprCount : Integer; override;
-
-      public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; const Name: String;
-                            BaseExpr: TTypedExpr; IsWrite: Boolean = True; IsIndex: Boolean = False);
-         destructor Destroy; override;
-
-         function AssignConnectorSym(prog : TdwsProgram; const connectorType : IConnectorType) : Boolean;
-         procedure AddArg(expr : TTypedExpr);
-         function Eval(exec : TdwsExecution) : Variant; override;
-         function IsWritable : Boolean; override;
-
-         property BaseExpr : TTypedExpr read FBaseExpr write FBaseExpr;
-         property IsWrite : Boolean read FIsWritable write FIsWritable;
-         property IsIndex : Boolean read FIsIndex write FIsIndex;
-         property ConnectorCall : IConnectorCall read FConnectorCall write FConnectorCall;
-   end;
-
-   TConnectorReadExpr = class sealed (TPosDataExpr)
-      private
-         FBaseExpr: TTypedExpr;
-         FConnectorMember: IConnectorMember;
-         FName: String;
-         FResultData: TData;
-
-      protected
-         function GetData(exec : TdwsExecution) : TData; override;
-         function GetSubExpr(i : Integer) : TExprBase; override;
-         function GetSubExprCount : Integer; override;
-
-      public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; const Name: String;
-                            BaseExpr: TTypedExpr);
-         destructor Destroy; override;
-
-         function AssignConnectorSym(ConnectorType : IConnectorType) : Boolean;
-         function Eval(exec : TdwsExecution) : Variant; override;
-
-         property BaseExpr : TTypedExpr read FBaseExpr write FBaseExpr;
-
-         property ConnectorMember : IConnectorMember read FConnectorMember write FConnectorMember;
-  end;
-
-   TConnectorWriteExpr = class sealed (TTypedExpr)
-      private
-         FBaseExpr: TTypedExpr;
-         FValueExpr: TTypedExpr;
-         FConnectorMember: IConnectorMember;
-         FName: String;
-         FScriptPos : TScriptPos;
-
-      protected
-         function GetSubExpr(i : Integer) : TExprBase; override;
-         function GetSubExprCount : Integer; override;
-
-      public
-         constructor Create(Prog: TdwsProgram; const scriptPos: TScriptPos; const Name: String;
-                            BaseExpr, ValueExpr: TTypedExpr);
-         destructor Destroy; override;
-
-         function ScriptPos : TScriptPos; override;
-         function AssignConnectorSym(prog : TdwsProgram; const connectorType : IConnectorType) : Boolean;
-         function  Eval(exec : TdwsExecution) : Variant; override;
-         procedure EvalNoResult(exec : TdwsExecution); override;
-
-         property ConnectorMember : IConnectorMember read FConnectorMember write FConnectorMember;
-         property BaseExpr : TTypedExpr read FBaseExpr write FBaseExpr;
-         property ValueExpr : TTypedExpr read FValueExpr write FValueExpr;
-   end;
-
-   // Call of a method
-   TMethodExpr = class abstract (TFuncExpr)
-      private
-         FBaseExpr : TTypedExpr;
-         FSelfAddr : Integer;
-
-      protected
-         function GetSubExpr(i : Integer) : TExprBase; override;
-         function GetSubExprCount : Integer; override;
-
-      public
-         constructor Create(Prog: TdwsProgram; const scriptPos : TScriptPos; Func: TMethodSymbol;
-                            BaseExpr: TTypedExpr);
-         destructor Destroy; override;
-
-         function MethSym : TMethodSymbol; inline;
-
-         function ChangeFuncSymbol(aProg: TdwsProgram; newFuncSym : TFuncSymbol) : TFuncExprBase; override;
-
-         property BaseExpr : TTypedExpr read FBaseExpr;
-   end;
-
-   // Call of a record method
-   TRecordMethodExpr = class (TFuncExpr)
-   end;
-
-   // Call of a helper method
-   THelperMethodExpr = class (TFuncExpr)
-   end;
-
-   // Call of static methods (not virtual)
-   TMethodStaticExpr = class(TMethodExpr)
-      protected
-         function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
-
-      public
-         function Eval(exec : TdwsExecution) : Variant; override;
-   end;
-
-   // Call of an interface methods
-   TMethodInterfaceExpr = class(TMethodStaticExpr)
-      protected
-         function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
-   end;
-
-   // Call to a virtual method
-   TMethodVirtualExpr = class(TMethodStaticExpr)
-      protected
-         function FindVirtualMethod(classSym : TClassSymbol): TMethodSymbol; inline;
-         function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
-
-      public
-   end;
-
-   // Class methods (non virtual)
-   TClassMethodStaticExpr = class(TMethodStaticExpr)
-      protected
-         function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
-   end;
-
-   // Call to a virtual class method
-   TClassMethodVirtualExpr = class(TClassMethodStaticExpr)
-      protected
-         function FindVirtualMethod(exec : TdwsExecution) : TMethodSymbol;
-         function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
-   end;
-
-   // Call to a static constructor
-   TConstructorStaticExpr = class(TMethodStaticExpr)
-      protected
-         function PostCall(exec : TdwsExecution) : Variant; override;
-         function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
-
-      public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; Func: TMethodSymbol;
-                            Base: TTypedExpr);
-   end;
-
-   // Call to a virtual constructor
-   TConstructorVirtualExpr = class(TMethodVirtualExpr)
-      private
-         FExternalObject: TObject;
-      protected
-         function PostCall(exec : TdwsExecution) : Variant; override;
-         function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
-      public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; Func: TMethodSymbol;
-                            Base: TTypedExpr);
-         property ExternalObject: TObject read FExternalObject write FExternalObject;
-   end;
-
-   TConstructorStaticObjExpr = class(TMethodStaticExpr)
-      protected
-         function PostCall(exec : TdwsExecution) : Variant; override;
-      public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; Func: TMethodSymbol;
-                            BaseExpr: TTypedExpr);
-   end;
-
-   TConstructorVirtualObjExpr = class(TMethodVirtualExpr)
-      protected
-         function PostCall(exec : TdwsExecution): Variant; override;
-      public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; Func: TMethodSymbol;
-                            Base: TTypedExpr);
-   end;
-
-   TDestructorStaticExpr = class(TMethodStaticExpr)
-      protected
-         function PostCall(exec : TdwsExecution): Variant; override;
-   end;
-
-   TDestructorVirtualExpr = class(TMethodVirtualExpr)
-      protected
-         function PostCall(exec : TdwsExecution) : Variant; override;
-   end;
-
    TUnaryOpExpr = class(TTypedExpr)
       protected
          FExpr : TTypedExpr;
@@ -1456,11 +1340,12 @@ type
          function GetSubExpr(i : Integer) : TExprBase; override;
          function GetSubExprCount : Integer; override;
 
+         function GetIsConstant : Boolean; override;
+
       public
          constructor Create(prog : TdwsProgram; expr : TTypedExpr); virtual;
          destructor Destroy; override;
 
-         function IsConstant : Boolean; override;
          property Expr : TTypedExpr read FExpr write FExpr;
    end;
    TUnaryOpExprClass = class of TUnaryOpExpr;
@@ -1488,7 +1373,7 @@ type
          function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
 
-   // String unary result
+   // UnicodeString unary result
    TUnaryOpStringExpr = class(TUnaryOpExpr)
       public
          constructor Create(prog : TdwsProgram; expr : TTypedExpr); override;
@@ -1510,12 +1395,13 @@ type
          function GetSubExpr(i : Integer) : TExprBase; override;
          function GetSubExprCount : Integer; override;
 
+         function GetIsConstant : Boolean; override;
+
       public
-         constructor Create(Prog: TdwsProgram; const Pos: TScriptPos; Expr: TTypedExpr);
+         constructor Create(Prog: TdwsProgram; const aScriptPos: TScriptPos; Expr: TTypedExpr);
          destructor Destroy; override;
 
          procedure EvalNoResult(exec : TdwsExecution); override;
-         function  IsConstant : Boolean; override;
 
          function ScriptPos : TScriptPos; override;
 
@@ -1531,12 +1417,18 @@ type
          function GetSubExpr(i : Integer) : TExprBase; override;
          function GetSubExprCount : Integer; override;
 
+         function GetIsConstant : Boolean; override;
+
       public
-         constructor Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr); virtual;
+         constructor Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr); virtual;
          destructor Destroy; override;
 
          function Eval(exec : TdwsExecution) : Variant; override;
-         function IsConstant : Boolean; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
+
+         procedure OptimizeConstantOperandsToFloats(prog : TdwsProgram; exec : TdwsExecution);
+
+         procedure Swap;
 
          property Typ : TTypeSymbol read FTyp write FTyp;
          property Left : TTypedExpr read FLeft write FLeft;
@@ -1546,29 +1438,28 @@ type
    TBinaryOpExprClass = class of TBinaryOpExpr;
 
    TVariantBinOpExpr = class(TBinaryOpExpr)
-     constructor Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr); override;
-     function Eval(exec : TdwsExecution) : Variant; override;
+     constructor Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr); override;
      function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
    TIntegerBinOpExpr = class(TBinaryOpExpr)
-     constructor Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr); override;
-     function Eval(exec : TdwsExecution) : Variant; override;
+     constructor Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr); override;
+     procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
      function EvalAsFloat(exec : TdwsExecution) : Double; override;
      function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
    TStringBinOpExpr = class(TBinaryOpExpr)
-     constructor Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr); override;
-     function Eval(exec : TdwsExecution) : Variant; override;
+     constructor Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr); override;
+     procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
      function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
    TFloatBinOpExpr = class(TBinaryOpExpr)
-     constructor Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr); override;
-     function Eval(exec : TdwsExecution) : Variant; override;
+     constructor Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr); override;
+     procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
      function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
    TBooleanBinOpExpr = class(TBinaryOpExpr)
-     constructor Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr); override;
-     function Eval(exec : TdwsExecution) : Variant; override;
+     constructor Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr); override;
+     procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
      function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
 
@@ -1605,39 +1496,43 @@ type
       function Call: IInfo; overload;
       function Call(const Params: array of Variant): IInfo; overload;
       function Element(const Indices: array of Integer): IInfo;
-      function GetConstructor(const MethName: String; ExtObject: TObject): IInfo;
+      function GetConstructor(const MethName: UnicodeString; ExtObject: TObject): IInfo;
       function GetData : TData;
       function GetExternalObject: TObject;
-      function GetMember(const s: String): IInfo;
+      function GetMember(const s: UnicodeString): IInfo;
       function GetFieldMemberNames : TStrings;
-      function GetMethod(const s: String): IInfo;
+      function GetMethod(const s: UnicodeString): IInfo;
       function GetScriptObj: IScriptObj;
-      function GetParameter(const s: String): IInfo;
+      function GetParameter(const s: UnicodeString): IInfo;
       function GetTypeSym: TSymbol;
       function GetValue : Variant;
-      function GetValueAsString : String;
+      function GetValueAsString : UnicodeString;
       function GetValueAsDataString : RawByteString;
       function GetValueAsInteger : Int64;
       function GetValueAsBoolean : Boolean;
       function GetValueAsFloat : Double;
       function GetInherited: IInfo;
+      function GetExec : IdwsProgramExecution;
       procedure SetData(const Data: TData);
       procedure SetExternalObject(ExtObject: TObject);
       procedure SetValue(const Value: Variant);
+      procedure SetValueAsInteger(const value : Int64);
+      procedure SetValueAsString(const value : UnicodeString);
 
       property Data: TData read GetData write SetData;
       property ExternalObject: TObject read GetExternalObject write SetExternalObject;
-      property Member[const s : String]: IInfo read GetMember;
+      property Member[const s : UnicodeString]: IInfo read GetMember;
       property FieldMemberNames : TStrings read GetFieldMemberNames;
-      property Method[const s : String]: IInfo read GetMethod;
+      property Method[const s : UnicodeString]: IInfo read GetMethod;
 
+      property Exec: IdwsProgramExecution read GetExec;
       property ScriptObj: IScriptObj read GetScriptObj;
-      property Parameter[const s: String]: IInfo read GetParameter;
+      property Parameter[const s: UnicodeString]: IInfo read GetParameter;
       property TypeSym: TSymbol read GetTypeSym;
       property Value: Variant read GetValue write SetValue;
-      property ValueAsString : String read GetValueAsString;
+      property ValueAsString : UnicodeString read GetValueAsString write SetValueAsString;
       property ValueAsDataString : RawByteString read GetValueAsDataString;
-      property ValueAsInteger : Int64 read GetValueAsInteger;
+      property ValueAsInteger : Int64 read GetValueAsInteger write SetValueAsInteger;
       property ValueAsBoolean : Boolean read GetValueAsBoolean;
       property ValueAsFloat : Double read GetValueAsFloat;
    end;
@@ -1652,32 +1547,37 @@ type
          FTable: TSymbolTable;
 
       protected
-         function GetData(const s: String): TData;
-         function GetFunc(const s: String): IInfo;
+         function GetData(const s: UnicodeString): TData;
+         function GetFunc(const s: UnicodeString): IInfo;
          procedure SetFuncSym(const Value: TFuncSymbol);
-         function GetValueAsVariant(const s: String): Variant;
-         function GetVars(const str: String): IInfo;
-         procedure SetData(const s: String; const Value: TData);
-         procedure SetValueAsVariant(const s: String; const Value: Variant);
-         procedure SetResultAsVariant(const Value: Variant);
+         function GetValueAsVariant(const s: UnicodeString): Variant;
+         procedure GetSymbolInfo(sym : TSymbol; var info : IInfo);
+         function GetVars(const str: UnicodeString): IInfo;
+         function GetParams(const Index: Integer): IInfo;
+         procedure SetData(const s: UnicodeString; const Value: TData);
+         procedure SetValueAsVariant(const s: UnicodeString; const Value: Variant);
          function GetResultAsVariant: Variant;
          function GetResultVars: IInfo;
 
-         function GetValueAsString(const s: String): String;
-         procedure SetValueAsString(const s: String; const Value: String);
-         function GetValueAsChar(const s: String): WideChar;
-         function GetValueAsDataString(const s: String): RawByteString;
-         procedure SetValueAsDataString(const s: String; const Value: RawByteString);
-         function GetValueAsInteger(const s: String): Int64;
-         procedure SetValueAsInteger(const s: String; const Value: Int64);
-         function GetValueAsBoolean(const s: String): Boolean;
-         procedure SetValueAsBoolean(const s: String; const Value: Boolean);
-         function GetValueAsFloat(const s: String): Double;
-         procedure SetValueAsFloat(const s: String; const Value: Double);
-         function GetValueAsObject(const s: String): TObject;
-         function GetValueAsClassSymbol(const s: String): TClassSymbol;
-         function GetValueAsTStrings(const s: String): TStrings;
-         procedure SetResultAsString(const value : String);
+         function GetValueAsString(const s: UnicodeString): UnicodeString;
+         procedure SetValueAsString(const s: UnicodeString; const Value: UnicodeString);
+         function GetValueAsChar(const s: UnicodeString): WideChar;
+         function GetValueAsDataString(const s: UnicodeString): RawByteString;
+         procedure SetValueAsDataString(const s: UnicodeString; const Value: RawByteString);
+         function GetValueAsInteger(const s: UnicodeString): Int64;
+         procedure SetValueAsInteger(const s: UnicodeString; const Value: Int64);
+         function GetValueAsBoolean(const s: UnicodeString): Boolean;
+         procedure SetValueAsBoolean(const s: UnicodeString; const Value: Boolean);
+         function GetValueAsFloat(const s: UnicodeString): Double;
+         procedure SetValueAsFloat(const s: UnicodeString; const Value: Double);
+         function GetValueAsObject(const s: UnicodeString): TObject;
+         function GetValueAsClassSymbol(const s: UnicodeString): TClassSymbol;
+         function GetValueAsTStrings(const s: UnicodeString): TStrings;
+
+         function GetResultAsPVariant : PVariant;
+
+         procedure SetResultAsVariant(const Value: Variant);
+         procedure SetResultAsString(const value : UnicodeString);
          procedure SetResultAsDataString(const value : RawByteString);
          procedure SetResultAsInteger(const value : Int64);
          procedure SetResultAsBoolean(const value : Boolean);
@@ -1686,55 +1586,63 @@ type
          function GetParamAsPVariant(index : Integer) : PVariant;
          function GetParamAsVariant(index : Integer) : Variant;
          function GetParamAsInteger(index : Integer) : Int64;
-         function GetParamAsString(index : Integer) : String;
+         procedure SetParamAsInteger(index : Integer; const v : Int64);
+         function GetParamAsString(index : Integer) : UnicodeString;
+         function GetParamAsDataString(index : Integer) : RawByteString;
+         procedure SetParamAsDataString(index : Integer; const v : RawByteString);
          function GetParamAsFloat(index : Integer) : Double;
          function GetParamAsBoolean(index : Integer) : Boolean;
          function GetParamAsObject(index : Integer) : TObject;
 
          function CreateUnitList : TList;
-         function FindSymbolInUnits(AUnitList: TList; const Name: String): TSymbol; overload;
+         function FindSymbolInUnits(AUnitList: TList; const Name: UnicodeString): TSymbol; overload;
 
       public
          procedure PrepareScriptObj;
 
-         function RegisterExternalObject(AObject: TObject; AutoFree: Boolean=False; ExactClassMatch: Boolean=True): Variant;
-         function GetExternalObjForVar(const s: String): TObject;
+         function RegisterExternalObject(AObject: TObject; AutoFree: Boolean=False; ExactClassMatch: Boolean=True): IScriptObj;
+         function GetExternalObjForVar(const s: UnicodeString): TObject;
          // cycle ancestry hierarchy and find the nearest matching type
          function FindClassMatch(AObject: TObject; ExactMatch: Boolean=True): TClassSymbol;
-         function FindSymbolInUnits(const Name: String): TSymbol; overload;
-         function GetTemp(const DataType: String): IInfo;
+         function FindSymbolInUnits(const Name: UnicodeString): TSymbol; overload;
+         function GetTemp(const DataType: UnicodeString): IInfo;
+
+         procedure RaiseExceptObj(const msg : UnicodeString; const obj : IScriptObj);
 
          property Table : TSymbolTable read FTable write FTable;
          property Execution : TdwsProgramExecution read FExecution write FExecution;
          property Level : Integer read FLevel write FLevel;
-         property Data[const s: String]: TData read GetData write SetData;
-         property Func[const s: String]: IInfo read GetFunc;
+         property Data[const s: UnicodeString]: TData read GetData write SetData;
+         property Func[const s: UnicodeString]: IInfo read GetFunc;
          property FuncSym: TFuncSymbol read FFuncSym write SetFuncSym;
-         property Method[const s: String]: IInfo read GetFunc;
+         property Method[const s: UnicodeString]: IInfo read GetFunc;
          property ScriptObj: IScriptObj read FScriptObj write FScriptObj;
          property ResultAsVariant: Variant read GetResultAsVariant write SetResultAsVariant;
          property ResultVars: IInfo read GetResultVars;
-         property Vars[const s: String]: IInfo read GetVars;
+         property Vars[const s: UnicodeString]: IInfo read GetVars;
+         property Params[const Index: Integer]: IInfo read GetParams;
 
-         property ValueAsVariant[const s : String] : Variant read GetValueAsVariant write SetValueAsVariant;
-         property ValueAsChar[const s : String] : WideChar read GetValueAsChar;
-         property ValueAsString[const s : String] : String read GetValueAsString write SetValueAsString;
-         property ValueAsDataString[const s : String] : RawByteString read GetValueAsDataString write SetValueAsDataString;
-         property ValueAsInteger[const s : String] : Int64 read GetValueAsInteger write SetValueAsInteger;
-         property ValueAsBoolean[const s : String] : Boolean read GetValueAsBoolean write SetValueAsBoolean;
-         property ValueAsFloat[const s : String] : Double read GetValueAsFloat write SetValueAsFloat;
-         property ValueAsObject[const s : String] : TObject read GetValueAsObject;
-         property ValueAsClassSymbol[const s : String] : TClassSymbol read GetValueAsClassSymbol;
-         property ValueAsTStrings[const s : String] : TStrings read GetValueAsTStrings;
+         property ValueAsVariant[const s : UnicodeString] : Variant read GetValueAsVariant write SetValueAsVariant;
+         property ValueAsChar[const s : UnicodeString] : WideChar read GetValueAsChar;
+         property ValueAsString[const s : UnicodeString] : UnicodeString read GetValueAsString write SetValueAsString;
+         property ValueAsDataString[const s : UnicodeString] : RawByteString read GetValueAsDataString write SetValueAsDataString;
+         property ValueAsInteger[const s : UnicodeString] : Int64 read GetValueAsInteger write SetValueAsInteger;
+         property ValueAsBoolean[const s : UnicodeString] : Boolean read GetValueAsBoolean write SetValueAsBoolean;
+         property ValueAsFloat[const s : UnicodeString] : Double read GetValueAsFloat write SetValueAsFloat;
+         property ValueAsObject[const s : UnicodeString] : TObject read GetValueAsObject;
+         property ValueAsClassSymbol[const s : UnicodeString] : TClassSymbol read GetValueAsClassSymbol;
+         property ValueAsTStrings[const s : UnicodeString] : TStrings read GetValueAsTStrings;
 
+         property ParamAsPVariant[index : Integer] : PVariant read GetParamAsPVariant;
          property ParamAsVariant[index : Integer] : Variant read GetParamAsVariant;
-         property ParamAsInteger[index : Integer] : Int64 read GetParamAsInteger;
-         property ParamAsString[index : Integer] : String read GetParamAsString;
+         property ParamAsInteger[index : Integer] : Int64 read GetParamAsInteger write SetParamAsInteger;
+         property ParamAsString[index : Integer] : UnicodeString read GetParamAsString;
+         property ParamAsDataString[index : Integer] : RawByteString read GetParamAsDataString write SetParamAsDataString;
          property ParamAsFloat[index : Integer] : Double read GetParamAsFloat;
          property ParamAsBoolean[index : Integer] : Boolean read GetParamAsBoolean;
          property ParamAsObject[index : Integer] : TObject read GetParamAsObject;
 
-         property ResultAsString : String write SetResultAsString;
+         property ResultAsString : UnicodeString write SetResultAsString;
          property ResultAsDataString : RawByteString write SetResultAsDataString;
          property ResultAsBoolean : Boolean write SetResultAsBoolean;
          property ResultAsInteger : Int64 write SetResultAsInteger;
@@ -1742,24 +1650,15 @@ type
   end;
 
    // An instance of a script class FClassSym. Instance data in FData,
-   TScriptObj = class(TInterfacedObject, IScriptObj)
+   TScriptObj = class(TDataContext, IScriptObj)
       private
          FNextObject, FPrevObject : TScriptObj;
 
       protected
-         FData : TData;
-
          function GetClassSym : TClassSymbol; virtual;
-         procedure SetClassSym(clsSym : TClassSymbol); virtual;
 
-         function GetData : TData;
-         function DataOfAddr(addr : Integer) : Variant;
-         function DataOfAddrAsString(addr : Integer) : String;
-         function DataOfAddrAsInteger(addr : Integer) : Int64;
-         procedure DataOfAddrAsScriptObj(addr : Integer; var scriptObj : IScriptObj);
          function GetDestroyed : Boolean; virtual;
          procedure SetDestroyed(const val : Boolean); virtual;
-         function GetInternalObject: TObject;
          function GetExternalObject: TObject; virtual;
          procedure SetExternalObject(Value: TObject); virtual;
          procedure SetExecutionContext(exec : TdwsProgramExecution); virtual;
@@ -1769,7 +1668,7 @@ type
          property PrevObject : TScriptObj read FPrevObject write FPrevObject;
    end;
 
-   TScriptObjInstance = class(TScriptObj)
+   TScriptObjInstance = class (TScriptObj, IScriptObj)
       private
          FClassSym : TClassSymbol;
          FExternalObj : TObject;
@@ -1779,7 +1678,6 @@ type
 
       protected
          function GetClassSym: TClassSymbol; override;
-         procedure SetClassSym(clsSym : TClassSymbol); override;
          function GetExternalObject: TObject; override;
          procedure SetExternalObject(Value: TObject); override;
          function GetDestroyed : Boolean; override;
@@ -1791,53 +1689,72 @@ type
          destructor Destroy; override;
          procedure BeforeDestruction; override;
 
+         function ToString : String; override;
+
+         procedure ClearData; override;
+
+         property ClassSym : TClassSymbol read FClassSym;
          property ExecutionContext : TdwsProgramExecution read FExecutionContext write FExecutionContext;
          property OnObjectDestroy: TObjectDestroyEvent read FOnObjectDestroy write FOnObjectDestroy;
          property Destroyed : Boolean read FDestroyed write FDestroyed;
    end;
 
-   TScriptDynamicArrayCompareFunc = function (idx1, idx2 : Integer) : Integer of object;
-
-   TScriptDynamicArray = class(TScriptObj)
+   TScriptDynamicArray = class abstract (TScriptObj)
       private
          FElementTyp : TTypeSymbol;
          FElementSize : Integer;
-         FLength : Integer;
+         FArrayLength : Integer;
 
       protected
-         procedure SetLength(n : Integer);
-         property GetLength : Integer read FLength;
-         procedure SetData(const data : TData);
-
-         procedure QuickSort(lo, hi : Integer; const compareFunc : TScriptDynamicArrayCompareFunc);
-         function CompareFunc(idx1, idx2 : Integer) : Integer;
+         procedure SetArrayLength(n : Integer);
 
       public
-         constructor Create(elemTyp : TTypeSymbol);
+         class function CreateNew(elemTyp : TTypeSymbol) : TScriptDynamicArray; static;
 
          procedure Delete(index, count : Integer);
          procedure Insert(index : Integer);
-         procedure Swap(i1, i2 : Integer);
+         procedure Swap(i1, i2 : Integer); virtual; abstract;
          procedure Reverse;
-         procedure Sort(exec : TdwsExecution; compareExpr : TTypedExpr);
          procedure Copy(src : TScriptDynamicArray; index, count : Integer);
          procedure RawCopy(const src : TData; rawIndex, rawCount : Integer);
          procedure Concat(src : TScriptDynamicArray);
-         function IndexOf(const item : TData; addr, fromIndex : Integer) : Integer; overload;
-         function IndexOf(const item : Variant; fromIndex : Integer) : Integer; overload;
-         function IndexOfFuncPtr(const item : Variant; fromIndex : Integer) : Integer; overload;
+
+         function IndexOfData(const item : IDataContext; fromIndex : Integer) : Integer;
+         function IndexOfValue(const item : Variant; fromIndex : Integer) : Integer;
+         function IndexOfString(const item : UnicodeString; fromIndex : Integer) : Integer;
+         function IndexOfInteger(const item : Int64; fromIndex : Integer) : Integer;
+         function IndexOfFuncPtr(const item : Variant; fromIndex : Integer) : Integer;
+
+         function ToString : String; override;
+         function ToStringArray : TStringDynArray;
+
+         procedure ReplaceData(const newData : TData); override;
 
          property ElementTyp : TTypeSymbol read FElementTyp;
          property ElementSize : Integer read FElementSize;
-         property Data : TData read FData write SetData;
-         property Length : Integer read FLength write SetLength;
+         property ArrayLength : Integer read FArrayLength write SetArrayLength;
    end;
 
-   TScriptInterface = class(TScriptObjInstance)
+   TScriptDynamicDataArray = class (TScriptDynamicArray)
+      public
+         procedure Swap(i1, i2 : Integer); override;
+   end;
+
+   TScriptDynamicValueArray = class (TScriptDynamicArray)
+      public
+         procedure Swap(i1, i2 : Integer); override;
+
+         function CompareString(i1, i2 : Integer) : Integer;
+         function CompareInteger(i1, i2 : Integer) : Integer;
+         function CompareFloat(i1, i2 : Integer) : Integer;
+   end;
+
+   TScriptInterface = class(TScriptObj)
       private
          FTyp : TInterfaceSymbol;
          FInstance : IScriptObj;
          FVMT : TMethodSymbolArray;
+         FExecutionContext : TdwsProgramExecution;
 
       protected
 
@@ -1847,6 +1764,8 @@ type
                             executionContext : TdwsProgramExecution = nil);
          procedure BeforeDestruction; override;
 
+         function ToString : String; override;
+
          property Typ : TInterfaceSymbol read FTyp;
          property Instance : IScriptObj read FInstance;
          property VMT : TMethodSymbolArray read FVMT write FVMT;
@@ -1854,20 +1773,9 @@ type
 
    EdwsVariantTypeCastError = class(EVariantTypeCastError)
       public
-         constructor Create(const v : Variant; const desiredType : String;
+         constructor Create(const v : Variant; const desiredType : UnicodeString;
                             originalException : Exception);
    end;
-
-   EScriptStopped = class (EScriptError)
-      public
-         class procedure DoRaise(exec : TdwsExecution; stoppedOn : TExprBase); static;
-   end;
-
-function CreateFuncExpr(prog : TdwsProgram; funcSym: TFuncSymbol;
-                        const scriptObj : IScriptObj; structSym : TCompositeTypeSymbol;
-                        forceStatic : Boolean = False): TFuncExpr;
-function CreateMethodExpr(prog: TdwsProgram; meth: TMethodSymbol; var expr : TTypedExpr; RefKind: TRefKind;
-                          const scriptPos: TScriptPos; ForceStatic : Boolean = False): TFuncExpr;
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -1877,36 +1785,20 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-uses dwsFunctions, dwsCoreExprs, dwsMagicExprs, dwsInfo;
-
-type
-
-   TPrintFunction = class(TInternalFunction)
-      public
-         procedure Execute(info : TProgramInfo); override;
-   end;
-
-   TPrintLnFunction = class(TInternalFunction)
-      public
-         procedure Execute(info : TProgramInfo); override;
-   end;
+uses dwsFunctions, dwsCoreExprs, dwsMagicExprs, dwsMethodExprs,
+   dwsInfo, dwsCompilerUtils, dwsConstExprs, dwsResultFunctions;
 
 { TScriptObjectWrapper }
 
 // wrapper to interact with an released script object
 type
-   TScriptObjectWrapper = class (TInterfacedObject, IUnknown, IScriptObj)
+   TScriptObjectWrapper = class (TDataContext, IUnknown, IScriptObj)
       private
          FScriptObj : TScriptObjInstance;
       protected
          { IScriptObj }
          function GetClassSym: TClassSymbol;
-         function GetData : TData;
-         function DataOfAddr(addr : Integer) : Variant;
-         function DataOfAddrAsString(addr : Integer) : String;
-         function DataOfAddrAsInteger(addr : Integer) : Int64;
-         procedure DataOfAddrAsScriptObj(addr : Integer; var scriptObj : IScriptObj);
-         function GetInternalObject: TObject;
+         function GetSelf : TObject;
          function GetExternalObject: TObject;
          procedure SetExternalObject(Value: TObject);
          function GetDestroyed : Boolean;
@@ -1921,6 +1813,7 @@ constructor TScriptObjectWrapper.Create(scriptObj : TScriptObjInstance);
 begin
    inherited Create;
    FScriptObj:=scriptObj;
+   ReplaceData(scriptObj.AsData);
 end;
 
 // GetClassSym
@@ -1930,42 +1823,9 @@ begin
    Result := FScriptObj.FClassSym;
 end;
 
-function TScriptObjectWrapper.GetData : TData;
-begin
-  Result := FScriptObj.GetData;
-end;
-
-// DataOfAddr
+// GetSelf
 //
-function TScriptObjectWrapper.DataOfAddr(addr : Integer) : Variant;
-begin
-   Result:=FScriptObj.DataOfAddr(addr);
-end;
-
-// DataOfAddrAsString
-//
-function TScriptObjectWrapper.DataOfAddrAsString(addr : Integer) : String;
-begin
-   Result:=FScriptObj.DataOfAddrAsString(addr);
-end;
-
-// DataOfAddrAsInteger
-//
-function TScriptObjectWrapper.DataOfAddrAsInteger(addr : Integer) : Int64;
-begin
-   Result:=FScriptObj.DataOfAddrAsInteger(addr);
-end;
-
-// DataOfAddrAsScriptObj
-//
-procedure TScriptObjectWrapper.DataOfAddrAsScriptObj(addr : Integer; var scriptObj : IScriptObj);
-begin
-   FScriptObj.DataOfAddrAsScriptObj(addr, scriptObj);
-end;
-
-// GetInternalObject
-//
-function TScriptObjectWrapper.GetInternalObject: TObject;
+function TScriptObjectWrapper.GetSelf: TObject;
 begin
    Result:=FScriptObj;
 end;
@@ -1996,7 +1856,7 @@ end;
 
 // RaiseVariableNotFound
 //
-procedure RaiseVariableNotFound(const s : String);
+procedure RaiseVariableNotFound(const s : UnicodeString);
 begin
    raise Exception.CreateFmt(RTE_VariableNotFound, [s]);
 end;
@@ -2015,150 +1875,6 @@ begin
    raise Exception.CreateFmt(RTE_OnlyVarSymbols, [sym.Caption]);
 end;
 
-// CreateFuncExpr
-//
-function CreateFuncExpr(prog : TdwsProgram; funcSym: TFuncSymbol;
-                        const scriptObj : IScriptObj; structSym : TCompositeTypeSymbol;
-                        forceStatic : Boolean = False): TFuncExpr;
-var
-   instanceExpr : TTypedExpr;
-begin
-   if FuncSym is TMethodSymbol then begin
-      if Assigned(scriptObj) then begin
-         instanceExpr:=TConstExpr.Create(Prog, structSym, scriptObj);
-         Result:=CreateMethodExpr(prog, TMethodSymbol(funcSym),
-                                  instanceExpr, rkObjRef, cNullPos, ForceStatic)
-      end else if structSym<>nil then begin
-         instanceExpr:=TConstExpr.Create(prog, (structSym as TClassSymbol).MetaSymbol, Int64(structSym));
-         Result:=CreateMethodExpr(prog, TMethodSymbol(funcSym),
-                                  instanceExpr, rkClassOfRef, cNullPos, ForceStatic)
-      end else begin
-         // static method
-         structSym:=TMethodSymbol(funcSym).StructSymbol;
-         if structSym is TStructuredTypeSymbol then begin
-            instanceExpr:=TConstExpr.Create(prog, TStructuredTypeSymbol(structSym).MetaSymbol, Int64(structSym));
-            Result:=CreateMethodExpr(prog, TMethodSymbol(funcSym),
-                                     instanceExpr, rkClassOfRef, cNullPos, ForceStatic)
-         end else begin
-            Result:=nil;
-            Assert(False, 'TODO');
-         end;
-      end;
-   end else begin
-      Result:=TFuncExpr.Create(Prog, cNullPos, funcSym);
-   end;
-end;
-
-// CreateMethodExpr
-//
-function CreateMethodExpr(prog: TdwsProgram; meth: TMethodSymbol; var expr: TTypedExpr; RefKind: TRefKind;
-                          const scriptPos: TScriptPos; ForceStatic : Boolean = False): TFuncExpr;
-var
-   helper : THelperSymbol;
-begin
-   // Create the correct TExpr for a method symbol
-   Result := nil;
-
-   if meth.StructSymbol is TInterfaceSymbol then begin
-
-      Result:=TMethodInterfaceExpr.Create(prog, scriptPos, meth, expr);
-
-   end else if meth.StructSymbol is TClassSymbol then begin
-
-      if meth.IsStatic then begin
-
-         Result:=TFuncExpr.Create(prog, scriptPos, meth);
-         expr.Free;
-         Exit;
-
-      end else if (expr.Typ is TClassOfSymbol) then begin
-
-         if expr.IsConstant and TClassOfSymbol(expr.Typ).TypClassSymbol.IsAbstract then begin
-            if meth.Kind=fkConstructor then
-               prog.CompileMsgs.AddCompilerError(scriptPos, RTE_InstanceOfAbstractClass)
-            else prog.CompileMsgs.AddCompilerError(scriptPos, CPE_AbstractClassUsage);
-         end;
-
-      end;
-      if (not meth.IsClassMethod) and meth.StructSymbol.IsStatic then
-         prog.CompileMsgs.AddCompilerErrorFmt(scriptPos, CPE_ClassIsStatic, [meth.StructSymbol.Name]);
-
-      // Return the right expression
-      case meth.Kind of
-         fkFunction, fkProcedure, fkMethod, fkLambda:
-            if meth.IsClassMethod then begin
-               if not ForceStatic and meth.IsVirtual then
-                  Result := TClassMethodVirtualExpr.Create(prog, scriptPos, meth, expr)
-               else Result := TClassMethodStaticExpr.Create(prog, scriptPos, meth, expr)
-            end else begin
-               if RefKind<>rkObjRef then
-                  prog.CompileMsgs.AddCompilerError(scriptPos, CPE_StaticMethodExpected);
-               if not ForceStatic and meth.IsVirtual then
-                  Result := TMethodVirtualExpr.Create(prog, scriptPos, meth, expr)
-               else Result := TMethodStaticExpr.Create(prog, scriptPos, meth, expr);
-            end;
-         fkConstructor:
-            if RefKind = rkClassOfRef then begin
-               if not ForceStatic and meth.IsVirtual then
-                  Result := TConstructorVirtualExpr.Create(prog, scriptPos, meth, expr)
-               else Result := TConstructorStaticExpr.Create(prog, scriptPos, meth, expr);
-            end else begin
-               if not ((prog is TdwsProcedure) and (TdwsProcedure(prog).Func.Kind=fkConstructor)) then
-                  prog.CompileMsgs.AddCompilerWarning(scriptPos, CPE_UnexpectedConstructor);
-               if not ForceStatic and meth.IsVirtual then
-                  Result := TConstructorVirtualObjExpr.Create(prog, scriptPos, meth, expr)
-               else Result := TConstructorStaticObjExpr.Create(prog, scriptPos, meth, expr);
-            end;
-         fkDestructor:
-            begin
-               if RefKind<>rkObjRef then
-                  prog.CompileMsgs.AddCompilerError(scriptPos, CPE_UnexpectedDestructor);
-               if not ForceStatic and meth.IsVirtual then
-                  Result := TDestructorVirtualExpr.Create(prog, scriptPos, meth, expr)
-               else Result := TDestructorStaticExpr.Create(prog, scriptPos, meth, expr)
-            end;
-      else
-         Assert(False);
-      end;
-
-   end else if meth.StructSymbol is TRecordSymbol then begin
-
-      if meth.IsClassMethod then begin
-
-         Result:=TFuncExpr.Create(prog, scriptPos, meth);
-         expr.Free;
-
-      end else begin
-
-         Result:=TRecordMethodExpr.Create(prog, scriptPos, meth);
-         Result.AddArg(expr);
-
-      end;
-
-   end else if meth.StructSymbol is THelperSymbol then begin
-
-      helper:=THelperSymbol(meth.StructSymbol);
-      if     meth.IsClassMethod
-         and (   (helper.ForType.ClassType=TInterfaceSymbol)
-              or not (   (helper.ForType is TStructuredTypeSymbol)
-                      or (helper.ForType is TStructuredTypeMetaSymbol))) then begin
-
-         Result:=TFuncExpr.Create(prog, scriptPos, meth);
-         expr.Free;
-
-      end else begin
-
-         Result:=THelperMethodExpr.Create(prog, scriptPos, meth);
-         if expr<>nil then
-            Result.AddArg(expr);
-
-      end;
-
-   end else Assert(False);
-
-   expr:=nil;
-end;
-
 // ------------------
 // ------------------ TdwsProgramExecution ------------------
 // ------------------
@@ -2171,8 +1887,6 @@ begin
 
    FProg:=aProgram;
    FProg._AddRef;
-
-   FMsgs:=TdwsRuntimeMessageList.Create;
 
    if aProgram.CompileMsgs.HasErrors then
       FProgramState:=psUndefined
@@ -2198,7 +1912,7 @@ begin
    FProgramInfo.Free;
    FProgInfoPool.Free;
    FResult.Free;
-   FMsgs.Free;
+   FRuntimeMsgs.Free;
    FEnvironment:=nil;
 
    FProg._Release;
@@ -2209,11 +1923,12 @@ end;
 //
 procedure TdwsProgramExecution.Execute(aTimeoutMilliSeconds : Integer = 0);
 begin
-   BeginProgram;
-   if ProgramState=psRunning then
-      RunProgram(aTimeoutMilliSeconds);
-   if ProgramState in [psRunning, psRunningStopped] then
-      EndProgram;
+   if BeginProgram then begin
+      if ProgramState=psRunning then
+         RunProgram(aTimeoutMilliSeconds);
+      if ProgramState in [psRunning, psRunningStopped] then
+         EndProgram;
+   end;
 end;
 
 // ExecuteParam
@@ -2252,8 +1967,10 @@ end;
 
 // BeginProgram
 //
-procedure TdwsProgramExecution.BeginProgram;
+function TdwsProgramExecution.BeginProgram : Boolean;
 begin
+   Result:=False;
+
    // Check program state
    if FProgramState<>psReadyToRun then begin
       case FProgramState of
@@ -2266,6 +1983,9 @@ begin
       end;
       Exit;
    end;
+
+   if Assigned(FOnExecutionStarted) then
+      FOnExecutionStarted(Self);
 
    FProgramState:=psRunning;
    try
@@ -2281,7 +2001,7 @@ begin
       FProgramInfo.Execution := Self;
 
       // allocate global stack space
-      Stack.Push(FProg.FGlobalAddrGenerator.DataSize + FProg.DataSize);
+      Stack.Push(FProg.FGlobalAddrGenerator.DataSize+FProg.DataSize);
       Stack.PushBp(0, Stack.BasePointer);
 
       // Initialize Result
@@ -2303,13 +2023,15 @@ begin
       if not (FProg.Expr is TBlockExprBase) then
          DoStep(FProg.FExpr);
 
+      Result:=True;
+
    except
       on e: EScriptError do begin
-         FMsgs.AddRuntimeError(e.ScriptPos, e.Message, e.ScriptCallStack);
+         GetMsgs.AddRuntimeError(e.ScriptPos, e.Message, e.ScriptCallStack);
          FProgramState:=psRunningStopped;
       end;
       on e: Exception do begin
-         FMsgs.AddRuntimeError(LastScriptError.ScriptPos, e.Message, LastScriptCallStack);
+         GetMsgs.AddRuntimeError(LastScriptError.ScriptPos, e.Message, LastScriptCallStack);
          FProgramState:=psRunningStopped;
       end;
    end;
@@ -2321,28 +2043,36 @@ procedure TdwsProgramExecution.RunProgram(aTimeoutMilliSeconds : Integer);
 
    procedure Handle_EScriptAssertionFailed(e : EScriptAssertionFailed);
    begin
+      if IsDebugging then
+         Debugger.NotifyException(Self, e.ExceptionObj);
       Msgs.AddRuntimeError(e.ScriptPos,
                             Copy(e.Message, 1, LastDelimiter('[', e.Message)-2)
-                           +Copy(e.Message, Pos(']', e.Message)+1, MaxInt),
+                           +StrAfterChar(e.Message, ']'),
                            e.ScriptCallStack);
    end;
 
    procedure Handle_Exception(e : Exception);
    var
       debugPos : TScriptPos;
+      exceptObj : IScriptObj;
    begin
-      if LastScriptError<>nil then
-         if LastScriptError is TFuncExpr then
-            Msgs.AddRuntimeError(LastScriptError.ScriptPos,
-                                 e.Message+' in '+TFuncExpr(LastScriptError).FuncSym.QualifiedName,
-                                 LastScriptCallStack)
-         else Msgs.AddRuntimeError(LastScriptError.ScriptPos, e.Message,
-                                   LastScriptCallStack)
-      else if (Debugger<>nil) and (Debugger.LastDebugStepExpr<>nil) then begin
-         debugPos:=Debugger.LastDebugStepExpr.ScriptPos;
-         debugPos.Col:=0;
-         Msgs.AddRuntimeError(debugPos, e.Message, LastScriptCallStack)
-      end else Msgs.AddRuntimeError(cNullPos, e.Message, LastScriptCallStack);
+      EnterExceptionBlock(exceptObj);
+      try
+         if LastScriptError<>nil then begin
+            if LastScriptError is TFuncExpr then
+               Msgs.AddRuntimeError(LastScriptError.ScriptPos,
+                                    e.Message+' in '+TFuncExpr(LastScriptError).FuncSym.QualifiedName,
+                                    LastScriptCallStack)
+            else Msgs.AddRuntimeError(LastScriptError.ScriptPos, e.Message,
+                                      LastScriptCallStack)
+         end else if (Debugger<>nil) and (Debugger.LastDebugStepExpr<>nil) then begin
+            debugPos:=Debugger.LastDebugStepExpr.ScriptPos;
+            debugPos.Col:=0;
+            Msgs.AddRuntimeError(debugPos, e.Message, LastScriptCallStack)
+         end else Msgs.AddRuntimeError(cNullPos, e.Message, LastScriptCallStack);
+      finally
+         LeaveExceptionBlock;
+      end;
    end;
 
 var
@@ -2377,8 +2107,11 @@ begin
       except
          on e: EScriptAssertionFailed do
             Handle_EScriptAssertionFailed(e);
-         on e: EScriptException do
+         on e: EScriptException do begin
+            if IsDebugging then
+               Debugger.NotifyException(Self, e.ExceptionObj);
             Msgs.AddRuntimeError(e.ScriptPos, e.Message, e.ScriptCallStack);
+         end;
          on e: EScriptError do
             Msgs.AddRuntimeError(e.ScriptPos, e.Message, e.ScriptCallStack);
          on e: EScriptStackException do
@@ -2388,7 +2121,6 @@ begin
          on e: Exception do
             Handle_Exception(e);
       end;
-
    finally
       if aTimeoutMilliSeconds>0 then
          TdwsGuardianThread.ForgetExecution(Self);
@@ -2441,33 +2173,89 @@ begin
          Msgs.AddRuntimeError(e.Message);
    end;
 
+   if Assigned(FOnExecutionEnded) then
+      FOnExecutionEnded(Self);
 end;
 
 // CallStackToString
 //
-class function TdwsProgramExecution.CallStackToString(const callStack : TdwsExprLocationArray) : String;
+class function TdwsProgramExecution.CallStackToString(const callStack : TdwsExprLocationArray) : UnicodeString;
 begin
    Result:=TExprBase.CallStackToString(callStack);
 end;
 
 // RaiseAssertionFailed
 //
-procedure TdwsProgramExecution.RaiseAssertionFailed(const msg : String; const scriptPos : TScriptPos);
+procedure TdwsProgramExecution.RaiseAssertionFailed(fromExpr : TExprBase; const msg : UnicodeString; const scriptPos : TScriptPos);
 begin
-   RaiseAssertionFailedFmt(RTE_AssertionFailed, [scriptPos.AsInfo, msg], scriptPos);
+   RaiseAssertionFailedFmt(fromExpr, RTE_AssertionFailed, [scriptPos.AsInfo, msg], scriptPos);
 end;
 
 // RaiseAssertionFailedFmt
 //
-procedure TdwsProgramExecution.RaiseAssertionFailedFmt(const fmt : String; const args : array of const; const scriptPos : TScriptPos);
+procedure TdwsProgramExecution.RaiseAssertionFailedFmt(fromExpr : TExprBase; const fmt : UnicodeString; const args : array of const; const scriptPos : TScriptPos);
 var
    exceptObj : IScriptObj;
-   fmtMsg : String;
+   fmtMsg : UnicodeString;
 begin
+   SetScriptError(fromExpr);
    fmtMsg:=Format(fmt, args);
    exceptObj:=IScriptObj(IUnknown(ProgramInfo.Vars[SYS_EASSERTIONFAILED].Method[SYS_TOBJECT_CREATE].Call([fmtMsg]).Value));
    (exceptObj.ExternalObject as TdwsExceptionContext).Skip(1); // temporary constructor expression
+   if IsDebugging then
+      DebuggerNotifyException(exceptObj);
    raise EScriptAssertionFailed.Create(fmtMsg, exceptObj, scriptPos)
+end;
+
+// CreateEDelphiObj
+//
+function TdwsProgramExecution.CreateEDelphiObj(const ClassName : String;
+                                   const Message : UnicodeString) : IScriptObj;
+begin
+   Result := IScriptObj(IUnknown(
+      ProgramInfo.Vars[SYS_EDELPHI].Method[SYS_TOBJECT_CREATE].Call([ClassName, Message]).Value));
+   (Result.ExternalObject as TdwsExceptionContext).ReplaceTop(LastScriptError); // temporary constructor expression
+end;
+
+// EnterExceptionBlock
+//
+procedure TdwsProgramExecution.EnterExceptionBlock(var exceptObj : IScriptObj);
+var
+   mainException : Exception;
+   err : EScriptError;
+   msg : UnicodeString;
+begin
+   if ExceptionObjectStack.Count>Stack.MaxExceptionDepth then
+      raise EScriptExceptionOverflow.CreateFmt(RTE_MaximalExceptionDepthExceeded,
+                                               [ExceptionObjectStack.Count]);
+
+   {$ifdef FPC}
+   mainException:=SysUtils.ExceptObject as Exception;
+   {$else}
+   mainException:=System.ExceptObject as Exception;
+   {$endif}
+
+   if mainException is EScriptException then begin
+      // a raise-statement created an Exception object
+      exceptObj:=EScriptException(mainException).ExceptionObj
+   end else if mainException is EScriptError then begin
+      msg:=mainException.Message;
+      err:=EScriptError(mainException);
+      if Length(err.ScriptCallStack)>0 then
+         msg:=msg+' in '+(err.ScriptCallStack[High(err.ScriptCallStack)].Expr as TFuncExpr).FuncSym.QualifiedName;
+      if EScriptError(mainException).ScriptPos.Defined then
+         msg:=msg+EScriptError(mainException).ScriptPos.AsInfo;
+      exceptObj:=CreateEDelphiObj(mainException.ClassName, msg);
+   end else if mainException is EScriptStackOverflow then begin
+      exceptObj:=nil
+   end else begin
+      // A Delphi exception. Transform it to a EDelphi-dws exception
+      exceptObj:=CreateEDelphiObj(mainException.ClassName, mainException.Message);
+   end;
+
+   inherited EnterExceptionBlock(exceptObj);
+   if IsDebugging then
+      DebuggerNotifyException(exceptObj);
 end;
 
 // AcquireProgramInfo
@@ -2499,7 +2287,7 @@ end;
 
 // LocalizeSymbol
 //
-procedure TdwsProgramExecution.LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : String);
+procedure TdwsProgramExecution.LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : UnicodeString);
 begin
    if Assigned(Localizer) then
       Localizer.LocalizeSymbol(aResSymbol, Result)
@@ -2508,7 +2296,7 @@ end;
 
 // LocalizeString
 //
-procedure TdwsProgramExecution.LocalizeString(const aString : String; var Result : String);
+procedure TdwsProgramExecution.LocalizeString(const aString : UnicodeString; var Result : UnicodeString);
 begin
    if Assigned(Localizer) then
       Localizer.LocalizeString(aString, Result)
@@ -2543,8 +2331,7 @@ begin
    // clear all datas, kill references
    for i:=0 to FObjectCount-1 do begin
       iter:=buffer[i];
-      SetLength(buffer[i].FData, 0);
-      iter.SetClassSym(nil);
+      iter.ClearData;
       iter.PrevObject:=nil;
       iter.NextObject:=nil;
    end;
@@ -2608,30 +2395,24 @@ end;
 //
 procedure TdwsProgramExecution.DestroyScriptObj(const scriptObj: IScriptObj);
 var
-   sym : TSymbol;
-   func : TMethodSymbol;
+   destroySym : TMethodSymbol;
    expr : TDestructorVirtualExpr;
    oldStatus : TExecutionStatusResult;
 begin
+   if scriptObj.ClassSym.IsExternalRooted then Exit;
    try
-      sym := ScriptObj.ClassSym.Members.FindSymbol(SYS_TOBJECT_DESTROY, cvPublic);
-
-      if sym is TMethodSymbol then begin
-         func := TMethodSymbol(sym);
-         if (func.Kind = fkDestructor) and (func.Params.Count = 0) then begin
-            expr := TDestructorVirtualExpr.Create(FProg, cNullPos, func,
-                                                  TConstExpr.Create(FProg, ScriptObj.ClassSym, ScriptObj));
-            oldStatus:=Status;
-            try
-               Status:=esrNone;
-               scriptObj.Destroyed:=False;
-               expr.EvalNoResult(Self);
-            finally
-               scriptObj.Destroyed:=True;
-               Status:=oldStatus;
-               expr.Free;
-            end;
-         end;
+      destroySym:=Prog.TypDefaultDestructor;
+      expr := TDestructorVirtualExpr.Create(FProg, cNullPos, destroySym,
+                                            TConstExpr.Create(FProg, ScriptObj.ClassSym, ScriptObj));
+      oldStatus:=Status;
+      try
+         Status:=esrNone;
+         scriptObj.Destroyed:=False;
+         expr.EvalNoResult(Self);
+      finally
+         scriptObj.Destroyed:=True;
+         Status:=oldStatus;
+         expr.Free;
       end;
    except
       on e: Exception do
@@ -2677,11 +2458,20 @@ begin
    FLocalizer:=val;
 end;
 
+// GetLastScriptErrorExpr
+//
+function TdwsProgramExecution.GetLastScriptErrorExpr : TExprBase;
+begin
+   Result:=LastScriptError;
+end;
+
 // GetMsgs
 //
 function TdwsProgramExecution.GetMsgs : TdwsRuntimeMessageList;
 begin
-   Result:=FMsgs;
+   if FRuntimeMsgs=nil then
+      FRuntimeMsgs:=TdwsRuntimeMessageList.Create;
+   Result:=FRuntimeMsgs;
 end;
 
 // GetEnvironment
@@ -2711,7 +2501,7 @@ procedure TdwsProgramExecution.EnterRecursion(caller : TExprBase);
 begin
    FCallStack.Push(caller);
    FCallStack.Push(FCurrentProg);
-   if FCallStack.Count div 2>FStack.MaxRecursionDepth then
+   if (FCallStack.Count shr 1)>FStack.MaxRecursionDepth then
       RaiseMaxRecursionReached;
 
    if IsDebugging then
@@ -2781,6 +2571,34 @@ begin
    else Result:=nil;
 end;
 
+// DebuggerFieldAddr
+//
+function TdwsProgramExecution.DebuggerFieldAddr : Integer;
+var
+   field : TFieldSymbol;
+begin
+   if FDebuggerFieldAddr=0 then begin
+      field:=TFieldSymbol(Prog.TypException.Members.FindSymbol(SYS_EXCEPTION_DEBUGGER_FIELD, cvMagic, TFieldSymbol));
+      Assert(field<>nil);
+      FDebuggerFieldAddr:=field.Offset;
+   end;
+   Result:=FDebuggerFieldAddr;
+end;
+
+// DebuggerNotifyException
+//
+procedure TdwsProgramExecution.DebuggerNotifyException(const exceptObj : IScriptObj);
+var
+   addr, i : Integer;
+begin
+   if not IsDebugging then Exit;
+   addr:=DebuggerFieldAddr;
+   i:=exceptObj.AsInteger[addr];
+   exceptObj.AsInteger[addr]:=i+1;
+   if i=0 then
+      Debugger.NotifyException(Self, exceptObj);
+end;
+
 // ------------------
 // ------------------ TdwsProgram ------------------
 // ------------------
@@ -2799,7 +2617,7 @@ begin
    FRootTable := TProgramSymbolTable.Create(systemTable.SymbolTable, @FAddrGenerator);
    FTable := FRootTable;
 
-   FInitExpr := TBlockInitExpr.Create(Self, cNullPos);
+   FInitExpr := TBlockInitExpr.Create(cNullPos);
 
    // Initialize shortcuts to often used symbols
    sysTable:=systemTable.SymbolTable;
@@ -2813,6 +2631,7 @@ begin
    FBaseTypes.FTypTObject := sysTable.TypTObject;
    FBaseTypes.FTypException := sysTable.TypException;
    FBaseTypes.FTypInterface := sysTable.TypInterface;
+   FBaseTypes.FTypAnyType := TAnyTypeSymbol.Create('', nil);
 end;
 
 // Destroy
@@ -2823,7 +2642,10 @@ begin
    FInitExpr.Free;
    FRootTable.Free;
    FUnitMains.Free;
+
    FBaseTypes.FTypNil.Free;
+   FBaseTypes.FTypAnyType.Free;
+
    FCompileMsgs.Free;
    FSubTables.Clear;
 
@@ -2849,6 +2671,22 @@ begin
    Result:=FAddrGenerator.DataSize;
 end;
 
+// SubExpr
+//
+function TdwsProgram.SubExpr(i : Integer) : TExprBase;
+begin
+   if i=0 then
+      Result:=InitExpr
+   else Result:=Expr;
+end;
+
+// SubExprCount
+//
+function TdwsProgram.SubExprCount : Integer;
+begin
+   Result:=2;
+end;
+
 function TdwsProgram.GetGlobalAddr(DataSize: Integer): Integer;
 begin
   Result := FRoot.FGlobalAddrGenerator.GetStackAddr(DataSize);
@@ -2866,7 +2704,7 @@ begin
    FExpr.Free;
    FExpr:=nil;
    FInitExpr.Free;
-   FInitExpr:=TBlockInitExpr.Create(Self, cNullPos);
+   FInitExpr:=TBlockInitExpr.Create(cNullPos);
 end;
 
 // EnterSubTable
@@ -2931,7 +2769,6 @@ constructor TdwsMainProgram.Create(const systemTable : ISystemSymbolTable;
 var
    systemUnitTable : TLinkedSymbolTable;
    systemUnit : TUnitMainSymbol;
-   sl : TStringList;
 begin
    inherited Create(systemTable);
 
@@ -2950,11 +2787,7 @@ begin
 
    FAttributes:=TdwsSymbolAttributes.Create;
 
-   sl:=TStringList.Create;
-   sl.Sorted:=True;
-   sl.CaseSensitive:=False;
-   sl.Duplicates:=dupIgnore;
-   FConditionalDefines:=TAutoStrings.Create(sl);
+   FConditionalDefines:=TAutoStrings.Create;
 
    FSourceList:=TScriptSourceList.Create;
 
@@ -2967,10 +2800,13 @@ begin
 
    FUnitMains:=TUnitMainSymbols.Create;
 
-   FSystemTable := systemTable;
+   FSystemTable:=systemTable;
    systemUnitTable:=TLinkedSymbolTable.Create(systemTable.SymbolTable);
    systemUnit:=TUnitMainSymbol.Create(SYS_SYSTEM, systemUnitTable, FUnitMains);
    systemUnit.ReferenceInSymbolTable(FRootTable, True);
+
+   FTypDefaultConstructor:=TypTObject.Members.FindSymbol(SYS_TOBJECT_CREATE, cvPublic) as TMethodSymbol;
+   FTypDefaultDestructor:=TypTObject.Members.FindSymbol(SYS_TOBJECT_DESTROY, cvPublic) as TMethodSymbol;
 
    FRoot:=Self;
 end;
@@ -2990,8 +2826,8 @@ begin
 
    inherited;
 
+   FOrphanedObjects.Free;
    FFinalExpr.Free;
-   FOperators.Free;
    FSourceContextMap.Free;
    FSymbolDictionary.Free;
    FAttributes.Free;
@@ -3008,10 +2844,14 @@ var
 begin
    if CompileMsgs.HasErrors then
       raise EScriptException.Create(RTE_CantRunScript);
-   exec:=TdwsProgramExecution.Create(Self, FStackParameters);
+   if FExecutionsClass=nil then
+      exec:=TdwsProgramExecution.Create(Self, FStackParameters)
+   else exec:=FExecutionsClass.Create(Self, FStackParameters);
    exec.UserObject:=DefaultUserObject;
    exec.Environment:=DefaultEnvironment;
    exec.Localizer:=DefaultLocalizer;
+   exec.OnExecutionStarted:=OnExecutionStarted;
+   exec.OnExecutionEnded:=OnExecutionEnded;
    FExecutionsLock.Enter;
    try
       FExecutions.Add(exec);
@@ -3114,9 +2954,16 @@ begin
    Result:=Self;
 end;
 
+// SetExecutionsClass
+//
+procedure TdwsMainProgram.SetExecutionsClass(aClass : TdwsProgramExecutionClass);
+begin
+   FExecutionsClass:=aClass;
+end;
+
 // GetSourceFile
 //
-function TdwsMainProgram.GetSourceFile(const aSourceFile : String) : TSourceFile;
+function TdwsMainProgram.GetSourceFile(const aSourceFile : UnicodeString) : TSourceFile;
 var
    i : Integer;
 begin
@@ -3202,6 +3049,15 @@ begin
    end;
 end;
 
+// OrphanObject
+//
+procedure TdwsMainProgram.OrphanObject(obj : TRefCountedObject);
+begin
+   if FOrphanedObjects=nil then
+      FOrphanedObjects:=TObjectList<TRefCountedObject>.Create;
+   FOrphanedObjects.Add(obj);
+end;
+
 // GetConditionalDefines
 //
 function TdwsMainProgram.GetConditionalDefines : IAutoStrings;
@@ -3223,11 +3079,10 @@ begin
    FAddrGenerator:=TAddrGeneratorRec.CreatePositive(Parent.Level + 1);
    FRootTable:=TProgramSymbolTable.Create(Parent.Table, @FAddrGenerator);
    FTable:=FRootTable;
-//   FSystemTable:=Parent.SystemTable;
    FCompileMsgs:=Parent.CompileMsgs;
    FUnitMains:=Parent.UnitMains;
 
-   FInitExpr := TBlockInitExpr.Create(Self, cNullPos);
+   FInitExpr := TBlockInitExpr.Create(cNullPos);
 
    // Connect the procedure to the root TdwsProgram
    FRoot:=Parent.Root;
@@ -3245,10 +3100,10 @@ end;
 
 procedure TdwsProcedure.AssignTo(sym: TFuncSymbol);
 begin
-  // Add parameter symboltable into the symboltable chain
-  FTable.InsertParent(0, sym.Params);
-  sym.Executable := ICallable(Self);
-  FFunc := sym;
+   // Add parameter symboltable into the symboltable chain
+   FTable.InsertParent(0, sym.Params);
+   sym.Executable := ICallable(Self);
+   FFunc := sym;
 end;
 
 // Call
@@ -3272,8 +3127,10 @@ begin
       if FPreConditions<>nil then
          FPreConditions.EvalNoresult(exec);
 
-      exec.DoStep(FInitExpr);
-      FInitExpr.EvalNoResult(exec);
+      if FInitExpr.StatementCount>0 then begin
+         exec.DoStep(FInitExpr);
+         FInitExpr.EvalNoResult(exec);
+      end;
 
       exec.DoStep(FExpr);
       FExpr.EvalNoResult(exec);
@@ -3289,8 +3146,9 @@ begin
    end;
 end;
 
-procedure TdwsProcedure.InitSymbol(Symbol: TSymbol);
+procedure TdwsProcedure.InitSymbol(Symbol: TSymbol; const msgs : TdwsCompileMessageList);
 begin
+   FTable.Initialize(msgs);
 end;
 
 procedure TdwsProcedure.InitExpression(Expr: TExprBase);
@@ -3300,6 +3158,7 @@ end;
 // OptimizeConstAssignments
 //
 procedure TdwsProcedure.OptimizeConstAssignments(blockExpr : TBlockExprBase);
+{$ifdef COALESCE_VAR_INITIALIZATION}
 var
    i, j : Integer;
    subExpr, initSubExpr : TExprBase;
@@ -3341,6 +3200,7 @@ begin
    end;
 
    // the first assignment can be moved to the last of the InitExpr
+   // if its expression doesn't use the variable itself
    if i<blockExpr.SubExprCount then begin
       subExpr:=blockExpr.SubExpr[i];
       if (subExpr is TAssignExpr) and not (subExpr is TOpAssignExpr) then begin
@@ -3351,11 +3211,15 @@ begin
             initSubExpr:=InitExpr.SubExpr[j];
             initAssign:=(initSubExpr as TAssignConstExpr);
             if (initAssign.Left is TVarExpr) and (TVarExpr(initAssign.Left).DataSym=assignExprSym) then begin
-               InitExpr.ReplaceStatement(j, blockExpr.ExtractStatement(i));
+               if not assignExpr.Right.ReferencesVariable(assignExprSym) then
+                  InitExpr.ReplaceStatement(j, blockExpr.ExtractStatement(i));
             end;
          end;
       end;
    end;
+{$else}
+begin
+{$endif}
 end;
 
 // SetBeginPos
@@ -3417,6 +3281,34 @@ begin
   FResultType := ResultType;
 end;
 
+// ToDataString
+//
+function TdwsResult.ToDataString : RawByteString;
+begin
+   Result:=ScriptStringToRawByteString(ToString);
+end;
+
+// ToUTF8String
+//
+function TdwsResult.ToUTF8String : UTF8String;
+begin
+   Result:=UTF8Encode(ToString);
+end;
+
+// AddCRLF
+//
+procedure TdwsResult.AddCRLF;
+begin
+   AddString(#13#10);
+end;
+
+// AddString
+//
+procedure TdwsResult.AddString(const i : Int64);
+begin
+   AddString(IntToStr(i));
+end;
+
 // ------------------
 // ------------------ TdwsDefaultResultType ------------------
 // ------------------
@@ -3433,30 +3325,7 @@ end;
 procedure TdwsDefaultResultType.AddResultSymbols(SymbolTable: TSymbolTable);
 begin
    inherited;
-   TPrintFunction.Create(SymbolTable, 'Print',  ['v', 'Variant'], '', []);
-   TPrintLnFunction.Create(SymbolTable, 'PrintLn', ['v', 'Variant'], '', []);
-end;
-
-// ------------------
-// ------------------ TPrintFunction ------------------
-// ------------------
-
-procedure TPrintFunction.Execute(info : TProgramInfo);
-begin
-   info.Execution.Result.AddString(info.ValueAsString['v']);
-end;
-
-// ------------------
-// ------------------ TPrintLnFunction ------------------
-// ------------------
-
-procedure TPrintLnFunction.Execute(info : TProgramInfo);
-var
-   result : TdwsResult;
-begin
-   result:=info.Execution.Result;
-   result.AddString(Info.ValueAsString['v']);
-   result.AddString(#13#10);
+   RegisterStandardResultFunctions(SymbolTable);
 end;
 
 // ------------------
@@ -3468,7 +3337,7 @@ end;
 constructor TdwsDefaultResult.Create(resultType: TdwsResultType);
 begin
    inherited;
-   FTextBuilder:=TWriteOnlyBlockStream.Create;
+   FTextBuilder:=TWriteOnlyBlockStream.AllocFromPool;
 end;
 
 // Destroy
@@ -3476,14 +3345,28 @@ end;
 destructor TdwsDefaultResult.Destroy;
 begin
    inherited;
-   FTextBuilder.Free;
+   FTextBuilder.ReturnToPool;
 end;
 
 // AddString
 //
-procedure TdwsDefaultResult.AddString(const str : String);
+procedure TdwsDefaultResult.AddString(const str : UnicodeString);
 begin
    FTextBuilder.WriteString(str);
+end;
+
+// AddString
+//
+procedure TdwsDefaultResult.AddString(const i : Int64);
+begin
+   FTextBuilder.WriteString(i);
+end;
+
+// AddCRLF
+//
+procedure TdwsDefaultResult.AddCRLF;
+begin
+   FTextBuilder.WriteCRLF;
 end;
 
 // Clear
@@ -3500,26 +3383,32 @@ begin
    Result:=GetText;
 end;
 
+// ToDataString
+//
+function TdwsDefaultResult.ToDataString : RawByteString;
+begin
+   Result:=ScriptStringToRawByteString(FTextBuilder.ToString);
+end;
+
 // GetText
 //
-function TdwsDefaultResult.GetText : String;
+function TdwsDefaultResult.GetText : UnicodeString;
 begin
    Result:=FTextBuilder.ToString;
 end;
 
 // ------------------
-// ------------------ TdwsGuardedExecutionList ------------------
+// ------------------ TdwsGuardedExecution ------------------
 // ------------------
 
-// Compare
+// FreeAll
 //
-function TdwsGuardedExecutionList.Compare(const item1, item2 : TdwsGuardedExecution) : Integer;
+procedure TdwsGuardedExecution.FreeAll;
 begin
-   if item1.TimeOutAt<item2.TimeOutAt then
-      Result:=1
-   else if item1.TimeOutAt>item2.TimeOutAt then
-      Result:=-1
-   else Result:=0;
+   if Assigned(Self) then begin
+      Next.FreeAll;
+      Destroy;
+   end;
 end;
 
 // ------------------
@@ -3532,12 +3421,9 @@ constructor TdwsGuardianThread.Create;
 begin
    FEvent:=TEvent.Create(nil, False, False, '');
    FExecutionsLock:=TFixedCriticalSection.Create;
-   FExecutions:=TdwsGuardedExecutionList.Create;
    FreeOnTerminate:=False;
 
    inherited Create(True);
-
-   SetThreadName('DWScript Guardian');
 
    Priority:=tpTimeCritical;
 end;
@@ -3546,8 +3432,7 @@ end;
 //
 destructor TdwsGuardianThread.Destroy;
 begin
-   FExecutions.Clear;
-   FExecutions.Free;
+   FExecutions.FreeAll;
    FEvent.Free;
    FExecutionsLock.Free;
    inherited;
@@ -3564,13 +3449,16 @@ end;
 // Finalize
 //
 class procedure TdwsGuardianThread.Finalize;
+var
+   guardian : TdwsGuardianThread;
 begin
    if vThread<>nil then begin
-      vThread.Terminate;
-      vThread.FEvent.SetEvent;
-      vThread.WaitFor;
-      vThread.Destroy;
+      guardian:=vThread;
       vThread:=nil;
+      guardian.Terminate;
+      guardian.FEvent.SetEvent;
+      guardian.WaitFor;
+      guardian.Destroy;
    end;
 end;
 
@@ -3579,39 +3467,69 @@ end;
 class procedure TdwsGuardianThread.GuardExecution(const exec : IdwsProgramExecution; aMilliSecToLive : Integer);
 var
    thread : TdwsGuardianThread;
-   item : TdwsGuardedExecution;
+   item, prev, iter : TdwsGuardedExecution;
+   timeOutAt : Int64;
 begin
    thread:=vThread;
-   item:=TdwsGuardedExecution.Create;
-   item.Exec:=exec;
-   item.TimeOutAt:=Now+aMilliSecToLive*(1/(86400*1000));
+   timeOutAt:=GetSystemMilliseconds+aMilliSecToLive;
    thread.FExecutionsLock.Enter;
    try
-      thread.FExecutions.Add(item);
-      thread.FEvent.SetEvent;
+      if vExecutionsPool<>nil then begin
+         item:=vExecutionsPool;
+         vExecutionsPool:=item.Next;
+         item.Next:=nil;
+      end else item:=TdwsGuardedExecution.Create;
+      item.Exec:=exec;
+      item.TimeOutAt:=timeOutAt;
+
+      iter:=thread.FExecutions;
+      if iter=nil then
+         thread.FExecutions:=item
+      else if iter.TimeOutAt>=item.TimeOutAt then begin
+         item.Next:=thread.FExecutions;
+         thread.FExecutions:=item
+      end else begin
+         repeat
+            prev:=iter;
+            iter:=iter.Next;
+         until (iter=nil) or (iter.TimeOutAt>=item.TimeOutAt);
+         item.Next:=iter;
+         prev.Next:=item;
+      end;
    finally
       thread.FExecutionsLock.Leave;
    end;
+   if aMilliSecToLive<PulseIntervalMilliSeconds then
+      thread.FEvent.SetEvent;
 end;
 
 // ForgetExecution
 //
 class procedure TdwsGuardianThread.ForgetExecution(const exec : IdwsProgramExecution);
 var
-   i : Integer;
    thread : TdwsGuardianThread;
-   execs : TdwsGuardedExecutionList;
-   guarded : TdwsGuardedExecution;
+   iter, prev : TdwsGuardedExecution;
 begin
    thread:=vThread;
+   if thread=nil then Exit;
    thread.FExecutionsLock.Enter;
    try
-      execs:=thread.FExecutions;
-      for i:=0 to execs.Count-1 do begin
-         guarded:=execs[i];
-         if guarded.Exec=exec then begin
-            guarded.Exec:=nil;
-            Break;
+      iter:=thread.FExecutions;
+      if iter<>nil then begin
+         if iter.Exec=exec then
+            thread.FExecutions:=iter.Next
+         else begin
+            repeat
+               prev:=iter;
+               iter:=iter.Next;
+            until (iter=nil) or (iter.Exec=exec);
+            if iter<>nil then
+               prev.Next:=iter.Next;
+         end;
+         if iter<>nil then begin
+            iter.Exec:=nil;
+            iter.Next:=vExecutionsPool;
+            vExecutionsPool:=iter;
          end;
       end;
    finally
@@ -3623,45 +3541,46 @@ end;
 //
 procedure TdwsGuardianThread.Execute;
 var
-   currentTime : TDateTime;
+   currentTime : Int64;
    item : TdwsGuardedExecution;
-   n, millisecs : Integer;
-   timeLeft : Double;
+   millisecs : Cardinal;
+   timeLeft : Int64;
 begin
+   SetThreadName('DWScript Guardian');
+
    while not Terminated do begin
 
-      currentTime:=Now;
-      item:=nil;
+      timeLeft:=INFINITE;
 
-      FExecutionsLock.Enter;
-      try
-         while FExecutions.Count>0 do begin
-            n:=FExecutions.Count;
-            item:=FExecutions[n-1];
-            if item.Exec=nil then begin
-               FExecutions.ExtractAt(n-1);
-               item.Free;
-            end else begin
-               if item.TimeOutAt<=currentTime then begin
-                  item.Exec.Stop;
-                  FExecutions.ExtractAt(n-1);
-                  item.Free;
-               end else Break;
+      if FExecutions<>nil then begin
+
+         currentTime:=GetSystemMilliseconds;
+
+         FExecutionsLock.Enter;
+         try
+            item:=FExecutions;
+            while (item<>nil) and (item.TimeOutAt<=currentTime) do begin
+               item.Exec.Stop;
+               FExecutions:=item.Next;
+               item.Exec:=nil;
+               item.Next:=vExecutionsPool;
+               vExecutionsPool:=item;
+               item:=FExecutions;
             end;
+            item:=FExecutions;
+            if item<>nil then
+               timeLeft:=item.TimeOutAt-currentTime;
+         finally
+            FExecutionsLock.Leave;
          end;
-      finally
-         FExecutionsLock.Leave;
+
       end;
 
-      if item=nil then
-         FEvent.WaitFor(INFINITE)
-      else begin
-         timeLeft:=item.TimeOutAt-currentTime;
-         if timeLeft<0 then
-            millisecs:=0
-         else millisecs:=Round(timeLeft*(86400*1000));
-         FEvent.WaitFor(millisecs);
-      end;
+      Assert(timeLeft>0);
+      if timeLeft>PulseIntervalMilliSeconds then
+         millisecs:=PulseIntervalMilliSeconds
+      else millisecs:=timeLeft;
+      FEvent.WaitFor(millisecs);
 
    end;
 end;
@@ -3669,13 +3588,6 @@ end;
 // ------------------
 // ------------------ TProgramExpr ------------------
 // ------------------
-
-// IsConstant
-//
-function TProgramExpr.IsConstant : Boolean;
-begin
-   Result:=False;
-end;
 
 // Optimize
 //
@@ -3742,7 +3654,7 @@ end;
 
 // AssignValueAsString
 //
-procedure TProgramExpr.AssignValueAsString(exec : TdwsExecution; const value: String);
+procedure TProgramExpr.AssignValueAsString(exec : TdwsExecution; const value: UnicodeString);
 begin
    AssignValue(exec, value);
 end;
@@ -3808,71 +3720,28 @@ end;
 
 // EvalAsString
 //
-procedure TProgramExpr.EvalAsString(exec : TdwsExecution; var Result : String);
+procedure TProgramExpr.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
 var
    v : Variant;
+   p : PVarData;
 begin
    v:=Eval(exec);
    try
-      Result:=String(v);
+      p:=PVarData(@v);
+      {$ifdef FPC}
+      if p^.VType=varString then
+         Result:=UnicodeString(p.VString)
+      {$else}
+      if p^.VType=varUString then
+         Result:=UnicodeString(p.VUString)
+      {$endif}
+      else VariantToString(v, Result);
    except
       // standardize RTL message
       on E : EVariantError do begin
-         raise EdwsVariantTypeCastError.Create(v, 'String', E);
+         raise EdwsVariantTypeCastError.Create(v, SYS_STRING, E);
       end else raise;
    end;
-end;
-
-// EvalNoResult
-//
-procedure TProgramExpr.EvalNoResult(exec : TdwsExecution);
-begin
-   Eval(exec);
-end;
-
-// RaiseScriptError
-//
-procedure TProgramExpr.RaiseScriptError(exec : TdwsExecution; e : EScriptError);
-begin
-   e.ScriptPos:=ScriptPos;
-   e.ScriptCallStack:=exec.GetCallStack;
-   raise e;
-end;
-
-// RaiseScriptError
-//
-procedure TProgramExpr.RaiseScriptError(exec : TdwsExecution);
-var
-   exc : Exception;
-   e : EScriptError;
-begin
-   Assert(ExceptObject is Exception);
-   exc:=Exception(ExceptObject);
-   e:=EScriptError.Create(exc.Message);
-   e.RawClassName:=exc.ClassName;
-   RaiseScriptError(exec, e);
-end;
-
-// RaiseScriptError
-//
-procedure TProgramExpr.RaiseScriptError(exec : TdwsExecution; const msg : String);
-begin
-   RaiseScriptError(exec, EScriptError, msg);
-end;
-
-// RaiseScriptError
-//
-procedure TProgramExpr.RaiseScriptError(exec : TdwsExecution; exceptClass : EScriptErrorClass; const msg : String);
-begin
-   RaiseScriptError(exec, exceptClass.Create(msg));
-end;
-
-// RaiseScriptError
-//
-procedure TProgramExpr.RaiseScriptError(exec : TdwsExecution; exceptClass : EScriptErrorClass;
-                                        const msg : String; const args : array of const);
-begin
-   RaiseScriptError(exec, exceptClass.CreateFmt(msg, args));
 end;
 
 // RaiseUpperExceeded
@@ -3889,37 +3758,20 @@ begin
    RaiseScriptError(exec, EScriptOutOfBounds.CreateFmt(RTE_ArrayLowerBoundExceeded, [index]));
 end;
 
-// CheckScriptObject
-//
-procedure TProgramExpr.CheckScriptObject(exec : TdwsExecution; const scriptObj : IScriptObj);
-begin
-   if scriptObj=nil then
-      RaiseObjectNotInstantiated(exec)
-   else if scriptObj.Destroyed then
-      RaiseObjectAlreadyDestroyed(exec);
-end;
-
-// RaiseObjectNotInstantiated
-//
-procedure TProgramExpr.RaiseObjectNotInstantiated(exec : TdwsExecution);
-begin
-   RaiseScriptError(exec, EScriptError, RTE_ObjectNotInstantiated);
-end;
-
-// RaiseObjectAlreadyDestroyed
-//
-procedure TProgramExpr.RaiseObjectAlreadyDestroyed(exec : TdwsExecution);
-begin
-   RaiseScriptError(exec, EScriptError, RTE_ObjectAlreadyDestroyed);
-end;
-
 // ScriptLocation
 //
-function TProgramExpr.ScriptLocation(prog : TObject) : String;
+function TProgramExpr.ScriptLocation(prog : TObject) : UnicodeString;
 begin
    if prog is TdwsProcedure then
       Result:=TdwsProcedure(prog).Func.QualifiedName+ScriptPos.AsInfo
    else Result:=ScriptPos.AsInfo;
+end;
+
+// InterruptsFlow
+//
+function TProgramExpr.InterruptsFlow : Boolean;
+begin
+   Result:=False;
 end;
 
 // ------------------
@@ -3934,11 +3786,15 @@ var
 begin
    try
       optimized:=Optimize(prog, exec);
-      Assert(optimized is TTypedExpr);
-      Result:=TTypedExpr(optimized);
+      if optimized<>Self then begin
+         Assert(optimized is TTypedExpr);
+         Result:=TTypedExpr(optimized);
+      end else Result:=Self;
    except
-      on E: Exception do
-         raise ECompileException.CreateFromException(hotPos, E)
+      on E: Exception do begin
+         prog.CompileMsgs.AddCompilerException(hotPos, E);
+         Result:=Self;
+      end;
    end;
 end;
 
@@ -3984,6 +3840,13 @@ begin
            and (Typ.IsOfType(typSym));
 end;
 
+// SameDataExpr
+//
+function TTypedExpr.SameDataExpr(expr : TTypedExpr) : Boolean;
+begin
+   Result:=False;
+end;
+
 // GetBaseType
 //
 function TTypedExpr.GetBaseType : TTypeSymbol;
@@ -4006,11 +3869,11 @@ end;
 
 // Create
 //
-constructor TTypeReferenceExpr.Create(aTyp : TTypeSymbol; const scriptPos : TScriptPos);
+constructor TTypeReferenceExpr.Create(aTyp : TTypeSymbol; const aScriptPos : TScriptPos);
 begin
    inherited Create;
    Typ:=aTyp;
-   FPos:=scriptPos;
+   FScriptPos:=aScriptPos;
 end;
 
 // Eval
@@ -4024,7 +3887,7 @@ end;
 //
 function TTypeReferenceExpr.ScriptPos : TScriptPos;
 begin
-   Result:=FPos;
+   Result:=FScriptPos;
 end;
 
 // ------------------
@@ -4036,19 +3899,26 @@ end;
 constructor TPosDataExpr.Create(Prog: TdwsProgram; const scriptPos : TScriptPos; Typ: TTypeSymbol);
 begin
    inherited Create(Prog, Typ);
-   FPos:=scriptPos;
+   FScriptPos:=scriptPos;
 end;
 
 // ScriptPos
 //
 function TPosDataExpr.ScriptPos : TScriptPos;
 begin
-   Result:=FPos;
+   Result:=FScriptPos;
 end;
 
 // ------------------
 // ------------------ TNoResultExpr ------------------
 // ------------------
+
+// Create
+//
+constructor TNoResultExpr.Create(const aPos: TScriptPos);
+begin
+   FScriptPos:=aPos;
+end;
 
 // Eval
 //
@@ -4065,45 +3935,16 @@ begin
    //nothing
 end;
 
-// OptimizeToNoResultExpr
-//
-function TNoResultExpr.OptimizeToNoResultExpr(prog : TdwsProgram; exec : TdwsExecution) : TNoResultExpr;
-var
-   optimized : TProgramExpr;
-begin
-   optimized:=Optimize(prog, exec);
-   Assert(optimized is TNoResultExpr);
-   Result:=TNoResultExpr(optimized);
-end;
-
-// InterruptsFlow
-//
-function TNoResultExpr.InterruptsFlow : Boolean;
-begin
-   Result:=False;
-end;
-
-// ------------------
-// ------------------ TNoResultPosExpr ------------------
-// ------------------
-
-// Create
-//
-constructor TNoResultPosExpr.Create(Prog: TdwsProgram; const Pos: TScriptPos);
-begin
-   FScriptPos:=Pos;
-end;
-
 // ScriptPos
 //
-function TNoResultPosExpr.ScriptPos : TScriptPos;
+function TNoResultExpr.ScriptPos : TScriptPos;
 begin
    Result:=FScriptPos;
 end;
 
 // SetScriptPos
 //
-procedure TNoResultPosExpr.SetScriptPos(const aPos : TScriptPos);
+procedure TNoResultExpr.SetScriptPos(const aPos : TScriptPos);
 begin
    FScriptPos:=aPos;
 end;
@@ -4135,7 +3976,7 @@ end;
 
 // AddStatement
 //
-procedure TBlockExprBase.AddStatement(expr : TNoResultExpr);
+procedure TBlockExprBase.AddStatement(expr : TProgramExpr);
 begin
    ReallocMem(FStatements, (FCount+1)*SizeOf(TNoResultExpr));
    FStatements[FCount]:=expr;
@@ -4144,7 +3985,7 @@ end;
 
 // ReplaceStatement
 //
-procedure TBlockExprBase.ReplaceStatement(index : Integer; expr : TNoResultExpr);
+procedure TBlockExprBase.ReplaceStatement(index : Integer; expr : TProgramExpr);
 begin
    FStatements[index].Free;
    FStatements[index]:=expr;
@@ -4152,7 +3993,7 @@ end;
 
 // ExtractStatement
 //
-function TBlockExprBase.ExtractStatement(index : Integer) : TNoResultExpr;
+function TBlockExprBase.ExtractStatement(index : Integer) : TProgramExpr;
 begin
    Result:=FStatements[index];
    if index<FCount-1 then
@@ -4183,7 +4024,7 @@ end;
 procedure TBlockRawExpr.EvalNoResult(exec : TdwsExecution);
 var
    i : Integer;
-   expr : PNoResultExpr;
+   expr : PProgramExpr;
 begin
    expr:=@FStatements[0];
    for i:=1 to FCount do begin
@@ -4205,7 +4046,7 @@ end;
 //
 function TDataExpr.Eval(exec : TdwsExecution) : Variant;
 begin
-   Result:=Data[exec][Addr[exec]];
+   DataPtr[exec].EvalAsVariant(0, Result);
 end;
 
 // IsWritable
@@ -4215,75 +4056,40 @@ begin
    Result:=True;
 end;
 
-function TDataExpr.GetAddr(exec : TdwsExecution) : Integer;
+// GetDataPtrFunc
+//
+function TDataExpr.GetDataPtrFunc(exec : TdwsExecution) : IDataContext;
 begin
-  Result := 0;
+   GetDataPtr(exec, Result);
 end;
 
-procedure TDataExpr.AssignData(exec : TdwsExecution; const SourceData: TData; SourceAddr: Integer);
+// AssignData
+//
+procedure TDataExpr.AssignData(exec : TdwsExecution; const source : IDataContext);
 begin
   Assert(IsWritable);
-  DWSCopyData(SourceData, SourceAddr, Data[exec], Addr[exec], Typ.Size);
+  if Typ.Size>0 then
+     DataPtr[exec].WriteData(source, Typ.Size);
 end;
 
+// AssignValue
+//
 procedure TDataExpr.AssignValue(exec : TdwsExecution; const Value: Variant);
 begin
   Assert(IsWritable);
-  VarCopy(Data[exec][Addr[exec]], Value);
-end;
-
-// AssignValueAsInteger
-//
-procedure TDataExpr.AssignValueAsInteger(exec : TdwsExecution; const value : Int64);
-begin
-   AssignValue(exec, value);
-end;
-
-// AssignValueAsBoolean
-//
-procedure TDataExpr.AssignValueAsBoolean(exec : TdwsExecution; const value : Boolean);
-begin
-   AssignValue(exec, value);
-end;
-
-// AssignValueAsFloat
-//
-procedure TDataExpr.AssignValueAsFloat(exec : TdwsExecution; const value : Double);
-begin
-   AssignValue(exec, value);
-end;
-
-// AssignValueAsString
-//
-procedure TDataExpr.AssignValueAsString(exec : TdwsExecution; const value: String);
-begin
-   AssignValue(exec, value);
-end;
-
-// AssignValueAsScriptObj
-//
-procedure TDataExpr.AssignValueAsScriptObj(exec : TdwsExecution; const value : IScriptObj);
-begin
-   AssignValue(exec, value);
+  DataPtr[exec][0]:=Value;
 end;
 
 // AssignExpr
 //
 procedure TDataExpr.AssignExpr(exec : TdwsExecution; Expr: TTypedExpr);
 begin
-   Expr.EvalAsVariant(exec, Data[exec][Addr[exec]]);
+   Expr.EvalAsVariant(exec, DataPtr[exec].AsPVariant(0)^);
 end;
 
 procedure TDataExpr.AssignDataExpr(exec : TdwsExecution; DataExpr: TDataExpr);
 begin
-   DWSCopyData(DataExpr.Data[exec], DataExpr.Addr[exec], Data[exec], Addr[exec], Typ.Size);
-end;
-
-// GetDataPtr
-//
-function TDataExpr.GetDataPtr(exec : TdwsExecution) : TDataPtr;
-begin
-   Result:=TDataPtr.Create(Data[exec], Addr[exec]);
+   DataPtr[exec].WriteData(DataExpr.DataPtr[exec], Typ.Size);
 end;
 
 // ------------------
@@ -4292,12 +4098,14 @@ end;
 
 // Create
 //
-constructor TFuncExprBase.Create(prog : TdwsProgram; const pos : TScriptPos; aFunc : TFuncSymbol);
+constructor TFuncExprBase.Create(prog : TdwsProgram; const aScriptPos: TScriptPos; aFunc : TFuncSymbol);
 begin
-   inherited Create(Prog, Pos, nil);
+   inherited Create(Prog, aScriptPos, nil);
    FFunc:=aFunc;
-   if Assigned(aFunc) then
+   if Assigned(aFunc) then begin
       FTyp:=aFunc.Typ;
+      FParamSize:=aFunc.ParamSize;
+   end;
 end;
 
 // Destroy
@@ -4348,7 +4156,7 @@ begin
                                                   TCompilerErrorMessage);
          end;
          on E: Exception do begin
-            Prog.CompileMsgs.AddCompilerErrorFmt(Pos, CPE_FunctionOptimizationFailed,
+            Prog.CompileMsgs.AddCompilerErrorFmt(ScriptPos, CPE_FunctionOptimizationFailed,
                                                  [FuncSym.Name, E.ClassName, E.Message],
                                                   TCompilerErrorMessage);
          end;
@@ -4358,9 +4166,9 @@ begin
    end;
 end;
 
-// IsConstant
+// GetIsConstant
 //
-function TFuncExprBase.IsConstant : Boolean;
+function TFuncExprBase.GetIsConstant : Boolean;
 var
    i : Integer;
 begin
@@ -4410,6 +4218,7 @@ begin
       Free;
    end else begin
       FFunc:=newFuncSym;
+      FParamSize:=newFuncSym.ParamSize;
       if Assigned(newFuncSym) then begin
          // don't update type for a constructor as the "return type" of a constructor
          // isn't specified by the constructor symbol, but by the meta the constructor
@@ -4419,6 +4228,14 @@ begin
       end else FTyp:=nil;
       Result:=Self;
    end
+end;
+
+// GetDataPtr
+//
+procedure TFuncExprBase.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
+begin
+   Eval(exec);
+   exec.DataContext_CreateBase(FResultAddr, result);
 end;
 
 // Initialize
@@ -4432,10 +4249,15 @@ end;
 // GetArgType
 //
 function TFuncExprBase.GetArgType(idx : Integer) : TTypeSymbol;
+var
+   expr : TTypedExpr;
 begin
-   if Cardinal(idx)<Cardinal(FArgs.Count) then
-      Result:=TTypedExpr(FArgs[idx]).Typ
-   else Result:=nil;
+   if Cardinal(idx)<Cardinal(FArgs.Count) then begin
+      expr:=TTypedExpr(FArgs[idx]);
+      if expr<>nil then
+         Result:=expr.Typ
+      else Result:=nil;
+   end else Result:=nil;
 end;
 
 // ------------------
@@ -4456,8 +4278,13 @@ end;
 // InitPushTempAddr
 //
 procedure TPushOperator.InitPushTempAddr(stackAddr: Integer; argExpr: TTypedExpr);
+var
+   typ : TTypeSymbol;
 begin
-   FTypeParamSym:=TSymbol(potTempAddr);
+   typ:=argExpr.Typ;
+   if (typ<>nil) and (typ.Size>1) then
+      FTypeParamSym:=TSymbol(potTempData)
+   else FTypeParamSym:=TSymbol(potTempAddr);
    FStackAddr:=stackAddr;
    FArgExpr:=argExpr;
 end;
@@ -4468,7 +4295,7 @@ procedure TPushOperator.InitPushTempArrayAddr(stackAddr: Integer; argExpr: TType
 begin
    FTypeParamSym:=TSymbol(potTempArrayAddr);
    FStackAddr:=stackAddr;
-   FArgExpr:=TArrayConstantExpr(argExpr);
+   FArgExpr:=argExpr;
 end;
 
 // InitPushTempArray
@@ -4477,7 +4304,9 @@ procedure TPushOperator.InitPushTempArray(stackAddr: Integer; argExpr: TTypedExp
 begin
    FTypeParamSym:=TSymbol(potTempArray);
    FStackAddr:=stackAddr;
-   FArgExpr:=argExpr as TConstParamExpr;
+   if argExpr is TConstParamExpr then
+      FArgExpr:=argExpr
+   else FArgExpr:=nil;  // error caught earlier, if not, ensure runtime crash
 end;
 
 // InitPushResult
@@ -4508,7 +4337,9 @@ procedure TPushOperator.InitPushData(StackAddr: Integer; ArgExpr: TTypedExpr; Pa
 begin
    FStackAddr:=StackAddr;
    FArgExpr:=ArgExpr;
-   FTypeParamSym:=ParamSym;
+   if argExpr is TConstExpr then
+      FTypeParamSym:=TSymbol(potConstData)
+   else FTypeParamSym:=ParamSym;
 end;
 
 // InitPushInitResult
@@ -4537,6 +4368,7 @@ begin
       NativeInt(potAddr) : ExecuteAddr(exec);
       NativeInt(potPassAddr) : ExecutePassAddr(exec);
       NativeInt(potTempAddr) : ExecuteTempAddr(exec);
+      NativeInt(potTempData) : ExecuteTempData(exec);
       NativeInt(potTempArrayAddr) : ExecuteTempArrayAddr(exec);
       NativeInt(potTempArray) : ExecuteTempArray(exec);
       NativeInt(potResultBoolean) : ExecuteResultBoolean(exec);
@@ -4545,6 +4377,7 @@ begin
       NativeInt(potResultString) : ExecuteResultString(exec);
       NativeInt(potResultConstString) : ExecuteResultConstString(exec);
       NativeInt(potResult) : ExecuteResult(exec);
+      NativeInt(potConstData) : ExecuteConstData(exec);
       NativeInt(potInitResult) : ExecuteInitResult(exec);
       NativeInt(potLazy) : ExecuteLazy(exec);
    else
@@ -4552,149 +4385,126 @@ begin
    end;
 end;
 
-type
-
-   TVarParamData = class (TInterfacedObject, IVarParamData)
-      private
-         FData : TData;
-         FAddr : Integer;
-      protected
-         function GetData : TData;
-         function GetAddr : Integer;
-      public
-         constructor Create(const Data: TData; Addr: Integer);
-         function Eval : PVariant;
-  end;
-
-{ TVarParamData }
-
-constructor TVarParamData.Create(const Data: TData; Addr: Integer);
-begin
-   inherited Create;
-   FData:=Data;
-   FAddr:=Addr;
-end;
-
-// Eval
-//
-function TVarParamData.Eval : PVariant;
-begin
-   Result:=@FData[FAddr];
-end;
-
-function TVarParamData.GetAddr : Integer;
-begin
-   Result:=FAddr;
-end;
-
-function TVarParamData.GetData : TData;
-begin
-  Result := FData;
-end;
-
 // ExecuteAddr
 //
 procedure TPushOperator.ExecuteAddr(exec : TdwsExecution);
-var
-   vpd : IVarParamData;
 begin
-   vpd:=TVarParamData.Create(TDataExpr(FArgExpr).Data[exec], TDataExpr(FArgExpr).Addr[exec]);
-   exec.Stack.WriteValue(exec.Stack.StackPointer + FStackAddr, vpd);
+   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FStackAddr, TDataExpr(FArgExpr).DataPtr[exec]);
 end;
 
 // ExecutePassAddr
 //
 procedure TPushOperator.ExecutePassAddr(exec : TdwsExecution);
 var
-   vpd : IVarParamData;
+   vpd : Pointer;
 begin
-   TVarParamExpr(FArgExpr).GetVarParamData(exec, vpd);
-   exec.Stack.WriteValue(exec.Stack.StackPointer+FStackAddr, vpd);
+   vpd:=TVarParamExpr(FArgExpr).GetVarParamDataAsPointer(exec);
+   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FStackAddr, IUnknown(vpd));
 end;
 
 // ExecuteTempAddr
 //
 procedure TPushOperator.ExecuteTempAddr(exec : TdwsExecution);
 var
-   vpd : IVarParamData;
+   vpd : IDataContext;
    data : TData;
 begin
    SetLength(data, 1);
    FArgExpr.EvalAsVariant(exec, data[0]);
-   vpd:=TVarParamData.Create(data, 0);
-   exec.Stack.WriteValue(exec.Stack.StackPointer + FStackAddr, vpd);
+   exec.DataContext_Create(data, 0, vpd);
+   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FStackAddr, vpd);
+end;
+
+// ExecuteTempData
+//
+procedure TPushOperator.ExecuteTempData(exec : TdwsExecution);
+var
+   vpd : IDataContext;
+   dataExpr : TDataExpr;
+   data : TData;
+begin
+   SetLength(data, FArgExpr.Typ.Size);
+
+   dataExpr:=TDataExpr(FArgExpr);
+   exec.DataContext_Create(data, 0, vpd);
+
+   vpd.WriteData(dataExpr.DataPtr[exec], FArgExpr.Typ.Size);
+
+   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FStackAddr, vpd);
 end;
 
 // ExecuteTempArrayAddr
 //
 procedure TPushOperator.ExecuteTempArrayAddr(exec : TdwsExecution);
 var
-   vpd : IVarParamData;
+   ace : TArrayConstantExpr;
+   vpd : IDataContext;
    data : TData;
 begin
-   data:=TArrayConstantExpr(FArgExpr).EvalAsTData(exec);
-   vpd:=TVarParamData.Create(data, 0);
-   exec.Stack.WriteValue(exec.Stack.StackPointer+FStackAddr, vpd);
+   ace:=TArrayConstantExpr(FArgExpr);
+   SetLength(data, ace.Size);
+
+   exec.DataContext_Create(data, 0, vpd);
+
+   ace.EvalAsTData(exec, vpd.AsPData^);
+
+   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FStackAddr, vpd);
 end;
 
 // ExecuteTempArray
 //
 procedure TPushOperator.ExecuteTempArray(exec : TdwsExecution);
-var
-   vpd : IVarParamData;
-   data : TData;
 begin
-   data:=TConstParamExpr(FArgExpr).Data[exec];
-   vpd:=TVarParamData.Create(data, 0);
-   exec.Stack.WriteValue(exec.Stack.StackPointer+FStackAddr, vpd);
+   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FStackAddr, TConstParamExpr(FArgExpr).DataPtr[exec]);
 end;
 
 // ExecuteResult
 //
 procedure TPushOperator.ExecuteResult(exec : TdwsExecution);
-var
-   buf : Variant;
 begin
-   FArgExpr.EvalAsVariant(exec, buf);
-   exec.Stack.WriteValue(exec.Stack.StackPointer + FStackAddr, buf);
+   FArgExpr.EvalAsVariant(exec, exec.Stack.Data[exec.Stack.StackPointer+FStackAddr]);
 end;
 
 // ExecuteResultBoolean
 //
 procedure TPushOperator.ExecuteResultBoolean(exec : TdwsExecution);
 begin
-   exec.Stack.WriteBoolValue(exec.Stack.StackPointer + FStackAddr, FArgExpr.EvalAsBoolean(exec));
+   exec.Stack.WriteBoolValue(exec.Stack.StackPointer+FStackAddr,
+                             FArgExpr.EvalAsBoolean(exec));
 end;
 
 // ExecuteResultInteger
 //
 procedure TPushOperator.ExecuteResultInteger(exec : TdwsExecution);
 begin
-   exec.Stack.WriteIntValue(exec.Stack.StackPointer + FStackAddr, FArgExpr.EvalAsInteger(exec));
+   exec.Stack.WriteIntValue(exec.Stack.StackPointer+FStackAddr,
+                            FArgExpr.EvalAsInteger(exec));
 end;
 
 // ExecuteResultFloat
 //
 procedure TPushOperator.ExecuteResultFloat(exec : TdwsExecution);
 begin
-   exec.Stack.WriteFloatValue(exec.Stack.StackPointer + FStackAddr, FArgExpr.EvalAsFloat(exec));
+   exec.Stack.WriteFloatValue(exec.Stack.StackPointer+FStackAddr,
+                              FArgExpr.EvalAsFloat(exec));
 end;
 
 // ExecuteResultString
 //
 procedure TPushOperator.ExecuteResultString(exec : TdwsExecution);
 var
-   buf : String;
+   buf : UnicodeString;
 begin
    FArgExpr.EvalAsString(exec, buf);
-   exec.Stack.WriteStrValue(exec.Stack.StackPointer + FStackAddr, buf);
+   exec.Stack.WriteStrValue(exec.Stack.StackPointer+FStackAddr,
+                            buf);
 end;
 
 // ExecuteResultConstString
 //
 procedure TPushOperator.ExecuteResultConstString(exec : TdwsExecution);
 begin
-   exec.Stack.WriteStrValue(exec.Stack.StackPointer + FStackAddr,
+   exec.Stack.WriteStrValue(exec.Stack.StackPointer+FStackAddr,
                             TConstStringExpr(FArgExpr).Value);
 end;
 
@@ -4705,8 +4515,18 @@ var
    dataExpr : TDataExpr;
 begin
    dataExpr:=TDataExpr(FArgExpr);
-   exec.Stack.WriteData(dataExpr.Addr[exec], exec.Stack.StackPointer+FStackAddr,
-                        FTypeParamSym.Typ.Size, dataExpr.Data[exec]);
+   dataExpr.DataPtr[exec].CopyData(exec.Stack.Data, exec.Stack.StackPointer+FStackAddr,
+                                   FTypeParamSym.Typ.Size);
+end;
+
+// ExecuteConstData
+//
+procedure TPushOperator.ExecuteConstData(exec : TdwsExecution);
+var
+   constExpr : TConstExpr;
+begin
+   constExpr:=TConstExpr(FArgExpr);
+   exec.Stack.WriteData(0, exec.Stack.StackPointer+FStackAddr, Length(constExpr.Data), constExpr.Data);
 end;
 
 // ExecuteInitResult
@@ -4750,9 +4570,7 @@ end;
 //
 function TFuncExpr.ExpectedArg : TParamSymbol;
 begin
-(*   if FFunc.IsOverloaded then
-      Result:=nil
-   else*) if FArgs.Count<FFunc.Params.Count then
+   if FArgs.Count<FFunc.Params.Count then
       Result:=(FFunc.Params[FArgs.Count] as TParamSymbol)
    else Result:=nil;
 end;
@@ -4771,34 +4589,39 @@ begin
    end;
 end;
 
+// DoEvalCall
+//
+procedure TFuncExpr.DoEvalCall(exec : TdwsExecution; func : TFuncSymbol);
+var
+   oldBasePointer : Integer;
+begin
+   EvalPushExprs(exec);
+
+   oldBasePointer:=exec.Stack.SwitchFrame(Level);
+   TdwsProgramExecution(exec).EnterRecursion(CallerID);
+   try
+      ICallable(func.Executable).Call(TdwsProgramExecution(exec), func);
+   finally
+      TdwsProgramExecution(exec).LeaveRecursion;
+      exec.Stack.RestoreFrame(Level, oldBasePointer);
+   end;
+end;
+
 // Eval
 //
 function TFuncExpr.Eval(exec : TdwsExecution) : Variant;
-var
-   oldBasePointer : Integer;
-   func : TFuncSymbol;
 begin
    try
       // Allocate memory for parameters on the stack
-      exec.Stack.Push(FFunc.ParamSize);
+      exec.Stack.Push(ParamSize);
       try
-         func:=PreCall(exec);
+         DoEvalCall(exec, FuncSym);
 
-         EvalPushExprs(exec);
-
-         oldBasePointer:=exec.Stack.SwitchFrame(FLevel);
-         TdwsProgramExecution(exec).EnterRecursion(CallerID);
-         try
-            ICallable(func.Executable).Call(TdwsProgramExecution(exec), func);
-         finally
-            TdwsProgramExecution(exec).LeaveRecursion;
-            exec.Stack.RestoreFrame(FLevel, oldBasePointer);
-         end;
-
-         Result:=PostCall(exec);
+         if Typ<>nil then
+            StaticPostCall(exec, Result);
       finally
          // Remove parameters from stack
-         exec.Stack.Pop(FFunc.ParamSize);
+         exec.Stack.Pop(ParamSize);
       end;
    except
       exec.SetScriptError(Self);
@@ -4806,42 +4629,52 @@ begin
    end;
 end;
 
-// PreCall
+// StaticPostCall
 //
-function TFuncExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
-begin
-   Result:=FFunc;
-end;
-
-// PostCall
-//
-function TFuncExpr.PostCall(exec : TdwsExecution) : Variant;
+procedure TFuncExpr.StaticPostCall(exec : TdwsExecution; var Result : Variant);
 var
    sourceAddr, destAddr: Integer;
 begin
-   if Assigned(FTyp) then begin
-      // Result.StackAddr is relative to BasePointer of the called function
-      // But the frame is already restored so its relative to the stackpointer here
-      sourceAddr:=exec.Stack.StackPointer+FFunc.Result.StackAddr;
-      // Copy return value
-      exec.Stack.ReadValue(sourceAddr, Result);
+   // Result.StackAddr is relative to BasePointer of the called function
+   // But the frame is already restored so its relative to the stackpointer here
+   sourceAddr:=exec.Stack.StackPointer+FuncSym.Result.StackAddr;
+   // Copy return value
+   exec.Stack.ReadValue(sourceAddr, Result);
 
-      if FResultAddr>=0 then begin
-         destAddr:=exec.Stack.BasePointer+FResultAddr;
-         exec.Stack.CopyData(sourceAddr, destAddr, FFunc.Typ.Size);
-      end;
+   if ResultAddr>=0 then begin
+      destAddr:=exec.Stack.BasePointer+ResultAddr;
+      exec.Stack.CopyData(sourceAddr, destAddr, FFunc.Typ.Size);
    end;
 end;
 
-function TFuncExpr.GetData(exec : TdwsExecution) : TData;
+// StaticPostCallInteger
+//
+procedure TFuncExpr.StaticPostCallInteger(exec : TdwsExecution; var Result : Int64);
+var
+   sourceAddr, destAddr: Integer;
 begin
-   Eval(exec);
-   Result := exec.Stack.Data;
+   sourceAddr:=exec.Stack.StackPointer+FuncSym.Result.StackAddr;
+   Result:=exec.Stack.ReadIntValue(sourceAddr);
+
+   if ResultAddr>=0 then begin
+      destAddr:=exec.Stack.BasePointer+ResultAddr;
+      exec.Stack.CopyData(sourceAddr, destAddr, FFunc.Typ.Size);
+   end;
 end;
 
-function TFuncExpr.GetAddr(exec : TdwsExecution) : Integer;
+// StaticPostCallFloat
+//
+procedure TFuncExpr.StaticPostCallFloat(exec : TdwsExecution; var Result : Double);
+var
+   sourceAddr, destAddr: Integer;
 begin
-  Result := exec.Stack.BasePointer + FResultAddr;
+   sourceAddr:=exec.Stack.StackPointer+FuncSym.Result.StackAddr;
+   Result:=exec.Stack.ReadFloatValue(sourceAddr);
+
+   if ResultAddr>=0 then begin
+      destAddr:=exec.Stack.BasePointer+ResultAddr;
+      exec.Stack.CopyData(sourceAddr, destAddr, FFunc.Typ.Size);
+   end;
 end;
 
 // AddPushExprs
@@ -4862,7 +4695,7 @@ begin
       pushOperator:=@FPushExprs[i];
       arg:=TTypedExpr(FArgs.ExprBase[i]);
       param:=TParamSymbol(FFunc.Params[i]);
-      if param.InheritsFrom(TLazyParamSymbol) then
+      if param.ClassType=TLazyParamSymbol then
          pushOperator.InitPushLazy(param.StackAddr, arg)
       else if arg is TDataExpr then begin
          if param.Typ is TOpenArraySymbol then begin
@@ -4902,6 +4735,70 @@ begin
    Result:=False;
 end;
 
+// FuncSymQualifiedName
+//
+function TFuncExpr.FuncSymQualifiedName : UnicodeString;
+begin
+   Result:=FuncSym.QualifiedName;
+end;
+
+// ------------------
+// ------------------ TFuncSimpleExpr ------------------
+// ------------------
+
+// EvalNoResult
+//
+procedure TFuncSimpleExpr.EvalNoResult(exec : TdwsExecution);
+begin
+   try
+      exec.Stack.Push(ParamSize);
+      try
+         DoEvalCall(exec, FuncSym);
+      finally
+         exec.Stack.Pop(ParamSize);
+      end;
+   except
+      exec.SetScriptError(Self);
+      raise;
+   end;
+end;
+
+// EvalAsInteger
+//
+function TFuncSimpleExpr.EvalAsInteger(exec : TdwsExecution) : Int64;
+begin
+   try
+      exec.Stack.Push(ParamSize);
+      try
+         DoEvalCall(exec, FuncSym);
+         StaticPostCallInteger(exec, Result);
+      finally
+         exec.Stack.Pop(ParamSize);
+      end;
+   except
+      exec.SetScriptError(Self);
+      raise;
+   end;
+end;
+
+// EvalAsFloat
+//
+function TFuncSimpleExpr.EvalAsFloat(exec : TdwsExecution) : Double;
+begin
+   try
+      exec.Stack.Push(ParamSize);
+      try
+         DoEvalCall(exec, FuncSym);
+         StaticPostCallFloat(exec, Result);
+      finally
+         exec.Stack.Pop(ParamSize);
+      end;
+   except
+      exec.SetScriptError(Self);
+      raise;
+   end;
+end;
+
 // ------------------
 // ------------------ TFuncPointer ------------------
 // ------------------
@@ -4928,7 +4825,7 @@ begin
       end else begin
          baseExpr.EvalAsScriptObj(exec, scriptObj);
          if baseTyp is TInterfaceSymbol then begin
-            FFuncExpr:=CreateFuncExpr(prog, funcExpr.FuncSym, scriptObj, (scriptObj.InternalObject as TScriptInterface).Typ);
+            FFuncExpr:=CreateFuncExpr(prog, funcExpr.FuncSym, scriptObj, (scriptObj.GetSelf as TScriptInterface).Typ);
          end else begin
             FFuncExpr:=CreateFuncExpr(prog, funcExpr.FuncSym, scriptObj, scriptObj.ClassSym);
          end;
@@ -4943,6 +4840,13 @@ begin
 
       FFuncExpr:=CreateFuncExpr(prog, funcExpr.FuncSym, nil, nil);
 
+   end;
+
+   if FFuncExpr is TMagicFuncExpr then
+      FDoEvalAsVariant:=EvalMagicAsVariant
+   else begin
+      Assert(FFuncExpr is TFuncExpr);
+      FDoEvalAsVariant:=EvalFuncAsVariant;
    end;
 end;
 
@@ -4982,6 +4886,91 @@ begin
    end;
 end;
 
+// EvalMagicAsVariant
+//
+procedure TFuncPointer.EvalMagicAsVariant(exec : TdwsExecution; caller : TFuncExpr; var result : Variant);
+var
+   oldArgs : TExprBaseListRec;
+begin
+   oldArgs:=FFuncExpr.Args;
+   FFuncExpr.Args:=caller.Args;
+   try
+      FFuncExpr.EvalAsVariant(exec, Result);
+   finally
+      FFuncExpr.Args:=oldArgs;
+   end;
+end;
+
+// EvalFuncAsVariant
+//
+procedure TFuncPointer.EvalFuncAsVariant(exec : TdwsExecution; caller : TFuncExpr; var result : Variant);
+var
+   funcExpr : TFuncExpr;
+   i : Integer;
+begin
+   funcExpr:=TFuncExpr(FFuncExpr);
+
+   funcExpr.ClearArgs;
+   for i:=0 to caller.Args.Count-1 do
+      funcExpr.AddArg(caller.Args.ExprBase[i] as TTypedExpr);
+   funcExpr.AddPushExprs((exec as TdwsProgramExecution).Prog);
+   funcExpr.CallerID:=caller;
+
+   try
+      funcExpr.EvalAsVariant(exec, Result);
+   finally
+      for i:=0 to caller.Args.Count-1 do
+         funcExpr.Args.ExprBase[i]:=nil;
+   end;
+end;
+
+// EvalAsVariant
+//
+procedure TFuncPointer.EvalAsVariant(exec : TdwsExecution; caller : TFuncExpr;
+                                     var result : Variant);
+begin
+   FDoEvalAsVariant(exec, caller, result);
+end;
+
+// EvalAsInteger
+//
+function TFuncPointer.EvalAsInteger(exec : TdwsExecution; caller : TFuncExpr) : Int64;
+var
+   v : TVarData;
+begin
+   v.VType:=varInt64;
+   FDoEvalAsVariant(exec, caller, Variant(v));
+   if v.VType=varInt64 then
+      Result:=v.VInt64
+   else begin
+      Result:=Variant(v);
+      VarClear(Variant(v));
+   end;
+end;
+
+// EvalDataPtr
+//
+function TFuncPointer.EvalDataPtr(exec : TdwsExecution; caller : TFuncExpr) : IDataContext;
+var
+   funcExpr : TFuncExpr;
+   i : Integer;
+begin
+   funcExpr:=TFuncExpr(FFuncExpr);
+
+   funcExpr.ClearArgs;
+   for i:=0 to caller.Args.Count-1 do
+      funcExpr.AddArg(caller.Args.ExprBase[i] as TTypedExpr);
+   funcExpr.AddPushExprs((exec as TdwsProgramExecution).Prog);
+   funcExpr.CallerID:=caller;
+
+   try
+      Result:=funcExpr.DataPtr[exec];
+   finally
+      for i:=0 to caller.Args.Count-1 do
+         funcExpr.Args.ExprBase[i]:=nil;
+   end;
+end;
+
 // ------------------
 // ------------------ TAnonymousFuncRefExpr ------------------
 // ------------------
@@ -5014,11 +5003,18 @@ end;
 // Eval
 //
 function TAnonymousFuncRefExpr.Eval(exec : TdwsExecution) : Variant;
+begin
+   EvalAsVariant(exec, Result);
+end;
+
+// EvalAsVariant
+//
+procedure TAnonymousFuncRefExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 var
    funcPtr : TFuncPointer;
 begin
-   if FFuncExpr is TFuncPtrExpr then
-      TFuncPtrExpr(FFuncExpr).FCodeExpr.EvalAsVariant(exec, Result)
+   if FFuncExpr.ClassType=TFuncPtrExpr then
+      TFuncPtrExpr(FFuncExpr).CodeExpr.EvalAsVariant(exec, Result)
    else begin
       funcPtr:=TFuncPointer.Create(exec, FFuncExpr);
       Result:=IFuncPointer(funcPtr);
@@ -5039,12 +5035,15 @@ begin
    Result:=1;
 end;
 
-// GetData
+// GetDataPtr
 //
-function TAnonymousFuncRefExpr.GetData(exec : TdwsExecution) : TData;
+procedure TAnonymousFuncRefExpr.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
+var
+   data : TData;
 begin
-   SetLength(Result, 1);
-   EvalAsVariant(exec, Result[0]);
+   SetLength(data, 1);
+   EvalAsVariant(exec, data[0]);
+   exec.DataContext_Create(data, 0, result);
 end;
 
 // ------------------
@@ -5053,9 +5052,9 @@ end;
 
 // Create
 //
-constructor TFuncPtrExpr.Create(prog : TdwsProgram; const pos : TScriptPos; codeExpr : TDataExpr);
+constructor TFuncPtrExpr.Create(prog : TdwsProgram; const aScriptPos : TScriptPos; codeExpr : TTypedExpr);
 begin
-   inherited Create(prog, pos, (codeExpr.Typ as TFuncSymbol));
+   inherited Create(prog, aScriptPos, (codeExpr.Typ as TFuncSymbol));
    FCodeExpr:=codeExpr;
 end;
 
@@ -5069,11 +5068,21 @@ end;
 
 // Extract
 //
-function TFuncPtrExpr.Extract : TDataExpr;
+function TFuncPtrExpr.Extract : TTypedExpr;
 begin
    Result:=FCodeExpr;
    FCodeExpr:=nil;
    Free;
+end;
+
+// EvalAsFuncPointer
+//
+procedure TFuncPtrExpr.EvalAsFuncPointer(exec : TdwsExecution; var result : IFuncPointer);
+var
+   val : Variant;
+begin
+   FCodeExpr.EvalAsVariant(exec, val);
+   result:=IFuncPointer(IUnknown(val));
 end;
 
 // Eval
@@ -5081,53 +5090,23 @@ end;
 function TFuncPtrExpr.Eval(exec : TdwsExecution) : Variant;
 var
    funcPointer : IFuncPointer;
-   funcExprBase : TFuncExprBase;
-   funcExpr : TFuncExpr;
-   oldArgs : TExprBaseListRec;
-   i : Integer;
-   val : Variant;
 begin
-   FCodeExpr.EvalAsVariant(exec, val);
-   funcPointer:=IFuncPointer(IUnknown(val));
+   EvalAsFuncPointer(exec, funcPointer);
    if funcPointer=nil then
       RaiseScriptError(exec, EScriptError, RTE_FuncPointerIsNil);
-   funcExprBase:=funcPointer.GetFuncExpr;
-
-   if funcExprBase is TMagicFuncExpr then begin
-
-      oldArgs:=funcExprBase.FArgs;
-      funcExprBase.FArgs:=FArgs;
-      try
-         funcExprBase.EvalAsVariant(exec, Result);
-      finally
-         funcExprBase.FArgs:=oldArgs;
-      end;
-
-   end else begin
-
-      Assert(funcExprBase is TFuncExpr);
-
-      funcExpr:=TFuncExpr(funcExprBase);
-
-      funcExpr.ClearArgs;
-      for i:=0 to FArgs.Count-1 do
-         funcExpr.AddArg(FArgs.ExprBase[i] as TTypedExpr);
-      funcExpr.AddPushExprs((exec as TdwsProgramExecution).Prog);
-      funcExpr.CallerID:=Self;
-
-      try
-         funcExprBase.EvalAsVariant(exec, Result);
-      finally
-         for i:=0 to FArgs.Count-1 do
-            funcExpr.FArgs.ExprBase[i]:=nil;
-      end;
-
-   end;
+   funcPointer.EvalAsVariant(exec, Self, Result);
 end;
 
-// IsConstant
+// EvalNoResult
 //
-function TFuncPtrExpr.IsConstant : Boolean;
+procedure TFuncPtrExpr.EvalNoResult(exec : TdwsExecution);
+begin
+   Eval(exec);
+end;
+
+// GetIsConstant
+//
+function TFuncPtrExpr.GetIsConstant : Boolean;
 begin
    Result:=False;
 end;
@@ -5217,7 +5196,7 @@ end;
 // ------------------ TBinaryOpExpr ------------------
 // ------------------
 
-constructor TBinaryOpExpr.Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr);
+constructor TBinaryOpExpr.Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr);
 begin
    FLeft := aLeft;
    FRight := aRight;
@@ -5232,14 +5211,40 @@ end;
 
 function TBinaryOpExpr.Eval(exec : TdwsExecution): Variant;
 begin
+   EvalAsVariant(exec, Result);
+end;
+
+// EvalAsVariant
+//
+procedure TBinaryOpExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
+begin
    Assert(False);
 end;
 
-// IsConstant
+// GetIsConstant
 //
-function TBinaryOpExpr.IsConstant : Boolean;
+function TBinaryOpExpr.GetIsConstant : Boolean;
 begin
    Result:=FLeft.IsConstant and FRight.IsConstant;
+end;
+
+// OptimizeConstantOperandsToFloats
+//
+procedure TBinaryOpExpr.OptimizeConstantOperandsToFloats(prog : TdwsProgram; exec : TdwsExecution);
+begin
+   FLeft:=FLeft.OptimizeToFloatConstant(prog, exec);
+   FRight:=FRight.OptimizeToFloatConstant(prog, exec);
+end;
+
+// Swap
+//
+procedure TBinaryOpExpr.Swap;
+var
+   t : TTypedExpr;
+begin
+   t:=FLeft;
+   FLeft:=FRight;
+   FRight:=t;
 end;
 
 // GetSubExpr
@@ -5264,17 +5269,10 @@ end;
 
 // Create
 //
-constructor TVariantBinOpExpr.Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr);
+constructor TVariantBinOpExpr.Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr);
 begin
    inherited;
    FTyp:=Prog.TypVariant;
-end;
-
-// Eval
-//
-function TVariantBinOpExpr.Eval(exec : TdwsExecution) : Variant;
-begin
-   EvalAsVariant(exec, Result);
 end;
 
 // Optimize
@@ -5293,15 +5291,15 @@ end;
 
 // Create
 //
-constructor TIntegerBinOpExpr.Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr);
+constructor TIntegerBinOpExpr.Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr);
 begin
    inherited;
    FTyp:=Prog.TypInteger;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TIntegerBinOpExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TIntegerBinOpExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 begin
    Result:=EvalAsInteger(exec);
 end;
@@ -5329,17 +5327,17 @@ end;
 
 // Create
 //
-constructor TStringBinOpExpr.Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr);
+constructor TStringBinOpExpr.Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr);
 begin
    inherited;
    FTyp:=Prog.TypString;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TStringBinOpExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TStringBinOpExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
-   buf : String;
+   buf : UnicodeString;
 begin
    EvalAsString(exec, buf);
    Result:=buf;
@@ -5349,7 +5347,7 @@ end;
 //
 function TStringBinOpExpr.Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr;
 var
-   buf : String;
+   buf : UnicodeString;
 begin
    if IsConstant then begin
       EvalAsString(exec, buf);
@@ -5364,15 +5362,15 @@ end;
 
 // Create
 //
-constructor TFloatBinOpExpr.Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr);
+constructor TFloatBinOpExpr.Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr);
 begin
    inherited;
    FTyp:=Prog.TypFloat;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TFloatBinOpExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TFloatBinOpExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 begin
    Result:=EvalAsFloat(exec);
 end;
@@ -5385,8 +5383,7 @@ begin
       Result:=TConstFloatExpr.CreateUnified(Prog, nil, EvalAsFloat(exec));
       Free;
    end else begin
-      FLeft:=FLeft.OptimizeToFloatConstant(prog, exec);
-      FRight:=FRight.OptimizeToFloatConstant(prog, exec);
+      OptimizeConstantOperandsToFloats(prog, exec);
       Result:=Self;
    end;
 end;
@@ -5397,13 +5394,15 @@ end;
 
 // Create
 //
-constructor TBooleanBinOpExpr.Create(Prog: TdwsProgram; aLeft, aRight : TTypedExpr);
+constructor TBooleanBinOpExpr.Create(Prog: TdwsProgram; const aScriptPos : TScriptPos; aLeft, aRight : TTypedExpr);
 begin
    inherited;
    FTyp:=Prog.TypBoolean;
 end;
 
-function TBooleanBinOpExpr.Eval(exec : TdwsExecution) : Variant;
+// EvalAsVariant
+//
+procedure TBooleanBinOpExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 begin
    Result:=EvalAsBoolean(exec);
 end;
@@ -5437,9 +5436,9 @@ begin
    inherited;
 end;
 
-// IsConstant
+// GetIsConstant
 //
-function TUnaryOpExpr.IsConstant : Boolean;
+function TUnaryOpExpr.GetIsConstant : Boolean;
 begin
    Result:=FExpr.IsConstant;
 end;
@@ -5551,7 +5550,7 @@ end;
 //
 function TUnaryOpStringExpr.Eval(exec : TdwsExecution) : Variant;
 var
-   buf : String;
+   buf : UnicodeString;
 begin
    EvalAsString(exec, buf);
    Result:=buf;
@@ -5576,342 +5575,65 @@ begin
    EvalAsVariant(exec, Result);
 end;
 
-// ------------------
-// ------------------ TMethodExpr ------------------
-// ------------------
-
-// Create
-//
-constructor TMethodExpr.Create(Prog: TdwsProgram; const scriptPos: TScriptPos;
-  Func: TMethodSymbol; BaseExpr: TTypedExpr);
-begin
-   inherited Create(Prog, scriptPos, Func);
-   FBaseExpr:=BaseExpr;
-   FSelfAddr:=Func.SelfSym.StackAddr;
-end;
-
-// Destroy
-//
-destructor TMethodExpr.Destroy;
-begin
-   FBaseExpr.Free;
-   inherited;
-end;
-
-// MethSym
-//
-function TMethodExpr.MethSym : TMethodSymbol;
-begin
-   Result:=TMethodSymbol(FuncSym);
-end;
-
-// ChangeFuncSymbol
-//
-function TMethodExpr.ChangeFuncSymbol(aProg: TdwsProgram; newFuncSym : TFuncSymbol) : TFuncExprBase;
-var
-   newMeth : TMethodSymbol;
-   refKind : TRefKind;
-begin
-   newMeth:=(newFuncSym as TMethodSymbol);
-
-   if BaseExpr.Typ is TStructuredTypeMetaSymbol then begin
-      Assert(newMeth.IsClassMethod or (newMeth.Kind=fkConstructor));
-      refKind:=rkClassOfRef;
-   end else refKind:=rkObjRef;
-
-   Result:=CreateMethodExpr(aProg, newMeth, Self.FBaseExpr, refKind, ScriptPos);
-   Result.Args.Assign(Args);
-   Self.FArgs.Clear;
-   Self.Free;
-end;
-
-// GetSubExpr
-//
-function TMethodExpr.GetSubExpr(i : Integer) : TExprBase;
-begin
-   case i of
-      0 : Result:=FBaseExpr;
-   else
-      Result:=inherited GetSubExpr(i-1);
-   end;
-end;
-
-// GetSubExprCount
-//
-function TMethodExpr.GetSubExprCount : Integer;
-begin
-   Result:=FArgs.Count+1;
-end;
-
-// ------------------
-// ------------------ TMethodStaticExpr ------------------
-// ------------------
-
-// Eval
-//
-function TMethodStaticExpr.Eval(exec : TdwsExecution) : Variant;
-var
-   scriptObj : Pointer;
-   oldSelf : PIScriptObj;
-begin
-   scriptObj:=nil;
-   oldSelf:=exec.SelfScriptObject;
-   try
-      exec.SelfScriptObject:=@scriptObj;
-      Result:=inherited Eval(exec);
-   finally
-      exec.SelfScriptObject:=oldSelf;
-      IScriptObj(scriptObj):=nil;
-   end;
-end;
-
-// PreCall
-//
-function TMethodStaticExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
-var
-   p : PIScriptObj;
-begin
-   p:=exec.SelfScriptObject;
-   FBaseExpr.EvalAsScriptObj(exec, p^);
-   if (p^<>nil) and p^.Destroyed then
-      RaiseObjectAlreadyDestroyed(exec);
-   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FSelfAddr, p^);
-
-   Result:=FFunc;
-end;
-
-// ------------------
-// ------------------ TMethodInterfaceExpr ------------------
-// ------------------
-
-// PreCall
-//
-function TMethodInterfaceExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
-var
-   scriptObj : IScriptObj;
-   intfObj : TScriptInterface;
-begin
-   FBaseExpr.EvalAsScriptObj(exec, scriptObj);
-   CheckInterface(exec, scriptObj);
-   intfObj:=TScriptInterface(scriptObj.InternalObject);
-   exec.SelfScriptObject^:=intfObj.Instance;
-   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FSelfAddr, intfObj.Instance);
-   Result:=intfObj.VMT[TMethodSymbol(FFunc).VMTIndex];
-end;
-
-// ------------------
-// ------------------ TMethodVirtualExpr ------------------
-// ------------------
-
-// FindVirtualMethod
-//
-function TMethodVirtualExpr.FindVirtualMethod(ClassSym: TClassSymbol): TMethodSymbol;
-begin
-   Result:=ClassSym.VMTMethod(TMethodSymbol(FFunc).VMTIndex);
-end;
-
-// PreCall
-//
-function TMethodVirtualExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
-var
-   p : PIScriptObj;
-begin
-   // Find virtual method
-   p:=exec.SelfScriptObject;
-   FBaseExpr.EvalAsScriptObj(exec, p^);
-   CheckScriptObject(exec, p^);
-   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FSelfAddr, p^);
-   Result:=FindVirtualMethod(p^.ClassSym);
-end;
-
-// ------------------
-// ------------------ TClassMethodStaticExpr ------------------
-// ------------------
-
-// PreCall
-//
-function TClassMethodStaticExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
-var
-   buf : Int64;
-begin
-   if FBaseExpr.Typ is TClassOfSymbol then
-      buf:=FBaseExpr.EvalAsInteger(exec)
-   else begin
-      FBaseExpr.EvalAsScriptObj(exec, exec.SelfScriptObject^);
-      CheckScriptObject(exec, exec.SelfScriptObject^);
-      buf:=Int64(exec.SelfScriptObject^.ClassSym);
-      exec.SelfScriptObject^:=nil;
-   end;
-   exec.Stack.WriteIntValue(exec.Stack.StackPointer + FSelfAddr, buf);
-   Result := FFunc;
-end;
-
-// ------------------
-// ------------------ TClassMethodVirtualExpr ------------------
-// ------------------
-
-// FindVirtualMethod
-//
-function TClassMethodVirtualExpr.FindVirtualMethod(exec : TdwsExecution) : TMethodSymbol;
-var
-   clsInt : Int64;
-   classSym : TClassSymbol;
-begin
-   clsInt:=exec.Stack.ReadIntValue(exec.Stack.StackPointer+FSelfAddr);
-   classSym:=TClassSymbol(clsInt);
-   if classSym=nil then
-      RaiseScriptError(exec, RTE_ClassTypeIsNil);
-
-   Result:=ClassSym.VMTMethod(TMethodSymbol(FFunc).VMTIndex);
-end;
-
-// PreCall
-//
-function TClassMethodVirtualExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
-begin
-   inherited PreCall(exec);
-
-   Result:=FindVirtualMethod(exec);
-end;
-
-// ------------------
-// ------------------ TConstructorStaticExpr ------------------
-// ------------------
-
-constructor TConstructorStaticExpr.Create(Prog: TdwsProgram; const Pos: TScriptPos;
-   Func: TMethodSymbol; Base: TTypedExpr);
-begin
-  inherited Create(Prog, Pos, Func, Base);
-  if Base.Typ is TClassOfSymbol then
-    FTyp := Base.Typ.Typ
-  else
-    FTyp := Base.Typ;
-end;
-
-// PreCall
-//
-function TConstructorStaticExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
-var
-   classSym : TClassSymbol;
-begin
-   classSym:=TClassSymbol(BaseExpr.EvalAsInteger(exec));
-   if classSym=nil then
-      RaiseScriptError(exec, RTE_ClassTypeIsNil);
-
-   // Create object
-   exec.SelfScriptObject^:=TScriptObjInstance.Create(classSym, exec as TdwsProgramExecution);
-   exec.SelfScriptObject^.ExternalObject:=exec.ExternalObject;
-
-   exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FSelfAddr, exec.SelfScriptObject^);
-
-   Result:=FFunc;
-end;
-
-// PostCall
-//
-function TConstructorStaticExpr.PostCall(exec : TdwsExecution) : Variant;
-begin
-   Assert(FResultAddr=-1);
-   Result:=exec.SelfScriptObject^;
-end;
-
-// ------------------
-// ------------------ TConstructorVirtualExpr ------------------
-// ------------------
-
-constructor TConstructorVirtualExpr.Create(Prog: TdwsProgram; const Pos: TScriptPos;
-   Func: TMethodSymbol; Base: TTypedExpr);
-begin
-  inherited Create(Prog, Pos, Func, Base);
-  FTyp := Base.Typ.Typ;
-end;
-
-// PreCall
-//
-function TConstructorVirtualExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
-var
-  classInt : Int64;
-  classSym : TClassSymbol;
-begin
-  // Get class symbol
-  classInt := FBaseExpr.EvalAsInteger(exec);
-  classSym := TClassSymbol(classInt);
-  Assert(classSym <> nil);
-
-  if classSym.IsAbstract then
-    RaiseScriptError(exec, RTE_InstanceOfAbstractClass);
-
-  Result := FindVirtualMethod(classSym);
-
-  // Create object
-  exec.SelfScriptObject^ := TScriptObjInstance.Create(classSym, exec as TdwsProgramExecution);
-  exec.SelfScriptObject^.ExternalObject := ExternalObject;
-
-  exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer + FSelfAddr, exec.SelfScriptObject^);
-end;
-
-// PostCall
-//
-function TConstructorVirtualExpr.PostCall(exec : TdwsExecution) : Variant;
-begin
-   // Return Self as Result
-   Assert(FResultAddr=-1);
-   Result:=exec.SelfScriptObject^;
-end;
-
 { TProgramInfo }
 
-function TProgramInfo.GetValueAsVariant(const s: String): Variant;
+function TProgramInfo.GetValueAsVariant(const s: UnicodeString): Variant;
 begin
   Result := GetVars(s).Value;
 end;
 
-function TProgramInfo.GetData(const s: String): TData;
+function TProgramInfo.GetData(const s: UnicodeString): TData;
 begin
   Result := GetVars(s).Data;
 end;
 
-procedure TProgramInfo.SetValueAsVariant(const s: String; const Value: Variant);
+procedure TProgramInfo.SetValueAsVariant(const s: UnicodeString; const Value: Variant);
 begin
   GetVars(s).Value := Value;
 end;
 
-procedure TProgramInfo.SetData(const s: String; const Value: TData);
+procedure TProgramInfo.SetData(const s: UnicodeString; const Value: TData);
 begin
   GetVars(s).Data := Value;
 end;
 
-function TProgramInfo.GetVars(const str : String): IInfo;
+// GetSymbolInfo
+//
+procedure TProgramInfo.GetSymbolInfo(sym : TSymbol; var info : IInfo);
 
    procedure GetExternalVarSymbolInfo(sym : TSymbol; var Result : IInfo);
    var
       dat : TData;
       extVDM : TExternalVarDataMaster;
+      locData : IDataContext;
    begin
       SetLength(dat, sym.Typ.Size);
       extVDM := TExternalVarDataMaster.Create(Execution, TExternalVarSymbol(sym));
       if sym.Typ is TClassSymbol then
          extVDM.Read(Execution, dat); // initialize 'Self'-Object
-      TInfo.SetChild(Result, Self, sym.Typ, dat, 0, extVDM);
+      Execution.DataContext_Create(dat, 0, locData);
+      TInfo.SetChild(Result, Self, sym.Typ, locData, extVDM);
    end;
 
    procedure GetTypeSymbolInfo(sym : TSymbol; var Result : IInfo);
    var
       dat : TData;
+      locData : IDataContext;
    begin
       if sym.BaseType is TClassSymbol then begin
          SetLength(dat, 1);
          VarClear(dat[0]);
-         Result := TInfoClassObj.Create(Self, sym, dat, 0)
+         Execution.DataContext_Create(dat, 0, locData);
+         Result := TInfoClassObj.Create(Self, sym, locData);
       end else Result:=nil;
    end;
 
    procedure GetVarParamVars(sym : TDataSymbol; basePointer : Integer; var Result : IInfo);
    var
-      vpd : IVarParamData;
+      dp : IDataContext;
    begin
-      vpd:=IVarParamData(IUnknown(Execution.Stack.Data[basePointer+sym.StackAddr]));
-      TInfo.SetChild(Result, Self, sym.Typ, vpd.Data, vpd.Addr);
+      dp:=IDataContext(IUnknown(Execution.Stack.Data[basePointer+sym.StackAddr]));
+      TInfo.SetChild(Result, Self, sym.Typ, dp);
    end;
 
    procedure GetDataSymbol(sym : TDataSymbol; var Result : IInfo);
@@ -5919,30 +5641,58 @@ function TProgramInfo.GetVars(const str : String): IInfo;
       basePointer : Integer;
       pin : TProgramInfo;
       exec : TdwsExecution;
+      locData : IDataContext;
    begin
       pin:=Self;
       exec:=pin.Execution;
       if sym.Level=pin.FLevel then
          basePointer:=exec.Stack.BasePointer
       else basePointer:=exec.Stack.GetSavedBp(pin.Level);
-      if (sym.ClassType=TVarParamSymbol) or (sym.Typ is TOpenArraySymbol) then begin
+      if    (sym is TByRefParamSymbol)
+         or (sym.Typ is TOpenArraySymbol)
+         or ((sym is TSelfSymbol) and (sym.Typ is TRecordSymbol))
+         then begin
          GetVarParamVars(sym, basePointer, Result);
       end else begin
-         TInfo.SetChild(Result, pin, sym.Typ, exec.Stack.Data,
-                        basePointer+sym.StackAddr);
+         exec.DataContext_CreateBase(sym.StackAddr, locData);
+         TInfo.SetChild(Result, pin, sym.Typ, locData);
       end;
    end;
 
    procedure GetFieldSymbol(sym : TFieldSymbol; var Result : IInfo);
+   var
+      locData : IDataContext;
    begin
       // Field of the Self object
-      TInfo.SetChild(Result, Self, sym.Typ, FScriptObj.Data, sym.Offset)
+      Execution.DataContext_Create(FScriptObj.AsData, sym.Offset, locData);
+      TInfo.SetChild(Result, Self, sym.Typ, locData);
    end;
 
    procedure GetConstSymbol(sym : TConstSymbol; var Result : IInfo);
+   var
+      locData : IDataContext;
    begin
-      TInfo.SetChild(Result, Self, sym.Typ, sym.Data, 0)
+      Execution.DataContext_Create(sym.Data, 0, locData);
+      TInfo.SetChild(Result, Self, sym.Typ, locData);
    end;
+
+begin
+   if sym is TDataSymbol then
+      GetDataSymbol(TDataSymbol(sym), info)
+   else if sym is TConstSymbol then
+      GetConstSymbol(TConstSymbol(sym), info)
+   else if sym is TFieldSymbol then
+      GetFieldSymbol(TFieldSymbol(sym), info)
+   else if sym is TExternalVarSymbol then
+      GetExternalVarSymbolInfo(sym, info)
+   else if sym is TTypeSymbol then
+      GetTypeSymbolInfo(sym, info)
+   else RaiseOnlyVarSymbols(sym);
+end;
+
+// GetVars
+//
+function TProgramInfo.GetVars(const str : UnicodeString): IInfo;
 
 var
    sym : TSymbol;
@@ -5951,20 +5701,30 @@ begin
 
    if not Assigned(sym) then
       RaiseVariableNotFound(str)
-   else if sym is TDataSymbol then
-      GetDataSymbol(TDataSymbol(sym), Result)
-   else if sym is TConstSymbol then
-      GetConstSymbol(TConstSymbol(sym), Result)
-   else if sym is TFieldSymbol then
-      GetFieldSymbol(TFieldSymbol(sym), Result)
-   else if sym is TExternalVarSymbol then
-      GetExternalVarSymbolInfo(sym, Result)
-   else if sym is TTypeSymbol then
-      GetTypeSymbolInfo(sym, Result)
-   else RaiseOnlyVarSymbols(sym);
+   else GetSymbolInfo(sym, Result);
 end;
 
-function TProgramInfo.GetFunc(const s: String): IInfo;
+// GetParams
+//
+function TProgramInfo.GetParams(const Index: Integer): IInfo;
+var
+   ip : TSymbolTable;
+   sym: TSymbol;
+begin
+   ip:=FuncSym.Params;
+   if Cardinal(index)>=Cardinal(ip.Count) then begin
+      RaiseIncorrectParameterIndex(index);
+      Result:=nil;
+   end else begin
+      sym:=ip[index];
+      if not Assigned(sym) then
+         RaiseVariableNotFound(ip[index].Name)
+      else GetSymbolInfo(sym, Result);
+   end;
+end;
+
+
+function TProgramInfo.GetFunc(const s: UnicodeString): IInfo;
 var
   sym: TSymbol;
 begin
@@ -5973,21 +5733,23 @@ begin
   if not Assigned(sym) then
     raise Exception.CreateFmt(RTE_FunctionNotFound, [s]);
 
-  if sym is TFuncSymbol then
+  if sym.IsFuncSymbol then
   begin
     if Assigned(FScriptObj) then
-      Result := TInfoFunc.Create(Self, sym, nil, 0, nil, FScriptObj, FScriptObj.ClassSym)
+      Result := TInfoFunc.Create(Self, sym, Execution.DataContext_Nil,
+                                 nil, FScriptObj, FScriptObj.ClassSym)
     else
-      Result := TInfoFunc.Create(Self, sym, nil, 0, nil, nil, nil)
+      Result := TInfoFunc.Create(Self, sym, Execution.DataContext_Nil, nil, nil, nil)
   end
   else
     raise Exception.CreateFmt(RTE_OnlyFuncSymbols, [sym.Caption]);
 end;
 
-function TProgramInfo.GetTemp(const DataType: String): IInfo;
+function TProgramInfo.GetTemp(const DataType: UnicodeString): IInfo;
 var
   data: TData;
   typSym: TTypeSymbol;
+  locData : IDataContext;
 begin
   typSym := FTable.FindTypeSymbol(DataType, cvMagic);
 
@@ -5998,7 +5760,15 @@ begin
   SetLength(data, typSym.Size);
   typSym.InitData(data, 0);
 
-  TInfo.SetChild(Result, Self, typSym, data, 0);
+  Execution.DataContext_Create(data, 0, locData);
+  TInfo.SetChild(Result, Self, typSym, locData);
+end;
+
+// RaiseExceptObj
+//
+procedure TProgramInfo.RaiseExceptObj(const msg : UnicodeString; const obj : IScriptObj);
+begin
+   raise EScriptException.Create(msg, obj, cNullPos);
 end;
 
 procedure TProgramInfo.SetFuncSym(const Value: TFuncSymbol);
@@ -6008,11 +5778,6 @@ begin
     FLevel := FFuncSym.Level      // 1
   else
     FLevel := 0;
-end;
-
-procedure TProgramInfo.SetResultAsVariant(const Value: Variant);
-begin
-  GetResultVars.Value := Value;
 end;
 
 function TProgramInfo.GetResultAsVariant: Variant;
@@ -6027,21 +5792,21 @@ begin
    Result:=GetVars(SYS_RESULT);
 end;
 
-function TProgramInfo.GetValueAsString(const s: String): String;
+function TProgramInfo.GetValueAsString(const s: UnicodeString): UnicodeString;
 begin
   Result:=GetVars(s).ValueAsString;
 end;
 
-procedure TProgramInfo.SetValueAsString(const s: String; const Value: String);
+procedure TProgramInfo.SetValueAsString(const s: UnicodeString; const Value: UnicodeString);
 begin
   GetVars(s).Value:=Value;
 end;
 
 // GetValueAsChar
 //
-function TProgramInfo.GetValueAsChar(const s: String): WideChar;
+function TProgramInfo.GetValueAsChar(const s: UnicodeString): WideChar;
 var
-   buf : String;
+   buf : UnicodeString;
 begin
    buf:=GetVars(s).ValueAsString;
    if buf<>'' then
@@ -6051,49 +5816,49 @@ end;
 
 // GetValueAsDataString
 //
-function TProgramInfo.GetValueAsDataString(const s: String): RawByteString;
+function TProgramInfo.GetValueAsDataString(const s: UnicodeString): RawByteString;
 begin
    Result:=ScriptStringToRawByteString(GetValueAsString(s));
 end;
 
 // SetValueAsDataString
 //
-procedure TProgramInfo.SetValueAsDataString(const s: String; const Value: RawByteString);
+procedure TProgramInfo.SetValueAsDataString(const s: UnicodeString; const Value: RawByteString);
 begin
    SetValueAsString(s, RawByteStringToScriptString(Value));
 end;
 
-function TProgramInfo.GetValueAsInteger(const s: String): Int64;
+function TProgramInfo.GetValueAsInteger(const s: UnicodeString): Int64;
 begin
   Result:=GetVars(s).ValueAsInteger;
 end;
 
-procedure TProgramInfo.SetValueAsInteger(const s: String; const Value: Int64);
+procedure TProgramInfo.SetValueAsInteger(const s: UnicodeString; const Value: Int64);
 begin
   GetVars(s).Value:=Value;
 end;
 
-function TProgramInfo.GetValueAsBoolean(const s: String): Boolean;
+function TProgramInfo.GetValueAsBoolean(const s: UnicodeString): Boolean;
 begin
   Result:=GetVars(s).Value;
 end;
 
-procedure TProgramInfo.SetValueAsBoolean(const s: String; const Value: Boolean);
+procedure TProgramInfo.SetValueAsBoolean(const s: UnicodeString; const Value: Boolean);
 begin
   GetVars(s).Value:=Value;
 end;
 
-function TProgramInfo.GetValueAsFloat(const s: String): Double;
+function TProgramInfo.GetValueAsFloat(const s: UnicodeString): Double;
 begin
   Result:=GetVars(s).ValueAsFloat;
 end;
 
-procedure TProgramInfo.SetValueAsFloat(const s: String; const Value: Double);
+procedure TProgramInfo.SetValueAsFloat(const s: UnicodeString; const Value: Double);
 begin
   GetVars(s).Value:=Value;
 end;
 
-function TProgramInfo.GetValueAsObject(const s: String): TObject;
+function TProgramInfo.GetValueAsObject(const s: UnicodeString): TObject;
 var
    info : IInfo;
    scriptobj : IScriptObj;
@@ -6109,12 +5874,12 @@ end;
 
 // GetValueAsClassSymbol
 //
-function TProgramInfo.GetValueAsClassSymbol(const s: String): TClassSymbol;
+function TProgramInfo.GetValueAsClassSymbol(const s: UnicodeString): TClassSymbol;
 begin
    Result:=TClassSymbol(GetVars(s).ValueAsInteger);
 end;
 
-function TProgramInfo.GetValueAsTStrings(const s: String): TStrings;
+function TProgramInfo.GetValueAsTStrings(const s: UnicodeString): TStrings;
 var
    obj : TObject;
 begin
@@ -6124,11 +5889,35 @@ begin
    else Result:=nil;
 end;
 
+// GetResultAsPVariant
+//
+function TProgramInfo.GetResultAsPVariant : PVariant;
+var
+   sym : TDataSymbol;
+   stackAddr : Integer;
+   exec : TdwsExecution;
+begin
+   sym:=FuncSym.Result;
+   if sym=nil then
+      RaiseVariableNotFound(SYS_RESULT);
+   Assert(sym.InheritsFrom(TDataSymbol));
+   exec:=Execution;
+   if sym.Level=FLevel then
+      stackAddr:=sym.StackAddr+exec.Stack.BasePointer
+   else stackAddr:=sym.StackAddr+exec.Stack.GetSavedBp(Level);
+   Result:=@exec.Stack.Data[stackAddr];
+end;
+
+procedure TProgramInfo.SetResultAsVariant(const Value: Variant);
+begin
+   GetResultAsPVariant^:=value;
+end;
+
 // SetResultAsString
 //
-procedure TProgramInfo.SetResultAsString(const value : String);
+procedure TProgramInfo.SetResultAsString(const value : UnicodeString);
 begin
-   GetVars(SYS_RESULT).Value:=value;
+   GetResultAsPVariant^:=value;
 end;
 
 // SetResultAsDataString
@@ -6142,21 +5931,21 @@ end;
 //
 procedure TProgramInfo.SetResultAsInteger(const value : Int64);
 begin
-   GetVars(SYS_RESULT).Value:=value;
+   GetResultAsPVariant^:=value;
 end;
 
 // SetResultAsBoolean
 //
 procedure TProgramInfo.SetResultAsBoolean(const value : Boolean);
 begin
-   GetVars(SYS_RESULT).Value:=value;
+   GetResultAsPVariant^:=value;
 end;
 
 // SetResultAsFloat
 //
 procedure TProgramInfo.SetResultAsFloat(const value : Double);
 begin
-   GetVars(SYS_RESULT).Value:=value;
+   GetResultAsPVariant^:=value;
 end;
 
 // GetParamAsPVariant
@@ -6165,10 +5954,10 @@ function TProgramInfo.GetParamAsPVariant(index : Integer) : PVariant;
 
    function GetVarParam(stackAddr : Integer) : PVariant;
    var
-      vpd : IVarParamData;
+      vpd : IDataContext;
    begin
-      vpd:=IVarParamData(IUnknown(Execution.Stack.Data[stackAddr]));
-      Result:=@vpd.Data[vpd.Addr];
+      vpd:=IDataContext(IUnknown(Execution.Stack.Data[stackAddr]));
+      Result:=vpd.AsPVariant(0);
    end;
 
 var
@@ -6213,21 +6002,47 @@ begin
    else Result:=PVariant(p)^;
 end;
 
+// SetParamAsInteger
+//
+procedure TProgramInfo.SetParamAsInteger(index : Integer; const v : Int64);
+var
+   p : PVarData;
+begin
+   p:=PVarData(GetParamAsPVariant(index));
+   if p^.VType=varInt64 then
+      p.VInt64:=v
+   else PVariant(p)^:=v;
+end;
+
 // GetParamAsString
 //
-function TProgramInfo.GetParamAsString(index : Integer) : String;
+function TProgramInfo.GetParamAsString(index : Integer) : UnicodeString;
 var
    p : PVarData;
 begin
    p:=PVarData(GetParamAsPVariant(index));
    {$ifdef FPC}
    if p^.VType=varString then
-      Result:=String(p.VString)
+      Result:=UnicodeString(p.VString)
    {$else}
    if p^.VType=varUString then
-      Result:=String(p.VUString)
+      Result:=UnicodeString(p.VUString)
    {$endif}
-   else Result:=PVariant(p)^;
+   else VariantToString(PVariant(p)^, Result);
+end;
+
+// GetParamAsDataString
+//
+function TProgramInfo.GetParamAsDataString(index : Integer) : RawByteString;
+begin
+   Result:=ScriptStringToRawByteString(GetParamAsString(index));
+end;
+
+// SetParamAsDataString
+//
+procedure TProgramInfo.SetParamAsDataString(index : Integer; const v : RawByteString);
+begin
+   GetParamAsPVariant(index)^:=RawByteStringToScriptString(v);
 end;
 
 // GetParamAsFloat
@@ -6257,8 +6072,14 @@ end;
 // GetParamAsObject
 //
 function TProgramInfo.GetParamAsObject(index : Integer) : TObject;
+var
+   p : PVarData;
 begin
-   Result:=IScriptObj(IUnknown(GetParamAsPVariant(index)^)).ExternalObject;
+   p:=PVarData(GetParamAsPVariant(index));
+   Assert(p.VType=varUnknown);
+   if p.VUnknown<>nil then
+      Result:=(IUnknown(p.VUnknown) as IScriptObj).ExternalObject
+   else Result:=nil;
 end;
 
 function TProgramInfo.FindClassMatch(AObject: TObject; ExactMatch: Boolean): TClassSymbol;
@@ -6287,13 +6108,13 @@ begin
       Result := TClassSymbol(typeSym);
 
     // Allowed to look through ancestor types
-    if not ExactMatch then
+    if not (ExactMatch or Assigned(typeSym)) then
     begin
       if AObject.ClassInfo <> nil then
       begin
         ParentRTTI := GetTypeData(AObject.ClassInfo).ParentInfo;
         repeat
-          typeSym := FindSymbolInUnits(unitList, String(ParentRTTI^.Name));
+          typeSym := FindSymbolInUnits(unitList, UnicodeString(ParentRTTI^.Name));
           if Assigned(typeSym) and (typeSym is TClassSymbol) then       // match found, stop searching
           begin
             Result := TClassSymbol(typeSym);
@@ -6316,7 +6137,7 @@ begin
   end;
 end;
 
-function TProgramInfo.RegisterExternalObject(AObject: TObject; AutoFree: Boolean; ExactClassMatch: Boolean): Variant;
+function TProgramInfo.RegisterExternalObject(AObject: TObject; AutoFree: Boolean; ExactClassMatch: Boolean): IScriptObj;
 var
   NewScriptObj: IScriptObj;
   ClassSym: TClassSymbol;
@@ -6339,13 +6160,13 @@ begin
       context := nil;
     NewScriptObj := TScriptObjInstance.Create(ClassSym, context);
     NewScriptObj.ExternalObject := AObject;
-    Result := IScriptObj(NewScriptObj);
+    Result := NewScriptObj;
   end
-  else                                     // no class returned or no object provided
-    Result := Unassigned;                  // return 'nil' Id
+  else                              // no class returned or no object provided
+    Result := nil;                  // return 'nil' Id
 end;
 
-function TProgramInfo.GetExternalObjForVar(const s: String): TObject;
+function TProgramInfo.GetExternalObjForVar(const s: UnicodeString): TObject;
 var
   sObj: IScriptObj;
 begin
@@ -6356,7 +6177,7 @@ begin
     Result := nil;
 end;
 
-function TProgramInfo.FindSymbolInUnits(AUnitList: TList; const Name: String): TSymbol;
+function TProgramInfo.FindSymbolInUnits(AUnitList: TList; const Name: UnicodeString): TSymbol;
 var
   i: Integer;
 begin
@@ -6377,7 +6198,7 @@ begin
    FScriptObj:=FExecution.SelfScriptObject^;
 end;
 
-function TProgramInfo.FindSymbolInUnits(const Name: String): TSymbol;
+function TProgramInfo.FindSymbolInUnits(const Name: UnicodeString): TSymbol;
 var
   list: TList;
 begin
@@ -6424,52 +6245,6 @@ begin
    Result:=nil;
 end;
 
-// SetClassSym
-//
-procedure TScriptObj.SetClassSym(clsSym : TClassSymbol);
-begin
-   // ignore
-end;
-
-function TScriptObj.GetData : TData;
-begin
-  Result := FData;
-end;
-
-// DataOfAddr
-//
-function TScriptObj.DataOfAddr(addr : Integer) : Variant;
-begin
-   Result:=FData[addr];
-end;
-
-// DataOfAddrAsString
-//
-function TScriptObj.DataOfAddrAsString(addr : Integer) : String;
-begin
-   Result:=FData[addr];
-end;
-
-// DataOfAddrAsInteger
-//
-function TScriptObj.DataOfAddrAsInteger(addr : Integer) : Int64;
-begin
-   Result:=FData[addr];
-end;
-
-// DataOfAddrAsScriptObj
-//
-procedure TScriptObj.DataOfAddrAsScriptObj(addr : Integer; var scriptObj : IScriptObj);
-var
-   varData : PVarData;
-begin
-   varData:=@FData[addr];
-   if varData.VType=varUnknown then
-      scriptObj:=IScriptObj(IUnknown(varData.VUnknown))
-   else Assert(False);
-//   scriptObj:=IScriptObj(IUnknown(FData[addr]));
-end;
-
 // GetExternalObject
 //
 function TScriptObj.GetExternalObject: TObject;
@@ -6505,13 +6280,6 @@ begin
    Assert(False);
 end;
 
-// GetInternalObject
-//
-function TScriptObj.GetInternalObject: TObject;
-begin
-   Result:=Self;
-end;
-
 // ------------------
 // ------------------ TScriptObjInstance ------------------
 // ------------------
@@ -6520,27 +6288,24 @@ end;
 //
 constructor TScriptObjInstance.Create(aClassSym : TClassSymbol; executionContext : TdwsProgramExecution);
 var
-   i : Integer;
-   classSymIter : TCompositeTypeSymbol;
    externalClass : TClassSymbol;
-   member : TSymbol;
+   fieldIter : TFieldSymbol;
+   instanceData : PData;
 begin
    FClassSym:=aClassSym;
+   if aClassSym=nil then Exit;
 
    if executionContext<>nil then
       executionContext.ScriptObjCreated(Self);
 
-   SetLength(FData, aClassSym.ScriptInstanceSize);
+   SetDataLength(aClassSym.ScriptInstanceSize);
 
    // initialize fields
-   classSymIter:=aClassSym;
-   while classSymIter<>nil do begin
-      for i:=0 to classSymIter.Members.Count-1 do begin
-         member:=classSymIter.Members[i];
-         if member.ClassType=TFieldSymbol then
-            TFieldSymbol(member).InitData(FData, 0);
-      end;
-      classSymIter := classSymIter.Parent;
+   instanceData:=AsPData;
+   fieldIter:=aClassSym.FirstField;
+   while fieldIter<>nil do begin
+      fieldIter.InitData(instanceData^, 0);
+      fieldIter:=fieldIter.NextField;
    end;
 
    // initialize OnObjectDestroy
@@ -6563,18 +6328,44 @@ end;
 // BeforeDestruction
 //
 procedure TScriptObjInstance.BeforeDestruction;
+
+   procedure CallDestructor;
+   var
+      iso : IScriptObj;
+   begin
+      iso:=TScriptObjectWrapper.Create(Self);
+      ExecutionContext.DestroyScriptObj(iso);
+   end;
+
 var
-   iso : IScriptObj;
+   destroySym : TMethodSymbol;
 begin
    if Assigned(FExecutionContext) then begin
       // we are released, so never do: Self as IScriptObj
       if not FDestroyed then begin
-         iso:=TScriptObjectWrapper.Create(Self);
-         ExecutionContext.DestroyScriptObj(iso);
+         destroySym:=ExecutionContext.Prog.TypDefaultDestructor;
+         if destroySym=ClassSym.VMTMethod(destroySym.VMTIndex) then
+            Destroyed:=True
+         else CallDestructor;
       end;
       ExecutionContext.ScriptObjDestroyed(Self);
    end;
    inherited;
+end;
+
+// ToString
+//
+function TScriptObjInstance.ToString : String;
+begin
+   Result:=FClassSym.Name;
+end;
+
+// ClearData
+//
+procedure TScriptObjInstance.ClearData;
+begin
+   inherited;
+   FClassSym:=nil;
 end;
 
 // GetClassSym
@@ -6582,13 +6373,6 @@ end;
 function TScriptObjInstance.GetClassSym: TClassSymbol;
 begin
    Result:=FClassSym;
-end;
-
-// SetClassSym
-//
-procedure TScriptObjInstance.SetClassSym(clsSym : TClassSymbol);
-begin
-   FClassSym:=nil;
 end;
 
 // GetExternalObject
@@ -6635,32 +6419,49 @@ end;
 // ------------------ TScriptDynamicArray ------------------
 // ------------------
 
-// Create
+// CreateNew
 //
-constructor TScriptDynamicArray.Create(elemTyp : TTypeSymbol);
+class function TScriptDynamicArray.CreateNew(elemTyp : TTypeSymbol) : TScriptDynamicArray;
+var
+   size : Integer;
 begin
-   FElementTyp:=elemTyp;
-   FElementSize:=elemTyp.Size;
+   if elemTyp<>nil then
+      size:=elemTyp.Size
+   else size:=0;
+   if size=1 then
+      Result:=TScriptDynamicValueArray.Create
+   else Result:=TScriptDynamicDataArray.Create;
+   Result.FElementTyp:=elemTyp;
+   Result.FElementSize:=size;
 end;
 
-// SetLength
+// TScriptDynamicArray_InitData
 //
-procedure TScriptDynamicArray.SetLength(n : Integer);
+procedure TScriptDynamicArray_InitData(elemTyp : TTypeSymbol; var result : Variant);
+begin
+   result:=IScriptObj(TScriptDynamicArray.CreateNew(elemTyp));
+end;
+
+// SetArrayLength
+//
+procedure TScriptDynamicArray.SetArrayLength(n : Integer);
 var
    i : Integer;
+   p : PData;
 begin
-   System.SetLength(FData, n*ElementSize);
-   for i:=FLength to n-1 do
-      FElementTyp.InitData(FData, i*ElementSize);
-   FLength:=n;
+   SetDataLength(n*ElementSize);
+   p:=AsPData;
+   for i:=FArrayLength to n-1 do
+      FElementTyp.InitData(p^, i*ElementSize);
+   FArrayLength:=n;
 end;
 
-// SetData
+// ReplaceData
 //
-procedure TScriptDynamicArray.SetData(const data : TData);
+procedure TScriptDynamicArray.ReplaceData(const newData : TData);
 begin
-   FData:=data;
-   FLength:=System.Length(data) div ElementSize;
+   inherited;
+   FArrayLength:=System.Length(newData) div ElementSize;
 end;
 
 // Insert
@@ -6669,13 +6470,13 @@ procedure TScriptDynamicArray.Insert(index : Integer);
 var
    n : Integer;
 begin
-   Inc(FLength);
-   System.SetLength(FData, FLength*ElementSize);
-   n:=(FLength-index-1)*ElementSize*SizeOf(Variant);
+   Inc(FArrayLength);
+   SetDataLength(FArrayLength*ElementSize);
+   n:=(FArrayLength-index-1)*ElementSize*SizeOf(Variant);
    if n>0 then
-      Move(FData[index*ElementSize], FData[(index+1)*ElementSize], n);
-   FillChar(FData[index*ElementSize], ElementSize*SizeOf(Variant), 0);
-   FElementTyp.InitData(FData, index*ElementSize);
+      Move(AsData[index*ElementSize], AsData[(index+1)*ElementSize], n);
+   FillChar(AsData[index*ElementSize], ElementSize*SizeOf(Variant), 0);
+   FElementTyp.InitData(AsData, index*ElementSize);
 end;
 
 // Delete
@@ -6684,91 +6485,39 @@ procedure TScriptDynamicArray.Delete(index, count : Integer);
 var
    i, d : Integer;
 begin
-   Dec(FLength, count);
+   if count<=0 then Exit;
+   Dec(FArrayLength, count);
    index:=index*ElementSize;
    count:=count*ElementSize;
    for i:=index to index+count-1 do
-      VarClear(FData[i]);
-   d:=(FLength-1)*ElementSize+count-index;
+      VarClear(AsPVariant(i)^);
+   d:=(FArrayLength-1)*ElementSize+count-index;
    if d>0 then
-      System.Move(FData[index+count], FData[index], d*SizeOf(Variant));
-   System.FillChar(FData[FLength*ElementSize], count*SizeOf(Variant), 0);
-   System.SetLength(FData, FLength*ElementSize);
-end;
-
-// Swap
-//
-procedure TScriptDynamicArray.Swap(i1, i2 : Integer);
-var
-   elem1, elem2 : PVarData;
-   buf : TVarData;
-begin
-   elem1:=PVarData(@FData[i1*ElementSize]);
-   elem2:=PVarData(@FData[i2*ElementSize]);
-   buf:=elem1^;
-   elem1^:=elem2^;
-   elem2^:=buf;
+      System.Move(AsData[index+count], AsData[index], d*SizeOf(Variant));
+   System.FillChar(AsData[FArrayLength*ElementSize], count*SizeOf(Variant), 0);
+   SetDataLength(FArrayLength*ElementSize);
 end;
 
 // Reverse
 //
 procedure TScriptDynamicArray.Reverse;
 var
-   i : Integer;
+   t, b : Integer;
 begin
-   if Length>1 then begin
-      for i:=0 to (Length div 2)-1 do
-         Swap(i, Length-i-1);
+   t:=ArrayLength-1;
+   b:=0;
+   while t>b do begin
+      Swap(t, b);
+      Dec(t);
+      Inc(b);
    end;
-end;
-
-// QuickSort
-//
-procedure TScriptDynamicArray.QuickSort(lo, hi : Integer; const compareFunc : TScriptDynamicArrayCompareFunc);
-var
-   i, j, pivot : Integer;
-begin
-   repeat
-      i:=lo;
-      j:=hi;
-      pivot:=(lo+hi) shr 1;
-      repeat
-         while compareFunc(i, pivot)<0 do
-            Inc(i);
-         while compareFunc(i, pivot)>0 do
-            Dec(j);
-         if i<=j then begin
-            if i<>j then
-               Swap(i, j);
-            Inc(i);
-            Dec(j);
-         end;
-      until i>j;
-      if lo<j then
-         QuickSort(lo, j, compareFunc);
-      lo:=i;
-   until i>=hi;
-end;
-
-// CompareFunc
-//
-function TScriptDynamicArray.CompareFunc(idx1, idx2 : Integer) : Integer;
-begin
-   Result:=0;
-end;
-
-// Sort
-//
-procedure TScriptDynamicArray.Sort(exec : TdwsExecution; compareExpr : TTypedExpr);
-begin
-   QuickSort(0, FLength-1, CompareFunc);
 end;
 
 // Copy
 //
 procedure TScriptDynamicArray.Copy(src : TScriptDynamicArray; index, count : Integer);
 begin
-   RawCopy(src.FData, index*ElementSize, count*ElementSize);
+   RawCopy(src.AsData, index*ElementSize, count*ElementSize);
 end;
 
 // RawCopy
@@ -6777,10 +6526,10 @@ procedure TScriptDynamicArray.RawCopy(const src : TData; rawIndex, rawCount : In
 var
    i : Integer;
 begin
-   FLength:=rawCount div ElementSize;
-   System.SetLength(FData, rawCount);
+   FArrayLength:=rawCount div ElementSize;
+   SetDataLength(rawCount);
    for i:=rawIndex to rawIndex+rawCount-1 do
-      FData[i-rawIndex]:=src[i];
+      AsVariant[i-rawIndex]:=src[i];
 end;
 
 // Concat
@@ -6789,37 +6538,79 @@ procedure TScriptDynamicArray.Concat(src : TScriptDynamicArray);
 var
    n, nSrc : Integer;
 begin
-   if src.Length>0 then begin
-      n:=Length;
-      nSrc:=src.Length;
-      FLength:=n+nSrc;
-      System.SetLength(FData, FLength*ElementSize);
-      DWSCopyData(src.Data, 0, FData, n*ElementSize, nSrc*ElementSize);
+   if src.ArrayLength>0 then begin
+      n:=ArrayLength;
+      nSrc:=src.ArrayLength;
+      FArrayLength:=n+nSrc;
+      SetDataLength(FArrayLength*ElementSize);
+      DWSCopyData(src.AsData, 0, AsData, n*ElementSize, nSrc*ElementSize);
    end;
 end;
 
-// IndexOf
+// IndexOfData
 //
-function TScriptDynamicArray.IndexOf(const item : TData; addr, fromIndex : Integer) : Integer;
+function TScriptDynamicArray.IndexOfData(const item : IDataContext; fromIndex : Integer) : Integer;
 var
    i : Integer;
+   data : PData;
 begin
-   for i:=fromIndex to Length-1 do
-      if DWSSameData(FData, item, i*ElementSize, addr, ElementSize) then
+   data:=AsPData;
+   for i:=fromIndex to ArrayLength-1 do
+      if item.SameData(0, data^, i*ElementSize, ElementSize) then
          Exit(i);
    Result:=-1;
 end;
 
-// IndexOf
+// IndexOfValue
 //
-function TScriptDynamicArray.IndexOf(const item : Variant; fromIndex : Integer) : Integer;
+function TScriptDynamicArray.IndexOfValue(const item : Variant; fromIndex : Integer) : Integer;
 var
    i : Integer;
+   data : PData;
 begin
    Assert(ElementSize=1);
-   for i:=fromIndex to Length-1 do
-      if DWSSameVariant(FData[i], item) then
+   data:=AsPData;
+   for i:=fromIndex to ArrayLength-1 do
+      if DWSSameVariant(data^[i], item) then
          Exit(i);
+   Result:=-1;
+end;
+
+// IndexOfString
+//
+function TScriptDynamicArray.IndexOfString(const item : UnicodeString; fromIndex : Integer) : Integer;
+var
+   i : Integer;
+   varData : PVarData;
+begin
+   if fromIndex<ArrayLength then begin
+      varData:=@AsPData^[fromIndex];
+      for i:=fromIndex to ArrayLength-1 do begin
+         Assert(varData^.VType=varUString);
+         if UnicodeString(varData^.VString)=item then
+            Exit(i);
+         Inc(varData);
+      end;
+   end;
+   Result:=-1;
+end;
+
+// IndexOfInteger
+//
+function TScriptDynamicArray.IndexOfInteger(const item : Int64; fromIndex : Integer) : Integer;
+var
+   i : Integer;
+   varData : PVarData;
+begin
+   if fromIndex<ArrayLength then begin
+      varData:=@AsPData^[fromIndex];
+      for i:=fromIndex to ArrayLength-1 do begin
+         Assert(varData^.VType=varInt64);
+         if varData^.VInt64=item then
+            Exit(i);
+         Inc(varData);
+      end;
+   end;
    Result:=-1;
 end;
 
@@ -6833,17 +6624,127 @@ var
 begin
    itemFunc:=IFuncPointer(IUnknown(item));
    if itemFunc=nil then begin
-      for i:=fromIndex to Length-1 do begin
-         p:=@FData[i];
+      for i:=fromIndex to ArrayLength-1 do begin
+         p:=PVarData(AsPVariant(i));
          if (p.VType=varUnknown) and (p.VUnknown=nil) then
             Exit(i);
       end;
    end else begin
-      for i:=fromIndex to Length-1 do
-         if itemFunc.SameFunc(FData[i]) then
+      for i:=fromIndex to ArrayLength-1 do
+         if itemFunc.SameFunc(AsPVariant(i)^) then
             Exit(i);
    end;
    Result:=-1;
+end;
+
+// ToString
+//
+function TScriptDynamicArray.ToString : String;
+begin
+   Result:='array of '+FElementTyp.Name;
+end;
+
+// ToStringArray
+//
+function TScriptDynamicArray.ToStringArray : TStringDynArray;
+var
+   i : Integer;
+begin
+   Assert(FElementTyp.BaseType.ClassType=TBaseStringSymbol);
+
+   System.SetLength(Result, ArrayLength);
+   for i:=0 to ArrayLength-1 do
+      EvalAsString(i, Result[i]);
+end;
+
+// ------------------
+// ------------------ TScriptDynamicValueArray ------------------
+// ------------------
+
+// Swap
+//
+procedure TScriptDynamicValueArray.Swap(i1, i2 : Integer);
+var
+   elem1, elem2 : PVarData;
+   buf : TVarData;
+begin
+   elem1:=@DirectData[i1];
+   elem2:=@DirectData[i2];
+   buf.VType:=elem1^.VType;
+   buf.VInt64:=elem1^.VInt64;
+   elem1^.VType:=elem2^.VType;
+   elem1^.VInt64:=elem2^.VInt64;
+   elem2^.VType:=buf.VType;
+   elem2^.VInt64:=buf.VInt64;
+end;
+
+// CompareString
+//
+function TScriptDynamicValueArray.CompareString(i1, i2 : Integer) : Integer;
+var
+   p : PVarDataArray;
+   v1, v2 : PVarData;
+begin
+   p:=@DirectData[0];
+   v1:=@p[i1];
+   v2:=@p[i2];
+   Assert((v1.VType=varUString) and (v2.VType=varUString));
+   Result:=UnicodeCompareStr(UnicodeString(v1.VString), UnicodeString(v2.VString));
+end;
+
+// CompareInteger
+//
+function TScriptDynamicValueArray.CompareInteger(i1, i2 : Integer) : Integer;
+var
+   p : PVarDataArray;
+   v1, v2 : PVarData;
+begin
+   p:=@DirectData[0];
+   v1:=@p[i1];
+   v2:=@p[i2];
+   Assert((v1.VType=varInt64) and (v2.VType=varInt64));
+   if v1.VInt64<v2.VInt64 then
+      Result:=-1
+   else Result:=Ord(v1.VInt64>v2.VInt64);
+end;
+
+// CompareFloat
+//
+function TScriptDynamicValueArray.CompareFloat(i1, i2 : Integer) : Integer;
+var
+   p : PVarDataArray;
+   v1, v2 : PVarData;
+begin
+   p:=@DirectData[0];
+   v1:=@p[i1];
+   v2:=@p[i2];
+   Assert((v1.VType=varDouble) and (v2.VType=varDouble));
+   if v1.VDouble<v2.VDouble then
+      Result:=-1
+   else Result:=Ord(v1.VDouble>v2.VDouble);
+end;
+
+// ------------------
+// ------------------ TScriptDynamicDataArray ------------------
+// ------------------
+
+// Swap
+//
+procedure TScriptDynamicDataArray.Swap(i1, i2 : Integer);
+var
+   i : Integer;
+   elem1, elem2 : PVarData;
+   buf : TVarData;
+begin
+   elem1:=@DirectData[i1*ElementSize];
+   elem2:=@DirectData[i2*ElementSize];
+   for i:=1 to ElementSize do begin
+      buf:=elem1^;
+      elem1^:=elem2^;
+      elem2^:=buf;
+      Inc(elem1);
+      Inc(elem2);
+   end;
 end;
 
 // ------------------
@@ -6871,337 +6772,15 @@ end;
 procedure TScriptInterface.BeforeDestruction;
 begin
    if Assigned(FExecutionContext) then
-      ExecutionContext.ScriptObjDestroyed(Self);
+      FExecutionContext.ScriptObjDestroyed(Self);
    inherited;
 end;
 
-{ TConnectorExpr }
-
-constructor TConnectorCallExpr.Create(Prog: TdwsProgram; const Pos: TScriptPos;
-  const Name: String; BaseExpr: TTypedExpr; IsWrite: Boolean; IsIndex: Boolean);
-begin
-  inherited Create(Prog, Pos, nil);
-  FName := Name;
-  FBaseExpr := BaseExpr;
-  FIsInstruction := IsWrite;
-  FIsWritable := IsWrite;
-  FIsIndex := IsIndex;
-end;
-
-destructor TConnectorCallExpr.Destroy;
-begin
-  FBaseExpr.Free;
-  FArgs.Clean;
-  inherited;
-end;
-
-// AddArg
+// ToString
 //
-procedure TConnectorCallExpr.AddArg(expr : TTypedExpr);
+function TScriptInterface.ToString : String;
 begin
-   FArgs.Add(expr);
-end;
-
-// AssignConnectorSym
-//
-function TConnectorCallExpr.AssignConnectorSym(prog : TdwsProgram; const connectorType : IConnectorType): Boolean;
-var
-   i : Integer;
-   typSym, paramTyp : TTypeSymbol;
-   arg : TTypedExpr;
-begin
-  // Prepare the parameter information array to query the connector symbol
-   if FArgs.Count>64 then
-      prog.CompileMsgs.AddCompilerErrorFmt(Pos, CPE_ConnectorTooManyArguments, [FArgs.Count]);
-
-   SetLength(FConnectorParams, FArgs.Count);
-   for i:=0 to FArgs.Count-1 do begin
-      arg:=TTypedExpr(FArgs.List[i]);
-      FConnectorParams[i].IsVarParam:=(arg is TDataExpr) and TDataExpr(arg).IsWritable
-                                      and not (arg.Typ is TArraySymbol);
-      FConnectorParams[i].TypSym:=arg.Typ;
-   end;
-
-   if not connectorType.AcceptsParams(FConnectorParams) then begin
-      if FName<>'' then begin
-         prog.CompileMsgs.AddCompilerErrorFmt(Pos, CPE_MethodConnectorParams,
-                                              [FName, connectorType.ConnectorCaption])
-      end else begin
-         prog.CompileMsgs.AddCompilerErrorFmt(Pos, CPE_ConnectorParams,
-                                              [connectorType.ConnectorCaption]);
-      end;
-   end;
-
-   // Ask the connector symbol if such a method exists
-   if FIsIndex then
-      FConnectorCall := ConnectorType.HasIndex(FName, FConnectorParams, typSym, FIsWritable)
-   else begin
-      FIsWritable := False;
-      FConnectorCall := ConnectorType.HasMethod(FName, FConnectorParams, typSym);
-   end;
-
-   Result := Assigned(FConnectorCall);
-   if Result then begin
-      // Prepare the arguments for the method call
-      SetLength(FConnectorArgs, FArgs.Count);
-      for i:=0 to FArgs.Count-1 do begin
-         paramTyp:=FConnectorParams[i].TypSym;
-         if paramTyp<>nil then
-            SetLength(FConnectorArgs[i], paramTyp.Size);
-      end;
-      FTyp:=typSym;
-   end else begin
-      prog.CompileMsgs.AddCompilerErrorFmt(Pos, CPE_ConnectorCall,
-                                           [FName, connectorType.ConnectorCaption])
-   end;
-end;
-
-// Eval
-//
-function TConnectorCallExpr.Eval(exec : TdwsExecution): Variant;
-var
-   dataSource, dataDest : TData;
-   addrSource : Integer;
-   x : Integer;
-   arg : TTypedExpr;
-   argTyp : TTypeSymbol;
-   buf : Variant;
-   obj : IScriptObj;
-begin
-   if exec.IsDebugging then
-      exec.Debugger.EnterFunc(exec, Self);
-
-   // Call function
-   try
-      dataSource := nil;
-      dataDest := nil;
-
-      for x := 0 to Length(FConnectorArgs) - 1 do begin
-         arg:=TTypedExpr(FArgs.List[x]);
-         argTyp:=FConnectorParams[x].TypSym;
-         if argTyp.Size = 1 then begin
-            if argTyp is TDynamicArraySymbol then begin
-               arg.EvalAsScriptObj(exec, obj);
-               FConnectorArgs[x][0]:=VarArrayOf(TScriptDynamicArray(obj.InternalObject).Data);
-            end else arg.EvalAsVariant(exec, FConnectorArgs[x][0]);
-         end else begin
-            dataSource := TDataExpr(arg).Data[exec];
-            addrSource := TDataExpr(arg).Addr[exec];
-            dataDest := FConnectorArgs[x];
-            DWSCopyData(dataSource, addrSource, dataDest, 0, argTyp.Size);
-         end;
-      end;
-
-      try
-         // The call itself
-         if FConnectorCall.NeedDirectReference then
-            FResultData := FConnectorCall.Call(TDataExpr(FBaseExpr).Data[exec][TDataExpr(FBaseExpr).Addr[exec]], FConnectorArgs)
-         else begin
-            FBaseExpr.EvalAsVariant(exec, buf);
-            FResultData := FConnectorCall.Call(buf, FConnectorArgs);
-         end;
-      except
-         on e: EScriptException do
-            raise;
-         on e: Exception do begin
-            exec.SetScriptError(Self);
-            raise;
-         end;
-      end;
-
-      for x := 0 to Length(FConnectorArgs) - 1 do
-         if FConnectorParams[x].IsVarParam then
-            TDataExpr(FArgs.List[x]).AssignData(exec, FConnectorArgs[x], 0);
-
-   finally
-      if exec.IsDebugging then
-         exec.Debugger.LeaveFunc(exec, Self);
-   end;
-
-   if Assigned(FResultData) then
-      Result := FResultData[0]
-   else
-      VarClear(Result);
-end;
-
-function TConnectorCallExpr.GetData(exec : TdwsExecution) : TData;
-begin
-  Eval(exec);
-  Result := FResultData;
-end;
-
-// GetSubExpr
-//
-function TConnectorCallExpr.GetSubExpr(i : Integer) : TExprBase;
-begin
-   if i=0 then
-      Result:=BaseExpr
-   else Result:=TExprBase(FArgs.List[i-1]);
-end;
-
-// IsWritable
-//
-function TConnectorCallExpr.IsWritable : Boolean;
-begin
-   Result:=FIsWritable;
-end;
-
-// GetSubExprCount
-//
-function TConnectorCallExpr.GetSubExprCount : Integer;
-begin
-   Result:=FArgs.Count+1;
-end;
-
-{ TConnectorReadExpr }
-
-function TConnectorReadExpr.AssignConnectorSym(
-  ConnectorType: IConnectorType): Boolean;
-begin
-  FConnectorMember := ConnectorType.HasMember(FName, FTyp,False);
-  Result := Assigned(FConnectorMember);
-end;
-
-constructor TConnectorReadExpr.Create(Prog: TdwsProgram; const Pos: TScriptPos;
-  const Name: String; BaseExpr: TTypedExpr);
-begin
-  inherited Create(Prog, Pos, nil);
-  FName := Name;
-  FBaseExpr := BaseExpr;
-end;
-
-destructor TConnectorReadExpr.Destroy;
-begin
-  FBaseExpr.Free;
-  inherited;
-end;
-
-function TConnectorReadExpr.Eval(exec : TdwsExecution): Variant;
-begin
-   try
-      FBaseExpr.EvalAsVariant(exec, Result);
-      FResultData := FConnectorMember.Read(Result);
-      Result := FResultData[0];
-   except
-      exec.SetScriptError(Self);
-      raise;
-   end;
-end;
-
-function TConnectorReadExpr.GetData(exec : TdwsExecution) : TData;
-begin
-  Eval(exec);
-  Result := FResultData;
-end;
-
-// GetSubExpr
-//
-function TConnectorReadExpr.GetSubExpr(i : Integer) : TExprBase;
-begin
-   Result:=FBaseExpr
-end;
-
-// GetSubExprCount
-//
-function TConnectorReadExpr.GetSubExprCount : Integer;
-begin
-   Result:=1;
-end;
-
-// ------------------
-// ------------------ TConnectorWriteExpr ------------------
-// ------------------
-
-constructor TConnectorWriteExpr.Create(prog : TdwsProgram; const scriptPos: TScriptPos;
-  const Name: String; BaseExpr, ValueExpr: TTypedExpr);
-begin
-   inherited Create;
-   FScriptPos:=scriptPos;
-   FName:=Name;
-   FBaseExpr:=BaseExpr;
-   FValueExpr:=ValueExpr;
-end;
-
-// Destroy
-//
-destructor TConnectorWriteExpr.Destroy;
-begin
-   FBaseExpr.Free;
-   FValueExpr.Free;
-   inherited;
-end;
-
-// ScriptPos
-//
-function TConnectorWriteExpr.ScriptPos : TScriptPos;
-begin
-   Result:=FScriptPos;
-end;
-
-// AssignConnectorSym
-//
-function TConnectorWriteExpr.AssignConnectorSym(prog : TdwsProgram; const connectorType : IConnectorType) : Boolean;
-var
-   memberTyp : TTypeSymbol;
-begin
-   FConnectorMember := ConnectorType.HasMember(FName, memberTyp, True);
-   Result := Assigned(FConnectorMember);
-   if Result and not (Assigned(memberTyp) and Assigned(FValueExpr.Typ) and memberTyp.IsCompatible(FValueExpr.Typ)) then
-      Prog.CompileMsgs.AddCompilerError(FScriptPos, CPE_ConnectorTypeMismatch);
-end;
-
-// Eval
-//
-function TConnectorWriteExpr.Eval(exec : TdwsExecution) : Variant;
-begin
-   EvalNoResult(exec);
-end;
-
-// EvalNoResult
-//
-procedure TConnectorWriteExpr.EvalNoResult(exec : TdwsExecution);
-var
-   dat : TData;
-   tmp : Variant;
-   base : PVariant;
-begin
-   if (FBaseExpr is TVarExpr) or (FBaseExpr.Typ.Size>1) then
-      base:=@TDataExpr(FBaseExpr).Data[exec][TDataExpr(FBaseExpr).Addr[exec]]
-   else begin
-      FBaseExpr.EvalAsVariant(exec, tmp);
-      base:=@tmp;
-   end;
-
-//  if FValueExpr is TDataExpr then
-//    dat := TDataExpr(FValueExpr).GetData(exec)
-//  else
-//  begin
-    SetLength(dat, 1);
-    FValueExpr.EvalAsVariant(exec, dat[0]);
-//  end;
-
-   try
-      FConnectorMember.Write(base^, dat);
-   except
-      exec.SetScriptError(Self);
-      raise;
-   end;
-end;
-
-// GetSubExpr
-//
-function TConnectorWriteExpr.GetSubExpr(i : Integer) : TExprBase;
-begin
-   if i=0 then
-      Result:=FBaseExpr
-   else Result:=FValueExpr;
-end;
-
-// GetSubExprCount
-//
-function TConnectorWriteExpr.GetSubExprCount : Integer;
-begin
-   Result:=2;
+   Result:=FTyp.ClassName;
 end;
 
 // ------------------
@@ -7248,7 +6827,7 @@ end;
 
 // FindSymbolAtPosition
 //
-function TdwsSymbolDictionary.FindSymbolAtPosition(aCol, aLine : Integer; const sourceFile : String) : TSymbol;
+function TdwsSymbolDictionary.FindSymbolAtPosition(aCol, aLine : Integer; const sourceFile : UnicodeString) : TSymbol;
 var
    i : Integer;
 begin
@@ -7287,7 +6866,7 @@ end;
 
 // FindSymbolPosList
 //
-function TdwsSymbolDictionary.FindSymbolPosList(const symName : String) : TSymbolPositionList;
+function TdwsSymbolDictionary.FindSymbolPosList(const symName : UnicodeString) : TSymbolPositionList;
 var
    i : Integer;
 begin
@@ -7307,7 +6886,7 @@ var
    symList : TSymbolPositionList;
 begin
    // TFuncSymbol - remove params
-   if sym is TFuncSymbol then begin
+   if sym.IsFuncSymbol then begin
       for i := 0 to TFuncSymbol(sym).Params.Count - 1 do
          Remove(TFuncSymbol(sym).Params[i]);
    // TPropertySymbol - remove array indices
@@ -7326,6 +6905,7 @@ begin
       // remove symList from internal list
       idx:=FSymbolList.Extract(symList);
       Assert(idx>=0);
+      SuppressH2077ValueAssignedToVariableNeverUsed(idx);
       symList.Free;
    end;
 end;
@@ -7335,11 +6915,15 @@ end;
 procedure TdwsSymbolDictionary.RemoveInRange(const startPos, endPos : TScriptPos);
 var
    i : Integer;
+   symPosList : TSymbolPositionList;
 begin
    if startPos.SourceFile<>endPos.SourceFile then Exit;
 
-   for i:=0 to FSymbolList.Count-1 do
-      FSymbolList[i].RemoveInRange(startPos, endPos);
+   for i:=0 to FSymbolList.Count-1 do begin
+      symPosList:=FSymbolList[i];
+      if symPosList.FSourceFile=startPos.SourceFile then
+         FSymbolList[i].RemoveInRange(startPos, endPos);
+   end;
 end;
 
 // EnumerateInRange
@@ -7418,7 +7002,7 @@ begin
    else Result:=nil;
 end;
 
-function TdwsSymbolDictionary.FindSymbolUsage(const SymName: String;
+function TdwsSymbolDictionary.FindSymbolUsage(const SymName: UnicodeString;
   SymbolUse: TSymbolUsage): TSymbolPosition;
 var
   list: TSymbolPositionList;
@@ -7429,7 +7013,7 @@ begin
     Result := list.FindUsage(SymbolUse);
 end;
 
-function TdwsSymbolDictionary.FindSymbolUsageOfType(const SymName: String;
+function TdwsSymbolDictionary.FindSymbolUsageOfType(const SymName: UnicodeString;
   SymbolType: TSymbolClass; SymbolUse: TSymbolUsage): TSymbolPosition;
 var
   list: TSymbolPositionList;
@@ -7462,7 +7046,7 @@ begin
    Result:=nil;
 end;
 
-function TdwsSymbolDictionary.FindSymbolPosListOfType(const SymName: String;
+function TdwsSymbolDictionary.FindSymbolPosListOfType(const SymName: UnicodeString;
   SymbolType: TSymbolClass): TSymbolPositionList;
 var
   x: Integer;
@@ -7505,6 +7089,11 @@ var
 begin
    if (scriptPos.Line<=0) or (scriptPos.SourceFile=nil) then Exit;
 
+   if FPosList.Count=0 then
+      FSourceFile:=scriptPos.SourceFile
+   else if FSourceFile<>scriptPos.SourceFile then
+      FSourceFile:=nil;
+
    New(symPos);
    symPos.FScriptPos:=scriptPos;
    symPos.FSymUsages:=useTypes;
@@ -7532,7 +7121,7 @@ end;
 
 // FindSymbolAtPosition
 //
-function TSymbolPositionList.FindSymbolAtPosition(aCol, aLine : Integer; const sourceFile : String): TSymbol;
+function TSymbolPositionList.FindSymbolAtPosition(aCol, aLine : Integer; const sourceFile : UnicodeString): TSymbol;
 var
    i : Integer;
    symPos : TSymbolPosition;
@@ -7571,7 +7160,22 @@ begin
    if Self<>nil then begin
       for i:=0 to Count-1 do begin
          Result:=FPosList[i];
-         if SymbolUse in Result.SymbolUsages then Exit;
+         if symbolUse in Result.SymbolUsages then Exit;
+      end;
+   end;
+   Result:=nil;
+end;
+
+// FindAnyUsage
+//
+function TSymbolPositionList.FindAnyUsage(const symbolUses : TSymbolUsages) : TSymbolPosition;
+var
+   i : Integer;
+begin
+   if Self<>nil then begin
+      for i:=0 to Count-1 do begin
+         Result:=FPosList[i];
+         if (symbolUses*Result.SymbolUsages)<>[] then Exit;
       end;
    end;
    Result:=nil;
@@ -7735,7 +7339,14 @@ end;
 
 // IsPositionInContext
 //
-function TdwsSourceContext.IsPositionInContext(aCol, aLine : Integer; const sourceName : String) : Boolean;
+function TdwsSourceContext.IsPositionInContext(const aPos : TScriptPos) : Boolean;
+begin
+   Result := IsPositionInContext(aPos.Col, aPos.Line, aPos.SourceFile.Name);
+end;
+
+// IsPositionInContext
+//
+function TdwsSourceContext.IsPositionInContext(aCol, aLine : Integer; const sourceName : UnicodeString) : Boolean;
 begin
    // check if the position is in the same SourceFile
    if sourceName<>'' then begin // if empty, don't check it
@@ -7843,7 +7454,7 @@ end;
 
 // FindContext
 //
-function TdwsSourceContextMap.FindContext(aCol, aLine : Integer; const sourceName : String) : TdwsSourceContext;
+function TdwsSourceContextMap.FindContext(aCol, aLine : Integer; const sourceName : UnicodeString) : TdwsSourceContext;
 var
    returnContext : TdwsSourceContext;    // Gets set to the context found
    hitEnd : Boolean;            // Followed branch to end, stop searching
@@ -7965,7 +7576,7 @@ end;
 // ------------------ TScriptSourceItem ------------------
 // ------------------
 
-constructor TScriptSourceItem.Create(const ANameReference: String; ASourceFile: TSourceFile;
+constructor TScriptSourceItem.Create(const ANameReference: UnicodeString; ASourceFile: TSourceFile;
   ASourceType: TScriptSourceType);
 begin
    FNameReference := ANameReference;
@@ -8004,7 +7615,7 @@ end;
 
 // Add
 //
-function TScriptSourceList.Add(const nameReference, code: String;
+function TScriptSourceList.Add(const nameReference, code: UnicodeString;
    sourceType: TScriptSourceType) : TSourceFile;
 var
    srcItem : TScriptSourceItem;
@@ -8041,7 +7652,7 @@ end;
 
 // FindScriptSourceItem
 //
-function TScriptSourceList.FindScriptSourceItem(const sourceFileName: String): TScriptSourceItem;
+function TScriptSourceList.FindScriptSourceItem(const sourceFileName: UnicodeString): TScriptSourceItem;
 var
    x : Integer;
 begin
@@ -8051,7 +7662,7 @@ begin
    else Result:=nil;
 end;
 
-function TScriptSourceList.IndexOf(const SourceFileName: String): Integer;
+function TScriptSourceList.IndexOf(const SourceFileName: UnicodeString): Integer;
 var
    x: Integer;
 begin
@@ -8065,76 +7676,19 @@ end;
 // ------------------ TMethodObjExpr ------------------
 // ------------------
 
-constructor TMethodObjExpr.Create(Prog: TdwsProgram; const Pos: TScriptPos;
-  BaseExpr: TDataExpr);
+constructor TMethodObjExpr.Create(Prog: TdwsProgram; const aScriptPos: TScriptPos;
+                                  BaseExpr: TDataExpr);
 begin
-  Assert(BaseExpr.Typ is TMethodSymbol);
-  inherited Create(Prog,Pos,TMethodSymbol(BaseExpr.Typ).StructSymbol);
-  FBaseExpr := BaseExpr;
+   Assert(BaseExpr.Typ is TMethodSymbol);
+   inherited Create(Prog, aScriptPos, TMethodSymbol(BaseExpr.Typ).StructSymbol);
+   FBaseExpr := BaseExpr;
 end;
 
-function TMethodObjExpr.GetAddr(exec : TdwsExecution) : Integer;
-begin
-  Result := FBaseExpr.Addr[exec] + 1;
-end;
-
-function TMethodObjExpr.GetData(exec : TdwsExecution) : TData;
-begin
-  Result := FBaseExpr.Data[exec];
-end;
-
-// ------------------
-// ------------------ TConstructorStaticObjExpr ------------------
-// ------------------
-
-constructor TConstructorStaticObjExpr.Create(Prog: TdwsProgram;
-  const Pos: TScriptPos; Func: TMethodSymbol; BaseExpr: TTypedExpr);
-begin
-  inherited Create(Prog,Pos,Func,BaseExpr);
-  Typ := BaseExpr.Typ;
-end;
-
-function TConstructorStaticObjExpr.PostCall(exec : TdwsExecution) : Variant;
-begin
-   Result := exec.SelfScriptObject^;
-end;
-
-// ------------------
-// ------------------ TConstructorVirtualObjExpr ------------------
-// ------------------
-
-constructor TConstructorVirtualObjExpr.Create(Prog: TdwsProgram;
-  const Pos: TScriptPos; Func: TMethodSymbol; Base: TTypedExpr);
-begin
-  inherited Create(Prog,Pos,Func,Base);
-  Typ := Base.Typ;
-end;
-
-function TConstructorVirtualObjExpr.PostCall(exec : TdwsExecution): Variant;
-begin
-   Result := exec.SelfScriptObject^;
-end;
-
-// ------------------
-// ------------------ TDestructorStaticExpr ------------------
-// ------------------
-
-// PostCall
+// GetDataPtr
 //
-function TDestructorStaticExpr.PostCall(exec : TdwsExecution) : Variant;
+procedure TMethodObjExpr.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
 begin
-   exec.SelfScriptObject^.Destroyed:=True;
-end;
-
-// ------------------
-// ------------------ TDestructorVirtualExpr ------------------
-// ------------------
-
-// PostCall
-//
-function TDestructorVirtualExpr.PostCall(exec : TdwsExecution) : Variant;
-begin
-   exec.SelfScriptObject^.Destroyed:=True;
+   FBaseExpr.DataPtr[exec].CreateOffset(1, result);
 end;
 
 // ------------------
@@ -8143,9 +7697,9 @@ end;
 
 // Create
 //
-constructor TNoResultWrapperExpr.Create(Prog: TdwsProgram; const Pos: TScriptPos; Expr: TTypedExpr);
+constructor TNoResultWrapperExpr.Create(Prog: TdwsProgram; const aScriptPos: TScriptPos; Expr: TTypedExpr);
 begin
-   inherited Create;
+   inherited Create(aScriptPos);
    FExpr := Expr;
 end;
 
@@ -8164,9 +7718,9 @@ begin
    Expr.EvalNoResult(exec);
 end;
 
-// IsConstant
+// GetIsConstant
 //
-function TNoResultWrapperExpr.IsConstant : Boolean;
+function TNoResultWrapperExpr.GetIsConstant : Boolean;
 begin
    Result:=FExpr.IsConstant;
 end;
@@ -8198,10 +7752,10 @@ end;
 
 // Create
 //
-constructor TSourceCondition.Create(const pos : TScriptPos; aTest, aMsg : TTypedExpr);
+constructor TSourceCondition.Create(const aScriptPos: TScriptPos; aTest, aMsg : TTypedExpr);
 begin
    inherited Create;
-   FPos:=pos;
+   FScriptPos:=aScriptPos;
    FTest:=aTest;
    FMsg:=aMsg;
 end;
@@ -8217,9 +7771,8 @@ end;
 
 // InitSymbol
 //
-procedure TSourceCondition.InitSymbol(symbol: TSymbol);
+procedure TSourceCondition.InitSymbol(symbol: TSymbol; const msgs : TdwsCompileMessageList);
 begin
-
 end;
 
 // InitExpression
@@ -8227,6 +7780,22 @@ end;
 procedure TSourceCondition.InitExpression(Expr: TExprBase);
 begin
    // nothing
+end;
+
+// SubExpr
+//
+function TSourceCondition.SubExpr(i : Integer) : TExprBase;
+begin
+   if i=0 then
+      Result:=FTest
+   else Result:=FMsg;
+end;
+
+// SubExprCount
+//
+function TSourceCondition.SubExprCount : Integer;
+begin
+   Result:=2;
 end;
 
 // EvalAsBoolean
@@ -8238,7 +7807,7 @@ end;
 
 // EvalAsString
 //
-procedure TSourceCondition.EvalAsString(exec : TdwsExecution; var Result : String);
+procedure TSourceCondition.EvalAsString(exec : TdwsExecution; var Result : UnicodeString);
 begin
    FMsg.EvalAsString(exec, Result);
 end;
@@ -8298,7 +7867,7 @@ var
 begin
    failed:=Test(exec);
    if failed<>nil then
-      RaiseConditionFailed(exec, FProg.FFunc, failed.Pos, failed);
+      RaiseConditionFailed(exec, FProg.FFunc, failed.ScriptPos, failed);
 end;
 
 // GetConditions
@@ -8317,10 +7886,10 @@ end;
 procedure TSourcePreConditions.RaiseConditionFailed(exec : TdwsExecution;
    funcSym : TFuncSymbol; const scriptPos : TScriptPos; const msg : IStringEvalable);
 var
-   msgStr : String;
+   msgStr : UnicodeString;
 begin
    msg.EvalAsString(exec, msgStr);
-   (exec as TdwsProgramExecution).RaiseAssertionFailedFmt(
+   (exec as TdwsProgramExecution).RaiseAssertionFailedFmt(nil,
       RTE_PreConditionFailed, [funcSym.QualifiedName, scriptPos.AsInfo, msgStr], scriptPos);
 end;
 
@@ -8333,10 +7902,10 @@ end;
 procedure TSourcePostConditions.RaiseConditionFailed(exec : TdwsExecution;
    funcSym : TFuncSymbol; const scriptPos : TScriptPos; const msg : IStringEvalable);
 var
-   msgStr : String;
+   msgStr : UnicodeString;
 begin
    msg.EvalAsString(exec, msgStr);
-   (exec as TdwsProgramExecution).RaiseAssertionFailedFmt(
+   (exec as TdwsProgramExecution).RaiseAssertionFailedFmt(nil,
       RTE_PostConditionFailed, [funcSym.QualifiedName, scriptPos.AsInfo, msgStr], scriptPos);
 end;
 
@@ -8407,7 +7976,7 @@ end;
 // Create
 //
 constructor EdwsVariantTypeCastError.Create(const v : Variant;
-      const desiredType : String; originalException : Exception);
+      const desiredType : UnicodeString; originalException : Exception);
 begin
    inherited CreateFmt(RTE_VariantCastFailed,
                        [VarTypeAsText(VarType(v)), desiredType, originalException.ClassName])
@@ -8420,7 +7989,7 @@ end;
 
 // InitSymbol
 //
-procedure TExternalFuncHandler.InitSymbol(symbol: TSymbol);
+procedure TExternalFuncHandler.InitSymbol(symbol: TSymbol; const msgs : TdwsCompileMessageList);
 begin
    // nothing
 end;
@@ -8443,19 +8012,18 @@ begin
                                            [func.Name, locArray[High(locArray)].Location]);
 end;
 
-// ------------------
-// ------------------ EScriptStopped ------------------
-// ------------------
-
-// DoRaise
+// SubExpr
 //
-class procedure EScriptStopped.DoRaise(exec : TdwsExecution; stoppedOn : TExprBase);
-var
-   e : EScriptStopped;
+function TExternalFuncHandler.SubExpr(i : Integer) : TExprBase;
 begin
-   e:=EScriptStopped.CreatePosFmt(stoppedOn.ScriptPos, RTE_ScriptStopped, []);
-   e.ScriptCallStack:=exec.GetCallStack;
-   raise e;
+   Result:=nil;
+end;
+
+// SubExprCount
+//
+function TExternalFuncHandler.SubExprCount : Integer;
+begin
+   Result:=0;
 end;
 
 // ------------------
@@ -8480,7 +8048,7 @@ begin
    Result:=nil;
    n:=FExpr.FArgs.Count;
    for i:=0 to FOverloads.Count-1 do begin
-      func:=FOverloads[i];
+      func := FOverloads.Items[i];
       if n<func.Params.Count then begin
          if Result=nil then
             Result:=(func.Params[n] as TParamSymbol)
@@ -8543,9 +8111,11 @@ initialization
 // ------------------------------------------------------------------
 
    TdwsGuardianThread.Initialize;
+   TDynamicArraySymbol.SetInitDynamicArrayProc(TScriptDynamicArray_InitData);
 
 finalization
 
    TdwsGuardianThread.Finalize;
+   TdwsGuardianThread.vExecutionsPool.FreeAll;
 
 end.

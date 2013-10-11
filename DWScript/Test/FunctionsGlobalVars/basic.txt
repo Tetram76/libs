@@ -1,9 +1,13 @@
 
 empty
+False
+def
+True
+hello
 hello
 world
 world!
-123,test
+test,123
 empty
 hello
 test

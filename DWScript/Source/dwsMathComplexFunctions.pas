@@ -20,18 +20,21 @@ unit dwsMathComplexFunctions;
 
 interface
 
-uses dwsFunctions, dwsSymbols, dwsExprs, dwsStrings, dwsOperators, dwsStack,
-   dwsTokenizer, SysUtils, dwsUtils, dwsMagicExprs, dwsUnitSymbols;
+uses
+   SysUtils,
+   dwsUtils, dwsXPlatform,
+   dwsFunctions, dwsSymbols, dwsExprs, dwsStrings, dwsOperators, dwsExprList,
+   dwsTokenizer,dwsMagicExprs, dwsUnitSymbols, dwsDataContext;
 
 type
    TComplexMakeExpr = class(TInternalMagicDataFunction)
       public
-         procedure DoEval(args : TExprBaseList; var result : TDataPtr); override;
+         procedure DoEval(const args : TExprBaseListExec; var result : IDataContext); override;
    end;
 
    TComplexToStrExpr = class(TInternalMagicStringFunction)
       public
-         procedure DoEvalAsString(args : TExprBaseList; var Result : String); override;
+         procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
    end;
 
    TAbsComplexExpr = class(TUnaryOpFloatExpr)
@@ -42,27 +45,27 @@ type
 
    TComplexNegOpExpr = class(TComplexOpExpr)
       public
-         procedure DoEval(args : TExprBaseList; var result : TDataPtr); override;
+         procedure DoEval(const args : TExprBaseListExec; var result : IDataContext); override;
    end;
 
    TComplexAddOpExpr = class(TComplexOpExpr)
       public
-         procedure DoEval(args : TExprBaseList; var result : TDataPtr); override;
+         procedure DoEval(const args : TExprBaseListExec; var result : IDataContext); override;
    end;
 
    TComplexSubOpExpr = class(TComplexOpExpr)
       public
-         procedure DoEval(args : TExprBaseList; var result : TDataPtr); override;
+         procedure DoEval(const args : TExprBaseListExec; var result : IDataContext); override;
    end;
 
    TComplexMultOpExpr = class(TComplexOpExpr)
       public
-         procedure DoEval(args : TExprBaseList; var result : TDataPtr); override;
+         procedure DoEval(const args : TExprBaseListExec; var result : IDataContext); override;
    end;
 
    TComplexDivOpExpr = class(TComplexOpExpr)
       public
-         procedure DoEval(args : TExprBaseList; var result : TDataPtr); override;
+         procedure DoEval(const args : TExprBaseListExec; var result : IDataContext); override;
    end;
 
 const
@@ -123,10 +126,10 @@ end;
 
 // DoEval
 //
-procedure TComplexMakeExpr.DoEval(args : TExprBaseList; var result : TDataPtr);
+procedure TComplexMakeExpr.DoEval(const args : TExprBaseListExec; var result : IDataContext);
 begin
-   result[0]:=args.AsFloat[0];
-   result[1]:=args.AsFloat[1];
+   result.AsFloat[0]:=args.AsFloat[0];
+   result.AsFloat[1]:=args.AsFloat[1];
 end;
 
 // ------------------
@@ -135,19 +138,19 @@ end;
 
 // DoEvalAsString
 //
-procedure TComplexToStrExpr.DoEvalAsString(args : TExprBaseList; var Result : String);
+procedure TComplexToStrExpr.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 var
-   cmplxData : TDataPtr;
+   cmplxData : IDataContext;
    r, i : Double;
 begin
    cmplxData:=TDataExpr(args.ExprBase[0]).DataPtr[args.Exec];
-   r:=cmplxData[0];
-   i:=cmplxData[1];
+   r:=cmplxData.AsFloat[0];
+   i:=cmplxData.AsFloat[1];
    if i>0 then
-      Result:=Format('%f + %fi', [r, i])
+      Result:=UnicodeFormat('%f + %fi', [r, i])
    else if i<0 then
-      Result:=Format('%f - %fi', [r, Abs(i)])
-   else Result:=Format('%f', [r]);
+      Result:=UnicodeFormat('%f - %fi', [r, Abs(i)])
+   else Result:=UnicodeFormat('%f', [r]);
 end;
 
 // ------------------
@@ -158,10 +161,10 @@ end;
 //
 function TAbsComplexExpr.EvalAsFloat(exec : TdwsExecution) : Double;
 var
-   cmplxData : TDataPtr;
+   cmplxData : IDataContext;
 begin
    cmplxData:=TDataExpr(Expr).DataPtr[exec];
-   Result:=Sqrt(Sqr(cmplxData[0])+Sqr(cmplxData[1]));
+   Result:=Sqrt(Sqr(cmplxData.AsFloat[0])+Sqr(cmplxData.AsFloat[1]));
 end;
 
 // ------------------
@@ -170,14 +173,14 @@ end;
 
 // DoEval
 //
-procedure TComplexNegOpExpr.DoEval(args : TExprBaseList; var result : TDataPtr);
+procedure TComplexNegOpExpr.DoEval(const args : TExprBaseListExec; var result : IDataContext);
 var
-   v : TDataPtr;
+   v : IDataContext;
 begin
    v:=TDataExpr(args.ExprBase[0]).DataPtr[args.Exec];
 
-   result[0]:=-v[0];
-   result[1]:=-v[1];
+   result.AsFloat[0]:=-v.AsFloat[0];
+   result.AsFloat[1]:=-v.AsFloat[1];
 end;
 
 // ------------------
@@ -186,9 +189,9 @@ end;
 
 // DoEval
 //
-procedure TComplexAddOpExpr.DoEval(args : TExprBaseList; var result : TDataPtr);
+procedure TComplexAddOpExpr.DoEval(const args : TExprBaseListExec; var result : IDataContext);
 var
-   leftData, rightData : TDataPtr;
+   leftData, rightData : IDataContext;
 begin
    leftData:=TDataExpr(args.ExprBase[0]).DataPtr[args.Exec];
    rightData:=TDataExpr(args.ExprBase[1]).DataPtr[args.Exec];
@@ -203,9 +206,9 @@ end;
 
 // DoEval
 //
-procedure TComplexSubOpExpr.DoEval(args : TExprBaseList; var result : TDataPtr);
+procedure TComplexSubOpExpr.DoEval(const args : TExprBaseListExec; var result : IDataContext);
 var
-   leftData, rightData : TDataPtr;
+   leftData, rightData : IDataContext;
 begin
    leftData:=TDataExpr(args.ExprBase[0]).DataPtr[args.Exec];
    rightData:=TDataExpr(args.ExprBase[1]).DataPtr[args.Exec];
@@ -220,9 +223,9 @@ end;
 
 // DoEval
 //
-procedure TComplexMultOpExpr.DoEval(args : TExprBaseList; var result : TDataPtr);
+procedure TComplexMultOpExpr.DoEval(const args : TExprBaseListExec; var result : IDataContext);
 var
-   leftData, rightData : TDataPtr;
+   leftData, rightData : IDataContext;
 begin
    leftData:=TDataExpr(args.ExprBase[0]).DataPtr[args.Exec];
    rightData:=TDataExpr(args.ExprBase[1]).DataPtr[args.Exec];
@@ -237,9 +240,9 @@ end;
 
 // DoEval
 //
-procedure TComplexDivOpExpr.DoEval(args : TExprBaseList; var result : TDataPtr);
+procedure TComplexDivOpExpr.DoEval(const args : TExprBaseListExec; var result : IDataContext);
 var
-   leftData, rightData : TDataPtr;
+   leftData, rightData : IDataContext;
    d : Double;
 begin
    leftData:=TDataExpr(args.ExprBase[0]).DataPtr[args.Exec];

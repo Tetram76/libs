@@ -2,27 +2,30 @@ unit UCornerCasesTests;
 
 interface
 
-uses Windows, Classes, SysUtils, dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs,
+uses
+   Windows, Classes, SysUtils,
+   dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsDataContext,
    dwsTokenizer, dwsXPlatform, dwsFileSystem, dwsErrors, dwsUtils, Variants,
-   dwsSymbols, dwsPascalTokenizer, dwsStrings, dwsStack, dwsJSON;
+   dwsSymbols, dwsPascalTokenizer, dwsStrings, dwsJSON;
 
 type
 
    TCornerCasesTests = class (TTestCase)
       private
          FCompiler : TDelphiWebScript;
+         FUnit : TdwsUnit;
          FLastResource : String;
 
       public
          procedure SetUp; override;
          procedure TearDown; override;
-         procedure DoOnInclude(const scriptName : String; var scriptSource : String);
-         procedure DoOnResource(compiler : TdwsCompiler; const resName : String);
+         procedure DoOnInclude(const scriptName : UnicodeString; var scriptSource : UnicodeString);
+         procedure DoOnResource(compiler : TdwsCompiler; const resName : UnicodeString);
+
+         procedure ReExec(info : TProgramInfo);
+         procedure HostExcept(info : TProgramInfo);
 
       published
-         procedure EmptyTokenBuffer;
-         procedure IgnoreDecimalSeparator;
-         procedure TokenizerSpecials;
          procedure TokenizerErrorTransition;
          procedure TimeOutTestFinite;
          procedure TimeOutTestInfinite;
@@ -30,6 +33,9 @@ type
          procedure IncludeViaEvent;
          procedure IncludeViaFile;
          procedure IncludeViaFileRestricted;
+         procedure IncludeCommentStart;
+         procedure IncludeStringStart;
+         procedure IncludeInSections;
          procedure StackMaxRecursion;
          procedure StackOverFlow;
          procedure StackOverFlowOnFuncPtr;
@@ -52,7 +58,26 @@ type
          procedure LongLineTest;
          procedure TryExceptLoop;
          procedure ExternalSubClass;
+         procedure DeprecatedTdwsUnit;
+         procedure OverloadForwardDictionary;
+         procedure OverloadMethodDictionary;
+         procedure ClassForwardDictionary;
+         procedure FilterTest;
+         procedure SubFilterTest;
+         procedure FilterNotDefined;
+         procedure ConfigNotifications;
+         procedure ConfigTimeout;
+         procedure CallUnitProcTest;
+         procedure NormalizeFloatArrayElements;
+         procedure MultiRunProtection;
+         procedure MultipleHostExceptions;
+         procedure OverloadOverrideIndwsUnit;
+         procedure PartialClassParent;
+         procedure ConstantAliasing;
+         procedure ExternalVariables;
    end;
+
+   ETestException = class (Exception);
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -66,15 +91,18 @@ type
    // TTokenBufferWrapper
    //
    TTokenBufferWrapper = class
-      Buffer : TTokenBuffer;
+      public
+         Buffer : TTokenBuffer;
    end;
 
-   TScriptThread = class (TThread)
-      FProg : IdwsProgram;
-      FTimeOut : Integer;
-      FTimeStamp : TDateTime;
-      constructor Create(const prog : IdwsProgram; timeOut : Integer);
-      procedure Execute; override;
+   TScriptThread = class (TdwsThread)
+      private
+         FProg : IdwsProgram;
+         FTimeOut : Integer;
+         FTimeStamp : TDateTime;
+      public
+         constructor Create(const prog : IdwsProgram; timeOut : Integer);
+         procedure Execute; override;
    end;
 
 // Create
@@ -94,6 +122,20 @@ begin
    FTimeStamp:=Now;
 end;
 
+type
+   TTestFilter = class(TdwsFilter)
+      constructor TestCreate(const s : String);
+   end;
+
+// TTestFilter
+//
+constructor TTestFilter.TestCreate(const s : String);
+begin
+   inherited Create(nil);
+   if s<>'' then
+      PrivateDependencies.Add(s);
+end;
+
 // ------------------
 // ------------------ TCornerCasesTests ------------------
 // ------------------
@@ -103,100 +145,20 @@ end;
 procedure TCornerCasesTests.SetUp;
 begin
    FCompiler:=TDelphiWebScript.Create(nil);
+
+   FUnit:=TdwsUnit.Create(nil);
+   FUnit.UnitName:='CornerCases';
+   FUnit.Functions.Add('ReExec').OnEval:=ReExec;
+   FUnit.Functions.Add('HostExcept').OnEval:=HostExcept;
+   FUnit.Script:=FCompiler;
 end;
 
 // TearDown
 //
 procedure TCornerCasesTests.TearDown;
 begin
+   FUnit.Free;
    FCompiler.Free;
-end;
-
-// EmptyTokenBuffer
-//
-procedure TCornerCasesTests.EmptyTokenBuffer;
-var
-   w : TTokenBufferWrapper;
-   s : String;
-begin
-   w:=TTokenBufferWrapper.Create;
-   try
-      CheckEquals('', w.Buffer.ToStr, 'ToStr function');
-      s:='dummy';
-      w.Buffer.ToStr(s);
-      CheckEquals('', s, 'ToStr procedure');
-      s:='dummy';
-      w.Buffer.ToUpperStr(s);
-      CheckEquals('', s, 'ToUpperStr');
-      CheckEquals(#0, w.Buffer.LastChar, 'LastChar');
-   finally
-      w.Free;
-   end;
-end;
-
-// IgnoreDecimalSeparator
-//
-procedure TCornerCasesTests.IgnoreDecimalSeparator;
-var
-   w : TTokenBufferWrapper;
-   dc : Char;
-begin
-   w:=TTokenBufferWrapper.Create;
-   dc:=GetDecimalSeparator;
-   try
-      w.Buffer.AppendChar('1');
-      w.Buffer.AppendChar('.');
-      w.Buffer.AppendChar('5');
-
-      SetDecimalSeparator('.');
-      CheckEquals(1.5, w.Buffer.ToFloat, 'With dot');
-      SetDecimalSeparator(',');
-      CheckEquals(1.5, w.Buffer.ToFloat, 'With comma');
-      SetDecimalSeparator('P');
-      CheckEquals(1.5, w.Buffer.ToFloat, 'With P');
-
-   finally
-      SetDecimalSeparator(dc);
-      w.Free;
-   end;
-end;
-
-// TokenizerSpecials
-//
-procedure TCornerCasesTests.TokenizerSpecials;
-var
-   rules : TPascalTokenizerStateRules;
-   t : TTokenizer;
-   msgs : TdwsCompileMessageList;
-   sourceFile : TSourceFile;
-begin
-   msgs:=TdwsCompileMessageList.Create;
-   sourceFile:=TSourceFile.Create;
-   sourceFile.Code:='@ @= %= ^ ^= $( ?';
-   rules:=TPascalTokenizerStateRules.Create;
-   t:=rules.CreateTokenizer(msgs);
-   try
-      t.BeginSourceFile(sourceFile);
-
-      CheckTrue(t.TestDelete(ttAT), '@');
-      CheckTrue(t.TestDelete(ttAT_ASSIGN), '@=');
-      CheckTrue(t.TestDelete(ttPERCENT_ASSIGN), '%=');
-      CheckTrue(t.TestDelete(ttCARET), '^');
-      CheckTrue(t.TestDelete(ttCARET_ASSIGN), '^=');
-      CheckTrue(t.TestDelete(ttDOLLAR), '$');
-      CheckTrue(t.TestDelete(ttBLEFT), '(');
-      CheckTrue(t.TestDelete(ttQUESTION), '?');
-
-      CheckTrue(t.TestAny([ttNAME])=ttNone, 'Any at end');
-      CheckTrue(t.TestDeleteAny([ttNAME])=ttNone, 'DeleteAny at end');
-
-      t.EndSourceFile;
-   finally
-      sourceFile.Free;
-      t.Free;
-      msgs.Free;
-      rules.Free;
-   end;
 end;
 
 // TokenizerErrorTransition
@@ -245,7 +207,7 @@ begin
    prog:=FCompiler.Compile('while true do;');
 
    for i:=1 to 3 do
-      threads[i]:=TScriptThread.Create(prog, i*80);
+      threads[i]:=TScriptThread.Create(prog, i*30);
    for i:=1 to 3 do
       threads[i].Start;
    while (threads[1].FTimeStamp=0) or (threads[2].FTimeStamp=0) or (threads[3].FTimeStamp=0) do
@@ -260,7 +222,7 @@ begin
    end;
 
    for i:=1 to 3 do
-      threads[i]:=TScriptThread.Create(prog, 250-i*80);
+      threads[i]:=TScriptThread.Create(prog, 100-i*30);
    for i:=1 to 3 do
       threads[i].Start;
    while (threads[1].FTimeStamp=0) or (threads[2].FTimeStamp=0) or (threads[3].FTimeStamp=0) do
@@ -277,19 +239,41 @@ end;
 
 // DoOnInclude
 //
-procedure TCornerCasesTests.DoOnInclude(const scriptName : String; var scriptSource : String);
+procedure TCornerCasesTests.DoOnInclude(const scriptName : UnicodeString; var scriptSource : UnicodeString);
 begin
-   CheckEquals('test.dummy', scriptName, 'DoOnInclude');
-   scriptSource:='Print(''hello'');';
+   if scriptName='comment.inc' then
+      scriptSource:='{'
+   else if scriptName='string.inc' then
+      scriptSource:='"he'
+   else if scriptName='define.test' then
+      scriptSource:='{$DEFINE TEST}'
+   else begin
+      CheckEquals('test.dummy', scriptName, 'DoOnInclude');
+      scriptSource:='Print(''hello'');';
+   end;
 end;
 
 // DoOnResource
 //
-procedure TCornerCasesTests.DoOnResource(compiler : TdwsCompiler; const resName : String);
+procedure TCornerCasesTests.DoOnResource(compiler : TdwsCompiler; const resName : UnicodeString);
 begin
    FLastResource:=resName;
    if resName='missing' then
       compiler.Msgs.AddCompilerError(compiler.Tokenizer.HotPos, 'Missing resource');
+end;
+
+// ReExec
+//
+procedure TCornerCasesTests.ReExec(info : TProgramInfo);
+begin
+   info.Execution.Execute;
+end;
+
+// HostExcept
+//
+procedure TCornerCasesTests.HostExcept(info : TProgramInfo);
+begin
+   raise ETestException.Create('boom');
 end;
 
 // IncludeViaEvent
@@ -309,7 +293,7 @@ begin
 
    prog:=FCompiler.Compile('{$include ''test.dummy''}');
 
-   CheckEquals('Compile Error: Couldn''t find file "test.dummy" on input paths [line: 1, column: 11]'#13#10,
+   CheckEquals('Compile Error: Could not find file "test.dummy" on input paths [line: 1, column: 11]'#13#10,
                prog.Msgs.AsInfo, 'include forbidden');
 
    FCompiler.OnInclude:=DoOnInclude;
@@ -361,7 +345,7 @@ begin
 
    FCompiler.Config.ScriptPaths.Clear;
    prog:=FCompiler.Compile('{$include ''test.dummy''}');
-   CheckEquals('Compile Error: Couldn''t find file "test.dummy" on input paths [line: 1, column: 11]'#13#10,
+   CheckEquals('Compile Error: Could not find file "test.dummy" on input paths [line: 1, column: 11]'#13#10,
                prog.Msgs.AsInfo, 'include via file no paths');
 
    FCompiler.Config.ScriptPaths.Add(tempDir);
@@ -405,41 +389,139 @@ var
    restricted : TdwsRestrictedFileSystem;
 begin
    restricted:=TdwsRestrictedFileSystem.Create(nil);
-   FCompiler.OnInclude:=nil;
-   FCompiler.Config.CompileFileSystem:=restricted;
-
-   tempDir:=GetTemporaryFilesPath;
-   tempFile:=tempDir+'test.dummy';
-
-   sl:=TStringList.Create;
    try
-      sl.Add('Print(''world'');');
-      sl.SaveToFile(tempFile);
+      FCompiler.OnInclude:=nil;
+      FCompiler.Config.CompileFileSystem:=restricted;
+
+      tempDir:=GetTemporaryFilesPath;
+      tempFile:=tempDir+'test.dummy';
+
+      sl:=TStringList.Create;
+      try
+         sl.Add('Print(''world'');');
+         sl.SaveToFile(tempFile);
+      finally
+         sl.Free;
+      end;
+
+      restricted.Paths.Text:=tempDir+'\nothing';
+      prog:=FCompiler.Compile('{$include ''test.dummy''}');
+      CheckEquals('Compile Error: Could not find file "test.dummy" on input paths [line: 1, column: 11]'#13#10,
+                  prog.Msgs.AsInfo, 'include via file missing paths');
+
+      restricted.Paths.Clear;
+
+      prog:=FCompiler.Compile('{$include ''test.dummy''}');
+      CheckEquals('Compile Error: Could not find file "test.dummy" on input paths [line: 1, column: 11]'#13#10,
+                  prog.Msgs.AsInfo, 'include via file restricted - no paths');
+
+      restricted.Paths.Text:=tempDir;
+
+      FCompiler.Config.ScriptPaths.Add('.');
+      prog:=FCompiler.Compile('{$include ''test.dummy''}');
+      CheckEquals('', prog.Msgs.AsInfo, 'include via file restricted - dot path');
+      exec:=prog.Execute;
+      CheckEquals('world', exec.Result.ToString, 'exec include via file');
+
+      DeleteFile(tempFile);
    finally
-      sl.Free;
+      restricted.Free;
    end;
 
-   restricted.Paths.Text:=tempDir+'\nothing';
-   prog:=FCompiler.Compile('{$include ''test.dummy''}');
-   CheckEquals('Compile Error: Couldn''t find file "test.dummy" on input paths [line: 1, column: 11]'#13#10,
-               prog.Msgs.AsInfo, 'include via file no paths');
-
-   restricted.Paths.Text:=tempDir;
-
-   prog:=FCompiler.Compile('{$include ''test.dummy''}');
-   CheckEquals('Compile Error: Couldn''t find file "test.dummy" on input paths [line: 1, column: 11]'#13#10,
-               prog.Msgs.AsInfo, 'include via file restricted - no paths');
-
-   FCompiler.Config.ScriptPaths.Add('.');
-   prog:=FCompiler.Compile('{$include ''test.dummy''}');
-   CheckEquals('', prog.Msgs.AsInfo, 'include via file restricted - dot path');
-   exec:=prog.Execute;
-   CheckEquals('world', exec.Result.ToString, 'exec include via file');
-
-   DeleteFile(tempFile);
-   restricted.Free;
-
    CheckTrue(FCompiler.Config.CompileFileSystem=nil, 'Notification release');
+end;
+
+// IncludeCommentStart
+//
+procedure TCornerCasesTests.IncludeCommentStart;
+var
+   prog : IdwsProgram;
+begin
+   FCompiler.OnInclude:=DoOnInclude;
+   prog:=FCompiler.Compile('{$include "comment.inc"}');
+
+   CheckEquals( 'Syntax Error: Unexpected end of file (unfinished comment) '
+               +'[line: 2, column: 1, file: comment.inc]'#13#10,
+               prog.Msgs.AsInfo);
+end;
+
+// IncludeStringStart
+//
+procedure TCornerCasesTests.IncludeStringStart;
+var
+   prog : IdwsProgram;
+begin
+   FCompiler.OnInclude:=DoOnInclude;
+   prog:=FCompiler.Compile('{$include "string.inc"}');
+
+   CheckEquals( 'Syntax Error: End of string constant not found (end of file) '
+               +'[line: 2, column: 1, file: string.inc]'#13#10,
+               prog.Msgs.AsInfo);
+end;
+
+// IncludeInSections
+//
+procedure TCornerCasesTests.IncludeInSections;
+const
+   cCode : String = 'unit Hello;'#13#10
+                   +'//1'#13#10
+                   +'interface'#13#10
+                   +'//2'#13#10
+                   +'{$ifdef TEST}procedure World;{$endif}'#13#10
+                   +'//3'#13#10
+                   +'implementation'#13#10
+                   +'//4'#13#10
+                   +'{$ifdef TEST}procedure World; begin end;{$endif}'#13#10
+                   +'//5'#13#10;
+var
+   prog : IdwsProgram;
+   opts : TCompilerOptions;
+   buf : String;
+begin
+   opts:=FCompiler.Config.CompilerOptions;
+   FCompiler.Config.CompilerOptions:=opts+[coSymbolDictionary];
+   FCompiler.OnInclude:=DoOnInclude;
+   try
+      prog:=FCompiler.Compile(cCode);
+      CheckEquals('', prog.Msgs.AsInfo, 'Compile default');
+      Check(prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration)=nil, 'Check default');
+
+      buf:=cCode;
+      FastStringReplace(buf, '//1', '{$include "define.test"}');
+      prog:=FCompiler.Compile(buf);
+      CheckEquals('', prog.Msgs.AsInfo, 'Compile 1');
+      Check(prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration)<>nil, 'Check 1');
+      CheckEquals(5, prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration).ScriptPos.Line, 'Line 1');
+
+      buf:=cCode;
+      FastStringReplace(buf, '//2', '{$include "define.test"}');
+      prog:=FCompiler.Compile(buf);
+      CheckEquals('', prog.Msgs.AsInfo, 'Compile 2');
+      Check(prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration)<>nil, 'Check 2');
+      CheckEquals(5, prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration).ScriptPos.Line, 'Line 2');
+
+      buf:=cCode;
+      FastStringReplace(buf, '//3', '{$include "define.test"}');
+      prog:=FCompiler.Compile(buf);
+      CheckEquals('', prog.Msgs.AsInfo, 'Compile 3');
+      Check(prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration)<>nil, 'Check 3');
+      CheckEquals(9, prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration).ScriptPos.Line, 'Line 3');
+
+      buf:=cCode;
+      FastStringReplace(buf, '//4', '{$include "define.test"}');
+      prog:=FCompiler.Compile(buf);
+      CheckEquals('', prog.Msgs.AsInfo, 'Compile 4');
+      Check(prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration)<>nil, 'Check 4');
+      CheckEquals(9, prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration).ScriptPos.Line, 'Line 4');
+
+      buf:=cCode;
+      FastStringReplace(buf, '//5', '{$include "define.test"}');
+      prog:=FCompiler.Compile(buf);
+      CheckEquals('', prog.Msgs.AsInfo, 'Compile 5');
+      Check(prog.SymbolDictionary.FindSymbolUsage('World', suDeclaration)=nil, 'Check 5');
+   finally
+      FCompiler.Config.CompilerOptions:=opts;
+   end;
 end;
 
 // StackMaxRecursion
@@ -454,7 +536,7 @@ begin
    prog:=FCompiler.Compile('procedure Dummy; begin Dummy; end; Dummy;');
    CheckEquals('', prog.Msgs.AsInfo, 'compile');
    exec:=prog.Execute;
-   CheckEquals('Runtime Error: Maximal recursion exceeded (5 calls) in Dummy [line: 1, column: 24]'#13#10
+   CheckEquals('Runtime Error: Maximal recursion exceeded (5 calls) [line: 1, column: 24]'#13#10
                +'Dummy [line: 1, column: 24]'#13#10
                +'Dummy [line: 1, column: 24]'#13#10
                +'Dummy [line: 1, column: 24]'#13#10
@@ -476,7 +558,7 @@ begin
    prog:=FCompiler.Compile('procedure Dummy; var i : Integer; begin Dummy; end; Dummy;');
    CheckEquals('', prog.Msgs.AsInfo, 'compile');
    exec:=prog.Execute;
-   CheckEquals('Runtime Error: Maximal data size exceeded (2 Variants) in Dummy [line: 1, column: 41]'#13#10
+   CheckEquals('Runtime Error: Maximal data size exceeded (2 Variants) [line: 1, column: 41]'#13#10
                +'Dummy [line: 1, column: 41]'#13#10
                +' [line: 1, column: 53]'#13#10,
                exec.Msgs.AsInfo, 'stack overflow');
@@ -558,20 +640,20 @@ var
 begin
    prog:=FCompiler.Compile('PrintLn(ParamCount);'
                            +'var i : Integer;'
+                           +'if ParamCount>0 then Print(Param(0));'
                            +'for i:=0 to ParamCount-1 do PrintLn(ParamStr(i));');
 
-   CheckEquals('1'#13#10'hello world'#13#10, prog.ExecuteParam('hello world').Result.ToString);
-   CheckEquals('2'#13#10'hello'#13#10'world'#13#10, prog.ExecuteParam(VarArrayOf(['hello','world'])).Result.ToString);
-
+   CheckEquals('1'#13#10'hello worldhello world'#13#10, prog.ExecuteParam('hello world').Result.ToString);
+   CheckEquals('2'#13#10'hellohello'#13#10'world'#13#10, prog.ExecuteParam(VarArrayOf(['hello','world'])).Result.ToString);
 
    SetLength(params, 0);
    CheckEquals('0'#13#10, prog.ExecuteParam(params).Result.ToString);
    SetLength(params, 1);
    params[0]:='hello';
-   CheckEquals('1'#13#10'hello'#13#10, prog.ExecuteParam(params).Result.ToString);
+   CheckEquals('1'#13#10'hellohello'#13#10, prog.ExecuteParam(params).Result.ToString);
    SetLength(params, 2);
    params[1]:=123;
-   CheckEquals('2'#13#10'hello'#13#10'123'#13#10, prog.ExecuteParam(params).Result.ToString);
+   CheckEquals('2'#13#10'hellohello'#13#10'123'#13#10, prog.ExecuteParam(params).Result.ToString);
 end;
 
 // CallFuncThatReturnsARecord
@@ -688,24 +770,24 @@ begin
                      +#9#9'TConstIntExpr'#13#10,
                MakeSubExprTree(testFuncSym.SubExpr[1]), 'Test Expr');
 
-   CheckEquals('TBlockInitExpr'#13#10,
-               MakeSubExprTree((prog as TdwsProgram).InitExpr), 'Main InitExpr');
+   CheckEquals('TBlockInitExpr'#13#10
+                  +#9'TInitDataExpr'#13#10
+                     +#9#9'TStrVarExpr'#13#10,
+               MakeSubExprTree((prog.GetSelf as TdwsProgram).InitExpr), 'Main InitExpr');
    CheckEquals('TBlockExprNoTable3'#13#10
                   +#9'TAssignConstToStringVarExpr'#13#10
                      +#9#9'TStrVarExpr'#13#10
                      +#9#9'nil'#13#10
-                  +#9'TNoResultWrapperExpr'#13#10
-                     +#9#9'TFuncExpr'#13#10
-                        +#9#9#9'TStrVarExpr'#13#10
+                  +#9'TMagicProcedureExpr'#13#10
+                     +#9#9'TStrVarExpr'#13#10
                   +#9'TIfThenExpr'#13#10
                      +#9#9'TRelNotEqualStringExpr'#13#10
                         +#9#9#9'TStrVarExpr'#13#10
                         +#9#9#9'TConstStringExpr'#13#10
-                     +#9#9'TNoResultWrapperExpr'#13#10
-                        +#9#9#9'TFuncExpr'#13#10
-                           +#9#9#9#9'TFuncExpr'#13#10
-                              +#9#9#9#9#9'TConstIntExpr'#13#10,
-               MakeSubExprTree((prog as TdwsProgram).Expr), 'Main Expr');
+                     +#9#9'TMagicProcedureExpr'#13#10
+                        +#9#9#9'TFuncSimpleExpr'#13#10
+                           +#9#9#9#9'TConstIntExpr'#13#10,
+               MakeSubExprTree((prog.GetSelf as TdwsProgram).Expr), 'Main Expr');
 end;
 
 // RecompileInContext
@@ -1035,9 +1117,10 @@ begin
    exec:=prog.CreateNewExecution;
    try
       exec.Execute;
-      CheckTrue(StrBeginsWith(exec.Msgs.AsInfo,
-         'Runtime Error: Maximal exception depth exceeded (11 nested exceptions) in Proc [line: 6, column: 3]'),
-         'exception depth');
+      CheckEquals('Runtime Error: Maximal exception depth exceeded (11 nested exceptions) [line: 4, column: 29]'#13#10
+                  +' [line: 9, column: 1]'#13#10,
+                  exec.Msgs.AsInfo,
+                  'exception depth');
    finally
       exec:=nil;
    end;
@@ -1066,6 +1149,465 @@ begin
    prog:=FCompiler.Compile( 'type TInt = class end;'#13#10
                            +'type TSub = class external (TInt) end;');
    CheckNotEquals(0, prog.Msgs.Count, prog.Msgs.AsInfo);
+end;
+
+// DeprecatedTdwsUnit
+//
+procedure TCornerCasesTests.DeprecatedTdwsUnit;
+var
+   un : TdwsUnit;
+   prog : IdwsProgram;
+   oldOptions : TCompilerOptions;
+begin
+   oldOptions:=FCompiler.Config.CompilerOptions;
+   un:=TdwsUnit.Create(nil);
+   try
+      un.UnitName:='Hello';
+      un.DeprecatedMessage:='world';
+
+      un.Script:=FCompiler;
+
+      FCompiler.Config.CompilerOptions:=oldOptions+[coExplicitUnitUses];
+      prog:=FCompiler.Compile('uses Hello;');
+
+      CheckEquals('Warning: "Hello" has been deprecated: world [line: 1, column: 6]'#13#10, prog.Msgs.AsInfo);
+
+      prog:=nil;
+   finally
+      FCompiler.Config.CompilerOptions:=oldOptions;
+      un.Free;
+   end;
+end;
+
+// OverloadForwardDictionary
+//
+procedure TCornerCasesTests.OverloadForwardDictionary;
+var
+   prog : IdwsProgram;
+   oldOptions : TCompilerOptions;
+   i : Integer;
+begin
+   oldOptions:=FCompiler.Config.CompilerOptions;
+
+   FCompiler.Config.CompilerOptions:=oldOptions+[coSymbolDictionary];
+
+   prog:=FCompiler.Compile(
+       'procedure Test(a1 : Integer); overload; forward;'#13#10
+      +'procedure Test(a2 : String); overload; forward;'#13#10
+      +'procedure Test(a3 : Boolean); overload; forward;'#13#10
+      +'procedure Test(a1 : Integer); begin end;'#13#10
+      +'procedure Test(a2 : String); begin end;'#13#10
+      +'procedure Test(a3 : Boolean); begin end;'#13#10
+      );
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compile A');
+   CheckEquals(6, prog.SymbolDictionary.Count, 'nb symbols A');
+   for i:=0 to prog.SymbolDictionary.Count-1 do
+      CheckEquals(2, prog.SymbolDictionary[i].Count,
+                   'A declared + reference for '+IntToStr(i)+' '
+                  +prog.SymbolDictionary[i].Symbol.Name);
+
+   prog:=nil;
+
+   prog:=FCompiler.Compile(
+       'procedure Test(a1, a2 : Integer); overload; forward;'#13#10
+      +'procedure Test(a2, a1 : String); overload; forward;'#13#10
+      +'procedure Test(a1, a2 : Integer); overload; begin end;'#13#10
+      +'procedure Test(a2, a1 : String); overload; begin end;'#13#10
+      );
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compile B');
+   CheckEquals(6, prog.SymbolDictionary.Count, 'nb symbols B');
+   for i:=0 to prog.SymbolDictionary.Count-1 do
+      CheckEquals(2, prog.SymbolDictionary[i].Count,
+                   'B declared + reference for '+IntToStr(i)+' '
+                  +prog.SymbolDictionary[i].Symbol.Name);
+
+
+   FCompiler.Config.CompilerOptions:=oldOptions;
+end;
+
+// OverloadMethodDictionary
+//
+procedure TCornerCasesTests.OverloadMethodDictionary;
+var
+   prog : IdwsProgram;
+   oldOptions : TCompilerOptions;
+   i : Integer;
+   symPosList : TSymbolPositionList;
+begin
+   oldOptions:=FCompiler.Config.CompilerOptions;
+
+   FCompiler.Config.CompilerOptions:=oldOptions+[coSymbolDictionary];
+
+   prog:=FCompiler.Compile(
+       'type TTest = class'#13#10
+      +'procedure Test(a1 : Integer); overload; '#13#10
+      +'procedure Test(a2 : String); overload;'#13#10
+      +'procedure Test(a3 : Boolean); overload;'#13#10
+      +'end;'#13#10
+      +'procedure TTest.Test(a1 : Integer); begin end;'#13#10
+      +'procedure TTest.Test(a2 : String); begin end;'#13#10
+      +'procedure TTest.Test(a3 : Boolean); begin end;'#13#10
+      );
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compile A');
+   CheckEquals(7, prog.SymbolDictionary.Count, 'nb symbols A');
+   for i:=0 to prog.SymbolDictionary.Count-1 do begin
+      symPosList:=prog.SymbolDictionary[i];
+      if symPosList.Symbol.Name='TTest' then
+         CheckEquals(4, symPosList.Count, 'TTest A')
+      else CheckEquals(2, symPosList.Count,
+                       'A declared + reference for '+IntToStr(i)+' '+symPosList.Symbol.Name);
+   end;
+
+   prog:=nil;
+
+   prog:=FCompiler.Compile(
+       'type TTest = class'#13#10
+      +'procedure Test(a1, a2 : Integer); overload;'#13#10
+      +'procedure Test(a2, a1 : String); overload;'#13#10
+      +'end;'#13#10
+      +'procedure TTest.Test(a1, a2 : Integer); begin end;'#13#10
+      +'procedure TTest.Test(a2, a1 : String); begin end;'#13#10
+      );
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compile B');
+   CheckEquals(7, prog.SymbolDictionary.Count, 'nb symbols B');
+   for i:=0 to prog.SymbolDictionary.Count-1 do begin
+      symPosList:=prog.SymbolDictionary[i];
+      if symPosList.Symbol.Name='TTest' then
+         CheckEquals(3, symPosList.Count, 'TTest B')
+      else CheckEquals(2, symPosList.Count,
+                       'B declared + reference for '+IntToStr(i)+' '+symPosList.Symbol.Name);
+   end;
+
+   FCompiler.Config.CompilerOptions:=oldOptions;
+end;
+
+// ClassForwardDictionary
+//
+procedure TCornerCasesTests.ClassForwardDictionary;
+var
+   prog : IdwsProgram;
+   oldOptions : TCompilerOptions;
+   symPosList : TSymbolPositionList;
+begin
+   oldOptions:=FCompiler.Config.CompilerOptions;
+   FCompiler.Config.CompilerOptions:=oldOptions+[coSymbolDictionary];
+
+   prog := FCompiler.Compile( 'type TTest = class;'#13#10
+                             +'type TTest = class end;');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compile');
+   CheckEquals(1, prog.SymbolDictionary.FindSymbolUsage('TTest', suForward).ScriptPos.Line, 'forward');
+   CheckEquals(2, prog.SymbolDictionary.FindSymbolUsage('TTest', suDeclaration).ScriptPos.Line, 'declaration');
+
+
+   prog := FCompiler.Compile( 'type TTest = class partial;'#13#10
+                             +'type TTest = class partial end;'
+                             +'type TTest = class partial end;');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compile');
+   symPosList:=prog.SymbolDictionary.FindSymbolPosList('TTest');
+   CheckTrue(symPosList.Items[0].SymbolUsages=[suForward], 'forward');
+   CheckTrue(symPosList.Items[1].SymbolUsages=[suDeclaration], 'declaration 1');
+   CheckTrue(symPosList.Items[2].SymbolUsages=[suDeclaration], 'declaration 2');
+
+   FCompiler.Config.CompilerOptions:=oldOptions;
+end;
+
+// FilterTest
+//
+procedure TCornerCasesTests.FilterTest;
+var
+   filter : TTestFilter;
+var
+   prog : IdwsProgram;
+begin
+   filter:=TTestFilter.TestCreate('');
+   FCompiler.OnInclude:=DoOnInclude;
+   FCompiler.Config.Filter:=filter;
+   try
+      prog:=FCompiler.Compile('{$F "test.dummy"}');
+      CheckEquals('', prog.Msgs.AsInfo);
+      CheckEquals('hello', prog.Execute.Result.ToString);
+
+      prog:=FCompiler.Compile('{$F "test.dummy"');
+      CheckEquals('Syntax Error: "}" expected [line: 1, column: 5]'#13#10, prog.Msgs.AsInfo);
+   finally
+      FCompiler.OnInclude:=nil;
+      filter.Free;
+   end;
+end;
+
+// SubFilterTest
+//
+procedure TCornerCasesTests.SubFilterTest;
+var
+   filter1, filter2 : TTestFilter;
+begin
+   filter1:=TTestFilter.TestCreate('abc');
+   filter2:=TTestFilter.TestCreate('def');
+   filter1.SubFilter:=filter2;
+   CheckEquals('abc,def', filter1.Dependencies.CommaText, 'dependencies 1+2');
+   CheckEquals('test', filter1.Process('test', nil), 'filter');
+   filter1.SubFilter:=nil;
+   CheckEquals('abc', filter1.Dependencies.CommaText, 'dependencies 2');
+   filter1.SubFilter:=filter2;
+   filter2.Free;
+   CheckTrue(filter1.SubFilter=nil);
+   filter1.Free;
+end;
+
+// FilterNotDefined
+//
+procedure TCornerCasesTests.FilterNotDefined;
+var
+   prog : IdwsProgram;
+begin
+   prog:=FCompiler.Compile('{$F "foo.bar"}');
+
+   CheckEquals('Syntax Error: There is no filter assigned to TDelphiWebScriptII.Config.Filter [line: 1, column: 5]'#13#10, prog.Msgs.AsInfo);
+end;
+
+// ConfigNotifications
+//
+procedure TCornerCasesTests.ConfigNotifications;
+var
+   rfs : TdwsNoFileSystem;
+   rt : TdwsResultType;
+begin
+   rfs:=TdwsNoFileSystem.Create(nil);
+   rt:=TdwsResultType.Create(nil);
+   FCompiler.Config.RuntimeFileSystem:=rfs;
+   FCompiler.Config.ResultType:=rt;
+   CheckTrue(FCompiler.Config.RuntimeFileSystem<>nil, 'rfs set');
+   CheckTrue(FCompiler.Config.ResultType<>nil, 'rt set');
+   rt.Free;
+   rfs.Free;
+   CheckTrue(FCompiler.Config.RuntimeFileSystem=nil, 'rfs cleared');
+   CheckTrue(FCompiler.Config.ResultType is TdwsDefaultResultType, 'rt cleared');
+
+end;
+
+// ConfigTimeout
+//
+procedure TCornerCasesTests.ConfigTimeout;
+begin
+   CheckEquals(0, FCompiler.Config.TimeoutMilliseconds, 'init');
+   FCompiler.Config.TimeOut:=2;
+   CheckEquals(2000, FCompiler.Config.TimeoutMilliseconds, 'timeout');
+   FCompiler.Config.TimeOut:=0;
+   CheckEquals(0, FCompiler.Config.TimeoutMilliseconds, 'cleanup');
+end;
+
+// CallUnitProcTest
+//
+procedure TCornerCasesTests.CallUnitProcTest;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+   func : IInfo;
+begin
+   prog:=FCompiler.Compile( 'unit test;'#13#10
+                           +'interface'#13#10
+                           +'procedure Test;'#13#10
+                           +'implementation'#13#10
+                           +'procedure Test;'#13#10
+                           +'var myvar : Integer;'#13#10
+                           +'begin'#13#10
+                           +'   myVar := 1;'#13#10
+                           +'   myVar:=2*myvar-StrToInt(IntToStr(myvar));'#13#10
+                           +'   PrintLn(myVar);'#13#10
+                           +'end;'#13#10
+                           +'end.'#13#10);
+   exec:=prog.BeginNewExecution;
+   func:=exec.Info.Func['Test'];
+   func.Call;
+   exec.EndProgram;
+end;
+
+// NormalizeFloatArrayElements
+//
+procedure TCornerCasesTests.NormalizeFloatArrayElements;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+   a : IInfo;
+begin
+   prog:=FCompiler.Compile( 'type TFloat2 = array [0..1] of Float;'#13#10
+                           +'var a : TFloat2 = [ 1, 2 ];');
+   exec:=prog.BeginNewExecution;
+   try
+      a:=exec.Info.Vars['a'];
+      CheckTrue(VarIsFloat(a.Element([0]).Value), 'before 0');
+      CheckTrue(VarIsFloat(a.Element([1]).Value), 'before 1');
+
+      exec.RunProgram(0);
+
+      CheckTrue(VarIsFloat(a.Element([0]).Value), 'after 0');
+      CheckTrue(VarIsFloat(a.Element([1]).Value), 'after 1');
+
+      CheckEquals(1.0, exec.ExecutionObject.Stack.Data[0]);
+      CheckEquals(2.0, exec.ExecutionObject.Stack.Data[1]);
+
+   finally
+      exec.EndProgram;
+   end;
+end;
+
+// MultiRunProtection
+//
+procedure TCornerCasesTests.MultiRunProtection;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'var o := new TObject;'#13#10
+                           +'ReExec;'#13#10
+                           +'Print(''Here'');');
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   exec:=prog.Execute;
+   CheckEquals('Runtime Error: Script is already running'#13#10, exec.Msgs.AsInfo);
+   CheckEquals('Here', exec.Result.ToString);
+end;
+
+// MultipleHostExceptions
+//
+procedure TCornerCasesTests.MultipleHostExceptions;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'try HostExcept; except Print("gobbled"); end;'#13#10
+                           +'HostExcept;'#13#10);
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   exec:=prog.Execute;
+   CheckEquals('Runtime Error: boom in HostExcept [line: 2, column: 1]'#13#10, exec.Msgs.AsInfo);
+   CheckEquals('gobbled', exec.Result.ToString);
+end;
+
+// OverloadOverrideIndwsUnit
+//
+procedure TCornerCasesTests.OverloadOverrideIndwsUnit;
+var
+   un : TdwsUnit;
+   cls : TdwsClass;
+   cst : TdwsConstructor;
+begin
+   un:=TdwsUnit.Create(nil);
+   try
+      un.Name := 'dwsUnitTest';
+      un.UnitName := 'TestUnit';
+      un.Script := FCompiler;
+
+      cls:=un.Classes.Add;
+      cls.Name := 'TClassA';
+      cls.IsAbstract := True;
+
+      cst:=cls.Constructors.Add;
+      cst.Name := 'Create';
+      cst.Attributes := [maVirtual, maAbstract];
+      cst.Overloaded := True;
+      cst.Parameters.Add('Test', 'Float');
+
+      cst:=cls.Constructors.Add;
+      cst.Name := 'Create';
+      cst.Attributes := [maVirtual, maAbstract];
+      cst.Overloaded := True;
+      cst.Parameters.Add('Test', 'Float');
+      cst.Parameters.Add('B', 'Integer');
+
+      cls:=un.Classes.Add;
+      cls.Name := 'TClassB';
+      cls.Ancestor := 'TClassA';
+
+      cst:=cls.Constructors.Add;
+      cst.Name := 'Create';
+      cst.Attributes := [maOverride];
+      cst.Overloaded := True;
+      cst.Parameters.Add('Test', 'Float');
+
+      cst:=cls.Constructors.Add;
+      cst.Name := 'Create';
+      cst.Attributes := [maOverride];
+      cst.Overloaded := True;
+      cst.Parameters.Add('Test', 'Float');
+      cst.Parameters.Add('B', 'Integer');
+
+      CheckEquals('', FCompiler.Compile('').Msgs.AsInfo);
+
+   finally
+      un.Free;
+   end;
+end;
+
+// PartialClassParent
+//
+procedure TCornerCasesTests.PartialClassParent;
+var
+   prog : IdwsProgram;
+   cls : TClassSymbol;
+begin
+   prog:=FCompiler.Compile( 'type TTest = partial class;'#13#10
+                           +'type TTest = partial class Field1 : Integer; end;'#13#10
+                           +'type TTest = partial class Field2 : Integer; end;'#13#10);
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compile');
+
+   cls:=prog.Table.FindTypeLocal('TTest') as TClassSymbol;
+
+   CheckEquals(2, cls.Members.Count, 'members');
+   Check(cls.Parent<>nil, 'Parent not nil');
+   CheckEquals('TObject', cls.Parent.Name, 'Parent name');
+end;
+
+// ConstantAliasing
+//
+procedure TCornerCasesTests.ConstantAliasing;
+var
+   prog : IdwsProgram;
+begin
+   prog:=FCompiler.Compile( 'type TZ = Integer;'#13#10
+                           +'const z = TZ(0);'#13#10
+                           +'var a : array [0..1] of Integer;');
+
+   CheckEquals('', prog.Msgs.AsInfo);
+end;
+
+// ExternalVariables
+//
+procedure TCornerCasesTests.ExternalVariables;
+var
+   prog : IdwsProgram;
+   sym : TSymbol;
+begin
+   prog:=FCompiler.Compile( 'var a external "alpha" : String;'#13#10
+                           +'var b external ''123'', c : Integer;'#13#10
+                           +'var d external := False;'#13#10
+                           +'procedure Test; begin var e external "gamma" : Float; end;');
+
+   CheckEquals( 'Syntax Error: String expected [line: 3, column: 16]'#13#10
+               +'Syntax Error: External variables must be global [line: 4, column: 29]'#13#10,
+               prog.Msgs.AsInfo);
+
+   sym:=prog.Table.FindSymbol('a', cvMagic);
+   CheckEquals(TDataSymbol.ClassName, sym.ClassType.ClassName, 'a');
+   CheckTrue(TDataSymbol(sym).HasExternalName, 'a');
+   CheckEquals('alpha', TDataSymbol(sym).ExternalName, 'a');
+
+   sym:=prog.Table.FindSymbol('b', cvMagic);
+   CheckEquals(TDataSymbol.ClassName, sym.ClassType.ClassName, 'b');
+   Check(TDataSymbol(sym).HasExternalName, 'b');
+   CheckEquals('123', TDataSymbol(sym).ExternalName, 'b');
+
+   sym:=prog.Table.FindSymbol('c', cvMagic);
+   CheckEquals(TDataSymbol.ClassName, sym.ClassType.ClassName, 'c');
+   CheckFalse(TDataSymbol(sym).HasExternalName, 'c');
+   CheckEquals('c', TDataSymbol(sym).ExternalName, 'c');
 end;
 
 // ------------------------------------------------------------------

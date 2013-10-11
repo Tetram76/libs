@@ -1,10 +1,14 @@
-unit FMain;
+ï»¿unit FMain;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, dwsComp, dwsExprs, dwsFunctions, dwsSymbols, dwsMagicExprs;
+  Dialogs, ExtCtrls, StdCtrls,
+  {$ifndef WIN64}
+  dwsJIT, dwsJITx86,
+  {$endif}
+  dwsComp, dwsExprs, dwsFunctions, dwsSymbols, dwsMagicExprs, dwsExprList;
 
 type
   TMainForm = class(TForm)
@@ -14,8 +18,9 @@ type
     LADWScript: TLabel;
     DelphiWebScript: TDelphiWebScript;
     procedure FormCreate(Sender: TObject);
+    procedure FormClick(Sender: TObject);
   private
-    { Déclarations privées }
+    { DÃ©clarations privÃ©es }
     FBitmap : TBitmap;
     FScanLines : array of Pointer;
     procedure PrepareBitmap;
@@ -23,8 +28,9 @@ type
 
     procedure PaintBitmapDelphi;
     procedure PaintBitmapDWSscript;
+//    procedure PaintBitmapLaPe;
   public
-    { Déclarations publiques }
+    procedure Benchmark;
   end;
 
 var
@@ -34,17 +40,74 @@ implementation
 
 {$R *.dfm}
 
+(*
+uses lptypes, lpparser, lpcompiler, lputils, lpvartypes, lpeval, lpinterpreter,
+   lpdisassembler;
+
+procedure LaPeSetPixel(Params: PParamArray);
+begin
+   MainForm.SetPixel(PInt32(Params^[0])^, PInt32(Params^[1])^, PInt32(Params^[2])^);
+end;
+
+// PaintBitmapLaPe
+//
+procedure TMainForm.PaintBitmapLaPe;
+const
+   cSource = ''
+      +'program test;'
+      +'const cSize = 500;'#13#10
+//      +'var i, j, newColor : Integer;'#13#10
+//      +'var u, v, x, y, z : Double;'#13#10
+//      +'begin'#13#10
+//      +'for i := 0 to cSize-2 do begin'#13#10
+//      +'   for j := 0 to cSize-2 do begin'#13#10
+//      +'      x := -0.8 + 3.0 * i / cSize;'#13#10
+//      +'      y := -1.4 + 2.8 * j / cSize;'#13#10
+//      +'      newColor := 0;'#13#10
+//      +'      u := 0;'#13#10
+//      +'      v := 0;'#13#10
+//      +'      repeat'#13#10
+//      +'         z := Sqr(u) - Sqr(v) - x;'#13#10
+//      +'         v := 2 * u * v - y;'#13#10
+//      +'         u := z;'#13#10
+//      +'         newColor := newColor + 1;'#13#10
+//      +'      until (Sqr(u) + Sqr(v) > 9) or (newColor = 16);'#13#10
+////      +'      SetPixel(i + 1, j + 1, newColor);'#13#10
+//      +'   end;'#13#10
+      +'end;'
+      +'end.';
+var
+  Parser: TLapeTokenizerBase;
+  Compiler: TLapeCompiler;
+begin
+   Parser := TLapeTokenizerString.Create(UTF8Encode(cSource));
+   Compiler := TLapeCompiler.Create(Parser);
+   try
+      InitializePascalScriptBasics(Compiler, [psiTypeAlias]);
+//      ExposeGlobals(Compiler);
+
+//      Compiler.addGlobalFunc('procedure SetPixel(x, y, color : Integer);', @LaPeSetPixel);
+
+//      Compiler.Compile();
+
+      RunCode(Compiler.Emitter.Code);
+   finally
+      Compiler.Free();
+      Parser.Free();
+   end;
+end;
+*)
 type
 
    // TSetPixelMagic
    //
    TSetPixelMagic = class (TInternalMagicProcedure)
-      procedure DoEvalProc(args : TExprBaseList); override;
+      procedure DoEvalProc(const args : TExprBaseListExec); override;
    end;
 
 // DoEvalProc
 //
-procedure TSetPixelMagic.DoEvalProc(args : TExprBaseList);
+procedure TSetPixelMagic.DoEvalProc(const args : TExprBaseListExec);
 begin
    MainForm.SetPixel(args.AsInteger[0], args.AsInteger[1], args.AsInteger[2]);
 end;
@@ -52,17 +115,34 @@ end;
 // FormCreate
 //
 procedure TMainForm.FormCreate(Sender: TObject);
-var
-   tStart, tStop, tFreq : Int64;
 begin
    RegisterInternalProcedure(TSetPixelMagic, 'SetPixel', ['x', 'Integer', 'y', 'Integer', 'color', 'Integer']);
+   Benchmark;
+end;
 
+// FormClick
+//
+procedure TMainForm.FormClick(Sender: TObject);
+begin
+   Benchmark;
+end;
+
+// Benchmark
+//
+procedure TMainForm.Benchmark;
+const
+   cNB_LOOPS = 10;
+var
+   tStart, tStop, tFreq : Int64;
+   i : Integer;
+begin
    QueryPerformanceFrequency(tFreq);
 
    PrepareBitmap;
    QueryPerformanceCounter(tStart);
 
-   PaintBitmapDelphi;
+   for i:=1 to cNB_LOOPS do
+      PaintBitmapDelphi;
 
    QueryPerformanceCounter(tStop);
    IMDelphi.Picture.Assign(FBitmap);
@@ -72,7 +152,9 @@ begin
    PrepareBitmap;
    QueryPerformanceCounter(tStart);
 
-   PaintBitmapDWSscript;
+   for i:=1 to cNB_LOOPS do
+      PaintBitmapDWSscript;
+//   PaintBitmapLaPe;
 
    QueryPerformanceCounter(tStop);
    IMDWScript.Picture.Assign(FBitmap);
@@ -92,6 +174,7 @@ begin
    FBitmap.Height:=500;
 
    SetLength(FScanLines, FBitmap.Height);
+
    for i:=0 to FBitmap.Height-1 do
       FScanLines[i]:=FBitmap.ScanLine[i];
 end;
@@ -100,12 +183,15 @@ end;
 //
 procedure TMainForm.SetPixel(x, y, color : Integer);
 const
-   cColors: array[0..14] of TColor = (
+   cColors: array[0..16] of TColor = (
       $000022, $000033, $000044, $000055, $000066, $000077, $000088,
-      $101099, $3030AA, $4040BB, $5050CC, $6060DD, $7070EE, $8080FF, $000000
+      $101099, $3030AA, $4040BB, $5050CC, $6060DD, $7070EE, $8080FF,
+      $9090FF, $A0A0FF,
+      $000000
       );
 begin
    PIntegerArray(FScanLines[y])[x]:=cColors[color];
+//   FBitmap.Canvas.Pixels[x, y]:=cColors[color];
 end;
 
 // PaintBitmapDelphi
@@ -119,7 +205,7 @@ var
 begin
    for i := 0 to cSize-2 do begin
       for j := 0 to cSize-2 do begin
-         x := -0.8 + 3 * i / cSize;
+         x := -0.8 + 3.0 * i / cSize;
          y := -1.4 + 2.8 * j / cSize;
          newColor := 0;
          u := 0;
@@ -129,7 +215,7 @@ begin
             v := 2 * u * v - y;
             u := z;
             newColor := newColor + 1;
-         until (Sqr(u) + Sqr(v) > 9) or (newColor = 14);
+         until (Sqr(u) + Sqr(v) > 9) or (newColor = 16);
          SetPixel(i + 1, j + 1, newColor);
       end;
    end;
@@ -146,7 +232,7 @@ const
       +#13#10
       +'for i := 0 to cSize-2 do begin'#13#10
       +'   for j := 0 to cSize-2 do begin'#13#10
-      +'      x := -0.8 + 3 * i / cSize;'#13#10
+      +'      x := -0.8 + 3.0 * i / cSize;'#13#10
       +'      y := -1.4 + 2.8 * j / cSize;'#13#10
       +'      newColor := 0;'#13#10
       +'      u := 0;'#13#10
@@ -156,15 +242,26 @@ const
       +'         v := 2 * u * v - y;'#13#10
       +'         u := z;'#13#10
       +'         newColor := newColor + 1;'#13#10
-      +'      until (Sqr(u) + Sqr(v) > 9) or (newColor = 14);'#13#10
+      +'      until (Sqr(u) + Sqr(v) > 9) or (newColor = 16);'#13#10
       +'      SetPixel(i + 1, j + 1, newColor);'#13#10
       +'   end;'#13#10
-      +'end;';
+      +'end;'
+   ;
 
 var
    prog : IdwsProgram;
+   {$ifndef WIN64}
+   jitter : TdwsJITx86;
+   {$endif}
 begin
    prog:=DelphiWebScript.Compile(cSource);
+
+   {$ifndef WIN64}
+   jitter:=TdwsJITx86.Create;
+   jitter.Options:=jitter.Options-[jitoNoBranchAlignment];
+   jitter.GreedyJIT(prog.ProgramObject);
+   jitter.Free;
+   {$endif}
 
    if prog.Msgs.Count=0 then
       prog.Execute

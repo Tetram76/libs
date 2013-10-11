@@ -23,16 +23,19 @@ unit dwsVCLGUIFunctions;
 
 interface
 
-uses Windows, Forms, Dialogs, Classes, dwsFunctions, dwsExprs, dwsSymbols, dwsMagicExprs;
+uses
+   Windows, Forms, Dialogs, Classes,
+   dwsUtils, dwsStrings,
+   dwsFunctions, dwsExprs, dwsSymbols, dwsMagicExprs, dwsExprList;
 
 type
 
   TShowMessageFunc = class(TInternalMagicProcedure)
-    procedure DoEvalProc(args : TExprBaseList); override;
+    procedure DoEvalProc(const args : TExprBaseListExec); override;
   end;
 
   TInputBoxFunc = class(TInternalMagicStringFunction)
-    procedure DoEvalAsString(args : TExprBaseList; var Result : String); override;
+    procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
   end;
 
   TdwsGUIFunctions = class(TComponent)
@@ -40,17 +43,11 @@ type
 
 implementation
 
-const // type constants
-  cFloat = 'Float';
-  cInteger = 'Integer';
-  cString = 'String';
-  cBoolean = 'Boolean';
-
 { TShowMessageFunc }
 
 // DoEvalProc
 //
-procedure TShowMessageFunc.DoEvalProc(args : TExprBaseList);
+procedure TShowMessageFunc.DoEvalProc(const args : TExprBaseListExec);
 begin
    ShowMessage(args.AsString[0]);
 end;
@@ -59,14 +56,14 @@ end;
 
 // DoEvalAsString
 //
-procedure TInputBoxFunc.DoEvalAsString(args : TExprBaseList; var Result : String);
+procedure TInputBoxFunc.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 begin
    Result:=InputBox(args.AsString[0], args.AsString[1], args.AsString[2]);
 end;
 
 initialization
 
-   RegisterInternalProcedure(TShowMessageFunc, 'ShowMessage', ['msg', cString]);
-   RegisterInternalStringFunction(TInputBoxFunc, 'InputBox', ['aCaption', cString, 'aPrompt', cString, 'aDefault', cString]);
+   RegisterInternalProcedure(TShowMessageFunc, 'ShowMessage', ['msg', SYS_STRING]);
+   RegisterInternalStringFunction(TInputBoxFunc, 'InputBox', ['aCaption', SYS_STRING, 'aPrompt', SYS_STRING, 'aDefault', SYS_STRING]);
   
 end.

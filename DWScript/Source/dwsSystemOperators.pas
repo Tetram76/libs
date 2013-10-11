@@ -28,7 +28,7 @@ type
 
    TSystemOperators = class (TOperators)
       public
-         constructor Create(systemTable : TSystemSymbolTable; table : TSymbolTable);
+         constructor Create(systemTable : TSystemSymbolTable);
    end;
 
 // ------------------------------------------------------------------
@@ -45,7 +45,7 @@ implementation
 
 // Create
 //
-constructor TSystemOperators.Create(systemTable : TSystemSymbolTable; table : TSymbolTable);
+constructor TSystemOperators.Create(systemTable : TSystemSymbolTable);
 var
    typInteger : TTypeSymbol;
    typFloat : TTypeSymbol;
@@ -198,6 +198,8 @@ begin
 
    RegisterOperator(ttEQ,     TRelEqualMetaExpr,      typClassOf, typClassOf);
    RegisterOperator(ttNOTEQ,  TRelNotEqualMetaExpr,   typClassOf, typClassOf);
+
+   RegisterOperator(ttIN,     TStringInStringExpr,    typString,  typString);
 
    // combined assignment operator
 

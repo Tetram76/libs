@@ -23,32 +23,11 @@ unit dwsStack;
 
 interface
 
-uses Variants, Classes, SysUtils, dwsStrings, dwsUtils, dwsXPlatform;
+uses
+   Variants, Classes, SysUtils,
+   dwsStrings, dwsUtils, dwsXPlatform, dwsDataContext;
 
 type
-
-   TData = array of Variant;
-   PData = ^TData;
-   TDataArray = array [0..MaxInt shr 5] of Variant;
-   PDataArray = ^TDataArray;
-   TVarDataArray = array [0..MaxInt shr 5] of TVarData;
-   PVarDataArray = ^TVarDataArray;
-   PIUnknown = ^IUnknown;
-
-   TDataPtr = record
-      private
-         FAddr : Integer;
-         FData : TData;
-
-         function GetData(addr : Integer) : Variant; inline;
-         procedure SetData(addr : Integer; const value : Variant); inline;
-
-      public
-         class function Create(const aData : TData; anAddr : Integer) : TDataPtr; static; inline;
-
-         property Data[addr : Integer] : Variant read GetData write SetData; default;
-         function AsPVarDataArray : PVarDataArray; inline;
-   end;
 
    TStackParameters = record
       MaxLevel : Integer;
@@ -58,24 +37,19 @@ type
       MaxExceptionDepth : Integer;
    end;
 
-   {$IFDEF VER200}
-   // D2009 workaround for:
-   // [DCC Fatal Error] dwsCoreExprs.pas(5327): F2051 Unit dwsCoreExprs was compiled with a different version of dwsStack.TSimpleStack<System.Integer>
-   TSimpleStackIntegerDummy = TSimpleStack<Integer>;
-   {$ENDIF}
-
    // TStackMixIn
    //
    TStack = ^TStackMixIn;
    TStackMixIn = record
       private
-         FBasePointer : Integer;
          FBaseData : PDataArray;
-         FBpStore : array of TSimpleStack<Integer>;
+         FBasePointer : Integer;
+         FBpStore : array of TSimpleIntegerStack;
          FParams : TStackParameters;
          FMaxSize : Integer;
          FSize : Integer;
          FStackPointer : Integer;
+         FDataPtrPool : IDataContextPool;
 
          function GetFrameSize : Integer;
 
@@ -86,13 +60,13 @@ type
          procedure SetBasePointer(newBp : Integer); inline;
 
       public
-         Data: TData;
+         Data : TData;
 
          procedure Initialize(const params : TStackParameters);
          procedure Finalize;
 
-         procedure Push(Delta: Integer); inline;
-         procedure Pop(Delta: Integer);
+         procedure Push(delta : Integer); inline;
+         procedure Pop(delta : Integer); inline;
 
          procedure WriteData(sourceAddr, destAddr, size: Integer; const sourceData: TData);
          procedure ReadData(sourceAddr, destAddr, size: Integer; destData: TData);
@@ -100,38 +74,44 @@ type
 
          procedure ClearData(addr, size : Integer); inline;
 
-         procedure WriteValue(DestAddr: Integer; const Value: Variant);
-         procedure WriteIntValue(DestAddr: Integer; const Value: Int64); overload; inline;
-         procedure WriteIntValue_BaseRelative(DestAddr: Integer; const Value: Int64); overload; inline;
-         procedure WriteIntValue_BaseRelative(DestAddr: Integer; const pValue: PInt64); overload; inline;
-         procedure WriteFloatValue(DestAddr: Integer; const Value: Double); inline;
-         procedure WriteFloatValue_BaseRelative(DestAddr: Integer; const Value: Double); inline;
-         procedure WriteStrValue(DestAddr: Integer; const Value: String); inline;
-         procedure WriteBoolValue(DestAddr: Integer; const Value: Boolean); inline;
-         procedure WriteInterfaceValue(DestAddr: Integer; const intf: IUnknown);
+         procedure WriteValue(destAddr: Integer; const Value: Variant);
+         procedure WriteIntValue(destAddr: Integer; const Value: Int64); inline;
+         procedure WriteIntValue_BaseRelative(destAddr: Integer; const Value: Int64); inline;
+         procedure WriteFloatValue(destAddr: Integer; const Value: Double); inline;
+         procedure WriteFloatValue_BaseRelative(destAddr: Integer; const Value: Double); inline;
+         procedure WriteStrValue(destAddr: Integer; const Value: UnicodeString); inline;
+         procedure WriteStrValue_BaseRelative(destAddr: Integer; const Value: UnicodeString); inline;
+         procedure WriteBoolValue(destAddr: Integer; const Value: Boolean); inline;
+         procedure WriteInterfaceValue(destAddr: Integer; const intf: IUnknown);
 
          function  SetStrChar(DestAddr: Integer; index : Integer; c : WideChar) : Boolean;
 
          procedure ReadValue(sourceAddr : Integer; var result : Variant); inline;
          function  ReadIntValue(SourceAddr: Integer): Int64; inline;
-         function  ReadIntValue_BaseRelative(SourceAddr: Integer): Int64; inline;
+         function  ReadIntValue_BaseRelative(SourceAddr: Integer) : Int64; inline;
          function  ReadIntAsFloatValue_BaseRelative(SourceAddr: Integer) : Double; inline;
-         function  ReadFloatValue(SourceAddr: Integer) : Double; inline;
+         function  ReadFloatValue(SourceAddr: Integer) : Double; //inline;
          function  ReadFloatValue_BaseRelative(SourceAddr: Integer) : Double; inline;
-         procedure ReadStrValue(SourceAddr: Integer; var Result : String);
+         procedure ReadStrValue(SourceAddr: Integer; var Result : UnicodeString);
          function  ReadBoolValue(SourceAddr: Integer): Boolean;
          procedure ReadInterfaceValue(SourceAddr: Integer; var Result : IUnknown);
 
          function  PointerToIntValue(addr : Integer) : PInt64;
-         function  PointerToFloatValue_BaseRelative(addr : Integer) : PDouble;//inline;
-         function  PointerToInterfaceValue(addr : Integer) : PIUnknown;
+         function  PointerToFloatValue_BaseRelative(addr : Integer) : PDouble;
+         function  PointerToStringValue_BaseRelative(addr : Integer) : PUnicodeString;// inline;
+         function  PointerToInterfaceValue_BaseRelative(addr : Integer) : PIUnknown;
+
+         procedure InitDataPtr(var dataPtr : IDataContext; addr : Integer); inline;
+         procedure InitDataPtrLevel(var dataPtr : IDataContext; level, addr : Integer); inline;
+         function  CreateDataContext(const data : TData; addr : Integer) : TDataContext; inline;
 
          procedure IncIntValue_BaseRelative(destAddr : Integer; const value : Int64); inline;
-         procedure AppendStringValue_BaseRelative(destAddr : Integer; const value : String);
+         procedure AppendStringValue_BaseRelative(destAddr : Integer; const value : UnicodeString);
 
-         procedure PushBp(Level, Bp: Integer); inline;
-         function  GetSavedBp(Level: Integer): Integer; inline;
-         procedure PopBp(Level : Integer); inline;
+         // D2010 compiler crashes when inlining those
+         procedure PushBp(Level, Bp: Integer); {$IFDEF DELPHI_XE_PLUS} inline; {$ENDIF}
+         function  GetSavedBp(Level: Integer): Integer; {$IFDEF DELPHI_XE_PLUS} inline; {$ENDIF}
+         procedure PopBp(Level : Integer); {$IFDEF DELPHI_XE_PLUS} inline; {$ENDIF}
 
          procedure FixBaseStack(newSize : Integer);
 
@@ -140,6 +120,7 @@ type
          procedure Reset;
 
          property BasePointer: Integer read FBasePointer write SetBasePointer;
+         property BaseData: PDataArray read FBaseData;
          property FrameSize: Integer read GetFrameSize;
          property MaxSize: Integer read FMaxSize write FMaxSize;
          property StackPointer: Integer read FStackPointer;
@@ -151,11 +132,6 @@ type
    EScriptStackOverflow = class(EScriptStackException);
    EScriptExceptionOverflow = class(EScriptStackException);
 
-procedure DWSCopyData(const sourceData : TData; sourceAddr : Integer;
-                      destData : TData; destAddr : Integer; size : Integer);
-function DWSSameData(const data1, data2 : TData; offset1, offset2, size : Integer) : Boolean;
-function DWSSameVariant(const v1, v2 : Variant) : Boolean;
-
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -165,96 +141,6 @@ implementation
 // ------------------------------------------------------------------
 
 {$R-}
-
-// DWSCopyData
-//
-procedure DWSCopyData(const sourceData: TData; sourceAddr: Integer;
-                      destData: TData; destAddr: Integer; size: Integer);
-begin
-   while size > 0 do begin
-      VarCopy(destData[destAddr], sourceData[sourceAddr]);
-      Inc(sourceAddr);
-      Inc(destAddr);
-      Dec(size);
-   end;
-end;
-
-// DWSSameData
-//
-function DWSSameData(const data1, data2 : TData; offset1, offset2, size : Integer) : Boolean;
-var
-   i : Integer;
-begin
-   for i:=0 to size-1 do
-      if not DWSSameVariant(data1[offset1+i], data2[offset2+i]) then
-         Exit(False);
-   Result:=True;
-end;
-
-// DWSSameVariant
-//
-function DWSSameVariant(const v1, v2 : Variant) : Boolean;
-var
-   vt : Integer;
-begin
-   vt:=TVarData(v1).VType;
-   if vt<>TVarData(v2).VType then
-      Result:=False
-   else begin
-      case vt of
-         varInt64 :
-            Result:=TVarData(v1).VInt64=TVarData(v2).VInt64;
-         varBoolean :
-            Result:=TVarData(v1).VBoolean=TVarData(v2).VBoolean;
-         varDouble :
-            Result:=TVarData(v1).VDouble=TVarData(v2).VDouble;
-         {$ifdef FPC}
-         varString :
-            Result:=String(TVarData(v1).VString)=String(TVarData(v2).VString);
-         {$else}
-         varUString :
-            Result:=String(TVarData(v1).VUString)=String(TVarData(v2).VUString);
-         {$endif}
-         varUnknown :
-            Result:=TVarData(v1).VUnknown=TVarData(v2).VUnknown;
-      else
-         Result:=(v1=v2);
-      end;
-   end;
-end;
-
-// ------------------
-// ------------------ TDataPtr ------------------
-// ------------------
-
-// Create
-//
-class function TDataPtr.Create(const aData : TData; anAddr : Integer) : TDataPtr;
-begin
-   Result.FData:=aData;
-   Result.FAddr:=anAddr;
-end;
-
-// GetData
-//
-function TDataPtr.GetData(addr : Integer) : Variant;
-begin
-   Result:=FData[FAddr+addr];
-end;
-
-// SetData
-//
-procedure TDataPtr.SetData(addr : Integer; const value : Variant);
-begin
-   FData[FAddr+addr]:=value;
-end;
-
-// AsPVarDataArray
-//
-function TDataPtr.AsPVarDataArray : PVarDataArray;
-begin
-   Result:=@FData[FAddr];
-end;
 
 // ------------------
 // ------------------ TStackMixIn ------------------
@@ -266,6 +152,7 @@ procedure TStackMixIn.Initialize(const params : TStackParameters);
 begin
    FParams:=params;
    FMaxSize:=params.MaxByteSize div SizeOf(Variant);
+   FDataPtrPool:=TDataContextPool.Create;
 end;
 
 // Destroy
@@ -273,6 +160,8 @@ end;
 procedure TStackMixIn.Finalize;
 begin
    ClearBpStore;
+   FDataPtrPool.Cleanup;
+   FDataPtrPool:=nil;
 end;
 
 // ClearBpStore
@@ -288,7 +177,6 @@ end;
 procedure TStackMixIn.CopyData(SourceAddr, DestAddr, Size: Integer);
 begin
    while Size > 0 do begin
-
       VarCopy(Data[DestAddr], Data[SourceAddr]);
       Inc(SourceAddr);
       Inc(DestAddr);
@@ -315,23 +203,6 @@ begin
   Result := FStackPointer - FBasePointer;
 end;
 
-// Pop
-//
-procedure TStackMixIn.Pop(delta : Integer);
-var
-   x, sp : Integer;
-   v : PVariant;
-begin
-   sp:=FStackPointer;
-   v:=@Data[sp];
-   sp:=sp-delta;
-   for x:=1 to delta do begin
-      Dec(v);
-      VarClear(v^);
-   end;
-   FStackPointer:=sp;
-end;
-
 // GrowTo
 //
 procedure TStackMixIn.GrowTo(desiredSize : Integer);
@@ -355,34 +226,32 @@ end;
 
 // Push
 //
-procedure TStackMixIn.Push(Delta: Integer);
+procedure TStackMixIn.Push(delta : Integer);
 var
    sp : Integer;
 begin
-   sp := FStackPointer + Delta;
+   sp:=FStackPointer+delta;
+   FStackPointer:=sp;
 
    // Increase stack size if necessary
-   if sp > FSize then
+   if sp>FSize then
       GrowTo(sp);
-
-   FStackPointer := sp;
 end;
 
-procedure TStackMixIn.Reset;
+// Pop
+//
+procedure TStackMixIn.Pop(delta : Integer);
 var
    i : Integer;
+   v : PVariant;
 begin
-   Data := nil;
-   FSize := 0;
-   FStackPointer := 0;
-   FBasePointer := 0;
-   FBaseData:=nil;
-   ClearBpStore;
-   SetLength(FBpStore, FParams.MaxLevel + 1);
-   for i:=0 to High(FBpStore) do begin
-      FBpStore[i]:=TSimpleStack<Integer>.Create;
-      FBpStore[i].Push(0);
+   if delta=0 then Exit;
+   v:=@Data[FStackPointer];
+   for i:=1 to delta do begin
+      Dec(v);
+      VarClear(v^);
    end;
+   Dec(FStackPointer, delta);
 end;
 
 // PushBp
@@ -436,6 +305,24 @@ begin
    PopBp(level);
 end;
 
+procedure TStackMixIn.Reset;
+var
+   i : Integer;
+begin
+   Data:=nil;
+   FSize:=0;
+   FStackPointer:=0;
+   FBasePointer:=0;
+   FBaseData:=nil;
+   ClearBpStore;
+   SetLength(FBpStore, FParams.MaxLevel + 1);
+   for i:=0 to High(FBpStore) do begin
+      FBpStore[i]:=TSimpleIntegerStack.Allocate;
+      FBpStore[i].Push(0);
+   end;
+   FDataPtrPool.Cleanup;
+end;
+
 procedure TStackMixIn.ReadData(SourceAddr, DestAddr, Size: Integer; DestData: TData);
 begin
   while Size > 0 do
@@ -461,21 +348,19 @@ var
    varData : PVarData;
 begin
    varData:=@Data[SourceAddr];
-   if varData.VType=varInt64 then
-      Result:=varData.VInt64
-   else Result:=PVariant(varData)^;
+   Assert(varData.VType=varInt64);
+   Result:=varData.VInt64
 end;
 
 // ReadIntValue
 //
-function TStackMixIn.ReadIntValue_BaseRelative(SourceAddr: Integer): Int64;
+function TStackMixIn.ReadIntValue_BaseRelative(SourceAddr: Integer) : Int64;
 var
    varData : PVarData;
 begin
    varData:=@FBaseData[SourceAddr];
-   if varData.VType=varInt64 then
-      Result:=varData.VInt64
-   else Result:=PVariant(varData)^;
+   Assert(varData.VType=varInt64);
+   Result:=varData.VInt64;
 end;
 
 // ReadIntAsFloatValue_BaseRelative
@@ -496,8 +381,14 @@ var
    varData : PVarData;
 begin
    varData:=@Data[SourceAddr];
-   Assert(varData.VType=varDouble);
-   Result:=varData.VDouble;
+   if varData.VType=varDouble then
+      Result:=varData.VDouble
+   else begin
+      Assert(varData.VType=varInt64);
+      Result:=varData.VInt64;
+   end;
+//   Assert(varData.VType=varDouble);
+//   Result:=varData.VDouble;
 end;
 
 // ReadFloatValue_BaseRelative
@@ -507,24 +398,23 @@ var
    varData : PVarData;
 begin
    varData:=@FBaseData[SourceAddr];
-   Assert(varData.VType=varDouble);
-   Result:=varData.VDouble;
+   if varData.VType=varDouble then
+      Result:=varData.VDouble
+   else begin
+      Assert(varData.VType=varInt64);
+      Result:=varData.VInt64;
+   end;
 end;
 
 // ReadStrValue
 //
-procedure TStackMixIn.ReadStrValue(SourceAddr: Integer; var Result : String);
+procedure TStackMixIn.ReadStrValue(SourceAddr: Integer; var Result : UnicodeString);
 var
    varData : PVarData;
 begin
    varData:=@Data[SourceAddr];
-   {$ifdef FPC}
-   if varData.VType=varString then
-      Result:=String(varData.VString)
-   {$else}
    if varData.VType=varUString then
-      Result:=String(varData.VUString)
-   {$endif}
+      Result:=UnicodeString(varData.VString)
    else Result:=PVariant(varData)^;
 end;
 
@@ -574,15 +464,47 @@ begin
    Result:=@varData.VDouble;
 end;
 
-// PointerToInterfaceValue
+// PointerToStringValue_BaseRelative
 //
-function TStackMixIn.PointerToInterfaceValue(addr : Integer) : PIUnknown;
+function TStackMixIn.PointerToStringValue_BaseRelative(addr : Integer) : PUnicodeString;
 var
    varData : PVarData;
 begin
-   varData:=@Data[addr];
+   varData:=@FBaseData[addr];
+   Assert(varData.VType=varUString);
+   Result:=@varData.VString;
+end;
+
+// PointerToInterfaceValue_BaseRelative
+//
+function TStackMixIn.PointerToInterfaceValue_BaseRelative(addr : Integer) : PIUnknown;
+var
+   varData : PVarData;
+begin
+   varData:=@FBaseData[addr];
    Assert(varData.VType=varUnknown);
    Result:=@varData.VUnknown;
+end;
+
+// InitDataPtr
+//
+procedure TStackMixIn.InitDataPtr(var dataPtr : IDataContext; addr : Integer);
+begin
+   dataPtr:=FDataPtrPool.Create(Data, BasePointer+addr);
+end;
+
+// InitDataPtrLevel
+//
+procedure TStackMixIn.InitDataPtrLevel(var dataPtr : IDataContext; level, addr : Integer);
+begin
+   dataPtr:=FDataPtrPool.Create(Data, GetSavedBp(level)+addr);
+end;
+
+// CreateDataContext
+//
+function TStackMixIn.CreateDataContext(const data : TData; addr : Integer) : TDataContext;
+begin
+   Result:=FDataPtrPool.Create(data, addr);
 end;
 
 // IncIntValue_BaseRelative
@@ -598,25 +520,13 @@ end;
 
 // AppendStringValue_BaseRelative
 //
-procedure TStackMixIn.AppendStringValue_BaseRelative(destAddr : Integer; const value : String);
-
-   procedure Fallback(varData : PVarData);
-   begin
-      PVariant(varData)^:=PVariant(varData)^+value;
-   end;
-
+procedure TStackMixIn.AppendStringValue_BaseRelative(destAddr : Integer; const value : UnicodeString);
 var
    varData : PVarData;
 begin
    varData:=@FBaseData[destAddr];
-   {$ifdef FPC}
-   if varData.VType=varString then
-      String(varData.VString):=String(varData.VString)+value
-   {$else}
-   if varData.VType=varUString then
-      String(varData.VUString):=String(varData.VUString)+value
-   {$endif}
-   else Fallback(varData);
+   Assert(varData.VType=varUString);
+   UnicodeString(varData.VString):=UnicodeString(varData.VString)+value
 end;
 
 // WriteData
@@ -635,7 +545,7 @@ end;
 //
 procedure TStackMixIn.WriteValue(DestAddr: Integer; const Value: Variant);
 begin
-  VarCopy(Data[DestAddr], Value);
+   VarCopy(Data[destAddr], Value);
 end;
 
 // WriteIntValue
@@ -660,18 +570,6 @@ begin
    if varData.VType=varInt64 then
       varData.VInt64:=Value
    else PVariant(varData)^:=Value;
-end;
-
-// WriteIntValue_BaseRelative
-//
-procedure TStackMixIn.WriteIntValue_BaseRelative(DestAddr: Integer; const pValue: PInt64);
-var
-   varData : PVarData;
-begin
-   varData:=@FBaseData[DestAddr];
-   if varData.VType=varInt64 then
-      varData.VInt64:=pValue^
-   else PVariant(varData)^:=pValue^;
 end;
 
 // WriteFloatValue
@@ -700,18 +598,25 @@ end;
 
 // WriteStrValue
 //
-procedure TStackMixIn.WriteStrValue(DestAddr: Integer; const Value: String);
+procedure TStackMixIn.WriteStrValue(DestAddr: Integer; const Value: UnicodeString);
 var
    varData : PVarData;
 begin
    varData:=@Data[DestAddr];
-   {$ifdef FPC}
-   if varData.VType=varString then
-      String(varData.VString):=Value
-   {$else}
    if varData.VType=varUString then
-      String(varData.VUString):=Value
-    {$endif}
+      UnicodeString(varData.VString):=Value
+   else PVariant(varData)^:=Value;
+end;
+
+// WriteStrValue_BaseRelative
+//
+procedure TStackMixIn.WriteStrValue_BaseRelative(DestAddr: Integer; const Value: UnicodeString);
+var
+   varData : PVarData;
+begin
+   varData:=@FBaseData[DestAddr];
+   if varData.VType=varUString then
+      UnicodeString(varData.VString):=Value
    else PVariant(varData)^:=Value;
 end;
 
@@ -746,19 +651,11 @@ var
    varData : PVarData;
 begin
    varData:=@Data[DestAddr];
-   {$ifdef FPC}
-   if varData.VType=varString then
-      if index>Length(String(varData.VString)) then
-         Exit(False)
-      else String(varData.VString)[index]:=c
-   else PVariant(varData)^[index]:=Char(c);
-   {$else}
    if varData.VType=varUString then
-      if index>Length(String(varData.VUString)) then
+      if index>Length(UnicodeString(varData.VString)) then
          Exit(False)
-      else String(varData.VUString)[index]:=c
+      else UnicodeString(varData.VString)[index]:=c
    else PVariant(varData)^[index]:=c;
-   {$endif}
    Result:=True;
 end;
 

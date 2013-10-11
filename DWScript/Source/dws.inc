@@ -42,6 +42,20 @@
    {$IFNDEF VER200}  // D2009
       {$RTTI EXPLICIT METHODS([]) PROPERTIES([]) FIELDS([])}
    {$ENDIF}
+   {$IFDEF VER240}
+      {$DEFINE DELPHI_XE3}
+   {$ENDIF}
+   {$IF CompilerVersion>21.0}
+      {$DEFINE DELPHI_XE_PLUS}
+   {$ELSE}
+      {$DEFINE DELPHI_2010_MINUS}
+   {$IFEND}
+   {$IF CompilerVersion>22.0}
+      {$DEFINE DELPHI_XE2_PLUS}
+   {$IFEND}
+   {$IF CompilerVersion>23.0}
+      {$DEFINE DELPHI_XE3_PLUS}
+   {$IFEND}
 {$ELSE}
    {$mode delphi}
    {$DEFINE PUREPASCAL}
@@ -49,6 +63,7 @@
 
 {.$DEFINE PUREPASCAL}
 {.$DEFINE UNICODE_IDENTIFIERS}
+{.$DEFINE COALESCE_VAR_INITIALIZATION}
 
 {$IFNDEF PUREPASCAL}
    {$IF Defined(WIN32)}
@@ -58,4 +73,9 @@
    {$IFEND}
 {$ENDIF}
 
+{$IFNDEF FPC}
+  {$IFNDEF DELPHI_XE2_PLUS}
+     {$DEFINE CPUX86}
+  {$ENDIF}
+{$ENDIF}
 
