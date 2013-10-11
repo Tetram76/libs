@@ -1,26 +1,52 @@
 <html>
 <head>
 <title>Hello DWS</title>
+<style><?pas
+{$F "res\index.css"}
+uses System.WebServer;
+
+var auths : array of String;
+for var a in WebServer.Authentications do
+	auths.Add(a.Name);
+?>
+</style>
 </head>
 <body>
-<h2>Hello DWS</h2>
-<p>This page was generated at <%=FormatDateTime('hh:nn:ss.zzz', Now)%>.</p>
-<p>Some test links<ul>
-<li><a href="requestInfo.dws">blank request info</a></li>
-<li><a href="requestInfo.dws?p=alpha&b=beta&c=gamma+delta">parameterized request info</a></li>
-</ul></p>
-<p>Some facts:<ul><%
-procedure PrintFacts(i : Integer);
-begin
-   Print(Format('%0:d + %0:d = %1:d', [i, i+i]));
-end;
+<table align="center" border=0>
+<tr><td align="center" class="info">
+	<a href="https://code.google.com/p/dwscript/"><img src="res/DWS_server.jpg" width=262 height=177 /></a><br />
+	<a href="http://delphitools.info">DelphiTools.info</a> - <a href="https://code.google.com/p/dwscript/">Get the code!</a><br />
+	Compiler Version <?pas=CompilerVersion?><br />
+	This page was generated at <?pas=FormatDateTime('hh:nn:ss.zzz', Now)?>.
+</tr></td>
+<tr><td>
+	<hr>
+</tr></td>
+<tr><td>
+	<p>Some test links<ul>
+	<li><a href="systemInfo.dws">system information</a></li>
+	<li>hello world: <a href="hello.dws">dynamic</a> or <a href="hello.htm">static</a></li>
+	<li>request info: <a href="requestInfo.dws">blank</a> or <a href="requestInfo.dws?p=alpha&b=beta&c=gamma+delta">parameterized</a></li>
+	<li><a href="formpost.dws">Form Post</a> test</li>
+	<li><a href="infiniteLoop.dws">infinite loop script</a> (auto-abort after 3 sec)</li>
+	<li><a href="authenticated.dws">authentication</a> (<?pas=if auths.Count=0 then 'not enabled' else auths.join(',')?>)</li>
+	<li><a href="uses.dws">uses Test</a></li>
+	<li><a href="sqlite.dws">SQLite Test</a></li>
+	</ul></p>
+	<p>Some facts:<ul><?pas
+	procedure PrintFacts(i : Integer);
+	begin
+		Print(Format('%0:d + %0:d = %1:d', [i, i+i]));
+	end;
 
-var i : Integer;
-for i:=1 to 5 do begin
-   Print('<li>');
-   PrintFacts(RandomInt(100)+1);   
-   PrintLn('</li>');
-end;
-%></ul></p>
+	var i : Integer;
+	for i:=1 to 5 do begin
+		Print('<li>');
+		PrintFacts(RandomInt(100)+1);   
+		PrintLn('</li>');
+	end;
+	?></ul></p>
+</tr></td>
+</table>
 </body>
 </html>

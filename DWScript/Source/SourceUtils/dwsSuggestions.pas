@@ -19,8 +19,10 @@ unit dwsSuggestions;
 
 interface
 
-uses Classes, SysUtils, dwsExprs, dwsSymbols, dwsErrors, dwsUtils, dwsTokenizer,
-   dwsUnitSymbols, dwsPascalTokenizer;
+uses
+   Classes, SysUtils,
+   dwsExprs, dwsSymbols, dwsErrors, dwsUtils, dwsTokenizer,
+   dwsUnitSymbols, dwsPascalTokenizer, dwsCompiler;
 
 type
 
@@ -35,27 +37,30 @@ type
                              scProperty,
                              scEnum, scElement,
                              scParameter,
-                             scVariable, scConst);
+                             scVariable, scConst,
+                             scReservedWord,
+                             scSpecialFunction);
 
    IdwsSuggestions = interface
       ['{09CA8BF2-AF3F-4B5A-B188-4B2FF574AC34}']
-      function GetCode(i : Integer) : String;
+      function GetCode(i : Integer) : UnicodeString;
       function GetCategory(i : Integer) : TdwsSuggestionCategory;
-      function GetCaption(i : Integer) : String;
+      function GetCaption(i : Integer) : UnicodeString;
       function GetSymbols(i : Integer) : TSymbol;
 
-      property Code[i : Integer] : String read GetCode;
+      property Code[i : Integer] : UnicodeString read GetCode;
       property Category[i : Integer] : TdwsSuggestionCategory read GetCategory;
-      property Caption[i : Integer] : String read GetCaption;
+      property Caption[i : Integer] : UnicodeString read GetCaption;
       property Symbols[i : Integer] : TSymbol read GetSymbols;
       function Count : Integer;
 
-      function PartialToken : String;
+      function PartialToken : UnicodeString;
+      function PreviousSymbol : TSymbol;
    end;
 
-   // Pseudo-symbol for suggestion purposes
-   TReservedWordSymbol = class(TSymbol)
-   end;
+   // Pseudo-symbols for suggestion purposes
+   TReservedWordSymbol = class(TSymbol);
+   TSpecialFunctionSymbol = class(TSymbol);
 
    TSimpleSymbolList = class;
 
@@ -82,6 +87,8 @@ type
    TdwsSuggestionsOption = (soNoReservedWords);
    TdwsSuggestionsOptions = set of TdwsSuggestionsOption;
 
+   TNameSymbolHash = TSimpleNameObjectHash<TSymbol>;
+
    TdwsSuggestions = class (TInterfacedObject, IdwsSuggestions)
       private
          FProg : IdwsProgram;
@@ -90,40 +97,46 @@ type
          FList : TSimpleSymbolList;
          FCleanupList : TTightList;
          FListLookup : TObjectsLookup;
-         FNamesLookup : TStringList;
-         FPartialToken : String;
+         FNamesLookup : TNameSymbolHash;
+         FPartialToken : UnicodeString;
          FPreviousSymbol : TSymbol;
-         FPreviousTokenString : String;
+         FPreviousSymbolIsMeta : Boolean;
+         FPreviousTokenString : UnicodeString;
          FPreviousToken : TTokenType;
+         FAfterDot : Boolean;
          FLocalContext : TdwsSourceContext;
          FLocalTable : TSymbolTable;
          FContextSymbol : TSymbol;
          FSymbolClassFilter : TSymbolClass;
          FStaticArrayHelpers : TSymbolTable;
          FDynArrayHelpers : TSymbolTable;
+         FEnumElementHelpers : TSymbolTable;
 
       protected
-         function GetCode(i : Integer) : String;
+         function GetCode(i : Integer) : UnicodeString;
          function GetCategory(i : Integer) : TdwsSuggestionCategory;
-         function GetCaption(i : Integer) : String;
+         function GetCaption(i : Integer) : UnicodeString;
          function GetSymbols(i : Integer) : TSymbol;
          function Count : Integer;
 
-         function PartialToken : String;
+         function PartialToken : UnicodeString;
+         function PreviousSymbol : TSymbol;
 
          procedure AnalyzeLocalTokens;
 
          procedure AddToList(aList : TSimpleSymbolList);
          function IsContextSymbol(sym : TSymbol) : Boolean;
 
-         function CreateHelper(const name : String; resultType : TTypeSymbol;
+         function CreateHelper(const name : UnicodeString; resultType : TTypeSymbol;
                                const args : array of const) : TFuncSymbol;
+         procedure AddEnumerationElementHelpers(list : TSimpleSymbolList);
          procedure AddStaticArrayHelpers(list : TSimpleSymbolList);
          procedure AddDynamicArrayHelpers(dyn : TDynamicArraySymbol; list : TSimpleSymbolList);
          procedure AddTypeHelpers(typ : TTypeSymbol; meta : Boolean; list : TSimpleSymbolList);
          procedure AddUnitSymbol(unitSym : TUnitSymbol; list : TSimpleSymbolList);
 
          procedure AddReservedWords;
+         procedure AddSpecialFuncs;
          procedure AddImmediateSuggestions;
          procedure AddContextSuggestions;
          procedure AddUnitSuggestions;
@@ -146,9 +159,10 @@ implementation
 
 type
    THelperFilter = class (TSimpleSymbolList)
-      List : TSimpleSymbolList;
-      Meta : Boolean;
-      function OnHelper(helper : THelperSymbol) : Boolean;
+      private
+         List : TSimpleSymbolList;
+         Meta : Boolean;
+         function OnHelper(helper : THelperSymbol) : Boolean;
    end;
 
 // OnHelper
@@ -176,8 +190,7 @@ begin
    FSourceFile:=sourcePos.SourceFile;
    FList:=TSimpleSymbolList.Create;
    FListLookup:=TObjectsLookup.Create;
-   FNamesLookup:=TFastCompareStringList.Create;
-   FNamesLookup.Sorted:=True;
+   FNamesLookup:=TNameSymbolHash.Create;
 
    AnalyzeLocalTokens;
 
@@ -188,8 +201,11 @@ begin
    AddUnitSuggestions;
    AddGlobalSuggestions;
 
-   if not (soNoReservedWords in options) then
-      AddReservedWords;
+   if not FAfterDot then begin
+      if not (soNoReservedWords in options) then
+         AddReservedWords;
+      AddSpecialFuncs;
+   end;
 
    FNamesLookup.Clear;
    FListLookup.Clear;
@@ -205,6 +221,7 @@ begin
    FCleanupList.Clean;
    FStaticArrayHelpers.Free;
    FDynArrayHelpers.Free;
+   FEnumElementHelpers.Free;
    inherited;
 end;
 
@@ -212,25 +229,51 @@ end;
 //
 procedure TdwsSuggestions.AnalyzeLocalTokens;
 var
-   codeLine : String;
+   codeLine : UnicodeString;
    p, p2 : Integer;
+   sl : TStringList;
+   lineNumber : Integer;
 
-   function MoveBackArrayBrackets : Boolean;
+   function NeedCodeLine : Boolean;
+   begin
+      if lineNumber>0 then begin
+         Dec(lineNumber);
+         codeLine:=sl[lineNumber];
+         p:=Length(codeLine);
+         Result:=True;
+      end else Result:=False;
+   end;
+
+   function SkipBrackets : Boolean;
    var
       n : Integer;
+      inString : Char;
    begin
-      Result:=False;
-      if p<1 then Exit;
-      n:=Ord(codeLine[p]=']');
-      if n=0 then Exit(False);
-      while (p>1) and (n>0) do begin
-         case codeLine[p-1] of
-            ']' : Inc(n);
-            '[' : Dec(n);
+      while p<=0 do
+         if not NeedCodeLine then
+            Exit(False);
+      n:=0;
+      inString:=#0;
+      Result:=(codeLine[p]=']') or (codeLine[p]=')');
+      while p>=1 do begin
+         if inString=#0 then begin
+            case codeLine[p] of
+               ')', ']' : Inc(n);
+               '(', '[' : Dec(n);
+               '''' : inString:='''';
+               '"' : inString:='"';
+            end;
+            if n=0 then Exit;
+         end else begin
+            if codeLine[p]=inString then
+               inString:=#0;
          end;
          Dec(p);
+         while p<=0 do
+            if not NeedCodeLine then
+               Exit(False);
       end;
-      Result:=(n=0);
+      Result:=Result and (p>=1);
    end;
 
    procedure MoveToTokenStart;
@@ -253,7 +296,6 @@ var
    end;
 
 var
-   sl : TStringList;
    context : TdwsSourceContext;
    arrayItem : Boolean;
 begin
@@ -277,31 +319,41 @@ begin
    sl:=TStringList.Create;
    try
       sl.Text:=FSourceFile.Code;
-      if Cardinal(FSourcePos.Line-1)<Cardinal(sl.Count) then
-         codeLine:=sl[FSourcePos.Line-1]
-      else Exit;
+      if Cardinal(FSourcePos.Line-1)>=Cardinal(sl.Count) then begin
+         lineNumber:=0;
+         codeLine:='';
+      end else begin
+         lineNumber:=FSourcePos.Line-1;
+         codeLine:=sl[lineNumber]
+      end;
+
+      p:=FSourcePos.Col;
+      MoveToTokenStart;
+
+      FPartialToken:=Copy(codeLine, p, FSourcePos.Col-p);
+
+      if (p>1) and (codeLine[p-1]='.') then begin
+         FAfterDot:=True;
+         Dec(p, 2);
+         arrayItem:=SkipBrackets;
+         MoveToTokenStart;
+         FPreviousSymbol:=FProg.SymbolDictionary.FindSymbolAtPosition(p, lineNumber+1, FSourceFile.Name);
+         if FPreviousSymbol<>nil then begin
+            if FPreviousSymbol is TAliasSymbol then
+               FPreviousSymbol:=TAliasSymbol(FPreviousSymbol).UnAliasedType;
+            if arrayItem then begin
+               FPreviousSymbolIsMeta:=False;
+               if FPreviousSymbol.Typ is TArraySymbol then
+                  FPreviousSymbol:=TArraySymbol(FPreviousSymbol.Typ).Typ
+               else if FPreviousSymbol is TPropertySymbol then
+                  FPreviousSymbol:=TArraySymbol(FPreviousSymbol).Typ;
+            end else begin
+               FPreviousSymbolIsMeta:=FPreviousSymbol.IsType;
+            end;
+         end;
+      end else FAfterDot:=False;
    finally
       sl.Free;
-   end;
-
-   p:=FSourcePos.Col;
-   MoveToTokenStart;
-
-   FPartialToken:=Copy(codeLine, p, FSourcePos.Col-p);
-
-   if (p>1) and (codeLine[p-1]='.') then begin
-      Dec(p, 2);
-      arrayItem:=MoveBackArrayBrackets;
-      MoveToTokenStart;
-      FPreviousSymbol:=FProg.SymbolDictionary.FindSymbolAtPosition(p, FSourcePos.Line, FSourceFile.Name);
-      if FPreviousSymbol is TAliasSymbol then
-         FPreviousSymbol:=TAliasSymbol(FPreviousSymbol).UnAliasedType;
-      if arrayItem then begin
-         if FPreviousSymbol.Typ is TArraySymbol then
-            FPreviousSymbol:=TArraySymbol(FPreviousSymbol.Typ).Typ
-         else if FPreviousSymbol is TPropertySymbol then
-            FPreviousSymbol:=TArraySymbol(FPreviousSymbol).Typ;
-      end;
    end;
 
    Dec(p);
@@ -340,12 +392,12 @@ begin
             if not ((sym is FSymbolClassFilter) or (sym.Typ is FSymbolClassFilter)) then continue;
          end else if sym is TOpenArraySymbol then
             continue;
-         if Pos(' ', sym.Name)>0 then continue;
+         if StrContains(sym.Name, ' ') then continue;
          if FListLookup.IndexOf(sym)<0 then begin
             FListLookup.Add(sym);
-            if FNamesLookup.IndexOf(sym.Name)<0 then begin
+            if FNamesLookup.Objects[sym.Name]=nil then begin
                tmp.AddObject(sym.Name, sym);
-               FNamesLookup.Add(sym.Name);
+               FNamesLookup.AddObject(sym.Name, sym);
             end;
          end;
       end;
@@ -374,7 +426,7 @@ end;
 
 // CreateHelper
 //
-function TdwsSuggestions.CreateHelper(const name : String; resultType : TTypeSymbol;
+function TdwsSuggestions.CreateHelper(const name : UnicodeString; resultType : TTypeSymbol;
                                       const args : array of const) : TFuncSymbol;
 var
    i : Integer;
@@ -389,9 +441,25 @@ begin
    for i:=0 to (Length(args) div 2)-1 do begin
       Assert(args[i*2].VType=vtUnicodeString);
       Assert(args[i*2+1].VType=vtObject);
-      p:=TParamSymbol.Create(String(args[i*2].VUnicodeString), TObject(args[i*2+1].VObject) as TTypeSymbol);
+      p:=TParamSymbol.Create(UnicodeString(args[i*2].VUnicodeString), TObject(args[i*2+1].VObject) as TTypeSymbol);
       Result.Params.AddSymbol(p);
    end;
+end;
+
+// AddEnumerationElementHelpers
+//
+procedure TdwsSuggestions.AddEnumerationElementHelpers(list : TSimpleSymbolList);
+var
+   p : TdwsMainProgram;
+begin
+   if FEnumElementHelpers=nil then begin
+      FEnumElementHelpers:=TSymbolTable.Create;
+      p:=FProg.ProgramObject;
+      FEnumElementHelpers.AddSymbol(CreateHelper('Name', p.TypString, []));
+      FEnumElementHelpers.AddSymbol(CreateHelper('Value', p.TypInteger, []));
+   end;
+
+   list.AddSymbolTable(FEnumElementHelpers);
 end;
 
 // AddStaticArrayHelpers
@@ -420,16 +488,22 @@ begin
    if FDynArrayHelpers=nil then begin
       p:=FProg.ProgramObject;
       FDynArrayHelpers:=TSystemSymbolTable.Create;
+      FDynArrayHelpers.AddSymbol(CreateHelper('Count', p.TypInteger, []));
       FDynArrayHelpers.AddSymbol(CreateHelper('Add', nil, ['item', dyn.Typ]));
       FDynArrayHelpers.AddSymbol(CreateHelper('Push', nil, ['item', dyn.Typ]));
+      FDynArrayHelpers.AddSymbol(CreateHelper('Pop', dyn.Typ, []));
+      FDynArrayHelpers.AddSymbol(CreateHelper('Peek', dyn.Typ, []));
       FDynArrayHelpers.AddSymbol(CreateHelper('Delete', nil, ['index', dyn.Typ, 'count', p.TypInteger]));
       FDynArrayHelpers.AddSymbol(CreateHelper('IndexOf', p.TypInteger, ['item', dyn.Typ, 'fromIndex', p.TypInteger]));
       FDynArrayHelpers.AddSymbol(CreateHelper('Insert', nil, ['index', p.TypInteger, 'item', dyn.Typ]));
       FDynArrayHelpers.AddSymbol(CreateHelper('SetLength', nil, ['newLength', p.TypInteger]));
       FDynArrayHelpers.AddSymbol(CreateHelper('Clear', nil, []));
+      FDynArrayHelpers.AddSymbol(CreateHelper('Remove', nil, []));
       FDynArrayHelpers.AddSymbol(CreateHelper('Reverse', nil, []));
       FDynArrayHelpers.AddSymbol(CreateHelper('Swap', nil, ['index1', p.TypInteger, 'index2', p.TypInteger]));
       FDynArrayHelpers.AddSymbol(CreateHelper('Copy', nil, ['startIndex', p.TypInteger, 'count', p.TypInteger]));
+      FDynArrayHelpers.AddSymbol(CreateHelper('Sort', nil, ['comparer', dyn.SortFunctionType(p.TypInteger)]));
+      FDynArrayHelpers.AddSymbol(CreateHelper('Map', nil, ['func', dyn.MapFunctionType(p.TypInteger)]));
    end;
 
    list.AddSymbolTable(FDynArrayHelpers);
@@ -467,7 +541,7 @@ end;
 //
 procedure TdwsSuggestions.AddReservedWords;
 
-   function IsAlpha(const s : String) : Boolean;
+   function IsAlpha(const s : UnicodeString) : Boolean;
    var
       i : Integer;
    begin
@@ -501,6 +575,27 @@ begin
    end;
 end;
 
+// AddSpecialFuncs
+//
+procedure TdwsSuggestions.AddSpecialFuncs;
+var
+   skk : TSpecialKeywordKind;
+   sfs : TSpecialFunctionSymbol;
+   list : TSimpleSymbolList;
+begin
+   list:=TSimpleSymbolList.Create;
+   try
+      for skk:=Succ(skNone) to High(TSpecialKeywordKind) do begin
+         sfs:=TSpecialFunctionSymbol.Create(cSpecialKeywords[skk], nil);
+         list.Add(sfs);
+         FCleanupList.Add(sfs);
+      end;
+      AddToList(list);
+   finally
+      list.Free;
+   end;
+end;
+
 // AddImmediateSuggestions
 //
 procedure TdwsSuggestions.AddImmediateSuggestions;
@@ -511,10 +606,12 @@ begin
    try
       if FPreviousSymbol<>nil then begin
 
-         if FPreviousSymbol.IsType then
-            AddTypeHelpers(FPreviousSymbol as TTypeSymbol, True, list)
-         else if (FPreviousSymbol.Typ<>nil) and FPreviousSymbol.Typ.IsType then
+         if FPreviousSymbolIsMeta then begin
+            AddTypeHelpers(FPreviousSymbol as TTypeSymbol, True, list);
+         end else if (FPreviousSymbol.Typ<>nil) and FPreviousSymbol.Typ.IsType then begin
             AddTypeHelpers(FPreviousSymbol.Typ, False, list);
+         end else if FPreviousSymbol is TTypeSymbol then
+            AddTypeHelpers(TTypeSymbol(FPreviousSymbol), False, list);
 
          if FPreviousSymbol is TStructuredTypeMetaSymbol then begin
 
@@ -522,10 +619,14 @@ begin
 
          end else if FPreviousSymbol is TStructuredTypeSymbol then begin
 
-            if FPreviousToken in [ttPROCEDURE, ttFUNCTION, ttMETHOD, ttCONSTRUCTOR, ttDESTRUCTOR]  then begin
-               FSymbolClassFilter:=TFuncSymbol;
-               list.AddMembers(TStructuredTypeSymbol(FPreviousSymbol), FContextSymbol);
-            end else list.AddMetaMembers(TStructuredTypeSymbol(FPreviousSymbol), FContextSymbol);
+            if not FPreviousSymbolIsMeta then
+               list.AddMembers(TStructuredTypeSymbol(FPreviousSymbol), FContextSymbol)
+            else begin
+               if FPreviousToken in [ttPROCEDURE, ttFUNCTION, ttMETHOD, ttCONSTRUCTOR, ttDESTRUCTOR]  then begin
+                  FSymbolClassFilter:=TFuncSymbol;
+                  list.AddMembers(TStructuredTypeSymbol(FPreviousSymbol), FContextSymbol);
+               end else list.AddMetaMembers(TStructuredTypeSymbol(FPreviousSymbol), FContextSymbol);
+            end;
 
          end else if     (FPreviousSymbol is TMethodSymbol)
                      and (TMethodSymbol(FPreviousSymbol).Kind=fkConstructor) then begin
@@ -562,6 +663,11 @@ begin
 
             list.AddSymbolTable(TEnumerationSymbol(FPreviousSymbol).Elements);
 
+         end else if    (FPreviousSymbol is TElementSymbol)
+                     or (FPreviousSymbol.Typ is TEnumerationSymbol) then begin
+
+            AddEnumerationElementHelpers(list);
+
          end else if list.Count=0 then
 
             FPreviousSymbol:=nil;
@@ -595,7 +701,7 @@ begin
       while context<>nil do begin
          list.AddSymbolTable(context.LocalTable);
 
-         if context.ParentSym is TFuncSymbol then begin
+         if context.ParentSym.IsFuncSymbol then begin
             funcSym:=TFuncSymbol(Context.ParentSym);
             list.AddDirectSymbolTable(funcSym.Params);
             list.AddDirectSymbolTable(funcSym.InternalParams);
@@ -673,7 +779,7 @@ end;
 
 // GetCode
 //
-function TdwsSuggestions.GetCode(i : Integer) : String;
+function TdwsSuggestions.GetCode(i : Integer) : UnicodeString;
 begin
    Result:=FList[i].Name;
 end;
@@ -696,7 +802,7 @@ begin
          if symbolClass.InheritsFrom(TClassSymbol) then
             Result:=scClass
          else if symbolClass.InheritsFrom(TRecordSymbol) then
-            Result:=scInterface
+            Result:=scRecord
          else if symbolClass.InheritsFrom(TInterfaceSymbol) then
             Result:=scInterface
       end else if symbolClass.InheritsFrom(TMethodSymbol) then begin
@@ -730,14 +836,18 @@ begin
          else Result:=scConst
       end else Result:=scVariable;
 
-   end;
-end;
+   end else if symbolClass.InheritsFrom(TReservedWordSymbol) then
+      Result:=scReservedWord
+   else if symbolClass.InheritsFrom(TSpecialFunctionSymbol) then
+      Result:=scSpecialFunction;
+
+ end;
 
 // GetCaption
 //
-function TdwsSuggestions.GetCaption(i : Integer) : String;
+function TdwsSuggestions.GetCaption(i : Integer) : UnicodeString;
 
-   function SafeSymbolName(symbol : TSymbol) : String;
+   function SafeSymbolName(symbol : TSymbol) : UnicodeString;
    begin
       if symbol<>nil then begin
          Result:=symbol.Name;
@@ -755,7 +865,7 @@ var
    alias : TAliasSymbol;
 begin
    symbol:=FList[i];
-   if symbol is TFuncSymbol then begin
+   if symbol.IsFuncSymbol then begin
 
       funcSym:=TFuncSymbol(symbol);
       Result:=funcSym.Name+' '+funcSym.ParamsDescription;
@@ -786,6 +896,12 @@ begin
       alias:=TAliasSymbol(symbol);
       Result:=alias.Name+' = '+SafeSymbolName(alias.Typ);
 
+   end else if symbol is TSpecialFunctionSymbol then begin
+
+      if symbol.Name='DebugBreak' then
+         Result:=symbol.Name
+      else Result:=symbol.Name+' ( special )';
+
    end else Result:=symbol.Name;
 end;
 
@@ -805,9 +921,14 @@ end;
 
 // PartialToken
 //
-function TdwsSuggestions.PartialToken : String;
+function TdwsSuggestions.PartialToken : UnicodeString;
 begin
    Result:=FPartialToken;
+end;
+
+function TdwsSuggestions.PreviousSymbol: TSymbol;
+begin
+  Result := FPreviousSymbol;
 end;
 
 // ------------------
@@ -918,28 +1039,48 @@ end;
 //
 procedure TSimpleSymbolList.AddMetaMembers(struc : TCompositeTypeSymbol; from : TSymbol;
                                            const addToList : TProcAddToList = nil);
+
+   function IsMetaAccessor(sym : TSymbol) : Boolean;
+   var
+      symClass : TClass;
+   begin
+      if sym=nil then Exit(False);
+      symClass:=sym.ClassType;
+      Result:=   (symClass=TClassConstSymbol)
+              or (symClass=TClassVarSymbol)
+              or (symClass.InheritsFrom(TMethodSymbol) and TMethodSymbol(sym).IsClassMethod);
+   end;
+
 var
    sym : TSymbol;
    methSym : TMethodSymbol;
+   propSym : TPropertySymbol;
    scope : TCompositeTypeSymbol;
    visibility : TdwsVisibility;
-   first : Boolean;
+   first, allowConstructors : Boolean;
 begin
    scope:=ScopeStruct(from);
    visibility:=ScopeVisiblity(scope, struc);
    first:=True;
+   allowConstructors:=(struc is TClassSymbol) and not TClassSymbol(struc).IsStatic;
 
    repeat
       for sym in struc.Members do begin
          if not sym.IsVisibleFor(visibility) then continue;
          if sym is TMethodSymbol then begin
             methSym:=TMethodSymbol(sym);
-            if methSym.IsClassMethod or (methSym.Kind=fkConstructor) then
+            if     methSym.IsClassMethod
+               or (    allowConstructors
+                   and (methSym.Kind=fkConstructor)) then
                Add(Sym);
          end else if sym is TClassConstSymbol then begin
             Add(sym);
          end else if sym is TClassVarSymbol then begin
             Add(sym);
+         end else if sym is TPropertySymbol then begin
+            propSym:=TPropertySymbol(sym);
+            if IsMetaAccessor(propSym.ReadSym) or IsMetaAccessor(propSym.WriteSym) then
+               Add(sym);
          end;
       end;
       if first then begin

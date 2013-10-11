@@ -23,18 +23,22 @@ unit dwsInfo;
 
 interface
 
-uses Classes, SysUtils, Variants, dwsSymbols, dwsStack, dwsExprs, dwsFunctions,
-   dwsStrings, dwsErrors, dwsUtils, dwsXPlatform;
+uses
+   Classes, SysUtils, Variants,
+   dwsUtils, dwsXPlatform,
+   dwsSymbols, dwsStack, dwsExprs, dwsFunctions, dwsDataContext, dwsConstExprs,
+   dwsConnectorExprs, dwsConvExprs, dwsMethodExprs, dwsResultFunctions,
+   dwsStrings, dwsErrors, dwsCompilerUtils;
 
 type
 
    IDataMaster = interface
       ['{8D534D17-4C6B-11D5-8DCB-0000216D9E86}']
-      function GetCaption : String;
+      function GetCaption : UnicodeString;
       function GetSize : Integer;
       procedure Read(exec : TdwsExecution; const data : TData);
       procedure Write(exec : TdwsExecution; const data : TData);
-      property Caption : String read GetCaption;
+      property Caption : UnicodeString read GetCaption;
       property Size : Integer read GetSize;
    end;
 
@@ -43,45 +47,47 @@ type
       protected
          FExec : TdwsProgramExecution;
          FChild : IInfo;
-         FData : TData;
-         FOffset : Integer;
+         FDataPtr : IDataContext;
          FProgramInfo : TProgramInfo;
          FDataMaster : IDataMaster;
          FTypeSym : TSymbol;
 
          function GetData : TData; virtual;
          function GetExternalObject : TObject; virtual;
-         function GetMember(const s : String) : IInfo; virtual;
+         function GetMember(const s : UnicodeString) : IInfo; virtual;
          function GetFieldMemberNames : TStrings; virtual;
-         function GetMethod(const s : String) : IInfo; virtual;
+         function GetMethod(const s : UnicodeString) : IInfo; virtual;
          function GetScriptObj : IScriptObj; virtual;
-         function GetParameter(const s : String) : IInfo; virtual;
+         function GetParameter(const s : UnicodeString) : IInfo; virtual;
          function GetTypeSym : TSymbol;
          function GetValue : Variant; virtual;
-         function GetValueAsString : String; virtual;
+         function GetValueAsString : UnicodeString; virtual;
          function GetValueAsDataString : RawByteString; virtual;
          function GetValueAsInteger : Int64; virtual;
          function GetValueAsBoolean : Boolean; virtual;
          function GetValueAsFloat : Double; virtual;
          function GetInherited: IInfo; virtual;
+         function GetExec : IdwsProgramExecution;
          procedure SetData(const Value: TData); virtual;
          procedure SetExternalObject(ExtObject: TObject); virtual;
          procedure SetValue(const Value: Variant); virtual;
+         procedure SetValueAsInteger(const value : Int64); virtual;
+         procedure SetValueAsString(const value : UnicodeString); virtual;
 
       public
          constructor Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
-                            const Data: TData; Offset: Integer; const DataMaster: IDataMaster = nil);
+                            const DataPtr: IDataContext; const DataMaster: IDataMaster = nil);
 
          function Call : IInfo; overload; virtual;
          function Call(const params : array of Variant) : IInfo; overload; virtual;
          function Element(const indices : array of Integer) : IInfo; virtual;
-         function GetConstructor(const methName : String; extObject : TObject) : IInfo; virtual;
+         function GetConstructor(const methName : UnicodeString; extObject : TObject) : IInfo; virtual;
 
-         property Data : TData read FData write FData;
-         property Offset : Integer read FOffset write FOffset;
+         property DataPtr : IDataContext read FDataPtr write FDataPtr;
+         property ProgramInfo : TProgramInfo read FProgramInfo;
 
          class procedure SetChild(out result : IInfo; programInfo : TProgramInfo; childTypeSym : TSymbol;
-                                  const childData : TData; childOffset : Integer; const childDataMaster : IDataMaster = nil);
+                                  const childDataPtr : IDataContext; const childDataMaster : IDataMaster = nil);
       end;
 
   TInfoConst = class(TInfo)
@@ -93,23 +99,24 @@ type
     function GetData : TData; override;
   end;
 
-   TInfoData = class(TInfo)
+   TInfoData = class (TInfo)
       protected
          function GetValue: Variant; override;
-         function GetValueAsString : String; override;
+         function GetValueAsString : UnicodeString; override;
          function GetValueAsInteger : Int64; override;
          function GetValueAsFloat : Double; override;
          function GetData : TData; override;
          function GetScriptObj: IScriptObj; override;
          procedure SetData(const Value: TData); override;
          procedure SetValue(const Value: Variant); override;
+         procedure SetValueAsInteger(const Value: Int64); override;
    end;
 
   TInfoClass = class(TInfoData)
     FScriptObj: IScriptObj;
-    function GetConstructor(const MethName: String; ExtObject: TObject): IInfo; override;
-    function GetMethod(const s: String): IInfo; override;
-    function GetValueAsString : String; override;
+    function GetConstructor(const MethName: UnicodeString; ExtObject: TObject): IInfo; override;
+    function GetMethod(const s: UnicodeString): IInfo; override;
+    function GetValueAsString : UnicodeString; override;
     function GetScriptObj: IScriptObj; override;
     function GetInherited: IInfo; override;
   end;
@@ -117,10 +124,10 @@ type
   TInfoClassObj = class(TInfoClass)
     FMembersCache : TStrings;
     constructor Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
-                       const Data: TData; Offset: Integer;
+                       const DataPtr: IDataContext;
                        const DataMaster: IDataMaster = nil);
     destructor Destroy; override;
-    function GetMember(const s : String): IInfo; override;
+    function GetMember(const s : UnicodeString): IInfo; override;
     function GetFieldMemberNames : TStrings; override;
     function GetExternalObject: TObject; override;
     procedure SetExternalObject(ExtObject: TObject); override;
@@ -142,14 +149,14 @@ type
    TInfoRecord = class(TInfoData)
       FMembersCache : TStrings;
       destructor Destroy; override;
-      function GetMember(const s: String): IInfo; override;
+      function GetMember(const s: UnicodeString): IInfo; override;
       function GetFieldMemberNames : TStrings; override;
    end;
 
    TInfoStaticArray = class(TInfoData)
       function Element(const Indices: array of Integer): IInfo; override;
-      function GetMember(const s: String): IInfo; override;
-      function GetValueAsString : String; override;
+      function GetMember(const s: UnicodeString): IInfo; override;
+      function GetValueAsString : UnicodeString; override;
    end;
 
    TInfoDynamicArrayBase = class (TInfoData)
@@ -162,10 +169,11 @@ type
          FDelta : Integer;
 
       public
-         constructor Create(ProgramInfo: TProgramInfo; const Data: TData; Offset, Delta: Integer);
+         constructor Create(ProgramInfo: TProgramInfo; const DataPtr: IDataContext; Delta: Integer);
          function GetValue : Variant; override;
          function GetValueAsInteger : Int64; override;
          procedure SetValue(const Value: Variant); override;
+         procedure SetValueAsInteger(const Value: Int64); override;
    end;
 
    TInfoDynamicArray = class(TInfoDynamicArrayBase)
@@ -173,19 +181,19 @@ type
          function GetScriptObj : IScriptObj; override;
 
       public
-         function Element(const Indices: array of Integer): IInfo; override;
-         function GetMember(const s: String): IInfo; override;
-         function GetValueAsString : String; override;
+         function Element(const indices : array of Integer) : IInfo; override;
+         function GetMember(const s: UnicodeString): IInfo; override;
+         function GetValueAsString : UnicodeString; override;
          function GetData : TData; override;
          procedure SetData(const Value: TData); override;
    end;
 
    TInfoOpenArray = class(TInfoStaticArray)
       function Element(const Indices: array of Integer): IInfo; override;
-      function GetMember(const s: String): IInfo; override;
+      function GetMember(const s: UnicodeString): IInfo; override;
    end;
 
-   TInfoFunc = class(TInfo)
+   TInfoFunc = class(TInfoData)
       protected
          FClassSym: TClassSymbol;
          FExternalObject: TObject;
@@ -198,16 +206,16 @@ type
          FUsesTempParams: Boolean;
          FForceStatic: Boolean;
 
-         function CreateTempFuncExpr : TFuncExpr;
+         function CreateTempFuncExpr : TFuncExprBase;
          procedure InitTempParams;
-         function GetParameter(const s: String): IInfo; override;
+         function GetParameter(const s: UnicodeString): IInfo; override;
          function GetExternalObject: TObject; override;
          procedure SetExternalObject(ExtObject: TObject); override;
          function GetInherited: IInfo; override;
 
       public
          constructor Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
-                            const Data: TData; Offset: Integer;
+                            const DataPtr: IDataContext;
                             const DataMaster: IDataMaster;
                             const ScriptObj: IScriptObj;
                             ClassSym: TClassSymbol; ForceStatic: Boolean = False);
@@ -224,31 +232,31 @@ type
          procedure AssignIndices(const Func: IInfo; FuncParams: TSymbolTable);
       protected
          procedure InitTempParams;
-         function GetParameter(const s: String): IInfo; override;
+         function GetParameter(const s: UnicodeString): IInfo; override;
          function GetValue: Variant; override;
          function GetData : TData; override;
          procedure SetData(const Value: TData); override;
          procedure SetValue(const Value: Variant); override;
       public
          constructor Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
-                            const Data: TData; Offset: Integer;
+                            const DataPtr: IDataContext;
                             PropSym: TPropertySymbol; const ScriptObj: IScriptObj);
          destructor Destroy; override;
    end;
 
    TInfoConnector = class(TInfoData)
-      function GetMethod(const s: String): IInfo; override;
-      function GetMember(const s: String): IInfo; override;
+      function GetMethod(const s: UnicodeString): IInfo; override;
+      function GetMember(const s: UnicodeString): IInfo; override;
    end;
 
    TInfoConnectorCall = class(TInfo)
       protected
-         FName: String;
+         FName: UnicodeString;
          FConnectorType: IConnectorType;
       public
          constructor Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
-                            const Data: TData; Offset: Integer;
-                            const ConnectorType: IConnectorType; const Name: String);
+                            const DataPtr: IDataContext;
+                            const ConnectorType: IConnectorType; const Name: UnicodeString);
          function Call(const Params: array of Variant): IInfo; overload; override;
    end;
 
@@ -256,7 +264,7 @@ type
       private
          FCaller: TdwsProgramExecution;
          FSym: TSymbol;
-         function GetCaption: String;
+         function GetCaption: UnicodeString;
          function GetSize: Integer;
       public
          constructor Create(Caller: TdwsProgramExecution; Sym: TSymbol);
@@ -273,22 +281,12 @@ type
    TConnectorMemberDataMaster = class(TDataMaster)
       private
          FBaseValue: Variant;
-         FName: String;
+         FName: UnicodeString;
 
       public
-         constructor Create(Caller: TdwsProgramExecution; Sym: TSymbol; const BaseValue: Variant; const Name: String);
+         constructor Create(Caller: TdwsProgramExecution; Sym: TSymbol; const BaseValue: Variant; const Name: UnicodeString);
          procedure Read(exec : TdwsExecution; const Data: TData); override;
          procedure Write(exec : TdwsExecution; const Data: TData); override;
-   end;
-
-   TPrintFunction = class(TInternalFunction)
-      public
-         procedure Execute(info : TProgramInfo); override;
-   end;
-
-   TPrintLnFunction = class(TInternalFunction)
-      public
-         procedure Execute(info : TProgramInfo); override;
    end;
 
    TdwsDefaultResultType = class(TdwsResultType)
@@ -314,8 +312,11 @@ uses dwsCoreExprs;
 //
 procedure CreateInfoOnSymbol(var result : IInfo; programInfo : TProgramInfo; typeSym : TSymbol;
                              const data : TData; offset : Integer);
+var
+   dataPtr : IDataContext;
 begin
-   TInfo.SetChild(result, programInfo, typeSym, data, offset, nil);
+   programInfo.Execution.DataContext_Create(data, offset, dataPtr);
+   TInfo.SetChild(result, programInfo, typeSym, dataPtr, nil);
 end;
 
 // ------------------
@@ -334,30 +335,7 @@ end;
 procedure TdwsDefaultResultType.AddResultSymbols(SymbolTable: TSymbolTable);
 begin
    inherited;
-   TPrintFunction.Create(SymbolTable, 'Print',  ['v', 'Variant'], '', []);
-   TPrintLnFunction.Create(SymbolTable, 'PrintLn', ['v', 'Variant'], '', []);
-end;
-
-// ------------------
-// ------------------ TPrintFunction ------------------
-// ------------------
-
-procedure TPrintFunction.Execute(info : TProgramInfo);
-begin
-   info.Execution.Result.AddString(info.ValueAsString['v']);
-end;
-
-// ------------------
-// ------------------ TPrintLnFunction ------------------
-// ------------------
-
-procedure TPrintLnFunction.Execute(info : TProgramInfo);
-var
-   result : TdwsResult;
-begin
-   result:=info.Execution.Result;
-   result.AddString(Info.ValueAsString['v']);
-   result.AddString(#13#10);
+   RegisterStandardResultFunctions(SymbolTable);
 end;
 
 // ------------------
@@ -365,14 +343,13 @@ end;
 // ------------------
 
 constructor TInfo.Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
-  const Data: TData; Offset: Integer; const DataMaster: IDataMaster = nil);
+  const DataPtr: IDataContext; const DataMaster: IDataMaster = nil);
 begin
   FProgramInfo := ProgramInfo;
   if Assigned(ProgramInfo) then
     FExec := ProgramInfo.Execution;
   FTypeSym := TypeSym;
-  FData := Data;
-  FOffset := Offset;
+  FDataPtr := DataPtr;
   FDataMaster := DataMaster;
 end;
 
@@ -391,7 +368,7 @@ begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['Element', FTypeSym.Caption]);
 end;
 
-function TInfo.GetConstructor(const MethName: String; ExtObject: TObject): IInfo;
+function TInfo.GetConstructor(const MethName: UnicodeString; ExtObject: TObject): IInfo;
 begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['GetConstructor', FTypeSym.Caption]);
 end;
@@ -408,7 +385,7 @@ end;
 
 // GetMember
 //
-function TInfo.GetMember(const s : String) : IInfo;
+function TInfo.GetMember(const s : UnicodeString) : IInfo;
 begin
    raise Exception.CreateFmt(RTE_InvalidOp, ['Member', FTypeSym.Caption]);
 end;
@@ -420,7 +397,7 @@ begin
    Result:=nil;
 end;
 
-function TInfo.GetMethod(const s: String): IInfo;
+function TInfo.GetMethod(const s: UnicodeString): IInfo;
 begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['Method', FTypeSym.Caption]);
 end;
@@ -430,7 +407,7 @@ begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['Obj', FTypeSym.Caption]);
 end;
 
-function TInfo.GetParameter(const s: String): IInfo;
+function TInfo.GetParameter(const s: UnicodeString): IInfo;
 begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['Parameter', FTypeSym.Caption]);
 end;
@@ -445,9 +422,9 @@ begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['Value', FTypeSym.Caption]);
 end;
 
-function TInfo.GetValueAsString : String;
+function TInfo.GetValueAsString : UnicodeString;
 begin
-   Result:=GetValue;
+   VariantToString(GetValue, Result);
 end;
 
 // GetValueAsDataString
@@ -479,7 +456,7 @@ begin
 end;
 
 class procedure TInfo.SetChild(out Result : IInfo; ProgramInfo: TProgramInfo;
-  ChildTypeSym: TSymbol; const ChildData: TData; ChildOffset: Integer;
+  ChildTypeSym: TSymbol; const ChildDataPtr: IDataContext;
   const ChildDataMaster: IDataMaster = nil);
 var
    baseType : TTypeSymbol;
@@ -490,31 +467,31 @@ begin
    if    (baseType is TBaseSymbol)
       or (baseType is TEnumerationSymbol)
       or (baseType is TConnectorSymbol) then
-         Result := TInfoData.Create(ProgramInfo, ChildTypeSym, ChildData, ChildOffset,
+         Result := TInfoData.Create(ProgramInfo, ChildTypeSym, childDataPtr,
                                     ChildDataMaster)
-   else if ChildTypeSym is TFuncSymbol then
-      Result := TInfoFunc.Create(ProgramInfo, ChildTypeSym, ChildData, ChildOffset,
+   else if ChildTypeSym.IsFuncSymbol then
+      Result := TInfoFunc.Create(ProgramInfo, ChildTypeSym, childDataPtr,
                                  ChildDataMaster, nil, nil)
    else if baseType is TRecordSymbol then
-      Result := TInfoRecord.Create(ProgramInfo, ChildTypeSym, ChildData,
-                                   ChildOffset, ChildDataMaster)
+      Result := TInfoRecord.Create(ProgramInfo, ChildTypeSym, childDataPtr,
+                                   ChildDataMaster)
    else if baseType is TStaticArraySymbol then begin
       if baseType is TOpenArraySymbol then begin
-         Result := TInfoOpenArray.Create(ProgramInfo, ChildTypeSym, ChildData,
-                                         ChildOffset, ChildDataMaster);
+         Result := TInfoOpenArray.Create(ProgramInfo, ChildTypeSym, childDataPtr,
+                                         ChildDataMaster);
       end else begin
-         Result := TInfoStaticArray.Create(ProgramInfo, ChildTypeSym, ChildData,
-                                           ChildOffset, ChildDataMaster);
+         Result := TInfoStaticArray.Create(ProgramInfo, ChildTypeSym, childDataPtr,
+                                           ChildDataMaster);
       end;
    end else if baseType is TDynamicArraySymbol then
-      Result := TInfoDynamicArray.Create(ProgramInfo, ChildTypeSym, ChildData,
-                                         ChildOffset, ChildDataMaster)
+      Result := TInfoDynamicArray.Create(ProgramInfo, ChildTypeSym, childDataPtr,
+                                         ChildDataMaster)
    else if baseType is TClassSymbol then
-      Result := TInfoClassObj.Create(ProgramInfo, ChildTypeSym, ChildData,
-                                     ChildOffset, ChildDataMaster)
+      Result := TInfoClassObj.Create(ProgramInfo, ChildTypeSym, childDataPtr,
+                                     ChildDataMaster)
    else if baseType is TClassOfSymbol then
-      Result := TInfoClassOf.Create(ProgramInfo, ChildTypeSym, ChildData,
-                                    ChildOffset, ChildDataMaster)
+      Result := TInfoClassOf.Create(ProgramInfo, ChildTypeSym, childDataPtr,
+                                    ChildDataMaster)
    else Assert(False); // Shouldn't be ever executed
 end;
 
@@ -533,9 +510,32 @@ begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['SetValue', FTypeSym.Caption]);
 end;
 
+// SetValueAsInteger
+//
+procedure TInfo.SetValueAsInteger(const value : Int64);
+begin
+   SetValue(value);
+end;
+
+// SetValueAsString
+//
+procedure TInfo.SetValueAsString(const value : UnicodeString);
+begin
+   SetValue(value);
+end;
+
+// GetInherited
+//
 function TInfo.GetInherited: IInfo;
 begin
-  raise Exception.CreateFmt(RTE_InvalidOp, ['GetInherited', FTypeSym.Caption]);
+   raise Exception.CreateFmt(RTE_InvalidOp, ['GetInherited', FTypeSym.Caption]);
+end;
+
+// GetExec
+//
+function TInfo.GetExec : IdwsProgramExecution;
+begin
+   Result:=FProgramInfo.Execution;
 end;
 
 { TInfoData }
@@ -543,10 +543,12 @@ end;
 function TInfoData.GetData;
 begin
   if Assigned(FDataMaster) then
-    FDataMaster.Read(FExec, FData);
+    FDataMaster.Read(FExec, FDataPtr.AsPData^);
 
-  SetLength(Result, FTypeSym.Size);
-  DWSCopyData(FData, FOffset, Result, 0, FTypeSym.Size);
+  if FDataPtr.DataLength<>0 then begin
+     SetLength(Result, FTypeSym.Size);
+     FDataPtr.CopyData(Result, 0, FTypeSym.Size);
+  end;
 end;
 
 // GetScriptObj
@@ -568,29 +570,31 @@ end;
 function TInfoData.GetValue : Variant;
 begin
    if Assigned(FDataMaster) then
-      FDataMaster.Read(FExec, FData);
+      FDataMaster.Read(FExec, FDataPtr.AsPData^);
    if Assigned(FTypeSym) and (FTypeSym.Size = 1) then
-      Result := FData[FOffset]
+      FDataPtr.EvalAsVariant(0, Result)
    else Result:=FTypeSym.Name;//raise Exception.CreateFmt(RTE_CanNotReadComplexType, [FTypeSym.Caption]);
 end;
 
 // GetValueAsString
 //
-function TInfoData.GetValueAsString : String;
+function TInfoData.GetValueAsString : UnicodeString;
 var
    varData : PVarData;
 begin
    if (FDataMaster=nil) and (FTypeSym<>nil) and (FTypeSym.Size=1) then begin
-      varData:=@FData[FOffset];
+      varData:=PVarData(FDataPtr.AsPVariant(0));
       {$ifdef FPC}
-      if varData.VType=varString then
-         Result:=String(varData.VString)
+      if varData.VType=varString then begin
+         Result:=UnicodeString(varData.VString);
       {$else}
-      if varData.VType=varUString then
-         Result:=String(varData.VUString)
+      if varData.VType=varUString then begin
+         Result:=UnicodeString(varData.VUString);
       {$endif}
-      else Result:=PVariant(varData)^;
-   end else Result:=inherited GetValueAsString;
+         Exit;
+      end;
+   end;
+   Result:=inherited GetValueAsString;
 end;
 
 // GetValueAsInteger
@@ -600,7 +604,7 @@ var
    varData : PVarData;
 begin
    if (FDataMaster=nil) and (FTypeSym<>nil) and (FTypeSym.Size=1) then begin
-      varData:=@FData[FOffset];
+      varData:=PVarData(FDataPtr.AsPVariant(0));
       if varData.VType=varInt64 then
          Result:=varData.VInt64
       else Result:=PVariant(varData)^;
@@ -614,7 +618,7 @@ var
    varData : PVarData;
 begin
    if (FDataMaster=nil) and (FTypeSym<>nil) and (FTypeSym.Size=1) then begin
-      varData:=@FData[FOffset];
+      varData:=PVarData(FDataPtr.AsPVariant(0));
       if varData.VType=varDouble then
          Result:=varData.VDouble
       else Result:=PVariant(varData)^;
@@ -625,31 +629,53 @@ procedure TInfoData.SetData(const Value: TData);
 begin
   if Length(Value) <> FTypeSym.Size then
     raise Exception.CreateFmt(RTE_InvalidInputDataSize, [Length(Value), FTypeSym.Size]);
-  DWSCopyData(Value, 0, FData, FOffset, FTypeSym.Size);
+  FDataPtr.WriteData(Value, 0, FTypeSym.Size);
 
   if Assigned(FDataMaster) then
   begin
     if FTypeSym.Size = FDataMaster.Size then
-      FDataMaster.Write(FExec, FData)
+      FDataMaster.Write(FExec, FDataPtr.AsPData^)
     else
       raise Exception.CreateFmt(RTE_CanOnlyWriteBlocks, [FDataMaster.Caption, FTypeSym.Caption]);
   end;
 end;
 
+// SetValue
+//
 procedure TInfoData.SetValue(const Value: Variant);
 begin
-  if Assigned(FTypeSym) and (FTypeSym.Size = 1) then
-    FData[FOffset] := Value
-  else
-    raise Exception.CreateFmt(RTE_CanNotSetValueForType, [FTypeSym.Caption]);
+   if Assigned(FTypeSym) and (FTypeSym.Size = 1) then
+      case VarType(Value) of
+         varInt64, varDouble, varBoolean, varUString, varUnknown :
+            FDataPtr[0] := Value;
+      else
+         if VarIsFloat(Value) then
+            FDataPtr[0]:=Double(Value)
+         else if VarIsOrdinal(Value) then
+            FDataPtr[0]:=Int64(Integer(Value)) // workaround for compiler bug
+         else if VarIsStr(Value) then
+            FDataPtr[0]:=UnicodeString(Value)
+         else FDataPtr[0] := Value;
+      end
+   else raise Exception.CreateFmt(RTE_CanNotSetValueForType, [FTypeSym.Caption]);
 
-  if Assigned(FDataMaster) then
-    FDataMaster.Write(FExec, FData);
+   if Assigned(FDataMaster) then
+      FDataMaster.Write(FExec, FDataPtr.AsPData^);
+end;
+
+// SetValueAsInteger
+//
+procedure TInfoData.SetValueAsInteger(const Value: Int64);
+begin
+   FDataPtr[0]:=Value;
+
+   if Assigned(FDataMaster) then
+      FDataMaster.Write(FExec, FDataPtr.AsPData^);
 end;
 
 { TInfoClass }
 
-function TInfoClass.GetConstructor(const MethName: String;
+function TInfoClass.GetConstructor(const MethName: UnicodeString;
   ExtObject: TObject): IInfo;
 begin
   Result := GetMethod(MethName);
@@ -658,11 +684,11 @@ end;
 
 function TInfoClass.GetInherited: IInfo;
 begin
-  SetChild(Result, FProgramInfo,(FTypeSym as TClassSymbol).Parent,FData,
-           FOffset,FDataMaster);
+  SetChild(Result, FProgramInfo,(FTypeSym as TClassSymbol).Parent,
+           FDataPtr, FDataMaster);
 end;
 
-function TInfoClass.GetMethod(const s: String): IInfo;
+function TInfoClass.GetMethod(const s: UnicodeString): IInfo;
 var
   sym: TSymbol;
 begin
@@ -677,7 +703,8 @@ begin
   if not Assigned(sym) then
     raise Exception.CreateFmt(RTE_MethodNotFoundInClass, [s, FTypeSym.Caption]);
 
-  Result := TInfoFunc.Create(FProgramInfo, sym, nil, 0, nil, FScriptObj, TClassSymbol(FTypeSym));
+  Result := TInfoFunc.Create(FProgramInfo, sym, FProgramInfo.Execution.DataContext_Nil,
+                             nil, FScriptObj, TClassSymbol(FTypeSym));
 end;
 
 function TInfoClass.GetScriptObj: IScriptObj;
@@ -687,7 +714,7 @@ end;
 
 // GetValueAsString
 //
-function TInfoClass.GetValueAsString : String;
+function TInfoClass.GetValueAsString : UnicodeString;
 begin
    if FScriptObj=nil then
       Result:='(nil)'
@@ -695,17 +722,24 @@ begin
       if FScriptObj.ClassSym<>nil then
          Result:='destroyed '+FScriptObj.ClassSym.Name
       else Result:='destroyed object';
-   end else Result:=FScriptObj.ClassSym.Name;
+   end else begin
+      if FScriptObj.ClassSym<>nil then
+         Result:=FScriptObj.ClassSym.Name
+      else Result:='N/A';
+   end;
 end;
 
 { TInfoClassObj }
 
 constructor TInfoClassObj.Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
-  const Data: TData; Offset: Integer; const DataMaster: IDataMaster);
+  const DataPtr: IDataContext; const DataMaster: IDataMaster);
+var
+   p : PVariant;
 begin
   inherited;
-  if VarType(Data[Offset]) = varUnknown then
-    FScriptObj := IScriptObj(IUnknown(Data[Offset]))
+  p:=DataPtr.AsPVariant(0);
+  if VarType(p^) = varUnknown then
+    FScriptObj := IScriptObj(IUnknown(p^))
   else
     FScriptObj := nil;
 end;
@@ -718,18 +752,21 @@ end;
 
 // GetMember
 //
-function TInfoClassObj.GetMember(const s : String) : IInfo;
+function TInfoClassObj.GetMember(const s : UnicodeString) : IInfo;
 var
    member : TSymbol;
+   locData : IDataContext;
 begin
    member:=FScriptObj.ClassSym.Members.FindSymbol(s, cvMagic);
    if member=nil then
       raise Exception.CreateFmt(RTE_NoMemberOfClass, [s, FTypeSym.Caption]);
 
-   if member is TFieldSymbol then
-      SetChild(Result, FProgramInfo, member.Typ, FScriptObj.Data, TFieldSymbol(member).Offset)
-   else if member is TPropertySymbol then
-      Result:=TInfoProperty.Create(FProgramInfo, member.Typ, nil, 0, TPropertySymbol(member), FScriptObj)
+   if member is TFieldSymbol then begin
+      FProgramInfo.Execution.DataContext_Create(FScriptObj.AsData, TFieldSymbol(member).Offset, locData);
+      SetChild(Result, FProgramInfo, member.Typ, locData);
+   end else if member is TPropertySymbol then
+      Result:=TInfoProperty.Create(FProgramInfo, member.Typ, FProgramInfo.Execution.DataContext_Nil,
+                                   TPropertySymbol(member), FScriptObj)
    else raise Exception.CreateFmt(RTE_UnsupportedMemberOfClass, [member.ClassName]);
 end;
 
@@ -759,7 +796,7 @@ begin
    if FMembersCache=nil then
       FMembersCache:=TStringList.Create
    else FMembersCache.Clear;
-   if (FScriptObj<>nil) and (not FScriptObj.Destroyed) then
+   if (FScriptObj<>nil) and (not FScriptObj.Destroyed) and (FScriptObj.ClassSym<>nil) then
       CollectMembers(FScriptObj.ClassSym.Members);
    Result:=FMembersCache;
 end;
@@ -795,10 +832,10 @@ end;
 { TInfoFunc }
 
 constructor TInfoFunc.Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
-   const Data: TData; Offset: Integer; const DataMaster: IDataMaster;
+   const DataPtr: IDataContext; const DataMaster: IDataMaster;
    const ScriptObj: IScriptObj; ClassSym: TClassSymbol; ForceStatic: Boolean);
 begin
-   inherited Create(ProgramInfo, TypeSym, Data, Offset, DataMaster);
+   inherited Create(ProgramInfo, TypeSym, DataPtr, DataMaster);
    FScriptObj := ScriptObj;
    FClassSym := ClassSym;
    FParams := TFuncSymbol(FTypeSym).Params;
@@ -820,15 +857,13 @@ end;
 
 // Call
 //
-function TInfoFunc.Call: IInfo;
+function TInfoFunc.Call : IInfo;
 var
    x : Integer;
    tp : TTempParam;
-   funcExpr : TFuncExpr;
-   resultAddr : Integer;
-   resultData : TData;
+   funcExpr : TFuncExprBase;
+   resultDataPtr : IDataContext;
 begin
-   resultData := nil;
    if not FUsesTempParams then
       InitTempParams;
 
@@ -870,16 +905,18 @@ begin
 
                      // Execute function.
                      // Result is stored on the stack
-                     resultData := funcExpr.GetData(FExec);
-                     resultAddr := funcExpr.GetAddr(FExec);
+                     funcExpr.GetDataPtr(FExec, resultDataPtr);
 
                      // Copy Result
-                     DWSCopyData(resultData, resultAddr, FResult, 0, funcExpr.Typ.Size);
+                     resultDataPtr.CopyData(FResult, 0, funcExpr.Typ.Size);
                   finally
                      FExec.Stack.Pop(funcExpr.Typ.Size);
                   end;
-               end else funcExpr.EvalAsVariant(FExec, FResult[0]);
-               SetChild(Result, FProgramInfo, funcExpr.Typ, FResult, 0);
+               end else begin
+                  funcExpr.EvalAsVariant(FExec, FResult[0]);
+               end;
+               FProgramInfo.Execution.DataContext_Create(FResult, 0, resultDataPtr);
+               SetChild(Result, FProgramInfo, funcExpr.Typ, resultDataPtr);
             end else begin
                // Execute as procedure
                funcExpr.EvalNoResult(FExec);
@@ -911,11 +948,9 @@ var
    x : Integer;
    funcSym : TFuncSymbol;
    dataSym : TDataSymbol;
-   funcExpr : TFuncExpr;
-   resultAddr : Integer;
-   resultData : TData;
+   funcExpr : TFuncExprBase;
+   resultDataPtr : IDataContext;
 begin
-   resultData := nil;
    funcSym := TFuncSymbol(FTypeSym);
 
    if Length(Params) <> funcSym.Params.Count then
@@ -947,17 +982,18 @@ begin
 
                // Execute function.
                // Result is stored on the stack
-               resultData := funcExpr.GetData(FExec);
-               resultAddr := funcExpr.GetAddr(FExec);
+               funcExpr.GetDataPtr(FExec, resultDataPtr);
 
                // Copy Result
-               for x := 0 to funcExpr.Typ.Size - 1 do
-                  FResult[x] := resultData[resultAddr + x];
+               resultDataPtr.CopyData(FResult, 0, funcExpr.Typ.Size);
             finally
                FExec.Stack.Pop(funcExpr.Typ.Size);
             end;
-         end else funcExpr.EvalAsVariant(FExec, FResult[0]);
-         SetChild(Result, FProgramInfo, funcExpr.Typ, FResult, 0);
+         end else begin
+            funcExpr.EvalAsVariant(FExec, FResult[0]);
+         end;
+         FProgramInfo.Execution.DataContext_Create(FResult, 0, resultDataPtr);
+         SetChild(Result, FProgramInfo, funcExpr.Typ, resultDataPtr);
       end else begin
          funcExpr.EvalNoResult(FExec);
       end;
@@ -969,18 +1005,20 @@ end;
 
 // GetParameter
 //
-function TInfoFunc.GetParameter(const s: String): IInfo;
+function TInfoFunc.GetParameter(const s: UnicodeString): IInfo;
 var
    tp: TTempParam;
+   locData : IDataContext;
 begin
    if not FUsesTempParams then
       InitTempParams;
 
    tp := TTempParam(FTempParams.FindSymbol(s, cvMagic));
 
-   if Assigned(tp) then
-      SetChild(Result, FProgramInfo, tp.Typ, tp.FData, 0)
-   else raise Exception.CreateFmt(RTE_NoParameterFound, [s, FTypeSym.Caption]);
+   if Assigned(tp) then begin
+      FProgramInfo.Execution.DataContext_Create(tp.FData, 0, locData);
+      SetChild(Result, FProgramInfo, tp.Typ, locData);
+   end else raise Exception.CreateFmt(RTE_NoParameterFound, [s, FTypeSym.Caption]);
 end;
 
 // InitTempParams
@@ -1016,25 +1054,38 @@ begin
    FExternalObject := ExtObject;
 end;
 
-function TInfoFunc.GetInherited: IInfo;
+// GetInherited
+//
+function TInfoFunc.GetInherited : IInfo;
 begin
-  if FTypeSym is TMethodSymbol then
-    result := TInfoFunc.Create(FProgramInfo,TMethodSymbol(FTypeSym).ParentMeth,
-      FData,FOffset,FDataMaster,FScriptObj,FClassSym.Parent,True)
-  else
-    result := inherited GetInherited;
+   if FTypeSym is TMethodSymbol then
+      Result:=TInfoFunc.Create(FProgramInfo, TMethodSymbol(FTypeSym).ParentMeth,
+                               FDataPtr, FDataMaster, FScriptObj, FClassSym.Parent, True)
+   else Result:=inherited GetInherited;
 end;
 
 // CreateTempFuncExpr
 //
-function TInfoFunc.CreateTempFuncExpr : TFuncExpr;
+function TInfoFunc.CreateTempFuncExpr : TFuncExprBase;
+var
+   caller : TExprBase;
 begin
-   if FData<>nil then begin
+   if FDataPtr.DataLength>0 then begin
       Result:=TFuncPtrExpr.Create(FExec.Prog, cNullPos,
-                                  TConstExpr.Create(FExec.Prog, TFuncSymbol(FTypeSym), FData[FOffset]));
+                                  TConstExpr.Create(FExec.Prog, TFuncSymbol(FTypeSym), FDataPtr[0]));
    end else begin
       Result:=CreateFuncExpr(FExec.Prog, TFuncSymbol(FTypeSym), FScriptObj,
                              FClassSym, FForceStatic);
+   end;
+   if Result is TFuncExpr then begin
+      caller:=FExec.CallStackLastExpr;
+      if caller<>nil then begin
+         // called from script
+         TFuncExpr(Result).Level:=(FExec.CallStackLastExpr as TFuncExpr).Level;
+      end else begin
+         // called from Delphi-side outside of script
+         TFuncExpr(Result).Level:=0;
+      end;
    end;
 end;
 
@@ -1048,17 +1099,18 @@ begin
    inherited;
 end;
 
-function TInfoRecord.GetMember(const s: String): IInfo;
+function TInfoRecord.GetMember(const s: UnicodeString): IInfo;
 var
-  sym: TSymbol;
+   sym: TSymbol;
+   locData : IDataContext;
 begin
-  sym := TRecordSymbol(FTypeSym).Members.FindLocal(s);
+   sym := TRecordSymbol(FTypeSym).Members.FindLocal(s);
 
-  if not (sym is TFieldSymbol) then
-    raise Exception.CreateFmt(RTE_NoRecordMemberFound, [s, FTypeSym.Caption]);
+   if not (sym is TFieldSymbol) then
+      raise Exception.CreateFmt(RTE_NoRecordMemberFound, [s, FTypeSym.Caption]);
 
-  SetChild(Result, FProgramInfo, sym.Typ, FData,
-           FOffset + TFieldSymbol(sym).Offset, FDataMaster);
+   DataPtr.CreateOffset(TFieldSymbol(sym).Offset, locData);
+   SetChild(Result, FProgramInfo, sym.Typ, locData, FDataMaster);
 end;
 
 // GetFieldMemberNames
@@ -1089,9 +1141,10 @@ var
   elemTyp: TSymbol;
   arrTyp: TStaticArraySymbol;
   elemOff, elemIdx: Integer;
+  locData : IDataContext;
 begin
   elemTyp := FTypeSym;
-  elemOff := FOffset;
+  elemOff := 0;
   for x := 0 to Length(Indices) - 1 do
   begin
     if Assigned(elemTyp) and (elemTyp.BaseType is TStaticArraySymbol) then
@@ -1110,10 +1163,11 @@ begin
     elemOff := elemOff + elemIdx * elemTyp.Size;
   end;
 
-  SetChild(Result, FProgramInfo, elemTyp, FData, elemOff, FDataMaster);
+   FDataPtr.CreateOffset(elemOff, locData);
+   SetChild(Result, FProgramInfo, elemTyp, locData, FDataMaster);
 end;
 
-function TInfoStaticArray.GetMember(const s: String): IInfo;
+function TInfoStaticArray.GetMember(const s: UnicodeString): IInfo;
 var
   h, l: Integer;
 begin
@@ -1131,7 +1185,7 @@ end;
 
 // GetValueAsString
 //
-function TInfoStaticArray.GetValueAsString : String;
+function TInfoStaticArray.GetValueAsString : UnicodeString;
 begin
    Result:=FTypeSym.Description;
 end;
@@ -1146,9 +1200,9 @@ function TInfoDynamicArrayBase.SelfDynArray : TScriptDynamicArray;
 var
    obj : IScriptObj;
 begin
-   obj:=IScriptObj(IUnknown(FData[FOffset]));
+   obj:=IScriptObj(FDataPtr.AsInterface[0]);
    if obj<>nil then
-      Result:=obj.InternalObject as TScriptDynamicArray
+      Result:=obj.GetSelf as TScriptDynamicArray
    else Result:=nil;
 end;
 
@@ -1158,9 +1212,9 @@ end;
 
 // Create
 //
-constructor TInfoDynamicArrayLength.Create(ProgramInfo: TProgramInfo; const Data: TData; Offset, Delta: Integer);
+constructor TInfoDynamicArrayLength.Create(ProgramInfo: TProgramInfo; const DataPtr: IDataContext; Delta: Integer);
 begin
-   inherited Create(ProgramInfo, ProgramInfo.Execution.Prog.TypInteger, Data, Offset);
+   inherited Create(ProgramInfo, ProgramInfo.Execution.Prog.TypInteger, DataPtr);
    FDelta:=Delta;
 end;
 
@@ -1175,14 +1229,21 @@ end;
 //
 function TInfoDynamicArrayLength.GetValueAsInteger : Int64;
 begin
-   Result:=SelfDynArray.Length+FDelta;
+   Result:=SelfDynArray.ArrayLength+FDelta;
 end;
 
 // SetValue
 //
 procedure TInfoDynamicArrayLength.SetValue(const Value: Variant);
 begin
-   SelfDynArray.Length:=Value-FDelta;
+   SetValueAsInteger(Value);
+end;
+
+// SetValueAsInteger
+//
+procedure TInfoDynamicArrayLength.SetValueAsInteger(const Value: Int64);
+begin
+   SelfDynArray.ArrayLength:=Value-FDelta;
 end;
 
 // ------------------
@@ -1191,56 +1252,63 @@ end;
 
 // Element
 //
-function TInfoDynamicArray.Element(const Indices: array of Integer): IInfo;
+function TInfoDynamicArray.Element(const indices : array of Integer): IInfo;
 var
    x : Integer;
    elemTyp : TSymbol;
    elemOff : Integer;
    dynArray : TScriptDynamicArray;
+   p : PVarData;
+   locData : IDataContext;
 begin
    dynArray:=SelfDynArray;
 
-   elemTyp := FTypeSym;
-   elemOff := 0;
-   if Length(Indices)=0 then
+   elemTyp:=FTypeSym;
+   elemOff:=0;
+   if Length(indices)=0 then
       raise Exception.Create(RTE_TooFewIndices);
 
-   for x := 0 to High(Indices) do begin
-      if Assigned(elemTyp) and (elemTyp.BaseType is TDynamicArraySymbol) then
-         elemTyp := elemTyp.BaseType.Typ
+   for x:=0 to High(indices) do begin
+      if Assigned(elemTyp) and (elemTyp.BaseType.ClassType=TDynamicArraySymbol) then
+         elemTyp:=elemTyp.BaseType.Typ
       else raise Exception.Create(RTE_TooManyIndices);
 
-      if Indices[x]>=dynArray.Length then
-         raise Exception.CreateFmt(RTE_ArrayUpperBoundExceeded,[x]);
+      if Cardinal(indices[x])>=Cardinal(dynArray.ArrayLength) then begin
+         if indices[x]<0 then
+            raise Exception.CreateFmt(RTE_ArrayLowerBoundExceeded, [x])
+         else raise Exception.CreateFmt(RTE_ArrayUpperBoundExceeded, [x]);
+      end;
 
-      if Indices[x]<0 then
-         raise Exception.CreateFmt(RTE_ArrayLowerBoundExceeded,[x]);
+      elemOff:=indices[x]*dynArray.ElementSize;
 
-      elemOff := Indices[x] * SelfDynArray.ElementSize;
-
-      if x<High(Indices) then
-         dynArray := IScriptObj(IUnknown(dynArray.Data[elemOff])).InternalObject as TScriptDynamicArray;
+      if x<High(indices) then begin
+         p:=PVarData(dynArray.AsPVariant(elemOff));
+         if p.VType<>varUnknown then
+            raise Exception.Create(RTE_TooManyIndices);
+         dynArray:=IScriptObj(p.VUnknown).GetSelf as TScriptDynamicArray;
+      end;
    end;
 
-   SetChild(Result, FProgramInfo, elemTyp, dynArray.Data, elemOff, FDataMaster);
+   FProgramInfo.Execution.DataContext_Create(dynArray.AsData, elemOff, locData);
+   SetChild(Result, FProgramInfo, elemTyp, locData, FDataMaster);
 end;
 
 // GetMember
 //
-function TInfoDynamicArray.GetMember(const s: String): IInfo;
+function TInfoDynamicArray.GetMember(const s: UnicodeString): IInfo;
 begin
-   if UnicodeSameText('length', s) then
-      Result:=TInfoDynamicArrayLength.Create(FProgramInfo, Data, Offset, 0)
+   if UnicodeSameText('length', s) or UnicodeSameText('count', s) then
+      Result:=TInfoDynamicArrayLength.Create(FProgramInfo, DataPtr, 0)
    else if UnicodeSameText('low', s) then
       Result:=TInfoConst.Create(FProgramInfo, FProgramInfo.Execution.Prog.TypInteger, 0)
    else if UnicodeSameText('high', s) then
-      Result:=TInfoDynamicArrayLength.Create(FProgramInfo, Data, Offset, -1)
+      Result:=TInfoDynamicArrayLength.Create(FProgramInfo, DataPtr, -1)
    else raise Exception.CreateFmt(RTE_NoMemberOfArray, [s, FTypeSym.Caption]);
 end;
 
 // GetValueAsString
 //
-function TInfoDynamicArray.GetValueAsString : String;
+function TInfoDynamicArray.GetValueAsString : UnicodeString;
 begin
    Result:=FTypeSym.Description;
 end;
@@ -1252,7 +1320,7 @@ var
    dynArray : TScriptDynamicArray;
 begin
    dynArray:=SelfDynArray;
-   Result:=dynArray.Data;
+   Result:=dynArray.AsData;
 end;
 
 // SetData
@@ -1262,14 +1330,14 @@ var
    dynArray : TScriptDynamicArray;
 begin
    dynArray:=SelfDynArray;
-   dynArray.Data:=value;
+   dynArray.ReplaceData(value);
 end;
 
 // GetScriptObj
 //
 function TInfoDynamicArray.GetScriptObj : IScriptObj;
 begin
-   Result:=IScriptObj(IUnknown(FData[FOffset]));
+   Result:=IScriptObj(FDataPtr.AsInterface[0]);
 end;
 
 // ------------------
@@ -1278,14 +1346,14 @@ end;
 
 // GetMember
 //
-function TInfoOpenArray.GetMember(const s: String): IInfo;
+function TInfoOpenArray.GetMember(const s: UnicodeString): IInfo;
 begin
    if UnicodeSameText('length', s) then
-      Result := TInfoConst.Create(FProgramInfo, FProgramInfo.Execution.Prog.TypInteger, Length(FData))
+      Result := TInfoConst.Create(FProgramInfo, FProgramInfo.Execution.Prog.TypInteger, FDataPtr.DataLength)
    else if UnicodeSameText('low', s) then
       Result := TInfoConst.Create(FProgramInfo, FProgramInfo.Execution.Prog.TypInteger, 0)
    else if UnicodeSameText('high', s) then
-      Result := TInfoConst.Create(FProgramInfo, FProgramInfo.Execution.Prog.TypInteger, High(FData))
+      Result := TInfoConst.Create(FProgramInfo, FProgramInfo.Execution.Prog.TypInteger, FDataPtr.DataLength-1)
    else
       raise Exception.CreateFmt(RTE_NoMemberOfClass, [s, FTypeSym.Caption]);
 end;
@@ -1296,13 +1364,14 @@ function TInfoOpenArray.Element(const Indices: array of Integer): IInfo;
 var
    elemTyp : TSymbol;
    elemOff, elemIdx : Integer;
+   locData : IDataContext;
 begin
    if Length(Indices)>1 then
       raise Exception.Create(RTE_TooManyIndices);
 
    elemIdx := Indices[0];
 
-   if elemIdx > High(FData) then
+   if elemIdx >= FDataPtr.DataLength then
       raise Exception.CreateFmt(RTE_ArrayUpperBoundExceeded, [elemIdx]);
 
    if elemIdx < 0 then
@@ -1311,17 +1380,21 @@ begin
    elemTyp := FExec.Prog.TypVariant;
    elemOff := elemIdx * elemTyp.Size;
 
-   SetChild(Result, FProgramInfo, elemTyp, FData, elemOff, FDataMaster);
+   FDataPtr.CreateOffset(elemOff, locData);
+   SetChild(Result, FProgramInfo, elemTyp, locData, FDataMaster);
 end;
 
 { TInfoConst }
 
 constructor TInfoConst.Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
   const Value: Variant);
+var
+   locData : IDataContext;
 begin
-  inherited Create(ProgramInfo, TypeSym, FData, 0);
   SetLength(FData, TypeSym.Size);
   VarCopy(FData[0], Value);
+  ProgramInfo.Execution.DataContext_Create(FData, 0, locData);
+  inherited Create(ProgramInfo, TypeSym, locData);
 end;
 
 function TInfoConst.GetData : TData;
@@ -1339,10 +1412,10 @@ end;
 // ------------------
 
 constructor TInfoProperty.Create(ProgramInfo: TProgramInfo;
-  TypeSym: TSymbol; const Data: TData; Offset: Integer;
+  TypeSym: TSymbol; const DataPtr: IDataContext;
   PropSym: TPropertySymbol; const ScriptObj: IScriptObj);
 begin
-  inherited Create(ProgramInfo,TypeSym,Data,Offset);
+  inherited Create(ProgramInfo,TypeSym, DataPtr);
   FPropSym := PropSym;
   FScriptObj := ScriptObj;
 end;
@@ -1353,18 +1426,20 @@ begin
   inherited;
 end;
 
-function TInfoProperty.GetParameter(const s: String): IInfo;
+function TInfoProperty.GetParameter(const s: UnicodeString): IInfo;
 var
   tp: TTempParam;
+  locData : IDataContext;
 begin
   if not Assigned(FTempParams) then
     InitTempParams;
 
   tp := TTempParam(FTempParams.FindSymbol(s, cvMagic));
 
-  if Assigned(tp) then
-    SetChild(Result, FProgramInfo, tp.Typ, tp.FData, 0)
-  else
+  if Assigned(tp) then begin
+    FProgramInfo.Execution.DataContext_Create(tp.FData, 0, locData);
+    SetChild(Result, FProgramInfo, tp.Typ, locData);
+  end else
     raise Exception.CreateFmt(RTE_NoIndexFound, [s, FPropSym.Name]);
 end;
 
@@ -1388,7 +1463,7 @@ end;
 
 procedure TInfoProperty.AssignIndices(const Func: IInfo; FuncParams: TSymbolTable);
 var
-  paramName: String;
+  paramName: UnicodeString;
   x: Integer;
   destParam: IInfo;
 begin
@@ -1404,17 +1479,18 @@ end;
 function TInfoProperty.GetData : TData;
 var
   func : IInfo;
+  locData : IDataContext;
 begin
-  if FPropSym.ReadSym is TFuncSymbol then begin
-    func := TInfoFunc.Create(FProgramInfo,FPropSym.ReadSym,FData,FOffset,
+  if FPropSym.ReadSym.IsFuncSymbol then begin
+    func := TInfoFunc.Create(FProgramInfo,FPropSym.ReadSym, FDataPtr,
       FDataMaster,FScriptObj,FScriptObj.ClassSym);
     AssignIndices(func,TFuncSymbol(FPropSym.ReadSym).Params);
     result := func.Call.Data;
   end
   else if FPropSym.ReadSym is TFieldSymbol then
   begin
-    SetChild(func, FProgramInfo,FPropSym.ReadSym.Typ,FScriptObj.Data,
-      TFieldSymbol(FPropSym.ReadSym).Offset);
+    FProgramInfo.Execution.DataContext_Create(FScriptObj.AsData, TFieldSymbol(FPropSym.ReadSym).Offset, locData);
+    SetChild(func, FProgramInfo,FPropSym.ReadSym.Typ, locData);
     result := func.Data;
 {
     fieldSym := TFieldSymbol(FPropSym.ReadSym); // var fieldSym : TFieldSymbol;
@@ -1429,13 +1505,14 @@ end;
 procedure TInfoProperty.SetData(const Value: TData);
 var
   func: IInfo;
-  paramName: String;
+  paramName: UnicodeString;
   params: TSymbolTable;
+  locData : IDataContext;
 begin
-  if FPropSym.WriteSym is TFuncSymbol then
+  if FPropSym.WriteSym.IsFuncSymbol then
   begin
-    func := TInfoFunc.Create(FProgramInfo,FPropSym.WriteSym,FData,FOffset,
-      FDataMaster,FScriptObj,FScriptObj.ClassSym);
+    func := TInfoFunc.Create(FProgramInfo,FPropSym.WriteSym,FDataPtr,
+                             FDataMaster,FScriptObj,FScriptObj.ClassSym);
 
     params := TFuncSymbol(FPropSym.WriteSym).Params;
     AssignIndices(func,params);
@@ -1447,8 +1524,8 @@ begin
   end
   else if FPropSym.WriteSym is TFieldSymbol then
   begin
-    SetChild(func, FProgramInfo,FPropSym.WriteSym.Typ,FScriptObj.Data,
-      TFieldSymbol(FPropSym.WriteSym).Offset);
+    FProgramInfo.Execution.DataContext_Create(FScriptObj.AsData, TFieldSymbol(FPropSym.WriteSym).Offset, locData);
+    SetChild(func, FProgramInfo,FPropSym.WriteSym.Typ, locData);
     func.Data := Value;
   end
   else
@@ -1465,25 +1542,25 @@ end;
 
 { TInfoConnector }
 
-function TInfoConnector.GetMember(const s: String): IInfo;
+function TInfoConnector.GetMember(const s: UnicodeString): IInfo;
 begin
-  TInfo.SetChild(Result, FProgramInfo, FTypeSym, FData, FOffset,
-    TConnectorMemberDataMaster.Create(FExec, FTypeSym, s, FData[FOffset]));
+  TInfo.SetChild(Result, FProgramInfo, FTypeSym, FDataPtr,
+                 TConnectorMemberDataMaster.Create(FExec, FTypeSym, s, FDataPtr[0]));
 end;
 
-function TInfoConnector.GetMethod(const s: String): IInfo;
+function TInfoConnector.GetMethod(const s: UnicodeString): IInfo;
 begin
   Result := TInfoConnectorCall.Create(FProgramInfo, FTypeSym,
-    FData, FOffset, TConnectorSymbol(FTypeSym).ConnectorType, s);
+                                      FDataPtr, TConnectorSymbol(FTypeSym).ConnectorType, s);
 end;
 
 { TInfoConnectorCall }
 
 constructor TInfoConnectorCall.Create(ProgramInfo: TProgramInfo;
-  TypeSym: TSymbol; const Data: TData; Offset: Integer;
-  const ConnectorType: IConnectorType; const Name: String);
+  TypeSym: TSymbol; const DataPtr: IDataContext;
+  const ConnectorType: IConnectorType; const Name: UnicodeString);
 begin
-  inherited Create(ProgramInfo, TypeSym, Data, Offset);
+  inherited Create(ProgramInfo, TypeSym, DataPtr);
   FConnectorType := ConnectorType;
   FName := Name;
 end;
@@ -1493,9 +1570,10 @@ var
   x: Integer;
   expr: TConnectorCallExpr;
   resultData: TData;
+  locData : IDataContext;
 begin
   expr := TConnectorCallExpr.Create(FExec.Prog, cNullPos, FName,
-    TConstExpr.Create(FExec.Prog, FExec.Prog.TypVariant, FData[FOffset]));
+    TConstExpr.Create(FExec.Prog, FExec.Prog.TypVariant, FDataPtr[0]));
 
   try
     for x := 0 to Length(Params) - 1 do
@@ -1507,7 +1585,8 @@ begin
       begin
         SetLength(resultData, 1);
         expr.EvalAsVariant(FExec, resultData[0]);
-        TInfo.SetChild(Result, FProgramInfo, expr.Typ, resultData, 0);
+        FProgramInfo.Execution.DataContext_Create(resultData, 0, locData);
+        TInfo.SetChild(Result, FProgramInfo, expr.Typ, locData);
       end
       else
       begin
@@ -1531,7 +1610,7 @@ begin
   FSym := Sym;
 end;
 
-function TDataMaster.GetCaption: String;
+function TDataMaster.GetCaption: UnicodeString;
 begin
   Result := FSym.Caption;
 end;
@@ -1555,13 +1634,10 @@ end;
 //
 procedure TExternalVarDataMaster.Read(exec : TdwsExecution; const Data: TData);
 var
-   x : Integer;
-   resultData : TData;
-   resultAddr : Integer;
-   funcExpr : TFuncExpr;
+   resultDataPtr : IDataContext;
+   funcExpr : TFuncExprBase;
    prog : TdwsProgram;
 begin
-   resultData := nil;
    // Read an external var
    if TExternalVarSymbol(FSym).ReadFunc<>nil then begin
       funcExpr := CreateFuncExpr(FCaller.Prog, TExternalVarSymbol(FSym).ReadFunc, nil, nil);
@@ -1574,11 +1650,9 @@ begin
             FCaller.Stack.Push(funcExpr.Typ.Size);
             try
                // Execute function.
-               resultData := funcExpr.GetData(exec);
-               resultAddr := funcExpr.GetAddr(exec);
+               funcExpr.GetDataPtr(exec, resultDataPtr);
                // Copy Result
-               for x := 0 to funcExpr.Typ.Size - 1 do
-                  Data[x] := resultData[resultAddr + x];
+               resultDataPtr.CopyData(Data, 0, funcExpr.Typ.Size);
             finally
                FCaller.Stack.Pop(funcExpr.Typ.Size);
             end;
@@ -1593,13 +1667,14 @@ end;
 //
 procedure TExternalVarDataMaster.Write(exec : TdwsExecution; const Data: TData);
 var
-   funcExpr : TFuncExpr;
+   funcExpr : TFuncExprBase;
 begin
    if TExternalVarSymbol(FSym).WriteFunc<>nil then begin
       funcExpr := CreateFuncExpr(FCaller.Prog, TExternalVarSymbol(FSym).WriteFunc, nil, nil);
       try
          funcExpr.AddArg(TConstExpr.CreateTyped(FCaller.Prog, FSym.Typ, Data));
-         funcExpr.AddPushExprs((exec as TdwsProgramExecution).Prog);
+         if (funcExpr is TFuncExpr) then
+            TFuncExpr(funcExpr).AddPushExprs((exec as TdwsProgramExecution).Prog);
          funcExpr.EvalNoResult(exec);
       finally
          funcExpr.Free;
@@ -1612,7 +1687,7 @@ end;
 // Create
 //
 constructor TConnectorMemberDataMaster.Create(Caller: TdwsProgramExecution;
-   Sym: TSymbol; const BaseValue: Variant; const Name: String);
+   Sym: TSymbol; const BaseValue: Variant; const Name: UnicodeString);
 begin
    inherited Create(Caller, Sym);
    FName := Name;
@@ -1629,7 +1704,7 @@ begin
 
   if readExpr.AssignConnectorSym(TConnectorSymbol(FSym).ConnectorType) then
   begin
-    dataSource := readExpr.Data[exec];
+    dataSource := readExpr.DataPtr[exec].AsPData^;
     DWSCopyData(dataSource, 0, Data, 0, readExpr.Typ.Size);
   end
   else

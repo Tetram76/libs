@@ -19,7 +19,9 @@ unit dwsLanguageExtension;
 
 interface
 
-uses Classes, dwsCompiler, dwsExprs, dwsErrors, dwsSymbols, dwsUnitSymbols;
+uses
+  Classes, Types,
+  dwsCompiler, dwsExprs, dwsErrors, dwsSymbols, dwsUnitSymbols;
 
 type
 
@@ -32,14 +34,16 @@ type
 
          function CreateBaseVariantSymbol(table : TSystemSymbolTable) : TBaseVariantSymbol; virtual;
          procedure CreateSystemSymbols(table : TSystemSymbolTable); virtual;
+         function StaticSymbols : Boolean; virtual;
          function ReadInstr(compiler : TdwsCompiler) : TNoResultExpr; virtual;
+         function ReadUnknownName(compiler: TdwsCompiler) : TTypedExpr; virtual;
          function ReadInstrSwitch(compiler : TdwsCompiler) : Boolean; virtual;
-         function FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol; virtual;
+         function FindUnknownName(compiler : TdwsCompiler; const name : UnicodeString) : TSymbol; virtual;
          procedure SectionChanged(compiler : TdwsCompiler); virtual;
          procedure ReadScript(compiler : TdwsCompiler; sourceFile : TSourceFile;
                               scriptType : TScriptSourceType); virtual;
          procedure GetDefaultEnvironment(var enviro : IdwsEnvironment); virtual;
-         function RootExternalClass(compiler : TdwsCompiler; const externalName : String) : TClassSymbol; virtual;
+         function RootExternalClass(compiler : TdwsCompiler; const externalName : UnicodeString) : TClassSymbol; virtual;
    end;
 
    // TdwsLanguageExtensionAggregator
@@ -60,15 +64,17 @@ type
 
          function CreateBaseVariantSymbol(table : TSystemSymbolTable) : TBaseVariantSymbol; override;
          procedure CreateSystemSymbols(table : TSystemSymbolTable); override;
+         function StaticSymbols : Boolean; override;
          function ReadInstr(compiler : TdwsCompiler) : TNoResultExpr; override;
+         function ReadUnknownName(compiler: TdwsCompiler) : TTypedExpr; override;
          function ReadInstrSwitch(compiler : TdwsCompiler) : Boolean; override;
-         function FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol; override;
+         function FindUnknownName(compiler : TdwsCompiler; const name : UnicodeString) : TSymbol; override;
          procedure SectionChanged(compiler : TdwsCompiler); override;
          procedure ReadScript(compiler : TdwsCompiler; sourceFile : TSourceFile;
                               scriptType : TScriptSourceType); override;
          procedure GetDefaultEnvironment(var enviro : IdwsEnvironment); override;
          function DefaultEnvironment : IdwsEnvironment;
-         function RootExternalClass(compiler : TdwsCompiler; const externalName : String) : TClassSymbol; override;
+         function RootExternalClass(compiler : TdwsCompiler; const externalName : UnicodeString) : TClassSymbol; override;
    end;
 
 // ------------------------------------------------------------------
@@ -106,6 +112,20 @@ begin
    // nothing
 end;
 
+// StaticSymbols
+//
+function TdwsLanguageExtension.StaticSymbols : Boolean;
+begin
+   Result:=False;
+end;
+
+// ReadInstrSwitch
+//
+function TdwsLanguageExtension.ReadUnknownName(compiler: TdwsCompiler) : TTypedExpr;
+begin
+   Result:=nil;
+end;
+
 // ReadInstr
 //
 function TdwsLanguageExtension.ReadInstr(compiler : TdwsCompiler) : TNoResultExpr;
@@ -122,7 +142,7 @@ end;
 
 // FindUnknownName
 //
-function TdwsLanguageExtension.FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol;
+function TdwsLanguageExtension.FindUnknownName(compiler : TdwsCompiler; const name : UnicodeString) : TSymbol;
 begin
    Result:=nil;
 end;
@@ -151,7 +171,7 @@ end;
 
 // RootExternalClass
 //
-function TdwsLanguageExtension.RootExternalClass(compiler : TdwsCompiler; const externalName : String) : TClassSymbol;
+function TdwsLanguageExtension.RootExternalClass(compiler : TdwsCompiler; const externalName : UnicodeString) : TClassSymbol;
 begin
    Result:=compiler.CurrentProg.TypObject;
 end;
@@ -232,6 +252,35 @@ begin
    end;
 end;
 
+// StaticSymbols
+//
+function TdwsLanguageExtensionAggregator.StaticSymbols : Boolean;
+var
+   i : Integer;
+   ext : TdwsLanguageExtension;
+begin
+   Result:=True;
+   for i:=0 to FList.Count-1 do begin
+      ext:=TdwsLanguageExtension(FList.List[i]);
+      Result:=Result and ext.StaticSymbols;
+   end;
+end;
+
+// ReadUnknownName
+//
+function TdwsLanguageExtensionAggregator.ReadUnknownName(compiler: TdwsCompiler): TTypedExpr;
+var
+   i : Integer;
+   ext : TdwsLanguageExtension;
+begin
+   for i:=0 to FList.Count-1 do begin
+      ext:=TdwsLanguageExtension(FList.List[i]);
+      Result:=ext.ReadUnknownName(compiler);
+      if Result<>nil then Exit;
+   end;
+   Result:=nil;
+end;
+
 // ReadInstr
 //
 function TdwsLanguageExtensionAggregator.ReadInstr(compiler : TdwsCompiler) : TNoResultExpr;
@@ -264,7 +313,7 @@ end;
 
 // FindUnknownName
 //
-function TdwsLanguageExtensionAggregator.FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol;
+function TdwsLanguageExtensionAggregator.FindUnknownName(compiler : TdwsCompiler; const name : UnicodeString) : TSymbol;
 var
    i : Integer;
    ext : TdwsLanguageExtension;
@@ -327,7 +376,7 @@ end;
 
 // RootExternalClass
 //
-function TdwsLanguageExtensionAggregator.RootExternalClass(compiler : TdwsCompiler; const externalName : String) : TClassSymbol;
+function TdwsLanguageExtensionAggregator.RootExternalClass(compiler : TdwsCompiler; const externalName : UnicodeString) : TClassSymbol;
 var
    i : Integer;
    ext : TdwsLanguageExtension;

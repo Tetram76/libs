@@ -28,9 +28,7 @@
    </ul><p>
 
    The global vars can be saved/restored as a whole from Delphi code (delphi
-   code only as of now, mainly for security reasons) to a file, string or stream.<br>
-   Be aware DWS will require special care to run in a multi-threaded
-   environment.
+   code only as of now, mainly for security reasons) to a file, string or stream.
 }
 unit dwsGlobalVarsFunctions;
 
@@ -39,74 +37,81 @@ unit dwsGlobalVarsFunctions;
 interface
 
 uses
-  Variants, Windows, Classes, SysUtils, dwsFunctions, dwsExprs, dwsSymbols, dwsUtils;
+   Variants, Windows, Classes, SysUtils,
+   dwsUtils, dwsStrings, dwsExprList, dwsConstExprs,
+   dwsFunctions, dwsExprs, dwsSymbols, dwsMagicExprs;
 
 type
 
-  TReadGlobalVarFunc = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
-  end;
+   TReadGlobalVarFunc = class(TInternalMagicVariantFunction)
+      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+   end;
 
-  TReadGlobalVarDefFunc = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
-  end;
+   TReadGlobalVarDefFunc = class(TInternalMagicVariantFunction)
+      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+   end;
 
-  TWriteGlobalVarFunc = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
-  end;
+   TTryReadGlobalVarFunc = class(TInternalMagicBoolFunction)
+      function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
+   end;
 
-  TDeleteGlobalVarFunc = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
-  end;
+   TWriteGlobalVarFunc = class(TInternalMagicBoolFunction)
+      function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
+   end;
 
-  TCleanupGlobalVarsFunc = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
-  end;
+   TDeleteGlobalVarFunc = class(TInternalMagicBoolFunction)
+      function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
+   end;
 
-  TGlobalVarsNamesCommaText = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
-  end;
+   TCleanupGlobalVarsFunc = class(TInternalMagicProcedure)
+      procedure DoEvalProc(const args : TExprBaseListExec); override;
+   end;
 
-  TSaveGlobalVarsToString = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
-  end;
+   TGlobalVarsNamesCommaText = class(TInternalMagicStringFunction)
+      procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
+   end;
 
-  TLoadGlobalVarsFromString = class(TInternalFunction)
-    procedure Execute(info : TProgramInfo); override;
-  end;
+   TSaveGlobalVarsToString = class(TInternalMagicStringFunction)
+      procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
+   end;
 
-  TdwsGlobalVarsFunctions = class(TComponent)
-  end;
+   TLoadGlobalVarsFromString = class(TInternalFunction)
+      procedure Execute(info : TProgramInfo); override;
+   end;
 
-  EGlobalVarError = class (Exception)
-  end;
+   TdwsGlobalVarsFunctions = class(TComponent)
+   end;
+
+   EGlobalVarError = class (Exception)
+   end;
 
 {: Directly write a global var.<p> }
-function WriteGlobalVar(const aName: String; const aValue: Variant) : Boolean;
+function WriteGlobalVar(const aName: UnicodeString; const aValue: Variant) : Boolean;
 {: Directly read a global var.<p> }
-function ReadGlobalVar(const aName: String): Variant;
+function ReadGlobalVar(const aName: UnicodeString): Variant; inline;
+function TryReadGlobalVar(const aName: UnicodeString; var value: Variant): Boolean;
 {: Directly read a global var, using a default value if variable does not exists.<p> }
-function ReadGlobalVarDef(const aName: String; const aDefault: Variant): Variant;
+function ReadGlobalVarDef(const aName: UnicodeString; const aDefault: Variant): Variant; inline;
 {: Delete specified global var if it exists. }
-function DeleteGlobalVar(const aName : String) : Boolean;
+function DeleteGlobalVar(const aName : UnicodeString) : Boolean;
 {: Resets all global vars.<p> }
 procedure CleanupGlobalVars;
 
-{: Save current global vars and their values to a String. }
+{: Save current global vars and their values to a UnicodeString. }
 function SaveGlobalVarsToString : RawByteString;
 {: Load global vars and their values to a file. }
 procedure LoadGlobalVarsFromString(const srcString : RawByteString);
 {: Save current global vars and their values to a file. }
-procedure SaveGlobalVarsToFile(const destFileName : String);
+procedure SaveGlobalVarsToFile(const destFileName : UnicodeString);
 {: Load global vars and their values to a file. }
-procedure LoadGlobalVarsFromFile(const srcFileName : String);
+procedure LoadGlobalVarsFromFile(const srcFileName : UnicodeString);
 {: Save current global vars and their values to a file. }
 procedure SaveGlobalVarsToStream(destStream : TStream);
 {: Load global vars and their values to a file. }
 procedure LoadGlobalVarsFromStream(srcStream : TStream);
 
 {: CommaText of the names of all global vars. }
-function GlobalVarsNamesCommaText : String;
+function GlobalVarsNamesCommaText : UnicodeString;
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -116,45 +121,42 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-var
-   vGlobalVarsCS : TRTLCriticalSection;
-   vGlobalVars : TFastCompareStringList;
-   vGlobalVarsNamesCache : String;
-
-const // type constants to make sure strings get reused by the compiler
-   cString = 'String';
-   cBoolean = 'Boolean';
-   cVariant = 'Variant';
-
-   cGlobalVarsFiles : AnsiString = 'GBF 2.0';
-
 type
 
    TGlobalVar = class(TObject)
-      Value: Variant;
+      private
+         Value: Variant;
 
-      procedure WriteToFiler(writer: TWriter; const Name : String);
-      procedure ReadFromFiler(reader: TReader; var Name : String);
+         procedure WriteToFiler(writer: TWriter; const Name : UnicodeString);
+         procedure ReadFromFiler(reader: TReader; var Name : UnicodeString);
    end;
+
+   TNameGlobalVarHash = TSimpleNameObjectHash<TGlobalVar>;
+
+var
+   vGlobalVarsCS : TRTLCriticalSection;
+   vGlobalVars : TNameGlobalVarHash;
+   vGlobalVarsNamesCache : UnicodeString;
+
+const
+   cGlobalVarsFiles : AnsiString = 'GBF 2.0';
 
 // WriteGlobalVar
 //
-function WriteGlobalVar(const aName : String; const aValue : Variant) : Boolean;
+function WriteGlobalVar(const aName : UnicodeString; const aValue : Variant) : Boolean;
 var
    gv : TGlobalVar;
-   i : Integer;
 begin
    EnterCriticalSection(vGlobalVarsCS);
    try
-      i:=vGlobalVars.IndexOf(aName);
-      if i<0 then begin
+      gv:=vGlobalVars.Objects[aName];
+      if gv=nil then begin
          gv:=TGlobalVar.Create;
-         vGlobalVars.AddObject(aName, gv);
+         vGlobalVars.Objects[aName]:=gv;
          gv.Value:=aValue;
          vGlobalVarsNamesCache:='';
          Result:=True;
       end else begin
-         gv:=TGlobalVar(vGlobalVars.Objects[i]);
          Result:=(VarType(gv.Value)<>VarType(aValue)) or (gv.Value<>aValue);
          if Result then
             gv.Value:=aValue;
@@ -166,44 +168,53 @@ end;
 
 // ReadGlobalVar
 //
-function ReadGlobalVar(const aName : String) : Variant;
+function ReadGlobalVar(const aName : UnicodeString) : Variant;
 begin
    // Result (empty) is our default value when calling...
    Result:=ReadGlobalVarDef(aName, Result);
 end;
 
-// ReadGlobalVarDef
+// TryReadGlobalVar
 //
-function ReadGlobalVarDef(const aName : String; const aDefault : Variant) : Variant;
+function TryReadGlobalVar(const aName: UnicodeString; var value: Variant): Boolean;
 var
-   i : Integer;
+   gv : TGlobalVar;
 begin
    EnterCriticalSection(vGlobalVarsCS);
    try
-      i:=vGlobalVars.IndexOf(aName);
-      if i<0 then
-         Result:=aDefault
-      else Result:=TGlobalVar(vGlobalVars.Objects[i]).Value;
+      gv:=vGlobalVars.Objects[aName];
+      if gv<>nil then begin
+         value:=gv.Value;
+         Result:=True;
+      end else Result:=False;
    finally
       LeaveCriticalSection(vGlobalVarsCS);
    end;
 end;
 
+// ReadGlobalVarDef
+//
+function ReadGlobalVarDef(const aName : UnicodeString; const aDefault : Variant) : Variant;
+begin
+   if not TryReadGlobalVar(aName, Result) then
+      Result:=aDefault;
+end;
+
 // DeleteGlobalVar
 //
-function DeleteGlobalVar(const aName : String) : Boolean;
+function DeleteGlobalVar(const aName : UnicodeString) : Boolean;
 var
-   i : Integer;
+   gv : TGlobalVar;
 begin
    EnterCriticalSection(vGlobalVarsCS);
    try
-      i:=vGlobalVars.IndexOf(aName);
-      Result:=(i>=0);
-      if Result then begin
-         vGlobalVars.Objects[i].Free;
-         vGlobalVars.Delete(i);
+      gv:=vGlobalVars.Objects[aName];
+      if gv<>nil then begin
+         gv.Free;
+         vGlobalVars.Objects[aName]:=nil;
          vGlobalVarsNamesCache:='';
-      end;
+         Result:=True;
+      end else Result:=False;
    finally
       LeaveCriticalSection(vGlobalVarsCS);
    end;
@@ -212,14 +223,10 @@ end;
 // CleanupGlobalVars
 //
 procedure CleanupGlobalVars;
-var
-  i: Integer;
 begin
    EnterCriticalSection(vGlobalVarsCS);
    try
-      for i:=0 to vGlobalVars.Count-1 do
-         vGlobalVars.Objects[i].Free;
-      vGlobalVars.Clear;
+      vGlobalVars.Clean;
       vGlobalVarsNamesCache:='';
    finally
       LeaveCriticalSection(vGlobalVarsCS);
@@ -232,7 +239,7 @@ function SaveGlobalVarsToString : RawByteString;
 var
    ms : TMemoryStream;
 begin
-   ms := TMemoryStream.Create;
+   ms:=TMemoryStream.Create;
    try
       SaveGlobalVarsToStream(ms);
       SetLength(Result, ms.Position);
@@ -263,7 +270,7 @@ begin
    end;
 end;
 
-procedure SaveGlobalVarsToFile(const destFileName : String);
+procedure SaveGlobalVarsToFile(const destFileName : UnicodeString);
 var
    fs : TFileStream;
 begin
@@ -275,7 +282,7 @@ begin
    end;
 end;
 
-procedure LoadGlobalVarsFromFile(const srcFileName : String);
+procedure LoadGlobalVarsFromFile(const srcFileName : UnicodeString);
 var
    fs : TFileStream;
 begin
@@ -294,7 +301,9 @@ var
    i : Integer;
    writer : TWriter;
    gv : TGlobalVar;
+   list : TStringList;
 begin
+   list:=TStringList.Create;
    writer:=TWriter.Create(destStream, 16384);
    try
       writer.Write(cGlobalVarsFiles[1], Length(cGlobalVarsFiles));
@@ -302,9 +311,11 @@ begin
 
       EnterCriticalSection(vGlobalVarsCS);
       try
-         for i:=0 to vGlobalVars.Count-1 do begin
-            gv:=TGlobalVar(vGlobalVars.Objects[i]);
-            gv.WriteToFiler(writer, vGlobalVars[i]);
+         vGlobalVars.Enumerate(list);
+         for i:=0 to list.Count-1 do begin
+            gv:=TGlobalVar(list.Objects[i]);
+            if gv<>nil then
+               gv.WriteToFiler(writer, list[i]);
          end;
       finally
          LeaveCriticalSection(vGlobalVarsCS);
@@ -313,6 +324,7 @@ begin
       writer.WriteListEnd;
    finally
       writer.Free;
+      list.Free;
    end;
 end;
 
@@ -322,7 +334,7 @@ procedure LoadGlobalVarsFromStream(srcStream : TStream);
 var
    reader : TReader;
    fileTag : AnsiString;
-   name : String;
+   name : UnicodeString;
    gv : TGlobalVar;
 begin
    reader:=TReader.Create(srcStream, 16384);
@@ -339,15 +351,14 @@ begin
          CleanupGlobalVars;
 
          reader.ReadListBegin;
-         vGlobalVars.Sorted:=False;
          while not reader.EndOfList do begin
             gv:=TGlobalVar.Create;
             gv.ReadFromFiler(reader, name);
             vGlobalVars.AddObject(name, gv);
          end;
-         vGlobalVars.Sorted:=True;
          reader.ReadListEnd;
 
+         vGlobalVarsNamesCache:='';
       finally
          LeaveCriticalSection(vGlobalVarsCS);
       end;
@@ -358,12 +369,26 @@ end;
 
 // GlobalVarsNamesCommaText
 //
-function GlobalVarsNamesCommaText : String;
+function GlobalVarsNamesCommaText : UnicodeString;
+var
+   i : Integer;
+   list : TStringList;
 begin
    EnterCriticalSection(vGlobalVarsCS);
    try
-      if vGlobalVarsNamesCache='' then
-         vGlobalVarsNamesCache:=vGlobalVars.CommaText;
+      if vGlobalVarsNamesCache='' then begin
+         list:=TStringList.Create;
+         try
+            vGlobalVars.Enumerate(list);
+            for i:=list.Count-1 downto 0 do begin
+               if list.Objects[i]=nil then
+                  list.Delete(i);
+            end;
+            vGlobalVarsNamesCache:=list.CommaText;
+         finally
+            list.Free;
+         end;
+      end;
       Result:=vGlobalVarsNamesCache;
    finally
       LeaveCriticalSection(vGlobalVarsCS);
@@ -387,7 +412,7 @@ begin
          {$ifdef FPC}
          writer.WriteString(UnicodeString(PVarData(@value).VString));
          {$else}
-         writer.WriteString(String(PVarData(@value).VUString));
+         writer.WriteString(UnicodeString(PVarData(@value).VUString));
          {$endif}
       varDouble :
          writer.WriteFloat(PVarData(@value).VDouble);
@@ -446,43 +471,42 @@ var
   valType: TValueType;
 begin
   valType := reader.NextValue;
-  with reader do
-    case valType of
-      vaNil, vaNull:
-        begin
-          if ReadValue = vaNil then
-            VarClear(Result)
-          else
-            Result := NULL;
-        end;
-      vaInt8: TVarData(Result).VByte := Byte(ReadInteger);
-      vaInt16: TVarData(Result).VSmallint := Smallint(ReadInteger);
-      vaInt32: TVarData(Result).VInteger := ReadInteger;
-      vaInt64: TVarData(Result).VInt64 := ReadInt64;
-      vaExtended: TVarData(Result).VDouble := ReadFloat;
-      vaSingle: TVarData(Result).VSingle := ReadSingle;
-      vaCurrency: TVarData(Result).VCurrency := ReadCurrency;
-      vaDate: TVarData(Result).VDate := ReadDate;
-      vaString, vaLString, vaUTF8String:
-         Result := String(ReadString);
-      vaWString: Result := ReadWideString;
-      vaFalse, vaTrue:
-         TVarData(Result).VBoolean := (ReadValue = vaTrue);
-    else
-      raise EReadError.Create('Invalid variant stream');
-    end;
+  case valType of
+    vaNil, vaNull:
+      begin
+        if ReadValue = vaNil then
+          VarClear(Result)
+        else
+          Result := NULL;
+      end;
+    vaInt8: TVarData(Result).VByte := Byte(reader.ReadInteger);
+    vaInt16: TVarData(Result).VSmallint := Smallint(reader.ReadInteger);
+    vaInt32: TVarData(Result).VInteger := reader.ReadInteger;
+    vaInt64: TVarData(Result).VInt64 := reader.ReadInt64;
+    vaExtended: TVarData(Result).VDouble := reader.ReadFloat;
+    vaSingle: TVarData(Result).VSingle := reader.ReadSingle;
+    vaCurrency: TVarData(Result).VCurrency := reader.ReadCurrency;
+    vaDate: TVarData(Result).VDate := reader.ReadDate;
+    vaString, vaLString, vaUTF8String:
+       Result := UnicodeString(reader.ReadString);
+    vaWString: Result := reader.ReadString;
+    vaFalse, vaTrue:
+       TVarData(Result).VBoolean := (reader.ReadValue = vaTrue);
+  else
+    raise EReadError.Create('Invalid variant stream');
+  end;
   TVarData(Result).VType := cValTtoVarT[ValType];
 end;
 
 { TGlobalVar }
 
-procedure TGlobalVar.WriteToFiler(writer: TWriter; const Name : String);
+procedure TGlobalVar.WriteToFiler(writer: TWriter; const Name : UnicodeString);
 begin
    writer.WriteString(Name);
    dwsGlobalVarsFunctions.WriteVariant(writer, Value);
 end;
 
-procedure TGlobalVar.ReadFromFiler(reader: TReader; var Name : String);
+procedure TGlobalVar.ReadFromFiler(reader: TReader; var Name : UnicodeString);
 begin
    Name:=reader.ReadString;
    Value:=dwsGlobalVarsFunctions.ReadVariant(reader);
@@ -490,51 +514,65 @@ end;
 
 { TReadGlobalVarFunc }
 
-procedure TReadGlobalVarFunc.Execute;
+function TReadGlobalVarFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
 begin
-  Info.ResultAsVariant := ReadGlobalVar(Info.ValueAsString['n']);
+   Result:=ReadGlobalVar(args.AsString[0]);
 end;
 
 { TReadGlobalVarDefFunc }
 
-procedure TReadGlobalVarDefFunc.Execute;
+function TReadGlobalVarDefFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
 begin
-  Info.ResultAsVariant := ReadGlobalVarDef(Info.ValueAsString['n'], Info.ValueAsVariant['d']);
+   if not TryReadGlobalVar(args.AsString[0], Result) then
+      args.ExprBase[1].EvalAsVariant(args.Exec, Result);
+end;
+
+{ TTryReadGlobalVarFunc }
+
+function TTryReadGlobalVarFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
+var
+   v : Variant;
+begin
+   Result:=TryReadGlobalVar(args.AsString[0], v);
+   if Result then
+      args.ExprBase[1].AssignValue(args.Exec, v);
 end;
 
 { TWriteGlobalVarFunc }
 
-procedure TWriteGlobalVarFunc.Execute;
+function TWriteGlobalVarFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-  Info.ResultAsBoolean:=WriteGlobalVar(Info.ValueAsString['n'], Info.ValueAsVariant['v']);
+   Result:=WriteGlobalVar(args.AsString[0], args.ExprBase[1].Eval(args.Exec));
 end;
 
 { TDeleteGlobalVarFunc }
 
-procedure TDeleteGlobalVarFunc.Execute;
+function TDeleteGlobalVarFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-  Info.ResultAsBoolean:=DeleteGlobalVar(Info.ValueAsString['n']);
+   Result:=DeleteGlobalVar(args.AsString[0]);
 end;
 
 { TCleanupGlobalVarsFunc }
 
-procedure TCleanupGlobalVarsFunc.Execute;
+procedure TCleanupGlobalVarsFunc.DoEvalProc(const args : TExprBaseListExec);
 begin
-  CleanupGlobalVars;
+   CleanupGlobalVars;
 end;
 
 { TGlobalVarsNamesCommaText }
 
-procedure TGlobalVarsNamesCommaText.Execute;
+procedure TGlobalVarsNamesCommaText.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 begin
-   Info.ResultAsString:=GlobalVarsNamesCommaText;
+   Result:=GlobalVarsNamesCommaText;
 end;
 
 { TSaveGlobalVarsToString }
 
-procedure TSaveGlobalVarsToString.Execute;
+// DoEvalAsString
+//
+procedure TSaveGlobalVarsToString.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 begin
-   Info.ResultAsDataString:=SaveGlobalVarsToString;
+   Result:=RawByteStringToScriptString(SaveGlobalVarsToString);
 end;
 
 { TLoadGlobalVarsFromString }
@@ -547,23 +585,23 @@ end;
 initialization
 
    InitializeCriticalSection(vGlobalVarsCS);
-   vGlobalVars:=TFastCompareStringList.Create;
-   vGlobalVars.CaseSensitive:=True;
-   vGlobalVars.Sorted:=True;
+   vGlobalVars:=TNameGlobalVarHash.Create;
 
-   RegisterInternalFunction(TReadGlobalVarFunc, 'ReadGlobalVar', ['n', cString], cVariant);
-   RegisterInternalFunction(TReadGlobalVarDefFunc, 'ReadGlobalVarDef', ['n', cString, 'd', cVariant], cVariant);
-   RegisterInternalFunction(TWriteGlobalVarFunc, 'WriteGlobalVar', ['n', cString, 'v', cVariant], cBoolean);
-   RegisterInternalFunction(TDeleteGlobalVarFunc, 'DeleteGlobalVar', ['n', cString], cBoolean);
+   RegisterInternalFunction(TReadGlobalVarFunc, 'ReadGlobalVar', ['n', SYS_STRING], SYS_VARIANT);
+   RegisterInternalFunction(TReadGlobalVarDefFunc, 'ReadGlobalVarDef', ['n', SYS_STRING, 'd', SYS_VARIANT], SYS_VARIANT);
+   RegisterInternalBoolFunction(TTryReadGlobalVarFunc, 'TryReadGlobalVar', ['n', SYS_STRING, '@v', SYS_VARIANT]);
+   RegisterInternalBoolFunction(TWriteGlobalVarFunc, 'WriteGlobalVar', ['n', SYS_STRING, 'v', SYS_VARIANT]);
+   RegisterInternalBoolFunction(TDeleteGlobalVarFunc, 'DeleteGlobalVar', ['n', SYS_STRING]);
    RegisterInternalFunction(TCleanupGlobalVarsFunc, 'CleanupGlobalVars', [], '');
-   RegisterInternalFunction(TGlobalVarsNamesCommaText, 'GlobalVarsNamesCommaText', [], cString);
-   RegisterInternalFunction(TSaveGlobalVarsToString, 'SaveGlobalVarsToString', [], cString);
-   RegisterInternalFunction(TLoadGlobalVarsFromString, 'LoadGlobalVarsFromString', ['s', cString], '');
+   RegisterInternalStringFunction(TGlobalVarsNamesCommaText, 'GlobalVarsNamesCommaText', []);
+   RegisterInternalStringFunction(TSaveGlobalVarsToString, 'SaveGlobalVarsToString', []);
+   RegisterInternalProcedure(TLoadGlobalVarsFromString, 'LoadGlobalVarsFromString', ['s', SYS_STRING]);
 
 finalization
 
    CleanupGlobalVars;
    DeleteCriticalSection(vGlobalVarsCS);
+   vGlobalVars.Clean;
    vGlobalVars.Free;
    vGlobalVars:=nil;
   

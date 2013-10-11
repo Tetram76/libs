@@ -1,0 +1,84 @@
+uses
+  ExampleUnit, uDemoUnit;
+
+{$I 'ExampleIncludeFile.inc'}
+
+procedure DemonstrationOf_Raise;
+const
+  Value = 5;
+begin
+  // Change the constant above to see the use of raising
+  // an exception error which halts execution ..
+  If Value <> 5 then
+    Raise Exception.Create( 'The value is incorrect' );
+end;
+    
+procedure DemonstrationOf_Assert;
+const
+  Value = 5;
+begin
+  // Change the constant above to see the use of Assert
+  // in verifying values are as demanded ..
+  Assert( Value = 5 );
+end;
+
+
+procedure DemonstrationOf_ExampleUnit;  
+var
+  I : integer;
+begin
+  // This function is in the used unit 'ExampleUnit' declared
+  // above in 'uses'.
+  I := ExampleUnit.ExampleUnitFunc;
+  If I <> 101 then
+    Raise Exception.Create( 'The value is incorrect' );
+end;
+
+
+procedure DemonstrationOf_ExampleIncludeFile;
+begin
+  // This constant (56) is declared in the include file 
+  // 'ExampleIncludeFile' declared above
+  Assert( ExampleValue = 56 );
+end;
+
+
+procedure DemonstrationOf_DemoUnit;
+var
+  MyObj := TDemoUnitObj.Create;
+  Test := TSubObj1.Create;
+begin
+  // uDemoUnit is an example of the dwsUnit component which has been
+  // used to define items 'outside' of the script at design time.
+  // The following code accesses these items.
+
+  // DemoUnitRec is a function that returns a type 'TDemoUnitType'
+  Assert( DemoUnitRec.One = 1 );
+  Assert( DemoUnitRec.Two = 2 );
+
+  // My Obj is a local variable above of TDemoUnitObj a class
+  // defined at design time in DemoUnit, but instantiated locally here above.
+  Assert( MyObj.GetOne = 1 );
+
+  // DemoUnitObj is an instance of a TDemoUnitObj class
+  // defined at design time in DemoUnit.
+  Assert( DemoUnitObj.GetOne = 1 );
+  Assert( MyObj.GetSubObj1.GetOne = 1 );
+
+  // .. as above, but GetSubObj1 calls a method that returns
+  // another class.
+  Assert( DemoUnitObj.GetSubObj1.GetOne = 1 );
+//  Assert( Test.GetOne = 1 );
+end;
+
+
+
+
+begin
+  DemonstrationOf_Raise;
+  DemonstrationOf_Assert;
+  DemonstrationOf_ExampleUnit;
+  DemonstrationOf_ExampleIncludeFile;
+  DemonstrationOf_DemoUnit;
+  //ShowMessage( 'The demonstration completed successfully' );
+end;

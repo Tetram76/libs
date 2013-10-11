@@ -1,11 +1,13 @@
 unit USourceUtilsTests;
 
+{$I ..\Source\dws.inc}
+
 interface
 
-uses Classes, SysUtils, dwsXPlatformTests,
-   dwsComp, dwsCompiler, dwsExprs,
-   dwsTokenizer, dwsErrors, dwsUtils, Variants,
-   dwsSymbols, dwsSuggestions;
+uses
+   Classes, SysUtils,
+   dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsDataContext,
+   dwsTokenizer, dwsErrors, dwsUtils, Variants, dwsSymbols, dwsSuggestions;
 
 type
 
@@ -27,7 +29,18 @@ type
          procedure StringTest;
          procedure StaticArrayTest;
          procedure DynamicArrayTest;
+         procedure ObjectArrayTest;
          procedure HelperSuggestTest;
+         procedure SuggestAfterCall;
+         procedure SuggestAcrossLines;
+         procedure SymDictFunctionForward;
+         procedure SymDictInherited;
+         procedure ReferencesVars;
+         procedure InvalidExceptSuggest;
+         procedure EnumerationNamesAndValues;
+         procedure BigEnumerationNamesAndValues;
+         procedure EnumerationSuggest;
+         procedure StaticClassSuggest;
    end;
 
 // ------------------------------------------------------------------
@@ -83,12 +96,13 @@ begin
 
    scriptPos.Col:=3;
    sugg:=TdwsSuggestions.Create(prog, scriptPos);
-   CheckEquals(5, sugg.Count, 'column 5');
-   CheckEquals('printit', sugg.Code[0], 'sugg 5, 0');
-   CheckEquals('Print', sugg.Code[1], 'sugg 5, 1');
-   CheckEquals('PrintLn', sugg.Code[2], 'sugg 5, 2');
-   CheckEquals('procedure', sugg.Code[3], 'sugg 5, 2');
-   CheckEquals('property', sugg.Code[4], 'sugg 5, 2');
+   CheckEquals(6, sugg.Count, 'column 6');
+   CheckEquals('printit', sugg.Code[0], 'sugg 6, 0');
+   CheckEquals('Print', sugg.Code[1], 'sugg 6, 1');
+   CheckEquals('PrintLn', sugg.Code[2], 'sugg 6, 2');
+   CheckEquals('procedure', sugg.Code[3], 'sugg 6, 3');
+   CheckEquals('property', sugg.Code[4], 'sugg 6, 4');
+   CheckEquals('Pred', sugg.Code[5], 'sugg 6, 5');
 
    scriptPos.Col:=7;
    sugg:=TdwsSuggestions.Create(prog, scriptPos);
@@ -206,7 +220,8 @@ begin
    sugg:=TdwsSuggestions.Create(prog, scriptPos);
    CheckTrue(sugg.Count>10, 'column 8');
    CheckEquals('Boolean', sugg.Code[0], 'sugg 8, 0');
-   CheckEquals('EAssertionFailed', sugg.Code[1], 'sugg 8, 1');
+   CheckEquals('CompilerVersion', sugg.Code[1], 'sugg 8, 1');
+   CheckEquals('EAssertionFailed', sugg.Code[2], 'sugg 8, 2');
 
    scriptPos.Col:=9;
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
@@ -278,15 +293,17 @@ begin
    scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 3);
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
 
-   CheckTrue(sugg.Count=3, 's.');
-   CheckEquals('High', sugg.Code[0], 's. 0');
-   CheckEquals('Length', sugg.Code[1], 's. 1');
-   CheckEquals('Low', sugg.Code[2], 's. 2');
+   CheckTrue(sugg.Count>4, 's.');
+   CheckEquals('After', sugg.Code[0], 's. 0');
+   CheckEquals('Before', sugg.Code[1], 's. 1');
+   CheckEquals('CompareText', sugg.Code[2], 's. 2');
+   CheckEquals('CompareTo', sugg.Code[3], 's. 3');
 
    scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 4);
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
-   CheckTrue(sugg.Count=1, 's.h');
-   CheckEquals('High', sugg.Code[0], 's.h 0');
+   CheckTrue(sugg.Count=2, 's.h');
+   CheckEquals('HexToInteger', sugg.Code[0], 's.h 0');
+   CheckEquals('High', sugg.Code[1], 's.h 1');
 end;
 
 // StaticArrayTest
@@ -326,40 +343,402 @@ begin
    scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 3);
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
 
-   CheckTrue(sugg.Count=13, 'd.');
+   CheckEquals(19, sugg.Count, 'd.');
    CheckEquals('Add', sugg.Code[0], 'd. 0');
    CheckEquals('Clear', sugg.Code[1], 'd. 1');
    CheckEquals('Copy', sugg.Code[2], 'd. 2');
-   CheckEquals('Delete', sugg.Code[3], 'd. 3');
-   CheckEquals('High', sugg.Code[4], 'd. 4');
-   CheckEquals('IndexOf', sugg.Code[5], 'd. 5');
-   CheckEquals('Insert', sugg.Code[6], 'd. 6');
-   CheckEquals('Length', sugg.Code[7], 'd. 7');
-   CheckEquals('Low', sugg.Code[8], 'd. 8');
-   CheckEquals('Push', sugg.Code[9], 'd. 9');
-   CheckEquals('Reverse', sugg.Code[10], 'd. 10');
-   CheckEquals('SetLength', sugg.Code[11], 'd. 11');
-   CheckEquals('Swap', sugg.Code[12], 'd. 12');
+   CheckEquals('Count', sugg.Code[3], 'd. 3');
+   CheckEquals('Delete', sugg.Code[4], 'd. 4');
+   CheckEquals('High', sugg.Code[5], 'd. 5');
+   CheckEquals('IndexOf', sugg.Code[6], 'd. 6');
+   CheckEquals('Insert', sugg.Code[7], 'd. 7');
+   CheckEquals('Length', sugg.Code[8], 'd. 8');
+   CheckEquals('Low', sugg.Code[9], 'd. 9');
+   CheckEquals('Map', sugg.Code[10], 'd. 10');
+   CheckEquals('Peek', sugg.Code[11], 'd. 11');
+   CheckEquals('Pop', sugg.Code[12], 'd. 12');
+   CheckEquals('Push', sugg.Code[13], 'd. 13');
+   CheckEquals('Remove', sugg.Code[14], 'd. 14');
+   CheckEquals('Reverse', sugg.Code[15], 'd. 15');
+   CheckEquals('SetLength', sugg.Code[16], 'd. 16');
+   CheckEquals('Sort', sugg.Code[17], 'd. 17');
+   CheckEquals('Swap', sugg.Code[18], 'd. 18');
 end;
 
-// HelperSuggestTest
+// ObjectArrayTest
 //
-procedure TSourceUtilsTests.HelperSuggestTest;
+procedure TSourceUtilsTests.ObjectArrayTest;
 var
    prog : IdwsProgram;
    sugg : IdwsSuggestions;
    scriptPos : TScriptPos;
 begin
-   prog:=FCompiler.Compile( 'type TIntegerHelper = helper for Integer const Hello = 123; function Next : Integer; begin Result:=Self+1; end; end;'#13#10
+   prog:=FCompiler.Compile( 'type TObj = class X : Integer; end; var a : array of TObj;'#13#10
+                           +'a[0].');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 6);
+   sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
+
+   CheckEquals(7, sugg.Count, 'a[0].');
+   CheckEquals('ClassName', sugg.Code[0], 'a[0]. 0');
+   CheckEquals('ClassParent', sugg.Code[1], 'a[0]. 1');
+   CheckEquals('ClassType', sugg.Code[2], 'a[0]. 2');
+   CheckEquals('Create', sugg.Code[3], 'a[0]. 3');
+   CheckEquals('Destroy', sugg.Code[4], 'a[0]. 4');
+   CheckEquals('Free', sugg.Code[5], 'a[0]. 5');
+   CheckEquals('X', sugg.Code[6], 'a[0]. 6');
+end;
+
+// HelperSuggestTest
+//
+procedure TSourceUtilsTests.HelperSuggestTest;
+const
+   cSugg : array [0..12] of String = (
+      'Clamp', 'Factorial', 'Hello', 'IsPrime', 'LeastFactor', 'Max',
+      'Min', 'Next', 'Sign', 'Sqr', 'ToBin', 'ToHexString', 'ToString'
+      );
+
+var
+   prog : IdwsProgram;
+   sugg : IdwsSuggestions;
+   scriptPos : TScriptPos;
+   i : Integer;
+begin
+   prog:=FCompiler.Compile( 'type TIntegerHelper = helper for Integer const Hello = 123; '
+                              +'function Next : Integer; begin Result:=Self+1; end; end;'#13#10
                            +'var d : Integer;'#13#10
                            +'d.');
 
    scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 3, 3);
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
 
-   CheckEquals(2, sugg.Count, 'd.');
-   CheckEquals('Hello', sugg.Code[0], 'd. 0');
-   CheckEquals('Next', sugg.Code[1], 'd. 0');
+   CheckEquals(Length(cSugg), sugg.Count, 'd.');
+   for i:=0 to High(cSugg) do
+      CheckEquals(cSugg[i], sugg.Code[i], 'd. '+IntToStr(i));
+end;
+
+// SuggestAfterCall
+//
+procedure TSourceUtilsTests.SuggestAfterCall;
+var
+   prog : IdwsProgram;
+   sugg : IdwsSuggestions;
+   scriptPos : TScriptPos;
+begin
+   prog:=FCompiler.Compile('function T(i : Integer) : String; forward;'#13#10
+                           +'T(1).L');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 7);
+   sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
+
+   CheckEquals(4, sugg.Count, '.L');
+   CheckEquals('Left', sugg.Code[0], '.L 0');
+   CheckEquals('Length', sugg.Code[1], '.L 1');
+   CheckEquals('Low', sugg.Code[2], '.L 2');
+   CheckEquals('LowerCase', sugg.Code[3], '.L 3');
+
+   prog:=FCompiler.Compile('function T(i : Integer) : String; forward;'#13#10
+                           +'T(Ord(IntToStr(1)[1]+"])([")).Le');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 33);
+   sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
+
+   CheckEquals(2, sugg.Count, '.Le');
+   CheckEquals('Left', sugg.Code[0], '.Le 0');
+   CheckEquals('Length', sugg.Code[1], '.Le 1');
+end;
+
+// SuggestAcrossLines
+//
+procedure TSourceUtilsTests.SuggestAcrossLines;
+var
+   prog : IdwsProgram;
+   sugg : IdwsSuggestions;
+   scriptPos : TScriptPos;
+begin
+   prog:=FCompiler.Compile('function T(i : Integer) : String; forward;'#13#10
+                           +'T('#13#10
+                           +'1'#13#10
+                           +')'#13#10
+                           +'.LO');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 5, 4);
+   sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
+
+   CheckEquals(2, sugg.Count, '.Lo');
+   CheckEquals('Low', sugg.Code[0], '.Lo 0');
+   CheckEquals('LowerCase', sugg.Code[1], '.L 1');
+end;
+
+// SymDictFunctionForward
+//
+procedure TSourceUtilsTests.SymDictFunctionForward;
+var
+   prog : IdwsProgram;
+begin
+   prog:=FCompiler.Compile( 'procedure Test; begin end;');
+
+   Check(prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suForward)=nil, 'Forward');
+   CheckEquals(1, prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suDeclaration).ScriptPos.Line,
+               'a Declaration');
+   CheckEquals(1, prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suImplementation).ScriptPos.Line,
+               'a Implementation');
+
+   prog:=FCompiler.Compile( 'procedure Test; forward;'#13#10
+                           +'procedure Test; begin end;');
+
+   CheckEquals(1, prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suForward).ScriptPos.Line,
+               'b Forward');
+   CheckEquals(1, prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suDeclaration).ScriptPos.Line,
+               'b Declaration');
+   CheckEquals(2, prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suImplementation).ScriptPos.Line,
+               'b Implementation');
+
+   prog:=FCompiler.Compile( 'unit Test; interface'#13#10
+                           +'procedure Test;'#13#10
+                           +'implementation'#13#10
+                           +'procedure Test; begin end;');
+
+   CheckEquals(2, prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suForward).ScriptPos.Line,
+               'c Forward');
+   CheckEquals(2, prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suDeclaration).ScriptPos.Line,
+               'c Declaration');
+   CheckEquals(4, prog.SymbolDictionary.FindSymbolUsageOfType('Test', TFuncSymbol, suImplementation).ScriptPos.Line,
+               'c Implementation');
+end;
+
+// SymDictInherited
+//
+procedure TSourceUtilsTests.SymDictInherited;
+var
+   prog : IdwsProgram;
+   symPosList : TSymbolPositionList;
+   sym : TSymbol;
+begin
+   prog:=FCompiler.Compile( 'type TBaseClass = class procedure Foo; virtual; end;'#13#10
+                           +'type TDerivedClass = class(TBaseClass) procedure Foo; override; end;'#13#10
+                           +'procedure TDerivedClass.Foo; begin'#13#10
+                           +'inherited;'#13#10
+                           +'inherited Foo;'#13#10
+                           +'end;');
+
+   // base method
+
+   sym:=prog.Table.FindSymbol('TBaseClass', cvMagic);
+   sym:=(sym as TClassSymbol).Members.FindSymbol('Foo', cvMagic);
+
+   symPosList:=prog.SymbolDictionary.FindSymbolPosList(sym);
+
+   CheckEquals(4, symPosList.Count);
+
+   CheckEquals(1, symPosList[0].ScriptPos.Line, 'TBaseClass Line 1');
+   Check(symPosList[0].SymbolUsages=[suDeclaration], 'TBaseClass Line 1 usage');
+
+   CheckEquals(2, symPosList[1].ScriptPos.Line, 'TBaseClass Line 2');
+   Check(symPosList[1].SymbolUsages=[suReference, suImplicit], 'TBaseClass Line 2 usage');
+
+   CheckEquals(4, symPosList[2].ScriptPos.Line, 'TBaseClass Line 4');
+   Check(symPosList[2].SymbolUsages=[suReference, suImplicit], 'TBaseClass Line 4 usage');
+
+   CheckEquals(5, symPosList[3].ScriptPos.Line, 'TBaseClass Line 5');
+   Check(symPosList[3].SymbolUsages=[suReference], 'TBaseClass Line 5 usage');
+
+   // derived method
+
+   sym:=prog.Table.FindSymbol('TDerivedClass', cvMagic);
+   sym:=(sym as TClassSymbol).Members.FindSymbol('Foo', cvMagic);
+
+   symPosList:=prog.SymbolDictionary.FindSymbolPosList(sym);
+
+   CheckEquals(2, symPosList.Count);
+
+   CheckEquals(2, symPosList[0].ScriptPos.Line, 'TDerivedClass Line 2');
+   Check(symPosList[0].SymbolUsages=[suDeclaration], 'TDerivedClass Line 2 usage');
+
+   CheckEquals(3, symPosList[1].ScriptPos.Line, 'TDerivedClass Line 3');
+   Check(symPosList[1].SymbolUsages=[suImplementation], 'TDerivedClass Line 3 usage');
+end;
+
+// ReferencesVars
+//
+procedure TSourceUtilsTests.ReferencesVars;
+var
+   prog : IdwsProgram;
+   sym : TDataSymbol;
+   funcSym : TSymbol;
+   funcExec : IExecutable;
+begin
+   prog:=FCompiler.Compile( 'var i : Integer;'#13#10
+                           +'if i>0 then Inc(i);'#13#10
+                           +'function Test : Integer;'#13#10
+                           +'begin var i:=1; result:=i; end;'#13#10);
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   sym:=TDataSymbol(prog.Table.FindSymbol('i', cvMagic, TDataSymbol));
+   CheckEquals('TDataSymbol', sym.ClassName, 'i class');
+
+   CheckTrue(prog.ProgramObject.Expr.ReferencesVariable(sym), 'referenced in program');
+
+   funcSym:=prog.Table.FindSymbol('Test', cvMagic);
+   CheckEquals('TSourceFuncSymbol', funcSym.ClassName, 'Test class');
+
+   funcExec:=(funcSym as TFuncSymbol).Executable;
+   CheckFalse((funcExec.GetSelf as TdwsProgram).Expr.ReferencesVariable(sym), 'not referenced in test');
+end;
+
+// InvalidExceptSuggest
+//
+procedure TSourceUtilsTests.InvalidExceptSuggest;
+var
+   prog : IdwsProgram;
+   sugg : IdwsSuggestions;
+   scriptPos : TScriptPos;
+begin
+   prog:=FCompiler.Compile( 'try'#13#10
+                           +'except'#13#10
+                           +'on e : Exception do'#13#10
+                           +'e.s'#13#10);
+
+   CheckTrue(prog.Msgs.HasErrors, 'compiled with errors');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 4, 4);
+
+   sugg:=TdwsSuggestions.Create(prog, scriptPos);
+   CheckEquals(1, sugg.Count, 'column 4');
+   CheckEquals('StackTrace', sugg.Code[0], 'sugg 2, 0');
+end;
+
+// EnumerationNamesAndValues
+//
+procedure TSourceUtilsTests.EnumerationNamesAndValues;
+var
+   prog : IdwsProgram;
+   enum : TEnumerationSymbol;
+begin
+   prog:=FCompiler.Compile( 'type TContinuous = (c1, c2, c3);'#13#10
+                           +'type TContinuous2 = (d1 = 1, d2 = 2, d3 = 3);'#13#10
+                           +'type TDiscontinuous = (e1 = 1, e2 = 3, e3 = 4);');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compiled with errors');
+
+   enum:=(prog.Table.FindTypeSymbol('TContinuous', cvPublic) as TEnumerationSymbol);
+   CheckEquals('c1', enum.ElementByValue(0).Name);
+   CheckEquals('c2', enum.ElementByValue(1).Name);
+   CheckEquals('c3', enum.ElementByValue(2).Name);
+   CheckNull(enum.ElementByValue(3), 'continuous');
+
+   enum:=(prog.Table.FindTypeSymbol('TContinuous2', cvPublic) as TEnumerationSymbol);
+   CheckNull(enum.ElementByValue(0), 'continuous2');
+   CheckEquals('d1', enum.ElementByValue(1).Name);
+   CheckEquals('d2', enum.ElementByValue(2).Name);
+   CheckEquals('d3', enum.ElementByValue(3).Name);
+
+   enum:=(prog.Table.FindTypeSymbol('TDiscontinuous', cvPublic) as TEnumerationSymbol);
+   CheckEquals('e1', enum.ElementByValue(1).Name);
+   CheckNull(enum.ElementByValue(2), 'discontinuous');
+   CheckEquals('e2', enum.ElementByValue(3).Name);
+   CheckEquals('e3', enum.ElementByValue(4).Name);
+end;
+
+// BigEnumerationNamesAndValues
+//
+procedure TSourceUtilsTests.BigEnumerationNamesAndValues;
+var
+   i : Integer;
+   s : String;
+   prog : IdwsProgram;
+   enum : TEnumerationSymbol;
+begin
+   s:='type TTest = (';
+   for i:=1 to 100 do begin
+      if i>1 then
+         s:=s+',';
+      s:=s+'v'+IntToStr(i);
+   end;
+   prog:=FCompiler.Compile(s+');');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compiled with errors');
+
+   enum:=(prog.Table.FindTypeSymbol('TTest', cvPublic) as TEnumerationSymbol);
+
+   for i:=1 to 100 do begin
+      CheckEquals(i-1, (enum.Elements.FindLocal('v'+IntToStr(i)) as TElementSymbol).Value, 'value of '+IntToStr(i-1));
+      CheckEquals('v'+IntToStr(i), enum.ElementByValue(i-1).Name, 'name of '+IntToStr(i-1));
+   end;
+end;
+
+// EnumerationSuggest
+//
+procedure TSourceUtilsTests.EnumerationSuggest;
+var
+   prog : IdwsProgram;
+   sugg : IdwsSuggestions;
+   scriptPos : TScriptPos;
+begin
+   prog:=FCompiler.Compile( 'type TTest = (One);'#13#10
+                           +'Print(TTest.One.Name);'#13#10
+                           +'var i : TTest;'#13#10
+                           +'Print(i.Value);'#13#10);
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compiled with errors');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 13);
+
+   sugg:=TdwsSuggestions.Create(prog, scriptPos);
+   CheckEquals(1, sugg.Count, 'column 13');
+   CheckEquals('One', sugg.Code[0], 'sugg 2, 13, 0');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 18);
+
+   sugg:=TdwsSuggestions.Create(prog, scriptPos);
+   CheckEquals(1, sugg.Count, 'column 18');
+   CheckEquals('Name', sugg.Code[0], 'sugg 2, 18, 0');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 4, 10);
+
+   sugg:=TdwsSuggestions.Create(prog, scriptPos);
+   CheckEquals(1, sugg.Count, 'column 10');
+   CheckEquals('Value', sugg.Code[0], 'sugg 4, 10, 0');
+end;
+
+// StaticClassSuggest
+//
+procedure TSourceUtilsTests.StaticClassSuggest;
+var
+   prog : IdwsProgram;
+   sugg : IdwsSuggestions;
+   scriptPos : TScriptPos;
+begin
+   prog:=FCompiler.Compile( 'type TTest = class static public'#13#10
+                           +'class function GetTest(i : Integer) : String; begin Result:=""; end;'#13#10
+                           +'property Test[i : Integer] : String read GetTest;'#13#10
+                           +'end;'#13#10
+                           +'Print(TTest.GetTest(1));'#13#10
+                           +'Print(TTest.Test[2]);'#13#10);
+
+   CheckEquals('', prog.Msgs.AsInfo, 'compiled with errors');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 5, 13);
+
+   sugg:=TdwsSuggestions.Create(prog, scriptPos);
+   CheckEquals(5, sugg.Count, 'column 13');
+   CheckEquals('ClassName', sugg.Code[0], 'sugg 5, 13, 0');
+   CheckEquals('ClassParent', sugg.Code[1], 'sugg 5, 13, 1');
+   CheckEquals('ClassType', sugg.Code[2], 'sugg 5, 13, 2');
+   CheckEquals('GetTest', sugg.Code[3], 'sugg 5, 13, 3');
+   CheckEquals('Test', sugg.Code[4], 'sugg 5, 13, 4');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 5, 14);
+
+   sugg:=TdwsSuggestions.Create(prog, scriptPos);
+   CheckEquals(1, sugg.Count, 'column 5,14');
+   CheckEquals('GetTest', sugg.Code[0], 'sugg 5, 14, 0');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 6, 14);
+
+   sugg:=TdwsSuggestions.Create(prog, scriptPos);
+   CheckEquals(1, sugg.Count, 'column 6,10');
+   CheckEquals('Test', sugg.Code[0], 'sugg 6, 14, 0');
 end;
 
 // ------------------------------------------------------------------

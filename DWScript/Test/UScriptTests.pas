@@ -1,5 +1,7 @@
 unit UScriptTests;
 
+{$I ..\Source\dws.inc}
+
 interface
 
 uses Classes, SysUtils, dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsUtils,
@@ -17,7 +19,7 @@ type
          procedure SetUp; override;
          procedure TearDown; override;
 
-         procedure DoInclude(const scriptName: string; var scriptSource: string);
+         procedure DoInclude(const scriptName: UnicodeString; var scriptSource: UnicodeString);
 
          procedure Compilation;
          procedure Execution;
@@ -74,6 +76,8 @@ begin
    CollectFiles(basePath+'InterfacesPass'+PathDelim, cFilter, FTests);
    CollectFiles(basePath+'OverloadsPass'+PathDelim, cFilter, FTests);
    CollectFiles(basePath+'HelpersPass'+PathDelim, cFilter, FTests);
+   CollectFiles(basePath+'PropertyExpressionsPass'+PathDelim, cFilter, FTests);
+   CollectFiles(basePath+'SetOfPass'+PathDelim, cFilter, FTests);
 
    CollectFiles(basePath+'FailureScripts'+PathDelim, cFilter, FFailures);
    CollectFiles(basePath+'InterfacesFail'+PathDelim, cFilter, FFailures);
@@ -81,6 +85,8 @@ begin
    CollectFiles(basePath+'HelpersFail'+PathDelim, cFilter, FFailures);
    CollectFiles(basePath+'AttributesFail'+PathDelim, cFilter, FFailures);
    CollectFiles(basePath+'LambdaFail'+PathDelim, cFilter, FFailures);
+   CollectFiles(basePath+'PropertyExpressionsFail'+PathDelim, cFilter, FFailures);
+   CollectFiles(basePath+'SetOfFail'+PathDelim, cFilter, FFailures);
 
    FCompiler:=TDelphiWebScript.Create(nil);
    FCompiler.OnInclude:=DoInclude;
@@ -99,7 +105,7 @@ end;
 
 // DoInclude
 //
-procedure TScriptTests.DoInclude(const scriptName: string; var scriptSource: string);
+procedure TScriptTests.DoInclude(const scriptName: UnicodeString; var scriptSource: UnicodeString);
 var
    sl : TStringList;
 begin
@@ -136,8 +142,8 @@ begin
 
          CheckEquals(False, prog.Msgs.HasErrors, FTests[i]+#13#10+prog.Msgs.AsInfo);
 
-         (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
-         (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+         (prog.GetSelf as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+         (prog.GetSelf as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
 
          prog:=nil;
 
@@ -315,8 +321,8 @@ begin
             end;
          end else Check(prog.Msgs.AsInfo<>'', FFailures[i]+': undetected error');
 
-         (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
-         (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+         (prog.GetSelf as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+         (prog.GetSelf as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
 
          try
             prog:=nil;

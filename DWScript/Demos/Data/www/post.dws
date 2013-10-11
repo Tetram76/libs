@@ -1,0 +1,11 @@
+<html>
+<head>
+<title>Form Post result</title>
+</head>
+<body>
+
+Raw post data (<?pas=WebRequest.ContentLength?> bytes, <?pas=WebRequest.ContentType?>) :
+<pre><?pas=WebRequest.ContentData ?></pre>
+
+</body>
+</html>

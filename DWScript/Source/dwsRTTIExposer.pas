@@ -20,7 +20,10 @@ unit dwsRTTIExposer;
 
 interface
 
-uses Classes, SysUtils, RTTI, TypInfo, dwsComp, dwsSymbols, dwsExprs, dwsStrings, dwsStack;
+uses
+   Classes, SysUtils, RTTI, TypInfo,
+   dwsXPlatform, dwsStrings,
+   dwsComp, dwsSymbols, dwsExprs, dwsStack;
 
 type
 
@@ -243,7 +246,7 @@ begin
 
    for meth in anInstanceType.GetMethods do begin
       if     (meth.MethodKind=TypInfo.mkConstructor)
-         and SameText(meth.Name, 'Create')
+         and ASCIISameText(meth.Name, 'Create')
          and (Length(meth.GetParameters)=0) then begin
          FInstanceConstructor:=meth;
          Break;
@@ -611,11 +614,22 @@ end;
 //
 function TdwsRTTIExposer.ExposeRTTIInterface(intf : TRttiInterfaceType;
                                       const options : TdwsRTTIExposerOptions) : TdwsInterface;
+var
+   rttiMeth : TRttiMethod;
+   rttiParam : TRttiParameter;
+   meth : TdwsMethod;
 begin
    Result:=Interfaces.Add;
    Result.Name:=dwsPublished.NameOf(intf);
 
-   // todo
+   for rttiMeth in intf.GetMethods do begin
+      meth:=Result.Methods.Add;
+      meth.Name:=rttiMeth.Name;
+      meth.ResultType:=RTTITypeToScriptType(rttiMeth.ReturnType);
+
+      for rttiParam in rttiMeth.GetParameters do
+         ExposeRTTIParameter(rttiParam, meth.Parameters, options);
+   end;
 end;
 
 // DoStandardCleanUp
@@ -707,7 +721,7 @@ begin
           Result.SetArrayElement(Index, TValue.FromVariant(info.Data[Index]));
       end
    else
-      Result:=ValueFromIInfo(asType, info);
+      // Unsupported
       Result:=TValue.Empty;
       Assert(False);
    end;

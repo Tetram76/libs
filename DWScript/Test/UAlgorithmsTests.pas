@@ -2,7 +2,9 @@ unit UAlgorithmsTests;
 
 interface
 
-uses Classes, SysUtils, dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs,
+uses
+   Classes, SysUtils,
+   dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsErrors,
    dwsXPlatform, dwsUtils, dwsSymbols;
 
 type
@@ -50,13 +52,14 @@ end;
 type
 
    TThreadedRunner = class(TdwsThread)
-      Script : String;
-      Exec : IdwsProgramExecution;
-      Count : Integer;
-      ExpectedResult : String;
-      ActualResult : String;
+      public
+         Script : String;
+         Exec : IdwsProgramExecution;
+         Count : Integer;
+         ExpectedResult : String;
+         ActualResult : String;
 
-      procedure Execute; override;
+         procedure Execute; override;
    end;
 
 // Execute
@@ -126,8 +129,8 @@ begin
 
          CheckEquals('', prog.Msgs.AsInfo, FTests[i]);
 
-         (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
-         (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+         (prog.GetSelf as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+         (prog.GetSelf as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
 
       end;
 

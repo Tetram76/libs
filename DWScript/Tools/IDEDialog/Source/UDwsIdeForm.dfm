@@ -2,9 +2,10 @@ object DwsIdeForm: TDwsIdeForm
   Left = 281
   Top = 84
   Caption = 'Dws Ide'
-  ClientHeight = 771
-  ClientWidth = 901
+  ClientHeight = 770
+  ClientWidth = 937
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -20,97 +21,111 @@ object DwsIdeForm: TDwsIdeForm
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Splitter1: TSplitter
-    Left = 637
-    Top = 0
-    Height = 771
-    Align = alRight
-    ExplicitHeight = 867
+  object SplitterBottom: TSplitter
+    Left = 0
+    Top = 660
+    Width = 937
+    Height = 3
+    Cursor = crVSplit
+    Align = alBottom
+    ResizeStyle = rsUpdate
   end
-  object pnlEditor: TPanel
+  object PanelBottom: TPanel
+    Left = 0
+    Top = 663
+    Width = 937
+    Height = 107
+    Align = alBottom
+    BevelOuter = bvNone
+    Caption = 'PanelBottom'
+    ParentBackground = False
+    ShowCaption = False
+    TabOrder = 0
+    object PageControlBottomWindows: TPageControl
+      Left = 0
+    Top = 0
+      Width = 937
+      Height = 107
+      ActivePage = TabSheetMessages
+      Align = alClient
+      TabOrder = 0
+      object TabSheetMessages: TTabSheet
+        Caption = 'Messages'
+        object ListBoxMessages: TListBox
+          Left = 0
+          Top = 0
+          Width = 929
+          Height = 79
+          Align = alClient
+          BorderStyle = bsNone
+          ItemHeight = 13
+          TabOrder = 0
+          OnDblClick = ListBoxMessagesDblClick
+  end
+      end
+      object TabSheetOutput: TTabSheet
+        Caption = 'Output'
+        ImageIndex = 1
+        object MemoOutputWindow: TMemo
     Left = 0
     Top = 0
-    Width = 637
-    Height = 771
+          Width = 929
+          Height = 79
     Align = alClient
-    BevelOuter = bvNone
-    BorderWidth = 5
-    DoubleBuffered = True
-    ParentBackground = False
-    ParentDoubleBuffered = False
+          BorderStyle = bsNone
+          Lines.Strings = (
+            '')
+          ReadOnly = True
     TabOrder = 0
-    object imgTabs: TImage
-      Left = 5
-      Top = 5
-      Width = 627
-      Height = 22
-      Align = alTop
-      OnMouseDown = pcEditorMouseDown
-      OnMouseLeave = imgTabsMouseLeave
-      OnMouseMove = imgTabsMouseMove
-      ExplicitLeft = 2
-      ExplicitTop = 0
     end
-    object StatusBar: TStatusBar
-      Left = 5
-      Top = 747
-      Width = 627
-      Height = 19
-      Panels = <
-        item
-          Alignment = taCenter
-          Width = 84
         end
-        item
-          Alignment = taCenter
-          Width = 72
         end
-        item
-          Alignment = taCenter
-          Width = 84
         end
-        item
-          Width = 50
-        end>
-    end
-    object pnlPageControl: TPanel
-      Left = 5
-      Top = 27
-      Width = 627
-      Height = 720
+  object PanelMain: TPanel
+    Left = 0
+    Top = 0
+    Width = 937
+    Height = 660
       Align = alClient
       BevelOuter = bvNone
-      ParentBackground = False
+    Caption = 'PanelMain'
+    DoubleBuffered = True
+    ParentDoubleBuffered = False
+    ShowCaption = False
       TabOrder = 1
-      OnResize = pnlPageControlResize
+    object SplitterRight: TSplitter
+      Left = 673
+      Top = 0
+      Height = 660
+      Align = alRight
+      ResizeStyle = rsUpdate
     end
-  end
-  object Panel2: TPanel
-    Left = 640
+    object PanelRight: TPanel
+      Left = 676
     Top = 0
     Width = 261
-    Height = 771
+      Height = 660
     Align = alRight
     BevelOuter = bvNone
     BorderWidth = 5
-    TabOrder = 1
+      DoubleBuffered = False
+      ParentBackground = False
+      ParentDoubleBuffered = False
+      TabOrder = 0
     inline DwsIdeLocalVariablesFrame: TDwsIdeLocalVariablesFrame
       Left = 5
       Top = 5
       Width = 251
       Height = 240
       Align = alTop
+        ParentBackground = False
       TabOrder = 0
-      ExplicitLeft = 5
-      ExplicitTop = 5
-      ExplicitWidth = 251
-      inherited ListView1: TListView
+        inherited ListView: TListView
         Width = 251
-        ExplicitWidth = 251
       end
-      inherited Panel1: TPanel
+        inherited PanelHeader: TPanel
         Width = 251
-        ExplicitWidth = 251
+          ParentBackground = False
       end
     end
     inline DwsIdeWatchesFrame: TDwsIdeWatchesFrame
@@ -119,290 +134,367 @@ object DwsIdeForm: TDwsIdeForm
       Width = 251
       Height = 224
       Align = alTop
+        ParentBackground = False
       TabOrder = 1
-      ExplicitLeft = 5
-      ExplicitTop = 245
-      ExplicitWidth = 251
-      ExplicitHeight = 224
       inherited lvWatches: TListView
         Width = 251
         Height = 207
         ReadOnly = True
         RowSelect = True
-        ExplicitWidth = 251
-        ExplicitHeight = 207
       end
-      inherited Panel1: TPanel
+        inherited PanelHeader: TPanel
         Width = 251
-        ExplicitWidth = 251
+          ParentBackground = False
       end
     end
     inline DwsIdeCallStackFrame: TDwsIdeCallStackFrame
       Left = 5
       Top = 469
       Width = 251
-      Height = 296
-      Align = alTop
+        Height = 186
+        Align = alClient
+        ParentBackground = False
       TabOrder = 2
-      ExplicitLeft = 5
-      ExplicitTop = 469
-      ExplicitWidth = 251
-      ExplicitHeight = 296
       inherited memCallStack: TMemo
         Width = 251
-        Height = 279
-        ExplicitWidth = 251
-        ExplicitHeight = 279
+          Height = 169
       end
-      inherited Panel1: TPanel
+        inherited PanelHeader: TPanel
         Width = 251
-        ExplicitWidth = 251
+          ParentBackground = False
       end
     end
   end
-  object ActionList1: TActionList
+    object PanelEditor: TPanel
+      Left = 0
+      Top = 0
+      Width = 673
+      Height = 660
+      Align = alClient
+      BevelOuter = bvNone
+      BorderWidth = 5
+      FullRepaint = False
+      ParentBackground = False
+      TabOrder = 1
+      object ImageTabs: TImage
+        Left = 5
+        Top = 5
+        Width = 663
+        Height = 22
+        Align = alTop
+        OnMouseDown = pcEditorMouseDown
+        OnMouseLeave = ImageTabsMouseLeave
+        OnMouseMove = ImageTabsMouseMove
+    end
+      object StatusBar: TStatusBar
+        Left = 5
+        Top = 636
+        Width = 663
+        Height = 19
+        Panels = <
+          item
+            Alignment = taCenter
+            Width = 84
+    end
+          item
+            Alignment = taCenter
+            Width = 72
+    end
+          item
+            Alignment = taCenter
+            Width = 84
+    end
+          item
+            Width = 50
+          end>
+    end
+      object pnlPageControl: TPanel
+        Left = 5
+        Top = 27
+        Width = 663
+        Height = 609
+        Align = alClient
+        BevelOuter = bvNone
+        Color = clWindow
+        ParentBackground = False
+        ParentShowHint = False
+        ShowHint = False
+        TabOrder = 1
+        OnResize = pnlPageControlResize
+      end
+    end
+  end
+  object ActionList: TActionList
     Images = SmallImages
-    Left = 176
-    Top = 200
-    object actOpenFile: TAction
+    Left = 168
+    Top = 40
+    object ActionFileNewProject: TAction
+      Category = 'File'
+      Caption = 'New Project'
+      ImageIndex = 6
+      OnExecute = ActionFileNewProjectExecute
+    end
+    object ActionFileNewUnit: TAction
+      Category = 'File'
+      Caption = 'New Unit'
+      ImageIndex = 7
+      OnExecute = ActionFileNewUnitExecute
+    end
+    object ActionFileNewIncludeFile: TAction
+      Category = 'File'
+      Caption = 'New Include File'
+      ImageIndex = 5
+      OnExecute = ActionFileNewIncludeFileExecute
+    end
+    object ActionOpenFile: TAction
       Category = 'File'
       Caption = 'Open File'
       Hint = 'Opens a file for editing'
       ImageIndex = 0
-      OnExecute = actOpenFileExecute
+      OnExecute = ActionOpenFileExecute
     end
-    object actClosePage: TAction
+    object ActionFileOpenProject: TAction
+      Category = 'File'
+      Caption = 'Open Project...'
+      ImageIndex = 10
+      ShortCut = 16506
+      OnExecute = ActionFileOpenProjectExecute
+    end
+    object ActionFileSave: TAction
+      Category = 'File'
+      Caption = 'Save'
+      ImageIndex = 8
+      ShortCut = 16467
+      OnExecute = ActionFileSaveExecute
+      OnUpdate = ActionFileSaveUpdate
+    end
+    object ActionViewProjectSource: TAction
+      Category = 'View'
+      Caption = 'View Project Source'
+      ImageIndex = 9
+      OnExecute = ActionViewProjectSourceExecute
+      OnUpdate = ActionViewProjectSourceUpdate
+    end
+    object ActionFileSaveAs: TAction
+      Category = 'File'
+      Caption = 'Save As...'
+      OnExecute = ActionFileSaveAsExecute
+      OnUpdate = ActionFileSaveAsUpdate
+    end
+    object ActionFileSaveProjectAs: TAction
+      Category = 'File'
+      Caption = 'Save Project As...'
+      ImageIndex = 4
+      OnExecute = ActionFileSaveProjectAsExecute
+    end
+    object ActionClosePage: TAction
       Category = 'File'
       Caption = 'Close Page'
       ImageIndex = 2
       ShortCut = 16499
-      OnExecute = actClosePageExecute
-      OnUpdate = actClosePageUpdate
+      OnExecute = ActionClosePageExecute
+      OnUpdate = ActionClosePageUpdate
     end
-    object actCloseAllOtherPages: TAction
+    object ActionCloseAllOtherPages: TAction
       Category = 'File'
       Caption = 'Close All Other Pages'
       ImageIndex = 1
       ShortCut = 24691
-      OnExecute = actCloseAllOtherPagesExecute
-      OnUpdate = actCloseAllOtherPagesUpdate
+      OnExecute = ActionCloseAllOtherPagesExecute
+      OnUpdate = ActionCloseAllOtherPagesUpdate
     end
-    object actExit: TAction
-      Category = 'File'
-      Caption = 'Exit'
-      ImageIndex = 3
-      OnExecute = actExitExecute
-    end
-    object actSaveProjectAs: TAction
-      Category = 'File'
-      Caption = 'Save Project As'
-      ImageIndex = 4
-      OnExecute = actSaveProjectAsExecute
-    end
-    object actFileNewProject: TAction
-      Category = 'File'
-      Caption = 'New Project'
-      ImageIndex = 6
-      OnExecute = actFileNewProjectExecute
-    end
-    object actFileNewUnit: TAction
-      Category = 'File'
-      Caption = 'New Unit'
-      ImageIndex = 7
-      OnExecute = actFileNewUnitExecute
-    end
-    object actFileNewIncludeFile: TAction
-      Category = 'File'
-      Caption = 'New Include File'
-      ImageIndex = 5
-      OnExecute = actFileNewIncludeFileExecute
-    end
-    object actFileSave: TAction
-      Category = 'File'
-      Caption = 'Save'
-      ImageIndex = 8
-      OnExecute = actFileSaveExecute
-      OnUpdate = actFileSaveUpdate
-    end
-    object actViewProjectSource: TAction
-      Category = 'View'
-      Caption = 'View Project Source'
-      ImageIndex = 9
-      OnExecute = actViewProjectSourceExecute
-      OnUpdate = actViewProjectSourceUpdate
-    end
-    object actFileCloseAll: TAction
+    object ActionFileCloseAll: TAction
       Category = 'File'
       Caption = 'Close All'
-      OnExecute = actFileCloseAllExecute
+      OnExecute = ActionFileCloseAllExecute
     end
-    object actOpenProject: TAction
-      Category = 'File'
-      Caption = 'Open Project'
-      ImageIndex = 10
-      OnExecute = actOpenProjectExecute
-    end
-    object actToggleReadOnly: TAction
+    object ActionEditToggleReadOnly: TAction
       Category = 'Edit'
       Caption = 'Read Only'
-      OnExecute = actToggleReadOnlyExecute
-      OnUpdate = actToggleReadOnlyUpdate
+      OnExecute = ActionEditToggleReadOnlyExecute
+      OnUpdate = ActionEditToggleReadOnlyUpdate
     end
-    object actRun: TAction
+    object ActionRun: TAction
       Category = 'Run'
       Caption = 'Run'
       ImageIndex = 20
       ShortCut = 120
-      OnExecute = actRunExecute
-      OnUpdate = actRunUpdate
+      OnExecute = ActionRunExecute
+      OnUpdate = ActionRunUpdate
     end
-    object actBuild: TAction
+    object ActionBuild: TAction
       Category = 'Project'
       Caption = 'Build'
       ShortCut = 16504
-      OnExecute = actBuildExecute
+      OnExecute = ActionBuildExecute
     end
-    object actClearAllBreakpoints: TAction
+    object ActionClearAllBreakpoints: TAction
       Category = 'Run'
       Caption = 'Clear All Breakpoints'
       ImageIndex = 19
-      OnExecute = actClearAllBreakpointsExecute
+      OnExecute = ActionClearAllBreakpointsExecute
     end
-    object actProgramReset: TAction
+    object ActionProgramReset: TAction
       Category = 'Run'
       Caption = 'Program Reset'
       ShortCut = 16497
-      OnExecute = actProgramResetExecute
-      OnUpdate = actProgramResetUpdate
+      OnExecute = ActionProgramResetExecute
+      OnUpdate = ActionProgramResetUpdate
     end
-    object actStepOver: TAction
+    object ActionStepOver: TAction
       Category = 'Run'
       Caption = 'Step Over'
       ImageIndex = 18
       ShortCut = 119
-      OnExecute = actStepOverExecute
-      OnUpdate = actStepOverUpdate
+      OnExecute = ActionStepOverExecute
+      OnUpdate = ActionStepOverUpdate
     end
-    object actTraceInto: TAction
+    object ActionTraceInto: TAction
       Category = 'Run'
       Caption = 'Trace Into'
       ImageIndex = 17
       ShortCut = 118
-      OnExecute = actTraceIntoExecute
-      OnUpdate = actTraceIntoUpdate
+      OnExecute = ActionTraceIntoExecute
+      OnUpdate = ActionTraceIntoUpdate
     end
-    object actRunWithoutDebugging: TAction
+    object ActionRunWithoutDebugging: TAction
       Category = 'Run'
       Caption = 'Run Without Debugging'
       ImageIndex = 11
       ShortCut = 24696
-      OnExecute = actRunWithoutDebuggingExecute
-      OnUpdate = actRunWithoutDebuggingUpdate
+      OnExecute = ActionRunWithoutDebuggingExecute
+      OnUpdate = ActionRunWithoutDebuggingUpdate
     end
-    object actFileSaveAs: TAction
-      Category = 'File'
-      Caption = 'Save As'
-      OnExecute = actFileSaveAsExecute
-      OnUpdate = actFileSaveAsUpdate
-    end
-    object actShowExecutionPoint: TAction
+    object ActionShowExecutionPoint: TAction
       Category = 'Run'
       Caption = 'Show Execution Point'
       ImageIndex = 21
-      OnExecute = actShowExecutionPointExecute
-      OnUpdate = actShowExecutionPointUpdate
+      OnExecute = ActionShowExecutionPointExecute
+      OnUpdate = ActionShowExecutionPointUpdate
     end
-    object actViewSymbols: TAction
+    object ActionViewSymbols: TAction
       Category = 'View'
       Caption = 'View Symbols'
-      OnExecute = actViewSymbolsExecute
-      OnUpdate = actViewSymbolsUpdate
+      OnExecute = ActionViewSymbolsExecute
+      OnUpdate = ActionViewSymbolsUpdate
     end
-    object actEditorSelectAll: TEditSelectAll
+    object ActionEditSelectAll: TEditSelectAll
       Category = 'Edit'
       Caption = 'Select &All'
       Hint = 'Select All|Selects the entire document'
+      ImageIndex = 33
       ShortCut = 16449
-      OnExecute = actEditorSelectAllExecute
-      OnUpdate = actEditorSelectAllUpdate
     end
-    object actEditorCopyToClipboard: TEditCopy
+    object ActionEditCopyToClipboard: TEditCopy
       Category = 'Edit'
       Caption = '&Copy'
       Hint = 'Copy|Copies the selection and puts it on the Clipboard'
+      ImageIndex = 22
       ShortCut = 16451
-      OnExecute = actEditorCopyToClipboardExecute
-      OnUpdate = actEditorCopyToClipboardUpdate
     end
-    object actEditorCut: TEditCut
+    object ActionEditCut: TEditCut
       Category = 'Edit'
       Caption = 'Cu&t'
       Hint = 'Cut|Cuts the selection and puts it on the Clipboard'
+      ImageIndex = 23
       ShortCut = 16472
-      OnExecute = actEditorCutExecute
-      OnUpdate = actEditorCutUpdate
     end
-    object actEditorPaste: TEditPaste
+    object ActionEditPaste: TEditPaste
       Category = 'Edit'
       Caption = '&Paste'
       Hint = 'Paste|Inserts Clipboard contents'
+      ImageIndex = 24
       ShortCut = 16470
-      OnExecute = actEditorPasteExecute
-      OnUpdate = actEditorPasteUpdate
     end
-    object actEditorDelete: TEditDelete
+    object ActionEditDelete: TEditDelete
       Category = 'Edit'
       Caption = '&Delete'
       Hint = 'Delete|Erases the selection'
+      ImageIndex = 25
       ShortCut = 16430
-      OnExecute = actEditorDeleteExecute
-      OnUpdate = actEditorDeleteUpdate
     end
-    object actRunProcedureAtCursor: TAction
-      Category = 'Run'
-      Caption = 'Run Procedure At Cursor'
-      Hint = 'Runs the procedure at the cursor'
-      ShortCut = 16504
-      OnExecute = actRunProcedureAtCursorExecute
-      OnUpdate = actRunProcedureAtCursorUpdate
+    object ActionEditClearOutputWindow: TAction
+      Category = 'Edit'
+      Caption = 'Clear output window'
+      OnExecute = ActionEditClearOutputWindowExecute
+      OnUpdate = ActionEditClearOutputWindowUpdate
     end
-    object actCodeProposalInvoke: TAction
-      Category = 'Project'
-      Caption = 'Code Proposal'
-      ShortCut = 16416
-      OnExecute = actCodeProposalInvokeExecute
+    object ActionSearchFind: TSearchFind
+      Category = 'Search'
+      Caption = '&Find...'
+      Hint = 'Find|Finds the specified text'
+      ImageIndex = 30
+      ShortCut = 16454
+      SecondaryShortCuts.Strings = (
+        'Ctrl+Q+F')
+    end
+    object ActionSearchReplace: TSearchReplace
+      Category = 'Search'
+      Caption = '&Replace'
+      Hint = 'Replace|Replaces specific text with different text'
+      ImageIndex = 31
+      ShortCut = 16466
+      SecondaryShortCuts.Strings = (
+        'Ctrl+Q+R')
+  end
+    object ActionEditUndo: TEditUndo
+      Category = 'Edit'
+      Caption = '&Undo'
+      Hint = 'Undo|Reverts the last action'
+      ImageIndex = 32
+      ShortCut = 16474
+    end
+    object ActionGotoHomePosition: TAction
+      Category = 'View'
+      Caption = 'Goto Home Position'
+      Hint = 'Go to the file and line number at which the IDE opened'
+      OnExecute = ActionGotoHomePositionExecute
+      OnUpdate = ActionGotoHomePositionUpdate
+    end
+    object ActionGotoLineNumber: TAction
+      Category = 'Search'
+      Caption = 'Go to Line Number'
+      ShortCut = 32839
+      OnExecute = ActionGotoLineNumberExecute
+      OnUpdate = ActionGotoLineNumberUpdate
+    end
+    object ActionExit: TFileExit
+      Category = 'File'
+      Caption = 'Exit'
+      Hint = 'Exit|Closes Application'
+      ImageIndex = 3
     end
   end
   object EditorPageTabContextMenu: TPopupMenu
     Images = SmallImages
-    Left = 176
-    Top = 32
-    object CloseFile1: TMenuItem
-      Action = actClosePage
+    Left = 168
+    Top = 184
+    object MenuItemPageTabCloseFile: TMenuItem
+      Action = ActionClosePage
     end
-    object miPages: TMenuItem
+    object MenuItemPageTabPages: TMenuItem
       Caption = 'Pages ...'
     end
     object N1: TMenuItem
       Caption = '-'
     end
-    object CloseAllOtherPages1: TMenuItem
-      Action = actCloseAllOtherPages
+    object MenuItemPageTabCloseAllOtherPages: TMenuItem
+      Action = ActionCloseAllOtherPages
     end
     object N4: TMenuItem
       Caption = '-'
     end
-    object Save2: TMenuItem
-      Action = actFileSave
+    object MenuItemPageTabSave: TMenuItem
+      Action = ActionFileSave
     end
-    object SaveAs2: TMenuItem
-      Action = actFileSaveAs
+    object MenuItemPageTabSaveAs: TMenuItem
+      Action = ActionFileSaveAs
     end
     object N7: TMenuItem
       Caption = '-'
     end
-    object ReadOnly1: TMenuItem
-      Action = actToggleReadOnly
+    object MenuItemPageTabReadOnly: TMenuItem
+      Action = ActionEditToggleReadOnly
     end
   end
   object OpenFileDialog: TFileOpenDialog
@@ -438,136 +530,157 @@ object DwsIdeForm: TDwsIdeForm
       end>
     Options = [fdoAllowMultiSelect]
     Title = 'Open Editor File'
-    Left = 176
-    Top = 88
+    Left = 56
+    Top = 40
   end
   object MainMenu: TMainMenu
     Images = SmallImages
-    Left = 368
-    Top = 32
-    object File1: TMenuItem
+    Left = 168
+    Top = 88
+    object MenuItemFile: TMenuItem
       Caption = 'File'
-      object New1: TMenuItem
+      object MenuItemFileNew: TMenuItem
         Caption = 'New ...'
-        object NewProject2: TMenuItem
-          Action = actFileNewProject
+        object MenuItemFileNewProject: TMenuItem
+          Action = ActionFileNewProject
         end
-        object FileNewUnit1: TMenuItem
-          Action = actFileNewUnit
+        object MenuItemFileNewUnit: TMenuItem
+          Action = ActionFileNewUnit
         end
-        object NewIncludeFile1: TMenuItem
-          Action = actFileNewIncludeFile
+        object MenuItemFileNewInclude: TMenuItem
+          Action = ActionFileNewIncludeFile
         end
       end
-      object OpenFile1: TMenuItem
-        Action = actOpenFile
+      object MenuItemFileOpen: TMenuItem
+        Action = ActionOpenFile
         Caption = 'Open ...'
       end
-      object OpenProject1: TMenuItem
-        Action = actOpenProject
-      end
-      object Save1: TMenuItem
-        Action = actFileSave
-      end
-      object SaveAs1: TMenuItem
-        Action = actFileSaveAs
+      object MenuItemFileOpenProject: TMenuItem
+        Action = ActionFileOpenProject
       end
       object N3: TMenuItem
         Caption = '-'
       end
-      object SaveProjectAs1: TMenuItem
-        Action = actSaveProjectAs
+      object MenuItemFileSave: TMenuItem
+        Action = ActionFileSave
       end
-      object ClosePage1: TMenuItem
-        Action = actClosePage
+      object MenuItemFileSaveAs: TMenuItem
+        Action = ActionFileSaveAs
       end
-      object CloseAll1: TMenuItem
-        Action = actFileCloseAll
+      object MenuItemFileSaveProjectAs: TMenuItem
+        Action = ActionFileSaveProjectAs
+      end
+      object N14: TMenuItem
+        Caption = '-'
+      end
+      object MenuItemFileClosePage: TMenuItem
+        Action = ActionClosePage
+      end
+      object MenuItemFileCloseAll: TMenuItem
+        Action = ActionFileCloseAll
       end
       object N2: TMenuItem
         Caption = '-'
       end
-      object Exit1: TMenuItem
-        Action = actExit
+      object MenuItemFileExit: TMenuItem
+        Action = ActionExit
       end
     end
-    object Edit1: TMenuItem
+    object MenuItemEdit: TMenuItem
       Caption = 'Edit'
-      object Cut2: TMenuItem
-        Action = actEditorCut
+      object MenuItemEditCut: TMenuItem
+        Action = ActionEditCut
       end
-      object Copy2: TMenuItem
-        Action = actEditorCopyToClipboard
+      object MenuItemEditCopy: TMenuItem
+        Action = ActionEditCopyToClipboard
       end
-      object Paste2: TMenuItem
-        Action = actEditorPaste
+      object MenuItemEditPaste: TMenuItem
+        Action = ActionEditPaste
       end
-      object Delete1: TMenuItem
-        Action = actEditorDelete
+      object MenuItemEditDelete: TMenuItem
+        Action = ActionEditDelete
       end
-      object SelectAll2: TMenuItem
-        Action = actEditorSelectAll
+      object MenuItemEditSelectAll: TMenuItem
+        Action = ActionEditSelectAll
+      end
+      object MenuItemEditUndo: TMenuItem
+        Action = ActionEditUndo
       end
       object N8: TMenuItem
         Caption = '-'
       end
-      object ReadOnly2: TMenuItem
-        Action = actToggleReadOnly
+      object MenuItemEditReadOnly: TMenuItem
+        Action = ActionEditToggleReadOnly
+      end
+      object N10: TMenuItem
+        Caption = '-'
+    end
+      object MenuItemEditClearOutputWindow: TMenuItem
+        Action = ActionEditClearOutputWindow
       end
     end
-    object View1: TMenuItem
+    object MenuItemSearch: TMenuItem
+      Caption = 'Search'
+      object MenuItemSearchFind: TMenuItem
+        Action = ActionSearchFind
+      end
+      object MenuItemSearchReplace: TMenuItem
+        Action = ActionSearchReplace
+      end
+    end
+    object MenuItemView: TMenuItem
       Caption = 'View'
-      object ViewProjectSource1: TMenuItem
-        Action = actViewProjectSource
+      object MenuItemViewProjectSource: TMenuItem
+        Action = ActionViewProjectSource
       end
-      object ViewSymbols1: TMenuItem
-        Action = actViewSymbols
+      object MenuItemViewSymbols: TMenuItem
+        Action = ActionViewSymbols
+      end
+      object N11: TMenuItem
+        Caption = '-'
+    end
+      object MenuItemViewGotoHomePosition: TMenuItem
+        Action = ActionGotoHomePosition
       end
     end
-    object Project1: TMenuItem
+    object MenuItemProject: TMenuItem
       Caption = 'Project'
-      object Build1: TMenuItem
-        Action = actBuild
+      object MenuItemProjectBuild: TMenuItem
+        Action = ActionBuild
       end
     end
-    object Run1: TMenuItem
+    object MenuItemRun: TMenuItem
       Caption = 'Run'
-      object Run2: TMenuItem
-        Action = actRun
+      object MenuItemRunStart: TMenuItem
+        Action = ActionRun
       end
-      object RunProcedureAtCursor1: TMenuItem
-        Action = actRunProcedureAtCursor
+      object MenuItemRunStepOver: TMenuItem
+        Action = ActionStepOver
       end
-      object actRunWithoutDebugging1: TMenuItem
-        Action = actRunWithoutDebugging
+      object MenuItemRunTraceInto: TMenuItem
+        Action = ActionTraceInto
       end
-      object StepOver1: TMenuItem
-        Action = actStepOver
+      object MenuItemRunReset: TMenuItem
+        Action = ActionProgramReset
       end
-      object raceInto1: TMenuItem
-        Action = actTraceInto
-      end
-      object Reset1: TMenuItem
-        Action = actProgramReset
-      end
-      object ShowExecutionPoint1: TMenuItem
-        Action = actShowExecutionPoint
+      object MenuItemRunShowExecutionPoint: TMenuItem
+        Action = ActionShowExecutionPoint
       end
       object N5: TMenuItem
         Caption = '-'
       end
-      object ClearAllBreakpoints1: TMenuItem
-        Action = actClearAllBreakpoints
+      object MenuItemRunClearAllBreakpoints: TMenuItem
+        Action = ActionClearAllBreakpoints
       end
     end
   end
   object SmallImages: TImageList
     ColorDepth = cd32Bit
-    Left = 176
-    Top = 256
+    Left = 424
+    Top = 88
     Bitmap = {
-      494C01011A001D00080010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
-      0000000000003600000028000000400000007000000001002000000000000070
+      494C010122002500040010001000FFFFFFFF2110FFFFFFFFFFFFFFFF424D3600
+      0000000000003600000028000000400000009000000001002000000000000090
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -577,126 +690,382 @@ object DwsIdeForm: TDwsIdeForm
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000000000000F5A3EFF0F5A3EFFBDDC
+      CEFF0F5A3EFF0F5A3EFFBDDCCEFF0F5A3EFF0F5A3EFFBDDCCEFF0F5A3EFF0F5A
+      3EFFBDDCCEFF0F5A3EFF0F5A3EFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000135F42FFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFF135F42FF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000BDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000000000001E6A4CFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFF1E6A4CFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000247151FFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFF247151FF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000663300006633
+      0000663300006633000066330000000000000000000000000000000000000000
+      00000000000066660000000000000000000000000000BDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000996600006666
+      0000666600009966000000000000000000000000000000000000000000000000
+      0000000000006666000000000000000000000000000031805EFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFF31805EFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000996600006666
+      000099660000CC99660000000000000000000000000000000000000000000000
+      00000000000066660000000000000000000000000000388764FFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFF388764FF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000996600009966
+      0000CC99660066660000CC996600000000000000000000000000000000000000
+      0000CC99660066660000000000000000000000000000BDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000996600000000
+      000000000000CC9966006666000066660000CC9966000000000000000000CC99
+      660066660000CC99660000000000000000000000000044946FFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFF44946FFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000CC9966006666000066660000666600006666
+      0000CC996600000000000000000000000000000000004A9A75FFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFF4A9A75FF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000BDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000053A47DFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDCCEFFBDDC
+      CEFFBDDCCEFFBDDCCEFF53A47DFF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000056A781FF56A781FFBDDC
+      CEFF56A781FF56A781FFBDDCCEFF56A781FF56A781FFBDDCCEFF56A781FF56A7
+      81FFBDDCCEFF56A781FF56A781FF000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000706B67DCA39D96FEA19B
+      95FEA19B95FEA19B95FEA19B95FEA19B95FEA19B96FEA19B94FEA19C94FEA19A
+      95FEA19B95FEA39C95FE716B67DC0000000000000000706B67DCA39D96FEA19B
+      95FEA19B95FEA19B95FEA19B95FEA29C96FEB3AEAAFEAAB4A9FE3E724AFF1267
+      28FF156C2BFF467B52FF828B80E2000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A7A29DFEFFFFFFFFFFFE
+      FCFFFFFFFAFFFFFDF9FFFFFEF8FFFFFCF8FFFFFBF5FFFFFAF5FFFFF9F2FFFFF6
+      F0FFFEF5EEFFFFF9EFFFA7A29BFE0000000000000000A7A29DFEFFFFFFFFFFFE
+      FCFFFFFFFAFFFFFDF9FFFFFEF8FFFEFBF8FFD2DED2FF15652BFF169637FF199E
+      3BFF159636FF128F32FF196C30FF0002002C0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A7A29AFEFFFFFDFFE9E7
+      E4FFE9E6E4FFEDEAE6FFFCF8F5FFFBF7F5FFFBF6F2FFFAF5F0FFFAF4EEFFF9F3
+      ECFFF9F1EAFFFDF5ECFFA6A099FE0000000000000000A7A29AFEFFFFFDFF5553
+      4FFF55524FFF4F4C49FFC1BDBAFF8E8C8AFF386D45FF25AE49FF33C659FF34C9
+      5BFF2CBB51FF1DA240FF118E31FF052D10B70000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A6A19BFEFFFFFFFF423F
+      3CFF464341FF65605AFFFCFAF7FFFCF9F6FFFBF8F4FFFBF7F2FFFAF5F0FFFAF4
+      EEFFF9F2ECFFFFF6EEFFA7A099FE0000000000000000A6A19BFEFFFFFFFFFDFC
+      FAFFFDFBFAFFFDFBF9FFFCFAF7FFFCFBF9FF1C7934FF3CD965FF54ED7BFF5CEF
+      82FF45E16DFF30C156FF189D3AFF0A5D20F700000000FFFFFF00000000000000
+      000000000000000000000000000000000000000000000000000000000000FFFF
+      FF00000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A6A19CFEFFFFFFFFFEFD
+      FDFFFEFDFEFFEDECEAFFEAE9E6FFEAE7E4FFEFECEAFFEDE9E6FFE5E2DDFFFAF5
+      F0FFFAF4EDFFFEF7F1FFA7A09AFE0000000000000000A6A19CFEFFFFFFFF504E
+      4AFF575453FF575451FF595753FFDCDAD9FF1E8038FF51EF7AFFA6F7BCFFC0F9
+      CFFF6EF392FF3BD463FF20AC46FF08571CF700000000FFFFFF00000000000000
+      000000000000000000000000000000000000000000000000000000000000FFFF
+      FF00000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A6A39BFEFFFFFFFFFFFF
+      FFFFFEFEFEFF5F5A54FF423F3BFF413D3AFF7D7A77FF666360FF34322FFFF7F2
+      EEFFFAF5EFFFFEF8F1FFA7A09AFE0000000000000000A6A39BFEFFFFFFFFFFFF
+      FFFFFEFEFEFFFEFEFEFFFEFDFEFFFCFCFBFF569366FF4EE175FFB7FAC8FFD7FB
+      E0FF77F498FF3DD865FF1FA644FF04280DB70000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A6A29BFEFEFEFEFFFEFE
+      FEFFFEFEFEFFEFEEEEFFE9E9E8FFEEECECFFFDFCFBFFFDFAF8FFFCF9F6FFFBF7
+      F3FFFAF5F0FFFFF9F4FFA7A09AFE0000000000000000A6A29BFEFFFFFFFF5D59
+      57FF605C5AFF5A5652FF5B5854FFC9C8C7FF8D9A8DFF25843DFF5CE581FF73F8
+      97FF4DED77FF2FBF55FF186C2DFF0002002D0000000000000000FFFFFF000000
+      00000000000000000000000000000000000000000000FFFFFF00000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000001B0B0ACFEEFFCFEFFD7F8
+      FEFFCCF6FEFF7E9EA0FF697471FF787B77FFFDFCFDFFFDFBFAFFFCFAF7FFFCF8
+      F5FFFBF6F2FFFFFBF4FFA7A199FE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFDFDFDFFFDFCFDFFD5E2D8FF579868FF2389
+      3EFF21843BFF538C60FFAEB9ACFE000000000000000000000000FFFFFF000000
+      00000000000000000000C0C0C0000000000000000000FFFFFF00000000000000
+      000000000000000000000000000000000000000000000000000000000000C0C0
+      C00000000000000000000000000000000000000000000000000000000000C0C0
+      C000000000000000000000000000000000000000000B99D1D5FEA1EEFEFF82DE
+      FEFF75DAFFFF82DFFEFF9FEEFEFFB8F2F8FFEAECECFFE9E8E6FFEAE8E5FFEBE8
+      E5FFE8E4E0FFFFFAF5FFA7A199FE0000000000000000A6A29BFEFFFFFFFF6763
+      61FF686462FF686561FFC3C2C1FF5F5B59FF565350FFC9C8C7FF999795FFDCDA
+      D8FFA09E9CFFFEFAF7FFB2ADA6FE000000000000000000000000FFFFFF000000
+      00000000000000000000C0C0C0000000000000000000FFFFFF00000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000008686860000000000000000000000000086868600000000000000
+      0000000000000000000000000000000000000000000F85D4E0FE68E2FFFF32BC
+      FFFF39B5FFFF34BEFFFF67E3FFFF75C1D0FF6A7472FF4C4844FF433F3AFF5A55
+      4FFF403C38FFFFFCF7FFA7A19BFE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFEFEFFFEFDFEFFFDFBFAFFFCF9
+      F7FFFBF8F4FFFFFCF7FFA7A19BFE000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000000506286BC7E4FE34BEFFFF6DCE
+      FFFF63C3FFFF6DCFFFFF31BDFEFF7EDBFBFFD7F8FEFFFDFEFCFFFDFCFAFFFCFA
+      F7FFFBF8F4FFFDF9F4FFA7A09AFE0000000000000000A6A29BFEFFFFFFFF736F
+      6BFFC9C8C8FF66625EFF66635FFF615D59FFC4C3C2FF666460FF5D5956FF5B56
+      53FFFBF8F4FFFFFBF6FFA7A09AFE00000000000000000000000000000000FFFF
+      FF000000000000000000000000000000000000000000FFFFFF00000000000000
+      000000000000000000000000000000000000000000000000000000000000C0C0
+      C00000000000000000000000000000000000C0C0C00000000000000000000000
+      00000000000000000000000000000000000000080A3363C6E9FF3CB5FFFF63C4
+      FFFFF8FFFFFF63C4FFFF33ABF5FF56B9DEFFCCF6FEFFFDFDFEFFFDFCFBFFFCFA
+      F8FFFCF8F5FFFFFBF8FFA7A09AFE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFEFFFFFDFCFBFFFCFA
+      F8FFFCF8F5FFFFFBF8FFA7A09AFE000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000000000000000000000000000C0C0
+      C00000000000000000000000000000000000C0C0C00000000000000000000000
+      000000000000000000000000000000000000000506286BC6E4FE32BEFFFF6DCF
+      FFFF63C3FFFF6DCEFFFF33BDFEFF7DDBFAFFD0F0F6FFEFEEEEFFEEEDEBFFEFEC
+      E9FFFCF8F5FFFFFBF8FFA7A09AFE0000000000000000A6A29BFEFFFFFFFF827C
+      79FF77716EFF615C58FFC7C6C5FF5A5753FF696763FF726E6CFFC7C6C4FF7875
+      71FF5C5855FFFFFBF8FFA7A09AFE000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000F87D2DFFE67E3FFFF2BB5
+      F5FF31ADF7FF27B1F3FF58D1EDFF71C1CEFF97A29FFF77726FFF6C6763FF726D
+      68FFFCF8F5FFFFFBF6FFA7A09AFE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFEFFFFFDFCFBFFFCFB
+      F9FFFCF8F5FFFFFBF6FFA7A09AFE000000000000000000000000000000000000
+      0000FFFFFF000000000000000000000000000000000000000000FFFFFF000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000868686000000000000000000000000000000
+      000000000000000000000000000000000000000000059AD2D5FE9FEEFEFF82DF
+      FEFF75DAFFFF82DEFEFFA1EEFEFFBDF7FEFFF8FEFEFFFEFEFEFFFFFFFFFFFFFF
+      FEFFFFFEFBFFFFFFFCFFA8A39DFE0000000000000000A9A49EFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      FEFFFFFEFBFFFFFFFCFFA8A39DFE000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000000000007B7C77DDB5BEBBFEA6C4
+      C6FE9DC4C9FEA4C2C5FEAEB7B5FEADACA8FEAAA6A0FEA69F9BFEA7A19AFEA5A0
+      9AFEA19B96FEA39D97FE716B67DC0000000000000000706C67DCA49E98FEA29C
+      96FEA29C96FEA29C96FEA29C96FEA29C96FEA29D96FEA29B97FEA39C95FEA19C
+      96FEA19B96FEA39D97FE716B67DC000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000706B67DCA39D96FEA19B
+      95FEA19B95FEA19B95FEA19B95FEA19B95FEA19B96FEA19B94FEA19C94FEA19A
+      95FEA19B95FEA39C95FE716B67DC0000000000000000706B67DCA39D96FEA19B
+      95FEA19B95FEA19B95FEA19B95FEA29C96FEB3AEAAFEAAB5B6FE417784FF136D
+      80FF136E83FF417A86FF818B8DE2000000000000000000000000000000000000
       0000000000000000000080000000800000008000000080000000800000008000
       0000800000008000000080000000800000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A7A29DFEFFFFFFFFFFFE
+      FCFFFFFFFAFFFFFDF9FFFFFEF8FFFFFCF8FFFFFBF5FFFFFAF5FFFFF9F2FFFFF6
+      F0FFFEF5EEFFFFF9EFFFA7A29BFE0000000000000000A7A29DFEFFFFFFFFFFFE
+      FCFFFFFFFAFFFFFDF9FFFFFEF8FFFEFBF8FFD3DFDFFF1A6E7EFF1CA1BEFF1FA9
+      C6FF1AA2BEFF1497B3FF156C80FF0002032C0000000000000000000000000000
       0000000000000000000080000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00800000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000086868600008080008686
+      00000000000000000000000000000000000000000000A7A29AFEFFFFFDFFE6EC
+      E4FFE6EBE4FFE7EBE4FFFCF8F5FFFBF7F5FFFBF6F2FFFAF5F0FFFAF4EEFFF9F3
+      ECFFF9F1EAFFFDF5ECFFA6A099FE0000000000000000A7A29AFEFFFFFDFFE9E7
+      E4FFE9E6E4FFEDEAE6FFFCF8F5FFFBF8F7FF518C96FF28B5D2FF33CCE9FF35CD
+      E9FF2FC3DFFF22ADC9FF1497B3FF042D35B70000000086868600008080008686
       8600008080008686860080000000FFFFFF000000000000000000000000000000
       00000000000000000000FFFFFF00800000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000808000868686000080
+      00000000000000000000000000000000000000000000A6A19BFEFFFFFFFF2572
+      39FF29723DFF2C713EFFFCFAF7FFFCF9F6FFFBF8F4FFFBF7F2FFFAF5F0FFFAF4
+      EEFFF9F2ECFFFFF6EEFFA7A099FE0000000000000000A6A19BFEFFFFFFFF423F
+      3CFF464341FF65605AFFFCFAF7FFFCFBF9FF1F8194FF3CDCF8FF56E9FFFF5EEC
+      FFFF46E1FDFF31C7E3FF1EA8C6FF0C6275F70000000000808000868686000080
       8000868686000080800080000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00800000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000086868600008080008686
+      00000000000000000000000000000000000000000000A6A19CFEFFFFFFFFFEFD
+      FDFFFEFDFEFFE8F2F3FFE7F0F0FFE7EDEEFFEDF0EFFFEAECEAFFE3E5E2FFFAF5
+      F0FFFAF4EDFFFEF7F1FFA7A09AFE0000000000000000A6A19CFEFFFFFFFFFEFD
+      FDFFFEFDFEFFEDECEAFFEAE9E6FFF2F1EFFF228799FF55ECFFFF96FBFFFFACFE
+      FFFF6DF1FFFF3CD7F4FF26B5D1FF0D6073F70000000086868600008080008686
       8600008080008686860080000000FFFFFF00000000000000000000000000FFFF
       FF00800000008000000080000000800000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000808000868686000080
+      00000000000000000000000000000000000000000000A6A39BFEFFFFFFFFFFFF
+      FFFFFEFEFEFF2E9DB5FF2993A9FF27899EFF6EACB9FF5297A4FF1B6575FFF7F2
+      EEFFFAF5EFFFFEF8F1FFA7A09AFE0000000000000000A6A39BFEFFFFFFFFFFFF
+      FFFFFEFEFEFF5F5A54FF423F3BFF7C7A78FF468590FF51E1F8FFA4FFFFFFC5FF
+      FFFF73F3FFFF3DDAF6FF25AFCCFF052C35B70000000000808000868686000080
       8000868686000080800080000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF0080000000FFFFFF0080000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000086868600008080008686
+      00000000000000000000000000000000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFF4F0EAFFF1ECE5FFF4EFEAFFFDFCFBFFFDFAF8FFFCF9F6FFFBF7
+      F3FFFAF5F0FFFFF9F4FFA7A09AFE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFEFEEEEFFEAEAE9FFF0EEEEFFD5E4E7FF2D8C9CFF5EE4F6FF70F7
+      FFFF51EAFFFF30C4E0FF1C7284FF0002032D0000000086868600008080008686
       8600008080008686860080000000FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00800000008000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000808000868686000080
+      00000000000000000000000000000000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFA1702FFF8A5712FF9A713EFFFEFDFEFFFDFBFAFFFCFAF7FFFCF8
+      F5FFFBF6F2FFFFFBF4FFA7A199FE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFF605C55FF3E3934FF65625EFFFDFCFDFFD5E4E7FF5A99A6FF268E
+      A2FF23879CFF55909CFFAFBABAFE000000000000000000808000868686000080
       8000868686000080800080000000800000008000000080000000800000008000
       0000800000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000086868600008080008686
+      00000000000000000000000000000000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFEDEDFAFFE8E8F8FFE7E6F4FFE6E4F2FFE5E2
+      EEFFE2DFEAFFFFFAF5FFA7A199FE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFEFEFEEFFEAE9E9FFECEBE9FFF0EEECFFF3F1
+      F0FFF1EFEDFFFEFAF7FFB2ADA6FE000000000000000086868600008080008686
       8600008080008686860000808000868686000080800086868600008080008686
       8600008080000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000808000868686000000
+      00000000000000000000000000000000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFF5454D3FF2C2CC4FF2E2EC0FF2828BBFF2C2B
+      B8FF1717AAFFFFFCF7FFA7A19BFE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFF6A6661FF423C37FF46423EFF433F3AFF5A55
+      4FFF403C38FFFFFCF7FFA7A19BFE000000000000000000808000868686000000
       0000000000000000000000000000000000000000000000000000000000008686
       8600868686000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000086868600868686000000
+      00000000000000000000000000000000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFF8F3ECFFF6F1E9FFF8F4EEFFFFFFFFFFFEFFFDFFFDFCFAFFFCFA
+      F7FFFBF8F4FFFDF9F4FFA7A09AFE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFF0EFEFFFEDECECFFF1F0F0FFFFFFFFFFFEFFFDFFFDFCFAFFFCFA
+      F7FFFBF8F4FFFDF9F4FFA7A09AFE000000000000000086868600868686000000
       0000000000000000000000000000000000000000000000000000000000008686
       8600008080000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000808000868686000080
+      00000000000000000000000000000000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFFC18B44FFB77E36FFBD9157FFFFFFFFFFFEFEFFFFFDFCFBFFFCFA
+      F8FFFCF8F5FFFFFBF8FFA7A09AFE0000000000000000A6A29BFEFFFFFFFFFFFF
+      FFFFFFFFFFFF65605AFF55514AFF706B68FFFFFFFFFFFEFEFFFFFDFCFBFFFCFA
+      F8FFFCF8F5FFFFFBF8FFA7A09AFE000000000000000000808000868686000080
       80000000000000FFFF00000000000000000000FFFF0000000000868686000080
       8000868686000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A6A29BFEFFFFFFFFECF5
+      EFFFECF5EFFFEAF3EDFFEBF4EDFFEAF3ECFFEDF4EFFFEBF2EDFFEAF0EBFFE9EE
+      E7FFFCF8F5FFFFFBF8FFA7A09AFE0000000000000000A6A29BFEFFFFFFFFF0F0
+      EFFFF1F1F0FFEFEFEEFFF0F0EFFFEFEFEEFFF1F0F0FFEFEEEEFFEEEDEBFFEFEC
+      E9FFFCF8F5FFFFFBF8FFA7A09AFE000000000000000000000000000000000000
       0000000000000000000000FFFF0000FFFF000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A6A29BFEFFFFFFFF4DA2
+      63FF459B5AFF328F4AFF439659FF2E8946FF4F9A63FF49955CFF428E56FF3E8A
+      51FFFCF8F5FFFFFBF6FFA7A09AFE0000000000000000A6A29BFEFFFFFFFF7773
+      6EFF706C67FF635E58FF6F6A66FF605B56FF7D7974FF726D6AFF6C6763FF726D
+      68FFFCF8F5FFFFFBF6FFA7A09AFE000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000A9A49EFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      FEFFFFFEFBFFFFFFFCFFA8A39DFE0000000000000000A9A49EFEFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      FEFFFFFEFBFFFFFFFCFFA8A39DFE000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
+      00000000000000000000000000000000000000000000706C67DCABA5A0FEA8A2
+      9DFEA29C96FEA6A09AFEA29C96FEA29C96FEA6A19AFEA7A09CFEA7A19AFEA5A0
+      9AFEA19B96FEA39D97FE716B67DC0000000000000000706C67DCABA5A0FEA8A2
+      9DFEA29C96FEA6A09AFEA29C96FEA29C96FEA6A19AFEA7A09CFEA7A19AFEA5A0
+      9AFEA19B96FEA39D97FE716B67DC000000000000000000000000000000000000
       00000000000000000000000000000000000003220BA70E5721F7000B03870000
       000A0000000000000000000000000000000000000000706B67DCA39D96FEA19B
       95FEA19B95FEAAA49FFE7E7D7BFE303236FF1A1F23FF313538FF878583FE8785
@@ -1465,8 +1834,16 @@ object DwsIdeForm: TDwsIdeForm
       0000000000000000000000000000000000000000000000000000000000002929
       2AB9505050ED525353F1525252F0505050EF4E4E4EEE4B4B4BED4A4A4AED4646
       46ED383838BD000000000000000000000000424D3E000000000000003E000000
-      2800000040000000700000000100010000000000800300000000000000000000
-      000000000000000000000000FFFFFF00FFFFFFFF00000000FC00FFFF00000000
+      2800000040000000900000000100010000000000800400000000000000000000
+      000000000000000000000000FFFFFF00FFFF000000000000FFFF000000000000
+      FFFF000000000000FFFF000000000000FFFF000000000000FFFF000000000000
+      C1FB000000000000C3FB000000000000C3FB000000000000C1F3000000000000
+      D863000000000000FE07000000000000FFFF000000000000FFFF000000000000
+      FFFF000000000000FFFF00000000000000000000FFFFB6E700000000FFFFB76B
+      0000000007C184270000000007C1B76B0000000007C1CEE7000000000101FFFF
+      000000000001C7C7000000000001C7C7000000000001C387000000008003C007
+      00000000C107C00700000000C107C00700000000E38FC00700000000E38FC007
+      00000000E38FF39F00000000FFFFF39FFFFFFFFF00000000FC00FFFF00000000
       8000EFFD000000000000C7FF000000000000C3FB000000000000E3F700000000
       0001F1E7000000000003F8CF000000000003FC1F000000000003FE3F00000000
       0003FC1F000000000FC3F8CF000000000003E1E7000000008007C3F300000000
@@ -1507,8 +1884,8 @@ object DwsIdeForm: TDwsIdeForm
       end>
     Options = [fdoOverWritePrompt, fdoStrictFileTypes]
     Title = 'Save Project File'
-    Left = 368
-    Top = 88
+    Left = 56
+    Top = 136
   end
   object OpenProjectDialog: TFileOpenDialog
     DefaultExtension = '*.dwsproj'
@@ -1536,24 +1913,24 @@ object DwsIdeForm: TDwsIdeForm
       end>
     Options = []
     Title = 'Open Editor File'
-    Left = 272
+    Left = 56
     Top = 88
   end
   object UpdateTimer: TTimer
     Interval = 300
     OnTimer = UpdateTimerTimer
-    Left = 272
-    Top = 144
+    Left = 424
+    Top = 40
   end
-  object dwsDebugger1: TdwsDebugger
-    OnDebug = dwsDebugger1Debug
-    OnDebugStart = dwsDebugger1DebugStart
-    OnDebugStop = dwsDebugger1DebugStop
-    OnEnterFunc = dwsDebugger1EnterFunc
-    OnLeaveFunc = dwsDebugger1LeaveFunc
-    OnStateChanged = dwsDebugger1StateChanged
-    Left = 272
-    Top = 200
+  object Debugger: TdwsDebugger
+    OnDebug = DebuggerDebug
+    OnDebugStart = DebuggerDebugStart
+    OnDebugStop = DebuggerDebugStop
+    OnEnterFunc = DebuggerEnterFunc
+    OnLeaveFunc = DebuggerLeaveFunc
+    OnStateChanged = DebuggerStateChanged
+    Left = 296
+    Top = 136
   end
   object SaveSourceDialog: TFileSaveDialog
     DefaultExtension = 'pas'
@@ -1569,66 +1946,118 @@ object DwsIdeForm: TDwsIdeForm
       end>
     Options = [fdoOverWritePrompt, fdoStrictFileTypes]
     Title = 'Save File As'
-    Left = 368
-    Top = 144
+    Left = 56
+    Top = 184
   end
   object EditorPagePopupMenu: TPopupMenu
     Images = SmallImages
-    Left = 176
-    Top = 144
-    object RunProcedureAtCursor2: TMenuItem
-      Action = actRunProcedureAtCursor
+    Left = 168
+    Top = 136
+    object MenuItemRun1: TMenuItem
+      Action = ActionRun
+    end
+    object MenuItemRunWithoutDebugging: TMenuItem
+      Action = ActionRunWithoutDebugging
+    end
+    object MenuItemBuild: TMenuItem
+      Action = ActionBuild
     end
     object N9: TMenuItem
       Caption = '-'
     end
-    object Cut1: TMenuItem
-      Action = actEditorCut
+    object MenuItemCut: TMenuItem
+      Action = ActionEditCut
     end
-    object Copy1: TMenuItem
-      Action = actEditorCopyToClipboard
+    object MenuItemCopy: TMenuItem
+      Action = ActionEditCopyToClipboard
     end
-    object Paste1: TMenuItem
-      Action = actEditorPaste
+    object MenuItemPaste: TMenuItem
+      Action = ActionEditPaste
     end
-    object Delete2: TMenuItem
-      Action = actEditorDelete
+    object MenuItemDelete: TMenuItem
+      Action = ActionEditDelete
     end
-    object SelectAll1: TMenuItem
-      Action = actEditorSelectAll
+    object MenuItemSelectAll: TMenuItem
+      Action = ActionEditSelectAll
     end
     object N6: TMenuItem
       Caption = '-'
     end
-    object MenuItem1: TMenuItem
-      Action = actClosePage
+    object MenuItemClosePage: TMenuItem
+      Action = ActionClosePage
     end
-    object MenuItem2: TMenuItem
-      Caption = 'Pages ...'
+    object MenuItemCloseAllOtherPages: TMenuItem
+      Action = ActionCloseAllOtherPages
     end
-    object MenuItem3: TMenuItem
+    object N12: TMenuItem
       Caption = '-'
     end
-    object MenuItem4: TMenuItem
-      Action = actCloseAllOtherPages
+    object MenuItemSave: TMenuItem
+      Action = ActionFileSave
     end
-    object MenuItem5: TMenuItem
+    object MenuItemSaveAs: TMenuItem
+      Action = ActionFileSaveAs
+    end
+    object N13: TMenuItem
       Caption = '-'
     end
-    object MenuItem6: TMenuItem
-      Action = actFileSave
+    object MenuItemReadOnly: TMenuItem
+      Action = ActionEditToggleReadOnly
     end
-    object MenuItem7: TMenuItem
-      Action = actFileSaveAs
     end
-    object MenuItem8: TMenuItem
-      Caption = '-'
+  object SynEditSearch: TSynEditSearch
+    Left = 296
+    Top = 40
     end
-    object MenuItem9: TMenuItem
-      Action = actToggleReadOnly
+  object SynMacroRecorder: TSynMacroRecorder
+    RecordShortCut = 24658
+    PlaybackShortCut = 24656
+    Left = 296
+    Top = 88
     end
-    object Suggest1: TMenuItem
-      Action = actCodeProposalInvoke
+  object SynCodeCompletion: TSynCompletionProposal
+    Options = [scoLimitToMatchedText, scoUseInsertList, scoUsePrettyText, scoUseBuiltInTimer, scoEndCharCompletion, scoCompleteWithTab, scoCompleteWithEnter]
+    NbLinesInWindow = 6
+    EndOfTokenChr = '()[]. '
+    TriggerChars = '.'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    TitleFont.Charset = DEFAULT_CHARSET
+    TitleFont.Color = clBtnText
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = [fsBold]
+    Columns = <>
+    OnExecute = SynCodeCompletionExecute
+    OnShow = SynCodeCompletionShow
+    ShortCut = 16416
+    Left = 296
+    Top = 184
     end
+  object SynParameters: TSynCompletionProposal
+    DefaultType = ctParams
+    Options = [scoLimitToMatchedText, scoUsePrettyText, scoUseBuiltInTimer]
+    ClBackground = clInfoBk
+    Width = 262
+    EndOfTokenChr = '()[]. '
+    TriggerChars = '('
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    TitleFont.Charset = DEFAULT_CHARSET
+    TitleFont.Color = clBtnText
+    TitleFont.Height = -11
+    TitleFont.Name = 'MS Sans Serif'
+    TitleFont.Style = [fsBold]
+    Columns = <>
+    OnExecute = SynParametersExecute
+    ShortCut = 24608
+    Left = 296
+    Top = 232
   end
 end

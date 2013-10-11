@@ -39,12 +39,18 @@ type
          sStringIndentSingle, sStringIndentSingleF : TState;
          sGreaterF, sSmallerF, sEqualF, sDotDot: TState;
 
+         FCurlyCommentTransition : TTransition;
+
       protected
          function StartState : TState; override;
+
+         procedure SetCurlyComments(const val : Boolean);
+         function GetCurlyComments : Boolean; inline;
 
       public
          constructor Create; override;
 
+         property CurlyComments : Boolean read GetCurlyComments write SetCurlyComments;
    end;
 
 const
@@ -71,7 +77,7 @@ const
       ttIMPLEMENTATION, ttIMPLIES, ttIN, ttINHERITED, ttINITIALIZATION,
       ttINTERFACE, ttIS, ttMOD, ttNEW, ttNIL, ttNOT, ttOBJECT,
       ttOF, ttOPERATOR, ttOR, ttOVERLOAD, ttPROCEDURE, ttPROPERTY, ttRAISE, ttRECORD,
-      ttREINTRODUCE, ttREPEAT, ttRESOURCESTRING, ttSAR, ttSET, ttSHL, ttSHR,
+      ttREINTRODUCE, ttREPEAT, ttRESOURCESTRING, ttSAR, ttSHL, ttSHR,
       ttTHEN, ttTRUE, ttTRY, ttTYPE,
       ttUNIT, ttUNTIL, ttUSES, ttVAR, ttWHILE, ttXOR
    ];
@@ -85,7 +91,7 @@ implementation
 // ------------------------------------------------------------------
 
 const
-   cOPS = ['+', '-', '*', '/', '=', '<', '>', '@', '%', '^'];
+   cOPS = ['+', '-', '*', '/', '=', '<', '>', '@', '%', '^', '|'];
    cSPACE = [' ', #9, #13, #10, #0];
    cSPEC = ['(', ')', ',', ';', '[', ']', '}', '!', '?'];
    cSTOP = cSPEC + cOPS + cSPACE + [':', '.', '{'];
@@ -160,7 +166,7 @@ begin
    sStart.AddTransition([''''], TSeekTransition.Create(sStringSingle, [toStart], caNone));
    sStart.AddTransition(['"'], TSeekTransition.Create(sStringDouble, [toStart], caNone));
    sStart.AddTransition(['#'], TSeekTransition.Create(sChar0, [toStart], caNone));
-   sStart.AddTransition([':', '+', '-', '*', '@', '%', '^'], TConsumeTransition.Create(sAssign0, [toStart], caNone));
+   sStart.AddTransition([':', '+', '-', '*', '@', '%', '^', '|'], TConsumeTransition.Create(sAssign0, [toStart], caNone));
    sStart.AddTransition(['='], TConsumeTransition.Create(sEqualF, [toStart], caNone));
    sStart.AddTransition(cSPEC-['('], TConsumeTransition.Create(sStart, [toStart, toFinal], caName));
    sStart.AddTransition(['('], TConsumeTransition.Create(sBracketLeft, [toStart], caNone));
@@ -177,9 +183,11 @@ begin
    sComment.SetElse(TSeekTransition.Create(sCommentF, [], caNone));
 
    sCommentF.AddTransition(['}'], TSeekTransition.Create(sStart, [], caClear));
+   sCommentF.AddEOFTransition(TErrorTransition.Create(CPE_UnexpectedEndOfFileForUnfinishedComment));
    sCommentF.SetElse(TSeekTransition.Create(sCommentF, [], caNone));
 
    sSwitch.AddTransition(cNAM, TConsumeTransition.Create(sSwitchNameF, [toStart], caNone));
+   sSwitch.AddEOFTransition(TErrorTransition.Create(CPE_UnexpectedEndOfFileForUnfinishedDirective));
    sSwitch.SetElse(TErrorTransition.Create(TOK_NameOfSwitchExpected));
 
    sSwitchNameF.AddTransition(cNAM + cINT, TConsumeTransition.Create(sSwitchNameF, [], caNone));
@@ -202,6 +210,7 @@ begin
 
    sBlockCommentBracket1.AddTransition([')'], TSeekTransition.Create(sStart, [], caClear));
    sBlockCommentBracket1.AddTransition(['*'], TSeekTransition.Create(sBlockCommentBracket1, [], caNone));
+   sBlockCommentBracket1.AddEOFTransition(TErrorTransition.Create(CPE_UnexpectedEndOfFileForUnfinishedComment));
    sBlockCommentBracket1.SetElse(TSeekTransition.Create(sBlockCommentBracket, [], caNone));
 
    sBlockCommentSlash.AddTransition(['*'], TSeekTransition.Create(sBlockCommentSlash1, [], caNone));
@@ -209,6 +218,7 @@ begin
 
    sBlockCommentSlash1.AddTransition(['/'], TSeekTransition.Create(sStart, [], caClear));
    sBlockCommentSlash1.AddTransition(['*'], TSeekTransition.Create(sBlockCommentSlash1, [], caNone));
+   sBlockCommentSlash1.AddEOFTransition(TErrorTransition.Create(CPE_UnexpectedEndOfFileForUnfinishedComment));
    sBlockCommentSlash1.SetElse(TSeekTransition.Create(sBlockCommentSlash, [], caNone));
 
    sChar0.AddTransition(cINT, TConsumeTransition.Create(sCharF, [], caNone));
@@ -237,7 +247,8 @@ begin
    sNameF.SetElse(TErrorTransition.Create(TOK_InvalidChar));
 
    sNameEscapedS.AddTransition(cNAM, TConsumeTransition.Create(sNameEscapedF, [toStart], caNone));
-   sNameEscapedS.SetElse(TErrorTransition.Create(TOK_InvalidChar));
+   sNameEscapedS.AddTransition(['&'], TConsumeTransition.Create(sStart, [toFinal], caAmpAmp));
+   sNameEscapedS.SetElse(TCheckTransition.Create(sStart, [toFinal], caAmp));
 
    sNameEscapedF.AddTransition(cNAM+cINT, TConsumeTransition.Create(sNameEscapedF, [], caNone));
    sNameEscapedF.AddTransition(cSTOP, TCheckTransition.Create(sStart, [toFinal], caNameEscaped));
@@ -303,7 +314,7 @@ begin
 
    sStringDouble.AddTransition(cANYCHAR - ['"', #0], TConsumeTransition.Create(sStringDouble, [], caNone));
    sStringDouble.AddTransition(['"'], TSeekTransition.Create(sStringDoubleF, [], caNone));
-   sStringDouble.AddTransition([#0], TErrorTransition.Create(TOK_HereDocTerminationError));
+   sStringDouble.AddEOFTransition(TErrorTransition.Create(TOK_HereDocTerminationError));
 
    sStringDoubleF.AddTransition(['"'], TConsumeTransition.Create(sStringDouble, [], caNone));
    sStringDoubleF.AddTransition(['#'], TCheckTransition.Create(sStart, [], caString));
@@ -312,7 +323,7 @@ begin
 
    sStringIndentSingle.AddTransition(cANYCHAR - ['''', #0], TConsumeTransition.Create(sStringIndentSingle, [], caNone));
    sStringIndentSingle.AddTransition([''''], TSeekTransition.Create(sStringIndentSingleF, [], caNone));
-   sStringIndentSingle.AddTransition([#0], TErrorTransition.Create(TOK_HereDocTerminationError));
+   sStringIndentSingle.AddEOFTransition(TErrorTransition.Create(TOK_HereDocTerminationError));
 
    sStringIndentSingleF.AddTransition([''''], TConsumeTransition.Create(sStringIndentSingle, [], caNone));
    sStringIndentSingleF.AddTransition(['#'], TCheckTransition.Create(sStart, [], caMultiLineString));
@@ -321,14 +332,14 @@ begin
 
    sStringIndentDouble.AddTransition(cANYCHAR - ['"', #0], TConsumeTransition.Create(sStringIndentDouble, [], caNone));
    sStringIndentDouble.AddTransition(['"'], TSeekTransition.Create(sStringIndentDoubleF, [], caNone));
-   sStringIndentDouble.AddTransition([#0], TErrorTransition.Create(TOK_HereDocTerminationError));
+   sStringIndentDouble.AddEOFTransition(TErrorTransition.Create(TOK_HereDocTerminationError));
 
    sStringIndentDoubleF.AddTransition(['"'], TConsumeTransition.Create(sStringIndentDouble, [], caNone));
    sStringIndentDoubleF.AddTransition(['#'], TCheckTransition.Create(sStart, [], caMultiLineString));
    sStringIndentDoubleF.AddTransition(cSTOP, TCheckTransition.Create(sStart, [toFinal], caMultiLineString));
    sStringIndentDoubleF.SetElse(TErrorTransition.Create(TOK_InvalidChar));
 
-   sAssign0.AddTransition(['='], TConsumeTransition.Create(sStart, [toFinal], caName));
+   sAssign0.AddTransition(['=', '|'], TConsumeTransition.Create(sStart, [toFinal], caName));
    sAssign0.AddTransition(cStart + cSTOP, TCheckTransition.Create(sStart, [toFinal], caName));
    sAssign0.SetElse(TErrorTransition.Create(TOK_EqualityExpected));
 
@@ -358,6 +369,27 @@ end;
 function TPascalTokenizerStateRules.StartState : TState;
 begin
    Result:=sStart;
+end;
+
+// SetCurlyComments
+//
+procedure TPascalTokenizerStateRules.SetCurlyComments(const val : Boolean);
+begin
+   if val=CurlyComments then Exit;
+   if val then begin
+      sStart.SetTransition('{', FCurlyCommentTransition);
+      FCurlyCommentTransition:=nil;
+   end else begin
+      FCurlyCommentTransition:=sStart.FindTransition('{');
+      sStart.SetTransition('{', sStart.FindTransition(';'));
+   end;
+end;
+
+// GetCurlyComments
+//
+function TPascalTokenizerStateRules.GetCurlyComments : Boolean;
+begin
+   Result:=(FCurlyCommentTransition=nil);
 end;
 
 end.

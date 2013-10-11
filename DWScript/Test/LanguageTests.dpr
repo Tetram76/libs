@@ -15,35 +15,62 @@ uses
   GUITestRunner,
   SysUtils,
   dwsXPlatform,
+  dwsMathComplexFunctions in '..\Source\dwsMathComplexFunctions.pas',
+  dwsMath3DFunctions in '..\Source\dwsMath3DFunctions.pas',
+  dwsDebugFunctions in '..\Source\dwsDebugFunctions.pas',
+  dwsLinq,
+  dwsLinqSql in '..\Libraries\LinqLib\dwsLinqSql.pas',
+  dwsLinqJson in '..\Libraries\LinqLib\dwsLinqJson.pas',
+  dwsDocBuilder in '..\Libraries\DocBuilder\dwsDocBuilder.pas',
   UScriptTests in 'UScriptTests.pas',
   UAlgorithmsTests in 'UAlgorithmsTests.pas',
   UdwsUnitTests in 'UdwsUnitTests.pas',
+  UdwsUnitTestsStatic in 'UdwsUnitTestsStatic.pas',
   UHTMLFilterTests in 'UHTMLFilterTests.pas',
   UCornerCasesTests in 'UCornerCasesTests.pas',
   UdwsClassesTests in 'UdwsClassesTests.pas',
   dwsClasses in '..\Libraries\ClassesLib\dwsClasses.pas',
-  dwsClassesLibModule in '..\Libraries\ClassesLib\dwsClassesLibModule.pas' {dwsClassesLib: TDataModule},
+  UdwsDataBaseTests in 'UdwsDataBaseTests.pas',
   UdwsFunctionsTests in 'UdwsFunctionsTests.pas',
   UCOMConnectorTests in 'UCOMConnectorTests.pas',
   UTestDispatcher in 'UTestDispatcher.pas',
   UDebuggerTests in 'UDebuggerTests.pas',
   UdwsUtilsTests in 'UdwsUtilsTests.pas',
   UMemoryTests in 'UMemoryTests.pas',
-  dwsMathComplexFunctions in '..\Source\dwsMathComplexFunctions.pas',
-  dwsMath3DFunctions in '..\Source\dwsMath3DFunctions.pas',
   UBuildTests in 'UBuildTests.pas',
-  URTTIExposeTests in 'URTTIExposeTests.pas',
   USourceUtilsTests in 'USourceUtilsTests.pas',
   ULocalizerTests in 'ULocalizerTests.pas',
   dwsRTTIFunctions,
-  UJSONTests in 'UJSONTests.pas';
+  UJSONTests in 'UJSONTests.pas',
+  UJSONConnectorTests in 'UJSONConnectorTests.pas',
+  UTokenizerTests in 'UTokenizerTests.pas',
+  ULanguageExtensionTests in 'ULanguageExtensionTests.pas',
+  UJITTests in 'UJITTests.pas',
+  UJITx86Tests in 'UJITx86Tests.pas',
+  ULinqTests in 'ULinqTests.pas',
+{$IF RTLVersion >= 21}
+  dwsSynSQLiteDatabase in '..\Libraries\DatabaseLib\dwsSynSQLiteDatabase.pas',
+  dwsUIBDataBase,
+  URTTIExposeTests in 'URTTIExposeTests.pas',
+  USpecialTestsRTTI in 'USpecialTestsRTTI.pas',
+{$IFEND}
+  ULinqJsonTests in 'ULinqJsonTests.pas';
 
 {$R *.res}
 
+var
+{$IF RTLVersion >= 23}
+   procAffinity, systAffinity : NativeUInt;
+{$ELSE}
+   procAffinity, systAffinity : DWORD;
+{$IFEND}
 begin
-   SetProcessAffinityMask(GetCurrentProcessId, Cardinal(-1));
+   DirectSet8087CW($133F);
+   GetProcessAffinityMask(GetCurrentProcess, procAffinity, systAffinity);
+   SetProcessAffinityMask(GetCurrentProcess, systAffinity);
    SetDecimalSeparator('.');
    ReportMemoryLeaksOnShutdown:=True;
    Application.Initialize;
    GUITestRunner.RunRegisteredTests;
 end.
+

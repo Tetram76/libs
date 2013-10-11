@@ -23,8 +23,10 @@ unit dwsUnitSymbols;
 
 interface
 
-uses SysUtils, dwsUtils, dwsSymbols, dwsErrors, dwsStack, dwsXPlatform,
-   dwsStrings, dwsTokenizer;
+uses
+   SysUtils,
+   dwsUtils, dwsSymbols, dwsErrors, dwsXPlatform,
+   dwsStrings, dwsTokenizer, dwsDataContext;
 
 type
 
@@ -49,9 +51,10 @@ type
          FInitializationRank : Integer;
          FInitializationExpr : TExprBase;
          FFinalizationExpr : TExprBase;
+         FDeprecatedMessage : UnicodeString;
 
       public
-         constructor Create(const name : String; table : TUnitSymbolTable;
+         constructor Create(const name : UnicodeString; table : TUnitSymbolTable;
                             unitSyms : TUnitMainSymbols);
          destructor Destroy; override;
 
@@ -75,6 +78,7 @@ type
          property InitializationRank : Integer read FInitializationRank write FInitializationRank;
          property InitializationExpr : TExprBase read FInitializationExpr write FInitializationExpr;
          property FinalizationExpr : TExprBase read FFinalizationExpr write FFinalizationExpr;
+         property DeprecatedMessage : UnicodeString read FDeprecatedMessage write FDeprecatedMessage;
    end;
 
    // list of unit main symbols (one per prog)
@@ -86,7 +90,7 @@ type
       public
          procedure Initialize(const msgs : TdwsCompileMessageList);
 
-         function Find(const unitName : String) : TUnitMainSymbol;
+         function Find(const unitName : UnicodeString) : TUnitMainSymbol;
    end;
 
    IObjectOwner = interface
@@ -133,13 +137,14 @@ type
 
          class function IsUnitTable : Boolean; override;
 
+         function FindLocal(const aName : UnicodeString; ofClass : TSymbolClass = nil) : TSymbol; override;
          function EnumerateHelpers(helpedType : TTypeSymbol; const callback : THelperSymbolEnumerationCallback) : Boolean; override;
    end;
 
    // Invisible symbol for included source code
    TIncludeSymbol = class (TSourceSymbol)
       public
-         constructor Create(const fileName : String);
+         constructor Create(const fileName : UnicodeString);
    end;
 
    // Front end for units, serves for explicit unit resolution "unitName.symbolName"
@@ -150,14 +155,16 @@ type
          FImplicit : Boolean;
 
       public
-         constructor Create(mainSymbol : TUnitMainSymbol; const name : String);
+         constructor Create(mainSymbol : TUnitMainSymbol; const name : UnicodeString);
          destructor Destroy; override;
 
          procedure InitData(const data : TData; offset : Integer); override;
 
          procedure RegisterNameSpaceUnit(unitSymbol : TUnitSymbol);
-         function  FindNameSpaceUnit(const name : String) : TUnitSymbol;
-         function  PossibleNameSpace(const name : String) : Boolean;
+         function  FindNameSpaceUnit(const name : UnicodeString) : TUnitSymbol;
+         function  PossibleNameSpace(const name : UnicodeString) : Boolean;
+
+         function IsDeprecated : Boolean;
 
          property Main : TUnitMainSymbol read FMain write FMain;
          property Implicit : Boolean read FImplicit write FImplicit;
@@ -168,6 +175,19 @@ type
          function ImplementationTable : TUnitImplementationTable; inline;
    end;
 
+   TUnitSymbolList = class(TObjectList<TUnitSymbol>);
+
+   // unit namespaces, aggregate unit symbols
+   TUnitNamespaceSymbol = class (TSourceSymbol)
+      private
+         FUnitSymbols : TUnitSymbolList;
+
+      public
+         constructor Create(const name : UnicodeString);
+         destructor Destroy; override;
+
+         property UnitSymbols : TUnitSymbolList read FUnitSymbols;
+   end;
 
    TStaticSymbolTable = class;
 
@@ -183,7 +203,7 @@ type
          FInitialized : Boolean;
 
       protected
-         function SymbolTable : TStaticSymbolTable;
+         function SymbolTable : TStaticSymbolTable; overload;
 
       public
          destructor Destroy; override;
@@ -208,14 +228,14 @@ type
       public
          constructor Create(const parent : IStaticSymbolTable);
 
-         function FindLocal(const Name: String; ofClass : TSymbolClass = nil) : TSymbol; override;
-         function FindSymbol(const Name: String; minVisibility : TdwsVisibility;
+         function FindLocal(const Name: UnicodeString; ofClass : TSymbolClass = nil) : TSymbol; override;
+         function FindSymbol(const Name: UnicodeString; minVisibility : TdwsVisibility;
                               ofClass : TSymbolClass = nil) : TSymbol; override;
          procedure Initialize(const msgs : TdwsCompileMessageList); override;
 
-         function EnumerateLocalSymbolsOfName(const aName : String;
+         function EnumerateLocalSymbolsOfName(const aName : UnicodeString;
                               const callback : TSymbolEnumerationCallback) : Boolean; override;
-         function EnumerateSymbolsOfNameInScope(const aName : String;
+         function EnumerateSymbolsOfNameInScope(const aName : UnicodeString;
                               const callback : TSymbolEnumerationCallback) : Boolean; override;
 
          function EnumerateLocalHelpers(helpedType : TTypeSymbol;
@@ -254,7 +274,7 @@ type
          FTypCustomAttribute : TClassSymbol;
 
       protected
-         function SymbolTable : TSystemSymbolTable;
+         function SymbolTable : TSystemSymbolTable; overload;
 
       public
          property TypInteger : TBaseIntegerSymbol read FTypInteger write FTypInteger;
@@ -331,9 +351,13 @@ var
    staticTable : TStaticSymbolTable;
 begin
    // accept only static parents
-   Assert((parent is TStaticSymbolTable), CPE_NoStaticSymbols);
+   if parent is TLinkedSymbolTable then
+      staticTable:=TLinkedSymbolTable(parent).ParentSymbolTable
+   else begin
+      Assert((parent is TStaticSymbolTable), CPE_NoStaticSymbols);
+      staticTable:=TStaticSymbolTable(parent);
+   end;
 
-   staticTable:=TStaticSymbolTable(parent);
    staticTable._AddRef;
    inherited InsertParent(index, staticTable);
 end;
@@ -396,14 +420,14 @@ begin
    FParentSymbolTable:=parent.SymbolTable;
 end;
 
-function TLinkedSymbolTable.FindLocal(const Name: String; ofClass : TSymbolClass = nil): TSymbol;
+function TLinkedSymbolTable.FindLocal(const Name: UnicodeString; ofClass : TSymbolClass = nil): TSymbol;
 begin
    Result:=FParentSymbolTable.FindLocal(Name, ofClass);
    if not Assigned(Result) then
       Result:=inherited FindLocal(Name, ofClass);
 end;
 
-function TLinkedSymbolTable.FindSymbol(const Name: String; minVisibility : TdwsVisibility;
+function TLinkedSymbolTable.FindSymbol(const Name: UnicodeString; minVisibility : TdwsVisibility;
                                        ofClass : TSymbolClass = nil): TSymbol;
 begin
   Result := FParentSymbolTable.FindSymbol(Name, minVisibility, ofClass);
@@ -419,14 +443,14 @@ end;
 
 // EnumerateLocalSymbolsOfName
 //
-function TLinkedSymbolTable.EnumerateLocalSymbolsOfName(const aName : String; const callback : TSymbolEnumerationCallback) : Boolean;
+function TLinkedSymbolTable.EnumerateLocalSymbolsOfName(const aName : UnicodeString; const callback : TSymbolEnumerationCallback) : Boolean;
 begin
    Result:=FParentSymbolTable.EnumerateLocalSymbolsOfName(aName, callback);
 end;
 
 // EnumerateSymbolsOfNameInScope
 //
-function TLinkedSymbolTable.EnumerateSymbolsOfNameInScope(const aName : String; const callback : TSymbolEnumerationCallback) : Boolean;
+function TLinkedSymbolTable.EnumerateSymbolsOfNameInScope(const aName : UnicodeString; const callback : TSymbolEnumerationCallback) : Boolean;
 begin
    Result:=FParentSymbolTable.EnumerateSymbolsOfNameInScope(aName, callback);
 end;
@@ -476,7 +500,7 @@ end;
 
 // Create
 //
-constructor TUnitMainSymbol.Create(const name : String; table : TUnitSymbolTable;
+constructor TUnitMainSymbol.Create(const name : UnicodeString; table : TUnitSymbolTable;
                                    unitSyms : TUnitMainSymbols);
 begin
    inherited Create(Name, nil);
@@ -566,7 +590,7 @@ function TUnitMainSymbol.ReferenceInSymbolTable(aTable : TSymbolTable; implicit 
 var
    p : Integer;
    nameSpace : TUnitSymbol;
-   part : String;
+   part : UnicodeString;
 begin
    p:=Pos('.', Name);
    if p>0 then
@@ -599,7 +623,7 @@ end;
 
 // Create
 //
-constructor TIncludeSymbol.Create(const fileName : String);
+constructor TIncludeSymbol.Create(const fileName : UnicodeString);
 begin
    inherited Create('$i '+fileName, nil);
 end;
@@ -610,7 +634,7 @@ end;
 
 // Find
 //
-function TUnitMainSymbols.Find(const unitName : String) : TUnitMainSymbol;
+function TUnitMainSymbols.Find(const unitName : UnicodeString) : TUnitMainSymbol;
 var
    i : Integer;
 begin
@@ -681,7 +705,7 @@ end;
 
 // Create
 //
-constructor TUnitSymbol.Create(mainSymbol : TUnitMainSymbol; const name : String);
+constructor TUnitSymbol.Create(mainSymbol : TUnitMainSymbol; const name : UnicodeString);
 begin
    inherited Create(name, nil);
    FMain:=mainSymbol;
@@ -715,7 +739,7 @@ end;
 
 // FindNameSpaceUnit
 //
-function TUnitSymbol.FindNameSpaceUnit(const name : String) : TUnitSymbol;
+function TUnitSymbol.FindNameSpaceUnit(const name : UnicodeString) : TUnitSymbol;
 var
    i : Integer;
 begin
@@ -731,10 +755,10 @@ end;
 
 // PossibleNameSpace
 //
-function TUnitSymbol.PossibleNameSpace(const name : String) : Boolean;
+function TUnitSymbol.PossibleNameSpace(const name : UnicodeString) : Boolean;
 var
    i : Integer;
-   candidate : String;
+   candidate : UnicodeString;
 begin
    if FNameSpace=nil then Exit(False);
    if FNameSpace.Find(name, i) then Exit(True);
@@ -743,6 +767,13 @@ begin
    Result:=    (Length(candidate)>Length(name))
            and (StrIBeginsWith(candidate, name))
            and (candidate[Length(name)+1]='.');
+end;
+
+// IsDeprecated
+//
+function TUnitSymbol.IsDeprecated : Boolean;
+begin
+   Result:=(Main.DeprecatedMessage<>'');
 end;
 
 // Table
@@ -811,6 +842,15 @@ begin
    Result:=False;
 end;
 
+// FindLocal
+//
+function TUnitImplementationTable.FindLocal(const aName : UnicodeString; ofClass : TSymbolClass = nil) : TSymbol;
+begin
+   Result:=inherited FindLocal(aName, ofClass);
+   if Result=nil then
+      Result:=UnitMainSymbol.Table.FindLocal(aName, ofClass);
+end;
+
 // EnumerateHelpers
 //
 function TUnitImplementationTable.EnumerateHelpers(helpedType : TTypeSymbol; const callback : THelperSymbolEnumerationCallback) : Boolean;
@@ -855,6 +895,26 @@ end;
 procedure TProgramSymbolTable.RemoveFromDestructionList(sym : TSymbol);
 begin
    FDestructionList.Remove(sym);
+end;
+
+// ------------------
+// ------------------ TUnitNamespaceSymbol ------------------
+// ------------------
+
+// Create
+//
+constructor TUnitNamespaceSymbol.Create(const name : UnicodeString);
+begin
+   inherited Create(name, nil);
+   FUnitSymbols:=TUnitSymbolList.Create;
+end;
+
+// Destroy
+//
+destructor TUnitNamespaceSymbol.Destroy;
+begin
+   FUnitSymbols.Free;
+   inherited;
 end;
 
 end.

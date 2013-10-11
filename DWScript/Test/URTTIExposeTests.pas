@@ -2,9 +2,10 @@ unit URTTIExposeTests;
 
 interface
 
-uses Classes, SysUtils, dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs,
-   dwsTokenizer, dwsRTTIExposer, dwsRTTIConnector, TypInfo, Types, RTTI,
-   Forms, StdCtrls, Variants;
+uses
+   Classes, SysUtils, TypInfo, Types, RTTI, Forms, StdCtrls, Variants,
+   dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsErrors,
+   dwsTokenizer, dwsRTTIExposer, dwsRTTIConnector;
 
 type
 
@@ -27,7 +28,7 @@ type
          procedure SimpleClass;
          procedure SimpleEnumeration;
          procedure SimpleRecord;
-         //procedure SimpleInterface;
+         procedure SimpleInterface;
          procedure ExposeInstances;
 
          procedure ConnectSimpleClass;
@@ -603,7 +604,7 @@ begin
     env := TRTTIEnvironment.Create;
     env.DefaultEnvironment := obj;
     FCompiler.Extensions.Add(env);
-    RegisterRTTIIndexedProperty(TStrings, 'Values', False,
+    RegisterRTTIIndexedProperty(TStrings, 'Values', False, varUString,
       TStrings_GetValues, TStrings_SetValues);
 
     try
@@ -729,7 +730,6 @@ end;
 
 // SimpleInterface
 //
-{
 procedure TRTTIExposeTests.SimpleInterface;
 var
    prog : IdwsProgram;
@@ -737,24 +737,24 @@ var
 begin
    FUnit.ExposeRTTI(TypeInfo(ISimpleInterface));
 
-   prog:=FCompiler.Compile( 'var i : ISimpleInterface'#13#10
-                           +'PrintLn(i.Hello);'#13#10
+   prog:=FCompiler.Compile( 'type TTest = class (ISimpleInterface)'#13#10
+                           +'  function GetHello : String; begin Result:=ClassName; end;'#13#10
+                           +'end;'#13#10
+                           +'var i : ISimpleInterface := new TTest;'#13#10
                            +'Print(i.GetHello);');
 
    CheckEquals('', prog.Msgs.AsInfo, 'Compile');
 
    exec:=prog.BeginNewExecution;
    try
-      exec.Info.Vars['i'].Value:=IUnknown(nil);
-
       exec.RunProgram(0);
 
       CheckEquals('', exec.Msgs.AsInfo, 'Exec Msgs');
-      CheckEquals('1, 2, 3, 4, 2, 0, 0, 1, 1, -1, -1, 2, 2', exec.Result.ToString, 'Exec Result');
+      CheckEquals('TTest', exec.Result.ToString, 'Exec Result');
    finally
       exec.EndProgram;
    end;
-end;   }
+end;
 
 var
    i1, i2 : TTestInstance;

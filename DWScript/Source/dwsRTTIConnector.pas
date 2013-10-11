@@ -20,8 +20,10 @@ unit dwsRTTIConnector;
 
 interface
 
-uses Windows, Forms, Variants, Classes, SysUtils, SysConst, dwsComp, dwsSymbols,
-   dwsExprs, dwsStrings, dwsFunctions, dwsStack, dwsOperators, TypInfo, RTTI,
+uses
+   Windows, Forms, Variants, Classes, SysUtils, SysConst, TypInfo, RTTI,
+   dwsComp, dwsSymbols, dwsDataContext, dwsErrors,
+   dwsExprs, dwsStrings, dwsFunctions, dwsStack, dwsOperators,
    dwsUtils, dwsLanguageExtension, dwsCompiler;
 
 const
@@ -114,8 +116,10 @@ type
          constructor Create(environment : TRTTIEnvironment);
 
          procedure Call(exec : TdwsProgramExecution; func : TFuncSymbol); virtual; abstract;
-         procedure InitSymbol(symbol : TSymbol);
+         procedure InitSymbol(symbol : TSymbol; const msgs : TdwsCompileMessageList);
          procedure InitExpression(expr : TExprBase);
+         function SubExpr(i : Integer) : TExprBase;
+         function SubExprCount : Integer;
    end;
 
    TRTTIEnvironmentField = class(TRTTIEnvironmentCallable)
@@ -162,13 +166,15 @@ type
       ClassType : TClass;
       PropName : String;
       IsDefault : Boolean;
+      PropType : TVarType;
       GetValue : TRTTIIndexedPropertyGetter;
       SetValue : TRTTIIndexedPropertySetter;
    end;
    PRTTIIndexedProperty = ^TRTTIIndexedProperty;
 
-procedure RegisterRTTIIndexedProperty(aClassType : TClass; const aPropName : String;
-      isDefault : Boolean; const getValue : TRTTIIndexedPropertyGetter; const setValue : TRTTIIndexedPropertySetter);
+procedure RegisterRTTIIndexedProperty(aClassType : TClass; const aPropName : String; isDefault : Boolean;
+                                      const aPropType : TVarType;
+                                      const getValue : TRTTIIndexedPropertyGetter; const setValue : TRTTIIndexedPropertySetter);
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -207,6 +213,7 @@ type
                             isWrite : Boolean) : IConnectorMember;
          function HasIndex(const propName : String; const params : TConnectorParamArray;
                            var typSym : TTypeSymbol; isWrite : Boolean) : IConnectorCall;
+         function HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
       public
          constructor Create(table : TSymbolTable; rttiType : TRttiType);
    end;
@@ -219,7 +226,7 @@ type
          FMethodType : TdwsRTTIMethodType;
 
       protected
-         function Call(const base : Variant; args : TConnectorArgs) : TData;
+         function Call(const base : Variant; const args : TConnectorArgs) : TData;
          function NeedDirectReference : Boolean;
 
       public
@@ -244,7 +251,7 @@ type
          FMethodType : TdwsRTTIMethodType;
 
       protected
-         function Call(const base : Variant; args : TConnectorArgs) : TData;
+         function Call(const base : Variant; const args : TConnectorArgs) : TData;
          function NeedDirectReference : Boolean;
 
       public
@@ -309,6 +316,7 @@ end;
 
 procedure RegisterRTTIIndexedProperty(
    aClassType : TClass; const aPropName : String; isDefault : Boolean;
+   const aPropType : TVarType;
    const getValue : TRTTIIndexedPropertyGetter; const setValue : TRTTIIndexedPropertySetter);
 var
    n : Integer;
@@ -320,6 +328,7 @@ begin
    entry.ClassType:=aClassType;
    entry.PropName:=aPropName;
    entry.IsDefault:=isDefault;
+   entry.PropType:=aPropType;
    entry.GetValue:=getValue;
    entry.SetValue:=setValue;
 end;
@@ -422,7 +431,7 @@ begin
 
    clsName:=Info.ParamAsString[1];
    compClass:=nil;
-   if Pos('.', clsName)>0 then begin
+   if StrContains(clsName, '.') then begin
       compType:=vRTTIContext.FindType(clsName);
       if compType is TRttiInstanceType then
          compClass:=TRttiInstanceType(compType).MetaclassType;
@@ -467,6 +476,13 @@ begin
    if isWrite then
       Result:=TdwsRTTIConnectorIndexedProperty.Create(propName, params, mtPropertySet)
    else Result:=TdwsRTTIConnectorIndexedProperty.Create(propName, params, mtPropertyGet)
+end;
+
+// HasEnumerator
+//
+function TdwsRTTIConnectorType.HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
+begin
+   Result:=nil;
 end;
 
 // HasMember
@@ -561,7 +577,7 @@ end;
 
 // Call
 //
-function TdwsRTTIConnectorCall.Call(const base : Variant; args : TConnectorArgs) : TData;
+function TdwsRTTIConnectorCall.Call(const base : Variant; const args : TConnectorArgs) : TData;
 var
    i : Integer;
    paramData : array of TValue;
@@ -910,7 +926,7 @@ end;
 
 // InitSymbol
 //
-procedure TRTTIEnvironmentCallable.InitSymbol(symbol : TSymbol);
+procedure TRTTIEnvironmentCallable.InitSymbol(symbol : TSymbol; const msgs : TdwsCompileMessageList);
 begin
    // nothing
 end;
@@ -920,6 +936,21 @@ end;
 procedure TRTTIEnvironmentCallable.InitExpression(expr : TExprBase);
 begin
    // nothing
+end;
+
+// SubExpr
+//
+function TRTTIEnvironmentCallable.SubExpr(i : Integer) : TExprBase;
+begin
+   Result:=nil;
+end;
+
+// SubExprCount
+//
+function TRTTIEnvironmentCallable.SubExprCount : Integer;
+begin
+   Result:=0;
+
 end;
 
 // ------------------
@@ -1071,24 +1102,38 @@ end;
 // Call
 //
 function TdwsRTTIConnectorIndexedProperty.Call(const base : Variant;
-                                               args : TConnectorArgs) : TData;
+                                               const args : TConnectorArgs) : TData;
 var
    i, k : Integer;
    instance : TdwsRTTIVariant;
+   instanceClass : TClass;
    resultValue : TValue;
    prop : TRttiProperty;
    value : Variant;
    values : TArray<TValue>;
    cip : TdwsRTTIConnectorIndexedProperty;
+   argVarType : TVarType;
 begin
+   // current implementation limitation
+   if Length(args)<1 then
+      raise EdwsRTTIException.CreateFmt(CPE_BadNumberOfParameters, [1, Length(args)]);
+
    SetLength(Result, 1);
    instance:=IUnknown(base) as TdwsRTTIVariant;
+   instanceClass:=instance.RTTIType.AsInstance.MetaclassType;
+
+   argVarType:=VarType(args[0][0]);
 
    for i:=0 to High(vIndexedProperties) do begin
-      if     instance.RTTIType.AsInstance.MetaclassType.InheritsFrom(vIndexedProperties[i].ClassType)
-         and (   SameText(FPropertyName, vIndexedProperties[i].PropName)
-              or (    (FPropertyName = '')
-                  and vIndexedProperties[i].IsDefault)) then begin
+
+      if not instanceClass.InheritsFrom(vIndexedProperties[i].ClassType) then
+         continue;
+      if argVarType<>vIndexedProperties[i].PropType then
+         continue;
+
+      if    UnicodeSameText(FPropertyName, vIndexedProperties[i].PropName)
+         or (    (FPropertyName = '')
+             and vIndexedProperties[i].IsDefault) then begin
 
          case FMethodType of
             mtPropertyGet : begin
@@ -1116,7 +1161,6 @@ begin
 
          prop:=instance.RTTIType.GetProperty(FPropertyName);
          if     (prop<>nil)
-            and prop.PropertyType.AsInstance.MetaclassType.InheritsFrom(vIndexedProperties[i].ClassType)
             and vIndexedProperties[i].IsDefault then begin
 
             resultValue:=prop.GetValue(instance.InstancePointer);
@@ -1135,8 +1179,8 @@ begin
       end;
    end;
 
-   raise EdwsRTTIException.CreateFmt('"%s" does not have a method "%s" exposed via RTTI',
-                                     [instance.RTTIType.Name, FPropertyName]);
+   raise EdwsRTTIException.CreateFmt('"%s" does not have a method "%s" exposed via RTTI accepting a %s',
+                                     [instance.RTTIType.Name, FPropertyName, VarTypeAsText(argVarType)]);
 end;
 
 // NeedDirectReference
@@ -1154,7 +1198,7 @@ initialization
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-  RegisterRTTIIndexedProperty(TStrings, 'Strings', True, TStrings_GetStrings, TStrings_SetStrings);
-  RegisterRTTIIndexedProperty(TComponent, 'Components', False, TComponent_GetComponents, nil);
+  RegisterRTTIIndexedProperty(TStrings, 'Strings', True, varInt64, TStrings_GetStrings, TStrings_SetStrings);
+  RegisterRTTIIndexedProperty(TComponent, 'Components', False, varInt64, TComponent_GetComponents, nil);
 
 end.

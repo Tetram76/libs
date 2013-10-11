@@ -26,6 +26,7 @@ interface
 uses
   Windows,
   Themes,
+  Classes,
   Graphics,
   dwsDebugger,
   SynEditHighlighter,
@@ -44,17 +45,32 @@ type
   TEditorHighlighterClass = class of TSynCustomHighlighter;
 
   TDwsIdeOptions = record
-    EditorHighlighterClass : TEditorHighlighterClass;
-    EditorFontName         : string;
-    EditorFontSize         : integer;
+    EditorHighlighterClass     : TEditorHighlighterClass;
+    EditorFontName             : string;
+    EditorFontSize             : integer;
+    ScriptFolder               : string;
+    ProjectName                : string;
+    HomePositionFileName       : string;
+    HomePositionFileIdentifier : string;
+  end;
+
+
+  TSynDWSSyn_DelphiLookalike = class( TSynDWSSyn )
+    constructor Create(AOwner: TComponent); override;
   end;
 
 
 const
-  IdeOptions_Style1 : TDwsIdeOptions = (
-    EditorHighlighterClass : TSynDWSSyn;
+  IdeOptions_Legacy   : TDwsIdeOptions = (
+    EditorHighlighterClass : TSynDWSSyn_DelphiLookalike;
     EditorFontName         : 'Courier New';
     EditorFontSize         : 10
+    );
+
+  IdeOptions_VistaOrLater : TDwsIdeOptions = (
+    EditorHighlighterClass : TSynDWSSyn_DelphiLookalike;
+    EditorFontName         : 'Consolas';
+    EditorFontSize         : 11
     );
 
   SuggestionCategoryNames : array[TdwsSuggestionCategory] of string = (
@@ -75,116 +91,118 @@ const
     'Element',
     'Parameter',
     'Variable',
-    'Const' );
+    'Const',
+    'ReservedWord',
+    'SpecialFunction' );
 
+  sDwsIdeProjectSourceFileExt   = '.dws';     // ext of the main file (like Delphi's dpr)
+  sDwsIdeProjectSourceFileExt2  = '.pas';     // ext of units
+  sDwsIdeProjectFileExt         = '.dwsproj'; // ext of the project file (like Delphi dproj)
+
+
+// Utility routines
+function BeginsWith( const AFragment, AStr : string; AMatchCase : boolean = False ) : boolean;
+// Returns TRUE if AStr begins with AFragment
 
 function DebuggerEvaluate( ADebugger : TDwsDebugger; const AExpression : string) : String;
 
-function Lighten( AColor: TColor; AFactor: Byte): TColor;
-// Lightens a color by this amount
+function IsValidIdentifier( const AName : string ) : boolean;
+// Returns TRUE if this name is an identifier i.e
+// a word starting with a letter and having chars 2..n as letters or numbers.
 
-function BeginsWith( const ABeginsStr, AStr : string; AMatchCase : boolean = False ) : boolean;
-// Returns TRUE if AStr begins with ABeginsStr
-
-{$IFDEF VER230} // Delphi XE2
-  function IDEStyleServices: TCustomStyleServices;
-{$ELSE}
-  function IDEStyleServices: TThemeServices;
-{$ENDIF}
 
 implementation
 
 uses
   SysUtils,
-  variants,
+  Variants,
   dwsCompiler;
-
 
 function DebuggerEvaluate( ADebugger : TDwsDebugger; const AExpression : string) : String;
 var
   expr : IdwsEvaluateExpr;
   V    : variant;
 begin
-   try
-      expr:= ADebugger.Evaluate(AExpression);
-      try
-         Result:='(no result)';
-         expr.Expression.EvalAsVariant( ADebugger.Execution.ExecutionObject, V );
-         Result := VarToStr( V );
-         if VarIsStr( V ) then
-           Result := '''' + Result + '''';
-      finally
-         expr:=nil;
-      end;
-   except
-      on E : Exception do
-         Result:=E.Message;
-   end;
+  try
+    expr := ADebugger.Evaluate(AExpression);
+    try
+      Result := '(no result)';
+      expr.Expression.EvalAsVariant( ADebugger.Execution.ExecutionObject, V );
+      Result := VarToStr( V );
+      if VarIsStr( V ) then
+        Result := '''' + Result + '''';
+    finally
+      expr := nil;
+    end;
+  except
+    on E : Exception do
+      Result := E.Message;
+  end;
 end;
 
 
-
-function Lighten( AColor: TColor; AFactor: Byte): TColor;
-// Lightens a color by this amount
-var
-  R, G, B: Byte;
-begin
-  AColor := ColorToRGB( AColor );
-
-  R := GetRValue(AColor);
-  G := GetGValue(AColor);
-  B := GetBValue(AColor);
-
-  Inc( R, AFactor );
-  Inc( G, AFactor );
-  Inc( B, AFactor );
-
-  Result := RGB(R, G, B);
-end;
-
-
-
-function BeginsWith( const ABeginsStr, AStr : string; AMatchCase : boolean = False ) : boolean;
-// Returns TRUE if AStr begins with ABeginsStr
+function BeginsWith( const AFragment, AStr : string; AMatchCase : boolean = False ) : boolean;
+// Returns TRUE if AStr begins with AFragment
 var
   I : integer;
 begin
   Result := False;
-  If ABeginsStr = '' then
+  if AFragment = '' then
+    Exit;
+
+  if AStr = '' then
+    Exit;
+
+  if Length( AStr ) < Length( AFragment ) then
     Exit;
 
   if AMatchCase then
-    begin
-    for I := 1 to Length( ABeginsStr ) do
-      If ABeginsStr[I] <> AStr[I] then
+  begin
+    for I := 1 to Length( AFragment ) do
+      if AFragment[I] <> AStr[I] then
         Exit;
-    end
-   else
-    for I := 1 to Length( ABeginsStr ) do
-      If UpCase(ABeginsStr[I]) <> UpCase(AStr[I]) then
+  end
+  else
+    for I := 1 to Length( AFragment ) do
+      if UpCase(AFragment[I]) <> UpCase(AStr[I]) then
         Exit;
 
   Result := True;
+end;
 
+
+function IsValidIdentifier( const AName : string ) : boolean;
+// Returns TRUE if this name is an identifier i.e
+// a word starting with a letter and having chars 2..n as letters or numbers.
+const
+  AllowedFirstChar = ['A'..'Z', 'a'..'z', '_' ];
+  AllowedSubsequentChars = AllowedFirstChar + ['0'..'9'];
+var
+  I : integer;
+begin
+  Result := False;
+
+  if Length( AName ) < 1 then
+    Exit;
+
+  if not CharInSet(AName[1], AllowedFirstChar ) then
+    Exit;
+
+  for I := 2 to Length( AName ) do
+    if not CharInSet(AName[I], AllowedSubsequentChars) then
+      Exit;
+
+  Result := True;
 end;
 
 
 
-{$IFDEF VER230} // Delphi XE2
-  function IDEStyleServices: TCustomStyleServices;
-  begin
-    Result := StyleServices;
-  end;
-{$ELSE}
-  function IDEStyleServices: TThemeServices;
-  begin
-    Result := ThemeServices;
-  end;
-{$ENDIF}
+{ TSynDWSSyn_DelphiLookalike }
 
-
-
-
-
+constructor TSynDWSSyn_DelphiLookalike.Create(AOwner: TComponent);
+begin
+  inherited;
+  LoadDelphiStyle;
+end;
 
 end.

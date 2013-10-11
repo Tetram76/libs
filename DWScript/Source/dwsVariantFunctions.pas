@@ -23,8 +23,10 @@ unit dwsVariantFunctions;
 
 interface
 
-uses Classes, Variants, SysUtils, dwsFunctions, dwsExprs, dwsSymbols, dwsUtils,
-   dwsMagicExprs, dwsUnitSymbols;
+uses
+   Classes, Variants, SysUtils,
+   dwsFunctions, dwsExprs, dwsSymbols, dwsUtils, dwsExprList,
+   dwsMagicExprs, dwsUnitSymbols, dwsXPlatform;
 
 type
   TVarClearFunc = class(TInternalFunction)
@@ -32,15 +34,19 @@ type
   end;
 
   TVarIsNullFunc = class(TInternalMagicBoolFunction)
-    function DoEvalAsBoolean(args : TExprBaseList) : Boolean; override;
+    function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
   end;
 
   TVarIsEmptyFunc = class(TInternalMagicBoolFunction)
-    function DoEvalAsBoolean(args : TExprBaseList) : Boolean; override;
+    function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
+  end;
+
+  TVarIsClearFunc = class(TInternalMagicBoolFunction)
+    function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
   end;
 
   TVarTypeFunc = class(TInternalMagicIntFunction)
-    function DoEvalAsInteger(args : TExprBaseList) : Int64; override;
+    function DoEvalAsInteger(const args : TExprBaseListExec) : Int64; override;
   end;
 
   TVarAsTypeFunc = class(TInternalFunction)
@@ -48,7 +54,7 @@ type
   end;
 
   TVarToStrFunc = class(TInternalMagicStringFunction)
-    procedure DoEvalAsString(args : TExprBaseList; var Result : String); override;
+    procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
   end;
 
 implementation
@@ -62,7 +68,7 @@ end;
 
 { TVarIsNullFunc }
 
-function TVarIsNullFunc.DoEvalAsBoolean(args : TExprBaseList) : Boolean;
+function TVarIsNullFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 var
    v : Variant;
 begin
@@ -72,7 +78,7 @@ end;
 
 { TVarIsEmptyFunc }
 
-function TVarIsEmptyFunc.DoEvalAsBoolean(args : TExprBaseList) : Boolean;
+function TVarIsEmptyFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 var
    v : Variant;
 begin
@@ -80,9 +86,19 @@ begin
    Result:=VarIsEmpty(v);
 end;
 
+{ TVarIsClearFunc }
+
+function TVarIsClearFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
+var
+   v : Variant;
+begin
+   args.ExprBase[0].EvalAsVariant(args.Exec, v);
+   Result:=VarIsClear(v);
+end;
+
 { TVarTypeFunc }
 
-function TVarTypeFunc.DoEvalAsInteger(args : TExprBaseList) : Int64;
+function TVarTypeFunc.DoEvalAsInteger(const args : TExprBaseListExec) : Int64;
 var
    v : Variant;
 begin
@@ -101,12 +117,12 @@ end;
 
 // DoEvalAsString
 //
-procedure TVarToStrFunc.DoEvalAsString(args : TExprBaseList; var Result : String);
+procedure TVarToStrFunc.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 var
    v : Variant;
 begin
    args.ExprBase[0].EvalAsVariant(args.Exec, v);
-   Result:=VarToStr(v);
+   Result:=VarToUnicodeStr(v);
 end;
 
 { InitVariants }
@@ -114,7 +130,7 @@ end;
 procedure InitVariants(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
                        unitTable : TSymbolTable);
 type
-   TVarTypeRec = packed record n : String; v : Word; end;
+   TVarTypeRec = packed record n : UnicodeString; v : Word; end;
 const
    cVarTypes : array [0..25] of TVarTypeRec = (
       (n:'Empty'; v:varEmpty),         (n:'Null'; v:varNull),
@@ -147,6 +163,7 @@ initialization
    RegisterInternalFunction(TVarClearFunc, 'VarClear', ['@v', 'Variant'], '');
    RegisterInternalBoolFunction(TVarIsNullFunc, 'VarIsNull', ['v', 'Variant']);
    RegisterInternalBoolFunction(TVarIsEmptyFunc, 'VarIsEmpty', ['v', 'Variant']);
+   RegisterInternalBoolFunction(TVarIsClearFunc, 'VarIsClear', ['v', 'Variant']);
    RegisterInternalFunction(TVarTypeFunc, 'VarType', ['v', 'Variant'], 'TVarType');
    RegisterInternalFunction(TVarAsTypeFunc, 'VarAsType', ['v', 'Variant', 'VarType', 'TVarType'], 'Variant');
    RegisterInternalStringFunction(TVarToStrFunc, 'VarToStr', ['v', 'Variant']);

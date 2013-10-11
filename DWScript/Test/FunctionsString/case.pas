@@ -1,5 +1,13 @@
-PrintLn(UpperCase('Hello éric!'));
-PrintLn(AnsiUpperCase('Hello éric!'));
+var s := 'Hello éric!';
 
-PrintLn(LowerCase('Hello éric!'));
-PrintLn(AnsiLowerCase('Hello éric!'));
+PrintLn(UpperCase(s));
+PrintLn(AnsiUpperCase(s));
+
+PrintLn(LowerCase(s));
+PrintLn(AnsiLowerCase(s));
+
+PrintLn(s.UpperCase);
+PrintLn(s.ToUpper);
+
+PrintLn(s.LowerCase);
+PrintLn(s.ToLower);

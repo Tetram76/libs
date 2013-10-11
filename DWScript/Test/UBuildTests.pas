@@ -2,7 +2,9 @@ unit UBuildTests;
 
 interface
 
-uses Classes, SysUtils, dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsUtils,
+uses
+   Classes, SysUtils,
+   dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsUtils, dwsErrors,
    dwsXPlatform, dwsSymbols, dwsFunctions, dwsJSON;
 
 type
@@ -16,8 +18,8 @@ type
          procedure SetUp; override;
          procedure TearDown; override;
 
-         procedure DoInclude(const scriptName : String; var scriptSource : String);
-         function DoNeedUnit(const unitName : String; var unitSource : String) : IdwsUnit;
+         procedure DoInclude(const scriptName : UnicodeString; var scriptSource : UnicodeString);
+         function DoNeedUnit(const unitName : UnicodeString; var unitSource : UnicodeString) : IdwsUnit;
 
          procedure Compilation;
          procedure Execution;
@@ -65,6 +67,7 @@ begin
    FCompiler:=TDelphiWebScript.Create(nil);
    FCompiler.OnInclude:=DoInclude;
    FCompiler.OnNeedUnit:=DoNeedUnit;
+   FCompiler.Config.Conditionals.Add('CONDITION');
 end;
 
 // TearDown
@@ -78,26 +81,19 @@ end;
 
 // DoInclude
 //
-procedure TBuildTests.DoInclude(const scriptName: string; var scriptSource: string);
+procedure TBuildTests.DoInclude(const scriptName: UnicodeString; var scriptSource: UnicodeString);
 var
-   sl : TStringList;
-   fileName : String;
+   fileName : UnicodeString;
 begin
    fileName:='BuildScripts\'+scriptName;
-   if FileExists(fileName) then begin
-      sl:=TStringList.Create;
-      try
-         sl.LoadFromFile(fileName);
-         scriptSource:=sl.Text;
-      finally
-         sl.Free;
-      end;
-   end else scriptSource:='';
+   if FileExists(fileName) then
+      scriptSource:=LoadTextFromFile(fileName)
+   else scriptSource:='';
 end;
 
 // DoNeedUnit
 //
-function TBuildTests.DoNeedUnit(const unitName : String; var unitSource : String) : IdwsUnit;
+function TBuildTests.DoNeedUnit(const unitName : UnicodeString; var unitSource : UnicodeString) : IdwsUnit;
 begin
    Result:=nil;
    DoInclude(unitName+'.pas', unitSource);
@@ -153,8 +149,8 @@ begin
 
             CheckEquals(False, prog.Msgs.HasErrors, FTests[i]+#13#10+prog.Msgs.AsInfo);
 
-            (prog as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
-            (prog as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+            (prog.GetSelf as TdwsProgram).InitExpr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
+            (prog.GetSelf as TdwsProgram).Expr.RecursiveEnumerateSubExprs(TEnumeratorEmptyCallBack(nil).EmptyCallBack);
 
          end;
 
@@ -172,56 +168,41 @@ end;
 //
 procedure TBuildTests.Execution;
 var
-   source, expectedResult : TStringList;
    i : Integer;
    prog : IdwsProgram;
    resultsFileName : String;
    output : String;
    exec : IdwsProgramExecution;
 begin
-   source:=TStringList.Create;
-   expectedResult:=TStringList.Create;
-   try
+   for i:=0 to FTests.Count-1 do begin
 
-      for i:=0 to FTests.Count-1 do begin
+      prog:=FCompiler.Compile(LoadTextFromFile(FTests[i]));
 
-         source.LoadFromFile(FTests[i]);
-
-         prog:=FCompiler.Compile(source.Text);
-
-         if not prog.Msgs.HasErrors then begin
-            try
-               exec:=prog.Execute;
-            except
-               on E: Exception do begin
-                  CheckEquals('', E.Message, FTests[i]);
-               end;
+      if not prog.Msgs.HasErrors then begin
+         try
+            exec:=prog.Execute;
+         except
+            on E: Exception do begin
+               CheckEquals('', E.Message, FTests[i]);
             end;
-            if prog.Msgs.Count+exec.Msgs.Count=0 then
-               output:=exec.Result.ToString
-            else begin
-               output:= 'Errors >>>>'#13#10
-                       +prog.Msgs.AsInfo
-                       +exec.Msgs.AsInfo
-                       +'Result >>>>'#13#10
-                       +exec.Result.ToString;
-            end;
-         end else begin
+         end;
+         if prog.Msgs.Count+exec.Msgs.Count=0 then
+            output:=exec.Result.ToString
+         else begin
             output:= 'Errors >>>>'#13#10
                     +prog.Msgs.AsInfo
+                    +exec.Msgs.AsInfo
+                    +'Result >>>>'#13#10
+                    +exec.Result.ToString;
          end;
-
-         resultsFileName:=ChangeFileExt(FTests[i], '.txt');
-         if FileExists(resultsFileName) then begin
-            expectedResult.LoadFromFile(resultsFileName);
-            CheckEquals(expectedResult.Text, output, FTests[i]);
-         end else CheckEquals('', output, FTests[i]);
-
+      end else begin
+         output:= 'Errors >>>>'#13#10
+                 +prog.Msgs.AsInfo
       end;
 
-   finally
-      expectedResult.Free;
-      source.Free;
+      resultsFileName:=ChangeFileExt(FTests[i], '.txt');
+      CheckEquals(LoadTextFromFile(resultsFileName), output, FTests[i]);
+
    end;
 end;
 

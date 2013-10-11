@@ -2,9 +2,10 @@ unit UMemoryTests;
 
 interface
 
-uses Classes, SysUtils, dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs,
-   Variants, ComObj, dwsXPlatform, dwsUtils,
-   dwsSymbols;
+uses
+   Classes, SysUtils, Types, Variants, ComObj,
+   dwsXPlatform, dwsUtils,
+   dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsSymbols;
 
 type
 
@@ -48,9 +49,11 @@ implementation
 
 type
    TTestObject = class
-      FAlreadyDestroyed : Boolean;
-      constructor Create;
-      destructor Destroy; override;
+      private
+         FAlreadyDestroyed : Boolean;
+      public
+         constructor Create;
+         destructor Destroy; override;
    end;
 
 var

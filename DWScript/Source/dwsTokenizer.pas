@@ -24,7 +24,8 @@ unit dwsTokenizer;
 interface
 
 uses
-  SysUtils, Classes, TypInfo, dwsErrors, dwsStrings, dwsXPlatform, dwsUtils
+  SysUtils, Classes, TypInfo,
+  dwsErrors, dwsStrings, dwsXPlatform, dwsUtils
   {$ifdef FPC},lazutf8{$endif};
 
 type
@@ -38,10 +39,10 @@ type
      ttCLASS, ttNIL, ttIS, ttAS, ttIMPLEMENTS, ttINDEX, ttOBJECT,
      ttVIRTUAL, ttOVERRIDE, ttREINTRODUCE, ttINHERITED, ttFINAL, ttNEW,
      ttABSTRACT, ttSEALED, ttSTATIC, ttPARTIAL, ttDEPRECATED, ttOVERLOAD,
-     ttEXTERNAL, ttFORWARD, ttEMPTY, ttIN,
+     ttEXTERNAL, ttFORWARD, ttINLINE, ttEMPTY, ttIN,
      ttENSURE, ttREQUIRE, ttINVARIANTS, ttOLD,
      ttINTERFACE, ttIMPLEMENTATION, ttINITIALIZATION, ttFINALIZATION, ttHELPER,
-     ttBEGIN, ttEND, ttBREAK, ttCONTINUE, ttEXIT,
+     ttASM, ttBEGIN, ttEND, ttBREAK, ttCONTINUE, ttEXIT,
      ttIF, ttTHEN, ttELSE, ttWHILE, ttREPEAT, ttUNTIL, ttFOR, ttTO, ttDOWNTO, ttDO,
      ttCASE,
      ttTRUE, ttFALSE,
@@ -49,17 +50,17 @@ type
      ttPLUS, ttMINUS,
      ttTIMES, ttDIVIDE, ttPERCENT, ttCARET, ttAT, ttDOLLAR, ttEXCLAMATION, ttQUESTION,
      ttEQ, ttNOTEQ, ttGTR, ttGTREQ, ttLESS, ttLESSEQ, ttEQGTR,
-     ttLESSLESS, ttGTRGTR,
+     ttLESSLESS, ttGTRGTR, ttPIPE, ttPIPEPIPE, ttAMP, ttAMPAMP,
      ttSEMI, ttCOMMA, ttCOLON,
      ttASSIGN, ttPLUS_ASSIGN, ttMINUS_ASSIGN, ttTIMES_ASSIGN, ttDIVIDE_ASSIGN,
      ttPERCENT_ASSIGN, ttCARET_ASSIGN, ttAT_ASSIGN,
-     ttBLEFT, ttBRIGHT, ttALEFT, ttARIGHT, ttCRIGHT,
-     ttDEFAULT, ttUSES, ttUNIT,
+     ttBLEFT, ttBRIGHT, ttALEFT, ttARIGHT, ttCLEFT, ttCRIGHT,
+     ttDEFAULT, ttUSES, ttUNIT, ttNAMESPACE,
      ttPRIVATE, ttPROTECTED, ttPUBLIC, ttPUBLISHED,
      ttPROGRAM,
 
      // Tokens for compatibility to Delphi
-     ttREGISTER, ttPASCAL, ttCDECL, ttSTDCALL, ttFASTCALL, ttREFERENCE);
+     ttREGISTER, ttPASCAL, ttCDECL, ttSAFECALL, ttSTDCALL, ttFASTCALL, ttREFERENCE);
 
    TTokenTypes = set of TTokenType;
 
@@ -68,17 +69,19 @@ type
    TTokenBuffer = record
       Len : Integer;
       Capacity : Integer;
-      Buffer : array of Char;
-      procedure AppendChar(c : Char);
+      CaseSensitive : Boolean;
+      Buffer : array of WideChar;
+      procedure AppendChar(c : WideChar);
       procedure Grow;
-      function LastChar : Char;
-      function ToStr : String; overload; inline;
-      procedure ToStr(var result : String); overload;
-      procedure AppendMultiToStr(var result : String);
-      procedure AppendToStr(var result : String);
-      procedure ToUpperStr(var result : String); overload;
-      function UpperFirstChar : Char;
-      function UpperMatchLen(const str : String) : Boolean;
+      function LastChar : WideChar;
+      function ToStr : UnicodeString; overload; inline;
+      procedure ToStr(var result : UnicodeString); overload;
+      procedure AppendMultiToStr(var result : UnicodeString);
+      procedure AppendToStr(var result : UnicodeString);
+      procedure ToUpperStr(var result : UnicodeString); overload;
+      function UpperFirstChar : WideChar;
+      function UpperMatchLen(const str : UnicodeString) : Boolean;
+      function MatchLen(const str : UnicodeString) : Boolean;
       procedure RaiseInvalidIntegerConstant;
       function BinToInt64 : Int64;
       function HexToInt64 : Int64;
@@ -86,17 +89,26 @@ type
       function ToFloat : Double;
       function ToType : TTokenType;
       function ToAlphaType : TTokenType;
+      function ToAlphaTypeCaseSensitive : TTokenType;
 
-      class function StringToTokenType(const str : String) : TTokenType; static;
+      class function StringToTokenType(const str : UnicodeString) : TTokenType; static;
    end;
 
    TToken = ^TTokenRecord;
    TTokenRecord = record
-      FScriptPos : TScriptPos;
-      FString : String;
-      FFloat : Double;
-      FInteger : Int64;
-      FTyp : TTokenType;
+      private
+         FString : UnicodeString;
+         FNext : TToken;
+
+      public
+         FScriptPos : TScriptPos;
+         FFloat : Double;
+         FInteger : Int64;
+         FTyp : TTokenType;
+
+         property AsString : UnicodeString read FString;
+
+         function EmptyString : Boolean; inline;
    end;
 
    TCharsType = set of AnsiChar;
@@ -110,15 +122,17 @@ type
       public
          destructor Destroy; override;
 
-         function FindTransition(c : Char) : TTransition; inline;
+         function FindTransition(c : WideChar) : TTransition; inline;
          procedure AddTransition(const chrs : TCharsType; o : TTransition);
+         procedure AddEOFTransition(o : TTransition);
+         procedure SetTransition(c : AnsiChar; o : TTransition); inline;
          procedure SetElse(o : TTransition);
    end;
 
    TConvertAction = (caNone, caClear, caName, caNameEscaped,
                      caBin, caHex, caInteger, caFloat,
                      caChar, caCharHex, caString, caMultiLineString,
-                     caSwitch, caDotDot);
+                     caSwitch, caDotDot, caAmp, caAmpAmp);
    TTransitionOptions = set of (toStart, toFinal);
 
    TTransition = class (TRefCountedObject)
@@ -127,6 +141,9 @@ type
          Start : Boolean; // Marks the begin of a Token
          Final : Boolean; // Marks the end of a Token
          Action : TConvertAction;
+         IsError : Boolean;
+         Consume : Boolean;
+         Seek : Boolean;
 
       public
          constructor Create(nstate: TState; opts: TTransitionOptions; actn: TConvertAction);
@@ -138,17 +155,21 @@ type
 
    TErrorTransition = class(TTransition)
       private
-         ErrorMessage : String;
+         ErrorMessage : UnicodeString;
 
       public
-         constructor Create(const msg : String);
+         constructor Create(const msg : UnicodeString);
    end;
 
    TCheckTransition = class(TTransition);
-   TSeekTransition = class(TCheckTransition); // Transition, next Char
-   TConsumeTransition = class(TSeekTransition); // Transition, consume Char, next Char
+   TSeekTransition = class (TCheckTransition) // Transition, next WideChar
+      constructor Create(nstate: TState; opts: TTransitionOptions; actn: TConvertAction);
+   end;
+   TConsumeTransition = class (TSeekTransition) // Transition, consume WideChar, next WideChar
+      constructor Create(nstate: TState; opts: TTransitionOptions; actn: TConvertAction);
+   end;
 
-   TSwitchHandler = function(const switchName : String) : Boolean of object;
+   TSwitchHandler = function(const switchName : UnicodeString) : Boolean of object;
 
    TTokenizer = class;
 
@@ -159,6 +180,7 @@ type
          FReservedNames : TTokenTypes;
          FSymbolTokens : TTokenTypes;
          FReservedTokens : TTokenTypes;
+         FCaseSensitive : Boolean;
 
       protected
          function CreateState : TState;
@@ -175,15 +197,17 @@ type
          property ReservedNames : TTokenTypes read FReservedNames write FReservedNames;
          property SymbolTokens : TTokenTypes read FSymbolTokens write FSymbolTokens;
          property ReservedTokens : TTokenTypes read FReservedTokens;
+         property CaseSensitive : Boolean read FCaseSensitive write FCaseSensitive;
    end;
 
    TTokenizerSourceInfo = record
-      FText : String;
+      FText : UnicodeString;
       FDefaultPos : TScriptPos;
       FHotPos : TScriptPos;
       FCurPos : TScriptPos;
-      FPosPtr : PChar;
+      FPosPtr : PWideChar;
    end;
+   PTokenizerSourceInfo = ^TTokenizerSourceInfo;
 
    TTokenizerConditional = (tcIf, tcElse);
    TTokenizerConditionalInfo = record
@@ -207,8 +231,7 @@ type
          FConditionalDefines : IAutoStrings;
          FConditionalDepth : TSimpleStack<TTokenizerConditionalInfo>;
 
-         FTokenStore : array of TToken;
-         FTokenStoreCount : Integer;
+         FTokenPool : TToken;
 
          FSourceStack : array of TTokenizerSourceInfo;
          FOnEndSourceFile : TTokenizerEndSourceFileEvent;
@@ -221,11 +244,12 @@ type
          procedure HandleHexa(var tokenBuf : TTokenBuffer; var result : TToken);
          procedure HandleInteger(var tokenBuf : TTokenBuffer; var result : TToken);
          procedure HandleFloat(var tokenBuf : TTokenBuffer; var result : TToken);
+         function  HandleSwitch : Boolean;
 
          procedure ConsumeToken;
 
          procedure ReadToken;
-         procedure AddCompilerStopFmtTokenBuffer(const formatString : String);
+         procedure AddCompilerStopFmtTokenBuffer(const formatString : UnicodeString);
 
       public
          constructor Create(rules : TTokenizerRules; msgs : TdwsCompileMessageList);
@@ -245,20 +269,23 @@ type
          function TestName : Boolean;
          function TestAnyName : Boolean;
 
-         function TestDeleteNamePos(var aName : String; var aPos : TScriptPos) : Boolean; inline;
-         function TestDeleteAnyNamePos(var aName : String; var aPos : TScriptPos) : Boolean; inline;
+         function TestDeleteNamePos(var aName : UnicodeString; var aPos : TScriptPos) : Boolean; inline;
+         function TestDeleteAnyNamePos(var aName : UnicodeString; var aPos : TScriptPos) : Boolean; inline;
+
+         procedure SkipTo(t : TTokenType);
 
          procedure SimulateToken(t : TTokenType; const scriptPos : TScriptPos);
-         procedure SimulateStringToken(const scriptPos : TScriptPos; const str : String);
-         procedure SimulateNameToken(const scriptPos : TScriptPos; const name : String);
+         procedure SimulateStringToken(const scriptPos : TScriptPos; const str : UnicodeString);
+         procedure SimulateNameToken(const scriptPos : TScriptPos; const name : UnicodeString);
 
-         property PosPtr : PChar read FSource.FPosPtr;
-         property Text : String read FSource.FText;
+         property PosPtr : PWideChar read FSource.FPosPtr;
+         property Text : UnicodeString read FSource.FText;
          property DefaultPos : TScriptPos read FSource.FDefaultPos;
          property HotPos : TScriptPos read FSource.FHotPos;
          property CurrentPos : TScriptPos read FSource.FCurPos;
 
          property ConditionalDepth : TSimpleStack<TTokenizerConditionalInfo> read FConditionalDepth;
+         property Rules : TTokenizerRules read FRules;
 
          property SwitchHandler : TSwitchHandler read FSwitchHandler write FSwitchHandler;
          property SwitchProcessor : TSwitchHandler read FSwitchProcessor write FSwitchProcessor;
@@ -267,7 +294,7 @@ type
    end;
 
 const
-   cTokenStrings : array [TTokenType] of String = (
+   cTokenStrings : array [TTokenType] of UnicodeString = (
      '', 'StrVal', 'IntVal', 'FloatVal', 'NAME', 'SWITCH',
      'LAZY', 'VAR', 'CONST', 'RESOURCESTRING',
      'TYPE', 'RECORD', 'ARRAY', 'SET', '.', '..', 'OF', 'ENUM', 'FLAGS',
@@ -276,10 +303,10 @@ const
      'CLASS', 'NIL', 'IS', 'AS', 'IMPLEMENTS', 'INDEX', 'OBJECT',
      'VIRTUAL', 'OVERRIDE', 'REINTRODUCE', 'INHERITED', 'FINAL', 'NEW',
      'ABSTRACT', 'SEALED', 'STATIC', 'PARTIAL', 'DEPRECATED', 'OVERLOAD',
-     'EXTERNAL', 'FORWARD', 'EMPTY', 'IN',
+     'EXTERNAL', 'FORWARD', 'INLINE', 'EMPTY', 'IN',
      'ENSURE', 'REQUIRE', 'INVARIANTS', 'OLD',
      'INTERFACE', 'IMPLEMENTATION', 'INITIALIZATION', 'FINALIZATION', 'HELPER',
-     'BEGIN', 'END', 'BREAK', 'CONTINUE', 'EXIT',
+     'ASM', 'BEGIN', 'END', 'BREAK', 'CONTINUE', 'EXIT',
      'IF', 'THEN', 'ELSE', 'WHILE', 'REPEAT', 'UNTIL', 'FOR', 'TO', 'DOWNTO', 'DO',
      'CASE',
      'TRUE', 'FALSE',
@@ -287,15 +314,15 @@ const
      '+', '-',
      '*', '/', '%', '^', '@', '$', '!', '?',
      '=', '<>', '>', '>=', '<', '<=', '=>',
-     '<<', '>>',
+     '<<', '>>', '|', '||', '&', '&&',
      ';', ',', ':',
      ':=', '+=', '-=', '*=', '/=',
      '%=', '^=', '@=',
-     '(', ')', '[', ']', '}',
-     'DEFAULT', 'USES', 'UNIT',
+     '(', ')', '[', ']', '{', '}',
+     'DEFAULT', 'USES', 'UNIT', 'NAMESPACE',
      'PRIVATE', 'PROTECTED', 'PUBLIC', 'PUBLISHED',
      'PROGRAM',
-     'REGISTER', 'PASCAL', 'CDECL', 'STDCALL', 'FASTCALL', 'REFERENCE'
+     'REGISTER', 'PASCAL', 'CDECL', 'SAFECALL', 'STDCALL', 'FASTCALL', 'REFERENCE'
      );
 
 // ------------------------------------------------------------------
@@ -309,9 +336,16 @@ implementation
 const
    cFormatSettings : TFormatSettings = ( DecimalSeparator : '.' );
 
+// EmptyString
+//
+function TTokenRecord.EmptyString : Boolean;
+begin
+   Result:=(FString='');
+end;
+
 // AppendChar
 //
-procedure TTokenBuffer.AppendChar(c : Char);
+procedure TTokenBuffer.AppendChar(c : WideChar);
 begin
    if Len>=Capacity then Grow;
    Buffer[Len]:=c;
@@ -330,7 +364,7 @@ end;
 
 // LastChar
 //
-function TTokenBuffer.LastChar : Char;
+function TTokenBuffer.LastChar : WideChar;
 begin
    if Len>0 then
       Result:=Buffer[Len-1]
@@ -339,39 +373,39 @@ end;
 
 // ToStr
 //
-function TTokenBuffer.ToStr : String;
+function TTokenBuffer.ToStr : UnicodeString;
 begin
    ToStr(Result);
 end;
 
 // ToStr
 //
-procedure TTokenBuffer.ToStr(var result : String);
+procedure TTokenBuffer.ToStr(var result : UnicodeString);
 begin
    if Len=0 then
       result:=''
    else begin
       SetLength(result, Len);
-      Move(Buffer[0], Pointer(result)^, Len*SizeOf(Char));
+      Move(Buffer[0], Pointer(result)^, Len*SizeOf(WideChar));
    end;
 end;
 
 // AppendToStr
 //
-procedure TTokenBuffer.AppendToStr(var result : String);
+procedure TTokenBuffer.AppendToStr(var result : UnicodeString);
 var
    n : Integer;
 begin
    if Len>0 then begin
       n:=Length(result);
       SetLength(result, n+Len);
-      Move(Buffer[0], PChar(Pointer(result))[n], Len*SizeOf(Char));
+      Move(Buffer[0], PWideChar(Pointer(result))[n], Len*SizeOf(WideChar));
    end;
 end;
 
 // AppendMultiToStr
 //
-procedure TTokenBuffer.AppendMultiToStr(var result : String);
+procedure TTokenBuffer.AppendMultiToStr(var result : UnicodeString);
 var
    i, n, k, minWhite, white : Integer;
    leftWhite, firstIsCRLF, firstLine : Boolean;
@@ -451,21 +485,21 @@ end;
 
 // ToUpperStr
 //
-procedure TTokenBuffer.ToUpperStr(var result : String);
+procedure TTokenBuffer.ToUpperStr(var result : UnicodeString);
 var
    i : Integer;
-   ch : Char;
-   pResult : PChar;
+   ch : WideChar;
+   pResult : PWideChar;
 begin
    if Len=0 then
       result:=''
    else begin
       SetLength(result, Len);
-      pResult:=PChar(result);
+      pResult:=PWideChar(result);
       for i:=0 to Len-1 do begin
          ch:=Buffer[i];
          case ch of
-            'a'..'z' : pResult[i]:=Char(Word(ch) xor $0020)
+            'a'..'z' : pResult[i]:=WideChar(Word(ch) xor $0020)
          else
             pResult[i]:=ch;
          end;
@@ -475,14 +509,14 @@ end;
 
 // UpperFirstChar
 //
-function TTokenBuffer.UpperFirstChar : Char;
+function TTokenBuffer.UpperFirstChar : WideChar;
 begin
    if Len=0 then
       Result:=#0
    else begin
       Result:=Buffer[0];
       case Result of
-         'a'..'z' : Result:=Char(Word(Result) xor $0020)
+         'a'..'z' : Result:=WideChar(Word(Result) xor $0020)
       end;
    end;
 end;
@@ -519,7 +553,6 @@ var
    i : Integer;
    v : Integer;
 begin
-   //Result:=StrToInt64(ToStr);
    if Buffer[0]='$' then
       i:=1     // $ form
    else i:=2;  // 0x form
@@ -576,7 +609,7 @@ var
    buf : Extended;
 begin
    AppendChar(#0);
-   if not TryTextToFloat(PChar(@Buffer[0]), buf, cFormatSettings) then
+   if not TryTextToFloat(PWideChar(@Buffer[0]), buf, cFormatSettings) then
       raise EConvertError.Create('');
    Result:=buf;
 end;
@@ -607,43 +640,44 @@ begin
          else if Len=2 then
             if Buffer[1]='=' then
                Result := ttPLUS_ASSIGN; // '+='
-     '-':
+      '-':
          if Len=1 then
             Result := ttMINUS
          else if Len=2 then
             if Buffer[1]='=' then
                Result := ttMINUS_ASSIGN; // '-='
-     '@':
+      '@':
          if Len=1 then
             Result := ttAT
          else if Len=2 then
             if Buffer[1]='=' then
                Result := ttAT_ASSIGN; // '@='
-     '%':
+      '%':
          if Len=1 then
             Result := ttPERCENT
          else if Len=2 then
             if Buffer[1]='=' then
                Result := ttPERCENT_ASSIGN; // '%='
-     '^':
+      '^':
          if Len=1 then
             Result := ttCARET
          else if Len=2 then
             if Buffer[1]='=' then
                Result := ttCARET_ASSIGN; // '^='
-     ';': Result := ttSEMI;
-     '(': Result := ttBLEFT;
-     ')': Result := ttBRIGHT;
-     '[': Result := ttALEFT;
-     ']': Result := ttARIGHT;
-     '!': Result := ttEXCLAMATION;
-     '?': Result := ttQUESTION;
-     '=': if Len=1 then
+      ';': Result := ttSEMI;
+      '(': Result := ttBLEFT;
+      ')': Result := ttBRIGHT;
+      '[': Result := ttALEFT;
+      ']': Result := ttARIGHT;
+      '!': Result := ttEXCLAMATION;
+      '?': Result := ttQUESTION;
+      '=':
+         if Len=1 then
             Result := ttEQ
          else if Len=2 then
             if Buffer[1]='>' then
                Result := ttEQGTR;
-     '<':
+      '<':
          if Len=1 then // '<'
             Result := ttLESS
          else if Len=2 then case Buffer[1] of
@@ -651,29 +685,44 @@ begin
             '>' : Result := ttNOTEQ;      // '<>'
             '<' : Result := ttLESSLESS;   // '<<'
          end;
-     '>':
+      '>':
          if Len=1 then // '>'
             Result := ttGTR
          else if Len=2 then case Buffer[1] of
             '=' : Result := ttGTREQ;      // '>='
             '>' : Result := ttGTRGTR;     // '>>'
          end;
-     ':':
+      ':':
          if Len=1 then // ':'
             Result := ttCOLON
          else if Len=2 then
             if Buffer[1]='=' then
                Result := ttASSIGN; // ':='
-     ',': Result := ttCOMMA;
-     '}': Result := ttCRIGHT;
-     '.':
+      ',': Result := ttCOMMA;
+      '{': Result := ttCLEFT;
+      '}': Result := ttCRIGHT;
+      '.':
          if Len=1 then
             Result := ttDOT;
-     '$':
+      '$':
          if Len=1 then
             Result := ttDOLLAR;
+      '|':
+         if Len=1 then
+            Result := ttPIPE
+         else if Len=2 then
+            if Buffer[1]='|' then
+               Result := ttPIPEPIPE;
+      '&':
+         if Len=1 then
+            Result := ttAMP
+         else if Len=2 then
+            if Buffer[1]='&' then
+               Result := ttAMPAMP;
    else
-      Result:=ToAlphaType;
+      if CaseSensitive then
+         Result:=ToAlphaTypeCaseSensitive
+      else Result:=ToAlphaType;
    end;
 end;
 
@@ -681,24 +730,24 @@ end;
 //
 const
    cAlphaTypeTokens : TTokenTypes = [
-      ttAND, ttARRAY, ttABSTRACT, ttAS,
+      ttAND, ttARRAY, ttABSTRACT, ttAS, ttASM,
       ttBEGIN, ttBREAK,
       ttCONST, ttCLASS, ttCONSTRUCTOR, ttCASE, ttCDECL, ttCONTINUE,
       ttDO, ttDOWNTO, ttDIV, ttDEFAULT, ttDESTRUCTOR, ttDEPRECATED,
       ttELSE, ttEMPTY, ttEND, ttENSURE, ttENUM, ttEXCEPT, ttEXIT, ttEXTERNAL,
       ttFALSE, ttFINAL, ttFINALIZATION, ttFINALLY, ttFLAGS, ttFOR,
       ttFORWARD, ttFUNCTION, ttHELPER,
-      ttIF, ttIMPLIES, ttIMPLEMENTS, ttIN, ttINITIALIZATION, ttINVARIANTS,
+      ttIF, ttIMPLIES, ttIMPLEMENTS, ttIN, ttINITIALIZATION, ttINLINE, ttINVARIANTS,
       ttIS, ttINHERITED, ttINDEX, ttINTERFACE, ttIMPLEMENTATION,
       ttLAMBDA, ttLAZY,
       ttMETHOD, ttMOD,
-      ttNEW, ttNOT, ttNIL,
+      ttNAMESPACE, ttNEW, ttNIL, ttNOT,
       ttOBJECT, ttOF, ttOLD, ttON, ttOPERATOR, ttOR, ttOVERLOAD, ttOVERRIDE,
       ttPARTIAL, ttPROCEDURE, ttPROPERTY, ttPASCAL, ttPROGRAM,
       ttPRIVATE, ttPROTECTED, ttPUBLIC, ttPUBLISHED,
       ttRECORD, ttREAD, ttRAISE, ttREINTRODUCE, ttREFERENCE, ttREGISTER,
       ttREPEAT, ttREQUIRE, ttRESOURCESTRING,
-      ttSAR, ttSEALED, ttSHL, ttSHR, ttSTATIC, ttSTDCALL,
+      ttSAFECALL, ttSAR, ttSEALED, ttSET, ttSHL, ttSHR, ttSTATIC, ttSTDCALL,
       ttTHEN, ttTO, ttTRUE, ttTRY, ttTYPE,
       ttUNIT, ttUNTIL, ttUSES,
       ttVAR, ttVIRTUAL,
@@ -706,7 +755,7 @@ const
       ttXOR ];
 type
    TTokenAlphaLookup = record
-      Alpha : String;
+      Alpha : UnicodeString;
       Token : TTokenType;
    end;
    TTokenAlphaLookups = array of TTokenAlphaLookup;
@@ -717,7 +766,7 @@ var
 procedure PrepareAlphaToTokenType;
 var
    n, len : Integer;
-   tokenName : String;
+   tokenName : UnicodeString;
    tt : TTokenType;
 begin
    for tt in cAlphaTypeTokens do begin
@@ -727,7 +776,7 @@ begin
       n:=Length(vAlphaToTokenType[len][tokenName[3]]);
       SetLength(vAlphaToTokenType[len][tokenName[3]], n+1);
       with vAlphaToTokenType[len][tokenName[3]][n] do begin
-         Alpha:=Copy(tokenName, 3, MaxInt);
+         Alpha:=StrDeleteLeft(tokenName, 2);
          Token:=tt;
       end;
    end;
@@ -739,17 +788,17 @@ end;
 
 // UpperMatchLen
 //
-function TTokenBuffer.UpperMatchLen(const str : String) : Boolean;
+function TTokenBuffer.UpperMatchLen(const str : UnicodeString) : Boolean;
 var
    i : Integer;
-   p : PChar;
-   ch : Char;
+   p : PWideChar;
+   ch : WideChar;
 begin
-   p:=PChar(Pointer(str));
+   p:=PWideChar(Pointer(str));
    for i:=1 to Len-1 do begin
       ch:=Buffer[i];
       case ch of
-         'a'..'z' : if Char(Word(ch) xor $0020)<>p[i] then Exit(False);
+         'a'..'z' : if WideChar(Word(ch) xor $0020)<>p[i] then Exit(False);
       else
          if ch<>p[i] then Exit(False);
       end;
@@ -761,14 +810,14 @@ end;
 //
 function TTokenBuffer.ToAlphaType : TTokenType;
 var
-   ch : Char;
+   ch : WideChar;
    i : Integer;
    lookups : PTokenAlphaLookups;
 begin
    if (Len<2) or (Len>14) then Exit(ttNAME);
    ch:=Buffer[0];
    case ch of
-      'a'..'x' : lookups:=@vAlphaToTokenType[Len][Char(Word(ch) xor $0020)];
+      'a'..'x' : lookups:=@vAlphaToTokenType[Len][WideChar(Word(ch) xor $0020)];
       'A'..'X' : lookups:=@vAlphaToTokenType[Len][ch];
    else
       Exit(ttNAME);
@@ -780,11 +829,53 @@ begin
    Result:=ttNAME;
 end;
 
+// MatchLen
+//
+function TTokenBuffer.MatchLen(const str : UnicodeString) : Boolean;
+var
+   i : Integer;
+   p : PWideChar;
+   ch : WideChar;
+begin
+   p:=PWideChar(Pointer(str));
+   for i:=1 to Len-1 do begin
+      ch:=Buffer[i];
+      case ch of
+         'a'..'z' : if WideChar(Word(ch) xor $0020)<>p[i] then Exit(False);
+      else
+         Exit(False);
+      end;
+   end;
+   Result:=True;
+end;
+
+// ToAlphaTypeCaseSensitive
+//
+function TTokenBuffer.ToAlphaTypeCaseSensitive : TTokenType;
+var
+   ch : WideChar;
+   i : Integer;
+   lookups : PTokenAlphaLookups;
+begin
+   if (Len<2) or (Len>14) then Exit(ttNAME);
+   ch:=Buffer[0];
+   case ch of
+      'a'..'x' : lookups:=@vAlphaToTokenType[Len][WideChar(Word(ch) xor $0020)];
+   else
+      Exit(ttNAME);
+   end;
+   for i:=0 to High(lookups^) do begin
+      if MatchLen(lookups^[i].Alpha) then
+         Exit(lookups^[i].Token);
+   end;
+   Result:=ttNAME;
+end;
+
 // StringToTokenType
 //
-class function TTokenBuffer.StringToTokenType(const str : String) : TTokenType;
+class function TTokenBuffer.StringToTokenType(const str : UnicodeString) : TTokenType;
 var
-   c : Char;
+   c : WideChar;
    buffer : TTokenBuffer;
 begin
    if str='' then Exit(ttNone);
@@ -811,7 +902,7 @@ end;
 
 // FindTransition
 //
-function TState.FindTransition(c : Char) : TTransition;
+function TState.FindTransition(c : WideChar) : TTransition;
 begin
    if c>#127 then
       c:=#127;
@@ -827,9 +918,24 @@ begin
    for c:=#0 to #127 do
       if c in chrs then begin
          if FTransitions[c]=nil then
-            FTransitions[c]:=o;
+            SetTransition(c, o);
       end;
    FOwnedTransitions.Add(o);
+end;
+
+// AddEOFTransition
+//
+procedure TState.AddEOFTransition(o : TTransition);
+begin
+   SetTransition(#0, o);
+   FOwnedTransitions.Add(o);
+end;
+
+// SetTransition
+//
+procedure TState.SetTransition(c : AnsiChar; o : TTransition);
+begin
+   FTransitions[c]:=o;
 end;
 
 // SetElse
@@ -840,8 +946,8 @@ var
 begin
    for c:=#1 to #127 do
       if FTransitions[c]=nil then
-        FTransitions[c]:=o;
-  FOwnedTransitions.Add(o);
+         SetTransition(c, o);
+   FOwnedTransitions.Add(o);
 end;
 
 // ------------------
@@ -875,9 +981,34 @@ end;
 // ------------------ TErrorTransition ------------------
 // ------------------
 
-constructor TErrorTransition.Create(const msg : String);
+constructor TErrorTransition.Create(const msg : UnicodeString);
 begin
+   IsError:=True;
    ErrorMessage:=msg;
+end;
+
+// ------------------
+// ------------------ TSeekTransition ------------------
+// ------------------
+
+// Create
+//
+constructor TSeekTransition.Create(nstate: TState; opts: TTransitionOptions; actn: TConvertAction);
+begin
+   inherited;
+   Seek:=True;
+end;
+
+// ------------------
+// ------------------ TConsumeTransition ------------------
+// ------------------
+
+// Create
+//
+constructor TConsumeTransition.Create(nstate: TState; opts: TTransitionOptions; actn: TConvertAction);
+begin
+   inherited;
+   Consume:=True;
 end;
 
 // ------------------
@@ -892,8 +1023,7 @@ begin
    FTokenBuf.Grow;
    FRules := rules;
    FStartState := FRules.StartState;
-
-   SetLength(FTokenStore, 8);
+   FTokenBuf.CaseSensitive := rules.CaseSensitive;
 
    FConditionalDepth:=TSimpleStack<TTokenizerConditionalInfo>.Create;
 end;
@@ -905,9 +1035,10 @@ begin
    if FToken<>nil then Dispose(FToken);
    if FNextToken<>nil then Dispose(FNextToken);
 
-   while FTokenStoreCount>0 do begin
-      Dec(FTokenStoreCount);
-      Dispose(FTokenStore[FTokenStoreCount]);
+   while FTokenPool<>nil do begin
+      FToken:=FTokenPool;
+      FTokenPool:=FToken.FNext;
+      Dispose(FToken);
    end;
 
    FConditionalDepth.Free;
@@ -932,7 +1063,7 @@ begin
    FSource.FDefaultPos.SourceFile := sourceFile;
    FSource.FHotPos := DefaultPos;
    FSource.FCurPos := DefaultPos;
-   FSource.FPosPtr := PChar(Text);
+   FSource.FPosPtr := PWideChar(Text);
    FSource.FCurPos.Line := 1;
    FSource.FCurPos.Col := 1;
 end;
@@ -980,9 +1111,9 @@ end;
 
 // AddCompilerStopFmtTokenBuffer
 //
-procedure TTokenizer.AddCompilerStopFmtTokenBuffer(const formatString : String);
+procedure TTokenizer.AddCompilerStopFmtTokenBuffer(const formatString : UnicodeString);
 var
-   buf : String;
+   buf : UnicodeString;
 begin
    buf:=FTokenBuf.ToStr;
    FMsgs.AddCompilerStopFmt(CurrentPos, formatString, [buf]);
@@ -1080,7 +1211,7 @@ end;
 
 // TestDeleteNamePos
 //
-function TTokenizer.TestDeleteNamePos(var aName : String; var aPos : TScriptPos) : Boolean;
+function TTokenizer.TestDeleteNamePos(var aName : UnicodeString; var aPos : TScriptPos) : Boolean;
 begin
    if not TestName then
       Result:=False
@@ -1094,7 +1225,7 @@ end;
 
 // TestDeleteAnyNamePos
 //
-function TTokenizer.TestDeleteAnyNamePos(var aName : String; var aPos : TScriptPos) : Boolean;
+function TTokenizer.TestDeleteAnyNamePos(var aName : UnicodeString; var aPos : TScriptPos) : Boolean;
 begin
    if not TestAnyName then
       Result:=False
@@ -1104,6 +1235,14 @@ begin
       KillToken;
       Result:=True;
    end;
+end;
+
+// SkipTo
+//
+procedure TTokenizer.SkipTo(t : TTokenType);
+begin
+   while (not Test(t)) and Assigned(FToken) do
+      KillToken;
 end;
 
 // SimulateToken
@@ -1119,7 +1258,7 @@ end;
 
 // SimulateStringToken
 //
-procedure TTokenizer.SimulateStringToken(const scriptPos : TScriptPos; const str : String);
+procedure TTokenizer.SimulateStringToken(const scriptPos : TScriptPos; const str : UnicodeString);
 begin
    SimulateToken(ttStrVal, scriptPos);
    FToken.FString:=str;
@@ -1127,7 +1266,7 @@ end;
 
 // SimulateNameToken
 //
-procedure TTokenizer.SimulateNameToken(const scriptPos : TScriptPos; const name : String);
+procedure TTokenizer.SimulateNameToken(const scriptPos : TScriptPos; const name : UnicodeString);
 begin
    SimulateToken(ttNAME, scriptPos);
    FToken.FString:=name;
@@ -1150,35 +1289,25 @@ end;
 procedure TTokenizer.HandleChar(var tokenBuf : TTokenBuffer; var result : TToken);
 var
    tokenIntVal, n : Integer;
-   {$ifdef FPC}
-   us : UnicodeString;
-   {$endif}
 begin
    tokenIntVal:=FTokenBuf.ToInt64;
    case tokenIntVal of
       0..$FFFF : begin
-         {$ifdef FPC}
-         result.FString:=result.FString+UTF8Encode(WideChar(tokenIntVal));
-         {$else}
          n:=Length(result.FString)+1;
          SetLength(result.FString, n);
          result.FString[n]:=WideChar(tokenIntVal);
-         {$endif}
          result.FTyp:=ttStrVal;
       end;
       $10000..$10FFFF : begin
-         {$ifdef FPC}
-         result.FString:=result.FString+UnicodeToUTF8(tokenIntVal);
-         {$else}
          tokenIntVal:=tokenIntVal-$10000;
          n:=Length(result.FString)+2;
          SetLength(result.FString, n);
          result.FString[n-1]:=WideChar($D800+(tokenIntVal shr 10));
          result.FString[n]:=WideChar($DC00+(tokenIntVal and $3FF));
-         {$endif}
          result.FTyp:=ttStrVal;
       end;
    else
+      ReleaseToken;
       AddCompilerStopFmtTokenBuffer(TOK_InvalidCharConstant)
    end;
 end;
@@ -1187,8 +1316,13 @@ end;
 //
 procedure TTokenizer.HandleBin(var tokenBuf : TTokenBuffer; var result : TToken);
 begin
-   result.FInteger:=tokenBuf.BinToInt64;
-   result.FTyp:=ttIntVal;
+   try
+      result.FInteger:=tokenBuf.BinToInt64;
+      result.FTyp:=ttIntVal;
+   except
+      ReleaseToken;
+      raise;
+   end;
 end;
 
 // HandleHexa
@@ -1199,8 +1333,8 @@ begin
       result.FInteger:=tokenBuf.HexToInt64;
       result.FTyp:=ttIntVal;
    except
-      on e : Exception do
-         AddCompilerStopFmtTokenBuffer(TOK_InvalidHexConstant);
+      ReleaseToken;
+      AddCompilerStopFmtTokenBuffer(TOK_InvalidHexConstant);
    end;
 end;
 
@@ -1214,8 +1348,8 @@ begin
       result.FInteger:=tokenBuf.ToInt64;
       result.FTyp:=ttIntVal;
    except
-      on e : Exception do
-         AddCompilerStopFmtTokenBuffer(TOK_InvalidIntegerConstant);
+      ReleaseToken;
+      AddCompilerStopFmtTokenBuffer(TOK_InvalidIntegerConstant);
    end;
 end;
 
@@ -1227,8 +1361,29 @@ begin
       result.FFloat:=tokenBuf.ToFloat;
       result.FTyp:=ttFloatVal;
    except
-      on e : EConvertError do
-         AddCompilerStopFmtTokenBuffer(TOK_InvalidFloatConstant);
+      ReleaseToken;
+      AddCompilerStopFmtTokenBuffer(TOK_InvalidFloatConstant);
+   end;
+end;
+
+// HandleSwitch
+//
+function TTokenizer.HandleSwitch : Boolean;
+begin
+   Result:=False;
+   if Assigned(FSwitchHandler) then begin
+      FSource.FHotPos.SetLineCol(FToken.FScriptPos);
+
+      // Ask parser if we should create a token or not
+      FTokenBuf.ToUpperStr(FToken.FString);
+      if FSwitchHandler(FToken.FString) then begin
+         FToken.FTyp:=ttSWITCH;
+      end else begin
+         if FToken=nil then
+            AllocateToken;
+         FTokenBuf.Len:=0;
+         Exit(True);
+      end;
    end;
 end;
 
@@ -1237,7 +1392,7 @@ end;
 procedure TTokenizer.ConsumeToken;
 
    // don't trigger error for EOF
-   procedure DoErrorTransition(trns : TErrorTransition; ch : Char);
+   procedure DoErrorTransition(trns : TErrorTransition; ch : WideChar);
    begin
       if trns.ErrorMessage<>'' then begin
          case ch of
@@ -1254,84 +1409,78 @@ procedure TTokenizer.ConsumeToken;
    // return True to reset state and continue to next token
    function DoAction(action : TConvertAction) : Boolean;
    begin
-      try
-         case action of
-            caClear : begin
-               FTokenBuf.Len:=0;
-               FToken.FScriptPos:=DefaultPos;
-            end;
-
-            // Convert name to token
-            caName : begin
-               FToken.FTyp:=FTokenBuf.ToType;
-               FTokenBuf.ToStr(FToken.FString);
-            end;
-
-            // Convert escaped name to token
-            caNameEscaped : begin
-               FToken.FTyp:=ttNAME;
-               FTokenBuf.ToStr(FToken.FString);
-            end;
-
-            // converts ASCII code to character (decimal or hex)
-            caChar, caCharHex :
-               HandleChar(FTokenBuf, FToken);
-
-            // Concatenates the parts of a String constant
-            caString : begin
-               FTokenBuf.AppendToStr(FToken.FString);
-               FToken.FTyp:=ttStrVal;
-            end;
-
-            caMultiLineString : begin
-               FTokenBuf.AppendMultiToStr(FToken.FString);
-               FToken.FTyp:=ttStrVal;
-            end;
-
-            // Converts binary number to integer
-            caBin :
-               HandleBin(FTokenBuf, FToken);
-
-            // Converts hexadecimal number to integer
-            caHex :
-               HandleHexa(FTokenBuf, FToken);
-
-            // Converts integer constants
-            caInteger :
-               HandleInteger(FTokenBuf, FToken);
-
-            // Converts Floating Point numbers
-            caFloat :
-               HandleFloat(FTokenBuf, FToken);
-
-            caSwitch :
-               if Assigned(FSwitchHandler) then begin
-                  FSource.FHotPos.SetLineCol(FToken.FScriptPos);
-
-                  // Ask parser if we should create a token or not
-                  FTokenBuf.ToUpperStr(FToken.FString);
-                  if FSwitchHandler(FToken.FString) then begin
-                     FToken.FTyp:=ttSWITCH;
-                  end else begin
-                     if FToken=nil then
-                        AllocateToken;
-                     FTokenBuf.Len:=0;
-                     Exit(True);
-                  end;
-               end;
-
-            caDotDot : begin
-               FToken.FScriptPos:=CurrentPos;
-               FToken.FScriptPos.Col:=FToken.FScriptPos.Col-1;
-               FToken.FTyp:=ttDOTDOT;
-            end;
+      case action of
+         caClear : begin
+            FTokenBuf.Len:=0;
+            FToken.FScriptPos:=DefaultPos;
          end;
-         FTokenBuf.Len:=0;
-         Result:=False;
-      except
-         ReleaseToken;
-         raise;
+
+         // Convert name to token
+         caName : begin
+            FToken.FTyp:=FTokenBuf.ToType;
+            FTokenBuf.ToStr(FToken.FString);
+         end;
+
+         // Convert escaped name to token
+         caNameEscaped : begin
+            FToken.FTyp:=ttNAME;
+            FTokenBuf.ToStr(FToken.FString);
+         end;
+
+         // converts ASCII code to character (decimal or hex)
+         caChar, caCharHex :
+            HandleChar(FTokenBuf, FToken);
+
+         // Concatenates the parts of a String constant
+         caString : begin
+            FTokenBuf.AppendToStr(FToken.FString);
+            FToken.FTyp:=ttStrVal;
+         end;
+
+         caMultiLineString : begin
+            FTokenBuf.AppendMultiToStr(FToken.FString);
+            FToken.FTyp:=ttStrVal;
+         end;
+
+         // Converts binary number to integer
+         caBin :
+            HandleBin(FTokenBuf, FToken);
+
+         // Converts hexadecimal number to integer
+         caHex :
+            HandleHexa(FTokenBuf, FToken);
+
+         // Converts integer constants
+         caInteger :
+            HandleInteger(FTokenBuf, FToken);
+
+         // Converts Floating Point numbers
+         caFloat :
+            HandleFloat(FTokenBuf, FToken);
+
+         caSwitch :
+            if HandleSwitch then Exit(True);
+
+         caDotDot : begin
+            FToken.FScriptPos:=CurrentPos;
+            FToken.FScriptPos.Col:=FToken.FScriptPos.Col-1;
+            FToken.FTyp:=ttDOTDOT;
+         end;
+
+         caAmp : begin
+            FToken.FScriptPos:=CurrentPos;
+            FToken.FScriptPos.Col:=FToken.FScriptPos.Col-1;
+            FToken.FTyp:=ttAMP;
+         end;
+
+         caAmpAmp : begin
+            FToken.FScriptPos:=CurrentPos;
+            FToken.FScriptPos.Col:=FToken.FScriptPos.Col-2;
+            FToken.FTyp:=ttAMPAMP;
+         end;
       end;
+      FTokenBuf.Len:=0;
+      Result:=False;
    end;
 
    // process switch instruction
@@ -1353,8 +1502,7 @@ procedure TTokenizer.ConsumeToken;
 var
    state : TState;
    trns : TTransition;
-   trnsClassType : TClass;
-   pch : PChar;
+   pch : PWideChar;
 begin
    AllocateToken;
 
@@ -1368,17 +1516,15 @@ begin
    while Assigned(state) do begin
 
       // Find next state
-      //trns:=state.FindTransition(pch^);
       if pch^>#127 then
          trns:=state.FTransitions[#127]
       else trns:=state.FTransitions[pch^];
 
-      trnsClassType:=trns.ClassType;
-
       // Handle Errors
-      if trnsClassType=TErrorTransition then begin
-         // tokenizer errors will raise exceptions, EOF won't
-         DoErrorTransition(TErrorTransition(trns), pch^);
+      if trns.IsError then begin
+         DoErrorTransition(trns as TErrorTransition, pch^);
+         state:=FStartState;
+         FTokenBuf.Len:=0;
          if FSourceStack<>nil then begin
             EndSourceFile;
             pch:=PosPtr;
@@ -1392,15 +1538,16 @@ begin
          FToken.FScriptPos:=CurrentPos;
 
       // Add actual character to s
-      if trnsClassType=TConsumeTransition then
+      if trns.Consume then
          FTokenBuf.AppendChar(pch^);
 
       // Proceed to the next character
-      if (trnsClassType=TSeekTransition) or (trnsClassType=TConsumeTransition) then begin
+      if trns.Seek then begin
          Inc(FSource.FPosPtr);
-         if pch^=#10 then
-            FSource.FCurPos.NewLine
-         else FSource.FCurPos.IncCol;
+         if pch^=#10 then begin
+            Inc(FSource.FCurPos.Line);
+            FSource.FCurPos.Col:=1;
+         end else Inc(FSource.FCurPos.Col);
          Inc(pch);
       end;
 
@@ -1438,12 +1585,12 @@ end;
 //
 procedure TTokenizer.AllocateToken;
 begin
-   if FTokenStoreCount>0 then begin
-      Dec(FTokenStoreCount);
-      FToken:=FTokenStore[FTokenStoreCount];
+   if FTokenPool<>nil then begin
+      FToken:=FTokenPool;
+      FTokenPool:=FToken.FNext;
    end else New(FToken);
    FToken.FTyp:=ttNone;
-   FToken.FScriptPos:=cNullPos;
+   FToken.FScriptPos.Clear;
 end;
 
 // ReleaseToken
@@ -1451,10 +1598,10 @@ end;
 procedure TTokenizer.ReleaseToken;
 begin
    if FToken<>nil then begin
-      FTokenStore[FTokenStoreCount]:=FToken;
-      Inc(FTokenStoreCount);
-      if FToken.FString<>'' then
-         FToken.FString:='';
+      FToken.FNext:=FTokenPool;
+      FTokenPool:=FToken;
+      if FTokenPool.FString<>'' then
+         FTokenPool.FString:='';
       FToken:=nil;
    end;
 end;
