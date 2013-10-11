@@ -185,7 +185,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="DWScript" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\DWScript</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/DWScript</RepositoryExternalPath>
