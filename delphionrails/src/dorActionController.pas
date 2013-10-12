@@ -20,6 +20,9 @@ uses superobject, dorHTTPStub;
 
 type
   TActionController = class
+  private
+    FEtag: Boolean;
+    procedure CalcETag;
   protected
     // This empty method is called to force RTTI
     // Could be used for somethingelse later
@@ -39,12 +42,13 @@ type
     class function HavePeerCertificate: Boolean; virtual;
     class function SSLSubject(const key: AnsiString): AnsiString; virtual;
     class function SSLIssuer(const key: AnsiString): AnsiString; virtual;
+    procedure ETag;
   public
-    procedure Invoke; virtual;
+    function Invoke: Boolean; virtual;
   end;
 
 implementation
-uses dorSocketStub;
+uses dorSocketStub, Classes, dorOpenSSL;
 
 { TActionController }
 
@@ -58,6 +62,35 @@ begin
   Result := (CurrentDorThread as THTTPStub).ErrorCode;
 end;
 
+procedure TActionController.ETag;
+begin
+  FEtag := True;
+end;
+
+procedure TActionController.CalcETag;
+var
+  stream: TMemoryStream;
+  buffer: array[0..SHA_DIGEST_LENGTH - 1] of AnsiChar;
+  buffer2: array[0..(SHA_DIGEST_LENGTH * 2) - 1] of AnsiChar;
+begin
+  stream := TMemoryStream.Create;
+  try
+    stream.Size := Return.CalcSize;
+    Return.SaveTo(stream);
+    SHA1(stream.Memory, stream.Size, @buffer);
+    BinToHex(PAnsiChar(@buffer), PAnsiChar(@buffer2), SHA_DIGEST_LENGTH);
+
+    if Request['env'].AsObject.S['if-none-match'] = string(buffer2) then
+      SetErrorCode(304) else
+      begin
+        Response.AsObject.S['Cache-Control'] := 'max-age=946080000, public';
+        Response.AsObject.S['ETag'] := string(buffer2);
+      end;
+  finally
+    stream.Free;
+  end;
+end;
+
 class function TActionController.HavePeerCertificate: Boolean;
 begin
   Result := (CurrentDorThread as TClientStub).Source.HavePeerCertificate;
@@ -68,12 +101,14 @@ begin
   Result := (CurrentDorThread as TClientStub).Source.IsSSL;
 end;
 
-procedure TActionController.Invoke;
+function TActionController.Invoke: Boolean;
 var
   obj: ISuperObject;
   ctx: TSuperRttiContext;
   ite: TSuperAvlEntry;
 begin
+  Result := False;
+  FEtag := False;
   ctx := (CurrentDorThread as THTTPStub).Context;
   for obj in Params do
     if obj <> nil then
@@ -81,9 +116,10 @@ begin
 
   case TrySOInvoke(ctx, Self, Params.AsObject.S['action'] + '_' + Request.AsObject.S['method'], Params, obj) of
     irParamError: SetErrorCode(400);
-    irError:
-      SetErrorCode(500);
+    irError: SetErrorCode(500);
+    irMethothodError: Result := False;
   else
+    Result := True;
     for ite in Params.AsObject do
       if (ite.Value <> nil) and (ite.Value.DataPtr = nil) then
         Return.AsObject[ite.Name] := ite.Value;
@@ -92,6 +128,8 @@ begin
     if ErrorCode = 0 then
       SetErrorCode(200);
   end;
+  if FEtag then
+    CalcETag;
 end;
 
 class function TActionController.Params: ISuperObject;
