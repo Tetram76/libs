@@ -47,7 +47,7 @@ interface
 {$I GR32.inc}
 
 uses
-  GR32, GR32_System, GR32_Bindings, SysUtils;
+  GR32, GR32_Bindings, SysUtils;
 
 var
   MMX_ACTIVE: Boolean;
@@ -56,6 +56,7 @@ type
 { Function Prototypes }
   TBlendReg    = function(F, B: TColor32): TColor32;
   TBlendMem    = procedure(F: TColor32; var B: TColor32);
+  TBlendMems   = procedure(F: TColor32; B: PColor32; Count: Integer);
   TBlendRegEx  = function(F, B, M: TColor32): TColor32;
   TBlendMemEx  = procedure(F: TColor32; var B: TColor32; M: TColor32);
   TBlendRegRGB = function(F, B, W: TColor32): TColor32;
@@ -78,6 +79,7 @@ var
 { Function Variables }
   BlendReg: TBlendReg;
   BlendMem: TBlendMem;
+  BlendMems: TBlendMems;
 
   BlendRegEx: TBlendRegEx;
   BlendMemEx: TBlendMemEx;
@@ -150,9 +152,11 @@ var
 
 implementation
 
+uses
 {$IFDEF TARGET_x86}
-uses GR32_LowLevel;
+  GR32_LowLevel,
 {$ENDIF}
+  GR32_System;
 
 {$IFDEF OMIT_MMX}
 procedure EMMS;
@@ -218,6 +222,16 @@ begin
     R := Af[FX.R] + Ab[R];
     G := Af[FX.G] + Ab[G];
     B := Af[FX.B] + Ab[B];
+  end;
+end;
+
+procedure BlendMems_Pas(F: TColor32; B: PColor32; Count: Integer);
+begin
+  while Count > 0 do
+  begin
+    BlendMem(F, B^);
+    Inc(B);
+    Dec(Count);
   end;
 end;
 
@@ -738,7 +752,7 @@ const
   bias = $00800080;
 
 
-function BlendReg_ASM(F, B: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function BlendReg_ASM(F, B: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F
@@ -856,7 +870,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMem_ASM(F: TColor32; var B: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMem_ASM(F: TColor32; var B: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // EAX <- F
@@ -979,7 +993,152 @@ asm
 {$ENDIF}
 end;
 
-function BlendRegEx_ASM(F, B, M: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMems_ASM(F: TColor32; B: PColor32; Count: Integer); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x86}
+        TEST    ECX,ECX
+        JZ      @Done
+
+        PUSH    EBX
+        PUSH    ESI
+        PUSH    EDI
+
+        MOV     ESI,EAX
+        MOV     EDI,EDX
+
+@LoopStart:
+        MOV     EAX,[ESI]
+        TEST    EAX,$FF000000
+        JZ      @NextPixel
+
+        PUSH    ECX
+
+        MOV     ECX,EAX
+        SHR     ECX,24
+
+        CMP     ECX,$FF
+        JZ      @CopyPixel
+
+        MOV     EBX,EAX
+        AND     EAX,$00FF00FF
+        AND     EBX,$FF00FF00
+        IMUL    EAX,ECX
+        SHR     EBX,8
+        IMUL    EBX,ECX
+        ADD     EAX,bias
+        AND     EAX,$FF00FF00
+        SHR     EAX,8
+        ADD     EBX,bias
+        AND     EBX,$FF00FF00
+        OR      EAX,EBX
+
+        MOV     EDX,[EDI]
+        XOR     ECX,$000000FF
+        MOV     EBX,EDX
+        AND     EDX,$00FF00FF
+        AND     EBX,$FF00FF00
+        IMUL    EDX,ECX
+        SHR     EBX,8
+        IMUL    EBX,ECX
+        ADD     EDX,bias
+        AND     EDX,$FF00FF00
+        SHR     EDX,8
+        ADD     EBX,bias
+        AND     EBX,$FF00FF00
+        OR      EBX,EDX
+
+        ADD     EAX,EBX
+@CopyPixel:
+        OR      EAX,$FF000000
+        MOV     [EDI],EAX
+        POP     ECX
+
+@NextPixel:
+        ADD     ESI,4
+        ADD     EDI,4
+
+        DEC     ECX
+        JNZ     @LoopStart
+
+        POP     EDI
+        POP     ESI
+        POP     EBX
+
+@Done:
+        RET
+{$ENDIF}
+
+{$IFDEF TARGET_x64}
+        TEST    R8D,R8D
+        JZ      @Done
+
+        PUSH    RDI
+
+        MOV     R9,RCX
+        MOV     RDI,RDX
+
+@LoopStart:
+        MOV     ECX,[RSI]
+        TEST    ECX,$FF000000
+        JZ      @NextPixel
+
+        PUSH    R8
+
+        MOV     R8D,ECX
+        SHR     R8D,24
+
+        CMP     R8D,$FF
+        JZ      @CopyPixel
+
+        MOV     EAX,ECX
+        AND     ECX,$00FF00FF
+        AND     EAX,$FF00FF00
+        IMUL    ECX,R8D
+        SHR     EAX,8
+        IMUL    EAX,R8D
+        ADD     ECX,bias
+        AND     ECX,$FF00FF00
+        SHR     ECX,8
+        ADD     EAX,bias
+        AND     EAX,$FF00FF00
+        OR      ECX,EAX
+
+        MOV     EDX,[RDI]
+        XOR     R8D,$000000FF
+        MOV     EAX,EDX
+        AND     EDX,$00FF00FF
+        AND     EAX,$FF00FF00
+        IMUL    EDX, R8D
+        SHR     EAX,8
+        IMUL    EAX,R8D
+        ADD     EDX,bias
+        AND     EDX,$FF00FF00
+        SHR     EDX,8
+        ADD     EAX,bias
+        AND     EAX,$FF00FF00
+        OR      EAX,EDX
+
+        ADD     ECX,EAX
+@CopyPixel:
+        OR      ECX,$FF000000
+        MOV     [RDI],ECX
+        POP     R8
+
+@NextPixel:
+        ADD     R9,4
+        ADD     RDI,4
+
+        DEC     R8D
+        JNZ     @LoopStart
+
+        POP     RDI
+
+@Done:
+        RET
+{$ENDIF}
+end;
+
+function BlendRegEx_ASM(F, B, M: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F multiplied by master alpha (M)
@@ -1096,7 +1255,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMemEx_ASM(F: TColor32; var B: TColor32; M: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMemEx_ASM(F: TColor32; var B: TColor32; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // EAX <- F
@@ -1219,7 +1378,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendLine_ASM(Src, Dst: PColor32; Count: Integer); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendLine_ASM(Src, Dst: PColor32; Count: Integer); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // EAX <- Src
@@ -1380,7 +1539,7 @@ end;
 
 {$IFDEF TARGET_x86}
 
-function MergeReg_ASM(F, B: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function MergeReg_ASM(F, B: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
         // EAX <- F
         // EDX <- B
@@ -1558,7 +1717,7 @@ end;
 
 {$ENDIF}
 
-function CombineReg_ASM(X, Y, W: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function CombineReg_ASM(X, Y, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // combine RGBA channels of colors X and Y with the weight of X given in W
   // Result Z = W * X + (1 - W) * Y (all channels are combined, including alpha)
@@ -1663,7 +1822,7 @@ asm
 {$ENDIF}
 end;
 
-procedure CombineMem_ASM(X: TColor32; var Y: TColor32; W: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure CombineMem_ASM(X: TColor32; var Y: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // EAX <- F
@@ -1775,7 +1934,7 @@ asm
 {$ENDIF}
 end;
 
-procedure EMMS_ASM; {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure EMMS_ASM; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 end;
 
@@ -1821,7 +1980,7 @@ end;
 
 { MMX versions }
 
-function BlendReg_MMX(F, B: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function BlendReg_MMX(F, B: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F
@@ -1878,7 +2037,7 @@ end;
 
 {$IFDEF TARGET_x86}
 
-procedure BlendMem_MMX(F: TColor32; var B: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMem_MMX(F: TColor32; var B: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // EAX - Color X
   // [EDX] - Color Y
@@ -1911,7 +2070,7 @@ asm
 @2:     MOV       [EDX],EAX
 end;
 
-function BlendRegEx_MMX(F, B, M: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function BlendRegEx_MMX(F, B, M: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F
@@ -1953,7 +2112,7 @@ end;
 
 {$ENDIF}
 
-procedure BlendMemEx_MMX(F: TColor32; var B:TColor32; M: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMemEx_MMX(F: TColor32; var B:TColor32; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // blend foreground color (F) to a background color (B),
@@ -2041,7 +2200,7 @@ asm
 {$ENDIF}
 end;
 
-function BlendRegRGB_MMX(F, B, W: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function BlendRegRGB_MMX(F, B, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PXOR      MM2,MM2
@@ -2088,7 +2247,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMemRGB_MMX(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMemRGB_MMX(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PXOR      MM2,MM2
@@ -2137,7 +2296,7 @@ end;
 
 
 {$IFDEF TARGET_x86}
-procedure BlendLine_MMX(Src, Dst: PColor32; Count: Integer); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendLine_MMX(Src, Dst: PColor32; Count: Integer); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // EAX <- Src
   // EDX <- Dst
@@ -2194,7 +2353,7 @@ asm
 @4:
 end;
 
-procedure BlendLineEx_MMX(Src, Dst: PColor32; Count: Integer; M: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendLineEx_MMX(Src, Dst: PColor32; Count: Integer; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // EAX <- Src
   // EDX <- Dst
@@ -2258,7 +2417,7 @@ end;
 
 {$ENDIF}
 
-function CombineReg_MMX(X, Y, W: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function CombineReg_MMX(X, Y, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX - Color X
@@ -2327,7 +2486,7 @@ asm
 {$ENDIF}
 end;
 
-procedure CombineMem_MMX(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure CombineMem_MMX(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX - Color X
@@ -2417,7 +2576,7 @@ end;
 
 {$IFDEF TARGET_x86}
 
-procedure CombineLine_MMX(Src, Dst: PColor32; Count: Integer; W: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure CombineLine_MMX(Src, Dst: PColor32; Count: Integer; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // EAX <- Src
   // EDX <- Dst
@@ -2475,12 +2634,12 @@ end;
 
 {$ENDIF}
 
-procedure EMMS_MMX; {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure EMMS_MMX; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   EMMS
 end;
 
-function LightenReg_MMX(C: TColor32; Amount: Integer): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function LightenReg_MMX(C: TColor32; Amount: Integer): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD    MM0,EAX
@@ -2517,7 +2676,7 @@ end;
 
 { MMX Color algebra versions }
 
-function ColorAdd_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorAdd_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      MM0,EAX
@@ -2534,7 +2693,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorSub_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorSub_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      MM0,EAX
@@ -2551,7 +2710,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorModulate_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorModulate_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         PXOR      MM2,MM2
@@ -2578,7 +2737,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorMax_EMMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorMax_EMMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      MM0,EAX
@@ -2595,7 +2754,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorMin_EMMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorMin_EMMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      MM0,EAX
@@ -2612,7 +2771,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorDifference_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorDifference_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      MM0,EAX
@@ -2635,7 +2794,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorExclusion_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorExclusion_MMX(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         PXOR      MM2,MM2
@@ -2668,7 +2827,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorScale_MMX(C, W: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorScale_MMX(C, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         PXOR      MM2,MM2
@@ -2705,7 +2864,7 @@ end;
 
 {$IFNDEF OMIT_SSE2}
 
-function BlendReg_SSE2(F, B: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function BlendReg_SSE2(F, B: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F
@@ -2756,7 +2915,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMem_SSE2(F: TColor32; var B: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMem_SSE2(F: TColor32; var B: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // EAX - Color X
@@ -2825,7 +2984,121 @@ asm
 {$ENDIF}
 end;
 
-function BlendRegEx_SSE2(F, B, M: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMems_SSE2(F: TColor32; B: PColor32; Count: Integer); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x86}
+        TEST      ECX,ECX
+        JZ        @Done
+
+        TEST      EAX,$FF000000
+        JZ        @Done
+
+        PUSH      EBX
+
+        MOV       EBX,EAX
+        SHR       EBX,24
+
+        CMP       EBX,$FF
+        JZ        @CopyPixel
+
+        MOVD      XMM4,EAX
+        PXOR      XMM3,XMM3
+        PUNPCKLBW XMM4,XMM3
+        MOV       EBX,bias_ptr
+
+@LoopStart:
+        MOVD      XMM2,[EDX]
+        PUNPCKLBW XMM2,XMM3
+        MOVQ      XMM1,XMM4
+        PUNPCKLBW XMM1,XMM3
+        PUNPCKHWD XMM1,XMM1
+        MOVQ      XMM0,XMM4
+        PSUBW     XMM0,XMM2
+        PUNPCKHDQ XMM1,XMM1
+        PSLLW     XMM2,8
+        PMULLW    XMM0,XMM1
+        PADDW     XMM2,[EBX]
+        PADDW     XMM2,XMM0
+        PSRLW     XMM2,8
+        PACKUSWB  XMM2,XMM3
+        MOVD      [EDX],XMM2
+
+@NextPixel:
+        ADD       EDX,4
+
+        DEC       ECX
+        JNZ       @LoopStart
+
+        POP       EBX
+
+@Done:
+        RET
+
+@CopyPixel:
+        MOV       [EDX],EAX
+        ADD       EDX,4
+
+        DEC       ECX
+        JNZ       @CopyPixel
+
+        POP       EBX
+{$ENDIF}
+
+{$IFDEF TARGET_x64}
+        TEST      R8D,R8D
+        JZ        @Done
+
+        TEST      ECX,$FF000000
+        JZ        @Done
+
+        MOV       RAX,RCX
+        SHR       EAX,24
+
+        CMP       EAX,$FF
+        JZ        @CopyPixel
+
+        MOVD      XMM4,ECX
+        PXOR      XMM3,XMM3
+        PUNPCKLBW XMM4,XMM3
+        MOV       RAX,bias_ptr
+
+@LoopStart:
+        MOVD      XMM2,[RDX]
+        PUNPCKLBW XMM2,XMM3
+        MOVQ      XMM1,XMM4
+        PUNPCKLBW XMM1,XMM3
+        PUNPCKHWD XMM1,XMM1
+        MOVQ      XMM0,XMM4
+        PSUBW     XMM0,XMM2
+        PUNPCKHDQ XMM1,XMM1
+        PSLLW     XMM2,8
+        PMULLW    XMM0,XMM1
+        PADDW     XMM2,[RAX]
+        PADDW     XMM2,XMM0
+        PSRLW     XMM2,8
+        PACKUSWB  XMM2,XMM3
+        MOVD      [RDX], XMM2
+
+@NextPixel:
+        ADD       RDX,4
+
+        DEC       R8D
+        JNZ       @LoopStart
+
+@Done:
+        RET
+
+@CopyPixel:
+        MOV       [RDX],ECX
+        ADD       RDX,4
+
+        DEC       R8D
+        JNZ       @CopyPixel
+{$ENDIF}
+end;
+
+
+function BlendRegEx_SSE2(F, B, M: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   // blend foreground color (F) to a background color (B),
   // using alpha channel value of F
@@ -2909,7 +3182,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMemEx_SSE2(F: TColor32; var B:TColor32; M: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMemEx_SSE2(F: TColor32; var B:TColor32; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
   // blend foreground color (F) to a background color (B),
@@ -2998,7 +3271,7 @@ asm
 {$ENDIF}
 end;
 
-function BlendRegRGB_SSE2(F, B, W: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function BlendRegRGB_SSE2(F, B, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PXOR      XMM2,XMM2
@@ -3045,7 +3318,7 @@ asm
 {$ENDIF}
 end;
 
-procedure BlendMemRGB_SSE2(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMemRGB_SSE2(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PXOR      XMM2,XMM2
@@ -3105,7 +3378,7 @@ asm
 end;
 
 {$IFDEF TEST_BLENDMEMRGB128SSE4}
-procedure BlendMemRGB128_SSE4(F: TColor32; var B: TColor32; W: UInt64); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendMemRGB128_SSE4(F: TColor32; var B: TColor32; W: UInt64); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         MOVQ      XMM1,W
@@ -3180,7 +3453,7 @@ asm
 end;
 {$ENDIF}
 
-procedure BlendLine_SSE2(Src, Dst: PColor32; Count: Integer); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendLine_SSE2(Src, Dst: PColor32; Count: Integer); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 {$IFDEF FPC}
 const
   COpaque: QWORD = $FF000000FF000000;
@@ -3367,7 +3640,7 @@ asm
 end;
 
 
-procedure BlendLineEx_SSE2(Src, Dst: PColor32; Count: Integer; M: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure BlendLineEx_SSE2(Src, Dst: PColor32; Count: Integer; M: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX <- Src
@@ -3493,7 +3766,7 @@ asm
 {$ENDIF}
 end;
 
-function CombineReg_SSE2(X, Y, W: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function CombineReg_SSE2(X, Y, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX - Color X
@@ -3562,7 +3835,7 @@ asm
 {$ENDIF}
 end;
 
-procedure CombineMem_SSE2(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure CombineMem_SSE2(F: TColor32; var B: TColor32; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX - Color X
@@ -3652,7 +3925,7 @@ asm
 end;
 
 
-procedure CombineLine_SSE2(Src, Dst: PColor32; Count: Integer; W: TColor32); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure CombineLine_SSE2(Src, Dst: PColor32; Count: Integer; W: TColor32); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
   // EAX <- Src
@@ -3770,7 +4043,7 @@ asm
 {$ENDIF}
 end;
 
-function MergeReg_SSE2(F, B: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function MergeReg_SSE2(F, B: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
   { This is an implementation of the merge formula, as described
     in a paper by Bruce Wallace in 1981. Merging is associative,
@@ -3884,12 +4157,12 @@ asm
 {$ENDIF}
 end;
 
-procedure EMMS_SSE2; {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure EMMS_SSE2; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 end;
 
 
-function LightenReg_SSE2(C: TColor32; Amount: Integer): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function LightenReg_SSE2(C: TColor32; Amount: Integer): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD    XMM0,EAX
@@ -3927,7 +4200,7 @@ end;
 
 { SSE2 Color algebra}
 
-function ColorAdd_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorAdd_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      XMM0,EAX
@@ -3944,7 +4217,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorSub_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorSub_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      XMM0,EAX
@@ -3961,7 +4234,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorModulate_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorModulate_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         PXOR      XMM2,XMM2
@@ -3988,7 +4261,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorMax_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorMax_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      XMM0,EAX
@@ -4005,7 +4278,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorMin_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorMin_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      XMM0,EAX
@@ -4022,7 +4295,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorDifference_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorDifference_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         MOVD      XMM0,EAX
@@ -4045,7 +4318,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorExclusion_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorExclusion_SSE2(C1, C2: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         PXOR      XMM2,XMM2
@@ -4078,7 +4351,7 @@ asm
 {$ENDIF}
 end;
 
-function ColorScale_SSE2(C, W: TColor32): TColor32; {$IFDEF FPC} nostackframe; {$ENDIF}
+function ColorScale_SSE2(C, W: TColor32): TColor32; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_X86}
         PXOR      XMM2,XMM2
@@ -4152,27 +4425,28 @@ const
 
   FID_BLENDREG = 10;
   FID_BLENDMEM = 11;
-  FID_BLENDLINE = 12;
-  FID_BLENDREGEX = 13;
-  FID_BLENDMEMEX = 14;
-  FID_BLENDLINEEX = 15;
+  FID_BLENDMEMS = 12;
+  FID_BLENDLINE = 13;
+  FID_BLENDREGEX = 14;
+  FID_BLENDMEMEX = 15;
+  FID_BLENDLINEEX = 16;
 
-  FID_COLORMAX = 16;
-  FID_COLORMIN = 17;
-  FID_COLORAVERAGE = 18;
-  FID_COLORADD = 19;
-  FID_COLORSUB = 20;
-  FID_COLORDIV = 21;
-  FID_COLORMODULATE = 22;
-  FID_COLORDIFFERENCE = 23;
-  FID_COLOREXCLUSION = 24;
-  FID_COLORSCALE = 25;
-  FID_LIGHTEN = 26;
+  FID_COLORMAX = 17;
+  FID_COLORMIN = 18;
+  FID_COLORAVERAGE = 19;
+  FID_COLORADD = 20;
+  FID_COLORSUB = 21;
+  FID_COLORDIV = 22;
+  FID_COLORMODULATE = 23;
+  FID_COLORDIFFERENCE = 24;
+  FID_COLOREXCLUSION = 25;
+  FID_COLORSCALE = 26;
+  FID_LIGHTEN = 27;
 
-  FID_BLENDREGRGB = 27;
-  FID_BLENDMEMRGB = 28;
+  FID_BLENDREGRGB = 28;
+  FID_BLENDMEMRGB = 29;
 {$IFDEF TEST_BLENDMEMRGB128SSE4}
-  FID_BLENDMEMRGB128 = 29;
+  FID_BLENDMEMRGB128 = 30;
 {$ENDIF}
 
 procedure RegisterBindings;
@@ -4193,6 +4467,7 @@ begin
 
   BlendRegistry.RegisterBinding(FID_BLENDREG, @@BlendReg);
   BlendRegistry.RegisterBinding(FID_BLENDMEM, @@BlendMem);
+  BlendRegistry.RegisterBinding(FID_BLENDMEMS, @@BlendMems);
   BlendRegistry.RegisterBinding(FID_BLENDLINE, @@BlendLine);
   BlendRegistry.RegisterBinding(FID_BLENDREGEX, @@BlendRegEx);
   BlendRegistry.RegisterBinding(FID_BLENDMEMEX, @@BlendMemEx);
@@ -4231,6 +4506,7 @@ begin
   BlendRegistry.Add(FID_COMBINELINE, @CombineLine_Pas);
   BlendRegistry.Add(FID_BLENDREG, @BlendReg_Pas);
   BlendRegistry.Add(FID_BLENDMEM, @BlendMem_Pas);
+  BlendRegistry.Add(FID_BLENDMEMS, @BlendMems_Pas);
   BlendRegistry.Add(FID_BLENDLINE, @BlendLine_Pas);
   BlendRegistry.Add(FID_BLENDREGEX, @BlendRegEx_Pas);
   BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_Pas);
@@ -4253,6 +4529,7 @@ begin
   BlendRegistry.Add(FID_COMBINEMEM, @CombineMem_ASM, []);
   BlendRegistry.Add(FID_BLENDREG, @BlendReg_ASM, []);
   BlendRegistry.Add(FID_BLENDMEM, @BlendMem_ASM, []);
+  BlendRegistry.Add(FID_BLENDMEMS, @BlendMems_ASM, []);
   BlendRegistry.Add(FID_BLENDREGEX, @BlendRegEx_ASM, []);
   BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_ASM, []);
   BlendRegistry.Add(FID_BLENDLINE, @BlendLine_ASM, []);
@@ -4288,6 +4565,7 @@ begin
   BlendRegistry.Add(FID_COMBINELINE, @CombineLine_SSE2, [ciSSE2]);
   BlendRegistry.Add(FID_BLENDREG, @BlendReg_SSE2, [ciSSE2]);
   BlendRegistry.Add(FID_BLENDMEM, @BlendMem_SSE2, [ciSSE2]);
+  BlendRegistry.Add(FID_BLENDMEMS, @BlendMems_SSE2, [ciSSE2]);
   BlendRegistry.Add(FID_BLENDMEMEX, @BlendMemEx_SSE2, [ciSSE2]);
   BlendRegistry.Add(FID_BLENDLINE, @BlendLine_SSE2, [ciSSE2]);
   BlendRegistry.Add(FID_BLENDLINEEX, @BlendLineEx_SSE2, [ciSSE2]);

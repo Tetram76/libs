@@ -254,6 +254,7 @@
 {$IFDEF COMPILERFPC}
   {$DEFINE PLATFORM_INDEPENDENT}
   {$MODE Delphi}
+  {$ASMMODE INTEL}
 {$ENDIF}
 
 {$IFDEF COMPILERXE2_UP}
@@ -265,7 +266,7 @@
 {$IFNDEF COMPILER6_UP}
 {$IFNDEF COMPILERFPC}
 +--------------------------------------------------------------------+
-|  Graphics32 may only be installed with Delphi/BCB 6 (or higher)    |
+|  DocProcessor may only be installed with Delphi/BCB 6 (or higher)  |
 |   or Free Pascal / Lazarus                                         |
 +--------------------------------------------------------------------+
 {$ENDIF}
@@ -305,13 +306,11 @@
     {$IFDEF CPUI386}
       // target is an Intel 80386 or later.
       {$DEFINE TARGET_x86}
-      {$ASMMODE INTEL}
     {$ENDIF}
 
     {$IFDEF CPUX86_64}
       // target is a 64-bit processor (AMD or INTEL).
       {$DEFINE TARGET_x64}
-      {$ASMMODE INTEL}
     {$ENDIF}
 
     {$IFDEF CPUPOWERPC}
@@ -325,12 +324,6 @@
   {$IFDEF CPUX86_64}
     // target is a 64-bit processor (AMD or INTEL).
     {$DEFINE TARGET_x64}
-    {$ASMMODE INTEL}
-  {$ENDIF}
-
-  {$IFDEF CPUARM}
-    // target is an ARM processor.
-    {$DEFINE TARGET_ARM}
   {$ENDIF}
 {$ELSE}
   // check for XE2 64-Bit compiler define
@@ -343,117 +336,11 @@
 {$ENDIF}
 
 
-(*
-  Symbol BITS_GETTER:
-  -------------------
-
-*)
-
-{$IFDEF COMPILERFPC}
-  // Widgetsets other then Windows will want to implement BITS_GETTER
-  {$IFNDEF LCLWin32}
-    {$DEFINE BITS_GETTER}
-  {$ENDIF}
-{$ENDIF}
-
-
-(*
-  Symbol PUREPASCAL:
-  ------------------
-
-     Forces GR32 into pure pascal mode.
-
-
-   NOTE: Further work needed to make assembly routines FPC compatible.
-
-   NOTE: The DARWIN target of Free Pascal generates PIC code by default
-   Which isn't compatible with the current assembler, so force PUREPASCAL
-
-   NOTE: Due to several issues with the Delphi X64 compiler, PUREPASCAL is
-   defined. However, most of the assembler optimized code does already work.
-   (for issues please see http://qc.embarcadero.com/wc/qcmain.aspx?d=98616
-   and http://qc.embarcadero.com/wc/qcmain.aspx?d=98613)
-*)
-
-{$IFDEF COMPILERFPC}
-  {-$DEFINE PUREPASCAL}
-{$ENDIF}
-
-{$IFDEF TARGET_x64}
-  {-$DEFINE PUREPASCAL}
-{$ENDIF}
-
-{$IFDEF TARGET_ARM}
-  {$DEFINE PUREPASCAL}
-  {$DEFINE OMIT_MMX}
-  {$DEFINE OMIT_SSE2}
-{$ENDIF}
-
-{$IFDEF DARWIN}
-  {$DEFINE PUREPASCAL}
-{$ENDIF}
-
-(*
-  Symbol BITS_GETTER:
-  -------------------
-
-*)
-
-{$IFDEF COMPILERFPC}
-  // Widgetsets other then Windows will want to implement BITS_GETTER
-  {$IFNDEF LCLWin32}
-    {$DEFINE BITS_GETTER}
-  {$ENDIF}
-{$ENDIF}
-
-
-(*
-  Symbol NATIVE_SINCOS:
-  ---------------------
-
-     Use native FPU function to retrieve SIN/COS values for a given argument
-
-   NOTE: On older systems a native call is typically much faster than calling
-   Sin() and Cos() from a higher level library (such as the math/system unit)
-   separately. However, on 64-bit systems a call can be slower, due to
-   additional conversion between XMM registers and the FPU
-*)
-
-{$IFDEF PUREPASCAL}
-  {$DEFINE NATIVE_SINCOS}
-{$ENDIF}
-{$IFDEF TARGET_x64}
-  {$DEFINE NATIVE_SINCOS}
-{$ENDIF}
-
-
-(*
-  Symbol HAS_NATIVEINT:
-  ---------------------
-
-     With the latest compilers (Delphi XE1+ and FPC 2.6.0+) the type NativeInt
-     is available which has the native size of the OS (32-Bit or 64-Bit). Thus,
-     it can be used to perform pointer arithmetrics.
-
-   NOTE: Please do not use simple Cardinal() or Integer() casts on pointers only
-*)
-
-{$IFDEF COMPILERXE1_UP}
-  {$DEFINE HAS_NATIVEINT}
-{$ENDIF}
-{$IFDEF FPC}
-  {$DEFINE HAS_NATIVEINT}
-{$ENDIF}
-
 
 (*
   Miscellaneous Defines:
   ---------------------- *)
 
-
-{$IFDEF COMPILER6}
-  {$DEFINE EXT_PROP_EDIT}
-{$ENDIF}
 
 {$IFNDEF COMPILER2010_UP}
   {$DEFINE USETHREADRESUME}
@@ -463,9 +350,6 @@
 {$ENDIF}
 
 {$IFDEF LINUX}
-  {$IFNDEF FPC}
-    {$DEFINE BITS_GETTER}
-  {$ENDIF}
   {$DEFINE UNIX}
 {$ENDIF}
 
@@ -477,9 +361,9 @@
 
 {$R-}{$Q-}  // switch off overflow and range checking
 
-{$IFDEF COMPILER6}
-  {$DEFINE EXT_PROP_EDIT}
-{$ENDIF}
+{$IFDEF COMPILER2010_UP}
+  {$DEFINE SUPPORTS_UNICODE}
+{$ENDIF COMPILER2010_UP}
 
 {$IFDEF COMPILER2010_UP}
   {$DEFINE SUPPORT_ENHANCED_RECORDS}
@@ -487,50 +371,4 @@
 
 {$IFNDEF COMPILERFPC}
   {$DEFINE SUPPORT_XPTHEMES} // enable support for windows xp themes
-{$ENDIF}
-
-
-
-(*
-  Compatibility Symbols
-  ---------------------
-
-  These symbols are deprecated and will be removed in future releases.
-  *)
-
-
-{$IFDEF COMPILER6_UP}
-  {$DEFINE COMPILER6}
-{$ENDIF}
-
-{$IFDEF COMPILER7_UP}
-  {$DEFINE COMPILER7}
-{$ENDIF}
-
-{$IFDEF COMPILER2005_UP}
-  {$DEFINE COMPILER2005}
-{$ENDIF}
-
-{$IFDEF COMPILER2006}
-  {$DEFINE COMPILER2006}
-{$ENDIF}
-
-{$IFDEF COMPILER2007_UP}
-  {$DEFINE COMPILER2007}
-{$ENDIF}
-
-{$IFDEF COMPILER2009_UP}
-  {$DEFINE COMPILER2009}
-{$ENDIF}
-
-{$IFDEF COMPILER2010_UP}
-  {$DEFINE COMPILER2010}
-{$ENDIF}
-
-{$IFDEF COMPILERXE1_UP}
-  {$DEFINE COMPILERXE1}
-{$ENDIF}
-
-{$IFDEF COMPILERXE2_UP}
-  {$DEFINE COMPILERXE2}
 {$ENDIF}
