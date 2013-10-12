@@ -21,9 +21,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-01-16 17:14:44 +0100 (lun., 16 janv. 2012)                         $ }
-{ Revision:      $Rev:: 3686                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -135,9 +135,9 @@ procedure FinalizeOpenDialogHook;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclOpenDialogHooks.pas $';
-    Revision: '$Revision: 3686 $';
-    Date: '$Date: 2012-01-16 17:14:44 +0100 (lun., 16 janv. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

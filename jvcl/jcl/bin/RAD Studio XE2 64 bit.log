@@ -1,0 +1,87 @@
+================================================================================
+JCL 2.5 Testing Build 4572
+==========RAD Studio XE2 64 bit=================================================
+Installed personalities :
+32 bit Delphi
+64 bit Delphi
+32 bit Delphi for OSX
+================================================================================
+Multiple profile installation
+Single profile installation
+================================================================================
+Saving conditional defines...
+Loaded template for include file D:\Composants\jvcl\jcl\source\include\jcl.template.inc
+Saved include file D:\Composants\jvcl\jcl\source\include\jcld16win64.inc
+Building source\common library units for RAD Studio XE2 64 bit...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" bzip2 Jcl8087 JclAbstractContainers JclAlgorithms JclAnsiStrings JclArrayLists JclArraySets JclBase JclBinaryTrees JclCharsets JclCompilerUtils JclComplex JclCompression JclContainerIntf JclCounter JclDateTime JclDevToolsResources JclExprEval JclFileUtils JclHashMaps JclHashSets JclIDEUtils JclIniFiles JclLinkedLists JclLogic JclMath JclMIDI JclMime JclNotify JclPCRE JclPreProcessorAlgorithmsTemplates JclPreProcessorArrayListsTemplates JclPreProcessorArraySetsTemplates JclPreProcessorBinaryTreesTemplates JclPreProcessorContainer1DTemplates JclPreProcessorContainer2DTemplates JclPreProcessorContainerIntfTemplates JclPreProcessorContainerKnownMaps JclPreProcessorContainerKnownTypes JclPreProcessorContainerTemplates JclPreProcessorContainerTypes JclPreProcessorExcDlgTemplates JclPreProcessorHashMapsTemplates JclPreProcessorHashSetsTemplates JclPreProcessorLexer JclPreProcessorLinkedListsTemplates JclPreProcessorParser JclPreProcessorQueuesTemplates JclPreProcessorSortedMapsTemplates JclPreProcessorStacksTemplates JclPreProcessorTemplates JclPreProcessorTreesTemplates JclPreProcessorVectorsTemplates JclQueues JclResources JclRTTI JclSchedule JclSimpleXml JclSortedMaps JclStacks JclStatistics JclStreams JclStrHashMap JclStringConversions JclStringLists JclStrings JclSynch JclSysInfo JclSysUtils JclTrees JclUnicode JclUnitConv JclUnitVersioning JclUnitVersioningProviders JclUsesUtils JclValidation JclVectors JclWideStrings pcre zlibh --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\Composants\jvcl\jcl\lib\d16\win64" -n"sSystem;System.Win;WinAPI;Vcl;Vcl.Imaging" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+575239 lignes, 10.97 secondes, 98167 octets de code, 458924 octets de données.
+Building source\windows library units for RAD Studio XE2 64 bit...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" Hardlinks JclAppInst JclCIL JclCLR JclCOM JclConsole JclCppException JclDebug JclDebugSerialization JclDebugXMLDeserializer JclDebugXMLSerializer JclDotNet JclHelpUtils JclHookExcept JclLANMan JclLocales JclMapi JclMetadata JclMiscel JclMsBuild JclMsdosSys JclMultimedia JclNTFS JclPeImage JclRegistry JclSecurity JclShell JclStructStorage JclSvcCtrl JclTask JclTD32 JclTimeZones JclWin32 JclWin32Ex JclWinMIDI mscoree_TLB mscorlib_TLB MSHelpServices_TLB MSTask sevenzip Snmp --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\Composants\jvcl\jcl\lib\d16\win64" -n"sSystem;System.Win;WinAPI;Vcl;Vcl.Imaging" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+185377 lignes, 2.65 secondes, 5296 octets de code, 9292 octets de données.
+Building source\vcl library units for RAD Studio XE2 64 bit...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" JclFont JclGraphics JclGraphUtils JclOpenDialogFavorites JclOpenDialogHooks JclPrint JclVclResources JclVersionControl JclVersionCtrlCVSImpl JclVersionCtrlGITImpl JclVersionCtrlSVNImpl --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\Composants\jvcl\jcl\lib\d16\win64" -n"sSystem;System.Win;WinAPI;Vcl;Vcl.Imaging" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+36734 lignes, 1.14 secondes, 12644 octets de code, 1932 octets de données.
+Building source\common library debug units for RAD Studio XE2 64 bit...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" bzip2 Jcl8087 JclAbstractContainers JclAlgorithms JclAnsiStrings JclArrayLists JclArraySets JclBase JclBinaryTrees JclCharsets JclCompilerUtils JclComplex JclCompression JclContainerIntf JclCounter JclDateTime JclDevToolsResources JclExprEval JclFileUtils JclHashMaps JclHashSets JclIDEUtils JclIniFiles JclLinkedLists JclLogic JclMath JclMIDI JclMime JclNotify JclPCRE JclPreProcessorAlgorithmsTemplates JclPreProcessorArrayListsTemplates JclPreProcessorArraySetsTemplates JclPreProcessorBinaryTreesTemplates JclPreProcessorContainer1DTemplates JclPreProcessorContainer2DTemplates JclPreProcessorContainerIntfTemplates JclPreProcessorContainerKnownMaps JclPreProcessorContainerKnownTypes JclPreProcessorContainerTemplates JclPreProcessorContainerTypes JclPreProcessorExcDlgTemplates JclPreProcessorHashMapsTemplates JclPreProcessorHashSetsTemplates JclPreProcessorLexer JclPreProcessorLinkedListsTemplates JclPreProcessorParser JclPreProcessorQueuesTemplates JclPreProcessorSortedMapsTemplates JclPreProcessorStacksTemplates JclPreProcessorTemplates JclPreProcessorTreesTemplates JclPreProcessorVectorsTemplates JclQueues JclResources JclRTTI JclSchedule JclSimpleXml JclSortedMaps JclStacks JclStatistics JclStreams JclStrHashMap JclStringConversions JclStringLists JclStrings JclSynch JclSysInfo JclSysUtils JclTrees JclUnicode JclUnitConv JclUnitVersioning JclUnitVersioningProviders JclUsesUtils JclValidation JclVectors JclWideStrings pcre zlibh --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\debug" -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\Composants\jvcl\jcl\lib\d16\win64\debug" -n"sSystem;System.Win;WinAPI;Vcl;Vcl.Imaging" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+575239 lignes, 11.40 secondes, 98513 octets de code, 458924 octets de données.
+Building source\windows library debug units for RAD Studio XE2 64 bit...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" Hardlinks JclAppInst JclCIL JclCLR JclCOM JclConsole JclCppException JclDebug JclDebugSerialization JclDebugXMLDeserializer JclDebugXMLSerializer JclDotNet JclHelpUtils JclHookExcept JclLANMan JclLocales JclMapi JclMetadata JclMiscel JclMsBuild JclMsdosSys JclMultimedia JclNTFS JclPeImage JclRegistry JclSecurity JclShell JclStructStorage JclSvcCtrl JclTask JclTD32 JclTimeZones JclWin32 JclWin32Ex JclWinMIDI mscoree_TLB mscorlib_TLB MSHelpServices_TLB MSTask sevenzip Snmp --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\debug" -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\Composants\jvcl\jcl\lib\d16\win64\debug" -n"sSystem;System.Win;WinAPI;Vcl;Vcl.Imaging" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+185377 lignes, 2.70 secondes, 5454 octets de code, 9292 octets de données.
+Building source\vcl library debug units for RAD Studio XE2 64 bit...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" JclFont JclGraphics JclGraphUtils JclOpenDialogFavorites JclOpenDialogHooks JclPrint JclVclResources JclVersionControl JclVersionCtrlCVSImpl JclVersionCtrlGITImpl JclVersionCtrlSVNImpl --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\debug" -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\Composants\jvcl\jcl\lib\d16\win64\debug" -n"sSystem;System.Win;WinAPI;Vcl;Vcl.Imaging" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+36734 lignes, 1.19 secondes, 13259 octets de code, 1916 octets de données.
+Building D:\Composants\jvcl\jcl\packages\d16\Jcl.dpk...
+Cleaning package cache for Jcl160.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d16\Jcl.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" "D:\Composants\jvcl\jcl\packages\d16\Jcl.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -N"..\..\lib\d16\win64" -I"..\..\lib\d16\win64;..\..\source\include" -R"..\..\lib\d16\win64;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;RELEASE;BCB;WIN32;CONDITIONALEXPRESSIONS;RELEASE -U"D:\Composants\jvcl\jcl\lib\d16\win64\;C:\Users\Public\Documents\RAD Studio\9.0\Dcp\Win64;..\..\lib\d16\win64;..\..\source\include" -LU"rtl;" -n"sSystem;System.Win;WinApi;Vcl;Vcl.Imaging" -LN"D:\Composants\jvcl\jcl\lib\d16\win64" -LE"C:\Users\Public\Documents\RAD Studio\9.0\Bpl\Win64"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+127 lignes, 0.48 secondes, 3703560 octets de code, 1060860 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d16\JclContainers.dpk...
+Cleaning package cache for JclContainers160.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d16\JclContainers.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" "D:\Composants\jvcl\jcl\packages\d16\JclContainers.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -N"..\..\lib\d16\win64" -I"..\..\lib\d16\win64;..\..\source\include" -R"..\..\lib\d16\win64;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;RELEASE;BCB;WIN32;CONDITIONALEXPRESSIONS;RELEASE -U"D:\Composants\jvcl\jcl\lib\d16\win64\;C:\Users\Public\Documents\RAD Studio\9.0\Dcp\Win64;..\..\lib\d16\win64;..\..\source\include" -LU"rtl;Jcl;" -n"sSystem;System.Win;WinApi;Vcl;Vcl.Imaging" -LN"D:\Composants\jvcl\jcl\lib\d16\win64" -LE"C:\Users\Public\Documents\RAD Studio\9.0\Bpl\Win64"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+68 lignes, 0.34 secondes, 3195784 octets de code, 267968 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d16\JclDeveloperTools.dpk...
+Cleaning package cache for JclDeveloperTools160.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d16\JclDeveloperTools.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" "D:\Composants\jvcl\jcl\packages\d16\JclDeveloperTools.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -N"..\..\lib\d16\win64" -I"..\..\lib\d16\win64;..\..\source\include" -R"..\..\lib\d16\win64;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;RELEASE;BCB;WIN32;CONDITIONALEXPRESSIONS;RELEASE -U"D:\Composants\jvcl\jcl\lib\d16\win64\;C:\Users\Public\Documents\RAD Studio\9.0\Dcp\Win64;..\..\lib\d16\win64;..\..\source\include" -LU"rtl;Jcl;JclContainers;" -n"sSystem;System.Win;WinApi;Vcl;Vcl.Imaging" -LN"D:\Composants\jvcl\jcl\lib\d16\win64" -LE"C:\Users\Public\Documents\RAD Studio\9.0\Bpl\Win64"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+85 lignes, 0.34 secondes, 705960 octets de code, 60072 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d16\JclVcl.dpk...
+Cleaning package cache for JclVcl160.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d16\JclVcl.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\bin\dcc64.exe" "D:\Composants\jvcl\jcl\packages\d16\JclVcl.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\9.0\lib\Win64\release" -N"..\..\lib\d16\win64" -I"..\..\lib\d16\win64;..\..\source\include" -R"..\..\lib\d16\win64;..\..\source\include" -DBCB;BCB;WIN32;CONDITIONALEXPRESSIONS;RELEASE;BCB;WIN32;CONDITIONALEXPRESSIONS;RELEASE -U"D:\Composants\jvcl\jcl\lib\d16\win64\;C:\Users\Public\Documents\RAD Studio\9.0\Dcp\Win64;..\..\lib\d16\win64;..\..\source\include" -LU"rtl;vcl;vclimg;Jcl;" -n"sSystem;System.Win;WinApi;Vcl;Vcl.Imaging" -LN"D:\Composants\jvcl\jcl\lib\d16\win64" -LE"C:\Users\Public\Documents\RAD Studio\9.0\Bpl\Win64"
+Version 23.0 du compilateur Embarcadero Delphi pour Win64
+Copyright (c) 1983, 2011 Embarcadero Technologies, Inc.
+66 lignes, 0.31 secondes, 215976 octets de code, 19204 octets de données.
+Compilation success
+...done.
+Added "D:\Composants\jvcl\jcl\lib\d16\win64;D:\Composants\jvcl\jcl\source\include" to library search path.
+Added "D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" to library browsing path.
+Added "D:\Composants\jvcl\jcl\lib\d16\win64\debug" to Debug DCU Path.

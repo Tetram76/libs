@@ -19,9 +19,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-01-22 15:45:29 +0100 (dim., 22 janv. 2012)                         $ }
-{ Revision:      $Rev:: 3700                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -67,9 +67,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/vcl/JclVersionCtrlSVNImpl.pas $';
-    Revision: '$Revision: 3700 $';
-    Date: '$Date: 2012-01-22 15:45:29 +0100 (dim., 22 janv. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\vcl';
     Extra: '';
     Data: nil

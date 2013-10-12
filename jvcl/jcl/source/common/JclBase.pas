@@ -30,9 +30,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-09-05 19:42:13 +0200 (mer., 05 sept. 2012)                         $ }
-{ Revision:      $Rev:: 3864                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -402,9 +402,9 @@ procedure GetMem(out P; Size: Longint);
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclBase.pas $';
-    Revision: '$Revision: 3864 $';
-    Date: '$Date: 2012-09-05 19:42:13 +0200 (mer., 05 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil

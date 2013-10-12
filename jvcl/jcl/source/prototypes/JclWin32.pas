@@ -39,9 +39,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-03-05 22:09:26 +0100 (lun., 05 mars 2012)                          $ }
-{ Revision:      $Rev:: 3763                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -228,9 +228,9 @@ const
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/prototypes/JclWin32.pas $';
-    Revision: '$Revision: 3763 $';
-    Date: '$Date: 2012-03-05 22:09:26 +0100 (lun., 05 mars 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\windows'
     );
 {$ENDIF UNITVERSIONING}

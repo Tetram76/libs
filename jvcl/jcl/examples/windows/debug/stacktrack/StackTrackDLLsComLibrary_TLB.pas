@@ -11,7 +11,7 @@ unit StackTrackDLLsComLibrary_TLB;
 // manual modifications will be lost.                                         
 // ************************************************************************ //
 
-// PASTLWTR : $Revision: 1658 $
+// PASTLWTR : $Revision$
 // File generated on 1.8.2005 02:48:29 from Type Library described below.
 
 // ************************************************************************ //

@@ -1,0 +1,173 @@
+================================================================================
+JCL 2.3 Testing Revision 183
+==========RAD Studio 2010=======================================================
+Installed personalities :
+32 bit Delphi
+================================================================================
+Multiple profile installation
+Single profile installation
+================================================================================
+Saving conditional defines...
+Loaded template for include file D:\Composants\jvcl\jcl\source\include\jcl.template.inc
+Saved include file D:\Composants\jvcl\jcl\source\include\jcld14.inc
+Building source\common library units for RAD Studio 2010...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" bzip2 Jcl8087 JclAbstractContainers JclAlgorithms JclAnsiStrings JclArrayLists JclArraySets JclBase JclBinaryTrees JclCharsets JclCompilerUtils JclComplex JclCompression JclContainerIntf JclCounter JclDateTime JclDevToolsResources JclExprEval JclFileUtils JclHashMaps JclHashSets JclIDEUtils JclIniFiles JclLinkedLists JclLogic JclMath JclMIDI JclMime JclMsBuild JclNotify JclPCRE JclPreProcessorAlgorithmsTemplates JclPreProcessorArrayListsTemplates JclPreProcessorArraySetsTemplates JclPreProcessorBinaryTreesTemplates JclPreProcessorContainer1DTemplates JclPreProcessorContainer2DTemplates JclPreProcessorContainerIntfTemplates JclPreProcessorContainerKnownMaps JclPreProcessorContainerKnownTypes JclPreProcessorContainerTemplates JclPreProcessorContainerTypes JclPreProcessorExcDlgTemplates JclPreProcessorHashMapsTemplates JclPreProcessorLexer JclPreProcessorLinkedListsTemplates JclPreProcessorParser JclPreProcessorQueuesTemplates JclPreProcessorSortedMapsTemplates JclPreProcessorStacksTemplates JclPreProcessorTemplates JclPreProcessorTreesTemplates JclPreProcessorVectorsTemplates JclQueues JclResources JclRTTI JclSchedule JclSimpleXml JclSortedMaps JclStacks JclStatistics JclStreams JclStrHashMap JclStringConversions JclStringLists JclStrings JclSynch JclSysInfo JclSysUtils JclTrees JclUnicode JclUnitConv JclUnitVersioning JclUnitVersioningProviders JclUsesUtils JclValidation JclVectors JclWideStrings pcre zlibh --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\Composants\jvcl\jcl\lib\d14" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+JclStrings.pas(2835) Conseil: H2445 La fonction inline 'TJclFormatSettings.GetDecimalSeparator' n'a pas été étendue car son unité 'JclSysUtils' est spécifiée dans l'instruction USES de la section IMPLEMENTATION et la fonction en cours est la fonction inline ou sur le point de le devenir
+JclStrings.pas(2840) Conseil: H2445 La fonction inline 'TJclFormatSettings.GetDecimalSeparator' n'a pas été étendue car son unité 'JclSysUtils' est spécifiée dans l'instruction USES de la section IMPLEMENTATION et la fonction en cours est la fonction inline ou sur le point de le devenir
+642273 lignes, 7.03 secondes, 53187 octets de code, 16852 octets de données.
+Building source\windows library units for RAD Studio 2010...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" Hardlinks JclAppInst JclCIL JclCLR JclCOM JclConsole JclCppException JclDebug JclDebugSerialization JclDebugXMLDeserializer JclDebugXMLSerializer JclDotNet JclHelpUtils JclHookExcept JclLANMan JclLocales JclMapi JclMetadata JclMiscel JclMsdosSys JclMultimedia JclNTFS JclPeImage JclRegistry JclSecurity JclShell JclStructStorage JclSvcCtrl JclTask JclTD32 JclTimeZones JclWin32 JclWin32Ex JclWinMIDI mscoree_TLB mscorlib_TLB MSHelpServices_TLB MSTask sevenzip Snmp --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\Composants\jvcl\jcl\lib\d14" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+217796 lignes, 2.27 secondes, 4246 octets de code, 188 octets de données.
+Building source\vcl library units for RAD Studio 2010...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" JclFont JclGraphics JclGraphUtils JclOpenDialogFavorites JclOpenDialogHooks JclPrint JclVclResources JclVersionControl JclVersionCtrlCVSImpl JclVersionCtrlSVNImpl --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C- -$D- -$I- -$L- -$O+ -$Q- -$R- -$W- -$Y- -N0"D:\Composants\jvcl\jcl\lib\d14" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+38788 lignes, 0.88 secondes, 4711 octets de code, 36 octets de données.
+Building source\common library debug units for RAD Studio 2010...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" bzip2 Jcl8087 JclAbstractContainers JclAlgorithms JclAnsiStrings JclArrayLists JclArraySets JclBase JclBinaryTrees JclCharsets JclCompilerUtils JclComplex JclCompression JclContainerIntf JclCounter JclDateTime JclDevToolsResources JclExprEval JclFileUtils JclHashMaps JclHashSets JclIDEUtils JclIniFiles JclLinkedLists JclLogic JclMath JclMIDI JclMime JclMsBuild JclNotify JclPCRE JclPreProcessorAlgorithmsTemplates JclPreProcessorArrayListsTemplates JclPreProcessorArraySetsTemplates JclPreProcessorBinaryTreesTemplates JclPreProcessorContainer1DTemplates JclPreProcessorContainer2DTemplates JclPreProcessorContainerIntfTemplates JclPreProcessorContainerKnownMaps JclPreProcessorContainerKnownTypes JclPreProcessorContainerTemplates JclPreProcessorContainerTypes JclPreProcessorExcDlgTemplates JclPreProcessorHashMapsTemplates JclPreProcessorLexer JclPreProcessorLinkedListsTemplates JclPreProcessorParser JclPreProcessorQueuesTemplates JclPreProcessorSortedMapsTemplates JclPreProcessorStacksTemplates JclPreProcessorTemplates JclPreProcessorTreesTemplates JclPreProcessorVectorsTemplates JclQueues JclResources JclRTTI JclSchedule JclSimpleXml JclSortedMaps JclStacks JclStatistics JclStreams JclStrHashMap JclStringConversions JclStringLists JclStrings JclSynch JclSysInfo JclSysUtils JclTrees JclUnicode JclUnitConv JclUnitVersioning JclUnitVersioningProviders JclUsesUtils JclValidation JclVectors JclWideStrings pcre zlibh --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\debug" -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\Composants\jvcl\jcl\lib\d14\debug" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+JclStrings.pas(2835) Conseil: H2445 La fonction inline 'TJclFormatSettings.GetDecimalSeparator' n'a pas été étendue car son unité 'JclSysUtils' est spécifiée dans l'instruction USES de la section IMPLEMENTATION et la fonction en cours est la fonction inline ou sur le point de le devenir
+JclStrings.pas(2840) Conseil: H2445 La fonction inline 'TJclFormatSettings.GetDecimalSeparator' n'a pas été étendue car son unité 'JclSysUtils' est spécifiée dans l'instruction USES de la section IMPLEMENTATION et la fonction en cours est la fonction inline ou sur le point de le devenir
+642273 lignes, 7.25 secondes, 53363 octets de code, 16852 octets de données.
+Building source\windows library debug units for RAD Studio 2010...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" Hardlinks JclAppInst JclCIL JclCLR JclCOM JclConsole JclCppException JclDebug JclDebugSerialization JclDebugXMLDeserializer JclDebugXMLSerializer JclDotNet JclHelpUtils JclHookExcept JclLANMan JclLocales JclMapi JclMetadata JclMiscel JclMsdosSys JclMultimedia JclNTFS JclPeImage JclRegistry JclSecurity JclShell JclStructStorage JclSvcCtrl JclTask JclTD32 JclTimeZones JclWin32 JclWin32Ex JclWinMIDI mscoree_TLB mscorlib_TLB MSHelpServices_TLB MSTask sevenzip Snmp --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\debug" -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\Composants\jvcl\jcl\lib\d14\debug" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+217796 lignes, 1.76 secondes, 4391 octets de code, 188 octets de données.
+Building source\vcl library debug units for RAD Studio 2010...
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" JclFont JclGraphics JclGraphUtils JclOpenDialogFavorites JclOpenDialogHooks JclPrint JclVclResources JclVersionControl JclVersionCtrlCVSImpl JclVersionCtrlSVNImpl --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib\debug" -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -M -$X+ -$G+ -$H+ -$P+ -$U- -$T- -$V+ -$J+ -$Z1 -$J+ -$C+ -$D+ -$I+ -$L+ -$O- -$Q+ -$R+ -$W+ -$Y+ -N0"D:\Composants\jvcl\jcl\lib\d14\debug" -I"D:\Composants\jvcl\jcl\source\include" -U"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" -R"D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+38788 lignes, 0.72 secondes, 4977 octets de code, 36 octets de données.
+Building D:\Composants\jvcl\jcl\packages\d14\Jcl.dpk...
+Cleaning package cache for Jcl140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\Jcl.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\Jcl.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+130 lignes, 0.45 secondes, 2070924 octets de code, 732132 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclContainers.dpk...
+Cleaning package cache for JclContainers140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclContainers.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclContainers.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;Jcl" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+68 lignes, 0.34 secondes, 1982236 octets de code, 1088 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclDeveloperTools.dpk...
+Cleaning package cache for JclDeveloperTools140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclDeveloperTools.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclDeveloperTools.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;vcl;Jcl;JclContainers" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+85 lignes, 0.20 secondes, 369464 octets de code, 13028 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclVcl.dpk...
+Cleaning package cache for JclVcl140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclVcl.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclVcl.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;vcl;vclimg;Jcl" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+66 lignes, 0.20 secondes, 123368 octets de code, 1796 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclBaseExpert.dpk...
+Cleaning package cache for JclBaseExpert140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclBaseExpert.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclBaseExpert.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;vcl;vclx;designide;Jcl;JclDeveloperTools" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+21842 lignes, 0.47 secondes, 55352 octets de code, 632 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclDebugExpert.dpk...
+Cleaning package cache for JclDebugExpert140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclDebugExpert.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclDebugExpert.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;vcl;designide;Jcl;JclBaseExpert;JclDeveloperTools" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+6151 lignes, 0.28 secondes, 35292 octets de code, 388 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclProjectAnalysisExpert.dpk...
+Cleaning package cache for JclProjectAnalysisExpert140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclProjectAnalysisExpert.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclProjectAnalysisExpert.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;vcl;designide;Jcl;JclBaseExpert" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+4980 lignes, 0.38 secondes, 24872 octets de code, 252 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclFavoriteFoldersExpert.dpk...
+Cleaning package cache for JclFavoriteFoldersExpert140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclFavoriteFoldersExpert.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclFavoriteFoldersExpert.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;vcl;designide;Jcl;JclVcl;JclBaseExpert" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+2048 lignes, 0.20 secondes, 6104 octets de code, 112 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclRepositoryExpert.dpk...
+Cleaning package cache for JclRepositoryExpert140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclRepositoryExpert.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclRepositoryExpert.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;vcl;designide;Jcl;JclContainers;JclBaseExpert;JclDeveloperTools" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+22595 lignes, 0.50 secondes, 44956 octets de code, 616 octets de données.
+Compilation success
+...done.
+Building D:\Composants\jvcl\jcl\packages\d14\JclStackTraceViewerExpert.dpk...
+Cleaning package cache for JclStackTraceViewerExpert140.bpl
+Cleaning ok
+Compiling package D:\Composants\jvcl\jcl\packages\d14\JclStackTraceViewerExpert.dpk
+"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\bin\dcc32.exe" "D:\Composants\jvcl\jcl\packages\d14\JclStackTraceViewerExpert.dpk" --no-config -U"C:\Program Files (x86)\Embarcadero\RAD Studio\7.0\lib" -N"..\..\lib\d14" -I"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -R"..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -DBCB;$(DCC_Define) -U"D:\Composants\jvcl\jcl\lib\d14\;C:\Users\Public\Documents\RAD Studio\7.0\Dcp;..\..\lib\d14;..\..\source\include;$(DCC_UnitSearchPath)" -LU"rtl;vcl;designide;Jcl;JclBaseExpert" -LN"D:\Composants\jvcl\jcl\lib\d14" -LE"C:\Users\Public\Documents\RAD Studio\7.0\Bpl"
+Version 21.0 du compilateur Embarcadero Delphi pour Win32
+Copyright (c) 1983,2009 Embarcadero Technologies, Inc.
+29910 lignes, 0.52 secondes, 68544 octets de code, 692 octets de données.
+Compilation success
+...done.
+Added "D:\Composants\jvcl\jcl\lib\d14;D:\Composants\jvcl\jcl\source\include" to library search path.
+Added "D:\Composants\jvcl\jcl\source\common;D:\Composants\jvcl\jcl\source\windows;D:\Composants\jvcl\jcl\source\vcl" to library browsing path.
+Added "D:\Composants\jvcl\jcl\lib\d14\debug" to Debug DCU Path.
+Cleaning package cache for JclBaseExpert140.bpl
+Cleaning ok
+Registering package C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JclBaseExpert140.bpl
+Registration ok
+Cleaning package cache for JclDebugExpert140.bpl
+Cleaning ok
+Registering package C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JclDebugExpert140.bpl
+Registration ok
+Cleaning package cache for JclProjectAnalysisExpert140.bpl
+Cleaning ok
+Registering package C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JclProjectAnalysisExpert140.bpl
+Registration ok
+Cleaning package cache for JclFavoriteFoldersExpert140.bpl
+Cleaning ok
+Registering package C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JclFavoriteFoldersExpert140.bpl
+Registration ok
+Cleaning package cache for JclRepositoryExpert140.bpl
+Cleaning ok
+Registering package C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JclRepositoryExpert140.bpl
+Registration ok
+Cleaning package cache for JclStackTraceViewerExpert140.bpl
+Cleaning ok
+Registering package C:\Users\Public\Documents\RAD Studio\7.0\Bpl\JclStackTraceViewerExpert140.bpl
+Registration ok

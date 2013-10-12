@@ -22,9 +22,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010)                         $ }
-{ Revision:      $Rev:: 3322                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -238,9 +238,9 @@ function SetThreadJclContext(AThread: IOTAThread; const JclContext: TJclContext)
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/experts/debug/simdview/JclSIMDUtils.pas $';
-    Revision: '$Revision: 3322 $';
-    Date: '$Date: 2010-09-01 21:52:52 +0200 (mer., 01 sept. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\experts\debug\simdview';
     Extra: '';
     Data: nil
