@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCxDB.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id$
 
 unit JvDynControlEngineDevExpCxDB;
 
@@ -37,12 +37,15 @@ uses
 {$ELSE}
 
 uses
-{$IFDEF UNITVERSIONING}
+  {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
-{$ENDIF UNITVERSIONING}
+  {$ENDIF UNITVERSIONING}
   Classes, ExtCtrls, ExtDlgs, Graphics, Buttons, Controls, Dialogs, FileCtrl,
   Forms, DBCtrls, DB, DBGrids, StdCtrls,
   cxDBEdit, cxDBNavigator,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   JvDynControlEngine, JvDynControlEngineDB, JvDynControlEngineIntf,
   JvDynControlEngineDevExpCx, JvDynControlEngineDBIntf;
 
@@ -593,9 +596,9 @@ procedure SetDefaultDynControlEngineDBDevExp;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCxDB.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

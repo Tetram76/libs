@@ -23,7 +23,7 @@ finalization section.
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFinalize.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 
 unit JvFinalize;
 

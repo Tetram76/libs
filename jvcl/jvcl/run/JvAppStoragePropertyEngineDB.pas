@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStoragePropertyEngineDB.pas 13088 2011-07-10 12:10:33Z jfudickar $
+// $Id$
 
 unit JvAppStoragePropertyEngineDB;
 
@@ -42,9 +42,9 @@ procedure RegisterAppStoragePropertyEngines;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStoragePropertyEngineDB.pas $';
-    Revision: '$Revision: 13088 $';
-    Date: '$Date: 2011-07-10 14:10:33 +0200 (dim., 10 juil. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

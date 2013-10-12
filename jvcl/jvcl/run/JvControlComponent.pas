@@ -24,7 +24,7 @@ Known Issues:
   It could also be called as a feature. Object Treeview shows the
   correct parent.
 -----------------------------------------------------------------------------}
-// $Id: JvControlComponent.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id$
 
 unit JvControlComponent;
 
@@ -61,9 +61,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlComponent.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

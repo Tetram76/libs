@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLogForm.pas 12863 2010-10-11 08:10:36Z obones $
+// $Id$
 
 unit JvLogForm;
 
@@ -73,9 +73,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLogForm.pas $';
-    Revision: '$Revision: 12863 $';
-    Date: '$Date: 2010-10-11 10:10:36 +0200 (lun., 11 oct. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

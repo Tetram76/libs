@@ -25,9 +25,9 @@ Changes:
   changed the way a parent/child PageIndex is assigned so that it matches the
   actual component using this editor
   
-$Id: JvPageLinkEditorForm.pas 12461 2009-08-14 17:21:33Z obones $
+$Id$
 -----------------------------------------------------------------------------}
-// $Id: JvPageLinkEditorForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit JvPageLinkEditorForm;
 

@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCsvDataEditor.pas 13274 2012-03-12 18:34:04Z wpostma $
+// $Id$
 
 unit JvCsvDataEditor;
 

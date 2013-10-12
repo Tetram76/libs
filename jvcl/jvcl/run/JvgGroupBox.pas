@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgGroupBox.pas 12590 2009-10-31 13:04:44Z jfudickar $
+// $Id$
 
 unit JvgGroupBox;
 
@@ -169,9 +169,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgGroupBox.pas $';
-    Revision: '$Revision: 12590 $';
-    Date: '$Date: 2009-10-31 14:04:44 +0100 (sam., 31 oct. 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLInstall.dpr 12467 2009-08-23 12:19:31Z outchy $
+// $Id$
 
 program JVCLInstall;
 

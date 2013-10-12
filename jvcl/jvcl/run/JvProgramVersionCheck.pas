@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvProgramVersionCheck.pas 13240 2012-02-27 11:05:59Z obones $
+// $Id$
 
 unit JvProgramVersionCheck;
 
@@ -72,6 +72,8 @@ type
     FProgramReleaseDate: TDateTime;
     function GetVersionDescription: TStrings;
     procedure SetVersionDescription(Value: TStrings);
+  protected
+    procedure StoreXMLProperties; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -211,6 +213,8 @@ type
   protected
     function LoadFileFromRemoteInt(const ARemotePath, ARemoteFileName, ALocalPath, ALocalFileName: string;
       ABaseThread: TJvBaseThread): string; override;
+  public
+    property ValidLocationPath;
   published
     property VersionInfoLocationPathList;
     property VersionInfoFileName;
@@ -266,6 +270,8 @@ type
   protected
     function LoadFileFromRemoteInt(const ARemotePath, ARemoteFileName, ALocalPath, ALocalFileName: string;
       ABaseThread: TJvBaseThread): string; override;
+  public
+    property ValidLocationPath;
   published
     property OnLoadFileFromRemote: TJvLoadFileFromRemoteHTTPEvent read FOnLoadFileFromRemote write FOnLoadFileFromRemote;
     property ProxySettings;
@@ -292,6 +298,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+  public
+    property ValidLocationPath;
   published
     property ProxySettings;
     property UserName;
@@ -318,6 +326,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+  public
+    property ValidLocationPath;
   published
     property ProxySettings;
     property UserName;
@@ -361,6 +371,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+  public
+    property ValidLocationPath;
   published
     property ProxySettings;
     property UserName;
@@ -384,6 +396,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+  public
+    property ValidLocationPath;
   published
     property ProxySettings;
     property UserName;
@@ -568,9 +582,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvProgramVersionCheck.pas $';
-    Revision: '$Revision: 13240 $';
-    Date: '$Date: 2012-02-27 12:05:59 +0100 (lun., 27 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -806,6 +820,12 @@ begin
   Result := ProgramVersionReleaseType;
   if ProgramSize > 0 then
     Result := Result + ' (' + ProgramSizeString + ')';
+end;
+
+procedure TJvProgramVersionInfo.StoreXMLProperties;
+begin
+  AppStorage.SetXMLProperty(AppStoragePath, 'Version', ProgramVersionReleaseType);
+  Inherited;
 end;
 
 //=== { TJvProgramVersionHistory } ===========================================

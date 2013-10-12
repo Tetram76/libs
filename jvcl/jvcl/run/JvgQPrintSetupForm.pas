@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgQPrintSetupForm.pas 12553 2009-10-05 13:22:42Z obones $
+// $Id$
 
 unit JvgQPrintSetupForm;
 
@@ -49,9 +49,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgQPrintSetupForm.pas $';
-    Revision: '$Revision: 12553 $';
-    Date: '$Date: 2009-10-05 15:22:42 +0200 (lun., 05 oct. 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

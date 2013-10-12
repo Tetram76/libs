@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLAboutForm.pas 13412 2012-09-08 10:19:55Z ahuser $
+// $Id$
 
 unit JvJVCLAboutForm;
 
@@ -107,9 +107,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJVCLAboutForm.pas $';
-    Revision: '$Revision: 13412 $';
-    Date: '$Date: 2012-09-08 12:19:55 +0200 (sam., 08 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

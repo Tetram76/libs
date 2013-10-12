@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedbarForm.pas 12702 2010-03-08 14:41:42Z obones $
+// $Id$
 
 unit JvSpeedbarForm;
 

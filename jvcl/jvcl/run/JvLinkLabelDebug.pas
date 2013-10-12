@@ -26,7 +26,7 @@ Description:
 Known Issues:
   Please see the accompanying documentation.
 -----------------------------------------------------------------------------}
-// $Id: JvLinkLabelDebug.pas 12538 2009-10-03 12:18:34Z ahuser $
+// $Id$
 
 unit JvLinkLabelDebug;
 
@@ -52,9 +52,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLinkLabelDebug.pas $';
-    Revision: '$Revision: 12538 $';
-    Date: '$Date: 2009-10-03 14:18:34 +0200 (sam., 03 oct. 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

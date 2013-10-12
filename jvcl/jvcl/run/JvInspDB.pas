@@ -107,9 +107,9 @@ function GetFieldName(const AField: TField): string;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspDB.pas $';
-    Revision: '$Revision: 12351 $';
-    Date: '$Date: 2009-06-28 19:13:38 +0200 (dim., 28 juin 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

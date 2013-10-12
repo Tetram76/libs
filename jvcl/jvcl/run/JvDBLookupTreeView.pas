@@ -38,7 +38,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupTreeView.pas 13441 2012-09-24 13:05:24Z ahuser $
+// $Id$
 
 unit JvDBLookupTreeView;
 
@@ -454,9 +454,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupTreeView.pas $';
-    Revision: '$Revision: 13441 $';
-    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -722,12 +722,11 @@ var
   TickCount: Integer;
   S: string;
 begin
-  if (FListField <> nil) and (FListField.FieldKind = fkData) and
-    (FListField.DataType = ftString) then
-    case Word(Key) of
+  if (FListField <> nil) and (FListField.FieldKind = fkData) and (FListField is TStringField) then
+    case Ord(Key) of
       VK_BACK, VK_ESCAPE:
         FSearchText := '';
-      VK_SPACE..255:
+      VK_SPACE..Ord(High(Char)):
         if CanModify then
         begin
           TickCount := GetTickCount;
@@ -737,8 +736,7 @@ begin
           if Length(FSearchText) < 32 then
           begin
             S := FSearchText + Key;
-            if FListLink.DataSet.Locate(FListField.FieldName, S,
-              [loCaseInsensitive, loPartialKey]) then
+            if FListLink.DataSet.Locate(FListField.FieldName, S, [loCaseInsensitive, loPartialKey]) then
             begin
               SelectKeyValue(FKeyField.Value);
               FSearchText := S;

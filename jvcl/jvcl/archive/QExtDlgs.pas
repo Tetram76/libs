@@ -18,7 +18,7 @@ Contributor(s):
 
 Known Issues:
 ----------------------------------------------------------------------------}
-// $Id: QExtDlgs.pas 11641 2007-12-24 16:34:00Z outchy $
+// $Id$
 
 unit QExtDlgs;
 

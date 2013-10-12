@@ -41,7 +41,7 @@ Known Issues:
   time of writing, that was the only method that worked to get the control
   to be refreshed. If you find a better way, please do the change.
 -----------------------------------------------------------------------------}
-// $Id: JvMemo.pas 13256 2012-02-28 08:18:58Z obones $
+// $Id$
 
 unit JvMemo;
 
@@ -209,9 +209,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMemo.pas $';
-    Revision: '$Revision: 13256 $';
-    Date: '$Date: 2012-02-28 09:18:58 +0100 (mar., 28 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

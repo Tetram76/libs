@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_SysUtils.pas 12833 2010-09-05 13:25:12Z obones $
+// $Id$
 
 unit JvInterpreter_SysUtils;
 
@@ -36,6 +36,9 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF RTL250_UP}
+  AnsiStrings, // must be included before SysUtils
+  {$ENDIF RTL250_UP}
   SysUtils,
   JvInterpreter;
 
@@ -47,9 +50,9 @@ function Var2SearchRec(const SearchRec: Variant): TSearchRec;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_SysUtils.pas $';
-    Revision: '$Revision: 12833 $';
-    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -957,7 +960,7 @@ procedure JvInterpreter_FormatBuf(var Value: Variant; Args: TJvInterpreterArgs);
   function FormatBufWorkaround(var Buffer; BufLen: Cardinal; const Format; FmtLen: Cardinal;
     const Args: array of const): Cardinal;
   begin
-    Result := FormatBuf(Buffer, BufLen, Format, FmtLen, Args);
+    Result := {$IFDEF RTL250_UP}AnsiStrings.{$ENDIF}FormatBuf(Buffer, BufLen, Format, FmtLen, Args);
   end;
 
 begin

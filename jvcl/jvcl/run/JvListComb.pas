@@ -30,7 +30,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvListComb.pas 13350 2012-06-13 14:54:41Z obones $
+// $Id$
 
 unit JvListComb;
 
@@ -396,9 +396,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListComb.pas $';
-    Revision: '$Revision: 13350 $';
-    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

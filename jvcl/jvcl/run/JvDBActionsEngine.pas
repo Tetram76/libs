@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActionsEngine.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id$
 
 unit JvDBActionsEngine;
 
@@ -182,9 +182,9 @@ function RegisteredDatabaseActionEngineList: TJvDatabaseActionEngineList;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActionsEngine.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

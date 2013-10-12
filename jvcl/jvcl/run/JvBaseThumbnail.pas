@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   This file contains (most likely) greek comments.
 -----------------------------------------------------------------------------}
-// $Id: JvBaseThumbnail.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvBaseThumbnail;
 
@@ -178,9 +178,9 @@ function ReplaceAllStr(const Str, SearchFor, ReplaceWith: string;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseThumbnail.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

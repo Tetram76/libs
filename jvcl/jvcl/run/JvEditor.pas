@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvEditor.pas 13407 2012-08-28 19:29:35Z ahuser $
+// $Id$
 
 unit JvEditor;
 
@@ -42,6 +42,9 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   Windows, Messages, Classes, Controls,
   JvEditorCommon;
 
@@ -380,9 +383,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditor.pas $';
-    Revision: '$Revision: 13407 $';
-    Date: '$Date: 2012-08-28 21:29:35 +0200 (mar., 28 août 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -957,9 +960,15 @@ begin
   Key := Char(Value);
   WasSelected := (FSelection.IsSelected) and (not PersistentBlocks);
   {$IFDEF UNICODE}
-  if (Key >= #32) and ((Key <= #$FF) or not TCharacter.IsControl(Char(Value))) then
+  if (Key >= #32) and ((Key <= #$FF) or
+    {$IFDEF RTL250_UP}
+    not Char(Value).IsControl
+    {$ELSE}
+    not TCharacter.IsControl(Char(Value))
+    {$ENDIF RTL250_UP}
+    ) then
   {$ELSE}
-  if CharInSet(Key, [#32..#255]) then
+  if Key >= #32 then
   {$ENDIF UNICODE}
   begin
     if not HasChar(Key, JvEditorCompletionChars) then
@@ -1614,11 +1623,8 @@ begin
 end;
 
 procedure TJvCustomEditor.ClipboardCopy;
-var
-  S: string;
 begin
-  S := GetSelText;
-  Clipboard.SetTextBuf(PChar(S));
+  Clipboard.AsText := GetSelText;
   SetClipboardBlockFormat(SelBlockFormat);
 end;
 
@@ -1834,23 +1840,18 @@ end;
 procedure TJvCustomEditor.ClipboardPaste;
 var
   ClipS: string;
-  Len: Integer;
-  H: THandle;
   X, Y, EndX, EndY: Integer;
 begin
   if (CaretY > FLines.Count - 1) and (FLines.Count > 0) then
     if BeepOnError then
       Beep;
-  H := Clipboard.GetAsHandle(CF_TEXT);
-  Len := GlobalSize(H);
-  if Len = 0 then
+  ClipS := Clipboard.AsText;
+  if ClipS = '' then
     Exit;
+  ClipS := ExpandTabs(AdjustLineBreaks(ClipS));
 
   BeginUpdate;
   try
-    SetLength(ClipS, Len);
-    SetLength(ClipS, Clipboard.GetTextBuf(PChar(ClipS), Len));
-    ClipS := ExpandTabs(AdjustLineBreaks(ClipS));
     PaintCaret(False);
 
     ReLine;
@@ -2033,7 +2034,7 @@ begin
     if ps > 1 then
     begin
       Move(S[1], P[0], ps * SizeOf(Char));
-      Inc(P, ps);
+      Inc(P, ps - 1);
     end;
 
     for I := ps to Length(S) do

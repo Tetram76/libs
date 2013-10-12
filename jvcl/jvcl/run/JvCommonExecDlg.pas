@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCommonExecDlg.pas 13351 2012-06-13 15:16:00Z obones $
+// $Id$
 
 unit JvCommonExecDlg;
 
@@ -48,9 +48,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCommonExecDlg.pas $';
-    Revision: '$Revision: 13351 $';
-    Date: '$Date: 2012-06-13 17:16:00 +0200 (mer., 13 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgQPrintPreviewForm.pas 12665 2010-01-07 21:10:15Z ahuser $
+// $Id$
 
 unit JvgQPrintPreviewForm;
 
@@ -105,9 +105,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgQPrintPreviewForm.pas $';
-    Revision: '$Revision: 12665 $';
-    Date: '$Date: 2010-01-07 22:10:15 +0100 (jeu., 07 janv. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

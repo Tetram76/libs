@@ -23,7 +23,7 @@ Description : Parser for JVCL Interpreter version 2
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreterParser.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id$
 
 { history (JVCL Library versions):
 

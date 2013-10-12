@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvVersionInfo.pas 13303 2012-06-02 20:25:06Z jfudickar $
+// $Id$
 
 unit JvVersionInfo;
 

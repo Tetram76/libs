@@ -88,7 +88,7 @@ You may retrieve the latest version of this file at the Project JEDI's JVCL home
 located at http://jvcl.delphi-jedi.org
 
 -----------------------------------------------------------------------------}
-// $Id: JvChart.pas 13458 2012-10-08 18:50:00Z wpostma $
+// $Id$
 
 unit JvChart;
 
@@ -941,9 +941,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvChart.pas $';
-    Revision: '$Revision: 13458 $';
-    Date: '$Date: 2012-10-08 20:50:00 +0200 (lun., 08 oct. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -3040,8 +3040,8 @@ var
   // Rectangle plotting:
   X, Y, X2, Y2: Integer;
 
-  aWidth:Integer;
-  aHeight:Integer;
+  //aWidth:Integer;
+  //aHeight:Integer;
   { Here be lots of local functions }
 
   { Draw symbol markers and text labels on a chart... }
@@ -3476,8 +3476,8 @@ var
 
 begin { Enough local functions for ya? -WP }
   ACanvas := GetChartCanvas(false);
-  aWidth := GetChartCanvasWidth;
-  aHeight:= GetChartCanvasHeight;
+  //aWidth := GetChartCanvasWidth;
+  //aHeight:= GetChartCanvasHeight;
 
   Assert(Assigned(ACanvas));
   Assert(Assigned(ACanvas.Brush));

@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmCompile.pas 13186 2011-11-30 13:21:45Z obones $
+// $Id$
 
 unit FrmCompile;
 

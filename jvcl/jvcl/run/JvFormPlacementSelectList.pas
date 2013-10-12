@@ -16,7 +16,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormPlacementSelectList.pas 13171 2011-11-19 10:32:36Z jfudickar $
+// $Id$
 
 unit JvFormPlacementSelectList;
 
@@ -58,9 +58,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormPlacementSelectList.pas $';
-    Revision: '$Revision: 13171 $';
-    Date: '$Date: 2011-11-19 11:32:36 +0100 (sam., 19 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

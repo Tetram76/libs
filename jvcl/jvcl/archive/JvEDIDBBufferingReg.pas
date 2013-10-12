@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEDIDBBufferingReg.pas 12758 2010-05-08 09:26:53Z ahuser $
+// $Id$
 
 unit JvEDIDBBufferingReg;
 

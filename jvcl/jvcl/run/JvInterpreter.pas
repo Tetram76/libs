@@ -31,7 +31,7 @@ description : JVCL Interpreter version 2
 Known Issues:
    String fields in records binded from Delphi don't work
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter.pas 13448 2012-09-25 08:05:34Z ahuser $
+// $Id$
 
 { history (JVCL Library versions):
   1.10:
@@ -1257,9 +1257,9 @@ const
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter.pas $';
-    Revision: '$Revision: 13448 $';
-    Date: '$Date: 2012-09-25 10:05:34 +0200 (mar., 25 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2870,22 +2870,21 @@ begin
   Index := L;
 end;
 
+function SortIdentifier(Item1, Item2: Pointer): Integer;
+begin
+  { function AnsiStrIComp about 30% faster than AnsiCompareText }
+  { Result := AnsiCompareText(TJvInterpreterIdentifier(Item1).Identifier,
+     TJvInterpreterIdentifier(Item2).Identifier); }
+  Result := AnsiStrIComp(PChar(TJvInterpreterIdentifier(Item1).Identifier),
+    PChar(TJvInterpreterIdentifier(Item2).Identifier));
+end;
+
 procedure TJvInterpreterIdentifierList.Sort(Compare: TListSortCompare = nil);
-
-  function SortIdentifier(Item1, Item2: Pointer): Integer;
-  begin
-    { function AnsiStrIComp about 30% faster than AnsiCompareText }
-    { Result := AnsiCompareText(TJvInterpreterIdentifier(Item1).Identifier,
-       TJvInterpreterIdentifier(Item2).Identifier); }
-    Result := AnsiStrIComp(PChar(TJvInterpreterIdentifier(Item1).Identifier),
-      PChar(TJvInterpreterIdentifier(Item2).Identifier));
-  end;
-
 begin
   if Assigned(Compare) then
     inherited Sort(Compare)
   else
-    inherited Sort(TListSortCompare(@SortIdentifier));
+    inherited Sort(SortIdentifier);
 end;
 
 function TJvInterpreterIdentifierList.IndexOf(const UnitName, Identifier: string): TJvInterpreterIdentifier;
@@ -8205,7 +8204,7 @@ end;
 
 //=== { TJvInterpreterMethodList } ===========================================
 
-function SortIdentifier(Item1, Item2: Pointer): Integer;
+function SortMethodIdentifier(Item1, Item2: Pointer): Integer;
 begin
   { function AnsiStrIComp about 30% faster than AnsiCompareText }
   { Result := AnsiCompareText(TJvInterpreterIdentifier(Item1).Identifier,
@@ -8225,7 +8224,7 @@ end;
 
 procedure TJvInterpreterMethodList.Sort(Compare: TListSortCompare);
 begin
-  inherited Sort(SortIdentifier);
+  inherited Sort(SortMethodIdentifier);
 end;
 
 //=== { TJvInterpreterRecord } ===============================================

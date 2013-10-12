@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgProcess.pas 11641 2007-12-24 16:34:00Z outchy $
+// $Id$
 
 unit JvgProcess;
 
@@ -71,8 +71,8 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$RCSfile$';
-    Revision: '$Revision: 11641 $';
-    Date: '$Date: 2007-12-24 17:34:00 +0100 (lun., 24 déc. 2007) $';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEProgress.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id$
 
 unit JvBDEProgress;
 
@@ -32,6 +32,9 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNIT_TYPES}
+  Types,
+  {$ENDIF HAS_UNIT_TYPES}
   Windows, Classes, Controls, DB, DBTables, BDE,
   {$IFDEF COMPILER10_UP}
   DBCommonTypes,
@@ -130,9 +133,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEProgress.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -141,6 +144,7 @@ implementation
 
 uses
   SysUtils, Math, Forms, StdCtrls,
+  JclAnsiStrings,
   JvProgressUtils, JvJVCLUtils;
 
 const
@@ -512,7 +516,7 @@ begin
       Exit;
     end;
     if CurFlag in TraceFlags then
-      FOnTrace(Self, CurFlag, string(StrPas(PTraceDesc(CBInfo)^.pszTrace)));
+      FOnTrace(Self, CurFlag, string(StrPasA(PTraceDesc(CBInfo)^.pszTrace)));
   end;
 end;
 
@@ -557,7 +561,7 @@ begin
   if CallInfo^.iPercentDone >= 0 then
     SetPercent(CallInfo^.iPercentDone)
   else
-    SetMessage(string(StrPas(CallInfo^.szMsg)));
+    SetMessage(string(StrPasA(CallInfo^.szMsg)));
 end;
 
 function TJvDBProgress.QryProgressCallback(CBInfo: Pointer): CBRType;

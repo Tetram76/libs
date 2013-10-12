@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDsgnConsts.pas 13455 2012-10-04 21:19:53Z jfudickar $
+// $Id$
 
 unit JvDsgnConsts;
 

@@ -32,7 +32,7 @@ Known Issues:
     When dragging an item and MultiSelect is True droptarget node is not painted
     correctly.
 -----------------------------------------------------------------------------}
-// $Id: JvComCtrls.pas 13441 2012-09-24 13:05:24Z ahuser $
+// $Id$
 
 unit JvComCtrls;
 
@@ -705,9 +705,9 @@ const
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComCtrls.pas $';
-    Revision: '$Revision: 13441 $';
-    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2560,7 +2560,7 @@ begin
     mask := TVIF_STATE;
     hItem := ItemId;
     if TreeView_GetItem(Handle, Item) then
-      Result := ((Item.State and TVIS_BOLD) = TVIS_BOLD)
+      Result := ((Item.state and TVIS_BOLD) = TVIS_BOLD)
     else
       Result := False;
   end;
@@ -2581,7 +2581,7 @@ begin
       mask := TVIF_STATE;
       hItem := ItemId;
       if TreeView_GetItem(Handle, Item) then
-        Result := ((Item.State and TVIS_CHECKED) = TVIS_CHECKED)
+        Result := ((Item.state and TVIS_CHECKED) = TVIS_CHECKED)
       else
         Result := False;
     end;
@@ -2602,9 +2602,9 @@ begin
       hItem := ItemId;
       StateMask := TVIS_BOLD;
       if Value then
-        Item.State := TVIS_BOLD
+        Item.state := TVIS_BOLD
       else
-        Item.State := 0;
+        Item.state := 0;
       TreeView_SetItem(Handle, Item);
     end;
   end;
@@ -2618,30 +2618,24 @@ begin
   begin
     FChecked := Value;
     if Owner.Owner is TJvTreeView then
-    begin
-      TJvTreeView(Owner.Owner).SetCheckedInState(Self, FChecked);
-    end
+      TJvTreeView(Owner.Owner).SetCheckedInState(Self, FChecked)
     else
     begin
       FillChar(Item, SizeOf(Item), 0);
-      with Item do
-      begin
-        hItem := ItemId;
-        mask := TVIF_STATE;
-        StateMask := TVIS_STATEIMAGEMASK;
-        if Value then
-          Item.State := TVIS_CHECKED
-        else
-          Item.State := TVIS_CHECKED shr 1;
-        TreeView_SetItem(Handle, Item);
-      end;
+      Item.hItem := ItemId;
+      Item.mask := TVIF_STATE;
+      Item.stateMask := TVIS_STATEIMAGEMASK;
+      if Value then
+        Item.state := TVIS_CHECKED
+      else
+        Item.state := TVIS_CHECKED shr 1;
+      TreeView_SetItem(Handle, Item);
     end;
     DoCheckedChange;
   end;
 end;
 
-procedure TJvTreeNode.MoveTo(Destination: TTreeNode;
-  Mode: TNodeAttachMode);
+procedure TJvTreeNode.MoveTo(Destination: TTreeNode; Mode: TNodeAttachMode);
 var
   SaveItem, Item: TTVItem;
 begin
@@ -2841,7 +2835,7 @@ begin
     mask := TVIF_STATE;
     hItem := Node.ItemId;
     if TreeView_GetItem(Handle, Item) then
-      Result := ((Item.State and TVIS_CHECKED) = TVIS_CHECKED)
+      Result := ((Item.state and TVIS_CHECKED) = TVIS_CHECKED)
     else
       Result := False;
   end;
@@ -3021,9 +3015,9 @@ begin
     mask := TVIF_STATE;
     StateMask := TVIS_STATEIMAGEMASK;
     if Value then
-      Item.State := TVIS_CHECKED
+      Item.state := TVIS_CHECKED
     else
-      Item.State := TVIS_CHECKED shr 1;
+      Item.state := TVIS_CHECKED shr 1;
     TreeView_SetItem(Handle, Item);
   end;
 end;

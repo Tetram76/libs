@@ -28,7 +28,7 @@ Known Issues:
   (rom) source cleaning incomplete
   (rom) GetAttr should be broken up further
 -----------------------------------------------------------------------------}
-// $Id: JvHLEditor.pas 13288 2012-04-27 08:32:34Z ahuser $
+// $Id$
 
 { history
  (JVCL Library versions) :
@@ -170,9 +170,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvHLEditor.pas $';
-    Revision: '$Revision: 13288 $';
-    Date: '$Date: 2012-04-27 10:32:34 +0200 (ven., 27 avr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1282,7 +1282,10 @@ begin
                         FLong := lgPreproc2
                       else
                         FLong := lgComment2;
-                      P := StrScanNil(F + I + 2, Char(')'));
+                      if F[I + 1] = #0 then
+                        P := nil
+                      else
+                        P := StrScanNil(F + I + 2, Char(')'));
                       if P = nil then
                         Break
                       else
@@ -1294,7 +1297,10 @@ begin
                     end;
                   '''':
                     begin
-                      P := StrScanNil(F + I + 1, Char(''''));
+                      if F[I] = #0 then
+                        P := nil
+                      else
+                        P := StrScanNil(F + I + 1, Char(''''));
                       if P <> nil then
                       begin
                         i1 := P - F;
@@ -1339,7 +1345,10 @@ begin
                     if {S[I + 1]} F[I] = '*' then
                     begin
                       FLong := lgComment2;
-                      P := StrScanNil(F + I + 2, Char('/'));
+                      if F[I + 1] = #0 then
+                        P := nil
+                      else
+                        P := StrScanNil(F + I + 2, Char('/'));
                       if P = nil then
                         Break
                       else
@@ -1351,7 +1360,10 @@ begin
                     end;
                   '"':
                     begin
-                      P := StrScanNil(F + I + 1, Char('"'));
+                      if F[I] = #0 then
+                        P := nil
+                      else
+                        P := StrScanNil(F + I + 1, Char('"'));
                       if P <> nil then
                       begin
                         i1 := P - F;
@@ -1393,7 +1405,10 @@ begin
                 end;
               lgString:
                 begin
-                  P := StrScanNil(F + I + 1, Char('"'));
+                  if F[I] = #0 then
+                    P := nil
+                  else
+                    P := StrScanNil(F + I + 1, Char('"'));
                   if P <> nil then
                   begin
                     i1 := P - F;
@@ -1499,7 +1514,10 @@ begin
                     if {S[I + 1]} F[I] = '*' then
                     begin
                       FLong := lgComment2;
-                      P := StrScanNil(F + I + 2, Char(')'));
+                      if F[I + 1] = #0 then
+                        P := nil
+                      else
+                        P := StrScanNil(F + I + 2, Char(')'));
                       if P = nil then
                         Break
                       else
@@ -1511,7 +1529,10 @@ begin
                     end;
                   '"':
                     begin
-                      P := StrScanNil(F + I + 1, Char('"'));
+                      if F[I] = #0 then
+                        P := nil
+                      else
+                        P := StrScanNil(F + I + 1, Char('"'));
                       if P <> nil then
                       begin
                         i1 := P - F;
@@ -1525,7 +1546,10 @@ begin
                     end;
                   '''':
                     begin
-                      P := StrScanNil(F + I + 1, Char(''''));
+                      if F[I] = #0 then
+                        P := nil
+                      else
+                        P := StrScanNil(F + I + 1, Char(''''));
                       if P <> nil then
                       begin
                         i1 := P - F;
@@ -1541,7 +1565,10 @@ begin
                     if {S[I + 1]} F[I] = '*' then
                     begin
                       FLong := lgComment2;
-                      P := StrScanNil(F + I + 2, Char('/'));
+                      if F[I + 1] = #0 then
+                        P := nil
+                      else
+                        P := StrScanNil(F + I + 2, Char('/'));
                       if P = nil then
                         Break
                       else

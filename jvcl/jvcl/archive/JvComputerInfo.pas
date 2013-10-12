@@ -44,7 +44,7 @@ Known Issues:
     Changed UserName to RegisteredOwner
     Changed Company to RegisteredOrganization
 -----------------------------------------------------------------------------}
-// $Id: JvComputerInfo.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 
 {$I jvcl.inc}
 {$I windowsonly.inc}

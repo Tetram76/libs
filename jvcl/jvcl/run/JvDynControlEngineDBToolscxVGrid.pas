@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDBToolscxVGrid.pas 12806 2010-06-12 17:27:30Z uschuster $
+// $Id$
 
 unit JvDynControlEngineDBToolscxVGrid;
 
@@ -87,9 +87,9 @@ Var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDBToolscxVGrid.pas $';
-    Revision: '$Revision: 12806 $';
-    Date: '$Date: 2010-06-12 19:27:30 +0200 (sam., 12 juin 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

@@ -22,7 +22,7 @@ Contributor(s):
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvExplorerBar.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvExplorerBar;
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxTreeList.pas 13099 2011-09-02 21:51:31Z jfudickar $
+// $Id$
 
 unit JvControlActionsEngineCxTreeList;
 
@@ -58,9 +58,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxTreeList.pas $';
-    Revision: '$Revision: 13099 $';
-    Date: '$Date: 2011-09-02 23:51:31 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -94,6 +94,8 @@ end;
 procedure TJvControlActioncxTreeListEngine.ExportTreeList(aTreeList: TcxCustomTreeList);
 var
   SaveDialog: TSaveDialog;
+  Extension: String;
+  FileName: String;
 begin
   if not Assigned(aTreeList) then
     Exit;
@@ -101,20 +103,23 @@ begin
   try
     SaveDialog.Name    := 'SaveDialog';
     SaveDialog.DefaultExt := 'XLS';
-    SaveDialog.Filter  := 'MS-Excel-Files (*.XLS)|*.XLS|XML-Files (*.XML)|*.HTM|HTML-Files (*.HTM)|*.HTM|Text-Files (*.TXT)|*.TXT|All Files (*.*)|*.*';
+    SaveDialog.Filter  := 'MS-Excel-Files (*.XLS;*.XLSX)|*.XLS;*.XLSX|XML-Files (*.XML)|*.HTM|HTML-Files (*.HTM)|*.HTM|Text-Files (*.TXT)|*.TXT|All Files (*.*)|*.*';
     SaveDialog.Options := [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist];
     if SaveDialog.Execute then
       if SaveDialog.FileName <> '' then
       begin
-        if (Pos('.XLS', UpperCase(SaveDialog.FileName)) = Length(SaveDialog.FileName) - 3) then
-          cxExportTLToExcel(SaveDialog.FileName, aTreeList)
-        else if (Pos('.XML', UpperCase(SaveDialog.FileName)) = Length(SaveDialog.FileName) - 3) then
-          cxExportTLToXML(SaveDialog.FileName, aTreeList)
-        else if ((Pos('.HTM', UpperCase(SaveDialog.FileName)) = Length(SaveDialog.FileName) - 3) or
-          (Pos('.HTML', UpperCase(SaveDialog.FileName)) = Length(SaveDialog.FileName) - 4)) then
-          cxExportTLToHTML(SaveDialog.FileName, aTreeList)
+        FileName := SaveDialog.Filename;
+        Extension := Uppercase(ExtractFileExt(FileName));
+        if Extension = '.XLS' then
+          cxExportTLToExcel(Filename, aTreeList)
+        else if Extension = '.XLSX' then
+          cxExportTLToXLSX(Filename, aTreeList)
+        else if Extension = 'XML' then
+          cxExportTLToXML(Filename, aTreeList)
+        else if (Extension = '.HTM') or (Extension = '.HTML') then
+          cxExportTLToHTML(Filename, aTreeList)
         else
-          cxExportTLToText(SaveDialog.FileName, aTreeList);
+          cxExportTLToText(Filename, aTreeList);
       end;
   finally
     SaveDialog.Free;

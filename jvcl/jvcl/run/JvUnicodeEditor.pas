@@ -30,7 +30,7 @@ Known Issues:
   Some russian comments were translated to english; these comments are marked
   with [translated]
 -----------------------------------------------------------------------------}
-// $Id: JvUnicodeEditor.pas 13407 2012-08-28 19:29:35Z ahuser $
+// $Id$
 
 unit JvUnicodeEditor;
 
@@ -278,9 +278,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUnicodeEditor.pas $';
-    Revision: '$Revision: 13407 $';
-    Date: '$Date: 2012-08-28 21:29:35 +0200 (mar., 28 août 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -935,7 +935,6 @@ begin
 
   WasSelected := (FSelection.IsSelected) and (not PersistentBlocks);
   if Value >= 32 then
-  //if Key in [#32..#255] then
   begin
     if (Value < 256) and not HasChar(Char(Key), JvEditorCompletionChars) then
       Completion.DoKeyPress(Char(Key));
@@ -1587,11 +1586,8 @@ begin
 end;
 
 procedure TJvCustomWideEditor.ClipboardCopy;
-var
-  S: string;
 begin
-  S := GetSelText; // convert to ANSI
-  Clipboard.SetTextBuf(PChar(S));
+  Clipboard.AsText := GetSelText;
   SetClipboardBlockFormat(SelBlockFormat);
 end;
 
@@ -1807,23 +1803,18 @@ end;
 procedure TJvCustomWideEditor.ClipboardPaste;
 var
   ClipS: string;
-  Len: Integer;
-  H: THandle;
   X, Y, EndX, EndY: Integer;
 begin
   if (CaretY > FLines.Count - 1) and (FLines.Count > 0) then
     if BeepOnError then
       Beep;
-  H := Clipboard.GetAsHandle(CF_TEXT);
-  Len := GlobalSize(H);
-  if Len = 0 then
+  ClipS := Clipboard.AsText;
+  if ClipS = '' then
     Exit;
+  ClipS := ExpandTabs(AdjustLineBreaks(ClipS));
 
   BeginUpdate;
   try
-    SetLength(ClipS, Len);
-    SetLength(ClipS, Clipboard.GetTextBuf(PChar(ClipS), Len));
-    ClipS := ExpandTabs(AdjustLineBreaks(ClipS));
     PaintCaret(False);
 
     ReLine;
@@ -2005,7 +1996,7 @@ begin
     if ps > 1 then
     begin
       MoveWideChar(S[1], P[0], ps);
-      Inc(P, ps);
+      Inc(P, ps - 1);
     end;
 
     for I := ps to Length(S) do

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppInst.pas 13189 2012-01-12 18:19:24Z ahuser $
+// $Id$
 
 unit JvAppInst;
 
@@ -109,9 +109,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppInst.pas $';
-    Revision: '$Revision: 13189 $';
-    Date: '$Date: 2012-01-12 19:19:24 +0100 (jeu., 12 janv. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

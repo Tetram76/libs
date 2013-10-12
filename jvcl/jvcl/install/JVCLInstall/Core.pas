@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Core.pas 13185 2011-11-30 12:46:44Z obones $
+// $Id$
 
 unit Core;
 

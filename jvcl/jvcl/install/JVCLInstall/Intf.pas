@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Intf.pas 13165 2011-11-08 22:00:27Z ahuser $
+// $Id$
 
 unit Intf;
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvJVCLAboutEditor.pas 13352 2012-06-14 09:21:26Z obones $
+// $Id$
 
 unit JvJVCLAboutEditor;
 

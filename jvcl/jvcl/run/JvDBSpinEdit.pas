@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
 
 -----------------------------------------------------------------------------}
-// $Id: JvDBSpinEdit.pas 13343 2012-06-13 12:22:56Z obones $
+// $Id$
 
 unit JvDBSpinEdit;
 
@@ -91,9 +91,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSpinEdit.pas $';
-    Revision: '$Revision: 13343 $';
-    Date: '$Date: 2012-06-13 14:22:56 +0200 (mer., 13 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

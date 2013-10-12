@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTSync.pas 12833 2010-09-05 13:25:12Z obones $
+// $Id$
 
 unit JvMTSync;
 
@@ -102,9 +102,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTSync.pas $';
-    Revision: '$Revision: 12833 $';
-    Date: '$Date: 2010-09-05 15:25:12 +0200 (dim., 05 sept. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

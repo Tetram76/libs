@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEMemTable.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvBDEMemTable;
 
@@ -74,7 +74,7 @@ type
     procedure DeleteTable;
     procedure EmptyTable;
     procedure GotoRecord(RecordNo: Longint);
-    function GetFieldData(Field: TField; Buffer: TJvValueBuffer): Boolean; override;
+    function GetFieldData(Field: TField; {$IFDEF RTL250_UP}var{$ENDIF} Buffer: TJvValueBuffer): Boolean; override;
     function IsSequenced: Boolean; override;
     function Locate(const KeyFields: string; const KeyValues: Variant;
       Options: TLocateOptions): Boolean; override;
@@ -90,9 +90,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEMemTable.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -260,10 +260,12 @@ begin
 end;
 
 
-function TJvBDEMemoryTable.GetFieldData(Field: TField; Buffer: TJvValueBuffer): Boolean;
+function TJvBDEMemoryTable.GetFieldData(Field: TField; {$IFDEF RTL250_UP}var{$ENDIF} Buffer: TJvValueBuffer): Boolean;
+type
+  TJvRecBuf = {$IFDEF COMPILER12_UP}PByte{$ELSE}PAnsiChar{$ENDIF COMPILER12_UP};
 var
   IsBlank: LongBool;
-  RecBuf: {$IFDEF COMPILER12_UP}PByte{$ELSE}PAnsiChar{$ENDIF COMPILER12_UP};
+  RecBuf: TJvRecBuf;
 begin
   Result := inherited GetFieldData(Field, Buffer);
   if not Result then
@@ -272,11 +274,11 @@ begin
     case State of
       dsBrowse:
         if not IsEmpty then
-          RecBuf := ActiveBuffer;
+          RecBuf := TJvRecBuf(ActiveBuffer);
       dsEdit, dsInsert:
-        RecBuf := ActiveBuffer;
+        RecBuf := TJvRecBuf(ActiveBuffer);
       dsCalcFields:
-        RecBuf := CalcBuffer;
+        RecBuf := TJvRecBuf(CalcBuffer);
     end;
     if RecBuf = nil then
       Exit;

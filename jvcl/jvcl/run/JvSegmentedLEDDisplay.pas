@@ -25,7 +25,7 @@ Known Issues:
   * Automatic unlit color calculation is not working properly. Maybe a function in JclGraphUtil
     can help out there.
 -----------------------------------------------------------------------------}
-// $Id: JvSegmentedLEDDisplay.pas 13145 2011-11-02 21:15:19Z ahuser $
+// $Id$
 
 unit JvSegmentedLEDDisplay;
 
@@ -34,6 +34,9 @@ unit JvSegmentedLEDDisplay;
 interface
 
 uses
+  {$IFDEF HAS_UNIT_TYPES}
+  Types,
+  {$ENDIF HAS_UNIT_TYPES}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -429,9 +432,9 @@ procedure UnregisterModuleSegmentedLEDDigitClasses(Module: HMODULE);
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSegmentedLEDDisplay.pas $';
-    Revision: '$Revision: 13145 $';
-    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -440,7 +443,7 @@ implementation
 
 uses
   Controls, SysUtils,
-  JclGraphUtils,
+  JclAnsiStrings, JclGraphUtils,
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
@@ -1793,7 +1796,7 @@ begin
   OrgPos := Stream.Position;
   try
     Stream.ReadBuffer(Hdr, SizeOf(Hdr));
-    if StrLIComp(Hdr.ID, PAnsiChar(Display.DigitClass.MapperFileID), Length(Display.DigitClass.MapperFileID)) = 0 then
+    if StrLICompA(Hdr.ID, PAnsiChar(Display.DigitClass.MapperFileID), Length(Display.DigitClass.MapperFileID)) = 0 then
       PrimReadMapping(Hdr, Stream)
     else
       raise EJVCLSegmentedLEDException.CreateRes(@RsEInvalidMappingFile);

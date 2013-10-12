@@ -23,7 +23,7 @@
  You may retrieve the latest version of this file at the Project JEDI home
  page, located at http://www.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvScheduledEvents.pas 13356 2012-06-15 08:24:05Z ahuser $
+// $Id$
 
 unit JvScheduledEvents;
 
@@ -271,9 +271,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvScheduledEvents.pas $';
-    Revision: '$Revision: 13356 $';
-    Date: '$Date: 2012-06-15 10:24:05 +0200 (ven., 15 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

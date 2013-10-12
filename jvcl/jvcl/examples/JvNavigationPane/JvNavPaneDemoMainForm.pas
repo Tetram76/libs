@@ -1,4 +1,4 @@
-// $Id: JvNavPaneDemoMainForm.pas 11909 2008-09-21 07:00:59Z cycocrew $
+// $Id$
 unit JvNavPaneDemoMainForm;
 
 interface

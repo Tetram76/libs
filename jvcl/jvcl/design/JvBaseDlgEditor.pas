@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDlgEditor.pas 13350 2012-06-13 14:54:41Z obones $
+// $Id$
 
 unit JvBaseDlgEditor;
 

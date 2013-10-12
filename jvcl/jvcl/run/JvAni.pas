@@ -28,7 +28,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAni.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit JvAni;
 
@@ -131,9 +131,9 @@ function LoadJvAniDialog: TJvAni;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAni.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -222,7 +222,7 @@ function ReadChunk(S: TStream; const Tag: TJvAniTag; var Data): Boolean;
 begin
   Result := S.Read(Data, Tag.ckSize) = Tag.ckSize;
   if Result then
-    Result := S.Seek(Tag.ckSize mod 2, soFromCurrent) <> -1;
+    Result := S.Seek(Tag.ckSize mod 2, soCurrent) <> -1;
 end;
 
 function ReadChunkN(S: TStream; const Tag: TJvAniTag; var Data;
@@ -238,14 +238,14 @@ begin
   if Result then
   begin
     cbRead := PadUp(Tag.ckSize) - cbRead;
-    Result := S.Seek(cbRead, soFromCurrent) <> -1;
+    Result := S.Seek(cbRead, soCurrent) <> -1;
   end;
 end;
 
 function SkipChunk(S: TStream; const Tag: TJvAniTag): Boolean;
 begin
   // Round pTag^.ckSize up to nearest word boundary to maintain alignment
-  Result := S.Seek(PadUp(Tag.ckSize), soFromCurrent) <> -1;
+  Result := S.Seek(PadUp(Tag.ckSize), soCurrent) <> -1;
 end;
 
 { Icon and cursor types }
@@ -618,7 +618,7 @@ begin
           begin
             GetMem(BI, DIBSize);
             try
-              Mem.Seek(DIBOffset, soFromBeginning);
+              Mem.Seek(DIBOffset, soBeginning);
               Mem.Read(BI^, DIBSize);
               FOriginalColors := Max(GetDInColors(BI^.biBitCount), FOriginalColors);
               HotSpot := Point(xHotspot, yHotspot);
@@ -831,11 +831,11 @@ var
 begin
   Pos := Stream.Position;
   Tag.ckSize := Pos - Tag.ckSize;
-  Stream.Seek(-Tag.ckSize, soFromCurrent);
+  Stream.Seek(-Tag.ckSize, soCurrent);
   Dec(Tag.ckSize, SizeOf(TJvAniTag));
   Inc(Tag.ckSize, AddSize);
   Stream.Write(Tag, SizeOf(Tag));
-  Stream.Seek(Pos, soFromBeginning);
+  Stream.Seek(Pos, soBeginning);
   if Odd(Tag.ckSize) then
   begin
     B := 0;

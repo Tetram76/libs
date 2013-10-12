@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgExportComponents.pas 13198 2012-02-17 08:50:31Z outchy $
+// $Id$
 
 unit JvgExportComponents;
 
@@ -199,9 +199,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgExportComponents.pas $';
-    Revision: '$Revision: 13198 $';
-    Date: '$Date: 2012-02-17 09:50:31 +0100 (ven., 17 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

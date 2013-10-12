@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEQBE.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id$
 
 unit JvBDEQBE;
 
@@ -121,9 +121,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEQBE.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -131,7 +131,8 @@ const
 implementation
 
 uses
-  SysUtils, DBConsts, bdeconst,
+  JclAnsiStrings, // must be included before SysUtils ("StrMove" conflicts)
+  SysUtils, DBConsts, Bdeconst,
   JvDBUtils;
 
 constructor TJvQBEQuery.Create(AOwner: TComponent);
@@ -362,7 +363,7 @@ begin
           AText := PAnsiChar(AnsiString(TempQBE.Text));
           try
             FreeStatement;
-            if StrLen(AText) > 1 then
+            if StrLenA(AText) > 1 then
               PrepareQBE(AText)
             else
               _DBError(SEmptySQLStatement);

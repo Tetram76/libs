@@ -113,7 +113,7 @@
                    an exception will not occur.
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDebugHandler.pas 13264 2012-02-29 15:47:52Z obones $
+// $Id$
 
 unit JvDebugHandler;
 
@@ -170,9 +170,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDebugHandler.pas $';
-    Revision: '$Revision: 13264 $';
-    Date: '$Date: 2012-02-29 16:47:52 +0100 (mer., 29 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

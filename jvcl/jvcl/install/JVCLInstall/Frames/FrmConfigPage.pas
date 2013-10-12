@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmConfigPage.pas 13119 2011-09-21 12:27:03Z obones $
+// $Id$
 
 unit FrmConfigPage;
 
@@ -31,6 +31,9 @@ unit FrmConfigPage;
 interface
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls,
   ShellAPI, CommCtrl,

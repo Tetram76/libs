@@ -23,7 +23,7 @@ tia
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUtils.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvDBUtils;
 
@@ -184,9 +184,9 @@ procedure _DBError(const Msg: string);
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUtils.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -932,7 +932,7 @@ begin
     DS := TDataSetAccess(DataSet);
 		DS.CheckBrowseMode;
 		if ForceScrollEvents or (rmCenter in Mode) then DS.DoBeforeScroll;
-		DS.InternalGotoBookmark(Pointer(Bookmark));
+		DS.InternalGotoBookmark({$IFNDEF RTL240_UP}Pointer{$ENDIF}(Bookmark));
 		DS.Resync(Mode);
 		if ForceScrollEvents or (rmCenter in Mode) then DS.DoAfterScroll;
 	end;

@@ -23,7 +23,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvOdacSmartQuery.pas 13372 2012-06-24 21:56:00Z jfudickar $
+// $Id$
 
 unit JvOdacSmartQuery;
 
@@ -312,9 +312,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvOdacSmartQuery.pas $';
-    Revision: '$Revision: 13372 $';
-    Date: '$Date: 2012-06-24 23:56:00 +0200 (dim., 24 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

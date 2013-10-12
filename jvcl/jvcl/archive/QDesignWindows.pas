@@ -19,7 +19,7 @@ Contributor(s):
 
 Known Issues:
 ----------------------------------------------------------------------------}
-// $Id: QDesignWindows.pas 11641 2007-12-24 16:34:00Z outchy $
+// $Id$
 
 unit QDesignWindows;
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStdCtrlsReg.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvStdCtrlsReg;
 

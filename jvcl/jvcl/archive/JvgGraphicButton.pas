@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgGraphicButton.pas 10855 2006-07-31 08:24:21Z obones $
+// $Id$
 
 unit JvgGraphicButton;
 
@@ -102,9 +102,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/JvgGraphicButton.pas $';
-    Revision: '$Revision: 10855 $';
-    Date: '$Date: 2006-07-31 10:24:21 +0200 (lun., 31 juil. 2006) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

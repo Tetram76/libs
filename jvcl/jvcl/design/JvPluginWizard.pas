@@ -39,7 +39,7 @@ Known Issues:
  V 05 : uses-list minimized
 
  -----------------------------------------------------------------------------}
-// $Id: JvPluginWizard.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvPluginWizard;
 
@@ -491,6 +491,8 @@ begin
     {$ENDIF BCB}
     {$IFDEF DELPHI}
     Repository := Installations.DelphiInstallationFromVersion[
+      {$IFDEF DELPHI19} 19 {$ENDIF} 
+      {$IFDEF DELPHI18} 18 {$ENDIF}
       {$IFDEF DELPHI17} 17 {$ENDIF}
       {$IFDEF DELPHI16} 16 {$ENDIF}
       {$IFDEF DELPHI15} 15 {$ENDIF}
@@ -792,30 +794,7 @@ begin
       {$IFDEF COMPILER8_UP}
       Project.AddFile('rtl.bpi', False);
       {$ENDIF COMPILER8_UP}
-      {$IFDEF COMPILER6}
-      Project.AddFile('JvCoreC6R.bpi', False)
-      {$ENDIF COMPILER6}
-      {$IFDEF COMPILER10}
-      Project.AddFile('JvCoreD10R.bpi', False)
-      {$ENDIF COMPILER10}
-      {$IFDEF COMPILER11}
-      Project.AddFile('JvCoreD11R.bpi', False)
-      {$ENDIF COMPILER11}
-      {$IFDEF COMPILER12}
-      Project.AddFile('JvCoreD12R.bpi', False)
-      {$ENDIF COMPILER12}
-      {$IFDEF COMPILER14}
-      Project.AddFile('JvCoreD14R.bpi', False)
-      {$ENDIF COMPILER14}
-      {$IFDEF COMPILER15}
-      Project.AddFile('JvCoreD15R.bpi', False)
-      {$ENDIF COMPILER15}
-      {$IFDEF COMPILER16}
-      Project.AddFile('JvCoreD16R.bpi', False)
-      {$ENDIF COMPILER16}
-      {$IFDEF COMPILER17}
-      Project.AddFile('JvCoreD17R.bpi', False)
-      {$ENDIF COMPILER17}
+      Project.AddFile('JvCore.bpi', False)
     end
   end
   else
@@ -823,36 +802,7 @@ begin
     // add requires
     if PlugType = ptPackage then
     begin
-      {$IFDEF COMPILER6}
-      Project.AddFile('JvCoreD6R.dcp', False);
-      {$ENDIF COMPILER6}
-      {$IFDEF COMPILER7}
-      Project.AddFile('JvCoreD7R.dcp', False);
-      {$ENDIF COMPILER7}
-      {$IFDEF COMPILER9}
-      Project.AddFile('JvCoreD9R.dcp', False);
-      {$ENDIF COMPILER9}
-      {$IFDEF COMPILER10}
-      Project.AddFile('JvCoreD10R.dcp', False);
-      {$ENDIF COMPILER10}
-      {$IFDEF COMPILER11}
-      Project.AddFile('JvCoreD11R.dcp', False);
-      {$ENDIF COMPILER11}
-      {$IFDEF COMPILER12}
-      Project.AddFile('JvCoreD12R.dcp', False);
-      {$ENDIF COMPILER12}
-      {$IFDEF COMPILER14}
-      Project.AddFile('JvCoreD14R.dcp', False);
-      {$ENDIF COMPILER14}
-      {$IFDEF COMPILER15}
-      Project.AddFile('JvCoreD15R.dcp', False);
-      {$ENDIF COMPILER15}
-      {$IFDEF COMPILER16}
-      Project.AddFile('JvCoreD16R.dcp', False);
-      {$ENDIF COMPILER16}
-      {$IFDEF COMPILER17}
-      Project.AddFile('JvCoreD17R.dcp', False);
-      {$ENDIF COMPILER17}
+      Project.AddFile('JvCore.dcp', False);
     end
   end;
 

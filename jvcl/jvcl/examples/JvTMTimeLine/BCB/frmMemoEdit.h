@@ -26,7 +26,7 @@ All Rights Reserved.
  rights and limitations under the License.
 
 ******************************************************************/
-// $Id: frmMemoEdit.h 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 //---------------------------------------------------------------------------
 
 #ifndef frmMemoEditH

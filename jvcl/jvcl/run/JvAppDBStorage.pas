@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppDBStorage.pas 13191 2012-01-19 20:30:54Z ahuser $
+// $Id$
 
 unit JvAppDBStorage;
 
@@ -125,9 +125,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppDBStorage.pas $';
-    Revision: '$Revision: 13191 $';
-    Date: '$Date: 2012-01-19 21:30:54 +0100 (jeu., 19 janv. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

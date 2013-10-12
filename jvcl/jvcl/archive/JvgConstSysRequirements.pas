@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgConstSysRequirements.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 
 unit JvgConstSysRequirements;
 

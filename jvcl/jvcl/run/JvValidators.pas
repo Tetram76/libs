@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidators.pas 13361 2012-06-18 12:15:20Z obones $
+// $Id$
 
 unit JvValidators;
 
@@ -283,9 +283,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvValidators.pas $';
-    Revision: '$Revision: 13361 $';
-    Date: '$Date: 2012-06-18 14:15:20 +0200 (lun., 18 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

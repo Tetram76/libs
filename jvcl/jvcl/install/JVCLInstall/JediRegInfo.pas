@@ -22,7 +22,7 @@ home page, located at http://jcl.sourceforge.net / http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JediRegInfo.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 {$A+,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
 

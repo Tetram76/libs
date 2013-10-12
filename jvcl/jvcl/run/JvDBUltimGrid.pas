@@ -106,7 +106,7 @@ if (!MyUltimGrid->SearchNext(ResultCol, ResultField, false, false, true)) ...
 -----------------------------------------------------------------------------
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBUltimGrid.pas 13263 2012-02-29 14:08:36Z obones $
+// $Id$
 
 unit JvDBUltimGrid;
 
@@ -244,9 +244,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBUltimGrid.pas $';
-    Revision: '$Revision: 13263 $';
-    Date: '$Date: 2012-02-29 15:08:36 +0100 (mer., 29 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -438,14 +438,12 @@ begin
   end;
 
   FSortOK := False;
-  if Assigned(DataLink) and DataLink.Active and Assigned(FieldsToSort) then
+  if Assigned(DataLink) and DataLink.Active and Assigned(FieldsToSort) and
+    (DataSource.DataSet <> nil) and not (DataSource.DataSet.Eof and DataSource.DataSet.Bof) then
   begin
     // Dataset must be in browse mode
     DSet := DataSource.DataSet;
     DSet.CheckBrowseMode;
-
-    if FRestoreOnSort then
-      SaveGridPosition;
 
     // Checking of OnUserSort assignment
     if Assigned(OnUserSort) then
@@ -461,6 +459,9 @@ begin
     if (SortWith = swFields) and
       not IsPublishedProp(DSet, cIndexFieldNames) then
       raise EJVCLDbGridException.CreateRes(@RsEJvDBGridIndexPropertyMissing);
+
+    if FRestoreOnSort then
+      SaveGridPosition;
 
     // Sorting
     Screen.Cursor := crHourGlass;
@@ -537,7 +538,6 @@ begin
           end;
         end
         else
-
         if SortWith = swClient then
         begin
           // Sort with IndexName
@@ -733,14 +733,14 @@ procedure TJvDBUltimGrid.RestoreGridPosition(Mode: TResyncMode = [rmExact, rmCen
 begin
   if Assigned(FOnRestoreGridPosition) then
   begin
-    if DataLink.DataSet.BookmarkValid(Pointer(FSavedBookmark)) then
+    if (FSavedBookmark <> {$IFDEF RTL200_UP}nil{$ELSE}''{$ENDIF RTL200_UP}) and DataLink.DataSet.BookmarkValid(Pointer(FSavedBookmark)) then
       GotoBookmarkEx(DataLink.DataSet, Pointer(FSavedBookmark), [rmExact], False);
 
     DataLink.ActiveRecord := FSavedRowPos;
     FOnRestoreGridPosition(Self, Pointer(FSavedBookmark), FSavedRowPos);
   end
   else
-  if DataLink.DataSet.BookmarkValid(Pointer(FSavedBookmark)) then
+  if (FSavedBookmark <> {$IFDEF RTL200_UP}nil{$ELSE}''{$ENDIF RTL200_UP}) and DataLink.DataSet.BookmarkValid(Pointer(FSavedBookmark)) then
     GotoBookmarkEx(DataLink.DataSet, Pointer(FSavedBookmark), Mode, False);
 end;
 

@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBImage.pas 13314 2012-06-12 10:24:34Z obones $
+// $Id$
 
 {
 Documentation:
@@ -106,9 +106,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBImage.pas $';
-    Revision: '$Revision: 13314 $';
-    Date: '$Date: 2012-06-12 12:24:34 +0200 (mar., 12 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

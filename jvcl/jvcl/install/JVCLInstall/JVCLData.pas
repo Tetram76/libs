@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCLData.pas 13295 2012-05-07 15:01:25Z obones $
+// $Id$
 
 unit JVCLData;
 

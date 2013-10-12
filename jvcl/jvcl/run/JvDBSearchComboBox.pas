@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBSearchComboBox.pas 13168 2011-11-13 10:02:20Z ahuser $
+// $Id$
 
 unit JvDBSearchComboBox;
 
@@ -186,9 +186,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBSearchComboBox.pas $';
-    Revision: '$Revision: 13168 $';
-    Date: '$Date: 2011-11-13 11:02:20 +0100 (dim., 13 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

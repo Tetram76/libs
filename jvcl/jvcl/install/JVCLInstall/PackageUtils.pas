@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageUtils.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit PackageUtils;
 

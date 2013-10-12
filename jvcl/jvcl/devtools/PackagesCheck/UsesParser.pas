@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: UsesParser.pas 12678 2010-01-15 18:54:05Z outchy $
+// $Id$
 
 unit UsesParser;
 

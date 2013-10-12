@@ -18,7 +18,7 @@ Contributor(s): ______________________________________.
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvMTConsts.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id$
 
 unit JvMTConsts;
 
@@ -57,9 +57,9 @@ const
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvMTConsts.pas $';
-    Revision: '$Revision: 12337 $';
-    Date: '$Date: 2009-06-11 12:42:10 +0200 (jeu., 11 juin 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

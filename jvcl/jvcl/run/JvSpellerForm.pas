@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpellerForm.pas 13170 2011-11-14 19:25:26Z ahuser $
+// $Id$
 
 unit JvSpellerForm;
 
@@ -97,9 +97,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpellerForm.pas $';
-    Revision: '$Revision: 13170 $';
-    Date: '$Date: 2011-11-14 20:25:26 +0100 (lun., 14 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -24,7 +24,7 @@
  rights and limitations under the License.
 
 ******************************************************************/
-// $Id: JvSystemPopup2MainFormU.h 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 //---------------------------------------------------------------------------
 
 #ifndef JvSystemPopup2MainFormUH

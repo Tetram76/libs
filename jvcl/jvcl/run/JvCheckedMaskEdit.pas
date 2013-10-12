@@ -26,7 +26,7 @@ Description:
 Known Issues:
  - BiDi support (checkbox should probably be on the right for RTL)
 -----------------------------------------------------------------------------}
-// $Id: JvCheckedMaskEdit.pas 13441 2012-09-24 13:05:24Z ahuser $
+// $Id$
 
 unit JvCheckedMaskEdit;
 
@@ -173,9 +173,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckedMaskEdit.pas $';
-    Revision: '$Revision: 13441 $';
-    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -18,7 +18,7 @@ Contributor(s):
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvManagedThreadsReg.pas 12337 2009-06-11 10:42:10Z ahuser $
+// $Id$
 
 unit JvManagedThreadsReg;
 

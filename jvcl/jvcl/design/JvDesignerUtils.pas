@@ -23,7 +23,7 @@ description : routines for design-time
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDesignerUtils.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id$
 
 unit JvDesignerUtils;
 

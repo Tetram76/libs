@@ -24,7 +24,7 @@ description : JvEditor with built-in highlighting for:
               pascal, cbuilder, sql, python, jscript,
               vbscript, perl, ini, html, not quite c
 -----------------------------------------------------------------------------}
-// $Id: JvUnicodeHLEditor.pas 13288 2012-04-27 08:32:34Z ahuser $
+// $Id$
 
 unit JvUnicodeHLEditor;
 
@@ -114,9 +114,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUnicodeHLEditor.pas $';
-    Revision: '$Revision: 13288 $';
-    Date: '$Date: 2012-04-27 10:32:34 +0200 (ven., 27 avr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

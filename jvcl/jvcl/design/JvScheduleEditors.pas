@@ -17,7 +17,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScheduleEditors.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit JvScheduleEditors;
 

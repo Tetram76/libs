@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFWeeks.pas 13145 2011-11-02 21:15:19Z ahuser $
+// $Id$
 
 unit JvTFWeeks;
 
@@ -103,9 +103,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFWeeks.pas $';
-    Revision: '$Revision: 13145 $';
-    Date: '$Date: 2011-11-02 22:15:19 +0100 (mer., 02 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

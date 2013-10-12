@@ -1,5 +1,5 @@
 { included in JVCLData.pas (at the bottom) }
-// $Id: InstalledPackages.inc 13132 2011-10-16 20:29:19Z jfudickar $
+// $Id$
 
 function GetSystemDir: string;
 begin

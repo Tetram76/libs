@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFUtils.pas 13174 2011-11-19 23:13:38Z ahuser $
+// $Id$
 
 unit JvTFUtils;
 
@@ -114,9 +114,9 @@ function IsClassByName(Obj: TObject; ClassName: string): Boolean;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFUtils.pas $';
-    Revision: '$Revision: 13174 $';
-    Date: '$Date: 2011-11-20 00:13:38 +0100 (dim., 20 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

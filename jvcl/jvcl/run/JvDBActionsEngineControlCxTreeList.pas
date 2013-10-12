@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActionsEngineControlCxTreeList.pas 12998 2011-03-06 22:24:57Z jfudickar $
+// $Id$
 
 unit JvDBActionsEngineControlCxTreeList;
 
@@ -70,9 +70,9 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
-    '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBActionsEngineControlCxTreeList.pas $';
-    Revision: '$Revision: 12998 $';
-    Date: '$Date: 2011-03-06 23:24:57 +0100 (dim., 06 mars 2011) $';
+    '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}

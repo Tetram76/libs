@@ -26,7 +26,7 @@ Changes:
   Drawing of State images differs from normal images since they are 1-based:
   the 0-th item for the state imagelist isn't drawn to alert the user to this fact
 -----------------------------------------------------------------------------}
-// $Id: JvTreeItemsEditorForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit JvTreeItemsEditorForm;
 

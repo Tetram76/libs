@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Jvg3DColors.pas 12845 2010-09-16 20:22:55Z jfudickar $
+// $Id$
 
 unit Jvg3DColors;
 
@@ -73,9 +73,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/Jvg3DColors.pas $';
-    Revision: '$Revision: 12845 $';
-    Date: '$Date: 2010-09-16 22:22:55 +0200 (jeu., 16 sept. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

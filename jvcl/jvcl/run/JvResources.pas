@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvResources.pas 13379 2012-07-08 20:33:32Z jfudickar $
+// $Id$
 
 unit JvResources;
 
@@ -517,7 +517,7 @@ resourcestring
   RsETableNameNotSet = 'TableName not specified';
   RsEGetMode = 'Invalid option to GetMode';
   RsENoTableName = 'TableName not specified';
-  RsETableNameRequired = 'LoadFromFile = True, so a TableName is required';
+  RsETableNameRequired = 'LoadsFromFile = True, so a TableName is required';
   RsEInternalCompare = 'InternalCompare. Nil value detected';
   RsEInvalidTableName = 'TJvCustomCsvDataSet.GetFileName - TableName property is not set';
 
@@ -2335,6 +2335,10 @@ resourcestring
     '            (Components[I] is TJvPanelHotTrackOptions)) then'#13#10#13#10 +
     'or by using the Controls[] array property if possible.';
 
+//=== JvXMLBrowser.pas ====================================================
+resourcestring
+  RSXMLBrowserDialogButtonClose = '&Close';
+
 //=== not taken into JVCL ====================================================
 {
 resourcestring
@@ -2363,9 +2367,9 @@ resourcestring
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvResources.pas $';
-    Revision: '$Revision: 13379 $';
-    Date: '$Date: 2012-07-08 22:33:32 +0200 (dim., 08 juil. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

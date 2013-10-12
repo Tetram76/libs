@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PackageInformation.pas 13408 2012-09-03 21:23:26Z ahuser $
+// $Id$
 
 unit PackageInformation;
 

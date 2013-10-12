@@ -24,7 +24,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppIniStorage.pas 13350 2012-06-13 14:54:41Z obones $
+// $Id$
 
 unit JvAppIniStorage;
 
@@ -178,9 +178,9 @@ procedure LoadPropertyStoreFromIniFile(APropertyStore: TJvCustomPropertyStore;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppIniStorage.pas $';
-    Revision: '$Revision: 13350 $';
-    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -853,6 +853,7 @@ begin
       APropertyStore.AppStoragePath := AAppStoragePath;
       APropertyStore.AppStorage := AppStorage;
       APropertyStore.StoreProperties;
+      AppStorage.Flush;
     finally
       APropertyStore.AppStoragePath := SaveAppStoragePath;
       APropertyStore.AppStorage := SaveAppStorage;

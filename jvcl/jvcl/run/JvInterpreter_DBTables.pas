@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_DBTables.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvInterpreter_DBTables;
 
@@ -45,9 +45,9 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_DBTables.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1741,7 +1741,9 @@ end;
 
 procedure TParam_GetData(var Value: Variant; Args: TJvInterpreterArgs);
 begin
+  {$WARNINGS OFF} // we want to call the deprecated function
   TParam(Args.Obj).GetData(V2P(Args.Values[0]));
+  {$WARNINGS ON}
 end;
 
 { function GetDataSize: Integer; }
@@ -1769,14 +1771,18 @@ end;
 
 procedure TParam_SetBlobData(var Value: Variant; Args: TJvInterpreterArgs);
 begin
+  {$WARNINGS OFF} // we want to call the deprecated function
   TParam(Args.Obj).SetBlobData(V2P(Args.Values[0]), Args.Values[1]);
+  {$WARNINGS ON}
 end;
 
 { procedure SetData(Buffer: Pointer); }
 
 procedure TParam_SetData(var Value: Variant; Args: TJvInterpreterArgs);
 begin
+  {$WARNINGS OFF} // we want to call the deprecated function
   TParam(Args.Obj).SetData(V2P(Args.Values[0]));
+  {$WARNINGS ON}
 end;
 
 { property Read AsBCD: Currency }
@@ -2114,7 +2120,9 @@ end;
 
 procedure TParams_GetParamList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
+  {$WARNINGS OFF} // we want to call the deprecated function
   TParams(Args.Obj).GetParamList(V2O(Args.Values[0]) as TList, Args.Values[1]);
+  {$WARNINGS ON}
 end;
 
 { function IsEqual(Value: TParams): Boolean; }

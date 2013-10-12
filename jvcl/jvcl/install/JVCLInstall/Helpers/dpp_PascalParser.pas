@@ -19,7 +19,7 @@
 { http://www.sourceforge.net/projects/dpp32                                                        }
 {                                                                                                  }
 {**************************************************************************************************}
-// $Id: dpp_PascalParser.pas 11892 2008-09-09 20:35:07Z obones $
+// $Id$
 {$A+,B-,C+,D+,E-,F-,G+,H+,I+,J-,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y+,Z1}
 
 unit dpp_PascalParser;

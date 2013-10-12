@@ -30,7 +30,7 @@ History:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvWizardsReg.pas 12661 2010-01-07 18:58:43Z ahuser $
+// $Id$
 
 unit JvWizardsReg;
 

@@ -25,7 +25,7 @@ Known Issues:
   UserDictionary entries are loaded into the dictionary table in BuildTables, so to get
   them added make sure UserDictionary is filled before setting the Dictionary property.
 -----------------------------------------------------------------------------}
-// $Id: JvSpellChecker.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvSpellChecker;
 
@@ -76,9 +76,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpellChecker.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

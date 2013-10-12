@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStoreEditorIntf.pas 12694 2010-02-08 23:11:12Z jfudickar $
+// $Id$
 unit JvPropertyStoreEditorIntf;
 
 {$I jvcl.inc}
@@ -60,9 +60,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStoreEditorIntf.pas $';
-    Revision: '$Revision: 12694 $';
-    Date: '$Date: 2010-02-09 00:11:12 +0100 (mar., 09 févr. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
