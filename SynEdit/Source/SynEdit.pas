@@ -82,6 +82,9 @@ uses
   {$IFDEF SYN_COMPILER_7}
   Themes,
   {$ENDIF}
+  {$IFDEF SYN_COMPILER_17_UP}
+  UITypes,
+  {$ENDIF}
   SynUnicode,
 {$ENDIF}
 {$IFDEF SYN_CLX}
@@ -1141,6 +1144,9 @@ implementation
 uses
 {$IFDEF SYN_COMPILER_6_UP}
   Consts,
+{$ENDIF}
+{$IFDEF SYN_COMPILER_18_UP}
+  AnsiStrings,
 {$ENDIF}
 {$IFDEF SYN_CLX}
   QStdActns,
@@ -4807,7 +4813,7 @@ begin
 
       if Visible then SendMessage(Handle, WM_SETREDRAW, 0, 0);
 
-      if (fScrollBars in [ssBoth, ssHorizontal]) and not WordWrap then
+      if (fScrollBars in [{$IFDEF SYN_COMPILER_17_UP}TScrollStyle.{$ENDIF}ssBoth, {$IFDEF SYN_COMPILER_17_UP}TScrollStyle.{$ENDIF}ssHorizontal]) and not WordWrap then
       begin
         if eoScrollPastEol in Options then
           nMaxScroll := MaxScrollWidth
@@ -5143,8 +5149,8 @@ begin
   end
   else
   begin
-    StrLCopy(PAnsiChar(Msg.Text), PAnsiChar(AnsiString(Text)), Msg.TextMax - 1);
-    Msg.Result := StrLen(PAnsiChar(Msg.Text));
+   {$IFDEF SYN_COMPILER_18_UP}AnsiStrings.{$ENDIF}StrLCopy(PAnsiChar(Msg.Text), PAnsiChar(AnsiString(Text)), Msg.TextMax - 1);
+    Msg.Result := {$IFDEF SYN_COMPILER_18_UP}AnsiStrings.{$ENDIF}StrLen(PAnsiChar(Msg.Text));
   end;
 end;
 
