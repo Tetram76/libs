@@ -49,7 +49,7 @@ uses
   Windows, Types,
 {$ENDIF}
   Classes, SysUtils, GR32, GR32_Transforms, GR32_Containers,
-  GR32_OrdinalMaps, GR32_Blend, GR32_System, GR32_Bindings;
+  GR32_OrdinalMaps, GR32_Blend;
 
 procedure BlockTransfer(
   Dst: TCustomBitmap32; DstX: Integer; DstY: Integer; DstClip: TRect;
@@ -342,7 +342,7 @@ type
     FOuterColor: TColor32;
     procedure SetKernel(const Value: TCustomKernel);
     function GetKernelClassName: string;
-    procedure SetKernelClassName(Value: string);
+    procedure SetKernelClassName(const Value: string);
     procedure SetKernelMode(const Value: TKernelMode);
     procedure SetTableSize(Value: Integer);
   protected
@@ -577,7 +577,7 @@ procedure Contract(Src, Dst: TCustomBitmap32; Kernel: TIntegerMap; CenterX, Cent
 { Auxiliary routines for accumulating colors in a buffer }
 procedure IncBuffer(var Buffer: TBufferEntry; Color: TColor32); {$IFDEF USEINLINING} inline; {$ENDIF}
 procedure MultiplyBuffer(var Buffer: TBufferEntry; W: Integer); {$IFDEF USEINLINING} inline; {$ENDIF}
-function BufferToColor32(Buffer: TBufferEntry; Shift: Integer): TColor32; {$IFDEF USEINLINING} inline; {$ENDIF}
+function BufferToColor32(const Buffer: TBufferEntry; Shift: Integer): TColor32; {$IFDEF USEINLINING} inline; {$ENDIF}
 procedure ShrBuffer(var Buffer: TBufferEntry; Shift: Integer); {$IFDEF USEINLINING} inline; {$ENDIF}
 
 { Registration routines }
@@ -604,7 +604,7 @@ resourcestring
 implementation
 
 uses
-  GR32_LowLevel, GR32_Rasterizers, GR32_Math, Math;
+  GR32_System, GR32_Bindings, GR32_LowLevel, GR32_Rasterizers, GR32_Math, Math;
 
 resourcestring
   RCStrInvalidSrcRect = 'Invalid SrcRect';
@@ -736,7 +736,7 @@ begin
   Buffer.A := Buffer.A shr Shift;
 end;
 
-function BufferToColor32(Buffer: TBufferEntry; Shift: Integer): TColor32;
+function BufferToColor32(const Buffer: TBufferEntry; Shift: Integer): TColor32;
 begin
   with TColor32Entry(Result) do
   begin
@@ -2930,7 +2930,7 @@ begin
   Result := FKernel.ClassName;
 end;
 
-procedure TKernelResampler.SetKernelClassName(Value: string);
+procedure TKernelResampler.SetKernelClassName(const Value: string);
 var
   KernelClass: TCustomKernelClass;
 begin
@@ -3359,8 +3359,7 @@ begin
   W := Ceil(FKernel.GetWidth);
   if FKernelMode in [kmTableNearest, kmTableLinear] then
   begin
-    FWeightTable := TIntegerMap.Create;
-    FWeightTable.SetSize(W * 2 + 1, FTableSize + 1);
+    FWeightTable := TIntegerMap.Create(W * 2 + 1, FTableSize + 1);
     for I := 0 to FTableSize do
     begin
       Fraction := I / (FTableSize - 1);

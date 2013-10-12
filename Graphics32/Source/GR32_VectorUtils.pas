@@ -165,8 +165,8 @@ function TransformPolygon(const Points: TArrayOfFixedPoint; Transformation: TTra
 function TransformPolyPolygon(const Points: TArrayOfArrayOfFloatPoint; Transformation: TTransformation): TArrayOfArrayOfFloatPoint; overload;
 function TransformPolyPolygon(const Points: TArrayOfArrayOfFixedPoint; Transformation: TTransformation): TArrayOfArrayOfFixedPoint; overload;
 
-function BuildPolygon(const Data: array of TFloat): TArrayOfFloatPoint; overload;
-function BuildPolygon(const Data: array of TFixed): TArrayOfFixedPoint; overload;
+function BuildPolygonF(const Data: array of TFloat): TArrayOfFloatPoint; overload;
+function BuildPolygonX(const Data: array of TFixed): TArrayOfFixedPoint; overload;
 
 function PolyPolygon(const Points: TArrayOfFloatPoint): TArrayOfArrayOfFloatPoint; overload; {$IFDEF USEINLINING}inline;{$ENDIF}
 function PolyPolygon(const Points: TArrayOfFixedPoint): TArrayOfArrayOfFixedPoint; overload; {$IFDEF USEINLINING}inline;{$ENDIF}
@@ -179,7 +179,7 @@ function FloatPointToFixedPoint(const Points: TArrayOfArrayOfFloatPoint): TArray
 implementation
 
 uses
-  Math, SysUtils, GR32_Math, GR32_Paths, GR32_Geometry, GR32_LowLevel;
+  Math, SysUtils, GR32_Math, GR32_Geometry, GR32_LowLevel;
 
 type
   TTransformationAccess = class(TTransformation);
@@ -1255,10 +1255,28 @@ end;
 function BuildArc(const P: TFloatPoint; StartAngle, EndAngle, Radius: TFloat): TArrayOfFloatPoint;
 const
   MINSTEPS = 6;
+  SQUAREDMINSTEPS = Sqr(MINSTEPS);
 var
+  Temp: TFloat;
   Steps: Integer;
 begin
-  Steps := Max(MINSTEPS, System.Round(Sqrt(Abs(Radius)) * Abs(EndAngle - StartAngle)));
+  // The code below was previously:
+  //
+  // Steps := Max(MINSTEPS, System.Round(Sqrt(Abs(Radius)) *
+  //   Abs(EndAngle - StartAngle)));
+  //
+  // However, for small radii, the square root calculation is performed with
+  // the result that the output is set to 6 anyway. In this case (only a few
+  // drawing operations), the performance spend for this calculation is dominant
+  // for large radii (when a lot of CPU intensive drawing takes place), the
+  // more expensive float point comparison (Temp < SQUAREDMINSTEPS) is not very
+  // significant
+
+  Temp := Abs(Radius) * Sqr(EndAngle - StartAngle);
+  if Temp < SQUAREDMINSTEPS then
+    Steps := 6
+  else
+    Steps := Round(Sqrt(Temp));
   Result := BuildArc(P, StartAngle, EndAngle, Radius, Steps);
 end;
 
@@ -1283,11 +1301,28 @@ end;
 function BuildArc(const P: TFixedPoint; StartAngle, EndAngle, Radius: TFloat): TArrayOfFixedPoint;
 const
   MINSTEPS = 6;
+  SQUAREDMINSTEPS = Sqr(MINSTEPS);
 var
+  Temp: TFloat;
   Steps: Integer;
 begin
-  Steps := Clamp(System.Round(Sqrt(Abs(Radius)) * Abs(EndAngle - StartAngle)),
-    MINSTEPS, $100000);
+  // The code below was previously:
+  //
+  // Steps := Clamp(System.Round(Sqrt(Abs(Radius)) *
+  //   Abs(EndAngle - StartAngle)), MINSTEPS, $100000);
+  //
+  // However, for small radii, the square root calculation is performed with
+  // the result that the output is set to 6 anyway. In this case (only a few
+  // drawing operations), the performance spend for this calculation is dominant
+  // for large radii (when a lot of CPU intensive drawing takes place), the
+  // more expensive float point comparison (Temp < SQUAREDMINSTEPS) is not very
+  // significant
+
+  Temp := Abs(Radius) * Sqr(EndAngle - StartAngle);
+  if Temp < SQUAREDMINSTEPS then
+    Steps := MINSTEPS
+  else
+    Steps := Clamp(Round(Sqrt(Temp)), $100000);
   Result := BuildArc(P, StartAngle, EndAngle, Radius, Steps);
 end;
 
@@ -1543,11 +1578,13 @@ function Grow(const Points: TArrayOfFloatPoint; const Normals: TArrayOfFloatPoin
   const Delta: TFloat; JoinStyle: TJoinStyle; Closed: Boolean; MiterLimit: TFloat): TArrayOfFloatPoint; overload;
 const
   BUFFSIZEINCREMENT = 128;
+  MINDISTPIXEL = 1.414; // just a little bit smaller than sqrt(2),
+  // -> set to about 2.5 for a similar output with the previous version
 var
-  I, L, H: Integer;
   ResSize, BuffSize: Integer;
-  PX, PY, D, RMin: TFloat;
-  A, B: TFloatPoint;
+  PX, PY: TFloat;
+  AngleInv, RMin: TFloat;
+  A, B, Dm: TFloatPoint;
 
   procedure AddPoint(const LongDeltaX, LongDeltaY: TFloat);
   begin
@@ -1556,11 +1593,7 @@ var
       Inc(BuffSize, BUFFSIZEINCREMENT);
       SetLength(Result, BuffSize);
     end;
-    with Result[ResSize] do
-    begin
-      X := PX + LongDeltaX;
-      Y := PY + LongDeltaY;
-    end;
+    Result[ResSize] := FloatPoint(PX + LongDeltaX, PY + LongDeltaY);
     Inc(ResSize);
   end;
 
@@ -1574,12 +1607,12 @@ var
     R := X1 * CX + Y1 * CY; //(1 - cos(ß))  (range: 0 <= R <= 2)
     if R < RMin then
     begin
-      AddPoint(D * X1, D * Y1);
-      AddPoint(D * X2, D * Y2);
+      AddPoint(Delta * X1, Delta * Y1);
+      AddPoint(Delta * X2, Delta * Y2);
     end
     else
     begin
-      R := D / R;
+      R := Delta / R;
       AddPoint(CX * R, CY * R)
     end;
   end;
@@ -1589,47 +1622,51 @@ var
     R: TFloat;
   begin
     R := X1 * Y2 - X2 * Y1; //cross product
-    if R * D <= 0 then      //ie angle is concave
+    if R * Delta <= 0 then      //ie angle is concave
     begin
       AddMitered(X1, Y1, X2, Y2);
     end
     else
     begin
-      AddPoint(D * X1, D * Y1);
-      AddPoint(D * X2, D * Y2);
+      AddPoint(Delta * X1, Delta * Y1);
+      AddPoint(Delta * X2, Delta * Y2);
     end;
   end;
 
   procedure AddRoundedJoin(const X1, Y1, X2, Y2: TFloat);
   var
-    R, a1, a2, da: TFloat;
-    Arc: TArrayOfFloatPoint;
+    R, tmp, da: TFloat;
     ArcLen: Integer;
+
+    I: Integer;
+    C: TFloatPoint;
   begin
     R := X1 * Y2 - X2 * Y1;
-    if R * D <= 0 then
-    begin
-      AddMitered(X1, Y1, X2, Y2);
-    end
+    if R * Delta <= 0 then
+      AddMitered(X1, Y1, X2, Y2)
     else
     begin
-      a1 := ArcTan2(Y1, X1);
-      a2 := ArcTan2(Y2, X2);
-      da := a2 - a1;
-      if da > Pi then
-        a2 := a2 - TWOPI
-      else if da < -Pi then
-        a2 := a2 + TWOPI;
-      Arc := BuildArc(FloatPoint(PX, PY), a1, a2, D);
+      if R < 0 then
+        Dm.Y := -Abs(Dm.Y)
+      else
+        Dm.Y := Abs(Dm.Y);
 
-      ArcLen := Length(Arc);
-      if ResSize + ArcLen >= BuffSize then
+      tmp := 1 - 0.5 * (Sqr(X2 - X1) + Sqr(Y2 - Y1));
+      da := 0.5 * Pi - tmp * (1 + Sqr(tmp) * 0.1667); // should be ArcCos(tmp);
+      ArcLen := Round(Abs(da * AngleInv)); // should be trunc instead of round
+
+      C.X := X1 * Delta;
+      C.Y := Y1 * Delta;
+      AddPoint(C.X, C.Y);
+      for I := 1 to ArcLen - 1 do
       begin
-        Inc(BuffSize, ArcLen);
-        SetLength(Result, BuffSize);
+        C := FloatPoint(C.X * Dm.X - C.Y * Dm.Y, C.Y * Dm.X + C.X * Dm.Y);
+        AddPoint(C.X, C.Y);
       end;
-      Move(Arc[0], Result[ResSize], Length(Arc) * SizeOf(TFloatPoint));
-      Inc(ResSize, arcLen);
+
+      C.X := X2 * Delta;
+      C.Y := Y2 * Delta;
+      AddPoint(C.X, C.Y);
     end;
   end;
 
@@ -1644,12 +1681,13 @@ var
     end;
   end;
 
+var
+  I, L, H: Integer;
+
 begin
   Result := nil;
 
   if Length(Points) <= 1 then Exit;
-
-  D := Delta;
 
   //MiterLimit = Sqrt(2/(1 - cos(ß)))
   //Sqr(MiterLimit) = 2/(1 - cos(ß))
@@ -1673,6 +1711,14 @@ begin
   ResSize := 0;
   BuffSize := BUFFSIZEINCREMENT;
   SetLength(Result, BuffSize);
+
+  // prepare
+  if JoinStyle = jsRound then
+  begin
+    Dm.X := 1 - 0.5 * Min(3, Sqr(MINDISTPIXEL / Abs(Delta)));
+    Dm.Y := Sqrt(1 - Sqr(Dm.X));
+    AngleInv := 1 / ArcCos(Dm.X);
+  end;
 
   for I := L to H do
   begin
@@ -2819,7 +2865,7 @@ begin
     Result[I] := TransformPolygon(Points[I], Transformation);
 end;
 
-function BuildPolygon(const Data: array of TFloat): TArrayOfFloatPoint;
+function BuildPolygonF(const Data: array of TFloat): TArrayOfFloatPoint;
 var
   Index, Count: Integer;
 begin
@@ -2833,7 +2879,7 @@ begin
   end;
 end;
 
-function BuildPolygon(const Data: array of TFixed): TArrayOfFixedPoint;
+function BuildPolygonX(const Data: array of TFixed): TArrayOfFixedPoint;
 var
   Index, Count: Integer;
 begin

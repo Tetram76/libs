@@ -48,7 +48,7 @@ interface
 {$ENDIF}
 
 uses
-  Graphics, GR32, GR32_Math, GR32_System, GR32_Bindings;
+  Graphics, GR32, GR32_Math;
 
 { Clamp function restricts value to [0..255] range }
 function Clamp(const Value: Integer): Integer; overload; {$IFDEF USEINLINING} inline; {$ENDIF}
@@ -149,7 +149,9 @@ const
 function Div255(Value: Cardinal): Cardinal; {$IFDEF USEINLINING} inline; {$ENDIF}
 
 { shift right with sign conservation }
+function SAR_3(Value: Integer): Integer;
 function SAR_4(Value: Integer): Integer;
+function SAR_6(Value: Integer): Integer;
 function SAR_8(Value: Integer): Integer;
 function SAR_9(Value: Integer): Integer;
 function SAR_11(Value: Integer): Integer;
@@ -164,10 +166,11 @@ function ColorSwap(WinColor: TColor): TColor32;
 
 implementation
 
-{$IFDEF FPC}
 uses
-  SysUtils;
+{$IFDEF FPC}
+  SysUtils,
 {$ENDIF}
+  GR32_System, GR32_Bindings;
 
 {$R-}{$Q-}  // switch off overflow and range checking
 
@@ -182,7 +185,7 @@ begin
  else
    Result := Value;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         // in x64 calling convention parameters are passed in ECX, EDX, R8 & R9
@@ -209,7 +212,7 @@ begin
 end;
 
 {$IFNDEF PUREPASCAL}
-procedure FillLongword_ASM(var X; Count: Cardinal; Value: Longword); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure FillLongword_ASM(var X; Count: Cardinal; Value: Longword); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         // EAX = X;   EDX = Count;   ECX = Value
@@ -239,7 +242,7 @@ asm
 {$ENDIF}
 end;
 
-procedure FillLongword_MMX(var X; Count: Cardinal; Value: Longword); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure FillLongword_MMX(var X; Count: Cardinal; Value: Longword); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         // EAX = X;   EDX = Count;   ECX = Value
@@ -308,7 +311,7 @@ asm
 {$ENDIF}
 end;
 
-procedure FillLongword_SSE2(var X; Count: Integer; Value: Longword); {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure FillLongword_SSE2(var X; Count: Integer; Value: Longword); {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         // EAX = X;   EDX = Count;   ECX = Value
@@ -435,7 +438,7 @@ begin
   for I := Count - 1 downto 0 do
     P[I] := Value;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         // EAX = X;   EDX = Count;   ECX = Value
@@ -474,7 +477,7 @@ procedure MoveLongword(const Source; var Dest; Count: Integer);
 begin
   Move(Source, Dest, Count shl 2);
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         // EAX = Source;   EDX = Dest;   ECX = Count
@@ -516,7 +519,7 @@ procedure MoveWord(const Source; var Dest; Count: Integer);
 begin
   Move(Source, Dest, Count shl 1);
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         // EAX = X;   EDX = Count;   ECX = Value
@@ -653,7 +656,7 @@ begin
   else
     Result := Value;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -692,7 +695,7 @@ begin
   if C > Result then
     Result := C;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       RAX,RCX
@@ -716,7 +719,7 @@ begin
   if C < Result then
     Result := C;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       RAX,RCX
@@ -739,7 +742,7 @@ begin
   else
     Result := Value;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV     EAX,ECX
@@ -769,7 +772,7 @@ begin
   else 
     Result := Value;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV     EAX,ECX
@@ -790,7 +793,7 @@ begin
   else
     Result := Value mod (Max + 1);
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV     EAX,ECX
@@ -834,7 +837,7 @@ begin
   Remainder := Dividend mod Divisor;
   Result := Dividend div Divisor;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         PUSH      EBX
@@ -873,7 +876,7 @@ begin
   if Odd(DivResult) then
     Result := Max - Result;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1027,12 +1030,26 @@ begin
 end;
 
 { shift right with sign conservation }
+function SAR_3(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
+begin
+  Result := Value div 8;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,3
+{$ENDIF}
+end;
+
 function SAR_4(Value: Integer): Integer;
-{$IFDEF USENATIVECODE}
+{$IFDEF PUREPASCAL}
 begin
   Result := Value div 16;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1041,12 +1058,26 @@ asm
 {$ENDIF}
 end;
 
+function SAR_6(Value: Integer): Integer;
+{$IFDEF PUREPASCAL}
+begin
+  Result := Value div 64;
+{$ELSE}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
+asm
+{$IFDEF TARGET_x64}
+        MOV       EAX,ECX
+{$ENDIF}
+        SAR       EAX,6
+{$ENDIF}
+end;
+
 function SAR_8(Value: Integer): Integer;
 {$IFDEF PUREPASCAL}
 begin
   Result := Value div 256;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1060,7 +1091,7 @@ function SAR_9(Value: Integer): Integer;
 begin
   Result := Value div 512;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1074,7 +1105,7 @@ function SAR_11(Value: Integer): Integer;
 begin
   Result := Value div 2048;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1088,7 +1119,7 @@ function SAR_12(Value: Integer): Integer;
 begin
   Result := Value div 4096;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1102,7 +1133,7 @@ function SAR_13(Value: Integer): Integer;
 begin
   Result := Value div 8192;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1116,7 +1147,7 @@ function SAR_14(Value: Integer): Integer;
 begin
   Result := Value div 16384;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1130,7 +1161,7 @@ function SAR_15(Value: Integer): Integer;
 begin
   Result := Value div 32768;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1144,7 +1175,7 @@ function SAR_16(Value: Integer): Integer;
 begin
   Result := Value div 65536;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x64}
         MOV       EAX,ECX
@@ -1165,7 +1196,7 @@ begin
   REn.R := WCEn.B;
   REn.B := WCEn.R;
 {$ELSE}
-{$IFDEF FPC} nostackframe; {$ENDIF}
+{$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 // EAX = WinColor
 // this function swaps R and B bytes in ABGR
@@ -1197,7 +1228,7 @@ end;
 
   x64 implementation by Jameel Halabi
   }
-function StackAlloc(Size: Integer): Pointer; register; {$IFDEF FPC} nostackframe; {$ENDIF}
+function StackAlloc(Size: Integer): Pointer; register; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         POP       ECX          // return address
@@ -1258,7 +1289,7 @@ end;
 - Built-in sanity checks guarantee that an improper call to StackFree will not
   corrupt the stack. Worst case is that the stack block is not released until
   the calling routine exits. }
-procedure StackFree(P: Pointer); register; {$IFDEF FPC} nostackframe; {$ENDIF}
+procedure StackFree(P: Pointer); register; {$IFDEF FPC} assembler; nostackframe; {$ENDIF}
 asm
 {$IFDEF TARGET_x86}
         POP       ECX                     // return address

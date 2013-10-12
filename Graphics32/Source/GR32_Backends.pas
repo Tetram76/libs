@@ -136,9 +136,6 @@ resourcestring
 
 implementation
 
-uses
-  GR32_LowLevel;
-
 procedure RequireBackendSupport(TargetBitmap: TCustomBitmap32;
   RequiredInterfaces: array of TGUID;
   Mode: TRequireOperatorMode; UseOptimizedDestructiveSwitchMethod: Boolean;
@@ -165,7 +162,7 @@ begin
 
     // TODO: Try to find a back-end that supports the required interfaces
     //       instead of resorting to the default platform back-end class...
-    TargetBitmap.Backend := GetPlatformBackendClass.Create;
+    TargetBitmap.Backend := TargetBitmap.GetPlatformBackendClass.Create;
   end
   else
     ReleasedBackend := nil;

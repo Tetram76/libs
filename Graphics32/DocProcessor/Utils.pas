@@ -1,9 +1,10 @@
 unit Utils;
 
-interface
-
+{$I DocProcessor.inc}
 {$WARN UNIT_PLATFORM OFF}
 {$WARN SYMBOL_PLATFORM OFF}
+
+interface
 
 uses
   Windows, Classes, SysUtils, FileCtrl, Contnrs, SimpleDOM, DocStructure,
@@ -18,13 +19,22 @@ function CompareDirectories(List: TStringList; Index1, Index2: Integer): Integer
 function GetLinkName(const Target: string): string;
 function CompareLinks(List: TStringList; Index1, Index2: Integer): Integer;
 function CompareElements(Item1, Item2: Pointer): Integer;
-procedure RunCommandInMemo(const Command: String; AMemo: TMemo);
+procedure RunCommandInMemo(const Command: string; AMemo: TMemo);
+
+{$IFNDEF SUPPORTS_UNICODE}
+type
+  TSysCharSet = set of AnsiChar;
+
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean; {$IFDEF INLININGSUPPORTED} inline; {$ENDIF}
+{$ENDIF}
 
 implementation
 
-uses MainUnit;
+uses
+  MainUnit;
 
-const CDirInfoFile = 'DirInfo.xml';
+const
+  CDirInfoFile = 'DirInfo.xml';
 
 function DirName(const FullPath: string): string;
 begin
@@ -102,7 +112,8 @@ begin
     while Res = 0 do
     begin
       if ARec.Name[1] <> '.' then
-        if DirectoryExists(FDirectory + ARec.Name) and not SameText(ARec.Name, 'CVS') then
+        if {$IFDEF COMPILERXE2_UP}SysUtils.{$ENDIF}DirectoryExists(FDirectory + ARec.Name)
+          and not SameText(ARec.Name, 'CVS') then
           Result.Add(FDirectory + ARec.Name);
       Res := FindNext(ARec);
     end;
@@ -137,7 +148,7 @@ begin
       Result := Target;
       while I > 0 do
       begin
-        if Target[I] in ['/', '\'] then
+        if CharInSet(Target[I], ['/', '\']) then
         begin
           Result := Copy(Target, I + 1, 1000);
           Break;
@@ -173,7 +184,7 @@ begin
   Result := AnsiCompareStr(TElement(Item1).DisplayName, TElement(Item2).DisplayName);
 end;
 
-procedure RunCommandInMemo(const Command: String; AMemo: TMemo);
+procedure RunCommandInMemo(const Command: string; AMemo: TMemo);
 const
   ReadBuffer = 2400;
 var
@@ -214,7 +225,7 @@ begin
         ReadFile(ReadPipe, Buffer[0], ReadBuffer, BytesRead, nil);
         Buffer[BytesRead] := #0;
         OemToAnsi(Buffer, Buffer);
-        AMemo.Text := AMemo.Text + AnsiString(Buffer);
+        AMemo.Text := AMemo.Text + string(AnsiString(Buffer));
       until BytesRead < ReadBuffer;
     end;
 
@@ -225,5 +236,12 @@ begin
     CloseHandle(WritePipe);
   end;
 end;
+
+{$IFNDEF SUPPORTS_UNICODE}
+function CharInSet(C: AnsiChar; const CharSet: TSysCharSet): Boolean;
+begin
+  Result := C in CharSet;
+end;
+{$ENDIF}
 
 end.
