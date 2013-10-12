@@ -1,7 +1,7 @@
-package VirtualTreesD;
+package VirtualTreesR;
 
 {$R *.res}
-{$R '..\..\Design\VirtualTrees.dcr'}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -9,32 +9,32 @@ package VirtualTreesD;
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
-{$LOCALSYMBOLS OFF}
+{$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION ON}
-{$OVERFLOWCHECKS ON}
-{$RANGECHECKS ON}
-{$REFERENCEINFO OFF}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES OFF}
+{$STACKFRAMES ON}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Virtual Treeview design time package'}
-{$DESIGNONLY}
-{$IMPLICITBUILD ON}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$LIBSUFFIX '19'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
 
 requires
-  DesignIde,
   vcl,
-  rtl;
+  vclx;
 
 contains
   VirtualTrees in '..\..\Source\VirtualTrees.pas',
-  VirtualTreesReg in '..\..\Design\VirtualTreesReg.pas',
   VTHeaderPopup in '..\..\Source\VTHeaderPopup.pas',
   VTAccessibilityFactory in '..\..\Source\VTAccessibilityFactory.pas',
   VTAccessibility in '..\..\Source\VTAccessibility.pas';

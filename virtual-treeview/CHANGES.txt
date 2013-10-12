@@ -1,13 +1,89 @@
-October 2012
+V5.2.1: (06 Sep 2013)
+- Fixed #352 and #354 by modifying the implementation of #237 so that a focused node is ensured only if the
+  control is being entered using the TAB key. This is consistent with the behavior of the Windows Explorer.
+- Fixed issue #360 (In the calculation of the horizontal scroll bar static text should be considered) by
+  calling DoGetNodeExtraWidth() in TBaseVirtualTree.GetMaxRightExtend()
+- Used fix proposed in issue #361 to fix issue #357 (AV in advanced demo - PropertiesDemo form in XE3+)
+- Removed call to TCustomStyleEngine.UnRegisterStyleHook() to fix issue #359/#355
+- Fixed issue #358: Horizontal Scrollbar issue when expand ing and scrollbars get visible
+- Fixed issue #355/#345: exception regarding style services
+
+V5.2: (09 Aug 2013)
+- OnMouseEnter and OnMouseLeave events have been added (#238)
+- Improved dpi scaling for VirtualTreeView and Header
+- toAutoChangeScale and toAutoSort are now among the defualt values for TCustomVirtualTreeOptions.AutoOptions
+- Fixed issue #237: Auto focus the first node on enter if there is no focused node
+- Fixed issue #344: Cannot select row by Ctrl+Click on empty column
+- Fixed issue #206: Column painting issue with coWrapCaption in Options
+- Fixed issue #128: OleUninitialize in FinalizeGlobalStructures can hang when using Virtual Treeview in a DLL
+- Added new public property LastDragEffect which supplies the last executed drag effect.
+- Added virtual method GetNodeImageSize() which can be overridden if one needs different sized images.
+- Added new public property LastDragEffect which supplies the last executed drag effect.
+- Fixed issue #206: Column painting issue with coWrapCaption in Options
+- Fixed issue #336 by ignoring PARENTDOUBLEBUFFEREDCHANGED message.
+- Fixed issue #342 by adding a new implementation of the VCL's DoubleBuffered property.
+  The inherited DoubleBuffered property of TWinControl must not be set to True!
+- A few minor improvements have been added.
+
+V5.1.3: (17 Apr 2013)
+- Fixed #340: GetHitTestInfoAt on right border of fixed column.
+- Fixed #337: Cannot "grab" item for dragging, odd behaviour of multi selecting with the selection
+  rectangle when toFullRowSelect is True but toSimpleDrawSelection is False.  (thx to Stefan Glienke)
+- Fixed #341: Error when unloading DLL due to missing UnRegisterStyleHook
+- Improved fix for #323: The fix applied in V5.1.2 was a breaking change for some projects, especially
+  if not all the initialization was done in the OnInitNode event (reported as #338). vsInitialUserData
+  has been renamed to vsOnFreeNodeCallRequired and is now set when GetNodeData is called. This fixes
+  the possible memory leak reported in #323 and has better backward compatibility. 
+- Fixed #316: These fixes are to make the treeview behave more like the windows explorer regarding
+  selecting and dragging. Thanks to Stefan Glienke.
+- Fixed #333: Possible Integer overflow in 64Bit builds.
+- Compatibility with / packages for Delphi Xe$ / RAD Studio XE4 have been added.
+
+V5.1.2 (04 Apr 2013):
+ - Added function TVirtualTreeColumns.GetFirstColumn that returns the first column in display order.
+ - Fixed issue #322: CaptionAlignment is not being restored by Header.LoadFromStream().
+ - TBaseVirtualTree.GetNodeData() now calls InitNode() if the node had not beend initialized.
+   This fixes issue #323 (Memory leak when the Node has children )
+ - Fixed issue #326: Application hangs when aborting OLE Copy/Paste Operation
+ - Added new option poResizeToFitItem to TVTHeaderPopupOption: Adds an item which, if clicked, 
+   resizes all columns to fit by calling TVTHeader.AutoFitColumns()
+ - Property RangeX is now public in the class TVirtualStringTree (#327)
+ - TVirtualTreeColumns.HandleClick(): No longer triggering auto sort if just the checkbox in the header was clicked
+ - TBaseVirtualTree.SetCheckType new resets PVirtualNode.CheckState only if the check state does not fit the new check type
+ - Fixed issue #321: Delphi2009: undeclared identifier: 'fState' in VirtualTrees.pas:DrawDisabledImage()
+ - Fixed issue #315: hoHeaderClickAutoSort was only working if toAutoSort is also set
+ 
+V5.1.1 (07 Feb 2013):
+ - Fixed issue #313: Translucent selection rectangle completely broken when PaintBackground is used
+ - Fixed issue #314: Only if toAutoSort is True non-expanded nodes will be excluded from sorting. 
+   This restores the behavior of V5.0.X. 
+ - Fixed issue #306: Drag image was broken except for CF_HDROP
+ - Fixed issue #305: Broken hint drawing with classic windows theme and toUseExplorerTheme
+ - Fixed issue #298: Bad canvas parameters in OnBeforeCellPaint method
+ - If NodeDataSize has its default value -1, now sizeof(Pointer) is used at runtime as actual value.
+   This makes it easier to store a simple Pointer with each node indepedent of the target platform (32/64Bit).
+ - Fixed issue #300: Made the hint text more centered in the hint window
+ - If TVirtualTreeColumn.CheckBox is set to True in Designer, then hoShowImages is now added to Header.Options
+ - Fixed issue #302: AV when painting sorted header column containing checkbox
+ - Now soring subnodes when they get expanded and the toAutoSort flag is set
+ - Added fix for ugly drawn disabled images (thx to S. Glienke). See also: 
+   http://stackoverflow.com/questions/6003018/make-disabled-menu-and-toolbar-images-look-better
+   http://qc.embarcadero.com/wc/qcmain.aspx?d=86879
+ - Fixed issue #299: Draw themed focus rectangle with toUseExplorerTheme
+ - Fixed issue #198: Wrong check images
+ - Removed file VTConfig.inc. The former $ifdef ReverseFullExpandHotKey is now a flag in the 
+   TVTMiscOption enumeration. The $ifdef TntSupport can be defined at the beginning of the unit VirtualTrees.
+ - Added new optional parameter "Recursive" to TBaseVirtualTree.Sort()
+
+V5.1.0 (05 Nov 2012):
+ - Fixed issue #291: Empty hint strings are shown when using custom hint window classes
+ - Added support for VCl styles of RAD Studio XE2 and higher. (Thanks to Dietmar Rösler, issue #288)
  - Fixed issue #285: access violation when mouse down over checkbox sometimes
  - Fixed issue #293: OnAdvancedHeaderDraw is called with wrong PaintInfo.PaintRectangle
  - Improved creation of IDragSourceHelper and added support for IDragSourceHelper2
  - Fixed problem with drawing selection rectangle after canceled rename
  - Improved creation of IDragSourceHelper and added support for IDragSourceHelper2
- - Fixed problem with drawing selection rectangle after canceled rename
  - Fixed issue regarding activating explorer theme
- 
-September 2012
  - Fixed issue #222: FDottedBrush is never released in the tree is never shown
  - Fixed issue #52: Misalignement of CheckBox and TreeLine/Buttons
  - Fixed issue #43: VT stop repaint after Windows visual style change
