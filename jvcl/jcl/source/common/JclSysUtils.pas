@@ -41,9 +41,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-09-03 16:52:06 +0200 (lun., 03 sept. 2012)                         $ }
-{ Revision:      $Rev:: 3860                                                                     $ }
-{ Author:        $Author:: obones                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -786,9 +786,9 @@ function VarIsNullEmptyBlank(const V: Variant): Boolean;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysUtils.pas $';
-    Revision: '$Revision: 3860 $';
-    Date: '$Date: 2012-09-03 16:52:06 +0200 (lun., 03 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -2756,7 +2756,7 @@ end;
 
 procedure InternalExecuteReadPipe(var PipeInfo: TPipeInfo; var Overlapped: TOverlapped);
 var
-  NullDWORD: PDWORD;
+  NullDWORD: ^DWORD; // XE4 broke PDWORD
   Res: DWORD;
 begin
   NullDWORD := nil;

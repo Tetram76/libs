@@ -50,9 +50,9 @@
 {                                                                                                  }
 {**************************************************************************************************}
 {                                                                                                  }
-{ Last modified: $Date:: 2012-08-22 17:40:33 +0200 (mer., 22 aoÃ»t 2012)                         $ }
-{ Revision:      $Rev:: 3843                                                                     $ }
-{ Author:        $Author:: outchy                                                                $ }
+{ Last modified: $Date::                                                                         $ }
+{ Revision:      $Rev::                                                                          $ }
+{ Author:        $Author::                                                                       $ }
 {                                                                                                  }
 {**************************************************************************************************}
 
@@ -178,7 +178,7 @@ type
     fsSupportsEncryption,       // The file system supports the Encrypted File System (EFS).
     fsSupportsNamedStreams,     // The file system supports named streams.
     fsVolumeIsReadOnly          // The specified volume is read-only.
-                                //   Windows 2000/NT and Windows Me/98/95:  This value is not supported.
+                                // Windows 2000/NT and Windows Me/98/95:  This value is not supported.
    );
 
   TFileSystemFlags = set of TFileSystemFlag;
@@ -259,7 +259,7 @@ type
     weWinVistaHomePremium, weWinVistaBusiness, weWinVistaBusinessN,
     weWinVistaEnterprise, weWinVistaUltimate, weWin7Starter, weWin7HomeBasic,
     weWin7HomePremium, weWin7Professional, weWin7Enterprise, weWin7Ultimate,
-    weWin8, weWin8Pro, weWin8Enterprise, weWin8Ultimate, weWin8RT);
+    weWin8, weWin8Pro, weWin8Enterprise, weWin8RT);
   TNtProductType =
    (ptUnknown, ptWorkStation, ptServer, ptAdvancedServer,
     ptPersonal, ptProfessional, ptDatacenterServer, ptEnterprise, ptWebEdition);
@@ -1383,9 +1383,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jcl.svn.sourceforge.net/svnroot/jcl/trunk/jcl/source/common/JclSysInfo.pas $';
-    Revision: '$Revision: 3843 $';
-    Date: '$Date: 2012-08-22 17:40:33 +0200 (mer., 22 aoÃ»t 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JCL\source\common';
     Extra: '';
     Data: nil
@@ -1422,7 +1422,7 @@ uses
   {$ENDIF MSWINDOWS}
   {$ENDIF ~HAS_UNITSCOPE}
   Jcl8087, JclIniFiles,
-  JclSysUtils, JclFileUtils, JclStrings;
+  JclSysUtils, JclFileUtils, JclAnsiStrings, JclStrings;
 
 {$IFDEF FPC}
 {$IFDEF MSWINDOWS}
@@ -2696,7 +2696,8 @@ function RunningProcessesList(const List: TStrings; FullPath: Boolean): Boolean;
         else
         begin
           if IsWin2k or IsWinXP or IsWin2003 or IsWin2003R2 or IsWinXP64 or
-            IsWinVista or IsWinServer2008 or IsWin7 or IsWinServer2008R2 then
+            IsWinVista or IsWinServer2008 or IsWin7 or IsWinServer2008R2 or
+            IsWin8 or IsWinServer2012 then
           begin
             FileName := ProcessFileName(ProcEntry.th32ProcessID);
             if FileName = '' then
@@ -3346,6 +3347,10 @@ var
 begin
   Result := weUnknown;
   Edition := RegReadStringDef(HKEY_LOCAL_MACHINE, ProductName, 'ProductName', '');
+
+  // remove (tm) in 'Windows (TM) Vista Ultimate'
+  Edition := StringReplace(Edition, '(TM) ', '', [rfReplaceAll, rfIgnoreCase]);
+
   if (pos('Windows XP', Edition) = 1) then
   begin
    // Windows XP Editions
@@ -3442,9 +3447,6 @@ begin
    if (pos('Enterprise', Edition) > 0) then
       Result := weWin8Enterprise
    else
-   if (pos('Ultimate', Edition) > 0) then
-      Result := weWin8Ultimate
-   else
       Result := weWin8;
   end
   else
@@ -3523,7 +3525,7 @@ begin
     end;
   end
   else
-  if IsWinXP or IsWinVista or IsWin7 then // workstation
+  if IsWinXP or IsWinVista or IsWin7 or IsWin8 then // workstation
   begin
     if GetVersionEx(OSVersionInfo) then
     begin
@@ -3537,7 +3539,7 @@ begin
     end;
   end
   else
-  if IsWinServer2008 or IsWinServer2008R2 then // server
+  if IsWinServer2008 or IsWinServer2008R2 or IsWinServer2012 then // server
   begin
     if OSVersionInfo.wProductType in [VER_NT_SERVER,VER_NT_DOMAIN_CONTROLLER] then
     begin
@@ -3665,6 +3667,12 @@ begin
       Result := LoadResString(@RsEditionWin7Enterprise);
     weWin7Ultimate:
       Result := LoadResString(@RsEditionWin7Ultimate);
+    weWin8Pro:
+      Result := LoadResString(@RsEditionWin8Pro);
+    weWin8Enterprise:
+      Result := LoadResString(@RsEditionWin8Enterprise);
+    weWin8RT:
+      Result := LoadResString(@RsEditionWin8RT);
   else
     Result := '';
   end;
@@ -3882,7 +3890,7 @@ begin
         begin
           { TODO : Store this information in a Global Variable, and return that??
                    This would save this work being performed again with later calls }
-          sOpenGLVersion := StrPas(pcTemp);
+          sOpenGLVersion := StrPasA(pcTemp);
         end
         else
         begin
@@ -3900,7 +3908,7 @@ begin
         begin
           { TODO : Store this information in a Global Variable, and return that??
                    This would save this work being performed again with later calls }
-          sOpenGLVendor := StrPas(pcTemp);
+          sOpenGLVendor := StrPasA(pcTemp);
         end
         else
         begin
@@ -4411,7 +4419,7 @@ function GetOSEnabledFeatures: TOSEnabledFeatures;
 var
   EnabledFeatures: Int64;
 begin
-  if IsWin7 or IsWinServer2008 or IsWinServer2008R2 then
+  if IsWin7 or IsWinServer2008 or IsWinServer2008R2 or IsWin8 or IsWinServer2012 then
   begin
     EnabledFeatures := $FFFFFFFF;
     EnabledFeatures := EnabledFeatures shl 32;
@@ -4747,7 +4755,7 @@ function CPUID: TCpuInfo;
             11:
               CPUInfo.CpuName := 'Pentium III';
           else
-            StrPCopy(CPUInfo.CpuName, AnsiString(Format('P6 (Model %d)', [CPUInfo.Model])));
+            StrPCopyA(CPUInfo.CpuName, AnsiString(Format('P6 (Model %d)', [CPUInfo.Model])));
           end;
         15:
           case CPUInfo.IntelSpecific.BrandID of
@@ -4761,7 +4769,7 @@ function CPUID: TCpuInfo;
             CPUInfo.CpuName := 'Pentium 4';
           end;
       else
-        StrPCopy(CPUInfo.CpuName, AnsiString(Format('P%d', [CPUInfo.Family])));
+        StrPCopyA(CPUInfo.CpuName, AnsiString(Format('P%d', [CPUInfo.Family])));
       end;
     end;
 
@@ -4892,7 +4900,7 @@ function CPUID: TCpuInfo;
             9:
               CPUInfo.CpuName := 'AMD-K6®-III (Model 9)';
             else
-              StrFmt(CPUInfo.CpuName, PAnsiChar(AnsiString(LoadResString(@RsUnknownAMDModel))),[CPUInfo.Model]);
+              StrFmtA(CPUInfo.CpuName, PAnsiChar(AnsiString(LoadResString(@RsUnknownAMDModel))), [CPUInfo.Model]);
           end;
         6:
           case CPUInfo.Model of
@@ -4913,7 +4921,7 @@ function CPUID: TCpuInfo;
             10:
               CPUInfo.CpuName := 'AMD Athlon™ XP (Model 10)';
             else
-              StrFmt(CPUInfo.CpuName, PAnsiChar(AnsiString(LoadResString(@RsUnknownAMDModel))), [CPUInfo.Model]);
+              StrFmtA(CPUInfo.CpuName, PAnsiChar(AnsiString(LoadResString(@RsUnknownAMDModel))), [CPUInfo.Model]);
           end;
         8:
 
@@ -4997,7 +5005,7 @@ function CPUID: TCpuInfo;
         6:
           CPUInfo.CpuName := '6x86MX';
       else
-        StrPCopy(CPUInfo.CpuName, AnsiString(Format('%dx86', [CPUInfo.Family])));
+        StrPCopyA(CPUInfo.CpuName, AnsiString(Format('%dx86', [CPUInfo.Family])));
       end;
     end;
   end;
