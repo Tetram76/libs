@@ -3992,8 +3992,8 @@ begin
     begin
       SetLength(Header, $803);
       ReadBuffer(Header[0], Length(Header));
-      Result := (StrLComp(PAnsiChar(@Header[0]), 'PCD_OPA', 7) = 0) or
-                (StrLComp(PAnsiChar(@Header[$800]), 'PCD', 3) = 0);
+      Result := (AnsiStrings.StrLComp(PAnsiChar(@Header[0]), 'PCD_OPA', 7) = 0) or
+                (AnsiStrings.StrLComp(PAnsiChar(@Header[$800]), 'PCD', 3) = 0);
     end;
     Position := LastPosition;
   end;
@@ -4272,9 +4272,9 @@ begin
     SetLength(Header, 3 * $800);
     ReadBuffer(Header[0], Length(Header));
     try
-      Overview := StrLComp(PAnsiChar(@Header[0]), 'PCD_OPA', 7) = 0;
+      Overview := AnsiStrings.StrLComp(PAnsiChar(@Header[0]), 'PCD_OPA', 7) = 0;
       // determine if image is a PhotoCD image
-      if Overview or (StrLComp(PAnsiChar(@Header[$800]), 'PCD', 3) = 0) then
+      if Overview or (AnsiStrings.StrLComp(PAnsiChar(@Header[$800]), 'PCD', 3) = 0) then
       begin
         Rotate := Header[$0E02] and 3;
 
@@ -6286,7 +6286,7 @@ begin
     if Result then
     begin
       ReadBuffer(Header, SizeOf(Header));
-      Result := (StrLIComp(Header.Signature, MagicID, Length(MagicID)) = 0) and
+      Result := (AnsiStrings.StrLIComp(Header.Signature, MagicID, Length(MagicID)) = 0) and
                 (Header.MajorVersion >= 3);
     end;
     Position := LastPosition;
@@ -6685,7 +6685,7 @@ begin
   with Stream, FImageProperties do
   begin
     ReadBuffer(Header, SizeOf(Header));
-    if (StrLIComp(Header.Signature, MagicID, Length(MagicID)) = 0) and
+    if (AnsiStrings.StrLIComp(Header.Signature, MagicID, Length(MagicID)) = 0) and
        (Header.MajorVersion >= 3) then
     begin
       Version := Header.MajorVersion;

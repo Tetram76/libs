@@ -4,7 +4,7 @@ unit Divers;
 interface
 
 uses
-  Windows, SysUtils, Forms, Classes, Dialogs, Controls, StdCtrls;
+  Windows, SysUtils, VCL.Forms, Classes, VCL.Dialogs, VCL.Controls, VCL.StdCtrls;
 
 
 type
@@ -137,7 +137,7 @@ function MAKELCID(lgid, srtid: Word): dword;
 implementation
 
 uses
-  Math, Themes;
+  AnsiStrings, Math, VCL.Themes;
 
 const
   VALIDCHARPOSTE: TSysCharSet = ['a'..'z', 'A'..'Z', '1'..'0', '!', '@', '#', '$', '%', '^', '&', '''', ')', '(', '.', '-', '_', '{', '}', '~', '.'];
@@ -1011,9 +1011,9 @@ begin
     VerQueryValue(buffer, '\VarFileInfo\Translation', Pointer(TransBuffer), TransLen);
     if TransLen >= 4 then
     begin
-      StrLCopy(@temp, PAnsiChar(TransBuffer), 2);
+      AnsiStrings.StrLCopy(@temp, PAnsiChar(TransBuffer), 2);
       CalcLangCharSet := IntToHex(temp and $FFFF, 4);
-      StrLCopy(@temp, PAnsiChar(TransBuffer + 2), 2);
+      AnsiStrings.StrLCopy(@temp, PAnsiChar(TransBuffer + 2), 2);
       CalcLangCharSet := CalcLangCharSet + IntToHex(temp and $FFFF, 4);
     end
     else

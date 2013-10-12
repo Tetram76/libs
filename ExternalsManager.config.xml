@@ -5,13 +5,13 @@
   <LogFolder/>
   <externals>
     <external Name="JCL" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\jvcl\jcl</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/jvcl/jcl</RepositoryExternalPath>
-      <DefaultSubfolder>/trunk/jcl</DefaultSubfolder>
+      <DefaultSubfolder>/jcl/trunk/jcl</DefaultSubfolder>
       <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>https://jcl.svn.sourceforge.net/svnroot/jcl</BaseURL>
+        <BaseURL>https://github.com/project-jedi</BaseURL>
         <VendorPath>/vendors/jcl</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -23,13 +23,13 @@
       </SVNExternalOptions>
     </external>
     <external Name="JVCL" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\jvcl\jvcl</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/jvcl/jvcl</RepositoryExternalPath>
-      <DefaultSubfolder>/trunk/jvcl</DefaultSubfolder>
+      <DefaultSubfolder>/jvcl/trunk/jvcl</DefaultSubfolder>
       <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>https://jvcl.svn.sourceforge.net/svnroot/jvcl</BaseURL>
+        <BaseURL>https://github.com/project-jedi</BaseURL>
         <VendorPath>/vendors/jvcl</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -41,7 +41,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="UIB" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\uib</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/uib</RepositoryExternalPath>
@@ -59,7 +59,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="PascalScript" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\PascalScript</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/PascalScript</RepositoryExternalPath>
@@ -77,7 +77,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="GrizzlyPack" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\GrizzlyPack</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/GrizzlyPack</RepositoryExternalPath>
@@ -94,12 +94,12 @@
         <PropertyCommitComment/>
       </SVNExternalOptions>
     </external>
-    <external Name="ICS V7" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+    <external Name="ICS V8" Kind="ekVendorBranch">
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\ics</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/ics</RepositoryExternalPath>
-      <DefaultSubfolder>/branches/icsv7</DefaultSubfolder>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
       <VendorBranchOptions SourceKind="eskSVN">
         <BaseURL>http://svn.overbyte.be:8443/svn/ics</BaseURL>
         <VendorPath>/vendors/ics</VendorPath>
@@ -113,7 +113,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="Alcinoe" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\alcinoe</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/alcinoe</RepositoryExternalPath>
@@ -131,7 +131,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="SubVersionTools by OBones" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Outils\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\SubVersion by OBones</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/outils/SubVersion by OBones</RepositoryExternalPath>
@@ -149,7 +149,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="Delphi On Rails" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\delphionrails</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/delphionrails</RepositoryExternalPath>
@@ -167,7 +167,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="SuperObject" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\superobject</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/superobject</RepositoryExternalPath>
@@ -203,7 +203,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="SynEdit" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\SynEdit</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/SynEdit</RepositoryExternalPath>
@@ -221,7 +221,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="VirtualTreeView" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\virtual-treeview</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/virtual-treeview</RepositoryExternalPath>
@@ -239,7 +239,7 @@
       </SVNExternalOptions>
     </external>
     <external Name="Graphics32" Kind="ekVendorBranch">
-      <BaseURL>http://tetram:280776@dev.tetram.org/svn</BaseURL>
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>Graphics32</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/Graphics32</RepositoryExternalPath>
@@ -247,6 +247,24 @@
       <VendorBranchOptions SourceKind="eskSVN">
         <BaseURL>https://graphics32.svn.sourceforge.net/svnroot/graphics32</BaseURL>
         <VendorPath>/vendors/graphics32</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="FastMM" Kind="ekVendorBranch">
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\FastMM</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/fastmm</RepositoryExternalPath>
+      <DefaultSubfolder>/code</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskSVN">
+        <BaseURL>http://svn.code.sf.net/p/fastmm</BaseURL>
+        <VendorPath>/vendors/fastmm</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
       </VendorBranchOptions>

@@ -9,7 +9,6 @@ package MediaKit;
 {$R 'Browss.dcr'}
 {$R 'HANDLES.dcr'}
 {$R 'ComboCheck.dcr'}
-{$R 'idrunner\idISAPIRunner.dcr'}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}

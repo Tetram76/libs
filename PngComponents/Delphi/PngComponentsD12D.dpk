@@ -1,7 +1,9 @@
 package PngComponentsD12D;
 
 {$R *.res}
+{$R *.otares}
 {$R '..\Design\PngComponents.dcr'}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -23,6 +25,8 @@ package PngComponentsD12D;
 {$WRITEABLECONST ON}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Png components designtime'}
 {$DESIGNONLY}
 {$IMPLICITBUILD ON}
