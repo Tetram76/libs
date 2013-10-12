@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvclVclClxCvt.pas 12640 2010-01-06 18:06:24Z outchy $
+// $Id$
 
 unit JvclVclClxCvt;
 

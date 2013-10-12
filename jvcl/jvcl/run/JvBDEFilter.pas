@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDEFilter.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvBDEFilter;
 
@@ -141,9 +141,9 @@ procedure DropAllFilters(DataSet: TDataSet);
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDEFilter.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -807,7 +807,7 @@ begin
       BeforeEdit := DataSource.DataSet.BeforeEdit;
     end;
     DbiInitRecord((DataSource.DataSet as TBDEDataSet).Handle,
-      DataSource.DataSet.ActiveBuffer);
+      Pointer(DataSource.DataSet.ActiveBuffer));
     DsSetBOF(DataSource.DataSet, True);
     DsSetEOF(DataSource.DataSet, True);
     DsSetState(DataSource.DataSet, dsEdit);

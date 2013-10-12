@@ -21,7 +21,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: build.dpr 12304 2009-05-05 20:10:29Z outchy $
+// $Id$
 
 program build;
 

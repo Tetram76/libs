@@ -26,9 +26,13 @@
 
 unit JvParameterListMainForm;
 
+{$I jvcl.inc}
+
 interface
 
-{.$DEFINE INCLUDE_DEVEXP_CX}
+{$IFDEF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
+{$DEFINE INCLUDE_DEVEXP_CX}
+{$ENDIF}
 
 uses
   JclUnitVersioning,
@@ -177,9 +181,9 @@ var
 
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/examples/JvParameterList/JvParameterListMainForm.pas $';
-    Revision: '$Revision: 12953 $';
-    Date: '$Date: 2010-12-29 11:33:07 +0100 (mer., 29 déc. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\examples\JvParameterList'
     );
 
@@ -234,14 +238,14 @@ begin
     {$ENDIF INCLUDE_DEVEXP_CX}
     if AutoHeightCheckBox.Checked then
       if AutoWidthCheckBox.Checked then
-        ParameterList.ArrangeSettings.AutoSize := asBoth
+        ParameterList.ArrangeSettings.AutoSize := JvPanel.asBoth
       else
-        ParameterList.ArrangeSettings.AutoSize := asHeight
+        ParameterList.ArrangeSettings.AutoSize := JvPanel.asHeight
     else
     if AutoWidthCheckBox.Checked then
-      ParameterList.ArrangeSettings.AutoSize := asWidth
+      ParameterList.ArrangeSettings.AutoSize := JvPanel.asWidth
     else
-      ParameterList.ArrangeSettings.AutoSize := asNone;
+      ParameterList.ArrangeSettings.AutoSize := JvPanel.asNone;
     Parameter := tjvTimeParameter.Create(ParameterList);
     with tjvTimeParameter(Parameter) do
     begin
@@ -498,14 +502,14 @@ begin
     ParameterList.AddParameter(Parameter);
     if AutoHeightCheckBox.Checked then
       if AutoWidthCheckBox.Checked then
-        ParameterList.ArrangeSettings.AutoSize := asBoth
+        ParameterList.ArrangeSettings.AutoSize := JvPanel.asBoth
       else
-        ParameterList.ArrangeSettings.AutoSize := asHeight
+        ParameterList.ArrangeSettings.AutoSize := JvPanel.asHeight
     else
     if AutoWidthCheckBox.Checked then
-      ParameterList.ArrangeSettings.AutoSize := asWidth
+      ParameterList.ArrangeSettings.AutoSize := JvPanel.asWidth
     else
-      ParameterList.ArrangeSettings.AutoSize := asNone;
+      ParameterList.ArrangeSettings.AutoSize := JvPanel.asNone;
     ParameterList.OkButtonDisableReasons.AddReason('CheckBox', True);
     ParameterList.MaxHeight := StrToInt(MaxHeightEdit.Text);
     ParameterList.MaxWidth := StrToInt(MaxWidthEdit.Text);

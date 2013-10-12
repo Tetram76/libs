@@ -54,7 +54,7 @@ Known issues / not (yet) implemented features:
   - it really is a control for date entry only.
 
 -----------------------------------------------------------------------------}
-// $Id: JvDatePickerEdit.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvDatePickerEdit;
 
@@ -346,9 +346,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDatePickerEdit.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1148,13 +1148,22 @@ begin
 end;
 
 procedure TJvCustomDatePickerEdit.SetDateFormat(AValue: string);
+var
+  UseDefaultDateFormat: Boolean;
 begin
+  UseDefaultDateFormat := False;
   if AValue = '' then
+  begin
     AValue := JclFormatSettings.ShortDateFormat;
+    // XE+ changed ShortDateFormat to always use '/'
+    FDateSeparator := JclFormatSettings.DateSeparator;
+    UseDefaultDateFormat := True;
+  end;
   if AValue <> FDateFormat then
   begin
     FDateFormat := AValue;
-    FDateSeparator := DetermineDateSeparator(FDateFormat);
+    if not UseDefaultDateFormat then
+      FDateSeparator := DetermineDateSeparator(FDateFormat);
     StoreDateFormat := FDateFormat <> JclFormatSettings.ShortDateFormat;
     ResetDateFormat;
   end;

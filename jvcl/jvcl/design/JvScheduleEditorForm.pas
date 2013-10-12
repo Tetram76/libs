@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvScheduleEditorForm.pas 12498 2009-09-13 08:01:22Z outchy $
+// $Id$
 
 unit JvScheduleEditorForm;
 

@@ -25,7 +25,7 @@ description : TJvCsvDataSet data access component. Design time unit - editor for
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCsvDataForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit JvCsvDataForm;
 

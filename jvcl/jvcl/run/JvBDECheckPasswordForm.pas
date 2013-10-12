@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBDECheckPasswordForm.pas 13389 2012-08-11 20:27:20Z ahuser $
+// $Id$
 
 unit JvBDECheckPasswordForm;
 
@@ -48,9 +48,9 @@ function ChangePasswordDialog(Database: TDatabase; AttemptNumber: Integer;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBDECheckPasswordForm.pas $';
-    Revision: '$Revision: 13389 $';
-    Date: '$Date: 2012-08-11 22:27:20 +0200 (sam., 11 août 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

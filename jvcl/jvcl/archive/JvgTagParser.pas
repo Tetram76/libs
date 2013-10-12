@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgTagParser.pas 13033 2011-05-28 12:08:42Z ahuser $
+// $Id$
 
 unit JvgTagParser;
 
@@ -54,9 +54,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/archive/JvgTagParser.pas $';
-    Revision: '$Revision: 13033 $';
-    Date: '$Date: 2011-05-28 14:08:42 +0200 (sam., 28 mai 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

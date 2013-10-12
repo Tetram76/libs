@@ -22,7 +22,7 @@ located at http://jvcl.sourceforge.net
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgProcessUtils.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 
 unit JvgProcessUtils;
 
@@ -75,8 +75,8 @@ const
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile: '$RCSfile$';
-    Revision: '$Revision: 10610 $';
-    Date: '$Date: 2006-05-19 15:35:08 +0200 (ven., 19 mai 2006) $';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

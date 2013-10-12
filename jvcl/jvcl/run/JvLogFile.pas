@@ -20,7 +20,7 @@ You may retrieve the latest version of this file at the Project JEDI's JVCL home
 located at http://jvcl.delphi-jedi.org
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvLogFile.pas 13268 2012-03-02 14:49:25Z obones $
+// $Id$
 
 unit JvLogFile;
 
@@ -91,9 +91,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvLogFile.pas $';
-    Revision: '$Revision: 13268 $';
-    Date: '$Date: 2012-03-02 15:49:25 +0100 (ven., 02 mars 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

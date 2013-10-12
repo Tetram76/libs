@@ -24,7 +24,7 @@
  rights and limitations under the License.
 
 ******************************************************************/
-// $Id: JvShFileOperationMainFormU.h 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 //---------------------------------------------------------------------------
 
 #ifndef JvShFileOperationMainFormUH

@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCpuUsage.pas 12677 2010-01-14 12:39:56Z obones $
+// $Id$
 
 unit JvCpuUsage;
 
@@ -64,9 +64,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCpuUsage.pas $';
-    Revision: '$Revision: 12677 $';
-    Date: '$Date: 2010-01-14 13:39:56 +0100 (jeu., 14 janv. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

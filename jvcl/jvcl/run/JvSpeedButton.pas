@@ -34,7 +34,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvSpeedButton.pas 13456 2012-10-06 09:14:10Z ahuser $
+// $Id$
 
 unit JvSpeedButton;
 
@@ -497,9 +497,9 @@ function DrawButtonFrame(Canvas: TCanvas; const Client: TRect;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvSpeedButton.pas $';
-    Revision: '$Revision: 13456 $';
-    Date: '$Date: 2012-10-06 11:14:10 +0200 (sam., 06 oct. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

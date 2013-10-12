@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFindFiles.pas 13352 2012-06-14 09:21:26Z obones $
+// $Id$
 
 unit JvFindFiles;
 
@@ -72,9 +72,9 @@ function FindFilesDlg(ParentWnd: HWND; const StartIn: string; SpecialFolder: TJv
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFindFiles.pas $';
-    Revision: '$Revision: 13352 $';
-    Date: '$Date: 2012-06-14 11:21:26 +0200 (jeu., 14 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

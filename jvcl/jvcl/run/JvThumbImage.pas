@@ -39,7 +39,7 @@ Removed the 180 degree rotation and replaced by the mirror(mtBoth) call.
  and image of 2300x3500x24bit without any problems on Win2K.
  I must test it on Win98 before release.
 -----------------------------------------------------------------------------}
-// $Id: JvThumbImage.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvThumbImage;
 
@@ -120,9 +120,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThumbImage.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

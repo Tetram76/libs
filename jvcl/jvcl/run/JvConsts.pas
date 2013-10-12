@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvConsts.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvConsts;
 
@@ -36,7 +36,7 @@ uses
 
 const
   { JvEditor }
-  JvEditorCompletionChars = #8'0123456789QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm';
+  JvEditorCompletionChars = #8'0123456789QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm_';
 
   { Various units }
   DigitSymbols = ['0'..'9'];
@@ -86,6 +86,17 @@ const
   {$IFDEF DELPHI17}
   SDelphiKey = 'Software\Embarcadero\BDS\10.0';
   {$ENDIF DELPHI17}
+  {$IFDEF DELPHI18}
+  SDelphiKey = 'Software\Embarcadero\BDS\11.0';
+  {$ENDIF DELPHI18}
+  {$IFDEF DELPHI19}
+  SDelphiKey = 'Software\Embarcadero\BDS\12.0';
+  {$ENDIF DELPHI19}
+
+  {$IF not declared(SDelphiKey)}
+    {$MESSAGE FATAL 'Declaration for SDelphiKey is missing'}
+  {$IFEND}
+  
   { JvDataProvider constants }
   { Consumer attributes }
   DPA_RenderDisabledAsGrayed = 1;
@@ -226,9 +237,9 @@ const
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvConsts.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

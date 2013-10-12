@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvValidatorsEditorForm.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id$
 
 unit JvValidatorsEditorForm;
 

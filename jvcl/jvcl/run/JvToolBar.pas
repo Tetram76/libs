@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvToolBar.pas 13155 2011-11-06 12:31:20Z ahuser $
+// $Id$
 
 unit JvToolBar;
 
@@ -75,9 +75,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolBar.pas $';
-    Revision: '$Revision: 13155 $';
-    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

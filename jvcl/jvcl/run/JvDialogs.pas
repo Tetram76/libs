@@ -25,7 +25,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDialogs.pas 13180 2011-11-22 12:45:23Z obones $
+// $Id$
 
 unit JvDialogs;
 
@@ -142,9 +142,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDialogs.pas $';
-    Revision: '$Revision: 13180 $';
-    Date: '$Date: 2011-11-22 13:45:23 +0100 (mar., 22 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

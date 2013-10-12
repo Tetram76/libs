@@ -51,7 +51,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppRegistryStorage.pas 13218 2012-02-24 10:21:00Z obones $
+// $Id$
 
 unit JvAppRegistryStorage;
 
@@ -140,9 +140,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppRegistryStorage.pas $';
-    Revision: '$Revision: 13218 $';
-    Date: '$Date: 2012-02-24 11:21:00 +0100 (ven., 24 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

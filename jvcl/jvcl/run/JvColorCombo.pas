@@ -29,7 +29,7 @@ Known Issues:
   custom color selected, not the last added as it should be thus AutoComplete is
   set to default to False. (p3)
 -----------------------------------------------------------------------------}
-// $Id: JvColorCombo.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id$
 
 unit JvColorCombo;
 
@@ -43,6 +43,9 @@ uses
   {$ENDIF UNITVERSIONING}
   Windows, Messages,
   Classes, Controls, Dialogs, Graphics,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}  
   JvCombobox;
 
 type
@@ -85,6 +88,7 @@ type
     function GetDropDownWidth: Integer;
     procedure SetDropDownWidth(const Value: Integer);
     function GetColor(Index: Integer): TColor;
+    function IsColorNameMapStored: Boolean;
   protected
     procedure FontChanged; override;
     procedure DrawItem(Index: Integer; R: TRect; State: TOwnerDrawState); override;
@@ -139,7 +143,7 @@ type
     // with the value in the list, otherwise the default value wil be used
     // Example:
     // clBlack=Black
-    property ColorNameMap: TStrings read GetColorNameMap write SetColorNameMap;
+    property ColorNameMap: TStrings read GetColorNameMap write SetColorNameMap stored IsColorNameMapStored;
     property ColorValue: TColor read FColorValue write SetColorValue default clBlack;
     property ColorDialogText: string read FColorDialogText write SetColorDialogText;
     property ColorWidth: Integer read FColorWidth write SetColorWidth default 21;
@@ -321,9 +325,9 @@ type
   {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorCombo.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}
@@ -822,6 +826,25 @@ begin
       FColorNameMap.Add(SysColorValues[I].Constant + '=' + SysColorValues[I].Description);
   finally
     FColorNameMap.EndUpdate;
+  end;
+end;
+
+function TJvColorComboBox.IsColorNameMapStored: Boolean;
+var
+  I, Offset: Integer;
+begin
+  Result := FColorNameMap.Count <> Length(ColorValues) + Length(SysColorValues);
+  if not Result then
+  begin
+    Result := True;
+    for I := Low(ColorValues) to High(ColorValues) do
+      if FColorNameMap[I - Low(ColorValues)] <> ColorValues[I].Constant + '=' + ColorValues[I].Description then
+        Exit;
+    Offset := High(ColorValues) - Low(ColorValues) + 1;
+    for I := Low(SysColorValues) to High(SysColorValues) do
+      if FColorNameMap[Offset + I - Low(SysColorValues)] <> SysColorValues[I].Constant + '=' + SysColorValues[I].Description then
+        Exit;
+    Result := False;
   end;
 end;
 

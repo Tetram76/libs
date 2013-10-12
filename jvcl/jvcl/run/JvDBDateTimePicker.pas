@@ -34,7 +34,7 @@ Known Issues:
 // Extending and add capability to integrate with database
 // www.geocities.com/ekosbg
 /////////////////////////////////////////////////////////////////////////
-// $Id: JvDBDateTimePicker.pas 13315 2012-06-12 11:33:51Z obones $
+// $Id$
 
 unit JvDBDateTimePicker;
 
@@ -102,9 +102,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBDateTimePicker.pas $';
-    Revision: '$Revision: 13315 $';
-    Date: '$Date: 2012-06-12 13:33:51 +0200 (mar., 12 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -414,20 +414,20 @@ begin
   end;
 
   inherited KeyPress(Key);
-  if CharInSet(Key, [#32..#255]) and ((Field <> nil) and
-    not (Field.IsValidChar(Key))) then
+  if (Key >= #32) and ((Field <> nil) and not (Field.IsValidChar(Key))) then
   begin
     if BeepOnError then
       Beep;
     Key := #0;
   end;
   case Key of
-    #32..#255:
+    #32..High(Char):
       FDataLink.Edit;
     Esc:
       begin
         FDataLink.Reset;
-        SetFocus;
+        if CanFocus then
+          SetFocus;
         Key := #0;
       end;
   end;

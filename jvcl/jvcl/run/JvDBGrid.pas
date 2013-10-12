@@ -52,7 +52,7 @@ KNOWN ISSUES:
 -----------------------------------------------------------------------------
 2004/07/08 - WPostma merged changes by Frédéric Leneuf-Magaud and ahuser.}
 
-// $Id: JvDBGrid.pas 13460 2012-10-12 07:20:33Z ahuser $
+// $Id$
 
 unit JvDBGrid;
 
@@ -255,6 +255,7 @@ type
     FPostOnEnterKey: Boolean;
     FSelectColumn: TSelectColumn;
     FTitleArrow: Boolean;
+    FTitleArrowDown: Boolean;
     FTitlePopup: TPopupMenu;
     FOnShowTitleHint: TJvTitleHintEvent;
     FOnTitleArrowMenuEvent: TNotifyEvent;
@@ -653,9 +654,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBGrid.pas $';
-    Revision: '$Revision: 13460 $';
-    Date: '$Date: 2012-10-12 09:20:33 +0200 (ven., 12 oct. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2409,6 +2410,10 @@ begin
       LastCell.X := Col;
       LastCell.Y := Row;
 
+      if (Button = mbLeft) and FTitleArrow and (Cell.X = 0) and (Cell.Y = 0) and
+         (dgTitles in Options) and (dgIndicator in Options) then
+        FTitleArrowDown := True;
+
       if (Button = mbRight) and
         (dgTitles in Options) and (dgIndicator in Options) and
         (Cell.Y = 0) then
@@ -2671,10 +2676,13 @@ begin
     FGridState := gsNormal;
   end;
 
-  if FTitleArrow and (Button = mbLeft) and
-    (dgTitles in Options) and (dgIndicator in Options) and
-    (Cell.X = 0) and (Cell.Y = 0) and (Columns.Count > 0) then
-    ShowSelectColumnClick; // Selection of columns
+  if FTitleArrowDown and (Button = mbLeft) then
+  begin
+    FTitleArrowDown := False;
+    if FTitleArrow and (dgTitles in Options) and (dgIndicator in Options) and
+       (Cell.X = 0) and (Cell.Y = 0) and (Columns.Count > 0) then
+      ShowSelectColumnClick; // Selection of columns
+  end;
 
   if (Button = mbLeft) and (FGridState = gsColSizing) then
   begin
@@ -2751,7 +2759,7 @@ end;
 procedure TJvDBGrid.WMChar(var Msg: TWMChar);
 begin
   if Assigned(SelectedField) and EditWithBoolBox(SelectedField) and
-    CharInSet(Char(Msg.CharCode), [Backspace, #32..#255]) then
+    ((Char(Msg.CharCode) = Backspace) or (Msg.CharCode >= 32)) then
   begin
     if not DoKeyPress(Msg) then
       case Char(Msg.CharCode) of
@@ -3551,7 +3559,7 @@ begin
   Highlight := (gdSelected in State) and ((dgAlwaysShowSelection in Options) or Focused);
   GetCellProps(Column, Canvas.Font, NewBackgrnd, Highlight or ActiveRowSelected);
   if not Highlight and (ReadOnlyCellColor <> clDefault) and
-     (not Field.CanModify or not CanEditCell(Field)) then
+     (Field <> nil) and (not Field.CanModify or not CanEditCell(Field)) then
   begin
     if (gdSelected in State) and (Focused xor MultiSelect) then
       Canvas.Brush.Color := NewBackgrnd
@@ -3759,10 +3767,10 @@ begin
 end;
 
 procedure TJvDBGrid.CalcSizingState(X, Y: Integer; var State: TGridState;
-  var Index: Longint; var SizingPos, SizingOfs: Integer;
-  var FixedInfo: TGridDrawInfo);
+  var Index: Longint; var SizingPos, SizingOfs: Integer; var FixedInfo: TGridDrawInfo);
 var
   Coord: TGridCoord;
+  DrawInfo: TGridDrawInfo;
 begin
   inherited CalcSizingState(X, Y, State, Index, SizingPos, SizingOfs, FixedInfo);
 
@@ -3770,14 +3778,18 @@ begin
   if not (dgColumnResize in Options) and not (csDesigning in ComponentState) then
     Exit;
 
-
   FCanResizeColumn := State = gsColSizing; //  If true, mouse double clicking can resize column.
 
-  // Mantis 5818: the inherited code sometimes gives an invalid index for the column
-  if Index > LeftCol + VisibleColCount then
-    Index := LeftCol + VisibleColCount;
+  { Mantis 5818: Index-out-of-range error when there is only one visible column partially displayed }
+  CalcDrawInfo(DrawInfo);
+  if (DrawInfo.Horz.FullVisBoundary = DrawInfo.Horz.FixedBoundary) then
+    Index := Index - 1; // Index from inherited code has the value of 2.
 
-  FResizeColumnIndex := Index - 1;// Store the column index to resize.
+  { Store the column index to resize }
+  if dgIndicator in Options then
+    FResizeColumnIndex := Index - 1
+  else
+    FResizeColumnIndex := Index; // Mantis 6061
 
   if (State = gsNormal) and (Y <= RowHeights[0]) then
   begin
@@ -4643,7 +4655,7 @@ begin
   // up with an infinite loop of error messages. This check must
   // be done in UseDefaultEditor
 
-  if ReadOnly or not (Control.Enabled and DataLink.DataSet.CanModify) then
+  if ReadOnly or (DataLink.DataSet = nil) or not (Control.Enabled and DataLink.DataSet.CanModify) then
   begin
     HideCurrentControl;
     Exit;
@@ -4855,8 +4867,12 @@ begin
       WM_GETDLGCODE:
         begin
           CurrentEditor := FControls.ControlByName(FCurrentControl.Name);
-          if (CurrentEditor <> nil) and CurrentEditor.LeaveOnUpDownKey then
-            Message.Result := Message.Result or DLGC_WANTTAB or DLGC_WANTARROWS;
+          if CurrentEditor <> nil then
+          begin
+            Message.Result := Message.Result or DLGC_WANTTAB;
+            if CurrentEditor.LeaveOnUpDownKey then
+              Message.Result := Message.Result or DLGC_WANTARROWS;
+          end;
         end;
       CM_EXIT:
         HideCurrentControl;

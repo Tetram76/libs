@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStore.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id$
 
 unit JvPropertyStore;
 
@@ -87,6 +87,7 @@ type
     function GetPropertyName(Index: Integer): string;
     //1 Returns the given property as TJvCustomPropertyStore or returns nil
     function GetPropertyJvCustomPropertyStore(PropName: string): TJvCustomPropertyStore;
+    procedure StoreXMLProperties; virtual;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -214,9 +215,9 @@ procedure StorePropertyStorageToAppStorage(iPropertyStore: TJvCustomPropertyStor
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
-      '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStore.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+      '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -843,10 +844,10 @@ end;
 
 procedure TJvCustomPropertyStore.StoreProperties;
 var
-  SaveProperties: Boolean;
   Mutex: TJclMutex;
 
   procedure ExecuteStoreProperties;
+  var SaveProperties: Boolean;
   begin
     AppStorage.BeginUpdate;
     try
@@ -860,14 +861,12 @@ var
         if StorePropertiesNow then
         begin
           if not IgnoreLastLoadTime then
-            AppStorage.WriteString(AppStorage.ConcatPaths([AppStoragePath,
-              cLastSaveTime]), DateTimeToStr(Now));
+            AppStorage.WriteString(AppStorage.ConcatPaths([AppStoragePath, cLastSaveTime]), DateTimeToStr(Now));
           if Assigned(FOnBeforeStoreProperties) then
             FOnBeforeStoreProperties(Self);
-          if SaveProperties then
-            StoreData;
-          AppStorage.WritePersistent(AppStoragePath, Self, True,
-            CombinedIgnoreProperties);
+          StoreData;
+          StoreXMLProperties;
+          AppStorage.WritePersistent(AppStoragePath, Self, True, CombinedIgnoreProperties);
           if Assigned(FOnAfterStoreProperties) then
             FOnAfterStoreProperties(Self);
         end;
@@ -918,6 +917,10 @@ begin
 end;
 
 procedure TJvCustomPropertyStore.StoreData;
+begin
+end;
+
+procedure TJvCustomPropertyStore.StoreXMLProperties;
 begin
 end;
 

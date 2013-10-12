@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFormWallpaper.pas 13222 2012-02-24 14:19:37Z obones $
+// $Id$
 
 unit JvFormWallpaper;
 
@@ -67,9 +67,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvFormWallpaper.pas $';
-    Revision: '$Revision: 13222 $';
-    Date: '$Date: 2012-02-24 15:19:37 +0100 (ven., 24 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

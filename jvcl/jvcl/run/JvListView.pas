@@ -28,7 +28,7 @@ Known Issues:
                (report for instance). As a workaround, always change the item's
                properties, never the canvas' directly.
 -----------------------------------------------------------------------------}
-// $Id: JvListView.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvListView;
 
@@ -522,9 +522,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListView.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -532,9 +532,12 @@ const
 implementation
 
 uses
-  {$IFDEF COMPILER10_UP}
+  {$IFDEF HAS_UNIT_TYPES}
   Types,
-  {$ENDIF COMPILER10_UP}
+  {$ENDIF HAS_UNIT_TYPES}
+  {$IFDEF RTL250_UP}
+  AnsiStrings,
+  {$ENDIF RTL250_UP}
   VarUtils, Variants,
   JvConsts;
 
@@ -1439,7 +1442,7 @@ begin
   Items.BeginUpdate;
   try
     Items.Clear;
-    if StrComp(Buf, cLISTVIEW01) <> 0 then
+    if {$IFDEF RTL250_UP}AnsiStrings.{$ENDIF}StrComp(Buf, cLISTVIEW01) <> 0 then
     begin
       Stream.Position := Start;
       LoadOldStyle(Stream);
@@ -1987,13 +1990,16 @@ procedure TJvListView.WMAutoSelect(var Msg: TMessage);
 var
   lv: TListItem;
 begin
-  with Msg do
+  if AutoSelect and (Selected = nil) then // Mantis 6037: Prevent AutoSelect from stealing the selected item when processing messages
   begin
-    lv := TListItem(WParam);
-    if Assigned(lv) and (Items.IndexOf(lv) >= 0) and (LParam = 1) then
+    with Msg do
     begin
-      lv.Selected := True;
-      lv.Focused := True;
+      lv := TListItem(WParam);
+      if Assigned(lv) and (Items.IndexOf(lv) >= 0) and (LParam = 1) then
+      begin
+        lv.Selected := True;
+        lv.Focused := True;
+      end;
     end;
   end;
 end;

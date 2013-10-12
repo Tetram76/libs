@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBActnResForm.pas 13155 2011-11-06 12:31:20Z ahuser $
+// $Id$
 
 unit JvDBActnResForm;
 

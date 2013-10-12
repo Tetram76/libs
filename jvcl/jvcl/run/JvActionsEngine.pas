@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActionsEngine.pas 13454 2012-10-04 21:02:30Z jfudickar $
+// $Id$
 
 unit JvActionsEngine;
 
@@ -135,9 +135,9 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
-      '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvActionsEngine.pas $';
-    Revision: '$Revision: 13454 $';
-    Date: '$Date: 2012-10-04 23:02:30 +0200 (jeu., 04 oct. 2012) $';
+      '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
   {$ENDIF UNITVERSIONING}

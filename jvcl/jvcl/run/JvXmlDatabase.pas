@@ -26,7 +26,7 @@ Known Issues:
   -Where conditions *MUST* be enclosed between parenthesis as ... WHERE (Col = 5) AND (Col2 < Col3) ...
   -Update statements are limited to simple operations like ... SET Col1 = Col1 + 1, Col2 = 4 ...
 -----------------------------------------------------------------------------}
-// $Id: JvXmlDatabase.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvXmlDatabase;
 
@@ -210,9 +210,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvXmlDatabase.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

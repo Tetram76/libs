@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPascalInterpreterReg.pas 12661 2010-01-07 18:58:43Z ahuser $
+// $Id$
 
 unit JvPascalInterpreterReg;
 

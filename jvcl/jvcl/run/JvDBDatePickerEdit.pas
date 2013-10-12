@@ -33,7 +33,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBDatePickerEdit.pas 13329 2012-06-12 14:28:33Z obones $
+// $Id$
 
 unit JvDBDatePickerEdit;
 
@@ -175,7 +175,7 @@ type
     property ShowCheckBox;
     property StoreDateFormat;
     property TabOrder;
-    {property TabStop;} {(rb) Why disabled?}
+    property TabStop;
     property Visible;
     property OnButtonClick;
     property OnChange;
@@ -201,18 +201,20 @@ type
     property OnParentColorChange;
     property OnSetFocus;
     property OnStartDrag;
-    property OnPopupHidden;
-    property OnPopupShown;
 
     property OnGetValidDateString;
+    property OnPopupShown;
+    property OnPopupHidden;
+    property OnPopupChange;
+    property OnPopupValueAccepted;
   end;
 
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBDatePickerEdit.pas $';
-    Revision: '$Revision: 13329 $';
-    Date: '$Date: 2012-06-12 16:28:33 +0200 (mar., 12 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

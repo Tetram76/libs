@@ -22,7 +22,7 @@
   Known Issues:
 
   ----------------------------------------------------------------------------- }
-// $Id: JvJclUnitVersioningBrowser.pas 13183 2011-11-23 21:48:44Z jfudickar $
+// $Id$
 
 unit JvJclUnitVersioningBrowser;
 
@@ -58,9 +58,9 @@ procedure ShowUnitVersioning(const aDynControlEngine: tJvDynControlEngine = nil)
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvJclUnitVersioningBrowser.pas $';
-    Revision: '$Revision: 13183 $';
-    Date: '$Date: 2011-11-23 22:48:44 +0100 (mer., 23 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

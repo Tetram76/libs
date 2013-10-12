@@ -36,7 +36,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvEdit.pas 13437 2012-09-24 11:46:58Z ahuser $
+// $Id$
 
 unit JvEdit;
 
@@ -275,9 +275,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEdit.pas $';
-    Revision: '$Revision: 13437 $';
-    Date: '$Date: 2012-09-24 13:46:58 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

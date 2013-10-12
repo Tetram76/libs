@@ -19,7 +19,7 @@
 { http://www.sourceforge.net/projects/dpp32                                                        }
 {                                                                                                  }
 {**************************************************************************************************}
-// $Id: dpp_PascalParser.pas 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 
 unit dpp_PascalParser;
 

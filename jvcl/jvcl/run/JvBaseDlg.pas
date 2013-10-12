@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDlg.pas 13365 2012-06-18 21:39:36Z jfudickar $
+// $Id$
 
 unit JvBaseDlg;
 
@@ -53,9 +53,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDlg.pas $';
-    Revision: '$Revision: 13365 $';
-    Date: '$Date: 2012-06-18 23:39:36 +0200 (lun., 18 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

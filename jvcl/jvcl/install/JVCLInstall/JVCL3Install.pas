@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JVCL3Install.pas 13294 2012-05-07 13:42:54Z obones $
+// $Id$
 
 unit JVCL3Install;
 
@@ -31,6 +31,9 @@ unit JVCL3Install;
 interface
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   Windows, ShellAPI, SysUtils, Classes, Core, Graphics, Controls, Forms,
   StdCtrls, Dialogs,
   DelphiData, JVCLData, Utils,

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvGridPreviewForm.pas 12767 2010-05-14 17:39:21Z ahuser $
+// $Id$
 
 unit JvGridPreviewForm;
 
@@ -100,9 +100,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvGridPreviewForm.pas $';
-    Revision: '$Revision: 12767 $';
-    Date: '$Date: 2010-05-14 19:39:21 +0200 (ven., 14 mai 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

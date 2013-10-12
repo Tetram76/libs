@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: DelphiData.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit DelphiData;
 
@@ -35,7 +35,7 @@ uses
   Windows, SysUtils, Classes, Contnrs, Registry, PackageInformation;
 
 const
-  BDSVersions: array[1..10] of record
+  BDSVersions: array[1..12] of record
                                 Name: string;
                                 VersionStr: string;
                                 Version: Integer;
@@ -52,7 +52,9 @@ const
     (Name: 'Embarcadero RAD Studio'; VersionStr: '2010'; Version: 14; CIV: '140'; Supported: True),
     (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE'; Version: 15; CIV: '150'; Supported: True),
     (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE2'; Version: 16; CIV: '160'; Supported: True),
-    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE3'; Version: 17; CIV: '170'; Supported: True)
+    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE3'; Version: 17; CIV: '170'; Supported: True),
+    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE4'; Version: 18; CIV: '180'; Supported: True),
+    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE5'; Version: 19; CIV: '190'; Supported: True)
   );
 
 type
@@ -390,6 +392,11 @@ end;
 
 { TCompileTargetList }
 
+function SortTargetsByVersionNumber(Item1, Item2: Pointer): Integer;
+begin
+  Result := TCompileTarget(Item1).Version - TCompileTarget(Item2).Version;
+end;
+
 constructor TCompileTargetList.Create;
 begin
   inherited Create;
@@ -410,6 +417,7 @@ begin
     LoadTargets(KeyCodeGear, 'BDS', CmdOptions.RegistryKeyBDS); // do not localize
     LoadTargets(KeyEmbarcadero, 'BDS', CmdOptions.RegistryKeyBDS); // do not localize
   end;
+  Sort(SortTargetsByVersionNumber);
 end;
 
 function TCompileTargetList.GetItems(Index: Integer): TCompileTarget;

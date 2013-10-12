@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvStrToHtml.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvStrToHtml;
 
@@ -63,9 +63,9 @@ function CharToHtml(Ch: Char): string;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvStrToHtml.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -397,17 +397,25 @@ var
   P: PChar;
   Ch: Char;
   W: Word;
+  Even: Boolean;
 begin
   Len := Length(Value);
   // number of chars to add
   AddLen := 0;
-  for I := 1 to Len do
+  I := 1;
+  while I <= Len do
   begin
     Ch := Value[I];
     if Ch = ' ' then
     begin
-      if (I > 1) and (Value[I - 1] = ' ') then
-        Inc(AddLen, 5 {Length(Nbsp) - 1});
+      Even := False;
+      repeat
+        if Even then
+          Inc(AddLen, 5 {Length(Nbsp) - 1});
+        Even := not Even;
+        Inc(I);
+      until (I > Len) or (Value[I] <> ' ');
+      Continue;
     end
     else
     if (Ch >= #128) or not (AnsiChar(Ch) in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
@@ -425,6 +433,7 @@ begin
           Break;
         end;
     end;
+    Inc(I);
   end;
 
   if AddLen = 0 then
@@ -433,18 +442,29 @@ begin
   begin
     SetLength(Result, Len + AddLen);
     P := Pointer(Result);
-    for I := 1 to Len do
+    I := 1;
+    while I <= Len do
     begin
       Ch := Value[I];
       if Ch = ' ' then
       begin
-        if (I > 1) and (Value[I - 1] = ' ') then
-        begin
-          HtmlLen := 6 {Length(Nbsp)};
-          Move(Nbsp[1], P[0], HtmlLen * SizeOf(Char));
-          Inc(P, HtmlLen);
-          Ch := #0;
-        end;
+        Even := False;
+        repeat
+          if Even then
+          begin
+            HtmlLen := 6 {Length(Nbsp)};
+            Move(Nbsp[1], P[0], HtmlLen * SizeOf(Char));
+            Inc(P, HtmlLen);
+          end
+          else
+          begin
+            P[0] := ' ';
+            Inc(P);
+          end;
+          Even := not Even;
+          Inc(I);
+        until (I > Len) or (Value[I] <> ' ');
+        Continue;
       end
       else
       if (Ch >= #128) or not (AnsiChar(Ch) in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
@@ -470,6 +490,7 @@ begin
         P[0] := Ch;
         Inc(P);
       end;
+      Inc(I);
     end;
   end;
 end;

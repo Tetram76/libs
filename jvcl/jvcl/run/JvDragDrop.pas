@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDragDrop.pas 13436 2012-09-19 14:21:04Z ahuser $
+// $Id$
 
 unit JvDragDrop;
 
@@ -150,9 +150,9 @@ function Malloc: IMalloc;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDragDrop.pas $';
-    Revision: '$Revision: 13436 $';
-    Date: '$Date: 2012-09-19 16:21:04 +0200 (mer., 19 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

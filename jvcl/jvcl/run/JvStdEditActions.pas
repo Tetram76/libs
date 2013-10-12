@@ -19,7 +19,7 @@ Contributor(s):
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvStdEditActions.pas 12699 2010-02-24 17:31:44Z ahuser $
+// $Id$
 
 unit JvStdEditActions;
 

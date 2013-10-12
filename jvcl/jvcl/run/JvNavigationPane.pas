@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvNavigationPane.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvNavigationPane;
 
@@ -34,7 +34,7 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   SysUtils, Classes,
-  Windows, Messages, Controls, Graphics, Menus, ExtCtrls, ImgList,
+  Windows, Messages, Controls, Graphics, Menus, ExtCtrls, ImgList, Math,
   {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
   System.UITypes,
   {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
@@ -1161,9 +1161,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvNavigationPane.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -2338,23 +2338,42 @@ var
     Result := Assigned(Images) and (ImageIndex >= 0);
   end;
 
+  function ColorBrightness(const AColor: TColor; const AChangeValue: Integer; ADestColor: TColor): TColor;
+  // Change Brightness from AColor to ADestColor with AChangeValue in procent (100% = ADestColor)
+  type
+    TRGBColor = packed record
+      case Boolean of
+        True : (Color: TColor);
+        False: (r, g, b, a: Byte);
+    end;
+  var
+    Rgb, RgbDest: TRGBColor;
+  begin
+    Rgb.Color := ColorToRGB(AColor);
+    RgbDest.Color := ColorToRGB(ADestColor);
+    Rgb.r := Min(Max(Rgb.r - Round(AChangeValue * (Rgb.r - RgbDest.r) / 100), 0), $FF);
+    Rgb.g := Min(Max(Rgb.g - Round(AChangeValue * (Rgb.g - RgbDest.g) / 100), 0), $FF);
+    Rgb.b := Min(Max(Rgb.b - Round(AChangeValue * (Rgb.b - RgbDest.b) / 100), 0), $FF);
+    Result := Rgb.Color;
+  end;
+
 begin
   R := ClientRect;
   if HotTrack and (bsMouseInside in MouseStates) then
   begin
     if bsMouseDown in MouseStates then
-      GradientFillRect(Canvas, R, Colors.ButtonSelectedColorTo, Colors.ButtonSelectedColorFrom, fdTopToBottom, 32)
+     GradientFillRect(Canvas, R, Colors.ButtonSelectedColorTo, Colors.ButtonSelectedColorFrom, fdTopToBottom, 32)
     else
-      GradientFillRect(Canvas, R, Colors.ButtonHotColorFrom, Colors.ButtonHotColorTo, fdTopToBottom, 32);
+     GradientFillRect(Canvas, R, Colors.ButtonHotColorFrom, Colors.ButtonHotColorTo, fdTopToBottom, 32);
   end
   else
   if Down then
-    GradientFillRect(Canvas, R, Colors.ButtonSelectedColorFrom, Colors.ButtonSelectedColorTo, fdTopToBottom, 32)
+   GradientFillRect(Canvas, R, Colors.ButtonSelectedColorFrom, Colors.ButtonSelectedColorTo, fdTopToBottom, 32)
   else
   if bsMouseDown in MouseStates then
-    GradientFillRect(Canvas, R, Colors.ButtonSelectedColorTo, Colors.ButtonSelectedColorFrom, fdTopToBottom, 32)
+   GradientFillRect(Canvas, R, Colors.ButtonSelectedColorTo, Colors.ButtonSelectedColorFrom, fdTopToBottom, 32)
   else
-    GradientFillRect(Canvas, ClientRect, Colors.ButtonColorFrom, Colors.ButtonColorTo, fdTopToBottom, 32);
+   GradientFillRect(Canvas, ClientRect, Colors.ButtonColorFrom, Colors.ButtonColorTo, fdTopToBottom, 32);
   InflateRect(R, -4, -4);
   if IsValidImage then
   begin
@@ -2365,17 +2384,20 @@ begin
   end;
   if Caption <> '' then
   begin
-    if HotTrack and (bsMouseInside in MouseStates) and not (bsMouseDown in MouseStates) then
+   if HotTrack and (bsMouseInside in MouseStates) and not (bsMouseDown in MouseStates) then
       Canvas.Font := HotTrackFont
     else
       Canvas.Font := Font;
     SetBkMode(Canvas.Handle, TRANSPARENT);
 
+    if not Enabled then
+      Canvas.Font.Color := ColorBrightness(Font.Color, 75, Canvas.Pixels[(R.Right - R.Left) div 2, (R.Bottom - R.Top) div 2]);
+
     TempRect := R;
     DrawText(Canvas, Caption, Length(Caption), TempRect,
-      DT_CALCRECT or cAlignment[Alignment] or cWordWrap[WordWrap] or DT_VCENTER);
+     DT_CALCRECT or cAlignment[Alignment] or cWordWrap[WordWrap] or DT_VCENTER);
     if WordWrap then
-      OffsetRect(R, 0, ((R.Bottom - R.Top) - (TempRect.Bottom - TempRect.Top)) div 2);
+     OffsetRect(R, 0, ((R.Bottom - R.Top) - (TempRect.Bottom - TempRect.Top)) div 2);
     DrawText(Canvas, Caption, Length(Caption), R,
       cAlignment[Alignment] or cWordWrap[WordWrap] or DT_VCENTER);
   end;
@@ -2413,6 +2435,8 @@ begin
     begin
       FStyleManager.RegisterChanges(FStyleLink);
       Colors := FStyleManager.Colors;
+      Font := FStyleManager.Fonts.NavPanelFont;
+      HotTrackFont := FStyleManager.Fonts.NavPanelHotTrackFont;
     end;
   end;
 end;

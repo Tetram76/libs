@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBaseDBLogonDialog.pas 13406 2012-08-24 20:05:23Z jfudickar $
+// $Id$
 
 unit JvBaseDBLogonDialog;
 
@@ -421,9 +421,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseDBLogonDialog.pas $';
-    Revision: '$Revision: 13406 $';
-    Date: '$Date: 2012-08-24 22:05:23 +0200 (ven., 24 août 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -2323,10 +2323,14 @@ begin
       for i := 1 to length(s) do
       begin
         if CharInSet(s[i], LowerChars) then
+          {$IFDEF RTL250_UP}
+          s[i] := s[i].ToUpper
+          {$ELSE}
           s[i] := ToUpper(s[i])
+          {$ENDIF RTL250_UP}
         else if not CharInSet(s[i], UpperChars) then
         begin
-          Result := trim(iName);
+          Result := Trim(iName);
           Exit;
         end;
       end;
@@ -2347,10 +2351,14 @@ begin
       for i := 1 to length(s) do
       begin
         if CharInSet(s[i], LowerChars) then
+          {$IFDEF RTL250_UP}
+          s[i] := s[i].ToUpper
+          {$ELSE}
           s[i] := ToUpper(s[i])
+          {$ENDIF RTL250_UP}
         else if not CharInSet(s[i], UpperChars) then
         begin
-          Result := trim(iName);
+          Result := Trim(iName);
           Exit;
         end;
       end;

@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: PgConfig.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit PgConfig;
 

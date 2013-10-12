@@ -32,7 +32,7 @@ Description:
 History:
   2004-07-23: Added TJvCheckedComboBox.
 -----------------------------------------------------------------------------}
-// $Id: JvComboListBox.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id$
 
 unit JvComboListBox;
 
@@ -174,9 +174,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComboListBox.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

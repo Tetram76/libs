@@ -25,7 +25,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDriveCtrls.pas 13362 2012-06-18 12:23:29Z obones $
+// $Id$
 
 unit JvDriveCtrls;
 
@@ -398,9 +398,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDriveCtrls.pas $';
-    Revision: '$Revision: 13362 $';
-    Date: '$Date: 2012-06-18 14:23:29 +0200 (lun., 18 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

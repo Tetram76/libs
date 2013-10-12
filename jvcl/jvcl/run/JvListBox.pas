@@ -42,7 +42,7 @@ Notes (2003-05-21) // Remko Bonte
   of flickering, best avoid it or set ScrollBars to ssNone.
 * Updated drag image to use with MultiLine.
 -----------------------------------------------------------------------------}
-// $Id: JvListBox.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvListBox;
 
@@ -58,7 +58,7 @@ uses
   {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
   System.UITypes,
   {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
-  JvItemsSearchs, JvDataProvider, JvDataProviderIntf, JvExStdCtrls;
+  JvDataProvider, JvDataProviderIntf, JvExStdCtrls;
 
 type
   TJvListboxFillMode = (bfmTile, bfmStretch);
@@ -394,9 +394,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvListBox.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -409,7 +409,7 @@ uses
   Types,
   {$ENDIF COMPILER10_UP}
   RTLConsts,
-  JvJCLUtils, JvJVCLUtils, JvConsts, JvResources;
+  JvItemsSearchs, JvJCLUtils, JvJVCLUtils, JvConsts, JvResources;
 
 const
   AlignFlags: array [TAlignment] of DWORD = (DT_LEFT, DT_RIGHT, DT_CENTER);

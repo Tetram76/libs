@@ -43,7 +43,7 @@ uses
   ScriptRunner;
 
 const
-  rcs_id :string = '#(@)$Id: ConsoleScriptRunner.pas 10610 2006-05-19 13:35:08Z elahn $';
+  rcs_id :string = '#(@)$Id$';
 
 type
   TConsoleScriptRunner = class(TScriptRunner)

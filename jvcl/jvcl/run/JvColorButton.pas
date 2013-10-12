@@ -26,7 +26,7 @@ Known Issues:
     If the OtherCaption is set to an empty string, the default '&Other..' magically appears.
     Solution: Set OtherCaption to ' ' instead
 -----------------------------------------------------------------------------}
-// $Id: JvColorButton.pas 13358 2012-06-18 09:33:44Z obones $
+// $Id$
 
 unit JvColorButton;
 
@@ -135,9 +135,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorButton.pas $';
-    Revision: '$Revision: 13358 $';
-    Date: '$Date: 2012-06-18 11:33:44 +0200 (lun., 18 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -286,7 +286,10 @@ begin
     OffsetRect(Rec, 1, 1);
 
   if Enabled then
-    Frame3D(Canvas, Rec, cl3DDkShadow, cl3DDkShadow, 1)
+  begin
+    Frame3D(Canvas, Rec, cl3DDkShadow, cl3DDkShadow, 1);
+    Canvas.Brush.Style := bsSolid;
+  end
   else
   begin
     Frame3D(Canvas, Rec, clBtnShadow, clBtnHighLight, 1);

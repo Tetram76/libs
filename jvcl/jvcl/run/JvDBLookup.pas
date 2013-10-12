@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookup.pas 13441 2012-09-24 13:05:24Z ahuser $
+// $Id$
 
 unit JvDBLookup;
 
@@ -678,9 +678,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookup.pas $';
-    Revision: '$Revision: 13441 $';
-    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1179,11 +1179,11 @@ var
   S: string;
 begin
   S := '';
-  if (FDisplayField <> nil) {and (FDisplayField.DataType = ftString)} then
+  if (FDisplayField <> nil) then
     case Key of
       Tab, Esc:
         FSearchText := '';
-      Backspace, #32..#255:
+      Backspace, #32..High(Char):
         if CanModify then
         begin
           if not FPopup then
@@ -2840,7 +2840,7 @@ begin
     if TabSelects and IsDropDown and (Key = Tab) then
       Key := Cr;
 
-    if CharInSet(Key, [Cr, Esc]) then
+    if (Key = Cr) or (Key = Esc) then
     begin
       CloseUp(Key = Cr);
       Key := #0;
@@ -2850,7 +2850,7 @@ begin
   end
   else
   begin
-    if CharInSet(Key, [#32..#255]) then
+    if Key >= #32 then
     begin
       DropDown;
       if FListVisible then

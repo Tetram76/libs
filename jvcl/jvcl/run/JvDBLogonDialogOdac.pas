@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBLogonDialogOdac.pas 13379 2012-07-08 20:33:32Z jfudickar $
+// $Id$
 
 unit JvDBLogonDialogOdac;
 
@@ -139,9 +139,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLogonDialogOdac.pas $';
-    Revision: '$Revision: 13379 $';
-    Date: '$Date: 2012-07-08 22:33:32 +0200 (dim., 08 juil. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -281,8 +281,8 @@ var
 begin
   Items := TStringList.Create;
   try
-    for i := 0 to OracleHomeCount - 1 do
-      Items.Add(OracleHomeNames[i]);
+    for i := 0 to Length(OracleHomes) - 1 do
+      Items.Add(OracleHomes[i].Name);
     if Supports(OracleHomeEdit, IJvDynControlItems, IDynControlItems) then
       IDynControlItems.ControlItems.Assign(Items);
   finally

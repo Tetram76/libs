@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxPivotGrid.pas 13099 2011-09-02 21:51:31Z jfudickar $
+// $Id$
 
 unit JvControlActionsEngineCxPivotGrid;
 
@@ -58,9 +58,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxPivotGrid.pas $';
-    Revision: '$Revision: 13099 $';
-    Date: '$Date: 2011-09-02 23:51:31 +0200 (ven., 02 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -103,6 +103,8 @@ end;
 procedure TJvControlActioncxPivotGridEngine.ExportGrid(aGrid: TcxCustomPivotGrid);
 var
   SaveDialog: TSaveDialog;
+  Extension: String;
+  FileName: String;
 begin
   if not Assigned(aGrid) then
     Exit;
@@ -110,20 +112,23 @@ begin
   try
     SaveDialog.Name    := 'SaveDialog';
     SaveDialog.DefaultExt := 'XLS';
-    SaveDialog.Filter  := 'MS-Excel-Files (*.XLS)|*.XLS|XML-Files (*.XML)|*.HTM|HTML-Files (*.HTM)|*.HTM|Text-Files (*.TXT)|*.TXT|All Files (*.*)|*.*';
+    SaveDialog.Filter  := 'MS-Excel-Files (*.XLS;*.XLSX)|*.XLS;*.XLSX|XML-Files (*.XML)|*.HTM|HTML-Files (*.HTM)|*.HTM|Text-Files (*.TXT)|*.TXT|All Files (*.*)|*.*';
     SaveDialog.Options := [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist];
     if SaveDialog.Execute then
       if SaveDialog.FileName <> '' then
       begin
-        if (Pos('.XLS', UpperCase(SaveDialog.FileName)) = Length(SaveDialog.FileName) - 3) then
-          cxExportPivotGridToExcel(SaveDialog.FileName, aGrid)
-        else if (Pos('.XML', UpperCase(SaveDialog.FileName)) = Length(SaveDialog.FileName) - 3) then
-          cxExportPivotGridToXML(SaveDialog.FileName, aGrid)
-        else if ((Pos('.HTM', UpperCase(SaveDialog.FileName)) = Length(SaveDialog.FileName) - 3) or
-          (Pos('.HTML', UpperCase(SaveDialog.FileName)) = Length(SaveDialog.FileName) - 4)) then
-          cxExportPivotGridToHTML(SaveDialog.FileName, aGrid)
+        FileName := SaveDialog.Filename;
+        Extension := Uppercase(ExtractFileExt(FileName));
+        if Extension = '.XLS' then
+          cxExportPivotGridToExcel(Filename, aGrid)
+        else if Extension = '.XLSX' then
+          cxExportPivotGridToXLSX(Filename, aGrid)
+        else if Extension = 'XML' then
+          cxExportPivotGridToXML(Filename, aGrid)
+        else if (Extension = '.HTM') or (Extension = '.HTML') then
+          cxExportPivotGridToHTML(Filename, aGrid)
         else
-          cxExportPivotGridToText(SaveDialog.FileName, aGrid);
+          cxExportPivotGridToText(Filename, aGrid);
       end;
   finally
     SaveDialog.Free;

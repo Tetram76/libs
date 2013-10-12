@@ -27,7 +27,7 @@ located at http://jvcl.delphi-jedi.org
 Known Issues:
   (rb) Move button related functionality from TJvCustomComboEdit to TJvEditButton
 -----------------------------------------------------------------------------}
-// $Id: JvToolEdit.pas 13459 2012-10-08 18:59:55Z wpostma $
+// $Id$
 
 unit JvToolEdit;
 
@@ -1128,9 +1128,9 @@ function IsInWordArray(Value: Word; const A: array of Word): Boolean;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvToolEdit.pas $';
-    Revision: '$Revision: 13459 $';
-    Date: '$Date: 2012-10-08 20:59:55 +0200 (lun., 08 oct. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1152,8 +1152,8 @@ uses
 type
   TCustomMaskEditAccessPrivate = class(TCustomEdit)
   protected
-    {$IFDEF COMPILER18_UP}
-      {$MESSAGE WARNING 'Check if Vcl.Mask.TCustomMaskEdit still has the exact same fields and adjust the IFDEF'}
+    {$IFDEF COMPILER20_UP}
+      {$MESSAGE WARN 'Check if Vcl.Mask.TCustomMaskEdit still has the exact same fields and adjust the IFDEF'}
     {$ENDIF}
     // Do not remove these fields, although they are not used.
     FEditMask: TEditMask;
@@ -3207,6 +3207,11 @@ begin
   end
   else
     inherited;
+
+  // This fixes the problem that the Button looses its border
+  if StyleServices.Enabled and Ctl3D and (BorderStyle = bsSingle) then
+    if (FBtnControl <> nil) and FBtnControl.Visible and FBtnControl.HandleAllocated then
+      Windows.InvalidateRect(FBtnControl.Handle, nil, False);
 end;
 {$ENDIF JVCLThemesEnabled}
 

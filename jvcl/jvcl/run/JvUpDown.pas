@@ -28,7 +28,7 @@ Description:
 Known Issues:
 - Can't set Position of TJvDomainUpDown at design-time. SOLVED 2003-05-30
 -----------------------------------------------------------------------------}
-// $Id: JvUpDown.pas 13155 2011-11-06 12:31:20Z ahuser $
+// $Id$
 
 unit JvUpDown;
 
@@ -200,9 +200,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUpDown.pas $';
-    Revision: '$Revision: 13155 $';
-    Date: '$Date: 2011-11-06 13:31:20 +0100 (dim., 06 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorForm.pas 13350 2012-06-13 14:54:41Z obones $
+// $Id$
 
 unit JvColorForm;
 
@@ -88,9 +88,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorForm.pas $';
-    Revision: '$Revision: 13350 $';
-    Date: '$Date: 2012-06-13 16:54:41 +0200 (mer., 13 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

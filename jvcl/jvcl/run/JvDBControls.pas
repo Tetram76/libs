@@ -32,7 +32,7 @@ Known Issues:
         You can use it as a generic editor control inside a control grid.
           -- Warren Postma (warrenpstma att hotmail dott com)
 -----------------------------------------------------------------------------}
-// $Id: JvDBControls.pas 13438 2012-09-24 11:54:30Z ahuser $
+// $Id$
 
 unit JvDBControls;
 
@@ -725,9 +725,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBControls.pas $';
-    Revision: '$Revision: 13438 $';
-    Date: '$Date: 2012-09-24 13:54:30 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -819,14 +819,13 @@ end;
 procedure TJvDBMaskEdit.KeyPress(var Key: Char);
 begin
   inherited KeyPress(Key);
-  if CharInSet(Key, [#32..#255]) and (FDataLink.Field <> nil) and
-    not FDataLink.Field.IsValidChar(Key) then
+  if (Key >= #32) and (FDataLink.Field <> nil) and not FDataLink.Field.IsValidChar(Key) then
   begin
     DoBeepOnError;
     Key := #0;
   end;
   case Key of
-    CtrlH, CtrlV, CtrlX, #32..#255:
+    CtrlH, CtrlV, CtrlX, #32..High(Char):
       FDataLink.Edit;
     Esc:
       begin
@@ -1154,14 +1153,13 @@ end;
 procedure TJvDBComboEdit.KeyPress(var Key: Char);
 begin
   inherited KeyPress(Key);
-  if CharInSet(Key, [#32..#255]) and (FDataLink.Field <> nil) and
-    not FDataLink.Field.IsValidChar(Key) then
+  if (Key >= #32) and (FDataLink.Field <> nil) and not FDataLink.Field.IsValidChar(Key) then
   begin
     DoBeepOnError;
     Key := #0;
   end;
   case Key of
-    CtrlH, CtrlV, CtrlX, #32..#255:
+    CtrlH, CtrlV, CtrlX, #32..High(Char):
       FDataLink.Edit;
     Esc:
       begin
@@ -1444,8 +1442,8 @@ end;
 procedure TJvDBDateEdit.KeyPress(var Key: Char);
 begin
   inherited KeyPress(Key);
-  if CharInSet(Key, [#32..#255]) and (FDataLink.Field <> nil) and
-    not CharInSet(Key, DigitChars) and (Key <> JclFormatSettings.DateSeparator) then
+  if (Key >= #32) and (FDataLink.Field <> nil) and not CharInSet(Key, DigitChars) and
+     (Key <> JclFormatSettings.DateSeparator) then
   begin
     DoBeepOnError;
     Key := #0;
@@ -1809,7 +1807,7 @@ procedure TJvDBCalcEdit.KeyPress(var Key: Char);
 begin
   inherited KeyPress(Key);
   case Key of
-    CtrlH, CtrlV, CtrlX, #32..#255:
+    CtrlH, CtrlV, CtrlX, #32..High(Char):
       if not PopupVisible then
         FDataLink.Edit;
     Esc:

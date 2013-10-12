@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvTFSparseMatrix.pas 13397 2012-08-16 17:23:19Z ahuser $
+// $Id$
 
 unit JvTFSparseMatrix;
 
@@ -73,9 +73,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTFSparseMatrix.pas $';
-    Revision: '$Revision: 13397 $';
-    Date: '$Date: 2012-08-16 19:23:19 +0200 (jeu., 16 août 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

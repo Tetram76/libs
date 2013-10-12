@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppXMLStorage.pas 13306 2012-06-03 20:21:44Z jfudickar $
+// $Id$
 
 unit JvAppXMLStorage;
 
@@ -166,6 +166,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    //1 Sets a xml property for a given path
+    procedure DoSetXMLProperty(const Path, Name, Value : string); override;
   published
     property StorageOptions: TJvAppXMLStorageOptions read GetStorageOptions write SetStorageOptions;
   end;
@@ -209,9 +211,9 @@ procedure LoadPropertyStoreFromXmlFile(APropertyStore: TJvCustomPropertyStore; c
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppXMLStorage.pas $';
-    Revision: '$Revision: 13306 $';
-    Date: '$Date: 2012-06-03 22:21:44 +0200 (dim., 03 juin 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -961,6 +963,18 @@ begin
   Result := 'xml';
 end;
 
+procedure TJvCustomAppXMLStorage.DoSetXMLProperty(const Path, Name, Value : string);
+var
+  ANode: TJvSimpleXmlElem;
+begin
+  ReloadIfNeeded;
+  ANode := CreateAndSetNode(Path);
+  Xml.Options := Xml.Options + [sxoAutoCreate];
+  ANode.Properties.ItemNamed[Name].Value := Value;
+  Xml.Options := Xml.Options - [sxoAutoCreate];
+  FlushIfNeeded;
+end;
+
 function TJvCustomAppXMLStorage.GetOnDecodeValue: TJvSimpleXMLEncodeEvent;
 begin
   Result := FXml.OnDecodeValue;
@@ -1097,6 +1111,7 @@ begin
       APropertyStore.AppStoragePath := AAppStoragePath;
       APropertyStore.AppStorage := AppStorage;
       APropertyStore.StoreProperties;
+      AppStorage.Flush;
     finally
       APropertyStore.AppStoragePath := SaveAppStoragePath;
       APropertyStore.AppStorage := SaveAppStorage;

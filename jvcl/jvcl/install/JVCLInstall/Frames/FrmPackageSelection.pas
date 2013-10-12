@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: FrmPackageSelection.pas 13148 2011-11-05 17:27:59Z ahuser $
+// $Id$
 
 unit FrmPackageSelection;
 
@@ -31,7 +31,7 @@ unit FrmPackageSelection;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
+  Windows, Messages, Types, SysUtils, Classes, Graphics, Controls, Forms,
   Dialogs, ComCtrls, StdCtrls, CheckLst, ImgList, ExtCtrls, Menus, ActnList,
   ShellAPI, CommCtrl,
   JVCL3Install, JVCLData, PackageInformation, PackageUtils, HtHint;

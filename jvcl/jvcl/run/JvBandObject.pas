@@ -24,7 +24,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandObject.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvBandObject;
 
@@ -170,9 +170,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBandObject.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -183,6 +183,7 @@ uses
   {$IFDEF DEBUGINFO_ON}
   //zTrace,
   {$ENDIF DEBUGINFO_ON}
+  JclAnsiStrings,
   SysUtils, Registry, Math, Forms, Menus,
   JvConsts, JvJVCLUtils;
 
@@ -1067,14 +1068,14 @@ begin
         MenuItem := FBandForm.BandContextMenu.FindItem(idCmd, fkCommand);
         if MenuItem = nil then
           Exit;
-        StrCopy(pszName, PAnsiChar(AnsiString(MenuItem.Hint)));  // text lost here, unicode version should be considered
+        StrCopyA(pszName, PAnsiChar(AnsiString(MenuItem.Hint)));  // text lost here, unicode version should be considered
       end;
     GCS_VERB:
       begin
         MenuItem := FBandForm.BandContextMenu.FindItem(idCmd, fkCommand);
         if MenuItem = nil then
           Exit;
-        StrCopy(pszName, PAnsiChar(AnsiString(GetContextMenuCaption(MenuItem))));    // text lost here, unicode version should be considered
+        StrCopyA(pszName, PAnsiChar(AnsiString(GetContextMenuCaption(MenuItem))));    // text lost here, unicode version should be considered
       end;
     GCS_VALIDATE:
       Result := NOERROR;

@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvPropertyStorage.pas 13138 2011-10-26 23:17:50Z jfudickar $
+// $Id$
 
 unit JvPropertyStorage;
 
@@ -99,9 +99,9 @@ var
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPropertyStorage.pas $';
-    Revision: '$Revision: 13138 $';
-    Date: '$Date: 2011-10-27 01:17:50 +0200 (jeu., 27 oct. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -266,8 +266,8 @@ end;
 procedure TJvPropertyStorage.LoadAnyProperty(PropInfo: PPropInfo);
 begin
   try
-    if PropInfo <> nil then
-      ReadProperty (AppStoragePath, GetItemName(PropInfo.Name), TPersistent(FObject), PropInfo.Name);
+    if (PropInfo <> nil) and (PropInfo.SetProc <> nil) then
+      ReadProperty(AppStoragePath, GetItemName(PropInfo.Name), TPersistent(FObject), PropInfo.Name);
   except
     { ignore any exception }
   end;
@@ -275,8 +275,8 @@ end;
 
 procedure TJvPropertyStorage.StoreAnyProperty(PropInfo: PPropInfo);
 begin
-  if PropInfo <> nil then
-    WriteProperty (AppStoragePath, GetItemName(PropInfo.Name), TPersistent(FObject), PropInfo.Name);
+  if (PropInfo <> nil) and (PropInfo.SetProc <> nil) then // write only if we can load it again
+    WriteProperty(AppStoragePath, GetItemName(PropInfo.Name), TPersistent(FObject), PropInfo.Name);
 end;
 
 

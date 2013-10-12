@@ -26,7 +26,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvArrowButton.pas 13441 2012-09-24 13:05:24Z ahuser $
+// $Id$
 
 unit JvArrowButton;
 
@@ -92,6 +92,7 @@ type
     procedure SetVerticalAlignment(const Value: TVerticalAlignment);
     procedure SetFlatArrowColor(const Value: TColor);
     procedure SetFlatArrowDisabledColor(const Value: TColor);
+    procedure SetSplittedButton(const Value: Boolean);
   protected
     FState: TButtonState;
     function GetPalette: HPALETTE; override;
@@ -137,7 +138,7 @@ type
     property PressBoth: Boolean read FPressBoth write FPressBoth default True;
     property ShowHint;
     property Spacing: Integer read FSpacing write SetSpacing default 4;
-    property SplittedButton: Boolean read FSplittedButton write FSplittedButton default True;
+    property SplittedButton: Boolean read FSplittedButton write SetSplittedButton default True;
     property VerticalAlignment: TVerticalAlignment read FVerticalAlignment write SetVerticalAlignment default taVerticalCenter;
     property Visible;
     property OnDrop: TNotifyEvent read FOnDrop write FOnDrop;
@@ -151,9 +152,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvArrowButton.pas $';
-    Revision: '$Revision: 13441 $';
-    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1346,6 +1347,15 @@ begin
   if Value <> FSpacing then
   begin
     FSpacing := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TJvArrowButton.SetSplittedButton(const Value: Boolean);
+begin
+  if Value <> FSplittedButton then
+  begin
+    FSplittedButton := Value;
     Invalidate;
   end;
 end;

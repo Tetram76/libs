@@ -22,7 +22,7 @@ description :
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvActnResForm.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit JvActnResForm;
 

@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCheckTreeView.pas 13227 2012-02-24 15:22:50Z obones $
+// $Id$
 
 unit JvCheckTreeView;
 
@@ -160,9 +160,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCheckTreeView.pas $';
-    Revision: '$Revision: 13227 $';
-    Date: '$Date: 2012-02-24 16:22:50 +0100 (ven., 24 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -400,8 +400,8 @@ begin
     mask := TVIF_STATE;
     hItem := Node.ItemId;
     if TreeView_GetItem(Handle, Item) then
-      Result := (((Item.State and TVIS_STATEIMAGEMASK) or TVIS_CHECKED) = TVIS_CHECKED) or
-                (((Item.State and TVIS_STATEIMAGEMASK) or TVIS_CHECKED shl 1) = TVIS_CHECKED shl 1)
+      Result := (((Item.state and TVIS_STATEIMAGEMASK) or TVIS_CHECKED) = TVIS_CHECKED) or
+                (((Item.state and TVIS_STATEIMAGEMASK) or TVIS_CHECKED shl 1) = TVIS_CHECKED shl 1)
     else
       Result := False;
   end;
@@ -507,18 +507,15 @@ var
   Item: TTVItem;
 begin
   FillChar(Item, SizeOf(Item), 0);
-  with Item do
-  begin
-    hItem := Node.ItemId;
-    mask := TVIF_STATE;
-    StateMask := TVIS_STATEIMAGEMASK;
-    TreeView_GetItem(Handle, Item);
-    if Value then
-      Item.State := Item.State + TVIS_CHECKED
-    else
-      Item.State := Item.State - TVIS_CHECKED;
-    TreeView_SetItem(Handle, Item);
-  end;
+  Item.hItem := Node.ItemId;
+  Item.mask := TVIF_STATE;
+  Item.stateMask := TVIS_STATEIMAGEMASK;
+  TreeView_GetItem(Handle, Item);
+  if Value then
+    Item.state := TVIS_CHECKED
+  else
+    Item.state := TVIS_CHECKED shr 1;
+  TreeView_SetItem(Handle, Item);
 end;
 
 procedure TJvCheckTreeView.SetRadioItem(Node: TTreeNode; const Value: Boolean);
@@ -595,11 +592,11 @@ begin
   begin
     Item.hItem := Node.ItemId;
     Item.mask := TVIF_STATE;
-    Item.StateMask := TVIS_STATEIMAGEMASK;
+    Item.stateMask := TVIS_STATEIMAGEMASK;
     TreeView_GetItem(Handle, Item);
 
-    if ((Item.State and TVIS_STATEIMAGEMASK) <> Cardinal(IndexToStateImageMask(CheckBoxOptions.RadioUncheckedIndex))) and
-       ((Item.State and TVIS_STATEIMAGEMASK) <> Cardinal(IndexToStateImageMask(CheckBoxOptions.RadioCheckedIndex))) then
+    if ((Item.state and TVIS_STATEIMAGEMASK) <> UINT(IndexToStateImageMask(CheckBoxOptions.RadioUncheckedIndex))) and
+       ((Item.state and TVIS_STATEIMAGEMASK) <> UINT(IndexToStateImageMask(CheckBoxOptions.RadioCheckedIndex))) then
     begin
       Item.mask := TVIF_STATE or TVIF_HANDLE;
       Item.stateMask := TVIS_STATEIMAGEMASK;

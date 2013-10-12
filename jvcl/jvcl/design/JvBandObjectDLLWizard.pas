@@ -21,7 +21,7 @@ located at http://www.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvBandObjectDLLWizard.pas 13092 2011-08-10 20:43:32Z outchy $
+// $Id$
 
 unit JvBandObjectDLLWizard;
 

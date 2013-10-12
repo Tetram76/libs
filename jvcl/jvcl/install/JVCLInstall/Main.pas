@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: Main.pas 13185 2011-11-30 12:46:44Z obones $
+// $Id$
 
 {
   command line arguments:
@@ -36,6 +36,9 @@ unit Main;
 interface
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, ImgList,
   Dialogs, JvExControls, JvComponent, jpeg, ExtCtrls, StdCtrls, JvWizard,
   JvWizardRouteMapList,

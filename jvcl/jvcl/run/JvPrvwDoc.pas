@@ -49,7 +49,7 @@ Scrolling rules:
       and scroll Rows pages on each click (i.e if Rows = 4 -> scroll 4 pages)
     * if scaling would make pages too small, show as many pages as possible
 -----------------------------------------------------------------------------}
-// $Id: JvPrvwDoc.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvPrvwDoc;
 
@@ -111,8 +111,8 @@ type
     FPageWidth: Cardinal;
     FLogPixelsX: Cardinal;
     FOnChange: TNotifyEvent;
-    FScreenDC: Longword;
-    FReferenceHandle: Longword;
+    FScreenDC: HDC;
+    FReferenceHandle: HDC;
     FPhysicalHeight: Cardinal;
     FPhysicalWidth: Cardinal;
     procedure SetLogPixelsY(const Value: Cardinal);
@@ -122,14 +122,19 @@ type
     procedure SetPageHeight(const Value: Cardinal);
     procedure SetPageWidth(const Value: Cardinal);
     procedure DefaultDeviceInfo;
-    procedure SetReferenceHandle(const Value: Longword);
+    procedure SetReferenceHandle(const Value: HDC);
     procedure SetPhysicalHeight(const Value: Cardinal);
     procedure SetPhysicalWidth(const Value: Cardinal);
     procedure SetOffsetBottom(const Value: Cardinal);
     procedure SetOffsetRight(const Value: Cardinal);
   protected
-    function GetScreenDC: Longword;
+    function GetScreenDC: HDC;
     procedure Change;
+
+    // Handle backwards compatibility for previously published ReferenceHandle.
+    procedure ReadReferenceHandle(Reader: TReader);
+    procedure WriteReferenceHandle(Writer: TWriter);
+    procedure DefineProperties(Filer: TFiler); override;
   public
     constructor Create;
     destructor Destroy; override;
@@ -142,8 +147,8 @@ type
     function MMToXPx(MM: Single): Integer;
     function MMToYPx(MM: Single): Integer;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property ReferenceHandle: HDC read FReferenceHandle write SetReferenceHandle;
   published
-    property ReferenceHandle: Longword read FReferenceHandle write SetReferenceHandle;
     property LogPixelsX: Cardinal read FLogPixelsX write SetLogPixesX;
     property LogPixelsY: Cardinal read FLogPixelsY write SetLogPixelsY;
     property PhysicalWidth: Cardinal read FPhysicalWidth write SetPhysicalWidth;
@@ -457,9 +462,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPrvwDoc.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -695,7 +700,7 @@ begin
     FOnChange(Self);
 end;
 
-function TJvDeviceInfo.GetScreenDC: Longword;
+function TJvDeviceInfo.GetScreenDC: HDC;
 begin
   if FScreenDC <> 0 then
     ReleaseDC(HWND_DESKTOP, FScreenDC);
@@ -813,7 +818,7 @@ begin
   end;
 end;
 
-procedure TJvDeviceInfo.SetReferenceHandle(const Value: Longword);
+procedure TJvDeviceInfo.SetReferenceHandle(const Value: HDC);
 begin
   FReferenceHandle := Value;
   if FReferenceHandle = 0 then
@@ -877,6 +882,23 @@ end;
 function TJvDeviceInfo.YPxToMM(Pixels: Integer): Single;
 begin
   Result := YPxToInch(Pixels) * 25.4;
+end;
+
+procedure TJvDeviceInfo.ReadReferenceHandle(Reader: TReader);
+begin
+  // Do nothing; ReferenceHandle is no longer saved.
+  Reader.ReadInteger;
+end;
+
+procedure TJvDeviceInfo.WriteReferenceHandle(Writer: TWriter);
+begin
+  // Do nothing; ReferenceHandle is no longer saved.
+end;
+
+procedure TJvDeviceInfo.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+  Filer.DefineProperty('ReferenceHandle', ReadReferenceHandle, WriteReferenceHandle, False);
 end;
 
 //=== { TJvCustomPreviewControl } ============================================

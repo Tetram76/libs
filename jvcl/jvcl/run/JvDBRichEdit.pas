@@ -20,7 +20,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBRichEdit.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvDBRichEdit;
 
@@ -178,9 +178,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBRichEdit.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -280,15 +280,14 @@ begin
   inherited KeyPress(Key);
   if FMemoLoaded then
   begin
-    if CharInSet(Key, [#32..#255]) and (FDataLink.Field <> nil) and
-      not FDataLink.Field.IsValidChar(Key) then
+    if (Key >= #32) and (FDataLink.Field <> nil) and not FDataLink.Field.IsValidChar(Key) then
     begin
       if BeepOnError then
         Beep;
       Key := #0;
     end;
     case Key of
-      CtrlH, CtrlI, CtrlJ, CtrlM, CtrlV, CtrlX, #32..#255:
+      CtrlH, CtrlI, CtrlJ, CtrlM, CtrlV, CtrlX, #32..High(Char):
         EditCanModify;
       Esc:
         FDataLink.Reset;

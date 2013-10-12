@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgImage.pas 12864 2010-10-11 08:19:42Z obones $
+// $Id$
 
 unit JvgImage;
 
@@ -136,9 +136,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgImage.pas $';
-    Revision: '$Revision: 12864 $';
-    Date: '$Date: 2010-10-11 10:19:42 +0200 (lun., 11 oct. 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

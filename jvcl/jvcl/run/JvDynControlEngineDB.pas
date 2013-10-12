@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDB.pas 13194 2012-01-25 10:54:30Z jfudickar $
+// $Id$
 
 unit JvDynControlEngineDB;
 
@@ -152,9 +152,9 @@ function DefaultDynControlEngineDB: TJvDynControlEngineDB;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDB.pas $';
-    Revision: '$Revision: 13194 $';
-    Date: '$Date: 2012-01-25 11:54:30 +0100 (mer., 25 janv. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

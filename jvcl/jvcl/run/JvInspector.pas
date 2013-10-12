@@ -156,7 +156,7 @@
       - System Sound (Beep) on enter key removed.
 
 -----------------------------------------------------------------------------}
-// $Id: JvInspector.pas 13441 2012-09-24 13:05:24Z ahuser $
+// $Id$
 
 unit JvInspector;
 
@@ -180,8 +180,6 @@ const
   irsValueHeight = $20000000;
   irsItemHeight = $40000000;
   irsValueMask = $0FFFFFFF;
-
-
 
 type
   // early declarations
@@ -257,13 +255,13 @@ type
   // We would have liked to be able to generate a const pointer to a
   // non const object (which is what the Delphi declaration is) but the
   // HPP Generator is compeletely flawed in this area
-  TInspectorItemEvent = procedure(Sender: TObject;  Item: TJvCustomInspectorItem) of object;
-  TInspectorItemBeforeCreateEvent = procedure(Sender: TObject;  Data: TJvCustomInspectorData;
+  TInspectorItemEvent = procedure(Sender: TObject; Item: TJvCustomInspectorItem) of object;
+  TInspectorItemBeforeCreateEvent = procedure(Sender: TObject; Data: TJvCustomInspectorData;
     var ItemClass: TJvInspectorItemClass) of object;
-  TInspectorItemBeforeSelectEvent = procedure(Sender: TObject;  NewItem: TJvCustomInspectorItem;
+  TInspectorItemBeforeSelectEvent = procedure(Sender: TObject; NewItem: TJvCustomInspectorItem;
     var Allow: Boolean) of object;
   TInspectorDataEvent = procedure(Sender: TObject; Data: TJvCustomInspectorData) of object;
-  TInspectorItemGetValueListEvent = procedure(Item: TJvCustomInspectorItem;  Values: TStrings) of object;
+  TInspectorItemGetValueListEvent = procedure(Item: TJvCustomInspectorItem; Values: TStrings) of object;
   TInspectorItemSortCompare = function(Item1, Item2: TJvCustomInspectorItem): Integer of object;
   TJvInspAsFloat = procedure(Sender: TJvInspectorEventData; var Value: Extended) of object;
   TJvInspAsInt64 = procedure(Sender: TJvInspectorEventData; var Value: Int64) of object;
@@ -462,7 +460,7 @@ type
     procedure GetDlgCode(var Code: TDlgCodes); override;
     procedure FocusSet(PrevWnd: THandle); override;
     procedure FocusKilled(NextWnd: THandle); override;
-    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;  MousePos: TPoint): Boolean; override;
+    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
     procedure ShowScrollBars(Bar: Integer; Visible: Boolean); virtual;
     function YToIdx(const Y: Integer): Integer; virtual;
     property AutoComplete: Boolean read FAutoComplete write FAutoComplete;
@@ -1600,7 +1598,7 @@ type
     function IsAssigned: Boolean; override;
     function IsInitialized: Boolean; override;
     class function ItemRegister: TJvInspectorRegister; override;
-    class function New(const AParent: TJvCustomInspectorItem; const AName: string;  ATypeInfo: PTypeInfo; const
+    class function New(const AParent: TJvCustomInspectorItem; const AName: string; ATypeInfo: PTypeInfo; const
       AAddress: Pointer): TJvCustomInspectorItem; reintroduce; overload;
     // REMOVED BECAUSE OF A BCB INCOMPATIBILITY:
     // Untyped parameters are output as void* which is exactly the same
@@ -1724,7 +1722,7 @@ type
     function HasValue: Boolean; override;
     function IsAssigned: Boolean; override;
     function IsInitialized: Boolean; override;
-    class function New(const AParent: TJvCustomInspectorItem; const AName: string;  ATypeInfo: PTypeInfo):
+    class function New(const AParent: TJvCustomInspectorItem; const AName: string; ATypeInfo: PTypeInfo):
       TJvCustomInspectorItem; reintroduce; overload;
     procedure SetAsSet(const Buf); override;
     property OnGetAsFloat: TJvInspAsFloat read FOnGetAsFloat write SetOnGetAsFloat;
@@ -1750,7 +1748,7 @@ type
     FKey: string;
     FSection: string;
   protected
-    constructor CreatePrim(const AName, ASection, AKey: string;  ATypeInfo: PTypeInfo);
+    constructor CreatePrim(const AName, ASection, AKey: string; ATypeInfo: PTypeInfo);
     function ExistingValue: Boolean; virtual; abstract;
     function GetAsFloat: Extended; override;
     function GetAsInt64: Int64; override;
@@ -1850,7 +1848,7 @@ type
     function GetTypeInfo: PTypeInfo; virtual;
     procedure SetTypeInfo(Value: PTypeInfo); virtual;
   public
-    constructor Create(const AItemClass: TJvInspectorItemClass;  ATypeInfo: PTypeInfo);
+    constructor Create(const AItemClass: TJvInspectorItemClass; ATypeInfo: PTypeInfo);
     function MatchValue(const ADataObj: TJvCustomInspectorData): Integer; override;
     function MatchPercent(const ADataObj: TJvCustomInspectorData): Integer; override;
     property TypeInfo: PTypeInfo read GetTypeInfo;
@@ -1886,7 +1884,7 @@ type
     FTypeInfo: PTypeInfo;
   public
     constructor Create(const AItemClass: TJvInspectorItemClass; const AObjectClass: TClass;
-      const AName: string;  ATypeInfo: PTypeInfo);
+      const AName: string; ATypeInfo: PTypeInfo);
     function Compare(const ADataObj: TJvCustomInspectorData;
       const Item: TJvCustomInspectorRegItem): Integer; override;
     function MatchValue(const ADataObj: TJvCustomInspectorData): Integer; override;
@@ -2091,9 +2089,9 @@ procedure RestoreCanvasState(const Canvas: TCanvas; const SavedIdx: Integer);
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInspector.pas $';
-    Revision: '$Revision: 13441 $';
-    Date: '$Date: 2012-09-24 15:05:24 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -4149,7 +4147,7 @@ begin
   EndUpdate;
 end;
 
-function TJvCustomInspector.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;  MousePos: TPoint): Boolean;
+function TJvCustomInspector.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
 var
   Count: Integer;
   Index: Integer;
@@ -5659,9 +5657,9 @@ begin
     if ListCount = 0 then
       ListCount := 1;
     TListBox(ListBox).Height := ListCount * TListBox(ListBox).ItemHeight + 4;
-    if ListBox.Height > Screen.Height then
+    if ListBox.Height > Screen.DesktopHeight then
     begin
-      ListCount := (Screen.Height - 4) div TListBox(ListBox).ItemHeight;
+      ListCount := (Screen.DesktopHeight - 4) div TListBox(ListBox).ItemHeight;
       TListBox(ListBox).Height := ListCount * TListBox(ListBox).ItemHeight + 4;
     end;
     ListBox.ItemIndex := ListBox.Items.IndexOf(EditCtrl.Text);
@@ -5679,16 +5677,16 @@ begin
     if ListBox.Items.Count > ListCount then
       Inc(J, GetSystemMetrics(SM_CXVSCROLL));
     ListBox.ClientWidth := J;
-    if ListBox.Width > Screen.Width then
-      ListBox.Width := Screen.Width;
+    if ListBox.Width > Screen.DesktopWidth then
+      ListBox.Width := Screen.DesktopWidth;
     P := Inspector.ClientToScreen(Point(Rects[iprValueArea].Right - ListBox.Width, EditCtrl.Top));
     if P.X < 0 then
       P := Inspector.ClientToScreen(Point(Rects[iprValueArea].Left, EditCtrl.Top));
     Y := P.Y + RectHeight(Rects[iprValueArea]);
-    if Y + ListBox.Height > Screen.Height then
+    if Y + ListBox.Height > Screen.DesktopHeight then
       Y := P.Y - TListBox(ListBox).Height;
-    if P.X + ListBox.Width > Screen.Width then
-      P.X := Screen.Width - ListBox.Width;
+    if P.X + ListBox.Width > Screen.DesktopWidth then
+      P.X := Screen.DesktopWidth - ListBox.Width;
     SetWindowPos(ListBox.Handle, HWND_TOP, P.X, Y, 0, 0,
       SWP_NOSIZE or {SWP_NOACTIVATE or }SWP_SHOWWINDOW);
     InvalidateItem;
@@ -10918,7 +10916,7 @@ begin
 end;
 
 class function TJvInspectorPropData.New(const AParent: TJvCustomInspectorItem;
-  const AInstance: TObject;  PropInfo: PPropInfo): TJvCustomInspectorItem;
+  const AInstance: TObject; PropInfo: PPropInfo): TJvCustomInspectorItem;
 var
   Data: TJvInspectorPropData;
   RegItem: TJvCustomInspectorRegItem;
@@ -11010,7 +11008,7 @@ begin
 end;
 
 class function TJvInspectorPropData.New(const AParent: TJvCustomInspectorItem;
-  const AInstance: TObject;  PropInfos: PPropList;
+  const AInstance: TObject; PropInfos: PPropList;
   const PropCount: Integer): TJvInspectorItemInstances;
 var
   I: Integer;
@@ -11759,7 +11757,7 @@ begin
 end;
 
 class function TJvInspectorINIFileData.New(const AParent: TJvCustomInspectorItem;
-  const AName, ASection, AKey: string;  ATypeInfo: PTypeInfo;
+  const AName, ASection, AKey: string; ATypeInfo: PTypeInfo;
   const AINIFile: TCustomIniFile): TJvCustomInspectorItem;
 var
   Data: TJvInspectorINIFileData;
@@ -12139,7 +12137,7 @@ end;
 //=== { TJvInspectorPropRegItem } ============================================
 
 constructor TJvInspectorPropRegItem.Create(const AItemClass: TJvInspectorItemClass;
-  const AObjectClass: TClass; const AName: string;  ATypeInfo: PTypeInfo);
+  const AObjectClass: TClass; const AName: string; ATypeInfo: PTypeInfo);
 begin
   inherited Create(AItemClass);
   FObjectClass := AObjectClass;

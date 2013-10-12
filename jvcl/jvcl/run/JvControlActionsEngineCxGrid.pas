@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvControlActionsEngineCxGrid.pas 13099 2011-09-02 21:51:31Z jfudickar $
+// $Id$
 
 unit JvControlActionsEngineCxGrid;
 
@@ -62,9 +62,9 @@ type
 const
   UnitVersioning: TUnitVersionInfo = (
     RCSfile:
-      '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvControlActionsEngineCxGrid.pas $';
-    Revision: '$Revision: 13099 $';
-    Date: '$Date: 2011-09-02 23:51:31 +0200 (ven., 02 sept. 2011) $';
+      '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}

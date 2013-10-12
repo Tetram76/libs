@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCustomFileMessageDialogEditor.pas 13351 2012-06-13 15:16:00Z obones $
+// $Id$
 
 unit JvCustomFileMessageDialogEditor;
 

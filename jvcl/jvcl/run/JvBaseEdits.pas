@@ -27,7 +27,7 @@ Known Issues:
        example DecimalPlaces/Decimal, CheckMinValue (name indicates action?
        maybe better: TJvValidateEdit's HasMinValue) etc.
 -----------------------------------------------------------------------------}
-// $Id: JvBaseEdits.pas 13437 2012-09-24 11:46:58Z ahuser $
+// $Id$
 
 unit JvBaseEdits;
 
@@ -319,9 +319,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvBaseEdits.pas $';
-    Revision: '$Revision: 13437 $';
-    Date: '$Date: 2012-09-24 13:46:58 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -511,7 +511,7 @@ begin
   if CharInSet(Key, ['.', ','] - [JclFormatSettings.ThousandSeparator]) then
     Key := JclFormatSettings.DecimalSeparator;
   inherited KeyPress(Key);
-  if CharInSet(Key, [#32..#255]) and not IsValidChar(Key) then
+  if (Key >= #32) and not IsValidChar(Key) then
   begin
     DoBeepOnError;
     Key := #0;

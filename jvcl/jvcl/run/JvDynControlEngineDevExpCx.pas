@@ -19,7 +19,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDynControlEngineDevExpCx.pas 13075 2011-06-27 22:56:21Z jfudickar $
+// $Id$
 
 unit JvDynControlEngineDevExpCx;
 
@@ -33,7 +33,7 @@ interface
 {$IFDEF UNITVERSIONING}
 uses
   JclUnitVersioning, JvDynControlEngineIntf, Graphics, ComCtrls, Classes,
-  JvInspector, ExtCtrls;
+  ExtCtrls, Grids;
 {$ENDIF UNITVERSIONING}
 
 {$ELSE}
@@ -41,12 +41,15 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   Classes, Controls, StdCtrls, ExtCtrls, ComCtrls, Mask, Forms, Graphics,
   Buttons, Dialogs, FileCtrl, ActnList, ImgList,
   cxLookAndFeels, cxMaskEdit, cxLabel, cxButtons, cxListBox, cxDropDownEdit,
   cxButtonEdit, cxCalendar, cxCheckBox, cxMemo, cxRadioGroup, cxImage, cxTreeView,
   cxEdit, cxCalc, cxSpinEdit, cxTimeEdit, cxCheckListBox, cxGroupBox, cxRichEdit,
-  cxProgressBar, cxPC, cxColorComboBox, cxGraphics, cxCheckComboBox,
+  cxProgressBar, cxPC, cxColorComboBox, cxGraphics, cxCheckComboBox, dxTaskbarProgress,
   {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXVERTICALGRID}
   cxOi, cxVGrid, cxVGridViewInfo,
   {$ENDIF}
@@ -841,7 +844,11 @@ type
 
   TJvDynControlCxProgressBar = class(TcxProgressBar, IUnknown, IJvDynControl,
       IJvDynControlProgressBar, IJvDynControlAlign, IJvDynControlDevExpCx)
+  private
+    fTaskbarProgress: TdxTaskbarProgress ;
   public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure ControlSetAlign(Value: TAlign);
     procedure ControlSetAnchors(Value: TAnchors);
     procedure ControlSetCaption(const Value: string);
@@ -1058,9 +1065,9 @@ function DynControlEngineDevExpCx: TJvDynControlEngineDevExpCx;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDynControlEngineDevExpCx.pas $';
-    Revision: '$Revision: 13075 $';
-    Date: '$Date: 2011-06-28 00:56:21 +0200 (mar., 28 juin 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -3632,6 +3639,21 @@ begin
   Selected := Value;
 end;
 
+constructor TJvDynControlCxProgressBar.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  fTaskbarProgress  := TdxTaskbarProgress .Create(AOwner);
+  fTaskbarProgress.LinkedComponent := Self;
+end;
+
+destructor TJvDynControlCxProgressBar.Destroy;
+begin
+  fTaskbarProgress.State := tbpsNoProgress;
+  fTaskbarProgress.Active := False;
+  FreeAndNil(fTaskbarProgress );
+  inherited Destroy;
+end;
+
 procedure TJvDynControlCxProgressBar.ControlSetAlign(Value: TAlign);
 begin
   Align := Value;
@@ -3721,6 +3743,7 @@ end;
 procedure TJvDynControlCxProgressbar.ControlSetCxProperties(Value: TCxDynControlWrapper);
 begin
   LookAndFeel.Assign(Value.LookAndFeel);
+  fTaskbarProgress.Active := True;
 end;
 
 procedure TJvDynControlCxProgressBar.ControlSetMarquee(Value: Boolean);
@@ -3989,68 +4012,6 @@ begin
 end;
 
 
-//=== { TJvDynControlEngineDevExpCx } ========================================
-
-constructor TJvDynControlEngineDevExpCx.Create;
-begin
-  inherited Create;
-  FCxProperties := TCxDynControlWrapper.Create;
-end;
-
-destructor TJvDynControlEngineDevExpCx.Destroy;
-begin
-  FreeAndNil(FCxProperties);
-  inherited Destroy;
-end;
-
-procedure TJvDynControlEngineDevExpCx.SetcxProperties(Value: TCxDynControlWrapper);
-begin
-  if Value is TCxDynControlWrapper then
-  begin
-    FCxProperties.LookAndFeel := Value.LookAndFeel;
-    FCxProperties.StyleController := Value.StyleController;
-  end;
-end;
-
-procedure TJvDynControlEngineDevExpCx.RegisterControls;
-begin
-  RegisterControlType(jctLabel, TJvDynControlCxLabel);
-  RegisterControlType(jctStaticText, TJvDynControlCxStaticText);
-  RegisterControlType(jctButton, TJvDynControlCxButton);
-  RegisterControlType(jctRadioButton, TJvDynControlCxRadioButton);
-  RegisterControlType(jctScrollBox, TJvDynControlCxScrollBox);
-  RegisterControlType(jctGroupBox, TJvDynControlCxGroupBox);
-  RegisterControlType(jctPanel, TJvDynControlCxPanel);
-  RegisterControlType(jctImage, TJvDynControlCxImage);
-  RegisterControlType(jctCheckBox, TJvDynControlCxCheckBox);
-  RegisterControlType(jctComboBox, TJvDynControlCxComboBox);
-  RegisterControlType(jctListBox, TJvDynControlCxListBox);
-  RegisterControlType(jctCheckListBox, TJvDynControlCxCheckListBox);
-  RegisterControlType(jctCheckComboBox, TJvDynControlCxCheckComboBox);
-  RegisterControlType(jctRadioGroup, TJvDynControlCxRadioGroup);
-  RegisterControlType(jctDateTimeEdit, TJvDynControlCxDateTimeEdit);
-  RegisterControlType(jctTimeEdit, TJvDynControlCxTimeEdit);
-  RegisterControlType(jctDateEdit, TJvDynControlCxDateEdit);
-  RegisterControlType(jctEdit, TJvDynControlCxMaskEdit);
-  RegisterControlType(jctCalculateEdit, TJvDynControlCxCalcEdit);
-  RegisterControlType(jctSpinEdit, TJvDynControlCxSpinEdit);
-  RegisterControlType(jctDirectoryEdit, TJvDynControlCxDirectoryEdit);
-  RegisterControlType(jctFileNameEdit, TJvDynControlCxFileNameEdit);
-  RegisterControlType(jctMemo, TJvDynControlCxMemo);
-  RegisterControlType(jctRichEdit, TJvDynControlCxRichEdit);
-  RegisterControlType(jctButtonEdit, TJvDynControlCxButtonEdit);
-  RegisterControlType(jctTreeVIew, TJvDynControlCxTreeView);
-  RegisterControlType(jctProgressbar, TJvDynControlCxProgressbar);
-  RegisterControlType(jctTabControl, TJvDynControlCxTabControl);
-  RegisterControlType(jctPageControl, TJvDynControlCxPageControl);
-  {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXVERTICALGRID}
-  RegisterControlType(jctRTTIInspector, TJvDynControlCxRTTIInspectorControl);
-  {$ELSE}
-  //RegisterControlType(jctRTTIInspector, TJvDynControlCxRTTIInspectorControl);
-  {$ENDIF}
-  RegisterControlType(jctColorComboBox, TJvDynControlCxColorComboBox);
-end;
-
 function TJvDynControlEngineDevExpCx.CreateControlClass(AControlClass: TControlClass; AOwner: TComponent; AParentControl: TWinControl; AControlName: string): TControl;
 var
   Control: TControl;
@@ -4245,6 +4206,8 @@ procedure TJvDynControlCxRTTIInspectorControl.SetControlOnPropertyChange(const
 begin
   fControlOnPropertyChange := Value;
 end;
+
+{$ENDIF USE_3RDPARTY_DEVEXPRESS_CXVERTICALGRID}
 
 function TJvDynControlCxColorComboBox.ControlGetColorName(AColor: TColor):
     string;
@@ -4486,7 +4449,70 @@ begin
   Properties.Delimiter:= Value;
 end;
 
-{$ENDIF}
+
+//=== { TJvDynControlEngineDevExpCx } ========================================
+
+constructor TJvDynControlEngineDevExpCx.Create;
+begin
+  inherited Create;
+  FCxProperties := TCxDynControlWrapper.Create;
+end;
+
+destructor TJvDynControlEngineDevExpCx.Destroy;
+begin
+  FreeAndNil(FCxProperties);
+  inherited Destroy;
+end;
+
+procedure TJvDynControlEngineDevExpCx.SetcxProperties(Value: TCxDynControlWrapper);
+begin
+  if Value is TCxDynControlWrapper then
+  begin
+    FCxProperties.LookAndFeel := Value.LookAndFeel;
+    FCxProperties.StyleController := Value.StyleController;
+  end;
+end;
+
+procedure TJvDynControlEngineDevExpCx.RegisterControls;
+begin
+  RegisterControlType(jctLabel, TJvDynControlCxLabel);
+  RegisterControlType(jctStaticText, TJvDynControlCxStaticText);
+  RegisterControlType(jctButton, TJvDynControlCxButton);
+  RegisterControlType(jctRadioButton, TJvDynControlCxRadioButton);
+  RegisterControlType(jctScrollBox, TJvDynControlCxScrollBox);
+  RegisterControlType(jctGroupBox, TJvDynControlCxGroupBox);
+  RegisterControlType(jctPanel, TJvDynControlCxPanel);
+  RegisterControlType(jctImage, TJvDynControlCxImage);
+  RegisterControlType(jctCheckBox, TJvDynControlCxCheckBox);
+  RegisterControlType(jctComboBox, TJvDynControlCxComboBox);
+  RegisterControlType(jctListBox, TJvDynControlCxListBox);
+  RegisterControlType(jctCheckListBox, TJvDynControlCxCheckListBox);
+  RegisterControlType(jctCheckComboBox, TJvDynControlCxCheckComboBox);
+  RegisterControlType(jctRadioGroup, TJvDynControlCxRadioGroup);
+  RegisterControlType(jctDateTimeEdit, TJvDynControlCxDateTimeEdit);
+  RegisterControlType(jctTimeEdit, TJvDynControlCxTimeEdit);
+  RegisterControlType(jctDateEdit, TJvDynControlCxDateEdit);
+  RegisterControlType(jctEdit, TJvDynControlCxMaskEdit);
+  RegisterControlType(jctCalculateEdit, TJvDynControlCxCalcEdit);
+  RegisterControlType(jctSpinEdit, TJvDynControlCxSpinEdit);
+  RegisterControlType(jctDirectoryEdit, TJvDynControlCxDirectoryEdit);
+  RegisterControlType(jctFileNameEdit, TJvDynControlCxFileNameEdit);
+  RegisterControlType(jctMemo, TJvDynControlCxMemo);
+  RegisterControlType(jctRichEdit, TJvDynControlCxRichEdit);
+  RegisterControlType(jctButtonEdit, TJvDynControlCxButtonEdit);
+  RegisterControlType(jctTreeVIew, TJvDynControlCxTreeView);
+  RegisterControlType(jctProgressbar, TJvDynControlCxProgressbar);
+  RegisterControlType(jctTabControl, TJvDynControlCxTabControl);
+  RegisterControlType(jctPageControl, TJvDynControlCxPageControl);
+  {$IFDEF USE_3RDPARTY_DEVEXPRESS_CXVERTICALGRID}
+  RegisterControlType(jctRTTIInspector, TJvDynControlCxRTTIInspectorControl);
+  {$ELSE}
+  //RegisterControlType(jctRTTIInspector, TJvDynControlCxRTTIInspectorControl);
+  {$ENDIF}
+  RegisterControlType(jctColorComboBox, TJvDynControlCxColorComboBox);
+  RegisterControlType(jctStringGrid, TJvDynControlVCLStringGrid);
+end;
+
 
 {$ENDIF USE_3RDPARTY_DEVEXPRESS_CXEDITOR}
 

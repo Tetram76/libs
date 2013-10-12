@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: CmdLineUtils.pas 13374 2012-06-27 13:09:29Z obones $
+// $Id$
 
 unit CmdLineUtils;
 

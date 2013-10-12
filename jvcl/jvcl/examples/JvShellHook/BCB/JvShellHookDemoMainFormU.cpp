@@ -24,7 +24,7 @@
  rights and limitations under the License.
 
 ******************************************************************/
-// $Id: JvShellHookDemoMainFormU.cpp 10610 2006-05-19 13:35:08Z elahn $
+// $Id$
 //---------------------------------------------------------------------------
 /*
    Note : if we want to use WinXP definitions there is need to

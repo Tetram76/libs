@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvColorTrackbar.pas 13121 2011-09-21 12:31:58Z obones $
+// $Id$
 
 unit JvColorTrackbar;
 
@@ -138,9 +138,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvColorTrackbar.pas $';
-    Revision: '$Revision: 13121 $';
-    Date: '$Date: 2011-09-21 14:31:58 +0200 (mer., 21 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

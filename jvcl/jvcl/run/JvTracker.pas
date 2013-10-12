@@ -33,7 +33,7 @@ Change: (Lionel Reynaud, 2009-2011)
   - Add draw min, max values and introduce event property OnShowMinMaxValue
 
 -----------------------------------------------------------------------------}
-// $Id: JvTracker.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvTracker;
 
@@ -42,6 +42,12 @@ unit JvTracker;
 interface
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes, // inline
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
+  {$IFDEF HAS_UNIT_TYPES}
+  Types, // inline
+  {$ENDIF HAS_UNIT_TYPES}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -205,9 +211,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvTracker.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -859,7 +865,11 @@ begin
       Value := Value - FStep;
     VK_RIGHT, VK_DOWN:
       Value := Value + FStep;
+  else
+    inherited;
+    Exit;
   end;
+  DoChangedValue(FValue);
 end;
 
 {$IFDEF UNITVERSIONING}

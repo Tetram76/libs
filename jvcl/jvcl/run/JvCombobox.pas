@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCombobox.pas 13437 2012-09-24 11:46:58Z ahuser $
+// $Id$
 
 unit JvCombobox;
 
@@ -295,12 +295,17 @@ type
     function GetOrderedTextValue: string;
     function GetItems: TStrings;
     function GetCheckedCount: Integer;
+    function GetHeader(Index: Integer): Boolean;
+    procedure SetHeader(Index: Integer; const Value: Boolean);
   protected
     procedure DoEnter; override;
     procedure DoExit; override;
     procedure AdjustSize; override;
     procedure CreatePopup; override;
     procedure Change; override;
+    function AcceptPopup(var Value: Variant): Boolean; override;
+
+    property ListBox: TJvCheckListBox read FListBox;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -314,6 +319,7 @@ type
     property CheckedCount: Integer read GetCheckedCount;
     property ItemEnabled[Index: Integer]: Boolean read GetItemEnabled write SetItemEnabled;
     property State[Index: Integer]: TCheckBoxState read GetState write SetState;
+    property Header[Index: Integer]: Boolean read GetHeader write SetHeader;
 
     property Items: TStrings read GetItems write SetItems;
     property CapSelectAll: string read FCapSelAll write FCapSelAll stored IsStoredCapSelAll;
@@ -406,9 +412,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCombobox.pas $';
-    Revision: '$Revision: 13437 $';
-    Date: '$Date: 2012-09-24 13:46:58 +0200 (lun., 24 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -605,6 +611,11 @@ begin
   inherited Destroy;
 end;
 
+function TJvCustomCheckedComboBox.AcceptPopup(var Value: Variant): Boolean;
+begin
+  Result := False;
+end;
+
 procedure TJvCustomCheckedComboBox.AdjustHeight;
 var
   DC: HDC;
@@ -730,6 +741,11 @@ end;
 function TJvCustomCheckedComboBox.GetItemEnabled(Index: Integer): Boolean;
 begin
   Result := FListBox.ItemEnabled[Index];
+end;
+
+function TJvCustomCheckedComboBox.GetHeader(Index: Integer): Boolean;
+begin
+  Result := FListBox.Header[Index];
 end;
 
 function TJvCustomCheckedComboBox.GetItems: TStrings;
@@ -964,6 +980,11 @@ begin
   if FDropDownLines <> Value then
     if (Value >= MinDropLines) and (Value <= MaxDropLines) then
       FDropDownLines := Value;
+end;
+
+procedure TJvCustomCheckedComboBox.SetHeader(Index: Integer; const Value: Boolean);
+begin
+  FListBox.Header[Index] := Value;
 end;
 
 procedure TJvCustomCheckedComboBox.SetItemEnabled(Index: Integer; const Value: Boolean);

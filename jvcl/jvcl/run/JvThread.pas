@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvThread.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvThread;
 
@@ -34,6 +34,10 @@ uses
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
   Windows, SysUtils, Classes, SyncObjs, Controls, ExtCtrls, Forms, Dialogs,
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.Types,
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}  
   JvTypes, JvComponentBase, JvComponent;
 
 type
@@ -60,6 +64,7 @@ type
     procedure SetShowModal(Value: Boolean);
   public
     constructor Create(AOwner: TJvCustomThreadDialog); virtual;
+    procedure Assign(Source: TPersistent); override;
   published
     property FormStyle: TFormStyle read FFormStyle write FFormStyle;
     // Delay in milliseconds for starting the thread dialog
@@ -336,9 +341,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvThread.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -357,6 +362,19 @@ begin
   FShowDialog := False;
   FShowModal := True;
   FShowDelay := 0;
+end;
+
+procedure TJvCustomThreadDialogOptions.Assign(Source: TPersistent);
+begin
+  if Source is TJvCustomThreadDialogOptions then
+    begin
+      FormStyle := TJvCustomThreadDialogOptions(Source).FormStyle;
+      ShowDialog := TJvCustomThreadDialogOptions(Source).ShowDialog;
+      ShowDelay := TJvCustomThreadDialogOptions(Source).ShowDelay;
+      ShowModal := TJvCustomThreadDialogOptions(Source).ShowModal;
+    end
+  else
+    Inherited Assign(Source);
 end;
 
 procedure TJvCustomThreadDialogOptions.SetShowDelay(const Value: Integer);

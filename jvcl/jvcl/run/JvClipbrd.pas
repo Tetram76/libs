@@ -22,7 +22,7 @@ home page, located at http://cnxmanager.sourceforge.net
 
 Known Issues: none to date.
 -----------------------------------------------------------------------------}
-// $Id: JvClipbrd.pas 12567 2009-10-22 08:50:56Z outchy $
+// $Id$
 
 unit JvClipbrd;
 
@@ -221,9 +221,9 @@ function JvClipboard: TJvClipboard;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvClipbrd.pas $';
-    Revision: '$Revision: 12567 $';
-    Date: '$Date: 2009-10-22 10:50:56 +0200 (jeu., 22 oct. 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

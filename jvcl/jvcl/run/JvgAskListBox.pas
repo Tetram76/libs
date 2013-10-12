@@ -31,7 +31,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgAskListBox.pas 13400 2012-08-19 08:16:20Z ahuser $
+// $Id$
 
 unit JvgAskListBox;
 
@@ -181,9 +181,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgAskListBox.pas $';
-    Revision: '$Revision: 13400 $';
-    Date: '$Date: 2012-08-19 10:16:20 +0200 (dim., 19 août 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

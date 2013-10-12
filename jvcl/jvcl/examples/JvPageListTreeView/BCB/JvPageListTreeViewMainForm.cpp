@@ -24,7 +24,7 @@
  rights and limitations under the License.
 
 ******************************************************************/
-// $Id: JvPageListTreeViewMainForm.cpp 12304 2009-05-05 20:10:29Z outchy $
+// $Id$
 //---------------------------------------------------------------------------
 
 #include <vcl.h>

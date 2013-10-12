@@ -23,7 +23,7 @@ Description : adapter unit - converts JvInterpreter calls to delphi calls
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvInterpreter_Classes.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit JvInterpreter_Classes;
 
@@ -32,6 +32,9 @@ unit JvInterpreter_Classes;
 interface
 
 uses
+  {$IFDEF HAS_UNIT_TYPES}
+  Types, // inline
+  {$ENDIF HAS_UNIT_TYPES}
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
@@ -42,9 +45,9 @@ procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapt
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvInterpreter_Classes.pas $';
-    Revision: '$Revision: 12461 $';
-    Date: '$Date: 2009-08-14 19:21:33 +0200 (ven., 14 août 2009) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -730,8 +733,13 @@ end;
 { function Seek(Offset: Longint; Origin: Word): Longint; }
 
 procedure TStream_Seek(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Offset: Int64;
+  Origin: Integer;
 begin
-  Value := TStream(Args.Obj).Seek(Args.Values[0], Args.Values[1]);
+  Offset := Args.Values[0];
+  Origin := Args.Values[1];
+  Value := TStream(Args.Obj).Seek(Offset, TSeekOrigin(Origin));
 end;
 
 { procedure ReadBuffer(var Buffer; Count: Longint); }

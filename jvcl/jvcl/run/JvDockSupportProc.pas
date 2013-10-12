@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDockSupportProc.pas 12805 2010-06-10 14:11:07Z obones $
+// $Id$
 
 unit JvDockSupportProc;
 
@@ -93,9 +93,9 @@ procedure UnRegisterSettingChangeClient(Client: TObject);
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDockSupportProc.pas $';
-    Revision: '$Revision: 12805 $';
-    Date: '$Date: 2010-06-10 16:11:07 +0200 (jeu., 10 juin 2010) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

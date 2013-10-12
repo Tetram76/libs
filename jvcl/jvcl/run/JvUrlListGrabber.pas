@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvUrlListGrabber.pas 13414 2012-09-09 12:00:18Z ahuser $
+// $Id$
 
 unit JvUrlListGrabber;
 
@@ -385,6 +385,8 @@ type
     FSize: Int64;
     // What has been read so far
     FBytesRead: Int64;
+    // True if data has been read
+    FGrabbingStarted: Boolean;
   protected
     // Event callers
     procedure DoError(ErrorMsg: string);
@@ -563,9 +565,9 @@ function JvUrlGrabberClassList: TJvUrlGrabberClassList;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvUrlListGrabber.pas $';
-    Revision: '$Revision: 13414 $';
-    Date: '$Date: 2012-09-09 14:00:18 +0200 (dim., 09 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -976,6 +978,10 @@ end;
 
 procedure TJvCustomUrlGrabber.DoEnded;
 begin
+  // Don't create empty file/stream if we didn't start grabbing
+  if not FGrabbingStarted Then
+    Exit;
+
   Stream.Position := 0;
   if FOutputMode = omStream then
   begin
@@ -1238,6 +1244,7 @@ procedure TJvCustomUrlGrabberThread.Execute;
 begin
   NameThread(ThreadName);
   SetGrabberStatus(gsStopped);
+  FGrabber.FGrabbingStarted := False;
   FGrabber.Stream := nil;
   try
     Grab;
@@ -1252,10 +1259,11 @@ begin
   end;
 end;
 
-procedure TJvCustomUrlGrabberThread.SetGrabberStatus(
-  Status: TJvGrabberStatus);
+procedure TJvCustomUrlGrabberThread.SetGrabberStatus(Status: TJvGrabberStatus);
 begin
   FGrabber.FStatus := Status;
+  if Status = gsGrabbing then
+    FGrabber.FGrabbingStarted := True;
 end;
 
 procedure TJvCustomUrlGrabberThread.UpdateGrabberProgress;

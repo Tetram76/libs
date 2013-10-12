@@ -28,7 +28,7 @@ Todo : Why the "stdcall" definitions ? (routines Configure, Initialize...)
        Why the TriggerConfigureEvent (and similar) procedures ? necessary ?
        What for the GlobalNameSpace.BeginWrite ?
 -----------------------------------------------------------------------------}
-// $Id: JvPlugin.pas 13249 2012-02-27 15:47:36Z obones $
+// $Id$
 
 unit JvPlugin;
 
@@ -149,9 +149,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvPlugin.pas $';
-    Revision: '$Revision: 13249 $';
-    Date: '$Date: 2012-02-27 16:47:36 +0100 (lun., 27 févr. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

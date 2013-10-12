@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCalc.pas 13413 2012-09-08 11:02:21Z ahuser $
+// $Id$
 
 unit JvCalc;
 
@@ -121,9 +121,9 @@ procedure SetupPopupCalculator(PopupCalc: TWinControl; APrecision: Byte; ABeepOn
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvCalc.pas $';
-    Revision: '$Revision: 13413 $';
-    Date: '$Date: 2012-09-08 13:02:21 +0200 (sam., 08 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

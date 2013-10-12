@@ -22,7 +22,7 @@ home page, located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: HtHint.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id$
 
 {$I jvcl.inc}
 
@@ -31,6 +31,9 @@ unit HtHint;
 interface
 
 uses
+  {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes,
+  {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
   Windows, SysUtils, Classes, Graphics, Controls, Forms, StdCtrls,
   JvConsts;
 

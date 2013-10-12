@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: TargetInfo.pas 12676 2010-01-13 20:03:11Z outchy $
+// $Id$
 
 unit TargetInfo;
 

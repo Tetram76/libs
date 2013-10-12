@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvComponent.pas 13173 2011-11-19 12:43:58Z ahuser $
+// $Id$
 
 unit JvComponent;
 
@@ -85,9 +85,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvComponent.pas $';
-    Revision: '$Revision: 13173 $';
-    Date: '$Date: 2011-11-19 13:43:58 +0100 (sam., 19 nov. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -238,7 +238,7 @@ begin
   case Key of
     BackSpace, Esc:
       FSearchText := '';
-    #32..#255:
+    #32..High(Char):
       begin
         TickCount := GetTickCount;
         if TickCount < FSearchTickCount then

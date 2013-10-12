@@ -23,7 +23,7 @@ Remko Bonte
 You may retrieve the latest version of this file at the Project JEDI's JVCL home page,
 located at http://jvcl.delphi-jedi.org
 -----------------------------------------------------------------------------}
-// $Id: JvEditorCommon.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 { history
  (JVCL Library versions) :
@@ -361,6 +361,7 @@ type
     FJvEditor: TJvCustomEditorBase;
     FPtr: Integer;
     InUndo: Boolean;
+    FDiscardList: TObjectList;
     function LastUndo: TJvUndo;
     function IsNewGroup(AUndo: TJvUndo): Boolean;
     function CanRedo: Boolean;
@@ -709,6 +710,7 @@ type
 
     { mouse support }
     TimerScroll: TTimer;
+    MouseMoveX: Integer;
     MouseMoveY: Integer;
     MouseMoveXX: Integer;
     MouseMoveYY: Integer;
@@ -1382,9 +1384,9 @@ function KeyPressed(VK: Integer): Boolean;
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvEditorCommon.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -1436,7 +1438,12 @@ end;
 procedure TJvUndoBuffer.Add(AUndo: TJvUndo);
 begin
   if InUndo then
+  begin
+    if FDiscardList = nil then
+      FDiscardList := TObjectList.Create;
+    FDiscardList.Add(AUndo);
     Exit;
+  end;
   ClearRedo;
   inherited Add(AUndo);
   FPtr := Count - 1;
@@ -1527,6 +1534,7 @@ begin
           FJvEditor.StatusChanged;
     end;
   finally
+    FreeAndNil(FDiscardList);
     InUndo := False;
   end;
 end;
@@ -2860,19 +2868,37 @@ end;
 
 procedure TJvCustomEditorBase.ScrollTimer(Sender: TObject);
 begin
-  if (MouseMoveY < 0) or (MouseMoveY > ClientHeight) then
+  if (MouseMoveX < EditorClient.Left) or (MouseMoveX > ClientWidth) or
+     (MouseMoveY < 0) or (MouseMoveY > ClientHeight) then
   begin
-    if MouseMoveY < -20 then
-      Dec(MouseMoveYY, FVisibleRowCount)
-    else
-    if MouseMoveY < 0 then
-      Dec(MouseMoveYY)
-    else
-    if MouseMoveY > ClientHeight + 20 then
-      Inc(MouseMoveYY, FVisibleRowCount)
-    else
-    if MouseMoveY > ClientHeight then
-      Inc(MouseMoveYY);
+    if (MouseMoveY < 0) or (MouseMoveY > ClientHeight) then
+    begin
+      if MouseMoveY < -20 then
+        Dec(MouseMoveYY, FVisibleRowCount)
+      else
+      if MouseMoveY < 0 then
+        Dec(MouseMoveYY)
+      else
+      if MouseMoveY > ClientHeight + 20 then
+        Inc(MouseMoveYY, FVisibleRowCount)
+      else
+      if MouseMoveY > ClientHeight then
+        Inc(MouseMoveYY);
+    end;
+    if (MouseMoveX < FGutterWidth) or (MouseMoveX > ClientWidth) then
+    begin
+      if MouseMoveX < FGutterWidth - 20 then
+        Dec(MouseMoveXX, 16)
+      else
+      if MouseMoveX < FGutterWidth then
+        Dec(MouseMoveXX, 4)
+      else
+      if MouseMoveX > ClientWidth + 20 then
+        Inc(MouseMoveXX, 16)
+      else
+      if MouseMoveX > ClientWidth then
+        Inc(MouseMoveXX, 4);
+    end;
     PaintCaret(False);
     SetSel(MouseMoveXX, MouseMoveYY);
     SetCaret(MouseMoveXX, MouseMoveYY);
@@ -2995,7 +3021,7 @@ procedure TJvCustomEditorBase.ChangeAttr(Line, ColBeg, ColEnd: Integer);
       Color: TColor;
     begin
       if LineStyle = lssUnselected then
-        for I := iBeg to iEnd do
+        for I := iBeg to Min(iEnd, Max_X - 1) do
         begin
           LineAttrs[I+1].FC := SelForeColor;
           LineAttrs[I+1].BC := SelBackColor;
@@ -3003,7 +3029,7 @@ procedure TJvCustomEditorBase.ChangeAttr(Line, ColBeg, ColEnd: Integer);
         end
       else
        // exchange fore and background color
-        for I := iBeg to iEnd do
+        for I := iBeg to Min(iEnd, Max_X - 1) do
         begin
           Color := LineAttrs[I+1].FC;
           LineAttrs[I+1].FC := LineAttrs[I+1].BC;
@@ -3444,9 +3470,10 @@ end;
 
 procedure TJvCustomEditorBase.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
-  if FMouseDown and (ssLeft in (Shift * [ssShift, ssLeft]) ) then
+  if FMouseDown and (ssLeft in (Shift * [ssShift, ssLeft])) then
   begin
     PaintCaret(False);
+    MouseMoveX := X;
     MouseMoveY := Y;
     Mouse2Caret(X, Y, MouseMoveXX, MouseMoveYY);
 
@@ -3455,7 +3482,7 @@ begin
       SetSel(MouseMoveXX, MouseMoveYY);
       SetCaret(MouseMoveXX, MouseMoveYY);
     end;
-    TimerScroll.Enabled := (Y < 0) or (Y > ClientHeight);
+    TimerScroll.Enabled := (Y < 0) or (Y > ClientHeight) or (X < FGutterWidth) or (X > ClientWidth);
     PaintCaret(True);
   end;
   inherited MouseMove(Shift, X, Y);
@@ -3517,6 +3544,7 @@ var
   pt: TPoint;
   XX, YY: Integer;
 begin
+  FSelection.Selecting := False; // may be true from a MouseDown+MouseMove, if another application had the focus when dbl-clicking on the editor
   FDoubleClick := True;
   if Assigned(FOnDblClick) then
     FOnDblClick(Self);

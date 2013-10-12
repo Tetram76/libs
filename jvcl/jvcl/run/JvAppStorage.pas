@@ -74,7 +74,7 @@ Description:
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvAppStorage.pas 13415 2012-09-10 09:51:54Z obones $
+// $Id$
 
 unit JvAppStorage;
 
@@ -96,7 +96,7 @@ uses
   {$IFNDEF COMPILER12_UP}
   JvJCLUtils,
   {$ENDIF ~COMPILER12_UP}
-  JvComponentBase, JvTypes, JvTranslateString;
+  JvComponentBase, JvTypes, JvTranslateString, IniFiles;
 
 const
   // (rom) this name is shared in several units and should be made global
@@ -426,10 +426,14 @@ type
     function GetPhysicalReadOnly: Boolean; virtual;
 
     property SubStorages: TJvAppSubStorages read FSubStorages write SetSubStorages;
-    function DecodeStrToDateTime(Value: string): TDateTime; virtual;
+    function DecodeStrToDateTime(const Value: string): TDateTime; virtual;
     function EncodeDateTimeToStr(Value: TDateTime): string; virtual;
     procedure Loaded; override;
     procedure DoError(const msg: string);
+    //1 Sets a xml property for a given path, this is only implemented for XML Appstorage
+    procedure DoSetXMLProperty(const Path, Name, Value : string); virtual;
+    //1 Sets a xml property for a given path, this is only implemented for XML Appstorage
+    procedure SetXMLPropertyInt(const Path, Name, Value : string); virtual;
     function GetFormatSettings: TFormatSettings;
     function ReadListItemCount(const Path: string; const ItemName: string = cItem): Integer; virtual;
     procedure WriteListItemCount(const Path: string; const ItemCount: Integer; const ItemName: string = cItem); virtual;
@@ -654,6 +658,8 @@ type
     procedure EnablePropertyValueCrypt;
     { Disables the Cryption of Property-Values (Only String-Values) }
     procedure DisablePropertyValueCrypt;
+    //1 Sets a xml property for a given path, this is only implemented for XML Appstorage
+    procedure SetXMLProperty(const Path, Name, Value : string);
     { Returns the current state if Property-Value Cryption is enabled }
     function IsPropertyValueCryptEnabled: Boolean;
     function ItemNameIndexPath(const ItemName: string; const Index: Integer): string; virtual;
@@ -979,6 +985,40 @@ type
 
   TJvAppStoragePropertyBaseEngineClass = class of TJvAppStoragePropertyBaseEngine;
 
+  //1 This class emulates a TCustomInifile using an appstorage class as data container
+  TJvAppStorageIniFile = class(TCustomIniFile)
+  private
+    FAppStorage: TJvCustomAppStorage;
+    FBaseSection: string;
+  public
+    constructor Create(const AppStorage : TJvCustomAppStorage);
+    procedure DeleteKey(const Section, Ident: string); override;
+    procedure EraseSection(const Section: string); override;
+    function ReadBool(const Section, Ident: string; Default: Boolean): Boolean; override;
+    function ReadDate(const Section, Name: string; Default: TDateTime): TDateTime; override;
+    function ReadDateTime(const Section, Name: string; Default: TDateTime): TDateTime; override;
+    function ReadFloat(const Section, Name: string; Default: Double): Double; override;
+    function ReadInteger(const Section, Ident: string; Default: Longint): Longint; override;
+    procedure ReadSection(const Section: string; Strings: TStrings); override;
+    procedure ReadSections(Strings: TStrings); override;
+    procedure ReadSectionValues(const Section: string; Strings: TStrings); override;
+    function ReadString(const Section, Ident, Default: string): string; override;
+    function ReadTime(const Section, Name: string; Default: TDateTime): TDateTime; override;
+    procedure UpdateFile; override;
+	{$IFDEF DELPHI9_UP}
+    function ValueExists(const Section, Ident: string): Boolean; override;
+	{$ENDIF DELPHI9_UP}
+    procedure WriteBool(const Section, Ident: string; Value: Boolean); override;
+    procedure WriteDate(const Section, Name: string; Value: TDateTime); override;
+    procedure WriteDateTime(const Section, Name: string; Value: TDateTime); override;
+    procedure WriteFloat(const Section, Name: string; Value: Double); override;
+    procedure WriteInteger(const Section, Ident: string; Value: Longint); override;
+    procedure WriteString(const Section, Ident, Value: string); override;
+    procedure WriteTime(const Section, Name: string; Value: TDateTime); override;
+    property AppStorage: TJvCustomAppStorage read FAppStorage write FAppStorage;
+    property BaseSection: string read FBaseSection write FBaseSection;
+  end;
+
 procedure RegisterAppStoragePropertyEngine(AEngineClass: TJvAppStoragePropertyBaseEngineClass);
 procedure UnregisterAppStoragePropertyEngine(AEngineClass: TJvAppStoragePropertyBaseEngineClass);
 
@@ -991,9 +1031,9 @@ const
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAppStorage.pas $';
-    Revision: '$Revision: 13415 $';
-    Date: '$Date: 2012-09-10 11:51:54 +0200 (lun., 10 sept. 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
     );
 {$ENDIF UNITVERSIONING}
@@ -3136,7 +3176,7 @@ begin
   end;
 end;
 
-function TJvCustomAppStorage.DecodeStrToDateTime(Value: string): TDateTime;
+function TJvCustomAppStorage.DecodeStrToDateTime(const Value: string): TDateTime;
 begin
   if StorageOptions.UseTranslateStringEngineDateTimeFormats then
     try
@@ -3147,6 +3187,26 @@ begin
     end
   else
     Result := StrToDateTime(Value);
+end;
+
+procedure TJvCustomAppStorage.DoSetXMLProperty(const Path, Name, Value : string);
+begin
+
+end;
+
+procedure TJvCustomAppStorage.SetXMLProperty(const Path, Name, Value : string);
+var
+  TargetStore: TJvCustomAppStorage;
+  TargetPath: string;
+begin
+  ResolvePath(Path, TargetStore, TargetPath);
+  if not TargetStore.ReadOnly then
+    TargetStore.SetXMLPropertyInt(TargetPath, Name, Value);
+end;
+
+procedure TJvCustomAppStorage.SetXMLPropertyInt(const Path, Name, Value : string);
+begin
+  DoSetXMLProperty(Path, Name, Value);
 end;
 
 function TJvCustomAppStorage.EncodeDateTimeToStr(Value: TDateTime): string;
@@ -3938,6 +3998,118 @@ begin
     BackupKeepFileAfterFlush := TJvAppFileStorageOptions(Source).BackupKeepFileAfterFlush;
   end;
   inherited assign(Source);
+end;
+
+constructor TJvAppStorageIniFile.Create(const AppStorage : TJvCustomAppStorage);
+begin
+  fAppStorage := AppStorage;
+end;
+
+procedure TJvAppStorageIniFile.DeleteKey(const Section, Ident: string);
+begin
+  AppStorage.DeleteValue(AppStorage.ConcatPaths([BaseSection, Section, Ident]));
+end;
+
+procedure TJvAppStorageIniFile.EraseSection(const Section: string);
+begin
+  AppStorage.DeleteSubTree(AppStorage.ConcatPaths([BaseSection, Section]));
+end;
+
+function TJvAppStorageIniFile.ReadBool(const Section, Ident: string; Default: Boolean): Boolean;
+begin
+  Result := AppStorage.ReadBoolean(AppStorage.ConcatPaths([BaseSection, Section, Ident]), Default);
+end;
+
+function TJvAppStorageIniFile.ReadDate(const Section, Name: string; Default: TDateTime): TDateTime;
+begin
+  Result := AppStorage.ReadDateTime(AppStorage.ConcatPaths([BaseSection, Section, Name]), Default);
+end;
+
+function TJvAppStorageIniFile.ReadDateTime(const Section, Name: string; Default: TDateTime): TDateTime;
+begin
+  Result := AppStorage.ReadDateTime(AppStorage.ConcatPaths([BaseSection, Section, Name]), Default);
+end;
+
+function TJvAppStorageIniFile.ReadFloat(const Section, Name: string; Default: Double): Double;
+begin
+  Result := AppStorage.ReadFloat(AppStorage.ConcatPaths([BaseSection, Section, Name]), Default);
+end;
+
+function TJvAppStorageIniFile.ReadInteger(const Section, Ident: string; Default: Longint): Longint;
+begin
+  Result := AppStorage.ReadInteger(AppStorage.ConcatPaths([BaseSection, Section, Ident]), Default);
+end;
+
+procedure TJvAppStorageIniFile.ReadSection(const Section: string; Strings: TStrings);
+begin
+  AppStorage.EnumFolders(AppStorage.ConcatPaths([BaseSection, Section]), Strings);
+end;
+
+procedure TJvAppStorageIniFile.ReadSections(Strings: TStrings);
+begin
+  AppStorage.EnumFolders(AppStorage.ConcatPaths([BaseSection]), Strings);
+end;
+
+procedure TJvAppStorageIniFile.ReadSectionValues(const Section: string; Strings: TStrings);
+begin
+  AppStorage.EnumValues(AppStorage.ConcatPaths([BaseSection, Section]), Strings);
+end;
+
+function TJvAppStorageIniFile.ReadString(const Section, Ident, Default: string): string;
+begin
+  Result := AppStorage.ReadString(AppStorage.ConcatPaths([BaseSection, Section, Ident]), Default);
+end;
+
+function TJvAppStorageIniFile.ReadTime(const Section, Name: string; Default: TDateTime): TDateTime;
+begin
+  Result := AppStorage.ReadDateTime(AppStorage.ConcatPaths([BaseSection, Section, Name]), Default);
+end;
+
+procedure TJvAppStorageIniFile.UpdateFile;
+begin
+  AppStorage.Flush;
+end;
+
+{$IFDEF DELPHI9_UP}
+function TJvAppStorageIniFile.ValueExists(const Section, Ident: string): Boolean;
+begin
+  Result := AppStorage.PathExists(AppStorage.ConcatPaths([BaseSection, Section, Ident]))
+end;
+{$ENDIF DELPHI9_UP}
+
+procedure TJvAppStorageIniFile.WriteBool(const Section, Ident: string; Value: Boolean);
+begin
+  AppStorage.WriteBoolean(AppStorage.ConcatPaths([BaseSection, Section, Ident]),Value);
+end;
+
+procedure TJvAppStorageIniFile.WriteDate(const Section, Name: string; Value: TDateTime);
+begin
+  AppStorage.WriteDateTime(AppStorage.ConcatPaths([BaseSection, Section, Name]),Value);
+end;
+
+procedure TJvAppStorageIniFile.WriteDateTime(const Section, Name: string; Value: TDateTime);
+begin
+  AppStorage.WriteDateTime(AppStorage.ConcatPaths([BaseSection, Section, Name]),Value);
+end;
+
+procedure TJvAppStorageIniFile.WriteFloat(const Section, Name: string; Value: Double);
+begin
+  AppStorage.WriteFloat(AppStorage.ConcatPaths([BaseSection, Section, Name]),Value);
+end;
+
+procedure TJvAppStorageIniFile.WriteInteger(const Section, Ident: string; Value: Longint);
+begin
+  AppStorage.WriteInteger(AppStorage.ConcatPaths([BaseSection, Section, Ident]),Value);
+end;
+
+procedure TJvAppStorageIniFile.WriteString(const Section, Ident, Value: string);
+begin
+  AppStorage.WriteString(AppStorage.ConcatPaths([BaseSection, Section, Ident]),Value);
+end;
+
+procedure TJvAppStorageIniFile.WriteTime(const Section, Name: string; Value: TDateTime);
+begin
+  AppStorage.WriteDateTime(AppStorage.ConcatPaths([BaseSection, Section, Name]),Value);
 end;
 
 initialization

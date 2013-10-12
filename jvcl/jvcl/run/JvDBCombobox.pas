@@ -23,7 +23,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvDBCombobox.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvDBCombobox;
 
@@ -50,6 +50,7 @@ type
     FOnReload: TNotifyEvent;
   protected
     procedure DataEvent(Event: TDataEvent; Info: {$IFDEF RTL230_UP}NativeInt{$ELSE}Integer{$ENDIF}); override;
+    procedure ActiveChanged; override;
   public
     property OnReload: TNotifyEvent read FOnReload write FOnReload;
   end;
@@ -64,6 +65,8 @@ type
     FShowOutfilteredValue: Boolean;
     FOutfilteredValueFont: TFont;
     FComboBox: TJvCustomDBComboBox;
+    FOutfilteredItems: TStrings;
+    FOutfilteredValues: TStrings;
     procedure SetDataSource(const Value: TDataSource);
     procedure SetFilter(Value: string);
     function GetDataSource: TDataSource;
@@ -254,9 +257,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBCombobox.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -485,15 +488,14 @@ end;
 procedure TJvCustomDBComboBox.KeyPress(var Key: Char);
 begin
   inherited KeyPress(Key);
-  if CharInSet(Key, [#32..#255]) and (FDataLink.Field <> nil) and
-    not FDataLink.Field.IsValidChar(Key) then
+  if (Key >= #32) and (FDataLink.Field <> nil) and not FDataLink.Field.IsValidChar(Key) then
   begin
     if BeepOnError then
       SysUtils.Beep;
     Key := #0;
   end;
   case Key of
-    CtrlH, CtrlV, CtrlX, #32..#255:
+    CtrlH, CtrlV, CtrlX, #32..High(Char):
       FDataLink.Edit;
     Esc:
       begin
@@ -649,6 +651,7 @@ var
   PaintStruct: TPaintStruct;
   DC: HDC;
   OldFont: HFONT;
+  Index: Integer;
 begin
   { If the field value is not part of the DataSource }
   if (Style in [csDropDownList, csOwnerDrawFixed, csOwnerDrawVariable]) and
@@ -657,7 +660,11 @@ begin
      ListSettings.IsValid then
   begin
     if ListSettings.DisplayField <> '' then
-      S := VarToStr(ListSettings.DataSource.DataSet.Lookup(ListSettings.KeyField, FDataLink.Field.AsVariant, ListSettings.DisplayField))
+    begin
+      Index := ListSettings.FOutfilteredValues.IndexOf(FDataLink.Field.AsString);
+      if (Index <> -1) and (Index < Items.Count) then
+        S := ListSettings.FOutfilteredItems[Index];
+    end
     else
       S := FDataLink.Field.Text;
 
@@ -802,6 +809,8 @@ begin
      (ListSettings.DataSource <> nil) and (ListSettings.DataSource.DataSet <> nil) and
      (ListSettings.DataSource.State = dsBrowse) then
   begin
+    ListSettings.FOutfilteredItems.Clear;
+    ListSettings.FOutfilteredValues.Clear;
     { Component is in the ListDataSet mode }
     Items.BeginUpdate;
     Values.BeginUpdate;
@@ -829,12 +838,15 @@ begin
               DataSet.First;
               while not DataSet.Eof do
               begin
-                if FilterAccepted
-                   and ((FilterExpr = nil) or FilterExpr.Evaluate) 
-                   then
+                if FilterAccepted and ((FilterExpr = nil) or FilterExpr.Evaluate) then
                 begin
                   Items.Add(LDisplayField.AsString);
                   Values.Add(LKeyField.AsString);
+                end
+                else
+                begin
+                  ListSettings.FOutfilteredItems.Add(LDisplayField.AsString);
+                  ListSettings.FOutfilteredValues.Add(LKeyField.AsString);
                 end;
                 DataSet.Next;
               end;
@@ -857,11 +869,19 @@ begin
       Items.EndUpdate;
       Values.EndUpdate;
     end;
-    SetComboText(LastText);
+    if ItemIndex = -1 then
+      SetComboText(LastText);
   end;
 end;
 
 { TJvDBComboBoxListDataLink }
+
+procedure TJvDBComboBoxListDataLink.ActiveChanged;
+begin
+  inherited ActiveChanged;
+  if Assigned(FOnReload) then
+    FOnReload(Self);
+end;
 
 procedure TJvDBComboBoxListDataLink.DataEvent(Event: TDataEvent; Info: {$IFDEF RTL230_UP}NativeInt{$ELSE}Integer{$ENDIF});
 begin
@@ -888,6 +908,8 @@ begin
   FOutfilteredValueFont := TFont.Create;
   FOutfilteredValueFont.Color := clRed;
   FOutfilteredValueFont.OnChange := FontChange;
+  FOutfilteredItems := TStringList.Create;
+  FOutfilteredValues := TStringList.Create;
 end;
 
 destructor TJvDBComboBoxListSettings.Destroy;
@@ -897,6 +919,8 @@ begin
   FListDataLink.OnReload := nil;
   FListDataLink.Free;
   FListDataLink := nil;
+  FOutfilteredItems.Free;
+  FOutfilteredValues.Free;
   inherited Destroy;
 end;
 

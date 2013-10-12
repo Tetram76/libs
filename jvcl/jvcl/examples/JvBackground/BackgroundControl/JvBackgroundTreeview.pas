@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 Description:
   Example of control that implements background image support
 -----------------------------------------------------------------------------}
-// $Id: JvBackgroundTreeview.pas 12461 2009-08-14 17:21:33Z obones $
+// $Id$
 
 unit JvBackgroundTreeview;
 

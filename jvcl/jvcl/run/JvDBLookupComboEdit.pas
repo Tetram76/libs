@@ -36,7 +36,7 @@ inherit it with JVCL3 from JvDBLookupEdit, the specified errors occur.
 
 Michael Habbe [2003-10-20]
 -----------------------------------------------------------------------------}
-// $Id: JvDBLookupComboEdit.pas 13104 2011-09-07 06:50:43Z obones $
+// $Id$
 
 unit JvDBLookupComboEdit;
 
@@ -161,9 +161,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvDBLookupComboEdit.pas $';
-    Revision: '$Revision: 13104 $';
-    Date: '$Date: 2011-09-07 08:50:43 +0200 (mer., 07 sept. 2011) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
@@ -254,8 +254,7 @@ end;
 procedure TJvDBLookupComboEdit.KeyPress(var Key: Char);
 begin
   inherited KeyPress(Key);
-  if CharInSet(Key, [#32..#255]) and (FDataLink.Field <> nil) and
-    not FDataLink.Field.IsValidChar(Key) then
+  if (Key >= #32) and (FDataLink.Field <> nil) and not FDataLink.Field.IsValidChar(Key) then
   begin
     if BeepOnError then
       SysUtils.Beep;
@@ -268,7 +267,7 @@ begin
 //  Key := #0;
   end
   else
-  if CharInSet(Key, [#8, #9, #24{Ctrl+X}, #32..#255]) then
+  if (Key >= #32) or CharInSet(Key, [#8, #9, #24{Ctrl+X}]) then
     if not EditCanModify then
       Key := #0;
 end;

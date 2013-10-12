@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvFullColorSpacesEditors.pas 13029 2011-05-17 22:32:08Z ahuser $
+// $Id$
 
 unit JvFullColorSpacesEditors;
 
@@ -727,6 +727,8 @@ end;
 
 function FindFullColorSpaceEditor(AColorSpaceID: TJvFullColorSpaceID): TJvFullColorSpacePropertyClass;
 begin
+  if GFullColorSpaceEditorArray = nil then
+    InitFullColorSpaceEditorArray;
   Result := GFullColorSpaceEditorArray[AColorSpaceID shr 2];
   if Result = nil then
     Result := DefaultFullColorSpacePropertyClass;

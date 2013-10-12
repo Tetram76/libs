@@ -31,7 +31,7 @@ Description: This unit defines a component that you can drop on any form or
 
 Known Issues: none known
 -----------------------------------------------------------------------------}
-// $Id: JvAVICapture.pas 13300 2012-05-19 20:29:49Z obones $
+// $Id$
 
 unit JvAVICapture;
 
@@ -556,9 +556,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvAVICapture.pas $';
-    Revision: '$Revision: 13300 $';
-    Date: '$Date: 2012-05-19 22:29:49 +0200 (sam., 19 mai 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}

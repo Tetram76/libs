@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCsvBaseEditor.pas 13274 2012-03-12 18:34:04Z wpostma $
+// $Id$
 
 unit JvCsvBaseEditor;
 

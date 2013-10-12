@@ -21,7 +21,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvCmpReg.pas 12882 2010-10-30 17:47:19Z jfudickar $
+// $Id$
 
 unit JvCmpReg;
 

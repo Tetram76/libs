@@ -22,7 +22,7 @@ located at http://jvcl.delphi-jedi.org
 
 Known Issues:
 -----------------------------------------------------------------------------}
-// $Id: JvgHTTPVersionInfo.pas 13401 2012-08-19 08:35:09Z ahuser $
+// $Id$
 
 unit JvgHTTPVersionInfo;
 
@@ -68,9 +68,9 @@ type
 {$IFDEF UNITVERSIONING}
 const
   UnitVersioning: TUnitVersionInfo = (
-    RCSfile: '$URL: https://jvcl.svn.sourceforge.net/svnroot/jvcl/trunk/jvcl/run/JvgHTTPVersionInfo.pas $';
-    Revision: '$Revision: 13401 $';
-    Date: '$Date: 2012-08-19 10:35:09 +0200 (dim., 19 août 2012) $';
+    RCSfile: '$URL$';
+    Revision: '$Revision$';
+    Date: '$Date$';
     LogPath: 'JVCL\run'
   );
 {$ENDIF UNITVERSIONING}
