@@ -80,7 +80,7 @@ begin
   if (hISession = nil) then RaiseLastOsError;
   try
     hRequest := InternetOpenUrl(hISession, PChar('http://www.tetram.org/lastversion.php?programme=' + Code), nil, 0, INTERNET_FLAG_PRAGMA_NOCACHE or INTERNET_FLAG_RELOAD or INTERNET_FLAG_RESYNCHRONIZE, 0);
-    if (hRequest = nil) then RaiseLastInternetError;
+    if (hRequest = nil) then RaiseLastOsError;
     try
       lBuffer := 1024;
       SetLength(Buffer, lBuffer);
