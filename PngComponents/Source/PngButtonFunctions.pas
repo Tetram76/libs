@@ -1,26 +1,37 @@
 unit PngButtonFunctions;
 
-{$I ..\Include\Thany.inc}
-
 interface
 
 uses
-  Windows, Buttons, Graphics, Classes, pngimage;
+  Windows, Buttons, Graphics, pngimage;
 
-procedure CalcButtonLayout(Canvas: TCanvas; PngImage: TPNGImage; const Client: TRect; Pressed, Down: Boolean; const Caption: string; Layout: TButtonLayout; Margin, Spacing: Integer; var GlyphPos, TextPos: TPoint; BiDiFlags: LongInt);
+{$IF RTLVersion < 20.0 }
+type
+  TPngImage = TPNGObject;
+{$IFEND}
+
+procedure CalcButtonLayout(Canvas: TCanvas; PngImage: TPngImage; const Client:
+  TRect; Pressed, Down: Boolean; const Caption: string; Layout: TButtonLayout;
+  Margin, Spacing: Integer; var GlyphPos, TextPos: TPoint; BiDiFlags: LongInt);
 
 implementation
 
-procedure CalcButtonLayout(Canvas: TCanvas; PngImage: TPNGImage; const Client: TRect; Pressed, Down: Boolean; const Caption: string; Layout: TButtonLayout; Margin, Spacing: Integer; var GlyphPos, TextPos: TPoint; BiDiFlags: LongInt);
+uses
+  Classes;
+
+procedure CalcButtonLayout(Canvas: TCanvas; PngImage: TPngImage; const Client:
+  TRect; Pressed, Down: Boolean; const Caption: string; Layout: TButtonLayout;
+  Margin, Spacing: Integer; var GlyphPos, TextPos: TPoint; BiDiFlags: LongInt);
 var
   ClientSize, GlyphSize, TextSize, TotalSize: TPoint;
   TextBounds: TRect;
 begin
-  if (BiDiFlags and DT_RIGHT) = DT_RIGHT then
+  if (BiDiFlags and DT_RIGHT) = DT_RIGHT then begin
     if Layout = blGlyphLeft then
       Layout := blGlyphRight
     else if Layout = blGlyphRight then
       Layout := blGlyphLeft;
+  end;
 
   //Calculate the item sizes
   ClientSize := Point(Client.Right - Client.Left, Client.Bottom - Client.Top);
@@ -30,14 +41,14 @@ begin
   else
     GlyphSize := Point(0, 0);
 
-  if Length(Caption) > 0 then
-  begin
+  if Length(Caption) > 0 then begin
     TextBounds := Rect(0, 0, Client.Right - Client.Left, 0);
-    DrawText(Canvas.Handle, PChar(Caption), Length(Caption), TextBounds, DT_CALCRECT or BiDiFlags);
-    TextSize := Point(TextBounds.Right - TextBounds.Left, TextBounds.Bottom - TextBounds.Top);
+    DrawText(Canvas.Handle, PChar(Caption), Length(Caption), TextBounds,
+      DT_CALCRECT or BiDiFlags);
+    TextSize := Point(TextBounds.Right - TextBounds.Left, TextBounds.Bottom -
+      TextBounds.Top);
   end
-  else
-  begin
+  else begin
     TextBounds := Rect(0, 0, 0, 0);
     TextSize := Point(0, 0);
   end;
@@ -55,25 +66,27 @@ begin
     Spacing := 0;
 
   //Adjust Margin and Spacing
-  if Margin = -1 then
-    if Spacing = -1 then
-    begin
+  if Margin = -1 then begin
+    if Spacing = -1 then begin
       TotalSize := Point(GlyphSize.X + TextSize.X, GlyphSize.Y + TextSize.Y);
       if Layout in [blGlyphLeft, blGlyphRight] then
         Margin := (ClientSize.X - TotalSize.X) div 3
       else
         Margin := (ClientSize.Y - TotalSize.Y) div 3;
     end
-    else
-    begin
-      TotalSize := Point(GlyphSize.X + Spacing + TextSize.X, GlyphSize.Y + Spacing + TextSize.Y);
+    else begin
+      TotalSize := Point(GlyphSize.X + Spacing + TextSize.X, GlyphSize.Y +
+        Spacing + TextSize.Y);
       if Layout in [blGlyphLeft, blGlyphRight] then
         Margin := (ClientSize.X - TotalSize.X) div 2
       else
         Margin := (ClientSize.Y - TotalSize.Y) div 2;
     end
-  else if Spacing = -1 then
-    TotalSize := Point(ClientSize.X - (Margin + GlyphSize.X), ClientSize.Y - (Margin + GlyphSize.Y));
+  end
+  else if Spacing = -1 then begin
+    TotalSize := Point(ClientSize.X - (Margin + GlyphSize.X), ClientSize.Y -
+      (Margin + GlyphSize.Y));
+  end;
 
   case Layout of
     blGlyphLeft: GlyphPos.X := Margin;
@@ -94,13 +107,11 @@ begin
   end;
 
   //Fixup the result variables
-  with GlyphPos do
-  begin
+  with GlyphPos do begin
     Inc(X, Client.Left + Integer(Pressed or Down));
     Inc(Y, Client.Top + Integer(Pressed or Down));
   end;
-  with TextPos do
-  begin
+  with TextPos do begin
     Inc(X, Client.Left + Integer(Pressed or Down));
     Inc(Y, Client.Top + Integer(Pressed or Down));
   end;

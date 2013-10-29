@@ -1,11 +1,17 @@
 unit PngFunctions;
 
-{$I ..\Include\Thany.inc}
-
 interface
 
 uses
-  Windows, Graphics, Classes, ImgList, Contnrs, pngimage;
+  Windows, Graphics, ImgList, Contnrs, pngimage;
+
+{$IF RTLVersion < 20.0 }
+  {$IF RTLVersion < 15.0 }
+    PngComponents are only compatible with Delphi 7 and higher!
+  {$IFEND}
+type
+  TPngImage = TPNGObject;
+{$IFEND}
 
 type
   TPngOption = (pngBlendOnDisabled, pngGrayscaleOnDisabled);
@@ -15,34 +21,36 @@ type
   TRGBALine = array[Word] of TRGBQuad;
   PRGBALine = ^TRGBALine;
 
-procedure MakeImageBlended(Image: TPNGImage; Amount: Byte = 127);
-procedure MakeImageGrayscale(Image: TPNGImage; Amount: Byte = 255);
-procedure DrawPNG(Png: TPNGImage; Canvas: TCanvas; const Rect: TRect; const Options: TPngOptions);
-procedure ConvertToPNG(Source: TGraphic; out Dest: TPNGImage);
-procedure CreatePNG(Color, Mask: TBitmap; out Dest: TPNGImage; InverseMask: Boolean = False);
-procedure CreatePNGMasked(Bitmap: TBitmap; Mask: TColor; out Dest: TPNGImage);
-procedure CopyImageFromImageList(Dest: TPNGImage; ImageList: TCustomImageList; Index: Integer);
-procedure SlicePNG(JoinedPNG: TPNGImage; Columns, Rows: Integer; out SlicedPNGs: TObjectList);
+procedure MakeImageBlended(Image: TPngImage; Amount: Byte = 127);
+procedure MakeImageGrayscale(Image: TPngImage; Amount: Byte = 255);
+procedure DrawPNG(Png: TPngImage; Canvas: TCanvas; const ARect: TRect; const Options: TPngOptions);
+procedure ConvertToPNG(Source: TGraphic; out Dest: TPngImage);
+procedure CreatePNG(Color, Mask: TBitmap; out Dest: TPngImage; InverseMask: Boolean = False);
+procedure CreatePNGMasked(Bitmap: TBitmap; Mask: TColor; out Dest: TPngImage);
+procedure CopyImageFromImageList(Dest: TPngImage; ImageList: TCustomImageList; Index: Integer);
+procedure SlicePNG(JoinedPNG: TPngImage; Columns, Rows: Integer; out SlicedPNGs: TObjectList);
 
 implementation
 
 uses
-  SysUtils, PngImageList;
+  SysUtils, PngImageList, classes;
 
 function ColorToTriple(Color: TColor): TRGBTriple;
+var
+  ColorRGB: Longint;
 begin
-  Color := ColorToRGB(Color);
-  Result.rgbtBlue := Color shr 16 and $FF;
-  Result.rgbtGreen := Color shr 8 and $FF;
-  Result.rgbtRed := Color and $FF;
+  ColorRGB := ColorToRGB(Color);
+  Result.rgbtBlue := ColorRGB shr 16 and $FF;
+  Result.rgbtGreen := ColorRGB shr 8 and $FF;
+  Result.rgbtRed := ColorRGB and $FF;
 end;
 
-procedure MakeImageBlended(Image: TPNGImage; Amount: Byte = 127);
+procedure MakeImageBlended(Image: TPngImage; Amount: Byte = 127);
 
   procedure ForceAlphachannel(BitTransparency: Boolean; TransparentColor: TColor);
   var
     Assigner: TBitmap;
-    Temp: TPNGImage;
+    Temp: TPngImage;
     X, Y: Integer;
     Line: pngimage.PByteArray;
     Current: TColor;
@@ -50,7 +58,7 @@ procedure MakeImageBlended(Image: TPNGImage; Amount: Byte = 127);
     //Not all formats of PNG support an alpha-channel (paletted images for example),
     //so with this function, I simply recreate the PNG as being 32-bits, effectivly
     //forcing an alpha-channel on it.
-    Temp := TPNGImage.Create;
+    Temp := TPngImage.Create;
     try
       Assigner := TBitmap.Create;
       try
@@ -61,17 +69,15 @@ procedure MakeImageBlended(Image: TPNGImage; Amount: Byte = 127);
         Assigner.Free;
       end;
       Temp.CreateAlpha;
-      for Y := 0 to Image.Height - 1 do
-      begin
+      for Y := 0 to Image.Height - 1 do begin
         Line := Temp.AlphaScanline[Y];
-        for X := 0 to Image.Width - 1 do
-        begin
+        for X := 0 to Image.Width - 1 do begin
           Current := Image.Pixels[X, Y];
           Temp.Pixels[X, Y] := Current;
           if BitTransparency and (Current = TransparentColor) then
-            Line^[X] := 0
+            Line[X] := 0
           else
-            Line^[X] := Amount;
+            Line[X] := Amount;
         end;
       end;
       Image.Assign(Temp);
@@ -87,34 +93,33 @@ var
   TransparentColor: TColor;
   BitTransparency: Boolean;
 begin
-  //If the PNG is doesn't have an alpha channel, then add one
+  //If the PNG doesn't have an alpha channel, then add one
   BitTransparency := Image.TransparencyMode = ptmBit;
   TransparentColor := Image.TransparentColor;
-  if not (Image.Header.ColorType in [COLOR_RGBALPHA, COLOR_GRAYSCALEALPHA]) then
-  begin
+  Forced := False;
+  if not (Image.Header.ColorType in [COLOR_RGBALPHA, COLOR_GRAYSCALEALPHA]) then begin
     Forced := Image.Header.ColorType in [COLOR_GRAYSCALE, COLOR_PALETTE];
     if Forced then
       ForceAlphachannel(BitTransparency, TransparentColor)
     else
       Image.CreateAlpha;
-  end
-  else
-    Forced := False;
+  end;
 
   //Divide the alpha values by 2
-  if not Forced and (Image.Header.ColorType in [COLOR_RGBALPHA, COLOR_GRAYSCALEALPHA]) then
-    for Y := 0 to Image.Height - 1 do
-    begin
+  if not Forced and (Image.Header.ColorType in [COLOR_RGBALPHA, COLOR_GRAYSCALEALPHA]) then begin
+    for Y := 0 to Image.Height - 1 do begin
       Line := Image.AlphaScanline[Y];
-      for X := 0 to Image.Width - 1 do
+      for X := 0 to Image.Width - 1 do begin
         if BitTransparency and (Image.Pixels[X, Y] = TransparentColor) then
-          Line^[X] := 0
+          Line[X] := 0
         else
-          Line^[X] := Round(Line^[X] / 256 * (Amount + 1));
+          Line[X] := Round(Line[X] / 256 * (Amount + 1));
+      end;
     end;
+  end;
 end;
 
-procedure MakeImageGrayscale(Image: TPNGImage; Amount: Byte = 255);
+procedure MakeImageGrayscale(Image: TPngImage; Amount: Byte = 255);
 
   procedure GrayscaleRGB(var R, G, B: Byte);
   var
@@ -128,15 +133,13 @@ procedure MakeImageGrayscale(Image: TPNGImage; Amount: Byte = 255);
 
 var
   X, Y, PalCount: Integer;
-  Line: Pointer;
+  Line: PRGBLine;
   PaletteHandle: HPalette;
   Palette: array[Byte] of TPaletteEntry;
 begin
   //Don't do anything if the image is already a grayscaled one
-  if not (Image.Header.ColorType in [COLOR_GRAYSCALE, COLOR_GRAYSCALEALPHA]) then
-  begin
-    if Image.Header.ColorType = COLOR_PALETTE then
-    begin
+  if not (Image.Header.ColorType in [COLOR_GRAYSCALE, COLOR_GRAYSCALEALPHA]) then begin
+    if Image.Header.ColorType = COLOR_PALETTE then begin
       //Grayscale every palette entry
       PaletteHandle := Image.Palette;
       PalCount := GetPaletteEntries(PaletteHandle, 0, 256, Palette);
@@ -145,42 +148,40 @@ begin
       SetPaletteEntries(PaletteHandle, 0, PalCount, Palette);
       Image.Palette := PaletteHandle;
     end
-    else
-    begin
+    else begin
       //Grayscale every pixel
-      for Y := 0 to Image.Height - 1 do
-      begin
+      for Y := 0 to Image.Height - 1 do begin
         Line := Image.Scanline[Y];
         for X := 0 to Image.Width - 1 do
-          GrayscaleRGB(PRGBLine(Line)^[X].rgbtRed, PRGBLine(Line)^[X].rgbtGreen, PRGBLine(Line)^[X].rgbtBlue);
+          GrayscaleRGB(Line[X].rgbtRed, Line[X].rgbtGreen, Line[X].rgbtBlue);
       end;
     end;
   end;
 end;
 
-procedure DrawPNG(Png: TPNGImage; Canvas: TCanvas; const Rect: TRect; const Options: TPngOptions);
+procedure DrawPNG(Png: TPngImage; Canvas: TCanvas; const ARect: TRect; const Options: TPngOptions);
 var
-  PngCopy: TPNGImage;
+  PngCopy: TPngImage;
 begin
-  if Options <> [] then
-  begin
-    PngCopy := TPNGImage.Create;
+  if Options <> [] then begin
+    PngCopy := TPngImage.Create;
     try
       PngCopy.Assign(Png);
       if pngBlendOnDisabled in Options then
         MakeImageBlended(PngCopy);
       if pngGrayscaleOnDisabled in Options then
         MakeImageGrayscale(PngCopy);
-      PngCopy.Draw(Canvas, Rect);
+      PngCopy.Draw(Canvas, ARect);
     finally
       PngCopy.Free;
     end;
   end
-  else
-    Png.Draw(Canvas, Rect);
+  else begin
+    Png.Draw(Canvas, ARect);
+  end;
 end;
 
-procedure ConvertToPNG(Source: TGraphic; out Dest: TPNGImage);
+procedure ConvertToPNG(Source: TGraphic; out Dest: TPngImage);
 var
   MaskLines: array of pngimage.PByteArray;
 
@@ -201,7 +202,8 @@ var
   procedure GetAlphaMask(SourceColor: TBitmap);
   type
     TBitmapInfo = packed record
-      bmiHeader: TBitmapV4Header; //Otherwise I may not get per-pixel alpha values.
+      bmiHeader: TBitmapV4Header;
+      //Otherwise I may not get per-pixel alpha values.
       bmiColors: array[0..0] of TRGBQuad;
     end;
   var
@@ -209,47 +211,47 @@ var
     BitmapInfo: TBitmapInfo;
     I, X, Y: Integer;
     HasAlpha: Boolean;
+    BitsSize: Integer;
   begin
-    Bits := AllocMem(4 * SourceColor.Width * SourceColor.Height);
+    BitsSize := 4 * SourceColor.Width * SourceColor.Height;
+    Bits := AllocMem(BitsSize);
     try
-      ZeroMemory(Bits, 4 * SourceColor.Width * SourceColor.Height);
+      ZeroMemory(Bits, BitsSize);
       ZeroMemory(@BitmapInfo, SizeOf(BitmapInfo));
       BitmapInfo.bmiHeader.bV4Size := SizeOf(BitmapInfo.bmiHeader);
       BitmapInfo.bmiHeader.bV4Width := SourceColor.Width;
-      BitmapInfo.bmiHeader.bV4Height := -SourceColor.Height; //Otherwise the image is upside down.
+      BitmapInfo.bmiHeader.bV4Height := -SourceColor.Height;
+      //Otherwise the image is upside down.
       BitmapInfo.bmiHeader.bV4Planes := 1;
       BitmapInfo.bmiHeader.bV4BitCount := 32;
       BitmapInfo.bmiHeader.bV4V4Compression := BI_BITFIELDS;
-      BitmapInfo.bmiHeader.bV4SizeImage := 4 * SourceColor.Width * SourceColor.Height;
+      BitmapInfo.bmiHeader.bV4SizeImage := BitsSize;
 
-      if GetDIBits(SourceColor.Canvas.Handle, SourceColor.Handle, 0, SourceColor.Height, Bits, Windows.PBitmapInfo(@BitmapInfo)^, DIB_RGB_COLORS) > 0 then
-      begin
+      if GetDIBits(SourceColor.Canvas.Handle, SourceColor.Handle, 0,
+        SourceColor.Height, Bits, Windows.PBitmapInfo(@BitmapInfo)^,
+        DIB_RGB_COLORS) > 0 then begin
         //Because Win32 API is a piece of crap when it comes to icons, I have to check
         //whether an has an alpha-channel the hard way.
-        I := 0;
         HasAlpha := False;
-        for Y := 0 to SourceColor.Height - 1 do
-          for X := 0 to SourceColor.Width - 1 do
-          begin
-            if Bits^[I].rgbReserved <> 0 then
-              HasAlpha := True;
-            Inc(I);
+        for I := 0 to (SourceColor.Height * SourceColor.Width) - 1 do begin
+          if Bits[I].rgbReserved <> 0 then begin
+            HasAlpha := True;
+            Break;
           end;
-        if HasAlpha then
-        begin
+        end;
+        if HasAlpha then begin
           //OK, so not all alpha-values are 0, which indicates the existence of an
           //alpha-channel.
           I := 0;
           for Y := 0 to SourceColor.Height - 1 do
-            for X := 0 to SourceColor.Width - 1 do
-            begin
-              MaskLines[Y]^[X] := Bits^[I].rgbReserved;
+            for X := 0 to SourceColor.Width - 1 do begin
+              MaskLines[Y][X] := Bits[I].rgbReserved;
               Inc(I);
             end;
         end;
       end;
     finally
-      FreeMem(Bits, 4 * SourceColor.Width * SourceColor.Height);
+      FreeMem(Bits, BitsSize);
     end;
   end;
 
@@ -259,7 +261,9 @@ var
   begin
     Info.dwOSVersionInfoSize := SizeOf(Info);
     GetVersionEx(Info);
-    Result := (Info.dwPlatformId = VER_PLATFORM_WIN32_NT) and ((Info.dwMajorVersion > 5) or ((Info.dwMajorVersion = 5) and (Info.dwMinorVersion >= 1)));
+    Result := (Info.dwPlatformId = VER_PLATFORM_WIN32_NT) and
+      ((Info.dwMajorVersion > 5) or
+      ((Info.dwMajorVersion = 5) and (Info.dwMinorVersion >= 1)));
   end;
 
 var
@@ -272,9 +276,8 @@ var
   AlphaNeeded: Boolean;
 begin
   //A PNG does not have to be converted
-  if Source is TPNGImage then
-  begin
-    Dest := TPNGImage.Create;
+  if Source is TPngImage then begin
+    Dest := TPngImage.Create;
     Dest.Assign(Source);
     Exit;
   end;
@@ -282,8 +285,7 @@ begin
   AlphaNeeded := False;
   Temp := TBitmap.Create;
   SetLength(MaskLines, Source.Height);
-  for Y := 0 to Source.Height - 1 do
-  begin
+  for Y := 0 to Source.Height - 1 do begin
     MaskLines[Y] := AllocMem(Source.Width);
     FillMemory(MaskLines[Y], Source.Width, 255);
   end;
@@ -294,34 +296,32 @@ begin
     Temp.PixelFormat := pf24bit;
 
     //Now figure out the transparency
-    if Source is TBitmap then
-      if Source.Transparent then
-      begin
+    if Source is TBitmap then begin
+      if Source.Transparent then begin
         //TBitmap is just about comparing the drawn colors against the TransparentColor
         if TBitmap(Source).TransparentMode = tmFixed then
           TransparentColor := TBitmap(Source).TransparentColor
         else
           TransparentColor := TBitmap(Source).Canvas.Pixels[0, Source.Height - 1];
-        for Y := 0 to Temp.Height - 1 do
-        begin
+
+        for Y := 0 to Temp.Height - 1 do begin
           Line := Temp.ScanLine[Y];
           MaskLine := MaskLines[Y];
-          for X := 0 to Temp.Width - 1 do
-          begin
+          for X := 0 to Temp.Width - 1 do begin
             CurrentColor := GetPixel(TBitmap(Source).Canvas.Handle, X, Y);
-            if CurrentColor = TransparentColor then
-            begin
+            if CurrentColor = TransparentColor then begin
               MaskLine^[X] := 0;
               AlphaNeeded := True;
             end;
-            Line^[X] := ColorToTriple(CurrentColor);
+            Line[X] := ColorToTriple(CurrentColor);
           end;
         end;
       end
-      else
-        Temp.Canvas.Draw(0, 0, Source)
-    else if Source is TIcon then
-    begin
+      else begin
+        Temp.Canvas.Draw(0, 0, Source);
+      end;
+    end
+    else if Source is TIcon then begin
       //TIcon is more complicated, because there are bitmasked (classic) icons and
       //alphablended (modern) icons. Not to forget about the "inverse" color.
       GetIconInfo(TIcon(Source).Handle, IconInfo);
@@ -331,18 +331,16 @@ begin
         SourceColor.Handle := IconInfo.hbmColor;
         SourceMask.Handle := IconInfo.hbmMask;
         Temp.Canvas.Draw(0, 0, SourceColor);
-        for Y := 0 to Temp.Height - 1 do
-        begin
+        for Y := 0 to Temp.Height - 1 do begin
           MaskLine := MaskLines[Y];
-          for X := 0 to Temp.Width - 1 do
-            if GetPixel(SourceMask.Canvas.Handle, X, Y) <> 0 then
-            begin
+          for X := 0 to Temp.Width - 1 do begin
+            if GetPixel(SourceMask.Canvas.Handle, X, Y) <> 0 then begin
               MaskLine^[X] := 0;
               AlphaNeeded := True;
             end;
+          end;
         end;
-        if (GetDeviceCaps(SourceColor.Canvas.Handle, BITSPIXEL) = 32) and WinXPOrHigher then
-        begin
+        if (GetDeviceCaps(SourceColor.Canvas.Handle, BITSPIXEL) = 32) and WinXPOrHigher then begin
           //This doesn't neccesarily mean we actually have 32bpp in the icon, because the
           //bpp of an icon is always the same as the display settings, regardless of the
           //actual color depth of the icon :(
@@ -357,13 +355,11 @@ begin
     end;
 
     //And finally, create the destination PNG image
-    Dest := TPNGImage.Create;
+    Dest := TPngImage.Create;
     Dest.Assign(Temp);
-    if AlphaNeeded then
-    begin
+    if AlphaNeeded then begin
       Dest.CreateAlpha;
-      for Y := 0 to Dest.Height - 1 do
-      begin
+      for Y := 0 to Dest.Height - 1 do begin
         AlphaLine := Dest.AlphaScanline[Y];
         CopyMemory(AlphaLine, MaskLines[Y], Temp.Width);
       end;
@@ -376,7 +372,7 @@ begin
   end;
 end;
 
-procedure CreatePNG(Color, Mask: TBitmap; out Dest: TPNGImage; InverseMask: Boolean = False);
+procedure CreatePNG(Color, Mask: TBitmap; out Dest: TPngImage; InverseMask: Boolean = False);
 var
   Temp: TBitmap;
   Line: pngimage.PByteArray;
@@ -384,9 +380,8 @@ var
 begin
   //Create a PNG from two separate color and mask bitmaps. InverseMask should be
   //True if white means transparent, and black means opaque.
-  Dest := TPNGImage.Create;
-  if not (Color.PixelFormat in [pf24bit, pf32bit]) then
-  begin
+  Dest := TPngImage.Create;
+  if not (Color.PixelFormat in [pf24bit, pf32bit]) then begin
     Temp := TBitmap.Create;
     try
       Temp.Assign(Color);
@@ -396,23 +391,24 @@ begin
       Temp.Free;
     end;
   end
-  else
+  else begin
     Dest.Assign(Color);
+  end;
 
   //Copy the alpha channel.
   Dest.CreateAlpha;
-  for Y := 0 to Dest.Height - 1 do
-  begin
+  for Y := 0 to Dest.Height - 1 do begin
     Line := Dest.AlphaScanline[Y];
-    for X := 0 to Dest.Width - 1 do
+    for X := 0 to Dest.Width - 1 do begin
       if InverseMask then
-        Line^[X] := 255 - (GetPixel(Mask.Canvas.Handle, X, Y) and $FF)
+        Line[X] := 255 - (GetPixel(Mask.Canvas.Handle, X, Y) and $FF)
       else
-        Line^[X] := GetPixel(Mask.Canvas.Handle, X, Y) and $FF;
+        Line[X] := GetPixel(Mask.Canvas.Handle, X, Y) and $FF;
+    end;
   end;
 end;
 
-procedure CreatePNGMasked(Bitmap: TBitmap; Mask: TColor; out Dest: TPNGImage);
+procedure CreatePNGMasked(Bitmap: TBitmap; Mask: TColor; out Dest: TPngImage);
 var
   Temp: TBitmap;
   Line: pngimage.PByteArray;
@@ -420,9 +416,8 @@ var
 begin
   //Create a PNG from two separate color and mask bitmaps. InverseMask should be
   //True if white means transparent, and black means opaque.
-  Dest := TPNGImage.Create;
-  if not (Bitmap.PixelFormat in [pf24bit, pf32bit]) then
-  begin
+  Dest := TPngImage.Create;
+  if not (Bitmap.PixelFormat in [pf24bit, pf32bit]) then begin
     Temp := TBitmap.Create;
     try
       Temp.Assign(Bitmap);
@@ -432,20 +427,20 @@ begin
       Temp.Free;
     end;
   end
-  else
+  else begin
     Dest.Assign(Bitmap);
+  end;
 
   //Copy the alpha channel.
   Dest.CreateAlpha;
-  for Y := 0 to Dest.Height - 1 do
-  begin
+  for Y := 0 to Dest.Height - 1 do begin
     Line := Dest.AlphaScanline[Y];
     for X := 0 to Dest.Width - 1 do
-      Line^[X] := Integer(TColor(GetPixel(Bitmap.Canvas.Handle, X, Y)) <> Mask) * $FF;
+      Line[X] := Integer(TColor(GetPixel(Bitmap.Canvas.Handle, X, Y)) <> Mask) * $FF;
   end;
 end;
 
-procedure CopyImageFromImageList(Dest: TPNGImage; ImageList: TCustomImageList; Index: Integer);
+procedure CopyImageFromImageList(Dest: TPngImage; ImageList: TCustomImageList; Index: Integer);
 var
   Icon: TIcon;
   IconInfo: TIconInfo;
@@ -454,24 +449,21 @@ var
   AlphaLine: pngimage.PByteArray;
   Png: TPngImageCollectionItem;
 begin
-  if ImageList is TPngImageList then
-  begin
+  if ImageList is TPngImageList then begin
     //This is easy, just copy the PNG object from the imagelist to the PNG object
     //from the button
-    Png := TPngImageList(ImageList).PngImages[Index];
+    Png := TPNGImageList(ImageList).PngImages[Index];
     if Png <> nil then
       Dest.Assign(Png.PngImage);
   end
-  else
-  begin
+  else begin
     Icon := TIcon.Create;
     ColorBitmap := TBitmap.Create;
     MaskBitmap := TBitmap.Create;
     try
       //Try to copy an icon to a PNG object, including transparency
       ImageList.GetIcon(Index, Icon);
-      if GetIconInfo(Icon.Handle, IconInfo) then
-      begin
+      if GetIconInfo(Icon.Handle, IconInfo) then begin
         //First, pump the colors into the PNG object
         ColorBitmap.Handle := IconInfo.hbmColor;
         ColorBitmap.PixelFormat := pf24bit;
@@ -480,11 +472,10 @@ begin
         //Finally, copy the transparency
         Dest.CreateAlpha;
         MaskBitmap.Handle := IconInfo.hbmMask;
-        for Y := 0 to Dest.Height - 1 do
-        begin
+        for Y := 0 to Dest.Height - 1 do begin
           AlphaLine := Dest.AlphaScanline[Y];
           for X := 0 to Dest.Width - 1 do
-            AlphaLine^[X] := Integer(GetPixel(MaskBitmap.Canvas.Handle, X, Y) = COLORREF(clBlack)) * 255;
+            AlphaLine^[X] := Integer(GetPixel(MaskBitmap.Canvas.Handle, X, Y) = COLORREF(clBlack)) * $FF;
         end;
       end;
     finally
@@ -495,14 +486,14 @@ begin
   end;
 end;
 
-procedure SlicePNG(JoinedPNG: TPNGImage; Columns, Rows: Integer; out SlicedPNGs: TObjectList);
+procedure SlicePNG(JoinedPNG: TPngImage; Columns, Rows: Integer; out SlicedPNGs: TObjectList);
 var
   X, Y, ImageX, ImageY, OffsetX, OffsetY: Integer;
   Width, Height: Integer;
   Bitmap: TBitmap;
   BitmapLine: PRGBLine;
   AlphaLineA, AlphaLineB: pngimage.PByteArray;
-  PNG: TPNGImage;
+  PNG: TPngImage;
 begin
   //This function slices a large PNG file (e.g. an image with all images for a
   //toolbar) into smaller, equally-sized pictures.
@@ -511,10 +502,8 @@ begin
   Height := JoinedPNG.Height div Rows;
 
   //Loop through the columns and rows to create each individual image
-  for ImageY := 0 to Rows - 1 do
-  begin
-    for ImageX := 0 to Columns - 1 do
-    begin
+  for ImageY := 0 to Rows - 1 do begin
+    for ImageX := 0 to Columns - 1 do begin
       OffsetX := ImageX * Width;
       OffsetY := ImageY * Height;
       Bitmap := TBitmap.Create;
@@ -523,28 +512,25 @@ begin
         Bitmap.Height := Height;
         Bitmap.PixelFormat := pf24bit;
 
-        //Copy the color information into a temporary bitmap. We can't use TPNGImage.Draw
+        //Copy the color information into a temporary bitmap. We can't use TPngImage.Draw
         //here, because that would combine the color and alpha values.
-        for Y := 0 to Bitmap.Height - 1 do
-        begin
+        for Y := 0 to Bitmap.Height - 1 do begin
           BitmapLine := Bitmap.Scanline[Y];
           for X := 0 to Bitmap.Width - 1 do
-            BitmapLine^[X] := ColorToTriple(JoinedPNG.Pixels[X + OffsetX, Y + OffsetY]);
+            BitmapLine[X] := ColorToTriple(JoinedPNG.Pixels[X + OffsetX, Y + OffsetY]);
         end;
 
-        PNG := TPNGImage.Create;
+        PNG := TPngImage.Create;
         PNG.Assign(Bitmap);
 
-        if JoinedPNG.Header.ColorType in [COLOR_GRAYSCALEALPHA, COLOR_RGBALPHA] then
-        begin
+        if JoinedPNG.Header.ColorType in [COLOR_GRAYSCALEALPHA, COLOR_RGBALPHA] then begin
           //Copy the alpha channel
           PNG.CreateAlpha;
-          for Y := 0 to PNG.Height - 1 do
-          begin
+          for Y := 0 to PNG.Height - 1 do begin
             AlphaLineA := JoinedPNG.AlphaScanline[Y + OffsetY];
             AlphaLineB := JoinedPNG.AlphaScanline[Y];
             for X := 0 to PNG.Width - 1 do
-              AlphaLineB^[X] := AlphaLineA^[X + OffsetX];
+              AlphaLineB[X] := AlphaLineA[X + OffsetX];
           end;
         end;
 
@@ -556,4 +542,13 @@ begin
   end;
 end;
 
+{$IF RTLVersion >= 20.0 }
+type
+  TPNGObject = class(TPngImage);
+initialization
+  TPicture.RegisterFileFormat('', '', TPNGObject);
+finalization
+  TPicture.UnregisterGraphicClass(TPNGObject);
+{$IFEND}
 end.
+

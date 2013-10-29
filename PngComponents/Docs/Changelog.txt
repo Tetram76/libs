@@ -1,3 +1,11 @@
+PngComponents 1.1:
+- Common: "adopted" the project from Martijn Saly
+- Common: added D2009 support (mostly changed PngObject to PngImage)
+- Common: removed compatibility with versions below Delphi 7
+- Common: removed references to Thany.Inc (use RTLVersion instead)
+- Common: cleaned up the code (mostly to use my formatting style)
+- Editor: added "use file name" in PngImageListEditor (sets the name of the image to it's filename)
+
 PngComponents 1.0 RC3:
 - Editor: Fixed "invalid header" exception when adding a PNG to the list.
 - Editor: Everything should now look good on "large fonts" setting.

@@ -1,16 +1,10 @@
 unit PngImageListEditor;
 
-{$I ..\Include\Thany.inc}
-
 interface
 
 uses
-  Windows, Messages, SysUtils,
-{$IFDEF THANY_COMPILER_6_UP}
-  Variants,
-{$ENDIF}
-  Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Buttons, PngBitBtn,
-  ExtCtrls, PngImageList, ExtDlgs, pngimage;
+  Windows, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, ExtCtrls,
+  ExtDlgs, pngimage, PngFunctions, PngBitBtn, PngImageList, Buttons;
 
 type
   TPngImageListEditorDlg = class(TForm)
@@ -48,6 +42,7 @@ type
     pnlModalButtons: TPanel;
     btnOK: TPngBitBtn;
     btnCancel: TPngBitBtn;
+    chkUseFilenames: TCheckBox;
     procedure btnAddClick(Sender: TObject);
     procedure btnClearClick(Sender: TObject);
     procedure btnDeleteClick(Sender: TObject);
@@ -58,7 +53,8 @@ type
     procedure cmbBackgroundColorDblClick(Sender: TObject);
     procedure cmbBackgroundColorExit(Sender: TObject);
     procedure cmbPreviewBackgroundChange(Sender: TObject);
-    procedure cmbPreviewBackgroundDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+    procedure cmbPreviewBackgroundDrawItem(Control: TWinControl; Index: Integer;
+      ARect: TRect; State: TOwnerDrawState);
     procedure edtNameChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -66,8 +62,10 @@ type
     procedure FormShow(Sender: TObject);
     procedure lbxImagesClick(Sender: TObject);
     procedure lbxImagesDblClick(Sender: TObject);
-    procedure lbxImagesDragOver(Sender, Source: TObject; X, Y: Integer; State: TDragState; var Accept: Boolean);
-    procedure lbxImagesDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+    procedure lbxImagesDragOver(Sender, Source: TObject; X, Y: Integer;
+      State: TDragState; var Accept: Boolean);
+    procedure lbxImagesDrawItem(Control: TWinControl; Index: Integer;
+      ARect: TRect; State: TOwnerDrawState);
     procedure lbxImagesEnter(Sender: TObject);
     procedure lbxImagesExit(Sender: TObject);
     procedure lbxImagesKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -75,17 +73,23 @@ type
     procedure lbxImagesMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure lbxImagesStartDrag(Sender: TObject; var DragObject: TDragObject);
   private
-    DraggingIndex, MaxWidth: Integer;
-    SelectionBodyColor, SelectionBorderColor: TColor;
+    FDraggingIndex: Integer;
+    FImageHeight: Integer;
+    FImageWidth: Integer;
+    FMaxWidth: Integer;
+    FSelectionBodyColor: TColor;
+    FSelectionBorderColor: TColor;
     function ConformDimensions(Png: TPngImage): Boolean;
     function FirstSelected: Integer;
     function LastSelected: Integer;
-    procedure DrawBackground(Canvas: TCanvas; const Rect: TRect; ScrollPos, Index: Integer; BlendColor: TColor = clNone; IgnoreScrollPos: Boolean = False);
+    procedure DrawBackground(Canvas: TCanvas; const ARect: TRect; ScrollPos, Index: Integer;
+      BlendColor: TColor = clNone; IgnoreScrollPos: Boolean = False);
     procedure GetColorProc(const S: string);
     procedure ParseBackgroundColor(Sender: TObject; CanDisplayError, CanChangeText: Boolean);
     procedure SelectBackgroundColor(Sender: TObject; Color: TColor);
   public
-    ImageWidth, ImageHeight: Integer;
+    property ImageHeight: Integer read FImageHeight write FImageHeight;
+    property ImageWidth: Integer read FImageWidth write FImageWidth;
   end;
 
 var
@@ -94,7 +98,13 @@ var
 implementation
 
 uses
-  Math;
+  SysUtils, Math;
+
+resourcestring
+  SAreYouSureYouWantToDelete = 'Are you sure you want to delete %s?';
+  SAnd = ' and ';
+  SThisWillClearTheEntireImageList = 'This will clear the entire image list. Are you sure you want to do this?';
+  SIsNotAValidColorValue = '"%s" is not a valid color value';
 
 {$R *.dfm}
 
@@ -105,12 +115,13 @@ const
   WeightB: single = 0.254902;
 
 const
-  SIncorrectSize = 'The selected PNG "%s" must be %dx%d in size, while its actual size is %dx%d';
+  SIncorrectSize =
+    'The selected PNG "%s" must be %dx%d in size, while its actual size is %dx%d';
 
 var
   ResX, ResY: Integer;
 
-{ Globals }
+  { Globals }
 
 function Blend(C1, C2: TColor; W1: Integer): TColor;
 var
@@ -169,7 +180,8 @@ end;
 function IsContrastEnough(AColor, ABkgndColor: Integer; DoAdjustThreshold: Boolean; Threshold: Single): Boolean;
 begin
   if DoAdjustThreshold then
-    Threshold := GetAdjustedThreshold(ColorDistance(ABkgndColor, $000000), Threshold);
+    Threshold := GetAdjustedThreshold(ColorDistance(ABkgndColor, $000000),
+      Threshold);
   Result := ColorDistance(ABkgndColor, AColor) > Threshold;
 end;
 
@@ -198,8 +210,7 @@ begin
   G := (AColor shr 8 and $FF) * WeightG;
   B := (AColor shr 16) * WeightB;
 
-  if DoInvert then
-  begin
+  if DoInvert then begin
     R := 195 - R;
     G := 390 - G;
     B := 65 - B;
@@ -224,8 +235,7 @@ begin
   G := (Q - W) * G / S;
   B := (Q - W) * B / S;
 
-  if DoInvert then
-  begin
+  if DoInvert then begin
     R := 195 - R;
     G := 390 - G;
     B := 65 - B;
@@ -302,7 +312,8 @@ end;
 function TPngImageListEditorDlg.ConformDimensions(Png: TPngImage): Boolean;
 begin
   //Returns whether an image conforms the specified dimensions, if available
-  Result := ((ImageHeight = 0) and (ImageWidth = 0)) or ((ImageHeight = Png.Height) and (ImageWidth = Png.Width));
+  Result := ((ImageHeight = 0) and (ImageWidth = 0)) or ((ImageHeight =
+    Png.Height) and (ImageWidth = Png.Width));
 end;
 
 function TPngImageListEditorDlg.FirstSelected: Integer;
@@ -321,21 +332,21 @@ begin
     Dec(Result);
 end;
 
-procedure TPngImageListEditorDlg.DrawBackground(Canvas: TCanvas; const Rect: TRect; ScrollPos, Index: Integer; BlendColor: TColor = clNone; IgnoreScrollPos: Boolean = False);
+procedure TPngImageListEditorDlg.DrawBackground(Canvas: TCanvas; const ARect: TRect;
+    ScrollPos, Index: Integer; BlendColor: TColor; IgnoreScrollPos: Boolean);
 var
   I, X, Y: Integer;
   PatBitmap, BkBitmap: TBitmap;
   Even: Boolean;
 begin
   //Draw the background of the listbox, if any
-  if Index = 0 then
-  begin
+  if Index = 0 then begin
     //No background, then skip the hard part
     if BlendColor = clNone then
       Canvas.Brush.Color := clWindow
     else
       Canvas.Brush.Color := BlendColor;
-    Canvas.FillRect(Rect);
+    Canvas.FillRect(ARect);
     Exit;
   end;
 
@@ -345,107 +356,94 @@ begin
   try
     PatBitmap.Height := 16;
     PatBitmap.Width := 16;
-    with PatBitmap.Canvas do
-    begin
+    with PatBitmap.Canvas do begin
       //First, draw the background for the pattern bitmap
-      if BlendColor = clNone then
-      begin
+      if BlendColor = clNone then begin
         Brush.Color := clWindow;
-        FillRect(Classes.Rect(0, 0, PatBitmap.Height, PatBitmap.Width));
+        FillRect(Rect(0, 0, PatBitmap.Height, PatBitmap.Width));
         Brush.Color := Blend(clWindow, clBtnFace, 50);
       end
-      else
-      begin
+      else begin
         Brush.Color := Blend(clWindow, BlendColor, 50);
-        FillRect(Classes.Rect(0, 0, PatBitmap.Height, PatBitmap.Width));
+        FillRect(Rect(0, 0, PatBitmap.Height, PatBitmap.Width));
         Brush.Color := BlendColor;
       end;
 
       //Then, draw the foreground on the pattern bitmap
       Pen.Color := Brush.Color;
       case Index of
-        1:
-        begin
-          //Checkerboard background
-          FillRect(Classes.Rect(PatBitmap.Width div 2, 0, PatBitmap.Width, PatBitmap.Height div 2));
-          FillRect(Classes.Rect(0, PatBitmap.Height div 2, PatBitmap.Width div 2, PatBitmap.Height));
-        end;
-        2:
-        begin
-          //Diamonds background
-          PatBitmap.Width := 10;
-          PatBitmap.Height := 10;
-          Polygon([Point(PatBitmap.Width div 2, 0), Point(PatBitmap.Width, PatBitmap.Height div 2), Point(PatBitmap.Width div 2, PatBitmap.Height), Point(0, PatBitmap.Height div 2)]);
-        end;
-        3:
-        begin
-          //Slashed background
-          Even := True;
-          I := 2;
-          while I < PatBitmap.Width + PatBitmap.Height do
-          begin
-            if I < PatBitmap.Width then
-            begin
-              MoveTo(I, 0);
-              LineTo(-1, I + 1);
-            end
-            else
-            begin
-              MoveTo(PatBitmap.Width, I - PatBitmap.Width);
-              LineTo(I - PatBitmap.Width, PatBitmap.Height);
-            end;
-            if Even then
-              Inc(I, 1)
-            else
-              Inc(I, 3);
-            Even := not Even;
+        1: begin
+            //Checkerboard background
+            FillRect(Rect(PatBitmap.Width div 2, 0, PatBitmap.Width, PatBitmap.Height div 2));
+            FillRect(Rect(0, PatBitmap.Height div 2, PatBitmap.Width div 2, PatBitmap.Height));
           end;
-        end;
-        4:
-        begin
-          //Backslashed background
-          Even := True;
-          I := 2;
-          while I < PatBitmap.Width + PatBitmap.Height do
-          begin
-            if I < PatBitmap.Width then
-            begin
-              MoveTo(I, 0);
-              LineTo(PatBitmap.Width, PatBitmap.Height - I);
-            end
-            else
-            begin
-              MoveTo(0, I - PatBitmap.Width - 1);
-              LineTo(PatBitmap.Width - (I - PatBitmap.Width) + 1, PatBitmap.Height);
-            end;
-            if Even then
-              Inc(I, 1)
-            else
-              Inc(I, 3);
-            Even := not Even;
+        2: begin
+            //Diamonds background
+            PatBitmap.Width := 10;
+            PatBitmap.Height := 10;
+            Polygon([Point(PatBitmap.Width div 2, 0), Point(PatBitmap.Width,
+                PatBitmap.Height div 2), Point(PatBitmap.Width div 2,
+                PatBitmap.Height), Point(0, PatBitmap.Height div 2)]);
           end;
-        end;
+        3: begin
+            //Slashed background
+            Even := True;
+            I := 2;
+            while I < PatBitmap.Width + PatBitmap.Height do begin
+              if I < PatBitmap.Width then begin
+                MoveTo(I, 0);
+                LineTo(-1, I + 1);
+              end
+              else begin
+                MoveTo(PatBitmap.Width, I - PatBitmap.Width);
+                LineTo(I - PatBitmap.Width, PatBitmap.Height);
+              end;
+              if Even then
+                Inc(I, 1)
+              else
+                Inc(I, 3);
+              Even := not Even;
+            end;
+          end;
+        4: begin
+            //Backslashed background
+            Even := True;
+            I := 2;
+            while I < PatBitmap.Width + PatBitmap.Height do begin
+              if I < PatBitmap.Width then begin
+                MoveTo(I, 0);
+                LineTo(PatBitmap.Width, PatBitmap.Height - I);
+              end
+              else begin
+                MoveTo(0, I - PatBitmap.Width - 1);
+                LineTo(PatBitmap.Width - (I - PatBitmap.Width) + 1,
+                  PatBitmap.Height);
+              end;
+              if Even then
+                Inc(I, 1)
+              else
+                Inc(I, 3);
+              Even := not Even;
+            end;
+          end;
       end;
     end;
 
     //The actual background bitmap, its width and height are increased to compensate
     //for scrolling distance
-    BkBitmap.Width := Rect.Left mod PatBitmap.Width + Rect.Right - Rect.Left;
+    BkBitmap.Width := ARect.Left mod PatBitmap.Width + ARect.Right - ARect.Left;
     if IgnoreScrollPos then
       ScrollPos := 0
     else
-      ScrollPos := (Rect.Top + ScrollPos) mod PatBitmap.Height;
-    BkBitmap.Height := ScrollPos + Rect.Bottom - Rect.Top;
+      ScrollPos := (ARect.Top + ScrollPos) mod PatBitmap.Height;
+    BkBitmap.Height := ScrollPos + ARect.Bottom - ARect.Top;
 
     //Now repeat the pattern bitmap onto the background bitmap
-    with BkBitmap.Canvas do
-    begin
+    with BkBitmap.Canvas do begin
       Y := 0;
-      while Y < BkBitmap.Height do
-      begin
+      while Y < BkBitmap.Height do begin
         X := 0;
-        while X < BkBitmap.Width do
-        begin
+        while X < BkBitmap.Width do begin
           Draw(X, Y, PatBitmap);
           Inc(X, PatBitmap.Width);
         end;
@@ -454,7 +452,9 @@ begin
     end;
 
     //And finally, draw the background bitmap to the canvas
-    BitBlt(Canvas.Handle, Rect.Left, Rect.Top, Rect.Right - Rect.Left, Rect.Bottom - Rect.Top, BkBitmap.Canvas.Handle, Rect.Left mod PatBitmap.Width, ScrollPos, SRCCOPY);
+    BitBlt(Canvas.Handle, ARect.Left, ARect.Top, ARect.Right - ARect.Left,
+      ARect.Bottom - ARect.Top, BkBitmap.Canvas.Handle, ARect.Left mod
+      PatBitmap.Width, ScrollPos, SRCCOPY);
   finally
     BkBitmap.Free;
     PatBitmap.Free;
@@ -462,27 +462,26 @@ begin
 end;
 
 //Method for getting color values
+
 procedure TPngImageListEditorDlg.GetColorProc(const S: string);
 begin
   cmbBackgroundColor.Items.Add(S);
 end;
 
 //Parse a background color name or code
+
 procedure TPngImageListEditorDlg.ParseBackgroundColor(Sender: TObject; CanDisplayError, CanChangeText: Boolean);
 var
   S: string;
   I, ParsedColor: Integer;
 begin
-  with cmbBackgroundColor do
-  begin
+  with cmbBackgroundColor do begin
     //First, see if its a known color name
-    if IdentToColor(Text, ParsedColor) then
-    begin
+    if IdentToColor(Text, ParsedColor) then begin
       ItemIndex := Items.IndexOf(Text);
       pnlBackgroundColor.Color := ParsedColor;
     end
-    else
-    begin
+    else begin
       S := Text;
       //Replace # with $ so StringToColor recognizes it
       if (Length(S) > 0) and (S[1] = '#') then
@@ -490,8 +489,7 @@ begin
       try
         //Try to convert to a real color value
         ParsedColor := StringToColor(S);
-        if CanChangeText then
-        begin
+        if CanChangeText then begin
           //And try to convert back to an identifier (i.e. if you type in $000000, it'll become clBlack)
           if ColorToIdent(ParsedColor, S) then
             ItemIndex := Items.IndexOf(S)
@@ -502,9 +500,10 @@ begin
       except
         //If it fails, display a message if neccesary
         on EConvertError do
-          if CanDisplayError then
-          begin
-            MessageBox(Self.Handle, PChar(Format('"%s" is not a valid color value', [Text])), PChar(Self.Caption), MB_ICONERROR or MB_OK);
+          if CanDisplayError then begin
+            MessageBox(Self.Handle,
+              PChar(Format(SIsNotAValidColorValue, [Text])),
+              PChar(Self.Caption), MB_ICONERROR or MB_OK);
             SetFocus;
           end;
       end;
@@ -516,7 +515,6 @@ begin
       if lbxImages.Selected[I] then
         Images.Items[I].Background := pnlBackgroundColor.Color;
 end;
-
 
 procedure TPngImageListEditorDlg.SelectBackgroundColor(Sender: TObject; Color: TColor);
 var
@@ -538,31 +536,31 @@ var
 begin
   //The Add button is pressed, let the programmer look for an image
   dlgOpenPicture.Options := dlgOpenPicture.Options + [ofAllowMultiSelect];
-  if dlgOpenPicture.Execute then
-  begin
+  if dlgOpenPicture.Execute then begin
     for I := 0 to lbxImages.Items.Count - 1 do
       lbxImages.Selected[I] := False;
     FirstSelected := -1;
-    for I := 0 to dlgOpenPicture.Files.Count - 1 do
-    begin
+    for I := 0 to dlgOpenPicture.Files.Count - 1 do begin
       Png := Images.Items.Add;
-      with Png.PngImage do
-      begin
+      with Png.PngImage do begin
         //Load the image, but remove any gamma, so that the gamma won't be reapplied
         //when loading the image from the DFM
         LoadFromFile(dlgOpenPicture.Files[I]);
-        if Png.PngImage.Header.ColorType in [COLOR_RGB, COLOR_RGBALPHA, COLOR_PALETTE] then
+        if Png.PngImage.Header.ColorType in [COLOR_RGB, COLOR_RGBALPHA,
+          COLOR_PALETTE] then
           Chunks.RemoveChunk(Chunks.ItemFromClass(TChunkgAMA));
       end;
       //Does the image conform the specified dimensions, if any?
-      if ConformDimensions(Png.PngImage) then
-      begin
+      if ConformDimensions(Png.PngImage) then begin
         //Update maximum image width
-        if MaxWidth < Png.PngImage.Width then
-          MaxWidth := Png.PngImage.Width;
+        if FMaxWidth < Png.PngImage.Width then
+          FMaxWidth := Png.PngImage.Width;
 
         //Invent a name for the image, and initialize its background color
-        Png.Name := 'PngImage' + IntToStr(Images.Items.Count - 1);
+        if chkUseFilenames.Checked then
+          Png.Name := ChangeFileExt(ExtractFileName(dlgOpenPicture.Files[I]), '')
+        else
+          Png.Name := 'PngImage' + IntToStr(Images.Items.Count - 1); // do not localize
         Png.Background := clWindow;
 
         //Finally, add it and select it
@@ -571,10 +569,11 @@ begin
         if FirstSelected = -1 then
           FirstSelected := Selected;
       end
-      else
-      begin
+      else begin
         //The image does not conform the specified dimensions
-        MessageBox(Handle, PChar(Format(SIncorrectSize, [ExtractFilename(dlgOpenPicture.Files[I]), ImageWidth, ImageHeight, Png.PngImage.Width, Png.PngImage.Height])), PChar(Caption), MB_ICONERROR or MB_OK);
+        MessageBox(Handle, PChar(Format(SIncorrectSize,
+          [ExtractFilename(dlgOpenPicture.Files[I]), ImageWidth, ImageHeight,
+          Png.PngImage.Width, Png.PngImage.Height])), PChar(Caption), MB_ICONERROR or MB_OK);
         Images.Items.Delete(Png.Index);
       end;
     end;
@@ -589,8 +588,10 @@ end;
 procedure TPngImageListEditorDlg.btnClearClick(Sender: TObject);
 begin
   //Clear the listbox and the collection
-  if (lbxImages.Items.Count > 0) and (MessageBox(Handle, 'This will clear the entire image list. Are you sure you want to do this?', PChar(Self.Caption), MB_ICONEXCLAMATION or MB_YESNO or MB_DEFBUTTON2) = IDYES) then
-  begin
+  if (lbxImages.Items.Count > 0) and (MessageBox(Handle,
+    PChar(SThisWillClearTheEntireImageList),
+    PChar(Self.Caption), MB_ICONEXCLAMATION or MB_YESNO or MB_DEFBUTTON2) =
+    IDYES) then begin
     lbxImages.Items.Clear;
     Images.Items.Clear;
     lbxImagesClick(nil);
@@ -612,13 +613,12 @@ procedure TPngImageListEditorDlg.btnDeleteClick(Sender: TObject);
       for I := 0 to lbxImages.Items.Count - 1 do
         if lbxImages.Selected[I] then
           S.Add(Images.Items[I].Name);
-      for I := 0 to S.Count - 1 do
-      begin
+      for I := 0 to S.Count - 1 do begin
         Result := Result + S[I];
         if I < S.Count - 2 then
           Result := Result + ', '
         else if I < S.Count - 1 then
-          Result := Result + ' and ';
+          Result := Result + SAnd;
       end;
     finally
       S.Free;
@@ -629,14 +629,14 @@ var
   I, NewIndex: Integer;
 begin
   with lbxImages do
-    if (SelCount > 0) and (MessageBox(Handle, PChar(Format('Are you sure you want to delete %s?', [GetCommaList])), PChar(Self.Caption), MB_ICONEXCLAMATION or MB_YESNO) = IDYES) then
-    begin
+    if (SelCount > 0) and (MessageBox(Handle,
+      PChar(Format(SAreYouSureYouWantToDelete, [GetCommaList])),
+      PChar(Self.Caption), MB_ICONEXCLAMATION or MB_YESNO) = IDYES) then begin
       //Delete every selected image from the listbox and from the collection
       NewIndex := -1;
       I := 0;
       while I < Items.Count do
-        if Selected[I] then
-        begin
+        if Selected[I] then begin
           if NewIndex = -1 then
             NewIndex := I;
           lbxImages.Items.Delete(I);
@@ -664,8 +664,7 @@ begin
   with lbxImages do
     if (SelCount > 0) and (LastSelected < Items.Count - 1) then
       for I := Items.Count - 1 downto 0 do
-        if Selected[I] then
-        begin
+        if Selected[I] then begin
           Images.Items[I].Index := I + 1;
           Items.Exchange(I, I + 1);
           Selected[I + 1] := True;
@@ -680,34 +679,35 @@ var
   Png: TPngImage;
 begin
   //The Replace button is pressed, let the programmer look for an image
+  Index := FirstSelected;
+  Item := Images.Items[Index];
+  dlgOpenPicture.FileName := Item.Name;
   dlgOpenPicture.Options := dlgOpenPicture.Options - [ofAllowMultiSelect];
   with lbxImages do
-    if (SelCount = 1) and dlgOpenPicture.Execute then
-    begin
-      Index := FirstSelected;
+    if (SelCount = 1) and dlgOpenPicture.Execute then begin
       Png := TPngImage.Create;
       try
         //First see if the image conforms the specified dimensions
         Png.LoadFromFile(dlgOpenPicture.Filename);
-        if ConformDimensions(Png) then
-        begin
+        if ConformDimensions(Png) then begin
           //Then remove any gamma, so that the gamma won't be reapplied when loading the
           //image from the DFM
           if Png.Header.ColorType in [COLOR_RGB, COLOR_RGBALPHA] then
             Png.Chunks.RemoveChunk(Png.Chunks.ItemFromClass(TChunkgAMA));
-          Item := Images.Items[Index];
           Item.PngImage := Png;
 
           //Update the maximum image width
-          if MaxWidth < Item.PngImage.Width then
-            MaxWidth := Item.PngImage.Width;
+          if FMaxWidth < Item.PngImage.Width then
+            FMaxWidth := Item.PngImage.Width;
 
           //Repaint and update everything, to be sure
           lbxImages.Repaint;
           lbxImagesClick(nil);
         end
         else
-          MessageBox(Handle, PChar(Format(SIncorrectSize, [ExtractFilename(dlgOpenPicture.Filename), ImageWidth, ImageHeight, Png.Width, Png.Height])), PChar(Caption), MB_ICONERROR or MB_OK);
+          MessageBox(Handle, PChar(Format(SIncorrectSize,
+            [ExtractFilename(dlgOpenPicture.Filename), ImageWidth, ImageHeight,
+            Png.Width, Png.Height])), PChar(Caption), MB_ICONERROR or MB_OK);
       finally
         Png.Free;
       end;
@@ -722,8 +722,7 @@ begin
   with lbxImages do
     if (SelCount > 0) and (FirstSelected > 0) then
       for I := 0 to Items.Count - 1 do
-        if Selected[I] then
-        begin
+        if Selected[I] then begin
           Images.Items[I].Index := I - 1;
           Items.Exchange(I, I - 1);
           Selected[I - 1] := True;
@@ -758,27 +757,29 @@ begin
   lbxImages.Repaint;
 end;
 
-procedure TPngImageListEditorDlg.cmbPreviewBackgroundDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+procedure TPngImageListEditorDlg.cmbPreviewBackgroundDrawItem(Control: TWinControl;
+    Index: Integer; ARect: TRect; State: TOwnerDrawState);
 var
   IconWidth: Integer;
 begin
-  with cmbPreviewBackground do
-  begin
+  with cmbPreviewBackground do begin
     //Draw the background "icon" of the preview background combobox
-    IconWidth := (Rect.Bottom - Rect.Top) * 4 div 3;
-    DrawBackground(Canvas, Classes.Rect(Rect.Left, Rect.Top, Rect.Left + IconWidth, Rect.Bottom), 0, Index, clNone, True);
-    Inc(Rect.Left, IconWidth);
+    IconWidth := (ARect.Bottom - ARect.Top) * 4 div 3;
+    DrawBackground(Canvas, Rect(ARect.Left, ARect.Top, ARect.Left + IconWidth, ARect.Bottom),
+      0, Index, clNone, True);
+    Inc(ARect.Left, IconWidth);
 
     //Background color of the rest of the item
     if odSelected in State then
       Canvas.Brush.Color := clHighlight
     else
       Canvas.Brush.Color := clWindow;
-    Canvas.FillRect(Rect);
-    Inc(Rect.Left, 4);
+    Canvas.FillRect(ARect);
+    Inc(ARect.Left, 4);
 
     //And the text
-    DrawText(Canvas.Handle, PChar(Items[Index]), -1, Rect, DT_LEFT or DT_NOPREFIX or DT_SINGLELINE or DT_VCENTER);
+    DrawText(Canvas.Handle, PChar(Items[Index]), -1, ARect, DT_LEFT or DT_NOPREFIX
+      or DT_SINGLELINE or DT_VCENTER);
 
     Canvas.Brush.Color := clWindow;
   end;
@@ -788,8 +789,7 @@ procedure TPngImageListEditorDlg.edtNameChange(Sender: TObject);
 begin
   //Update the selected image with the entered name, in realtime
   with lbxImages do
-    if ItemIndex >= 0 then
-    begin
+    if ItemIndex >= 0 then begin
       Images.Items[ItemIndex].Name := edtName.Text;
       Items[ItemIndex] := edtName.Text;
     end;
@@ -805,18 +805,18 @@ var
   Space8H: Integer;
 begin
   //Initialize OfficeXP colors for selection
-  SelectionBodyColor := Blend(clHighlight, clWindow, 30);
-  SetContrast(SelectionBodyColor, Blend(clWindow, clBtnFace, 165), 50);
-  SelectionBorderColor := clHighlight;
+  FSelectionBodyColor := Blend(clHighlight, clWindow, 30);
+  SetContrast(FSelectionBodyColor, Blend(clWindow, clBtnFace, 165), 50);
+  FSelectionBorderColor := clHighlight;
 
   //Initialize a value that keeps track of dragging
-  DraggingIndex := -1;
+  FDraggingIndex := -1;
 
   //Get all available color names
   GetColorValues(GetColorProc);
 
   //Initialize the background to clWindow
-  cmbBackgroundColor.ItemIndex := cmbBackgroundColor.Items.IndexOf('clWindow');
+  cmbBackgroundColor.ItemIndex := cmbBackgroundColor.Items.IndexOf('clWindow'); // do not localize
   cmbBackgroundColorChange(nil);
 
   //Do not specify image width and height by default (the imagelist will fill
@@ -829,18 +829,19 @@ begin
   Space8H := lbxImages.Top;
   Width := ResizeProportionalX(Width);
   Height := ResizeProportionalY(Height);
-  Constraints.MinHeight := gbxProperties.Top + cmbBackgroundColor.Top + cmbBackgroundColor.Height + Space8H + Space8H + gbxImageInfo.Height + Space8H + (Height - pnlMain.Height);
+  Constraints.MinHeight := gbxProperties.Top + cmbBackgroundColor.Top +
+    cmbBackgroundColor.Height + Space8H + Space8H + gbxImageInfo.Height + Space8H
+    + (Height - pnlMain.Height);
   Constraints.MinWidth := Width;
   pnlButtons.Align := alBottom;
   pnlMain.Align := alClient;
-  cmbPreviewBackground.ItemHeight := ResizeProportionalY(cmbPreviewBackground.ItemHeight);
+  cmbPreviewBackground.ItemHeight :=
+    ResizeProportionalY(cmbPreviewBackground.ItemHeight);
   pnlBackgroundColor.Height := cmbBackgroundColor.Height;
 
   //Make sure the background color isn't reset when themes are enabled
-{$IFDEF ThemeSupport}
   pnlBackgroundColor.ParentBackground := True;
   pnlBackgroundColor.ParentBackground := False;
-{$ENDIF}
 end;
 
 procedure TPngImageListEditorDlg.FormResize(Sender: TObject);
@@ -855,16 +856,15 @@ var
   I: Integer;
 begin
   //Initialize the maximum width of the images, to align text in the listbox
-  MaxWidth := 0;
+  FMaxWidth := 0;
   for I := 0 to Images.Items.Count - 1 do
-    if Images.Items[I].PngImage.Width > MaxWidth then
-      MaxWidth := Images.Items[I].PngImage.Width;
+    if Images.Items[I].PngImage.Width > FMaxWidth then
+      FMaxWidth := Images.Items[I].PngImage.Width;
 
   //Fill the listbox with the images
   for I := 0 to Images.Items.Count - 1 do
     lbxImages.Items.AddObject(Images.Items[I].Name, Images.Items[I]);
-  if lbxImages.Items.Count > 0 then
-  begin
+  if lbxImages.Items.Count > 0 then begin
     lbxImages.Selected[0] := True;
     lbxImages.ItemIndex := 0;
   end;
@@ -890,11 +890,11 @@ procedure TPngImageListEditorDlg.lbxImagesClick(Sender: TObject);
     //Return the color depth, including whether the image is grayscale or paletted
     case Png.Header.ColorType of
       COLOR_GRAYSCALE, COLOR_GRAYSCALEALPHA:
-        Result := IntToStr(Png.Header.BitDepth) + '-bits grayscale';
+        Result := Format('%d-bits grayscale', [Png.Header.BitDepth]);
       COLOR_RGB, COLOR_RGBALPHA:
-        Result := IntToStr(Png.Header.BitDepth * 3) + '-bits';
+        Result := Format('%d-bits', [Png.Header.BitDepth * 3]);
       COLOR_PALETTE:
-        Result := IntToStr(Png.Header.BitDepth) + '-bits paletted';
+        Result := Format('%d-bits paletted', [Png.Header.BitDepth]);
     end;
   end;
 
@@ -902,12 +902,13 @@ procedure TPngImageListEditorDlg.lbxImagesClick(Sender: TObject);
   begin
     //Return the formatted transparency depth, or transparency mode
     if Png.Header.ColorType in [COLOR_GRAYSCALEALPHA, COLOR_RGBALPHA] then
-      Result := IntToStr(Png.Header.BitDepth) + '-bits alpha'
+      Result := Format('%d-bits alpha', [Png.Header.BitDepth])
     else
       case Png.TransparencyMode of
         ptmBit: Result := 'bitmask';
         ptmPartial: Result := 'indexed';
-        else Result := 'none';
+      else
+        Result := 'none';
       end;
   end;
 
@@ -925,7 +926,8 @@ procedure TPngImageListEditorDlg.lbxImagesClick(Sender: TObject);
       FILTER_UP: Result := 'up';
       FILTER_AVERAGE: Result := 'average';
       FILTER_PAETH: Result := 'paeth';
-      else Result := 'none';
+    else
+      Result := 'none';
     end;
   end;
 
@@ -941,14 +943,12 @@ procedure TPngImageListEditorDlg.lbxImagesClick(Sender: TObject);
     Result := True;
     for I := 0 to lbxImages.Items.Count - 1 do
       if lbxImages.Selected[I] then
-        if First then
-        begin
+        if First then begin
           //Found the first selected and its background color
           FirstBgColor := Images.Items[I].Background;
           First := False;
         end
-        else
-        begin
+        else begin
           //If not equal to first background color, then break, continue otherwise
           Result := FirstBgColor = Images.Items[I].Background;
           if not Result then
@@ -960,8 +960,7 @@ const
   NoneSelected = '[ none ]';
   MultipleSelected = '[ multiple ]';
 begin
-  with lbxImages do
-  begin
+  with lbxImages do begin
     //Refresh the enabled state of the buttons and controls
     btnReplace.Enabled := SelCount = 1;
     btnDelete.Enabled := SelCount > 0;
@@ -973,17 +972,15 @@ begin
     lblBackgroundColor.Enabled := SelCount > 0;
     cmbBackgroundColor.Enabled := SelCount > 0;
     case SelCount of
-      0:
-      begin
-        //None is selected, so no information to display
-        lblDimensionsValue.Caption := NoneSelected;
-        lblColorDepthValue.Caption := NoneSelected;
-        lblTransparencyValue.Caption := NoneSelected;
-        lblCompressionValue.Caption := NoneSelected;
-        lblFilteringValue.Caption := NoneSelected;
-      end;
-      1: with Images.Items[FirstSelected] do
-        begin
+      0: begin
+          //None is selected, so no information to display
+          lblDimensionsValue.Caption := NoneSelected;
+          lblColorDepthValue.Caption := NoneSelected;
+          lblTransparencyValue.Caption := NoneSelected;
+          lblCompressionValue.Caption := NoneSelected;
+          lblFilteringValue.Caption := NoneSelected;
+        end;
+      1: with Images.Items[FirstSelected] do begin
           edtName.OnChange := nil;
           try
             //One item is selected, display its properties and information
@@ -998,8 +995,7 @@ begin
             edtName.OnChange := edtNameChange;
           end;
         end;
-      else
-      begin
+    else begin
         //More than 1 is selected, so no image information can be displayed
         if SameBackgroundColor then
           SelectBackgroundColor(Sender, Images.Items[FirstSelected].Background)
@@ -1022,13 +1018,13 @@ begin
     btnReplaceClick(nil);
 end;
 
-procedure TPngImageListEditorDlg.lbxImagesDragOver(Sender, Source: TObject; X, Y: Integer; State: TDragState; var Accept: Boolean);
+procedure TPngImageListEditorDlg.lbxImagesDragOver(Sender, Source: TObject;
+    X, Y: Integer; State: TDragState; var Accept: Boolean);
 
   procedure MoveItem(Index, Delta: Integer);
   begin
     //Move a single item up or down, depending on Delta
-    if lbxImages.Selected[Index] then
-    begin
+    if lbxImages.Selected[Index] then begin
       Images.Items[Index].Index := Index + Delta;
       lbxImages.Items.Exchange(Index, Index + Delta);
       lbxImages.Selected[Index + Delta] := True;
@@ -1044,22 +1040,21 @@ procedure TPngImageListEditorDlg.lbxImagesDragOver(Sender, Source: TObject; X, Y
 var
   NewIndex, NewItemIndex, Delta, I: Integer;
 begin
-  Accept := DraggingIndex >= 0;
-  if Accept then
-  begin
+  Accept := FDraggingIndex >= 0;
+  if Accept then begin
     //Figure out to which index is dragged
     NewIndex := lbxImages.ItemAtPos(Point(X, Y), False);
     if NewIndex > lbxImages.Items.Count - 1 then
       NewIndex := lbxImages.Items.Count - 1;
 
     //Figure out the distance (delta) of the drag
-    Delta := NewIndex - DraggingIndex;
+    Delta := NewIndex - FDraggingIndex;
 
     //The destination index has to exist and has to be differend from where we
     //started the drag. On to pof that, the drag destination of the first and
     //last selected items have to be in range.
-    if (NewIndex >= 0) and (NewIndex <> DraggingIndex) and InRange(FirstSelected + Delta) and InRange(LastSelected + Delta) then
-    begin
+    if (NewIndex >= 0) and (NewIndex <> FDraggingIndex) and InRange(FirstSelected
+      + Delta) and InRange(LastSelected + Delta) then begin
       //Calc the new focus index
       NewItemIndex := lbxImages.ItemIndex + Delta;
 
@@ -1074,14 +1069,14 @@ begin
 
       //Set the new focus index and tracking value of the drag
       lbxImages.ItemIndex := NewItemIndex;
-      DraggingIndex := NewIndex;
+      FDraggingIndex := NewIndex;
 
       lbxImagesClick(nil);
     end;
   end;
 end;
 
-procedure TPngImageListEditorDlg.lbxImagesDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+procedure TPngImageListEditorDlg.lbxImagesDrawItem(Control: TWinControl; Index: Integer; ARect: TRect; State: TOwnerDrawState);
 var
   DrawRect: TRect;
   ScrollInfo: TScrollInfo;
@@ -1099,47 +1094,73 @@ begin
   //First, draw the background
   if odSelected in State then
     if lbxImages.Focused then
-      DrawBackground(lbxImages.Canvas, Rect, ScrollPos, cmbPreviewBackground.ItemIndex, SelectionBodyColor)
+      DrawBackground(lbxImages.Canvas, ARect, ScrollPos,
+        cmbPreviewBackground.ItemIndex, FSelectionBodyColor)
     else
-      DrawBackground(lbxImages.Canvas, Rect, ScrollPos, cmbPreviewBackground.ItemIndex, Blend(SelectionBodyColor, clWindow, 50))
+      DrawBackground(lbxImages.Canvas, ARect, ScrollPos,
+        cmbPreviewBackground.ItemIndex, Blend(FSelectionBodyColor, clWindow, 50))
   else
-    DrawBackground(lbxImages.Canvas, Rect, ScrollPos, cmbPreviewBackground.ItemIndex);
-  with lbxImages.Canvas do
-  begin
+    DrawBackground(lbxImages.Canvas, ARect, ScrollPos,
+      cmbPreviewBackground.ItemIndex);
+  with lbxImages.Canvas do begin
     //Then, draw a focus border, if focused
     Brush.Style := bsClear;
-    if odFocused in State then
-    begin
+    if odFocused in State then begin
       if lbxImages.Focused then
-        Pen.Color := SelectionBorderColor
+        Pen.Color := FSelectionBorderColor
       else
-        Pen.Color := Blend(SelectionBorderColor, clWindow, 50);
+        Pen.Color := Blend(FSelectionBorderColor, clWindow, 50);
       Pen.Style := psSolid;
-      Rectangle(Rect);
+      Rectangle(ARect);
     end;
 
-    //Draw the image at the center of (Rect.Left, Rect.Top, Rect.Left + MaxWidth,
-    //Rect.Bottom)
-    with Images.Items[Index] do
-    begin
-      DrawRect.Left := Rect.Left + (MaxWidth - PngImage.Width) div 2 + 2;
-      DrawRect.Top := Rect.Top + (Rect.Bottom - Rect.Top - PngImage.Height) div 2;
-      DrawRect.Right := DrawRect.Left + PngImage.Width;
-      DrawRect.Bottom := DrawRect.Top + PngImage.Height;
+    //Draw the image at the center of (ARect.Left, ARect.Top, ARect.Left + FMaxWidth, ARect.Bottom)
+    with Images.Items[Index] do begin
+      {$IF RTLVersion < 23 }
+      if (ARect.Right - ARect.Left) < PngImage.Height then begin
+        DrawRect.Left := ARect.Left + 2;
+        DrawRect.Top := ARect.Top;
+        DrawRect.Right := DrawRect.Left + Round(PngImage.Width * (ARect.Right - ARect.Left)/PngImage.Height);
+        DrawRect.Bottom := ARect.Bottom;
+      end
+      else begin
+        DrawRect.Left := ARect.Left + (FMaxWidth - PngImage.Width) div 2 + 2;
+        DrawRect.Top := ARect.Top + (ARect.Bottom - ARect.Top - PngImage.Height) div 2;
+        DrawRect.Right := DrawRect.Left + PngImage.Width;
+        DrawRect.Bottom := DrawRect.Top + PngImage.Height;
+      end;
+      {$ELSE}
+      if ARect.Height < PngImage.Height then begin
+        DrawRect.Left := ARect.Left + 2;
+        DrawRect.Top := ARect.Top;
+        DrawRect.Right := DrawRect.Left + Round(PngImage.Width * ARect.Height/PngImage.Height);
+        DrawRect.Bottom := ARect.Bottom;
+      end
+      else begin
+        DrawRect.Left := ARect.Left + (FMaxWidth - PngImage.Width) div 2 + 2;
+        DrawRect.Top := ARect.Top + (ARect.Bottom - ARect.Top - PngImage.Height) div 2;
+        DrawRect.Right := DrawRect.Left + PngImage.Width;
+        DrawRect.Bottom := DrawRect.Top + PngImage.Height;
+      end;
+      {$IFEND}
       PngImage.Draw(lbxImages.Canvas, DrawRect);
     end;
 
     //Draw the image index number and the name
     Font.Color := clWindowText;
-    DrawRect := Classes.Rect(Rect.Left + MaxWidth + 8, Rect.Top, Rect.Left + MaxWidth + Canvas.TextWidth(IntToStr(lbxImages.Items.Count - 1)) + 8, Rect.Bottom);
-    DrawText(Handle, PChar(IntToStr(Index)), -1, DrawRect, DT_RIGHT or DT_NOPREFIX or DT_SINGLELINE or DT_VCENTER);
+    DrawRect := Rect(ARect.Left + FMaxWidth + 8, ARect.Top, ARect.Left +
+      FMaxWidth + Canvas.TextWidth(IntToStr(lbxImages.Items.Count - 1)) + 8,
+      ARect.Bottom);
+    DrawText(Handle, PChar(IntToStr(Index)), -1, DrawRect, DT_RIGHT or
+      DT_NOPREFIX or DT_SINGLELINE or DT_VCENTER);
     DrawRect.Left := DrawRect.Right;
-    DrawRect.Right := Rect.Right;
-    DrawText(Handle, PChar(' - ' + Images.Items[Index].Name), -1, DrawRect, DT_END_ELLIPSIS or DT_LEFT or DT_NOPREFIX or DT_SINGLELINE or DT_VCENTER);
+    DrawRect.Right := ARect.Right;
+    DrawText(Handle, PChar(' - ' + Images.Items[Index].Name), -1, DrawRect,
+      DT_END_ELLIPSIS or DT_LEFT or DT_NOPREFIX or DT_SINGLELINE or DT_VCENTER);
 
     //Draw the normal focusrect, so that it'll become invisible
     if (odFocused in State) and lbxImages.Focused then
-      DrawFocusRect(Rect);
+      DrawFocusRect(ARect);
   end;
 end;
 
@@ -1160,27 +1181,23 @@ begin
   //I would expect this "ctrl"-navigation would work standardly, but appearantly
   //it doesn't, so we'll have to code it ourselves
   with lbxImages do
-    if ssCtrl in Shift then
-    begin
+    if ssCtrl in Shift then begin
       case Key of
-        VK_DOWN:
-        begin
-          if ItemIndex < Items.Count - 1 then
-            ItemIndex := ItemIndex + 1;
-          Key := 0;
-        end;
-        VK_UP:
-        begin
-          if ItemIndex > 0 then
-            ItemIndex := ItemIndex - 1;
-          Key := 0;
-        end;
-        VK_SPACE:
-        begin
-          Selected[ItemIndex] := not Selected[ItemIndex];
-          lbxImagesClick(nil);
-          Key := 0;
-        end;
+        VK_DOWN: begin
+            if ItemIndex < Items.Count - 1 then
+              ItemIndex := ItemIndex + 1;
+            Key := 0;
+          end;
+        VK_UP: begin
+            if ItemIndex > 0 then
+              ItemIndex := ItemIndex - 1;
+            Key := 0;
+          end;
+        VK_SPACE: begin
+            Selected[ItemIndex] := not Selected[ItemIndex];
+            lbxImagesClick(nil);
+            Key := 0;
+          end;
       end;
     end;
 end;
@@ -1195,13 +1212,15 @@ begin
   Temp := lbxImages.Canvas.TextHeight('0') + 4;
   if Temp > Height then
     Height := Temp;
+  if Height > 255 then
+    Height := 255;
 end;
 
 procedure TPngImageListEditorDlg.lbxImagesMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   //If the mouse button is released, the tracking value of the drag needs to be
   //reset as well
-  DraggingIndex := -1;
+  FDraggingIndex := -1;
 end;
 
 procedure TPngImageListEditorDlg.lbxImagesStartDrag(Sender: TObject; var DragObject: TDragObject);
@@ -1210,12 +1229,13 @@ var
 begin
   //Figure out where this drag start is
   GetCursorPos(Pos);
-  DraggingIndex := lbxImages.ItemAtPos(lbxImages.ScreenToClient(Pos), True);
-  if DraggingIndex >= 0 then
-    lbxImages.ItemIndex := DraggingIndex;
+  FDraggingIndex := lbxImages.ItemAtPos(lbxImages.ScreenToClient(Pos), True);
+  if FDraggingIndex >= 0 then
+    lbxImages.ItemIndex := FDraggingIndex;
 end;
 
 initialization
   InitResolution;
 
 end.
+

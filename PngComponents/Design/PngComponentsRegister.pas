@@ -1,39 +1,27 @@
 unit PngComponentsRegister;
 
-{$I ..\Include\Thany.inc}
-
 interface
 
 uses
-  Classes,
-{$IFDEF THANY_COMPILER_6_UP}
-  DesignIntf,
-{$ELSE}
-  DsgnIntf,
-{$ENDIF}
-  PngSpeedButton, PngBitBtn, PngImageList, PngCheckListBox, PngComponentEditors,   TypInfo;
+  Classes, DesignIntf, TypInfo,
+  PngSpeedButton, PngBitBtn, PngImageList, PngCheckListBox, PngComponentEditors;
 
 procedure Register;
 
 implementation
 
-{$IFNDEF THANY_COMPILER_7_UP}
-
-procedure UnlistPublishedProperty(ComponentClass: TClass; const PropertyName: string);
-var
-  LPropInfo: PPropInfo;
-begin
-  LPropInfo := GetPropInfo(ComponentClass, PropertyName);
-  if LPropInfo <> nil then
-    RegisterPropertyEditor(LPropInfo^.PropType^, ComponentClass, PropertyName, nil);
-end;
-
-{$ENDIF}
+const
+  SPageName = 'Png';
 
 procedure Register;
 begin
+  {$if CompilerVersion >= 24.0 }
+    TPngImageList.IDE_WriteData_Hack := true;
+  {$ifend}
+
   //Register all components
-  RegisterComponents('Png', [TPngSpeedButton, TPngBitBtn, TPngImageList, TPngImageCollection, TPngCheckListBox]);
+  RegisterComponents(SPageName, [TPngSpeedButton, TPngBitBtn, TPngImageList,
+    TPngImageCollection, TPngCheckListBox]);
 
   //Register component editors
   RegisterComponentEditor(TPngImageList, TPngImageListEditor);
@@ -42,14 +30,16 @@ begin
   RegisterComponentEditor(TPngSpeedButton, TPngButtonEditor);
 
   //Register property editors
-  RegisterPropertyEditor(TypeInfo(TPngImageCollectionItems), TPngImageList, 'PngImages', TPngImageListImagesEditor);
-  RegisterPropertyEditor(TypeInfo(TPngImageCollectionItems), TPngImageCollection, 'Items', TPngImageCollectionItemsEditor);
+  RegisterPropertyEditor(TypeInfo(TPngImageCollectionItems), TPngImageList,
+    'PngImages', TPngImageListImagesEditor); // do not localize
+  RegisterPropertyEditor(TypeInfo(TPngImageCollectionItems), TPngImageCollection,
+    'Items', TPngImageCollectionItemsEditor); // do not localize
 
   //Hide properties that should be omitted
-  UnlistPublishedProperty(TPngSpeedButton, 'NumGlyphs');
-  UnlistPublishedProperty(TPngSpeedButton, 'Glyph');
-  UnlistPublishedProperty(TPngBitBtn, 'NumGlyphs');
-  UnlistPublishedProperty(TPngBitBtn, 'Glyph');
+  UnlistPublishedProperty(TPngSpeedButton, 'NumGlyphs'); // do not localize
+  UnlistPublishedProperty(TPngSpeedButton, 'Glyph'); // do not localize
+  UnlistPublishedProperty(TPngBitBtn, 'NumGlyphs'); // do not localize
+  UnlistPublishedProperty(TPngBitBtn, 'Glyph'); // do not localize
 end;
 
 end.

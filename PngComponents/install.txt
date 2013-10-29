@@ -1,4 +1,4 @@
-- Compiler le paquet Delphi\PngComponentsD12.dpk
-- Compiler puis Installer le paquet Delphi\PngComponentsD12D.dpk
+- Compiler le paquet PackagesXE5\PngComponents.dpk
+- Compiler puis Installer le paquet PackagesXE5\PngComponentsDesign.dpk
 - Ajouter le chemin de bibliothèque 
     * $(Compos)\PngComponents\Source

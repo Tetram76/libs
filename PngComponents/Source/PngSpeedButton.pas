@@ -1,21 +1,18 @@
 unit PngSpeedButton;
 
-{$I ..\Include\Thany.inc}
-
 interface
 
 uses
-  Windows, SysUtils, Classes, Controls, Buttons, Graphics, ActnList,
-  PngFunctions, PngButtonFunctions, pngimage;
+  Windows, Classes, Buttons, pngimage, PngFunctions;
 
 type
   TPngSpeedButton = class(TSpeedButton)
   private
-    FPngImage: TPNGImage;
+    FPngImage: TPngImage;
     FPngOptions: TPngOptions;
     FImageFromAction: Boolean;
     function PngImageStored: Boolean;
-    procedure SetPngImage(const Value: TPNGImage);
+    procedure SetPngImage(const Value: TPngImage);
     procedure SetPngOptions(const Value: TPngOptions);
     procedure CreatePngGlyph;
   protected
@@ -26,7 +23,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
-    property PngImage: TPNGImage read FPngImage write SetPngImage stored PngImageStored;
+    property PngImage: TPngImage read FPngImage write SetPngImage stored PngImageStored;
     property PngOptions: TPngOptions read FPngOptions write SetPngOptions default [pngBlendOnDisabled];
     property Glyph stored False;
     property NumGlyphs stored False;
@@ -34,12 +31,15 @@ type
 
 implementation
 
+uses
+  Graphics, ActnList, PngButtonFunctions;
+
 { TPngSpeedButton }
 
 constructor TPngSpeedButton.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FPngImage := TPNGImage.Create;
+  FPngImage := TPngImage.Create;
   FPngOptions := [pngBlendOnDisabled];
   FImageFromAction := False;
 end;
@@ -54,11 +54,11 @@ procedure TPngSpeedButton.ActionChange(Sender: TObject; CheckDefaults: Boolean);
 begin
   inherited ActionChange(Sender, CheckDefaults);
   if Sender is TCustomAction then
-    with TCustomAction(Sender) do
-    begin
+    with TCustomAction(Sender) do begin
       //Copy image from action's imagelist
-      if (PngImage.Empty or FImageFromAction) and (ActionList <> nil) and (ActionList.Images <> nil) and (ImageIndex >= 0) and (ImageIndex < ActionList.Images.Count) then
-      begin
+      if (PngImage.Empty or FImageFromAction) and (ActionList <> nil) and
+        (ActionList.Images <> nil) and (ImageIndex >= 0) and (ImageIndex <
+        ActionList.Images.Count) then begin
         CopyImageFromImageList(FPngImage, ActionList.Images, ImageIndex);
         CreatePngGlyph;
         FImageFromAction := True;
@@ -73,11 +73,11 @@ var
 begin
   inherited Paint;
 
-  if (FPngImage <> nil) and (not FPngImage.Empty) then
-  begin
+  if FPngImage <> nil then begin
     //Calculate the position of the PNG glyph
-    CalcButtonLayout(Canvas, FPngImage, ClientRect, FState = bsDown, Down, Caption, Layout, Margin, Spacing, GlyphPos, TextPos, DrawTextBiDiModeFlags(0));
-    PaintRect := Rect(GlyphPos.X, GlyphPos.Y, GlyphPos.X + FPngImage.Width, GlyphPos.Y + FPngImage.Height);
+    CalcButtonLayout(Canvas, FPngImage, ClientRect, FState = bsDown, Down,
+      Caption, Layout, Margin, Spacing, GlyphPos, TextPos, DrawTextBiDiModeFlags(0));
+    PaintRect := Bounds(GlyphPos.X, GlyphPos.Y, FPngImage.Width, FPngImage.Height);
 
     if Enabled then
       DrawPNG(FPngImage, Canvas, PaintRect, [])
@@ -97,23 +97,20 @@ begin
   Result := not FImageFromAction;
 end;
 
-procedure TPngSpeedButton.SetPngImage(const Value: TPNGImage);
+procedure TPngSpeedButton.SetPngImage(const Value: TPngImage);
 begin
-  //This is all neccesary, because you can't assign a nil to a TPNGImage
-  if (Value = nil) or (Value.Empty) then
-  begin
+  //This is all neccesary, because you can't assign a nil to a TPngImage
+  if Value = nil then begin
     FPngImage.Free;
-    FPngImage := TPNGImage.Create;
+    FPngImage := TPngImage.Create;
   end
   else
-  begin
     FPngImage.Assign(Value);
 
-    //To work around the gamma-problem
-    with FPngImage do
-      if Header.ColorType in [COLOR_RGB, COLOR_RGBALPHA, COLOR_PALETTE] then
-        Chunks.RemoveChunk(Chunks.ItemFromClass(TChunkgAMA));
-  end;
+  //To work around the gamma-problem
+  with FPngImage do
+    if Header.ColorType in [COLOR_RGB, COLOR_RGBALPHA, COLOR_PALETTE] then
+      Chunks.RemoveChunk(Chunks.ItemFromClass(TChunkgAMA));
 
   FImageFromAction := False;
   CreatePngGlyph;
@@ -122,8 +119,7 @@ end;
 
 procedure TPngSpeedButton.SetPngOptions(const Value: TPngOptions);
 begin
-  if FPngOptions <> Value then
-  begin
+  if FPngOptions <> Value then begin
     FPngOptions := Value;
     CreatePngGlyph;
     Repaint;
@@ -147,6 +143,5 @@ begin
     Bmp.Free;
   end;
 end;
-
 
 end.
