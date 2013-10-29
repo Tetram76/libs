@@ -1,31 +1,22 @@
 unit PngBitBtn;
 
-{$I ..\Include\Thany.inc}
-
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Controls, StdCtrls, Buttons, Graphics,
-  ImgList, ActnList, PngImageList, PngFunctions, PngButtonFunctions, pngimage
-  {$IFDEF ThemeSupport}
-  , Themes
-{$ENDIF}
-  ;
+  Windows, Messages, Classes, Graphics, Controls, Buttons, pngimage, PngFunctions;
 
 type
   TPngBitBtn = class(TBitBtn)
   private
-    FPngImage: TPNGImage;
+    FPngImage: TPngImage;
     FPngOptions: TPngOptions;
     FCanvas: TCanvas;
     FLastKind: TBitBtnKind;
     FImageFromAction: Boolean;
-    {$IFDEF ThemeSupport}
     FMouseInControl: Boolean;
-    {$ENDIF}
     IsFocused: Boolean;
     function PngImageStored: Boolean;
-    procedure SetPngImage(const Value: TPNGImage);
+    procedure SetPngImage(const Value: TPngImage);
     procedure SetPngOptions(const Value: TPngOptions);
     procedure CNDrawItem(var Message: TWMDrawItem); message CN_DRAWITEM;
     procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
@@ -37,7 +28,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
-    property PngImage: TPNGImage read FPngImage write SetPngImage stored PngImageStored;
+    property PngImage: TPngImage read FPngImage write SetPngImage stored PngImageStored;
     property PngOptions: TPngOptions read FPngOptions write SetPngOptions default [pngBlendOnDisabled];
     property Glyph stored False;
     property NumGlyphs stored False;
@@ -45,12 +36,44 @@ type
 
 implementation
 
+uses
+  ActnList, Themes, PngButtonFunctions;
+
+{$IF RTLVersion < 23.0 }
+type
+  TThemeServicesHelper = class helper for TThemeServices
+  private
+    function GetEnabled: Boolean;
+  public
+    function GetElementContentRect(DC: HDC; Details: TThemedElementDetails; const BoundingRect: TRect;
+        out ContentRect: TRect): Boolean; overload;
+    property Enabled: Boolean read GetEnabled;
+  end;
+
+function TThemeServicesHelper.GetElementContentRect(DC: HDC; Details: TThemedElementDetails; const BoundingRect: TRect;
+    out ContentRect: TRect): Boolean;
+begin
+  ContentRect := Self.ContentRect(DC, Details, BoundingRect);
+  Result := true;
+end;
+
+function TThemeServicesHelper.GetEnabled: Boolean;
+begin
+  Result := ThemesEnabled;
+end;
+
+function StyleServices: TThemeServices;
+begin
+  result := ThemeServices;
+end;
+{$IFEND}
+
 { TPngBitBtn }
 
 constructor TPngBitBtn.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FPngImage := TPNGImage.Create;
+  FPngImage := TPngImage.Create;
   FPngOptions := [pngBlendOnDisabled];
   FCanvas := TCanvas.Create;
   FLastKind := bkCustom;
@@ -67,23 +90,23 @@ end;
 procedure TPngBitBtn.ActionChange(Sender: TObject; CheckDefaults: Boolean);
 begin
   inherited ActionChange(Sender, CheckDefaults);
-  if Sender is TCustomAction then
-    with TCustomAction(Sender) do
-    begin
+  if Sender is TCustomAction then begin
+    with TCustomAction(Sender) do begin
       //Copy image from action's imagelist
-      if (PngImage.Empty or FImageFromAction) and (ActionList <> nil) and (ActionList.Images <> nil) and (ImageIndex >= 0) and (ImageIndex < ActionList.Images.Count) then
-      begin
+      if (PngImage.Empty or FImageFromAction) and (ActionList <> nil) and
+        (ActionList.Images <> nil) and (ImageIndex >= 0) and (ImageIndex <
+        ActionList.Images.Count) then begin
         CopyImageFromImageList(FPngImage, ActionList.Images, ImageIndex);
         FImageFromAction := True;
       end;
     end;
+  end;
 end;
 
 procedure TPngBitBtn.SetButtonStyle(ADefault: Boolean);
 begin
   inherited SetButtonStyle(ADefault);
-  if ADefault <> IsFocused then
-  begin
+  if ADefault <> IsFocused then begin
     IsFocused := ADefault;
     Refresh;
   end;
@@ -94,16 +117,16 @@ begin
   Result := not FImageFromAction;
 end;
 
-procedure TPngBitBtn.SetPngImage(const Value: TPNGImage);
+procedure TPngBitBtn.SetPngImage(const Value: TPngImage);
 begin
-  //This is all neccesary, because you can't assign a nil to a TPNGImage
-  if Value = nil then
-  begin
+  //This is all neccesary, because you can't assign a nil to a TPngImage
+  if Value = nil then begin
     FPngImage.Free;
-    FPngImage := TPNGImage.Create;
+    FPngImage := TPngImage.Create;
   end
-  else
+  else begin
     FPngImage.Assign(Value);
+  end;
 
   //To work around the gamma-problem
   with FPngImage do
@@ -116,8 +139,7 @@ end;
 
 procedure TPngBitBtn.SetPngOptions(const Value: TPngOptions);
 begin
-  if FPngOptions <> Value then
-  begin
+  if FPngOptions <> Value then begin
     FPngOptions := Value;
     Repaint;
   end;
@@ -129,10 +151,8 @@ var
   GlyphPos, TextPos: TPoint;
   IsDown, IsDefault: Boolean;
   Flags: Cardinal;
-   {$IFDEF ThemeSupport}
   Button: TThemedButton;
   Details: TThemedElementDetails;
-   {$ENDIF}
 begin
   R := ClientRect;
   FCanvas.Handle := Message.DrawItemStruct^.hDC;
@@ -141,9 +161,7 @@ begin
   IsDefault := Message.DrawItemStruct^.itemState and ODS_FOCUS <> 0;
 
   //Draw the border
-{$IFDEF ThemeSupport}
-  if StyleServices.Enabled then
-  begin
+  if StyleServices.Enabled then begin
     //Themed border
     if not Enabled then
       Button := tbPushButtonDisabled
@@ -161,14 +179,10 @@ begin
     StyleServices.DrawParentBackground(Handle, Message.DrawItemStruct.hDC, @Details, True);
     StyleServices.DrawElement(Message.DrawItemStruct.hDC, Details, Message.DrawItemStruct.rcItem);
     StyleServices.GetElementContentRect(FCanvas.Handle, Details, Message.DrawItemStruct.rcItem, R);
-
   end
-  else
-{$ENDIF}
-  begin
+  else begin
     //Draw the outer border, when focused
-    if IsFocused or IsDefault then
-    begin
+    if IsFocused or IsDefault then begin
       FCanvas.Pen.Color := clWindowFrame;
       FCanvas.Pen.Width := 1;
       FCanvas.Brush.Style := bsClear;
@@ -176,24 +190,21 @@ begin
       InflateRect(R, -1, -1);
     end;
     //Draw the inner border
-    if IsDown then
-    begin
+    if IsDown then begin
       FCanvas.Pen.Color := clBtnShadow;
       FCanvas.Pen.Width := 1;
       FCanvas.Brush.Color := clBtnFace;
       FCanvas.Rectangle(R.Left, R.Top, R.Right, R.Bottom);
       InflateRect(R, -1, -1);
     end
-    else
-    begin
+    else begin
       Flags := DFCS_BUTTONPUSH or DFCS_ADJUSTRECT;
       if Message.DrawItemStruct.itemState and ODS_DISABLED <> 0 then
         Flags := Flags or DFCS_INACTIVE;
       DrawFrameControl(Message.DrawItemStruct.hDC, R, DFC_BUTTON, Flags);
     end;
     //Adjust the rect when focused and/or down
-    if IsFocused then
-    begin
+    if IsFocused then begin
       R := ClientRect;
       InflateRect(R, -1, -1);
     end;
@@ -202,12 +213,12 @@ begin
   end;
 
   //Calculate the position of the PNG glyph
-  CalcButtonLayout(FCanvas, FPngImage, ClientRect, IsDown, False, Caption, Layout, Margin, Spacing, GlyphPos, TextPos, DrawTextBiDiModeFlags(0));
+  CalcButtonLayout(FCanvas, FPngImage, ClientRect, IsDown, False, Caption,
+    Layout, Margin, Spacing, GlyphPos, TextPos, DrawTextBiDiModeFlags(0));
 
   //Draw the image
-  if (FPngImage <> nil) and (Kind = bkCustom) and not FPngImage.Empty then
-  begin
-    PaintRect := Rect(GlyphPos.X, GlyphPos.Y, GlyphPos.X + FPngImage.Width, GlyphPos.Y + FPngImage.Height);
+  if (FPngImage <> nil) and (Kind = bkCustom) and not FPngImage.Empty then begin
+    PaintRect := Bounds(GlyphPos.X, GlyphPos.Y, FPngImage.Width, FPngImage.Height);
     if Enabled then
       DrawPNG(FPngImage, FCanvas, PaintRect, [])
     else
@@ -215,26 +226,29 @@ begin
   end;
 
   //Draw the text
-  if Length(Caption) > 0 then
-  begin
+  if Length(Caption) > 0 then begin
     PaintRect := Rect(TextPos.X, TextPos.Y, Width, Height);
     FCanvas.Brush.Style := bsClear;
-    DrawText(FCanvas.Handle, PChar(Caption), -1, PaintRect, DrawTextBiDiModeFlags(0) or DT_TOP or DT_LEFT or DT_SINGLELINE);
+    //grayed Caption when disabled
+    if not Enabled then begin
+      OffsetRect(PaintRect, 1, 1);
+      FCanvas.Font.Color := clBtnHighlight;
+      DrawText(FCanvas.Handle, PChar(Caption), -1, PaintRect,
+        DrawTextBiDiModeFlags(0) or DT_TOP or DT_LEFT or DT_SINGLELINE);
+      OffsetRect(PaintRect, -1, -1);
+      FCanvas.Font.Color := clBtnShadow;
+    end;
+
+    DrawText(FCanvas.Handle, PChar(Caption), -1, PaintRect,
+      DrawTextBiDiModeFlags(0) or DT_TOP or DT_LEFT or DT_SINGLELINE);
   end;
 
   //Draw the focus rectangle
-  if IsFocused and IsDefault then
-  begin
-     {$IFDEF ThemeSupport}
-    if not StyleServices.Enabled then
-    begin
+  if IsFocused and IsDefault then begin
+    if not StyleServices.Enabled then begin
       R := ClientRect;
       InflateRect(R, -3, -3);
     end;
-     {$ELSE}
-    R := ClientRect;
-    InflateRect(R, -3, -3);
-     {$ENDIF}
     FCanvas.Pen.Color := clWindowFrame;
     FCanvas.Brush.Color := clBtnFace;
     DrawFocusRect(FCanvas.Handle, R);
@@ -246,26 +260,20 @@ end;
 
 procedure TPngBitBtn.CMMouseEnter(var Message: TMessage);
 begin
-{$IFDEF ThemeSupport}
   inherited;
-  if StyleServices.Enabled and not FMouseInControl and not (csDesigning in ComponentState) then
-  begin
+  if StyleServices.Enabled and not FMouseInControl and not (csDesigning in ComponentState) then begin
     FMouseInControl := True;
     Repaint;
   end;
-{$ENDIF}
 end;
 
 procedure TPngBitBtn.CMMouseLeave(var Message: TMessage);
 begin
-{$IFDEF ThemeSupport}
   inherited;
-  if StyleServices.Enabled and FMouseInControl then
-  begin
+  if StyleServices.Enabled and FMouseInControl then begin
     FMouseInControl := False;
     Repaint;
   end;
-{$ENDIF}
 end;
 
 end.

@@ -3,7 +3,7 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
   Top = 128
   BorderIcons = [biSystemMenu]
   Caption = 'Editing PngImageList'
-  ClientHeight = 286
+  ClientHeight = 288
   ClientWidth = 461
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
@@ -66,7 +66,7 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Top = 79
         Width = 140
         Height = 21
-        ItemHeight = 13
+        ItemHeight = 0
         TabOrder = 2
         OnChange = cmbBackgroundColorChange
         OnDblClick = cmbBackgroundColorDblClick
@@ -232,13 +232,11 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Width = 75
         Height = 25
         Caption = '&Add'
-        DoubleBuffered = True
-        Layout = blGlyphRight
-        Margin = 6
-        ParentDoubleBuffered = False
-        Spacing = 3
         TabOrder = 0
         OnClick = btnAddClick
+        Layout = blGlyphRight
+        Margin = 6
+        Spacing = 3
         PngImage.Data = {
           89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
           610000001974455874536F6674776172650041646F626520496D616765526561
@@ -271,13 +269,11 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Width = 75
         Height = 25
         Caption = '&Delete'
-        DoubleBuffered = True
-        Layout = blGlyphRight
-        Margin = 6
-        ParentDoubleBuffered = False
-        Spacing = 3
         TabOrder = 1
         OnClick = btnDeleteClick
+        Layout = blGlyphRight
+        Margin = 6
+        Spacing = 3
         PngImage.Data = {
           89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
           610000001974455874536F6674776172650041646F626520496D616765526561
@@ -310,13 +306,11 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Width = 75
         Height = 25
         Caption = '&Replace'
-        DoubleBuffered = True
-        Layout = blGlyphRight
-        Margin = 6
-        ParentDoubleBuffered = False
-        Spacing = 3
         TabOrder = 2
         OnClick = btnReplaceClick
+        Layout = blGlyphRight
+        Margin = 6
+        Spacing = 3
         PngImage.Data = {
           89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
           610000001974455874536F6674776172650041646F626520496D616765526561
@@ -356,13 +350,11 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Width = 75
         Height = 25
         Caption = '&Clear'
-        DoubleBuffered = True
-        Layout = blGlyphRight
-        Margin = 6
-        ParentDoubleBuffered = False
-        Spacing = 3
         TabOrder = 3
         OnClick = btnClearClick
+        Layout = blGlyphRight
+        Margin = 6
+        Spacing = 3
         PngImage.Data = {
           89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
           610000001974455874536F6674776172650041646F626520496D616765526561
@@ -400,13 +392,11 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Width = 75
         Height = 25
         Caption = '&Up'
-        DoubleBuffered = True
-        Layout = blGlyphRight
-        Margin = 6
-        ParentDoubleBuffered = False
-        Spacing = 3
         TabOrder = 4
         OnClick = btnUpClick
+        Layout = blGlyphRight
+        Margin = 6
+        Spacing = 3
         PngImage.Data = {
           89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
           610000001974455874536F6674776172650041646F626520496D616765526561
@@ -436,13 +426,11 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Width = 75
         Height = 25
         Caption = '&Down'
-        DoubleBuffered = True
-        Layout = blGlyphRight
-        Margin = 6
-        ParentDoubleBuffered = False
-        Spacing = 3
         TabOrder = 5
         OnClick = btnDownClick
+        Layout = blGlyphRight
+        Margin = 6
+        Spacing = 3
         PngImage.Data = {
           89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
           610000001974455874536F6674776172650041646F626520496D616765526561
@@ -493,9 +481,7 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Height = 25
         Caption = '&OK'
         Default = True
-        DoubleBuffered = True
         ModalResult = 1
-        ParentDoubleBuffered = False
         TabOrder = 0
         PngImage.Data = {
           89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
@@ -524,9 +510,7 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
         Height = 25
         Cancel = True
         Caption = '&Cancel'
-        DoubleBuffered = True
         ModalResult = 2
-        ParentDoubleBuffered = False
         TabOrder = 1
         PngImage.Data = {
           89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
@@ -556,6 +540,17 @@ object PngImageListEditorDlg: TPngImageListEditorDlg
           4D201887BF0E089370290F0CAB6298048051DE659DC699A15B96B17C7D7CAF03
           44D1A75E05D8A1168889F55F525F839E0094AAF50000000049454E44AE426082}
       end
+    end
+    object chkUseFilenames: TCheckBox
+      Left = 341
+      Top = 7
+      Width = 112
+      Height = 17
+      Anchors = [akTop, akRight]
+      Caption = 'Use Filenames'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
     end
   end
   object dlgOpenPicture: TOpenPictureDialog
