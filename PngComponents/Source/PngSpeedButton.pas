@@ -73,7 +73,7 @@ var
 begin
   inherited Paint;
 
-  if FPngImage <> nil then begin
+  if (FPngImage <> nil) and not PngImage.Empty then begin
     //Calculate the position of the PNG glyph
     CalcButtonLayout(Canvas, FPngImage, ClientRect, FState = bsDown, Down,
       Caption, Layout, Margin, Spacing, GlyphPos, TextPos, DrawTextBiDiModeFlags(0));
