@@ -1,17 +1,20 @@
 unit VDTButton;
 {$D-}
+
 interface
 
 uses
-  Windows, Forms, Controls, Classes, Buttons, ComCtrls, Graphics, RoundButton, PngSpeedButton;
+  Windows, Forms, Controls, Classes, Buttons, ComCtrls, Graphics, RoundButton, PngSpeedButton, PngFunctions;
 
 type
   TVDTButton = class(TPngSpeedButton)
   public
+    procedure Paint; override;
     constructor Create(AOwner: TComponent); override;
   published
     property Flat default True;
     property Cursor default crHandPoint;
+    property PngOptions default [pngBlendOnDisabled, pngGrayscaleOnDisabled];
   end;
 
   TVDTListView = class(TListView)
@@ -44,6 +47,14 @@ begin
   inherited Create(AOwner);
   Flat := True;
   Cursor := crHandPoint;
+  PngOptions := [pngBlendOnDisabled, pngGrayscaleOnDisabled];
+end;
+
+procedure TVDTButton.Paint;
+begin
+  if PngImage.Empty then
+    Flat := False;
+  inherited;
 end;
 
 constructor TVDTListView.Create(AOwner: TComponent);
