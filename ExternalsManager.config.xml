@@ -63,9 +63,9 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\PascalScript</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/PascalScript</RepositoryExternalPath>
-      <DefaultSubfolder>/pascalscript</DefaultSubfolder>
+      <DefaultSubfolder>/trunk</DefaultSubfolder>
       <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>http://code.remobjects.com/svn</BaseURL>
+        <BaseURL>https://github.com/remobjects/pascalscript</BaseURL>
         <VendorPath>/vendors/pascalscript</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
