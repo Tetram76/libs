@@ -3,7 +3,7 @@ unit PrintObject;
 interface
 
 uses
-  SysUtils, WinSpool, Windows, Classes, Controls, Graphics, Forms, Printers, JPEG, Dialogs;
+  SysUtils, WinSpool, Windows, Classes, Controls, Graphics, Forms, Printers, JPEG, Dialogs, Generics.Collections;
 
 var
   mf: tmetafile;
@@ -568,7 +568,7 @@ type
     procedure Start; safecall; // début de l'impression
     procedure Abort; safecall; // Annulation de l'impression
     procedure Quit; safecall; // fin de l'impression
-    function Pages: TList; safecall; // liste des pages (TBitmap)
+    function Pages: TList<TGraphic>; safecall; // liste des pages (TBitmap)
     procedure SetHeightMM(const Value: Single); safecall;
     procedure SetWidthMM(const Value: Single); safecall;
     procedure SetCaption(const Title: string); safecall;
@@ -580,7 +580,7 @@ type
   private
     { Déclarations privées }
     FPrintingState: TPrintingState; { En cours d'impression? }
-    FPages: TList; { liste des pages }
+    FPages: TList<TGraphic>; { liste des pages }
     OPreview: IPrintObjectPreview; { Objet récupérant toutes les actions pour préview }
     FDateTime: TDateTimeRecord; { Informations d'impression de la date }
     FAutoPaging: Boolean; { Passage à la page automatique? }
@@ -756,7 +756,7 @@ type
     procedure WriteHeader;
     procedure WritePageNumber;
 
-    procedure PrintPages(Pages: TList);
+    procedure PrintPages(Pages: TList<TGraphic>);
   published
     { Déclarations publiées }
     property AutoPaging: Boolean read FAutoPaging write SetAutoPaging default True;
@@ -1814,7 +1814,7 @@ begin
   FHeaderCoordinates.BackColor := clWhite;
   FFooterCoordinates.BackColor := clWhite;
 
-  FPages := TObjectList.Create(True);
+  FPages := TObjectList<TGraphic>.Create(True);
 end;
 {-------------------------------------------------------------------------------}
 
@@ -4108,7 +4108,7 @@ end;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-procedure TPrintObject.PrintPages(Pages: TList);
+procedure TPrintObject.PrintPages(Pages: TList<TGraphic>);
 var
   PrintDialog: TPrintDialog;
   PrinterPhysicalOffsetX, PrinterPhysicalOffsetY: Cardinal;
