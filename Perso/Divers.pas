@@ -1,15 +1,14 @@
 unit Divers;
 
-{.$D-}
+{ .$D- }
 interface
 
 uses
   Windows, SysUtils, VCL.Forms, Classes, VCL.Dialogs, VCL.Controls, VCL.StdCtrls;
 
-
 type
   IMesurePerf = interface
-  ['{46EF7EF7-D12F-4AF0-9A29-321ABCA2A6B7}']
+    ['{46EF7EF7-D12F-4AF0-9A29-321ABCA2A6B7}']
   end;
 
   TMesurePerf = class(TInterfacedObject, IMesurePerf)
@@ -38,14 +37,14 @@ function Soundex(const in_str, language: string): string;
 function NumericSoundex(in_str: string; const language: string): SmallInt;
 function ExtendedSoundex(in_str: string): string;
 procedure ReplaceString(var str: string; const fr_str, to_str: string);
-function MakeInitiales(Str: string): string;
-function SansAccents(Str: string): string; overload;
-function OnlyAlphaNum(const Str: string; NoDblSpace: Boolean = True): string;
+function MakeInitiales(str: string): string;
+function SansAccents(str: string): string; overload;
+function OnlyAlphaNum(const str: string; NoDblSpace: Boolean = True): string;
 function ListOfResName(Module, TypeRes: PChar; var ListRes: TStringList): Boolean;
 function MessageGetLastError: string; overload;
 function MessageGetLastError(ErrorCode: Integer): string; overload;
 function GetPosteName: string;
-function SetPosteName(const value: string): boolean;
+function SetPosteName(const value: string): Boolean;
 procedure DoInvisible(Form: TForm);
 procedure Visible(Form: TForm);
 function ExtractLongPathName(const FileName: string): string;
@@ -72,11 +71,11 @@ type
     FCode: TList;
     FData: TList;
   protected
-    function GetIsProc(index: Integer): Boolean;
-    function GetMethods(index: Integer): TNotifyEvent;
-    function GetProcs(index: Integer): TNotifyProc;
-    procedure SetMethods(index: Integer; const Value: TNotifyEvent);
-    procedure SetProcs(index: Integer; const Value: TNotifyProc);
+    function GetIsProc(Index: Integer): Boolean;
+    function GetMethods(Index: Integer): TNotifyEvent;
+    function GetProcs(Index: Integer): TNotifyProc;
+    procedure SetMethods(Index: Integer; const value: TNotifyEvent);
+    procedure SetProcs(Index: Integer; const value: TNotifyProc);
   public
     constructor Create;
     destructor Destroy; override;
@@ -84,7 +83,7 @@ type
     procedure Add(const NotifyProc: TNotifyProc); overload;
     procedure Clear;
     function Count: Integer;
-    procedure Delete(index: Integer);
+    procedure Delete(Index: Integer);
     function IndexOf(const NotifyProc: TNotifyEvent): Integer; overload;
     function IndexOf(const NotifyProc: TNotifyProc): Integer; overload;
     procedure Notify(Sender: TObject);
@@ -100,13 +99,13 @@ function IsDownKey(nVirtKey: Integer): Boolean;
 
 type
   TVersionNumber = record
-  private
-    type TArrayOfInteger = array of Integer;
+  private type
+    TArrayOfInteger = array of Integer;
 
-    class procedure DecodeVer(const Ver: string; var AVer: TArrayOfInteger; Sep: Char); static;
-    function GetIndexVersion(const Index: Integer): Integer;
+  class procedure DecodeVer(const Ver: string; var AVer: TArrayOfInteger; Sep: Char); static;
+  function GetIndexVersion(const Index: Integer): Integer;
   public
-    Value: string;
+    value: string;
 
     property MajorVersion: Integer index 0 read GetIndexVersion;
     property MinorVersion: Integer index 1 read GetIndexVersion;
@@ -131,7 +130,7 @@ function MulDiv(Number, Numerator, Denominator: Integer; Default: Real = 0): Rea
 procedure ClearList(List: TList);
 function IsRemoteSession: Boolean;
 
-function MAKELANGID(p, s: word): Word;
+function MAKELANGID(p, S: Word): Word;
 function MAKELCID(lgid, srtid: Word): dword;
 
 implementation
@@ -140,7 +139,7 @@ uses
   AnsiStrings, Math, VCL.Themes;
 
 const
-  VALIDCHARPOSTE: TSysCharSet = ['a'..'z', 'A'..'Z', '1'..'0', '!', '@', '#', '$', '%', '^', '&', '''', ')', '(', '.', '-', '_', '{', '}', '~', '.'];
+  VALIDCHARPOSTE: TSysCharSet = ['a' .. 'z', 'A' .. 'Z', '1' .. '0', '!', '@', '#', '$', '%', '^', '&', '''', ')', '(', '.', '-', '_', '{', '}', '~', '.'];
 
 constructor TMesurePerf.Create(const Texte: string);
 begin
@@ -155,7 +154,7 @@ begin
   inherited;
 end;
 
-  { TNotifyList }
+{ TNotifyList }
 
 constructor TNotifyList.Create;
 begin
@@ -203,24 +202,24 @@ begin
   Result := FCode.Count;
 end;
 
-procedure TNotifyList.Delete(index: Integer);
+procedure TNotifyList.Delete(Index: Integer);
 begin
   FCode.Delete(index);
   FData.Delete(index);
 end;
 
-function TNotifyList.GetIsProc(index: Integer): Boolean;
+function TNotifyList.GetIsProc(Index: Integer): Boolean;
 begin
   Result := (not Assigned(FData[index]));
 end;
 
-function TNotifyList.GetMethods(index: Integer): TNotifyEvent;
+function TNotifyList.GetMethods(Index: Integer): TNotifyEvent;
 begin
   TMethod(Result).Code := FCode[index];
   TMethod(Result).Data := FData[index];
 end;
 
-function TNotifyList.GetProcs(index: Integer): TNotifyProc;
+function TNotifyList.GetProcs(Index: Integer): TNotifyProc;
 begin
   Result := FCode[index];
 end;
@@ -305,21 +304,21 @@ begin
   end;
 end;
 
-procedure TNotifyList.SetMethods(index: Integer; const Value: TNotifyEvent);
+procedure TNotifyList.SetMethods(Index: Integer; const value: TNotifyEvent);
 begin
-  FCode[index] := TMethod(Value).Code;
-  FData[index] := TMethod(Value).Data;
+  FCode[index] := TMethod(value).Code;
+  FData[index] := TMethod(value).Data;
 end;
 
-procedure TNotifyList.SetProcs(index: Integer; const Value: TNotifyProc);
+procedure TNotifyList.SetProcs(Index: Integer; const value: TNotifyProc);
 begin
-  FCode[index] := @Value;
+  FCode[index] := @value;
   FData[index] := nil;
 end;
 
 procedure RemplaceChaine(var Chaine: string; Quoi, parQuoi: string);
 var
-  i: integer;
+  i: Integer;
 begin
   i := Pos(Quoi, Chaine);
   while i > 0 do
@@ -348,8 +347,7 @@ end;
 
 procedure ShowFormOnTaskBar(Handle: Integer);
 begin
-  SetWindowLong(Handle, GWL_EXSTYLE,
-    GetWindowLong(Handle, GWL_EXSTYLE) or WS_EX_APPWINDOW and not WS_EX_TOOLWINDOW);
+  SetWindowLong(Handle, GWL_EXSTYLE, GetWindowLong(Handle, GWL_EXSTYLE) or WS_EX_APPWINDOW and not WS_EX_TOOLWINDOW);
 end;
 
 // PROCEDURE HIDEFORMONTASKBAR
@@ -361,8 +359,7 @@ end;
 
 procedure HideFormOnTaskBar(Handle: Integer);
 begin
-  SetWindowLong(Handle, GWL_EXSTYLE,
-    GetWindowLong(Handle, GWL_EXSTYLE) or WS_EX_TOOLWINDOW and not WS_EX_APPWINDOW);
+  SetWindowLong(Handle, GWL_EXSTYLE, GetWindowLong(Handle, GWL_EXSTYLE) or WS_EX_TOOLWINDOW and not WS_EX_APPWINDOW);
 end;
 
 function PosMulti(const Substr: array of string; const S: string): Integer;
@@ -371,8 +368,8 @@ var
   trouve: Boolean;
 begin
   Result := 0;
-  Trouve := False;
-  for i := low(SubStr) to High(Substr) do
+  trouve := False;
+  for i := low(Substr) to High(Substr) do
   begin
     p := Pos(Substr[i], S);
     if p > 0 then
@@ -386,22 +383,22 @@ end;
 
 function PosInTextEx(const Debut: Integer; const Texte: string; const AChercher: array of string): Integer;
 var
-  Temp, P: PChar;
+  Temp, p: PChar;
   i: Integer;
   trouve: Boolean;
 begin
   Result := 0;
-  if not Debut in [1..Length(Texte)] then
+  if not Debut in [1 .. Length(Texte)] then
     Exit;
   trouve := False;
   Temp := @Texte[Debut];
   for i := low(AChercher) to High(AChercher) do
   begin
-    P := StrPos(Temp, PChar(AChercher[i]));
+    p := StrPos(Temp, PChar(AChercher[i]));
     if p <> nil then
     begin
-      if (Debut + P - Temp < Result) or not trouve then
-        Result := Debut + P - Temp;
+      if (Debut + p - Temp < Result) or not trouve then
+        Result := Debut + p - Temp;
       trouve := True;
     end;
   end;
@@ -417,7 +414,7 @@ end;
 
 function IIf(Test: Boolean; Retour_Vrai, Retour_Faux: Variant): Variant;
 begin
-  if test then
+  if Test then
     Result := Retour_Vrai
   else
     Result := Retour_Faux;
@@ -426,17 +423,17 @@ end;
 function Choose(Val: Integer; const Retour: array of Variant): Variant;
 begin
   Result := varNull;
-  if Val in [0..High(Retour)] then
+  if Val in [0 .. High(Retour)] then
     Result := Retour[Val];
 end;
 
 {$HINTS OFF}
 
 function IsPrevInstance: HWND;
-  // Retourne 0 si aucune instance n'est trouvée
-  // sinon, retourne le handle de l'application trouvée.
+// Retourne 0 si aucune instance n'est trouvée
+// sinon, retourne le handle de l'application trouvée.
 var
-  ClassName: array[0..255] of Char;
+  ClassName: array [0 .. 255] of Char;
   TitreApplication: string;
 begin
   Result := 0;
@@ -444,7 +441,7 @@ begin
   Application.Title := '';
   try
     GetClassName(Application.Handle, ClassName, 254);
-    result := FindWindow(ClassName, PChar(TitreApplication));
+    Result := FindWindow(ClassName, PChar(TitreApplication));
   finally
     Application.Title := TitreApplication;
   end;
@@ -466,13 +463,13 @@ begin
   in_str := Trim(AnsiUpperCase(in_str));
   ReplaceString(in_str, ' ', '');
   ReplaceString(in_str, '''', '');
-  if Language = 'FR' then
+  if language = 'FR' then
   begin
     ReplaceString(in_str, 'CHR', 'CR');
     ReplaceString(in_str, 'PH', 'F');
-    //    ReplaceString(in_str, 'Z', 'S');
+    // ReplaceString(in_str, 'Z', 'S');
   end
-  else if Language = 'EN' then
+  else if language = 'EN' then
   begin
     ReplaceString(in_str, 'TH', 'Z');
   end;
@@ -485,7 +482,7 @@ var
   ch: Char;
   i: Integer;
 begin
-  if UpperCase(Language) = 'FR' then
+  if UpperCase(language) = 'FR' then
     lg := Francais
   else
     lg := Anglais;
@@ -494,14 +491,16 @@ begin
   begin
     ch := in_str[i];
     case ch of
-      'A', 'E', 'I', 'O', 'U', 'H', 'W', 'Y': ;
-      else if CharInSet(ch, ['A'..'Z']) then
-          no_vowels := no_vowels + ch;
+      'A', 'E', 'I', 'O', 'U', 'H', 'W', 'Y':
+        ;
+    else
+      if CharInSet(ch, ['A' .. 'Z']) then
+        no_vowels := no_vowels + ch;
     end;
   end;
   for i := 1 to Length(no_vowels) do
     coded := coded + string(lg[Ord(no_vowels[i]) - Ord('A') + 1]);
-  //  out_str := coded[1];
+  // out_str := coded[1];
   for i := 1 to Length(no_vowels) do
     if (coded[i] <> '0') and (coded[i] <> coded[i - 1]) then
       out_str := out_str + coded[i];
@@ -518,13 +517,13 @@ end;
 
 function NumericSoundex(in_str: string; const language: string): SmallInt;
 var
-  Value: Integer;
+  value: Integer;
 begin
   in_str := Soundex(in_str, language);
-  Value := (Ord(in_str[1]) - Ord('A')) * 1000;
+  value := (Ord(in_str[1]) - Ord('A')) * 1000;
   if (Length(in_str) > 1) then
-    Value := Value + StrToInt(Copy(in_str, 2, Length(in_str) - 1));
-  Result := Value;
+    value := value + StrToInt(Copy(in_str, 2, Length(in_str) - 1));
+  Result := value;
 end;
 
 procedure ReplaceString(var str: string; const fr_str, to_str: string);
@@ -557,14 +556,15 @@ begin
   begin
     ch := in_str[i];
     case ch of
-      'A', 'E', 'I', 'O', 'U': ;
-      else
-        if (ch <> last_ch) then
-        begin
-          if CharInSet(ch, ['A'..'Z']) then
-            no_vowels := no_vowels + ch;
-          last_ch := ch;
-        end;
+      'A', 'E', 'I', 'O', 'U':
+        ;
+    else
+      if (ch <> last_ch) then
+      begin
+        if CharInSet(ch, ['A' .. 'Z']) then
+          no_vowels := no_vowels + ch;
+        last_ch := ch;
+      end;
     end;
   end;
   Result := Result + no_vowels;
@@ -575,20 +575,20 @@ var
   i: Integer;
   ch: string;
 begin
-  if Length(Str) = 0 then
+  if Length(str) = 0 then
     Exit;
   str := Trim(str);
   Result := '';
   i := 0;
   repeat
     ch := AnsiUpperCase(str[i + 1]);
-    if CharInSet(ch[1], ['A'..'Z', '0'..'9']) then
+    if CharInSet(ch[1], ['A' .. 'Z', '0' .. '9']) then
       Result := Result + str[i + 1];
     i := PosInTextEx(i + 1, str, [' ', '''']);
   until (i = 0) or (i >= Length(str));
 end;
 
-function SansAccents(Str: string): string;
+function SansAccents(str: string): string;
 const
   Tab1: string = 'àáâãäåèéêëìíîïòóôõöùúûüýÿçñ';
   Tab2: string = 'aaaaaaeeeeiiiiooooouuuuyycn';
@@ -596,30 +596,30 @@ var
   i, p: Integer;
   Dummy: string;
 begin
-  Dummy := AnsiLowerCase(Str);
-  for i := 1 to length(Tab1) do
+  Dummy := AnsiLowerCase(str);
+  for i := 1 to Length(Tab1) do
   begin
     p := Pos(Tab1[i], Dummy);
     while p > 0 do
     begin
-      Str[p] := Chr(Ord(Tab2[i]) - (Ord(Dummy[p]) - Ord(Str[p])));
+      str[p] := Chr(Ord(Tab2[i]) - (Ord(Dummy[p]) - Ord(str[p])));
       Dummy[p] := Tab2[i];
-      p := Pos(Tab1[i], Str);
+      p := Pos(Tab1[i], str);
     end;
   end;
-  Result := Str;
+  Result := str;
 end;
 
-function OnlyAlphaNum(const Str: string; NoDblSpace: Boolean = True): string;
+function OnlyAlphaNum(const str: string; NoDblSpace: Boolean = True): string;
 var
   i: Integer;
   c, cPrec: Char;
 begin
   Result := '';
   cPrec := #0;
-  for i := 1 to Length(Str) do
+  for i := 1 to Length(str) do
   begin
-    c := Str[i];
+    c := str[i];
     if not IsCharAlphaNumeric(c) then
       c := ' ';
     if not NoDblSpace or (c <> ' ') or not CharInSet(cPrec, [#0, ' ']) then
@@ -664,27 +664,26 @@ end;
 
 function MessageGetLastError(ErrorCode: Integer): string;
 var
-  Buf: array[Byte] of Char;
+  Buf: array [Byte] of Char;
 begin
   Result := '';
-  if (ErrorCode <> 0) and
-    (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, nil, ErrorCode, LOCALE_USER_DEFAULT, Buf, SizeOf(Buf), nil) <> 0) then
+  if (ErrorCode <> 0) and (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, nil, ErrorCode, LOCALE_USER_DEFAULT, Buf, SizeOf(Buf), nil) <> 0) then
     Result := StrPas(Buf);
 end;
 
 function GetPosteName: string;
-  //retourne le nom du poste de travail
+// retourne le nom du poste de travail
 var
-  lpBuffer: array[0..MAX_COMPUTERNAME_LENGTH - 1] of Char;
-  Asize: DWORD;
+  lpBuffer: array [0 .. MAX_COMPUTERNAME_LENGTH - 1] of Char;
+  ASize: dword;
 begin
-  Asize := SizeOf(lpBuffer);
-  GetComputerName(lpBuffer, Asize);
+  ASize := SizeOf(lpBuffer);
+  GetComputerName(lpBuffer, ASize);
   Result := StrPas(lpBuffer);
 end;
 
 function SetPosteName(const value: string): Boolean;
-  //Change le nom du poste de travail
+// Change le nom du poste de travail
 var
   i: Integer;
   Avalue: string;
@@ -704,7 +703,7 @@ procedure DoInvisible(Form: TForm);
 var
   FullRgn, ClientRgn, CtlRgn: HRGN;
   AControl: TControl;
-  A, Margin, X, Y, CtlX, CtlY: Integer;
+  a, Margin, X, Y, CtlX, CtlY: Integer;
 begin
   with Form do
   begin
@@ -715,9 +714,9 @@ begin
     ClientRgn := CreateRectRgn(X, Y, X + ClientWidth, Y + ClientHeight);
     CombineRgn(FullRgn, FullRgn, ClientRgn, RGN_DIFF);
 
-    for A := 0 to ControlCount - 1 do
+    for a := 0 to ControlCount - 1 do
     begin
-      AControl := Controls[A];
+      AControl := Controls[a];
       if (AControl is TWinControl) or (AControl is TGraphicControl) then
         with AControl do
         begin
@@ -730,7 +729,7 @@ begin
           end;
         end;
     end;
-    SetWindowRgn(Handle, FullRgn, TRUE);
+    SetWindowRgn(Handle, FullRgn, True);
   end;
 end;
 
@@ -742,7 +741,7 @@ begin
   begin
     FullRgn := CreateRectRgn(0, 0, Width, Height);
     CombineRgn(FullRgn, FullRgn, FullRgn, RGN_COPY);
-    SetWindowRgn(Handle, FullRgn, TRUE);
+    SetWindowRgn(Handle, FullRgn, True);
   end;
 end;
 
@@ -750,12 +749,12 @@ function GetVolumeInfo(Drive: Char; var SysInfoRec: TSysInfoRec): Boolean;
 var
   lpRootPathName: PChar; // address of root directory of the file system
   lpVolumeNameBuffer: PChar; // address of name of the volume
-  nVolumeNameSize: DWORD; // length of lpVolumeNameBuffer
-  lpVolumeSerialNumber: DWORD; // address of volume serial number
-  lpMaximumComponentLength: DWORD; // address of system's maximum filename length
-  lpFileSystemFlags: DWORD; // address of file system flags
+  nVolumeNameSize: dword; // length of lpVolumeNameBuffer
+  lpVolumeSerialNumber: dword; // address of volume serial number
+  lpMaximumComponentLength: dword; // address of system's maximum filename length
+  lpFileSystemFlags: dword; // address of file system flags
   lpFileSystemNameBuffer: PChar; // address of name of file system
-  nFileSystemNameSize: DWORD; // length of lpFileSystemNameBuffer
+  nFileSystemNameSize: dword; // length of lpFileSystemNameBuffer
 begin
   GetMem(lpVolumeNameBuffer, MAX_PATH + 1);
   GetMem(lpFileSystemNameBuffer, MAX_PATH + 1);
@@ -765,13 +764,8 @@ begin
     nFileSystemNameSize := MAX_PATH + 1;
 
     lpRootPathName := PChar(Drive + ':\');
-    Result := Windows.GetVolumeInformation(lpRootPathName,
-      lpVolumeNameBuffer,
-      nVolumeNameSize, @lpVolumeSerialNumber,
-      lpMaximumComponentLength,
-      lpFileSystemFlags,
-      lpFileSystemNameBuffer,
-      nFileSystemNameSize);
+    Result := Windows.GetVolumeInformation(lpRootPathName, lpVolumeNameBuffer, nVolumeNameSize, @lpVolumeSerialNumber, lpMaximumComponentLength,
+      lpFileSystemFlags, lpFileSystemNameBuffer, nFileSystemNameSize);
     if Result then
       with SysInfoRec do
       begin
@@ -790,7 +784,7 @@ type
   TUnite = (uOctets, uKo, uMo, uGo, uTo);
 
 const
-  sUnites: array[TUnite] of string = ('o', 'Ko', 'Mo', 'Go', 'To');
+  sUnites: array [TUnite] of string = ('o', 'Ko', 'Mo', 'Go', 'To');
 
 function FormatFileSize(ASize: Integer): string;
 var
@@ -809,24 +803,27 @@ end;
 
 procedure ChangeCurseur(Index: TCursor; Nom, Rubrique: PChar);
 var
-  lpFileName: array[0..MAX_PATH] of Char;
-  buffer: array [0..MAX_PATH] of Char;
+  lpFileName: array [0 .. MAX_PATH] of Char;
+  buffer: array [0 .. MAX_PATH] of Char;
+  res: TResourceStream;
 begin
   ZeroMemory(@buffer, Length(buffer) * SizeOf(Char));
   ZeroMemory(@lpFileName, Length(lpFileName) * SizeOf(Char));
 
   GetTempPath(Length(buffer), buffer);
   GetTempFileName(buffer, 'CSR', 0, lpFileName);
-  with TResourceStream.Create(HInstance, Nom, Rubrique) do
-  begin
+  try
+    res := TResourceStream.Create(HInstance, Nom, Rubrique);
     try
-      SaveToFile(lpFileName);
+      res.SaveToFile(lpFileName);
       DestroyCursor(Screen.Cursors[Index]);
       Screen.Cursors[Index] := LoadCursorFromFile(lpFileName);
       DeleteFile(lpFileName);
     finally
-      Free;
+      res.Free;
     end;
+  except
+    // tant pis si on ne peut pas charger le nouveau curseur
   end;
 end;
 
@@ -834,7 +831,7 @@ function Base64(valueSTR: string): string;
 const
   v: string = 'e7dRaTuV5AGZ1YzKhl34L9ONc0DMPq6rbCi8UXpgs2oEwIvtfHBmjFSJkWxnQy';
 var
-  i, j: integer;
+  i, j: Integer;
 begin
   Result := valueSTR;
   for i := 1 to Length(Result) do
@@ -876,8 +873,7 @@ begin
   // Determine space required for all buttons.
   nAllButtonsWidth := nButtonWidth * (High(AButtons) + 1);
   // Each button has padding on each side.
-  nAllButtonsWidth := nAllButtonsWidth +
-    (10 * (High(AButtons) + 2));
+  nAllButtonsWidth := nAllButtonsWidth + (10 * (High(AButtons) + 2));
   // The form has to be at least as wide as the buttons.
   if nAllButtonsWidth > oForm.Width then
     oForm.Width := nAllButtonsWidth;
@@ -931,7 +927,7 @@ type
 
 function ExtractLongPathName(const FileName: string): string;
 var
-  Buffer: array[0..MAX_PATH - 1] of WideChar;
+  buffer: array [0 .. MAX_PATH - 1] of WideChar;
   PBuffer: PWideChar;
   DriveLen, Position: Integer;
   FindData: TWin32FindData;
@@ -956,7 +952,7 @@ begin
     raise ELongFilename.CreateFmt('Path or file not found (%s) !', [FileName]);
 
   DriveLen := Length(SysUtils.ExtractFileDrive(FileName));
-  PBuffer := Buffer;
+  PBuffer := buffer;
   StrPCopy(PBuffer, FileName);
   Position := Length(PBuffer) - 1;
   while Position <> DriveLen do
@@ -1008,18 +1004,18 @@ begin
     SetLength(buffer, size);
 
     GetFileVersionInfo(PChar(Fichier), 0, size, buffer);
-    VerQueryValue(buffer, '\VarFileInfo\Translation', Pointer(TransBuffer), TransLen);
-    if TransLen >= 4 then
+    VerQueryValue(buffer, '\VarFileInfo\Translation', Pointer(TransBuffer), Translen);
+    if Translen >= 4 then
     begin
-      AnsiStrings.StrLCopy(@temp, PAnsiChar(TransBuffer), 2);
-      CalcLangCharSet := IntToHex(temp and $FFFF, 4);
-      AnsiStrings.StrLCopy(@temp, PAnsiChar(TransBuffer + 2), 2);
-      CalcLangCharSet := CalcLangCharSet + IntToHex(temp and $FFFF, 4);
+      AnsiStrings.StrLCopy(@Temp, PAnsiChar(TransBuffer), 2);
+      CalcLangCharSet := IntToHex(Temp and $FFFF, 4);
+      AnsiStrings.StrLCopy(@Temp, PAnsiChar(TransBuffer + 2), 2);
+      CalcLangCharSet := CalcLangCharSet + IntToHex(Temp and $FFFF, 4);
     end
     else
       Exit;
 
-    if VerQueryValue(Buffer, PChar('\StringFileInfo\' + CalcLangCharSet + '\FileVersion'), Pointer(VersionPointer), vallen) then
+    if VerQueryValue(buffer, PChar('\StringFileInfo\' + CalcLangCharSet + '\FileVersion'), Pointer(VersionPointer), vallen) then
     begin
       SetLength(tmpResult, vallen - 1);
       StrLCopy(PChar(tmpResult), PChar(VersionPointer), vallen - 1);
@@ -1081,47 +1077,47 @@ end;
 
 class operator TVersionNumber.Subtract(a, b: TVersionNumber): Integer;
 begin
-  Result := CompareVersionNum(a.Value, b.Value);
+  Result := CompareVersionNum(a.value, b.value);
 end;
 
 class procedure TVersionNumber.DecodeVer(const Ver: string; var AVer: TArrayOfInteger; Sep: Char);
 var
   Index: Integer;
-  s: string;
+  S: string;
 begin
   Index := 1;
   while (Index <= Length(Ver)) do
   begin
-    s := '';
+    S := '';
     while (Index <= Length(Ver)) and (Ver[Index] <> Sep) do
     begin
-      if CharInSet(Ver[Index], ['0'..'9']) then
-        s := s + Ver[Index]
+      if CharInSet(Ver[Index], ['0' .. '9']) then
+        S := S + Ver[Index]
       else
         raise Exception.Create('"' + Ver + '" n''est pas un numéro de version valide');
       Inc(Index);
     end;
     SetLength(AVer, Length(AVer) + 1);
-    AVer[Length(AVer) - 1] := StrToIntDef(s, 0);
+    AVer[Length(AVer) - 1] := StrToIntDef(S, 0);
     Inc(Index);
   end;
 end;
 
 class operator TVersionNumber.Equal(a, b: TVersionNumber): Boolean;
 begin
-  Result := CompareVersionNum(a.Value, b.Value) = 0;
+  Result := CompareVersionNum(a.value, b.value) = 0;
 end;
 
 class operator TVersionNumber.NotEqual(a, b: TVersionNumber): Boolean;
 begin
-  Result := not (a = b);
+  Result := not(a = b);
 end;
 
 function TVersionNumber.GetIndexVersion(const Index: Integer): Integer;
 var
   AVer: TArrayOfInteger;
 begin
-  DecodeVer(Value, AVer, '.');
+  DecodeVer(value, AVer, '.');
   if (Index >= 0) and (Index < Length(AVer)) then
     Result := AVer[Index]
   else
@@ -1130,32 +1126,32 @@ end;
 
 class operator TVersionNumber.GreaterThan(a, b: TVersionNumber): Boolean;
 begin
-  Result := CompareVersionNum(a.Value, b.Value) > 0;
+  Result := CompareVersionNum(a.value, b.value) > 0;
 end;
 
 class operator TVersionNumber.GreaterThanOrEqual(a, b: TVersionNumber): Boolean;
 begin
-  Result := CompareVersionNum(a.Value, b.Value) >= 0;
+  Result := CompareVersionNum(a.value, b.value) >= 0;
 end;
 
 class operator TVersionNumber.LessThan(a, b: TVersionNumber): Boolean;
 begin
-  Result := CompareVersionNum(a.Value, b.Value) < 0;
+  Result := CompareVersionNum(a.value, b.value) < 0;
 end;
 
 class operator TVersionNumber.LessThanOrEqual(a, b: TVersionNumber): Boolean;
 begin
-  Result := CompareVersionNum(a.Value, b.Value) <= 0;
+  Result := CompareVersionNum(a.value, b.value) <= 0;
 end;
 
 class operator TVersionNumber.Implicit(a: TVersionNumber): string;
 begin
-  Result := a.Value;
+  Result := a.value;
 end;
 
 class operator TVersionNumber.Implicit(a: string): TVersionNumber;
 begin
-  Result.Value := a;
+  Result.value := a;
 end;
 
 class function TVersionNumber.CompareVersionNum(Ver1, Ver2: string; Sep: Char): Integer;
@@ -1193,9 +1189,9 @@ begin
   Result := (Win32MajorVersion >= 6) and UseLatestCommonDialogs and StyleServices.Enabled;
 end;
 
-function MAKELANGID(p, s: word): Word;
+function MAKELANGID(p, S: Word): Word;
 begin
-  Result := (s shl 10) + (p);
+  Result := (S shl 10) + (p);
 end;
 
 function MAKELCID(lgid, srtid: Word): dword;
@@ -1204,4 +1200,3 @@ begin
 end;
 
 end.
-
