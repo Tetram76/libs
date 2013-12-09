@@ -3518,10 +3518,6 @@ class function TJclBDSInstallation.GetCommonProjectsDirectory(const RootDir: str
   IDEVersionNumber: Integer): string;
 var
   Variables: TStrings;
-  I: Integer;
-  S, StartS: string;
-  ps: Integer;
-  LowerEnvVariableBDSCOMDIRValueName: string;
 begin
   if IDEVersionNumber >= 5 then
   begin
@@ -3529,42 +3525,8 @@ begin
 
     Variables := TStringList.Create;
     try
-      // Try to parse the rsvars.bat what is much faster than creating a cmd.exe process.
-      try
-        Variables.LoadFromFile(GetRADStudioVarsFileName(RootDir, IDEVersionNumber));
-        LowerEnvVariableBDSCOMDIRValueName := LowerCase(EnvVariableBDSCOMDIRValueName);
-        // Find "[@]SET BDSCOMMONDIR=..."
-        for I := Variables.Count - 1 downto 0 do // the last occurrence overwrites the others
-        begin
-          S := LowerCase(Variables[I]);
-          ps := Pos(LowerEnvVariableBDSCOMDIRValueName, S);
-          if ps > 0 then
-          begin
-            StartS := Trim(Copy(S, 1, ps - 1));
-            if (StartS <> '') and (StartS[1] = '@') then
-              StartS := Trim(Copy(StartS, 2, Length(StartS)));
-            if StartS = 'set' then
-            begin
-              S := Trim(Copy(Variables[I], ps + Length(EnvVariableBDSCOMDIRValueName), Length(Variables[I])));
-              if (S <> '') and (S[1] = '=') then
-              begin
-                S := Copy(S, 2, Length(S));
-                if Pos('%', S) = 0 then // if there is a macro in the string we fall back to using cmd.exe
-                  Result := S;
-                Break;
-              end;
-            end;
-          end;
-        end;
-      except
-        Result := '';
-      end;
-
-      if Result = '' then
-      begin
-        GetRADStudioVars(RootDir, IDEVersionNumber, Variables);
-        Result := Variables.Values[EnvVariableBDSCOMDIRValueName];
-      end;
+      GetRADStudioVars(RootDir, IDEVersionNumber, Variables);
+      Result := Variables.Values[EnvVariableBDSCOMDIRValueName];
     finally
       Variables.Free;
     end;

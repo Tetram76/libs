@@ -4850,7 +4850,7 @@ begin
   Result := '';
   if Window <> 0 then
   begin
-    if not JclCheckWinVersion(5, 0) then // Win2k or newer required
+    if GetWindowsVersion < WVWin2000 then
       raise EJclWin32Error.CreateRes(@RsEWindowsVersionNotSupported);
 
     {$IFDEF HAS_UNITSCOPE}Winapi.{$ENDIF}Windows.GetWindowThreadProcessId(Window, @ProcessID);
@@ -4858,7 +4858,7 @@ begin
     if hProcess <> 0 then
     begin
       try
-        if JclCheckWinVersion(6, 0) then // WinVista or newer
+        if GetWindowsVersion >= WvWinVista then
         begin
           DllHinst := LoadLibrary('Kernel32.dll');
           if DllHinst < HINSTANCE_ERROR then
