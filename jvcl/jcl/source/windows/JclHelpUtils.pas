@@ -119,7 +119,7 @@ const
     RCSfile: '$URL$';
     Revision: '$Revision$';
     Date: '$Date$';
-    LogPath: 'jcl\source\windows';
+    LogPath: 'JCL\source\windows';
     Extra: '';
     Data: nil
     );
@@ -314,12 +314,6 @@ begin
   FHxPlugin := nil;
   if IDEVersionNumber > 0 then
   begin
-    if (IDEVersionNumber = 12) then
-      FIdeNameSpace := 'embarcadero.rs_xe5'
-    else
-    if (IDEVersionNumber = 11) then
-      FIdeNameSpace := 'embarcadero.rs_xe4'
-    else
     if (IDEVersionNumber = 10) then
       FIdeNameSpace := 'embarcadero.rs_xe3'
     else

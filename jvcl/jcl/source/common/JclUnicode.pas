@@ -7740,7 +7740,8 @@ var
   CP: Word;
   CSI: TCharsetInfo;
 begin
-  if not JclCheckWinVersion(5, 0) then // Win2k required
+  if GetWindowsVersion in [wvUnknown, wvWin95, wvWin95OSR2, wvWin98, wvWin98SE,
+                           wvWinME, wvWinNT31, wvWinNT35, wvWinNT351, wvWinNT4] then
   begin
     // these versions of Windows don't support TCI_SRCLOCALE
     CP := CodePageFromLocale(Language);

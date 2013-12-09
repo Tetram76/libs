@@ -43,26 +43,28 @@ implementation
 
 uses
   {$IFDEF HAS_UNITSCOPE}
-  WinApi.Windows, System.SysUtils, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Graphics, System.TypInfo,
+  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Graphics, System.TypInfo,
   {$ELSE ~HAS_UNITSCOPE}
-  Windows, SysUtils, StdCtrls, ComCtrls, Graphics, TypInfo,
+  StdCtrls, ComCtrls, Graphics, TypInfo,
   {$ENDIF ~HAS_UNITSCOPE}
   JclSysUtils, JclSysInfo;
 
 procedure SetCaptionFont(const AObjectFont: TFont);
 begin
-  if JclCheckWinVersion(6, 0) then // WinVista or newer
+  if IsWinVista or IsWinServer2008 or IsWin7 or IsWinServer2008R2 then
   begin
     AObjectFont.Name := 'Segoe UI';
     AObjectFont.Size := 9;
   end
-  else if JclCheckWinVersion(5, 0) then // Win2k or newer
+  else if IsWinXP or IsWin2k or IsWin2003 then
   begin
-     AObjectFont.Name := 'Tahoma';
-     AObjectFont.Size := 8;
+    // MS Shell Dlg 2
+    AObjectFont.Name := 'Tahoma';
+    AObjectFont.Size := 8;
   end
-  else // Win95..WinME/NT4
+  else
   begin
+    // MS Shell Dlg
     AObjectFont.Name := 'MS Sans Serif';
     AObjectFont.Size := 8;
   end;
@@ -70,18 +72,20 @@ end;
 
 procedure SetContentFont(const AObjectFont: TFont);
 begin
-  if JclCheckWinVersion(6, 0) then // WinVista or newer
+  if IsWinVista or IsWinServer2008 or IsWin7 or IsWinServer2008R2 then
   begin
     AObjectFont.Name := 'Calibri';
     AObjectFont.Size := 9;
   end
-  else if JclCheckWinVersion(5, 0) then // Win2k or newer
+  else if IsWinXP or IsWin2k or IsWin2003 then
   begin
+    // MS Shell Dlg 2
     AObjectFont.Name := 'Verdana';
     AObjectFont.Size := 8;
   end
-  else // Win95..WinME/NT4
+  else
   begin
+    // MS Shell Dlg
     AObjectFont.Name := 'MS Sans Serif';
     AObjectFont.Size := 8;
   end;
@@ -92,12 +96,12 @@ var
   AObjectFont: TFont;
   AFontType:   TFontType;
 begin
-  if AObject.ClassType = TFont then
+  if (AObject.ClassType = TFont) then
     AObjectFont := TFont(AObject)
   else
     AObjectFont := TFont(GetObjectProp(AObject, 'Font', TFont));
 
-  if FontType = ftAuto then
+  if (FontType = ftAuto) then
   begin
     if (AObject.ClassType = TMemo) {$IFDEF BORLAND}or (AObject.ClassType = TRichEdit){$ENDIF} then
       AFontType := ftContent
@@ -107,10 +111,14 @@ begin
   else
     AFontType := FontType;
 
-  if AFontType = ftCaption then
-    SetCaptionFont(AObjectFont)
-  else if AFontType = ftContent then
+  if (AFontType = ftCaption) then
+  begin
+    SetCaptionFont(AObjectFont);
+  end
+  else if (AFontType = ftContent) then
+  begin
     SetContentFont(AObjectFont);
+  end;
 end;
 
 end.
