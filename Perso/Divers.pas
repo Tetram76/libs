@@ -26,7 +26,9 @@ procedure Split(var Chaine: string; const Sep: string);
 procedure Collapse(var Chaine: string; const Sep: string = '');
 procedure ShowFormOnTaskBar(Handle: Integer);
 procedure HideFormOnTaskBar(Handle: Integer);
+{$IFDEF WIN32}
 procedure Swap(a, b: Variant);
+{$ENDIF}
 function PosMulti(const Substr: array of string; const S: string): Integer;
 function PosInTextEx(const Debut: Integer; const Texte: string; const AChercher: array of string): Integer;
 function IIf(Test: Boolean; Retour_Vrai, Retour_Faux: Variant): Variant;
@@ -404,6 +406,7 @@ begin
   end;
 end;
 
+{$IFDEF WIN32}
 procedure Swap;
 asm
   MOV EAX, &a;
@@ -411,6 +414,7 @@ asm
   MOV &a, ECX;
   MOV &b, EAX;
 end;
+{$ENDIF}
 
 function IIf(Test: Boolean; Retour_Vrai, Retour_Faux: Variant): Variant;
 begin
