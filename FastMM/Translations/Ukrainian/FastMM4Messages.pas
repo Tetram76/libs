@@ -7,7 +7,7 @@ Ukrainian translation by Andrey V. Shtukaturov.
 
 }
 
-unit FastMM4Messages;
+unit FastMM4MessagesUKR;
 
 interface
 
