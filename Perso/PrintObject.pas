@@ -3,7 +3,7 @@ unit PrintObject;
 interface
 
 uses
-  SysUtils, WinSpool, Windows, Classes, Controls, Graphics, Forms, Printers, JPEG, Dialogs, Generics.Collections;
+  SysUtils, WinSpool, Windows, Classes, Controls, Graphics, Forms, Printers, JPEG, Dialogs, Generics.Collections, System.UITypes;
 
 var
   mf: tmetafile;
