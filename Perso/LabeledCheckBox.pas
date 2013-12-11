@@ -3,7 +3,7 @@ unit LabeledCheckBox;
 interface
 
 uses
-  Windows, SysUtils, Classes, Messages, Controls, Graphics, StdCtrls, ExtCtrls;
+  Windows, SysUtils, Classes, Messages, Controls, Graphics, StdCtrls, ExtCtrls, System.Types;
 
 type
   TLabelPosition = (lpAbove, lpBelow, lpLeft, lpRight);

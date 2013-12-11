@@ -3,7 +3,7 @@ unit RoundButton;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls,
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, System.Types,
   StdCtrls, Menus, Buttons, dialogs;
 
 type
