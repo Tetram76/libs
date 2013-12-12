@@ -75,6 +75,10 @@ type
          procedure PartialClassParent;
          procedure ConstantAliasing;
          procedure ExternalVariables;
+         procedure TypeOfProperty;
+         procedure MethodFree;
+         procedure MethodDestroy;
+         procedure PropertyDefault;
    end;
 
    ETestException = class (Exception);
@@ -1608,6 +1612,99 @@ begin
    CheckEquals(TDataSymbol.ClassName, sym.ClassType.ClassName, 'c');
    CheckFalse(TDataSymbol(sym).HasExternalName, 'c');
    CheckEquals('c', TDataSymbol(sym).ExternalName, 'c');
+end;
+
+// TypeOfProperty
+//
+procedure TCornerCasesTests.TypeOfProperty;
+var
+   prog : IdwsProgram;
+   sym : TSymbol;
+   cls : TClassSymbol;
+begin
+   prog:=FCompiler.Compile( 'type TColor = Integer;'#13#10
+                           +'type TTest = class'#13#10
+                           +'Field : TColor;'#13#10
+                           +'property Prop : TColor read Field;'#13#10
+                           +'property Prop2 : TColor;'#13#10
+                           +'end;');
+
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   sym:=prog.Table.FindSymbol('TTest', cvMagic);
+   CheckTrue(sym is TClassSymbol, 'is class');
+
+   cls:=TClassSymbol(sym);
+
+   sym:=cls.Members.FindSymbol('Prop', cvMagic);
+   CheckEquals('TColor', sym.Typ.Name, 'Prop');
+
+   sym:=cls.Members.FindSymbol('Prop2', cvMagic);
+   CheckEquals('TColor', sym.Typ.Name, 'Prop2');
+end;
+
+// MethodFree
+//
+procedure TCornerCasesTests.MethodFree;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'var toto : string = "test";'#13#10
+                           +'type tobj = class(Tobject)'#13#10
+                           +'Destructor destroy;override;'#13#10
+                           +'begin Print(toto) end;'#13#10
+                           +'end;'#13#10
+                           +'tobj.create.free;');
+
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   exec:=prog.Execute;
+   CheckEquals('test', exec.Result.ToString);
+end;
+
+// MethodDestroy
+//
+procedure TCornerCasesTests.MethodDestroy;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'var toto : string = "test";'#13#10
+                           +'type tobj = class(Tobject)'#13#10
+                           +'Destructor destroy;override;'#13#10
+                           +'begin Print(toto) end;'#13#10
+                           +'end;'#13#10
+                           +'procedure Test; begin var o := tobj.create; end;'#13#10
+                           +'Test');
+
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   exec:=prog.Execute;
+   CheckEquals('test', exec.Result.ToString);
+end;
+
+// PropertyDefault
+//
+procedure TCornerCasesTests.PropertyDefault;
+var
+   prog : IdwsProgram;
+   cls : TClassSymbol;
+   prop : TPropertySymbol;
+begin
+   prog:=FCompiler.Compile( 'type tobj = class(Tobject)'#13#10
+                           +'Field : String;'#13#10
+                           +'property Prop : String read Field default "hello";'#13#10
+                           +'end;');
+
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   cls:=prog.Table.FindTypeLocal('tobj') as TClassSymbol;
+
+   prop:=cls.Members.FindSymbol('Prop', cvMagic) as TPropertySymbol;
+
+   CheckEquals('String', prop.DefaultSym.Typ.Name);
+   CheckEquals('hello', prop.DefaultSym.Data[0]);
 end;
 
 // ------------------------------------------------------------------

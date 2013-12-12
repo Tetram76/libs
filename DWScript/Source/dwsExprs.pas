@@ -705,7 +705,7 @@ type
          FResultType : TdwsResultType;
          FRuntimeFileSystem : TdwsCustomFileSystem;
          FExecutions : TTightList;
-         FExecutionsLock : TCriticalSection;
+         FExecutionsLock : TFixedCriticalSection;
          FTimeoutMilliseconds : Integer;
 
          FSourceContextMap : TdwsSourceContextMap;
@@ -2398,12 +2398,25 @@ var
    destroySym : TMethodSymbol;
    expr : TDestructorVirtualExpr;
    oldStatus : TExecutionStatusResult;
+   caller : TExprBase;
 begin
    if scriptObj.ClassSym.IsExternalRooted then Exit;
    try
       destroySym:=Prog.TypDefaultDestructor;
       expr := TDestructorVirtualExpr.Create(FProg, cNullPos, destroySym,
                                             TConstExpr.Create(FProg, ScriptObj.ClassSym, ScriptObj));
+
+      caller:=CallStackLastExpr;
+      if caller<>nil then begin
+         // called from script
+         expr.Level:=(caller as TFuncExpr).Level;
+         if expr.Level=0 then
+            expr.Level:=1;
+      end else begin
+         // called from Delphi-side outside of script
+         expr.Level:=0;
+      end;
+
       oldStatus:=Status;
       try
          Status:=esrNone;
@@ -2774,7 +2787,7 @@ begin
 
    FResultType:=ResultType;
 
-   FExecutionsLock:=TCriticalSection.Create;
+   FExecutionsLock:=TFixedCriticalSection.Create;
 
    FStackParameters:=stackParameters;
    FStackParameters.MaxLevel:=1;
@@ -5054,7 +5067,7 @@ end;
 //
 constructor TFuncPtrExpr.Create(prog : TdwsProgram; const aScriptPos : TScriptPos; codeExpr : TTypedExpr);
 begin
-   inherited Create(prog, aScriptPos, (codeExpr.Typ as TFuncSymbol));
+   inherited Create(prog, aScriptPos, (codeExpr.Typ.UnAliasedType as TFuncSymbol));
    FCodeExpr:=codeExpr;
 end;
 
@@ -5733,7 +5746,7 @@ begin
   if not Assigned(sym) then
     raise Exception.CreateFmt(RTE_FunctionNotFound, [s]);
 
-  if sym.IsFuncSymbol then
+  if sym.AsFuncSymbol<>nil then
   begin
     if Assigned(FScriptObj) then
       Result := TInfoFunc.Create(Self, sym, Execution.DataContext_Nil,
@@ -6884,11 +6897,13 @@ procedure TdwsSymbolDictionary.Remove(sym: TSymbol);
 var
    idx, i : Integer;
    symList : TSymbolPositionList;
+   funcSym : TFuncSymbol;
 begin
    // TFuncSymbol - remove params
-   if sym.IsFuncSymbol then begin
-      for i := 0 to TFuncSymbol(sym).Params.Count - 1 do
-         Remove(TFuncSymbol(sym).Params[i]);
+   funcSym:=sym.AsFuncSymbol;
+   if funcSym<>nil then begin
+      for i := 0 to funcSym.Params.Count - 1 do
+         Remove(funcSym.Params[i]);
    // TPropertySymbol - remove array indices
    end else if sym is TPropertySymbol then begin
       for i := 0 to TPropertySymbol(sym).ArrayIndices.Count - 1 do
@@ -7251,6 +7266,15 @@ begin
    inherited;
 end;
 
+// GetSubContext
+//
+function TdwsSourceContext.GetSubContext(index : Integer) : TdwsSourceContext;
+begin
+   Result:=TdwsSourceContext(FSubContexts.List[index]);
+end;
+
+// HasParentSymbolOfClass
+//
 function TdwsSourceContext.HasParentSymbolOfClass(SymbolType: TSymbolClass;
   SearchParents: Boolean): Boolean;
 begin
@@ -7378,13 +7402,6 @@ begin
    end;
 end;
 
-// GetSubContext
-//
-function TdwsSourceContext.GetSubContext(index : Integer) : TdwsSourceContext;
-begin
-   Result:=TdwsSourceContext(FSubContexts.List[index]);
-end;
-
 // ------------------
 // ------------------ TdwsSourceContextMap ------------------
 // ------------------
@@ -7508,7 +7525,7 @@ end;
 //
 function TdwsSourceContextMap.FindContext(const scriptPos : TScriptPos): TdwsSourceContext;
 begin
-   Result:=FindContext(scriptPos.Col, scriptPos.Line, scriptPos.SourceFile.Name);
+   Result:=FindContext(scriptPos.Col, scriptPos.Line, scriptPos.SourceName);
 end;
 
 // OpenContext

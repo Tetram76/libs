@@ -50,7 +50,10 @@ type
       procedure Shutdown;
 
       function HttpPort : Integer;
+      function HttpDomainName : String;
       function HttpsPort : Integer;
+      function HttpsDomainName : String;
+
    end;
 
    THttpSys2WebServer = class (TInterfacedSelfObject, IHttpSys2WebServer, IWebServerInfo)
@@ -61,6 +64,8 @@ type
          FNotifier : TdwsFileNotifier;
          FPort : Integer;
          FSSLPort : Integer;
+         FDomainName : String;
+         FSSLDomainName : String;
          FRelativeURI : String;
          FSSLRelativeURI : String;
          FDirectoryIndex : TDirectoryIndexCache;
@@ -75,10 +80,15 @@ type
          procedure LoadAuthenticateOptions(authOptions : TdwsJSONValue);
 
          function HttpPort : Integer;
+         function HttpDomainName : String;
          function HttpsPort : Integer;
+         function HttpsDomainName : String;
+
+         procedure Initialize(const basePath : TFileName; options : TdwsJSONValue); virtual;
 
       public
-         constructor Create(const basePath : TFileName; options : TdwsJSONValue);
+         constructor Create; overload;
+         class function Create(const basePath : TFileName; options : TdwsJSONValue) : THttpSys2WebServer; overload;
          destructor Destroy; override;
 
          procedure Shutdown;
@@ -95,6 +105,8 @@ type
 
          property Port : Integer read FPort;
          property SSLPort : Integer read FSSLPort;
+         property DomainName : String read FDomainName;
+         property SSLDomainName : String read FSSLDomainName;
          property RelativeURI : String read FRelativeURI;
          property SSLRelativeURI : String read FSSLRelativeURI;
          property AutoRedirectFolders : Boolean read FAutoRedirectFolders;
@@ -112,8 +124,12 @@ const
          +'"Port": 888,'
          // http relative URI
          +'"RelativeURI": "",'
+         // http domain name URI
+         +'"DomainName": "+",'
          // https server port, if zero, no https port is opened
          +'"SSLPort": 0,'
+         // http domain name URI
+         +'"SSLDomainName": "+",'
          // https relative URI
          +'"SSLRelativeURI": "",'
          // is HTTP compression activated
@@ -181,7 +197,16 @@ end;
 // ------------------ THttpSys2WebServer ------------------
 // ------------------
 
-constructor THttpSys2WebServer.Create(const basePath : TFileName; options : TdwsJSONValue);
+// Create
+//
+constructor THttpSys2WebServer.Create;
+begin
+   inherited;
+end;
+
+// Initialize
+//
+procedure THttpSys2WebServer.Initialize(const basePath : TFileName; options : TdwsJSONValue);
 var
    logPath : TdwsJSONValue;
    serverOptions : TdwsJSONValue;
@@ -197,21 +222,23 @@ begin
    FDirectoryIndex:=TDirectoryIndexCache.Create;
    FDirectoryIndex.IndexFileNames.CommaText:='"index.dws","index.htm","index.html"';
 
+   FServer:=THttpApi2Server.Create(False);
+
    serverOptions:=TdwsJSONValue.ParseString(cDefaultServerOptions);
    try
       serverOptions.Extend(options['Server']);
 
-      FServer:=THttpApi2Server.Create(False);
-
       FRelativeURI:=serverOptions['RelativeURI'].AsString;
+      FDomainName:=serverOptions['DomainName'].AsString;
       FPort:=serverOptions['Port'].AsInteger;
       if FPort<>0 then
-         FServer.AddUrl(FRelativeURI, FPort, False, '+');
+         FServer.AddUrl(FRelativeURI, FPort, False, FDomainName);
 
       FSSLRelativeURI:=serverOptions['SSLRelativeURI'].AsString;
+      FSSLDomainName:=serverOptions['SSLDomainName'].AsString;
       FSSLPort:=serverOptions['SSLPort'].AsInteger;
       if FSSLPort<>0 then begin
-         FServer.AddUrl('', FSSLPort, True, '+');
+         FServer.AddUrl(FSSLRelativeURI, FSSLPort, True, FSSLDomainName);
       end;
 
       if serverOptions['Compression'].AsBoolean then
@@ -254,6 +281,12 @@ begin
 
    if nbThreads>1 then
       FServer.Clone(nbThreads-1);
+end;
+
+class function THttpSys2WebServer.Create(const basePath : TFileName; options : TdwsJSONValue) : THttpSys2WebServer;
+begin
+   Result:=Self.Create;
+   Result.Initialize(basePath, options);
 end;
 
 destructor THttpSys2WebServer.Destroy;
@@ -458,11 +491,29 @@ begin
    Result:=Port;
 end;
 
+// HttpDomainName
+//
+function THttpSys2WebServer.HttpDomainName : String;
+begin
+   if DomainName='+' then
+      Result:='localhost'
+   else Result:=DomainName;
+end;
+
 // HttpsPort
 //
 function THttpSys2WebServer.HttpsPort : Integer;
 begin
    Result:=SSLPort;
+end;
+
+// HttpsDomainName
+//
+function THttpSys2WebServer.HttpsDomainName : String;
+begin
+   if SSLDomainName='+' then
+      Result:='localhost'
+   else Result:=SSLDomainName;
 end;
 
 end.

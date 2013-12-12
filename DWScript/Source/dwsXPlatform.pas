@@ -66,14 +66,34 @@ type
 
          function TryEnter : Boolean;
    end;
-   {$HINTS ON}
 
+   TMultiReadSingleWrite = class
+      private
+         FCS : TFixedCriticalSection; // used as fallback
+         FSRWLock : Pointer;
+         FDummy : array [0..95-4*SizeOf(Pointer)] of Byte; // padding
+
+      public
+         constructor Create(forceFallBack : Boolean = False);
+         destructor Destroy; override;
+
+         procedure BeginRead;
+         procedure EndRead;
+
+         procedure BeginWrite;
+         procedure EndWrite;
+   end;
+   {$HINTS ON}
 
 procedure SetDecimalSeparator(c : Char);
 function GetDecimalSeparator : Char;
 
+type
+   TCollectFileProgressEvent = procedure (const directory : String; var shouldAbort : Boolean) of object;
+
 procedure CollectFiles(const directory, fileMask : UnicodeString;
-                       list : TStrings; recurseSubdirectories: Boolean = False);
+                       list : TStrings; recurseSubdirectories: Boolean = False;
+                       onProgress : TCollectFileProgressEvent = nil);
 
 type
    {$IFNDEF FPC}
@@ -184,7 +204,6 @@ procedure GetMemForT(var T; Size: integer); inline;
 {$ifdef NEED_FindDelimiter}
 function FindDelimiter(const Delimiters, S: string; StartIdx: Integer = 1): Integer;
 {$endif}
-
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -492,7 +511,8 @@ type
 //
 procedure CollectFilesMasked(const directory : UnicodeString;
                              mask : TMask; list : TStrings;
-                             recurseSubdirectories: Boolean = False);
+                             recurseSubdirectories: Boolean = False;
+                             onProgress : TCollectFileProgressEvent = nil);
 const
    // contant defined in Windows.pas is incorrect
    FindExInfoBasic = 1;
@@ -500,11 +520,18 @@ var
    searchRec : TFindDataRec;
    infoLevel : TFindexInfoLevels;
    fileName : String;
+   shouldAbort : Boolean;
 begin
    // 6.1 required for FindExInfoBasic (Win 2008 R2 or Win 7)
    if ((Win32MajorVersion shl 8) or Win32MinorVersion)>=$601 then
       infoLevel:=TFindexInfoLevels(FindExInfoBasic)
    else infoLevel:=FindExInfoStandard;
+
+   if Assigned(onProgress) then begin
+      shouldAbort:=False;
+      onProgress(directory, shouldAbort);
+      if shouldAbort then exit;
+   end;
 
    fileName:=directory+'*';
    searchRec.Handle:=FindFirstFileEx(PChar(Pointer(fileName)), infoLevel,
@@ -529,7 +556,7 @@ begin
             // decomposed cast and concatenation to avoid implicit string variable
             fileName:=searchRec.Data.cFileName;
             fileName:=directory+fileName+PathDelim;
-            CollectFilesMasked(fileName, mask, list, True);
+            CollectFilesMasked(fileName, mask, list, True, onProgress);
          end;
       until not FindNextFile(searchRec.Handle, searchRec.Data);
       Windows.FindClose(searchRec.Handle);
@@ -539,7 +566,8 @@ end;
 // CollectFiles
 //
 procedure CollectFiles(const directory, fileMask : UnicodeString; list : TStrings;
-                       recurseSubdirectories: Boolean = False);
+                       recurseSubdirectories: Boolean = False;
+                       onProgress : TCollectFileProgressEvent = nil);
 var
    mask : TMask;
 begin
@@ -547,7 +575,8 @@ begin
    // Mask confirmation is necessary
    mask:=TMask.Create(fileMask);
    try
-      CollectFilesMasked(directory, mask, list, recurseSubdirectories);
+      CollectFilesMasked(IncludeTrailingPathDelimiter(directory), mask,
+                         list, recurseSubdirectories, onProgress);
    finally
       mask.Free;
    end;
@@ -895,5 +924,85 @@ end;
 
 {$ENDIF}
 {$ENDIF}
+
+// ------------------
+// ------------------ TMultiReadSingleWrite ------------------
+// ------------------
+
+// light-weight SRW is supported on Vista and above
+// we detect by feature rather than OS Version
+type
+   SRWLOCK = Pointer;
+var vSupportsSRWChecked : Boolean;
+var AcquireSRWLockExclusive : procedure (var SRWLock : SRWLOCK); stdcall;
+var ReleaseSRWLockExclusive : procedure (var SRWLock : SRWLOCK); stdcall;
+var AcquireSRWLockShared : procedure(var SRWLock : SRWLOCK); stdcall;
+var ReleaseSRWLockShared : procedure (var SRWLock : SRWLOCK); stdcall;
+
+function SupportsSRW : Boolean;
+var
+   h : Integer;
+begin
+   if not vSupportsSRWChecked then begin
+      vSupportsSRWChecked:=True;
+      h:=GetModuleHandle('kernel32');
+      AcquireSRWLockExclusive:=GetProcAddress(h, 'AcquireSRWLockExclusive');
+      ReleaseSRWLockExclusive:=GetProcAddress(h, 'ReleaseSRWLockExclusive');
+      AcquireSRWLockShared:=GetProcAddress(h, 'AcquireSRWLockShared');
+      ReleaseSRWLockShared:=GetProcAddress(h, 'ReleaseSRWLockShared');
+   end;
+   Result:=Assigned(AcquireSRWLockExclusive);
+end;
+
+// Create
+//
+constructor TMultiReadSingleWrite.Create(forceFallBack : Boolean = False);
+begin
+   if forceFallBack or not SupportsSRW then
+      FCS:=TFixedCriticalSection.Create;
+end;
+
+// Destroy
+//
+destructor TMultiReadSingleWrite.Destroy;
+begin
+   FCS.Free;
+end;
+
+// BeginRead
+//
+procedure TMultiReadSingleWrite.BeginRead;
+begin
+   if Assigned(FCS) then
+      FCS.Enter
+   else AcquireSRWLockShared(FSRWLock);
+end;
+
+// EndRead
+//
+procedure TMultiReadSingleWrite.EndRead;
+begin
+   if Assigned(FCS) then
+      FCS.Leave
+   else ReleaseSRWLockShared(FSRWLock)
+end;
+
+// BeginWrite
+//
+procedure TMultiReadSingleWrite.BeginWrite;
+begin
+   if Assigned(FCS) then
+      FCS.Enter
+   else AcquireSRWLockExclusive(FSRWLock);
+end;
+
+// EndWrite
+//
+procedure TMultiReadSingleWrite.EndWrite;
+begin
+   if Assigned(FCS) then
+      FCS.Leave
+   else ReleaseSRWLockExclusive(FSRWLock)
+end;
 
 end.

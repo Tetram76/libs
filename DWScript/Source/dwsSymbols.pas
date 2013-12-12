@@ -241,6 +241,8 @@ type
    TdwsVisibility = (cvMagic, cvPrivate, cvProtected, cvPublic, cvPublished);
    TdwsVisibilities = set of TdwsVisibility;
 
+   TFuncSymbol = class;
+
    // TSymbol
    //
    // Named item in the script
@@ -255,7 +257,7 @@ type
          function SafeGetCaption : UnicodeString;
          function GetCaption : UnicodeString; virtual;
          function GetDescription : UnicodeString; virtual;
-         function GetIsFuncSymbol : Boolean; virtual;
+         function GetAsFuncSymbol : TFuncSymbol; virtual;
 
       public
          constructor Create(const aName : UnicodeString; aType : TTypeSymbol);
@@ -266,7 +268,8 @@ type
 
          class function IsBaseType : Boolean; virtual;
          function IsType : Boolean; virtual;
-         function IsFuncSymbol : Boolean;
+         function AsFuncSymbol : TFuncSymbol; overload;
+         function AsFuncSymbol(var funcSym : TFuncSymbol) : Boolean; overload;
 
          function QualifiedName : UnicodeString; virtual;
 
@@ -683,7 +686,7 @@ type
          function  IsCompatible(typSym : TTypeSymbol) : Boolean; override;
          function  IsType : Boolean; override;
          procedure SetIsType;
-         function  GetIsFuncSymbol : Boolean; override;
+         function  GetAsFuncSymbol : TFuncSymbol; override;
          procedure SetInline;
          procedure AddParam(param : TParamSymbol);
          procedure AddParams(params : TParamsSymbolTable);
@@ -889,6 +892,7 @@ type
    TAliasSymbol = class sealed (TTypeSymbol)
       protected
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
+         function GetAsFuncSymbol : TFuncSymbol; override;
 
       public
          function BaseType : TTypeSymbol; override;
@@ -1363,6 +1367,7 @@ type
          FArrayIndices : TParamsSymbolTable;
          FIndexSym : TTypeSymbol;
          FIndexValue: TData;
+         FDefaultSym : TConstSymbol;
          FVisibility : TdwsVisibility;
          FDeprecatedMessage : UnicodeString;
 
@@ -1394,6 +1399,7 @@ type
          property IsDefault : Boolean read GetIsDefault;
          property IndexValue : TData read FIndexValue;
          property IndexSym : TTypeSymbol read FIndexSym;
+         property DefaultSym : TConstSymbol read FDefaultSym write FDefaultSym;
          property DeprecatedMessage : UnicodeString read FDeprecatedMessage write FDeprecatedMessage;
          property IsDeprecated : Boolean read GetIsDeprecated;
    end;
@@ -1450,7 +1456,8 @@ type
                        csfStatic, csfExternal, csfPartial,
                        csfNoVirtualMembers, csfNoOverloads,
                        csfExternalRooted,
-                       csfInitialized);
+                       csfInitialized,
+                       csfAttribute);
    TClassSymbolFlags = set of TClassSymbolFlag;
 
    // type X = class ... end;
@@ -1476,6 +1483,8 @@ type
          procedure SetIsExternal(const val : Boolean); inline;
          function GetIsExternalRooted : Boolean; override;
          function GetIsPartial : Boolean; override;
+         function GetIsAttribute : Boolean; inline;
+         procedure SetIsAttribute(const val : Boolean); inline;
 
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
@@ -1536,6 +1545,7 @@ type
          property IsStatic : Boolean read GetIsStatic write SetIsStatic;
          property IsExternal : Boolean read GetIsExternal write SetIsExternal;
          property IsPartial : Boolean read GetIsPartial;
+         property IsAttribute : Boolean read GetIsAttribute write SetIsAttribute;
 
          property OnObjectDestroy : TObjectDestroyEvent read FOnObjectDestroy write FOnObjectDestroy;
    end;
@@ -2083,18 +2093,30 @@ begin
    Result:=False;
 end;
 
-// GetIsFuncSymbol
+// GetAsFuncSymbol
 //
-function TSymbol.GetIsFuncSymbol : Boolean;
+function TSymbol.GetAsFuncSymbol : TFuncSymbol;
 begin
-   Result:=False;
+   Result:=nil;
 end;
 
-// IsFuncSymbol
+// AsFuncSymbol
 //
-function TSymbol.IsFuncSymbol : Boolean;
+function TSymbol.AsFuncSymbol : TFuncSymbol;
 begin
-   Result:=(Self<>nil) and GetIsFuncSymbol;
+   if Self<>nil then
+      Result:=GetAsFuncSymbol
+   else Result:=nil;
+end;
+
+// AsFuncSymbol
+//
+function TSymbol.AsFuncSymbol(var funcSym : TFuncSymbol) : Boolean;
+begin
+   if Self<>nil then
+      funcSym:=GetAsFuncSymbol
+   else funcSym:=nil;
+   Result:=(funcSym<>nil);
 end;
 
 // QualifiedName
@@ -3236,9 +3258,9 @@ begin
 //      Result:=False
    else begin
       Result:=False;
-      if not typSym.IsFuncSymbol then
+      funcSym:=typSym.AsFuncSymbol;
+      if funcSym=nil then
          Exit;
-      funcSym:=TFuncSymbol(typSym);
       if Params.Count<>funcSym.Params.Count then Exit;
       if not cCompatibleKinds[Kind, funcSym.Kind] then Exit;
       if    (Typ=funcSym.Typ)
@@ -3262,11 +3284,10 @@ var
    i : Integer;
    funcSym : TFuncSymbol;
 begin
-   Result:=    (typSym<>nil)
-           and typSym.IsFuncSymbol;
-   if not Result then Exit;
+   funcSym:=typSym.AsFuncSymbol;
+   if funcSym=nil then
+      Exit(False);
 
-   funcSym:=TFuncSymbol(typSym);
    Result:=    (Kind=funcSym.Kind)
            and (Params.Count=funcSym.Params.Count);
    if not Result then Exit;
@@ -3298,11 +3319,11 @@ begin
    Include(FFlags, fsfType);
 end;
 
-// GetIsFuncSymbol
+// GetAsFuncSymbol
 //
-function TFuncSymbol.GetIsFuncSymbol : Boolean;
+function TFuncSymbol.GetAsFuncSymbol : TFuncSymbol;
 begin
-   Result:=True;
+   Result:=Self;
 end;
 
 // SetInline
@@ -3821,6 +3842,7 @@ end;
 destructor TPropertySymbol.Destroy;
 begin
   FArrayIndices.Free;
+  FDefaultSym.Free;
   inherited;
 end;
 
@@ -3996,6 +4018,128 @@ begin
    FOperators.Free;
    FInterfaces.Free;
    inherited;
+end;
+
+// GetIsExplicitAbstract
+//
+function TClassSymbol.GetIsExplicitAbstract : Boolean;
+begin
+   Result:=(csfExplicitAbstract in FFlags);
+end;
+
+// SetIsExplicitAbstract
+//
+procedure TClassSymbol.SetIsExplicitAbstract(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, csfExplicitAbstract)
+   else Exclude(FFlags, csfExplicitAbstract);
+end;
+
+// GetIsAbstract
+//
+function TClassSymbol.GetIsAbstract : Boolean;
+begin
+   Result:=(([csfAbstract, csfExplicitAbstract]*FFlags)<>[]);
+end;
+
+// GetIsSealed
+//
+function TClassSymbol.GetIsSealed : Boolean;
+begin
+   Result:=(csfSealed in FFlags);
+end;
+
+// SetIsSealed
+//
+procedure TClassSymbol.SetIsSealed(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, csfSealed)
+   else Exclude(FFlags, csfSealed);
+end;
+
+// GetIsStatic
+//
+function TClassSymbol.GetIsStatic : Boolean;
+begin
+   Result:=(csfStatic in FFlags);
+end;
+
+// SetIsStatic
+//
+procedure TClassSymbol.SetIsStatic(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, csfStatic)
+   else Exclude(FFlags, csfStatic);
+end;
+
+// GetIsExternal
+//
+function TClassSymbol.GetIsExternal : Boolean;
+begin
+   Result:=(csfExternal in FFlags);
+end;
+
+// SetIsExternal
+//
+procedure TClassSymbol.SetIsExternal(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, csfExternal)
+   else Exclude(FFlags, csfExternal);
+end;
+
+// GetIsExternalRooted
+//
+function TClassSymbol.GetIsExternalRooted : Boolean;
+begin
+   Result:=IsExternal or (csfExternalRooted in FFlags);
+end;
+
+// GetIsPartial
+//
+function TClassSymbol.GetIsPartial : Boolean;
+begin
+   Result:=(csfPartial in FFlags);
+end;
+
+// GetIsAttribute
+//
+function TClassSymbol.GetIsAttribute : Boolean;
+begin
+   Result:=(csfAttribute in FFlags);
+end;
+
+// SetIsAttribute
+//
+procedure TClassSymbol.SetIsAttribute(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, csfAttribute)
+   else Exclude(FFlags, csfAttribute);
+end;
+
+// SetIsPartial
+//
+procedure TClassSymbol.SetIsPartial;
+begin
+   Include(FFlags, csfPartial);
+end;
+
+// SetNoVirtualMembers
+//
+procedure TClassSymbol.SetNoVirtualMembers;
+begin
+   Include(FFlags, csfNoVirtualMembers);
+end;
+
+// SetNoOverloads
+//
+procedure TClassSymbol.SetNoOverloads;
+begin
+   Include(FFlags, csfNoOverloads);
 end;
 
 // AddField
@@ -4257,6 +4401,9 @@ begin
 
    IsStatic:=IsStatic or ancestorClassSym.IsStatic;
 
+   if ancestorClassSym.IsAttribute then
+      Include(FFlags, csfAttribute);
+
    if [csfExternalRooted, csfExternal]*ancestorClassSym.Flags<>[] then
       Include(FFlags, csfExternalRooted);
 
@@ -4326,112 +4473,6 @@ begin
     Result := Result + '   ' + Members.Symbols[i].Description + ';'#13#10;
 
   Result := Result + 'end';
-end;
-
-// GetIsExplicitAbstract
-//
-function TClassSymbol.GetIsExplicitAbstract : Boolean;
-begin
-   Result:=(csfExplicitAbstract in FFlags);
-end;
-
-// SetIsExplicitAbstract
-//
-procedure TClassSymbol.SetIsExplicitAbstract(const val : Boolean);
-begin
-   if val then
-      Include(FFlags, csfExplicitAbstract)
-   else Exclude(FFlags, csfExplicitAbstract);
-end;
-
-// GetIsAbstract
-//
-function TClassSymbol.GetIsAbstract : Boolean;
-begin
-   Result:=(([csfAbstract, csfExplicitAbstract]*FFlags)<>[]);
-end;
-
-// GetIsSealed
-//
-function TClassSymbol.GetIsSealed : Boolean;
-begin
-   Result:=(csfSealed in FFlags);
-end;
-
-// SetIsSealed
-//
-procedure TClassSymbol.SetIsSealed(const val : Boolean);
-begin
-   if val then
-      Include(FFlags, csfSealed)
-   else Exclude(FFlags, csfSealed);
-end;
-
-// GetIsStatic
-//
-function TClassSymbol.GetIsStatic : Boolean;
-begin
-   Result:=(csfStatic in FFlags);
-end;
-
-// SetIsStatic
-//
-procedure TClassSymbol.SetIsStatic(const val : Boolean);
-begin
-   if val then
-      Include(FFlags, csfStatic)
-   else Exclude(FFlags, csfStatic);
-end;
-
-// GetIsExternal
-//
-function TClassSymbol.GetIsExternal : Boolean;
-begin
-   Result:=(csfExternal in FFlags);
-end;
-
-// SetIsExternal
-//
-procedure TClassSymbol.SetIsExternal(const val : Boolean);
-begin
-   if val then
-      Include(FFlags, csfExternal)
-   else Exclude(FFlags, csfExternal);
-end;
-
-// GetIsExternalRooted
-//
-function TClassSymbol.GetIsExternalRooted : Boolean;
-begin
-   Result:=IsExternal or (csfExternalRooted in FFlags);
-end;
-
-// GetIsPartial
-//
-function TClassSymbol.GetIsPartial : Boolean;
-begin
-   Result:=(csfPartial in FFlags);
-end;
-
-// SetIsPartial
-//
-procedure TClassSymbol.SetIsPartial;
-begin
-   Include(FFlags, csfPartial);
-end;
-
-// SetNoVirtualMembers
-//
-procedure TClassSymbol.SetNoVirtualMembers;
-begin
-   Include(FFlags, csfNoVirtualMembers);
-end;
-
-// SetNoOverloads
-//
-procedure TClassSymbol.SetNoOverloads;
-begin
-   Include(FFlags, csfNoOverloads);
 end;
 
 // FindClassOperatorStrict
@@ -5485,7 +5526,7 @@ var
 begin
    ptrList:=FSymbols.List;
    for i:=FSymbols.Count-1 downto 0 do begin
-      if TSymbol(ptrList[i]).IsFuncSymbol then
+      if TSymbol(ptrList[i]).AsFuncSymbol<>nil then
          Exit(True);
    end;
    Result:=False;
@@ -6299,6 +6340,13 @@ begin
    Result:=Typ.DoIsOfType(typSym);
 end;
 
+// GetAsFuncSymbol
+//
+function TAliasSymbol.GetAsFuncSymbol : TFuncSymbol;
+begin
+   Result:=Typ.GetAsFuncSymbol;
+end;
+
 // ------------------
 // ------------------ TTypeSymbol ------------------
 // ------------------
@@ -6808,7 +6856,7 @@ end;
 //
 function TAnyFuncSymbol.IsCompatible(typSym : TTypeSymbol) : Boolean;
 begin
-   Result:=typSym.IsFuncSymbol;
+   Result:=(typSym.AsFuncSymbol<>nil);
 end;
 
 // ------------------
@@ -7024,13 +7072,14 @@ function TPerfectMatchEnumerator.Callback(sym : TSymbol) : Boolean;
 var
    locSym : TFuncSymbol;
 begin
-   if sym.IsFuncSymbol then begin
-      locSym:=TFuncSymbol(sym);
-      if locSym.Level=FuncSym.Level then
+   locSym:=sym.AsFuncSymbol;
+   if locSym<>nil then begin
+      if locSym.Level=FuncSym.Level then begin
          if FuncSym.IsSameOverloadOf(locSym) then begin
             Match:=locSym;
             Exit(True);
          end;
+      end;
    end;
    Result:=False;
 end;
