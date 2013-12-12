@@ -593,7 +593,87 @@ begin
    Result:=Frac(v);
 end;
 
+function double_exp(const v : Double) : Double;
+begin
+   Result:=Exp(v);
+end;
+
+function double_ln(const v : Double) : Double;
+{$ifdef WIN32_ASM}
+asm
+   fld   v
+   fldln2
+   fxch
+   fyl2x
+{$else}
+begin
+   Result:=Ln(v);
+{$endif}
+end;
+
+function double_log2(const v : Double) : Double;
+{$ifdef WIN32_ASM}
+asm
+   fld1
+   fld   v
+   fyl2x
+{$else}
+begin
+   Result:=Log2(v);
+{$endif}
+end;
+
+function double_log10(const v : Double) : Double;
+{$ifdef WIN32_ASM}
+asm
+   fldlg2
+   fld   v
+   fyl2x
+{$else}
+begin
+   Result:=Log10(v);
+{$endif}
+end;
+
+function double_cos(const v : Double) : Double;
+{$ifdef WIN32_ASM}
+asm
+   fld v
+   fcos
+{$else}
+begin
+   Result:=Cos(v);
+{$endif}
+end;
+
+function double_sin(const v : Double) : Double;
+{$ifdef WIN32_ASM}
+asm
+   fld v
+   fsin
+{$else}
+begin
+   Result:=Sin(v);
+{$endif}
+end;
+
+function double_tan(const v : Double) : Double;
+{$ifdef WIN32_ASM}
+asm
+   fld v
+   fptan
+   fstp st(0)
+{$else}
+begin
+   Result:=Tan(v);
+{$endif}
+end;
+
 var
+   vAddr_Exp : function (const v : Double) : Double = double_exp;
+   vAddr_Ln : function (const v : Double) : Double = double_ln;
+   vAddr_Log2 : function (const v : Double) : Double = double_log2;
+   vAddr_Log10 : function (const v : Double) : Double = double_log10;
    vAddr_Power : function (const base, exponent: Double) : Double = Math.Power;
    vAddr_Trunc : function (const v : Double) : Int64 = double_trunc;
    vAddr_Frac : function (const v : Double) : Double = double_frac;
@@ -603,6 +683,9 @@ var
    vAddr_IsInfinite : function (const v : Double) : Boolean = Math.IsInfinite;
    vAddr_IsFinite : function (const v : Double) : Boolean = dwsMathFunctions.IsFinite;
    vAddr_IsPrime : function (const n : Int64) : Boolean = dwsMathFunctions.IsPrime;
+   vAddr_Cos : function (const v : Double) : Double = double_cos;
+   vAddr_Sin : function (const v : Double) : Double = double_sin;
+   vAddr_Tan : function (const v : Double) : Double = double_tan;
 
 // ------------------
 // ------------------ TdwsJITx86 ------------------
@@ -869,7 +952,14 @@ begin
    RegisterJITter(TSqrFloatFunc,                Tx86SqrFloatFunc.Create(Self));
    RegisterJITter(TMaxFunc,                     Tx86MinMaxFloatFunc.Create(Self, xmm_maxsd));
    RegisterJITter(TMinFunc,                     Tx86MinMaxFloatFunc.Create(Self, xmm_minsd));
+
+   RegisterJITter(TExpFunc,                     Tx86DirectCallFunc.Create(Self, @@vAddr_Exp));
+   RegisterJITter(TLnFunc,                      Tx86DirectCallFunc.Create(Self, @@vAddr_Ln));
+   RegisterJITter(TLog2Func,                    Tx86DirectCallFunc.Create(Self, @@vAddr_Log2));
+   RegisterJITter(TLog10Func,                   Tx86DirectCallFunc.Create(Self, @@vAddr_Log10));
+
    RegisterJITter(TPowerFunc,                   Tx86DirectCallFunc.Create(Self, @@vAddr_Power));
+
    RegisterJITter(TRoundFunc,                   Tx86RoundFunc.Create(Self));
    RegisterJITter(TTruncFunc,                   Tx86DirectCallFunc.Create(Self, @@vAddr_Trunc));
    RegisterJITter(TFracFunc,                    Tx86DirectCallFunc.Create(Self, @@vAddr_Frac));
@@ -879,6 +969,10 @@ begin
    RegisterJITter(TIsPrimeFunc,                 Tx86DirectCallFunc.Create(Self, @@vAddr_IsPrime));
 
    RegisterJITter(TOddFunc,                     Tx86OddFunc.Create(Self));
+
+   RegisterJITter(TCosFunc,                     Tx86DirectCallFunc.Create(Self, @@vAddr_Cos));
+   RegisterJITter(TSinFunc,                     Tx86DirectCallFunc.Create(Self, @@vAddr_Sin));
+   RegisterJITter(TTanFunc,                     Tx86DirectCallFunc.Create(Self, @@vAddr_Tan));
 end;
 
 // Destroy
@@ -2632,7 +2726,7 @@ begin
 
    jit.RestoreXMMRegs;
 
-   x86._op_reg_int32(gpOp_and, gprEAX, 0);
+   x86._op_reg_int32(gpOp_and, gprEAX, 255);
 
    jit.QueueGreed(expr);
 
@@ -3281,7 +3375,11 @@ begin
 
       x86._movsd_qword_ptr_indexed_reg(gprEAX, gprECX, 1, delta, reg);
 
-   end else inherited;
+   end else begin
+
+      inherited;
+
+   end;
 end;
 
 // ------------------
@@ -4383,8 +4481,6 @@ begin
       if paramReg[i]<>xmmNone then
          x86._movsd_esp_reg(stackOffset-paramOffset[i], paramReg[i]);
    end;
-
-   jit.ResetXMMReg;
 
    x86._call_absmem(addrPtr);
 

@@ -74,6 +74,12 @@ type
          procedure EvaluateSymbol(const aSymbolList : TSymbolPositionList; msgs : TdwsMessageList); override;
    end;
 
+   TGR_AttributeClassNaming = class abstract (TdwsSymbolDictionaryGabelouRule)
+      public
+         constructor Create; override;
+         procedure EvaluateSymbol(const aSymbolList : TSymbolPositionList; msgs : TdwsMessageList); override;
+   end;
+
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -144,7 +150,7 @@ end;
 //
 procedure TGR_PascalCaseFunctions.EvaluateSymbol(const aSymbolList : TSymbolPositionList; msgs : TdwsMessageList);
 begin
-   if not aSymbolList.Symbol.IsFuncSymbol then Exit;
+   if aSymbolList.Symbol.AsFuncSymbol=nil then Exit;
 
    if TCharacter.IsLower(aSymbolList.Symbol.Name[1]) then
       TGabelouMessage.CreateOnSymbolPosList(msgs, aSymbolList, Description);
@@ -285,11 +291,42 @@ end;
 procedure TGR_PascalCaseTypes.EvaluateSymbol(const aSymbolList : TSymbolPositionList; msgs : TdwsMessageList);
 begin
    if not (aSymbolList.Symbol is TTypeSymbol) then Exit;
-   if aSymbolList.Symbol.IsFuncSymbol then Exit;
+   if aSymbolList.Symbol.AsFuncSymbol<>nil then Exit;
    if aSymbolList.Symbol is TUnitSymbol then Exit;
 
    if TCharacter.IsLower(aSymbolList.Symbol.Name[1]) then
       TGabelouMessage.CreateOnSymbolPosList(msgs, aSymbolList, Description);
+end;
+
+// ------------------
+// ------------------ TGR_AttributeClassNaming ------------------
+// ------------------
+
+// Create
+//
+constructor TGR_AttributeClassNaming.Create;
+begin
+   Name:=GAB_AttributeClassNaming_Name;
+   Description:=GAB_AttributeClassNaming_Description;
+end;
+
+// EvaluateSymbol
+//
+procedure TGR_AttributeClassNaming.EvaluateSymbol(const aSymbolList : TSymbolPositionList; msgs : TdwsMessageList);
+var
+   cls : TClassSymbol;
+begin
+   if aSymbolList.Symbol.ClassType<>TClassSymbol then Exit;
+
+   cls:=TClassSymbol(aSymbolList.Symbol);
+   if not cls.IsAttribute then Exit;
+   if cls.IsAbstract then Exit;
+   if cls.Name=SYS_TCUSTOMATTRIBUTE then Exit;
+
+   if    (not StrEndsWith(cls.Name, 'Attribute'))
+      or (StrBeginsWith(cls.Name, 'T') and not TCharacter.IsLower((Copy(cls.Name, 2, 1)+'e')[1])) then begin
+      TGabelouMessage.CreateOnSymbolPosList(msgs, aSymbolList, Description);
+   end;
 end;
 
 // ------------------------------------------------------------------
@@ -306,6 +343,7 @@ initialization
       TGR_ConstantNamingRules,
 
       TGR_PascalCaseFunctions, TGR_PascalCaseProperties, TGR_PascalCaseTypes,
+      TGR_AttributeClassNaming,
 
       TGR_PrefixedFields, TGR_PrefixedClassVariables
       ]);

@@ -469,7 +469,7 @@ begin
       or (baseType is TConnectorSymbol) then
          Result := TInfoData.Create(ProgramInfo, ChildTypeSym, childDataPtr,
                                     ChildDataMaster)
-   else if ChildTypeSym.IsFuncSymbol then
+   else if ChildTypeSym.AsFuncSymbol<>nil then
       Result := TInfoFunc.Create(ProgramInfo, ChildTypeSym, childDataPtr,
                                  ChildDataMaster, nil, nil)
    else if baseType is TRecordSymbol then
@@ -834,18 +834,21 @@ end;
 constructor TInfoFunc.Create(ProgramInfo: TProgramInfo; TypeSym: TSymbol;
    const DataPtr: IDataContext; const DataMaster: IDataMaster;
    const ScriptObj: IScriptObj; ClassSym: TClassSymbol; ForceStatic: Boolean);
+var
+   funcSym : TFuncSymbol;
 begin
    inherited Create(ProgramInfo, TypeSym, DataPtr, DataMaster);
    FScriptObj := ScriptObj;
    FClassSym := ClassSym;
-   FParams := TFuncSymbol(FTypeSym).Params;
-   FParamSize := TFuncSymbol(FTypeSym).ParamSize;
+   funcSym := FTypeSym.AsFuncSymbol;
+   FParams := funcSym.Params;
+   FParamSize := funcSym.ParamSize;
    FTempParams := TUnsortedSymbolTable.Create;
    FForceStatic := ForceStatic;
 
-   if Assigned(TFuncSymbol(FTypeSym).Typ) then
-      SetLength(FResult, TFuncSymbol(FTypeSym).Typ.Size)
-   else if (FTypeSym is TMethodSymbol) and (TMethodSymbol(FTypeSym).Kind = fkConstructor) then
+   if Assigned(funcSym.Typ) then
+      SetLength(FResult, funcSym.Typ.Size)
+   else if (funcSym is TMethodSymbol) and (TMethodSymbol(funcSym).Kind = fkConstructor) then
       SetLength(FResult, 1);
 end;
 
@@ -951,7 +954,7 @@ var
    funcExpr : TFuncExprBase;
    resultDataPtr : IDataContext;
 begin
-   funcSym := TFuncSymbol(FTypeSym);
+   funcSym := FTypeSym.AsFuncSymbol;
 
    if Length(Params) <> funcSym.Params.Count then
       raise Exception.CreateFmt(RTE_InvalidNumberOfParams, [Length(Params),
@@ -1072,16 +1075,18 @@ var
 begin
    if FDataPtr.DataLength>0 then begin
       Result:=TFuncPtrExpr.Create(FExec.Prog, cNullPos,
-                                  TConstExpr.Create(FExec.Prog, TFuncSymbol(FTypeSym), FDataPtr[0]));
+                                  TConstExpr.Create(FExec.Prog, FTypeSym.AsFuncSymbol, FDataPtr[0]));
    end else begin
-      Result:=CreateFuncExpr(FExec.Prog, TFuncSymbol(FTypeSym), FScriptObj,
+      Result:=CreateFuncExpr(FExec.Prog, FTypeSym.AsFuncSymbol, FScriptObj,
                              FClassSym, FForceStatic);
    end;
    if Result is TFuncExpr then begin
       caller:=FExec.CallStackLastExpr;
       if caller<>nil then begin
          // called from script
-         TFuncExpr(Result).Level:=(FExec.CallStackLastExpr as TFuncExpr).Level;
+         TFuncExpr(Result).Level:=(caller as TFuncExpr).Level;
+         if TFuncExpr(Result).Level=0 then
+            TFuncExpr(Result).Level:=1;
       end else begin
          // called from Delphi-side outside of script
          TFuncExpr(Result).Level:=0;
@@ -1481,10 +1486,10 @@ var
   func : IInfo;
   locData : IDataContext;
 begin
-  if FPropSym.ReadSym.IsFuncSymbol then begin
+  if FPropSym.ReadSym.AsFuncSymbol<>nil then begin
     func := TInfoFunc.Create(FProgramInfo,FPropSym.ReadSym, FDataPtr,
       FDataMaster,FScriptObj,FScriptObj.ClassSym);
-    AssignIndices(func,TFuncSymbol(FPropSym.ReadSym).Params);
+    AssignIndices(func, FPropSym.ReadSym.AsFuncSymbol.Params);
     result := func.Call.Data;
   end
   else if FPropSym.ReadSym is TFieldSymbol then
@@ -1509,12 +1514,12 @@ var
   params: TSymbolTable;
   locData : IDataContext;
 begin
-  if FPropSym.WriteSym.IsFuncSymbol then
+  if FPropSym.WriteSym.AsFuncSymbol<>nil then
   begin
     func := TInfoFunc.Create(FProgramInfo,FPropSym.WriteSym,FDataPtr,
                              FDataMaster,FScriptObj,FScriptObj.ClassSym);
 
-    params := TFuncSymbol(FPropSym.WriteSym).Params;
+    params := FPropSym.WriteSym.AsFuncSymbol.Params;
     AssignIndices(func,params);
 
     paramName := params[params.Count - 1].Name;
