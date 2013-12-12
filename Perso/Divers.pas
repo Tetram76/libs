@@ -20,6 +20,7 @@ type
     destructor Destroy; override;
   end;
 
+function IsAdmin: Boolean;
 function CanUseTaskDialog: Boolean;
 procedure RemplaceChaine(var Chaine: string; Quoi, parQuoi: string);
 procedure Split(var Chaine: string; const Sep: string);
@@ -407,6 +408,7 @@ begin
 end;
 
 {$IFDEF WIN32}
+
 procedure Swap;
 asm
   MOV EAX, &a;
@@ -1201,6 +1203,54 @@ end;
 function MAKELCID(lgid, srtid: Word): dword;
 begin
   Result := (srtid shl 16) + (lgid);
+end;
+
+const
+  SECURITY_NT_AUTHORITY: TSIDIdentifierAuthority = (value: (0, 0, 0, 0, 0, 5));
+  SECURITY_BUILTIN_DOMAIN_RID = $00000020;
+  DOMAIN_ALIAS_RID_ADMINS = $00000220;
+  SE_GROUP_ENABLED = $00000004;
+
+function IsAdmin: Boolean;
+var
+  hAccessToken: THandle;
+  ptgGroups: PTokenGroups;
+  dwInfoBufferSize: dword;
+  psidAdministrators: PSID;
+  X: Integer;
+  bSuccess: Bool;
+begin
+  // RunAsAdmin
+  // if CheckWin32Version(6, 0) then ShellExecute(Handle, 'runas', PChar(Application.Exename), '/registerHandlers', nil, SW_SHOWNORMAL)
+
+  Result := False;
+  bSuccess := OpenThreadToken(GetCurrentThread, TOKEN_QUERY, True, hAccessToken);
+  if not bSuccess then
+    if GetLastError = ERROR_NO_TOKEN then
+      bSuccess := OpenProcessToken(GetCurrentProcess, TOKEN_QUERY, hAccessToken);
+  if bSuccess then
+  begin
+    GetTokenInformation(hAccessToken, TokenGroups, nil, 0, dwInfoBufferSize);
+    ptgGroups := GetMemory(dwInfoBufferSize);
+    bSuccess := GetTokenInformation(hAccessToken, TokenGroups, ptgGroups, dwInfoBufferSize, dwInfoBufferSize);
+    CloseHandle(hAccessToken);
+    if bSuccess then
+    begin
+      AllocateAndInitializeSid(SECURITY_NT_AUTHORITY, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, psidAdministrators);
+{$R-}
+      for X := 0 to ptgGroups.GroupCount - 1 do
+      begin
+        if (SE_GROUP_ENABLED = (ptgGroups.Groups[X].Attributes and SE_GROUP_ENABLED)) and EqualSid(psidAdministrators, ptgGroups.Groups[X].Sid) then
+        begin
+          Result := True;
+          Break;
+        end;
+      end;
+{$R+}
+      FreeSid(psidAdministrators);
+    end;
+    FreeMem(ptgGroups);
+  end;
 end;
 
 end.
