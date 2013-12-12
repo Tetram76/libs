@@ -84,6 +84,7 @@ type
     FFilename: string; // '' = current exe, DLL whatever.
     FDateTimeFormat: string;
     FFileSizeFormat: string;
+    FInfoSuffix: string;
 
     function CalcLangCharset(Buffer: pointer; Buflen: UINT): string;
     function Slice(var S: string; Delimiter: string): string;
@@ -95,6 +96,7 @@ type
     function GetFileSizeInfo: string;
     function GetInfo: string;
     procedure SetupCaption;
+    procedure SetInfoSuffix(const Value: string);
   protected
     { Protected declarations }
     procedure SetFileSizeFormat(Value: string);
@@ -115,6 +117,7 @@ type
     property VersionResource: TVersionResources read FVersionResource write SetVersionResource;
     property VersionResourceKey: string read FVersionResourceKey write SetVersionResourceKey;
     property InfoPrefix: string read GetInfoPrefix write SetInfoPrefix;
+    property InfoSuffix: string read FInfoSuffix write SetInfoSuffix;
     property ShowInfoPrefix: Boolean read FShowInfoPrefix write SetShowInfoPrefix;
     property LangCharset: string read FLangCharset write SetLangCharset;
     property WordWrap;
@@ -260,8 +263,8 @@ function TfshVersionLabel.GetStringFileInfo(Buffer: PChar; size: Integer):
 //var vallen, Translen: Integer;
 var
   vallen, Translen: UINT;
-  VersionPointer: pointer;
-  TransBuffer: pointer;
+  VersionPointer: Pointer;
+  TransBuffer: Pointer;
   Major, Minor: Integer;
 begin
   if FLangCharSet = '-1' then
@@ -283,8 +286,7 @@ begin
   begin
     if (Vallen > 1) then
     begin
-      SetLength(Result, vallen);
-      StrLCopy(PChar(Result), VersionPointer, vallen);
+      Result := PChar(VersionPointer);
             // special case for 'short' file versions
       if FVersionResource = vrShortFileVersion then
       begin
@@ -435,6 +437,7 @@ begin
     end;
   end;
   if ShowInfoPrefix then Result := InfoPrefix + ' ' + Result;
+  Result := Result + ' ' + InfoSuffix;
 end;
 
 procedure TfshVersionLabel.SetInfoPrefix(Value: string);
@@ -443,6 +446,13 @@ begin
   FInfoPrefix := Value;
     {The caption needs to be recalculated everytime the prefix is
     changed, otherwise the detaults override the user specified one}
+  SetupCaption;
+end;
+
+procedure TfshVersionLabel.SetInfoSuffix(const Value: string);
+begin
+  if FInfoSuffix = Value then Exit;
+  FInfoSuffix := Value;
   SetupCaption;
 end;
 
