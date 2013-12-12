@@ -1,11 +1,13 @@
 unit FormPreviewPrintObject;
-{.$D-}
+{ .$D- }
 {$B-}
+
 interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ComCtrls, StdCtrls, ExtCtrls, ToolWin, Menus, Printers, PrintObject, ImgList;
+  ComCtrls, StdCtrls, ExtCtrls, ToolWin, Menus, Printers, PrintObject, ImgList,
+  Generics.Collections;
 
 type
   TFormPreview = class(TForm, IPrintObjectPreview)
@@ -66,11 +68,11 @@ type
     { Déclarations publiques }
     HeightMM: Single;
     WidthMM: Single;
-    FPages: TList;
+    FPages: TList<TGraphic>;
     numeropage: Integer;
     procedure Abort; safecall;
     procedure Quit; safecall;
-    function Pages: TList; safecall;
+    function Pages: TList<TGraphic>; safecall;
     procedure SetHeightMM(const Value: Single); safecall;
     procedure SetWidthMM(const Value: Single); safecall;
     procedure SetCaption(const Title: string); safecall;
@@ -97,20 +99,27 @@ resourcestring
 var
   PosClick: TPoint;
   Moving: Boolean;
-const                                                     
+
+const
   CurHand = 300;
 
 {$R *.DFM}
 {$R *.res}
 
-function Max(a,b: Integer): Integer;
+function Max(a, b: Integer): Integer;
 begin
-  if a > b then Result := a else Result := b;
+  if a > b then
+    Result := a
+  else
+    Result := b;
 end;
 
-function Min(a,b: Integer): Integer;
+function Min(a, b: Integer): Integer;
 begin
-  if a < b then Result := a else Result := b;
+  if a < b then
+    Result := a
+  else
+    Result := b;
 end;
 
 procedure TFormPreview.SysCommand;
@@ -124,17 +133,25 @@ procedure TFormPreview.SysCommand;
   var
     s: PChar;
   begin
-    if Form.WindowState=wsMinimized then s := 'RestoreUp' else s := 'RestoreDown';
+    if Form.WindowState = wsMinimized then
+      s := 'RestoreUp'
+    else
+      s := 'RestoreDown';
     PlaySound(s, 0, SND_ALIAS or SND_ASYNC or SND_NOSTOP or SND_NODEFAULT);
     ShowWindow(Form.Handle, SW_RESTORE);
   end;
 
 begin
   case (Msg.CmdType and $FFF0) of
-    SC_CLOSE: if FormStyle = fsMDIChild then Self.Release;
-    SC_MINIMIZE: ZoomMinimize(Self);
-    SC_RESTORE: ZoomRestore(Self);
-    else inherited;
+    SC_CLOSE:
+      if FormStyle = fsMDIChild then
+        Self.Release;
+    SC_MINIMIZE:
+      ZoomMinimize(Self);
+    SC_RESTORE:
+      ZoomRestore(Self);
+  else
+    inherited;
   end;
 end;
 
@@ -154,7 +171,8 @@ end;
 
 procedure TFormPreview.CreateParams;
 begin
-  if TApplication(Owner).MainForm.FormStyle = fsMDIForm then FormStyle := fsMDIChild;
+  if TApplication(Owner).MainForm.FormStyle = fsMDIForm then
+    FormStyle := fsMDIChild;
   inherited;
 end;
 
@@ -194,7 +212,7 @@ begin
   ToolButton8.Hint := quitter;
   numeropage := 0;
   Icon := TApplication(Owner).Icon;
-  FPages := TList.Create;
+  FPages := TList<TGraphic>.Create;
   ScrollBarV.Top := 0;
   ScrollBarV.Height := Panel.Height;
   ScrollBarV.Left := Panel.Width - ScrollBarV.Width;
@@ -210,7 +228,7 @@ end;
 
 procedure TFormPreview.Quit;
 begin
-  Label1.Caption := IntToStr(maximum);
+  Label1.Caption := IntToStr(Maximum);
   ToolButton1.Click;
   Label1.AutoSize := False;
   Label2.AutoSize := False;
@@ -225,25 +243,29 @@ end;
 
 procedure TFormPreview.ToolButton1Click(Sender: TObject);
 begin
-  if (numeropage <> 1) and ShowPage(1) then numeropage := 1;
+  if (numeropage <> 1) and ShowPage(1) then
+    numeropage := 1;
   ShowNoPage;
 end;
 
 procedure TFormPreview.ToolButton2Click(Sender: TObject);
 begin
-  if (numeropage > 1) and ShowPage(numeropage-1) then dec(numeropage);
+  if (numeropage > 1) and ShowPage(numeropage - 1) then
+    dec(numeropage);
   ShowNoPage;
 end;
 
 procedure TFormPreview.ToolButton3Click(Sender: TObject);
 begin
-  if (numeropage < maximum) and ShowPage(numeropage+1) then inc(numeropage);
+  if (numeropage < Maximum) and ShowPage(numeropage + 1) then
+    inc(numeropage);
   ShowNoPage;
 end;
 
 procedure TFormPreview.ToolButton4Click(Sender: TObject);
 begin
-  if (numeropage <> maximum) and ShowPage(maximum) then numeropage := maximum;
+  if (numeropage <> Maximum) and ShowPage(Maximum) then
+    numeropage := Maximum;
   ShowNoPage;
 end;
 
@@ -251,9 +273,12 @@ procedure TFormPreview.PopupClick(Sender: TObject);
 var
   dummy: Integer;
 begin
-  if TComponent(Sender).Tag = 0 then dummy := StrToInt(InputBox(AllerA, AllerA, IntToStr(numeropage)))
-                                else dummy := TComponent(Sender).Tag;
-  if (dummy in [1..maximum]) and (dummy <> numeropage) and ShowPage(dummy) then numeropage := dummy;
+  if TComponent(Sender).Tag = 0 then
+    dummy := StrToInt(InputBox(allera, allera, IntToStr(numeropage)))
+  else
+    dummy := TComponent(Sender).Tag;
+  if (dummy in [1 .. Maximum]) and (dummy <> numeropage) and ShowPage(dummy) then
+    numeropage := dummy;
   ShowNoPage;
 end;
 
@@ -276,13 +301,15 @@ end;
 function TFormPreview.PWidth;
 begin
   Result := Panel.Width;
-  if ScrollBarV.Visible then Result := Panel.Width - ScrollBarV.Width;
+  if ScrollBarV.Visible then
+    Result := Panel.Width - ScrollBarV.Width;
 end;
 
 function TFormPreview.PHeight;
 begin
   Result := Panel.Height;
-  if ScrollBarH.Visible then Result := Panel.Height - ScrollBarH.Height;
+  if ScrollBarH.Visible then
+    Result := Panel.Height - ScrollBarH.Height;
 end;
 
 function TFormPreview.ShowPage;
@@ -291,7 +318,7 @@ var
   Rapport: Double;
 begin
   try
-    Source := TBitmap(Pages[Page-1]);
+    Source := TBitmap(Pages[Page - 1]);
     Dest := Image.Picture.Bitmap;
     case Zoom.ItemIndex + 1 of
       1:
@@ -311,9 +338,11 @@ begin
           Panel1.Visible := False;
           Image.SetBounds(Image.Left, Image.Top, PWidth, Round(PWidth * Rapport));
         end;
-      else begin
-        Rapport := StrToInt(Copy(Zoom.Items[Zoom.ItemIndex], 1, Length(Zoom.Items[Zoom.ItemIndex])-1)) / 100;
-        Image.SetBounds(Image.Left, Image.Top, Round(WidthMM * Screen.PixelsPerInch * 56.7 / 1440 * Rapport), Round(HeightMM * Screen.PixelsPerInch * 56.7 / 1440 * Rapport));
+    else
+      begin
+        Rapport := StrToInt(Copy(Zoom.Items[Zoom.ItemIndex], 1, Length(Zoom.Items[Zoom.ItemIndex]) - 1)) / 100;
+        Image.SetBounds(Image.Left, Image.Top, Round(WidthMM * Screen.PixelsPerInch * 56.7 / 1440 * Rapport),
+          Round(HeightMM * Screen.PixelsPerInch * 56.7 / 1440 * Rapport));
         ScrollBarV.Visible := Image.Height > (Panel.Height - ScrollBarH.Height);
         ScrollBarH.Visible := Image.Width > (Panel.Width - ScrollBarV.Width);
         ScrollBarV.Height := PHeight;
@@ -334,12 +363,18 @@ begin
     ScrollBarH.LargeChange := PWidth;
     ScrollBarH.SmallChange := PWidth div 5;
 
-    if not ScrollBarH.Visible then Image.Left := (PWidth - Image.Width) div 2
-                              else if (Image.Left > 0) then Image.Left := 0;
-    if not ScrollBarV.Visible then Image.Top := (PHeight - Image.Height) div 2
-                              else if (Image.Top > 0) then Image.Top := 0;
-    if Image.Top<=0 then ScrollBarV.Position := -Image.Top;
-    if Image.Left<=0 then ScrollBarH.Position := -Image.Left;
+    if not ScrollBarH.Visible then
+      Image.Left := (PWidth - Image.Width) div 2
+    else if (Image.Left > 0) then
+      Image.Left := 0;
+    if not ScrollBarV.Visible then
+      Image.Top := (PHeight - Image.Height) div 2
+    else if (Image.Top > 0) then
+      Image.Top := 0;
+    if Image.Top <= 0 then
+      ScrollBarV.Position := -Image.Top;
+    if Image.Left <= 0 then
+      ScrollBarH.Position := -Image.Left;
 
     Result := True;
   except
@@ -352,18 +387,21 @@ var
   i: Integer;
 begin
   OnResize := nil;
-  for i:=0 to Maximum-1 do TImage(Pages[i]).Free;
+  for i := 0 to Maximum - 1 do
+    TImage(Pages[i]).Free;
   Pages.Free;
 end;
 
 procedure TFormPreview.ScrollBarVChange(Sender: TObject);
 begin
-  if not Moving then Image.Top := - ScrollBarV.Position;
+  if not Moving then
+    Image.Top := -ScrollBarV.Position;
 end;
 
 procedure TFormPreview.ScrollBarHChange(Sender: TObject);
 begin
-  if not Moving then Image.Left := - ScrollBarH.Position;
+  if not Moving then
+    Image.Left := -ScrollBarH.Position;
 end;
 
 procedure TFormPreview.ZoomChange(Sender: TObject);
@@ -377,14 +415,17 @@ var
   debut, fin: Integer;
   t: TMenuItem;
 begin
-  for i := 0 to PopupMenu1.Items.Count - 1 do PopupMenu1.Items[0].Free;
+  for i := 0 to PopupMenu1.Items.Count - 1 do
+    PopupMenu1.Items[0].Free;
   debut := Max(numeropage - 5, 1);
-  fin   := Min(debut + 10, maximum);
+  fin := Min(debut + 10, Maximum);
   debut := Max(fin - 10, 1);
-  for i := debut to fin do AddNewItem(PopupMenu1, i, Self);
-  if Maximum > 10 then begin
+  for i := debut to fin do
+    AddNewItem(PopupMenu1, i, Self);
+  if Maximum > 10 then
+  begin
     t := TMenuItem.Create(PopupMenu1);
-    t.Caption := AllerA;
+    t.Caption := allera;
     t.Tag := 0;
     t.OnClick := Self.PopupClick;
     PopupMenu1.Items.Add(t);
@@ -400,21 +441,25 @@ procedure TFormPreview.Image3MouseDown(Sender: TObject; Button: TMouseButton; Sh
 var
   pos: TPoint;
 begin
-  if (Sender = Image3) or (Sender = Label2) then PopupMenu1.Alignment := paLeft;
-  if (Sender = Panel4)                      then PopupMenu1.Alignment := paCenter;
-  if (Sender = Image2) or (Sender = Label1) then PopupMenu1.Alignment := paRight;
+  if (Sender = Image3) or (Sender = Label2) then
+    PopupMenu1.Alignment := paLeft;
+  if (Sender = Panel4) then
+    PopupMenu1.Alignment := paCenter;
+  if (Sender = Image2) or (Sender = Label1) then
+    PopupMenu1.Alignment := paRight;
 
-  pos.x := X;
-  pos.y := Image3.Top + Image3.Height;
+  pos.X := X;
+  pos.Y := Image3.Top + Image3.Height;
   pos := TWinControl(Sender).ClientToScreen(pos);
-  PopupMenu1.Popup(pos.x, pos.y);
+  PopupMenu1.Popup(pos.X, pos.Y);
 end;
 
 procedure TFormPreview.ImageMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
-  if Shift <> [ssLeft] then Exit;
-  Image.Left := Image.Left + (X - PosClick.x);
-  Image.Top  := Image.Top  + (Y - PosClick.y);
+  if Shift <> [ssLeft] then
+    Exit;
+  Image.Left := Image.Left + (X - PosClick.X);
+  Image.Top := Image.Top + (Y - PosClick.Y);
   ScrollBarH.Position := -Image.Left;
   ScrollBarV.Position := -Image.Top;
 end;
@@ -439,7 +484,7 @@ begin
   Self.Release;
 end;
 
-function TFormPreview.Pages: TList;
+function TFormPreview.Pages: TList<TGraphic>;
 begin
   Result := FPages;
 end;
@@ -460,6 +505,7 @@ begin
 end;
 
 initialization
-  Screen.Cursors[CurHand] := LoadCursor(HInstance, 'HAND');
+
+Screen.Cursors[CurHand] := LoadCursor(HInstance, 'HAND');
 
 end.
