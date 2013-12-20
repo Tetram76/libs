@@ -4,7 +4,7 @@ unit Divers;
 interface
 
 uses
-  Windows, SysUtils, VCL.Forms, Classes, VCL.Dialogs, VCL.Controls, VCL.StdCtrls;
+  Winapi.Windows, System.SysUtils, VCL.Forms, System.Classes, VCL.Dialogs, VCL.Controls, VCL.StdCtrls;
 
 type
   IMesurePerf = interface
@@ -139,7 +139,7 @@ function MAKELCID(lgid, srtid: Word): dword;
 implementation
 
 uses
-  AnsiStrings, Math, VCL.Themes;
+  System.AnsiStrings, System.Math, VCL.Themes;
 
 const
   VALIDCHARPOSTE: TSysCharSet = ['a' .. 'z', 'A' .. 'Z', '1' .. '0', '!', '@', '#', '$', '%', '^', '&', '''', ')', '(', '.', '-', '_', '{', '}', '~', '.'];
@@ -770,7 +770,7 @@ begin
     nFileSystemNameSize := MAX_PATH + 1;
 
     lpRootPathName := PChar(Drive + ':\');
-    Result := Windows.GetVolumeInformation(lpRootPathName, lpVolumeNameBuffer, nVolumeNameSize, @lpVolumeSerialNumber, lpMaximumComponentLength,
+    Result := Winapi.Windows.GetVolumeInformation(lpRootPathName, lpVolumeNameBuffer, nVolumeNameSize, @lpVolumeSerialNumber, lpMaximumComponentLength,
       lpFileSystemFlags, lpFileSystemNameBuffer, nFileSystemNameSize);
     if Result then
       with SysInfoRec do
@@ -946,18 +946,18 @@ var
   begin
     FindHandle := FindFirstFile(Path, FindData);
     Result := FindData.cFileName;
-    Windows.FindClose(FindHandle);
+    Winapi.Windows.FindClose(FindHandle);
   end;
 
 begin
   Result := '';
   FindHandle := FindFirstFile(PChar(FileName), FindData);
   if FindHandle <> INVALID_HANDLE_VALUE then
-    Windows.FindClose(FindHandle)
+    Winapi.Windows.FindClose(FindHandle)
   else
     raise ELongFilename.CreateFmt('Path or file not found (%s) !', [FileName]);
 
-  DriveLen := Length(SysUtils.ExtractFileDrive(FileName));
+  DriveLen := Length(System.SysUtils.ExtractFileDrive(FileName));
   PBuffer := buffer;
   StrPCopy(PBuffer, FileName);
   Position := Length(PBuffer) - 1;
@@ -1013,9 +1013,9 @@ begin
     VerQueryValue(buffer, '\VarFileInfo\Translation', Pointer(TransBuffer), Translen);
     if Translen >= 4 then
     begin
-      AnsiStrings.StrLCopy(@Temp, PAnsiChar(TransBuffer), 2);
+      System.AnsiStrings.StrLCopy(@Temp, PAnsiChar(TransBuffer), 2);
       CalcLangCharSet := IntToHex(Temp and $FFFF, 4);
-      AnsiStrings.StrLCopy(@Temp, PAnsiChar(TransBuffer + 2), 2);
+      System.AnsiStrings.StrLCopy(@Temp, PAnsiChar(TransBuffer + 2), 2);
       CalcLangCharSet := CalcLangCharSet + IntToHex(Temp and $FFFF, 4);
     end
     else
