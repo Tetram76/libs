@@ -54,7 +54,7 @@
         <Icon_MainIcon>MediaKit_Icon.ico</Icon_MainIcon>
         <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_UsePackage>vcl;vclimg;VclSmp;vcldb;bdertl;PngComponentsD12;PngComponents;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;vclimg;VclSmp;vcldb;bdertl;PngComponentsD12;PngComponents;Jcl;JvCore;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
@@ -104,6 +104,8 @@
         <DCCReference Include="bdertl.dcp"/>
         <DCCReference Include="VclSmp.dcp"/>
         <DCCReference Include="PngComponents.dcp"/>
+        <DCCReference Include="Jcl.dcp"/>
+        <DCCReference Include="JvCore.dcp"/>
         <DCCReference Include="HARMFADE.PAS"/>
         <DCCReference Include="MyBarCode.pas"/>
         <DCCReference Include="PrintObject.pas"/>

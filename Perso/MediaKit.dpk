@@ -42,7 +42,9 @@ requires
   vcldb,
   bdertl,
   VclSmp,
-  PngComponents;
+  PngComponents,
+  Jcl,
+  JvCore;
 
 contains
   HARMFADE in 'HARMFADE.PAS',
