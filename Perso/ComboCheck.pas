@@ -244,6 +244,9 @@ procedure Register;
 
 implementation
 
+uses
+  System.UITypes;
+
 {$R CheckCombo.res}
 
 const

@@ -70,7 +70,7 @@ type
     property Visible;
     property Transparent;
     property InfoString: string read FInfoString; // Read only copy of captoion
-    property Filename: string read GetFilename write SetFilename;
+    property Filename: string read GetFilename write SetFilename stored False;
     property DateTimeFormat: string read FDateTimeFormat write SetDateTimeFormat;
     property FileSizeFormat: string read FFileSizeFormat write SetFileSizeFormat;
   end;
@@ -164,8 +164,6 @@ end;
 
 function TfshVersionLabel.GetFixedFileInfo: string;
 var
-  // ValLen: Integer;
-  ValLen: UINT;
   FixedFileInfo: PVSFixedFileInfo;
 begin
   Result := '';
