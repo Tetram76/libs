@@ -188,6 +188,9 @@ type
     U_ERROR_LIMIT =
     U_PLUGIN_ERROR_LIMIT);
 
+function U_SUCCESS(code: UErrorCode): Boolean;
+function U_FAILURE(code: UErrorCode): Boolean;
+
 {$IFDEF ICU_LINKONREQUEST}
 
 type
@@ -210,6 +213,9 @@ var
 
 implementation
 
+uses
+  umachine;
+
 {$IFNDEF ICU_LINKONREQUEST}
 function u_errorName; external ICU_DEFAULT_COMMON_MODULE_NAME name UErrorNameDefaultExportName;
 {$ELSE ~ICU_LINKONREQUEST}
@@ -223,6 +229,16 @@ end;
 procedure UnloadICU;
 begin
   @u_errorName := nil;
+end;
+
+function U_SUCCESS(code: UErrorCode): Boolean;
+begin
+  Result := (code <= U_ZERO_ERROR);
+end;
+
+function U_FAILURE(code: UErrorCode): Boolean;
+begin
+  Result := (code > U_ZERO_ERROR);
 end;
 
 initialization

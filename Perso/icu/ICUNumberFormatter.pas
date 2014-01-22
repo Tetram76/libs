@@ -73,6 +73,10 @@ type
       property PaddingPosition: Int32 index UNUM_PADDING_POSITION read GetAttribute write SetAttribute;
       property SecondaryGroupingSize: Int32 index UNUM_SECONDARY_GROUPING_SIZE read GetAttribute write SetAttribute;
       property Scale: Int32 index UNUM_SCALE read GetAttribute write SetAttribute;
+      property SignificantDigitsUsed: Int32 index UNUM_SIGNIFICANT_DIGITS_USED read GetAttribute write SetAttribute;
+      property MinSignificantDigits: Int32 index UNUM_MIN_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
+      property MaxSignificantDigits: Int32 index UNUM_MAX_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
+      property LenientParse: Int32 index UNUM_LENIENT_PARSE read GetAttribute write SetAttribute;
 
       property PositivePrefix: string index UNUM_POSITIVE_PREFIX read GetTextAttribute write SetTextAttribute;
       property PositiveSuffix: string index UNUM_POSITIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
@@ -102,14 +106,12 @@ type
     procedure BuildFormatter;
     procedure ReleaseFormatter;
 
-    function GetLocale(aType: ULocDataLocaleType = ULOC_ACTUAL_LOCALE): string;
+    function GetLocale(aType: ULocDataLocaleType = ULOC_ACTUAL_LOCALE): AnsiString;
     procedure SetLocale(const Value: AnsiString);
     procedure SetPattern(const Value: string);
     procedure SetStyle(const Value: UNumberFormatStyle);
     function GetPattern: string;
 
-    function GetErrorCode: UErrorCode;
-    function GetErrorMessage: string;
   public
     constructor Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = '');
     destructor Destroy; override;
@@ -126,9 +128,12 @@ type
     function ParseCurrency(const Value: string; const CurrencyCode: string): Double;
     function ParseDecimal(const Value: string): AnsiString;
 
+    function GetErrorCode: UErrorCode;
+    function GetErrorMessage: AnsiString;
+
     property Locale: AnsiString read FLocale write SetLocale;
-    property ActualLocale: string index ULOC_ACTUAL_LOCALE read GetLocale;
-    property ValidLocale: string index ULOC_VALID_LOCALE read GetLocale;
+    property ActualLocale: AnsiString index ULOC_ACTUAL_LOCALE read GetLocale;
+    property ValidLocale: AnsiString index ULOC_VALID_LOCALE read GetLocale;
     property Style: UNumberFormatStyle read FStyle write SetStyle;
     property Pattern: string read GetPattern write SetPattern;
 
@@ -139,7 +144,7 @@ type
 implementation
 
 uses
-  icu_globals;
+  icu_globals, System.AnsiStrings;
 
 const
   DEFAULT_BUFFER_SIZE = 256;
@@ -234,6 +239,7 @@ end;
 procedure TICUNumberFormatter.BuildFormatter;
 var
   unumStatus: UErrorCode;
+  loc: PAnsiChar;
 begin
   if not(IsICULoaded or LoadICU) then
     raise Exception.Create('Impossible de charger ICU');
@@ -241,8 +247,13 @@ begin
   if FFormat <> nil then
     ReleaseFormatter;
 
+  if Locale = '' then
+    loc := nil
+  else
+    loc := PAnsiChar(Locale);
+
   unumStatus := U_ZERO_ERROR;
-  FFormat := UnumOpen(Style, @WideString(Pattern)[1], Length(Pattern), PAnsiChar(Locale), nil, unumStatus);
+  FFormat := UnumOpen(Style, @WideString(Pattern)[1], Length(Pattern), loc, nil, unumStatus);
 end;
 
 constructor TICUNumberFormatter.Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = '');
@@ -347,12 +358,12 @@ begin
   Result := FStatus;
 end;
 
-function TICUNumberFormatter.GetErrorMessage: string;
+function TICUNumberFormatter.GetErrorMessage: AnsiString;
 begin
   Result := u_errorName(FStatus);
 end;
 
-function TICUNumberFormatter.GetLocale(aType: ULocDataLocaleType): string;
+function TICUNumberFormatter.GetLocale(aType: ULocDataLocaleType): AnsiString;
 begin
   FStatus := U_ZERO_ERROR;
   Result := UnumGetLocaleByType(FFormat, aType, FStatus);
@@ -415,13 +426,13 @@ end;
 
 procedure TICUNumberFormatter.SetLocale(const Value: AnsiString);
 begin
-  FLocale := Value;
+  FLocale := System.AnsiStrings.Trim(Value);
   BuildFormatter;
 end;
 
 procedure TICUNumberFormatter.SetPattern(const Value: string);
 begin
-  FPattern := Value;
+  FPattern := Trim(Value);
   BuildFormatter;
 end;
 
