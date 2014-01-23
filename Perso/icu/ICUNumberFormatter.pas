@@ -3,7 +3,7 @@ unit ICUNumberFormatter;
 interface
 
 uses
-  System.SysUtils, System.Classes, unum, uloc, utypes;
+  System.SysUtils, System.Classes, _unum, _uloc, _utypes;
 
 type
   TICUNumberFormatter = class

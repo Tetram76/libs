@@ -19,15 +19,18 @@ uses
   UTestUnum in 'lib\UTestUnum.pas',
   icu_globals in '..\lib\icu_globals.pas',
   parseerr in '..\lib\parseerr.pas',
-  umachine in '..\lib\umachine.pas',
-  umisc in '..\lib\umisc.pas',
-  unum in '..\lib\unum.pas',
-  utypes in '..\lib\utypes.pas',
-  formattable in '..\lib\formattable.pas',
-  uloc in '..\lib\uloc.pas',
+  _umachine in '..\lib\_umachine.pas',
+  _umisc in '..\lib\_umisc.pas',
+  _unum in '..\lib\_unum.pas',
+  _utypes in '..\lib\_utypes.pas',
+  _uformattable in '..\lib\_uformattable.pas',
+  _uloc in '..\lib\_uloc.pas',
   ICUNumberFormatter in '..\ICUNumberFormatter.pas',
   TestICUNumberFormat in 'TestICUNumberFormat.pas',
-  TestICUNumberFormatFunctions in 'TestICUNumberFormatFunctions.pas';
+  TestICUNumberFormatFunctions in 'TestICUNumberFormatFunctions.pas',
+  _udat in '..\lib\_udat.pas',
+  _ucal in '..\lib\_ucal.pas',
+  _udisplaycontext in '..\lib\_udisplaycontext.pas';
 
 {$R *.RES}
 

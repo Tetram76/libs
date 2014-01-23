@@ -18,7 +18,7 @@ type
 implementation
 
 uses
-  unum, parseerr, utypes, umachine, umisc, icu_globals;
+  _unum, parseerr, _utypes, _umachine, _umisc, icu_globals;
 
 { TTestUnum }
 
@@ -50,7 +50,7 @@ begin
     Check((unumStatus = U_BUFFER_OVERFLOW_ERROR) or (unumStatus = U_STRING_NOT_TERMINATED_WARNING), 'unum_format 1, unexpected: ' + u_errorName(unumStatus));
     SetLength(Result, bufNeeded);
     unumStatus := U_ZERO_ERROR;
-    bufNeeded := UnumFormat(fmt, 150, @Result[1], Length(Result), nil, unumStatus);
+    UnumFormat(fmt, 150, @Result[1], Length(Result), nil, unumStatus);
     Check(unumStatus = U_STRING_NOT_TERMINATED_WARNING, 'unum_format 1, unexpected: ' + u_errorName(unumStatus));
 
     CheckEquals('one hundred fifty', Result);
@@ -66,7 +66,7 @@ begin
     Check((unumStatus = U_BUFFER_OVERFLOW_ERROR) or (unumStatus = U_STRING_NOT_TERMINATED_WARNING), 'unum_format 1, unexpected: ' + u_errorName(unumStatus));
     SetLength(Result, bufNeeded);
     unumStatus := U_ZERO_ERROR;
-    bufNeeded := UnumFormat(fmt, 150, @Result[1], Length(Result), nil, unumStatus);
+    UnumFormat(fmt, 150, @Result[1], Length(Result), nil, unumStatus);
     Check(unumStatus = U_STRING_NOT_TERMINATED_WARNING, 'unum_format 1, unexpected: ' + u_errorName(unumStatus));
 
     CheckEquals('cent cinquante', Result);

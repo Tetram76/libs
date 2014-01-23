@@ -1,4 +1,4 @@
-unit utypes;
+unit _utypes;
 
 {$I icu.inc}
 
@@ -199,7 +199,7 @@ type
 var
   u_errorName: TUErrorNameFunc = nil;
 {$ELSE ~ICU_LINKONREQUEST}
-  u_errorName = function(code: UErrorCode): PAnsiChar; cdecl;
+function u_errorName(code: UErrorCode): PAnsiChar; cdecl;
 {$ENDIF ~ICU_LINKONREQUEST}
 
 const
@@ -214,7 +214,17 @@ var
 implementation
 
 uses
-  umachine;
+  _umachine;
+
+function U_SUCCESS(code: UErrorCode): Boolean;
+begin
+  Result := (code <= U_ZERO_ERROR);
+end;
+
+function U_FAILURE(code: UErrorCode): Boolean;
+begin
+  Result := (code > U_ZERO_ERROR);
+end;
 
 {$IFNDEF ICU_LINKONREQUEST}
 function u_errorName; external ICU_DEFAULT_COMMON_MODULE_NAME name UErrorNameDefaultExportName;
@@ -229,16 +239,6 @@ end;
 procedure UnloadICU;
 begin
   @u_errorName := nil;
-end;
-
-function U_SUCCESS(code: UErrorCode): Boolean;
-begin
-  Result := (code <= U_ZERO_ERROR);
-end;
-
-function U_FAILURE(code: UErrorCode): Boolean;
-begin
-  Result := (code > U_ZERO_ERROR);
 end;
 
 initialization

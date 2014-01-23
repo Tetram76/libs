@@ -3,7 +3,7 @@ unit TestICUNumberFormat;
 interface
 
 uses
-  System.Classes, System.SysUtils, TestFramework, ICUNumberFormatter, unum;
+  System.Classes, System.SysUtils, TestFramework, ICUNumberFormatter, _unum;
 
 type
   // Méthodes de test pour la classe TICUNumberFormat
@@ -60,8 +60,8 @@ end;
 procedure TestTICUNumberFormat.TestParseAsDecimal;
 begin
   FICUNumberFormat := TICUNumberFormatter.Create('fr-FR', UNUM_SPELLOUT);
-  CheckEquals('NaN', FICUNumberFormat.ParseDecimal('NaN'));
-  CheckEquals('153.45', FICUNumberFormat.ParseDecimal('153,45'));
+  CheckEquals('NaN', string(FICUNumberFormat.ParseDecimal('NaN')));
+  CheckEquals('153.45', string(FICUNumberFormat.ParseDecimal('153,45')));
 end;
 
 procedure TestTICUNumberFormat.TestSetSymbol;
