@@ -103,15 +103,18 @@
         <DCCReference Include="lib\UTestUnum.pas"/>
         <DCCReference Include="..\lib\icu_globals.pas"/>
         <DCCReference Include="..\lib\parseerr.pas"/>
-        <DCCReference Include="..\lib\umachine.pas"/>
-        <DCCReference Include="..\lib\umisc.pas"/>
-        <DCCReference Include="..\lib\unum.pas"/>
-        <DCCReference Include="..\lib\utypes.pas"/>
-        <DCCReference Include="..\lib\formattable.pas"/>
-        <DCCReference Include="..\lib\uloc.pas"/>
+        <DCCReference Include="..\lib\_umachine.pas"/>
+        <DCCReference Include="..\lib\_umisc.pas"/>
+        <DCCReference Include="..\lib\_unum.pas"/>
+        <DCCReference Include="..\lib\_utypes.pas"/>
+        <DCCReference Include="..\lib\_uformattable.pas"/>
+        <DCCReference Include="..\lib\_uloc.pas"/>
         <DCCReference Include="..\ICUNumberFormatter.pas"/>
         <DCCReference Include="TestICUNumberFormat.pas"/>
         <DCCReference Include="TestICUNumberFormatFunctions.pas"/>
+        <DCCReference Include="..\lib\_udat.pas"/>
+        <DCCReference Include="..\lib\_ucal.pas"/>
+        <DCCReference Include="..\lib\_udisplaycontext.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

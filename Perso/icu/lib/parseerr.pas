@@ -5,7 +5,7 @@ unit parseerr;
 interface
 
 uses
-  umachine;
+  _umachine;
 
 const
   U_PARSE_CONTEXT_LEN = 16;

@@ -70,7 +70,7 @@ var
   loadProc: TLoadFunction;
 begin
   if IsICULoaded then
-    Exit;
+    Exit(True);
 
   Result := JclSysUtils.LoadModule(ICU_COMMON_LibraryHandle, ICU_COMMON_MODULE_NAME) and JclSysUtils.LoadModule(ICU_I18N_LibraryHandle, ICU_I18N_MODULE_NAME)
     and JclSysUtils.LoadModule(ICU_DATA_LibraryHandle, ICU_DATA_MODULE_NAME);
@@ -97,18 +97,23 @@ begin
 end;
 
 procedure UnloadICU;
-var
-  unloadProc: TUnloadProcedure;
-begin
 {$IFDEF ICU_LINKONREQUEST}
-  for unloadProc in UnloadProcs do
-    unloadProc;
+var
+  UnloadProc: TUnloadProcedure;
+begin
+  for UnloadProc in UnloadProcs do
+    UnloadProc;
   JclSysUtils.UnloadModule(ICU_DATA_LibraryHandle);
   JclSysUtils.UnloadModule(ICU_I18N_LibraryHandle);
   JclSysUtils.UnloadModule(ICU_COMMON_LibraryHandle);
-{$ENDIF ~ICU_LINKONREQUEST}
 end;
+{$ELSE ~ICU_LINKONREQUEST}
 
+begin
+end;
+{$ENDIF ~ICU_LINKONREQUEST}
+
+{$IFDEF ICU_LINKONREQUEST}
 initialization
 
 LoadProcs := TList<TLoadFunction>.Create;
@@ -118,5 +123,6 @@ finalization
 
 LoadProcs.Free;
 UnloadProcs.Free;
+{$ENDIF ~ICU_LINKONREQUEST}
 
 end.

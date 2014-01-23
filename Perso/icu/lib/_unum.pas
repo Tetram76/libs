@@ -1,12 +1,12 @@
-unit unum;
-
-interface
+unit _unum;
 
 {$I icu.inc}
 
+interface
+
 uses
-  icu_globals, JclSysUtils, umachine, utypes, umisc, parseerr, formattable,
-  uloc;
+  icu_globals, JclSysUtils, _umachine, _utypes, _umisc, parseerr, _uformattable,
+  _uloc;
 
 type
   // A number formatter.
@@ -161,15 +161,15 @@ type
 
 {$IFDEF ICU_LINKONREQUEST}
   // Create and return a new UNumberFormat for formatting and parsing numbers.
-  TUnumOpenFunc = function(Style: UNumberFormatStyle; Pattern: PUChar; PatternLength: Int32; Locale: PAnsiChar; parseerr: PUParseError; out Status: UErrorCode): PUNumberFormat; cdecl;
+  TUnumOpen = function(Style: UNumberFormatStyle; Pattern: PUChar; PatternLength: Int32; Locale: PAnsiChar; parseerr: PUParseError; out Status: UErrorCode): PUNumberFormat; cdecl;
   // Close a UNumberFormat.
-  TUnumCloseProc = procedure(Fmt: PUNumberFormat); cdecl;
+  TUnumClose = procedure(Fmt: PUNumberFormat); cdecl;
   // Open a copy of a UNumberFormat.
-  TUnumCloneFunc = function(const Fmt: PUNumberFormat; var Status: UErrorCode): PUNumberFormat; cdecl;
+  TUnumClone = function(const Fmt: PUNumberFormat; var Status: UErrorCode): PUNumberFormat; cdecl;
   // Format an integer using a UNumberFormat.
-  TUnumFormatFunc = function(const Fmt: PUNumberFormat; Number: Int32; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+  TUnumFormat = function(const Fmt: PUNumberFormat; Number: Int32; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
   // Format an int64 using a UNumberFormat.
-  TUnumFormatInt64Func = function(const Fmt: PUNumberFormat; Number: Int64; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+  TUnumFormatInt64 = function(const Fmt: PUNumberFormat; Number: Int64; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
   // Format a double using a UNumberFormat.
   TUnumFormatDouble = function(const Fmt: PUNumberFormat; NNumber: Double; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
   // Format a decimal number using a UNumberFormat.
@@ -218,11 +218,11 @@ type
   TUnumGetLocaleByType = function(const Fmt: PUNumberFormat; aType: ULocDataLocaleType; var Status: UErrorCode): PAnsiChar; cdecl;
 
 var
-  UnumOpen: TUnumOpenFunc = nil;
-  UnumClose: TUnumCloseProc = nil;
-  UnumClone: TUnumCloneFunc = nil;
-  UnumFormat: TUnumFormatFunc = nil;
-  UnumFormatInt64: TUnumFormatInt64Func = nil;
+  UnumOpen: TUnumOpen = nil;
+  UnumClose: TUnumClose = nil;
+  UnumClone: TUnumClone = nil;
+  UnumFormat: TUnumFormat = nil;
+  UnumFormatInt64: TUnumFormatInt64 = nil;
   UnumFormatDouble: TUnumFormatDouble = nil;
   UnumFormatDecimal: TUnumFormatDecimal = nil;
   UnumFormatDoubleCurrency: TUnumFormatDoubleCurrency = nil;
@@ -247,34 +247,34 @@ var
   UnumSetSymbol: TUnumSetSymbol = nil;
   UnumGetLocaleByType: TUnumGetLocaleByType = nil;
 {$ELSE ~ICU_LINKONREQUEST}
-  UnumOpen = function(Style: UNumberFormatStyle; Pattern: PUChar; PatternLength: Int32; Locale: PAnsiChar; parseerr: PUParseError; out Status: UErrorCode): PUNumberFormat; cdecl;
-  UnumClose = procedure(Fmt: PUNumberFormat); cdecl;
-  UnumClone = function(const Fmt: PUNumberFormat; var Status: UErrorCode): PUNumberFormat; cdecl;
-  UnumFormat = function(Fmt: PUNumberFormat; Number: Int32; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
-  UnumFormatInt64 = function(const Fmt: PUNumberFormat; Number: int64; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
-  UnumFormatDouble = function(const Fmt: PUNumberFormat; NNumber: Double; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
-  UnumFormatDecimal = function (const Fmt: PUNumberFormat; const Number: PAnsiChar; Length: Int32; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
-  UnumFormatDoubleCurrency = function(const Fmt: PUNumberFormat; Number: Double; Currency: PUChar; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
-  UnumFormatUFormattable = function(const Fmt: PUNumberFormat; const Number: PUFormattable; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
-  UnumParse = function(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): Int32; cdecl;
-  UnumParseInt64 = function(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): Int64; cdecl;
-  UnumParseDouble = function(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): Double; cdecl;
-  UnumParseDecimal = function(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; outBuf: PAnsiChar; outBufLength: Int32; var Status: UErrorCode): Int32; cdecl;
-  UnumParseDoubleCurrency = function(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; Currency: PUChar; var Status: UErrorCode): Double; cdecl;
-  UnumParseToUFormattable = function(const Fmt: PUNumberFormat; Result: PUFormattable; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): PUFormattable; cdecl;
-  UnumApplyPattern = procedure(Format: PUNumberFormat; Localized: UBool; const Pattern: PUChar; PatternLength: Int32; parseError: PUParseError; var Status: UErrorCode); cdecl;
-  UnumGetAvailable = function(LocaleIndex: Int32): PAnsiChar; cdecl;
-  UnumCountAvailable = function: Int32; cdecl;
-  UnumGetAttribute = function(const Fmt: PUNumberFormat; Attr: UNumberFormatAttribute): Int32; cdecl;
-  UnumSetAttribute = procedure(Fmt: PUNumberFormat; Attr: UNumberFormatAttribute; NewValue: Int32); cdecl;
-  UnumGetDoubleAttribute = function(const Fmt: PUNumberFormat; Attr: UNumberFormatAttribute): Double; cdecl;
-  UnumSetDoubleAttribute = procedure(Fmt: PUNumberFormat; Attr: UNumberFormatAttribute; NewValue: Double); cdecl;
-  UnumGetTextAttribute = function(const Fmt: PUNumberFormat; Tag: UNumberFormatTextAttribute; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
-  UnumSetTextAttribute = procedure(Fmt: PUNumberFormat; Tag: UNumberFormatTextAttribute; const NewValue: PUChar; NewValueLength: Int32; var Status: UErrorCode); cdecl;
-  UnumToPattern = function(const Fmt: PUNumberFormat; IsPatternLocalized: UBool; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
-  UnumGetSymbol = function(const Fmt: PUNumberFormat; Symbol: UNumberFormatSymbol; Buffer: PUChar; Size: Int32; var Status: UErrorCode): Int32; cdecl;
-  UnumSetSymbol = procedure(Fmt: PUNumberFormat; Symbol: UNumberFormatSymbol; const Value: PUChar; Length: Int32; var Status: UErrorCode); cdecl;
-  UnumGetLocaleByType = function(const Fmt: PUNumberFormat; aType: ULocDataLocaleType; var Status: UErrorCode): PAnsiChar; cdecl;
+function UnumOpen(Style: UNumberFormatStyle; Pattern: PUChar; PatternLength: Int32; Locale: PAnsiChar; parseerr: PUParseError; out Status: UErrorCode): PUNumberFormat; cdecl;
+procedure UnumClose(Fmt: PUNumberFormat); cdecl;
+function UnumClone(const Fmt: PUNumberFormat; var Status: UErrorCode): PUNumberFormat; cdecl;
+function UnumFormat(Fmt: PUNumberFormat; Number: Int32; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+function UnumFormatInt64(const Fmt: PUNumberFormat; Number: int64; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+function UnumFormatDouble(const Fmt: PUNumberFormat; NNumber: Double; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+function  UnumFormatDecimal(const Fmt: PUNumberFormat; const Number: PAnsiChar; Length: Int32; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+function UnumFormatDoubleCurrency(const Fmt: PUNumberFormat; Number: Double; Currency: PUChar; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+function UnumFormatUFormattable(const Fmt: PUNumberFormat; const Number: PUFormattable; Result: PUChar; ResultLength: Int32; Pos: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+function UnumParse(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): Int32; cdecl;
+function UnumParseInt64(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): Int64; cdecl;
+function UnumParseDouble(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): Double; cdecl;
+function UnumParseDecimal(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; outBuf: PAnsiChar; outBufLength: Int32; var Status: UErrorCode): Int32; cdecl;
+function UnumParseDoubleCurrency(const Fmt: PUNumberFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; Currency: PUChar; var Status: UErrorCode): Double; cdecl;
+function UnumParseToUFormattable(const Fmt: PUNumberFormat; Result: PUFormattable; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): PUFormattable; cdecl;
+procedure UnumApplyPattern(Format: PUNumberFormat; Localized: UBool; const Pattern: PUChar; PatternLength: Int32; parseError: PUParseError; var Status: UErrorCode); cdecl;
+function UnumGetAvailable(LocaleIndex: Int32): PAnsiChar; cdecl;
+function UnumCountAvailable: Int32; cdecl;
+function UnumGetAttribute(const Fmt: PUNumberFormat; Attr: UNumberFormatAttribute): Int32; cdecl;
+procedure UnumSetAttribute(Fmt: PUNumberFormat; Attr: UNumberFormatAttribute; NewValue: Int32); cdecl;
+function UnumGetDoubleAttribute(const Fmt: PUNumberFormat; Attr: UNumberFormatAttribute): Double; cdecl;
+procedure UnumSetDoubleAttribute(Fmt: PUNumberFormat; Attr: UNumberFormatAttribute; NewValue: Double); cdecl;
+function UnumGetTextAttribute(const Fmt: PUNumberFormat; Tag: UNumberFormatTextAttribute; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
+procedure UnumSetTextAttribute(Fmt: PUNumberFormat; Tag: UNumberFormatTextAttribute; const NewValue: PUChar; NewValueLength: Int32; var Status: UErrorCode); cdecl;
+function UnumToPattern(const Fmt: PUNumberFormat; IsPatternLocalized: UBool; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
+function UnumGetSymbol(const Fmt: PUNumberFormat; Symbol: UNumberFormatSymbol; Buffer: PUChar; Size: Int32; var Status: UErrorCode): Int32; cdecl;
+procedure UnumSetSymbol(Fmt: PUNumberFormat; Symbol: UNumberFormatSymbol; const Value: PUChar; Length: Int32; var Status: UErrorCode); cdecl;
+function UnumGetLocaleByType(const Fmt: PUNumberFormat; aType: ULocDataLocaleType; var Status: UErrorCode): PAnsiChar; cdecl;
 {$ENDIF ~ICU_LINKONREQUEST}
 
 const
@@ -343,34 +343,34 @@ var
 implementation
 
 {$IFNDEF ICU_LINKONREQUEST}
-function UnumOpen; external ICU_I18N_DEFAULT_MODULE_NAME name UnumOpenDefaultExportName;
-procedure UnumClose; external ICU_I18N_DEFAULT_MODULE_NAME name UnumCloseDefaultExportName;
-function UnumClone; external ICU_I18N_DEFAULT_MODULE_NAME name UnumCloneDefaultExportName;
-function UnumFormat; external ICU_I18N_DEFAULT_MODULE_NAME name UnumFormatDefaultExportName;
-function UnumFormatInt64; external ICU_I18N_DEFAULT_MODULE_NAME name UnumFormatInt64DefaultExportName;
-function UnumFormatDouble; external ICU_I18N_DEFAULT_MODULE_NAME name UnumFormatDoubleDefaultExportName;
-function UnumFormatDecimal; external ICU_I18N_DEFAULT_MODULE_NAME name UnumFormatDecimalDefaultExportName;
-function UnumFormatDoubleCurrency; external ICU_I18N_DEFAULT_MODULE_NAME name UnumFormatDoubleCurrencyDefaultExportName;
-function UnumFormatUFormattable; external ICU_I18N_DEFAULT_MODULE_NAME name UnumFormatUFormattableDefaultExportName;
-function UnumParse; external ICU_I18N_DEFAULT_MODULE_NAME name UnumParseDefaultExportName;
-function UnumParseInt64; external ICU_I18N_DEFAULT_MODULE_NAME name UnumParseInt64DefaultExportName;
-function UnumParseDouble; external ICU_I18N_DEFAULT_MODULE_NAME name UnumParseDoubleDefaultExportName;
-function UnumParseDecimal; external ICU_I18N_DEFAULT_MODULE_NAME name UnumParseDecimalDefaultExportName;
-function UnumParseDoubleCurrency; external ICU_I18N_DEFAULT_MODULE_NAME name UnumParseDoubleCurrencyDefaultExportName;
-function UnumParseToUFormattable; external ICU_I18N_DEFAULT_MODULE_NAME name UnumParseToUFormattableDefaultExportName;
-procedure UnumApplyPattern; external ICU_I18N_DEFAULT_MODULE_NAME name UnumApplyPatternDefaultExportName;
-function UnumGetAvailable; external ICU_I18N_DEFAULT_MODULE_NAME name UnumGetAvailableDefaultExportName;
-function UnumCountAvailable; external ICU_I18N_DEFAULT_MODULE_NAME name UnumCountAvailableDefaultExportName;
-function UnumGetAttribute; external ICU_I18N_DEFAULT_MODULE_NAME name UnumGetAttributeDefaultExportName;
-procedure UnumSetAttribute; external ICU_I18N_DEFAULT_MODULE_NAME name UnumSetAttributeDefaultExportName;
-function UnumGetDoubleAttribute; external ICU_I18N_DEFAULT_MODULE_NAME name UnumGetDoubleAttributeDefaultExportName;
-procedure UnumSetDoubleAttribute; external ICU_I18N_DEFAULT_MODULE_NAME name UnumSetDoubleAttributeDefaultExportName;
-function UnumGetTextAttribute; external ICU_I18N_DEFAULT_MODULE_NAME name UnumGetTextAttributeDefaultExportName;
-procedure UnumSetTextAttribute; external ICU_I18N_DEFAULT_MODULE_NAME name UnumSetTextAttributeDefaultExportName;
-function UnumToPattern; external ICU_I18N_DEFAULT_MODULE_NAME name UnumToPatternDefaultExportName;
-function UnumGetSymbol; external ICU_I18N_DEFAULT_MODULE_NAME name UnumGetSymbolDefaultExportName;
-procedure UnumSetSymbol; external ICU_I18N_DEFAULT_MODULE_NAME name UnumSetSymbolDefaultExportName;
-function UnumGetLocaleByType; external ICU_I18N_DEFAULT_MODULE_NAME name UnumGetLocaleByTypeDefaultExportName;
+function UnumOpen; external ICU_DEFAULT_I18N_MODULE_NAME name UnumOpenDefaultExportName;
+procedure UnumClose; external ICU_DEFAULT_I18N_MODULE_NAME name UnumCloseDefaultExportName;
+function UnumClone; external ICU_DEFAULT_I18N_MODULE_NAME name UnumCloneDefaultExportName;
+function UnumFormat; external ICU_DEFAULT_I18N_MODULE_NAME name UnumFormatDefaultExportName;
+function UnumFormatInt64; external ICU_DEFAULT_I18N_MODULE_NAME name UnumFormatInt64DefaultExportName;
+function UnumFormatDouble; external ICU_DEFAULT_I18N_MODULE_NAME name UnumFormatDoubleDefaultExportName;
+function UnumFormatDecimal; external ICU_DEFAULT_I18N_MODULE_NAME name UnumFormatDecimalDefaultExportName;
+function UnumFormatDoubleCurrency; external ICU_DEFAULT_I18N_MODULE_NAME name UnumFormatDoubleCurrencyDefaultExportName;
+function UnumFormatUFormattable; external ICU_DEFAULT_I18N_MODULE_NAME name UnumFormatUFormattableDefaultExportName;
+function UnumParse; external ICU_DEFAULT_I18N_MODULE_NAME name UnumParseDefaultExportName;
+function UnumParseInt64; external ICU_DEFAULT_I18N_MODULE_NAME name UnumParseInt64DefaultExportName;
+function UnumParseDouble; external ICU_DEFAULT_I18N_MODULE_NAME name UnumParseDoubleDefaultExportName;
+function UnumParseDecimal; external ICU_DEFAULT_I18N_MODULE_NAME name UnumParseDecimalDefaultExportName;
+function UnumParseDoubleCurrency; external ICU_DEFAULT_I18N_MODULE_NAME name UnumParseDoubleCurrencyDefaultExportName;
+function UnumParseToUFormattable; external ICU_DEFAULT_I18N_MODULE_NAME name UnumParseToUFormattableDefaultExportName;
+procedure UnumApplyPattern; external ICU_DEFAULT_I18N_MODULE_NAME name UnumApplyPatternDefaultExportName;
+function UnumGetAvailable; external ICU_DEFAULT_I18N_MODULE_NAME name UnumGetAvailableDefaultExportName;
+function UnumCountAvailable; external ICU_DEFAULT_I18N_MODULE_NAME name UnumCountAvailableDefaultExportName;
+function UnumGetAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name UnumGetAttributeDefaultExportName;
+procedure UnumSetAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name UnumSetAttributeDefaultExportName;
+function UnumGetDoubleAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name UnumGetDoubleAttributeDefaultExportName;
+procedure UnumSetDoubleAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name UnumSetDoubleAttributeDefaultExportName;
+function UnumGetTextAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name UnumGetTextAttributeDefaultExportName;
+procedure UnumSetTextAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name UnumSetTextAttributeDefaultExportName;
+function UnumToPattern; external ICU_DEFAULT_I18N_MODULE_NAME name UnumToPatternDefaultExportName;
+function UnumGetSymbol; external ICU_DEFAULT_I18N_MODULE_NAME name UnumGetSymbolDefaultExportName;
+procedure UnumSetSymbol; external ICU_DEFAULT_I18N_MODULE_NAME name UnumSetSymbolDefaultExportName;
+function UnumGetLocaleByType; external ICU_DEFAULT_I18N_MODULE_NAME name UnumGetLocaleByTypeDefaultExportName;
 
 {$ELSE ~ICU_LINKONREQUEST}
 
