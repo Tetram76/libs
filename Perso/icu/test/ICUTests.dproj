@@ -111,6 +111,7 @@
         <DCCReference Include="..\lib\uloc.pas"/>
         <DCCReference Include="..\ICUNumberFormatter.pas"/>
         <DCCReference Include="TestICUNumberFormat.pas"/>
+        <DCCReference Include="TestICUNumberFormatFunctions.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -192,6 +193,7 @@
                 <TestFramework>DUnit / Delphi Win32</TestFramework>
                 <TestRunner>GUI</TestRunner>
                 <SourceProjectName>D:\MEDIA.KIT\BDTheque\Sources\BDT_UDF.DLL\icu\Project10.dproj</SourceProjectName>
+                <TestProjectName/>
             </UnitTesting>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>

@@ -11,17 +11,68 @@ type
     TICUNumberFormatterChild = class
     private
       FFormatter: TICUNumberFormatter;
+    public
+      constructor Create(Formatter: TICUNumberFormatter);
+    end;
+
+  private type
+    TAttributes = class(TICUNumberFormatterChild)
+    protected
+      function GetAttribute(Attr: UNumberFormatAttribute): Int32;
+      procedure SetAttribute(Attr: UNumberFormatAttribute; const Value: Int32);
+      function GetBoolAttribute(Attr: UNumberFormatAttribute): Boolean;
+      procedure SetBoolAttribute(Attr: UNumberFormatAttribute; const Value: Boolean);
+      function GetRoundingMode(Attr: UNumberFormatAttribute): UNumberFormatRoundingMode;
+      procedure SetRoundingMode(Attr: UNumberFormatAttribute; const Value: UNumberFormatRoundingMode);
+      function GetTextAttribute(Tag: UNumberFormatTextAttribute): string;
+      procedure SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: string);
+      function GetDoubleAttribute(Attr: UNumberFormatAttribute): Double;
+      procedure SetDoubleAttribute(Attr: UNumberFormatAttribute; const Value: Double);
+    public
+      property ParseIntOnly: Boolean index UNUM_PARSE_INT_ONLY read GetBoolAttribute write SetBoolAttribute;
+      property GroupingUsed: Boolean index UNUM_GROUPING_USED read GetBoolAttribute write SetBoolAttribute;
+      property LenientParse: Boolean index UNUM_LENIENT_PARSE read GetBoolAttribute write SetBoolAttribute;
+
+      property DecimalAlwaysShown: Int32 index UNUM_DECIMAL_ALWAYS_SHOWN read GetAttribute write SetAttribute;
+      property MaxIntegerDigits: Int32 index UNUM_MAX_INTEGER_DIGITS read GetAttribute write SetAttribute;
+      property MinIntegerDigits: Int32 index UNUM_MIN_INTEGER_DIGITS read GetAttribute write SetAttribute;
+      property IntegerDigits: Int32 index UNUM_INTEGER_DIGITS read GetAttribute write SetAttribute;
+      property MaxFractionDigits: Int32 index UNUM_MAX_FRACTION_DIGITS read GetAttribute write SetAttribute;
+      property MinFractionDigits: Int32 index UNUM_MIN_FRACTION_DIGITS read GetAttribute write SetAttribute;
+      property FractionDigits: Int32 index UNUM_FRACTION_DIGITS read GetAttribute write SetAttribute;
+      property Multiplier: Int32 index UNUM_MULTIPLIER read GetAttribute write SetAttribute;
+      property GroupingSize: Int32 index UNUM_GROUPING_SIZE read GetAttribute write SetAttribute;
+      property RoundingMode: UNumberFormatRoundingMode index UNUM_ROUNDING_MODE read GetRoundingMode write SetRoundingMode;
+      property FormatWidth: Int32 index UNUM_FORMAT_WIDTH read GetAttribute write SetAttribute;
+      property PaddingPosition: Int32 index UNUM_PADDING_POSITION read GetAttribute write SetAttribute;
+      property SecondaryGroupingSize: Int32 index UNUM_SECONDARY_GROUPING_SIZE read GetAttribute write SetAttribute;
+      property Scale: Int32 index UNUM_SCALE read GetAttribute write SetAttribute;
+      property SignificantDigitsUsed: Int32 index UNUM_SIGNIFICANT_DIGITS_USED read GetAttribute write SetAttribute;
+      property MinSignificantDigits: Int32 index UNUM_MIN_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
+      property MaxSignificantDigits: Int32 index UNUM_MAX_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
+
+      property PositivePrefix: string index UNUM_POSITIVE_PREFIX read GetTextAttribute write SetTextAttribute;
+      property PositiveSuffix: string index UNUM_POSITIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
+      property NegativePrefix: string index UNUM_NEGATIVE_PREFIX read GetTextAttribute write SetTextAttribute;
+      property NegativeSuffix: string index UNUM_NEGATIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
+      property PaddingCharacter: string index UNUM_PADDING_CHARACTER read GetTextAttribute write SetTextAttribute;
+      property Currency: string index UNUM_CURRENCY_CODE read GetTextAttribute write SetTextAttribute;
+      property DefaultRuleset: string index UNUM_DEFAULT_RULESET read GetTextAttribute write SetTextAttribute;
+      property PublicRuleset: string index UNUM_PUBLIC_RULESETS read GetTextAttribute write SetTextAttribute;
+
+      property RoundingIncrement: Double index UNUM_ROUNDING_INCREMENT read GetDoubleAttribute write SetDoubleAttribute;
+    end;
+
+    TSymbols = class(TICUNumberFormatterChild)
     protected
       function GetSymbol(Symbol: UNumberFormatSymbol): string;
       procedure SetSymbol(Symbol: UNumberFormatSymbol; const Value: string);
     public
-      constructor Create(Formatter: TICUNumberFormatter);
-
       property DecimalSeparator: string index UNUM_DECIMAL_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
       property GroupingSeparator: string index UNUM_GROUPING_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
       property PatternSeparator: string index UNUM_PATTERN_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
       property Percent: string index UNUM_PERCENT_SYMBOL read GetSymbol write SetSymbol;
-      property ZeorDigit: string index UNUM_ZERO_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property ZeroDigit: string index UNUM_ZERO_DIGIT_SYMBOL read GetSymbol write SetSymbol;
       property Digit: string index UNUM_DIGIT_SYMBOL read GetSymbol write SetSymbol;
       property MinusSign: string index UNUM_MINUS_SIGN_SYMBOL read GetSymbol write SetSymbol;
       property PlusSign: string index UNUM_PLUS_SIGN_SYMBOL read GetSymbol write SetSymbol;
@@ -45,53 +96,6 @@ type
       property EightDigit: string index UNUM_EIGHT_DIGIT_SYMBOL read GetSymbol write SetSymbol;
       property NineDigit: string index UNUM_NINE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
       property Format: string index UNUM_FORMAT_SYMBOL_COUNT read GetSymbol write SetSymbol;
-    end;
-
-  private type
-    TAttributes = class(TICUNumberFormatterChild)
-    protected
-      function GetAttribute(Attr: UNumberFormatAttribute): Int32;
-      procedure SetAttribute(Attr: UNumberFormatAttribute; const Value: Int32);
-      function GetTextAttribute(Tag: UNumberFormatTextAttribute): string;
-      procedure SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: string);
-      function GetDoubleAttribute(Attr: UNumberFormatAttribute): Double;
-      procedure SetDoubleAttribute(Attr: UNumberFormatAttribute; const Value: Double);
-    public
-      property ParseIntOnly: Int32 index UNUM_PARSE_INT_ONLY read GetAttribute write SetAttribute;
-      property GroupingUsed: Int32 index UNUM_GROUPING_USED read GetAttribute write SetAttribute;
-      property DecimalAlwaysShown: Int32 index UNUM_DECIMAL_ALWAYS_SHOWN read GetAttribute write SetAttribute;
-      property MaxIntegerDigits: Int32 index UNUM_MAX_INTEGER_DIGITS read GetAttribute write SetAttribute;
-      property MinIntegerDigits: Int32 index UNUM_MIN_INTEGER_DIGITS read GetAttribute write SetAttribute;
-      property IntegerDigits: Int32 index UNUM_INTEGER_DIGITS read GetAttribute write SetAttribute;
-      property MaxFractionDigits: Int32 index UNUM_MAX_FRACTION_DIGITS read GetAttribute write SetAttribute;
-      property MinFractionDigits: Int32 index UNUM_MIN_FRACTION_DIGITS read GetAttribute write SetAttribute;
-      property FractionDigits: Int32 index UNUM_FRACTION_DIGITS read GetAttribute write SetAttribute;
-      property Multiplier: Int32 index UNUM_MULTIPLIER read GetAttribute write SetAttribute;
-      property GroupingSize: Int32 index UNUM_GROUPING_SIZE read GetAttribute write SetAttribute;
-      property RoundingMode: Int32 index UNUM_ROUNDING_MODE read GetAttribute write SetAttribute;
-      property FormatWidth: Int32 index UNUM_FORMAT_WIDTH read GetAttribute write SetAttribute;
-      property PaddingPosition: Int32 index UNUM_PADDING_POSITION read GetAttribute write SetAttribute;
-      property SecondaryGroupingSize: Int32 index UNUM_SECONDARY_GROUPING_SIZE read GetAttribute write SetAttribute;
-      property Scale: Int32 index UNUM_SCALE read GetAttribute write SetAttribute;
-      property SignificantDigitsUsed: Int32 index UNUM_SIGNIFICANT_DIGITS_USED read GetAttribute write SetAttribute;
-      property MinSignificantDigits: Int32 index UNUM_MIN_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
-      property MaxSignificantDigits: Int32 index UNUM_MAX_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
-      property LenientParse: Int32 index UNUM_LENIENT_PARSE read GetAttribute write SetAttribute;
-
-      property PositivePrefix: string index UNUM_POSITIVE_PREFIX read GetTextAttribute write SetTextAttribute;
-      property PositiveSuffix: string index UNUM_POSITIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
-      property NegativePrefix: string index UNUM_NEGATIVE_PREFIX read GetTextAttribute write SetTextAttribute;
-      property NegativeSuffix: string index UNUM_NEGATIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
-      property PaddingCharacter: string index UNUM_PADDING_CHARACTER read GetTextAttribute write SetTextAttribute;
-      property Currency: string index UNUM_CURRENCY_CODE read GetTextAttribute write SetTextAttribute;
-      property DefaultRuleset: string index UNUM_DEFAULT_RULESET read GetTextAttribute write SetTextAttribute;
-      property PublicRuleset: string index UNUM_PUBLIC_RULESETS read GetTextAttribute write SetTextAttribute;
-
-      property RoundingIncrement: Double index UNUM_ROUNDING_INCREMENT read GetDoubleAttribute write SetDoubleAttribute;
-    end;
-
-    TSymbols = class(TICUNumberFormatterChild)
-
     end;
 
   private
@@ -141,10 +145,14 @@ type
     property Symbols: TSymbols read FSymbols;
   end;
 
-function ICUFormatCurrency(const Value: Double; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): string;
-function ICUFormatDecimal(const Value: Double; const Locale: AnsiString = ''): string;
-function ICUStrToDecimal(const Value: string; const Locale: AnsiString = ''): Double;
-function ICUStrToDecimalDef(const Value: string; const Default: Double; const Locale: AnsiString = ''): Double;
+function ICUCurrencyToStr(const Value: Double; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): string;
+function ICUCurrencyToStrShort(const Value: Double; const Locale: AnsiString = ''): string;
+function ICUStrToCurrency(const Value: string; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): Double;
+function ICUStrToCurrencyDef(const Value: string; const Default: Double; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): Double;
+
+function ICUDoubleToStr(const Value: Double; const Locale: AnsiString = ''): string;
+function ICUStrToDouble(const Value: string; const Locale: AnsiString = ''): Double;
+function ICUStrToDoubleDef(const Value: string; const Default: Double; const Locale: AnsiString = ''): Double;
 
 implementation
 
@@ -161,7 +169,9 @@ begin
   FFormatter := Formatter;
 end;
 
-function TICUNumberFormatter.TICUNumberFormatterChild.GetSymbol(Symbol: UNumberFormatSymbol): string;
+{ TICUNumberFormatter.TSymbols }
+
+function TICUNumberFormatter.TSymbols.GetSymbol(Symbol: UNumberFormatSymbol): string;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -183,7 +193,7 @@ begin
   Result := buffer;
 end;
 
-procedure TICUNumberFormatter.TICUNumberFormatterChild.SetSymbol(Symbol: UNumberFormatSymbol; const Value: string);
+procedure TICUNumberFormatter.TSymbols.SetSymbol(Symbol: UNumberFormatSymbol; const Value: string);
 begin
   FFormatter.FStatus := U_ZERO_ERROR;
   UnumSetSymbol(FFormatter.FFormat, Symbol, @WideString(Value)[1], Length(Value), FFormatter.FStatus);
@@ -193,14 +203,22 @@ end;
 
 function TICUNumberFormatter.TAttributes.GetAttribute(Attr: UNumberFormatAttribute): Int32;
 begin
-  FFormatter.FStatus := U_ZERO_ERROR;
   Result := UnumGetAttribute(FFormatter.FFormat, Attr);
+end;
+
+function TICUNumberFormatter.TAttributes.GetBoolAttribute(Attr: UNumberFormatAttribute): Boolean;
+begin
+  Result := UnumGetAttribute(FFormatter.FFormat, Attr) <> 0;
 end;
 
 function TICUNumberFormatter.TAttributes.GetDoubleAttribute(Attr: UNumberFormatAttribute): Double;
 begin
-  FFormatter.FStatus := U_ZERO_ERROR;
   Result := UnumGetDoubleAttribute(FFormatter.FFormat, Attr);
+end;
+
+function TICUNumberFormatter.TAttributes.GetRoundingMode(Attr: UNumberFormatAttribute): UNumberFormatRoundingMode;
+begin
+  Result := UNumberFormatRoundingMode(GetAttribute(Attr));
 end;
 
 function TICUNumberFormatter.TAttributes.GetTextAttribute(Tag: UNumberFormatTextAttribute): string;
@@ -228,9 +246,21 @@ begin
   UnumSetAttribute(FFormatter.FFormat, Attr, Value);
 end;
 
+procedure TICUNumberFormatter.TAttributes.SetBoolAttribute(Attr: UNumberFormatAttribute; const Value: Boolean);
+const
+  boolVals: array [False .. True] of Byte = (0, 1);
+begin
+  UnumSetAttribute(FFormatter.FFormat, Attr, boolVals[Value]);
+end;
+
 procedure TICUNumberFormatter.TAttributes.SetDoubleAttribute(Attr: UNumberFormatAttribute; const Value: Double);
 begin
   UnumSetDoubleAttribute(FFormatter.FFormat, Attr, Value);
+end;
+
+procedure TICUNumberFormatter.TAttributes.SetRoundingMode(Attr: UNumberFormatAttribute; const Value: UNumberFormatRoundingMode);
+begin
+  SetAttribute(Attr, Ord(Value));
 end;
 
 procedure TICUNumberFormatter.TAttributes.SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: string);
@@ -406,9 +436,14 @@ begin
 end;
 
 function TICUNumberFormatter.ParseDouble(const Value: string): Double;
+var
+  p: Int32;
 begin
   FStatus := U_ZERO_ERROR;
-  Result := UnumParseDouble(FFormat, @WideString(Value)[1], Length(Value), nil, FStatus);
+  p := 0;
+  Result := UnumParseDouble(FFormat, @WideString(Value)[1], Length(Value), @p, FStatus);
+  if p < Length(Value) then
+    FStatus := U_PARSE_ERROR;
 end;
 
 function TICUNumberFormatter.ParseInt32(const Value: string): Int32;
@@ -467,59 +502,106 @@ begin
   Result := buffer;
 end;
 
-function ICUFormatCurrency(const Value: Double; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): string;
+function ICUCurrencyToStr(const Value: Double; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): string;
 var
-  formatter: TICUNumberFormatter;
+  Formatter: TICUNumberFormatter;
 begin
-  formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
+  Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
   try
     if CurrencySymbol <> '' then
-      formatter.Symbols.Currency := CurrencySymbol;
+      Formatter.Symbols.Currency := CurrencySymbol;
 
-    Result := formatter.Format(Value);
+    Result := Formatter.Format(Value);
   finally
-    formatter.Free;
+    Formatter.Free;
   end;
 end;
 
-function ICUFormatDecimal(const Value: Double; const Locale: AnsiString = ''): string;
+function ICUCurrencyToStrShort(const Value: Double; const Locale: AnsiString = ''): string;
 var
-  formatter: TICUNumberFormatter;
+  Formatter: TICUNumberFormatter;
 begin
-  formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
   try
-    formatter.Attributes.SignificantDigitsUsed := 1;
-    Result := formatter.Format(Value);
+    Formatter.Symbols.Currency := '';
+    Result := Formatter.Format(Value).Trim([#32, #160]);
   finally
-    formatter.Free;
+    Formatter.Free;
   end;
 end;
 
-function ICUStrToDecimal(const Value: string; const Locale: AnsiString = ''): Double;
+function ICUStrToCurrency(const Value: string; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): Double;
 var
-  formatter: TICUNumberFormatter;
+  Formatter: TICUNumberFormatter;
 begin
-  formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
   try
-    formatter.Attributes.SignificantDigitsUsed := 1;
-    Result := formatter.ParseDouble(Value);
+    if CurrencySymbol <> '' then
+      Formatter.Symbols.Currency := CurrencySymbol;
+    Formatter.Attributes.LenientParse := True;
+
+    Result := Formatter.ParseDouble(Value.Trim);
   finally
-    formatter.Free;
+    Formatter.Free;
   end;
 end;
 
-function ICUStrToDecimalDef(const Value: string; const Default: Double; const Locale: AnsiString = ''): Double;
+function ICUStrToCurrencyDef(const Value: string; const Default: Double; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): Double;
 var
-  formatter: TICUNumberFormatter;
+  Formatter: TICUNumberFormatter;
 begin
-  formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
   try
-    formatter.Attributes.SignificantDigitsUsed := 1;
-    Result := formatter.ParseDouble(Value);
-    if U_FAILURE(formatter.GetErrorCode) then
+    if CurrencySymbol <> '' then
+      Formatter.Symbols.Currency := CurrencySymbol;
+    Formatter.Attributes.LenientParse := True;
+
+    Result := Formatter.ParseDouble(Value.Trim);
+    if U_FAILURE(Formatter.GetErrorCode) then
       Result := Default;
   finally
-    formatter.Free;
+    Formatter.Free;
+  end;
+end;
+
+function ICUDoubleToStr(const Value: Double; const Locale: AnsiString = ''): string;
+var
+  Formatter: TICUNumberFormatter;
+begin
+  Formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  try
+    Formatter.Attributes.RoundingMode := UNUM_ROUND_UNNECESSARY;
+    Result := Formatter.Format(Value);
+  finally
+    Formatter.Free;
+  end;
+end;
+
+function ICUStrToDouble(const Value: string; const Locale: AnsiString = ''): Double;
+var
+  Formatter: TICUNumberFormatter;
+begin
+  Formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  try
+    Result := Formatter.ParseDouble(Value.Trim);
+  finally
+    Formatter.Free;
+  end;
+end;
+
+function ICUStrToDoubleDef(const Value: string; const Default: Double; const Locale: AnsiString = ''): Double;
+var
+  Formatter: TICUNumberFormatter;
+begin
+  Formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  try
+    Formatter.Attributes.ParseIntOnly := False;
+    Formatter.Attributes.LenientParse := False;
+    Result := Formatter.ParseDouble(Value.Trim);
+    if U_FAILURE(Formatter.GetErrorCode) then
+      Result := Default;
+  finally
+    Formatter.Free;
   end;
 end;
 

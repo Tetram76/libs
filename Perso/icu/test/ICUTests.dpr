@@ -26,7 +26,8 @@ uses
   formattable in '..\lib\formattable.pas',
   uloc in '..\lib\uloc.pas',
   ICUNumberFormatter in '..\ICUNumberFormatter.pas',
-  TestICUNumberFormat in 'TestICUNumberFormat.pas';
+  TestICUNumberFormat in 'TestICUNumberFormat.pas',
+  TestICUNumberFormatFunctions in 'TestICUNumberFormatFunctions.pas';
 
 {$R *.RES}
 
