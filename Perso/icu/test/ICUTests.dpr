@@ -32,7 +32,9 @@ uses
   _ucal in '..\lib\_ucal.pas',
   _udisplaycontext in '..\lib\_udisplaycontext.pas',
   UTestUdat in 'lib\UTestUdat.pas',
-  ICUTest in 'ICUTest.pas';
+  ICUTest in 'ICUTest.pas',
+  ICUDateFormatter in '..\ICUDateFormatter.pas',
+  TestICUDateFormat in 'TestICUDateFormat.pas';
 
 {$R *.RES}
 
