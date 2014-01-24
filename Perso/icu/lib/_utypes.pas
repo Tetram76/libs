@@ -5,11 +5,19 @@ unit _utypes;
 interface
 
 uses
-  icu_globals, JclSysUtils;
+  icu_globals;
 
 type
   // Date and Time data type.
-  UDate = double;
+  UDate = record
+  private
+    Value: Double;
+  public
+    class operator Implicit(Value: Double): UDate;
+    class operator Implicit(Value: TDateTime): UDate;
+    class operator Implicit(Value: UDate): Double;
+    class operator Implicit(Value: UDate): TDateTime;
+  end;
 
   // Error code to replace exception handling, so that the code is compatible with all C++ compilers, and to use the same mechanism for C and C++.
   PUErrorCode = ^UErrorCode;
@@ -214,7 +222,7 @@ var
 implementation
 
 uses
-  _umachine;
+  _umachine, Winapi.Windows, System.SysUtils, JclSysUtils;
 
 function U_SUCCESS(code: UErrorCode): Boolean;
 begin
@@ -224,6 +232,28 @@ end;
 function U_FAILURE(code: UErrorCode): Boolean;
 begin
   Result := (code > U_ZERO_ERROR);
+end;
+
+{ UDate }
+
+class operator UDate.Implicit(Value: TDateTime): UDate;
+begin
+  Result.Value := (Value - UnixDateDelta) * MSecsPerDay;
+end;
+
+class operator UDate.Implicit(Value: Double): UDate;
+begin
+  Result.Value := Value;
+end;
+
+class operator UDate.Implicit(Value: UDate): TDateTime;
+begin
+  Result := (Value.Value / MSecsPerDay) + UnixDateDelta;
+end;
+
+class operator UDate.Implicit(Value: UDate): Double;
+begin
+  Result := Value.Value;
 end;
 
 {$IFNDEF ICU_LINKONREQUEST}
