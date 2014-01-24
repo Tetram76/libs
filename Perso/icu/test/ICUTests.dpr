@@ -30,7 +30,9 @@ uses
   TestICUNumberFormatFunctions in 'TestICUNumberFormatFunctions.pas',
   _udat in '..\lib\_udat.pas',
   _ucal in '..\lib\_ucal.pas',
-  _udisplaycontext in '..\lib\_udisplaycontext.pas';
+  _udisplaycontext in '..\lib\_udisplaycontext.pas',
+  UTestUdat in 'lib\UTestUdat.pas',
+  ICUTest in 'ICUTest.pas';
 
 {$R *.RES}
 
