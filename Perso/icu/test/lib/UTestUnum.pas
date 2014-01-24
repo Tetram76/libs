@@ -34,37 +34,37 @@ end;
 
 procedure TTestUnum.TestFormat;
 var
-  unumStatus: UErrorCode;
+  Status: UErrorCode;
   fmt: PUNumberFormat;
   Result: WideString;
   bufNeeded: int32;
 begin
-  unumStatus := U_ZERO_ERROR;
-  fmt := unum_open(UNUM_SPELLOUT, nil, 0, 'en-US', nil, unumStatus);
-  Check(fmt <> nil, 'unum_open failed: ' + u_errorName(unumStatus));
+  Status := U_ZERO_ERROR;
+  fmt := unum_open(UNUM_SPELLOUT, nil, 0, 'en-US', nil, Status);
+  Check(U_SUCCESS(Status), 'unum_open failed: ' + u_errorName(Status));
   try
-    bufNeeded := unum_format(fmt, 150, @Result[1], 0, nil, unumStatus);
-    Check((unumStatus = U_BUFFER_OVERFLOW_ERROR) or (unumStatus = U_STRING_NOT_TERMINATED_WARNING), 'unum_format 1, unexpected: ' + u_errorName(unumStatus));
+    bufNeeded := unum_format(fmt, 150, @Result[1], 0, nil, Status);
+    Check(U_SUCCESS(Status) or (Status = U_BUFFER_OVERFLOW_ERROR), 'unum_format 1, unexpected: ' + u_errorName(Status));
     SetLength(Result, bufNeeded);
-    unumStatus := U_ZERO_ERROR;
-    unum_format(fmt, 150, @Result[1], Length(Result), nil, unumStatus);
-    Check(unumStatus = U_STRING_NOT_TERMINATED_WARNING, 'unum_format 1, unexpected: ' + u_errorName(unumStatus));
+    Status := U_ZERO_ERROR;
+    unum_format(fmt, 150, @Result[1], Length(Result), nil, Status);
+    Check(U_SUCCESS(Status), 'unum_format 2, unexpected: ' + u_errorName(Status));
 
     CheckEquals('one hundred fifty', Result);
   finally
     unum_close(fmt);
   end;
 
-  unumStatus := U_ZERO_ERROR;
-  fmt := unum_open(UNUM_SPELLOUT, nil, 0, 'fr-FR', nil, unumStatus);
-  Check(fmt <> nil, 'unum_open failed: ' + u_errorName(unumStatus));
+  Status := U_ZERO_ERROR;
+  fmt := unum_open(UNUM_SPELLOUT, nil, 0, 'fr-FR', nil, Status);
+  Check(U_SUCCESS(Status), 'unum_open failed: ' + u_errorName(Status));
   try
-    bufNeeded := unum_format(fmt, 150, @Result[1], 0, nil, unumStatus);
-    Check((unumStatus = U_BUFFER_OVERFLOW_ERROR) or (unumStatus = U_STRING_NOT_TERMINATED_WARNING), 'unum_format 1, unexpected: ' + u_errorName(unumStatus));
+    bufNeeded := unum_format(fmt, 150, @Result[1], 0, nil, Status);
+    Check(U_SUCCESS(Status) or (Status = U_BUFFER_OVERFLOW_ERROR), 'unum_format 1, unexpected: ' + u_errorName(Status));
     SetLength(Result, bufNeeded);
-    unumStatus := U_ZERO_ERROR;
-    unum_format(fmt, 150, @Result[1], Length(Result), nil, unumStatus);
-    Check(unumStatus = U_STRING_NOT_TERMINATED_WARNING, 'unum_format 1, unexpected: ' + u_errorName(unumStatus));
+    Status := U_ZERO_ERROR;
+    unum_format(fmt, 150, @Result[1], Length(Result), nil, Status);
+    Check(U_SUCCESS(Status), 'unum_format 2, unexpected: ' + u_errorName(Status));
 
     CheckEquals('cent cinquante', Result);
   finally
