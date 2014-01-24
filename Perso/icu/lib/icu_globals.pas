@@ -46,6 +46,9 @@ procedure RegisterLoadICUProc(LoadProc: TLoadFunction; UnloadProc: TUnloadProced
 
 {$ENDIF ~ICU_LINKONREQUEST}
 
+const
+  DEFAULT_BUFFER_SIZE = 256;
+
 implementation
 
 uses
