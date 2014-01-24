@@ -67,7 +67,7 @@ end;
 function LoadICU: Boolean;
 {$IFDEF ICU_LINKONREQUEST}
 var
-  loadProc: TLoadFunction;
+  LoadProc: TLoadFunction;
 begin
   if IsICULoaded then
     Exit(True);
@@ -76,8 +76,8 @@ begin
     and JclSysUtils.LoadModule(ICU_DATA_LibraryHandle, ICU_DATA_MODULE_NAME);
 
   if Result then
-    for loadProc in LoadProcs do
-      Result := loadProc and Result;
+    for LoadProc in LoadProcs do
+      Result := LoadProc and Result;
 end;
 {$ELSE ~ICU_LINKONREQUEST}
 
@@ -113,14 +113,17 @@ begin
 end;
 {$ENDIF ~ICU_LINKONREQUEST}
 
-{$IFDEF ICU_LINKONREQUEST}
 initialization
 
-LoadProcs := TList<TLoadFunction>.Create;
+{$IFDEF ICU_LINKONREQUEST}
+  LoadProcs := TList<TLoadFunction>.Create;
 UnloadProcs := TList<TUnloadProcedure>.Create;
+{$ENDIF ~ICU_LINKONREQUEST}
 
 finalization
 
+UnloadICU;
+{$IFDEF ICU_LINKONREQUEST}
 LoadProcs.Free;
 UnloadProcs.Free;
 {$ENDIF ~ICU_LINKONREQUEST}

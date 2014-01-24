@@ -200,289 +200,289 @@ type
 {$IFDEF ICU_LINKONREQUEST}
 
   // Maps from a UDateFormatField to the corresponding UCalendarDateFields.
-  TUdatToCalendarDateField = function(Field: UDateFormatField): UCalendarDateFields; cdecl;
+  Tudat_toCalendarDateField = function(field: UDateFormatField): UCalendarDateFields; cdecl;
   // Open a new UDateFormat for formatting and parsing dates and times.
-  TUdatOpen = function(TimeStyle: UDateFormatStyle; DateStyle: UDateFormatStyle; const Locale: PAnsiChar; const TzID: PUChar; TzIDLength: Int32; const Pattern: PUChar; PatternLength: Int32; var Status: UErrorCode): PUDateFormat; cdecl;
+  Tudat_open = function(timeStyle: UDateFormatStyle; dateStyle: UDateFormatStyle; const locale: PAnsiChar; const tzID: PUChar; tzIDLength: Int32; const pattern: PUChar; patternLength: Int32; var status: UErrorCode): PUDateFormat; cdecl;
   // Close a UDateFormat.
-  TUdatClose = procedure(Format: PUDateFormat); cdecl;
+  Tudat_close = procedure(format: PUDateFormat); cdecl;
   // Open a copy of a UDateFormat.
-  TUdatClone = function(const Format: PUDateFormat; var Status: UErrorCode): PUDateFormat; cdecl;
+  Tudat_clone = function(const format: PUDateFormat; var status: UErrorCode): PUDateFormat; cdecl;
   // Format a date using an UDateFormat.
-  TUdatFormat = function(const Format: PUDateFormat; DateToFormat: UDate; Result: PUChar; ResultLength: Int32; Position: PUFieldPosition; var Status: UErrorCode): Int32; cdecl;
+  Tudat_format = function(const format: PUDateFormat; dateToFormat: UDate; result: PUChar; resultLength: Int32; position: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
   // Parse a string into an date/time using a UDateFormat.
-  TUdatParse = function(const Format: PUDateFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): UDate; cdecl;
+  Tudat_parse = function(const format: PUDateFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode): UDate; cdecl;
   // Parse a string into an date/time using a UDateFormat.
-  TUdatParseCalendar = procedure(const Format: PUDateFormat; Calendar: PUCalendar; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode); cdecl;
+  Tudat_parseCalendar = procedure(const format: PUDateFormat; calendar: PUCalendar; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode); cdecl;
   // Determine if an UDateFormat will perform lenient parsing.
-  TUdatIsLenient = function(const Format: PUDateFormat): UBool; cdecl;
+  Tudat_isLenient = function(const format: PUDateFormat): UBool; cdecl;
   // Specify whether an UDateFormat will perform lenient parsing.
-  TUdatSetLenient = procedure(Format: PUDateFormat; isLenient: UBool); cdecl;
+  Tudat_setLenient = procedure(format: PUDateFormat; isLenient: UBool); cdecl;
   // Get the UCalendar associated with an UDateFormat.
-  TUdatGetCalendar = function(const Format: PUDateFormat): PUCalendar; cdecl;
+  Tudat_getCalendar = function(const format: PUDateFormat): PUCalendar; cdecl;
   // Set the UCalendar associated with an UDateFormat.
-  TUdatSetCalendar = procedure(Format: PUDateFormat; const CalendarToSet: PUCalendar); cdecl;
+  Tudat_setCalendar = procedure(format: PUDateFormat; const calendarToSet: PUCalendar); cdecl;
   // Get the UNumberFormat associated with an UDateFormat.
-  TUdatGetNumberFormat = function(const Format: PUDateFormat): PUNumberFormat; cdecl;
+  Tudat_getNumberFormat = function(const format: PUDateFormat): PUNumberFormat; cdecl;
   // Set the UNumberFormat associated with an UDateFormat.
-  TUdatSetNumberFormat = procedure(Format: PUDateFormat; const NumberFormatToSet: PUNumberFormat); cdecl;
+  Tudat_setNumberFormat = procedure(format: PUDateFormat; const numberFormatToSet: PUNumberFormat); cdecl;
   // Get a locale for which date/time formatting patterns are available.
-  TUdatGetAvailable = function(LocaleIndex: Int32): PAnsiChar; cdecl;
+  Tudat_getAvailable = function(localeIndex: Int32): PAnsiChar; cdecl;
   // Determine how many locales have date/time formatting patterns available.
-  TUdatCountAvailable = function: Int32; cdecl;
+  Tudat_countAvailable = function: Int32; cdecl;
   // Get the year relative to which all 2-digit years are interpreted.
-  TUdatGet2DigitYearStart = function(const Format: PUDateFormat; var Status: UErrorCode): UDate; cdecl;
+  Tudat_get2DigitYearStart = function(const format: PUDateFormat; var status: UErrorCode): UDate; cdecl;
   // Set the year relative to which all 2-digit years will be interpreted.
-  TUdatSet2DigitYearStart = procedure(Format: PUDateFormat; d: UDate; var Status: UErrorCode); cdecl;
+  Tudat_set2DigitYearStart = procedure(format: PUDateFormat; d: UDate; var status: UErrorCode); cdecl;
   // Extract the pattern from a UDateFormat.
-  TUdatToPattern = function(const Format: PUDateFormat; Localized: UBool; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
+  Tudat_toPattern = function(const format: PUDateFormat; localized: UBool; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
   // Set the pattern used by an UDateFormat.
-  TUdatApplyPattern = procedure(Format: PUDateFormat; Localized: UBool; const Pattern: PUChar; PatternLength: Int32); cdecl;
+  Tudat_applyPattern = procedure(format: PUDateFormat; localized: UBool; const pattern: PUChar; patternLength: Int32); cdecl;
   // Get the symbols associated with an UDateFormat.
-  TUdatGetSymbols = function(const Format: PUDateFormat; aType: UDateFormatSymbolType; SymbolIndex: Int32; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
+  Tudat_getSymbols = function(const format: PUDateFormat; _type: UDateFormatSymbolType; symbolIndex: Int32; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
   // Count the number of particular symbols for an UDateFormat.
-  TUdatCountSymbols = function(const Format: PUDateFormat; aType: UDateFormatSymbolType): Int32; cdecl;
+  Tudat_countSymbols = function(const format: PUDateFormat; _type: UDateFormatSymbolType): Int32; cdecl;
   // Set the symbols associated with an UDateFormat.
-  TUdatSetSymbols = procedure(Format: PUDateFormat; aType: UDateFormatSymbolType; SymbolIndex: Int32; Value: PUChar; ValueLength: Int32; var Status: UErrorCode); cdecl;
+  Tudat_setSymbols = procedure(format: PUDateFormat; _type: UDateFormatSymbolType; symbolIndex: Int32; value: PUChar; valueLength: Int32; var status: UErrorCode); cdecl;
   // Get the locale for this date format object.
-  TUdatGetLocaleByType = function(const Format: PUDateFormat; aType: ULocDataLocaleType; var Status: UErrorCode): PAnsiChar; cdecl;
+  Tudat_getLocaleByType = function(const format: PUDateFormat; _type: ULocDataLocaleType; var status: UErrorCode): PAnsiChar; cdecl;
   // Set a particular UDisplayContext value in the formatter, such as UDISPCTX_CAPITALIZATION_FOR_STANDALONE.
-  TUdatSetContext = procedure(Format: PUDateFormat; Value: UDisplayContext; var Status: UErrorCode); cdecl;
+  Tudat_setContext = procedure(format: PUDateFormat; value: UDisplayContext; var status: UErrorCode); cdecl;
   // Get the formatter's UDisplayContext value for the specified UDisplayContextType, such as UDISPCTX_TYPE_CAPITALIZATION.
-  TUdatGetContext = function(Format: PUDateFormat; aType: UDisplayContextType; var Status: UErrorCode): UDisplayContext; cdecl;
+  Tudat_getContext = function(format: PUDateFormat; _type: UDisplayContextType; var status: UErrorCode): UDisplayContext; cdecl;
   // Extract the date pattern from a UDateFormat set for relative date formatting.
-  TUdatToPatternRelativeDate = function(const Format: PUDateFormat; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
+  Tudat_toPatternRelativeDate = function(const format: PUDateFormat; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
   // Extract the time pattern from a UDateFormat set for relative date formatting.
-  TUdatToPatternRelativeTime = function(const Format: PUDateFormat; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
+  Tudat_toPatternRelativeTime = function(const format: PUDateFormat; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
   // Set the date & time patterns used by a UDateFormat set for relative date formatting.
-  TUdatApplyPatternRelative = procedure(Format: PUDateFormat; const DatePattern: PUChar; DatePatternLength: Int32; const TimePattern: PUChar; TimePatternLength: Int32; var Status: UErrorCode); cdecl;
+  Tudat_applyPatternRelative = procedure(format: PUDateFormat; const datePattern: PUChar; datePatternLength: Int32; const timePattern: PUChar; timePatternLength: Int32; var status: UErrorCode); cdecl;
 
 var
-  UdatToCalendarDateField: TUdatToCalendarDateField = nil;
-  UdatOpen: TUdatOpen = nil;
-  UdatClose: TUdatClose = nil;
-  UdatClone: TUdatClone = nil;
-  UdatFormat: TUdatFormat = nil;
-  UdatParse: TUdatParse = nil;
-  UdatParseCalendar: TUdatParseCalendar = nil;
-  UdatIsLenient: TUdatIsLenient = nil;
-  UdatSetLenient: TUdatSetLenient = nil;
-  UdatGetCalendar: TUdatGetCalendar = nil;
-  UdatSetCalendar: TUdatSetCalendar = nil;
-  UdatGetNumberFormat: TUdatGetNumberFormat = nil;
-  UdatSetNumberFormat: TUdatSetNumberFormat = nil;
-  UdatGetAvailable: TUdatGetAvailable = nil;
-  UdatCountAvailable: TUdatCountAvailable = nil;
-  UdatGet2DigitYearStart: TUdatGet2DigitYearStart = nil;
-  UdatSet2DigitYearStart: TUdatSet2DigitYearStart = nil;
-  UdatToPattern: TUdatToPattern = nil;
-  UdatApplyPattern: TUdatApplyPattern = nil;
-  UdatGetSymbols: TUdatGetSymbols = nil;
-  UdatCountSymbols: TUdatCountSymbols = nil;
-  UdatSetSymbols: TUdatSetSymbols = nil;
-  UdatGetLocaleByType: TUdatGetLocaleByType = nil;
-  UdatSetContext: TUdatSetContext = nil;
-  UdatGetContext: TUdatGetContext = nil;
-  UdatToPatternRelativeDate: TUdatToPatternRelativeDate = nil;
-  UdatToPatternRelativeTime: TUdatToPatternRelativeTime = nil;
-  UdatApplyPatternRelative: TUdatApplyPatternRelative = nil;
+  udat_toCalendarDateField: Tudat_toCalendarDateField = nil;
+  udat_open: Tudat_open = nil;
+  udat_close: Tudat_close = nil;
+  udat_clone: Tudat_clone = nil;
+  udat_format: Tudat_format = nil;
+  udat_parse: Tudat_parse = nil;
+  udat_parseCalendar: Tudat_parseCalendar = nil;
+  udat_isLenient: Tudat_isLenient = nil;
+  udat_setLenient: Tudat_setLenient = nil;
+  udat_getCalendar: Tudat_getCalendar = nil;
+  udat_setCalendar: Tudat_setCalendar = nil;
+  udat_getNumberFormat: Tudat_getNumberFormat = nil;
+  udat_setNumberFormat: Tudat_setNumberFormat = nil;
+  udat_getAvailable: Tudat_getAvailable = nil;
+  udat_countAvailable: Tudat_countAvailable = nil;
+  udat_get2DigitYearStart: Tudat_get2DigitYearStart = nil;
+  udat_set2DigitYearStart: Tudat_set2DigitYearStart = nil;
+  udat_toPattern: Tudat_toPattern = nil;
+  udat_applyPattern: Tudat_applyPattern = nil;
+  udat_getSymbols: Tudat_getSymbols = nil;
+  udat_countSymbols: Tudat_countSymbols = nil;
+  udat_setSymbols: Tudat_setSymbols = nil;
+  udat_getLocaleByType: Tudat_getLocaleByType = nil;
+  udat_setContext: Tudat_setContext = nil;
+  udat_getContext: Tudat_getContext = nil;
+  udat_toPatternRelativeDate: Tudat_toPatternRelativeDate = nil;
+  udat_toPatternRelativeTime: Tudat_toPatternRelativeTime = nil;
+  udat_applyPatternRelative: Tudat_applyPatternRelative = nil;
 {$ELSE ~ICU_LINKONREQUEST}
-function UdatToCalendarDateField(Field: UDateFormatField): UCalendarDateFields; cdecl;
-function UdatOpen(TimeStyle: UDateFormatStyle; DateStyle: UDateFormatStyle; const Locale: PAnsiChar; const TzID: PUChar; TzIDLength: Int32; const Pattern: PUChar; PatternLength: Int32; var Status: UErrorCode): PUDateFormat; cdecl;
-procedure UdatClose(Format: PUDateFormat); cdecl;
-function UdatClone(const Format: PUDateFormat; var Status: UErrorCode): PUDateFormat; cdecl;
-function UdatFormat(const Format: PUDateFormat; DateToFormat: UDate; Result: PUChar; ResultLength: Int32; Position: PUFieldPosition; var Status: UErrorCode) Int32; cdecl;
-function UdatParse(const Format: PUDateFormat; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode): UDate; cdecl;
-procedure UdatParseCalendar(const Format: PUDateFormat; Calendar: PUCalendar; const Text: PUChar; TextLength: Int32; ParsePos: PInt32; var Status: UErrorCode); cdecl;
-function UdatIsLenient(const Format: PUDateFormat): UBool; cdecl;
-procedure UdatSetLenient(Format: PUDateFormat; isLenient: UBool); cdecl;
-function UdatGetCalendar(const Format: PUDateFormat): PUCalendar; cdecl;
-procedure UdatSetCalendar(Format: PUDateFormat; const CalendarToSet: PUCalendar); cdecl;
-function UdatGetNumberFormat(const Format: PUDateFormat): PUNumberFormat; cdecl;
-procedure UdatSetNumberFormat(Format: PUDateFormat; const NumberFormatToSet: PUNumberFormat); cdecl;
-function UdatGetAvailable(LocaleIndex: Int32): PAnsiChar; cdecl;
-function UdatCountAvailable: Int32; cdecl;
-function UdatGet2DigitYearStart(const Format: PUDateFormat; var Status: UErrorCode): UDate; cdecl;
-procedure UdatSet2DigitYearStart(Format: PUDateFormat; d: UDate; var Status: UErrorCode); cdecl;
-function UdatToPattern(const Format: PUDateFormat; Localized: UBool; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
-procedure UdatApplyPattern(Format: PUDateFormat; Localized: UBool; const Pattern: PUChar; PatternLength: Int32); cdecl;
-function UdatGetSymbols(const Format: PUDateFormat; aType: UDateFormatSymbolType; SymbolIndex: Int32; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
-function UdatCountSymbols(const Format: PUDateFormat; aType: UDateFormatSymbolType): Int32; cdecl;
-procedure UdatSetSymbols(Format: PUDateFormat; aType: UDateFormatSymbolType; SymbolIndex: Int32; Value: PUChar; ValueLength: Int32; var Status: UErrorCode); cdecl;
-function UdatGetLocaleByType(const Format: PUDateFormat; aType: ULocDataLocaleType; var Status: UErrorCode): PAnsiChar; cdecl;
-procedure UdatSetContext(Format: PUDateFormat; Value: UDisplayContext; var Status: UErrorCode); cdecl;
-function UdatGetContext(Format: PUDateFormat; aType: UDisplayContextType; var Status: UErrorCode): UDisplayContext; cdecl;
-function UdatToPatternRelativeDate(const Format: PUDateFormat; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
-function UdatToPatternRelativeTime(const Format: PUDateFormat; Result: PUChar; ResultLength: Int32; var Status: UErrorCode): Int32; cdecl;
-procedure UdatApplyPatternRelative(Format: PUDateFormat; const DatePattern: PUChar; DatePatternLength: Int32; const TimePattern: PUChar; TimePatternLength: Int32; var Status: UErrorCode); cdecl;
+  function udat_toCalendarDateField(field: UDateFormatField): UCalendarDateFields; cdecl;
+  function udat_open(timeStyle: UDateFormatStyle; dateStyle: UDateFormatStyle; const locale: PAnsiChar; const tzID: PUChar; tzIDLength: Int32; const pattern: PUChar; patternLength: Int32; var status: UErrorCode): PUDateFormat; cdecl;
+  procedure udat_close(format: PUDateFormat); cdecl;
+  function udat_clone(const format: PUDateFormat; var status: UErrorCode): PUDateFormat; cdecl;
+  function udat_format(const format: PUDateFormat; dateToFormat: UDate; result: PUChar; resultLength: Int32; position: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
+  function udat_parse(const format: PUDateFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode): UDate; cdecl;
+  procedure udat_parseCalendar(const format: PUDateFormat; calendar: PUCalendar; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode); cdecl;
+  function udat_isLenient(const format: PUDateFormat): UBool; cdecl;
+  procedure udat_setLenient(format: PUDateFormat; isLenient: UBool); cdecl;
+  function udat_getCalendar(const format: PUDateFormat): PUCalendar; cdecl;
+  procedure udat_setCalendar(format: PUDateFormat; const calendarToSet: PUCalendar); cdecl;
+  function udat_getNumberFormat(const format: PUDateFormat): PUNumberFormat; cdecl;
+  procedure udat_setNumberFormat(format: PUDateFormat; const numberFormatToSet: PUNumberFormat); cdecl;
+  function udat_getAvailable(localeIndex: Int32): PAnsiChar; cdecl;
+  function udat_countAvailable: Int32; cdecl;
+  function udat_get2DigitYearStart(const format: PUDateFormat; var status: UErrorCode): UDate; cdecl;
+  procedure udat_set2DigitYearStart(format: PUDateFormat; d: UDate; var status: UErrorCode); cdecl;
+  function udat_toPattern(const format: PUDateFormat; localized: UBool; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
+  procedure udat_applyPattern(format: PUDateFormat; localized: UBool; const pattern: PUChar; patternLength: Int32); cdecl;
+  function udat_getSymbols(const format: PUDateFormat; _type: UDateFormatSymbolType; symbolIndex: Int32; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
+  function udat_countSymbols(const format: PUDateFormat; _type: UDateFormatSymbolType): Int32; cdecl;
+  procedure udat_setSymbols(format: PUDateFormat; _type: UDateFormatSymbolType; symbolIndex: Int32; value: PUChar; valueLength: Int32; var status: UErrorCode); cdecl;
+  function udat_getLocaleByType(const format: PUDateFormat; _type: ULocDataLocaleType; var status: UErrorCode): PAnsiChar; cdecl;
+  procedure udat_setContext(format: PUDateFormat; value: UDisplayContext; var status: UErrorCode); cdecl;
+  function udat_getContext(format: PUDateFormat; _type: UDisplayContextType; var status: UErrorCode): UDisplayContext; cdecl;
+  function udat_toPatternRelativeDate(const format: PUDateFormat; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
+  function udat_toPatternRelativeTime(const format: PUDateFormat; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
+  procedure udat_applyPatternRelative(format: PUDateFormat; const datePattern: PUChar; datePatternLength: Int32; const timePattern: PUChar; timePatternLength: Int32; var status: UErrorCode); cdecl;
 {$ENDIF ~ICU_LINKONREQUEST}
 
 const
-  UdatToCalendarDateFieldDefaultExportName = 'udat_toCalendarDateField' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatOpenDefaultExportName = 'udat_open' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatCloseDefaultExportName = 'udat_close' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatCloneDefaultExportName = 'udat_clone' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatFormatDefaultExportName = 'udat_format' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatParseDefaultExportName = 'udat_parse' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatParseCalendarDefaultExportName = 'udat_parseCalendar' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatIsLenientDefaultExportName = 'udat_isLenient' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatSetLenientDefaultExportName = 'udat_setLenient' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatGetCalendarDefaultExportName = 'udat_getCalendar' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatSetCalendarDefaultExportName = 'udat_setCalendar' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatGetNumberFormatDefaultExportName = 'udat_getNumberFormat' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatSetNumberFormatDefaultExportName = 'udat_setNumberFormat' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatGetAvailableDefaultExportName = 'udat_getAvailable' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatCountAvailableDefaultExportName = 'udat_countAvailable' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatGet2DigitYearStartDefaultExportName = 'udat_get2DigitYearStart' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatSet2DigitYearStartDefaultExportName = 'udat_set2DigitYearStart' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatToPatternDefaultExportName = 'udat_toPattern' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatApplyPatternDefaultExportName = 'udat_applyPattern' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatGetSymbolsDefaultExportName = 'udat_getSymbols' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatCountSymbolsDefaultExportName = 'udat_countSymbols' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatSetSymbolsDefaultExportName = 'udat_setSymbols' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatGetLocaleByTypeDefaultExportName = 'udat_getLocaleByType' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatSetContextDefaultExportName = 'udat_setContext' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatGetContextDefaultExportName = 'udat_getContext' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatToPatternRelativeDateDefaultExportName = 'udat_toPatternRelativeDate' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatToPatternRelativeTimeDefaultExportName = 'udat_toPatternRelativeTime' + ICU_DEFAULT_EXPORT_SUFFIX;
-  UdatApplyPatternRelativeDefaultExportName = 'udat_applyPatternRelative' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_toCalendarDateFieldDefaultExportName = 'udat_toCalendarDateField' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_openDefaultExportName = 'udat_open' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_closeDefaultExportName = 'udat_close' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_cloneDefaultExportName = 'udat_clone' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_formatDefaultExportName = 'udat_format' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_parseDefaultExportName = 'udat_parse' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_parseCalendarDefaultExportName = 'udat_parseCalendar' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_isLenientDefaultExportName = 'udat_isLenient' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_setLenientDefaultExportName = 'udat_setLenient' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_getCalendarDefaultExportName = 'udat_getCalendar' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_setCalendarDefaultExportName = 'udat_setCalendar' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_getNumberFormatDefaultExportName = 'udat_getNumberFormat' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_setNumberFormatDefaultExportName = 'udat_setNumberFormat' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_getAvailableDefaultExportName = 'udat_getAvailable' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_countAvailableDefaultExportName = 'udat_countAvailable' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_get2DigitYearStartDefaultExportName = 'udat_get2DigitYearStart' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_set2DigitYearStartDefaultExportName = 'udat_set2DigitYearStart' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_toPatternDefaultExportName = 'udat_toPattern' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_applyPatternDefaultExportName = 'udat_applyPattern' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_getSymbolsDefaultExportName = 'udat_getSymbols' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_countSymbolsDefaultExportName = 'udat_countSymbols' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_setSymbolsDefaultExportName = 'udat_setSymbols' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_getLocaleByTypeDefaultExportName = 'udat_getLocaleByType' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_setContextDefaultExportName = 'udat_setContext' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_getContextDefaultExportName = 'udat_getContext' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_toPatternRelativeDateDefaultExportName = 'udat_toPatternRelativeDate' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_toPatternRelativeTimeDefaultExportName = 'udat_toPatternRelativeTime' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_applyPatternRelativeDefaultExportName = 'udat_applyPatternRelative' + ICU_DEFAULT_EXPORT_SUFFIX;
 
 {$IFDEF ICU_LINKONREQUEST}
 
 var
-  UdatToCalendarDateFieldExportName: string = UdatToCalendarDateFieldDefaultExportName;
-  UdatOpenExportName: string = UdatOpenDefaultExportName;
-  UdatCloseExportName: string = UdatCloseDefaultExportName;
-  UdatCloneExportName: string = UdatCloneDefaultExportName;
-  UdatFormatExportName: string = UdatFormatDefaultExportName;
-  UdatParseExportName: string = UdatParseDefaultExportName;
-  UdatParseCalendarExportName: string = UdatParseCalendarDefaultExportName;
-  UdatIsLenientExportName: string = UdatIsLenientDefaultExportName;
-  UdatSetLenientExportName: string = UdatSetLenientDefaultExportName;
-  UdatGetCalendarExportName: string = UdatGetCalendarDefaultExportName;
-  UdatSetCalendarExportName: string = UdatSetCalendarDefaultExportName;
-  UdatGetNumberFormatExportName: string = UdatGetNumberFormatDefaultExportName;
-  UdatSetNumberFormatExportName: string = UdatSetNumberFormatDefaultExportName;
-  UdatGetAvailableExportName: string = UdatGetAvailableDefaultExportName;
-  UdatCountAvailableExportName: string = UdatCountAvailableDefaultExportName;
-  UdatGet2DigitYearStartExportName: string = UdatGet2DigitYearStartDefaultExportName;
-  UdatSet2DigitYearStartExportName: string = UdatSet2DigitYearStartDefaultExportName;
-  UdatToPatternExportName: string = UdatToPatternDefaultExportName;
-  UdatApplyPatternExportName: string = UdatApplyPatternDefaultExportName;
-  UdatGetSymbolsExportName: string = UdatGetSymbolsDefaultExportName;
-  UdatCountSymbolsExportName: string = UdatCountSymbolsDefaultExportName;
-  UdatSetSymbolsExportName: string = UdatSetSymbolsDefaultExportName;
-  UdatGetLocaleByTypeExportName: string = UdatGetLocaleByTypeDefaultExportName;
-  UdatSetContextExportName: string = UdatSetContextDefaultExportName;
-  UdatGetContextExportName: string = UdatGetContextDefaultExportName;
-  UdatToPatternRelativeDateExportName: string = UdatToPatternRelativeDateDefaultExportName;
-  UdatToPatternRelativeTimeExportName: string = UdatToPatternRelativeTimeDefaultExportName;
-  UdatApplyPatternRelativeExportName: string = UdatApplyPatternRelativeDefaultExportName;
+  udat_toCalendarDateFieldExportName: string = udat_toCalendarDateFieldDefaultExportName;
+  udat_openExportName: string = udat_openDefaultExportName;
+  udat_closeExportName: string = udat_closeDefaultExportName;
+  udat_cloneExportName: string = udat_cloneDefaultExportName;
+  udat_formatExportName: string = udat_formatDefaultExportName;
+  udat_parseExportName: string = udat_parseDefaultExportName;
+  udat_parseCalendarExportName: string = udat_parseCalendarDefaultExportName;
+  udat_isLenientExportName: string = udat_isLenientDefaultExportName;
+  udat_setLenientExportName: string = udat_setLenientDefaultExportName;
+  udat_getCalendarExportName: string = udat_getCalendarDefaultExportName;
+  udat_setCalendarExportName: string = udat_setCalendarDefaultExportName;
+  udat_getNumberFormatExportName: string = udat_getNumberFormatDefaultExportName;
+  udat_setNumberFormatExportName: string = udat_setNumberFormatDefaultExportName;
+  udat_getAvailableExportName: string = udat_getAvailableDefaultExportName;
+  udat_countAvailableExportName: string = udat_countAvailableDefaultExportName;
+  udat_get2DigitYearStartExportName: string = udat_get2DigitYearStartDefaultExportName;
+  udat_set2DigitYearStartExportName: string = udat_set2DigitYearStartDefaultExportName;
+  udat_toPatternExportName: string = udat_toPatternDefaultExportName;
+  udat_applyPatternExportName: string = udat_applyPatternDefaultExportName;
+  udat_getSymbolsExportName: string = udat_getSymbolsDefaultExportName;
+  udat_countSymbolsExportName: string = udat_countSymbolsDefaultExportName;
+  udat_setSymbolsExportName: string = udat_setSymbolsDefaultExportName;
+  udat_getLocaleByTypeExportName: string = udat_getLocaleByTypeDefaultExportName;
+  udat_setContextExportName: string = udat_setContextDefaultExportName;
+  udat_getContextExportName: string = udat_getContextDefaultExportName;
+  udat_toPatternRelativeDateExportName: string = udat_toPatternRelativeDateDefaultExportName;
+  udat_toPatternRelativeTimeExportName: string = udat_toPatternRelativeTimeDefaultExportName;
+  udat_applyPatternRelativeExportName: string = udat_applyPatternRelativeDefaultExportName;
 {$ENDIF ~ICU_LINKONREQUEST}
 
 implementation
 
 {$IFNDEF ICU_LINKONREQUEST}
-function UdatToCalendarDateField; external ICU_DEFAULT_I18N_MODULE_NAME name UdatToCalendarDateFieldDefaultExportName;
-function UdatOpen; external ICU_DEFAULT_I18N_MODULE_NAME name UdatOpenDefaultExportName;
-procedure UdatClose; external ICU_DEFAULT_I18N_MODULE_NAME name UdatCloseDefaultExportName;
-function UdatClone; external ICU_DEFAULT_I18N_MODULE_NAME name UdatCloneDefaultExportName;
-function UdatFormat; external ICU_DEFAULT_I18N_MODULE_NAME name UdatFormatDefaultExportName;
-function UdatParse; external ICU_DEFAULT_I18N_MODULE_NAME name UdatParseDefaultExportName;
-procedure UdatParseCalendar; external ICU_DEFAULT_I18N_MODULE_NAME name UdatParseCalendarDefaultExportName;
-function UdatIsLenient; external ICU_DEFAULT_I18N_MODULE_NAME name UdatIsLenientDefaultExportName;
-procedure UdatSetLenient; external ICU_DEFAULT_I18N_MODULE_NAME name UdatSetLenientDefaultExportName;
-function UdatGetCalendar; external ICU_DEFAULT_I18N_MODULE_NAME name UdatGetCalendarDefaultExportName;
-procedure UdatSetCalendar; external ICU_DEFAULT_I18N_MODULE_NAME name UdatSetCalendarDefaultExportName;
-function UdatGetNumberFormat; external ICU_DEFAULT_I18N_MODULE_NAME name UdatGetNumberFormatDefaultExportName;
-procedure UdatSetNumberFormat; external ICU_DEFAULT_I18N_MODULE_NAME name UdatSetNumberFormatDefaultExportName;
-function UdatGetAvailable; external ICU_DEFAULT_I18N_MODULE_NAME name UdatGetAvailableDefaultExportName;
-function UdatCountAvailable; external ICU_DEFAULT_I18N_MODULE_NAME name UdatCountAvailableDefaultExportName;
-function UdatGet2DigitYearStart; external ICU_DEFAULT_I18N_MODULE_NAME name UdatGet2DigitYearStartDefaultExportName;
-procedure UdatSet2DigitYearStart; external ICU_DEFAULT_I18N_MODULE_NAME name UdatSet2DigitYearStartDefaultExportName;
-function UdatToPattern; external ICU_DEFAULT_I18N_MODULE_NAME name UdatToPatternDefaultExportName;
-procedure UdatApplyPattern; external ICU_DEFAULT_I18N_MODULE_NAME name UdatApplyPatternDefaultExportName;
-function UdatGetSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name UdatGetSymbolsDefaultExportName;
-function UdatCountSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name UdatCountSymbolsDefaultExportName;
-procedure UdatSetSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name UdatSetSymbolsDefaultExportName;
-function UdatGetLocaleByType; external ICU_DEFAULT_I18N_MODULE_NAME name UdatGetLocaleByTypeDefaultExportName;
-procedure UdatSetContext; external ICU_DEFAULT_I18N_MODULE_NAME name UdatSetContextDefaultExportName;
-function UdatGetContext; external ICU_DEFAULT_I18N_MODULE_NAME name UdatGetContextDefaultExportName;
-function UdatToPatternRelativeDate; external ICU_DEFAULT_I18N_MODULE_NAME name UdatToPatternRelativeDateDefaultExportName;
-function UdatToPatternRelativeTime; external ICU_DEFAULT_I18N_MODULE_NAME name UdatToPatternRelativeTimeDefaultExportName;
-procedure UdatApplyPatternRelative; external ICU_DEFAULT_I18N_MODULE_NAME name UdatApplyPatternRelativeDefaultExportName;
+function udat_toCalendarDateField; external ICU_DEFAULT_I18N_MODULE_NAME name udat_toCalendarDateFieldDefaultExportName;
+function udat_open; external ICU_DEFAULT_I18N_MODULE_NAME name udat_openDefaultExportName;
+procedure udat_close; external ICU_DEFAULT_I18N_MODULE_NAME name udat_closeDefaultExportName;
+function udat_clone; external ICU_DEFAULT_I18N_MODULE_NAME name udat_cloneDefaultExportName;
+function udat_format; external ICU_DEFAULT_I18N_MODULE_NAME name udat_formatDefaultExportName;
+function udat_parse; external ICU_DEFAULT_I18N_MODULE_NAME name udat_parseDefaultExportName;
+procedure udat_parseCalendar; external ICU_DEFAULT_I18N_MODULE_NAME name udat_parseCalendarDefaultExportName;
+function udat_isLenient; external ICU_DEFAULT_I18N_MODULE_NAME name udat_isLenientDefaultExportName;
+procedure udat_setLenient; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setLenientDefaultExportName;
+function udat_getCalendar; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getCalendarDefaultExportName;
+procedure udat_setCalendar; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setCalendarDefaultExportName;
+function udat_getNumberFormat; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getNumberFormatDefaultExportName;
+procedure udat_setNumberFormat; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setNumberFormatDefaultExportName;
+function udat_getAvailable; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getAvailableDefaultExportName;
+function udat_countAvailable; external ICU_DEFAULT_I18N_MODULE_NAME name udat_countAvailableDefaultExportName;
+function udat_get2DigitYearStart; external ICU_DEFAULT_I18N_MODULE_NAME name udat_get2DigitYearStartDefaultExportName;
+procedure udat_set2DigitYearStart; external ICU_DEFAULT_I18N_MODULE_NAME name udat_set2DigitYearStartDefaultExportName;
+function udat_toPattern; external ICU_DEFAULT_I18N_MODULE_NAME name udat_toPatternDefaultExportName;
+procedure udat_applyPattern; external ICU_DEFAULT_I18N_MODULE_NAME name udat_applyPatternDefaultExportName;
+function udat_getSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getSymbolsDefaultExportName;
+function udat_countSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name udat_countSymbolsDefaultExportName;
+procedure udat_setSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setSymbolsDefaultExportName;
+function udat_getLocaleByType; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getLocaleByTypeDefaultExportName;
+procedure udat_setContext; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setContextDefaultExportName;
+function udat_getContext; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getContextDefaultExportName;
+function udat_toPatternRelativeDate; external ICU_DEFAULT_I18N_MODULE_NAME name udat_toPatternRelativeDateDefaultExportName;
+function udat_toPatternRelativeTime; external ICU_DEFAULT_I18N_MODULE_NAME name udat_toPatternRelativeTimeDefaultExportName;
+procedure udat_applyPatternRelative; external ICU_DEFAULT_I18N_MODULE_NAME name udat_applyPatternRelativeDefaultExportName;
 
 {$ELSE ~ICU_LINKONREQUEST}
 
 function LoadICU: Boolean;
 begin
-  @UdatToCalendarDateField := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatToCalendarDateFieldExportName);
-  @UdatOpen := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatOpenExportName);
-  @UdatClose := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatCloseExportName);
-  @UdatClone := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatCloneExportName);
-  @UdatFormat := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatFormatExportName);
-  @UdatParse := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatParseExportName);
-  @UdatParseCalendar := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatParseCalendarExportName);
-  @UdatIsLenient := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatIsLenientExportName);
-  @UdatSetLenient := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatSetLenientExportName);
-  @UdatGetCalendar := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatGetCalendarExportName);
-  @UdatSetCalendar := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatSetCalendarExportName);
-  @UdatGetNumberFormat := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatGetNumberFormatExportName);
-  @UdatSetNumberFormat := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatSetNumberFormatExportName);
-  @UdatGetAvailable := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatGetAvailableExportName);
-  @UdatCountAvailable := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatCountAvailableExportName);
-  @UdatGet2DigitYearStart := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatGet2DigitYearStartExportName);
-  @UdatSet2DigitYearStart := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatSet2DigitYearStartExportName);
-  @UdatToPattern := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatToPatternExportName);
-  @UdatApplyPattern := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatApplyPatternExportName);
-  @UdatGetSymbols := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatGetSymbolsExportName);
-  @UdatCountSymbols := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatCountSymbolsExportName);
-  @UdatSetSymbols := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatSetSymbolsExportName);
-  @UdatGetLocaleByType := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatGetLocaleByTypeExportName);
-  @UdatSetContext := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatSetContextExportName);
-  @UdatGetContext := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatGetContextExportName);
-  @UdatToPatternRelativeDate := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatToPatternRelativeDateExportName);
-  @UdatToPatternRelativeTime := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatToPatternRelativeTimeExportName);
-  @UdatApplyPatternRelative := GetModuleSymbol(ICU_I18N_LibraryHandle, UdatApplyPatternRelativeExportName);
+  @udat_toCalendarDateField := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_toCalendarDateFieldExportName);
+  @udat_open := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_openExportName);
+  @udat_close := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_closeExportName);
+  @udat_clone := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_cloneExportName);
+  @udat_format := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_formatExportName);
+  @udat_parse := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_parseExportName);
+  @udat_parseCalendar := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_parseCalendarExportName);
+  @udat_isLenient := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_isLenientExportName);
+  @udat_setLenient := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setLenientExportName);
+  @udat_getCalendar := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getCalendarExportName);
+  @udat_setCalendar := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setCalendarExportName);
+  @udat_getNumberFormat := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getNumberFormatExportName);
+  @udat_setNumberFormat := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setNumberFormatExportName);
+  @udat_getAvailable := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getAvailableExportName);
+  @udat_countAvailable := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_countAvailableExportName);
+  @udat_get2DigitYearStart := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_get2DigitYearStartExportName);
+  @udat_set2DigitYearStart := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_set2DigitYearStartExportName);
+  @udat_toPattern := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_toPatternExportName);
+  @udat_applyPattern := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_applyPatternExportName);
+  @udat_getSymbols := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getSymbolsExportName);
+  @udat_countSymbols := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_countSymbolsExportName);
+  @udat_setSymbols := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setSymbolsExportName);
+  @udat_getLocaleByType := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getLocaleByTypeExportName);
+  @udat_setContext := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setContextExportName);
+  @udat_getContext := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getContextExportName);
+  @udat_toPatternRelativeDate := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_toPatternRelativeDateExportName);
+  @udat_toPatternRelativeTime := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_toPatternRelativeTimeExportName);
+  @udat_applyPatternRelative := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_applyPatternRelativeExportName);
 
-  Result := Assigned(@UdatToCalendarDateField) and Assigned(@UdatOpen) and Assigned(@UdatClose) and Assigned(@UdatClone) and Assigned(@UdatFormat) and
-    Assigned(@UdatParse) and Assigned(@UdatParseCalendar) and Assigned(@UdatIsLenient) and Assigned(@UdatSetLenient) and Assigned(@UdatGetCalendar) and
-    Assigned(@UdatSetCalendar) and Assigned(@UdatGetNumberFormat) and Assigned(@UdatSetNumberFormat) and Assigned(@UdatGetAvailable) and
-    Assigned(@UdatCountAvailable) and Assigned(@UdatGet2DigitYearStart) and Assigned(@UdatSet2DigitYearStart) and Assigned(@UdatToPattern) and
-    Assigned(@UdatApplyPattern) and Assigned(@UdatGetSymbols) and Assigned(@UdatCountSymbols) and Assigned(@UdatSetSymbols) and Assigned(@UdatGetLocaleByType)
-    and Assigned(@UdatSetContext) and Assigned(@UdatGetContext) and Assigned(@UdatToPatternRelativeDate) and Assigned(@UdatToPatternRelativeTime) and
-    Assigned(@UdatApplyPatternRelative);
+  Result := Assigned(@udat_toCalendarDateField) and Assigned(@udat_open) and Assigned(@udat_close) and Assigned(@udat_clone) and Assigned(@udat_format) and
+    Assigned(@udat_parse) and Assigned(@udat_parseCalendar) and Assigned(@udat_isLenient) and Assigned(@udat_setLenient) and Assigned(@udat_getCalendar) and
+    Assigned(@udat_setCalendar) and Assigned(@udat_getNumberFormat) and Assigned(@udat_setNumberFormat) and Assigned(@udat_getAvailable) and
+    Assigned(@udat_countAvailable) and Assigned(@udat_get2DigitYearStart) and Assigned(@udat_set2DigitYearStart) and Assigned(@udat_toPattern) and
+    Assigned(@udat_applyPattern) and Assigned(@udat_getSymbols) and Assigned(@udat_countSymbols) and Assigned(@udat_setSymbols) and
+    Assigned(@udat_getLocaleByType) and Assigned(@udat_setContext) and Assigned(@udat_getContext) and Assigned(@udat_toPatternRelativeDate) and
+    Assigned(@udat_toPatternRelativeTime) and Assigned(@udat_applyPatternRelative);
 end;
 
 procedure UnloadICU;
 begin
-  @UdatToCalendarDateField := nil;
-  @UdatOpen := nil;
-  @UdatClose := nil;
-  @UdatClone := nil;
-  @UdatFormat := nil;
-  @UdatParse := nil;
-  @UdatParseCalendar := nil;
-  @UdatIsLenient := nil;
-  @UdatSetLenient := nil;
-  @UdatGetCalendar := nil;
-  @UdatSetCalendar := nil;
-  @UdatGetNumberFormat := nil;
-  @UdatSetNumberFormat := nil;
-  @UdatGetAvailable := nil;
-  @UdatCountAvailable := nil;
-  @UdatGet2DigitYearStart := nil;
-  @UdatSet2DigitYearStart := nil;
-  @UdatToPattern := nil;
-  @UdatApplyPattern := nil;
-  @UdatGetSymbols := nil;
-  @UdatCountSymbols := nil;
-  @UdatSetSymbols := nil;
-  @UdatGetLocaleByType := nil;
-  @UdatSetContext := nil;
-  @UdatGetContext := nil;
-  @UdatToPatternRelativeDate := nil;
-  @UdatToPatternRelativeTime := nil;
-  @UdatApplyPatternRelative := nil;
+  @udat_toCalendarDateField := nil;
+  @udat_open := nil;
+  @udat_close := nil;
+  @udat_clone := nil;
+  @udat_format := nil;
+  @udat_parse := nil;
+  @udat_parseCalendar := nil;
+  @udat_isLenient := nil;
+  @udat_setLenient := nil;
+  @udat_getCalendar := nil;
+  @udat_setCalendar := nil;
+  @udat_getNumberFormat := nil;
+  @udat_setNumberFormat := nil;
+  @udat_getAvailable := nil;
+  @udat_countAvailable := nil;
+  @udat_get2DigitYearStart := nil;
+  @udat_set2DigitYearStart := nil;
+  @udat_toPattern := nil;
+  @udat_applyPattern := nil;
+  @udat_getSymbols := nil;
+  @udat_countSymbols := nil;
+  @udat_setSymbols := nil;
+  @udat_getLocaleByType := nil;
+  @udat_setContext := nil;
+  @udat_getContext := nil;
+  @udat_toPatternRelativeDate := nil;
+  @udat_toPatternRelativeTime := nil;
+  @udat_applyPatternRelative := nil;
 end;
 
 initialization

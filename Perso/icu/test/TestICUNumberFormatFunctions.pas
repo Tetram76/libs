@@ -3,17 +3,15 @@ unit TestICUNumberFormatFunctions;
 interface
 
 uses
-  System.Classes, System.SysUtils, TestFramework, ICUNumberFormatter;
+  System.Classes, System.SysUtils, TestFramework, ICUNumberFormatter, ICUTest;
 
 type
   // Méthodes de test pour les fonctions globales de l'unité ICUNumberFormat
 
-  TestTICUNumberFormat = class(TTestCase)
-  public
+  TestTICUNumberFormat = class(TICUTest)
+  protected
     procedure SetUp; override;
     procedure TearDown; override;
-
-    procedure CheckEquals(expected, actual: extended; msg: string = ''); override;
   published
     procedure TestCurrencyToStr;
     procedure TestCurrencyToStrShort;
@@ -26,35 +24,16 @@ type
 
 implementation
 
-uses
-  System.Math;
-
 { TestTICUNumberFormat }
-
-procedure TestTICUNumberFormat.CheckEquals(expected, actual: extended; msg: string);
-const
-  FuzzFactor = 1000;
-  SingleResolution   = 1E-7 * FuzzFactor;
-  DoubleResolution   = 1E-15 * FuzzFactor;
-{$IFDEF EXTENDEDIS10BYTES}
-  ExtendedResolution = 1E-19 * FuzzFactor;
-{$ELSE  EXTENDEDIS10BYTES}
-  ExtendedResolution = DoubleResolution;
-{$ENDIF EXTENDEDIS10BYTES}
-begin
-  CheckEquals(expected, actual, Max(Min(Abs(expected), Abs(actual)) * ExtendedResolution, ExtendedResolution), msg);
-end;
 
 procedure TestTICUNumberFormat.SetUp;
 begin
   inherited;
-
 end;
 
 procedure TestTICUNumberFormat.TearDown;
 begin
   inherited;
-
 end;
 
 procedure TestTICUNumberFormat.TestCurrencyToStr;
@@ -116,6 +95,6 @@ end;
 
 initialization
 
-RegisterTest(TestTICUNumberFormat.Suite);
+RegisterTest('ICU', TestTICUNumberFormat.Suite);
 
 end.

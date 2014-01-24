@@ -3,15 +3,16 @@ unit TestICUNumberFormat;
 interface
 
 uses
-  System.Classes, System.SysUtils, TestFramework, ICUNumberFormatter, _unum;
+  System.Classes, System.SysUtils, TestFramework, ICUNumberFormatter, _unum,
+  ICUTest;
 
 type
   // Méthodes de test pour la classe TICUNumberFormat
 
-  TestTICUNumberFormat = class(TTestCase)
+  TestTICUNumberFormat = class(TICUTest)
   strict private
     FICUNumberFormat: TICUNumberFormatter;
-  public
+  protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
@@ -30,10 +31,12 @@ implementation
 
 procedure TestTICUNumberFormat.SetUp;
 begin
+  inherited;
 end;
 
 procedure TestTICUNumberFormat.TearDown;
 begin
+  inherited;
 end;
 
 procedure TestTICUNumberFormat.TestFormatNaturalInteger;
@@ -216,6 +219,6 @@ end;
 
 initialization
 
-RegisterTest(TestTICUNumberFormat.Suite);
+RegisterTest('ICU', TestTICUNumberFormat.Suite);
 
 end.

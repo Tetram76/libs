@@ -181,12 +181,12 @@ begin
   // tous les autres sont à 1 (sauf pour UNUM_FORMAT_SYMBOL_COUNT mais il demande un traitement spécial)
   bufNeeded := 3;
   SetLength(buffer, bufNeeded);
-  bufNeeded := UnumGetSymbol(FFormatter.FFormat, Symbol, @buffer[1], bufNeeded, FFormatter.FStatus);
+  bufNeeded := unum_getSymbol(FFormatter.FFormat, Symbol, @buffer[1], bufNeeded, FFormatter.FStatus);
   if FFormatter.FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FFormatter.FStatus := U_ZERO_ERROR;
-    bufNeeded := UnumGetSymbol(FFormatter.FFormat, Symbol, @buffer[1], bufNeeded, FFormatter.FStatus);
+    bufNeeded := unum_getSymbol(FFormatter.FFormat, Symbol, @buffer[1], bufNeeded, FFormatter.FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -196,24 +196,24 @@ end;
 procedure TICUNumberFormatter.TSymbols.SetSymbol(Symbol: UNumberFormatSymbol; const Value: string);
 begin
   FFormatter.FStatus := U_ZERO_ERROR;
-  UnumSetSymbol(FFormatter.FFormat, Symbol, @WideString(Value)[1], Length(Value), FFormatter.FStatus);
+  unum_setSymbol(FFormatter.FFormat, Symbol, @WideString(Value)[1], Length(Value), FFormatter.FStatus);
 end;
 
 { TICUNumberFormatter.TAttributes }
 
 function TICUNumberFormatter.TAttributes.GetAttribute(Attr: UNumberFormatAttribute): Int32;
 begin
-  Result := UnumGetAttribute(FFormatter.FFormat, Attr);
+  Result := unum_getAttribute(FFormatter.FFormat, Attr);
 end;
 
 function TICUNumberFormatter.TAttributes.GetBoolAttribute(Attr: UNumberFormatAttribute): Boolean;
 begin
-  Result := UnumGetAttribute(FFormatter.FFormat, Attr) <> 0;
+  Result := unum_getAttribute(FFormatter.FFormat, Attr) <> 0;
 end;
 
 function TICUNumberFormatter.TAttributes.GetDoubleAttribute(Attr: UNumberFormatAttribute): Double;
 begin
-  Result := UnumGetDoubleAttribute(FFormatter.FFormat, Attr);
+  Result := unum_getDoubleAttribute(FFormatter.FFormat, Attr);
 end;
 
 function TICUNumberFormatter.TAttributes.GetRoundingMode(Attr: UNumberFormatAttribute): UNumberFormatRoundingMode;
@@ -229,12 +229,12 @@ begin
   FFormatter.FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := UnumGetTextAttribute(FFormatter.FFormat, Tag, @buffer[1], bufNeeded, FFormatter.FStatus);
+  bufNeeded := unum_getTextAttribute(FFormatter.FFormat, Tag, @buffer[1], bufNeeded, FFormatter.FStatus);
   if FFormatter.FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FFormatter.FStatus := U_ZERO_ERROR;
-    bufNeeded := UnumGetTextAttribute(FFormatter.FFormat, Tag, @buffer[1], bufNeeded, FFormatter.FStatus);
+    bufNeeded := unum_getTextAttribute(FFormatter.FFormat, Tag, @buffer[1], bufNeeded, FFormatter.FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -243,19 +243,19 @@ end;
 
 procedure TICUNumberFormatter.TAttributes.SetAttribute(Attr: UNumberFormatAttribute; const Value: Int32);
 begin
-  UnumSetAttribute(FFormatter.FFormat, Attr, Value);
+  unum_setAttribute(FFormatter.FFormat, Attr, Value);
 end;
 
 procedure TICUNumberFormatter.TAttributes.SetBoolAttribute(Attr: UNumberFormatAttribute; const Value: Boolean);
 const
   boolVals: array [False .. True] of Byte = (0, 1);
 begin
-  UnumSetAttribute(FFormatter.FFormat, Attr, boolVals[Value]);
+  unum_setAttribute(FFormatter.FFormat, Attr, boolVals[Value]);
 end;
 
 procedure TICUNumberFormatter.TAttributes.SetDoubleAttribute(Attr: UNumberFormatAttribute; const Value: Double);
 begin
-  UnumSetDoubleAttribute(FFormatter.FFormat, Attr, Value);
+  unum_setDoubleAttribute(FFormatter.FFormat, Attr, Value);
 end;
 
 procedure TICUNumberFormatter.TAttributes.SetRoundingMode(Attr: UNumberFormatAttribute; const Value: UNumberFormatRoundingMode);
@@ -266,7 +266,7 @@ end;
 procedure TICUNumberFormatter.TAttributes.SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: string);
 begin
   FFormatter.FStatus := U_ZERO_ERROR;
-  UnumSetTextAttribute(FFormatter.FFormat, Tag, @WideString(Value)[1], Length(Value), FFormatter.FStatus);
+  unum_setTextAttribute(FFormatter.FFormat, Tag, @WideString(Value)[1], Length(Value), FFormatter.FStatus);
 end;
 
 { TICUNumberFormat }
@@ -288,7 +288,7 @@ begin
     loc := PAnsiChar(Locale);
 
   unumStatus := U_ZERO_ERROR;
-  FFormat := UnumOpen(Style, @WideString(Pattern)[1], Length(Pattern), loc, nil, unumStatus);
+  FFormat := unum_open(Style, @WideString(Pattern)[1], Length(Pattern), loc, nil, unumStatus);
 end;
 
 constructor TICUNumberFormatter.Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = '');
@@ -316,12 +316,12 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := UnumFormatDoubleCurrency(FFormat, Value, @WideString(CurrencyCode)[1], @buffer[1], bufNeeded, nil, FStatus);
+  bufNeeded := unum_formatDoubleCurrency(FFormat, Value, @WideString(CurrencyCode)[1], @buffer[1], bufNeeded, nil, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := UnumFormatDoubleCurrency(FFormat, Value, @WideString(CurrencyCode)[1], @buffer[1], bufNeeded, nil, FStatus);
+    bufNeeded := unum_formatDoubleCurrency(FFormat, Value, @WideString(CurrencyCode)[1], @buffer[1], bufNeeded, nil, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -336,12 +336,12 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := UnumFormatDouble(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
+  bufNeeded := unum_formatDouble(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := UnumFormatDouble(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
+    bufNeeded := unum_formatDouble(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -356,12 +356,12 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := UnumFormat(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
+  bufNeeded := unum_format(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := UnumFormat(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
+    bufNeeded := unum_format(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -376,12 +376,12 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := UnumFormatInt64(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
+  bufNeeded := unum_formatInt64(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := UnumFormatInt64(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
+    bufNeeded := unum_formatInt64(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -401,7 +401,7 @@ end;
 function TICUNumberFormatter.GetLocale(aType: ULocDataLocaleType): AnsiString;
 begin
   FStatus := U_ZERO_ERROR;
-  Result := UnumGetLocaleByType(FFormat, aType, FStatus);
+  Result := unum_getLocaleByType(FFormat, aType, FStatus);
 end;
 
 function TICUNumberFormatter.GetPattern: string;
@@ -412,7 +412,7 @@ end;
 function TICUNumberFormatter.ParseCurrency(const Value, CurrencyCode: string): Double;
 begin
   FStatus := U_ZERO_ERROR;
-  Result := UnumParseDoubleCurrency(FFormat, @WideString(Value)[1], Length(Value), nil, @WideString(CurrencyCode)[1], FStatus);
+  Result := unum_parseDoubleCurrency(FFormat, @WideString(Value)[1], Length(Value), nil, @WideString(CurrencyCode)[1], FStatus);
 end;
 
 function TICUNumberFormatter.ParseDecimal(const Value: string): AnsiString;
@@ -423,12 +423,12 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := UnumParseDecimal(FFormat, @WideString(Value)[1], Length(Value), nil, @buffer[1], bufNeeded, FStatus);
+  bufNeeded := unum_parseDecimal(FFormat, @WideString(Value)[1], Length(Value), nil, @buffer[1], bufNeeded, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := UnumParseDecimal(FFormat, @WideString(Value)[1], Length(Value), nil, @buffer[1], bufNeeded, FStatus);
+    bufNeeded := unum_parseDecimal(FFormat, @WideString(Value)[1], Length(Value), nil, @buffer[1], bufNeeded, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -441,7 +441,7 @@ var
 begin
   FStatus := U_ZERO_ERROR;
   p := 0;
-  Result := UnumParseDouble(FFormat, @WideString(Value)[1], Length(Value), @p, FStatus);
+  Result := unum_parseDouble(FFormat, @WideString(Value)[1], Length(Value), @p, FStatus);
   if p < Length(Value) then
     FStatus := U_PARSE_ERROR;
 end;
@@ -449,18 +449,18 @@ end;
 function TICUNumberFormatter.ParseInt32(const Value: string): Int32;
 begin
   FStatus := U_ZERO_ERROR;
-  Result := UnumParse(FFormat, @WideString(Value)[1], Length(Value), nil, FStatus);
+  Result := unum_parse(FFormat, @WideString(Value)[1], Length(Value), nil, FStatus);
 end;
 
 function TICUNumberFormatter.ParseInt64(const Value: string): Int64;
 begin
   FStatus := U_ZERO_ERROR;
-  Result := UnumParseInt64(FFormat, @WideString(Value)[1], Length(Value), nil, FStatus);
+  Result := unum_parseInt64(FFormat, @WideString(Value)[1], Length(Value), nil, FStatus);
 end;
 
 procedure TICUNumberFormatter.ReleaseFormatter;
 begin
-  UnumClose(FFormat);
+  unum_close(FFormat);
   FFormat := nil;
 end;
 
@@ -490,12 +490,12 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := UnumFormatDecimal(FFormat, PAnsiChar(Value), Length(Value), @buffer[1], bufNeeded, nil, FStatus);
+  bufNeeded := unum_formatDecimal(FFormat, PAnsiChar(Value), Length(Value), @buffer[1], bufNeeded, nil, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := UnumFormatDecimal(FFormat, PAnsiChar(Value), Length(Value), @buffer[1], bufNeeded, nil, FStatus);
+    bufNeeded := unum_formatDecimal(FFormat, PAnsiChar(Value), Length(Value), @buffer[1], bufNeeded, nil, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -540,7 +540,7 @@ begin
       Formatter.Symbols.Currency := CurrencySymbol;
     Formatter.Attributes.LenientParse := True;
 
-    Result := Formatter.ParseDouble(Value.Trim);
+    Result := Formatter.ParseDouble(StringReplace(Value.Trim, #32, #160, [rfReplaceAll]));
   finally
     Formatter.Free;
   end;
@@ -556,7 +556,7 @@ begin
       Formatter.Symbols.Currency := CurrencySymbol;
     Formatter.Attributes.LenientParse := True;
 
-    Result := Formatter.ParseDouble(Value.Trim);
+    Result := Formatter.ParseDouble(StringReplace(Value.Trim, #32, #160, [rfReplaceAll]));
     if U_FAILURE(Formatter.GetErrorCode) then
       Result := Default;
   finally
@@ -583,7 +583,7 @@ var
 begin
   Formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
   try
-    Result := Formatter.ParseDouble(Value.Trim);
+    Result := Formatter.ParseDouble(StringReplace(Value.Trim, #32, #160, [rfReplaceAll]));
   finally
     Formatter.Free;
   end;
@@ -597,7 +597,7 @@ begin
   try
     Formatter.Attributes.ParseIntOnly := False;
     Formatter.Attributes.LenientParse := False;
-    Result := Formatter.ParseDouble(Value.Trim);
+    Result := Formatter.ParseDouble(StringReplace(Value.Trim, #32, #160, [rfReplaceAll]));
     if U_FAILURE(Formatter.GetErrorCode) then
       Result := Default;
   finally

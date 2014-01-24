@@ -115,6 +115,8 @@
         <DCCReference Include="..\lib\_udat.pas"/>
         <DCCReference Include="..\lib\_ucal.pas"/>
         <DCCReference Include="..\lib\_udisplaycontext.pas"/>
+        <DCCReference Include="lib\UTestUdat.pas"/>
+        <DCCReference Include="ICUTest.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
