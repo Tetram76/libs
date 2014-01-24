@@ -32,10 +32,22 @@ begin
   finally
     ICUDateFormat.Free;
   end;
+  ICUDateFormat := TICUDateFormatter.Create('fr-FR', UDAT_DEFAULT, UDAT_DEFAULT, 'GMT+1');
+  try
+    CheckEquals('25 mars 2015 19:45:36', ICUDateFormat.Format(Value));
+  finally
+    ICUDateFormat.Free;
+  end;
 
   ICUDateFormat := TICUDateFormatter.Create('en-US', UDAT_DEFAULT, UDAT_DEFAULT, 'GMT');
   try
     CheckEquals('Mar 25, 2015, 6:45:36 PM', ICUDateFormat.Format(Value));
+  finally
+    ICUDateFormat.Free;
+  end;
+  ICUDateFormat := TICUDateFormatter.Create('en-US', UDAT_DEFAULT, UDAT_DEFAULT, 'GMT+1');
+  try
+    CheckEquals('Mar 25, 2015, 7:45:36 PM', ICUDateFormat.Format(Value));
   finally
     ICUDateFormat.Free;
   end;
