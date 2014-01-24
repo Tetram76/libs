@@ -24,8 +24,8 @@ type
       procedure SetBoolAttribute(Attr: UNumberFormatAttribute; const Value: Boolean);
       function GetRoundingMode(Attr: UNumberFormatAttribute): UNumberFormatRoundingMode;
       procedure SetRoundingMode(Attr: UNumberFormatAttribute; const Value: UNumberFormatRoundingMode);
-      function GetTextAttribute(Tag: UNumberFormatTextAttribute): string;
-      procedure SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: string);
+      function GetTextAttribute(Tag: UNumberFormatTextAttribute): WideString;
+      procedure SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: WideString);
       function GetDoubleAttribute(Attr: UNumberFormatAttribute): Double;
       procedure SetDoubleAttribute(Attr: UNumberFormatAttribute; const Value: Double);
     public
@@ -51,95 +51,95 @@ type
       property MinSignificantDigits: Int32 index UNUM_MIN_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
       property MaxSignificantDigits: Int32 index UNUM_MAX_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
 
-      property PositivePrefix: string index UNUM_POSITIVE_PREFIX read GetTextAttribute write SetTextAttribute;
-      property PositiveSuffix: string index UNUM_POSITIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
-      property NegativePrefix: string index UNUM_NEGATIVE_PREFIX read GetTextAttribute write SetTextAttribute;
-      property NegativeSuffix: string index UNUM_NEGATIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
-      property PaddingCharacter: string index UNUM_PADDING_CHARACTER read GetTextAttribute write SetTextAttribute;
-      property Currency: string index UNUM_CURRENCY_CODE read GetTextAttribute write SetTextAttribute;
-      property DefaultRuleset: string index UNUM_DEFAULT_RULESET read GetTextAttribute write SetTextAttribute;
-      property PublicRuleset: string index UNUM_PUBLIC_RULESETS read GetTextAttribute write SetTextAttribute;
+      property PositivePrefix: WideString index UNUM_POSITIVE_PREFIX read GetTextAttribute write SetTextAttribute;
+      property PositiveSuffix: WideString index UNUM_POSITIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
+      property NegativePrefix: WideString index UNUM_NEGATIVE_PREFIX read GetTextAttribute write SetTextAttribute;
+      property NegativeSuffix: WideString index UNUM_NEGATIVE_SUFFIX read GetTextAttribute write SetTextAttribute;
+      property PaddingCharacter: WideString index UNUM_PADDING_CHARACTER read GetTextAttribute write SetTextAttribute;
+      property Currency: WideString index UNUM_CURRENCY_CODE read GetTextAttribute write SetTextAttribute;
+      property DefaultRuleset: WideString index UNUM_DEFAULT_RULESET read GetTextAttribute write SetTextAttribute;
+      property PublicRuleset: WideString index UNUM_PUBLIC_RULESETS read GetTextAttribute write SetTextAttribute;
 
       property RoundingIncrement: Double index UNUM_ROUNDING_INCREMENT read GetDoubleAttribute write SetDoubleAttribute;
     end;
 
     TSymbols = class(TICUNumberFormatterChild)
     protected
-      function GetSymbol(Symbol: UNumberFormatSymbol): string;
-      procedure SetSymbol(Symbol: UNumberFormatSymbol; const Value: string);
+      function GetSymbol(Symbol: UNumberFormatSymbol): WideString;
+      procedure SetSymbol(Symbol: UNumberFormatSymbol; const Value: WideString);
     public
-      property DecimalSeparator: string index UNUM_DECIMAL_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
-      property GroupingSeparator: string index UNUM_GROUPING_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
-      property PatternSeparator: string index UNUM_PATTERN_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
-      property Percent: string index UNUM_PERCENT_SYMBOL read GetSymbol write SetSymbol;
-      property ZeroDigit: string index UNUM_ZERO_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property Digit: string index UNUM_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property MinusSign: string index UNUM_MINUS_SIGN_SYMBOL read GetSymbol write SetSymbol;
-      property PlusSign: string index UNUM_PLUS_SIGN_SYMBOL read GetSymbol write SetSymbol;
-      property Currency: string index UNUM_CURRENCY_SYMBOL read GetSymbol write SetSymbol;
-      property IntlCurrency: string index UNUM_INTL_CURRENCY_SYMBOL read GetSymbol write SetSymbol;
-      property MonetarySeparator: string index UNUM_MONETARY_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
-      property ExponentialSeparator: string index UNUM_EXPONENTIAL_SYMBOL read GetSymbol write SetSymbol;
-      property Permill: string index UNUM_PERMILL_SYMBOL read GetSymbol write SetSymbol;
-      property PadEscape: string index UNUM_PAD_ESCAPE_SYMBOL read GetSymbol write SetSymbol;
-      property Infinity: string index UNUM_INFINITY_SYMBOL read GetSymbol write SetSymbol;
-      property NAN: string index UNUM_NAN_SYMBOL read GetSymbol write SetSymbol;
-      property SignificantDigit: string index UNUM_SIGNIFICANT_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property MonetaryGroupingSeparator: string index UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
-      property OneDigit: string index UNUM_ONE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property TwoDigit: string index UNUM_TWO_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property ThreeDigit: string index UNUM_THREE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property FourDigit: string index UNUM_FOUR_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property FiveDigit: string index UNUM_FIVE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property SixDigit: string index UNUM_SIX_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property SevenDigit: string index UNUM_SEVEN_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property EightDigit: string index UNUM_EIGHT_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property NineDigit: string index UNUM_NINE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
-      property Format: string index UNUM_FORMAT_SYMBOL_COUNT read GetSymbol write SetSymbol;
+      property DecimalSeparator: WideString index UNUM_DECIMAL_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
+      property GroupingSeparator: WideString index UNUM_GROUPING_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
+      property PatternSeparator: WideString index UNUM_PATTERN_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
+      property Percent: WideString index UNUM_PERCENT_SYMBOL read GetSymbol write SetSymbol;
+      property ZeroDigit: WideString index UNUM_ZERO_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property Digit: WideString index UNUM_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property MinusSign: WideString index UNUM_MINUS_SIGN_SYMBOL read GetSymbol write SetSymbol;
+      property PlusSign: WideString index UNUM_PLUS_SIGN_SYMBOL read GetSymbol write SetSymbol;
+      property Currency: WideString index UNUM_CURRENCY_SYMBOL read GetSymbol write SetSymbol;
+      property IntlCurrency: WideString index UNUM_INTL_CURRENCY_SYMBOL read GetSymbol write SetSymbol;
+      property MonetarySeparator: WideString index UNUM_MONETARY_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
+      property ExponentialSeparator: WideString index UNUM_EXPONENTIAL_SYMBOL read GetSymbol write SetSymbol;
+      property Permill: WideString index UNUM_PERMILL_SYMBOL read GetSymbol write SetSymbol;
+      property PadEscape: WideString index UNUM_PAD_ESCAPE_SYMBOL read GetSymbol write SetSymbol;
+      property Infinity: WideString index UNUM_INFINITY_SYMBOL read GetSymbol write SetSymbol;
+      property NAN: WideString index UNUM_NAN_SYMBOL read GetSymbol write SetSymbol;
+      property SignificantDigit: WideString index UNUM_SIGNIFICANT_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property MonetaryGroupingSeparator: WideString index UNUM_MONETARY_GROUPING_SEPARATOR_SYMBOL read GetSymbol write SetSymbol;
+      property OneDigit: WideString index UNUM_ONE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property TwoDigit: WideString index UNUM_TWO_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property ThreeDigit: WideString index UNUM_THREE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property FourDigit: WideString index UNUM_FOUR_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property FiveDigit: WideString index UNUM_FIVE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property SixDigit: WideString index UNUM_SIX_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property SevenDigit: WideString index UNUM_SEVEN_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property EightDigit: WideString index UNUM_EIGHT_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property NineDigit: WideString index UNUM_NINE_DIGIT_SYMBOL read GetSymbol write SetSymbol;
+      property Format: WideString index UNUM_FORMAT_SYMBOL_COUNT read GetSymbol write SetSymbol;
     end;
 
   private
     FFormat: PUNumberFormat;
     FStatus: UErrorCode;
     FLocale: AnsiString;
-    FPattern: string;
+    FPattern: WideString;
     FStyle: UNumberFormatStyle;
     FAttributes: TAttributes;
     FSymbols: TSymbols;
 
-    procedure BuildFormatter;
-    procedure ReleaseFormatter;
-
     function GetLocale(aType: ULocDataLocaleType = ULOC_ACTUAL_LOCALE): AnsiString;
     procedure SetLocale(const Value: AnsiString);
-    procedure SetPattern(const Value: string);
+    procedure SetPattern(const Value: WideString);
     procedure SetStyle(const Value: UNumberFormatStyle);
-    function GetPattern: string;
-
+  protected
+    procedure BuildFormatter; virtual;
+    procedure ReleaseFormatter; virtual;
   public
     constructor Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = '');
     destructor Destroy; override;
 
-    function Format(Value: Int32): string; overload;
-    function Format(Value: Int64): string; overload;
-    function Format(Value: Double): string; overload;
-    function Format(Value: Double; const CurrencyCode: string): string; overload;
-    function Format(Value: AnsiString): string; overload;
+    function Format(Value: Int32): WideString; overload;
+    function Format(Value: Int64): WideString; overload;
+    function Format(Value: Double): WideString; overload;
+    function Format(Value: Double; const CurrencyCode: WideString): WideString; overload;
+    function Format(Value: AnsiString): WideString; overload;
 
-    function ParseInt32(const Value: string): Int32;
-    function ParseInt64(const Value: string): Int64;
-    function ParseDouble(const Value: string): Double;
-    function ParseCurrency(const Value: string; const CurrencyCode: string): Double;
-    function ParseDecimal(const Value: string): AnsiString;
+    function ParseInt32(const Value: WideString): Int32;
+    function ParseInt64(const Value: WideString): Int64;
+    function ParseDouble(const Value: WideString): Double;
+    function ParseCurrency(const Value: WideString; const CurrencyCode: WideString): Double;
+    function ParseDecimal(const Value: WideString): AnsiString;
 
     function GetErrorCode: UErrorCode;
     function GetErrorMessage: AnsiString;
+
+    property UNumberFormat: PUNumberFormat read FFormat;
 
     property Locale: AnsiString read FLocale write SetLocale;
     property ActualLocale: AnsiString index ULOC_ACTUAL_LOCALE read GetLocale;
     property ValidLocale: AnsiString index ULOC_VALID_LOCALE read GetLocale;
     property Style: UNumberFormatStyle read FStyle write SetStyle;
-    property Pattern: string read GetPattern write SetPattern;
+    property Pattern: WideString read FPattern write SetPattern;
 
     property Attributes: TAttributes read FAttributes;
     property Symbols: TSymbols read FSymbols;
@@ -157,12 +157,9 @@ function ICUStrToDoubleDef(const Value: string; const Default: Double; const Loc
 implementation
 
 uses
-  icu_globals, System.AnsiStrings;
+  icu_globals, System.AnsiStrings, _umachine;
 
-const
-  DEFAULT_BUFFER_SIZE = 256;
-
-  { TICUNumberFormatter.TICUNumberFormatterChild }
+{ TICUNumberFormatter.TICUNumberFormatterChild }
 
 constructor TICUNumberFormatter.TICUNumberFormatterChild.Create(Formatter: TICUNumberFormatter);
 begin
@@ -171,7 +168,7 @@ end;
 
 { TICUNumberFormatter.TSymbols }
 
-function TICUNumberFormatter.TSymbols.GetSymbol(Symbol: UNumberFormatSymbol): string;
+function TICUNumberFormatter.TSymbols.GetSymbol(Symbol: UNumberFormatSymbol): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -193,10 +190,10 @@ begin
   Result := buffer;
 end;
 
-procedure TICUNumberFormatter.TSymbols.SetSymbol(Symbol: UNumberFormatSymbol; const Value: string);
+procedure TICUNumberFormatter.TSymbols.SetSymbol(Symbol: UNumberFormatSymbol; const Value: WideString);
 begin
   FFormatter.FStatus := U_ZERO_ERROR;
-  unum_setSymbol(FFormatter.FFormat, Symbol, @WideString(Value)[1], Length(Value), FFormatter.FStatus);
+  unum_setSymbol(FFormatter.FFormat, Symbol, @Value[1], Length(Value), FFormatter.FStatus);
 end;
 
 { TICUNumberFormatter.TAttributes }
@@ -221,7 +218,7 @@ begin
   Result := UNumberFormatRoundingMode(GetAttribute(Attr));
 end;
 
-function TICUNumberFormatter.TAttributes.GetTextAttribute(Tag: UNumberFormatTextAttribute): string;
+function TICUNumberFormatter.TAttributes.GetTextAttribute(Tag: UNumberFormatTextAttribute): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -263,18 +260,15 @@ begin
   SetAttribute(Attr, Ord(Value));
 end;
 
-procedure TICUNumberFormatter.TAttributes.SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: string);
+procedure TICUNumberFormatter.TAttributes.SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: WideString);
 begin
   FFormatter.FStatus := U_ZERO_ERROR;
-  unum_setTextAttribute(FFormatter.FFormat, Tag, @WideString(Value)[1], Length(Value), FFormatter.FStatus);
+  unum_setTextAttribute(FFormatter.FFormat, Tag, @Value[1], Length(Value), FFormatter.FStatus);
 end;
 
 { TICUNumberFormat }
 
 procedure TICUNumberFormatter.BuildFormatter;
-var
-  unumStatus: UErrorCode;
-  loc: PAnsiChar;
 begin
   if not(IsICULoaded or LoadICU) then
     raise Exception.Create('Impossible de charger ICU');
@@ -282,13 +276,8 @@ begin
   if FFormat <> nil then
     ReleaseFormatter;
 
-  if Locale = '' then
-    loc := nil
-  else
-    loc := PAnsiChar(Locale);
-
-  unumStatus := U_ZERO_ERROR;
-  FFormat := unum_open(Style, @WideString(Pattern)[1], Length(Pattern), loc, nil, unumStatus);
+  FStatus := U_ZERO_ERROR;
+  FFormat := unum_open(Style, @Pattern[1], Length(Pattern), @Locale[1], nil, FStatus);
 end;
 
 constructor TICUNumberFormatter.Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = '');
@@ -308,7 +297,7 @@ begin
   inherited;
 end;
 
-function TICUNumberFormatter.Format(Value: Double; const CurrencyCode: string): string;
+function TICUNumberFormatter.Format(Value: Double; const CurrencyCode: WideString): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -316,19 +305,19 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := unum_formatDoubleCurrency(FFormat, Value, @WideString(CurrencyCode)[1], @buffer[1], bufNeeded, nil, FStatus);
+  bufNeeded := unum_formatDoubleCurrency(FFormat, Value, @CurrencyCode[1], @buffer[1], bufNeeded, nil, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := unum_formatDoubleCurrency(FFormat, Value, @WideString(CurrencyCode)[1], @buffer[1], bufNeeded, nil, FStatus);
+    bufNeeded := unum_formatDoubleCurrency(FFormat, Value, @CurrencyCode[1], @buffer[1], bufNeeded, nil, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
   Result := buffer;
 end;
 
-function TICUNumberFormatter.Format(Value: Double): string;
+function TICUNumberFormatter.Format(Value: Double): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -348,7 +337,7 @@ begin
   Result := buffer;
 end;
 
-function TICUNumberFormatter.Format(Value: Int32): string;
+function TICUNumberFormatter.Format(Value: Int32): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -368,7 +357,7 @@ begin
   Result := buffer;
 end;
 
-function TICUNumberFormatter.Format(Value: Int64): string;
+function TICUNumberFormatter.Format(Value: Int64): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -404,18 +393,13 @@ begin
   Result := unum_getLocaleByType(FFormat, aType, FStatus);
 end;
 
-function TICUNumberFormatter.GetPattern: string;
-begin
-  Result := FPattern;
-end;
-
-function TICUNumberFormatter.ParseCurrency(const Value, CurrencyCode: string): Double;
+function TICUNumberFormatter.ParseCurrency(const Value, CurrencyCode: WideString): Double;
 begin
   FStatus := U_ZERO_ERROR;
-  Result := unum_parseDoubleCurrency(FFormat, @WideString(Value)[1], Length(Value), nil, @WideString(CurrencyCode)[1], FStatus);
+  Result := unum_parseDoubleCurrency(FFormat, @Value[1], Length(Value), nil, PUChar(CurrencyCode), FStatus);
 end;
 
-function TICUNumberFormatter.ParseDecimal(const Value: string): AnsiString;
+function TICUNumberFormatter.ParseDecimal(const Value: WideString): AnsiString;
 var
   buffer: AnsiString;
   bufNeeded: Int32;
@@ -423,39 +407,39 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := unum_parseDecimal(FFormat, @WideString(Value)[1], Length(Value), nil, @buffer[1], bufNeeded, FStatus);
+  bufNeeded := unum_parseDecimal(FFormat, @Value[1], Length(Value), nil, @buffer[1], bufNeeded, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := unum_parseDecimal(FFormat, @WideString(Value)[1], Length(Value), nil, @buffer[1], bufNeeded, FStatus);
+    bufNeeded := unum_parseDecimal(FFormat, @Value[1], Length(Value), nil, @buffer[1], bufNeeded, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
   Result := buffer;
 end;
 
-function TICUNumberFormatter.ParseDouble(const Value: string): Double;
+function TICUNumberFormatter.ParseDouble(const Value: WideString): Double;
 var
   p: Int32;
 begin
   FStatus := U_ZERO_ERROR;
   p := 0;
-  Result := unum_parseDouble(FFormat, @WideString(Value)[1], Length(Value), @p, FStatus);
+  Result := unum_parseDouble(FFormat, @Value[1], Length(Value), @p, FStatus);
   if p < Length(Value) then
     FStatus := U_PARSE_ERROR;
 end;
 
-function TICUNumberFormatter.ParseInt32(const Value: string): Int32;
+function TICUNumberFormatter.ParseInt32(const Value: WideString): Int32;
 begin
   FStatus := U_ZERO_ERROR;
-  Result := unum_parse(FFormat, @WideString(Value)[1], Length(Value), nil, FStatus);
+  Result := unum_parse(FFormat, @Value[1], Length(Value), nil, FStatus);
 end;
 
-function TICUNumberFormatter.ParseInt64(const Value: string): Int64;
+function TICUNumberFormatter.ParseInt64(const Value: WideString): Int64;
 begin
   FStatus := U_ZERO_ERROR;
-  Result := unum_parseInt64(FFormat, @WideString(Value)[1], Length(Value), nil, FStatus);
+  Result := unum_parseInt64(FFormat, @Value[1], Length(Value), nil, FStatus);
 end;
 
 procedure TICUNumberFormatter.ReleaseFormatter;
@@ -470,7 +454,7 @@ begin
   BuildFormatter;
 end;
 
-procedure TICUNumberFormatter.SetPattern(const Value: string);
+procedure TICUNumberFormatter.SetPattern(const Value: WideString);
 begin
   FPattern := Trim(Value);
   BuildFormatter;
@@ -482,7 +466,7 @@ begin
   BuildFormatter;
 end;
 
-function TICUNumberFormatter.Format(Value: AnsiString): string;
+function TICUNumberFormatter.Format(Value: AnsiString): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -490,12 +474,12 @@ begin
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
-  bufNeeded := unum_formatDecimal(FFormat, PAnsiChar(Value), Length(Value), @buffer[1], bufNeeded, nil, FStatus);
+  bufNeeded := unum_formatDecimal(FFormat, @Value[1], Length(Value), @buffer[1], bufNeeded, nil, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
     FStatus := U_ZERO_ERROR;
-    bufNeeded := unum_formatDecimal(FFormat, PAnsiChar(Value), Length(Value), @buffer[1], bufNeeded, nil, FStatus);
+    bufNeeded := unum_formatDecimal(FFormat, @Value[1], Length(Value), @buffer[1], bufNeeded, nil, FStatus);
   end;
 
   SetLength(buffer, bufNeeded);
@@ -520,11 +504,13 @@ end;
 function ICUCurrencyToStrShort(const Value: Double; const Locale: AnsiString = ''): string;
 var
   Formatter: TICUNumberFormatter;
+  s: string;
 begin
   Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
   try
     Formatter.Symbols.Currency := '';
-    Result := Formatter.Format(Value).Trim([#32, #160]);
+    s := Formatter.Format(Value);
+    Result := s.Trim([#32, #160]);
   finally
     Formatter.Free;
   end;
@@ -604,11 +590,5 @@ begin
     Formatter.Free;
   end;
 end;
-
-initialization
-
-finalization
-
-UnloadICU;
 
 end.
