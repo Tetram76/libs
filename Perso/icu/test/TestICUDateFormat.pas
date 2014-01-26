@@ -26,6 +26,12 @@ var
 begin
   Value := EncodeDate(2015, 3, 25) + EncodeTime(18, 45, 36, 753);
 
+  ICUDateFormat := TICUDateFormatter.Create('fr-FR', UDAT_DEFAULT, UDAT_DEFAULT, '');
+  try
+    CheckEquals('25 mars 2015 18:45:36', ICUDateFormat.Format(Value));
+  finally
+    ICUDateFormat.Free;
+  end;
   ICUDateFormat := TICUDateFormatter.Create('fr-FR', UDAT_DEFAULT, UDAT_DEFAULT, 'GMT');
   try
     CheckEquals('25 mars 2015 18:45:36', ICUDateFormat.Format(Value));

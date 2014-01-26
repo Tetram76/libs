@@ -1,5 +1,7 @@
 unit _utmscale;
 
+{$I icu.inc}
+
 interface
 
 type

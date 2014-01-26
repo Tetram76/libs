@@ -34,7 +34,10 @@ uses
   UTestUdat in 'lib\UTestUdat.pas',
   ICUTest in 'ICUTest.pas',
   ICUDateFormatter in '..\ICUDateFormatter.pas',
-  TestICUDateFormat in 'TestICUDateFormat.pas';
+  TestICUDateFormat in 'TestICUDateFormat.pas',
+  TestICUDateFormatFunctions in 'TestICUDateFormatFunctions.pas',
+  _enum in '..\lib\_enum.pas',
+  _utmscale in '..\lib\_utmscale.pas';
 
 {$R *.RES}
 

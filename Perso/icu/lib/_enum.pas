@@ -1,5 +1,7 @@
 unit _enum;
 
+{$I icu.inc}
+
 interface
 
 type
