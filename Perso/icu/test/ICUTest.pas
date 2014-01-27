@@ -7,11 +7,11 @@ uses
 
 type
   TICUTest = class(TTestCase)
-  public
-    procedure CheckEquals(expected, actual: extended; msg: string = ''); override;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+  public
+    procedure CheckEquals(expected, actual: extended; msg: string = ''); override;
   end;
 
 implementation
@@ -32,19 +32,20 @@ const
   ExtendedResolution = DoubleResolution;
 {$ENDIF EXTENDEDIS10BYTES}
 begin
-  CheckEquals(expected, actual, Max(Min(Abs(expected), Abs(actual)) * ExtendedResolution, ExtendedResolution));
+  CheckEquals(expected, actual, Max(Min(Abs(expected), Abs(actual)) * ExtendedResolution, ExtendedResolution), msg);
 end;
 
 procedure TICUTest.SetUp;
 begin
   inherited;
-  Check(LoadICU, 'Impossible de charger ICU');
+  CheckTrue(LoadICU, 'Cannot load ICU');
 end;
 
 procedure TICUTest.TearDown;
 begin
+  // pas besoin de les décharger, l'unité icu_globals s'en charge et ça fait gagner du temps sur les tests
+  // UnloadICU;
   inherited;
-
 end;
 
 end.
