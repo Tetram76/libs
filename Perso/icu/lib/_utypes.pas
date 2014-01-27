@@ -5,7 +5,7 @@ unit _utypes;
 interface
 
 uses
-  icu_globals;
+  icu_globals, System.Math;
 
 type
   // Date and Time data type.
@@ -19,6 +19,15 @@ type
     class operator Implicit(Value: UDate): TDateTime;
   end;
 
+const
+  U_MILLIS_PER_SECOND = 1000;
+  U_MILLIS_PER_MINUTE = 60000;
+  U_MILLIS_PER_HOUR = 3600000;
+  U_MILLIS_PER_DAY = 86400000;
+  U_DATE_MAX = MaxDouble;
+  U_DATE_MIN = -U_DATE_MAX;
+
+type
   // Error code to replace exception handling, so that the code is compatible with all C++ compilers, and to use the same mechanism for C and C++.
   PUErrorCode = ^UErrorCode;
   UErrorCode = (
@@ -211,12 +220,12 @@ function u_errorName(code: UErrorCode): PAnsiChar; cdecl;
 {$ENDIF ~ICU_LINKONREQUEST}
 
 const
-  UErrorNameDefaultExportName = 'u_errorName' + ICU_DEFAULT_EXPORT_SUFFIX;
+  u_errorNameDefaultExportName = 'u_errorName' + ICU_DEFAULT_EXPORT_SUFFIX;
 
 {$IFDEF ICU_LINKONREQUEST}
 
 var
-  UErrorNameExportName: string = UErrorNameDefaultExportName;
+  u_errorNameExportName: string = u_errorNameDefaultExportName;
 {$ENDIF ~ICU_LINKONREQUEST}
 
 implementation
@@ -257,12 +266,12 @@ begin
 end;
 
 {$IFNDEF ICU_LINKONREQUEST}
-function u_errorName; external ICU_DEFAULT_COMMON_MODULE_NAME name UErrorNameDefaultExportName;
+function u_errorName; external ICU_DEFAULT_COMMON_MODULE_NAME name u_errorNameDefaultExportName;
 {$ELSE ~ICU_LINKONREQUEST}
 
 function LoadICU: Boolean;
 begin
-  @u_errorName := GetModuleSymbol(ICU_COMMON_LibraryHandle, UErrorNameExportName);
+  @u_errorName := GetModuleSymbol(ICU_COMMON_LibraryHandle, u_errorNameExportName);
   Result := Assigned(@u_errorName);
 end;
 

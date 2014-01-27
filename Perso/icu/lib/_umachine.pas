@@ -17,6 +17,8 @@ type
   UBool = int8;
   // Define UChar to be UCHAR_TYPE, if that is #defined (for example, to char16_t), or wchar_t if that is 16 bits wide; always assumed to be unsigned.
   UChar = WideString;
+
+  PPUChar = ^PUChar;
   PUChar = ^UChar;
   // Define UChar32 as a type for single Unicode code points.
   UChar32 = int32;
