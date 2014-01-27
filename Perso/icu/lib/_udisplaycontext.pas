@@ -4,6 +4,7 @@ unit _udisplaycontext;
 
 interface
 
+{$IFNDEF U_HIDE_DRAFT_API}
 type
   UDisplayContextType = (
     UDISPCTX_TYPE_DIALECT_HANDLING = 0,
@@ -19,6 +20,7 @@ type
     UDISPCTX_CAPITALIZATION_FOR_UI_LIST_OR_MENU = (Ord(UDISPCTX_TYPE_CAPITALIZATION) shl 8) + 3,
     UDISPCTX_CAPITALIZATION_FOR_STANDALONE = (Ord(UDISPCTX_TYPE_CAPITALIZATION) shl 8) + 4
   );
+{$ENDIF ~U_HIDE_DRAFT_API}
 
 implementation
 

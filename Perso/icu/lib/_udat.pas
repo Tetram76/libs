@@ -22,10 +22,10 @@ type
     UDAT_SHORT,
     UDAT_DEFAULT = UDAT_MEDIUM,
     UDAT_RELATIVE = (1 shl 7),
-    UDAT_FULL_RELATIVE = UDAT_FULL or UDAT_RELATIVE,
-    UDAT_LONG_RELATIVE = UDAT_LONG or UDAT_RELATIVE,
-    UDAT_MEDIUM_RELATIVE = UDAT_MEDIUM or UDAT_RELATIVE,
-    UDAT_SHORT_RELATIVE = UDAT_SHORT or UDAT_RELATIVE,
+    UDAT_FULL_RELATIVE = UDAT_FULL + UDAT_RELATIVE, // or
+    UDAT_LONG_RELATIVE = UDAT_LONG + UDAT_RELATIVE, // or
+    UDAT_MEDIUM_RELATIVE = UDAT_MEDIUM + UDAT_RELATIVE, // or
+    UDAT_SHORT_RELATIVE = UDAT_SHORT + UDAT_RELATIVE, // or
     UDAT_NONE = -1,
     UDAT_PATTERN = -2,
     UDAT_IGNORE = UDAT_PATTERN
@@ -34,10 +34,12 @@ type
 const
   // Constant for date skeleton with year.
   UDAT_YEAR = 'y';
+{$IFNDEF U_HIDE_DRAFT_API}
   // Constant for date skeleton with quarter.
   UDAT_QUARTER = 'QQQQ';
   // Constant for date skeleton with abbreviated quarter.
   UDAT_ABBR_QUARTER = 'QQQ';
+{$ENDIF ~U_HIDE_DRAFT_API}
   // Constant for date skeleton with year and quarter.
   UDAT_YEAR_QUARTER = 'yQQQQ';
   // Constant for date skeleton with year and abbreviated quarter.
@@ -62,10 +64,12 @@ const
   UDAT_YEAR_ABBR_MONTH_DAY = 'yMMMd';
   // Constant for date skeleton with year, numeric month, and day.
   UDAT_YEAR_NUM_MONTH_DAY = 'yMd';
+{$IFNDEF U_HIDE_DRAFT_API}
   // Constant for date skeleton with weekday.
   UDAT_WEEKDAY = 'EEEE';
   // Constant for date skeleton with abbreviated weekday.
   UDAT_ABBR_WEEKDAY = 'E';
+{$ENDIF ~U_HIDE_DRAFT_API}
   // Constant for date skeleton with year, month, weekday, and day.
   UDAT_YEAR_MONTH_WEEKDAY_DAY = 'yMMMMEEEEd';
   // Constant for date skeleton with year, abbreviated month, weekday, and day.
@@ -86,22 +90,27 @@ const
   UDAT_NUM_MONTH_WEEKDAY_DAY = 'MEd';
   // Constant for date skeleton with hour, with the locale's preferred hour format (12 or 24).
   UDAT_HOUR = 'j';
+{$IFNDEF U_HIDE_DRAFT_API}
   // Constant for date skeleton with hour in 24-hour presentation.
   UDAT_HOUR24 = 'H';
   // Constant for date skeleton with minute.
   UDAT_MINUTE = 'm';
+{$ENDIF ~U_HIDE_DRAFT_API}
   // Constant for date skeleton with hour and minute, with the locale's preferred hour format (12 or 24).
   UDAT_HOUR_MINUTE = 'jm';
   // Constant for date skeleton with hour and minute in 24-hour presentation.
   UDAT_HOUR24_MINUTE = 'Hm';
+{$IFNDEF U_HIDE_DRAFT_API}
   // Constant for date skeleton with second.
   UDAT_SECOND = 's';
+{$ENDIF ~U_HIDE_DRAFT_API}
   // Constant for date skeleton with hour, minute, and second, with the locale's preferred hour format (12 or 24).
   UDAT_HOUR_MINUTE_SECOND = 'jms';
   // Constant for date skeleton with hour, minute, and second in 24-hour presentation.
   UDAT_HOUR24_MINUTE_SECOND = 'Hms';
   // Constant for date skeleton with minute and second.
   UDAT_MINUTE_SECOND = 'ms';
+{$IFNDEF U_HIDE_DRAFT_API}
   // Constant for generic location format, such as Los Angeles Time; used in combinations date + time + zone, or time + zone.
   UDAT_LOCATION_TZ = 'VVVV';
   // Constant for generic non-location format, such as Pacific Time; used in combinations date + time + zone, or time + zone.
@@ -114,18 +123,21 @@ const
   UDAT_ABBR_SPECIFIC_TZ = 'z';
   // Constant for localized GMT/UTC format, such as GMT+8:00 or HPG-8:00; used in combinations date + time + zone, or time + zone.
   UDAT_ABBR_UTC_TZ = 'ZZZZ';
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_DEPRECATED_API}
   // Constant for date skeleton with standalone month.
-  UDAT_STANDALONE_MONTH = 'LLLL' deprecated;
+  UDAT_STANDALONE_MONTH = 'LLLL';
   // Constant for date skeleton with standalone abbreviated month.
-  UDAT_ABBR_STANDALONE_MONTH = 'LLL' deprecated;
+  UDAT_ABBR_STANDALONE_MONTH = 'LLL';
   // Constant for date skeleton with hour, minute, and generic timezone.
-  UDAT_HOUR_MINUTE_GENERIC_TZ = 'jmv' deprecated;
+  UDAT_HOUR_MINUTE_GENERIC_TZ = 'jmv';
   // Constant for date skeleton with hour, minute, and timezone.
-  UDAT_HOUR_MINUTE_TZ = 'jmz' deprecated;
+  UDAT_HOUR_MINUTE_TZ = 'jmz';
   // Constant for date skeleton with hour and generic timezone.
-  UDAT_HOUR_GENERIC_TZ = 'jv' deprecated;
+  UDAT_HOUR_GENERIC_TZ = 'jv';
   // Constant for date skeleton with hour and timezone.
-  UDAT_HOUR_TZ = 'jz' deprecated;
+  UDAT_HOUR_TZ = 'jz';
+{$ENDIF ~U_HIDE_DEPRECATED_API}
 
 type
   // FieldPosition and UFieldPosition selectors for format fields defined by DateFormat and UDateFormat.
@@ -161,10 +173,18 @@ type
     UDAT_STANDALONE_QUARTER_FIELD = 28,
     UDAT_TIMEZONE_SPECIAL_FIELD = 29,
     UDAT_YEAR_NAME_FIELD = 30,
+{$IFNDEF U_HIDE_DRAFT_API}
     UDAT_TIMEZONE_LOCALIZED_GMT_OFFSET_FIELD = 31,
     UDAT_TIMEZONE_ISO_FIELD = 32,
     UDAT_TIMEZONE_ISO_LOCAL_FIELD = 33,
+{$ENDIF ~U_HIDE_DRAFT_API}
     UDAT_FIELD_COUNT = 34
+  );
+
+  UDateFormatBooleanAttribute = (
+    UDAT_PARSE_ALLOW_WHITESPACE,
+    UDAT_PARSE_ALLOW_NUMERIC,
+    UDAT_BOOLEAN_ATTRIBUTE_COUNT
   );
 
   // The possible types of date format symbols.
@@ -188,17 +208,29 @@ type
     UDAT_QUARTERS,
     UDAT_SHORT_QUARTERS,
     UDAT_STANDALONE_QUARTERS,
-    UDAT_STANDALONE_SHORT_QUARTERS,
-    UDAT_SHORTER_WEEKDAYS,
-    UDAT_STANDALONE_SHORTER_WEEKDAYS
+    UDAT_STANDALONE_SHORT_QUARTERS
+{$IFNDEF U_HIDE_DRAFT_API}
+    ,UDAT_SHORTER_WEEKDAYS
+    ,UDAT_STANDALONE_SHORTER_WEEKDAYS
+{$ENDIF ~U_HIDE_DRAFT_API}
   );
 
   // Date format symbols.
   UDateFormatSymbols = packed record
   end;
 
-{$IFDEF ICU_LINKONREQUEST}
+{$IFNDEF U_HIDE_INTERNAL_API}
+  PUDateFormatOpener = ^UDateFormatOpener;
+  UDateFormatOpener = function(timeStyle: UDateFormatStyle; dateStyle: UDateFormatStyle; const locale: PAnsiChar; const tzID: PUChar; tzIDLength: Int32; const pattern: PUChar; patternLength: Int32; var status: UErrorCode): PUDateFormat; cdecl;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 
+{$IFDEF ICU_LINKONREQUEST}
+{$IFNDEF U_HIDE_INTERNAL_API}
+  // Get a boolean attribute associated with a UDateFormat.
+  Tudat_getBooleanAttribute = function(const format: PUDateFormat; attr: UDateFormatBooleanAttribute; var status: UErrorCode): UBool; cdecl;
+  // Set a boolean attribute associated with a UDateFormat.
+  Tudat_setBooleanAttribute = procedure(format: PUDateFormat; attr: UDateFormatBooleanAttribute; value: UBool; var status: UErrorCode); cdecl;
+{$ENDIF ~U_HIDE_INTERNAL_API}
   // Maps from a UDateFormatField to the corresponding UCalendarDateFields.
   Tudat_toCalendarDateField = function(field: UDateFormatField): UCalendarDateFields; cdecl;
   // Open a new UDateFormat for formatting and parsing dates and times.
@@ -245,18 +277,30 @@ type
   Tudat_setSymbols = procedure(format: PUDateFormat; _type: UDateFormatSymbolType; symbolIndex: Int32; value: PUChar; valueLength: Int32; var status: UErrorCode); cdecl;
   // Get the locale for this date format object.
   Tudat_getLocaleByType = function(const format: PUDateFormat; _type: ULocDataLocaleType; var status: UErrorCode): PAnsiChar; cdecl;
+{$IFNDEF U_HIDE_DRAFT_API}
   // Set a particular UDisplayContext value in the formatter, such as UDISPCTX_CAPITALIZATION_FOR_STANDALONE.
   Tudat_setContext = procedure(format: PUDateFormat; value: UDisplayContext; var status: UErrorCode); cdecl;
   // Get the formatter's UDisplayContext value for the specified UDisplayContextType, such as UDISPCTX_TYPE_CAPITALIZATION.
   Tudat_getContext = function(format: PUDateFormat; _type: UDisplayContextType; var status: UErrorCode): UDisplayContext; cdecl;
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
   // Extract the date pattern from a UDateFormat set for relative date formatting.
   Tudat_toPatternRelativeDate = function(const format: PUDateFormat; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
   // Extract the time pattern from a UDateFormat set for relative date formatting.
   Tudat_toPatternRelativeTime = function(const format: PUDateFormat; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
   // Set the date & time patterns used by a UDateFormat set for relative date formatting.
   Tudat_applyPatternRelative = procedure(format: PUDateFormat; const datePattern: PUChar; datePatternLength: Int32; const timePattern: PUChar; timePatternLength: Int32; var status: UErrorCode); cdecl;
+  // Register a provider factory.
+  Tudat_registerOpener = procedure(opener: UDateFormatOpener; var status: UErrorCode); cdecl;
+  // Un-Register a provider factory.
+  Tudat_unregisterOpener = function(opener: UDateFormatOpener; var status: UErrorCode): UDateFormatOpener; cdecl;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 
 var
+{$IFNDEF U_HIDE_INTERNAL_API}
+  udat_getBooleanAttribute: Tudat_getBooleanAttribute = nil;
+  udat_setBooleanAttribute: Tudat_setBooleanAttribute = nil;
+{$ENDIF ~U_HIDE_INTERNAL_API}
   udat_toCalendarDateField: Tudat_toCalendarDateField = nil;
   udat_open: Tudat_open = nil;
   udat_close: Tudat_close = nil;
@@ -280,12 +324,22 @@ var
   udat_countSymbols: Tudat_countSymbols = nil;
   udat_setSymbols: Tudat_setSymbols = nil;
   udat_getLocaleByType: Tudat_getLocaleByType = nil;
+{$IFNDEF U_HIDE_DRAFT_API}
   udat_setContext: Tudat_setContext = nil;
   udat_getContext: Tudat_getContext = nil;
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
   udat_toPatternRelativeDate: Tudat_toPatternRelativeDate = nil;
   udat_toPatternRelativeTime: Tudat_toPatternRelativeTime = nil;
   udat_applyPatternRelative: Tudat_applyPatternRelative = nil;
+  udat_registerOpener: Tudat_registerOpener = nil;
+  udat_unregisterOpener: Tudat_unregisterOpener = nil;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 {$ELSE ~ICU_LINKONREQUEST}
+{$IFNDEF U_HIDE_INTERNAL_API}
+  function udat_getBooleanAttribute(const format: PUDateFormat; attr: UDateFormatBooleanAttribute; var status: UErrorCode): UBool; cdecl;
+  procedure udat_setBooleanAttribute(format: PUDateFormat; attr: UDateFormatBooleanAttribute; value: UBool; var status: UErrorCode); cdecl;
+{$ENDIF ~U_HIDE_INTERNAL_API}
   function udat_toCalendarDateField(field: UDateFormatField): UCalendarDateFields; cdecl;
   function udat_open(timeStyle: UDateFormatStyle; dateStyle: UDateFormatStyle; const locale: PAnsiChar; const tzID: PUChar; tzIDLength: Int32; const pattern: PUChar; patternLength: Int32; var status: UErrorCode): PUDateFormat; cdecl;
   procedure udat_close(format: PUDateFormat); cdecl;
@@ -309,14 +363,24 @@ var
   function udat_countSymbols(const format: PUDateFormat; _type: UDateFormatSymbolType): Int32; cdecl;
   procedure udat_setSymbols(format: PUDateFormat; _type: UDateFormatSymbolType; symbolIndex: Int32; value: PUChar; valueLength: Int32; var status: UErrorCode); cdecl;
   function udat_getLocaleByType(const format: PUDateFormat; _type: ULocDataLocaleType; var status: UErrorCode): PAnsiChar; cdecl;
+{$IFNDEF U_HIDE_DRAFT_API}
   procedure udat_setContext(format: PUDateFormat; value: UDisplayContext; var status: UErrorCode); cdecl;
   function udat_getContext(format: PUDateFormat; _type: UDisplayContextType; var status: UErrorCode): UDisplayContext; cdecl;
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
   function udat_toPatternRelativeDate(const format: PUDateFormat; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
   function udat_toPatternRelativeTime(const format: PUDateFormat; result: PUChar; resultLength: Int32; var status: UErrorCode): Int32; cdecl;
   procedure udat_applyPatternRelative(format: PUDateFormat; const datePattern: PUChar; datePatternLength: Int32; const timePattern: PUChar; timePatternLength: Int32; var status: UErrorCode); cdecl;
+  procedure udat_registerOpener(opener: UDateFormatOpener; var status: UErrorCode); cdecl;
+  function udat_unregisterOpener(opener: UDateFormatOpener; var status: UErrorCode): UDateFormatOpener; cdecl;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 {$ENDIF ~ICU_LINKONREQUEST}
 
 const
+{$IFNDEF U_HIDE_INTERNAL_API}
+  udat_getBooleanAttributeDefaultExportName = 'udat_getBooleanAttribute' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_setBooleanAttributeDefaultExportName = 'udat_setBooleanAttribute' + ICU_DEFAULT_EXPORT_SUFFIX;
+{$ENDIF ~U_HIDE_INTERNAL_API}
   udat_toCalendarDateFieldDefaultExportName = 'udat_toCalendarDateField' + ICU_DEFAULT_EXPORT_SUFFIX;
   udat_openDefaultExportName = 'udat_open' + ICU_DEFAULT_EXPORT_SUFFIX;
   udat_closeDefaultExportName = 'udat_close' + ICU_DEFAULT_EXPORT_SUFFIX;
@@ -340,15 +404,25 @@ const
   udat_countSymbolsDefaultExportName = 'udat_countSymbols' + ICU_DEFAULT_EXPORT_SUFFIX;
   udat_setSymbolsDefaultExportName = 'udat_setSymbols' + ICU_DEFAULT_EXPORT_SUFFIX;
   udat_getLocaleByTypeDefaultExportName = 'udat_getLocaleByType' + ICU_DEFAULT_EXPORT_SUFFIX;
+{$IFNDEF U_HIDE_DRAFT_API}
   udat_setContextDefaultExportName = 'udat_setContext' + ICU_DEFAULT_EXPORT_SUFFIX;
   udat_getContextDefaultExportName = 'udat_getContext' + ICU_DEFAULT_EXPORT_SUFFIX;
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
   udat_toPatternRelativeDateDefaultExportName = 'udat_toPatternRelativeDate' + ICU_DEFAULT_EXPORT_SUFFIX;
   udat_toPatternRelativeTimeDefaultExportName = 'udat_toPatternRelativeTime' + ICU_DEFAULT_EXPORT_SUFFIX;
   udat_applyPatternRelativeDefaultExportName = 'udat_applyPatternRelative' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_registerOpenerDefaultExportName = 'udat_registerOpener' + ICU_DEFAULT_EXPORT_SUFFIX;
+  udat_unregisterOpenerDefaultExportName = 'udat_unregisterOpener' + ICU_DEFAULT_EXPORT_SUFFIX;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 
 {$IFDEF ICU_LINKONREQUEST}
 
 var
+{$IFNDEF U_HIDE_INTERNAL_API}
+  udat_getBooleanAttributeExportName: string = udat_getBooleanAttributeDefaultExportName;
+  udat_setBooleanAttributeExportName: string = udat_setBooleanAttributeDefaultExportName;
+{$ENDIF ~U_HIDE_INTERNAL_API}
   udat_toCalendarDateFieldExportName: string = udat_toCalendarDateFieldDefaultExportName;
   udat_openExportName: string = udat_openDefaultExportName;
   udat_closeExportName: string = udat_closeDefaultExportName;
@@ -372,16 +446,26 @@ var
   udat_countSymbolsExportName: string = udat_countSymbolsDefaultExportName;
   udat_setSymbolsExportName: string = udat_setSymbolsDefaultExportName;
   udat_getLocaleByTypeExportName: string = udat_getLocaleByTypeDefaultExportName;
+{$IFNDEF U_HIDE_DRAFT_API}
   udat_setContextExportName: string = udat_setContextDefaultExportName;
   udat_getContextExportName: string = udat_getContextDefaultExportName;
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
   udat_toPatternRelativeDateExportName: string = udat_toPatternRelativeDateDefaultExportName;
   udat_toPatternRelativeTimeExportName: string = udat_toPatternRelativeTimeDefaultExportName;
   udat_applyPatternRelativeExportName: string = udat_applyPatternRelativeDefaultExportName;
+  udat_registerOpenerExportName: string = udat_registerOpenerDefaultExportName;
+  udat_unregisterOpenerExportName: string = udat_unregisterOpenerDefaultExportName;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 {$ENDIF ~ICU_LINKONREQUEST}
 
 implementation
 
 {$IFNDEF ICU_LINKONREQUEST}
+{$IFNDEF U_HIDE_INTERNAL_API}
+function udat_getBooleanAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getBooleanAttributeDefaultExportName;
+procedure udat_setBooleanAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setBooleanAttributeDefaultExportName;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 function udat_toCalendarDateField; external ICU_DEFAULT_I18N_MODULE_NAME name udat_toCalendarDateFieldDefaultExportName;
 function udat_open; external ICU_DEFAULT_I18N_MODULE_NAME name udat_openDefaultExportName;
 procedure udat_close; external ICU_DEFAULT_I18N_MODULE_NAME name udat_closeDefaultExportName;
@@ -405,16 +489,26 @@ function udat_getSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getSym
 function udat_countSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name udat_countSymbolsDefaultExportName;
 procedure udat_setSymbols; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setSymbolsDefaultExportName;
 function udat_getLocaleByType; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getLocaleByTypeDefaultExportName;
+{$IFNDEF U_HIDE_DRAFT_API}
 procedure udat_setContext; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setContextDefaultExportName;
 function udat_getContext; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getContextDefaultExportName;
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
 function udat_toPatternRelativeDate; external ICU_DEFAULT_I18N_MODULE_NAME name udat_toPatternRelativeDateDefaultExportName;
 function udat_toPatternRelativeTime; external ICU_DEFAULT_I18N_MODULE_NAME name udat_toPatternRelativeTimeDefaultExportName;
 procedure udat_applyPatternRelative; external ICU_DEFAULT_I18N_MODULE_NAME name udat_applyPatternRelativeDefaultExportName;
+procedure udat_registerOpener; external ICU_DEFAULT_I18N_MODULE_NAME name udat_registerOpenerDefaultExportName;
+function udat_unregisterOpener; external ICU_DEFAULT_I18N_MODULE_NAME name udat_unregisterOpenerDefaultExportName;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 
 {$ELSE ~ICU_LINKONREQUEST}
 
 function LoadICU: Boolean;
 begin
+{$IFNDEF U_HIDE_INTERNAL_API}
+  @udat_getBooleanAttribute := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getBooleanAttributeExportName);
+  @udat_setBooleanAttribute := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setBooleanAttributeExportName);
+{$ENDIF ~U_HIDE_INTERNAL_API}
   @udat_toCalendarDateField := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_toCalendarDateFieldExportName);
   @udat_open := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_openExportName);
   @udat_close := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_closeExportName);
@@ -438,23 +532,44 @@ begin
   @udat_countSymbols := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_countSymbolsExportName);
   @udat_setSymbols := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setSymbolsExportName);
   @udat_getLocaleByType := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getLocaleByTypeExportName);
+{$IFNDEF U_HIDE_DRAFT_API}
   @udat_setContext := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setContextExportName);
   @udat_getContext := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getContextExportName);
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
   @udat_toPatternRelativeDate := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_toPatternRelativeDateExportName);
   @udat_toPatternRelativeTime := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_toPatternRelativeTimeExportName);
   @udat_applyPatternRelative := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_applyPatternRelativeExportName);
+  @udat_registerOpener := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_registerOpenerExportName);
+  @udat_unregisterOpener := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_unregisterOpenerExportName);
+{$ENDIF ~U_HIDE_INTERNAL_API}
 
-  Result := Assigned(@udat_toCalendarDateField) and Assigned(@udat_open) and Assigned(@udat_close) and Assigned(@udat_clone) and Assigned(@udat_format) and
+  Result :=
+{$IFNDEF U_HIDE_INTERNAL_API}
+    Assigned(@udat_getBooleanAttribute) and Assigned(@udat_setBooleanAttribute) and
+{$ENDIF ~U_HIDE_INTERNAL_API}
+    Assigned(@udat_toCalendarDateField) and Assigned(@udat_open) and Assigned(@udat_close) and Assigned(@udat_clone) and Assigned(@udat_format) and
     Assigned(@udat_parse) and Assigned(@udat_parseCalendar) and Assigned(@udat_isLenient) and Assigned(@udat_setLenient) and Assigned(@udat_getCalendar) and
     Assigned(@udat_setCalendar) and Assigned(@udat_getNumberFormat) and Assigned(@udat_setNumberFormat) and Assigned(@udat_getAvailable) and
     Assigned(@udat_countAvailable) and Assigned(@udat_get2DigitYearStart) and Assigned(@udat_set2DigitYearStart) and Assigned(@udat_toPattern) and
     Assigned(@udat_applyPattern) and Assigned(@udat_getSymbols) and Assigned(@udat_countSymbols) and Assigned(@udat_setSymbols) and
-    Assigned(@udat_getLocaleByType) and Assigned(@udat_setContext) and Assigned(@udat_getContext) and Assigned(@udat_toPatternRelativeDate) and
-    Assigned(@udat_toPatternRelativeTime) and Assigned(@udat_applyPatternRelative);
+    Assigned(@udat_getLocaleByType)
+{$IFNDEF U_HIDE_DRAFT_API}
+    and Assigned(@udat_setContext) and Assigned(@udat_getContext)
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
+    and Assigned(@udat_toPatternRelativeDate) and Assigned(@udat_toPatternRelativeTime) and Assigned(@udat_applyPatternRelative) and
+    Assigned(@udat_registerOpener) and Assigned(@udat_unregisterOpener)
+{$ENDIF ~U_HIDE_INTERNAL_API}
+    ;
 end;
 
 procedure UnloadICU;
 begin
+{$IFNDEF U_HIDE_INTERNAL_API}
+  @udat_getBooleanAttribute := nil;
+  @udat_setBooleanAttribute := nil;
+{$ENDIF ~U_HIDE_INTERNAL_API}
   @udat_toCalendarDateField := nil;
   @udat_open := nil;
   @udat_close := nil;
@@ -478,11 +593,17 @@ begin
   @udat_countSymbols := nil;
   @udat_setSymbols := nil;
   @udat_getLocaleByType := nil;
+{$IFNDEF U_HIDE_DRAFT_API}
   @udat_setContext := nil;
   @udat_getContext := nil;
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
   @udat_toPatternRelativeDate := nil;
   @udat_toPatternRelativeTime := nil;
   @udat_applyPatternRelative := nil;
+  @udat_registerOpener := nil;
+  @udat_unregisterOpener := nil;
+{$ENDIF ~U_HIDE_INTERNAL_API}
 end;
 
 initialization

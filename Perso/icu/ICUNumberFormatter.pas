@@ -1,5 +1,7 @@
 unit ICUNumberFormatter;
 
+{$I icu.inc}
+
 interface
 
 uses
@@ -46,7 +48,9 @@ type
       property FormatWidth: Int32 index UNUM_FORMAT_WIDTH read GetAttribute write SetAttribute;
       property PaddingPosition: Int32 index UNUM_PADDING_POSITION read GetAttribute write SetAttribute;
       property SecondaryGroupingSize: Int32 index UNUM_SECONDARY_GROUPING_SIZE read GetAttribute write SetAttribute;
+{$IFNDEF U_HIDE_DRAFT_API}
       property Scale: Int32 index UNUM_SCALE read GetAttribute write SetAttribute;
+{$ENDIF ~U_HIDE_DRAFT_API}
       property SignificantDigitsUsed: Int32 index UNUM_SIGNIFICANT_DIGITS_USED read GetAttribute write SetAttribute;
       property MinSignificantDigits: Int32 index UNUM_MIN_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;
       property MaxSignificantDigits: Int32 index UNUM_MAX_SIGNIFICANT_DIGITS read GetAttribute write SetAttribute;

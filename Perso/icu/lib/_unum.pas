@@ -41,7 +41,9 @@ type
     UNUM_ROUND_DOWN,
     UNUM_ROUND_UP,
     UNUM_ROUND_HALFEVEN,
+{$IFNDEF U_HIDE_DEPRECATED_API}
     UNUM_FOUND_HALFEVEN = UNUM_ROUND_HALFEVEN,
+{$ENDIF ~U_HIDE_DEPRECATED_API}
     UNUM_ROUND_HALFDOWN = UNUM_ROUND_HALFEVEN + 1,
     UNUM_ROUND_HALFUP,
     UNUM_ROUND_UNNECESSARY
@@ -55,11 +57,13 @@ type
     UNUM_PAD_AFTER_SUFFIX
   );
 
+{$IFNDEF U_HIDE_DRAFT_API}
   // Constants for specifying short or long format.
   UNumberCompactStyle = (
     UNUM_SHORT,
     UNUM_LONG
   );
+{$ENDIF ~U_HIDE_DRAFT_API}
 
   // Constants for specifying currency spacing.
   UCurrencySpacing = (
@@ -107,12 +111,18 @@ type
     UNUM_MIN_SIGNIFICANT_DIGITS,
     UNUM_MAX_SIGNIFICANT_DIGITS,
     UNUM_LENIENT_PARSE,
+{$IFNDEF U_HIDE_DRAFT_API}
     UNUM_SCALE = UNUM_LENIENT_PARSE + 2,
+{$ENDIF ~U_HIDE_DRAFT_API}
+{$IFNDEF U_HIDE_INTERNAL_API}
     UNUM_NUMERIC_ATTRIBUTE_COUNT = UNUM_LENIENT_PARSE + 3,
     UNUM_MAX_NONBOOLEAN_ATTRIBUTE = $0FFF,
+{$ENDIF ~U_HIDE_INTERNAL_API}
     UNUM_FORMAT_FAIL_IF_MORE_THAN_MAX_DIGITS = $1000,
-    UNUM_PARSE_NO_EXPONENT,
-    UNUM_LIMIT_BOOLEAN_ATTRIBUTE
+    UNUM_PARSE_NO_EXPONENT
+{$IFNDEF U_HIDE_INTERNAL_API}
+    , UNUM_LIMIT_BOOLEAN_ATTRIBUTE
+{$ENDIF ~U_HIDE_INTERNAL_API}
   );
 
   // The possible UNumberFormat text attributes.
@@ -176,8 +186,10 @@ type
   Tunum_formatDecimal = function (const fmt: PUNumberFormat; const number: PAnsiChar; length: Int32; result: PUChar; resultLength: Int32; pos: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
   // Format a double currency amount using a UNumberFormat.
   Tunum_formatDoubleCurrency = function(const fmt: PUNumberFormat; number: Double; currency: PUChar; result: PUChar; resultLength: Int32; pos: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
+{$IFNDEF U_HIDE_DRAFT_API}
   // Format a UFormattable into a string.
   Tunum_formatUFormattable = function(const fmt: PUNumberFormat; const number: PUFormattable; result: PUChar; resultLength: Int32; pos: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
+{$ENDIF ~U_HIDE_DRAFT_API}
   // Parse a string into an integer using a UNumberFormat.
   Tunum_parse = function(const fmt: PUNumberFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode): Int32; cdecl;
   // Parse a string into an int64 using a UNumberFormat.
@@ -188,8 +200,10 @@ type
   Tunum_parseDecimal = function(const fmt: PUNumberFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; outBuf: PAnsiChar; outBufLength: Int32; var status: UErrorCode): Int32; cdecl;
   // Parse a string into a double and a currency using a UNumberFormat.
   Tunum_parseDoubleCurrency = function(const fmt: PUNumberFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; currency: PUChar; var status: UErrorCode): Double; cdecl;
+{$IFNDEF U_HIDE_DRAFT_API}
   // Parse a UChar string into a UFormattable.
   Tunum_parseToUFormattable = function(const fmt: PUNumberFormat; result: PUFormattable; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode): PUFormattable; cdecl;
+{$ENDIF ~U_HIDE_DRAFT_API}
   // Set the pattern used by a UNumberFormat.
   Tunum_applyPattern = procedure(format: PUNumberFormat; localized: UBool; const pattern: PUChar; patternLength: Int32; parseError: PUParseError; var status: UErrorCode); cdecl;
   // Get a locale for which decimal formatting patterns are available.
@@ -226,13 +240,17 @@ var
   unum_formatDouble: Tunum_formatDouble = nil;
   unum_formatDecimal: Tunum_formatDecimal = nil;
   unum_formatDoubleCurrency: Tunum_formatDoubleCurrency = nil;
+{$IFNDEF U_HIDE_DRAFT_API}
   unum_formatUFormattable: Tunum_formatUFormattable = nil;
+{$ENDIF ~U_HIDE_DRAFT_API}
   unum_parse: Tunum_parse = nil;
   unum_parseInt64: Tunum_parseInt64 = nil;
   unum_parseDouble: Tunum_parseDouble = nil;
   unum_parseDecimal: Tunum_parseDecimal = nil;
   unum_parseDoubleCurrency: Tunum_parseDoubleCurrency = nil;
+{$IFNDEF U_HIDE_DRAFT_API}
   unum_parseToUFormattable: Tunum_parseToUFormattable = nil;
+{$ENDIF ~U_HIDE_DRAFT_API}
   unum_applyPattern: Tunum_applyPattern = nil;
   unum_getAvailable: Tunum_getAvailable = nil;
   unum_countAvailable: Tunum_countAvailable = nil;
@@ -255,13 +273,17 @@ var
   function unum_formatDouble(const fmt: PUNumberFormat; number: Double; result: PUChar; resultLength: Int32; pos: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
   function  unum_formatDecimal(const fmt: PUNumberFormat; const number: PAnsiChar; length: Int32; result: PUChar; resultLength: Int32; pos: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
   function unum_formatDoubleCurrency(const fmt: PUNumberFormat; number: Double; currency: PUChar; result: PUChar; resultLength: Int32; pos: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
+{$IFNDEF U_HIDE_DRAFT_API}
   function unum_formatUFormattable(const fmt: PUNumberFormat; const number: PUFormattable; result: PUChar; resultLength: Int32; pos: PUFieldPosition; var status: UErrorCode): Int32; cdecl;
+{$ENDIF ~U_HIDE_DRAFT_API}
   function unum_parse(const fmt: PUNumberFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode): Int32; cdecl;
   function unum_parseInt64(const fmt: PUNumberFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode): Int64; cdecl;
   function unum_parseDouble(const fmt: PUNumberFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode): Double; cdecl;
   function unum_parseDecimal(const fmt: PUNumberFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; outBuf: PAnsiChar; outBufLength: Int32; var status: UErrorCode): Int32; cdecl;
   function unum_parseDoubleCurrency(const fmt: PUNumberFormat; const text: PUChar; textLength: Int32; parsePos: PInt32; currency: PUChar; var status: UErrorCode): Double; cdecl;
+{$IFNDEF U_HIDE_DRAFT_API}
   function unum_parseToUFormattable(const fmt: PUNumberFormat; result: PUFormattable; const text: PUChar; textLength: Int32; parsePos: PInt32; var status: UErrorCode): PUFormattable; cdecl;
+{$ENDIF ~U_HIDE_DRAFT_API}
   procedure unum_applyPattern(format: PUNumberFormat; localized: UBool; const pattern: PUChar; patternLength: Int32; parseError: PUParseError; var status: UErrorCode); cdecl;
   function unum_getAvailable(localeIndex: Int32): PAnsiChar; cdecl;
   function unum_countAvailable: Int32; cdecl;
@@ -286,13 +308,17 @@ const
   unum_formatDoubleDefaultExportName = 'unum_formatDouble' + ICU_DEFAULT_EXPORT_SUFFIX;
   unum_formatDecimalDefaultExportName = 'unum_formatDecimal' + ICU_DEFAULT_EXPORT_SUFFIX;
   unum_formatDoubleCurrencyDefaultExportName = 'unum_formatDoubleCurrency' + ICU_DEFAULT_EXPORT_SUFFIX;
+{$IFNDEF U_HIDE_DRAFT_API}
   unum_formatUFormattableDefaultExportName = 'unum_formatUFormattable' + ICU_DEFAULT_EXPORT_SUFFIX;
+{$ENDIF ~U_HIDE_DRAFT_API}
   unum_parseDefaultExportName = 'unum_parse' + ICU_DEFAULT_EXPORT_SUFFIX;
   unum_parseInt64DefaultExportName = 'unum_parseInt64' + ICU_DEFAULT_EXPORT_SUFFIX;
   unum_parseDoubleDefaultExportName = 'unum_parseDouble' + ICU_DEFAULT_EXPORT_SUFFIX;
   unum_parseDecimalDefaultExportName = 'unum_parseDecimal' + ICU_DEFAULT_EXPORT_SUFFIX;
   unum_parseDoubleCurrencyDefaultExportName = 'unum_parseDoubleCurrency' + ICU_DEFAULT_EXPORT_SUFFIX;
+{$IFNDEF U_HIDE_DRAFT_API}
   unum_parseToUFormattableDefaultExportName = 'unum_parseToUFormattable' + ICU_DEFAULT_EXPORT_SUFFIX;
+{$ENDIF ~U_HIDE_DRAFT_API}
   unum_applyPatternDefaultExportName = 'unum_applyPattern' + ICU_DEFAULT_EXPORT_SUFFIX;
   unum_getAvailableDefaultExportName = 'unum_getAvailable' + ICU_DEFAULT_EXPORT_SUFFIX;
   unum_countAvailableDefaultExportName = 'unum_countAvailable' + ICU_DEFAULT_EXPORT_SUFFIX;
@@ -318,13 +344,17 @@ var
   unum_formatDoubleExportName: string = unum_formatDoubleDefaultExportName;
   unum_formatDecimalExportName: string = unum_formatDecimalDefaultExportName;
   unum_formatDoubleCurrencyExportName: string = unum_formatDoubleCurrencyDefaultExportName;
+{$IFNDEF U_HIDE_DRAFT_API}
   unum_formatUFormattableExportName: string = unum_formatUFormattableDefaultExportName;
+{$ENDIF ~U_HIDE_DRAFT_API}
   unum_parseExportName: string = unum_parseDefaultExportName;
   unum_parseInt64ExportName: string = unum_parseInt64DefaultExportName;
   unum_parseDoubleExportName: string = unum_parseDoubleDefaultExportName;
   unum_parseDecimalExportName: string = unum_parseDecimalDefaultExportName;
   unum_parseDoubleCurrencyExportName: string = unum_parseDoubleCurrencyDefaultExportName;
+{$IFNDEF U_HIDE_DRAFT_API}
   unum_parseToUFormattableExportName: string = unum_parseToUFormattableDefaultExportName;
+{$ENDIF ~U_HIDE_DRAFT_API}
   unum_applyPatternExportName: string = unum_applyPatternDefaultExportName;
   unum_getAvailableExportName: string = unum_getAvailableDefaultExportName;
   unum_countAvailableExportName: string = unum_countAvailableDefaultExportName;
@@ -351,13 +381,17 @@ function unum_formatInt64; external ICU_DEFAULT_I18N_MODULE_NAME name unum_forma
 function unum_formatDouble; external ICU_DEFAULT_I18N_MODULE_NAME name unum_formatDoubleDefaultExportName;
 function unum_formatDecimal; external ICU_DEFAULT_I18N_MODULE_NAME name unum_formatDecimalDefaultExportName;
 function unum_formatDoubleCurrency; external ICU_DEFAULT_I18N_MODULE_NAME name unum_formatDoubleCurrencyDefaultExportName;
+{$IFNDEF U_HIDE_DRAFT_API}
 function unum_formatUFormattable; external ICU_DEFAULT_I18N_MODULE_NAME name unum_formatUFormattableDefaultExportName;
+{$ENDIF ~U_HIDE_DRAFT_API}
 function unum_parse; external ICU_DEFAULT_I18N_MODULE_NAME name unum_parseDefaultExportName;
 function unum_parseInt64; external ICU_DEFAULT_I18N_MODULE_NAME name unum_parseInt64DefaultExportName;
 function unum_parseDouble; external ICU_DEFAULT_I18N_MODULE_NAME name unum_parseDoubleDefaultExportName;
 function unum_parseDecimal; external ICU_DEFAULT_I18N_MODULE_NAME name unum_parseDecimalDefaultExportName;
 function unum_parseDoubleCurrency; external ICU_DEFAULT_I18N_MODULE_NAME name unum_parseDoubleCurrencyDefaultExportName;
+{$IFNDEF U_HIDE_DRAFT_API}
 function unum_parseToUFormattable; external ICU_DEFAULT_I18N_MODULE_NAME name unum_parseToUFormattableDefaultExportName;
+{$ENDIF ~U_HIDE_DRAFT_API}
 procedure unum_applyPattern; external ICU_DEFAULT_I18N_MODULE_NAME name unum_applyPatternDefaultExportName;
 function unum_getAvailable; external ICU_DEFAULT_I18N_MODULE_NAME name unum_getAvailableDefaultExportName;
 function unum_countAvailable; external ICU_DEFAULT_I18N_MODULE_NAME name unum_countAvailableDefaultExportName;
@@ -384,13 +418,17 @@ begin
   @unum_formatDouble := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_formatDoubleExportName);
   @unum_formatDecimal := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_formatDecimalExportName);
   @unum_formatDoubleCurrency := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_formatDoubleCurrencyExportName);
+{$IFNDEF U_HIDE_DRAFT_API}
   @unum_formatUFormattable := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_formatUFormattableExportName);
+{$ENDIF ~U_HIDE_DRAFT_API}
   @unum_parse := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_parseExportName);
   @unum_parseInt64 := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_parseInt64ExportName);
   @unum_parseDouble := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_parseDoubleExportName);
   @unum_parseDecimal := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_parseDecimalExportName);
   @unum_parseDoubleCurrency := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_parseDoubleCurrencyExportName);
+{$IFNDEF U_HIDE_DRAFT_API}
   @unum_parseToUFormattable := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_parseToUFormattableExportName);
+{$ENDIF ~U_HIDE_DRAFT_API}
   @unum_applyPattern := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_applyPatternExportName);
   @unum_getAvailable := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_getAvailableExportName);
   @unum_countAvailable := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_countAvailableExportName);
@@ -405,13 +443,16 @@ begin
   @unum_setSymbol := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_setSymbolExportName);
   @unum_getLocaleByType := GetModuleSymbol(ICU_I18N_LibraryHandle, unum_getLocaleByTypeExportName);
 
-  Result := Assigned(@unum_open) and Assigned(@unum_close) and Assigned(@unum_clone) and Assigned(@unum_format) and Assigned(@unum_formatInt64) and
-    Assigned(@unum_formatDouble) and Assigned(@unum_formatDecimal) and Assigned(@unum_formatDoubleCurrency) and Assigned(@unum_formatUFormattable) and
-    Assigned(unum_parse) and Assigned(@unum_parseInt64) and Assigned(@unum_parseDouble) and Assigned(@unum_parseDecimal) and Assigned(@unum_parseDoubleCurrency) and
-    Assigned(@unum_parseToUFormattable) and Assigned(@unum_applyPattern) and Assigned(@unum_getAvailable) and Assigned(@unum_countAvailable) and
-    Assigned(@unum_getAttribute) and Assigned(@unum_setAttribute) and Assigned(@unum_getDoubleAttribute) and Assigned(@unum_setDoubleAttribute) and
-    Assigned(@unum_getTextAttribute) and Assigned(@unum_setTextAttribute) and Assigned(@unum_toPattern) and Assigned(@unum_getSymbol) and Assigned(@unum_setSymbol)
-    and Assigned(@unum_getLocaleByType);
+  result := Assigned(@unum_open) and Assigned(@unum_close) and Assigned(@unum_clone) and Assigned(@unum_format) and Assigned(@unum_formatInt64) and
+    Assigned(@unum_formatDouble) and Assigned(@unum_formatDecimal) and Assigned(@unum_formatDoubleCurrency) {$IFNDEF U_HIDE_DRAFT_API}
+    and Assigned(@unum_formatUFormattable) {$ENDIF ~U_HIDE_DRAFT_API}
+    and Assigned(unum_parse) and Assigned(@unum_parseInt64) and Assigned(@unum_parseDouble) and Assigned(@unum_parseDecimal) and
+    Assigned(@unum_parseDoubleCurrency) {$IFNDEF U_HIDE_DRAFT_API}
+    and Assigned(@unum_parseToUFormattable) {$ENDIF ~U_HIDE_DRAFT_API}
+    and Assigned(@unum_applyPattern) and Assigned(@unum_getAvailable) and Assigned(@unum_countAvailable) and Assigned(@unum_getAttribute) and
+    Assigned(@unum_setAttribute) and Assigned(@unum_getDoubleAttribute) and Assigned(@unum_setDoubleAttribute) and Assigned(@unum_getTextAttribute) and
+    Assigned(@unum_setTextAttribute) and Assigned(@unum_toPattern) and Assigned(@unum_getSymbol) and Assigned(@unum_setSymbol) and
+    Assigned(@unum_getLocaleByType);
 end;
 
 procedure UnloadICU;
@@ -423,13 +464,17 @@ begin
   @unum_formatDouble := nil;
   @unum_formatDecimal := nil;
   @unum_formatDoubleCurrency := nil;
+{$IFNDEF U_HIDE_DRAFT_API}
   @unum_formatUFormattable := nil;
+{$ENDIF ~U_HIDE_DRAFT_API}
   @unum_parse := nil;
   @unum_parseInt64 := nil;
   @unum_parseDouble := nil;
   @unum_parseDecimal := nil;
   @unum_parseDoubleCurrency := nil;
+{$IFNDEF U_HIDE_DRAFT_API}
   @unum_parseToUFormattable := nil;
+{$ENDIF ~U_HIDE_DRAFT_API}
   @unum_applyPattern := nil;
   @unum_getAvailable := nil;
   @unum_countAvailable := nil;
