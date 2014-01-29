@@ -37,7 +37,8 @@ uses
   TestICUDateFormat in 'TestICUDateFormat.pas',
   TestICUDateFormatFunctions in 'TestICUDateFormatFunctions.pas',
   _enum in '..\lib\_enum.pas',
-  _utmscale in '..\lib\_utmscale.pas';
+  _utmscale in '..\lib\_utmscale.pas',
+  ICUCalendar in '..\ICUCalendar.pas';
 
 {$R *.RES}
 

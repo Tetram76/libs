@@ -72,31 +72,31 @@ begin
   CheckEquals('18:45:36', ICUTimeToStr(FDate, False, 'fr-FR'), 'fr-FR');
   CheckEquals('17:45:36', ICUTimeToStr(FDate, True, 'fr-FR'), 'fr-FR GMT');
   CheckEquals('6:45:36 PM', ICUTimeToStr(FDate, False, 'en-US'), 'en-US');
-  CheckEquals('Mar 25, 2015', ICUTimeToStr(FDate, True, 'en-US'), 'en-US GMT');
+  CheckEquals('5:45:36 PM', ICUTimeToStr(FDate, True, 'en-US'), 'en-US GMT');
 end;
 
 procedure TestTICUDateFormat.TestTimeToStrFull;
 begin
-//  CheckEquals('18:45:36 UTC', ICUTimeToStrFull(FDate, False, 'fr-FR'), 'fr-FR');
-//  CheckEquals('17:45:36 UTC', ICUTimeToStrFull(FDate, True, 'fr-FR'), 'fr-FR GMT');
-  CheckEquals('6:45:36 PM GMT', ICUTimeToStrFull(FDate, False, 'en-US'), 'en-US');
-  CheckEquals('Wednesday, March 25, 2015', ICUTimeToStrFull(FDate, True, 'en-US'), 'en-US GMT');
+  CheckEquals('18:45:36 UTC+01:00', ICUTimeToStrFull(FDate, False, 'fr-FR'), 'fr-FR');
+  CheckEquals('17:45:36 UTC', ICUTimeToStrFull(FDate, True, 'fr-FR'), 'fr-FR GMT');
+  CheckEquals('6:45:36 PM GMT+01:00', ICUTimeToStrFull(FDate, False, 'en-US'), 'en-US');
+  CheckEquals('5:45:36 PM GMT', ICUTimeToStrFull(FDate, True, 'en-US'), 'en-US GMT');
 end;
 
 procedure TestTICUDateFormat.TestTimeToStrLong;
 begin
-  CheckEquals('18:45:36 UTC', ICUTimeToStrLong(FDate, False, 'fr-FR'), 'fr-FR');
+  CheckEquals('18:45:36 UTC+1', ICUTimeToStrLong(FDate, False, 'fr-FR'), 'fr-FR');
   CheckEquals('17:45:36 UTC', ICUTimeToStrLong(FDate, True, 'fr-FR'), 'fr-FR GMT');
-  CheckEquals('March 25, 2015', ICUTimeToStrLong(FDate, False, 'en-US'), 'en-US');
-  CheckEquals('March 25, 2015', ICUTimeToStrLong(FDate, True, 'en-US'), 'en-US GMT');
+  CheckEquals('6:45:36 PM GMT+1', ICUTimeToStrLong(FDate, False, 'en-US'), 'en-US');
+  CheckEquals('5:45:36 PM GMT', ICUTimeToStrLong(FDate, True, 'en-US'), 'en-US GMT');
 end;
 
 procedure TestTICUDateFormat.TestTimeToStrShort;
 begin
   CheckEquals('18:45', ICUTimeToStrShort(FDate, False, 'fr-FR'), 'fr-FR');
   CheckEquals('17:45', ICUTimeToStrShort(FDate, True, 'fr-FR'), 'fr-FR GMT');
-  CheckEquals('3/25/15', ICUTimeToStrShort(FDate, False, 'en-US'), 'en-US');
-  CheckEquals('3/25/15', ICUTimeToStrShort(FDate, True, 'en-US'), 'en-US GMT');
+  CheckEquals('6:45 PM', ICUTimeToStrShort(FDate, False, 'en-US'), 'en-US');
+  CheckEquals('5:45 PM', ICUTimeToStrShort(FDate, True, 'en-US'), 'en-US GMT');
 end;
 
 initialization

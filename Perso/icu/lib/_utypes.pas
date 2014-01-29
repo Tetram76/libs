@@ -205,8 +205,9 @@ type
     U_ERROR_LIMIT =
     U_PLUGIN_ERROR_LIMIT);
 
-function U_SUCCESS(code: UErrorCode): Boolean;
-function U_FAILURE(code: UErrorCode): Boolean;
+function U_SUCCESS(code: UErrorCode): Boolean; inline;
+function U_FAILURE(code: UErrorCode): Boolean; inline;
+procedure ICUCheck(code: UErrorCode); inline;
 
 {$IFDEF ICU_LINKONREQUEST}
 
@@ -228,6 +229,15 @@ var
   u_errorNameExportName: string = u_errorNameDefaultExportName;
 {$ENDIF ~ICU_LINKONREQUEST}
 
+type
+  TICUObject = class
+  protected
+    FStatus: UErrorCode;
+  public
+    function GetErrorCode: UErrorCode;
+    function GetErrorMessage: AnsiString;
+  end;
+
 implementation
 
 uses
@@ -241,6 +251,24 @@ end;
 function U_FAILURE(code: UErrorCode): Boolean;
 begin
   Result := (code > U_ZERO_ERROR);
+end;
+
+procedure ICUCheck(code: UErrorCode);
+begin
+  if U_FAILURE(code) then
+    raise Exception.Create(u_errorName(code));
+end;
+
+{ TICUObject }
+
+function TICUObject.GetErrorCode: UErrorCode;
+begin
+  Result := FStatus;
+end;
+
+function TICUObject.GetErrorMessage: AnsiString;
+begin
+  Result := u_errorName(FStatus);
 end;
 
 { UDate }

@@ -9,43 +9,50 @@ uses
   ICUNumberFormatter;
 
 type
-  TICUDateFormatter = class
+  TICUDateFormatterWrapper = class(TICUObject)
   private
     FFormat: PUDateFormat;
-    FStatus: UErrorCode;
+    FNumberFormat: TICUNumberFormatterWrapper;
+    function GetLenient: Boolean;
+    procedure SetLenient(const Value: Boolean);
+  protected
+    function GetNumberFormat: TICUNumberFormatterWrapper;
+    function GetDateFormat: PUDateFormat;
+  public
+    constructor Create(UDateFormat: PUDateFormat); overload;
+    destructor Destroy; override;
+
+    function Format(Value: TDateTime): WideString;
+    function Parse(const Value: WideString): TDateTime;
+    property NumberFormat: TICUNumberFormatterWrapper read GetNumberFormat;
+
+    property Lenient: Boolean read GetLenient write SetLenient;
+  end;
+
+  TICUDateFormatter = class(TICUDateFormatterWrapper)
+  private
     FLocale: AnsiString;
     FTimeStyle: UDateFormatStyle;
     FDateStyle: UDateFormatStyle;
     FTimeZone: WideString;
     FPattern: WideString;
     procedure SetLocale(const Value: AnsiString);
+    procedure SetTimeStyle(const Value: UDateFormatStyle);
     procedure SetDateStyle(const Value: UDateFormatStyle);
     procedure SetTimeZone(const Value: WideString);
     procedure SetPattern(const Value: WideString);
-    procedure SetTimeStyle(const Value: UDateFormatStyle);
-    function GetLenient: Boolean;
-    procedure SetLenient(const Value: Boolean);
   protected
     procedure BuildFormatter; virtual;
     procedure ReleaseFormatter; virtual;
   public
-  public
     constructor Create(Locale: AnsiString; timeStyle, dateStyle: UDateFormatStyle; timeZone: WideString = ''; Pattern: WideString = '');
     destructor Destroy; override;
-
-    function GetErrorCode: UErrorCode;
-    function GetErrorMessage: AnsiString;
-
-    function Format(Value: TDateTime): WideString;
-    function Parse(const Value: WideString): TDateTime;
 
     property Locale: AnsiString read FLocale write SetLocale;
     property timeStyle: UDateFormatStyle read FTimeStyle write SetTimeStyle;
     property dateStyle: UDateFormatStyle read FDateStyle write SetDateStyle;
     property timeZone: WideString read FTimeZone write SetTimeZone;
     property Pattern: WideString read FPattern write SetPattern;
-
-    property Lenient: Boolean read GetLenient write SetLenient;
   end;
 
 function ICUDateToStr(const Value: TDateTime; LocalToGMT: Boolean = False; const Locale: AnsiString = ''): string;
@@ -60,43 +67,30 @@ function ICUTimeToStrLong(const Value: TDateTime; LocalToGMT: Boolean = False; c
 implementation
 
 uses
-  System.AnsiStrings, icu_globals, _umachine;
+  System.AnsiStrings, icu_globals, _umachine, System.DateUtils;
 
-{ TICUDateFormatter }
+  { TICUDateFormatterWrapper }
 
-procedure TICUDateFormatter.BuildFormatter;
+constructor TICUDateFormatterWrapper.Create(UDateFormat: PUDateFormat);
 begin
-  if not(IsICULoaded or LoadICU) then
-    raise Exception.Create('Impossible de charger ICU');
-
-  if FFormat <> nil then
-    ReleaseFormatter;
-
-  FStatus := U_ZERO_ERROR;
-  FFormat := udat_open(timeStyle, dateStyle, @Locale[1], @timeZone[1], Length(FTimeZone), PUChar(Pattern), Length(Pattern), FStatus);
+  FFormat := UDateFormat;
+  FNumberFormat := TICUNumberFormatterWrapper.Create(udat_getNumberFormat(UDateFormat));
 end;
 
-constructor TICUDateFormatter.Create(Locale: AnsiString; timeStyle, dateStyle: UDateFormatStyle; timeZone: WideString; Pattern: WideString);
+destructor TICUDateFormatterWrapper.Destroy;
 begin
-  FLocale := Locale;
-  FTimeStyle := timeStyle;
-  FDateStyle := dateStyle;
-  FTimeZone := timeZone;
-  FPattern := Pattern;
-  BuildFormatter;
-end;
-
-destructor TICUDateFormatter.Destroy;
-begin
-
+  FNumberFormat.Free;
   inherited;
 end;
 
-function TICUDateFormatter.Format(Value: TDateTime): WideString;
+function TICUDateFormatterWrapper.Format(Value: TDateTime): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
 begin
+  if FNumberFormat <> nil then
+    udat_setNumberFormat(FFormat, FNumberFormat.UNumberFormat);
+
   FStatus := U_ZERO_ERROR;
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
@@ -112,68 +106,70 @@ begin
   Result := buffer;
 end;
 
-function TICUDateFormatter.GetErrorCode: UErrorCode;
+function TICUDateFormatterWrapper.GetDateFormat: PUDateFormat;
 begin
-  Result := FStatus;
+  Result := FFormat;
 end;
 
-function TICUDateFormatter.GetErrorMessage: AnsiString;
-begin
-  Result := u_errorName(FStatus);
-end;
-
-function TICUDateFormatter.GetLenient: Boolean;
+function TICUDateFormatterWrapper.GetLenient: Boolean;
 begin
   Result := udat_isLenient(FFormat) <> 0;
 end;
 
-function TICUDateFormatter.Parse(const Value: WideString): TDateTime;
+function TICUDateFormatterWrapper.GetNumberFormat: TICUNumberFormatterWrapper;
 begin
+  Result := FNumberFormat;
+end;
+
+function TICUDateFormatterWrapper.Parse(const Value: WideString): TDateTime;
+begin
+  if FNumberFormat <> nil then
+    udat_setNumberFormat(FFormat, FNumberFormat.UNumberFormat);
+
   FStatus := U_ZERO_ERROR;
   Result := udat_parse(FFormat, @Value[1], Length(Value), nil, FStatus);
 end;
 
-procedure TICUDateFormatter.ReleaseFormatter;
-begin
-  udat_close(FFormat);
-  FFormat := nil;
-end;
-
-procedure TICUDateFormatter.SetDateStyle(const Value: UDateFormatStyle);
-begin
-  FDateStyle := Value;
-  BuildFormatter;
-end;
-
-procedure TICUDateFormatter.SetLenient(const Value: Boolean);
+procedure TICUDateFormatterWrapper.SetLenient(const Value: Boolean);
 const
   boolVals: array [False .. True] of Byte = (0, 1);
 begin
   udat_setLenient(FFormat, boolVals[Value]);
 end;
+{ TICUDateFormatter }
 
-procedure TICUDateFormatter.SetLocale(const Value: AnsiString);
+constructor TICUDateFormatter.Create(Locale: AnsiString; timeStyle, dateStyle: UDateFormatStyle; timeZone: WideString = ''; Pattern: WideString = '');
 begin
-  FLocale := System.AnsiStrings.Trim(Value);
+  FLocale := Locale;
+  FTimeStyle := timeStyle;
+  FDateStyle := dateStyle;
+  FTimeZone := timeZone;
+  FPattern := Pattern;
   BuildFormatter;
 end;
 
-procedure TICUDateFormatter.SetPattern(const Value: WideString);
+destructor TICUDateFormatter.Destroy;
 begin
-  FPattern := Trim(Value);
-  BuildFormatter;
+  ReleaseFormatter;
+  inherited;
 end;
 
-procedure TICUDateFormatter.SetTimeStyle(const Value: UDateFormatStyle);
+procedure TICUDateFormatter.BuildFormatter;
 begin
-  FTimeStyle := Value;
-  BuildFormatter;
+  if not(IsICULoaded or LoadICU) then
+    raise Exception.Create('Impossible de charger ICU');
+  ReleaseFormatter;
+  FStatus := U_ZERO_ERROR;
+  FFormat := udat_open(timeStyle, dateStyle, @Locale[1], @timeZone[1], Length(FTimeZone), PUChar(Pattern), Length(Pattern), FStatus);
+  FNumberFormat := TICUNumberFormatterWrapper.Create(udat_getNumberFormat(FFormat));
 end;
 
-procedure TICUDateFormatter.SetTimeZone(const Value: WideString);
+procedure TICUDateFormatter.ReleaseFormatter;
 begin
-  FTimeZone := Value;
-  BuildFormatter;
+  if FFormat <> nil then
+    udat_close(FFormat);
+  FreeAndNil(FNumberFormat);
+  FFormat := nil;
 end;
 
 function FormatDateTime(Value: TDateTime; DateFormat, TimeFormat: UDateFormatStyle; LocalToGMT: Boolean; Locale: AnsiString): string;
@@ -182,13 +178,13 @@ var
   timeZone: string;
 begin
   if LocalToGMT then
-    timeZone := 'GMT+1'
+    timeZone := 'GMT'
   else
-    timeZone := '';
+    timeZone := TTimeZone.Local.Abbreviation;
 
   Formatter := TICUDateFormatter.Create(Locale, TimeFormat, DateFormat, timeZone);
   try
-    Result := Formatter.Format(Value);
+    Result := Formatter.Format(TTimeZone.Local.ToUniversalTime(Value));
   finally
     Formatter.Free;
   end;
@@ -232,6 +228,36 @@ end;
 function ICUTimeToStrFull(const Value: TDateTime; LocalToGMT: Boolean = False; const Locale: AnsiString = ''): string;
 begin
   Result := FormatDateTime(Value, UDAT_NONE, UDAT_FULL, LocalToGMT, Locale);
+end;
+
+procedure TICUDateFormatter.SetLocale(const Value: AnsiString);
+begin
+  FLocale := System.AnsiStrings.Trim(Value);
+  BuildFormatter;
+end;
+
+procedure TICUDateFormatter.SetTimeStyle(const Value: UDateFormatStyle);
+begin
+  FTimeStyle := Value;
+  BuildFormatter;
+end;
+
+procedure TICUDateFormatter.SetDateStyle(const Value: UDateFormatStyle);
+begin
+  FDateStyle := Value;
+  BuildFormatter;
+end;
+
+procedure TICUDateFormatter.SetTimeZone(const Value: WideString);
+begin
+  FTimeZone := Value;
+  BuildFormatter;
+end;
+
+procedure TICUDateFormatter.SetPattern(const Value: WideString);
+begin
+  FPattern := Trim(Value);
+  BuildFormatter;
 end;
 
 end.

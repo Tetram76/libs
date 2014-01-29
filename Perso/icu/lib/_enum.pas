@@ -77,24 +77,24 @@ uses
   JclSysUtils;
 
 {$IFNDEF ICU_LINKONREQUEST}
-procedure uenum_close; external ICU_DEFAULT_I18N_MODULE_NAME name uenum_closeDefaultExportName;
-function uenum_count; external ICU_DEFAULT_I18N_MODULE_NAME name uenum_countDefaultExportName;
-function uenum_unext; external ICU_DEFAULT_I18N_MODULE_NAME name uenum_unextDefaultExportName;
-function uenum_next; external ICU_DEFAULT_I18N_MODULE_NAME name uenum_nextDefaultExportName;
-procedure uenum_reset; external ICU_DEFAULT_I18N_MODULE_NAME name uenum_resetDefaultExportName;
-function uenum_openUCharStringsEnumeration; external ICU_DEFAULT_I18N_MODULE_NAME name uenum_openUCharStringsEnumerationDefaultExportName;
-function uenum_openCharStringsEnumeration; external ICU_DEFAULT_I18N_MODULE_NAME name uenum_openCharStringsEnumerationDefaultExportName;
+procedure uenum_close; external ICU_DEFAULT_COMMON_MODULE_NAME name uenum_closeDefaultExportName;
+function uenum_count; external ICU_DEFAULT_COMMON_MODULE_NAME name uenum_countDefaultExportName;
+function uenum_unext; external ICU_DEFAULT_COMMON_MODULE_NAME name uenum_unextDefaultExportName;
+function uenum_next; external ICU_DEFAULT_COMMON_MODULE_NAME name uenum_nextDefaultExportName;
+procedure uenum_reset; external ICU_DEFAULT_COMMON_MODULE_NAME name uenum_resetDefaultExportName;
+function uenum_openUCharStringsEnumeration; external ICU_DEFAULT_COMMON_MODULE_NAME name uenum_openUCharStringsEnumerationDefaultExportName;
+function uenum_openCharStringsEnumeration; external ICU_DEFAULT_COMMON_MODULE_NAME name uenum_openCharStringsEnumerationDefaultExportName;
 {$ELSE ~ICU_LINKONREQUEST}
 
 function LoadICU: Boolean;
 begin
-  @uenum_close := GetModuleSymbol(ICU_I18N_LibraryHandle, uenum_closeExportName);
-  @uenum_count := GetModuleSymbol(ICU_I18N_LibraryHandle, uenum_countExportName);
-  @uenum_unext := GetModuleSymbol(ICU_I18N_LibraryHandle, uenum_unextExportName);
-  @uenum_next := GetModuleSymbol(ICU_I18N_LibraryHandle, uenum_nextExportName);
-  @uenum_reset := GetModuleSymbol(ICU_I18N_LibraryHandle, uenum_resetExportName);
-  @uenum_openUCharStringsEnumeration := GetModuleSymbol(ICU_I18N_LibraryHandle, uenum_openUCharStringsEnumerationExportName);
-  @uenum_openCharStringsEnumeration := GetModuleSymbol(ICU_I18N_LibraryHandle, uenum_openCharStringsEnumerationExportName);
+  @uenum_close := GetModuleSymbol(ICU_COMMON_LibraryHandle, uenum_closeExportName);
+  @uenum_count := GetModuleSymbol(ICU_COMMON_LibraryHandle, uenum_countExportName);
+  @uenum_unext := GetModuleSymbol(ICU_COMMON_LibraryHandle, uenum_unextExportName);
+  @uenum_next := GetModuleSymbol(ICU_COMMON_LibraryHandle, uenum_nextExportName);
+  @uenum_reset := GetModuleSymbol(ICU_COMMON_LibraryHandle, uenum_resetExportName);
+  @uenum_openUCharStringsEnumeration := GetModuleSymbol(ICU_COMMON_LibraryHandle, uenum_openUCharStringsEnumerationExportName);
+  @uenum_openCharStringsEnumeration := GetModuleSymbol(ICU_COMMON_LibraryHandle, uenum_openCharStringsEnumerationExportName);
 
   Result := Assigned(@uenum_close) and Assigned(@uenum_count) and Assigned(@uenum_unext) and Assigned(@uenum_next) and Assigned(@uenum_reset) and
     Assigned(@uenum_openUCharStringsEnumeration) and Assigned(@uenum_openCharStringsEnumeration);
