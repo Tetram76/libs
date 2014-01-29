@@ -227,9 +227,9 @@ type
 {$IFDEF ICU_LINKONREQUEST}
 {$IFNDEF U_HIDE_INTERNAL_API}
   // Get a boolean attribute associated with a UDateFormat.
-  Tudat_getBooleanAttribute = function(const format: PUDateFormat; attr: UDateFormatBooleanAttribute; var status: UErrorCode): UBool; cdecl;
+  //  Tudat_getBooleanAttribute = function(const format: PUDateFormat; attr: UDateFormatBooleanAttribute; var status: UErrorCode): UBool; cdecl;
   // Set a boolean attribute associated with a UDateFormat.
-  Tudat_setBooleanAttribute = procedure(format: PUDateFormat; attr: UDateFormatBooleanAttribute; value: UBool; var status: UErrorCode); cdecl;
+  //  Tudat_setBooleanAttribute = procedure(format: PUDateFormat; attr: UDateFormatBooleanAttribute; value: UBool; var status: UErrorCode); cdecl;
 {$ENDIF ~U_HIDE_INTERNAL_API}
   // Maps from a UDateFormatField to the corresponding UCalendarDateFields.
   Tudat_toCalendarDateField = function(field: UDateFormatField): UCalendarDateFields; cdecl;
@@ -298,8 +298,8 @@ type
 
 var
 {$IFNDEF U_HIDE_INTERNAL_API}
-  udat_getBooleanAttribute: Tudat_getBooleanAttribute = nil;
-  udat_setBooleanAttribute: Tudat_setBooleanAttribute = nil;
+//  udat_getBooleanAttribute: Tudat_getBooleanAttribute = nil;
+//  udat_setBooleanAttribute: Tudat_setBooleanAttribute = nil;
 {$ENDIF ~U_HIDE_INTERNAL_API}
   udat_toCalendarDateField: Tudat_toCalendarDateField = nil;
   udat_open: Tudat_open = nil;
@@ -337,8 +337,8 @@ var
 {$ENDIF ~U_HIDE_INTERNAL_API}
 {$ELSE ~ICU_LINKONREQUEST}
 {$IFNDEF U_HIDE_INTERNAL_API}
-  function udat_getBooleanAttribute(const format: PUDateFormat; attr: UDateFormatBooleanAttribute; var status: UErrorCode): UBool; cdecl;
-  procedure udat_setBooleanAttribute(format: PUDateFormat; attr: UDateFormatBooleanAttribute; value: UBool; var status: UErrorCode); cdecl;
+//  function udat_getBooleanAttribute(const format: PUDateFormat; attr: UDateFormatBooleanAttribute; var status: UErrorCode): UBool; cdecl;
+//  procedure udat_setBooleanAttribute(format: PUDateFormat; attr: UDateFormatBooleanAttribute; value: UBool; var status: UErrorCode); cdecl;
 {$ENDIF ~U_HIDE_INTERNAL_API}
   function udat_toCalendarDateField(field: UDateFormatField): UCalendarDateFields; cdecl;
   function udat_open(timeStyle: UDateFormatStyle; dateStyle: UDateFormatStyle; const locale: PAnsiChar; const tzID: PUChar; tzIDLength: Int32; const pattern: PUChar; patternLength: Int32; var status: UErrorCode): PUDateFormat; cdecl;
@@ -378,8 +378,8 @@ var
 
 const
 {$IFNDEF U_HIDE_INTERNAL_API}
-  udat_getBooleanAttributeDefaultExportName = 'udat_getBooleanAttribute' + ICU_DEFAULT_EXPORT_SUFFIX;
-  udat_setBooleanAttributeDefaultExportName = 'udat_setBooleanAttribute' + ICU_DEFAULT_EXPORT_SUFFIX;
+//  udat_getBooleanAttributeDefaultExportName = 'udat_getBooleanAttribute' + ICU_DEFAULT_EXPORT_SUFFIX;
+//  udat_setBooleanAttributeDefaultExportName = 'udat_setBooleanAttribute' + ICU_DEFAULT_EXPORT_SUFFIX;
 {$ENDIF ~U_HIDE_INTERNAL_API}
   udat_toCalendarDateFieldDefaultExportName = 'udat_toCalendarDateField' + ICU_DEFAULT_EXPORT_SUFFIX;
   udat_openDefaultExportName = 'udat_open' + ICU_DEFAULT_EXPORT_SUFFIX;
@@ -420,8 +420,8 @@ const
 
 var
 {$IFNDEF U_HIDE_INTERNAL_API}
-  udat_getBooleanAttributeExportName: string = udat_getBooleanAttributeDefaultExportName;
-  udat_setBooleanAttributeExportName: string = udat_setBooleanAttributeDefaultExportName;
+//  udat_getBooleanAttributeExportName: string = udat_getBooleanAttributeDefaultExportName;
+//  udat_setBooleanAttributeExportName: string = udat_setBooleanAttributeDefaultExportName;
 {$ENDIF ~U_HIDE_INTERNAL_API}
   udat_toCalendarDateFieldExportName: string = udat_toCalendarDateFieldDefaultExportName;
   udat_openExportName: string = udat_openDefaultExportName;
@@ -463,8 +463,8 @@ implementation
 
 {$IFNDEF ICU_LINKONREQUEST}
 {$IFNDEF U_HIDE_INTERNAL_API}
-function udat_getBooleanAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getBooleanAttributeDefaultExportName;
-procedure udat_setBooleanAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setBooleanAttributeDefaultExportName;
+// function udat_getBooleanAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name udat_getBooleanAttributeDefaultExportName;
+// procedure udat_setBooleanAttribute; external ICU_DEFAULT_I18N_MODULE_NAME name udat_setBooleanAttributeDefaultExportName;
 {$ENDIF ~U_HIDE_INTERNAL_API}
 function udat_toCalendarDateField; external ICU_DEFAULT_I18N_MODULE_NAME name udat_toCalendarDateFieldDefaultExportName;
 function udat_open; external ICU_DEFAULT_I18N_MODULE_NAME name udat_openDefaultExportName;
@@ -506,8 +506,8 @@ function udat_unregisterOpener; external ICU_DEFAULT_I18N_MODULE_NAME name udat_
 function LoadICU: Boolean;
 begin
 {$IFNDEF U_HIDE_INTERNAL_API}
-  @udat_getBooleanAttribute := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getBooleanAttributeExportName);
-  @udat_setBooleanAttribute := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setBooleanAttributeExportName);
+//  @udat_getBooleanAttribute := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_getBooleanAttributeExportName);
+//  @udat_setBooleanAttribute := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_setBooleanAttributeExportName);
 {$ENDIF ~U_HIDE_INTERNAL_API}
   @udat_toCalendarDateField := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_toCalendarDateFieldExportName);
   @udat_open := GetModuleSymbol(ICU_I18N_LibraryHandle, udat_openExportName);
@@ -546,7 +546,7 @@ begin
 
   Result :=
 {$IFNDEF U_HIDE_INTERNAL_API}
-    Assigned(@udat_getBooleanAttribute) and Assigned(@udat_setBooleanAttribute) and
+//    Assigned(@udat_getBooleanAttribute) and Assigned(@udat_setBooleanAttribute) and
 {$ENDIF ~U_HIDE_INTERNAL_API}
     Assigned(@udat_toCalendarDateField) and Assigned(@udat_open) and Assigned(@udat_close) and Assigned(@udat_clone) and Assigned(@udat_format) and
     Assigned(@udat_parse) and Assigned(@udat_parseCalendar) and Assigned(@udat_isLenient) and Assigned(@udat_setLenient) and Assigned(@udat_getCalendar) and
@@ -567,8 +567,8 @@ end;
 procedure UnloadICU;
 begin
 {$IFNDEF U_HIDE_INTERNAL_API}
-  @udat_getBooleanAttribute := nil;
-  @udat_setBooleanAttribute := nil;
+//  @udat_getBooleanAttribute := nil;
+//  @udat_setBooleanAttribute := nil;
 {$ENDIF ~U_HIDE_INTERNAL_API}
   @udat_toCalendarDateField := nil;
   @udat_open := nil;

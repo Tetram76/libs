@@ -8,13 +8,13 @@ uses
   System.SysUtils, System.Classes, _unum, _uloc, _utypes;
 
 type
-  TICUNumberFormatter = class
+  TICUNumberFormatterWrapper = class(TICUObject)
   private type
     TICUNumberFormatterChild = class
     private
-      FFormatter: TICUNumberFormatter;
+      FFormatter: TICUNumberFormatterWrapper;
     public
-      constructor Create(Formatter: TICUNumberFormatter);
+      constructor Create(Formatter: TICUNumberFormatterWrapper);
     end;
 
   private type
@@ -104,22 +104,12 @@ type
 
   private
     FFormat: PUNumberFormat;
-    FStatus: UErrorCode;
-    FLocale: AnsiString;
-    FPattern: WideString;
-    FStyle: UNumberFormatStyle;
     FAttributes: TAttributes;
     FSymbols: TSymbols;
 
     function GetLocale(aType: ULocDataLocaleType = ULOC_ACTUAL_LOCALE): AnsiString;
-    procedure SetLocale(const Value: AnsiString);
-    procedure SetPattern(const Value: WideString);
-    procedure SetStyle(const Value: UNumberFormatStyle);
-  protected
-    procedure BuildFormatter; virtual;
-    procedure ReleaseFormatter; virtual;
   public
-    constructor Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = '');
+    constructor Create(UNumberFormat: PUNumberFormat); overload;
     destructor Destroy; override;
 
     function Format(Value: Int32): WideString; overload;
@@ -134,19 +124,32 @@ type
     function ParseCurrency(const Value: WideString; const CurrencyCode: WideString): Double;
     function ParseDecimal(const Value: WideString): AnsiString;
 
-    function GetErrorCode: UErrorCode;
-    function GetErrorMessage: AnsiString;
-
     property UNumberFormat: PUNumberFormat read FFormat;
 
-    property Locale: AnsiString read FLocale write SetLocale;
     property ActualLocale: AnsiString index ULOC_ACTUAL_LOCALE read GetLocale;
     property ValidLocale: AnsiString index ULOC_VALID_LOCALE read GetLocale;
-    property Style: UNumberFormatStyle read FStyle write SetStyle;
-    property Pattern: WideString read FPattern write SetPattern;
 
     property Attributes: TAttributes read FAttributes;
     property Symbols: TSymbols read FSymbols;
+  end;
+
+  TICUNumberFormatter = class(TICUNumberFormatterWrapper)
+  private
+    FLocale: AnsiString;
+    FPattern: WideString;
+    FStyle: UNumberFormatStyle;
+    procedure BuildFormatter; virtual;
+    procedure ReleaseFormatter; virtual;
+    procedure SetLocale(const Value: AnsiString);
+    procedure SetPattern(const Value: WideString);
+    procedure SetStyle(const Value: UNumberFormatStyle);
+  public
+    constructor Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = ''); overload;
+    destructor Destroy; override;
+
+    property Locale: AnsiString read FLocale write SetLocale;
+    property Style: UNumberFormatStyle read FStyle write SetStyle;
+    property Pattern: WideString read FPattern write SetPattern;
   end;
 
 function ICUCurrencyToStr(const Value: Double; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): string;
@@ -165,14 +168,14 @@ uses
 
 { TICUNumberFormatter.TICUNumberFormatterChild }
 
-constructor TICUNumberFormatter.TICUNumberFormatterChild.Create(Formatter: TICUNumberFormatter);
+constructor TICUNumberFormatterWrapper.TICUNumberFormatterChild.Create(Formatter: TICUNumberFormatterWrapper);
 begin
   FFormatter := Formatter;
 end;
 
 { TICUNumberFormatter.TSymbols }
 
-function TICUNumberFormatter.TSymbols.GetSymbol(Symbol: UNumberFormatSymbol): WideString;
+function TICUNumberFormatterWrapper.TSymbols.GetSymbol(Symbol: UNumberFormatSymbol): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -194,7 +197,7 @@ begin
   Result := buffer;
 end;
 
-procedure TICUNumberFormatter.TSymbols.SetSymbol(Symbol: UNumberFormatSymbol; const Value: WideString);
+procedure TICUNumberFormatterWrapper.TSymbols.SetSymbol(Symbol: UNumberFormatSymbol; const Value: WideString);
 begin
   FFormatter.FStatus := U_ZERO_ERROR;
   unum_setSymbol(FFormatter.FFormat, Symbol, @Value[1], Length(Value), FFormatter.FStatus);
@@ -202,27 +205,27 @@ end;
 
 { TICUNumberFormatter.TAttributes }
 
-function TICUNumberFormatter.TAttributes.GetAttribute(Attr: UNumberFormatAttribute): Int32;
+function TICUNumberFormatterWrapper.TAttributes.GetAttribute(Attr: UNumberFormatAttribute): Int32;
 begin
   Result := unum_getAttribute(FFormatter.FFormat, Attr);
 end;
 
-function TICUNumberFormatter.TAttributes.GetBoolAttribute(Attr: UNumberFormatAttribute): Boolean;
+function TICUNumberFormatterWrapper.TAttributes.GetBoolAttribute(Attr: UNumberFormatAttribute): Boolean;
 begin
   Result := unum_getAttribute(FFormatter.FFormat, Attr) <> 0;
 end;
 
-function TICUNumberFormatter.TAttributes.GetDoubleAttribute(Attr: UNumberFormatAttribute): Double;
+function TICUNumberFormatterWrapper.TAttributes.GetDoubleAttribute(Attr: UNumberFormatAttribute): Double;
 begin
   Result := unum_getDoubleAttribute(FFormatter.FFormat, Attr);
 end;
 
-function TICUNumberFormatter.TAttributes.GetRoundingMode(Attr: UNumberFormatAttribute): UNumberFormatRoundingMode;
+function TICUNumberFormatterWrapper.TAttributes.GetRoundingMode(Attr: UNumberFormatAttribute): UNumberFormatRoundingMode;
 begin
   Result := UNumberFormatRoundingMode(GetAttribute(Attr));
 end;
 
-function TICUNumberFormatter.TAttributes.GetTextAttribute(Tag: UNumberFormatTextAttribute): WideString;
+function TICUNumberFormatterWrapper.TAttributes.GetTextAttribute(Tag: UNumberFormatTextAttribute): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -242,66 +245,51 @@ begin
   Result := buffer;
 end;
 
-procedure TICUNumberFormatter.TAttributes.SetAttribute(Attr: UNumberFormatAttribute; const Value: Int32);
+procedure TICUNumberFormatterWrapper.TAttributes.SetAttribute(Attr: UNumberFormatAttribute; const Value: Int32);
 begin
   unum_setAttribute(FFormatter.FFormat, Attr, Value);
 end;
 
-procedure TICUNumberFormatter.TAttributes.SetBoolAttribute(Attr: UNumberFormatAttribute; const Value: Boolean);
+procedure TICUNumberFormatterWrapper.TAttributes.SetBoolAttribute(Attr: UNumberFormatAttribute; const Value: Boolean);
 const
   boolVals: array [False .. True] of Byte = (0, 1);
 begin
   unum_setAttribute(FFormatter.FFormat, Attr, boolVals[Value]);
 end;
 
-procedure TICUNumberFormatter.TAttributes.SetDoubleAttribute(Attr: UNumberFormatAttribute; const Value: Double);
+procedure TICUNumberFormatterWrapper.TAttributes.SetDoubleAttribute(Attr: UNumberFormatAttribute; const Value: Double);
 begin
   unum_setDoubleAttribute(FFormatter.FFormat, Attr, Value);
 end;
 
-procedure TICUNumberFormatter.TAttributes.SetRoundingMode(Attr: UNumberFormatAttribute; const Value: UNumberFormatRoundingMode);
+procedure TICUNumberFormatterWrapper.TAttributes.SetRoundingMode(Attr: UNumberFormatAttribute; const Value: UNumberFormatRoundingMode);
 begin
   SetAttribute(Attr, Ord(Value));
 end;
 
-procedure TICUNumberFormatter.TAttributes.SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: WideString);
+procedure TICUNumberFormatterWrapper.TAttributes.SetTextAttribute(Tag: UNumberFormatTextAttribute; const Value: WideString);
 begin
   FFormatter.FStatus := U_ZERO_ERROR;
   unum_setTextAttribute(FFormatter.FFormat, Tag, @Value[1], Length(Value), FFormatter.FStatus);
 end;
 
-{ TICUNumberFormat }
+{ TICUNumberFormatterWrapper }
 
-procedure TICUNumberFormatter.BuildFormatter;
-begin
-  if not(IsICULoaded or LoadICU) then
-    raise Exception.Create('Impossible de charger ICU');
-
-  if FFormat <> nil then
-    ReleaseFormatter;
-
-  FStatus := U_ZERO_ERROR;
-  FFormat := unum_open(Style, @Pattern[1], Length(Pattern), @Locale[1], nil, FStatus);
-end;
-
-constructor TICUNumberFormatter.Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = '');
+constructor TICUNumberFormatterWrapper.Create(UNumberFormat: PUNumberFormat);
 begin
   FAttributes := TAttributes.Create(Self);
   FSymbols := TSymbols.Create(Self);
-  FLocale := Locale;
-  FStyle := Style;
-  FPattern := Pattern;
-  BuildFormatter;
+  FFormat := UNumberFormat;
 end;
 
-destructor TICUNumberFormatter.Destroy;
+destructor TICUNumberFormatterWrapper.Destroy;
 begin
   FAttributes.Free;
   FSymbols.Free;
   inherited;
 end;
 
-function TICUNumberFormatter.Format(Value: Double; const CurrencyCode: WideString): WideString;
+function TICUNumberFormatterWrapper.Format(Value: Double; const CurrencyCode: WideString): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -321,7 +309,7 @@ begin
   Result := buffer;
 end;
 
-function TICUNumberFormatter.Format(Value: Double): WideString;
+function TICUNumberFormatterWrapper.Format(Value: Double): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -341,7 +329,7 @@ begin
   Result := buffer;
 end;
 
-function TICUNumberFormatter.Format(Value: Int32): WideString;
+function TICUNumberFormatterWrapper.Format(Value: Int32): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -361,7 +349,7 @@ begin
   Result := buffer;
 end;
 
-function TICUNumberFormatter.Format(Value: Int64): WideString;
+function TICUNumberFormatterWrapper.Format(Value: Int64): WideString;
 var
   buffer: WideString;
   bufNeeded: Int32;
@@ -381,29 +369,19 @@ begin
   Result := buffer;
 end;
 
-function TICUNumberFormatter.GetErrorCode: UErrorCode;
-begin
-  Result := FStatus;
-end;
-
-function TICUNumberFormatter.GetErrorMessage: AnsiString;
-begin
-  Result := u_errorName(FStatus);
-end;
-
-function TICUNumberFormatter.GetLocale(aType: ULocDataLocaleType): AnsiString;
+function TICUNumberFormatterWrapper.GetLocale(aType: ULocDataLocaleType): AnsiString;
 begin
   FStatus := U_ZERO_ERROR;
   Result := unum_getLocaleByType(FFormat, aType, FStatus);
 end;
 
-function TICUNumberFormatter.ParseCurrency(const Value, CurrencyCode: WideString): Double;
+function TICUNumberFormatterWrapper.ParseCurrency(const Value, CurrencyCode: WideString): Double;
 begin
   FStatus := U_ZERO_ERROR;
   Result := unum_parseDoubleCurrency(FFormat, @Value[1], Length(Value), nil, PUChar(CurrencyCode), FStatus);
 end;
 
-function TICUNumberFormatter.ParseDecimal(const Value: WideString): AnsiString;
+function TICUNumberFormatterWrapper.ParseDecimal(const Value: WideString): AnsiString;
 var
   buffer: AnsiString;
   bufNeeded: Int32;
@@ -423,7 +401,7 @@ begin
   Result := buffer;
 end;
 
-function TICUNumberFormatter.ParseDouble(const Value: WideString): Double;
+function TICUNumberFormatterWrapper.ParseDouble(const Value: WideString): Double;
 var
   p: Int32;
 begin
@@ -434,21 +412,71 @@ begin
     FStatus := U_PARSE_ERROR;
 end;
 
-function TICUNumberFormatter.ParseInt32(const Value: WideString): Int32;
+function TICUNumberFormatterWrapper.ParseInt32(const Value: WideString): Int32;
 begin
   FStatus := U_ZERO_ERROR;
   Result := unum_parse(FFormat, @Value[1], Length(Value), nil, FStatus);
 end;
 
-function TICUNumberFormatter.ParseInt64(const Value: WideString): Int64;
+function TICUNumberFormatterWrapper.ParseInt64(const Value: WideString): Int64;
 begin
   FStatus := U_ZERO_ERROR;
   Result := unum_parseInt64(FFormat, @Value[1], Length(Value), nil, FStatus);
 end;
 
+function TICUNumberFormatterWrapper.Format(Value: AnsiString): WideString;
+var
+  buffer: WideString;
+  bufNeeded: Int32;
+begin
+  FStatus := U_ZERO_ERROR;
+  bufNeeded := DEFAULT_BUFFER_SIZE;
+  SetLength(buffer, bufNeeded);
+  bufNeeded := unum_formatDecimal(FFormat, @Value[1], Length(Value), @buffer[1], bufNeeded, nil, FStatus);
+  if FStatus = U_BUFFER_OVERFLOW_ERROR then
+  begin
+    SetLength(buffer, bufNeeded);
+    FStatus := U_ZERO_ERROR;
+    bufNeeded := unum_formatDecimal(FFormat, @Value[1], Length(Value), @buffer[1], bufNeeded, nil, FStatus);
+  end;
+
+  SetLength(buffer, bufNeeded);
+  Result := buffer;
+end;
+
+{ TICUNumberFormatter }
+
+procedure TICUNumberFormatter.BuildFormatter;
+begin
+  if not(IsICULoaded or LoadICU) then
+    raise Exception.Create('Impossible de charger ICU');
+
+  ReleaseFormatter;
+
+  FStatus := U_ZERO_ERROR;
+  FFormat := unum_open(Style, @Pattern[1], Length(Pattern), @Locale[1], nil, FStatus);
+end;
+
+constructor TICUNumberFormatter.Create(Locale: AnsiString; Style: UNumberFormatStyle; Pattern: string = '');
+begin
+  FAttributes := TAttributes.Create(Self);
+  FSymbols := TSymbols.Create(Self);
+  FLocale := Locale;
+  FStyle := Style;
+  FPattern := Pattern;
+  BuildFormatter;
+end;
+
+destructor TICUNumberFormatter.Destroy;
+begin
+  ReleaseFormatter;
+  inherited;
+end;
+
 procedure TICUNumberFormatter.ReleaseFormatter;
 begin
-  unum_close(FFormat);
+  if FFormat <> nil then
+    unum_close(FFormat);
   FFormat := nil;
 end;
 
@@ -468,26 +496,6 @@ procedure TICUNumberFormatter.SetStyle(const Value: UNumberFormatStyle);
 begin
   FStyle := Value;
   BuildFormatter;
-end;
-
-function TICUNumberFormatter.Format(Value: AnsiString): WideString;
-var
-  buffer: WideString;
-  bufNeeded: Int32;
-begin
-  FStatus := U_ZERO_ERROR;
-  bufNeeded := DEFAULT_BUFFER_SIZE;
-  SetLength(buffer, bufNeeded);
-  bufNeeded := unum_formatDecimal(FFormat, @Value[1], Length(Value), @buffer[1], bufNeeded, nil, FStatus);
-  if FStatus = U_BUFFER_OVERFLOW_ERROR then
-  begin
-    SetLength(buffer, bufNeeded);
-    FStatus := U_ZERO_ERROR;
-    bufNeeded := unum_formatDecimal(FFormat, @Value[1], Length(Value), @buffer[1], bufNeeded, nil, FStatus);
-  end;
-
-  SetLength(buffer, bufNeeded);
-  Result := buffer;
 end;
 
 function ICUCurrencyToStr(const Value: Double; const Locale: AnsiString = ''; const CurrencySymbol: string = ''): string;
