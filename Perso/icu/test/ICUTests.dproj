@@ -123,6 +123,7 @@
         <DCCReference Include="..\lib\_enum.pas"/>
         <DCCReference Include="..\lib\_utmscale.pas"/>
         <DCCReference Include="..\ICUCalendar.pas"/>
+        <DCCReference Include="..\ICUEnumeration.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

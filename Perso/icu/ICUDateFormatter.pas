@@ -18,8 +18,9 @@ type
   protected
     function GetNumberFormat: TICUNumberFormatterWrapper;
     function GetDateFormat: PUDateFormat;
+    procedure ReleaseFormatter; virtual;
   public
-    constructor Create(UDateFormat: PUDateFormat); overload;
+    constructor Create(UDateFormat: PUDateFormat); reintroduce;
     destructor Destroy; override;
 
     function Format(Value: TDateTime): WideString;
@@ -43,9 +44,9 @@ type
     procedure SetPattern(const Value: WideString);
   protected
     procedure BuildFormatter; virtual;
-    procedure ReleaseFormatter; virtual;
   public
-    constructor Create(Locale: AnsiString; timeStyle, dateStyle: UDateFormatStyle; timeZone: WideString = ''; Pattern: WideString = '');
+    constructor Create(const Locale: AnsiString = ''; timeStyle: UDateFormatStyle = UDAT_DEFAULT; dateStyle: UDateFormatStyle = UDAT_DEFAULT;
+      const timeZone: WideString = ''; const Pattern: WideString = ''); reintroduce;
     destructor Destroy; override;
 
     property Locale: AnsiString read FLocale write SetLocale;
@@ -69,17 +70,16 @@ implementation
 uses
   System.AnsiStrings, icu_globals, _umachine, System.DateUtils;
 
-  { TICUDateFormatterWrapper }
+{ TICUDateFormatterWrapper }
 
 constructor TICUDateFormatterWrapper.Create(UDateFormat: PUDateFormat);
 begin
   FFormat := UDateFormat;
-  FNumberFormat := TICUNumberFormatterWrapper.Create(udat_getNumberFormat(UDateFormat));
 end;
 
 destructor TICUDateFormatterWrapper.Destroy;
 begin
-  FNumberFormat.Free;
+  ReleaseFormatter;
   inherited;
 end;
 
@@ -91,14 +91,14 @@ begin
   if FNumberFormat <> nil then
     udat_setNumberFormat(FFormat, FNumberFormat.UNumberFormat);
 
-  FStatus := U_ZERO_ERROR;
+  ResetErrorCode(FStatus);
   bufNeeded := DEFAULT_BUFFER_SIZE;
   SetLength(buffer, bufNeeded);
   bufNeeded := udat_format(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
   if FStatus = U_BUFFER_OVERFLOW_ERROR then
   begin
     SetLength(buffer, bufNeeded);
-    FStatus := U_ZERO_ERROR;
+    ResetErrorCode(FStatus);
     bufNeeded := udat_format(FFormat, Value, @buffer[1], bufNeeded, nil, FStatus);
   end;
 
@@ -113,11 +113,13 @@ end;
 
 function TICUDateFormatterWrapper.GetLenient: Boolean;
 begin
-  Result := udat_isLenient(FFormat) <> 0;
+  Result := udat_isLenient(FFormat);
 end;
 
 function TICUDateFormatterWrapper.GetNumberFormat: TICUNumberFormatterWrapper;
 begin
+  if FNumberFormat = nil then
+    FNumberFormat := TICUNumberFormatterWrapper.Create(udat_getNumberFormat(FFormat));
   Result := FNumberFormat;
 end;
 
@@ -126,8 +128,16 @@ begin
   if FNumberFormat <> nil then
     udat_setNumberFormat(FFormat, FNumberFormat.UNumberFormat);
 
-  FStatus := U_ZERO_ERROR;
+  ResetErrorCode(FStatus);
   Result := udat_parse(FFormat, @Value[1], Length(Value), nil, FStatus);
+end;
+
+procedure TICUDateFormatterWrapper.ReleaseFormatter;
+begin
+  FreeAndNil(FNumberFormat);
+  if FFormat <> nil then
+    udat_close(FFormat);
+  FFormat := nil;
 end;
 
 procedure TICUDateFormatterWrapper.SetLenient(const Value: Boolean);
@@ -138,8 +148,9 @@ begin
 end;
 { TICUDateFormatter }
 
-constructor TICUDateFormatter.Create(Locale: AnsiString; timeStyle, dateStyle: UDateFormatStyle; timeZone: WideString = ''; Pattern: WideString = '');
+constructor TICUDateFormatter.Create(const Locale: AnsiString; timeStyle, dateStyle: UDateFormatStyle; const timeZone, Pattern: WideString);
 begin
+  inherited Create(nil);
   FLocale := Locale;
   FTimeStyle := timeStyle;
   FDateStyle := dateStyle;
@@ -150,7 +161,6 @@ end;
 
 destructor TICUDateFormatter.Destroy;
 begin
-  ReleaseFormatter;
   inherited;
 end;
 
@@ -159,17 +169,8 @@ begin
   if not(IsICULoaded or LoadICU) then
     raise Exception.Create('Impossible de charger ICU');
   ReleaseFormatter;
-  FStatus := U_ZERO_ERROR;
+  ResetErrorCode(FStatus);
   FFormat := udat_open(timeStyle, dateStyle, @Locale[1], @timeZone[1], Length(FTimeZone), PUChar(Pattern), Length(Pattern), FStatus);
-  FNumberFormat := TICUNumberFormatterWrapper.Create(udat_getNumberFormat(FFormat));
-end;
-
-procedure TICUDateFormatter.ReleaseFormatter;
-begin
-  if FFormat <> nil then
-    udat_close(FFormat);
-  FreeAndNil(FNumberFormat);
-  FFormat := nil;
 end;
 
 function FormatDateTime(Value: TDateTime; DateFormat, TimeFormat: UDateFormatStyle; LocalToGMT: Boolean; Locale: AnsiString): string;

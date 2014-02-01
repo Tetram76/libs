@@ -24,7 +24,7 @@ type
   // Returns the next element in the iterator's list.
   Tuenum_unext = function(en: PUEnumeration; var resultLength: Int32; var status: UErrorCode): PUChar; cdecl;
   // Returns the next element in the iterator's list.
-  Tuenum_next = function(en: PUEnumeration; var resultLength: Int32; var status: UErrorCode): PAnsiChar; cdecl;
+  Tuenum_next = function(en: PUEnumeration; var resultLength: Int32; var status: UErrorCode): PAnsiString; cdecl;
   // Resets the iterator to the current list of service IDs.
   Tuenum_reset = procedure(en: PUEnumeration; var status: UErrorCode); cdecl;
   // Given an array of const UChar* strings, return a UEnumeration.
