@@ -208,6 +208,7 @@ type
 function U_SUCCESS(code: UErrorCode): Boolean; inline;
 function U_FAILURE(code: UErrorCode): Boolean; inline;
 procedure ICUCheck(code: UErrorCode); inline;
+procedure ResetErrorCode(var code: UErrorCode); inline;
 
 {$IFDEF ICU_LINKONREQUEST}
 
@@ -256,7 +257,12 @@ end;
 procedure ICUCheck(code: UErrorCode);
 begin
   if U_FAILURE(code) then
-    raise Exception.Create(u_errorName(code));
+    raise Exception.Create(string(u_errorName(code)));
+end;
+
+procedure ResetErrorCode(var code: UErrorCode);
+begin
+  code := U_ZERO_ERROR;
 end;
 
 { TICUObject }

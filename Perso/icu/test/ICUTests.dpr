@@ -38,7 +38,8 @@ uses
   TestICUDateFormatFunctions in 'TestICUDateFormatFunctions.pas',
   _enum in '..\lib\_enum.pas',
   _utmscale in '..\lib\_utmscale.pas',
-  ICUCalendar in '..\ICUCalendar.pas';
+  ICUCalendar in '..\ICUCalendar.pas',
+  ICUEnumeration in '..\ICUEnumeration.pas';
 
 {$R *.RES}
 
