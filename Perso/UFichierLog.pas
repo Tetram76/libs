@@ -44,6 +44,7 @@ type
     procedure SetLogOptions(const Value: TLogOptions);
     procedure SetLogFileOptions(const Value: TLogFileOptions);
     function GetLogFullPath: string;
+    function GetBackupPath: string;
 
     function OpenLogFile: Boolean;
     procedure CloseLogFile;
@@ -55,7 +56,6 @@ type
     procedure WriteToLogStream(Stream: TStream; const Text: string);
 
     constructor Create;
-    function GetBackupPath: string;
   public
     procedure BeforeDestruction; override;
     destructor Destroy; override;
