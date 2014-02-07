@@ -12,7 +12,9 @@ type
   TLogOptions = set of TLogOption;
   TLogFileOption = (lfoAutoClose, lfoKeepBackup);
   TLogFileOptions = set of TLogFileOption;
-  TOnAppendLog = procedure(Message: string; TypeMessage: TTypeMessage; AddedToFile: Boolean) of object;
+
+  TOnAppendLogEvent = procedure(const FullText, SmallText: string; TypeMessage: TTypeMessage; AddedToFile: Boolean) of object;
+  TOnBuildMessageEvent = procedure(var Prefix, Message, Suffix: string; TypeMessage: TTypeMessage) of object;
 
   TFichierLog = class
   strict private
@@ -33,6 +35,7 @@ type
     FLogOptions: TLogOptions;
     FLogFileOptions: TLogFileOptions;
     FArchivingDuration: Integer;
+    FOnBuildMessage: TOnBuildMessageEvent;
     procedure SetLimitSize(const Value: Integer);
     function GetLogDir: string;
     procedure SetLogDir(const Value: string);
@@ -48,7 +51,6 @@ type
 
     function OpenLogFile: Boolean;
     procedure CloseLogFile;
-    function BuildMessage(const Texte: string; TypeMessage: TTypeMessage): string;
     procedure AddToBackup(Data: TStream);
     procedure CleanBackupDir;
     procedure ForwardStream(Stream: TStream);
@@ -62,6 +64,8 @@ type
 
     class function getInstance: TFichierLog;
     class destructor Destroy;
+
+    function BuildMessage(const Texte: string; TypeMessage: TTypeMessage): string;
 
     procedure AppendLog(const Texte: string; TypeMessage: TTypeMessage); overload;
     procedure AppendLog(E: Exception); overload;
@@ -86,7 +90,8 @@ type
     property LogFullPath: string read GetLogFullPath;
     property BackupPath: string read GetBackupPath;
 
-    property OnAppend: TOnAppendLog read FOnAppend write FOnAppend;
+    property OnAppend: TOnAppendLogEvent read FOnAppend write FOnAppend;
+    property OnBuildMessage: TOnBuildMessageEvent read FOnBuildMessage write FOnBuildMessage;
   end;
 
 implementation
@@ -103,17 +108,12 @@ procedure TFichierLog.AppendLog(const Texte: string; TypeMessage: TTypeMessage);
 var
   s: string;
 begin
-  if (TypeMessage > FLogLevel) then
-    Exit;
-
+  s := BuildMessage(Texte, TypeMessage);
   try
-    if OpenLogFile then
+    if (TypeMessage <= FLogLevel) and OpenLogFile then
       WriteToLogStream(FFichierLog, Texte);
     try
-      s := BuildMessage(Texte, TypeMessage);
       WriteToLogStream(FFichierLog, s + #13#10);
-      if Assigned(FOnAppend) then
-        FOnAppend(s, TypeMessage, TypeMessage <= FLogLevel);
     finally
       if lfoAutoClose in FLogFileOptions then
         CloseLogFile;
@@ -121,6 +121,8 @@ begin
   except
     // cette proc ne doit pas être problématique
   end;
+  if Assigned(FOnAppend) then
+    FOnAppend(s, Texte, TypeMessage, TypeMessage <= FLogLevel);
 end;
 
 procedure TFichierLog.AddToBackup(Data: TStream);
@@ -533,17 +535,23 @@ end;
 
 procedure TFichierLog.SetKeepRatio(const Value: Integer);
 begin
-  if not(Value in [0 .. 100]) then
-    raise Exception.Create('Le ratio doit être compris entre 0% et 100%');
+  if not(Value in [0 .. 99]) then
+    raise Exception.Create('Le ratio doit être compris entre 0% et 99%');
   FKeepRatio := Value;
 end;
 
 function TFichierLog.BuildMessage(const Texte: string; TypeMessage: TTypeMessage): string;
+var
+  suffix: string;
 begin
   Result := FormatDateTime('dd-mm-yyyy hh:mm:ss:zzz', Now);
   if loIncludeInstanceID in FLogOptions then
     Result := Result + ' - ' + FguidInstance;
-  Result := Result + ' - ' + Texte;
+
+  if Assigned(FOnBuildMessage) then
+    FOnBuildMessage(Result, Texte, suffix, TypeMessage);
+
+  Result := Result + ' - ' + Texte + suffix;
 end;
 
 procedure TFichierLog.SetLogOptions(const Value: TLogOptions);
