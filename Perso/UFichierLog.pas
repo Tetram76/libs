@@ -16,14 +16,19 @@ type
   TOnAppendLogEvent = procedure(const FullText, SmallText: string; TypeMessage: TTypeMessage; AddedToFile: Boolean) of object;
   TOnBuildMessageEvent = procedure(var Prefix, Message, Suffix: string; TypeMessage: TTypeMessage) of object;
 
-  TFichierLog = class
+  TFichierLog = class sealed
   strict private
     class var _Instance: TFichierLog;
+  public
+    class property Instance: TFichierLog read _Instance;
+    class constructor Create;
+    class destructor Destroy;
+
   strict private
     FLogCriticalSection, FFileCriticalSection: TCriticalSection;
   private
     FLogFileName, FLogDir: string;
-    FFichierLog: TFileStream;
+    FWriter: TThread;
     FLogLevel: TTypeMessage;
     FguidInstance: string;
     FLimitSize: Integer;
@@ -31,7 +36,7 @@ type
     FBackupDir: string;
     FBackupRotation: TLogRotation;
     FEncoding: TEncoding;
-    FOnAppend: TOnAppendLog;
+    FOnAppend: TOnAppendLogEvent;
     FLogOptions: TLogOptions;
     FLogFileOptions: TLogFileOptions;
     FArchivingDuration: Integer;
@@ -49,27 +54,17 @@ type
     function GetLogFullPath: string;
     function GetBackupPath: string;
 
-    function OpenLogFile: Boolean;
-    procedure CloseLogFile;
-    procedure AddToBackup(Data: TStream);
-    procedure CleanBackupDir;
-    procedure ForwardStream(Stream: TStream);
-    procedure RewindStream(Stream: TStream);
-    procedure WriteToLogStream(Stream: TStream; const Text: string);
+    procedure CheckLogging;
 
     constructor Create;
   public
     procedure BeforeDestruction; override;
     destructor Destroy; override;
 
-    class function getInstance: TFichierLog;
-    class destructor Destroy;
-
-    function BuildMessage(const Texte: string; TypeMessage: TTypeMessage): string;
+    function BuildMessage(Texte: string; TypeMessage: TTypeMessage): string;
 
     procedure AppendLog(const Texte: string; TypeMessage: TTypeMessage); overload;
     procedure AppendLog(E: Exception); overload;
-    procedure UpdateLog(const Texte: string; TypeMessage: TTypeMessage);
 
     property LogFileName: string read GetLogFileName write SetLogFileName;
     property LogDir: string read GetLogDir write SetLogDir;
@@ -99,56 +94,64 @@ implementation
 uses
   DateUtils, TypInfo, System.IOUtils, JclCompression, JclDebug;
 
-procedure TFichierLog.SetLimitSize(const Value: Integer);
-begin
-  FLimitSize := Value;
-end;
+type
+  TLogWriter = class sealed(TThread)
+  public
+    FFichierLog: TFileStream;
 
-procedure TFichierLog.AppendLog(const Texte: string; TypeMessage: TTypeMessage);
-var
-  s: string;
-begin
-  s := BuildMessage(Texte, TypeMessage);
-  try
-    if (TypeMessage <= FLogLevel) and OpenLogFile then
-      WriteToLogStream(FFichierLog, Texte);
-    try
-      WriteToLogStream(FFichierLog, s + #13#10);
-    finally
-      if lfoAutoClose in FLogFileOptions then
-        CloseLogFile;
-    end;
-  except
-    // cette proc ne doit pas être problématique
+    lockSection: TCriticalSection;
+    LstLog: TStringList;
+    function isOpen: Boolean;
+
+    function OpenLogFile: Boolean;
+    procedure CloseLogFile;
+    procedure AddToBackup(Data: TStream);
+    procedure CleanBackupDir;
+    procedure ForwardStream(Stream: TStream);
+    procedure RewindStream(Stream: TStream);
+    procedure WriteToLogStream(Stream: TStream; const Text: string);
+
+    procedure AddLigne(const s: string);
+
+    procedure Execute; override;
   end;
-  if Assigned(FOnAppend) then
-    FOnAppend(s, Texte, TypeMessage, TypeMessage <= FLogLevel);
+
+  { TLogWriter }
+
+procedure TLogWriter.AddLigne(const s: string);
+begin
+  lockSection.Acquire;
+  try
+    LstLog.Add(s);
+  finally
+    lockSection.Leave;
+  end;
 end;
 
-procedure TFichierLog.AddToBackup(Data: TStream);
+procedure TLogWriter.AddToBackup(Data: TStream);
 var
-  NomFichierBackup, NomArchive, suffix: string;
+  NomFichierBackup, NomArchive, Suffix: string;
   bckStream: TStream;
   Archive: TJclGZipUpdateArchive;
 begin
-  if FArchivingDuration > 0 then
+  if TFichierLog.Instance.ArchivingDuration > 0 then
     CleanBackupDir;
 
-  NomFichierBackup := LogFileName;
-  suffix := '';
-  if FBackupRotation <= lrYear then
-    suffix := suffix + Format('_%.4d', [YearOf(Now)]);
-  if FBackupRotation <= lrMonth then
-    suffix := suffix + Format('_%.2d', [MonthOf(Now)]);
-  if FBackupRotation <= lrDay then
-    suffix := suffix + Format('_%.2d', [DayOf(Now)]);
-  if FBackupRotation <= lrHour then
-    suffix := suffix + Format('_%.2d', [HourOf(Now)]);
-  if FBackupRotation <= lrMinute then
-    suffix := suffix + Format('_%.2d', [MinuteOf(Now)]);
+  NomFichierBackup := TFichierLog.Instance.LogFileName;
+  Suffix := '';
+  if TFichierLog.Instance.BackupRotation <= lrYear then
+    Suffix := Suffix + Format('_%.4d', [YearOf(Now)]);
+  if TFichierLog.Instance.BackupRotation <= lrMonth then
+    Suffix := Suffix + Format('_%.2d', [MonthOf(Now)]);
+  if TFichierLog.Instance.BackupRotation <= lrDay then
+    Suffix := Suffix + Format('_%.2d', [DayOf(Now)]);
+  if TFichierLog.Instance.BackupRotation <= lrHour then
+    Suffix := Suffix + Format('_%.2d', [HourOf(Now)]);
+  if TFichierLog.Instance.BackupRotation <= lrMinute then
+    Suffix := Suffix + Format('_%.2d', [MinuteOf(Now)]);
 
-  NomFichierBackup := TPath.GetFileNameWithoutExtension(NomFichierBackup) + suffix + TPath.GetExtension(NomFichierBackup);
-  NomFichierBackup := TPath.Combine(BackupPath, NomFichierBackup);
+  NomFichierBackup := TPath.GetFileNameWithoutExtension(NomFichierBackup) + Suffix + TPath.GetExtension(NomFichierBackup);
+  NomFichierBackup := TPath.Combine(TFichierLog.Instance.BackupPath, NomFichierBackup);
   TDirectory.CreateDirectory(TPath.GetDirectoryName(NomFichierBackup));
 
   NomArchive := NomFichierBackup + '.gz';
@@ -165,7 +168,7 @@ begin
       Archive.Items[0].OwnsStream := False;
       Archive.ExtractSelected;
       bckStream.Seek(0, soFromEnd);
-      Data.Seek(Length(FEncoding.GetPreamble), soFromBeginning);
+      Data.Seek(Length(TFichierLog.Instance.Encoding.GetPreamble), soFromBeginning);
     end
     else
       Archive.AddFile(TPath.GetFileName(NomFichierBackup), bckStream);
@@ -178,6 +181,227 @@ begin
     bckStream.Free;
     Archive.Free;
   end;
+end;
+
+procedure TLogWriter.CleanBackupDir;
+var
+  fileName, rootLogFileName: string;
+begin
+  if not TDirectory.Exists(TFichierLog.Instance.BackupPath) then
+    Exit;
+  rootLogFileName := TPath.GetFileNameWithoutExtension(TFichierLog.Instance.LogFileName);
+  for fileName in TDirectory.GetFiles(TFichierLog.Instance.BackupPath, rootLogFileName + '*.gz', TSearchOption.soTopDirectoryOnly,
+    function(const Path: string; const SearchRec: TSearchRec): Boolean
+    var
+      s: string;
+      v: TArray<Word>;
+      i: Integer;
+      tags: TArray<string>;
+      backupDate: TDateTime;
+    begin
+      try
+        s := TPath.GetFileNameWithoutExtension(SearchRec.Name);
+        s := TPath.GetFileNameWithoutExtension(s).Substring(Length(rootLogFileName) + 1);
+        SetLength(v, 5);
+        v[0] := YearOf(Now);
+        v[1] := MonthOf(Now);
+        v[2] := DayOf(Now);
+        v[3] := HourOf(Now);
+        v[4] := MinuteOf(Now);
+        tags := s.Split(['_']);
+        for i := 0 to Pred(Length(tags)) do
+          v[i] := StrToInt(tags[i]);
+        backupDate := EncodeDateTime(v[0], v[1], v[2], v[3], v[4], 0, 0);
+        case TFichierLog.Instance.BackupRotation of
+          lrMinute:
+            Exit(MinutesBetween(backupDate, Now) > TFichierLog.Instance.ArchivingDuration);
+          lrHour:
+            Exit(HoursBetween(backupDate, Now) > TFichierLog.Instance.ArchivingDuration);
+          lrDay:
+            Exit(DaysBetween(backupDate, Now) > TFichierLog.Instance.ArchivingDuration);
+          lrMonth:
+            Exit(MonthsBetween(backupDate, Now) > TFichierLog.Instance.ArchivingDuration);
+          lrYear:
+            Exit(YearsBetween(backupDate, Now) > TFichierLog.Instance.ArchivingDuration);
+        end;
+        Exit(False);
+      except
+        // si le nom de fichier n'est pas décodable, c'est qu'il n'est pas un fichier de backup
+        Result := False;
+      end;
+    end) do
+    TFile.Delete(fileName);
+end;
+
+procedure TLogWriter.CloseLogFile;
+begin
+  if not Assigned(FFichierLog) then
+    Exit;
+
+  FreeAndNil(FFichierLog);
+end;
+
+procedure TLogWriter.Execute;
+var
+  dumpLst: TStringList;
+  s: string;
+begin
+  lockSection := TCriticalSection.Create;
+  LstLog := TStringList.Create;
+  dumpLst := TStringList.Create;
+  try
+    while not Terminated do
+    begin
+      lockSection.Acquire;
+      try
+        if LstLog.Count > 0 then
+        begin
+          dumpLst.Assign(LstLog);
+          LstLog.Clear;
+        end;
+      finally
+        lockSection.Leave;
+      end;
+
+      if dumpLst.Count > 0 then
+        try
+          for s in dumpLst do
+            if OpenLogFile then
+              WriteToLogStream(FFichierLog, s + #13#10);
+        finally
+          dumpLst.Clear;
+          if lfoAutoClose in TFichierLog.Instance.LogFileOptions then
+            CloseLogFile;
+        end;
+
+      Sleep(500);
+    end;
+  finally
+    CloseLogFile;
+    dumpLst.Free;
+    LstLog.Free;
+    lockSection.Free;
+  end;
+end;
+
+procedure TLogWriter.ForwardStream(Stream: TStream);
+var
+  c: AnsiChar;
+begin
+  Stream.Read(c, 1);
+  while (Stream.Position < Stream.Size) and not CharInSet(c, [#10, #13]) do
+    Stream.Read(c, 1);
+  while (Stream.Position < Stream.Size) and CharInSet(c, [#10, #13]) do
+    Stream.Read(c, 1);
+  Stream.Seek(-1, soFromCurrent);
+end;
+
+function TLogWriter.isOpen: Boolean;
+begin
+  Result := Assigned(FFichierLog);
+end;
+
+function TLogWriter.OpenLogFile: Boolean;
+var
+  tmpStream, bckStream: TStream;
+  cutPos: Integer;
+  NomFichierLog: string;
+  MaxFileSize: Cardinal;
+begin
+  MaxFileSize := TFichierLog.Instance.LimitSize;
+  Result := Assigned(FFichierLog);
+  NomFichierLog := TFichierLog.Instance.GetLogFullPath;
+  if not Result then
+  begin
+    if TFile.Exists(NomFichierLog) then
+      FFichierLog := TFileStream.Create(NomFichierLog, fmOpenReadWrite or fmShareDenyWrite)
+    else
+    begin
+      TDirectory.CreateDirectory(TPath.GetDirectoryName(NomFichierLog));
+      FFichierLog := TFileStream.Create(NomFichierLog, fmCreate or fmOpenReadWrite or fmShareDenyWrite);
+    end;
+
+    Result := True;
+  end;
+  if (MaxFileSize > 0) and (FFichierLog.Size > MaxFileSize) then
+  begin
+    bckStream := TMemoryStream.Create;
+    tmpStream := TMemoryStream.Create;
+    try
+      FFichierLog.Position := FFichierLog.Size - MulDiv(MaxFileSize, 100 - TFichierLog.Instance.KeepRatio, 100);
+      ForwardStream(FFichierLog);
+
+      cutPos := FFichierLog.Position;
+
+      // on copie le BOM en même temps s'il est présent
+      FFichierLog.Position := 0;
+      bckStream.CopyFrom(FFichierLog, cutPos);
+
+      // FFichierLog a été repositionné sur cutPos
+      tmpStream.CopyFrom(FFichierLog, FFichierLog.Size - cutPos);
+
+      FFichierLog.Size := Length(TFichierLog.Instance.Encoding.GetPreamble);
+      FFichierLog.CopyFrom(tmpStream, -1);
+
+      if lfoKeepBackup in TFichierLog.Instance.LogFileOptions then
+        AddToBackup(bckStream);
+    finally
+      tmpStream.Free;
+      bckStream.Free;
+    end;
+  end;
+
+  FFichierLog.Seek(0, soFromEnd);
+end;
+
+procedure TLogWriter.RewindStream(Stream: TStream);
+var
+  c: AnsiChar;
+begin
+  Stream.Seek(-1, soFromCurrent);
+  Stream.Read(c, 1);
+  while (Stream.Position > 1) and CharInSet(c, [#10, #13]) do
+  begin
+    Stream.Seek(-2, soFromCurrent);
+    Stream.Read(c, 1);
+  end;
+  while (Stream.Position > 1) and not CharInSet(c, [#10, #13]) do
+  begin
+    Stream.Seek(-2, soFromCurrent);
+    Stream.Read(c, 1);
+  end;
+end;
+
+procedure TLogWriter.WriteToLogStream(Stream: TStream; const Text: string);
+var
+  Buffer, Preamble: TBytes;
+begin
+  Buffer := TFichierLog.Instance.Encoding.GetBytes(Text);
+  if Stream.Size = 0 then
+  begin
+    Preamble := TFichierLog.Instance.Encoding.GetPreamble;
+    if Length(Preamble) > 0 then
+      Stream.WriteBuffer(Preamble, Length(Preamble));
+  end;
+  Stream.WriteBuffer(Buffer, Length(Buffer));
+end;
+
+{ TFichierLog }
+
+procedure TFichierLog.SetLimitSize(const Value: Integer);
+begin
+  FLimitSize := Value;
+end;
+
+procedure TFichierLog.AppendLog(const Texte: string; TypeMessage: TTypeMessage);
+var
+  s: string;
+begin
+  s := BuildMessage(Texte, TypeMessage);
+  if (TypeMessage <= FLogLevel) then
+    TLogWriter(FWriter).AddLigne(s);
+  if Assigned(FOnAppend) then
+    FOnAppend(s, Texte, TypeMessage, TypeMessage <= FLogLevel);
 end;
 
 procedure TFichierLog.AppendLog(E: Exception);
@@ -213,106 +437,28 @@ begin
   LogOptions := FLogOptions - [loIncludeCallStackOnError];
 end;
 
-function TFichierLog.OpenLogFile: Boolean;
-var
-  tmpStream, bckStream: TStream;
-  cutPos: Integer;
-  NomFichierLog: string;
-  MaxFileSize: Cardinal;
-begin
-  FFileCriticalSection.Acquire;
-  try
-    MaxFileSize := FLimitSize;
-    Result := Assigned(FFichierLog);
-    NomFichierLog := GetLogFullPath;
-    if not Result then
-    begin
-      if TFile.Exists(NomFichierLog) then
-        FFichierLog := TFileStream.Create(NomFichierLog, fmOpenReadWrite or fmShareDenyWrite)
-      else
-      begin
-        TDirectory.CreateDirectory(TPath.GetDirectoryName(NomFichierLog));
-        FFichierLog := TFileStream.Create(NomFichierLog, fmCreate or fmOpenReadWrite or fmShareDenyWrite);
-      end;
-
-      Result := True;
-    end;
-    if (MaxFileSize > 0) and (FFichierLog.Size > MaxFileSize) then
-    begin
-      bckStream := TMemoryStream.Create;
-      tmpStream := TMemoryStream.Create;
-      try
-        FFichierLog.Position := FFichierLog.Size - MulDiv(MaxFileSize, 100 - FKeepRatio, 100);
-        ForwardStream(FFichierLog);
-
-        cutPos := FFichierLog.Position;
-
-        // on copie le BOM en même temps s'il est présent
-        FFichierLog.Position := 0;
-        bckStream.CopyFrom(FFichierLog, cutPos);
-
-        // FFichierLog a été repositionné sur cutPos
-        tmpStream.CopyFrom(FFichierLog, FFichierLog.Size - cutPos);
-
-        FFichierLog.Size := Length(FEncoding.GetPreamble);
-        FFichierLog.CopyFrom(tmpStream, -1);
-
-        if lfoKeepBackup in FLogFileOptions then
-          AddToBackup(bckStream);
-      finally
-        tmpStream.Free;
-        bckStream.Free;
-      end;
-    end;
-
-    FFichierLog.Seek(0, soFromEnd);
-  finally
-    FFileCriticalSection.Release;
-  end;
-end;
-
-procedure TFichierLog.RewindStream(Stream: TStream);
-var
-  c: AnsiChar;
-begin
-  Stream.Seek(-1, soFromCurrent);
-  Stream.Read(c, 1);
-  while (Stream.Position > 1) and CharInSet(c, [#10, #13]) do
-  begin
-    Stream.Seek(-2, soFromCurrent);
-    Stream.Read(c, 1);
-  end;
-  while (Stream.Position > 1) and not CharInSet(c, [#10, #13]) do
-  begin
-    Stream.Seek(-2, soFromCurrent);
-    Stream.Read(c, 1);
-  end;
-end;
-
-procedure TFichierLog.ForwardStream(Stream: TStream);
-var
-  c: AnsiChar;
-begin
-  Stream.Read(c, 1);
-  while (Stream.Position < Stream.Size) and not CharInSet(c, [#10, #13]) do
-    Stream.Read(c, 1);
-  while (Stream.Position < Stream.Size) and CharInSet(c, [#10, #13]) do
-    Stream.Read(c, 1);
-  Stream.Seek(-1, soFromCurrent);
-end;
-
 destructor TFichierLog.Destroy;
 begin
-  CloseLogFile;
+  FWriter.Terminate;
+  FWriter.WaitFor;
   FLogCriticalSection.Free;
   FFileCriticalSection.Free;
+  JclStopExceptionTracking;
   inherited;
+end;
+
+procedure TFichierLog.CheckLogging;
+begin
+  if TLogWriter(FWriter).isOpen then
+    raise Exception.Create('Impossible de modifier les propriétés');
 end;
 
 constructor TFichierLog.Create;
 var
   GUID: TGUID;
 begin
+  FWriter := TLogWriter.Create(True);
+
   FLogCriticalSection := TCriticalSection.Create;
   FFileCriticalSection := TCriticalSection.Create;
 
@@ -332,6 +478,10 @@ begin
 
   LogOptions := [loIncludeInstanceID];
   LogFileOptions := [lfoKeepBackup, lfoAutoClose];
+
+  JclStartExceptionTracking;
+
+  FWriter.Start;
 end;
 
 class destructor TFichierLog.Destroy;
@@ -344,64 +494,9 @@ begin
   Result := TPath.Combine(LogDir, LogFileName);
 end;
 
-procedure TFichierLog.CleanBackupDir;
-var
-  fileName, rootLogFileName: string;
+class constructor TFichierLog.Create;
 begin
-  if not TDirectory.Exists(BackupPath) then
-    Exit;
-  rootLogFileName := TPath.GetFileNameWithoutExtension(LogFileName);
-  for fileName in TDirectory.GetFiles(BackupPath, rootLogFileName + '*.gz', TSearchOption.soTopDirectoryOnly,
-    function(const Path: string; const SearchRec: TSearchRec): Boolean
-    var
-      s: string;
-      v: TArray<Word>;
-      i: Integer;
-      tags: TArray<string>;
-      backupDate: TDateTime;
-    begin
-      try
-        s := TPath.GetFileNameWithoutExtension(SearchRec.Name);
-        s := TPath.GetFileNameWithoutExtension(s).Substring(Length(rootLogFileName) + 1);
-        SetLength(v, 5);
-        v[0] := YearOf(Now);
-        v[1] := MonthOf(Now);
-        v[2] := DayOf(Now);
-        v[3] := HourOf(Now);
-        v[4] := MinuteOf(Now);
-        tags := s.Split(['_']);
-        for i := 0 to Pred(Length(tags)) do
-          v[i] := StrToInt(tags[i]);
-        backupDate := EncodeDateTime(v[0], v[1], v[2], v[3], v[4], 0, 0);
-        case FBackupRotation of
-          lrMinute:
-            Exit(MinutesBetween(backupDate, Now) > FArchivingDuration);
-          lrHour:
-            Exit(HoursBetween(backupDate, Now) > FArchivingDuration);
-          lrDay:
-            Exit(DaysBetween(backupDate, Now) > FArchivingDuration);
-          lrMonth:
-            Exit(MonthsBetween(backupDate, Now) > FArchivingDuration);
-          lrYear:
-            Exit(YearsBetween(backupDate, Now) > FArchivingDuration);
-        end;
-        Exit(False);
-      except
-        // si le nom de fichier n'est pas décodable, c'est qu'il n'est pas un fichier de backup
-        Result := False;
-      end;
-    end) do
-    TFile.Delete(fileName);
-end;
-
-procedure TFichierLog.CloseLogFile;
-begin
-  FFileCriticalSection.Acquire;
-  try
-    FreeAndNil(FFichierLog);
-  finally
-    FFileCriticalSection.Release;
-  end;
+  _Instance := TFichierLog.Create;
 end;
 
 function TFichierLog.GetLogDir: string;
@@ -416,57 +511,9 @@ begin
 end;
 
 procedure TFichierLog.SetLogDir(const Value: string);
-var
-  s: string;
 begin
-  s := IncludeTrailingPathDelimiter(Value);
-
-  if not SameFileName(s, FLogDir) then
-    CloseLogFile;
-
-  FLogDir := s;
-end;
-
-procedure TFichierLog.UpdateLog(const Texte: string; TypeMessage: TTypeMessage);
-var
-  s: string;
-begin
-  if (TypeMessage > FLogLevel) then
-    Exit;
-
-  try
-    if OpenLogFile then
-      try
-        s := BuildMessage(Texte, TypeMessage);
-        RewindStream(FFichierLog);
-        WriteToLogStream(FFichierLog, s + #13#10);
-        FFichierLog.Size := FFichierLog.Position;
-      finally
-        if lfoAutoClose in FLogFileOptions then
-          CloseLogFile;
-      end;
-  except
-    // cette proc ne doit pas être problématique
-  end;
-end;
-
-procedure TFichierLog.WriteToLogStream(Stream: TStream; const Text: string);
-var
-  Buffer, Preamble: TBytes;
-begin
-  FLogCriticalSection.Acquire;
-  try
-    Buffer := FEncoding.GetBytes(Text);
-    if Stream.Size = 0 then
-    begin
-      Preamble := FEncoding.GetPreamble;
-      if Length(Preamble) > 0 then
-        Stream.WriteBuffer(Preamble, Length(Preamble));
-    end;
-    Stream.WriteBuffer(Buffer, Length(Buffer));
-  finally
-    FLogCriticalSection.Release;
-  end;
+  CheckLogging;
+  FLogDir := IncludeTrailingPathDelimiter(Value);
 end;
 
 function TFichierLog.GetBackupPath: string;
@@ -490,23 +537,15 @@ begin
     Result := FLogFileName;
 end;
 
-class function TFichierLog.getInstance: TFichierLog;
-begin
-  if _Instance = nil then
-    _Instance := TFichierLog.Create;
-  Result := _Instance;
-end;
-
 procedure TFichierLog.SetBackupRotation(const Value: TLogRotation);
 begin
-  if FBackupRotation <> Value then
-    CloseLogFile;
-
+  CheckLogging;
   FBackupRotation := Value;
 end;
 
 procedure TFichierLog.SetEncoding(const Value: TEncoding);
 begin
+  CheckLogging;
   if not TEncoding.IsStandardEncoding(FEncoding) then
     FEncoding.Free;
   if TEncoding.IsStandardEncoding(Value) then
@@ -519,18 +558,13 @@ end;
 
 procedure TFichierLog.SetLogFileName(const Value: string);
 begin
-  if not SameFileName(Value, FLogFileName) then
-    CloseLogFile;
-
+  CheckLogging;
   FLogFileName := Value;
 end;
 
 procedure TFichierLog.SetLogFileOptions(const Value: TLogFileOptions);
 begin
   FLogFileOptions := Value;
-
-  if lfoAutoClose in FLogFileOptions then
-    CloseLogFile;
 end;
 
 procedure TFichierLog.SetKeepRatio(const Value: Integer);
@@ -540,27 +574,22 @@ begin
   FKeepRatio := Value;
 end;
 
-function TFichierLog.BuildMessage(const Texte: string; TypeMessage: TTypeMessage): string;
+function TFichierLog.BuildMessage(Texte: string; TypeMessage: TTypeMessage): string;
 var
-  suffix: string;
+  Suffix: string;
 begin
   Result := FormatDateTime('dd-mm-yyyy hh:mm:ss:zzz', Now);
   if loIncludeInstanceID in FLogOptions then
     Result := Result + ' - ' + FguidInstance;
 
   if Assigned(FOnBuildMessage) then
-    FOnBuildMessage(Result, Texte, suffix, TypeMessage);
+    FOnBuildMessage(Result, Texte, Suffix, TypeMessage);
 
-  Result := Result + ' - ' + Texte + suffix;
+  Result := Result + ' - ' + Texte + Suffix;
 end;
 
 procedure TFichierLog.SetLogOptions(const Value: TLogOptions);
 begin
-  if (loIncludeCallStackOnError in FLogOptions) and not(loIncludeCallStackOnError in Value) then
-    JclStopExceptionTracking;
-  if not(loIncludeCallStackOnError in FLogOptions) and (loIncludeCallStackOnError in Value) then
-    JclStartExceptionTracking;
-
   FLogOptions := Value;
 end;
 
