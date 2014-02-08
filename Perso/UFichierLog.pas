@@ -92,7 +92,7 @@ type
 implementation
 
 uses
-  DateUtils, TypInfo, System.IOUtils, JclCompression, JclDebug;
+  DateUtils, TypInfo, System.IOUtils, JclCompression, JclDebug, sevenzip;
 
 type
   TLogWriter = class sealed(TThread)
@@ -407,27 +407,19 @@ end;
 procedure TFichierLog.AppendLog(E: Exception);
 var
   sl: TStringList;
-  hasAutoClose: Boolean;
 begin
-  hasAutoClose := lfoAutoClose in FLogFileOptions;
-  try
-    Exclude(FLogFileOptions, lfoAutoClose);
-    AppendLog(E.ClassName, tmErreur);
-    AppendLog(E.Message, tmErreur);
+  AppendLog(E.ClassName, tmErreur);
+  AppendLog(E.Message, tmErreur);
 
-    if loIncludeCallStackOnError in FLogOptions then
-    begin
-      sl := TStringList.Create;
-      try
-        JclLastExceptStackListToStrings(sl, True);
-        AppendLog(sl.Text, tmErreur);
-      finally
-        sl.Free;
-      end;
+  if loIncludeCallStackOnError in FLogOptions then
+  begin
+    sl := TStringList.Create;
+    try
+      JclLastExceptStackListToStrings(sl, True);
+      AppendLog(sl.Text, tmErreur);
+    finally
+      sl.Free;
     end;
-  finally
-    if hasAutoClose then
-      LogFileOptions := FLogFileOptions + [lfoAutoClose];
   end;
 end;
 
@@ -477,7 +469,9 @@ begin
   FArchivingDuration := 6;
 
   LogOptions := [loIncludeInstanceID];
-  LogFileOptions := [lfoKeepBackup, lfoAutoClose];
+  LogFileOptions := [lfoAutoClose];
+  if Load7Zip then
+    LogFileOptions := LogFileOptions + [lfoKeepBackup];
 
   JclStartExceptionTracking;
 
