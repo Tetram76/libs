@@ -2908,8 +2908,8 @@ end;
 function TPSPascalCompiler.GetUnicodeString(Src: PIfRVariant; var s: Boolean): tbtunicodestring;
 begin
   case Src.FType.BaseType of
-    btChar: Result := tbtWidestring(Src^.tchar);
-    btString: Result := tbtWidestring(tbtstring(src^.tstring));
+    btChar: Result := Src^.tchar;
+    btString: Result := tbtstring(src^.tstring);
     btWideChar: Result := src^.twidechar;
     btWideString: Result := tbtWideString(src^.twidestring);
     btUnicodeString: result := tbtUnicodeString(src^.tunistring);
@@ -6774,7 +6774,11 @@ function TPSPascalCompiler.ProcessSub(BlockInfo: TPSBlockInfo): Boolean;
               u := rr.aType;
             end;
           end
-          {$IFDEF PS_HAVEVARIANT}else if (u.BaseType = btVariant) then break else {$ENDIF}
+          {$IFDEF PS_HAVEVARIANT}
+          else if (u.BaseType = btVariant) then break else
+          {$ELSE}
+          ;
+          {$ENDIF}
 
           begin
             x.Free;
@@ -7285,6 +7289,7 @@ function TPSPascalCompiler.ProcessSub(BlockInfo: TPSBlockInfo): Boolean;
         end;
         FType2 := GetTypeNo(BlockInfo, Temp);
         if ((typeno.BaseType = btClass){$IFNDEF PS_NOINTERFACES} or (TypeNo.basetype = btInterface){$ENDIF}) and
+          (ftype2<>nil) and
           ((ftype2.BaseType = btClass){$IFNDEF PS_NOINTERFACES} or (ftype2.BaseType = btInterface){$ENDIF}) and (TypeNo <> ftype2) then
         begin
 {$IFNDEF PS_NOINTERFACES}
@@ -7338,7 +7343,7 @@ function TPSPascalCompiler.ProcessSub(BlockInfo: TPSBlockInfo): Boolean;
           FParser.Next;
           Exit;
         end;
-        if not IsCompatibleType(TypeNo, FType2, True) then
+        if (FType2=nil) or not IsCompatibleType(TypeNo, FType2, True) then
         begin
           temp.Free;
           MakeError('', ecTypeMismatch, '');
@@ -8199,7 +8204,7 @@ function TPSPascalCompiler.ProcessSub(BlockInfo: TPSBlockInfo): Boolean;
             {$IFNDEF PS_NOWIDESTRING}
             else if ((t1.BaseType = btString) or (t1.BaseType = btChar) or (t1.BaseType = btPchar)or (t1.BaseType = btWideString) or (t1.BaseType = btWideChar) or (t1.BaseType = btUnicodeString)) and
             ((t2.BaseType = btString) or (t2.BaseType = btChar) or (t2.BaseType = btPchar) or (t2.BaseType = btWideString) or (t2.BaseType = btWideChar) or (t2.BaseType = btUnicodeString)) then
-              Result := at2ut(FindBaseType(btWideString))
+              Result := at2ut(FindBaseType(btUnicodeString))
             {$ENDIF}
             else
               Result := nil;
@@ -14563,7 +14568,7 @@ begin
       C := CurrClass.FClassItems[I];
       if (c is TPSDelphiClassItemConstructor) and (C.NameHash = H) and (C.Name = Name) then
       begin
-        Index := Cardinal(C);
+        Index := IPointer(C);
         Result := True;
         exit;
       end;
