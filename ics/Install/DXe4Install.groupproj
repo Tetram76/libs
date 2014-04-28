@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{30D8AA58-0A26-4C23-AD0A-2243BA3306F8}</ProjectGuid>
+        <ProjectGuid>{42B244C7-CF42-4216-AE75-48C72ECA4295}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="..\Packages\OverbyteIcsDXe4Run.dproj">

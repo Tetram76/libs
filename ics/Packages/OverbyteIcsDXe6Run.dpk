@@ -1,4 +1,4 @@
-package OverbyteIcsD2007Run;
+package OverbyteIcsDXE6Run;
 
 {$R *.res}
 {$R '..\Source\OverbyteIcsHttpSrv.dcr'}
@@ -30,36 +30,35 @@ package OverbyteIcsD2007Run;
 {$R '..\Source\OverbyteIcsWSocketTS.dcr'}
 {$R '..\Source\OverbyteIcsMimeUtils.dcr'}
 {$R '..\Source\OverbyteIcsCookies.dcr'}
-{$R '..\Source\OverbyteIcsSysLogClient.dcr'}
-{$R '..\Source\OverbyteIcsSysLogServer.dcr'}
-{$R '..\Source\OverbyteIcsSnmpCli.dcr'}
-{$R '..\source\OverbyteIcsSmtpSrv.dcr'}
+{$R '..\Source\OverbyteIcsSmtpSrv.dcr'}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
-{ ASSERTIONS ON}
+{$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{ DEBUGINFO ON}
+{$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
-{ IOCHECKS ON}
-{ LOCALSYMBOLS ON}
-{ LONGSTRINGS ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{ OPTIMIZATION OFF}
-{ OVERFLOWCHECKS OFF}
-{ RANGECHECKS OFF}
-{ REFERENCEINFO ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
-{ STACKFRAMES ON}
+{$STACKFRAMES ON}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'Overbyte ICS Run-Time Package Delphi 2007'}
-{$RUNONLY}
-{$IMPLICITBUILD OFF}
 {$DEFINE DEBUG}
 {$DEFINE USE_SSL}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Overbyte ICS VCL Run-Time Package for Delphi XE6'}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,
@@ -124,21 +123,20 @@ contains
   OverbyteIcsCharsetComboBox in '..\Source\OverbyteIcsCharsetComboBox.pas',
   OverbyteIcsThreadTimer in '..\Source\OverbyteIcsThreadTimer.pas',
   OverbyteIcsWSocketTS in '..\Source\OverbyteIcsWSocketTS.pas',
-  OverbyteIcsMLang in '..\Source\OverbyteIcsMLang.pas',
   OverbyteIcsCsc in '..\Source\OverbyteIcsCsc.pas',
   OverbyteIcsIconv in '..\Source\OverbyteIcsIconv.pas',
+  OverbyteIcsMLang in '..\Source\OverbyteIcsMLang.pas',
   OverbyteIcsWinnls in '..\Source\OverbyteIcsWinnls.pas',
   OverbyteIcsCookies in '..\Source\OverbyteIcsCookies.pas',
   OverbyteIcsHttpCCodZLib in '..\Source\OverbyteIcsHttpCCodZLib.pas',
-  OverbyteIcsZLibDll in '..\Source\OverbyteIcsZLibDll.pas',
-  OverbyteIcsTicks64 in '..\Source\OverbyteIcsTicks64.pas',
+  OverbyteIcsAsn1Utils in '..\Source\OverbyteIcsAsn1Utils.pas',
   OverbyteIcsFormDataDecoder in '..\Source\OverbyteIcsFormDataDecoder.pas',
+  OverbyteIcsSnmpCli in '..\Source\OverbyteIcsSnmpCli.pas',
+  OverbyteIcsSnmpMsgs in '..\Source\OverbyteIcsSnmpMsgs.pas',
   OverbyteIcsSysLogClient in '..\Source\OverbyteIcsSysLogClient.pas',
   OverbyteIcsSysLogDefs in '..\Source\OverbyteIcsSysLogDefs.pas',
   OverbyteIcsSysLogServer in '..\Source\OverbyteIcsSysLogServer.pas',
-  OverbyteIcsSnmpCli in '..\Source\OverbyteIcsSnmpCli.pas',
-  OverbyteIcsAsn1Utils in '..\Source\OverbyteIcsAsn1Utils.pas',
-  OverbyteIcsSnmpMsgs in '..\Source\OverbyteIcsSnmpMsgs.pas',
+  OverbyteIcsTicks64 in '..\Source\OverbyteIcsTicks64.pas',
   OverbyteIcsSmtpSrv in '..\Source\OverbyteIcsSmtpSrv.pas';
 
 end.
