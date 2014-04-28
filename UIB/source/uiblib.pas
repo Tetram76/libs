@@ -848,7 +848,6 @@ type
     function GetFieldName(const Index: Word): string; virtual;
     procedure AllocateDataBuffer(AInit: boolean = true); virtual;
     function GetMaxSqlLen(const Index: Word): SmallInt; virtual;
-    function GetMaxStrLen(const Index: Word): SmallInt; virtual;
 
     function AddFieldA(const name: AnsiString): Word; virtual;
     function AddFieldW(const name: UnicodeString): Word; virtual;
@@ -888,7 +887,6 @@ type
     property FieldName[const Index: Word]: string read GetFieldName;
     property ParamCount : Word read FParamCount;
     property MaxSqlLen[const Index: Word]: Smallint read GetMaxSqlLen;
-    property MaxStrLen[const Index: Word]: Smallint read GetMaxStrLen;
   end;
 
   TSQLParamsClass = class of TSQLParams;
@@ -1689,7 +1687,7 @@ const
     CurPos  := PAnsiChar(Params);
     while (CurPos <> nil) do
     begin
-      NextPos := AnsiStrings.StrScan(CurPos, Delimiter);
+      NextPos := StrScan(CurPos, Delimiter);
       if (NextPos = nil) then
         CurStr := CurPos else
         begin
@@ -1706,7 +1704,7 @@ const
           CurValue := Copy(CurStr, EqualPos+1, Length(CurStr) - EqualPos);
           CurStr   := Copy(CurStr, 0, EqualPos-1);
         end;
-        AnsiStrings.StrLower(PAnsiChar(CurStr));
+        StrLower(PAnsiChar(CurStr));
         CurStr := Trim(CurStr);
         CurValue := Trim(CurValue);
         for Code := 1 to isc_dpb_Max_Value do
@@ -1837,23 +1835,23 @@ const
     Params: AnsiString; Sep: AnsiChar = ';');
   begin
     Params := CreateDBParams(Params, Sep);
-      CheckUIBApiCall(isc_attach_database(@FStatusVector, Length(FileName), Pointer(FileName),
-        @DBHandle, Length(Params), PAnsiChar(Params)));
-    end;
+    CheckUIBApiCall(isc_attach_database(@FStatusVector, Length(FileName), Pointer(FileName),
+      @DBHandle, Length(Params), PAnsiChar(Params)));
+  end;
 
   procedure TUIBLibrary.DetachDatabase(var DBHandle: IscDbHandle);
   begin
-      CheckUIBApiCall(isc_detach_database(@FStatusVector, @DBHandle));
-      // if connection lost DBHandle must be set manually to nil.
-      DBHandle := nil;
-    end;
+    CheckUIBApiCall(isc_detach_database(@FStatusVector, @DBHandle));
+    // if connection lost DBHandle must be set manually to nil.
+    DBHandle := nil;
+  end;
 
   procedure TUIBLibrary.DatabaseInfo(var DBHandle: IscDbHandle;
     const Items: AnsiString; var Buffer: AnsiString);
   begin
-      CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, Length(Items),
-        Pointer(Items), Length(Buffer), Pointer(Buffer)));
-    end;
+    CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, Length(Items),
+      Pointer(Items), Length(Buffer), Pointer(Buffer)));
+  end;
 
   function TUIBLibrary.DatabaseInfoIntValue(var DBHandle: IscDbHandle;
     const item: AnsiChar): Integer;
@@ -1869,19 +1867,19 @@ const
     end;
   begin
     result := 0;
-      CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, 1, @item,
-        sizeof(data), @data));
-      if (data.item = item) then
-        case data.len of
-          0: ;
-          1: result := data.vByte;
-          2: result := data.vSmallint;
-          4: result := data.vInteger;
-        else
-          raise exception.Create('Unexpected data size.');
-        end else
-          raise exception.Create('Invalid item identifier.');
-    end;
+    CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, 1, @item,
+      sizeof(data), @data));
+    if (data.item = item) then
+      case data.len of
+        0: ;
+        1: result := data.vByte;
+        2: result := data.vSmallint;
+        4: result := data.vInteger;
+      else
+        raise exception.Create('Unexpected data size.');
+      end else
+        raise exception.Create('Invalid item identifier.');
+  end;
 
   function TUIBLibrary.DatabaseInfoDateTime(var DBHandle: IscDbHandle; item: byte): TDateTime;
   var
@@ -1892,29 +1890,29 @@ const
       dummy: word;
     end;
   begin
-      CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, 1, @item,
-        sizeof(data), @data));
-      Result := DecodeTimeStamp(@data.date);
-    end;
+    CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, 1, @item,
+      sizeof(data), @data));
+    Result := DecodeTimeStamp(@data.date);
+  end;
 
   function TUIBLibrary.DatabaseInfoString(var DBHandle: IscDbHandle;
     item: byte; size: Integer): AnsiString;
   begin
     SetLength(result, size);
-      while true do
-      begin
-        CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, 1, @item,
-          Length(result), PAnsiChar(result)));
-        if result[1] = chr(isc_info_truncated) then
-          SetLength(result, Length(result) + size) else
-            if (byte(result[1]) = item) or (result[1] = #1) then
-              Break else
-              begin
-                result := '';
-                raise Exception.Create('');
-              end;
-      end;
+    while true do
+    begin
+      CheckUIBApiCall(isc_database_info(@FStatusVector, @DBHandle, 1, @item,
+        Length(result), PAnsiChar(result)));
+      if result[1] = chr(isc_info_truncated) then
+        SetLength(result, Length(result) + size) else
+          if (byte(result[1]) = item) or (result[1] = #1) then
+            Break else
+            begin
+              result := '';
+              raise Exception.Create('');
+            end;
     end;
+  end;
 
   function StrToCharacterSet(const CharacterSet: RawByteString): TCharacterSet;
   var
@@ -1926,7 +1924,7 @@ const
     begin
       for Result := low(TCharacterSet) to High(TCharacterSet) do
         if (len = Length(CharacterSetStr[Result])) and
-          (AnsiStrings.StrIComp(PAnsiChar(CharacterSetStr[Result]), PAnsiChar(CharacterSet)) = 0) then
+          (StrIComp(PAnsiChar(CharacterSetStr[Result]), PAnsiChar(CharacterSet)) = 0) then
             Exit;
       raise Exception.CreateFmt(EUIB_CHARSETNOTFOUND, [CharacterSet]);
     end;
@@ -1934,8 +1932,8 @@ const
 
   procedure TUIBLibrary.DatabaseDrop(DbHandle: IscDbHandle);
   begin
-      CheckUIBApiCall(isc_drop_database(@FStatusVector, @DbHandle));
-    end;
+    CheckUIBApiCall(isc_drop_database(@FStatusVector, @DbHandle));
+  end;
 
 {$IFDEF FB25_UP}
   function TUIBLibrary.DatabaseCancelOperation(var DBHandle: IscDbHandle; option: ISC_USHORT): Boolean;
@@ -1964,48 +1962,48 @@ const
 
   procedure TUIBLibrary.TransactionStartMultiple(var TraHandle: IscTrHandle; DBCount: Smallint; Vector: PISCTEB);
   begin
-      CheckUIBApiCall(isc_start_multiple(@FStatusVector, @TraHandle, DBCount, Vector));
-    end;
+    CheckUIBApiCall(isc_start_multiple(@FStatusVector, @TraHandle, DBCount, Vector));
+  end;
 
   procedure TUIBLibrary.TransactionCommit(var TraHandle: IscTrHandle);
   begin
-      CheckUIBApiCall(isc_commit_transaction(@FStatusVector, @TraHandle));
-      // if connection lost TraHandle must be set manually to nil.
-      TraHandle := nil;
-    end;
+    CheckUIBApiCall(isc_commit_transaction(@FStatusVector, @TraHandle));
+    // if connection lost TraHandle must be set manually to nil.
+    TraHandle := nil;
+  end;
 
   procedure TUIBLibrary.TransactionRollback(var TraHandle: IscTrHandle);
   begin
-      CheckUIBApiCall(isc_rollback_transaction(@FStatusVector, @TraHandle));
-      // if connection lost TraHandle must be set manually to nil.
-      TraHandle := nil;
-    end;
+    CheckUIBApiCall(isc_rollback_transaction(@FStatusVector, @TraHandle));
+    // if connection lost TraHandle must be set manually to nil.
+    TraHandle := nil;
+  end;
 
   procedure TUIBLibrary.TransactionCommitRetaining(var TraHandle: IscTrHandle);
   begin
-      CheckUIBApiCall(isc_commit_retaining(@FStatusVector, @TraHandle));
-    end;
+    CheckUIBApiCall(isc_commit_retaining(@FStatusVector, @TraHandle));
+  end;
 
   procedure TUIBLibrary.TransactionPrepare(var TraHandle: IscTrHandle);
   begin
-      CheckUIBApiCall(isc_prepare_transaction(@FStatusVector, @TraHandle));
-    end;
+    CheckUIBApiCall(isc_prepare_transaction(@FStatusVector, @TraHandle));
+  end;
 
   procedure TUIBLibrary.TransactionRollbackRetaining(var TraHandle: IscTrHandle);
   begin
-      CheckUIBApiCall(isc_rollback_retaining(@FStatusVector, @TraHandle));
-    end;
+    CheckUIBApiCall(isc_rollback_retaining(@FStatusVector, @TraHandle));
+  end;
 
   function TUIBLibrary.TransactionGetId(var TraHandle: IscTrHandle): Cardinal;
   var
     tra_items: AnsiChar;
     tra_info: array [0..31] of AnsiChar;
   begin
-      tra_items := AnsiChar(isc_info_tra_id);
-      CheckUIBApiCall(isc_transaction_info(@FStatusVector, @TraHandle,
-        sizeof(tra_items), @tra_items, sizeof(tra_info), tra_info));
-      Result := PCardinal(tra_info + 3)^;
-    end;
+    tra_items := AnsiChar(isc_info_tra_id);
+    CheckUIBApiCall(isc_transaction_info(@FStatusVector, @TraHandle,
+      sizeof(tra_items), @tra_items, sizeof(tra_info), tra_info));
+    Result := PCardinal(tra_info + 3)^;
+  end;
 
 //******************************************************************************
 // DSQL
@@ -2025,22 +2023,22 @@ const
   procedure TUIBLibrary.DSQLExecuteImmediate(var DBHandle: IscDbHandle; var TraHandle: IscTrHandle;
     const Statement: RawbyteString; Dialect: Word; Sqlda: TSQLDA = nil);
   begin
-      CheckUIBApiCall(isc_dsql_execute_immediate(@FStatusVector, @DBHandle, @TraHandle,
-        length(Statement), Pointer(Statement), Dialect, GetSQLDAData(Sqlda)));
-    end;
+    CheckUIBApiCall(isc_dsql_execute_immediate(@FStatusVector, @DBHandle, @TraHandle,
+      length(Statement), Pointer(Statement), Dialect, GetSQLDAData(Sqlda)));
+  end;
 
   procedure TUIBLibrary.DSQLExecuteImmediate(const Statement: RawbyteString; Dialect: Word; Sqlda: TSQLDA = nil);
   var p: pointer;
   begin
-      p := nil;
-      CheckUIBApiCall(isc_dsql_execute_immediate(@FStatusVector, @p, @p,
-        length(Statement), Pointer(Statement), Dialect, GetSQLDAData(Sqlda)));
-    end;
+    p := nil;
+    CheckUIBApiCall(isc_dsql_execute_immediate(@FStatusVector, @p, @p,
+      length(Statement), Pointer(Statement), Dialect, GetSQLDAData(Sqlda)));
+  end;
 
   procedure TUIBLibrary.DSQLAllocateStatement(var DBHandle: IscDbHandle; var StmtHandle: IscStmtHandle);
   begin
-      CheckUIBApiCall(isc_dsql_allocate_statement(@FStatusVector, @DBHandle, @StmtHandle));
-    end;
+    CheckUIBApiCall(isc_dsql_allocate_statement(@FStatusVector, @DBHandle, @StmtHandle));
+  end;
 
   function TUIBLibrary.DSQLPrepare(var DbHandle: IscDbHandle; var TraHandle: IscTrHandle; var StmtHandle: IscStmtHandle;
     Statement: RawbyteString; Dialect: Word; Sqlda: TSQLResult = nil): TUIBStatementType;
@@ -2074,24 +2072,24 @@ const
   procedure TUIBLibrary.DSQLExecute(var TraHandle: IscTrHandle; var StmtHandle: IscStmtHandle;
     Dialect: Word; Sqlda: TSQLDA = nil);
   begin
-      CheckUIBApiCall(isc_dsql_execute(@FStatusVector, @TraHandle, @StmtHandle,
-        Dialect, GetSQLDAData(Sqlda)));
-    end;
+    CheckUIBApiCall(isc_dsql_execute(@FStatusVector, @TraHandle, @StmtHandle,
+      Dialect, GetSQLDAData(Sqlda)));
+  end;
 
   procedure TUIBLibrary.DSQLExecute2(var TraHandle: IscTrHandle; var StmtHandle: IscStmtHandle; Dialect: Word;
     InSqlda: TSQLDA; OutSqlda: TSQLResult);
   begin
-      CheckUIBApiCall(isc_dsql_execute2(@FStatusVector, @TraHandle, @StmtHandle, Dialect,
-        GetSQLDAData(InSqlda), GetSQLDAData(OutSqlda)));
-    end;
+    CheckUIBApiCall(isc_dsql_execute2(@FStatusVector, @TraHandle, @StmtHandle, Dialect,
+      GetSQLDAData(InSqlda), GetSQLDAData(OutSqlda)));
+  end;
 
   procedure TUIBLibrary.DSQLFreeStatement(var StmtHandle: IscStmtHandle; Option: Word);
   begin
-      CheckUIBApiCall(isc_dsql_free_statement(@FStatusVector, @StmtHandle, Option));
-      // if connection lost StmtHandle must be set manually to nil.
-      if option = DSQL_DROP then
-         StmtHandle := nil;
-    end;
+    CheckUIBApiCall(isc_dsql_free_statement(@FStatusVector, @StmtHandle, Option));
+    // if connection lost StmtHandle must be set manually to nil.
+    if option = DSQL_DROP then
+       StmtHandle := nil;
+  end;
 
   function TUIBLibrary.DSQLFetch(var DBHandle: IscDbHandle; var TransHandle: IscTrHandle;
     var StmtHandle: IscStmtHandle; Dialect: Word; Sqlda: TSQLResult): boolean;
@@ -2104,7 +2102,7 @@ const
     Result := True;
     if (Sqlda <> nil) then
       Sqlda.FScrollEOF := False;
-      Status := isc_dsql_fetch(@FStatusVector, @StmtHandle, Dialect, GetSQLDAData(Sqlda));
+    Status := isc_dsql_fetch(@FStatusVector, @StmtHandle, Dialect, GetSQLDAData(Sqlda));
 
     case Status of
       0   : if (Sqlda <> nil) then
@@ -2152,7 +2150,7 @@ const
     Result := True;
     if (Sqlda <> nil) then
       sqlda.FScrollEOF := False;
-      Status := isc_dsql_fetch(@FStatusVector, @StmtHandle, Dialect, GetSQLDAData(Sqlda));
+    Status := isc_dsql_fetch(@FStatusVector, @StmtHandle, Dialect, GetSQLDAData(Sqlda));
 
     case Status of
       0   :
@@ -2252,19 +2250,19 @@ const
     src, dst: PUIBSQLVar;
   begin
     if Sqlda = nil then Exit;
-      len := XSQLDA_LENGTH(sqlda.Data.sqln);
-      GetMem(da, len);
-      try
-        FillChar(da^, len, 0);
-        da.version := Sqlda.Data.version;
-        da.sqln := sqlda.Data.sqln;
-        da.sqld := sqlda.Data.sqld;
-        CheckUIBApiCall(isc_dsql_describe_bind(@FStatusVector, @StmtHandle, Dialect, PXSQLDA(da)));
-        for i := 0 to Sqlda.FieldCount - 1 do
-          with Sqlda.Data^.sqlvar[i] do
-          begin
-            src := @Sqlda.Data^.sqlvar[i];
-            dst := @da^.sqlvar[i];
+    len := XSQLDA_LENGTH(sqlda.Data.sqln);
+    GetMem(da, len);
+    try
+      FillChar(da^, len, 0);
+      da.version := Sqlda.Data.version;
+      da.sqln := sqlda.Data.sqln;
+      da.sqld := sqlda.Data.sqld;
+      CheckUIBApiCall(isc_dsql_describe_bind(@FStatusVector, @StmtHandle, Dialect, PXSQLDA(da)));
+      for i := 0 to Sqlda.FieldCount - 1 do
+        with Sqlda.Data^.sqlvar[i] do
+        begin
+          src := @Sqlda.Data^.sqlvar[i];
+          dst := @da^.sqlvar[i];
           if dst^.SqlType and 1 = 0 then
             Include(src^.Flags, pfNotNullable);
           src^.SqlType := dst^.sqltype or 1;
@@ -2276,30 +2274,30 @@ const
 {$IFDEF IB7_UP}
           src^.SqlPrecision := dst^.SqlPrecision;
 {$ENDIF}
-          end;
+        end;
        Sqlda.AllocateDataBuffer(False);
-      finally
-        FreeMem(da);
-      end;
+    finally
+      FreeMem(da);
     end;
+  end;
 
   procedure  TUIBLibrary.DSQLSetCursorName(var StmtHandle: IscStmtHandle; const cursor: AnsiString);
   begin
-      CheckUIBApiCall(isc_dsql_set_cursor_name(@FStatusVector, @StmtHandle, PAnsiChar(cursor), 0));
-    end;
+    CheckUIBApiCall(isc_dsql_set_cursor_name(@FStatusVector, @StmtHandle, PAnsiChar(cursor), 0));
+  end;
 
   procedure TUIBLibrary.DSQLExecImmed2(var DBHhandle: IscDbHandle; var TraHandle: IscTrHandle;
     const Statement: RawbyteString; dialect: Word; InSqlda, OutSqlda: TSQLDA);
   begin
-      CheckUIBApiCall(isc_dsql_exec_immed2(@FStatusVector, @DBHhandle, @TraHandle, Length(Statement),
-        PAnsiChar(Statement), dialect, GetSQLDAData(InSqlda), GetSQLDAData(OutSqlda)));
-    end;
+    CheckUIBApiCall(isc_dsql_exec_immed2(@FStatusVector, @DBHhandle, @TraHandle, Length(Statement),
+      PAnsiChar(Statement), dialect, GetSQLDAData(InSqlda), GetSQLDAData(OutSqlda)));
+  end;
 
   procedure TUIBLibrary.DSQLInfo(var StmtHandle: IscStmtHandle; const Items: array of byte; var buffer: AnsiString);
   begin
-      CheckUIBApiCall(isc_dsql_sql_info(@FStatusVector, @StmtHandle, Length(Items), @Items[0],
-        Length(buffer), PAnsiChar(buffer)));
-    end;
+    CheckUIBApiCall(isc_dsql_sql_info(@FStatusVector, @StmtHandle, Length(Items), @Items[0],
+      Length(buffer), PAnsiChar(buffer)));
+  end;
 
   function TUIBLibrary.DSQLInfoPlan(var StmtHandle: IscStmtHandle): string;
   var
@@ -2311,8 +2309,8 @@ const
     InfoType: Byte;
   begin
     InfoType := isc_info_sql_get_plan;
-      CheckUIBApiCall(isc_dsql_sql_info(@FStatusVector, @StmtHandle, 1, @InfoType,
-        SizeOf(STInfo), @STInfo));
+    CheckUIBApiCall(isc_dsql_sql_info(@FStatusVector, @StmtHandle, 1, @InfoType,
+      SizeOf(STInfo), @STInfo));
     SetString(Result, PAnsiChar(@STInfo.PlanDesc[1]), STInfo.InfoLen - 1);
   end;
 
@@ -2327,8 +2325,8 @@ const
     InfoIn: byte;
   begin
     InfoIn := isc_info_sql_stmt_type;
-      CheckUIBApiCall(isc_dsql_sql_info(@FStatusVector, @StmtHandle, 1,
-        @InfoIn, SizeOf(STInfo), @STInfo));
+    CheckUIBApiCall(isc_dsql_sql_info(@FStatusVector, @StmtHandle, 1,
+      @InfoIn, SizeOf(STInfo), @STInfo));
     dec(STInfo.InfoType);
     Result := STInfo.InfoType;
   end;
@@ -2370,24 +2368,24 @@ const
       Result := 0 else
     begin
       DSQLInfoRowsAffected2(StmtHandle, SelectedRows, InsertedRows, UpdatedRows, DeletedRows);
-        case StatementType of
+      case StatementType of
         stUpdate: Result := UpdatedRows;
         stDelete: Result := DeletedRows;
         stInsert: Result := InsertedRows;
         stExecProcedure: Result := InsertedRows + UpdatedRows + DeletedRows;
-        else
-          Result := 0;
-        end;
+      else
+        Result := 0;
       end;
     end;
+  end;
 
 {$IFNDEF FB30_UP}
   procedure TUIBLibrary.DDLExecute(var DBHandle: IscDbHandle;
     var TraHandle: IscTrHandle; const ddl: AnsiString);
   begin
-      CheckUIBApiCall(isc_ddl(@FStatusVector, @DBHandle, @TraHandle,
-        length(ddl), Pointer(ddl)));
-    end;
+    CheckUIBApiCall(isc_ddl(@FStatusVector, @DBHandle, @TraHandle,
+      length(ddl), Pointer(ddl)));
+  end;
 {$ENDIF}
 
 //******************************************************************************
@@ -2396,45 +2394,45 @@ const
   function TUIBLibrary.ArrayLookupBounds(var DBHandle: IscDbHandle; var TransHandle: IscTrHandle;
     const RelationName, FieldName: AnsiString): TArrayDesc;
   begin
-      {$IFDEF IB7_UP}
-        CheckUIBApiCall(isc_array_lookup_bounds2(@FStatusVector, @DBHandle, @TransHandle,
-          PAnsiChar(RelationName), PAnsiChar(FieldName), @Result));
-      {$ELSE}
-        CheckUIBApiCall(isc_array_lookup_bounds(@FStatusVector, @DBHandle, @TransHandle,
-          PAnsiChar(RelationName), PAnsiChar(FieldName), @Result));
-      {$ENDIF}
-    end;
+    {$IFDEF IB7_UP}
+      CheckUIBApiCall(isc_array_lookup_bounds2(@FStatusVector, @DBHandle, @TransHandle,
+        PAnsiChar(RelationName), PAnsiChar(FieldName), @Result));
+    {$ELSE}
+      CheckUIBApiCall(isc_array_lookup_bounds(@FStatusVector, @DBHandle, @TransHandle,
+        PAnsiChar(RelationName), PAnsiChar(FieldName), @Result));
+    {$ENDIF}
+  end;
 
   procedure TUIBLibrary.ArrayGetSlice(var DBHandle: IscDbHandle; var TransHandle: IscTrHandle; ArrayId: TISCQuad;
     var desc: TArrayDesc; DestArray: PPointer; var SliceLength: Integer);
   begin
-      {$IFDEF IB7_UP}
-        CheckUIBApiCall(isc_array_get_slice2(@FStatusVector, @DBHandle, @TransHandle, @ArrayId,
-          @desc, DestArray, @SliceLength));
-      {$ELSE}
-        CheckUIBApiCall(isc_array_get_slice(@FStatusVector, @DBHandle, @TransHandle, @ArrayId,
-          @desc, DestArray, @SliceLength));
-      {$ENDIF}
-    end;
+    {$IFDEF IB7_UP}
+      CheckUIBApiCall(isc_array_get_slice2(@FStatusVector, @DBHandle, @TransHandle, @ArrayId,
+        @desc, DestArray, @SliceLength));
+    {$ELSE}
+      CheckUIBApiCall(isc_array_get_slice(@FStatusVector, @DBHandle, @TransHandle, @ArrayId,
+        @desc, DestArray, @SliceLength));
+    {$ENDIF}
+  end;
 
   procedure TUIBLibrary.ArrayPutSlice(var DBHandle: IscDbHandle; var TransHandle: IscTrHandle;
     var ArrayId: TISCQuad; var desc: TArrayDesc; DestArray: Pointer; var SliceLength: Integer);
   begin
-      {$IFDEF IB7_UP}
-        CheckUIBApiCall(isc_array_put_slice2(@FStatusVector, @DBHandle, @TransHandle, @ArrayId,
-          @desc, DestArray, @SliceLength));
-      {$ELSE}
-        CheckUIBApiCall(isc_array_put_slice(@FStatusVector, @DBHandle, @TransHandle, @ArrayId,
-          @desc, DestArray, @SliceLength));
-      {$ENDIF}
-    end;
+    {$IFDEF IB7_UP}
+      CheckUIBApiCall(isc_array_put_slice2(@FStatusVector, @DBHandle, @TransHandle, @ArrayId,
+        @desc, DestArray, @SliceLength));
+    {$ELSE}
+      CheckUIBApiCall(isc_array_put_slice(@FStatusVector, @DBHandle, @TransHandle, @ArrayId,
+        @desc, DestArray, @SliceLength));
+    {$ENDIF}
+  end;
 
   procedure TUIBLibrary.ArraySetDesc(const RelationName, FieldName: AnsiString; var SqlDtype,
     SqlLength, Dimensions: Smallint; var desc: TISCArrayDesc);
   begin
-      CheckUIBApiCall(isc_array_set_desc(@FStatusVector, PAnsiChar(RelationName),
-        PAnsiChar(FieldName), @SqlDtype, @SqlLength, @Dimensions, @desc));
-    end;
+    CheckUIBApiCall(isc_array_set_desc(@FStatusVector, PAnsiChar(RelationName),
+      PAnsiChar(FieldName), @SqlDtype, @SqlLength, @Dimensions, @desc));
+  end;
 
 
 //******************************************************************************
@@ -2443,8 +2441,8 @@ const
 
   function  TUIBLibrary.ErrSqlcode: ISCLong;
   begin
-      Result := isc_sqlcode(@FStatusVector);
-    end;
+    Result := isc_sqlcode(@FStatusVector);
+  end;
 
   function TUIBLibrary.ErrInterprete: RawByteString;
   var
@@ -2454,24 +2452,24 @@ const
   begin
     Result := '';
     StatusVector := @FStatusVector;
-      repeat
-      {$IFDEF FB20_UP}
-        len := fb_interpret(buffer, sizeof(buffer), @StatusVector);
-      {$ELSE}
-        len := isc_interprete(buffer, @StatusVector);
-      {$ENDIF}
-        if len > 0 then
-          Result := Result + copy(buffer, 0, len) + NewLine else
-          Break;
-      until False;
-    end;
+    repeat
+    {$IFDEF FB20_UP}
+      len := fb_interpret(buffer, sizeof(buffer), @StatusVector);
+    {$ELSE}
+      len := isc_interprete(buffer, @StatusVector);
+    {$ENDIF}
+      if len > 0 then
+        Result := Result + copy(buffer, 0, len) + NewLine else
+        Break;
+    until False;
+  end;
 
   function TUIBLibrary.ErrSQLInterprete(SQLCODE: Smallint): RawByteString;
   var
     i : Integer;
   begin
     SetLength(Result, 255);
-      isc_sql_interprete(SQLCODE, PAnsiChar(Result), 255);
+    isc_sql_interprete(SQLCODE, PAnsiChar(Result), 255);
     for i := 1 to 255 do if Result[i] = #0 then Break; // Quick trim
     SetLength(Result, i-1);
   end;
@@ -2489,26 +2487,26 @@ const
 
   procedure TUIBLibrary.ServiceAttach(const ServiceName: RawByteString; var SvcHandle: IscSvcHandle; const Spb: RawByteString);
   begin
-      CheckUIBApiCall(isc_service_attach(@FStatusVector, Length(ServiceName),
-        PAnsiChar(ServiceName), @SvcHandle, Length(Spb), PAnsiChar(Spb)));
-    end;
+    CheckUIBApiCall(isc_service_attach(@FStatusVector, Length(ServiceName),
+      PAnsiChar(ServiceName), @SvcHandle, Length(Spb), PAnsiChar(Spb)));
+  end;
 
   procedure TUIBLibrary.ServiceDetach(var SvcHandle: IscSvcHandle);
   begin
-      CheckUIBApiCall(isc_service_detach(@FStatusVector, @SvcHandle));
-    end;
+    CheckUIBApiCall(isc_service_detach(@FStatusVector, @SvcHandle));
+  end;
 
   procedure TUIBLibrary.ServiceQuery(var SvcHandle: IscSvcHandle; const SendSpb, RequestSpb: RawByteString; var Buffer: RawByteString);
   begin
-      CheckUIBApiCall(isc_service_query(@FStatusVector, @SvcHandle, nil,
-        Length(SendSpb), PAnsiChar(SendSpb), Length(RequestSpb), PAnsiChar(RequestSpb),
-        Length(Buffer), PAnsiChar(Buffer)));
-    end;
+    CheckUIBApiCall(isc_service_query(@FStatusVector, @SvcHandle, nil,
+      Length(SendSpb), PAnsiChar(SendSpb), Length(RequestSpb), PAnsiChar(RequestSpb),
+      Length(Buffer), PAnsiChar(Buffer)));
+  end;
 
   procedure TUIBLibrary.ServiceStart(var SvcHandle: IscSvcHandle; const Spb: RawByteString);
   begin
-      CheckUIBApiCall(isc_service_start(@FStatusVector, @SvcHandle, nil, Length(Spb), PAnsiChar(Spb)));
-    end;
+    CheckUIBApiCall(isc_service_start(@FStatusVector, @SvcHandle, nil, Length(Spb), PAnsiChar(Spb)));
+  end;
 
 //******************************************************************************
 //  Blob
@@ -2564,7 +2562,7 @@ const
     CurPos  := PAnsiChar(Params);
     while (CurPos <> nil) do
     begin
-      NextPos := AnsiStrings.StrScan(CurPos, Delimiter);
+      NextPos := StrScan(CurPos, Delimiter);
       if (NextPos = nil) then
         CurStr := CurPos else
         begin
@@ -2581,7 +2579,7 @@ const
           CurValue := Copy(CurStr, EqualPos+1, Length(CurStr) - EqualPos);
           CurStr   := Copy(CurStr, 0, EqualPos-1);
         end;
-        AnsiStrings.StrLower(PAnsiChar(CurStr));
+        StrLower(PAnsiChar(CurStr));
         CurStr := Trim(CurStr);
         CurValue := Trim(CurValue);
         for Code := 1 to isc_bpb_Max_Value do
@@ -2607,9 +2605,9 @@ const
     var BlobHandle: IscBlobHandle; BlobId: TISCQuad; BPB: AnsiString = '');
   begin
     BPB := CreateBlobParams(BPB,';');
-      CheckUIBApiCall(isc_open_blob2(@FStatusVector, @DBHandle, @TraHandle, @BlobHandle,
-        @BlobId, Length(BPB), PAnsiChar(BPB)));
-    end;
+    CheckUIBApiCall(isc_open_blob2(@FStatusVector, @DBHandle, @TraHandle, @BlobHandle,
+      @BlobId, Length(BPB), PAnsiChar(BPB)));
+  end;
 
   function TUIBLibrary.BlobGetSegment(var BlobHandle: IscBlobHandle; out length: Word;
     BufferLength: Cardinal; Buffer: Pointer): boolean;
@@ -2618,7 +2616,7 @@ const
   begin
     if BufferLength > High(Word) then
       BufferLength := High(Word);
-      AStatus := isc_get_segment(@FStatusVector, @BlobHandle, @length, Word(BufferLength), Buffer);
+    AStatus := isc_get_segment(@FStatusVector, @BlobHandle, @length, Word(BufferLength), Buffer);
     Result := (AStatus = 0) or (FStatusVector[1] = isc_segment);
     if not Result then
       if (FStatusVector[1] <> isc_segstr_eof) then
@@ -2627,8 +2625,8 @@ const
 
   procedure TUIBLibrary.BlobClose(var BlobHandle: IscBlobHandle);
   begin
-      CheckUIBApiCall(isc_close_blob(@FStatusVector, @BlobHandle));
-    end;
+    CheckUIBApiCall(isc_close_blob(@FStatusVector, @BlobHandle));
+  end;
 
 type
   TBlobInfo = packed record
@@ -2648,26 +2646,26 @@ type
       reserved: Word; // alignement (8)
     end;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 1,
-        isc_info_blob_total_length, SizeOf(BlobInfo), @BlobInfo));
-      Size := BlobInfo.Value;
-    end;
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 1,
+      isc_info_blob_total_length, SizeOf(BlobInfo), @BlobInfo));
+    Size := BlobInfo.Value;
+  end;
 
   procedure TUIBLibrary.BlobMaxSegment(var BlobHandle: IscBlobHandle; out Size: Cardinal);
   var BlobInfo: array[0..1] of TBlobInfo;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 1,
-        isc_info_blob_max_segment, SizeOf(BlobInfo), @BlobInfo));
-      Size := BlobInfo[0].CardType;
-    end;
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 1,
+      isc_info_blob_max_segment, SizeOf(BlobInfo), @BlobInfo));
+    Size := BlobInfo[0].CardType;
+  end;
 
   procedure TUIBLibrary.BlobInfo(var BlobHandle: IscBlobHandle; out NumSegments, MaxSegment,
     TotalLength: Cardinal; out btype : byte);
   var BlobInfos: array[0..3] of TBlobInfo;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 4,
-        isc_info_blob_num_segments + isc_info_blob_max_segment +
-        isc_info_blob_total_length + isc_info_blob_type, SizeOf(BlobInfos), @BlobInfos));
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 4,
+      isc_info_blob_num_segments + isc_info_blob_max_segment +
+      isc_info_blob_total_length + isc_info_blob_type, SizeOf(BlobInfos), @BlobInfos));
     NumSegments := BlobInfos[0].CardType;
     MaxSegment  := BlobInfos[1].CardType;
     TotalLength := BlobInfos[2].CardType;
@@ -2676,12 +2674,12 @@ type
 
   procedure TUIBLibrary.BlobDefaultDesc(var Desc: TBlobDesc; const RelationName, FieldName: AnsiString);
   begin
-      {$IFDEF IB7_UP}
-        isc_blob_default_desc2(@Desc, PAnsiChar(RelationName), PAnsiChar(FieldName));
-      {$ELSE}
-        isc_blob_default_desc(@Desc, PAnsiChar(RelationName), PAnsiChar(FieldName));
-      {$ENDIF}
-    end;
+    {$IFDEF IB7_UP}
+      isc_blob_default_desc2(@Desc, PAnsiChar(RelationName), PAnsiChar(FieldName));
+    {$ELSE}
+      isc_blob_default_desc(@Desc, PAnsiChar(RelationName), PAnsiChar(FieldName));
+    {$ENDIF}
+  end;
 
   procedure TUIBLibrary.BlobSaveToStream(var BlobHandle: IscBlobHandle; Stream: TStream);
   var
@@ -2689,9 +2687,9 @@ type
     Buffer: Pointer;
     CurrentLength: Word;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
-        isc_info_blob_max_segment + isc_info_blob_total_length,
-        SizeOf(BlobInfos), @BlobInfos));
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
+      isc_info_blob_max_segment + isc_info_blob_total_length,
+      SizeOf(BlobInfos), @BlobInfos));
 
     Stream.Seek(0, soFromBeginning);
     Getmem(Buffer, BlobInfos[0].CardType);
@@ -2716,9 +2714,9 @@ type
     Buffer: Pointer;
     Len: Integer;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
-        isc_info_blob_max_segment + isc_info_blob_total_length,
-        SizeOf(BlobInfos), @BlobInfos));
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
+      isc_info_blob_max_segment + isc_info_blob_total_length,
+      SizeOf(BlobInfos), @BlobInfos));
     SetLength(Str, BlobInfos[1].CardType);
     Buffer := PAnsiChar(Str);
     len := 0;
@@ -2739,9 +2737,9 @@ type
     TMP: Pointer;
     Len: Integer;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
-        isc_info_blob_max_segment + isc_info_blob_total_length,
-        SizeOf(BlobInfos), @BlobInfos));
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
+      isc_info_blob_max_segment + isc_info_blob_total_length,
+      SizeOf(BlobInfos), @BlobInfos));
     if realloc and (Buffer <> nil) then
     begin
       if Size <> BlobInfos[1].CardType then
@@ -2773,9 +2771,9 @@ type
     TMP: Pointer;
     Len: Integer;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
-        isc_info_blob_max_segment + isc_info_blob_total_length,
-        SizeOf(BlobInfos), @BlobInfos));
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
+      isc_info_blob_max_segment + isc_info_blob_total_length,
+      SizeOf(BlobInfos), @BlobInfos));
     TMP := Buffer;
     Len := 0;
     while BlobGetSegment(BlobHandle, CurrentLength, BlobInfos[1].CardType - len, TMP) do
@@ -2795,9 +2793,9 @@ type
     TMP: Pointer;
     Len: Integer;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
-        isc_info_blob_max_segment + isc_info_blob_total_length,
-        SizeOf(BlobInfos), @BlobInfos));
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
+      isc_info_blob_max_segment + isc_info_blob_total_length,
+      SizeOf(BlobInfos), @BlobInfos));
     if MaxSize > BlobInfos[1].CardType then
       MaxSize := BlobInfos[1].CardType;
 
@@ -2819,9 +2817,9 @@ type
     Len: Integer;
     Buffer: Pointer;
   begin
-      CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
-        isc_info_blob_max_segment + isc_info_blob_total_length,
-        SizeOf(BlobInfos), @BlobInfos));
+    CheckUIBApiCall(isc_blob_info(@FStatusVector, @BlobHandle, 2,
+      isc_info_blob_max_segment + isc_info_blob_total_length,
+      SizeOf(BlobInfos), @BlobInfos));
 
     Value := VarArrayCreate([0, BlobInfos[1].CardType - 1], varByte);
     Len := 0;
@@ -2843,22 +2841,22 @@ type
     var BlobHandle: IscBlobHandle; BPB: AnsiString = ''): TISCQuad;
   begin
     BPB := CreateBlobParams(BPB,';');
-      CheckUIBApiCall(isc_create_blob2(@FStatusVector, @DBHandle, @TraHandle, @BlobHandle, @Result, Length(BPB), PAnsiChar(BPB)));
-    end;
+    CheckUIBApiCall(isc_create_blob2(@FStatusVector, @DBHandle, @TraHandle, @BlobHandle, @Result, Length(BPB), PAnsiChar(BPB)));
+  end;
 
   procedure TUIBLibrary.BlobWriteSegment(var BlobHandle: IscBlobHandle; BufferLength: Cardinal; Buffer: Pointer);
   var size: Word;
   begin
-      while BufferLength > 0 do
-      begin
-        if BufferLength > FSegmentSize then
-          size := FSegmentSize else
-          size := Word(BufferLength);
-        CheckUIBApiCall(isc_put_segment(@FStatusVector, @BlobHandle, Size, Buffer));
-        dec(BufferLength, size);
-        inc(PByte(Buffer), size);
-      end;
+    while BufferLength > 0 do
+    begin
+      if BufferLength > FSegmentSize then
+        size := FSegmentSize else
+        size := Word(BufferLength);
+      CheckUIBApiCall(isc_put_segment(@FStatusVector, @BlobHandle, Size, Buffer));
+      dec(BufferLength, size);
+      inc(PByte(Buffer), size);
     end;
+  end;
 
   procedure TUIBLibrary.BlobWriteString(var BlobHandle: IscBlobHandle; const Str: RawByteString);
   begin
@@ -2890,13 +2888,13 @@ type
     var Database: IscDbHandle; var Transaction: IscTrHandle;
     Mode: AnsiChar): PBStream;
   begin
-      Result := Bopen(@BlobId, @Database, @Transaction, @Mode);
-    end;
+    Result := Bopen(@BlobId, @Database, @Transaction, @Mode);
+  end;
 
   function TUIBLibrary.StreamBlobClose(Stream: PBStream): integer;
   begin
-      Result := BLOB_close(Stream);
-    end;
+    Result := BLOB_close(Stream);
+  end;
 
 //******************************************************************************
 //  Events
@@ -2904,40 +2902,40 @@ type
 
   procedure TUIBLibrary.EventCancel(var DbHandle: IscDbHandle; var id: Integer);
   begin
-     CheckUIBApiCall(isc_cancel_events(@FStatusVector, @DbHandle, @id));
-    end;
+    CheckUIBApiCall(isc_cancel_events(@FStatusVector, @DbHandle, @id));
+  end;
 
   function TUIBLibrary.EventBlock(var EventBuffer, ResultBuffer: PAnsiChar; Count: Smallint;
     v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15: PAnsiChar): Integer;
   begin
-      result := isc_event_block(@EventBuffer, @ResultBuffer, Count, v1, v2,
-        v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15);
-    end;
+    result := isc_event_block(@EventBuffer, @ResultBuffer, Count, v1, v2,
+      v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15);
+  end;
 
   procedure TUIBLibrary.EventQueue(var handle: IscDbHandle; var id: Integer; length: Word;
       events: PAnsiChar; ast: ISC_EVENT_CALLBACK; arg: Pointer);
   begin
-     CheckUIBApiCall(isc_que_events(@FStatusVector, @handle, @id, length,
-       events, ast, arg));
-    end;
+    CheckUIBApiCall(isc_que_events(@FStatusVector, @handle, @id, length,
+      events, ast, arg));
+  end;
 
   procedure TUIBLibrary.EventCounts(var ResultVector: TStatusVector;
     BufferLength: Smallint; EventBuffer, ResultBuffer: PAnsiChar);
   begin
-      isc_event_counts(@ResultVector, BufferLength, EventBuffer, ResultBuffer);
-    end;
+    isc_event_counts(@ResultVector, BufferLength, EventBuffer, ResultBuffer);
+  end;
 
   procedure TUIBLibrary.EventWaitFor(var handle: IscDbHandle; length: Smallint;
     events, buffer: Pointer);
   begin
-     CheckUIBApiCall(isc_wait_for_event(@FStatusVector, @handle, length, events, buffer));
-    end;
+    CheckUIBApiCall(isc_wait_for_event(@FStatusVector, @handle, length, events, buffer));
+  end;
 
 
   function TUIBLibrary.IscFree(data: Pointer): Integer;
   begin
-     result := isc_free(data);
-    end;
+    result := isc_free(data);
+  end;
 
 //******************************************************************************
 //  Save Points
@@ -2947,33 +2945,33 @@ type
   procedure TUIBLibrary.SavepointRelease(var TrHandle: IscTrHandle;
     const Name: AnsiString);
   begin
-      CheckUIBApiCall(isc_release_savepoint(@FStatusVector, @TrHandle, PAnsiChar(Name)));
-    end;
+    CheckUIBApiCall(isc_release_savepoint(@FStatusVector, @TrHandle, PAnsiChar(Name)));
+  end;
 
   procedure TUIBLibrary.SavepointRollback(var TrHandle: IscTrHandle;
     const Name: string; Option: Word);
   begin
-      CheckUIBApiCall(isc_rollback_savepoint(@FStatusVector, @TrHandle, PAnsiChar(Name), Option));
-    end;
+    CheckUIBApiCall(isc_rollback_savepoint(@FStatusVector, @TrHandle, PAnsiChar(Name), Option));
+  end;
 
   procedure TUIBLibrary.SavepointStart(var TrHandle: IscTrHandle;
     const Name: string);
   begin
-      CheckUIBApiCall(isc_start_savepoint(@FStatusVector, @TrHandle, PAnsiChar(Name)));
-    end;
+    CheckUIBApiCall(isc_start_savepoint(@FStatusVector, @TrHandle, PAnsiChar(Name)));
+  end;
 {$ENDIF}
 
 
   function TUIBLibrary.GetSegmentSize: Word;
   begin
-      Result := FSegMentSize;
-    end;
+    Result := FSegMentSize;
+  end;
 
   procedure TUIBLibrary.SetSegmentSize(Value: Word);
   begin
     Assert(Value > 0);
-      FSegmentSize := Value;
-    end;
+    FSegmentSize := Value;
+  end;
 
 
 //******************************************************************************
@@ -3183,19 +3181,23 @@ type
   end;
 
   procedure TSQLDA.DecodeStringW(const Code: Smallint; Index: Word; out Str: UnicodeString);
+  var
+    Buff: RawByteString;
   begin
     with FXSQLDA.sqlvar[Index] do
     case Code of
       SQL_TEXT    :
         begin
-          Str := MBUDecode(Copy(sqldata, 0, sqllen), CharacterSetCP[FCharacterSet]);
+          SetString(Buff, sqldata, sqllen);
+          Str := MBUDecode(Buff, CharacterSetCP[FCharacterSet]);
           if SqlSubType > 0 then
             SetLength(Str, sqllen div BytesPerCharacter[FCharacterSet]);
         end;
       SQL_VARYING :
-        Str := MBUDecode(
-          Copy(PAnsiChar(@PVary(sqldata).vary_string), 0, PVary(sqldata).vary_length),
-          CharacterSetCP[FCharacterSet]);
+        begin
+          SetString(Buff, PAnsiChar(@PVary(sqldata).vary_string), PVary(sqldata).vary_length);
+          Str := MBUDecode(Buff, CharacterSetCP[FCharacterSet]);
+        end;
     end;
   end;
 
@@ -3247,9 +3249,9 @@ type
               ReallocMem(sqldata, NewLen+2);
             if MaxSqlLen > 0 then
               NewLen := Min(NewLen, MaxSqlLen);
-            sqllen := NewLen + 2;
+            sqllen := NewLen;
             PVary(sqldata).vary_length := NewLen;
-            Move(PAnsiChar(str)^, PVary(sqldata).vary_string,PVary(sqldata).vary_length);
+            Move(PAnsiChar(str)^, PVary(sqldata).vary_string, PVary(sqldata).vary_length);
           end;
         end;
     end;
@@ -4374,7 +4376,7 @@ end;
     with FXSQLDA.sqlvar[Index] do
       if (sqlind <> nil) then
         case Value of
-          True  : sqlind^ := -1;
+          True : sqlind^ := -1;
           False: sqlind^ :=  0;
         end;
   end;
@@ -5058,8 +5060,7 @@ end;
   function TSQLDA.GetFieldIndex(const name: AnsiString): Word;
   begin
     if not TryGetFieldIndex(name, Result) then
-
-    raise Exception.CreateFmt(EUIB_FIELDSTRNOTFOUND, [name]);
+      raise Exception.CreateFmt(EUIB_FIELDSTRNOTFOUND, [name]);
   end;
 
   function TSQLDA.TryGetFieldIndex(const name: AnsiString; out index: Word): Boolean;
@@ -5068,7 +5069,7 @@ end;
   begin
     for i := 0 to GetAllocatedFields - 1 do
       if FXSQLDA.sqlvar[i].AliasNameLength = Length(name) then
-        if AnsiStrings.StrLIComp(PansiChar(@FXSQLDA.sqlvar[i].aliasname), PAnsiChar(Name),
+        if StrLIComp(PansiChar(@FXSQLDA.sqlvar[i].aliasname), PAnsiChar(Name),
           FXSQLDA.sqlvar[i].AliasNameLength) = 0 then
           begin
             index := i;
@@ -6110,7 +6111,7 @@ end;
     if FXSQLDA.sqln > 1 then
       for i := 0 to FXSQLDA.sqln - 2 do
         if not ((FXSQLDA.sqlvar[i].RelNameLength = FXSQLDA.sqlvar[i+1].RelNameLength) and
-          (AnsiStrings.StrIComp(FXSQLDA.sqlvar[i].RelName, FXSQLDA.sqlvar[i+1].RelName) = 0)) then
+          (StrIComp(FXSQLDA.sqlvar[i].RelName, FXSQLDA.sqlvar[i+1].RelName) = 0)) then
             exit;
     if FXSQLDA.sqln > 0 then
       SetString(Result, FXSQLDA.sqlvar[0].RelName, FXSQLDA.sqlvar[0].RelNameLength);
@@ -6667,15 +6668,6 @@ procedure TSQLParams.AddFieldType(const Name: string; FieldType: TUIBFieldType;
     Result := FXSQLDA.sqlvar[Index].MaxSqlLen
   end;
 
-  function TSQLParams.GetMaxStrLen(const Index: Word): SmallInt;
-  begin
-    CheckRange(Index);
-    if (CharacterSet = csNone) or (FXSQLDA.sqlvar[Index].SqlSubType = 0) then
-      Result := FXSQLDA.sqlvar[Index].MaxSqlLen
-    else
-      Result := FXSQLDA.sqlvar[Index].MaxSqlLen div BytesPerCharacter[CharacterSet];
-  end;
-
   function TSQLParams.GetFieldIndex(const name: AnsiString): Word;
   begin
     if not TryGetFieldIndex(name, Result) then
@@ -6688,7 +6680,7 @@ procedure TSQLParams.AddFieldType(const Name: string; FieldType: TUIBFieldType;
   begin
     for Field := 0 to FXSQLDA.sqln - 1 do
       if FXSQLDA.sqlvar[Field].ParamNameLength = Length(name) then
-        if AnsiStrings.StrLIComp(@FXSQLDA.sqlvar[Field].ParamName, PAnsiChar(Name),
+        if StrLIComp(@FXSQLDA.sqlvar[Field].ParamName, PAnsiChar(Name),
           FXSQLDA.sqlvar[Field].ParamNameLength) = 0 then
           begin
             Result := true;
