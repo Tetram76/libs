@@ -93,23 +93,13 @@ type
          function Find(const unitName : UnicodeString) : TUnitMainSymbol;
    end;
 
-   IObjectOwner = interface
-      procedure ReleaseObject;
-   end;
-
    // TUnitSymbolTable
    //
    TUnitSymbolTable = class (TSymbolTable)
       private
-         FObjects : TTightList;
          FUnitMainSymbol : TUnitMainSymbol;
 
       public
-         destructor Destroy; override;
-
-         procedure AddObjectOwner(const AOwner : IObjectOwner);
-         procedure ClearObjectOwners;
-
          class function IsUnitTable : Boolean; override;
 
          property UnitMainSymbol : TUnitMainSymbol read FUnitMainSymbol write FUnitMainSymbol;
@@ -176,6 +166,10 @@ type
    end;
 
    TUnitSymbolList = class(TObjectList<TUnitSymbol>);
+   TUnitSymbolRefList = class(TUnitSymbolList)
+      public
+         destructor Destroy; override;
+   end;
 
    // unit namespaces, aggregate unit symbols
    TUnitNamespaceSymbol = class (TSourceSymbol)
@@ -272,11 +266,14 @@ type
          FTypException : TClassSymbol;
          FTypInterface : TInterfaceSymbol;
          FTypCustomAttribute : TClassSymbol;
+         FTypAnyType : TAnyTypeSymbol;
 
       protected
          function SymbolTable : TSystemSymbolTable; overload;
 
       public
+         destructor Destroy; override;
+
          property TypInteger : TBaseIntegerSymbol read FTypInteger write FTypInteger;
          property TypBoolean : TBaseBooleanSymbol read FTypBoolean write FTypBoolean;
          property TypFloat : TBaseFloatSymbol read FTypFloat write FTypFloat;
@@ -290,6 +287,8 @@ type
          property TypException : TClassSymbol read FTypException write FTypException;
 
          property TypInterface : TInterfaceSymbol read FTypInterface write FTypInterface;
+
+         property TypAnyType : TAnyTypeSymbol read FTypAnyType write FTypAnyType;
 
          property TypCustomAttribute : TClassSymbol read FTypCustomAttribute write FTypCustomAttribute;
    end;
@@ -660,38 +659,6 @@ end;
 // ------------------ TUnitSymbolTable ------------------
 // ------------------
 
-// Destroy
-//
-destructor TUnitSymbolTable.Destroy;
-begin
-   ClearObjectOwners;
-   inherited;
-   FObjects.Free;
-end;
-
-// AddObjectOwner
-//
-procedure TUnitSymbolTable.AddObjectOwner(const AOwner : IObjectOwner);
-begin
-   AOwner._AddRef;
-   FObjects.Add(Pointer(AOwner));
-end;
-
-// ClearObjectOwners
-//
-procedure TUnitSymbolTable.ClearObjectOwners;
-var
-   i : Integer;
-   objOwner : Pointer;
-begin
-   for i:=0 to FObjects.Count-1 do begin
-      objOwner:=FObjects.List[i];
-      IObjectOwner(objOwner).ReleaseObject;
-      IObjectOwner(objOwner)._Release;
-   end;
-   FObjects.Clear;
-end;
-
 // IsUnitTable
 //
 class function TUnitSymbolTable.IsUnitTable : Boolean;
@@ -864,6 +831,14 @@ end;
 // ------------------ TSystemSymbolTable ------------------
 // ------------------
 
+// Destroy
+//
+destructor TSystemSymbolTable.Destroy;
+begin
+   inherited;
+   FTypAnyType.Free;
+end;
+
 // SymbolTable
 //
 function TSystemSymbolTable.SymbolTable : TSystemSymbolTable;
@@ -914,6 +889,18 @@ end;
 destructor TUnitNamespaceSymbol.Destroy;
 begin
    FUnitSymbols.Free;
+   inherited;
+end;
+
+// ------------------
+// ------------------ TUnitSymbolRefList ------------------
+// ------------------
+
+// Destroy
+//
+destructor TUnitSymbolRefList.Destroy;
+begin
+   ExtractAll;
    inherited;
 end;
 

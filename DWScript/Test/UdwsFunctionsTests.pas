@@ -81,6 +81,11 @@ type
          procedure SetUp; override;
    end;
 
+   TdwsFuncFunctionsTestsDebug = class (TdwsFunctionsTestsBase)
+      public
+         procedure SetUp; override;
+   end;
+
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -195,7 +200,7 @@ end;
 //
 procedure TdwsFunctionsTestsBase.ExecutionNonOptimized;
 begin
-   FCompiler.Config.CompilerOptions:=[coAssertions];
+   FCompiler.Config.CompilerOptions:=[coSymbolDictionary, coContextMap, coAssertions];
    Execution;
 end;
 
@@ -328,6 +333,18 @@ begin
    inherited;
 end;
 
+// ------------------
+// ------------------ TdwsFuncFunctionsTestsDebug ------------------
+// ------------------
+
+// SetUp
+//
+procedure TdwsFuncFunctionsTestsDebug.SetUp;
+begin
+   FFolder:='FunctionsDebug';
+   inherited;
+end;
+
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -336,13 +353,14 @@ initialization
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-   RegisterTest('FunctionsMath', TdwsFuncFunctionsTestsMath);
-   RegisterTest('FunctionsMathComplex', TdwsFuncFunctionsTestsMathComplex);
-   RegisterTest('FunctionsMath3D', TdwsFuncFunctionsTestsMath3D);
-   RegisterTest('FunctionsTime', TdwsFuncFunctionsTestsTime);
-   RegisterTest('FunctionsString', TdwsFuncFunctionsTestsString);
-   RegisterTest('FunctionsVariant', TdwsFuncFunctionsTestsVariant);
-   RegisterTest('FunctionsGlobalVars', TdwsFuncFunctionsTestsGlobalVars);
-   RegisterTest('FunctionsRTTI', TdwsFuncFunctionsTestsRTTI);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsMath);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsMathComplex);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsMath3D);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsTime);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsString);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsVariant);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsGlobalVars);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsRTTI);
+   RegisterTest('Functions', TdwsFuncFunctionsTestsDebug);
 
 end.

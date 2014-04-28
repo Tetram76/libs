@@ -34,6 +34,7 @@ type
    TdwsSynSQLiteDataBase = class (TdwsDataBase, IdwsDataBase)
       private
          FDB : TSQLDatabase;
+         FDataSets : Integer;
 
       public
          constructor Create(const parameters : array of String);
@@ -43,6 +44,7 @@ type
          procedure Commit;
          procedure Rollback;
          function InTransaction : Boolean;
+         function CanReleaseToPool : String;
 
          procedure Exec(const sql : String; const parameters : TData);
          function Query(const sql : String; const parameters : TData) : IdwsDataSet;
@@ -82,6 +84,7 @@ type
          function AsString : String; override;
          function AsInteger : Int64; override;
          function AsFloat : Double; override;
+         function AsBlob : RawByteString; override;
    end;
 
 //   IdwsBlob = interface
@@ -139,6 +142,7 @@ begin
          varUString : rq.BindS(i, String(p.VUString));
          varBoolean : rq.Bind(i, Ord(p.VBoolean));
          varNull : rq.BindNull(i);
+         varString : rq.Bind(i, p.VString, Length(RawByteString(p.VString)));
       else
          raise Exception.CreateFmt('Unsupported VarType %d', [p.VType]);
       end;
@@ -170,12 +174,23 @@ end;
 constructor TdwsSynSQLiteDataBase.Create(const parameters : array of String);
 var
    dbName : String;
+   i, flags : Integer;
 begin
    if Length(parameters)>0 then
       dbName:=TdwsDataBase.ApplyPathVariables(parameters[0])
    else dbName:=':memory:';
+
+   flags:=SQLITE_OPEN_READWRITE or SQLITE_OPEN_CREATE;
+   for i:=1 to High(parameters) do begin
+      if UnicodeSameText(parameters[i], 'read_only') then
+         flags:=SQLITE_OPEN_READONLY
+      else if UnicodeSameText(parameters[i], 'shared_cache') then
+         flags:=flags or SQLITE_OPEN_SHAREDCACHE;
+   end;
+
    try
-      FDB:=TSQLDatabase.Create(dbName);
+      FDB:=TSQLDatabase.Create(dbName, '', flags);
+      FDB.BusyTimeout:=1500;
    except
       RefCount:=0;
       raise;
@@ -216,6 +231,17 @@ end;
 function TdwsSynSQLiteDataBase.InTransaction : Boolean;
 begin
    Result:=FDB.TransactionActive;
+end;
+
+// CanReleaseToPool
+//
+function TdwsSynSQLiteDataBase.CanReleaseToPool : String;
+begin
+   if FDB.TransactionActive then
+      Result:='in transaction'
+   else if FDataSets>0 then  // need to check as they could maintain a lock
+      Result:='has opened datasets'
+   else Result:='';
 end;
 
 // Exec
@@ -266,6 +292,7 @@ begin
       try
          AssignParameters(FQuery, parameters);
          FEOFReached:=(FQuery.Step=SQLITE_DONE);
+         Inc(FDB.FDataSets);
       except
          FQuery.Close;
          raise;
@@ -280,6 +307,7 @@ end;
 //
 destructor TdwsSynSQLiteDataSet.Destroy;
 begin
+   Dec(FDB.FDataSets);
    if FQuery.Request<>0 then
       FQuery.Close;
    inherited;
@@ -376,6 +404,13 @@ end;
 function TdwsSynSQLiteDataField.AsFloat : Double;
 begin
    Result:=TdwsSynSQLiteDataSet(DataSet).FQuery.FieldDouble(Index);
+end;
+
+// AsBlob
+//
+function TdwsSynSQLiteDataField.AsBlob : RawByteString;
+begin
+   Result:=TdwsSynSQLiteDataSet(DataSet).FQuery.FieldBlob(Index);
 end;
 
 // ------------------------------------------------------------------

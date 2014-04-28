@@ -97,13 +97,13 @@ type
          procedure Clear;
          function Add(const nameReference, code: UnicodeString; sourceType: TScriptSourceType) : TSourceFile;
 
-         function FindScriptSourceItem(const SourceFileName: UnicodeString): TScriptSourceItem; overload;
+         function FindScriptSourceItem(const sourceFileName: UnicodeString): TScriptSourceItem; overload;
 
-         function IndexOf(const SourceFileName: UnicodeString): Integer; overload;
+         function IndexOf(const sourceFileName: UnicodeString): Integer; overload;
 
          property Count : Integer read FSourceList.FCount;
 
-         property Items[Index: Integer] : TScriptSourceItem read GetSourceItem; default;
+         property Items[index: Integer] : TScriptSourceItem read GetSourceItem; default;
          property MainScript: TScriptSourceItem read FMainScript;
    end;
 
@@ -192,6 +192,7 @@ type
          procedure ChangeUsageAt(const scriptPos : TScriptPos; const addUsages, removeUsages : TSymbolUsages);
 
          function FindSymbolAtPosition(aCol, aLine: Integer; const sourceFile : UnicodeString): TSymbol; overload;
+         function FindSymbolAtPosition(aScriptPos: TScriptPos): TSymbol; overload;
          function FindSymbolPosList(sym: TSymbol): TSymbolPositionList; overload;  // return list of symbol
          function FindSymbolPosList(const symName: UnicodeString): TSymbolPositionList; overload;  // return list of symbol
          function FindSymbolPosListOfType(const symName: UnicodeString; symbolType: TSymbolClass): TSymbolPositionList; // return list of symbol given the desired type
@@ -575,7 +576,8 @@ type
 
          function CallStackDepth : Integer; override;
          function GetCallStack : TdwsExprLocationArray; override;
-         function CallStackLastExpr : TExprBase;
+         function CallStackLastExpr : TExprBase; override;
+         function CallStackLastProg : TObject; override;
 
          function  DebuggerFieldAddr : Integer;
          procedure DebuggerNotifyException(const exceptObj : IScriptObj); override;
@@ -594,6 +596,8 @@ type
 
          procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : UnicodeString); override;
          procedure LocalizeString(const aString : UnicodeString; var Result : UnicodeString); override;
+
+         function ValidateFileName(const path : String) : String; override;
 
          property Prog : TdwsMainProgram read FProg;
          property CurrentProg : TdwsProgram read FCurrentProg write SetCurrentProg;
@@ -778,6 +782,8 @@ type
 
          property FinalExpr : TBlockFinalExpr read FFinalExpr write FFinalExpr;
 
+         procedure AddFinalExpr(expr : TProgramExpr);
+
          property TimeoutMilliseconds : Integer read FTimeoutMilliseconds write FTimeoutMilliseconds;
          property MaxRecursionDepth : Integer read FStackParameters.MaxRecursionDepth write FStackParameters.MaxRecursionDepth;
          property MaxExceptionDepth : Integer read FStackParameters.MaxExceptionDepth write FStackParameters.MaxExceptionDepth;
@@ -815,6 +821,13 @@ type
       ['{8D534D15-4C6B-11D5-8DCB-0000216D9E86}']
       procedure Call(exec : TdwsProgramExecution; func : TFuncSymbol);
    end;
+
+   IExternalRoutine = interface (ICallable)
+      ['{1595278A-94F5-4B46-8173-C3604C93959C}']
+      procedure SetExternalPointer(value : Pointer);
+   end;
+
+   TExternalRoutineFactory = function (funcSymbol : TFuncSymbol; mainProg : TdwsMainProgram) : IExternalRoutine;
 
    // A script procedure
    TdwsProcedure = class sealed (TdwsProgram, IUnknown, ICallable)
@@ -1585,17 +1598,20 @@ type
 
          function GetParamAsPVariant(index : Integer) : PVariant;
          function GetParamAsVariant(index : Integer) : Variant;
+         procedure SetParamAsVariant(index : Integer; const v : Variant);
          function GetParamAsInteger(index : Integer) : Int64;
          procedure SetParamAsInteger(index : Integer; const v : Int64);
          function GetParamAsString(index : Integer) : UnicodeString;
+         procedure SetParamAsString(index : Integer; const v : UnicodeString);
          function GetParamAsDataString(index : Integer) : RawByteString;
          procedure SetParamAsDataString(index : Integer; const v : RawByteString);
          function GetParamAsFloat(index : Integer) : Double;
          function GetParamAsBoolean(index : Integer) : Boolean;
          function GetParamAsObject(index : Integer) : TObject;
 
-         function CreateUnitList : TList;
-         function FindSymbolInUnits(AUnitList: TList; const Name: UnicodeString): TSymbol; overload;
+         function CreateUnitList : TUnitSymbolRefList;
+         function FindSymbolInUnits(aUnitList: TUnitSymbolRefList; const aName: UnicodeString) : TSymbol; overload;
+         function GetSystemTable : TSystemSymbolTable;
 
       public
          procedure PrepareScriptObj;
@@ -1604,12 +1620,13 @@ type
          function GetExternalObjForVar(const s: UnicodeString): TObject;
          // cycle ancestry hierarchy and find the nearest matching type
          function FindClassMatch(AObject: TObject; ExactMatch: Boolean=True): TClassSymbol;
-         function FindSymbolInUnits(const Name: UnicodeString): TSymbol; overload;
+         function FindSymbolInUnits(const aName : UnicodeString) : TSymbol; overload;
          function GetTemp(const DataType: UnicodeString): IInfo;
 
          procedure RaiseExceptObj(const msg : UnicodeString; const obj : IScriptObj);
 
          property Table : TSymbolTable read FTable write FTable;
+         property SystemTable : TSystemSymbolTable read GetSystemTable;
          property Execution : TdwsProgramExecution read FExecution write FExecution;
          property Level : Integer read FLevel write FLevel;
          property Data[const s: UnicodeString]: TData read GetData write SetData;
@@ -1634,9 +1651,9 @@ type
          property ValueAsTStrings[const s : UnicodeString] : TStrings read GetValueAsTStrings;
 
          property ParamAsPVariant[index : Integer] : PVariant read GetParamAsPVariant;
-         property ParamAsVariant[index : Integer] : Variant read GetParamAsVariant;
+         property ParamAsVariant[index : Integer] : Variant read GetParamAsVariant write SetParamAsVariant;
          property ParamAsInteger[index : Integer] : Int64 read GetParamAsInteger write SetParamAsInteger;
-         property ParamAsString[index : Integer] : UnicodeString read GetParamAsString;
+         property ParamAsString[index : Integer] : UnicodeString read GetParamAsString write SetParamAsString;
          property ParamAsDataString[index : Integer] : RawByteString read GetParamAsDataString write SetParamAsDataString;
          property ParamAsFloat[index : Integer] : Double read GetParamAsFloat;
          property ParamAsBoolean[index : Integer] : Boolean read GetParamAsBoolean;
@@ -1666,6 +1683,7 @@ type
       public
          property NextObject : TScriptObj read FNextObject write FNextObject;
          property PrevObject : TScriptObj read FPrevObject write FPrevObject;
+         property ExternalObject : TObject read GetExternalObject write SetExternalObject;
    end;
 
    TScriptObjInstance = class (TScriptObj, IScriptObj)
@@ -1926,9 +1944,9 @@ begin
    if BeginProgram then begin
       if ProgramState=psRunning then
          RunProgram(aTimeoutMilliSeconds);
-      if ProgramState in [psRunning, psRunningStopped] then
-         EndProgram;
    end;
+   if ProgramState in [psRunning, psRunningStopped] then
+      EndProgram;
 end;
 
 // ExecuteParam
@@ -2303,6 +2321,17 @@ begin
    else Result:=aString;
 end;
 
+// ValidateFileName
+//
+function TdwsProgramExecution.ValidateFileName(const path : String) : String;
+begin
+   if Assigned(FileSystem) then
+      Result:=FileSystem.ValidateFileName(path)
+   else Result:='';
+   if Result='' then
+      Result:=inherited ValidateFileName(path);
+end;
+
 // ReleaseObjects
 //
 procedure TdwsProgramExecution.ReleaseObjects;
@@ -2584,6 +2613,18 @@ begin
    else Result:=nil;
 end;
 
+// CallStackLastProg
+//
+function TdwsProgramExecution.CallStackLastProg : TObject;
+var
+   n : Integer;
+begin
+   n:=FCallStack.Count-1;
+   if n>=0 then
+      Result:=TObject(FCallStack.List[n])
+   else Result:=nil;
+end;
+
 // DebuggerFieldAddr
 //
 function TdwsProgramExecution.DebuggerFieldAddr : Integer;
@@ -2644,7 +2685,7 @@ begin
    FBaseTypes.FTypTObject := sysTable.TypTObject;
    FBaseTypes.FTypException := sysTable.TypException;
    FBaseTypes.FTypInterface := sysTable.TypInterface;
-   FBaseTypes.FTypAnyType := TAnyTypeSymbol.Create('', nil);
+   FBaseTypes.FTypAnyType := sysTable.TypAnyType;
 end;
 
 // Destroy
@@ -2657,7 +2698,6 @@ begin
    FUnitMains.Free;
 
    FBaseTypes.FTypNil.Free;
-   FBaseTypes.FTypAnyType.Free;
 
    FCompileMsgs.Free;
    FSubTables.Clear;
@@ -3069,6 +3109,15 @@ begin
    if FOrphanedObjects=nil then
       FOrphanedObjects:=TObjectList<TRefCountedObject>.Create;
    FOrphanedObjects.Add(obj);
+end;
+
+// AddFinalExpr
+//
+procedure TdwsMainProgram.AddFinalExpr(expr : TProgramExpr);
+begin
+   if FFinalExpr=nil then
+      FFinalExpr:=TBlockFinalExpr.Create(cNullPos);
+   FFinalExpr.AddStatement(expr);
 end;
 
 // GetConditionalDefines
@@ -5677,7 +5726,11 @@ procedure TProgramInfo.GetSymbolInfo(sym : TSymbol; var info : IInfo);
       locData : IDataContext;
    begin
       // Field of the Self object
-      Execution.DataContext_Create(FScriptObj.AsData, sym.Offset, locData);
+      if sym.StructSymbol is TRecordSymbol then begin
+         Execution.DataContext_Create(Self.GetData(SYS_SELF), sym.Offset, locData);
+      end else begin
+         Execution.DataContext_Create(FScriptObj.AsData, sym.Offset, locData);
+      end;
       TInfo.SetChild(Result, Self, sym.Typ, locData);
    end;
 
@@ -6003,6 +6056,16 @@ begin
    Result:=GetParamAsPVariant(index)^;
 end;
 
+// SetParamAsVariant
+//
+procedure TProgramInfo.SetParamAsVariant(index : Integer; const v : Variant);
+var
+   p : PVariant;
+begin
+   p:=GetParamAsPVariant(index);
+   p^:=v;
+end;
+
 // GetParamAsInteger
 //
 function TProgramInfo.GetParamAsInteger(index : Integer) : Int64;
@@ -6042,6 +6105,13 @@ begin
       Result:=UnicodeString(p.VUString)
    {$endif}
    else VariantToString(PVariant(p)^, Result);
+end;
+
+// SetParamAsString
+//
+procedure TProgramInfo.SetParamAsString(index : Integer; const v : UnicodeString);
+begin
+   GetParamAsPVariant(index)^:=v;
 end;
 
 // GetParamAsDataString
@@ -6102,7 +6172,7 @@ var
   {$else}
   ParentRTTI: PPTypeInfo;
   {$endif}
-  unitList: TList;      // build the list once, may search for many symbols
+  unitList: TUnitSymbolRefList;      // build the list once, may search for many symbols
   typeSym: TSymbol;
 begin
   Result := nil;
@@ -6190,18 +6260,28 @@ begin
     Result := nil;
 end;
 
-function TProgramInfo.FindSymbolInUnits(AUnitList: TList; const Name: UnicodeString): TSymbol;
+function TProgramInfo.FindSymbolInUnits(aUnitList: TUnitSymbolRefList; const aName: UnicodeString) : TSymbol;
 var
-  i: Integer;
+   i : Integer;
+   table : TUnitSymbolTable;
 begin
-  // Search all units for the symbol
-  Result := nil;
-  for i := 0 to AUnitList.Count - 1 do
-  begin
-    Result := TUnitSymbol(AUnitList[i]).Table.FindLocal(Name);
-    if Assigned(Result) then
-      Break;
-  end;
+   // Search all units for the symbol
+   for i := 0 to aUnitList.Count-1 do begin
+      table := aUnitList[i].Table;
+      if table <> nil then begin
+         Result := table.FindLocal(aName);
+         if Assigned(Result) then
+            Exit;
+      end;
+   end;
+   Result := nil;
+end;
+
+// GetSystemTable
+//
+function TProgramInfo.GetSystemTable : TSystemSymbolTable;
+begin
+   Result:=Execution.Prog.SystemTable.SymbolTable;
 end;
 
 // PrepareScriptObj
@@ -6211,40 +6291,51 @@ begin
    FScriptObj:=FExecution.SelfScriptObject^;
 end;
 
-function TProgramInfo.FindSymbolInUnits(const Name: UnicodeString): TSymbol;
+// FindSymbolInUnits
+//
+function TProgramInfo.FindSymbolInUnits(const aName : UnicodeString) : TSymbol;
 var
-  list: TList;
+   list : TUnitSymbolRefList;
 begin
-  list := CreateUnitList;
-  try
-    Result := FindSymbolInUnits(list, Name);
-  finally
-    list.Free;
-  end;
+   list := CreateUnitList;
+   try
+      Result := FindSymbolInUnits(list, aName);
+   finally
+      list.Free;
+   end;
 end;
 
-function TProgramInfo.CreateUnitList: TList;
+// CreateUnitList
+//
+function TProgramInfo.CreateUnitList : TUnitSymbolRefList;
 var
-  root: TSymbolTable;
-  i: Integer;
+   root : TSymbolTable;
+   sym : TSymbol;
+   unitSym : TUnitSymbol;
+   i : Integer;
 begin
-  // Find the root table for the full compiled program (not just the function)
-  if Assigned(Execution) then
-    root := Execution.Prog.RootTable
-  else
-  // if no caller provided, make a 'best effort' to find a root.
-  begin
-    root := FTable;
-    while root.ParentCount > 0 do
-      root := root.Parents[0];
-  end;
+   // Find the root table for the full compiled program (not just the function)
+   if Assigned(Execution) then
+      root := Execution.Prog.RootTable
+   else begin
+      // if no caller provided, make a 'best effort' to find a root.
+      root := FTable;
+      while root.ParentCount > 0 do
+         root := root.Parents[0];
+   end;
 
-  Result := TList.Create;                         // caller reponsible for freeing
-  // Add all unit symbols to a list
-  for i := 0 to root.Count - 1 do
-    if root.Symbols[i].ClassType=TUnitSymbol then        // if a unit symbol
-      if Result.IndexOf(root.Symbols[i]) < 0 then // and not already in list (units may reuse others)
-        Result.Add(root.Symbols[i]);
+   // caller reponsible for freeing
+   Result := TUnitSymbolRefList.Create;
+
+   // Add all unit symbols to a list
+   for i := 0 to root.Count-1 do begin
+      sym := root.Symbols[i];
+      if sym.ClassType = TUnitSymbol then begin
+         unitSym := TUnitSymbol(sym);
+         if Result.IndexOf(unitSym) < 0 then  // (units may reuse others)
+            Result.Add(unitSym);
+      end;
+   end;
 end;
 
 // ------------------
@@ -6849,6 +6940,13 @@ begin
       Result:=FSymbolList[i].FindSymbolAtPosition(aCol, aLine, sourceFile);
       if Assigned(Result) then Break;
    end;
+end;
+
+// FindSymbolAtPosition
+//
+function TdwsSymbolDictionary.FindSymbolAtPosition(aScriptPos: TScriptPos): TSymbol;
+begin
+   Result:=FindSymbolAtPosition(aScriptPos.Col, aScriptPos.Line, aScriptPos.SourceName);
 end;
 
 // GetList

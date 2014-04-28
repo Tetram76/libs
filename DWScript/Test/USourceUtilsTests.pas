@@ -35,6 +35,8 @@ type
          procedure SuggestAcrossLines;
          procedure SymDictFunctionForward;
          procedure SymDictInherited;
+         procedure SymDictParamExplicit;
+         procedure SymDictParamImplicit;
          procedure ReferencesVars;
          procedure InvalidExceptSuggest;
          procedure EnumerationNamesAndValues;
@@ -225,7 +227,7 @@ begin
 
    scriptPos.Col:=9;
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
-   CheckEquals(8, sugg.Count, 'column 9');
+   CheckEquals(9, sugg.Count, 'column 9');
    CheckEquals('TClass', sugg.Code[0], 'sugg 9, 0');
    CheckEquals('TComplex', sugg.Code[1], 'sugg 9, 1');
    CheckEquals('TCustomAttribute', sugg.Code[2], 'sugg 9, 2');
@@ -233,7 +235,8 @@ begin
    CheckEquals('TRTTIRawAttribute', sugg.Code[4], 'sugg 9, 4');
    CheckEquals('TRTTIRawAttributes', sugg.Code[5], 'sugg 9, 5');
    CheckEquals('TRTTITypeInfo', sugg.Code[6], 'sugg 9, 6');
-   CheckEquals('TVector', sugg.Code[7], 'sugg 9, 7');
+   CheckEquals('TSourceCodeLocation', sugg.Code[7], 'sugg 9, 7');
+   CheckEquals('TVector', sugg.Code[8], 'sugg 9, 8');
 end;
 
 // MetaClassTest
@@ -393,9 +396,10 @@ end;
 //
 procedure TSourceUtilsTests.HelperSuggestTest;
 const
-   cSugg : array [0..12] of String = (
+   cSugg : array [0..13] of String = (
       'Clamp', 'Factorial', 'Hello', 'IsPrime', 'LeastFactor', 'Max',
-      'Min', 'Next', 'Sign', 'Sqr', 'ToBin', 'ToHexString', 'ToString'
+      'Min', 'Next', 'Sign', 'Sqr', 'ToBin', 'ToHexString', 'ToString',
+      'Unsigned32'
       );
 
 var
@@ -557,6 +561,72 @@ begin
 
    CheckEquals(3, symPosList[1].ScriptPos.Line, 'TDerivedClass Line 3');
    Check(symPosList[1].SymbolUsages=[suImplementation], 'TDerivedClass Line 3 usage');
+end;
+
+// SymDictParamExplicit
+//
+procedure TSourceUtilsTests.SymDictParamExplicit;
+var
+   prog : IdwsProgram;
+   sym : TTypeSymbol;
+   spl : TSymbolPositionList;
+begin
+   prog:=FCompiler.Compile( 'type TTest = class end;'#13#10
+                           +'procedure Test(a : TTest); begin end;'#13#10
+                           +'Test(nil);'#13#10);
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   sym := prog.Table.FindTypeSymbol('TTest', cvMagic);
+
+   spl := prog.SymbolDictionary.FindSymbolPosList(sym);
+
+   CheckEquals(2, spl.Count, 'TTest');
+   CheckEquals(' [line: 1, column: 6]', spl.Items[0].ScriptPos.AsInfo);
+   CheckEquals(' [line: 2, column: 20]', spl.Items[1].ScriptPos.AsInfo);
+
+   spl := prog.SymbolDictionary.FindSymbolPosList('a');
+
+   CheckEquals(1, spl.Count, 'a');
+   CheckEquals(' [line: 2, column: 16]', spl.Items[0].ScriptPos.AsInfo);
+
+   spl := prog.SymbolDictionary.FindSymbolPosList('Test');
+
+   CheckEquals(2, spl.Count, 'Test');
+   CheckEquals(' [line: 2, column: 11]', spl.Items[0].ScriptPos.AsInfo);
+   CheckEquals(' [line: 3, column: 1]', spl.Items[1].ScriptPos.AsInfo);
+end;
+
+// SymDictParamImplicit
+//
+procedure TSourceUtilsTests.SymDictParamImplicit;
+var
+   prog : IdwsProgram;
+   sym : TTypeSymbol;
+   spl : TSymbolPositionList;
+begin
+   prog:=FCompiler.Compile( 'type TTest = class end;'#13#10
+                           +'procedure Test(a : TTest = nil); begin end;'#13#10
+                           +'Test();'#13#10);
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   sym := prog.Table.FindTypeSymbol('TTest', cvMagic);
+
+   spl := prog.SymbolDictionary.FindSymbolPosList(sym);
+
+   CheckEquals(2, spl.Count, 'TTest');
+   CheckEquals(' [line: 1, column: 6]', spl.Items[0].ScriptPos.AsInfo);
+   CheckEquals(' [line: 2, column: 20]', spl.Items[1].ScriptPos.AsInfo);
+
+   spl := prog.SymbolDictionary.FindSymbolPosList('a');
+
+   CheckEquals(1, spl.Count, 'a');
+   CheckEquals(' [line: 2, column: 16]', spl.Items[0].ScriptPos.AsInfo);
+
+   spl := prog.SymbolDictionary.FindSymbolPosList('Test');
+
+   CheckEquals(2, spl.Count, 'Test');
+   CheckEquals(' [line: 2, column: 11]', spl.Items[0].ScriptPos.AsInfo);
+   CheckEquals(' [line: 3, column: 1]', spl.Items[1].ScriptPos.AsInfo);
 end;
 
 // ReferencesVars

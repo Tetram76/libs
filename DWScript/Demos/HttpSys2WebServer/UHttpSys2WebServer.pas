@@ -38,11 +38,11 @@ interface
 
 uses
   Windows, SysUtils, Classes,
-  SynZip,
+  SynZip, SynCommons,
   dwsHTTPSysServer, dwsHTTPSysAPI,
   dwsUtils, dwsWebEnvironment, dwsFileSystem,
   dwsDirectoryNotifier, dwsJSON, dwsXPlatform,
-  dwsWebServerHelpers, dwsWebServerInfo,
+  dwsWebServerHelpers, dwsWebServerInfo, dwsWebUtils,
   DSimpleDWScript;
 
 type
@@ -73,6 +73,7 @@ type
          // Used to implement a lazy flush on FileAccessInfoCaches
          FCacheCounter : Cardinal;
          FFileAccessInfoCacheSize : Integer;
+         FDWSExtensions : array of String;
 
          procedure FileChanged(sender : TdwsFileNotifier; const fileName : String;
                                changeAction : TFileNotificationAction);
@@ -94,6 +95,7 @@ type
          procedure Shutdown;
 
          procedure Process(request : TWebRequest; response : TWebResponse);
+         procedure ProcessStaticFile(const pathName : String; request : TWebRequest; response : TWebResponse);
 
          procedure Redirect301TrailingPathDelimiter(request : TWebRequest; response : TWebResponse);
 
@@ -132,6 +134,8 @@ const
          +'"SSLDomainName": "+",'
          // https relative URI
          +'"SSLRelativeURI": "",'
+         // supplemental domains array of {Port, Name, RelativeURI, SSL}
+         +'"Domains": [],'
          // is HTTP compression activated
          +'"Compression": true,'
          // Base path for served files,
@@ -157,7 +161,9 @@ const
          +'"MaxInputLength": 0,'
          // If true folder requests that don't include the trailing path delimiter
          // will automatically be redirected with a 301 error
-         +'"AutoRedirectFolders": true'
+         +'"AutoRedirectFolders": true,'
+         // List of extensions that go through the script filter
+         +'"ScriptedExtensions": [".dws"]'
       +'}';
 
 // ------------------------------------------------------------------
@@ -210,7 +216,10 @@ procedure THttpSys2WebServer.Initialize(const basePath : TFileName; options : Td
 var
    logPath : TdwsJSONValue;
    serverOptions : TdwsJSONValue;
-   nbThreads : Integer;
+   scriptedExtensions : TdwsJSONValue;
+   extraDomains, domain : TdwsJSONValue;
+   env: TdwsJSONObject;
+   i, nbThreads : Integer;
 begin
    FPath:=IncludeTrailingPathDelimiter(ExpandFileName(basePath));
 
@@ -218,15 +227,30 @@ begin
    FDWS.Initialize(Self);
 
    FDWS.PathVariables.Values['www']:=ExcludeTrailingPathDelimiter(FPath);
+   env := options['Server']['Environment'] as TdwsJSONObject;
+   if assigned(env) then
+      for i := 0 to env.ElementCount - 1 do
+         fDWS.PathVariables.Values[env.Names[i]] := env.Elements[i].AsString;
 
    FDirectoryIndex:=TDirectoryIndexCache.Create;
    FDirectoryIndex.IndexFileNames.CommaText:='"index.dws","index.htm","index.html"';
+
+   FDWS.LoadCPUOptions(options['CPU']);
+
+   FDWS.LoadDWScriptOptions(options['DWScript']);
+
+   FDWS.Startup;
 
    FServer:=THttpApi2Server.Create(False);
 
    serverOptions:=TdwsJSONValue.ParseString(cDefaultServerOptions);
    try
       serverOptions.Extend(options['Server']);
+
+      scriptedExtensions:=serverOptions['ScriptedExtensions'];
+      SetLength(FDWSExtensions, scriptedExtensions.ElementCount);
+      for i:=0 to scriptedExtensions.ElementCount-1 do
+         FDWSExtensions[i]:=scriptedExtensions.Elements[i].AsString;
 
       FRelativeURI:=serverOptions['RelativeURI'].AsString;
       FDomainName:=serverOptions['DomainName'].AsString;
@@ -239,6 +263,15 @@ begin
       FSSLPort:=serverOptions['SSLPort'].AsInteger;
       if FSSLPort<>0 then begin
          FServer.AddUrl(FSSLRelativeURI, FSSLPort, True, FSSLDomainName);
+      end;
+
+      extraDomains:=serverOptions['Domains'];
+      for i:=0 to extraDomains.ElementCount-1 do begin
+         domain:=extraDomains.Elements[i];
+         FServer.AddUrl(domain['RelativeURI'].AsString,
+                        domain['Port'].AsInteger,
+                        domain['SSL'].AsBoolean,
+                        domain['Name'].AsString);
       end;
 
       if serverOptions['Compression'].AsBoolean then
@@ -272,10 +305,6 @@ begin
       serverOptions.Free;
    end;
 
-   FDWS.LoadCPUOptions(options['CPU']);
-
-   FDWS.LoadDWScriptOptions(options['DWScript']);
-
    FNotifier:=TdwsFileNotifier.Create(FPath, dnoDirectoryAndSubTree);
    FNotifier.OnFileChanged:=FileChanged;
 
@@ -302,6 +331,10 @@ end;
 //
 procedure THttpSys2WebServer.Shutdown;
 begin
+   FDWS.StopDWS;
+   FServer.Free;
+   FServer:=nil;
+   FDWS.Shutdown;
    FDWS.Finalize;
 end;
 
@@ -309,6 +342,7 @@ end;
 //
 procedure THttpSys2WebServer.Process(request : TWebRequest; response : TWebResponse);
 var
+   i : Integer;
    noTrailingPathDelimiter : Boolean;
    infoCache : TFileAccessInfoCache;
    fileInfo : TFileAccessInfo;
@@ -361,8 +395,13 @@ begin
          end;
          {$WARN SYMBOL_PLATFORM ON}
 
-         fileInfo.DWScript := StrEndsWith(fileInfo.CookedPathName, '.dws');
-
+         fileInfo.DWScript:=False;
+         for i:=0 to High(FDWSExtensions) do begin
+            if StrEndsWith(fileInfo.CookedPathName, FDWSExtensions[i]) then begin
+               fileInfo.DWScript:=True;
+               Break;
+            end;
+         end;
       end;
 
    end;
@@ -382,16 +421,45 @@ begin
    else
       if fileInfo.DWScript then begin
 
-         FDWS.HandleDWS(fileInfo.CookedPathName, request, response);
+         FDWS.HandleDWS(fileInfo.CookedPathName, request, response, []);
 
       end else begin
 
-         // http.sys will send the specified file from kernel mode
-         // THttpApiServer.Execute will return 404 if not found
-         response.ContentData:=UTF8Encode(fileInfo.CookedPathName);
-         response.ContentType:=HTTP_RESP_STATICFILE;
+         ProcessStaticFile(fileInfo.CookedPathName, request, response);
 
       end;
+   end;
+end;
+
+// ProcessStaticFile
+//
+procedure THttpSys2WebServer.ProcessStaticFile(const pathName : String; request : TWebRequest; response : TWebResponse);
+var
+   ifModifiedSince : TDateTime;
+   lastModified : TDateTime;
+begin
+   lastModified:=FileDateTime(pathName);
+   if lastModified=0 then begin
+      response.ContentData:='<h1>Not found</h1>';
+      response.StatusCode:=404;
+      Exit;
+   end;
+
+   ifModifiedSince:=request.IfModifiedSince;
+
+   // compare with a precision to the second and no more
+   if Round(lastModified*86400)>Round(ifModifiedSince*86400) then begin
+
+      // http.sys will send the specified file from kernel mode
+
+      response.ContentData:=UnicodeStringToUtf8(pathName);
+      response.ContentType:=HTTP_RESP_STATICFILE;
+      response.LastModified:=lastModified;
+
+   end else begin
+
+      response.StatusCode:=304;
+
    end;
 end;
 

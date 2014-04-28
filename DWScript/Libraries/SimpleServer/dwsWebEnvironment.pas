@@ -20,7 +20,7 @@ interface
 
 uses
    Classes, SysUtils, StrUtils, DateUtils,
-   dwsExprs, dwsUtils;
+   dwsExprs, dwsUtils, dwsWebUtils;
 
 type
    TWebRequestAuthentication = (
@@ -59,6 +59,7 @@ type
       private
          FCookies : TStrings;
          FQueryFields : TStrings;
+         FContentFields : TStrings;
          FCustom : TObject;
 
       protected
@@ -68,6 +69,7 @@ type
          function GetHeaders : TStrings; virtual; abstract;
          function GetCookies : TStrings;
          function GetQueryFields : TStrings;
+         function GetContentFields : TStrings;
 
          function GetUserAgent : String;
 
@@ -76,10 +78,16 @@ type
 
          function PrepareCookies : TStrings; virtual;
          function PrepareQueryFields : TStrings; virtual;
+         function PrepareContentFields : TStrings; virtual;
 
       public
          constructor Create;
          destructor Destroy; override;
+
+         procedure ResetCookies; inline;
+         procedure ResetQueryFields; inline;
+         procedure ResetContentFields; inline;
+         procedure ResetFields; inline;
 
          function Header(const headerName : String) : String;
 
@@ -89,7 +97,7 @@ type
          function URL : String; virtual; abstract;
          function Method : String; virtual; abstract;
          function MethodVerb : TWebRequestMethodVerb; virtual; abstract;
-         function Security : String; virtual; abstract;
+         function Security : String; virtual;
 
          function ContentData : RawByteString; virtual; abstract;
          function ContentType : RawByteString; virtual; abstract;
@@ -101,8 +109,12 @@ type
          property Headers : TStrings read GetHeaders;
          property Cookies : TStrings read GetCookies;
          property QueryFields : TStrings read GetQueryFields;
+         property ContentFields : TStrings read GetContentFields;
 
          function HasQueryField(const name : String) : Boolean;
+         function HasContentField(const name : String) : Boolean;
+
+         function IfModifiedSince : TDateTime;
 
          property Authentication : TWebRequestAuthentication read GetAuthentication;
          property AuthenticatedUser : String read GetAuthenticatedUser;
@@ -143,6 +155,7 @@ type
 
       protected
          procedure SetContentText(const textType : RawByteString; const text : String);
+         procedure SetLastModified(v : TDateTime);
          function GetCookies : TWebResponseCookies;
 
       public
@@ -164,6 +177,7 @@ type
          property Headers : TStrings read FHeaders;
          property Cookies : TWebResponseCookies read GetCookies;
          property Compression : Boolean read FCompression write FCompression;
+         property LastModified : TDateTime write SetLastModified;
    end;
 
    IWebEnvironment = interface
@@ -247,9 +261,48 @@ end;
 destructor TWebRequest.Destroy;
 begin
    FQueryFields.Free;
+   FContentFields.Free;
    FCookies.Free;
    FCustom.Free;
    inherited;
+end;
+
+// ResetCookies
+//
+procedure TWebRequest.ResetCookies;
+begin
+   if FCookies<>nil then begin
+      FCookies.Free;
+      FCookies:=nil;
+   end;
+end;
+
+// ResetQueryFields
+//
+procedure TWebRequest.ResetQueryFields;
+begin
+   if FQueryFields<>nil then begin
+      FQueryFields.Free;
+      FQueryFields:=nil;
+   end;
+end;
+
+// ResetContentFields
+//
+procedure TWebRequest.ResetContentFields;
+begin
+   if FContentFields<>nil then begin
+      FContentFields.Free;
+      FContentFields:=nil;
+   end;
+end;
+
+// ResetFields
+//
+procedure TWebRequest.ResetFields;
+begin
+   ResetQueryFields;
+   ResetContentFields;
 end;
 
 // PrepareCookies
@@ -270,7 +323,7 @@ begin
       if (p>base) and (next>p) then begin
          Result.Add(Trim(Copy(cookieField, base, p-base))
                     +'='
-                    +Copy(cookieField, p+1, next-p));
+                    +Copy(cookieField, p+1, pred(next-p)));
          base:=next+1;
       end else Break;
    end;
@@ -283,24 +336,20 @@ end;
 // PrepareQueryFields
 //
 function TWebRequest.PrepareQueryFields : TStrings;
-var
-   fields : String;
-   base, next : Integer;
+begin
+   Result:=TStringList.Create;
+   WebUtils.ParseURLEncoded(ScriptStringToRawByteString(QueryString), Result);
+end;
+
+// PrepareContentFields
+//
+function TWebRequest.PrepareContentFields : TStrings;
 begin
    Result:=TStringList.Create;
 
-   fields:=QueryString;
-   base:=1;
-   while True do begin
-      next:=PosEx('&', fields, base);
-      if next>base then begin
-         Result.Add(Copy(fields, base, next-base));
-         base:=next+1;
-      end else begin
-         if base<Length(fields) then
-            Result.Add(Copy(fields, base));
-         Break;
-      end;
+   if StrBeginsWithA(ContentType, 'application/x-www-form-urlencoded') then begin
+      // TODO: handle case where encoding isn't utf-8
+      WebUtils.ParseURLEncoded(ContentData, Result);
    end;
 end;
 
@@ -309,6 +358,13 @@ end;
 function TWebRequest.Header(const headerName : String) : String;
 begin
    Result:=Headers.Values[headerName];
+end;
+
+// Security
+//
+function TWebRequest.Security : String;
+begin
+   Result:='';
 end;
 
 // GetCookies
@@ -329,24 +385,39 @@ begin
    Result:=FQueryFields;
 end;
 
+// GetContentFields
+//
+function TWebRequest.GetContentFields : TStrings;
+begin
+   if FContentFields=nil then
+      FContentFields:=PrepareContentFields;
+   Result:=FContentFields;
+end;
+
 // HasQueryField
 //
 function TWebRequest.HasQueryField(const name : String) : Boolean;
-var
-   i, n : Integer;
-   fields : TStrings;
-   elem : String;
 begin
-   fields:=QueryFields;
-   for i:=0 to fields.Count-1 do begin
-      elem:=fields[i];
-      if StrBeginsWith(elem, name) then begin
-         n:=Length(name);
-         if (Length(elem)=n) or (elem[n+1]='=') then
-            Exit(True);
-      end;
-   end;
-   Result:=False;
+   Result:=WebUtils.HasFieldName(QueryFields, name);
+end;
+
+// HasContentField
+//
+function TWebRequest.HasContentField(const name : String) : Boolean;
+begin
+   Result:=WebUtils.HasFieldName(ContentFields, name);
+end;
+
+// IfModifiedSince
+//
+function TWebRequest.IfModifiedSince : TDateTime;
+var
+   v : String;
+begin
+   v:=Header('If-Modified-Since');
+   if v<>'' then
+      Result:=WebUtils.RFC822ToDateTime(v)
+   else Result:=0;
 end;
 
 // GetUserAgent
@@ -462,6 +533,13 @@ begin
    finally
       wobs.ReturnToPool;
    end;
+end;
+
+// SetLastModified
+//
+procedure TWebResponse.SetLastModified(v : TDateTime);
+begin
+   Headers.Add('Last-Modified='+WebUtils.DateTimeToRFC822(v));
 end;
 
 // SetContentText

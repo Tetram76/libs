@@ -43,13 +43,14 @@ type
          constructor Create(const parameters : array of String);
          destructor Destroy; override;
 
-         procedure BeginTransaction; virtual;
-         procedure Commit; virtual;
-         procedure Rollback; virtual;
-         function InTransaction : Boolean; virtual;
+         procedure BeginTransaction;
+         procedure Commit;
+         procedure Rollback;
+         function InTransaction : Boolean;
+         function CanReleaseToPool : String;
 
-         procedure Exec(const sql : String; const parameters : TData); virtual;
-         function Query(const sql : String; const parameters : TData) : IdwsDataSet; virtual;
+         procedure Exec(const sql : String; const parameters : TData);
+         function Query(const sql : String; const parameters : TData) : IdwsDataSet;
 
          function VersionInfoText : String;
    end;
@@ -86,6 +87,7 @@ type
          function AsInteger : Int64; override;
          function AsFloat : Double; override;
          function AsBoolean : Boolean; override;
+         function AsBlob : RawByteString; override;
    end;
 
 //   IdwsBlob = interface
@@ -211,6 +213,16 @@ end;
 function TdwsUIBDataBase.InTransaction : Boolean;
 begin
    Result:=FTransaction.InTransaction;
+end;
+
+// CanReleasetoPool
+//
+function TdwsUIBDataBase.CanReleasetoPool : String;
+begin
+   // Note: UIB can't have datasets open outside transactions
+   if InTransaction then
+      Result:='in transaction'
+   else Result:='';
 end;
 
 // Exec
@@ -401,6 +413,13 @@ end;
 function TdwsUIBDataField.AsBoolean : Boolean;
 begin
    Result:=TdwsUIBDataSet(DataSet).FQuery.Fields.AsBoolean[Index];
+end;
+
+// AsBlob
+//
+function TdwsUIBDataField.AsBlob : RawByteString;
+begin
+   Result:=TdwsUIBDataSet(DataSet).FQuery.Fields.AsRawByteString[Index];
 end;
 
 // ------------------------------------------------------------------

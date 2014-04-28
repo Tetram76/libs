@@ -18,14 +18,21 @@ unit DSimpleDWScript;
 
 interface
 
+{.$define EnablePas2Js}
+
 uses
    Windows, SysUtils, Classes, StrUtils,
    dwsFileSystem, dwsGlobalVarsFunctions, dwsExprList,
    dwsCompiler, dwsHtmlFilter, dwsComp, dwsExprs, dwsUtils, dwsXPlatform,
+   dwsJSONConnector, dwsJSON, dwsErrors, dwsFunctions, dwsSymbols,
+   dwsJIT, dwsJITx86,
+{$ifdef EnablePas2Js}
+   dwsJSFilter, dwsJSLibModule, dwsCodeGen,
+{$endif}
    dwsWebEnvironment, dwsSystemInfoLibModule, dwsCPUUsage, dwsWebLibModule,
    dwsDataBase, dwsDataBaseLibModule, dwsWebServerInfo, dwsWebServerLibModule,
-   dwsJSONConnector, dwsJSON, dwsErrors, dwsFunctions, dwsSymbols,
-   dwsJIT, dwsJITx86;
+   dwsBackgroundWorkersLibModule, dwsSynapseLibModule, dwsCryptoLibModule,
+   dwsEncodingLibModule;
 
 type
 
@@ -47,23 +54,32 @@ type
          function GetItemHashCode(const item1 : TCompiledProgram) : Integer; override;
    end;
 
+   PExecutingScript = ^TExecutingScript;
+   TExecutingScript = record
+      Exec : IdwsProgramExecution;
+      Prev, Next : PExecutingScript;
+   end;
+
    TLoadSourceCodeEvent = function (const fileName : String) : String of object;
+
+   TDWSHandlingOption = (optWorker);
+   TDWSHandlingOptions = set of TDWSHandlingOption;
 
    TSimpleDWScript = class(TDataModule)
       DelphiWebScript: TDelphiWebScript;
       dwsHtmlFilter: TdwsHtmlFilter;
       dwsGlobalVarsFunctions: TdwsGlobalVarsFunctions;
-      dwsRestrictedFileSystem: TdwsRestrictedFileSystem;
+      dwsCompileSystem: TdwsRestrictedFileSystem;
+      dwsRuntimeFileSystem: TdwsRestrictedFileSystem;
       procedure DataModuleCreate(Sender: TObject);
       procedure DataModuleDestroy(Sender: TObject);
 
       procedure DoInclude(const scriptName: String; var scriptSource: String);
       function  DoNeedUnit(const unitName : String; var unitSource : String) : IdwsUnit;
-      function  dwsFileIOFunctionsFileExistsFastEval(args: TExprBaseListExec): Variant;
-      function  dwsFileIOFunctionsDeleteFileFastEval(args: TExprBaseListExec): Variant;
 
    private
       FScriptTimeoutMilliseconds : Integer;
+      FWorkerTimeoutMilliseconds : Integer;
       FCPUUsageLimit : Integer;
       FCPUAffinity : Cardinal;
 
@@ -74,7 +90,9 @@ type
       FWebEnv : TdwsWebLib;
       FDataBase : TdwsDatabaseLib;
       FJSON : TdwsJSONLibModule;
+      FSynapse : TdwsSynapseLib;
       FWebServerLib : TdwsWebServerLib;
+      FBkgndWorkers : TdwsBackgroundWorkersLib;
 
       FCompiledPrograms : TCompiledProgramHash;
       FCompiledProgramsLock : TFixedCriticalSection;
@@ -83,9 +101,16 @@ type
       FCompilerLock : TFixedCriticalSection;
       FUseJIT : Boolean;
 
+      FExecutingScripts : PExecutingScript;
+      FExecutingScriptsLock : TMultiReadSingleWrite;
+
       FFlushProgList : TProgramList;
 
       FOnLoadSourceCode : TLoadSourceCodeEvent;
+
+      FStartupScriptName : String;
+      FShutdownScriptName : String;
+      FBackgroundFileSystem : IdwsFileSystem;
 
    protected
       procedure TryAcquireDWS(const fileName : String; var prog : IdwsProgram);
@@ -100,11 +125,15 @@ type
 
       function DoLoadSourceCode(const fileName : String) : String;
 
+      procedure DoBackgroundWork(const request : TWebRequest);
+
    public
       procedure Initialize(const serverInfo : IWebServerInfo);
       procedure Finalize;
 
-      procedure HandleDWS(const fileName : String; request : TWebRequest; response : TWebResponse);
+      procedure HandleDWS(const fileName : String; request : TWebRequest; response : TWebResponse;
+                          const options : TDWSHandlingOptions);
+      procedure StopDWS;
 
       procedure FlushDWSCache(const fileName : String = '');
 
@@ -112,14 +141,22 @@ type
       procedure LoadDWScriptOptions(options : TdwsJSONValue);
 
       function ApplyPathVariables(const aPath : String) : String;
+      procedure ApplyPathsVariables(paths : TdwsJSONValue; dest : TStrings);
+
+      procedure Startup;
+      procedure Shutdown;
 
       property ScriptTimeoutMilliseconds : Integer read FScriptTimeoutMilliseconds write FScriptTimeoutMilliseconds;
+      property WorkerTimeoutMilliseconds : Integer read FWorkerTimeoutMilliseconds write FWorkerTimeoutMilliseconds;
 
       property CPUUsageLimit : Integer read FCPUUsageLimit write SetCPUUsageLimit;
       property CPUAffinity : Cardinal read FCPUAffinity write SetCPUAffinity;
       property PathVariables : TStrings read FPathVariables;
 
       property OnLoadSourceCode : TLoadSourceCodeEvent read FOnLoadSourceCode write FOnLoadSourceCode;
+
+      property StartupScriptName : String read FStartupScriptName write FStartupScriptName;
+      property ShutdownScriptName : String read FShutdownScriptName write FShutdownScriptName;
   end;
 
 const
@@ -140,6 +177,7 @@ const
          // Script timeout in milliseconds
          // zero = no limit (not recommended)
          +'"TimeoutMSec": 3000,'
+         +'"WorkerTimeoutMSec": 30000,'
          // Size of stack growth chunks
          +'"StackChunkSize": 300,'
          // Maximum stack size per script
@@ -149,10 +187,16 @@ const
          // Library paths (outside of www folder)
          // By default, assumes a '.lib' subfolder of the folder where the exe is
          +'"LibraryPaths": ["%www%\\.lib"],'
+         // Paths which scripts are allowed to perform file operations on
+         +'"WorkPaths": ["%www%"],'
          // HTML Filter patterns
          +'"PatternOpen": "<?pas",'
          +'"PatternEval": "=",'
          +'"PatternClose": "?>",'
+         // Startup Script Name
+         +'"Startup": "%www%\\.startup.pas",'
+         // Shutdown Script Name
+         +'"Shutdown": "%www%\\.shutdown.pas",'
          // Turns on/off JIT compilation
          +'"JIT": false'
       +'}';
@@ -168,6 +212,11 @@ implementation
 {$R *.dfm}
 
 procedure TSimpleDWScript.DataModuleCreate(Sender: TObject);
+{$ifdef EnablePas2Js}
+var
+   jsCompiler : TDelphiWebScript;
+   jsFilter : TdwsJSFilter;
+{$endif}
 begin
    FPathVariables:=TFastCompareTextList.Create;
 
@@ -184,12 +233,41 @@ begin
    FJSON:=TdwsJSONLibModule.Create(Self);
    FJSON.Script:=DelphiWebScript;
 
+   FSynapse:=TdwsSynapseLib.Create(Self);
+   FSynapse.Script:=DelphiWebScript;
+
+   TdwsCryptoLib.Create(Self).dwsCrypto.Script:=DelphiWebScript;
+
+   TdwsEncodingLib.Create(Self).dwsEncoding.Script:=DelphiWebScript;
+
    FCompiledPrograms:=TCompiledProgramHash.Create;
    FCompiledProgramsLock:=TFixedCriticalSection.Create;
    FCompilerLock:=TFixedCriticalSection.Create;
    FDependenciesHash:=TDependenciesHash.Create;
 
+   FExecutingScriptsLock:=TMultiReadSingleWrite.Create;
+
    FScriptTimeoutMilliseconds:=3000;
+   FWorkerTimeoutMilliseconds:=30000;
+
+{$ifdef EnablePas2Js}
+   jsFilter:=TdwsJSFilter.Create(Self);
+   dwsHtmlFilter.SubFilter:=jsFilter;
+   jsCompiler:=TDelphiWebScript.Create(Self);
+   jsFilter.Compiler:=jsCompiler;
+   TdwsJSLibModule.Create(Self).Script:=jsCompiler;
+   jsCompiler.OnNeedUnit:=DoNeedUnit;
+   jsCompiler.OnInclude:=DoInclude;
+   jsCompiler.Config.CompilerOptions:=[
+      coOptimize, coAssertions, coSymbolDictionary, coContextMap, coExplicitUnitUses,
+      coVariablesAsVarOnly, coAllowClosures
+   ];
+   jsFilter.CodeGenOptions:=[
+      cgoNoRangeChecks, cgoNoCheckInstantiated, cgoNoCheckLoopStep,
+      cgoNoConditions, cgoObfuscate, cgoNoSourceLocations,
+      cgoSmartLink, cgoDeVirtualize
+   ];
+{$endif}
 end;
 
 procedure TSimpleDWScript.DataModuleDestroy(Sender: TObject);
@@ -201,11 +279,14 @@ begin
    FCompiledPrograms.Free;
    FDependenciesHash.Free;
    FPathVariables.Free;
+
+   FExecutingScriptsLock.Free;
 end;
 
 // HandleDWS
 //
-procedure TSimpleDWScript.HandleDWS(const fileName : String; request : TWebRequest; response : TWebResponse);
+procedure TSimpleDWScript.HandleDWS(const fileName : String; request : TWebRequest; response : TWebResponse;
+                                    const options : TDWSHandlingOptions);
 
    procedure Handle503(response : TWebResponse);
    begin
@@ -216,8 +297,10 @@ procedure TSimpleDWScript.HandleDWS(const fileName : String; request : TWebReque
 
    procedure Handle500(response : TWebResponse; msgs : TdwsMessageList);
    begin
-      response.StatusCode:=500;
-      response.ContentText['plain']:=msgs.AsInfo;
+      if response<>nil then begin
+         response.StatusCode:=500;
+         response.ContentText['plain']:=msgs.AsInfo;
+      end else OutputDebugString(msgs.AsInfo);
    end;
 
    procedure HandleScriptResult(response : TWebResponse; scriptResult : TdwsResult);
@@ -229,8 +312,8 @@ procedure TSimpleDWScript.HandleDWS(const fileName : String; request : TWebReque
 
 var
    prog : IdwsProgram;
-   exec : IdwsProgramExecution;
    webenv : TWebEnvironment;
+   executing : TExecutingScript;
 begin
    if (CPUUsageLimit>0) and not WaitForCPULimit then begin
       Handle503(response);
@@ -244,25 +327,62 @@ begin
    if prog.Msgs.HasErrors then
       Handle500(response, prog.Msgs)
    else begin
-      exec:=prog.CreateNewExecution;
+      executing.Exec:=prog.CreateNewExecution;
 
       webenv:=TWebEnvironment.Create;
       webenv.WebRequest:=request;
       webenv.WebResponse:=response;
-      exec.Environment:=webenv;
+      executing.Exec.Environment:=webenv;
       try
-         exec.BeginProgram;
-         exec.RunProgram(ScriptTimeoutMilliseconds);
-         exec.EndProgram;
+         executing.Exec.BeginProgram;
+
+         // insert into executing queue
+         executing.Prev:=nil;
+         FExecutingScriptsLock.BeginWrite;
+         executing.Next:=FExecutingScripts;
+         if FExecutingScripts<>nil then
+            FExecutingScripts.Prev:=@executing;
+         FExecutingScripts:=@executing;
+         FExecutingScriptsLock.EndWrite;
+
+         if optWorker in options then
+            executing.Exec.RunProgram(WorkerTimeoutMilliseconds)
+         else executing.Exec.RunProgram(ScriptTimeoutMilliseconds);
+
+         // extract from executing queue
+         FExecutingScriptsLock.BeginWrite;
+         if executing.Prev<>nil then
+            executing.Prev.Next:=executing.Next
+         else FExecutingScripts:=executing.Next;
+         if executing.Next<>nil then
+            executing.Next.Prev:=executing.Prev;
+         FExecutingScriptsLock.EndWrite;
+
+         executing.Exec.EndProgram;
       finally
-         exec.Environment:=nil;
+         executing.Exec.Environment:=nil;
       end;
 
-      if exec.Msgs.Count>0 then
-         Handle500(response, exec.Msgs)
-      else if response.ContentData='' then
-         HandleScriptResult(response, exec.Result);
+      if executing.Exec.Msgs.Count>0 then
+         Handle500(response, executing.Exec.Msgs)
+      else if (response<>nil) and (response.ContentData='') then
+         HandleScriptResult(response, executing.Exec.Result);
    end;
+end;
+
+// StopDWS
+//
+procedure TSimpleDWScript.StopDWS;
+var
+   p : PExecutingScript;
+begin
+   FExecutingScriptsLock.BeginRead;
+   p:=FExecutingScripts;
+   while p<>nil do begin
+      p^.Exec.Stop;
+      p:=p.Next;
+   end;
+   FExecutingScriptsLock.EndRead;
 end;
 
 // FlushDWSCache
@@ -270,14 +390,23 @@ end;
 procedure TSimpleDWScript.FlushDWSCache(const fileName : String = '');
 var
    oldHash : TCompiledProgramHash;
+   unitName : String;
 begin
+   // ignore .bak files
+   if StrEndsWith(fileName, '.bak') then exit;
+   // ignore .db folder
+   if Pos('/.db/', fileName)>0 then exit;
+
    FCompiledProgramsLock.Enter;
    try
       if fileName='' then begin
          FDependenciesHash.Clean;
          FCompiledPrograms.Clear;
       end else begin
-         FFlushProgList:=FDependenciesHash.Objects[LowerCase(ExtractFileName(fileName))];
+         unitName:=LowerCase(ExtractFileName(fileName));
+         FFlushProgList:=FDependenciesHash.Objects[unitName];
+         if FFlushProgList=nil then
+            FFlushProgList:=FDependenciesHash.Objects[ChangeFileExt(unitName, '')];
          if (FFlushProgList<>nil) and (FFlushProgList.Count>0) then begin
             oldHash:=FCompiledPrograms;
             try
@@ -315,34 +444,32 @@ end;
 //
 procedure TSimpleDWScript.LoadDWScriptOptions(options : TdwsJSONValue);
 var
-   dws, libs : TdwsJSONValue;
-   i : Integer;
-   path : String;
+   dws : TdwsJSONValue;
 begin
    dws:=TdwsJSONValue.ParseString(cDefaultDWScriptOptions);
    try
       dws.Extend(options);
 
       ScriptTimeoutMilliseconds:=dws['TimeoutMSec'].AsInteger;
+      WorkerTimeoutMilliseconds:=dws['WorkerTimeoutMSec'].AsInteger;
 
       DelphiWebScript.Config.MaxDataSize:=dws['StackMaxSize'].AsInteger;
       DelphiWebScript.Config.MaxRecursionDepth:=dws['MaxRecursionDepth'].AsInteger;
 
-      libs:=dws['LibraryPaths'];
-      dwsRestrictedFileSystem.Paths.Clear;
-      for i:=0 to libs.ElementCount-1 do begin
-         path:=libs.Elements[i].AsString;
-         if path<>'' then begin
-            path:=ApplyPathVariables(path);
-            dwsRestrictedFileSystem.Paths.Add(IncludeTrailingPathDelimiter(path));
-         end;
-      end;
+      dwsCompileSystem.Paths.Clear;
+      ApplyPathsVariables(dws['LibraryPaths'], dwsCompileSystem.Paths);
+
+      dwsRuntimeFileSystem.Paths.Clear;
+      ApplyPathsVariables(dws['WorkPaths'], dwsRuntimeFileSystem.Paths);
 
       dwsHtmlFilter.PatternOpen:=dws['PatternOpen'].AsString;
       dwsHtmlFilter.PatternClose:=dws['PatternClose'].AsString;
       dwsHtmlFilter.PatternEval:=dws['PatternEval'].AsString;
 
       FUseJIT:=dws['JIT'].AsBoolean;
+
+      FStartupScriptName:=ApplyPathVariables(dws['Startup'].AsString);
+      FShutdownScriptName:=ApplyPathVariables(dws['Shutdown'].AsString);
    finally
       dws.Free;
    end;
@@ -381,6 +508,10 @@ begin
       if prog<>nil then Exit;
 
       FHotPath:=ExtractFilePath(fileName);
+
+      if StrIEndsWith(fileName, '.pas') then
+         DelphiWebScript.Config.Filter:=nil
+      else DelphiWebScript.Config.Filter:=dwsHtmlFilter;
 
       prog:=DelphiWebScript.Compile(code);
 
@@ -492,6 +623,19 @@ begin
    else Result:=LoadTextFromFile(fileName);
 end;
 
+// DoBackgroundWork
+//
+procedure TSimpleDWScript.DoBackgroundWork(const request : TWebRequest);
+var
+   name : String;
+begin
+   if Assigned(FBackgroundFileSystem) then begin
+      name:=FBackgroundFileSystem.ValidateFileName(request.URL);
+      if name<>'' then
+         HandleDWS(name, request, nil, [optWorker]);
+   end;
+end;
+
 // Initialize
 //
 procedure TSimpleDWScript.Initialize(const serverInfo : IWebServerInfo);
@@ -499,12 +643,17 @@ begin
    FWebServerLib:=TdwsWebServerLib.Create(Self);
    FWebServerLib.Server:=serverInfo;
    FWebServerLib.dwsWebServer.Script:=DelphiWebScript;
+
+   FBkgndWorkers:=TdwsBackgroundWorkersLib.Create(Self);
+   FBkgndWorkers.dwsBackgroundWorkers.Script:=DelphiWebScript;
+   FBkgndWorkers.OnBackgroundWork:=DoBackgroundWork;
 end;
 
 // Finalize
 //
 procedure TSimpleDWScript.Finalize;
 begin
+   FreeAndNil(FBkgndWorkers);
    FreeAndNil(FWebServerLib);
 end;
 
@@ -524,6 +673,44 @@ begin
               +Copy(Result, p2+1);
       p1:=PosEx('%', Result, p1);
    end;
+end;
+
+// ApplyPathsVariables
+//
+procedure TSimpleDWScript.ApplyPathsVariables(paths : TdwsJSONValue; dest : TStrings);
+var
+   i : Integer;
+   path : String;
+begin
+   for i:=0 to paths.ElementCount-1 do begin
+      path:=paths.Elements[i].AsString;
+      if path<>'' then begin
+         path:=ApplyPathVariables(path);
+         dest.Add(IncludeTrailingPathDelimiter(path));
+      end;
+   end;
+end;
+
+// Startup
+//
+procedure TSimpleDWScript.Startup;
+begin
+   FBackgroundFileSystem:=dwsRuntimeFileSystem.AllocateFileSystem;
+
+   if StartupScriptName<>'' then
+      HandleDWS(StartupScriptName, nil, nil, [optWorker]);
+end;
+
+// Shutdown
+//
+procedure TSimpleDWScript.Shutdown;
+begin
+   FBackgroundFileSystem:=nil;
+
+   StopDWS;
+
+   if ShutdownScriptName<>'' then
+      HandleDWS(ShutdownScriptName, nil, nil, [optWorker]);
 end;
 
 // ------------------
@@ -554,11 +741,15 @@ procedure TDependenciesHash.RegisterProg(const cp : TCompiledProgram);
 var
    i : Integer;
    list : TScriptSourceList;
+   item : TScriptSourceItem;
 begin
    AddName(cp.Name, cp.Prog);
    list:=cp.Prog.SourceList;
-   for i:=0 to list.Count-1 do
-      AddName(list[i].NameReference, cp.Prog);
+   for i:=0 to list.Count-1 do begin
+      item:=list[i];
+      if not StrBeginsWith(item.NameReference, '*') then
+         AddName(item.NameReference, cp.Prog);
+   end;
 end;
 
 // AddName
@@ -575,26 +766,6 @@ begin
       Objects[lcName]:=list;
    end;
    list.Add(prog);
-end;
-
-// following stuff to be moved to own unit
-
-function TSimpleDWScript.dwsFileIOFunctionsDeleteFileFastEval(
-  args: TExprBaseListExec): Variant;
-var
-   fileName : String;
-begin
-   fileName:=ApplyPathVariables(args.AsString[0]);
-   Result:=DeleteFile(fileName);
-end;
-
-function TSimpleDWScript.dwsFileIOFunctionsFileExistsFastEval(
-  args: TExprBaseListExec): Variant;
-var
-   fileName : String;
-begin
-   fileName:=ApplyPathVariables(args.AsString[0]);
-   Result:=FileExists(fileName);
 end;
 
 end.

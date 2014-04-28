@@ -66,7 +66,12 @@ type
          property DataSym : TDataSymbol read FDataSym write FDataSym;
    end;
 
-   TIntVarExpr = class (TVarExpr)
+   TBaseTypeVarExpr = class (TVarExpr)
+      public
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
+   end;
+
+   TIntVarExpr = class (TBaseTypeVarExpr)
       public
          procedure AssignExpr(exec : TdwsExecution; Expr: TTypedExpr); override;
          procedure AssignValue(exec : TdwsExecution; const Value: Variant); override;
@@ -79,7 +84,7 @@ type
          function  EvalAsPInteger(exec : TdwsExecution) : PInt64; inline;
    end;
 
-   TFloatVarExpr = class sealed (TVarExpr)
+   TFloatVarExpr = class sealed (TBaseTypeVarExpr)
       protected
       public
          procedure AssignExpr(exec : TdwsExecution; Expr: TTypedExpr); override;
@@ -88,7 +93,7 @@ type
          function  EvalAsFloat(exec : TdwsExecution) : Double; override;
    end;
 
-   TStrVarExpr = class sealed (TVarExpr)
+   TStrVarExpr = class sealed (TBaseTypeVarExpr)
       protected
       public
          procedure AssignExpr(exec : TdwsExecution; Expr: TTypedExpr); override;
@@ -100,7 +105,7 @@ type
          procedure Append(exec : TdwsExecution; const value : UnicodeString);
    end;
 
-   TBoolVarExpr = class (TVarExpr)
+   TBoolVarExpr = class (TBaseTypeVarExpr)
       protected
       public
          procedure AssignExpr(exec : TdwsExecution; Expr: TTypedExpr); override;
@@ -110,10 +115,9 @@ type
          function  EvalAsInteger(exec : TdwsExecution) : Int64; override;
    end;
 
-   TObjectVarExpr = class (TVarExpr)
+   TObjectVarExpr = class (TBaseTypeVarExpr)
       public
          procedure AssignExpr(exec : TdwsExecution; Expr: TTypedExpr); override;
-         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
          procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); override;
          function EvalAsPIScriptObj(exec : TdwsExecution) : PIScriptObj; inline;
    end;
@@ -1106,19 +1110,23 @@ type
      function EvalAsBoolean(exec : TdwsExecution) : Boolean; override;
    end;
 
-   // a shl b
-   TShlExpr = class(TIntegerBinOpExpr)
-     function EvalAsInteger(exec : TdwsExecution) : Int64; override;
-   end;
-
-   // a shr b
-   TShrExpr = class(TIntegerBinOpExpr)
-      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+   // a shift b
+   TShiftExpr = class(TIntegerBinOpExpr)
       function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
 
+   // a shl b
+   TShlExpr = class(TShiftExpr)
+      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+   end;
+
+   // a shr b
+   TShrExpr = class(TShiftExpr)
+      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+   end;
+
    // a sar b
-   TSarExpr = class(TIntegerBinOpExpr)
+   TSarExpr = class(TShiftExpr)
      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
    end;
 
@@ -2037,6 +2045,8 @@ begin
       else Result:=TSelfVarExpr.Create(prog, dataSym)
    else if (typ is TClassSymbol) or (typ is TDynamicArraySymbol) then
       Result:=TObjectVarExpr.Create(prog, dataSym)
+   else if typ.Size=1 then
+      Result:=TBaseTypeVarExpr.Create(prog, dataSym)
    else Result:=TVarExpr.Create(prog, dataSym);
 end;
 
@@ -2129,6 +2139,17 @@ end;
 procedure TVarExpr.AssignValueAsScriptObj(exec : TdwsExecution; const value : IScriptObj);
 begin
    DataPtr[exec].AsInterface[0]:=Value;
+end;
+
+// ------------------
+// ------------------ TBaseTypeVarExpr ------------------
+// ------------------
+
+// EvalAsVariant
+//
+procedure TBaseTypeVarExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
+begin
+   exec.Stack.ReadValue(exec.Stack.BasePointer + FStackAddr, Result);
 end;
 
 // ------------------
@@ -2336,13 +2357,6 @@ end;
 procedure TObjectVarExpr.AssignExpr(exec : TdwsExecution; Expr: TTypedExpr);
 begin
    Expr.EvalAsVariant(exec, exec.Stack.Data[exec.Stack.BasePointer+FStackAddr]);
-end;
-
-// EvalAsVariant
-//
-procedure TObjectVarExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
-begin
-   exec.Stack.ReadValue(exec.Stack.BasePointer + FStackAddr, Result);
 end;
 
 // EvalAsScriptObj
@@ -4866,6 +4880,21 @@ begin
 end;
 
 // ------------------
+// ------------------ TShiftExpr ------------------
+// ------------------
+
+// Optimize
+//
+function TShiftExpr.Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr;
+begin
+   if Right.IsConstant and (Right.EvalAsInteger(exec)=0) then begin
+      Result:=Left;
+      FLeft:=nil;
+      Free;
+   end else Result:=Self;
+end;
+
+// ------------------
 // ------------------ TShlExpr ------------------
 // ------------------
 
@@ -4885,17 +4914,6 @@ end;
 function TShrExpr.EvalAsInteger(exec : TdwsExecution) : Int64;
 begin
    Result := FLeft.EvalAsInteger(exec) shr FRight.EvalAsInteger(exec);
-end;
-
-// Optimize
-//
-function TShrExpr.Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr;
-begin
-   if Right.IsConstant and (Right.EvalAsInteger(exec)=0) then begin
-      Result:=Right;
-      FRight:=nil;
-      Free;
-   end else Result:=Self;
 end;
 
 // ------------------
@@ -5015,7 +5033,7 @@ begin
    if FRight.ClassType=TArrayConstantExpr then
       TArrayConstantExpr(FRight).Prepare(Prog, FLeft.Typ.Typ);
 
-   FRight:=TConvExpr.WrapWithConvCast(prog, ScriptPos, FLeft.Typ, FRight, True);
+   FRight:=TConvExpr.WrapWithConvCast(prog, ScriptPos, FLeft.Typ, FRight, CPE_AssignIncompatibleTypes);
 end;
 
 // Optimize
