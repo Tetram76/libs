@@ -3,11 +3,11 @@
 Author:       François PIETTE
 Description:  TWSocket class encapsulate the Windows Socket paradigm
 Creation:     April 1996
-Version:      8.06
+Version:      8.09
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1996-2013 by François PIETTE
+Legal issues: Copyright (C) 1996-2014 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
@@ -928,7 +928,7 @@ May 2012 - V8.00 - Arno added FireMonkey cross platform support with POSIX/MacOS
                      WSocketIsIPv4, WSocketIsIP (finds SocketFamily from string)
 Aug 5, 2012 V8.01 - Angus added WSocketIsIPEx (finds SocketFamily from string,
                      including AnyIPv4/IPv6), added SocketFamilyNames
-Feb 16. 2013, V8.02 Angus - WSocketResolveIp no exception for IPv6 lookups
+Feb 16. 2013 V8.02 Angus - WSocketResolveIp no exception for IPv6 lookups
 Mar 16, 2013 V8.03 Arno added new property LocalAddr6. This is a breaking change
                    if you ever assigned some IPv6 to property LocalAddr in
                    existing code. LocalAddr6 should be assigned a local IPv6,
@@ -942,6 +942,10 @@ Jun 03, 2013 V8.05 Eric Fleming Bonilha found a serious bug with closing the
                    socket. The problem was that winsock may continue to post
                    notification messages after closesocket() has been called.
 Aug 18, 2013 V8.06 Arno added some default property specifiers.
+Oct 22. 2013 V8.07 Angus - Added SendTo6 and ReceiveFrom6 for IPv6 UDP
+Dec 24. 2013 V8.08 Francois - fixed range check error in various PostMessages
+Feb 12, 2014 V8.09 Angus - fixed TX509Base.PostConnectionCheck to check multiple
+                   DNS or IP entries
 }
 
 {
@@ -1085,8 +1089,8 @@ type
   TSocketFamily = (sfAny, sfAnyIPv4, sfAnyIPv6, sfIPv4, sfIPv6);
 
 const
-  WSocketVersion            = 806;
-  CopyRight    : String     = ' TWSocket (c) 1996-2013 Francois Piette V8.06 ';
+  WSocketVersion            = 809;
+  CopyRight    : String     = ' TWSocket (c) 1996-2014 Francois Piette V8.09 ';
   WSA_WSOCKET_TIMEOUT       = 12001;
   DefaultSocketFamily       = sfIPv4;
 
@@ -1599,6 +1603,10 @@ type  { <== Required to make D7 code explorer happy, AG 05/24/2007 }
                             BufferSize  : Integer;
                             var From    : TSockAddr;
                             var FromLen : Integer) : Integer; virtual;
+    function    ReceiveFrom6(Buffer      : TWSocketData;   { V8.07 }
+                             BufferSize  : Integer;
+                             var From    : TSockAddrIn6;
+                             var FromLen : Integer) : Integer; virtual;
     function    PeekData(Buffer : TWSocketData; BufferSize: Integer) : Integer;
     function    Send(Data : TWSocketData; Len : Integer) : Integer; overload; virtual;
     function    Send(DataByte : Byte) : Integer; overload; virtual;
@@ -1606,6 +1614,10 @@ type  { <== Required to make D7 code explorer happy, AG 05/24/2007 }
                        DestLen    : Integer;
                        Data       : TWSocketData;
                        Len        : Integer) : Integer; virtual;
+    function    SendTo6(Dest       : TSockAddrIn6;       { V8.07 }
+                        DestLen    : Integer;
+                        Data       : TWSocketData;
+                        Len        : Integer) : Integer; virtual;
     function    SendStr(const Str : RawByteString) : Integer; {$IFDEF COMPILER12_UP} overload; {$ENDIF} virtual;
 {$IFDEF COMPILER12_UP}
     function    SendStr(const Str : UnicodeString; ACodePage: LongWord) : Integer; overload; virtual;
@@ -6746,6 +6758,21 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomWSocket.ReceiveFrom6(       { V8.07 }
+    Buffer      : TWSocketData;
+    BufferSize  : Integer;
+    var From    : TSockAddrIn6;
+    var FromLen : Integer) : Integer;
+begin
+    Result := DoRecvFrom(FHSocket, Buffer, BufferSize, 0, PSockAddrIn(@From)^, FromLen);
+    if Result < 0 then
+        FLastError := WSocket_Synchronized_WSAGetLastError
+    else
+        FReadCount := FReadCount + Result;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 function TCustomWSocket.PeekData(Buffer : TWSocketData; BufferSize: Integer) : Integer;
 begin
     Result := DoRecv(Buffer, BufferSize, MSG_PEEK);
@@ -6772,7 +6799,7 @@ end;
 
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
-{ This function should be used with UDP only. Use Send for TCP.             }
+{ This function should be used with UDP IPv4 only. Use Send for TCP.        }
 function TCustomWSocket.SendTo(
     Dest       : TSockAddr;
     DestLen    : Integer;
@@ -6788,7 +6815,30 @@ begin
         if bAllSent and (FType = SOCK_DGRAM) then
             PostMessage(Handle,
                         FMsg_WM_ASYNCSELECT,
-                        FHSocket,
+                        WParam(FHSocket),            { V8.08 }
+                        IcsMakeLong(FD_WRITE, 0));
+    end;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ This function should be used with UDP IPv6 only. Use Send for TCP.        }
+function TCustomWSocket.SendTo6(      { V8.07 }
+    Dest       : TSockAddrIn6;
+    DestLen    : Integer;
+    Data       : TWSocketData;
+    Len        : Integer) : Integer;
+begin
+    Result := WSocket_Synchronized_SendTo(FHSocket, Data, Len, FSendFlags,
+                                                   PSockAddrIn(@Dest)^, DestLen);
+    if Result > 0 then begin
+        FWriteCount := FWriteCount + Result;  { 7.24 }
+        TriggerSendData(Result);
+        { Post FD_WRITE message to have OnDataSent event triggered }
+        if bAllSent and (FType = SOCK_DGRAM) then
+            PostMessage(Handle,
+                        FMsg_WM_ASYNCSELECT,
+                        WParam(FHSocket),            { V8.08 }
                         IcsMakeLong(FD_WRITE, 0));
     end;
 end;
@@ -6801,7 +6851,7 @@ begin
 { Write('S', Moulin[MoulinCnt], #13); }
     if FType = SOCK_DGRAM then
         Result := WSocket_Synchronized_SendTo(FHSocket, Data, Len, FSendFlags,
-                                              PSockAddr(@Fsin)^, SizeOfAddr(Fsin))
+                                                 PSockAddr(@Fsin)^, SizeOfAddr(Fsin))
     else
         Result := WSocket_Synchronized_Send(FHSocket, Data, Len, FSendFlags);
     if Result > 0 then begin
@@ -6956,7 +7006,7 @@ begin
         { the send function.                                               }
         PostMessage(Handle,
                     FMsg_WM_ASYNCSELECT,
-                    FHSocket,
+                    WParam(FHSocket),            { V8.08 }
                     IcsMakeLong(FD_WRITE, 0));
     end;
 end;
@@ -14923,7 +14973,8 @@ begin
             for I := 0 to Li.Count -1 do begin
                 if (Pos('IP',  IcsUpperCase(Li.Names[I])) = 1) or
                    (Pos('DNS', IcsUpperCase(Li.Names[I])) = 1) then begin
-                    Mask := TMask.Create(Li.Values[Li.Names[I]]);
+            {        Mask := TMask.Create(Li.Values[Li.Names[I]]); only checks first name, ignores alternatives  }
+                    Mask := TMask.Create(Copy(Li[I], Length(Li.Names[I])+2,999)); { V8.09 }
                     try
                         Result := Mask.Matches(HostOrIP);
                         if Result then Exit;
@@ -15695,11 +15746,11 @@ begin
     if not (Event in FPendingSslEvents) then begin
         case Event of
             sslFdRead  :  Result := PostMessage(Handle, FMsg_WM_SSL_ASYNCSELECT,
-                                          FHSocket, IcsMakeLong(FD_READ, ErrCode));
+                                        WParam(FHSocket), IcsMakeLong(FD_READ, ErrCode));  { V8.08 }
             sslFdWrite :  Result := PostMessage(Handle, FMsg_WM_SSL_ASYNCSELECT,
-                                         FHSocket, IcsMakeLong(FD_WRITE, ErrCode));
+                                        WParam(FHSocket), IcsMakeLong(FD_WRITE, ErrCode)); { V8.08 }
             sslFdClose :  Result := PostMessage(Handle, FMsg_WM_SSL_ASYNCSELECT,
-                                         FHSocket, IcsMakeLong(FD_CLOSE, ErrCode));
+                                        WParam(FHSocket), IcsMakeLong(FD_CLOSE, ErrCode)); { V8.08 }
         end;
         if Result then
             FPendingSslEvents := FPendingSslEvents + [Event];

@@ -2,7 +2,7 @@ object frmPemTool2: TfrmPemTool2
   Left = 436
   Top = 237
   Width = 513
-  Height = 332
+  Height = 339
   Caption = 'frmPemTool2'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -29,5 +29,6 @@ object frmPemTool2: TfrmPemTool2
     ReadOnly = True
     ScrollBars = ssBoth
     TabOrder = 0
+    OnDblClick = Memo1DblClick
   end
 end

@@ -213,7 +213,7 @@ begin
       {$IFNDEF BCB}
         TSslWSocketThrdServer,
       {$ENDIF}
-      TSslSmtpServer,
+        TSslSmtpServer,
     {$ENDIF VCL}
     {$IFNDEF NO_DYNLOCK}
       TSslDynamicLock,
