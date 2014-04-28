@@ -20,7 +20,7 @@ interface
 
 uses
    SysUtils,
-   dwsExprs, dwsUtils, dwsStack, dwsXplatform, dwsDataContext;
+   dwsExprs, dwsUtils, dwsStack, dwsXPlatform, dwsDataContext;
 
 // Simple database abstraction interfaces and optional base classes for DWS
 // exposes transaction & forward-only cursor, which are all one really needs :p
@@ -47,6 +47,8 @@ type
       procedure Commit;
       procedure Rollback;
       function InTransaction : Boolean;
+      // if can't should return string with descriptive reason
+      function CanReleaseToPool : String;
 
       procedure Exec(const sql : String; const parameters : TData);
       function Query(const sql : String; const parameters : TData) : IdwsDataSet;
@@ -75,6 +77,7 @@ type
       function AsInteger : Int64;
       function AsFloat : Double;
       function AsBoolean : Boolean;
+      function AsBlob : RawByteString;
    end;
 
    IdwsBlob = interface
@@ -157,6 +160,7 @@ type
          function AsInteger : Int64; virtual; abstract;
          function AsFloat : Double; virtual; abstract;
          function AsBoolean : Boolean; virtual;
+         function AsBlob : RawByteString; virtual; abstract;
    end;
 
 // ------------------------------------------------------------------
@@ -219,7 +223,6 @@ constructor TdwsDataSet.Create(db : TdwsDataBase);
 begin
    inherited Create;
    FDataBase:=db;
-   FDataBase.IncRefCount;
 end;
 
 // Destroy
@@ -227,7 +230,6 @@ end;
 destructor TdwsDataSet.Destroy;
 begin
    SetLength(FFields, 0);
-   FDataBase.DecRefCount;
    inherited;
 end;
 

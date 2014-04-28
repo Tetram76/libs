@@ -285,6 +285,7 @@ const
   CPE_IncompatibleParameterType = 'Type of parameter %d don''t match the declaration';
   CPE_InvalidResultType = 'Invalid type "%s" for function result';
   CPE_NoResultTypeExpected = 'No result type expected';
+  CPE_DuplicateExternal = 'An external function named "%s" is already declared';
 
   CPE_NameAlreadyExists = 'Name "%s" already exists';
   CPE_NameIsReserved = 'Name "%s" is reserved';
@@ -541,6 +542,8 @@ const
 
   RTE_UnHandledExternalCall = 'Unhandled call to external symbol "%s" from%s';
 
+  RTE_UnauthorizedFilePath = 'Unauthorized file path: "%s"';
+
   // Connectors
   RTE_ConnectorCallFailed = 'Connector Call "%s" failed';
   RTE_ConnectorReadError = 'ConnectorRead error';
@@ -617,6 +620,8 @@ const
   UNT_InvalidArrayBounds = 'LowBound is higher than HighBound';
 
   UNT_CantChangeUnitname = 'Cannot change UnitName while property "Script" is assigned';
+
+  UNT_InstancesNotSupportedInStaticUnits = 'Instances are not supported in static units';
 
   ADP_ChainIsFormingLoop = 'Adapter chain is forming a loop';
   ADP_IncompatibleAdapters = 'Incompatible Adapters: %s -> %s';

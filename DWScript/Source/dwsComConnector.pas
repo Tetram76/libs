@@ -25,12 +25,12 @@ interface
 
 uses
    Variants, SysUtils, ComObj, ActiveX,
-   dwsUtils, dwsDataContext, dwsExprList,
+   dwsUtils, dwsDataContext, dwsExprList, dwsConnectorSymbols,
    dwsStrings, dwsFunctions, dwsStack, dwsMagicExprs,
-   dwsExprs, dwsComp, dwsSymbols, dwsOperators;
+   dwsExprs, dwsComp, dwsSymbols, dwsOperators, dwsUnitSymbols;
 
 const
-   COM_ConnectorCaption = 'COM Connector 1.0';
+   COM_ConnectorCaption = 'COM Connector 2.0';
    COM_UnitName = 'COM';
 
 type
@@ -42,7 +42,7 @@ type
 
       protected
          function GetUnitName: UnicodeString; override;
-         procedure AddUnitSymbols(Table: TSymbolTable; operators : TOperators); override;
+         procedure AddUnitSymbols(systemTable : TSystemSymbolTable; Table: TSymbolTable; operators : TOperators); override;
 
       published
          property StaticSymbols;
@@ -340,6 +340,7 @@ type
          function ComVariantSymbol : TTypeSymbol;
 
          function ConnectorCaption : UnicodeString;
+         function AutoVarParams : Boolean;
          function AcceptsParams(const params: TConnectorParamArray) : Boolean;
          function HasMethod(const aMethodName: UnicodeString; const aParams: TConnectorParamArray;
                             var TypSym: TTypeSymbol): IConnectorCall;
@@ -355,7 +356,7 @@ type
          constructor Create(Table: TSymbolTable);
    end;
 
-   TComConnectorCall = class(TInterfacedSelfObject, IUnknown, IConnectorCall)
+   TComConnectorCall = class(TInterfacedSelfObject, IUnknown, IConnectorCall, IConnectorArgsCall)
       private
          FMethodName : WideString;
          FPMethodName : PWideString;
@@ -369,7 +370,7 @@ type
          constructor Create(const aMethodName: UnicodeString; aMethodType: Cardinal);
   end;
 
-   TComConnectorMember = class(TInterfacedSelfObject, IUnknown, IConnectorMember)
+   TComConnectorMember = class(TInterfacedSelfObject, IUnknown, IConnectorMember, IConnectorDataMember)
       private
          FMemberName : WideString;
          FPMemberName : PWideString;
@@ -391,23 +392,43 @@ type
          procedure InitData(const aData: TData; Offset: Integer); override;
    end;
 
-   IComVariantArrayLength = interface(IConnectorMember)
+   TComVariantArrayMember = class (TInterfacedSelfObject, IConnectorMember)
+      procedure Write(const Base: Variant; const Data: TData);
+      procedure FastWrite(const exec : TdwsExecution; const base, value : TExprBase);
    end;
-   IComVariantArrayHighBound = interface(IConnectorMember)
+
+   TComVariantArrayLengthMember = class (TComVariantArrayMember, IConnectorFastMember)
+      procedure FastRead(const exec : TdwsExecution; const base : TExprBase; var result : Variant);
    end;
-   IComVariantArrayLowBound = interface(IConnectorMember)
+   TComVariantArrayHighBoundMember = class (TComVariantArrayMember, IConnectorDataMember)
+      function Read(const base: Variant): TData;
+      procedure Write(const Base: Variant; const Data: TData);
    end;
-   IComVariantArrayDimCount = interface(IConnectorMember)
+   TComVariantArrayLowBoundMember = class (TComVariantArrayMember, IConnectorDataMember)
+      function Read(const base: Variant): TData;
    end;
-   IComVariantArrayReadIndex = interface(IConnectorCall)
+   TComVariantArrayDimCountMember = class (TComVariantArrayMember, IConnectorDataMember)
+      function Read(const base: Variant): TData;
    end;
-   IComVariantArrayWriteIndex = interface(IConnectorCall)
+
+   TComVariantArrayCall = class (TInterfacedSelfObject, IConnectorCall)
+      function NeedDirectReference : Boolean;
    end;
-   IComVariantArrayLengthCall = interface(IConnectorCall)
+
+   TComVariantArrayReadIndex = class (TComVariantArrayCall, IConnectorArgsCall)
+      function Call(const Base: Variant; const Args: TConnectorArgs): TData;
    end;
-   IComVariantArrayHighBoundCall = interface(IConnectorCall)
+   TComVariantArrayWriteIndex = class (TComVariantArrayCall, IConnectorArgsCall)
+      function Call(const Base: Variant; const Args: TConnectorArgs): TData;
    end;
-   IComVariantArrayLowBoundCall = interface(IConnectorCall)
+   TComVariantArrayLengthCall = class (TComVariantArrayCall, IConnectorFastCall)
+      procedure FastCall(const args : TExprBaseListExec; var result : Variant);
+   end;
+   TComVariantArrayHighBoundCall = class (TComVariantArrayCall, IConnectorFastCall)
+      procedure FastCall(const args : TExprBaseListExec; var result : Variant);
+   end;
+   TComVariantArrayLowBoundCall = class (TComVariantArrayCall, IConnectorFastCall)
+      procedure FastCall(const args : TExprBaseListExec; var result : Variant);
    end;
 
    TComVariantArrayEnumerator = class (TInterfacedSelfObject)
@@ -422,34 +443,23 @@ type
    end;
 
    TComVariantArrayType = class (TInterfacedSelfObject, IUnknown, IConnectorType,
-                                 IComVariantArrayReadIndex, IComVariantArrayWriteIndex,
-                                 IComVariantArrayLength, IComVariantArrayDimCount,
-                                 IComVariantArrayHighBound, IComVariantArrayLowBound,
-                                 IComVariantArrayLowBoundCall, IComVariantArrayHighBoundCall,
-                                 IComVariantArrayLengthCall,
                                  IConnectorEnumerator)
       private
-         FTable: TSymbolTable;
+         FTable: TSystemSymbolTable;
+         FLengthMember : IConnectorMember;
+         FLengthCall : IConnectorCall;
+         FLowBoundMember, FHighBoundMember : IConnectorMember;
+         FLowBoundCall, FHighBoundCall : IConnectorCall;
+         FDimCountMember : IConnectorMember;
+         FArrayWriteIndex, FArrayReadIndex : IConnectorCall;
 
       protected
-         function ReadLength(const Base: Variant): TData; overload;
-         function ReadLowBound(const Base: Variant): TData; overload;
-         function ReadHighBound(const Base: Variant): TData; overload;
-         function ReadDimCount(const Base: Variant): TData;
-         procedure WriteHighBound(const Base: Variant; const Data: TData);
-         function ReadIndex(const Base: Variant; const Args: TConnectorArgs): TData;
-         function WriteIndex(const Base: Variant; const Args: TConnectorArgs): TData;
-         function ReadLength(const Base: Variant; const Args: TConnectorArgs): TData; overload;
-         function ReadLowBound(const Base: Variant; const Args: TConnectorArgs): TData; overload;
-         function ReadHighBound(const Base: Variant; const Args: TConnectorArgs): TData; overload;
-
          function NewEnumerator(const base : Variant; const args : TConnectorArgs) : IUnknown;
          function Step(const enumerator : IInterface; var data : TData) : Boolean;
 
-         function NeedDirectReference : Boolean;
-
          { IConnectorType }
          function ConnectorCaption: UnicodeString;
+         function AutoVarParams : Boolean;
          function AcceptsParams(const params: TConnectorParamArray) : Boolean;
          function HasMethod(const MethodName: UnicodeString; const Params: TConnectorParamArray;
                             var TypSym: TTypeSymbol): IConnectorCall;
@@ -458,27 +468,12 @@ type
                          var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorCall;
          function HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
 
-         { IConnectorCall }
-         function IComVariantArrayReadIndex.Call = ReadIndex;
-         function IComVariantArrayWriteIndex.Call = WriteIndex;
-         function IComVariantArrayLowBoundCall.Call = ReadLowBound;
-         function IComVariantArrayHighBoundCall.Call = ReadHighBound;
-         function IComVariantArrayLengthCall.Call = ReadLength;
-
-         { IConnectorMember }
-         function IComVariantArrayLength.Read = ReadLength;
-         function IComVariantArrayHighBound.Read = ReadHighBound;
-         function IComVariantArrayLowBound.Read = ReadLowBound;
-         function IComVariantArrayDimCount.Read = ReadDimCount;
-         procedure IComVariantArrayHighBound.Write = WriteHighBound;
-         procedure Write(const Base: Variant; const Data: TData);
-
          { IConnectorEnumerator }
          function IConnectorEnumerator.NewEnumerator = NewEnumerator;
          function IConnectorEnumerator.Step = Step;
 
       public
-         constructor Create(Table: TSymbolTable);
+         constructor Create(Table: TSystemSymbolTable);
    end;
 
 // ------------------
@@ -505,39 +500,36 @@ begin
   Result := COM_UnitName;
 end;
 
-procedure TdwsComConnector.AddUnitSymbols(Table: TSymbolTable; operators : TOperators);
+procedure TdwsComConnector.AddUnitSymbols(systemTable : TSystemSymbolTable; Table: TSymbolTable; operators : TOperators);
 var
-  v: Variant;
-  VariantSym: TTypeSymbol;
-  ComVariantSym: TTypeSymbol;
+   v : Variant;
+   comVariantSym : TTypeSymbol;
 begin
-  VariantSym := Table.FindTypeSymbol('Variant', cvMagic);
+   // Datatype of com-objects
+   comVariantSym := TConnectorSymbol.Create('ComVariant', TComConnectorType.Create(Table));
+   Table.AddSymbol(comVariantSym);
+   Table.AddSymbol(TAliasSymbol.Create('OleVariant', comVariantSym));
 
-  // Datatype of com-objects
-  ComVariantSym := TConnectorSymbol.Create('ComVariant', TComConnectorType.Create(Table));
-  Table.AddSymbol(ComVariantSym);
-  Table.AddSymbol(TAliasSymbol.Create('OleVariant', ComVariantSym));
+   // Optional parameter for dispatch interfaces with unnamed arguments
+   v := 0;
+   PVarData(@v).VType := varError;
+   Table.AddSymbol(TConstSymbol.CreateValue('ComOpt', systemTable.TypVariant, v));
 
-  // Optional parameter for dispatch interfaces with unnamed arguments
-  v := 0;
-  PVarData(@v).VType := varError;
-  Table.AddSymbol(TConstSymbol.CreateValue('ComOpt', VariantSym, v));
+   // Function to create a new COM-Object
+   TCreateOleObjectFunc.Create(Table, 'CreateOleObject', ['ClassName', SYS_STRING], 'ComVariant');
 
-  // Function to create a new COM-Object
-  TCreateOleObjectFunc.Create(Table, 'CreateOleObject', ['ClassName', SYS_STRING], 'ComVariant');
+   TClassIDToProgIDFunc.Create(Table, 'ClassIDToProgID', ['ClassID', SYS_STRING], SYS_STRING);
+   TGetActiveOleObjectFunc.Create(Table, 'GetActiveOleObject', ['ClassName', SYS_STRING], 'ComVariant');
 
-  TClassIDToProgIDFunc.Create(Table, 'ClassIDToProgID', ['ClassID', SYS_STRING], SYS_STRING);
-  TGetActiveOleObjectFunc.Create(Table, 'GetActiveOleObject', ['ClassName', SYS_STRING], 'ComVariant');
+   TOleInt16Func.Create(Table, 'OleInt16', ['v', SYS_INTEGER], 'ComVariant', [iffStateLess]);
+   TOleInt32Func.Create(Table, 'OleInt32', ['v', SYS_INTEGER], 'ComVariant', [iffStateLess]);
+   TOleInt64Func.Create(Table, 'OleInt64', ['v', SYS_INTEGER], 'ComVariant', [iffStateLess]);
+   TOleCurrencyFunc.Create(Table, 'OleCurrency', ['v', SYS_VARIANT], 'ComVariant', [iffStateLess]);
+   TOleDateFunc.Create(Table, 'OleDate', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
+   TOleSingleFunc.Create(Table, 'OleSingle', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
+   TOleDoubleFunc.Create(Table, 'OleDouble', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
 
-  TOleInt16Func.Create(Table, 'OleInt16', ['v', SYS_INTEGER], 'ComVariant', [iffStateLess]);
-  TOleInt32Func.Create(Table, 'OleInt32', ['v', SYS_INTEGER], 'ComVariant', [iffStateLess]);
-  TOleInt64Func.Create(Table, 'OleInt64', ['v', SYS_INTEGER], 'ComVariant', [iffStateLess]);
-  TOleCurrencyFunc.Create(Table, 'OleCurrency', ['v', SYS_VARIANT], 'ComVariant', [iffStateLess]);
-  TOleDateFunc.Create(Table, 'OleDate', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
-  TOleSingleFunc.Create(Table, 'OleSingle', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
-  TOleDoubleFunc.Create(Table, 'OleDouble', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
-
-  Table.AddSymbol(TComVariantArraySymbol.Create('ComVariantArray', TComVariantArrayType.Create(Table), VariantSym));
+   Table.AddSymbol(TComVariantArraySymbol.Create('ComVariantArray', TComVariantArrayType.Create(systemTable), systemTable.TypVariant));
 end;
 
 // ------------------
@@ -666,6 +658,13 @@ end;
 function TComConnectorType.ConnectorCaption: UnicodeString;
 begin
   Result := COM_ConnectorCaption;
+end;
+
+// AutoVarParams
+//
+function TComConnectorType.AutoVarParams : Boolean;
+begin
+   Result:=True;
 end;
 
 constructor TComConnectorType.Create(Table: TSymbolTable);
@@ -845,8 +844,28 @@ end;
 // ------------------ TComVariantArrayType ------------------
 // ------------------
 
-function TComVariantArrayType.ReadIndex(const Base: Variant;
-  const Args: TConnectorArgs): TData;
+constructor TComVariantArrayType.Create(Table: TSystemSymbolTable);
+begin
+   inherited Create;
+   FTable := Table;
+
+   FLengthMember := TComVariantArrayLengthMember.Create;
+   FLengthCall := TComVariantArrayLengthCall.Create;
+
+   FLowBoundMember := TComVariantArrayLowBoundMember.Create;
+   FLowBoundCall := TComVariantArrayLowBoundCall.Create;
+
+   FHighBoundMember := TComVariantArrayHighBoundMember.Create;
+   FHighBoundCall := TComVariantArrayHighBoundCall.Create;
+
+   FDimCountMember := TComVariantArrayDimCountMember.Create;
+
+   FArrayWriteIndex := TComVariantArrayWriteIndex.Create;
+   FArrayReadIndex := TComVariantArrayReadIndex.Create;
+
+end;
+
+function TComVariantArrayReadIndex.Call(const Base: Variant; const Args: TConnectorArgs): TData;
 var
   Indices: array of Integer;
   x, ArgCount: Integer;
@@ -859,8 +878,7 @@ begin
   VarCopy(Result[0], VarArrayGet(Base, Indices));
 end;
 
-function TComVariantArrayType.WriteIndex(const Base: Variant;
-  const Args: TConnectorArgs): TData;
+function TComVariantArrayWriteIndex.Call(const Base: Variant; const Args: TConnectorArgs): TData;
 var
   BaseRef: PVariant;
   x, ArgCount: Integer;
@@ -879,10 +897,11 @@ begin
   Result := 'ComVariantArray';
 end;
 
-constructor TComVariantArrayType.Create(Table: TSymbolTable);
+// AutoVarParams
+//
+function TComVariantArrayType.AutoVarParams : Boolean;
 begin
-  inherited Create;
-  FTable := Table;
+   Result:=True;
 end;
 
 function TComVariantArrayType.HasIndex(Const PropName: UnicodeString; const Params: TConnectorParamArray;
@@ -916,12 +935,12 @@ begin
   if IsWrite then
   begin
     TypSym := nil;
-    Result := IComVariantArrayWriteIndex(Self);
+    Result := FArrayWriteIndex;
   end
   else
   begin
     TypSym := SymVariant;
-    Result := IComVariantArrayReadIndex(Self);
+    Result := FArrayReadIndex;
   end;
 end;
 
@@ -929,7 +948,7 @@ end;
 //
 function TComVariantArrayType.HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
 begin
-   typSym := FTable.FindTypeSymbol(SYS_VARIANT, cvMagic);
+   typSym := FTable.TypVariant;
    Result := IConnectorEnumerator(Self);
 end;
 
@@ -938,8 +957,8 @@ function TComVariantArrayType.HasMember(const MemberName: UnicodeString;
 begin
   if UnicodeSameText(MemberName, 'high') then
   begin
-    Result := IComVariantArrayHighBound(Self);
-    typSym := FTable.FindTypeSymbol(SYS_INTEGER, cvMagic);
+    Result := FHighBoundMember;
+    typSym := FTable.TypInteger;
   end
   else if IsWrite then
     Result := nil
@@ -947,18 +966,18 @@ begin
   begin
     if UnicodeSameText(MemberName, 'length') then
     begin
-      Result := IComVariantArrayLength(Self);
-      typSym := FTable.FindTypeSymbol(SYS_INTEGER, cvMagic);
+      Result := FLengthMember;
+      typSym := FTable.TypInteger;
     end
     else if UnicodeSameText(MemberName, 'low') then
     begin
-      Result := IComVariantArrayLowBound(Self);
-      typSym := FTable.FindTypeSymbol(SYS_INTEGER, cvMagic);
+      Result := FLowBoundMember;
+      typSym := FTable.TypInteger;
     end
     else if UnicodeSameText(MemberName, 'dimcount') then
     begin
-      Result := IComVariantArrayDimCount(Self);
-      typSym := FTable.FindTypeSymbol(SYS_INTEGER, cvMagic);
+      Result := FDimCountMember;
+      typSym := FTable.TypInteger;
     end
     else
       Result := nil;
@@ -977,21 +996,15 @@ function TComVariantArrayType.HasMethod(Const methodName: UnicodeString;
   const params: TConnectorParamArray; var typSym: TTypeSymbol): IConnectorCall;
 begin
    if UnicodeSameText(methodName, 'length') then begin
-      Result := IComVariantArrayLengthCall(Self);
-      typSym := FTable.FindTypeSymbol(SYS_INTEGER, cvMagic);
+      Result := FLengthCall;
+      typSym := FTable.TypInteger;
    end else if UnicodeSameText(methodName, 'low') then begin
-      Result := IComVariantArrayLowBoundCall(Self);
-      typSym := FTable.FindTypeSymbol(SYS_INTEGER, cvMagic);
+      Result := FLowBoundCall;
+      typSym := FTable.TypInteger;
    end else if UnicodeSameText(methodName, 'high') then begin
-      Result := IComVariantArrayHighBoundCall(Self);
-      typSym := FTable.FindTypeSymbol(SYS_INTEGER, cvMagic);
+      Result := FHighBoundCall;
+      typSym := FTable.TypInteger;
    end else Result := nil;
-end;
-
-function TComVariantArrayType.ReadHighBound(const Base: Variant): TData;
-begin
-  SetLength(Result, 1);
-  Result[0] := VarArrayHighBound(Base, 1);
 end;
 
 // NewEnumerator
@@ -1010,35 +1023,46 @@ end;
 
 // NeedDirectReference
 //
-function TComVariantArrayType.NeedDirectReference : Boolean;
+function TComVariantArrayCall.NeedDirectReference : Boolean;
 begin
    Result:=True;
 end;
 
-function TComVariantArrayType.ReadLength(const Base: Variant): TData;
+// Write
+//
+procedure TComVariantArrayMember.Write(const Base: Variant; const Data: TData);
 begin
-  SetLength(Result, 1);
-  Result[0] := VarArrayHighBound(Base, 1) - VarArrayLowBound(Base, 1) + 1;
+  Assert(False); // we should never come here
 end;
 
-function TComVariantArrayType.ReadLowBound(const Base: Variant): TData;
+// FastWrite
+//
+procedure TComVariantArrayMember.FastWrite(const exec : TdwsExecution; const base, value : TExprBase);
 begin
-  SetLength(Result, 1);
-  Result[0] := VarArrayLowBound(Base, 1);
+  Assert(False); // we should never come here
 end;
 
-procedure TComVariantArrayType.Write(const Base: Variant; const Data: TData);
-begin
-  Assert(False); // we should never com here
-end;
-
-function TComVariantArrayType.ReadDimCount(const Base: Variant): TData;
+function TComVariantArrayDimCountMember.Read(const Base: Variant): TData;
 begin
   SetLength(Result, 1);
   Result[0] := VarArrayDimCount(Base);
 end;
 
-procedure TComVariantArrayType.WriteHighBound(const Base: Variant; const Data: TData);
+function TComVariantArrayLowBoundMember.Read(const Base: Variant): TData;
+begin
+  SetLength(Result, 1);
+  Result[0] := VarArrayLowBound(Base, 1);
+end;
+
+procedure TComVariantArrayLowBoundCall.FastCall(const args : TExprBaseListExec; var result : Variant);
+var
+   base : Variant;
+begin
+   args.EvalAsVariant(0, base);
+   Result := VarArrayLowBound(base, args.AsInteger[1]);
+end;
+
+procedure TComVariantArrayHighBoundMember.Write(const Base: Variant; const Data: TData);
 var
   BaseRef: Variant;
   x: Integer;
@@ -1048,28 +1072,36 @@ begin
   VarArrayRedim(BaseRef, x);
 end;
 
-function TComVariantArrayType.ReadHighBound(const Base: Variant;
-  const Args: TConnectorArgs): TData;
-begin
-  SetLength(Result, 1);
-  Result[0] := VarArrayHighBound(Base, Args[0][0]);
-end;
-
-function TComVariantArrayType.ReadLength(const Base: Variant;
-  const Args: TConnectorArgs): TData;
+procedure TComVariantArrayHighBoundCall.FastCall(const args : TExprBaseListExec; var result : Variant);
 var
-  x: Integer;
+   base : Variant;
 begin
-  x := Args[0][0];
-  SetLength(Result, 1);
-  Result[0] := VarArrayHighBound(Base, x) - VarArrayLowBound(Base, x) + 1;
+   args.EvalAsVariant(0, base);
+   Result := VarArrayHighBound(base, args.AsInteger[1]);
 end;
 
-function TComVariantArrayType.ReadLowBound(const Base: Variant;
-  const Args: TConnectorArgs): TData;
+function TComVariantArrayHighBoundMember.Read(const Base: Variant): TData;
 begin
   SetLength(Result, 1);
-  Result[0] := VarArrayLowBound(Base, Args[0][0]);
+  Result[0] := VarArrayHighBound(Base, 1);
+end;
+
+procedure TComVariantArrayLengthMember.FastRead(const exec : TdwsExecution; const base : TExprBase; var result : Variant);
+var
+   bv : Variant;
+begin
+   base.EvalAsVariant(exec, bv);
+   Result := VarArrayHighBound(bv, 1) - VarArrayLowBound(bv, 1) + 1;
+end;
+
+procedure TComVariantArrayLengthCall.FastCall(const args : TExprBaseListExec; var result : Variant);
+var
+   base : Variant;
+   x : Integer;
+begin
+   args.EvalAsVariant(0, base);
+   x := args.AsInteger[1];
+   Result := VarArrayHighBound(base, x) - VarArrayLowBound(base, x) + 1;
 end;
 
 // ------------------

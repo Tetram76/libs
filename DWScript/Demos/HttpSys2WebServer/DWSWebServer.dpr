@@ -61,7 +61,10 @@ uses
   dwsWebServerLibModule in '..\..\Libraries\SimpleServer\dwsWebServerLibModule.pas' {dwsWebServerLib: TDataModule},
   dwsWebServerInfo in '..\..\Libraries\SimpleServer\dwsWebServerInfo.pas',
   dwsFileFunctions in '..\..\Source\dwsFileFunctions.pas',
-  dwsGraphicLibrary in '..\..\Libraries\GraphicsLib\dwsGraphicLibrary.pas';
+  dwsGraphicLibrary in '..\..\Libraries\GraphicsLib\dwsGraphicLibrary.pas',
+  dwsBackgroundWorkersLibModule in '..\..\Libraries\SimpleServer\dwsBackgroundWorkersLibModule.pas' {dwsBackgroundWorkersLib: TDataModule},
+  dwsWebUtils in '..\..\Libraries\SimpleServer\dwsWebUtils.pas',
+  dwsEncodingLibModule in '..\..\Libraries\ClassesLib\dwsEncodingLibModule.pas' {dwsEncodingLib: TDataModule};
 
 type
    TWebServerHttpService = class(TdwsWindowsService)
@@ -143,7 +146,7 @@ var
    service : TWebServerHttpService;
 begin
    if Win32MajorVersion<6 then begin
-      writeln('This program requires Windows 2008 or Vista');
+      writeln('This program requires at least Windows 2008 or Vista');
       exit;
    end;
 

@@ -21,7 +21,7 @@ unit dwsUtils;
 interface
 
 uses
-   Classes, SysUtils, Variants, Types, StrUtils,
+   Classes, SysUtils, Variants, Types, StrUtils, Masks,
    dwsXPlatform, Math;
 
 type
@@ -392,17 +392,25 @@ type
 
          function GetObjects(const aName : UnicodeString) : T;
          procedure SetObjects(const aName : UnicodeString; obj : T);
+         function GetBucketObject(index : Integer) : T;
+         procedure SetBucketObject(index : Integer; obj : T);
+         function GetBucketName(index : Integer) : String;
 
       public
+         constructor Create(initialCapacity : Integer = 0);
+
          function AddObject(const aName : UnicodeString; aObj : T; replace : Boolean = False) : Boolean;
 
          procedure Clean;
          procedure Clear;
 
          property Objects[const aName : UnicodeString] : T read GetObjects write SetObjects; default;
-         property Count : Integer read FCount;
 
-         procedure Enumerate(destinationList : TStrings);
+         property BucketObject[index : Integer] : T read GetBucketObject write SetBucketObject;
+         property BucketName[index : Integer] : String read GetBucketName;
+
+         property Count : Integer read FCount;
+         property Capacity : Integer read FCapacity;
    end;
 
    TObjectObjectHashBucket<TKey, TValue{$IFNDEF FPC}: TRefCountedObject{$ENDIF}> = record
@@ -499,6 +507,48 @@ type
          property Value : T read GetValue write SetValue;
    end;
 
+   // TSimpleQueue<T>
+   //
+   {: A minimalistic generic queue.
+      Based on a linked list with an items pool, supports both FIFO & LIFO. }
+   TSimpleQueue<T> = class
+      private
+      type
+         PItemT = ^ItemT;
+         ItemT = record
+            Prev, Next : PItemT;
+            Value : T;
+         end;
+      var
+         FFirst, FLast : PItemT;
+         FCount : Integer;
+         FPool : PItemT;
+         FPoolLeft : Integer;
+
+      protected
+         function Alloc : PItemT;
+         procedure Release(i : PItemT);
+
+      public
+         constructor Create(poolSize : Integer = 8);
+         destructor Destroy; override;
+
+         // Adds to the end of the queue
+         procedure Push(const v : T);
+         // Removes from the end of the queue
+         function  Pop(var v : T) : Boolean; overload;
+         function  Pop : T; overload;
+         // Adds to the beginning of the queue
+         procedure Insert(const v : T);
+         // Removes from the beginning of the queue
+         function  Pull(var v : T) : Boolean; overload;
+         function  Pull : T; overload;
+
+         procedure Clear;
+
+         property Count : Integer read FCount;
+   end;
+
 const
    cWriteOnlyBlockStreamBlockSize = $2000 - 2*SizeOf(Pointer);
 
@@ -568,6 +618,12 @@ type
          procedure StoreUTF8Data(destStream : TStream); overload;
    end;
 
+   TSimpleInt64List = class(TSimpleList<Int64>)
+   end;
+
+   TSimpleDoubleList = class(TSimpleList<Double>)
+   end;
+
    TFastCompareStringList = class (TStringList)
       {$ifdef FPC}
       function DoCompareText(const s1,s2 : string) : PtrInt; override;
@@ -619,6 +675,7 @@ function  StringUnifierHistogram : TIntegerDynArray;
 function UnicodeCompareLen(p1, p2 : PWideChar; n : Integer) : Integer;
 function UnicodeCompareText(const s1, s2 : UnicodeString) : Integer;
 function UnicodeSameText(const s1, s2 : UnicodeString) : Boolean;
+function AsciiCompareLen(p1, p2 : PAnsiChar; n : Integer) : Integer;
 
 function StrNonNilLength(const aString : UnicodeString) : Integer; inline;
 
@@ -626,9 +683,12 @@ function StrIBeginsWith(const aStr, aBegin : UnicodeString) : Boolean;
 function StrBeginsWith(const aStr, aBegin : UnicodeString) : Boolean;
 function StrBeginsWithA(const aStr, aBegin : RawByteString) : Boolean;
 function StrIEndsWith(const aStr, aEnd : UnicodeString) : Boolean;
+function StrIEndsWithA(const aStr, aEnd : RawByteString) : Boolean;
 function StrEndsWith(const aStr, aEnd : UnicodeString) : Boolean;
 function StrContains(const aStr, aSubStr : UnicodeString) : Boolean; overload;
 function StrContains(const aStr : UnicodeString; aChar : WideChar) : Boolean; overload;
+
+function StrMatches(const aStr, aMask : UnicodeString) : Boolean;
 
 function StrDeleteLeft(const aStr : UnicodeString; n : Integer) : UnicodeString;
 function StrDeleteRight(const aStr : UnicodeString; n : Integer) : UnicodeString;
@@ -645,7 +705,8 @@ function WhichPowerOfTwo(const v : Int64) : Integer;
 function SimpleStringHash(const s : UnicodeString) : Cardinal; inline;
 
 function RawByteStringToScriptString(const s : RawByteString) : UnicodeString; overload; inline;
-procedure RawByteStringToScriptString(const s : RawByteString; var result : UnicodeString); overload;
+procedure RawByteStringToScriptString(const s : RawByteString; var result : UnicodeString); inline; overload;
+procedure BytesToScriptString(const p : PByte; n : Integer; var result : UnicodeString);
 function ScriptStringToRawByteString(const s : UnicodeString) : RawByteString; overload; inline;
 procedure ScriptStringToRawByteString(const s : UnicodeString; var result : RawByteString); overload;
 
@@ -664,6 +725,13 @@ function DivMod100(var dividend : Cardinal) : Cardinal;
 procedure FastStringReplace(var str : UnicodeString; const sub, newSub : UnicodeString);
 
 procedure VariantToString(const v : Variant; var s : UnicodeString);
+
+type
+   EISO8601Exception = class (Exception);
+
+function TryISO8601ToDateTime(const v : String; var aResult : TDateTime) : Boolean;
+function ISO8601ToDateTime(const v : String) : TDateTime;
+function DateTimeToISO8601(dt : TDateTime; extendedFormat : Boolean) : String;
 
 procedure SuppressH2077ValueAssignedToVariableNeverUsed(const X); inline;
 
@@ -742,12 +810,12 @@ asm
 {$endif}
 end;
 
-function EightDigits(i : Cardinal; p : PWideChar) : Integer;
 type
    TTwoChars = packed array [0..1] of WideChar;
    PTwoChars = ^TTwoChars;
 const
-   cDigits : packed array [10..99] of TTwoChars = (
+   cTwoDigits : packed array [0..99] of TTwoChars = (
+      ('0','0'), ('0','1'), ('0','2'), ('0','3'), ('0','4'), ('0','5'), ('0','6'), ('0','7'), ('0','8'), ('0','9'),
       ('1','0'), ('1','1'), ('1','2'), ('1','3'), ('1','4'), ('1','5'), ('1','6'), ('1','7'), ('1','8'), ('1','9'),
       ('2','0'), ('2','1'), ('2','2'), ('2','3'), ('2','4'), ('2','5'), ('2','6'), ('2','7'), ('2','8'), ('2','9'),
       ('3','0'), ('3','1'), ('3','2'), ('3','3'), ('3','4'), ('3','5'), ('3','6'), ('3','7'), ('3','8'), ('3','9'),
@@ -758,6 +826,7 @@ const
       ('8','0'), ('8','1'), ('8','2'), ('8','3'), ('8','4'), ('8','5'), ('8','6'), ('8','7'), ('8','8'), ('8','9'),
       ('9','0'), ('9','1'), ('9','2'), ('9','3'), ('9','4'), ('9','5'), ('9','6'), ('9','7'), ('9','8'), ('9','9')
       );
+function EightDigits(i : Cardinal; p : PWideChar) : Integer;
 var
    r : Integer;
 begin
@@ -771,7 +840,7 @@ begin
          r:=DivMod100(i);
       end;
       if r>=10 then begin
-         PTwoChars(p)^:=cDigits[r];
+         PTwoChars(p)^:=cTwoDigits[r];
          Dec(p, 2);
          Inc(Result, 2);
       end else begin
@@ -1101,6 +1170,170 @@ begin
    end;
 end;
 
+// DateTimeToISO8601
+//
+function DateTimeToISO8601(dt : TDateTime; extendedFormat : Boolean) : String;
+var
+   buf : array [0..31] of Char;
+   p : PChar;
+
+   procedure WriteChar(c : Char);
+   begin
+      p^:=c;
+      Inc(p);
+   end;
+
+   procedure Write2Digits(v : Integer);
+   begin
+      PTwoChars(p)^:=cTwoDigits[v];
+      Inc(p, 2);
+   end;
+
+var
+   y, m, d, h, n, s, z : Word;
+begin
+   p:=@buf;
+   DecodeDate(dt, y, m, d);
+   Write2Digits((y div 100) mod 100);
+   Write2Digits(y mod 100);
+   if extendedFormat then
+      WriteChar('-');
+   Write2Digits(m);
+   if extendedFormat then
+      WriteChar('-');
+   Write2Digits(d);
+   DecodeTime(dt, h, n, s, z);
+
+   WriteChar('T');
+   Write2Digits(h);
+   if extendedFormat then
+      WriteChar(':');
+   Write2Digits(n);
+   if s<>0 then begin
+      if extendedFormat then
+         WriteChar(':');
+      Write2Digits(s);
+   end;
+   WriteChar('Z');
+
+   p^:=#0;
+   Result:=buf;
+end;
+
+// ISO8601ToDateTime
+//
+function ISO8601ToDateTime(const v : String) : TDateTime;
+var
+   p : PChar;
+
+   function ReadDigit : Integer;
+   var
+      c : Char;
+   begin
+      c := p^;
+      case c of
+         '0'..'9' : Result:=Ord(c)-Ord('0');
+      else
+         raise EISO8601Exception.CreateFmt('Unexpected character (%d) instead of digit', [Ord(c)]);
+      end;
+      Inc(p);
+   end;
+
+   function Read2Digits : Integer; inline;
+   begin
+      Result:=ReadDigit*10;
+      Result:=Result+ReadDigit;
+   end;
+
+   function Read4Digits : Integer; inline;
+   begin
+      Result:=Read2Digits*100;
+      Result:=Result+Read2Digits;
+   end;
+
+var
+   y, m, d, h, n, s : Integer;
+   separator : Boolean;
+begin
+   if v='' then begin
+      Result:=0;
+      Exit;
+   end;
+   p:=Pointer(v);
+
+   // parsing currently limited to basic Z variations with limited validation
+
+   y:=Read4Digits;
+   separator:=(p^='-');
+   if separator then
+      Inc(p);
+   m:=Read2Digits;
+   if separator then begin
+      if p^<>'-' then
+         raise EISO8601Exception.Create('"-" expected after month');
+      Inc(p);
+   end;
+   d:=Read2Digits;
+   try
+      Result:=EncodeDate(y, m, d);
+   except
+      on E: Exception do
+         raise EISO8601Exception.Create(E.Message);
+   end;
+
+   if p^=#0 then Exit;
+   case p^ of
+      'T', ' ' : Inc(p);
+   else
+      raise EISO8601Exception.Create('"T" expected after date');
+   end;
+
+   h:=Read2Digits;
+   separator:=(p^=':');
+   if separator then
+      Inc(p);
+   n:=Read2Digits;
+   case p^ of
+      ':', '0'..'9' : begin
+         if (p^=':')<>separator then begin
+            if separator then
+               raise EISO8601Exception.Create('":" expected after minutes')
+            else raise EISO8601Exception.Create('Unexpected ":" after minutes');
+         end;
+         Inc(p);
+         s:=Read2Digits;
+      end;
+   else
+      s:=0;
+   end;
+
+   Result:=Result+EncodeTime(h, n, s, 0);
+
+   case p^ of
+      #0 : exit;
+      'Z' : Inc(p);
+   else
+      raise EISO8601Exception.Create('Unsupported ISO8601 time zone');
+   end;
+
+   if p^<>#0 then
+      raise EISO8601Exception.Create('Unsupported or invalid ISO8601 format');
+end;
+
+// TryISO8601ToDateTime
+//
+function TryISO8601ToDateTime(const v : String; var aResult : TDateTime) : Boolean;
+begin
+   try
+      aResult:=ISO8601ToDateTime(v);
+      Result:=True;
+   except
+      on E : EISO8601Exception do
+         Result:=False;
+      else raise
+   end;
+end;
+
 // FastCompareFloat
 //
 function FastCompareFloat(d1, d2 : PDouble) : Integer;
@@ -1131,19 +1364,27 @@ begin
    RawByteStringToScriptString(s, Result);
 end;
 
+// RawByteStringToScriptString
+//
 procedure RawByteStringToScriptString(const s : RawByteString; var result : UnicodeString); overload;
-var
-   i, n : Integer;
-   pSrc : PByteArray;
-   pDest : PWordArray;
 begin
    if s='' then begin
       result:='';
       exit;
    end;
-   n:=Length(s);
+   BytesToScriptString(Pointer(s), Length(s), result)
+end;
+
+// BytesToScriptString
+//
+procedure BytesToScriptString(const p : PByte; n : Integer; var result : UnicodeString); overload;
+var
+   i : Integer;
+   pSrc : PByteArray;
+   pDest : PWordArray;
+begin
    SetLength(result, n);
-   pSrc:=PByteArray(Pointer(s));
+   pSrc:=PByteArray(p);
    pDest:=PWordArray(Pointer(result));
    for i:=0 to n-1 do
       pDest[i]:=Word(PByte(@pSrc[i])^);
@@ -1448,6 +1689,31 @@ begin
    Result:=(Length(s1)=Length(s2)) and (UnicodeCompareText(s1, s2)=0)
 end;
 
+// AsciiCompareLen
+//
+function AsciiCompareLen(p1, p2 : PAnsiChar; n : Integer) : Integer;
+var
+   c1, c2 : Integer;
+begin
+   for n:=n downto 1 do begin
+      c1:=Ord(p1^);
+      c2:=Ord(p2^);
+      if (c1<>c2) then begin
+         if c1 in [Ord('a')..Ord('z')] then
+            c1:=c1+(Ord('A')-Ord('a'));
+         if c2 in [Ord('a')..Ord('z')] then
+            c2:=c2+(Ord('A')-Ord('a'));
+         if c1<>c2 then begin
+            Result:=c1-c2;
+            Exit;
+         end;
+      end;
+      Inc(p1);
+      Inc(p2);
+   end;
+   Result:=0;
+end;
+
 // StrNonNilLength
 //
 function StrNonNilLength(const aString : UnicodeString) : Integer;
@@ -1507,6 +1773,19 @@ begin
    else Result:=(UnicodeCompareLen(@aStr[n1-n2+1], Pointer(aEnd), n2)=0);
 end;
 
+// StrIEndsWithA
+//
+function StrIEndsWithA(const aStr, aEnd : RawByteString) : Boolean;
+var
+   n1, n2 : Integer;
+begin
+   n1:=Length(aStr);
+   n2:=Length(aEnd);
+   if (n2>n1) or (n2=0) then
+      Result:=False
+   else Result:=(AsciiCompareLen(@aStr[n1-n2+1], Pointer(aEnd), n2)=0);
+end;
+
 // StrEndsWith
 //
 function StrEndsWith(const aStr, aEnd : UnicodeString) : Boolean;
@@ -1529,6 +1808,20 @@ begin
    else if StrNonNilLength(aSubStr)=1 then
       Result:=StrContains(aStr, aSubStr[1])
    else Result:=(Pos(aSubStr, aStr)>0);
+end;
+
+// StrMatches
+//
+function StrMatches(const aStr, aMask : UnicodeString) : Boolean;
+var
+   mask : TMask;
+begin
+   mask:=TMask.Create(aMask);
+   try
+      Result:=mask.Matches(aStr);
+   finally
+      mask.Free;
+   end;
 end;
 
 // StrContains (sub char)
@@ -3198,6 +3491,19 @@ end;
 // ------------------ TSimpleNameObjectHash<T> ------------------
 // ------------------
 
+// Create
+//
+constructor TSimpleNameObjectHash<T>.Create(initialCapacity : Integer = 0);
+begin
+   if initialCapacity>0 then begin
+      // check if initial capacity is a power of two
+      Assert((initialCapacity and (initialCapacity-1))=0);
+
+      FCapacity:=initialCapacity;
+      SetLength(FBuckets, FCapacity);
+   end;
+end;
+
 // Grow
 //
 procedure TSimpleNameObjectHash<T>.Grow;
@@ -3338,16 +3644,25 @@ begin
    FCapacity:=0;
 end;
 
-// Enumerate
+// GetBucketName
 //
-procedure TSimpleNameObjectHash<T>.Enumerate(destinationList : TStrings);
-var
-   i : Integer;
+function TSimpleNameObjectHash<T>.GetBucketName(index : Integer) : String;
 begin
-   for i:=0 to FCapacity-1 do begin
-      if FBuckets[i].HashCode<>0 then
-         destinationList.AddObject(FBuckets[i].Name, FBuckets[i].Obj);
-   end;
+   Result:=FBuckets[index].Name;
+end;
+
+// GetBucketObject
+//
+function TSimpleNameObjectHash<T>.GetBucketObject(index : Integer) : T;
+begin
+   Result:=FBuckets[index].Obj;
+end;
+
+// SetBucketObject
+//
+procedure TSimpleNameObjectHash<T>.SetBucketObject(index : Integer; obj : T);
+begin
+   FBuckets[index].Obj:=obj;
 end;
 
 // ------------------
@@ -3805,6 +4120,159 @@ begin
          minIndex:=i;
       until i>=maxIndex;
    end;
+end;
+
+// ------------------
+// ------------------ TSimpleQueue<T> ------------------
+// ------------------
+
+// Create
+//
+constructor TSimpleQueue<T>.Create(poolSize: Integer);
+begin
+   FPoolLeft:=poolSize;
+end;
+
+// Destroy
+//
+destructor TSimpleQueue<T>.Destroy;
+var
+   next : PItemT;
+begin
+   Clear;
+   while FPool<>nil do begin
+      next:=FPool.Next;
+      FreeMem(FPool);
+      FPool:=next;
+   end;
+   inherited;
+end;
+
+// Alloc
+//
+function TSimpleQueue<T>.Alloc: PItemT;
+begin
+   if FPool=nil then
+      Result:=AllocMem(SizeOf(ItemT))
+   else begin
+      Result:=FPool;
+      FPool:=Result.Next;
+      Result.Next:=nil;
+      Inc(FPoolLeft);
+   end;
+   Inc(FCount);
+end;
+
+// Release
+//
+procedure TSimpleQueue<T>.Release(i: PItemT);
+begin
+   i.Value:=Default(T);
+   if FPoolLeft>0 then begin
+      Dec(FPoolLeft);
+      i.Prev:=nil;
+      i.Next:=FPool;
+      FPool:=i;
+   end else FreeMem(i);
+   Dec(FCount);
+end;
+
+// Push
+//
+procedure TSimpleQueue<T>.Push(const v: T);
+var
+   p : PItemT;
+begin
+   p:=Alloc;
+   p.Value:=v;
+   if FLast<>nil then begin
+      p.Prev:=FLast;
+      FLast.Next:=p;
+   end else FFirst:=p;
+   FLast:=p;
+end;
+
+// Pop
+//
+function TSimpleQueue<T>.Pop(var v: T) : Boolean;
+var
+   p : PItemT;
+begin
+   if FCount=0 then Exit(False);
+
+   p:=FLast;
+   FLast:=p.Prev;
+   v:=p.Value;
+   Release(p);
+   if FLast<>nil then
+      FLast.Next:=nil
+   else FFirst:=FLast;
+   Result:=True;
+end;
+
+// Pop
+//
+function TSimpleQueue<T>.Pop : T;
+begin
+   Assert(Count>0);
+   Pop(Result);
+end;
+
+// Insert
+//
+procedure TSimpleQueue<T>.Insert(const v: T);
+var
+   p : PItemT;
+begin
+   p:=Alloc;
+   p.Value:=v;
+   if FFirst<>nil then begin
+      p.Next:=FFirst;
+      FFirst.Prev:=p;
+   end else FLast:=p;
+   FFirst:=p;
+end;
+
+// Pull
+//
+function TSimpleQueue<T>.Pull(var v: T) : Boolean;
+var
+   p : PItemT;
+begin
+   if FCount=0 then Exit(False);
+
+   p:=FFirst;
+   FFirst:=p.Next;
+   v:=p.Value;
+   Release(p);
+   if FFirst<>nil then
+      FFirst.Prev:=nil
+   else FLast:=FFirst;
+   Result:=True;
+end;
+
+// Pull
+//
+function TSimpleQueue<T>.Pull : T;
+begin
+   Assert(Count>0);
+   Pull(Result);
+end;
+
+// Clear
+//
+procedure TSimpleQueue<T>.Clear;
+var
+   p, pNext : PItemT;
+begin
+   p:=FFirst;
+   while p<>nil do begin
+      pNext:=p.Next;
+      Release(p);
+      p:=pNext;
+   end;
+   FFirst:=nil;
+   FLast:=nil;
 end;
 
 // ------------------------------------------------------------------

@@ -3,7 +3,7 @@ unit dwsLinqSql;
 interface
 uses
    Classes,
-   dwsLinq, dwsExprs, dwsXPlatform, dwsSymbols, dwsDataContext,
+   dwsLinq, dwsExprs, dwsXPlatform, dwsSymbols, dwsDataContext, dwsUtils,
    dwsConstExprs, dwsMethodExprs,
    dwsCompiler, dwsCoreExprs, dwsErrors, dwsRelExprs;
 
@@ -50,6 +50,7 @@ type
       FSQL: string;
       FParams: TArrayConstantExpr;
       FMethod: TMethodExpr;
+      FListParams: TStringList;
       function NewParam: string;
       procedure BuildSelectList(list: TStringList; prog: TdwsProgram);
       procedure BuildQuery(compiler: TdwsCompiler);
@@ -66,6 +67,14 @@ type
       procedure BuildOrderClause(list: TStringList; prog: TdwsProgram);
       procedure WriteCommaList(exprs: TSqlList; list: TStringList; prog: TdwsProgram);
       procedure BuildGroupClause(list: TStringList; prog: TdwsProgram);
+      function GetIdentifierName(ident: TSqlIdentifier;
+        prog: TdwsProgram): string;
+
+      function EvalDynamic(exec : TdwsExecution) : Variant;
+      function Interpolate(exec: TdwsExecution; list: TObjectVarExpr; params: TArrayConstantexpr;
+        const param, query: string): string;
+      procedure BuildDynamicQuery(prog: TdwsProgram; const query: string;
+        params: TArrayConstantExpr);
    public
       constructor Create(tableName: TSqlIdentifier; const symbol: TDataSymbol);
       destructor Destroy; override;
@@ -86,26 +95,39 @@ type
    end;
 
    TLinqIntoSingleExpr = class(TLinqIntoExpr)
-   private
+   protected
       FStep: TMethodStaticExpr;
    public
       constructor Create(base: TSqlFromExpr; into: TFuncPtrExpr;
         const compiler: IdwsCompiler; const aPos: TScriptPos; dsSymbol: TClassSymbol);
       destructor Destroy; override;
+   end;
+
+   TLinqIntoSingleValExpr = class(TLinqIntoSingleExpr)
+   public
       function Eval(exec : TdwsExecution) : Variant; override;
+   end;
+
+   TLinqIntoSingleProcExpr = class(TLinqIntoSingleExpr)
+   public
+      function Eval(exec : TdwsExecution): variant; override;
    end;
 
    TLinqIntoSetExpr = class(TLinqIntoExpr)
    public
       constructor Create(base: TSqlFromExpr; into: TFuncPtrExpr;
         const compiler: IdwsCompiler; const aPos: TScriptPos);
-      function  Eval(exec : TdwsExecution) : Variant; override;
+   end;
+
+   TLinqIntoSetValExpr = class(TLinqIntoSetExpr)
+   public
+      function Eval(exec : TdwsExecution) : Variant; override;
    end;
 
 implementation
 uses
    Sysutils,
-   dwsUtils, dwsExprList, dwsConvExprs, dwsUnitSymbols;
+   dwsExprList, dwsConvExprs, dwsUnitSymbols;
 
 { TSqlFromExpr }
 
@@ -114,10 +136,12 @@ begin
    inherited Create;
    FTableName := tableName;
    FDBSymbol := symbol;
+   FListParams := TStringList.Create;
 end;
 
 destructor TSqlFromExpr.Destroy;
 begin
+   FListParams.Free;
    FTableName.Free;
    FMethod.Free;
    FWhereList.Free;
@@ -125,7 +149,15 @@ begin
    FJoinList.Free;
    FOrderList.Free;
    FGroupList.Free;
+   FParams.Free;
    inherited Destroy;
+end;
+
+function TSqlFromExpr.GetIdentifierName(ident: TSqlIdentifier; prog: TdwsProgram): string;
+begin
+   result := ident.GetValue(FParams, prog, self.NewParam);
+   if ident.rename <> '' then
+      result := format('%s as %s', [result, ident.rename]);
 end;
 
 procedure TSqlFromExpr.WriteCommaList(exprs: TSqlList; list: TStringList; prog: TdwsProgram);
@@ -135,7 +167,7 @@ var
 begin
    for i := 0 to exprs.Count - 1 do
    begin
-      item := (exprs[i] as TSqlIdentifier).GetValue(FParams, prog, self.NewParam);
+      item := GetIdentifierName(exprs[i] as TSqlIdentifier, prog);
       if i < exprs.Count - 1 then
          item := item + ',';
       list.Add(item)
@@ -173,6 +205,8 @@ begin
       result := NewParam;
       FParams.AddElementExpr(compiler.CurrentProg, expr);
       expr.IncRefCount;
+      if expr.typ.classtype = TDynamicArraySymbol then
+         FListParams.Add(result)
    end;
 end;
 
@@ -234,7 +268,7 @@ begin
    for i := 0 to FJoinList.Count - 1 do
    begin
       join := FJoinList[i] as TSqlJoinExpr;
-      joinLine := JOINS[join.JoinType] + 'join ' + join.JoinExpr.Value;
+      joinLine := JOINS[join.JoinType] + 'join ' + GetIdentifierName(join.JoinExpr, compiler.CurrentProg);
       if assigned(join.Criteria) then
          joinLine := joinLine + ' on';
       list.Add(joinLine);
@@ -297,6 +331,7 @@ begin
    base := TVarExpr.CreateTyped(prog, FDBSymbol);
 
    FParams := TArrayConstantExpr.Create(prog, pos);
+   FParams.IncRefCount;
    BuildQuery(compiler);
 
    FMethod := TMethodStaticExpr.Create(prog, pos, query, base);
@@ -306,9 +341,84 @@ begin
    FMethod.Initialize(prog);
 end;
 
+function TSqlFromExpr.Interpolate(exec: TdwsExecution; list: TObjectVarExpr; params: TArrayConstantexpr;
+  const param, query: string): string;
+var
+   i, high: integer;
+   paramList: TStringList;
+   obj: IScriptObj;
+   prog: TdwsProgram;
+begin
+   list.EvalAsScriptObj(exec, obj);
+   high := (obj.GetSelf as TScriptDynamicArray).ArrayLength - 1;
+   prog := TdwsProgramExecution(exec).Prog;
+   paramList := TStringList.Create;
+   try
+      for i := 0 to High do
+      begin
+         paramList.Add(':a' + intToStr(i));
+         params.AddElementExpr(prog, TConstExpr.Create(Prog, prog.TypVariant, obj.AsVariant[i]));
+      end;
+      result := StringReplace(query, param, format('(%s)', [paramList.CommaText]), []);
+   finally
+      paramList.Free;
+   end;
+end;
+
+procedure TSqlFromExpr.BuildDynamicQuery(prog: TdwsProgram; const query: string; params: TArrayConstantExpr);
+var
+   method: TMethodStaticExpr;
+   arr: TConvStaticArrayToDynamicExpr;
+begin
+   method := TMethodStaticExpr.Create(prog, FMethod.ScriptPos, FMethod.FuncSym as TMethodSymbol, FMethod.BaseExpr);
+   method.BaseExpr.IncRefCount;
+   method.AddArg(TConstStringExpr.Create(prog, nil, query));
+   arr := TConvStaticArrayToDynamicExpr.Create(prog, params,
+     TDynamicArraySymbol(method.FuncSym.Params.Symbols[1].Typ));
+   method.AddArg(arr);
+   method.Initialize(prog);
+   FMethod.free;
+   FMethod := method;
+end;
+
+function TSqlFromExpr.EvalDynamic(exec: TdwsExecution): Variant;
+var
+   param, query: string;
+   counter, index: integer;
+   params: TArrayConstantExpr;
+   prog: TdwsProgram;
+   sub: TTypedExpr;
+begin
+   prog := (exec as TdwsProgramExecution).Prog;
+   query := FSql;
+   params := TArrayConstantExpr.Create(prog, FParams.ScriptPos);
+   try
+      counter := 0;
+      for param in FListParams do
+      begin
+         index := StrToint(copy(param, 3)) - 1;
+         while counter < index do
+         begin
+            sub := FParams.SubExpr[counter] as TTypedExpr;
+            params.AddElementExpr(prog, sub);
+            sub.IncRefCount;
+            inc(counter);
+         end;
+         query := interpolate(exec, FParams.SubExpr[index] as TObjectVarExpr, params, param, query);
+      end;
+      BuildDynamicQuery(prog, query, params);
+   except
+      params.Free;
+      raise;
+   end;
+   FMethod.EvalAsVariant(exec, result);
+end;
+
 function TSqlFromExpr.Eval(exec: TdwsExecution): Variant;
 begin
-   FMethod.EvalAsVariant(exec, result);
+   if FListParams.Count > 0 then
+      result := EvalDynamic(exec)
+   else FMethod.EvalAsVariant(exec, result);
 end;
 
 function TSqlFromExpr.NewParam: string;
@@ -332,8 +442,8 @@ begin
    FData := TDataSymbol.Create('', FBase.Typ);
    FData.AllocateStackAddr(prog.Table.AddrGenerator);
    dsVar := TObjectVarExpr.Create(prog, FData);
-   FBase.FMethod.IncRefCount;
-   FAssign := TAssignExpr.Create(prog, aPos, dsVar, FBase.FMethod);
+   FBase.IncRefCount;
+   FAssign := TAssignExpr.Create(prog, aPos, dsVar, FBase);
    dsVar.IncRefCount;
    FInto.AddArg(dsVar);
    FInto.Initialize(prog);
@@ -359,7 +469,8 @@ constructor TLinqIntoSingleExpr.Create(base: TSqlFromExpr; into: TFuncPtrExpr;
   const compiler: IdwsCompiler; const aPos: TScriptPos; dsSymbol: TClassSymbol);
 begin
    inherited Create(base, into, compiler, aPos);
-   self.Typ := TDynamicArraySymbol.Create('', into.FuncSym.Result.Typ, compiler.CurrentProg.TypInteger);
+   if assigned(into.FuncSym.Result) then
+      self.Typ := TDynamicArraySymbol.Create('', into.FuncSym.Result.Typ, compiler.CurrentProg.TypInteger);
    FAssign.Left.IncRefCount;
    FStep := TMethodStaticExpr.Create(compiler.CurrentProg, aPos,
      dsSymbol.Members.FindSymbol('Step', cvMagic) as TMethodSymbol, FAssign.Left);
@@ -371,7 +482,9 @@ begin
    inherited Destroy;
 end;
 
-function TLinqIntoSingleExpr.Eval(exec: TdwsExecution): Variant;
+{ TLinqIntoSingleValExpr }
+
+function TLinqIntoSingleValExpr.Eval(exec: TdwsExecution): Variant;
 var
    dyn: TScriptDynamicArray;
    n: integer;
@@ -390,6 +503,16 @@ begin
    FFree.Eval(exec);
 end;
 
+{ TLinqIntoSingleProcExpr }
+
+function TLinqIntoSingleProcExpr.Eval(exec: TdwsExecution): Variant;
+begin
+   FAssign.EvalNoResult(exec);
+   while FStep.EvalAsBoolean(exec) do
+      FInto.EvalNoResult(exec);
+   FFree.Eval(exec);
+end;
+
 { TLinqIntoSetExpr }
 
 constructor TLinqIntoSetExpr.Create(base: TSqlFromExpr; into: TFuncPtrExpr;
@@ -400,7 +523,9 @@ begin
    self.Typ.IncRefCount;
 end;
 
-function TLinqIntoSetExpr.Eval(exec: TdwsExecution): Variant;
+{ TLinqIntoSetValExpr }
+
+function TLinqIntoSetValExpr.Eval(exec: TdwsExecution): Variant;
 begin
    FAssign.EvalNoResult(exec);
    FInto.EvalAsVariant(exec, result);
@@ -434,6 +559,7 @@ begin
    result.Typ := FDatasetSymbol;
 end;
 
+
 function TLinqSqlFactory.Group(from: TTypedExpr; list: TSqlList): TTypedExpr;
 begin
    assert((from as TSqlFromExpr).FGroupList = nil);
@@ -446,9 +572,12 @@ var
    from: TSqlFromExpr;
 begin
    from := base as TSqlFromExpr;
-   if targetFunc.FuncSym.Typ is TArraySymbol then
-      result := TLinqIntoSetExpr.Create(from, targetFunc, FCompiler, aPos)
-   else result := TLinqIntoSingleExpr.Create(from, targetFunc, FCompiler, aPos, from.Typ as TClassSymbol);
+   if targetFunc.FuncSym.Typ = nil then
+      result := TLinqIntoSingleProcExpr.Create(from, targetFunc, FCompiler,
+                aPos, from.Typ as TClassSymbol)
+   else if targetFunc.FuncSym.Typ is TArraySymbol then
+      result := TLinqIntoSetValExpr.Create(from, targetFunc, FCompiler, aPos)
+   else result := TLinqIntoSingleValExpr.Create(from, targetFunc, FCompiler, aPos, from.Typ as TClassSymbol);
 end;
 
 function TLinqSqlFactory.Join(base: TTypedExpr; value: TSqlJoinExpr): TTypedExpr;

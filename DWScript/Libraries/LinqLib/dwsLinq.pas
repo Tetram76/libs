@@ -62,6 +62,8 @@ type
       function ReadComparisonExpr(const compiler: IdwsCompiler; tok: TTokenizer): TRelOpExpr;
       function ReadSqlIdentifier(const compiler: IdwsCompiler; tok: TTokenizer;
         acceptStar: boolean = false): TSqlIdentifier;
+      function ReadRenamableSqlIdentifier(const compiler: IdwsCompiler; tok: TTokenizer;
+        acceptStar: boolean = false): TSqlIdentifier;
       procedure ReadJoinExpr(const compiler: IdwsCompiler; tok: TTokenizer; var from: TTypedExpr);
       function ReadJoinType(const compiler: IdwsCompiler; tok: TTokenizer): TJoinType;
       procedure ReadComparisons(const compiler: IdwsCompiler; tok: TTokenizer;
@@ -75,7 +77,10 @@ type
       function ReadIntoExpression(const compiler: IdwsCompiler; tok: TTokenizer;
         base: TTypedExpr): TTypedExpr;
       function ValidIntoExpr(from, target: TTypedExpr): boolean;
+      function BuildInExpr(const compiler: IdwsCompiler; expr: TRelGreaterEqualIntExpr): TRelOpExpr;
+      function IsLinqKeyword(tok: TTokenizer): boolean;
    public
+      function StaticSymbols : Boolean; override;
       procedure ReadScript(compiler : TdwsCompiler; sourceFile : TSourceFile;
                            scriptType : TScriptSourceType); override;
       function ReadUnknownName(compiler: TdwsCompiler) : TTypedExpr; override;
@@ -86,10 +91,13 @@ type
    TNewParamFunc = function: string of object;
 
    TSqlIdentifier = class(TConstStringExpr)
+   private
+      FRename: string;
    public
       constructor Create(const name: string; const compiler: IdwsCompiler);
       function GetValue(params: TArrayConstantExpr; prog: TdwsProgram;
         newParam: TNewParamFunc): string; virtual;
+      property rename: string read FRename;
    end;
 
    TSqlFunction = class(TSqlIdentifier)
@@ -113,6 +121,11 @@ type
       property JoinType: TJoinType read FJoinType;
       property JoinExpr: TSqlIdentifier read FJoinExpr;
       property Criteria: TSqlList read FCriteria;
+   end;
+
+   TSqlInExpr = class(TRelOpExpr)
+   public
+      procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
    end;
 
    type TRelOp = (roEq, roNeq, roGt, roLt, roGte, roLte, roIn, roNin);
@@ -163,6 +176,30 @@ begin
    error(compiler, format(msg, args));
 end;
 
+function TdwsLinqExtension.StaticSymbols: Boolean;
+begin
+   result := true;
+end;
+
+function TdwsLinqExtension.BuildInExpr(const compiler: IdwsCompiler; expr: TRelGreaterEqualIntExpr): TRelOpExpr;
+var
+   idx: TArrayIndexOfExpr;
+   base: TTypedExpr;
+   ident: TSqlIdentifier;
+begin
+   idx := expr.Left as TArrayIndexOfExpr;
+   if not ((idx.ItemExpr is TConvVarToIntegerExpr)
+           and (TConvVarToIntegerExpr(idx.ItemExpr).expr is TSqlIdentifier)) then
+      exit(expr);
+   base := idx.baseExpr;
+   assert(base.typ.classtype = TDynamicArraySymbol);
+   ident := TSqlIdentifier(TConvVarToIntegerExpr(idx.ItemExpr).expr);
+   result := TSqlInExpr.Create(compiler.CurrentProg, compiler.Tokenizer.HotPos, ident, base);
+   base.IncRefCount;
+   ident.IncRefCount;
+   expr.Free;
+end;
+
 function TdwsLinqExtension.ReadComparisonExpr(const compiler: IdwsCompiler; tok: TTokenizer): TRelOpExpr;
 var
    expr: TTypedExpr;
@@ -171,7 +208,9 @@ begin
    try
       if not(expr is TRelOpExpr) then
          Error(compiler, 'Comparison expected');
-      result := TRelOpExpr(expr);
+      if (expr.classtype = TRelGreaterEqualIntExpr) and (TRelOpExpr(expr).left.classtype = TArrayIndexOfExpr) then
+         result := BuildInExpr(compiler, TRelGreaterEqualIntExpr(expr))
+      else result := TRelOpExpr(expr);
    except
       expr.Free;
       raise;
@@ -199,7 +238,7 @@ end;
 function TdwsLinqExtension.ReadExpression(const compiler: IdwsCompiler; tok: TTokenizer): TTypedExpr;
 begin
    if tok.TestDelete(ttAMP) then
-      result := self.ReadSqlIdentifier(compiler, tok, true)
+      result := self.ReadRenamableSqlIdentifier(compiler, tok, true)
    else result := compiler.ReadExpr();
 end;
 
@@ -235,7 +274,7 @@ begin
 
    list := TSqlList.Create;
    repeat
-      list.Add(ReadSqlIdentifier(compiler, tok, true));
+      list.Add(ReadRenamableSqlIdentifier(compiler, tok, true));
    until not tok.TestDelete(ttCOMMA);
    from := FQueryBuilder.Select(from, list);
 end;
@@ -307,6 +346,7 @@ begin
    from := FQueryBuilder.Join(from, join)
 end;
 
+
 procedure TdwsLinqExtension.ReadOrderExprs(const compiler: IdwsCompiler; tok: TTokenizer; var from: TTypedExpr);
 var
    ident: TSqlIdentifier;
@@ -328,6 +368,30 @@ begin
       list.Add(ident);
    until not tok.TestDelete(ttCOMMA);
    from := FQueryBuilder.Order(from, list);
+end;
+
+function TdwsLinqExtension.IsLinqKeyword(tok: TTokenizer): boolean;
+const WORDS: array [1..11] of string = ('from', 'on', 'join', 'left', 'right', 'cross', 'where', 'order', 'select', 'into', 'group');
+var
+   keyword: string;
+begin
+   result := false;
+   for keyword in WORDS do
+      result := result or TokenEquals(tok, keyword)
+end;
+
+function TdwsLinqExtension.ReadRenamableSqlIdentifier(
+  const compiler: IdwsCompiler; tok: TTokenizer;
+  acceptStar: boolean): TSqlIdentifier;
+begin
+   result := ReadSqlIdentifier(compiler, tok, acceptStar);
+   if tok.TestDelete(ttAs) or (tok.TestName and not IsLinqKeyword(tok)) then
+   begin
+      if not tok.TestName then
+         Error(compiler, 'Identifier expected');
+      result.FRename := tok.GetToken.AsString;
+      tok.KillToken;
+   end;
 end;
 
 procedure TdwsLinqExtension.ReadGroupByExprs(const compiler: IdwsCompiler; tok: TTokenizer; var from: TTypedExpr);
@@ -438,13 +502,18 @@ end;
 
 function TdwsLinqExtension.ReadSqlFunction(const compiler: IdwsCompiler; tok : TTokenizer;
    base: TSqlIdentifier): TSqlFunction;
+var
+   arg: TTypedExpr;
 begin
    result := TSqlFunction.Create(base, compiler);
    base.Free;
    if tok.TestDelete(ttBRIGHT) then
       Exit;
    repeat
-      result.FFunction.AddArg(ReadExpression(compiler, tok));
+      arg := ReadExpression(compiler, tok);
+      result.FFunction.AddArg(arg);
+      if not (arg is TSqlIdentifier) then
+         arg.IncRefCount;
    until not tok.TestDelete(ttCOMMA);
    if not tok.TestDelete(ttBRIGHT) then
       Error(compiler, 'Close parenthesis expected.');
@@ -477,7 +546,6 @@ end;
 function TdwsLinqExtension.ValidIntoExpr(from, target: TTypedExpr): boolean;
 var
    base: TFuncSymbol;
-   returnType: TTypeSymbol;
 begin
    result := false;
    if not (target is TFuncRefExpr) then
@@ -487,15 +555,12 @@ begin
       Exit;
    if base.GetParamType(0) <> from.Typ then
       Exit;
-   returnType := base.Typ;
-   if returnType = nil then
-      Exit;
    result := true;
 end;
 
 function TypeSymbol(const compiler: IdwsCompiler; base: TTypedExpr): TFuncSymbol;
 begin
-   result := TFuncSymbol.Create('', fkFunction, 0);
+   result := TFuncSymbol.Create('', fkMethod, 0);
    result.Typ := compiler.Compiler.CurrentProg.TypAnyType;
    result.AddParam(TParamSymbol.Create('', base.Typ));
 end;
@@ -509,24 +574,32 @@ var
    aPos: TScriptPos;
 begin
    try
-      aPos := tok.CurrentPos;
-      tok.KillToken;
-      targetSymbol := TypeSymbol(compiler, base);
       try
-         target := compiler.ReadExpr(targetSymbol);
-      finally
-         targetSymbol.Free;
+         aPos := tok.CurrentPos;
+         tok.KillToken;
+         targetSymbol := TypeSymbol(compiler, base);
+         try
+            target := compiler.ReadExpr(targetSymbol);
+         finally
+            targetSymbol.Free;
+         end;
+         if not ValidIntoExpr(base, target) then
+         begin
+            target.Free;
+            Error(compiler, 'Into expression must be a valid function reference.');
+         end;
+         targetFunc := TFuncPtrExpr.Create(compiler.CurrentProg, aPos, target);
+         result := FQueryBuilder.Into(base, targetFunc, aPos);
+      except
+         base.Free;
+         raise;
       end;
-      if not ValidIntoExpr(base, target) then
-      begin
-         target.Free;
-         Error(compiler, 'Into expression must be a valid function reference.');
-      end;
-      targetFunc := TFuncPtrExpr.Create(compiler.CurrentProg, aPos, target);
-      result := FQueryBuilder.Into(base, targetFunc, aPos);
    except
-      base.Free;
-      raise;
+      on EAbort do
+      begin
+         compiler.Msgs.AddCompilerStop(tok.GetToken.FScriptPos, 'Invalid LINQ expression');
+         result := nil;
+      end;
    end;
 end;
 
@@ -544,7 +617,7 @@ begin
       if TokenEquals(tok, 'into') then
          result := ReadIntoExpression(compiler, tok, result);
    end
-   else result := ReadSqlIdentifier(compiler, tok);
+   else result := ReadRenamableSqlIdentifier(compiler, tok);
 end;
 
 procedure TdwsLinqExtension.ReadScript(compiler: TdwsCompiler;
@@ -564,6 +637,7 @@ constructor TSqlIdentifier.Create(const name: string; const compiler: IdwsCompil
 begin
    inherited Create(compiler.CurrentProg, compiler.CurrentProg.TypVariant, name);
 end;
+
 
 function TSqlIdentifier.GetValue(params: TArrayConstantExpr; prog: TdwsProgram; newParam: TNewParamFunc): string;
 begin
@@ -627,7 +701,7 @@ end;
 
 function GetOp(expr: TRelOpExpr): TRelOp;
 begin
-   if expr.ClassType = TRelEqualVariantExpr then
+   if (expr.ClassType = TRelEqualVariantExpr) or (expr.ClassType = TRelEqualStringExpr) then
       result := roEq
    else if expr.ClassType = TRelNotEqualVariantExpr then
       result := roNeq
@@ -639,7 +713,18 @@ begin
       result := roGt
    else if expr.ClassType = TRelGreaterEqualVariantExpr then
       result := roGte
+   else if expr.classType = TRelGreaterEqualIntExpr then
+      result := roGte
+   else if expr.classType = TSqlInExpr then
+      result := roIn
    else raise Exception.CreateFmt('Unknown op type: %s.', [expr.ClassName]);
+end;
+
+{ TSqlInExpr }
+
+procedure TSqlInExpr.EvalAsString(exec: TdwsExecution; var Result: UnicodeString);
+begin
+//
 end;
 
 end.

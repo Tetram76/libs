@@ -35,8 +35,18 @@ unit dwsXPlatform;
 
 interface
 
-uses Windows, Classes, SysUtils, Masks
-   {$IFNDEF VER200}, IOUtils{$ENDIF}
+uses
+   Classes, SysUtils, Types, Masks,
+   {$IFDEF FPC}
+      {$IFDEF Windows}
+         Windows
+      {$ELSE}
+         LCLIntf
+      {$ENDIF}
+   {$ELSE}
+      Windows
+      {$IFNDEF VER200}, IOUtils{$ENDIF}
+   {$ENDIF}
    ;
 
 const
@@ -89,7 +99,7 @@ procedure SetDecimalSeparator(c : Char);
 function GetDecimalSeparator : Char;
 
 type
-   TCollectFileProgressEvent = procedure (const directory : String; var shouldAbort : Boolean) of object;
+   TCollectFileProgressEvent = procedure (const directory : String; var skipScan : Boolean) of object;
 
 procedure CollectFiles(const directory, fileMask : UnicodeString;
                        list : TStrings; recurseSubdirectories: Boolean = False;
@@ -132,6 +142,7 @@ type
       {$ENDIF}
    end;
 
+// 64bit system clock reference in milliseconds, absolute value is maningless
 function GetSystemMilliseconds : Int64;
 function UTCDateTime : TDateTime;
 
@@ -186,6 +197,8 @@ procedure CloseFileHandle(hFile : THandle);
 function FileCopy(const existing, new : UnicodeString; failIfExists : Boolean) : Boolean;
 function FileDelete(const fileName : String) : Boolean;
 function FileRename(const oldName, newName : String) : Boolean;
+function FileSize(const name : String) : Int64;
+function FileDateTime(const name : String) : TDateTime;
 
 function DirectSet8087CW(newValue : Word) : Word; register;
 function DirectSetMXCSR(newValue : Word) : Word; register;
@@ -217,14 +230,51 @@ implementation
 uses Variants;
 {$endif}
 
-// GetSystemMilliseconds
+{$ifdef FPC}
+type
+   TFindExInfoLevels = FINDEX_INFO_LEVELS;
+{$endif}
+
+// GetSystemTimeMilliseconds
 //
-function GetSystemMilliseconds : Int64;
+function GetSystemTimeMilliseconds : Int64; stdcall;
 var
    fileTime : TFileTime;
 begin
+{$IFDEF WINDOWS}
    GetSystemTimeAsFileTime(fileTime);
    Result:=Round(PInt64(@fileTime)^*1e-4); // 181
+{$ELSE}
+   Not yet implemented!
+{$ENDIF}
+end;
+
+// GetSystemMilliseconds
+//
+var
+   vGetSystemMilliseconds : function : Int64; stdcall;
+function GetSystemMilliseconds : Int64;
+{$ifdef WIN32_ASM}
+asm
+   jmp [vGetSystemMilliseconds]
+{$else}
+begin
+   Result:=vGetSystemMilliseconds;
+{$endif}
+end;
+
+// InitializeGetSystemMilliseconds
+//
+procedure InitializeGetSystemMilliseconds;
+var
+   h : THandle;
+begin
+   {$IFDEF WINDOWS}
+   h:=LoadLibrary('kernel32.dll');
+   vGetSystemMilliseconds:=GetProcAddress(h, 'GetTickCount64');
+   {$ENDIF}
+   if not Assigned(vGetSystemMilliseconds) then
+      vGetSystemMilliseconds:=@GetSystemTimeMilliseconds;
 end;
 
 // UTCDateTime
@@ -233,11 +283,15 @@ function UTCDateTime : TDateTime;
 var
    systemTime : TSystemTime;
 begin
+{$IFDEF Windows}
    FillChar(systemTime, SizeOf(systemTime), 0);
    GetSystemTime(systemTime);
    with systemTime do
       Result:= EncodeDate(wYear, wMonth, wDay)
               +EncodeTime(wHour, wMinute, wSecond, wMilliseconds);
+{$ELSE}
+   Not yet implemented!
+{$ENDIF}
 end;
 
 {$ifndef FPC}
@@ -401,7 +455,11 @@ end;
 function InterlockedExchangePointer(var target : Pointer; val : Pointer) : Pointer;
 {$ifndef WIN32_ASM}
 begin
+   {$ifdef FPC}
+   Result:=InterlockedExchangePointer(target, val);
+   {$else}
    Result:=Windows.InterlockedExchangePointer(target, val);
+   {$endif}
 {$else}
 asm
    lock  xchg dword ptr [eax], edx
@@ -520,7 +578,7 @@ var
    searchRec : TFindDataRec;
    infoLevel : TFindexInfoLevels;
    fileName : String;
-   shouldAbort : Boolean;
+   skipScan : Boolean;
 begin
    // 6.1 required for FindExInfoBasic (Win 2008 R2 or Win 7)
    if ((Win32MajorVersion shl 8) or Win32MinorVersion)>=$601 then
@@ -528,9 +586,9 @@ begin
    else infoLevel:=FindExInfoStandard;
 
    if Assigned(onProgress) then begin
-      shouldAbort:=False;
-      onProgress(directory, shouldAbort);
-      if shouldAbort then exit;
+      skipScan:=False;
+      onProgress(directory, skipScan);
+      if skipScan then exit;
    end;
 
    fileName:=directory+'*';
@@ -725,7 +783,7 @@ end;
 
 // FileCopy
 //
-function FileCopy(const existing, new : String; failIfExists : Boolean) : Boolean;
+function FileCopy(const existing, new : UnicodeString; failIfExists : Boolean) : Boolean;
 begin
    Result:=Windows.CopyFileW(PWideChar(existing), PWideChar(new), failIfExists);
 end;
@@ -734,7 +792,7 @@ end;
 //
 function FileDelete(const fileName : String) : Boolean;
 begin
-   Result:=DeleteFile(fileName);
+   Result:=SysUtils.DeleteFile(fileName);
 end;
 
 // FileRename
@@ -742,6 +800,30 @@ end;
 function FileRename(const oldName, newName : String) : Boolean;
 begin
    Result:=RenameFile(oldName, newName);
+end;
+
+// FileSize
+//
+function FileSize(const name : String) : Int64;
+var
+   info : TWin32FileAttributeData;
+begin
+   if GetFileAttributesEx(PChar(Pointer(name)), GetFileExInfoStandard, @info) then
+      Result:=info.nFileSizeLow or (Int64(info.nFileSizeHigh) shl 32)
+   else Result:=-1;
+end;
+
+// FileDateTime
+//
+function FileDateTime(const name : String) : TDateTime;
+var
+   info : TWin32FileAttributeData;
+   systemTime : TSystemTime;
+begin
+   if GetFileAttributesEx(PChar(Pointer(name)), GetFileExInfoStandard, @info) then begin
+      FileTimeToSystemTime(info.ftLastWriteTime, systemTime);
+      Result:=SystemTimeToDateTime(systemTime);
+   end else Result:=0;
 end;
 
 // DirectSet8087CW
@@ -941,7 +1023,7 @@ var ReleaseSRWLockShared : procedure (var SRWLock : SRWLOCK); stdcall;
 
 function SupportsSRW : Boolean;
 var
-   h : Integer;
+   h : HMODULE;
 begin
    if not vSupportsSRWChecked then begin
       vSupportsSRWChecked:=True;
@@ -1004,5 +1086,15 @@ begin
       FCS.Leave
    else ReleaseSRWLockExclusive(FSRWLock)
 end;
+
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+initialization
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+
+   InitializeGetSystemMilliseconds;
 
 end.

@@ -554,6 +554,7 @@ type
 
    Tx86RoundFunc = class (Tx86MagicFunc)
       function CompileInteger(expr : TTypedExpr) : Integer; override;
+      function DoCompileFloat(expr : TTypedExpr) : TxmmRegister; override;
    end;
 
    Tx86OddFunc = class (Tx86MagicBoolFunc)
@@ -568,6 +569,8 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
+
+{$R-}
 
 const
    cExecInstanceGPR = gprEDI;
@@ -722,6 +725,7 @@ begin
    RegisterJITter(TIntVarExpr,                  Tx86IntVar.Create(Self));
    RegisterJITter(TBoolVarExpr,                 Tx86BoolVar.Create(Self));
    RegisterJITter(TObjectVarExpr,               Tx86ObjectVar.Create(Self));
+   RegisterJITter(TSelfObjectVarExpr,           Tx86ObjectVar.Create(Self));
    RegisterJITter(TVarParentExpr,               FInterpretedJITter.IncRefCount);
 
    RegisterJITter(TFieldExpr,                   FInterpretedJITter.IncRefCount);
@@ -4634,6 +4638,30 @@ begin
    x86._mov_eaxedx_qword_ptr_reg(gprESP, 0);
 
    Result:=0;
+end;
+
+// DoCompileFloat
+//
+function Tx86RoundFunc.DoCompileFloat(expr : TTypedExpr) : TxmmRegister;
+var
+   reg : TxmmRegister;
+begin
+   reg:=jit.CompileFloat(TMagicFuncExpr(expr).Args[0] as TTypedExpr);
+
+   jit.FPreamble.NeedTempSpace(SizeOf(Double));
+
+   x86._movsd_esp_reg(reg);
+
+   jit.ReleaseXMMReg(reg);
+
+   x86._fld_esp;
+   x86._fistp_esp;
+   x86._fild_esp;
+   x86._fstp_esp;
+
+   Result := jit.AllocXMMReg(expr);
+
+   x86._movsd_reg_esp(Result);
 end;
 
 // ------------------

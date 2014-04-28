@@ -36,6 +36,7 @@ type
          procedure Commit;
          procedure Rollback;
          function InTransaction : Boolean;
+         function CanReleaseToPool : String;
 
          procedure Exec(const sql : String; const parameters : TData);
          function Query(const sql : String; const parameters : TData) : IdwsDataSet;
@@ -70,6 +71,7 @@ type
          function AsString : String; override;
          function AsInteger : Int64; override;
          function AsFloat : Double; override;
+         function AsBlob : RawByteString; override;
    end;
 
 //   IdwsBlob = interface
@@ -167,6 +169,13 @@ end;
 function TdwsGUIDDataBase.InTransaction : Boolean;
 begin
    Result:=False;
+end;
+
+// CanReleaseToPool
+//
+function TdwsGUIDDataBase.CanReleaseToPool : String;
+begin
+   Result:='';
 end;
 
 // Exec
@@ -297,6 +306,13 @@ end;
 // AsFloat
 //
 function TdwsGUIDDataField.AsFloat : Double;
+begin
+   raise Exception.Create('Not supported');
+end;
+
+// AsBlob
+//
+function TdwsGUIDDataField.AsBlob : RawByteString;
 begin
    raise Exception.Create('Not supported');
 end;

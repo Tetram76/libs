@@ -49,6 +49,7 @@
       {$DEFINE DELPHI_XE_PLUS}
    {$ELSE}
       {$DEFINE DELPHI_2010_MINUS}
+      {$DEFINE WINDOWS}
    {$IFEND}
    {$IF CompilerVersion>22.0}
       {$DEFINE DELPHI_XE2_PLUS}
@@ -78,4 +79,10 @@
      {$DEFINE CPUX86}
   {$ENDIF}
 {$ENDIF}
+
+{$IF Defined(WIN32)}
+   {$DEFINE WINDOWS}
+{$ELSEIF Defined(WIN64)}
+   {$DEFINE WINDOWS}
+{$IFEND}
 

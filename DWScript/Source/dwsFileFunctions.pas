@@ -98,6 +98,14 @@ type
       procedure DoEvalProc(const args : TExprBaseListExec); override;
    end;
 
+   TFileSizeFunc = class(TInternalMagicIntFunction)
+      function DoEvalAsInteger(const args : TExprBaseListExec) : Int64; override;
+   end;
+
+   TFileDateTimeFunc = class(TInternalMagicFloatFunction)
+      procedure DoEvalAsFloat(const args : TExprBaseListExec; var Result : Double); override;
+   end;
+
    TFileExistsFunc = class(TInternalMagicBoolFunction)
       function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
    end;
@@ -140,6 +148,10 @@ type
       function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
    end;
 
+   TEnumerateDirFunc = class(TInternalMagicVariantFunction)
+      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+   end;
+
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -151,13 +163,25 @@ implementation
 // RegisterFileTypes
 //
 procedure RegisterFileTypes(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
-                              unitTable : TSymbolTable);
+                            unitTable : TSymbolTable);
 var
    typFile : TBaseVariantSymbol;
 begin
    typFile:=TBaseFileSymbol.Create;
 
    systemTable.AddSymbol(typFile);
+
+   unitTable.AddSymbol(TConstSymbol.CreateValue('fmOpenRead', systemTable.TypInteger, fmOpenRead));
+   unitTable.AddSymbol(TConstSymbol.CreateValue('fmOpenWrite', systemTable.TypInteger, fmOpenWrite));
+   unitTable.AddSymbol(TConstSymbol.CreateValue('fmOpenReadWrite', systemTable.TypInteger, fmOpenReadWrite));
+   unitTable.AddSymbol(TConstSymbol.CreateValue('fmExclusive', systemTable.TypInteger, fmExclusive));
+   unitTable.AddSymbol(TConstSymbol.CreateValue('fmShareExclusive', systemTable.TypInteger, fmShareExclusive));
+   unitTable.AddSymbol(TConstSymbol.CreateValue('fmShareDenyWrite', systemTable.TypInteger, fmShareDenyWrite));
+   unitTable.AddSymbol(TConstSymbol.CreateValue('fmShareDenyNone', systemTable.TypInteger, fmShareDenyNone));
+
+   unitTable.AddSymbol(TConstSymbol.CreateValue('soFromBeginning', systemTable.TypInteger, soFromBeginning));
+   unitTable.AddSymbol(TConstSymbol.CreateValue('soFromCurrent', systemTable.TypInteger, soFromCurrent));
+   unitTable.AddSymbol(TConstSymbol.CreateValue('soFromEnd', systemTable.TypInteger, soFromEnd));
 end;
 
 // GetFileHandle
@@ -241,7 +265,7 @@ var
    h : THandle;
    i : IdwsFileHandle;
 begin
-   h:=FileOpen(args.AsString[0], args.AsInteger[1]);
+   h:=FileOpen(args.AsFileName[0], args.AsInteger[1]);
    i:=TdwsFileHandle.Create(h);
    Result:=IUnknown(i);
 end;
@@ -257,7 +281,7 @@ var
    h : THandle;
    i : IdwsFileHandle;
 begin
-   h:=FileOpen(args.AsString[0], fmOpenRead+fmShareDenyNone);
+   h:=FileOpen(args.AsFileName[0], fmOpenRead+fmShareDenyNone);
    i:=TdwsFileHandle.Create(h);
    Result:=IUnknown(i);
 end;
@@ -273,7 +297,7 @@ var
    h : THandle;
    i : IdwsFileHandle;
 begin
-   h:=FileCreate(args.AsString[0]);
+   h:=FileCreate(args.AsFileName[0]);
    i:=TdwsFileHandle.Create(h);
    Result:=IUnknown(i);
 end;
@@ -394,6 +418,28 @@ begin
 end;
 
 // ------------------
+// ------------------ TFileSizeFunc ------------------
+// ------------------
+
+// DoEvalAsInteger
+//
+function TFileSizeFunc.DoEvalAsInteger(const args : TExprBaseListExec) : Int64;
+begin
+   Result:=FileSize(args.AsFileName[0]);
+end;
+
+// ------------------
+// ------------------ TFileDateTimeFunc ------------------
+// ------------------
+
+// DoEvalAsFloat
+//
+procedure TFileDateTimeFunc.DoEvalAsFloat(const args : TExprBaseListExec; var Result : Double);
+begin
+   Result:=FileDateTime(args.AsFileName[0]);
+end;
+
+// ------------------
 // ------------------ TFileExistsFunc ------------------
 // ------------------
 
@@ -401,7 +447,7 @@ end;
 //
 function TFileExistsFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-   Result:=FileExists(args.AsString[0]);
+   Result:=FileExists(args.AsFileName[0]);
 end;
 
 // ------------------
@@ -412,7 +458,7 @@ end;
 //
 function TDirectoryExistsFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-   Result:=DirectoryExists(args.AsString[0]);
+   Result:=DirectoryExists(args.AsFileName[0]);
 end;
 
 // ------------------
@@ -423,7 +469,7 @@ end;
 //
 procedure TExpandFileNameFunc.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 begin
-   Result:=ExpandFileName(args.AsString[0]);
+   Result:=args.AsFileName[0];
 end;
 
 // ------------------
@@ -456,7 +502,7 @@ end;
 //
 function TDeleteFileFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-   Result:=FileDelete(args.AsString[0]);
+   Result:=FileDelete(args.AsFileName[0]);
 end;
 
 // ------------------
@@ -467,7 +513,7 @@ end;
 //
 function TCopyFileFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-   Result:=FileCopy(args.AsString[0], args.AsString[1], args.AsBoolean[2]);
+   Result:=FileCopy(args.AsFileName[0], args.AsFileName[1], args.AsBoolean[2]);
 end;
 
 // ------------------
@@ -478,7 +524,7 @@ end;
 //
 function TRenameFileFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-   Result:=FileRename(args.AsString[0], args.AsString[1]);
+   Result:=FileRename(args.AsFileName[0], args.AsFileName[1]);
 end;
 
 // ------------------
@@ -489,7 +535,7 @@ end;
 //
 function TForceDirectoriesFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-   Result:=ForceDirectories(args.AsString[0]);
+   Result:=ForceDirectories(args.AsFileName[0]);
 end;
 
 // ------------------
@@ -500,7 +546,7 @@ end;
 //
 function TCreateDirFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-   Result:=CreateDir(args.AsString[0]);
+   Result:=CreateDir(args.AsFileName[0]);
 end;
 
 // ------------------
@@ -511,7 +557,32 @@ end;
 //
 function TRemoveDirFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
 begin
-   Result:=RemoveDir(args.AsString[0]);
+   Result:=RemoveDir(args.AsFileName[0]);
+end;
+
+// ------------------
+// ------------------ TEnumerateDirFunc ------------------
+// ------------------
+
+// DoEvalAsVariant
+//
+function TEnumerateDirFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+var
+   sl : TStringList;
+   newArray : TScriptDynamicArray;
+   i : Integer;
+begin
+   sl:=TStringList.Create;
+   try
+      CollectFiles(args.AsFileName[0], args.AsString[1], sl, args.AsBoolean[2]);
+      newArray:=TScriptDynamicArray.CreateNew((args.Exec as TdwsProgramExecution).Prog.SystemTable.SymbolTable.TypString);
+      Result:=IScriptObj(newArray);
+      newArray.ArrayLength:=sl.Count;
+      for i:=0 to newArray.ArrayLength-1 do
+         newArray.AsString[i]:=sl[i];
+   finally
+      sl.Free;
+   end;
 end;
 
 // ------------------------------------------------------------------
@@ -536,6 +607,9 @@ initialization
 
    RegisterInternalProcedure(TFileCloseFunc, 'FileClose', ['f', SYS_FILE]);
 
+   RegisterInternalIntFunction(TFileSizeFunc, 'FileSize', ['name', SYS_STRING], []);
+   RegisterInternalFloatFunction(TFileDateTimeFunc, 'FileDateTime', ['name', SYS_STRING], []);
+
    RegisterInternalBoolFunction(TFileExistsFunc, 'FileExists', ['name', SYS_STRING], []);
    RegisterInternalBoolFunction(TDirectoryExistsFunc, 'DirectoryExists', ['name', SYS_STRING], []);
 
@@ -550,6 +624,8 @@ initialization
    RegisterInternalBoolFunction(TForceDirectoriesFunc, 'ForceDirectories', ['path', SYS_STRING], []);
    RegisterInternalBoolFunction(TCreateDirFunc, 'CreateDir', ['path', SYS_STRING], []);
    RegisterInternalBoolFunction(TRemoveDirFunc, 'RemoveDir', ['path', SYS_STRING], []);
+
+   RegisterInternalFunction(TEnumerateDirFunc, 'EnumerateDir', ['path', SYS_STRING, 'mask', SYS_STRING, 'recursive', SYS_BOOLEAN], 'array of integer', []);
 
 end.
 

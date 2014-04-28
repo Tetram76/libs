@@ -62,6 +62,31 @@ object dwsWebLib: TdwsWebLib
             Kind = mkClassFunction
           end
           item
+            Name = 'GetContentField'
+            Parameters = <
+              item
+                Name = 'name'
+                DataType = 'String'
+              end>
+            ResultType = 'String'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesWebRequestMethodsGetContentFieldEval
+            Visibility = cvProtected
+            Kind = mkClassFunction
+          end
+          item
+            Name = 'HasContentField'
+            Parameters = <
+              item
+                Name = 'name'
+                DataType = 'String'
+              end>
+            ResultType = 'Boolean'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesWebRequestMethodsHasContentFieldEval
+            Kind = mkClassFunction
+          end
+          item
             Name = 'URL'
             ResultType = 'String'
             Attributes = [maStatic]
@@ -165,6 +190,13 @@ object dwsWebLib: TdwsWebLib
             Attributes = [maClassMethod, maStatic]
             OnEval = dwsWebClassesWebRequestMethodsContentLengthEval
             Kind = mkClassFunction
+          end
+          item
+            Name = 'IfModifiedSince'
+            ResultType = 'Float'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesWebRequestMethodsIfModifiedSinceEval
+            Kind = mkClassFunction
           end>
         Properties = <
           item
@@ -191,6 +223,16 @@ object dwsWebLib: TdwsWebLib
             Name = 'QueryField'
             DataType = 'String'
             ReadAccess = 'GetQueryField'
+            Parameters = <
+              item
+                Name = 'name'
+                DataType = 'String'
+              end>
+          end
+          item
+            Name = 'ContentField'
+            DataType = 'String'
+            ReadAccess = 'GetContentField'
             Parameters = <
               item
                 Name = 'name'
@@ -361,6 +403,17 @@ object dwsWebLib: TdwsWebLib
             Attributes = [maClassMethod, maStatic]
             OnEval = dwsWebClassesWebResponseMethodsSetCompressionEval
             Kind = mkClassProcedure
+          end
+          item
+            Name = 'SetLastModified'
+            Parameters = <
+              item
+                Name = 'v'
+                DataType = 'Float'
+              end>
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesWebResponseMethodsSetLastModifiedEval
+            Kind = mkClassProcedure
           end>
         Properties = <
           item
@@ -407,6 +460,75 @@ object dwsWebLib: TdwsWebLib
             Name = 'Compression'
             DataType = 'Boolean'
             WriteAccess = 'SetCompression'
+          end
+          item
+            Name = 'LastModified'
+            DataType = 'Float'
+            WriteAccess = 'SetLastModified'
+          end>
+      end
+      item
+        Name = 'HttpQuery'
+        IsStatic = True
+        Methods = <
+          item
+            Name = 'GetText'
+            Parameters = <
+              item
+                Name = 'url'
+                DataType = 'String'
+              end
+              item
+                Name = 'data'
+                DataType = 'String'
+                IsVarParam = True
+              end>
+            ResultType = 'Integer'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsGetTextEval
+            Kind = mkClassFunction
+          end
+          item
+            Name = 'GetData'
+            Parameters = <
+              item
+                Name = 'url'
+                DataType = 'String'
+              end
+              item
+                Name = 'data'
+                DataType = 'String'
+                IsVarParam = True
+              end>
+            ResultType = 'Integer'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsGetDataEval
+            Kind = mkClassFunction
+          end
+          item
+            Name = 'PostData'
+            Parameters = <
+              item
+                Name = 'url'
+                DataType = 'String'
+              end
+              item
+                Name = 'requestData'
+                DataType = 'String'
+              end
+              item
+                Name = 'requestContentType'
+                DataType = 'String'
+              end
+              item
+                Name = 'replyData'
+                DataType = 'String'
+                IsVarParam = True
+              end>
+            ResultType = 'Integer'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsPostDataEval
+            Kind = mkClassFunction
           end>
       end>
     Enumerations = <
@@ -451,6 +573,33 @@ object dwsWebLib: TdwsWebLib
       item
         Name = 'WebAuthentications'
         BaseType = 'WebAuthentication'
+      end>
+    Functions = <
+      item
+        Name = 'DeflateCompress'
+        Parameters = <
+          item
+            Name = 'data'
+            DataType = 'String'
+          end
+          item
+            Name = 'level'
+            DataType = 'Integer'
+            HasDefaultValue = True
+            DefaultValue = '1'
+          end>
+        ResultType = 'String'
+        OnFastEval = dwsWebFunctionsDeflateCompressFastEval
+      end
+      item
+        Name = 'DeflateDecompress'
+        Parameters = <
+          item
+            Name = 'data'
+            DataType = 'String'
+          end>
+        ResultType = 'String'
+        OnFastEval = dwsWebFunctionsDeflateDecompressionFastEval
       end>
     UnitName = 'System.Net'
     StaticSymbols = True

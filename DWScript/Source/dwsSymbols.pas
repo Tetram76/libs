@@ -160,6 +160,7 @@ type
          function  EvalAsFloat(exec : TdwsExecution) : Double; virtual; abstract;
          procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); overload; virtual; abstract;
          procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); overload; virtual; abstract;
+         procedure EvalAsDataContext(exec : TdwsExecution; var Result : IDataContext); virtual;
          procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); virtual; abstract;
          procedure EvalNoResult(exec : TdwsExecution); virtual;
 
@@ -653,6 +654,7 @@ type
          FFlags : TFuncSymbolFlags;
          FKind : TFuncKind;
          FExternalName : UnicodeString;
+         FExternalConvention: TTokenType;
 
          procedure SetType(const Value: TTypeSymbol);
          function GetCaption : UnicodeString; override;
@@ -717,6 +719,7 @@ type
          property Kind : TFuncKind read FKind write FKind;
          property ExternalName : UnicodeString read GetExternalName write FExternalName;
          function HasExternalName : Boolean;
+         property ExternalConvention: TTokenType read FExternalConvention write FExternalConvention;
          property IsLambda : Boolean read GetIsLambda write SetIsLambda;
          property Level : SmallInt read GetLevel;
          property InternalParams : TSymbolTable read FInternalParams;
@@ -946,69 +949,6 @@ type
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
          procedure InitData(const data : TData; offset : Integer); override;
          function SupportsEmptyParam : Boolean; virtual;
-   end;
-
-   IConnectorType = interface;
-
-   IConnector = interface
-      ['{8D534D1A-4C6B-11D5-8DCB-0000216D9E86}']
-      function ConnectorCaption: UnicodeString;
-      function ConnectorName: UnicodeString;
-      function GetUnit(const UnitName: UnicodeString): IConnectorType;
-   end;
-
-   TConnectorArgs = array of TData;
-
-   IConnectorCall = interface (IGetSelf)
-      ['{8D534D1B-4C6B-11D5-8DCB-0000216D9E86}']
-      function Call(const base : Variant; const args : TConnectorArgs) : TData;
-      function NeedDirectReference : Boolean;
-   end;
-
-   IConnectorMember = interface (IGetSelf)
-      ['{8D534D1C-4C6B-11D5-8DCB-0000216D9E86}']
-      function Read(const base : Variant) : TData;
-      procedure Write(const base : Variant; const data : TData);
-   end;
-
-   IConnectorEnumerator = interface (IGetSelf)
-      ['{13223223-94F0-42FC-89FB-D413DAD670B7}']
-      function NewEnumerator(const base : Variant; const args : TConnectorArgs) : IUnknown;
-      function Step(const enumerator : IInterface; var data : TData) : Boolean;
-   end;
-
-   TConnectorParam = record
-      IsVarParam : Boolean;
-      TypSym : TTypeSymbol;
-   end;
-
-   TConnectorParamArray = array of TConnectorParam;
-
-   IConnectorType = interface
-     ['{8D534D1D-4C6B-11D5-8DCB-0000216D9E86}']
-     function ConnectorCaption: UnicodeString;
-     function AcceptsParams(const params: TConnectorParamArray) : Boolean;
-     function HasMethod(const MethodName: UnicodeString; const Params: TConnectorParamArray;
-                        var TypSym: TTypeSymbol): IConnectorCall;
-     function HasMember(const MemberName: UnicodeString; var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorMember;
-     function HasIndex(const PropName: UnicodeString; const Params: TConnectorParamArray;
-                       var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorCall;
-     function HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
-   end;
-
-   TConnectorSymbol = class(TBaseVariantSymbol)
-      private
-         FConnectorType : IConnectorType;
-
-      protected
-         function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
-
-      public
-         constructor Create(const name : UnicodeString; const connectorType : IConnectorType);
-
-         function Specialize(table : TSymbolTable; const qualifier : UnicodeString) : TConnectorSymbol; virtual;
-
-         property ConnectorType : IConnectorType read FConnectorType write FConnectorType;
    end;
 
    TSetOfSymbol = class sealed (TTypeSymbol)
@@ -1428,6 +1368,7 @@ type
    TClassOfSymbol = class sealed (TStructuredTypeMetaSymbol)
       protected
          function GetCaption : UnicodeString; override;
+         function GetDescription : UnicodeString; override;
          function DoIsOfType(typSym : TTypeSymbol) : Boolean; override;
 
       public
@@ -1730,6 +1671,8 @@ type
          procedure ClearScriptError;
 
          function GetCallStack : TdwsExprLocationArray; virtual; abstract;
+         function CallStackLastExpr : TExprBase; virtual; abstract;
+         function CallStackLastProg : TObject; virtual; abstract;
          function CallStackDepth : Integer; virtual; abstract;
 
          procedure DataContext_Create(const data : TData; addr : Integer; var Result : IDataContext); inline;
@@ -1739,6 +1682,8 @@ type
 
          procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : UnicodeString); virtual;
          procedure LocalizeString(const aString : UnicodeString; var Result : UnicodeString); virtual;
+
+         function ValidateFileName(const path : String) : String; virtual;
 
          function Random : Double;
 
@@ -1949,6 +1894,14 @@ end;
 
 // EvalNoResult
 //
+procedure TExprBase.EvalAsDataContext(exec: TdwsExecution; var Result: IDataContext);
+var
+   temp : IScriptObj;
+begin
+   EvalAsScriptObj(exec, temp);
+   Result := temp;
+end;
+
 procedure TExprBase.EvalNoResult(exec : TdwsExecution);
 begin
    Eval(exec);
@@ -3270,7 +3223,10 @@ begin
             param:=Params[i];
             otherParam:=funcSym.Params[i];
             if param.ClassType<>otherParam.ClassType then Exit;
-            if param.Typ<>otherParam.Typ then Exit;
+            if param.Typ<>otherParam.Typ then begin
+               if not param.Typ.IsCompatible(otherParam.Typ) then Exit;
+               if not otherParam.Typ.IsCompatible(param.Typ) then Exit;
+            end;
          end;
          Result:=True;
       end;
@@ -4642,10 +4598,18 @@ end;
 
 function TClassOfSymbol.GetCaption: UnicodeString;
 begin
-  if Typ <> nil then
-    Result := 'class of ' + Typ.Name
-  else
-    Result := 'class of ???';
+   if Name <> '' then
+      Result := Name
+   else Result := GetDescription;
+end;
+
+// GetDescription
+//
+function TClassOfSymbol.GetDescription : UnicodeString;
+begin
+   if Typ <> nil then
+      Result := 'class of ' + Typ.Name
+   else Result := 'class of ???';
 end;
 
 function TClassOfSymbol.IsCompatible(typSym : TTypeSymbol) : Boolean;
@@ -4839,33 +4803,6 @@ end;
 function TBaseVariantSymbol.SupportsEmptyParam : Boolean;
 begin
    Result:=True;
-end;
-
-// ------------------
-// ------------------ TConnectorSymbol ------------------
-// ------------------
-
-// Create
-//
-constructor TConnectorSymbol.Create(const name : UnicodeString; const connectorType : IConnectorType);
-begin
-   inherited Create(name);
-   FConnectorType:=ConnectorType;
-end;
-
-// DoIsOfType
-//
-function TConnectorSymbol.DoIsOfType(typSym : TTypeSymbol) : Boolean;
-begin
-   Result:=   (inherited DoIsOfType(typSym))
-           or (typSym is TBaseVariantSymbol);
-end;
-
-// Specialize
-//
-function TConnectorSymbol.Specialize(table : TSymbolTable; const qualifier : UnicodeString) : TConnectorSymbol;
-begin
-   Result:=Self;
 end;
 
 // ------------------
@@ -6700,6 +6637,13 @@ end;
 procedure TdwsExecution.LocalizeString(const aString : UnicodeString; var Result : UnicodeString);
 begin
    Result:=aString;
+end;
+
+// ValidateFileName
+//
+function TdwsExecution.ValidateFileName(const path : String) : String;
+begin
+   raise EScriptException.CreateFmt(RTE_UnauthorizedFilePath, [path]);
 end;
 
 // DataContext_Create

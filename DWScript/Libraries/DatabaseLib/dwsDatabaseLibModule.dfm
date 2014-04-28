@@ -1,5 +1,7 @@
 object dwsDatabaseLib: TdwsDatabaseLib
   OldCreateOrder = False
+  OnCreate = DataModuleCreate
+  OnDestroy = DataModuleDestroy
   Left = 646
   Top = 86
   Height = 150
@@ -264,6 +266,54 @@ object dwsDatabaseLib: TdwsDatabaseLib
             Kind = mkFunction
           end
           item
+            Name = 'AsBlob'
+            Parameters = <
+              item
+                Name = 'fieldName'
+                DataType = 'String'
+              end>
+            ResultType = 'String'
+            Overloaded = True
+            OnEval = dwsDatabaseClassesDataSetMethodsAsBlobByNameEval
+            Kind = mkFunction
+          end
+          item
+            Name = 'AsBlob'
+            Parameters = <
+              item
+                Name = 'index'
+                DataType = 'Integer'
+              end>
+            ResultType = 'String'
+            Overloaded = True
+            OnEval = dwsDatabaseClassesDataSetMethodsAsBlobByIndexEval
+            Kind = mkFunction
+          end
+          item
+            Name = 'IsNull'
+            Parameters = <
+              item
+                Name = 'fieldName'
+                DataType = 'String'
+              end>
+            ResultType = 'Boolean'
+            Overloaded = True
+            OnEval = dwsDatabaseClassesDataSetMethodsIsNullByNameEval
+            Kind = mkFunction
+          end
+          item
+            Name = 'IsNull'
+            Parameters = <
+              item
+                Name = 'index'
+                DataType = 'Integer'
+              end>
+            ResultType = 'Boolean'
+            Overloaded = True
+            OnEval = dwsDatabaseClassesDataSetMethodsIsNullByIndexEval
+            Kind = mkFunction
+          end
+          item
             Name = 'Stringify'
             ResultType = 'String'
             OnEval = dwsDatabaseClassesDataSetMethodsStringifyEval
@@ -338,12 +388,84 @@ object dwsDatabaseLib: TdwsDatabaseLib
             ResultType = 'Boolean'
             OnEval = dwsDatabaseClassesDataFieldMethodsAsBooleanEval
             Kind = mkFunction
+          end
+          item
+            Name = 'AsBlob'
+            ResultType = 'String'
+            OnEval = dwsDatabaseClassesDataFieldMethodsAsBlobEval
+            Kind = mkFunction
           end>
         OnCleanUp = dwsDatabaseClassesDataBaseCleanUp
       end
       item
         Name = 'EDBException'
         Ancestor = 'Exception'
+      end
+      item
+        Name = 'DataBasePool'
+        IsStatic = True
+        Methods = <
+          item
+            Name = 'Acquire'
+            Parameters = <
+              item
+                Name = 'name'
+                DataType = 'String'
+              end>
+            ResultType = 'DataBase'
+            Attributes = [maStatic]
+            OnEval = dwsDatabaseClassesDataBasePoolMethodsAcquireEval
+            Kind = mkClassFunction
+          end
+          item
+            Name = 'Release'
+            Parameters = <
+              item
+                Name = 'name'
+                DataType = 'String'
+              end
+              item
+                Name = 'db'
+                DataType = 'DataBase'
+                IsVarParam = True
+              end
+              item
+                Name = 'poolSize'
+                DataType = 'Integer'
+                HasDefaultValue = True
+                DefaultValue = 3
+              end>
+            Attributes = [maStatic]
+            OnEval = dwsDatabaseClassesDataBasePoolMethodsReleaseEval
+            Kind = mkClassProcedure
+          end
+          item
+            Name = 'Cleanup'
+            Parameters = <
+              item
+                Name = 'filter'
+                DataType = 'String'
+                HasDefaultValue = True
+                DefaultValue = '*'
+              end>
+            Attributes = [maStatic]
+            OnEval = dwsDatabaseClassesDataBasePoolMethodsCleanupEval
+            Kind = mkClassProcedure
+          end
+          item
+            Name = 'Count'
+            Parameters = <
+              item
+                Name = 'filter'
+                DataType = 'String'
+                HasDefaultValue = True
+                DefaultValue = '*'
+              end>
+            ResultType = 'Integer'
+            Attributes = [maStatic]
+            OnEval = dwsDatabaseClassesDataBasePoolMethodsCountEval
+            Kind = mkClassFunction
+          end>
       end>
     Enumerations = <
       item
@@ -374,6 +496,17 @@ object dwsDatabaseLib: TdwsDatabaseLib
             Name = 'Blob'
           end>
         Style = enumScoped
+      end>
+    Functions = <
+      item
+        Name = 'BlobParameter'
+        Parameters = <
+          item
+            Name = 'data'
+            DataType = 'String'
+          end>
+        ResultType = 'Variant'
+        OnFastEval = dwsDatabaseFunctionsBlobParameterFastEval
       end>
     UnitName = 'System.Data'
     StaticSymbols = True

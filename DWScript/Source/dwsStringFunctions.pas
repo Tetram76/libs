@@ -24,7 +24,7 @@ unit dwsStringFunctions;
 interface
 
 uses
-   Classes, SysUtils, Variants, StrUtils, Math,
+   Classes, SysUtils, Variants, StrUtils, Math, Masks,
    dwsXPlatform, dwsUtils, dwsStrings,
    dwsFunctions, dwsSymbols, dwsExprs, dwsCoreExprs, dwsExprList,
    dwsConstExprs, dwsMagicExprs, dwsDataContext;
@@ -197,6 +197,10 @@ type
     function DoEvalAsInteger(const args : TExprBaseListExec) : Int64; override;
   end;
 
+  TMatchesStrFunc = class(TInternalMagicBoolFunction)
+    function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
+  end;
+
   TIsDelimiterFunc = class(TInternalMagicBoolFunction)
     function DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean; override;
   end;
@@ -298,23 +302,21 @@ end;
 { TStrToIntFunc }
 
 function TStrToIntFunc.DoEvalAsInteger(const args : TExprBaseListExec) : Int64;
+var
+   s : UnicodeString;
 begin
-   {$ifdef FPC}
-   Result:=StrToInt64(UTF8Encode(args.AsString[0]));
-   {$else}
-   Result:=StrToInt64(args.AsString[0]);
-   {$endif}
+   s:=args.AsString[0];
+   Result:=StrToInt64(s);
 end;
 
 { TStrToIntDefFunc }
 
 function TStrToIntDefFunc.DoEvalAsInteger(const args : TExprBaseListExec) : Int64;
+var
+   s : UnicodeString;
 begin
-   {$ifdef FPC}
-   Result:=StrToInt64Def(UTF8Encode(args.AsString[0]), args.AsInteger[1]);
-   {$else}
-   Result:=StrToInt64Def(args.AsString[0], args.AsInteger[1]);
-   {$endif}
+   s:=args.AsString[0];
+   Result:=StrToInt64Def(s, args.AsInteger[1]);
 end;
 
 { TIntToHexFunc }
@@ -698,6 +700,13 @@ begin
    Result:=dwsXPlatform.AnsiCompareStr(args.AsString[0], args.AsString[1]);
 end;
 
+{ TMatchesStrFunc }
+
+function TMatchesStrFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
+begin
+   Result:=StrMatches(args.AsString[0], args.AsString[1]);
+end;
+
 { TIsDelimiterFunc }
 
 function TIsDelimiterFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
@@ -924,7 +933,8 @@ function TStrSplitFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant
 var
    str, delim : UnicodeString;
    dyn : TScriptDynamicArray;
-   p, pn, nDelim, k : Integer;
+   p, pn, nDelim, k, n : Integer;
+   c : Char;
 begin
    str:=args.AsString[0];
    delim:=args.AsString[1];
@@ -939,8 +949,32 @@ begin
       for k:=1 to pn do
          dyn.AsString[k-1]:=str[k];
 
+   end else if Length(delim)=1 then begin
+
+      // special case of a single-character delimiter
+      c:=delim[1];
+      n:=0;
+      for k:=1 to Length(str) do
+         if str[k]=c then Inc(n);
+      dyn.ArrayLength:=n+1;
+      if n=0 then
+         dyn.AsString[0]:=str
+      else begin
+         n:=0;
+         p:=1;
+         for k:=1 to Length(str) do begin
+            if str[k]=c then begin
+               dyn.AsString[n]:=Copy(str, p, k-p);
+               Inc(n);
+               p:=k+1;
+            end;
+         end;
+         dyn.AsString[n]:=Copy(str, p);
+      end;
+
    end else begin
 
+      // general case of string delimiter
       nDelim:=Length(delim);
       p:=1;
       k:=0;
@@ -1072,6 +1106,8 @@ initialization
    RegisterInternalIntFunction(TAnsiCompareTextFunc, 'AnsiCompareText', ['str1', SYS_STRING, 'str2', SYS_STRING], [iffStateLess]);
    RegisterInternalIntFunction(TCompareStrFunc, 'CompareStr', ['str1', SYS_STRING, 'str2', SYS_STRING], [iffStateLess], 'CompareTo');
    RegisterInternalIntFunction(TAnsiCompareStrFunc, 'AnsiCompareStr', ['str1', SYS_STRING, 'str2', SYS_STRING], [iffStateLess]);
+
+   RegisterInternalBoolFunction(TMatchesStrFunc, 'StrMatches', ['str', SYS_STRING, 'mask', SYS_STRING], [iffStateLess], 'Matches');
 
    RegisterInternalBoolFunction(TIsDelimiterFunc, 'IsDelimiter', ['delims', SYS_STRING, 'str', SYS_STRING, 'index', SYS_INTEGER], [iffStateLess]);
    RegisterInternalIntFunction(TLastDelimiterFunc, 'LastDelimiter', ['delims', SYS_STRING, 'str', SYS_STRING], [iffStateLess]);
