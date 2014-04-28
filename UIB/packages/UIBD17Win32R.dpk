@@ -1,8 +1,7 @@
 package UIBD17Win32R;
 
-{$IMPLICITBUILD OFF}
-
 {$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
@@ -24,8 +23,10 @@ package UIBD17Win32R;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DESCRIPTION 'UIB Components for XE3 D17'}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'UIB Components for Delphi/RAD Studio 2011'}
 {$RUNONLY}
+{$IMPLICITBUILD ON}
 
 requires
   rtl,
