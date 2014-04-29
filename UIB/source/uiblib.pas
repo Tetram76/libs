@@ -848,6 +848,7 @@ type
     function GetFieldName(const Index: Word): string; virtual;
     procedure AllocateDataBuffer(AInit: boolean = true); virtual;
     function GetMaxSqlLen(const Index: Word): SmallInt; virtual;
+    function GetMaxStrLen(const Index: Word): SmallInt; virtual;
 
     function AddFieldA(const name: AnsiString): Word; virtual;
     function AddFieldW(const name: UnicodeString): Word; virtual;
@@ -887,6 +888,7 @@ type
     property FieldName[const Index: Word]: string read GetFieldName;
     property ParamCount : Word read FParamCount;
     property MaxSqlLen[const Index: Word]: Smallint read GetMaxSqlLen;
+    property MaxStrLen[const Index: Word]: Smallint read GetMaxStrLen;
   end;
 
   TSQLParamsClass = class of TSQLParams;
@@ -6666,6 +6668,15 @@ procedure TSQLParams.AddFieldType(const Name: string; FieldType: TUIBFieldType;
   begin
     CheckRange(Index);
     Result := FXSQLDA.sqlvar[Index].MaxSqlLen
+  end;
+
+  function TSQLParams.GetMaxStrLen(const Index: Word): SmallInt;
+  begin
+    CheckRange(Index);
+    if (CharacterSet = csNone) or (FXSQLDA.sqlvar[Index].SqlSubType = 0) then
+      Result := FXSQLDA.sqlvar[Index].MaxSqlLen
+    else
+      Result := FXSQLDA.sqlvar[Index].MaxSqlLen div BytesPerCharacter[CharacterSet];
   end;
 
   function TSQLParams.GetFieldIndex(const name: AnsiString): Word;
