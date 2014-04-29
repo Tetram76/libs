@@ -13,6 +13,11 @@
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Android' and '$(Base)'=='true') or '$(Base_Android)'!=''">
+        <Base_Android>true</Base_Android>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
         <Base_Win32>true</Base_Win32>
         <CfgParent>Base</CfgParent>
@@ -52,13 +57,18 @@
         <DCC_N>true</DCC_N>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Android)'!=''">
+        <DCC_UsePackage>rtl;dbrtl;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <DCC_UsePackage>rtl;vcl;vclimg;dbrtl;vcldb;VclSmp;bdertl;PngComponents;Jcl;JvCore;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <Icon_MainIcon>MediaKit_Icon1.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <DCC_UsePackage>rtl;vcl;vclimg;dbrtl;vcldb;VclSmp;PngComponents;$(DCC_UsePackage)</DCC_UsePackage>
         <Icon_MainIcon>MediaKit_Icon1.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
