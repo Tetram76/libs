@@ -396,20 +396,20 @@ begin
 
   Result :=
 {$IFNDEF U_HIDE_SYSTEM_API}
-    Assigned(@uloc_getDefaultExportName) and Assigned(@uloc_setDefaultExportName) and
+    Assigned(@uloc_getDefault) and Assigned(@uloc_setDefault) and
 {$ENDIF ~U_HIDE_SYSTEM_API}
-    Assigned(@uloc_getLanguageExportName) and Assigned(@uloc_getScriptExportName) and Assigned(@uloc_getCountryExportName) and
-    Assigned(@uloc_getVariantExportName) and Assigned(@uloc_getNameExportName) and Assigned(@uloc_canonicalizeExportName) and
-    Assigned(@uloc_getISO3LanguageExportName) and Assigned(@uloc_getISO3CountryExportName) and Assigned(@uloc_getLCIDExportName) and
-    Assigned(@uloc_getDisplayLanguageExportName) and Assigned(@uloc_getDisplayScriptExportName) and Assigned(@uloc_getDisplayCountryExportName) and
-    Assigned(@uloc_getDisplayVariantExportName) and Assigned(@uloc_getDisplayKeywordExportName) and Assigned(@uloc_getDisplayKeywordValueExportName) and
-    Assigned(@uloc_getDisplayNameExportName) and Assigned(@uloc_getAvailableExportName) and Assigned(@uloc_countAvailableExportName) and
-    Assigned(@uloc_getISOLanguagesExportName) and Assigned(@uloc_getISOCountriesExportName) and Assigned(@uloc_getParentExportName) and
-    Assigned(@uloc_getBaseNameExportName) and Assigned(@uloc_openKeywordsExportName) and Assigned(@uloc_getKeywordValueExportName) and
-    Assigned(@uloc_setKeywordValueExportName) and Assigned(@uloc_getCharacterOrientationExportName) and Assigned(@uloc_getLineOrientationExportName) and
-    Assigned(@uloc_acceptLanguageFromHTTPExportName) and Assigned(@uloc_acceptLanguageExportName) and Assigned(@uloc_getLocaleForLCIDExportName) and
-    Assigned(@uloc_addLikelySubtagsExportName) and Assigned(@uloc_minimizeSubtagsExportName) and Assigned(@uloc_forLanguageTagExportName) and
-    Assigned(@uloc_toLanguageTagExportName);
+    Assigned(@uloc_getLanguage) and Assigned(@uloc_getScript) and Assigned(@uloc_getCountry) and
+    Assigned(@uloc_getVariant) and Assigned(@uloc_getName) and Assigned(@uloc_canonicalize) and
+    Assigned(@uloc_getISO3Language) and Assigned(@uloc_getISO3Country) and Assigned(@uloc_getLCID) and
+    Assigned(@uloc_getDisplayLanguage) and Assigned(@uloc_getDisplayScript) and Assigned(@uloc_getDisplayCountry) and
+    Assigned(@uloc_getDisplayVariant) and Assigned(@uloc_getDisplayKeyword) and Assigned(@uloc_getDisplayKeywordValue) and
+    Assigned(@uloc_getDisplayName) and Assigned(@uloc_getAvailable) and Assigned(@uloc_countAvailable) and
+    Assigned(@uloc_getISOLanguages) and Assigned(@uloc_getISOCountries) and Assigned(@uloc_getParent) and
+    Assigned(@uloc_getBaseName) and Assigned(@uloc_openKeywords) and Assigned(@uloc_getKeywordValue) and
+    Assigned(@uloc_setKeywordValue) and Assigned(@uloc_getCharacterOrientation) and Assigned(@uloc_getLineOrientation) and
+    Assigned(@uloc_acceptLanguageFromHTTP) and Assigned(@uloc_acceptLanguage) and Assigned(@uloc_getLocaleForLCID) and
+    Assigned(@uloc_addLikelySubtags) and Assigned(@uloc_minimizeSubtags) and Assigned(@uloc_forLanguageTag) and
+    Assigned(@uloc_toLanguageTag);
 end;
 
 procedure UnloadICU;

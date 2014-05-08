@@ -5,7 +5,7 @@ unit ICUNumberFormatter;
 interface
 
 uses
-  System.SysUtils, System.Classes, _unum, _uloc, _utypes;
+  System.SysUtils, System.Classes, _unum, _uloc, _utypes, ICULocale;
 
 type
   TICUNumberFormatterWrapper = class(TICUObject)
@@ -503,7 +503,7 @@ function ICUCurrencyToStr(const Value: Double; const Locale: AnsiString = ''; co
 var
   Formatter: TICUNumberFormatter;
 begin
-  Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
+  Formatter := TICUNumberFormatter.Create(ProperLocale(Locale), UNUM_CURRENCY);
   try
     if CurrencySymbol <> '' then
       Formatter.Symbols.Currency := CurrencySymbol;
@@ -519,7 +519,7 @@ var
   Formatter: TICUNumberFormatter;
   s: string;
 begin
-  Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
+  Formatter := TICUNumberFormatter.Create(ProperLocale(Locale), UNUM_CURRENCY);
   try
     Formatter.Symbols.Currency := '';
     s := Formatter.Format(Value);
@@ -533,7 +533,7 @@ function ICUStrToCurrency(const Value: string; const Locale: AnsiString = ''; co
 var
   Formatter: TICUNumberFormatter;
 begin
-  Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
+  Formatter := TICUNumberFormatter.Create(ProperLocale(Locale), UNUM_CURRENCY);
   try
     if CurrencySymbol <> '' then
       Formatter.Symbols.Currency := CurrencySymbol;
@@ -549,7 +549,7 @@ function ICUStrToCurrencyDef(const Value: string; const Default: Double; const L
 var
   Formatter: TICUNumberFormatter;
 begin
-  Formatter := TICUNumberFormatter.Create(Locale, UNUM_CURRENCY);
+  Formatter := TICUNumberFormatter.Create(ProperLocale(Locale), UNUM_CURRENCY);
   try
     if CurrencySymbol <> '' then
       Formatter.Symbols.Currency := CurrencySymbol;
@@ -567,10 +567,11 @@ function ICUDoubleToStr(const Value: Double; const Locale: AnsiString = ''): str
 var
   Formatter: TICUNumberFormatter;
 begin
-  Formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  Formatter := TICUNumberFormatter.Create(ProperLocale(Locale), UNUM_DECIMAL);
   try
-    Formatter.Attributes.RoundingMode := UNUM_ROUND_UNNECESSARY;
+    Formatter.Attributes.RoundingMode := UNUM_ROUND_HALFEVEN;
     Result := Formatter.Format(Value);
+    ICUCheck(Formatter.GetErrorCode);
   finally
     Formatter.Free;
   end;
@@ -580,7 +581,7 @@ function ICUStrToDouble(const Value: string; const Locale: AnsiString = ''): Dou
 var
   Formatter: TICUNumberFormatter;
 begin
-  Formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  Formatter := TICUNumberFormatter.Create(ProperLocale(Locale), UNUM_DECIMAL);
   try
     Result := Formatter.ParseDouble(StringReplace(Value.Trim, #32, #160, [rfReplaceAll]));
   finally
@@ -592,7 +593,7 @@ function ICUStrToDoubleDef(const Value: string; const Default: Double; const Loc
 var
   Formatter: TICUNumberFormatter;
 begin
-  Formatter := TICUNumberFormatter.Create(Locale, UNUM_DECIMAL);
+  Formatter := TICUNumberFormatter.Create(ProperLocale(Locale), UNUM_DECIMAL);
   try
     Formatter.Attributes.ParseIntOnly := False;
     Formatter.Attributes.LenientParse := False;

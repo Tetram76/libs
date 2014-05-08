@@ -196,7 +196,7 @@ function ICUWeekendTransition(Locale: AnsiString; Day: UCalendarDaysOfWeek): Int
 implementation
 
 uses
-  Winapi.Windows, _umachine;
+  Winapi.Windows, _umachine, ICULocale;
 
 { TICUCalendarWrapper.TICUNumberFormatterChild }
 
@@ -591,7 +591,7 @@ function ICUIsWeekend(Locale: AnsiString; Date: TDateTime): Boolean;
 var
   cal: TICUCalendar;
 begin
-  cal := TICUCalendar.Create(Locale, UCAL_DEFAULT);
+  cal := TICUCalendar.Create(ProperLocale(Locale), UCAL_DEFAULT);
   try
     ResetErrorCode(cal.FStatus);
     Result := ucal_isWeekend(cal.FCalendar, Date, cal.FStatus);
@@ -605,7 +605,7 @@ function ICUWeekdayType(Locale: AnsiString; Day: UCalendarDaysOfWeek): UCalendar
 var
   cal: TICUCalendar;
 begin
-  cal := TICUCalendar.Create(Locale, UCAL_DEFAULT);
+  cal := TICUCalendar.Create(ProperLocale(Locale), UCAL_DEFAULT);
   try
     ResetErrorCode(cal.FStatus);
     Result := ucal_getDayOfWeekType(cal.FCalendar, Day, cal.FStatus);
@@ -619,7 +619,7 @@ function ICUWeekendTransition(Locale: AnsiString; Day: UCalendarDaysOfWeek): Int
 var
   cal: TICUCalendar;
 begin
-  cal := TICUCalendar.Create(Locale, UCAL_DEFAULT);
+  cal := TICUCalendar.Create(ProperLocale(Locale), UCAL_DEFAULT);
   try
     ResetErrorCode(cal.FStatus);
     Result := ucal_getWeekendTransition(cal.FCalendar, Day, cal.FStatus);
