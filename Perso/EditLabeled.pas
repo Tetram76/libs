@@ -549,6 +549,7 @@ constructor TCheckBoxLabeled.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FLinkControls := TControlList.Create;
+  FLinkControls.Add(Self);
 end;
 
 destructor TCheckBoxLabeled.Destroy;
