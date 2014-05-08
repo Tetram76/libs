@@ -39,7 +39,8 @@ uses
   _enum in '..\lib\_enum.pas',
   _utmscale in '..\lib\_utmscale.pas',
   ICUCalendar in '..\ICUCalendar.pas',
-  ICUEnumeration in '..\ICUEnumeration.pas';
+  ICUEnumeration in '..\ICUEnumeration.pas',
+  ICULocale in '..\ICULocale.pas';
 
 {$R *.RES}
 

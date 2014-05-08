@@ -14,6 +14,7 @@ type
     procedure TearDown; override;
   published
     procedure TestCurrencyToStr;
+    procedure TestCurrencyToStrDefaultLocale;
     procedure TestCurrencyToStrShort;
     procedure TestDoubleToStr;
     procedure TestStrToDouble;
@@ -25,6 +26,8 @@ type
 implementation
 
 { TestTICUNumberFormat }
+
+uses _uloc;
 
 procedure TestTICUNumberFormat.SetUp;
 begin
@@ -43,6 +46,13 @@ begin
   CheckEquals('$2,145.46', ICUCurrencyToStr(2145.456, 'en-US'), 'en-US');
 end;
 
+procedure TestTICUNumberFormat.TestCurrencyToStrDefaultLocale;
+begin
+  CheckEquals('fr_FR', uloc_getDefault);
+  CheckEquals('2'#160'145,46'#160'€', ICUCurrencyToStr(2145.456, uloc_getDefault), 'uloc_getDefault');
+  CheckEquals('2'#160'145,46'#160'€', ICUCurrencyToStr(2145.456), 'default');
+end;
+
 procedure TestTICUNumberFormat.TestCurrencyToStrShort;
 begin
   // ATTENTION: icu-fr utilise #160 (espace insécable) au lieu de #32 comme espace
@@ -55,6 +65,8 @@ begin
   // ATTENTION: icu-fr utilise #160 (espace insécable) au lieu de #32 comme espace
   CheckEquals('2'#160'145,456', ICUDoubleToStr(2145.456, 'fr-FR'), 'fr-FR');
   CheckEquals('2,145.456', ICUDoubleToStr(2145.456, 'en-US'), 'en-US');
+
+  CheckEquals('64,899', ICUDoubleToStr(59 / 0.9091, uloc_getDefault), 'uloc_getDefault');
 end;
 
 procedure TestTICUNumberFormat.TestStrToCurrency;
