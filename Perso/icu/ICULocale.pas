@@ -2,7 +2,7 @@ unit ICULocale;
 
 interface
 
-uses SysUtils, Classes, _uloc;
+uses SysUtils, Classes, _uloc, AnsiStrings;
 
 function ProperLocale(const Locale: AnsiString): AnsiString;
 
@@ -10,7 +10,7 @@ implementation
 
 function ProperLocale(const Locale: AnsiString): AnsiString;
 begin
-  if Trim(Locale) = '' then
+  if AnsiStrings.Trim(Locale) = '' then
     Result := uloc_getDefault
   else
     Result := Locale;
