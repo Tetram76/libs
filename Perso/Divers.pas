@@ -20,6 +20,15 @@ type
     destructor Destroy; override;
   end;
 
+  RCommandLine = record
+  private
+    value: string;
+  public
+    procedure Add(Param: string);
+    class operator Implicit(value: string): RCommandLine;
+    class operator Implicit(value: RCommandLine): string;
+  end;
+
 function IsAdmin: Boolean;
 function CanUseTaskDialog: Boolean;
 procedure RemplaceChaine(var Chaine: string; Quoi, parQuoi: string);
@@ -1251,6 +1260,27 @@ begin
     end;
     FreeMem(ptgGroups);
   end;
+end;
+
+{ RCommandLine }
+
+procedure RCommandLine.Add(Param: string);
+begin
+  if (Param.Contains(' ') or Param.Contains('"')) and not (Param.StartsWith('"') and Param.EndsWith('"')) then
+    Param := '"' + Param.Replace('"', '""', [rfReplaceAll]) + '"';
+  if value <> string.Empty then
+    Param.Insert(0, ' ');
+  value := value + Param;
+end;
+
+class operator RCommandLine.Implicit(value: RCommandLine): string;
+begin
+  Result := value.value;
+end;
+
+class operator RCommandLine.Implicit(value: string): RCommandLine;
+begin
+  Result.value := value;
 end;
 
 end.
