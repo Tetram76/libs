@@ -3,6 +3,7 @@ unit UFichierLog;
 interface
 
 uses
+{$IFDEF DEBUG} FastMM4, {$ENDIF}
   Windows, SysUtils, Classes, StrUtils, SyncObjs;
 
 type
@@ -65,6 +66,7 @@ type
 
     procedure AppendLog(const Texte: string; TypeMessage: TTypeMessage); overload;
     procedure AppendLog(E: Exception); overload;
+    procedure AppendCallStack;
 
     property LogFileName: string read GetLogFileName write SetLogFileName;
     property LogDir: string read GetLogDir write SetLogDir;
@@ -404,23 +406,26 @@ begin
     FOnAppend(s, Texte, TypeMessage, TypeMessage <= FLogLevel);
 end;
 
-procedure TFichierLog.AppendLog(E: Exception);
+procedure TFichierLog.AppendCallStack;
 var
   sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    JclLastExceptStackListToStrings(sl, True);
+    AppendLog(sl.Text, tmErreur);
+  finally
+    sl.Free;
+  end;
+end;
+
+procedure TFichierLog.AppendLog(E: Exception);
 begin
   AppendLog(E.ClassName, tmErreur);
   AppendLog(E.Message, tmErreur);
 
   if loIncludeCallStackOnError in FLogOptions then
-  begin
-    sl := TStringList.Create;
-    try
-      JclLastExceptStackListToStrings(sl, True);
-      AppendLog(sl.Text, tmErreur);
-    finally
-      sl.Free;
-    end;
-  end;
+    AppendCallStack;
 end;
 
 procedure TFichierLog.BeforeDestruction;
@@ -586,5 +591,11 @@ procedure TFichierLog.SetLogOptions(const Value: TLogOptions);
 begin
   FLogOptions := Value;
 end;
+
+initialization
+
+{$IFDEF DEBUG}
+  RegisterExpectedMemoryLeak(TLogWriter, 1);
+{$ENDIF}
 
 end.
