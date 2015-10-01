@@ -2,6 +2,7 @@
 <config>
   <TempFolder>.\temp</TempFolder>
   <SVNExePath>C:\Program Files\TortoiseSVN\bin</SVNExePath>
+  <GITExePath>C:\Program Files\Git\bin</GITExePath>
   <LogFolder/>
   <externals>
     <external Name="JCL" Kind="ekVendorBranch">
@@ -15,6 +16,7 @@
         <VendorPath>/vendors/jcl</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -33,6 +35,7 @@
         <VendorPath>/vendors/jvcl</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -45,12 +48,13 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\uib</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/uib</RepositoryExternalPath>
-      <DefaultSubfolder>/trunk</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>https://uib.svn.sourceforge.net/svnroot/uib</BaseURL>
+      <DefaultSubfolder/>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://github.com/hgourvest/uib.git</BaseURL>
         <VendorPath>/vendors/uib</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -69,6 +73,7 @@
         <VendorPath>/vendors/pascalscript</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -87,6 +92,7 @@
         <VendorPath>/vendors/grizzlypack</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -105,6 +111,7 @@
         <VendorPath>/vendors/ics</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -123,6 +130,7 @@
         <VendorPath>/vendors/alcinoe</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -132,7 +140,7 @@
     </external>
     <external Name="SubVersionTools by OBones" Kind="ekVendorBranch">
       <BaseURL>http://dev.tetram.org/svn</BaseURL>
-      <WorkingCopyPath>D:\Outils\</WorkingCopyPath>
+      <WorkingCopyPath>D:\Outils\VCS</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\SubVersion by OBones</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/outils/SubVersion by OBones</RepositoryExternalPath>
       <DefaultSubfolder>/trunk/sources</DefaultSubfolder>
@@ -141,6 +149,7 @@
         <VendorPath>/vendors/svnwintools</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -159,6 +168,7 @@
         <VendorPath>/vendors/delphionrails</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -177,6 +187,7 @@
         <VendorPath>/vendors/superobject</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -195,6 +206,7 @@
         <VendorPath>/vendors/dwscript</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -213,6 +225,7 @@
         <VendorPath>/vendors/synedit</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -231,6 +244,7 @@
         <VendorPath>/vendors/virtual-treeview</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -249,6 +263,7 @@
         <VendorPath>/vendors/graphics32</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
@@ -267,6 +282,7 @@
         <VendorPath>/vendors/fastmm</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
       </VendorBranchOptions>
       <SVNExternalOptions>
         <BaseURL/>
