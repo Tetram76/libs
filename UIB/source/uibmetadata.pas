@@ -10,7 +10,8 @@
 (* the specific language governing rights and limitations under the License.    *)
 (*                                                                              *)
 (* Unit owner : Henri Gourvest <hgourvest@progdigy.com>                         *)
-(* Contributor: Pierre Yager                                                    *)
+(* Contributor:                                                                 *)
+(*     Pierre Yager <pierre.y@gmail.com>                                        *)
 (*                                                                              *)
 (********************************************************************************)
 
@@ -24,7 +25,8 @@ uses
 {$IFDEF MSWINDOWS}
   Windows,
 {$ENDIF}
-  Classes, SysUtils, uibase, uiblib, uib, uibconst, uibkeywords, uibavl;
+  Classes, SysUtils, Types,
+  uibase, uiblib, uib, uibconst, uibkeywords, uibavl;
 
 type
   TTriggerPrefix = (tpBefore, tpAfter);
@@ -407,6 +409,7 @@ type
     procedure LoadFromQuery(Q: TUIBStatement);
     procedure LoadFromStream(Stream: TStream); override;
     function GetAsAlterDDL: string;
+    function GetAsAlterEmptyDDL: string;
     function GetAsAlterToActiveDDL: string;
     function GetAsAlterToInactiveDDL: string;
   public
@@ -415,6 +418,7 @@ type
     procedure SaveToStream(Stream: TStream); override;
     procedure SaveToDDLNode(Stream: TStringStream; options: TDDLOptions); override;
     procedure SaveToAlterDDL(Stream: TStringStream);
+    procedure SaveToAlterEmptyDDL(Stream: TStringStream);
     procedure SaveToAlterToActiveDDL(Stream: TStringStream);
     procedure SaveToAlterToInactiveDDL(Stream: TStringStream);
     property Prefix: TTriggerPrefix read FPrefix;
@@ -423,6 +427,7 @@ type
     property Active: Boolean read FActive;
     property Source: string read FSource;
     property AsAlterDDL: string read GetAsAlterDDL;
+    property AsAlterEmptyDDL: string read GetAsAlterEmptyDDL;
     property AsAlterToActiveDDL: string read GetAsAlterToActiveDDL;
     property AsAlterToInactiveDDL: string read GetAsAlterToInactiveDDL;
   end;
@@ -3882,6 +3887,11 @@ begin
   Stream.WriteString(Format('ALTER TRIGGER %s%s%s', [Name, NewLine, FSource]));
 end;
 
+procedure TMetaTrigger.SaveToAlterEmptyDDL(Stream: TStringStream);
+begin
+  Stream.WriteString(Format('ALTER TRIGGER %s%sAS%sbegin exit; end', [Name, NewLine, NewLine]));
+end;
+
 function TMetaTrigger.GetAsAlterToActiveDDL: string;
 var stream: TStringStream;
 begin
@@ -3900,6 +3910,18 @@ begin
   stream := TStringStream.Create('');
   try
     SaveToAlterDDL(stream);
+    Result := stream.DataString;
+  finally
+    stream.Free;
+  end;
+end;
+
+function TMetaTrigger.GetAsAlterEmptyDDL: string;
+var stream: TStringStream;
+begin
+  stream := TStringStream.Create('');
+  try
+    SaveToAlterEmptyDDL(stream);
     Result := stream.DataString;
   finally
     stream.Free;
