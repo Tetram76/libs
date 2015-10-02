@@ -5,7 +5,6 @@ program OverbyteIcsSslSmtpServer;
 
 uses
   Forms,
-  OverbyteIcsIniFiles in '..\..\OverbyteIcsIniFiles.pas',
   OverbyteIcsSslSmtpServ1 in 'OverbyteIcsSslSmtpServ1.pas' {SmtpSslSrvForm};
 
 {$R *.res}

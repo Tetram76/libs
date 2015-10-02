@@ -3,11 +3,11 @@
 Author:       François PIETTE
 Description:  Version defines for ICS (Internet Component Suite)
 Creation:     2003
-Version:      8.03
+Version:      8.08
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1996-2014 by François PIETTE
+Legal issues: Copyright (C) 1996-2015 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
 
@@ -51,12 +51,18 @@ Sep 21, 2010 V1.10 Arno corrected VER180/VER185 and added VER190 and VER160.
                    supported compiler version.
 Sep 24, 2010 V1.11 Arno removed BCB7/C++BuilderX.
 Oct 23, 2010 V1.12 PasDoc compatible.
-Feb 4,  2011 V1.13 BUILTIN_TIMEOUT and BUILTIN_THROTTLE now enabled by default 
+Feb 4,  2011 V1.13 BUILTIN_TIMEOUT and BUILTIN_THROTTLE now enabled by default
 May 2012 - V8.00 - Arno added FireMonkey cross platform support with POSIX/MacOS
                    also IPv6 support, include files now in sub-directory
 Apr 2013 - V8.01 - Arno XE4
 Aug 2013 - V8.02 - FPiette XE5
 Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
+Aug 2014 - V8.04 - Angus XE7
+Nov 8,  2014 V8.05 Eugene Kotlyarov added namespace for all RTL units for XE2 and
+                    later, using new define RTL_NAMESPACES
+Feb 2015 - V8.06 - Angus XE8
+Jun 2015 - V8.07 - Angus XE9
+Aug 2015 - V8.08 - Angus XE9 is now Delphi 10 Seattle
 
 
   SYMBOL           Compiler version
@@ -95,6 +101,9 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
   DELPHI18_UP      Delphi 18 or higher  (Delphi XE4  - Quitessence)
   DELPHI19_UP      Delphi 19 or higher  (Delphi XE5  - Zephyr)
   DELPHI20_UP      Delphi 20 or higher  (Delphi XE6  - Proteus)
+  DELPHI21_UP      Delphi 21 or higher  (Delphi XE7  - Carpathia)
+  DELPHI22_UP      Delphi 22 or higher  (Delphi XE8  - Elbrus)
+  DELPHI23_UP      Delphi 23 or higher  (Delphi 10 Seattle - Aitana)
 
   BCB1             C++ Builder 1
   BCB3             C++ Builder 3
@@ -116,6 +125,9 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
   BCB18_UP         C++ Builder XE4  or higher
   BCB19_UP         C++ Builder XE5  or higher
   BCB20_UP         C++ Builder XE6  or higher
+  BCB21_UP         C++ Builder XE7  or higher
+  BCB22_UP         C++ Builder XE8  or higher
+  BCB23_UP         C++ Builder 10 Seattle  or higher
 
   COMPILER1        Delphi 1
   COMPILER2        Delphi 2  or C++ Builder 1
@@ -136,7 +148,10 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
   COMPILER17       Delphi or C++ Builder XE3
   COMPILER18       Delphi or C++ Builder XE4
   COMPILER19       Delphi or C++ Builder XE5
-  COMPILER20       Delphi or C++ Builder XE5
+  COMPILER20       Delphi or C++ Builder XE6
+  COMPILER21       Delphi or C++ Builder XE7
+  COMPILER22       Delphi or C++ Builder XE8
+  COMPILER23       Delphi or C++ Builder 10 Seattle
 
   COMPILER1_UP     Delphi 1  or higher
   COMPILER2_UP     Delphi 2  or C++ Builder 1 or higher
@@ -158,6 +173,9 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
   COMPILER18_UP    Delphi or C++ Builder XE4  or higher (Quitessence)
   COMPILER19_UP    Delphi or C++ Builder XE5  or higher (Zephyr)
   COMPILER20_UP    Delphi or C++ Builder XE6  or higher (Proteus)
+  COMPILER21_UP    Delphi or C++ Builder XE7  or higher (Carpathia)
+  COMPILER22_UP    Delphi or C++ Builder XE8  or higher (Elbrus)
+  COMPILER23_UP    Delphi or C++ Builder 10 Seattle or higher (Aitana)
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * }
 
@@ -221,6 +239,39 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
 {$ENDIF}
 
 {$DEFINE VER_UNKNOWN}
+
+{$IFDEF VER300}
+  {$UNDEF VER_UNKNOWN}
+  {$DEFINE COMPILER23}
+  {$IFDEF BCB}
+    {$DEFINE BCB23}
+  {$ELSE}
+    {$DEFINE DELPHI23}
+    {$DEFINE DELPHI}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF VER290}
+  {$UNDEF VER_UNKNOWN}
+  {$DEFINE COMPILER22}
+  {$IFDEF BCB}
+    {$DEFINE BCB22}
+  {$ELSE}
+    {$DEFINE DELPHI22}
+    {$DEFINE DELPHI}
+  {$ENDIF}
+{$ENDIF}
+
+{$IFDEF VER280}
+  {$UNDEF VER_UNKNOWN}
+  {$DEFINE COMPILER21}
+  {$IFDEF BCB}
+    {$DEFINE BCB21}
+  {$ELSE}
+    {$DEFINE DELPHI21}
+    {$DEFINE DELPHI}
+  {$ENDIF}
+{$ENDIF}
 
 {$IFDEF VER270}
   {$UNDEF VER_UNKNOWN}
@@ -430,13 +481,85 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
 {$ENDIF}
 
 {$IFDEF VER_UNKNOWN}   { If the compiler version is not detected define latest }
-  {$DEFINE COMPILER20} { supported compiler version.                           }
+  {$DEFINE COMPILER23} { supported compiler version.                           }
   {$IFDEF BCB}
-    {$DEFINE BCB20}
+    {$DEFINE BCB23}
   {$ELSE}
-    {$DEFINE DELPHI20}
+    {$DEFINE DELPHI23}
     {$DEFINE DELPHI}
   {$ENDIF}
+{$ENDIF}
+
+{$IFDEF DELPHI23}
+  {$DEFINE DELPHI23_UP}
+  {$DEFINE DELPHI22_UP}
+  {$DEFINE DELPHI21_UP}
+  {$DEFINE DELPHI20_UP}
+  {$DEFINE DELPHI19_UP}
+  {$DEFINE DELPHI18_UP}
+  {$DEFINE DELPHI17_UP}
+  {$DEFINE DELPHI16_UP}
+  {$DEFINE DELPHI15_UP}
+  {$DEFINE DELPHI14_UP}
+  {$DEFINE DELPHI12_UP}
+  {$DEFINE DELPHI11_UP}
+  {$DEFINE DELPHI10_UP}
+  {$DEFINE DELPHI9_UP}
+  {$DEFINE DELPHI8_UP}
+  {$DEFINE DELPHI7_UP}
+  {$DEFINE DELPHI6_UP}
+  {$DEFINE DELPHI5_UP}
+  {$DEFINE DELPHI4_UP}
+  {$DEFINE DELPHI3_UP}
+  {$DEFINE DELPHI2_UP}
+  {$DEFINE DELPHI1_UP}
+{$ENDIF}
+
+{$IFDEF DELPHI22}
+  {$DEFINE DELPHI22_UP}
+  {$DEFINE DELPHI21_UP}
+  {$DEFINE DELPHI20_UP}
+  {$DEFINE DELPHI19_UP}
+  {$DEFINE DELPHI18_UP}
+  {$DEFINE DELPHI17_UP}
+  {$DEFINE DELPHI16_UP}
+  {$DEFINE DELPHI15_UP}
+  {$DEFINE DELPHI14_UP}
+  {$DEFINE DELPHI12_UP}
+  {$DEFINE DELPHI11_UP}
+  {$DEFINE DELPHI10_UP}
+  {$DEFINE DELPHI9_UP}
+  {$DEFINE DELPHI8_UP}
+  {$DEFINE DELPHI7_UP}
+  {$DEFINE DELPHI6_UP}
+  {$DEFINE DELPHI5_UP}
+  {$DEFINE DELPHI4_UP}
+  {$DEFINE DELPHI3_UP}
+  {$DEFINE DELPHI2_UP}
+  {$DEFINE DELPHI1_UP}
+{$ENDIF}
+
+{$IFDEF DELPHI21}
+  {$DEFINE DELPHI21_UP}
+  {$DEFINE DELPHI20_UP}
+  {$DEFINE DELPHI19_UP}
+  {$DEFINE DELPHI18_UP}
+  {$DEFINE DELPHI17_UP}
+  {$DEFINE DELPHI16_UP}
+  {$DEFINE DELPHI15_UP}
+  {$DEFINE DELPHI14_UP}
+  {$DEFINE DELPHI12_UP}
+  {$DEFINE DELPHI11_UP}
+  {$DEFINE DELPHI10_UP}
+  {$DEFINE DELPHI9_UP}
+  {$DEFINE DELPHI8_UP}
+  {$DEFINE DELPHI7_UP}
+  {$DEFINE DELPHI6_UP}
+  {$DEFINE DELPHI5_UP}
+  {$DEFINE DELPHI4_UP}
+  {$DEFINE DELPHI3_UP}
+  {$DEFINE DELPHI2_UP}
+  {$DEFINE DELPHI1_UP}
 {$ENDIF}
 
 {$IFDEF DELPHI20}
@@ -557,7 +680,7 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
 {$ENDIF}
 
 {$IFDEF DELPHI14}
-  {$DEFINE DELPHI14_UP} 
+  {$DEFINE DELPHI14_UP}
   {$DEFINE DELPHI12_UP}
   {$DEFINE DELPHI11_UP}
   {$DEFINE DELPHI10_UP}
@@ -684,6 +807,81 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
 
 {$IFDEF DELPHI1}
   {$DEFINE DELPHI1_UP}
+{$ENDIF}
+
+{$IFDEF COMPILER23}
+  {$DEFINE COMPILER23_UP}
+  {$DEFINE COMPILER22_UP}
+  {$DEFINE COMPILER21_UP}
+  {$DEFINE COMPILER20_UP}
+  {$DEFINE COMPILER19_UP}
+  {$DEFINE COMPILER18_UP}
+  {$DEFINE COMPILER17_UP}
+  {$DEFINE COMPILER16_UP}
+  {$DEFINE COMPILER15_UP}
+  {$DEFINE COMPILER14_UP}
+  {$DEFINE COMPILER12_UP}
+  {$DEFINE COMPILER11_UP}
+  {$DEFINE COMPILER10_UP}
+  {$DEFINE COMPILER9_UP}
+  {$DEFINE COMPILER8_UP}
+  {$DEFINE COMPILER7_UP}
+  {$DEFINE COMPILER6_UP}
+  {$DEFINE COMPILER5_UP}
+  {$DEFINE COMPILER4_UP}
+  {$DEFINE COMPILER35_UP}
+  {$DEFINE COMPILER3_UP}
+  {$DEFINE COMPILER2_UP}
+  {$DEFINE COMPILER1_UP}
+{$ENDIF}
+
+{$IFDEF COMPILER22}
+  {$DEFINE COMPILER22_UP}
+  {$DEFINE COMPILER21_UP}
+  {$DEFINE COMPILER20_UP}
+  {$DEFINE COMPILER19_UP}
+  {$DEFINE COMPILER18_UP}
+  {$DEFINE COMPILER17_UP}
+  {$DEFINE COMPILER16_UP}
+  {$DEFINE COMPILER15_UP}
+  {$DEFINE COMPILER14_UP}
+  {$DEFINE COMPILER12_UP}
+  {$DEFINE COMPILER11_UP}
+  {$DEFINE COMPILER10_UP}
+  {$DEFINE COMPILER9_UP}
+  {$DEFINE COMPILER8_UP}
+  {$DEFINE COMPILER7_UP}
+  {$DEFINE COMPILER6_UP}
+  {$DEFINE COMPILER5_UP}
+  {$DEFINE COMPILER4_UP}
+  {$DEFINE COMPILER35_UP}
+  {$DEFINE COMPILER3_UP}
+  {$DEFINE COMPILER2_UP}
+  {$DEFINE COMPILER1_UP}
+{$ENDIF}
+
+{$IFDEF COMPILER21}
+  {$DEFINE COMPILER21_UP}
+  {$DEFINE COMPILER20_UP}
+  {$DEFINE COMPILER19_UP}
+  {$DEFINE COMPILER18_UP}
+  {$DEFINE COMPILER17_UP}
+  {$DEFINE COMPILER16_UP}
+  {$DEFINE COMPILER15_UP}
+  {$DEFINE COMPILER14_UP}
+  {$DEFINE COMPILER12_UP}
+  {$DEFINE COMPILER11_UP}
+  {$DEFINE COMPILER10_UP}
+  {$DEFINE COMPILER9_UP}
+  {$DEFINE COMPILER8_UP}
+  {$DEFINE COMPILER7_UP}
+  {$DEFINE COMPILER6_UP}
+  {$DEFINE COMPILER5_UP}
+  {$DEFINE COMPILER4_UP}
+  {$DEFINE COMPILER35_UP}
+  {$DEFINE COMPILER3_UP}
+  {$DEFINE COMPILER2_UP}
+  {$DEFINE COMPILER1_UP}
 {$ENDIF}
 
 {$IFDEF COMPILER20}
@@ -956,6 +1154,66 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
   {$DEFINE COMPILER1_UP}
 {$ENDIF}
 
+{$IFDEF BCB23}
+  {$DEFINE BCB23_UP}
+  {$DEFINE BCB22_UP}
+  {$DEFINE BCB21_UP}
+  {$DEFINE BCB20_UP}
+  {$DEFINE BCB19_UP}
+  {$DEFINE BCB18_UP}
+  {$DEFINE BCB17_UP}
+  {$DEFINE BCB16_UP}
+  {$DEFINE BCB15_UP}
+  {$DEFINE BCB14_UP}
+  {$DEFINE BCB12_UP}
+  {$DEFINE BCB11_UP}
+  {$DEFINE BCB10_UP}
+  {$DEFINE BCB6_UP}
+  {$DEFINE BCB5_UP}
+  {$DEFINE BCB4_UP}
+  {$DEFINE BCB3_UP}
+  {$DEFINE BCB1_UP}
+{$ENDIF}
+
+{$IFDEF BCB22}
+  {$DEFINE BCB22_UP}
+  {$DEFINE BCB21_UP}
+  {$DEFINE BCB20_UP}
+  {$DEFINE BCB19_UP}
+  {$DEFINE BCB18_UP}
+  {$DEFINE BCB17_UP}
+  {$DEFINE BCB16_UP}
+  {$DEFINE BCB15_UP}
+  {$DEFINE BCB14_UP}
+  {$DEFINE BCB12_UP}
+  {$DEFINE BCB11_UP}
+  {$DEFINE BCB10_UP}
+  {$DEFINE BCB6_UP}
+  {$DEFINE BCB5_UP}
+  {$DEFINE BCB4_UP}
+  {$DEFINE BCB3_UP}
+  {$DEFINE BCB1_UP}
+{$ENDIF}
+
+{$IFDEF BCB21}
+  {$DEFINE BCB21_UP}
+  {$DEFINE BCB20_UP}
+  {$DEFINE BCB19_UP}
+  {$DEFINE BCB18_UP}
+  {$DEFINE BCB17_UP}
+  {$DEFINE BCB16_UP}
+  {$DEFINE BCB15_UP}
+  {$DEFINE BCB14_UP}
+  {$DEFINE BCB12_UP}
+  {$DEFINE BCB11_UP}
+  {$DEFINE BCB10_UP}
+  {$DEFINE BCB6_UP}
+  {$DEFINE BCB5_UP}
+  {$DEFINE BCB4_UP}
+  {$DEFINE BCB3_UP}
+  {$DEFINE BCB1_UP}
+{$ENDIF}
+
 {$IFDEF BCB20}
   {$DEFINE BCB20_UP}
   {$DEFINE BCB19_UP}
@@ -1192,5 +1450,7 @@ Apr 2014 - V8.03 - Arno Latest supported compiler version fall back updated
   {$ENDIF}
 {$ENDIF}
 
-
+{$IFDEF DELPHI16_UP}
+  {$DEFINE RTL_NAMESPACES}
+{$ENDIF}
 

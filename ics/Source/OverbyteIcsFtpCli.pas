@@ -2,13 +2,13 @@
 
 Author:       François PIETTE
 Creation:     May 1996
-Version:      V8.04
+Version:      V8.07
 Object:       TFtpClient is a FTP client (RFC 959 implementation)
               Support FTPS (SSL) if ICS-SSL is used (RFC 2228 implementation)
 EMail:        http://www.overbyte.be        francois.piette@overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1996-2014 by François PIETTE
+Legal issues: Copyright (C) 1996-2015 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
@@ -1068,6 +1068,10 @@ Jul 24, 2013 V8.03 - Angus added more error reporting for not ready and more
                be sent usually resulting in not ready errors.
 Feb 07, 2014 V8.04 - Arno, in DoneQuitAsync call FControlSocket.Close rather than
              CloseDelayed.
+Dec 02, 2014 V8.05 - Angus fixed PBSZAsync set incorrect TFtpFct
+Dec 10, 2014 V8.06 - Angus added SslHandshakeRespMsg for better error handling
+Jun 01, 2015 V8.07 - Angus update SslServerName for SSL SNI support allowing server to
+                     select correct SSL context and certificate
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFNDEF ICS_INCLUDE_MODE}
@@ -1110,8 +1114,8 @@ interface
 
 uses
 {$IFDEF MSWINDOWS}
-    Windows,
-    Messages,
+    {$IFDEF RTL_NAMESPACES}Winapi.Windows{$ELSE}Windows{$ENDIF},
+    {$IFDEF RTL_NAMESPACES}Winapi.Messages{$ELSE}Messages{$ENDIF},
     OverbyteIcsWinSock,
 {$ENDIF}
 {$IFDEF POSIX}
@@ -1121,12 +1125,13 @@ uses
     Ics.Posix.WinTypes,
     Ics.Posix.Messages,
 {$ENDIF}
-    SysUtils, Classes,
+    {$IFDEF RTL_NAMESPACES}System.SysUtils{$ELSE}SysUtils{$ENDIF},
+    {$IFDEF RTL_NAMESPACES}System.Classes{$ELSE}Classes{$ENDIF},
 {$IFNDEF NOFORMS}
   {$IFDEF FMX}
     FMX.Forms,
   {$ELSE}
-    Forms,
+    {$IFDEF RTL_NAMESPACES}Vcl.Forms{$ELSE}Forms{$ENDIF},
   {$ENDIF}
 {$ENDIF}
 { You must define USE_SSL so that SSL code is included in the component.   }
@@ -1157,9 +1162,9 @@ uses
     OverByteIcsFtpSrvT;
 
 const
-  FtpCliVersion      = 804;
-  CopyRight : String = ' TFtpCli (c) 1996-2014 F. Piette V8.04 ';
-  FtpClientId : String = 'ICS FTP Client V8.04 ';   { V2.113 sent with CLNT command  }
+  FtpCliVersion      = 807;
+  CopyRight : String = ' TFtpCli (c) 1996-2015 F. Piette V8.07 ';
+  FtpClientId : String = 'ICS FTP Client V8.07 ';   { V2.113 sent with CLNT command  }
 
 const
 //  BLOCK_SIZE       = 1460; { 1514 - TCP header size }
@@ -7063,8 +7068,8 @@ end;
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslFtpClient.PBSZAsync;
 begin
-    FFctPrv := ftpFctProt;
-    ExecAsync(ftpProtAsync, 'PBSZ ' + IntToStr(FPBSZSize), [200], nil);
+    FFctPrv := ftpFctPbsz;    { V8.05 }
+    ExecAsync(ftpPbszAsync, 'PBSZ ' + IntToStr(FPBSZSize), [200], nil);
 end;
 
 
@@ -7087,14 +7092,15 @@ procedure TSslFtpClient.TransferSslHandshakeDone(Sender: TObject;
     ErrCode: Word; PeerCert: TX509Base;  var Disconnect : Boolean);
 begin
     if (ErrCode <> 0) then begin
-        FLastResponse := '535 SSL handshake failed. Error #' + IntToStr(ErrCode);
+    {    FLastResponse := '535 SSL handshake failed. Error #' + IntToStr(ErrCode);  }
+        FLastResponse := '535 SSL handshake failed - ' + (Sender as TCustomSslWSocket).SslHandshakeRespMsg;  { V8.06 }
         DisplayLastResponse;
         FStatusCode    := 535;
         FRequestResult := FStatusCode;
         SetErrorMessage;
     end
     else
-        TriggerDisplay('! SSL handshake OK');
+        TriggerDisplay('! ' + (Sender as TCustomSslWSocket).SslHandshakeRespMsg);  { V8.06 }
 
     if Assigned(FOnSslHandshakeDone) then
         FOnSslHandshakeDone(Self, ErrCode, PeerCert, Disconnect);   // 12/14/05
@@ -7242,6 +7248,7 @@ begin
         if FDataSocket.SslEnable then begin
             FDataSocket.SslContext            := FControlSocket.SslContext;
             FDataSocket.SslMode               := SslModeClient;
+            FDataSocket.SslServerName         := FHostName;  { V8.07 needed for SNI support }
             FDataSocket.OnSslVerifyPeer       := FControlSocket.OnSslVerifyPeer;
             FDataSocket.OnSslHandshakeDone    := FControlSocket.OnSslHandshakeDone;
             FDataSocket.OnSslCliGetSession    := FControlSocket.OnSslCliGetSession;
@@ -7263,6 +7270,7 @@ begin
     if FDataSocket.SslEnable then begin
         FDataSocket.SslContext            := FControlSocket.SslContext;
         FDataSocket.SslMode               := SslModeClient;
+        FDataSocket.SslServerName         := FHostName;  { V8.07 needed for SNI support }
         FDataSocket.OnSslVerifyPeer       := FControlSocket.OnSslVerifyPeer;
         FDataSocket.OnSslHandshakeDone    := FControlSocket.OnSslHandshakeDone;
         FDataSocket.OnSslCliGetSession    := FControlSocket.OnSslCliGetSession;
@@ -7281,6 +7289,7 @@ begin
         if FControlSocket.SslEnable then
         try
             FControlSocket.SslMode             := sslModeClient;
+            FControlSocket.SslServerName       := FHostName;  { V8.07 needed for SNI support }
             FControlSocket.OnSslHandshakeDone  := TransferSslHandshakeDone;
             FControlSocket.OnSslVerifyPeer     := TransferSslVerifyPeer;
             FControlSocket.OnSslCliGetSession  := TransferSslCliGetSession;

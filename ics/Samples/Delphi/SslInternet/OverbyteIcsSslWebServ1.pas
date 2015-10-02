@@ -8,11 +8,11 @@ Description:  WebSrv1 show how to use THttpServer component to implement
               The code below allows to get all files on the computer running
               the demo. Add code in OnGetDocument, OnHeadDocument and
               OnPostDocument to check for authorized access to files.
-Version:      1.09
+Version:      8.03
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1999-2011 by François PIETTE
+Legal issues: Copyright (C) 1999-2015 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
@@ -57,6 +57,15 @@ Dec 14, 2005 V1.07 A. Garrels fixed the call to get a session ID string,
                    added a simple SSL renegotiation request (doesn't work
                    with IE 6 so far!?).
 Aug 04, 2005 V1.08 A. Garrels made a few changes to prepare code for Unicode.
+Jul 9, 2014  V8.00 Angus using better SSL cipher list for more secure comms
+Dec 9, 2014  V8.01 Angus added SslHandshakeRespMsg for better error handling
+                   Disable SSL3
+Mar 16 2015  V8.02 Angus added DHParam File needed to supporting DH key exchange
+                   Added EllCurve to support ECDH key exchange
+                   Display SSL handshake info on demo menu
+                   Added Server Name Indication (SNI) display, used to support
+                     multiple host and certificates on the same IP address
+Mar 23 2015 V8.03 SslServerName is now a published property
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 unit OverbyteIcsSslWebServ1;
@@ -95,7 +104,7 @@ uses
   OverbyteIcsSslSessionCache, OverbyteIcsLogger, OverbyteIcsWndControl;
 
 const
-  CopyRight : String         = 'WebServ (c) 1999-2011 F. Piette V1.08 ';
+  CopyRight : String         = 'WebServ (c) 1999-2015 F. Piette V8.03 ';
   Ssl_Session_ID_Context     = 'WebServ_Test';
 
 type
@@ -106,7 +115,7 @@ type
   TMyHttpConnection = class(THttpConnection)
   protected
     FPostedRawData    : PAnsiChar; { Will hold dynamically allocated buffer }
-    FPostedDataBuffer : PChar;     { Contains either Unicode or Ansi data   } 
+    FPostedDataBuffer : PChar;     { Contains either Unicode or Ansi data   }
     FPostedDataSize   : Integer;   { Databuffer size                        }
     FDataLen          : Integer;   { Keep track of received byte count.     }
     LastHandshake     : Longword;
@@ -163,6 +172,10 @@ type
     DisplaySslInfoCheckBox: TCheckBox;
     IcsLogger1: TIcsLogger;
     SslAvlSessionCache1: TSslAvlSessionCache;
+    Label19: TLabel;
+    DhParamFileEdit: TEdit;
+    ECDHList: TComboBox;
+    Label13: TLabel;
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
@@ -206,6 +219,9 @@ type
     procedure ButtonOSSLVersionClick(Sender: TObject);
     procedure SslHttpServer1SslSetSessionIDContext(Sender: TObject;
       var SessionIDContext: String);
+    procedure SslHttpServer1SslServerName(Sender      : TObject;
+                                  var Ctx     : TSslContext;
+                                  var ErrCode : TTlsExtError);
   private
     FIniFileName            : String;
     FInitialized            : Boolean;
@@ -266,6 +282,8 @@ const
     KeyCAPath          = 'CAPath';
     KeyAcceptableHosts = 'AcceptableHosts';
     KeyRenegInterval   = 'RenegotiationInterval';
+    KeyDHFile          = 'DHFile';
+    KeyECDHList        = 'ECDHList';
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 procedure TSslWebServForm.FormCreate(Sender: TObject);
@@ -329,6 +347,8 @@ begin
                                                    'cacert.pem');
         CAPathEdit.Text      := IniFile.ReadString(SectionData, KeyCAPath,
                                                    '');
+        DHParamFileEdit.Text := IniFile.ReadString(SectionData, KeyDHFile,    { V8.02 }
+                                                   'dhparam2048.pem');
         AcceptableHostsEdit.Text := IniFile.ReadString(SectionData, KeyAcceptableHosts,
                                                        'www.overbyte.be;www.borland.com');
         VerifyPeerCheckBox.Checked := Boolean(IniFile.ReadInteger(SectionData,
@@ -336,10 +356,11 @@ begin
                                                                   0));
         FRenegotiationInterval := IniFile.ReadInteger(SectionData,
                                                       KeyRenegInterval, 0);
+        ECDHList.ItemIndex := IniFile.ReadInteger(SectionData, KeyECDHList, 1);   { V8.02 }
         IniFile.Free;
 
         RenegotiationIntervalEdit.Text := IntToStr(FRenegotiationInterval);
-        
+
         { Start log file }
         if WriteLogFileCheckBox.Checked then begin
             OpenLogFile;
@@ -400,9 +421,11 @@ begin
     IniFile.WriteString(SectionData,    KeyPassPhrase,  PassPhraseEdit.Text);
     IniFile.WriteString(SectionData,    KeyCAFile,      CAFileEdit.Text);
     IniFile.WriteString(SectionData,    KeyCAPath,      CAPathEdit.Text);
+    IniFile.WriteString(SectionData,    KeyDHFile,      DhParamFileEdit.Text);        { V8.01 }
     IniFile.WriteString(SectionData,    KeyAcceptableHosts, AcceptableHostsEdit.Text);
     IniFile.WriteInteger(SectionData,   KeyVerifyPeer,  Ord(VerifyPeerCheckBox.Checked));
     IniFile.WriteInteger(SectionData,   KeyRenegInterval, FRenegotiationInterval);
+    IniFile.WriteInteger(SectionData,   KeyECDHList,  ECDHList.ItemIndex);        { V8.01 }
     IniFile.UpdateFile;
     IniFile.Free;
     CloseLogFile;
@@ -454,14 +477,29 @@ begin
     SslHttpServer1.DefaultDoc       := Trim(DefaultDocEdit.Text);
     SslHttpServer1.Port             := Trim(PortHttpsEdit.Text);
     SslHttpServer1.ClientClass      := TMyHttpConnection;
-    SslHttpServer1.SetAcceptableHostsList(AcceptableHostsEdit.Text); 
+    SslHttpServer1.SetAcceptableHostsList(AcceptableHostsEdit.Text);
     SslContext1.SslCertFile         := CertFileEdit.Text;
     SslContext1.SslPassPhrase       := PassPhraseEdit.Text;
     SslContext1.SslPrivKeyFile      := PrivKeyFileEdit.Text;
     SslContext1.SslCAFile           := CAFileEdit.Text;
     SslContext1.SslCAPath           := CAPathEdit.Text;
+    SslContext1.SslDHParamFile      := DhParamFileEdit.Text;      { V8.02 }
     SslContext1.SslVerifyPeer       := VerifyPeerCheckBox.Checked;
-
+   SslContext1.SslCipherList       := sslCiphersMozillaSrvBack;   { V8.00 much more secure }
+//    SslContext1.SslCipherList       := sslCiphersMozillaSrvInter;   { V8.01 and better }
+    SslContext1.SslVersionMethod    := sslBestVer_SERVER;        { V8.02 }
+    SslContext1.SslECDHMethod       := TSslECDHMethod(ECDHList.ItemIndex); { V8.02 }
+    SslContext1.SslOptions          := SslContext1.SslOptions +  { V8.01 disable SSLv3 }
+                            [sslOpt_NO_SSLv2, sslOpt_NO_SSLv3,   { V8.02 single DH needed for perfect forward secrecy }
+                            sslOpt_CIPHER_SERVER_PREFERENCE, sslOpt_SINGLE_DH_USE];
+    try
+        SslContext1.InitContext;  { V8.02 get any error now before starting server }
+    except
+        on E:Exception do begin
+            Display('Failed to initialize SSL Context: ' + E.Message);
+            Exit;
+        end;
+    end;
     SslHttpServer1.Start;
 end;
 
@@ -553,6 +591,33 @@ begin
     ClientHttpsCountLabel.Caption :=
         IntToStr((Sender as THttpServer).ClientCount);
     TMyHttpConnection(Client).OnBgException := BackgroundException;
+//    TMyHttpConnection(Client).OnSslServerName := ClientSslServerName;  { V8.02 }
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TSslWebServForm.SslHttpServer1SslServerName(      { V8.02 }
+  Sender      : TObject;
+  var Ctx     : TSslContext;
+  var ErrCode : TTlsExtError); // Optional error code
+var
+    Cli : TSslWSocketClient;
+begin
+    Cli := TSslWSocketClient(Sender);
+    Display('[' + FormatDateTime('HH:NN:SS', Now) + ' ' +
+            Cli.GetPeerAddr + '] SNI "' + Cli.SslServerName +'" received');
+    { Provide a SslContext that corresponds to the server name received }
+    { this allows different hosts and certificates on the same IP address }
+
+ {   if FComputerName = Cli.SslServerName then begin
+        if not SslContext2.IsCtxInitialized then
+            SslContext2.InitContext;
+        Ctx := SslContext2;
+        DisplayMemo.Lines.Add('! Switching context to SslContext2');
+    end
+    else
+        DisplayMemo.Lines.Add('! Unknown server name "' + Cli.SslServerName +
+                              '" received. Context switch denied');   }
 end;
 
 
@@ -704,6 +769,7 @@ begin
           '</HEAD>' +
           '<BODY>' +
             '<H2>ICS-SSL WebServer Demo Menu</H2>' +
+            'SSL Handshake: ' + TMyHttpConnection(Client).SslHandshakeRespMsg  + '<BR>' +  { V8.02 }
             '<A HREF="/time.html">Server time</A><BR>'  +
             '<A HREF="/redir.html">Redirection</A><BR>' +
             '<A HREF="/">Default document</A><BR>'     +
@@ -1149,18 +1215,22 @@ begin
     if ErrCode = 0 then begin
         Remote.LastHandshake := GetTickCount;
         if DisplaySslInfoCheckBox.Checked then
-            Display(Format('[' + FormatDateTime('HH:NN:SS', Now) + ' ' +
+      {     Display(Format('[' + FormatDateTime('HH:NN:SS', Now) + ' ' +
                     Remote.GetPeerAddr + '] SslHandshakeDone. Secure ' +
                     'connection with %s, cipher %s, %d secret bits ' +
                     '(%d total), SessionReused %d',
                     [Remote.SslVersion, Remote.SslCipher,
                     Remote.SslSecretBits, Remote.SslTotalBits,
-                    Ord(Remote.SslSessionReused)]));
-    end                   
+                    Ord(Remote.SslSessionReused)]));  }
+            Display('[' + FormatDateTime('HH:NN:SS', Now) + ' ' +
+                    Remote.GetPeerAddr + '] ' + Remote.SslHandshakeRespMsg +
+                    ', SessionReused ' + IntToStr (Ord(Remote.SslSessionReused)));    { V8.01 }
+    end
     else
         if DisplaySslInfoCheckBox.Checked then
             Display('[' + FormatDateTime('HH:NN:SS', Now) + ' ' +
-                       Remote.GetPeerAddr + '] SslHandshake failed.');
+                      Remote.GetPeerAddr + '] SslHandshake failed, error #' +
+                        IntToStr (ErrCode) + ' - ' + Remote.SslHandshakeRespMsg);  { V8.01 }
 end;
 
 
