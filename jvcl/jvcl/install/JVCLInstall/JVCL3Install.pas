@@ -154,9 +154,16 @@ begin
   else
   begin
     if Data.IsJVCLInstalledAnywhere(3) then
-      InstallType := itUpdate
+    begin
+      if CmdOptions.ForceUninstall then
+        InstallType := itUninstall
+      else
+        InstallType := itUpdate;
+    end
     else
+    begin
       CmdOptions.AutoUpdate := False; // auto update not possible
+    end;
   end;
 
   if CmdOptions.AutoInstall then
@@ -280,7 +287,16 @@ end;
 
 function TWelcomePage.GetSelectedOption: Integer;
 begin
-  Result := Integer(Installer.InstallType);
+  case Installer.InstallType of
+    itFreshInstall:
+      Result := 0;
+    itUpdate:
+      Result := 1;
+    itUninstall:
+      Result := 3;
+    else
+      Result := -1;
+  end;
 end;
 
 function TWelcomePage.NextPage: IInstallerPage;

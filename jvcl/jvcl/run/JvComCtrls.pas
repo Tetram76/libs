@@ -44,6 +44,7 @@ uses
   {$IFDEF UNITVERSIONING}
   JclUnitVersioning,
   {$ENDIF UNITVERSIONING}
+  JclSysInfo,
   Windows, Messages, Graphics, Controls, Forms,
   Classes,
   Menus, ComCtrls, ImgList, Buttons, Types, CommCtrl,
@@ -729,7 +730,7 @@ const
   ComCtlVersionIE6 = $00060000;
 {$ENDIF ~COMPILER7_UP}
 begin
-  Result := (GetComCtlVersion < ComCtlVersionIE6) or not CheckWin32Version(6, 0);
+  Result := (GetComCtlVersion < ComCtlVersionIE6) or not JclCheckWinVersion(6, 0);
 end;
 
 //=== { TJvIPAddressRange } ==================================================
@@ -901,12 +902,12 @@ begin
   if Value <> FHandle then
   begin
     if FHandle <> 0 then
-      SetWindowLongPtr(FHandle, GWL_WNDPROC, LONG_PTR(FOrgWndProc));
+      SetWindowLongPtr(FHandle, GWLP_WNDPROC, LONG_PTR(FOrgWndProc));
 
     FHandle := Value;
 
     if FHandle <> 0 then
-      FOrgWndProc := Pointer(SetWindowLongPtr(FHandle, GWL_WNDPROC, LONG_PTR(FInstance)));
+      FOrgWndProc := Pointer(SetWindowLongPtr(FHandle, GWLP_WNDPROC, LONG_PTR(FInstance)));
   end;
 end;
 

@@ -720,8 +720,23 @@ const
   twFrameBottomSizingTemplate = {$IFDEF COMPILER7_UP}Themes{$ELSE}ThemeSrv{$ENDIF}.twFrameBottomSizingTemplate; {$EXTERNALSYM twFrameBottomSizingTemplate}
   twSmallFrameBottomSizingTemplate = {$IFDEF COMPILER7_UP}Themes{$ELSE}ThemeSrv{$ENDIF}.twSmallFrameBottomSizingTemplate; {$EXTERNALSYM twSmallFrameBottomSizingTemplate}
 
+
+{$IFNDEF COMPILER16_UP}
+type
+  TElementSize = (esMinimum, esActual, esStretch);
+{$ELSE}
+  esMinimum = TElementSize.esStretch;
+  esActual = TElementSize.esActual;
+  esStretch = TElementSize.esStretch;
+{$ENDIF ~COMPILER16_UP}
+
 type
   TThemeServicesEx = class(TThemeServices)
+  {$IFNDEF COMPILER16_UP}
+  private
+    function DoGetElementSize(DC: HDC; Details: TThemedElementDetails; Rect: PRect;
+      ElementSize: TElementSize; out Size: TSize): Boolean;
+  {$ENDIF ~COMPILER16_UP}
   public
     {$IFNDEF COMPILER7_UP}
     procedure ApplyThemeChange;
@@ -729,9 +744,14 @@ type
     {$IFNDEF COMPILER16_UP}
     function GetElementContentRect(DC: HDC; Details: TThemedElementDetails;
       const BoundingRect: TRect; out AContentRect: TRect): Boolean;
+    function GetElementSize(DC: HDC; Details: TThemedElementDetails; ElementSize: TElementSize;
+      out Size: TSize): Boolean; overload;
+    function GetElementSize(DC: HDC; Details: TThemedElementDetails; const Rect: TRect;
+      ElementSize: TElementSize; out Size: TSize): Boolean; overload;
     function IsSystemStyle: Boolean;
     function Enabled: Boolean;
     function Available: Boolean;
+    function GetSystemColor(Color: TColor): TColor;
     {$ENDIF ~COMPILER16_UP}
   end;
 
@@ -827,10 +847,11 @@ const
 
 implementation
 
-{$IFNDEF COMPILER10_UP}
 uses
-  JclSysUtils;
+{$IFNDEF COMPILER10_UP}
+  JclSysUtils,
 {$ENDIF ~COMPILER10_UP}
+  JclSysInfo;
 
 type
   TWinControlThemeInfo = class(TWinControl)
@@ -854,7 +875,7 @@ begin
      (Control.Parent <> nil) and
      ((Color = TWinControlThemeInfo(Control.Parent).Color) or
       (ColorToRGB(Color) = ColorToRGB(TWinControlThemeInfo(Control.Parent).Color))) and
-     ((not NeedsParentBackground) or (csParentBackground in GetThemeStyle(Control))) then
+     (not NeedsParentBackground or (csParentBackground in GetThemeStyle(Control))) then
   begin
     if Control is TWinControl then
     begin
@@ -870,6 +891,10 @@ begin
   else
   {$ENDIF JVCLThemesEnabled}
   begin
+    {$IFDEF JVCLStylesEnabled}
+    if StyleServices.Enabled and TStyleManager.IsCustomStyleActive then
+      Color := StyleServices.GetSystemColor(Color);
+    {$ENDIF JVCLStylesEnabled}
     Cl := Canvas.Brush.Color;
     if Cl <> Color then
       Canvas.Brush.Color := Color;
@@ -891,8 +916,7 @@ begin
   if StyleServices.Enabled and
      (Control.Parent <> nil) and
      (LogBrush.lbColor = Cardinal(ColorToRGB(TWinControlThemeInfo(Control.Parent).Color))) and
-     ((not NeedsParentBackground) or
-     (csParentBackground in GetThemeStyle(Control))) then
+     (not NeedsParentBackground or (csParentBackground in GetThemeStyle(Control))) then
   begin
     if Control is TWinControl then
     begin
@@ -1353,7 +1377,7 @@ var
 {$ENDIF COMPILER11_UP}
 begin
   {$IFDEF COMPILER11_UP}
-  if StyleServices.Enabled and CheckWin32Version(6, 0) then
+  if StyleServices.Enabled and JclCheckWinVersion(6, 0) then
   begin
     FillChar(Options, SizeOf(Options), 0);
     Options.dwSize := SizeOf(Options);
@@ -1406,7 +1430,7 @@ var
 {$ENDIF COMPILER11_UP}
 begin
   {$IFDEF COMPILER11_UP}
-  if PaintOnGlass and CheckWin32Version(6, 0) then
+  if PaintOnGlass and JclCheckWinVersion(6, 0) then
   begin
     { TODO : Not working correctly on a JvSpeedButton. But it works if used direcly on
              a sheet of glass. Some optimizations could be done. }
@@ -1461,6 +1485,32 @@ function TThemeServicesEx.GetElementContentRect(DC: HDC; Details: TThemedElement
 begin
   AContentRect := ContentRect(DC, Details, BoundingRect);
   Result := True;
+end;
+
+function TThemeServicesEx.DoGetElementSize(DC: HDC; Details: TThemedElementDetails; Rect: PRect;
+  ElementSize: TElementSize; out Size: TSize): Boolean;
+const
+  ElementSizes: array[TElementSize] of TThemeSize = (TS_MIN, TS_TRUE, TS_DRAW);
+begin
+  Result := GetThemePartSize(Theme[Details.Element], DC, Details.Part, Details.State, Rect,
+    ElementSizes[ElementSize], Size) = S_OK;
+end;
+
+function TThemeServicesEx.GetElementSize(DC: HDC; Details: TThemedElementDetails; ElementSize: TElementSize;
+  out Size: TSize): Boolean;
+begin
+  Result := DoGetElementSize(DC, Details, nil, ElementSize, Size);
+end;
+
+function TThemeServicesEx.GetElementSize(DC: HDC; Details: TThemedElementDetails; const Rect: TRect;
+  ElementSize: TElementSize; out Size: TSize): Boolean;
+begin
+  Result := DoGetElementSize(DC, Details, @Rect, ElementSize, Size);
+end;
+
+function TThemeServicesEx.GetSystemColor(Color: TColor): TColor;
+begin
+  Result := Color;
 end;
 
 function TThemeServicesEx.IsSystemStyle: Boolean;

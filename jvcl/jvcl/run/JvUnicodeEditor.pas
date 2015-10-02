@@ -1587,8 +1587,15 @@ end;
 
 procedure TJvCustomWideEditor.ClipboardCopy;
 begin
-  Clipboard.AsText := GetSelText;
-  SetClipboardBlockFormat(SelBlockFormat);
+  // Set both clipboard formats with one clipboard lock, otherwise clipboard viewers may have
+  // a hard time and even mess up the clipboard content (like mRemote).
+  Clipboard.Open;
+  try
+    Clipboard.AsText := GetSelText;
+    SetClipboardBlockFormat(SelBlockFormat);
+  finally
+    Clipboard.Close;
+  end;
 end;
 
 procedure TJvCustomWideEditor.InsertText(const Text: WideString);
@@ -2633,24 +2640,29 @@ var
   I: Integer;
   S: WideString;
 begin
-  Items.Clear;
-  case Mode of
-    cmIdentifiers:
-      for I := 0 to FIdentifiers.Count - 1 do
-        Items.Add(FIdentifiers[I]);
-    cmTemplates:
-      begin
-        with TJvCustomWideEditor(JvEditor) do
-          if FLines.Count > CaretY then
-            S := GetWordOnPosW(FLines[CaretY], CaretX)
-          else
-            S := '';
-        for I := 0 to FTemplates.Count - 1 do
-          if StrLICompW(PWideChar(FTemplates[I]), PWideChar(S), Length(S)) = 0 then
-            Items.Add(FTemplates[I]);
-        if Items.Count = 0 then
-          Items.Assign(FTemplates);
-      end;
+  Items.BeginUpdate;
+  try
+    Items.Clear;
+    case Mode of
+      cmIdentifiers:
+        for I := 0 to FIdentifiers.Count - 1 do
+          Items.Add(FIdentifiers[I]);
+      cmTemplates:
+        begin
+          with TJvCustomWideEditor(JvEditor) do
+            if FLines.Count > CaretY then
+              S := GetWordOnPosW(FLines[CaretY], CaretX)
+            else
+              S := '';
+          for I := 0 to FTemplates.Count - 1 do
+            if StrLICompW(PWideChar(FTemplates[I]), PWideChar(S), Length(S)) = 0 then
+              Items.Add(FTemplates[I]);
+          if Items.Count = 0 then
+            Items.Assign(FTemplates);
+        end;
+    end;
+  finally
+    Items.EndUpdate;
   end;
 end;
 

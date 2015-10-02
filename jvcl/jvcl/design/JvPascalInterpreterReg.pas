@@ -42,7 +42,11 @@ uses
   JvInterpreter_ComCtrls, JvInterpreter_Contnrs, JvInterpreter_Controls,
   {$IFNDEF DelphiPersonalEdition}
   JvInterpreter_Db, JvInterpreter_DbCtrls, JvInterpreter_DbGrids,
+  {$IFNDEF COMPILER22_UP}
+    {$IFDEF USE_BDE}
   JvInterpreter_DBTables,
+    {$ENDIF USE_BDE}
+  {$ENDIF ~COMPILER22_UP}
    {$IFDEF INTERNET_COMPONENTS}
   JvInterpreter_httpapp,
    {$ENDIF INTERNET_COMPONENTS}

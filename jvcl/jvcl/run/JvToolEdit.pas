@@ -138,15 +138,18 @@ type
   TJvEditButton = class(TJvImageSpeedButton)
   private
     FNoAction: Boolean;
+    FPopupVisible: Boolean;
     procedure WMContextMenu(var Msg: TWMContextMenu); message WM_CONTEXTMENU;
     function GetGlyph: TBitmap;
     function GetNumGlyphs: TJvNumGlyphs;
     function GetUseGlyph: Boolean;
     procedure SetGlyph(const Value: TBitmap);
     procedure SetNumGlyphs(Value: TJvNumGlyphs);
+    procedure SetPopupVisible(const Value: Boolean);
   protected
     {$IFDEF JVCLThemesEnabled}
     FDrawThemedDropDownBtn: Boolean;
+    FDrawThemedDatePickerBtn: Boolean;
     {$ENDIF JVCLThemesEnabled}
     FStandard: Boolean;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -154,6 +157,7 @@ type
     procedure PaintImage(Canvas: TCanvas; ARect: TRect; const Offset: TPoint;
       AState: TJvButtonState; DrawMark: Boolean; PaintOnGlass: Boolean); override;
     procedure Paint; override;
+    property PopupVisible: Boolean read FPopupVisible write SetPopupVisible;
   public
     constructor Create(AOwner: TComponent); override;
     procedure Click; override;
@@ -164,7 +168,7 @@ type
   end;
 
   TGlyphKind = (gkCustom, gkDefault, gkDropDown, gkEllipsis);
-  TJvImageKind = (ikCustom, ikDefault, ikDropDown, ikEllipsis);
+  TJvImageKind = (ikCustom, ikDefault, ikDropDown, ikEllipsis, ikDatePicker);
 
   TJvCustomComboEdit = class;
 
@@ -284,10 +288,11 @@ type
     procedure CMPopupCloseup(var Msg: TMessage); message CM_POPUPCLOSEUP;
     {$IFDEF JVCLThemesEnabled}
     procedure WMNCPaint(var Msg: TWMNCPaint); message WM_NCPAINT;
-    procedure WMNCCalcSize(var Msg: TWMNCCalcSize); message WM_NCCALCSIZE;
     {$ENDIF JVCLThemesEnabled}
     procedure WMNCHitTest(var Msg: TWMNCHitTest); message WM_NCHITTEST;
     procedure CMFixCaretPosition(var Msg: TMessage); message CM_FIXCARETPOSITION;
+    procedure SetAlwaysEnableButton(const Value: Boolean);
+    procedure UpdateButtonEnabled;
   protected
     FButton: TJvEditButton;
     FBtnControl: TWinControl;
@@ -308,6 +313,12 @@ type
     procedure FontChanged; override;
     procedure DoEnter; override;
     procedure DoExit; override;
+    {$IFDEF JVCLThemesEnabled}
+    procedure AutoSizeEditButton;
+    function GetDatePickerThemeButtonWidth: Integer;
+    function GetDatePickerThemeButtonMinTextSize: Integer; virtual; // overridden by TJvCustomDatePickerEdit
+    procedure Resize; override;
+    {$ENDIF JVCLThemesEnabled}
     procedure DoCtl3DChanged; virtual;
     function DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean; override;
     { Repositions the child controls; checkbox }
@@ -346,6 +357,7 @@ type
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure PopupChange; virtual;
+    procedure ResetPopupValue; virtual;
     procedure PopupCloseUp(Sender: TObject; Accept: Boolean); virtual;
     procedure AsyncPopupCloseUp(Accept: Boolean); virtual;
     procedure PopupDropDown(DisableEdit: Boolean); virtual;
@@ -360,7 +372,7 @@ type
     procedure UpdatePopupVisible;
     procedure CMExit(var Message: TCMExit); message CM_EXIT;
     property Alignment: TAlignment read FAlignment write SetAlignment default taLeftJustify;
-    property AlwaysEnableButton: Boolean read FAlwaysEnableButton write FAlwaysEnableButton default False;
+    property AlwaysEnableButton: Boolean read FAlwaysEnableButton write SetAlwaysEnableButton default False;
     property AlwaysShowPopup: Boolean read FAlwaysShowPopup write FAlwaysShowPopup default False;
     property AutoCompleteItems: TStrings read FAutoCompleteItems write SetAutoCompleteItems;
     property AutoCompleteOptions: TJvAutoCompleteOptions read FAutoCompleteOptions write SetAutoCompleteOptions default [];
@@ -1140,10 +1152,15 @@ implementation
 uses
   RTLConsts, Math, MaskUtils,
   MultiMon,
-  {$IFDEF COMPILER16_UP} // VCL-Styles support
+  {$IFDEF JVCLThemesEnabled}
+  {$IFDEF HAS_UNIT_UXTHEME}
+  UxTheme,
+  {$ENDIF HAS_UNIT_UXTHEME}
+  {$ENDIF JVCLThemesEnabled}
+  {$IFDEF HAS_UNIT_VCL_THEMES} // VCL-Styles support
   Vcl.Themes,
-  {$ENDIF COMPILER16_UP}
-  JclFileUtils, JclStrings,
+  {$ENDIF HAS_UNIT_VCL_THEMES}
+  JclSysInfo, JclFileUtils, JclStrings,
   JvPickDate, JvJCLUtils, JvJVCLUtils,
   JvThemes, JvResources, JclSysUtils;
 
@@ -1152,7 +1169,7 @@ uses
 type
   TCustomMaskEditAccessPrivate = class(TCustomEdit)
   protected
-    {$IFDEF COMPILER20_UP}
+    {$IFDEF RTL310_UP}
       {$MESSAGE WARN 'Check if Vcl.Mask.TCustomMaskEdit still has the exact same fields and adjust the IFDEF'}
     {$ENDIF}
     // Do not remove these fields, although they are not used.
@@ -1170,6 +1187,12 @@ type
   TCustomEditAccessProtected = class(TCustomEdit);
   TCustomFormAccessProtected = class(TCustomForm);
   TWinControlAccessProtected = class(TWinControl);
+
+{$IFDEF JVCLThemesEnabled}
+{$IFNDEF HAS_UNIT_UXTHEME}
+  HTHEME = THANDLE;
+{$ENDIF ~HAS_UNIT_UXTHEME}
+{$ENDIF JVCLThemesEnabled}
 
 const
   sDirBmp = 'JvDirectoryEditGLYPH';    { Directory editor button glyph }
@@ -1272,8 +1295,17 @@ var
   {$IFDEF JVCLThemesEnabled}
   GDirImageIndexXP: TImageIndex = -1;
   GFileImageIndexXP: TImageIndex = -1;
+  GDatePickerThemeDataAvailable: Integer = -1;
+  {$IFDEF HAS_UNIT_VCL_THEMES}
+  GDatePickerThemeData: HTHEME;
+  {$ENDIF HAS_UNIT_VCL_THEMES}
   {$ENDIF JVCLThemesEnabled}
   GCoInitialized: Integer = 0;
+
+{$IFDEF JVCLThemesEnabled}
+const
+  DefDatePickerThemeButtonWidth = 34;
+{$ENDIF JVCLThemesEnabled}
 
 //=== Local procedures =======================================================
 
@@ -1283,6 +1315,36 @@ begin
     GDateHook := TDateHook.Create;
   Result := GDateHook;
 end;
+
+{$IFDEF JVCLThemesEnabled}
+  {$IFNDEF HAS_UNIT_UXTHEME}
+const
+  // Vista+
+  VSCLASS_DATEPICKER = 'DATEPICKER';
+  DP_SHOWCALENDARBUTTONRIGHT = 3;
+  DPSCBR_NORMAL   = 1;
+  DPSCBR_HOT      = 2;
+  DPSCBR_PRESSED  = 3;
+  DPSCBR_DISABLED = 4;
+  {$ENDIF ~HAS_UNIT_UXTHEME}
+
+function IsDatePickerThemeDataAvailable: Boolean;
+begin
+  {$IFDEF HAS_UNIT_VCL_THEMES}
+  if (GDatePickerThemeDataAvailable = -1) and StyleServices.Available and Assigned(OpenThemeData) then
+  begin
+    GDatePickerThemeData := OpenThemeData(Application.Handle, VSCLASS_DATEPICKER);
+    if GDatePickerThemeData = 0 then
+      GDatePickerThemeDataAvailable := 0
+    else
+      GDatePickerThemeDataAvailable := 1;
+  end;
+  Result := (GDatePickerThemeDataAvailable = 1) and StyleServices.IsSystemStyle; // CustomStyles don't support the DatePicker theme
+  {$ELSE}
+  Result := False;
+  {$ENDIF ~HAS_UNIT_VCL_THEMES}
+end;
+{$ENDIF JVCLThemesEnabled}
 
 function ClipFilename(const FileName: string; const Clip: Boolean): string;
 var
@@ -1689,6 +1751,23 @@ begin
   FEdit.Text := Field.AsString; // update to stored value
 end;
 
+type
+  TJvBtnWinControl = class(TWinControl)
+  protected
+    procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
+  end;
+
+procedure TJvBtnWinControl.WMEraseBkgnd(var Message: TWMEraseBkgnd);
+begin
+  {$IFDEF HAS_UNIT_VCL_THEMES}
+  if ((Owner as TJvCustomComboEdit).ImageKind in [ikDropDown, ikDatePicker]) and
+     StyleServices.Enabled and not TJvCustomComboEdit(Owner).ButtonFlat then
+    Message.Result := 1 // the button is alClient and paints everything, reduces flicker
+  else
+  {$ENDIF HAS_UNIT_VCL_THEMES}
+    inherited;
+end;
+
 //=== { TJvCustomComboEdit } =================================================
 
 constructor TJvCustomComboEdit.Create(AOwner: TComponent);
@@ -1700,7 +1779,7 @@ begin
   FDirectInput := True;
   FClickKey := scAltDown;
   FPopupAlign := epaRight;
-  FBtnControl := TWinControl.Create(Self);
+  FBtnControl := TJvBtnWinControl.Create(Self);
   with FBtnControl do
     ControlStyle := ControlStyle + [csReplicatable];
   FBtnControl.Width := DefEditBtnWidth;
@@ -1856,15 +1935,61 @@ begin
   UpdateMargins;
 end;
 
+{$IFDEF JVCLThemesEnabled}
+function TJvCustomComboEdit.GetDatePickerThemeButtonMinTextSize: Integer;
+begin
+  Result := 0;
+end;
+
+function TJvCustomComboEdit.GetDatePickerThemeButtonWidth: Integer;
+begin
+  if Width - DefDatePickerThemeButtonWidth <= GetDatePickerThemeButtonMinTextSize + 8 then
+    Result := GetSystemMetrics(SM_CXVSCROLL)
+  else
+    Result := DefDatePickerThemeButtonWidth;
+end;
+
+procedure TJvCustomComboEdit.AutoSizeEditButton;
+var
+  W: Integer;
+begin
+  if (FImageKind = ikDatePicker) and StyleServices.Enabled and IsDatePickerThemeDataAvailable then
+  begin
+    if ShowButton and not (csLoading in ComponentState) then
+    begin
+      W := GetDatePickerThemeButtonWidth;
+
+      // Set button width without RecreateWnd
+      FSavedButtonWidth := W;
+      FButton.Width := W;
+      FBtnControl.SetBounds(FBtnControl.Left + FBtnControl.Width - W, FBtnControl.Top, W, FBtnControl.Height);
+      FButton.ControlStyle := FButton.ControlStyle + [csFixedWidth];
+      UpdateControls;
+      UpdateMargins;
+    end;
+  end;
+end;
+
+procedure TJvCustomComboEdit.Resize;
+begin
+  inherited Resize;
+  AutoSizeEditButton;
+end;
+{$ENDIF JVCLThemesEnabled}
+
 procedure TJvCustomComboEdit.AsyncPopupCloseUp(Accept: Boolean);
 begin
-  PostMessage(Handle, CM_POPUPCLOSEUP, Ord(Accept), 0);
+  if not (csDestroying in ComponentState) then
+    PostMessage(Handle, CM_POPUPCLOSEUP, Ord(Accept), 0);
 end;
 
 function TJvCustomComboEdit.BtnWidthStored: Boolean;
 begin
   if (FImageKind = ikDefault) and (DefaultImages <> nil) and (DefaultImageIndex >= 0) then
     Result := ButtonWidth <> Max(DefaultImages.Width + 6, DefEditBtnWidth)
+  else
+  if FImageKind = ikDatePicker then
+    Result := False
   else
   if FImageKind = ikDropDown then
     Result := ButtonWidth <> GetSystemMetrics(SM_CXVSCROLL)
@@ -2124,24 +2249,24 @@ begin
   if csDestroying in ComponentState then
     { (rb) Implementation diffs; some return True other False }
     Exit;
-  if Enabled then
+  if Enabled or (FDisabledColor = clNone) or (FDisabledColor = clDefault) or (FDisabledColor = clWindow) then
     Result := inherited DoEraseBackground(Canvas, Param)
   else
   begin
     {$IFDEF COMPILER16_UP}
     if StyleServices.Enabled and not StyleServices.IsSystemStyle then
     begin
-      // Ignore FDisabldColor. The Style dictates the color
+      // Ignore FDisabledColor. The Style dictates the color
       Result := inherited DoEraseBackground(Canvas, Param);
     end
     else
     {$ENDIF COMPILER16_UP}
     begin
-    Canvas.Brush.Color := FDisabledColor;
-    Canvas.Brush.Style := bsSolid;
-    Canvas.FillRect(ClientRect);
+      Canvas.Brush.Color := FDisabledColor;
+      Canvas.Brush.Style := bsSolid;
+      Canvas.FillRect(ClientRect);
+    end;
   end;
-end;
 end;
 
 procedure TJvCustomComboEdit.FocusSet(PrevWnd: THandle);
@@ -2154,7 +2279,7 @@ end;
 
 procedure TJvCustomComboEdit.EditButtonClick(Sender: TObject);
 begin
-  if (not FReadOnly) or AlwaysEnableButton then
+  if not FReadOnly or AlwaysEnableButton then
     ButtonClick;
 end;
 
@@ -2167,7 +2292,7 @@ procedure TJvCustomComboEdit.EnabledChanged;
 begin
   inherited EnabledChanged;
   Invalidate;
-  FButton.Enabled := Enabled;
+  UpdateButtonEnabled;
   if Assigned(FOnEnabledChanged) then
     FOnEnabledChanged(Self);
 end;
@@ -2243,10 +2368,8 @@ begin
 end;
 
 procedure TJvCustomComboEdit.GetInternalMargins(var ALeft, ARight: Integer);
-const
-  CPixelsBetweenEditAndButton = 2;
 begin
-  ARight := ARight + FBtnControl.Width + CPixelsBetweenEditAndButton;
+  ARight := ARight + FBtnControl.Width;
 end;
 
 function TJvCustomComboEdit.GetMinHeight: Integer;
@@ -2428,7 +2551,11 @@ begin
         ControlStyle := ControlStyle + [csFixedWidth];
   end;
 
+  UpdateButtonEnabled;
   UpdateControls;
+  {$IFDEF JVCLThemesEnabled}
+  AutoSizeEditButton;
+  {$ENDIF JVCLThemesEnabled}
   UpdateMargins;
 end;
 
@@ -2471,6 +2598,11 @@ begin
     FOnPopupChange(Self);
 end;
 
+procedure TJvCustomComboEdit.ResetPopupValue;
+begin
+  Reset;
+end;
+
 procedure TJvCustomComboEdit.PopupCloseUp(Sender: TObject; Accept: Boolean);
 var
   AValue: Variant;
@@ -2480,6 +2612,8 @@ begin
     if GetCapture <> 0 then
       SendMessage(GetCapture, WM_CANCELMODE, 0, 0);
     AValue := GetPopupValue;
+    if FButton <> nil then
+      FButton.PopupVisible := False;
     HidePopup;
     try
       try
@@ -2502,9 +2636,9 @@ begin
             inherited SelectAll;
         end
         else
-          Reset;
+          ResetPopupValue;
       except
-        Reset;
+        ResetPopupValue;
         raise;
       end;
     finally
@@ -2567,6 +2701,8 @@ begin
     if CanFocus then
       SetFocus;
     ShowPopup(Point(P.X, Y));
+    if FButton <> nil then
+      FButton.PopupVisible := True;
     FPopupVisible := True;
     if DisableEdit then
     begin
@@ -2639,17 +2775,18 @@ begin
   if not ShowButton then
     Exit;
 
-  if FImageKind in [ikDropDown, ikEllipsis] then
+  if FImageKind in [ikDropDown, ikEllipsis, ikDatePicker] then
   begin
     FButton.ImageIndex := -1;
     FButton.NumGlyphs := 1;
   end;
   {$IFDEF JVCLThemesEnabled}
   FButton.FDrawThemedDropDownBtn := FImageKind = ikDropDown;
+  FButton.FDrawThemedDatePickerBtn := FImageKind = ikDatePicker;
   {$ENDIF JVCLThemesEnabled}
 
   case FImageKind of
-    ikDropDown:
+    ikDropDown, ikDatePicker: // DatePicker uses the same Glyph if not supported by the OS
       begin
         {$IFDEF JVCLThemesEnabled}
         { When XP Themes are enabled, ButtonFlat = False, GlyphKind = gkDropDown then
@@ -2701,6 +2838,21 @@ begin
   end;
 end;
 
+procedure TJvCustomComboEdit.SetAlwaysEnableButton(const Value: Boolean);
+begin
+  if Value <> FAlwaysEnableButton then
+  begin
+    FAlwaysEnableButton := Value;
+    UpdateButtonEnabled;
+  end;
+end;
+
+procedure TJvCustomComboEdit.UpdateButtonEnabled;
+begin
+  if FButton <> nil then
+    FButton.Enabled := Enabled and (not FReadOnly or AlwaysEnableButton);
+end;
+
 procedure TJvCustomComboEdit.SetAutoCompleteItems(Strings: TStrings);
 begin
   FAutoCompleteItems.Assign(Strings);
@@ -2726,7 +2878,7 @@ begin
     the glyph is the default themed dropdown button. When ButtonFlat = True, we
     can't use that default dropdown button, so we have to recreate the glyph
     in this special case }
-  if StyleServices.Enabled and (ImageKind = ikDropDown) then
+  if StyleServices.Enabled and (ImageKind in [ikDropDown, ikDatePicker]) then
     RecreateGlyph;
   {$ENDIF JVCLThemesEnabled}
 end;
@@ -2749,6 +2901,11 @@ begin
   else
   if (ButtonWidth <> Value) {or ((Value > 0) <> ShowButton)} then
   begin
+    {$IFDEF JVCLThemesEnabled}
+    if (ImageKind = ikDatePicker) and (Value = DefDatePickerThemeButtonWidth) then
+      Value := GetDatePickerThemeButtonWidth;
+    {$ENDIF JVCLThemesEnabled}
+
     if Value > 1 then
       FBtnControl.Visible := True
     else
@@ -2848,6 +3005,8 @@ begin
 end;
 
 procedure TJvCustomComboEdit.SetImageKind(const Value: TJvImageKind);
+var
+  SysButtonWidth: Integer;
 begin
   if FImageKind <> Value then
   begin
@@ -2868,24 +3027,32 @@ begin
           if Assigned(FButton.Images) and (FButton.ImageIndex >= 0) then
             ButtonWidth := Max(FButton.Images.Width + 6, FButton.Width)
         end;
-      ikDropDown:
-        if csLoading in ComponentState then
+      ikDropDown, ikDatePicker:
         begin
-          if (FStreamedButtonWidth < 0) or FStreamedFixedWidth then
+          SysButtonWidth := GetSystemMetrics(SM_CXVSCROLL);
+          {$IFDEF JVCLThemesEnabled}
+          if (FImageKind = ikDatePicker) and StyleServices.Enabled and IsDatePickerThemeDataAvailable then
+            SysButtonWidth := DefDatePickerThemeButtonWidth;
+          {$ENDIF JVCLThemesEnabled}
+
+          if csLoading in ComponentState then
           begin
-            ButtonWidth := GetSystemMetrics(SM_CXVSCROLL);
-            { Setting ButtonWidth will set FStreamedFixedWidth to False, thus
+            if (FStreamedButtonWidth < 0) or FStreamedFixedWidth then
+            begin
+              ButtonWidth := SysButtonWidth;
+              { Setting ButtonWidth will set FStreamedFixedWidth to False, thus
+                reapply it. }
+              FStreamedFixedWidth := True;
+            end;
+          end
+          else
+          begin
+            ButtonWidth := SysButtonWidth;
+            { Setting ButtonWidth will remove the csFixedWidth flag, thus
               reapply it. }
-            FStreamedFixedWidth := True;
+            with FButton do
+              ControlStyle := ControlStyle + [csFixedWidth];
           end;
-        end
-        else
-        begin
-          ButtonWidth := GetSystemMetrics(SM_CXVSCROLL);
-          { Setting ButtonWidth will remove the csFixedWidth flag, thus
-            reapply it. }
-          with FButton do
-            ControlStyle := ControlStyle + [csFixedWidth];
         end;
       ikEllipsis: ;
     end;
@@ -2928,6 +3095,7 @@ begin
   if Value <> FReadOnly then
   begin
     FReadOnly := Value;
+    UpdateButtonEnabled;
     inherited ReadOnly := Value or not FDirectInput;
   end;
 end;
@@ -3012,7 +3180,7 @@ var
   {$ENDIF JVCLThemesEnabled}
 begin
   if not Assigned(FButton) then
-    exit;
+    Exit;
 
   {$IFDEF JVCLThemesEnabled}
   if StyleServices.Enabled then
@@ -3021,13 +3189,13 @@ begin
     begin
        // Work around the VCL Style engine bug where edit controls are painted smaller than they are (see also WMNCCalcSize)
       StyleExtraBorder := 0;
-      if not StyleServices.IsSystemStyle and Ctl3D then
+      if Ctl3D then
         StyleExtraBorder := 2;
 
       if Ctl3D then
-        BtnRect := Bounds(Width - FButton.Width - 2 - 1 - StyleExtraBorder, 0 + 1, FButton.Width, Height - 2 - 2 - StyleExtraBorder)
+        BtnRect := Bounds(Width - FButton.Width - 2 - StyleExtraBorder, 0, FButton.Width, Height - 2 - StyleExtraBorder)
       else
-        BtnRect := Bounds(Width - FButton.Width - 1 - 1 - StyleExtraBorder, 1 + 1, FButton.Width, Height - 2 - 2 - StyleExtraBorder);
+        BtnRect := Bounds(Width - FButton.Width - 1 - StyleExtraBorder, 1, FButton.Width, Height - 2 - StyleExtraBorder);
     end
     else
       BtnRect := Bounds(Width - FButton.Width, 0, FButton.Width, Height);
@@ -3038,9 +3206,9 @@ begin
     if BorderStyle = bsSingle then
     begin
       if not Flat then
-        BtnRect := Bounds(Width - FButton.Width - 4 + 1, 0 + 1, FButton.Width, Height - 4)
+        BtnRect := Bounds(Width - FButton.Width - 4, 0, FButton.Width, Height - 4)
       else
-        BtnRect := Bounds(Width - FButton.Width - 2, 2, FButton.Width, Height - 4)
+        BtnRect := Bounds(Width - FButton.Width - 2, 1, FButton.Width, Height - 4)
     end
     else
       BtnRect := Bounds(Width - FButton.Width, 0, FButton.Width, Height);
@@ -3089,6 +3257,8 @@ begin
 end;
 
 procedure TJvCustomComboEdit.UpdateMargins;
+const
+  CPixelsBetweenEditAndButton = 3;
 var
   LLeft, LRight, LTop: Integer;
   Loc: TRect;
@@ -3138,7 +3308,7 @@ begin
 
   GetInternalMargins(LLeft, LRight);
 
-  SetRect(Loc, LLeft, LTop, Width - LRight-3, ClientHeight - 1);
+  SetRect(Loc, LLeft, LTop, Width - LRight - CPixelsBetweenEditAndButton, ClientHeight - 1);
   SendRectMessage(Handle, EM_SETRECTNP, 0, Loc);
   // (rb) EM_SETMARGINS necessary?
   //SendMessage(Handle, EM_SETMARGINS, EC_RIGHTMARGIN or EC_LEFTMARGIN, MakeLong(LLeft, LRight));
@@ -3154,19 +3324,6 @@ begin
   if CheckOnExit or (FInCMExit = 0) then
     inherited ValidateEdit;
 end;
-
-{$IFDEF JVCLThemesEnabled}
-procedure TJvCustomComboEdit.WMNCCalcSize(var Msg: TWMNCCalcSize);
-begin
-  if StyleServices.Enabled and Ctl3D and (BorderStyle = bsSingle) and
-     StyleServices.IsSystemStyle then // Work around the VCL Style engine bug where edit controls are painted smaller than they are (see also UpdateBtnBounds)
-  begin
-    with Msg.CalcSize_Params^ do
-      InflateRect(rgrc[0], 1, 1);
-  end;
-  inherited;
-end;
-{$ENDIF JVCLThemesEnabled}
 
 procedure TJvCustomComboEdit.WMNCHitTest(var Msg: TWMNCHitTest);
 var
@@ -3190,13 +3347,13 @@ var
   Details: TThemedElementDetails;
 begin
   if StyleServices.Enabled and Ctl3D and (BorderStyle = bsSingle) and
-     not CheckWin32Version(6, 0) then // Vista draws the border animated and not with teEditTextNormal
+     not JclCheckWinVersion(6, 0) then // Vista draws the border animated and not with teEditTextNormal
   begin
     DC := GetWindowDC(Handle);
     try
       GetWindowRect(Handle, DrawRect);
       OffsetRect(DrawRect, -DrawRect.Left, -DrawRect.Top);
-      ExcludeClipRect(DC, DrawRect.Left + 1, DrawRect.Top + 1, DrawRect.Right - 1, DrawRect.Bottom - 1);
+      ExcludeClipRect(DC, DrawRect.Left + 2, DrawRect.Top + 2, DrawRect.Right - 2, DrawRect.Bottom - 2);
 
       Details := StyleServices.GetElementDetails(teEditTextNormal);
       StyleServices.DrawElement(DC, Details, DrawRect);
@@ -4382,6 +4539,9 @@ end;
 procedure TJvEditButton.Paint;
 {$IFDEF JVCLThemesEnabled}
 var
+  {$IFDEF HAS_UNIT_VCL_THEMES}
+  DrawState: TJvButtonState;
+  {$ENDIF HAS_UNIT_VCL_THEMES}
   ThemedState: TThemedComboBox;
   Details: TThemedElementDetails;
   R: TRect;
@@ -4390,6 +4550,37 @@ begin
   {$IFDEF JVCLThemesEnabled}
   if StyleServices.Enabled then
   begin
+    if FDrawThemedDatePickerBtn and IsDatePickerThemeDataAvailable then
+    begin
+      {$IFDEF HAS_UNIT_VCL_THEMES}
+      DrawState := FState;
+      if FPopupVisible then
+        DrawState := rbsDown;
+    
+      Details.Part := DP_SHOWCALENDARBUTTONRIGHT;
+
+      if not Enabled then
+        Details.State := DPSCBR_DISABLED
+      else
+      if DrawState in [rbsDown, rbsExclusive] then
+        Details.State := DPSCBR_PRESSED
+      else
+      if MouseOver or IsDragging then
+        Details.State := DPSCBR_HOT
+      else
+        Details.State := DPSCBR_NORMAL;
+
+      R := ClientRect;
+      if Enabled then
+        FillRect(Canvas.Handle, R, HBRUSH(COLOR_WINDOW + 1))
+      else
+        FillRect(Canvas.Handle, R, HBRUSH(COLOR_BTNFACE + 1));
+      if Width < DefDatePickerThemeButtonWidth then
+        R.Left := R.Right - 15; // paint without the dropdown arrow
+      DrawThemeBackground(GDatePickerThemeData, Canvas.Handle, Details.Part, Details.State, R, nil);
+      {$ENDIF HAS_UNIT_VCL_THEMES}
+    end
+    else
     if FDrawThemedDropDownBtn then
     begin
       if not Enabled then
@@ -4412,17 +4603,16 @@ begin
   else
   {$ENDIF JVCLThemesEnabled}
   begin
-     inherited Paint;
+    inherited Paint;
     if FState <> rbsDown then
-      with Canvas do
-      begin
-        Pen.Color := clBtnFace;
-        MoveTo(0, 0);
-        LineTo(0, Self.Height - 1);
-        Pen.Color := clBtnHighlight;
-        MoveTo(1, 1);
-        LineTo(1, Self.Height - 2);
-      end;
+    begin
+      Canvas.Pen.Color := clBtnFace;
+      Canvas.MoveTo(0, 0);
+      Canvas.LineTo(0, Height - 1);
+      Canvas.Pen.Color := clBtnHighlight;
+      Canvas.MoveTo(1, 1);
+      Canvas.LineTo(1, Height - 2);
+    end;
   end;
 end;
 
@@ -4452,6 +4642,15 @@ begin
   if Value <> ButtonGlyph.NumGlyphs then
   begin
     ButtonGlyph.NumGlyphs := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TJvEditButton.SetPopupVisible(const Value: Boolean);
+begin
+  if Value <> FPopupVisible then
+  begin
+    FPopupVisible := Value;
     Invalidate;
   end;
 end;
@@ -4940,6 +5139,7 @@ procedure TJvFilenameEdit.PopupDropDown(DisableEdit: Boolean);
 var
   Temp: string;
   Action: Boolean;
+  Path, Name: string;
 begin
   Action := True;
   Temp := FileName;
@@ -4948,12 +5148,24 @@ begin
     Exit;
   if ValidFileName(Temp) then
   try
-    if DirectoryExists(ExtractFilePath(Temp)) then
-      SetInitialDir(ExtractFilePath(Temp));
-    if (ExtractFileName(Temp) = '') or
-      not ValidFileName(ExtractFileName(Temp)) then
+    Path := ExtractFilePath(Temp);
+    Name := ExtractFileName(Temp);
+
+    if (Name = '') or not ValidFileName(Name) then
       Temp := '';
-    FDialog.FileName := Temp;
+
+    if DirectoryExists(Path) then
+    begin
+      SetInitialDir(Path);
+      // If we are in the FileName's directory we don't have to include the path in the edit field.
+      // After FDialog.Execute the FileName property will contains the expanded path.
+      if Temp <> '' then
+        FDialog.FileName := Name
+      else
+        FDialog.FileName := '';
+    end
+    else
+      FDialog.FileName := Temp;
   except
     { ignore any exceptions }
   end;
@@ -4975,7 +5187,8 @@ begin
       inherited Text := ExtFilename(Temp)
     else
       inherited Text := Temp;
-    SetInitialDir(ExtractFilePath(FDialog.FileName));
+    Path := ExtractFilePath(FDialog.FileName);
+    SetInitialDir(Path);
   end;
 end;
 
@@ -5158,6 +5371,12 @@ initialization
 finalization
   FreeAndNil(GDateHook);
   FreeAndNil(GDefaultComboEditImagesList);
+  {$IFDEF JVCLThemesEnabled}
+  {$IFDEF HAS_UNIT_VCL_THEMES}
+  if (GDatePickerThemeData <> 0) and Assigned(CloseThemeData) then
+    CloseThemeData(GDatePickerThemeData);
+  {$ENDIF HAS_UNIT_VCL_THEMES}
+  {$ENDIF JVCLThemesEnabled}
   {$IFDEF UNITVERSIONING}
   UnregisterUnitVersion(HInstance);
   {$ENDIF UNITVERSIONING}

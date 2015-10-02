@@ -520,6 +520,8 @@ begin
           end;
           if IDEVersion < 7 then
             Inc(Result.Version, 6)  // 3.0 => 9
+          else if IDEVersion >= 14 then
+            Inc(Result.Version, 6) // 14.0 => 20  // there is no 13.0
           else
             Inc(Result.Version, 7); // 7.0 => 14
         end;
@@ -558,8 +560,14 @@ begin
           6: Result.Name := 'CodeGear RAD Studio 2009';
           7: Result.Name := 'Embarcadero RAD Studio 2010';
           8: Result.Name := 'Embarcadero RAD Studio XE';
+         17: Result.Name := 'Embarcadero RAD Studio 10 Seattle';
        else
-         Result.Name := 'Embarcadero RAD Studio XE' + IntToStr(2 + (Result.IDEVersion - 9));
+         if Result.IDEVersion > 17 then
+           Result.Name := 'Embarcadero RAD Studio 10.' + IntToStr(Result.IDEVersion - 17) // just a guess
+         else if Result.IDEVersion > 13 then
+           Result.Name := 'Embarcadero RAD Studio XE' + IntToStr(2 + (Result.IDEVersion - 10))
+         else
+           Result.Name := 'Embarcadero RAD Studio XE' + IntToStr(2 + (Result.IDEVersion - 9));
        end;
     end;
 
@@ -871,7 +879,7 @@ begin
   InvalidFound := False;
   for Typ := ttFirst to High(TTargetType) do
   begin
-    for IDEVersion := 1 to 20 do
+    for IDEVersion := 1 to 40 do
     begin
       Target := ReadTargetInfo(Typ, IDEVersion);
       if (Target.Typ <> ttNone) and (Target.Version >= 5) then
@@ -1199,7 +1207,7 @@ begin
   begin
     WriteLn;
     WriteLn('Additional options (must be specified before any dcc32 parameter):');
-    WriteLn('  --delphi-version=d18   Prefer this version, overrides environment variable');
+    WriteLn('  --delphi-version=d23   Prefer this version, overrides environment variable');
     WriteLn('  --verbose              Show warnings and errors during the compiler detection');
     WriteLn('  --use-search-paths     Use the IDE''s search paths');
     WriteLn('  --preserve-config      Keep the dcc32.cfg file and create a dcc32_command.cmd');
@@ -1211,8 +1219,8 @@ begin
     WriteLn('  --runtime-package-vcl  Link the executable against the vcl package');
     WriteLn;
     WriteLn('Environment variables:');
-    WriteLn('  DELPHIVERSION = d18    Prefer this Delphi/BCB/BDS version');
-    WriteLn('                         (d6, d7, c6, d9, d10, d11, d12, d14, ..., d18, ...)');
+    WriteLn('  DELPHIVERSION = d23    Prefer this Delphi/BCB/BDS version');
+    WriteLn('                         (d6, d7, c6, d9, d10, d11, d12, d14, ..., d23, ...)');
   end;
 
   ExitCode := Status;
