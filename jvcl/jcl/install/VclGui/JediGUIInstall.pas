@@ -38,7 +38,7 @@ interface
 uses
   SysUtils, Classes,
   Graphics, Forms, Controls, StdCtrls, ComCtrls, ExtCtrls, FrmCompile,
-  JclIDEUtils, JediInstall;
+  JclBase, JclWin32, JclIDEUtils, JediInstall;
 
 type
   TSetIconEvent = procedure(Sender: TObject; const FileName: string) of object;
@@ -149,6 +149,7 @@ type
     Id: Integer;
     Options: TJediInstallGUIOptions;
     Hint: string;
+    Node: TTreeNode;
   end;
 
   PNodeRec = ^TNodeRec;
@@ -174,10 +175,10 @@ var
   Index: Integer;
 begin
   for Index := FNodeData.Count - 1 downto 0 do
-    Dispose(FNodeData.Items[Index]);
+    Dispose(PNodeRec(FNodeData.Items[Index]));
   FNodeData.Free;
   for Index := FDirectories.Count - 1 downto 0 do
-    Dispose(FDirectories.Items[Index]);
+    Dispose(PDirectoryRec(FDirectories.Items[Index]));
   FDirectories.Free;
 
   inherited Destroy;
@@ -325,14 +326,20 @@ begin
 end;
 
 function TInstallFrame.GetNode(Id: Integer): TTreeNode;
+var
+  I: Integer;
+  Data: PNodeRec;
 begin
-  Result := TreeView.Items.GetFirstNode;
-  while Assigned(Result) do
+  for I := 0 to FNodeData.Count - 1 do
   begin
-    if PNodeRec(Result.Data)^.Id = Id then
-      Break;
-    Result := Result.GetNext;
+    Data := FNodeData[I];
+    if Data^.Id = Id then
+    begin
+      Result := Data^.Node;
+      Exit;
+    end;
   end;
+  Result := nil;
 end;
 
 procedure TInstallFrame.UpdateImageIndex(N: TTreeNode);
@@ -432,7 +439,7 @@ begin
   if not Assigned(FFormCompile) then
   begin
     FFormCompile := TFormCompile.Create(Self, FInstallGUI);
-    SetWindowLong(FFormCompile.Handle, GWL_HWNDPARENT, Handle);
+    SetWindowLongPtr(FFormCompile.Handle, GWL_HWNDPARENT, LONG_PTR(Handle));
     FFormCompile.Init(Caption, True);
     FFormCompile.Show;
     Application.ProcessMessages;
@@ -499,6 +506,7 @@ begin
     NodeRec^.Hint := Hint;
     NodeRec^.Options := Options;
     ThisNode := TreeView.Items.AddChildObject(ParentNode, Caption, NodeRec);
+    NodeRec^.Node := ThisNode;
     FNodeData.Add(NodeRec);
   end;
 
