@@ -117,7 +117,7 @@ type
 implementation
 
 uses
-  GR32_Lowlevel, GR32_Blend, GR32_Transforms, GR32_Math, SysUtils;
+  GR32_Lowlevel, GR32_Math, SysUtils;
 
 resourcestring
   RCStrCantAllocateVectorMap = 'Can''t allocate VectorMap!';
@@ -249,13 +249,13 @@ begin
     {$IFDEF HAS_NATIVEINT}
     Result := CombineVectorsReg(CombineVectorsReg(PFixedPoint(P)^,
       PFixedPoint(NativeUInt(P) + NativeUInt(H))^, WX), CombineVectorsReg(
-      PFixedPoint(NativeUInt(P) + NativeUInt(W))^, PFixedPoint(
-        NativeUInt(P) + NativeUInt(W) + NativeUInt(H))^, WX), WY);
+      PFixedPoint(NativeUInt(P) + NativeUInt(W))^,
+      PFixedPoint(NativeUInt(P) + NativeUInt(W + H))^, WX), WY);
     {$ELSE}
     Result := CombineVectorsReg(CombineVectorsReg(PFixedPoint(P)^,
-      PFixedPoint(Cardinal(P) + H)^, WX), CombineVectorsReg(
-      PFixedPoint(Cardinal(P) + W)^, PFixedPoint(Cardinal(P) + W + H)^, WX),
-      WY);
+      PFixedPoint(Cardinal(P) + Cardinal(H))^, WX), CombineVectorsReg(
+      PFixedPoint(Cardinal(P) + Cardinal(W))^,
+      PFixedPoint(Cardinal(P) + Cardinal(W) + Cardinal(H))^, WX), WY);
     {$ENDIF}
   end else
   begin
@@ -321,7 +321,7 @@ begin
     AssignFile(MeshFile, FileName);
     Reset(MeshFile, 1);
     BlockRead(MeshFile, Header, SizeOf(TPSLiquifyMeshHeader));
-    if Lowercase(String(Header.Ident)) <> Lowercase(MeshIdent) then
+    if LowerCase(string(Header.Ident)) <> LowerCase(MeshIdent) then
       Exception.Create(RCStrBadFormat);
     with Header do
     begin
@@ -627,11 +627,10 @@ begin
       Dec(Right)
     until Right <= Left;
 
-
   end;
   RightDone:
   if IsRectEmpty(Result) then
-    Result := Rect(0,0,0,0);
+    Result := Rect(0, 0, 0, 0);
 end;
 
 end.
