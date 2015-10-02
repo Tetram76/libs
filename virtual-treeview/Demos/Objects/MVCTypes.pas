@@ -55,7 +55,8 @@ unit MVCTypes;
 interface
 
 uses Windows,Messages,SysUtils,Graphics,VirtualTrees,Classes,StdCtrls,
-     Controls,Forms,ImgList;
+     Controls,Forms,ImgList,
+     System.Types, System.UITypes;
 
 type { TMVCNode is the encapsulation of a single Node in the structure.
        This implementation is a bit bloated because in my project
@@ -214,12 +215,12 @@ type { TMVCNode is the encapsulation of a single Node in the structure.
            details on what they do and why they are overridden. }
          function DoGetNodeWidth(Node: PVirtualNode; Column: TColumnIndex; Canvas: TCanvas = nil): Integer; override;
          procedure DoPaintNode(var PaintInfo: TVTPaintInfo); override;
-         procedure DoInitChildren(Node:PVirtualNode;var ChildCount:Cardinal); override;
+         function DoInitChildren(Node: PVirtualNode; var ChildCount: Cardinal): Boolean; override;
          procedure DoInitNode(aParent,aNode:PVirtualNode;
                               var aInitStates:TVirtualNodeInitStates); override;
          procedure DoFreeNode(aNode:PVirtualNode); override;
          function DoGetImageIndex(Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
-           var Ghosted: Boolean; var Index: Integer): TCustomImageList; override;
+           var Ghosted: Boolean; var Index: TImageIndex): TCustomImageList; override;
          procedure DoChecked(aNode:PVirtualNode); override;
          function DoCreateEditor(Node: PVirtualNode; Column: TColumnIndex): IVTEditLink; override;
          function InternalData(Node: PVirtualNode): Pointer;
@@ -504,9 +505,10 @@ function TMVCTreeView.GetMVCNode(VirtualNode:PVirtualNode):TMVCNode;
 begin
   { Return the reference to the TMVCNode that is represented by
     Virtualnode }
-  if VirtualNode=NIL
-    then Result:=NIL
-    else Result:=PMyNodeData(InternalData(VirtualNode)).Node;
+  if VirtualNode.IsAssigned() then
+    Result := PMyNodeData(InternalData(VirtualNode)).Node
+  else
+    Result := nil;
 end;
 
 procedure TMVCTreeView.SetMVCNode(VirtualNode:PVirtualNode;aNode:TMVCNode);
@@ -727,10 +729,11 @@ begin
   inherited DoFreeNode(aNode);
 end;
 
-procedure TMVCTreeView.DoInitChildren(Node:PVirtualNode;var ChildCount:Cardinal);
+function TMVCTreeView.DoInitChildren(Node: PVirtualNode; var ChildCount: Cardinal): Boolean;
 begin
   inherited DoInitChildren(Node,ChildCount);
   ChildCount:=MVCNode[Node].ChildCount;
+  Result := True;
 end;
 
 procedure TMVCTreeView.DoInitNode(aParent,aNode:PVirtualNode;
@@ -762,7 +765,7 @@ begin
 end;
 
 function TMVCTreeView.DoGetImageIndex(Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
-  var Ghosted: Boolean; var Index: Integer): TCustomImageList;
+  var Ghosted: Boolean; var Index: TImageIndex): TCustomImageList;
 { The tree requests the image-index for a Node and column. }
 var N:TMVCNode;
 begin
@@ -1009,7 +1012,7 @@ end;
 constructor TMVCTreeView.Create(AOwner: TComponent);
 begin
   inherited;
-  FInternalDataOffset := AllocateInternalDataArea(SizeOf(Cardinal));
+  FInternalDataOffset := AllocateInternalDataArea(SizeOf(Pointer));
 end;
 
 function TMVCTreeView.GetOptions: TVirtualTreeOptions;

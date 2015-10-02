@@ -1,49 +1,188 @@
+V6.2 (09 Sep 2015)
+  * Issue #582: Added support and packages for RAD Studio 10 Seattle
+  * Issue #580: Added support for Delphi package manager Delphinus
+  * Fixed issue #571: Grid mode and extended selection leads to drawing inconsistencies
+  * Fixed issue #569 which includes a fix for AddChild().
+  * Fixed issue #568: Integer overflow when reiniting nodes and using ivsFiltered
+  * Merged pull request #564 which includes a fix for ComputeNodeHeight() and single line nodes     
+  * Merged pull request #563 which prevents an access violation when using custom check images in column headers     
+  * Merged pull request #561 which makes VclStyleChanged() virtual
+  * Fixed issue #557: Using isFiltered in InitNode leads to integer overflows or bogus rendering
+  * Fixed issue #556: Variable height and more than 1 level results in incorrect RangeY
+  * Fixed issue #555: The OnChange event is not fired in case the selected node is deleted through DeleteChildren(). Although no the option toAlwaysSelectNode is set, the parent node was not selected afterwards.
+  * Fixed issue #553: painting failure with variable NodeHeight
+  * Fixed issue #551: Some overlay images were drawn ghosted like the main image, some not. 
+  * TBaseVirtualTree.PrepareBitmaps() now fires the OnPrepareButtonImages event also in case VCL styles are used.          
+  * Added implementation for TVirtualTreeAccessibility.accSelect() so that screen readers and especially UI testing tools can use MSAA to select specific elements in the control.
+  * Property OnColumnVisibilityChanged is now published.
+  * Now using type TImageIndex instead of integer for variables and parameters that store an image index.
+
+V6.1 (02 June 2015)
+ * Implemented Issue #530: Removed all AnsiString code from export routines. Breaking changes:
+   - TCustomVirtualStringTree.ContentToText() is now based on (Unicode)string and no longer on AnsiString.
+   - TCustomVirtualStringTree.ContentToUnicode() is now deprecated, use ContentToText() instead.
+ * Implemented issue #536: Add export event that is triggered for each cell
+   - Added new event OnGetCellText which has new TVSTGetCellTextEventArgs record as parameter.
+     This event could supersede the OnGetText event in a future version.
+   - All export formats now also export static text, in case the toShowStaticText flag is set  
+ * Fixed issue #545: VCL Themes: Background of scrollbars is erased with wrong color
+ * Fixed issue #487: When OnAddToSelection is called, GetFirstSelected returns nil
+ * Fixed issue #542: AllocateInternalDataArea() was broken for derived classes
+   This was a result of issue #507. Now the user node data comes before the internal data.
+   Therefore it is important to use the function InternalData() to access the internal data of a node.  
+ * Fixed issue #541: Duplicate call of EndEdit()
+ * Fixed issue #123: Triangle button is not shown for hot node
+ * Fixed issue #347: With VCL-Themes: No expand-pluses seen under Windows classic theme
+ * Fixed copy&paste error is source code related to issue #519
+
+V6.0 (13 Apr 2015)
+  * Issue #509: Added new option hoAutoColumnPopupMenu to TVTHeaderOption. 
+  * Issue #457: Virtual TreeView no longer react on standard actions for TEdit controls
+    We added standard actions for copy, cut, paste, delete, select all, check, uncheck in the new unit "VirtualTrees.Actions".  
+  * Issue #484: ContentToHTML() no longer pre-encodes the HTML in UTF-8 but returns a Unicodestring
+  * Issue #507: Added to TBaseVirtualTree:
+    function GetNodeData<T>(pNode: PVirtualNode): T;
+    function GetNodeDataAt<T:class>(pXCoord: Integer; pYCoord: Integer): T;
+    function GetFirstSelectedNodeData<T>(): T; overload;
+    function GetInterfaceFromNodeData<T:IInterface>(pNode: PVirtualNode): T; 
+    procedure SetNodeData(pNode: PVirtualNode; pUserData: Pointer); 
+    procedure SetNodeData(pNode: PVirtualNode; const pUserData: IInterface); 
+    procedure SetNodeData<T:class>(pNode: PVirtualNode; pUserData: T);
+    Similar functions have also been added to the TVirtualNode record.
+  * The grid demo of the "Advanced" project now uses a class instead of a record and the new generic functions from issue #502.
+  * Issue #519: Changed plus/minus buttons so that hot tracking of the buttons is always on, independent of toHotTrack.
+  * Issue #514: The splitter area in the column header should be configurable
+  * Issue #515: The value for Indent should get scaled too if the toAutoScale flag is set
+  * Issue #511: From the unit VirtualTres new units have been extracted to reduce its size.
+  * Issue #483 for TVTOperationKind.okExport: All exports can now be cancelled using CancelOperation()
+  * Issue #362: InternalConnectNode: AdjustTotalHeight not called if Node not FullyVisible
+  * Issue #506: Autosort is being triggered at design-time.
+  * Issue #486: AutoScroll is performed although toAutoScroll is not set.
+  * DoMeasureItem() now ensures that the node was initialized.
+  * Issue #493: Editing with DblClick should always open editor immediately.
+  * TVirtualTreeColumns.UpdatePositions() now exits immediately if the control is destroying, ths prevents AVs.
+  * Added support for CBuilder XE7.  
+  * A larger patch from Diemtar Rösler was applied which addresses various issue regarding VCL styles (especially #478 and #491).
+  * Supporting only Delphi / C++ Builder XE3 and higher
+  * Improved support for C++ Builder  
+
+V5.5.3: (08 Jan 2015)
+  * Fixed issue #495: Incorrect text vertical align when changing font in OnPaintText
+  * Fixed Issue #496: Access violation at VT destroy
+  * Fixed issue #498: Node totalheight not initialized properly when adding new node and using toVariableNodeHeight
+        
+V5.5.2: (10 Nov 2014)
+  * Various improvements regarding code style
+  * Implemented #471: Add emVisibleDueToExpansion and emSelected to TVTExportMode  
+  * Fixed issue #488: XE7 packages should depend on one another and use suffix 21
+  * Fixed issue #462: Undo r636, make VirtualTreesD require VirtualTreesR again
+  * Fixed issue #489 XE2 compiler switch error
+
+V5.5.1: (13 Oct 2014)
+  * Fixed issue #479: The style hooks for the VCL styles are now registered for TVirtualStringTree and TVirtualDrawTree instead of TBaseVirtualTree, which makes it easier to use own style hooks in derived classes.  
+  * Partial fix for issue #478: The standard VCL property StyleElemets (public in TControl in RAD Studio XE3 and higher) is now supported and published for TVirtualStringTree and TVirtualDrawTree (XE3 and higher). This means you can define if the font and the backgrounbd color is taken from the VCL style or the control's properties. Leaving out seBorder is not yet working well, more work will be necessary.
+  *  Fixed issue #473: Return type of GetUtilityImages should be TCustomImageList
+  * Fix for issue #470: VCL Styles and sorting failure
+  * Added missing inherited to CMMouseEnter()
+  * Fixed issue #468: Redundant code in CreateSystemImageSet()
+  * Fixed issue #482: AutoScale() could cause exception during form load.
+  * Added fix for #466: No parent window if column created in constructor
+  * Fixed issue #446: ScrollIntoView does not work properly after applying patch from issue #339
+  * Improvements for toAlwaysSelectNode option: Selection of next sibling has been improved in case the currently selected node is being removed.
+  * Added missing begin/end-block in MeasureItemHeight() 
+  * Improved fix for issue #438: Now correctly initializing member of property TVTColors.UnfocusedColor  
+  * Improved fix for issue #447: DoMeasureItem() was called for Node instead of Child.
+  * Minor improvement in appearance of border lines in HTML export.  
+  * Fixed issue #480: Warning when compiling Delphi XE2 packages
+  * Fixed #472: Redundant conditions in TVclStyleScrollBarsHook.WMMouseMove
+  * Fixed #476: Simplify TVTDragImage.WillMove()
+  * Fixed issue #485: unit VirtualTrees does not compile with {$TYPEDADDRESS ON}
+   
+V5.5: (11 Sep 2014)
+  * Added packages for RAD Studio XE7 / Delphi XE7
+  * Fixed issue #464: Vertical grid lines not computed correctly for spanned cells with header auto resize
+  * Fixed issue #442: Scrollbars are not updated for active VCL Style under XE2
+  * Fixed issue #463: HTML export shows grid lines in IE and Chrome, but not in Firefox
+  * Fixed issue #460: Access violation in design time when setting "CheckBox" to True for a Virtual Treeview Column
+  * Fixed issue #72: Call Application.CancelHint only if the current control is showing the hint
+  * Fixed issue #461: corrected condition in TBaseVirtualTree.ScrollIntoView, so that not only partially (by the fixed area) covered columns but also totally covered columns are scrolled in view
+  * Fixed issue #450: Regional letters entered using Right+Alt should also trigger the incremental search.
+  * Improvemtns for toAlwaysSelectNode: 
+    Clicking the free space below the tree nodes no longer deselects the selected node. 
+    We now prevent toggling of the selection of the last selected node if toAlwaysSelectNode is set in TreeOptions.
+  * Fixed issue #447: SetChildCount() now calls DoMeasureItem() instead of using DefaultNodeHeight.
+  * Fixed issue #444: ERangeError in TBaseVirtualTree.CMMouseWheel
+  * TBaseVirtualTree.MeasureItemHeight() is virtual now.
+  * Fixed issue #445 MultiSelect behavior: Can't drag node which is not selected
+  * Fixed Issue #443: TVirtualTreeColumns.ColumnFromPosition on right border of fixed column
+  * Fixed issue #339: Problems with fixed column 
+  * Implemented #410: Small extension of TStringEditLink: Allow creating own edit control by moving the creation of TVTEdit from constructor to virtual PrepareEdit with assigned check.
+  * Implemented #409: Extend THitInfo record with hit coordinates
+  * Added suggestions of #438: Make some members visible to derived classes
+  * Fixed issue #440: Context menu does not pop up if there is no selected node
+  * Added C++ Builder link demand to VirtualTreesR.Lib as {$HPPEMIT}
+  * Improved installation instructions, especially for C++ Builder
+  
+V5.4.1: (26 May 2014)
+  * Added packages for C++ Builder XE6
+  * If toAutoChangeScale is set in AutoOptions, the Virtual TreeView control now
+    increases the DefaultNodeHeight if the font size is too large to fit.
+  * If toAutoChangeScale is set in AutoOptions, the columns widths are now adjusted too.
+  * Improved implementation for toRestoreSelection option
+  * Fixed possible AV in PaintNodeButton()
+  * Now ensuring that both GetHorzScrollBarSliderRect() and
+    GetVertScrollBarSliderRect() return a valid value for every code path (Thx to
+    Dmitri Dmitrienko). This could cause strange out of resources exceptions with VCL
+    styles enabled.
+  * Fixed issue #434: Application compiled with Delphi 7 stops responding when you call AddChild 
+  * A few minor changes
+  
 V5.4.0: (22 Apr 2014)
-- Added support for XE6.
-- Added new option toRestoreSelection to TVTSelectionOptions: Set to true if upon refill the previously
-  selected nodes should be selected again. The nodes will be identified by its caption only.
-- Added new option toAlwaysSelectNode to TVTSelectionOption enum. If this flag is set, the treeview tries to
-  always have a node selected. This behavior is closer to the Windows TreeView and useful in Windows Explorer
-  style applications. It is also useful for accessible applications which can indicate having the focus by
-  displaying a selection.
-- Added function TBaseVirtualTree.IsEmpty which returns True if the control has no nodes.  
-- Fixed a wrongly drawn selection after the user scrolled horizontally.
-- Fixed issue #423: Change property TVirtualTreeColumn.Tag to NativeInt. 
-- Implemented #415: Added feature for design time column header dragging and resizing. (Thx to fr0st.brutal)
-- Fixed issue #180: Memory leak in grid demo of Advanced project
-- Implemented #422: Added TBaseVirtualTree.GetFirstChildNoInit() 
-- Fixed issue #420: Add coEditable to TVTColumnOption) by applying the supplied path. Thx to Stefan Glienke.
-- Fixed issue #419: Some issues with changing to edit mode with clicking
-- Fixed issue #430: TVTDragManager memory leak with visual inheritance. Thx to Andreas Hausladen for the patch.
-- Fixed issue #431: Visual bug when using TStringEditLink with large node heights
-- TVclStyleScrollBarsHook.WMMouseMove(): Now preventing possible range check error exception.
-- Now handling WM_MOVE and WM_POSCHNAGED correctly in TVclStyleScrollBarsHook (Thx to Dmitri Dmitrienko)
-- Preventing possible stack overflow in TVirtualTreeHintWindow.ActivateHint (Thx to Dmitri Dmitrienko)
-- Added packages for C++ Builder XE5.
-- Some minor cchnages, imporevements and fixes have been incorporated
+  * Added support for XE6.
+  * Added new option toRestoreSelection to TVTSelectionOptions: Set to true if upon refill the previously
+    elected nodes should be selected again. The nodes will be identified by its caption only.
+  * Added new option toAlwaysSelectNode to TVTSelectionOption enum. If this flag is set, the treeview tries to
+    lways have a node selected. This behavior is closer to the Windows TreeView and useful in Windows Explorer
+    tyle applications. It is also useful for accessible applications which can indicate having the focus by
+    isplaying a selection.
+  * Added function TBaseVirtualTree.IsEmpty which returns True if the control has no nodes.  
+  * Fixed a wrongly drawn selection after the user scrolled horizontally.
+  * Fixed issue #423: Change property TVirtualTreeColumn.Tag to NativeInt. 
+  * Implemented #415: Added feature for design time column header dragging and resizing. (Thx to fr0st.brutal)
+  * Fixed issue #180: Memory leak in grid demo of Advanced project
+  * Implemented #422: Added TBaseVirtualTree.GetFirstChildNoInit() 
+  * Fixed issue #420: Add coEditable to TVTColumnOption) by applying the supplied path. Thx to Stefan Glienke.
+  * Fixed issue #419: Some issues with changing to edit mode with clicking
+  * Fixed issue #430: TVTDragManager memory leak with visual inheritance. Thx to Andreas Hausladen for the patch.
+  * Fixed issue #431: Visual bug when using TStringEditLink with large node heights
+  * TVclStyleScrollBarsHook.WMMouseMove(): Now preventing possible range check error exception.
+  * Now handling WM_MOVE and WM_POSCHNAGED correctly in TVclStyleScrollBarsHook (Thx to Dmitri Dmitrienko)
+  * Preventing possible stack overflow in TVirtualTreeHintWindow.ActivateHint (Thx to Dmitri Dmitrienko)
+  * Added packages for C++ Builder XE5.
+  * Some minor changes, improvements and fixes have been incorporated
 
 V5.3.0: (04 Jan 2014)
-- Fix for issue #159 (Cursor missing in edit with non-standard DPI): Ensuring a minimum size of the edit control
-- Fixed issue #403: Declare TVTGetNodeProc as reference to procedure (for D2009+) 
-- Fixed issue #402: TVTEdit.CNCommand discard all notification except EN_UPDATE due to missing inherited
-- Corrected fix for issue #376 (Incorrect selection paint when toGridExtensions is included in the MiscOptions)
-- Fixed issue #401: OnNodeClick event doesn't trigger in some case, coFixed set for a column
-- Modified #316 (concerning r498). The fix for #316 will only be applied in case toMultiSelect is set.
-  If toMultiSelect is not set we can start a drag anywhere in the row.
-- ContentToHTML() and ContentToRTF() now return a string of type RawByteString. 
-  Because the generated strings are pre-encoded in UTF-8, the previous type AnsiString caused
-  problems in Delphi 2009+ e.g. when this string was written using the VCL TStreamWriter class.
-  The helper class TBufferedAnsiString therefore uses RywByteString now as type too.
-- Fixed issue #399: EditDelay not working
-- Fixed issue #400: AltGr+A does not behave as expected for foreign keyboard layouts in VTEdit
-- Fixed issue #388: VirtualStringTree with toFixedIndent causes range check error
-- Edit box when editing a node in a tree with toFixedIndent now has the correct indent
-- Fixed issue #392: Now ensuring that MeasureItemHeight() is only called from the main thread.
-- Fixed #383: Clear vsHasChildren for a node without children even if the children count didn't change.
-- Fixed #377: Wrong font (size, etc) in TargetCanvas in MeasureItem for first node
-- Fixed issue #398 (hoAutoResize causes DFM designer to be modified after loading) by calling TControl.Updating()/Updated() in AdjustAutoSize()
-- Preventing possible AV in TBaseVirtualTree.FontChanged()
-- Fixed 32Bit Integer overflows in Win64 build in TBufferedAnsiString.
+  * Fix for issue #159 (Cursor missing in edit with non-standard DPI): Ensuring a minimum size of the edit control
+  * Fixed issue #403: Declare TVTGetNodeProc as reference to procedure (for D2009+) 
+  * Fixed issue #402: TVTEdit.CNCommand discard all notification except EN_UPDATE due to missing inherited
+  * Corrected fix for issue #376 (Incorrect selection paint when toGridExtensions is included in the MiscOptions)
+  * Fixed issue #401: OnNodeClick event doesn't trigger in some case, coFixed set for a column
+  * Modified #316 (concerning r498). The fix for #316 will only be applied in case toMultiSelect is set.
+    If toMultiSelect is not set we can start a drag anywhere in the row.
+  * ContentToHTML() and ContentToRTF() now return a string of type RawByteString. 
+    Because the generated strings are pre-encoded in UTF-8, the previous type AnsiString caused
+    problems in Delphi 2009+ e.g. when this string was written using the VCL TStreamWriter class.
+    The helper class TBufferedAnsiString therefore uses RywByteString now as type too.
+  * Fixed issue #399: EditDelay not working
+  * Fixed issue #400: AltGr+A does not behave as expected for foreign keyboard layouts in VTEdit
+  * Fixed issue #388: VirtualStringTree with toFixedIndent causes range check error
+  * Edit box when editing a node in a tree with toFixedIndent now has the correct indent
+  * Fixed issue #392: Now ensuring that MeasureItemHeight() is only called from the main thread.
+  * Fixed #383: Clear vsHasChildren for a node without children even if the children count didn't change.
+  * Fixed #377: Wrong font (size, etc) in TargetCanvas in MeasureItem for first node
+  * Fixed issue #398 (hoAutoResize causes DFM designer to be modified after loading) by calling TControl.Updating()/Updated() in AdjustAutoSize()
+  * Preventing possible AV in TBaseVirtualTree.FontChanged()
+  * Fixed 32Bit Integer overflows in Win64 build in TBufferedAnsiString.
 
 V5.2.2: (30 Oct 2013)
 - Added support for Delphi / RAD Studio XE5
@@ -136,7 +275,7 @@ V5.1.1 (07 Feb 2013):
 
 V5.1.0 (05 Nov 2012):
  - Fixed issue #291: Empty hint strings are shown when using custom hint window classes
- - Added support for VCl styles of RAD Studio XE2 and higher. (Thanks to Dietmar R�sler, issue #288)
+ - Added support for VCl styles of RAD Studio XE2 and higher. (Thanks to Dietmar Rösler, issue #288)
  - Fixed issue #285: access violation when mouse down over checkbox sometimes
  - Fixed issue #293: OnAdvancedHeaderDraw is called with wrong PaintInfo.PaintRectangle
  - Improved creation of IDragSourceHelper and added support for IDragSourceHelper2
