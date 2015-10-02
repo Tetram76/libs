@@ -42,7 +42,6 @@ requires
   vclimg,
   dbrtl,
   vcldb,
-  bdertl,
   VclSmp,
   PngComponents,
   Jcl,
