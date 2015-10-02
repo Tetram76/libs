@@ -39,7 +39,7 @@ interface
 
 uses
   SysUtils, Classes, Windows, Graphics, GR32, GR32_Backends, GR32_Containers,
-  GR32_Image, GR32_Backends_Generic;
+  GR32_Image, GR32_Backends_Generic, GR32_Paths;
 
 type
   { TGDIBackend }
@@ -49,7 +49,7 @@ type
 
   TGDIBackend = class(TCustomBackend, IPaintSupport,
     IBitmapContextSupport, IDeviceContextSupport,
-    ITextSupport, IFontSupport, ICanvasSupport)
+    ITextSupport, IFontSupport, ICanvasSupport, ITextToPathSupport)
   private
     procedure FontChangedHandler(Sender: TObject);
     procedure CanvasChangedHandler(Sender: TObject);
@@ -121,6 +121,11 @@ type
     property Font: TFont read GetFont write SetFont;
     property OnFontChange: TNotifyEvent read FOnFontChange write FOnFontChange;
 
+    { ITextToPathSupport }
+    procedure TextToPath(Path: TCustomPath; const X, Y: TFloat; const Text: WideString); overload;
+    procedure TextToPath(Path: TCustomPath; const DstRect: TFloatRect; const Text: WideString; Flags: Cardinal); overload;
+    function MeasureText(const DstRect: TFloatRect; const Text: WideString; Flags: Cardinal): TFloatRect;
+
     { ICanvasSupport }
     function GetCanvasChange: TNotifyEvent;
     procedure SetCanvasChange(Handler: TNotifyEvent);
@@ -178,6 +183,9 @@ type
   end;
 
 implementation
+
+uses
+  GR32_Text_VCL;
 
 var
   StockFont: HFONT;
@@ -246,6 +254,12 @@ begin
     FBits := nil;
     raise Exception.Create(RCStrCannotSelectAnObjectIntoDC);
   end;
+end;
+
+function TGDIBackend.MeasureText(const DstRect: TFloatRect;
+  const Text: WideString; Flags: Cardinal): TFloatRect;
+begin
+  Result := GR32_Text_VCL.MeasureText(Font.Handle, DstRect, Text, Flags);
 end;
 
 procedure TGDIBackend.FinalizeSurface;
@@ -410,6 +424,21 @@ begin
     DrawTextW(Handle, PWideChar(Text), Length(Text), DstRect, Flags);
 
   FOwner.Changed(DstRect);
+end;
+
+procedure TGDIBackend.TextToPath(Path: TCustomPath; const X, Y: TFloat;
+  const Text: WideString);
+var
+  R: TFloatRect;
+begin
+  R := FloatRect(X, Y, X, Y);
+  GR32_Text_VCL.TextToPath(Font.Handle, Path, R, Text, 0);
+end;
+
+procedure TGDIBackend.TextToPath(Path: TCustomPath; const DstRect: TFloatRect;
+  const Text: WideString; Flags: Cardinal);
+begin
+  GR32_Text_VCL.TextToPath(Font.Handle, Path, DstRect, Text, Flags);
 end;
 
 procedure TGDIBackend.UpdateFont;
@@ -694,9 +723,8 @@ var
   Buffer        : Pointer;
   OldObject     : HGDIOBJ;
 begin
-  if SetDIBitsToDevice(hDst, DstX, DstY,
-    FOwner.Width, FOwner.Height, 0, 0, 0, FOwner.Height, FBits, FBitmapInfo,
-    DIB_RGB_COLORS) = 0 then
+  if SetDIBitsToDevice(hDst, DstX, DstY, FOwner.Width, FOwner.Height, 0, 0, 0,
+    FOwner.Height, FBits, FBitmapInfo, DIB_RGB_COLORS) = 0 then
   begin
     // create compatible device context
     DeviceContext := CreateCompatibleDC(hDst);
