@@ -10,9 +10,9 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\jvcl\jcl</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/jvcl/jcl</RepositoryExternalPath>
-      <DefaultSubfolder>/jcl/trunk/jcl</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>https://github.com/project-jedi</BaseURL>
+      <DefaultSubfolder>/jcl</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://github.com/project-jedi/jcl.git</BaseURL>
         <VendorPath>/vendors/jcl</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -29,9 +29,9 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\jvcl\jvcl</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/jvcl/jvcl</RepositoryExternalPath>
-      <DefaultSubfolder>/jvcl/trunk/jvcl</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>https://github.com/project-jedi</BaseURL>
+      <DefaultSubfolder>/jvcl</DefaultSubfolder>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://github.com/project-jedi/jvcl.git</BaseURL>
         <VendorPath>/vendors/jvcl</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -67,9 +67,9 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\PascalScript</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/PascalScript</RepositoryExternalPath>
-      <DefaultSubfolder>/trunk</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>https://github.com/remobjects/pascalscript</BaseURL>
+      <DefaultSubfolder/>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://github.com/remobjects/pascalscript.git</BaseURL>
         <VendorPath>/vendors/pascalscript</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -181,9 +181,9 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\superobject</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/superobject</RepositoryExternalPath>
-      <DefaultSubfolder>/trunk</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskFolder">
-        <BaseURL>http://superobject.googlecode.com/svn</BaseURL>
+      <DefaultSubfolder/>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://github.com/hgourvest/superobject.git</BaseURL>
         <VendorPath>/vendors/superobject</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -200,9 +200,9 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\DWScript</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/DWScript</RepositoryExternalPath>
-      <DefaultSubfolder>/trunk</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>http://dwscript.googlecode.com/svn</BaseURL>
+      <DefaultSubfolder/>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://bitbucket.org/egrange/dwscript.git</BaseURL>
         <VendorPath>/vendors/dwscript</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -219,9 +219,9 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\SynEdit</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/SynEdit</RepositoryExternalPath>
-      <DefaultSubfolder>/SynEdit</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>http://synedit.svn.sourceforge.net/svnroot/synedit</BaseURL>
+      <DefaultSubfolder/>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://github.com/SynEdit/SynEdit.git</BaseURL>
         <VendorPath>/vendors/synedit</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -238,9 +238,9 @@
       <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
       <ExternalWorkingCopySubfolder>\virtual-treeview</ExternalWorkingCopySubfolder>
       <RepositoryExternalPath>/composants/virtual-treeview</RepositoryExternalPath>
-      <DefaultSubfolder>/trunk</DefaultSubfolder>
-      <VendorBranchOptions SourceKind="eskSVN">
-        <BaseURL>http://virtual-treeview.googlecode.com/svn</BaseURL>
+      <DefaultSubfolder/>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://github.com/Virtual-TreeView/Virtual-TreeView.git</BaseURL>
         <VendorPath>/vendors/virtual-treeview</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
@@ -280,6 +280,25 @@
       <VendorBranchOptions SourceKind="eskSVN">
         <BaseURL>http://svn.code.sf.net/p/fastmm</BaseURL>
         <VendorPath>/vendors/fastmm</VendorPath>
+        <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
+        <MergeCommitComment>Changes from the public version</MergeCommitComment>
+        <DefaultBranch>master</DefaultBranch>
+      </VendorBranchOptions>
+      <SVNExternalOptions>
+        <BaseURL/>
+        <PropertyLocationPath/>
+        <PropertyCommitComment/>
+      </SVNExternalOptions>
+    </external>
+    <external Name="Jedi Common" Kind="ekVendorBranch">
+      <BaseURL>http://dev.tetram.org/svn</BaseURL>
+      <WorkingCopyPath>D:\Composants\</WorkingCopyPath>
+      <ExternalWorkingCopySubfolder>\jvcl\jedicommon</ExternalWorkingCopySubfolder>
+      <RepositoryExternalPath>/composants/jvcl/jedicommon</RepositoryExternalPath>
+      <DefaultSubfolder/>
+      <VendorBranchOptions SourceKind="eskGIT">
+        <BaseURL>https://github.com/project-jedi/jedi.git</BaseURL>
+        <VendorPath>/vendors/jedicommon</VendorPath>
         <VendorBranchCommitComment>Synchronized with public version</VendorBranchCommitComment>
         <MergeCommitComment>Changes from the public version</MergeCommitComment>
         <DefaultBranch>master</DefaultBranch>
