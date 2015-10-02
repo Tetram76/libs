@@ -59,6 +59,10 @@ type
          function Method : String; override;
          function MethodVerb : TWebRequestMethodVerb; override;
 
+         function Security : String; override;
+         function Secure : Boolean; override;
+
+         function ContentLength : Integer; override;
          function ContentData : RawByteString; override;
          function ContentType : RawByteString; override;
 
@@ -115,6 +119,27 @@ end;
 function TWorkWebRequest.MethodVerb : TWebRequestMethodVerb;
 begin
    Result:=wrmvPOST
+end;
+
+// Security
+//
+function TWorkWebRequest.Security : String;
+begin
+   Result:='';
+end;
+
+// Secure
+//
+function TWorkWebRequest.Secure : Boolean;
+begin
+   Result:=False;
+end;
+
+// ContentLength
+//
+function TWorkWebRequest.ContentLength : Integer;
+begin
+   Result:=Length(Data);
 end;
 
 // ContentData

@@ -24,14 +24,18 @@ unit dwsSymbols;
 interface
 
 uses SysUtils, Variants, Classes,
-   dwsStrings, dwsErrors, dwsUtils,
+   dwsStrings, dwsErrors, dwsUtils, dwsDateTime,
    dwsTokenizer, dwsStack, dwsXPlatform, dwsDataContext
    {$ifdef FPC},LazUTF8{$endif};
 
 type
 
    IScriptObj = interface;
+   IScriptObjInterface = interface;
+   IScriptDynArray = interface;
+
    PIScriptObj = ^IScriptObj;
+
    TdwsExecution = class;
    TExprBase = class;
    TSymbol = class;
@@ -61,6 +65,12 @@ type
    end;
    TdwsExprLocationArray = array of TdwsExprLocation;
 
+   // Interface for coalesce-able IUnknown
+   ICoalesceable = interface
+      ['{9F074F2A-2AAC-48E7-851B-FFA2CE3742F4}']
+      function IsFalsey : Boolean;
+   end;
+
    // Interface for external debuggers
    IDebugger = interface
       ['{8D534D14-4C6B-11D5-8DCB-0000216D9E86}']
@@ -86,10 +96,12 @@ type
       procedure SetUserObject(const value : TObject);
       function GetStack : TStack;
       function GetProgramState : TProgramState;
+      function GetSleeping : Boolean;
 
       function GetCallStack : TdwsExprLocationArray;
 
       property ProgramState : TProgramState read GetProgramState;
+      property Sleeping : Boolean read GetSleeping;
       property Stack : TStack read GetStack;
       property Msgs : TdwsRuntimeMessageList read GetMsgs;
       property Debugger : IDebugger read GetDebugger write SetDebugger;
@@ -144,6 +156,8 @@ type
 
    { TExprBase }
 
+   TExprBaseClass = class of TExprBase;
+
    TExprBase = class (TRefCountedObject)
       protected
          function GetSubExpr(i : Integer) : TExprBase; virtual;
@@ -154,14 +168,15 @@ type
       public
          function  IsConstant : Boolean; inline;
 
-         function  Eval(exec : TdwsExecution) : Variant; virtual; abstract;
+         function  Eval(exec : TdwsExecution) : Variant; deprecated 'Use appropriate EvalAsXxx instead';
          function  EvalAsInteger(exec : TdwsExecution) : Int64; virtual; abstract;
          function  EvalAsBoolean(exec : TdwsExecution) : Boolean; virtual; abstract;
          function  EvalAsFloat(exec : TdwsExecution) : Double; virtual; abstract;
-         procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); overload; virtual; abstract;
-         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); overload; virtual; abstract;
-         procedure EvalAsDataContext(exec : TdwsExecution; var Result : IDataContext); virtual;
-         procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); virtual; abstract;
+         procedure EvalAsString(exec : TdwsExecution; var result : UnicodeString); overload; virtual; abstract;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); overload; virtual; abstract;
+         procedure EvalAsScriptObj(exec : TdwsExecution; var result : IScriptObj); virtual; abstract;
+         procedure EvalAsScriptObjInterface(exec : TdwsExecution; var result : IScriptObjInterface); virtual; abstract;
+         procedure EvalAsScriptDynArray(exec : TdwsExecution; var result : IScriptDynArray); virtual; abstract;
          procedure EvalNoResult(exec : TdwsExecution); virtual;
 
          procedure AssignValue(exec : TdwsExecution; const value : Variant); virtual; abstract;
@@ -170,6 +185,7 @@ type
          procedure AssignValueAsFloat(exec : TdwsExecution; const value : Double); virtual; abstract;
          procedure AssignValueAsString(exec : TdwsExecution; const value : UnicodeString); virtual; abstract;
          procedure AssignValueAsScriptObj(exec : TdwsExecution; const value : IScriptObj); virtual; abstract;
+         procedure AssignValueAsScriptDynArray(exec : TdwsExecution; const value : IScriptDynArray); virtual; abstract;
 
          property SubExpr[i : Integer] : TExprBase read GetSubExpr;
          property SubExprCount : Integer read GetSubExprCount;
@@ -196,8 +212,6 @@ type
          procedure RaiseObjectNotInstantiated(exec : TdwsExecution);
          procedure RaiseObjectAlreadyDestroyed(exec : TdwsExecution);
    end;
-
-   TExprBaseClass = class of TExprBase;
 
    // All functions callable from the script implement this interface
    IExecutable = interface (IGetSelf)
@@ -269,6 +283,7 @@ type
 
          class function IsBaseType : Boolean; virtual;
          function IsType : Boolean; virtual;
+         function IsPointerType : Boolean; virtual;
          function AsFuncSymbol : TFuncSymbol; overload;
          function AsFuncSymbol(var funcSym : TFuncSymbol) : Boolean; overload;
 
@@ -292,7 +307,9 @@ type
 
    TOperatorSymbolEnumerationCallback = function (opSym : TOperatorSymbol) : Boolean of object;
 
-   TSymbolTableFlag = (stfSorted, stfHasHelpers, stfHasLocalOperators, stfHasParentOperators, stfHasOperators);
+   TSymbolTableFlag = (stfSorted,
+                       stfHasChildTables, stfHasHelpers,
+                       stfHasLocalOperators, stfHasParentOperators, stfHasOperators);
    TSymbolTableFlags = set of TSymbolTableFlag;
 
    TSimpleSymbolList = TSimpleList<TSymbol>;
@@ -359,9 +376,9 @@ type
          function HasSameLocalOperator(anOpSym : TOperatorSymbol) : Boolean; virtual;
          function HasOperators : Boolean; inline;
 
-         procedure CollectPublishedSymbols(tableList : TSimpleRefCountedObjectHash;
-                                           symbolList : TSimpleSymbolList);
+         procedure CollectPublishedSymbols(symbolList : TSimpleSymbolList); virtual;
 
+         function HasChildTables : Boolean; inline;
          function HasClass(const aClass : TSymbolClass) : Boolean;
          function HasSymbol(sym : TSymbol) : Boolean;
          function HasMethods : Boolean;
@@ -407,6 +424,11 @@ type
          function GetSymbol(x : Integer) : TParamSymbol;
       public
          property Symbols[x : Integer] : TParamSymbol read GetSymbol; default;
+   end;
+
+   // TExpressionSymbolTable
+   //
+   TExpressionSymbolTable = class (TSymbolTable)
    end;
 
    // A resource string (hybrid between a constant and a function)
@@ -479,6 +501,10 @@ type
          property StackAddr: Integer read FStackAddr write FStackAddr;
    end;
 
+   // used for script engine internal purposes
+   TScriptDataSymbol = class (TDataSymbol)
+   end;
+
    // parameter: procedure P(x: Integer);
    TParamSymbol = class (TDataSymbol)
       public
@@ -489,7 +515,7 @@ type
    THasParamSymbolMethod = function (param : TParamSymbol) : Boolean of object;
    TAddParamSymbolMethod = procedure (param : TParamSymbol) of object;
 
-   TParamSymbolWithDefaultValue = class(TParamSymbol)
+   TParamSymbolWithDefaultValue = class sealed (TParamSymbol)
       private
          FDefaultValue : TData;
 
@@ -638,7 +664,8 @@ type
    TResultSymbol = class(TDataSymbol)
    end;
 
-   TFuncSymbolFlag = (fsfStateless, fsfExternal, fsfType, fsfOverloaded, fsfLambda, fsfInline);
+   TFuncSymbolFlag = (fsfStateless, fsfExternal, fsfType, fsfOverloaded, fsfLambda,
+                      fsfInline, fsfProperty, fsfExport);
    TFuncSymbolFlags = set of TFuncSymbolFlag;
 
    // A script function / procedure: procedure X(param: Integer);
@@ -666,6 +693,10 @@ type
          procedure SetIsStateless(const val : Boolean);
          function GetIsExternal : Boolean; inline;
          procedure SetIsExternal(const val : Boolean);
+         function GetIsExport : Boolean; inline;
+         procedure SetIsExport(const val : Boolean);
+         function GetIsProperty : Boolean; inline;
+         procedure SetIsProperty(const val : Boolean);
          function GetIsOverloaded : Boolean; inline;
          procedure SetIsOverloaded(const val : Boolean);
          function GetIsLambda : Boolean; inline;
@@ -716,6 +747,8 @@ type
          property IsForwarded : Boolean read GetIsForwarded;
          property IsOverloaded : Boolean read GetIsOverloaded write SetIsOverloaded;
          property IsExternal : Boolean read GetIsExternal write SetIsExternal;
+         property IsExport : Boolean read GetIsExport write SetIsExport;
+         property IsProperty : Boolean read GetIsProperty write SetIsProperty;
          property Kind : TFuncKind read FKind write FKind;
          property ExternalName : UnicodeString read GetExternalName write FExternalName;
          function HasExternalName : Boolean;
@@ -863,6 +896,8 @@ type
          function GetSourcePosition : TScriptPos; override;
 
       public
+         function IsPointerType : Boolean; override;
+
          function ParamsDescription : UnicodeString; override;
 
          property Alias : TFuncSymbol read FAlias write FAlias;
@@ -902,6 +937,7 @@ type
          function UnAliasedType : TTypeSymbol; override;
          procedure InitData(const data : TData; offset : Integer); override;
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
+         function IsPointerType : Boolean; override;
    end;
 
    // integer/UnicodeString/float/boolean/variant
@@ -1005,6 +1041,7 @@ type
          constructor Create(const name : UnicodeString; elementType, indexType : TTypeSymbol);
          procedure InitData(const Data: TData; Offset: Integer); override;
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
+         function IsPointerType : Boolean; override;
          function SameType(typSym : TTypeSymbol) : Boolean; override;
 
          class procedure SetInitDynamicArrayProc(const aProc : TInitDynamicArrayProc);
@@ -1055,6 +1092,7 @@ type
       public
          procedure AddParent(parent : TMembersSymbolTable);
          function FindSymbol(const aName : UnicodeString; minVisibility : TdwsVisibility; ofClass : TSymbolClass = nil) : TSymbol; override;
+         function VisibilityFromScope(scopeSym : TCompositeTypeSymbol) : TdwsVisibility;
          function FindSymbolFromScope(const aName : UnicodeString; scopeSym : TCompositeTypeSymbol) : TSymbol; reintroduce;
          function Visibilities : TdwsVisibilities;
 
@@ -1084,6 +1122,8 @@ type
          FVisibility : TdwsVisibility;
 
       public
+         constructor Create(const aName : UnicodeString; aType : TTypeSymbol; aVisibility :  TdwsVisibility);
+
          function QualifiedName : UnicodeString; override;
          function IsVisibleFor(const aVisibility : TdwsVisibility) : Boolean; override;
 
@@ -1108,6 +1148,7 @@ type
          function GetIsExternalRooted : Boolean; virtual;
          function GetExternalName : UnicodeString; virtual;
          function GetIsPartial : Boolean; virtual;
+         function GetIsImmutable : Boolean; virtual;
 
          procedure CheckMethodsImplemented(const msgs : TdwsCompileMessageList);
 
@@ -1154,6 +1195,7 @@ type
          property IsExternal : Boolean read GetIsExternal;
          property IsExternalRooted : Boolean read GetIsExternalRooted;
          property ExternalName : UnicodeString read GetExternalName;
+         property IsImmutable : Boolean read GetIsImmutable;
    end;
 
    // class, record, interface
@@ -1190,7 +1232,7 @@ type
    end;
 
    // class of, record of
-   TStructuredTypeMetaSymbol = class(TTypeSymbol)
+   TStructuredTypeMetaSymbol = class (TTypeSymbol)
       public
          constructor Create(const name : UnicodeString; typ : TStructuredTypeSymbol);
 
@@ -1198,6 +1240,8 @@ type
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
 
          function StructSymbol : TStructuredTypeSymbol; inline;
+
+         function Parent : TStructuredTypeMetaSymbol;
    end;
 
    // field of a script object
@@ -1220,6 +1264,7 @@ type
 
          function QualifiedName : UnicodeString; override;
          function IsVisibleFor(const aVisibility : TdwsVisibility) : Boolean; override;
+         function HasExternalName : Boolean; inline;
 
          procedure InitData(const data : TData; structOffset : Integer);
 
@@ -1232,7 +1277,7 @@ type
          property NextField : TFieldSymbol read FNextField write FNextField;
    end;
 
-   TRecordSymbolFlag = (rsfDynamic, rsfFullyDefined);
+   TRecordSymbolFlag = (rsfDynamic, rsfFullyDefined, rsfImmutable);
    TRecordSymbolFlags = set of TRecordSymbolFlag;
 
    // record member1: Integer; member2: Integer end;
@@ -1246,6 +1291,8 @@ type
 
          function GetIsDynamic : Boolean; inline;
          procedure SetIsDynamic(const val : Boolean);
+         function GetIsImmutable : Boolean; override;
+         procedure SetIsImmutable(const val : Boolean);
          function GetIsFullyDefined : Boolean; inline;
          procedure SetIsFullyDefined(const val : Boolean);
 
@@ -1266,6 +1313,7 @@ type
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
 
          property IsDynamic : Boolean read GetIsDynamic write SetIsDynamic;
+         property IsImmutable : Boolean read GetIsImmutable write SetIsImmutable;
          property IsFullyDefined : Boolean read GetIsFullyDefined write SetIsFullyDefined;
    end;
 
@@ -1289,6 +1337,7 @@ type
          procedure InitData(const Data: TData; Offset: Integer); override;
          procedure Initialize(const msgs : TdwsCompileMessageList); override;
          function  IsCompatible(typSym : TTypeSymbol) : Boolean; override;
+         function IsPointerType : Boolean; override;
 
          function CreateSelfParameter(methSym : TMethodSymbol) : TDataSymbol; override;
          function CreateAnonymousMethod(aFuncKind : TFuncKind; aVisibility : TdwsVisibility;
@@ -1454,6 +1503,7 @@ type
          procedure InitData(const Data: TData; Offset: Integer); override;
          procedure Initialize(const msgs : TdwsCompileMessageList); override;
          function  IsCompatible(typSym : TTypeSymbol) : Boolean; override;
+         function  IsPointerType : Boolean; override;
          function  HasMetaSymbol : Boolean; override;
 
          function VMTMethod(index : Integer) : TMethodSymbol;
@@ -1488,6 +1538,8 @@ type
          property IsPartial : Boolean read GetIsPartial;
          property IsAttribute : Boolean read GetIsAttribute write SetIsAttribute;
 
+         function IsPureStatic : Boolean;
+
          property OnObjectDestroy : TObjectDestroyEvent read FOnObjectDestroy write FOnObjectDestroy;
    end;
 
@@ -1498,6 +1550,7 @@ type
          FUnAliasedForType : TTypeSymbol;
          FMetaForType : TTypeSymbol;
          FPriority : Integer;
+         FStrict : Boolean;
 
       protected
 
@@ -1518,6 +1571,7 @@ type
 
          property ForType : TTypeSymbol read FForType;
          property Priority : Integer read FPriority;
+         property Strict : Boolean read FStrict write FStrict;
    end;
 
    THelperSymbols = class(TSimpleList<THelperSymbol>)
@@ -1583,6 +1637,7 @@ type
          function DefaultValue : Int64;
          procedure InitData(const data : TData; offset : Integer); override;
          function BaseType : TTypeSymbol; override;
+         function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
 
          procedure AddElement(element : TElementSymbol);
          function ElementByValue(const value : Int64) : TElementSymbol;
@@ -1625,6 +1680,9 @@ type
          FDebugger : IDebugger;
          FIsDebugging : Boolean;
 
+         FSleepTime : Integer;
+         FSleeping : Boolean;
+
       protected
          FProgramState : TProgramState;  // here to reduce its offset
 
@@ -1632,11 +1690,13 @@ type
          FExternalObject : TObject;
          FUserObject : TObject;
 
-         FExceptionObjectStack : TSimpleStack<Variant>;
+         FExceptionObjectStack : TSimpleStack<IScriptObj>;
          FLastScriptError : TExprBase;
          FLastScriptCallStack : TdwsExprLocationArray;
 
          FRandSeed : UInt64;
+
+         FFormatSettings : TdwsFormatSettings;
 
       protected
          function  GetDebugger : IDebugger;
@@ -1656,6 +1716,10 @@ type
 
          function GetProgramState : TProgramState;
 
+         function GetSleeping : Boolean;
+
+         function GetFormatSettings : TdwsFormatSettings;
+
       public
          constructor Create(const stackParams : TStackParameters);
          destructor Destroy; override;
@@ -1666,6 +1730,8 @@ type
          property Stack : TStackMixIn read FStack;
          property SelfScriptObject : PIScriptObj read FSelfScriptObject write FSelfScriptObject;
          property SelfScriptClassSymbol : TClassSymbol read FSelfScriptClassSymbol write FSelfScriptClassSymbol;
+
+         class function Status_Offset : Integer;
 
          procedure SetScriptError(expr : TExprBase);
          procedure ClearScriptError;
@@ -1678,7 +1744,7 @@ type
          procedure DataContext_Create(const data : TData; addr : Integer; var Result : IDataContext); inline;
          procedure DataContext_CreateBase(addr : Integer; var Result : IDataContext); inline;
          procedure DataContext_CreateLevel(level, addr : Integer; var Result : IDataContext); inline;
-         function DataContext_Nil : IDataContext; inline;
+         function  DataContext_Nil : IDataContext; inline;
 
          procedure LocalizeSymbol(aResSymbol : TResourceStringSymbol; var Result : UnicodeString); virtual;
          procedure LocalizeString(const aString : UnicodeString; var Result : UnicodeString); virtual;
@@ -1687,9 +1753,13 @@ type
 
          function Random : Double;
 
+         // interruptible sleep (in case program is stopped)
+         procedure Sleep(msec, sleepCycle : Integer);
+         property Sleeping : Boolean read FSleeping;
+
          property LastScriptError : TExprBase read FLastScriptError;
          property LastScriptCallStack : TdwsExprLocationArray read FLastScriptCallStack;
-         property ExceptionObjectStack : TSimpleStack<Variant> read FExceptionObjectStack;
+         property ExceptionObjectStack : TSimpleStack<IScriptObj> read FExceptionObjectStack;
 
          procedure EnterExceptionBlock(var exceptObj : IScriptObj); virtual;
          procedure LeaveExceptionBlock;
@@ -1705,6 +1775,8 @@ type
 
          // per-execution randseed
          property RandSeed : UInt64 read FRandSeed write SetRandSeed;
+
+         property FormatSettings : TdwsFormatSettings read GetFormatSettings;
 
          // specifies an external object for IInfo constructors, temporary
          property ExternalObject : TObject read FExternalObject write FExternalObject;
@@ -1726,6 +1798,29 @@ type
       property ClassSym : TClassSymbol read GetClassSym;
       property ExternalObject : TObject read GetExternalObject write SetExternalObject;
       property Destroyed : Boolean read GetDestroyed write SetDestroyed;
+   end;
+
+   // IScriptObjInterface
+   //
+   IScriptObjInterface = interface (IDataContext)
+      ['{86B77C28-C396-4D53-812B-8FF1867A6128}']
+      function GetScriptObj : IScriptObj;
+   end;
+
+   // IScriptDynArray
+   //
+   IScriptDynArray = interface (IDataContext)
+      ['{29767B6E-05C0-40E1-A41A-94DF54142312}']
+      function GetElementSize : Integer;
+      property ElementSize : Integer read GetElementSize;
+
+      function GetArrayLength : Integer;
+      procedure SetArrayLength(n : Integer);
+      property ArrayLength : Integer read GetArrayLength write SetArrayLength;
+
+      function ToStringArray : TStringDynArray;
+
+      procedure ReplaceData(const v : TData);
    end;
 
    TPerfectMatchEnumerator = class
@@ -1758,6 +1853,7 @@ type
 const
    cFuncKindToString : array [Low(TFuncKind)..High(TFuncKind)] of UnicodeString = (
       'function', 'procedure', 'constructor', 'destructor', 'method', 'lambda' );
+   cFirstFieldUnprepared : TFieldSymbol = Pointer(-1);
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -1892,19 +1988,11 @@ begin
    Result:=0;
 end;
 
-// EvalNoResult
-//
-procedure TExprBase.EvalAsDataContext(exec: TdwsExecution; var Result: IDataContext);
-var
-   temp : IScriptObj;
-begin
-   EvalAsScriptObj(exec, temp);
-   Result := temp;
-end;
-
 procedure TExprBase.EvalNoResult(exec : TdwsExecution);
+var
+   buf : Variant;
 begin
-   Eval(exec);
+   EvalAsVariant(exec, buf);
 end;
 
 // GetIsConstant
@@ -1919,6 +2007,13 @@ end;
 function TExprBase.IsConstant : Boolean;
 begin
    Result:=(Self<>nil) and GetIsConstant;
+end;
+
+// Eval
+//
+function TExprBase.Eval(exec : TdwsExecution) : Variant;
+begin
+   EvalAsVariant(exec, Result);
 end;
 
 // RaiseScriptError
@@ -2046,6 +2141,13 @@ begin
    Result:=False;
 end;
 
+// IsPointerType
+//
+function TSymbol.IsPointerType : Boolean;
+begin
+   Result:=False;
+end;
+
 // GetAsFuncSymbol
 //
 function TSymbol.GetAsFuncSymbol : TFuncSymbol;
@@ -2119,6 +2221,7 @@ begin
    inherited Create(name, nil);
    FUnitSymbol:=aUnit;
    FMembers:=CreateMembersTable;
+   FFirstField:=cFirstFieldUnprepared;
 end;
 
 // Destroy
@@ -2173,7 +2276,7 @@ end;
 //
 procedure TCompositeTypeSymbol.AddField(fieldSym : TFieldSymbol);
 begin
-   Assert(FFirstField=nil);
+   Assert(FFirstField=cFirstFieldUnprepared);
    FMembers.AddSymbol(fieldSym);
    fieldSym.FStructSymbol:=Self;
 end;
@@ -2246,6 +2349,13 @@ end;
 // GetIsPartial
 //
 function TCompositeTypeSymbol.GetIsPartial : Boolean;
+begin
+   Result:=False;
+end;
+
+// GetIsImmutable
+//
+function TCompositeTypeSymbol.GetIsImmutable : Boolean;
 begin
    Result:=False;
 end;
@@ -2346,7 +2456,7 @@ end;
 //
 function TCompositeTypeSymbol.FirstField : TFieldSymbol;
 begin
-   if FFirstField=nil then
+   if FFirstField=cFirstFieldUnprepared then
       PrepareFirstField;
    Result:=FFirstField;
 end;
@@ -2511,6 +2621,18 @@ begin
    Result:=TStructuredTypeSymbol(Typ);
 end;
 
+// Parent
+//
+function TStructuredTypeMetaSymbol.Parent : TStructuredTypeMetaSymbol;
+var
+   p : TCompositeTypeSymbol;
+begin
+   p:=StructSymbol.Parent;
+   if (p=nil) or not (p is TStructuredTypeSymbol) then
+      Result:=nil
+   else Result:=TStructuredTypeSymbol(p).MetaSymbol;
+end;
+
 // ------------------
 // ------------------ TRecordSymbol ------------------
 // ------------------
@@ -2644,6 +2766,22 @@ begin
    else Exclude(FFlags, rsfDynamic);
 end;
 
+// GetIsImmutable
+//
+function TRecordSymbol.GetIsImmutable : Boolean;
+begin
+   Result:=(rsfImmutable in FFlags);
+end;
+
+// SetIsImmutable
+//
+procedure TRecordSymbol.SetIsImmutable(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, rsfImmutable)
+   else Exclude(FFlags, rsfImmutable);
+end;
+
 // GetIsFullyDefined
 //
 function TRecordSymbol.GetIsFullyDefined : Boolean;
@@ -2737,6 +2875,13 @@ begin
    else Result:=False;
 end;
 
+// IsPointerType
+//
+function TInterfaceSymbol.IsPointerType : Boolean;
+begin
+   Result:=True;
+end;
+
 // CreateSelfParameter
 //
 function TInterfaceSymbol.CreateSelfParameter(methSym : TMethodSymbol) : TDataSymbol;
@@ -2805,6 +2950,13 @@ begin
    Result:=(FVisibility>=aVisibility);
 end;
 
+// HasExternalName
+//
+function TFieldSymbol.HasExternalName : Boolean;
+begin
+   Result:=(FExternalName<>'');
+end;
+
 // InitData
 //
 procedure TFieldSymbol.InitData(const data : TData; structOffset : Integer);
@@ -2844,6 +2996,14 @@ end;
 // ------------------
 // ------------------ TClassVarSymbol ------------------
 // ------------------
+
+// Create
+//
+constructor TClassVarSymbol.Create(const aName : UnicodeString; aType : TTypeSymbol; aVisibility :  TdwsVisibility);
+begin
+   inherited Create(aName, aType);
+   Visibility:=aVisibility;
+end;
 
 // QualifiedName
 //
@@ -3113,6 +3273,38 @@ begin
    if val then
       Include(FFlags, fsfExternal)
    else Exclude(FFlags, fsfExternal);
+end;
+
+// GetIsExport
+//
+function TFuncSymbol.GetIsExport : Boolean;
+begin
+   Result:=(fsfExport in FFlags);
+end;
+
+// SetIsExport
+//
+procedure TFuncSymbol.SetIsExport(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, fsfExport)
+   else Exclude(FFlags, fsfExport);
+end;
+
+// GetIsProperty
+//
+function TFuncSymbol.GetIsProperty : Boolean;
+begin
+   Result:=(fsfProperty in FFlags);
+end;
+
+// SetIsProperty
+//
+procedure TFuncSymbol.SetIsProperty(const val : Boolean);
+begin
+   if val then
+      Include(FFlags, fsfProperty)
+   else Exclude(FFlags, fsfProperty);
 end;
 
 // GetIsOverloaded
@@ -4375,12 +4567,23 @@ end;
 //
 function TClassSymbol.IsCompatible(typSym : TTypeSymbol) : Boolean;
 begin
-   typSym:=typSym.UnAliasedType;
-   if typSym is TNilSymbol then
-      Result:=True
-   else if typSym is TClassSymbol then
-      Result:=(NthParentOf(TClassSymbol(typSym))>=0)
-   else Result:=False;
+   if typSym=nil then
+      Result:=False
+   else begin
+      typSym:=typSym.UnAliasedType;
+      if typSym is TNilSymbol then
+         Result:=True
+      else if typSym is TClassSymbol then
+         Result:=(NthParentOf(TClassSymbol(typSym))>=0)
+      else Result:=False;
+   end;
+end;
+
+// IsPointerType
+//
+function TClassSymbol.IsPointerType : Boolean;
+begin
+   Result:=True;
 end;
 
 // HasMetaSymbol
@@ -4564,6 +4767,33 @@ end;
 function TClassSymbol.Parent : TClassSymbol;
 begin
    Result:=TClassSymbol(FParent);
+end;
+
+// IsPureStatic
+//
+function TClassSymbol.IsPureStatic : Boolean;
+var
+   sym : TSymbol;
+   symClass : TClass;
+   meth : TMethodSymbol;
+begin
+   Result:=IsStatic and IsSealed;
+   if not Result then Exit;
+
+   for sym in FMembers do begin
+      symClass:=sym.ClassType;
+      if symClass=TFieldSymbol then exit;
+      if symClass=TClassConstSymbol then continue;
+      if symClass=TClassVarSymbol then continue;
+      if symClass=TPropertySymbol then continue;
+      if symClass.InheritsFrom(TMethodSymbol) then begin
+         meth:=TMethodSymbol(symClass);
+         if not meth.IsStatic then exit;
+         if not meth.IsClassMethod then exit;
+      end;
+      exit;
+   end;
+   Result:=True;
 end;
 
 // ------------------
@@ -4795,7 +5025,7 @@ end;
 //
 procedure TBaseVariantSymbol.InitData(const data : TData; offset : Integer);
 begin
-   VarClear(data[offset]);
+   VarClearSafe(data[offset]);
 end;
 
 // SupportsEmptyParam
@@ -4851,7 +5081,7 @@ begin
    inherited Create(Name, Typ);
    Assert(Typ.Size=1);
    SetLength(FData, 1);
-   VarCopy(FData[0], Value);
+   VarCopySafe(FData[0], Value);
 end;
 
 // CreateData
@@ -5204,6 +5434,7 @@ function TSymbolTable.FindSymbol(const aName : UnicodeString; minVisibility : Td
                                  ofClass : TSymbolClass = nil) : TSymbol;
 var
    i : Integer;
+   parentSymTable : TSymbolTable;
 begin
    // Find Symbol in the local List
    Result:=FindLocal(aName, ofClass);
@@ -5215,7 +5446,8 @@ begin
 
    // Find Symbol in all parent lists
    for i:=0 to ParentCount-1 do begin
-      Result:=Parents[i].FindSymbol(aName, minVisibility, ofClass);
+      parentSymTable:=Parents[i];
+      Result:=parentSymTable.FindSymbol(aName, minVisibility, ofClass);
       if Assigned(Result) then Break;
    end;
 end;
@@ -5304,10 +5536,10 @@ begin
    for i:=0 to ParentCount-1 do begin
       p:=Parents[i];
       if p.IsUnitTable then begin
-         if p.EnumerateLocalHelpers(helpedType, callback) then Exit(True)
-      end else begin
-         if p.EnumerateHelpers(helpedType, callback) then Exit(True);
+         if p.EnumerateLocalHelpers(helpedType, callback) then
+            Exit(True)
       end;
+      if p.EnumerateHelpers(helpedType, callback) then Exit(True);
    end;
    Result:=False;
 end;
@@ -5401,19 +5633,10 @@ end;
 
 // CollectPublishedSymbols
 //
-procedure TSymbolTable.CollectPublishedSymbols(tableList : TSimpleRefCountedObjectHash;
-                                               symbolList : TSimpleSymbolList);
+procedure TSymbolTable.CollectPublishedSymbols(symbolList : TSimpleSymbolList);
 var
-   i : Integer;
-   parent : TSymbolTable;
    sym, member : TSymbol;
 begin
-   tableList.Add(Self);
-   for i:=0 to ParentCount-1 do begin
-      parent:=Parents[i];
-      if not tableList.Contains(parent) then
-         parent.CollectPublishedSymbols(tableList, symbolList);
-   end;
    for sym in Self do begin
       if sym.ClassType=TClassSymbol then begin
          for member in TClassSymbol(sym).Members do begin
@@ -5430,6 +5653,13 @@ begin
          end;
       end;
    end;
+end;
+
+// HasChildTables
+//
+function TSymbolTable.HasChildTables : Boolean;
+begin
+   Result:=stfHasChildTables in FFlags;
 end;
 
 // HasClass
@@ -5562,6 +5792,7 @@ end;
 //
 procedure TSymbolTable.InsertParent(Index: Integer; Parent: TSymbolTable);
 begin
+   Include(Parent.FFlags, stfHasChildTables);
    FParents.Insert(Index, Parent);
    if stfHasOperators in Parent.FFlags then
       FFlags:=FFlags+[stfHasOperators, stfHasParentOperators];
@@ -5657,8 +5888,14 @@ var
 begin
    // Find Symbol in the local List
    Result:=FindLocal(aName, ofClass);
-   if Assigned(Result) and Result.IsVisibleFor(minVisibility) then
-      Exit;
+   if Assigned(Result) then begin
+      if Result.IsVisibleFor(minVisibility) then Exit;
+      // try harder in case of overload with different visibility
+      for Result in Self do begin
+         if     (UnicodeCompareText(Result.Name, aName)=0)
+            and Result.IsVisibleFor(minVisibility) then Exit;
+      end;
+   end;
    Result:=nil;
 
    // Find Symbol in all parent lists
@@ -5671,19 +5908,26 @@ begin
    end;
 end;
 
+// VisibilityFromScope
+//
+function TMembersSymbolTable.VisibilityFromScope(scopeSym : TCompositeTypeSymbol) : TdwsVisibility;
+begin
+   if scopeSym=nil then
+      Result:=cvPublic
+   else if    (scopeSym=Owner)
+           or (    (scopeSym.UnitSymbol<>nil)
+               and (scopeSym.UnitSymbol=Owner.UnitSymbol)) then
+      Result:=cvPrivate
+   else if scopeSym.DoIsOfType(Owner) then
+      Result:=cvProtected
+   else Result:=cvPublic;
+end;
+
 // FindSymbolFromScope
 //
 function TMembersSymbolTable.FindSymbolFromScope(const aName : UnicodeString; scopeSym : TCompositeTypeSymbol) : TSymbol;
 begin
-   if scopeSym=nil then
-      Result:=FindSymbol(aName, cvPublic)
-   else if    (scopeSym=Owner)
-           or (    (scopeSym.UnitSymbol<>nil)
-               and (scopeSym.UnitSymbol=Owner.UnitSymbol)) then
-      Result:=FindSymbol(aName, cvPrivate)
-   else if scopeSym.DoIsOfType(Owner) then
-      Result:=FindSymbol(aName, cvProtected)
-   else Result:=FindSymbol(aName, cvPublic);
+   Result:=FindSymbol(aName, VisibilityFromScope(scopeSym));
 end;
 
 // Visibilities
@@ -5933,9 +6177,17 @@ end;
 function TDynamicArraySymbol.IsCompatible(typSym : TTypeSymbol) : Boolean;
 begin
   Result :=    (    (typSym is TDynamicArraySymbol)
+//                and (typSym.Typ.IsCompatible(Typ) or (typSym.Typ is TNilSymbol))
                 and (Typ.IsCompatible(typSym.Typ) or (typSym.Typ is TNilSymbol))
             or (    (typSym is TStaticArraySymbol)
                 and TStaticArraySymbol(typSym).IsEmptyArray));
+end;
+
+// IsPointerType
+//
+function TDynamicArraySymbol.IsPointerType : Boolean;
+begin
+   Result:=True;
 end;
 
 // SameType
@@ -6160,6 +6412,13 @@ begin
    Result:=Typ;
 end;
 
+// IsCompatible
+//
+function TEnumerationSymbol.IsCompatible(typSym : TTypeSymbol) : Boolean;
+begin
+   Result:=(typSym.UnAliasedType=Self);
+end;
+
 // DoIsOfType
 //
 function TEnumerationSymbol.DoIsOfType(typSym : TTypeSymbol) : Boolean;
@@ -6268,6 +6527,13 @@ end;
 function TAliasSymbol.IsCompatible(typSym : TTypeSymbol) : Boolean;
 begin
    Result:=Typ.IsCompatible(typSym);
+end;
+
+// IsPointerType
+//
+function TAliasSymbol.IsPointerType : Boolean;
+begin
+   Result:=Typ.IsPointerType;
 end;
 
 // DoIsOfType
@@ -6450,7 +6716,7 @@ begin
    inherited Create;
    FStack.Initialize(stackParams);
    FStack.Reset;
-   FExceptionObjectStack:=TSimpleStack<Variant>.Create;
+   FExceptionObjectStack:=TSimpleStack<IScriptObj>.Create;
    FRandSeed:=cDefaultRandSeed xor (UInt64(System.Random($7FFFFFFF)) shl 15);
 end;
 
@@ -6462,6 +6728,7 @@ begin
    FExceptionObjectStack.Free;
    FStack.Finalize;
    FCallStack.Free;
+   FFormatSettings.Free;
    inherited;
 end;
 
@@ -6481,6 +6748,18 @@ begin
       EScriptStopped.DoRaise(Self, expr)
    else if IsDebugging then
       DoDebug(Self, expr);
+end;
+
+// Status_Offset
+//
+class function TdwsExecution.Status_Offset : Integer;
+{$ifdef WIN32_ASM}
+asm
+   mov eax, OFFSET FStatus
+{$else}
+begin
+   Result:=0;
+{$endif}
 end;
 
 // SetScriptError
@@ -6564,6 +6843,15 @@ begin
    Result:=FProgramState;
 end;
 
+// GetFormatSettings
+//
+function TdwsExecution.GetFormatSettings : TdwsFormatSettings;
+begin
+   if FFormatSettings=nil then
+      FFormatSettings:=TdwsFormatSettings.Create;
+   Result:=FFormatSettings;
+end;
+
 // GetExecutionObject
 //
 function TdwsExecution.GetExecutionObject : TdwsExecution;
@@ -6601,6 +6889,42 @@ end;
   {$UNDEF RANGEON}
 {$ENDIF}
 
+// Sleep
+//
+procedure TdwsExecution.Sleep(msec, sleepCycle : Integer);
+var
+   stopTicks, tStart, tNow : Int64;
+begin
+   // this is an abortable sleep with a granulosity
+   if msec<0 then Exit;
+   FSleeping:=True;
+   tStart:=GetSystemMilliseconds;
+   if msec=0 then begin
+      // special case of relinquishing current time slice
+      SystemSleep(0);
+      tNow:=GetSystemMilliseconds;
+   end else begin
+      tNow:=tStart;
+      stopTicks:=tStart+msec;
+      repeat
+         msec:=stopTicks-tNow;
+         if msec<0 then break;
+         if msec>sleepCycle then msec:=sleepCycle;
+         SystemSleep(msec);
+         tNow:=GetSystemMilliseconds;
+      until ProgramState<>psRunning;
+   end;
+   FSleepTime:=tNow-tStart;
+   FSleeping:=False;
+end;
+
+// GetSleeping
+//
+function TdwsExecution.GetSleeping : Boolean;
+begin
+   Result:=FSleeping;
+end;
+
 // EnterExceptionBlock
 //
 procedure TdwsExecution.EnterExceptionBlock(var exceptObj : IScriptObj);
@@ -6612,7 +6936,7 @@ end;
 //
 procedure TdwsExecution.LeaveExceptionBlock;
 begin
-   ExceptionObjectStack.Peek:=Unassigned;
+   ExceptionObjectStack.Peek:=nil;
    ExceptionObjectStack.Pop;
 end;
 
@@ -6958,10 +7282,10 @@ end;
 //
 function THelperSymbol.HelpsType(typ : TTypeSymbol) : Boolean;
 begin
-   if typ=nil then
-      Result:=False
-   else if typ=ForType then
+   if typ=ForType then
       Result:=True
+   else if (typ=nil) or Strict then
+      Result:=False
    else if typ.IsOfType(FUnAliasedForType) then
       Result:=True
    else if FMetaForType<>nil then
@@ -6990,6 +7314,13 @@ end;
 function TAliasMethodSymbol.GetSourcePosition : TScriptPos;
 begin
    Result:=Alias.GetSourcePosition;
+end;
+
+// IsPointerType
+//
+function TAliasMethodSymbol.IsPointerType : Boolean;
+begin
+   Result:=Alias.IsPointerType;
 end;
 
 // ParamsDescription

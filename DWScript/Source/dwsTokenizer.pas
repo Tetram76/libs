@@ -39,25 +39,27 @@ type
      ttCLASS, ttNIL, ttIS, ttAS, ttIMPLEMENTS, ttINDEX, ttOBJECT,
      ttVIRTUAL, ttOVERRIDE, ttREINTRODUCE, ttINHERITED, ttFINAL, ttNEW,
      ttABSTRACT, ttSEALED, ttSTATIC, ttPARTIAL, ttDEPRECATED, ttOVERLOAD,
-     ttEXTERNAL, ttFORWARD, ttINLINE, ttEMPTY, ttIN,
+     ttEXTERNAL, ttEXPORT, ttFORWARD, ttINLINE, ttEMPTY, ttIN,
      ttENSURE, ttREQUIRE, ttINVARIANTS, ttOLD,
-     ttINTERFACE, ttIMPLEMENTATION, ttINITIALIZATION, ttFINALIZATION, ttHELPER,
+     ttINTERFACE, ttIMPLEMENTATION, ttINITIALIZATION, ttFINALIZATION,
+     ttHELPER, ttSTRICT,
      ttASM, ttBEGIN, ttEND, ttBREAK, ttCONTINUE, ttEXIT,
-     ttIF, ttTHEN, ttELSE, ttWHILE, ttREPEAT, ttUNTIL, ttFOR, ttTO, ttDOWNTO, ttDO,
+     ttIF, ttTHEN, ttELSE, ttWITH, ttWHILE, ttREPEAT, ttUNTIL, ttFOR, ttTO, ttDOWNTO, ttDO,
      ttCASE,
      ttTRUE, ttFALSE,
      ttAND, ttOR, ttXOR, ttIMPLIES, ttDIV, ttMOD, ttNOT, ttSHL, ttSHR, ttSAR,
      ttPLUS, ttMINUS,
-     ttTIMES, ttDIVIDE, ttPERCENT, ttCARET, ttAT, ttDOLLAR, ttEXCLAMATION, ttQUESTION,
+     ttTIMES, ttDIVIDE, ttPERCENT, ttCARET, ttAT, ttTILDE,
+     ttDOLLAR, ttEXCLAMATION, ttQUESTION, ttQUESTIONQUESTION, ttQUESTIONDOT,
      ttEQ, ttNOTEQ, ttGTR, ttGTREQ, ttLESS, ttLESSEQ, ttEQGTR,
      ttLESSLESS, ttGTRGTR, ttPIPE, ttPIPEPIPE, ttAMP, ttAMPAMP,
      ttSEMI, ttCOMMA, ttCOLON,
      ttASSIGN, ttPLUS_ASSIGN, ttMINUS_ASSIGN, ttTIMES_ASSIGN, ttDIVIDE_ASSIGN,
-     ttPERCENT_ASSIGN, ttCARET_ASSIGN, ttAT_ASSIGN,
+     ttPERCENT_ASSIGN, ttCARET_ASSIGN, ttAT_ASSIGN, ttTILDE_ASSIGN,
      ttBLEFT, ttBRIGHT, ttALEFT, ttARIGHT, ttCLEFT, ttCRIGHT,
      ttDEFAULT, ttUSES, ttUNIT, ttNAMESPACE,
      ttPRIVATE, ttPROTECTED, ttPUBLIC, ttPUBLISHED,
-     ttPROGRAM,
+     ttPROGRAM, ttLIBRARY,
 
      // Tokens for compatibility to Delphi
      ttREGISTER, ttPASCAL, ttCDECL, ttSAFECALL, ttSTDCALL, ttFASTCALL, ttREFERENCE);
@@ -277,6 +279,7 @@ type
 
          procedure SimulateToken(t : TTokenType; const scriptPos : TScriptPos);
          procedure SimulateStringToken(const scriptPos : TScriptPos; const str : UnicodeString);
+         procedure SimulateIntegerToken(const scriptPos : TScriptPos; const i : Int64);
          procedure SimulateNameToken(const scriptPos : TScriptPos; const name : UnicodeString);
 
          property PosPtr : PWideChar read FSource.FPosPtr;
@@ -285,6 +288,8 @@ type
          property HotPos : TScriptPos read FSource.FHotPos;
          property CurrentPos : TScriptPos read FSource.FCurPos;
          property PathName : String read FSource.FPathName;
+
+         function SafePathName : String; inline;
 
          property ConditionalDepth : TSimpleStack<TTokenizerConditionalInfo> read FConditionalDepth;
          property Rules : TTokenizerRules read FRules;
@@ -297,7 +302,7 @@ type
 
 const
    cTokenStrings : array [TTokenType] of UnicodeString = (
-     '', 'StrVal', 'IntVal', 'FloatVal', 'NAME', 'SWITCH',
+     '', 'String Literal', 'Integer Literal', 'Float Literal', 'NAME', 'SWITCH',
      'LAZY', 'VAR', 'CONST', 'RESOURCESTRING',
      'TYPE', 'RECORD', 'ARRAY', 'SET', '.', '..', 'OF', 'ENUM', 'FLAGS',
      'TRY', 'EXCEPT', 'RAISE', 'FINALLY', 'ON', 'READ', 'WRITE', 'PROPERTY',
@@ -305,27 +310,30 @@ const
      'CLASS', 'NIL', 'IS', 'AS', 'IMPLEMENTS', 'INDEX', 'OBJECT',
      'VIRTUAL', 'OVERRIDE', 'REINTRODUCE', 'INHERITED', 'FINAL', 'NEW',
      'ABSTRACT', 'SEALED', 'STATIC', 'PARTIAL', 'DEPRECATED', 'OVERLOAD',
-     'EXTERNAL', 'FORWARD', 'INLINE', 'EMPTY', 'IN',
+     'EXTERNAL', 'EXPORT', 'FORWARD', 'INLINE', 'EMPTY', 'IN',
      'ENSURE', 'REQUIRE', 'INVARIANTS', 'OLD',
-     'INTERFACE', 'IMPLEMENTATION', 'INITIALIZATION', 'FINALIZATION', 'HELPER',
+     'INTERFACE', 'IMPLEMENTATION', 'INITIALIZATION', 'FINALIZATION',
+     'HELPER', 'STRICT',
      'ASM', 'BEGIN', 'END', 'BREAK', 'CONTINUE', 'EXIT',
-     'IF', 'THEN', 'ELSE', 'WHILE', 'REPEAT', 'UNTIL', 'FOR', 'TO', 'DOWNTO', 'DO',
+     'IF', 'THEN', 'ELSE', 'WITH', 'WHILE', 'REPEAT', 'UNTIL', 'FOR', 'TO', 'DOWNTO', 'DO',
      'CASE',
      'TRUE', 'FALSE',
      'AND', 'OR', 'XOR', 'IMPLIES', 'DIV', 'MOD', 'NOT', 'SHL', 'SHR', 'SAR',
      '+', '-',
-     '*', '/', '%', '^', '@', '$', '!', '?',
+     '*', '/', '%', '^', '@', '~', '$', '!', '?', '??', '?.',
      '=', '<>', '>', '>=', '<', '<=', '=>',
      '<<', '>>', '|', '||', '&', '&&',
      ';', ',', ':',
      ':=', '+=', '-=', '*=', '/=',
-     '%=', '^=', '@=',
+     '%=', '^=', '@=', '~=',
      '(', ')', '[', ']', '{', '}',
      'DEFAULT', 'USES', 'UNIT', 'NAMESPACE',
      'PRIVATE', 'PROTECTED', 'PUBLIC', 'PUBLISHED',
-     'PROGRAM',
+     'PROGRAM', 'LIBRARY',
      'REGISTER', 'PASCAL', 'CDECL', 'SAFECALL', 'STDCALL', 'FASTCALL', 'REFERENCE'
      );
+
+function TokenTypesToString(const tt : TTokenTypes) : String;
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -337,6 +345,24 @@ implementation
 
 const
    cFormatSettings : TFormatSettings = ( DecimalSeparator : '.' );
+
+// TokenTypesToString
+//
+function TokenTypesToString(const tt : TTokenTypes) : String;
+var
+   t : TTokenType;
+begin
+   for t in tt do begin
+      if Result<>'' then
+         Result:=Result+' or ';
+      case t of
+         ttIntVal, ttStrVal, ttFloatVal :
+            Result:=Result+cTokenStrings[t];
+      else
+         Result:=Result+'"'+cTokenStrings[t]+'"';
+      end;
+   end;
+end;
 
 // EmptyString
 //
@@ -666,13 +692,25 @@ begin
          else if Len=2 then
             if Buffer[1]='=' then
                Result := ttCARET_ASSIGN; // '^='
+      '~':
+         if Len=1 then
+            Result := ttTILDE
+         else if Len=2 then
+            if Buffer[1]='=' then
+               Result := ttTILDE_ASSIGN; // '~='
       ';': Result := ttSEMI;
       '(': Result := ttBLEFT;
       ')': Result := ttBRIGHT;
       '[': Result := ttALEFT;
       ']': Result := ttARIGHT;
       '!': Result := ttEXCLAMATION;
-      '?': Result := ttQUESTION;
+      '?':
+         if Len=1 then
+            Result := ttQUESTION
+         else if Len=2 then case Buffer[1] of
+            '?' : Result:= ttQUESTIONQUESTION;  // ??
+            '.' : Result:= ttQUESTIONDOT;       // ?.
+         end;
       '=':
          if Len=1 then
             Result := ttEQ
@@ -730,12 +768,12 @@ const
       ttBEGIN, ttBREAK,
       ttCONST, ttCLASS, ttCONSTRUCTOR, ttCASE, ttCDECL, ttCONTINUE,
       ttDO, ttDOWNTO, ttDIV, ttDEFAULT, ttDESTRUCTOR, ttDEPRECATED,
-      ttELSE, ttEMPTY, ttEND, ttENSURE, ttENUM, ttEXCEPT, ttEXIT, ttEXTERNAL,
+      ttELSE, ttEMPTY, ttEND, ttENSURE, ttENUM, ttEXCEPT, ttEXIT, ttEXTERNAL, ttEXPORT,
       ttFALSE, ttFINAL, ttFINALIZATION, ttFINALLY, ttFLAGS, ttFOR,
       ttFORWARD, ttFUNCTION, ttHELPER,
       ttIF, ttIMPLIES, ttIMPLEMENTS, ttIN, ttINITIALIZATION, ttINLINE, ttINVARIANTS,
       ttIS, ttINHERITED, ttINDEX, ttINTERFACE, ttIMPLEMENTATION,
-      ttLAMBDA, ttLAZY,
+      ttLAMBDA, ttLAZY, ttLIBRARY,
       ttMETHOD, ttMOD,
       ttNAMESPACE, ttNEW, ttNIL, ttNOT,
       ttOBJECT, ttOF, ttOLD, ttON, ttOPERATOR, ttOR, ttOVERLOAD, ttOVERRIDE,
@@ -743,11 +781,11 @@ const
       ttPRIVATE, ttPROTECTED, ttPUBLIC, ttPUBLISHED,
       ttRECORD, ttREAD, ttRAISE, ttREINTRODUCE, ttREFERENCE, ttREGISTER,
       ttREPEAT, ttREQUIRE, ttRESOURCESTRING,
-      ttSAFECALL, ttSAR, ttSEALED, ttSET, ttSHL, ttSHR, ttSTATIC, ttSTDCALL,
+      ttSAFECALL, ttSAR, ttSEALED, ttSET, ttSHL, ttSHR, ttSTATIC, ttSTDCALL, ttSTRICT,
       ttTHEN, ttTO, ttTRUE, ttTRY, ttTYPE,
       ttUNIT, ttUNTIL, ttUSES,
       ttVAR, ttVIRTUAL,
-      ttWHILE, ttWRITE,
+      ttWHILE, ttWITH, ttWRITE,
       ttXOR ];
 type
    TTokenAlphaLookup = record
@@ -1263,12 +1301,29 @@ begin
    FToken.FString:=str;
 end;
 
+// SimulateIntegerToken
+//
+procedure TTokenizer.SimulateIntegerToken(const scriptPos : TScriptPos; const i : Int64);
+begin
+   SimulateToken(ttIntVal, scriptPos);
+   FToken.FInteger:=i;
+end;
+
 // SimulateNameToken
 //
 procedure TTokenizer.SimulateNameToken(const scriptPos : TScriptPos; const name : UnicodeString);
 begin
    SimulateToken(ttNAME, scriptPos);
    FToken.FString:=name;
+end;
+
+// SafePathName
+//
+function TTokenizer.SafePathName : String;
+begin
+   if Self<>nil then
+      Result:=PathName
+   else Result:='';
 end;
 
 // HasTokens
@@ -1516,7 +1571,9 @@ begin
 
       // Find next state
       if pch^>#127 then
-         trns:=state.FTransitions[#127]
+         if Ord(pch^)=160 then  // treat no-break space as regular space
+            trns:=state.FTransitions[#32]
+         else trns:=state.FTransitions[#127]
       else trns:=state.FTransitions[pch^];
 
       // Handle Errors

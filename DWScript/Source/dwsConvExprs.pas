@@ -34,9 +34,10 @@ type
    TConvExpr = class(TUnaryOpExpr)
       public
          class function WrapWithConvCast(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                         exec : TdwsExecution;
                                          toTyp : TTypeSymbol; expr : TTypedExpr;
                                          const reportError : String) : TTypedExpr; static;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
    // Just wraps with a typ for an invalid conversion expr
@@ -67,6 +68,10 @@ type
      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
      function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
+   // Integer(float x)
+   TConvFloatToIntegerExpr = class (TUnaryOpIntExpr)
+     function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+   end;
 
    // String(variant x)
    TConvVarToStringExpr = class (TUnaryOpStringExpr)
@@ -93,35 +98,59 @@ type
 
    // Static Array to Dynamic Array
    TConvStaticArrayToDynamicExpr = class (TUnaryOpExpr)
-      constructor Create(prog : TdwsProgram; expr : TArrayConstantExpr; toTyp : TDynamicArraySymbol); reintroduce;
-      function Eval(exec : TdwsExecution) : Variant; override;
-   end;
-
-   // Static Array to set of
-   TConvStaticArrayToSetOfExpr = class (TPosDataExpr)
-      private
-         FExpr : TArrayConstantExpr;
-
-      protected
-         function GetSubExpr(i : Integer) : TExprBase; override;
-         function GetSubExprCount : Integer; override;
-
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
-                            expr : TArrayConstantExpr; toTyp : TSetOfSymbol);
-         destructor Destroy; override;
-
-         procedure EvalAsTData(exec : TdwsExecution; var data : TData);
-
-         function IsWritable: Boolean; override;
-         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
-
-         property Expr : TArrayConstantExpr read FExpr write FExpr;
+         constructor Create(prog : TdwsProgram; expr : TArrayConstantExpr; toTyp : TDynamicArraySymbol); reintroduce;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
    // ExternalClass(x)
    TConvExternalExpr = class (TUnaryOpVariantExpr)
       procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
+   end;
+
+   // convert to data expr
+   TConvDataExpr = class (TPosDataExpr)
+      private
+         FExpr : TTypedExpr;
+
+      protected
+         function GetSubExpr(i : Integer) : TExprBase; override;
+         function GetSubExprCount : Integer; override;
+
+         function  GetIsConstant : Boolean; override;
+
+      public
+         constructor Create(const scriptPos : TScriptPos; expr : TTypedExpr; aTyp : TTypeSymbol);
+         destructor Destroy; override;
+
+         function IsWritable: Boolean; override;
+
+         property Expr : TTypedExpr read FExpr write FExpr;
+   end;
+
+   // Static Array to set of
+   TConvStaticArrayToSetOfExpr = class (TConvDataExpr)
+      public
+         constructor Create(const scriptPos : TScriptPos;
+                            expr : TArrayConstantExpr; toTyp : TSetOfSymbol);
+
+         procedure EvalAsTData(exec : TdwsExecution; var data : TData);
+         function ToConstExpr(exec : TdwsExecution) : TConstExpr;
+
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
+   end;
+
+   // Integer(x)
+   TConvSetOfToIntegerExpr = class (TUnaryOpIntExpr)
+      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+   end;
+
+   // set of (Integer)
+   TConvIntegerToSetOfExpr = class (TConvDataExpr)
+      public
+         constructor Create(const scriptPos : TScriptPos; expr : TTypedExpr; toTyp : TSetOfSymbol);
+
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
    end;
 
    // cast something as Typ
@@ -132,7 +161,7 @@ type
       public
          constructor Create(prog : TdwsProgram; const aPos : TScriptPos;
                             expr : TTypedExpr; toTyp : TTypeSymbol); reintroduce;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
    // class as TMyClass
@@ -141,7 +170,7 @@ type
          procedure RaiseMetaClassCastFailed(exec : TdwsExecution; classSym : TClassSymbol);
 
       public
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
    // obj as TMyClass
@@ -158,25 +187,25 @@ type
       public
          constructor Create(prog : TdwsProgram; expr : TTypedExpr); override;
 
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
    // obj as Interface
    TObjAsIntfExpr = class(TAsCastExpr)
       public
-         procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
    // interface as Interface
    TIntfAsIntfExpr = class(TAsCastExpr)
       public
-         procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
    // interface as class
    TIntfAsClassExpr = class(TAsCastExpr)
       public
-         procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
 // ------------------------------------------------------------------
@@ -196,6 +225,7 @@ uses dwsCoreExprs;
 // WrapWithConvCast
 //
 class function TConvExpr.WrapWithConvCast(prog : TdwsProgram; const scriptPos : TScriptPos;
+                                          exec : TdwsExecution;
                                           toTyp : TTypeSymbol; expr : TTypedExpr;
                                           const reportError : String) : TTypedExpr;
 
@@ -215,6 +245,7 @@ class function TConvExpr.WrapWithConvCast(prog : TdwsProgram; const scriptPos : 
 
 var
    arrayConst : TArrayConstantExpr;
+   staticArrayToSetOf : TConvStaticArrayToSetOfExpr;
 begin
    Result:=expr;
    if (toTyp=nil) or (expr.Typ=nil) then begin
@@ -233,8 +264,16 @@ begin
             Result:=TConvStaticArrayToDynamicExpr.Create(prog, arrayConst,
                                                          TDynamicArraySymbol(toTyp))
       end else if toTyp is TSetOfSymbol then begin
-         if (arrayConst.ElementCount=0) or arrayConst.Typ.Typ.IsOfType(toTyp.Typ) then
-            Result:=TConvStaticArrayToSetOfExpr.Create(prog, scriptPos, arrayConst, TSetOfSymbol(toTyp));
+         if arrayConst.ElementCount=0 then begin
+            Result:=TConstExpr.Create(toTyp);
+            expr.Free;
+         end else if arrayConst.Typ.Typ.IsOfType(toTyp.Typ) then begin
+            staticArrayToSetOf:=TConvStaticArrayToSetOfExpr.Create(scriptPos, arrayConst, TSetOfSymbol(toTyp));
+            if staticArrayToSetOf.IsConstant then begin
+               Result:=staticArrayToSetOf.ToConstExpr(exec);
+               staticArrayToSetOf.Free;
+            end else Result:=staticArrayToSetOf;
+         end;
       end;
 
    end else if expr.Typ.UnAliasedTypeIs(TBaseVariantSymbol) then begin
@@ -276,9 +315,9 @@ begin
       ReportIncompatibleTypes;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TConvExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TConvExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 begin
    Assert(False);
 end;
@@ -369,6 +408,17 @@ begin
 end;
 
 // ------------------
+// ------------------ TConvFloatToIntegerExpr ------------------
+// ------------------
+
+// EvalAsInteger
+//
+function TConvFloatToIntegerExpr.EvalAsInteger(exec : TdwsExecution) : Int64;
+begin
+   Result:=Round(Expr.EvalAsFloat(exec));
+end;
+
+// ------------------
 // ------------------ TConvVarToStringExpr ------------------
 // ------------------
 
@@ -442,9 +492,9 @@ begin
    Typ:=toTyp;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TConvStaticArrayToDynamicExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TConvStaticArrayToDynamicExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
    arr : TArrayConstantExpr;
    dynArray : TScriptDynamicArray;
@@ -454,7 +504,7 @@ begin
    dynArray:=TScriptDynamicArray.CreateNew(TDynamicArraySymbol(Typ).Typ);
    dynArray.ReplaceData(arr.EvalAsTData(exec));
 
-   Result:=IUnknown(IScriptObj(dynArray));
+   VarCopySafe(Result, IScriptDynArray(dynArray));
 end;
 
 // ------------------
@@ -466,6 +516,17 @@ end;
 procedure TConvExternalExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    Expr.EvalAsVariant(exec, Result);
+end;
+
+// ------------------
+// ------------------ TConvSetOfToIntegerExpr ------------------
+// ------------------
+
+// EvalAsInteger
+//
+function TConvSetOfToIntegerExpr.EvalAsInteger(exec : TdwsExecution) : Int64;
+begin
+   Result:=TDataExpr(Expr).DataPtr[exec].AsInteger[0];
 end;
 
 // ------------------
@@ -482,14 +543,14 @@ begin
    FTyp:=toTyp;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TAsCastExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TAsCastExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
    scriptObj : IScriptObj;
 begin
    EvalAsScriptObj(exec, scriptObj);
-   Result:=scriptObj;
+   VarCopySafe(Result, scriptObj);
 end;
 
 // ------------------
@@ -504,14 +565,14 @@ begin
                                                   [classSym.Caption, FTyp.Name]))
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TClassAsClassExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TClassAsClassExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
    ref : TClassSymbol;
 begin
    ref:=TClassSymbol(Expr.EvalAsInteger(exec));
-   Result:=Int64(ref);
+   VarCopySafe(Result, Int64(ref));
 
    if ref<>nil then begin
       if not FTyp.IsCompatible(ref.MetaSymbol) then
@@ -553,101 +614,153 @@ begin
    Typ:=(expr.Typ as TStructuredTypeSymbol).MetaSymbol;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TObjToClassTypeExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TObjToClassTypeExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
    obj : IScriptObj;
 begin
    Expr.EvalAsScriptObj(exec, obj);
    if obj=nil then
-      Result:=Int64(0)
-   else Result:=Int64(obj.ClassSym);
+      VarCopySafe(Result, Int64(0))
+   else VarCopySafe(Result, Int64(obj.ClassSym));
 end;
 
 // ------------------
 // ------------------ TObjAsIntfExpr ------------------
 // ------------------
 
-// EvalAsScriptObj
+// EvalAsVariant
 //
-procedure TObjAsIntfExpr.EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj);
+procedure TObjAsIntfExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 
-   procedure RaiseIntfCastFailed;
+   procedure RaiseIntfCastFailed(const obj : IScriptObj);
    begin
       RaiseScriptError(exec, EClassCast.CreatePosFmt(ScriptPos, RTE_ObjCastToIntfFailed,
-                                                     [Result.ClassSym.Caption, FTyp.Caption]))
+                                                     [obj.ClassSym.Caption, FTyp.Caption]))
    end;
 
 var
    intf : TScriptInterface;
    resolved : TResolvedInterface;
+   obj : IScriptObj;
 begin
-   Expr.EvalAsScriptObj(exec, Result);
+   Expr.EvalAsScriptObj(exec, obj);
 
-   if Assigned(Result) then begin
-      if not Result.ClassSym.ResolveInterface(TInterfaceSymbol(Typ), resolved) then
-         RaiseIntfCastFailed;
-      intf:=TScriptInterface.Create(Result, resolved);
-      Result:=intf;
-   end;
+   if Assigned(obj) then begin
+      if not obj.ClassSym.ResolveInterface(TInterfaceSymbol(Typ), resolved) then
+         RaiseIntfCastFailed(obj);
+      intf:=TScriptInterface.Create(obj, resolved);
+   end else intf:=nil;
+   VarCopySafe(Result, IScriptObjInterface(intf));
 end;
 
 // ------------------
 // ------------------ TIntfAsIntfExpr ------------------
 // ------------------
 
-// EvalAsScriptObj
+// EvalAsVariant
 //
-procedure TIntfAsIntfExpr.EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj);
+procedure TIntfAsIntfExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 
-   procedure RaiseIntfCastFailed;
+   procedure RaiseIntfCastFailed(const obj : IScriptObj);
    begin
       RaiseScriptError(exec, EClassCast.CreatePosFmt(ScriptPos, RTE_IntfCastToIntfFailed,
-                                                     [Result.ClassSym.Caption, FTyp.Caption]))
+                                                     [obj.ClassSym.Caption, FTyp.Caption]))
    end;
 
 var
+   scriptIntf : IScriptObjInterface;
    intf : TScriptInterface;
    instance : IScriptObj;
    resolved : TResolvedInterface;
 begin
-   Expr.EvalAsScriptObj(exec, Result);
+   Expr.EvalAsScriptObjInterface(exec, scriptIntf);
 
-   if Assigned(Result) then begin
-      instance:=TScriptInterface(Result.GetSelf).Instance;
+   if Assigned(scriptIntf) then begin
+      instance:=TScriptInterface(scriptIntf.GetSelf).Instance;
       if not instance.ClassSym.ResolveInterface(TInterfaceSymbol(Typ), resolved) then
-         RaiseIntfCastFailed;
+         RaiseIntfCastFailed(instance);
       intf:=TScriptInterface.Create(instance, resolved);
-      Result:=intf;
-   end;
+   end else intf:=nil;
+   VarCopySafe(Result, IUnknown(intf));
 end;
 
 // ------------------
 // ------------------ TIntfAsClassExpr ------------------
 // ------------------
 
-// EvalAsScriptObj
+// EvalAsVariant
 //
-procedure TIntfAsClassExpr.EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj);
+procedure TIntfAsClassExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 
-   procedure RaiseIntfCastFailed;
+   procedure RaiseIntfCastFailed(const obj : IScriptObj);
    begin
       RaiseScriptError(exec, EClassCast.CreatePosFmt(ScriptPos, RTE_IntfCastToObjFailed,
-                                                     [Result.ClassSym.Caption, FTyp.Caption]))
+                                                     [obj.ClassSym.Caption, FTyp.Caption]))
    end;
 
 var
+   scriptIntf : IScriptObjInterface;
+   obj : IScriptObj;
    intf : TScriptInterface;
 begin
-   Expr.EvalAsScriptObj(exec, Result);
+   Expr.EvalAsScriptObjInterface(exec, scriptIntf);
 
-   if Assigned(Result) then begin
-      intf:=TScriptInterface(Result.GetSelf);
-      Result:=intf.Instance;
-      if not Result.ClassSym.IsCompatible(FTyp) then
-         RaiseIntfCastFailed;
-   end;
+   if Assigned(scriptIntf) then begin
+      intf:=TScriptInterface(scriptIntf.GetSelf);
+      obj:=intf.Instance;
+      if not obj.ClassSym.IsCompatible(FTyp) then
+         RaiseIntfCastFailed(obj);
+   end else VarCopySafe(Result, nil);
+end;
+
+// ------------------
+// ------------------ TConvDataExpr ------------------
+// ------------------
+
+// Create
+//
+constructor TConvDataExpr.Create(const scriptPos : TScriptPos; expr : TTypedExpr; aTyp : TTypeSymbol);
+begin
+   inherited Create(scriptPos, aTyp);
+   FExpr:=expr;
+end;
+
+// Destroy
+//
+destructor TConvDataExpr.Destroy;
+begin
+   inherited;
+   FExpr.Free;
+end;
+
+// IsWritable
+//
+function TConvDataExpr.IsWritable: Boolean;
+begin
+   Result:=False;
+end;
+
+// GetSubExpr
+//
+function TConvDataExpr.GetSubExpr(i : Integer) : TExprBase;
+begin
+   Result:=FExpr;
+end;
+
+// GetSubExprCount
+//
+function TConvDataExpr.GetSubExprCount : Integer;
+begin
+   Result:=1;
+end;
+
+// GetIsConstant
+//
+function TConvDataExpr.GetIsConstant : Boolean;
+begin
+   Result:=FExpr.IsConstant;
 end;
 
 // ------------------
@@ -656,19 +769,10 @@ end;
 
 // Create
 //
-constructor TConvStaticArrayToSetOfExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
+constructor TConvStaticArrayToSetOfExpr.Create(const scriptPos : TScriptPos;
                                                expr : TArrayConstantExpr; toTyp : TSetOfSymbol);
 begin
-   inherited Create(prog, scriptPos, toTyp);
-   FExpr:=expr;
-end;
-
-// Destroy
-//
-destructor TConvStaticArrayToSetOfExpr.Destroy;
-begin
-   inherited;
-   FExpr.Free;
+   inherited Create(scriptPos, expr, toTyp);
 end;
 
 // EvalAsTData
@@ -676,25 +780,33 @@ end;
 procedure TConvStaticArrayToSetOfExpr.EvalAsTData(exec : TdwsExecution; var data : TData);
 var
    i, v : Integer;
+   i64 : Int64;
    setOfSym : TSetOfSymbol;
+   arrayExpr : TArrayConstantExpr;
 begin
    setOfSym:=TSetOfSymbol(Typ);
 
    SetLength(data, setOfSym.Size);
    Typ.InitData(data, 0);
 
-   for i:=0 to Expr.ElementCount-1 do begin
-      v:=Expr.Elements[i].EvalAsInteger(exec)-setOfSym.MinValue;
-      if Cardinal(v)<Cardinal(setOfSym.CountValue) then
-         data[v shr 6]:=data[v shr 6] or (Int64(1) shl (v and 63));
+   arrayExpr:=TArrayConstantExpr(Expr);
+   for i:=0 to arrayExpr.ElementCount-1 do begin
+      v:=arrayExpr.Elements[i].EvalAsInteger(exec)-setOfSym.MinValue;
+      if Cardinal(v)<Cardinal(setOfSym.CountValue) then begin
+         i64 := data[v shr 6];
+         data[v shr 6] := i64 or (Int64(1) shl (v and 63));
+      end;
    end;
 end;
 
-// IsWritable
+// ToConstExpr
 //
-function TConvStaticArrayToSetOfExpr.IsWritable: Boolean;
+function TConvStaticArrayToSetOfExpr.ToConstExpr(exec : TdwsExecution) : TConstExpr;
+var
+   data : TData;
 begin
-   Result:=False;
+   EvalAsTData(exec, data);
+   Result:=TConstExpr.Create(Typ, data, 0);
 end;
 
 // GetDataPtr
@@ -707,18 +819,28 @@ begin
    result:=exec.Stack.CreateDataContext(data, 0);
 end;
 
-// GetSubExpr
+// ------------------
+// ------------------ TConvIntegerToSetOfExpr ------------------
+// ------------------
+
+// Create
 //
-function TConvStaticArrayToSetOfExpr.GetSubExpr(i : Integer) : TExprBase;
+constructor TConvIntegerToSetOfExpr.Create(
+      const scriptPos : TScriptPos; expr : TTypedExpr; toTyp : TSetOfSymbol);
 begin
-   Result:=FExpr;
+   inherited Create(scriptPos, expr, toTyp);
+   Assert(toTyp.Size=1);
 end;
 
-// GetSubExprCount
+// GetDataPtr
 //
-function TConvStaticArrayToSetOfExpr.GetSubExprCount : Integer;
+procedure TConvIntegerToSetOfExpr.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
+var
+   data : TData;
 begin
-   Result:=1;
+   SetLength(data, 1);
+   data[0]:=Expr.EvalAsInteger(exec);
+   result:=exec.Stack.CreateDataContext(data, 0);
 end;
 
 end.

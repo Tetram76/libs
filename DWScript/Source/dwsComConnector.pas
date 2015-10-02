@@ -25,9 +25,10 @@ interface
 
 uses
    Variants, SysUtils, ComObj, ActiveX,
-   dwsUtils, dwsDataContext, dwsExprList, dwsConnectorSymbols,
-   dwsStrings, dwsFunctions, dwsStack, dwsMagicExprs,
-   dwsExprs, dwsComp, dwsSymbols, dwsOperators, dwsUnitSymbols;
+   dwsUtils, dwsDataContext, dwsExprList, dwsConnectorSymbols, dwsXPlatform,
+   dwsStrings, dwsFunctions, dwsStack, dwsMagicExprs, dwsErrors,
+   dwsExprs, dwsComp, dwsSymbols, dwsOperators, dwsUnitSymbols,
+   dwsCompilerUtils;
 
 const
    COM_ConnectorCaption = 'COM Connector 2.0';
@@ -277,15 +278,46 @@ var
    excepInfo : TExcepInfo;
    dispParams : TDispParams;
    err : HResult;
+   flags : Word;
 begin
    dispParams.rgvarg:=@value;
    dispParams.rgdispidNamedArgs:=@dispIDNamedArgs;
    dispParams.cArgs:=1;
    dispParams.cNamedArgs:=1;
-   err:=disp.Invoke(dispID, GUID_NULL, 0, DISPATCH_PROPERTYPUT, dispParams,
+   if VarType(value)=varDispatch then
+      flags:=DISPATCH_PROPERTYPUT or DISPATCH_PROPERTYPUTREF
+   else flags:=DISPATCH_PROPERTYPUT;
+   err:=disp.Invoke(dispID, GUID_NULL, 0, flags,
+                    dispParams,
                     nil, @excepInfo, nil);
    if err<>S_OK then
       RaiseOleError(err, excepInfo);
+end;
+
+// Connection to
+//
+var
+   vWbemLocator : OleVariant;
+   vWbemLocatorMRSW : TMultiReadSingleWrite;
+function WbemLocatorConnect(const path : String; const user : String = ''; const pass : String = '') : OleVariant;
+var
+   p : Integer;
+   server, namespace : String;
+begin
+   p:=Pos(':\\', path);
+   server:=Copy(path, p+3, MaxInt);
+   p:=Pos('\', server);
+   namespace:=Copy(server, p+1, MaxInt);
+   SetLength(server, p-1);
+
+   vWbemLocatorMRSW.BeginWrite;
+   try
+      if VarIsClear(vWbemLocator) then
+         vWbemLocator:=CreateOleObject('WbemScripting.SWbemLocator');
+      Result:=vWbemLocator.ConnectServer(server, namespace, user, pass);
+   finally
+      vWbemLocatorMRSW.EndWrite;
+   end;
 end;
 
 type
@@ -304,31 +336,35 @@ type
    TOleConversionFunc = class (TInternalMagicVariantFunction);
 
    TOleInt16Func = class(TOleConversionFunc)
-      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+      procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
    end;
 
    TOleInt32Func = class(TOleConversionFunc)
-      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+      procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
    end;
 
    TOleInt64Func = class(TOleConversionFunc)
-      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+      procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
    end;
 
    TOleCurrencyFunc = class(TOleConversionFunc)
-      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+      procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
    end;
 
    TOleDateFunc = class(TOleConversionFunc)
-      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+      procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
    end;
 
    TOleSingleFunc = class(TOleConversionFunc)
-      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+      procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
    end;
 
    TOleDoubleFunc = class(TOleConversionFunc)
-      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+      procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
+   end;
+
+   TComVarClearFunc = class(TInternalFunction)
+      procedure Execute(info : TProgramInfo); override;
    end;
 
    TComConnectorType = class(TInterfacedSelfObject, IUnknown, IConnectorType, IConnectorEnumerator)
@@ -348,6 +384,7 @@ type
          function HasIndex(const aPropName: UnicodeString; const aParams: TConnectorParamArray;
                            var typSym: TTypeSymbol; isWrite: Boolean): IConnectorCall;
          function HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
+         function HasCast(typSym: TTypeSymbol) : IConnectorCast;
 
          function NewEnumerator(const base : Variant; const args : TConnectorArgs) : IUnknown;
          function Step(const enumerator : IInterface; var data : TData) : Boolean;
@@ -461,12 +498,14 @@ type
          function ConnectorCaption: UnicodeString;
          function AutoVarParams : Boolean;
          function AcceptsParams(const params: TConnectorParamArray) : Boolean;
-         function HasMethod(const MethodName: UnicodeString; const Params: TConnectorParamArray;
-                            var TypSym: TTypeSymbol): IConnectorCall;
-         function HasMember(const MemberName: UnicodeString; var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorMember;
+         function HasMethod(const methodName: UnicodeString; const params: TConnectorParamArray;
+                            var typSym: TTypeSymbol): IConnectorCall;
+         function HasMember(const memberName: UnicodeString; var typSym: TTypeSymbol;
+                            isWrite: Boolean): IConnectorMember;
          function HasIndex(const PropName: UnicodeString; const Params: TConnectorParamArray;
                          var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorCall;
          function HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
+         function HasCast(typSym: TTypeSymbol) : IConnectorCast;
 
          { IConnectorEnumerator }
          function IConnectorEnumerator.NewEnumerator = NewEnumerator;
@@ -528,6 +567,7 @@ begin
    TOleDateFunc.Create(Table, 'OleDate', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
    TOleSingleFunc.Create(Table, 'OleSingle', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
    TOleDoubleFunc.Create(Table, 'OleDouble', ['v', SYS_FLOAT], 'ComVariant', [iffStateLess]);
+   TComVarClearFunc.Create(Table, 'VarClear', ['@v', 'ComVariant'], '', [iffOverloaded]);
 
    Table.AddSymbol(TComVariantArraySymbol.Create('ComVariantArray', TComVariantArrayType.Create(systemTable), systemTable.TypVariant));
 end;
@@ -558,8 +598,13 @@ end;
 // ------------------
 
 procedure TGetActiveOleObjectFunc.Execute(info : TProgramInfo);
+var
+   n : String;
 begin
-   Info.ResultAsVariant := GetActiveOleObject(Info.ParamAsString[0]);
+   n:=info.ParamAsString[0];
+   if StrIBeginsWith(n, 'winmgmts:') then
+      Info.ResultAsVariant := WbemLocatorConnect(n)
+   else Info.ResultAsVariant := GetActiveOleObject(n);
 end;
 
 // ------------------
@@ -568,7 +613,7 @@ end;
 
 // DoEvalAsVariant
 //
-function TOleInt16Func.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TOleInt16Func.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 begin
    Result := SmallInt(args.AsInteger[0]);
 end;
@@ -579,7 +624,7 @@ end;
 
 // DoEvalAsVariant
 //
-function TOleInt32Func.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TOleInt32Func.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 begin
    Result := Int32(args.AsInteger[0]);
 end;
@@ -590,7 +635,7 @@ end;
 
 // DoEvalAsVariant
 //
-function TOleInt64Func.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TOleInt64Func.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 begin
    Result := args.AsInteger[0];
 end;
@@ -601,7 +646,7 @@ end;
 
 // DoEvalAsVariant
 //
-function TOleCurrencyFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TOleCurrencyFunc.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 begin
    args.ExprBase[0].EvalAsVariant(args.Exec, Result);
    if VarType(Result)<>varCurrency then
@@ -614,7 +659,7 @@ end;
 
 // DoEvalAsVariant
 //
-function TOleDateFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TOleDateFunc.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 begin
    Result := VarFromDateTime(args.AsFloat[0]);
 end;
@@ -625,9 +670,9 @@ end;
 
 // DoEvalAsVariant
 //
-function TOleSingleFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TOleSingleFunc.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 begin
-   VarClear(Result);
+   VarClearSafe(Result);
    // Needed so compiler won't generate a double precision variant
    PVarData(@Result)^.VType := varSingle;
    PVarData(@Result)^.VSingle := args.AsFloat[0];
@@ -639,9 +684,20 @@ end;
 
 // DoEvalAsVariant
 //
-function TOleDoubleFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TOleDoubleFunc.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 begin
    Result := args.AsFloat[0];
+end;
+
+// ------------------
+// ------------------ TComVarClearFunc ------------------
+// ------------------
+
+// Execute
+//
+procedure TComVarClearFunc.Execute(info : TProgramInfo);
+begin
+   Info.ValueAsVariant['v'] := Unassigned;
 end;
 
 // ------------------
@@ -690,6 +746,13 @@ function TComConnectorType.HasEnumerator(var typSym: TTypeSymbol) : IConnectorEn
 begin
    typSym:=ComVariantSymbol;
    Result:=IConnectorEnumerator(Self);
+end;
+
+// HasCast
+//
+function TComConnectorType.HasCast(typSym: TTypeSymbol) : IConnectorCast;
+begin
+   Result:=nil;
 end;
 
 // NewEnumerator
@@ -952,36 +1015,44 @@ begin
    Result := IConnectorEnumerator(Self);
 end;
 
-function TComVariantArrayType.HasMember(const MemberName: UnicodeString;
-  var typSym: TTypeSymbol; IsWrite: Boolean): IConnectorMember;
+// HasCast
+//
+function TComVariantArrayType.HasCast(typSym: TTypeSymbol) : IConnectorCast;
 begin
-  if UnicodeSameText(MemberName, 'high') then
-  begin
-    Result := FHighBoundMember;
-    typSym := FTable.TypInteger;
-  end
-  else if IsWrite then
-    Result := nil
-  else
-  begin
-    if UnicodeSameText(MemberName, 'length') then
-    begin
-      Result := FLengthMember;
+   Result:=nil;
+end;
+
+// HasMember
+//
+function TComVariantArrayType.HasMember(const memberName: UnicodeString;
+      var typSym: TTypeSymbol; isWrite: Boolean): IConnectorMember;
+var
+   methodKind : TArrayMethodKind;
+begin
+   methodKind:=NameToArrayMethod(memberName, nil, cNullPos);
+   if methodKind=amkHigh then begin
+      Result := FHighBoundMember;
       typSym := FTable.TypInteger;
-    end
-    else if UnicodeSameText(MemberName, 'low') then
-    begin
-      Result := FLowBoundMember;
-      typSym := FTable.TypInteger;
-    end
-    else if UnicodeSameText(MemberName, 'dimcount') then
-    begin
-      Result := FDimCountMember;
-      typSym := FTable.TypInteger;
-    end
-    else
-      Result := nil;
-  end;
+   end else if isWrite then
+      Result := nil
+   else begin
+      case methodKind of
+         amkLength, amkCount : begin
+            Result := FLengthMember;
+            typSym := FTable.TypInteger;
+         end;
+         amkLow : begin
+            Result := FLowBoundMember;
+            typSym := FTable.TypInteger;
+         end;
+         amkDimCount : begin
+            Result := FDimCountMember;
+            typSym := FTable.TypInteger;
+         end;
+      else
+         Result := nil;
+      end;
+   end;
 end;
 
 // AcceptsParams
@@ -992,19 +1063,30 @@ begin
           and FTable.FindTypeSymbol(SYS_INTEGER, cvMagic).IsCompatible(params[0].typSym);
 end;
 
-function TComVariantArrayType.HasMethod(Const methodName: UnicodeString;
-  const params: TConnectorParamArray; var typSym: TTypeSymbol): IConnectorCall;
+// HasMethod
+//
+function TComVariantArrayType.HasMethod(const methodName: UnicodeString;
+      const params: TConnectorParamArray; var typSym: TTypeSymbol): IConnectorCall;
+var
+   methodKind : TArrayMethodKind;
 begin
-   if UnicodeSameText(methodName, 'length') then begin
-      Result := FLengthCall;
-      typSym := FTable.TypInteger;
-   end else if UnicodeSameText(methodName, 'low') then begin
-      Result := FLowBoundCall;
-      typSym := FTable.TypInteger;
-   end else if UnicodeSameText(methodName, 'high') then begin
-      Result := FHighBoundCall;
-      typSym := FTable.TypInteger;
-   end else Result := nil;
+   methodKind:=NameToArrayMethod(methodName, nil, cNullPos);
+   case methodKind of
+      amkLength, amkCount : begin
+         Result := FLengthCall;
+         typSym := FTable.TypInteger;
+      end;
+      amkLow : begin
+         Result := FLowBoundCall;
+         typSym := FTable.TypInteger;
+      end;
+      amkHigh : begin
+         Result := FHighBoundCall;
+         typSym := FTable.TypInteger;
+      end;
+   else
+      Result := nil;
+   end;
 end;
 
 // NewEnumerator
@@ -1153,6 +1235,20 @@ begin
 
    end else Result:=False;
 end;
+
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+initialization
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+
+   vWbemLocatorMRSW:=TMultiReadSingleWrite.Create;
+
+finalization
+
+   FreeAndNil(vWbemLocatorMRSW);
 
 end.
 

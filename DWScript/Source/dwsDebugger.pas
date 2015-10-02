@@ -362,7 +362,14 @@ type
          property OnStateChanged : TNotifyEvent read FOnStateChanged write FOnStateChanged;
    end;
 
-   TNamesBitsHash = TSimpleNameObjectHash<TBits>;
+   TBreakpointBits = class(TBits)
+      private
+         FSourceName : String;
+      public
+         property SourceName : String read FSourceName write FSourceName;
+   end;
+
+   TNamesBitsHash = TSimpleNameObjectHash<TBreakpointBits>;
 
    TdwsBreakpointableLines = class
       private
@@ -371,7 +378,7 @@ type
          // Valid only during construction
          FProcessedProgs : TObjectsLookup;
          FLastSourceFile : TSourceFile;
-         FLastBreakpointLines : TBits;
+         FLastBreakpointLines : TBreakpointBits;
 
       protected
          function GetSourceLines(const sourceName : UnicodeString) : TBits; inline;
@@ -392,7 +399,7 @@ type
          property SourceLines[const sourceName : UnicodeString] : TBits read GetSourceLines;
          function Count : Integer; inline;
 
-         function IsExecutable(sourceName : UnicodeString; line : Integer) : Boolean;
+         function IsExecutable(const sourceName : UnicodeString; line : Integer) : Boolean;
 
          procedure Enumerate(destinationList : TStrings);
    end;
@@ -1310,6 +1317,7 @@ procedure TdwsDebuggerWatch.Update(debugger : TdwsDebugger);
 var
    expr : TTypedExpr;
    exec : TdwsExecution;
+   scriptPos : TScriptPos;
 begin
    FEvaluationError:=dweeNone;
    if debugger.State<>dsDebugSuspended then begin
@@ -1319,8 +1327,10 @@ begin
       Exit;
    end;
 
-   if (Evaluator=nil) or (not Evaluator.ContextIsValid) then
-      Evaluator:=TdwsCompiler.Evaluate(debugger.Execution, ExpressionText);
+   if (Evaluator=nil) or (not Evaluator.ContextIsValid) then begin
+      scriptPos:=debugger.GetCurrentScriptPos;
+      Evaluator:=TdwsCompiler.Evaluate(debugger.Execution, ExpressionText, [], @scriptPos);
+   end;
 
    expr:=Evaluator.Expression;
    if expr.Typ=nil then begin
@@ -1483,7 +1493,7 @@ end;
 
 // IsExecutable
 //
-function TdwsBreakpointableLines.IsExecutable(sourceName : UnicodeString; line : Integer) : Boolean;
+function TdwsBreakpointableLines.IsExecutable(const sourceName : UnicodeString; line : Integer) : Boolean;
 var
    bits : TBits;
 begin
@@ -1498,17 +1508,21 @@ end;
 procedure TdwsBreakpointableLines.Enumerate(destinationList : TStrings);
 var
    i : Integer;
+   bits : TBreakpointBits;
 begin
-   for i:=0 to FSources.Capacity-1 do
-      if FSources.BucketObject[i]<>nil then
-         destinationList.AddObject(FSources.BucketName[i], FSources.BucketObject[i]);
+   for i:=0 to FSources.HighIndex do begin
+      if FSources.BucketObject[i]<>nil then begin
+         bits:=(FSources.BucketObject[i] as TBreakpointBits);
+         destinationList.AddObject(bits.SourceName, bits);
+      end;
+   end;
 end;
 
 // GetSourceLines
 //
 function TdwsBreakpointableLines.GetSourceLines(const sourceName : UnicodeString) : TBits;
 begin
-   Result:=FSources.Objects[sourceName];
+   Result:=FSources.Objects[UnicodeLowerCase(sourceName)];
 end;
 
 // EnumeratorCallback
@@ -1541,10 +1555,11 @@ begin
    if scriptPos.SourceFile=nil then Exit;
    if scriptPos.SourceFile<>FLastSourceFile then begin
       FLastSourceFile:=scriptPos.SourceFile;
-      FLastBreakpointLines:=FSources.Objects[FLastSourceFile.Name];
+      FLastBreakpointLines:=FSources.Objects[UnicodeLowerCase(FLastSourceFile.Name)];
       if FLastBreakpointLines=nil then begin
-         FLastBreakpointLines:=TBits.Create;
-         FSources.AddObject(scriptPos.SourceFile.Name, FLastBreakpointLines);
+         FLastBreakpointLines:=TBreakpointBits.Create;
+         FLastBreakpointLines.SourceName:=scriptPos.SourceFile.Name;
+         FSources.AddObject(UnicodeLowerCase(scriptPos.SourceFile.Name), FLastBreakpointLines);
          FLastBreakpointLines.Size:=CountLines(scriptPos.SourceFile.Code)+1;
       end;
    end;
@@ -1565,7 +1580,8 @@ begin
    if (prog.InitExpr.ScriptPos.SourceFile<>nil) and (prog.InitExpr.SubExprCount>0) then
       prog.InitExpr.RecursiveEnumerateSubExprs(EnumeratorCallback);
 
-   RegisterScriptPos(prog.Expr.ScriptPos);
+   if not (prog.Expr is TBlockExprBase) then
+      RegisterScriptPos(prog.Expr.ScriptPos);
 
    prog.Expr.RecursiveEnumerateSubExprs(EnumeratorCallback);
 

@@ -145,6 +145,9 @@ type
   end;
 
 
+  TDwsNewProjectEvent = procedure(const AProjectFileName: string) of object;
+  
+  
   TDwsIdeForm = class(TForm, IDwsIde)
     ActionBuild: TAction;
     ActionClearAllBreakpoints: TAction;
@@ -349,6 +352,7 @@ type
     procedure ActionGotoLineNumberUpdate(Sender: TObject);
   private
     FScript: TDelphiWebScript;
+    FOnNewProject: TDwsNewProjectEvent;
 
     FpcEditorLastMouseButton: TMouseButton;
     FpcEditorLastMouseXY: TPoint;
@@ -469,6 +473,8 @@ type
     property Script: TDelphiWebScript
                read FScript
                write SetScript;
+
+    property OnNewProject: TDwsNewProjectEvent read FOnNewProject write FOnNewProject;
   end;
 
 
@@ -904,10 +910,10 @@ begin
   if ALoadFile and FileExists(AFileName) then
   begin
     FEditor.Lines.Text := LoadTextFromFile(AFileName);
-    InitExecutableLines;
-    InitLineChangeStates;
     FEditor.ReadOnly  := FileIsReadOnly(AFileName);
   end;
+  InitExecutableLines;
+  InitLineChangeStates;
 
   FEditor.Modified := False;
 end;
@@ -1071,7 +1077,10 @@ end;
 procedure TEditorPage.InitExecutableLines;
 begin
   FExecutableLines.Size := 0;
-  FExecutableLines.Size := Editor.Lines.Count;
+  if Editor.Lines.Count = 0 then
+    FExecutableLines.Size := 1
+  else
+    FExecutableLines.Size := Editor.Lines.Count;
 end;
 
 // ShowExecutableLines
@@ -1093,7 +1102,10 @@ end;
 procedure TEditorPage.InitLineChangeStates;
 begin
   SetLength(FLineChangedState, 0);
-  SetLength(FLineChangedState, Editor.Lines.Count);
+  if Editor.Lines.Count = 0 then
+    SetLength(FLineChangedState, 1)
+  else
+    SetLength(FLineChangedState, Editor.Lines.Count);
 end;
 
 // ToggleLineChangedStates
@@ -1591,13 +1603,13 @@ begin
   // Try to get a project name from the supplied project name (which might be a *.dws or *.dwsproj)
   // if there is one, this becomes our project file name.
   if FOptions.ProjectName <> '' then
-    sProjectFileName := ScriptFolder + ChangeFileExt(FOptions.ProjectName, sDwsIdeProjectFileExt {eg '.dws' });
+    sProjectFileName := ScriptFolder + ChangeFileExt(FOptions.ProjectName, sDwsIdeProjectFileExt {eg '.dwsproj' });
 
   if FileExists(sProjectFileName) then
     LoadProjectFile(sProjectFileName) // << load the dwsproj if possible
   else
   begin
-    S := ScriptFolder + ChangeFileExt(FOptions.ProjectName, sDwsIdeProjectSourceFileExt {eg '.dwsproj' }); // try loading the main dws file...
+    S := ScriptFolder + ChangeFileExt(FOptions.ProjectName, sDwsIdeProjectSourceFileExt {eg '.dws' }); // try loading the main dws file...
     if FileExists(S) then
     begin
       // Here we've got a dws (main) file, so load it and make a project file from it too..
@@ -3618,11 +3630,18 @@ begin
     [IncludeTrailingBackslash(FScriptFolder), sDwsIdeProjectFileExt]);
   sFileName := ModifyFileNameToUniqueInProject(sFileName);
 
-  NewProjectFile(sFileName);
+  // Allow the project files to be pre-created by the app (e.g. using template files)
+  if Assigned(FOnNewProject) then
+    FOnNewProject(sFileName);
 
-  sFileName := ProjectfileNameToProjectSourceFileName(sFileName);
-  EditorPageAddNew(sFileName, False);
-
+  if Assigned(FOnNewProject) and FileExists(sFileName) then
+    LoadProjectFile(sFileName)
+  else
+  begin
+    NewProjectFile(sFileName);
+    sFileName := ProjectfileNameToProjectSourceFileName(sFileName);
+    EditorPageAddNew(sFileName, False);
+  end;
 end;
 
 procedure TDwsIdeForm.ActionFileNewUnitExecute(Sender: TObject);
@@ -3690,7 +3709,7 @@ end;
 procedure TDwsIdeForm.ActionFileOpenProjectExecute(Sender: TObject);
 begin
   if OpenProjectDialog.Execute then
-    LoadProjectfile(OpenProjectDialog.FileName);
+    LoadProjectFile(OpenProjectDialog.FileName);
 end;
 
 procedure TDwsIdeForm.ActionProgramResetExecute(Sender: TObject);

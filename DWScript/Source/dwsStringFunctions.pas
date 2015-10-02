@@ -27,13 +27,13 @@ uses
    Classes, SysUtils, Variants, StrUtils, Math, Masks,
    dwsXPlatform, dwsUtils, dwsStrings,
    dwsFunctions, dwsSymbols, dwsExprs, dwsCoreExprs, dwsExprList,
-   dwsConstExprs, dwsMagicExprs, dwsDataContext;
+   dwsConstExprs, dwsMagicExprs, dwsDataContext, dwsWebUtils;
 
 type
 
   EChrConvertError = class (Exception);
 
-  TChrFunc = class(TInternalMagicStringFunction)
+  TChrFunc = class sealed (TInternalMagicStringFunction)
     procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
   end;
 
@@ -72,6 +72,9 @@ type
   TFloatToStrFunc = class(TInternalMagicStringFunction)
     procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
   end;
+  TFloatToStrPFunc = class(TInternalMagicStringFunction)
+    procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
+  end;
 
   TStrToFloatFunc = class(TInternalMagicFloatFunction)
     procedure DoEvalAsFloat(const args : TExprBaseListExec; var Result : Double); override;
@@ -79,6 +82,10 @@ type
 
   TStrToFloatDefFunc = class(TInternalMagicFloatFunction)
     procedure DoEvalAsFloat(const args : TExprBaseListExec; var Result : Double); override;
+  end;
+
+  TStrToHtmlFunc = class(TInternalMagicStringFunction)
+    procedure DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString); override;
   end;
 
   TFormatFunc = class(TInternalMagicStringFunction)
@@ -246,7 +253,7 @@ type
   end;
 
   TStrSplitFunc = class(TInternalMagicVariantFunction)
-    function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+    procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
   end;
 
   TStrJoinFunc = class(TInternalMagicStringFunction)
@@ -379,14 +386,35 @@ var
 begin
    s:=args.AsString[0];
 
-   Result:=   UnicodeSameText(s, 'True') or UnicodeSameText(s, 'T')
-           or UnicodeSameText(s, 'Yes') or UnicodeSameText(s, 'Y')
-           or UnicodeSameText(s, '1');
+   case Length(s) of
+      1 : begin
+         case s[1] of
+            '1', 'T', 't', 'Y', 'y' : Result:=True;
+         else
+            Result:=False;
+         end;
+      end;
+      3 : Result:=UnicodeSameText(s, 'Yes');
+      4 : Result:=UnicodeSameText(s, 'True');
+   else
+      Result:=False;
+   end;
 end;
 
 { TFloatToStrFunc }
 
 procedure TFloatToStrFunc.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
+begin
+   {$ifdef FPC}
+   Result:=UTF8Decode(FloatToStr(args.AsFloat[0]))
+   {$else}
+   Result:=FloatToStr(args.AsFloat[0])
+   {$endif}
+end;
+
+{ TFloatToStrPFunc }
+
+procedure TFloatToStrPFunc.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 var
    p : Integer;
    v, p10 : Double;
@@ -430,10 +458,15 @@ begin
    {$endif}
 end;
 
+{ TStrToHtmlFunc }
+
+procedure TStrToHtmlFunc.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
+begin
+   Result:=WebUtils.HTMLTextEncode(args.AsString[0]);
+end;
+
 { TCopyFunc }
 
-// DoEvalAsString
-//
 procedure TCopyFunc.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 begin
    Result:=Copy(args.AsString[0], args.AsInteger[1], args.AsInteger[2]);
@@ -929,7 +962,7 @@ end;
 
 { TStrSplitFunc }
 
-function TStrSplitFunc.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TStrSplitFunc.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 var
    str, delim : UnicodeString;
    dyn : TScriptDynamicArray;
@@ -992,7 +1025,7 @@ begin
 
    end;
 
-   Result:=IDataContext(dyn);
+   Result:=IScriptDynArray(dyn);
 end;
 
 // ------------------
@@ -1004,33 +1037,31 @@ end;
 procedure TStrJoinFunc.DoEvalAsString(const args : TExprBaseListExec; var Result : UnicodeString);
 var
    delim, item : UnicodeString;
-   obj : IScriptObj;
-   dyn : TScriptDynamicArray;
+   dynIntf : IScriptDynArray;
    i : Integer;
    wobs : TWriteOnlyBlockStream;
 begin
-   args.ExprBase[0].EvalAsScriptObj(args.Exec, obj);
-   dyn:=obj.GetSelf as TScriptDynamicArray;
+   args.ExprBase[0].EvalAsScriptDynArray(args.Exec, dynIntf);
 
    delim:=args.AsString[1];
 
-   case dyn.ArrayLength of
+   case dynIntf.ArrayLength of
       0 : Result:='';
       1..5 : begin
-         dyn.EvalAsString(0, Result);
-         for i:=1 to dyn.ArrayLength-1 do begin
-            dyn.EvalAsString(i, item);
+         dynIntf.EvalAsString(0, Result);
+         for i:=1 to dynIntf.ArrayLength-1 do begin
+            dynIntf.EvalAsString(i, item);
             Result:=Result+delim+item;
          end;
       end;
    else
       wobs:=TWriteOnlyBlockStream.AllocFromPool;
       try
-         dyn.EvalAsString(0, item);
+         dynIntf.EvalAsString(0, item);
          wobs.WriteString(item);
-         for i:=1 to dyn.ArrayLength-1 do begin
+         for i:=1 to dynIntf.ArrayLength-1 do begin
             wobs.WriteString(delim);
-            dyn.EvalAsString(i, item);
+            dynIntf.EvalAsString(i, item);
             wobs.WriteString(item);
          end;
          Result:=wobs.ToString;
@@ -1073,10 +1104,13 @@ initialization
    RegisterInternalStringFunction(TBoolToStrFunc, 'BoolToStr', ['b', SYS_BOOLEAN], [iffStateLess], 'ToString');
    RegisterInternalBoolFunction(TStrToBoolFunc, 'StrToBool', ['str', SYS_STRING], [iffStateLess], 'ToBoolean');
 
-   RegisterInternalStringFunction(TFloatToStrFunc, 'FloatToStr', ['f', SYS_FLOAT, 'p=99', SYS_INTEGER], [iffStateLess], 'ToString');
+   RegisterInternalStringFunction(TFloatToStrFunc, 'FloatToStr', ['f', SYS_FLOAT], [iffStateLess, iffOverloaded], 'ToString');
+   RegisterInternalStringFunction(TFloatToStrPFunc, 'FloatToStr', ['f', SYS_FLOAT, 'p', SYS_INTEGER], [iffStateLess, iffOverloaded], 'ToString');
    RegisterInternalFloatFunction(TStrToFloatFunc, 'StrToFloat', ['str', SYS_STRING], [iffStateLess], 'ToFloat');
    RegisterInternalFloatFunction(TStrToFloatDefFunc, 'StrToFloatDef', ['str', SYS_STRING, 'def', SYS_FLOAT], [iffStateLess], 'ToFloatDef');
    RegisterInternalFloatFunction(TStrToFloatDefFunc, 'VarToFloatDef', ['val', SYS_VARIANT, 'def', SYS_FLOAT], [iffStateLess]);
+
+   RegisterInternalStringFunction(TStrToHtmlFunc, 'StrToHtml', ['str', SYS_STRING], [iffStateLess], 'ToHtml');
 
    RegisterInternalStringFunction(TFormatFunc, 'Format', ['fmt', SYS_STRING, 'args', 'array of const'], [iffStateLess], 'Format');
 

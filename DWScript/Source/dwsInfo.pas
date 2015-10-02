@@ -58,6 +58,7 @@ type
          function GetFieldMemberNames : TStrings; virtual;
          function GetMethod(const s : UnicodeString) : IInfo; virtual;
          function GetScriptObj : IScriptObj; virtual;
+         function GetScriptDynArray: IScriptDynArray; virtual;
          function GetParameter(const s : UnicodeString) : IInfo; virtual;
          function GetTypeSym : TSymbol;
          function GetValue : Variant; virtual;
@@ -107,6 +108,7 @@ type
          function GetValueAsFloat : Double; override;
          function GetData : TData; override;
          function GetScriptObj: IScriptObj; override;
+         function GetScriptDynArray: IScriptDynArray; override;
          procedure SetData(const Value: TData); override;
          procedure SetValue(const Value: Variant); override;
          procedure SetValueAsInteger(const Value: Int64); override;
@@ -131,6 +133,10 @@ type
     function GetFieldMemberNames : TStrings; override;
     function GetExternalObject: TObject; override;
     procedure SetExternalObject(ExtObject: TObject); override;
+  end;
+
+  TInfoInterfaceObj = class(TInfoData)
+    // Todo
   end;
 
    TTempParam = class(TParamSymbol)
@@ -161,7 +167,7 @@ type
 
    TInfoDynamicArrayBase = class (TInfoData)
       protected
-         function SelfDynArray : TScriptDynamicArray;
+         function SelfDynArray : IScriptDynArray;
    end;
 
    TInfoDynamicArrayLength = class (TInfoDynamicArrayBase)
@@ -179,6 +185,7 @@ type
    TInfoDynamicArray = class(TInfoDynamicArrayBase)
       protected
          function GetScriptObj : IScriptObj; override;
+         function GetScriptDynArray: IScriptDynArray; override;
 
       public
          function Element(const indices : array of Integer) : IInfo; override;
@@ -407,6 +414,13 @@ begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['Obj', FTypeSym.Caption]);
 end;
 
+// GetScriptDynArray
+//
+function TInfo.GetScriptDynArray: IScriptDynArray;
+begin
+  raise Exception.CreateFmt(RTE_InvalidOp, ['DynArray', FTypeSym.Caption]);
+end;
+
 function TInfo.GetParameter(const s: UnicodeString): IInfo;
 begin
   raise Exception.CreateFmt(RTE_InvalidOp, ['Parameter', FTypeSym.Caption]);
@@ -455,43 +469,51 @@ begin
    Result:=GetValue;
 end;
 
-class procedure TInfo.SetChild(out Result : IInfo; ProgramInfo: TProgramInfo;
-  ChildTypeSym: TSymbol; const ChildDataPtr: IDataContext;
-  const ChildDataMaster: IDataMaster = nil);
+class procedure TInfo.SetChild(out result : IInfo; programInfo: TProgramInfo;
+  childTypeSym: TSymbol; const childDataPtr: IDataContext;
+  const childDataMaster: IDataMaster = nil);
 var
    baseType : TTypeSymbol;
+   baseTypeClass : TClass;
 begin
-   Assert(Assigned(ChildTypeSym));
-   baseType := ChildTypeSym.baseType;
+   Assert(Assigned(childTypeSym));
+   baseType := childTypeSym.baseType;
+   baseTypeClass := baseType.ClassType;
 
    if    (baseType is TBaseSymbol)
-      or (baseType is TEnumerationSymbol)
-      or (baseType is TConnectorSymbol) then
-         Result := TInfoData.Create(ProgramInfo, ChildTypeSym, childDataPtr,
-                                    ChildDataMaster)
-   else if ChildTypeSym.AsFuncSymbol<>nil then
-      Result := TInfoFunc.Create(ProgramInfo, ChildTypeSym, childDataPtr,
-                                 ChildDataMaster, nil, nil)
-   else if baseType is TRecordSymbol then
-      Result := TInfoRecord.Create(ProgramInfo, ChildTypeSym, childDataPtr,
-                                   ChildDataMaster)
+      or (baseTypeClass=TEnumerationSymbol)
+      or (baseTypeClass=TSetOfSymbol) then
+         result := TInfoData.Create(programInfo, childTypeSym, childDataPtr,
+                                    childDataMaster)
+   else if childTypeSym.AsFuncSymbol<>nil then
+      result := TInfoFunc.Create(programInfo, childTypeSym, childDataPtr,
+                                 childDataMaster, nil, nil)
+   else if baseTypeClass=TRecordSymbol then
+      result := TInfoRecord.Create(programInfo, childTypeSym, childDataPtr,
+                                   childDataMaster)
    else if baseType is TStaticArraySymbol then begin
       if baseType is TOpenArraySymbol then begin
-         Result := TInfoOpenArray.Create(ProgramInfo, ChildTypeSym, childDataPtr,
-                                         ChildDataMaster);
+         result := TInfoOpenArray.Create(programInfo, childTypeSym, childDataPtr,
+                                          childDataMaster);
       end else begin
-         Result := TInfoStaticArray.Create(ProgramInfo, ChildTypeSym, childDataPtr,
-                                           ChildDataMaster);
+         result := TInfoStaticArray.Create(programInfo, childTypeSym, childDataPtr,
+                                            childDataMaster);
       end;
-   end else if baseType is TDynamicArraySymbol then
-      Result := TInfoDynamicArray.Create(ProgramInfo, ChildTypeSym, childDataPtr,
-                                         ChildDataMaster)
-   else if baseType is TClassSymbol then
-      Result := TInfoClassObj.Create(ProgramInfo, ChildTypeSym, childDataPtr,
-                                     ChildDataMaster)
-   else if baseType is TClassOfSymbol then
-      Result := TInfoClassOf.Create(ProgramInfo, ChildTypeSym, childDataPtr,
+   end else if baseTypeClass=TDynamicArraySymbol then
+      result := TInfoDynamicArray.Create(programInfo, childTypeSym, childDataPtr,
+                                          childDataMaster)
+   else if baseTypeClass=TClassSymbol then
+      result := TInfoClassObj.Create(programInfo, childTypeSym, childDataPtr,
+                                      childDataMaster)
+   else if baseTypeClass=TClassOfSymbol then
+      result := TInfoClassOf.Create(programInfo, childTypeSym, childDataPtr,
+                                     childDataMaster)
+   else if baseType is TConnectorSymbol then
+      result := TInfoData.Create(programInfo, childTypeSym, childDataPtr,
                                     ChildDataMaster)
+   else if baseType is TInterfaceSymbol then
+      Result := TInfoInterfaceObj.Create(ProgramInfo, ChildTypeSym, childDataPtr,
+                                     ChildDataMaster)
    else Assert(False); // Shouldn't be ever executed
 end;
 
@@ -565,6 +587,22 @@ begin
       end;
    end;
    Result:=inherited GetScriptObj;
+end;
+
+// GetScriptDynArray
+//
+function TInfoData.GetScriptDynArray: IScriptDynArray;
+var
+   v : Variant;
+begin
+   if FTypeSym.Size=1 then begin
+      v:=GetValue;
+      if VarType(v)=varUnknown then begin
+         Result:=IScriptDynArray(IUnknown(v));
+         Exit;
+      end;
+   end;
+   Result:=inherited GetScriptDynArray;
 end;
 
 function TInfoData.GetValue : Variant;
@@ -1201,14 +1239,9 @@ end;
 
 // SelfDynArray
 //
-function TInfoDynamicArrayBase.SelfDynArray : TScriptDynamicArray;
-var
-   obj : IScriptObj;
+function TInfoDynamicArrayBase.SelfDynArray : IScriptDynArray;
 begin
-   obj:=IScriptObj(FDataPtr.AsInterface[0]);
-   if obj<>nil then
-      Result:=obj.GetSelf as TScriptDynamicArray
-   else Result:=nil;
+   Result:=IScriptDynArray(FDataPtr.AsInterface[0]);
 end;
 
 // ------------------
@@ -1262,7 +1295,7 @@ var
    x : Integer;
    elemTyp : TSymbol;
    elemOff : Integer;
-   dynArray : TScriptDynamicArray;
+   dynArray : IScriptDynArray;
    p : PVarData;
    locData : IDataContext;
 begin
@@ -1290,7 +1323,7 @@ begin
          p:=PVarData(dynArray.AsPVariant(elemOff));
          if p.VType<>varUnknown then
             raise Exception.Create(RTE_TooManyIndices);
-         dynArray:=IScriptObj(p.VUnknown).GetSelf as TScriptDynamicArray;
+         dynArray:=IScriptDynArray(p.VUnknown);
       end;
    end;
 
@@ -1321,28 +1354,29 @@ end;
 // GetData
 //
 function TInfoDynamicArray.GetData : TData;
-var
-   dynArray : TScriptDynamicArray;
 begin
-   dynArray:=SelfDynArray;
-   Result:=dynArray.AsData;
+   Result:=SelfDynArray.AsData;
 end;
 
 // SetData
 //
 procedure TInfoDynamicArray.SetData(const Value: TData);
-var
-   dynArray : TScriptDynamicArray;
 begin
-   dynArray:=SelfDynArray;
-   dynArray.ReplaceData(value);
+   SelfDynArray.ReplaceData(value);
 end;
 
 // GetScriptObj
 //
 function TInfoDynamicArray.GetScriptObj : IScriptObj;
 begin
-   Result:=IScriptObj(FDataPtr.AsInterface[0]);
+   Result:=(FDataPtr.AsInterface[0] as IScriptObj);
+end;
+
+// GetScriptDynArray
+//
+function TInfoDynamicArray.GetScriptDynArray: IScriptDynArray;
+begin
+   Result:=IScriptDynArray(FDataPtr.AsInterface[0]);
 end;
 
 // ------------------
@@ -1397,7 +1431,7 @@ var
    locData : IDataContext;
 begin
   SetLength(FData, TypeSym.Size);
-  VarCopy(FData[0], Value);
+  VarCopySafe(FData[0], Value);
   ProgramInfo.Execution.DataContext_Create(FData, 0, locData);
   inherited Create(ProgramInfo, TypeSym, locData);
 end;
@@ -1577,7 +1611,7 @@ var
   resultData: TData;
   locData : IDataContext;
 begin
-  expr := TConnectorCallExpr.Create(FExec.Prog, cNullPos, FName,
+  expr := TConnectorCallExpr.Create(cNullPos, FName,
     TConstExpr.Create(FExec.Prog, FExec.Prog.TypVariant, FDataPtr[0]));
 
   try

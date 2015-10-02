@@ -38,6 +38,8 @@ type
          procedure EvaluateOutsideOfExec;
          procedure EvaluateContextTest;
          procedure EvaluateLocalVar;
+         procedure EvaluateBlockVar;
+         procedure EvaluateAfterBlock;
 
          procedure ExecutableLines;
 
@@ -47,6 +49,12 @@ type
 
          procedure ExceptionNotification;
    end;
+
+   TDebuggerOptimizedTests = class (TDebuggerTests)
+      public
+         procedure SetUp; override;
+   end;
+
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -305,6 +313,75 @@ begin
    end;
 end;
 
+// EvaluateBlockVar
+//
+procedure TDebuggerTests.EvaluateBlockVar;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'begin'#13#10
+                           +'var i := 123;'#13#10
+                           +'Print(i);'#13#10
+                           +'end');
+   try
+      exec:=prog.CreateNewExecution;
+      try
+         FDebugEvalExpr:='i';
+
+         FDebugEvalAtLine:=3;
+         FDebugLastEvalResult:='';
+         FDebugger.BeginDebug(exec);
+         try
+            CheckEquals('123', FDebugLastEvalResult, 'i at line 3');
+         finally
+            FDebugger.EndDebug;
+         end;
+      finally
+         exec:=nil;
+      end;
+   finally
+      prog:=nil;
+   end;
+end;
+
+// EvaluateAfterBlock
+//
+procedure TDebuggerTests.EvaluateAfterBlock;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   FCompiler.Config.CompilerOptions := FCompiler.Config.CompilerOptions + [coOptimize];
+   prog:=FCompiler.Compile( 'var a := 0;'#13#10
+                           +'var b := 0;'#13#10
+                           +'repeat'#13#10
+                           +'   begin'#13#10
+                           +'      var x :=0;'#13#10
+                           +'   end'#13#10
+                           +'until  (a=b) ;');
+   try
+      exec:=prog.CreateNewExecution;
+      try
+         FDebugEvalExpr:='a';
+
+         FDebugEvalAtLine:=7;
+         FDebugLastEvalResult:='';
+         FDebugger.BeginDebug(exec);
+         try
+            CheckEquals('0', FDebugLastEvalResult, 'a at line 7');
+         finally
+            FDebugger.EndDebug;
+         end;
+      finally
+         exec:=nil;
+      end;
+   finally
+      FCompiler.Config.CompilerOptions := FCompiler.Config.CompilerOptions - [coOptimize];
+      prog:=nil;
+   end;
+end;
+
 // ExecutableLines
 //
 procedure TDebuggerTests.ExecutableLines;
@@ -348,7 +425,7 @@ begin
    CheckEquals('2'#13#10, prog.Execute.Result.ToString, 'Result 1');
 
    breakpointables:=TdwsBreakpointableLines.Create(prog);
-   CheckEquals('*MainModule*: 1,3,4,5,7,', ReportBreakpointables, 'Case 1');
+   CheckEquals('*MainModule*: 1,3,5,7,', ReportBreakpointables, 'Case 1');
    breakpointables.Free;
 
    prog:=FCompiler.Compile( 'var i := 1;'#13#10
@@ -361,7 +438,7 @@ begin
    CheckEquals('', prog.Execute.Result.ToString, 'Result 2');
 
    breakpointables:=TdwsBreakpointableLines.Create(prog);
-   CheckEquals('*MainModule*: 1,3,4,5,7,', ReportBreakpointables, 'Case 2');
+   CheckEquals('*MainModule*: 1,4,5,7,', ReportBreakpointables, 'Case 2');
    breakpointables.Free;
 end;
 
@@ -465,6 +542,18 @@ begin
    CheckEquals(' [line: 4, column: 8]', FDebugLastNotificationPos.AsInfo, '4');
 end;
 
+// ------------------
+// ------------------ TDebuggerOptimizedTests ------------------
+// ------------------
+
+// SetUp
+//
+procedure TDebuggerOptimizedTests.SetUp;
+begin
+   inherited SetUp;
+   FCompiler.Config.CompilerOptions:=FCompiler.Config.CompilerOptions+[coOptimize];
+end;
+
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -474,5 +563,6 @@ initialization
 // ------------------------------------------------------------------
 
    RegisterTest('DebuggerTests', TDebuggerTests);
+   RegisterTest('DebuggerOptimizedTests', TDebuggerOptimizedTests);
 
 end.

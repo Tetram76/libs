@@ -21,6 +21,8 @@ type
          procedure IgnoreDecimalSeparator;
          procedure TokenizerSpecials;
          procedure NoCurlyComments;
+         procedure DollarNames;
+         procedure NoBreakSpace;
    end;
 
 // ------------------------------------------------------------------
@@ -116,7 +118,7 @@ var
    t : TTokenizer;
 begin
    FMsgs.Clear;
-   FSourceFile.Code:='@ @= %= ^ ^= $( ? | || & &&';
+   FSourceFile.Code:='@ @= %= ^ ^= $( ? ?? ?. | || & && ~ ~=';
    rules:=TPascalTokenizerStateRules.Create;
    t:=rules.CreateTokenizer(FMsgs);
    try
@@ -130,10 +132,14 @@ begin
       CheckTrue(t.TestDelete(ttDOLLAR), '$');
       CheckTrue(t.TestDelete(ttBLEFT), '(');
       CheckTrue(t.TestDelete(ttQUESTION), '?');
+      CheckTrue(t.TestDelete(ttQUESTIONQUESTION), '??');
+      CheckTrue(t.TestDelete(ttQUESTIONDOT), '?.');
       CheckTrue(t.TestDelete(ttPIPE), '|');
       CheckTrue(t.TestDelete(ttPIPEPIPE), '||');
       CheckTrue(t.TestDelete(ttAMP), '&');
       CheckTrue(t.TestDelete(ttAMPAMP), '&&');
+      CheckTrue(t.TestDelete(ttTILDE), '~');
+      CheckTrue(t.TestDelete(ttTILDE_ASSIGN), '~=');
 
       CheckTrue(t.TestAny([ttNAME])=ttNone, 'Any at end');
       CheckTrue(t.TestDeleteAny([ttNAME])=ttNone, 'DeleteAny at end');
@@ -171,6 +177,73 @@ begin
 
       t.BeginSourceFile(FSourceFile);
       CheckFalse(t.HasTokens, 'skip curly comment');
+      t.EndSourceFile;
+   finally
+      t.Free;
+      rules.Free;
+   end;
+end;
+
+// DollarNames
+//
+procedure TTokenizerTests.DollarNames;
+var
+   rules : TPascalTokenizerStateRules;
+   t : TTokenizer;
+begin
+   FSourceFile.Code:='$a a$ $a$';
+   rules:=TPascalTokenizerStateRules.Create;
+   t:=rules.CreateTokenizer(FMsgs);
+   try
+      CheckFalse(rules.DollarNames, 'dollar names by default');
+
+      rules.DollarNames:=True;
+      CheckTrue(rules.DollarNames, 'dollar names set');
+
+      t.BeginSourceFile(FSourceFile);
+      CheckTrue(t.TestName, '$a');
+      CheckEquals(t.GetToken.AsString, '$a');
+      t.KillToken;
+
+      CheckTrue(t.TestName, 'a$');
+      CheckEquals(t.GetToken.AsString, 'a$');
+      t.KillToken;
+
+      CheckTrue(t.TestName, '$a$');
+      CheckEquals(t.GetToken.AsString, '$a$');
+      t.KillToken;
+
+      t.EndSourceFile;
+
+      rules.DollarNames:=False;
+      CheckFalse(rules.DollarNames, 'dollar names set');
+   finally
+      t.Free;
+      rules.Free;
+   end;
+end;
+
+// NoBreakSpace
+//
+procedure TTokenizerTests.NoBreakSpace;
+var
+   rules : TPascalTokenizerStateRules;
+   t : TTokenizer;
+begin
+   FSourceFile.Code:='" "'#$00A0'"'#$00A0'"';
+   rules:=TPascalTokenizerStateRules.Create;
+   t:=rules.CreateTokenizer(FMsgs);
+   try
+      t.BeginSourceFile(FSourceFile);
+
+      CheckTrue(t.Test(ttStrVal), '1st string');
+      CheckEquals(' ', t.GetToken.AsString, '1st string value');
+      t.KillToken;
+
+      CheckTrue(t.Test(ttStrVal), '2nd string');
+      CheckEquals(#$00A0, t.GetToken.AsString, '2nd string value');
+      t.KillToken;
+
       t.EndSourceFile;
    finally
       t.Free;

@@ -72,6 +72,7 @@ type
          function HasIndex(const propName : UnicodeString; const params : TConnectorParamArray;
                            var typSym : TTypeSymbol; isWrite : Boolean) : IConnectorCall;
          function HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
+         function HasCast(typSym: TTypeSymbol) : IConnectorCast;
 
       public
          constructor Create(table : TSystemSymbolTable);
@@ -176,6 +177,7 @@ type
       public
          function IsCompatible(typSym : TTypeSymbol) : Boolean; override;
          function CreateAssignExpr(prog : TdwsProgram; const aScriptPos: TScriptPos;
+                                   exec : TdwsExecution;
                                    left : TDataExpr; right : TTypedExpr) : TProgramExpr; override;
    end;
 
@@ -268,7 +270,7 @@ const
    SYS_JSON_NEWARRAY = 'NewArray';
 
 type
-   TBoxedJSONValue = class (TInterfacedSelfObject, IBoxedJSONValue, IUnknown)
+   TBoxedJSONValue = class (TInterfacedSelfObject, IBoxedJSONValue, ICoalesceable, IUnknown)
       FValue : TdwsJSONValue;
 
       constructor Create(wrapped : TdwsJSONValue);
@@ -279,15 +281,18 @@ type
       function Value : TdwsJSONValue;
       function ToString : UnicodeString; override;
 
+      function IsFalsey : Boolean;
+
       class procedure Allocate(wrapped : TdwsJSONValue; var v : Variant); static;
       class procedure AllocateOrGetImmediate(wrapped : TdwsJSONValue; var v : Variant); static;
 
       class function UnBox(const v : Variant) : TdwsJSONValue; static;
    end;
 
-   TBoxedNilJSONValue = class (TInterfacedSelfObject, IBoxedJSONValue)
+   TBoxedNilJSONValue = class (TInterfacedSelfObject, IBoxedJSONValue, ICoalesceable)
       function Value : TdwsJSONValue;
       function ToString : UnicodeString; override;
+      function IsFalsey : Boolean;
    end;
 
 var
@@ -328,7 +333,16 @@ end;
 //
 function TBoxedJSONValue.ToString : UnicodeString;
 begin
-   Result:=FValue.ToString;
+   if FValue.ValueType=jvtString then
+      Result:=FValue.AsString
+   else Result:=FValue.ToString;
+end;
+
+// IsFalsey
+//
+function TBoxedJSONValue.IsFalsey : Boolean;
+begin
+   Result:=FValue.IsFalsey;
 end;
 
 // Allocate
@@ -392,6 +406,13 @@ end;
 function TBoxedNilJSONValue.ToString;
 begin
    Result:='';
+end;
+
+// IsFalsey
+//
+function TBoxedNilJSONValue.IsFalsey : Boolean;
+begin
+   Result:=True;
 end;
 
 // ------------------
@@ -627,6 +648,13 @@ end;
 // HasEnumerator
 //
 function TdwsJSONConnectorType.HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
+begin
+   Result:=nil;
+end;
+
+// HasCast
+//
+function TdwsJSONConnectorType.HasCast(typSym: TTypeSymbol) : IConnectorCast;
 begin
    Result:=nil;
 end;
@@ -1030,6 +1058,7 @@ end;
 // CreateAssignExpr
 //
 function TJSONConnectorSymbol.CreateAssignExpr(prog : TdwsProgram; const aScriptPos: TScriptPos;
+                                               exec : TdwsExecution;
                                                left : TDataExpr; right : TTypedExpr) : TProgramExpr;
 var
    rightTyp : TTypeSymbol;
@@ -1041,11 +1070,13 @@ begin
 
    rightTypClass:=rightTyp.ClassType;
    if rightTypClass=TJSONConnectorSymbol then
-      Result:=TAssignExpr.Create(prog, aScriptPos, left, right)
+      Result:=TAssignExpr.Create(prog, aScriptPos, exec, left, right)
    else if rightTypClass.InheritsFrom(TBaseSymbol) then
-      Result:=TAssignBoxJSONExpr.Create(prog, aScriptPos, left, right);
+      Result:=TAssignBoxJSONExpr.Create(prog, aScriptPos, exec, left, right);
 
    if Result=nil then begin
+      prog.CompileMsgs.AddCompilerErrorFmt(aScriptPos, CPE_AssignIncompatibleTypes,
+                                           [right.Typ.Caption, left.Typ.Caption]);
       left.Free;
       right.Free;
    end;
@@ -1092,7 +1123,7 @@ begin
       tokenizer.ParseIntegerArray(values);
 
       newArray:=TScriptDynamicArray.CreateNew(info.Execution.Prog.TypInteger);
-      Info.ResultAsVariant:=IScriptObj(newArray);
+      Info.ResultAsVariant:=IScriptDynArray(newArray);
       newArray.ArrayLength:=values.Count;
       newPData:=newArray.AsPData;
 
@@ -1127,7 +1158,7 @@ begin
       tokenizer.ParseNumberArray(values);
 
       newArray:=TScriptDynamicArray.CreateNew(info.Execution.Prog.TypInteger);
-      Info.ResultAsVariant:=IScriptObj(newArray);
+      Info.ResultAsVariant:=IScriptDynArray(newArray);
       newArray.ArrayLength:=values.Count;
       newPData:=newArray.AsPData;
 
@@ -1162,7 +1193,7 @@ begin
       tokenizer.ParseStringArray(values);
 
       newArray:=TScriptDynamicArray.CreateNew(info.Execution.Prog.TypInteger);
-      Info.ResultAsVariant:=IScriptObj(newArray);
+      Info.ResultAsVariant:=IScriptDynArray(newArray);
       newArray.ArrayLength:=values.Count;
       newPData:=newArray.AsPData;
 
@@ -1251,9 +1282,9 @@ class procedure TJSONStringifyMethod.StringifyVariant(exec : TdwsExecution; writ
 var
    unk : IUnknown;
    getSelf : IGetSelf;
+   selfObj : TObject;
    boxedJSON : IBoxedJSONValue;
    scriptObj : IScriptObj;
-   scriptObjSelf : TObject;
    p : PVarData;
 begin
    p:=PVarData(@v);
@@ -1264,25 +1295,40 @@ begin
          writer.WriteNumber(p^.VDouble);
       varBoolean :
          writer.WriteBoolean(p^.VBoolean);
+      varNull :
+         writer.WriteNull;
       varUnknown : begin
          unk:=IUnknown(p^.VUnknown);
          if unk=nil then
             writer.WriteNull
          else if unk.QueryInterface(IBoxedJSONValue, boxedJSON)=0 then begin
+
             if boxedJSON.Value<>nil then
                boxedJSON.Value.WriteTo(writer)
             else writer.WriteString('Undefined');
+
          end else begin
-            if unk.QueryInterface(IScriptObj, scriptObj)=0 then begin
-               scriptObjSelf:=scriptObj.GetSelf;
-               if scriptObjSelf is TScriptDynamicArray then
-                  StringifyDynamicArray(exec, writer, TScriptDynamicArray(scriptObjSelf))
-               else StringifyClass(exec, writer, scriptObj.ClassSym, scriptObj);
-            end else begin
-               if unk.QueryInterface(IGetSelf, getSelf)=0 then
-                  writer.WriteString(getSelf.ToString)
-               else writer.WriteString('IUnknown');
-            end;
+
+            if unk.QueryInterface(IGetSelf, getSelf)=0 then begin
+
+               selfObj:=getSelf.GetSelf;
+               if selfObj is TScriptObjInstance then begin
+
+                  scriptObj:=TScriptObjInstance(selfObj);
+                  StringifyClass(exec, writer, scriptObj.ClassSym, scriptObj);
+
+               end else if selfObj is TScriptDynamicArray then begin
+
+                  StringifyDynamicArray(exec, writer, TScriptDynamicArray(selfObj))
+
+               end else if selfObj<>nil then begin
+
+                  writer.WriteString(selfObj.ToString)
+
+               end else writer.WriteString('null');
+
+            end else writer.WriteString('IUnknown');
+
          end;
       end;
    else
@@ -1301,7 +1347,7 @@ begin
    if ct.InheritsFrom(TBaseSymbol) then
       StringifyVariant(exec, writer, dataPtr[0])
    else if ct=TDynamicArraySymbol then
-      StringifyDynamicArray(exec, writer, IScriptObj(dataPtr.AsInterface[0]).GetSelf as TScriptDynamicArray)
+      StringifyDynamicArray(exec, writer, IScriptDynArray(dataPtr.AsInterface[0]).GetSelf as TScriptDynamicArray)
    else if ct.InheritsFrom(TStaticArraySymbol) then
       StringifyArray(exec, writer, TStaticArraySymbol(sym).Typ, dataPtr, TStaticArraySymbol(sym).ElementCount)
    else if ct=TRecordSymbol then

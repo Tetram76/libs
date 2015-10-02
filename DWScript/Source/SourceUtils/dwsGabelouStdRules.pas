@@ -149,10 +149,15 @@ end;
 // EvaluateSymbol
 //
 procedure TGR_PascalCaseFunctions.EvaluateSymbol(const aSymbolList : TSymbolPositionList; msgs : TdwsMessageList);
+var
+   funcSym : TFuncSymbol;
 begin
-   if aSymbolList.Symbol.AsFuncSymbol=nil then Exit;
+   funcSym:=aSymbolList.Symbol.AsFuncSymbol;
+   if funcSym=nil then Exit;
 
-   if TCharacter.IsLower(aSymbolList.Symbol.Name[1]) then
+   if funcSym.IsExport then Exit;
+
+   if TCharacter.IsLower(funcSym.Name[1]) then
       TGabelouMessage.CreateOnSymbolPosList(msgs, aSymbolList, Description);
 end;
 
@@ -216,11 +221,16 @@ end;
 // EvaluateSymbol
 //
 procedure TGR_PrefixedClassVariables.EvaluateSymbol(const aSymbolList : TSymbolPositionList; msgs : TdwsMessageList);
+var
+   sym : TClassVarSymbol;
 begin
    if aSymbolList.Symbol.ClassType<>TClassVarSymbol then Exit;
 
-   if    (Length(aSymbolList.Symbol.Name)<2)
-      or (aSymbolList.Symbol.Name[1]<>'v') or TCharacter.IsLower(aSymbolList.Symbol.Name[2]) then
+   sym:=TClassVarSymbol(aSymbolList.Symbol);
+   if sym.OwnerSymbol.IsStatic then Exit;
+
+   if    (Length(sym.Name)<2)
+      or (sym.Name[1]<>'v') or TCharacter.IsLower(sym.Name[2]) then
       TGabelouMessage.CreateOnSymbolPosList(msgs, aSymbolList, Description);
 end;
 
@@ -239,10 +249,15 @@ end;
 // EvaluateSymbol
 //
 procedure TGR_PrefixedFields.EvaluateSymbol(const aSymbolList : TSymbolPositionList; msgs : TdwsMessageList);
+var
+   fld : TFieldSymbol;
 begin
    if aSymbolList.Symbol.ClassType<>TFieldSymbol then Exit;
 
-   if not (TFieldSymbol(aSymbolList.Symbol).Visibility in [cvPublic, cvPublished]) then begin
+   fld:=TFieldSymbol(aSymbolList.Symbol);
+   if fld.StructSymbol.IsExternal or (fld.StructSymbol.Name='') then Exit;
+
+   if not (fld.Visibility in [cvPublic, cvPublished]) then begin
       if    (Length(aSymbolList.Symbol.Name)<2)
          or (aSymbolList.Symbol.Name[1]<>'F') or TCharacter.IsLower(aSymbolList.Symbol.Name[2]) then
          TGabelouMessage.CreateOnSymbolPosList(msgs, aSymbolList, Description);

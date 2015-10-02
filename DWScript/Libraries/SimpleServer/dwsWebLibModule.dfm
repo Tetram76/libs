@@ -325,6 +325,17 @@ object dwsWebLib: TdwsWebLib
             Kind = mkClassProcedure
           end
           item
+            Name = 'SetContentJSON'
+            Parameters = <
+              item
+                Name = 'j'
+                DataType = 'JSONVariant'
+              end>
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesWebResponseMethodsSetContentJSONEval
+            Kind = mkClassProcedure
+          end
+          item
             Name = 'RequestAuthentication'
             Parameters = <
               item
@@ -529,6 +540,88 @@ object dwsWebLib: TdwsWebLib
             Attributes = [maStatic]
             OnEval = dwsWebClassesHttpQueryMethodsPostDataEval
             Kind = mkClassFunction
+          end
+          item
+            Name = 'PutData'
+            Parameters = <
+              item
+                Name = 'url'
+                DataType = 'String'
+              end
+              item
+                Name = 'data'
+                DataType = 'String'
+              end
+              item
+                Name = 'dataType'
+                DataType = 'String'
+              end>
+            ResultType = 'Integer'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsPutDataEval
+            Kind = mkClassFunction
+          end
+          item
+            Name = 'Delete'
+            Parameters = <
+              item
+                Name = 'url'
+                DataType = 'String'
+              end>
+            ResultType = 'Integer'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsDeleteEval
+            Kind = mkClassFunction
+          end
+          item
+            Name = 'SetCredentials'
+            Parameters = <
+              item
+                Name = 'authScheme'
+                DataType = 'WebAuthentication'
+              end
+              item
+                Name = 'userName'
+                DataType = 'String'
+              end
+              item
+                Name = 'password'
+                DataType = 'String'
+              end>
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsSetCredentialsEval
+            Kind = mkClassProcedure
+          end
+          item
+            Name = 'ClearCredentials'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsClearCredentialsEval
+            Kind = mkClassProcedure
+          end
+          item
+            Name = 'SetIgnoreSSLCertificateErrors'
+            Parameters = <
+              item
+                Name = 'val'
+                DataType = 'Boolean'
+              end>
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsSetIgnoreSSLCertificateErrorsEval
+            Kind = mkClassProcedure
+          end
+          item
+            Name = 'GetIgnoreSSLCertificateErrors'
+            ResultType = 'Boolean'
+            Attributes = [maStatic]
+            OnEval = dwsWebClassesHttpQueryMethodsGetIgnoreSSLCertificateErrorsEval
+            Kind = mkClassFunction
+          end>
+        Properties = <
+          item
+            Name = 'IgnoreSSLCertificateErrors'
+            DataType = 'Boolean'
+            ReadAccess = 'GetIgnoreSSLCertificateErrors'
+            WriteAccess = 'SetIgnoreSSLCertificateErrors'
           end>
       end>
     Enumerations = <
@@ -555,6 +648,9 @@ object dwsWebLib: TdwsWebLib
           end
           item
             Name = 'Kerberos'
+          end
+          item
+            Name = 'Authorization'
           end>
         Style = enumScoped
       end
@@ -600,6 +696,16 @@ object dwsWebLib: TdwsWebLib
           end>
         ResultType = 'String'
         OnFastEval = dwsWebFunctionsDeflateDecompressionFastEval
+      end
+      item
+        Name = 'GetHostByAddr'
+        Parameters = <
+          item
+            Name = 'addr'
+            DataType = 'String'
+          end>
+        ResultType = 'String'
+        OnEval = dwsWebFunctionsGetHostByAddrEval
       end>
     UnitName = 'System.Net'
     StaticSymbols = True

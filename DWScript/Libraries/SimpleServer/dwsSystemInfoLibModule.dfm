@@ -141,6 +141,13 @@ object dwsSystemInfoLibModule: TdwsSystemInfoLibModule
             Attributes = [maStatic]
             OnEval = dwsSystemInfoClassesApplicationInfoMethodsSetEnvironmentVariableEval
             Kind = mkClassProcedure
+          end
+          item
+            Name = 'MemoryCounters'
+            ResultType = 'ProcessMemoryCounters'
+            Attributes = [maStatic]
+            OnEval = dwsSystemInfoClassesApplicationInfoMethodsMemoryCountersEval
+            Kind = mkClassFunction
           end>
         Properties = <
           item
@@ -148,6 +155,11 @@ object dwsSystemInfoLibModule: TdwsSystemInfoLibModule
             DataType = 'String'
             ReadAccess = 'GetEnvironmentVariable'
             WriteAccess = 'SetEnvironmentVariable'
+            Parameters = <
+              item
+                Name = 'name'
+                DataType = 'String'
+              end>
           end>
       end
       item
@@ -193,6 +205,27 @@ object dwsSystemInfoLibModule: TdwsSystemInfoLibModule
           end
           item
             Name = 'Available'
+            DataType = 'Integer'
+          end>
+        Properties = <>
+      end
+      item
+        Name = 'ProcessMemoryCounters'
+        Members = <
+          item
+            Name = 'WorkingSetSize'
+            DataType = 'Integer'
+          end
+          item
+            Name = 'PeakWorkingSetSize'
+            DataType = 'Integer'
+          end
+          item
+            Name = 'PagefileUsage'
+            DataType = 'Integer'
+          end
+          item
+            Name = 'PeakPagefileUsage'
             DataType = 'Integer'
           end>
         Properties = <>

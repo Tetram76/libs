@@ -33,6 +33,7 @@ type
    TSystemSymbolTable = class;
    TUnitSymbolTable = class;
    TUnitImplementationTable = class;
+   TUnitMainSymbol = class;
    TUnitMainSymbols = class;
    TUnitSymbol = class;
 
@@ -40,6 +41,8 @@ type
    TSourceSymbol = class (TSymbol)
       public
    end;
+
+   TUnitMainSymbolArray = array of TUnitMainSymbol;
 
    // Invisible symbol for units (e. g. for TdwsUnit)
    TUnitMainSymbol = class sealed (TSourceSymbol)
@@ -52,6 +55,7 @@ type
          FInitializationExpr : TExprBase;
          FFinalizationExpr : TExprBase;
          FDeprecatedMessage : UnicodeString;
+         FDependencies : TUnitMainSymbolArray;
 
       public
          constructor Create(const name : UnicodeString; table : TUnitSymbolTable;
@@ -70,6 +74,8 @@ type
 
          function HasSymbol(sym : TSymbol) : Boolean;
 
+         procedure AddDependency(ums : TUnitMainSymbol);
+
          property Table : TUnitSymbolTable read FTable;
 
          property InterfaceTable : TSymbolTable read FInterfaceTable;
@@ -79,6 +85,7 @@ type
          property InitializationExpr : TExprBase read FInitializationExpr write FInitializationExpr;
          property FinalizationExpr : TExprBase read FFinalizationExpr write FFinalizationExpr;
          property DeprecatedMessage : UnicodeString read FDeprecatedMessage write FDeprecatedMessage;
+         property Dependencies : TUnitMainSymbolArray read FDependencies;
    end;
 
    // list of unit main symbols (one per prog)
@@ -91,6 +98,9 @@ type
          procedure Initialize(const msgs : TdwsCompileMessageList);
 
          function Find(const unitName : UnicodeString) : TUnitMainSymbol;
+
+         procedure CollectPublishedSymbols(symbolList : TSimpleSymbolList;
+                                           ignoreImplementationPublished : Boolean);
    end;
 
    // TUnitSymbolTable
@@ -583,6 +593,17 @@ begin
    else Result:=Table.HasSymbol(sym) or ImplementationTable.HasSymbol(sym);
 end;
 
+// AddDependency
+//
+procedure TUnitMainSymbol.AddDependency(ums : TUnitMainSymbol);
+var
+   n : Integer;
+begin
+   n:=Length(FDependencies);
+   SetLength(FDependencies, n+1);
+   FDependencies[n]:=ums;
+end;
+
 // ReferenceInSymbolTable
 //
 function TUnitMainSymbol.ReferenceInSymbolTable(aTable : TSymbolTable; implicit : Boolean) : TUnitSymbol;
@@ -643,6 +664,23 @@ begin
          Exit(Result);
    end;
    Result:=nil;
+end;
+
+// CollectPublishedSymbols
+//
+procedure TUnitMainSymbols.CollectPublishedSymbols(symbolList : TSimpleSymbolList;
+                                                   ignoreImplementationPublished : Boolean);
+var
+   i : Integer;
+   ums : TUnitMainSymbol;
+begin
+   for i:=0 to Count-1 do begin
+      ums:=items[i];
+      if ums.Table<>nil then
+         ums.Table.CollectPublishedSymbols(symbolList);
+      if (not ignoreImplementationPublished) and (ums.ImplementationTable<>nil) then
+         ums.ImplementationTable.CollectPublishedSymbols(symbolList);
+   end;
 end;
 
 // Initialize

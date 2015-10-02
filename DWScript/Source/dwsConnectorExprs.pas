@@ -46,7 +46,7 @@ type
          procedure SetBaseExpr(expr : TTypedExpr);
 
       public
-         constructor Create(aProg: TdwsProgram; const aScriptPos: TScriptPos;
+         constructor Create(const aScriptPos: TScriptPos;
                             const aName: UnicodeString; aBaseExpr: TTypedExpr);
          destructor Destroy; override;
 
@@ -72,11 +72,11 @@ type
          procedure FastEvalAsVariant(exec : TdwsExecution; var result : Variant);
 
       public
-         constructor Create(aProg: TdwsProgram; const aScriptPos: TScriptPos; const aName: UnicodeString;
+         constructor Create(const aScriptPos: TScriptPos; const aName: UnicodeString;
                             aBaseExpr: TTypedExpr; isWrite: Boolean = True; isIndex: Boolean = False);
 
          function AssignConnectorSym(prog : TdwsProgram; const connectorType : IConnectorType) : Boolean;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
          function IsWritable : Boolean; override;
 
          procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
@@ -129,7 +129,7 @@ type
 
       public
          procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
 
          property ConnectorMember : IConnectorFastMember read FConnectorMember write FConnectorMember;
    end;
@@ -155,7 +155,7 @@ type
          destructor Destroy; override;
 
          function  ScriptPos : TScriptPos; override;
-         function  Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
 
          property Name : UnicodeString read FName write FName;
          property BaseExpr : TTypedExpr read FBaseExpr write FBaseExpr;
@@ -196,7 +196,7 @@ type
       public
          constructor Create(const scriptPos : TScriptPos;
                             const enumerator : IConnectorEnumerator;
-                            loopVarExpr, inExpr : TTypedExpr; doExpr : TProgramExpr);
+                            loopVarExpr, inExpr : TTypedExpr);
          destructor Destroy; override;
 
          procedure EvalNoResult(exec : TdwsExecution); override;
@@ -205,6 +205,18 @@ type
          property InExpr : TTypedExpr read FInExpr write FInExpr;
          property LoopVarExpr : TTypedExpr read FLoopVarExpr write FLoopVarExpr;
          property DoExpr : TProgramExpr read FDoExpr write FDoExpr;
+   end;
+
+   TConnectorCastExpr = class sealed (TUnaryOpExpr)
+      private
+         FConnectorCast : IConnectorCast;
+
+      public
+         constructor CreateCast(prog : TdwsProgram; expr : TTypedExpr; const cast : IConnectorCast);
+
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
+
+         property ConnectorCast : IConnectorCast read FConnectorCast write FConnectorCast;
    end;
 
 // ------------------------------------------------------------------
@@ -221,10 +233,10 @@ implementation
 
 // Create
 //
-constructor TBaseConnectorCallExpr.Create(aProg: TdwsProgram; const aScriptPos: TScriptPos;
+constructor TBaseConnectorCallExpr.Create(const aScriptPos: TScriptPos;
                                           const aName: UnicodeString; aBaseExpr: TTypedExpr);
 begin
-   inherited Create(aProg, aScriptPos, nil);
+   inherited Create(aScriptPos, nil);
    FName:=aName;
    FArguments.Add(aBaseExpr);
 end;
@@ -278,10 +290,10 @@ end;
 
 // Create
 //
-constructor TConnectorCallExpr.Create(aProg: TdwsProgram; const aScriptPos: TScriptPos;
+constructor TConnectorCallExpr.Create(const aScriptPos: TScriptPos;
   const aName: UnicodeString; aBaseExpr: TTypedExpr; isWrite: Boolean; isIndex: Boolean);
 begin
-   inherited Create(aProg, aScriptPos, aName, aBaseExpr);
+   inherited Create(aScriptPos, aName, aBaseExpr);
    if isWrite then
       Include(FFlags, ccfIsInstruction);
    FIsWritable := isWrite;
@@ -358,9 +370,9 @@ begin
    end;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TConnectorCallExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TConnectorCallExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    if FConnectorFastCall<>nil then
       FastEvalAsVariant(exec, Result)
@@ -378,7 +390,7 @@ var
       i : Integer;
       arg : TTypedExpr;
       argTyp : TTypeSymbol;
-      obj : IScriptObj;
+      dyn : IScriptDynArray;
       sourcePtr : IDataContext;
    begin
       for i:=0 to FArguments.Count-2 do begin
@@ -387,8 +399,8 @@ var
          SetLength(callArgs[i], argTyp.Size);
          if argTyp.Size=1 then begin
             if argTyp.ClassType=TDynamicArraySymbol then begin
-               arg.EvalAsScriptObj(exec, obj);
-               callArgs[i][0]:=VarArrayOf(TScriptDynamicArray(obj.GetSelf).AsData);
+               arg.EvalAsScriptDynArray(exec, dyn);
+               callArgs[i][0]:=VarArrayOf(dyn.AsPData^);
             end else arg.EvalAsVariant(exec, callArgs[i][0]);
          end else begin
             sourcePtr:=TDataExpr(arg).DataPtr[exec];
@@ -459,7 +471,7 @@ begin
 
    if Length(resultData)>0 then
       Result := resultData[0]
-   else VarClear(Result);
+   else VarClearSafe(Result);
 end;
 
 // FastEvalAsVariant
@@ -487,7 +499,7 @@ var
    data : TData;
 begin
    SetLength(data, 1);
-   data[0]:=Eval(exec);
+   EvalAsVariant(exec, data[0]);
    result:=exec.Stack.CreateDataContext(data, 0);
 end;
 
@@ -537,14 +549,14 @@ begin
 
    if Assigned(connFastMember) then begin
 
-      Result := TConnectorFastReadExpr.Create(aProg, aScriptPos, typSym);
+      Result := TConnectorFastReadExpr.Create(aScriptPos, typSym);
       TConnectorFastReadExpr(Result).ConnectorMember := connFastMember;
 
    end else begin
 
       connMember.QueryInterface(IConnectorDataMember, connDataMember);
 
-      Result := TConnectorReadExpr.Create(aProg, aScriptPos, typSym);
+      Result := TConnectorReadExpr.Create(aScriptPos, typSym);
       TConnectorReadExpr(Result).ConnectorMember := connDataMember;
 
    end;
@@ -613,13 +625,13 @@ var
    resultData : TData;
 begin
    SetLength(resultData, 1);
-   resultData[1]:=Eval(exec);
+   EvalAsVariant(exec, resultData[1]);
    exec.DataContext_Create(resultData, 0, result);
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TConnectorFastReadExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TConnectorFastReadExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    try
       FConnectorMember.FastRead(exec, BaseExpr, Result);
@@ -706,9 +718,9 @@ begin
    Result:=FScriptPos;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TConnectorWriteMemberExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TConnectorWriteMemberExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    EvalNoResult(exec);
 end;
@@ -793,14 +805,13 @@ end;
 //
 constructor TConnectorForInExpr.Create(const scriptPos : TScriptPos;
              const enumerator : IConnectorEnumerator;
-             loopVarExpr, inExpr : TTypedExpr; doExpr : TProgramExpr);
+             loopVarExpr, inExpr : TTypedExpr);
 begin
    inherited Create(scriptPos);
    Assert(loopVarExpr is TVarExpr);
    FConnectorEnumerator:=enumerator;
    FLoopVarExpr:=loopVarExpr;
    FInExpr:=inExpr;
-   FDoExpr:=doExpr;
 end;
 
 // Destroy
@@ -841,6 +852,7 @@ var
    enumData : IUnknown;
 begin
    FInExpr.EvalAsVariant(exec, base);
+   if VarIsClear(base) then Exit;
    enumData:=ConnectorEnumerator.NewEnumerator(base, nil);
    if enumData<>nil then begin
       SetLength(item, 1);
@@ -862,6 +874,28 @@ begin
          exec.DoStep(Self);
       end;
    end;
+end;
+
+// ------------------
+// ------------------ TConnectorCastExpr ------------------
+// ------------------
+
+// CreateCast
+//
+constructor TConnectorCastExpr.CreateCast(prog : TdwsProgram; expr : TTypedExpr; const cast : IConnectorCast);
+begin
+   inherited Create(prog, expr);
+   FConnectorCast:=cast;
+end;
+
+// EvalAsVariant
+//
+procedure TConnectorCastExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
+var
+   buf : Variant;
+begin
+   Expr.EvalAsVariant(exec, buf);
+   VarCopySafe(Result, FConnectorCast.CastVariant(buf));
 end;
 
 end.

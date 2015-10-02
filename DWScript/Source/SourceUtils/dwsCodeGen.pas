@@ -15,6 +15,8 @@
 {**********************************************************************}
 unit dwsCodeGen;
 
+{$I dws.inc}
+
 interface
 
 uses
@@ -71,6 +73,8 @@ type
          procedure ReserveName(const name : String); inline;
          procedure ReserveExternalName(sym : TSymbol);
 
+         function IsReserved(const name : String) : Boolean; inline;
+
          function MapSymbol(symbol : TSymbol; scope : TdwsCodeGenSymbolScope; canObfuscate : Boolean) : String;
 
          property CodeGen : TdwsCodeGen read FCodeGen;
@@ -105,7 +109,7 @@ type
    TdwsCodeGenOption = (cgoNoRangeChecks, cgoNoCheckInstantiated, cgoNoCheckLoopStep,
                         cgoNoConditions, cgoNoInlineMagics, cgoObfuscate, cgoNoSourceLocations,
                         cgoOptimizeForSize, cgoSmartLink, cgoDeVirtualize,
-                        cgoNoRTTI, cgoNoFinalizations );
+                        cgoNoRTTI, cgoNoFinalizations, cgoIgnorePublishedInImplementation );
    TdwsCodeGenOptions = set of TdwsCodeGenOption;
 
    TdwsCodeGenOutputVerbosity = (cgovNone, cgovNormal, cgovVerbose);
@@ -125,6 +129,8 @@ type
 
          property List : TStringList read FList;
    end;
+
+   TdwsCustomCodeGenEvent = function (expr : TExprBase) : TdwsExprCodeGen of object;
 
    TdwsCodeGen = class
       private
@@ -166,6 +172,8 @@ type
          FTryDepth : Integer;
 
          FDataContextPool : IDataContextPool;
+
+         FOnCustomCodeGen : TdwsCustomCodeGenEvent;
 
       protected
          property SymbolDictionary : TdwsSymbolDictionary read FSymbolDictionary;
@@ -211,6 +219,8 @@ type
 
          procedure MapStructuredSymbol(structSym : TCompositeTypeSymbol; canObfuscate : Boolean);
 
+         function DoCustomCodeGen(expr : TExprBase) : TdwsExprCodeGen; virtual;
+
          property Output : TWriteOnlyBlockStream read FOutput write FOutput;
 
       public
@@ -218,7 +228,8 @@ type
          destructor Destroy; override;
 
          procedure RegisterCodeGen(expr : TExprBaseClass; codeGen : TdwsExprCodeGen);
-         function  FindCodeGen(expr : TExprBase) : TdwsExprCodeGen;
+         function  FindCodeGen(expr : TExprBase) : TdwsExprCodeGen; overload;
+         function  FindCodeGen(exprClass : TExprBaseClass) : TdwsExprCodeGen; overload;
          function  FindSymbolAtStackAddr(stackAddr, level : Integer) : TDataSymbol; deprecated;
          function  SymbolMappedName(sym : TSymbol; scope : TdwsCodeGenSymbolScope) : String; virtual;
 
@@ -258,8 +269,8 @@ type
 
          procedure WriteIndent;
          procedure WriteIndentIfNeeded;
-         procedure Indent;
-         procedure UnIndent;
+         procedure Indent(needIndent : Boolean = True);
+         procedure UnIndent(needIndent : Boolean = True);
 
          procedure WriteString(const s : String); overload;
          procedure WriteString(const c : WideChar); overload;
@@ -308,14 +319,21 @@ type
 
          property Dependencies : TdwsCodeGenDependencies read FDependencies;
          property FlushedDependencies : TStringList read FFlushedDependencies;
+
+         property OnCustomCodeGen : TdwsCustomCodeGenEvent read FOnCustomCodeGen write FOnCustomCodeGen;
    end;
 
    TdwsExprCodeGen = class abstract
+      private
+         FOwner : TdwsCodeGen;
+
       public
          procedure CodeGen(codeGen : TdwsCodeGen; expr : TExprBase); virtual;
          procedure CodeGenNoWrap(codeGen : TdwsCodeGen; expr : TTypedExpr); virtual;
 
          class function ExprIsConstantInteger(expr : TExprBase; value : Integer) : Boolean; static;
+
+         property Owner : TdwsCodeGen read FOwner;
    end;
 
    ECodeGenException = class (Exception);
@@ -415,15 +433,26 @@ begin
    reg.Expr:=expr;
    reg.CodeGen:=codeGen;
    FCodeGenList.Add(reg);
+   codeGen.FOwner:=Self;
 end;
 
 // FindCodeGen
 //
 function TdwsCodeGen.FindCodeGen(expr : TExprBase) : TdwsExprCodeGen;
+begin
+   Result:=DoCustomCodeGen(expr);
+   if Result<>nil then Exit;
+
+   Result:=FindCodeGen(TExprBaseClass(expr.ClassType));
+end;
+
+// FindCodeGen
+//
+function TdwsCodeGen.FindCodeGen(exprClass : TExprBaseClass) : TdwsExprCodeGen;
 var
    i : Integer;
 begin
-   FTempReg.Expr:=TExprBaseClass(expr.ClassType);
+   FTempReg.Expr:=exprClass;
    if FCodeGenList.Find(FTempReg, i) then
       Result:=FCodeGenList.Items[i].CodeGen
    else Result:=nil;
@@ -463,6 +492,7 @@ var
    i : Integer;
    meth : TMethodSymbol;
    funcSym : TFuncSymbol;
+   fieldSym : TFieldSymbol;
 begin
    funcSym:=sym.AsFuncSymbol;
    if funcSym<>nil then begin
@@ -483,7 +513,8 @@ begin
       if TClassSymbol(sym).ExternalRoot<>nil then
          Exit(TClassSymbol(sym).ExternalName);
    end else if sym is TFieldSymbol then begin
-      if TFieldSymbol(sym).StructSymbol.IsExternalRooted then
+      fieldSym:=TFieldSymbol(sym);
+      if fieldSym.HasExternalName or fieldSym.StructSymbol.IsExternalRooted then
          Exit(TFieldSymbol(sym).ExternalName);
    end else if sym is TBaseSymbol then begin
       if sym.ClassType=TBaseIntegerSymbol then
@@ -531,6 +562,7 @@ begin
    FCompiledUnits.Clear;
    FMappedUnits.Clear;
 
+   FSymbolMapStack.Clear;
    FSymbolMap:=nil;
    FSymbolMaps.Clear;
    EnterScope(nil);
@@ -697,7 +729,9 @@ begin
    execSelf:=func.Executable.GetSelf;
    if not (execSelf is TdwsProcedure) then Exit;
 
-   if (func.Name<>'') and not SmartLink(func) then Exit;
+   if     (func.Name<>'')
+      and (not func.IsExport)
+      and not SmartLink(func) then Exit;
 
    proc:=TdwsProcedure(execSelf);
 
@@ -1011,6 +1045,16 @@ begin
    LeaveScopes(n);
 end;
 
+// DoCustomCodeGen
+//
+function TdwsCodeGen.DoCustomCodeGen(expr : TExprBase) : TdwsExprCodeGen;
+begin
+   if Assigned(FOnCustomCodeGen) then begin
+      Result:=FOnCustomCodeGen(expr);
+      if Result<>nil then Exit;
+   end else Result:=nil;
+end;
+
 // MapInternalSymbolNames
 //
 procedure TdwsCodeGen.MapInternalSymbolNames(progTable, systemTable : TSymbolTable);
@@ -1158,20 +1202,20 @@ end;
 
 // Indent
 //
-procedure TdwsCodeGen.Indent;
+procedure TdwsCodeGen.Indent(needIndent : Boolean = True);
 begin
    Inc(FIndent);
    FIndentString:=StringOfChar(' ', FIndent*FIndentSize);
-   FNeedIndent:=True;
+   FNeedIndent:=needIndent;
 end;
 
 // UnIndent
 //
-procedure TdwsCodeGen.UnIndent;
+procedure TdwsCodeGen.UnIndent(needIndent : Boolean = True);
 begin
    Dec(FIndent);
    FIndentString:=StringOfChar(' ', FIndent*FIndentSize);
-   FNeedIndent:=True;
+   FNeedIndent:=needIndent;
 end;
 
 // WriteString
@@ -1598,7 +1642,7 @@ begin
             funcSym:=sym.AsFuncSymbol;
             if funcSym<>nil then begin
 
-               if funcSym.IsExternal or funcSym.IsType then continue;
+               if funcSym.IsExternal or funcSym.IsType or funcSym.IsExport then continue;
                if not SmartLink(funcSym) then begin
                   if FSymbolDictionary.FindSymbolPosList(funcSym)<>nil then begin
                      RemoveReferencesInContextMap(funcSym);
@@ -2061,6 +2105,13 @@ begin
          // RaiseAlreadyDefined(sym, existing)
       end else FNames.Objects[n]:=sym;
    end;
+end;
+
+// IsReserved
+//
+function TdwsCodeGenSymbolMap.IsReserved(const name : String) : Boolean;
+begin
+   Result:=(FNames.Objects[name]<>nil);
 end;
 
 // MapSymbol

@@ -1087,14 +1087,14 @@ procedure HTTP_RESPONSE_V2.SetContent(var dataChunk : HTTP_DATA_CHUNK_INMEMORY;
    const Content, ContentType : RawByteString);
 begin
    fillchar(dataChunk, sizeof(dataChunk), 0);
-   if Content = '' then
-      exit;
-   dataChunk.DataChunkType := hctFromMemory;
-   dataChunk.pBuffer := pointer(Content);
-   dataChunk.BufferLength := length(Content);
-   EntityChunkCount := 1;
-   pEntityChunks := @dataChunk;
-   Headers.KnownHeaders[reqContentType].RawValueLength := length(ContentType);
+   if Content <> '' then begin
+      dataChunk.DataChunkType := hctFromMemory;
+      dataChunk.pBuffer := pointer(Content);
+      dataChunk.BufferLength := length(Content);
+      EntityChunkCount := 1;
+      pEntityChunks := @dataChunk;
+      Headers.KnownHeaders[reqContentType].RawValueLength := length(ContentType);
+   end;
    Headers.KnownHeaders[reqContentType].pRawValue := pointer(ContentType);
 end;
 
@@ -1104,12 +1104,15 @@ var
    knownHeader : THttpHeader;
    current : PHTTP_UNKNOWN_HEADER;
    pKnown : PHTTP_KNOWN_HEADER;
+   setCookieOnce : Boolean;
 begin
    current := @UnknownHeaders[0];
    Headers.pUnknownHeaders := current;
    Headers.UnknownHeaderCount := 0;
 
    if P=nil then Exit;
+
+   setCookieOnce := False;
 
    while True do begin
       while P^ in [#13, #10] do
@@ -1125,7 +1128,12 @@ begin
       else if IdemPChar(P, 'WWW-AUTHENTICATE:') then
          knownHeader := respWwwAuthenticate
       else if IdemPChar(P, 'SET-COOKIE:') then
-         knownHeader := respSetCookie
+         if setCookieOnce then
+            knownHeader := reqCacheControl
+         else begin
+            knownHeader := respSetCookie;
+            setCookieOnce := True;
+         end
       else if IdemPChar(P, 'UPGRADE:') then
          knownHeader := reqUpgrade
       else knownHeader := reqCacheControl; // mark not found

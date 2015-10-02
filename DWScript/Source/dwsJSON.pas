@@ -48,18 +48,26 @@ type
          constructor Create(aStream : TWriteOnlyBlockStream);
          destructor Destroy; override;
 
-         procedure BeginObject; virtual;
+         procedure BeginObject; overload; virtual;
+         procedure BeginObject(const aName : UnicodeString); overload; inline;
          procedure EndObject; virtual;
 
-         procedure BeginArray; virtual;
+         procedure BeginArray; overload; virtual;
+         procedure BeginArray(const aName : UnicodeString); overload; inline;
          procedure EndArray; virtual;
 
-         procedure WriteName(const aName : UnicodeString); virtual;
-         procedure WriteString(const str : UnicodeString);
-         procedure WriteNumber(const n : Double);
-         procedure WriteInteger(const n : Int64);
-         procedure WriteBoolean(b : Boolean);
-         procedure WriteNull;
+         function  WriteName(const aName : UnicodeString) : TdwsJSONWriter; overload; inline;
+         function  WriteName(const aName : PWideChar) : TdwsJSONWriter; overload; virtual;
+         procedure WriteString(const str : UnicodeString); overload; inline;
+         procedure WriteString(const name, str : UnicodeString); overload; inline;
+         procedure WriteString(const p : PWideChar); overload;
+         procedure WriteNumber(const n : Double); overload;
+         procedure WriteNumber(const name : UnicodeString; const n : Double); overload; inline;
+         procedure WriteInteger(const n : Int64); overload;
+         procedure WriteInteger(const name : UnicodeString; const n : Int64); overload; inline;
+         procedure WriteBoolean(b : Boolean); overload;
+         procedure WriteBoolean(const name : UnicodeString; b : Boolean); overload; inline;
+         procedure WriteNull; overload;
 
          // ISO 8601 Date Time
          procedure WriteDate(dt : TDateTime); overload;
@@ -95,7 +103,7 @@ type
          procedure BeginArray; override;
          procedure EndArray; override;
 
-         procedure WriteName(const aName : UnicodeString); override;
+         function  WriteName(const aName : PWideChar) : TdwsJSONWriter; override;
    end;
 
    TdwsJSONDuplicatesOptions = (jdoAccept, jdoOverwrite);
@@ -136,9 +144,15 @@ type
    //
    TdwsJSONValue = class (TRefCountedObject)
       private
-         FOwner : TdwsJSONValue;
+         FRawOwner : NativeUInt; // 3 low order bytes are reserved for immediates
 
       protected
+         function GetOwner : TdwsJSONValue; inline;
+         procedure SetOwner(aOwner : TdwsJSONValue); inline;
+         procedure ClearOwner; inline;
+
+         property FOwner : TdwsJSONValue read GetOwner write SetOwner;
+
          procedure DetachChild(child : TdwsJSONValue); virtual;
 
          function GetValueType : TdwsJSONValueType; virtual; abstract;
@@ -176,6 +190,8 @@ type
          function DoClone : TdwsJSONValue; virtual; abstract;
          procedure DoExtend(other : TdwsJSONValue); virtual; abstract;
 
+         function DoIsFalsey : Boolean; virtual;
+
          class procedure RaiseJSONException(const msg : UnicodeString); static;
          class procedure RaiseJSONParseError(const msg : UnicodeString; c : WideChar = #0); static;
 
@@ -198,7 +214,7 @@ type
          function ToBeautifiedString(initialTabs : Integer = 0; indentTabs : Integer = 1) : UnicodeString;
          procedure Detach;
 
-         property Owner : TdwsJSONValue read FOwner;
+         property Owner : TdwsJSONValue read GetOwner;
          property Items[const name : UnicodeString] : TdwsJSONValue read GetItem write SetItem;
          property Names[index : Integer] : UnicodeString read GetName;
          property Elements[index : Integer] : TdwsJSONValue read GetElement write SetElement;
@@ -208,6 +224,8 @@ type
          function IsImmediateValue : Boolean; inline;
          function Value : TdwsJSONImmediate; inline;
          function ValueType : TdwsJSONValueType; inline;
+
+         function IsFalsey : Boolean;
 
          property AsString : UnicodeString read GetAsString write SetAsString;
          property IsNull : Boolean read GetIsNull write SetIsNull;
@@ -232,6 +250,13 @@ type
                   property Current : TdwsJSONValue read GetCurrent;
             end;
          function GetEnumerator : TElementEnumerator;
+   end;
+
+   // does not own its elements
+   TdwsJSONValueList = class(TSimpleList<TdwsJSONValue>)
+      public
+         procedure WriteTo(writer : TdwsJSONWriter);
+         function ToString : String; override;
    end;
 
    TdwsJSONPair = record
@@ -354,9 +379,12 @@ type
    TdwsJSONImmediate = class sealed (TdwsJSONValue)
       private
          FData : Double;
-         FType : TdwsJSONValueType;
 
       protected
+         function GetType : TdwsJSONValueType; inline;
+         procedure SetType(t : TdwsJSONValueType); inline;
+         property FType : TdwsJSONValueType read GetType write SetType;
+
          procedure DoSetItem(const name : UnicodeString; const value : TdwsJSONValue); override;
          procedure DoSetElement(index : Integer; const value : TdwsJSONValue); override;
 
@@ -381,6 +409,8 @@ type
          function DoClone : TdwsJSONValue; override;
          procedure DoExtend(other : TdwsJSONValue); override;
 
+         function DoIsFalsey : Boolean; override;
+
       public
          destructor Destroy; override;
 
@@ -403,7 +433,8 @@ type
    EdwsJSONParseError = class (EdwsJSONException);
    EdwsJSONWriterError = class (EdwsJSONException);
 
-procedure WriteJavaScriptString(destStream : TWriteOnlyBlockStream; const str : UnicodeString);
+procedure WriteJavaScriptString(destStream : TWriteOnlyBlockStream; const str : UnicodeString); overload; inline;
+procedure WriteJavaScriptString(destStream : TWriteOnlyBlockStream; p : PWideChar); overload;
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -752,6 +783,13 @@ end;
 // WriteJavaScriptString
 //
 procedure WriteJavaScriptString(destStream : TWriteOnlyBlockStream; const str : UnicodeString);
+begin
+   WriteJavaScriptString(destStream, PWideChar(Pointer(str)));
+end;
+
+// WriteJavaScriptString
+//
+procedure WriteJavaScriptString(destStream : TWriteOnlyBlockStream; p : PWideChar); overload;
 
    procedure WriteUTF16(destStream : TWriteOnlyBlockStream; c : Integer);
    const
@@ -773,10 +811,8 @@ const
    cQUOTE : WideChar = '"';
 var
    c : WideChar;
-   p : PWideChar;
 begin
    destStream.Write(cQUOTE, SizeOf(WideChar));
-   p:=PWideChar(Pointer(str));
    if p<>nil then while True do begin
       c:=p^;
       case Ord(c) of
@@ -795,6 +831,8 @@ begin
             destStream.WriteString('\"');
          Ord('\') :
             destStream.WriteString('\\');
+         Ord('/') : // XSS protection when used for inline scripts in HTML
+            destStream.WriteString('\/');
          {$ifndef FPC}
          $100..$FFFF :
             WriteUTF16(destStream, Ord(c));
@@ -810,6 +848,27 @@ end;
 // ------------------
 // ------------------ TdwsJSONValue ------------------
 // ------------------
+
+// GetOwner
+//
+function TdwsJSONValue.GetOwner : TdwsJSONValue;
+begin
+   Result:=TdwsJSONValue(FRawOwner and -8);
+end;
+
+// SetOwner
+//
+procedure TdwsJSONValue.SetOwner(aOwner : TdwsJSONValue);
+begin
+   FRawOwner:=(FRawOwner and $7) or NativeUInt(aOwner);
+end;
+
+// ClearOwner
+//
+procedure TdwsJSONValue.ClearOwner;
+begin
+   FRawOwner:=(FRawOwner and $7);
+end;
 
 // Destroy
 //
@@ -980,7 +1039,7 @@ var
 begin
    oldOwner:=FOwner;
    if oldOwner<>nil then begin
-      FOwner:=nil;
+      ClearOwner;
       oldOwner.DetachChild(Self);
    end;
 end;
@@ -1024,6 +1083,13 @@ begin
    if Assigned(Self) then
       Result:=GetValueType
    else Result:=jvtUndefined;
+end;
+
+// IsFalsey
+//
+function TdwsJSONValue.IsFalsey : Boolean;
+begin
+   Result:=(not Assigned(Self)) or DoIsFalsey;
 end;
 
 // GetValue
@@ -1265,6 +1331,12 @@ begin
    Inc(FIndex, Integer(Result));
 end;
 
+// DoIsFalsey
+//
+function TdwsJSONValue.DoIsFalsey : Boolean;
+begin
+   Result:=false;
+end;
 
 // ------------------
 // ------------------ TdwsJSONObject ------------------
@@ -1317,7 +1389,7 @@ var
 begin
    for i:=0 to FCount-1 do begin
       v:=FItems^[i].Value;
-      v.FOwner:=nil;
+      v.ClearOwner;
       v.DecRefCount;
       FItems^[i].Name:='';
    end;
@@ -1439,8 +1511,8 @@ var
    child : TdwsJSONValue;
 begin
    child:=FItems[i].Value;
-   if child.FOwner=Self then begin
-      child.FOwner:=nil;
+   if child.Owner=Self then begin
+      child.ClearOwner;
       child.DecRefCount;
    end;
    Finalize(FItems[i]);
@@ -1487,7 +1559,7 @@ begin
       if value<>nil then begin
 
          member:=FItems^[index].Value;
-         member.FOwner:=nil;
+         member.ClearOwner;
          member.DecRefCount;
 
          FItems^[index].Value:=value;
@@ -1595,7 +1667,7 @@ begin
       k:=IndexOfName(otherObj.FItems[i].Name);
       if k>=0 then begin
          member:=FItems[k].Value;
-         member.FOwner:=nil;
+         member.ClearOwner;
          member.DecRefCount;
          member:=otherObj.FItems[i].Value.Clone;
          member.FOwner:=Self;
@@ -1704,7 +1776,7 @@ var
 begin
    child:=FElements[idx];
    if child.FOwner=Self then begin
-      child.FOwner:=nil;
+      child.ClearOwner;
       child.DecRefCount;
    end;
    Move(FElements[idx+1], FElements[idx], (FCount-1-idx)*SizeOf(Pointer));
@@ -1734,7 +1806,7 @@ var
 begin
    for i:=0 to FCount-1 do begin
       v:=FElements^[i];
-      v.FOwner:=nil;
+      v.ClearOwner;
       v.DecRefCount;
    end;
    FreeMem(FElements);
@@ -1922,7 +1994,7 @@ begin
          end else v:=TdwsJSONImmediate.Create
       else v:=value;
 
-      FElements[index].FOwner:=nil;
+      FElements[index].ClearOwner;
       FElements[index].DecRefCount;
       FElements[index]:=v;
       v.FOwner:=Self;
@@ -2005,6 +2077,20 @@ end;
 // ------------------
 // ------------------ TdwsJSONImmediate ------------------
 // ------------------
+
+// GetType
+//
+function TdwsJSONImmediate.GetType : TdwsJSONValueType;
+begin
+   Result:=TdwsJSONValueType(FRawOwner and $7);
+end;
+
+// SetType
+//
+procedure TdwsJSONImmediate.SetType(t : TdwsJSONValueType);
+begin
+   FRawOwner:=(FRawOwner and -8) or NativeUInt(t);
+end;
 
 // Destroy
 //
@@ -2191,6 +2277,24 @@ begin
    RaiseJSONException('Cannot extend immediate values');
 end;
 
+// DoIsFalsey
+//
+function TdwsJSONImmediate.DoIsFalsey : Boolean;
+begin
+   case FType of
+      jvtUndefined, jvtNull :
+         Result:=True;
+      jvtString :
+         Result:=PString(@FData)^='';
+      jvtNumber :
+         Result:=FData=0;
+      jvtBoolean :
+         Result:=not PBoolean(@FData)^;
+   else
+      Result:=False;
+   end;
+end;
+
 // Clone
 //
 function TdwsJSONImmediate.Clone : TdwsJSONImmediate;
@@ -2331,6 +2435,13 @@ begin
    FStream.WriteChar('{');
 end;
 
+// BeginObject
+//
+procedure TdwsJSONWriter.BeginObject(const aName : UnicodeString);
+begin
+   WriteName(aName).BeginObject;
+end;
+
 // EndObject
 //
 procedure TdwsJSONWriter.EndObject;
@@ -2355,6 +2466,13 @@ begin
    FStream.WriteChar('[');
 end;
 
+// BeginArray
+//
+procedure TdwsJSONWriter.BeginArray(const aName : UnicodeString);
+begin
+   WriteName(aName).BeginArray;
+end;
+
 // EndArray
 //
 procedure TdwsJSONWriter.EndArray;
@@ -2369,7 +2487,14 @@ end;
 
 // WriteName
 //
-procedure TdwsJSONWriter.WriteName(const aName : UnicodeString);
+function TdwsJSONWriter.WriteName(const aName : UnicodeString) : TdwsJSONWriter;
+begin
+   Result:=WriteName(PWideChar(aName));
+end;
+
+// WriteName
+//
+function TdwsJSONWriter.WriteName(const aName : PWideChar) : TdwsJSONWriter;
 begin
    case FState of
       wsObject : ;
@@ -2382,14 +2507,29 @@ begin
    WriteJavaScriptString(FStream, aName);
    FStream.WriteChar(':');
    FState:=wsObjectValue;
+   Result:=Self;
 end;
 
 // WriteString
 //
 procedure TdwsJSONWriter.WriteString(const str : UnicodeString);
 begin
+   WriteString(PWideChar(Pointer(str)));
+end;
+
+// WriteString
+//
+procedure TdwsJSONWriter.WriteString(const name, str : UnicodeString);
+begin
+   WriteName(name).WriteString(str);
+end;
+
+// WriteString
+//
+procedure TdwsJSONWriter.WriteString(const p : PWideChar);
+begin
    BeforeWriteImmediate;
-   WriteJavaScriptString(FStream, str);
+   WriteJavaScriptString(FStream, p);
    AfterWriteImmediate;
 end;
 
@@ -2402,6 +2542,13 @@ begin
    AfterWriteImmediate;
 end;
 
+// WriteNumber
+//
+procedure TdwsJSONWriter.WriteNumber(const name : UnicodeString; const n : Double);
+begin
+   WriteName(name).WriteNumber(n);
+end;
+
 // WriteInteger
 //
 procedure TdwsJSONWriter.WriteInteger(const n : Int64);
@@ -2409,6 +2556,13 @@ begin
    BeforeWriteImmediate;
    FStream.WriteString(n);
    AfterWriteImmediate;
+end;
+
+// WriteInteger
+//
+procedure TdwsJSONWriter.WriteInteger(const name : UnicodeString; const n : Int64);
+begin
+   WriteName(name).WriteInteger(n);
 end;
 
 // WriteBoolean
@@ -2420,6 +2574,13 @@ begin
       FStream.WriteString('true')
    else FStream.WriteString('false');
    AfterWriteImmediate;
+end;
+
+// WriteBoolean
+//
+procedure TdwsJSONWriter.WriteBoolean(const name : UnicodeString; b : Boolean);
+begin
+   WriteName(name).WriteBoolean(b);
 end;
 
 // WriteNull
@@ -2606,7 +2767,7 @@ end;
 
 // WriteName
 //
-procedure TdwsJSONBeautifiedWriter.WriteName(const aName : UnicodeString);
+function TdwsJSONBeautifiedWriter.WriteName(const aName : PWideChar) : TdwsJSONWriter;
 begin
    case FState of
       wsObject :
@@ -2620,6 +2781,42 @@ begin
    WriteJavaScriptString(FStream, aName);
    FStream.WriteString(' : ');
    FState:=wsObjectValue;
+   Result:=Self;
+end;
+
+// ------------------
+// ------------------ TdwsJSONValueList ------------------
+// ------------------
+
+// ToString
+//
+function TdwsJSONValueList.ToString : String;
+var
+   wr : TdwsJSONWriter;
+   wobs : TWriteOnlyBlockStream;
+begin
+   if Count=0 then Exit('[]');
+   wobs:=TWriteOnlyBlockStream.AllocFromPool;
+   wr:=TdwsJSONWriter.Create(wobs);
+   try
+      WriteTo(wr);
+      Result:=wobs.ToString;
+   finally
+      wr.Free;
+      wobs.ReturnToPool;
+   end;
+end;
+
+// WriteTo
+//
+procedure TdwsJSONValueList.WriteTo(writer : TdwsJSONWriter);
+var
+   i : Integer;
+begin
+   writer.BeginArray;
+   for i:=0 to Count-1 do
+      Items[i].WriteTo(writer);
+   writer.EndArray;
 end;
 
 // ------------------------------------------------------------------

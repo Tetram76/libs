@@ -63,7 +63,7 @@ type
    // - to be used with THttpSocket.RegisterCompress method
    // - type is a generic AnsiString, which should be in practice a
    // RawByteString or a RawByteString
-   THttpSocketCompress = function(var Data : RawByteString; Compress : boolean) : RawByteString;
+   THttpSocketCompress = function(var DataRawByteString; Compress : boolean) : AnsiString;
 
    /// used to maintain a list of known compression algorithms
    THttpSocketCompressRec = record
@@ -976,11 +976,11 @@ var
    pContentEncoding : PHTTP_KNOWN_HEADER;
    pRespServer : PHTTP_KNOWN_HEADER;
 begin
+   NameThreadForDebugging('THttpApi2Server');
+
    // THttpServerGeneric thread preparation: launch any OnHttpThreadStart event
    inherited Execute;
    CoInitialize(nil);
-
-   OutputDebugString(PChar('SAMPLING THREAD '+IntToStr(GetCurrentThreadId)));
 
    FWebRequest:=THttpSysWebRequest.Create;
    FWebResponse:=THttpSysWebResponse.Create;
@@ -1042,8 +1042,8 @@ begin
                   exit;
 
                if FWebResponse.HasHeaders then
-                  outCustomHeader:=FWebResponse.CompiledHeaders
-               else outCustomHeader:='';
+                  outCustomHeader := FWebResponse.CompiledHeaders
+               else outCustomHeader := '';
 
                FLogFieldsData.ProtocolStatus := FWebResponse.StatusCode;
 
@@ -1085,8 +1085,9 @@ begin
                end;
             except
                // handle any exception raised during process: show must go on!
-               on E : Exception do
+               on E : Exception do begin
                   SendError(request, response, 500, E.Message);
+               end;
             end;
             // reset Request ID to handle the next pending request
             requestID := 0;
@@ -1283,7 +1284,6 @@ end;
 
 procedure THttpServerGeneric.Execute;
 begin
-   OutputDebugString(PChar('SAMPLING THREAD '+IntToStr(GetCurrentThreadId)));
    if Assigned(FOnHttpThreadStart) then
       FOnHttpThreadStart(self);
 end;

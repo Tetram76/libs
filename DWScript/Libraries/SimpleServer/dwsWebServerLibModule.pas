@@ -18,6 +18,10 @@ type
       Info: TProgramInfo; ExtObject: TObject);
     procedure dwsWebServerClassesWebServerMethodsAuthenticationsEval(
       Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsWebServerClassesWebServerMethodsFlushCompiledProgramsEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsWebServerClassesWebServerMethodsLiveQueriesEval(
+      Info: TProgramInfo; ExtObject: TObject);
   private
     { Private declarations }
     FServer :  IWebServerInfo;
@@ -36,6 +40,12 @@ begin
    Info.ResultAsInteger:=0;
 end;
 
+procedure TdwsWebServerLib.dwsWebServerClassesWebServerMethodsFlushCompiledProgramsEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+   FServer.FlushCompiledPrograms;
+end;
+
 procedure TdwsWebServerLib.dwsWebServerClassesWebServerMethodsHttpPortEval(
   Info: TProgramInfo; ExtObject: TObject);
 begin
@@ -46,6 +56,12 @@ procedure TdwsWebServerLib.dwsWebServerClassesWebServerMethodsHttpsPortEval(
   Info: TProgramInfo; ExtObject: TObject);
 begin
    Info.ResultAsInteger:=FServer.HttpsPort;
+end;
+
+procedure TdwsWebServerLib.dwsWebServerClassesWebServerMethodsLiveQueriesEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+   Info.ResultAsString:=FServer.LiveQueries;
 end;
 
 procedure TdwsWebServerLib.dwsWebServerClassesWebServerMethodsNameEval(

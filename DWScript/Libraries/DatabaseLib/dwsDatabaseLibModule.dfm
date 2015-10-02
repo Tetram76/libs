@@ -321,6 +321,13 @@ object dwsDatabaseLib: TdwsDatabaseLib
           end
           item
             Name = 'StringifyAll'
+            Parameters = <
+              item
+                Name = 'maxRows'
+                DataType = 'Integer'
+                HasDefaultValue = True
+                DefaultValue = '0'
+              end>
             ResultType = 'String'
             OnEval = dwsDatabaseClassesDataSetMethodsStringifyAllEval
             Kind = mkFunction
@@ -507,6 +514,16 @@ object dwsDatabaseLib: TdwsDatabaseLib
           end>
         ResultType = 'Variant'
         OnFastEval = dwsDatabaseFunctionsBlobParameterFastEval
+      end
+      item
+        Name = 'BlobHexParameter'
+        Parameters = <
+          item
+            Name = 'hexData'
+            DataType = 'String'
+          end>
+        ResultType = 'Variant'
+        OnFastEval = dwsDatabaseFunctionsBlobHexParameterFastEval
       end>
     UnitName = 'System.Data'
     StaticSymbols = True
