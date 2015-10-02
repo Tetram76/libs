@@ -1,4 +1,4 @@
-- Dans source\jvuib.inc
+- Dans source\uib.inc
     * remplacer {$DEFINE UIBLANG_EN} par {.$DEFINE UIBLANG_EN}
     * remplacer {.$DEFINE UIBLANG_FR} par {$DEFINE UIBLANG_FR}
     optionnel: * remplacer {$DEFINE HAVE_SYNEDIT} par {.$DEFINE HAVE_SYNEDIT}
