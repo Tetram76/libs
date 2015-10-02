@@ -1521,7 +1521,7 @@ begin
 {$ENDIF}
 end;
 
-{.$MESSAGE 'Check what must be adapted in DoKeyPressW and related methods'}
+{$MESSAGE 'Check what must be adapted in DoKeyPressW and related methods'}
 procedure TSynBaseCompletionProposalForm.DoKeyPressW(Key: WideChar);
 begin
   if Key <> #0 then
@@ -1577,6 +1577,7 @@ function TSynBaseCompletionProposalForm.CanResize(var NewWidth, NewHeight: Integ
 var
   NewLinesInWindow: Integer;
   BorderWidth: Integer;
+  tmpHeight : integer;
 begin
   Result := True;
   case FDisplayKind of
@@ -1586,10 +1587,13 @@ begin
 
       if FEffectiveItemHeight <> 0 then
       begin
-        NewLinesInWindow := (NewHeight-FHeightBuffer) div FEffectiveItemHeight;
+        tmpHeight := NewHeight - BorderWidth;
+        NewLinesInWindow := (tmpHeight - FHeightBuffer) div FEffectiveItemHeight;
+
         if NewLinesInWindow < 1 then
           NewLinesInWindow := 1;
-      end else
+      end
+      else
         NewLinesInWindow := 0;
 
       FLinesInWindow := NewLinesInWindow;
