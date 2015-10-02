@@ -62,6 +62,7 @@ type
 
    TdwsEmptyUnit = class(TComponent, IUnknown, IdwsUnit)
       private
+         procedure BeforeAdditionTo(dwscript : TObject);
          function GetUnitName: UnicodeString;
          function GetDependencies: TStrings;
          function GetUnitTable(systemTable : TSystemSymbolTable;
@@ -130,10 +131,10 @@ type
          constructor Create(AOwner: TComponent); override;
          destructor Destroy; override;
 
-         procedure AddUnit(const Un: IdwsUnit);
-         function RemoveUnit(const Un: IdwsUnit): Boolean;
+         procedure AddUnit(const aUnit : IdwsUnit); overload;
+         function RemoveUnit(const aUnit : IdwsUnit): Boolean;
 
-         function Compile(const Text: UnicodeString): IdwsProgram; virtual;
+         function Compile(const text : UnicodeString; const mainFileName : String = '') : IdwsProgram; virtual;
          procedure RecompileInContext(const prog : IdwsProgram; const text : UnicodeString); virtual;
 
          procedure AbortCompilation;
@@ -208,6 +209,7 @@ type
       protected
          procedure Notification(AComponent: TComponent; Operation: TOperation); override;
 
+         procedure BeforeAdditionTo(dwscript : TObject);
          function GetUnitName: UnicodeString; virtual;
          function GetUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
                                operators : TOperators; rootTable : TSymbolTable) : TUnitSymbolTable; virtual; abstract;
@@ -401,6 +403,7 @@ type
 
       protected
          procedure Call(exec : TdwsProgramExecution; func : TFuncSymbol); virtual; abstract;
+         procedure CompileTimeCheck(prog : TdwsProgram; expr : TFuncExprBase); virtual;
          procedure InitSymbol(symbol : TSymbol; const msgs : TdwsCompileMessageList);
          procedure InitExpression(expr : TExprBase);
          function SubExpr(i : Integer) : TExprBase;
@@ -583,9 +586,13 @@ type
    TdwsConstants = class(TdwsCollection)
       protected
          class function GetSymbolClass : TdwsSymbolClass; override;
+         function GetValues(const name : String) : Variant;
+         procedure SetValues(const name : String; const v : Variant);
 
       public
          function Add : TdwsConstant; inline;
+
+         property Values[const name : String] : Variant read GetValues write SetValues;
    end;
 
    TdwsConstantsClass = class of TdwsConstants;
@@ -1433,7 +1440,7 @@ type
       private
          FOnFastEval : TFuncFastEvalEvent;
       public
-         function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+         procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
    end;
 
    TCustomInternalMagicDataFunction = class(TInternalMagicDataFunction)
@@ -1443,6 +1450,8 @@ type
       public
          procedure DoEval(const args : TExprBaseListExec; var result : IDataContext); override;
    end;
+
+   EdwsInvalidUnitAddition = class (Exception);
 
 // Return the external object for a variable name.
 function GetExternalObjForID(Info: TProgramInfo; const AVarName: UnicodeString): TObject;
@@ -1486,11 +1495,44 @@ begin
    end;
 end;
 
+// VariantTypeToDataType
+//
+function VariantTypeToDataType(const value : Variant) : TDataType;
+begin
+   //TODO: Extend with arrays, records, etc:
+   // varEmpty
+   // varNull
+   // varDate
+   // varVariant
+   // varRecord
+   // varStrArg
+   // varObject
+   // varUStrArg
+   // varAny
+   case VarType(value) of
+      varSmallInt, varInteger, varShortInt, varByte, varWord, varLongWord,
+      varInt64, varUInt64 :
+         Result := SYS_INTEGER;
+      varSingle, varDouble, varCurrency :
+         Result := SYS_FLOAT;
+      varOleStr, varString, varUString :
+         Result := SYS_STRING;
+      varBoolean :
+         Result := SYS_BOOLEAN;
+      varVariant :
+         Result := SYS_VARIANT;
+   else
+      Result := '';
+   end;
+end;
+
 function GetExternalObjForID(Info: TProgramInfo; const AVarName: UnicodeString): TObject;
 begin
   // Get param "Source" as object in Source_Obj
   Result := IScriptObj(IUnknown(Info.ValueAsVariant[AVarName])).ExternalObject;
 end;
+
+{ TCustomInternalMagicProcedure }
 
 // DoEvalProc
 //
@@ -1499,12 +1541,16 @@ begin
    FOnFastEval(args);
 end;
 
+{ TCustomInternalMagicFunction }
+
 // DoEvalAsVariant
 //
-function TCustomInternalMagicFunction.DoEvalAsVariant(const args : TExprBaseListExec) : Variant;
+procedure TCustomInternalMagicFunction.DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant);
 begin
    Result:=FOnFastEval(args);
 end;
+
+{ TCustomInternalMagicDataFunction }
 
 // DoEval
 //
@@ -1620,12 +1666,12 @@ end;
 
 // Compile
 //
-function TDelphiWebScript.Compile(const Text: UnicodeString): IdwsProgram;
+function TDelphiWebScript.Compile(const Text: UnicodeString; const mainFileName : String = ''): IdwsProgram;
 begin
    Lock;
    try
       SetupExtensions;
-      Result:=FCompiler.Compile(Text, FConfig);
+      Result:=FCompiler.Compile(Text, FConfig, mainFileName);
    finally
       UnLock;
    end;
@@ -1653,25 +1699,28 @@ end;
 
 // AddUnit
 //
-procedure TDelphiWebScript.AddUnit(const Un: IdwsUnit);
+procedure TDelphiWebScript.AddUnit(const aUnit : IdwsUnit);
 begin
-   RemoveUnit(Un);
-   if Assigned(Un) then
-      FConfig.Units.Add(Un);
+   if not Assigned(aUnit) then Exit;
+
+   aUnit.BeforeAdditionTo(Self);
+
+   RemoveUnit(aUnit);
+   FConfig.Units.Add(aUnit);
 end;
 
 // RemoveUnit
 //
-function TDelphiWebScript.RemoveUnit(const Un: IdwsUnit): Boolean;
+function TDelphiWebScript.RemoveUnit(const aUnit : IdwsUnit): Boolean;
 var
    i : Integer;
 begin
-   i := FConfig.Units.IndexOf(Un);
-   if i >= 0 then begin
+   i:=FConfig.Units.IndexOf(aUnit);
+   Result:=(i>=0);
+   if Result then begin
       FConfig.Units[i]:=nil;
       FConfig.Units.Extract(i);
    end;
-   Result := i >= 0;
 end;
 
 // Lock
@@ -2854,6 +2903,11 @@ var
       extObj : TObject;
       info : TProgramInfo;
    begin
+      scriptObj := TScriptObjInstance.Create(ClassSym);
+      scriptObj.OnObjectDestroy := OnObjectDestroy;
+      p^ := IScriptObj(scriptObj);
+      exec.Stack.WriteValue(DataSym.StackAddr, p^);
+
       extObj:=nil;
       if Assigned(FOnInstantiate) then begin
          info:=exec.AcquireProgramInfo(func);
@@ -2868,11 +2922,8 @@ var
             Exit;
          end;
       end;
-      scriptObj := TScriptObjInstance.Create(ClassSym);
-      scriptObj.OnObjectDestroy := OnObjectDestroy;
+
       scriptObj.ExternalObject := extObj;
-      p^ := IScriptObj(scriptObj);
-      exec.Stack.WriteValue(DataSym.StackAddr, p^);
    end;
 
 begin
@@ -3114,6 +3165,13 @@ begin
    Result:=0;
 end;
 
+// CompileTimeCheck
+//
+procedure TdwsCallable.CompileTimeCheck(prog : TdwsProgram; expr : TFuncExprBase);
+begin
+   // nothing yet
+end;
+
 // ------------------
 // ------------------ TdwsFunctionCallable ------------------
 // ------------------
@@ -3233,6 +3291,7 @@ var
    name, enumValue : UnicodeString;
    paramSym, elemSym : TSymbol;
    param : TdwsParameter;
+   paramRec : PParamRec;
 begin
    SetLength(Result, Parameters.Count);
    for i := 0 to Parameters.Count - 1 do begin
@@ -3245,15 +3304,17 @@ begin
             raise Exception.CreateFmt(UNT_ParameterNameAlreadyExists, [name]);
       end;
 
-      Result[i].IsVarParam := param.IsVarParam and param.IsWritable;
-      Result[i].IsConstParam := param.IsVarParam and not param.IsWritable;
-      Result[i].ParamName := name;
-      Result[i].ParamType := param.DataType;
+      paramRec := @Result[i];
 
-      Result[i].HasDefaultValue := param.HasDefaultValue;
-      if Result[i].HasDefaultValue then begin
-         SetLength(Result[i].DefaultValue, 1);
-         paramSym:=Symbol.GetDataType(systemTable, Table, Result[i].ParamType);
+      paramRec.IsVarParam := param.IsVarParam and param.IsWritable;
+      paramRec.IsConstParam := param.IsVarParam and not param.IsWritable;
+      paramRec.ParamName := name;
+      paramRec.ParamType := param.DataType;
+
+      paramRec.HasDefaultValue := param.HasDefaultValue;
+      if paramRec.HasDefaultValue then begin
+         SetLength(paramRec.DefaultValue, 1);
+         paramSym:=Symbol.GetDataType(systemTable, Table, paramRec.ParamType);
          if paramSym is TEnumerationSymbol then begin
             enumValue:=param.DefaultValue;
             if UnicodeSameText(StrBeforeChar(enumValue, '.'), paramSym.Name) then
@@ -3262,11 +3323,13 @@ begin
             if elemSym=nil then
                elemValue:=param.DefaultValue
             else elemValue:=TElementSymbol(elemSym).Value;
-            Result[i].DefaultValue[0] := elemValue;
-         end else Result[i].DefaultValue[0] := param.DefaultValue;
-      end else Result[i].DefaultValue := nil;
+            paramRec.DefaultValue[0] := elemValue;
+         end else if paramSym.IsPointerType and VarIsNull(param.DefaultValue) then
+            paramRec.DefaultValue[0] := IUnknown(nil)
+         else paramRec.DefaultValue[0] := param.DefaultValue;
+      end else paramRec.DefaultValue := nil;
 
-      Symbol.GetUnit.GetSymbol(systemTable, Table, Result[i].ParamType);
+      Symbol.GetUnit.GetSymbol(systemTable, Table, paramRec.ParamType);
   end;
 end;
 
@@ -4320,13 +4383,13 @@ begin
       if ancestorSym <> nil then
          intfSym.InheritFrom(ancestorSym);
 
+      GetUnit.Table.AddSymbol(intfSym);
+
       for x := 0 to FMethods.Count - 1 do
          intfSym.AddMethod(TMethodSymbol(TdwsMethod(FMethods.Items[x]).Generate(systemTable, Table, intfSym)));
 
       for x := 0 to FProperties.Count - 1 do
          intfSym.AddProperty(TPropertySymbol(TdwsProperty(FProperties.Items[x]).Generate(systemTable, Table, intfSym)));
-
-      GetUnit.Table.AddSymbol(intfSym);
    except
       if not intfSym.IsForwarded then
          intfSym.Free;
@@ -4544,6 +4607,17 @@ begin
    Result:=FIsDefault and (Parameters.Count>0);
 end;
 
+function GetProperties(const Symbol: TObject): TdwsProperties;
+begin
+  if Symbol is TdwsInterface then
+    Exit((Symbol as TdwsInterface).Properties);
+
+  if Symbol is TdwsClass then
+    Exit((Symbol as TdwsClass).Properties);
+
+  Exit(nil);
+end;
+
 // SetIsDefault
 //
 procedure TdwsProperty.SetIsDefault(Value: Boolean);
@@ -4557,7 +4631,7 @@ begin
     FIsDefault := Value;
     if FIsDefault then
     begin
-      properties := TdwsClass(TdwsCollection(Collection).GetOwner).Properties;
+      properties := GetProperties(TdwsCollection(Collection).GetOwner); // GetOwner can return a TdwsClass as well as a TdwsInterface, so GetProperties is used to distinguish.
       for i := 0 to properties.Count - 1 do
         if properties.Items[i] <> Self then
           TdwsProperty(properties.Items[i]).FIsDefault := False;
@@ -4948,7 +5022,6 @@ procedure TReadVarEventFunc.Execute(info : TProgramInfo);
 var
   Value: Variant;
 begin
-  VarClear(Value);
   if Assigned(FOnReadVar) then
     FOnReadVar(info, Value);
   Info.ResultAsVariant := Value;
@@ -5029,6 +5102,24 @@ begin
       SetScript(nil);
 end;
 
+// BeforeAdditionTo
+//
+procedure TdwsAbstractUnit.BeforeAdditionTo(dwscript : TObject);
+begin
+   if dwscript<>FScript then begin
+      // at this point an interface was likeley acquired and its ref-counter will be off
+      // so the folowing exception is likely to be hidden by another exception in the implicit
+      // exception frame, since the code is kaput, which just detach ourselves which will
+      // cause a memory leak but no other exception (code is incorrect anyway,
+      // so no point in avoiding the leak)
+      if Owner<>nil then
+         Owner.RemoveComponent(Self);
+      raise EdwsInvalidUnitAddition.Create('Do not use AddUnit method but Script property instead');
+   end;
+end;
+
+// SetDependencies
+//
 procedure TdwsAbstractUnit.SetDependencies(const Value: TStrings);
 begin
   FDependencies.Assign(Value);
@@ -5135,6 +5226,13 @@ end;
 function TdwsEmptyUnit.GetDeprecatedMessage : UnicodeString;
 begin
    Result:='';
+end;
+
+// BeforeAdditionTo
+//
+procedure TdwsEmptyUnit.BeforeAdditionTo(dwscript : TObject);
+begin
+   // nothing
 end;
 
 { TdwsEmptyUnit }
@@ -5604,11 +5702,43 @@ begin
    result := inherited Add as TdwsSet;
 end;
 
-{ TdwsConstants }
+// ------------------
+// ------------------ TdwsConstants ------------------
+// ------------------
 
+// GetSymbolClass
+//
 class function TdwsConstants.GetSymbolClass: TdwsSymbolClass;
 begin
-  Result := TdwsConstant;
+   Result := TdwsConstant;
+end;
+
+// GetValues
+//
+function TdwsConstants.GetValues(const name : String) : Variant;
+var
+   i : Integer;
+begin
+   // returns Unassigned if not present
+   i:=IndexOf(name);
+   if i>=0 then
+      Result:=TdwsConstant(Items[i]).Value;
+end;
+
+// SetValues
+//
+procedure TdwsConstants.SetValues(const name : String; const v : Variant);
+var
+   i : Integer;
+   c : TdwsConstant;
+begin
+   i:=IndexOf(name);
+   if i<0 then begin
+      c:=Add;
+      c.Name:=name;
+      c.DataType:=VariantTypeToDataType(v);
+   end else c:=TdwsConstant(Items[i]);
+   c.Value:=v;
 end;
 
 // Add
@@ -5618,11 +5748,15 @@ begin
    Result:=TdwsConstant(inherited Add);
 end;
 
-{ TdwsClasses }
+// ------------------
+// ------------------ TdwsClasses ------------------
+// ------------------
 
+// GetSymbolClass
+//
 class function TdwsClasses.GetSymbolClass: TdwsSymbolClass;
 begin
-  Result := TdwsClass;
+   Result:=TdwsClass;
 end;
 
 // Add
@@ -5632,7 +5766,9 @@ begin
    Result:=TdwsClass(inherited Add);
 end;
 
-{ TdwsArrays }
+// ------------------
+// ------------------ TdwsArrays ------------------
+// ------------------
 
 class function TdwsArrays.GetSymbolClass: TdwsSymbolClass;
 begin
@@ -5644,7 +5780,9 @@ begin
   Result := TdwsArray(inherited Add);
 end;
 
-{ TdwsRecords }
+// ------------------
+// ------------------ TdwsRecords ------------------
+// ------------------
 
 class function TdwsRecords.GetSymbolClass: TdwsSymbolClass;
 begin
@@ -5658,7 +5796,9 @@ begin
    Result:=TdwsRecord(inherited Add);
 end;
 
-{ TdwsParameters }
+// ------------------
+// ------------------ TdwsParameters ------------------
+// ------------------
 
 class function TdwsParameters.GetSymbolClass: TdwsSymbolClass;
 begin
@@ -6188,40 +6328,43 @@ begin
   inherited;
 end;
 
-// -----------------------------------------------------------------------------
-
+// DoGenerate
+//
 function TdwsDelegate.DoGenerate(systemTable : TSystemSymbolTable; Table: TSymbolTable; ParentSym: TSymbol): TSymbol;
 var
-  FuncSym: TFuncSymbol;
-  FuncKind: TFuncKind;
-  Params: TParamArray;
+   funcSym : TFuncSymbol;
+   funcKind : TFuncKind;
+   params : TParamArray;
+   typ : TTypeSymbol;
 begin
-  FIsGenerating := True;
-  CheckName(Table, Name);
+   FIsGenerating := True;
+   CheckName(Table, Name);
 
-  if (ResultType <> '') then
-  begin
-    GetDataType(systemTable, Table, ResultType);
-    FuncKind := fkFunction;
-  end else
-    FuncKind := fkProcedure;
+   if ResultType <> '' then begin
+      typ := GetDataType(systemTable, Table, ResultType);
+      funcKind := fkFunction;
+   end else begin
+      typ := nil;
+      funcKind := fkProcedure;
+   end;
 
-  FuncSym := TFuncSymbol.Create('', FuncKind, -1);
-//  FuncSym := TFuncSymbol.Generate(Table, Name, GetParameters(Table), ResultType);
-  try
-    Params := GetParameters(systemTable, Table);
-    FuncSym.GenerateParams(Table, Params);
-    FuncSym.Params.AddParent(Table);
+   funcSym := TFuncSymbol.Create('', funcKind, -1);
+   try
+      funcSym.Typ := typ;
 
-    FuncSym.SetName(Name);
-    FuncSym.SetIsType;
-    FuncSym.DeprecatedMessage := Deprecated;
-    GetUnit.Table.AddSymbol(FuncSym);
-  except
-    FuncSym.Free;
-    raise;
-  end;
-  Result := FuncSym;
+      params := GetParameters(systemTable, Table);
+      funcSym.GenerateParams(Table, params);
+      funcSym.params.AddParent(Table);
+
+      funcSym.SetName(Name);
+      funcSym.SetIsType;
+      funcSym.DeprecatedMessage := Deprecated;
+      GetUnit.Table.AddSymbol(funcSym);
+   except
+      funcSym.Free;
+      raise;
+   end;
+   Result := funcSym;
 end;
 
 // -----------------------------------------------------------------------------

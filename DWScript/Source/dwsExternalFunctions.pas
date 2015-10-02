@@ -1,5 +1,7 @@
 unit dwsExternalFunctions;
 
+{$I dws.inc}
+
 interface
 
 uses
@@ -77,7 +79,7 @@ type
       constructor Create(aFuncSymbol : TFuncSymbol; prog: TdwsProgram);
       destructor Destroy; override;
 
-      function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; override;
+      procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); override;
    end;
 
 implementation
@@ -228,7 +230,7 @@ begin
    inherited Destroy;
 end;
 
-function TExternalFunction.DoEvalAsVariant(const args: TExprBaseListExec): Variant;
+procedure TExternalFunction.DoEvalAsVariant(const args: TExprBaseListExec; var result : Variant);
 begin
    if not Assigned(FStub) then
       RaiseUnHandledExternalCall(args.Exec, FuncSymbol);

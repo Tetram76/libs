@@ -78,7 +78,7 @@ type
    public
       constructor Create(tableName: TSqlIdentifier; const symbol: TDataSymbol);
       destructor Destroy; override;
-      function Eval(exec : TdwsExecution) : Variant; override;
+      procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
    TLinqIntoExpr = class(TTypedExpr)
@@ -105,12 +105,12 @@ type
 
    TLinqIntoSingleValExpr = class(TLinqIntoSingleExpr)
    public
-      function Eval(exec : TdwsExecution) : Variant; override;
+      procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
    TLinqIntoSingleProcExpr = class(TLinqIntoSingleExpr)
    public
-      function Eval(exec : TdwsExecution): variant; override;
+      procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
    TLinqIntoSetExpr = class(TLinqIntoExpr)
@@ -121,7 +121,7 @@ type
 
    TLinqIntoSetValExpr = class(TLinqIntoSetExpr)
    public
-      function Eval(exec : TdwsExecution) : Variant; override;
+      procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
 implementation
@@ -346,11 +346,11 @@ function TSqlFromExpr.Interpolate(exec: TdwsExecution; list: TObjectVarExpr; par
 var
    i, high: integer;
    paramList: TStringList;
-   obj: IScriptObj;
+   obj: IScriptDynArray;
    prog: TdwsProgram;
 begin
-   list.EvalAsScriptObj(exec, obj);
-   high := (obj.GetSelf as TScriptDynamicArray).ArrayLength - 1;
+   list.EvalAsScriptDynArray(exec, obj);
+   high := obj.ArrayLength - 1;
    prog := TdwsProgramExecution(exec).Prog;
    paramList := TStringList.Create;
    try
@@ -414,7 +414,9 @@ begin
    FMethod.EvalAsVariant(exec, result);
 end;
 
-function TSqlFromExpr.Eval(exec: TdwsExecution): Variant;
+// EvalAsVariant
+//
+procedure TSqlFromExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    if FListParams.Count > 0 then
       result := EvalDynamic(exec)
@@ -443,7 +445,7 @@ begin
    FData.AllocateStackAddr(prog.Table.AddrGenerator);
    dsVar := TObjectVarExpr.Create(prog, FData);
    FBase.IncRefCount;
-   FAssign := TAssignExpr.Create(prog, aPos, dsVar, FBase);
+   FAssign := TAssignExpr.Create(prog, aPos, compiler.CompileTimeExecution, dsVar, FBase);
    dsVar.IncRefCount;
    FInto.AddArg(dsVar);
    FInto.Initialize(prog);
@@ -484,7 +486,9 @@ end;
 
 { TLinqIntoSingleValExpr }
 
-function TLinqIntoSingleValExpr.Eval(exec: TdwsExecution): Variant;
+// EvalAsVariant
+//
+procedure TLinqIntoSingleValExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 var
    dyn: TScriptDynamicArray;
    n: integer;
@@ -496,21 +500,23 @@ begin
    while FStep.EvalAsBoolean(exec) do
    begin
       dyn.ArrayLength := n + 1;
-      dyn.AsPVariant(n)^ := FInto.Eval(exec);
+      FInto.EvalAsVariant(exec, dyn.AsPVariant(n)^);
       inc(n);
    end;
-   result := IScriptObj(dyn);
-   FFree.Eval(exec);
+   result := IScriptDynArray(dyn);
+   FFree.EvalNoResult(exec);
 end;
 
 { TLinqIntoSingleProcExpr }
 
-function TLinqIntoSingleProcExpr.Eval(exec: TdwsExecution): Variant;
+// EvalAsVariant
+//
+procedure TLinqIntoSingleProcExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    FAssign.EvalNoResult(exec);
    while FStep.EvalAsBoolean(exec) do
       FInto.EvalNoResult(exec);
-   FFree.Eval(exec);
+   FFree.EvalNoResult(exec);
 end;
 
 { TLinqIntoSetExpr }
@@ -525,11 +531,13 @@ end;
 
 { TLinqIntoSetValExpr }
 
-function TLinqIntoSetValExpr.Eval(exec: TdwsExecution): Variant;
+// EvalAsVariant
+//
+procedure TLinqIntoSetValExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    FAssign.EvalNoResult(exec);
    FInto.EvalAsVariant(exec, result);
-   FFree.Eval(exec);
+   FFree.EvalNoResult(exec);
 end;
 
 { TLinqSqlFactory }

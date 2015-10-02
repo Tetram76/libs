@@ -177,6 +177,7 @@ type
          procedure _restore_eax(addr : Integer);
 
          procedure _mov_reg_execInstance(reg : TgpRegister);
+         procedure _mov_reg_execStatus(reg : TgpRegister);
          procedure _DoStep(expr : TExprBase);
          procedure _RangeCheck(expr : TExprBase; reg : TgpRegister;
                                delta, miniInclusive, maxiExclusive : Integer);
@@ -762,6 +763,7 @@ begin
    RegisterJITter(TArraySortNaturalFloatExpr,   FInterpretedJITter.IncRefCount);
    RegisterJITter(TArrayReverseExpr,            FInterpretedJITter.IncRefCount);
    RegisterJITter(TArrayMapExpr,                FInterpretedJITter.IncRefCount);
+   RegisterJITter(TArrayConcatExpr,             FInterpretedJITter.IncRefCount);
 
    RegisterJITter(TOpenArrayLengthExpr,         FInterpretedJITter.IncRefCount);
 
@@ -786,6 +788,7 @@ begin
    RegisterJITter(TAssignArrayConstantExpr,     FInterpretedJITter.IncRefCount);
 
    RegisterJITter(TAssignedInstanceExpr,        FInterpretedJITter.IncRefCount);
+   RegisterJITter(TAssignedInterfaceExpr,       FInterpretedJITter.IncRefCount);
    RegisterJITter(TAssignedMetaClassExpr,       FInterpretedJITter.IncRefCount);
    RegisterJITter(TAssignedFuncPtrExpr,         FInterpretedJITter.IncRefCount);
 
@@ -810,6 +813,8 @@ begin
    RegisterJITter(TIfThenExpr,                  Tx86IfThen.Create(Self));
    RegisterJITter(TIfThenElseExpr,              Tx86IfThenElse.Create(Self));
    RegisterJITter(TCaseExpr,                    FInterpretedJITter.IncRefCount);
+   RegisterJITter(TCaseStringExpr,              FInterpretedJITter.IncRefCount);
+   RegisterJITter(TCaseIntegerExpr,             FInterpretedJITter.IncRefCount);
 
    RegisterJITter(TLoopExpr,                    Tx86Loop.Create(Self));
    RegisterJITter(TRepeatExpr,                  Tx86Repeat.Create(Self));
@@ -859,6 +864,10 @@ begin
    RegisterJITter(TShlExpr,                     Tx86Shl.Create(Self));
 
    RegisterJITter(TInOpExpr,                    FInterpretedJITter.IncRefCount);
+   RegisterJITter(TStringInOpExpr,              FInterpretedJITter.IncRefCount);
+   RegisterJITter(TStringInOpStaticSetExpr,     FInterpretedJITter.IncRefCount);
+   RegisterJITter(TIntegerInOpExpr,             FInterpretedJITter.IncRefCount);
+   RegisterJITter(TBitwiseInOpExpr,             FInterpretedJITter.IncRefCount);
 
    RegisterJITter(TIncIntVarExpr,               Tx86IncIntVar.Create(Self));
    RegisterJITter(TDecIntVarExpr,               Tx86DecIntVar.Create(Self));
@@ -896,6 +905,9 @@ begin
    RegisterJITter(TRelEqualMetaExpr,            Tx86RelEqualInt.Create(Self));
    RegisterJITter(TRelNotEqualMetaExpr,         Tx86RelNotEqualInt.Create(Self));
 
+   RegisterJITter(TRelVarEqualNilExpr,          FInterpretedJITter.IncRefCount);
+   RegisterJITter(TRelVarNotEqualNilExpr,       FInterpretedJITter.IncRefCount);
+
    RegisterJITter(TIsOpExpr,                    FInterpretedJITter.IncRefCount);
    RegisterJITter(TImplementsIntfOpExpr,        FInterpretedJITter.IncRefCount);
    RegisterJITter(TObjCmpEqualExpr,             FInterpretedJITter.IncRefCount);
@@ -907,6 +919,11 @@ begin
    RegisterJITter(TBoolAndExpr,                 Tx86BoolAndExpr.Create(Self));
    RegisterJITter(TBoolXorExpr,                 FInterpretedJITter.IncRefCount);
    RegisterJITter(TBoolImpliesExpr,             FInterpretedJITter.IncRefCount);
+
+   RegisterJITter(TCoalesceExpr,                FInterpretedJITter.IncRefCount);
+   RegisterJITter(TCoalesceStrExpr,             FInterpretedJITter.IncRefCount);
+   RegisterJITter(TCoalesceClassExpr,           FInterpretedJITter.IncRefCount);
+   RegisterJITter(TCoalesceDynArrayExpr,        FInterpretedJITter.IncRefCount);
 
    RegisterJITter(TSetOfInExpr,                 Tx86SetOfInExpr.Create(Self));
    RegisterJITter(TSetOfSmallInExpr,            Tx86SetOfInExpr.Create(Self));
@@ -926,6 +943,7 @@ begin
    RegisterJITter(TConditionalDefinedExpr,      FInterpretedJITter.IncRefCount);
 
    RegisterJITter(TConvIntToFloatExpr,          Tx86ConvIntToFloat.Create(Self));
+   RegisterJITter(TConvFloatToIntegerExpr,      FInterpretedJITter.IncRefCount);
    RegisterJITter(TConvVarToFloatExpr,          FInterpretedJITter.IncRefCount);
    RegisterJITter(TConvVarToIntegerExpr,        FInterpretedJITter.IncRefCount);
    RegisterJITter(TConvOrdToIntegerExpr,        FInterpretedJITter.IncRefCount);
@@ -1332,6 +1350,14 @@ begin
    FPreamble.PreserveExec:=True;
 
    x86._mov_reg_dword_ptr_reg(reg, gprEBP, cExecInstanceEBPoffset);
+end;
+
+// _mov_reg_execStatus
+//
+procedure TdwsJITx86._mov_reg_execStatus(reg : TgpRegister);
+begin
+   _mov_reg_execInstance(reg);
+   x86._mov_reg_dword_ptr_reg(reg, reg, TdwsExecution.Status_Offset);
 end;
 
 // _DoStep
@@ -2637,6 +2663,26 @@ end;
 procedure Tx86InterpretedExpr.CompileStatement(expr : TExprBase);
 begin
    DoCallEval(expr, vmt_TExprBase_EvalNoResult);
+
+   jit._mov_reg_execStatus(gprEAX);
+
+   x86._cmp_reg_int32(gprEAX, Ord(esrExit));
+   if jit.ExitTarget<>nil then
+      jit.Fixups.NewJump(flagsE, jit.ExitTarget)
+   else jit.OutputFailedOn:=expr;
+
+   if jit.LoopContext<>nil then begin
+
+      jit._mov_reg_execInstance(gprEDX);
+      x86._mov_reg_dword(gprECX, 0);
+      x86._mov_dword_ptr_reg_reg(gprEDX, TdwsExecution.Status_Offset, gprECX);
+
+      x86._cmp_reg_int32(gprEAX, Ord(esrBreak));
+      jit.Fixups.NewJump(flagsE, jit.LoopContext.TargetExit);
+      x86._cmp_reg_int32(gprEAX, Ord(esrContinue));
+      jit.Fixups.NewJump(flagsE, jit.LoopContext.TargetContinue);
+
+   end;
 end;
 
 // DoCompileFloat

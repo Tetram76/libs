@@ -21,23 +21,76 @@ unit dwsCompilerUtils;
 interface
 
 uses
-   SysUtils,
-   dwsErrors, dwsStrings, dwsXPlatform,
+   SysUtils, TypInfo,
+   dwsErrors, dwsStrings, dwsXPlatform, dwsUtils,
    dwsSymbols, dwsUnitSymbols,
-   dwsExprs, dwsCoreExprs, dwsConstExprs, dwsMethodExprs, dwsMagicExprs;
+   dwsExprs, dwsCoreExprs, dwsConstExprs, dwsMethodExprs, dwsMagicExprs,
+   dwsConvExprs;
 
 type
 
-   TdwsCompilerUtils = class
+   CompilerUtils = class
       public
+         class procedure IncompatibleTypes(
+                        aProg : TdwsProgram; const scriptPos : TScriptPos;
+                        const fmt : UnicodeString; typ1, typ2 : TTypeSymbol); static;
+
+         class function WrapWithImplicitConversion(
+                        aProg : TdwsProgram; expr : TTypedExpr; toTyp : TTypeSymbol;
+                        const hotPos : TScriptPos;
+                        const msg : String = CPE_IncompatibleTypes) : TTypedExpr; static;
+
          class procedure AddProcHelper(const name : UnicodeString;
                                        table : TSymbolTable; func : TFuncSymbol;
                                        unitSymbol : TUnitMainSymbol); static;
+
+         class function DynamicArrayAdd(aProg : TdwsProgram; baseExpr : TTypedExpr;
+                                        const namePos : TScriptPos;
+                                        argList : TTypedExprList; const argPosArray : TScriptPosArray) : TArrayAddExpr; overload; static;
+         class function DynamicArrayAdd(aProg : TdwsProgram; baseExpr : TTypedExpr;
+                                        const scriptPos : TScriptPos; argExpr : TTypedExpr) : TArrayAddExpr; overload; static;
+
+         class function ArrayConcat(aProg : TdwsProgram; const hotPos : TScriptPos;
+                                    left, right : TTypedExpr) : TArrayConcatExpr; static;
    end;
+
+   IRecursiveHasSubExprClass = interface
+      function Check(expr : TExprBase) : Boolean;
+   end;
+
+   TRecursiveHasSubExprClass = class (TInterfacedObject, IRecursiveHasSubExprClass)
+      private
+         FClass : TExprBaseClass;
+
+      protected
+         procedure Callback(parent, expr : TExprBase; var abort : Boolean);
+
+      public
+         constructor Create(aClass : TExprBaseClass);
+
+         function Check(expr : TExprBase) : Boolean;
+   end;
+
+   TStringToEnum = class (TCaseInsensitiveNameValueHash<Integer>)
+      public
+         constructor Create(typ : PTypeInfo; low, high, prefixLength : Integer);
+   end;
+
+   TArrayMethodKind = (
+      amkNone,
+      amkAdd, amkPush, amkIndexOf, amkRemove, amkSort, amkMap, amkHigh, amkLow,
+      amkLength, amkCount, amkPop, amkPeek, amkDelete, amkInsert, amkSetLength,
+      amkClear, amkSwap, amkCopy, amkReverse, amkDimCount
+   );
+
+function NameToArrayMethod(const name : String; msgs : TdwsCompileMessageList;
+                           const namePos : TScriptPos) : TArrayMethodKind;
 
 function CreateFuncExpr(prog : TdwsProgram; funcSym: TFuncSymbol;
                         const scriptObj : IScriptObj; structSym : TCompositeTypeSymbol;
                         forceStatic : Boolean = False) : TFuncExprBase;
+function CreateIntfExpr(prog : TdwsProgram; funcSym: TFuncSymbol;
+                        const scriptObjIntf : IScriptObjInterface) : TFuncExprBase;
 function CreateMethodExpr(prog: TdwsProgram; meth: TMethodSymbol; var expr : TTypedExpr; RefKind: TRefKind;
                           const scriptPos: TScriptPos; ForceStatic : Boolean = False) : TFuncExprBase;
 
@@ -48,6 +101,25 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
+
+// NameToArrayMethod
+//
+var
+   vArrayMethodsHash : TStringToEnum;
+function NameToArrayMethod(const name : String; msgs : TdwsCompileMessageList;
+                           const namePos : TScriptPos) : TArrayMethodKind;
+var
+   bucket : TNameValueHashBucket<Integer>;
+begin
+   bucket.Name:=name;
+   if vArrayMethodsHash.Match(bucket) then begin
+      Result:=TArrayMethodKind(bucket.Value);
+      if (msgs<>nil) and (name<>bucket.Name) then begin
+         msgs.AddCompilerHintFmt(namePos, CPH_CaseDoesNotMatchDeclaration,
+                                 [name, bucket.Name], hlPedantic);
+      end;
+   end else Result:=amkNone;
+end;
 
 type
    TCheckAbstractClassConstruction = class (TErrorMessage)
@@ -109,6 +181,20 @@ begin
    end;
 end;
 
+// CreateIntfExpr
+//
+function CreateIntfExpr(prog : TdwsProgram; funcSym: TFuncSymbol;
+                        const scriptObjIntf : IScriptObjInterface) : TFuncExprBase;
+var
+   instanceExpr : TTypedExpr;
+   scriptIntf : TScriptInterface;
+begin
+   scriptIntf:=(scriptObjIntf.GetSelf as TScriptInterface);
+   instanceExpr:=TConstExpr.Create(Prog, scriptIntf.Typ, scriptObjIntf);
+   Result:=CreateMethodExpr(prog, TMethodSymbol(funcSym),
+                            instanceExpr, rkIntfRef, cNullPos)
+end;
+
 // CreateMethodExpr
 //
 function CreateMethodExpr(prog: TdwsProgram; meth: TMethodSymbol; var expr: TTypedExpr; RefKind: TRefKind;
@@ -124,7 +210,7 @@ begin
    if meth is TMagicMethodSymbol then begin
 
       if meth is TMagicStaticMethodSymbol then begin
-         FreeAndNil(expr);
+         dwsFreeAndNil(expr);
          internalFunc:=TMagicStaticMethodSymbol(meth).InternalFunction;
          Result:=internalFunc.MagicFuncExprClass.Create(prog, scriptPos, meth, internalFunc);
       end else Assert(False, 'not supported yet');
@@ -152,7 +238,8 @@ begin
             if classSymbol.IsAbstract then begin
                if meth.Kind=fkConstructor then
                   TCheckAbstractClassConstruction.Create(prog.CompileMsgs, RTE_InstanceOfAbstractClass, scriptPos, classSymbol)
-               else TCheckAbstractClassConstruction.Create(prog.CompileMsgs, CPE_AbstractClassUsage, scriptPos, classSymbol);
+               else if meth.IsAbstract then
+                  TCheckAbstractClassConstruction.Create(prog.CompileMsgs, CPE_AbstractClassUsage, scriptPos, classSymbol);
             end;
          end;
 
@@ -168,7 +255,7 @@ begin
                   Result := TClassMethodVirtualExpr.Create(prog, scriptPos, meth, expr)
                else Result := TClassMethodStaticExpr.Create(prog, scriptPos, meth, expr)
             end else begin
-               if RefKind<>rkObjRef then
+               if RefKind=rkClassOfRef then
                   prog.CompileMsgs.AddCompilerError(scriptPos, CPE_StaticMethodExpected)
                else if expr.Typ is TClassOfSymbol then
                   prog.CompileMsgs.AddCompilerError(scriptPos, CPE_ClassMethodExpected);
@@ -192,7 +279,7 @@ begin
             end;
          fkDestructor:
             begin
-               if RefKind<>rkObjRef then
+               if RefKind=rkClassOfRef then
                   prog.CompileMsgs.AddCompilerError(scriptPos, CPE_UnexpectedDestructor);
                if not ForceStatic and meth.IsVirtual then
                   Result := TDestructorVirtualExpr.Create(prog, scriptPos, meth, expr)
@@ -242,12 +329,21 @@ begin
 end;
 
 // ------------------
-// ------------------ TdwsCompilerUtils ------------------
+// ------------------ CompilerUtils ------------------
 // ------------------
+
+// IncompatibleTypes
+//
+class procedure CompilerUtils.IncompatibleTypes(
+                        aProg : TdwsProgram; const scriptPos : TScriptPos;
+                        const fmt : UnicodeString; typ1, typ2 : TTypeSymbol);
+begin
+   aProg.CompileMsgs.AddCompilerErrorFmt(scriptPos, fmt, [typ1.Caption, typ2.Caption]);
+end;
 
 // AddProcHelper
 //
-class procedure TdwsCompilerUtils.AddProcHelper(const name : UnicodeString;
+class procedure CompilerUtils.AddProcHelper(const name : UnicodeString;
                                                 table : TSymbolTable; func : TFuncSymbol;
                                                 unitSymbol : TUnitMainSymbol);
 var
@@ -287,5 +383,164 @@ begin
    meth.Alias:=func;
    helper.AddMethod(meth);
 end;
+
+// DynamicArrayAdd
+//
+class function CompilerUtils.DynamicArrayAdd(
+      aProg : TdwsProgram; baseExpr : TTypedExpr;
+      const namePos : TScriptPos;
+      argList : TTypedExprList; const argPosArray : TScriptPosArray) : TArrayAddExpr;
+var
+   i : Integer;
+   arraySym : TDynamicArraySymbol;
+begin
+   arraySym:=(baseExpr.Typ.UnAliasedType as TDynamicArraySymbol);
+   for i:=0 to argList.Count-1 do begin
+      if    (argList[i].Typ=nil)
+         or not (   arraySym.Typ.IsCompatible(argList[i].Typ)
+                 or arraySym.IsCompatible(argList[i].Typ)
+                 or (    (argList[i].Typ is TStaticArraySymbol)
+                     and (   arraySym.Typ.IsCompatible(argList[i].Typ.Typ)
+                          or (argList[i].Typ.Size=0)))) then begin
+         argList[i]:=WrapWithImplicitConversion(aProg, argList[i], arraySym.Typ, argPosArray[i],
+                                                CPE_IncompatibleParameterTypes);
+         Break;
+      end else if argList[i].ClassType=TArrayConstantExpr then begin
+         TArrayConstantExpr(argList[i]).Prepare(aProg, arraySym.Typ);
+      end;
+   end;
+   Result:=TArrayAddExpr.Create(namePos, baseExpr, argList);
+   argList.Clear;
+end;
+
+// ArrayConcat
+//
+class function CompilerUtils.ArrayConcat(aProg : TdwsProgram; const hotPos : TScriptPos;
+                                         left, right : TTypedExpr) : TArrayConcatExpr;
+var
+   typ : TDynamicArraySymbol;
+   leftTyp, rightTyp : TArraySymbol;
+begin
+   leftTyp:=left.Typ.UnAliasedType as TArraySymbol;
+   rightTyp:=left.Typ.UnAliasedType as TArraySymbol;
+
+   if leftTyp.Typ<>rightTyp.Typ then
+      IncompatibleTypes(aProg, hotPos, CPE_IncompatibleTypes, left.Typ, right.Typ);
+
+   typ:=TDynamicArraySymbol.Create('', leftTyp.Typ, aProg.TypInteger);
+   aProg.Table.AddSymbol(typ);
+
+   Result:=TArrayConcatExpr.Create(hotPos, typ);
+   Result.AddArg(left);
+   Result.AddArg(right);
+end;
+
+// DynamicArrayAdd
+//
+class function CompilerUtils.DynamicArrayAdd(aProg : TdwsProgram; baseExpr : TTypedExpr;
+      const scriptPos : TScriptPos; argExpr : TTypedExpr) : TArrayAddExpr;
+var
+   argList : TTypedExprList;
+   argPosArray : TScriptPosArray;
+begin
+   argList:=TTypedExprList.Create;
+   try
+      argList.AddExpr(argExpr);
+      SetLength(argPosArray, 1);
+      argPosArray[0]:=scriptPos;
+      Result:=DynamicArrayAdd(aProg, baseExpr, scriptPos, argList, argPosArray);
+   finally
+      argList.Free;
+   end;
+end;
+
+
+// WrapWithImplicitConversion
+//
+class function CompilerUtils.WrapWithImplicitConversion(
+      aProg : TdwsProgram; expr : TTypedExpr; toTyp : TTypeSymbol;
+      const hotPos : TScriptPos;
+      const msg : String = CPE_IncompatibleTypes) : TTypedExpr;
+var
+   exprTyp : TTypeSymbol;
+begin
+   if expr<>nil then
+      exprTyp:=expr.Typ
+   else exprTyp:=nil;
+
+   if exprTyp.IsOfType(aProg.TypInteger) and toTyp.IsOfType(aProg.TypFloat) then begin
+
+      if expr.ClassType=TConstIntExpr then begin
+         Result:=TConstExpr.CreateFloatValue(aProg, TConstIntExpr(expr).Value);
+         expr.Free;
+      end else Result:=TConvIntToFloatExpr.Create(aProg, expr);
+
+   end else begin
+      // error & keep compiling
+      IncompatibleTypes(aProg, hotPos, msg, toTyp, exprTyp);
+      Result:=TConvInvalidExpr.Create(aProg, expr, toTyp);
+      Exit;
+   end;
+end;
+
+// ------------------
+// ------------------ TRecursiveHasSubExprClass ------------------
+// ------------------
+
+// Create
+//
+constructor TRecursiveHasSubExprClass.Create(aClass : TExprBaseClass);
+begin
+   FClass:=aClass;
+end;
+
+// Check
+//
+function TRecursiveHasSubExprClass.Check(expr : TExprBase) : Boolean;
+begin
+   Result:=expr.RecursiveEnumerateSubExprs(CallBack);
+end;
+
+// Callback
+//
+procedure TRecursiveHasSubExprClass.Callback(parent, expr : TExprBase; var abort : Boolean);
+begin
+   abort:=abort or (expr is FClass);
+end;
+
+// ------------------
+// ------------------ TStringToEnum ------------------
+// ------------------
+
+// Create
+//
+constructor TStringToEnum.Create(typ : PTypeInfo; low, high, prefixLength : Integer);
+var
+   i : Integer;
+   bucket : TNameValueHashBucket<Integer>;
+begin
+   for i:=low to high do begin
+      bucket.Name:=Copy(GetEnumName(typ, i), prefixLength+1, 99);
+      bucket.Value:=i;
+      Add(bucket);
+   end;
+end;
+
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+initialization
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+// ------------------------------------------------------------------
+
+   vArrayMethodsHash := TStringToEnum.Create(
+      TypeInfo(TArrayMethodKind),
+      Ord(Low(TArrayMethodKind)), Ord(High(TArrayMethodKind)), 3
+   );
+
+finalization
+
+   FreeAndNil(vArrayMethodsHash);
 
 end.

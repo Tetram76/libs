@@ -84,7 +84,7 @@ type
          procedure AddNameSpace(unitSym : TUnitSymbol);
    end;
 
-   TdwsSuggestionsOption = (soNoReservedWords);
+   TdwsSuggestionsOption = (soNoReservedWords, soNoUnits);
    TdwsSuggestionsOptions = set of TdwsSuggestionsOption;
 
    TNameSymbolHash = TSimpleNameObjectHash<TSymbol>;
@@ -111,6 +111,7 @@ type
          FStaticArrayHelpers : TSymbolTable;
          FDynArrayHelpers : TSymbolTable;
          FEnumElementHelpers : TSymbolTable;
+         FOptions: TdwsSuggestionsOptions;
 
       protected
          function GetCode(i : Integer) : UnicodeString;
@@ -188,6 +189,7 @@ begin
    FProg:=prog;
    FSourcePos:=sourcePos;
    FSourceFile:=sourcePos.SourceFile;
+   FOptions:=options;
    FList:=TSimpleSymbolList.Create;
    FListLookup:=TObjectsLookup.Create;
    FNamesLookup:=TNameSymbolHash.Create;
@@ -198,7 +200,8 @@ begin
    if customSuggestions<>nil then
       AddToList(customSuggestions);
    AddContextSuggestions;
-   AddUnitSuggestions;
+   if not (soNoUnits in options) then
+      AddUnitSuggestions;
    AddGlobalSuggestions;
 
    if not FAfterDot then begin
@@ -386,6 +389,7 @@ begin
       tmp.Capacity:=aList.Count;
       for i:=0 to aList.Count-1 do begin
          sym:=aList[i];
+         if sym.Name='' then continue;
          if FPartialToken<>'' then begin
             if not StrIBeginsWith(sym.Name, FPartialToken) then continue;
          end;
@@ -394,6 +398,13 @@ begin
          end else if sym is TOpenArraySymbol then
             continue;
          if StrContains(sym.Name, ' ') then continue;
+
+         if (FLocalContext<>nil) and (FLocalContext.Token=ttUSES) then begin
+            if not (sym is TUnitSymbol) then continue;
+         end else begin
+            if (soNoUnits in FOptions) and (sym is TUnitSymbol) then continue;
+         end;
+
          if FListLookup.IndexOf(sym)<0 then begin
             FListLookup.Add(sym);
             if FNamesLookup.Objects[sym.Name]=nil then begin

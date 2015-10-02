@@ -20,6 +20,7 @@ interface
 
 uses
    Classes, SysUtils, StrUtils, DateUtils,
+   SynCrtSock, SynCommons,
    dwsExprs, dwsUtils, dwsWebUtils;
 
 type
@@ -30,7 +31,8 @@ type
       wraDigest,
       wraNTLM,
       wraNegotiate,
-      wraKerberos
+      wraKerberos,
+      wraAuthorization
    );
    TWebRequestAuthentications = set of TWebRequestAuthentication;
 
@@ -61,6 +63,8 @@ type
          FQueryFields : TStrings;
          FContentFields : TStrings;
          FCustom : TObject;
+         FID : Int64;
+         FAppUser : String;
 
       protected
          FPathInfo : String;
@@ -97,8 +101,11 @@ type
          function URL : String; virtual; abstract;
          function Method : String; virtual; abstract;
          function MethodVerb : TWebRequestMethodVerb; virtual; abstract;
-         function Security : String; virtual;
+         function Security : String; virtual; abstract;
+         function Secure : Boolean; virtual; abstract;
+         function Host : String; virtual;
 
+         function ContentLength : Integer; virtual; abstract;
          function ContentData : RawByteString; virtual; abstract;
          function ContentType : RawByteString; virtual; abstract;
 
@@ -119,6 +126,10 @@ type
          property Authentication : TWebRequestAuthentication read GetAuthentication;
          property AuthenticatedUser : String read GetAuthenticatedUser;
 
+         // custom request ID
+         property ID : Int64 read FID write FID;
+         // custom Application User
+         property AppUser : String read FAppUser write FAppUser;
          // custom object field, freed with the request
          property Custom : TObject read FCustom write FCustom;
    end;
@@ -152,9 +163,11 @@ type
          FHeaders : TStrings;
          FCookies : TWebResponseCookies;  // lazy initialization
          FCompression : Boolean;
+         FProcessingTime : Integer;
 
       protected
          procedure SetContentText(const textType : RawByteString; const text : String);
+         procedure SetContentJSON(const json : String);
          procedure SetLastModified(v : TDateTime);
          function GetCookies : TWebResponseCookies;
 
@@ -170,6 +183,7 @@ type
 
          property StatusCode : Integer read FStatusCode write FStatusCode;
          property ContentText[const textType : RawByteString] : String write SetContentText;
+         property ContentJSON : String write SetContentJSON;
          property ContentData : RawByteString read FContentData write FContentData;
          property ContentType : RawByteString read FContentType write FContentType;
          property ContentEncoding : RawByteString read FContentEncoding write FContentEncoding;
@@ -178,6 +192,9 @@ type
          property Cookies : TWebResponseCookies read GetCookies;
          property Compression : Boolean read FCompression write FCompression;
          property LastModified : TDateTime write SetLastModified;
+
+         // optional, informative, time it took to process the response in microseconds
+         property ProcessingTime : Integer read FProcessingTime write FProcessingTime;
    end;
 
    IWebEnvironment = interface
@@ -207,7 +224,7 @@ type
 
 const
    cWebRequestAuthenticationToString : array [TWebRequestAuthentication] of String = (
-      'None', 'Failed', 'Basic', 'Digest', 'NTLM', 'Negotiate', 'Kerberos'
+      'None', 'Failed', 'Basic', 'Digest', 'NTLM', 'Negotiate', 'Kerberos', 'Header'
    );
 
 const
@@ -318,17 +335,17 @@ begin
    p:=0;
    base:=1;
    while True do begin
-      p:=PosEx('=', cookieField, base);
-      next:=PosEx(';', cookieField, p);
+      p:=StrUtils.PosEx('=', cookieField, base);
+      next:=StrUtils.PosEx(';', cookieField, p);
       if (p>base) and (next>p) then begin
-         Result.Add(Trim(Copy(cookieField, base, p-base))
+         Result.Add(SysUtils.Trim(Copy(cookieField, base, p-base))
                     +'='
                     +Copy(cookieField, p+1, pred(next-p)));
          base:=next+1;
       end else Break;
    end;
    if (p>base) and (base<Length(cookieField)) then
-      Result.Add(Trim(Copy(cookieField, base, p-base))
+      Result.Add(SysUtils.Trim(Copy(cookieField, base, p-base))
                  +'='
                  +Copy(cookieField, p+1));
 end;
@@ -360,11 +377,11 @@ begin
    Result:=Headers.Values[headerName];
 end;
 
-// Security
+// Host
 //
-function TWebRequest.Security : String;
+function TWebRequest.Host : String;
 begin
-   Result:='';
+   Result:=Headers.Values['Host'];
 end;
 
 // GetCookies
@@ -547,7 +564,15 @@ end;
 procedure TWebResponse.SetContentText(const textType : RawByteString; const text : String);
 begin
    ContentType:='text/'+textType+'; charset=utf-8';
-   ContentData:=UTF8Encode(text);
+   ContentData:=StringToUTF8(text);
+end;
+
+// SetContentJSON
+//
+procedure TWebResponse.SetContentJSON(const json : String);
+begin
+   ContentType:='application/json';
+   ContentData:=StringToUTF8(json);
 end;
 
 // GetCookies
@@ -591,7 +616,7 @@ begin
       end;
    end;
 
-   if MaxAge<>0 then begin
+   if MaxAge>0 then begin
       dest.WriteString('; Max-Age=');
       dest.WriteString(MaxAge);
    end;

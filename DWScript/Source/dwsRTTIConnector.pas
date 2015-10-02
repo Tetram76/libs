@@ -116,6 +116,7 @@ type
          constructor Create(environment : TRTTIEnvironment);
 
          procedure Call(exec : TdwsProgramExecution; func : TFuncSymbol); virtual; abstract;
+         procedure CompileTimeCheck(prog : TdwsProgram; expr : TFuncExprBase);
          procedure InitSymbol(symbol : TSymbol; const msgs : TdwsCompileMessageList);
          procedure InitExpression(expr : TExprBase);
          function SubExpr(i : Integer) : TExprBase;
@@ -215,13 +216,14 @@ type
          function HasIndex(const propName : String; const params : TConnectorParamArray;
                            var typSym : TTypeSymbol; isWrite : Boolean) : IConnectorCall;
          function HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
+         function HasCast(typSym: TTypeSymbol) : IConnectorCast;
       public
          constructor Create(table : TSymbolTable; rttiType : TRttiType);
    end;
 
    TdwsRTTIMethodType = (mtMethod, mtPropertyGet, mtPropertySet);
 
-   TdwsRTTIConnectorCall = class(TInterfacedSelfObject, IUnknown, IConnectorCall)
+   TdwsRTTIConnectorCall = class(TInterfacedSelfObject, IUnknown, IConnectorCall, IConnectorArgsCall)
       private
          FMethodName : String;
          FMethodType : TdwsRTTIMethodType;
@@ -235,7 +237,7 @@ type
                             methodType : TdwsRTTIMethodType);
    end;
 
-   TdwsRTTIConnectorMember = class(TInterfacedSelfObject, IUnknown, IConnectorMember)
+   TdwsRTTIConnectorMember = class(TInterfacedSelfObject, IUnknown, IConnectorMember, IConnectorDataMember)
       protected
          FMemberName : String;
 
@@ -246,7 +248,7 @@ type
          constructor Create(const memberName : String);
    end;
 
-   TdwsRTTIConnectorIndexedProperty = class(TInterfacedSelfObject, IUnknown, IConnectorCall)
+   TdwsRTTIConnectorIndexedProperty = class(TInterfacedSelfObject, IUnknown, IConnectorCall, IConnectorArgsCall)
       private
          FPropertyName : String;
          FMethodType : TdwsRTTIMethodType;
@@ -482,6 +484,13 @@ end;
 // HasEnumerator
 //
 function TdwsRTTIConnectorType.HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
+begin
+   Result:=nil;
+end;
+
+// HasCast
+//
+function TdwsRTTIConnectorType.HasCast(typSym: TTypeSymbol) : IConnectorCast;
 begin
    Result:=nil;
 end;
@@ -959,6 +968,13 @@ function TRTTIEnvironmentCallable.SubExprCount : Integer;
 begin
    Result:=0;
 
+end;
+
+// CompileTimeCheck
+//
+procedure TRTTIEnvironmentCallable.CompileTimeCheck(prog : TdwsProgram; expr : TFuncExprBase);
+begin
+   // nothing yet
 end;
 
 // ------------------

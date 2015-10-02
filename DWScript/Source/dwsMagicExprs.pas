@@ -34,7 +34,7 @@ type
    TMagicFuncExpr = class;
    TMagicFuncExprClass = class of TMagicFuncExpr;
 
-   TMagicFuncDoEvalEvent = function(const args : TExprBaseListExec) : Variant of object;
+   TMagicFuncDoEvalEvent = procedure(const args : TExprBaseListExec; var result : Variant) of object;
    TMagicProcedureDoEvalEvent = procedure(const args : TExprBaseListExec) of object;
    TMagicFuncDoEvalDataEvent = procedure(const args : TExprBaseListExec; var result : IDataContext) of object;
    TMagicFuncDoEvalAsIntegerEvent = function(const args : TExprBaseListExec) : Int64 of object;
@@ -76,7 +76,7 @@ type
    //
    TInternalMagicVariantFunction = class(TInternalMagicFunction)
       public
-         function DoEvalAsVariant(const args : TExprBaseListExec) : Variant; virtual; abstract;
+         procedure DoEvalAsVariant(const args : TExprBaseListExec; var result : Variant); virtual; abstract;
          function MagicFuncExprClass : TMagicFuncExprClass; override;
    end;
    TInternalMagicVariantFunctionClass = class of TInternalMagicVariantFunction;
@@ -173,6 +173,8 @@ type
          function IsWritable : Boolean; override;
 
          procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
+
+         procedure CompileTimeCheck(prog : TdwsProgram); override;
    end;
 
    // TMagicVariantFuncExpr
@@ -183,7 +185,7 @@ type
       public
          constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
                             func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
    // TMagicProcedureExpr
@@ -197,7 +199,7 @@ type
                             func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
 
          procedure EvalNoResult(exec : TdwsExecution); override;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
    // TMagicDataFuncExpr
@@ -211,7 +213,7 @@ type
                             func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
 
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
 
          procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
    end;
@@ -225,7 +227,7 @@ type
          constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
                             func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
          function EvalAsInteger(exec : TdwsExecution) : Int64; override;
    end;
 
@@ -238,7 +240,7 @@ type
          constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
                             func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
          procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
    end;
 
@@ -251,7 +253,7 @@ type
          constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
                             func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
          function EvalAsFloat(exec : TdwsExecution) : Double; override;
    end;
 
@@ -264,7 +266,7 @@ type
          constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos;
                             func : TFuncSymbol; internalFunc : TInternalMagicFunction); override;
          procedure EvalNoResult(exec : TdwsExecution); override;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
          function EvalAsBoolean(exec : TdwsExecution) : Boolean; override;
    end;
 
@@ -274,7 +276,7 @@ type
          constructor Create(prog : TdwsProgram; const aScriptPos : TScriptPos;
                             left, right : TTypedExpr); reintroduce;
          procedure EvalNoResult(exec : TdwsExecution); override;
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
    // result = Inc(left, right)
@@ -450,7 +452,7 @@ begin
       table.AddSymbol(sym);
       self.FuncSymbol := sym;
       if helperName<>'' then
-         TdwsCompilerUtils.AddProcHelper(helperName, table, sym, nil);
+         CompilerUtils.AddProcHelper(helperName, table, sym, nil);
    end;
 end;
 
@@ -481,7 +483,7 @@ end;
 constructor TMagicFuncExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos;
                                   func : TFuncSymbol; internalFunc : TInternalMagicFunction);
 begin
-   inherited Create(prog, scriptPos, func);
+   inherited Create(scriptPos, func);
 end;
 
 // ExpectedArg
@@ -507,6 +509,13 @@ begin
    exec.DataContext_CreateBase(FResultAddr, Result);
 end;
 
+// CompileTimeCheck
+//
+procedure TMagicFuncExpr.CompileTimeCheck(prog : TdwsProgram);
+begin
+   TMagicFuncSymbol(FuncSym).InternalFunction.CompileTimeCheck(prog, Self);
+end;
+
 // ------------------
 // ------------------ TMagicVariantFuncExpr ------------------
 // ------------------
@@ -520,16 +529,16 @@ begin
    FOnEval:=(internalFunc as TInternalMagicVariantFunction).DoEvalAsVariant;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMagicVariantFuncExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMagicVariantFuncExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 var
    execRec : TExprBaseListExec;
 begin
    execRec.ListRec:=FArgs;
    execRec.Exec:=exec;
    try
-      Result:=FOnEval(execRec);
+      FOnEval(execRec, Result);
    except
       RaiseScriptError(exec);
    end;
@@ -558,9 +567,9 @@ begin
    GetDataPtr(exec, buf);
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMagicDataFuncExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMagicDataFuncExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 var
    buf : IDataContext;
 begin
@@ -605,11 +614,11 @@ begin
    EvalAsInteger(exec);
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMagicIntFuncExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMagicIntFuncExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
-   Result:=EvalAsInteger(exec);
+   VarCopySafe(Result, EvalAsInteger(exec));
 end;
 
 // EvalAsInteger
@@ -653,14 +662,14 @@ begin
    EvalAsString(exec, buf);
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMagicStringFuncExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMagicStringFuncExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 var
    buf : UnicodeString;
 begin
    EvalAsString(exec, buf);
-   Result:=buf;
+   VarCopySafe(Result, buf);
 end;
 
 // EvalAsString
@@ -698,11 +707,11 @@ begin
    EvalAsFloat(exec);
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMagicFloatFuncExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMagicFloatFuncExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
-   Result:=EvalAsFloat(exec);
+   VarCopySafe(Result, EvalAsFloat(exec));
 end;
 
 // EvalAsFloat
@@ -740,11 +749,11 @@ begin
    EvalAsBoolean(exec);
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMagicBoolFuncExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMagicBoolFuncExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
-   Result:=EvalAsBoolean(exec);
+   VarCopySafe(Result, EvalAsBoolean(exec));
 end;
 
 // EvalAsBoolean
@@ -793,9 +802,9 @@ begin
    end;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMagicProcedureExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMagicProcedureExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    EvalNoResult(exec);
 end;
@@ -822,11 +831,11 @@ begin
    EvalAsInteger(exec);
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMagicIteratorFuncExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMagicIteratorFuncExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
-   Result:=EvalAsInteger(exec);
+   VarCopySafe(Result, EvalAsInteger(exec));
 end;
 
 // ------------------

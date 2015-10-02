@@ -65,11 +65,11 @@ type
          procedure PostCall(exec : TdwsExecution; var Result : Variant); virtual;
 
       public
-         constructor Create(Prog: TdwsProgram; const scriptPos : TScriptPos; Func: TMethodSymbol;
+         constructor Create(aProg : TdwsProgram;const scriptPos : TScriptPos; Func: TMethodSymbol;
                             BaseExpr: TTypedExpr);
          destructor Destroy; override;
 
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
 
          function MethSym : TMethodSymbol; inline;
 
@@ -85,7 +85,7 @@ type
    // Call of a helper method
    THelperMethodExpr = class (TFuncExpr)
       public
-         constructor Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TFuncSymbol);
+         constructor Create(aProg : TdwsProgram; const scriptPos : TScriptPos; func : TFuncSymbol);
    end;
 
    // Call of static methods (not virtual)
@@ -94,7 +94,7 @@ type
          function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
 
       public
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
    end;
 
    // Call of an interface methods
@@ -139,7 +139,7 @@ type
          procedure PostCall(exec : TdwsExecution; var Result : Variant); override;
 
       public
-         constructor Create(Prog: TdwsProgram; const aScriptPos: TScriptPos; Func: TMethodSymbol;
+         constructor Create(aProg : TdwsProgram; const aScriptPos: TScriptPos; Func: TMethodSymbol;
                             Base: TTypedExpr);
    end;
 
@@ -150,21 +150,29 @@ type
          function PreCall(exec : TdwsExecution) : TFuncSymbol; override;
 
       public
-         constructor Create(Prog: TdwsProgram; const aScriptPos: TScriptPos; Func: TMethodSymbol;
+         constructor Create(aProg : TdwsProgram; const aScriptPos: TScriptPos; Func: TMethodSymbol;
                             Base: TTypedExpr);
    end;
 
-   // call to default TObject.Create (which is empty)
+   // Call to default TObject.Create (which is empty)
    TConstructorStaticDefaultExpr = class(TConstructorStaticExpr)
       public
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var result : Variant); override;
+   end;
+
+   // Instantiates an anonymous class
+   TConstructorAnonymousExpr = class(TPosDataExpr)
+      public
+         constructor Create(const aScriptPos: TScriptPos; aClass : TClassSymbol);
+
+         procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
    end;
 
    TConstructorStaticObjExpr = class(TMethodStaticExpr)
       protected
          procedure PostCall(exec : TdwsExecution; var Result : Variant); override;
       public
-         constructor Create(Prog: TdwsProgram; const aScriptPos: TScriptPos; Func: TMethodSymbol;
+         constructor Create(aProg : TdwsProgram; const aScriptPos: TScriptPos; Func: TMethodSymbol;
                             BaseExpr: TTypedExpr);
    end;
 
@@ -172,7 +180,7 @@ type
       protected
          procedure PostCall(exec : TdwsExecution; var Result : Variant); override;
       public
-         constructor Create(Prog: TdwsProgram; const aScriptPos: TScriptPos; Func: TMethodSymbol;
+         constructor Create(aProg : TdwsProgram; const aScriptPos: TScriptPos; Func: TMethodSymbol;
                             Base: TTypedExpr);
    end;
 
@@ -275,10 +283,10 @@ end;
 
 // Create
 //
-constructor TMethodExpr.Create(Prog: TdwsProgram; const scriptPos: TScriptPos;
-  Func: TMethodSymbol; BaseExpr: TTypedExpr);
+constructor TMethodExpr.Create(aProg : TdwsProgram;const scriptPos: TScriptPos;
+                               Func: TMethodSymbol; BaseExpr: TTypedExpr);
 begin
-   inherited Create(Prog, scriptPos, Func);
+   inherited Create(aProg, scriptPos, Func);
    FBaseExpr:=BaseExpr;
    FSelfAddr:=Func.SelfSym.StackAddr;
 end;
@@ -291,9 +299,9 @@ begin
    inherited;
 end;
 
-// Eval
+// EvalAsVariant
 //
-function TMethodExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMethodExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
    func : TFuncSymbol;
 begin
@@ -305,7 +313,7 @@ begin
 
          DoEvalCall(exec, func);
 
-         PostCall(exec, Result);
+         PostCall(exec, result);
       finally
          // Remove parameters from stack
          exec.Stack.Pop(ParamSize);
@@ -382,11 +390,11 @@ end;
 
 // Create
 //
-constructor THelperMethodExpr.Create(prog : TdwsProgram; const scriptPos : TScriptPos; func : TFuncSymbol);
+constructor THelperMethodExpr.Create(aProg : TdwsProgram; const scriptPos : TScriptPos; func : TFuncSymbol);
 begin
    if func.ClassType=TAliasMethodSymbol then
       func:=TAliasMethodSymbol(func).Alias;
-   inherited Create(prog, scriptPos, func);
+   inherited Create(aProg, scriptPos, func);
 
 end;
 
@@ -394,9 +402,9 @@ end;
 // ------------------ TMethodStaticExpr ------------------
 // ------------------
 
-// Eval
+// EvalAsVariant
 //
-function TMethodStaticExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TMethodStaticExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
    scriptObj : Pointer;
    oldSelf : PIScriptObj;
@@ -405,7 +413,7 @@ begin
    oldSelf:=exec.SelfScriptObject;
    try
       exec.SelfScriptObject:=@scriptObj;
-      Result:=inherited Eval(exec);
+      inherited EvalAsVariant(exec, Result);
    finally
       exec.SelfScriptObject:=oldSelf;
       IScriptObj(scriptObj):=nil;
@@ -435,12 +443,12 @@ end;
 //
 function TMethodInterfaceExpr.PreCall(exec : TdwsExecution) : TFuncSymbol;
 var
-   scriptObj : IScriptObj;
+   scriptIntf : IScriptObjInterface;
    intfObj : TScriptInterface;
 begin
-   FBaseExpr.EvalAsScriptObj(exec, scriptObj);
-   CheckInterface(exec, scriptObj);
-   intfObj:=TScriptInterface(scriptObj.GetSelf);
+   FBaseExpr.EvalAsScriptObjInterface(exec, scriptIntf);
+   CheckInterface(exec, scriptIntf);
+   intfObj:=TScriptInterface(scriptIntf.GetSelf);
    exec.SelfScriptObject^:=intfObj.Instance;
    exec.Stack.WriteInterfaceValue(exec.Stack.StackPointer+FSelfAddr, intfObj.Instance);
    Result:=intfObj.VMT[TMethodSymbol(FuncSym).VMTIndex];
@@ -540,14 +548,13 @@ end;
 // ------------------ TConstructorStaticExpr ------------------
 // ------------------
 
-constructor TConstructorStaticExpr.Create(Prog: TdwsProgram; const aScriptPos: TScriptPos;
-   Func: TMethodSymbol; Base: TTypedExpr);
+constructor TConstructorStaticExpr.Create(aProg : TdwsProgram; const aScriptPos: TScriptPos;
+                                          Func: TMethodSymbol; Base: TTypedExpr);
 begin
-  inherited Create(Prog, aScriptPos, Func, Base);
-  if Base.Typ is TClassOfSymbol then
-    FTyp := Base.Typ.Typ
-  else
-    FTyp := Base.Typ;
+   inherited Create(aProg, aScriptPos, Func, Base);
+   if Base.Typ is TClassOfSymbol then
+      FTyp := Base.Typ.Typ
+   else FTyp := Base.Typ;
 end;
 
 // DoCreate
@@ -588,10 +595,10 @@ end;
 // ------------------ TConstructorVirtualExpr ------------------
 // ------------------
 
-constructor TConstructorVirtualExpr.Create(Prog: TdwsProgram; const aScriptPos: TScriptPos;
+constructor TConstructorVirtualExpr.Create(aProg : TdwsProgram; const aScriptPos: TScriptPos;
    Func: TMethodSymbol; Base: TTypedExpr);
 begin
-  inherited Create(Prog, aScriptPos, Func, Base);
+  inherited Create(aProg, aScriptPos, Func, Base);
   FTyp := Base.Typ.Typ;
 end;
 
@@ -632,9 +639,9 @@ end;
 // ------------------ TConstructorStaticDefaultExpr ------------------
 // ------------------
 
-// Eval
+// EvalAsVariant
 //
-function TConstructorStaticDefaultExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TConstructorStaticDefaultExpr.EvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
    scriptObj : Pointer;
    oldSelf : PIScriptObj;
@@ -644,7 +651,7 @@ begin
    try
       exec.SelfScriptObject:=@scriptObj;
       DoCreate(exec);
-      Result:=exec.SelfScriptObject^;
+      VarCopySafe(result, exec.SelfScriptObject^);
    finally
       exec.SelfScriptObject:=oldSelf;
       IScriptObj(scriptObj):=nil;
@@ -655,10 +662,10 @@ end;
 // ------------------ TConstructorStaticObjExpr ------------------
 // ------------------
 
-constructor TConstructorStaticObjExpr.Create(Prog: TdwsProgram;
-  const aScriptPos: TScriptPos; Func: TMethodSymbol; BaseExpr: TTypedExpr);
+constructor TConstructorStaticObjExpr.Create(aProg : TdwsProgram;
+      const aScriptPos: TScriptPos; Func: TMethodSymbol; BaseExpr: TTypedExpr);
 begin
-   inherited Create(Prog, aScriptPos, Func, BaseExpr);
+   inherited Create(aProg, aScriptPos, Func, BaseExpr);
    Typ := BaseExpr.Typ;
 end;
 
@@ -671,10 +678,10 @@ end;
 // ------------------ TConstructorVirtualObjExpr ------------------
 // ------------------
 
-constructor TConstructorVirtualObjExpr.Create(Prog: TdwsProgram;
-  const aScriptPos: TScriptPos; Func: TMethodSymbol; Base: TTypedExpr);
+constructor TConstructorVirtualObjExpr.Create(aProg : TdwsProgram;
+      const aScriptPos: TScriptPos; Func: TMethodSymbol; Base: TTypedExpr);
 begin
-   inherited Create(Prog, aScriptPos, Func, Base);
+   inherited Create(aProg, aScriptPos, Func, Base);
    Typ := Base.Typ;
 end;
 
@@ -703,6 +710,25 @@ end;
 procedure TDestructorVirtualExpr.PostCall(exec : TdwsExecution; var Result : Variant);
 begin
    exec.SelfScriptObject^.Destroyed:=True;
+end;
+
+// ------------------
+// ------------------ TConstructorAnonymousExpr ------------------
+// ------------------
+
+// Create
+//
+constructor TConstructorAnonymousExpr.Create(const aScriptPos: TScriptPos;
+                                             aClass : TClassSymbol);
+begin
+   inherited Create(aScriptPos, aClass);
+end;
+
+// GetDataPtr
+//
+procedure TConstructorAnonymousExpr.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
+begin
+   Assert(False, 'Anonymous class construction not supported in scripts, yet.');
 end;
 
 end.

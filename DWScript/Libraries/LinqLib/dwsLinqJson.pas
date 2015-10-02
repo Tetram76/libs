@@ -19,7 +19,7 @@ type
    TLinqJsonFactory = class(TInterfacedObject, ILinqQueryBuilder)
    private
       FJsonSymbol: TTypeSymbol;
-      FCompiler: TdwsCompiler;
+      FCompiler: IdwsCompiler;
 
       function From(value: TTypedExpr; base: TDataSymbol): TTypedExpr;
       function Join(base: TTypedExpr; value: TSqlJoinExpr): TTypedExpr;
@@ -32,13 +32,13 @@ type
       procedure Finalize(From: TTypedExpr);
       function NeedsDot: boolean;
    public
-      constructor Create(compiler: TdwsCompiler);
+      constructor Create(compiler: IdwsCompiler);
    end;
 
    TJsonExpr = class(TTypedExpr)
    public
       function EvalAsJson(exec : TdwsExecution): TdwsJsonValue; virtual; abstract;
-      function Eval(exec : TdwsExecution) : Variant; override;
+      procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
    TJsonFromExpr = class(TJsonExpr)
@@ -109,9 +109,9 @@ type
       FData: TDataSymbol;
       FAssign: TAssignExpr;
    public
-      constructor Create(base: TJsonExpr; targetFunc: TFuncPtrExpr; compiler: TdwsCompiler; aPos: TScriptPos);
+      constructor Create(base: TJsonExpr; targetFunc: TFuncPtrExpr; compiler: IdwsCompiler; aPos: TScriptPos);
       destructor Destroy; override;
-      function Eval(exec : TdwsExecution): variant; override;
+      procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
    end;
 
 implementation
@@ -121,7 +121,7 @@ uses
 
 { TLinqJsonFactory }
 
-constructor TLinqJsonFactory.Create(compiler: TdwsCompiler);
+constructor TLinqJsonFactory.Create(compiler: IdwsCompiler);
 begin
    FCompiler := compiler;
    FJsonSymbol := compiler.CurrentProg.Table.FindTypeSymbol('JSONVariant', cvMagic);
@@ -192,7 +192,9 @@ end;
 
 { TJsonExpr }
 
-function TJsonExpr.Eval(exec: TdwsExecution): Variant;
+// EvalAsVariant
+//
+procedure TJsonExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    result := BoxedJsonValue(EvalAsJson(exec));
 end;
@@ -212,9 +214,11 @@ end;
 
 function TJsonFromExpr.EvalAsJson(exec: TdwsExecution): TdwsJsonValue;
 var
+   buf : Variant;
    value: IBoxedJsonValue;
 begin
-   value := IUnknown(FBase.Eval(exec)) as IBoxedJsonValue;
+   FBase.EvalAsVariant(exec, buf);
+   value := IUnknown(buf) as IBoxedJsonValue;
    result := value.Value.Clone;
 end;
 
@@ -240,7 +244,7 @@ function TJsonWhereFilter.HalfFilterValue(filter: TTypedExpr; value: TdwsJsonVal
 begin
    if filter is TSqlIdentifier then
       result := value.Items[TSqlIdentifier(filter).Value].Value.AsVariant
-   else result := filter.Eval(exec);
+   else filter.EvalAsVariant(exec, result);
 end;
 
 function TJsonWhereFilter.MatchFilter(filter: TTypedExpr; value: TdwsJsonValue; exec: TdwsExecution): boolean;
@@ -609,7 +613,7 @@ end;
 { TJsonIntoFilter }
 
 constructor TJsonIntoFilter.Create(base: TJsonExpr; targetFunc: TFuncPtrExpr;
-  compiler: TdwsCompiler; aPos: TScriptPos);
+  compiler: IdwsCompiler; aPos: TScriptPos);
 var
    prog: TdwsProgram;
    jsonVar: TVarExpr;
@@ -623,7 +627,7 @@ begin
    FData.AllocateStackAddr(prog.Table.AddrGenerator);
    jsonVar := TVarExpr.Create(prog, FData);
    FBase.IncRefCount;
-   FAssign := TAssignExpr.Create(prog, aPos, jsonVar, FBase);
+   FAssign := TAssignExpr.Create(prog, aPos, compiler.CompileTimeExecution, jsonVar, FBase);
    jsonVar.IncRefCount;
    FInto.AddArg(jsonVar);
    FInto.Initialize(prog);
@@ -638,7 +642,9 @@ begin
    inherited Destroy;
 end;
 
-function TJsonIntoFilter.Eval(exec: TdwsExecution): variant;
+// EvalAsVariant
+//
+procedure TJsonIntoFilter.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
    FAssign.EvalNoResult(exec);
    FInto.EvalAsVariant(exec, result);
@@ -646,7 +652,7 @@ end;
 
 { Classless }
 
-function LinqJsonFactory(compiler: TdwsCompiler; symbol: TTypeSymbol): ILinqQueryBuilder;
+function LinqJsonFactory(compiler: IdwsCompiler; symbol: TTypeSymbol): ILinqQueryBuilder;
 var
    factory: TLinqJsonFactory;
 begin

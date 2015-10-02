@@ -213,22 +213,6 @@ begin
    Result:=CompareText(S1, S2);
 end;
 
-function TSynDWSSyn.HashKey(Str: PWideChar): Cardinal;
-var
-   c : Word;
-begin
-   Result:=0;
-   while IsIdentChar(Str^) do begin
-      c:=Ord(Str^);
-      if c in [Ord('A')..Ord('Z')] then
-         c := c + (Ord('a')-Ord('A'));
-      Result := Result * 692 + c * 171;
-      inc(Str);
-   end;
-   fStringLen := Str - fToIdent;
-   Result := Result mod Cardinal(Length(fIdentFuncTable));
-end;
-
 function TSynDWSSyn.IdentKind(MayBe: PWideChar): TtkTokenKind;
 var
   Key: Cardinal;
@@ -755,21 +739,27 @@ end;
 
 procedure TSynDWSSyn.StringQuoteProc;
 begin
-  fTokenID := tkString;
-  if (Run>0) or IsLineEnd(Run+1) then
-     Inc(Run);
-  fRange := rsHereDocDouble;
-  while not IsLineEnd(Run) do
-  begin
-    if fLine[Run] = '"' then begin
+   fTokenID := tkString;
+   if fRange <> rsHereDocDouble then begin
+      fRange := rsHereDocDouble;
       Inc(Run);
-      if fLine[Run] <> '"' then begin
-        fRange := rsUnknown;
-        break;
+   end else begin
+      if IsLineEnd(Run) then begin
+         Inc(Run);
+         Exit;
       end;
-    end;
-    Inc(Run);
-  end;
+   end;
+
+   while not IsLineEnd(Run) do begin
+      if fLine[Run] = '"' then begin
+         Inc(Run);
+         if fLine[Run] <> '"' then begin
+            fRange := rsUnknown;
+            break;
+         end;
+      end;
+      Inc(Run);
+   end;
 end;
 
 procedure TSynDWSSyn.SymbolProc;
@@ -981,6 +971,24 @@ end;
 class function TSynDWSSyn.GetFriendlyLanguageName: UnicodeString;
 begin
   Result := SYNS_FriendlyLangPascal;
+end;
+
+{$overflowchecks OFF}
+
+function TSynDWSSyn.HashKey(Str: PWideChar): Cardinal;
+var
+   c : Word;
+begin
+   Result:=0;
+   while IsIdentChar(Str^) do begin
+      c:=Ord(Str^);
+      if c in [Ord('A')..Ord('Z')] then
+         c := c + (Ord('a')-Ord('A'));
+      Result := Result * 692 + c * 171;
+      inc(Str);
+   end;
+   fStringLen := Str - fToIdent;
+   Result := Result mod Cardinal(Length(fIdentFuncTable));
 end;
 
 initialization

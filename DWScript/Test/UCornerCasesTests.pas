@@ -6,7 +6,7 @@ uses
    Windows, Classes, SysUtils,
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsDataContext,
    dwsTokenizer, dwsXPlatform, dwsFileSystem, dwsErrors, dwsUtils, Variants,
-   dwsSymbols, dwsPascalTokenizer, dwsStrings, dwsJSON;
+   dwsSymbols, dwsPascalTokenizer, dwsStrings, dwsJSON, dwsFunctions;
 
 type
 
@@ -24,6 +24,8 @@ type
 
          procedure ReExec(info : TProgramInfo);
          procedure HostExcept(info : TProgramInfo);
+
+         procedure InvalidAddUnit;
 
       published
          procedure TokenizerErrorTransition;
@@ -75,10 +77,20 @@ type
          procedure PartialClassParent;
          procedure ConstantAliasing;
          procedure ExternalVariables;
+         procedure ExternalClassVariable;
          procedure TypeOfProperty;
          procedure MethodFree;
          procedure MethodDestroy;
          procedure PropertyDefault;
+         procedure SimpleStringListIndexOf;
+         procedure ExceptionInInitialization;
+         procedure ExceptionInFinalization;
+         procedure CaseOfBuiltinHelper;
+         procedure CompilerInternals;
+         procedure CompilerAbort;
+         procedure InitializationFinalization;
+         procedure IsAbstractFlag;
+         procedure UnitOwnedByCompiler;
    end;
 
    ETestException = class (Exception);
@@ -263,7 +275,9 @@ procedure TCornerCasesTests.DoOnResource(compiler : TdwsCompiler; const resName 
 begin
    FLastResource:=resName;
    if resName='missing' then
-      compiler.Msgs.AddCompilerError(compiler.Tokenizer.HotPos, 'Missing resource');
+      compiler.Msgs.AddCompilerError(compiler.Tokenizer.HotPos, 'Missing resource')
+   else if resName='abort' then
+      compiler.AbortCompilation;
 end;
 
 // ReExec
@@ -1614,6 +1628,27 @@ begin
    CheckEquals('c', TDataSymbol(sym).ExternalName, 'c');
 end;
 
+// ExternalClassVariable
+//
+procedure TCornerCasesTests.ExternalClassVariable;
+var
+   prog : IdwsProgram;
+   sym : TSymbol;
+begin
+   prog:=FCompiler.Compile('type TTest = class'#13#10
+                           +'class var a external "alpha" : String;'#13#10
+                           +'end;');
+
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   sym:=prog.Table.FindSymbol('TTest', cvMagic);
+   CheckEquals(TClassSymbol.ClassName, sym.ClassType.ClassName, 'TTest');
+
+   sym:=TClassSymbol(sym).Members.FindSymbol('a', cvMagic);
+   CheckEquals(TClassVarSymbol.ClassName, sym.ClassType.ClassName, 'a');
+   Check(TClassVarSymbol(sym).HasExternalName, 'alpha');
+end;
+
 // TypeOfProperty
 //
 procedure TCornerCasesTests.TypeOfProperty;
@@ -1705,6 +1740,221 @@ begin
 
    CheckEquals('String', prop.DefaultSym.Typ.Name);
    CheckEquals('hello', prop.DefaultSym.Data[0]);
+end;
+
+// SimpleStringListIndexOf
+//
+procedure TCornerCasesTests.SimpleStringListIndexOf;
+var
+   ssl : TSimpleStringList;
+begin
+   ssl:=TSimpleStringList.Create;
+   try
+      Check(ssl.IndexOf('a')<0, 'empty');
+      ssl.Add('a');
+      CheckEquals(0, ssl.IndexOf('a'), 'a 1');
+      ssl.Add('b');
+      CheckEquals(0, ssl.IndexOf('a'), 'a 2');
+      CheckEquals(1, ssl.IndexOf('b'), 'b 2');
+      Check(ssl.IndexOf('c')<0, 'c 3');
+   finally
+      ssl.Free;
+   end;
+end;
+
+// ExceptionInInitialization
+//
+procedure TCornerCasesTests.ExceptionInInitialization;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'unit Dummy; interface implementation initialization'#13#10
+                           +'Assert(False);'#13#10
+                           +'finalization'#13#10
+                           +'PrintLn("here");'#13#10
+                           +'end.');
+
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   exec:=prog.Execute;
+   CheckEquals('here'#13#10, exec.Result.ToString);
+   CheckEquals('Runtime Error: Assertion failed [line: 2, column: 1]'#13#10, exec.Msgs.AsInfo);
+end;
+
+// ExceptionInFinalization
+//
+procedure TCornerCasesTests.ExceptionInFinalization;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'unit Dummy; interface implementation initialization finalization'#13#10
+                           +'Assert(False);');
+
+   CheckEquals('', prog.Msgs.AsInfo);
+
+   exec:=prog.Execute;
+   CheckEquals('Runtime Error: Assertion failed [line: 2, column: 1]'#13#10, exec.Msgs.AsInfo);
+end;
+
+// CaseOfBuiltinHelper
+//
+procedure TCornerCasesTests.CaseOfBuiltinHelper;
+var
+   prog : IdwsProgram;
+begin
+   FCompiler.Config.HintsLevel:=hlPedantic;
+
+   prog:=FCompiler.Compile( 'var a : array of Integer;'#13#10
+                           +'a.cleaR;');
+
+   CheckEquals('Hint: "cleaR" does not match case of declaration ("Clear") [line: 2, column: 3]'#13#10, prog.Msgs.AsInfo, 'array');
+
+(*
+   TODO
+
+   prog:=FCompiler.Compile( 'var s : String;'#13#10
+                           +'s.lengtH;'#13#10
+                           +'type TEnum = (One);'#13#10
+                           +'s := One.Name;'#13#10
+                           +'var se : set of TEnum;'#13#10
+                           +'se.includE(one);'#13#10
+                           );
+
+   CheckEquals('bbb', prog.Msgs.AsInfo, 'string');
+
+   prog:=FCompiler.Compile( 'type TEnum = (One);'#13#10
+                           +'s := One.Name;'#13#10
+                           +'var se : set of TEnum;'#13#10
+                           +'se.includE(one);'#13#10
+                           );
+
+   CheckEquals('bbb', prog.Msgs.AsInfo, 'enums & sets');
+*)
+   FCompiler.Config.HintsLevel:=hlNormal;
+end;
+
+// CompilerInternals
+//
+procedure TCornerCasesTests.CompilerInternals;
+var
+   c : IdwsCompiler;
+begin
+   c:=FCompiler.Compiler;
+
+   // this test is most meaningful when run after other tests
+
+   CheckTrue(c.Msgs=nil, 'Msgs');
+   CheckTrue(c.Tokenizer=nil, 'Tokenizer');
+   CheckTrue(c.ExternalFunctionsManager=nil, 'External');
+   CheckEquals(TdwsCompilerExecution.ClassName, c.CompileTimeExecution.ClassName, 'Exec');
+end;
+
+// CompilerAbort
+//
+procedure TCornerCasesTests.CompilerAbort;
+var
+   prog : IdwsProgram;
+begin
+   FCompiler.OnResource:=DoOnResource;
+
+   prog:=FCompiler.Compile( 'var a := 1;'#13#10
+                           +'{$R "abort"}'#13#10
+                           +'bug bug bug');
+
+   CheckEquals('Syntax Error: Compilation aborted [line: 3, column: 1]'#13#10, prog.Msgs.AsInfo, 'array');
+
+   FCompiler.OnResource:=nil;
+end;
+
+// InitializationFinalization
+//
+procedure TCornerCasesTests.InitializationFinalization;
+var
+   prog : IdwsProgram;
+begin
+   prog:=FCompiler.Compile( 'unit Test; '#13#10
+                           +'interface'#13#10
+                           +'implementation'#13#10
+                           +'initialization'#13#10
+                           +'Print("hello");'#13#10
+                           +'finalization');
+
+   CheckEquals('', prog.Msgs.AsInfo, 'no finalization compile');
+
+   CheckEquals('hello', prog.Execute.Result.ToString, 'no finalization exec');
+end;
+
+// IsAbstractFlag
+//
+procedure TCornerCasesTests.IsAbstractFlag;
+var
+   prog : IdwsProgram;
+   sym : TTypeSymbol;
+begin
+   prog:=FCompiler.Compile( 'type TA = class procedure A; virtual; abstract; end;'#13#10
+                           +'type TS = class (TA) procedure A; override; begin end; end;');
+
+   sym:=prog.Table.FindTypeSymbol('TA', cvMagic);
+   Check(sym is TClassSymbol, 'TA class');
+   Check(TClassSymbol(sym).IsAbstract, 'TA abstract');
+
+   sym:=prog.Table.FindTypeSymbol('TS', cvMagic);
+   Check(sym is TClassSymbol, 'TS class');
+   Check(not TClassSymbol(sym).IsAbstract, 'TS not abstract');
+end;
+
+// InvalidAddUnit
+//
+procedure TCornerCasesTests.InvalidAddUnit;
+var
+   i : IdwsUnit;
+   u : TdwsUnit;
+   s : TDelphiWebScript;
+begin
+   u:=nil;
+   try
+      s:=TDelphiWebScript.Create(nil);
+      try
+         u:=TdwsUnit.Create(s);
+         i:=u;
+         s.AddUnit(u);
+      finally
+         s.Free;
+      end;
+   finally
+      // recover the leak from the above exception (cf. TdwsAbstractUnit.BeforeAdditionTo)
+      i:=nil;
+      u.Free;
+   end;
+end;
+
+// UnitOwnedByCompiler
+//
+procedure TCornerCasesTests.UnitOwnedByCompiler;
+var
+   u : TdwsUnit;
+   s : TDelphiWebScript;
+begin
+   // owned but not used
+   s:=TDelphiWebScript.Create(nil);
+   try
+      TdwsUnit.Create(s);
+   finally
+      s.Free;
+   end;
+
+   // owned and referred
+   s:=TDelphiWebScript.Create(nil);
+   try
+      u:=TdwsUnit.Create(s);
+      u.Script:=s;
+   finally
+      s.Free;
+   end;
+
+   CheckException(InvalidAddUnit, EdwsInvalidUnitAddition, 'TdwsUnit AddUnit');
 end;
 
 // ------------------------------------------------------------------

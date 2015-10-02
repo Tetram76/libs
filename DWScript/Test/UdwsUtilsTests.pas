@@ -17,7 +17,7 @@ unit UdwsUtilsTests;
 
 interface
 
-uses Classes, SysUtils, Math, dwsXPlatformTests, dwsUtils;
+uses Classes, SysUtils, Math, dwsXPlatformTests, dwsUtils, dwsXPlatform, dwsWebUtils;
 
 type
 
@@ -60,6 +60,14 @@ type
          procedure IntToHexTest;
 
          procedure QueueTest;
+
+         procedure StringHash;
+
+         procedure LoadTextFromBufferTest;
+
+         procedure URLEncodedEncoder;
+
+         procedure VariantClearAssignString;
    end;
 
 // ------------------------------------------------------------------
@@ -766,6 +774,82 @@ begin
    finally
       q.Free;
    end;
+end;
+
+// StringHash
+//
+procedure TdwsUtilsTests.StringHash;
+begin
+   CheckEquals(SimpleLowerCaseStringHash(''), SimpleStringHash(''), 'empty');
+   CheckEquals(SimpleLowerCaseStringHash('abc'), SimpleStringHash('abc'), 'abc');
+   CheckEquals(SimpleLowerCaseStringHash('ABC'), SimpleStringHash(LowerCase('ABC')), 'ABC');
+   CheckEquals(SimpleLowerCaseStringHash('ÈRic'), SimpleStringHash(UnicodeLowerCase('ÈRic')), 'ÈRic');
+end;
+
+// LoadTextFromBufferTest
+//
+procedure TdwsUtilsTests.LoadTextFromBufferTest;
+
+   function Buffer(const a : array of const) : TBytes;
+   var
+      i : Integer;
+   begin
+      SetLength(Result, Length(a));
+      for i:=0 to High(a) do begin
+         case a[i].VType of
+            vtInteger : Result[i]:=a[i].VInteger;
+            vtChar : Result[i]:=Ord(a[i].VChar);
+            vtWideChar : Result[i]:=Ord(a[i].VWideChar);
+         else
+            Assert(False);
+         end;
+      end;
+   end;
+
+begin
+   CheckEquals('hello', LoadTextFromBuffer(Buffer(['h', 'e', 'l', 'l', 'o'])), 'hello');
+   CheckEquals('hÈl', LoadTextFromBuffer(Buffer(['h', $C3, $A9, 'l'])), 'hÈl');
+   CheckEquals('utf8È', LoadTextFromBuffer(Buffer([$EF, $BB, $BF, 'u', 't', 'f', '8', $C3, $A9])), 'utf8È');
+   CheckEquals('BÈ', LoadTextFromBuffer(Buffer([$FE, $FF, 0, 'B', 0, $E9])), 'BÈ');
+   CheckEquals('LÈ', LoadTextFromBuffer(Buffer([$FF, $FE, 'L', 0, $E9, 0])), 'LÈ');
+end;
+
+// URLEncodedEncoder
+//
+procedure TdwsUtilsTests.URLEncodedEncoder;
+begin
+   CheckEquals('', WebUtils.EncodeURLEncoded(''), 'empty');
+   CheckEquals('a', WebUtils.EncodeURLEncoded('a'), 'a');
+   CheckEquals('a%3D', WebUtils.EncodeURLEncoded('a='), 'a=');
+   CheckEquals('%3D%3D%3D%3D%3D%3D', WebUtils.EncodeURLEncoded('======'), '======');
+end;
+
+// VariantClearAssignString
+//
+procedure TdwsUtilsTests.VariantClearAssignString;
+var
+   v : Variant;
+begin
+   VarCopySafe(v, 'a');
+   CheckEquals('a', v, 'a');
+   VarClearSafe(v);
+   CheckEquals('', v, 'a clear');
+
+   VarCopySafe(v, 'b');
+   CheckEquals('b', v, 'b');
+   VarCopySafe(v, 'c');
+   CheckEquals('c', v, 'c');
+
+   VarCopySafe(v, 1);
+   CheckEquals(1, v, '1');
+
+   VarCopySafe(v, 'd');
+   CheckEquals('d', v, 'd');
+
+   v:=123;
+   CheckEquals(123, v, '123');
+   VarCopySafe(v, 'e');
+   CheckEquals('e', v, 'e');
 end;
 
 // ------------------------------------------------------------------

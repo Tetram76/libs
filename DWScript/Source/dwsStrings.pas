@@ -85,6 +85,9 @@ const
   SWI_WARNINGS = 'WARNINGS';
   SWI_ERROR = 'ERROR';
   SWI_FATAL = 'FATAL';
+  SWI_REGION = 'REGION';
+  SWI_ENDREGION = 'ENDREGION';
+  SWI_CODEGEN = 'CODEGEN';
 
   // COMPILER ERRORS
   //
@@ -97,6 +100,9 @@ const
 const
 
   // Missing Tokens
+  CPE_XxxExpected = ' expected.';
+  CPE_Unexpected_X = 'Unexpected "%s".';
+  CPE_X_ExpectedBut_Y_Found = '%s expected but %s found.';
   CPE_CommaExpected = '"," expected.';
   CPE_SemiExpected = '";" expected.';
   CPE_BrackLeftExpected = '"(" expected.';
@@ -139,6 +145,7 @@ const
   CPE_ExternalArrayForStaticMethodsOnly = 'External array is supported only for static methods';
   CPE_ExternalVariablesMustBeGlobal = 'External variables must be global';
   CPE_ExternalClassVariablesInitializationIsNotSupported = 'External class variables initialization is not supported';
+  CPE_ExternalPropertyNoArguments = 'External properties cannot have arguments';
 
   // ReadName
   CPE_UnknownName = 'Unknown name "%s"';
@@ -232,7 +239,10 @@ const
   CPE_NoParamsExpected = 'No parameters expected';
   CPE_NoProtectedVisibilityForHelpers = 'Helpers do not supported "protected" visibility specifier';
   CPE_HelpersNotAllowedForDelegates = 'Helpers not allowed for delegates or function pointers';
+  CPE_HelperExpected = '"helper" expected';
   CPE_AnonymousMethodsNotAllowedHere = 'Anonymous methods not allowed here';
+  CPE_AnonymousClassesMustBeFullyDefined = 'Anonymous classes must be fully defined';
+  CPE_AnonymousClassNotAllowed = 'Anonymous class not allowed by compiler options';
 
   CPE_AttributeConstructorExpected = 'Attribute constructor expected';
   CPE_DanglingAttribute = 'Dangling attribute declaration';
@@ -276,6 +286,9 @@ const
   CPE_ArrayMethodRestrictedToDynamicArrays = 'Array method "%s" is restricted to dynamic arrays';
   CPE_ArrayDoesNotHaveNaturalSortOrder = 'Array does not have a natural sort order';
 
+  // Sets
+  CPE_SetTooLargeForCastToInteger = 'Set has too many elements for cast to integer';
+
   // Assign
   CPE_RightSideNeedsReturnType = 'Assignment''s right-side-argument has no return type';
   CPE_CantWriteToLeftSide = 'Cannot assign a value to the left-side argument';
@@ -309,6 +322,7 @@ const
   CPE_ConstVarParam = 'Argument %d (%s) cannot be passed as Var-parameter';
   CPE_OnlyVariablesAsVarParam = 'Only a variable can be be passed as Var-parameter';
   CPE_MustExplicitOverloads = 'Overloaded procedure "%s" must be marked with the "overload" directive';
+  CPH_ShouldExplicitOverload = 'Overloaded method "%s" should be marked with the "overload" directive';
   CPE_NoMatchingOverloadDeclaration = 'There is no overloaded version of "%s" declared with these arguments';
   CPE_NoMatchingOverloadForCall = 'There is no overloaded version of "%s" that can be called with these arguments';
   CPE_MatchingOverload = 'Overload of "%s" will be ambiguous with a previously declared version';
@@ -330,6 +344,7 @@ const
   CPH_PrivateVirtualMethodCantBeOverridden = 'Private virtual methods cannot be overridden';
   CPH_ResultNotUsed = 'Result is never used';
   CPH_RedundantVisibilitySpecifier = 'Redundant specifier, visibility is already "%s"';
+  CPH_RedundantFunctionCall = 'Redundant function call';
   CPH_NameAmbiguousInScopeContext = 'Name "%s" could be ambiguous in its scope context';
   CPH_ReferenceTypeParamAsVarButNeverWrittenTo = '"%s" parameter is a reference type passed as VAR, but never written to';
   CPH_ReferenceTypeParamAsConst = '"%s" parameter is a reference type passed as CONST';
@@ -345,6 +360,9 @@ const
   CPH_CallConventionIsNotSupportedAndIgnored = 'Call convention "%s" is not supported and ignored';
 
   CPH_UnnamedEnumerationElement = 'Enumeration element is unnamed or out of range';
+
+  CPH_EmptyThenBlock = 'Empty THEN block';
+  CPH_EmptyElseBlock = 'Empty ELSE block';
 
   // TypeCheck
   CPE_BooleanExpected = 'Boolean expected';
@@ -364,6 +382,7 @@ const
   CPE_AssignIncompatibleTypes = 'Incompatible types: Cannot assign "%s" to "%s"';
   CPE_RangeIncompatibleTypes = 'Range start and range stop are of incompatible types: "%s" and "%s"';
   CPE_TypeCouldNotBeInferenced = 'Type could not be inferenced';
+  CPE_RangeTooLarge = 'Range is too large';
 
   CPE_LocalFunctionAsDelegate = 'Local procedure/function cannot be used as delegate';
 
@@ -386,6 +405,7 @@ const
 
   CPE_ConstantExpressionExpected = 'Constant expression expected';
   CPE_IntegerExpressionExpected = 'Integer expression expected';
+  CPE_OrdinalExpressionExpected = 'Ordinal expression expected';
   CPE_InvalidConstType = 'Invalid const type "%s"';
   CPE_ConstantCannotBeWrittenTo = 'Constant "%s" cannot be written to';
 
@@ -408,6 +428,8 @@ const
   CPE_UnfinishedConditionalDirective = 'Unfinished conditional directive';
   CPE_UnexpectedEndOfFileForUnfinishedComment = 'Unexpected end of file (unfinished comment)';
   CPE_UnexpectedEndOfFileForUnfinishedDirective = 'Unexpected end of file (unfinished directive)';
+
+  CPE_UnexpectedEqGtrForLambdaStatement = 'Unexpected "=>" for a lambda statement';
 
   CPE_TypeIsUnknown = 'Type "%s" unknown';
   CPE_TypeForParamNotFound = 'Type "%s" not found for parameter "%s"';

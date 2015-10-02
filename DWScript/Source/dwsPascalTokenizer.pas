@@ -37,20 +37,25 @@ type
          sStringDouble, sStringDoubleF : TState;
          sStringIndentDouble, sStringIndentDoubleF : TState;
          sStringIndentSingle, sStringIndentSingleF : TState;
-         sGreaterF, sSmallerF, sEqualF, sDotDot: TState;
+         sGreaterF, sSmallerF, sEqualF, sDotDot, sQuestion : TState;
 
          FCurlyCommentTransition : TTransition;
+         FDollarNamesTransition : TTransition;
 
       protected
          function StartState : TState; override;
 
-         procedure SetCurlyComments(const val : Boolean);
          function GetCurlyComments : Boolean; inline;
+         procedure SetCurlyComments(const val : Boolean);
+
+         function GetDollarNames : Boolean; inline;
+         procedure SetDollarNames(const val : Boolean);
 
       public
          constructor Create; override;
 
          property CurlyComments : Boolean read GetCurlyComments write SetCurlyComments;
+         property DollarNames : Boolean read GetDollarNames write SetDollarNames;
    end;
 
 const
@@ -59,12 +64,12 @@ const
 
       ttDOT, ttDOTDOT,
       ttPLUS, ttMINUS,
-      ttTIMES, ttDIVIDE, ttPERCENT, ttCARET, ttAT, ttDOLLAR,
+      ttTIMES, ttDIVIDE, ttPERCENT, ttCARET, ttAT, ttDOLLAR, ttTILDE,
       ttEQ, ttNOTEQ, ttGTR, ttGTREQ, ttLESS, ttLESSEQ,
       ttLESSLESS, ttGTRGTR, ttEQGTR,
       ttSEMI, ttCOMMA, ttCOLON,
       ttASSIGN, ttPLUS_ASSIGN, ttMINUS_ASSIGN, ttTIMES_ASSIGN, ttDIVIDE_ASSIGN,
-      ttPERCENT_ASSIGN, ttCARET_ASSIGN, ttAT_ASSIGN,
+      ttPERCENT_ASSIGN, ttCARET_ASSIGN, ttAT_ASSIGN, ttTILDE_ASSIGN,
       ttBLEFT, ttBRIGHT, ttALEFT, ttARIGHT, ttCRIGHT
    ];
 
@@ -158,6 +163,7 @@ begin
    sSmallerF:=CreateState;
    sEqualF:=CreateState;
    sDotDot:=CreateState;
+   sQuestion:=CreateState;
 
    sStart.AddTransition(cSPACE, TSeekTransition.Create(sStart, [], caNone));
    sStart.AddTransition(cNAM, TConsumeTransition.Create(sNameF, [toStart], caNone));
@@ -166,9 +172,10 @@ begin
    sStart.AddTransition([''''], TSeekTransition.Create(sStringSingle, [toStart], caNone));
    sStart.AddTransition(['"'], TSeekTransition.Create(sStringDouble, [toStart], caNone));
    sStart.AddTransition(['#'], TSeekTransition.Create(sChar0, [toStart], caNone));
-   sStart.AddTransition([':', '+', '-', '*', '@', '%', '^', '|'], TConsumeTransition.Create(sAssign0, [toStart], caNone));
+   sStart.AddTransition([':', '+', '-', '*', '@', '%', '^', '|', '~'], TConsumeTransition.Create(sAssign0, [toStart], caNone));
    sStart.AddTransition(['='], TConsumeTransition.Create(sEqualF, [toStart], caNone));
-   sStart.AddTransition(cSPEC-['('], TConsumeTransition.Create(sStart, [toStart, toFinal], caName));
+   sStart.AddTransition(cSPEC-['(', '?'], TConsumeTransition.Create(sStart, [toStart, toFinal], caName));
+   sStart.AddTransition(['?'], TConsumeTransition.Create(sQuestion, [toStart], caNone));
    sStart.AddTransition(['('], TConsumeTransition.Create(sBracketLeft, [toStart], caNone));
    sStart.AddTransition(['/'], TConsumeTransition.Create(sSlashComment0, [toStart], caNone));
    sStart.AddTransition(['<'], TConsumeTransition.Create(sSmallerF, [toStart], caNone));
@@ -361,6 +368,9 @@ begin
    sDotDot.AddTransition(['.'], TConsumeTransition.Create(sStart, [toFinal], caDotDot));
    sDotDot.SetElse(TCheckTransition.Create(sStart, [toFinal], caName));
 
+   sQuestion.AddTransition(['?', '.'], TConsumeTransition.Create(sStart, [toFinal], caName));
+   sQuestion.SetElse(TCheckTransition.Create(sStart, [toFinal], caName));
+
    PrepareStates;
 end;
 
@@ -369,6 +379,13 @@ end;
 function TPascalTokenizerStateRules.StartState : TState;
 begin
    Result:=sStart;
+end;
+
+// GetCurlyComments
+//
+function TPascalTokenizerStateRules.GetCurlyComments : Boolean;
+begin
+   Result:=(FCurlyCommentTransition=nil);
 end;
 
 // SetCurlyComments
@@ -385,11 +402,27 @@ begin
    end;
 end;
 
-// GetCurlyComments
+// GetDollarNames
 //
-function TPascalTokenizerStateRules.GetCurlyComments : Boolean;
+function TPascalTokenizerStateRules.GetDollarNames : Boolean;
 begin
-   Result:=(FCurlyCommentTransition=nil);
+   Result:=(FDollarNamesTransition<>nil);
+end;
+
+// SetDollarNames
+//
+procedure TPascalTokenizerStateRules.SetDollarNames(const val : Boolean);
+begin
+   if val=DollarNames then Exit;
+   if val then begin
+      FDollarNamesTransition:=sStart.FindTransition('$');
+      sStart.SetTransition('$', sStart.FindTransition('A'));
+      sNameF.SetTransition('$', sNameF.FindTransition('A'));
+   end else begin
+      sStart.SetTransition('$', FDollarNamesTransition);
+      sNameF.SetTransition('$', sNameF.FindTransition(#0));
+      FDollarNamesTransition:=nil;
+   end;
 end;
 
 end.

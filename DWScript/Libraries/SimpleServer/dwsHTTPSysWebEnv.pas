@@ -44,6 +44,8 @@ type
          FAuthentication : TWebRequestAuthentication;
          FAuthenticatedUser : String;
 
+         FURL : String;
+
          FHeaders : TStrings;
 
          FIP_UTF8 : RawByteString;
@@ -57,6 +59,7 @@ type
          function  GetHeaders : TStrings; override;
 
          procedure PrepareAuthenticationInfo;
+         procedure PrepareURL;
          procedure PrepareHeaders;
          procedure PrepareIP_UTF8;
 
@@ -70,6 +73,7 @@ type
          property Request : PHTTP_REQUEST_V2 read FRequest write SetRequest;
 
          function RemoteIP : String; override;
+         procedure GetRemoteIP(var ip : RawByteString);
          function RemoteIP_UTF8 : PAnsiChar;
          function RemoteIP_UTF8_Length : Integer;
 
@@ -78,7 +82,9 @@ type
          function Method : String; override;
          function MethodVerb : TWebRequestMethodVerb; override;
          function Security : String; override;
+         function Secure : Boolean; override;
 
+         function ContentLength : Integer; override;
          function ContentData : RawByteString; override;
          function ContentType : RawByteString; override;
 
@@ -147,7 +153,7 @@ begin
       r := getnameinfo(@sin, SizeOfVarSin(sin), host, hostlen,
                        nil, servlen, NI_NUMERICHOST + NI_NUMERICSERV);
       if r=0 then begin
-         hostlen := StrLen(@host);
+         hostlen := StrLen(PAnsiChar(@host));
          SetLength(Result, hostlen);
          Move(host, Pointer(Result)^, hostlen);
       end else Result := '';
@@ -195,7 +201,7 @@ begin
    SetString(FQueryString, p, n div SizeOf(Char));
 
    FPrepared:=[];
-
+   FURL:='';
    ResetCookies;
    ResetFields;
 end;
@@ -226,6 +232,13 @@ begin
             FAuthentication:=wraFailed;
       end;
    end;
+end;
+
+// PrepareURL
+//
+procedure THttpSysWebRequest.PrepareURL;
+begin
+   FURL:=UTF8ToString(UrlDecode(Request^.pRawUrl));
 end;
 
 // PrepareHeaders
@@ -272,6 +285,7 @@ begin
               +'='
               +UTF8DecodeToString(PUTF8Char(p.pRawValue), p.RawValueLength);
          FHeaders.Add(buf);
+         Inc(p);
       end;
    end;
 end;
@@ -329,13 +343,22 @@ begin
    Result:=UTF8ToString(RemoteIP_UTF8);
 end;
 
+// GetRemoteIP
+//
+procedure THttpSysWebRequest.GetRemoteIP(var ip : RawByteString);
+begin
+   if not (prepIP_UTF8 in FPrepared) then
+      PrepareIP_UTF8;
+
+   ip:=FIP_UTF8;
+end;
+
 // RemoteIP_UTF8
 //
 function THttpSysWebRequest.RemoteIP_UTF8 : PAnsiChar;
 begin
    if not (prepIP_UTF8 in FPrepared) then
       PrepareIP_UTF8;
-
    Result:=Pointer(FIP_UTF8);
 end;
 
@@ -360,7 +383,9 @@ end;
 //
 function THttpSysWebRequest.URL : String;
 begin
-   Result:=UTF8ToString(UrlDecode(Request^.pRawUrl));
+   if FURL='' then
+      PrepareURL;
+   Result:=FURL;
 end;
 
 // Method
@@ -399,6 +424,20 @@ begin
    if request^.pSslInfo<>nil then
       Result:=Format('SSL, %d bits', [request^.pSslInfo^.ConnectionKeySize*8])
    else Result:='';
+end;
+
+// Secure
+//
+function THttpSysWebRequest.Secure : Boolean;
+begin
+   Result:=(request^.pSslInfo<>nil);
+end;
+
+// ContentLength
+//
+function THttpSysWebRequest.ContentLength : Integer;
+begin
+   Result:=Length(InContent);
 end;
 
 // ContentData

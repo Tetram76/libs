@@ -37,6 +37,7 @@ type
    // Interface for units
    IdwsUnit = interface
       ['{8D534D12-4C6B-11D5-8DCB-0000216D9E86}']
+      procedure BeforeAdditionTo(dwscript : TObject);
       function GetUnitName : UnicodeString;
       function GetUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
                             operators : TOperators; rootTable : TSymbolTable) : TUnitSymbolTable;
@@ -56,6 +57,7 @@ type
    TEmptyFunc = class sealed (TInterfacedSelfObject, ICallable)
       public
          procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol);
+         procedure CompileTimeCheck(prog : TdwsProgram; expr : TFuncExprBase);
          procedure InitSymbol(Symbol: TSymbol; const msgs : TdwsCompileMessageList);
          procedure InitExpression(Expr: TExprBase);
          function SubExpr(i : Integer) : TExprBase;
@@ -71,6 +73,7 @@ type
          function SubExpr(i : Integer) : TExprBase;
          function SubExprCount : Integer;
          procedure Call(exec: TdwsProgramExecution; func: TFuncSymbol); virtual; abstract;
+         procedure CompileTimeCheck(prog : TdwsProgram; expr : TFuncExprBase); virtual;
          property FuncSymbol : TFuncSymbol read FFuncSymbol write FFuncSymbol;
    end;
 
@@ -168,6 +171,7 @@ type
          function _Release : Integer; stdcall;
          function QueryInterface({$ifdef FPC}constref{$else}const{$endif} IID: TGUID; out Obj): HResult; stdcall;
          function GetDependencies : TStrings;
+         procedure BeforeAdditionTo(dwscript : TObject);
          function GetUnitName : UnicodeString;
          function GetDeprecatedMessage : UnicodeString;
 
@@ -195,6 +199,8 @@ type
                                      operators : TOperators);
          procedure ReleaseStaticSymbols;
 
+         procedure EnumerateHelperMemberNames(hash : TSimpleStringHash);
+
          property StaticTable : IStaticSymbolTable read FStaticTable;
          property StaticSymbols : Boolean read FStaticSymbols write SetStaticSymbols;
    end;
@@ -211,6 +217,7 @@ type
                             unitSyms : TUnitMainSymbols);
          destructor Destroy; override;
 
+         procedure BeforeAdditionTo(dwscript : TObject);
          function GetUnitName : UnicodeString;
          function GetUnitTable(systemTable : TSystemSymbolTable; unitSyms : TUnitMainSymbols;
                                operators : TOperators; rootTable : TSymbolTable) : TUnitSymbolTable;
@@ -363,8 +370,18 @@ end;
 
 { TEmptyFunc }
 
+// Call
+//
 procedure TEmptyFunc.Call(exec: TdwsProgramExecution; func: TFuncSymbol);
 begin
+   // nothing
+end;
+
+// CompileTimeCheck
+//
+procedure TEmptyFunc.CompileTimeCheck(prog : TdwsProgram; expr : TFuncExprBase);
+begin
+   // nothing
 end;
 
 procedure TEmptyFunc.InitSymbol(Symbol: TSymbol; const msgs : TdwsCompileMessageList);
@@ -413,6 +430,13 @@ begin
    Result:=0;
 end;
 
+// CompileTimeCheck
+//
+procedure TFunctionPrototype.CompileTimeCheck(prog : TdwsProgram; expr : TFuncExprBase);
+begin
+   // nothing yet
+end;
+
 // ------------------
 // ------------------ TInternalFunction ------------------
 // ------------------
@@ -436,7 +460,7 @@ begin
    table.AddSymbol(sym);
 
    if helperName<>'' then
-      TdwsCompilerUtils.AddProcHelper(helperName, table, sym, nil);
+      CompilerUtils.AddProcHelper(helperName, table, sym, nil);
 end;
 
 // Create
@@ -747,6 +771,13 @@ begin
    Result:=FDependencies;
 end;
 
+// BeforeAdditionTo
+//
+procedure TInternalUnit.BeforeAdditionTo(dwscript : TObject);
+begin
+   // nothing
+end;
+
 // GetUnitName
 //
 function TInternalUnit.GetUnitName : UnicodeString;
@@ -784,6 +815,20 @@ procedure TInternalUnit.ReleaseStaticSymbols;
 begin
    FStaticSystemTable:=nil;
    FStaticTable:=nil;
+end;
+
+// EnumerateHelperMemberNames
+//
+procedure TInternalUnit.EnumerateHelperMemberNames(hash : TSimpleStringHash);
+var
+   i : Integer;
+   p : PRegisteredInternalFunction;
+begin
+   for i:=0 to FRegisteredInternalFunctions.Count-1 do begin
+      p:=PRegisteredInternalFunction(FRegisteredInternalFunctions[i]);
+      if p.HelperName<>'' then
+         hash.Add(p.HelperName);
+   end;
 end;
 
 // GetUnitTable
@@ -950,6 +995,13 @@ destructor TSourceUnit.Destroy;
 begin
    FDependencies.Free;
    inherited;
+end;
+
+// BeforeAdditionTo
+//
+procedure TSourceUnit.BeforeAdditionTo(dwscript : TObject);
+begin
+   // nothing
 end;
 
 // GetUnitName

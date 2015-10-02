@@ -121,6 +121,35 @@ object dwsEncodingLib: TdwsEncodingLib
           end>
       end
       item
+        Name = 'HexadecimalEncoder'
+        Ancestor = 'Encoder'
+        Methods = <
+          item
+            Name = 'Encode'
+            Parameters = <
+              item
+                Name = 'v'
+                DataType = 'String'
+              end>
+            ResultType = 'String'
+            Attributes = [maVirtual, maOverride]
+            OnEval = dwsEncodingClassesHexadecimalEncoderMethodsEncodeEval
+            Kind = mkClassFunction
+          end
+          item
+            Name = 'Decode'
+            Parameters = <
+              item
+                Name = 'v'
+                DataType = 'String'
+              end>
+            ResultType = 'String'
+            Attributes = [maVirtual, maOverride]
+            OnEval = dwsEncodingClassesHexadecimalEncoderMethodsDecodeEval
+            Kind = mkClassFunction
+          end>
+      end
+      item
         Name = 'HTMLTextEncoder'
         Ancestor = 'Encoder'
         Methods = <
@@ -148,9 +177,38 @@ object dwsEncodingLib: TdwsEncodingLib
             OnEval = dwsEncodingClassesHTMLTextEncoderMethodsDecodeEval
             Kind = mkClassFunction
           end>
+      end
+      item
+        Name = 'Base58Encoder'
+        Ancestor = 'Encoder'
+        Methods = <
+          item
+            Name = 'Encode'
+            Parameters = <
+              item
+                Name = 'v'
+                DataType = 'String'
+              end>
+            ResultType = 'String'
+            Attributes = [maVirtual, maOverride]
+            OnEval = dwsEncodingClassesBase58EncoderMethodsEncodeEval
+            Kind = mkClassFunction
+          end
+          item
+            Name = 'Decode'
+            Parameters = <
+              item
+                Name = 'v'
+                DataType = 'String'
+              end>
+            ResultType = 'String'
+            Attributes = [maVirtual, maOverride]
+            OnEval = dwsEncodingClassesBase58EncoderMethodsDecodeEval
+            Kind = mkClassFunction
+          end>
       end>
     UnitName = 'System.Encoding'
-    StaticSymbols = False
+    StaticSymbols = True
     Left = 72
     Top = 32
   end

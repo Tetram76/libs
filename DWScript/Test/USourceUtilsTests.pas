@@ -7,13 +7,16 @@ interface
 uses
    Classes, SysUtils,
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsDataContext,
-   dwsTokenizer, dwsErrors, dwsUtils, Variants, dwsSymbols, dwsSuggestions;
+   dwsTokenizer, dwsErrors, dwsUtils, Variants, dwsSymbols, dwsSuggestions,
+   dwsFunctions, dwsCaseNormalizer;
 
 type
 
    TSourceUtilsTests = class (TTestCase)
       private
          FCompiler : TDelphiWebScript;
+
+         function NeedUnitHandler(const unitName : UnicodeString; var unitSource : UnicodeString) : IdwsUnit;
 
       public
          procedure SetUp; override;
@@ -31,6 +34,7 @@ type
          procedure DynamicArrayTest;
          procedure ObjectArrayTest;
          procedure HelperSuggestTest;
+         procedure SuggestInUsesSection;
          procedure SuggestAfterCall;
          procedure SuggestAcrossLines;
          procedure SymDictFunctionForward;
@@ -43,6 +47,8 @@ type
          procedure BigEnumerationNamesAndValues;
          procedure EnumerationSuggest;
          procedure StaticClassSuggest;
+         procedure SuggestInBlockWithError;
+         procedure NormalizeOverload;
    end;
 
 // ------------------------------------------------------------------
@@ -63,6 +69,7 @@ procedure TSourceUtilsTests.SetUp;
 begin
    FCompiler:=TDelphiWebScript.Create(nil);
    FCompiler.Config.CompilerOptions:=FCompiler.Config.CompilerOptions+[coSymbolDictionary, coContextMap];
+   FCompiler.OnNeedUnit:=NeedUnitHandler;
 end;
 
 // TearDown
@@ -208,9 +215,10 @@ begin
 
    scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 1, 11);
    sugg:=TdwsSuggestions.Create(prog, scriptPos);
-   CheckTrue(sugg.Count>2, 'column 11');
-   CheckEquals('Pi', sugg.Code[0], 'sugg 11, 0');
-   CheckEquals('Pos', sugg.Code[1], 'sugg 11, 1');
+   CheckTrue(sugg.Count>3, 'column 11');
+   CheckEquals('ParseDateTime', sugg.Code[0], 'sugg 11, 0');
+   CheckEquals('Pi', sugg.Code[1], 'sugg 11, 1');
+   CheckEquals('PixmapToJPEGData', sugg.Code[2], 'sugg 11, 2');
 
    scriptPos.Col:=12;
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
@@ -223,7 +231,7 @@ begin
    CheckTrue(sugg.Count>10, 'column 8');
    CheckEquals('Boolean', sugg.Code[0], 'sugg 8, 0');
    CheckEquals('CompilerVersion', sugg.Code[1], 'sugg 8, 1');
-   CheckEquals('EAssertionFailed', sugg.Code[2], 'sugg 8, 2');
+   CheckEquals('DateTimeZone', sugg.Code[2], 'sugg 8, 2');
 
    scriptPos.Col:=9;
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
@@ -262,6 +270,13 @@ begin
    CheckEquals('ClassParent', sugg.Code[1], 'v. 1');
    CheckEquals('ClassType', sugg.Code[2], 'v. 2');
    CheckEquals('Create', sugg.Code[3], 'v. 3');
+end;
+
+function TSourceUtilsTests.NeedUnitHandler(const unitName: UnicodeString;
+  var unitSource: UnicodeString): IdwsUnit;
+begin
+  CheckEquals('SomeUnit', unitName, 'Only the unit ''SomeUnit'' is handled properly!');
+  unitSource := 'unit SomeUnit;';
 end;
 
 // EmptyOptimizedLocalTable
@@ -450,6 +465,43 @@ begin
    CheckEquals(2, sugg.Count, '.Le');
    CheckEquals('Left', sugg.Code[0], '.Le 0');
    CheckEquals('Length', sugg.Code[1], '.Le 1');
+end;
+
+procedure TSourceUtilsTests.SuggestInUsesSection;
+var
+   prog : IdwsProgram;
+   sugg : IdwsSuggestions;
+   scriptPos : TScriptPos;
+begin
+   prog:=FCompiler.Compile('uses SomeUnit;'#13#10'So');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 1, 6);
+   sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
+
+   CheckEquals(4, sugg.Count, 'There should be four units in the suggestions');
+   CheckEquals('Default', sugg.Code[0], 'Unit ''Default'' not found');
+   CheckEquals('Internal', sugg.Code[1], 'Unit ''Internal'' not found');
+   CheckEquals('SomeUnit', sugg.Code[2], 'Unit ''SomeUnit'' not found');
+   CheckEquals('System', sugg.Code[3], 'Unit ''System'' not found');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 3);
+   sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
+
+   CheckEquals(1, sugg.Count, 'Should be only one suggestion');
+   CheckEquals('SomeUnit', sugg.Code[0], 'The suggestion should be the unit ''SomeUnit''');
+
+   // now check the same example without including units at all
+   prog:=FCompiler.Compile('uses SomeUnit;'#13#10'So');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 1, 6);
+   sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords, soNoUnits]);
+
+   CheckEquals(0, sugg.Count, 'There shouldn''t be units in the suggestions at all');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 2, 3);
+   sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords, soNoUnits]);
+
+   CheckEquals(0, sugg.Count, 'There shouldn''t be units in the suggestions at all');
 end;
 
 // SuggestAcrossLines
@@ -809,6 +861,73 @@ begin
    sugg:=TdwsSuggestions.Create(prog, scriptPos);
    CheckEquals(1, sugg.Count, 'column 6,10');
    CheckEquals('Test', sugg.Code[0], 'sugg 6, 14, 0');
+end;
+
+// SuggestInBlockWithError
+//
+procedure TSourceUtilsTests.SuggestInBlockWithError;
+var
+   prog : IdwsProgram;
+   sugg : IdwsSuggestions;
+   scriptPos : TScriptPos;
+begin
+   prog:=FCompiler.Compile( 'begin'#13#10
+                           +'var xyz := "";'#13#10
+                           +'x');
+
+   CheckNotEquals('', prog.Msgs.AsInfo, 'should have compiled with errors');
+
+   scriptPos:=TScriptPos.Create(prog.SourceList[0].SourceFile, 3, 2);
+
+   sugg:=TdwsSuggestions.Create(prog, scriptPos);
+   CheckEquals(2, sugg.Count, 'line 3 col 2');
+   CheckEquals('xyz', sugg.Code[0], '3,2,0');
+   CheckEquals('xor', sugg.Code[1], '3,2,1');
+
+end;
+
+// NormalizeOverload
+//
+type
+   TTestNormalizer = class (TStringList)
+      procedure Normalize(line, col : Integer; const name : String);
+   end;
+procedure TTestNormalizer.Normalize(line, col : Integer; const name : String);
+begin
+   Add(Format('%d, %d, %s', [line, col, name]));
+end;
+procedure TSourceUtilsTests.NormalizeOverload;
+var
+   prog : IdwsProgram;
+   lines : TStringList;
+   normalizer : TTestNormalizer;
+begin
+   lines:=TStringList.Create;
+   try
+      lines.Text:= 'unit Unit1;'#13#10
+                  +'interface'#13#10
+                  +'procedure Test(const A, Blah: string; const C: string); overload;'#13#10
+                  +'procedure Test; overload;'#13#10
+                  +'implementation'#13#10
+                  +'procedure Test(const A, Blah: string; const C: string);'#13#10
+                  +'begin end;'#13#10
+                  +'procedure Test;'#13#10
+                  +'begin end;';
+
+      prog:=FCompiler.Compile(lines.Text);
+
+      CheckEquals('', prog.Msgs.AsInfo, 'should have compiled without errors');
+
+      normalizer:=TTestNormalizer.Create;
+      try
+         NormalizeSymbolsCase(lines, prog.SourceList[0].SourceFile, prog.SymbolDictionary,
+                              normalizer.Normalize);
+      finally
+         normalizer.Free;
+      end;
+   finally
+      lines.Free;
+   end;
 end;
 
 // ------------------------------------------------------------------

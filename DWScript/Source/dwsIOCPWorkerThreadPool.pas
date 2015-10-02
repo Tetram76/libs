@@ -21,7 +21,7 @@ interface
 {$I dws.inc}
 
 uses
-   Windows, Classes, SysUtils,
+   Windows, Classes, SysUtils, ActiveX,
    dwsXPlatform, dwsUtils;
 
 type
@@ -92,10 +92,15 @@ const
 
 type
 
+   {$IFNDEF VER270}
+   ULONG_PTR = {$IFDEF VER230}NativeUInt{$ELSE}DWORD{$ENDIF};
+   {$ENDIF}
+
    TIOCPData = packed record
       case Integer of
          0 : (
-            lpNumberOfBytesTransferred, lpCompletionKey : {$IFDEF VER230}NativeUInt{$ELSE}DWORD{$ENDIF};
+            lpNumberOfBytesTransferred : DWORD;
+            lpCompletionKey : ULONG_PTR;
             lpOverlapped : POverlapped;
          );
          1 : (
@@ -151,6 +156,8 @@ procedure TIOCPWorkerThread.Execute;
 var
    data : TIOCPData;
 begin
+   CoInitialize(nil);
+
    while not Terminated do begin
       if not GetQueuedCompletionStatus(FIOCP,
                                        data.lpNumberOfBytesTransferred,
@@ -175,6 +182,8 @@ begin
          end;
       end;
    end;
+
+   CoUninitialize;
 end;
 
 // ------------------

@@ -23,6 +23,7 @@ type
     FSize: Integer;
     FThreshold: Integer;
     FLoadFactor: Integer; // In percent
+    FInitCapacity: Integer;
     FItems: PHashItems;
     procedure Rehash(NewCapacity: Integer);
   protected
@@ -116,6 +117,7 @@ begin
     raise Exception.CreateFmt('Invalid InitCapacity: %d', [InitCapacity]);
   if (LoadFactor < 0) or (LoadFactor > 100) then
     raise Exception.CreateFmt('Invalid LoadFactor: %d', [LoadFactor]);
+  FInitCapacity:=InitCapacity;
   FLoadFactor := LoadFactor;
   Rehash(InitCapacity);
 end;
@@ -143,6 +145,8 @@ begin
     end;
     FItems[x] := nil;
   end;
+  FSize:=0;
+  Rehash(FInitCapacity);
 end;
 
 function THashTable.InternalGet(Item: THashItem): ValueType;

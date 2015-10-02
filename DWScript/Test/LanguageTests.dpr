@@ -8,6 +8,7 @@ program LanguageTests;
 {$ENDIF}
 
 uses
+   FastMM4,
   Classes,
   Forms,
   Windows,
@@ -48,14 +49,16 @@ uses
   ULanguageExtensionTests in 'ULanguageExtensionTests.pas',
   UJITTests in 'UJITTests.pas',
   UJITx86Tests in 'UJITx86Tests.pas',
-  ULinqTests in 'ULinqTests.pas',
-  ULinqJsonTests in 'ULinqJsonTests.pas',
   dwsSymbolsLibModule in '..\Libraries\SymbolsLib\dwsSymbolsLibModule.pas',
   UExternalFunctionTests in 'UExternalFunctionTests.pas',
   UdwsCryptoTests in 'UdwsCryptoTests.pas',
   UdwsEncodingTests in 'UdwsEncodingTests.pas',
   UInstantiateTests in 'UInstantiateTests.pas',
-  UdwsWebUtilsTests in 'UdwsWebUtilsTests.pas';
+  UdwsWebUtilsTests in 'UdwsWebUtilsTests.pas',
+  UdwsGraphicsTests in 'UdwsGraphicsTests.pas',
+  dwsJSONPath in '..\Source\dwsJSONPath.pas',
+  // UDelegateTests in 'UDelegateTests.pas',  // memory leak
+  dwsDateTime in '..\Source\dwsDateTime.pas';
 
 {$R *.res}
 

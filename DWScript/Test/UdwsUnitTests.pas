@@ -36,6 +36,7 @@ type
          procedure FuncIncEval(Info: TProgramInfo);
          procedure FuncIncNEval(Info: TProgramInfo);
          procedure FuncEnumEval(Info: TProgramInfo);
+         procedure FuncSetEval(Info: TProgramInfo);
          procedure FuncVariantEval(Info: TProgramInfo);
          procedure FuncVariantDateEval(Info: TProgramInfo);
          procedure FuncVarEval(Info: TProgramInfo);
@@ -52,7 +53,9 @@ type
          function  FuncFastPointEval(const args : TExprBaseListExec) : Variant;
          procedure ProcCallLevelsEval(Info: TProgramInfo);
          procedure FuncReturnStrings(Info: TProgramInfo);
+         procedure FuncReturnStrings2(Info: TProgramInfo);
          procedure FuncReturnVirtCreate(Info: TProgramInfo);
+         procedure FuncNil(Info: TProgramInfo);
 
          procedure ClassConstructor(Info: TProgramInfo; var ExtObject: TObject);
          procedure ClassVirtConstructor(Info: TProgramInfo; var ExtObject: TObject);
@@ -71,6 +74,9 @@ type
 
          procedure DoReadVar(info: TProgramInfo; var value : Variant);
          procedure DoWriteVar(info: TProgramInfo; const value : Variant);
+         procedure DoReadVar42(info: TProgramInfo; var value : Variant);
+         procedure DoReadVarIncMagic(info: TProgramInfo; var value : Variant);
+         procedure DoReadVarDateTime(info: TProgramInfo; var value : Variant);
    end;
 
 
@@ -104,11 +110,13 @@ type
          procedure CallFuncPointVarParam;
          procedure CallFuncPointArray;
          procedure PredefinedVar;
+         procedure VarDateTime;
          procedure AssignTest;
          procedure PredefinedArray;
          procedure PredefinedRecord;
          procedure DynamicArray;
          procedure DynamicArrayResult;
+         procedure DynamicArrayResult2;
          procedure ClassPropertyInfo;
          procedure ClassInit;
          procedure DestructorAndExternalObject;
@@ -127,6 +135,7 @@ type
          procedure ArrayOfObjects;
          procedure FuncVariantTest;
          procedure FuncVariantDateTest;
+         procedure FuncNilTest;
          procedure SetTest;
          procedure ClassNameTest;
          procedure VirtCreateFunc;
@@ -161,6 +170,8 @@ const
       +'if FuncTrue<>True then PrintLn(''FuncTrue failed'');'#13#10
       +'if FuncEnum<>1 then PrintLn(''FuncEnum default failed'');'#13#10
       +'if FuncEnum(meTen)<>10 then PrintLn(''FuncEnum meTen failed'');'#13#10
+      +'if FuncSet([meOne])<>2 then PrintLn(''FuncSet default failed'');'#13#10
+      +'if FuncSet([meOne, meTen])<>1026 then PrintLn(''FuncSet default failed'');'#13#10
       +'var i=1; FuncVar(i); if i<>2 then PrintLn(''FuncVar def failed'');'#13#10
       +'FuncVar(i, 10); if i<>12 then PrintLn(''FuncVar 10 failed'');'#13#10
       +'FuncVar(i, i); if i<>24 then PrintLn(''FuncVar i failed'');'#13#10
@@ -322,6 +333,14 @@ begin
    param.DefaultValue:='meOne';
 
    func:=FUnit.Functions.Add;
+   func.Name:='FuncSet';
+   func.ResultType:='Integer';
+   func.OnEval:=FuncSetEval;
+   param:=func.Parameters.Add;
+   param.Name:='s';
+   param.DataType:='TMyEnums';
+
+   func:=FUnit.Functions.Add;
    func.Name:='FuncVar';
    func.OnEval:=FuncVarEval;
    param:=func.Parameters.Add;
@@ -433,8 +452,15 @@ begin
    func.Parameters.Add('i', 'Integer');
    func.OnEval:=FuncReturnStrings;
 
+   func:=FUnit.Functions.Add('FuncStrings2', 'TStringArray');
+   func.Parameters.Add('i', 'Integer');
+   func.OnEval:=FuncReturnStrings2;
+
    func:=FUnit.Functions.Add('FuncReturnVirtCreate', 'TTestClass');
    func.OnEval:=FuncReturnVirtCreate;
+
+   func:=FUnit.Functions.Add('FuncNil', 'TObject');
+   func.OnEval:=FuncNil;
 end;
 
 // DeclareTestClasses
@@ -619,9 +645,23 @@ begin
    v:=FUnit.Variables.Add;
    v.Name:='magicVar';
    v.DataType:='String';
-
    v.OnReadVar:=DoReadVar;
    v.OnWriteVar:=DoWriteVar;
+
+   v:=FUnit.Variables.Add;
+   v.Name:='magicVarInc';
+   v.DataType:='String';
+   v.OnReadVar:=DoReadVarIncMagic;
+
+   v:=FUnit.Variables.Add;
+   v.Name:='LifeUniverseEverything';
+   v.DataType:='Integer';
+   v.OnReadVar:=DoReadVar42;
+
+   v:=FUnit.Variables.Add;
+   v.Name:='vDateTime';
+   v.DataType:='Variant';
+   v.OnReadVar:=DoReadVarDateTime;
 end;
 
 // DeclareTestArrays
@@ -905,11 +945,39 @@ begin
    end;
 end;
 
+// FuncReturnStrings2
+//
+procedure TdwsUnitTestsContext.FuncReturnStrings2(Info: TProgramInfo);
+var
+   a : TStringDynArray;
+   i, n : Integer;
+begin
+   n:=Info.ParamAsInteger[0];
+   SetLength(a, n);
+   for i:=0 to n-1 do
+      a[i]:=IntToStr(i*2);
+   Info.ResultAsStringArray:=a;
+end;
+
 // FuncReturnVirtCreate
 //
 procedure TdwsUnitTestsContext.FuncReturnVirtCreate(Info: TProgramInfo);
 begin
    Info.ResultAsVariant := Info.Vars['TTestClass'].GetConstructor('VirtCreate', Pointer(-1)).Call.Value;
+
+   end;
+// FuncSetEval
+//
+procedure TdwsUnitTestsContext.FuncSetEval(Info: TProgramInfo);
+begin
+   Info.ResultAsInteger:=Info.ValueAsInteger['s'];
+end;
+
+// FuncNil
+//
+procedure TdwsUnitTestsContext.FuncNil(Info: TProgramInfo);
+begin
+   Info.ResultAsVariant:=IScriptObj(nil);
 end;
 
 // ClassConstructor
@@ -1020,6 +1088,31 @@ end;
 procedure TdwsUnitTestsContext.DoWriteVar(info: TProgramInfo; const value : Variant);
 begin
    FMagicVar:=value;
+end;
+
+// DoReadVar42
+//
+procedure TdwsUnitTestsContext.DoReadVar42(info: TProgramInfo; var value : Variant);
+begin
+   value:=Int64(42);
+end;
+
+// DoReadVarIncMagic
+//
+procedure TdwsUnitTestsContext.DoReadVarIncMagic(info: TProgramInfo; var value : Variant);
+begin
+   FMagicVar:=FMagicVar+'+1';
+   value:=FMagicVar;
+end;
+
+// DoReadVarDateTime
+//
+procedure TdwsUnitTestsContext.DoReadVarDateTime(info: TProgramInfo; var value : Variant);
+var
+   t : TDateTime;
+begin
+   t:=Now;
+   value:=t;
 end;
 
 // ------------------
@@ -1627,7 +1720,10 @@ var
    exec : IdwsProgramExecution;
 begin
    prog:=FCompiler.Compile( 'PrintLn(xyzVar); xyzVar:=''XYZ''; PrintLn(xyzVar);'#13#10
-                           +'PrintLn(magicVar); magicVar:=''MAGIC''; PrintLn(magicVar);'#13#10);
+                           +'PrintLn(magicVar); magicVar:=''MAGIC''; PrintLn(magicVar);'#13#10
+                           +'PrintLn(magicVarInc);'#13#10
+                           +'PrintLn(LifeUniverseEverything);'#13#10
+                           );
 
    CheckEquals('', prog.Msgs.AsInfo, 'Compile');
 
@@ -1639,12 +1735,39 @@ begin
       exec.RunProgram(0);
 
       CheckEquals( 'xyz'#13#10'XYZ'#13#10
-                  +'magic'#13#10'MAGIC'#13#10, exec.Result.ToString, 'Result');
+                  +'magic'#13#10'MAGIC'#13#10
+                  +'MAGIC+1'#13#10
+                  +'42'#13#10, exec.Result.ToString, 'Result');
       CheckEquals('XYZ', exec.Info.ValueAsString['xyzVar'], 'xyz var value');
-      CheckEquals('MAGIC', FContext.FMagicVar, 'magic var value');
+      CheckEquals('MAGIC+1', FContext.FMagicVar, 'magic var value');
+      CheckEquals(42, exec.Info.ValueAsInteger['LifeUniverseEverything'], '42 var value');
    finally
       exec.EndProgram;
    end;
+end;
+
+// VarDateTime
+//
+procedure TdwsUnitTests.VarDateTime;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'var t := Now;'#13#10
+                           +'PrintLn(Round(t-vDateTime));'#13#10
+                           +'if vDateTime>t+1 then PrintLn("bug1");'#13#10
+                           +'if vDateTime<t-1 then PrintLn("bug2");'#13#10
+                           +'var v := vDateTime;'#13#10
+                           +'PrintLn(Round(t-v));'#13#10
+                           +'if v>t+1 then PrintLn("bug3");'#13#10
+                           +'if v<t-1 then PrintLn("bug4");'#13#10
+                           );
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
+
+   exec:=prog.Execute;
+
+   CheckEquals('0'#13#10'0'#13#10, exec.Result.ToString, 'Result');
 end;
 
 // AssignTest
@@ -1812,6 +1935,35 @@ begin
       CheckEquals('', exec.Msgs.AsInfo, 'Run');
 
       CheckEquals('0-1'#13#10#13#10'0/1/2'#13#10, exec.Result.ToString);
+   finally
+      exec.EndProgram;
+   end;
+end;
+
+// DynamicArrayResult2
+//
+procedure TdwsUnitTests.DynamicArrayResult2;
+var
+   prog : IdwsProgram;
+   exec : IdwsProgramExecution;
+begin
+   prog:=FCompiler.Compile( 'var astr := FuncStrings2(2);'#13#10
+                           +'PrintLn(astr.Join("-"));'#13#10
+                           +'astr := FuncStrings2(0);'#13#10
+                           +'PrintLn(astr.Join("-"));'#13#10
+                           +'astr := FuncStrings2(3);'#13#10
+                           +'PrintLn(astr.Join("/"));'#13#10
+                           );
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
+
+   exec:=prog.BeginNewExecution;
+   try
+      exec.RunProgram(0);
+
+      CheckEquals('', exec.Msgs.AsInfo, 'Run');
+
+      CheckEquals('0-2'#13#10#13#10'0/2/4'#13#10, exec.Result.ToString);
    finally
       exec.EndProgram;
    end;
@@ -2238,6 +2390,24 @@ begin
                            );
 
    CheckEquals('', prog.Msgs.AsInfo, 'Compile 1');
+
+   CheckEquals('', prog.Execute.Msgs.AsInfo, 'exec errs');
+   CheckEquals('', prog.Execute.Result.ToString, 'exec result');
+end;
+
+// FuncNilTest
+//
+procedure TdwsUnitTests.FuncNilTest;
+var
+   prog : IdwsProgram;
+begin
+   prog:=FCompiler.Compile( 'var o := TObject.Create;'#13#10
+                           +'if o=nil then Print("bug");'#13#10
+                           +'o:=FuncNil;'#13#10
+                           +'if o<>nil then Print("rebug");'#13#10
+                           );
+
+   CheckEquals('', prog.Msgs.AsInfo, 'Compile');
 
    CheckEquals('', prog.Execute.Msgs.AsInfo, 'exec errs');
    CheckEquals('', prog.Execute.Result.ToString, 'exec result');

@@ -126,7 +126,10 @@ var
    clsMethAttribute : TClassSymbol;
    field : TFieldSymbol;
 begin
+   if systemTable.FindLocal(SYS_TRTTITYPEINFO)<>nil then exit;
+
    typTypInfo:=TRecordSymbol.Create(SYS_TRTTITYPEINFO, nil);
+   typTypInfo.IsImmutable:=True;
    systemTable.AddSymbol(typTypInfo);
    typTypInfo.AddField(TFieldSymbol.Create('ID', systemTable.TypInteger, cvPrivate));
    TRTTITypeInfoNameMethod.Create(mkFunction, [], 'Name',
@@ -134,6 +137,7 @@ begin
                                   typTypInfo, cvPublic, systemTable);
 
    typRawAttribute:=TRecordSymbol.Create(SYS_TRTTIRAWATTRIBUTE, nil);
+   typRawAttribute.IsImmutable:=True;
    systemTable.AddSymbol(typRawAttribute);
    field:=TFieldSymbol.Create('T', typTypInfo, cvPublic);
    field.ExternalName:=field.Name;
@@ -206,7 +210,7 @@ end;
 
 // PrepareRTTIRawAttributes
 //
-procedure PrepareRTTIRawAttributes(info : TProgramInfo; var scriptObj : IScriptObj);
+procedure PrepareRTTIRawAttributes(info : TProgramInfo; var scriptDynArray : IScriptDynArray);
 var
    typRawAttribute : TRecordSymbol;
    dynArray : TScriptDynamicArray;
@@ -225,13 +229,13 @@ var
 begin
    typRawAttribute:=info.Execution.Prog.Table.FindTypeSymbol(SYS_TRTTIRAWATTRIBUTE, cvPublic) as TRecordSymbol;
    dynArray:=TScriptDynamicArray.CreateNew(typRawAttribute);
-   scriptObj:=dynArray;
-   info.Execution.RTTIRawAttributes:=scriptObj;
+   scriptDynArray:=dynArray;
+   info.Execution.RTTIRawAttributes:=scriptDynArray;
 
    rttiPropertyAttributeCreate:=Info.Vars[SYS_RTTIPROPERTYATTRIBUTE].Method[SYS_TOBJECT_CREATE];
    rttiMethodAttributeCreate:=Info.Vars[SYS_RTTIMETHODATTRIBUTE].Method[SYS_TOBJECT_CREATE];
 
-   publishedSymbols:=info.Execution.Prog.CollectAllPublishedSymbols;
+   publishedSymbols:=info.Execution.Prog.CollectAllPublishedSymbols(False);
    try
 
       attributes:=info.Execution.Prog.Attributes;
@@ -243,7 +247,7 @@ begin
          symbolClassType:=attrib.Symbol.ClassType;
          if symbolClassType=TClassSymbol then begin
             dynArray.AsInteger[i*2]:=Int64(attrib.Symbol);
-            dynArray.AsVariant[i*2+1]:=attrib.AttributeConstructor.Eval(info.Execution);
+            attrib.AttributeConstructor.EvalAsVariant(info.Execution, dynArray.AsPVariant(i*2+1)^);
          end else Assert(False);
       end;
 
@@ -288,12 +292,12 @@ end;
 //
 procedure TRTTIRawAttributesFunc.Execute(info : TProgramInfo);
 var
-   scriptObj : IScriptObj;
+   scriptDynArray : IScriptDynArray;
 begin
-   scriptObj:=info.Execution.RTTIRawAttributes;
-   if not Assigned(scriptObj) then
-      PrepareRTTIRawAttributes(info, scriptObj);
-   info.Vars[SYS_RESULT].Value:=scriptObj;
+   scriptDynArray:=info.Execution.RTTIRawAttributes;
+   if not Assigned(scriptDynArray) then
+      PrepareRTTIRawAttributes(info, scriptDynArray);
+   info.Vars[SYS_RESULT].Value:=scriptDynArray;
 end;
 
 // ------------------
@@ -341,8 +345,12 @@ end;
 // DoEvalAsBoolean
 //
 function TSameRTTITypeInfoFunc.DoEvalAsBoolean(const args : TExprBaseListExec) : Boolean;
+var
+   v1, v2 : Variant;
 begin
-   Result:=(args.ExprBase[0].Eval(args.Exec)=args.ExprBase[1].Eval(args.Exec));
+   args.ExprBase[0].EvalAsVariant(args.Exec, v1);
+   args.ExprBase[1].EvalAsVariant(args.Exec, v2);
+   Result:=(v1=v2);
 end;
 
 // ------------------

@@ -76,6 +76,11 @@ type
       function Step(const enumerator : IInterface; var data : TData) : Boolean;
    end;
 
+   IConnectorCast = interface (IGetSelf)
+      ['{DCFCCC15-585C-4F48-99E1-547628C55696}']
+      function CastVariant(const base : Variant) : Variant;
+   end;
+
    TConnectorParam = record
       IsVarParam : Boolean;
       TypSym : TTypeSymbol;
@@ -94,6 +99,7 @@ type
      function HasIndex(const PropName: UnicodeString; const Params: TConnectorParamArray;
                        var TypSym: TTypeSymbol; IsWrite: Boolean): IConnectorCall;
      function HasEnumerator(var typSym: TTypeSymbol) : IConnectorEnumerator;
+     function HasCast(typSym: TTypeSymbol) : IConnectorCast;
    end;
 
    TConnectorSymbol = class (TBaseVariantSymbol)
@@ -108,6 +114,7 @@ type
 
          function Specialize(table : TSymbolTable; const qualifier : UnicodeString) : TConnectorSymbol; virtual;
          function CreateAssignExpr(prog : TdwsProgram; const aScriptPos: TScriptPos;
+                                   exec : TdwsExecution;
                                    left : TDataExpr; right : TTypedExpr) : TProgramExpr; virtual;
 
 
@@ -154,9 +161,10 @@ end;
 // CreateAssignExpr
 //
 function TConnectorSymbol.CreateAssignExpr(prog : TdwsProgram; const aScriptPos: TScriptPos;
+                                           exec : TdwsExecution;
                                            left : TDataExpr; right : TTypedExpr) : TProgramExpr;
 begin
-   Result:=TAssignExpr.Create(prog, aScriptPos, left, right);
+   Result:=TAssignExpr.Create(prog, aScriptPos, exec, left, right);
 end;
 
 end.

@@ -40,14 +40,17 @@ type
          function GetIsConstant : Boolean; override;
 
       public
-         constructor Create(Prog: TdwsProgram; Typ: TTypeSymbol; const Value: Variant); overload; virtual;
-         constructor Create(Prog: TdwsProgram; Typ: TTypeSymbol; const Data: TData; addr : Integer); overload;
-         constructor Create(Prog: TdwsProgram; Typ: TTypeSymbol); overload;
-         constructor CreateRef(Prog: TdwsProgram; Typ: TTypeSymbol; const Data: TData);
+         constructor Create(Prog: TdwsProgram; aTyp: TTypeSymbol; const Value: Variant); overload; virtual;
+         constructor Create(aTyp: TTypeSymbol; const Data: TData; addr : Integer); overload;
+         constructor Create(aTyp: TTypeSymbol); overload;
+         constructor CreateRef(aTyp: TTypeSymbol; const Data: TData);
+         constructor CreateNull(aTyp: TTypeSymbol);
 
-         function Eval(exec : TdwsExecution) : Variant; override;
          procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); override;
          procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
+         procedure EvalAsScriptObj(exec : TdwsExecution; var result : IScriptObj); override;
+         procedure EvalAsScriptObjInterface(exec : TdwsExecution; var result : IScriptObjInterface); override;
+         procedure EvalAsScriptDynArray(exec : TdwsExecution; var result : IScriptDynArray); override;
 
          function IsWritable : Boolean; override;
          function SameValueAs(otherConst : TConstExpr) : Boolean;
@@ -73,7 +76,7 @@ type
 
          class function CreateBooleanValue(prog : TdwsProgram; const value : Boolean) : TConstExpr; overload; static;
 
-         class function CreateDynamicArrayValue(prog : TdwsProgram; typ : TTypeSymbol) : TConstExpr; overload; static;
+         class function CreateDynamicArrayValue(prog : TdwsProgram; typ : TTypeSymbol; const val : IScriptDynArray) : TConstExpr; overload; static;
    end;
 
    TUnifiedConstExprClass = class of TUnifiedConstExpr;
@@ -84,6 +87,17 @@ type
    TUnifiedConstExpr = class (TConstExpr)
       public
          class function CreateUnified(Prog: TdwsProgram; Typ: TTypeSymbol; const Value: Variant) : TUnifiedConstExpr;
+   end;
+
+   // TConstNilExpr
+   //
+   TConstNilExpr = class(TConstExpr)
+      public
+         function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
+         procedure EvalAsScriptObj(exec : TdwsExecution; var result : IScriptObj); override;
+         procedure EvalAsScriptObjInterface(exec : TdwsExecution; var result : IScriptObjInterface); override;
+         procedure EvalAsScriptDynArray(exec : TdwsExecution; var result : IScriptDynArray); override;
    end;
 
    // TConstBooleanExpr
@@ -155,7 +169,7 @@ type
          FIntegers : TStandardIntegersConstIntExprArray;
          FZeroFloat : TUnifiedConstExpr;
          FTrue, FFalse : TUnifiedConstExpr;
-         FNil : TUnifiedConstExpr;
+         FNil : TConstNilExpr;
 
       protected
          function Compare(const item1, item2 : TExprBase) : Integer; override;
@@ -170,7 +184,7 @@ type
          property ZeroFloat : TUnifiedConstExpr read FZeroFloat;
          property TrueConst : TUnifiedConstExpr read FTrue;
          property FalseConst : TUnifiedConstExpr read FFalse;
-         property NilConst : TUnifiedConstExpr read FNil;
+         property NilConst : TConstNilExpr read FNil;
    end;
 
    TArrayConstantExpr = class sealed (TPosDataExpr)
@@ -196,13 +210,15 @@ type
          property Elements[idx : Integer] : TTypedExpr read GetElement;
          property ElementCount : Integer read GetElementCount;
          procedure AddElementExpr(Prog: TdwsProgram; ElementExpr: TTypedExpr);
+         procedure AddElementRange(prog : TdwsProgram; const range1, range2 : Int64; typ : TTypeSymbol);
          procedure Prepare(Prog: TdwsProgram; ElementTyp : TTypeSymbol);
          procedure TypeCheckElements(prog : TdwsProgram);
          procedure ElementsFromIntegerToFloat(prog : TdwsProgram);
 
          function Size : Integer; inline;
 
-         function Eval(exec : TdwsExecution) : Variant; override;
+         procedure EvalNoResult(exec : TdwsExecution); override;
+         procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); override;
          function EvalAsTData(exec : TdwsExecution) : TData; overload; inline;
          procedure EvalAsTData(exec : TdwsExecution; var result : TData); overload;
          procedure EvalToTData(exec : TdwsExecution; var result : TData; offset : Integer);
@@ -228,13 +244,13 @@ uses dwsConvExprs;
 
 // Create
 //
-constructor TConstExpr.Create(Prog: TdwsProgram; Typ: TTypeSymbol; const Value: Variant);
+constructor TConstExpr.Create(Prog: TdwsProgram; aTyp: TTypeSymbol; const Value: Variant);
 begin
-   inherited Create(Prog, Typ);
-   SetLength(FData, Typ.Size);
-   case Typ.Size of
+   inherited Create(aTyp);
+   SetLength(FData, aTyp.Size);
+   case aTyp.Size of
       0 : ;
-      1 : FData[0] := Value;
+      1 : VarCopySafe(FData[0], Value);
    else
       Assert(False);
    end;
@@ -242,33 +258,38 @@ end;
 
 // Create
 //
-constructor TConstExpr.Create(Prog: TdwsProgram; Typ: TTypeSymbol; const Data: TData; addr : Integer);
+constructor TConstExpr.Create(aTyp: TTypeSymbol; const Data: TData; addr : Integer);
 begin
-   Create(Prog, Typ);
-   DWSCopyData(Data, addr, FData, 0, Typ.Size);
+   Create(aTyp);
+   DWSCopyData(Data, addr, FData, 0, aTyp.Size);
 end;
 
 // Create
 //
-constructor TConstExpr.Create(Prog: TdwsProgram; Typ: TTypeSymbol);
+constructor TConstExpr.Create(aTyp: TTypeSymbol);
 begin
-   inherited Create(Prog, Typ);
-   SetLength(FData, Typ.Size);
+   inherited Create(aTyp);
+   SetLength(FData, aTyp.Size);
 end;
 
 // CreateRef
 //
-constructor TConstExpr.CreateRef(Prog: TdwsProgram; Typ: TTypeSymbol; const Data: TData);
+constructor TConstExpr.CreateRef(aTyp: TTypeSymbol; const Data: TData);
 begin
-   inherited Create(Prog, Typ);
+   inherited Create(aTyp);
    FData:=Data;
 end;
 
-// Eval
+// CreateNull
 //
-function TConstExpr.Eval(exec : TdwsExecution) : Variant;
+constructor TConstExpr.CreateNull(aTyp: TTypeSymbol);
+var
+   i : Integer;
 begin
-   EvalAsVariant(exec, Result);
+   inherited Create(aTyp);
+   SetLength(FData, aTyp.Size);
+   for i:=0 to aTyp.Size-1 do
+      FData[i]:=Null;
 end;
 
 // EvalAsString
@@ -282,7 +303,28 @@ end;
 //
 procedure TConstExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
 begin
-   Result := FData[0];
+   VarCopySafe(Result, FData[0]);
+end;
+
+// EvalAsScriptObj
+//
+procedure TConstExpr.EvalAsScriptObj(exec : TdwsExecution; var result : IScriptObj);
+begin
+   result := IScriptObj(IUnknown(FData[0]));
+end;
+
+// EvalAsScriptObjInterface
+//
+procedure TConstExpr.EvalAsScriptObjInterface(exec : TdwsExecution; var result : IScriptObjInterface);
+begin
+   result := IScriptObjInterface(IUnknown(FData[0]));
+end;
+
+// EvalAsScriptDynArray
+//
+procedure TConstExpr.EvalAsScriptDynArray(exec : TdwsExecution; var result : IScriptDynArray);
+begin
+   result := IScriptDynArray(IUnknown(FData[0]));
 end;
 
 // GetIsConstant
@@ -329,7 +371,7 @@ begin
    if typ=prog.TypString then
       Result:=TConstStringExpr.CreateUnified(prog, typ, value)
    else if typ.ClassType=TDynamicArraySymbol then
-      Result:=CreateDynamicArrayValue(prog, typ)
+      Result:=CreateDynamicArrayValue(prog, typ, IUnknown(value) as IScriptDynArray)
    else if (typ=prog.TypInteger) or (typ.typ=prog.TypInteger) then
       Result:=CreateIntegerValue(prog, typ, value)
    else if typ=prog.TypBoolean then
@@ -347,7 +389,7 @@ begin
       0 : Result:=TConstExpr.Create(Prog, Typ, Null);
       1 : Result:=TConstExpr.CreateTypedVariantValue(Prog, Typ, Data[addr]);
    else
-      Result:=TConstExpr.Create(Prog, Typ, Data, addr);
+      Result:=TConstExpr.Create(Typ, Data, addr);
    end;
 end;
 
@@ -420,9 +462,12 @@ end;
 
 // CreateDynamicArrayValue
 //
-class function TConstExpr.CreateDynamicArrayValue(prog : TdwsProgram; typ : TTypeSymbol) : TConstExpr;
+class function TConstExpr.CreateDynamicArrayValue(prog : TdwsProgram;
+      typ : TTypeSymbol; const val : IScriptDynArray) : TConstExpr;
 begin
-   Result:=TConstExpr.Create(prog, typ, TScriptDynamicArray.CreateNew(typ.Typ) as IScriptObj);
+   if val<>nil then
+      Result:=TConstExpr.Create(prog, typ, val)
+   else Result:=TConstExpr.Create(prog, typ, TScriptDynamicArray.CreateNew(typ.Typ) as IScriptDynArray);
 end;
 
 // ------------------
@@ -445,6 +490,45 @@ begin
       Result:=TUnifiedConstExpr(Prog.Root.UnifiedConstList[i]);
    end;
    Result.IncRefCount;
+end;
+
+// ------------------
+// ------------------ TConstNilExpr ------------------
+// ------------------
+
+// EvalAsInteger
+//
+function TConstNilExpr.EvalAsInteger(exec : TdwsExecution) : Int64;
+begin
+   Result := 0;
+end;
+
+// EvalAsVariant
+//
+procedure TConstNilExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
+begin
+   VarCopySafe(Result, FData[0]);
+end;
+
+// EvalAsScriptObj
+//
+procedure TConstNilExpr.EvalAsScriptObj(exec : TdwsExecution; var result : IScriptObj);
+begin
+   result := nil;
+end;
+
+// EvalAsScriptObjInterface
+//
+procedure TConstNilExpr.EvalAsScriptObjInterface(exec : TdwsExecution; var result : IScriptObjInterface);
+begin
+   result := nil;
+end;
+
+// EvalAsScriptDynArray
+//
+procedure TConstNilExpr.EvalAsScriptDynArray(exec : TdwsExecution; var result : IScriptDynArray);
+begin
+   result := nil;
 end;
 
 // ------------------
@@ -576,7 +660,7 @@ end;
 //
 constructor TConstArrayExpr.Create(prog : TdwsProgram; symbol : TConstSymbol);
 begin
-   inherited CreateRef(prog, symbol.Typ, symbol.Data);
+   inherited CreateRef(symbol.Typ, symbol.Data);
    FSymbol:=symbol;
 end;
 
@@ -620,7 +704,7 @@ begin
    FZeroFloat:=TConstFloatExpr.CreateUnified(prog, systemTable.TypFloat, cZeroFloat);
    FTrue:=TConstBooleanExpr.CreateUnified(prog, systemTable.TypBoolean, True);
    FFalse:=TConstBooleanExpr.CreateUnified(prog, systemTable.TypBoolean, False);
-   FNil:=TUnifiedConstExpr.CreateUnified(prog, prog.TypNil, cNilIntf);
+   FNil:=TConstNilExpr.Create(prog, prog.TypNil, cNilIntf);
 end;
 
 // Compare
@@ -672,7 +756,7 @@ end;
 //
 constructor TArrayConstantExpr.Create(Prog: TdwsProgram; const aScriptPos: TScriptPos);
 begin
-   inherited Create(prog, aScriptPos,
+   inherited Create(aScriptPos,
       TStaticArraySymbol.Create('', prog.TypNil, prog.TypInteger, 0, -1));
 end;
 
@@ -687,7 +771,7 @@ end;
 
 // AddElementExpr
 //
-procedure TArrayConstantExpr.AddElementExpr(Prog: TdwsProgram; ElementExpr: TTypedExpr);
+procedure TArrayConstantExpr.AddElementExpr(prog: TdwsProgram; ElementExpr: TTypedExpr);
 var
    arraySymbol : TStaticArraySymbol;
 begin
@@ -706,6 +790,24 @@ begin
    end;
    FElementExprs.Add(ElementExpr);
    arraySymbol.AddElement;
+end;
+
+// AddElementRange
+//
+procedure TArrayConstantExpr.AddElementRange(prog : TdwsProgram; const range1, range2 : Int64; typ : TTypeSymbol);
+var
+   i : Int64;
+   d : Integer;
+begin
+   if range1<range2 then
+      d:=1
+   else d:=-1;
+   i:=range1;
+   repeat
+      AddElementExpr(prog, TConstIntExpr.CreateUnified(prog, typ, i));
+      if i=range2 then break;
+      Inc(i, d);
+   until False;
 end;
 
 // Prepare
@@ -739,7 +841,7 @@ end;
 //
 procedure TArrayConstantExpr.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
 begin
-   Eval(exec);
+   EvalNoResult(exec);
    exec.DataContext_Create(exec.Stack.Data, FArrayAddr, Result);
 end;
 
@@ -778,9 +880,9 @@ begin
    Result:=ElementCount*Typ.Typ.Size;
 end;
 
-// Eval
+// EvalNoResult
 //
-function TArrayConstantExpr.Eval(exec : TdwsExecution) : Variant;
+procedure TArrayConstantExpr.EvalNoResult(exec : TdwsExecution);
 
    procedure DoEval;
    var
@@ -788,6 +890,7 @@ function TArrayConstantExpr.Eval(exec : TdwsExecution) : Variant;
       elemSize : Integer;
       elemExpr : TTypedExpr;
       dataExpr : TDataExpr;
+      buf : Variant;
    begin
       exec.Stack.WriteValue(FArrayAddr, FElementExprs.Count);
 
@@ -796,7 +899,8 @@ function TArrayConstantExpr.Eval(exec : TdwsExecution) : Variant;
       for x:=0 to FElementExprs.Count-1 do begin
          elemExpr:=TTypedExpr(FElementExprs.List[x]);
          if elemSize=1 then begin
-            exec.Stack.WriteValue(addr, elemExpr.Eval(exec));
+            elemExpr.EvalAsVariant(exec, buf);
+            exec.Stack.WriteValue(addr, buf);
          end else begin
             dataExpr:=elemExpr as TDataExpr;
             dataExpr.DataPtr[exec].CopyData(exec.Stack.Data, addr, elemSize);
@@ -810,8 +914,15 @@ begin
       FArrayEvaled:=True;
       DoEval;
    end;
+end;
 
-   Result:=FArrayAddr;
+// EvalAsVariant
+//
+procedure TArrayConstantExpr.EvalAsVariant(exec : TdwsExecution; var Result : Variant);
+
+begin
+   EvalNoResult(exec);
+   VarCopySafe(Result, FArrayAddr);
 end;
 
 // EvalAsTData
@@ -923,6 +1034,15 @@ begin
             else if (expr.Typ is TStructuredTypeSymbol) and (elemTyp is TStructuredTypeSymbol) then begin
                repeat
                   elemTyp:=TStructuredTypeSymbol(elemTyp).Parent;
+                  if elemTyp=nil then begin
+                     prog.CompileMsgs.AddCompilerErrorFmt(ScriptPos, CPE_AssignIncompatibleTypes,
+                                                          [expr.Typ.Caption, Elements[0].Typ.Caption]);
+                     Exit;
+                  end;
+               until elemTyp.IsCompatible(expr.Typ);
+            end else if (expr.Typ is TStructuredTypeMetaSymbol) and (elemTyp is TStructuredTypeMetaSymbol) then begin
+               repeat
+                  elemTyp:=TStructuredTypeMetaSymbol(elemTyp).Parent;
                   if elemTyp=nil then begin
                      prog.CompileMsgs.AddCompilerErrorFmt(ScriptPos, CPE_AssignIncompatibleTypes,
                                                           [expr.Typ.Caption, Elements[0].Typ.Caption]);

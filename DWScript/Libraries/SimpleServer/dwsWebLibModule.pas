@@ -19,9 +19,11 @@ unit dwsWebLibModule;
 interface
 
 uses
-  SysUtils, Classes, StrUtils,
-  dwsUtils, dwsComp, dwsExprs, dwsWebEnvironment, dwsExprList, dwsSymbols,
-  SynZip, SynCrtSock, SynCommons;
+   Windows, WinInet, Variants,
+   SysUtils, Classes, StrUtils,
+   SynZip, SynCrtSock, SynCommons, SynWinSock,
+   dwsUtils, dwsComp, dwsExprs, dwsWebEnvironment, dwsExprList, dwsSymbols,
+   dwsJSONConnector;
 
 type
   TdwsWebLib = class(TDataModule)
@@ -102,6 +104,21 @@ type
       Info: TProgramInfo; ExtObject: TObject);
     procedure dwsWebClassesWebResponseMethodsSetLastModifiedEval(
       Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsWebClassesHttpQueryMethodsSetCredentialsEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsWebClassesHttpQueryMethodsClearCredentialsEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsWebClassesHttpQueryMethodsPutDataEval(Info: TProgramInfo;
+      ExtObject: TObject);
+    procedure dwsWebClassesHttpQueryMethodsDeleteEval(Info: TProgramInfo;
+      ExtObject: TObject);
+    procedure dwsWebClassesWebResponseMethodsSetContentJSONEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsWebClassesHttpQueryMethodsSetIgnoreSSLCertificateErrorsEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsWebClassesHttpQueryMethodsGetIgnoreSSLCertificateErrorsEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsWebFunctionsGetHostByAddrEval(info: TProgramInfo);
   private
     { Private declarations }
   public
@@ -113,23 +130,65 @@ implementation
 {$R *.dfm}
 
 type
-   THttpQueryMethod = (hqmGET, hqmPOST);
+   THttpQueryMethod = (hqmGET, hqmPOST, hqmPUT, hqmDELETE);
+
+   TdwsWinHTTP = class (TWinHTTP)
+      protected
+         AuthorizationHeader : RawByteString;
+         procedure InternalSendRequest(const aData: SockString); override;
+   end;
+
+//function WinHttpSetOption(hInternet: HINTERNET; dwOption: DWORD;
+//  lpBuffer: Pointer; dwBufferLength: DWORD): BOOL; stdcall; external 'winhttp.dll';
+
+const
+   cWinHttpCredentials : TGUID = '{FB60EB3D-1085-4A88-9923-DE895B5CAB76}';
+   cWinHttpIgnoreSSLCertificateErrors : TGUID = '{42AC8563-761B-4E3D-9767-A21F8F32201C}';
+
+// InternalSendRequest
+//
+procedure TdwsWinHTTP.InternalSendRequest(const aData: SockString);
+begin
+   if AuthorizationHeader<>'' then
+      InternalAddHeader('Authorization: '+AuthorizationHeader);
+   inherited InternalSendRequest(aData);
+end;
 
 function HttpQuery(method : THttpQueryMethod; const url : RawByteString;
                    const requestData : RawByteString;
                    const requestContentType : RawByteString;
-                   var replyData : String; asText : Boolean) : Integer; overload;
+                   var replyData : String; asText : Boolean;
+                   const customStates : TdwsCustomStates) : Integer; overload;
 const
    cContentType : RawUTF8 = 'Content-Type:';
 var
-   query : TWinHTTP;
+   query : TdwsWinHTTP;
    uri : TURI;
-   headers, buf, mimeType : RawByteString;
+   headers, buf, mimeType : SockString;
    p1, p2 : Integer;
+   credentials, ignoreSSLErrors : Variant;
 begin
    if uri.From(url) then begin
-      query:=TWinHTTP.Create(uri.Server, uri.Port, uri.Https);
+      query:=TdwsWinHTTP.Create(uri.Server, uri.Port, uri.Https);
       try
+         ignoreSSLErrors:=customStates[cWinHttpIgnoreSSLCertificateErrors];
+         // may be empty, and that fails direct boolean casting, hence casting & boolean check
+         if (VarType(ignoreSSLErrors)=varBoolean) and TVarData(ignoreSSLErrors).VBoolean then
+            query.IgnoreSSLCertificateErrors:=True;
+
+         credentials:=customStates[cWinHttpCredentials];
+         if VarIsArray(credentials, False) then begin
+            case TWebRequestAuthentication(credentials[0]) of
+               wraBasic : query.AuthScheme := THttpRequestAuthentication.wraBasic;
+               wraDigest : query.AuthScheme := THttpRequestAuthentication.wraDigest;
+               wraNegotiate : query.AuthScheme := THttpRequestAuthentication.wraNegotiate;
+               wraAuthorization : query.AuthorizationHeader := UTF8Encode(credentials[1]);
+            else
+               query.AuthScheme := THttpRequestAuthentication.wraNone;
+            end;
+            query.AuthUserName:=credentials[1];
+            query.AuthPassword:=credentials[2];
+         end;
          case method of
             hqmGET : begin
                Assert(requestData='');
@@ -137,6 +196,12 @@ begin
             end;
             hqmPOST : begin
                Result:=query.Request(uri.Address, 'POST', 0, '', requestData, requestContentType, headers, buf);
+            end;
+            hqmPUT : begin
+               Result:=query.Request(uri.Address, 'PUT', 0, '', requestData, requestContentType, headers, buf);
+            end;
+            hqmDELETE : begin
+               Result:=query.Request(uri.Address, 'PUT', 0, '', '', '', headers, buf);
             end;
          else
             Result:=0;
@@ -150,9 +215,21 @@ begin
                if p2>p1 then
                   mimeType:=Copy(headers, p1, p2-p1);
             end;
-            if StrIEndsWithA(mimeType, 'charset=utf-8') then
-               replyData:=UTF8DecodeToUnicodeString(buf)
-            else RawByteStringToScriptString(buf, replyData);
+            if StrEndsWithA(mimeType, '/xml') then begin
+               // unqualified xml content, may still be utf-8, check data header
+               p1:=PosA('?>', buf);
+               if     (p1>0)
+                  and (PosA('encoding="utf-8"', LowerCaseA(Copy(buf, 1, p1)))>0) then begin
+                  mimeType := mimeType + '; charset=utf-8';
+               end;
+            end;
+
+            if StrIEndsWithA(mimeType, 'charset=utf-8') then begin
+               // strip BOM if present
+               if StrBeginsWithBytes(buf, [$EF, $BB, $BF]) then
+                  Delete(buf, 1, 3);
+               replyData:=UTF8DecodeToUnicodeString(buf);
+            end else RawByteStringToScriptString(buf, replyData);
          end else RawByteStringToScriptString(buf, replyData);
       finally
          query.Free;
@@ -161,18 +238,28 @@ begin
 end;
 
 function HttpQuery(method : THttpQueryMethod; const url : RawByteString;
-                   var replyData : String; asText : Boolean) : Integer; overload;
+                   var replyData : String; asText : Boolean;
+                   const customStates : TdwsCustomStates) : Integer; overload;
 begin
-   Result:=HttpQuery(method, url, '', '', replyData, asText);
+   Result:=HttpQuery(method, url, '', '', replyData, asText, customStates);
 end;
 
+procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsDeleteEval(Info: TProgramInfo;
+  ExtObject: TObject);
+var
+   buf : String;
+begin
+   Info.ResultAsInteger:=HttpQuery(hqmDELETE, Info.ParamAsDataString[0], buf, False,
+                                   Info.Execution.CustomStates);
+end;
 
 procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsGetDataEval(
   Info: TProgramInfo; ExtObject: TObject);
 var
    buf : String;
 begin
-   Info.ResultAsInteger:=HttpQuery(hqmGET, Info.ParamAsDataString[0], buf, False);
+   Info.ResultAsInteger:=HttpQuery(hqmGET, Info.ParamAsDataString[0], buf, False,
+                                   Info.Execution.CustomStates);
    Info.ParamAsString[1]:=buf;
 end;
 
@@ -181,7 +268,8 @@ procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsGetTextEval(
 var
    buf : String;
 begin
-   Info.ResultAsInteger:=HttpQuery(hqmGET, Info.ParamAsDataString[0], buf, True);
+   Info.ResultAsInteger:=HttpQuery(hqmGET, Info.ParamAsDataString[0], buf, True,
+                                   Info.Execution.CustomStates);
    Info.ParamAsString[1]:=buf;
 end;
 
@@ -190,9 +278,57 @@ procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsPostDataEval(
 var
    buf : String;
 begin
-   Info.ResultAsInteger:=HttpQuery(hqmPOST, Info.ParamAsDataString[0],
-      Info.ParamAsDataString[1], Info.ParamAsDataString[2], buf, False);
+   Info.ResultAsInteger:=HttpQuery(
+      hqmPOST, Info.ParamAsDataString[0],
+      Info.ParamAsDataString[1], Info.ParamAsDataString[2], buf, False,
+      Info.Execution.CustomStates);
    Info.ParamAsString[3]:=buf;
+end;
+
+procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsPutDataEval(
+  Info: TProgramInfo; ExtObject: TObject);
+var
+   buf : String;
+begin
+   Info.ResultAsInteger:=HttpQuery(
+      hqmPUT, Info.ParamAsDataString[0],
+      Info.ParamAsDataString[1], Info.ParamAsDataString[2], buf, False,
+      Info.Execution.CustomStates);
+end;
+
+procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsSetCredentialsEval(
+  Info: TProgramInfo; ExtObject: TObject);
+var
+   v : Variant;
+begin
+   v:=VarArrayCreate([0, 2], varVariant);
+   v[0]:=Info.ParamAsInteger[0];
+   v[1]:=Info.ParamAsString[1];
+   v[2]:=Info.ParamAsString[2];
+   Info.Execution.CustomStates[cWinHttpCredentials]:=v;
+end;
+
+procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsClearCredentialsEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+   Info.Execution.CustomStates[cWinHttpCredentials]:=Unassigned;
+end;
+
+procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsSetIgnoreSSLCertificateErrorsEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+   Info.Execution.CustomStates[cWinHttpIgnoreSSLCertificateErrors]:=Info.ParamAsBoolean[0];
+end;
+
+procedure TdwsWebLib.dwsWebClassesHttpQueryMethodsGetIgnoreSSLCertificateErrorsEval(
+  Info: TProgramInfo; ExtObject: TObject);
+var
+   v : Variant;
+begin
+   v:=Info.Execution.CustomStates[cWinHttpIgnoreSSLCertificateErrors];
+   if VarType(v)<>varBoolean then
+      v:=False;
+   Info.ResultAsBoolean:=v;
 end;
 
 procedure TdwsWebLib.dwsWebClassesWebRequestMethodsAuthenticatedUserEval(
@@ -366,6 +502,19 @@ begin
    Info.WebResponse.Compression:=Info.ParamAsBoolean[0];
 end;
 
+procedure TdwsWebLib.dwsWebClassesWebResponseMethodsSetContentJSONEval(
+  Info: TProgramInfo; ExtObject: TObject);
+var
+   intf : IUnknown;
+   json : String;
+begin
+   intf := IUnknown(Info.ParamAsVariant[0]);
+   if intf <> nil then
+      json := (intf as IBoxedJSONValue).Value.ToString
+   else json := '';
+   Info.WebResponse.ContentJSON := json;
+end;
+
 procedure TdwsWebLib.dwsWebClassesWebResponseMethodsSetContentTextEval(
   Info: TProgramInfo; ExtObject: TObject);
 begin
@@ -420,7 +569,7 @@ var
    strm : TZStream;
    tmp : RawByteString;
 begin
-   strm.Init;
+   StreamInit(strm);
    strm.next_in := Pointer(data);
    strm.avail_in := Length(data);
    SetString(tmp, nil, strm.avail_in+256+strm.avail_in shr 3); // max mem required
@@ -445,7 +594,7 @@ var
    code, len : integer;
    tmp : RawByteString;
 begin
-   strm.Init;
+   StreamInit(strm);
    strm.next_in := Pointer(data);
    strm.avail_in := Length(data);
    len := (strm.avail_in*20) shr 3; // initial chunk size = comp. ratio of 60%
@@ -492,6 +641,16 @@ begin
    data:=args.AsDataString[0];
    DeflateDecompress(data);
    Result:=RawByteStringToScriptString(data);
+end;
+
+procedure TdwsWebLib.dwsWebFunctionsGetHostByAddrEval(info: TProgramInfo);
+var
+   addr : RawByteString;
+begin
+   addr := info.ParamAsDataString[0];
+   if (addr = '127.0.0.1') or (addr = '::1') then
+      info.ResultAsString := 'localhost'
+   else info.ResultAsDataString := ResolveIPToName(addr, 0, 0, SOCK_STREAM);
 end;
 
 end.
