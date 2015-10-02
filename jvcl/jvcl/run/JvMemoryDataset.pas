@@ -130,7 +130,6 @@ type
     FIndexList: TList;
     FCaseInsensitiveSort: Boolean;
     FDescendingSort: Boolean;
-    FAutoIncField: TField;
     FSrcAutoIncField: TField;
     FDataSet: TDataSet;
     FDataSetClosed: Boolean;
@@ -152,7 +151,6 @@ type
     FAfterApplyRecord: TApplyRecordEvent;
     FFilterParser: TExprParser; // CSchiffler. June 2009.  See JvExprParser.pas
     FFilterExpression: TJvDBFilterExpression; // ahuser. Same filter expression parser that ClientDataSet uses
-    FCopyFromDataSetFieldDefs: array of Integer; // only valid while CopyFromDataSet is executed
     FClearing: Boolean;
     FUseDataSetFilter: Boolean;
     FTrimEmptyString: Boolean;
@@ -170,7 +168,6 @@ type
     procedure SetCapacity(Value: Integer);
     procedure ClearRecords;
     procedure InitBufferPointers(GetProps: Boolean);
-    procedure FixReadOnlyFields(MakeReadOnly: Boolean);
     procedure SetDataSet(ADataSet: TDataSet);
     procedure CheckStructure(UseAutoIncAsInteger: Boolean = False);
     procedure AddStatusField;
@@ -253,6 +250,7 @@ type
     function BookmarkValid(Bookmark: TBookmark): Boolean; override;
     function CompareBookmarks(Bookmark1, Bookmark2: TBookmark): Integer; override;
     function CreateBlobStream(Field: TField; Mode: TBlobStreamMode): TStream; override;
+    procedure FixReadOnlyFields(MakeReadOnly: Boolean);
     function GetFieldData(Field: TField; {$IFDEF RTL250_UP}var{$ENDIF} Buffer: TJvValueBuffer): Boolean; overload; override;
     {$IFNDEF NEXTGEN}
       {$IFDEF RTL240_UP}
@@ -456,6 +454,10 @@ begin
         DestField.AsBCD := SourceField.AsBCD;
       ftString:
         DestField.AsString := SourceField.AsString;
+      {$IFDEF COMPILER10_UP}
+      ftWideString:
+        DestField.AsWideString := SourceField.AsWideString;
+      {$ENDIF COMPILER10_UP}
       ftFloat:
         DestField.AsFloat := SourceField.AsFloat;
       ftDateTime:
@@ -806,6 +808,7 @@ var
   I: Integer;
   Offset: Word;
   Field: TField;
+  FieldDefsUpdated: Boolean;
 begin
   if FieldDefs.Count = 0 then
   begin
@@ -821,11 +824,19 @@ begin
   inherited InitFieldDefsFromFields;
   { Calculate fields offsets }
   SetLength(FOffsets, FieldDefList.Count);
-  for I := 0 to FieldDefList.Count - 1 do
-  begin
-    FOffsets[I] := Offset;
-    if FieldDefList[I].DataType in ftSupported - ftBlobTypes then
-      Inc(Offset, CalcFieldLen(FieldDefList[I].DataType, FieldDefList[I].Size) + 1);
+
+  FieldDefList.Update;
+  FieldDefsUpdated := FieldDefs.Updated;
+  try
+    FieldDefs.Updated := True; // Performance optimization: FieldDefList.Updated returns False is FieldDefs.Updated is False
+    for I := 0 to FieldDefList.Count - 1 do
+    begin
+      FOffsets[I] := Offset;
+      if FieldDefList[I].DataType in ftSupported - ftBlobTypes then
+        Inc(Offset, CalcFieldLen(FieldDefList[I].DataType, FieldDefList[I].Size) + 1);
+    end;
+  finally
+    FieldDefs.Updated := FieldDefsUpdated;
   end;
 end;
 
@@ -835,10 +846,7 @@ var
   DataType: TFieldType;
 begin
   Result := nil;
-  if Length(FCopyFromDataSetFieldDefs) > 0 then
-    Index := FCopyFromDataSetFieldDefs[Field.Index]
-  else
-    Index := FieldDefList.IndexOf(Field.FullName);
+  Index := Field.FieldNo - 1; // FieldDefList index (-1 and 0 become less than zero => ignored)
   if (Index >= 0) and (Buffer <> nil) then
   begin
     DataType := FieldDefList[Index].DataType;
@@ -1290,8 +1298,7 @@ end;
 function TJvMemoryData.BookmarkValid(Bookmark: TBookmark): Boolean;
 begin
   Result := (Bookmark <> nil) and FActive and
-   (TJvBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark[0]){$ELSE}Bookmark{$ENDIF RTL200_UP}^) > Low(Integer)) and
-   (TJvBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark[0]){$ELSE}Bookmark{$ENDIF RTL200_UP}^) <= FLastID);
+    (FindRecordID(TJvBookmarkData({$IFDEF RTL200_UP}Pointer(@Bookmark[0]){$ELSE}Bookmark{$ENDIF RTL200_UP}^)) <> nil);
 end;
 
 function TJvMemoryData.CompareBookmarks(Bookmark1, Bookmark2: TBookmark): Integer;
@@ -1646,7 +1653,12 @@ end;
 procedure TJvMemoryData.InternalOpen;
 begin
   BookmarkSize := SizeOf(TJvBookmarkData);
+  FieldDefs.Updated := False;
+  FieldDefs.Update;
+  FieldDefList.Update;
+  {$IFNDEF HAS_AUTOMATIC_DB_FIELDS}
   if DefaultFields then
+  {$ENDIF !HAS_AUTOMATIC_DB_FIELDS}
     CreateFields;
   BindFields(True);
   InitBufferPointers(True);
@@ -1736,7 +1748,9 @@ begin
   ClearRecords;
   FAutoInc := 1;
   BindFields(False);
+  {$IFNDEF HAS_AUTOMATIC_DB_FIELDS}
   if DefaultFields then
+  {$ENDIF !HAS_AUTOMATIC_DB_FIELDS}
     DestroyFields;
   FreeIndexList;
   FActive := False;
@@ -1979,8 +1993,6 @@ begin
     begin
       Fields[I].Tag := Ord(Fields[I].ReadOnly);
       Fields[I].ReadOnly := False;
-      if Fields[I].DataType = ftAutoInc then
-        FAutoIncField := Fields[I];
     end;
 end;
 
@@ -2006,7 +2018,7 @@ end;
 function TJvMemoryData.LoadFromDataSet(Source: TDataSet; RecordCount: Integer;
   Mode: TLoadMode; DisableAllControls: Boolean = True): Integer;
 var
-  MovedCount, I: Integer;
+  MovedCount, I, FinalAutoInc: Integer;
   SB, DB: TBookmark;
 begin
   Result := 0;
@@ -2048,8 +2060,8 @@ begin
         Source.First;
         MovedCount := MaxInt;
       end;
-      FAutoIncField := nil;
-      // FixReadOnlyFields also sets FAutoIncField if there is any
+
+      FinalAutoInc := 0;
       FixReadOnlyFields(False);
       // find first source autoinc field
       FSrcAutoIncField := nil;
@@ -2066,8 +2078,11 @@ begin
           Append;
           AssignRecord(Source, Self, True);
           // assign AutoInc value manually (make user keep largest if source isn't sorted by autoinc field)
-          if (FAutoIncField <> nil) and (FSrcAutoIncField <> nil) then
-            FAutoInc := Max(FAutoInc, FSrcAutoIncField.AsInteger);
+          if FSrcAutoIncField <> nil then
+          begin
+            FinalAutoInc := Max(FinalAutoInc, FSrcAutoIncField.AsInteger);
+            FAutoInc := FSrcAutoIncField.AsInteger;
+          end;
           if (Mode = lmCopy) and (FApplyMode <> amNone) then
             FieldByName(FStatusName).AsInteger := Integer(rsOriginal);
           Post;
@@ -2084,7 +2099,8 @@ begin
           FRowsAffected := 0;
         end;
         FixReadOnlyFields(True);
-        FAutoIncField := nil;
+        if Mode = lmCopy then
+          FAutoInc := FinalAutoInc + 1;
         FSrcAutoIncField := nil;
         First;
       end;
@@ -2466,7 +2482,7 @@ end;
 
 function TJvMemoryData.CopyFromDataSet: Integer;
 var
-  I, Len: Integer;
+  I, Len, FinalAutoInc: Integer;
   Original, StatusField: TField;
   OriginalFields: array of TField;
   FieldReadOnly: Boolean;
@@ -2493,27 +2509,21 @@ begin
     Exit;
   end;
 
+  FinalAutoInc := 0;
   FDataSet.DisableControls;
   DisableControls;
   FSaveLoadState := slsLoading;
   try
     SetLength(OriginalFields, Fields.Count);
-    SetLength(FCopyFromDataSetFieldDefs, Fields.Count);
     for I := 0 to Fields.Count - 1 do
     begin
       if Fields[I].FieldKind <> fkCalculated then
-      begin
         OriginalFields[I] := FDataSet.FindField(Fields[I].FieldName);
-        FCopyFromDataSetFieldDefs[I] := FieldDefList.IndexOf(Fields[I].FullName);
-      end
-      else
-        FCopyFromDataSetFieldDefs[I] := -1;
     end;
     StatusField := nil;
     if FApplyMode <> amNone then
       StatusField := FieldByName(FStatusName);
 
-    FAutoIncField := nil;
     // find first source autoinc field
     FSrcAutoIncField := nil;
     for I := 0 to FDataSet.FieldCount - 1 do
@@ -2522,8 +2532,6 @@ begin
         FSrcAutoIncField := FDataSet.Fields[I];
         Break;
       end;
-    if FSrcAutoIncField <> nil then
-      FAutoIncField := FindField(FSrcAutoIncField.FieldName);
 
     FDataSet.First;
     while not FDataSet.EOF do
@@ -2549,8 +2557,11 @@ begin
         end;
       end;
       // assign AutoInc value manually (make user keep largest if source isn't sorted by autoinc field)
-      if (FAutoIncField <> nil) and (FSrcAutoIncField <> nil) then
-        FAutoInc := Max(FAutoInc, FSrcAutoIncField.AsInteger);
+      if FSrcAutoIncField <> nil then
+      begin
+        FinalAutoInc := Max(FinalAutoInc, FSrcAutoIncField.AsInteger);
+        FAutoInc := FSrcAutoIncField.AsInteger;
+      end;
       if FApplyMode <> amNone then
         StatusField.AsInteger := Integer(rsOriginal);
       Post;
@@ -2560,7 +2571,7 @@ begin
     FRowsChanged := 0;
     FRowsAffected := 0;
   finally
-    SetLength(FCopyFromDataSetFieldDefs, 0);
+    FAutoInc := FinalAutoInc + 1;
     FSaveLoadState := slsNone;
     EnableControls;
     FDataSet.EnableControls;
@@ -2657,7 +2668,7 @@ var
         begin
           FClient := Fields[J];
           FOriginal := FDataSet.FindField(FClient.FieldName);
-          if (FOriginal <> nil) and (FClient <> nil) then
+          if (FOriginal <> nil) and (FClient <> nil) and not FClient.ReadOnly then
           begin
             if FClient.IsNull then
               FOriginal.Clear

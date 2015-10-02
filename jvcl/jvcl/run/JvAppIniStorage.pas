@@ -236,7 +236,35 @@ end;
   Note that this is a dirty hack, a better way would be to rewrite TMemIniFile;
   especially expose FSections, but other optimizations can be done also.
   For example TCustomIniFile.SectionExists}
-{$IFDEF DELPHI7}
+{$IFDEF DELPHI2009_UP}
+type
+  /// Optimization: TMemIniFile should overwrite this methods by itself
+  TMemIniFileHelper = class helper for TMemIniFile
+  public
+    function SectionExists(const Section: string): Boolean;
+    function ValueExists(const Section, Ident: string): Boolean;
+  end;
+
+function TMemIniFileHelper.SectionExists(const Section: string): Boolean;
+begin
+  Result := self.FSections.IndexOf(Section) >= 0;
+end;
+
+function TMemIniFileHelper.ValueExists(const Section, Ident: string): Boolean;
+var
+  I: Integer;
+  Strings: TStrings;
+begin
+  I := self.FSections.IndexOf(Section);
+  if I >= 0 then
+  begin
+    Strings := TStringList(self.FSections.Objects[I]);
+    I := Strings.IndexOfName(Ident);
+    Result := I >= 0;
+  end else
+    Result := False;
+end;
+{$ELSE}
 type
   TJvMemIniFile = class(TMemIniFile)
   public
@@ -262,18 +290,18 @@ begin
   end else
     Result := False;
 end;
-{$ENDIF DELPHI7}
+{$ENDIF DELPHI2009_UP}
 
 //=== { TJvCustomAppIniStorage } =============================================
 
 constructor TJvCustomAppIniStorage.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  {$IFDEF DELPHI7}
-  FIniFile := TJvMemIniFile.Create(Name);
-  {$ELSE}
+  {$IFDEF DELPHI2009_UP}
   FIniFile := TMemIniFile.Create(Name);
-  {$ENDIF DELPHI7}
+  {$ELSE}
+  FIniFile := TJvMemIniFile.Create(Name);
+  {$ENDIF DELPHI2009_UP}
 end;
 
 destructor TJvCustomAppIniStorage.Destroy;
@@ -580,7 +608,6 @@ begin
     Strings.EndUpdate;
   end;
 end;
-
 
 function TJvCustomAppIniStorage.CalcDefaultSection(Section: string): string;
 begin

@@ -473,7 +473,9 @@ type
 
 const
   LOCALE_SISO639LANGNAME = $59;    // Used by Lazarus software development tool
+  {$NODEFINE LOCALE_SISO639LANGNAME}
   LOCALE_SISO3166CTRYNAME = $5A;   // Used by Lazarus software development tool
+  {$NODEFINE LOCALE_SISO3166CTRYNAME }
 
 var
   DefaultInstance:TGnuGettextInstance;  /// Default instance of the main API for singlethreaded applications.
@@ -2116,8 +2118,8 @@ var
   line: string;
   i: integer;
   s:TStringList;
-  {$ifdef DELPHI2009OROLDER}
   slAsTStringList:TStringList;
+  {$ifdef DELPHI2009OROLDER}
   originalOwnsObjects: Boolean;
   {$endif}
 begin
@@ -2129,11 +2131,11 @@ begin
     // only if sl is a TStringList instance and if using Delphi 2009 or upper.
     {$ifdef DELPHI2009OROLDER}
     originalOwnsObjects := False; // avoid warning
+    {$endif}
     if sl is TStringList then
       slAsTStringList := TStringList(sl)
     else
       slAsTStringList := nil;
-    {$endif}
 
     sl.BeginUpdate;
     try
@@ -2159,15 +2161,24 @@ begin
         end;
         {$endif}
         try
-          // Fix for Mantis #5917. TStringList doesn't release the objects in PutObject, so we
-          // use this to get sl.Clear to not destroy the objects in classes that inherit from
-          // TStringList but do a ClearObject in Clear.
-          if (sl.ClassType <> TStringList) and (sl is TStringList) then
-            for I := 0 to sl.Count - 1 do
-              sl.Objects[I] := nil;
-          // same here, we don't want to modify the properties of the orignal string list
-          sl.Clear;
-          sl.AddStrings(s);
+          if Assigned(slAsTStringList) and slAsTStringList.Sorted then
+          begin
+            // Fix for Mantis #5917. TStringList doesn't release the objects in PutObject, so we
+            // use this to get sl.Clear to not destroy the objects in classes that inherit from
+            // TStringList but do a ClearObject in Clear.
+            if sl.ClassType <> TStringList then
+              for I := 0 to sl.Count - 1 do
+                sl.Objects[I] := nil;
+
+            // same here, we don't want to modify the properties of the orignal string list
+            sl.Clear;
+            sl.AddStrings(s);
+          end
+          else
+          begin
+            for i := 0 to sl.Count - 1 do
+              sl[i] := s[i];
+          end;
         finally
           {$ifdef DELPHI2009OROLDER}
           if Assigned(slAsTStringList) then
@@ -3077,7 +3088,7 @@ begin
     Inc(patchPosition, 2); // skip the jump
     patchPosition := pansiChar(Pointer(pointer(patchPosition)^)^);
   end;
-  offset:=integer(NewProc)-integer(pointer(patchPosition))-5;
+  offset:=pansiChar(NewProc)-pansiChar(pointer(patchPosition))-5;
 
   Patch[0] := ansichar($E9);
   Patch[1] := ansichar(offset and 255);
@@ -3098,7 +3109,7 @@ begin
   {$ifdef LINUX}
   pageSize:=sysconf (_SC_PAGE_SIZE);
   p:=pointer(PatchPosition);
-  p:=pointer((integer(p) + PAGESIZE-1) and not (PAGESIZE-1) - pageSize);
+  p:=pointer((pansichar(p) + PAGESIZE-1) and not (PAGESIZE-1) - pageSize);
   if mprotect (p, pageSize, PROT_READ + PROT_WRITE + PROT_EXEC) <> 0 then
     RaiseLastOSError;
   {$endif}

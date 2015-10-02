@@ -2161,11 +2161,13 @@ implementation
 
 uses
   SysUtils,
+  JclSysInfo,
   ModuleLoader;
 
 {$IFDEF HID_LINKONREQUEST}
 var
   HidLib: TModuleHandle = INVALID_MODULEHANDLE_VALUE;
+  HidLoadCount: Integer = 0;
 {$ENDIF HID_LINKONREQUEST}
 
 // (rom) this function is a macro and cannot be implemented with the original name
@@ -2212,6 +2214,9 @@ end;
 function LoadHid: Boolean;
 begin
   {$IFDEF HID_LINKONREQUEST}
+  Inc(HidLoadCount);
+  if HidLoadCount > 1 then
+    Exit;
   Result := LoadModule(HidLib, HidModuleName);
   if Result then
   begin
@@ -2232,7 +2237,7 @@ begin
     @HidD_GetSerialNumberString := GetModuleSymbolEx(HidLib, 'HidD_GetSerialNumberString', Result);
     @HidD_GetPhysicalDescriptor := GetModuleSymbolEx(HidLib, 'HidD_GetPhysicalDescriptor', Result);
     @HidD_GetIndexedString := GetModuleSymbolEx(HidLib, 'HidD_GetIndexedString', Result);
-    if (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(5, 1) then
+    if (Win32Platform = VER_PLATFORM_WIN32_NT) and JclCheckWinVersion(5, 1) then
     begin
       @HidD_GetInputReport := GetModuleSymbolEx(HidLib, 'HidD_GetInputReport', Result);
       @HidD_SetOutputReport := GetModuleSymbolEx(HidLib, 'HidD_SetOutputReport', Result);
@@ -2262,7 +2267,7 @@ begin
     @HidP_SetUsageValueArray := GetModuleSymbolEx(HidLib, 'HidP_SetUsageValueArray', Result);
     @HidP_UsageListDifference := GetModuleSymbolEx(HidLib, 'HidP_UsageListDifference', Result);
     @HidP_TranslateUsagesToI8042ScanCodes := GetModuleSymbolEx(HidLib, 'HidP_TranslateUsagesToI8042ScanCodes', Result);
-    if (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(5, 0) then
+    if (Win32Platform = VER_PLATFORM_WIN32_NT) and JclCheckWinVersion(5, 0) then
     begin
       @HidP_GetExtendedAttributes := GetModuleSymbolEx(HidLib, 'HidP_GetExtendedAttributes', Result);
       @HidP_InitializeReportForID := GetModuleSymbolEx(HidLib, 'HidP_InitializeReportForID', Result);
@@ -2278,6 +2283,9 @@ end;
 procedure UnloadHid;
 begin
   {$IFDEF HID_LINKONREQUEST}
+  Dec(HidLoadCount);
+  if HidLoadCount > 0 then
+    Exit;
   UnloadModule(HidLib);
   @HidD_Hello := nil;
   @HidD_GetHidGuid := nil;

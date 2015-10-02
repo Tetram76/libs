@@ -129,6 +129,7 @@ type
     FShowDesignCaption: TJvShowDesignCaption;
     FHiddenPages: TList;
     procedure CMDesignHitTest(var Msg: TCMDesignHitTest); message CM_DESIGNHITTEST;
+    procedure WMEraseBkgnd(var Message: TWMEraseBkgnd); message WM_ERASEBKGND;
     procedure UpdateEnabled;
     procedure SetPropagateEnable(const Value: Boolean);
     procedure SetShowDesignCaption(const Value: TJvShowDesignCaption);
@@ -298,6 +299,11 @@ const
 implementation
 
 uses
+  {$IFDEF JVCLStylesEnabled}
+    {$IFDEF HAS_UNIT_SYSTEM_UITYPES}
+  System.UITypes, // for inline
+    {$ENDIF HAS_UNIT_SYSTEM_UITYPES}
+  {$ENDIF JVCLStylesEnabled}
   Forms;
 
 function GetUniqueName(AOwner: TComponent; const AClassName: string): string;
@@ -388,38 +394,35 @@ procedure TJvCustomPage.DoPaint(ACanvas: TCanvas; ARect: TRect);
 var
   S: string;
 begin
-  with ACanvas do
+  ACanvas.Font := Font;
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Brush.Color := Color;
+  DrawThemedBackground(Self, ACanvas, ARect);
+  if csDesigning in ComponentState then
   begin
-    Font := Self.Font;
-    Brush.Style := bsSolid;
-    Brush.Color := Self.Color;
-    DrawThemedBackground(Self, Canvas, ARect);
-    if (csDesigning in ComponentState) then
+    ACanvas.Pen.Style := psDot;
+    ACanvas.Pen.Color := clBlack;
+    ACanvas.Brush.Style := bsClear;
+    ACanvas.Rectangle(ARect);
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := Color;
+    if (PageList <> nil) and (PageList.ShowDesignCaption <> sdcNone) then
     begin
-      Pen.Style := psDot;
-      Pen.Color := clBlack;
-      Brush.Style := bsClear;
-      Rectangle(ARect);
-      Brush.Style := bsSolid;
-      Brush.Color := Color;
-      if (PageList <> nil) and (PageList.ShowDesignCaption <> sdcNone) then
+      S := Caption;
+      if S = '' then
+        S := Name;
+      // make some space around the edges
+      InflateRect(ARect, -4, -4);
+      if not Enabled then
       begin
-        S := Caption;
-        if S = '' then
-          S := Name;
-        // make some space around the edges
-        InflateRect(ARect, -4, -4);
-        if not Enabled then
-        begin
-          SetBkMode(Handle, Windows.TRANSPARENT);
-          Canvas.Font.Color := clHighlightText;
-          DrawText(Handle, PChar(S), Length(S), ARect, GetDesignCaptionFlags(PageList.ShowDesignCaption) or DT_SINGLELINE);
-          OffsetRect(ARect, -1, -1);
-          Canvas.Font.Color := clGrayText;
-        end;
-        DrawText(Handle, PChar(S), Length(S), ARect, GetDesignCaptionFlags(PageList.ShowDesignCaption) or DT_SINGLELINE);
-        InflateRect(ARect, 4, 4);
+        SetBkMode(ACanvas.Handle, Windows.TRANSPARENT);
+        ACanvas.Font.Color := clHighlightText;
+        DrawText(ACanvas.Handle, PChar(S), Length(S), ARect, GetDesignCaptionFlags(PageList.ShowDesignCaption) or DT_SINGLELINE);
+        OffsetRect(ARect, -1, -1);
+        ACanvas.Font.Color := clGrayText;
       end;
+      DrawText(ACanvas.Handle, PChar(S), Length(S), ARect, GetDesignCaptionFlags(PageList.ShowDesignCaption) or DT_SINGLELINE);
+      InflateRect(ARect, 4, 4);
     end;
   end;
   if Assigned(FOnPaint) then
@@ -478,15 +481,35 @@ begin
 end;
 
 function TJvCustomPage.DoEraseBackground(Canvas: TCanvas; Param: LPARAM): Boolean;
+{$IFDEF JVCLStylesEnabled}
+var
+  BrushRecall: TBrushRecall;
+{$ENDIF JVCLStylesEnabled}
 begin
   if DoubleBuffered then
-    Result := inherited DoEraseBackground(Canvas, Param)
+  begin
+    {$IFDEF JVCLStylesEnabled}
+    BrushRecall := nil;
+    try
+      if StyleServices.Enabled and not StyleServices.IsSystemStyle then
+      begin
+        BrushRecall := TBrushRecall.Create(Brush);
+        Brush.Color := StyleServices.GetSystemColor(Brush.Color);
+      end;
+    {$ENDIF JVCLStylesEnabled}
+      Result := inherited DoEraseBackground(Canvas, Param);
+    {$IFDEF JVCLStylesEnabled}
+    finally
+      BrushRecall.Free;
+    end;
+    {$ENDIF JVCLStylesEnabled}
+  end
   else
   begin
-    {$IFDEF JVCLThemesEnabled}
+    {$IFDEF JVCLStylesEnabled}
     if StyleServices.Enabled then
       DrawThemedBackground(Self, Canvas, ClientRect, Color, ParentBackground);
-    {$ENDIF JVCLThemesEnabled}
+    {$ENDIF JVCLStylesEnabled}
     Result := True;
   end;
 end;
@@ -572,6 +595,29 @@ begin
     Msg.Result := 1;
 end;
 
+procedure TJvCustomPageList.WMEraseBkgnd(var Message: TWMEraseBkgnd);
+{$IFDEF JVCLStylesEnabled}
+var
+  BrushRecall: TBrushRecall;
+{$ENDIF JVCLStylesEnabled}
+begin
+  {$IFDEF JVCLStylesEnabled}
+  BrushRecall := nil;
+  try
+    if StyleServices.Enabled and not StyleServices.IsSystemStyle then
+    begin
+      BrushRecall := TBrushRecall.Create(Brush);
+      Brush.Color := StyleServices.GetSystemColor(Brush.Color);
+    end;
+  {$ENDIF JVCLStylesEnabled}
+  inherited;
+  {$IFDEF JVCLStylesEnabled}
+  finally
+    BrushRecall.Free;
+  end;
+  {$ENDIF JVCLStylesEnabled}
+end;
+
 procedure TJvCustomPageList.GetChildren(Proc: TGetChildProc;
   Root: TComponent);
 var
@@ -625,13 +671,12 @@ end;
 procedure TJvCustomPageList.Paint;
 begin
   if (csDesigning in ComponentState) and (PageCount = 0) then
-    with Canvas do
-    begin
-      Pen.Color := clBlack;
-      Pen.Style := psDot;
-      Brush.Style := bsClear;
-      Rectangle(ClientRect);
-    end;
+  begin
+    Canvas.Pen.Color := clBlack;
+    Canvas.Pen.Style := psDot;
+    Canvas.Brush.Style := bsClear;
+    Canvas.Rectangle(ClientRect);
+  end;
 end;
 
 procedure TJvCustomPageList.RemovePage(APage: TJvCustomPage);

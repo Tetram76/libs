@@ -51,6 +51,7 @@ const
   DefaultXPSeparatorColor = TColor($A6A6A6);
   DefaultXPSFBrushColor = TColor($D2BDB6);
   DefaultXPSFPenColor = TColor($6A240A);
+  DefaultXPBorderColor = TColor($666666);
   DefaultXPShadowColor = TColor($9D8D88);
   DefaultXPCheckedImageBackColorSelected = TColor($B59285);
   DefaultXPCheckedImageBackColor = TColor($D8D5D4);
@@ -707,6 +708,7 @@ type
     // property fields
     FSelectionFrameBrush: TBrush;
     FSelectionFramePen: TPen;
+    FBorderColor: TColor;
     FShadowColor: TColor;
     FSeparatorColor: TColor;
     FCheckedImageBackColorSelected: TColor;
@@ -748,6 +750,7 @@ type
       State: TMenuOwnerDrawState); override;
   published
     property ImageBackgroundColor default DefaultXPImageBackgroundColor;
+    property BorderColor: TColor read FBorderColor write FBorderColor default DefaultXPBorderColor;
     property SelectionFrameBrush: TBrush read FSelectionFrameBrush write SetSelectionFrameBrush;
     property SelectionFramePen: TPen read FSelectionFramePen write SetSelectionFramePen;
     property SeparatorColor: TColor read FSeparatorColor write FSeparatorColor default DefaultXPSeparatorColor;
@@ -779,7 +782,7 @@ uses
   {$IFNDEF COMPILER7_UP}
   JvWin32,
   {$ENDIF ~COMPILER7_UP}
-  JclGraphUtils, JvConsts, JvJCLUtils, JvJVCLUtils;
+  JclSysInfo, JclGraphUtils, JvConsts, JvJCLUtils, JvJVCLUtils;
 
 const
   Separator = '-';
@@ -844,7 +847,7 @@ end;
 
 function IsWinXP_UP: Boolean;
 begin
-  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and CheckWin32Version(5, 1);
+  Result := (Win32Platform = VER_PLATFORM_WIN32_NT) and JclCheckWinVersion(5, 1);
 end;
 
 function UseFlatMenubars: Boolean;
@@ -3165,6 +3168,7 @@ begin
   FCheckedPoint := Point(0, 0);
 
   // affect default values that are not 0
+  FBorderColor := DefaultXPBorderColor;
   FShadowColor := DefaultXPShadowColor;
   FImageBackgroundColor := DefaultXPImageBackgroundColor;
   FSelectionFrameBrush.Color := DefaultXPSFBrushColor;
@@ -3234,7 +3238,7 @@ begin
   begin
     Brush.Color := RGB(0, 0, 0);  // must set the color or the style might not be taken into account
     Brush.Style := bsClear;
-    Pen.Color := RGB(102, 102, 102);
+    Pen.Color := BorderColor;
     Pen.Style := psSolid;
 
       // dark contour
@@ -3655,7 +3659,7 @@ begin
       begin
         GetWindowRect(CanvasWindow, WRect);
 
-        DefProc := Pointer(GetWindowLongPtr(CanvasWindow, GWL_WNDPROC));
+        DefProc := Pointer(GetWindowLongPtr(CanvasWindow, GWLP_WNDPROC));
         if (DefProc <> nil) and
            (DefProc <> @XPMenuItemPainterWndProc) and
            not (csDesigning in Menu.ComponentState) then
@@ -3990,7 +3994,7 @@ procedure TWindowList.AddHook(AHandle: THandle; OldProc, NewProc: Pointer);
 begin
   FWindowList.Add(Pointer(AHandle));
   FPrevProcList.Add(OldProc);
-  SetWindowLongPtr(AHandle, GWL_WNDPROC, LONG_PTR(NewProc));
+  SetWindowLongPtr(AHandle, GWLP_WNDPROC, LONG_PTR(NewProc));
 end;
 
 function TWindowList.CallPrevWindowProc(hwnd: THandle; uMsg: UINT;
@@ -4026,12 +4030,7 @@ begin
   Index := FWindowList.IndexOf(Pointer(AHandle));
   if Index >= 0 then
   begin
-    {$IFDEF RTL230_UP}
-    SetWindowLongPtr(AHandle, GWL_WNDPROC, LONG_PTR(FPrevProcList[Index]));
-    {$ELSE}
-    SetWindowLong(AHandle, GWL_WNDPROC, Integer(FPrevProcList[Index]));
-    {$ENDIF RTL230_UP}
-
+    SetWindowLongPtr(AHandle, GWLP_WNDPROC, LONG_PTR(FPrevProcList[Index]));
     FWindowList.Delete(Index);
     FPrevProcList.Delete(Index);
   end;

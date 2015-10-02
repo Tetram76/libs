@@ -238,7 +238,6 @@ type
     FIniLink: TJvIniLink;
     FDisableCount: Integer;
     FFixedCols: Integer;
-    FMsIndicators: TImageList;
     FOnCheckButton: TCheckTitleBtnEvent;
     FOnGetCellProps: TGetCellPropsEvent;
     FOnGetCellParams: TGetCellParamsEvent;
@@ -311,6 +310,7 @@ type
     {$IFNDEF COMPILER14_UP}
     FUseXPThemes: Boolean;
     {$ENDIF ~COMPILER14_UP}
+    FUseThemedHighlighting: Boolean;
     FPaintInfo: TJvGridPaintInfo;
     FCell: TGridCoord; // currently selected cell
 
@@ -407,7 +407,6 @@ type
 
     function GetMaxDisplayText: string;
     function GetColumnMaxWidth: Integer;
-
   protected
     FCurrentDrawRow: Integer;
     procedure MouseLeave(Control: TControl); override;
@@ -428,6 +427,7 @@ type
     procedure DoDrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState); virtual;
     procedure DrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState); override;
     procedure DrawDataCell(const Rect: TRect; Field: TField; State: TGridDrawState); override; { obsolete from Delphi 2.0 }
+    function DrawThemedHighlighting(ACanvas: TCanvas; R: TRect): Boolean;
     function GetPaintInfo: TJvGridPaintInfo;
 
     function BeginColumnDrag(var Origin: Integer; var Destination: Integer; const MousePt: TPoint): Boolean; override;
@@ -633,6 +633,8 @@ type
     property BooleanEditor: Boolean read FBooleanEditor write SetBooleanEditor default True;
     { UseXPThemes: if true, the grid is painted in the active XP theme style }
     property UseXPThemes: Boolean read GetUseXPThemes write SetUseXPThemes {$IFDEF COMPILER14_UP} stored False{$ENDIF} default True;
+    { UseThemedHighlighting: if true, the grid's cell selection is painted with the styling color }
+    property UseThemedHighlighting: Boolean read FUseThemedHighlighting write FUseThemedHighlighting default True;
     { OnCheckIfBooleanField: event used to treat integer fields and string fields as boolean fields }
     property OnCheckIfBooleanField: TJvDBCheckIfBooleanFieldEvent read FOnCheckIfBooleanField write FOnCheckIfBooleanField;
     { OnColumnResized: event triggered each time a column is resized with the mouse }
@@ -667,6 +669,9 @@ uses
   Variants, SysUtils, Math, TypInfo, Dialogs, DBConsts, StrUtils,
   JvDBLookup,
   JvConsts, JvResources, JvThemes, JvJCLUtils, JvJVCLUtils,
+  {$IFDEF COMPILER16_UP}
+  Themes,
+  {$ENDIF COMPILER16_UP}
   {$IFDEF COMPILER7_UP}
   // => TScrollDirection, DrawArray(must be after JvJVCLUtils)
   {$ENDIF COMPILER7_UP}
@@ -702,11 +707,13 @@ var
   GridBitmaps: array [TGridPicture] of TJvDBGridBitmap =
     (nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil);
   FirstGridBitmaps: Boolean = True;
+  MsIndicators: TImageList;
 
 procedure FinalizeGridBitmaps;
 var
   I: TGridPicture;
 begin
+  FreeAndNil(MsIndicators);
   for I := Low(TGridPicture) to High(TGridPicture) do
     FreeAndNil(GridBitmaps[I]);
 end;
@@ -1058,15 +1065,18 @@ begin
 
   FAutoSort := True;
   FBeepOnError := True;
-  Bmp := TBitmap.Create;
-  try
-    Bmp.Handle := LoadBitmap(HInstance, bmMultiDot);
-    FMsIndicators := TImageList.CreateSize(Bmp.Width, Bmp.Height);
-    FMsIndicators.AddMasked(Bmp, clWhite);
-    Bmp.Handle := LoadBitmap(HInstance, bmMultiArrow);
-    FMsIndicators.AddMasked(Bmp, clWhite);
-  finally
-    Bmp.Free;
+  if MsIndicators = nil then
+  begin
+    Bmp := TBitmap.Create;
+    try
+      Bmp.Handle := LoadBitmap(HInstance, bmMultiDot);
+      MsIndicators := TImageList.CreateSize(Bmp.Width, Bmp.Height);
+      MsIndicators.AddMasked(Bmp, clWhite);
+      Bmp.Handle := LoadBitmap(HInstance, bmMultiArrow);
+      MsIndicators.AddMasked(Bmp, clWhite);
+    finally
+      Bmp.Free;
+    end;
   end;
   FIniLink := TJvIniLink.Create;
   FIniLink.OnSave := IniSave;
@@ -1106,6 +1116,8 @@ begin
   {$IFNDEF COMPILER14_UP}
   FUseXPThemes := True;
   {$ENDIF ~COMPILER14_UP}
+  FUseThemedHighlighting := True;
+
   FPaintInfo.ColPressed := False;
   FPaintInfo.MouseInCol := -1;
   FPaintInfo.ColPressedIdx := -1;
@@ -1126,7 +1138,6 @@ begin
   FControls.Free;
 
   FIniLink.Free;
-  FMsIndicators.Free;
   FSelectColumnsDialogStrings.Free;
 
   FChangeLinks.Free;
@@ -2063,9 +2074,9 @@ begin
           AFont.Color := AlternateRowFontColor;
       end;
     end;
-  end
+  end(*
   else
-    Background := FixedColor;
+    Background := FixedColor*);
 
   if Highlight then
   begin
@@ -2365,6 +2376,7 @@ var
   lCompare: Integer;
   WasAlwaysShowEditor: Boolean;
   WasRowResizing: Boolean;
+  InheritedCalled: Boolean;
 begin
   if not AcquireFocus then
     Exit;
@@ -2471,12 +2483,16 @@ begin
             Exit;
         end;
       end;
+      InheritedCalled := False;
       if Cell.Y >= 0 then
       begin
         if (Cell.X < FixedCols + IndicatorOffset) and DataLink.Active then
         begin
           if dgIndicator in Options then
-            inherited MouseDown(Button, Shift, 1, Y)
+          begin
+            inherited MouseDown(Button, Shift, 1, Y);
+            InheritedCalled := True;
+          end
           else
           if Cell.Y >= TitleOffset then
             if Cell.Y - Row <> 0 then
@@ -2504,13 +2520,17 @@ begin
                 // Disable goRowSizing without all the code that SetOptions executes.
                 TGridOptions(Pointer(@TCustomGridAccess(Self).Options)^) := TCustomGridAccess(Self).Options - [goRowSizing];
                 inherited MouseDown(Button, Shift, 1, Y);
+                InheritedCalled := True;
               finally
                 if WasRowResizing then
                   TGridOptions(Pointer(@TCustomGridAccess(Self).Options)^) := TCustomGridAccess(Self).Options + [goRowSizing];
               end;
             end
             else
+            begin
               inherited MouseDown(Button, Shift, X, Y);
+              InheritedCalled := True;
+            end;
             if (Col = LastCell.X) and (Row <> LastCell.Y) then
             begin
               { ColEnter is not invoked when switching between rows staying in the
@@ -2525,7 +2545,7 @@ begin
         end;
       end;
       MouseDownEvent := OnMouseDown;
-      if Assigned(MouseDownEvent) then
+      if Assigned(MouseDownEvent) and not InheritedCalled then
         MouseDownEvent(Self, Button, Shift, X, Y);
       if not (((csDesigning in ComponentState) or (dgColumnResize in Options)) and
         (Cell.Y < TitleOffset)) and (Button = mbLeft) then
@@ -2533,6 +2553,8 @@ begin
         if MultiSelect and DataLink.Active then
           with SelectedRows do
           begin
+            // must refresh the selected rows or we might have invalid bookmarks in it following record deletion
+            Refresh;
             FSelecting := False;
             if Shift * KeyboardShiftStates = [ssCtrl] then
               CurrentRowSelected := not CurrentRowSelected
@@ -2554,7 +2576,7 @@ begin
                       begin
                         GotoBookmark(Pointer(lLastSelected));
                         Next;
-                        while not (CurrentRowSelected and ({$IFDEF RTL200_UP}CompareBookmarks(Bookmark, lNewSelected) = 0{$ELSE}Bookmark = lNewSelected{$ENDIF RTL200_UP})) do
+                        while not Eof and not (CurrentRowSelected and ({$IFDEF RTL200_UP}CompareBookmarks(Bookmark, lNewSelected) = 0{$ELSE}Bookmark = lNewSelected{$ENDIF RTL200_UP})) do
                         begin
                           CurrentRowSelected := True;
                           Next;
@@ -2565,7 +2587,7 @@ begin
                       begin
                         GotoBookmark(Pointer(lLastSelected));
                         Prior;
-                        while not (CurrentRowSelected and ({$IFDEF RTL200_UP}CompareBookmarks(Bookmark, lNewSelected) = 0{$ELSE}Bookmark = lNewSelected{$ENDIF RTL200_UP})) do
+                        while not Bof and not (CurrentRowSelected and ({$IFDEF RTL200_UP}CompareBookmarks(Bookmark, lNewSelected) = 0{$ELSE}Bookmark = lNewSelected{$ENDIF RTL200_UP})) do
                         begin
                           CurrentRowSelected := True;
                           Prior;
@@ -2942,7 +2964,11 @@ begin
       UseRightToLeftAlignmentForField(Column.Field, Column.Alignment), False);
   end
   else if GetImageIndex(Column.Field) < 0 then  // Mantis 5013: Must not call inherited drawer, or the text will be painted over
+  begin
+    if DrawThemedHighlighting(Canvas, Rect) then
+      Canvas.Brush.Style := bsClear;
     inherited DefaultDrawColumnCell(Rect, DataCol, Column, State);
+  end;
 end;
 
 procedure TJvDBGrid.DefaultDataCellDraw(const Rect: TRect; Field: TField;
@@ -2969,6 +2995,39 @@ begin
   Result := AnsiSameText(AFieldName, SortedField);
 end;
 
+function TJvDBGrid.DrawThemedHighlighting(ACanvas: TCanvas; R: TRect): Boolean;
+begin
+  {$IFDEF JVCLThemesEnabled}
+  if UseThemedHighlighting and UseXPThemes and StyleServices.Enabled and (ACanvas.Brush.Color = clHighlight) then
+  begin
+    if ACanvas.Brush.Style <> bsSolid then
+      ACanvas.Brush.Style := bsSolid;
+    {$IFDEF COMPILER16_UP}
+    if CheckWin32Version(6, 0) then
+    begin
+      ACanvas.Brush.Color := Self.Color;
+      ACanvas.FillRect(R);
+      if MultiSelect and ActiveRowSelected then
+        InflateRect(R, 1, 0);
+      StyleServices.DrawElement(ACanvas.Handle, StyleServices.GetElementDetails(tmPopupItemHot), R, nil);
+    end
+    else
+    {$ENDIF COMPILER16_UP}
+    begin
+      ACanvas.Brush.Color := $FFEFDE;
+      ACanvas.Pen.Color := $ECB57F;
+      ACanvas.Rectangle(R);
+    end;
+    ACanvas.Brush.Color := clHighlight;
+    if ACanvas.Font.Color = clHighlightText then
+      ACanvas.Font.Color := StyleServices.GetSystemColor(clWindowText);
+    Result := True;
+  end
+  else
+  {$ENDIF JVCLThemesEnabled}
+    Result := False;
+end;
+
 procedure TJvDBGrid.WriteCellText(ARect: TRect; DX, DY: Integer; const Text: string;
   Alignment: TAlignment; ARightToLeft: Boolean; FixCell: Boolean; Options: Integer = 0);
 const
@@ -2985,27 +3044,25 @@ var
 
   procedure DrawAText(CellCanvas: TCanvas);
   begin
-    with CellCanvas do
-    begin
-      DrawOptions := DT_EXPANDTABS or DT_NOPREFIX;
-      if Options <> 0 then
-        DrawOptions := DrawOptions or Options;
-      if WordWrap then
-        DrawOptions := DrawOptions or DT_WORDBREAK;
-      {$IFDEF JVCLThemesEnabled}
-      if not FixCell or not (UseXPThemes and StyleServices.Enabled) then
-      {$ENDIF JVCLThemesEnabled}
-        {$IFDEF COMPILER14_UP}
-        if not FixCell or (DrawingStyle in [gdsClassic, gdsThemed]) then
-        {$ENDIF COMPILER14_UP}
-        begin
-          if Brush.Style <> bsSolid then
-            Brush.Style := bsSolid;
-          FillRect(B);
-        end;
-      SetBkMode(Handle, TRANSPARENT);
-      DrawBiDiText(Handle, Text, R, DrawOptions, Alignment, ARightToLeft, Canvas.CanvasOrientation);
-    end;
+    DrawOptions := DT_EXPANDTABS or DT_NOPREFIX;
+    if Options <> 0 then
+      DrawOptions := DrawOptions or Options;
+    if WordWrap then
+      DrawOptions := DrawOptions or DT_WORDBREAK;
+    {$IFDEF JVCLThemesEnabled}
+    if not FixCell or not (UseXPThemes and StyleServices.Enabled) then
+    {$ENDIF JVCLThemesEnabled}
+      {$IFDEF COMPILER14_UP}
+      if not FixCell or (DrawingStyle in [gdsClassic, gdsThemed]) then
+      {$ENDIF COMPILER14_UP}
+      begin
+        if CellCanvas.Brush.Style <> bsSolid then
+          CellCanvas.Brush.Style := bsSolid;
+        if not DrawThemedHighlighting(CellCanvas, B) then
+          CellCanvas.FillRect(B);
+      end;
+    SetBkMode(CellCanvas.Handle, TRANSPARENT);
+    DrawBiDiText(CellCanvas.Handle, Text, R, DrawOptions, Alignment, ARightToLeft, Canvas.CanvasOrientation);
   end;
 
 begin
@@ -3124,20 +3181,20 @@ begin
         // without the 3D border.
         Bmp := TBitmap.Create;
         try
-          Bmp.Canvas.Brush.Color := FixedColor;
+//          Bmp.Canvas.Brush.Color := FixedColor;
           Bmp.Width := lCellRect.Right - lCellRect.Left;
           Bmp.Height := lCellRect.Bottom - lCellRect.Top;
           DC := Canvas.Handle;
           try
             Canvas.Handle := Bmp.Canvas.Handle;
             IntersectClipRect(Canvas.Handle, 2, 2, Bmp.Width - 2, Bmp.Height - 2);
-            CallDrawCellEvent(ACol, ARow, Rect(0, 0, Bmp.Width - 1, Bmp.Height - 1), [gdFixed]);
+//            CallDrawCellEvent(ACol, ARow, Rect(0, 0, Bmp.Width - 1, Bmp.Height - 1), [gdFixed]);
           finally
             Canvas.Handle := DC;
           end;
-          Bmp.TransparentColor := FixedColor;
+//          Bmp.TransparentColor := FixedColor;
           Bmp.Transparent := True;
-          Canvas.Draw(lCellRect.Left, lCellRect.Top, Bmp);
+//          Canvas.Draw(lCellRect.Left, lCellRect.Top, Bmp);
         finally
           Bmp.Free;
         end;
@@ -3216,6 +3273,7 @@ var
   InBiDiMode: Boolean;
   DrawColumn: TColumn;
   DefaultDrawText, DefaultDrawSortMarker: Boolean;
+  OSOffset: Integer;
 
   function CalcTitleRect(Col: TColumn; ARow: Integer; var MasterCol: TColumn): TRect;
     { copied from CodeGear's DbGrids.pas }
@@ -3273,6 +3331,9 @@ var
       Result.Bottom := DrawInfo.Vert.FixedBoundary -
         DrawInfo.Vert.EffectiveLineWidth;
     end;
+    Result.Left := Result.Left + 1;
+    if Win32MajorVersion >= 6 then // Windows 7+
+      Result.Right := Result.Right - 1;
   end;
 
   procedure DrawExpandBtn(var TitleRect, TextRect: TRect; InBiDiMode: Boolean;
@@ -3355,12 +3416,12 @@ begin
         Indicator := 0
       else
         Indicator := 1; { multiselected and current row }
-      FMsIndicators.BkColor := FixedColor;
-      ALeft := FixRect.Right - FMsIndicators.Width - FrameOffs;
+//      MsIndicators.BkColor := FixedColor;
+      ALeft := FixRect.Right - MsIndicators.Width - FrameOffs;
       if InBiDiMode then
         Inc(ALeft);
-      FMsIndicators.Draw(Self.Canvas, ALeft, (FixRect.Top +
-        FixRect.Bottom - FMsIndicators.Height) shr 1, Indicator);
+      MsIndicators.Draw(Self.Canvas, ALeft, (FixRect.Top +
+        FixRect.Bottom - MsIndicators.Height) shr 1, Indicator);
     end;
   end
   else
@@ -3385,8 +3446,12 @@ begin
       if Assigned(DrawColumn) and not DrawColumn.Showing then
         Exit;
       TitleRect := CalcTitleRect(DrawColumn, ARow, MasterCol);
-      if TitleRect.Right < ARect.Right then
-        TitleRect.Right := ARect.Right;
+      if Win32MajorVersion >= 6 then // Windows 7+
+        OSOffset := 1
+      else
+        OSOffset := 0;
+      if TitleRect.Right < ARect.Right - OSOffset then
+        TitleRect.Right := ARect.Right - OSOffset;
       if MasterCol = nil then
         Exit
       else
@@ -3500,7 +3565,7 @@ begin
             if IsRightToLeft then
               ALeft := TitleRect.Left + 3;
             {$IFDEF COMPILER14_UP}
-            DrawCellBackground(Rect(TextRect.Right, TitleRect.Top, TitleRect.Right, TitleRect.Bottom), FixedColor, AState, ACol, ARow - TitleOffset);
+            //DrawCellBackground(Rect(TextRect.Right, TitleRect.Top, TitleRect.Right, TitleRect.Bottom), FixedColor, AState, ACol, ARow - TitleOffset);
             {$ELSE}
               {$IFDEF JVCLThemesEnabled}
             if not (UseXPThemes and StyleServices.Enabled) then
@@ -3550,6 +3615,7 @@ var
   Highlight: Boolean;
   Bmp: TBitmap;
   Field, ReadOnlyTestField: TField;
+  R: TRect;
 begin
   Field := Column.Field;
   if Assigned(DataSource) and Assigned(DataSource.DataSet) and DataSource.DataSet.Active and
@@ -3601,7 +3667,29 @@ begin
   if DefaultDrawing and (gdFocused in State) and not (csDesigning in ComponentState) and
     not (dgRowSelect in Options) and
     (ValidParentForm(Self).ActiveControl = Self) then
-    Canvas.DrawFocusRect(Rect);
+  begin
+    R := Rect;
+    {$IFDEF JVCLThemesEnabled}
+    if UseThemedHighlighting and UseXPThemes and StyleServices.Enabled then
+    begin
+      InflateRect(R, -1, -1);
+      Bmp := TBitmap.Create;
+      try
+        Bmp.Canvas.Brush.Color := clWhite;
+        Bmp.Width := R.Right - R.Left;
+        Bmp.Height := R.Bottom - R.Top;
+        Bmp.Canvas.DrawFocusRect(Types.Rect(0, 0, Bmp.Width, Bmp.Height));
+        Bmp.TransparentColor := clWhite;
+        Bmp.Transparent := True;
+        Canvas.Draw(R.Left, R.Top, Bmp);
+      finally
+        Bmp.Free;
+      end;
+    end
+    else
+    {$ENDIF JVCLThemesEnabled}
+      Canvas.DrawFocusRect(R);
+  end;
 end;
 
 procedure TJvDBGrid.DrawDataCell(const Rect: TRect; Field: TField;

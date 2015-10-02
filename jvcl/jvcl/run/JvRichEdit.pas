@@ -667,6 +667,7 @@ type
     function GetSelText: string; override;
     procedure SetSelLength(Value: Integer); override;
     procedure SetSelStart(Value: Integer); override;
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     property AllowInPlace: Boolean read FAllowInPlace write FAllowInPlace default True;
     property AutoAdvancedTypography: Boolean read FAutoAdvancedTypography write FAutoAdvancedTypography default True;
     property AdvancedTypography: Boolean read GetAdvancedTypography write SetAdvancedTypography stored
@@ -990,7 +991,7 @@ uses
   {$IFDEF RTL200_UP}
   CommDlg,
   {$ENDIF RTL200_UP}
-  JclAnsiStrings,
+  JclAnsiStrings, JclSysInfo,
   JvThemes, JvConsts, JvResources, JvFixedEditPopUp;
 
 type
@@ -3317,7 +3318,9 @@ end;
 {$IFDEF RTL220_UP}
 procedure TJvCustomRichEdit.DoContextPopup(MousePos: TPoint; var Handled: Boolean);
 begin
-  if not Assigned(PopupMenu) then
+  inherited DoContextPopup(MousePos, Handled);
+
+  if not Assigned(PopupMenu) and not Handled then
   begin
     MousePos := ClientToScreen(MousePos);
     FixedDefaultEditPopUp(Self).Popup(MousePos.X, MousePos.Y);
@@ -3756,6 +3759,15 @@ end;
 function TJvCustomRichEdit.IsAdvancedTypographyStored: Boolean;
 begin
   Result := not AutoAdvancedTypography;
+end;
+
+procedure TJvCustomRichEdit.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  // Mantis 6231: TCustomRichEdit from the VCL ignores WantReturns
+  if not WantReturns and (Key = $D) and (Shift = []) then
+    Key := 0;
+
+  inherited KeyDown(Key, Shift);
 end;
 
 function TJvCustomRichEdit.CharFromPos(X, Y: Integer): Integer;
@@ -4622,7 +4634,7 @@ procedure TJvCustomRichEdit.WMRButtonUp(var Msg: TMessage);
 begin
   { RichEd20 does not pass the WM_RBUTTONUP message to defwndproc, }
   { so we get no WM_CONTEXTMENU message. Simulate message here.    }
-  if ((RichEditVersion <> 1) or not CheckWin32Version(5, 0)) and AllowObjects then
+  if ((RichEditVersion <> 1) or not JclCheckWinVersion(5, 0)) and AllowObjects then
     Perform(WM_CONTEXTMENU, Handle, {$IFDEF RTL230_UP}PointToLParam{$ELSE}LPARAM{$ENDIF RTL230_UP}(PointToSmallPoint(
       ClientToScreen(SmallPointToPoint(TWMMouse(Msg).Pos)))));
   inherited;
@@ -5998,7 +6010,7 @@ var
 begin
   with EditStream do
   begin
-    dwCookie := Longint(AConverter);
+    dwCookie := {$IFDEF COMPILER19_UP}DWORD_PTR{$ELSE}Longint{$ENDIF}(AConverter);
     pfnCallBack := StreamSave;
     dwError := 0;
   end;
@@ -6050,7 +6062,7 @@ begin
   try
     with EditStream do
     begin
-      dwCookie := Longint(Cookie);
+      dwCookie := {$IFDEF COMPILER19_UP}DWORD_PTR{$ELSE}Longint{$ENDIF}(Cookie);
       pfnCallBack := StreamLoad;
       dwError := 0;
     end;

@@ -35,7 +35,7 @@ uses
   Windows, SysUtils, Classes, Contnrs, Registry, PackageInformation;
 
 const
-  BDSVersions: array[1..12] of record
+  BDSVersions: array[1..17] of record
                                 Name: string;
                                 VersionStr: string;
                                 Version: Integer;
@@ -54,7 +54,12 @@ const
     (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE2'; Version: 16; CIV: '160'; Supported: True),
     (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE3'; Version: 17; CIV: '170'; Supported: True),
     (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE4'; Version: 18; CIV: '180'; Supported: True),
-    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE5'; Version: 19; CIV: '190'; Supported: True)
+    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE5'; Version: 19; CIV: '190'; Supported: True),
+    (Name: 'skipped'; VersionStr: 'skipped'; Version: 19; CIV: '190'; Supported: False),
+    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE6'; Version: 20; CIV: '200'; Supported: True),
+    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE7'; Version: 21; CIV: '210'; Supported: True),
+    (Name: 'Embarcadero RAD Studio'; VersionStr: 'XE8'; Version: 22; CIV: '220'; Supported: True),
+    (Name: 'Embarcadero RAD Studio'; VersionStr: '10'; Version: 23; CIV: '230'; Supported: True)
   );
 
 type
@@ -176,6 +181,7 @@ type
     function GetDcc64: string;
     function GetDccil: string;
     function GetBcc32: string;
+    function GetBcc64: string;
     function GetIlink32: string;
     function GetTlib: string;
     function GetBplDir: string;
@@ -195,6 +201,7 @@ type
     function IsDelphi: Boolean;
     function IsPersonal: Boolean;
     function DisplayName: string;
+    function HasBDE: Boolean;
 
     function IsInEnvPath(const Dir: string): Boolean;
       { IsInEnvPath returns True if Dir is in the EnvPath. (ShortPaths and
@@ -240,6 +247,7 @@ type
     property Dcc64: string read GetDcc64;
     property Dccil: string read GetDccil;
     property Bcc32: string read GetBcc32;
+    property Bcc64: string read GetBcc64;
     property Ilink32: string read GetIlink32;
     property Tlib: string read GetTlib;
 
@@ -646,6 +654,8 @@ begin
      // available macros
       if (S = 'delphi') or (S = 'bcb') or (S = 'bds') then // do not localize
         NewS := FRootDir
+      else if S = 'bdslib' then // don't trust the env-var for this as it may be the wrong version
+        NewS := FRootDir + '\lib'
       else if IsBDS and (S = 'bdsprojectsdir') then // do not localize
         NewS := BDSProjectsDir
       else if IsBDS and (IDEVersion >= 5) and (S = 'bdscommondir') then
@@ -1343,8 +1353,8 @@ begin
     Result := SupportedPersonalities = Personalities
   else
     Result := SupportedPersonalities * Personalities = Personalities;
-  // there is no C++ Win64 personality yet
-  if (Personalities = [persBCB]) and IsBDS and (IDEVersion >= 9) and (FPlatform = ctpWin64) then
+  // C++ Win64 personality appeared with XE3
+  if (Personalities = [persBCB]) and IsBDS and (IDEVersion >= 9) and (IDEVersion < 11) and (FPlatform = ctpWin64) then
     Result := False;
 end;
 
@@ -1400,6 +1410,11 @@ begin
   Result := RootDir + '\Bin\bcc32.exe'; // do not localize
 end;
 
+function TCompileTarget.GetBcc64: string;
+begin
+  Result := RootDir + '\Bin\bcc64.exe'; // do not localize
+end;
+
 function TCompileTarget.GetIlink32: string;
 begin
   Result := RootDir + '\Bin\ilink32.exe'; // do not localize
@@ -1408,6 +1423,11 @@ end;
 function TCompileTarget.GetTlib: string;
 begin
   Result := RootDir + '\Bin\tlib.exe'; // do not localize
+end;
+
+function TCompileTarget.HasBDE: Boolean;
+begin
+  Result := (Platform = ctpWin32) and ((Version < 21) or FileExists(PathAddSeparator(RootLibReleaseDir) + 'bdertl.dcp'));
 end;
 
 function TCompileTarget.GetDcpDir: string;
