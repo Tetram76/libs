@@ -84,18 +84,26 @@
 {.$DEFINE DEBUG} // track memory leack
 
 
+{$if defined(VER210) or defined(VER220)}
+  {$define VER210ORGREATER}
+{$ifend}
+
+{$if defined(VER230) or defined(VER240)  or defined(VER250) or
+     defined(VER260) or defined(VER270)  or defined(VER280)}
+  {$define VER210ORGREATER}
+  {$define VER230ORGREATER}
+{$ifend}
+
 {$if defined(FPC) or defined(VER170) or defined(VER180) or defined(VER190)
-  or defined(VER200) or defined(VER210) or defined(VER220) or defined(VER230)
-  or defined(VER240)  or defined(VER250) or defined(VER260)}
+  or defined(VER200) or defined(VER210ORGREATER)}
   {$DEFINE HAVE_INLINE}
 {$ifend}
 
-{$if defined(VER210) or defined(VER220) or defined(VER230) or defined(VER240)
-  or defined(VER250) or defined(VER260)}
+{$if defined(VER210ORGREATER)}
   {$define HAVE_RTTI}
 {$ifend}
 
-{$if defined(VER230) or defined(VER240) or defined(VER250) or defined(VER260)}
+{$if defined(VER230ORGREATER)}
   {$define NEED_FORMATSETTINGS}
 {$ifend}
 
@@ -1139,11 +1147,14 @@ begin
     i := F.Ite.GetIter;
     if i <> nil then
     begin
-      f.key := i.Name;
-      f.val := i.Value;
-      Result := true;
+      F.key := i.Name;
+      F.val := i.Value;
+      Result := True;
     end else
+    begin
+      FreeAndNil(F.Ite);
       Result := False;
+    end;
   end else
     Result := False;
 end;
@@ -1152,20 +1163,26 @@ function ObjectFindNext(var F: TSuperObjectIter): boolean;
 var
   i: TSuperAvlEntry;
 begin
+  if Assigned(F.Ite) then
+  begin
   F.Ite.Next;
   i := F.Ite.GetIter;
   if i <> nil then
   begin
-    f.key := i.FName;
-    f.val := i.Value;
-    Result := true;
+      F.key := i.FName;
+      F.val := i.Value;
+      Result := True;
   end else
+    Result := False;
+  end
+  else
     Result := False;
 end;
 
 procedure ObjectFindClose(var F: TSuperObjectIter);
 begin
-  F.Ite.Free;
+  if Assigned(F.Ite) then
+    FreeAndNil(F.Ite);
   F.val := nil;
 end;
 
@@ -3407,6 +3424,8 @@ begin
         for j := 0 to arr.Length - 1 do
           Add(arr.GetO(j).Clone);
       end;
+    stNull:
+      Result := TSuperObject.Create(stNull);
   else
     Result := nil;
   end;
@@ -6389,11 +6408,11 @@ function TSuperRttiContext.ToJson(var value: TValue; const index: ISuperObject):
   begin
     if TValueData(Value).FAsObject <> nil then
     begin
-      o := index[IntToStr(Integer(Value.AsObject))];
+      o := index[IntToStr(NativeInt(Value.AsObject))];
       if o = nil then
       begin
         Result := TSuperObject.Create(stObject);
-        index[IntToStr(Integer(Value.AsObject))] := Result;
+        index[IntToStr(NativeInt(Value.AsObject))] := Result;
         for f in Context.GetType(Value.AsObject.ClassType).GetFields do
           if f.FieldType <> nil then
           begin
