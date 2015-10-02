@@ -10,11 +10,11 @@ Author:       François PIETTE
 Object:       TPop3Cli class implements the POP3 protocol
               (RFC-1225, RFC-1939)
 Creation:     03 october 1997
-Version:      8.01
+Version:      8.05
 EMail:        francois.piette@overbyte.be  http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2011 by François PIETTE
+Legal issues: Copyright (C) 1997-2015 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
@@ -203,7 +203,10 @@ Mar 19, 2013 V8.01 Angus added OpenEx, Login, UserPass, Capa and
              Note: SocketFamily must be set to sfAny, sfIPv6 or sfAnyIPv6 to
                    allow a host name to resolve to an IPv6 address.
 Apr 25, 2013 V8.02 Angus Login now checks AuthType and calls Auth, UserPass or APOP
-
+Dec 10, 2014 V8.03 Angus added SslHandshakeRespMsg for better error handling
+Mar 18, 2015 V8.04 Angus added IcsLogger
+Jun 01, 2015 V8.05 Angus update SslServerName for SSL SNI support allowing server to
+                     select correct SSL context and certificate
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFNDEF ICS_INCLUDE_MODE}
@@ -233,24 +236,25 @@ interface
 
 uses
 {$IFDEF MSWINDOWS}
-    Messages,
-    Windows,
+    {$IFDEF RTL_NAMESPACES}Winapi.Messages{$ELSE}Messages{$ENDIF},
+    {$IFDEF RTL_NAMESPACES}Winapi.Windows{$ELSE}Windows{$ENDIF},
     OverbyteIcsWinSock,
 {$ENDIF}
 {$IFDEF POSIX}
     Ics.Posix.WinTypes,
     Ics.Posix.Messages,
 {$ENDIF}
-    SysUtils, Classes,
+    {$IFDEF RTL_NAMESPACES}System.SysUtils{$ELSE}SysUtils{$ENDIF},
+    {$IFDEF RTL_NAMESPACES}System.Classes{$ELSE}Classes{$ENDIF},
 {$IFNDEF NOFORMS}
   {$IFDEF FMX}
     FMX.Forms,
   {$ELSE}
-    Forms,
+    {$IFDEF RTL_NAMESPACES}Vcl.Forms{$ELSE}Forms{$ENDIF},
   {$ENDIF}
 {$ENDIF}
 {$IFDEF COMPILER12_UP}
-    AnsiStrings, // For Trim and LowerCase
+    {$IFDEF RTL_NAMESPACES}System.AnsiStrings{$ELSE}AnsiStrings{$ENDIF}, // For Trim and LowerCase
 {$ENDIF}
 {$IFDEF FMX}
     Ics.Fmx.OverbyteIcsWndControl,
@@ -258,6 +262,9 @@ uses
 {$ELSE}
     OverbyteIcsWndControl,
     OverbyteIcsWSocket,
+{$ENDIF}
+{$IFNDEF NO_DEBUG_LOG}
+    OverbyteIcsLogger,
 {$ENDIF}
     OverbyteIcsNtlmMsgs,
     OverbyteIcsMimeUtils,
@@ -270,8 +277,8 @@ uses
 (*$HPPEMIT '#pragma alias "@Overbyteicspop3prot@TCustomPop3Cli@GetUserNameW$qqrv"="@Overbyteicspop3prot@TCustomPop3Cli@GetUserName$qqrv"' *)
 
 const
-    Pop3CliVersion     = 802;
-    CopyRight : String = ' POP3 component (c) 1997-2013 F. Piette V8.02 ';
+    Pop3CliVersion     = 805;
+    CopyRight : String = ' POP3 component (c) 1997-2015 F. Piette V8.05 ';
     POP3_RCV_BUF_SIZE  = 4096;
 
 type
@@ -464,6 +471,12 @@ type
         procedure   TriggerMultiLineLine; virtual;
         procedure   TriggerMultiLineEnd; virtual;
         property    RequestType: TPop3Request read FRequestType;
+{$IFNDEF NO_DEBUG_LOG}
+        function  GetIcsLogger: TIcsLogger;                 { V8.04 }
+        procedure SetIcsLogger(const Value: TIcsLogger);    { V8.04 }
+        procedure DebugLog(LogOption: TLogOption; const Msg : string); virtual;   { V8.04 }
+        function  CheckLogOptions(const LogOption: TLogOption): Boolean; virtual; { V8.04 }
+{$ENDIF}
     public
         constructor Create(AOwner : TComponent); override;
         destructor  Destroy; override;
@@ -589,6 +602,10 @@ type
         property OnSessionClosed : TSessionClosed
                                                      read  FOnSessionClosed
                                                      write FOnSessionClosed;
+{$IFNDEF NO_DEBUG_LOG}
+        property IcsLogger          : TIcsLogger     read  GetIcsLogger   { V8.04 }
+                                                     write SetIcsLogger;
+{$ENDIF}
     end;
 
     TPop3Cli = class(TCustomPop3Cli)
@@ -630,6 +647,7 @@ type
         property OnResponse;
         property OnSessionConnected;
         property OnSessionClosed;
+        property IcsLogger;  { V8.04 }
     end;
 
 
@@ -2318,6 +2336,37 @@ begin
 end;
 
 
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{$IFNDEF NO_DEBUG_LOG}
+function TCustomPop3Cli.GetIcsLogger: TIcsLogger;                            { V8.04}
+begin
+    Result := FWSocket.IcsLogger;
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomPop3Cli.SetIcsLogger(const Value: TIcsLogger);              { V8.04 }
+begin
+    FWSocket.IcsLogger := Value;
+end;
+
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+function TCustomPop3Cli.CheckLogOptions(const LogOption: TLogOption): Boolean;  { V8.04 }
+begin
+    Result := Assigned(IcsLogger) and (LogOption in IcsLogger.LogOptions);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+procedure TCustomPop3Cli.DebugLog(LogOption: TLogOption; const Msg: string);    { V8.04 }
+begin
+    if Assigned(IcsLogger) then
+        IcsLogger.DoDebugLog(Self, LogOption, Msg);
+end;
+{$ENDIF}
+
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 constructor TSyncPop3Cli.Create(AOwner : TComponent);
 begin
@@ -2694,13 +2743,14 @@ begin
         FOnSslHandShakeDone(Sender, ErrCode, PeerCert, Disconnect);
     if (ErrCode = 0) and (not Disconnect) and
        (FWSocket.State = wsConnected) then begin
-        with (Sender as TSslWSocket) do
+        TriggerDisplay((Sender as TSslWSocket).SslHandshakeRespMsg);  { V8.03 }
+      { with (Sender as TSslWSocket) do
             TriggerDisplay(
                            Format('! Secure connection with %s, cipher %s, ' +
                                   '%d secret bits (%d total)',
                                   [SslVersion, SslCipher, SslSecretBits,
                                    SslTotalBits])
-                           );
+                           );  }
         if FSslType = pop3TlsImplicit then
             StateChange(pop3WaitingBanner)
         else begin
@@ -2715,7 +2765,9 @@ begin
             FWSocket.Abort;
             FRequestDoneFlag := FALSE;
         end;
-        FErrorMessage  := '-ERR SSL Handshake';
+//        FErrorMessage  := '-ERR SSL Handshake';
+        FErrorMessage    := 'ERR SSL handshake failed - ' + (Sender as TSslWSocket).SslHandshakeRespMsg;  { V8.03 }
+        TriggerDisplay(FErrorMessage);    { V8.03 }
         FStatusCode    := 500;
         FRequestResult := FStatusCode;
         FNextRequest   := nil;
@@ -2748,6 +2800,7 @@ begin
     TriggerDisplay('! Starting SSL handshake');
     FWSocket.OnSslHandshakeDone := TransferSslHandShakeDone;
     FWSocket.SslEnable := TRUE;
+    FWSocket.SslServerName := FHost;  { V8.05 needed for SNI support }
     try
         //raise Exception.Create('Test');
         FWSocket.StartSslHandshake;
@@ -2779,6 +2832,7 @@ begin
         TriggerDisplay('! Starting SSL handshake');
         FWSocket.OnSslHandshakeDone := TransferSslHandShakeDone;
         FWSocket.SslEnable := TRUE;
+        FWSocket.SslServerName := FHost;  { V8.05 needed for SNI support }
         try
             //raise Exception.Create('Test');
             FWSocket.StartSslHandshake;

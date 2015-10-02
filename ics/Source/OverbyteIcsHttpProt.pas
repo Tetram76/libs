@@ -2,7 +2,7 @@
 
 Author:       François PIETTE
 Creation:     November 23, 1997
-Version:      8.06
+Version:      8.11
 Description:  THttpCli is an implementation for the HTTP protocol
               RFC 1945 (V1.0), and some of RFC 2068 (V1.1)
 Credit:       This component was based on a freeware from by Andreas
@@ -11,7 +11,7 @@ Credit:       This component was based on a freeware from by Andreas
 EMail:        francois.piette@overbyte.be         http://www.overbyte.be
 Support:      Use the mailing list twsocket@elists.org
               Follow "support" link at http://www.overbyte.be for subscription.
-Legal issues: Copyright (C) 1997-2012 by François PIETTE
+Legal issues: Copyright (C) 1997-2015 by François PIETTE
               Rue de Grady 24, 4053 Embourg, Belgium.
               <francois.piette@overbyte.be>
               SSL implementation includes code written by Arno Garrels,
@@ -67,6 +67,7 @@ Methods:
                 Retrieve document or file header specified by URL, without
                 blocking. OnRequestDone event trigered when finished. Use HTTP
                 HEAD method.
+
     Get         Synchronous, blocking Get. Same as GetAsync, but blocks until
                 finished.
     Post        Synchronous, blocking Post. Same as PostAsync, but blocks until
@@ -489,6 +490,18 @@ Oct 10, 2013 V8.05 - Arno fixed a relocation bug with URL "https://yahoo.com" by
              header returned by the server had that port appended as well even
              though the new location was simple HTTP.
 Apr 19, 2014 V8.06 Angus added PATCH method, thanks to RTT <pdfe@sapo.pt>
+Jun  4, 2014 V8.07 Angus fixed POST 307 and 308 now redirects with POST method,
+                   thanks to RTT <pdfe@sapo.pt>
+             Note POST redirection is poorly and confusingly documented in the RFCs,
+               a 307 POST should ideally be confirmed by the user, somehow...
+Jul 14, 2014 V8.08 Angus try and match how Chrome and Firefox handle POST relocation,
+                   thanks to RTT <pdfe@sapo.pt> again
+Jul 16, 2014 V8.09 Angus added new methods: OPTIONS and TRACE
+                   published RequestType for events
+Jul 18, 2014 V8.10 Angus applied V8.08 change to another function
+Jun 01, 2015 V8.11 Angus update SslServerName for SSL SNI support allowing server to
+                     select correct SSL context and certificate
+
 
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 {$IFNDEF ICS_INCLUDE_MODE}
@@ -532,20 +545,21 @@ interface
 
 uses
 {$IFDEF MSWINDOWS}
-    Messages,
-    Windows,
+    {$IFDEF RTL_NAMESPACES}Winapi.Messages{$ELSE}Messages{$ENDIF},
+    {$IFDEF RTL_NAMESPACES}Winapi.Windows{$ELSE}Windows{$ENDIF},
     OverbyteIcsWinSock,
 {$ENDIF}
 {$IFDEF POSIX}
     Ics.Posix.WinTypes,
     Ics.Posix.Messages,
 {$ENDIF}
-    SysUtils, Classes,
+    {$IFDEF RTL_NAMESPACES}System.SysUtils{$ELSE}SysUtils{$ENDIF},
+    {$IFDEF RTL_NAMESPACES}System.Classes{$ELSE}Classes{$ENDIF},
 {$IFNDEF NOFORMS}
   {$IFDEF FMX}
     FMX.Forms,
   {$ELSE}
-    Forms,
+    {$IFDEF RTL_NAMESPACES}Vcl.Forms{$ELSE}Forms{$ENDIF},
   {$ENDIF}
 {$ENDIF}
 { You must define USE_SSL so that SSL code is included in the component.   }
@@ -576,8 +590,8 @@ uses
     OverbyteIcsTypes, OverbyteIcsUtils;
 
 const
-    HttpCliVersion       = 806;
-    CopyRight : String   = ' THttpCli (c) 1997-2014 F. Piette V8.06 ';
+    HttpCliVersion       = 811;
+    CopyRight : String   = ' THttpCli (c) 1997-2015 F. Piette V8.11 ';
     DefaultProxyPort     = '80';
     //HTTP_RCV_BUF_SIZE    = 8193;
     //HTTP_SND_BUF_SIZE    = 8193;
@@ -609,7 +623,8 @@ type
 
     THttpEncoding    = (encUUEncode, encBase64, encMime);
     THttpRequest     = (httpABORT, httpGET, httpPOST, httpPUT,
-                        httpHEAD, httpDELETE, httpCLOSE, httpPATCH);
+                        httpHEAD, httpDELETE, httpCLOSE, httpPATCH,
+                        httpOPTIONS, httpTRACE);  { V8.09 }
     THttpState       = (httpReady,         httpNotConnected, httpConnected,
                         httpDnsLookup,     httpDnsLookupDone,
                         httpWaitingHeader, httpWaitingBody,  httpBodyReceived,
@@ -931,6 +946,8 @@ type
         procedure   Post;       { Synchronous blocking Post        }
         procedure   Put;        { Synchronous blocking Put         }
         procedure   Patch;      { Synchronous blocking Patch V8.06 }
+        procedure   OptionsSync;    { Synchronous blocking Options V8.09 - warning Options exists already }
+        procedure   Trace;      { Synchronous blocking Trace   V8.09 }
         procedure   Head;       { Synchronous blocking Head        }
         procedure   Del;        { Synchronous blocking Delete      }
         procedure   Close;      { Synchronous blocking Close       }
@@ -939,6 +956,8 @@ type
         procedure   PostASync;  { Asynchronous, non-blocking Post  }
         procedure   PutASync;   { Asynchronous, non-blocking Put   }
         procedure   PatchAsync; { Asynchronous, non-blocking Patch V8.06 }
+        procedure   OptionsAsync; { Asynchronous, non-blocking Options V8.09 }
+        procedure   TraceAsync;   { Asynchronous, non-blocking Trace V8.09   }
         procedure   HeadASync;  { Asynchronous, non-blocking Head  }
         procedure   DelASync;   { Asynchronous, non-blocking Delete}
         procedure   CloseAsync; { Asynchronous, non-blocking Close }
@@ -971,6 +990,7 @@ type
         property RcvdHeader           : TStrings     read  FRcvdHeader;
         property Hostname             : String       read  FHostname;
         property Protocol             : String       read  FProtocol;
+        property RequestType          : THttpRequest read  FRequestType;   { V8.09 }
 {$IFDEF UseNTLMAuthentication}
         property LmCompatLevel        : LongWord     read  FLmCompatLevel  { V7.25 }
                                                      write FLmCompatLevel; { V7.25 }
@@ -2352,6 +2372,14 @@ begin
                 begin
                     SendRequest('DELETE', FRequestVer);
                 end;
+            httpOPTIONS:
+                begin
+                    SendRequest('OPTIONS', FRequestVer);
+                end;
+            httpTRACE:
+                begin
+                    SendRequest('TRACE', FRequestVer);
+                end;
             httpHEAD:
                 begin
                     SendRequest('HEAD', FRequestVer);
@@ -3379,6 +3407,8 @@ begin
         Proto := 'http';
     if FPath = '' then
         FPath := '/';
+    if (FPath = '/*') and (Rq = httpOPTIONS) then  { V8.09 }
+        FPath := '*';
 
     AdjustDocName;
 
@@ -3489,7 +3519,9 @@ begin
     if I > 0 then
         FDocName := Copy(FDocName, 1, I - 1);
 
-    if (FDocName = '') or (FDocName[Length(FDocName)] = '/') then
+    if FRequestType = httpOptions then  { V8.09 options method may be *, user name or anything }
+        FDocName := 'options.htm'
+    else if (FDocName = '') or (FDocName[Length(FDocName)] = '/') then
         FDocName := 'document.htm'
     else begin
         if FDocName[Length(FDocName)] = '/' then
@@ -3620,8 +3652,14 @@ begin
     FProxyConnected := FALSE;
     FLocationFlag   := FALSE;
     { When relocation occurs doing a POST, new relocated page has to be GET }
-    if FRequestType = httpPOST then
+    {  if FRequestType = httpPOST then  }
+    { angus V8.07  unless a 307 or 308 POST which must not revert to GET }
+    {if (FRequestType = httpPOST) and not ((FStatusCode = 307) or (FStatusCode = 308)) then }
+    { angus V8.08 - try and match how Chrome and Firefox handle POST relocation }
+    if ((FStatusCode=303) and (FRequestType <> httpHEAD)) or
+              ((FRequestType = httpPOST) and ((FStatusCode=301) or (FStatusCode=302))) then
         FRequestType  := httpGET;
+
     { Restore normal session closed event }
     FCtrlSocket.OnSessionClosed := SocketSessionClosed;
 
@@ -4028,7 +4066,12 @@ begin
         AdjustDocName;
         { When relocation occurs doing a POST, new relocated page }
         { has to be GET.  01/05/03                                }
-        if FRequestType = httpPOST then
+        { if FRequestType = httpPOST then }
+        { angus V8.07  unless a 307 or 308 POST which must not revert to GET }
+        {if (FRequestType = httpPOST) and not ((FStatusCode = 307) or (FStatusCode = 308)) then }
+        { angus V8.10 - try and match how Chrome and Firefox handle POST relocation }
+        if ((FStatusCode=303) and (FRequestType <> httpHEAD)) or
+              ((FRequestType = httpPOST) and ((FStatusCode=301) or (FStatusCode=302))) then
             FRequestType  := httpGET;
         { Must clear what we already received }
         CleanupRcvdStream; {11/11/04}
@@ -4539,6 +4582,14 @@ begin
             begin
                 SendRequest('DELETE', FRequestVer);
             end;
+        httpOPTIONS:
+            begin
+                SendRequest('OPTIONS', FRequestVer);
+            end;
+        httpTRACE:
+            begin
+                SendRequest('TRACE', FRequestVer);
+            end;
         httpHEAD:
             begin
                 SendRequest('HEAD', FRequestVer);
@@ -4631,11 +4682,30 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { This will start the Patch process and wait until terminated (blocking)      }
-procedure THttpCli.Patch;   { V8.06 } 
+procedure THttpCli.Patch;   { V8.06 }
 begin
-    FLocationChangeCurCount := 0 ;  
+    FLocationChangeCurCount := 0 ;
     DoRequestSync(httpPatch);
 end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ This will start the Options process and wait until terminated (blocking)      }
+procedure THttpCli.OptionsSync;     { V8.09 }
+begin
+    FLocationChangeCurCount := 0 ;
+    DoRequestSync(httpOptions);
+end;
+
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ This will start the Trace process and wait until terminated (blocking)      }
+procedure THttpCli.Trace;     { V8.09 }
+begin
+    FLocationChangeCurCount := 0 ;
+    DoRequestSync(httpTrace);
+end;
+
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { This will start the Close process and wait until terminated (blocking)    }
@@ -4691,10 +4761,26 @@ end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
 { This will start the patch process and returns immediately (non blocking)    }
-procedure THttpCli.PatchAsync;   { V8.06 } 
+procedure THttpCli.PatchAsync;   { V8.06 }
 begin
-    FLocationChangeCurCount := 0 ;  
+    FLocationChangeCurCount := 0 ;
     DoRequestASync(httpPatch);
+end;
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ This will start the options process and returns immediately (non blocking)    }
+procedure THttpCli.OptionsAsync;  { V8.09 }
+begin
+    FLocationChangeCurCount := 0 ;
+    DoRequestASync(httpOptions);
+end;
+
+{* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
+{ This will start the trace process and returns immediately (non blocking)    }
+procedure THttpCli.TraceAsync;   { V8.09 }
+begin
+    FLocationChangeCurCount := 0 ;
+    DoRequestASync(httpTrace);
 end;
 
 {* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *}
@@ -5026,6 +5112,7 @@ end;
 procedure TSslHttpCli.DoBeforeConnect;
 begin
     inherited DoBeforeConnect;
+    FCtrlSocket.SslServerName       := FHostName;  { V8.11 needed for SNI support }
     FCtrlSocket.OnSslVerifyPeer     := TransferSslVerifyPeer;
     FCtrlSocket.OnSslCliGetSession  := TransferSslCliGetSession;
     FCtrlSocket.OnSslCliNewSession  := TransferSslCliNewSession;

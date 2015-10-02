@@ -155,6 +155,66 @@ Packages\OverbyteIcsDXE6Run.dpk
 Packages\OverbyteIcsDXE6Design.dproj
 Packages\OverbyteIcsDXE6Design.dpk
 
+Packages\IcsCommonDXE7Run.dpk
+Packages\IcsCommonDXE7Run.dproj
+Packages\IcsCommonDXE7Design.dpk
+Packages\IcsCommonDXE7Design.dproj
+
+Packages\IcsFmxDXE7Run.dpk
+Packages\IcsFmxDXE7Run.dproj
+Packages\IcsFmxDXE7Design.dpk
+Packages\IcsFmxDXE7Design.dproj
+
+Packages\IcsVclDXE7Run.dpk
+Packages\IcsVclDXE7Run.dproj
+Packages\IcsVclDXE7Design.dpk
+Packages\IcsVclDXE7Design.dproj
+
+Packages\OverbyteIcsDXE7Run.dproj
+Packages\OverbyteIcsDXE7Run.dpk
+Packages\OverbyteIcsDXE7Design.dproj
+Packages\OverbyteIcsDXE7Design.dpk
+
+Packages\IcsCommonDXE8Run.dpk
+Packages\IcsCommonDXE8Run.dproj
+Packages\IcsCommonDXE8Design.dpk
+Packages\IcsCommonDXE8Design.dproj
+
+Packages\IcsFmxDXE8Run.dpk
+Packages\IcsFmxDXE8Run.dproj
+Packages\IcsFmxDXE8Design.dpk
+Packages\IcsFmxDXE8Design.dproj
+
+Packages\IcsVclDXE8Run.dpk
+Packages\IcsVclDXE8Run.dproj
+Packages\IcsVclDXE8Design.dpk
+Packages\IcsVclDXE8Design.dproj
+
+Packages\OverbyteIcsDXE8Run.dproj
+Packages\OverbyteIcsDXE8Run.dpk
+Packages\OverbyteIcsDXE8Design.dproj
+Packages\OverbyteIcsDXE8Design.dpk
+
+Packages\IcsCommonD10SRun.dpk
+Packages\IcsCommonD10SRun.dproj
+Packages\IcsCommonD10SDesign.dpk
+Packages\IcsCommonD10SDesign.dproj
+
+Packages\IcsFmxD10SRun.dpk
+Packages\IcsFmxD10SRun.dproj
+Packages\IcsFmxD10SDesign.dpk
+Packages\IcsFmxD10SDesign.dproj
+
+Packages\IcsVclD10SRun.dpk
+Packages\IcsVclD10SRun.dproj
+Packages\IcsVclD10SDesign.dpk
+Packages\IcsVclD10SDesign.dproj
+
+Packages\OverbyteIcsD10SRun.dproj
+Packages\OverbyteIcsD10SRun.dpk
+Packages\OverbyteIcsD10SDesign.dproj
+Packages\OverbyteIcsD10SDesign.dpk
+
 Packages\OverbyteIcsCB2006Run.bdsproj
 Packages\OverbyteIcsCB2006Run.cpp
 Packages\OverbyteIcsCB2006Run.res
@@ -242,6 +302,7 @@ Source\OverbyteIcsCommonVersion.rc
 Source\OverbyteIcsCommonVersion.res
 Source\OverbyteIcsCookies.dcr
 Source\OverbyteIcsCookies.pas
+Source\OverbyteIcsCryptUiApi.pas
 Source\OverbyteIcsCsc.pas
 Source\OverbyteIcsDES.pas
 Source\OverbyteIcsDigestAuth.pas
@@ -268,7 +329,10 @@ Source\OverbyteIcsHttpSrv.dcr
 Source\OverbyteIcsHttpSrv.pas
 Source\OverbyteIcsIcmp.pas
 Source\OverbyteIcsIconv.pas
+Source\OverbyteIcsIniFiles.pas
+Source\OverbyteIcsJwaWinCrypt.inc
 Source\OverbyteIcsLIBEAY.pas
+Source\OverbyteIcsLibeayEx.pas
 Source\OverbyteIcsLogger.dcr
 Source\OverbyteIcsLogger.pas
 Source\OverbyteIcsMD4.pas
@@ -278,6 +342,7 @@ Source\OverbyteIcsMimeDec.dcr
 Source\OverbyteIcsMimeDec.pas
 Source\OverbyteIcsMimeUtils.dcr
 Source\OverbyteIcsMimeUtils.pas
+Source\OverbyteIcsMsSslUtils.pas
 Source\OverbyteIcsMultiProgressBar.dcr
 Source\OverbyteIcsMultiProgressBar.pas
 Source\OverbyteIcsMultipartFtpDownloader.dcr
@@ -308,6 +373,7 @@ Source\OverbyteIcsSslSessionCache.dcr
 Source\OverbyteIcsSslSessionCache.pas
 Source\OverbyteIcsSslThrdLock.dcr
 Source\OverbyteIcsSslThrdLock.pas
+Source\OverbyteIcsSslX509Utils.pas
 Source\OverbyteIcsSspi.pas
 Source\OverbyteIcsStreams.pas
 Source\OverbyteIcsSysLogClient.dcr
@@ -349,6 +415,7 @@ Source\OverbyteIcsXpManifest.res
 Source\OverbyteIcsZLibDll.pas
 Source\OverbyteIcsZLibObj.pas
 Source\OverbyteIcsZlibHigh.pas
+Source\OverbyteIcsWinCrypt.pas
 
 Source\Include\Ics.InterlockedApi.inc
 Source\Include\OverbyteIcsDefs.inc
@@ -360,7 +427,6 @@ Source\Include\OverbyteIcsWinsockTypes.inc
 Source\Include\OverbyteIcsZlib.inc
 
 Source\Extras\OverbyteIcsConApp.pas
-Source\Extras\OverbyteIcsLibeayEx.pas
 Source\Extras\OverbyteIcsLibrary.pas
 Source\Extras\OverbyteIcsPop3ProtOld.pas
 Source\Extras\OverbyteIcsWinSock2.pas
@@ -435,6 +501,12 @@ Install\DXe5Install.groupproj
 Install\DXe5InstallVclFmx.groupproj
 Install\DXE6Install.groupproj
 Install\DXE6InstallVclFmx.groupproj
+Install\DXE7Install.groupproj
+Install\DXE7InstallVclFmx.groupproj
+Install\DXE8Install.groupproj
+Install\DXE8InstallVclFmx.groupproj
+Install\D10SInstall.groupproj
+Install\D10SInstallVclFmx.groupproj
 
 Install\CB2006Install.bdsgroup
 Install\CB2007Install.groupproj
@@ -1108,6 +1180,8 @@ Samples\cpp\Internet\CBXe2\OverbyteIcsUdpSend.cpp
 Samples\cpp\Internet\CBXe2\OverbyteIcsWebServ.cbproj
 Samples\cpp\Internet\CBXe2\OverbyteIcsWebServ.cpp
 
+Samples\Delphi\AllDemosProject.bpg
+
 Samples\Delphi\BrowserDemo\Dcu\dir.txt
 
 Samples\Delphi\BrowserDemo\FrameBrowserIcs.dof
@@ -1688,15 +1762,13 @@ Samples\Delphi\SslInternet\01cert.pem
 Samples\Delphi\SslInternet\01key.pem
 Samples\Delphi\SslInternet\cacert.pem
 Samples\Delphi\SslInternet\client.pem
-Samples\Delphi\SslInternet\CryptUiApi.pas
-Samples\Delphi\SslInternet\JwaWinCrypt.pas
 Samples\Delphi\SslInternet\root.pem
-Samples\Delphi\SslInternet\OverbyteIcsMsSslUtils.pas
-Samples\Delphi\SslInternet\OverbyteIcsSslX509Utils.pas
 Samples\Delphi\SslInternet\Server.pem
 Samples\Delphi\SslInternet\TrustedCABundle.pem
 Samples\Delphi\SslInternet\TrustedCaStore\6F6359FC.0
-Samples\Delphi\SslInternet\WinCrypt.pas
+Samples\Delphi\SslInternet\dhparam512.pem
+Samples\Delphi\SslInternet\dhparam1024.pem
+Samples\Delphi\SslInternet\dhparam2048.pem
 
 Samples\Delphi\SslInternet\OverbyteIcsHttpsServer.dof
 Samples\Delphi\SslInternet\OverbyteIcsHttpsServer.dpr
@@ -1798,6 +1870,7 @@ Samples\Delphi\SslInternet\OverbyteIcsSslSmtpServer.dpr
 Samples\Delphi\SslInternet\OverbyteIcsSslSmtpServer.res
 Samples\Delphi\SslInternet\OverbyteIcsSslSmtpServ1.dfm
 Samples\Delphi\SslInternet\OverbyteIcsSslSmtpServ1.pas
+Samples\Delphi\SslInternet\OverbyteIcsSslSmtpServer_Icon1.ico
 
 Samples\Delphi\SslInternet\OverbyteIcsCommonVersion.res
 

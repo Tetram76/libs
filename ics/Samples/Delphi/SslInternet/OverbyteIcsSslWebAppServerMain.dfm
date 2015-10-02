@@ -1,9 +1,9 @@
 object WebAppSrvForm: TWebAppSrvForm
   Left = 66
   Top = 425
-  Width = 547
-  Height = 414
   Caption = 'Overbyte ICS SSL Web Application Server Demo'
+  ClientHeight = 387
+  ClientWidth = 539
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@ object WebAppSrvForm: TWebAppSrvForm
   object ToolsPanel: TPanel
     Left = 0
     Top = 0
-    Width = 531
+    Width = 539
     Height = 173
     Align = alTop
     TabOrder = 0
@@ -72,6 +72,13 @@ object WebAppSrvForm: TWebAppSrvForm
       Height = 13
       Caption = 'hosts'
     end
+    object Label19: TLabel
+      Left = 256
+      Top = 103
+      Width = 35
+      Height = 13
+      Caption = 'DH File'
+    end
     object CertFileEdit: TEdit
       Left = 80
       Top = 52
@@ -121,20 +128,31 @@ object WebAppSrvForm: TWebAppSrvForm
       Text = 'AcceptableHostsEdit'
     end
     object VerifyPeerCheckBox: TCheckBox
-      Left = 242
-      Top = 104
+      Left = 22
+      Top = 149
       Width = 71
       Height = 17
       Alignment = taLeftJustify
       Caption = 'Verify Peer'
       TabOrder = 6
     end
+    object DhParamFileEdit: TEdit
+      Left = 300
+      Top = 100
+      Width = 153
+      Height = 21
+      Hint = 'Enter DH Parameter File (can be empty).'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 7
+      Text = 'DhParamFileEdit'
+    end
   end
   object DisplayMemo: TMemo
     Left = 0
     Top = 173
-    Width = 531
-    Height = 203
+    Width = 539
+    Height = 214
     Align = alClient
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -167,12 +185,14 @@ object WebAppSrvForm: TWebAppSrvForm
     LingerTimeout = 0
     Options = []
     KeepAliveTimeSec = 10
+    KeepAliveTimeXferSec = 300
     MaxRequestsKeepAlive = 100
     SizeCompressMin = 5000
     SizeCompressMax = 5000000
     MaxBlkSize = 8192
     BandwidthLimit = 0
     BandwidthSampling = 1000
+    ServerHeader = 'Server: ICS-HttpServer-8.08'
     OnServerStarted = HttpAppSrv1ServerStarted
     OnServerStopped = HttpAppSrv1ServerStopped
     OnClientConnect = HttpAppSrv1ClientConnect
@@ -188,6 +208,7 @@ object WebAppSrvForm: TWebAppSrvForm
     OnVirtualException = HttpAppSrv1VirtualException
     SslEnable = True
     SslContext = SslContext1
+    OnSslHandshakeDone = HttpAppSrv1SslHandshakeDone
     Left = 44
     Top = 228
   end
@@ -195,11 +216,12 @@ object WebAppSrvForm: TWebAppSrvForm
     SslVerifyPeer = False
     SslVerifyDepth = 9
     SslVerifyFlags = []
-    SslOptions = [sslOpt_MICROSOFT_SESS_ID_BUG, sslOpt_NETSCAPE_CHALLENGE_BUG, sslOpt_NETSCAPE_REUSE_CIPHER_CHANGE_BUG, sslOpt_SSLREF2_REUSE_CERT_TYPE_BUG, sslOpt_MICROSOFT_BIG_SSLV3_BUFFER, sslOpt_SSLEAY_080_CLIENT_DH_BUG, sslOpt_TLS_D5_BUG, sslOpt_TLS_BLOCK_PADDING_BUG, sslOpt_TLS_ROLLBACK_BUG, sslOpt_NO_SSLv2, sslOpt_NETSCAPE_CA_DN_BUG, sslOpt_NO_SESSION_RESUMPTION_ON_RENEGOTIATION, sslOpt_NETSCAPE_DEMO_CIPHER_CHANGE_BUG]
+    SslOptions = [sslOpt_MICROSOFT_SESS_ID_BUG, sslOpt_NETSCAPE_CHALLENGE_BUG, sslOpt_NETSCAPE_REUSE_CIPHER_CHANGE_BUG, sslOpt_MICROSOFT_BIG_SSLV3_BUFFER, sslOpt_SSLEAY_080_CLIENT_DH_BUG, sslOpt_TLS_D5_BUG, sslOpt_TLS_BLOCK_PADDING_BUG, sslOpt_TLS_ROLLBACK_BUG, sslOpt_SINGLE_DH_USE, sslOpt_NO_SSLv2, sslOpt_NO_SSLv3, sslOpt_NETSCAPE_CA_DN_BUG, sslOpt_NO_SESSION_RESUMPTION_ON_RENEGOTIATION, sslOpt_NETSCAPE_DEMO_CIPHER_CHANGE_BUG]
     SslVerifyPeerModes = [SslVerifyMode_PEER]
     SslSessionCacheModes = [sslSESS_CACHE_SERVER, sslSESS_CACHE_NO_INTERNAL_LOOKUP, sslSESS_CACHE_NO_INTERNAL_STORE]
     SslCipherList = 'ALL:!ADH:RC4+RSA:+SSLv2:@STRENGTH'
-    SslVersionMethod = sslV23_SERVER
+    SslVersionMethod = sslBestVer_SERVER
+    SslECDHMethod = sslECDH_P256
     SslSessionTimeout = 300
     SslSessionCacheSize = 20480
     SslDefaultSessionIDContext = 'Webservertest'
