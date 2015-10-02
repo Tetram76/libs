@@ -228,6 +228,8 @@ type
     function IndexOf(const S: string): Integer; override;
     procedure Insert(Index: Integer; const S: string); override;
 
+    procedure MergeEnvironmentProperties(SystemEnvironmentProperties: TStrings);
+
     property ReservedProperties: TStrings read FReservedProperties;
     property EnvironmentProperties: TStrings read FEnvironmentProperties;
     property GlobalProperties: TStrings read FGlobalProperties;
@@ -730,6 +732,22 @@ begin
   end;
   
   raise EJclMsBuildError.CreateRes(@SRangeError);
+end;
+
+procedure TJclMsBuildProperties.MergeEnvironmentProperties(
+  SystemEnvironmentProperties: TStrings);
+var
+  I: Integer;
+  PropName: string;
+  SystemValue: string;
+begin
+  for I := 0 to FEnvironmentProperties.Count - 1 do
+  begin
+    PropName := FEnvironmentProperties.Names[I];
+    SystemValue := SystemEnvironmentProperties.Values[PropName];
+    if SystemValue <> '' then
+      FEnvironmentProperties.Values[PropName] := SystemValue;
+  end;
 end;
 
 procedure TJclMsBuildProperties.Put(Index: Integer; const S: string);
@@ -1787,6 +1805,16 @@ begin
     Result := BoolToStr(FileExists(FileOrDirectory) or DirectoryExists(FileOrDirectory), True);
     while (Position <= Len) and CharIsWhiteSpace(Condition[Position]) do
       Inc(Position);
+    // skip inner $(xxxx) inside an outer Exists( )  - Necessary, starting with XE8.
+    if (Position <= Len) and (Condition[Position] = '$') then
+       Inc(Position);
+    if (Position <= Len) and (Condition[Position] = '(') then
+      while (Position <= Len) do
+      begin
+        Inc(Position);
+        if Condition[Position-1] = ')' then
+          Break;
+      end;
     // skip closing parenthesis
     if Condition[Position] <> ')' then
       raise EJclMsBuildError.CreateResFmt(@RsEMissingParenthesis, [Condition]);

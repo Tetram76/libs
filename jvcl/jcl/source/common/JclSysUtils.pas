@@ -1213,7 +1213,7 @@ begin
   Result := 0;
   Pointer(P) := nil;
 
-  if not CheckWin32Version(5, 0) and ((Name = '') or (Pos('\', Name) > 0)) then
+  if not JclCheckWinVersion(5, 0) and ((Name = '') or (Pos('\', Name) > 0)) then
     raise ESharedMemError.CreateResFmt(@RsInvalidMMFName, [Name]);
 
   {$IFDEF THREADSAFE}
@@ -1581,7 +1581,13 @@ end;
 
 function DynArrayCompareInteger(Item1, Item2: Pointer): Integer;
 begin
-  Result := PInteger(Item1)^ - PInteger(Item2)^;
+  if PInteger(Item1)^ < PInteger(Item2)^ then
+    Result := -1
+  else
+  if PInteger(Item1)^ > PInteger(Item2)^ then
+    Result := 1
+  else
+    Result := 0;
 end;
 
 function DynArrayCompareCardinal(Item1, Item2: Pointer): Integer;
@@ -2941,7 +2947,7 @@ begin
   else
     StartupInfo.hStdError := ErrorPipeInfo.PipeWrite;
   UniqueString(CommandLine); // CommandLine must be in a writable memory block
-  ProcessInfo.dwProcessId := 0;
+  ResetMemory(ProcessInfo, SizeOf(ProcessInfo));
   ProcessEvent := nil;
   try
     if CreateProcess(nil, PChar(CommandLine), nil, nil, True, ProcessPriorities[ProcessPriority],
@@ -3025,7 +3031,7 @@ begin
         end;
         if {$IFDEF FPC}Boolean({$ENDIF}AbortPtr^{$IFDEF FPC}){$ENDIF} then
           TerminateProcess(ProcessEvent.Handle, Cardinal(ABORT_EXIT_CODE));
-        if (ProcessEvent.WaitForever = wrSignaled) and not GetExitCodeProcess(ProcessEvent.Handle, Result) then
+        if (ProcessEvent.WaitForever = {$IFDEF RTL280_UP}TJclWaitResult.{$ENDIF RTL280_UP}wrSignaled) and not GetExitCodeProcess(ProcessEvent.Handle, Result) then
           Result := $FFFFFFFF;
         CloseHandle(ProcessInfo.hThread);
         ProcessInfo.hThread := 0;
