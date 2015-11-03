@@ -1,6 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{90943296-FDFA-4C80-A99D-237F570C4F54}</ProjectGuid>
+        <ProjectGuid>{85AC5363-0DD3-4B39-8709-5987A7DA817E}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="VirtualTreesCR.cbproj">

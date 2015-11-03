@@ -2298,7 +2298,6 @@ type
     procedure SetCheckImageKind(Value: TCheckImageKind);
     procedure SetCheckState(Node: PVirtualNode; Value: TCheckState);
     procedure SetCheckType(Node: PVirtualNode; Value: TCheckType);
-    procedure SetChildCount(Node: PVirtualNode; NewChildCount: Cardinal);
     procedure SetClipboardFormats(const Value: TClipboardFormats);
     procedure SetColors(const Value: TVTColors);
     procedure SetCustomCheckImages(const Value: TCustomImageList);
@@ -2638,6 +2637,7 @@ type
     procedure ResetRangeAnchor; virtual;
     procedure RestoreFontChangeEvent(Canvas: TCanvas); virtual;
     procedure SelectNodes(StartNode, EndNode: PVirtualNode; AddOnly: Boolean); virtual;
+    procedure SetChildCount(Node: PVirtualNode; NewChildCount: Cardinal); virtual;
     procedure SetFocusedNodeAndColumn(Node: PVirtualNode; Column: TColumnIndex); virtual;
     procedure SkipNode(Stream: TStream); virtual;
     procedure StartOperation(OperationKind: TVTOperationKind);
@@ -2959,8 +2959,8 @@ type
     function GetNodeData<T>(pNode: PVirtualNode): T; overload; inline;
     function GetSelectedData<T>(): TArray<T>; overload;
     function GetInterfaceFromNodeData<T:IInterface>(pNode: PVirtualNode): T; overload; inline;
-    function GetNodeDataAt<T:class>(pXCoord: Integer; pYCoord: Integer): T;
-    function GetFirstSelectedNodeData<T:class>(): T;
+    function GetNodeDataAt<T>(pXCoord: Integer; pYCoord: Integer): T;
+    function GetFirstSelectedNodeData<T>(): T;
     function GetNodeLevel(Node: PVirtualNode): Cardinal;
     function GetPrevious(Node: PVirtualNode; ConsiderChildrenAbove: Boolean = False): PVirtualNode;
     function GetPreviousChecked(Node: PVirtualNode; State: TCheckState = csCheckedNormal;
@@ -3275,6 +3275,7 @@ type
     function GetStaticText(Node: PVirtualNode; Column: TColumnIndex): string;
     function GetText(Node: PVirtualNode; Column: TColumnIndex): string;
     procedure ReadText(Reader: TReader);
+    procedure ResetInternalData(Node: PVirtualNode; Recursive: Boolean);
     procedure SetDefaultText(const Value: string);
     procedure SetOptions(const Value: TCustomStringTreeOptions);
     procedure SetText(Node: PVirtualNode; Column: TColumnIndex; const Value: string);
@@ -3317,6 +3318,7 @@ type
       ChunkSize: Integer): Boolean; override;
     procedure ReadOldStringOptions(Reader: TReader);
     function RenderOLEData(const FormatEtcIn: TFormatEtc; out Medium: TStgMedium; ForClipboard: Boolean): HResult; override;
+    procedure SetChildCount(Node: PVirtualNode; NewChildCount: Cardinal); override;
     procedure WriteChunks(Stream: TStream; Node: PVirtualNode); override;
 
     property DefaultText: string read FDefaultText write SetDefaultText stored False;
@@ -4216,7 +4218,7 @@ var
       ButtonState := ButtonState or DFCS_CHECKED;
     if Flat then
       ButtonState := ButtonState or DFCS_FLAT;
-    DrawFrameControl(BM.Canvas.Handle, Rect(1, 2, BM.Width - 2, BM.Height - 1), DFC_BUTTON, ButtonType or ButtonState);
+    DrawFrameControl(BM.Canvas.Handle, Rect(0, 0, BM.Width, BM.Height), DFC_BUTTON, ButtonType or ButtonState);
     IL.AddMasked(BM, MaskColor);
   end;
 
@@ -4226,8 +4228,8 @@ var
   I, Width, Height: Integer;
 
 begin
-  Width := GetSystemMetrics(SM_CXMENUCHECK) + 3;
-  Height := GetSystemMetrics(SM_CYMENUCHECK) + 3;
+  Width := GetSystemMetrics(SM_CXMENUCHECK);
+  Height := GetSystemMetrics(SM_CYMENUCHECK);
   IL := TImageList.CreateSize(Width, Height);
   with IL do
     Handle := ImageList_Create(Width, Height, Flags, 0, AllocBy);
@@ -12098,7 +12100,8 @@ begin
   FClipboardFormats := TClipboardFormats.Create(Self);
   FOptions := GetOptionsClass.Create(Self);
 
-  AddThreadReference;
+  if not (csDesigning in ComponentState) then //Don't cerate worker thread in IDE, there is no use for it
+    AddThreadReference;
   VclStyleChanged();
 end;
 
@@ -14482,7 +14485,9 @@ begin
         else
           StructureChange(Node, crChildAdded);
 
-        ReinitNode(Node, True);
+        // One may want to reinit the nodes here, especially to fix Issue #572 but that may trigger
+        // stack overflows in user code that calls AddChild inside the OnInitNode or OnInitChildren events.
+        //ReinitNode(Node, True);
       end;
     end;
   end;
@@ -15084,6 +15089,8 @@ begin
 
       AddToSelection(Node);
 
+      if not (toMultiSelect in FOptions.FSelectionOptions) then
+        FocusedNode := Node; // if only one node can be selected, make sure the focused node changes with the selected node
       // Make sure there is a valid column selected (if there are columns at all).
       if ((FFocusedColumn < 0) or not (coVisible in FHeader.Columns[FFocusedColumn].Options)) and
         (FHeader.MainColumn > NoColumn) then
@@ -17872,7 +17879,7 @@ procedure TBaseVirtualTree.AdjustImageBorder(Images: TCustomImageList; BidiMode:
 begin
   if BidiMode = bdLeftToRight then
   begin
-    ImageInfo.XPos := R.Left;
+    ImageInfo.XPos := R.Left-1;
     Inc(R.Left, Images.Width + 2);
   end
   else
@@ -19842,24 +19849,6 @@ begin
 
   if Node = FNextNodeToSelect then
     FNextNodeToSelect := Node.Parent;
-  if Self.UpdateCount = 0 then
-  begin
-    // Omit this stuff if the control is in a BeginUpdate/EndUpdate bracket to increase performance
-    // We now try
-    // Make sure that CurrentNode does not point to an invalid node
-    if (toAlwaysSelectNode in TreeOptions.SelectionOptions) and (Node = GetFirstSelected()) then
-    begin
-      if Assigned(FNextNodeToSelect) then
-        // Select a new node if the currently selected node gets freed
-        Selected[FNextNodeToSelect] := True
-      else
-      begin
-        FNextNodeToSelect := Self.NodeParent[GetFirstSelected()];
-        if Assigned(FNextNodeToSelect) then
-          Selected[FNextNodeToSelect] := True;
-      end;//else
-    end;//if
-  end;
 
   // fire event
   if Assigned(FOnFreeNode) and ([vsInitialized, vsOnFreeNodeCallRequired] * Node.States <> []) then
@@ -23629,13 +23618,11 @@ var
   ForegroundColor: COLORREF;
   R: TRect;
   Details: TThemedElementDetails;
-
 begin
   with ImageInfo do
   begin
     if (tsUseThemes in FStates) and (FCheckImageKind = ckSystemDefault) then
     begin
-      R := Rect(XPos - 1, YPos + 1, XPos + 16, YPos + 16);
       Details.Element := teButton;
       case Index of
         // ctRadioButton
@@ -23668,9 +23655,11 @@ begin
       else
         Details := StyleServices.GetElementDetails(tbButtonRoot);
       end;
+      //StyleServices.GetElementSize(Canvas.Handle, Details, TElementSize.esActual, lSize);
+      R := Rect(XPos, YPos, XPos + Self.fCheckImages.Width, YPos + Self.fCheckImages.Height);
       StyleServices.DrawElement(Canvas.Handle, Details, R);
       if Index in [21..24] then
-        UtilityImages.Draw(Canvas, XPos - 1, YPos, 4);
+        UtilityImages.Draw(Canvas, XPos, YPos, 4);
     end
     else
       with FCheckImages do
@@ -25252,7 +25241,7 @@ begin
   InterruptValidation;
 
   FStartIndex := 0;
-  if (tsValidationNeeded in FStates) and (FVisibleCount > CacheThreshold) then
+  if (tsValidationNeeded in FStates) and (FVisibleCount > CacheThreshold) and Assigned(WorkerThread) then
   begin
     // Tell the thread this tree needs actually something to do.
     WorkerThread.AddTree(Self);
@@ -26220,6 +26209,7 @@ begin
         WasInSynchMode := tsSynchMode in FStates;
         Include(FStates, tsSynchMode);
         RemoveFromSelection(Node);
+        EnsureNodeSelected();
         if not WasInSynchMode then
           Exclude(FStates, tsSynchMode);
         InvalidateToBottom(LastParent);
@@ -28388,10 +28378,6 @@ var
   lNode: PVirtualNode;
 begin
   lNode := GetNodeAt(pXCoord, pYCoord);
-
-  if not Assigned(lNode) then
-    Exit(nil);
-
   Result := Self.GetNodeData<T>(lNode);
 end;
 
@@ -28402,7 +28388,7 @@ function TBaseVirtualTree.GetFirstSelectedNodeData<T>(): T;
 // Returns of the first selected node associated data converted to the type given in the generic part of the function.
 
 begin
-  Result := T(Self.GetNodeData(GetFirstSelected())^);
+  Result := Self.GetNodeData<T>(GetFirstSelected());
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -34236,21 +34222,56 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure TCustomVirtualStringTree.ReinitNode(Node: PVirtualNode; Recursive: Boolean);
+procedure TCustomVirtualStringTree.ResetInternalData(Node: PVirtualNode; Recursive: Boolean);
 
 var
   Data: PInteger;
+  Run: PVirtualNode;
 
 begin
-  inherited;
   // Reset node width so changed text attributes are applied correctly.
   if Assigned(Node) and (Node <> FRoot) then
   begin
     Data := InternalData(Node);
     if Assigned(Data) then
       Data^ := 0;
-    // vsHeightMeasured is already removed in the base tree.
+
+    Exclude(Node.States, vsHeightMeasured);
   end;
+
+  if Assigned(Node) then
+    Run := Node.FirstChild
+  else
+    Run := FRoot.FirstChild;
+
+  while Assigned(Run) do
+  begin
+    ResetInternalData(Run, Recursive);
+    Run := Run.NextSibling;
+  end;
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+procedure TCustomVirtualStringTree.ReinitNode(Node: PVirtualNode; Recursive: Boolean);
+
+begin
+  inherited;
+
+  ResetInternalData(Node, False);  // False because there already is a loop inside ReinitNode
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+procedure TCustomVirtualStringTree.SetChildCount(Node: PVirtualNode; NewChildCount: Cardinal);
+
+begin
+  inherited;
+
+  // See comment at the end of TBaseVirtualTree.SetChildCount
+  //ReinitChildren(Node, True);
+
+  ResetInternalData(Node, True);
 end;
 
 //----------------- TVirtualStringTree ---------------------------------------------------------------------------------
