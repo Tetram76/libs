@@ -1,4 +1,4 @@
-- Installer Mediakit.dpk
+- Installer Mediakit.dpk 
 - Ajouter une variable d'environnement globale: Compos = ce répertoire
 - Ajouter les chemin de bibliothèque 
     * $(Compos)
