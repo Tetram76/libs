@@ -56,7 +56,7 @@ const
    cDefaultStackChunkSize = 4096;  // 64 kB in 32bit Delphi, each stack entry is a Variant
 
    // compiler version is date in YYYYMMDD format, dot subversion number
-   cCompilerVersion = 20141015.0;
+   cCompilerVersion = 20151029.0;
 
 type
    TdwsCompiler = class;
@@ -2148,7 +2148,7 @@ end;
 //
 function TdwsCompiler.Optimize : Boolean;
 begin
-   Result:=(coOptimize in FOptions) and (not FMsgs.HasErrors);
+   Result:=(coOptimize in FOptions) and (not FMsgs.HasErrors) and not (coSymbolDictionary in FOptions);
 end;
 
 // ReadRootBlock
@@ -6712,7 +6712,7 @@ begin
       else if progMeth.IsStatic then begin
          structSym:=progMeth.StructSymbol;
          Result:=GetMethodExpr(methodSym,
-                               TConstExpr.Create(FProg, (structSym as TStructuredTypeSymbol).MetaSymbol, Int64(structSym)),
+                               TConstExpr.Create(FProg, structSym.MetaSymbol, Int64(structSym)),
                                rkClassOfRef, FTok.HotPos, forceStatic);
       end else if progMeth.SelfSym is TConstParamSymbol then begin
          Result:=GetMethodExpr(methodSym,
@@ -6728,7 +6728,7 @@ begin
    end else begin
       structSym:=methodSym.StructSymbol;
       Result:=GetMethodExpr(methodSym,
-                            TConstExpr.Create(FProg, (structSym as TStructuredTypeSymbol).MetaSymbol, Int64(structSym)),
+                            TConstExpr.Create(FProg, structSym.MetaSymbol, Int64(structSym)),
                             rkClassOfRef, FTok.HotPos, True);
    end;
 
@@ -9546,9 +9546,10 @@ begin
                end else if expr.IsConstant then begin
                   if not FMsgs.HasErrors then begin
                      SetLength(exprData, typ.Size);
-                     if typ.Size=1 then begin
-                        expr.EvalAsVariant(FExec, exprData[0]);
-                     end else begin
+                     case typ.Size of
+                        0 : FMsgs.AddCompilerError(FTok.HotPos, CPE_ConstantInstruction);
+                        1 : expr.EvalAsVariant(FExec, exprData[0]);
+                     else
                         FExec.Stack.Push(typ.Size);
                         try
                            (expr as TDataExpr).DataPtr[FExec].CopyData(exprData, 0, typ.Size);
@@ -12242,6 +12243,7 @@ function TdwsCompiler.ReadConnectorSym(const name : UnicodeString; baseExpr : TT
 var
    connWrite : TConnectorWriteMemberExpr;
    connRead : TConnectorReadMemberExpr;
+   rightExpr : TTypedExpr;
 begin
    if FTok.Test(ttALEFT) then begin
 
@@ -12265,12 +12267,20 @@ begin
 
       // An assignment of the form "connector.member := expr" was found
       // and is transformed into "connector.member(expr)"
-      connWrite:=TConnectorWriteMemberExpr.CreateNew(FProg, FTok.HotPos, name, baseExpr, ReadExpr, connectorType);
-      if connWrite=nil then begin
-         FMsgs.AddCompilerStopFmt(FTok.HotPos, CPE_ConnectorMember,
+      try
+         rightExpr:=ReadExpr;
+         connWrite:=TConnectorWriteMemberExpr.CreateNew(FProg, FTok.HotPos, name, baseExpr, rightExpr, connectorType);
+         baseExpr:=nil;
+         if connWrite=nil then begin
+            OrphanObject(connWrite);
+            FMsgs.AddCompilerStopFmt(FTok.HotPos, CPE_ConnectorMember,
                                   [name, connectorType.ConnectorCaption]);
+         end;
+         Result:=connWrite;
+      except
+         OrphanObject(baseExpr);
+         raise;
       end;
-      Result:=connWrite;
 
    end else begin
 
@@ -12309,10 +12319,10 @@ begin
       if not Result.AssignConnectorSym(FProg, connectorType) then
          FMsgs.AddCompilerStopFmt(FTok.HotPos, CPE_ConnectorIndex, [ConnectorType.ConnectorCaption]);
    except
-      Result.BaseExpr:=nil;
+//      Result.BaseExpr:=nil;
       OrphanObject(Result);
       raise;
-  end;
+   end;
 end;
 
 function TdwsCompiler.ReadStringArray(expr : TDataExpr; IsWrite: Boolean): TProgramExpr;
@@ -13722,7 +13732,7 @@ begin
    if progMeth<>nil then begin
       if progMeth.IsStatic then begin
          structSym:=progMeth.StructSymbol;
-         selfExpr:=TConstExpr.Create(FProg, (structSym as TStructuredTypeSymbol).MetaSymbol, Int64(structSym));
+         selfExpr:=TConstExpr.Create(FProg, structSym.MetaSymbol, Int64(structSym));
       end else if progMeth.SelfSym is TConstParamSymbol then
          selfExpr:=GetConstParamExpr(TConstParamSymbol(progMeth.SelfSym))
       else if progMeth.SelfSym=nil then

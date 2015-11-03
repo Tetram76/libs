@@ -1069,6 +1069,11 @@ type
      function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
 
+   // a mod b  (float)
+   TModFloatExpr = class(TFloatBinOpExpr)
+     function EvalAsFloat(exec : TdwsExecution) : Double; override;
+   end;
+
    TPosIntegerBinOpExpr = class(TIntegerBinOpExpr)
       private
          FScriptPos : TScriptPos;
@@ -4948,6 +4953,36 @@ begin
 end;
 
 // ------------------
+// ------------------ TModFloatExpr ------------------
+// ------------------
+
+// EvalAsFloat
+//
+function TModFloatExpr.EvalAsFloat(exec : TdwsExecution) : Double;
+
+   function fmod(f, d : Double) : Double;
+{$if Defined(WIN32_ASM)}
+   asm
+      fld d
+      fld f
+   @@loop:
+      fprem
+      fnstsw
+      sahf
+      jp @@loop
+      ffree st(1)
+   end;
+{$else}
+   begin
+      Result := Frac(f / d) * d;
+   end;
+{$ifend}
+
+begin
+   Result := fmod(Left.EvalAsFloat(exec), Right.EvalAsFloat(exec));
+end;
+
+// ------------------
 // ------------------ TPosIntegerBinOpExpr ------------------
 // ------------------
 
@@ -6910,6 +6945,7 @@ end;
 //
 procedure TCompareCaseCondition.TypeCheck(prog : TdwsProgram; typ : TTypeSymbol);
 begin
+   if FCompareExpr=nil then Exit;
    if (FCompareExpr.Typ=nil) or not (typ.IsCompatible(FCompareExpr.Typ) or FCompareExpr.Typ.IsCompatible(typ)) then
       if not (IsOfTypeNumber(prog, FCompareExpr.Typ) and IsOfTypeNumber(prog, typ)) then
          prog.CompileMsgs.AddCompilerErrorFmt(ScriptPos, CPE_IncompatibleTypes,
