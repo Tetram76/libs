@@ -43,7 +43,7 @@ uses
 {$IFDEF FPC}
   Controls, Graphics, Forms,
 {$ELSE}
-  Windows, Controls, Graphics, Forms,
+  Windows, Controls, Graphics, Forms, System.Types,
 {$ENDIF}
   Classes, SysUtils, Math, GR32;
 
@@ -1226,8 +1226,8 @@ begin
   if Bitmap.Empty then Exit;
   DstRect := MakeRect(GetAdjustedRect(FLocation));
   ClipRect := Buffer.ClipRect;
-  IntersectRect(TempRect, ClipRect, DstRect);
-  if IsRectEmpty(TempRect) then Exit;
+  GR32.IntersectRect(TempRect, ClipRect, DstRect);
+  if GR32.IsRectEmpty(TempRect) then Exit;
 
   SrcRect := MakeRect(0, 0, Bitmap.Width, Bitmap.Height);
   if Cropped and (LayerCollection.FOwner is TCustomImage32) and
@@ -1240,7 +1240,7 @@ begin
     end;
     if (LayerWidth < 0.5) or (LayerHeight < 0.5) then Exit;
     ImageRect := TCustomImage32(LayerCollection.FOwner).GetBitmapRect;
-    IntersectRect(ClipRect, ClipRect, ImageRect);
+    GR32.IntersectRect(ClipRect, ClipRect, ImageRect);
   end;
   StretchTransfer(Buffer, DstRect, ClipRect, FBitmap, SrcRect,
     FBitmap.Resampler, FBitmap.DrawMode, FBitmap.OnPixelCombine);
@@ -1375,7 +1375,7 @@ begin
   else if db and dx and dh_sides and not(rhNotBottomSide in FHandles) then Result := dsSizeB
   else if dl and dy and dh_sides and not(rhNotLeftSide in FHandles) then Result := dsSizeL
   else if dt and dx and dh_sides and not(rhNotTopSide in FHandles) then Result := dsSizeT
-  else if dh_center and PtInRect(R, Point(X, Y)) then Result := dsMove;
+  else if dh_center and GR32.PtInRect(R, Point(X, Y)) then Result := dsMove;
 end;
 
 procedure TRubberbandLayer.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);

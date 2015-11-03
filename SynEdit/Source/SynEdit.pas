@@ -83,7 +83,7 @@ uses
   Themes,
   {$ENDIF}
   {$IFDEF SYN_COMPILER_17_UP}
-  UITypes,
+  System.Types, UITypes,
   {$ENDIF}
   SynUnicode,
 {$ENDIF}

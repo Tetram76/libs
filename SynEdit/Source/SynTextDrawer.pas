@@ -73,7 +73,9 @@ uses
   Classes,
   Windows,
   Graphics,
-  Math;
+  Math,
+  System.Types,
+  System.UITypes;
 
 const
   FontStyleCount = Ord(High(TFontStyle)) +1;

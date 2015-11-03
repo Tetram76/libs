@@ -41,7 +41,7 @@ uses
 {$IFDEF FPC}
   LCLIntf,
 {$ELSE}
-  Windows,
+  Windows, System.Types,
 {$ENDIF}
   Classes, SysUtils, GR32, GR32_Containers, GR32_Layers;
 

@@ -58,7 +58,8 @@ uses
   SynEditKeyCmds,
   SynUnicode,
 {$ENDIF}
-  Classes;
+  Classes,
+  System.Types;
 
 type
   TAbstractSynPlugin = class(TComponent)

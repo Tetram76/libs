@@ -85,7 +85,9 @@ uses
   SynUnicode,
 {$ENDIF}
   SysUtils,
-  Classes;
+  Classes,
+  System.Types,
+  System.UITypes;
 
 type
   SynCompletionType = (ctCode, ctHint, ctParams);

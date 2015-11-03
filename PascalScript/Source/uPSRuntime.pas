@@ -1101,7 +1101,8 @@ function IDispatchInvoke(Self: IDispatch; PropertySet: Boolean; const Name: tbtS
 
 implementation
 uses
-  TypInfo {$IFDEF DELPHI3UP}{$IFNDEF FPC}{$IFNDEF KYLIX} , ComObj {$ENDIF}{$ENDIF}{$ENDIF}{$IFDEF PS_FPC_HAS_COM}, ComObj{$ENDIF};
+  TypInfo {$IFDEF DELPHI3UP}{$IFNDEF FPC}{$IFNDEF KYLIX} , ComObj {$ENDIF}{$ENDIF}{$ENDIF}{$IFDEF PS_FPC_HAS_COM}, ComObj{$ENDIF},
+  System.AnsiStrings;
 
 {$IFDEF DELPHI3UP }
 resourceString
@@ -2555,6 +2556,7 @@ var
       Result := True;
     end;
   begin
+    Curr := nil;
     LoadTypes := True;
     for l := 0 to HDR.TypeCount - 1 do begin
       if not read(currf, SizeOf(currf)) then begin
@@ -9432,7 +9434,7 @@ end;
 
 function ToString(p: PansiChar): tbtString;
 begin
-  SetString(Result, p, StrLen(p));
+  SetString(Result, p, System.AnsiStrings.StrLen(p));
 end;
 
 function IntPIFVariantToVariant(Src: pointer; aType: TPSTypeRec; var Dest: Variant): Boolean;
@@ -11908,7 +11910,6 @@ end;
 function TPSRuntimeClassImporter.FindClass(const Name: tbtString): TPSRuntimeClass;
 var
   h, i: Longint;
-  lName: tbtstring;
   p: TPSRuntimeClass;
   Cl: tbtString;
 begin
