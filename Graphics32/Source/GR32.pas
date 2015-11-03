@@ -44,7 +44,7 @@ interface
 
 uses
   {$IFDEF FPC} LCLIntf, LCLType, Types, {$ELSE}
-  {$IFDEF COMPILERXE2_UP}Types, {$ENDIF} Windows, {$ENDIF}
+  {$IFDEF COMPILERXE2_UP}Types, System.UITypes,{$ENDIF} Windows, {$ENDIF}
   Controls, Graphics, Classes, SysUtils;
   
 { Version Control }

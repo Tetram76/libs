@@ -39,7 +39,7 @@ interface
 {$BOOLEVAL OFF}
 
 uses
-  GR32, GR32_Transforms, GR32_Polygons{$IFDEF FPC}, Types{$ENDIF};
+  GR32, GR32_Transforms, GR32_Polygons{$IFDEF FPC}, Types{$ENDIF}, Math;
 
 const
   DEFAULT_MITER_LIMIT = 4.0;
@@ -206,7 +206,7 @@ function FloatPointToFixedPoint(const Points: TArrayOfArrayOfFloatPoint): TArray
 implementation
 
 uses
-  Math, SysUtils, GR32_Math, GR32_Geometry, GR32_LowLevel;
+  SysUtils, GR32_Math, GR32_Geometry, GR32_LowLevel;
 
 type
   TTransformationAccess = class(TTransformation);

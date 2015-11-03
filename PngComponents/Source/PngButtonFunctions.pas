@@ -3,7 +3,7 @@ unit PngButtonFunctions;
 interface
 
 uses
-  Windows, Buttons, Graphics, pngimage;
+  Windows, Buttons, Graphics, pngimage, System.Types;
 
 {$IF RTLVersion < 20.0 }
 type

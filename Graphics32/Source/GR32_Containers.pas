@@ -45,7 +45,7 @@ uses
   Types,
   {$ENDIF}
 {$ELSE}
-  Windows,
+  Windows, System.Types,
 {$ENDIF}
   RTLConsts,
   GR32, SysUtils, Classes, TypInfo;
@@ -587,7 +587,7 @@ end;
 function TRectList.IndexOf(const Rect: TRect): Integer;
 begin
   Result := 0;
-  while (Result < FCount) and not EqualRect(FList^[Result], Rect) do
+  while (Result < FCount) and not GR32.EqualRect(FList^[Result], Rect) do
     Inc(Result);
   if Result = FCount then
     Result := -1;
