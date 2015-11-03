@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, SysUtils, Classes, Registry, PsAPI,
-  dwsDataContext, dwsComp, dwsExprs, dwsUtils, dwsCPUUsage;
+  dwsDataContext, dwsComp, dwsExprs, dwsUtils, dwsCPUUsage, dwsXPlatform;
 
 type
    TOSNameVersion = record
@@ -54,6 +54,14 @@ type
       Info: TProgramInfo; ExtObject: TObject);
     procedure dwsSystemInfoClassesApplicationInfoMethodsMemoryCountersEval(
       Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsSystemInfoClassesCPUInfoMethodsSystemTimeEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsSystemInfoClassesCPUInfoMethodsKernelTimeEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsSystemInfoClassesCPUInfoMethodsProcessTimeEval(
+      Info: TProgramInfo; ExtObject: TObject);
+    procedure dwsSystemInfoClassesCPUInfoMethodsUpTimeEval(Info: TProgramInfo;
+      ExtObject: TObject);
   private
     { Private declarations }
     FOSNameVersion : TOSNameVersion;
@@ -224,6 +232,12 @@ begin
    Info.ResultAsInteger:=SystemCPU.Frequency;
 end;
 
+procedure TdwsSystemInfoLibModule.dwsSystemInfoClassesCPUInfoMethodsKernelTimeEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+   Info.ResultAsFloat:=SystemCPU.SystemTimes(cpuKernel)+SystemCPU.ProcessTimes(cpuKernel);
+end;
+
 procedure TdwsSystemInfoLibModule.dwsSystemInfoClassesCPUInfoMethodsKernelUsageEval(
   Info: TProgramInfo; ExtObject: TObject);
 begin
@@ -236,16 +250,34 @@ begin
    Info.ResultAsString:=SystemCPU.Name;
 end;
 
+procedure TdwsSystemInfoLibModule.dwsSystemInfoClassesCPUInfoMethodsProcessTimeEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+   Info.ResultAsFloat:=SystemCPU.ProcessTimes(cpuUser);
+end;
+
 procedure TdwsSystemInfoLibModule.dwsSystemInfoClassesCPUInfoMethodsProcessUsageEval(
   Info: TProgramInfo; ExtObject: TObject);
 begin
    Info.ResultAsFloat:=SystemCPU.ProcessUser+SystemCPU.ProcessKernel;
 end;
 
+procedure TdwsSystemInfoLibModule.dwsSystemInfoClassesCPUInfoMethodsSystemTimeEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+   Info.ResultAsFloat:=SystemCPU.SystemTimes(cpuUser);
+end;
+
 procedure TdwsSystemInfoLibModule.dwsSystemInfoClassesCPUInfoMethodsSystemUsageEval(
   Info: TProgramInfo; ExtObject: TObject);
 begin
    Info.ResultAsFloat:=SystemCPU.Usage;
+end;
+
+procedure TdwsSystemInfoLibModule.dwsSystemInfoClassesCPUInfoMethodsUpTimeEval(
+  Info: TProgramInfo; ExtObject: TObject);
+begin
+   Info.ResultAsFloat:=GetSystemMilliseconds*(1/864e5);
 end;
 
 procedure TdwsSystemInfoLibModule.dwsSystemInfoClassesHostInfoMethodsDNSDomainEval(
